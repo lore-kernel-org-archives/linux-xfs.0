@@ -1,54 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 11:52:01 -0700 (PDT)
-Received: from service.eng.exegy.net (68-191-203-42.static.stls.mo.charter.com [68.191.203.42])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6HIphDW020875
-	for <xfs@oss.sgi.com>; Mon, 17 Jul 2006 11:51:43 -0700
-Received: from HANAFORD.eng.exegy.net (hanaford.eng.exegy.net [10.19.1.4])
-	by service.eng.exegy.net (8.13.1/8.13.1) with ESMTP id k6HHQFj7010524
-	for <xfs@oss.sgi.com>; Mon, 17 Jul 2006 12:26:15 -0500
-Message-ID: <44BBC836.7020503@exegy.com>
-Date: Mon, 17 Jul 2006 12:26:14 -0500
-From: Dave Lloyd <dlloyd@exegy.com>
-MIME-Version: 1.0
-Subject: Re: Stripe alignment with RAID volumes
-References: <e692861c0607161423o552588a3yd603a423afc71004@mail.gmail.com> <20060717144623.GA2114946@melbourne.sgi.com>
-In-Reply-To: <20060717144623.GA2114946@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Jul 2006 03:26:08 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [210.143.35.51])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6EAPjDW021156
+	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 03:25:47 -0700
+Subject: Re: [PATCH] xfs: i_state of inode is changed after the inode is freed
+In-reply-to: <20060710103740.B1674239@wobbly.melbourne.sgi.com>
+Message-Id: <20060714192520m-saito@mail.aom.tnes.nec.co.jp>
+References: <20060710103740.B1674239@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+From: Masayuki Saito <m-saito@tnes.nec.co.jp>
+Date: Fri, 14 Jul 2006 19:25:20 +0900
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-David Chinner wrote:
+Hi, Nathan.
 
- >
- > Device mapper is your friend - you can offset the start of the volume
- > on each device you use.
- >
- > We've done this in the past to allow multiple volume managers to coexist
- > on the same luns. e.g. first volume manager exists in 0-4MiB of each
- > lun, so we tell dm that each device starts at offset 4MiB rather than
- > at 0....
+>I'll leave it to Dave to comment more later (he's travelling at the
+>moment), since he's had his head deep in this area of the code most
+>recently - but my first thoughts on your patch are that its solving
+>the problem incorrectly.  We should not be in the destroy_inode code
+>if the inode reference counting is correct everywhere - I would have
+>expected the fix to be a get/put style change, rather than adding an
+>inode lock and new lock/unlock semantics around an individual field;
+>... and if that cannot be done to fix this (eh?), then some comments
+>as to why refcounting didn't solve the problem here.
 
-Device Mapper?  I haven't heard about this.
+On the basis of the above, I consider the get/put style fix which use
+i_count.
 
- >> Would it be possible to add a stripe start offset to XFS?
- >
- > Maybe, but I can't see how it would be a simple thing to do because
- > it would require on-disk format changes...
- >
- > Anyway, if you were configuring an XFS filesystem to do this, you
- > still need to understand the underlying geometry to get it right.
- > You may as well get your volume manager configuration correct, and
- > then we don't have to worry about it in XFS.
+This problem is that i_state of the inode is changed while the inode
+is freed in xfs filesystem.  And the cause is that the inode release
+and xfs_iunpun() can run in parallel.
 
-The latest parted will let you use bytes to size the partitions.  Stripe
-aligning the begining and the end of the partition does give better
-performance.
+To fix this problem, I added a pair of igrab()/iput() before and behind
+mark_inode_dirty_sync() at xfs_iunpin().  I think this can change it as
+follows.
 
--- 
-Dave Lloyd
-Test Engineer, Exegy, Inc.
-314.450.5342
-dlloyd@exegy.com
+(1)The case that the inode release transaction runs after xfs_iunpin()
+is called.
+While mark_inode_dirty_sync() is running, igrab() promises that the
+inode is alive.
+
+(2)The case that xfs_iunpin() is called after iput() in the inode
+release transaction is called(i_count is 0).
+mark_inode_dirty_sync() is not called because the igrab() can not get
+the inode.
+
+I have made the following patch, but it is not yet tested.
+I would like to hear your comment, first.
+
+Signed-off-by: Masayuki Saito <m-saito@tnes.nec.co.jp>
+---
+
+--- linux-2.6.17.4/fs/xfs/xfs_inode.c.orig	2006-07-14 09:44:44.187844139 +0900
++++ linux-2.6.17.4/fs/xfs/xfs_inode.c	2006-07-14 09:58:26.398486290 +0900
+@@ -2751,8 +2751,14 @@ xfs_iunpin(
+ 			if (vp) {
+ 				struct inode	*inode = vn_to_inode(vp);
+ 
+-				if (!(inode->i_state & I_NEW))
+-					mark_inode_dirty_sync(inode);
++				if (!(inode->i_state & 
++						(I_NEW|I_FREEING|I_CLEAR))) {
++					inode = igrab(inode);
++					if (inode != NULL) {
++						mark_inode_dirty_sync(inode);
++						iput(inode);
++					}
++				}
+ 			}
+ 		}
+ 		wake_up(&ip->i_ipin_wait);
