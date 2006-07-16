@@ -1,68 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 11:28:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Jul 2006 02:44:22 -0700 (PDT)
 Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6IISXDW011729
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 11:28:34 -0700
-Received: from localhost (dslb-084-056-120-082.pools.arcor-ip.net [84.56.120.82])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id 7D5F6FA68B
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 20:25:40 +0200 (CEST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6G9i6DW004897
+	for <linux-xfs@oss.sgi.com>; Sun, 16 Jul 2006 02:44:11 -0700
+Received: from localhost (dslb-084-056-110-224.pools.arcor-ip.net [84.56.110.224])
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id 1D807FA4F3
+	for <linux-xfs@oss.sgi.com>; Sun, 16 Jul 2006 11:41:44 +0200 (CEST)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: XFS and write barrier
-Date: Tue, 18 Jul 2006 20:27:48 +0200
-References: <200607151248.56603.Martin@lichtvoll.de> <17596.41680.124148.595601@cse.unsw.edu.au> <20060718170406.GT15160733@melbourne.sgi.com>
-In-Reply-To: <20060718170406.GT15160733@melbourne.sgi.com>
+Subject: XFS now working stable with write caches - Thank you!
+Date: Sun, 16 Jul 2006 11:43:38 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200607182027.49648.Martin@lichtvoll.de>
+Message-Id: <200607161143.38872.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: linux-xfs@oss.sgi.com
 
-Am Dienstag 18 Juli 2006 19:04 schrieb David Chinner:
 
-> > "Journalling filesystems need write barrier" isn't really accurate.
-> > They can make good use of write barrier if it is supported, and where
-> > it isn't supported, they should use blkdev_issue_flush in combination
-> > with regular submit/wait.
->
-> blkdev_issue_flush() causes a write cache flush - just like a
-> barrier typically causes a write cache flush up to the I/O with the
-> barrier in it.  Both of these mechanisms provide the same thing - an
-> I/O barrier that enforces ordering of I/Os to disk.
+Hello,
 
-Hello David,
+okay, I am pretty much convinced. See
 
-well now it gets interesting. If both provide the same thing, whats the 
-difference?
+http://bugzilla.kernel.org/show_bug.cgi?id=6380
 
-> Given that filesystems already indicate to the block layer when they
-> want a barrier, wouldn't it be better to get the block layer to issue
-> this cache flush if the underlying device doesn't support barriers
-> and it receives a barrier request?
+Thank you, guys!
 
-Does a device need to support more than this cache flush in order to 
-support barriers? Up to know I thought that when a device supports cache 
-flushes the kernel can provide barrier functinality for it.
 
-I see in boot output that my notebook harddisk supports cache flushes. But 
-not in dmesg nor in syslog. I don't know yet how to actually determine 
-whether barrier functionality is really usable on a certain system. 
+Running an automated test case simulating switching the power off while 
+writing data for a thousand times might still be a good idea if it has 
+not already been done yet and someone can fund it.
 
-> FWIW, Only XFS and Reiser3 use this function, and only then when
-> issuing a fsync when barriers are disabled to make sure a common
-> test (fsync then power cycle) doesn't result in data loss...
 
-So will XFS be safe even without write barriers? What will it do when it 
-cannot do write barriers but write barriers are requested by the user or 
-the inbuilt default setting of the filesystem? Will it work unsafely or 
-will mount readonly or disable write caches in that case?
+Too bad that the XFS fix from 
 
-I think I need to read / learn even more to get a complete picture of 
-this.
+http://bugzilla.kernel.org/show_bug.cgi?id=6757
+
+still did not make it into a stable kernel release for 2.6.17!
+
+I stronly recommend to apply it if you want to use 2.6.17 and probably 
+2.6.16 as well!
 
 Regards,
 -- 
