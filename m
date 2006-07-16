@@ -1,33 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 14:17:21 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6ILHADW004971
-	for <linux-xfs@OSS.SGI.com>; Tue, 18 Jul 2006 14:17:11 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1G2Vpg-0003Av-Ty
-	for <linux-xfs@OSS.SGI.com>; Mon, 17 Jul 2006 17:20:32 +0100
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Jul 2006 08:52:21 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6GFpaDW008577
+	for <xfs@oss.sgi.com>; Sun, 16 Jul 2006 08:51:48 -0700
+Date: Mon, 17 Jul 2006 01:50:29 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Bonnie getc reading hitting exact 65536 kb/s
+Message-ID: <20060716155029.GR15160733@melbourne.sgi.com>
+References: <20060715171304.59053A00A8A@smtp.funpic.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <17595.47312.720883.451573@base.ty.sabi.co.UK>
-Date: Mon, 17 Jul 2006 17:20:32 +0100
-Subject: Re: stable xfs
-In-Reply-To: <1153150223.4532.24.camel@localhost.localdomain>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <20060715171304.59053A00A8A@smtp.funpic.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: "A. Liemen" <maillist@liemen.net>
+Cc: xfs@oss.sgi.com
 
->>> On Mon, 17 Jul 2006 11:30:23 -0400, Ming Zhang
->>> <mingz@ele.uri.edu> said:
+On Sat, Jul 15, 2006 at 07:13:10PM +0200, A. Liemen wrote:
+> Hi,
+> 
+> during some xfs tuning tests I discovered the following phenomenon. 
+> Maybe someone can explain it to me:
+> 
+> Bonnie++ Reading with getc()... hits exactly an almost constant
+> 65536 kbyte/s with only ~15% IO usage.
+> 
+> iostat and bonnie output can be found under:
+> 
+> http://alexander.liemen.net/bonnie.txt
 
-mingz> Hi All We want to use XFS in all of our production
-mingz> servers but feel a little scary about the corruption
-mingz> problems seen in this list. [ ... ]
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+storage4     40000M 64890  99 229195  39 105826  24 63895  98 350285  38 361.1   0
+                    ^^^^^^^^^                       ^^^^^^^^^
 
-XFS is complex but quite stable code. Most of the reports about
-''corruption'' are consequences of not being aware of what it
-was designed for, how it works and how it should be used...
+It's cpu bound, not I/O bound. It can't go any faster because it's a
+single threaded test....
+
+> CPU usage is 100% (on one of the cpus) but i don't think that's the 
+> limiting factor since it hits that 16bit value absolut constantly.
+
+What you are seeing is XFS issuing regular sized I/Os at a constant
+throughput.
+
+If you really think this is a 16bit ceiling, see what the block I/O tests
+report in iostat - you're getting ~230MB/s for write and 350MB/s for read, so
+if iostat is has a bug then you'll see it there.
+
+> Also of interest would be why the random seeks are so bad.
+
+Try creating more than 16 files for youre create/read/delete so
+that the runtime is somewhat greater than the timer resolution....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
