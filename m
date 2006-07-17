@@ -1,46 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 01:44:16 -0700 (PDT)
-Received: from e450.epcc.ed.ac.uk (e450.epcc.ed.ac.uk [129.215.56.230])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6J8hUDW028947
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 01:43:33 -0700
-Date: Wed, 19 Jul 2006 08:37:28 +0100
-From: Andrew Elwell <andrewe@epcc.ed.ac.uk>
-Subject: Re: oops with CentOS 4.3 / xfs / nfsd
-Message-ID: <20060719073728.GA14530@garnet.epcc.ed.ac.uk>
-References: <1153214961.6793.15.camel@x41ade> <20060719083014.B1935136@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060719083014.B1935136@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 03:36:30 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6HAa2DW020958
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 03:36:14 -0700
+Message-ID: <44BB592E.1040400@melbourne.sgi.com>
+Date: Mon, 17 Jul 2006 19:32:30 +1000
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
+MIME-Version: 1.0
+Subject: Re: file system defragmentation
+References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <43128F82.4010004@tlinx.org> <4312913F.6040205@coremetrics.com> <43311567.3060208@tlinx.org> <5356806.post@talk.nabble.com>
+In-Reply-To: <5356806.post@talk.nabble.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com, maciej@epcc.ed.ac.uk
+To: Cosmo Nova <cs_mcc98@hotmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-> This is very likely to be due to the way older versions of XFS
-> managed incore inode extent lists.  So, you've likely got a very
-> fragmented file/files here, and XFS used to require large amounts
-> of contiguous memory to deal with that. 
 
-More than likely - the filesystem is exported to our Blue Gene rack
-so gets hammered by parallel IO constantly. Oh, and the server also
-exports a chunk of SATA raid out (3ware controller) as pvfs2...
 
-I guess our priority should be to try and "source" some more memory
-than the 512M we have in at the moment. 
+Cosmo Nova wrote:
+> Hi, you mentioned delayed allocation. What is the size of the buffer holding
+> the data, before they're actually written to disk? How can it tackle growing
+> files?
 
-> Your options are to take
-> steps to combat inode extent fragmentation (like fsr), or use a
-> more recent kernel (2.6.17+ IIRC).
+I'll leave the details for Nathan/Dave...
 
-OK - we were trying to stay reasonably simple by using vendor kernels but I guess it's time for a quick "make menuconfig"
+> 
+> If I have a DVR system of 16 channels. They keep writing data to the disk in
+> pieces of video files. I read some spec of xfs. Apart from extend-based
+> allocation, there're allocaiton groups in xfs. I would like to ask, does
+> XFS's allocation groups work similar as JFS's, which would lock an
+> allocation group for individual file write? How does the allocation group in
+> XFS work? And how would it help the fragmentation problem?
+> 
 
-Ta
+Locking down an allocation group is part of what a new "filestream"
+mount option will provide. This feature is already in use at a
+number of IRIX sites with media apps (mainly in conjunction with CXFS
+since you have more writers in a clustered filesystem and more need to
+lock down contiguous space), and is coming to Linux XFS soon.
 
-Andrew
+The best way to tackle fragementation with streaming data is to
+preallocate space for the files. This allows the allocator to
+try to find the space you require using as large contiguous chunks
+as it can find. See xfsctl(3).
+
+David
 
 -- 
-Andrew Elwell, System Administrator EPCC
-Tel 0131 445 7833 (ACF Building)
-Tel 0131 650 5023 (Rm 3309, JCMB)
+David Chatterton                   Phone: +61 3 9963 1934
+XFS Engineering Manager            Mobile: +61 409 154 121
+SGI Australia          http://www.sgi.com/products/storage
