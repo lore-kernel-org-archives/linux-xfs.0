@@ -1,58 +1,115 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 19:23:31 -0700 (PDT)
-Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6J2NADW007736
-	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 19:23:10 -0700
-Subject: Re: stable xfs
-From: Ming Zhang <mingz@ele.uri.edu>
-Reply-To: mingz@ele.uri.edu
-In-Reply-To: <20060719095400.A1936041@wobbly.melbourne.sgi.com>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-	 <20060719095400.A1936041@wobbly.melbourne.sgi.com>
-Content-Type: text/plain
-Date: Tue, 18 Jul 2006 21:15:53 -0400
-Message-Id: <1153271753.2669.276.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 03:07:43 -0700 (PDT)
+Received: from rproxy.teamix.net (team.teamix.net [194.150.191.72])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6HA7FDW017712
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 03:07:28 -0700
+Received: from mango.of.teamix.net (unknown [172.21.123.1])
+	(using TLSv1 with cipher EXP1024-RC4-SHA (56/128 bits))
+	(No client certificate requested)
+	by rproxy.teamix.net (Postfix) with ESMTP id AD04447E2B
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 09:05:48 +0000 (UTC)
+From: Martin Steigerwald <ms@teamix.de>
+Subject: Unfixable XFS defect - fatal error -- can't read block 16777216
+Date: Mon, 17 Jul 2006 11:05:46 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200607171105.46445.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-thanks a lot for this detail explanation!
 
-i will check both 2.6.17 -stable release and sles kernel. unfortunately,
-i only play with RHEL so far.
+Hello,
 
-Ming
+today I got a "E: Bus error" on my workstation and KDE went down as well as no 
+files were accessible anymore. Like trying to run "bash" gives "Input/Output 
+error". I have no idea what this was, why it happened and found no mention of 
+it in the syslog.
 
-On Wed, 2006-07-19 at 09:54 +1000, Nathan Scott wrote:
-> On Mon, Jul 17, 2006 at 11:30:23AM -0400, Ming Zhang wrote:
-> > Hi All
-> > 
-> > We want to use XFS in all of our production servers but feel a little
-> > scary about the corruption problems seen in this list. I wonder which
-> > 2.6.16+ kernel we can use in order to get a stable XFS? Thanks!
-> 
-> Use the latest 2.6.17 -stable release, or a vendor kernel (SLES is
-> particularly good with XFS, as SGI works closely with SUSE).
-> 
-> The current batch of corruption reports is due to one unfortunate
-> bug that has slipped through our QA testing net, which happily is
-> a fairly rare occurence (it was a very subtle bug).
-> 
-> XFS also tends to get a bad rap (IMO) from the way it reports on-disk
-> corruption and I/O errors in critical data structures, which is quite
-> different to many other filesystems - it dumps a stack trace into the
-> system log (alot of people mistake that for a panic) and "shuts down"
-> the filesystem, with subsequent accesses returning errors until the
-> problem is resolved.
-> 
-> > ps, one friend mentioned that XFS has some issue with LVM+MD under it.
-> > Is this true?
-> 
-> No.
-> 
-> cheers.
-> 
+I booted into Knoppix 5 and did an XFS check on the partition just to make 
+sure it is okay. Well the root partition has some problems:
+
+root@1[~]# xfs_check /dev/sda6
+agi unlinked bucket 1 is 100033 in ag 0 (inode=100033)
+[... some more of these ...]
+bad free block nused 3 should be 8 for dir ino 58973313 block 16777216
+[... I thought things like this shouldn't happen anymore)
+missing free index for data block 0 in dir ino 100884318
+missing free index for data block 1 in dir ino 100884318
+missing free index for data block 2 in dir ino 100884318
+missing free index for data block 3 in dir ino 100884318
+missing free index for data block 4 in dir ino 100884318
+missing free index for data block 5 in dir ino 100884318
+missing free index for data block 6 in dir ino 100884318
+missing free index for data block 7 in dir ino 100884318
+missing free index for data block 8 in dir ino 100884318
+missing free index for data block 9 in dir ino 100884318
+missing free index for data block 10 in dir ino 100884318
+missing free index for data block 11 in dir ino 100884318
+missing free index for data block 12 in dir ino 100884318
+missing free index for data block 13 in dir ino 100884318
+missing free index for data block 14 in dir ino 100884318
+missing free index for data block 32 in dir ino 100884318
+agi unlinked bucket 2 is 964930 in ag 13 (inode=110016834)
+allocated inode 207228 has 0 link count
+[... some more of these ...]
+
+Does not seem to be a big problem, but xfs_repair cannot repair it:
+
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - ensuring existence of lost+found directory
+        - traversing filesystem starting at / ...
+
+fatal error -- can't read block 16777216 for directory inode 100884318
+
+
+I darkly recall having read about this problem here before, but I do not find 
+the relevant mail anymore. Can anyone give me a pointer on where to look?
+
+I am using kernel:
+
+mango:~# uname -a
+Linux mango 2.6.17.3-workstation-sws2-2.2.6-xfs-fix #1 PREEMPT Thu Jul 6 
+12:50:38 CEST 2006 i686 GNU/Linux
+
+which has the fix from
+http://bugzilla.kernel.org/show_bug.cgi?id=6757
+
+on a Dell Dimension 5100 with SATA controller:
+
+mango:/home_lokal/ms# lspci
+0000:00:00.0 Host bridge: Intel Corporation 945G/P Memory Controller Hub (rev 
+02)
+0000:00:01.0 PCI bridge: Intel Corporation 945G/P PCI Express Graphics Port 
+(rev 02)
+0000:00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High 
+Definition Audio Controller (rev 01)
+0000:00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express 
+Port 1 (rev 01)
+0000:00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI 
+#1 (rev 01)
+[... some more of these ...]
+0000:00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev e1)
+0000:00:1f.0 ISA bridge: Intel Corporation 82801GB/GR (ICH7 Family) LPC 
+Interface Bridge (rev 01)
+0000:00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE 
+Controller (rev 01)
+0000:00:1f.2 IDE interface: Intel Corporation 82801GB/GR/GH (ICH7 Family) 
+Serial ATA Storage Controllers cc=IDE (rev 01)
+0000:00:1f.3 SMBus: Intel Corporation 82801G (ICH7 Family) SMBus Controller 
+(rev 01)
+0000:01:00.0 VGA compatible controller: ATI Technologies Inc RV370 5B60 
+[Radeon X300 (PCIE)]
+0000:01:00.1 Display controller: ATI Technologies Inc RV370 [Radeon X300SE]
+0000:03:08.0 Ethernet controller: Intel Corporation 82801G (ICH7 Family) LAN 
+Controller (rev 01)
+
+Regards,
+-- 
+Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
+gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
