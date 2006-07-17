@@ -1,78 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Jul 2006 03:26:08 -0700 (PDT)
-Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [210.143.35.51])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6EAPjDW021156
-	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 03:25:47 -0700
-Subject: Re: [PATCH] xfs: i_state of inode is changed after the inode is freed
-In-reply-to: <20060710103740.B1674239@wobbly.melbourne.sgi.com>
-Message-Id: <20060714192520m-saito@mail.aom.tnes.nec.co.jp>
-References: <20060710103740.B1674239@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-From: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Date: Fri, 14 Jul 2006 19:25:20 +0900
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 12:09:03 -0700 (PDT)
+Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6HJ8oDW023164
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 12:08:50 -0700
+Date: Mon, 17 Jul 2006 12:08:27 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: file system defragmentation
+Message-ID: <20060717190827.GA7845@tuatara.stupidest.org>
+References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <43128F82.4010004@tlinx.org> <4312913F.6040205@coremetrics.com> <43311567.3060208@tlinx.org> <5356806.post@talk.nabble.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <5356806.post@talk.nabble.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Cosmo Nova <cs_mcc98@hotmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-Hi, Nathan.
+On Mon, Jul 17, 2006 at 12:36:09AM -0700, Cosmo Nova wrote:
 
->I'll leave it to Dave to comment more later (he's travelling at the
->moment), since he's had his head deep in this area of the code most
->recently - but my first thoughts on your patch are that its solving
->the problem incorrectly.  We should not be in the destroy_inode code
->if the inode reference counting is correct everywhere - I would have
->expected the fix to be a get/put style change, rather than adding an
->inode lock and new lock/unlock semantics around an individual field;
->... and if that cannot be done to fix this (eh?), then some comments
->as to why refcounting didn't solve the problem here.
+> If I have a DVR system of 16 channels. They keep writing data to the
+> disk in pieces of video files.
 
-On the basis of the above, I consider the get/put style fix which use
-i_count.
+I did some work for someone who does a similar thing (they write 96
+channels in parallel and have to be able to do read back up to 32 of
+them at the same time of something).
 
-This problem is that i_state of the inode is changed while the inode
-is freed in xfs filesystem.  And the cause is that the inode release
-and xfs_iunpun() can run in parallel.
+By default concurrent writes into the same directory will cause the
+files to get badly interleaved, and trying to get one file per-ag
+doesn't work so well if the agcount < n-files.
 
-To fix this problem, I added a pair of igrab()/iput() before and behind
-mark_inode_dirty_sync() at xfs_iunpin().  I think this can change it as
-follows.
-
-(1)The case that the inode release transaction runs after xfs_iunpin()
-is called.
-While mark_inode_dirty_sync() is running, igrab() promises that the
-inode is alive.
-
-(2)The case that xfs_iunpin() is called after iput() in the inode
-release transaction is called(i_count is 0).
-mark_inode_dirty_sync() is not called because the igrab() can not get
-the inode.
-
-I have made the following patch, but it is not yet tested.
-I would like to hear your comment, first.
-
-Signed-off-by: Masayuki Saito <m-saito@tnes.nec.co.jp>
----
-
---- linux-2.6.17.4/fs/xfs/xfs_inode.c.orig	2006-07-14 09:44:44.187844139 +0900
-+++ linux-2.6.17.4/fs/xfs/xfs_inode.c	2006-07-14 09:58:26.398486290 +0900
-@@ -2751,8 +2751,14 @@ xfs_iunpin(
- 			if (vp) {
- 				struct inode	*inode = vn_to_inode(vp);
- 
--				if (!(inode->i_state & I_NEW))
--					mark_inode_dirty_sync(inode);
-+				if (!(inode->i_state & 
-+						(I_NEW|I_FREEING|I_CLEAR))) {
-+					inode = igrab(inode);
-+					if (inode != NULL) {
-+						mark_inode_dirty_sync(inode);
-+						iput(inode);
-+					}
-+				}
- 			}
- 		}
- 		wake_up(&ip->i_ipin_wait);
+I ended up getting them to change their code to preallocate and AFAIK
+it works very well now (you can throw away any space you over allocate
+when you're closing the file too).
