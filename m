@@ -1,47 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 02:04:22 -0700 (PDT)
-Received: from rproxy.teamix.net (team.teamix.net [194.150.191.72])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6J93uDW031519
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 02:03:58 -0700
-From: Martin Steigerwald <ms@teamix.de>
-Subject: Re: stable xfs
-Date: Wed, 19 Jul 2006 09:40:05 +0200
-References: <1153150223.4532.24.camel@localhost.localdomain> <20060719095400.A1936041@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060719095400.A1936041@wobbly.melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607190940.05596.ms@teamix.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 03:41:48 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6HAfHDW021644
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 03:41:29 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id UAA05087 for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 20:40:45 +1000
+Subject: TAKE 954580 - cleanups
+Message-Id: <20060717104044.E87C958C4C01@chook.melbourne.sgi.com>
+Date: Mon, 17 Jul 2006 20:40:44 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Ming Zhang <mingz@ele.uri.edu>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Am Mittwoch, 19. Juli 2006 01:54 schrieb Nathan Scott:
-> On Mon, Jul 17, 2006 at 11:30:23AM -0400, Ming Zhang wrote:
-> > Hi All
-> >
-> > We want to use XFS in all of our production servers but feel a little
-> > scary about the corruption problems seen in this list. I wonder which
-> > 2.6.16+ kernel we can use in order to get a stable XFS? Thanks!
->
-> Use the latest 2.6.17 -stable release, or a vendor kernel (SLES is
-> particularly good with XFS, as SGI works closely with SUSE).
+use NULL for pointer initialisation instead of zero-cast-to-ptr
 
-Hello Nathan,
 
-as far as I can see the fix for kernel bug #6757 has not yet made it in a 
-stable kernel release upto 2.6.17.6 and thus should manually be applied:
+Date:  Mon Jul 17 20:31:23 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  sjv
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6757
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
 
-It probably doesn't happen for lots of people but I would still apply that 
-patch unless it is finally put into a stable point release.
 
-Regards,
--- 
-Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
-gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
+Modid:  xfs-linux-melb:xfs-kern:26562a
+xfs_ialloc.c - 1.191 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.191&r2=text&tr2=1.190&f=h
+xfs_ialloc_btree.c - 1.86 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.86&r2=text&tr2=1.85&f=h
+xfs_bmap_btree.c - 1.157 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.157&r2=text&tr2=1.156&f=h
+xfs_alloc_btree.c - 1.89 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.89&r2=text&tr2=1.88&f=h
+
+
+remove bhv_lookup, _range version works aswell and has more useful semantics.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+
+Date:  Mon Jul 17 20:34:49 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  hch
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26563a
+xfs_mount.h - 1.226 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.226&r2=text&tr2=1.225&f=h
+xfs_behavior.c - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_behavior.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+xfs_behavior.h - 1.23 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_behavior.h.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
+linux-2.6/xfs_vnode.h - 1.125 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.125&r2=text&tr2=1.124&f=h
+linux-2.4/xfs_vnode.h - 1.113 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.h.diff?r1=text&tr1=1.113&r2=text&tr2=1.112&f=h
+linux-2.6/xfs_ksyms.c - 1.50 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
+linux-2.4/xfs_ksyms.c - 1.45 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ksyms.c.diff?r1=text&tr1=1.45&r2=text&tr2=1.44&f=h
+dmapi/xfs_dm.c - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+	- remove bhv_lookup, _range version works aswell and has more useful semantics.
+
+
+remove accidentally reintroduced vfs unmount flag, unneeded in current kernels
+
+
+Date:  Mon Jul 17 20:40:14 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  hch
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26564a
+linux-2.6/xfs_vfs.h - 1.65 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vfs.h.diff?r1=text&tr1=1.65&r2=text&tr2=1.64&f=h
