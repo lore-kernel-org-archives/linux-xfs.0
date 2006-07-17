@@ -1,50 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Jul 2006 09:05:26 -0700 (PDT)
-Received: from nwkea-mail-5.sun.com (nwkea-mail-5.sun.com [192.18.42.27])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6EG5BDW009339
-	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 09:05:11 -0700
-Received: from centralmail3brm.Central.Sun.COM ([129.147.62.199])
-	by nwkea-mail-5.sun.com (8.13.6+Sun/8.12.9) with ESMTP id k6EG4oAV009000
-	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 09:04:50 -0700 (PDT)
-Received: from kickball-mn.Central.Sun.COM (kickball-mn.Central.Sun.COM [10.1.170.217])
-	by centralmail3brm.Central.Sun.COM (8.13.6+Sun/8.13.6/ENSMAIL,v2.2) with ESMTP id k6EG23n6022722
-	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 10:02:03 -0600 (MDT)
-Received: from kickball-mn.Central.Sun.COM (localhost [127.0.0.1])
-	by kickball-mn.Central.Sun.COM (8.13.4+Sun/8.13.3) with ESMTP id k6EG4otA007234
-	for <xfs@oss.sgi.com>; Fri, 14 Jul 2006 11:04:50 -0500 (CDT)
-Received: (from roehrich@localhost)
-	by kickball-mn.Central.Sun.COM (8.13.4+Sun/8.13.3/Submit) id k6EG4oKZ007233
-	for xfs@oss.sgi.com; Fri, 14 Jul 2006 11:04:50 -0500 (CDT)
-Date: Fri, 14 Jul 2006 11:04:49 -0500
-From: Dean Roehrich <dean.roehrich@sun.com>
-Subject: Re: Re: Re: Delivered state of DMAPI Event
-Message-ID: <20060714160449.GA7207@kickball-mn.Central.Sun.COM>
-References: <bc5727090607132007w7e884c3cr3339eaf745ea5207@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 06:21:03 -0700 (PDT)
+Received: from rproxy.teamix.net (team.teamix.net [194.150.191.72])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6HDKmDW011776
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 06:20:48 -0700
+Received: from mango.of.teamix.net (unknown [172.21.123.1])
+	(using TLSv1 with cipher EXP1024-RC4-SHA (56/128 bits))
+	(No client certificate requested)
+	by rproxy.teamix.net (Postfix) with ESMTP id E0A7C47E0B
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 13:20:27 +0000 (UTC)
+From: Martin Steigerwald <ms@teamix.de>
+Subject: Re: Unfixable XFS defect - fatal error -- can't read block 16777216
+Date: Mon, 17 Jul 2006 15:20:24 +0200
+References: <200607171105.46445.ms@teamix.de>
+In-Reply-To: <200607171105.46445.ms@teamix.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <bc5727090607132007w7e884c3cr3339eaf745ea5207@mail.gmail.com>
+Message-Id: <200607171520.25067.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Fri, Jul 14, 2006 at 11:07:40AM +0800, Michael Li (Gmail) wrote:
+Am Montag, 17. Juli 2006 11:05 schrieben Sie:
 
-> Or: No matther the event is outstanding or not, if it is read event and
-> DMAPI enabled, it will cause a read process hang although the event will not
-> be in delivered state(outstanding state)?
+> I darkly recall having read about this problem here before, but I do not
+> find the relevant mail anymore. Can anyone give me a pointer on where to
+> look?
 
-The state (new or delivered) doesn't matter.  The file had a dmapi event set
-for that action so the filesystem deferred the thread to dmapi.  That thread
-is now in the DMAPI module and, ultimately, the only mechanism to release it
-from DMAPI and allow it to return to the filesystem is a call to
-dm_respond_event.
+Hello,
 
-You don't have a usable filesystem if there's no DM app responding to events.
-You need to think in terms of making that app robust and keeping it running.
-The people writing that DM app also need to be aware that through DMAPI their
-app becomes a part of the filesystem's I/O path and they need to think
-appropriately, given that context.
+I found it:
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=631
 
-Dean
+Mailing list thread:
+XFS crashed twice, once in 2.6.16.20, next in 2.6.17, reproducable
+
+I read that using xfs_repair 2.7.18  might help. I didnt found this in the ftp 
+area thus I compiled xfsprogs 2.8.4 under Knoppix 5 and tried with that. 
+Unfortunately it isn't able to fix the defect. It shows the same error 
+message as the older xfs_repair in Knoppix 5.
+
+The partition in question is 20 gigs. I can create a backup of it, but only 
+with partimage which can compress, as I have no 20gig in one place free on 
+that harddisk. Tell me when you are interested.
+
+I like to know how I can fix this in place however - the manual way of fixing 
+it which is described in the mailing list thread I mentioned above did not 
+work according to what I read there.
+
+If nothing else helps I will replay a backup.
+
+Regards,
+-- 
+Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
+gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
