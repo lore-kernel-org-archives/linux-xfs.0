@@ -1,50 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 16:55:29 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6INslDW025447
-	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 16:55:01 -0700
-Date: Wed, 19 Jul 2006 09:54:00 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: stable xfs
-Message-ID: <20060719095400.A1936041@wobbly.melbourne.sgi.com>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 01:36:29 -0700 (PDT)
+Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6H8aJDW008544
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 01:36:19 -0700
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1G2NeD-0005Eb-9j
+	for linux-xfs@oss.sgi.com; Mon, 17 Jul 2006 00:36:09 -0700
+Message-ID: <5356806.post@talk.nabble.com>
+Date: Mon, 17 Jul 2006 00:36:09 -0700 (PDT)
+From: Cosmo Nova <cs_mcc98@hotmail.com>
+Subject: Re: file system defragmentation
+In-Reply-To: <43311567.3060208@tlinx.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1153150223.4532.24.camel@localhost.localdomain>; from mingz@ele.uri.edu on Mon, Jul 17, 2006 at 11:30:23AM -0400
+Content-Transfer-Encoding: 7bit
+References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <43128F82.4010004@tlinx.org> <4312913F.6040205@coremetrics.com> <43311567.3060208@tlinx.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ming Zhang <mingz@ele.uri.edu>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Jul 17, 2006 at 11:30:23AM -0400, Ming Zhang wrote:
-> Hi All
-> 
-> We want to use XFS in all of our production servers but feel a little
-> scary about the corruption problems seen in this list. I wonder which
-> 2.6.16+ kernel we can use in order to get a stable XFS? Thanks!
 
-Use the latest 2.6.17 -stable release, or a vendor kernel (SLES is
-particularly good with XFS, as SGI works closely with SUSE).
+Hi, you mentioned delayed allocation. What is the size of the buffer holding
+the data, before they're actually written to disk? How can it tackle growing
+files?
 
-The current batch of corruption reports is due to one unfortunate
-bug that has slipped through our QA testing net, which happily is
-a fairly rare occurence (it was a very subtle bug).
+If I have a DVR system of 16 channels. They keep writing data to the disk in
+pieces of video files. I read some spec of xfs. Apart from extend-based
+allocation, there're allocaiton groups in xfs. I would like to ask, does
+XFS's allocation groups work similar as JFS's, which would lock an
+allocation group for individual file write? How does the allocation group in
+XFS work? And how would it help the fragmentation problem?
 
-XFS also tends to get a bad rap (IMO) from the way it reports on-disk
-corruption and I/O errors in critical data structures, which is quite
-different to many other filesystems - it dumps a stack trace into the
-system log (alot of people mistake that for a panic) and "shuts down"
-the filesystem, with subsequent accesses returning errors until the
-problem is resolved.
-
-> ps, one friend mentioned that XFS has some issue with LVM+MD under it.
-> Is this true?
-
-No.
-
-cheers.
-
+Thankyou!
 -- 
-Nathan
+View this message in context: http://www.nabble.com/file-system-defragmentation-tf255485.html#a5356806
+Sent from the Xfs - General forum at Nabble.com.
