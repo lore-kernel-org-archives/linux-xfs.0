@@ -1,41 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 15:36:54 -0700 (PDT)
-Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6IMacDW012775
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 15:36:39 -0700
-Subject: Re: stable xfs
-From: Ming Zhang <mingz@ele.uri.edu>
-Reply-To: mingz@ele.uri.edu
-In-Reply-To: <17595.47312.720883.451573@base.ty.sabi.co.UK>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-	 <17595.47312.720883.451573@base.ty.sabi.co.UK>
-Content-Type: text/plain
-Date: Tue, 18 Jul 2006 18:36:06 -0400
-Message-Id: <1153262166.2669.267.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Jul 2006 17:44:41 -0700 (PDT)
+Received: from smtp114.sbc.mail.mud.yahoo.com (smtp114.sbc.mail.mud.yahoo.com [68.142.198.213])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6H0iHDW019901
+	for <linux-xfs@oss.sgi.com>; Sun, 16 Jul 2006 17:44:23 -0700
+Date: Sun, 16 Jul 2006 17:43:54 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: XFS and write barrier
+Message-ID: <20060717004354.GA27193@tuatara.stupidest.org>
+References: <200607151248.56603.Martin@lichtvoll.de> <20060715192857.GA11034@tuatara.stupidest.org> <200607161153.40130.Martin@lichtvoll.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <200607161153.40130.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>
-Cc: Linux XFS <linux-xfs@oss.sgi.com>
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com
 
-Thanks for your response.
+On Sun, Jul 16, 2006 at 11:53:39AM +0200, Martin Steigerwald wrote:
 
-But could you give me an example on what is an improper use?
+> yes, but for 2.6.17 which was still in development. The stable
+> release of it appeared kernel.org on 18-Jun-2006 02:10 according to
+> the date in the file listing there!
 
-Ming
+well, i guess it depends how you look at it
 
-On Mon, 2006-07-17 at 17:20 +0100, Peter Grandi wrote:
-> >>> On Mon, 17 Jul 2006 11:30:23 -0400, Ming Zhang
-> >>> <mingz@ele.uri.edu> said:
-> 
-> mingz> Hi All We want to use XFS in all of our production
-> mingz> servers but feel a little scary about the corruption
-> mingz> problems seen in this list. [ ... ]
-> 
-> XFS is complex but quite stable code. Most of the reports about
-> ''corruption'' are consequences of not being aware of what it
-> was designed for, how it works and how it should be used...
-> 
-> 
+> What I would like to know whether its safe to use write barriers
+> with 2.6.16 or even 2.6.15 (if it is possible at all) as well (I
+> guess there are not many distributions that shipd with 2.6.17
+> already) or whether one might face those "intermittent IO errors" -
+> whatever they are - when using them.
+
+some people (myself included) saw problems when write barriers were
+enabled, but that was quite some time ago and it wasn't clear if this
+was really an xfs, a write-barrier or some other coincidental problem
+at the time
+
+the problems never cause any significant on-disk damage (perhaps none
+at all, i don't recall the details other than it would crash often
+during large rsync jobs until i disabled it)
+
+write barrier support appear november last year, so a lot has changed
+since then
+
+fwiw, w/o write barries if your disks have write caching enabled (most
+will, they are horribly slow and worse some die without it) then you
+can trivially create corrupted volumes (do something like cp -Rl src
+dst and drop power or yank a hot-plug drive)
+
+> If I do not find anything more on this I will recommend 2.6.17 for
+> XFS with write barrier usages as I am pretty much convinced that it
+> works stable from my own experience. (See my other post.)
+
+you probably want 2.6.17.5+ as that has a fix for a very hard to hit
+bug (that seemingly a few people may have hit)
