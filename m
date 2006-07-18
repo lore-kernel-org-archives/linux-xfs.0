@@ -1,45 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Jul 2006 08:24:11 -0700 (PDT)
-Received: from amanpulo.hosting.qsr.com.ph (amanpulo.hosting.qsr.com.ph [64.34.170.22])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6EFO0DW004209
-	for <linux-xfs@oss.sgi.com>; Fri, 14 Jul 2006 08:24:00 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id EB7DBC07D9D7
-	for <linux-xfs@oss.sgi.com>; Fri, 14 Jul 2006 21:54:52 +0800 (PHT)
-Received: from musang.free.net.ph (gusi.leathercollection.ph [202.163.192.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id A2AA2C0001FF
-	for <linux-xfs@oss.sgi.com>; Fri, 14 Jul 2006 21:54:48 +0800 (PHT)
-Date: Fri, 14 Jul 2006 21:54:44 +0800
-From: Federico Sevilla III <jijo@free.net.ph>
-Subject: Request Barriers and Software RAID
-Message-ID: <20060714135444.GB3307@free.net.ph>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 04:37:08 -0700 (PDT)
+Received: from chaos.egr.duke.edu (chaos.egr.duke.edu [152.3.195.82])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6IBarDW010742
+	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 04:36:56 -0700
+Date: Tue, 18 Jul 2006 07:36:21 -0400 (EDT)
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: oops with CentOS 4.3 / xfs / nfsd
+In-Reply-To: <1153214961.6793.15.camel@x41ade>
+Message-ID: <Pine.LNX.4.62.0607180735040.4795@chaos.egr.duke.edu>
+References: <1153214961.6793.15.camel@x41ade>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS Mailing List <linux-xfs@oss.sgi.com>
+To: Andrew Elwell <andrewe@epcc.ed.ac.uk>
+Cc: linux-xfs@oss.sgi.com, maciej@epcc.ed.ac.uk
 
-Hi,
+On Tue, 18 Jul 2006 at 10:29am, Andrew Elwell wrote
 
-I just upgraded to 2.6.17.4, and with request barriers in XFS enabled by
-default, am now discovering that request barriers do not work with my
-software RAID 1 configuration. Would anyone know if there's a way of
-safely allowing software RAID 1 together with XFS to support request
-barriers, so that I can safely enable write caching in my underlying IDE
-drives to squeeze out a little bit of additional performance?
+> using the 2.6.9-34 centosplus SMP kernel (3GHz P4 with hyperthreading
+> enabled)
+>
+> what we normally (~once a day) is simply
+>
+> do_IRQ: stack overflow: 416
+> [<c0107a27>]
 
-Thank you very much.
+You don't want to use the XFS in the centosplus kernel.  It has major 
+known issues with 4K stacks (leading to overflows).  Use the 
+kernel-module-xfs (or somesuch) RPM instead, and you should have better 
+luck.
 
-Cheers!
-
- --> Jijo
+Or move to x86_64... ;)
 
 -- 
-Federico Vicente C. Sevilla III
-Information Technology Consultant
-Q Software Research Corporation
-Website: http://jijo.free.net.ph
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
