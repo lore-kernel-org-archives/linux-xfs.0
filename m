@@ -1,48 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 15 Jul 2006 03:08:43 -0700 (PDT)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6FA8RDW014664
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Jul 2006 03:08:28 -0700
-Received: from [82.41.152.154] (helo=vaio.housecafe.de)
-	by mail.g-house.de with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
-	(Exim 4.50)
-	id 1G1h4G-0008Sw-KR
-	for linux-xfs@oss.sgi.com; Sat, 15 Jul 2006 12:08:12 +0200
-Date: Sat, 15 Jul 2006 11:07:54 +0100 (BST)
-From: christian <evilninja@gmx.net>
-Subject: Re: 2.6.18-rc1: XFS internal error
-In-Reply-To: <Pine.NEB.4.64.0607142100580.4054@vaio.testbed.de>
-Message-ID: <Pine.NEB.4.64.0607151103400.4054@vaio.testbed.de>
-References: <Pine.NEB.4.64.0607142100580.4054@vaio.testbed.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 04:07:34 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6IB4vDW002649
+	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 04:07:13 -0700
+Message-ID: <44BCC01F.2020802@melbourne.sgi.com>
+Date: Tue, 18 Jul 2006 21:03:59 +1000
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: oops with CentOS 4.3 / xfs / nfsd
+References: <1153214961.6793.15.camel@x41ade>
+In-Reply-To: <1153214961.6793.15.camel@x41ade>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Andrew Elwell <andrewe@epcc.ed.ac.uk>
+Cc: linux-xfs@oss.sgi.com, maciej@epcc.ed.ac.uk
 
-On Fri, 14 Jul 2006, christian wrote:
-> today one of my xfs partitions has been shutdown with the folowing errors:
->
-> Filesystem "md0": XFS internal error xfs_da_do_buf(1) at line 1992 of file 
-> fs/xfs/xfs_da_btree.c.  Caller 0xc02172f0
-> Filesystem "md0": XFS internal error xfs_trans_cancel at line 1138 of file 
-> fs/xfs/xfs_trans.c.  Caller 0xc024b7c7
+Andrew,
 
-well, it just happened again at approx. the same time when the backups 
-are made and rsnapshot/rsync is hammering the fs:
+I may be completely wrong, but the error message suggests to me that you
+are exceeding the 4KB stack.
 
-Jul 14 07:09:33 sheep kernel: Filesystem "md0": XFS internal error xfs_da_do_buf(1) at line 1992 of file fs/xfs/xfs_da_btree.c.  Caller 0xc02172f0
-Jul 14 07:09:33 sheep kernel: Filesystem "md0": XFS internal error xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c.  Caller 0xc024b7c7
-Jul 15 07:06:14 sheep kernel: Filesystem "md0": XFS internal error xfs_da_do_buf(1) at line 1992 of file fs/xfs/xfs_da_btree.c.  Caller 0xc02172f0
-Jul 15 07:06:14 sheep kernel: Filesystem "md0": XFS internal error xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c.  Caller 0xc024b7c7
+If you can see an archive of this list, also see Nathan's reply to
+"Bad page state in process 'nfsd' with xfs", but i'm not sure which
+2.6 kernel he is referring to where our stack usage was reduced.
 
-I'll downgrade to 2.6.17.4 now, please tell me it'll go away with 
-2.6.18-final ;)
+David
 
-thanks,
-Christian.
--- 
-BOFH excuse #418:
 
-Sysadmins busy fighting SPAM.
+Andrew Elwell wrote:
+> Hi Folks,
+> 
+> We've migrated some of our storage servers to CentOS 4.3 and are seeing
+> lockups. It *could* be hardware I know, and I'm scheduling downtime to
+> run memtest86+ ASAP.
+> 
+> Overview:
+> 2* LPFC HBA's connecting to our SAN, 
+> dm setup for multipath to see 4*1.6TB trays
+> each tray as a PV in lvm2 sanvg
+> xfs on a 3T lv
+> NFS exported out as /export/work 
+> 
+> using the 2.6.9-34 centosplus SMP kernel (3GHz P4 with hyperthreading
+> enabled)
+> 
+> what we normally (~once a day) is simply
+> 
+> do_IRQ: stack overflow: 416
+>  [<c0107a27>]
+> 
+> on the console and nothing else. (needs a cold reboot)
+> 
+> Having installed netdump (nice tool btw) we got a different error
+> yesterday that looks xfs / nfsd related...
+> 
+> (attached)
+> 
+> any help in progressing this would be much appreciated - 
+> 
+> Andrew
+> 
