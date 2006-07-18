@@ -1,57 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Jul 2006 17:44:41 -0700 (PDT)
-Received: from smtp114.sbc.mail.mud.yahoo.com (smtp114.sbc.mail.mud.yahoo.com [68.142.198.213])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6H0iHDW019901
-	for <linux-xfs@oss.sgi.com>; Sun, 16 Jul 2006 17:44:23 -0700
-Date: Sun, 16 Jul 2006 17:43:54 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: XFS and write barrier
-Message-ID: <20060717004354.GA27193@tuatara.stupidest.org>
-References: <200607151248.56603.Martin@lichtvoll.de> <20060715192857.GA11034@tuatara.stupidest.org> <200607161153.40130.Martin@lichtvoll.de>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 15:59:02 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6IMwJDW014951
+	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 15:58:31 -0700
+Date: Wed, 19 Jul 2006 08:57:31 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: XFS breakage in 2.6.18-rc1
+Message-ID: <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+References: <20060718222941.GA3801@stargate.galaxy>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <200607161153.40130.Martin@lichtvoll.de>
+In-Reply-To: <20060718222941.GA3801@stargate.galaxy>; from torsten@debian.org on Wed, Jul 19, 2006 at 12:29:41AM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com
+To: Torsten Landschoff <torsten@debian.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Jul 16, 2006 at 11:53:39AM +0200, Martin Steigerwald wrote:
+On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
+> Hi friends, 
 
-> yes, but for 2.6.17 which was still in development. The stable
-> release of it appeared kernel.org on 18-Jun-2006 02:10 according to
-> the date in the file listing there!
+Hi Torsten,
 
-well, i guess it depends how you look at it
+> I upgraded to 2.6.18-rc1 on sunday, with the following results (taken
+> from my /var/log/kern.log), which ultimately led me to reinstall my 
+> system:
+> 
+> Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
+> Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
 
-> What I would like to know whether its safe to use write barriers
-> with 2.6.16 or even 2.6.15 (if it is possible at all) as well (I
-> guess there are not many distributions that shipd with 2.6.17
-> already) or whether one might face those "intermittent IO errors" -
-> whatever they are - when using them.
+I suspect you had some residual directory corruption from using the
+2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
+fixed in the latest -stable point release).
 
-some people (myself included) saw problems when write barriers were
-enabled, but that was quite some time ago and it wasn't clear if this
-was really an xfs, a write-barrier or some other coincidental problem
-at the time
+> of programs fail in mysterious ways. I tried to recover using xfs_repair
+> but I feel that my partition is thorougly borked. Of course no data was 
+> lost due to backups but still I'd like this bug to be fixed ;-)
 
-the problems never cause any significant on-disk damage (perhaps none
-at all, i don't recall the details other than it would crash often
-during large rsync jobs until i disabled it)
+2.6.18-rc1 should be fine (contains the corruption fix).  Did you
+mkfs and restore?  Or at least get a full repair run?  If you did,
+and you still see issues in .18-rc1, please let me know asap.
 
-write barrier support appear november last year, so a lot has changed
-since then
+thanks.
 
-fwiw, w/o write barries if your disks have write caching enabled (most
-will, they are horribly slow and worse some die without it) then you
-can trivially create corrupted volumes (do something like cp -Rl src
-dst and drop power or yank a hot-plug drive)
-
-> If I do not find anything more on this I will recommend 2.6.17 for
-> XFS with write barrier usages as I am pretty much convinced that it
-> works stable from my own experience. (See my other post.)
-
-you probably want 2.6.17.5+ as that has a fix for a very hard to hit
-bug (that seemingly a few people may have hit)
+-- 
+Nathan
