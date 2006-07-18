@@ -1,48 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Jul 2006 10:33:58 -0700 (PDT)
-Received: from amanpulo.hosting.qsr.com.ph (amanpulo.hosting.qsr.com.ph [64.34.170.22])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6GHXMDW015224
-	for <linux-xfs@oss.sgi.com>; Sun, 16 Jul 2006 10:33:22 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id C1F71C06F478
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 01:32:49 +0800 (PHT)
-Received: from musang.free.net.ph (amanpulo.hosting.qsr.com.ph [64.34.170.22])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id 54DE5C0001FD
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 01:32:42 +0800 (PHT)
-Date: Mon, 17 Jul 2006 01:32:38 +0800
-From: Federico Sevilla III <jijo@free.net.ph>
-Subject: Re: XFS and write barrier
-Message-ID: <20060716173238.GD3417@free.net.ph>
-References: <200607151248.56603.Martin@lichtvoll.de>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 15:28:34 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6IMQpDW011252
+	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 15:27:03 -0700
+Date: Wed, 19 Jul 2006 08:24:59 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [patch 01/45] XFS: corruption fix
+Message-ID: <20060719082458.A1935136@wobbly.melbourne.sgi.com>
+References: <20060717160652.408007000@blue.kroah.org> <20060717162518.GB4829@kroah.com> <Pine.LNX.4.61.0607181526320.9156@yvahk01.tjqt.qr>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <200607151248.56603.Martin@lichtvoll.de>
+In-Reply-To: <Pine.LNX.4.61.0607181526320.9156@yvahk01.tjqt.qr>; from jengelh@linux01.gwdg.de on Tue, Jul 18, 2006 at 03:27:37PM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, Mandy Kirkconnell <alkirkco@sgi.com>, Chris Wright <chrisw@sous-sol.org>, xfs@oss.sgi.com
 
-On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
-> I am currently gathering information to write an article about journal
-> filesystems with emphasis on write barrier functionality, how it
-> works, why journalling filesystems need write barrier and the current
-> implementation of write barrier support for different filesystems.
+On Tue, Jul 18, 2006 at 03:27:37PM +0200, Jan Engelhardt wrote:
+> >
+> >Fix nused counter.  It's currently getting set to -1 rather than getting
+> >decremented by 1.  Since nused never reaches 0, the "if (!free->hdr.nused)"
+> >check in xfs_dir2_leafn_remove() fails every time and xfs_dir2_shrink_inode()
+> >doesn't get called when it should.  This causes extra blocks to be left on
+> >an empty directory and the directory in unable to be converted back to
+> >inline extent mode.
+> >
+> Is there a utility to fix such directories or will they autoshrink once the fs
+> is run with a 2.6.17.7?
 
-Cool! Would you by any chance have information on the interaction
-between journal filesystems with write barrier functionality, and
-software RAID (md)? Based on my experience with 2.6.17, XFS detects that
-the underlying software RAID 1 device does not support barriers and
-therefore disables that functionality.
+An xfs_repair is required.  There is a remaining issue with repair
+where it cannot resolve some particular types of directory trashing,
+but for the most part I believe xfs_repair will resolve this (please
+report if not).  We're working on improving the way xfs_repair deals
+with dir2 corruption atm, so this remaining problem (that funky dir2
+offset problem, iow) I expect will shortly be resolved.
 
-Cheers!
-
- --> Jijo
+cheers.
 
 -- 
-Federico Vicente C. Sevilla III
-Information Technology Consultant
-Q Software Research Corporation
-Website: http://jijo.free.net.ph
+Nathan
