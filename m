@@ -1,49 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 16:11:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6JNAUDW010450
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 16:10:44 -0700
-Date: Thu, 20 Jul 2006 09:09:45 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS breakage in 2.6.18-rc1
-Message-ID: <20060720090945.G1947140@wobbly.melbourne.sgi.com>
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <20060719211402.GA1133@stargate.galaxy>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 16:41:56 -0700 (PDT)
+Received: from mx2.suse.de (ns2.suse.de [195.135.220.15])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JNfXDW018737
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 16:41:35 -0700
+From: Neil Brown <neilb@suse.de>
+Date: Wed, 19 Jul 2006 09:41:31 +1000
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060719211402.GA1133@stargate.galaxy>; from torsten@debian.org on Wed, Jul 19, 2006 at 11:14:02PM +0200
+Content-Transfer-Encoding: 7bit
+Message-ID: <17597.29099.110370.121220@cse.unsw.edu.au>
+Subject: Re: XFS and write barrier
+In-Reply-To: message from David Chinner on Wednesday July 19
+References: <200607151248.56603.Martin@lichtvoll.de>
+	<20060716173238.GD3417@free.net.ph>
+	<20060718173122.B1914501@wobbly.melbourne.sgi.com>
+	<17596.41680.124148.595601@cse.unsw.edu.au>
+	<20060718170406.GT15160733@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Torsten Landschoff <torsten@debian.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Nathan Scott <nathans@sgi.com>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 
-On Wed, Jul 19, 2006 at 11:14:02PM +0200, Torsten Landschoff wrote:
-> On Wed, Jul 19, 2006 at 08:57:31AM +1000, Nathan Scott wrote:
-> > I suspect you had some residual directory corruption from using the
-> > 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
-> > fixed in the latest -stable point release).
+On Wednesday July 19, dgc@sgi.com wrote:
+> On Tue, Jul 18, 2006 at 06:58:56PM +1000, Neil Brown wrote:
+> > On Tuesday July 18, nathans@sgi.com wrote:
+> > > On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
+> > > > On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
+> > > > > I am currently gathering information to write an article about journal
+> > > > > filesystems with emphasis on write barrier functionality, how it
+> > > > > works, why journalling filesystems need write barrier and the current
+> > > > > implementation of write barrier support for different filesystems.
+> > 
+> > "Journalling filesystems need write barrier" isn't really accurate.
+> > They can make good use of write barrier if it is supported, and where
+> > it isn't supported, they should use blkdev_issue_flush in combination
+> > with regular submit/wait.
 > 
-> That probably the cause of my problem. Thanks for the info!
+> blkdev_issue_flush() causes a write cache flush - just like a
+> barrier typically causes a write cache flush up to the I/O with the
+> barrier in it.  Both of these mechanisms provide the same thing - an
+> I/O barrier that enforces ordering of I/Os to disk.
 > 
-> BTW: I think there was nothing important on the broken filesystems, but
-> I'd like to keep what's still there anyway just in case... How would you
-> suggest should I copy that data? I fear, just mounting and using cp 
-> might break and shutdown the FS again, would xfsdump be more
-> appropriate?
+> Given that filesystems already indicate to the block layer when they
+> want a barrier, wouldn't it be better to get the block layer to issue
+> this cache flush if the underlying device doesn't support barriers
+> and it receives a barrier request?
 
-Yeah, xfsdumps not a bad idea, the interfaces it uses may well
-be able to avoid the cases that trigger shutdown.  Otherwise it
-is a case of identifying the problem directory inode (the inum
-is reported in the shutdown trace) and avoiding that path when
-cp'ing - you can match inum to path via xfs_ncheck.
+A barrier means a lot more than just a flush.
+It means
+  wait for all proceeding requests to commit
+  flush
+  write this request
+  flush
 
-> Thanks for XFS, I am using it for years in production servers!
+Any block device that uses the io scheduler could probably manage
+this.  Other block devices might not find it so easy.
 
-Thanks for the kind words, they're much appreciated at times
-like these. :-]
+> 
+> Any particular reason for not supporting barriers on the other types
+> of RAID?
+> 
 
-cheers.
+Imagine trying to implement barriers for raid0 (or any level with
+striping).  You would need to
+  block new requests
+  wait for all requests to all devices to complete
+  issue a flush to all devices
+  issue the barrier request to the target device
+  issue a flush to the target device
+  permit new requests.
 
--- 
-Nathan
+This means raid0 would need to keep track of all pending requests,
+which it doesn't do.  As the filesystem does, it is just as efficient
+to let the filesystem to the work.
+
+I guess raid0 could
+  - block new requests
+  - submit a no-op barrier to all devices
+  - wait for the no-op to complete
+  - submit the write/barrier request
+  - permit new requests.
+
+This would avoid needing to keep track of all requests.  However I
+don't think the Linux block layer supports a no-op barrer, and I don't
+think this would actually be better than not supporting barriers.
+
+The real value of barriers (as far as I can see) is that the target
+device can understand them so you don't need to stall the queue of
+requests flying over the buss to the device.  If you need to stall the
+flow of requests and wait at the OS level, then the value of barriers
+disappears and you may as well wait in the filesystem code.
+
+At least, that is my understanding.  I am happy to be educated.
+
+NeilBrown
