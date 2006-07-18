@@ -1,59 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 06:21:03 -0700 (PDT)
-Received: from rproxy.teamix.net (team.teamix.net [194.150.191.72])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6HDKmDW011776
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 06:20:48 -0700
-Received: from mango.of.teamix.net (unknown [172.21.123.1])
-	(using TLSv1 with cipher EXP1024-RC4-SHA (56/128 bits))
-	(No client certificate requested)
-	by rproxy.teamix.net (Postfix) with ESMTP id E0A7C47E0B
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 13:20:27 +0000 (UTC)
-From: Martin Steigerwald <ms@teamix.de>
-Subject: Re: Unfixable XFS defect - fatal error -- can't read block 16777216
-Date: Mon, 17 Jul 2006 15:20:24 +0200
-References: <200607171105.46445.ms@teamix.de>
-In-Reply-To: <200607171105.46445.ms@teamix.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 02:00:24 -0700 (PDT)
+Received: from mx1.suse.de (ns.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6I8xxDW017752
+	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 02:00:00 -0700
+From: Neil Brown <neilb@suse.de>
+Date: Tue, 18 Jul 2006 18:58:56 +1000
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607171520.25067.ms@teamix.de>
+Message-ID: <17596.41680.124148.595601@cse.unsw.edu.au>
+Subject: Re: XFS and write barrier
+In-Reply-To: message from Nathan Scott on Tuesday July 18
+References: <200607151248.56603.Martin@lichtvoll.de>
+	<20060716173238.GD3417@free.net.ph>
+	<20060718173122.B1914501@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
 
-Am Montag, 17. Juli 2006 11:05 schrieben Sie:
+On Tuesday July 18, nathans@sgi.com wrote:
+> On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
+> > On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
+> > > I am currently gathering information to write an article about journal
+> > > filesystems with emphasis on write barrier functionality, how it
+> > > works, why journalling filesystems need write barrier and the current
+> > > implementation of write barrier support for different filesystems.
 
-> I darkly recall having read about this problem here before, but I do not
-> find the relevant mail anymore. Can anyone give me a pointer on where to
-> look?
+"Journalling filesystems need write barrier" isn't really accurate.
+They can make good use of write barrier if it is supported, and where
+it isn't supported, they should use blkdev_issue_flush in combination
+with regular submit/wait.
 
-Hello,
+> > 
+> > Cool! Would you by any chance have information on the interaction
+> > between journal filesystems with write barrier functionality, and
+> > software RAID (md)? Based on my experience with 2.6.17, XFS detects that
+> > the underlying software RAID 1 device does not support barriers and
+> > therefore disables that functionality.
+> 
+> Noone here seems to know, maybe Neil &| the other folks on linux-raid
+> can help us out with details on status of MD and write barriers?
 
-I found it:
-http://oss.sgi.com/bugzilla/show_bug.cgi?id=631
+In 2.6.17, md/raid1 will detect if the underlying devices support
+barriers and if they all do, it will accept barrier requests from the
+filesystem and pass those requests down to all devices.
 
-Mailing list thread:
-XFS crashed twice, once in 2.6.16.20, next in 2.6.17, reproducable
+Other raid levels will reject all barrier requests.  Filesystems
+should notice this and submit regular writes and wait for them to
+complete (which they do) and call blk_issue_flush after the commit
+block has been written (which I think few do).
 
-I read that using xfs_repair 2.7.18  might help. I didnt found this in the ftp 
-area thus I compiled xfsprogs 2.8.4 under Knoppix 5 and tried with that. 
-Unfortunately it isn't able to fix the defect. It shows the same error 
-message as the older xfs_repair in Knoppix 5.
+At least, that is my understanding.
 
-The partition in question is 20 gigs. I can create a backup of it, but only 
-with partimage which can compress, as I have no 20gig in one place free on 
-that harddisk. Tell me when you are interested.
-
-I like to know how I can fix this in place however - the manual way of fixing 
-it which is described in the mailing list thread I mentioned above did not 
-work according to what I read there.
-
-If nothing else helps I will replay a backup.
-
-Regards,
--- 
-Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
-gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
+NeilBrown
