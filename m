@@ -1,47 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 02:26:55 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6J9QDDW002077
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 02:26:26 -0700
-Date: Wed, 19 Jul 2006 19:25:14 +1000 (AEST)
-From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
-Message-Id: <200607190925.k6J9PErG32441978@snort.melbourne.sgi.com>
-Subject: TAKE 954372 - xfs EA list callback functionality + namespace abstractions
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 01:00:14 -0700 (PDT)
+Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6I802DW009575
+	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 01:00:03 -0700
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1G2kUV-00065A-8K
+	for linux-xfs@oss.sgi.com; Tue, 18 Jul 2006 00:59:39 -0700
+Message-ID: <5374022.post@talk.nabble.com>
+Date: Tue, 18 Jul 2006 00:59:39 -0700 (PDT)
+From: Cosmo Nova <cs_mcc98@hotmail.com>
+Subject: Re: file system defragmentation
+In-Reply-To: <20060717141917.GY2114946@melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <43128F82.4010004@tlinx.org> <4312913F.6040205@coremetrics.com> <43311567.3060208@tlinx.org> <5356806.post@talk.nabble.com> <20060717141917.GY2114946@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
-
-Add EA list callbacks for xfs kernel use.
-Cleanup some namespace code.
-
-Date:  Wed Jul 19 19:19:40 AEST 2006
-Workarea:  snort.melbourne.sgi.com:/home/tes/isms/xfs-linux
-Inspected by:  nathans@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+To: linux-xfs@oss.sgi.com
 
 
-Modid:  xfs-linux-melb:xfs-kern:26583a
-xfs_attr_leaf.h - 1.47 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.h.diff?r1=text&tr1=1.47&r2=text&tr2=1.46&f=h
-	- Some namespace macros and additional fields
-	  for the EA list context.
+Hi, can I summarize by saying that, XFS still partition the volume into
+different allocation groups, but there is NO locking. Two files may write in
+the same allocation group and introduce fragments?
+What is the maximum and typical number of allocation groups please? I can't
+find the numbers in the source code...
 
-xfs_attr_leaf.c - 1.103 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.c.diff?r1=text&tr1=1.103&r2=text&tr2=1.102&f=h
-	- Add calls to EA list callback.
-	  Allow callback to be given a value as well as a name.
-	  Allow callback to indicate that the list iteration should
-	  finish early allowing to be used for searching.
-	  Abstract some namespace operations to simplify code for additions
-	  of more namespaces if needed.
+And for the buffer, Is preallocation the same as delayed allocation? page
+cache, as I remember belongs to Linux VFS. What are the memory / disk
+requirement and sizing for the cache please? If a file space allocation is
+delayed, what is the upper bound of the delayed size? Can files of MBs, GBs
+being delayed allocate, and multiple channels/threads files all store in
+memory?? How XFS's allocation works (with number please if possible) to help
+tackle fragmentation?
 
-xfs_attr.c - 1.139 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.c.diff?r1=text&tr1=1.139&r2=text&tr2=1.138&f=h
-	- Add EA list callbacks.
-
-xfs_attr.h - 1.36 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.h.diff?r1=text&tr1=1.36&r2=text&tr2=1.35&f=h
-	- Some prototype additions.
+Thankyou!
+-- 
+View this message in context: http://www.nabble.com/file-system-defragmentation-tf255485.html#a5374022
+Sent from the Xfs - General forum at Nabble.com.
