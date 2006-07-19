@@ -1,43 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Jul 2006 01:41:55 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6H8fiDW009177
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 01:41:44 -0700
-Received: from deepdance.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id 0D191FA6B3
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Jul 2006 10:39:07 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: XFS failure
-Date: Mon, 17 Jul 2006 10:41:14 +0200
-References: <44BAD692.8070402@gmx.de>
-In-Reply-To: <44BAD692.8070402@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-6"
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 19:23:31 -0700 (PDT)
+Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6J2NADW007736
+	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 19:23:10 -0700
+Subject: Re: stable xfs
+From: Ming Zhang <mingz@ele.uri.edu>
+Reply-To: mingz@ele.uri.edu
+In-Reply-To: <20060719095400.A1936041@wobbly.melbourne.sgi.com>
+References: <1153150223.4532.24.camel@localhost.localdomain>
+	 <20060719095400.A1936041@wobbly.melbourne.sgi.com>
+Content-Type: text/plain
+Date: Tue, 18 Jul 2006 21:15:53 -0400
+Message-Id: <1153271753.2669.276.camel@localhost.localdomain>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607171041.14806.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Am Montag 17 Juli 2006 02:15 schrieb Michel:
-> Hello dear developer,
->
-> almost every week on checking my fs i get
+thanks a lot for this detail explanation!
 
-Hello,
+i will check both 2.6.17 -stable release and sles kernel. unfortunately,
+i only play with RHEL so far.
 
-known and already fixed bug, see:
+Ming
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6757
-
-You need to apply this patch to get it fixed:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=6757#c8
-
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+On Wed, 2006-07-19 at 09:54 +1000, Nathan Scott wrote:
+> On Mon, Jul 17, 2006 at 11:30:23AM -0400, Ming Zhang wrote:
+> > Hi All
+> > 
+> > We want to use XFS in all of our production servers but feel a little
+> > scary about the corruption problems seen in this list. I wonder which
+> > 2.6.16+ kernel we can use in order to get a stable XFS? Thanks!
+> 
+> Use the latest 2.6.17 -stable release, or a vendor kernel (SLES is
+> particularly good with XFS, as SGI works closely with SUSE).
+> 
+> The current batch of corruption reports is due to one unfortunate
+> bug that has slipped through our QA testing net, which happily is
+> a fairly rare occurence (it was a very subtle bug).
+> 
+> XFS also tends to get a bad rap (IMO) from the way it reports on-disk
+> corruption and I/O errors in critical data structures, which is quite
+> different to many other filesystems - it dumps a stack trace into the
+> system log (alot of people mistake that for a panic) and "shuts down"
+> the filesystem, with subsequent accesses returning errors until the
+> problem is resolved.
+> 
+> > ps, one friend mentioned that XFS has some issue with LVM+MD under it.
+> > Is this true?
+> 
+> No.
+> 
+> cheers.
+> 
