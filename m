@@ -1,72 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 06:43:49 -0700 (PDT)
-Received: from mail.metronet.co.uk (mail.metronet.co.uk [213.162.97.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JDhHDW006279
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 06:43:18 -0700
-From: Alistair John Strachan <s0348365@sms.ed.ac.uk>
-Subject: Re: XFS breakage in 2.6.18-rc1
-Date: Wed, 19 Jul 2006 13:43:33 +0100
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <1153304468.3706.4.camel@localhost>
-In-Reply-To: <1153304468.3706.4.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 07:11:26 -0700 (PDT)
+Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JEB7DW009520
+	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 07:11:07 -0700
+Subject: Re: stable xfs
+From: Ming Zhang <mingz@ele.uri.edu>
+Reply-To: mingz@ele.uri.edu
+In-Reply-To: <20060719055621.GA1491@tuatara.stupidest.org>
+References: <1153150223.4532.24.camel@localhost.localdomain>
+	 <17595.47312.720883.451573@base.ty.sabi.co.UK>
+	 <1153262166.2669.267.camel@localhost.localdomain>
+	 <17597.27469.834961.186850@base.ty.sabi.co.UK>
+	 <1153272044.2669.282.camel@localhost.localdomain>
+	 <20060719055621.GA1491@tuatara.stupidest.org>
+Content-Type: text/plain
+Date: Wed, 19 Jul 2006 10:10:06 -0400
+Message-Id: <1153318206.2691.43.camel@localhost.localdomain>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607191343.33502.s0348365@sms.ed.ac.uk>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Kasper Sandberg <lkml@metanurb.dk>
-Cc: Nathan Scott <nathans@sgi.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Chris Wedgwood <cw@f00f.org>
+Cc: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>, Linux XFS <linux-xfs@oss.sgi.com>
 
-On Wednesday 19 July 2006 11:21, Kasper Sandberg wrote:
-> On Wed, 2006-07-19 at 08:57 +1000, Nathan Scott wrote:
-> > On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
-> > > Hi friends,
-> >
-> > Hi Torsten,
-> >
-> > > I upgraded to 2.6.18-rc1 on sunday, with the following results (taken
-> > > from my /var/log/kern.log), which ultimately led me to reinstall my
-> > > system:
-> > >
-> > > Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
-> > > Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
-> >
-> > I suspect you had some residual directory corruption from using the
-> > 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
-> > fixed in the latest -stable point release).
->
-> This has me very worried.
->
-> i just upgraded to .18-rc1-git5 when it came out, i used .17-rc3 before.
-> does this mean my .17-rc3 may have corrupted my filesystem?
->
-> what action do you suggest i do now?
->
-> > > of programs fail in mysterious ways. I tried to recover using
-> > > xfs_repair but I feel that my partition is thorougly borked. Of course
-> > > no data was lost due to backups but still I'd like this bug to be fixed
-> > > ;-)
-> >
-> > 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
-> > mkfs and restore?  Or at least get a full repair run?  If you did,
-> > and you still see issues in .18-rc1, please let me know asap.
-> >
-> > thanks.
+On Tue, 2006-07-18 at 22:56 -0700, Chris Wedgwood wrote:
+> On Tue, Jul 18, 2006 at 09:20:44PM -0400, Ming Zhang wrote:
+> 
+> > when u say large parallel storage system, you mean independent
+> > spindles right? but most people will have all disks configured in
+> > one RAID5/6 and thus it is not parallel any more.
+> 
+> it depends, you might have 100s of spindles in groups, you don't make
+> a giant raid5/6 array with that many disks, you make a number of
+> smaller arrays
 
-According to another thread Nathan just responded to, it sounds like we need 
-to wait for a new version of the xfsprogs package, and then run xfs_repair on 
-the affected filesystems. I wouldn't worry about it too much if you've not 
-had any crashes. The damage can be repaired, just not right now.
+right
 
-I'm still waiting for a crash on a machine that has been under heavy load for 
-28 days, so it's obviously not _that_ easy to trigger.
+> 
+> > i think with write barrier support, system without UPS should be ok.
+> 
+> with barrier support a UPS shouldn't be necessary
+> 
+> > considering even u have UPS, kernel oops in other parts still can
+> > take the FS down.
+> 
 
--- 
-Cheers,
-Alistair.
+i mean with UPS and huge write cache, but no write barrier.
 
-Third year Computer Science undergraduate.
-1F2 55 South Clerk Street, Edinburgh, UK.
+> but a crash won't cause writes to be 'reordered'
+> 
+> 
+> reordering is bad because the fs pushes writes down in a manner that
+> means when it comes back it will be able to make it self consistent,
+> so if you have a number of writes pending and some of them are lost,
+> and those that are lost are not the most recent writes because of
+> reordering, you can end up with a corrupt fs
