@@ -1,100 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 03:51:55 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JApiDW012911
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 03:51:45 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1G39gC-0000zR-Vx
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 11:53:25 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <17598.3876.565887.172598@base.ty.sabi.co.UK>
-Date: Wed, 19 Jul 2006 11:53:24 +0100
-Subject: Re: stable xfs
-In-Reply-To: <20060719055621.GA1491@tuatara.stupidest.org>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-	<17595.47312.720883.451573@base.ty.sabi.co.UK>
-	<1153262166.2669.267.camel@localhost.localdomain>
-	<17597.27469.834961.186850@base.ty.sabi.co.UK>
-	<1153272044.2669.282.camel@localhost.localdomain>
-	<20060719055621.GA1491@tuatara.stupidest.org>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 04:23:42 -0700 (PDT)
+Received: from pqueuea.post.tele.dk (pqueuea.post.tele.dk [193.162.153.9])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JBN7DW022094
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 04:23:08 -0700
+Received: from pfepc.post.tele.dk (pfepc.post.tele.dk [195.41.46.237])
+	by pqueuea.post.tele.dk (Postfix) with ESMTP id 1A39537601E
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 12:21:13 +0200 (CEST)
+Subject: Re: XFS breakage in 2.6.18-rc1
+From: Kasper Sandberg <lkml@metanurb.dk>
+In-Reply-To: <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+References: <20060718222941.GA3801@stargate.galaxy>
+	 <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+Content-Type: text/plain
+Date: Wed, 19 Jul 2006 12:21:08 +0200
+Message-Id: <1153304468.3706.4.camel@localhost>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: Nathan Scott <nathans@sgi.com>
+Cc: Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-[ ... ]
+On Wed, 2006-07-19 at 08:57 +1000, Nathan Scott wrote:
+> On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
+> > Hi friends, 
+> 
+> Hi Torsten,
+> 
+> > I upgraded to 2.6.18-rc1 on sunday, with the following results (taken
+> > from my /var/log/kern.log), which ultimately led me to reinstall my 
+> > system:
+> > 
+> > Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
+> > Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
+> 
+> I suspect you had some residual directory corruption from using the
+> 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
+> fixed in the latest -stable point release).
+This has me very worried.
 
-mingz> when u say large parallel storage system, you mean
-mingz> independent spindles right? but most people will have all
-mingz> disks configured in one RAID5/6 and thus it is not parallel
-mingz> any more.
+i just upgraded to .18-rc1-git5 when it came out, i used .17-rc3 before.
+does this mean my .17-rc3 may have corrupted my filesystem?
 
-cw> it depends, you might have 100s of spindles in groups, you
-cw> don't make a giant raid5/6 array with that many disks, you
-cw> make a number of smaller arrays
+what action do you suggest i do now?
 
-Perhaps you are undestimating the ''if it can be done''
-mindset...
-
-Also, if one does a number of smaller RAID5s, is each one a
-separate filesystem or they get aggregated, for example with
-LVM with ''concat''? Either way, how likely is is that the
-consequences have been thought through?
-
-I would personally hesitate to recommend either, especially a
-two-level arrangement where the base level is a RAID5.
-
-[I am making an effort in this discussion to use euphemisms]
-
-mingz> i think with write barrier support, system without UPS
-mingz> should be ok.
-
-cw> with barrier support a UPS shouldn't be necessary
-
-Sure, «should» and «shouldn't» are nice hopeful concepts.
-
-But write barriers are difficult to achieve, and when achieved
-they are often unreliable, except on enterprise level hardware,
-because many disks/host adapters/...  simply lie as to whether
-they have actually started writing (never mind finished writing,
-or written correctly) stuff.
-
-To get reliable write barrier often one has to source special
-cards or disks with custom firmware; or leave system integration
-to the big expensive guys and buy an Altix or equivalent system
-from Sun or IBM.
-
-Besides I have seen many reports of ''corruption'' that cannot
-be fixed by write barriers: many have the expectation that
-*data* should not be lost, even if no 'fsync' is done, *as if*
-'mount -o sync' or 'mount -o data=ordered'.
-
-Of course that is a bit of an inflated expectation, but all that
-the vast majority of sysadms care about is whether it ''just
-works'', without ''wasting time'' figuring things out.
-
-mingz> considering even u have UPS, kernel oops in other parts
-mingz> still can take the FS down.
-
-cw> but a crash won't cause writes to be 'reordered' [ ... ]
-
-The metadata will be consistent, but metadata and data may well
-will be lost. So the filesystem is still ''corrupted'', at least
-from the point of view of a sysadm who just wants the filesystem
-to be effortlessly foolproof. Anyhow, if a crash happens all
-bets are off, because who knows *what* gets written.
-
-Look at it from the point of view of a ''practitioner'' sysadm:
-
-  ''who cares if the metadata is consistent, if my 3TiB
-  application database is unusable (and I don't do backups
-  because after all it is a concat of RAID5s, backups are not
-  necessary) as there is a huge gap in some data file, and my
-  users are yelling at me, and it is not my fault''
-
-The tradeoff in XFS is that if you know exactly what you are
-doing you get extra performance...
+> 
+> > of programs fail in mysterious ways. I tried to recover using xfs_repair
+> > but I feel that my partition is thorougly borked. Of course no data was 
+> > lost due to backups but still I'd like this bug to be fixed ;-)
+> 
+> 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
+> mkfs and restore?  Or at least get a full repair run?  If you did,
+> and you still see issues in .18-rc1, please let me know asap.
+> 
+> thanks.
+> 
