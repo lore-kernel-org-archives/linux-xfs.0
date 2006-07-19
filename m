@@ -1,62 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 15:22:48 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.171])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JMLpDW003991
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 15:21:51 -0700
-Date: Wed, 19 Jul 2006 23:14:02 +0200
-From: Torsten Landschoff <torsten@debian.org>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 15:58:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6JMvPDW007576
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 15:57:39 -0700
+Date: Thu, 20 Jul 2006 08:56:36 +1000
+From: Nathan Scott <nathans@sgi.com>
 Subject: Re: XFS breakage in 2.6.18-rc1
-Message-ID: <20060719211402.GA1133@stargate.galaxy>
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+Message-ID: <20060720085636.D1947140@wobbly.melbourne.sgi.com>
+References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <200607190908.30727.s0348365@sms.ed.ac.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zhXaljGHf11kAtnf"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+In-Reply-To: <200607190908.30727.s0348365@sms.ed.ac.uk>; from s0348365@sms.ed.ac.uk on Wed, Jul 19, 2006 at 09:08:30AM +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alistair John Strachan <s0348365@sms.ed.ac.uk>
+Cc: Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
---zhXaljGHf11kAtnf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jul 19, 2006 at 09:08:30AM +0100, Alistair John Strachan wrote:
+> On Tuesday 18 July 2006 23:57, Nathan Scott wrote:
+> [snip]
+> > > of programs fail in mysterious ways. I tried to recover using xfs_repair
+> > > but I feel that my partition is thorougly borked. Of course no data was
+> > > lost due to backups but still I'd like this bug to be fixed ;-)
+> >
+> > 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
+> > mkfs and restore?  Or at least get a full repair run?  If you did,
+> > and you still see issues in .18-rc1, please let me know asap.
+> 
+> Just out of interest, I've got a few XFS volumes that were created 24 months 
+> ago on a machine that I upgraded to 2.6.17 about a month ago. I haven't seen 
+> any crashes so far.
+> 
+> Assuming I get the newest XFS repair tools on there, what's the disadvantage 
+> of repairing versus creating a new filesystem? What special circumstances are 
+> required to cause a crash?
 
-Hi Nathan,=20
+There should be no disadvantage to repairing.  I will update the FAQ
+shortly to describe all the details of the problem, recommendations
+on how to address it, which kernel version is affected, etc.
 
-On Wed, Jul 19, 2006 at 08:57:31AM +1000, Nathan Scott wrote:
-=20
-> I suspect you had some residual directory corruption from using the
-> 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
-> fixed in the latest -stable point release).
+cheers.
 
-That probably the cause of my problem. Thanks for the info!
-
-BTW: I think there was nothing important on the broken filesystems, but
-I'd like to keep what's still there anyway just in case... How would you
-suggest should I copy that data? I fear, just mounting and using cp=20
-might break and shutdown the FS again, would xfsdump be more
-appropriate?
-
-Thanks for XFS, I am using it for years in production servers!
-
-Greetings
-
-	Torsten
-
---zhXaljGHf11kAtnf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFEvqCadQgHtVUb5EcRAoJLAJ4jJaYRxbnNVCEZBJuki2kTz2VtQwCfd2Mq
-9BasGncq2cRLpRTp5wU9EMM=
-=NS5n
------END PGP SIGNATURE-----
-
---zhXaljGHf11kAtnf--
+-- 
+Nathan
