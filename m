@@ -1,78 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 08:26:29 -0700 (PDT)
-Received: from pqueueb.post.tele.dk (pqueueb.post.tele.dk [193.162.153.10])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JFPuDW022291
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 08:25:58 -0700
-Received: from pfepb.post.tele.dk (pfepb.post.tele.dk [195.41.46.236])
-	by pqueueb.post.tele.dk (Postfix) with ESMTP id 43F603DE238
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 17:25:34 +0200 (CEST)
-Subject: Re: XFS breakage in 2.6.18-rc1
-From: Kasper Sandberg <lkml@metanurb.dk>
-In-Reply-To: <200607191343.33502.s0348365@sms.ed.ac.uk>
-References: <20060718222941.GA3801@stargate.galaxy>
-	 <20060719085731.C1935136@wobbly.melbourne.sgi.com>
-	 <1153304468.3706.4.camel@localhost>
-	 <200607191343.33502.s0348365@sms.ed.ac.uk>
-Content-Type: text/plain
-Date: Wed, 19 Jul 2006 17:25:26 +0200
-Message-Id: <1153322726.25089.1.camel@localhost>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 13:42:20 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [66.45.37.187])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6JKg6DW027068
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 13:42:06 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by lucidpixels.com (Postfix) with ESMTP id 835E716172EC3
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 16:41:41 -0400 (EDT)
+Date: Wed, 19 Jul 2006 16:41:41 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: The XFS bug of death 16777216.
+Message-ID: <Pine.LNX.4.64.0607191640560.8526@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alistair John Strachan <s0348365@sms.ed.ac.uk>
-Cc: Nathan Scott <nathans@sgi.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 2006-07-19 at 13:43 +0100, Alistair John Strachan wrote:
-> On Wednesday 19 July 2006 11:21, Kasper Sandberg wrote:
-> > On Wed, 2006-07-19 at 08:57 +1000, Nathan Scott wrote:
-> > > On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
-> > > > Hi friends,
-> > >
-> > > Hi Torsten,
-> > >
-> > > > I upgraded to 2.6.18-rc1 on sunday, with the following results (taken
-> > > > from my /var/log/kern.log), which ultimately led me to reinstall my
-> > > > system:
-> > > >
-> > > > Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
-> > > > Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
-> > >
-> > > I suspect you had some residual directory corruption from using the
-> > > 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
-> > > fixed in the latest -stable point release).
-> >
-> > This has me very worried.
-> >
-> > i just upgraded to .18-rc1-git5 when it came out, i used .17-rc3 before.
-> > does this mean my .17-rc3 may have corrupted my filesystem?
-> >
-> > what action do you suggest i do now?
-> >
-> > > > of programs fail in mysterious ways. I tried to recover using
-> > > > xfs_repair but I feel that my partition is thorougly borked. Of course
-> > > > no data was lost due to backups but still I'd like this bug to be fixed
-> > > > ;-)
-> > >
-> > > 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
-> > > mkfs and restore?  Or at least get a full repair run?  If you did,
-> > > and you still see issues in .18-rc1, please let me know asap.
-> > >
-> > > thanks.
-> 
-> According to another thread Nathan just responded to, it sounds like we need 
-> to wait for a new version of the xfsprogs package, and then run xfs_repair on 
-> the affected filesystems. I wouldn't worry about it too much if you've not 
-> had any crashes. The damage can be repaired, just not right now.
-without ANY loss? because even though it would be abit painful for me to
-do, i do have the option of smashing in a new drive, copy everything,
-and reinitialize my filesystem.
-> 
-> I'm still waiting for a crash on a machine that has been under heavy load for 
-> 28 days, so it's obviously not _that_ easy to trigger.
-so basically if i upgrade to a safe kernel before i do get these errors,
-im good?
+Anyone have an FAQ for this?
 
-
-> 
+I am currently running 2.6.17.3 and am not [yet] affected, what triggers 
+this bug? Will it be fixed in 2.6.18?
