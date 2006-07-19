@@ -1,40 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 00:32:44 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6I7W2DW005962
-	for <xfs@oss.sgi.com>; Tue, 18 Jul 2006 00:32:14 -0700
-Date: Tue, 18 Jul 2006 17:31:22 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS and write barrier
-Message-ID: <20060718173122.B1914501@wobbly.melbourne.sgi.com>
-References: <200607151248.56603.Martin@lichtvoll.de> <20060716173238.GD3417@free.net.ph>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 02:13:52 -0700 (PDT)
+Received: from smtp.nildram.co.uk (smtp.nildram.co.uk [195.112.4.54])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6J9DLDW032657
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 02:13:22 -0700
+From: Alistair John Strachan <s0348365@sms.ed.ac.uk>
+Subject: Re: XFS breakage in 2.6.18-rc1
+Date: Wed, 19 Jul 2006 09:08:30 +0100
+References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20060716173238.GD3417@free.net.ph>; from jijo@free.net.ph on Mon, Jul 17, 2006 at 01:32:38AM +0800
+Message-Id: <200607190908.30727.s0348365@sms.ed.ac.uk>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Nathan Scott <nathans@sgi.com>
+Cc: Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jul 17, 2006 at 01:32:38AM +0800, Federico Sevilla III wrote:
-> On Sat, Jul 15, 2006 at 12:48:56PM +0200, Martin Steigerwald wrote:
-> > I am currently gathering information to write an article about journal
-> > filesystems with emphasis on write barrier functionality, how it
-> > works, why journalling filesystems need write barrier and the current
-> > implementation of write barrier support for different filesystems.
-> 
-> Cool! Would you by any chance have information on the interaction
-> between journal filesystems with write barrier functionality, and
-> software RAID (md)? Based on my experience with 2.6.17, XFS detects that
-> the underlying software RAID 1 device does not support barriers and
-> therefore disables that functionality.
+On Tuesday 18 July 2006 23:57, Nathan Scott wrote:
+[snip]
+> > of programs fail in mysterious ways. I tried to recover using xfs_repair
+> > but I feel that my partition is thorougly borked. Of course no data was
+> > lost due to backups but still I'd like this bug to be fixed ;-)
+>
+> 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
+> mkfs and restore?  Or at least get a full repair run?  If you did,
+> and you still see issues in .18-rc1, please let me know asap.
 
-Noone here seems to know, maybe Neil &| the other folks on linux-raid
-can help us out with details on status of MD and write barriers?
+Just out of interest, I've got a few XFS volumes that were created 24 months 
+ago on a machine that I upgraded to 2.6.17 about a month ago. I haven't seen 
+any crashes so far.
 
-cheers.
+Assuming I get the newest XFS repair tools on there, what's the disadvantage 
+of repairing versus creating a new filesystem? What special circumstances are 
+required to cause a crash?
 
 -- 
-Nathan
+Cheers,
+Alistair.
+
+Final year Computer Science undergraduate.
+1F2 55 South Clerk Street, Edinburgh, UK.
