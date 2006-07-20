@@ -1,58 +1,89 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 03:30:16 -0700 (PDT)
-Received: from pqueuea.post.tele.dk (pqueuea.post.tele.dk [193.162.153.9])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KATXDW004620
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 03:29:34 -0700
-Received: from pfepb.post.tele.dk (pfepb.post.tele.dk [195.41.46.236])
-	by pqueuea.post.tele.dk (Postfix) with ESMTP id DEE17375DDA
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 12:29:08 +0200 (CEST)
-Subject: Re: XFS breakage in 2.6.18-rc1
-From: Kasper Sandberg <lkml@metanurb.dk>
-In-Reply-To: <20060720085636.D1947140@wobbly.melbourne.sgi.com>
-References: <20060718222941.GA3801@stargate.galaxy>
-	 <20060719085731.C1935136@wobbly.melbourne.sgi.com>
-	 <200607190908.30727.s0348365@sms.ed.ac.uk>
-	 <20060720085636.D1947140@wobbly.melbourne.sgi.com>
-Content-Type: text/plain
-Date: Thu, 20 Jul 2006 12:29:02 +0200
-Message-Id: <1153391342.31822.4.camel@localhost>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 03:35:22 -0700 (PDT)
+Received: from mondschein.lichtvoll.de (ms1.lichtvoll.de [194.150.191.234])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KAZ7DW005487
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 03:35:11 -0700
+Received: from localhost (dslb-084-056-078-084.pools.arcor-ip.net [84.56.78.84])
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id D4E9FFA8A6
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 12:32:10 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: XFS and write barrier
+Date: Thu, 20 Jul 2006 12:34:41 +0200
+References: <200607151248.56603.Martin@lichtvoll.de> <200607182027.49648.Martin@lichtvoll.de> <20060718192135.GV15160733@melbourne.sgi.com>
+In-Reply-To: <20060718192135.GV15160733@melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200607201234.42293.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Alistair John Strachan <s0348365@sms.ed.ac.uk>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Thu, 2006-07-20 at 08:56 +1000, Nathan Scott wrote:
-> On Wed, Jul 19, 2006 at 09:08:30AM +0100, Alistair John Strachan wrote:
-> > On Tuesday 18 July 2006 23:57, Nathan Scott wrote:
-> > [snip]
-> > > > of programs fail in mysterious ways. I tried to recover using xfs_repair
-> > > > but I feel that my partition is thorougly borked. Of course no data was
-> > > > lost due to backups but still I'd like this bug to be fixed ;-)
-> > >
-> > > 2.6.18-rc1 should be fine (contains the corruption fix).  Did you
-> > > mkfs and restore?  Or at least get a full repair run?  If you did,
-> > > and you still see issues in .18-rc1, please let me know asap.
-> > 
-> > Just out of interest, I've got a few XFS volumes that were created 24 months 
-> > ago on a machine that I upgraded to 2.6.17 about a month ago. I haven't seen 
-> > any crashes so far.
-> > 
-> > Assuming I get the newest XFS repair tools on there, what's the disadvantage 
-> > of repairing versus creating a new filesystem? What special circumstances are 
-> > required to cause a crash?
-> 
-> There should be no disadvantage to repairing.  I will update the FAQ
-> shortly to describe all the details of the problem, recommendations
-> on how to address it, which kernel version is affected, etc.
-this FAQ, is it this: http://oss.sgi.com/projects/xfs/faq.html#dir2 ?
-(btw, it seems that while only in the TOC once, you have the same about
-2.6.17 twice..)..
+Am Dienstag 18 Juli 2006 21:21 schrieb David Chinner:
 
-which version of xfsprogs should i use while doing the xfs_check ?
+> > Hello David,
+> >
+> > well now it gets interesting. If both provide the same thing, whats
+> > the difference?
+>
+> A WRITE_BARRIER I/O can be optimised by smart drivers, protocols and
+> hardware to minimise the adverse effects of the barrier, whereas a
+> cache flush is a brute force cache cleaning mechanism that cannot be
+> optimised....
 
-> 
-> cheers.
-> 
+Hello David,
+
+Thanks for your answer. I think now I understand it:
+
+The driver and the drive does a cache flush immediately, but they can 
+delay a write barrier related cache flush as long as they make sure that 
+they has completed all of the io requests before the write barrier and 
+none of the io requests after the write barrier.
+
+The smart driver of a smart drive that supports ordered requests may 
+additionally offload request ordering from the operating system to the 
+drive.
+
+> > Does a device need to support more than this cache flush in order to
+> > support barriers? Up to know I thought that when a device supports
+> > cache flushes the kernel can provide barrier functinality for it.
+>
+> Not necessarily as different device/protocol commands are used.
+
+Do you have any specific information link about this one?
+
+AFAIK it should be possible to implement barrier functionality in the 
+driver as soon as the drive supports cache flushes. According to what I 
+understand from Documentation/block/barriers.txt, this is this case. That 
+would be
+
+"iii. Devices which have queue depth of 1.  This is a degenerate case
+of ii.  Just keeping issue order suffices.  Ancient SCSI
+controllers/drives and IDE drives are in this category."
+
+in combination with this one:
+
+"iii. Write-back cache and flush operation but no FUA (forced unit
+access).  We need two cache flushes - before and after the barrier
+request."
+
+The number of cache flushes can be reduced to one if FUA is used:
+
+"iv. Write-back cache, flush operation and FUA.  We still need one
+flush to make sure requests preceding a barrier are written to medium,
+but post-barrier flush can be avoided by using FUA write on the
+barrier itself."
+
+And then there are drives with queue depth greater 1 with support or do 
+not support ordered requests.
+
+Ah, I think I finally got all of this and have a complete picture. Lets 
+see whether I can put that into a diagram or what ;-).
+
+Regards,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
