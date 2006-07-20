@@ -1,69 +1,86 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 07:09:18 -0700 (PDT)
-Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KE8xDW005151
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 07:08:59 -0700
-Subject: Re: stable xfs
-From: Ming Zhang <mingz@ele.uri.edu>
-Reply-To: mingz@ele.uri.edu
-In-Reply-To: <20060720061527.GB18135@tuatara.stupidest.org>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-	 <17595.47312.720883.451573@base.ty.sabi.co.UK>
-	 <1153262166.2669.267.camel@localhost.localdomain>
-	 <17597.27469.834961.186850@base.ty.sabi.co.UK>
-	 <1153272044.2669.282.camel@localhost.localdomain>
-	 <17598.2129.999932.67127@base.ty.sabi.co.UK>
-	 <1153314670.2691.14.camel@localhost.localdomain>
-	 <20060720061527.GB18135@tuatara.stupidest.org>
-Content-Type: text/plain
-Date: Thu, 20 Jul 2006 10:08:22 -0400
-Message-Id: <1153404502.2768.50.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 07:52:27 -0700 (PDT)
+Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KEptDW009819
+	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 07:51:57 -0700
+Message-ID: <44BF8500.1010708@dgreaves.com>
+Date: Thu, 20 Jul 2006 14:28:32 +0100
+From: David Greaves <david@dgreaves.com>
+MIME-Version: 1.0
+Subject: Re: FAQ updated (was Re: XFS breakage...)
+References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <1153304468.3706.4.camel@localhost> <20060720171310.B1970528@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060720171310.B1970528@wobbly.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>, Linux XFS <linux-xfs@oss.sgi.com>
+To: Nathan Scott <nathans@sgi.com>
+Cc: Kasper Sandberg <lkml@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cw@f00f.org, ml@magog.se, radsaq@gmail.com
 
-On Wed, 2006-07-19 at 23:15 -0700, Chris Wedgwood wrote:
-> On Wed, Jul 19, 2006 at 09:11:10AM -0400, Ming Zhang wrote:
+Nathan Scott wrote:
+> Correction there - no -stable exists with this yet, I guess that'll
+> be 2.6.17.7 once its out though.
 > 
-> > what kind of "ram vs fs" size ratio here will be a safe/good/proper
-> > one?
+>> what action do you suggest i do now?
 > 
-> it depends very much on what you are doing
-
-we mainly handle large media files like 20-50GB. so file number is not
-too much. but file size is large.
-
-hope i never need to run repair, but i do need to defrag from time to
-time.
-
-
+> I've captured the state of this issue here, with options and ways
+> to correct the problem:
+> 	http://oss.sgi.com/projects/xfs/faq.html#dir2
 > 
-> > any rule of thumb? thanks!
-> >
-> > hope not 1:1. :)
-> 
-> i recent dealt with a corrupted filesystem that xfs_repair needed over
-> 1GB to deal with --- the kicker is the filesystem was only 20GB, so
-> that's 20:1 for xfs_repair
+> Hope this helps.
 
-hope this does not hold true for a 15x750GB SATA raid5. ;)
-
-> 
-> i suspect that was anomalous though and that some bug or quirk of
-> their fs cause xfs_repair to behave badly (that said, i'd had to have
-> to repair an 8TB fs fill of maildir email boxes, which i know some
-> people have)
-
-ps, also another question brought up while reading this thread.
-
-say XFS can make use of parallel storage by using multiple allocation
-groups. but XFS need to be built over one block device. so if i have 4
-smaller raid, i have to use LVM to glue them before i create XFS over it
-right? but then u said XFS over LVM or N MD is not good?
+It does, thanks :)
 
 
-Ming
+Does this problem exist in 2.16.6.x??
+
+>From various comments like:
+  Unless 2.6.16.x is a dead-end could we please also have this patch put
+  into there?
+and
+  a result (I believe) of the corruption bug that was in 2.6.16/17.
+and
+  I just want to confirm this bug as well and unfortunately it was my
+  system disk too who had to take the hit. Im running 2.6.16
+I assume it does.
+
+But the FAQ says:
+Q: What is the issue with directory corruption in Linux 2.6.17?
+In the Linux kernel 2.6.17 release a subtle bug...
+
+which implies it's not...
+
+HELP
+
+So given this is from 2.6.16.9:
+                        /*
+                         * One less used entry in the free table.
+                         */
+                        INT_MOD(free->hdr.nused, ARCH_CONVERT, -1);
+                        xfs_dir2_free_log_header(tp, fbp);
+
+and it looks awfully similar to the patch which says:
+
+--- linux-2.6.17.2.orig/fs/xfs/xfs_dir2_node.c
++++ linux-2.6.17.2/fs/xfs/xfs_dir2_node.c
+@@ -970,7 +970,7 @@ xfs_dir2_leafn_remove(
+ 			/*
+ 			 * One less used entry in the free table.
+ 			 */
+-			free->hdr.nused = cpu_to_be32(-1);
++			be32_add(&free->hdr.nused, -1);
+ 			xfs_dir2_free_log_header(tp, fbp);
+
+Should 2.6.16.x replace
+  INT_MOD(free->hdr.nused, ARCH_CONVERT, -1);
+with
+  be32_add(&free->hdr.nused, -1);
+
+I hope so because I assumed there simply wasn't a patch for 2.6.16 and
+applied this 'best guess' to my servers and rebooted/remounted successfully.
+
+David
+
+
+-- 
