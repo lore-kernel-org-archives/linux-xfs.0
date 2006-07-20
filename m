@@ -1,54 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 09:17:44 -0700 (PDT)
-Received: from smtp103.sbc.mail.mud.yahoo.com (smtp103.sbc.mail.mud.yahoo.com [68.142.198.202])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6KGHVDW023580
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 09:17:33 -0700
-Date: Thu, 20 Jul 2006 09:17:07 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: stable xfs
-Message-ID: <20060720161707.GB26748@tuatara.stupidest.org>
-References: <1153150223.4532.24.camel@localhost.localdomain> <17595.47312.720883.451573@base.ty.sabi.co.UK> <1153262166.2669.267.camel@localhost.localdomain> <17597.27469.834961.186850@base.ty.sabi.co.UK> <1153272044.2669.282.camel@localhost.localdomain> <17598.2129.999932.67127@base.ty.sabi.co.UK> <1153314670.2691.14.camel@localhost.localdomain> <20060720061527.GB18135@tuatara.stupidest.org> <1153404502.2768.50.camel@localhost.localdomain>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 09:32:35 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.188])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KGWADW025308
+	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 09:32:10 -0700
+Received: by nf-out-0910.google.com with SMTP id a27so501789nfc
+        for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 09:31:47 -0700 (PDT)
+Message-ID: <3b0ffc1f0607200813q39ba2303l7623baedd924a5a1@mail.gmail.com>
+Date: Thu, 20 Jul 2006 11:13:57 -0400
+From: "Kevin Radloff" <radsaq@gmail.com>
+Subject: Re: FAQ updated (was Re: XFS breakage...)
+In-Reply-To: <20060720171310.B1970528@wobbly.melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <1153404502.2768.50.camel@localhost.localdomain>
+References: <20060718222941.GA3801@stargate.galaxy>
+	 <20060719085731.C1935136@wobbly.melbourne.sgi.com>
+	 <1153304468.3706.4.camel@localhost>
+	 <20060720171310.B1970528@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ming Zhang <mingz@ele.uri.edu>
-Cc: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>, Linux XFS <linux-xfs@oss.sgi.com>
+To: Nathan Scott <nathans@sgi.com>
+Cc: Kasper Sandberg <lkml@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jul 20, 2006 at 10:08:22AM -0400, Ming Zhang wrote:
+On 7/20/06, Nathan Scott <nathans@sgi.com> wrote:
+> On Wed, Jul 19, 2006 at 12:21:08PM +0200, Kasper Sandberg wrote:
+> > On Wed, 2006-07-19 at 08:57 +1000, Nathan Scott wrote:
+> > > On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
+> > > >
+> > > > Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
+> > > > Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
+> > >
+> > > I suspect you had some residual directory corruption from using the
+> > > 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
+> > > fixed in the latest -stable point release).
+>
+> Correction there - no -stable exists with this yet, I guess that'll
+> be 2.6.17.7 once its out though.
+>
+> > what action do you suggest i do now?
+>
+> I've captured the state of this issue here, with options and ways
+> to correct the problem:
+>         http://oss.sgi.com/projects/xfs/faq.html#dir2
+>
+> Hope this helps.
 
-> we mainly handle large media files like 20-50GB. so file number is
-> not too much. but file size is large.
+I actually tried the xfs_db method to fix my / filesystem (as you had
+outlined in http://marc.theaimsgroup.com/?l=linux-kernel&m=115070320401919&w=2),
+and while it's quite possible that I screwed it up, after a subsequent
+xfs_repair run (which completed successfully and moved lots of stuff
+to /lost+found, as I would expect), the XFS code had serious problems
+with various parts of my filesystem (like "ls /lost+found", which
+would cause lots of errors to be logged, although not a complete fs
+shutdown). After another run through xfs_repair resulted in a
+filesystem that would no longer even successfully boot.
 
-xfs_repair usually deals with that fairly well in reality (much better
-than lots of small files anyhow)
+Unfortunately it was a mostly-full 74GB big-/ partition on my primary
+machine (a laptop), so I don't have a dump of it for you and my report
+is probably pretty useless. :( But on the bright side, virtually all
+of the filesystem was otherwise intact and I was able to get all my
+data off before rebuilding my system.
 
-> hope i never need to run repair, but i do need to defrag from time
-> to time.
-
-if you preallocate you can avoid that (this is what i do, i
-preallocate in the replication daemon)
-
-> hope this does not hold true for a 15x750GB SATA raid5. ;)
-
-that's ~10TB or so, my guess is that a repair there would take some
-GBs of ram
-
-it would be interesting to test it if you had the time
-
-there is a 'formular' for working out how much ram is needed roughly
-(steve lord posted it a long time ago, hopefully someone can find that
-and repost is)
-
-> say XFS can make use of parallel storage by using multiple
-> allocation groups. but XFS need to be built over one block
-> device. so if i have 4 smaller raid, i have to use LVM to glue them
-> before i create XFS over it right? but then u said XFS over LVM or N
-> MD is not good?
-
-with recent kernels it shouldn't be a problem, the recursive nature of
-the block layer changed so you no longer blow up as badly as people
-did in the past (also, XFS tends to use less stack these days)
+-- 
+Kevin 'radsaq' Radloff
+radsaq@gmail.com
+http://thesaq.com/
