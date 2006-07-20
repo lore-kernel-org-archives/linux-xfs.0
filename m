@@ -1,39 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 08:46:29 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.187])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KFkIDW020142
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 08:46:18 -0700
-Received: by nf-out-0910.google.com with SMTP id a27so487136nfc
-        for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 08:45:55 -0700 (PDT)
-Message-ID: <cfac95650607200743if7190y7164089ebb1e389e@mail.gmail.com>
-Date: Thu, 20 Jul 2006 15:43:28 +0100
-From: "Roger Willcocks" <willcor@gmail.com>
-Subject: Re: xfs_force_shutdown on full filesystem
-In-Reply-To: <cfac95650602271135v2ee8b2aap8c87ae18bd4f1321@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 09:12:17 -0700 (PDT)
+Received: from smtp111.sbc.mail.mud.yahoo.com (smtp111.sbc.mail.mud.yahoo.com [68.142.198.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6KGBkDW022750
+	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 09:11:52 -0700
+Date: Thu, 20 Jul 2006 09:11:21 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: FAQ updated (was Re: XFS breakage...)
+Message-ID: <20060720161121.GA26748@tuatara.stupidest.org>
+References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <1153304468.3706.4.camel@localhost> <20060720171310.B1970528@wobbly.melbourne.sgi.com> <44BF8500.1010708@dgreaves.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <cfac95650602251509i7da3a41ew4972479e7cb6b409@mail.gmail.com>
-	 <4401039B.9050700@sgi.com>
-	 <cfac95650602270633k10f5fa94q6cf055398ffcc1c4@mail.gmail.com>
-	 <cfac95650602271135v2ee8b2aap8c87ae18bd4f1321@mail.gmail.com>
+In-Reply-To: <44BF8500.1010708@dgreaves.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: David Greaves <david@dgreaves.com>
+Cc: Nathan Scott <nathans@sgi.com>, Kasper Sandberg <lkml@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, ml@magog.se, radsaq@gmail.com
 
-On 2/27/06, Roger Willcocks <willcor@gmail.com> wrote:
-> On 2/27/06, Roger Willcocks <willcor@gmail.com> wrote:
->
-> > I've reproduced the problem on a clean checkout of linux-2.6-xfs from
-> > oss.sgi.com.
->
-> I've narrowed this down to XFS_DIR_CREATENAME returning ENOSPC in
-> xfs_create. (resblks = 40, resblks - XFS_IALLOC_SPACE_RES(mp) = 35).
+On Thu, Jul 20, 2006 at 02:28:32PM +0100, David Greaves wrote:
 
-For what it's worth, this eventually turned out to be a code
-generation error. Updating the compiler made the problem go away.
+> Does this problem exist in 2.16.6.x??
 
---
-Roger
+The change was merged after 2.6.16.x was branched, I was mistaken
+in how long I thought the bug has been about.
+
+> I hope so because I assumed there simply wasn't a patch for 2.6.16 and
+> applied this 'best guess' to my servers and rebooted/remounted successfully.
+
+Doing the correct change to 2.6.16.x won't hurt, but it's not
+necessary.
