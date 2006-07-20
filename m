@@ -1,46 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 00:14:45 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 00:50:15 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6K7E0DW008069
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 00:14:12 -0700
-Date: Thu, 20 Jul 2006 17:13:10 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: FAQ updated (was Re: XFS breakage...)
-Message-ID: <20060720171310.B1970528@wobbly.melbourne.sgi.com>
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <1153304468.3706.4.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1153304468.3706.4.camel@localhost>; from lkml@metanurb.dk on Wed, Jul 19, 2006 at 12:21:08PM +0200
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6K7njDW016633
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 00:49:59 -0700
+Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id QAA23891 for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 16:48:54 +1000
+Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k6K6mSEo31699685
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 16:48:29 +1000 (AEST)
+Received: (from nathans@localhost)
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k6K6mSUg33101176
+	for linux-xfs@oss.sgi.com; Thu, 20 Jul 2006 16:48:28 +1000 (AEST)
+Date: Thu, 20 Jul 2006 16:48:28 +1000 (AEST)
+From: Nathan Scott <nathans@snort.melbourne.sgi.com>
+Message-Id: <200607200648.k6K6mSUg33101176@snort.melbourne.sgi.com>
+Subject: TAKE 907752 - faq.html
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Kasper Sandberg <lkml@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, Torsten Landschoff <torsten@debian.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Wed, Jul 19, 2006 at 12:21:08PM +0200, Kasper Sandberg wrote:
-> On Wed, 2006-07-19 at 08:57 +1000, Nathan Scott wrote:
-> > On Wed, Jul 19, 2006 at 12:29:41AM +0200, Torsten Landschoff wrote:
-> > > 
-> > > Jul 17 07:33:53 pulsar kernel: xfs_da_do_buf: bno 16777216
-> > > Jul 17 07:33:53 pulsar kernel: dir: inode 54526538
-> > 
-> > I suspect you had some residual directory corruption from using the
-> > 2.6.17 XFS (which is known to have a lurking dir2 corruption issue,
-> > fixed in the latest -stable point release).
+Update the FAQ regarding dir2 corruption in 2.6.17.
 
-Correction there - no -stable exists with this yet, I guess that'll
-be 2.6.17.7 once its out though.
+Date:  Wed Jul 19 23:48:34 PDT 2006
+Workarea:  snort.melbourne.sgi.com:/home/nathans/isms/us-xfs-website
+Inspected by:  nathans
 
-> what action do you suggest i do now?
+The following file(s) were checked into:
+  bonnie.engr.sgi.com:/isms/xfs-website/current
 
-I've captured the state of this issue here, with options and ways
-to correct the problem:
-	http://oss.sgi.com/projects/xfs/faq.html#dir2
 
-Hope this helps.
-
-cheers.
-
--- 
-Nathan
+Modid:  current:xfs-website:212893a
+faq.html - 1.89 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.4-xfs/faq.html.diff?r1=text&tr1=1.89&r2=text&tr2=1.88&f=h
