@@ -1,48 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 18:57:34 -0700 (PDT)
-Received: from avalanche.hickorytech.net (smtp.hickorytech.net [216.114.192.16])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K1v7DW031656
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 18:57:12 -0700
-Message-ID: <44BF19DA.9060403@mnsu.edu>
-Date: Thu, 20 Jul 2006 00:51:22 -0500
-From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 21:22:37 -0700 (PDT)
+Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K4MMDW017793
+	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 21:22:22 -0700
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1G3Q2y-0003Gz-5K
+	for linux-xfs@oss.sgi.com; Wed, 19 Jul 2006 21:22:00 -0700
+Message-ID: <5408744.post@talk.nabble.com>
+Date: Wed, 19 Jul 2006 21:22:00 -0700 (PDT)
+From: Cosmo Nova <cs_mcc98@hotmail.com>
+Subject: Re: file system defragmentation
+In-Reply-To: <20050829001723.GA10587@xiao.rsnet>
 MIME-Version: 1.0
-Subject: Re: XFS breakage in 2.6.18-rc1
-References: <67dc30140607190717r57ed2fe5w719dcca896110d8@mail.gmail.com> <44BE48D5.7020107@mnsu.edu> <20060720090109.F1947140@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060720090109.F1947140@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <E4E12CD035E14A4AB8C36E0F4B7143F7277DED@iu-mssg-mbx09.exchange.iu.edu> <43112C5D.8090202@sgi.com> <20050829001723.GA10587@xiao.rsnet>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Mattias Hedenskog <ml@magog.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Wed, Jul 19, 2006 at 09:59:33AM -0500, Jeffrey E. Hundstad wrote:
->   
->> I did try the xfs_repair 2.8.4 for a volume running on 2.6.17.4 and it 
->> annihilated the volume.  This volume was not showing signs of crashing.  
->> So... I guess I would certainly not run xfs_repair unless there is good 
->> reason.
->>     
->
-> Erm, wha..?  Can you expand on "annihilated" a bit?  (please send
-> me the full xfs_repair output if you still have it).
->   
 
-Nathan Scott,
-
-I'm very sorry; I don't have the output anymore.  By annihilated I mean 
-that there were several directories trees that /didn't work/.  If you 
-tried to cd into the directory or take a directory listing... or used a 
-file that you knew was in these certain directories then you'd get pages 
-of debug message to the console; and no usable data.  I re-ran 
-xfs_repair and retried several times but the condition never seemed to 
-improve or get worse for that matter.
-
-I /incorrectly/ figured it was a known issue or I'd have saved the 
-output.  Sorry again.
-
+does the preallocation belong to xfs layer? or it's a "suggested feature" for
+applications?
 -- 
-Jeffrey Hundstad
+View this message in context: http://www.nabble.com/file-system-defragmentation-tf255485.html#a5408744
+Sent from the Xfs - General forum at Nabble.com.
