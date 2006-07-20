@@ -1,50 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 17:20:15 -0700 (PDT)
-Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.172])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K0JvDW022620
-	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 17:19:58 -0700
-Received: by ug-out-1314.google.com with SMTP id h2so544207ugf
-        for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 17:19:35 -0700 (PDT)
-Message-ID: <68559cef0607191431m4b59e142v51e1c1dc12e60dc0@mail.gmail.com>
-Date: Wed, 19 Jul 2006 23:31:15 +0200
-From: "Luca Maranzano" <liuk001@gmail.com>
-Subject: XFS: possible memory allocation deadlock in _pagebuf_lookup_pages (mode:0x250)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 18:57:34 -0700 (PDT)
+Received: from avalanche.hickorytech.net (smtp.hickorytech.net [216.114.192.16])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K1v7DW031656
+	for <xfs@oss.sgi.com>; Wed, 19 Jul 2006 18:57:12 -0700
+Message-ID: <44BF19DA.9060403@mnsu.edu>
+Date: Thu, 20 Jul 2006 00:51:22 -0500
+From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
 MIME-Version: 1.0
+Subject: Re: XFS breakage in 2.6.18-rc1
+References: <67dc30140607190717r57ed2fe5w719dcca896110d8@mail.gmail.com> <44BE48D5.7020107@mnsu.edu> <20060720090109.F1947140@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060720090109.F1947140@wobbly.melbourne.sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: Mattias Hedenskog <ml@magog.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hello all,
+Nathan Scott wrote:
+> On Wed, Jul 19, 2006 at 09:59:33AM -0500, Jeffrey E. Hundstad wrote:
+>   
+>> I did try the xfs_repair 2.8.4 for a volume running on 2.6.17.4 and it 
+>> annihilated the volume.  This volume was not showing signs of crashing.  
+>> So... I guess I would certainly not run xfs_repair unless there is good 
+>> reason.
+>>     
+>
+> Erm, wha..?  Can you expand on "annihilated" a bit?  (please send
+> me the full xfs_repair output if you still have it).
+>   
 
-we have a CentOS 4.3 Server on an HP DL 380G3, 1 Xeon 2,8 Ghz (no
-hyperthreading).
-Kernel: 2.6.9-34.0.2.EL
-Xfs:
-xfsprogs-2.7.3-1
-kernel-module-xfs-2.6.9-34.EL-0.1-3
+Nathan Scott,
 
-modinfo xfs:
-filename:       /lib/modules/2.6.9-34.0.2.EL/extra/xfs.ko
-author:         Silicon Graphics, Inc.
-description:    SGI-XFS CVS-2004-10-17_05:00_UTC with ACLs, security
-attributes, realtime, large block numbers, no debug enabled
-license:        GPL
-vermagic:       2.6.9-34.EL 686 REGPARM 4KSTACKS gcc-3.4
-depends:
+I'm very sorry; I don't have the output anymore.  By annihilated I mean 
+that there were several directories trees that /didn't work/.  If you 
+tried to cd into the directory or take a directory listing... or used a 
+file that you knew was in these certain directories then you'd get pages 
+of debug message to the console; and no usable data.  I re-ran 
+xfs_repair and retried several times but the condition never seemed to 
+improve or get worse for that matter.
 
-The server has 1 Emulex Lp9002 with 3 LUNs of our SAN.
-2 LUNs are forming a Striped LVM2 volume of 2,7 TB.
-1 LUN is an LVM2 volume of 1,5 TB.
+I /incorrectly/ figured it was a known issue or I'd have saved the 
+output.  Sorry again.
 
-The message appeared during moderately heavy load copying 700GB from
-one LVM to the other LVM (serveral thousands of I/O on the HBA).
-Apparently it's still working fine, but we are a bit worried about this message.
-Do you suggest some upgrade of the Kernel or the xfs modules?
-
-TIA.
-Kind regards,
-Luca
+-- 
+Jeffrey Hundstad
