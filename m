@@ -1,86 +1,179 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 07:52:27 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KEptDW009819
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 07:51:57 -0700
-Message-ID: <44BF8500.1010708@dgreaves.com>
-Date: Thu, 20 Jul 2006 14:28:32 +0100
-From: David Greaves <david@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 08:38:43 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.185])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6KFcVDW019140
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 08:38:32 -0700
+Received: by nf-out-0910.google.com with SMTP id a27so484580nfc
+        for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 08:38:09 -0700 (PDT)
+Message-ID: <cfac95650607200738o1bf811e8r1493c4bbcf13e24b@mail.gmail.com>
+Date: Thu, 20 Jul 2006 15:38:27 +0100
+From: "Roger Willcocks" <willcor@gmail.com>
+Subject: preallocate near a specified block
 MIME-Version: 1.0
-Subject: Re: FAQ updated (was Re: XFS breakage...)
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <1153304468.3706.4.camel@localhost> <20060720171310.B1970528@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060720171310.B1970528@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_44296_19539042.1153406307636"
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Kasper Sandberg <lkml@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, Torsten Landschoff <torsten@debian.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cw@f00f.org, ml@magog.se, radsaq@gmail.com
+To: linux-xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> Correction there - no -stable exists with this yet, I guess that'll
-> be 2.6.17.7 once its out though.
-> 
->> what action do you suggest i do now?
-> 
-> I've captured the state of this issue here, with options and ways
-> to correct the problem:
-> 	http://oss.sgi.com/projects/xfs/faq.html#dir2
-> 
-> Hope this helps.
+------=_Part_44296_19539042.1153406307636
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-It does, thanks :)
+Hi folks,
 
+I've put together a 'preallocate near' ioctl, which I've been using in
+anger for several months now. The changes are pretty minimal, and boil
+down to making xfs_bmap think it's extending a file instead of doing
+an initial allocation.
 
-Does this problem exist in 2.16.6.x??
+>From a user perspective it's a simple extension of the existing RESVSP
+ioctl, with the flag bits (allocate near, allocate contiguous) hidden
+in the 'whence' parameter.
 
->From various comments like:
-  Unless 2.6.16.x is a dead-end could we please also have this patch put
-  into there?
-and
-  a result (I believe) of the corruption bug that was in 2.6.16/17.
-and
-  I just want to confirm this bug as well and unfortunately it was my
-  system disk too who had to take the hit. Im running 2.6.16
-I assume it does.
+        xfs_flock64_t flck;
+        memset(&flck, 0, sizeof(flck));
 
-But the FAQ says:
-Q: What is the issue with directory corruption in Linux 2.6.17?
-In the Linux kernel 2.6.17 release a subtle bug...
+        flck.l_whence = SEEK_SET;
+        flck.l_start = 0LL;
+        flck.l_len = (off64_t)extent;
 
-which implies it's not...
+        if (nearToBlock != 0) {
+                flck.l_whence |= RESV_NEAR | RESV_CONTIG; /* if possible */
+                flck.l_near = nearToBlock;
+        }
 
-HELP
+        int status = ioctl(fd, XFS_IOC_RESVSP64, &flck);
 
-So given this is from 2.6.16.9:
-                        /*
-                         * One less used entry in the free table.
-                         */
-                        INT_MOD(free->hdr.nused, ARCH_CONVERT, -1);
-                        xfs_dir2_free_log_header(tp, fbp);
+Any interest?
 
-and it looks awfully similar to the patch which says:
+--
+Roger
 
---- linux-2.6.17.2.orig/fs/xfs/xfs_dir2_node.c
-+++ linux-2.6.17.2/fs/xfs/xfs_dir2_node.c
-@@ -970,7 +970,7 @@ xfs_dir2_leafn_remove(
- 			/*
- 			 * One less used entry in the free table.
- 			 */
--			free->hdr.nused = cpu_to_be32(-1);
-+			be32_add(&free->hdr.nused, -1);
- 			xfs_dir2_free_log_header(tp, fbp);
+------=_Part_44296_19539042.1153406307636
+Content-Type: application/octet-stream; name="xfs_near.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="xfs_near.patch"
+X-Attachment-Id: file0
 
-Should 2.6.16.x replace
-  INT_MOD(free->hdr.nused, ARCH_CONVERT, -1);
-with
-  be32_add(&free->hdr.nused, -1);
+ZGlmZiAtdXJiIGxpbnV4LTIuNi4xNi4xNi5vcmlnL2ZzL3hmcy94ZnNfYm1h
+cC5jIGxpbnV4LTIuNi4xNi4xNi9mcy94ZnMveGZzX2JtYXAuYwotLS0gbGlu
+dXgtMi42LjE2LjE2Lm9yaWcvZnMveGZzL3hmc19ibWFwLmMJMjAwNi0wNS0x
+MSAwMjo1NjoyNC4wMDAwMDAwMDAgKzAxMDAKKysrIGxpbnV4LTIuNi4xNi4x
+Ni9mcy94ZnMveGZzX2JtYXAuYwkyMDA2LTA3LTIwIDE0OjM5OjQzLjAwMDAw
+MDAwMCArMDEwMApAQCAtMjY4OCwxMiArMjY4OCwxMyBAQAogCQkgKiB1bmRl
+cmx5aW5nIGxvZ2ljYWwgdm9sdW1lIG1hbmFnZXIgaXMgYSBzdHJpcGUsIGFu
+ZAogCQkgKiB0aGUgZmlsZSBvZmZzZXQgaXMgemVybyB0aGVuIHRyeSB0byBh
+bGxvY2F0ZSBkYXRhCiAJCSAqIGJsb2NrcyBvbiBzdHJpcGUgdW5pdCBib3Vu
+ZGFyeS4KLQkJICogTk9URTogYXAtPmFlb2YgaXMgb25seSBzZXQgaWYgdGhl
+IGFsbG9jYXRpb24gbGVuZ3RoCisJCSAqIE5PVEU6IGFwLT5hZW9mID09IDEg
+aWYgdGhlIGFsbG9jYXRpb24gbGVuZ3RoCiAJCSAqIGlzID49IHRoZSBzdHJp
+cGUgdW5pdCBhbmQgdGhlIGFsbG9jYXRpb24gb2Zmc2V0IGlzCi0JCSAqIGF0
+IHRoZSBlbmQgb2YgZmlsZS4KKwkJICogYXQgdGhlIGVuZCBvZiBmaWxlLiBh
+cC0+YWVvZiA9PSAyIGlmIHdlIHdhbnQgdG8KKwkJICogZm9yY2UgYW4gYWxs
+b2NhdGlvbiBhdCBhIHNwZWNpZmljIGJsb2NrLgogCQkgKi8KIAkJaWYgKCFh
+cC0+bG93ICYmIGFwLT5hZW9mKSB7Ci0JCQlpZiAoIWFwLT5vZmYpIHsKKwkJ
+CWlmICghYXAtPm9mZiAmJiBhcC0+YWVvZiA9PSAxKSB7CiAJCQkJYXJncy5h
+bGlnbm1lbnQgPSBtcC0+bV9kYWxpZ247CiAJCQkJYXR5cGUgPSBhcmdzLnR5
+cGU7CiAJCQkJaXNhbGlnbmVkID0gMTsKQEAgLTQ3NjQsNyArNDc2NSw3IEBA
+CiAJCQkJZmlyc3RibG9jaywgdG90YWwsICZsb2dmbGFncywgd2hpY2hmb3Jr
+KSkpCiAJCQlnb3RvIGVycm9yMDsKIAl9Ci0JaWYgKHdyICYmICpmaXJzdGJs
+b2NrID09IE5VTExGU0JMT0NLKSB7CisJaWYgKHdyICYmICgqZmlyc3RibG9j
+ayA9PSBOVUxMRlNCTE9DSyB8fCAoZmxhZ3MgJiBYRlNfQk1BUElfTkVBUikg
+IT0gMCkpIHsKIAkJaWYgKFhGU19JRk9SS19GT1JNQVQoaXAsIHdoaWNoZm9y
+aykgPT0gWEZTX0RJTk9ERV9GTVRfQlRSRUUpCiAJCQltaW5sZWZ0ID0gYmUx
+Nl90b19jcHUoaWZwLT5pZl9icm9vdC0+YmJfbGV2ZWwpICsgMTsKIAkJZWxz
+ZQpAQCAtNDk0Nyw3ICs0OTQ4LDEwIEBACiAJCQkJICogZW9mIGlmIGl0IGlz
+IHVzZXJkYXRhIGFuZCBhbGxvY2F0aW9uIGxlbmd0aAogCQkJCSAqIGlzIGxh
+cmdlciB0aGFuIGEgc3RyaXBlIHVuaXQuCiAJCQkJICovCi0JCQkJaWYgKG1w
+LT5tX2RhbGlnbiAmJiBhbGVuID49IG1wLT5tX2RhbGlnbiAmJgorCQkJCWlm
+ICgoZmxhZ3MgJiBYRlNfQk1BUElfTkVBUikgIT0gMCkgeworCQkJCQlibWEu
+YWVvZiA9IDI7CisJCQkJfQorCQkJCWVsc2UgaWYgKG1wLT5tX2RhbGlnbiAm
+JiBhbGVuID49IG1wLT5tX2RhbGlnbiAmJgogCQkJCSAgICB1c2VyZGF0YSAm
+JiB3aGljaGZvcmsgPT0gWEZTX0RBVEFfRk9SSykgewogCQkJCQlpZiAoKGVy
+cm9yID0geGZzX2JtYXBfaXNhZW9mKGlwLCBhb2ZmLAogCQkJCQkJCXdoaWNo
+Zm9yaywgJmJtYS5hZW9mKSkpCmRpZmYgLXVyYiBsaW51eC0yLjYuMTYuMTYu
+b3JpZy9mcy94ZnMveGZzX2JtYXAuaCBsaW51eC0yLjYuMTYuMTYvZnMveGZz
+L3hmc19ibWFwLmgKLS0tIGxpbnV4LTIuNi4xNi4xNi5vcmlnL2ZzL3hmcy94
+ZnNfYm1hcC5oCTIwMDYtMDUtMTEgMDI6NTY6MjQuMDAwMDAwMDAwICswMTAw
+CisrKyBsaW51eC0yLjYuMTYuMTYvZnMveGZzL3hmc19ibWFwLmgJMjAwNi0w
+Ny0yMCAxNDoxNzo1NC4wMDAwMDAwMDAgKzAxMDAKQEAgLTY2LDYgKzY2LDcg
+QEAKICNkZWZpbmUgWEZTX0JNQVBJX0NPTlZFUlQJMHgxMDAwCS8qIHVud3Jp
+dHRlbiBleHRlbnQgY29udmVyc2lvbiAtICovCiAJCQkJCS8qIG5lZWQgd3Jp
+dGUgY2FjaGUgZmx1c2hpbmcgYW5kIG5vICovCiAJCQkJCS8qIGFkZGl0aW9u
+YWwgYWxsb2NhdGlvbiBhbGlnbm1lbnRzICovCisjZGVmaW5lIFhGU19CTUFQ
+SV9ORUFSCQkweDIwMDAJLyogYWxsb2NhdGUgbmVhciBoZXJlIGlmIHBvc3Np
+YmxlICovCiAKICNkZWZpbmUJWEZTX0JNQVBJX0FGTEFHKHcpCXhmc19ibWFw
+aV9hZmxhZyh3KQogc3RhdGljIGlubGluZSBpbnQgeGZzX2JtYXBpX2FmbGFn
+KGludCB3KQpkaWZmIC11cmIgbGludXgtMi42LjE2LjE2Lm9yaWcvZnMveGZz
+L3hmc19mcy5oIGxpbnV4LTIuNi4xNi4xNi9mcy94ZnMveGZzX2ZzLmgKLS0t
+IGxpbnV4LTIuNi4xNi4xNi5vcmlnL2ZzL3hmcy94ZnNfZnMuaAkyMDA2LTA1
+LTExIDAyOjU2OjI0LjAwMDAwMDAwMCArMDEwMAorKysgbGludXgtMi42LjE2
+LjE2L2ZzL3hmcy94ZnNfZnMuaAkyMDA2LTA3LTIwIDE0OjU0OjEzLjAwMDAw
+MDAwMCArMDEwMApAQCAtMTU2LDEwICsxNTYsMTcgQEAKIAlfX3M2NAkJbF9s
+ZW47CQkvKiBsZW4gPT0gMCBtZWFucyB1bnRpbCBlbmQgb2YgZmlsZSAqLwog
+CV9fczMyCQlsX3N5c2lkOwogCV9fdTMyCQlsX3BpZDsKLQlfX3MzMgkJbF9w
+YWRbNF07CS8qIHJlc2VydmUgYXJlYQkJCSAgICAqLworCV9fczY0CQlsX25l
+YXI7CQkvKiBkaXNrIGJsb2NrIHdlJ2QgbGlrZSB0byBhbGxvY2F0ZSBuZWFy
+ICovCisJX19zMzIJCWxfcGFkWzJdOwkvKiByZXNlcnZlIGFyZWEJCQkgICAg
+Ki8KIH0geGZzX2Zsb2NrNjRfdDsKIAogLyoKKyAqIGZsYWdzIGZvciB0aGUg
+bF93aGVuY2UgZmllbGQKKyAqLworI2RlZmluZSBSRVNWX05FQVIJNAorI2Rl
+ZmluZSBSRVNWX0NPTlRJRwk4CisKKy8qCiAgKiBPdXRwdXQgZm9yIFhGU19J
+T0NfRlNHRU9NRVRSWV9WMQogICovCiB0eXBlZGVmIHN0cnVjdCB4ZnNfZnNv
+cF9nZW9tX3YxIHsKZGlmZiAtdXJiIGxpbnV4LTIuNi4xNi4xNi5vcmlnL2Zz
+L3hmcy94ZnNfdm5vZGVvcHMuYyBsaW51eC0yLjYuMTYuMTYvZnMveGZzL3hm
+c192bm9kZW9wcy5jCi0tLSBsaW51eC0yLjYuMTYuMTYub3JpZy9mcy94ZnMv
+eGZzX3Zub2Rlb3BzLmMJMjAwNi0wNS0xMSAwMjo1NjoyNC4wMDAwMDAwMDAg
+KzAxMDAKKysrIGxpbnV4LTIuNi4xNi4xNi9mcy94ZnMveGZzX3Zub2Rlb3Bz
+LmMJMjAwNi0wNy0yMCAxNDo1NTowNS4wMDAwMDAwMDAgKzAxMDAKQEAgLTM5
+ODQsNyArMzk4NCw4IEBACiAJeGZzX29mZl90CQlvZmZzZXQsCiAJeGZzX29m
+Zl90CQlsZW4sCiAJaW50CQkJYWxsb2NfdHlwZSwKLQlpbnQJCQlhdHRyX2Zs
+YWdzKQorCWludAkJCWF0dHJfZmxhZ3MsCisJeGZzX2ZzYmxvY2tfdAkJbmVh
+cl9ibG9jaykKIHsKIAl4ZnNfbW91bnRfdAkJKm1wID0gaXAtPmlfbW91bnQ7
+CiAJeGZzX29mZl90CQljb3VudDsKQEAgLTQwMjcsNyArNDAyOCw3IEBACiAJ
+ZXJyb3IgPSAwOwogCWltYXBwID0gJmltYXBzWzBdOwogCW5pbWFwcyA9IDE7
+Ci0JYm1hcGlfZmxhZyA9IFhGU19CTUFQSV9XUklURSB8IChhbGxvY190eXBl
+ID8gWEZTX0JNQVBJX1BSRUFMTE9DIDogMCk7CisJYm1hcGlfZmxhZyA9IFhG
+U19CTUFQSV9XUklURSB8IGFsbG9jX3R5cGU7CiAJc3RhcnRvZmZzZXRfZnNi
+CT0gWEZTX0JfVE9fRlNCVChtcCwgb2Zmc2V0KTsKIAlhbGxvY2F0ZXNpemVf
+ZnNiID0gWEZTX0JfVE9fRlNCKG1wLCBjb3VudCk7CiAKQEAgLTQxMTUsMTAg
+KzQxMTYsMTcgQEAKIAkJICogSXNzdWUgdGhlIHhmc19ibWFwaSgpIGNhbGwg
+dG8gYWxsb2NhdGUgdGhlIGJsb2NrcwogCQkgKi8KIAkJWEZTX0JNQVBfSU5J
+VCgmZnJlZV9saXN0LCAmZmlyc3Rmc2IpOworCisJCWlmICgoYm1hcGlfZmxh
+ZyAmIFhGU19CTUFQSV9ORUFSKSAhPSAwKQorCQkJZmlyc3Rmc2IgPSBuZWFy
+X2Jsb2NrOworCiAJCWVycm9yID0geGZzX2JtYXBpKHRwLCBpcCwgc3RhcnRv
+ZmZzZXRfZnNiLAogCQkJCSAgYWxsb2NhdGVzaXplX2ZzYiwgYm1hcGlfZmxh
+ZywKIAkJCQkgICZmaXJzdGZzYiwgMCwgaW1hcHAsICZuaW1hcHMsCiAJCQkJ
+ICAmZnJlZV9saXN0KTsKKworCQlibWFwaV9mbGFnICY9IH5YRlNfQk1BUElf
+TkVBUjsKKwogCQlpZiAoZXJyb3IpIHsKIAkJCWdvdG8gZXJyb3IwOwogCQl9
+CkBAIC00NDg4LDEyICs0NDk2LDI0IEBACiAJdmF0dHJfdAkJdmE7CiAJdm5v
+ZGVfdAkJKnZwOwogCisJeGZzX2ZzYmxvY2tfdAluZWFyX2Jsb2NrID0gTlVM
+TEZTQkxPQ0s7CisJaW50CQlhbGxvY190eXBlID0gMDsKKwogCXZwID0gQkhW
+X1RPX1ZOT0RFKGJkcCk7CiAJdm5fdHJhY2VfZW50cnkodnAsIF9fRlVOQ1RJ
+T05fXywgKGluc3RfdCAqKV9fcmV0dXJuX2FkZHJlc3MpOwogCiAJaXAgPSBY
+RlNfQkhWVE9JKGJkcCk7CiAJbXAgPSBpcC0+aV9tb3VudDsKIAorCWlmIChj
+bWQgPT0gWEZTX0lPQ19SRVNWU1A2NCkgeworCSAgICAJYWxsb2NfdHlwZSB8
+PSAoYmYtPmxfd2hlbmNlICYgUkVTVl9ORUFSKSA/IFhGU19CTUFQSV9ORUFS
+IDogMDsKKwkgICAgCWFsbG9jX3R5cGUgfD0gKGJmLT5sX3doZW5jZSAmIFJF
+U1ZfQ09OVElHKSA/IFhGU19CTUFQSV9DT05USUcgOiAwOworCQliZi0+bF93
+aGVuY2UgJj0gfihSRVNWX05FQVIgfCBSRVNWX0NPTlRJRyk7CisKKwkJaWYg
+KChhbGxvY190eXBlICYgWEZTX0JNQVBJX05FQVIpICE9IDApCisJCQluZWFy
+X2Jsb2NrID0gWEZTX0RBRERSX1RPX0ZTQihtcCwgYmYtPmxfbmVhcik7CisJ
+fQorCiAJLyoKIAkgKiBtdXN0IGJlIGEgcmVndWxhciBmaWxlIGFuZCBoYXZl
+IHdyaXRlIHBlcm1pc3Npb24KIAkgKi8KQEAgLTQ1NTIsNyArNDU3Miw3IEBA
+CiAJY2FzZSBYRlNfSU9DX1JFU1ZTUDoKIAljYXNlIFhGU19JT0NfUkVTVlNQ
+NjQ6CiAJCWVycm9yID0geGZzX2FsbG9jX2ZpbGVfc3BhY2UoaXAsIHN0YXJ0
+b2Zmc2V0LCBiZi0+bF9sZW4sCi0JCQkJCQkJCTEsIGF0dHJfZmxhZ3MpOwor
+CQkJCQkgICAgIGFsbG9jX3R5cGUgfCBYRlNfQk1BUElfUFJFQUxMT0MsIGF0
+dHJfZmxhZ3MsIG5lYXJfYmxvY2spOwogCQlpZiAoZXJyb3IpCiAJCQlyZXR1
+cm4gZXJyb3I7CiAJCXNldHByZWFsbG9jID0gMTsKQEAgLTQ1NzEsNyArNDU5
+MSw3IEBACiAJY2FzZSBYRlNfSU9DX0ZSRUVTUDY0OgogCQlpZiAoc3RhcnRv
+ZmZzZXQgPiBmc2l6ZSkgewogCQkJZXJyb3IgPSB4ZnNfYWxsb2NfZmlsZV9z
+cGFjZShpcCwgZnNpemUsCi0JCQkJCXN0YXJ0b2Zmc2V0IC0gZnNpemUsIDAs
+IGF0dHJfZmxhZ3MpOworCQkJCQkJICAgICBzdGFydG9mZnNldCAtIGZzaXpl
+LCAwLCBhdHRyX2ZsYWdzLCBOVUxMRlNCTE9DSyk7CiAJCQlpZiAoZXJyb3Ip
+CiAJCQkJYnJlYWs7CiAJCX0K
 
-I hope so because I assumed there simply wasn't a patch for 2.6.16 and
-applied this 'best guess' to my servers and rebooted/remounted successfully.
-
-David
-
-
--- 
+------=_Part_44296_19539042.1153406307636--
