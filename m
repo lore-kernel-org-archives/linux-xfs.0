@@ -1,28 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 23:03:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6K63LDW029805
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 23:03:32 -0700
-Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id QAA23106 for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 16:02:48 +1000
-Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k6K62MEo32327937
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 16:02:22 +1000 (AEST)
-Received: (from tes@localhost)
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k6K62Lsp32974694
-	for linux-xfs@oss.sgi.com; Thu, 20 Jul 2006 16:02:21 +1000 (AEST)
-Date: Thu, 20 Jul 2006 16:02:21 +1000 (AEST)
-From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
-Message-Id: <200607200602.k6K62Lsp32974694@snort.melbourne.sgi.com>
-Subject: xfs FAQ update for write cache
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Jul 2006 23:12:43 -0700 (PDT)
+Received: from smtp114.sbc.mail.mud.yahoo.com (smtp114.sbc.mail.mud.yahoo.com [68.142.198.213])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6K6CXDW031260
+	for <linux-xfs@oss.sgi.com>; Wed, 19 Jul 2006 23:12:33 -0700
+Date: Wed, 19 Jul 2006 23:12:09 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: stable xfs
+Message-ID: <20060720061209.GA18135@tuatara.stupidest.org>
+References: <1153150223.4532.24.camel@localhost.localdomain> <17595.47312.720883.451573@base.ty.sabi.co.UK> <1153262166.2669.267.camel@localhost.localdomain> <17597.27469.834961.186850@base.ty.sabi.co.UK> <1153272044.2669.282.camel@localhost.localdomain> <20060719055621.GA1491@tuatara.stupidest.org> <17598.3876.565887.172598@base.ty.sabi.co.UK>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <17598.3876.565887.172598@base.ty.sabi.co.UK>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>
+Cc: Linux XFS <linux-xfs@oss.sgi.com>
 
-Modid:  current:xfs-website:212892a
-faq.html - 1.88 - changed
-	- Update info about write cache.
-	  Mention persistent write cache, external logs,
-	  checking it was actually enabled in xfs msgs.
+On Wed, Jul 19, 2006 at 11:53:24AM +0100, Peter Grandi wrote:
 
---Tim
+> But write barriers are difficult to achieve, and when achieved they
+> are often unreliable, except on enterprise level hardware, because
+> many disks/host adapters/...  simply lie as to whether they have
+> actually started writing (never mind finished writing, or written
+> correctly) stuff.
+
+IDE/SATA doesn't have barrier to lie about (the kernel has to flush
+and wait in those cases).
+
+> The metadata will be consistent, but metadata and data may well will
+> be lost. So the filesystem is still ''corrupted'', at least from the
+> point of view of a sysadm who just wants the filesystem to be
+> effortlessly foolproof.
+
+Sanely written applications shouldn't lose data.
+
+> Look at it from the point of view of a ''practitioner'' sysadm:
+>
+>   ''who cares if the metadata is consistent, if my 3TiB
+>   application database is unusable (and I don't do backups
+
+any sane database should be safe, it will fsync or similar as needed
+
+this is also true for sane MTAs
+
+
+i've actually tested sitations where transactions were in flight and
+i've dropped power on a rack of disks and verified that when it came
+up all transactions that we claimed to have completed really did
+
+i've also done lesser things will SATA disks and email and it usually
+turns out to also be reliable for the most part
