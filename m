@@ -1,46 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 00:58:42 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K7wVDW017906
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 00:58:32 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 02:44:19 -0700 (PDT)
+Received: from mondschein.lichtvoll.de (ms1.lichtvoll.de [194.150.191.234])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6K9i6DW030403
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 02:44:09 -0700
 Received: from localhost (dslb-084-056-078-084.pools.arcor-ip.net [84.56.78.84])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id 78DC8FA8A6
-	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 09:55:36 +0200 (CEST)
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id B6A0EFA8A6
+	for <linux-xfs@oss.sgi.com>; Thu, 20 Jul 2006 11:41:10 +0200 (CEST)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: FAQ updated (was Re: XFS breakage...)
-Date: Thu, 20 Jul 2006 09:58:07 +0200
-References: <20060718222941.GA3801@stargate.galaxy> <1153304468.3706.4.camel@localhost> <20060720171310.B1970528@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060720171310.B1970528@wobbly.melbourne.sgi.com>
+Subject: How does XFS handle file data with regards to journaling?
+Date: Thu, 20 Jul 2006 11:43:40 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200607200958.07706.Martin@lichtvoll.de>
+Message-Id: <200607201143.40984.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: linux-xfs@oss.sgi.com
 
-Am Donnerstag 20 Juli 2006 09:13 schrieb Nathan Scott:
 
-> > what action do you suggest i do now?
->
-> I've captured the state of this issue here, with options and ways
-> to correct the problem:
-> 	http://oss.sgi.com/projects/xfs/faq.html#dir2
->
-> Hope this helps.
+Hello,
 
-Hello Nathan,
+AFAIK XFS does not support real data journaling. But when does it write 
+changes to file data? Does ist write it before or after it updates the 
+journal? IOW does it support ordered writes as ext3 does?
 
-thanks a lot.
+data=ordered    (*)     All data are forced directly out to the main file
+system prior to its metadata being committed to the journal.
 
-If you need anyone to test a new xfs_repair let me know. I have a 
-partition which that kind of corruption at hand and can compile a new 
-xfs_repair under Knoppix 5.
+Or does it work in writeback mode?
 
-If you do not need any additional testers I will fix it the manual way.
+data=writeback      Data ordering is not preserved, data may be written
+into the main file system after its metadata has been                      
+committed to the journal.
 
 Regards,
 -- 
