@@ -1,65 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 22:29:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 22:38:51 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6L5SjDW024481
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 22:28:57 -0700
-Date: Fri, 21 Jul 2006 15:28:07 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6L5c4DW025905
+	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 22:38:16 -0700
+Date: Fri, 21 Jul 2006 15:37:19 +1000
 From: Nathan Scott <nathans@sgi.com>
-Subject: review: fix remount vs barrier options
-Message-ID: <20060721152807.D1998769@wobbly.melbourne.sgi.com>
+Subject: Re: Problems cross compiling xfsprogs
+Message-ID: <20060721153719.E1998769@wobbly.melbourne.sgi.com>
+References: <20060720114406.0fdf557a@XEONBOX>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20060720114406.0fdf557a@XEONBOX>; from jjones@2wire.com on Thu, Jul 20, 2006 at 11:44:06AM -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: jeremy@sgi.com
+To: Jackson Jones <jjones@2wire.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Thu, Jul 20, 2006 at 11:44:06AM -0700, Jackson Jones wrote:
+> xfs@oss.sgi.com, Nathan,
+> 
+> Hi, my name is Jackson Jones, I am working on an embedded linux project. We are
+> using XFS for our filesystem. I am updating our toolchain to a 2.6.12 kernel
+> (from a 2.4.25).
+> 
+> We were using xfsprogs-2.6.25 (which did fine against the 2.4.25 kernel. When
+> compiling against the 2.6.12 kernel, I got the following error(the entire build
+> log is attached)
+>....
+> fadvise.o: In function `fadvise_f':
+> /home/jjones/depot/mp/exp-perf/output/mipsel/build/debug/xfsprogs/io/fadvise.c:122:
+> undefined reference to `posix_fadvise64'
 
-Jeremy has had me scratching my head for a few days trying to
-figure out how the SCSI traces he's looking at can still show
-signs of write barriers being issued to the device, despite a
-"remount,nobarrier" having been done.
+This sounds like you have an ancient libc... is that possible?
 
-It finally clicked that we are not clearing the buffer flag
-from a previously written log buffer, even though we'll no
-longer set a new flag into a buffer (due to the mount flag
-being cleared), so we _can_ still issue barrier writes when
-remounted without barriers.
+> I moved up to xfsprogs-2.7.11 and got (entire log is attached).
+> -DPACKAGE=\"xfsprogs\" -I../include -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+> --tag=gcc -c bit.c libtool: compile: unable to infer tagged configuration
+> libtool: compile: specify a tag with `--tag' gmake[2]: *** [bit.lo] Error 1
+> make[1]: *** [default] Error 2 make[1]: Leaving directory
 
-This was made more complicated by the way a freshly mounted
-filesystem with 8 log buffers wouldn't show up the problem,
-since we have to slowly cycle through the "clear" log buffers
-before we see the bug.  This seems like the simplest fix...
+Urgh, I have no idea - libtool Just Works (TM) for me, so I
+don't mess with it... if you need to pass more options in,
+bounce us a patch implementing that I guess.
 
-(Hmmm, actually, I wonder if this will also resolve the quota
-log I/O problem that was reported the other day too).
+> Is there a version (of xfsprogs, which you recommend, or where in the build
+> script should I insert the --tag=gcc option after the mode=compile? I am
+
+Dunno.
+
+> guessing the libtool is confused since our compiler is called
+> mipsel-linux-gcc.
+
+Did setting CC in the environment before running configure have
+any effect?  (not sure, I've not done it, but maybe..)
+
+cheers.
 
 -- 
 Nathan
-
-
-Index: xfs-linux/xfs_log.c
-===================================================================
---- xfs-linux.orig/xfs_log.c	2006-07-21 08:55:24.520992250 +1000
-+++ xfs-linux/xfs_log.c	2006-07-21 09:47:08.429216000 +1000
-@@ -1471,6 +1471,8 @@ xlog_sync(xlog_t		*log,
- 	 */
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 		XFS_BUF_ORDERED(bp);
-+	else
-+		XFS_BUF_UNORDERED(bp);
- 
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
- 	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-@@ -1503,6 +1505,8 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ASYNC(bp);
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			XFS_BUF_ORDERED(bp);
-+		else
-+			XFS_BUF_UNORDERED(bp);
- 		dptr = XFS_BUF_PTR(bp);
- 		/*
- 		 * Bump the cycle numbers at the start of each block
