@@ -1,45 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Jul 2006 23:28:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Jul 2006 01:06:32 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6L6S4DW000594
-	for <xfs@oss.sgi.com>; Thu, 20 Jul 2006 23:28:16 -0700
-Message-ID: <44C07377.3060209@sgi.com>
-Date: Fri, 21 Jul 2006 16:25:59 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: review: fix remount vs barrier options
-References: <20060721152807.D1998769@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060721152807.D1998769@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6L865DW020183
+	for <linux-xfs@oss.sgi.com>; Fri, 21 Jul 2006 01:06:16 -0700
+Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA21874 for <linux-xfs@oss.sgi.com>; Fri, 21 Jul 2006 18:05:30 +1000
+Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k6L854Eo33929511
+	for <linux-xfs@oss.sgi.com>; Fri, 21 Jul 2006 18:05:05 +1000 (AEST)
+Received: (from tes@localhost)
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k6L853br33936230
+	for linux-xfs@oss.sgi.com; Fri, 21 Jul 2006 18:05:03 +1000 (AEST)
+Date: Fri, 21 Jul 2006 18:05:03 +1000 (AEST)
+From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
+Message-Id: <200607210805.k6L853br33936230@snort.melbourne.sgi.com>
+Subject: TAKE faq.html - barrier disable msg clarification
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com, jeremy@sgi.com
+To: linux-xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> Hi,
-> 
-> Jeremy has had me scratching my head for a few days trying to
-> figure out how the SCSI traces he's looking at can still show
-> signs of write barriers being issued to the device, despite a
-> "remount,nobarrier" having been done.
-> 
-> It finally clicked that we are not clearing the buffer flag
-> from a previously written log buffer, even though we'll no
-> longer set a new flag into a buffer (due to the mount flag
-> being cleared), so we _can_ still issue barrier writes when
-> remounted without barriers.
-> 
-> This was made more complicated by the way a freshly mounted
-> filesystem with 8 log buffers wouldn't show up the problem,
-> since we have to slowly cycle through the "clear" log buffers
-> before we see the bug.  This seems like the simplest fix...
-> 
-> (Hmmm, actually, I wonder if this will also resolve the quota
-> log I/O problem that was reported the other day too).
-> 
-Patch looks good to me.
+Date:  Fri Jul 21 01:03:59 PDT 2006
+Inspected by:  tes@sgi.com
+
+The following file(s) were checked into:
+  bonnie.engr.sgi.com:/isms/xfs-website/current
+
+
+Modid:  current:xfs-website:212950a
+faq.html - 1.93 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.4-xfs/faq.html.diff?r1=text&tr1=1.93&r2=text&tr2=1.92&f=h
+	- Give more info and list the msgs for disabling barrier support.
+	  Martin Steigerwald suggested that clarification would be useful
+	  here.
 
 --Tim
