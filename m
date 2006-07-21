@@ -1,104 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Jul 2006 11:07:50 -0700 (PDT)
-Received: from smtp102.sbc.mail.mud.yahoo.com (smtp102.sbc.mail.mud.yahoo.com [68.142.198.201])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6LI7VDW011398
-	for <linux-xfs@oss.sgi.com>; Fri, 21 Jul 2006 11:07:35 -0700
-Date: Fri, 21 Jul 2006 11:07:07 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: stable xfs
-Message-ID: <20060721180707.GB13892@tuatara.stupidest.org>
-References: <20060720061527.GB18135@tuatara.stupidest.org> <1153404502.2768.50.camel@localhost.localdomain> <20060720161707.GB26748@tuatara.stupidest.org> <1153413481.2768.65.camel@localhost.localdomain> <20060720190401.GA28836@tuatara.stupidest.org> <1153441178.2768.158.camel@localhost.localdomain> <20060721032632.GA4138@tuatara.stupidest.org> <1153487431.2841.8.camel@localhost.localdomain> <20060721160709.GB12347@tuatara.stupidest.org> <1153501244.2841.50.camel@localhost.localdomain>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Jul 2006 16:00:30 -0700 (PDT)
+Received: from lilly.ping.de (lilly.ping.de [83.97.42.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6LMxWDW012338
+	for <xfs@oss.sgi.com>; Fri, 21 Jul 2006 15:59:39 -0700
+Date: Sat, 22 Jul 2006 00:58:05 +0200
+From: Jochen Heuer <jogi-kernel@planetzork.ping.de>
+Subject: Re: BUG: soft lockup detected on CPU#1!
+Message-ID: <20060721225805.GB12184@planetzork.ping.de>
+References: <20060717125216.GA15481@planetzork.ping.de> <1153146608.1218.9.camel@localhost.localdomain>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1153501244.2841.50.camel@localhost.localdomain>
+In-Reply-To: <1153146608.1218.9.camel@localhost.localdomain>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ming Zhang <mingz@ele.uri.edu>
-Cc: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>, Linux XFS <linux-xfs@oss.sgi.com>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, nathans@sgi.com, xfs@oss.sgi.com
 
-On Fri, Jul 21, 2006 at 01:00:44PM -0400, Ming Zhang wrote:
+Hi everyone.
 
-> what u mean overlay fs over small fs? like a unionfs?
+> > Jul 17 09:23:03 [kernel]  [<c022dcbe>] crypt+0xee/0x1e0
+> > Jul 17 09:23:03 [kernel]  [<c022ddef>] crypt_iv_unaligned+0x3f/0xc0
+> > Jul 17 09:23:03 [kernel]  [<c022e23d>] cbc_decrypt_iv+0x3d/0x50
+> > Jul 17 09:23:03 [kernel]  [<c032f6b7>] crypt_convert_scatterlist+0x117/0x170
+> > Jul 17 09:23:03 [kernel]  [<c032f8b2>] crypt_convert+0x142/0x190
+> > Jul 17 09:23:03 [kernel]  [<c032fb82>] kcryptd_do_work+0x42/0x60
+> > Jul 17 09:23:03 [kernel]  [<c012fcff>] run_workqueue+0x6f/0xe0
+> > Jul 17 09:23:03 [kernel]  [<c012fe98>] worker_thread+0x128/0x150
+> > Jul 17 09:23:03 [kernel]  [<c0133364>] kthread+0xa4/0xe0
+> > Jul 17 09:23:03 [kernel]  [<c01010e5>] kernel_thread_helper+0x5/0x10
+> > Jul 17 09:24:17 [kernel] =============================================
+> > Jul 17 09:24:17 [kernel] [ INFO: possible recursive locking detected ]
+> > Jul 17 09:24:17 [kernel] ---------------------------------------------
+> 
+> This looks like a separate issue, and something more about fixing
+> lockdep not to report it instead of an actual bug (and why I CC'd the
+> xfs folks and Ingo).
+> 
+> Probably XFS needs to tell lockdep about it's nesting. But maybe there
+> is a bug that is lying in there somewhere.
 
-sorta not really, it's userspace libraries which create a virtual
-filesystem over real filesystems with some database (bezerkely db).
-it sorta evolved from an attempt to unify several filesystems spread
-over cheap PCs into something that pretended to be one larger fs
+I have some more of these. Now they look like this every time I get them:
 
-> but other than fsr. there is no better way for this right?
+Jul 19 18:43:15 [kernel] =============================================
+Jul 19 18:43:15 [kernel] [ INFO: possible recursive locking detected ]
+Jul 19 18:43:15 [kernel] ---------------------------------------------
+Jul 19 18:43:15 [kernel] qmail-local/9368 is trying to acquire lock:
+Jul 19 18:43:15 [kernel]  (&(&ip->i_lock)->mr_lock){----}, at: [<c01f63b0>]
+xfs_ilock+0x60/0xb0
+Jul 19 18:43:15 [kernel] but task is already holding lock:
+Jul 19 18:43:15 [kernel]  (&(&ip->i_lock)->mr_lock){----}, at: [<c01f63b0>]
+xfs_ilock+0x60/0xb0
+Jul 19 18:43:15 [kernel] other info that might help us debug this:
+Jul 19 18:43:15 [kernel] 2 locks held by qmail-local/9368:
+Jul 19 18:43:15 [kernel]  #0:  (&inode->i_mutex){--..}, at: [<c03c2931>]
+mutex_lock+0x21/0x30
+Jul 19 18:43:15 [kernel]  #1:  (&(&ip->i_lock)->mr_lock){----}, at:
+[<c01f63b0>] xfs_ilock+0x60/0xb0
+Jul 19 18:43:15 [kernel] stack backtrace:
+Jul 19 18:43:15 [kernel]  [<c0103cd2>] show_trace+0x12/0x20
+Jul 19 18:43:15 [kernel]  [<c0103de9>] dump_stack+0x19/0x20
+Jul 19 18:43:15 [kernel]  [<c01385a9>] print_deadlock_bug+0xb9/0xd0
+Jul 19 18:43:15 [kernel]  [<c013862b>] check_deadlock+0x6b/0x80
+Jul 19 18:43:15 [kernel]  [<c0139ed4>] __lock_acquire+0x354/0x990
+Jul 19 18:43:15 [kernel]  [<c013ac35>] lock_acquire+0x75/0xa0
+Jul 19 18:43:15 [kernel]  [<c0136aaf>] down_write+0x3f/0x60
+Jul 19 18:43:15 [kernel]  [<c01f63b0>] xfs_ilock+0x60/0xb0
+Jul 19 18:43:15 [kernel]  [<c01f5b3a>] xfs_iget_core+0x2aa/0x5b0
+Jul 19 18:43:15 [kernel]  [<c01f5f0c>] xfs_iget+0xcc/0x150
+Jul 19 18:43:15 [kernel]  [<c0210b38>] xfs_trans_iget+0xa8/0x140
+Jul 19 18:43:15 [kernel]  [<c01f80af>] xfs_ialloc+0xaf/0x4c0
+Jul 19 18:43:15 [kernel]  [<c021159d>] xfs_dir_ialloc+0x6d/0x280
+Jul 19 18:43:15 [kernel]  [<c0217381>] xfs_create+0x241/0x670
+Jul 19 18:43:15 [kernel]  [<c022307d>] xfs_vn_mknod+0x1ed/0x2e0
+Jul 19 18:43:15 [kernel]  [<c0223182>] xfs_vn_create+0x12/0x20
+Jul 19 18:43:15 [kernel]  [<c017514d>] vfs_create+0x7d/0xd0
+Jul 19 18:43:15 [kernel]  [<c017542f>] open_namei+0xbf/0x620
+Jul 19 18:43:15 [kernel]  [<c016487c>] do_filp_open+0x2c/0x60
+Jul 19 18:43:15 [kernel]  [<c0164c00>] do_sys_open+0x50/0xe0
+Jul 19 18:43:15 [kernel]  [<c0164cac>] sys_open+0x1c/0x20
+Jul 19 18:43:15 [kernel]  [<c0102e15>] sysenter_past_esp+0x56/0x8d
 
-not publicly, you could patch fsr or nag me for my patches if that
-helps
+Best regards,
 
-> of course, preallocate is always good. but i do not have control
-> over applications.
-
-well, in some cases you could use LD_PRELOAD and influence things,  it
-depends on the application and what you need from it
-
-fwiw, most modern p2p applicaitons have terribly access patterns which
-cause cause horrible fragmentation (on all fs's, not just XFS)
-
-> sounds like a useful patch. :P will it be merged into fsr code?
-
-no, because it's ugly and i don't think i ever decoupled it from other
-changes and posted it
-
-> what kind of assistance you mean?
-
-[WARNING: lots of hand waving ahead, plenty of minor, but important,
-details ignored]
-
-if you wanted much smarter defragmentation semantics, it would
-probably make sense to
-
-  * bulkstat the entire volume, this will give you the inode cluster
-    locations and enough information to start building a tree of where
-    all the files are (XFS_IOC_FSGEOMETRY details obviously)
-
-  * opendir/read to build a full directory tree
-
-  * use XFS_IOC_GETBMAP & XFS_IOC_GETBMAPA to figure out which blocks
-    are occupied by which files
-
-you would now have a pretty good idea of what is using what parts of
-the disk, except of course it could be constantly changing underneath
-you to make things harder
-
-also, doing this using the existing interfaces is (when i tried it)
-really really painfully slow if you have a large filesystem with a lot
-of small files (even when you try to optimized you accesses for
-minimize seeking by sorting by inode number and submitting several
-requests in parallel to try and help the elevator merge accesses)
-
-
-one you have some overall picture of the disk, you can decide what you
-want to move to achieve your goal, typically this would be to reduce
-the fragmentation of the largest files, and this would be be
-relocating some of all of those blocks to another place
-
-if you want to allocate space in a given AG, you open/creat a
-temporary file in a directory in that AG (create multiple dirs as
-needed to ensure you have one or more of these), and preallocate the
-space --- there you can copy the file over
-
-we could also add ioctls to further bias XFSs allocation strategies,
-like telling it to never allocate in some AGs (needed for an online
-shrink if someone wanted to make such a thing) or simply bias strongly
-away from some places, then add other ioctls to allow you to
-specifically allocate space in those AGs so you can bias what is
-allocated where
-
-another useful ioctl would be a variation of XFS_IOC_SWAPEXT which
-would swap only some extents.  there is no internal support for this
-now except we do have code for XFS_IOC_UNRESVSP64 and XFS_IOC_RESVSP64
-so perhaps the idea would be to swap some (but not all) blocks of a
-file by creating a function that do the equivalent of 'punch a hole'
-where we want to replace the blocks, and then 'allocate new blocks
-given some i already have elsewhere' (however, making that all work as
-one transaction might be very very difficult)
-
-it's a lot of effort for what for many people wouldn't only have
-marginal gains
+   Jochen
