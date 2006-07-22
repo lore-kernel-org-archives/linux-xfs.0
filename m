@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 10:45:28 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 10:45:31 -0700 (PDT)
 Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6MHj3DW015116
-	for <linux-xfs@OSS.SGI.com>; Sat, 22 Jul 2006 10:45:16 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6MHjIDW015176
+	for <linux-xfs@oss.sgi.com>; Sat, 22 Jul 2006 10:45:19 -0700
 Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
 	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1G4LJm-0003zp-Rg
-	for <linux-xfs@OSS.SGI.com>; Sat, 22 Jul 2006 18:31:10 +0100
+	id 1G4JY2-0003pG-6C
+	for <linux-xfs@oss.sgi.com>; Sat, 22 Jul 2006 16:37:46 +0100
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <17602.24798.454081.144575@base.ty.sabi.co.UK>
-Date: Sat, 22 Jul 2006 18:31:10 +0100
+Message-ID: <17602.17985.533632.85589@base.ty.sabi.co.UK>
+Date: Sat, 22 Jul 2006 16:37:37 +0100
 Subject: Re: stable xfs
-In-Reply-To: <20060720061209.GA18135@tuatara.stupidest.org>
+In-Reply-To: <1153314670.2691.14.camel@localhost.localdomain>
 References: <1153150223.4532.24.camel@localhost.localdomain>
 	<17595.47312.720883.451573@base.ty.sabi.co.UK>
 	<1153262166.2669.267.camel@localhost.localdomain>
 	<17597.27469.834961.186850@base.ty.sabi.co.UK>
 	<1153272044.2669.282.camel@localhost.localdomain>
-	<20060719055621.GA1491@tuatara.stupidest.org>
-	<17598.3876.565887.172598@base.ty.sabi.co.UK>
-	<20060720061209.GA18135@tuatara.stupidest.org>
+	<17598.2129.999932.67127@base.ty.sabi.co.UK>
+	<1153314670.2691.14.camel@localhost.localdomain>
 From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
@@ -28,62 +27,50 @@ Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Linux XFS <linux-xfs@oss.sgi.com>
 
->>> On Wed, 19 Jul 2006 23:12:09 -0700, Chris Wedgwood
->>> <cw@f00f.org> said:
+>>> On Wed, 19 Jul 2006 09:11:10 -0400, Ming Zhang
+>>> <mingz@ele.uri.edu> said:
 
 [ ... ]
 
-pg> But write barriers are difficult to achieve, and when
-pg> achieved they are often unreliable, except on enterprise
-pg> level hardware, because many disks/host adapters/...  simply
-pg> lie as to whether they have actually started writing (never
-pg> mind finished writing, or written correctly) stuff.
+mingz> what kind of "ram vs fs" size ratio here will be a
+mingz> safe/good/proper one?  any rule of thumb? thanks! hope
+mingz> not 1:1. :)
 
-cw> IDE/SATA doesn't have barrier to lie about
+This is driven mostly by the space required by check/repair
+(which can well be above 4GiB, so 64 bit systems are often
+required):
 
-Actually a very few ATA/SATA do have write barriers, but that is
-a just a nitpick, because it is hard to get to them, and anyhow
-Linux does not take advantage much :-).
+  http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
 
-cw> (the kernel has to flush and wait in those cases).
+   «e.g. it took 1.5GiB RAM for 32bit xfs_check and 2.7GiB RAM
+    for a 64bit xfs_check on a 1.1TiB filesystem with 3million
+    inodes in it.»
 
-But ATA/SATA flush and wait have the same problems as write
-barriers, except worse: disks and ATA/SATA cards do lie too as
-to cache flushing. Just getting an ATA/SATA driver or card
-manufacturer to tell whether completion of cache flush is
-reported when the command is received, or when writing has
-started, or when writing has ended, is pretty difficult.
+It suggests that a 10TB filesystem might need from about 15
+gigabytes of RAM (or swap, with corresponding slowdown), after
+all only less than 0.2% of its size.
 
-cw> [ ... ] Sanely written applications shouldn't lose data. [
-cw> ... ] any sane database should be safe, it will fsync or
-cw> similar as needed this is also true for sane MTAs
+Anyhow, a system with lots of RAM to speedly check/repair an
+XFS filesystem also benefits from the same RAM for caching and
+delayed writing, so it is all for good (as long as one has a
+perfectly reliable block IO subsystem).
 
-Sure, in optimal conditions where people running the system and
-writing applications know exactly what they are doing and the
-storage subsystem has the right semantics, then things are
-good. Problem is, ''sanity'' is not entirely common in IT, as
-the archives of this mailing list show abundantly.
+Note that the 15 gigabytes in the example above are well above
+what a 32 bit process can address, thus for multi-terabyte
+filesystem one should really have a 64 bit system (from the same
+article mentioned above):
 
-cw> i've actually tested sitations where transactions were in
-cw> flight and i've dropped power on a rack of disks and
-cw> verified that when it came up all transactions that we
-cw> claimed to have completed really did
+  http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
 
-I hope that this was with an Altix or equivalently robustly and
-advisedly engineered system and storage subsystem... (and I
-don't get any commission from SGI :->).
+   «> > Your filesystem (8TiB) may simply bee too large for your
+    > > system to be able to repair. Try mounting it on a 64bit
+    > > system with more RAM in it and repairing it from there.
+    > 
+    > Sorry, but is this a joke?
 
-cw> i've also done lesser things will SATA disks and email and
-cw> it usually turns out to also be reliable for the most part
+    A joke? Absolutely not.
 
-Ehehehe here :-). I like the «usually» and «most part». But my
-argument is that I guess that is what the 'ext3' designers, but
-not the XFS ones, have targeted.
-
-The difference here between XFS and 'ext3' is that with 'ext3'
-(and similar) even a not very aware sysadm running on a not very
-well chosen system can get ''just works''. Just the 'commit=5'
-default of 'ext3' makes *a very large* difference.
-
-My overall message is that using XFS on a system that «usually»
-and for the «most part» ''just works'' is not very appropriate...
+    Acheivable XFS filesystem sizes outgrew the capability of 32
+    bit Irix systems to repair them several years ago. Now that
+    linux supports larger than 2TiB filesystems on 32 bit
+    systems, this is true for Linux as well.»
