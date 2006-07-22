@@ -1,72 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 02:32:04 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6M9VlDW022775
-	for <linux-xfs@oss.sgi.com>; Sat, 22 Jul 2006 02:31:48 -0700
-Received: from localhost (dslb-084-056-114-021.pools.arcor-ip.net [84.56.114.21])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id D61ABFA8A7
-	for <linux-xfs@oss.sgi.com>; Sat, 22 Jul 2006 11:28:29 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: XFS and write barrier
-Date: Sat, 22 Jul 2006 11:31:15 +0200
-References: <200607151248.56603.Martin@lichtvoll.de> <200607182027.49648.Martin@lichtvoll.de> <20060718192135.GV15160733@melbourne.sgi.com>
-In-Reply-To: <20060718192135.GV15160733@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 05:18:49 -0700 (PDT)
+Received: from mxfep02.bredband.com (mxfep02.bredband.com [195.54.107.73])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6MCIBDW012463
+	for <linux-xfs@oss.sgi.com>; Sat, 22 Jul 2006 05:18:15 -0700
+Message-ID: <44C1FFA3.1050805@stesmi.com>
+Date: Sat, 22 Jul 2006 12:36:19 +0200
+From: Stefan Smietanowski <stesmi@stesmi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607221131.16238.Martin@lichtvoll.de>
+Subject: Re: XFS and write barrier
+References: <200607151248.56603.Martin@lichtvoll.de> <200607182027.49648.Martin@lichtvoll.de> <20060718192135.GV15160733@melbourne.sgi.com> <200607221131.16238.Martin@lichtvoll.de>
+In-Reply-To: <200607221131.16238.Martin@lichtvoll.de>
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+ protocol="application/pgp-signature";
+ boundary="------------enig5AA663FDD0F88E9C46B816A2"
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com
 
-Am Dienstag 18 Juli 2006 21:21 schrieb David Chinner:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig5AA663FDD0F88E9C46B816A2
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 
-> > > blkdev_issue_flush() causes a write cache flush - just like a
-> > > barrier typically causes a write cache flush up to the I/O with the
-> > > barrier in it.  Both of these mechanisms provide the same thing -
-> > > an I/O barrier that enforces ordering of I/Os to disk.
-> >
-> > Hello David,
-> >
-> > well now it gets interesting. If both provide the same thing, whats
-> > the difference?
->
-> A WRITE_BARRIER I/O can be optimised by smart drivers, protocols and
-> hardware to minimise the adverse effects of the barrier, whereas a
-> cache flush is a brute force cache cleaning mechanism that cannot be
-> optimised....
+> immediately while with a barrier it can happen some time in the future 
+> given that it happens before the barrier request is issued.  
 
-Hello David,
+Timetravel?
 
-I like to understand this difference a bit better.
+// Stefan
 
-As far as I understand there are three important differences between 
-blkdev_issue_flush() and using the new barrier functionality:
+--------------enig5AA663FDD0F88E9C46B816A2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-1) blkdev_issue_flush() issues a cache flush synchronously and the 
-filesystem has to wait for it to return. OTOH a write barrier is like a 
-asynchron cache flush: The filesystem sends a barrier request to the 
-block layer and forgets about it then. It can handle other stuff in the 
-meanwhile while block layer will take care of the correct order of the 
-write requests.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
 
-2) Since the filesystem offloads the ordering of the requests to the block 
-layer, block layer can support smart drivers, protocols and hardware to 
-optimize request ordering (say TCQ devices for example).
+iD8DBQFEwf+nBrn2kJu9P78RA4WoAJ9XmpyP156zjsy49tanoZQ8/IgVbACgl2CG
+hvmcUGtlQP3O4IFZDna8sLo=
+=bj9k
+-----END PGP SIGNATURE-----
 
-3) A direct cache flush means that the cache flush has to happen 
-immediately while with a barrier it can happen some time in the future 
-given that it happens before the barrier request is issued.  
-
-So the advantages of the barrier functionality that is that it provides 
-request ordering at a lower cost for the filesystem.
-
-Anything to add or correct?
-
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+--------------enig5AA663FDD0F88E9C46B816A2--
