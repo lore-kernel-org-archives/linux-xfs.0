@@ -1,37 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 16:12:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PNBZDW025094
-	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 16:11:47 -0700
-Date: Wed, 26 Jul 2006 09:10:50 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS breakage in 2.6.18-rc1
-Message-ID: <20060726091050.D2118045@wobbly.melbourne.sgi.com>
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <Pine.LNX.4.64.0607221722500.8407@prinz64.housecafe.de> <20060724090138.C2083275@wobbly.melbourne.sgi.com> <Pine.LNX.4.61.0607252215010.12906@yvahk01.tjqt.qr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0607252215010.12906@yvahk01.tjqt.qr>; from jengelh@linux01.gwdg.de on Tue, Jul 25, 2006 at 10:16:10PM +0200
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 05:10:00 -0700 (PDT)
+Received: from web31705.mail.mud.yahoo.com (web31705.mail.mud.yahoo.com [68.142.201.185])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6NC9hDW030060
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 05:09:43 -0700
+Message-ID: <20060723110919.79373.qmail@web31705.mail.mud.yahoo.com>
+Date: Sun, 23 Jul 2006 04:09:18 -0700 (PDT)
+From: Heilige Gheist <hgheist@yahoo.com>
+Subject: XFS setting custom extent size: real-time section only?
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 25, 2006 at 10:16:10PM +0200, Jan Engelhardt wrote:
-> Now that 2.6.17.7 is finally there, I am going to eyeball my XFS 
-> filesystems. Does xfsprogs 2.7.11 suffice?
+I'm trying to get custom extent size per file working, but
+XFS_IOC_FSSETXATTR ioctl returns with EINVAL,
+both from my code or from xfs_io.
+The environment is SLES9 SP2, 2.6.5-7.252 kernel, xfsprogs-2.6.25-0.6
+After examining the kernel code in xfs_vnodeops.c we found out that
+custom extent size is supported on files in real-time section only.
+This is not mentioned anywhere else in the documentation, so I'm
+wondering whether this limitation is removed in further kernel
+versions.
+I've downloaded the recent xfsprogs-2.8.4, it uses a new flag
+XFS_XFLAG_EXTSIZE when setting the custom extent size.
+I'm not sure what kernel version do I need to work with 2.8.4, but it's
+certainly a sign that kernel support has changed.
+Can anyone shed a light on this?
 
-Sure, except for the repair issue which Barry is working on
-(see the FAQ).
+Thanks,
+Alan
 
-> Please update the XFS FAQ about this problem (and the solution, for 
-> others that did not read LKML), thanks!
 
-That was done last week.  You shoulda read it before sending
-this, and saved me some time replying. ;)
-
-cheers.
-
--- 
-Nathan
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
