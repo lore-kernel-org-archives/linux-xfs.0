@@ -1,72 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 16:02:17 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PN1aDW023806
-	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 16:01:47 -0700
-Date: Wed, 26 Jul 2006 09:00:51 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS setting custom extent size: real-time section only?
-Message-ID: <20060726090051.C2118045@wobbly.melbourne.sgi.com>
-References: <20060725084356.B2090627@wobbly.melbourne.sgi.com> <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>; from hgheist@yahoo.com on Tue, Jul 25, 2006 at 11:08:07AM -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 07:21:57 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6NELkDW012442
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 07:21:46 -0700
+Message-ID: <44C385DE.100@sandeen.net>
+Date: Sun, 23 Jul 2006 09:21:18 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Userspace cp and ls utility
+References: <44C0B0E4.7020403@l4x.org> <44C2EEC5.4020804@sandeen.net> <44C33080.3060108@l4x.org>
+In-Reply-To: <44C33080.3060108@l4x.org>
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Heilige Gheist <hgheist@yahoo.com>
+To: Jan Dittmer <jdi@l4x.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jul 25, 2006 at 11:08:07AM -0700, Heilige Gheist wrote:
-> [..]
-> > 
-> > OK.  Are you certain you need this feature?  (can you describe your
-> > usage a bit?)  You can get large contiguous chunks of disk space via
-> > large direct writes for example, or preallocation, so maybe you could
-> > attack the issue from a different angle to solve it?
+Jan Dittmer wrote:
+>> You could also try xfs_copy, it makes a copy of the filesystem and 
+>> works on the underlying device, with the filesystem unmounted.  
+>> There's a man page for it.
 > 
-> The application is reading and writing sparse file of 0.5-1GB, with
-> heavy skew toward read. The data is written in clusters of various
-> size, depending on data stream type. The filesystem is constantly being
-> updated with new data, older files are removed, the filesystem gets
-> fragmented and we're down to the allocation extent size in terms of
-> available contiguous disk space.
+> Is there any difference to using dd when the destination is no xfs
+> filesystem? And if I read the description correctly it does not allow
+> to copy individual files?
 
-Hmm.
+xfs_copy knows about the xfs format, so it only copies what it needs to.  dd 
+will copy every bit on the source disk.  So, xfs_copy is more efficient.  There 
+is no option to copy individual files.
 
-> When you speak of pre-allocation, do you suggest using XFS_IOC_RESVSP
-> ioctl interface to explicitly reserve blocks in advance?
+Depending on the problem with your original filesystem, perhaps xfs_copy might 
+not be the best choice.
 
-Yes, thats the one.
-
-> Can it guarantee contiguous chunk allocation?
-
-No, but it does the best it can under the circumstances,
-which is usually pretty good.
-
-> management, isn't it? Basically you pay for unfragmented contiguous
-> block layout with extra disk space reserved for unwritten data.
-
-But its not really "extra" if you know you're going to use it,
-right?
-
-> If so, why offer custom extent size in the first place?
-
-Its a different concept, solving different problems really.  One is
-at the extent level, the other is at (typically large) ranges of bytes
-that can be more than an extent.  One is a "harder" guarantee than the
-the other of getting contiguous space, as they call into the allocator
-in different ways.
-
-> [..]
-> > > Do I have to have non-realtime regular section?
-> > Yes.  All metadata is stored there.
-> Is there any way I can do sizing of the meta-data? 
-
-I'm not sure what you're asking there...?
-
-cheers.
-
--- 
-Nathan
+-Eric
