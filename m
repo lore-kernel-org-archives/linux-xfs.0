@@ -1,42 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Jul 2006 01:00:14 -0700 (PDT)
-Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6I802DW009575
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Jul 2006 01:00:03 -0700
-Received: from [72.21.53.38] (helo=jubjub.nabble.com)
-	by talk.nabble.com with esmtp (Exim 4.50)
-	id 1G2kUV-00065A-8K
-	for linux-xfs@oss.sgi.com; Tue, 18 Jul 2006 00:59:39 -0700
-Message-ID: <5374022.post@talk.nabble.com>
-Date: Tue, 18 Jul 2006 00:59:39 -0700 (PDT)
-From: Cosmo Nova <cs_mcc98@hotmail.com>
-Subject: Re: file system defragmentation
-In-Reply-To: <20060717141917.GY2114946@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 02:26:00 -0700 (PDT)
+Received: from ds666.l4x.org (mail.trixing.net [87.230.125.58])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6N9PcDW012646
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 02:25:38 -0700
+Message-ID: <44C33080.3060108@l4x.org>
+Date: Sun, 23 Jul 2006 10:17:04 +0200
+From: Jan Dittmer <jdi@l4x.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <44C0B0E4.7020403@l4x.org> <44C2EEC5.4020804@sandeen.net>
+In-Reply-To: <44C2EEC5.4020804@sandeen.net>
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <43128F82.4010004@tlinx.org> <4312913F.6040205@coremetrics.com> <43311567.3060208@tlinx.org> <5356806.post@talk.nabble.com> <20060717141917.GY2114946@melbourne.sgi.com>
+Subject: Re: Userspace cp and ls utility
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
+Eric Sandeen schrieb:
+> Jan Dittmer wrote:
+> 
+>> Are there utilities for xfs which are able to ls and
+>> cp from an _unmounted_ xfs volume? I fear that by
+>> mounting the volume - even ro - I would lose even more
+>> data.
+>> Or can I achieve such an effect with other xfs related
+>> utilities?
+> 
+> 
+> Mounting ro should be fine - if you also mount with "norecovery" then 
+> truly no IO should happen.  If you're really paranoid, find a utility to 
+> mark the block device itself as read-only, then you've taken it out of 
+> the filesystem's hands completely.
 
-Hi, can I summarize by saying that, XFS still partition the volume into
-different allocation groups, but there is NO locking. Two files may write in
-the same allocation group and introduce fragments?
-What is the maximum and typical number of allocation groups please? I can't
-find the numbers in the source code...
+Thanks for the suggestions. Meanwhile I found the norecovery option
+myself and got most of my data back. Strangely enough I had one top
+directory missing on one mount attempt (only ro option) and it appeared
+again on the next attempt (ro + norecovery).
 
-And for the buffer, Is preallocation the same as delayed allocation? page
-cache, as I remember belongs to Linux VFS. What are the memory / disk
-requirement and sizing for the cache please? If a file space allocation is
-delayed, what is the upper bound of the delayed size? Can files of MBs, GBs
-being delayed allocate, and multiple channels/threads files all store in
-memory?? How XFS's allocation works (with number please if possible) to help
-tackle fragmentation?
+> You could also try xfs_copy, it makes a copy of the filesystem and works 
+> on the underlying device, with the filesystem unmounted.  There's a man 
+> page for it.
 
-Thankyou!
--- 
-View this message in context: http://www.nabble.com/file-system-defragmentation-tf255485.html#a5374022
-Sent from the Xfs - General forum at Nabble.com.
+Is there any difference to using dd when the destination is no xfs
+filesystem? And if I read the description correctly it does not allow
+to copy individual files?
+
+Thanks,
+
+Jan
