@@ -1,50 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 11:07:49 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6MI7aDW018671
-	for <linux-xfs@OSS.SGI.com>; Sat, 22 Jul 2006 11:07:37 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1G4Lv3-00044x-28
-	for <linux-xfs@OSS.SGI.com>; Sat, 22 Jul 2006 19:09:41 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Jul 2006 20:37:18 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6N3b2DW009496
+	for <xfs@oss.sgi.com>; Sat, 22 Jul 2006 20:37:02 -0700
+Message-ID: <44C2EEC5.4020804@sandeen.net>
+Date: Sat, 22 Jul 2006 22:36:37 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: Userspace cp and ls utility
+References: <44C0B0E4.7020403@l4x.org>
+In-Reply-To: <44C0B0E4.7020403@l4x.org>
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <17602.27108.555049.327996@base.ty.sabi.co.UK>
-Date: Sat, 22 Jul 2006 19:09:40 +0100
-Subject: Re: stable xfs
-In-Reply-To: <1153413481.2768.65.camel@localhost.localdomain>
-References: <1153150223.4532.24.camel@localhost.localdomain>
-	<17595.47312.720883.451573@base.ty.sabi.co.UK>
-	<1153262166.2669.267.camel@localhost.localdomain>
-	<17597.27469.834961.186850@base.ty.sabi.co.UK>
-	<1153272044.2669.282.camel@localhost.localdomain>
-	<17598.2129.999932.67127@base.ty.sabi.co.UK>
-	<1153314670.2691.14.camel@localhost.localdomain>
-	<20060720061527.GB18135@tuatara.stupidest.org>
-	<1153404502.2768.50.camel@localhost.localdomain>
-	<20060720161707.GB26748@tuatara.stupidest.org>
-	<1153413481.2768.65.camel@localhost.localdomain>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: Jan Dittmer <jdi@l4x.org>
+Cc: xfs@oss.sgi.com
 
->>> On Thu, 20 Jul 2006 12:38:01 -0400, Ming Zhang
->>> <mingz@ele.uri.edu> said:
+Jan Dittmer wrote:
+> Are there utilities for xfs which are able to ls and
+> cp from an _unmounted_ xfs volume? I fear that by
+> mounting the volume - even ro - I would lose even more
+> data.
+> Or can I achieve such an effect with other xfs related
+> utilities?
 
-[ ... ]
+Mounting ro should be fine - if you also mount with "norecovery" then truly no 
+IO should happen.  If you're really paranoid, find a utility to mark the block 
+device itself as read-only, then you've taken it out of the filesystem's hands 
+completely.
 
->>> we mainly handle large media files like 20-50GB. so file
->>> number is not too much. but file size is large.
+You could also try xfs_copy, it makes a copy of the filesystem and works on the 
+underlying device, with the filesystem unmounted.  There's a man page for it.
 
->> xfs_repair usually deals with that fairly well in reality
->> (much better than lots of small files anyhow)
-
-> sounds cool. yes, large # of small files are always painful.
-
-It is not just number of inodes, it is also number of
-extents. That is total number of metadata items.
-
-[ ... ]
+-Eric
