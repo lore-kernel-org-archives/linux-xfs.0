@@ -1,35 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 16:22:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6RNLPDW010623
-	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 16:21:36 -0700
-Date: Fri, 28 Jul 2006 09:20:36 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: [PATCH] [xfs] Add lock annotations to xfs_trans_update_ail and xfs_trans_delete_ail
-Message-ID: <20060728092035.C2196410@wobbly.melbourne.sgi.com>
-References: <1153938323.12517.58.camel@josh-work.beaverton.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 09:04:01 -0700 (PDT)
+Received: from stargate.synerway.com (stargate.synerway.com [84.14.10.249])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OG3nDW024688
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 09:03:50 -0700
+Received: from stargate.synerway.com (stargate.synerway.com [127.0.0.1])
+	by stargate.synerway.com (Postfix) with ESMTP id 13EB6454092
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 18:31:30 +0200 (CEST)
+Received: from venus (unknown [172.16.10.150])
+	by stargate.synerway.com (Postfix) with ESMTP id 0515C45408E
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 18:31:29 +0200 (CEST)
+Date: Mon, 24 Jul 2006 18:03:17 +0200
+From: Pascal GREGIS <pgs@synerway.com>
+Subject: currupted files filling with zeros after power failure
+Message-ID: <20060724160317.GA787@venus.synerway.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1153938323.12517.58.camel@josh-work.beaverton.ibm.com>; from josht@us.ibm.com on Wed, Jul 26, 2006 at 11:25:23AM -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josh Triplett <josht@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Wed, Jul 26, 2006 at 11:25:23AM -0700, Josh Triplett wrote:
-> xfs_trans_update_ail and xfs_trans_delete_ail get called with the AIL lock
-> held, and release it.  Add lock annotations to these two functions (abstracted
-> like the AIL lock itself) so that sparse can check callers for lock pairing,
-> and so that sparse will not complain about these functions since they
-> intentionally use locks in this manner.
+Hello everyone,
 
-Thanks Josh, looks good - I'll get it merged.  I'd prefer to just
-open code the use of __acquires/__releases for clarity, but I can
-easily make that change before merging.
+I'm  working on power failures on some test machines in my company.
+I volunteerly switch off my machine by pressing the power button and restart my machine to see how it behaves.
 
-cheers.
+The problem I'm facing is that about once for two crashes the last file (or at least the last file) i which I wrote becomes corrupted and filled with \0 characters.
 
--- 
-Nathan
+I didn't think XFS could be subject to this type of problem, however here isn't really the reason of my mail.
+
+What I would like to know is what can I do to resolve this problem? Is XFS able to recover my file with its right content, at least a consistent content, not only \0 characters?
+I made some tries with xfs_repair and it didn't repair it, once it put me some inodes in lost+found but id didn't repair my corrupted file.
+Maybe xfs_db could help, I don't know.
+
+I'm running a 2.6.11.11 kernel iwth xfsprogs-2.7.3 and xfsdump-2.2.30.
+Maybe is a bug in that kernel.
+
+Do you guys know if this problem has often been encountered or not,a dn if there is a way to proceed?
+
+Thank you
+
+Pascal
