@@ -1,37 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Jul 2006 02:25:29 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6Q9PHDW000330
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Jul 2006 02:25:17 -0700
-Received: from deepdance.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id A3F68FA68E
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Jul 2006 11:24:32 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: finally there it is: 2.6.17.7 contains XFS corruption fix
-Date: Wed, 26 Jul 2006 11:24:45 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 17:25:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6O0OoDW002141
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 17:25:02 -0700
+Date: Mon, 24 Jul 2006 10:23:59 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Buglet in mount(8) with large page size
+Message-ID: <20060724102359.B2056114@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Message-Id: <200607261124.45399.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Arthur Corliss <acorliss@nevaeh-linux.org>, xfs@oss.sgi.com
 
+Hi Adrian,
 
-Hello,
+We have had this XFS bug report...
+	http://oss.sgi.com/bugzilla/show_bug.cgi?id=704
+...and Arthur has diagnosed the problem and proposed a fix.
 
-2.6.17.7 contains fix for
+Its in some code we "lifted" from mount(8) to attempt to detect
+an existing filesystem/partition/... before overwriting it with
+mkfs.xfs.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6757
+How do you want to fix this in mount_guess_fstype.c?  Options
+would seem to be:
+- bump up the size of the "buf" array to cater for all current
+page sizes; or
+- malloc the read buffer taking into account the page size.
 
-So no need to apply the patch manually anymore.
+cheers.
 
-Kudos to kernel stable team!
-
-Regards,
 -- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Nathan
