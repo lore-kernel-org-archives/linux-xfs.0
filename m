@@ -1,76 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Jul 2006 06:30:37 -0700 (PDT)
-Received: from mail01.miraclelinux.com (ns.miraclelinux.com [219.118.163.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6QDUHDW006609
-	for <xfs@oss.sgi.com>; Wed, 26 Jul 2006 06:30:22 -0700
-Message-ID: <44C7508A.5010500@miraclelinux.com>
-Date: Wed, 26 Jul 2006 20:22:50 +0900
-From: Robert <robert@miraclelinux.com>
-MIME-Version: 1.0
-Subject: Unresolved generic_file_write_nolock
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 23:06:23 -0700 (PDT)
+Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6O65dDW017893
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 23:05:52 -0700
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k6O5vfnx029358
+	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 00:57:41 -0500
+Received: from omx2.sgi.com ([198.149.32.25])
+	by imr2.americas.sgi.com (8.12.9/8.12.10/SGI_generic_relay-1.2) with ESMTP id k6O678Du42435685
+	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 23:07:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with SMTP id k6O8P6JQ023948
+	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 01:25:07 -0700
+Received: from wobbly.melbourne.sgi.com (wobbly.melbourne.sgi.com [134.14.55.135]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id PAA27287 for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 15:57:34 +1000
+Received: from wobbly.melbourne.sgi.com (localhost [127.0.0.1])
+	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k6O5vWgw2093802
+	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 15:57:33 +1000 (EST)
+Received: (from nathans@localhost)
+	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k6O5vVaq2094825
+	for xfs@oss.sgi.com; Mon, 24 Jul 2006 15:57:31 +1000 (EST)
+Date: Mon, 24 Jul 2006 15:57:30 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: review: bump up xlog_state_do_callback loop checking
+Message-ID: <20060724155730.A2090627@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
-Cc: Robert <robert@miraclelinux.com>
 
-Hi XFS guys
+Hi,
 
-I like to use XFS but I have a compile question for
+I started running the QA tests with an external log on a ramdisk &
+now constantly see situations where xlog_state_so_callback reports:
 
-xfs-modules-fs-modules-1.3.3-2.4.21-27.0.2.EL.sgi9.src.rpm
+    Filesystem "sda2": xlog_state_do_callback: looping 10
+    Filesystem "sda2": xlog_state_do_callback: looping 20
+    Filesystem "sda2": xlog_state_do_callback: looping 10
+    Filesystem "sda2": xlog_state_do_callback: looping 10
+    Filesystem "sda2": xlog_state_do_callback: looping 10
+    Filesystem "sda2": xlog_state_do_callback: looping 20
 
-which is download from ftp://oss.sgi/com/projects/xfs/testing/RHEL3/
+on the system console.  Tim and I looked into this further, and remembered
+long ago list discussion on the topic, after others reported this too (also
+on ramdisks interestingly):
+http://oss.sgi.com/archives/xfs/2005-02/msg00108.html
+http://oss.sgi.com/archives/xfs/2005-02/msg00109.html
+
+So, it seems Glen added this to try detect infinte loops on systems where
+we do log callback processing in interrupt context (i.e. IRIX).  It seems
+that with ramdisks its causing spurious warnings due to how quickly the
+completion handlers will be run (immediate, sync) though.  We can quite
+easily still keep the same infinite loop check but bump up the reporting
+threshold to something that wont happen for ramdisks/raid caches ... and
+report each several-thousand iterations instead of each tenth one.  It
+does still seems worthwhile to keep the infinte loop detection though, so
+at this stage I've left that in there.
+
+Tim also insisted I optimise away the modulo operation that we do in the
+callback processing loop, while I was fixing this other issue, and he's
+pointed out an easy way to do that...
+
+cheers.
+
+-- 
+Nathan
 
 
-I compiled it with kernel-2.4.21-37.EL with normal steps. Everything
-is ok and then I run the command installkernel but got below error 
-message like this:
-
-depmod  ..... xfs.o
-Unresolved symble : generic_file_write_nolock
-
-Then I had tried to find this function in 2.4.21-37EL and mainstream
-kernel-2.4.32, but it does not exist in them. I refer to SPEC file
-and found this generic_file_write_nolock() already deleted at
-linux-2.4.21-odirect.patch, no more exist. Even in the old kernel
-2.4.21-20.EL, I can not find it.
-
-This generic_file_write_nolock() is used in xfs/linux/xfs_lrw.c line 745
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2.4.22) || defined\ 
-(KERNEL_HAS_NEW_O_DIRECT)
-    :
-    :
-    :
-#else
-retry :
-      if (ioflags & IO_ISDIRECT) {
-            xfs_inval_cached_pages(vp, io, *offset, 1, 1);
-      }
-      ret = generic_file_write_nolock(file, buf, size, offset);
-#endif
-
-Logically, the #if KERNEL_VERSION_CODE is smaller than 2.4.22.
-The generic_file_write_nolock should be included by C preprocessor.
-So, could you guys tell me why the uploaded RPM:
-
-xfs-modules-smp-1.3.3-2.4.21_27.0.2.EL.sgi9_sgi2.i686.rpm
-
-does not included this function, generic_file_write_nolock?
-
-and Did you compile the xfs-modules with the same kernel
-2.4.21-27.0.2.EL.sgi9_sgi2?
-
-I can not find generic_file_write_nolock in the System.map of the
-its uploaded RPM :
-
-  kernel-smp-2.4.21-27.0.2.EL.sgi9.i686.rpm
-
-This issue take my time for about 1 week and still not solved.
-Any comment is thankfully.
-
-Best Regards
-Robert
+Index: xfs-linux/xfs_log.c
+===================================================================
+--- xfs-linux.orig/xfs_log.c	2006-07-20 12:06:56.455633750 +1000
++++ xfs-linux/xfs_log.c	2006-07-20 12:17:19.819492000 +1000
+@@ -2243,9 +2243,13 @@ xlog_state_do_callback(
+ 
+ 			iclog = iclog->ic_next;
+ 		} while (first_iclog != iclog);
+-		if (repeats && (repeats % 10) == 0) {
++
++		if (repeats > 5000) {
++			flushcnt += repeats;
++			repeats = 0;
+ 			xfs_fs_cmn_err(CE_WARN, log->l_mp,
+-				"xlog_state_do_callback: looping %d", repeats);
++				"%s: possible infinite loop (%d iterations)",
++				__FUNCTION__, flushcnt);
+ 		}
+ 	} while (!ioerrors && loopdidcallbacks);
+ 
+@@ -2277,6 +2281,7 @@ xlog_state_do_callback(
+ 	}
+ #endif
+ 
++	flushcnt = 0;
+ 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR)) {
+ 		flushcnt = log->l_flushcnt;
+ 		log->l_flushcnt = 0;
