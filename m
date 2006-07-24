@@ -1,43 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 16:44:18 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6RNhcDW014579
-	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 16:43:49 -0700
-Date: Fri, 28 Jul 2006 09:42:54 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS / Quota Bug in  2.6.17.x and 2.6.18x
-Message-ID: <20060728094254.F2196410@wobbly.melbourne.sgi.com>
-References: <44C8A5F1.7060604@profihost.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 10:16:10 -0700 (PDT)
+Received: from mondschein.lichtvoll.de (ms2.lichtvoll.de [194.150.191.235] (may be forged))
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OHFuDW003379
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 10:15:57 -0700
+Received: from localhost (dslb-084-056-077-111.pools.arcor-ip.net [84.56.77.111])
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id C0B45FA68A
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 19:15:24 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: currupted files filling with zeros after power failure
+Date: Mon, 24 Jul 2006 19:15:19 +0200
+References: <20060724160317.GA787@venus.synerway.com>
+In-Reply-To: <20060724160317.GA787@venus.synerway.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <44C8A5F1.7060604@profihost.com>; from s.priebe@profihost.com on Thu, Jul 27, 2006 at 01:39:29PM +0200
+Message-Id: <200607241915.19642.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: ProfiHost - Stefan Priebe <s.priebe@profihost.com>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hi Stefan,
+Am Montag 24 Juli 2006 18:03 schrieb Pascal GREGIS:
 
-On Thu, Jul 27, 2006 at 01:39:29PM +0200, ProfiHost - Stefan Priebe wrote:
-> Hello!
-> 
-> The crash only occurs if you use quota and IDE without barrier support.
-> 
-> The Problem is, that on a new mount of a root filesystem - the flag 
-> VFS_RDONLY is set - and so no barrier check is done before checking 
-> quota. With this patch barrier check is done always. The partition 
-> should not be mounted at that moment. For mount -o remount, rw or 
-> something like this it uses another function where VFS_RDONLY is checked.
+[ files with zero at the end after switching off the computer abruptly)
 
-Ah, I see.  The patch isn't quite right, I think we will now need to
-also add a test to xfs_mountfs_check_barriers() to ensure the device
-beneath us is not bdev_read_only().
+> I didn't think XFS could be subject to this type of problem, however
+> here isn't really the reason of my mail.
 
-I'll add that and get the fix merged, thanks.
+Hello Pascal,
 
-cheers.
+it is. Cause it does not do data journaling and it doesn't ensure that the 
+data that belongs to a metadata change (i.e. enlarge a file) makes it to 
+the disk before the metadate change. Read about "Journaling options and 
+write latency" in
 
+http://www-128.ibm.com/developerworks/library/l-fs8.html
+
+to find out more about this. XFS behaves like ext3 with "data=writeback". 
+
+This is the fastest mode of operation. "data=ordered" => writing data 
+before metadata is slightly slower and "data=journal" => data journalling 
+is twice as slow. AFAIK only Reiser4 (and the commercial WAFL) can do 
+fast data journaling by use of its wandering logs feature:
+
+http://en.wikipedia.org/wiki/Wandering_log
+
+> What I would like to know is what can I do to resolve this problem? Is
+> XFS able to recover my file with its right content, at least a
+> consistent content, not only \0 characters? I made some tries with
+> xfs_repair and it didn't repair it, once it put me some inodes in
+> lost+found but id didn't repair my corrupted file. Maybe xfs_db could
+> help, I don't know.
+
+I think you can't fix it without changing XFS to support either data 
+journaling or writing data before metadata.
+
+BTW seen from the metadata side the files are not corrupted. The 
+filesystem structure is still fine. Any application that relies on the 
+integrity of the file contents will have a problem tough. Its a speed 
+versus data safety issue unless you use some kind of wandering logs or a 
+another approach which doesn't require writing data twice.
+
+Still with data journaling you may get a certain granularity depending on 
+its implementation, maybe a 4K (page granularity) write (data + metadata) 
+made it through, while some more writes where missing. Ideally either a 
+write *as issued* by the application will make it through completely or 
+not at all.
+
+An additional approach is having some sort of data journaling in the 
+application which should know best about the integrity of its own data. 
+Many databases and servers take some precautions to ensure data integrity 
+in case of a crash.
+
+Regards,
 -- 
-Nathan
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
