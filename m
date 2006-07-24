@@ -1,49 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 16:19:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6RNIODW006209
-	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 16:18:36 -0700
-Date: Fri, 28 Jul 2006 09:17:35 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: review: increase bulkstat readahead window
-Message-ID: <20060728091735.B2196410@wobbly.melbourne.sgi.com>
-References: <20060725135004.E2116482@wobbly.melbourne.sgi.com> <20060725094004.GB29615@infradead.org> <20060726083709.B2118045@wobbly.melbourne.sgi.com> <20060726102551.GA9141@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 07:42:10 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.184])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OEfxDW010263
+	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 07:41:59 -0700
+Received: by nf-out-0910.google.com with SMTP id a27so1547302nfc
+        for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 07:41:35 -0700 (PDT)
+Message-ID: <d1ec67b40607240625s5d8b9385ueab714c0f20fcc24@mail.gmail.com>
+Date: Mon, 24 Jul 2006 15:25:09 +0200
+From: "Artur Iwaniuk" <aiwaniuk@gmail.com>
+Subject: atime on xfs
+MIME-Version: 1.0
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20060726102551.GA9141@infradead.org>; from hch@infradead.org on Wed, Jul 26, 2006 at 11:25:51AM +0100
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cw@f00f.org, vapo@melbourne.sgi.com, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Wed, Jul 26, 2006 at 11:25:51AM +0100, Christoph Hellwig wrote:
-> Maybe we can start with a common XFS routine first:
-> 
-> kmem_alloc_greedy(size_t *size, size_t minsize, unsigned int flags)
+hello,
 
-Looks good, I'll create a patch & send out later today.  Actually,
-we could say minsize is 1 page, and simplify - for our uses in XFS,
-that will suffice... or dya want that extra parameter for the more
-generic version later?
+can anyone can me explain such stat on my xfs partition:
 
-> > cost is added for usual case), just so we can always easily see where
-> > the large allocations are, and trap any inadvertantly introduced new
-> > ones... thoughts?
-> 
-> I'm happy with that flag, but I'd prefer it only allocations with
-> KM_LARGE would go to vmalloc so that we can start to untangle the
-> allocator wrapping mess.
+  File: `194/194.149.231.137'
+  Size: 0               Blocks: 0          IO Block: 4096   pusty zwyk=B3y
+plik
+Device: 902h/2306d      Inode: 1477457428  Links: 1
+Access: (0666/-rw-rw-rw-)  Uid: (  201/  qmaild)   Gid: (  200/ nofiles)
+Access: 2006-07-18 09:13:32.903206500 +0200
+Modify: 2006-07-18 11:26:23.273786250 +0200
+Change: 2006-07-18 11:26:23.273786250 +0200
 
-Yep - that was the other reason why I started down that path - I'm not
-convinced we really need the vmalloc calls anymore, we don't get near
-the max slab cutoff on my i386 test box anyway, AFAICT.  Long term, we
-should be removing the vmalloc call, but needs more beating to be sure
-nothing can get there nowadays - ultimately we should just BUG_ON over
-a max size (below the current vmalloc cutoff).
+why access time is earlier than change, modify time ? how is it posible? is
+there bug in xfs ?
+i am sure, that file was asscessed yesterday, maybe even today
 
-cheers.
+please, help
 
--- 
-Nathan
+
+[[HTML alternate version deleted]]
