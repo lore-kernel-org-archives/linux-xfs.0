@@ -1,37 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 07:21:57 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6NELkDW012442
-	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 07:21:46 -0700
-Message-ID: <44C385DE.100@sandeen.net>
-Date: Sun, 23 Jul 2006 09:21:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Userspace cp and ls utility
-References: <44C0B0E4.7020403@l4x.org> <44C2EEC5.4020804@sandeen.net> <44C33080.3060108@l4x.org>
-In-Reply-To: <44C33080.3060108@l4x.org>
-Content-Type: text/plain; charset=KOI8-R; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 15:22:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PMM0DW019211
+	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 15:22:12 -0700
+Date: Wed, 26 Jul 2006 08:21:12 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: review: fix remount vs barrier options
+Message-ID: <20060726082112.A2118045@wobbly.melbourne.sgi.com>
+References: <20060721152807.D1998769@wobbly.melbourne.sgi.com> <20060723190650.GA22180@infradead.org> <20060724100147.F2083275@wobbly.melbourne.sgi.com> <20060724112737.D2085715@wobbly.melbourne.sgi.com> <20060725094438.GD29615@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20060725094438.GD29615@infradead.org>; from hch@infradead.org on Tue, Jul 25, 2006 at 10:44:38AM +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Dittmer <jdi@l4x.org>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, jeremy@sgi.com
 
-Jan Dittmer wrote:
->> You could also try xfs_copy, it makes a copy of the filesystem and 
->> works on the underlying device, with the filesystem unmounted.  
->> There's a man page for it.
-> 
-> Is there any difference to using dd when the destination is no xfs
-> filesystem? And if I read the description correctly it does not allow
-> to copy individual files?
+Hi Christoph,
 
-xfs_copy knows about the xfs format, so it only copies what it needs to.  dd 
-will copy every bit on the source disk.  So, xfs_copy is more efficient.  There 
-is no option to copy individual files.
+On Tue, Jul 25, 2006 at 10:44:38AM +0100, Christoph Hellwig wrote:
+> ...
+> The flag clearing changes look good.  But why is it okay to skip the
+> ordered flag on the first block?  We want to make sure all previous I/O
+> is finished before even doing the first log block write, don't we?
 
-Depending on the problem with your original filesystem, perhaps xfs_copy might 
-not be the best choice.
+No, thats not necessary - Tim and I looked into this at length - the
+way the split log write happens, we keep a count in the iclog struct
+for this write (its initially 2); once the first write completes (and
+this is guaranteed to be before the final write by the final write's
+barrier), we atomically decrement that counter.  Once it reaches zero
+(i.e. only one buffer completion was remaining, which is also the non-
+split log write case) only then will we do any callback processing,
+metadata unpinning, etc, etc.
 
--Eric
+So, its a safe and valid optimisation - otherwise we do an extra write
+with barrier whenever we wrap around the physical log end.
+
+Thanks for the reviews!
+
+cheers.
+
+-- 
+Nathan
