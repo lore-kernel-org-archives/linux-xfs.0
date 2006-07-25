@@ -1,41 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 07:35:53 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (ms1.lichtvoll.de [194.150.191.234])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SEZgDW019917
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 07:35:42 -0700
-Received: from localhost (dslb-084-056-089-058.pools.arcor-ip.net [84.56.89.58])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id 46A47FA68E
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:35:01 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: Problem with xfs_repair
-Date: Fri, 28 Jul 2006 16:35:10 +0200
-References: <20060728064505.GA14714@charite.de> <200607280656.QAA18277@larry.melbourne.sgi.com> <20060728082950.GA30429@charite.de>
-In-Reply-To: <20060728082950.GA30429@charite.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 11:09:05 -0700 (PDT)
+Received: from web31702.mail.mud.yahoo.com (web31702.mail.mud.yahoo.com [68.142.201.182])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PI8XDW023588
+	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 11:08:35 -0700
+Message-ID: <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>
+Date: Tue, 25 Jul 2006 11:08:07 -0700 (PDT)
+From: Heilige Gheist <hgheist@yahoo.com>
+Subject: Re: XFS setting custom extent size: real-time section only?
+In-Reply-To: <20060725084356.B2090627@wobbly.melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200607281635.10559.Martin@lichtvoll.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Am Freitag 28 Juli 2006 10:29 schrieb Ralf Hildebrandt:
+[..]
+> 
+> OK.  Are you certain you need this feature?  (can you describe your
+> usage a bit?)  You can get large contiguous chunks of disk space via
+> large direct writes for example, or preallocation, so maybe you could
+> attack the issue from a different angle to solve it?
 
-> >   2. Try the xfs_repair patch I just posted to this list.
->
-> This means I'd have to get this running under knoppix (or should I try
-> an in place repair)?
+The application is reading and writing sparse file of 0.5-1GB, with
+heavy skew toward read. The data is written in clusters of various
+size, depending on data stream type. The filesystem is constantly being
+updated with new data, older files are removed, the filesystem gets
+fragmented and we're down to the allocation extent size in terms of
+available contiguous disk space.
 
-Hello Ralf,
+When you speak of pre-allocation, do you suggest using XFS_IOC_RESVSP
+ioctl interface to explicitly reserve blocks in advance?
+Can it guarantee contiguous chunk allocation?
+Provided it can, pre-allocation is pretty much the same as extent
+management, isn't it? Basically you pay for unfragmented contiguous
+block layout with extra disk space reserved for unwritten data.
+If so, why offer custom extent size in the first place?
 
-its possible to compile xfs_repair under Knoppix V5. I did it once. I do 
-not remember the exact steps anymore. I needed uuid lib from ext3-utils 
-as documented and I think some additional packages.
+[..]
+> > Do I have to have non-realtime regular section?
+> Yes.  All metadata is stored there.
+Is there any way I can do sizing of the meta-data? 
 
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+--alan
+
+
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
