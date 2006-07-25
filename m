@@ -1,40 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 05:10:00 -0700 (PDT)
-Received: from web31705.mail.mud.yahoo.com (web31705.mail.mud.yahoo.com [68.142.201.185])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6NC9hDW030060
-	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 05:09:43 -0700
-Message-ID: <20060723110919.79373.qmail@web31705.mail.mud.yahoo.com>
-Date: Sun, 23 Jul 2006 04:09:18 -0700 (PDT)
-From: Heilige Gheist <hgheist@yahoo.com>
-Subject: XFS setting custom extent size: real-time section only?
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 16:02:17 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PN1aDW023806
+	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 16:01:47 -0700
+Date: Wed, 26 Jul 2006 09:00:51 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: XFS setting custom extent size: real-time section only?
+Message-ID: <20060726090051.C2118045@wobbly.melbourne.sgi.com>
+References: <20060725084356.B2090627@wobbly.melbourne.sgi.com> <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>; from hgheist@yahoo.com on Tue, Jul 25, 2006 at 11:08:07AM -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Heilige Gheist <hgheist@yahoo.com>
+Cc: xfs@oss.sgi.com
 
-I'm trying to get custom extent size per file working, but
-XFS_IOC_FSSETXATTR ioctl returns with EINVAL,
-both from my code or from xfs_io.
-The environment is SLES9 SP2, 2.6.5-7.252 kernel, xfsprogs-2.6.25-0.6
-After examining the kernel code in xfs_vnodeops.c we found out that
-custom extent size is supported on files in real-time section only.
-This is not mentioned anywhere else in the documentation, so I'm
-wondering whether this limitation is removed in further kernel
-versions.
-I've downloaded the recent xfsprogs-2.8.4, it uses a new flag
-XFS_XFLAG_EXTSIZE when setting the custom extent size.
-I'm not sure what kernel version do I need to work with 2.8.4, but it's
-certainly a sign that kernel support has changed.
-Can anyone shed a light on this?
+On Tue, Jul 25, 2006 at 11:08:07AM -0700, Heilige Gheist wrote:
+> [..]
+> > 
+> > OK.  Are you certain you need this feature?  (can you describe your
+> > usage a bit?)  You can get large contiguous chunks of disk space via
+> > large direct writes for example, or preallocation, so maybe you could
+> > attack the issue from a different angle to solve it?
+> 
+> The application is reading and writing sparse file of 0.5-1GB, with
+> heavy skew toward read. The data is written in clusters of various
+> size, depending on data stream type. The filesystem is constantly being
+> updated with new data, older files are removed, the filesystem gets
+> fragmented and we're down to the allocation extent size in terms of
+> available contiguous disk space.
 
-Thanks,
-Alan
+Hmm.
 
+> When you speak of pre-allocation, do you suggest using XFS_IOC_RESVSP
+> ioctl interface to explicitly reserve blocks in advance?
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+Yes, thats the one.
+
+> Can it guarantee contiguous chunk allocation?
+
+No, but it does the best it can under the circumstances,
+which is usually pretty good.
+
+> management, isn't it? Basically you pay for unfragmented contiguous
+> block layout with extra disk space reserved for unwritten data.
+
+But its not really "extra" if you know you're going to use it,
+right?
+
+> If so, why offer custom extent size in the first place?
+
+Its a different concept, solving different problems really.  One is
+at the extent level, the other is at (typically large) ranges of bytes
+that can be more than an extent.  One is a "harder" guarantee than the
+the other of getting contiguous space, as they call into the allocator
+in different ways.
+
+> [..]
+> > > Do I have to have non-realtime regular section?
+> > Yes.  All metadata is stored there.
+> Is there any way I can do sizing of the meta-data? 
+
+I'm not sure what you're asking there...?
+
+cheers.
+
+-- 
+Nathan
