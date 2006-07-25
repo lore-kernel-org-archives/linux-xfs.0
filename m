@@ -1,97 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 23:45:50 -0700 (PDT)
-Received: from mail.charite.de (mail.charite.de [160.45.207.131])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6S6jdDW025025
-	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 23:45:40 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by mail.charite.de (Postfix) with ESMTP id 14B7E2207FB
-	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 08:45:10 +0200 (CEST)
-Received: from mail.charite.de ([127.0.0.1])
-	by localhost (mail.charite.de [127.0.0.1]) (amavisd-new, port 10025)
-	with LMTP id 8bRIUKf0uHlD for <xfs@oss.sgi.com>;
-	Fri, 28 Jul 2006 08:45:08 +0200 (CEST)
-Received: from postamt.charite.de (postamt.charite.de [160.45.207.132])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mail.charite.de (Postfix) with ESMTP id ED5292207ED
-	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 08:45:06 +0200 (CEST)
-Date: Fri, 28 Jul 2006 08:45:05 +0200
-From: Ralf Hildebrandt <Ralf.Hildebrandt@charite.de>
-Subject: Problem with xfs_repair
-Message-ID: <20060728064505.GA14714@charite.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 03:51:38 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6PAp7DZ001440
+	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 03:51:11 -0700
+Date: Tue, 25 Jul 2006 10:44:38 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: review: fix remount vs barrier options
+Message-ID: <20060725094438.GD29615@infradead.org>
+References: <20060721152807.D1998769@wobbly.melbourne.sgi.com> <20060723190650.GA22180@infradead.org> <20060724100147.F2083275@wobbly.melbourne.sgi.com> <20060724112737.D2085715@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20060724112737.D2085715@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, jeremy@sgi.com
 
-xfs_repair gave me this when repairing my / fs using a knoppix boot cd:
+On Mon, Jul 24, 2006 at 11:27:37AM +1000, Nathan Scott wrote:
+> On Mon, Jul 24, 2006 at 10:01:48AM +1000, Nathan Scott wrote:
+> > On Sun, Jul 23, 2006 at 08:06:50PM +0100, Christoph Hellwig wrote:
+> > > Shouldn't we make sure we clear all flags when reusing a log buffer?
+> > > Relying on clearing individual flags seems rather fragile to me.
+> > 
+> > *nod* - good idea.  I'll rework xlog_sync, and resend later.
+> 
+> After looking more, I'm less convinced.  There's some flags we wont
+> want to touch - the "internal" flags like PAGE_CACHE, etc (that one
+> is obviously not relevent here, but still, at some point a flag may
+> be introduced that we accidentally break by clearing all flags).
+> 
+> There is a ZEROFLAGS macro, I've added ORDERED to that and used it
+> instead.  I also fixed the double barrier issue for the split log
+> write case - here's an updated patch...
 
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - clear lost+found (if it exists) ...
-        - clearing existing "lost+found" inode
-        - marking entry "lost+found" to be deleted
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - ensuring existence of lost+found directory
-        - traversing filesystem starting at / ... 
-rebuilding directory inode 128
-
-fatal error -- can't read block 16777216 for directory inode 167785633
-
-a) How can I find out which file/directory this inode belongs to?
-b) Can I mark the block defektiv somehow?
-
--- 
-Ralf Hildebrandt (i.A. des IT-Zentrums)         Ralf.Hildebrandt@charite.de
-Charite - Universitätsmedizin Berlin            Tel.  +49 (0)30-450 570-155
-Gemeinsame Einrichtung von FU- und HU-Berlin    Fax.  +49 (0)30-450 570-962
-IT-Zentrum Standort CBF                 send no mail to spamtrap@charite.de
+The flag clearing changes look good.  But why is it okay to skip the
+ordered flag on the first block?  We want to make sure all previous I/O
+is finished before even doing the first log block write, don't we?
