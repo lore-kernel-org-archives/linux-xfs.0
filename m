@@ -1,38 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 13:06:33 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6NK68DW030214
-	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 13:06:08 -0700
-Date: Sun, 23 Jul 2006 20:06:50 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: review: fix remount vs barrier options
-Message-ID: <20060723190650.GA22180@infradead.org>
-References: <20060721152807.D1998769@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060721152807.D1998769@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 18:36:21 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6Q1ZdDW021262
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Jul 2006 18:35:51 -0700
+Subject: PARTIAL TAKE 944409 - bulkstat readahead
+Message-Id: <20060726013459.655AA58C38C1@chook.melbourne.sgi.com>
+Date: Wed, 26 Jul 2006 11:34:59 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com, jeremy@sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-> It finally clicked that we are not clearing the buffer flag
-> from a previously written log buffer, even though we'll no
-> longer set a new flag into a buffer (due to the mount flag
-> being cleared), so we _can_ still issue barrier writes when
-> remounted without barriers.
+Drop unneeded endian conversion in bulkstat and start readahead for
+batches of inode cluster buffers at once, before any blocking reads
+are issued.
 
-That's true.  Ooops.
+Date:  Wed Jul 26 11:34:38 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  hch
 
-> This was made more complicated by the way a freshly mounted
-> filesystem with 8 log buffers wouldn't show up the problem,
-> since we have to slowly cycle through the "clear" log buffers
-> before we see the bug.  This seems like the simplest fix...
-> 
-> (Hmmm, actually, I wonder if this will also resolve the quota
-> log I/O problem that was reported the other day too).
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
 
-Shouldn't we make sure we clear all flags when reusing a log buffer?
-Relying on clearing individual flags seems rather fragile to me.
+
+Modid:  xfs-linux-melb:xfs-kern:26606a
+xfs_itable.c - 1.142 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.142&r2=text&tr2=1.141&f=h
