@@ -1,106 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Jul 2006 18:29:04 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6O1SQDW010534
-	for <xfs@oss.sgi.com>; Sun, 23 Jul 2006 18:28:38 -0700
-Date: Mon, 24 Jul 2006 11:27:37 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: review: fix remount vs barrier options
-Message-ID: <20060724112737.D2085715@wobbly.melbourne.sgi.com>
-References: <20060721152807.D1998769@wobbly.melbourne.sgi.com> <20060723190650.GA22180@infradead.org> <20060724100147.F2083275@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060724100147.F2083275@wobbly.melbourne.sgi.com>; from nathans@sgi.com on Mon, Jul 24, 2006 at 10:01:48AM +1000
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Jul 2006 06:30:37 -0700 (PDT)
+Received: from mail01.miraclelinux.com (ns.miraclelinux.com [219.118.163.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6QDUHDW006609
+	for <xfs@oss.sgi.com>; Wed, 26 Jul 2006 06:30:22 -0700
+Message-ID: <44C7508A.5010500@miraclelinux.com>
+Date: Wed, 26 Jul 2006 20:22:50 +0900
+From: Robert <robert@miraclelinux.com>
+MIME-Version: 1.0
+Subject: Unresolved generic_file_write_nolock
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, jeremy@sgi.com
+To: xfs@oss.sgi.com
+Cc: Robert <robert@miraclelinux.com>
 
-On Mon, Jul 24, 2006 at 10:01:48AM +1000, Nathan Scott wrote:
-> On Sun, Jul 23, 2006 at 08:06:50PM +0100, Christoph Hellwig wrote:
-> > Shouldn't we make sure we clear all flags when reusing a log buffer?
-> > Relying on clearing individual flags seems rather fragile to me.
-> 
-> *nod* - good idea.  I'll rework xlog_sync, and resend later.
+Hi XFS guys
 
-After looking more, I'm less convinced.  There's some flags we wont
-want to touch - the "internal" flags like PAGE_CACHE, etc (that one
-is obviously not relevent here, but still, at some point a flag may
-be introduced that we accidentally break by clearing all flags).
+I like to use XFS but I have a compile question for
 
-There is a ZEROFLAGS macro, I've added ORDERED to that and used it
-instead.  I also fixed the double barrier issue for the split log
-write case - here's an updated patch...
+xfs-modules-fs-modules-1.3.3-2.4.21-27.0.2.EL.sgi9.src.rpm
 
-cheers.
-
--- 
-Nathan
+which is download from ftp://oss.sgi/com/projects/xfs/testing/RHEL3/
 
 
-Index: xfs-linux/xfs_log.c
-===================================================================
---- xfs-linux.orig/xfs_log.c	2006-07-21 08:55:24.520992250 +1000
-+++ xfs-linux/xfs_log.c	2006-07-24 11:13:22.743144500 +1000
-@@ -1444,7 +1444,7 @@ xlog_sync(xlog_t		*log,
- 	ops = iclog->ic_header.h_num_logops;
- 	INT_SET(iclog->ic_header.h_num_logops, ARCH_CONVERT, ops);
- 
--	bp	    = iclog->ic_bp;
-+	bp = iclog->ic_bp;
- 	ASSERT(XFS_BUF_FSPRIVATE2(bp, unsigned long) == (unsigned long)1);
- 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)2);
- 	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(INT_GET(iclog->ic_header.h_lsn, ARCH_CONVERT)));
-@@ -1461,15 +1461,14 @@ xlog_sync(xlog_t		*log,
- 	}
- 	XFS_BUF_SET_PTR(bp, (xfs_caddr_t) &(iclog->ic_header), count);
- 	XFS_BUF_SET_FSPRIVATE(bp, iclog);	/* save for later */
-+	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
- 	/*
- 	 * Do an ordered write for the log block.
--	 *
--	 * It may not be needed to flush the first split block in the log wrap
--	 * case, but do it anyways to be safe -AK
-+	 * Its unnecessary to flush the first split block in the log wrap case.
- 	 */
--	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
-+	if (!split && (log->l_mp->m_flags & XFS_MOUNT_BARRIER))
- 		XFS_BUF_ORDERED(bp);
- 
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
-@@ -1491,7 +1490,7 @@ xlog_sync(xlog_t		*log,
- 		return error;
- 	}
- 	if (split) {
--		bp		= iclog->ic_log->l_xbuf;
-+		bp = iclog->ic_log->l_xbuf;
- 		ASSERT(XFS_BUF_FSPRIVATE2(bp, unsigned long) ==
- 							(unsigned long)1);
- 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)2);
-@@ -1499,6 +1498,7 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_SET_PTR(bp, (xfs_caddr_t)((__psint_t)&(iclog->ic_header)+
- 					    (__psint_t)count), split);
- 		XFS_BUF_SET_FSPRIVATE(bp, iclog);
-+		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
-Index: xfs-linux/linux-2.6/xfs_buf.h
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_buf.h	2006-07-24 11:04:17.203179750 +1000
-+++ xfs-linux/linux-2.6/xfs_buf.h	2006-07-24 11:09:29.652577250 +1000
-@@ -247,8 +247,8 @@ extern void xfs_buf_trace(xfs_buf_t *, c
- #define BUF_BUSY		XBF_DONT_BLOCK
- 
- #define XFS_BUF_BFLAGS(bp)	((bp)->b_flags)
--#define XFS_BUF_ZEROFLAGS(bp)	\
--	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI))
-+#define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
-+		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
- 
- #define XFS_BUF_STALE(bp)	((bp)->b_flags |= XFS_B_STALE)
- #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XFS_B_STALE)
+I compiled it with kernel-2.4.21-37.EL with normal steps. Everything
+is ok and then I run the command installkernel but got below error 
+message like this:
+
+depmod  ..... xfs.o
+Unresolved symble : generic_file_write_nolock
+
+Then I had tried to find this function in 2.4.21-37EL and mainstream
+kernel-2.4.32, but it does not exist in them. I refer to SPEC file
+and found this generic_file_write_nolock() already deleted at
+linux-2.4.21-odirect.patch, no more exist. Even in the old kernel
+2.4.21-20.EL, I can not find it.
+
+This generic_file_write_nolock() is used in xfs/linux/xfs_lrw.c line 745
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2.4.22) || defined\ 
+(KERNEL_HAS_NEW_O_DIRECT)
+    :
+    :
+    :
+#else
+retry :
+      if (ioflags & IO_ISDIRECT) {
+            xfs_inval_cached_pages(vp, io, *offset, 1, 1);
+      }
+      ret = generic_file_write_nolock(file, buf, size, offset);
+#endif
+
+Logically, the #if KERNEL_VERSION_CODE is smaller than 2.4.22.
+The generic_file_write_nolock should be included by C preprocessor.
+So, could you guys tell me why the uploaded RPM:
+
+xfs-modules-smp-1.3.3-2.4.21_27.0.2.EL.sgi9_sgi2.i686.rpm
+
+does not included this function, generic_file_write_nolock?
+
+and Did you compile the xfs-modules with the same kernel
+2.4.21-27.0.2.EL.sgi9_sgi2?
+
+I can not find generic_file_write_nolock in the System.map of the
+its uploaded RPM :
+
+  kernel-smp-2.4.21-27.0.2.EL.sgi9.i686.rpm
+
+This issue take my time for about 1 week and still not solved.
+Any comment is thankfully.
+
+Best Regards
+Robert
