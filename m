@@ -1,123 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 01:09:11 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6O88UDW010964
-	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 01:08:35 -0700
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.7/8.13.4) with ESMTP id k6O8800C017712
-	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 17:08:01 +0900 (JST)
-Subject: Re: [PATCH] xfs: i_state of inode is changed after the inode is freed
-In-reply-to: <20060717140751.GW2114946@melbourne.sgi.com>
-Message-Id: <20060724170133m-saito@mail.aom.tnes.nec.co.jp>
-References: <20060717140751.GW2114946@melbourne.sgi.com>
-Mime-Version: 1.0
-From: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Date: Mon, 24 Jul 2006 17:01:33 +0900
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Jul 2006 18:20:23 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6R1JtDW026818
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Jul 2006 18:20:07 -0700
+Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA13713 for <linux-xfs@oss.sgi.com>; Thu, 27 Jul 2006 11:19:19 +1000
+Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k6R1IqEo38285533
+	for <linux-xfs@oss.sgi.com>; Thu, 27 Jul 2006 11:18:53 +1000 (AEST)
+Received: (from tes@localhost)
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k6R1IqL337600737
+	for linux-xfs@oss.sgi.com; Thu, 27 Jul 2006 11:18:52 +1000 (AEST)
+Date: Thu, 27 Jul 2006 11:18:52 +1000 (AEST)
+From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
+Message-Id: <200607270118.k6R1IqL337600737@snort.melbourne.sgi.com>
+Subject: TAKE xfs_fsr.8
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>, David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
-Hi Nathan, David,
-Thank you for comments.
+Fix typo noticed by Ming Zhang.
+Thanks.
 
->I don't think it fixes the problem because igrab() fails to handle
->the case we are hitting where I_CLEAR is set on the inode when we
->mark it dirty. There's nothing in this patch preventing us from
->sleeping after the !(I_NEW|I_FREEING|I_CLEAR) check is done and then
->racing with generic_drop_inode() before the igrab() can take a
->reference on the inode.
+Date:  Thu Jul 27 11:18:40 AEST 2006
+Workarea:  snort.melbourne.sgi.com:/home/tes/isms/xfs-cmds
+Inspected by:  mingz@ele.uri.edu
 
-I overlooked the case.  Thank you for your review.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
->Worse, the i_flags field does not use atomic bitops and
->there is no consistent locking protecting i_flags so updates
->and reads of this filed can race or even get lost....
-
-I agree it, too.  I think that we should add new spin_lock for
-i_flags.
-
-
->I think a fix is going to be much more invasive than just adding
->reference as my fixes appear to have only narrowed the race window
->and not solved it. The addition of the lock in the original patch
->solves the atomic xfs_iunpin()/xfs_reclaim() execution problem,
->but it does not solve the problems with the i_flags field. Adding
->a new lock may be our only option here.
-
-I'm considering the solution which fixes two problems([a] i_state of
-the inode is changed while the inode is freed in xfs filesystem and
-[b] the above i_flags problem)
-
-the solution:
-(1)Add new spin_lock(i_flags_lock) for all refernece and change
-   places of all i_flags.
-(2)Add igrab()/iput() for xfs_iunpin().
-
-It makes sure that mark_inode_dirty_sync() is never called if
-xfs_iunpin() runs after I_CLEAR is set.  Because XFS_IRECLAIM
-or XFS_IRECLAIMABLE is set/checked within the spin_lock.
-
-And there is the reason that igrab()/iput() is needed even if I add
-new spin_lock for xfs_iunpin().  We can prevent the following case
-by adding them.
-* After passing (I_NEW|I_FREEING|I_CLEAR) check in xfs_iunpin(),
-  I_FREEING is set.
-* Then mark_inode_dirty_sync() is called and i_state is changed.
-* Hit BUG_ON(!(inode->i_state & I_FREEING)) in clear_inode().
-
-If these ideas seem to be correct, I'll make patches for above (1),(2).
-Any comment?
-
-
-(The following is a part of my thinking patch.  Only xfs_iunpin().)
-
---- linux-2.6.17.6/fs/xfs/xfs_inode.c.orig	2006-07-22 08:07:50.194236144 +0900
-+++ linux-2.6.17.6/fs/xfs/xfs_inode.c	2006-07-25 06:07:18.062853045 +0900
-@@ -2729,6 +2729,8 @@ void
- xfs_iunpin(
- 	xfs_inode_t	*ip)
- {
-+	int need_unlock;
-+
- 	ASSERT(atomic_read(&ip->i_pincount) > 0);
- 
- 	if (atomic_dec_and_test(&ip->i_pincount)) {
-@@ -2744,6 +2746,8 @@ xfs_iunpin(
- 		 * call as the inode reclaim may be blocked waiting for
- 		 * the inode to become unpinned.
- 		 */
-+		spin_lock(&ip->i_flags_lock);
-+		need_unlock = 1;
- 		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
- 			vnode_t	*vp = XFS_ITOV_NULL(ip);
- 
-@@ -2751,10 +2755,22 @@ xfs_iunpin(
- 			if (vp) {
- 				struct inode	*inode = vn_to_inode(vp);
- 
--				if (!(inode->i_state & I_NEW))
--					mark_inode_dirty_sync(inode);
-+				if (!(inode->i_state &
-+						(I_NEW|I_FREEING|I_CLEAR))) {
-+					inode = igrab(inode);
-+					if (inode != NULL) {
-+						mark_inode_dirty_sync(inode);
-+						spin_unlock(&ip->i_flags_lock);
-+						need_unlock = 0;
-+						iput(inode);
-+					}
-+				}
- 			}
- 		}
-+		if (need_unlock) {
-+			spin_unlock(&ip->i_flags_lock);
-+			need_unlock = 0;
-+		}
- 		wake_up(&ip->i_ipin_wait);
- 	}
- }
+Modid:  master-melb:xfs-cmds:26614a
+xfsdump/man/man8/xfs_fsr.8 - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/man/man8/xfs_fsr.8.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+	- Fix typo noticed by Ming Zhang.
