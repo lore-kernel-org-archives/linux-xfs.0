@@ -1,44 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 09:04:01 -0700 (PDT)
-Received: from stargate.synerway.com (stargate.synerway.com [84.14.10.249])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OG3nDW024688
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 09:03:50 -0700
-Received: from stargate.synerway.com (stargate.synerway.com [127.0.0.1])
-	by stargate.synerway.com (Postfix) with ESMTP id 13EB6454092
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 18:31:30 +0200 (CEST)
-Received: from venus (unknown [172.16.10.150])
-	by stargate.synerway.com (Postfix) with ESMTP id 0515C45408E
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 18:31:29 +0200 (CEST)
-Date: Mon, 24 Jul 2006 18:03:17 +0200
-From: Pascal GREGIS <pgs@synerway.com>
-Subject: currupted files filling with zeros after power failure
-Message-ID: <20060724160317.GA787@venus.synerway.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 16:44:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6RNhcDW014579
+	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 16:43:49 -0700
+Date: Fri, 28 Jul 2006 09:42:54 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: XFS / Quota Bug in  2.6.17.x and 2.6.18x
+Message-ID: <20060728094254.F2196410@wobbly.melbourne.sgi.com>
+References: <44C8A5F1.7060604@profihost.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <44C8A5F1.7060604@profihost.com>; from s.priebe@profihost.com on Thu, Jul 27, 2006 at 01:39:29PM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: ProfiHost - Stefan Priebe <s.priebe@profihost.com>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Hello everyone,
+Hi Stefan,
 
-I'm  working on power failures on some test machines in my company.
-I volunteerly switch off my machine by pressing the power button and restart my machine to see how it behaves.
+On Thu, Jul 27, 2006 at 01:39:29PM +0200, ProfiHost - Stefan Priebe wrote:
+> Hello!
+> 
+> The crash only occurs if you use quota and IDE without barrier support.
+> 
+> The Problem is, that on a new mount of a root filesystem - the flag 
+> VFS_RDONLY is set - and so no barrier check is done before checking 
+> quota. With this patch barrier check is done always. The partition 
+> should not be mounted at that moment. For mount -o remount, rw or 
+> something like this it uses another function where VFS_RDONLY is checked.
 
-The problem I'm facing is that about once for two crashes the last file (or at least the last file) i which I wrote becomes corrupted and filled with \0 characters.
+Ah, I see.  The patch isn't quite right, I think we will now need to
+also add a test to xfs_mountfs_check_barriers() to ensure the device
+beneath us is not bdev_read_only().
 
-I didn't think XFS could be subject to this type of problem, however here isn't really the reason of my mail.
+I'll add that and get the fix merged, thanks.
 
-What I would like to know is what can I do to resolve this problem? Is XFS able to recover my file with its right content, at least a consistent content, not only \0 characters?
-I made some tries with xfs_repair and it didn't repair it, once it put me some inodes in lost+found but id didn't repair my corrupted file.
-Maybe xfs_db could help, I don't know.
+cheers.
 
-I'm running a 2.6.11.11 kernel iwth xfsprogs-2.7.3 and xfsdump-2.2.30.
-Maybe is a bug in that kernel.
-
-Do you guys know if this problem has often been encountered or not,a dn if there is a way to proceed?
-
-Thank you
-
-Pascal
+-- 
+Nathan
