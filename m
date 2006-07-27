@@ -1,41 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 07:42:10 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.184])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OEfxDW010263
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 07:41:59 -0700
-Received: by nf-out-0910.google.com with SMTP id a27so1547302nfc
-        for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 07:41:35 -0700 (PDT)
-Message-ID: <d1ec67b40607240625s5d8b9385ueab714c0f20fcc24@mail.gmail.com>
-Date: Mon, 24 Jul 2006 15:25:09 +0200
-From: "Artur Iwaniuk" <aiwaniuk@gmail.com>
-Subject: atime on xfs
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 16:22:19 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6RNLPDW010623
+	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 16:21:36 -0700
+Date: Fri, 28 Jul 2006 09:20:36 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [PATCH] [xfs] Add lock annotations to xfs_trans_update_ail and xfs_trans_delete_ail
+Message-ID: <20060728092035.C2196410@wobbly.melbourne.sgi.com>
+References: <1153938323.12517.58.camel@josh-work.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1153938323.12517.58.camel@josh-work.beaverton.ibm.com>; from josht@us.ibm.com on Wed, Jul 26, 2006 at 11:25:23AM -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Josh Triplett <josht@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, xfs@oss.sgi.com
 
-hello,
+On Wed, Jul 26, 2006 at 11:25:23AM -0700, Josh Triplett wrote:
+> xfs_trans_update_ail and xfs_trans_delete_ail get called with the AIL lock
+> held, and release it.  Add lock annotations to these two functions (abstracted
+> like the AIL lock itself) so that sparse can check callers for lock pairing,
+> and so that sparse will not complain about these functions since they
+> intentionally use locks in this manner.
 
-can anyone can me explain such stat on my xfs partition:
+Thanks Josh, looks good - I'll get it merged.  I'd prefer to just
+open code the use of __acquires/__releases for clarity, but I can
+easily make that change before merging.
 
-  File: `194/194.149.231.137'
-  Size: 0               Blocks: 0          IO Block: 4096   pusty zwyk=B3y
-plik
-Device: 902h/2306d      Inode: 1477457428  Links: 1
-Access: (0666/-rw-rw-rw-)  Uid: (  201/  qmaild)   Gid: (  200/ nofiles)
-Access: 2006-07-18 09:13:32.903206500 +0200
-Modify: 2006-07-18 11:26:23.273786250 +0200
-Change: 2006-07-18 11:26:23.273786250 +0200
+cheers.
 
-why access time is earlier than change, modify time ? how is it posible? is
-there bug in xfs ?
-i am sure, that file was asscessed yesterday, maybe even today
-
-please, help
-
-
-[[HTML alternate version deleted]]
+-- 
+Nathan
