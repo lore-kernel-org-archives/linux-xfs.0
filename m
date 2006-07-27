@@ -1,85 +1,112 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 03:23:34 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.187])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6OANLDW002156
-	for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 03:23:22 -0700
-Received: by nf-out-0910.google.com with SMTP id a27so1474121nfc
-        for <xfs@oss.sgi.com>; Mon, 24 Jul 2006 03:22:55 -0700 (PDT)
-Message-ID: <68559cef0607240322x6be3a38fp8bd03b20caf2a06a@mail.gmail.com>
-Date: Mon, 24 Jul 2006 12:22:55 +0200
-From: "Luca Maranzano" <liuk001@gmail.com>
-Subject: Re: Page allocation failure writing to an XFS volume via NFS on CentOS 4.3
-In-Reply-To: <20060721161326.GE12347@tuatara.stupidest.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 00:37:46 -0700 (PDT)
+Received: from mail01.miraclelinux.com (ns.miraclelinux.com [219.118.163.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6R7bTDW030805
+	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 00:37:34 -0700
+Message-ID: <44C86D20.2040908@miraclelinux.com>
+Date: Thu, 27 Jul 2006 16:37:04 +0900
+From: Robert <robert@miraclelinux.com>
 MIME-Version: 1.0
+Subject: Re: Unresolved generic_file_write_nolock
+References: <44C7508A.5010500@miraclelinux.com>
+In-Reply-To: <44C7508A.5010500@miraclelinux.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <68559cef0607210519q9f382c6n7104bef9cf9716f3@mail.gmail.com>
-	 <20060721161326.GE12347@tuatara.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: Robert <robert@miraclelinux.com>
 
-Hi Crhis,
+Hi
 
-thank you for your reply.
+I had solved this problem. I will describe in this email.
 
-I've verified and it seems that nothing should be so piggy to make the
-server out of memory.
-The server is essentially an NFS Server and there are no memory hog
-running besides standard services.
-/proc/meminfo:
-MemTotal:      1035832 kB
-MemFree:         12568 kB
-Buffers:         10468 kB
-Cached:         968336 kB
-SwapCached:       4716 kB
-Active:          19064 kB
-Inactive:       967740 kB
-HighTotal:      131048 kB
-HighFree:          952 kB
-LowTotal:       904784 kB
-LowFree:         11616 kB
-SwapTotal:     1052248 kB
-SwapFree:      1041744 kB
-Dirty:               0 kB
-Writeback:           0 kB
-Mapped:          13588 kB
-Slab:            25124 kB
-Committed_AS:    52516 kB
-PageTables:        832 kB
-VmallocTotal:   106488 kB
-VmallocUsed:      5528 kB
-VmallocChunk:    94392 kB
-HugePages_Total:     0
-HugePages_Free:      0
-Hugepagesize:     4096 kB
+At frist, the error message for this issue is as below:
 
-It seems that there is always a big memory "cached" ( > 900 MB) which
-could be reclaimed by the kernel as needed, so I'd exclude the memory
-exhaustion issue.
+Loading xfs.o module
+/lib/xfs.o : unresolved symbol generic_file_write_nolock
+ERROR : /bin/insmod exited abnormally
+creating block devices
+mounting root filesystem
+mount : error 19 mounting xfs
+.........
 
-Besides in the last 2 days during the backups via NFS of some machines
-we have more than 600 messages lines like this from the Kernel:
-XFS: possible memory allocation deadlock in kmem_alloc (mode:0x2d0)
+I changed all
 
-Doing some search I've found Bug 410
-(http://oss.sgi.com/bugzilla/show_bug.cgi?id=410) but it seems to
-affect only 64bit kernel and 2.6.11, while I've a 32 bit Xeon 2.8 Ghz
-with kernel 2.6.9.
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2.4.22) || defined\
+(KERNEL_HAS_NEW_O_DIRECT)
 
-The 1GB of DRAM is adequate to my setup in your opinion?
+in fs/xfs/linux/xfs_lrw.c to
 
-TIA.
-Regards,
-Luca
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2.4.21) || defined\
+(KERNEL_HAS_NEW_O_DIRECT)
+
+and rebuild, install kernel. Everything goes well now.
+
+Please comment.
+
+Thank you
+Robert
 
 
-On 7/21/06, Chris Wedgwood <cw@f00f.org> wrote:
-> On Fri, Jul 21, 2006 at 02:19:34PM +0200, Luca Maranzano wrote:
->
-> > kswapd0: page allocation failure. order:0, mode:0xd0
->
-> you're out of memory, see what's being so piggy
->
+Robert wrote:
+> Hi XFS guys
+> 
+> I like to use XFS but I have a compile question for
+> 
+> xfs-modules-fs-modules-1.3.3-2.4.21-27.0.2.EL.sgi9.src.rpm
+> 
+> which is download from ftp://oss.sgi/com/projects/xfs/testing/RHEL3/
+> 
+> 
+> I compiled it with kernel-2.4.21-37.EL with normal steps. Everything
+> is ok and then I run the command installkernel but got below error 
+> message like this:
+> 
+> depmod  ..... xfs.o
+> Unresolved symble : generic_file_write_nolock
+> 
+> Then I had tried to find this function in 2.4.21-37EL and mainstream
+> kernel-2.4.32, but it does not exist in them. I refer to SPEC file
+> and found this generic_file_write_nolock() already deleted at
+> linux-2.4.21-odirect.patch, no more exist. Even in the old kernel
+> 2.4.21-20.EL, I can not find it.
+> 
+> This generic_file_write_nolock() is used in xfs/linux/xfs_lrw.c line 745
+> 
+> #if LINUX_VERSION_CODE >= KERNEL_VERSION(2.4.22) || defined\ 
+> (KERNEL_HAS_NEW_O_DIRECT)
+>    :
+>    :
+>    :
+> #else
+> retry :
+>      if (ioflags & IO_ISDIRECT) {
+>            xfs_inval_cached_pages(vp, io, *offset, 1, 1);
+>      }
+>      ret = generic_file_write_nolock(file, buf, size, offset);
+> #endif
+> 
+> Logically, the #if KERNEL_VERSION_CODE is smaller than 2.4.22.
+> The generic_file_write_nolock should be included by C preprocessor.
+> So, could you guys tell me why the uploaded RPM:
+> 
+> xfs-modules-smp-1.3.3-2.4.21_27.0.2.EL.sgi9_sgi2.i686.rpm
+> 
+> does not included this function, generic_file_write_nolock?
+> 
+> and Did you compile the xfs-modules with the same kernel
+> 2.4.21-27.0.2.EL.sgi9_sgi2?
+> 
+> I can not find generic_file_write_nolock in the System.map of the
+> its uploaded RPM :
+> 
+>  kernel-smp-2.4.21-27.0.2.EL.sgi9.i686.rpm
+> 
+> This issue take my time for about 1 week and still not solved.
+> Any comment is thankfully.
+> 
+> Best Regards
+> Robert
+> 
