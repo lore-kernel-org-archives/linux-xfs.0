@@ -1,52 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 13:55:51 -0700 (PDT)
-Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SKtZDW021555
-	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 13:55:35 -0700
-Received: from [72.21.53.38] (helo=jubjub.nabble.com)
-	by talk.nabble.com with esmtp (Exim 4.50)
-	id 1G6YGg-0000xD-1I
-	for xfs@oss.sgi.com; Fri, 28 Jul 2006 12:45:06 -0700
-Message-ID: <5545990.post@talk.nabble.com>
-Date: Fri, 28 Jul 2006 12:45:06 -0700 (PDT)
-From: calembour <mrcekets@gmail.com>
-Subject: write back cache and barriers
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 14:49:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6SLmqDW030596
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 14:49:04 -0700
+Date: Sat, 29 Jul 2006 07:48:03 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: XFS breakage in 2.6.18-rc1
+Message-ID: <20060729074803.A2222647@wobbly.melbourne.sgi.com>
+References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <Pine.LNX.4.64.0607221722500.8407@prinz64.housecafe.de> <20060724090138.C2083275@wobbly.melbourne.sgi.com> <Pine.LNX.4.64.0607281526220.1882@sheep.housecafe.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0607281526220.1882@sheep.housecafe.de>; from evil@g-house.de on Fri, Jul 28, 2006 at 05:01:24PM +0000
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christian Kujau <evil@g-house.de>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+On Fri, Jul 28, 2006 at 05:01:24PM +0000, Christian Kujau wrote:
+> I had two xfs filesystems and I first noticed that /data/Scratch was 
+> befallen from this bug. I did not care much about this (hence the
+> name :)) and I wanted to postpone the xfs_db surgery.
+> ...
+> found more and more errors. I decided to mkfs the partition and make use 
+> of my backups. my other "scratch" partition is still XFS but mounted ro 
+> and I'll try the xfsprogs fixes Nathan published on this one.
 
-Hi,
-I don't have a deep knowledge about filesystems and I've few experiences
-with 
-raid configuration, so I need someone who can answer some questions about 
-write back cache and barriers.
+Barry sent an xfs_repair patch to resolve this issue to the xfs@oss.sgi.com
+list yesterday; please give that a go and let us know how it fares.
 
-I have two sata hd (sda, sdb) configured in bios-raid 0 and relative device 
-created by dmraid on boot (nvidia_ihfaaicb).
+cheers.
 
-(1) what should I do to know if the write back cache is enabled or not ?
-(2) if the write cache is enabled on both sda and sdb this mean that is
-enabled 
-also on the raid device (/dev/mapper/nvidia_ihfaaicb) ?
-(3) how should I do to enable/disable the write cache on the raid device ?
-
-If I try mounting a xfs filesystem I get a message like "barriers are not 
-supported by this device" but if I mount a ext3 or a reiserfs filesystem 
-respectively with options barrier=1 and barrier=flush they don't complain.
-If I mount the reiserfs I explicity get a message like "using barriers".
-So who tells the truth ?? 
-
-(4) is there a way to know if the raid device supports barrier or not ?
-(5) is there a (not dangerous) test I can do to figure out if barriers are 
-really enabled and used with ext3 and reiserfs filesystems ?
-
-Thanks for reading the message
-Marco
 -- 
-View this message in context: http://www.nabble.com/write-back-cache-and-barriers-tf2017234.html#a5545990
-Sent from the Xfs - General forum at Nabble.com.
+Nathan
