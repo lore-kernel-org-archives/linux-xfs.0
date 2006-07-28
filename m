@@ -1,53 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 11:09:05 -0700 (PDT)
-Received: from web31702.mail.mud.yahoo.com (web31702.mail.mud.yahoo.com [68.142.201.182])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PI8XDW023588
-	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 11:08:35 -0700
-Message-ID: <20060725180807.64194.qmail@web31702.mail.mud.yahoo.com>
-Date: Tue, 25 Jul 2006 11:08:07 -0700 (PDT)
-From: Heilige Gheist <hgheist@yahoo.com>
-Subject: Re: XFS setting custom extent size: real-time section only?
-In-Reply-To: <20060725084356.B2090627@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 08:51:22 -0700 (PDT)
+Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SFoiDW003168
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 08:50:54 -0700
+Received: from omx2.sgi.com ([198.149.32.25])
+	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k6SEjsnx030993
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 09:45:54 -0500
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k6SHDjGv024491
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 10:13:45 -0700
+Message-ID: <44CA22F8.2040507@sgi.com>
+Date: Fri, 28 Jul 2006 07:45:12 -0700
+From: Madan Valluri <mvalluri@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Subject: Re: Review: xfs_repair fixes for dir2 corruption
+References: <20060728091735.B2196410@wobbly.melbourne.sgi.com> <200607280155.LAA12814@larry.melbourne.sgi.com> <20060728181013.C2197701@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060728181013.C2197701@wobbly.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Barry Naujok <bnaujok@melbourne.sgi.com>, xfs@oss.sgi.com
 
-[..]
-> 
-> OK.  Are you certain you need this feature?  (can you describe your
-> usage a bit?)  You can get large contiguous chunks of disk space via
-> large direct writes for example, or preallocation, so maybe you could
-> attack the issue from a different angle to solve it?
+Nathan Scott wrote:
+> On Fri, Jul 28, 2006 at 11:58:52AM +1000, Barry Naujok wrote:
+>   
+>> This patch addresses the following xfs_repair issues:
+>>     
+>
+> The libxfs cache stuff looks good to me.  Maybe Madan can cast
+> an eye over the repair changes for ya?
+>
+> cheers.
+>
+>   
+>>  
+1) Since dir_hash_add can be called for both V1 and V2 directories its 
+second parameter type xfs_dir2_dataptr_t should be neutral.
+2) In dir_hash_add when dup is set, do you still need to add to the 
+nextbyhash by list?
+3) The following statement in   longform_dir2_rebuild looks odd. 
+Besides, FWIW, you can match "/."
 
-The application is reading and writing sparse file of 0.5-1GB, with
-heavy skew toward read. The data is written in clusters of various
-size, depending on data stream type. The filesystem is constantly being
-updated with new data, older files are removed, the filesystem gets
-fragmented and we're down to the allocation extent size in terms of
-available contiguous disk space.
+                if (p->name[0] == '/' || (p->name[0] == '.' && 
+(p->namelen == 1
+                                || (p->namelen == 2 && p->name[1] == '.'))))
+                        continue;
 
-When you speak of pre-allocation, do you suggest using XFS_IOC_RESVSP
-ioctl interface to explicitly reserve blocks in advance?
-Can it guarantee contiguous chunk allocation?
-Provided it can, pre-allocation is pretty much the same as extent
-management, isn't it? Basically you pay for unfragmented contiguous
-block layout with extra disk space reserved for unwritten data.
-If so, why offer custom extent size in the first place?
+Consider:
 
-[..]
-> > Do I have to have non-realtime regular section?
-> Yes.  All metadata is stored there.
-Is there any way I can do sizing of the meta-data? 
+               if (((p->name[0] == '/' || p->name[0] == '.') && 
+p->namelen == 1) ||
+                        (p->name[0] == '.' && p->name[1] == '.' && 
+p->namelen == 2))
+                        continue;
 
---alan
+4) Related to items 2&3, shouldn't the code be skipping duplicate entries?
+5) Can we do anything to minimize the do_error calls in 
+longform_dir2_rebuild? Seems like on a full file system, while 
+rebuilding say the root directory, matters can get wacky - The directory 
+is being rebuilt and we have no further room. Sounds like that this how 
+it has been....
 
+Thanks.
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+/Madan
