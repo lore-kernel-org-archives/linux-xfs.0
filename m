@@ -1,50 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 15:38:51 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6PMbtDW020869
-	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 15:38:06 -0700
-Date: Wed, 26 Jul 2006 08:37:09 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: review: increase bulkstat readahead window
-Message-ID: <20060726083709.B2118045@wobbly.melbourne.sgi.com>
-References: <20060725135004.E2116482@wobbly.melbourne.sgi.com> <20060725094004.GB29615@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060725094004.GB29615@infradead.org>; from hch@infradead.org on Tue, Jul 25, 2006 at 10:40:04AM +0100
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 09:25:26 -0700 (PDT)
+Received: from mail.mdlink.de (hydra.mdlink.de [213.211.192.38])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SGPDDW009517
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 09:25:13 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.mdlink.de (Postfix) with ESMTP id BCB0E80E5E6D
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:21:22 +0200 (CEST)
+Received: from [213.211.192.21] (premium.mdlink.de [213.211.192.21])
+	by mail.mdlink.de (Postfix) with ESMTP id 877BF80E37FA
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:21:22 +0200 (CEST)
+Message-ID: <44CA1D89.3080104@mdlink.de>
+Date: Fri, 28 Jul 2006 16:22:01 +0200
+From: Frank Patzig <fp@mdlink.de>
+MIME-Version: 1.0
+Subject: [xfs] quota project problem
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, cw@f00f.org
-Cc: vapo@melbourne.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 25, 2006 at 10:40:04AM +0100, Christoph Hellwig wrote:
-> On Tue, Jul 25, 2006 at 01:50:04PM +1000, Nathan Scott wrote:
-> > .. it up front.  We don't want to get silly in sizing this buffer, 
-> > though, as it needs to be a contiguous chunk of memory.  Here I've
-> > increased it from 1 page to 4 pages, with some logic to halve the
-> > size incrementally if we cant allocate that successfully (as we do
-> > in one or two other places in XFS, for other things).
-> 
-> ok.  I wonder whether we should add a generic kmalloc_leastmost routine
-> (with a name better than that of course..)
+Hallo,
 
-Yeah, Chris suggested the same thing - probably we should, since two
-people suggested it now. :)  The XFS users I know of are the inode
-hash, the dquot hash, and this bulkstat code.  Oh, and probably the
-attr_multi ioctl code should use this for its buffer too.  If you can
-suggest a good interface, I'll have at it.
+i have a problem with project quota. Can i help you.
 
-Semi-related, I have another patch which instruments our local memory
-allocation routines to add a KM_LARGE flag - I've been using this to
-locate and annotate the few remaining places where we will do multi-
-page allocations inside XFS... any interest in this patch?  I've been
-tossing up whether or not to merge it (its debug only, so no runtime
-cost is added for usual case), just so we can always easily see where
-the large allocations are, and trap any inadvertantly introduced new
-ones... thoughts?
+combolix:~ # uname -a
+Linux combolix 2.6.18_rc1-jen27-default #1 Thu Jul 13 01:34:23 CEST 2006 
+i686
+i686 i386 GNU/Linux
 
-cheers.
+combolix:~ # cat /etc/mtab
+/dev/hdc2 / xfs rw,uquota,gquota,pquota 0 0
+proc /proc proc rw 0 0
+sysfs /sys sysfs rw 0 0
+tmpfs /dev/shm tmpfs rw 0 0
+devpts /dev/pts devpts rw,mode=0620,gid=5 0 0
+usbfs /proc/bus/usb usbfs rw 0 0
 
+combolix:~ # echo 42:/var/log >> /etc/projects
+combolix:~ # echo logfiles:42 >> /etc/projid
+
+combolix:~ # xfs_quota -x -c 'project -c logfiles' /
+Checking project logfiles (path /var/log)...
+Processed 1 /etc/projects paths for project logfiles
+
+combolix:~ # xfs_quota -x -c 'limit -p bhard=1g logfiles' /
+xfs_quota: cannot set limits: No such process
+
+xfs_quota -x -c 'state -p' /
+Project quota state on / (/dev/hdc2)
+   Accounting: OFF
+   Enforcement: OFF
+   Inode: #18446744073709551615 (0 blocks, 0 extents)
+Blocks grace time: [7 days]
+Inodes grace time: [7 days]
+Realtime Blocks grace time: [7 days]
+
+combolix:~ # xfs_quota -x -c 'report -p' /
+not answer
+
+combolix:~ # xfs_quota -x -c 'quota -p logfile' /
+xfs_quota: cannot find project logfile
+combolix:~ # xfs_quota -x -c 'quota -p 42' /
+not answer
+
+combolix:~ # xfs_quota -x -c 'print'
+Filesystem          Pathname
+/                   /dev/hdc2 (uquota)
+/var/log            /dev/hdc2 (project 42, logfiles)
+
+combolix:~ # xfs_quota -x -c 'quot -p'
+/dev/hdc2 (/) Project:
+    16080    logfiles
+
+combolix:~ # xfs_quota -x -c 'free'
+Filesystem           1K-blocks       Used  Available  Use% Pathname
+/dev/hdc2             76006520    4666116   71340404    7% /
+XFS_GETQUOTA: No such process
+
+combolix:~ # xfs_quota -x -c 'path'
+       Filesystem          Pathname
+[000] /                   /dev/hdc2 (uquota)
+  001  /var/log            /dev/hdc2 (project 42, logfiles)
+
+I have not a idee for this problem.
+
+Thanks
 -- 
-Nathan
+Frank Patzig	
+
+MDlink online service center GmbH       mail: fp@mdlink.de
+Universitätsplatz 12                    phone:  +49 391 25568 0
+Magdeburg                               fax:    +49 391 25568 99
+39104                                   http://www.mdlink.de
+Germany	
