@@ -1,40 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Jul 2006 03:51:38 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6PAp7DZ001440
-	for <xfs@oss.sgi.com>; Tue, 25 Jul 2006 03:51:11 -0700
-Date: Tue, 25 Jul 2006 10:44:38 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: review: fix remount vs barrier options
-Message-ID: <20060725094438.GD29615@infradead.org>
-References: <20060721152807.D1998769@wobbly.melbourne.sgi.com> <20060723190650.GA22180@infradead.org> <20060724100147.F2083275@wobbly.melbourne.sgi.com> <20060724112737.D2085715@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060724112737.D2085715@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 23:56:48 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6S6uBDW027603
+	for <linux-xfs@oss.sgi.com>; Thu, 27 Jul 2006 23:56:23 -0700
+Subject: TAKE 953819 - bulkstat vs debug kernels
+Message-Id: <20060728065532.7419B58C38C1@chook.melbourne.sgi.com>
+Date: Fri, 28 Jul 2006 16:55:32 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, jeremy@sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Mon, Jul 24, 2006 at 11:27:37AM +1000, Nathan Scott wrote:
-> On Mon, Jul 24, 2006 at 10:01:48AM +1000, Nathan Scott wrote:
-> > On Sun, Jul 23, 2006 at 08:06:50PM +0100, Christoph Hellwig wrote:
-> > > Shouldn't we make sure we clear all flags when reusing a log buffer?
-> > > Relying on clearing individual flags seems rather fragile to me.
-> > 
-> > *nod* - good idea.  I'll rework xlog_sync, and resend later.
-> 
-> After looking more, I'm less convinced.  There's some flags we wont
-> want to touch - the "internal" flags like PAGE_CACHE, etc (that one
-> is obviously not relevent here, but still, at some point a flag may
-> be introduced that we accidentally break by clearing all flags).
-> 
-> There is a ZEROFLAGS macro, I've added ORDERED to that and used it
-> instead.  I also fixed the double barrier issue for the split log
-> write case - here's an updated patch...
+Remove last bulkstat false-positives with debug kernels.
 
-The flag clearing changes look good.  But why is it okay to skip the
-ordered flag on the first block?  We want to make sure all previous I/O
-is finished before even doing the first log block write, don't we?
+Date:  Fri Jul 28 16:53:21 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  tes
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26628a
+xfs_ialloc.c - 1.192 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.192&r2=text&tr2=1.191&f=h
+xfs_itable.c - 1.144 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.144&r2=text&tr2=1.143&f=h
+xfs_iget.c - 1.217 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.217&r2=text&tr2=1.216&f=h
+xfs_inode.c - 1.450 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.450&r2=text&tr2=1.449&f=h
+xfs_inode.h - 1.215 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.215&r2=text&tr2=1.214&f=h
+dmapi/xfs_dm.c - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+
+
+Ensure bulkstat from an invalid inode number gets caught always with EINVAL.
+
+Date:  Fri Jul 28 16:55:15 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  tes
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26629a
+xfs_inode.c - 1.451 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.451&r2=text&tr2=1.450&f=h
