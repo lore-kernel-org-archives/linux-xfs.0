@@ -1,27 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 20:40:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 22:43:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6P3e2DW012992
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 20:40:13 -0700
-Subject: PARTIAL TAKE 944409 - readahead
-Message-Id: <20060725033923.75F0558C38C1@chook.melbourne.sgi.com>
-Date: Tue, 25 Jul 2006 13:39:23 +1000 (EST)
-From: nathans@sgi.com (Nathan Scott)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6S5guDW014260
+	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 22:43:08 -0700
+Message-ID: <44C9A353.1050702@sgi.com>
+Date: Fri, 28 Jul 2006 15:40:35 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: review: fix bulkstat error detection logic
+References: <20060726102406.I2118045@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060726102406.I2118045@wobbly.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: xfs@oss.sgi.com
 
-When issuing metadata readahead, submit bio with READA not READ.
+Nathan Scott wrote:
+> Hi,
+> 
+> An earlier patch to remove bulkstat verbosity in debug kernels
+> changed the xfs_itobp logic slightly, such that we no longer do
+> the first stage of buffer checking there.  Turns out this isn't
+> the right fix, we need to do that check still, and pass out the
+> error code to bulkstat still, otherwise we either trip up logic
+> in later debug code, or pass out success incorrectly.
+> 
+> This fixes that up, and is the last bulkstat change I have for
+> awhile. :)  Its error handling is correct once more, its a fair
+> bit quicker, and no more debug-kernel console spam - hooray!
+> 
+> cheers.
+> 
 
-Date:  Tue Jul 25 13:39:04 AEST 2006
-Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
-Inspected by:  dgc
+Looks reasonable.
+So you still do the inode buffer validation but we don't print out
+a corruption error msg and we return EINVAL instead of EFSCORRUPTED.
+Can we not be bulkstat'ing over inodes with reasonable numbers/locations but
+the inode data on disk is just corrupted?
+(I missed looking at the original patch)
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+(Interesting how previously you set ni to 0 in the XFS_IMAP_BULKSTAT
+case and yet in the loop which would then never iterate (0<0=F),
+you test for XFS_IMAP_BULKSTAT :)
 
-
-Modid:  xfs-linux-melb:xfs-kern:26603a
-linux-2.6/xfs_buf.c - 1.224 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.224&r2=text&tr2=1.223&f=h
+--Tim
