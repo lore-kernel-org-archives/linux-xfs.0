@@ -1,53 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 10:15:34 -0700 (PDT)
-Received: from mxout.fs-cfc.co.uk (mxout.fs-cfc.co.uk [193.203.83.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SHFCDW017677
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 10:15:22 -0700
-Received: from localhost (unknown [127.0.0.1])
-	by mxout.fs-cfc.co.uk (Postfix) with ESMTP id 1D841138064
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:15:48 +0100 (BST)
-Received: from mxout.fs-cfc.co.uk ([127.0.0.1])
- by localhost (mx-out.prod.local [127.0.0.1]) (amavisd-new, port 10026)
- with ESMTP id 11641-02 for <linux-xfs@oss.sgi.com>;
- Fri, 28 Jul 2006 16:15:47 +0100 (BST)
-Received: from mail.admin.local (mail.admin.local [192.168.0.15])
-	by mxout.fs-cfc.co.uk (Postfix) with ESMTP id 41AAF13803B
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:15:47 +0100 (BST)
-Received: from localhost (unknown [127.0.0.1])
-	by mail.admin.local (Postfix) with ESMTP id 9B00F73B48C
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 15:14:04 +0000 (UTC)
-Received: from mail.admin.local ([127.0.0.1])
- by localhost (mail [127.0.0.1]) (amavisd-new, port 10026) with ESMTP
- id 17049-01 for <linux-xfs@oss.sgi.com>;
- Fri, 28 Jul 2006 16:14:04 +0100 (BST)
-Received: from [172.17.80.198] (sys198.prod.local [172.17.80.198])
-	by mail.admin.local (Postfix) with ESMTP id EC00B73F3EB
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Jul 2006 16:14:03 +0100 (BST)
-Message-ID: <44CA29BB.6080706@framestore-cfc.com>
-Date: Fri, 28 Jul 2006 16:14:03 +0100
-From: Marcin Stangel <mstangel@framestore-cfc.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Jul 2006 13:55:51 -0700 (PDT)
+Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6SKtZDW021555
+	for <xfs@oss.sgi.com>; Fri, 28 Jul 2006 13:55:35 -0700
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1G6YGg-0000xD-1I
+	for xfs@oss.sgi.com; Fri, 28 Jul 2006 12:45:06 -0700
+Message-ID: <5545990.post@talk.nabble.com>
+Date: Fri, 28 Jul 2006 12:45:06 -0700 (PDT)
+From: calembour <mrcekets@gmail.com>
+Subject: write back cache and barriers
 MIME-Version: 1.0
-Subject: question - xfs stress tests
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi there,
 
-I have a 2TB raid5 device and I need to do some stress tests, I've read 
-about xfstests tool but I couldn't find sources.
+Hi,
+I don't have a deep knowledge about filesystems and I've few experiences
+with 
+raid configuration, so I need someone who can answer some questions about 
+write back cache and barriers.
 
-is there somewhere a tar.gz file available ?
+I have two sata hd (sda, sdb) configured in bios-raid 0 and relative device 
+created by dmraid on boot (nvidia_ihfaaicb).
 
-cheers!
-Marcin
+(1) what should I do to know if the write back cache is enabled or not ?
+(2) if the write cache is enabled on both sda and sdb this mean that is
+enabled 
+also on the raid device (/dev/mapper/nvidia_ihfaaicb) ?
+(3) how should I do to enable/disable the write cache on the raid device ?
 
+If I try mounting a xfs filesystem I get a message like "barriers are not 
+supported by this device" but if I mount a ext3 or a reiserfs filesystem 
+respectively with options barrier=1 and barrier=flush they don't complain.
+If I mount the reiserfs I explicity get a message like "using barriers".
+So who tells the truth ?? 
+
+(4) is there a way to know if the raid device supports barrier or not ?
+(5) is there a (not dangerous) test I can do to figure out if barriers are 
+really enabled and used with ext3 and reiserfs filesystems ?
+
+Thanks for reading the message
+Marco
 -- 
-Marcin Stangel
-Systems Support
-9 Noel Street
-London W1F 8GH
-+44 (0)20 7106 2544
+View this message in context: http://www.nabble.com/write-back-cache-and-barriers-tf2017234.html#a5545990
+Sent from the Xfs - General forum at Nabble.com.
