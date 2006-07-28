@@ -1,50 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Jul 2006 20:37:27 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Jul 2006 22:24:03 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6P3aoDW012627
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Jul 2006 20:37:01 -0700
-Subject: PARTIAL TAKE 944409 - DMAPI bulkstat optimisations
-Message-Id: <20060725033609.3AC4F58C38C1@chook.melbourne.sgi.com>
-Date: Tue, 25 Jul 2006 13:36:09 +1000 (EST)
-From: nathans@sgi.com (Nathan Scott)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6S5NQDW010498
+	for <xfs@oss.sgi.com>; Thu, 27 Jul 2006 22:23:38 -0700
+Date: Fri, 28 Jul 2006 15:22:44 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: review: block bogus bulkstat messages, last stage
+Message-ID: <20060728152244.H2196410@wobbly.melbourne.sgi.com>
+References: <20060726101537.H2118045@wobbly.melbourne.sgi.com> <44C99C86.2000208@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44C99C86.2000208@sgi.com>; from tes@sgi.com on Fri, Jul 28, 2006 at 03:11:34PM +1000
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Ensure we specify the type of bulkstat call we will issue
-(uninited variable).
+On Fri, Jul 28, 2006 at 03:11:34PM +1000, Timothy Shimmin wrote:
+> 1. xfs_ialloc.c
+> +		xfs_stack_trace();
+> What's the stack trace for?
+> It is just to give more info after one of the 3 error msgs
+> beforehand? Happens in DEBUG. Okay.
 
-Date:  Tue Jul 25 13:31:08 AEST 2006
-Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
-Inspected by:  vapo
+Yep, basically just to help figure out how the warning got triggered.
+If it gets triggered now, it always indicates a real problem... while
+before it was only possibly a problem.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+> Seems fine.
 
+Thanks for the review.
 
-Modid:  xfs-linux-melb:xfs-kern:26601a
-dmapi/xfs_dm.c - 1.16 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+cheers.
 
-
-Rework DMAPI bulkstat calls in such a way that we can directly extract
-inline attributes out of the bulkstat buffer (for that case), rather
-than using an (extremely expensive for large icount filesystems) iget
-for fetching attrs.
-
-Date:  Tue Jul 25 13:34:45 AEST 2006
-Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
-Inspected by:  vapo
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:26602a
-xfs_itable.c - 1.141 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.141&r2=text&tr2=1.140&f=h
-xfs_itable.h - 1.49 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.h.diff?r1=text&tr1=1.49&r2=text&tr2=1.48&f=h
-dmapi/xfs_dm.c - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+-- 
+Nathan
