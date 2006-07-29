@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 09:53:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 09:56:01 -0700 (PDT)
 Received: from slimak.dkm.cz (slimak.dkm.cz [62.24.64.34])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6TGrYDW029042
-	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 09:53:35 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6TGtoDW029359
+	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 09:55:50 -0700
 From: =?iso-8859-2?Q?Ladislav_Durch=E1nek?= <durchanek@gmail.com>
-Subject: Tree Quota error message suggestion
-Date: Sat, 29 Jul 2006 17:53:34 +0200
-Message-ID: <018a01c6b327$25bc6d40$0201a8c0@reykjavik>
+Subject: FW: Tree Quota error message suggestion
+Date: Sat, 29 Jul 2006 17:55:46 +0200
+Message-ID: <018f01c6b327$74523980$0201a8c0@reykjavik>
 MIME-Version: 1.0
 Content-Type: text/plain
 Content-Disposition: inline
@@ -15,6 +15,23 @@ Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+
+I forgot, i'm using XFS on Linux 2.6.17 Gentoo.
+
+=20
+
+            L=E1=EFa
+
+=20
+
+  _____=20=20
+
+From: Ladislav Durch=E1nek [mailto:durchanek@gmail.com]=20
+Sent: Saturday, July 29, 2006 5:54 PM
+To: 'xfs@oss.sgi.com'
+Subject: Tree Quota error message suggestion
+
+=20
 
 Hi everybody,
 First at all I have to say that XFS is great. Especially its built-in quota
