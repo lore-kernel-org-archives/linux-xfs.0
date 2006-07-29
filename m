@@ -1,61 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 09:56:01 -0700 (PDT)
-Received: from slimak.dkm.cz (slimak.dkm.cz [62.24.64.34])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6TGtoDW029359
-	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 09:55:50 -0700
-From: =?iso-8859-2?Q?Ladislav_Durch=E1nek?= <durchanek@gmail.com>
-Subject: FW: Tree Quota error message suggestion
-Date: Sat, 29 Jul 2006 17:55:46 +0200
-Message-ID: <018f01c6b327$74523980$0201a8c0@reykjavik>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 12:27:26 -0700 (PDT)
+Received: from amanpulo.hosting.qsr.com.ph (amanpulo.hosting.qsr.com.ph [64.34.170.22])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6TJR9DW018846
+	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 12:27:11 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id A45B3C189E26
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 02:18:01 +0800 (PHT)
+Received: from musang.free.net.ph (unknown [203.177.91.252])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by amanpulo.hosting.qsr.com.ph (Postfix) with ESMTP id 27662C189E29
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 02:17:55 +0800 (PHT)
+Date: Sun, 30 Jul 2006 02:17:50 +0800
+From: Federico Sevilla III <jijo@free.net.ph>
+Subject: Re: FW: Tree Quota error message suggestion
+Message-ID: <20060729181750.GA3520@free.net.ph>
+References: <018f01c6b327$74523980$0201a8c0@reykjavik>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <018f01c6b327$74523980$0201a8c0@reykjavik>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-I forgot, i'm using XFS on Linux 2.6.17 Gentoo.
+On Sat, Jul 29, 2006 at 05:55:46PM +0200, Ladislav Durchánek wrote:
+> I forgot, i'm using XFS on Linux 2.6.17 Gentoo.
 
-=20
+You may want to upgrade to 2.6.17.7 ASAP. See
+<http://oss.sgi.com/projects/xfs/faq.html#dir2> for why.
 
-            L=E1=EFa
+ --> Jijo
 
-=20
-
-  _____=20=20
-
-From: Ladislav Durch=E1nek [mailto:durchanek@gmail.com]=20
-Sent: Saturday, July 29, 2006 5:54 PM
-To: 'xfs@oss.sgi.com'
-Subject: Tree Quota error message suggestion
-
-=20
-
-Hi everybody,
-First at all I have to say that XFS is great. Especially its built-in quota
-support is really nice thing. I found tree quotas extremely useful for
-hosting servers where uploaded files are created with other owner than
-customer is.
-
-=20
-
-But there is a one thing which could be done better I think: When I define
-tree quota and user tries to exceed id, error message returned is "No space
-left on device" which is not true - there is a plenty of space on device.
-Only when quota is totally full, next message is "Disk quota exceeded". I
-think it should be better if first message will be also "Disk quota
-exceeded".
-
-=20
-
-Cheers
-
-=20
-
-            L=E1=EFa Durch=E1nek
-
-
-
-[[HTML alternate version deleted]]
+-- 
+Federico Vicente C. Sevilla III
+Information Technology Consultant
+Q Software Research Corporation
+Website: http://jijo.free.net.ph
