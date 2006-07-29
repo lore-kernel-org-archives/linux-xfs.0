@@ -1,28 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 14:26:12 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6TLPqDW002889
-	for <linux-xfs@oss.sgi.com>; Sat, 29 Jul 2006 14:25:57 -0700
-Subject: Re: [PATCH] kill leftover WANT_FUNCS macro indirection
-References: <44CAE247.6020608@sandeen.net>
-From: Andi Kleen <ak@suse.de>
-Date: 29 Jul 2006 22:08:21 +0200
-In-Reply-To: <44CAE247.6020608@sandeen.net>
-Message-ID: <p73k65w41je.fsf@verdi.suse.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 15:24:54 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6TMNTDW010676
+	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 15:23:29 -0700
+Message-ID: <44CBDFC9.3040202@sandeen.net>
+Date: Sat, 29 Jul 2006 17:23:05 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH] kill leftover WANT_FUNCS macro indirection
+References: <44CAE247.6020608@sandeen.net> <p73k65w41je.fsf@verdi.suse.de>
+In-Reply-To: <p73k65w41je.fsf@verdi.suse.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@oss.sgi.com
+To: Andi Kleen <ak@suse.de>, xfs@oss.sgi.com
 
-Eric Sandeen <sandeen@sandeen.net> writes:
+Andi Kleen wrote:
+> Eric Sandeen <sandeen@sandeen.net> writes:
+> 
+>> This gets rid of some pointless macro defines... I had a version that
+>> lower-cased it all too but Nathan liked this better, and he's the man!
+>> :)
+> 
+> Shouted function names is not exactly Linux code style at least.
+> 
+> -Andi
+> 
 
-> This gets rid of some pointless macro defines... I had a version that
-> lower-cased it all too but Nathan liked this better, and he's the man!
-> :)
+well, *shrug* I have both versions, Nathan can take his pick :)
 
-Shouted function names is not exactly Linux code style at least.
+honestly, one-liner static inlines isn't exactly linux code style either, tho 
+the typechecking is nice.
 
--Andi
+I guess I shouldn't have said "Nathan liked this better" - I think he was being 
+pragmatic about the scope of the change.
+
+-Eric
