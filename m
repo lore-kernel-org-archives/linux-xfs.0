@@ -1,70 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 16:09:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 16:46:07 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6UN95DW021228
-	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 16:09:16 -0700
-Date: Mon, 31 Jul 2006 09:08:15 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6UNjFDW029944
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 16:45:27 -0700
+Date: Mon, 31 Jul 2006 09:44:24 +1000
 From: Nathan Scott <nathans@sgi.com>
-Subject: Re: [PATCH] kill no-op buf macros
-Message-ID: <20060731090815.B2280998@wobbly.melbourne.sgi.com>
-References: <44CC2A55.6030207@sandeen.net>
+Subject: Re: XFS Bug null pointer dereference in xfs_free_ag_extent
+Message-ID: <20060731094424.E2280998@wobbly.melbourne.sgi.com>
+References: <44BF29CD.1000809@l4x.org> <44CB0BF7.6030204@idccenter.cn> <44CB1303.7010303@l4x.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <44CC2A55.6030207@sandeen.net>; from sandeen@sandeen.net on Sat, Jul 29, 2006 at 10:41:09PM -0500
+In-Reply-To: <44CB1303.7010303@l4x.org>; from jdi@l4x.org on Sat, Jul 29, 2006 at 09:49:23AM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, dgc@sgi.com
-Cc: xfs@oss.sgi.com
+To: Jan Dittmer <jdi@l4x.org>, kernel <linux@idccenter.cn>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Jul 29, 2006 at 10:41:09PM -0500, Eric Sandeen wrote:
-> It looks like these macros are not particularly interesting... this patch kills 
-> them.
+Hi there,
 
-Hmm, I'm not sure about some of these..
+On Sat, Jul 29, 2006 at 09:49:23AM +0200, Jan Dittmer wrote:
+> kernel schrieb:
+> > I have the same problem, but it seems not have a patch right now.
+> 
+> No, I got zero feedback, but let's cc the correct
+> mailing list. I also filed bug 6877 at kernel.org
+> 
 
-> #define XFS_BUF_BUSY(bp)	do { } while (0)
-> #define XFS_BUF_ISBUSY(bp)	(1)
+Is this easily reproducible for you?  I've not seen it before, and
+the only possibly related recent changes I can think of are these:
 
-This ones used on 2.4, I'd like to get Daves thoughts on whether
-we do the right thing here based on his buffer cache fu.
+http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e63a3690013a475746ad2cea998ebb534d825704
 
-> #define XFS_BUF_SHUT(bp)	do { } while (0)
-> #define XFS_BUF_UNSHUT(bp)	do { } while (0)
-> #define XFS_BUF_ISSHUT(bp)	(0)
+http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d210a28cd851082cec9b282443f8cc0e6fc09830
 
-Ditto (not used on 2.4 though, but still maybe we should be doing
-something here).
+Could you try reverting each of those to see if either is the cause?
 
-> #define XFS_BUF_ISUNINITIAL(bp)	(0)
+thanks.
 
-This can go, unwritten extents don't use this interface on Linux.
-
-> #define XFS_BUF_BP_ISMAPPED(bp)	(1)
-
-*nod* - looks like it should go.
-
-(could you regen the patch with just these two for now?  they are
-pretty much self-contained changes, and nice 'n small)
-
-> #define XFS_BUF_SET_START(bp)			do { } while (0)
-
-Not sure what this used to do - Dave?
-
-> #define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
-> #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
-> #define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
-
-These ones should probably be implemented properly, not removed.
-We currently treat all metadata buffers with an equal ranking when
-we're delwri flushing them to try to reclaim memory, this was a
-scheme to indicate some are more precious than others... we have
-a (currently ignored) priority passed into xfsbufd_wakeup that we
-could start honouring and improve our low memory handling there..
-d'ya want to hack something up there?
-
-cheers.
-
-- 
+-- 
 Nathan
