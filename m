@@ -1,43 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 16:46:07 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6UNjFDW029944
-	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 16:45:27 -0700
-Date: Mon, 31 Jul 2006 09:44:24 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: XFS Bug null pointer dereference in xfs_free_ag_extent
-Message-ID: <20060731094424.E2280998@wobbly.melbourne.sgi.com>
-References: <44BF29CD.1000809@l4x.org> <44CB0BF7.6030204@idccenter.cn> <44CB1303.7010303@l4x.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <44CB1303.7010303@l4x.org>; from jdi@l4x.org on Sat, Jul 29, 2006 at 09:49:23AM +0200
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 17:21:31 -0700 (PDT)
+Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6V0KnDW001849
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 17:20:59 -0700
+Received: from omx2.sgi.com ([198.149.32.25])
+	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k6UNHmnx006498
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 18:17:48 -0500
+Message-ID: <44CD3DF2.1010108@melbourne.sgi.com>
+Date: Mon, 31 Jul 2006 09:17:06 +1000
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] kill leftover WANT_FUNCS macro indirection
+References: <44CAE247.6020608@sandeen.net> <p73k65w41je.fsf@verdi.suse.de> <44CBDFC9.3040202@sandeen.net> <20060731085454.A2280998@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060731085454.A2280998@wobbly.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Dittmer <jdi@l4x.org>, kernel <linux@idccenter.cn>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Andi Kleen <ak@suse.de>, xfs@oss.sgi.com
 
-Hi there,
 
-On Sat, Jul 29, 2006 at 09:49:23AM +0200, Jan Dittmer wrote:
-> kernel schrieb:
-> > I have the same problem, but it seems not have a patch right now.
+
+Nathan Scott wrote:
+> On Sat, Jul 29, 2006 at 05:23:05PM -0500, Eric Sandeen wrote:
+>> Andi Kleen wrote:
+>>> Eric Sandeen <sandeen@sandeen.net> writes:
+>>>
+>>>> This gets rid of some pointless macro defines... I had a version that
+>>>> lower-cased it all too but Nathan liked this better, and he's the man!
+>>>> :)
+>>> Shouted function names is not exactly Linux code style at least.
+>>>
+>>> -Andi
+>>>
+>> well, *shrug* I have both versions, Nathan can take his pick :)
+>>
+>> honestly, one-liner static inlines isn't exactly linux code style either, tho 
+>> the typechecking is nice.
+>>
+>> I guess I shouldn't have said "Nathan liked this better" - I think he was being 
+>> pragmatic about the scope of the change.
 > 
-> No, I got zero feedback, but let's cc the correct
-> mailing list. I also filed bug 6877 at kernel.org
+> Right, its more that we don't have a great track record at the moment
+> of not introducing regressions with these cleanups (including myself),
+> so I'm becoming more reluctant to do sweeping changes across the whole
+> codebase.  Smaller, specific, and obviously-correct things are less 
+> likely to introduce issues, so if we can achieve basically the same
+> thing while churning the code less, I'm all for it.
 > 
 
-Is this easily reproducible for you?  I've not seen it before, and
-the only possibly related recent changes I can think of are these:
+Sam on his previous project had to do significant cleanup/macro
+changes and wrote some tools to help him do post-preprocessor
+comparisons to really look at what had changed. I'm not sure how
+generic these tools are, but worth considering.
 
-http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=e63a3690013a475746ad2cea998ebb534d825704
-
-http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d210a28cd851082cec9b282443f8cc0e6fc09830
-
-Could you try reverting each of those to see if either is the cause?
-
-thanks.
-
--- 
-Nathan
+David
