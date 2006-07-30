@@ -1,36 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Jul 2006 19:36:45 -0700 (PDT)
-Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k712aBDW006361
-	for <linux-xfs@oss.sgi.com>; Mon, 31 Jul 2006 19:36:21 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 16:09:43 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with SMTP id k710NGnx029951
-	for <linux-xfs@oss.sgi.com>; Mon, 31 Jul 2006 19:23:17 -0500
-Message-ID: <44CE9F23.7000605@sgi.com>
-Date: Tue, 01 Aug 2006 10:24:03 +1000
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: TAKE 953687 - [SUSE#182691]The current XFS kernel does not pass the
- file mode on remove events
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6UN95DW021228
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 16:09:16 -0700
+Date: Mon, 31 Jul 2006 09:08:15 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [PATCH] kill no-op buf macros
+Message-ID: <20060731090815.B2280998@wobbly.melbourne.sgi.com>
+References: <44CC2A55.6030207@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44CC2A55.6030207@sandeen.net>; from sandeen@sandeen.net on Sat, Jul 29, 2006 at 10:41:09PM -0500
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, dgc@sgi.com
+Cc: xfs@oss.sgi.com
 
-pass file mode on DMAPI remove events
+On Sat, Jul 29, 2006 at 10:41:09PM -0500, Eric Sandeen wrote:
+> It looks like these macros are not particularly interesting... this patch kills 
+> them.
 
+Hmm, I'm not sure about some of these..
 
+> #define XFS_BUF_BUSY(bp)	do { } while (0)
+> #define XFS_BUF_ISBUSY(bp)	(1)
 
-Date:  Tue Aug  1 09:32:45 AEST 2006
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
-Inspected by:  nathans
+This ones used on 2.4, I'd like to get Daves thoughts on whether
+we do the right thing here based on his buffer cache fu.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+> #define XFS_BUF_SHUT(bp)	do { } while (0)
+> #define XFS_BUF_UNSHUT(bp)	do { } while (0)
+> #define XFS_BUF_ISSHUT(bp)	(0)
 
+Ditto (not used on 2.4 though, but still maybe we should be doing
+something here).
 
-Modid:  xfs-linux-melb:xfs-kern:26639a
-fs/xfs/xfs_vnodeops.c - 1.682 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.682&r2=text&tr2=1.681&f=h
+> #define XFS_BUF_ISUNINITIAL(bp)	(0)
+
+This can go, unwritten extents don't use this interface on Linux.
+
+> #define XFS_BUF_BP_ISMAPPED(bp)	(1)
+
+*nod* - looks like it should go.
+
+(could you regen the patch with just these two for now?  they are
+pretty much self-contained changes, and nice 'n small)
+
+> #define XFS_BUF_SET_START(bp)			do { } while (0)
+
+Not sure what this used to do - Dave?
+
+> #define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
+> #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
+> #define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
+
+These ones should probably be implemented properly, not removed.
+We currently treat all metadata buffers with an equal ranking when
+we're delwri flushing them to try to reclaim memory, this was a
+scheme to indicate some are more precious than others... we have
+a (currently ignored) priority passed into xfsbufd_wakeup that we
+could start honouring and improve our low memory handling there..
+d'ya want to hack something up there?
+
+cheers.
+
+- 
+Nathan
