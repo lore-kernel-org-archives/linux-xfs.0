@@ -1,535 +1,511 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 20:34:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 20:41:43 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6U3YeDW027837
-	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 20:34:41 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6U3fVDW028897
+	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 20:41:31 -0700
 Received: from [10.0.0.4] (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id E92811806631D
-	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 22:34:15 -0500 (CDT)
-Message-ID: <44CC28BA.7070005@sandeen.net>
-Date: Sat, 29 Jul 2006 22:34:18 -0500
+	by sandeen.net (Postfix) with ESMTP id A79FC18DE2F33
+	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 22:41:06 -0500 (CDT)
+Message-ID: <44CC2A55.6030207@sandeen.net>
+Date: Sat, 29 Jul 2006 22:41:09 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] Kill off a bunch of unused macros
+Subject: [PATCH] kill no-op buf macros
 Content-Type: multipart/mixed;
- boundary="------------010804030805080203090806"
+ boundary="------------060303000702070608060508"
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
 This is a multi-part message in MIME format.
---------------010804030805080203090806
+--------------060303000702070608060508
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-This kills off 74 unused macros; more could go but I left some in for symmetry, 
-bitfields, etc... *shrug* Nathan, maybe you don't want all these to go, but 
-surely some can.
+It looks like these macros are not particularly interesting... this patch kills 
+them.
 
-I left xfs_mac.h intact but it's really not used at this point either...
+#define XFS_BUF_BUSY(bp)	do { } while (0)
+#define XFS_BUF_ISBUSY(bp)	(1)
+#define XFS_BUF_SHUT(bp)	do { } while (0)
+#define XFS_BUF_UNSHUT(bp)	do { } while (0)
+#define XFS_BUF_ISSHUT(bp)	(0)
+#define XFS_BUF_ISUNINITIAL(bp)	(0)
+#define XFS_BUF_BP_ISMAPPED(bp)	(1)
+#define XFS_BUF_SET_START(bp)			do { } while (0)
+#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
+#define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
+#define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
 
 Thanks,
 
 -Eric
 
---------------010804030805080203090806
+--------------060303000702070608060508
 Content-Type: text/plain; x-mac-type="0"; x-mac-creator="0";
- name="kill-unused-macros"
+ name="kill-buf-macros"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="kill-unused-macros"
+ filename="kill-buf-macros"
 
- linux-2.6/sv.h         |    4 ----
- linux-2.6/xfs_buf.h    |   10 ----------
- linux-2.6/xfs_linux.h  |    7 -------
- linux-2.6/xfs_vfs.h    |   10 ----------
- linux-2.6/xfs_vnode.h  |    3 ---
- quota/xfs_qm.h         |    6 ------
- quota/xfs_quota_priv.h |    2 --
- support/radix-tree.h   |   15 ---------------
- xfs_acl.h              |    4 ----
- xfs_bmap_btree.h       |    3 ---
- xfs_cap.h              |   19 -------------------
- xfs_da_btree.h         |    2 --
- xfs_error.h            |    8 --------
- xfs_fs.h               |    4 ----
- xfs_log.h              |    8 --------
- xfs_log_priv.h         |    4 ----
- xfs_quota.h            |    3 ---
- xfs_sb.h               |   22 ----------------------
- 18 files changed, 134 deletions(-)
+ linux-2.6/xfs_buf.h |   16 ----------------
+ quota/xfs_dquot.c   |    7 -------
+ xfs_alloc.c         |    2 --
+ xfs_btree.c         |   13 -------------
+ xfs_buf_item.c      |   20 +-------------------
+ xfs_da_btree.c      |    9 ---------
+ xfs_ialloc.c        |    1 -
+ xfs_inode.c         |   13 -------------
+ xfs_log.c           |    4 ----
+ xfs_log_recover.c   |    2 --
+ xfs_mount.c         |    2 --
+ xfs_trans_buf.c     |    9 ---------
+ 12 files changed, 1 insertion(+), 97 deletions(-)
 
 Signed-Off-By: Eric Sandeen <sandeen@sandeen.net>
 
-Index: xfs-linux-killwantfuncs/linux-2.6/sv.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/linux-2.6/sv.h
-+++ xfs-linux-killwantfuncs/linux-2.6/sv.h
-@@ -33,12 +33,8 @@ typedef struct sv_s {
- } sv_t;
- 
- #define SV_FIFO		0x0		/* sv_t is FIFO type */
--#define SV_LIFO		0x2		/* sv_t is LIFO type */
--#define SV_PRIO		0x4		/* sv_t is PRIO type */
--#define SV_KEYED	0x6		/* sv_t is KEYED type */
- #define SV_DEFAULT      SV_FIFO
- 
--
- static inline void _sv_wait(sv_t *sv, spinlock_t *lock, int state,
- 			     unsigned long timeout)
- {
 Index: xfs-linux-killwantfuncs/linux-2.6/xfs_buf.h
 ===================================================================
 --- xfs-linux-killwantfuncs.orig/linux-2.6/xfs_buf.h
 +++ xfs-linux-killwantfuncs/linux-2.6/xfs_buf.h
-@@ -275,7 +275,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
+@@ -274,9 +274,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
+ #define XFS_BUF_UNDONE(bp)	((bp)->b_flags &= ~XBF_DONE)
  #define XFS_BUF_ISDONE(bp)	((bp)->b_flags & XBF_DONE)
  
- #define XFS_BUF_BUSY(bp)	do { } while (0)
--#define XFS_BUF_UNBUSY(bp)	do { } while (0)
- #define XFS_BUF_ISBUSY(bp)	(1)
- 
+-#define XFS_BUF_BUSY(bp)	do { } while (0)
+-#define XFS_BUF_ISBUSY(bp)	(1)
+-
  #define XFS_BUF_ASYNC(bp)	((bp)->b_flags |= XBF_ASYNC)
-@@ -284,7 +283,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
- 
+ #define XFS_BUF_UNASYNC(bp)	((bp)->b_flags &= ~XBF_ASYNC)
+ #define XFS_BUF_ISASYNC(bp)	((bp)->b_flags & XBF_ASYNC)
+@@ -284,10 +281,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
  #define XFS_BUF_ORDERED(bp)	((bp)->b_flags |= XBF_ORDERED)
  #define XFS_BUF_UNORDERED(bp)	((bp)->b_flags &= ~XBF_ORDERED)
--#define XFS_BUF_ISORDERED(bp)	((bp)->b_flags & XBF_ORDERED)
  
- #define XFS_BUF_SHUT(bp)	do { } while (0)
- #define XFS_BUF_UNSHUT(bp)	do { } while (0)
-@@ -297,10 +295,8 @@ extern void xfs_buf_trace(xfs_buf_t *, c
- 
+-#define XFS_BUF_SHUT(bp)	do { } while (0)
+-#define XFS_BUF_UNSHUT(bp)	do { } while (0)
+-#define XFS_BUF_ISSHUT(bp)	(0)
+-
+ #define XFS_BUF_HOLD(bp)	xfs_buf_hold(bp)
+ #define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
+ #define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
+@@ -296,10 +289,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
  #define XFS_BUF_WRITE(bp)	((bp)->b_flags |= XBF_WRITE)
  #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
--#define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
  
- #define XFS_BUF_ISUNINITIAL(bp)	(0)
--#define XFS_BUF_UNUNINITIAL(bp)	(0)
+-#define XFS_BUF_ISUNINITIAL(bp)	(0)
+-
+-#define XFS_BUF_BP_ISMAPPED(bp)	(1)
+-
+ #define XFS_BUF_IODONE_FUNC(bp)			((bp)->b_iodone)
+ #define XFS_BUF_SET_IODONE_FUNC(bp, func)	((bp)->b_iodone = (func))
+ #define XFS_BUF_CLR_IODONE_FUNC(bp)		((bp)->b_iodone = NULL)
+@@ -312,7 +301,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
+ #define XFS_BUF_SET_FSPRIVATE2(bp, val)		((bp)->b_fspriv2 = (void*)(val))
+ #define XFS_BUF_FSPRIVATE3(bp, type)		((type)(bp)->b_fspriv3)
+ #define XFS_BUF_SET_FSPRIVATE3(bp, val)		((bp)->b_fspriv3 = (void*)(val))
+-#define XFS_BUF_SET_START(bp)			do { } while (0)
+ #define XFS_BUF_SET_BRELSE_FUNC(bp, func)	((bp)->b_relse = (func))
  
- #define XFS_BUF_BP_ISMAPPED(bp)	(1)
- 
-@@ -323,12 +319,9 @@ extern void xfs_buf_trace(xfs_buf_t *, c
- #define XFS_BUF_SET_PTR(bp, val, cnt)	xfs_buf_associate_memory(bp, val, cnt)
- #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
--#define XFS_BUF_OFFSET(bp)		((bp)->b_file_offset)
--#define XFS_BUF_SET_OFFSET(bp, off)	((bp)->b_file_offset = (off))
- #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
+ #define XFS_BUF_PTR(bp)			(xfs_caddr_t)((bp)->b_addr)
+@@ -323,10 +311,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
  #define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
  #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
--#define XFS_BUF_SET_SIZE(bp, cnt)	((bp)->b_buffer_length = (cnt))
  
- #define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
- #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
-@@ -338,7 +331,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
+-#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
+-#define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
+-#define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
+-
+ #define XFS_BUF_ISPINNED(bp)	xfs_buf_ispin(bp)
  
  #define XFS_BUF_VALUSEMA(bp)	xfs_buf_lock_value(bp)
- #define XFS_BUF_CPSEMA(bp)	(xfs_buf_cond_lock(bp) == 0)
--#define XFS_BUF_VSEMA(bp)	xfs_buf_unlock(bp)
- #define XFS_BUF_PSEMA(bp,x)	xfs_buf_lock(bp)
- #define XFS_BUF_V_IODONESEMA(bp) up(&bp->b_iodonesema);
+Index: xfs-linux-killwantfuncs/quota/xfs_dquot.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/quota/xfs_dquot.c
++++ xfs-linux-killwantfuncs/quota/xfs_dquot.c
+@@ -369,7 +369,6 @@ xfs_qm_init_dquot_blk(
+ 	int		curid, i;
  
-@@ -394,8 +386,6 @@ static inline int XFS_bwrite(xfs_buf_t *
- 	return error;
+ 	ASSERT(tp);
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 
+ 	d = (xfs_dqblk_t *)XFS_BUF_PTR(bp);
+@@ -609,7 +608,6 @@ xfs_qm_dqtobp(
+ 		if (error || !bp)
+ 			return XFS_ERROR(error);
+ 	}
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 
+ 	/*
+@@ -627,7 +625,6 @@ xfs_qm_dqtobp(
+ 			xfs_trans_brelse(tp, bp);
+ 			return XFS_ERROR(EIO);
+ 		}
+-		XFS_BUF_BUSY(bp); /* We dirtied this */
+ 	}
+ 
+ 	*O_bpp = bp;
+@@ -680,9 +677,6 @@ xfs_qm_dqread(
+ 	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
+ 	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
+ 
+-	/* Mark the buf so that this will stay incore a little longer */
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_DQUOT, XFS_DQUOT_REF);
+-
+ 	/*
+ 	 * We got the buffer with a xfs_trans_read_buf() (in dqtobp())
+ 	 * So we need to release with xfs_trans_brelse().
+@@ -695,7 +689,6 @@ xfs_qm_dqread(
+ 	 * this particular dquot was repaired. We still aren't afraid to
+ 	 * brelse it because we have the changes incore.
+ 	 */
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 	xfs_trans_brelse(tp, bp);
+ 
+Index: xfs-linux-killwantfuncs/xfs_alloc.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_alloc.c
++++ xfs-linux-killwantfuncs/xfs_alloc.c
+@@ -409,7 +409,6 @@ xfs_alloc_read_agfl(
+ 		return error;
+ 	ASSERT(bp);
+ 	ASSERT(!XFS_BUF_GETERROR(bp));
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGFL, XFS_AGFL_REF);
+ 	*bpp = bp;
+ 	return 0;
  }
- 
--#define XFS_bdwrite(bp)		xfs_buf_iostart(bp, XBF_DELWRI | XBF_ASYNC)
--
- static inline int xfs_bdwrite(void *mp, xfs_buf_t *bp)
- {
- 	bp->b_strat = xfs_bdstrat_cb;
-Index: xfs-linux-killwantfuncs/linux-2.6/xfs_linux.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/linux-2.6/xfs_linux.h
-+++ xfs-linux-killwantfuncs/linux-2.6/xfs_linux.h
-@@ -152,11 +152,7 @@ BUFFER_FNS(PrivateStart, unwritten);
- 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
- 
- #define NBPP		PAGE_SIZE
--#define DPPSHFT		(PAGE_SHIFT - 9)
- #define NDPP		(1 << (PAGE_SHIFT - 9))
--#define dtop(DD)	(((DD) + NDPP - 1) >> DPPSHFT)
--#define dtopt(DD)	((DD) >> DPPSHFT)
--#define dpoff(DD)	((DD) & (NDPP-1))
- 
- #define NBBY		8		/* number of bits per byte */
- #define	NBPC		PAGE_SIZE	/* Number of bytes per click */
-@@ -176,8 +172,6 @@ BUFFER_FNS(PrivateStart, unwritten);
- #define	btoct(x)	((__psunsigned_t)(x)>>BPCSHIFT)
- #define	btoc64(x)	(((__uint64_t)(x)+(NBPC-1))>>BPCSHIFT)
- #define	btoct64(x)	((__uint64_t)(x)>>BPCSHIFT)
--#define	io_btoc(x)	(((__psunsigned_t)(x)+(IO_NBPC-1))>>IO_BPCSHIFT)
--#define	io_btoct(x)	((__psunsigned_t)(x)>>IO_BPCSHIFT)
- 
- /* off_t bytes to clicks */
- #define offtoc(x)       (((__uint64_t)(x)+(NBPC-1))>>BPCSHIFT)
-@@ -190,7 +184,6 @@ BUFFER_FNS(PrivateStart, unwritten);
- #define	ctob(x)		((__psunsigned_t)(x)<<BPCSHIFT)
- #define btoct(x)        ((__psunsigned_t)(x)>>BPCSHIFT)
- #define	ctob64(x)	((__uint64_t)(x)<<BPCSHIFT)
--#define	io_ctob(x)	((__psunsigned_t)(x)<<IO_BPCSHIFT)
- 
- /* bytes to clicks */
- #define btoc(x)         (((__psunsigned_t)(x)+(NBPC-1))>>BPCSHIFT)
-Index: xfs-linux-killwantfuncs/linux-2.6/xfs_vfs.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/linux-2.6/xfs_vfs.h
-+++ xfs-linux-killwantfuncs/linux-2.6/xfs_vfs.h
-@@ -166,18 +166,8 @@ typedef struct bhv_vfsops {
- #define bhv_next_vfs_mount(b, ma,cr)		vfs_mount(b, ma,cr)
- #define bhv_next_vfs_parseargs(b, o,ma,f)	vfs_parseargs(b, o,ma,f)
- #define bhv_next_vfs_showargs(b, m)		vfs_showargs(b, m)
--#define bhv_next_vfs_unmount(b, f,cr)		vfs_unmount(b, f,cr)
--#define bhv_next_vfs_mntupdate(b, fl,args)	vfs_mntupdate(b, fl, args)
--#define bhv_next_vfs_root(b, vpp)		vfs_root(b, vpp)
- #define bhv_next_vfs_statvfs(b, sp,vp)		vfs_statvfs(b, sp,vp)
- #define bhv_next_vfs_sync(b, flag,cr)		vfs_sync(b, flag,cr)
--#define bhv_next_vfs_vget(b, vpp,fidp)		vfs_vget(b, vpp,fidp)
--#define bhv_next_vfs_dmapiops(b, p)		vfs_dmapiops(b, p)
--#define bhv_next_vfs_quotactl(b, c,id,p)	vfs_quotactl(b, c,id,p)
--#define bhv_next_vfs_get_inode(b, ino,fl)	vfs_get_inode(b, ino,fl)
--#define bhv_next_vfs_init_vnode(b, vp,b2,ul)	vfs_init_vnode(b, vp,b2,ul)
--#define bhv_next_force_shutdown(b, fl,f,l)	vfs_force_shutdown(b, fl,f,l)
--#define bhv_next_vfs_freeze(b)			vfs_freeze(b)
- 
- extern int vfs_mount(bhv_desc_t *, struct xfs_mount_args *, struct cred *);
- extern int vfs_parseargs(bhv_desc_t *, char *, struct xfs_mount_args *, int);
-Index: xfs-linux-killwantfuncs/linux-2.6/xfs_vnode.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/linux-2.6/xfs_vnode.h
-+++ xfs-linux-killwantfuncs/linux-2.6/xfs_vnode.h
-@@ -294,10 +294,7 @@ typedef struct bhv_vnodeops {
- #define bhv_vop_release(vp)		VOP(vop_release, vp)(VNHEAD(vp))
- #define bhv_vop_fid2(vp,fidp)		VOP(vop_fid2, vp)(VNHEAD(vp),fidp)
- #define bhv_vop_rwlock(vp,i)		VOP(vop_rwlock, vp)(VNHEAD(vp),i)
--#define bhv_vop_rwlock_try(vp,i)	VOP(vop_rwlock, vp)(VNHEAD(vp),i)
- #define bhv_vop_rwunlock(vp,i)		VOP(vop_rwunlock, vp)(VNHEAD(vp),i)
--#define bhv_vop_frlock(vp,c,fl,flags,offset,fr)				\
--		VOP(vop_frlock, vp)(VNHEAD(vp),c,fl,flags,offset,fr)
- #define bhv_vop_reclaim(vp)		VOP(vop_reclaim, vp)(VNHEAD(vp))
- #define bhv_vop_attr_get(vp, name, val, vallenp, fl, cred)		\
- 		VOP(vop_attr_get, vp)(VNHEAD(vp),name,val,vallenp,fl,cred)
-Index: xfs-linux-killwantfuncs/quota/xfs_quota_priv.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/quota/xfs_quota_priv.h
-+++ xfs-linux-killwantfuncs/quota/xfs_quota_priv.h
-@@ -75,7 +75,6 @@ static inline int XQMISLCKD(struct xfs_d
- 
- #define xfs_qm_freelist_lock(qm)	XQMLCK(&((qm)->qm_dqfreelist))
- #define xfs_qm_freelist_unlock(qm)	XQMUNLCK(&((qm)->qm_dqfreelist))
--#define XFS_QM_IS_FREELIST_LOCKED(qm)	XQMISLCKD(&((qm)->qm_dqfreelist))
- 
- /*
-  * Hash into a bucket in the dquot hash table, based on <mp, id>.
-@@ -170,6 +169,5 @@ for ((dqp) = (qlist)->qh_next; (dqp) != 
- #define DQFLAGTO_TYPESTR(d)	(((d)->dq_flags & XFS_DQ_USER) ? "USR" : \
- 				 (((d)->dq_flags & XFS_DQ_GROUP) ? "GRP" : \
- 				 (((d)->dq_flags & XFS_DQ_PROJ) ? "PRJ":"???")))
--#define DQFLAGTO_DIRTYSTR(d)	(XFS_DQ_IS_DIRTY(d) ? "DIRTY" : "NOTDIRTY")
- 
- #endif	/* __XFS_QUOTA_PRIV_H__ */
-Index: xfs-linux-killwantfuncs/support/radix-tree.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/support/radix-tree.h
-+++ xfs-linux-killwantfuncs/support/radix-tree.h
-@@ -24,20 +24,6 @@ struct radix_tree_root {
- 	struct radix_tree_node	*rnode;
- };
- 
--#define RADIX_TREE_INIT(mask)	{					\
--	.height = 0,							\
--	.rnode = NULL,							\
--}
--
--#define RADIX_TREE(name, mask) \
--	struct radix_tree_root name = RADIX_TREE_INIT(mask)
--
--#define INIT_RADIX_TREE(root, mask)					\
--do {									\
--	(root)->height = 0;						\
--	(root)->rnode = NULL;						\
--} while (0)
--
- #define RADIX_TREE_MAX_TAGS 2
- 
- int radix_tree_insert(struct radix_tree_root *, unsigned long, void *);
-@@ -47,7 +33,6 @@ void *radix_tree_delete(struct radix_tre
- unsigned int
- radix_tree_gang_lookup(struct radix_tree_root *root, void **results,
- 			unsigned long first_index, unsigned int max_items);
--#define radix_tree_preload(gfp_mask)	do { } while (0)
- void radix_tree_init(void);
- void *radix_tree_tag_set(struct radix_tree_root *root,
- 			unsigned long index, unsigned int tag);
-Index: xfs-linux-killwantfuncs/xfs_acl.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_acl.h
-+++ xfs-linux-killwantfuncs/xfs_acl.h
-@@ -72,9 +72,7 @@ extern int xfs_acl_vremove(struct bhv_vn
- #define _ACL_PERM_INVALID(perm)	((perm) & ~(ACL_READ|ACL_WRITE|ACL_EXECUTE))
- 
- #define _ACL_INHERIT(c,v,d)	(xfs_acl_inherit(c,v,d))
--#define _ACL_GET_ACCESS(pv,pa)	(xfs_acl_vtoacl(pv,pa,NULL) == 0)
- #define _ACL_GET_DEFAULT(pv,pd)	(xfs_acl_vtoacl(pv,NULL,pd) == 0)
--#define _ACL_ACCESS_EXISTS	xfs_acl_vhasacl_access
- #define _ACL_DEFAULT_EXISTS	xfs_acl_vhasacl_default
- #define _ACL_XFS_IACCESS(i,m,c) (XFS_IFORK_Q(i) ? xfs_acl_iaccess(i,m,c) : -1)
- 
-@@ -92,9 +90,7 @@ extern int xfs_acl_vremove(struct bhv_vn
- #define _ACL_ALLOC(a)		(1)	/* successfully allocate nothing */
- #define _ACL_FREE(a)		((void)0)
- #define _ACL_INHERIT(c,v,d)	(0)
--#define _ACL_GET_ACCESS(pv,pa)	(0)
- #define _ACL_GET_DEFAULT(pv,pd)	(0)
--#define _ACL_ACCESS_EXISTS	(NULL)
- #define _ACL_DEFAULT_EXISTS	(NULL)
- #define _ACL_XFS_IACCESS(i,m,c) (-1)
+@@ -2206,7 +2205,6 @@ xfs_alloc_read_agf(
+ 		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
+ 	}
  #endif
-Index: xfs-linux-killwantfuncs/xfs_bmap_btree.h
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGF, XFS_AGF_REF);
+ 	*bpp = bp;
+ 	return 0;
+ }
+Index: xfs-linux-killwantfuncs/xfs_btree.c
 ===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_bmap_btree.h
-+++ xfs-linux-killwantfuncs/xfs_bmap_btree.h
-@@ -74,9 +74,6 @@ typedef struct xfs_bmdr_block {
+--- xfs-linux-killwantfuncs.orig/xfs_btree.c
++++ xfs-linux-killwantfuncs/xfs_btree.c
+@@ -759,9 +759,6 @@ xfs_btree_read_bufl(
+ 		return error;
+ 	}
+ 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
+-	if (bp != NULL) {
+-		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
+-	}
+ 	*bpp = bp;
+ 	return 0;
+ }
+@@ -792,16 +789,6 @@ xfs_btree_read_bufs(
+ 		return error;
+ 	}
+ 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
+-	if (bp != NULL) {
+-		switch (refval) {
+-		case XFS_ALLOC_BTREE_REF:
+-			XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
+-			break;
+-		case XFS_INO_BTREE_REF:
+-			XFS_BUF_SET_VTYPE_REF(bp, B_FS_INOMAP, refval);
+-			break;
+-		}
+-	}
+ 	*bpp = bp;
+ 	return 0;
+ }
+Index: xfs-linux-killwantfuncs/xfs_buf_item.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_buf_item.c
++++ xfs-linux-killwantfuncs/xfs_buf_item.c
+@@ -234,7 +234,6 @@ xfs_buf_item_format(
+ 	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
+ 	       (bip->bli_flags & XFS_BLI_STALE));
+ 	bp = bip->bli_buf;
+-	ASSERT(XFS_BUF_BP_ISMAPPED(bp));
+ 	vecp = log_vector;
  
- #endif /* XFS_NATIVE_HOST */
+ 	/*
+@@ -351,7 +350,6 @@ xfs_buf_item_pin(
+ 	xfs_buf_t	*bp;
  
--
--#define BMBT_USE_64	1
--
- typedef struct xfs_bmbt_rec_32
+ 	bp = bip->bli_buf;
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
+ 	       (bip->bli_flags & XFS_BLI_STALE));
+@@ -901,7 +899,6 @@ xfs_buf_item_relse(
+ 	XFS_BUF_SET_FSPRIVATE(bp, bip->bli_item.li_bio_list);
+ 	if ((XFS_BUF_FSPRIVATE(bp, void *) == NULL) &&
+ 	    (XFS_BUF_IODONE_FUNC(bp) != NULL)) {
+-		ASSERT((XFS_BUF_ISUNINITIAL(bp)) == 0);
+ 		XFS_BUF_CLR_IODONE_FUNC(bp);
+ 	}
+ 
+@@ -936,7 +933,6 @@ xfs_buf_attach_iodone(
  {
- 	__uint32_t		l0, l1, l2, l3;
-Index: xfs-linux-killwantfuncs/xfs_cap.h
+ 	xfs_log_item_t	*head_lip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 
+ 	lip->li_cb = cb;
+@@ -1008,20 +1004,7 @@ xfs_buf_iodone_callbacks(
+ 			xfs_buf_do_callbacks(bp, lip);
+ 			XFS_BUF_SET_FSPRIVATE(bp, NULL);
+ 			XFS_BUF_CLR_IODONE_FUNC(bp);
+-
+-			/*
+-			 * XFS_SHUT flag gets set when we go thru the
+-			 * entire buffer cache and deliberately start
+-			 * throwing away delayed write buffers.
+-			 * Since there's no biowait done on those,
+-			 * we should just brelse them.
+-			 */
+-			if (XFS_BUF_ISSHUT(bp)) {
+-			    XFS_BUF_UNSHUT(bp);
+-				xfs_buf_relse(bp);
+-			} else {
+-				xfs_biodone(bp);
+-			}
++			xfs_biodone(bp);
+ 
+ 			return;
+ 		}
+@@ -1051,7 +1034,6 @@ xfs_buf_iodone_callbacks(
+ 			if (!(XFS_BUF_ISSTALE(bp))) {
+ 				XFS_BUF_DELAYWRITE(bp);
+ 				XFS_BUF_DONE(bp);
+-				XFS_BUF_SET_START(bp);
+ 			}
+ 			ASSERT(XFS_BUF_IODONE_FUNC(bp));
+ 			xfs_buftrace("BUF_IODONE ASYNC", bp);
+Index: xfs-linux-killwantfuncs/xfs_da_btree.c
 ===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_cap.h
-+++ xfs-linux-killwantfuncs/xfs_cap.h
-@@ -29,12 +29,6 @@ typedef struct xfs_cap_set {
- 	xfs_cap_value_t	cap_inheritable;/* pass through exec */
- } xfs_cap_set_t;
- 
--/* On-disk XFS extended attribute names */
--#define SGI_CAP_FILE	"SGI_CAP_FILE"
--#define SGI_CAP_FILE_SIZE	(sizeof(SGI_CAP_FILE)-1)
--#define SGI_CAP_LINUX	"SGI_CAP_LINUX"
--#define SGI_CAP_LINUX_SIZE	(sizeof(SGI_CAP_LINUX)-1)
--
- /*
-  * For Linux, we take the bitfields directly from capability.h
-  * and no longer attempt to keep this attribute ondisk compatible
-@@ -50,19 +44,6 @@ typedef struct xfs_cap_set {
- #include <linux/posix_cap_xattr.h>
- 
- struct bhv_vnode;
--
--extern int xfs_cap_vhascap(struct bhv_vnode *);
--extern int xfs_cap_vset(struct bhv_vnode *, void *, size_t);
--extern int xfs_cap_vget(struct bhv_vnode *, void *, size_t);
--extern int xfs_cap_vremove(struct bhv_vnode *);
--
--#define _CAP_EXISTS		xfs_cap_vhascap
--
--#else
--#define xfs_cap_vset(v,p,sz)	(-EOPNOTSUPP)
--#define xfs_cap_vget(v,p,sz)	(-EOPNOTSUPP)
--#define xfs_cap_vremove(v)	(-EOPNOTSUPP)
--#define _CAP_EXISTS		(NULL)
+--- xfs-linux-killwantfuncs.orig/xfs_da_btree.c
++++ xfs-linux-killwantfuncs/xfs_da_btree.c
+@@ -2033,15 +2033,6 @@ xfs_da_do_buf(
+ 		}
+ 		if (!bp)
+ 			continue;
+-		if (caller == 1) {
+-			if (whichfork == XFS_ATTR_FORK) {
+-				XFS_BUF_SET_VTYPE_REF(bp, B_FS_ATTR_BTREE,
+-						XFS_ATTR_BTREE_REF);
+-			} else {
+-				XFS_BUF_SET_VTYPE_REF(bp, B_FS_DIR_BTREE,
+-						XFS_DIR_BTREE_REF);
+-			}
+-		}
+ 		if (bplist) {
+ 			bplist[nbplist++] = bp;
+ 		}
+Index: xfs-linux-killwantfuncs/xfs_ialloc.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_ialloc.c
++++ xfs-linux-killwantfuncs/xfs_ialloc.c
+@@ -1405,7 +1405,6 @@ xfs_ialloc_read_agi(
+ 	}
  #endif
  
- #endif	/* __KERNEL__ */
-Index: xfs-linux-killwantfuncs/xfs_da_btree.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_da_btree.h
-+++ xfs-linux-killwantfuncs/xfs_da_btree.h
-@@ -72,8 +72,6 @@ typedef struct xfs_da_intnode {
- typedef struct xfs_da_node_hdr xfs_da_node_hdr_t;
- typedef struct xfs_da_node_entry xfs_da_node_entry_t;
- 
--#define XFS_DA_MAXHASH	((xfs_dahash_t)-1) /* largest valid hash value */
--
- #define	XFS_LBSIZE(mp)	(mp)->m_sb.sb_blocksize
- #define	XFS_LBLOG(mp)	(mp)->m_sb.sb_blocklog
- 
-Index: xfs-linux-killwantfuncs/xfs_error.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_error.h
-+++ xfs-linux-killwantfuncs/xfs_error.h
-@@ -18,14 +18,6 @@
- #ifndef	__XFS_ERROR_H__
- #define	__XFS_ERROR_H__
- 
--#define XFS_ERECOVER	1	/* Failure to recover log */
--#define XFS_ELOGSTAT	2	/* Failure to stat log in user space */
--#define XFS_ENOLOGSPACE	3	/* Reservation too large */
--#define XFS_ENOTSUP	4	/* Operation not supported */
--#define	XFS_ENOLSN	5	/* Can't find the lsn you asked for */
--#define XFS_ENOTFOUND	6
--#define XFS_ENOTXFS	7	/* Not XFS filesystem */
--
- #ifdef DEBUG
- #define	XFS_ERROR_NTRAP	10
- extern int	xfs_etrap[XFS_ERROR_NTRAP];
-Index: xfs-linux-killwantfuncs/xfs_fs.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_fs.h
-+++ xfs-linux-killwantfuncs/xfs_fs.h
-@@ -22,8 +22,6 @@
-  * SGI's XFS filesystem's major stuff (constants, structures)
-  */
- 
--#define XFS_NAME	"xfs"
--
- /*
-  * Direct I/O attribute record used with XFS_IOC_DIOINFO
-  * d_miniosz is the min xfer size, xfer size multiple and file seek offset
-@@ -428,8 +426,6 @@ typedef struct xfs_handle {
- 
- #define XFS_HANDLE_CMP(h1, h2)	memcmp(h1, h2, sizeof(xfs_handle_t))
- 
--#define FSHSIZE		sizeof(fsid_t)
--
- /* 
-  * Flags for going down operation
-  */
-Index: xfs-linux-killwantfuncs/xfs_sb.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_sb.h
-+++ xfs-linux-killwantfuncs/xfs_sb.h
-@@ -60,10 +60,6 @@ struct xfs_mount;
- 	 XFS_SB_VERSION_LOGV2BIT | \
- 	 XFS_SB_VERSION_SECTORBIT | \
- 	 XFS_SB_VERSION_MOREBITSBIT)
--#define	XFS_SB_VERSION_OKSASHBITS	\
--	(XFS_SB_VERSION_NUMBITS | \
--	 XFS_SB_VERSION_REALFBITS | \
--	 XFS_SB_VERSION_OKSASHFBITS)
- #define	XFS_SB_VERSION_OKREALBITS	\
- 	(XFS_SB_VERSION_NUMBITS | \
- 	 XFS_SB_VERSION_OKREALFBITS | \
-@@ -81,9 +77,6 @@ struct xfs_mount;
- #define XFS_SB_VERSION2_RESERVED2BIT	0x00000002
- #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
- #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
--#define XFS_SB_VERSION2_SASHFBITS	0xff000000	/* Mask: features that
--							   require changing
--							   PROM and SASH */
- 
- #define	XFS_SB_VERSION2_OKREALFBITS	\
- 	(XFS_SB_VERSION2_ATTR2BIT)
-@@ -237,12 +230,6 @@ static inline int XFS_SB_GOOD_VERSION(xf
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
+ 	*bpp = bp;
+ 	return 0;
  }
- #endif /* __KERNEL__ */
+Index: xfs-linux-killwantfuncs/xfs_inode.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_inode.c
++++ xfs-linux-killwantfuncs/xfs_inode.c
+@@ -369,11 +369,6 @@ xfs_itobp(
+ 	xfs_inobp_check(mp, bp);
  
--#define	XFS_SB_GOOD_SASH_VERSION(sbp)	\
--	((((sbp)->sb_versionnum >= XFS_SB_VERSION_1) && \
--	  ((sbp)->sb_versionnum <= XFS_SB_VERSION_3)) || \
--	 ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
--	  !((sbp)->sb_versionnum & ~XFS_SB_VERSION_OKSASHBITS)))
+ 	/*
+-	 * Mark the buffer as an inode buffer now that it looks good
+-	 */
+-	XFS_BUF_SET_VTYPE(bp, B_FS_INO);
 -
- static inline unsigned XFS_SB_VERSION_TONEW(unsigned v)
+-	/*
+ 	 * Set *dipp to point to the on-disk inode in the buffer.
+ 	 */
+ 	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
+@@ -978,13 +973,6 @@ xfs_iread(
+ 	ip->i_delayed_blks = 0;
+ 
+ 	/*
+-	 * Mark the buffer containing the inode as something to keep
+-	 * around for a while.  This helps to keep recently accessed
+-	 * meta-data in-core longer.
+-	 */
+-	 XFS_BUF_SET_REF(bp, XFS_INO_REF);
+-
+-	/*
+ 	 * Use xfs_trans_brelse() to release the buffer containing the
+ 	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
+ 	 * in xfs_itobp() above.  If tp is NULL, this is just a normal
+@@ -3233,7 +3221,6 @@ cluster_corrupt_out:
+ 			XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+ 			XFS_BUF_UNDONE(bp);
+ 			XFS_BUF_STALE(bp);
+-			XFS_BUF_SHUT(bp);
+ 			XFS_BUF_ERROR(bp,EIO);
+ 			xfs_biodone(bp);
+ 		} else {
+Index: xfs-linux-killwantfuncs/xfs_log.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_log.c
++++ xfs-linux-killwantfuncs/xfs_log.c
+@@ -1169,7 +1169,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+ 	XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
+ 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 	log->l_xbuf = bp;
+ 
+@@ -1224,7 +1223,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		iclog->ic_callback_tail = &(iclog->ic_callback);
+ 		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
+ 
+-		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
+ 		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
+ 		sv_init(&iclog->ic_forcesema, SV_DEFAULT, "iclog-force");
+ 		sv_init(&iclog->ic_writesema, SV_DEFAULT, "iclog-write");
+@@ -1430,7 +1428,6 @@ xlog_sync(xlog_t		*log,
+ 	}
+ 	XFS_BUF_SET_PTR(bp, (xfs_caddr_t) &(iclog->ic_header), count);
+ 	XFS_BUF_SET_FSPRIVATE(bp, iclog);	/* save for later */
+-	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_ASYNC(bp);
+ 	/*
+ 	 * Do an ordered write for the log block.
+@@ -1468,7 +1465,6 @@ xlog_sync(xlog_t		*log,
+ 		XFS_BUF_SET_PTR(bp, (xfs_caddr_t)((__psint_t)&(iclog->ic_header)+
+ 					    (__psint_t)count), split);
+ 		XFS_BUF_SET_FSPRIVATE(bp, iclog);
+-		XFS_BUF_BUSY(bp);
+ 		XFS_BUF_ASYNC(bp);
+ 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+ 			XFS_BUF_ORDERED(bp);
+Index: xfs-linux-killwantfuncs/xfs_log_recover.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_log_recover.c
++++ xfs-linux-killwantfuncs/xfs_log_recover.c
+@@ -115,7 +115,6 @@ xlog_bread(
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+ 	XFS_BUF_READ(bp);
+-	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
+ 	XFS_BUF_SET_TARGET(bp, log->l_mp->m_logdev_targp);
+ 
+@@ -150,7 +149,6 @@ xlog_bwrite(
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+ 	XFS_BUF_ZEROFLAGS(bp);
+-	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_HOLD(bp);
+ 	XFS_BUF_PSEMA(bp, PRIBIO);
+ 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
+Index: xfs-linux-killwantfuncs/xfs_mount.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_mount.c
++++ xfs-linux-killwantfuncs/xfs_mount.c
+@@ -499,7 +499,6 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 		error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
+ 		goto fail;
+ 	}
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 
+ 	/*
+@@ -541,7 +540,6 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 			error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
+ 			goto fail;
+ 		}
+-		ASSERT(XFS_BUF_ISBUSY(bp));
+ 		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 	}
+ 
+Index: xfs-linux-killwantfuncs/xfs_trans_buf.c
+===================================================================
+--- xfs-linux-killwantfuncs.orig/xfs_trans_buf.c
++++ xfs-linux-killwantfuncs/xfs_trans_buf.c
+@@ -649,7 +649,6 @@ xfs_trans_bjoin(xfs_trans_t	*tp,
  {
- 	return ((((v) == XFS_SB_VERSION_1) ? \
-@@ -436,15 +423,6 @@ static inline void XFS_SB_VERSION_ADDATT
-  * File system sector to basic block conversions.
-  */
- #define XFS_FSS_TO_BB(mp,sec)	((sec) << (mp)->m_sectbb_log)
--#define XFS_BB_TO_FSS(mp,bb)	\
--	(((bb) + (XFS_FSS_TO_BB(mp,1) - 1)) >> (mp)->m_sectbb_log)
--#define XFS_BB_TO_FSST(mp,bb)	((bb) >> (mp)->m_sectbb_log)
--
--/*
-- * File system sector to byte conversions.
-- */
--#define XFS_FSS_TO_B(mp,sectno)	((xfs_fsize_t)(sectno) << (mp)->m_sb.sb_sectlog)
--#define XFS_B_TO_FSST(mp,b)	(((__uint64_t)(b)) >> (mp)->m_sb.sb_sectlog)
+ 	xfs_buf_log_item_t	*bip;
  
- /*
-  * File system block to basic block conversions.
-Index: xfs-linux-killwantfuncs/quota/xfs_qm.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/quota/xfs_qm.h
-+++ xfs-linux-killwantfuncs/quota/xfs_qm.h
-@@ -56,12 +56,6 @@ extern kmem_zone_t	*qm_dqtrxzone;
- #define XFS_QM_HASHSIZE_HIGH		((NBPP * 4) / sizeof(xfs_dqhash_t))
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, void *) == NULL);
  
- /*
-- * We output a cmn_err when quotachecking a quota file with more than
-- * this many fsbs.
-- */
--#define XFS_QM_BIG_QCHECK_NBLKS		500
--
--/*
-  * This defines the unit of allocation of dquots.
-  * Currently, it is just one file system block, and a 4K blk contains 30
-  * (136 * 30 = 4080) dquots. It's probably not worth trying to make
-Index: xfs-linux-killwantfuncs/xfs_log.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_log.h
-+++ xfs-linux-killwantfuncs/xfs_log.h
-@@ -48,16 +48,10 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn
-  */
+ 	/*
+@@ -694,7 +693,6 @@ xfs_trans_bhold(xfs_trans_t	*tp,
+ {
+ 	xfs_buf_log_item_t	*bip;
  
- /*
-- * Flags to xfs_log_mount
-- */
--#define XFS_LOG_RECOVER		0x1
--
--/*
-  * Flags to xfs_log_done()
-  */
- #define XFS_LOG_REL_PERM_RESERV	0x1
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
  
--
- /*
-  * Flags to xfs_log_reserve()
-  *
-@@ -70,8 +64,6 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn
- #define XFS_LOG_SLEEP		0x0
- #define XFS_LOG_NOSLEEP		0x1
- #define XFS_LOG_PERM_RESERV	0x2
--#define XFS_LOG_RESV_ALL	(XFS_LOG_NOSLEEP|XFS_LOG_PERM_RESERV)
--
+@@ -716,7 +714,6 @@ xfs_trans_bhold_release(xfs_trans_t	*tp,
+ {
+ 	xfs_buf_log_item_t	*bip;
  
- /*
-  * Flags to xfs_log_force()
-Index: xfs-linux-killwantfuncs/xfs_log_priv.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_log_priv.h
-+++ xfs-linux-killwantfuncs/xfs_log_priv.h
-@@ -32,7 +32,6 @@ struct xfs_mount;
- #define XLOG_MIN_ICLOGS		2
- #define XLOG_MED_ICLOGS		4
- #define XLOG_MAX_ICLOGS		8
--#define XLOG_CALLBACK_SIZE	10
- #define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
- #define XLOG_VERSION_1		1
- #define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
-@@ -149,9 +148,6 @@ struct xfs_mount;
- #define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
- #define XLOG_END_TRANS		0x10	/* End a continued transaction */
- #define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
--#define XLOG_SKIP_TRANS		(XLOG_COMMIT_TRANS | XLOG_CONTINUE_TRANS | \
--				 XLOG_WAS_CONT_TRANS | XLOG_END_TRANS | \
--				 XLOG_UNMOUNT_TRANS)
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
  
- #ifdef __KERNEL__
- /*
-Index: xfs-linux-killwantfuncs/xfs_quota.h
-===================================================================
---- xfs-linux-killwantfuncs.orig/xfs_quota.h
-+++ xfs-linux-killwantfuncs/xfs_quota.h
-@@ -281,9 +281,6 @@ typedef struct xfs_qoff_logformat {
- 				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
- 				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
- 				 XFS_GQUOTA_ACCT)
--#define XFS_MOUNT_QUOTA_MASK	(XFS_MOUNT_QUOTA_ALL | XFS_UQUOTA_ACTIVE | \
--				 XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
--
+@@ -747,7 +744,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	xfs_buf_log_item_t	*bip;
+ 	xfs_log_item_desc_t	*lidp;
  
- /*
-  * The structure kept inside the xfs_trans_t keep track of dquot changes
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
+@@ -824,7 +820,6 @@ xfs_trans_binval(
+ 	xfs_log_item_desc_t	*lidp;
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 
+@@ -902,7 +897,6 @@ xfs_trans_inode_buf(
+ {
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 
+@@ -928,7 +922,6 @@ xfs_trans_stale_inode_buf(
+ {
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 
+@@ -958,7 +951,6 @@ xfs_trans_inode_alloc_buf(
+ {
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 
+@@ -988,7 +980,6 @@ xfs_trans_dquot_buf(
+ {
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 	ASSERT(type == XFS_BLI_UDQUOT_BUF ||
 
---------------010804030805080203090806--
+--------------060303000702070608060508--
