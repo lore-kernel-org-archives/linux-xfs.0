@@ -1,39 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 17:26:37 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k6V0QGDW002700
-	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 17:26:16 -0700
-Message-ID: <44CD4E0F.2070905@sandeen.net>
-Date: Sun, 30 Jul 2006 19:25:51 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] kill no-op buf macros
-References: <44CC2A55.6030207@sandeen.net> <20060731090815.B2280998@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060731090815.B2280998@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Jul 2006 17:33:06 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6V0WODW003917
+	for <xfs@oss.sgi.com>; Sun, 30 Jul 2006 17:32:36 -0700
+Date: Mon, 31 Jul 2006 10:31:33 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [xfs] quota project problem
+Message-ID: <20060731103133.G2280998@wobbly.melbourne.sgi.com>
+References: <44CA1D89.3080104@mdlink.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44CA1D89.3080104@mdlink.de>; from fp@mdlink.de on Fri, Jul 28, 2006 at 04:22:01PM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: dgc@sgi.com, xfs@oss.sgi.com
+To: Frank Patzig <fp@mdlink.de>
+Cc: xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Sat, Jul 29, 2006 at 10:41:09PM -0500, Eric Sandeen wrote:
->> It looks like these macros are not particularly interesting... this patch kills 
->> them.
+On Fri, Jul 28, 2006 at 04:22:01PM +0200, Frank Patzig wrote:
+> Hallo,
 > 
-> Hmm, I'm not sure about some of these..
+> i have a problem with project quota. Can i help you.
 > 
->> #define XFS_BUF_BUSY(bp)	do { } while (0)
->> #define XFS_BUF_ISBUSY(bp)	(1)
+> combolix:~ # uname -a
+> Linux combolix 2.6.18_rc1-jen27-default #1 Thu Jul 13 01:34:23 CEST 2006 
+> i686
+> i686 i386 GNU/Linux
 > 
-> This ones used on 2.4, I'd like to get Daves thoughts on whether
-> we do the right thing here based on his buffer cache fu.
+> combolix:~ # cat /etc/mtab
+> /dev/hdc2 / xfs rw,uquota,gquota,pquota 0 0
 
-Grr, just realized my cvs checkout didn't even pull linux-2.4 :/  Suppose I'd 
-better re-check everything I sent.
+This isn't correct - you can have either gquota or pquota,
+not both.  You also need to set root flags via the kernel
+boot option "rootflags=" - not via mtab (chicken vs egg).
 
-Grr!
+> Project quota state on / (/dev/hdc2)
+>    Accounting: OFF
+>    Enforcement: OFF
+>    Inode: #18446744073709551615 (0 blocks, 0 extents)
 
--Eric
+cheers.
+
+-- 
+Nathan
