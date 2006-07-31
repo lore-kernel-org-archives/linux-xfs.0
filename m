@@ -1,48 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Jul 2006 16:37:58 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k6TNbKDW024027
-	for <xfs@oss.sgi.com>; Sat, 29 Jul 2006 16:37:32 -0700
-Message-ID: <44CBE0F5.3050201@melbourne.sgi.com>
-Date: Sun, 30 Jul 2006 08:28:05 +1000
-From: David Chatterton <chatz@melbourne.sgi.com>
-Reply-To: chatz@melbourne.sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Jul 2006 19:08:38 -0700 (PDT)
+Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7128IDW002263
+	for <xfs@oss.sgi.com>; Mon, 31 Jul 2006 19:08:19 -0700
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: XFS vs. swsusp
+Date: Tue, 1 Aug 2006 01:23:37 +0200
+References: <20060731215933.GB3612@elf.ucw.cz> <20060801084143.D2286470@wobbly.melbourne.sgi.com> <20060731225308.GA4000@elf.ucw.cz>
+In-Reply-To: <20060731225308.GA4000@elf.ucw.cz>
 MIME-Version: 1.0
-Subject: Re: XFS breakage in 2.6.18-rc1
-References: <20060718222941.GA3801@stargate.galaxy> <20060719085731.C1935136@wobbly.melbourne.sgi.com> <Pine.LNX.4.64.0607221722500.8407@prinz64.housecafe.de> <20060724090138.C2083275@wobbly.melbourne.sgi.com> <Pine.LNX.4.64.0607281526220.1882@sheep.housecafe.de> <20060729074803.A2222647@wobbly.melbourne.sgi.com> <20060729202223.GD20039@charite.de>
-In-Reply-To: <20060729202223.GD20039@charite.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200608010123.37466.rjw@sisk.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>, Christian Kujau <evil@g-house.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Nathan Scott <nathans@sgi.com>, kernel list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
+Hi,
 
+On Tuesday 01 August 2006 00:53, Pavel Machek wrote:
+> > > Rafael has patches to add bdev freezing to swsusp. I'd like to know if
+> > > they are neccessary (and why).
+> > > 
+> > > 1) Is sync() enough to guarantee that all the data written before sync
+> > > actually reach the platters?
+> > > 
+> > > (Or is it that data only reach the journal? OTOH that would be okay, too).
+> > 
+> > It ensures file data reaches its final resting place, and that
+> > metadata changes have been logged.  It does not necessarily
+> ....
+> 
+> Okay, good, being safely in the journal is okay.
+> 
+> > > 2) If we stop all the user proceses and all the kernel threads, is
+> > > that enough to prevent XFS from writing to disk?
+> > 
+> > Yes, I believe so (if all user processes and kernel threads are
+> > stopped, who else would be left to initiate I/O?).  There is a
+> 
+> Well, we were afraid that you'd do it from timer interrupt or
+> something like that.
+> 
+> > timer driven wakeup done on the per-fs xfssyncd kernel threads,
+> > which do background metadata writeout and will write to the log
+> > periodically... but if those processes are all stopped too, you
+> > should be OK.
+> 
+> Timer only wakes up xfssyncd thread, right? That's okay, as that
+> thread will be stopped.
 
-Ralf Hildebrandt wrote:
-> * Nathan Scott <nathans@sgi.com>:
-> 
->> Barry sent an xfs_repair patch to resolve this issue to the xfs@oss.sgi.com
->> list yesterday; please give that a go and let us know how it fares.
-> 
-> Just to let you know, I did a cvs checkout of xfs-cmds
-> as described on http://oss.sgi.com/projects/xfs/source.html
-> 
-> Then I saved the patch from
-> http://oss.sgi.com/archives/xfs/2006-07/msg00374.html using the
-> "Original" link on hat page.
-> 
-> I build a xfs_Repair binary using that, transferred it onto an old
-> KLAX boot cd I had and repaired the XFS root on my laptop.
-> 
-> I got 5000 files in lost and found, mostly the whole manpages from my
-> system. Had to reinstall a few packages to restore lost binaries, but
-> that's all.
-> 
-> When will that horrible bug be fixed in 2.6.x? 
-> 
+But we call sync() before kernel threads are frozen.  What happens if xfssyncd
+gets woken up by the timer after the sync() and before we freeze it?
 
-The bug is fixed in 2.6.17.7.
-
-David
+Rafael
