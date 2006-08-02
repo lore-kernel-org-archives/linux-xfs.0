@@ -1,71 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Aug 2006 07:36:42 -0700 (PDT)
-Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k72EaNDW015466
-	for <xfs@oss.sgi.com>; Wed, 2 Aug 2006 07:36:29 -0700
-Received: from frontend3.internal (frontend3.internal [10.202.2.152])
-	by frontend1.messagingengine.com (Postfix) with ESMTP id 4B8A9D93487
-	for <xfs@oss.sgi.com>; Wed,  2 Aug 2006 10:35:57 -0400 (EDT)
-Message-Id: <1154529360.12604.267468790@webmail.messagingengine.com>
-From: "CN" <cnliou9@fastmail.fm>
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="GB2312"
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Aug 2006 13:21:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k72KKoDW014481
+	for <linux-xfs@oss.sgi.com>; Wed, 2 Aug 2006 13:20:50 -0700
+Message-ID: <44D0F61A.5070200@sandeen.net>
+Date: Wed, 02 Aug 2006 13:59:38 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-References: <1154433320.2160.267361956@webmail.messagingengine.com>
-   <20060801153951.GB17036@linuxathome.me>
-Subject: Re: xfs_check refuses to work on readonly fs
-In-Reply-To: <20060801153951.GB17036@linuxathome.me>
-Date: Wed, 02 Aug 2006 22:36:00 +0800
+Subject: Re: XFS stack space crashes - current status?
+References: <44D0A296.9020307@cjx.com>
+In-Reply-To: <44D0A296.9020307@cjx.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Chris Allen <chris@cjx.com>
+Cc: linux-xfs@oss.sgi.com
 
-Hi! Hedi,
+Chris Allen wrote:
 
-> Based on the info you provided I infer that you're running Linux.
-
-Yes. I forgot to mention this.
-
-> | # init 1
-> | # mount -o ro,remount /
-> | # mount
-> | /dev/hda1 on / type xfs (rw)
-> | # xfs_check /dev/hda1
-> | xfs_check: /dev/hda1 contains a mounted and writable filesystem
-> |
-> | xfs_check/xfs_repair are willing to work only when I boot from a disk
-> | and check/repair the other unmounted disk.
-> |
-> | Why "mount" shows (rw) instead of (ro) even "mount -o ro,remount /" is
-> | issued?
+> So..... questions:
 > 
-> Because mount is relying on /etc/mtab which couldn't be updated
-> precisely because / was remounted ro.
-> 
-> You'll need a recent xfsprogs version, at least 2.7.17 IIRC, one
-> that uses that uses /proc/mounts instead of /etc/mtab to check
-> filesystem status.
-> 
-> Or you can use a dirty and quick hack
-> 
->     - prior to remounting ro, edit /etc/mtab and change the root fs entry
->     from
->     rw to ro.
->     - remount ro
->     - run your xfs_check/xfs_repair in dangerous mode.
-> 
-> FWIW the safe thing to do after a repair on a mounted root FS is to
-> reboot.
+> 1. How much is known about this problem? Seeing as it is 100% reproducible,
+> is there any active development underway to fix it?
 
-I upgraded xfsprogs to 2.8.4 and have tried both approaches you provided
-but still have no luck. Only one thing is different: "mount" now reports
-"ro" if I edit /etc/mtab as you instructed.
+XFS is a lot less stack-heavy than it used to be, but if you put enough 
+IO code between sys_write and your disks, it can all add up to a problem.
 
-Regards,
+> 2. I have seen postings that say compiling a kernel with 8K stacks will 
+> fix the
+> problem. Is this the case? Or will I be able to trigger it again by 
+> running 100 or
+> 200 simultaneous writes?
 
-CN
+More threads probably won't matter.
 
--- 
-http://www.fastmail.fm - The professional email service
+> 3. Any suggestions as to what I should try? At present it looks like I 
+> am stuck between
+> finding a fix for XFS and splitting the box into 2 or 3 EXT3 partitions 
+> (which I really don't
+> want to do). I have tried ReiserFS (max FS size is 8TB even though the 
+> FAQ says 16), and
+> JFS (jfs_fsck segfaults which doesn't fill me with confidence).
+
+If you can run w/ 8k stacks you will probably be in better shape.
+
+If you want to do a bit of testing, go into do_IRQ() and change the 
+warning threshold (STACK_WARN) to something slightly bigger, so that 
+you'll get the warning message earlier, and you should also get a 
+backtrace that tells you how you got there.
+
+-Eric
+
+> 
+> Many thanks for any suggestions,
+> 
+> Chris Allen.
+> 
+> 
+> 
+> 
