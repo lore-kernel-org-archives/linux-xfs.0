@@ -1,67 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Aug 2006 07:23:21 -0700 (PDT)
-Received: from apple.cjx.com (37.233.187.81.in-addr.arpa [81.187.233.37])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k72EN5DW010265
-	for <linux-xfs@oss.sgi.com>; Wed, 2 Aug 2006 07:23:10 -0700
-Received: from [10.0.1.8] (mac.cjx.com [10.0.1.8])
-	(authenticated bits=0)
-	by apple.cjx.com (8.12.11/8.12.11) with ESMTP id k72D3Hmf024295
-	for <linux-xfs@oss.sgi.com>; Wed, 2 Aug 2006 14:03:17 +0100
-Message-ID: <44D0A296.9020307@cjx.com>
-Date: Wed, 02 Aug 2006 14:03:18 +0100
-From: Chris Allen <chris@cjx.com>
-MIME-Version: 1.0
-Subject: XFS stack space crashes - current status?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Aug 2006 07:36:42 -0700 (PDT)
+Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k72EaNDW015466
+	for <xfs@oss.sgi.com>; Wed, 2 Aug 2006 07:36:29 -0700
+Received: from frontend3.internal (frontend3.internal [10.202.2.152])
+	by frontend1.messagingengine.com (Postfix) with ESMTP id 4B8A9D93487
+	for <xfs@oss.sgi.com>; Wed,  2 Aug 2006 10:35:57 -0400 (EDT)
+Message-Id: <1154529360.12604.267468790@webmail.messagingengine.com>
+From: "CN" <cnliou9@fastmail.fm>
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="GB2312"
+MIME-Version: 1.0
+References: <1154433320.2160.267361956@webmail.messagingengine.com>
+   <20060801153951.GB17036@linuxathome.me>
+Subject: Re: xfs_check refuses to work on readonly fs
+In-Reply-To: <20060801153951.GB17036@linuxathome.me>
+Date: Wed, 02 Aug 2006 22:36:00 +0800
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-I have a box running XFS over md (raid5) over Fedora core5 2.6.17-1 kernel.
+Hi! Hedi,
 
-The box contains 16x750GB SATA drives combined into a single 11TB raid5
-partition using md, and this partition contains a single XFS filesystem.
+> Based on the info you provided I infer that you're running Linux.
 
-I can consistently crash the box within about ten minutes with a simple
-perl script that spawns 25 processes each of which loop writing random
-files to the filesystem.
+Yes. I forgot to mention this.
 
-The only message I get on the console is something like this:
+> | # init 1
+> | # mount -o ro,remount /
+> | # mount
+> | /dev/hda1 on / type xfs (rw)
+> | # xfs_check /dev/hda1
+> | xfs_check: /dev/hda1 contains a mounted and writable filesystem
+> |
+> | xfs_check/xfs_repair are willing to work only when I boot from a disk
+> | and check/repair the other unmounted disk.
+> |
+> | Why "mount" shows (rw) instead of (ro) even "mount -o ro,remount /" is
+> | issued?
+> 
+> Because mount is relying on /etc/mtab which couldn't be updated
+> precisely because / was remounted ro.
+> 
+> You'll need a recent xfsprogs version, at least 2.7.17 IIRC, one
+> that uses that uses /proc/mounts instead of /etc/mtab to check
+> filesystem status.
+> 
+> Or you can use a dirty and quick hack
+> 
+>     - prior to remounting ro, edit /etc/mtab and change the root fs entry
+>     from
+>     rw to ro.
+>     - remount ro
+>     - run your xfs_check/xfs_repair in dangerous mode.
+> 
+> FWIW the safe thing to do after a repair on a mounted root FS is to
+> reboot.
 
-do_IRQ: stack overflow: 492
- <c0406460>
+I upgraded xfsprogs to 2.8.4 and have tried both approaches you provided
+but still have no luck. Only one thing is different: "mount" now reports
+"ro" if I edit /etc/mtab as you instructed.
 
-Once crashed, the box requires a hard reboot to rescue it (and needs to 
-resync
-the RAID array).
+Regards,
 
+CN
 
-As the box is to be used for a production upload fileserver receiving 
-several hundred
-simultaneous uploads, I would most likely be seeing this problem lots.
-
-So..... questions:
-
-1. How much is known about this problem? Seeing as it is 100% reproducible,
-is there any active development underway to fix it?
-
-2. I have seen postings that say compiling a kernel with 8K stacks will 
-fix the
-problem. Is this the case? Or will I be able to trigger it again by 
-running 100 or
-200 simultaneous writes?
-
-3. Any suggestions as to what I should try? At present it looks like I 
-am stuck between
-finding a fix for XFS and splitting the box into 2 or 3 EXT3 partitions 
-(which I really don't
-want to do). I have tried ReiserFS (max FS size is 8TB even though the 
-FAQ says 16), and
-JFS (jfs_fsck segfaults which doesn't fill me with confidence).
-
-
-Many thanks for any suggestions,
-
-Chris Allen.
+-- 
+http://www.fastmail.fm - The professional email service
