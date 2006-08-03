@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Aug 2006 04:29:46 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Aug 2006 05:19:48 -0700 (PDT)
 Received: from otto.lonx.net (work.lonx.net [195.243.240.241])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k73BTXDW024685
-	for <xfs@oss.sgi.com>; Thu, 3 Aug 2006 04:29:33 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k73CJXDW001640
+	for <xfs@oss.sgi.com>; Thu, 3 Aug 2006 05:19:34 -0700
 Received: from localhost (localhost [127.0.0.1])
-	by otto.lonx.net (Postfix) with ESMTP id 052FF261C
-	for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:26:59 +0200 (CEST)
+	by otto.lonx.net (Postfix) with ESMTP id 61DE0261D
+	for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:18:42 +0200 (CEST)
 Received: from otto.lonx.net ([127.0.0.1])
  by localhost (otto [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 23806-05 for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:26:56 +0200 (CEST)
+ id 23913-04 for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:18:40 +0200 (CEST)
 Received: from otto.lonx.net (localhost [127.0.0.1])
-	by otto.lonx.net (Postfix) with ESMTP id 4ABC2261B
-	for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:26:56 +0200 (CEST)
-Message-ID: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net>
-Date: Thu, 3 Aug 2006 12:26:56 +0200 (CEST)
+	by otto.lonx.net (Postfix) with ESMTP id A73F8261C
+	for <xfs@oss.sgi.com>; Thu,  3 Aug 2006 12:18:40 +0200 (CEST)
+Message-ID: <15447.62.159.242.114.1154600320.squirrel@otto.lonx.net>
+Date: Thu, 3 Aug 2006 12:18:40 +0200 (CEST)
 Subject: "xfs_io -c chattr +i " on a symlink
-From: "Dan Am" <xfs@lonx.net>
+From: "Daniel Amthor" <da@lonx.net>
 MIME-Version: 1.0
 Content-Type: text/plain;charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
+References: 
+In-Reply-To: 
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
-
-(resend, since I used the wrong account to send the initial mail, sorry)
 
 Dear list,
 
