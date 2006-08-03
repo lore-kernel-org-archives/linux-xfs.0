@@ -1,78 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Aug 2006 10:36:09 -0700 (PDT)
-Received: from woody.linuxathome.me (host81-151-221-214.range81-151.btcentralplus.com [81.151.221.214])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k71HZtDW019535
-	for <xfs@oss.sgi.com>; Tue, 1 Aug 2006 10:35:59 -0700
-Date: Tue, 1 Aug 2006 16:39:51 +0100
-From: Hedi Berriche <hedi@berriche.co.uk>
-Subject: Re: xfs_check refuses to work on readonly fs
-Message-ID: <20060801153951.GB17036@linuxathome.me>
-References: <1154433320.2160.267361956@webmail.messagingengine.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Aug 2006 07:13:56 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k73EDgDW021718
+	for <xfs@oss.sgi.com>; Thu, 3 Aug 2006 07:13:42 -0700
+Message-ID: <44D20473.3010304@sandeen.net>
+Date: Thu, 03 Aug 2006 09:13:07 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FFoLq8A0u+X9iRU8"
-Content-Disposition: inline
-In-Reply-To: <1154433320.2160.267361956@webmail.messagingengine.com>
+Subject: Re: "xfs_io -c chattr +i " on a symlink
+References: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net>
+In-Reply-To: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: CN <cnliou9@fastmail.fm>
+To: Dan Am <xfs@lonx.net>
 Cc: xfs@oss.sgi.com
 
---FFoLq8A0u+X9iRU8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Dan Am wrote:
+> (resend, since I used the wrong account to send the initial mail, sorry)
+> 
+> Dear list,
+> 
+> I am trying to make a symlink immutable with chattr, however the command
+> seems to follow the link, which point to a NFS Mount.
+> Setting xattr works on symlink btw, which is useful.
+> More data below
+> Any ideas ?
+> 
+> Best Regards
+> Dan
+> 
+> Heres the situation from my machine's view:
+> /data > ls -l bin
+> lrwxrwxrwx  1 root root 48 Aug  2 15:53 bin -> /archive/l01abnfs07/bin
+> 
+> /data> xfs_io  -c "chattr +i" bin
+> xfs_io: specified file ["bin"] is not on an XFS filesystem
+> 
+> ~ > xfs_io -V
+> xfs_io version 2.8.4
 
-Hi,
+Try just using chattr.
 
-Based on the info you provided I infer that you're running Linux.
+[sandeen@sandeen ~]$ ln -s /tmp tmplink
+[sandeen@sandeen ~]$ ls -l tmplink
+lrwxrwxrwx  1 sandeen sandeen 4 Aug  3 09:05 tmplink -> /tmp
+[sandeen@sandeen ~]$ su
+Password:
+[root@sandeen sandeen]# chattr +i tmplink
+[root@sandeen sandeen]# stat -f tmplink
+   File: "tmplink"
+     ID: 802      Namelen: 255     Type: XFS (0x58465342)
+Blocks: Total: 23377204   Free: 8557099    Available: 8557099    Size: 4096
+Inodes: Total: 93554496   Free: 93202008
+[root@sandeen sandeen]#
+[root@sandeen sandeen]# lsattr tmplink
+----i-------- tmplink
 
-On Tue, Aug 01, 2006 at 14:00 CN <cnliou9@fastmail.fm> wrote:
-| Hi!
-|
-| # init 1
-| # mount -o ro,remount /
-| # mount
-| /dev/hda1 on / type xfs (rw)
-| # xfs_check /dev/hda1
-| xfs_check: /dev/hda1 contains a mounted and writable filesystem
-|
-| xfs_check/xfs_repair are willing to work only when I boot from a disk
-| and check/repair the other unmounted disk.
-|
-| Why "mount" shows (rw) instead of (ro) even "mount -o ro,remount /" is
-| issued?
+xfs_io also has an option to try to do operations even on non-xfs filesystems, 
+if that helps... if it follows the link & sets the attr on the link target, that 
+may not be behaving as expected though.
 
-Because mount is relying on /etc/mtab which couldn't be updated
-precisely because / was remounted ro.
-
-You'll need a recent xfsprogs version, at least 2.7.17 IIRC, one
-that uses that uses /proc/mounts instead of /etc/mtab to check
-filesystem status.
-
-Or you can use a dirty and quick hack
-
-    - prior to remounting ro, edit /etc/mtab and change the root fs entry from
-    rw to ro.
-    - remount ro
-    - run your xfs_check/xfs_repair in dangerous mode.
-
-FWIW the safe thing to do after a repair on a mounted root FS is to reboot.
-
-Cheers,
-Hedi.
-
---FFoLq8A0u+X9iRU8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
-
-iD8DBQFEz3XHzLYXAd7ekr0RAmccAJ9qSDms78A5zFs6KZcEU1v00jiGXwCfZr4A
-20UbpNSSHtDpmN8JGEGZFDM=
-=it3F
------END PGP SIGNATURE-----
-
---FFoLq8A0u+X9iRU8--
+-Eric
