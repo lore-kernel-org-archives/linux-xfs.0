@@ -1,63 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 Aug 2006 09:46:31 -0700 (PDT)
-Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k74Gk5DW030249
-	for <xfs@oss.sgi.com>; Fri, 4 Aug 2006 09:46:16 -0700
-Message-ID: <44D379A6.9040200@sgi.com>
-Date: Fri, 04 Aug 2006 11:45:26 -0500
-From: Bill Kendall <wkendall@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 Aug 2006 10:09:46 -0700 (PDT)
+Received: from brmea-mail-4.sun.com (brmea-mail-4.Sun.COM [192.18.98.36])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k74H9ODW004772
+	for <xfs@oss.sgi.com>; Fri, 4 Aug 2006 10:09:25 -0700
+Received: from centralmail4brm.central.Sun.COM ([129.147.62.198])
+	by brmea-mail-4.sun.com (8.13.6+Sun/8.12.9) with ESMTP id k74H8uAE017554
+	for <xfs@oss.sgi.com>; Fri, 4 Aug 2006 11:08:56 -0600 (MDT)
+Received: from kickball-mn.Central.Sun.COM (kickball-mn.Central.Sun.COM [10.1.170.217])
+	by centralmail4brm.central.Sun.COM (8.13.6+Sun/8.13.6/ENSMAIL,v2.2) with ESMTP id k74H8uQw010738
+	for <xfs@oss.sgi.com>; Fri, 4 Aug 2006 11:08:56 -0600 (MDT)
+Date: Fri, 4 Aug 2006 12:08:56 -0500
+From: Dean Roehrich <dean.roehrich@sun.com>
 Subject: Re: review: Simple patch to remove the dmapi support from xfsdump
-References: <44D10F9B.8090904@thebarn.com> <44D2CA85.3040208@sgi.com> <20060804141012.GA26@kickball-mn.Central.Sun.COM> <44D36985.1090006@thebarn.com> <20060804155850.GA3338@kickball-mn.Central.Sun.COM>
-In-Reply-To: <20060804155850.GA3338@kickball-mn.Central.Sun.COM>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20060804170856.GA3652@kickball-mn.Central.Sun.COM>
+References: <44D10F9B.8090904@thebarn.com> <44D2CA85.3040208@sgi.com> <20060804141012.GA26@kickball-mn.Central.Sun.COM> <44D36985.1090006@thebarn.com> <20060804155850.GA3338@kickball-mn.Central.Sun.COM> <44D379A6.9040200@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44D379A6.9040200@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dean Roehrich <dean.roehrich@sun.com>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: Russell Cattelan <cattelan@thebarn.com>, Vlad Apostolov <vapo@sgi.com>, xfs@oss.sgi.com
 
-Dean Roehrich wrote:
-> On Fri, Aug 04, 2006 at 10:36:37AM -0500, Russell Cattelan wrote:
-> 
-> 
->>I appears as if the Hsm routines are only used if the -a flag is given 
->>to xfsdump.
->>(dump DMF dualstate files as offline)
-> 
-> 
-> If use of -a causes xfsdump to fail then that may be sufficient.
+On Fri, Aug 04, 2006 at 11:45:26AM -0500, Bill Kendall wrote:
 
-Then what? Each user (admittedly, this is a small number) has to rebuild
-xfsdump locally, and then do so every time their package manager grabs
-an updated xfsdump? That sounds like more of an inconvenience than
-installing a couple packages on a build machine, especially considering
-the xfsdump and libdm source are bundled together with all the other xfs
-user space tools. (And isn't there logic in the xfs makefiles to use
-the locally built libraries if the required libraries aren't installed?)
+> 3) Add make_handle() routine to libhandle. xfsdump's only dependencies
+> from libdm are dm_make_handle() and dm_handle_to_fsid() (the latter
+> of which is in libhandle as handle_to_fshandle(), I think).
 
-> 
-> Also, use of -D should cause xfsrestore to fail.
+If libhandle can satisfy everything then that would be a suitable solution.
 
-That's not necessary - there are no libdm calls in xfsrestore,
-regardless of whether or not the image being restore came from
-xfsdump -a.
+If Russell wants this changed bad enough then I'm sure he'll get around to
+submitting another patch for it someday...
 
-There are several solutions here:
+:)
 
-1) Russell's proposal -- noop hsm routines if libdm doesn't exist on
-build machine.
-
-2) Require libdm on build machine, change xfsdump to dlopen libdm so
-that libdm is optional at run-time.
-
-3) Add make_handle() routine to libhandle. xfsdump's only dependencies
-from libdm are dm_make_handle() and dm_handle_to_fsid() (the latter
-of which is in libhandle as handle_to_fshandle(), I think).
-
-4) Noop the existing hsm routines, and allow xfsdump to dlopen a
-specified .so to override the default (noop) behavior. DMF could
-then ship a .so implementing those functions.
-
-Bill
+Dean
