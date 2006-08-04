@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Aug 2006 19:39:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k742coDW001243
-	for <xfs@oss.sgi.com>; Thu, 3 Aug 2006 19:38:50 -0700
-Message-ID: <44D2B31D.80804@sandeen.net>
-Date: Thu, 03 Aug 2006 21:38:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Aug 2006 21:21:01 -0700 (PDT)
+Received: from smtp109.sbc.mail.mud.yahoo.com (smtp109.sbc.mail.mud.yahoo.com [68.142.198.208])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k744KZDW019952
+	for <xfs@oss.sgi.com>; Thu, 3 Aug 2006 21:20:39 -0700
+Date: Thu, 3 Aug 2006 21:20:03 -0700
+From: Chris Wedgwood <cw@f00f.org>
 Subject: Re: "xfs_io -c chattr +i " on a symlink
-References: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net> <44D20473.3010304@sandeen.net> <20060804102949.B2401829@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060804102949.B2401829@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20060804042003.GA9271@tuatara.stupidest.org>
+References: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net> <20060804102814.A2401829@wobbly.melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20060804102814.A2401829@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Nathan Scott <nathans@sgi.com>
 Cc: Dan Am <xfs@lonx.net>, xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Thu, Aug 03, 2006 at 09:13:07AM -0500, Eric Sandeen wrote:
->> Try just using chattr.
-> 
-> Or not. :)
+On Fri, Aug 04, 2006 at 10:28:14AM +1000, Nathan Scott wrote:
 
-Whoops, oh well.  Shoulda investigated a bit more I guess :)
+> Its not possible to open(2) a symbolic link (see
+> fs/namei.c::may_open), which means you cannot get a file descriptor
+> for a symlink, which means you cannot issue an ioctl(2) to a symlink
+> (which is how the inode flags are set), which means you're out of
+> luck on this one, sorry.
 
--Eric
+I always disliked open/ioctl for this.  I think we should actually
+have a separate syscall for chattr, etc. (FreeBSD does this I think?)
