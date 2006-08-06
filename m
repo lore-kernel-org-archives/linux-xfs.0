@@ -1,34 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 15:26:17 -0700 (PDT)
-Received: from astra.simleu.ro (astra.simleu.ro [80.97.18.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k76MQ3DW014627
-	for <xfs@oss.sgi.com>; Sun, 6 Aug 2006 15:26:03 -0700
-Date: Sun, 6 Aug 2006 23:22:11 +0200
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: XFS null files
-Message-ID: <20060806212211.GA2154@teal.hq.k1024.org>
-References: <83d59530608061232r21feab01j456c7d1fec742958@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 16:21:42 -0700 (PDT)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k76NLVDW027619
+	for <xfs@oss.sgi.com>; Sun, 6 Aug 2006 16:21:31 -0700
+Message-ID: <44D66BBF.8010107@thebarn.com>
+Date: Sun, 06 Aug 2006 17:22:55 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Subject: Re: XFS null files
+References: <83d59530608061232r21feab01j456c7d1fec742958@mail.gmail.com>
 In-Reply-To: <83d59530608061232r21feab01j456c7d1fec742958@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jeff Briggs <ephemeral.elusive@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Briggs <ephemeral.elusive@gmail.com>, xfs@oss.sgi.com
 
-On Sun, Aug 06, 2006 at 08:32:49PM +0100, Jeff Briggs wrote:
+Jeff Briggs wrote:
+
 > Hello.
-> 
+>
 > I've just lost data to XFS, with the files full of nulls. I've found
 > posts dating back over two years about such data losses. I'm using
 > linux 2.6.17 with xfsprogs 2.8.10.
-FWIW, I've never lost files since disabling write cache on disks.
-> 
+
+Check to see if you have this change
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=1.675;r2=1.676;f=h
+
+I helps reduce the null file problem.
+
+>
 > emacs claims to fsync on write, yet still I lost data, the faq
 > suggests I should not have if this is so?
-Have you disabled the write cache of your storage, or is your storage
-battery-backed?
+>
+> Is this likely to be fixed soon, or should I switch file system?
 
-Iustin Pop
+Any caching file system could potentially loose data, XFS just happens to
+get the file size correct so you end up with a file that is nothing but a
+hole. Other file system would probably just give you an empty file.
+Either way data in cache always has the potential for being lost.
+Running xfs in full sync mode would be safest but you loose many performance
+advantages... so it always a trade off of performance vs data integrity.
+
+>
+> Many thanks.
+>
