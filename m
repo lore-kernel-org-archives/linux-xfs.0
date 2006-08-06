@@ -1,64 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 02:01:36 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 02:46:26 -0700 (PDT)
 Received: from mondschein.lichtvoll.de (mondschein.lichtschiff.de [194.150.191.238] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7691HDW009265
-	for <linux-xfs@oss.sgi.com>; Sun, 6 Aug 2006 02:01:22 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k769kFDW016444
+	for <linux-xfs@oss.sgi.com>; Sun, 6 Aug 2006 02:46:15 -0700
 Received: from localhost (dslb-084-056-104-201.pools.arcor-ip.net [84.56.104.201])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id 08D49FA68A
-	for <linux-xfs@oss.sgi.com>; Sun,  6 Aug 2006 10:59:18 +0200 (CEST)
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id B0170FA68A
+	for <linux-xfs@oss.sgi.com>; Sun,  6 Aug 2006 11:44:26 +0200 (CEST)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: write back cache and barriers
-Date: Sun, 6 Aug 2006 11:00:35 +0200
-References: <5545990.post@talk.nabble.com> <44CC2D1A.3060805@sandeen.net>
-In-Reply-To: <44CC2D1A.3060805@sandeen.net>
+Subject: Re: [PATCH] kill leftover WANT_FUNCS macro indirection
+Date: Sun, 6 Aug 2006 11:45:45 +0200
+References: <44CAE247.6020608@sandeen.net> <44CBDFC9.3040202@sandeen.net> <20060731085454.A2280998@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060731085454.A2280998@wobbly.melbourne.sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200608061100.36508.Martin@lichtvoll.de>
+Message-Id: <200608061145.45997.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: linux-xfs@oss.sgi.com
 
-Am Sonntag 30 Juli 2006 05:52 schrieb Eric Sandeen:
+Am Montag 31 Juli 2006 00:54 schrieb Nathan Scott:
 
-> > If I try mounting a xfs filesystem I get a message like "barriers are
-> > not supported by this device" but if I mount a ext3 or a reiserfs
-> > filesystem respectively with options barrier=1 and barrier=flush they
-> > don't complain. If I mount the reiserfs I explicity get a message
-> > like "using barriers". So who tells the truth ??
->
-> I don't see ext3 or reiser actually checking whether the underlying
-> device supports barriers.  xfs does, in xfs_mountfs_check_barriers().
+> Right, its more that we don't have a great track record at the moment
+> of not introducing regressions with these cleanups (including myself),
+> so I'm becoming more reluctant to do sweeping changes across the whole
+> codebase.  Smaller, specific, and obviously-correct things are less
+> likely to introduce issues, so if we can achieve basically the same
+> thing while churning the code less, I'm all for it.
 
-Hello Eric,
+Hello Nathan,
 
-for my article I looked at the source code of those. It seems that journal 
-block device tests wether barriers work
-
-commit.c:       if (ret == -EOPNOTSUPP && barrier_done) {
-commit.c:                       "JBD: barrier-based sync failed on %s - "
-commit.c:                       "disabling barriers\n",
-
-Also reiserfs 3 seems to deactivate barriers if not avaible (journal.c)
-
-                if (reiserfs_barrier_flush(p_s_sb)) {
-                        int ret;
-                        lock_buffer(journal->j_header_bh);
-                        ret = submit_barrier_buffer(journal->j_header_bh);
-                        if (ret == -EOPNOTSUPP) {
-                                set_buffer_uptodate(journal->j_header_bh);
-                                disable_barrier(p_s_sb);
-                                goto sync;
-                        }
-                        wait_on_buffer(journal->j_header_bh);
-                        check_barrier_completion(p_s_sb, 
-journal->j_header_bh);
-                } else {
-
-(both sources from kernel 2.6.17.7)
+I fully agree with that - especially as XFS is a file system and 
+regressions can easily have desastrous results.
 
 Regards,
 -- 
