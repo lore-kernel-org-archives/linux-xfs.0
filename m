@@ -1,54 +1,221 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 21:30:58 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k774UkDW012275
-	for <linux-xfs@oss.sgi.com>; Sun, 6 Aug 2006 21:30:46 -0700
-Message-ID: <44D6A61A.5090900@sandeen.net>
-Date: Sun, 06 Aug 2006 21:31:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: write back cache and barriers
-References: <5545990.post@talk.nabble.com> <44CC2D1A.3060805@sandeen.net> <200608061100.36508.Martin@lichtvoll.de>
-In-Reply-To: <200608061100.36508.Martin@lichtvoll.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 21:50:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k774nQDW014797
+	for <xfs@oss.sgi.com>; Sun, 6 Aug 2006 21:49:37 -0700
+Received: from wobbly.melbourne.sgi.com (wobbly.melbourne.sgi.com [134.14.55.135]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id OAA12965 for <xfs@oss.sgi.com>; Mon, 7 Aug 2006 14:48:48 +1000
+Received: from wobbly.melbourne.sgi.com (localhost [127.0.0.1])
+	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k774mkgw2466518
+	for <xfs@oss.sgi.com>; Mon, 7 Aug 2006 14:48:47 +1000 (EST)
+Received: (from nathans@localhost)
+	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k774mjCU2500499
+	for xfs@oss.sgi.com; Mon, 7 Aug 2006 14:48:45 +1000 (EST)
+Date: Mon, 7 Aug 2006 14:48:45 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: review: fix xfs_free_extent related NULL dereference
+Message-ID: <20060807144844.B2501392@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Martin Steigerwald wrote:
+Hi all,
 
-> Hello Eric,
-> 
-> for my article I looked at the source code of those. It seems that journal 
-> block device tests wether barriers work
-> 
-> commit.c:       if (ret == -EOPNOTSUPP && barrier_done) {
-> commit.c:                       "JBD: barrier-based sync failed on %s - "
-> commit.c:                       "disabling barriers\n",
-> 
-> Also reiserfs 3 seems to deactivate barriers if not avaible (journal.c)
-> 
->                 if (reiserfs_barrier_flush(p_s_sb)) {
->                         int ret;
->                         lock_buffer(journal->j_header_bh);
->                         ret = submit_barrier_buffer(journal->j_header_bh);
->                         if (ret == -EOPNOTSUPP) {
->                                 set_buffer_uptodate(journal->j_header_bh);
->                                 disable_barrier(p_s_sb);
->                                 goto sync;
->                         }
->                         wait_on_buffer(journal->j_header_bh);
->                         check_barrier_completion(p_s_sb, 
-> journal->j_header_bh);
->                 } else {
-> 
-> (both sources from kernel 2.6.17.7)
+Here is a fix for the NULL buffer pointer dereference after a call
+to the xfs_free_extent routine.  I've not yet reproduced this, but
+I have a plausible theory now, at least..
 
-Yep, you're right, not quite sure how I missed that...
+We recently fixed an out-of-space deadlock in XFS, and part of that
+fix involved the addition of the XFS_ALLOC_FLAG_FREEING flag to some
+of the space allocator calls to indicate they're freeing space, not
+allocating it.  There was a missed xfs_alloc_fix_freelist condition
+test that did not correctly test "flags".  The same test would also
+test an uninitialised structure field (args->userdata) and depending
+on its value either would or would not return early with a critical
+buffer pointer set to NULL.
 
-Thanks,
+This fixes that up, adds asserts to several places to catch future
+botches of this nature, and skips sections of xfs_alloc_fix_freelist
+that are irrelevent for the space-freeing case.
 
--Eric
+cheers.
+
+-- 
+Nathan
+
+
+Index: xfs-linux/xfs_alloc.c
+===================================================================
+--- xfs-linux.orig/xfs_alloc.c	2006-08-07 09:40:03.565509250 +1000
++++ xfs-linux/xfs_alloc.c	2006-08-07 10:22:39.750084250 +1000
+@@ -1835,40 +1835,47 @@ xfs_alloc_fix_freelist(
+ 				&agbp)))
+ 			return error;
+ 		if (!pag->pagf_init) {
++			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
++			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+ 			args->agbp = NULL;
+ 			return 0;
+ 		}
+ 	} else
+ 		agbp = NULL;
+ 
+-	/* If this is a metadata preferred pag and we are user data
++	/*
++	 * If this is a metadata preferred pag and we are user data
+ 	 * then try somewhere else if we are not being asked to
+ 	 * try harder at this point
+ 	 */
+-	if (pag->pagf_metadata && args->userdata && flags) {
++	if (pag->pagf_metadata && args->userdata &&
++	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
++		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+ 		args->agbp = NULL;
+ 		return 0;
+ 	}
+ 
+-	need = XFS_MIN_FREELIST_PAG(pag, mp);
+-	delta = need > pag->pagf_flcount ? need - pag->pagf_flcount : 0;
+-	/*
+-	 * If it looks like there isn't a long enough extent, or enough
+-	 * total blocks, reject it.
+-	 */
+-	longest = (pag->pagf_longest > delta) ?
+-		(pag->pagf_longest - delta) :
+-		(pag->pagf_flcount > 0 || pag->pagf_longest > 0);
+-	if (args->minlen + args->alignment + args->minalignslop - 1 > longest ||
+-	    (!(flags & XFS_ALLOC_FLAG_FREEING) &&
+-	     (int)(pag->pagf_freeblks + pag->pagf_flcount -
+-		   need - args->total) <
+-	     (int)args->minleft)) {
+-		if (agbp)
+-			xfs_trans_brelse(tp, agbp);
+-		args->agbp = NULL;
+-		return 0;
++	if (!(flags & XFS_ALLOC_FLAG_FREEING)) {
++		need = XFS_MIN_FREELIST_PAG(pag, mp);
++		delta = need > pag->pagf_flcount ? need - pag->pagf_flcount : 0;
++		/*
++		 * If it looks like there isn't a long enough extent, or enough
++		 * total blocks, reject it.
++		 */
++		longest = (pag->pagf_longest > delta) ?
++			(pag->pagf_longest - delta) :
++			(pag->pagf_flcount > 0 || pag->pagf_longest > 0);
++		if ((args->minlen + args->alignment + args->minalignslop - 1) >
++				longest ||
++		    ((int)(pag->pagf_freeblks + pag->pagf_flcount -
++			   need - args->total) < (int)args->minleft)) {
++			if (agbp)
++				xfs_trans_brelse(tp, agbp);
++			args->agbp = NULL;
++			return 0;
++		}
+ 	}
++
+ 	/*
+ 	 * Get the a.g. freespace buffer.
+ 	 * Can fail if we're not blocking on locks, and it's held.
+@@ -1878,6 +1885,8 @@ xfs_alloc_fix_freelist(
+ 				&agbp)))
+ 			return error;
+ 		if (agbp == NULL) {
++			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
++			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+ 			args->agbp = NULL;
+ 			return 0;
+ 		}
+@@ -1887,22 +1896,24 @@ xfs_alloc_fix_freelist(
+ 	 */
+ 	agf = XFS_BUF_TO_AGF(agbp);
+ 	need = XFS_MIN_FREELIST(agf, mp);
+-	delta = need > be32_to_cpu(agf->agf_flcount) ?
+-		(need - be32_to_cpu(agf->agf_flcount)) : 0;
+ 	/*
+ 	 * If there isn't enough total or single-extent, reject it.
+ 	 */
+-	longest = be32_to_cpu(agf->agf_longest);
+-	longest = (longest > delta) ? (longest - delta) :
+-		(be32_to_cpu(agf->agf_flcount) > 0 || longest > 0);
+-	if (args->minlen + args->alignment + args->minalignslop - 1 > longest ||
+-	     (!(flags & XFS_ALLOC_FLAG_FREEING) &&
+-		(int)(be32_to_cpu(agf->agf_freeblks) +
+-		   be32_to_cpu(agf->agf_flcount) - need - args->total) <
+-	     (int)args->minleft)) {
+-		xfs_trans_brelse(tp, agbp);
+-		args->agbp = NULL;
+-		return 0;
++	if (!(flags & XFS_ALLOC_FLAG_FREEING)) {
++		delta = need > be32_to_cpu(agf->agf_flcount) ?
++			(need - be32_to_cpu(agf->agf_flcount)) : 0;
++		longest = be32_to_cpu(agf->agf_longest);
++		longest = (longest > delta) ? (longest - delta) :
++			(be32_to_cpu(agf->agf_flcount) > 0 || longest > 0);
++		if ((args->minlen + args->alignment + args->minalignslop - 1) >
++				longest ||
++		    ((int)(be32_to_cpu(agf->agf_freeblks) +
++		     be32_to_cpu(agf->agf_flcount) - need - args->total) <
++				(int)args->minleft)) {
++			xfs_trans_brelse(tp, agbp);
++			args->agbp = NULL;
++			return 0;
++		}
+ 	}
+ 	/*
+ 	 * Make the freelist shorter if it's too long.
+@@ -1950,12 +1961,11 @@ xfs_alloc_fix_freelist(
+ 		 * on a completely full ag.
+ 		 */
+ 		if (targs.agbno == NULLAGBLOCK) {
+-			if (!(flags & XFS_ALLOC_FLAG_FREEING)) {
+-				xfs_trans_brelse(tp, agflbp);
+-				args->agbp = NULL;
+-				return 0;
+-			}
+-			break;
++			if (flags & XFS_ALLOC_FLAG_FREEING)
++				break;
++			xfs_trans_brelse(tp, agflbp);
++			args->agbp = NULL;
++			return 0;
+ 		}
+ 		/*
+ 		 * Put each allocated block on the list.
+@@ -2442,10 +2452,7 @@ xfs_free_extent(
+ 	xfs_fsblock_t	bno,	/* starting block number of extent */
+ 	xfs_extlen_t	len)	/* length of extent */
+ {
+-#ifdef DEBUG
+-	xfs_agf_t	*agf;	/* a.g. freespace header */
+-#endif
+-	xfs_alloc_arg_t	args;	/* allocation argument structure */
++	xfs_alloc_arg_t	args = { 0 };
+ 	int		error;
+ 
+ 	ASSERT(len != 0);
+@@ -2454,19 +2461,16 @@ xfs_free_extent(
+ 	args.agno = XFS_FSB_TO_AGNO(args.mp, bno);
+ 	ASSERT(args.agno < args.mp->m_sb.sb_agcount);
+ 	args.agbno = XFS_FSB_TO_AGBNO(args.mp, bno);
+-	args.alignment = 1;
+-	args.minlen = args.minleft = args.minalignslop = 0;
+ 	down_read(&args.mp->m_peraglock);
+ 	args.pag = &args.mp->m_perag[args.agno];
+ 	if ((error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING)))
+ 		goto error0;
+ #ifdef DEBUG
+ 	ASSERT(args.agbp != NULL);
+-	agf = XFS_BUF_TO_AGF(args.agbp);
+-	ASSERT(args.agbno + len <= be32_to_cpu(agf->agf_length));
++	ASSERT((args.agbno + len) <=
++		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
+ #endif
+-	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno,
+-		len, 0);
++	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
+ error0:
+ 	up_read(&args.mp->m_peraglock);
+ 	return error;
