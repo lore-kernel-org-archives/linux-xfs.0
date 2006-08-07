@@ -1,42 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 21:56:11 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k774tYDW015848
-	for <xfs@oss.sgi.com>; Sun, 6 Aug 2006 21:55:45 -0700
-Date: Mon, 7 Aug 2006 14:54:43 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: "xfs_io -c chattr +i " on a symlink
-Message-ID: <20060807145443.C2501392@wobbly.melbourne.sgi.com>
-References: <28749.62.159.242.114.1154600816.squirrel@otto.lonx.net> <44D20473.3010304@sandeen.net> <20060804102949.B2401829@wobbly.melbourne.sgi.com> <48367.62.159.242.114.1154691452.squirrel@otto.lonx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48367.62.159.242.114.1154691452.squirrel@otto.lonx.net>; from xfs@lonx.net on Fri, Aug 04, 2006 at 01:37:32PM +0200
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Aug 2006 01:49:18 -0700 (PDT)
+Received: from web31713.mail.mud.yahoo.com (web31713.mail.mud.yahoo.com [68.142.201.193])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k778mwDW024819
+	for <xfs@oss.sgi.com>; Mon, 7 Aug 2006 01:49:02 -0700
+Message-ID: <20060807084830.58133.qmail@web31713.mail.mud.yahoo.com>
+Date: Mon, 7 Aug 2006 01:48:30 -0700 (PDT)
+From: Heilige Gheist <hgheist@yahoo.com>
+Subject: Re: Concurrent mount of XFS over SAN
+In-Reply-To: <44D26D3E.5010708@exegy.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dan Am <xfs@lonx.net>
+To: Dave Lloyd <dlloyd@exegy.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 04, 2006 at 01:37:32PM +0200, Dan Am wrote:
-> On Fri, August 4, 2006 2:29 am, Nathan Scott wrote:
+Dave, 
+That's 100% correct assuming you prohibit a shared access between the
+nodes. I didn't point out that we're dealing with filesystem failover
+setup.
+It's obvious that I can always fall back to the inter-node heart-beat
+to ensure that only one node is mounting the filesystem.
+I'm just wondering if there's any facility or accepted practice to
+enforce it.
+
+Thanks,
+Alan
+
+--- Dave Lloyd <dlloyd@exegy.com> wrote:
+
+> Heilige Gheist wrote:
+>  > Is there a way to prevent and/or detect concurrent mount of same
+> XFS
+>  > SAN-based partition from several nodes?
+>  > I had to fsck a filesystem losing some data after two nodes
+> happily
+>  > mounted a filesystem from same SAN-based partition at the same
+> time and
+>  > wrote into it.
+>  > Thanks!
+>  >
+>  > --alan
+>  >
+>  > __________________________________________________
+>  > Do You Yahoo!?
+>  > Tired of spam?  Yahoo! Mail has the best spam protection around
+>  > http://mail.yahoo.com
+>  >
+>  >
 > 
-> > ... I think you just set immutable on /tmp.  Try a broken symlink,
-> > instead of one that points to an existing inode.
-> Nope:
-
-Eh?
-
-> /data/tara-test > ls -l test
-> lrwxr-xr-x  1 root root 13 Aug  4 13:33 test -> /archive/no-such-file
+> I think that the generally accepted way is to zone at the switch or
+> the
+> storage array.
 > 
-> /data/tara-test > xfs_io -c "chattr +i" test
-> test: No such file or directory
+> -- 
+> Dave Lloyd
+> Test Engineer, Exegy, Inc.
+> 314.450.5342
+> dlloyd@exegy.com
+> 
+> 
+> 
 
-Right, that was my point.  As I said, you're out of luck - there
-is currently no way to do what you want.
 
-cheers.
-
--- 
-Nathan
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
