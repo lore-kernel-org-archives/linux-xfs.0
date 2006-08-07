@@ -1,58 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 17:00:38 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7700BDW001133
-	for <xfs@oss.sgi.com>; Sun, 6 Aug 2006 17:00:22 -0700
-Message-ID: <44D68290.6020703@sgi.com>
-Date: Mon, 07 Aug 2006 10:00:16 +1000
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Aug 2006 21:30:58 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k774UkDW012275
+	for <linux-xfs@oss.sgi.com>; Sun, 6 Aug 2006 21:30:46 -0700
+Message-ID: <44D6A61A.5090900@sandeen.net>
+Date: Sun, 06 Aug 2006 21:31:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: review: Simple patch to remove the dmapi support from xfsdump
-References: <44D10F9B.8090904@thebarn.com> <44D2CA85.3040208@sgi.com> <20060804141012.GA26@kickball-mn.Central.Sun.COM>
-In-Reply-To: <20060804141012.GA26@kickball-mn.Central.Sun.COM>
+Subject: Re: write back cache and barriers
+References: <5545990.post@talk.nabble.com> <44CC2D1A.3060805@sandeen.net> <200608061100.36508.Martin@lichtvoll.de>
+In-Reply-To: <200608061100.36508.Martin@lichtvoll.de>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dean Roehrich <dean.roehrich@sun.com>
-Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com
 
-Dean Roehrich wrote:
-> On Fri, Aug 04, 2006 at 02:18:13PM +1000, Vlad Apostolov wrote:
->   
->> Hi Russel,
->>
->> I don't understand in details the build changes but they seam to be fine.
->>     
->
-> Vlad, why do they seem fine?
->   
-Well, I patiently waited with the hope that someone  more knowledgeable 
-on the topic would
-do the review.  No one responded in time and I thought that either no 
-one cares  about the
-change or no one fully understands it. As I am supposed to support 
-DMAPI, I had to take
-the review and after consulting locally with xfs developers I did the 
-review. Now I see
-that there are people interested and knowing better than me what needs 
-to be done.
->> In summary if the build system can find the DMAPI lib installed it will
->> use hsmapi_noop.c otherwise hsmapi.c.
->> The return code of HsmInitFileContext() stub probably should be non zero.
->>
->> It is looking good.
->>     
->
-> So this is determined at build time...so when you're using a version of
-> xfsdump/xfsrestore how do you know you're _not_ using one that is DMAPI-aware
-> _before_ you get into trouble with an invalid dump?
->
-> Assuming that issue is addressed, here's another:  The libdm is a shared
-> object, so why not take advantage of that and load it with dlopen?  Then the
-> issue is determined at runtime rather than build time.  This is easy, and even
-> DMF does it this way.
->
-> Dean
->   
+Martin Steigerwald wrote:
+
+> Hello Eric,
+> 
+> for my article I looked at the source code of those. It seems that journal 
+> block device tests wether barriers work
+> 
+> commit.c:       if (ret == -EOPNOTSUPP && barrier_done) {
+> commit.c:                       "JBD: barrier-based sync failed on %s - "
+> commit.c:                       "disabling barriers\n",
+> 
+> Also reiserfs 3 seems to deactivate barriers if not avaible (journal.c)
+> 
+>                 if (reiserfs_barrier_flush(p_s_sb)) {
+>                         int ret;
+>                         lock_buffer(journal->j_header_bh);
+>                         ret = submit_barrier_buffer(journal->j_header_bh);
+>                         if (ret == -EOPNOTSUPP) {
+>                                 set_buffer_uptodate(journal->j_header_bh);
+>                                 disable_barrier(p_s_sb);
+>                                 goto sync;
+>                         }
+>                         wait_on_buffer(journal->j_header_bh);
+>                         check_barrier_completion(p_s_sb, 
+> journal->j_header_bh);
+>                 } else {
+> 
+> (both sources from kernel 2.6.17.7)
+
+Yep, you're right, not quite sure how I missed that...
+
+Thanks,
+
+-Eric
