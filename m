@@ -1,71 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Aug 2006 01:49:18 -0700 (PDT)
-Received: from web31713.mail.mud.yahoo.com (web31713.mail.mud.yahoo.com [68.142.201.193])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k778mwDW024819
-	for <xfs@oss.sgi.com>; Mon, 7 Aug 2006 01:49:02 -0700
-Message-ID: <20060807084830.58133.qmail@web31713.mail.mud.yahoo.com>
-Date: Mon, 7 Aug 2006 01:48:30 -0700 (PDT)
-From: Heilige Gheist <hgheist@yahoo.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Aug 2006 03:36:05 -0700 (PDT)
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k77AZfDW030972
+	for <linux-xfs@oss.sgi.com>; Mon, 7 Aug 2006 03:35:43 -0700
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1GA2Rq-0005aY-Ap
+	for linux-xfs@oss.sgi.com; Mon, 07 Aug 2006 12:35:02 +0200
+Received: from blueice4n1.de.ibm.com ([195.212.29.187])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Mon, 07 Aug 2006 12:35:02 +0200
+Received: from mykleb by blueice4n1.de.ibm.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Mon, 07 Aug 2006 12:35:02 +0200
+From: Jan-Frode Myklebust <mykleb@no.ibm.com>
 Subject: Re: Concurrent mount of XFS over SAN
-In-Reply-To: <44D26D3E.5010708@exegy.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Date: Mon, 7 Aug 2006 12:13:10 +0200
+Message-ID: <slrnede4hl.bg1.mykleb@99RXZYP.ibm.com>
+References: <44D26D3E.5010708@exegy.com> <20060807084830.58133.qmail@web31713.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Lloyd <dlloyd@exegy.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Dave, 
-That's 100% correct assuming you prohibit a shared access between the
-nodes. I didn't point out that we're dealing with filesystem failover
-setup.
-It's obvious that I can always fall back to the inter-node heart-beat
-to ensure that only one node is mounting the filesystem.
-I'm just wondering if there's any facility or accepted practice to
-enforce it.
+On 2006-08-07, Heilige Gheist <hgheist@yahoo.com> wrote:
+> It's obvious that I can always fall back to the inter-node heart-beat
+> to ensure that only one node is mounting the filesystem.
+> I'm just wondering if there's any facility or accepted practice to
+> enforce it.
 
-Thanks,
-Alan
+STONITH (Shoot The Other Node In The Head) trough smart power switches
+or management adapters in the node. 
 
---- Dave Lloyd <dlloyd@exegy.com> wrote:
+SCSI reserve/release ... No idea how reliable this is on a SAN, but the
+ServeRAID-version works great. http://www.linux-ha.org/ServeRAID
 
-> Heilige Gheist wrote:
->  > Is there a way to prevent and/or detect concurrent mount of same
-> XFS
->  > SAN-based partition from several nodes?
->  > I had to fsck a filesystem losing some data after two nodes
-> happily
->  > mounted a filesystem from same SAN-based partition at the same
-> time and
->  > wrote into it.
->  > Thanks!
->  >
->  > --alan
->  >
->  > __________________________________________________
->  > Do You Yahoo!?
->  > Tired of spam?  Yahoo! Mail has the best spam protection around
->  > http://mail.yahoo.com
->  >
->  >
-> 
-> I think that the generally accepted way is to zone at the switch or
-> the
-> storage array.
-> 
-> -- 
-> Dave Lloyd
-> Test Engineer, Exegy, Inc.
-> 314.450.5342
-> dlloyd@exegy.com
-> 
-> 
-> 
+Export the volume group, or scsi device on the first node, before
+importing/attaching it on the second .. Probably best to use together
+with STONITH, in case the first node fails on unmounting/exporting.
+
+BTW: I think XFS on IRIX had the owning node name in the file system header, 
+and only would allow this node to mount the fs. But I can't find this now...
+Maybe it's gone, or maybe it was in xlv.. ?
 
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+  -jf
