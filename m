@@ -1,36 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 18:09:08 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 18:26:37 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7918GDW005323
-	for <xfs@oss.sgi.com>; Tue, 8 Aug 2006 18:08:27 -0700
-Date: Wed, 9 Aug 2006 11:07:18 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: [PATCH 1/2] Add new spin_lock for i_flags of xfs_inode
-Message-ID: <20060809110718.B2508736@wobbly.melbourne.sgi.com>
-References: <20060808205855m-saito@mail.aom.tnes.nec.co.jp>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k791PxDW008008
+	for <xfs@oss.sgi.com>; Tue, 8 Aug 2006 18:26:10 -0700
+Date: Wed, 9 Aug 2006 11:24:44 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] kill no-op buf macros
+Message-ID: <20060809012444.GS2114946@melbourne.sgi.com>
+References: <44CC2A55.6030207@sandeen.net> <20060731090815.B2280998@wobbly.melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060808205855m-saito@mail.aom.tnes.nec.co.jp>; from m-saito@tnes.nec.co.jp on Tue, Aug 08, 2006 at 08:58:55PM +0900
+In-Reply-To: <20060731090815.B2280998@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Nathan Scott <nathans@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, dgc@sgi.com, xfs@oss.sgi.com
 
-On Tue, Aug 08, 2006 at 08:58:55PM +0900, Masayuki Saito wrote:
-> It is the problem that i_flags of xfs_inode has no consistent
-> locking protection.
+On Mon, Jul 31, 2006 at 09:08:15AM +1000, Nathan Scott wrote:
+> On Sat, Jul 29, 2006 at 10:41:09PM -0500, Eric Sandeen wrote:
+> > It looks like these macros are not particularly interesting... this patch kills 
+> > them.
 > 
-> For the reason, I define a new spin_lock(i_flags_lock) for i_flags
-> of xfs_inode.  And I add this spin_lock for appropriate places.
+> Hmm, I'm not sure about some of these..
+> 
+> > #define XFS_BUF_BUSY(bp)	do { } while (0)
+> > #define XFS_BUF_ISBUSY(bp)	(1)
+> 
+> This ones used on 2.4, I'd like to get Daves thoughts on whether
+> we do the right thing here based on his buffer cache fu.
 
-Thanks Masayuki.  I've queued these two patches in my test
-kernels, and if Dave has no more comments, I will get this
-merged soon (probably 2.6.19 material, as its not had much
-exposure yet afaik).
+XFS_BUF_ISBUSY() is only ever used in ASSERT() statements, so I
+think that can go. On 2.4:
 
-cheers.
+#define XFS_BUF_BUSY(bp) ((bp)->b_flags |= XBF_FORCEIO)
 
+The XBF_FORCEIO affects how we do partial page I/O on 2.4, but is
+unused on 2.6. On 2.4, if the flag is set, we ignore the
+buffer_uptodate() status of the buffers on the page and re-read all
+the buffers in the range specified.  For writes, we always write all
+the buffers on the page.
+
+The flag is set when we issue direct I/O or in  xfs_buf_get_noaddr()
+which is used to allocate log buffers and buffers for block zeroing.
+This seems sane to me given the way we use bufferheads in 2.4....
+
+> > #define XFS_BUF_SHUT(bp)	do { } while (0)
+> > #define XFS_BUF_UNSHUT(bp)	do { } while (0)
+> > #define XFS_BUF_ISSHUT(bp)	(0)
+> 
+> Ditto (not used on 2.4 though, but still maybe we should be doing
+> something here).
+
+IIRC, these were used to indicate that the buffers we're throwing
+away on filesystem shutdown during I/O completion. This   is the
+irix mechanism for throwing away delwri buffers on shutdown - we
+don't use this on linux so I think we can kill these.
+
+> > #define XFS_BUF_SET_START(bp)			do { } while (0)
+> 
+> Not sure what this used to do - Dave?
+
+On Irix, that writes the current kernel time in to the buffer so
+that the delwri flush code can tell when it is old enough to flush.
+Wwe do that differently in linux, so this can be removed, methinks.
+
+> > #define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
+> > #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
+> > #define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
+> 
+> These ones should probably be implemented properly, not removed.
+
+*nod*
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
