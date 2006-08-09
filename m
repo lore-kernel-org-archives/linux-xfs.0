@@ -1,50 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 19:44:47 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k792iJDW016766
-	for <xfs@oss.sgi.com>; Tue, 8 Aug 2006 19:44:20 -0700
-Message-ID: <44D94BE5.7020503@sandeen.net>
-Date: Tue, 08 Aug 2006 21:43:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] kill no-op buf macros
-References: <44CC2A55.6030207@sandeen.net> <20060731090815.B2280998@wobbly.melbourne.sgi.com> <20060809012444.GS2114946@melbourne.sgi.com>
-In-Reply-To: <20060809012444.GS2114946@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 20:15:22 -0700 (PDT)
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k793EwDW019988
+	for <xfs@oss.sgi.com>; Tue, 8 Aug 2006 20:15:08 -0700
+Subject: TAKE 955273 - 
+Message-Id: <20060809031419.EC1B71DD718@attica.americas.sgi.com>
+Date: Tue,  8 Aug 2006 22:14:19 -0500 (CDT)
+From: wkendall@sgi.com (Bill Kendall)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nathan Scott <nathans@sgi.com>, xfs@oss.sgi.com
+To: xfs@sgi.com, sgi.bugs.xfs@sgi.com
 
-David Chinner wrote:
-> On Mon, Jul 31, 2006 at 09:08:15AM +1000, Nathan Scott wrote:
->> On Sat, Jul 29, 2006 at 10:41:09PM -0500, Eric Sandeen wrote:
->>> It looks like these macros are not particularly interesting... this patch kills 
->>> them.
->> Hmm, I'm not sure about some of these..
->>
->>> #define XFS_BUF_BUSY(bp)	do { } while (0)
->>> #define XFS_BUF_ISBUSY(bp)	(1)
->> This ones used on 2.4, I'd like to get Daves thoughts on whether
->> we do the right thing here based on his buffer cache fu.
-> 
-> XFS_BUF_ISBUSY() is only ever used in ASSERT() statements, so I
-> think that can go. On 2.4:
-> 
-> #define XFS_BUF_BUSY(bp) ((bp)->b_flags |= XBF_FORCEIO)
-> 
-> The XBF_FORCEIO affects how we do partial page I/O on 2.4, but is
-> unused on 2.6. On 2.4, if the flag is set, we ignore the
-> buffer_uptodate() status of the buffers on the page and re-read all
-> the buffers in the range specified.  For writes, we always write all
-> the buffers on the page.
+Remove xfsdump's dependency on libdm by substituting libdm calls
+with existing routines in libhandle.
 
-Hm, 2.4 just seemed so old by now I forgot all about it :)  Sorry about that, 
-thanks for the comments, I'll re-jigger taking this (and the rest of your 
-comments) into account.
 
-Thanks,
+Date:  Tue Aug  8 20:12:52 PDT 2006
+Workarea:  attica.americas.sgi.com:/data/lwork/attica2/wkendall/stout/work/pl_root/xfs
+Inspected by:  dean.roehrich@sun.com,cattelan@thebarn.com
 
--Eric
+The following file(s) were checked into:
+  bonnie.engr.sgi.com:/isms/xfs-cmds/master
+
+
+Modid:  master:xfs-cmds:213628a
+xfsdump/configure.in - 1.41 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/configure.in.diff?r1=text&tr1=1.41&r2=text&tr2=1.40&f=h
+xfsdump/VERSION - 1.83 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/VERSION.diff?r1=text&tr1=1.83&r2=text&tr2=1.82&f=h
+xfsdump/doc/CHANGES - 1.95 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/doc/CHANGES.diff?r1=text&tr1=1.95&r2=text&tr2=1.94&f=h
+xfsdump/dump/Makefile - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/dump/Makefile.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+xfsdump/build/rpm/xfsdump.spec.in - 1.17 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/build/rpm/xfsdump.spec.in.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+xfsdump/include/builddefs.in - 1.30 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/include/builddefs.in.diff?r1=text&tr1=1.30&r2=text&tr2=1.29&f=h
+xfsdump/restore/Makefile - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/restore/Makefile.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+xfsdump/debian/control - 1.23 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/debian/control.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
+xfsdump/debian/shlibs.local - 1.7 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/debian/shlibs.local.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
+xfsdump/aclocal.m4 - 1.20 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/aclocal.m4.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+xfsdump/m4/package_dmapidev.m4 - 1.3 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/m4/package_dmapidev.m4.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+xfsdump/m4/Makefile - 1.4 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/m4/Makefile.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
+xfsdump/common/hsmapi.c - 1.4 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/common/hsmapi.c.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
