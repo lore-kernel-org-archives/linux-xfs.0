@@ -1,37 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 16:36:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Aug 2006 18:09:08 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k78NZhDW026095
-	for <linux-xfs@oss.sgi.com>; Tue, 8 Aug 2006 16:35:56 -0700
-Date: Wed, 9 Aug 2006 09:34:25 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: file system defragmentation
-Message-ID: <20060808233425.GQ2114946@melbourne.sgi.com>
-References: <4f52331f050826001612f8e323@mail.gmail.com> <20050826101131.GA24544@ii.uib.no> <4f52331f0508260848782f240a@mail.gmail.com> <E4E12CD035E14A4AB8C36E0F4B7143F7277DED@iu-mssg-mbx09.exchange.iu.edu> <43112C5D.8090202@sgi.com> <20050828034108.73921.qmail@web34103.mail.mud.yahoo.com> <5408752.post@talk.nabble.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7918GDW005323
+	for <xfs@oss.sgi.com>; Tue, 8 Aug 2006 18:08:27 -0700
+Date: Wed, 9 Aug 2006 11:07:18 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [PATCH 1/2] Add new spin_lock for i_flags of xfs_inode
+Message-ID: <20060809110718.B2508736@wobbly.melbourne.sgi.com>
+References: <20060808205855m-saito@mail.aom.tnes.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5408752.post@talk.nabble.com>
+In-Reply-To: <20060808205855m-saito@mail.aom.tnes.nec.co.jp>; from m-saito@tnes.nec.co.jp on Tue, Aug 08, 2006 at 08:58:55PM +0900
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Cosmo Nova <cs_mcc98@hotmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Masayuki Saito <m-saito@tnes.nec.co.jp>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Wed, Jul 19, 2006 at 09:23:42PM -0700, Cosmo Nova wrote:
+On Tue, Aug 08, 2006 at 08:58:55PM +0900, Masayuki Saito wrote:
+> It is the problem that i_flags of xfs_inode has no consistent
+> locking protection.
 > 
-> what is the maximum tolerance for the delayed allocations pls? I guess it's
-> not possible to buf a GB size file and delay its allocation?
+> For the reason, I define a new spin_lock(i_flags_lock) for i_flags
+> of xfs_inode.  And I add this spin_lock for appropriate places.
 
-Sure it is. The limit on how much is buffered before writeback (and therefore
-allocation) is determined by how much memory you have and your
-/proc/sys/vm/dirty* tunable settings. This can range from a few MB to a few TB
-of data depending on how big your machine is ;)
+Thanks Masayuki.  I've queued these two patches in my test
+kernels, and if Dave has no more comments, I will get this
+merged soon (probably 2.6.19 material, as its not had much
+exposure yet afaik).
 
-Cheers,
+cheers.
 
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Nathan
