@@ -1,226 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Aug 2006 23:00:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Aug 2006 23:14:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7A5xYDW004894
-	for <xfs@oss.sgi.com>; Wed, 9 Aug 2006 22:59:48 -0700
-Received: from wobbly.melbourne.sgi.com (wobbly.melbourne.sgi.com [134.14.55.135]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id PAA19214 for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 15:58:55 +1000
-Received: from wobbly.melbourne.sgi.com (localhost [127.0.0.1])
-	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k7A5wrgw2592802
-	for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 15:58:53 +1000 (EST)
-Received: (from nathans@localhost)
-	by wobbly.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k7A5wqYm2585092
-	for xfs@oss.sgi.com; Thu, 10 Aug 2006 15:58:52 +1000 (EST)
-Date: Thu, 10 Aug 2006 15:58:51 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: review: fsblock zero - don't panic
-Message-ID: <20060810155851.C2591606@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7A6DlDW007136
+	for <linux-xfs@oss.sgi.com>; Wed, 9 Aug 2006 23:13:59 -0700
+Subject: PARTIAL TAKE 955302 - cleanup
+Message-Id: <20060810061303.75B3A58C6F7C@chook.melbourne.sgi.com>
+Date: Thu, 10 Aug 2006 16:13:03 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-As part of attempting to understand what happened in a corruption
-problem awhile back, and generally be a bit more defensive of our
-precious primary superblock, some code was added to XFS to detect
-(and panic) on any inode extents that start at block zero.
+Remove a couple of unused BUF macros
 
-This has happened once or twice now, and when it does, we panic the
-kernel.  This is not at all nice, as it means we take out the whole
-system due to ondisk corruption.  This patch makes that code issue
-a warning now, and fail whatever operation was in progress.
-
-cheers.
-
--- 
-Nathan
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
 
-Index: xfs-linux/xfs_bmap.c
-===================================================================
---- xfs-linux.orig/xfs_bmap.c	2006-08-08 15:59:14.396022750 +1000
-+++ xfs-linux/xfs_bmap.c	2006-08-08 16:08:34.790988750 +1000
-@@ -3722,16 +3722,19 @@ xfs_bmap_search_extents(
- 
- 	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
- 	if (unlikely(!rt && !gotp->br_startblock && (*lastxp != NULLEXTNUM))) {
--                cmn_err(CE_PANIC,"Access to block zero: fs: <%s> inode: %lld "
--			"start_block : %llx start_off : %llx blkcnt : %llx "
--			"extent-state : %x \n",
--			(ip->i_mount)->m_fsname, (long long)ip->i_ino,
-+		cmn_err(CE_WARN, "Access to block zero: fs: <%s> inode: %lld "
-+				 "start_block : %llx start_off : %llx "
-+				 "blkcnt : %llx extent-state : %x lastx : %x\n",
-+			ip->i_mount->m_fsname, (long long)ip->i_ino,
- 			(unsigned long long)gotp->br_startblock,
- 			(unsigned long long)gotp->br_startoff,
- 			(unsigned long long)gotp->br_blockcount,
--			gotp->br_state);
--        }
--        return ep;
-+			gotp->br_state, *lastxp);
-+		ASSERT(0);
-+		*eofp = 1;
-+		return NULL;
-+	}
-+	return ep;
- }
- 
- 
-Index: xfs-linux/xfs_iomap.c
-===================================================================
---- xfs-linux.orig/xfs_iomap.c	2006-08-08 15:59:14.428024750 +1000
-+++ xfs-linux/xfs_iomap.c	2006-08-08 16:18:40.116068500 +1000
-@@ -536,23 +536,28 @@ xfs_iomap_write_direct(
- 	 * Copy any maps to caller's array and return any error.
- 	 */
- 	if (nimaps == 0) {
--		error = (ENOSPC);
-+		error = ENOSPC;
- 		goto error_out;
- 	}
- 
--	*ret_imap = imap;
--	*nmaps = 1;
--	if ( !(io->io_flags & XFS_IOCORE_RT)  && !ret_imap->br_startblock) {
--                cmn_err(CE_PANIC,"Access to block zero:  fs <%s> inode: %lld "
--                        "start_block : %llx start_off : %llx blkcnt : %llx "
--                        "extent-state : %x \n",
--                        (ip->i_mount)->m_fsname,
--                        (long long)ip->i_ino,
--                        (unsigned long long)ret_imap->br_startblock,
-+	if (unlikely(
-+	    !(io->io_flags & XFS_IOCORE_RT) && !ret_imap->br_startblock)) {
-+		cmn_err(CE_WARN, "Access to block zero:  fs <%s> inode: %lld "
-+				 "start_block : %llx start_off : %llx "
-+				 "blkcnt : %llx extent-state : %x\n",
-+			ip->i_mount->m_fsname,
-+			(long long)ip->i_ino,
-+			(unsigned long long)ret_imap->br_startblock,
- 			(unsigned long long)ret_imap->br_startoff,
--                        (unsigned long long)ret_imap->br_blockcount,
-+			(unsigned long long)ret_imap->br_blockcount,
- 			ret_imap->br_state);
--        }
-+		ASSERT(0);
-+		error = EFSCORRUPTED;
-+		goto error_out;
-+	}
-+
-+	*ret_imap = imap;
-+	*nmaps = 1;
- 	return 0;
- 
- error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
-@@ -715,16 +720,19 @@ retry:
- 		goto retry;
- 	}
- 
--	if (!(io->io_flags & XFS_IOCORE_RT)  && !ret_imap->br_startblock) {
--		cmn_err(CE_PANIC,"Access to block zero:  fs <%s> inode: %lld "
--                        "start_block : %llx start_off : %llx blkcnt : %llx "
--                        "extent-state : %x \n",
--                        (ip->i_mount)->m_fsname,
--                        (long long)ip->i_ino,
--                        (unsigned long long)ret_imap->br_startblock,
--			(unsigned long long)ret_imap->br_startoff,
--                        (unsigned long long)ret_imap->br_blockcount,
--			ret_imap->br_state);
-+	if (unlikely(
-+	    !(io->io_flags & XFS_IOCORE_RT) && !ret_imap->br_startblock)) {
-+		cmn_err(CE_WARN, "Access to block zero:  fs <%s> inode: %lld "
-+				 "start_block : %llx start_off : %llx "
-+				 "blkcnt : %llx extent-state : %x\n",
-+				ip->i_mount->m_fsname,
-+				(long long)ip->i_ino,
-+				(unsigned long long)ret_imap->br_startblock,
-+				(unsigned long long)ret_imap->br_startoff,
-+				(unsigned long long)ret_imap->br_blockcount,
-+				ret_imap->br_state);
-+		ASSERT(0);
-+		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
- 	*ret_imap = imap[0];
-@@ -855,15 +863,15 @@ xfs_iomap_write_allocate(
- 		 * See if we were able to allocate an extent that
- 		 * covers at least part of the callers request
- 		 */
--
- 		for (i = 0; i < nimaps; i++) {
--			if (!(io->io_flags & XFS_IOCORE_RT)  &&
--			    !imap[i].br_startblock) {
--				cmn_err(CE_PANIC,"Access to block zero:  "
--					"fs <%s> inode: %lld "
--					"start_block : %llx start_off : %llx "
--					"blkcnt : %llx extent-state : %x \n",
--					(ip->i_mount)->m_fsname,
-+			if (unlikely(!(io->io_flags & XFS_IOCORE_RT) &&
-+				     !imap[i].br_startblock)) {
-+				cmn_err(CE_WARN,
-+					"Access to block zero: fs <%s> "
-+					"inode: %lld start_block : %llx "
-+					"start_off : %llx blkcnt : %llx "
-+					"extent-state : %x\n",
-+					ip->i_mount->m_fsname,
- 					(long long)ip->i_ino,
- 					(unsigned long long)
- 						imap[i].br_startblock,
-@@ -872,7 +880,9 @@ xfs_iomap_write_allocate(
- 					(unsigned long long)
- 				        	imap[i].br_blockcount,
- 					imap[i].br_state);
--                        }
-+				ASSERT(0);
-+				return XFS_ERROR(EFSCORRUPTED);
-+			}
- 			if ((offset_fsb >= imap[i].br_startoff) &&
- 			    (offset_fsb < (imap[i].br_startoff +
- 					   imap[i].br_blockcount))) {
-@@ -951,7 +961,7 @@ xfs_iomap_write_unwritten(
- 		}
- 		if (error) {
- 			xfs_trans_cancel(tp, 0);
--			goto error0;
-+			return XFS_ERROR(error);
- 		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
-@@ -977,18 +987,22 @@ xfs_iomap_write_unwritten(
- 		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (error)
--			goto error0;
-+			return XFS_ERROR(error);
- 
--		if ( !(io->io_flags & XFS_IOCORE_RT)  && !imap.br_startblock) {
--			cmn_err(CE_PANIC,"Access to block zero:  fs <%s> "
--				"inode: %lld start_block : %llx start_off : "
--				"%llx blkcnt : %llx extent-state : %x \n",
--				(ip->i_mount)->m_fsname,
-+		if (unlikely(
-+		    !(io->io_flags & XFS_IOCORE_RT) && !imap.br_startblock)) {
-+			cmn_err(CE_WARN, "Access to block zero:  fs <%s> "
-+					 "inode: %lld start_block : %llx "
-+					 "start_off : %llx blkcnt : %llx "
-+					 "extent-state : %x\n",
-+				ip->i_mount->m_fsname,
- 				(long long)ip->i_ino,
- 				(unsigned long long)imap.br_startblock,
- 				(unsigned long long)imap.br_startoff,
- 				(unsigned long long)imap.br_blockcount,
- 				imap.br_state);
-+			ASSERT(0);
-+			return XFS_ERROR(EFSCORRUPTED);
-         	}
- 
- 		if ((numblks_fsb = imap.br_blockcount) == 0) {
-@@ -1009,6 +1023,5 @@ error_on_bmapi_transaction:
- 	xfs_bmap_cancel(&free_list);
- 	xfs_trans_cancel(tp, (XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT));
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--error0:
- 	return XFS_ERROR(error);
- }
+Date:  Thu Aug 10 16:04:22 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  sandeen
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26746a
+xfs_buf_item.c - 1.159 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_buf_item.c.diff?r1=text&tr1=1.159&r2=text&tr2=1.158&f=h
+linux-2.6/xfs_buf.h - 1.115 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.115&r2=text&tr2=1.114&f=h
+linux-2.4/xfs_buf.h - 1.116 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.h.diff?r1=text&tr1=1.116&r2=text&tr2=1.115&f=h
+	- Remove a couple of unused BUF macros
+
+
+Remove unused iop_abort log item operation
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Thu Aug 10 16:09:47 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  sandeen
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26747a
+xfs_extfree_item.c - 1.65 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_extfree_item.c.diff?r1=text&tr1=1.65&r2=text&tr2=1.64&f=h
+xfs_buf_item.c - 1.160 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_buf_item.c.diff?r1=text&tr1=1.160&r2=text&tr2=1.159&f=h
+xfs_inode_item.c - 1.129 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode_item.c.diff?r1=text&tr1=1.129&r2=text&tr2=1.128&f=h
+xfs_trans.h - 1.141 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.h.diff?r1=text&tr1=1.141&r2=text&tr2=1.140&f=h
+quota/xfs_dquot_item.c - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_dquot_item.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+	- Remove unused iop_abort log item operation
+
+
+Remove several macros that are no longer used anywhere
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Thu Aug 10 16:12:32 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  sandeen
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26749a
+xfs_log.h - 1.79 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.h.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
+xfs_log_priv.h - 1.116 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.116&r2=text&tr2=1.115&f=h
+xfs_sb.h - 1.67 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_sb.h.diff?r1=text&tr1=1.67&r2=text&tr2=1.66&f=h
+xfs_fs.h - 1.32 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fs.h.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+xfs_error.h - 1.44 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.h.diff?r1=text&tr1=1.44&r2=text&tr2=1.43&f=h
+xfs_quota.h - 1.47 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_quota.h.diff?r1=text&tr1=1.47&r2=text&tr2=1.46&f=h
+quota/xfs_quota_priv.h - 1.10 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_quota_priv.h.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
+quota/xfs_qm.h - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.h.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+linux-2.6/xfs_linux.h - 1.149 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.149&r2=text&tr2=1.148&f=h
+linux-2.4/xfs_linux.h - 1.160 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_linux.h.diff?r1=text&tr1=1.160&r2=text&tr2=1.159&f=h
+linux-2.6/xfs_buf.h - 1.116 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.116&r2=text&tr2=1.115&f=h
+linux-2.4/xfs_buf.h - 1.117 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.h.diff?r1=text&tr1=1.117&r2=text&tr2=1.116&f=h
+	- Remove several macros that are no longer used anywhere
