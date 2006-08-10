@@ -1,202 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Aug 2006 09:20:46 -0700 (PDT)
-Received: from qb-out-0506.google.com (qb-out-0506.google.com [72.14.204.231])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7AGKMDW005578
-	for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 09:20:23 -0700
-Received: by qb-out-0506.google.com with SMTP id a16so171013qbd
-        for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 09:19:54 -0700 (PDT)
-Message-ID: <6bffcb0e0608100805k42357f5bxa73189c38fb926df@mail.gmail.com>
-Date: Thu, 10 Aug 2006 17:05:35 +0200
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: 2.6.18-rc4+ext4 oops while mounting xfs
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Aug 2006 11:10:41 -0700 (PDT)
+Received: from mx.wurtel.net (a83-68-3-130.adsl.cistron.nl [83.68.3.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7AIAPDW020233
+	for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 11:10:26 -0700
+Received: from wurtel ([192.168.1.1] helo=wurtel-ws.wurtel.net)
+	by mx.wurtel.net with esmtp (Exim 3.36 #1 (Debian))
+	id 1GBDby-0007PP-00
+	for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 18:42:22 +0200
+Received: from paul by wurtel-ws.wurtel.net with local (Exim 4.62)
+	(envelope-from <paul@wurtel-ws.wurtel.net>)
+	id 1GBDby-0004XF-8s
+	for xfs@oss.sgi.com; Thu, 10 Aug 2006 18:42:22 +0200
+Date: Thu, 10 Aug 2006 18:42:22 +0200
+From: Paul Slootman <paul@wurtel.net>
+Subject: cache_purge: shake on cache 0x5880a0 left 8 nodes!?
+Message-ID: <20060810164222.GA16332@wurtel.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-masters@oss.sgi.com
-Cc: nathans@sgi.com, xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
 Hi,
 
-This script is awesome :)
+I had problems due to the well-known endian bug.
+I first ran xfs_repair on it from the standard Debian package,
+version 2.6.20.  That gave a lot of output (which can be found at
+http://www.xs4all.nl/~wurtel2/xfs_repair.out.4 ).
 
-#! /bin/bash
+While that was running, I got today's CVS version and built that
+(it reports version 2.8.11).  I ran that version against the
+just-repaired filesystem, and got a number of additional errors,
+notably:
 
-m_fs() {
-#    sudo mount -o loop -t ext2 /home/fs-farm/ext2.img /mnt/fs-farm/ext2/
-#    sudo mount -o loop -t ext3 /home/fs-farm/ext3.img /mnt/fs-farm/ext3/
-#    sudo mount -o loop -t ext3dev /home/fs-farm/ext4.img /mnt/fs-farm/ext4/
-#    sudo mount -o loop -t reiserfs /home/fs-farm/reiser3.img
-/mnt/fs-farm/reiser3/
-    sudo mount -o loop -t xfs /home/fs-farm/xfs.img /mnt/fs-farm/xfs/
-#    sudo mount -o loop -t jfs /home/fs-farm/jfs.img /mnt/fs-farm/jfs/
-}
+empty data block 10 in directory inode 1343747104: junking block
+empty data block 11 in directory inode 1343747104: junking block
+empty data block 12 in directory inode 1343747104: junking block
+free block 16777216 entry 10 for directory ino 1343747104 bad
+rebuilding directory inode 1343747104
 
-u_fs() {
-#    sudo umount /mnt/fs-farm/ext2/
-#    sudo umount /mnt/fs-farm/ext3/
-#    sudo umount /mnt/fs-farm/ext4/
-#    sudo umount /mnt/fs-farm/reiser3/
-    sudo umount /mnt/fs-farm/xfs/
-#    sudo umount /mnt/fs-farm/jfs/
-}
+This 7 times; additionally, this was mentioned a couple of times:
 
-while true
-do
-m_fs
-u_fs
-done
+cache_purge: shake on cache 0x5880a0 left 8 nodes!?
 
-Aug 10 16:50:53 ltg01-fedora kernel: BUG: unable to handle kernel
-paging request at virtual address 6b6b6c07
-Aug 10 16:50:53 ltg01-fedora kernel:  printing eip:
-Aug 10 16:50:53 ltg01-fedora kernel: c013551a
-Aug 10 16:50:53 ltg01-fedora kernel: *pde = 00000000
-Aug 10 16:50:53 ltg01-fedora kernel: Oops: 0002 [#1]
-Aug 10 16:50:53 ltg01-fedora kernel: PREEMPT SMP
-Aug 10 16:50:53 ltg01-fedora kernel: Modules linked in: xfs ext3dev
-jbd2 loop ipv6 w83627hf hwmon_vid hwmon i2c_isa af_packe
-t ip_conntrack_netbios_ns ipt_REJECT xt_state ip_conntrack nfnetlink
-xt_tcpudp iptable_filter ip_tables x_tables cpufreq_use
-rspace p4_clockmod speedstep_lib binfmt_misc thermal processor fan
-container evdev snd_intel8x0 snd_ac97_codec snd_ac97_bus
-snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device
-snd_pcm_oss snd_mixer_oss snd_pcm sk98lin snd_timer snd
-ide_cd soundcore skge snd_page_alloc cdrom i2c_i801 intel_agp agpgart rtc unix
-Aug 10 16:50:53 ltg01-fedora kernel: CPU:    0
-Aug 10 16:50:53 ltg01-fedora kernel: EIP:    0060:[<c013551a>]    Not
-tainted VLI
-Aug 10 16:50:53 ltg01-fedora kernel: EFLAGS: 00010002   (2.6.18-rc4 #119)
-Aug 10 16:50:53 ltg01-fedora kernel: EIP is at __lock_acquire+0x2ca/0x9b6
-Aug 10 16:50:53 ltg01-fedora kernel: eax: d9c53d4c   ebx: 6b6b6b6b
-ecx: 00000000   edx: 00000000
-Aug 10 16:50:53 ltg01-fedora kernel: esi: 00000002   edi: df966d20
-ebp: e44a8e7c   esp: e44a8e4c
-Aug 10 16:50:53 ltg01-fedora kernel: ds: 007b   es: 007b   ss: 0068
-Aug 10 16:50:53 ltg01-fedora kernel: Process umount (pid: 16133,
-ti=e44a8000 task=df966d20 task.ti=e44a8000)
-Aug 10 16:50:53 ltg01-fedora kernel: Stack: 00000000 00000000 d9c53d4c
-df966d20 00000000 00000378 00000008 df9672f8
-Aug 10 16:50:53 ltg01-fedora kernel:        df966d20 df9672a8 00000002
-df966d20 e44a8eb0 c0135ccb 00000000 00000002
-Aug 10 16:50:53 ltg01-fedora kernel:        00000000 fe5778b7 c02d580c
-00000003 df967280 00000004 df966d20 f4202a00
-Aug 10 16:50:53 ltg01-fedora kernel: Call Trace:
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0135ccb>]
-lock_release_non_nested+0xc5/0x11d
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0136026>] lock_release+0x12f/0x159
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d579e>]
-__mutex_unlock_slowpath+0x99/0xff
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d580c>] mutex_unlock+0x8/0xa
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d3b2>]
-generic_shutdown_super+0xbb/0x113
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d42a>] kill_block_super+0x20/0x32
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d4ea>] deactivate_super+0x5d/0x6f
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0180336>] mntput_no_expire+0x42/0x72
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0173147>]
-path_release_on_umount+0x15/0x18
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c018147c>] sys_umount+0x1e7/0x21b
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01814bd>] sys_oldumount+0xd/0xf
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0102f15>] sysenter_past_esp+0x56/0x8d
-Aug 10 16:50:53 ltg01-fedora kernel: DWARF2 unwinder stuck at
-sysenter_past_esp+0x56/0x8d
-Aug 10 16:50:53 ltg01-fedora kernel: Leftover inexact backtrace:
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c010418c>] show_stack_log_lvl+0x8c/0x97
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01042e8>] show_registers+0x151/0x1c6
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01044d9>] die+0x17c/0x281
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0116677>] do_page_fault+0x3b3/0x480
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0103b19>] error_code+0x39/0x40
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0135ccb>]
-lock_release_non_nested+0xc5/0x11d
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0136026>] lock_release+0x12f/0x159
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d579e>]
-__mutex_unlock_slowpath+0x99/0xff
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d580c>] mutex_unlock+0x8/0xa
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d3b2>]
-generic_shutdown_super+0xbb/0x113
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d42a>] kill_block_super+0x20/0x32
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d4ea>] deactivate_super+0x5d/0x6f
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0180336>] mntput_no_expire+0x42/0x72
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0173147>]
-path_release_on_umount+0x15/0x18
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c018147c>] sys_umount+0x1e7/0x21b
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01814bd>] sys_oldumount+0xd/0xf
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0102f15>] sysenter_past_esp+0x56/0x8d
-Aug 10 16:50:53 ltg01-fedora kernel: Code: 2a e8 73 94 0a 00 85 c0 74
-21 68 ab a2 2d c0 68 d5 04 00 00 68 d9 37 2f c0 68 ee
-d0 2e c0 e8 b5 9d fe ff e8 45 f2 fc ff 83 c4 10 <f0> ff 83 9c 00 00 00
-8b 55 dc 8b 92 5c 05 00 00 89 55 e4 83 fa
-Aug 10 16:50:53 ltg01-fedora kernel: EIP: [<c013551a>]
-__lock_acquire+0x2ca/0x9b6 SS:ESP 0068:e44a8e4c
-Aug 10 16:50:53 ltg01-fedora kernel:  <3>BUG: sleeping function called
-from invalid context at /usr/src/linux-work2/mm/slab.c:2901
-Aug 10 16:50:53 ltg01-fedora kernel: in_atomic():0, irqs_disabled():1
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0104006>] show_trace_log_lvl+0x58/0x152
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01046ad>] show_trace+0xd/0x10
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0104775>] dump_stack+0x19/0x1b
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01181df>] __might_sleep+0x8d/0x95
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0163c61>] kmem_cache_zalloc+0x28/0xcc
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c014b83c>]
-taskstats_exit_alloc+0x32/0x70
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01213e1>] do_exit+0x111/0x7f1
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01045b8>] die+0x25b/0x281
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0116677>] do_page_fault+0x3b3/0x480
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0103b19>] error_code+0x39/0x40
-Aug 10 16:50:53 ltg01-fedora kernel: DWARF2 unwinder stuck at
-error_code+0x39/0x40
-Aug 10 16:50:53 ltg01-fedora kernel: Leftover inexact backtrace:
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01046ad>] show_trace+0xd/0x10
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0104775>] dump_stack+0x19/0x1b
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01181df>] __might_sleep+0x8d/0x95
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0163c61>] kmem_cache_zalloc+0x28/0xcc
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c014b83c>]
-taskstats_exit_alloc+0x32/0x70
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01213e1>] do_exit+0x111/0x7f1
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01045b8>] die+0x25b/0x281
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0116677>] do_page_fault+0x3b3/0x480
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0103b19>] error_code+0x39/0x40
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0135ccb>]
-lock_release_non_nested+0xc5/0x11d
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0136026>] lock_release+0x12f/0x159
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d579e>]
-__mutex_unlock_slowpath+0x99/0xff
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c02d580c>] mutex_unlock+0x8/0xa
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d3b2>]
-generic_shutdown_super+0xbb/0x113
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d42a>] kill_block_super+0x20/0x32
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c016d4ea>] deactivate_super+0x5d/0x6f
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0180336>] mntput_no_expire+0x42/0x72
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0173147>]
-path_release_on_umount+0x15/0x18
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c018147c>] sys_umount+0x1e7/0x21b
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c01814bd>] sys_oldumount+0xd/0xf
-Aug 10 16:50:53 ltg01-fedora kernel:  [<c0102f15>] sysenter_past_esp+0x56/0x8d
-Aug 10 16:50:53 ltg01-fedora kernel: Filesystem "loop2": Disabling
-barriers, not supported by the underlying device
-Aug 10 16:50:53 ltg01-fedora kernel: XFS mounting filesystem loop2
+In fact, twice before the final "done.".
 
-(gdb) list *0xc013551a
-0xc013551a is in __lock_acquire (include2/asm/atomic.h:96).
-91       *
-92       * Atomically increments @v by 1.
-93       */
-94      static __inline__ void atomic_inc(atomic_t *v)
-95      {
-96              __asm__ __volatile__(
-97                      LOCK_PREFIX "incl %0"
-98                      :"+m" (v->counter));
-99      }
-100
+The second repair output can be found at
+http://www.xs4all.nl/~wurtel2/xfs_repair.out.4b .
 
-Here is a config file http://www.stardust.webpages.pl/files/o_bugs/test-config
+Should I be worried about that?  I tried a search for "shake on cache"
+and found zero hits...
 
-Regards,
-Michal
+Additionally, the hash hit rates seem pretty bad. Anything to be
+worried about, and could anything be done about it?
 
--- 
-Michal K. K. Piotrowski
-LTG - Linux Testers Group
-(http://www.stardust.webpages.pl/ltg/wiki/)
+
+thanks,
+Paul Slootman (please CC me on responses)
