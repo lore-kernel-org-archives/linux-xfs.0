@@ -1,55 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Aug 2006 20:28:26 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7B3RjDW001718
-	for <xfs@oss.sgi.com>; Thu, 10 Aug 2006 20:27:57 -0700
-Date: Fri, 11 Aug 2006 13:26:26 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: review: fsblock zero - don't panic
-Message-ID: <20060811032626.GF50254148@melbourne.sgi.com>
-References: <20060810155851.C2591606@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 02:03:38 -0700 (PDT)
+Received: from mx.wurtel.net (a83-68-3-130.adsl.cistron.nl [83.68.3.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7B938DW021261
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 02:03:13 -0700
+Date: Fri, 11 Aug 2006 11:02:18 +0200
+From: Paul Slootman <paul@wurtel.net>
+Subject: Re: cache_purge: shake on cache 0x5880a0 left 8 nodes!?
+Message-ID: <20060811090218.GB22934@wurtel.net>
+References: <20060810164222.GA16332@wurtel.net> <200608110125.LAA18091@larry.melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060810155851.C2591606@wobbly.melbourne.sgi.com>
+In-Reply-To: <200608110125.LAA18091@larry.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 10, 2006 at 03:58:51PM +1000, Nathan Scott wrote:
-> As part of attempting to understand what happened in a corruption
-> problem awhile back, and generally be a bit more defensive of our
-> precious primary superblock, some code was added to XFS to detect
-> (and panic) on any inode extents that start at block zero.
+On Fri 11 Aug 2006, Barry Naujok wrote:
 > 
-> This has happened once or twice now, and when it does, we panic the
-> kernel.  This is not at all nice, as it means we take out the whole
-> system due to ondisk corruption.  This patch makes that code issue
-> a warning now, and fail whatever operation was in progress.
+> What you are seeing is fine. The current libxfs cache with the directory update code is leaving some blocks referenced,
+> and the libxfs code is printing out these blocks with outstanding references. 
+> 
+> The actual data was written to disk (prior to 2.8.10 it may not have). 
 
-Looks OK.
+Hmmm....
 
-FWIW:
+Unfortunately, the filesystem panicked again last night.
+This was after the double repair, and rebooting into 2.6.17.7, which
+shouldn't have the bug, right?
+I'll run another repair now :-(
 
-> -	if ( !(io->io_flags & XFS_IOCORE_RT)  && !ret_imap->br_startblock) {
-.....
-> +	if (unlikely(
-> +	    !(io->io_flags & XFS_IOCORE_RT) && !ret_imap->br_startblock)) {
 
-If you are hinting this branch to be unlikely, then we should also
-check the start block first before checking the io_flags.  We only
-need to check the io_flags if we are actually accessing block zero.
-i.e.
+Paul Slootman
 
-+	if (unlikely(
-+	    !ret_imap->br_startblock && !(io->io_flags & XFS_IOCORE_RT))) {
+The latest kernel message:
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+rip copy_user_generic_c+0x8/0x26
+Filesystem "md6": XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff880577d3
+
+Call Trace: <ffffffff880501d0>{:xfs:xfs_trans_cancel+96}
+       <ffffffff880577d3>{:xfs:xfs_create+1587} <ffffffff88062381>{:xfs:xfs_vn_mknod+433}
+       <ffffffff8802cff9>{:xfs:xfs_dir2_leafn_lookup_int+89}
+       <ffffffff8805076c>{:xfs:xfs_trans_unlocked_item+44}
+       <ffffffff8805e1ae>{:xfs:xfs_buf_rele+62} <ffffffff8802ea28>{:xfs:xfs_dir2_node_lookup+184}
+       <ffffffff88027bab>{:xfs:xfs_dir2_lookup+267} <ffffffff802892ef>{link_path_walk+415}
+       <ffffffff880560aa>{:xfs:xfs_access+74} <ffffffff80289e9e>{vfs_create+142}
+       <ffffffff8028a22f>{open_namei+383} <ffffffff80278ff7>{do_filp_open+39}
+       <ffffffff80279211>{get_unused_fd+113} <ffffffff80279406>{do_sys_open+70}
+       <ffffffff80209b5a>{system_call+126}
+xfs_force_shutdown(md6,0x8) called from line 1151 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff88065ba8
+xfs_force_shutdown(md6,0x2) called from line 729 of file fs/xfs/xfs_log.c.  Return address = 0xffffffff88065ba8
+Filesystem "md6": Corruption of in-memory data detected.  Shutting down filesystem: md6
+Please umount the filesystem, and rectify the problem(s)
