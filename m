@@ -1,39 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 12:44:57 -0700 (PDT)
-Received: from tetsuo.zabbo.net (tetsuo.zabbo.net [207.173.201.20])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BJifDW026007
-	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 12:44:43 -0700
-Received: from [192.168.110.21] (kei.pdx.zabbo.net [192.168.110.21])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by tetsuo.zabbo.net (Postfix) with ESMTP id BFA812FD0423
-	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 10:43:14 -0700 (PDT)
-Message-ID: <44DCC1B0.70003@oracle.com>
-Date: Fri, 11 Aug 2006 10:43:12 -0700
-From: Zach Brown <zach.brown@oracle.com>
-MIME-Version: 1.0
-Subject: xfs_end_io_direct() with negative size?
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 13:32:27 -0700 (PDT)
+Received: from rrzmta2.rz.uni-regensburg.de (rrzmta2.rz.uni-regensburg.de [132.199.1.17])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BKWHDW029038
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 13:32:17 -0700
+Date: Fri, 11 Aug 2006 20:29:38 +0200
+From: Christian Guggenberger <christian.guggenberger@physik.uni-regensburg.de>
+Subject: Re: Directory corruption
+Message-ID: <20060811182938.GA14761@pc51072.physik.uni-regensburg.de>
+Reply-To: christian.guggenberger@physik.uni-regensburg.de
+References: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
+On Fri, Aug 11, 2006 at 08:00:08PM +0200, Jan Engelhardt wrote:
+> Hello,
+> 
+> 
+> I was about to (finally!) fix my on-disk corruptions using a new xfsprogs, 
+> and this is what I got:
+> 
+> # xfs_check /dev/hda2
+> bad free block nused 1 should be 40 for dir ino 17332222 block 16777216
+> bad nblocks 907 for inode 109663513, counted 922
+> bad nblocks 849 for inode 109663521, counted 859
+> sb_ifree 26084, counted 26080
+> sb_fdblocks 1712799, counted 1712761
+> user quota id 0, have/exp bc 796381/796369
+> group quota id 0, have/exp bc 794376/794364 ic 88214/88212
+> group quota id 5, have/exp ic 651/653
+> 
+> But before I wanted to fix that, I checked which objects were affected
+> 
+> # find /mnt/hda2ro -inum 109663513 -o -inum 109663521
+> /mnt/hda2ro/var/log/kernel
+> /mnt/hda2ro/var/log/messages
+> Ok so far, but
+> 
+> # find /mnt/hda2ro -inum 17332222
+> 
+> Did not turn up anything. Is it an object that is invisible?
+>
+what does 'xfs_ncheck -i 17332222 /dev/hda2' tell ?
 
-So, I was lost in fs/direct-io.c chasing yet another bug when I noticed
-that a recent unrelated change might have changed the semantics of the
-end_io() call.
-
-   http://www.kernel.org/hg/linux-2.6/?cs=34c151cf341f
-
-Notice how that changes the aio path to set 'transferred' to -EIO based
-on dio->io_error before calling dio_complete() instead of after, like
-the sync path does with its possibly negative 'ret'.
-
-So it looks like xfs_end_io_direct() can now get a -ve size if, say,
-someone unplugs a drive part-way through a dio+aio write.  There's an
-ASSERT() in there that makes me wonder if this is something we should be
-worrying about.
-
-- z
+cheers.
+ - Christian
