@@ -1,46 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 11:01:10 -0700 (PDT)
-Received: from mailer.gwdg.de (mailer.gwdg.de [134.76.10.26])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BI0tDW010397
-	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 11:00:56 -0700
-Date: Fri, 11 Aug 2006 20:00:08 +0200 (MEST)
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Directory corruption
-Message-ID: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 11:39:54 -0700 (PDT)
+Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7BIdUDW014888
+	for <linux-xfs@oss.sgi.com>; Fri, 11 Aug 2006 11:39:38 -0700
+Date: Fri, 11 Aug 2006 11:38:58 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: mkfs.xfs
+Message-ID: <20060811183858.GA28538@tuatara.stupidest.org>
+References: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Katt <katt.man@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-Hello,
+On Fri, Aug 11, 2006 at 12:47:47PM +0100, Katt wrote:
 
+> It is posibile to recovery a xfs partition after I make only
+> mkfs.xfs?
 
-I was about to (finally!) fix my on-disk corruptions using a new xfsprogs, 
-and this is what I got:
-
-# xfs_check /dev/hda2
-bad free block nused 1 should be 40 for dir ino 17332222 block 16777216
-bad nblocks 907 for inode 109663513, counted 922
-bad nblocks 849 for inode 109663521, counted 859
-sb_ifree 26084, counted 26080
-sb_fdblocks 1712799, counted 1712761
-user quota id 0, have/exp bc 796381/796369
-group quota id 0, have/exp bc 794376/794364 ic 88214/88212
-group quota id 5, have/exp ic 651/653
-
-But before I wanted to fix that, I checked which objects were affected
-
-# find /mnt/hda2ro -inum 109663513 -o -inum 109663521
-/mnt/hda2ro/var/log/kernel
-/mnt/hda2ro/var/log/messages
-Ok so far, but
-
-# find /mnt/hda2ro -inum 17332222
-
-Did not turn up anything. Is it an object that is invisible?
-
-Jan Engelhardt
--- 
+Not really, if you know what file(s) you lost you could do a heuristic
+scan for them.  I've done this many times for photos lost on CF cards
+in cameras for example.
