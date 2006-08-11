@@ -1,36 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 08:57:08 -0700 (PDT)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BFuwDW032168
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Aug 2006 08:56:58 -0700
-Received: from [82.41.152.154] (helo=[192.168.10.36])
-	by mail.g-house.de with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
-	(Exim 4.50)
-	id 1GBZND-0007Mq-SV
-	for linux-xfs@oss.sgi.com; Fri, 11 Aug 2006 17:56:36 +0200
-Date: Fri, 11 Aug 2006 16:56:30 +0100 (BST)
-From: Christian <evilninja@gmx.net>
-Subject: Re: mkfs.xfs
-In-Reply-To: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0608111651020.7492@prinz64.housecafe.de>
-References: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 11:01:10 -0700 (PDT)
+Received: from mailer.gwdg.de (mailer.gwdg.de [134.76.10.26])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BI0tDW010397
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 11:00:56 -0700
+Date: Fri, 11 Aug 2006 20:00:08 +0200 (MEST)
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Directory corruption
+Message-ID: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, 11 Aug 2006, Katt wrote:
-> It is posibile to recovery a xfs partition after I make only mkfs.xfs?
+Hello,
 
-The only painless way to "recover" from this is to use backups. 
-You *could* try to use xfs_repair, but a freshly mkfs'ed xfs should report 
-no errors. If it's about plaintext files, you could dd(1) around on the 
-block-device and grep for it...no fun for big devices though...
 
-Christian.
+I was about to (finally!) fix my on-disk corruptions using a new xfsprogs, 
+and this is what I got:
+
+# xfs_check /dev/hda2
+bad free block nused 1 should be 40 for dir ino 17332222 block 16777216
+bad nblocks 907 for inode 109663513, counted 922
+bad nblocks 849 for inode 109663521, counted 859
+sb_ifree 26084, counted 26080
+sb_fdblocks 1712799, counted 1712761
+user quota id 0, have/exp bc 796381/796369
+group quota id 0, have/exp bc 794376/794364 ic 88214/88212
+group quota id 5, have/exp ic 651/653
+
+But before I wanted to fix that, I checked which objects were affected
+
+# find /mnt/hda2ro -inum 109663513 -o -inum 109663521
+/mnt/hda2ro/var/log/kernel
+/mnt/hda2ro/var/log/messages
+Ok so far, but
+
+# find /mnt/hda2ro -inum 17332222
+
+Did not turn up anything. Is it an object that is invisible?
+
+Jan Engelhardt
 -- 
-BOFH excuse #68:
-
-only available on a need to know basis
