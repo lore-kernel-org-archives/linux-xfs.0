@@ -1,28 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 11:39:54 -0700 (PDT)
-Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7BIdUDW014888
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Aug 2006 11:39:38 -0700
-Date: Fri, 11 Aug 2006 11:38:58 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: mkfs.xfs
-Message-ID: <20060811183858.GA28538@tuatara.stupidest.org>
-References: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 12:44:57 -0700 (PDT)
+Received: from tetsuo.zabbo.net (tetsuo.zabbo.net [207.173.201.20])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BJifDW026007
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 12:44:43 -0700
+Received: from [192.168.110.21] (kei.pdx.zabbo.net [192.168.110.21])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by tetsuo.zabbo.net (Postfix) with ESMTP id BFA812FD0423
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 10:43:14 -0700 (PDT)
+Message-ID: <44DCC1B0.70003@oracle.com>
+Date: Fri, 11 Aug 2006 10:43:12 -0700
+From: Zach Brown <zach.brown@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <684a75330608110447k16c4a079q74ab3d4deac0a273@mail.gmail.com>
+Subject: xfs_end_io_direct() with negative size?
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Katt <katt.man@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 11, 2006 at 12:47:47PM +0100, Katt wrote:
 
-> It is posibile to recovery a xfs partition after I make only
-> mkfs.xfs?
+So, I was lost in fs/direct-io.c chasing yet another bug when I noticed
+that a recent unrelated change might have changed the semantics of the
+end_io() call.
 
-Not really, if you know what file(s) you lost you could do a heuristic
-scan for them.  I've done this many times for photos lost on CF cards
-in cameras for example.
+   http://www.kernel.org/hg/linux-2.6/?cs=34c151cf341f
+
+Notice how that changes the aio path to set 'transferred' to -EIO based
+on dio->io_error before calling dio_complete() instead of after, like
+the sync path does with its possibly negative 'ret'.
+
+So it looks like xfs_end_io_direct() can now get a -ve size if, say,
+someone unplugs a drive part-way through a dio+aio write.  There's an
+ASSERT() in there that makes me wonder if this is something we should be
+worrying about.
+
+- z
