@@ -1,91 +1,91 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 Aug 2006 10:36:30 -0700 (PDT)
-Received: from mail.automatix.de (www.automatix.de [213.131.230.237])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7CHaEDW021053
-	for <linux-xfs@oss.sgi.com>; Sat, 12 Aug 2006 10:36:15 -0700
-Received: from uucp by mail.automatix.de with local-bsmtp (Exim 3.36 #1)
-	id 1GBoYk-00034D-00
-	for linux-xfs@oss.sgi.com; Sat, 12 Aug 2006 10:09:30 +0200
-Received: from pc2.s.automatix.de ([192.168.11.12])
-	by s.automatix.de with esmtp (Exim 3.36 #1)
-	id 1GBoML-0006In-00
-	for linux-xfs@oss.sgi.com; Sat, 12 Aug 2006 09:56:41 +0200
-From: Juergen Sauer <juergen.sauer@automatix.de>
-Reply-To: juergen.sauer@automatix.de
-Subject: Bug in xfsrestore or NFS+XFS Filesystem on NFS Server ? Can anyone confirm ?
-Date: Sat, 12 Aug 2006 09:56:47 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 Aug 2006 14:34:15 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.184])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7CLXkDW008232
+	for <xfs@oss.sgi.com>; Sat, 12 Aug 2006 14:33:47 -0700
+Received: by nf-out-0910.google.com with SMTP id c29so1338853nfb
+        for <xfs@oss.sgi.com>; Sat, 12 Aug 2006 14:33:15 -0700 (PDT)
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] XFS: possibly uninitialized variable use in fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int()
+Date: Sat, 12 Aug 2006 23:34:21 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200608120956.47466.juergen.sauer@automatix.de>
-Content-Transfer-Encoding: 8bit
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200608122334.21901.jesper.juhl@gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: xfs-masters@oss.sgi.com, nathans@sgi.com, xfs@oss.sgi.com, Jesper Juhl <jesper.juhl@gmail.com>
 
-Hi!
-Job to do: filesytem tranfer fom one raid to another / backup a server of 
-about 1TB data and restore.
+Ok, I'll honestly admit that I'm in over my head here. But, coverity found
+a potential use of an uninitialized variable in 
+fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int() and I think it might be 
+correct (coverity bug #900).
 
-This Senario:
-Server: Ubuntu 6.06 LTS + own xfs-fixed kernel 2.6.17.7
-Backup: Ubuntu 6.06 LTS + own xfs-fixed kernel 2.6.17.7
-Network 1Gbit Copper
+The problem spot is this bit of code : 
 
-xfsdumped server like this:
-1. logged into the backup system 
-1a. dumped the XFS Filesystem like that: 
-> ssh server "xfsdump -l 0 -F -L transfer -M server_backup" - /dev/sdb1" >  /backup//backup/server_sdb1_xfsdump
-Worked fine. Rsult was: 
--rw-rw-r-- 1 root root 568776542496 2006-08-10 15:16 /backup/backup-server_sdb1_xfsdump
+...
+ 			if (blk->magic == XFS_DIR2_LEAFN_MAGIC) {
+ 				retval = xfs_dir2_leafn_lookup_int(blk->bp, args,
+ 								&blk->index, state);
+ 			}
+ 			else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+ 				retval = xfs_attr_leaf_lookup_int(blk->bp, args);
+ 				blk->index = args->index;
+ 				args->blkno = blk->blkno;
+ 			}
+ 			if (((retval == ENOENT) || (retval == ENOATTR)) &&
 
-But the ssh transfer has got an big overhead off cpu (comression, evcryption), so the dump
-was not fast as expected, it took about 2 days.
-So I decided to drop the overhead and to use a NFS link on the restore side.
+                              ^^^--- 'retval' possibly used uninitialized here...
 
-2. Now I exchanged the old Hardware Raid on the server and started from Knoppix V5.01
-(see: http://ftp.freenet.de/pub/ftp.uni-kl.de/pub/linux/knoppix/KNOPPIX_V5.0.1CD-2006-06-01-DE.iso
-http://ftp.freenet.de/pub/ftp.uni-kl.de/pub/linux/knoppix/KNOPPIX_V5.0.1CD-2006-06-01-EN.iso)
-Knoppix Booted using "knoppix 2"
+ 			    (blk->hashval == args->hashval)) {
+...
 
-2a. created anf formated partitions, sda1, sda2 (sda2 for swap, 4 GN or so. aktivated swap);
-mounted the fresh XFS partiton to /mnt
-2b. made NFS link to Backup server up (started portmap and mounted the backup:/backup/)
+Nothing initializes 'retval' before this bit of code, so if 'blk->magic' is 
+neither == XFS_DIR2_LEAFN_MAGIC or XFS_ATTR_LEAF_MAGIC then it'll be in an 
+uninitialized state when we get to the "if (((retval == ENOENT) ..." bit.
 
-2c. started xfsrestore like that
-xfsrestore -f /backup/backup-server_sda1_xfsdump /mnt/ 
+Now we get to the part where I'm in over my head. 
 
-After about a few hours xfsrestore quitted with a failure:  "Too much open files", Abort
-The restore Process failed after ca. 66G of 500G.
-OK, I raised the Kernel Openfile MAX, echo 524288 > /proc/sys/fs/file-max
-and tried again.
-xfsrestore -f /backup/backup-server_sda1_xfsdump /mnt/ 
-Same error at same place.
-Version was:  xfsrestore: version 2.2.36 (dump format 3.0)
+Since there is code above that check 'blk->magic' against 
+being == XFS_DA_NODE_MAGIC and I don't see how we would be skipping the 
+code quoted above in that case, it looks to me like this could happen and 
+lead to the uninitialized use of retval.
+It also seems to me, from reading fs/xfs/xfs_da_btree.h, that 'blk->magic' 
+might in some cases be == XFS_DIR2_LEAF1_MAGIC in which case we'd also end 
+up using retval uninitialized.
 
-Can s.o. confirm this ?
+Now, what to do about it. Well, if I'm reading the function correctly the 
+safest thing would be to assume a 'retval' of ENOENT if the above 
+"if/else if" didn't trigger, so below is a patch that initializes 'retval' 
+to that value so that if we do hit this corner case we'll just act as if 
+we couldn't find what we were looking for in the Btree.
 
-A working around was to use the much slower ssh pipe construct:
-2d.
-root@Knoppix[~]# ssh backup "dd if=/backup/backup-server_sda1_xfsdump bs=10M" | xfsrestore - /mnt/
+I suspect I may be completely wrong, and if that's the case I'd sure like 
+an explanation of where I went wrong along with the NACK for the patch.
+In case my understanding is in fact correct and the patch below makes sense,
+then kindly apply :-)
 
-This works.
 
-Since that the last restore works, I think there is a bug in xfsrestore or xfs/nfs in the kernel 2.6.17.
-Backupserver, Server, Knoppix are bugfixed 2.6.17(.7). Restoring the dump via nfs failed due "too much open files".
 
-Does xfsrestore opens really 512k files ? I do not belive that. 
-So It could a problem in Kernel  or NFS Stack be the problem.
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
 
-Can any one confirm this behavior ? (to make it better next time)
+ fs/xfs/xfs_da_btree.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
 
-Greetings from Northern Germany
-	Jürgen Sauer
-
--- 
-Jürgen Sauer - AutomatiX GmbH, +49-4209-4699, jojo@automatix.de
-Das Linux Systemhaus - Service - Support - Server - Lösungen
-http://www.automatix.de OpenOffice erhalten Sie hier kostenfrei 
-http://de.openoffice.org/
+--- linux-2.6.18-rc4-orig/fs/xfs/xfs_da_btree.c	2006-08-11 00:11:13.000000000 +0200
++++ linux-2.6.18-rc4/fs/xfs/xfs_da_btree.c	2006-08-12 23:18:23.000000000 +0200
+@@ -1053,7 +1053,8 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 	xfs_da_intnode_t *node;
+ 	xfs_da_node_entry_t *btree;
+ 	xfs_dablk_t blkno;
+-	int probe, span, max, error, retval;
++	int probe, span, max, error;
++	int retval = ENOENT;
+ 	xfs_dahash_t hashval;
+ 	xfs_da_args_t *args;
+ 
