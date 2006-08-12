@@ -1,53 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 13:32:27 -0700 (PDT)
-Received: from rrzmta2.rz.uni-regensburg.de (rrzmta2.rz.uni-regensburg.de [132.199.1.17])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7BKWHDW029038
-	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 13:32:17 -0700
-Date: Fri, 11 Aug 2006 20:29:38 +0200
-From: Christian Guggenberger <christian.guggenberger@physik.uni-regensburg.de>
-Subject: Re: Directory corruption
-Message-ID: <20060811182938.GA14761@pc51072.physik.uni-regensburg.de>
-Reply-To: christian.guggenberger@physik.uni-regensburg.de
-References: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0608111955530.23379@yvahk01.tjqt.qr>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Aug 2006 20:16:27 -0700 (PDT)
+Received: from rwcrmhc11.comcast.net (rwcrmhc11.comcast.net [204.127.192.81])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7C3G8DW003579
+	for <xfs@oss.sgi.com>; Fri, 11 Aug 2006 20:16:08 -0700
+Message-ID: <44DD46A5.7010308@comcast.net>
+Date: Fri, 11 Aug 2006 23:10:29 -0400
+From: Brian Davis <bridavis@comcast.net>
+MIME-Version: 1.0
+Subject: Negligible improvement when using su/sw for hardware RAID5, expected?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Fri, Aug 11, 2006 at 08:00:08PM +0200, Jan Engelhardt wrote:
-> Hello,
-> 
-> 
-> I was about to (finally!) fix my on-disk corruptions using a new xfsprogs, 
-> and this is what I got:
-> 
-> # xfs_check /dev/hda2
-> bad free block nused 1 should be 40 for dir ino 17332222 block 16777216
-> bad nblocks 907 for inode 109663513, counted 922
-> bad nblocks 849 for inode 109663521, counted 859
-> sb_ifree 26084, counted 26080
-> sb_fdblocks 1712799, counted 1712761
-> user quota id 0, have/exp bc 796381/796369
-> group quota id 0, have/exp bc 794376/794364 ic 88214/88212
-> group quota id 5, have/exp ic 651/653
-> 
-> But before I wanted to fix that, I checked which objects were affected
-> 
-> # find /mnt/hda2ro -inum 109663513 -o -inum 109663521
-> /mnt/hda2ro/var/log/kernel
-> /mnt/hda2ro/var/log/messages
-> Ok so far, but
-> 
-> # find /mnt/hda2ro -inum 17332222
-> 
-> Did not turn up anything. Is it an object that is invisible?
->
-what does 'xfs_ncheck -i 17332222 /dev/hda2' tell ?
+Is this expected? I thought I would see more improvement when tweaking 
+my su/sw values for hardware RAID 5.
 
-cheers.
- - Christian
+Details, 3x300GB drives, 3Ware 7506-4LP Hardware RAID 5 using a 64K 
+stripe size (non-configurable on this card).
+
+FS creation and Bonnie++ results:
+
+Untweaked:---------------------------------------------------------------------- 
+
+
+localhost / # mkfs.xfs -f /dev/sda1
+meta-data=/dev/sda1              isize=256    agcount=32, agsize=4578999 
+blks
+        =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=146527968, imaxpct=25
+        =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=1
+        =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+localhost / # mount -t xfs /dev/sda1 /raid
+localhost / # cd /raid
+localhost raid # bonnie++ -n0 -u0 -r 768 -s 30720 -b -f
+Using uid:0, gid:0.
+Writing intelligently...done
+Rewriting...done
+Reading intelligently...done
+start 'em...done...done...done...done...done...
+Version 1.93c       ------Sequential Output------ --Sequential Input- 
+--Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  
+/sec %CP
+localhost       30G           27722  40 23847  37           98367  99  
+88.6  11
+Latency                         891ms     693ms             16968us     
+334ms
+
+Tweaked:------------------------------------------------------------------------- 
+
+
+localhost / # mkfs.xfs -f -d sw=2,su=64k /dev/sda1
+meta-data=/dev/sda1              isize=256    agcount=32, agsize=4578992 
+blks
+        =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=146527744, imaxpct=25
+        =                       sunit=16     swidth=32 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=1
+        =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+localhost / # mount -t xfs /dev/sda1 /raid
+localhost / # cd /raid
+localhost raid # bonnie++ -n0 -u0 -r 768 -s 30720 -b -f
+Using uid:0, gid:0.
+Writing intelligently...done
+Rewriting...done
+Reading intelligently...done
+start 'em...done...done...done...done...done...
+Version 1.93c       ------Sequential Output------ --Sequential Input- 
+--Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  
+/sec %CP
+localhost       30G           27938  43 23880  40           98066  99  
+91.8   9
+Latency                         772ms     584ms             19889us     
+340ms
