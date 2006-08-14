@@ -1,72 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 Aug 2006 20:25:55 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7D3PTDW005710
-	for <xfs@oss.sgi.com>; Sat, 12 Aug 2006 20:25:33 -0700
-Message-ID: <44DE9B86.90006@sandeen.net>
-Date: Sat, 12 Aug 2006 22:24:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] XFS: possibly uninitialized variable use in fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int()
-References: <200608122334.21901.jesper.juhl@gmail.com>
-In-Reply-To: <200608122334.21901.jesper.juhl@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Aug 2006 17:24:34 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7E0NoDW010547
+	for <xfs@oss.sgi.com>; Sun, 13 Aug 2006 17:24:01 -0700
+Date: Mon, 14 Aug 2006 10:22:58 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: xfs_end_io_direct() with negative size?
+Message-ID: <20060814102258.A2698880@wobbly.melbourne.sgi.com>
+References: <44DCC1B0.70003@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44DCC1B0.70003@oracle.com>; from zach.brown@oracle.com on Fri, Aug 11, 2006 at 10:43:12AM -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: xfs-masters@oss.sgi.com, nathans@sgi.com, xfs@oss.sgi.com
+To: Zach Brown <zach.brown@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Jesper Juhl wrote:
-> I suspect I may be completely wrong, and if that's the case I'd sure like 
-> an explanation of where I went wrong along with the NACK for the patch.
-> In case my understanding is in fact correct and the patch below makes sense,
-> then kindly apply :-)
+On Fri, Aug 11, 2006 at 10:43:12AM -0700, Zach Brown wrote:
 > 
+> So, I was lost in fs/direct-io.c chasing yet another bug when I noticed
+> that a recent unrelated change might have changed the semantics of the
+> end_io() call.
+> 
+>    http://www.kernel.org/hg/linux-2.6/?cs=34c151cf341f
+> 
+> Notice how that changes the aio path to set 'transferred' to -EIO based
+> on dio->io_error before calling dio_complete() instead of after, like
+> the sync path does with its possibly negative 'ret'.
+> 
+> So it looks like xfs_end_io_direct() can now get a -ve size if, say,
+> someone unplugs a drive part-way through a dio+aio write.  There's an
+> ASSERT() in there that makes me wonder if this is something we should be
+> worrying about.
 
-Seems reasonable to me; I also can't see how it avoids using an uninitialized 
-retval in all cases.  But I'm in over my head too, so don't take my word for it 
-:).  I'll let the folks @sgi chime in...
+Its harmless.  It was written when there was no way a negative byte
+count would be coming back at us from the dio code.  We should simply
+remove the assert.
 
-FWIW seems like there's a lot of unnecessary endian flipping in there too; I 
-haven't tested this but since it endian-flips the magic into blk->magic seems 
-like it may as well use it:
+cheers.
 
-Index: xfs-linux/xfs_da_btree.c
-===================================================================
---- xfs-linux.orig/xfs_da_btree.c
-+++ xfs-linux/xfs_da_btree.c
-@@ -1079,14 +1079,14 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
-  			return(error);
-  		}
-  		curr = blk->bp->data;
--		ASSERT(be16_to_cpu(curr->magic) == XFS_DA_NODE_MAGIC ||
--		       be16_to_cpu(curr->magic) == XFS_DIR2_LEAFN_MAGIC ||
--		       be16_to_cpu(curr->magic) == XFS_ATTR_LEAF_MAGIC);
-+		blk->magic = be16_to_cpu(curr->magic);
-+		ASSERT(blk->magic == XFS_DA_NODE_MAGIC ||
-+		       blk->magic == XFS_DIR2_LEAFN_MAGIC ||
-+		       blk->magic == XFS_ATTR_LEAF_MAGIC);
-
-  		/*
-  		 * Search an intermediate node for a match.
-  		 */
--		blk->magic = be16_to_cpu(curr->magic);
-  		if (blk->magic == XFS_DA_NODE_MAGIC) {
-  			node = blk->bp->data;
-  			blk->hashval = 
-be32_to_cpu(node->btree[be16_to_cpu(node->hdr.count)-1].hashval);
-@@ -1133,10 +1133,10 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
-  				blk->index = probe;
-  				blkno = be32_to_cpu(btree->before);
-  			}
--		} else if (be16_to_cpu(curr->magic) == XFS_ATTR_LEAF_MAGIC) {
-+		} else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
-  			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
-  			break;
--		} else if (be16_to_cpu(curr->magic) == XFS_DIR2_LEAFN_MAGIC) {
-+		} else if (blk->magic == XFS_DIR2_LEAFN_MAGIC) {
-  			blk->hashval = xfs_dir2_leafn_lasthash(blk->bp, NULL);
-  			break;
-  		}
+-- 
+Nathan
