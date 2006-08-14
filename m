@@ -1,47 +1,152 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Aug 2006 19:02:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Aug 2006 20:01:16 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7E21SDW017584
-	for <xfs@oss.sgi.com>; Sun, 13 Aug 2006 19:01:39 -0700
-Date: Mon, 14 Aug 2006 12:00:32 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: 2.6.18-rc3-git3 - XFS - BUG: unable to handle kernel NULL pointer dereference at virtual address 00000078
-Message-ID: <20060814120032.E2698880@wobbly.melbourne.sgi.com>
-References: <3aa654a40608072039r2b5c5a19hbd3e68e4fee40869@mail.gmail.com> <20060808134438.E2526901@wobbly.melbourne.sgi.com> <9a8748490608080137k596a6290r3567096668449a64@mail.gmail.com> <20060808185405.B2528231@wobbly.melbourne.sgi.com> <9a8748490608100431m244207b1v9c9c5087233fcf3a@mail.gmail.com> <20060811083546.B2596458@wobbly.melbourne.sgi.com> <9a8748490608101544n29f863e7o7584ac64f1d4c210@mail.gmail.com> <9a8748490608101552w12822fa6m415a5fb5537c744d@mail.gmail.com> <9a8748490608110133v5f973cf6w1af340f59bb229ec@mail.gmail.com> <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7E30YDW022513
+	for <xfs@oss.sgi.com>; Sun, 13 Aug 2006 20:00:46 -0700
+Date: Mon, 14 Aug 2006 12:59:02 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] xfs: i_state of inode is changed after the inode is freed
+Message-ID: <20060814025901.GE51703024@melbourne.sgi.com>
+References: <20060717140751.GW2114946@melbourne.sgi.com> <20060724170133m-saito@mail.aom.tnes.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>; from jesper.juhl@gmail.com on Fri, Aug 11, 2006 at 12:25:03PM +0200
+In-Reply-To: <20060724170133m-saito@mail.aom.tnes.nec.co.jp>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Avuton Olrich <avuton@gmail.com>, "Tony. Ho" <linux@idccenter.cn>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Masayuki Saito <m-saito@tnes.nec.co.jp>
+Cc: Nathan Scott <nathans@sgi.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Fri, Aug 11, 2006 at 12:25:03PM +0200, Jesper Juhl wrote:
-> I didn't capture all of the xfs_repair output, but I did get this :
-> ...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - clear lost+found (if it exists) ...
->         - clearing existing "lost+found" inode
->         - deleting existing "lost+found" entry
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
-> LEAFN node level is 1 inode 412035424 bno = 8388608
+Masayuki,
 
-Ooh.  Can you describe this test case you're using?  Something with
-a bunch of renames in it, obviously, but I'd also like to be able to
-reproduce locally with the exact data set (file names in particular),
-if at all possible.
+Sorry for taking so long to get back to you - travelling and vacation
+left a mountain of email for me to delete :/
 
-thanks!
+On Mon, Jul 24, 2006 at 05:01:33PM +0900, Masayuki Saito wrote:
+> >I think a fix is going to be much more invasive than just adding
+> >reference as my fixes appear to have only narrowed the race window
+> >and not solved it. The addition of the lock in the original patch
+> >solves the atomic xfs_iunpin()/xfs_reclaim() execution problem,
+> >but it does not solve the problems with the i_flags field. Adding
+> >a new lock may be our only option here.
+> 
+> I'm considering the solution which fixes two problems([a] i_state of
+> the inode is changed while the inode is freed in xfs filesystem and
+> [b] the above i_flags problem)
+> 
+> the solution:
+> (1)Add new spin_lock(i_flags_lock) for all refernece and change
+>    places of all i_flags.
+> (2)Add igrab()/iput() for xfs_iunpin().
+> 
+> It makes sure that mark_inode_dirty_sync() is never called if
+> xfs_iunpin() runs after I_CLEAR is set.  Because XFS_IRECLAIM
+> or XFS_IRECLAIMABLE is set/checked within the spin_lock.
 
+*nod*
+
+> And there is the reason that igrab()/iput() is needed even if I add
+> new spin_lock for xfs_iunpin().  We can prevent the following case
+> by adding them.
+> * After passing (I_NEW|I_FREEING|I_CLEAR) check in xfs_iunpin(),
+>   I_FREEING is set.
+> * Then mark_inode_dirty_sync() is called and i_state is changed.
+> * Hit BUG_ON(!(inode->i_state & I_FREEING)) in clear_inode().
+
+*nod*
+
+> If these ideas seem to be correct, I'll make patches for above (1),(2).
+> Any comment?
+> 
+> 
+> (The following is a part of my thinking patch.  Only xfs_iunpin().)
+> 
+> --- linux-2.6.17.6/fs/xfs/xfs_inode.c.orig	2006-07-22 08:07:50.194236144 +0900
+> +++ linux-2.6.17.6/fs/xfs/xfs_inode.c	2006-07-25 06:07:18.062853045 +0900
+> @@ -2729,6 +2729,8 @@ void
+>  xfs_iunpin(
+>  	xfs_inode_t	*ip)
+>  {
+> +	int need_unlock;
+> +
+>  	ASSERT(atomic_read(&ip->i_pincount) > 0);
+>  
+>  	if (atomic_dec_and_test(&ip->i_pincount)) {
+> @@ -2744,6 +2746,8 @@ xfs_iunpin(
+>  		 * call as the inode reclaim may be blocked waiting for
+>  		 * the inode to become unpinned.
+>  		 */
+> +		spin_lock(&ip->i_flags_lock);
+> +		need_unlock = 1;
+>  		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
+>  			vnode_t	*vp = XFS_ITOV_NULL(ip);
+>  
+> @@ -2751,10 +2755,22 @@ xfs_iunpin(
+>  			if (vp) {
+>  				struct inode	*inode = vn_to_inode(vp);
+>  
+> -				if (!(inode->i_state & I_NEW))
+> -					mark_inode_dirty_sync(inode);
+> +				if (!(inode->i_state &
+> +						(I_NEW|I_FREEING|I_CLEAR))) {
+> +					inode = igrab(inode);
+> +					if (inode != NULL) {
+> +						mark_inode_dirty_sync(inode);
+> +						spin_unlock(&ip->i_flags_lock);
+> +						need_unlock = 0;
+> +						iput(inode);
+> +					}
+> +				}
+>  			}
+>  		}
+> +		if (need_unlock) {
+> +			spin_unlock(&ip->i_flags_lock);
+> +			need_unlock = 0;
+> +		}
+>  		wake_up(&ip->i_ipin_wait);
+>  	}
+>  }
+
+Hmmm - Idon't think we should iput() before we wake up any pinned waiters.
+When we have a waiter on i_ipin_wait (called from xfs_iflush()), we have
+a thread sleeping with the inode locked.
+
+If we then call iput() and it drops the last reference, we can call back
+into the filesystem and start transactions. Those transactions will need
+to lock the inode. Hence I think the above can deadlock when racing against
+an inode flush. 
+
+The code should probably read:
+
+	if (dropped last pincount) {
+		int need_iput = 0;
+		struct inode *inode;
+
+		spin_lock(i_flags_lock)
+		if (!reclaimable) {
+			if (!vp) {
+				if (!(i_state & (NEW|CLEAR))) {
+					inode = igrab(inode)
+					if (inode) {
+						need_iput = 1	
+						mark_inode_dirty_sync(inode)
+					}
+				}
+			}
+		}
+		spin_unlock(i_flags_lock)
+		wake_up(&ip->i_ipin_wait)
+		if (need_iput)
+			iput(inode);
+	}
+
+to avoid this possible deadlock.
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
