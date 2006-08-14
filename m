@@ -1,153 +1,148 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Aug 2006 00:50:04 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.186])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7E7ndDW025297
-	for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 00:49:39 -0700
-Received: by nf-out-0910.google.com with SMTP id c29so1685139nfb
-        for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 00:49:10 -0700 (PDT)
-Message-ID: <9a8748490608140049t492742cx7f826a9f40835d71@mail.gmail.com>
-Date: Mon, 14 Aug 2006 09:49:10 +0200
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: 2.6.18-rc3-git3 - XFS - BUG: unable to handle kernel NULL pointer dereference at virtual address 00000078
-In-Reply-To: <20060814120032.E2698880@wobbly.melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <3aa654a40608072039r2b5c5a19hbd3e68e4fee40869@mail.gmail.com>
-	 <9a8748490608080137k596a6290r3567096668449a64@mail.gmail.com>
-	 <20060808185405.B2528231@wobbly.melbourne.sgi.com>
-	 <9a8748490608100431m244207b1v9c9c5087233fcf3a@mail.gmail.com>
-	 <20060811083546.B2596458@wobbly.melbourne.sgi.com>
-	 <9a8748490608101544n29f863e7o7584ac64f1d4c210@mail.gmail.com>
-	 <9a8748490608101552w12822fa6m415a5fb5537c744d@mail.gmail.com>
-	 <9a8748490608110133v5f973cf6w1af340f59bb229ec@mail.gmail.com>
-	 <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>
-	 <20060814120032.E2698880@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Aug 2006 02:56:42 -0700 (PDT)
+Received: from dmz.tecosim.de (dmz.tecosim.com [195.135.152.162])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7E9uRDW005996
+	for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 02:56:27 -0700
+Subject: Re: Negligible improvement when using su/sw for hardware RAID5,
+	expected?
+From: utz lehmann <u.lehmann@de.tecosim.com>
+In-Reply-To: <44DD46A5.7010308@comcast.net>
+References: <44DD46A5.7010308@comcast.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fuAbNIqoNHd6p7/e6F08"
+Date: Mon, 14 Aug 2006 10:51:34 +0200
+Message-Id: <1155545494.1238.11.camel@donner.tecosim.de>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Avuton Olrich <avuton@gmail.com>, "Tony. Ho" <linux@idccenter.cn>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Davis <bridavis@comcast.net>
+Cc: xfs@oss.sgi.com
 
-On 14/08/06, Nathan Scott <nathans@sgi.com> wrote:
-> On Fri, Aug 11, 2006 at 12:25:03PM +0200, Jesper Juhl wrote:
-> > I didn't capture all of the xfs_repair output, but I did get this :
-> > ...
-> > Phase 4 - check for duplicate blocks...
-> >         - setting up duplicate extent list...
-> >         - clear lost+found (if it exists) ...
-> >         - clearing existing "lost+found" inode
-> >         - deleting existing "lost+found" entry
-> >         - check for inodes claiming duplicate blocks...
-> >         - agno = 0
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> >         - agno = 4
-> >         - agno = 5
-> >         - agno = 6
-> > LEAFN node level is 1 inode 412035424 bno = 8388608
->
-> Ooh.  Can you describe this test case you're using?
+--=-fuAbNIqoNHd6p7/e6F08
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Sure.
+Hi
 
-The server has a bunch of XFS filesystems :
-
-# mount
-/dev/md1 on / type xfs (rw)
-proc on /proc type proc (rw)
-sysfs on /sys type sysfs (rw)
-devpts on /dev/pts type devpts (rw,gid=5,mode=620)
-tmpfs on /dev/shm type tmpfs (rw)
-usbfs on /proc/bus/usb type usbfs (rw)
-/dev/md0 on /boot type ext3 (rw)
-/dev/mapper/Archive-Backup on /mnt/backup type xfs (rw)
-/dev/mapper/Mirror-ws1 on /mnt/rsync/ws1 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws1_log)
-/dev/mapper/Mirror-ws2 on /mnt/rsync/ws2 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws2_log)
-/dev/mapper/Mirror-ws3 on /mnt/rsync/ws3 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws3_log)
-/dev/mapper/Mirror-ws4 on /mnt/rsync/ws4 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws4_log)
-/dev/mapper/Mirror-ws5 on /mnt/rsync/ws5 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws5_log)
-/dev/mapper/Mirror-ws6 on /mnt/rsync/ws6 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws6_log)
-/dev/mapper/Mirror-ws7 on /mnt/rsync/ws7 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws7_log)
-/dev/mapper/Mirror-ws8 on /mnt/rsync/ws8 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws8_log)
-/dev/mapper/Mirror-ws9 on /mnt/rsync/ws9 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws9_log)
-/dev/mapper/Mirror-ws10 on /mnt/rsync/ws10 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws10_log)
-/dev/mapper/Mirror-ws11 on /mnt/rsync/ws11 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws11_log)
-/dev/mapper/Mirror-ws12 on /mnt/rsync/ws12 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws12_log)
-/dev/mapper/Mirror-ws13 on /mnt/rsync/ws13 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws13_log)
-/dev/mapper/Mirror-ws14 on /mnt/rsync/ws14 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws14_log)
-/dev/mapper/Mirror-ws15 on /mnt/rsync/ws15 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws15_log)
-/dev/mapper/Mirror-ws16 on /mnt/rsync/ws16 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws16_log)
-/dev/mapper/Mirror-ws17 on /mnt/rsync/ws17 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws17_log)
-/dev/mapper/Mirror-ws18 on /mnt/rsync/ws18 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws18_log)
-/dev/mapper/Mirror-ws19 on /mnt/rsync/ws19 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws19_log)
-/dev/mapper/Mirror-ws20 on /mnt/rsync/ws20 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws20_log)
-/dev/mapper/Mirror-ws21 on /mnt/rsync/ws21 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/ws21_log)
-/dev/mapper/Mirror-wsb1 on /mnt/rsync/wsb1 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsb1_log)
-/dev/mapper/Mirror-wsb2 on /mnt/rsync/wsb2 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsb2_log)
-/dev/mapper/Mirror-wsb3 on /mnt/rsync/wsb3 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsb3_log)
-/dev/mapper/Mirror-wsb4 on /mnt/rsync/wsb4 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsb4_log)
-/dev/mapper/Mirror-wsp1 on /mnt/rsync/wsp1 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsp1_log)
-/dev/mapper/Mirror-wsp2 on /mnt/rsync/wsp2 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsp2_log)
-/dev/mapper/Mirror-wsp3 on /mnt/rsync/wsp3 type xfs
-(rw,noatime,ihashsize=64433,logdev=/dev/Log/wsp3_log)
-/dev/mapper/Mirror-obr1 on /mnt/ob/obr1 type xfs (rw,noatime,ihashsize=64433)
-tmpfs on /dev type tmpfs (rw,size=10M,mode=0755)
-
-These filesystems vary in size from 50G to 3.5T
-
-The XFS filesystems contain rsync copies of filesystems on as many servers.
-The workload that triggers the problem is when all the servers start
-updating their copy via rsync - Then within a few hours the problem
-triggers.
-
-So to recreate the same scenario you'll want 28 servers doing rsync of
-filesystems of various sizes between 50G & 3.5T to a central server
-running 2.6.18-rc4 with 28 XFS filesystems.
-The XFS filesystems are on LVM and each physical volume is made up of
-two disks in a RAID1.
+You are using a partition. Is it correctly aligned? Usually the first
+partition starts at sector 63. Which is in the middle of your stripe.
+Use the whole disk (/dev/sda) or align the start of the partition to a
+multiple of the stripe size.
+But i doubt you will see a performance improvement with such a simple
+test (single threaded sequential read/ write).
 
 
->  Something with
-> a bunch of renames in it, obviously, but I'd also like to be able to
-> reproduce locally with the exact data set (file names in particular),
-> if at all possible.
->
-There are millions of files. The data the server recievs is copies of
-websites. Each server that sends data to the server with the 28 XFS
-filesystems hosts between 1800 and 2600 websites, so there are lots of
-files and every concievable strange filename.
+utz=20
 
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+On Fri, 2006-08-11 at 23:10 -0400, Brian Davis wrote:
+> Is this expected? I thought I would see more improvement when tweaking=20
+> my su/sw values for hardware RAID 5.
+>=20
+> Details, 3x300GB drives, 3Ware 7506-4LP Hardware RAID 5 using a 64K=20
+> stripe size (non-configurable on this card).
+>=20
+> FS creation and Bonnie++ results:
+>=20
+> Untweaked:---------------------------------------------------------------=
+-------=20
+>=20
+>=20
+> localhost / # mkfs.xfs -f /dev/sda1
+> meta-data=3D/dev/sda1              isize=3D256    agcount=3D32, agsize=3D=
+4578999=20
+> blks
+>         =3D                       sectsz=3D512   attr=3D0
+> data     =3D                       bsize=3D4096   blocks=3D146527968, ima=
+xpct=3D25
+>         =3D                       sunit=3D0      swidth=3D0 blks, unwritt=
+en=3D1
+> naming   =3Dversion 2              bsize=3D4096
+> log      =3Dinternal log           bsize=3D4096   blocks=3D32768, version=
+=3D1
+>         =3D                       sectsz=3D512   sunit=3D0 blks
+> realtime =3Dnone                   extsz=3D65536  blocks=3D0, rtextents=
+=3D0
+> localhost / # mount -t xfs /dev/sda1 /raid
+> localhost / # cd /raid
+> localhost raid # bonnie++ -n0 -u0 -r 768 -s 30720 -b -f
+> Using uid:0, gid:0.
+> Writing intelligently...done
+> Rewriting...done
+> Reading intelligently...done
+> start 'em...done...done...done...done...done...
+> Version 1.93c       ------Sequential Output------ --Sequential Input-=20
+> --Random-
+> Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--=20
+> --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP=20=
+=20
+> /sec %CP
+> localhost       30G           27722  40 23847  37           98367  99=20=
+=20
+> 88.6  11
+> Latency                         891ms     693ms             16968us=20=20=
+=20=20=20
+> 334ms
+>=20
+> Tweaked:-----------------------------------------------------------------=
+--------=20
+>=20
+>=20
+> localhost / # mkfs.xfs -f -d sw=3D2,su=3D64k /dev/sda1
+> meta-data=3D/dev/sda1              isize=3D256    agcount=3D32, agsize=3D=
+4578992=20
+> blks
+>         =3D                       sectsz=3D512   attr=3D0
+> data     =3D                       bsize=3D4096   blocks=3D146527744, ima=
+xpct=3D25
+>         =3D                       sunit=3D16     swidth=3D32 blks, unwrit=
+ten=3D1
+> naming   =3Dversion 2              bsize=3D4096
+> log      =3Dinternal log           bsize=3D4096   blocks=3D32768, version=
+=3D1
+>         =3D                       sectsz=3D512   sunit=3D0 blks
+> realtime =3Dnone                   extsz=3D65536  blocks=3D0, rtextents=
+=3D0
+> localhost / # mount -t xfs /dev/sda1 /raid
+> localhost / # cd /raid
+> localhost raid # bonnie++ -n0 -u0 -r 768 -s 30720 -b -f
+> Using uid:0, gid:0.
+> Writing intelligently...done
+> Rewriting...done
+> Reading intelligently...done
+> start 'em...done...done...done...done...done...
+> Version 1.93c       ------Sequential Output------ --Sequential Input-=20
+> --Random-
+> Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--=20
+> --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP=20=
+=20
+> /sec %CP
+> localhost       30G           27938  43 23880  40           98066  99=20=
+=20
+> 91.8   9
+> Latency                         772ms     584ms             19889us=20=20=
+=20=20=20
+> 340ms
+>=20
+--=20
+    <>        utz lehmann
+  <>  <>      u.lehmann@de.tecosim.com
+<>  <>  <>    TECOSIM GmbH / IT
+  <>  <>      +49(0)-6142-82720
+    <>        http://www.tecosim.com/
+
+
+--=-fuAbNIqoNHd6p7/e6F08
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBE4DmW7OmPIkYy5+4RAsUpAKCAhrRtilHrKspv9qaSKCvKL6SwcQCfUig2
+TGU7L3/8iIytRMflps/Ukoc=
+=txA+
+-----END PGP SIGNATURE-----
+
+--=-fuAbNIqoNHd6p7/e6F08--
