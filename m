@@ -1,45 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Aug 2006 08:56:26 -0700 (PDT)
-Received: from mx.wurtel.net (xs.wurtel.net [83.68.3.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7EFuEDW032764
-	for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 08:56:14 -0700
-Received: from wurtel ([192.168.1.1] helo=wurtel-ws.wurtel.net)
-	by mx.wurtel.net with esmtp (Exim 3.36 #1 (Debian))
-	id 1GCemm-00079Z-00
-	for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 17:55:28 +0200
-Received: from paul by wurtel-ws.wurtel.net with local (Exim 4.62)
-	(envelope-from <paul@wurtel-ws.wurtel.net>)
-	id 1GCeml-0002oi-Q7
-	for xfs@oss.sgi.com; Mon, 14 Aug 2006 17:55:27 +0200
-Date: Mon, 14 Aug 2006 17:55:27 +0200
-From: Paul Slootman <paul@wurtel.net>
-Subject: Re: cache_purge: shake on cache 0x5880a0 left 8 nodes!?
-Message-ID: <20060814155527.GA10314@wurtel.net>
-References: <20060810164222.GA16332@wurtel.net> <20060814145927.GA28940@tuatara.stupidest.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Aug 2006 09:59:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7EGxIDW015781
+	for <xfs@oss.sgi.com>; Mon, 14 Aug 2006 09:59:20 -0700
+Message-ID: <44E09E06.9020400@sandeen.net>
+Date: Mon, 14 Aug 2006 11:00:06 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060814145927.GA28940@tuatara.stupidest.org>
+Subject: Re: review: cleanup xfs_da_node_lookup_int (was Re: [PATCH] XFS:
+ possibly uninitialized variable use in fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int())
+References: <200608122334.21901.jesper.juhl@gmail.com> <44DE9B86.90006@sandeen.net> <20060814155609.G2698880@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060814155609.G2698880@wobbly.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: Jesper Juhl <jesper.juhl@gmail.com>, xfs@oss.sgi.com
 
-On Mon 14 Aug 2006, Chris Wedgwood wrote:
-> On Thu, Aug 10, 2006 at 06:42:22PM +0200, Paul Slootman wrote:
+Nathan Scott wrote:
+> On Sat, Aug 12, 2006 at 10:24:54PM -0500, Eric Sandeen wrote:
+>> ...
+>> FWIW seems like there's a lot of unnecessary endian flipping in there too; I 
+>> haven't tested this but since it endian-flips the magic into blk->magic seems 
+>> like it may as well use it:
 > 
-> > empty data block 10 in directory inode 1343747104: junking block
-> > empty data block 11 in directory inode 1343747104: junking block
-> > empty data block 12 in directory inode 1343747104: junking block
-> > free block 16777216 entry 10 for directory ino 1343747104 bad
-> > rebuilding directory inode 1343747104
-> 
-> do subsequent xfs_repair runs go silent?  if not then you've probably
-> hit a case where it's leaving something icky behind and you have to
-> manually poke it using xfs_db (i had this myself)
+> How's this look?
 
-No, these particular messages didn't reoccur, although I've been having
-a lot of trouble with that filesystem (see my other message today).
+Looks good to me.
 
+(now that I look closer & grok that there are 2 loops in that function 
+and the break is in the nested one... oops!)
 
-Paul Slootman
+-Eric
