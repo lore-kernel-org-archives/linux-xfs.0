@@ -1,152 +1,127 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Aug 2006 20:01:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Aug 2006 22:57:50 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7E30YDW022513
-	for <xfs@oss.sgi.com>; Sun, 13 Aug 2006 20:00:46 -0700
-Date: Mon, 14 Aug 2006 12:59:02 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] xfs: i_state of inode is changed after the inode is freed
-Message-ID: <20060814025901.GE51703024@melbourne.sgi.com>
-References: <20060717140751.GW2114946@melbourne.sgi.com> <20060724170133m-saito@mail.aom.tnes.nec.co.jp>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7E5v8DW011369
+	for <xfs@oss.sgi.com>; Sun, 13 Aug 2006 22:57:19 -0700
+Date: Mon, 14 Aug 2006 15:56:09 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: review: cleanup xfs_da_node_lookup_int (was Re: [PATCH] XFS: possibly uninitialized variable use in fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int())
+Message-ID: <20060814155609.G2698880@wobbly.melbourne.sgi.com>
+References: <200608122334.21901.jesper.juhl@gmail.com> <44DE9B86.90006@sandeen.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060724170133m-saito@mail.aom.tnes.nec.co.jp>
+In-Reply-To: <44DE9B86.90006@sandeen.net>; from sandeen@sandeen.net on Sat, Aug 12, 2006 at 10:24:54PM -0500
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Cc: Nathan Scott <nathans@sgi.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jesper Juhl <jesper.juhl@gmail.com>, xfs@oss.sgi.com
 
-Masayuki,
+On Sat, Aug 12, 2006 at 10:24:54PM -0500, Eric Sandeen wrote:
+> ...
+> FWIW seems like there's a lot of unnecessary endian flipping in there too; I 
+> haven't tested this but since it endian-flips the magic into blk->magic seems 
+> like it may as well use it:
 
-Sorry for taking so long to get back to you - travelling and vacation
-left a mountain of email for me to delete :/
+How's this look?
 
-On Mon, Jul 24, 2006 at 05:01:33PM +0900, Masayuki Saito wrote:
-> >I think a fix is going to be much more invasive than just adding
-> >reference as my fixes appear to have only narrowed the race window
-> >and not solved it. The addition of the lock in the original patch
-> >solves the atomic xfs_iunpin()/xfs_reclaim() execution problem,
-> >but it does not solve the problems with the i_flags field. Adding
-> >a new lock may be our only option here.
-> 
-> I'm considering the solution which fixes two problems([a] i_state of
-> the inode is changed while the inode is freed in xfs filesystem and
-> [b] the above i_flags problem)
-> 
-> the solution:
-> (1)Add new spin_lock(i_flags_lock) for all refernece and change
->    places of all i_flags.
-> (2)Add igrab()/iput() for xfs_iunpin().
-> 
-> It makes sure that mark_inode_dirty_sync() is never called if
-> xfs_iunpin() runs after I_CLEAR is set.  Because XFS_IRECLAIM
-> or XFS_IRECLAIMABLE is set/checked within the spin_lock.
+thanks.
 
-*nod*
+--
+Nathan
 
-> And there is the reason that igrab()/iput() is needed even if I add
-> new spin_lock for xfs_iunpin().  We can prevent the following case
-> by adding them.
-> * After passing (I_NEW|I_FREEING|I_CLEAR) check in xfs_iunpin(),
->   I_FREEING is set.
-> * Then mark_inode_dirty_sync() is called and i_state is changed.
-> * Hit BUG_ON(!(inode->i_state & I_FREEING)) in clear_inode().
 
-*nod*
-
-> If these ideas seem to be correct, I'll make patches for above (1),(2).
-> Any comment?
-> 
-> 
-> (The following is a part of my thinking patch.  Only xfs_iunpin().)
-> 
-> --- linux-2.6.17.6/fs/xfs/xfs_inode.c.orig	2006-07-22 08:07:50.194236144 +0900
-> +++ linux-2.6.17.6/fs/xfs/xfs_inode.c	2006-07-25 06:07:18.062853045 +0900
-> @@ -2729,6 +2729,8 @@ void
->  xfs_iunpin(
->  	xfs_inode_t	*ip)
->  {
-> +	int need_unlock;
-> +
->  	ASSERT(atomic_read(&ip->i_pincount) > 0);
->  
->  	if (atomic_dec_and_test(&ip->i_pincount)) {
-> @@ -2744,6 +2746,8 @@ xfs_iunpin(
->  		 * call as the inode reclaim may be blocked waiting for
->  		 * the inode to become unpinned.
->  		 */
-> +		spin_lock(&ip->i_flags_lock);
-> +		need_unlock = 1;
->  		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
->  			vnode_t	*vp = XFS_ITOV_NULL(ip);
->  
-> @@ -2751,10 +2755,22 @@ xfs_iunpin(
->  			if (vp) {
->  				struct inode	*inode = vn_to_inode(vp);
->  
-> -				if (!(inode->i_state & I_NEW))
-> -					mark_inode_dirty_sync(inode);
-> +				if (!(inode->i_state &
-> +						(I_NEW|I_FREEING|I_CLEAR))) {
-> +					inode = igrab(inode);
-> +					if (inode != NULL) {
-> +						mark_inode_dirty_sync(inode);
-> +						spin_unlock(&ip->i_flags_lock);
-> +						need_unlock = 0;
-> +						iput(inode);
-> +					}
-> +				}
->  			}
->  		}
-> +		if (need_unlock) {
-> +			spin_unlock(&ip->i_flags_lock);
-> +			need_unlock = 0;
-> +		}
->  		wake_up(&ip->i_ipin_wait);
->  	}
->  }
-
-Hmmm - Idon't think we should iput() before we wake up any pinned waiters.
-When we have a waiter on i_ipin_wait (called from xfs_iflush()), we have
-a thread sleeping with the inode locked.
-
-If we then call iput() and it drops the last reference, we can call back
-into the filesystem and start transactions. Those transactions will need
-to lock the inode. Hence I think the above can deadlock when racing against
-an inode flush. 
-
-The code should probably read:
-
-	if (dropped last pincount) {
-		int need_iput = 0;
-		struct inode *inode;
-
-		spin_lock(i_flags_lock)
-		if (!reclaimable) {
-			if (!vp) {
-				if (!(i_state & (NEW|CLEAR))) {
-					inode = igrab(inode)
-					if (inode) {
-						need_iput = 1	
-						mark_inode_dirty_sync(inode)
-					}
-				}
-			}
-		}
-		spin_unlock(i_flags_lock)
-		wake_up(&ip->i_ipin_wait)
-		if (need_iput)
-			iput(inode);
-	}
-
-to avoid this possible deadlock.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Index: xfs-linux/xfs_da_btree.c
+===================================================================
+--- xfs-linux.orig/xfs_da_btree.c	2006-08-14 15:34:20.623194000 +1000
++++ xfs-linux/xfs_da_btree.c	2006-08-14 15:42:07.198743750 +1000
+@@ -1054,7 +1054,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 	xfs_da_node_entry_t *btree;
+ 	xfs_dablk_t blkno;
+ 	int probe, span, max, error, retval;
+-	xfs_dahash_t hashval;
++	xfs_dahash_t hashval, btreehashval;
+ 	xfs_da_args_t *args;
+ 
+ 	args = state->args;
+@@ -1079,30 +1079,32 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 			return(error);
+ 		}
+ 		curr = blk->bp->data;
+-		ASSERT(be16_to_cpu(curr->magic) == XFS_DA_NODE_MAGIC ||
+-		       be16_to_cpu(curr->magic) == XFS_DIR2_LEAFN_MAGIC ||
+-		       be16_to_cpu(curr->magic) == XFS_ATTR_LEAF_MAGIC);
++		blk->magic = be16_to_cpu(curr->magic);
++		ASSERT(blk->magic == XFS_DA_NODE_MAGIC ||
++		       blk->magic == XFS_DIR2_LEAFN_MAGIC ||
++		       blk->magic == XFS_ATTR_LEAF_MAGIC);
+ 
+ 		/*
+ 		 * Search an intermediate node for a match.
+ 		 */
+-		blk->magic = be16_to_cpu(curr->magic);
+ 		if (blk->magic == XFS_DA_NODE_MAGIC) {
+ 			node = blk->bp->data;
+-			blk->hashval = be32_to_cpu(node->btree[be16_to_cpu(node->hdr.count)-1].hashval);
++			max = be16_to_cpu(node->hdr.count);
++			btreehashval = node->btree[max-1].hashval;
++			blk->hashval = be32_to_cpu(btreehashval);
+ 
+ 			/*
+ 			 * Binary search.  (note: small blocks will skip loop)
+ 			 */
+-			max = be16_to_cpu(node->hdr.count);
+ 			probe = span = max / 2;
+ 			hashval = args->hashval;
+ 			for (btree = &node->btree[probe]; span > 4;
+ 				   btree = &node->btree[probe]) {
+ 				span /= 2;
+-				if (be32_to_cpu(btree->hashval) < hashval)
++				btreehashval = be32_to_cpu(btree->hashval);
++				if (btreehashval < hashval)
+ 					probe += span;
+-				else if (be32_to_cpu(btree->hashval) > hashval)
++				else if (btreehashval > hashval)
+ 					probe -= span;
+ 				else
+ 					break;
+@@ -1133,10 +1135,10 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 				blk->index = probe;
+ 				blkno = be32_to_cpu(btree->before);
+ 			}
+-		} else if (be16_to_cpu(curr->magic) == XFS_ATTR_LEAF_MAGIC) {
++		} else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+ 			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
+ 			break;
+-		} else if (be16_to_cpu(curr->magic) == XFS_DIR2_LEAFN_MAGIC) {
++		} else if (blk->magic == XFS_DIR2_LEAFN_MAGIC) {
+ 			blk->hashval = xfs_dir2_leafn_lasthash(blk->bp, NULL);
+ 			break;
+ 		}
+@@ -1152,11 +1154,13 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 		if (blk->magic == XFS_DIR2_LEAFN_MAGIC) {
+ 			retval = xfs_dir2_leafn_lookup_int(blk->bp, args,
+ 							&blk->index, state);
+-		}
+-		else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
++		} else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+ 			retval = xfs_attr_leaf_lookup_int(blk->bp, args);
+ 			blk->index = args->index;
+ 			args->blkno = blk->blkno;
++		} else {
++			ASSERT(0);
++			return XFS_ERROR(EFSCORRUPTED);
+ 		}
+ 		if (((retval == ENOENT) || (retval == ENOATTR)) &&
+ 		    (blk->hashval == args->hashval)) {
+@@ -1166,8 +1170,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+ 				return(error);
+ 			if (retval == 0) {
+ 				continue;
+-			}
+-			else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
++			} else if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+ 				/* path_shift() gives ENOENT */
+ 				retval = XFS_ERROR(ENOATTR);
+ 			}
