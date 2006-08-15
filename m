@@ -1,91 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Aug 2006 04:43:23 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.190])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7FBgwDW004119
-	for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 04:43:00 -0700
-Received: by nf-out-0910.google.com with SMTP id p46so301611nfa
-        for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 04:42:27 -0700 (PDT)
-Message-ID: <9a8748490608150442q4ad7a835r53400e9880da3175@mail.gmail.com>
-Date: Tue, 15 Aug 2006 13:42:27 +0200
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: 2.6.18-rc3-git3 - XFS - BUG: unable to handle kernel NULL pointer dereference at virtual address 00000078
-In-Reply-To: <20060815190343.A2743401@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Aug 2006 04:55:49 -0700 (PDT)
+Received: from mx.wurtel.net (xs.wurtel.net [83.68.3.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7FBtYDW006683
+	for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 04:55:39 -0700
+Received: from wurtel ([192.168.1.1] helo=wurtel-ws.wurtel.net)
+	by mx.wurtel.net with esmtp (Exim 3.36 #1 (Debian))
+	id 1GCxVK-00086K-00
+	for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 13:54:42 +0200
+Received: from paul by wurtel-ws.wurtel.net with local (Exim 4.62)
+	(envelope-from <paul@wurtel-ws.wurtel.net>)
+	id 1GCxVK-0002PP-FZ
+	for xfs@oss.sgi.com; Tue, 15 Aug 2006 13:54:42 +0200
+Date: Tue, 15 Aug 2006 13:54:42 +0200
+From: Paul Slootman <paul@wurtel.net>
+Subject: Re: XFS internal error XFS_WANT_CORRUPTED_GOTO
+Message-ID: <20060815115442.GA9248@wurtel.net>
+References: <20060810164222.GA16332@wurtel.net> <200608110125.LAA18091@larry.melbourne.sgi.com> <20060811090218.GB22934@wurtel.net> <20060812091451.GA16661@wurtel.net> <20060814141731.GA9098@wurtel.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <9a8748490608080137k596a6290r3567096668449a64@mail.gmail.com>
-	 <9a8748490608100431m244207b1v9c9c5087233fcf3a@mail.gmail.com>
-	 <20060811083546.B2596458@wobbly.melbourne.sgi.com>
-	 <9a8748490608101544n29f863e7o7584ac64f1d4c210@mail.gmail.com>
-	 <9a8748490608101552w12822fa6m415a5fb5537c744d@mail.gmail.com>
-	 <9a8748490608110133v5f973cf6w1af340f59bb229ec@mail.gmail.com>
-	 <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>
-	 <20060814120032.E2698880@wobbly.melbourne.sgi.com>
-	 <9a8748490608140049t492742cx7f826a9f40835d71@mail.gmail.com>
-	 <20060815190343.A2743401@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060814141731.GA9098@wurtel.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 15/08/06, Nathan Scott <nathans@sgi.com> wrote:
-> On Mon, Aug 14, 2006 at 09:49:10AM +0200, Jesper Juhl wrote:
-> > On 14/08/06, Nathan Scott <nathans@sgi.com> wrote:
-> > > > LEAFN node level is 1 inode 412035424 bno = 8388608
-> > >
-> > > Ooh.  Can you describe this test case you're using?
-> > ...
-> > These filesystems vary in size from 50G to 3.5T
-> >
-> > The XFS filesystems contain rsync copies of filesystems on as many servers.
-> > The workload that triggers the problem is when all the servers start
-> > updating their copy via rsync - Then within a few hours the problem
-> > triggers.
-> >
-> > So to recreate the same scenario you'll want 28 servers doing rsync of
-> > filesystems of various sizes between 50G & 3.5T to a central server
-> > running 2.6.18-rc4 with 28 XFS filesystems.
-> > ...
-> > There are millions of files. The data the server recievs is copies of
-> > websites. Each server that sends data to the server with the 28 XFS
-> > filesystems hosts between 1800 and 2600 websites, so there are lots of
-> > files and every concievable strange filename.
->
-> Wow, a special kind of hell for a filesystem developer...! ;-)
->
-> Its not clear to me where the rename operation happens in all of
-> this - does rsync create a local, temporary copy of the file and
-> then rename it?
+On Mon 14 Aug 2006, Paul Slootman wrote:
+> 
+> kernel: 2.6.17.7 x86_64
+> xfstools: 2.8.11 from CVS last week
+> 
+> I'm now running the "standard" debian xfs_repair (version 2.6.20) for kicks,
+> as the 2.8.11 version didn't really seem to help much. I'm now getting
+> plenty of these errors:
+[snip]
 
-I'm not sure. I'll investigate and see if I can work out what exactely
-rsync does.
+After all that, again, tonight:
 
-> Is it that central server going down or one of
-> those 28 other server machines?  (I assume it is, I can't see an
-> opportunity for renaming out there...).
->
-It's the central server with all the xfs filesystems that dies. The
-one recieving all the rsync data.
+Aug 15 01:11:57 boes kernel: Filesystem "md6": XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff880577d3
+Aug 15 01:11:57 boes kernel: 
+Aug 15 01:11:57 boes kernel: Call Trace: <ffffffff880501d0>{:xfs:xfs_trans_cancel+96}
+Aug 15 01:11:57 boes kernel:        <ffffffff880577d3>{:xfs:xfs_create+1587} <ffffffff88062381>{:xfs:xfs_vn_mknod+433}
+Aug 15 01:11:57 boes kernel:        <ffffffff8805076c>{:xfs:xfs_trans_unlocked_item+44}
+Aug 15 01:11:57 boes kernel:        <ffffffff8805e1ae>{:xfs:xfs_buf_rele+62} <ffffffff880260f1>{:xfs:xfs_da_brelse+129}
+Aug 15 01:11:57 boes kernel:        <ffffffff8802c24b>{:xfs:xfs_dir2_leaf_lookup_int+555}
+Aug 15 01:11:57 boes kernel:        <ffffffff8802bf93>{:xfs:xfs_dir2_leaf_lookup+35} <ffffffff8802842f>{:xfs:xfs_dir2_isleaf+31}
+Aug 15 01:11:57 boes kernel:        <ffffffff88027b9f>{:xfs:xfs_dir2_lookup+255} <ffffffff802892ef>{link_path_walk+415}
+Aug 15 01:11:57 boes kernel:        <ffffffff880560aa>{:xfs:xfs_access+74} <ffffffff80289e9e>{vfs_create+142}
+Aug 15 01:11:57 boes kernel:        <ffffffff8028a22f>{open_namei+383} <ffffffff80278ff7>{do_filp_open+39}
+Aug 15 01:11:57 boes kernel:        <ffffffff80279211>{get_unused_fd+113} <ffffffff80279406>{do_sys_open+70}
+Aug 15 01:11:57 boes kernel:        <ffffffff80209b5a>{system_call+126}
+Aug 15 01:11:57 boes kernel: xfs_force_shutdown(md6,0x8) called from line 1151 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff88065ba8
+Aug 15 01:11:57 boes kernel: Filesystem "md6": Corruption of in-memory data detected.  Shutting down filesystem: md6
+Aug 15 01:11:57 boes kernel: Please umount the filesystem, and rectify the problem(s)
 
 
-> When you hit it again, could you grab the contents of the inode
-> (you'll get that from xfs_repair -n, e.g. 412035424 above) with
-> xfs_db (see last entry in the XFS FAQ which describes how to do
-> that), then mail that to me please?
+The only thing the (2.8.11) xfs_repair reported was, in phase 3:
 
-Sure, I'll read up on that and make sure to grab that info next time.
+    data fork in ino 2995825682 claims free block 251664817
 
 
-> If you can get the source
-> and target names in the rename that'll help alot too... I can
-> explain how to use KDB to get that, but maybe you have another
-> debugger handy already?
->
-An explanation of how exactely to do that would be greatly appreciated.
-
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+Paul Slootman
