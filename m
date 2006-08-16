@@ -1,68 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 12:02:29 -0700 (PDT)
-Received: from 217-133-29-81.b2b.tiscali.it (217-133-29-81.b2b.tiscali.it [217.133.29.81])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7GJ2HDW017941
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 12:02:17 -0700
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by 217-133-29-81.b2b.tiscali.it (Postfix) with ESMTP id 398318012F
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 20:06:11 +0200 (CEST)
-Received: from 217-133-29-81.b2b.tiscali.it ([127.0.0.1])
-	by localhost (solstizio.toel.it [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 18308-09 for <xfs@oss.sgi.com>;
-	Wed, 16 Aug 2006 20:06:08 +0200 (CEST)
-Received: from [10.0.11.232] (unknown [10.0.2.114])
-	by 217-133-29-81.b2b.tiscali.it (Postfix) with ESMTP id 42AA08012E
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 20:06:08 +0200 (CEST)
-From: "Daniele P." <daniele@interline.it>
-Subject: Re: xfsdump -s unacceptable performances
-Date: Wed, 16 Aug 2006 20:05:39 +0200
-References: <200608161515.00543.daniele@interline.it> <44E349EE.6080905@sgi.com>
-In-Reply-To: <44E349EE.6080905@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 14:06:53 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.187])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7GL6TDW009715
+	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 14:06:30 -0700
+Received: by nf-out-0910.google.com with SMTP id a25so845756nfc
+        for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 14:05:59 -0700 (PDT)
+Message-ID: <9a8748490608161405s4c4ad5f5l405c6d5a7d56396@mail.gmail.com>
+Date: Wed, 16 Aug 2006 23:05:59 +0200
+From: "Jesper Juhl" <jesper.juhl@gmail.com>
+Subject: Re: review: cleanup xfs_da_node_lookup_int (was Re: [PATCH] XFS: possibly uninitialized variable use in fs/xfs/xfs_da_btree.c::xfs_da_node_lookup_int())
+In-Reply-To: <20060814155609.G2698880@wobbly.melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200608162005.40112.daniele@interline.it>
+References: <200608122334.21901.jesper.juhl@gmail.com>
+	 <44DE9B86.90006@sandeen.net>
+	 <20060814155609.G2698880@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wednesday 16 August 2006 18:38, Bill Kendall wrote:
-
-Hi Bill,
-Thanks for the explanations. I only have had a glimpse into the sources.
-
-> And of course there's another scan for dumping the non-dir inodes.
-> Keep in mind these are inode scans, which are substantially faster
-> than recursing through the directories doing individual stat(2) calls.
-
-Yes, but scanning 10.000.000 inodes when you really need to scan only 4 it's
-really a waste of resource.
-This is a corner case. But usually I want to backup only 10% of the entire
-filesystem.
-At this point I have to redesign my backup strategy taking care of
-xfsdump strength and weakness.
-
-> Nonetheless, these scans could be optimized by seeking the scan to
-> the next inode of interest, which could be found using xfsdump's inomap
-> (created in the first scan). This would be beneficial to -s and
-> incremental dumps.
-
-That's interesting.
-
-> > Are all there scan really necessary?
+On 14/08/06, Nathan Scott <nathans@sgi.com> wrote:
+> On Sat, Aug 12, 2006 at 10:24:54PM -0500, Eric Sandeen wrote:
+> > ...
+> > FWIW seems like there's a lot of unnecessary endian flipping in there too; I
+> > haven't tested this but since it endian-flips the magic into blk->magic seems
+> > like it may as well use it:
 >
-> A lot of this stuff could be done in a single scan in a disk-to-disk
-> backup approach. But in the current scheme, they are necessary.
+> How's this look?
 >
-> > Could we expect a performance fix?
-> > Is there a workaround?
->
-> Nothing is planned, but patches are always welcome.
+As far as I can see it looks good, but I'm still just starting to read
+the XFS code, so I'm far from reliable yet  ;-)
 
-This too, but for me the xfs filesystem it's a big black box.
-
-Thanks again,
-Daniele
+-- 
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
