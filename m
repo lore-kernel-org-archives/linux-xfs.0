@@ -1,48 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Aug 2006 15:15:08 -0700 (PDT)
-Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.183])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7FMEtDW004688
-	for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 15:14:55 -0700
-Received: by py-out-1112.google.com with SMTP id c39so1947965pyd
-        for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 15:14:24 -0700 (PDT)
-Message-ID: <83d59530608151514m288edcf1te3268b413b94dd2a@mail.gmail.com>
-Date: Tue, 15 Aug 2006 23:14:23 +0100
-From: "Jeff Briggs" <ephemeral.elusive@gmail.com>
-Subject: Re: XFS null files
-In-Reply-To: <44D66BBF.8010107@thebarn.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Aug 2006 17:13:02 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7G0CIDW026231
+	for <xfs@oss.sgi.com>; Tue, 15 Aug 2006 17:12:30 -0700
+Date: Wed, 16 Aug 2006 10:11:22 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: kernel BUG at <bad filename>:50307!
+Message-ID: <20060816101122.E2740551@wobbly.melbourne.sgi.com>
+References: <44E1D9CA.30805@uni-hd.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <83d59530608061232r21feab01j456c7d1fec742958@mail.gmail.com>
-	 <44D66BBF.8010107@thebarn.com>
+In-Reply-To: <44E1D9CA.30805@uni-hd.de>; from mbraun@uni-hd.de on Tue, Aug 15, 2006 at 04:27:22PM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: xfs@oss.sgi.com
+To: Martin Braun <mbraun@uni-hd.de>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 06/08/06, Russell Cattelan <cattelan@thebarn.com> wrote:
-> Check to see if you have this change
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=1.675;r2=1.676;f=h
->
-> I helps reduce the null file problem.
+Hi Martin,
 
-i do not.
+On Tue, Aug 15, 2006 at 04:27:22PM +0200, Martin Braun wrote:
+> ...
+> What does this bug mean?
+> ...
+> Aug 15 15:01:02 pers109 kernel: Access to block zero: fs: <sdc1> inode:
+> 254474718 start_block : 0 start_off : c0a0b0e8a099
+> 0 blkcnt : 90000 extent-state : 0
+> Aug 15 15:01:02 pers109 kernel: ------------[ cut here ]------------
+> Aug 15 15:01:02 pers109 kernel: kernel BUG at <bad filename>:50307!
 
-> > emacs claims to fsync on write, yet still I lost data, the faq
-> > suggests I should not have if this is so?
-> >
-> > Is this likely to be fixed soon, or should I switch file system?
->
-> Any caching file system could potentially loose data, XFS just happens to
-> get the file size correct so you end up with a file that is nothing but a
-> hole. Other file system would probably just give you an empty file.
-> Either way data in cache always has the potential for being lost.
-> Running xfs in full sync mode would be safest but you loose many performance
-> advantages... so it always a trade off of performance vs data integrity.
+It means XFS detected ondisk corruption in inode# 254474718, and
+paniced your system (stupidly; a fix for this is around, will be
+merged with the next mainline update).  For me, a more interesting
+question is how that inode got into this state... have you had any
+crashes recently (i.e. has the filesystem journal needed to be
+replayed recently?)  Can you send the output of:
 
-it's really ugly how the default is not safe. i didn't have my write
-cache disabled, but it is now.
+	# xfs_db -c 'inode 254474718' -c print /dev/sdc1
 
-thanks for the responses.
+You'll need to run xfs_repair on that filesystem to fix this up,
+but please send us that output first.
+
+thanks.
+
+-- 
+Nathan
