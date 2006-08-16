@@ -1,37 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 16:43:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 16:47:16 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7GNh5DW001189
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 16:43:16 -0700
-Date: Thu, 17 Aug 2006 09:42:15 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7GNkbDW001877
+	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 16:46:50 -0700
+Date: Thu, 17 Aug 2006 09:45:42 +1000
 From: Nathan Scott <nathans@sgi.com>
-Subject: Re: xfs for Oracle
-Message-ID: <20060817094215.C2787212@wobbly.melbourne.sgi.com>
-References: <91EDB00F83BAD443A9D05FA67623955A0154C169@QMAIL.corp.questar.com>
+Subject: Re: review: fsblock zero - don't panic
+Message-ID: <20060817094542.D2787212@wobbly.melbourne.sgi.com>
+References: <20060810155851.C2591606@wobbly.melbourne.sgi.com> <20060811032626.GF50254148@melbourne.sgi.com> <20060816142800.D2762042@wobbly.melbourne.sgi.com> <1155713014.7103.345.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <91EDB00F83BAD443A9D05FA67623955A0154C169@QMAIL.corp.questar.com>; from Jeffrey.Bryson@questar.com on Wed, Aug 16, 2006 at 04:14:37PM -0600
+In-Reply-To: <1155713014.7103.345.camel@localhost.localdomain>; from stewart@flamingspork.com on Wed, Aug 16, 2006 at 03:23:33PM +0800
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jeffrey Bryson <Jeffrey.Bryson@questar.com>
-Cc: xfs@oss.sgi.com
+To: Stewart Smith <stewart@flamingspork.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Wed, Aug 16, 2006 at 04:14:37PM -0600, Jeffrey Bryson wrote:
-> We are debating which filesystem to use with Oracle on Suse9 or Suse10.
-> We are not using RAC.  We found this statement in Metalink:
->  
-> Please refer to the link below that indicates that the recommended file
-> systems are Oracle Automatic Storage Management (ASM), ext3 (with
-> O_SYNC), NFS, OCFS, ReiserFS, and raw. XFS is not supported.
->  
-> We were going with XFS until we found the above statement by Oracle.
-> Why is XFS not supported by Oracle and
-> will XFS be supported any time soon?
+On Wed, Aug 16, 2006 at 03:23:33PM +0800, Stewart Smith wrote:
+> On Wed, 2006-08-16 at 14:28 +1000, Nathan Scott wrote:
+> > +		error = EFSCORRUPTED;
+> 
+> should this be XFS_ERROR(EFSCORRUPTED) ?
 
-You're asking the wrong people.  Let us know what their reason is
-though, if you manage to find out from them...
+*nod*, will do, thanks.
 
 cheers.
 
