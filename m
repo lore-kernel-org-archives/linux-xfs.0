@@ -1,32 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 16:47:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 18:34:43 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7GNkbDW001877
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 16:46:50 -0700
-Date: Thu, 17 Aug 2006 09:45:42 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: review: fsblock zero - don't panic
-Message-ID: <20060817094542.D2787212@wobbly.melbourne.sgi.com>
-References: <20060810155851.C2591606@wobbly.melbourne.sgi.com> <20060811032626.GF50254148@melbourne.sgi.com> <20060816142800.D2762042@wobbly.melbourne.sgi.com> <1155713014.7103.345.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1155713014.7103.345.camel@localhost.localdomain>; from stewart@flamingspork.com on Wed, Aug 16, 2006 at 03:23:33PM +0800
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7H1YFDW018676
+	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 18:34:28 -0700
+Message-ID: <44E3C6D5.2080704@sgi.com>
+Date: Thu, 17 Aug 2006 11:31:01 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfsdump -s unacceptable performances
+References: <200608161515.00543.daniele@interline.it> <44E32DE6.9090602@gmx.net> <200608162001.10342.daniele@interline.it>
+In-Reply-To: <200608162001.10342.daniele@interline.it>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stewart Smith <stewart@flamingspork.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: "Daniele P." <daniele@interline.it>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 16, 2006 at 03:23:33PM +0800, Stewart Smith wrote:
-> On Wed, 2006-08-16 at 14:28 +1000, Nathan Scott wrote:
-> > +		error = EFSCORRUPTED;
-> 
-> should this be XFS_ERROR(EFSCORRUPTED) ?
+Daniele P. wrote:
+> But xfsdump still doesn't scale down well with a small subtree on a
+> large filesystem.
 
-*nod*, will do, thanks.
+That is very true.
+It is really designed for dumping whole filesystems (or at least,
+large parts of them).
+For dumping small subtrees, I'd be looking at using something else.
+That was one of the 1st things I noticed when looking at the xfsdump
+code on IRIX a while back, was all the scans it does and how for a subtree
+it will do another scan and prune the data - i.e. implemented
+like an afterthought :)
+It is built around bulkstat which walks all the inodes which is great
+for dumping them all out.
+But if you want a small directory walk then you need something else IMHO.
 
-cheers.
-
--- 
-Nathan
+Cheers,
+--Tim
