@@ -1,53 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 23:36:59 -0700 (PDT)
-Received: from mail.rentalia.net (mail.rentalia.com [213.192.209.8])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7H6acDW004070
-	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 23:36:38 -0700
-Message-ID: <44E40E50.3070708@rentalia.com>
-Date: Thu, 17 Aug 2006 08:36:00 +0200
-From: Ruben Rubio <ruben@rentalia.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Aug 2006 23:59:05 -0700 (PDT)
+Received: from mail.interline.it (mail.interline.it [195.182.241.4])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7H6wnDW007897
+	for <xfs@oss.sgi.com>; Wed, 16 Aug 2006 23:58:50 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.interline.it (Postfix) with ESMTP id ACC618D8
+	for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 08:52:04 +0200 (CEST)
+Received: from mail.interline.it ([127.0.0.1])
+	by localhost (pin [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id 22051-23 for <xfs@oss.sgi.com>;
+	Thu, 17 Aug 2006 08:52:03 +0200 (CEST)
+Received: from [192.168.1.98] (unknown [88.36.237.170])
+	by mail.interline.it (Postfix) with ESMTP id EF8408C9
+	for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 08:52:02 +0200 (CEST)
+From: "Daniele P." <daniele@interline.it>
+Subject: Re: xfsdump -s unacceptable performances
+Date: Thu, 17 Aug 2006 08:58:11 +0200
+References: <200608161515.00543.daniele@interline.it> <200608162001.10342.daniele@interline.it> <44E3C6D5.2080704@sgi.com>
+In-Reply-To: <44E3C6D5.2080704@sgi.com>
 MIME-Version: 1.0
-Subject: Re: File problem question
-References: <44DC44FA.4060401@rentalia.com> <20060814103139.B2698880@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060814103139.B2698880@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200608170858.11697.daniele@interline.it>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thursday 17 August 2006 03:31, you wrote:
+> Daniele P. wrote:
+> > But xfsdump still doesn't scale down well with a small subtree on a
+> > large filesystem.
+>
+> That is very true.
+> It is really designed for dumping whole filesystems (or at least,
+> large parts of them).
+> For dumping small subtrees, I'd be looking at using something else.
 
-Nathan Scott wrote:
-> On Fri, Aug 11, 2006 at 10:51:06AM +0200, Ruben Rubio wrote:
->> root@rigodon log # pwd
->> /var/log
->> root@rigodon log # ls -al lastlog
->> - -r--------  1 root root 146292 ago 11 10:44 lastlog
->> root@rigodon log # du -sh * | grep lastlog
->> 7,6G    lastlog
-> 
-> what does "xfs_bmap -vp lastlog" say?
+Hi Timothy,
+Yes, you are right, but there is another problem on my side.
+The /small/ subtree of the filesystem usually contains a lot of hard 
+links (our backup software uses hard links to save disk space, so 
+expect one hard link per file per day) and using a generic tool like 
+tar/star or rsync that uses "stat" to scan the filesysem should be 
+significant slower (no test done) than a native tool like xfsdump, as 
+Bill in a previous email pointed out.
 
-root@rigodon log # xfs_bmap -vp lastlog
-lastlog:
- EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET        TOTAL
-   0: [0..279]:        hole                                     280
-   1: [280..287]:      64537592..64537599 15 (17552..17559)       8
+It seems that there isn't a right tool for this job.
 
-
-> 
-> cheers.
-> 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFE5A5QIo1XmbAXRboRApuuAKCEaMWm17e2YWJwbD/sL/aq88+S+wCgpHJi
-yFtYxP3wzm+7WS7H/Ci94tk=
-=k8IT
------END PGP SIGNATURE-----
+Regards,
+Daniele
