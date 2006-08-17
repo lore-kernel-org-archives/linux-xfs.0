@@ -1,82 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Aug 2006 07:16:57 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7HEGgDW019547
-	for <linux-xfs@OSS.SGI.com>; Thu, 17 Aug 2006 07:16:43 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1GDh0V-0000om-Re
-	for <linux-xfs@OSS.SGI.com>; Thu, 17 Aug 2006 13:29:55 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Aug 2006 14:24:38 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.191])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7HLOBDW004579
+	for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 14:24:13 -0700
+Received: by nf-out-0910.google.com with SMTP id a25so1194015nfc
+        for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 14:23:39 -0700 (PDT)
+Message-ID: <9a8748490608171423w3e5f7007nf92fad74637f0dd3@mail.gmail.com>
+Date: Thu, 17 Aug 2006 23:23:39 +0200
+From: "Jesper Juhl" <jesper.juhl@gmail.com>
+Subject: Re: 2.6.18-rc3-git3 - XFS - BUG: unable to handle kernel NULL pointer dereference at virtual address 00000078
+In-Reply-To: <20060816112630.C2756824@wobbly.melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <17636.24895.74010.977829@base.ty.sabi.co.UK>
-Date: Thu, 17 Aug 2006 13:29:51 +0100
-Subject: Re: xfsdump -s unacceptable performances
-In-Reply-To: <200608170858.11697.daniele@interline.it>
-References: <200608161515.00543.daniele@interline.it>
-	<200608162001.10342.daniele@interline.it>
-	<44E3C6D5.2080704@sgi.com>
-	<200608170858.11697.daniele@interline.it>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+References: <9a8748490608100431m244207b1v9c9c5087233fcf3a@mail.gmail.com>
+	 <9a8748490608101544n29f863e7o7584ac64f1d4c210@mail.gmail.com>
+	 <9a8748490608101552w12822fa6m415a5fb5537c744d@mail.gmail.com>
+	 <9a8748490608110133v5f973cf6w1af340f59bb229ec@mail.gmail.com>
+	 <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>
+	 <20060814120032.E2698880@wobbly.melbourne.sgi.com>
+	 <9a8748490608140049t492742cx7f826a9f40835d71@mail.gmail.com>
+	 <20060815190343.A2743401@wobbly.melbourne.sgi.com>
+	 <9a8748490608150442q4ad7a835r53400e9880da3175@mail.gmail.com>
+	 <20060816112630.C2756824@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: Nathan Scott <nathans@sgi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
->>> On Thu, 17 Aug 2006 08:58:11 +0200, "Daniele P." 
->>> <daniele@interline.it> said:
+On 16/08/06, Nathan Scott <nathans@sgi.com> wrote:
+> On Tue, Aug 15, 2006 at 01:42:27PM +0200, Jesper Juhl wrote:
+> > On 15/08/06, Nathan Scott <nathans@sgi.com> wrote:
+> > > If you can get the source
+> > > and target names in the rename that'll help alot too... I can
+> > > explain how to use KDB to get that, but maybe you have another
+> > > debugger handy already?
+> > >
+> > An explanation of how exactely to do that would be greatly appreciated.
+>
+> - patch in KDB
+> - echo 127 > /proc/sys/fs/xfs/panic_mask
+> [ filesystem shutdown now == panic ]
+> - kdb> bt
+> [ pick out parameters to rename from the backtrace ]
+> - kdb> md 0xXXX
+> [ gives a memory dump of the pointers to pathnames ]
+>
 
-[ ... ]
+Thanks a lot for the explanation.
 
-daniele> Hi Timothy, Yes, you are right, but there is another
-daniele> problem on my side. The /small/ subtree of the
-daniele> filesystem usually contains a lot of hard links (our
-daniele> backup software
+Unfortunately I didn't get a chance to run new tests on the server
+this week (always the big problem when it's a production machine).
+I'm also going on a short vacation, so I won't have the oppotunity to
+try and recreate a simpler test case at home for the next few days.
 
-Given the context, I would imagine that this backup filesystem
-is stored on a RAID5 device... Is it? It can be an important
-part of the strategy.
+When I get back (in some 4 days time) I'll try to build a more simple
+test case and in about a week or so I hopefully will get a new chance
+to run new tests on the server that has so far shown the problem.
+If there are additional tests you want me to run or data you want me
+to collect, then let me know and I'll do so the first chance I get.
 
-daniele> uses hard links to save disk space, so expect one hard
-daniele> link per file per day) and using a generic tool like
-daniele> tar/star or rsync that uses "stat" to scan the
-daniele> filesysem should be significant slower (no test done)
-daniele> than a native tool like xfsdump, as Bill in a previous
-daniele> email pointed out.
+I'll be back in touch in ~1 weeks time.
 
-Depends a lot, for example on whether the system has enough RAM
-to cache the inodes affected, and anyhow on the ratio between
-inodes in the subtree and inodes in the whole filesystem.
-
-As to this case:
-
-    deniale> Dumping one directory with 4 file using 4KB of
-    deniale> space takes hours (or days, it hasn't finished yet)
-    deniale> if the underlying filesystem contains around
-    deniale> 10.000.000 inodes.
-
-probably using 'tar'/'star' may be a bit faster...
-
-daniele> It seems that there isn't a right tool for this job.
-
-Or perhaps it is not the right job :-).
-
-Anyhow sequential scans of large filesystems are not an awesome
-idea in general. I wonder how long and how much RAM your 10m
-inode filesystem will take to 'fsck' for example :-), perhaps
-you don't want to read this older entry in this mailing list:
-
-  http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
-
-The basic problem is that the bottleneck is the ''pickup'' and
-its speed has not grown as fast as disc capacity, so one has to
-do RAID to work around that, but RAID delivers only for parallel,
-not sequential, scans of the filesystem.
-
-A significant issue that nobody seems in a hurry to address. As
-a recent ''contributor'' to this list wrote:
-
-  > hope i never need to run repair,
-
-:-)
+-- 
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
