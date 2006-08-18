@@ -1,70 +1,129 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Aug 2006 14:24:38 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.191])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7HLOBDW004579
-	for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 14:24:13 -0700
-Received: by nf-out-0910.google.com with SMTP id a25so1194015nfc
-        for <xfs@oss.sgi.com>; Thu, 17 Aug 2006 14:23:39 -0700 (PDT)
-Message-ID: <9a8748490608171423w3e5f7007nf92fad74637f0dd3@mail.gmail.com>
-Date: Thu, 17 Aug 2006 23:23:39 +0200
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: 2.6.18-rc3-git3 - XFS - BUG: unable to handle kernel NULL pointer dereference at virtual address 00000078
-In-Reply-To: <20060816112630.C2756824@wobbly.melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <9a8748490608100431m244207b1v9c9c5087233fcf3a@mail.gmail.com>
-	 <9a8748490608101544n29f863e7o7584ac64f1d4c210@mail.gmail.com>
-	 <9a8748490608101552w12822fa6m415a5fb5537c744d@mail.gmail.com>
-	 <9a8748490608110133v5f973cf6w1af340f59bb229ec@mail.gmail.com>
-	 <9a8748490608110325k25c340e2yac925eb226d1fe4f@mail.gmail.com>
-	 <20060814120032.E2698880@wobbly.melbourne.sgi.com>
-	 <9a8748490608140049t492742cx7f826a9f40835d71@mail.gmail.com>
-	 <20060815190343.A2743401@wobbly.melbourne.sgi.com>
-	 <9a8748490608150442q4ad7a835r53400e9880da3175@mail.gmail.com>
-	 <20060816112630.C2756824@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Aug 2006 17:06:00 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7I05MDW025665
+	for <linux-xfs@oss.sgi.com>; Thu, 17 Aug 2006 17:05:34 -0700
+Subject: TAKE 955302 - misc cleanup
+Message-Id: <20060818000436.2DEEA58C8A48@chook.melbourne.sgi.com>
+Date: Fri, 18 Aug 2006 10:04:36 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On 16/08/06, Nathan Scott <nathans@sgi.com> wrote:
-> On Tue, Aug 15, 2006 at 01:42:27PM +0200, Jesper Juhl wrote:
-> > On 15/08/06, Nathan Scott <nathans@sgi.com> wrote:
-> > > If you can get the source
-> > > and target names in the rename that'll help alot too... I can
-> > > explain how to use KDB to get that, but maybe you have another
-> > > debugger handy already?
-> > >
-> > An explanation of how exactely to do that would be greatly appreciated.
->
-> - patch in KDB
-> - echo 127 > /proc/sys/fs/xfs/panic_mask
-> [ filesystem shutdown now == panic ]
-> - kdb> bt
-> [ pick out parameters to rename from the backtrace ]
-> - kdb> md 0xXXX
-> [ gives a memory dump of the pointers to pathnames ]
->
+Add a debug flag for allocations which are known to be larger than one page.
 
-Thanks a lot for the explanation.
+Date:  Fri Aug 18 09:41:40 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  hch
 
-Unfortunately I didn't get a chance to run new tests on the server
-this week (always the big problem when it's a production machine).
-I'm also going on a short vacation, so I won't have the oppotunity to
-try and recreate a simpler test case at home for the next few days.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
 
-When I get back (in some 4 days time) I'll try to build a more simple
-test case and in about a week or so I hopefully will get a new chance
-to run new tests on the server that has so far shown the problem.
-If there are additional tests you want me to run or data you want me
-to collect, then let me know and I'll do so the first chance I get.
 
-I'll be back in touch in ~1 weeks time.
+Modid:  xfs-linux-melb:xfs-kern:26800a
+xfs_log.c - 1.326 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.326&r2=text&tr2=1.325&f=h
+xfs_iget.c - 1.218 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.218&r2=text&tr2=1.217&f=h
+support/ktrace.c - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/ktrace.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+quota/xfs_qm.c - 1.42 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.42&r2=text&tr2=1.41&f=h
+linux-2.6/xfs_buf.c - 1.225 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.225&r2=text&tr2=1.224&f=h
+linux-2.6/kmem.h - 1.39 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/kmem.h.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
+linux-2.4/xfs_buf.c - 1.217 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.c.diff?r1=text&tr1=1.217&r2=text&tr2=1.216&f=h
+linux-2.4/kmem.h - 1.33 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.h.diff?r1=text&tr1=1.33&r2=text&tr2=1.32&f=h
+linux-2.4/kmem.c - 1.36 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.c.diff?r1=text&tr1=1.36&r2=text&tr2=1.35&f=h
+linux-2.6/kmem.c - 1.7 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/kmem.c.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
 
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+
+Improve error handling for the zero-fsblock extent detection code.
+
+Date:  Fri Aug 18 09:51:19 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  dgc,gwehrman,nb
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26802a
+xfs_error.h - 1.45 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.h.diff?r1=text&tr1=1.45&r2=text&tr2=1.44&f=h
+xfs_bmap.c - 1.357 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.357&r2=text&tr2=1.356&f=h
+xfs_iomap.c - 1.48 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.c.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
+linux-2.6/xfs_globals.c - 1.69 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_globals.c.diff?r1=text&tr1=1.69&r2=text&tr2=1.68&f=h
+linux-2.4/xfs_globals.c - 1.77 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_globals.c.diff?r1=text&tr1=1.77&r2=text&tr2=1.76&f=h
+
+
+Add a greedy allocation interface, allocating within a min/max size range.
+
+Date:  Fri Aug 18 09:53:31 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  hch,cw
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26803a
+xfs_itable.c - 1.145 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.145&r2=text&tr2=1.144&f=h
+xfs_iget.c - 1.219 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.219&r2=text&tr2=1.218&f=h
+quota/xfs_qm.c - 1.43 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.43&r2=text&tr2=1.42&f=h
+linux-2.6/kmem.h - 1.40 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/kmem.h.diff?r1=text&tr1=1.40&r2=text&tr2=1.39&f=h
+linux-2.4/kmem.h - 1.34 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.h.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
+linux-2.4/kmem.c - 1.37 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.c.diff?r1=text&tr1=1.37&r2=text&tr2=1.36&f=h
+linux-2.6/kmem.c - 1.8 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/kmem.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+
+
+Remove a no-longer-correct debug assert from dio completion handling.
+
+Date:  Fri Aug 18 09:58:13 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  zach.brown@oracle.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26804a
+linux-2.6/xfs_aops.c - 1.133 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.133&r2=text&tr2=1.132&f=h
+
+
+Minor code rearranging and cleanup to prevent some coverity false positives.
+
+Date:  Fri Aug 18 10:02:34 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  sandeen,jesper.juhl@gmail.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26805a
+xfs_da_btree.c - 1.172 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_da_btree.c.diff?r1=text&tr1=1.172&r2=text&tr2=1.171&f=h
+xfs_rtalloc.c - 1.102 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rtalloc.c.diff?r1=text&tr1=1.102&r2=text&tr2=1.101&f=h
+xfs_alloc.c - 1.184 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc.c.diff?r1=text&tr1=1.184&r2=text&tr2=1.183&f=h
