@@ -1,305 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Aug 2006 12:13:17 -0700 (PDT)
-Received: from n15a.bullet.sc5.yahoo.com (n15a.bullet.sc5.yahoo.com [66.163.187.158])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7NJCnDW024824
-	for <linux-xfs@oss.sgi.com>; Wed, 23 Aug 2006 12:12:57 -0700
-Message-Id: <E1GFvWL-0001MQ-Rg@eleni.phantom.webserversystems.com>
-From: Chuck Mache <submissions@article-distribution.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Aug 2006 12:14:25 -0700 (PDT)
+Received: from n14c.bullet.sc5.yahoo.com (n14c.bullet.sc5.yahoo.com [66.163.187.205])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7NJE8DW025263
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Aug 2006 12:14:10 -0700
+Message-ID: <a180a0e294c4427f6f03258ef4e1c7f0@laptop>
+From: "Amrit Hallan" <ah4articles@gmail.com>
 MIME-Version: 1.0
-Date: Wed, 23 Aug 2006 12:24:01 -0400
-Subject: [Fr*e-Content] Sales Force Management & Leadership: Increase Profitability By Understanding Your Sales Team
-Reply-To: <submissions@article-distribution.com>
-Content-Type: text/plain
+Date: Sat, 19 Aug 2006 21:28:35 +0530
+Subject: [Fr*e-Content] 5 sure-shot ways to build traffic to your blog
+Reply-To: <ah4articles@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Free-Content@yahoogroups.com
 
+Dear Publisher,
 
-Free-Reprint Article Written by: Chuck Mache 
-See Terms of Reprint Below.
+You can publish this article wherever you feel like, as long as you use the resource box. Although it is not necessary to inform me, but I feel happy if some tell me that my article has been posted :-)
 
+-- Amrit
 
-*****************************************************************
-*
-* This email is being delivered directly to members of the group:
-* 
-*    Free-Content@yahoogroups.com
-* 
-*****************************************************************
+==========================================
 
+Article Title: 5 sure-shot ways to build traffic to your blog
+Category: Blog Publishing
+Copyright © 2006 Amrit Hallan
 
-We have moved our TERMS OF REPRINT to the end of the article.
-Be certain to read our TERMS OF REPRINT and honor our TERMS 
-OF REPRINT when you use this article. Thank you.
+========================================== 
 
-This article has been distributed by:
-http://Article-Distribution.com
+== Article Begins ==
 
-Helpful Link: 
-  The Digital Millennium Copyright Act - Overview
-  http://www.gseis.ucla.edu/iclp/dmca1.htm
+With 70 thousand new blogs being created everyday (source link: http://technorati.com/weblog/2006/02/83.html) getting traffic to your blog can be an overwhelming task, and many new bloggers abandon blogging because very few people turn up to read their posts. A decent amount of traffic is essential for many reasons. Some bloggers want to disseminate their pioneering ideas and opinions. Others publish content to generate advertising revenue. Many entrepreneurs use their blogs as PR platforms. The more your ideas spread, the greater impact they can create. In different, shorter articles I'll be listing steps you can use to create effective blogs and generate relevant traffic to them. This article can seem like jumping the gun; I haven't yet covered the creation and maintenance of an ideally effective blog and I'm already talking about generating traffic. 
 
----------------------------------------------------------------------
+There are a few a reasons.
 
-Article Title:
-==============
+The first reason is personal. I myself am studying ways to increase traffic to my own blogs. I've been blogging for more than 3 years now and I've never made a concerted effort to increase traffic. Consequently, my blogging has always been haphazard. You are motivated to write more if you know people are reading your thoughts and are sharing their own opinions with you. For this you need lots of traffic because only 3%-4% of your visitors leave genuine comments on your blog. Even if they don't leave comments, a steady increase in traffic means your audience are increasing. So this post is also, sort of, a recent manifestation of my (relevant) traffic building efforts.
 
-Sales Force Management & Leadership: Increase Profitability By Understanding Your Sales Team
+The second reason is logical. When you start a new blog, the biggest hurdle after "what to write?" is "how to get people to read it?" So once you know how to get traffic to your blog, you can create your blog with confidence. You can also work parallel: you can initiate at least some actions that can build a decent traffic by the time you've got a solid blog under your belt.
 
-Article Description:
-====================
+So here are the 5 sure-shot ways to build traffic to your blog:
 
-Have you ever closely examined why some people are wildly
-successful at selling, meeting and exceeding every goal placed in
-front of them, while others lack either the self motivation or
-certain key skill sets to get them to their next level of growth
-and performance? After all, they all have the same product, the
-same tools, and the same compensation structure...
+==] Visit other blogs and leave comments [==
 
+I mention it as the first most point because it puts your name, and your link in front of many blog readers, especially if you interact on a popular blog. Don't just leave comments for the sake of leaving them. Think about the post carefully, and then think about what more you can add. In the beginning it seems difficult because you feel like an outsider, but once you start interacting regularly you feel like a part of the discussion. I'll stress, only leave comments when you have something really to say. Randomly leaving your links in the comment boxes is a "sure-shot way of not getting traffic to your blog".
 
-Additional Article Information:
-===============================
+==] Put others' links on your blog [==
 
-751 Words; formatted to 65 Characters per Line
-Distribution Date and Time: 2006-08-23 12:24:00
+Just as you want your link to appear on other blogs, other bloggers too want their links to appear on your blog. Again, don't just randomly select the links; they should some way or the other be related to your blog's topic. For a few months it may seem like a one-sided affair (you putting everybody's link and nobody linking back to you) but as the traffic on your blog gradually builds and as you regularly post interesting topics, the other bloggers will recognize the worth of linking to you.
 
-Written By:     Chuck Mache
-Copyright:      2006
-Contact Email:  mailto:chuck.mache@thephantomwriters.com
+==] Write optimized posts to get relevant traffic from search engines [==
 
+Search engines can be a good source of traffic once you have enough number of "optimized" posts. When I say optimized it doesn't mean stuff your post with key words and key phrases and turn it into a nonsensical rumble. Just use the keyword once in your title/heading and twice or thrice in your post body.
 
+==] Post reply-comments when people leave comments [==
 
-For more free-reprint articles by Chuck Mache, please visit:
-http://thePhantomWriters.com/free_content/d/index.shtml#Chuck_Mache
+You get lots of repeat traffic if vibrant interaction takes place on your blog. I think repeat traffic is the best traffic you can get because it shows people are not just accidentally bumping into your blog — they are consciously coming there. When you post replies it also shows you take interest in others' ideas and value their opinions. If they blog too, to it encourages them to put your link on their blogs.
 
+==] Claim your blog at Technorati [==
 
-=============================================
-Special Notice For Publishers and Webmasters:
-=============================================
+Technorati is a large blog ranking engine and a majority of bloggers use it to find the blog content they're looking for. After you've created an account for yourself, simply "claim" your blog and then choose the right categories for it. Also make sure you click the checkbox to select "Include this blog in Technorati's Blog Finder". If your blog gets a good ranking in Technorati there is a greater chance of it showing up when people search for your blog's topic or a category existing under your blog.
 
-TEXT Copy-and-Paste and HTML Copy-and-Paste 
-Versions Of Article Are Available at:
-http://thePhantomWriters.com/free_content/db/m/sales-force-leadership.shtml#get_code
+So these are the 5 immediate things you can start doing even if you've got just 3-4 posts on your blog, or even if you've just created it a few minutes ago. Good content and traffic building effort should go on hand-in-hand. Once you've surpassed the critical mass in traffic, you can focus more on content because after that the traffic is, somewhat, self generating. The traffic after that takes care of itself provided you keep publishing quality posts, at regular intervals.
 
+== Article Ends ==
 
-If you use this article on your website or in your ezine,
-We Want To Know About It. Use the following URL to let
-us know where you have used this article, and we will
-include a link to your website on thePhantomWriters.com: 
+About the author:
 
-http://thephantomwriters.com/notify.php?id=3432&p=load
+===============================================
 
+Amrit Hallan is a freelance copywriter,
+and a website content writer. He also writes
+optimized content for better Search Engine
+Ranking. To know more about his services,
+visit his website site at
+http://www.amrithallan.com or his
+blog at http://www.website-content-writer.com
 
-
----------------------------------------------------------------------
-
-Sales Force Management & Leadership: Increase Profitability By Understanding Your Sales Team
-Copyright © 2006 Chuck Mache
-Chuck Mache Communications
-http://www.ChuckMache.com
-
-
-
-Have you ever closely examined why some people are wildly
-successful at selling, meeting and exceeding every goal placed in
-front of them, while others lack either the self motivation or
-certain key skill sets to get them to their next level of growth
-and performance? After all, they all have the same product, the
-same tools, and the same compensation structure.  They've all
-been through the same sales management-training program.   In my
-experience of 25 years selling, building sales organizations and
-leading and managing thousands of salespeople, the answer has to
-do with the fact that virtually all sales' organizations are
-comprised of four different kinds of salespeople:
-
-1.   The Performers - The Top Producers
-
-These high achieving sales executives are the best at bringing in
-the numbers, but chances are that you spend a fair share of your
-time cleaning up her messes.  Seems like they're either sky-high
-or down in the dumps.  When the performer is down, they are out
-of their selling zone, and productivity comes to a standstill. 
-But when the performer is up, look out world!
-
-2. The Professional - Another Top Producer
-
-This top producer is very consistent, a total team player, even
-tempered, patient, and consistently bringing in the numbers. 
-Professionals are also part of the elite members on the sales
-team, but they seem to be missing some opportunities that would
-catapult them to super stardom if they made some slight changes
-to their selling game.  Instead, they stick to self-proven
-conservative approaches.
-
-3. The Caretaker - Stuck In A Major Comfort
-
-These are the sales executives that are simply stuck in their
-lackluster comfort zones -- giving you a solid month about every
-third month, or giving you about seventy percent of what they
-have all the time.   They have the potential, but they're
-consistently mediocre.  You just can't get them to perform the
-difficult tasks that it takes to produce at top levels with any
-regularity.  Worse yet, they're passive aggressive.  You say to
-yourself, "If I could only wake them up, they'd be right up
-there with the best."
-
-I was giving a speech on "Four People, Four Paths" to a leading
-company in the California real estate industry where I was
-emphasizing the importance of knowing exactly who you are.  While
-I was quoting my book The Four Kinds of Sales People and
-explaining in detail the struggles and breakthrough opportunities
-for each of the four kinds of sales people, a woman in the
-audience yelled out, "Oh my God, I'm a Caretaker!"  The crowd
-laughed and I congratulated her on her honesty and pointed out to
-her (and others who were not so forthright) the tremendous
-opportunity that existed if she made the conscious decision to
-change and begin doing the difficult things that it takes to
-produce top results on a consistent basis.
-
-4. The Searcher - The One That Belongs In Any Career But Sales
-
-All sales leaders have made some bad hiring decisions that result
-in sales reps that just don't belong in sales.  They perceived a
-sales career to be easy and they were wrong.  Producing top sales
-is hard work.  These misfits are consumed with fear, and if truth
-be told, they honestly hate sales.  They have no real intention
-of making the necessary changes to be successful.  You're better
-off helping them find more fulfilling careers.
-
-My point is that while the individual make-up of sales forces may
-vary, there are always only four kinds.  Management's goal is to
-get the best to keep getting better while building a team with as
-many top producers as possible. That means management must
-influence those that are "stuck" in their comfort zone to break
-through to the next level.  That means management must perform
-the unenviable task of helping those that don't belong to find
-other career paths.  In my experience, management gets too
-preoccupied with these two challenges and neglects the
-opportunity to get their top producers to reach for their next
-level of achievement.  They have more potential.  That's why
-they're the best. And can be even better.
-
-If you want sales to improve, particularly in highly competitive
-sales environments, then leaders must create a growth-oriented
-atmosphere that thrives on constant improvement, regardless of
-market conditions.  By the way, that means leaders and managers
-must also be striving to break through to their next level as
-well. Sales is about creating and sustaining momentum, and then
-creating even more of it.  Consistently.
-
-
-
-
----------------------------------------------------------------------
-Breakthrough mentor and sales guru, Chuck Mache, President of 
-Chuck Mache Communications ( http://www.ChuckMache.com ) has 
-more than 25 years experience in selling, managing, building 
-and leading sales organizations regionally as well as 
-internationally.  In his Brian Tracy endorsed book "The Four 
-Kinds of Sales People" Mache uses his transforming knowledge 
-and expertise in building heavy-hitter sales organizations 
-to deliver an inspired parable that identifies exactly how 
-and why sales people excel - or don't. Get his book today at 
-http://www.thefourkindsofsalespeople.com/PR/ and increase your 
-organization’s productivity, and profitability. 
-
-
---- END ARTICLE ---
-
-Get TEXT or HTML Copy-and-Paste Versions Of This Article at:
-http://thePhantomWriters.com/free_content/db/m/sales-force-leadership.shtml#get_code
-
-
-
-.....................................
-
-TERMS OF REPRINT - Publication Rules 
-(Last Updated:  May 11, 2006)
-
-Our TERMS OF REPRINT are fully enforcable under the terms of:
-
-  The Digital Millennium Copyright Act
-  http://thomas.loc.gov/cgi-bin/query/z?c105:H.R.2281.ENR:
-
-.....................................
-
-*** Digital Reprint Rights ***
-
-* If you publish this article in a website/forum/blog, 
-  You Must Set All URL's or Mailto Addresses in the body 
-  of the article AND in the Author's Resource Box as
-  Hyperlinks (clickable links).
-
-* Links must remain in the form that we published them.
-  Clean links should point to the Author's links without
-  redirects having been inserted into the copy.
-
-* You are not allowed to Change or Delete any Words or 
-  Links in the Article or Resource Box. Paragraph breaks 
-  must be retained with articles. You can change where
-  the paragraph breaks fall, but you cannot eliminate all
-  paragraph breaks as some have chosen to do.
-
-* Email Distribution of this article Must be done through
-  Opt-in Email Only. No Unsolicited Commercial Email.
-
-
-* You Are Allowed to format the layout of the article for 
-  proper display of the article in your website or in your 
-  ezine, so long as you can maintain the author's interests 
-  within the article.
-
-* You may not use sentences from this article as an input
-  for any software that steals sentences from others in 
-  order to build an article with software. The copyright on
-  this article applies to the "WHOLE" article.
-
-
-*** Author Notification ***
-
-  We ask that you notify the author of publication of his
-  or her work. Chuck Mache can be reached at:
-  chuck.mache@thephantomwriters.com
-
-
-*** Print Publication Reprint Rights ***
-
-  If you desire to publish this article in a PRINT 
-  publication, you must contact the author directly 
-  for Print Permission at:  
-  mailto:chuck.mache@thephantomwriters.com
-
-
-
-.....................................
-
-If you need help converting this text article for proper 
-hyperlinked placement in your webpage, please use this 
-free tool:  http://thephantomwriters.com/link-builder.pl
-
-
-
-=====================================================================
-
-ABOUT THIS ARTICLE SUBMISSION
-
-http://thePhantomWriters.com is a paid article distribution 
-service. thePhantomWriters.com and Article-Distribution.com 
-are owned and operated by Bill Platt of Stillwater, Oklahoma USA.
-
-The content of this article is solely the property 
-and opinion of its author, Chuck Mache
-http://www.ChuckMache.com
-
-
-
----------------------------------------------------------------------
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
----------------------------------------------------------------------
-
-
+===============================================
 
 
 
