@@ -1,168 +1,199 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Aug 2006 11:45:51 -0700 (PDT)
-Received: from n12c.bullet.sc5.yahoo.com (n12c.bullet.sc5.yahoo.com [66.163.187.203])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7NIjUDW016760
-	for <linux-xfs@oss.sgi.com>; Wed, 23 Aug 2006 11:45:30 -0700
-Message-Id: <200608231845.k7NIjUDW016760@oss.sgi.com>
-From: articles@randommouse.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Aug 2006 11:50:46 -0700 (PDT)
+Received: from n31a.bullet.scd.yahoo.com (n31a.bullet.scd.yahoo.com [209.73.160.90])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7NIoXDW018679
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Aug 2006 11:50:34 -0700
+Message-Id: <E1GEpTy-0001Mu-K4@apollo.isnare.com>
+From: "Claude Jollet" <gprialde@gmail.com>
 MIME-Version: 1.0
-Date: 20 Aug 2006 11:34:59 -0700
-Subject: [Fr*e-Content] Dramatically Increase The Credibility Of Your Affiliate Website With Customer
- Reviews
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Date: Sun, 20 Aug 2006 23:45:02 +0800
+Subject: [Fr*e-Content] Planning Is Taking Advantage Of Risks
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Free-Content@yahoogroups.com
+To: free-content@yahoogroups.com
 
-==================================================
+
+*****************************************************************
+
+Message delivered directly to members of the group:
+free-content@yahoogroups.com
+
+*****************************************************************
+
+Please consider this free-reprint article written by:
+Claude Jollet
+
+==================
 IMPORTANT - Publication/Reprint Terms
 
-This article may be reposted elsewhere provided that (a) the Article Content and Author Biography remain unchanged and appear together (if needed, you may re-format the article for display purposes), and (b) you have permission to post the article. Under no circumstances can this article be posted elsewhere if doing so would be considered an act of spamming.
+- You have permission to publish this article electronically in
+free-only publications such as a website or an ezine as long as
+the bylines are included.
 
-A courtesy copy of your publication would be appreciated.
-==================================================
+- You are not allowed to use this article for commercial
+purposes. The article should only be reprinted in a publicly
+accessible website and not in a members-only commercial site. 
 
-Article Title: Dramatically Increase The Credibility Of Your Affiliate Website With Customer Reviews
-Author: Stephen Carter
-Word Count: 904
-Keywords: review script, credibility of affiliate websites, customer reviews on affiliate websites
-Contact Email Address: articles@randommouse.com
-Website: http://www.randommouse.com
-Category: Affiliate Marketing, Affiliate, Marketing, Internet, Advertising
-Description: Learn how to increase the preselling power of your affiliate
-website by adding the credibility that comes with customer
-reviews.
+- You are not allowed to post/reprint this article in any
+sites/publications that contains or supports hate, violence,
+porn and warez or any indecent and illegal sites/publications. 
+
+- You are not allowed to use this article in UCE (Unsolicited
+Commercial Email) or SPAM. This article MUST be distributed in
+an opt-in email list only.
+
+- If you distribute this article in an ezine or newsletter, we
+ask that you send a copy of the newsletter or ezine that
+contains the article to claude_jollet[at]sympatico.ca (replace
+[at] with @)
+
+- If you post this article in a website/forum/blog, ALL links
+MUST be set to hyperlinks and we ask that you send a copy of
+the URL where the article is posted to
+claude_jollet[at]sympatico.ca (replace [at] with @)
+
+- We request that you ask permission from the author if you
+want to publish this article in print.
+
+The role of iSnare.com is only to distribute this article as
+part of its Article Distribution feature (
+own this article, please respect the author's copyright and
+this publication/reprint terms. If you do not agree to any of
+these terms, please do not reprint or publish this article.
+==================
+
+Article Title: Planning Is Taking Advantage Of Risks
+Author: Claude Jollet
+Word Count: 816
+Article URL:
+Format: 64cpl
+Author's Email Address: claude_jollet[at]sympatico.ca (replace
+[at] with @)
+
+Easy Publish Tool: http://www.isnare.com/html.php?aid=76997 
 
 ================== ARTICLE START ==================
-
-Title: Dramatically Increase The Credibility Of Your Affiliate Website With Customer Reviews
-
-
-Affiliate marketing was a six billion dollar business in 2006,
-and shows no sign of tapering off any time soon. But as good as
-business has been for the top affiliate marketers, it could be
-a lot better for the majority.
-
-A real obstacle to achieving the sales goals of many affiliates
-involves their credibility. If I say a product is great, and I
-am being paid to convince you to buy it, why should you believe
-me?
-
-The fact is, most affiliate sites on the web today are poorly
-constructed, and this beggars any authority the owner of the
-site hopes to convert into sales. Often these sites are thin
-conduits designed to ferry traffic from search engines to the
-sites of merchants who have neither the resources nor the time
-to figure out how to find the customers they need to ensure
-their business success.
-
-Despite this, and because the web is growing more and more
-congested, the value of a *quality* affiliate marketer
-nonetheless continues to increase. Unfortunately this simple
-fact is not at all recognized by the buying public who often
-begrudge affiliate marketers and view them as interlopers who
-put themselves between the customer and the merchants they are
-searching for. In short, the affiliate marketer has long
-suffered, and continues to suffer, from an image problem.
-
-This image problem is not confined just to the public. Google,
-which derives huge advertising revenues from affiliate
-marketers, nevertheless regards affiliate marketing sites with
-complete disdain. Of course, affiliate marketers themselves
-have contributed to this problem because their websites very
-often contain little in the way of new or unique content, which
-is what Google values and believes its customers (web
-searchers) value.
-
-It is no surprise therefore, to find that some of the top
-affiliate marketers differentiate themselves from the rest of
-the pack in precisely this area. They offer not only critical
-assessment of the products they promote, but also take the time
-to blog and build a comraderie with the visitors to their
-sites. By offering unique, and regularly updated content, they
-appease the Gods of Google, and are rewarded with organic (non
-pay-per-click) traffic that very much contributes to the bottom
-line. In other words, the top affiliate marketers know how to
-project a good image--to their visitors, to Google, and to
-other search engines that might bring in prospects.
-
-Blogging is a great way to produce unique content. But it is
-time consuming, there is a limit to how much daily content you
-can produce as an affiliate, and not everyone finds the task of
-writing content easy work.
-
-What if instead you could have the content create itself
-automatically? Well, actually you can. If you offer customer
-reviews of the products you promote you accomplish this and
-more. Not only is the subject matter on target, but the reviews
-themselves promote the products for you (supposing you have
-carefully chosen only the best products to promote, which is
-what any *good* affiliate marketer knows to do). Even better,
-you no longer have to worry about that credibility problem. If
-ten people come onto your site and say "Buy product XYZ, it
-rocks!" that recommendation is a heck of a lot more convincing
-than anything that you might say, no matter how truthful your
-utterances.
-
-So, all you have to do as an affiliate marketer, to get people
-to "click through" to a merchant site in a buying mood is to
-promote good products and let people express their opinions
-about those products on your site. If the products are great,
-the reviews will reflect that. If instead it turns out that the
-reviews are consistently bad for one of the products you
-promote, then drop it! Replace it with another.
-
-"But collecting reviews is really difficult!" I hear you
-object. "I simply do not have time for that. Do I?"
-
-There is nothing inherently difficult about putting customer
-reviews on your site today. It does take a little time to set
-things up, but low-cost commercial quality reviewing
-applications are available to do the bulk of the work (see the
-one mentioned in the resource box below if you want to get a
-jump start on implementing customer reviews on your website).
-
-Not only does a customer review section on your site
-substantially increase your overall credibility, but search
-engines will love the content--especially if the review pages
-have been optimized for the search engines (as all good
-reviewing engines will certainly do).
-
-There is another benefit to collecting customer reviews. Some
-review engines allow you to publish the reviews as RSS feeds.
-What this means is increased traffic. You can submit your feeds
-to the RSS directories. Moreover, if the reviewing application
-also allows you to create RSS feeds compatible with Google Base
-(as does the application mentioned below) you can upload your
-entire review database (or the first N characters of each
-review) to Google Base and make your reviews accessible to the
-various Google marketing avenues.
-
-Given the clear benefits to implementing customer reviews on
-affiliate marketing sites it is surprising that so very few
-marketers have actually adopted this strategy to date. But as
-the web continues to mature, and affiliate marketing grows more
-professional, it is to be expected that this strategy will
-become more and more common on the sites of top affiliate
-marketers.
+Planning is the management of risk ... while there are no risks
+involved (yet), and while it is still safe to take action ...
+proactive action, that is! Planning is being able to recognize
+friends from foe ... before going into “business battle”.
+Planning is the dressed rehearsal before the premiere. Here is
+a “behind the scene” look at what the planning process is all
+about. 
+ 
+An Eventful Journey 
+ 
+Many (too many) aspiring entrepreneurs see the business plan as
+a set of documents describing their intentions and aspirations.
+Planning before going into business is much more than that! 
+ 
+Business life is made up of events that occur sequentially,
+from cause to effect, as well as simultaneously, randomly, and
+spuriously. These events can occur within your sphere of
+influence, as well as on the periphery. They can, and will,
+also occur far removed from your knowledge ... apparently
+harmlessly! 
+ 
+Each event can be a source of risks and opportunities for you
+and your business. Consequently, planning is the process by
+which you aim to maximize the beneficial effects of the latter,
+while minimizing the adverse effects of the former. 
+ 
+A risky situation or event gives you the opportunity to put
+into action a counter measure that will benefit your business.
+You will have some of those measures planned, hopefully! One of
+the major advantages of a planned counter measure is that you
+can put it in effect ... while your competition is still
+destabilized! 
+ 
+A Picture Is Worth ... 
+ 
+Any successful entrepreneur will tell you that you have to
+picture yourself going through the motions, to know how to
+react when the time comes. 
+ 
+Rehearsing lets you discover which events – and situation
+within an event - you may not be ready for. Planning lets you
+do just that. When you find you would not know how to react in
+a given situation, you can visualize your actions – before,
+during, and after the given event or situation – and test them
+for effectiveness. While still “off stage”, you can rehearse
+your moves until you find the proper ones to do. 
+ 
+Before The S... Hits The Fan 
+ 
+I mentioned that there are actions that have to be taken before
+the event. That is perhaps the most important part of planning.
+If you do your business research right, you will find that
+there are undesirable events you can indeed avoid, by simply
+avoiding the actions – or inactions – that will put you in
+trouble! You can easily identify these negative moves with
+proper planning. You can eliminate them from your winning
+scenario, before they have any chance of harming your business.
+That is what being proactive really means. 
+ 
+During The Storm 
+ 
+Nobody can foresee everything. Planning helps you eliminate as
+many unknowns as humanly possible. However, there will be times
+when things happen so fast, or in an unforeseen way, that you
+can be destabilized, even driven into a state of panic. You can
+avoid dangerous false reactions during a potentially disruptive
+event. You can avoid being overcome by doubt. You can practice
+reacting in front of the unknown. You can rehearse to react in
+a controlled fashion. 
+ 
+Remember though that the best defense is offense. Proper
+planning is a potent form of offense. Your competition will
+never know your state of preparedness ... until it's too late! 
+ 
+After The Wind Has Died Down 
+ 
+That's when you take advantage of the good moves, and you
+recover – hopefully unharmed – from the bad ones. You can learn
+how to do that too! In fact, your business cannot grow if you
+cannot master the art of taking swift advantage of a favorable
+situation ... and of swiftly recovering from harmful ones. With
+proper planning, and training, you can learn how to recognize
+both, and take appropriate actions. 
+ 
+Planning ... Takes Planning 
+ 
+As you might have guessed by now, planning itself ... takes
+planning and practice! Before going into business, get a
+professional trainer to help you go through the moves with a
+training (learning) plan that will suit your needs. Get a coach
+to help you work on your mindset and resolve. In other words, do
+not hesitate to seek the help of reputable people who have been
+there, and done it. 
+ 
+The professional trainer, and coach, will help you: 
+ 
+* identify what you have to take into account, 
+* see the business game, play by play, 
+* avoid getting lost in rehearsing false moves, 
+* go through the motions, in a professional manner, before you
+go into action, 
+* plan how to recover from your mistakes. 
+ 
+In short, they will help you build your confidence, and
+competence, one small – planned – move at a time.
 
 
+About The Author: Claude Jollet is a former planning advisor to
+major industrial and commercial clients. He specialized in
+weather related operational planning issues. He holds a B.Sc.A.
+specializing in business process analysis and automation. He now
+devotes himself to the promotion of entrepreneurship on
 
-----------------------------------------------------------------
-Stephen Carter is the developer of Red Queen,
-a powerful web-based customer review engine that allows
-webmasters to manage customer reviews on their web site.
-http://www.randommouse.com/redqueen
-
-See also "How To Put Customer Reviews On Your Affiliate Website"
-http://www.randommouse.com/rms/find/create_an_affiliate_site.php
-----------------------------------------------------------------
-
-
+Please use the HTML version of this article at:
 ================== ARTICLE END ==================
 
+For more free-reprint articles by Claude Jollet please visit:
+ http://www.isnare.com/?s=author&a=Claude+Jollet
 
 
 
@@ -177,10 +208,8 @@ Shortcut URL to this page:
   http://www.yahoogroups.com/group/Free-Content
 
 Coming Soon! Submissions & Archive at New Site 
-http://publish101.com
 
 Free Text to HTML Converter for Publishers!
-http://website101.com/cgi-bin/t2h/Mt2h.cgi 
 Yahoo! Groups Links
 
 <*> To visit your group on the web, go to:
