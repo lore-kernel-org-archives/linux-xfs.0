@@ -1,65 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Aug 2006 20:48:16 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7N3lxDW023445
-	for <xfs@oss.sgi.com>; Tue, 22 Aug 2006 20:48:05 -0700
-Subject: [PATCH] standardize on one sema init macro
-Message-Id: <20060823034719.AD5B418DAFEC7@sandeen.net>
-Date: Tue, 22 Aug 2006 22:47:19 -0500 (CDT)
-From: sandeen@sandeen.net
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Aug 2006 21:03:51 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7N43EDW026902
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Aug 2006 21:03:25 -0700
+Date: Wed, 23 Aug 2006 14:02:18 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Infinite loop in xfssyncd on full file system
+Message-ID: <20060823040218.GC807872@melbourne.sgi.com>
+References: <Pine.LNX.4.64.0608221318300.3139@madrid.max-t.internal>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0608221318300.3139@madrid.max-t.internal>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Stephane Doyon <sdoyon@max-t.com>
+Cc: linux-xfs@oss.sgi.com, lnx1138@us.ibm.com
 
-One sema to rule them all, one sema to find them...
+On Tue, Aug 22, 2006 at 04:01:10PM -0400, Stephane Doyon wrote:
+> I'm seeing what appears to be an infinite loop in xfssyncd. It is 
+> triggered when writing to a file system that is full or nearly full. I 
+> have pinpointed the change that introduced this problem: it's
+> 
+>     "TAKE 947395 - Fixing potential deadlock in space allocation and
+>     freeing due to ENOSPC"
+> 
+> git commit d210a28cd851082cec9b282443f8cc0e6fc09830.
 
-how many sema init routines does one really need after all?
+Thanks for tracking that down - I've been trying to isolate a test case
+for another report of this looping in xfssyncd.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+[Luciano - this is the same problem we've been trying to track down.]
 
- linux-2.4/sema.h |    2 --
- linux-2.6/sema.h |    2 --
- xfs_iget.c       |    2 +-
- 3 files changed, 1 insertion(+), 5 deletions(-)
+> I hope you XFS experts see what might be wrong with that bug fix. It's 
+> ironic but for me, this (apparent) infinite loop seems much easier to hit 
+> than the out-of-order locking problem that the commit in question was 
+> supposed to fix. Let me know if I can get you any more info.
 
+Now we know what patch introduces the problem, we know where to look.
+Stay tuned...
 
-Index: xfs-linux/linux-2.4/sema.h
-===================================================================
---- xfs-linux.orig/linux-2.4/sema.h
-+++ xfs-linux/linux-2.4/sema.h
-@@ -29,8 +29,6 @@
- 
- typedef struct semaphore sema_t;
- 
--#define init_sema(sp, val, c, d)	sema_init(sp, val)
--#define initsema(sp, val)		sema_init(sp, val)
- #define initnsema(sp, val, name)	sema_init(sp, val)
- #define psema(sp, b)			down(sp)
- #define vsema(sp)			up(sp)
-Index: xfs-linux/linux-2.6/sema.h
-===================================================================
---- xfs-linux.orig/linux-2.6/sema.h
-+++ xfs-linux/linux-2.6/sema.h
-@@ -29,8 +29,6 @@
- 
- typedef struct semaphore sema_t;
- 
--#define init_sema(sp, val, c, d)	sema_init(sp, val)
--#define initsema(sp, val)		sema_init(sp, val)
- #define initnsema(sp, val, name)	sema_init(sp, val)
- #define psema(sp, b)			down(sp)
- #define vsema(sp)			up(sp)
-Index: xfs-linux/xfs_iget.c
-===================================================================
---- xfs-linux.orig/xfs_iget.c
-+++ xfs-linux/xfs_iget.c
-@@ -546,7 +546,7 @@ xfs_inode_lock_init(
- 	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", vp->v_number);
- 	init_waitqueue_head(&ip->i_ipin_wait);
- 	atomic_set(&ip->i_pincount, 0);
--	init_sema(&ip->i_flock, 1, "xfsfino", vp->v_number);
-+	initnsema(&ip->i_flock, 1, "xfsfino");
- }
- 
- /*
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
