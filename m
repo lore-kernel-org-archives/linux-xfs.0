@@ -1,49 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 06:53:37 -0700 (PDT)
-Received: from mondschein.lichtvoll.de (mondschein.lichtschiff.de [194.150.191.238] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7ODrRDW007238
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 06:53:28 -0700
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: xfs bug in 2.6.17.9?
-Date: Thu, 24 Aug 2006 14:29:13 +0200
-References: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com>
-In-Reply-To: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-6"
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 13:12:36 -0700 (PDT)
+Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7OKCSDW003524
+	for <linux-xfs@oss.sgi.com>; Thu, 24 Aug 2006 13:12:28 -0700
+Subject: how to understand allocsp
+From: Ming Zhang <mingz@ele.uri.edu>
+Reply-To: mingz@ele.uri.edu
+Content-Type: text/plain
+Date: Thu, 24 Aug 2006 16:11:50 -0400
+Message-Id: <1156450310.2700.85.camel@localhost.localdomain>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200608241429.14277.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: liste@jordet.nu
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Am Donnerstag 24 August 2006 11:45 schrieb Stian Jordet:
-> I got this on my server today, while it was not doing anything in
-> particular...
->
-> Aug 24 09:22:09 buick kernel: xfs_da_do_buf: bno 16777216
+Hi All
 
-Hello Stian,
+Play with xfs_io and feel confused about this allocsp.
 
-It looks to me that the directory corruption bug in kernel 2.6.17 upto 
-2.6.17.6 hit you: Did you use a 2.6.17 kernel < 2.6.17.7 before? 
+Starting with a empty file.
 
-See 
+xfs_io> bmap
+/t/x: no extents
 
-http://oss.sgi.com/projects/xfs/faq.html#dir2
-http://bugzilla.kernel.org/show_bug.cgi?id=6757
+I assumed this will allocate space from 0 with 1048576 bytes. but seems
+this is wrong.
 
-Try xfs_check and if it finds errors xfs_repair. 
+xfs_io> allocsp 0 1048576
+xfs_io> bmap
+/t/x: no extents
 
-If xfs_repair cannot fix it, you will have to look out a version that 
-contains some fixes related to handling this kind of corruption:
 
-http://oss.sgi.com/archives/xfs/2006-07/msg00374.html
+Do this from a non-zero start, found file filled with 0.
+xfs_io> allocsp 1048576 0
+xfs_io> bmap
+/t/x:
+        0: [0..2047]: 2147745792..2147747839
 
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+XFS_IOC_ALLOCSP64
+
+Alter storage space associated with a section of the ordinary file
+specified. The section
+~~~~no idea what this "alter" mean here.
+
+ is specified by a variable of type xfs_flock64_t, pointed to by the
+final argument. The data type xfs_flock64_t contains the following
+members: l_whence is 0, 1, or 2 to indicate that the relative offset
+l_start will be measured from the start of the file, the current
+position, or the end of the file, respectively. l_start is the offset
+from the position specified in l_whence. l_len is the size of the
+section. An l_len value of zero frees up to the end of the file; in this
+case, the end of file (i.e., file size) is set to the beginning of the
+section freed. Any data previously written into this section is no
+longer accessible. If the section specified is beyond the current end of
+file, the file is grown and filled with zeroes. The l_len field is
+currently ignored, and should be set to zero.
+
+this "currently ignored" is ONLY when "section is beyond the current end
+of file" or for any l_start?
+
+
+Thanks!
+
+Ming
