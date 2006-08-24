@@ -1,85 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 14:02:29 -0700 (PDT)
-Received: from orca.ele.uri.edu (orca.ele.uri.edu [131.128.51.63])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7OL2MDW016781
-	for <linux-xfs@oss.sgi.com>; Thu, 24 Aug 2006 14:02:22 -0700
-Subject: Re: how to understand allocsp
-From: Ming Zhang <mingz@ele.uri.edu>
-Reply-To: mingz@ele.uri.edu
-In-Reply-To: <44EE11B0.7010208@sandeen.net>
-References: <1156450310.2700.85.camel@localhost.localdomain>
-	 <44EE11B0.7010208@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 18:00:41 -0700 (PDT)
+Received: from buick.jordet.net (buick.jordet.net [217.8.143.72])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7P10RDW012338
+	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 18:00:27 -0700
+Subject: Re: xfs bug in 2.6.17.9?
+From: Stian Jordet <liste@jordet.net>
+In-Reply-To: <200608241429.14277.Martin@lichtvoll.de>
+References: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com>
+	 <200608241429.14277.Martin@lichtvoll.de>
 Content-Type: text/plain
-Date: Thu, 24 Aug 2006 17:01:49 -0400
-Message-Id: <1156453309.2700.94.camel@localhost.localdomain>
+Date: Fri, 25 Aug 2006 01:45:33 +0200
+Message-Id: <1156463133.19666.4.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: xfs@oss.sgi.com
 
-see the code for this XFS_IOC_ALLOCSP
-
-                if (startoffset > fsize) {
-                        error = xfs_alloc_file_space(ip, fsize,
-                                        startoffset - fsize, 0,
-attr_flags);
-                        if (error)
-                                break;
-                }
-
-                va.va_mask = XFS_AT_SIZE;
-                va.va_size = startoffset;
-
-                error = xfs_setattr(bdp, &va, attr_flags, credp);
-
-                if (error)
-                        return error;
-
-                clrprealloc = 1;
-                break;
-
-
-so if offset is larger than current file size, it will allocate the
-space and fill with zero. this is exactly what i met with "allocsp
-1048576 0".
-
-i would say this this pretty misleading. since "allocsp 0 1048576" can
-be easily thought as "allocate 1048576 space start from 0" but now seems
-only an ATTR is set.
-
-
-Ming
-
-
-
-On Thu, 2006-08-24 at 15:53 -0500, Eric Sandeen wrote:
-> Ming Zhang wrote:
-> > Hi All
-> > 
-> > Play with xfs_io and feel confused about this allocsp.
-> > 
-> > Starting with a empty file.
-> > 
+tor, 24,.08.2006 kl. 14.29 +0200, skrev Martin Steigerwald:
+> It looks to me that the directory corruption bug in kernel 2.6.17 upto 
+> 2.6.17.6 hit you: Did you use a 2.6.17 kernel < 2.6.17.7 before? 
 > 
-> I honestly never keep this all straight without going back to the code, 
-> but I'd start by looking at the comments for, and code in, 
-> xfs_change_file_space and xfs_alloc_file_space.
+> See 
 > 
->          /*
->           * XFS_IOC_RESVSP and XFS_IOC_UNRESVSP will reserve or unreserve
->           * file space.
->           * These calls do NOT zero the data space allocated to the file,
->           * nor do they change the file size.
->           *
->           * XFS_IOC_ALLOCSP and XFS_IOC_FREESP will allocate and free file
->           * space.
->           * These calls cause the new file data to be zeroed and the file
->           * size to be changed.
->           */
+> http://oss.sgi.com/projects/xfs/faq.html#dir2
+> http://bugzilla.kernel.org/show_bug.cgi?id=6757
 > 
-> The semantics of all this could be clearer, IMHO.
+> Try xfs_check and if it finds errors xfs_repair. 
 > 
-> -Eric
+> If xfs_repair cannot fix it, you will have to look out a version that 
+> contains some fixes related to handling this kind of corruption:
+> 
+> http://oss.sgi.com/archives/xfs/2006-07/msg00374.html
+
+Martin,
+
+thanks for your help. I did use both 2.6.17.1 and 2.6.17.3 before
+2.6.17.9... So I guess (hope) that's the problem, and not my memory... 
+
+I have run xfs_repair 2.8.11 on two filesystems with errors (luckily,
+neither my /home nor my backup partition seems to be hit), and it find
+some errors, but if I run it again, I finds the same errors over and
+over again... I seem to have it up and running again now, but I really
+don't like that xfs_repair shows a lot of errors on each run. Don't like
+that at all... It says it has fixed the errors, but I just never get rid
+of them.
+
+Is that normal? Guess not. And is it something that can happen with the
+directory corruption bug? I read that I needed to have xfsprogs >2.8.10,
+but that didn't help neither...
+
+Best regards,
+Stian
