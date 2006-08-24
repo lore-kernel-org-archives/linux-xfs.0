@@ -1,32 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 03:39:44 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7OAdODW023233
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 03:39:24 -0700
-Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
-	by tyo200.gate.nec.co.jp (8.13.7/8.13.4) with ESMTP id k7OAEE7Z000295
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 19:14:14 +0900 (JST)
-Subject: Re: [PATCH 2/2] Fix i_state of inode is changed after the inode is freed [try #2]
-In-reply-to: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
-Message-Id: <20060824191341m-saito@mail.aom.tnes.nec.co.jp>
-References: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-From: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Date: Thu, 24 Aug 2006 19:13:41 +0900
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 03:48:51 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.224])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7OAmZDW024664
+	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 03:48:35 -0700
+Received: by wx-out-0506.google.com with SMTP id h29so410004wxd
+        for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 03:48:02 -0700 (PDT)
+Message-ID: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com>
+Date: Thu, 24 Aug 2006 11:45:27 +0200
+From: "Stian Jordet" <sjordet@gmail.com>
+Reply-To: liste@jordet.nu
+Subject: xfs bug in 2.6.17.9?
+MIME-Version: 1.0
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Hi, Nathan
+I got this on my server today, while it was not doing anything in
+particular...
 
->Which doesn't look correct due to your need_iput guard, but perhaps
->we should do this instead...
+Aug 24 09:22:09 buick kernel: xfs_da_do_buf: bno 16777216
+Aug 24 09:22:09 buick kernel: dir: inode 14715927
+Aug 24 09:22:09 buick kernel: Filesystem "rd/c0d0p1": XFS internal error
+xfs_da_do_buf(1) at line 2119 of file fs/xfs/xfs_da_btree.c.  Caller
+0xc029d81c
+Aug 24 09:22:09 buick kernel:  <c029d2ef> xfs_da_do_buf+0x4ff/0x980
+<c029d81c> xfs_da_read_buf+0x3c/0x40
+Aug 24 09:22:09 buick kernel:  <c02aacc8>
+xfs_dir2_leafn_lookup_int+0x2e8/0x520  <c02aacc8>
+xfs_dir2_leafn_lookup_int+0x2e8/0x520
+Aug 24 09:22:09 buick kernel:  <c02a538d>
+xfs_dir2_data_log_unused+0x6d/0x90  <c029d81c> xfs_da_read_buf+0x3c/0x40
+Aug 24 09:22:09 buick kernel:  <c02a8dd8>
+xfs_dir2_node_removename+0x368/0x5b0  <c02a8dd8>
+xfs_dir2_node_removename+0x368/0x5b0
+Aug 24 09:22:09 buick kernel:  <c02a3389> xfs_dir2_removename+0x129/0x130
+<c02cd593> xfs_icsb_modify_counters_int+0x73/0x1d0
+Aug 24 09:22:09 buick kernel:  <c02d4beb> xfs_trans_ijoin+0x3b/0x90
+<c02de404> xfs_remove+0x314/0x510
+Aug 24 09:22:09 buick kernel:  <c016e220> vfs_permission+0x20/0x30
+<c02e8e9a> xfs_vn_unlink+0x3a/0x70
+Aug 24 09:22:09 buick kernel:  <c02da26f> xfs_access+0x4f/0x60  <c02e91e6>
+xfs_vn_permission+0x26/0x30
+Aug 24 09:22:09 buick kernel:  <c016cff3> permission+0x73/0x110  <c016d7f3>
+may_delete+0x43/0x130
+Aug 24 09:22:09 buick kernel:  <c016dea1> vfs_unlink+0xc1/0x120  <c01700c1>
+do_unlinkat+0xe1/0x170
+Aug 24 09:22:09 buick kernel:  <c0102fcf> syscall_call+0x7/0xb
+Aug 24 09:22:09 buick kernel: Filesystem "rd/c0d0p1": XFS internal error
+xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c.  Caller 0xc02de475
+Aug 24 09:22:09 buick kernel:  <c02d2d2b> xfs_trans_cancel+0x10b/0x140
+<c02de475> xfs_remove+0x385/0x510
+Aug 24 09:22:09 buick kernel:  <c02de475> xfs_remove+0x385/0x510  <c016e220>
+vfs_permission+0x20/0x30
+Aug 24 09:22:09 buick kernel:  <c02e8e9a> xfs_vn_unlink+0x3a/0x70
+<c02da26f> xfs_access+0x4f/0x60
+Aug 24 09:22:09 buick kernel:  <c02e91e6> xfs_vn_permission+0x26/0x30
+<c016cff3> permission+0x73/0x110
+Aug 24 09:22:09 buick kernel:  <c016d7f3> may_delete+0x43/0x130  <c016dea1>
+vfs_unlink+0xc1/0x120
+Aug 24 09:22:09 buick kernel:  <c01700c1> do_unlinkat+0xe1/0x170  <c0102fcf>
+syscall_call+0x7/0xb
+Aug 24 09:22:09 buick kernel: Filesystem "rd/c0d0p1": Corruption of
+in-memory data detected.  Shutting down filesystem: rd/c0d0p1
+Aug 24 09:22:09 buick kernel: Please umount the filesystem, and rectify the
+problem(s)
 
-I think that your fix is simpler, so I agree it.
+I'll update to latest 2.6.17.11 tonight, but I wonder if this is a known
+bug? I did upgrade the memory on this server from 2GB to 4GB about a week
+ago, there is a slight chance there's faulty ram in there, but I don't think
+that's the problem. And please, if this is the wrong place for problems like
+this, I'm really sorry.
+
+And after I went home in my lunch to restart it, it came up fine, but now
+it's dead again. Need to investigate more tonight...
+
+Any thoughts?
+
+Best regards,
+Stian
 
 
-Masayuki
+[[HTML alternate version deleted]]
