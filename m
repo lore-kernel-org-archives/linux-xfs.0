@@ -1,42 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 19:00:36 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7P200DW001342
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 19:00:16 -0700
-Date: Fri, 25 Aug 2006 11:58:58 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: xfs bug in 2.6.17.9?
-Message-ID: <20060825115858.A3029472@wobbly.melbourne.sgi.com>
-References: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com> <Pine.LNX.4.64.0608240942180.30908@p34.internal.lan> <1156463263.19666.7.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1156463263.19666.7.camel@localhost.localdomain>; from liste@jordet.net on Fri, Aug 25, 2006 at 01:47:43AM +0200
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 19:24:34 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7P2OPDW010653
+	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 19:24:26 -0700
+Subject: [PATCH] collapse sv_init, init_sv on linux
+Message-Id: <20060825022352.7E22C18DAFEC7@sandeen.net>
+Date: Thu, 24 Aug 2006 21:23:52 -0500 (CDT)
+From: sandeen@sandeen.net
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stian Jordet <liste@jordet.net>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 25, 2006 at 01:47:43AM +0200, Stian Jordet wrote:
-> tor, 24,.08.2006 kl. 09.42 -0400, skrev Justin Piszcz:
-> > Aug 24 09:22:09 buick kernel: xfs_da_do_buf: bno 16777216
-> > 
-> > That is the bug from 2.6.17 -> 2.6.17.6.
-> > 
-> > It was patched in 2.6.17.7, but I assume(?) if you never fixed your FS to 
-> > begin with, you will still have the problem.  Read the XFS FAQ, and backup 
-> > your data before you do that :)
-> 
-> As I just wrote to Martin, I did run a couple of those kernels. But even
-> with updated xfsprogs I can't fix the errors... Is that "normal", or am
-> I in deep trouble?
+Change the one caller of init_sv on linux2.4 to sv_init, since there
+is no difference between sv_init & init_sv on linux anyway.
 
-This is likely to be lost+found being recreated each time, its
-normal if you don't do something about the lost+found files -
-once those are renamed/removed, it should run cleanly.
+Then get rid of now unused init_sv.
 
-cheers.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
--- 
-Nathan
+ linux-2.4/sv.h        |    2 --
+ linux-2.4/xfs_vnode.c |    2 +-
+ linux-2.6/sv.h        |    2 --
+ 3 files changed, 1 insertion(+), 5 deletions(-)
+
+Index: xfs-linux/linux-2.4/sv.h
+===================================================================
+--- xfs-linux.orig/linux-2.4/sv.h
++++ xfs-linux/linux-2.4/sv.h
+@@ -53,8 +53,6 @@ static inline void _sv_wait(sv_t *sv, sp
+ 	remove_wait_queue(&sv->waiters, &wait);
+ }
+ 
+-#define init_sv(sv,type,name,flag) \
+-	init_waitqueue_head(&(sv)->waiters)
+ #define sv_init(sv,flag,name) \
+ 	init_waitqueue_head(&(sv)->waiters)
+ #define sv_destroy(sv) \
+Index: xfs-linux/linux-2.4/xfs_vnode.c
+===================================================================
+--- xfs-linux.orig/linux-2.4/xfs_vnode.c
++++ xfs-linux/linux-2.4/xfs_vnode.c
+@@ -35,7 +35,7 @@ vn_init(void)
+ 	register int i;
+ 
+ 	for (svp = vsync, i = 0; i < NVSYNC; i++, svp++)
+-		init_sv(svp, SV_DEFAULT, "vsy", i);
++		sv_init(svp, SV_DEFAULT, "vsy");
+ }
+ 
+ struct bhv_vnode *
+Index: xfs-linux/linux-2.6/sv.h
+===================================================================
+--- xfs-linux.orig/linux-2.6/sv.h
++++ xfs-linux/linux-2.6/sv.h
+@@ -53,8 +53,6 @@ static inline void _sv_wait(sv_t *sv, sp
+ 	remove_wait_queue(&sv->waiters, &wait);
+ }
+ 
+-#define init_sv(sv,type,name,flag) \
+-	init_waitqueue_head(&(sv)->waiters)
+ #define sv_init(sv,flag,name) \
+ 	init_waitqueue_head(&(sv)->waiters)
+ #define sv_destroy(sv) \
