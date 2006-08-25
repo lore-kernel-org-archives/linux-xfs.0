@@ -1,33 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 19:35:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7P2YuDW013990
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 19:35:08 -0700
-Date: Fri, 25 Aug 2006 12:34:03 +1000
-From: Nathan Scott <nathans@sgi.com>
-Subject: Re: [PATCH] collapse sv_init, init_sv on linux
-Message-ID: <20060825123403.A3026918@wobbly.melbourne.sgi.com>
-References: <20060825022352.7E22C18DAFEC7@sandeen.net>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 22:36:11 -0700 (PDT)
+Received: from smtp106.sbc.mail.mud.yahoo.com (smtp106.sbc.mail.mud.yahoo.com [68.142.198.205])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7P5ZxDW011187
+	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 22:35:59 -0700
+Date: Thu, 24 Aug 2006 22:08:38 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: xfs bug in 2.6.17.9?
+Message-ID: <20060825050838.GA1322@tuatara.stupidest.org>
+References: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com> <Pine.LNX.4.64.0608240942180.30908@p34.internal.lan> <1156463263.19666.7.camel@localhost.localdomain>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060825022352.7E22C18DAFEC7@sandeen.net>; from sandeen@sandeen.net on Thu, Aug 24, 2006 at 09:23:52PM -0500
+In-Reply-To: <1156463263.19666.7.camel@localhost.localdomain>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: xfs@oss.sgi.com
+To: Stian Jordet <liste@jordet.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
 
-On Thu, Aug 24, 2006 at 09:23:52PM -0500, sandeen@sandeen.net wrote:
-> Change the one caller of init_sv on linux2.4 to sv_init, since there
-> is no difference between sv_init & init_sv on linux anyway.
-> 
-> Then get rid of now unused init_sv.
+On Fri, Aug 25, 2006 at 01:47:43AM +0200, Stian Jordet wrote:
 
-Taa, queued up (along with one or two earlier ones I didn't
-reply to yet).
+> As I just wrote to Martin, I did run a couple of those kernels. But
+> even with updated xfsprogs I can't fix the errors... Is that
+> "normal", or am I in deep trouble?
 
-thanks.
-
--- 
-Nathan
+More recent xfs_repair will deal better with it, I think it's in CVS
+now, I'm not entirely sure though.  Search for the XFS faq, at the end
+there is a section on directory corruption and details on how to fix
+it by hand if need be.
