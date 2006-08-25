@@ -1,75 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 23:16:31 -0700 (PDT)
-Received: from buick.jordet.net (buick.jordet.net [217.8.143.72])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7P6GEDW024637
-	for <xfs@oss.sgi.com>; Thu, 24 Aug 2006 23:16:15 -0700
-Subject: Re: xfs bug in 2.6.17.9?
-From: Stian Jordet <liste@jordet.net>
-In-Reply-To: <20060825115858.A3029472@wobbly.melbourne.sgi.com>
-References: <92b7ea0a0608240245v700f19dex6ecb688efcab657b@mail.gmail.com>
-	 <Pine.LNX.4.64.0608240942180.30908@p34.internal.lan>
-	 <1156463263.19666.7.camel@localhost.localdomain>
-	 <20060825115858.A3029472@wobbly.melbourne.sgi.com>
-Content-Type: text/plain
-Date: Fri, 25 Aug 2006 08:15:38 +0200
-Message-Id: <1156486538.6854.1.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Aug 2006 23:44:59 -0700 (PDT)
+Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7P6iSDW004201
+	for <linux-xfs@oss.sgi.com>; Thu, 24 Aug 2006 23:44:40 -0700
+Received: from soarer.melbourne.sgi.com (soarer.melbourne.sgi.com [134.14.55.89])
+	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k7P6hknx021419
+	for <linux-xfs@oss.sgi.com>; Fri, 25 Aug 2006 01:43:47 -0500
+Subject: TAKE 955006 - 
+Message-Id: <20060825064405.5DA52627C5@soarer.melbourne.sgi.com>
+Date: Fri, 25 Aug 2006 16:44:05 +1000 (EST)
+From: vapo@soarer.melbourne.sgi.com (Vlad Apostolov)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.melbourne.sgi.com, linux-xfs@oss.sgi.com
 
-fre, 25,.08.2006 kl. 11.58 +1000, skrev Nathan Scott:
-> On Fri, Aug 25, 2006 at 01:47:43AM +0200, Stian Jordet wrote:
-> > tor, 24,.08.2006 kl. 09.42 -0400, skrev Justin Piszcz:
-> > > Aug 24 09:22:09 buick kernel: xfs_da_do_buf: bno 16777216
-> > > 
-> > > That is the bug from 2.6.17 -> 2.6.17.6.
-> > > 
-> > > It was patched in 2.6.17.7, but I assume(?) if you never fixed your FS to 
-> > > begin with, you will still have the problem.  Read the XFS FAQ, and backup 
-> > > your data before you do that :)
-> > 
-> > As I just wrote to Martin, I did run a couple of those kernels. But even
-> > with updated xfsprogs I can't fix the errors... Is that "normal", or am
-> > I in deep trouble?
-> 
-> This is likely to be lost+found being recreated each time, its
-> normal if you don't do something about the lost+found files -
-> once those are renamed/removed, it should run cleanly.
+955006: DMAPI set/get/remove attribute returns EINVAL instead of EFAULT:bad &dm_attrname
 
-You seem to be right about that :)
 
-But when I wake up this morning, I had my logs full of this:
+Date:  Fri Aug 25 16:41:56 AEST 2006
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs-dmapi
+Inspected by:  bnaujok
 
-0x0: 24 73 74 61 74 73 20 3d 20 7b 0a 20 20 27 73 68
-Filesystem "rd/c0d1p1": XFS internal error xfs_da_do_buf(2) at line 2212
-of file fs/xfs/xfs_da_btree.c.  Caller 0xc029d81c
- <c02b0b0b> xfs_corruption_error+0x10b/0x140  <c029d81c> xfs_da_read_buf
-+0x3c/0x40
- <c02e10a1> kmem_zone_alloc+0x61/0xe0  <c029cd9a> xfs_da_buf_make
-+0xfa/0x150
- <c029d719> xfs_da_do_buf+0x929/0x980  <c029d81c> xfs_da_read_buf
-+0x3c/0x40
- <c029d81c> xfs_da_read_buf+0x3c/0x40  <c02a05fd> xfs_da_node_lookup_int
-+0xcd/0x3b0
- <c02a05fd> xfs_da_node_lookup_int+0xcd/0x3b0  <c02a899f>
-xfs_dir2_node_lookup+0x3f/0xc0
- <c02a325a> xfs_dir2_lookup+0x12a/0x130  <c02e91e6> xfs_vn_permission
-+0x26/0x30
- <c016e220> vfs_permission+0x20/0x30  <c016e84a> __link_path_walk
-+0x8a/0xfa0
- <c02d58cc> xfs_dir_lookup_int+0x4c/0x130  <c02da1fe> xfs_lookup
-+0x7e/0xa0
- <c02e963e> xfs_vn_lookup+0x4e/0x90  <c016e119> __lookup_hash+0xe9/0x120
- <c0170088> do_unlinkat+0xa8/0x170  <c0168947> sys_stat64+0x27/0x30
- <c0102fcf> syscall_call+0x7/0xb
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-Don't know how many times, but many! Is that related to anything...?
 
-Thanks!
-
-Best regards,
-Stian
+Modid:  xfs-linux-melb:xfs-kern:26864a
+fs/xfs/dmapi/xfs_dm.c - 1.20 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+	- pv 955006, rv bnaujok - check access_ok() for user dm_attrname_t buffer
