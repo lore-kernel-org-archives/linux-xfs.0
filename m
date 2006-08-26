@@ -1,39 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Aug 2006 10:07:45 -0700 (PDT)
-Received: from mailout.stusta.mhn.de (emailhub.stusta.mhn.de [141.84.69.5])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7QH7RDW005103
-	for <xfs@oss.sgi.com>; Sat, 26 Aug 2006 10:07:27 -0700
-Date: Sat, 26 Aug 2006 17:06:55 +0200
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] fs/xfs/xfs_bmap.c:xfs_bmapi(): fix a bug
-Message-ID: <20060826150654.GE4765@stusta.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Aug 2006 18:07:56 -0700 (PDT)
+Received: from vega.opentrend.net (vega.opentrend.net [65.39.131.100])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7R17kDW005637
+	for <xfs@oss.sgi.com>; Sat, 26 Aug 2006 18:07:46 -0700
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by vega.opentrend.net (Postfix) with ESMTP id 4C938580153D
+	for <xfs@oss.sgi.com>; Sat, 26 Aug 2006 19:08:35 -0400 (EDT)
+Received: from vega.opentrend.net ([127.0.0.1])
+	by localhost (vega [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id 26463-03 for <xfs@oss.sgi.com>;
+	Sat, 26 Aug 2006 19:08:34 -0400 (EDT)
+Received: from mimosa.opentrend.net (mimosa.opentrend.net [192.168.120.11])
+	by vega.opentrend.net (Postfix) with ESMTP id ED6A158014F7
+	for <xfs@oss.sgi.com>; Sat, 26 Aug 2006 19:08:33 -0400 (EDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mimosa.opentrend.net (Postfix) with ESMTP id 74E461C00B62
+	for <xfs@oss.sgi.com>; Sat, 26 Aug 2006 19:08:27 -0400 (EDT)
+Date: Sat, 26 Aug 2006 19:08:27 -0400 (EDT)
+From: Robert Brockway <rbrockway@opentrend.net>
+Subject: Thanks!
+Message-ID: <Pine.LNX.4.64.0608261903570.27119@mimosa.opentrend.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-This patch fixes the following bug introduced by commit 
-39269e29d4aad04252e0debec4c9b01bac16a257:
+Hi guys.  I think the poor hard working developers get a lot more 
+negative messages than positive (it's broken, there's a bug, etc) so I 
+just wanted to send a positive message.
 
-Since bma.conv is a char and XFS_BMAPI_CONVERT is 0x1000, bma.conv was 
-always assigned zero.
+I've been a happy xfs user for many years and I've never had a problem 
+with the filesystem.  Today I managed to powerdown a firewire drive with 
+an XFS filesystem on it while it was mounted (oops).  Anyway there was FS 
+corruption and after a vanilla xfs_repair failed I had to resort to 
+xfs_repair -L.  The filesystem was fully repaired and is now fine.
 
-Spotted by the GNU C compiler (SVN version).
+Thanks a bunch to the xfs developers.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cheers,
 
---- linux-2.6.18-rc4-mm2/fs/xfs/xfs_bmap.c.old	2006-08-26 03:31:23.000000000 +0200
-+++ linux-2.6.18-rc4-mm2/fs/xfs/xfs_bmap.c	2006-08-26 03:31:28.000000000 +0200
-@@ -4993,7 +4993,7 @@ xfs_bmapi(
- 				bma.firstblock = *firstblock;
- 				bma.alen = alen;
- 				bma.off = aoff;
--				bma.conv = (flags & XFS_BMAPI_CONVERT);
-+				bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 				bma.wasdel = wasdelay;
- 				bma.minlen = minlen;
- 				bma.low = flist->xbf_low;
+Rob
+
+-- 
+Robert Brockway B.Sc.        Phone:          +1-905-821-2327
+Senior Technical Consultant  Urgent Support: +1-416-669-3073
+OpenTrend Solutions Ltd      Email:          support@opentrend.net
+                              Web:            www.opentrend.net
