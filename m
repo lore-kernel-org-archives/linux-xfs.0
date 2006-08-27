@@ -1,70 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Aug 2006 02:00:12 -0700 (PDT)
-Received: from zenon.apartia.fr (zenon.apartia.fr [82.66.93.83])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7R901DW012154
-	for <xfs@oss.sgi.com>; Sun, 27 Aug 2006 02:00:03 -0700
-Received: from styx.apartia.fr (styx.apartia.fr [10.0.3.109])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "styx.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
-	by zenon.apartia.fr (Postfix) with ESMTP id 3CBACF02F333E
-	for <xfs@oss.sgi.com>; Sun, 27 Aug 2006 09:21:24 +0200 (CEST)
-Date: Sun, 27 Aug 2006 09:21:23 +0200
-From: Louis-David Mitterrand <ldm@apartia.org>
-Subject: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate memory
-Message-ID: <20060827072123.GA3875@apartia.fr>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Aug 2006 04:37:10 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7RBalDW010882
+	for <linux-xfs@OSS.SGI.com>; Sun, 27 Aug 2006 04:36:59 -0700
+Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
+	id 1GHIvu-0003sQ-8r
+	for <linux-xfs@OSS.SGI.com>; Sun, 27 Aug 2006 12:36:06 +0100
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+Message-ID: <17649.33701.520393.118416@base.ty.sabi.co.UK>
+Date: Sun, 27 Aug 2006 12:36:05 +0100
+Subject: Re: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate memory
+In-Reply-To: <20060827072810.GA4098@apartia.fr>
+References: <20060827072810.GA4098@apartia.fr>
+From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Linux XFS <linux-xfs@oss.sgi.com>
 
-Package: xfsprogs
-Version: 2.8.11-1
-Followup-For: Bug #382935
+>>> On Sun, 27 Aug 2006 09:28:10 +0200, Louis-David Mitterrand
+>>> <vindex+lists-xfs@apartia.org> said:
 
-Hello,
+[ ... ]
 
-Using xfs_repair on a 2TB partition I get:
+> xfs_repair: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate memory
 
-	Phase 1 - find and verify superblock...
-	Phase 2 - using internal log
-			- zero log...
-			- scan filesystem freespace and inode maps...
-			- found root inode chunk
-	Phase 3 - for each AG...
-			- scan and clear agi unlinked lists...
-			- process known inodes and perform inode discovery...
-			- agno = 0
-			- agno = 1
-			- agno = 2
-			- agno = 3
-			- agno = 4
-			- agno = 5
-			- agno = 6
-			- agno = 7
-			- agno = 8
-			- agno = 9
-			- agno = 10
-	xfs_repair: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate memory
+Most probably this is not a bug. The system probably does not
+have enough memory. "Cannot allocate memory" is probably what
+is happening. This has been discussed many times previously...
 
+   http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
 
-
--- System Information:
-Debian Release: testing/unstable
-  APT prefers unstable
-  APT policy: (500, 'unstable'), (500, 'testing'), (499, 'experimental')
-Architecture: i386 (i686)
-Shell:  /bin/sh linked to /bin/bash
-Kernel: Linux 2.6.17-6-debian-styx
-Locale: LANG=en_CA, LC_CTYPE=fr_FR@euro (charmap=ISO-8859-15)
-
-Versions of packages xfsprogs depends on:
-ii  libc6                        2.3.6.ds1-4 GNU C Library: Shared libraries
-ii  libreadline5                 5.1-7       GNU readline and history libraries
-ii  libuuid1                     1.39-1      universally unique id library
-
-xfsprogs recommends no packages.
-
--- no debconf information
+[ ... ]
