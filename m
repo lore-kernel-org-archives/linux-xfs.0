@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Aug 2006 02:00:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Aug 2006 02:00:12 -0700 (PDT)
 Received: from zenon.apartia.fr (zenon.apartia.fr [82.66.93.83])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7R901DW012155
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7R901DW012154
 	for <xfs@oss.sgi.com>; Sun, 27 Aug 2006 02:00:03 -0700
 Received: from styx.apartia.fr (styx.apartia.fr [10.0.3.109])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(Client CN "styx.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
-	by zenon.apartia.fr (Postfix) with ESMTP id 408CBF5176A06
-	for <xfs@oss.sgi.com>; Sun, 27 Aug 2006 09:28:11 +0200 (CEST)
-Date: Sun, 27 Aug 2006 09:28:10 +0200
-From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
+	by zenon.apartia.fr (Postfix) with ESMTP id 3CBACF02F333E
+	for <xfs@oss.sgi.com>; Sun, 27 Aug 2006 09:21:24 +0200 (CEST)
+Date: Sun, 27 Aug 2006 09:21:23 +0200
+From: Louis-David Mitterrand <ldm@apartia.org>
 Subject: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate memory
-Message-ID: <20060827072810.GA4098@apartia.fr>
+Message-ID: <20060827072123.GA3875@apartia.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
