@@ -1,40 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Aug 2006 21:17:20 -0700 (PDT)
-Received: from smtp114.sbc.mail.mud.yahoo.com (smtp114.sbc.mail.mud.yahoo.com [68.142.198.213])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7T4HADW028689
-	for <xfs@oss.sgi.com>; Mon, 28 Aug 2006 21:17:11 -0700
-Date: Mon, 28 Aug 2006 21:16:35 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: accidently deleted files from directory
-Message-ID: <20060829041635.GA3166@tuatara.stupidest.org>
-References: <44f384c5.270c085b.5896.ffff9b29@mx.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <44f384c5.270c085b.5896.ffff9b29@mx.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Aug 2006 21:22:59 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7T4MaDW029857
+	for <linux-xfs@oss.sgi.com>; Mon, 28 Aug 2006 21:22:48 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id OAA04550 for <linux-xfs@oss.sgi.com>; Tue, 29 Aug 2006 14:21:53 +1000
+Subject: TAKE 907752 - xfsprogs
+Message-Id: <20060829042153.B134F58CF7C4@chook.melbourne.sgi.com>
+Date: Tue, 29 Aug 2006 14:21:53 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: gert wohlgemuth <wohlgemuth@ucdavis.edu>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Aug 28, 2006 at 05:05:30PM -0700, gert wohlgemuth wrote:
+Update Polish xfsprogs translation, thanks to Jakub Bogusz.
 
-> On the weekend it happens that I accidentally deleted 1 TB of data
-> (rm -rdf /mnt/lcq). We have no backup of the data (internal reasons
-> of the university...) and it would be nice to get the data somehow
-> back.
+Date:  Tue Aug 29 14:15:08 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-cmds
+Inspected by:  Jakub Bogusz <qboosh@pld-linux.org> 
 
-ouch
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-> after I did a cat /dev/sda1 | less I could see that some data are still
-> exist and are not overwritten. So I think "all" what I have todo is some how
-> get the journal back.
 
-that won't suffice, the metadata showing where all the files are is
-likely gone
+Modid:  master-melb:xfs-cmds:26882a
+xfsprogs/po/pl.po - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/po/pl.po.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
 
-> Is there anyway or is all hope lost?
 
-if you know what the data looks like heuristically scan for it and try
-to glue the fragments back together...
+Bump xfsprogs version number, after recent changes.
+
+Date:  Tue Aug 29 14:21:43 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-cmds
+Inspected by:  nathans
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:26883a
+xfsprogs/VERSION - 1.162 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.162&r2=text&tr2=1.161&f=h
+xfsprogs/doc/CHANGES - 1.218 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.218&r2=text&tr2=1.217&f=h
