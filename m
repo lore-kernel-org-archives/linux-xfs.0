@@ -1,40 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Aug 2006 14:40:17 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7SLdrDW004636
-	for <xfs@oss.sgi.com>; Mon, 28 Aug 2006 14:39:54 -0700
-Date: Mon, 28 Aug 2006 21:38:39 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: review: change default realtime extsize
-Message-ID: <20060828203839.GA719@infradead.org>
-References: <20060828133132.A3124842@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060828133132.A3124842@wobbly.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Aug 2006 18:10:02 -0700 (PDT)
+Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.183])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7T19lDW002930
+	for <xfs@oss.sgi.com>; Mon, 28 Aug 2006 18:09:48 -0700
+Received: by py-out-1112.google.com with SMTP id x31so2420182pye
+        for <xfs@oss.sgi.com>; Mon, 28 Aug 2006 18:09:16 -0700 (PDT)
+From: "gert wohlgemuth" <wohlgemuth@ucdavis.edu>
+Subject: accidently deleted files from directory
+Date: Mon, 28 Aug 2006 17:05:30 -0700
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Message-ID: <44f384c5.270c085b.5896.ffff9b29@mx.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 28, 2006 at 01:31:32PM +1000, Nathan Scott wrote:
-> Hi,
-> 
-> While testing something else recently, I noticed we were always
-> creating a large number of unwritten extents during page cache
-> writout to the realtime subvolume.  It turned out to be because
-> of the way we are typically called with page sized allocation
-> requests, but we always allocate much more than a page.  Back
-> when realtime subvols could only use direct I/O this was fine
-> (apps typically used larger IO sizes) but now its not so good.
-> 
-> These larger allocations are ending up meaning we need to do many
-> additional unwritten extent conversions (i.e. more transactions,
-> and more log traffic), which we can easily avoid.  Since we have
-> a default 4K filesystem blocksize on the data device, there would
-> seem to be no harm in matching that on the realtime subvolume, by
-> default.  This simple mkfs tweak does just that...
+Hi and thx for your help,
 
-That description makes sense, and given that the one-liner diff is
-obviously correct.  ACK from me.
+I'm running a gentoo box and using xfs as file system.
+
+On the weekend it happens that I accidentally deleted 1 TB of data (rm -rdf
+/mnt/lcq). We have no backup of the data (internal reasons of the
+university...) and it would be nice to get the data somehow back.
+
+After the delete the first step was to unmount the partion and this are the
+info's from the xfs_check program.
+
+meta-data=/mnt/lcq               isize=256    agcount=32, agsize=9154978
+blks
+         =                       sectsz=512
+data     =                       bsize=4096   blocks=292959296, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+after I did a cat /dev/sda1 | less I could see that some data are still
+exist and are not overwritten. So I think "all" what I have todo is some how
+get the journal back.
+
+Is there anyway or is all hope lost?
+
+Thx gert
+
+p.s. pleace CC me (wohlgemuth@ucdavis.edu) because I'm not a member of this
+mailing list.
