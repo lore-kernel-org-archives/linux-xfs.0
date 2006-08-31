@@ -1,36 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 21:59:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V4xIDW024860
-	for <linux-xfs@oss.sgi.com>; Wed, 30 Aug 2006 21:59:32 -0700
-Message-ID: <44F66CA0.4080008@sgi.com>
-Date: Thu, 31 Aug 2006 14:59:12 +1000
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: TAKE 955006: DMAPI set/get/remove attribute returns EINVAL instead
- of EFAULT:bad &dm_attrname
-References: <44CE9F23.7000605@sgi.com> <44EE9DF7.1080904@sgi.com>
-In-Reply-To: <44EE9DF7.1080904@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 22:07:21 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V574DW026402
+	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 22:07:05 -0700
+Subject: Re: [PATCH 2/2] Fix i_state of inode is changed after the inode is freed [try #2]
+In-reply-to: <20060831131902.H3208450@wobbly.melbourne.sgi.com>
+Message-Id: <20060831140643m-saito@mail.aom.tnes.nec.co.jp>
+References: <20060831131902.H3208450@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+From: Masayuki Saito <m-saito@tnes.nec.co.jp>
+Date: Thu, 31 Aug 2006 14:06:43 +0900
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Date:  Thu Aug 31 14:55:04 AEST 2006
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs-dmapi
-Inspected by:  bnaujok
-Author:  vapo
+>> Are the patches going to be merged?
+>
+>Yep, they're queued up for 2.6.19.  Since it was a race found
+>only on testing with a ramdisk (iirc) it didn't really seem to
+>me like they needed to be rushed through for a 2.6.18-rc.  The
+>race has also been there for the entire lifetime of the Linux
+>XFS port... so, not urgent (and not risk free either).
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Thanks, I agree it.  I'm looking forward to receiving the TAKE.
+So far thank you, Nathan.  I wish to be glorious in your future.
 
+cheers.
 
-Modid:  xfs-linux-melb:xfs-kern:26892a
-fs/xfs/dmapi/xfs_dm.c - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-        - pv 955006, rv bnaujok - Better (and proper) way to fix the 
-problem.
-          strnlen_user returns strlen+1 not strlen as documented in the 
-ia64 code.
+--
+Masayuki
