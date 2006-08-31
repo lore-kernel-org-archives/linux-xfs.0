@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 20:20:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 20:22:47 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V3KADW009025
-	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 20:20:22 -0700
-Date: Thu, 31 Aug 2006 13:19:02 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V3MIDW010218
+	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 20:22:30 -0700
+Date: Thu, 31 Aug 2006 13:21:07 +1000
 From: Nathan Scott <nathans@sgi.com>
-Subject: Re: [PATCH 2/2] Fix i_state of inode is changed after the inode is freed [try #2]
-Message-ID: <20060831131902.H3208450@wobbly.melbourne.sgi.com>
-References: <20060824171653.C3003989@wobbly.melbourne.sgi.com> <20060831114423m-saito@mail.aom.tnes.nec.co.jp>
+Subject: Re: Review: Prevent free space oversubscription
+Message-ID: <20060831132107.I3208450@wobbly.melbourne.sgi.com>
+References: <20060830021532.GF5737019@melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20060831114423m-saito@mail.aom.tnes.nec.co.jp>; from m-saito@tnes.nec.co.jp on Thu, Aug 31, 2006 at 11:44:23AM +0900
+In-Reply-To: <20060830021532.GF5737019@melbourne.sgi.com>; from dgc@sgi.com on Wed, Aug 30, 2006 at 12:15:32PM +1000
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com, Stephane Doyon <sdoyon@max-t.com>, Luciano Chavez <lnx1138@us.ibm.com>
 
-On Thu, Aug 31, 2006 at 11:44:23AM +0900, Masayuki Saito wrote:
-> Hi, Nathan
-> 
-> Are the patches going to be merged?
+On Wed, Aug 30, 2006 at 12:15:32PM +1000, David Chinner wrote:
+> ...
+> The following patch reserves space for the free lists in all AGs
+> plus the inode bmap btree which prevents oversubscription. It also
+> prevents those blocks from being reported as free space (as they can
+> never be used) and makes the SMP in-core superblock accounting code and
+> the reserved block ioctl respect this requirement.
 
-Yep, they're queued up for 2.6.19.  Since it was a race found
-only on testing with a ramdisk (iirc) it didn't really seem to
-me like they needed to be rushed through for a 2.6.18-rc.  The
-race has also been there for the entire lifetime of the Linux
-XFS port... so, not urgent (and not risk free either).
+Makes sense to me & patch looks good.
 
 cheers.
 
