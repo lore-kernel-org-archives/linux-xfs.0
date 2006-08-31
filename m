@@ -1,74 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 00:49:14 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V7mkDW029324
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 00:48:58 -0700
-Date: Thu, 31 Aug 2006 17:47:42 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 01:03:46 -0700 (PDT)
+Received: from e4.ny.us.ibm.com (e4.ny.us.ibm.com [32.97.182.144])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V83SDW003004
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 01:03:28 -0700
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7V82tSJ025235
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:55 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7V82tj5013894
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:55 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7V82spG013394
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:54 -0400
+Message-ID: <44F6979C.4070309@cn.ibm.com>
+Date: Thu, 31 Aug 2006 16:02:36 +0800
+From: Yao Fei Zhu <walkinair@cn.ibm.com>
+Reply-To: walkinair@cn.ibm.com
+MIME-Version: 1.0
 Subject: Re: kernel BUG in __xfs_get_blocks at fs/xfs/linux-2.6/xfs_aops.c:1293!
-Message-ID: <20060831074742.GD807830@melbourne.sgi.com>
-References: <44F67847.6030307@cn.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <44F67847.6030307@cn.ibm.com>
+References: <44F67847.6030307@cn.ibm.com> <20060831074742.GD807830@melbourne.sgi.com>
+In-Reply-To: <20060831074742.GD807830@melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Yao Fei Zhu <walkinair@cn.ibm.com>
+To: David Chinner <dgc@sgi.com>
 Cc: linux-kernel@vger.kernel.org, haveblue@us.ibm.com, xfs@oss.sgi.com
 
-On Thu, Aug 31, 2006 at 01:48:55PM +0800, Yao Fei Zhu wrote:
-> Problem description:
-> Run fsstress on xfs file system with -n 1000 and -p 1000, after about 3 
-> hours,
-> test box will fall into xmon, and get
-> kernel BUG in __xfs_get_blocks at fs/xfs/linux-2.6/xfs_aops.c:1293!
-> 
-> Hardware Environment
->    Machine type (p650, x235, SF2, etc.): B70+
->    Cpu type (Power4, Power5, IA-64, etc.): POWER5+
-> Software Environmnet
->    Base OS: SLES10 GM
->    Kernel: 2.6.18-rc5
-> 
-> Additional information:
-> 3:mon> e
-> cpu 0x3: Vector: 700 (Program Check) at [c0000001e16632d0]
->    pc: d0000000006daa88: .__xfs_get_blocks+0x1a0/0x2a0 [xfs]
->    lr: d0000000006da984: .__xfs_get_blocks+0x9c/0x2a0 [xfs]
->    sp: c0000001e1663550
->   msr: 8000000000029032
->  current = 0xc0000001dde71310
->  paca    = 0xc0000000004c4900
->    pid   = 9217, comm = fsstress
-> kernel BUG in __xfs_get_blocks at fs/xfs/linux-2.6/xfs_aops.c:1293!
-> 3:mon> t
-> [c0000001e1663640] c000000000108344 .__blockdev_direct_IO+0x560/0xcfc
-> [c0000001e1663760] d0000000006dc43c .xfs_vm_direct_IO+0xec/0x13c [xfs]
-> [c0000001e1663860] c0000000000a1474 .generic_file_direct_IO+0xe8/0x15c
-> [c0000001e1663910] c0000000000a1748 .__generic_file_aio_read+0xf4/0x22c
-> [c0000001e16639e0] d0000000006e4b94 .xfs_read+0x288/0x368 [xfs]
-> [c0000001e1663ae0] d0000000006e0750 .xfs_file_aio_read+0x88/0x9c [xfs]
-> [c0000001e1663b70] c0000000000d4df0 .do_sync_read+0xd4/0x130
-> [c0000001e1663cf0] c0000000000d5c44 .vfs_read+0x118/0x200
-> [c0000001e1663d90] c0000000000d6128 .sys_read+0x4c/0x8c
-> [c0000001e1663e30] c00000000000871c syscall_exit+0x0/0x40
+David Chinner wrote:
 
-Hmmmm. We've mapped a range that has been reserved for a delayed
-allocate extent during a direct I/O. That should not happen as XFS
-flushes delalloc extents before executing a direct read and holds
-the I/O lock which will prevent any new writes from mapping new
-delalloc extents. Something went astray, though. :(
+>
+>Hmmmm. We've mapped a range that has been reserved for a delayed
+>allocate extent during a direct I/O. That should not happen as XFS
+>flushes delalloc extents before executing a direct read and holds
+>the I/O lock which will prevent any new writes from mapping new
+>delalloc extents. Something went astray, though. :(
+>
+>Can you give me some more detail on the machine you're running?
+>e.g. How many CPUs, RAM and what type of disk subsystem you are using?
+>That will make it easier for us to try to reproduce this problem.
+>
+>Cheers,
+>
+>Dave.
+>  
+>
+The test box is an IBM System p5 Linux partition, allocated with
+0.8 physical POWER5+ cpu processing unit/ 2 virtual processors and 8GB 
+memory.
+The disk is exported by AIX Virtual IO Server.
 
-Can you give me some more detail on the machine you're running?
-e.g. How many CPUs, RAM and what type of disk subsystem you are using?
-That will make it easier for us to try to reproduce this problem.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+BTW, I have CONFIG_PPC_64K_PAGES enabled.
+ 
