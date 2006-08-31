@@ -1,72 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 20:06:35 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V35uDW001535
-	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 20:06:19 -0700
-Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
-	by tyo200.gate.nec.co.jp (8.13.7/8.13.4) with ESMTP id k7V2r1lW020001
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 11:53:03 +0900 (JST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 20:20:39 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V3KADW009025
+	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 20:20:22 -0700
+Date: Thu, 31 Aug 2006 13:19:02 +1000
+From: Nathan Scott <nathans@sgi.com>
 Subject: Re: [PATCH 2/2] Fix i_state of inode is changed after the inode is freed [try #2]
-In-reply-to: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
-Message-Id: <20060831114423m-saito@mail.aom.tnes.nec.co.jp>
-References: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
+Message-ID: <20060831131902.H3208450@wobbly.melbourne.sgi.com>
+References: <20060824171653.C3003989@wobbly.melbourne.sgi.com> <20060831114423m-saito@mail.aom.tnes.nec.co.jp>
 Mime-Version: 1.0
-From: Masayuki Saito <m-saito@tnes.nec.co.jp>
-Date: Thu, 31 Aug 2006 11:44:23 +0900
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <20060831114423m-saito@mail.aom.tnes.nec.co.jp>; from m-saito@tnes.nec.co.jp on Thu, Aug 31, 2006 at 11:44:23AM +0900
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
+To: Masayuki Saito <m-saito@tnes.nec.co.jp>
 Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Hi, Nathan
-
-
->Fix i_state of the inode is changed after the inode is freed.
->
->Signed-off-by: Masayuki Saito <m-saito@tnes.nec.co.jp>
->Signed-off-by: ASANO Masahiro <masano@tnes.nec.co.jp>
->---
->
->Index: xfs-linux/xfs_inode.c
->===================================================================
->--- xfs-linux.orig/xfs_inode.c	2006-08-24 17:02:36.896740000 +1000
->+++ xfs-linux/xfs_inode.c	2006-08-24 17:09:29.430521750 +1000
->@@ -2761,19 +2761,29 @@ xfs_iunpin(
-> 		 * call as the inode reclaim may be blocked waiting for
-> 		 * the inode to become unpinned.
-> 		 */
->+		struct inode *inode = NULL;
->+
->+		spin_lock(&ip->i_flags_lock);
-> 		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
-> 			bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
+On Thu, Aug 31, 2006 at 11:44:23AM +0900, Masayuki Saito wrote:
+> Hi, Nathan
 > 
-> 			/* make sync come back and flush this inode */
-> 			if (vp) {
->-				struct inode	*inode = vn_to_inode(vp);
->+				inode = vn_to_inode(vp);
-> 
-> 				if (!(inode->i_state &
->-						(I_NEW|I_FREEING|I_CLEAR)))
->-					mark_inode_dirty_sync(inode);
->+						(I_NEW|I_FREEING|I_CLEAR))) {
->+					inode = igrab(inode);
->+					if (inode)
->+						mark_inode_dirty_sync(inode);
->+				} else
->+					inode = NULL;
-> 			}
-> 		}
->+		spin_unlock(&ip->i_flags_lock);
-> 		wake_up(&ip->i_ipin_wait);
->+		if (inode)
->+			iput(inode);
-> 	}
-> }
+> Are the patches going to be merged?
 
-Are the patches going to be merged?
+Yep, they're queued up for 2.6.19.  Since it was a race found
+only on testing with a ramdisk (iirc) it didn't really seem to
+me like they needed to be rushed through for a 2.6.18-rc.  The
+race has also been there for the entire lifetime of the Linux
+XFS port... so, not urgent (and not risk free either).
 
-Masayuki
+cheers.
+
+-- 
+Nathan
