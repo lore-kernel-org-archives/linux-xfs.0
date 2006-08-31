@@ -1,55 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 01:03:46 -0700 (PDT)
-Received: from e4.ny.us.ibm.com (e4.ny.us.ibm.com [32.97.182.144])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V83SDW003004
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 01:03:28 -0700
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7V82tSJ025235
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:55 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7V82tj5013894
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:55 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7V82spG013394
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:02:54 -0400
-Message-ID: <44F6979C.4070309@cn.ibm.com>
-Date: Thu, 31 Aug 2006 16:02:36 +0800
-From: Yao Fei Zhu <walkinair@cn.ibm.com>
-Reply-To: walkinair@cn.ibm.com
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 01:19:22 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k7V8IaDW006711
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 01:18:49 -0700
+Date: Thu, 31 Aug 2006 18:17:26 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: kernel BUG in __xfs_get_blocks at fs/xfs/linux-2.6/xfs_aops.c:1293!
-References: <44F67847.6030307@cn.ibm.com> <20060831074742.GD807830@melbourne.sgi.com>
-In-Reply-To: <20060831074742.GD807830@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20060831081726.GV5737019@melbourne.sgi.com>
+References: <44F67847.6030307@cn.ibm.com> <20060831074742.GD807830@melbourne.sgi.com> <44F6979C.4070309@cn.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44F6979C.4070309@cn.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, haveblue@us.ibm.com, xfs@oss.sgi.com
+To: Yao Fei Zhu <walkinair@cn.ibm.com>
+Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, haveblue@us.ibm.com, xfs@oss.sgi.com
 
-David Chinner wrote:
+On Thu, Aug 31, 2006 at 04:02:36PM +0800, Yao Fei Zhu wrote:
+> David Chinner wrote:
+> >Hmmmm. We've mapped a range that has been reserved for a delayed
+> >allocate extent during a direct I/O. That should not happen as XFS
+> >flushes delalloc extents before executing a direct read and holds
+> >the I/O lock which will prevent any new writes from mapping new
+> >delalloc extents. Something went astray, though. :(
+> >
+> >Can you give me some more detail on the machine you're running?
+> >e.g. How many CPUs, RAM and what type of disk subsystem you are using?
+> >That will make it easier for us to try to reproduce this problem.
+>
+> The test box is an IBM System p5 Linux partition, allocated with
+> 0.8 physical POWER5+ cpu processing unit/ 2 virtual processors and 8GB 
+> memory.
+> The disk is exported by AIX Virtual IO Server.
 
->
->Hmmmm. We've mapped a range that has been reserved for a delayed
->allocate extent during a direct I/O. That should not happen as XFS
->flushes delalloc extents before executing a direct read and holds
->the I/O lock which will prevent any new writes from mapping new
->delalloc extents. Something went astray, though. :(
->
->Can you give me some more detail on the machine you're running?
->e.g. How many CPUs, RAM and what type of disk subsystem you are using?
->That will make it easier for us to try to reproduce this problem.
->
->Cheers,
->
->Dave.
->  
->
-The test box is an IBM System p5 Linux partition, allocated with
-0.8 physical POWER5+ cpu processing unit/ 2 virtual processors and 8GB 
-memory.
-The disk is exported by AIX Virtual IO Server.
+Nothing too unusual there.
 
-BTW, I have CONFIG_PPC_64K_PAGES enabled.
- 
+> BTW, I have CONFIG_PPC_64K_PAGES enabled.
+
+But that might be a good place to start. Can you see if you can
+reproduce the problem without this config option set?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
