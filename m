@@ -1,37 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 01:56:11 -0700 (PDT)
-Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.4])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V8tEDW013154
-	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 01:55:57 -0700
-Date: Thu, 31 Aug 2006 01:54:30 -0700
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: kernel BUG in __xfs_get_blocks at
- fs/xfs/linux-2.6/xfs_aops.c:1293!
-Message-Id: <20060831015430.6df0d8ba.akpm@osdl.org>
-In-Reply-To: <20060831081726.GV5737019@melbourne.sgi.com>
-References: <44F67847.6030307@cn.ibm.com>
-	<20060831074742.GD807830@melbourne.sgi.com>
-	<44F6979C.4070309@cn.ibm.com>
-	<20060831081726.GV5737019@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 Aug 2006 04:25:45 -0700 (PDT)
+Received: from kernel.dk (brick.kernel.dk [62.242.22.158])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7VBPKDW007792
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 04:25:22 -0700
+Date: Thu, 31 Aug 2006 11:24:41 +0200
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: vmsplice can't work well
+Message-ID: <20060831092440.GC5528@kernel.dk>
+References: <44F4440F.1090300@gmail.com> <20060829140542.GN12257@kernel.dk> <44F5CC08.8010205@mnsu.edu> <20060830174815.GF7331@kernel.dk> <44F5D3C6.1010108@mnsu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44F5D3C6.1010108@mnsu.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Yao Fei Zhu <walkinair@cn.ibm.com>, linux-kernel@vger.kernel.org, haveblue@us.ibm.com, xfs@oss.sgi.com
+To: "Jeffrey E. Hundstad" <jeffrey.hundstad@mnsu.edu>
+Cc: xfs@oss.sgi.com, nathans@sgi.com
 
-On Thu, 31 Aug 2006 18:17:26 +1000
-David Chinner <dgc@sgi.com> wrote:
+XFS list,
 
-> > BTW, I have CONFIG_PPC_64K_PAGES enabled.
+On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+> Jens Axboe wrote:
+> >On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+> >  
+> >>I tried your splie-git...tar.gz file and tried the splice-cp.  It 
+> >>produced files that are the right length... but the files only contain 
+> >>nulls.  Here's the straces:
+> >>    
+> >
+> >Works for me as well. Could be an fs issue, how large was the README and
+> >what filesystem did you use?
+> >
+> >  
+> The file was 1130 bytes (it was the README in that directory.)  The 
+> filesystem is XFS.
 > 
-> But that might be a good place to start. Can you see if you can
-> reproduce the problem without this config option set?
 
-It would be useful to compare the compiler warning output for 64k pages
-versus that for smaller-pages.  
+I can reproduce this quite easily, doing:
 
-Several quite worrisome-looking warnings are emitted from various parts of
-the kernel with 64k pages.  Related to arithmetic on short types.
+nelson:~ # splice-cp sda.blktrace.0 foo
+
+nelson:~ # md5sum sda.blktrace.0 foo
+4754070ae77091468c830ea23b125d68  sda.blktrace.0
+efdc7b9d00692fdfe91a691277209267  foo
+
+'foo' contains only zeroes. Doing the same on ext3 yields the correct
+results, foo contains the right data. I'm testing on
+2.16.18-rc5-current, Jeffrey used 2.6.17.x latest.
+
+-- 
+Jens Axboe
