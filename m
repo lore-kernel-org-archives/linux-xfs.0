@@ -1,30 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 12:16:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7UJGVDW021789
-	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 12:16:34 -0700
-Message-ID: <44F5E3DB.70802@sandeen.net>
-Date: Wed, 30 Aug 2006 14:15:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: catch22: xfs_repair fails, tells me to mount, which fails
-References: <20060830082411.GA9986@lapse.madduck.net> <44F597F9.6020803@agami.com> <20060830141548.GA21325@piper.madduck.net>
-In-Reply-To: <20060830141548.GA21325@piper.madduck.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Aug 2006 20:06:35 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k7V35uDW001535
+	for <xfs@oss.sgi.com>; Wed, 30 Aug 2006 20:06:19 -0700
+Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
+	by tyo200.gate.nec.co.jp (8.13.7/8.13.4) with ESMTP id k7V2r1lW020001
+	for <xfs@oss.sgi.com>; Thu, 31 Aug 2006 11:53:03 +0900 (JST)
+Subject: Re: [PATCH 2/2] Fix i_state of inode is changed after the inode is freed [try #2]
+In-reply-to: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
+Message-Id: <20060831114423m-saito@mail.aom.tnes.nec.co.jp>
+References: <20060824171653.C3003989@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+From: Masayuki Saito <m-saito@tnes.nec.co.jp>
+Date: Thu, 31 Aug 2006 11:44:23 +0900
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: martin f krafft <madduck@madduck.net>
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: Nathan Scott <nathans@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-martin f krafft wrote:
+Hi, Nathan
 
-> Btw: there's the xfs and linux-xfs mailing list, and I am confused
-> about whether they're separate or merged, and which one I should be
-> using. If you have any input, I'd love to hear it.
 
-xfs@ is the current one, linux-xfs@ is the old one, and is aliased to 
-xfs@ (there was probably a post about this when xfs@ was created).
+>Fix i_state of the inode is changed after the inode is freed.
+>
+>Signed-off-by: Masayuki Saito <m-saito@tnes.nec.co.jp>
+>Signed-off-by: ASANO Masahiro <masano@tnes.nec.co.jp>
+>---
+>
+>Index: xfs-linux/xfs_inode.c
+>===================================================================
+>--- xfs-linux.orig/xfs_inode.c	2006-08-24 17:02:36.896740000 +1000
+>+++ xfs-linux/xfs_inode.c	2006-08-24 17:09:29.430521750 +1000
+>@@ -2761,19 +2761,29 @@ xfs_iunpin(
+> 		 * call as the inode reclaim may be blocked waiting for
+> 		 * the inode to become unpinned.
+> 		 */
+>+		struct inode *inode = NULL;
+>+
+>+		spin_lock(&ip->i_flags_lock);
+> 		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
+> 			bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
+> 
+> 			/* make sync come back and flush this inode */
+> 			if (vp) {
+>-				struct inode	*inode = vn_to_inode(vp);
+>+				inode = vn_to_inode(vp);
+> 
+> 				if (!(inode->i_state &
+>-						(I_NEW|I_FREEING|I_CLEAR)))
+>-					mark_inode_dirty_sync(inode);
+>+						(I_NEW|I_FREEING|I_CLEAR))) {
+>+					inode = igrab(inode);
+>+					if (inode)
+>+						mark_inode_dirty_sync(inode);
+>+				} else
+>+					inode = NULL;
+> 			}
+> 		}
+>+		spin_unlock(&ip->i_flags_lock);
+> 		wake_up(&ip->i_ipin_wait);
+>+		if (inode)
+>+			iput(inode);
+> 	}
+> }
 
--Eric
+Are the patches going to be merged?
+
+Masayuki
