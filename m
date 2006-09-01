@@ -1,89 +1,132 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Sep 2006 03:41:41 -0700 (PDT)
-Received: from jabber.dneg.com (mail.dneg.com [193.203.82.196])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k81AfVDW030184
-	for <xfs@oss.sgi.com>; Fri, 1 Sep 2006 03:41:32 -0700
-Message-ID: <44F7F219.40904@dneg.com>
-Date: Fri, 01 Sep 2006 09:40:57 +0100
-From: Evan Fraser <evan@dneg.com>
-MIME-Version: 1.0
-Subject: Re: XFS and 3.2TB Partition
-References: <44F714F2.7050502@gmail.com>
-In-Reply-To: <44F714F2.7050502@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Sep 2006 06:20:49 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k81DKDDW024104
+	for <xfs@oss.sgi.com>; Fri, 1 Sep 2006 06:20:27 -0700
+Date: Fri, 1 Sep 2006 23:19:13 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: vmsplice can't work well
+Message-ID: <20060901131913.GG5737019@melbourne.sgi.com>
+References: <44F4440F.1090300@gmail.com> <20060829140542.GN12257@kernel.dk> <44F5CC08.8010205@mnsu.edu> <20060830174815.GF7331@kernel.dk> <44F5D3C6.1010108@mnsu.edu> <20060831092440.GC5528@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20060831092440.GC5528@kernel.dk>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Hane <chrishane@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Jeffrey E. Hundstad" <jeffrey.hundstad@mnsu.edu>, xfs@oss.sgi.com, nathans@sgi.com
 
-I had that problem when I was using an adaptec aic79xx adapter, using a 
-new LSI-Logic one fixed the problem for me.  Could it be a limit with 
-your controller/controller driver?
+On Thu, Aug 31, 2006 at 11:24:41AM +0200, Jens Axboe wrote:
+> XFS list,
+> 
+> On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+> > Jens Axboe wrote:
+> > >On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+> > >  
+> > >>I tried your splie-git...tar.gz file and tried the splice-cp.  It 
+> > >>produced files that are the right length... but the files only contain 
+> > >>nulls.  Here's the straces:
+> > >>    
+> > >
+> > >Works for me as well. Could be an fs issue, how large was the README and
+> > >what filesystem did you use?
+> > >
+> > >  
+> > The file was 1130 bytes (it was the README in that directory.)  The 
+> > filesystem is XFS.
+> > 
+> 
+> I can reproduce this quite easily, doing:
+> 
+> nelson:~ # splice-cp sda.blktrace.0 foo
+> 
+> nelson:~ # md5sum sda.blktrace.0 foo
+> 4754070ae77091468c830ea23b125d68  sda.blktrace.0
+> efdc7b9d00692fdfe91a691277209267  foo
 
-Chris Hane wrote:
->
-> I am trying to create a 3.2TB partition on my Raid 5.  Is there a 
-> document that could help?
->
-> I have a 3ware 9500 controller and 8 *500GB sata drives configured 
-> into a single RAID 5 array.
->
-> I am running linux 2.6.16 with the 3ware drivers compiled into the 
-> kernel.
->
-> I've tried a couple of different means to create the partition and 
-> format the file system with xfs without success (or confidence that I 
-> haven't done something wrong).
->
-> 1. FDISK
->
-> I've tried fdisk on the array to create the partition; but it forces 
-> me enter the number of cylinders before letting me create the 
-> partition.  I enter the largest number of cylinders since I'm not sure 
-> how to calculate the correct cylinder number across an 8 disk RAID 5 
-> array.
->
-> I then create the partition starting at 0 (or whatever the default 
-> was) and ending at 3500GB.
->
-> Once the partition is created this way, I can mkfs.xfs; but I'm a 
-> little hesitant to use this since I input and arbitrary cylinder number.
->
-> Thoughts on what to use for the correct cylinder count with fdisk?
->
-> 2. PARTED
->
-> I've tried to use parted without any success.  Here is what I've tried 
-> and the errors I get.
->
-> > parted
-> parted> mklabel gpt
-> parted> mkpart primary 0 3500GB
-> parted> quit
->
-> ok  - the partition now exists.  If I use ext2 everything works ok.
->
-> however, when I run
->
-> > mkfs.xfs /dev/sda1
->
-> the file system is formated but is truncated to to 2TB.
->
->
-> Any advice/pointers on how to partition and format a 3.2TB raid 5 
-> array would be much appreciated.
->
-> Thanks,
-> Chris....
->
->
->
+Busted write side - splice-in works fine, splice-out is an alias
+for /dev/zero. The reason it's full of NULLs:
 
+death:/mnt# xfs_bmap -vv foo
+foo: no extents
+death:/mnt#
+
+It's a hole.  Nothing has been flushed out to disk.
+
+Interesting - the inode is leaving pipe_to_file() dirty, the page is
+dirty, the buffer head is dirty, delay, mapped and uptodate. The
+page is the only page in the radix tree and the radix tree is marked
+dirty.
+
+But it never gets flushed out. Even when I use dd to seek past the
+first disk block and write further into the file, I still end up
+with a hole in the range where the original splice write should
+be which means it was no longer in the page cache.
+
+Copying a large file I can see dirty memory increase to tens of
+megabytes.  Nothing is going to disk, writeback is not going above
+zero.  Interestingly, when the write completes, the size of the page
+cache drops by almost exactly the size of the file being written -
+almost like a truncate_inode_pages() is occuring on file close.
+
+Oh, look - we _are_ tossing away all the pages on close.
+
+xfs_splice_write() hasn't updated the xfs inode size when extending the
+file. The linux inode  has the correct value, but xfs thinks that it's
+only got a speculative allocation EOF (i.e. 0) so we invalidate it
+before it gets to disk.
+
+The patch below just copies some code out of xfs_write() where it updates
+the xfs inode size and drops it in xfs_splice_write(). It's almost certainly not
+the right fix, but the bucket under the pipe will now catch most of the
+bits....
+
+Cheers,
+
+Dave.
 -- 
-evan@dneg.com
-Linux Systems Administrator
-Double Negative
-tel: +44 (0)20 7534 4400 fax: +44 (0)20 7534 4452
-77 shaftesbury avenue, w1d 5du, London
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+
+---
+ fs/xfs/linux-2.6/xfs_lrw.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_lrw.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_lrw.c	2006-08-31 16:17:47.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_lrw.c	2006-09-01 22:48:56.463190730 +1000
+@@ -390,6 +390,8 @@ xfs_splice_write(
+ 	xfs_inode_t		*ip = XFS_BHVTOI(bdp);
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	ssize_t			ret;
++	struct inode		*inode = outfilp->f_mapping->host;
++	xfs_fsize_t		isize;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+@@ -416,6 +418,20 @@ xfs_splice_write(
+ 	if (ret > 0)
+ 		XFS_STATS_ADD(xs_write_bytes, ret);
+ 
++	isize = i_size_read(inode);
++	if (unlikely(ret < 0 && ret != -EFAULT && *ppos > isize))
++		*ppos = isize;
++
++	if (*ppos > ip->i_d.di_size) {
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		if (*ppos > ip->i_d.di_size) {
++			ip->i_d.di_size = *ppos;
++			i_size_write(inode, *ppos);
++			ip->i_update_core = 1;
++			ip->i_update_size = 1;
++		}
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	}
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return ret;
+ }
