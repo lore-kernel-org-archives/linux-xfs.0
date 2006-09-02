@@ -1,75 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Sep 2006 10:43:45 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k81HhWDW032586
-	for <linux-xfs@OSS.SGI.com>; Fri, 1 Sep 2006 10:43:33 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1GJCbK-0006s4-L8
-	for <linux-xfs@OSS.SGI.com>; Fri, 01 Sep 2006 18:14:42 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Sep 2006 20:33:29 -0700 (PDT)
+Received: from avalanche.hickorytech.net (smtp.hickorytech.net [216.114.192.16])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k823XCDW012434
+	for <xfs@oss.sgi.com>; Fri, 1 Sep 2006 20:33:13 -0700
+Message-ID: <44F8ECE7.2090102@mnsu.edu>
+Date: Fri, 01 Sep 2006 21:31:03 -0500
+From: "Jeffrey E. Hundstad" <jeffrey.hundstad@mnsu.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: vmsplice can't work well
+References: <44F4440F.1090300@gmail.com> <20060829140542.GN12257@kernel.dk> <44F5CC08.8010205@mnsu.edu> <20060830174815.GF7331@kernel.dk> <44F5D3C6.1010108@mnsu.edu> <20060831092440.GC5528@kernel.dk> <20060901131913.GG5737019@melbourne.sgi.com>
+In-Reply-To: <20060901131913.GG5737019@melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <17656.27266.222500.130897@base.ty.sabi.co.UK>
-Date: Fri, 1 Sep 2006 18:14:42 +0100
-Subject: Re: XFS and 3.2TB Partition
-In-Reply-To: <44F714F2.7050502@gmail.com>
-References: <44F714F2.7050502@gmail.com>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Jens Axboe <axboe@kernel.dk>, xfs@oss.sgi.com, nathans@sgi.com
 
->>> On Thu, 31 Aug 2006 12:57:22 -0400, Chris Hane
->>> <chrishane@gmail.com> said:
+David Chinner wrote:
+> On Thu, Aug 31, 2006 at 11:24:41AM +0200, Jens Axboe wrote:
+>   
+>> XFS list,
+>>
+>> On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+>>     
+>>> Jens Axboe wrote:
+>>>       
+>>>> On Wed, Aug 30 2006, Jeffrey E. Hundstad wrote:
+>>>>  
+>>>>         
+>>>>> I tried your splie-git...tar.gz file and tried the splice-cp.  It 
+>>>>> produced files that are the right length... but the files only contain 
+>>>>> nulls.  Here's the straces:
+>>>>>    
+>>>>>           
+>>>> Works for me as well. Could be an fs issue, how large was the README and
+>>>> what filesystem did you use?
+>>>>
+>>>>  
+>>>>         
+>>> The file was 1130 bytes (it was the README in that directory.)  The 
+>>> filesystem is XFS.
+>>>
+>>>       
+>> I can reproduce this quite easily, doing:
+>>
+>> nelson:~ # splice-cp sda.blktrace.0 foo
+>>
+>> nelson:~ # md5sum sda.blktrace.0 foo
+>> 4754070ae77091468c830ea23b125d68  sda.blktrace.0
+>> efdc7b9d00692fdfe91a691277209267  foo
+>>     
+>
+> Busted write side - splice-in works fine, splice-out is an alias
+> for /dev/zero. The reason it's full of NULLs:
+>
+> death:/mnt# xfs_bmap -vv foo
+> foo: no extents
+> death:/mnt#
+>
+> It's a hole.  Nothing has been flushed out to disk.
+>
+> Interesting - the inode is leaving pipe_to_file() dirty, the page is
+> dirty, the buffer head is dirty, delay, mapped and uptodate. The
+> page is the only page in the radix tree and the radix tree is marked
+> dirty.
+>
+> But it never gets flushed out. Even when I use dd to seek past the
+> first disk block and write further into the file, I still end up
+> with a hole in the range where the original splice write should
+> be which means it was no longer in the page cache.
+>
+> Copying a large file I can see dirty memory increase to tens of
+> megabytes.  Nothing is going to disk, writeback is not going above
+> zero.  Interestingly, when the write completes, the size of the page
+> cache drops by almost exactly the size of the file being written -
+> almost like a truncate_inode_pages() is occuring on file close.
+>
+> Oh, look - we _are_ tossing away all the pages on close.
+>
+> xfs_splice_write() hasn't updated the xfs inode size when extending the
+> file. The linux inode  has the correct value, but xfs thinks that it's
+> only got a speculative allocation EOF (i.e. 0) so we invalidate it
+> before it gets to disk.
+>
+> The patch below just copies some code out of xfs_write() where it updates
+> the xfs inode size and drops it in xfs_splice_write(). It's almost certainly not
+> the right fix, but the bucket under the pipe will now catch most of the
+> bits....
+>
+> Cheers,
+>
+> Dave.
+>   
 
-chrishane> I've tried to use parted without any success.  Here
-chrishane> is what I've tried and the errors I get.
+I can confirm that this patch allows splice-cp to work as expected!
 
-chrishane> parted
-    parted> mklabel gpt
-    parted> mkpart primary 0 3500GB
-    parted> quit
+Thanks all!
 
-Uhm, I had missed the 'mklabel gpt'. Unlike 'fdisk', which only
-supports DOS-style partitions with a 2^32 sector limit (2TiB
-indeed) the fairly recent GPT partition scheme (disk labeling in
-the Linux kernel jargon) should support just about any size
-partitions, with a 2^64 sector limit.
-
-It is somewhat worrying that this happens:
-
-chrishane> ok - the partition now exists.  If I use ext2
-chrishane> everything works ok.  however, when I run mkfs.xfs
-chrishane> /dev/sda1 the file system is formated but is
-chrishane> truncated to to 2TB.
-
-Now, you have succeeded in creating a 3.2TiB partition with
-'ext2' on '/dev/sda1' with GPT, and with XFS directly on
-'/dev/sda'. It is rather strange that it apparently did not
-work with XFS on '/dev/sda1' with GPT.
-
-perhaps 'mkfs.xfs' somehow has problems with the GPT scheme,
-but that is indeed strange. It would have been interesting to
-see what 'grep /dev/sda /proc/partitions' would have returned.
-
-It might have been interesting to follow this suggestion too
-
-  sandeen> mkfs.xfs uses the BLKGETSIZE64 and BLKGETSIZE ioctls
-  sandeen> to determine device size; you might either instrument
-  sandeen> xfsprogs/libxfs/linux.c and re-run, or strace your
-  sandeen> mkfs command looking for those ioctl calls, to see
-  sandeen> what size it's getting back from the kernel.
-
-to see why 'mkfs.ext2' seems to get the right size of a GPT
-partition but apparently not 'mkfs.xfs'.
-
-BTW, I hope that you have got a 64 bit system and lots of RAM
-for that 3.2TiB filesystem...
-
-  http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
-
-BTW, for those following this thread: what other ways to create
-and manage GPT disk labels are available under GNU/Linux other
-than 'parted'?
+-- 
+Jeffrey Hundstad
