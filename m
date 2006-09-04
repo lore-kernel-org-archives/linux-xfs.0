@@ -1,36 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Sep 2006 18:31:36 -0700 (PDT)
-Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k841VLDW011078
-	for <xfs@oss.sgi.com>; Sun, 3 Sep 2006 18:31:31 -0700
-Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
-	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k840cDnx017901
-	for <xfs@oss.sgi.com>; Sun, 3 Sep 2006 19:38:13 -0500
-Message-ID: <44FB75CB.8050809@sgi.com>
-Date: Mon, 04 Sep 2006 01:39:39 +0100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: review: minor cleanup in xfs_read locking
-References: <20060904101711.A3331169@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060904101711.A3331169@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Sep 2006 18:33:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k841WkDW011352
+	for <linux-xfs@oss.sgi.com>; Sun, 3 Sep 2006 18:32:57 -0700
+Subject: TAKE 955302 - fix warnings
+Message-Id: <20060904013157.3ED5158CF851@chook.melbourne.sgi.com>
+Date: Mon,  4 Sep 2006 11:31:56 +1000 (EST)
+From: nathans@sgi.com (Nathan Scott)
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Looking a little closer... you could probably do away with the extra
-pair of parentheses in the call to unlikely().
+Fix kmem_zalloc_greedy warnings on 64 bit platforms.
 
-Nathan Scott wrote:
-> Hi Lachlan,
-> 
-> Could you check this for me - it just folds the second direct I/O
-> conditional added in your recent deadlock fix back into the prior
-> branch, which is also direct I/O specific...
-> 
-> thanks.
-> 
+Date:  Mon Sep  4 11:31:03 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/nathans/xfs-linux
+Inspected by:  lachlan,vapo
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26907a
+xfs_itable.c - 1.148 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.148&r2=text&tr2=1.147&f=h
+xfs_vfsops.c - 1.511 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.511&r2=text&tr2=1.510&f=h
+xfs_mount.h - 1.227 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.227&r2=text&tr2=1.226&f=h
+quota/xfs_qm.c - 1.44 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.44&r2=text&tr2=1.43&f=h
+linux-2.6/xfs_ksyms.c - 1.51 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
+linux-2.4/xfs_ksyms.c - 1.46 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ksyms.c.diff?r1=text&tr1=1.46&r2=text&tr2=1.45&f=h
