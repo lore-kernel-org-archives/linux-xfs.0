@@ -1,52 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Sep 2006 17:18:36 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Sep 2006 18:11:08 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k840I3DW002413
-	for <xfs@oss.sgi.com>; Sun, 3 Sep 2006 17:18:15 -0700
-Date: Mon, 4 Sep 2006 10:17:11 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k841AaDW008320
+	for <xfs@oss.sgi.com>; Sun, 3 Sep 2006 18:10:48 -0700
+Date: Mon, 4 Sep 2006 11:09:45 +1000
 From: Nathan Scott <nathans@sgi.com>
-Subject: review: minor cleanup in xfs_read locking
-Message-ID: <20060904101711.A3331169@wobbly.melbourne.sgi.com>
+Subject: Re: review: minor cleanup in xfs_read locking
+Message-ID: <20060904110945.A3329063@wobbly.melbourne.sgi.com>
+References: <20060904101711.A3331169@wobbly.melbourne.sgi.com> <44FB75CB.8050809@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <44FB75CB.8050809@sgi.com>; from lachlan@sgi.com on Mon, Sep 04, 2006 at 01:39:39AM +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Hi Lachlan,
+On Mon, Sep 04, 2006 at 01:39:39AM +0100, Lachlan McIlroy wrote:
+> Looking a little closer... you could probably do away with the extra
+> pair of parentheses in the call to unlikely().
+> 
 
-Could you check this for me - it just folds the second direct I/O
-conditional added in your recent deadlock fix back into the prior
-branch, which is also direct I/O specific...
+Done, thanks - I'll push in most of my pending stuff shortly.
 
-thanks.
+cheers.
 
 -- 
 Nathan
-
-
-Index: xfs-linux/linux-2.6/xfs_lrw.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_lrw.c	2006-09-04 09:59:10.955973000 +1000
-+++ xfs-linux/linux-2.6/xfs_lrw.c	2006-09-04 09:59:42.205926000 +1000
-@@ -270,12 +270,12 @@ xfs_read(
- 		}
- 	}
- 
--	if (unlikely((ioflags & IO_ISDIRECT) && VN_CACHED(vp)))
--		bhv_vop_flushinval_pages(vp, ctooff(offtoct(*offset)),
--						-1, FI_REMAPF_LOCKED);
--
--	if (unlikely(ioflags & IO_ISDIRECT))
-+	if (unlikely((ioflags & IO_ISDIRECT))) {
-+		if (VN_CACHED(vp))
-+			bhv_vop_flushinval_pages(vp, ctooff(offtoct(*offset)),
-+						 -1, FI_REMAPF_LOCKED);
- 		mutex_unlock(&inode->i_mutex);
-+	}
- 
- 	xfs_rw_enter_trace(XFS_READ_ENTER, &ip->i_iocore,
- 				(void *)iovp, segs, *offset, ioflags);
