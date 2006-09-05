@@ -1,61 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 15:36:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 16:15:47 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k85MZkDW022405
-	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 15:35:58 -0700
-Date: Wed, 6 Sep 2006 08:34:48 +1000
-From: Nathan Scott <nathans@xfs.org>
-Subject: race in xfs_rename? (fwd)
-Message-ID: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k85NFEDW028040
+	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 16:15:25 -0700
+Date: Wed, 6 Sep 2006 09:14:08 +1000
+From: Nathan Scott <nathans@sgi.com>
+Subject: Re: [xfs-masters] Re: [PATCH 2.6.18-rc4-mm3 2/2] fs/xfs: Converting into generic boolean
+Message-ID: <20060906091407.M3365803@wobbly.melbourne.sgi.com>
+References: <44F833C9.1000208@student.ltu.se> <20060904150241.I3335706@wobbly.melbourne.sgi.com> <44FBFEE9.4010201@student.ltu.se> <20060905130557.A3334712@wobbly.melbourne.sgi.com> <44FD71C6.20006@student.ltu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <44FD71C6.20006@student.ltu.se>; from ricknu-0@student.ltu.se on Tue, Sep 05, 2006 at 02:47:02PM +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: xfs@oss.sgi.com
+To: Richard Knutsson <ricknu-0@student.ltu.se>
+Cc: akpm@osdl.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Hi Roger,
+On Tue, Sep 05, 2006 at 02:47:02PM +0200, Richard Knutsson wrote:
+> Just the notion: "your" guys was the ones to make those to boolean(_t), 
 
-I'm gonna be rude and fwd your mail to the list - in the hope
-someone there will be able to help you.  I'm running out of time
-@sgi and have a bunch of stuff still to get done before I skip
-outta here - having to look at the xfs_rename locking right now
-might just be enough to make my head explode. ;)
+Sort of, we actually inherited that type from IRIX where it is
+defined in <sys/types.h>.
+
+> and now you seem to want to patch them away because I tried to make them 
+> more general.
+
+Nah, I just don't see the value either way, and see it as another
+code churn exercise.
+
+> So, is the:
+> B_FALSE -> false
+> B_TRUE -> true
+> ok by you?
+
+Personally, no.  Thats code churn with no value IMO.
+
+> >"int needflush;" is just as readable (some would argue moreso) as
+> >"bool needflush;" and thats pretty much the level of use in XFS -
+> >  
+> How are you sure "needflush" is, for example, not a counter?
+
+Well, that would be named "flushcount" or some such thing.  And you
+would be able to tell that it was a counter by the way its used in
+the surrounding code.
+
+This discussion really isn't going anywhere useful; I think you need
+to accept that not everyone sees value in a boolean type. :)
 
 cheers.
-
------ Forwarded message from Roger Willcocks <roger@filmlight.ltd.uk> -----
-
-Date: 05 Sep 2006 14:30:30 +0100
-To: nathans@sgi.com
-X-Mailer: Ximian Evolution 1.2.2 (1.2.2-4) 
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-Subject: race in xfs_rename?
-
-Hi Nathan,
-
-I think I must be missing something here:
-
-xfs_rename calls xfs_lock_for_rename, which i-locks the source file and
-directory, target directory, and (if it already exists) the target file.
-
-It returns a two-to-four entry list of participating inodes.
-
-xfs_rename unlocks them all, creates a transaction, and then locks them
-all again.
-
-Surely while they're unlocked, another processor could jump in and
-fiddle with the underlying files and directories?
-
-
---
-Roger
-
-
-
------ End forwarded message -----
 
 -- 
 Nathan
