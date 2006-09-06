@@ -1,71 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 19:32:56 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k862WMDW026638
-	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 19:32:34 -0700
-Date: Wed, 6 Sep 2006 12:31:28 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: race in xfs_rename? (fwd)
-Message-ID: <20060906023128.GN10950339@melbourne.sgi.com>
-References: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 20:00:39 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.234])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k862xCDW030589
+	for <linux-xfs@oss.sgi.com>; Tue, 5 Sep 2006 20:00:34 -0700
+Received: by wx-out-0506.google.com with SMTP id h29so2401887wxd
+        for <linux-xfs@oss.sgi.com>; Tue, 05 Sep 2006 19:58:39 -0700 (PDT)
+Message-ID: <2260b150609051855g6b667f4ar74f1977552633178@mail.gmail.com>
+Date: Wed, 6 Sep 2006 11:55:24 +1000
+From: "Chris Seufert" <seufert@gmail.com>
+Subject: Re: XFS Journal on md device
+In-Reply-To: <2260b150609051853w1286eda7ve59a5df2c7e0ae1c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
+References: <2260b150609051640y288629cbtcbc133d05b2b40dd@mail.gmail.com>
+	 <44FE28A8.5000803@oss.sgi.com>
+	 <2260b150609051853w1286eda7ve59a5df2c7e0ae1c@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@xfs.org>
-Cc: Roger Willcocks <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
+To: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
 
-On Wed, Sep 06, 2006 at 08:34:48AM +1000, Nathan Scott wrote:
-> Hi Roger,
-> 
-> I'm gonna be rude and fwd your mail to the list - in the hope
-> someone there will be able to help you.  I'm running out of time
-> @sgi and have a bunch of stuff still to get done before I skip
-> outta here - having to look at the xfs_rename locking right now
-> might just be enough to make my head explode. ;)
-> 
-> cheers.
-> 
-> ----- Forwarded message from Roger Willcocks <roger@filmlight.ltd.uk> -----
-> 
-> Date: 05 Sep 2006 14:30:30 +0100
-> To: nathans@sgi.com
-> X-Mailer: Ximian Evolution 1.2.2 (1.2.2-4) 
-> From: Roger Willcocks <roger@filmlight.ltd.uk>
-> Subject: race in xfs_rename?
-> 
-> Hi Nathan,
-> 
-> I think I must be missing something here:
-> 
-> xfs_rename calls xfs_lock_for_rename, which i-locks the source file and
-> directory, target directory, and (if it already exists) the target file.
-> 
-> It returns a two-to-four entry list of participating inodes.
-> 
-> xfs_rename unlocks them all, creates a transaction, and then locks them
-> all again.
-> 
-> Surely while they're unlocked, another processor could jump in and
-> fiddle with the underlying files and directories?
+Sorry i meant to say md4, not that it really matters. if I unmount the
+xfs volume before i halt it seems fine (althou this is not that easy
+with nfs+samba shares on it)
 
-I don't think that can happen due to i_mutex locking at the vfs layer
-i.e. in do_rename() via lock_rename() and in vfs_rename_{dir,other}().
-Hence I think it is safe for XFS to do what it does.
-
-FWIW, in Irix where there is no higher layer locking, XFS has extra
-checks and locks (ancestor lock, inode generation count checks, etc)
-to ensure nothing changed when the locks were dropped and regained.
-AFAICT, the Linux XFS code doesn't need to do of this because the VFS
-guarantees us that things won't change.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+On 9/6/06, Chris Seufert <seufert@gmail.com> wrote:
+> unable to stop /dev/md3, right before it does the powering off
+> /dev/sda /dev/sdb etc...
+>
+> I believe its from the init scripts for md. Its only there for a sec,
+> so im not completely sure of the message.
+>
+> However on reboot xfs does a journal rebuild/repair. and the md does a
+> re-sync of the md device.
+>
+> On 9/6/06, linux-xfs@oss.sgi.com <linux-xfs@oss.sgi.com> wrote:
+> > Chris Seufert wrote:
+> > > Hey,
+> > >
+> > > I currently have a 2.1Tb xfs partition, sitting on a hardware SATA raid
+> > > card.
+> > >
+> > > However i also have 2 hdd's (for OS etc) in software raid1, with a md
+> > > device for the xfs log file. Its a 100mb RAID1 (under /dev/md4), now
+> > > when i halt/reboot the box, even after the xfs partition is unmounted
+> > > (as part of the shutdown sequence as normal on debian etch) the
+> > > /dev/md4 device cant be cleanly stopped.
+> >
+> > What sorts of related error messages do you get on shutdown?  (both from the
+> > initscripts & the kernel?)
+> >
+> > -Eric
+> >
+>
