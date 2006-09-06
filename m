@@ -1,65 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 17:17:16 -0700 (PDT)
-Received: from gepetto.dc.ltu.se (gepetto.dc.ltu.se [130.240.42.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k860GtDW008712
-	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 17:16:59 -0700
-Message-ID: <44FE14ED.3020605@student.ltu.se>
-Date: Wed, 06 Sep 2006 02:23:09 +0200
-From: Richard Knutsson <ricknu-0@student.ltu.se>
-MIME-Version: 1.0
-Subject: Re: [xfs-masters] Re: [PATCH 2.6.18-rc4-mm3 2/2] fs/xfs: Converting
- into generic boolean
-References: <44F833C9.1000208@student.ltu.se> <20060904150241.I3335706@wobbly.melbourne.sgi.com> <44FBFEE9.4010201@student.ltu.se> <20060905130557.A3334712@wobbly.melbourne.sgi.com> <44FD71C6.20006@student.ltu.se> <20060906091407.M3365803@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060906091407.M3365803@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 19:32:56 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k862WMDW026638
+	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 19:32:34 -0700
+Date: Wed, 6 Sep 2006 12:31:28 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: race in xfs_rename? (fwd)
+Message-ID: <20060906023128.GN10950339@melbourne.sgi.com>
+References: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nathans@sgi.com>
-Cc: akpm@osdl.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Nathan Scott <nathans@xfs.org>
+Cc: Roger Willcocks <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
 
-Nathan Scott wrote:
+On Wed, Sep 06, 2006 at 08:34:48AM +1000, Nathan Scott wrote:
+> Hi Roger,
+> 
+> I'm gonna be rude and fwd your mail to the list - in the hope
+> someone there will be able to help you.  I'm running out of time
+> @sgi and have a bunch of stuff still to get done before I skip
+> outta here - having to look at the xfs_rename locking right now
+> might just be enough to make my head explode. ;)
+> 
+> cheers.
+> 
+> ----- Forwarded message from Roger Willcocks <roger@filmlight.ltd.uk> -----
+> 
+> Date: 05 Sep 2006 14:30:30 +0100
+> To: nathans@sgi.com
+> X-Mailer: Ximian Evolution 1.2.2 (1.2.2-4) 
+> From: Roger Willcocks <roger@filmlight.ltd.uk>
+> Subject: race in xfs_rename?
+> 
+> Hi Nathan,
+> 
+> I think I must be missing something here:
+> 
+> xfs_rename calls xfs_lock_for_rename, which i-locks the source file and
+> directory, target directory, and (if it already exists) the target file.
+> 
+> It returns a two-to-four entry list of participating inodes.
+> 
+> xfs_rename unlocks them all, creates a transaction, and then locks them
+> all again.
+> 
+> Surely while they're unlocked, another processor could jump in and
+> fiddle with the underlying files and directories?
 
->On Tue, Sep 05, 2006 at 02:47:02PM +0200, Richard Knutsson wrote:
->  
->
->>Just the notion: "your" guys was the ones to make those to boolean(_t), 
->>    
->>
->
->Sort of, we actually inherited that type from IRIX where it is
->defined in <sys/types.h>.
->  
->
-Oh, ok
+I don't think that can happen due to i_mutex locking at the vfs layer
+i.e. in do_rename() via lock_rename() and in vfs_rename_{dir,other}().
+Hence I think it is safe for XFS to do what it does.
 
->>>"int needflush;" is just as readable (some would argue moreso) as
->>>"bool needflush;" and thats pretty much the level of use in XFS -
->>> 
->>>      
->>>
->>How are you sure "needflush" is, for example, not a counter?
->>    
->>
->
->Well, that would be named "flushcount" or some such thing.  And you
->would be able to tell that it was a counter by the way its used in
->the surrounding code.
->  
->
-True, thinking more of when you have a quick look at the headers, but 
-"flushcount" would be a more logical name in such a case.
+FWIW, in Irix where there is no higher layer locking, XFS has extra
+checks and locks (ancestor lock, inode generation count checks, etc)
+to ensure nothing changed when the locks were dropped and regained.
+AFAICT, the Linux XFS code doesn't need to do of this because the VFS
+guarantees us that things won't change.....
 
->This discussion really isn't going anywhere useful; I think you need
->to accept that not everyone sees value in a boolean type. :)
->  
->
-Well, can you blame me for trying? ;)
-But the more important thing is to clean up the boolean-type and 
-FALSE/TRUE mess in the kernel.
+Cheers,
 
->cheers.
->  
->
-Thank you for your time and happy coding :)
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
