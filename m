@@ -1,62 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 22:45:37 -0700 (PDT)
-Received: from albatross.madduck.net (armagnac.ifi.unizh.ch [130.60.75.72])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k865jRDW027334
-	for <linux-xfs@oss.sgi.com>; Tue, 5 Sep 2006 22:45:32 -0700
-Date: Wed, 6 Sep 2006 05:40:27 +0200
-From: martin f krafft <madduck@madduck.net>
-Subject: Re: XFS Journal on md device
-Message-ID: <20060906034027.GA7393@piper.madduck.net>
-References: <2260b150609051640y288629cbtcbc133d05b2b40dd@mail.gmail.com> <44FE28A8.5000803@oss.sgi.com> <2260b150609051853w1286eda7ve59a5df2c7e0ae1c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rwEMma7ioTxnRzrJ"
-Content-Disposition: inline
-In-Reply-To: <2260b150609051853w1286eda7ve59a5df2c7e0ae1c@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Sep 2006 02:05:44 -0700 (PDT)
+Received: from ipmail01.adl2.internode.on.net (ipmail01.adl2.internode.on.net [203.16.214.140])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8695QDW028542
+	for <xfs@oss.sgi.com>; Wed, 6 Sep 2006 02:05:27 -0700
+Subject: Re: review: propogate return codes from flush routines
+From: Stewart Smith <stewart@flamingspork.com>
+In-Reply-To: <44FD476C.3080009@sgi.com>
+References: <44FC0D0F.60403@sgi.com>
+	 <1157442848.5844.38.camel@localhost.localdomain> <44FD476C.3080009@sgi.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gPawd9S+B0i9EHYg4K07"
+Date: Wed, 06 Sep 2006 19:04:41 +1000
+Message-Id: <1157533481.12018.33.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Seufert <seufert@gmail.com>
-Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
+To: lachlan@sgi.com
+Cc: xfs@oss.sgi.com
 
---rwEMma7ioTxnRzrJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-gPawd9S+B0i9EHYg4K07
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-also sprach Chris Seufert <seufert@gmail.com> [2006.09.06.0353 +0200]:
-> However on reboot xfs does a journal rebuild/repair. and the md
-> does a re-sync of the md device.
+On Tue, 2006-09-05 at 10:46 +0100, Lachlan McIlroy wrote:=20
+> What's a really catastrophic error?
 
-Which distro?
+I think I've just spent too much time with HA database clusters... good
+temporary errors "out of resource", okay temp errors "node failed" or
+"lost connection", bad errors "cluster failure", catastrophic "and your
+data is gone too and backups haven't been working". :)
 
-I am the Debian maintainer for mdadm and have run into the problem
-that the array used for / cannot be stopped until after / is
-unmounted, at which point nothing stops the array for there is no
-shutdownramfs.
-
-However, we (Debian) remount / read-only and I never see
-a filesystem check on reboot.
-
+I sometimes forget that the rest of the world can just have "errors".
 --=20
-martin;              (greetings from the heart of the sun.)
-  \____ echo mailto: !#^."<*>"|tr "<*> mailto:" net@madduck
-=20
-spamtraps: madduck.bogus@madduck.net
-=20
-the micro$oft hoover: finally, a product that's supposed to suck!
+Stewart Smith (stewart@flamingspork.com)
+http://www.flamingspork.com/
 
---rwEMma7ioTxnRzrJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature (GPG/PGP)
-Content-Disposition: inline
+
+--=-gPawd9S+B0i9EHYg4K07
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Version: GnuPG v1.4.2.2 (GNU/Linux)
 
-iD8DBQFE/kMrIgvIgzMMSnURAoSgAJ4mQ8a1RH6sYd7VRn4yZsRNKxbeSACdEGFv
-HeWvLK1N+R1nvxMfeqlDZk8=
-=LyfV
+iD8DBQBE/o8pKglWCUL+FDoRAombAJ0fA7xS8OwxEHxDuvSOqKN94eVLHACeNmbb
+iXqYChHx+J7Pv7WAh0b3Xwg=
+=cwTV
 -----END PGP SIGNATURE-----
 
---rwEMma7ioTxnRzrJ--
+--=-gPawd9S+B0i9EHYg4K07--
