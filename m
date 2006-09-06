@@ -1,35 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 16:41:25 -0700 (PDT)
-Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.236])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k85NfFDW004087
-	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 16:41:15 -0700
-Received: by wx-out-0506.google.com with SMTP id h29so2351472wxd
-        for <xfs@oss.sgi.com>; Tue, 05 Sep 2006 16:40:41 -0700 (PDT)
-Message-ID: <2260b150609051640y288629cbtcbc133d05b2b40dd@mail.gmail.com>
-Date: Wed, 6 Sep 2006 09:40:41 +1000
-From: "Chris Seufert" <seufert@gmail.com>
-Subject: XFS Journal on md device
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Sep 2006 17:17:16 -0700 (PDT)
+Received: from gepetto.dc.ltu.se (gepetto.dc.ltu.se [130.240.42.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k860GtDW008712
+	for <xfs@oss.sgi.com>; Tue, 5 Sep 2006 17:16:59 -0700
+Message-ID: <44FE14ED.3020605@student.ltu.se>
+Date: Wed, 06 Sep 2006 02:23:09 +0200
+From: Richard Knutsson <ricknu-0@student.ltu.se>
 MIME-Version: 1.0
+Subject: Re: [xfs-masters] Re: [PATCH 2.6.18-rc4-mm3 2/2] fs/xfs: Converting
+ into generic boolean
+References: <44F833C9.1000208@student.ltu.se> <20060904150241.I3335706@wobbly.melbourne.sgi.com> <44FBFEE9.4010201@student.ltu.se> <20060905130557.A3334712@wobbly.melbourne.sgi.com> <44FD71C6.20006@student.ltu.se> <20060906091407.M3365803@wobbly.melbourne.sgi.com>
+In-Reply-To: <20060906091407.M3365803@wobbly.melbourne.sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-To: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@sgi.com>
+Cc: akpm@osdl.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Hey,
+Nathan Scott wrote:
 
-I currently have a 2.1Tb xfs partition, sitting on a hardware SATA raid card.
+>On Tue, Sep 05, 2006 at 02:47:02PM +0200, Richard Knutsson wrote:
+>  
+>
+>>Just the notion: "your" guys was the ones to make those to boolean(_t), 
+>>    
+>>
+>
+>Sort of, we actually inherited that type from IRIX where it is
+>defined in <sys/types.h>.
+>  
+>
+Oh, ok
 
-However i also have 2 hdd's (for OS etc) in software raid1, with a md
-device for the xfs log file. Its a 100mb RAID1 (under /dev/md4), now
-when i halt/reboot the box, even after the xfs partition is unmounted
-(as part of the shutdown sequence as normal on debian etch) the
-/dev/md4 device cant be cleanly stopped.
+>>>"int needflush;" is just as readable (some would argue moreso) as
+>>>"bool needflush;" and thats pretty much the level of use in XFS -
+>>> 
+>>>      
+>>>
+>>How are you sure "needflush" is, for example, not a counter?
+>>    
+>>
+>
+>Well, that would be named "flushcount" or some such thing.  And you
+>would be able to tell that it was a counter by the way its used in
+>the surrounding code.
+>  
+>
+True, thinking more of when you have a quick look at the headers, but 
+"flushcount" would be a more logical name in such a case.
 
-Is having the log on a redundant partition a good idea or is it better
-to leave it as an internal log or is there another way round this
-problem.
+>This discussion really isn't going anywhere useful; I think you need
+>to accept that not everyone sees value in a boolean type. :)
+>  
+>
+Well, can you blame me for trying? ;)
+But the more important thing is to clean up the boolean-type and 
+FALSE/TRUE mess in the kernel.
 
--Chris
+>cheers.
+>  
+>
+Thank you for your time and happy coding :)
