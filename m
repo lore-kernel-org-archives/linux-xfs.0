@@ -1,44 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Sep 2006 11:30:54 -0700 (PDT)
-Received: from amsfep11-int.chello.nl (amsfep17-int.chello.nl [213.46.243.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k88IUfDW003607
-	for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 11:30:42 -0700
-Received: from cable-213-132-154-40.upc.chello.be ([213.132.154.40])
-          by amsfep11-int.chello.nl
-          (InterMail vM.6.01.05.04 201-2131-123-105-20051025) with ESMTP
-          id <20060908172214.XVNB14551.amsfep11-int.chello.nl@cable-213-132-154-40.upc.chello.be>
-          for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 19:22:14 +0200
-From: Grozdan Nikolov <microchip@chello.be>
-Subject: XFS questions
-Date: Fri, 8 Sep 2006 19:23:07 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Sep 2006 12:20:37 -0700 (PDT)
+Received: from smtp105.sbc.mail.mud.yahoo.com (smtp105.sbc.mail.mud.yahoo.com [68.142.198.204])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k88JKKDW015784
+	for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 12:20:24 -0700
+Date: Fri, 8 Sep 2006 12:19:40 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: XFS questions
+Message-ID: <20060908191940.GC30358@tuatara.stupidest.org>
+References: <200609081923.08215.microchip@chello.be>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Message-Id: <200609081923.08215.microchip@chello.be>
+In-Reply-To: <200609081923.08215.microchip@chello.be>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Grozdan Nikolov <microchip@chello.be>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Fri, Sep 08, 2006 at 07:23:07PM +0200, Grozdan Nikolov wrote:
 
-I have a few questions regarding the data integrity on XFS filesystems. I have 
-4 servers here all running on XFS partitions and I'm a bit concerned about 
-the data integrity of an XFS filesystem. After reading a lot of 
-benchmarks/user experiences I came to the conclusion that XFS is really very 
-fast, as I experience it here on my servers  too, but when it comes to data 
-integrity it is wise not to use XFS for partitions containing important files 
-as XFS may not be able to recover them after a lets say power outage. I'm 
-also worried about the 'zeroing' thing in XFS. 
+> I'm also worried about the 'zeroing' thing in XFS.
 
-I have 3 questions... 
+Most of what people claim is a bit vague and often incorrect.
 
-1) How reliable is XFS at data-integrity?
-2) Will the 'zeroing' thing be removed/fixed in the near future?
-3) Will XFS ever support ordered or journalled mode like ReiserFS or Ext3?
+> 1) How reliable is XFS at data-integrity?
 
-Thanks in advance and best regards,
+Fine, if your applications are sane.  MTAs like postfix for example
+*never* had any problems with XFS.
 
-Grozdan
+> 2) Will the 'zeroing' thing be removed/fixed in the near future?
+
+What usually happens if that if you truncate over a file, and write
+data *then* loose power some of the data might not have been written
+to disk yet so when you read it back the XFS returns zeroes.
+
+This is normal/expected for journalling filesystems.  Now, by default
+ext3 doesn't have this 'problem' so I think have a misconception as to
+how it should work (or how they would like it to).
+
+In recent kernels when XFS truncated over a file the data is flushed
+after close() so the chances of loosing data are much less.
+
+Why have people seen this?  Because a lot of applications do something
+like:
+
+   open file ~/.bookmarks
+   read
+   close
+
+   [...]
+
+   open file ~/.bookmarks, truncating the existing file
+   write
+   close
+
+The open + truncate is journalled, so that will survive a power
+failure, but the 'write' isn't --- so you might end up with a file
+that looks like it has zeroes.
+
+I'll claim this in general is a bad practise and I'm also going to
+claim applications that do this ideally should be fixed to open/creat
+tmp, write, fsync, close, rename tmp to original.  Not only does that
+make things more reliable for XFS, but also pretty much every other fs
+out there on any unix-like OS.  It also is more reliable again
+something like a crash/powerfailure in the application during write
+out (which I've seen).
