@@ -1,65 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Sep 2006 19:35:09 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k882YaDW006722
-	for <xfs@oss.sgi.com>; Thu, 7 Sep 2006 19:34:47 -0700
-Date: Fri, 8 Sep 2006 12:33:39 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Wrong free space reported for XFS filesystem
-Message-ID: <20060908023339.GF10950339@melbourne.sgi.com>
-References: <9a8748490609060154ye8730b0n16e23524010a35e4@mail.gmail.com> <20060906230238.GJ5737019@melbourne.sgi.com> <9a8748490609070717q6ed9111ckdc3de025dc44938b@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Sep 2006 08:05:45 -0700 (PDT)
+Received: from a.mx.filmlight.ltd.uk (host217-40-27-25.in-addr.btopenworld.com [217.40.27.25])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k88F5LDW005483
+	for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 08:05:24 -0700
+Subject: Re: race in xfs_rename? (fwd)
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <20060906023128.GN10950339@melbourne.sgi.com>
+References: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
+	 <20060906023128.GN10950339@melbourne.sgi.com>
+Content-Type: text/plain
+Message-Id: <1157724365.873.71.camel@orthia.filmlight.ltd.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9a8748490609070717q6ed9111ckdc3de025dc44938b@mail.gmail.com>
+Date: 08 Sep 2006 15:06:05 +0100
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Nathan Scott <nathans@xfs.org>, xfs@oss.sgi.com
 
-On Thu, Sep 07, 2006 at 04:17:53PM +0200, Jesper Juhl wrote:
-> On 07/09/06, David Chinner <dgc@sgi.com> wrote:
-> >On Wed, Sep 06, 2006 at 10:54:34AM +0200, Jesper Juhl wrote:
-> >> For your information;
-> >>
-> >> I've been running a bunch of benchmarks on a 250GB XFS filesystem.
-> >> After the benchmarks had run for a few hours and almost filled up the
-> >> fs, I removed all the files and did a "df -h" with interresting
-> >> results :
-.....
-> >So the in-core accounting has underflowed by a small amount but the
-> >on disk accounting is correct.
-> >
-> >We've had a few reports of this that I know of over the past
-> >couple of years, but we've never managed to find a reproducable
-> >test case for it.
-> >Can you describe what benchmark you were runnin, wht kernel you were
-> >using
+On Wed, 2006-09-06 at 03:31, David Chinner wrote:
+> On Wed, Sep 06, 2006 at 08:34:48AM +1000, Nathan Scott wrote:
+> > Hi Roger,
+> > 
+> > I'm gonna be rude and fwd your mail to the list - in the hope
+> > someone there will be able to help you.  I'm running out of time
+> > @sgi and have a bunch of stuff still to get done before I skip
+> > outta here - having to look at the xfs_rename locking right now
+> > might just be enough to make my head explode. ;)
+> > 
+> > cheers.
+> > 
+> > ----- Forwarded message from Roger Willcocks <roger@filmlight.ltd.uk> -----
+> > 
+> > Date: 05 Sep 2006 14:30:30 +0100
+> > To: nathans@sgi.com
+> > X-Mailer: Ximian Evolution 1.2.2 (1.2.2-4) 
+> > From: Roger Willcocks <roger@filmlight.ltd.uk>
+> > Subject: race in xfs_rename?
+> > 
+> > Hi Nathan,
+> > 
+> > I think I must be missing something here:
+> > 
+> > xfs_rename calls xfs_lock_for_rename, which i-locks the source file and
+> > directory, target directory, and (if it already exists) the target file.
+> > 
+> > It returns a two-to-four entry list of participating inodes.
+> > 
+> > xfs_rename unlocks them all, creates a transaction, and then locks them
+> > all again.
+> > 
+> > Surely while they're unlocked, another processor could jump in and
+> > fiddle with the underlying files and directories?
 > 
-> The kernel is 2.6.18-rc6 SMP
-
-Ok, so it's a current problem....
-
-> >and whether any of the tests hit  an ENOSPC condition?
-> >
-> That I don't know.
+> I don't think that can happen due to i_mutex locking at the vfs layer
+> i.e. in do_rename() via lock_rename() and in vfs_rename_{dir,other}().
+> Hence I think it is safe for XFS to do what it does.
 > 
-> The script I was running is this one :
+> FWIW, in Irix where there is no higher layer locking, XFS has extra
+> checks and locks (ancestor lock, inode generation count checks, etc)
+> to ensure nothing changed when the locks were dropped and regained.
+> AFAICT, the Linux XFS code doesn't need to do of this because the VFS
+> guarantees us that things won't change.....
+> 
+> Cheers,
+> 
+> Dave.
 
-<snip>
+Hi Dave & Nathan,
 
-That doesn't really narrow down the scope at all. All that script
-tells me is that problem is <waves hands> somewhere inside XFS....  :/
-Can you try to isolate which of the loads is causing the problem?
+yes that makes sense. I'm currently chasing a couple of xfs shutdowns on
+customer clusters, and 'rename' seems to be a factor, although it could
+just as well be a dodgy network driver, or whatever. I'll let you know
+if I find a reproducible test case.
 
-That being said, this looks like a good stress load - I'll pass it
-onto our QA folks...
+I've also been looking into a couple of 'LEAFN node level is X' warnings
+from xfs_repair, and it seems to me that leaf nodes don't actually have
+a /level/ member, although internal nodes do (compare
+xfs_dir2_leaf_hdr_t and xfs_da_intnode_t). The value being tested by
+xfs_repair is actually leaf->hdr.stale, so the warning is bogus.
 
-Cheers,
+Or so it seems to me...
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--
+Roger
