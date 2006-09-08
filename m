@@ -1,87 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Sep 2006 08:05:45 -0700 (PDT)
-Received: from a.mx.filmlight.ltd.uk (host217-40-27-25.in-addr.btopenworld.com [217.40.27.25])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k88F5LDW005483
-	for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 08:05:24 -0700
-Subject: Re: race in xfs_rename? (fwd)
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-In-Reply-To: <20060906023128.GN10950339@melbourne.sgi.com>
-References: <20060906083448.J3365803@wobbly.melbourne.sgi.com>
-	 <20060906023128.GN10950339@melbourne.sgi.com>
-Content-Type: text/plain
-Message-Id: <1157724365.873.71.camel@orthia.filmlight.ltd.uk>
-Mime-Version: 1.0
-Date: 08 Sep 2006 15:06:05 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Sep 2006 11:30:54 -0700 (PDT)
+Received: from amsfep11-int.chello.nl (amsfep17-int.chello.nl [213.46.243.15])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k88IUfDW003607
+	for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 11:30:42 -0700
+Received: from cable-213-132-154-40.upc.chello.be ([213.132.154.40])
+          by amsfep11-int.chello.nl
+          (InterMail vM.6.01.05.04 201-2131-123-105-20051025) with ESMTP
+          id <20060908172214.XVNB14551.amsfep11-int.chello.nl@cable-213-132-154-40.upc.chello.be>
+          for <xfs@oss.sgi.com>; Fri, 8 Sep 2006 19:22:14 +0200
+From: Grozdan Nikolov <microchip@chello.be>
+Subject: XFS questions
+Date: Fri, 8 Sep 2006 19:23:07 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200609081923.08215.microchip@chello.be>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nathan Scott <nathans@xfs.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 2006-09-06 at 03:31, David Chinner wrote:
-> On Wed, Sep 06, 2006 at 08:34:48AM +1000, Nathan Scott wrote:
-> > Hi Roger,
-> > 
-> > I'm gonna be rude and fwd your mail to the list - in the hope
-> > someone there will be able to help you.  I'm running out of time
-> > @sgi and have a bunch of stuff still to get done before I skip
-> > outta here - having to look at the xfs_rename locking right now
-> > might just be enough to make my head explode. ;)
-> > 
-> > cheers.
-> > 
-> > ----- Forwarded message from Roger Willcocks <roger@filmlight.ltd.uk> -----
-> > 
-> > Date: 05 Sep 2006 14:30:30 +0100
-> > To: nathans@sgi.com
-> > X-Mailer: Ximian Evolution 1.2.2 (1.2.2-4) 
-> > From: Roger Willcocks <roger@filmlight.ltd.uk>
-> > Subject: race in xfs_rename?
-> > 
-> > Hi Nathan,
-> > 
-> > I think I must be missing something here:
-> > 
-> > xfs_rename calls xfs_lock_for_rename, which i-locks the source file and
-> > directory, target directory, and (if it already exists) the target file.
-> > 
-> > It returns a two-to-four entry list of participating inodes.
-> > 
-> > xfs_rename unlocks them all, creates a transaction, and then locks them
-> > all again.
-> > 
-> > Surely while they're unlocked, another processor could jump in and
-> > fiddle with the underlying files and directories?
-> 
-> I don't think that can happen due to i_mutex locking at the vfs layer
-> i.e. in do_rename() via lock_rename() and in vfs_rename_{dir,other}().
-> Hence I think it is safe for XFS to do what it does.
-> 
-> FWIW, in Irix where there is no higher layer locking, XFS has extra
-> checks and locks (ancestor lock, inode generation count checks, etc)
-> to ensure nothing changed when the locks were dropped and regained.
-> AFAICT, the Linux XFS code doesn't need to do of this because the VFS
-> guarantees us that things won't change.....
-> 
-> Cheers,
-> 
-> Dave.
+Hi,
 
-Hi Dave & Nathan,
+I have a few questions regarding the data integrity on XFS filesystems. I have 
+4 servers here all running on XFS partitions and I'm a bit concerned about 
+the data integrity of an XFS filesystem. After reading a lot of 
+benchmarks/user experiences I came to the conclusion that XFS is really very 
+fast, as I experience it here on my servers  too, but when it comes to data 
+integrity it is wise not to use XFS for partitions containing important files 
+as XFS may not be able to recover them after a lets say power outage. I'm 
+also worried about the 'zeroing' thing in XFS. 
 
-yes that makes sense. I'm currently chasing a couple of xfs shutdowns on
-customer clusters, and 'rename' seems to be a factor, although it could
-just as well be a dodgy network driver, or whatever. I'll let you know
-if I find a reproducible test case.
+I have 3 questions... 
 
-I've also been looking into a couple of 'LEAFN node level is X' warnings
-from xfs_repair, and it seems to me that leaf nodes don't actually have
-a /level/ member, although internal nodes do (compare
-xfs_dir2_leaf_hdr_t and xfs_da_intnode_t). The value being tested by
-xfs_repair is actually leaf->hdr.stale, so the warning is bogus.
+1) How reliable is XFS at data-integrity?
+2) Will the 'zeroing' thing be removed/fixed in the near future?
+3) Will XFS ever support ordered or journalled mode like ReiserFS or Ext3?
 
-Or so it seems to me...
+Thanks in advance and best regards,
 
---
-Roger
+Grozdan
