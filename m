@@ -1,71 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 05:27:25 -0700 (PDT)
-Received: from mail.crc.dk (mail.crc.dk [130.226.184.8])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8BCRCDW004537
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Sep 2006 05:27:14 -0700
-Message-ID: <45053B2D.50203@crc.dk>
-Date: Mon, 11 Sep 2006 12:32:13 +0200
-From: Mogens Kjaer <mk@crc.dk>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 05:31:01 -0700 (PDT)
+Received: from rapidforum.com (www.rapidforum.com [80.237.244.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8BCUfDW005382
+	for <xfs@oss.sgi.com>; Mon, 11 Sep 2006 05:30:45 -0700
+Message-ID: <450556AF.6030201@rapidforum.com>
+Date: Mon, 11 Sep 2006 14:29:35 +0200
+From: Christian Schmid <webmaster@rapidforum.com>
 MIME-Version: 1.0
-Subject: Mounting IRIX disk on Linux
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: Critical xfs bug in 2.6.17.11?
+References: <4504151F.6050704@rapidforum.com> <20060911005429.GK10950339@melbourne.sgi.com>
+In-Reply-To: <20060911005429.GK10950339@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-When I try to mount a disk from our SGI Origin 200
-machine under Linux (Fedora Core 5), I get the following error message:
+Unfortunately after this error I did a mkfs.xfs on this device, because its just a /tmp fs.
 
-# mount /dev/sda1 /mnt/sgi
-mount: Function not implemented
-
-The partitions are found during boot:
-
-...
-SCSI device sda: 143374738 512-byte hdwr sectors (73408 MB)
-sda: Write Protect is off
-sda: Mode Sense: 9f 00 10 08
-SCSI device sda: drive cache: write back w/ FUA
-SCSI device sda: 143374738 512-byte hdwr sectors (73408 MB)
-sda: Write Protect is off
-sda: Mode Sense: 9f 00 10 08
-SCSI device sda: drive cache: write back w/ FUA
- sda: sda1 sda2 sda9 sda11
-...
-# fdisk -l /dev/sda
-
-Disk /dev/sda (SGI disk label): 255 heads, 63 sectors, 8924 cylinders
-Units = cylinders of 16065 * 512 bytes
-
------ partitions -----
-Pt#    Device  Info     Start       End   Sectors  Id  System
- 1: /dev/sda1  boot        17      8924 143108498   a  SGI xfs
- 2: /dev/sda2  swap         1        16    262144   3  SGI raw
- 9: /dev/sda3               0         0      4096   0  SGI volhdr
-11: /dev/sda4               0      8924 143374738   6  SGI volume
------ Bootinfo -----
-Bootfile: /unix
------ Directory Entries -----
-
-The only thing that gets logged during the mount is:
-
-SGI XFS with ACLs, security attributes, large block numbers, no debug
-enabled
-SGI XFS Quota Management subsystem
-
-
-How do I determine which of the requirements
-listed in:
-
-http://oss.sgi.com/projects/xfs/faq.html#useirixxfs
-
-that hasn't been fulfilled?
-
-Mogens
--- 
-Mogens Kjaer, Carlsberg A/S, Computer Department
-Gamle Carlsberg Vej 10, DK-2500 Valby, Denmark
-Phone: +45 33 27 53 25, Fax: +45 33 27 47 08
-Email: mk@crc.dk Homepage: http://www.crc.dk
+David Chinner wrote:
+> On Sun, Sep 10, 2006 at 03:37:35PM +0200, Christian Schmid wrote:
+> 
+>>Hello.
+>>
+>>Instead of a tmpfs, I use a raid 10 softraid. Unfortunately it crashed 
+>>after 10 hours of extreme activities (read/block-writes with up to 250 
+>>streams/deletes)
+>>
+>>12 gb memory-test successful. 2 cpu xeon smp system.
+>>
+>>Tell me if this helps you:
+>>
+>>Sep  9 18:08:49 inode430 kernel: [87433.143498] 0x0: 58 41 47 46 00 00 00 
+>>01 00 00 00 00 00 04 34 a0 
+>>Sep  9 18:08:49 inode430 kernel: [87433.143672] Filesystem "md5": XFS 
+>>internal error xfs_alloc_read_agf at line 2176 of file fs/xfs/xfs_alloc.c.  
+>>Caller 0xffffffff80314069 
+> 
+> 
+> Hmm - bad read of the AGF during allocation, which causes a shutdown
+> due to cancelling a dirty transaction.
+> 
+> If you run "xfs_check -n /dev/md5" and "xfs_repair -n /dev/md5" do
+> they warn about any AGF related corruption?
+> 
+> Cheers,
+> 
+> Dave.
