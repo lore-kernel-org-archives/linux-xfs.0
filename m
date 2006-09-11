@@ -1,51 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Sep 2006 17:44:45 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.190])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8B0iZDW027973
-	for <xfs@oss.sgi.com>; Sun, 10 Sep 2006 17:44:35 -0700
-Received: by nf-out-0910.google.com with SMTP id a25so1062790nfc
-        for <xfs@oss.sgi.com>; Sun, 10 Sep 2006 17:44:00 -0700 (PDT)
-Message-ID: <4504A3A9.4080704@gmail.com>
-Date: Mon, 11 Sep 2006 01:45:45 +0200
-From: Enrico Maria Crisostomo <enrico.m.crisostomo@gmail.com>
-MIME-Version: 1.0
-Subject: xfs_repair -d doesn't work
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Sep 2006 17:48:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8B0ldDW028276
+	for <linux-xfs@oss.sgi.com>; Sun, 10 Sep 2006 17:47:50 -0700
+Date: Mon, 11 Sep 2006 10:46:43 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: oops mounting unassembled md device
+Message-ID: <20060911004643.GJ10950339@melbourne.sgi.com>
+References: <450342F9.8090301@stwo-corp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <450342F9.8090301@stwo-corp.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Michael Morrison <mikem@stwo-corp.com>
+Cc: linux-xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Sat, Sep 09, 2006 at 03:40:57PM -0700, Michael Morrison wrote:
+> Got on oops when trying to mount xfs filesystem onto unassembled md
+> raid0 device.
+> What else can I provide to help with this?
+> 
+> Linux version: 2.6.18-rc4
+> Drives are hanging off an LSI fibre channel controller which is driven by
+> the mpt driver in drivers/message/fusion.
+> 
+> Steps leading up to this:
+> 
+> 1. assemble 8 drive raid0 on /dev/md0
+> 2. mount filesystem: /bin/mount -t xfs /dev/md0 /mnt/testfs -o
+> noatime,nodiratime
+> 3. umount /mnt/testfs
+> 4. mdadm --stop /dev/md0
+> 5. /bin/mount -t xfs /dev/md0 /mnt/testfs -o noatime,nodiratime
 
-Hi.
+So why did MD allow /dev/md0 to be used if the device had been
+stopped? According to the mdadm man page a --stop will release all
+resources associated with the md device so after stopping /dev/md0
+it should not be possible to use it.
 
-I'm running a slackware-current with xfsprogs-2.8.10_1. On some
-machine I ran many 2.6.17 kernel and one machine is showing the
-"directory problem": I cannot get rid of many "Filesystem "hda3": XFS
-internal error xfs_da_do_buf(2) at line 2212 of file
-fs/xfs/xfs_da_btree.c. Caller 0xe0ac57d9". As I'm now running
-2.6.17.13 I think I'm at safe from this bug and the last thing to do
-is... repairing my root filesystem. Unfortunately xfs_repair -d and
-xfs_repair -n does not work, and it returns saying it could not
-initialize XFS library because the filesystem is mounted AND writable.
-What I did:
-- - remounted the file system read only: did not work, not even
-xfs_repair -n, which I expect to succeed always
-- - hacked /etc/mtab to change rw to ro: did not work, error is the same
-as before.
+This is not an XFS problem - this is either an MD bug (leaving /dev/md0
+around after being stopped) and/or user error.
 
-Can you suggest me some way to repair my file system and confirm me
-that this xfs_repair behavior is a bug?
+Cheers,
 
-Thank you,
-Enrico M. Crisostomo
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQFFBKOpW8+x8v0iKa8RAkMPAKDbwuF/pgkX8epIvkKEZOjQKP2cbgCghvJB
-IkbMDVHlvNJgRnwZ61YTgwk=
-=ht3Y
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
