@@ -1,61 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Sep 2006 18:10:38 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8B1ABDW031571
-	for <xfs@oss.sgi.com>; Sun, 10 Sep 2006 18:10:22 -0700
-Date: Mon, 11 Sep 2006 11:09:16 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs_repair -d doesn't work
-Message-ID: <20060911010916.GM10950339@melbourne.sgi.com>
-References: <4504A3A9.4080704@gmail.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 05:27:25 -0700 (PDT)
+Received: from mail.crc.dk (mail.crc.dk [130.226.184.8])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8BCRCDW004537
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Sep 2006 05:27:14 -0700
+Message-ID: <45053B2D.50203@crc.dk>
+Date: Mon, 11 Sep 2006 12:32:13 +0200
+From: Mogens Kjaer <mk@crc.dk>
+MIME-Version: 1.0
+Subject: Mounting IRIX disk on Linux
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4504A3A9.4080704@gmail.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Enrico Maria Crisostomo <enrico.m.crisostomo@gmail.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Sep 11, 2006 at 01:45:45AM +0200, Enrico Maria Crisostomo wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> Hi.
-> 
-> I'm running a slackware-current with xfsprogs-2.8.10_1. On some
-> machine I ran many 2.6.17 kernel and one machine is showing the
-> "directory problem": I cannot get rid of many "Filesystem "hda3": XFS
-> internal error xfs_da_do_buf(2) at line 2212 of file
-> fs/xfs/xfs_da_btree.c. Caller 0xe0ac57d9". As I'm now running
-> 2.6.17.13 I think I'm at safe from this bug and the last thing to do
-> is... repairing my root filesystem. Unfortunately xfs_repair -d and
-> xfs_repair -n does not work, and it returns saying it could not
-> initialize XFS library because the filesystem is mounted AND writable.
-> What I did:
-> - - remounted the file system read only: did not work, not even
-> xfs_repair -n, which I expect to succeed always
-> - - hacked /etc/mtab to change rw to ro: did not work, error is the same
-> as before.
+When I try to mount a disk from our SGI Origin 200
+machine under Linux (Fedora Core 5), I get the following error message:
 
-IIRC, we recently updated libxfs to look at /proc/mounts rather than
-/etc/mtab to fix these sorts of problems.
+# mount /dev/sda1 /mnt/sgi
+mount: Function not implemented
 
-As it is, to fix the "directory problem" you need a more recent
-xfsprogs (2.8.11 IIRC), so I'd suggest the first thing to do is
-upgrade your xfsprogs and try again.
+The partitions are found during boot:
 
-> Can you suggest me some way to repair my file system
+...
+SCSI device sda: 143374738 512-byte hdwr sectors (73408 MB)
+sda: Write Protect is off
+sda: Mode Sense: 9f 00 10 08
+SCSI device sda: drive cache: write back w/ FUA
+SCSI device sda: 143374738 512-byte hdwr sectors (73408 MB)
+sda: Write Protect is off
+sda: Mode Sense: 9f 00 10 08
+SCSI device sda: drive cache: write back w/ FUA
+ sda: sda1 sda2 sda9 sda11
+...
+# fdisk -l /dev/sda
 
-You should be able to boot to single user mode, remount the root
-filesystem readonly and then "xfs_repair -d <dev>" to fix it. You
-need to reboot after doing this....
+Disk /dev/sda (SGI disk label): 255 heads, 63 sectors, 8924 cylinders
+Units = cylinders of 16065 * 512 bytes
 
-Cheers,
+----- partitions -----
+Pt#    Device  Info     Start       End   Sectors  Id  System
+ 1: /dev/sda1  boot        17      8924 143108498   a  SGI xfs
+ 2: /dev/sda2  swap         1        16    262144   3  SGI raw
+ 9: /dev/sda3               0         0      4096   0  SGI volhdr
+11: /dev/sda4               0      8924 143374738   6  SGI volume
+----- Bootinfo -----
+Bootfile: /unix
+----- Directory Entries -----
 
-Dave.
+The only thing that gets logged during the mount is:
+
+SGI XFS with ACLs, security attributes, large block numbers, no debug
+enabled
+SGI XFS Quota Management subsystem
+
+
+How do I determine which of the requirements
+listed in:
+
+http://oss.sgi.com/projects/xfs/faq.html#useirixxfs
+
+that hasn't been fulfilled?
+
+Mogens
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Mogens Kjaer, Carlsberg A/S, Computer Department
+Gamle Carlsberg Vej 10, DK-2500 Valby, Denmark
+Phone: +45 33 27 53 25, Fax: +45 33 27 47 08
+Email: mk@crc.dk Homepage: http://www.crc.dk
