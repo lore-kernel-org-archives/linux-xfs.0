@@ -1,50 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 05:31:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 05:32:40 -0700 (PDT)
 Received: from rapidforum.com (www.rapidforum.com [80.237.244.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8BCUfDW005382
-	for <xfs@oss.sgi.com>; Mon, 11 Sep 2006 05:30:45 -0700
-Message-ID: <450556AF.6030201@rapidforum.com>
-Date: Mon, 11 Sep 2006 14:29:35 +0200
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8BCWKDW005843
+	for <xfs@oss.sgi.com>; Mon, 11 Sep 2006 05:32:21 -0700
+Message-ID: <45055717.4090800@rapidforum.com>
+Date: Mon, 11 Sep 2006 14:31:19 +0200
 From: Christian Schmid <webmaster@rapidforum.com>
 MIME-Version: 1.0
 Subject: Re: Critical xfs bug in 2.6.17.11?
-References: <4504151F.6050704@rapidforum.com> <20060911005429.GK10950339@melbourne.sgi.com>
-In-Reply-To: <20060911005429.GK10950339@melbourne.sgi.com>
+References: <4504151F.6050704@rapidforum.com> <Pine.LNX.4.64.0609101731150.29937@p34.internal.lan> <45048E1E.6040002@rapidforum.com> <Pine.LNX.4.64.0609101835390.29937@p34.internal.lan> <4504A12C.9090608@rapidforum.com> <20060911010035.GL10950339@melbourne.sgi.com>
+In-Reply-To: <20060911010035.GL10950339@melbourne.sgi.com>
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
 
-Unfortunately after this error I did a mkfs.xfs on this device, because its just a /tmp fs.
+I am not sure. Its a linux software-raid and as far as I know there is a crc-check in the drives so 
+if they cant read the data, they give an error and the raid gets the data from the other drive and 
+marks this drive as broken. As far as the log says, the drives are ok.
 
 David Chinner wrote:
-> On Sun, Sep 10, 2006 at 03:37:35PM +0200, Christian Schmid wrote:
+> On Mon, Sep 11, 2006 at 01:35:08AM +0200, Christian Schmid wrote:
 > 
->>Hello.
->>
->>Instead of a tmpfs, I use a raid 10 softraid. Unfortunately it crashed 
->>after 10 hours of extreme activities (read/block-writes with up to 250 
->>streams/deletes)
->>
->>12 gb memory-test successful. 2 cpu xeon smp system.
->>
->>Tell me if this helps you:
->>
->>Sep  9 18:08:49 inode430 kernel: [87433.143498] 0x0: 58 41 47 46 00 00 00 
->>01 00 00 00 00 00 04 34 a0 
->>Sep  9 18:08:49 inode430 kernel: [87433.143672] Filesystem "md5": XFS 
->>internal error xfs_alloc_read_agf at line 2176 of file fs/xfs/xfs_alloc.c.  
->>Caller 0xffffffff80314069 
+>>Memory-test with ECC disabled ran through 12 hours without any errors. ECC 
+>>is on now of course, so the possibility of a simple hardware problem is 
+>>eliminated from my side.
 > 
 > 
-> Hmm - bad read of the AGF during allocation, which causes a shutdown
-> due to cancelling a dirty transaction.
-> 
-> If you run "xfs_check -n /dev/md5" and "xfs_repair -n /dev/md5" do
-> they warn about any AGF related corruption?
+> A _memory error_ can be ruled out, but what about a bad disk, bad
+> disk controller, bad PCI bus interface, a bad driver, etc. Memory is
+> just one piece of hardware that can result in bad data being read
+> from or written to disk. Is there any indication of disk or driver
+> errors in your syslog?
 > 
 > Cheers,
 > 
