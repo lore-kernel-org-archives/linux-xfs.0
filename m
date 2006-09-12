@@ -1,47 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 17:32:51 -0700 (PDT)
-Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.4])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8C0Wdih014790
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Sep 2006 17:32:40 -0700
-Date: Mon, 11 Sep 2006 16:28:59 -0700
-From: Judith Lebzelter <judith@osdl.org>
-Subject: Re: 2.6.18-rc6-mm1 'uio_read' redefined, breaks allyesconfig on i386
-Message-ID: <20060911232859.GK9335@shell0.pdx.osdl.net>
-References: <20060911224520.GJ9335@shell0.pdx.osdl.net> <20060911155311.270a8fbb.akpm@osdl.org>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Sep 2006 23:22:03 -0700 (PDT)
+Received: from mail.crc.dk (mail.crc.dk [130.226.184.8])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8C6Loif023087
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Sep 2006 23:21:54 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.crc.dk (8.12.11.20060308/8.12.11) with ESMTP id k8C6LFdb007897
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Sep 2006 08:21:15 +0200
+Received: from mail.crc.dk ([127.0.0.1])
+ by localhost (mail.crc.dk [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+ id 16765-10 for <linux-xfs@oss.sgi.com>;
+ Tue, 12 Sep 2006 08:21:13 +0200 (CEST)
+Received: from [130.226.183.100] (mkx.crc.dk [130.226.183.100])
+	by mail.crc.dk (8.12.11.20060308/8.12.11) with ESMTP id k8C6L9QX007892
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Sep 2006 08:21:09 +0200
+Message-ID: <450651D5.2010706@crc.dk>
+Date: Tue, 12 Sep 2006 08:21:09 +0200
+From: Mogens Kjaer <mk@crc.dk>
+MIME-Version: 1.0
+Subject: Re: Mounting IRIX disk on Linux
+References: <45053B2D.50203@crc.dk> <1157991715.3651.14.camel@xenon.msp.redhat.com>
+In-Reply-To: <1157991715.3651.14.camel@xenon.msp.redhat.com>
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20060911155311.270a8fbb.akpm@osdl.org>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@osdl.org>
-Cc: Judith Lebzelter <judith@osdl.org>, tglx@linutronix.de, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>, linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Sep 11, 2006 at 03:53:11PM -0700, Andrew Morton wrote:
-> On Mon, 11 Sep 2006 15:45:20 -0700
-> Judith Lebzelter <judith@osdl.org> wrote:
-> > I noticed in the 'allyesconfig' build for i386 is not working for 2.6.18-rc6-mm1.
-> > The function 'uio_read' in gregkh-driver-uio.patch has the same name as a 
-> > function in fs/xfs/support/move.c.  Here is the error message:
-> > 
-> >   LD      init/built-in.o
-> >   LD      .tmp_vmlinux1
-> > drivers/built-in.o(.text+0x6eb597): In function `uio_read':
-> > drivers/uio/uio_dev.c:59: multiple definition of `uio_read'
-> > fs/built-in.o(.text+0x2f4ee8):fs/xfs/support/move.c:26: first defined here
-> > i686-unknown-linux-gnu-ld: Warning: size of symbol `uio_read' changed from 123 in fs/built-in.o to 397 in drivers/built-in.o
-> > make: [.tmp_vmlinux1] Error 1 (ignored)
-> >   KSYM    .tmp_kallsyms1.S
-> > i686-unknown-linux-gnu-nm: '.tmp_vmlinux1': No such file
-> > No valid symbol.
-> > make: [.tmp_kallsyms1.S] Error 1 (ignored)
-> > 
+Russell Cattelan wrote:
+> Was this disk cleanly unmounted from the SGI box?
 > 
-> Thanks.   I'd suggest that XFS is being poorly behaved here.  "uio_read" isn't
-> an appropriately named symbol for a filesystem to be exposing.
+> If the log is dirty linux won't be able to mount it since it will be
+> in the wrong endian format (well assuming you are using a 
+> little endian linux box)
+> 
+> If you can cleanly mount and unmount on the sgi box
+> if that is not possible run xfs_repair -L to clear
+> the log. But not that will potentially loose important
+> file system info.
 
-Great.  This is showing up on other platforms as well in PLM (OSDL's cross-compile 
-build farm), so it will be good to see it fixed.:~)  
+Some of the disks are dirty, some are clean (the Origin boots,
+but halt during the boot phase because of multiple fan failure -
+a little strange as all fans are running).
 
-Judith
+I could mount one of the disks after the xfs_repair -L trick,
+but it gave massive file system corruption.
+
+Not a big deal, we have backups of everything.
+
+Mogens
+-- 
+Mogens Kjaer, Carlsberg A/S, Computer Department
+Gamle Carlsberg Vej 10, DK-2500 Valby, Denmark
+Phone: +45 33 27 53 25, Fax: +45 33 27 47 08
+Email: mk@crc.dk Homepage: http://www.crc.dk
