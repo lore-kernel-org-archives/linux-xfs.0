@@ -1,53 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Sep 2006 19:05:26 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Sep 2006 19:06:23 -0700 (PDT)
 Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8F259Zd016517
-	for <xfs@oss.sgi.com>; Thu, 14 Sep 2006 19:05:19 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8F25pZd016628
+	for <linux-xfs@oss.sgi.com>; Thu, 14 Sep 2006 19:06:01 -0700
+Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
+	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k8E1dGnx021464
+	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 20:39:16 -0500
+Received: from omx2.sgi.com ([198.149.32.25])
+	by internal-mail-relay1.corp.sgi.com (8.12.9/8.12.10/SGI_generic_relay-1.2) with ESMTP id k8E1dG8s39912864
+	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 18:39:16 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with SMTP id k8E1vFnx024243
-	for <xfs@oss.sgi.com>; Wed, 13 Sep 2006 20:57:17 -0500
-Message-Id: <200609140157.LAA22186@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: Bug#387057: xfsprogs: repeated xfs_repair does not fix the filesystem
-Date: Thu, 14 Sep 2006 12:03:28 +1000
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <87zmd4jdzz.fsf@tac.ki.iif.hu>
+	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with SMTP id k8E4EBti011249
+	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 21:14:12 -0700
+Subject: TAKE 952967 - BUG() in generic_delete_inode()
+Message-Id: <20060914013903.2896E58CF851@chook.melbourne.sgi.com>
+Date: Thu, 14 Sep 2006 11:39:03 +1000 (EST)
+From: dgc@SGI.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Ferenc Wagner' <wferi@niif.hu>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
- 
+Really fix use after free in xfs_iunpin.
 
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Ferenc Wagner
-> Sent: Wednesday, 13 September 2006 7:46 PM
-> To: Nathan Scott
-> Cc: 387057@bugs.debian.org; xfs@oss.sgi.com
-> Subject: Re: Bug#387057: xfsprogs: repeated xfs_repair does 
-> not fix the filesystem
-> 
-> 
-> Still, xfs_check reported:
-> => link count mismatch for inode 400254 (name ?), nlink 0, counted 2
-> => link count mismatch for inode 4239409 (name ?), nlink 0, counted 2
-> => link count mismatch for inode 8388736 (name ?), nlink 39, 
-> counted 38
-> 
-> Further runs of xfs_repair didn't bring any change.  On the root
-> filesystem the results are much the same, but xfs_check reports:
-> => sb_ifree 3042, counted 3041
-> 
-> I read that xfs_check is being obsoleted in the future, but not sure
-> which program to trust.  Are my filesystems healthy or not?
+The previous attempts to fix the linux inode use-after-free in
+xfs_iunpin simply made the problem harder to hit. We actually need
+complete exclusion between xfs_reclaim and xfs_iunpin, as well as
+ensuring that the i_flags are consistent during both of these
+functions. Introduce a new spinlock for exclusion and the i_flags,
+and fix up xfs_iunpin to use igrab before marking the inode dirty.
 
-This has been reported before, can you try running an older xfsprogs before
-2.8.10 and see how that goes? I think with the dir2 fixes, the nlink stuff
-might be a tad broken. I'll also look into it from my end.
+Date:  Thu Sep 14 11:37:19 AEST 2006
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs-new
+Inspected by:  m-saito,masano,nathans
 
-Barry.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26964a
+fs/xfs/xfs_vnodeops.c - 1.683 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.683&r2=text&tr2=1.682&f=h
+	- Use new i_flags_lock to protect i_flags.
+
+fs/xfs/xfs_itable.c - 1.149 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.149&r2=text&tr2=1.148&f=h
+	- Use new i_flags_lock to protect i_flags.
+
+fs/xfs/xfs_iget.c - 1.221 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.221&r2=text&tr2=1.220&f=h
+	- Use new i_flags_lock to protect i_flags.
+
+fs/xfs/xfs_inode.c - 1.452 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.452&r2=text&tr2=1.451&f=h
+	- Fix xfs_iunpin to prevent use-after-free of the linux inode.
+
+fs/xfs/xfs_inode.h - 1.216 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.216&r2=text&tr2=1.215&f=h
+	- Use new i_flags_lock to protect i_flags.
+
+fs/xfs/linux-2.6/xfs_super.c - 1.370 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.370&r2=text&tr2=1.369&f=h
+	- Use new i_flags_lock to protect i_flags.
