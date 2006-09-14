@@ -1,64 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Sep 2006 19:06:23 -0700 (PDT)
-Received: from omx1.americas.sgi.com (omx1.americas.sgi.com [198.149.16.13])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8F25pZd016628
-	for <linux-xfs@oss.sgi.com>; Thu, 14 Sep 2006 19:06:01 -0700
-Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
-	by omx1.americas.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k8E1dGnx021464
-	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 20:39:16 -0500
-Received: from omx2.sgi.com ([198.149.32.25])
-	by internal-mail-relay1.corp.sgi.com (8.12.9/8.12.10/SGI_generic_relay-1.2) with ESMTP id k8E1dG8s39912864
-	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 18:39:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with SMTP id k8E4EBti011249
-	for <linux-xfs@oss.sgi.com>; Wed, 13 Sep 2006 21:14:12 -0700
-Subject: TAKE 952967 - BUG() in generic_delete_inode()
-Message-Id: <20060914013903.2896E58CF851@chook.melbourne.sgi.com>
-Date: Thu, 14 Sep 2006 11:39:03 +1000 (EST)
-From: dgc@SGI.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Sep 2006 20:17:39 -0700 (PDT)
+Received: from swip.net (mailfe03.tele2.dk [212.247.154.67])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8F3HQZd014490
+	for <linux-xfs@oss.sgi.com>; Thu, 14 Sep 2006 20:17:27 -0700
+Received: from [83.73.5.27] (HELO mogens1.lemo.dk)
+  by mailfe03.swip.net (CommuniGate Pro SMTP 5.0.8)
+  with ESMTPS id 286094762 for linux-xfs@oss.sgi.com; Thu, 14 Sep 2006 17:16:40 +0200
+Received: from [192.168.1.89] (dhcp89.lemo.dk [192.168.1.89])
+	by mogens1.lemo.dk (8.13.7/8.13.6) with ESMTP id k8EFGcrt009815
+	for <linux-xfs@oss.sgi.com>; Thu, 14 Sep 2006 17:16:38 +0200
+Message-ID: <45097256.4060601@crc.dk>
+Date: Thu, 14 Sep 2006 17:16:38 +0200
+From: Mogens Kjaer <mk@crc.dk>
+MIME-Version: 1.0
+Subject: Re: Mounting IRIX disk on Linux
+References: <45053B2D.50203@crc.dk> <4505712E.5070801@oss.sgi.com> <4506529F.9030109@crc.dk> <4506831A.3000001@sgi.com> <4506D66D.8060206@sandeen.net> <450758E2.30408@sgi.com>
+In-Reply-To: <450758E2.30408@sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Really fix use after free in xfs_iunpin.
+Timothy Shimmin wrote:
+..
+>                         "file system using version 1 directory format");
 
-The previous attempts to fix the linux inode use-after-free in
-xfs_iunpin simply made the problem harder to hit. We actually need
-complete exclusion between xfs_reclaim and xfs_iunpin, as well as
-ensuring that the i_flags are consistent during both of these
-functions. Introduce a new spinlock for exclusion and the i_flags,
-and fix up xfs_iunpin to use igrab before marking the inode dirty.
+> Did this not happen, Mogens?
 
-Date:  Thu Sep 14 11:37:19 AEST 2006
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs-new
-Inspected by:  m-saito,masano,nathans
+No. Nothing in /var/log/messages, and the only thing I
+get on the screen when I mount is "Function not implemented".
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Mogens
 
-
-Modid:  xfs-linux-melb:xfs-kern:26964a
-fs/xfs/xfs_vnodeops.c - 1.683 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.683&r2=text&tr2=1.682&f=h
-	- Use new i_flags_lock to protect i_flags.
-
-fs/xfs/xfs_itable.c - 1.149 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.149&r2=text&tr2=1.148&f=h
-	- Use new i_flags_lock to protect i_flags.
-
-fs/xfs/xfs_iget.c - 1.221 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.221&r2=text&tr2=1.220&f=h
-	- Use new i_flags_lock to protect i_flags.
-
-fs/xfs/xfs_inode.c - 1.452 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.452&r2=text&tr2=1.451&f=h
-	- Fix xfs_iunpin to prevent use-after-free of the linux inode.
-
-fs/xfs/xfs_inode.h - 1.216 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.216&r2=text&tr2=1.215&f=h
-	- Use new i_flags_lock to protect i_flags.
-
-fs/xfs/linux-2.6/xfs_super.c - 1.370 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.370&r2=text&tr2=1.369&f=h
-	- Use new i_flags_lock to protect i_flags.
+-- 
+Mogens Kjaer, Carlsberg A/S, Computer Department
+Gamle Carlsberg Vej 10, DK-2500 Valby, Denmark
+Phone: +45 33 27 53 25, Fax: +45 33 27 47 08
+Email: mk@crc.dk Homepage: http://www.crc.dk
