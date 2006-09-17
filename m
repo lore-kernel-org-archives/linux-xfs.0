@@ -1,35 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Sep 2006 16:50:39 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8FNoTZd026063
-	for <linux-xfs@OSS.SGI.com>; Fri, 15 Sep 2006 16:50:32 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1GONR8-0002lz-Ue
-	for <linux-xfs@OSS.SGI.com>; Sat, 16 Sep 2006 00:49:34 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Sep 2006 16:47:22 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8HNkuZd004677
+	for <linux-xfs@oss.sgi.com>; Sun, 17 Sep 2006 16:47:08 -0700
+Message-ID: <450DDE60.50300@sgi.com>
+Date: Mon, 18 Sep 2006 09:46:40 +1000
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: TAKE 955947: Infinite loop in xfs_bulkstat() on formatter() error
+References: <44CE9F23.7000605@sgi.com> <44EE9DF7.1080904@sgi.com> <44F66CA0.4080008@sgi.com> <450A4E87.4030005@sgi.com> <450A531E.2070205@sgi.com>
+In-Reply-To: <450A531E.2070205@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <17675.15374.698393.232722@base.ty.sabi.co.UK>
-Date: Sat, 16 Sep 2006 00:49:34 +0100
-Subject: Re: swidth with mdadm and RAID6
-In-Reply-To: <Pine.LNX.4.10.10609151652070.31539-100000@limpet.umeoce.maine.edu>
-References: <Pine.LNX.4.10.10609151652070.31539-100000@limpet.umeoce.maine.edu>
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
 
->>> On Fri, 15 Sep 2006 17:07:07 -0400 (EDT), Steve Cousins
->>> <cousins@limpet.umeoce.maine.edu> said:
+955947: Infinite loop in xfs_bulkstat() on formatter() error
 
-cousins> I have a RAID6 array of 11 500 GB drives using mdadm.
-cousins> There is one hot-spare so the number of data drives is
-cousins> 8.  I used mkfs.xfs with defaults to create the file
-cousins> system and it seemed to pick up the chunk size I used
-cousins> correctly (64K) but I think it got the swidth wrong.
+Date:  Mon Sep 18 09:43:49 AEST 2006
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
+Inspected by:  nathans
+Author:  vapo
 
-Worrying about the impact on performance of a relatively small
-thing like 'swidth' for something like an 8+2 RAID6 is quite
-funny. http://WWW.BAARF.com/
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:26986a
+fs/xfs/xfs_itable.c - 1.151 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.151&r2=text&tr2=1.150&f=h
+        - pv 955947, rv: nathans - update lastino on non critical errors 
+returned by formatter()
