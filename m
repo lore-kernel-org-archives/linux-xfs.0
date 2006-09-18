@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Sep 2006 13:28:55 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Sep 2006 13:45:46 -0700 (PDT)
 Received: from limpet.umeoce.maine.edu (limpet.umeoce.maine.edu [130.111.192.115])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8IKSgZd003338
-	for <xfs@oss.sgi.com>; Mon, 18 Sep 2006 13:28:46 -0700
-Date: Mon, 18 Sep 2006 16:28:05 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8IKjbZd006847
+	for <xfs@oss.sgi.com>; Mon, 18 Sep 2006 13:45:38 -0700
+Date: Mon, 18 Sep 2006 16:44:59 -0400 (EDT)
 From: Steve Cousins <cousins@limpet.umeoce.maine.edu>
 Reply-To: cousins@umit.maine.edu
 Subject: Re: swidth with mdadm and RAID6
 In-Reply-To: <fc.004c4d192b2c45a93b9aca00fc3f0f38.2b2c4b4d@umit.maine.edu>
-Message-ID: <Pine.LNX.4.10.10609181626550.1732-100000@limpet.umeoce.maine.edu>
+Message-ID: <Pine.LNX.4.10.10609181639000.1732-100000@limpet.umeoce.maine.edu>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
@@ -18,10 +18,29 @@ To: Shailendra Tripathi <stripathi@agami.com>
 Cc: "\"xfs@oss.sgi.com\" <xfs@oss.sgi.com>" <xfs@oss.sgi.com>
 
 
-Thanks very much Shailendra.  I'll give it a try.
+Hi again,
+
+Still no luck with 2.8.11:
+
+[root@juno xfsprogs-2.8.11]# cd mkfs
+
+[root@juno mkfs]# ./mkfs.xfs -f /dev/md0
+meta-data=/dev/md0               isize=256    agcount=32, agsize=30524160
+blks
+         =                       sectsz=4096  attr=0
+data     =                       bsize=4096   blocks=976772992, imaxpct=25
+         =                       sunit=16     swidth=144 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=4096  sunit=1 blks
+realtime =none                   extsz=589824 blocks=0, rtextents=0
+
+Since I have a spare in there do you think it is starting with md.nr_disks
+= 11 and then subtracting two?
+
+Thanks,
 
 Steve
-
 ______________________________________________________________________
  Steve Cousins, Ocean Modeling Group    Email: cousins@umit.maine.edu
  Marine Sciences, 452 Aubert Hall       http://rocky.umeoce.maine.edu
