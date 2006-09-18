@@ -1,86 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Sep 2006 15:25:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Sep 2006 15:40:43 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8IMOnZd025648
-	for <xfs@oss.sgi.com>; Mon, 18 Sep 2006 15:25:01 -0700
-Date: Tue, 19 Sep 2006 08:23:48 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8IMeEZd028072
+	for <xfs@oss.sgi.com>; Mon, 18 Sep 2006 15:40:25 -0700
+Date: Tue, 19 Sep 2006 08:39:18 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs_check - out of memory | xfs_repair - superblock error reading
-Message-ID: <20060918222348.GY3034@melbourne.sgi.com>
-References: <200609181519.18448.christian.gattermair@mci.edu>
+Subject: Re: File system block reservation mechanism is broken
+Message-ID: <20060918223918.GZ3034@melbourne.sgi.com>
+References: <Pine.LNX.4.64.0609151242110.21194@madrid.max-t.internal>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <200609181519.18448.christian.gattermair@mci.edu>
+In-Reply-To: <Pine.LNX.4.64.0609151242110.21194@madrid.max-t.internal>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: christian gattermair <christian.gattermair@mci.edu>
+To: Stephane Doyon <sdoyon@max-t.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Sep 18, 2006 at 03:19:18PM +0200, christian gattermair wrote:
-> hi!
+On Fri, Sep 15, 2006 at 12:44:16PM -0400, Stephane Doyon wrote:
+> [Resending. Seems my previous post did not make it somehow...]
 > 
-> after a reboot of our box (debian sarge, 3ware controller, raid 5 - 3tb xfs) 
-> we can not mount it any more.
-> 
-> from syslog:
-> 
-> Sep 18 12:51:36 localhost kernel: SGI XFS with ACLs, security attributes, 
-> realtime, large block numbers, no debug enabled
-> Sep 18 12:51:36 localhost kernel: SGI XFS Quota Management subsystem
-> Sep 18 12:51:53 localhost kernel: attempt to access beyond end of device
-> Sep 18 12:51:53 localhost kernel: sdb1: rw=0, want=6445069056, 
-> limit=2150101796
-> Sep 18 12:51:53 localhost kernel: I/O error in filesystem ("sdb1") meta-data 
-> dev sdb1 block 0x18027f2ff       ("xfs_read_buf") error 5 buf count 512
-> Sep 18 12:51:53 localhost kernel: XFS: size check 2 failed
+> The mechanism allowing to reserve file system blocks, xfs_reserve_blocks() 
+> / XFS_IOC_SET_RESBLKS, appears to have been broken by the patch that 
+> introduced per-cpu superblock counters.
 
-I/O error - something is not right with your raid controller i think.
-Are there any other errors in dmesg? What does /proc/partitions tell
-you about the size of the device?
+Thanks for finding this, Stephane. It turns out our xfsqa test that
+is supposed to test this feature only tests whether the ioctl
+succeeds or fails - it doesn't check whether values have been set
+properly, whether the reservation really is reserved, etc. Hence
+we've always got false successes from this test and hence it's never
+been noticed as broken.
 
-> xfs_check fails with:
-> 
-> xfs_check /dev/sdb1
-> XFS: totally zeroed log
-> xfs_check: out of memory
+Your patch is based on a tree that is a little out of date - the
+allocation set aside code has already been pushed into
+xfs_reserve_blocks().  Unfortunately I didn't notice that this code
+didn't work with SMP counters at the same time I realised it needed
+to obey the set aside restrictions....
 
-3TB filesystem - you won't be able to xfs_check that on a 32 bit system,
-and you'll need >6GiB RAM to check it on a 64bit system.
-
-> there is a lot of space (i tryed more swap)
-> 
-> Mem:          1011       1006          5          0        750        111
-> -/+ buffers/cache:        144        867
-> Swap:        57812          0      57812
-> 
-> does xfs_check only looks at the mem or also an swap??? is there any hint to 
-> use the swap?
-
-Sounds like a 32 bit system where a process can't use more than 2-3GB of RAM.
-No amount of swap will help if the process requires more then the maximum
-thæt can be addressed per process.
-
-> second question:
-> 
-> xfs_repair works but can not find any superblock. any hints?
-> 
-> xfs_repair /dev/sdb1
-> Phase 1 - find and verify superblock...
-> error reading superblock 11 -- seek to offset 1134332153856 failed
-> couldn't verify primary superblock - bad magic number !!!
-
-As already commented, that's about 1TB into 3TB volume. I'd suggest
-raid controller problems....
-
-Did you boot the same kernel you'd been running previously?
-
-> the whole system runs one year without any errors. only today one shutdown for 
-> chaning the usv ....
-
-What's a usv? Did you change anything else?
+I'll have a fix for the problem soon and get the QA test updated
+to test the ioctl properly.
 
 Cheers,
 
