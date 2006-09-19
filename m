@@ -1,56 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 00:03:02 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8J72maG019244
-	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 00:02:50 -0700
-Message-ID: <450F9617.2020603@sgi.com>
-Date: Tue, 19 Sep 2006 17:02:47 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 02:08:19 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8J980aG011970
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 02:08:06 -0700
+Received: from mail.vcc.de (mail.vcc.de [217.111.2.122])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 18ABA452DDF
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 00:54:59 -0700 (PDT)
+Message-ID: <450FA2A2.10909@opticalart.de>
+Date: Tue, 19 Sep 2006 09:56:18 +0200
+From: Frank Hellmann <frank@opticalart.de>
 MIME-Version: 1.0
-Subject: Re: swidth with mdadm and RAID6
-References: <Pine.LNX.4.10.10609181639000.1732-100000@limpet.umeoce.maine.edu> <450F1A1F.1020204@agami.com> <450F7C1E.5020300@sgi.com> <450F91D4.1030606@agami.com>
-In-Reply-To: <450F91D4.1030606@agami.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: xfs_check - out of memory | xfs_repair - superblock error reading
+References: <200609181519.18448.christian.gattermair@mci.edu> <20060918222348.GY3034@melbourne.sgi.com> <8B10E861-C427-4F9F-B0C4-7A87DB77236B@astro.wisc.edu>
+In-Reply-To: <8B10E861-C427-4F9F-B0C4-7A87DB77236B@astro.wisc.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Shailendra Tripathi <stripathi@agami.com>
-Cc: cousins@umit.maine.edu, "\"xfs@oss.sgi.com\" <xfs@oss.sgi.com>" <xfs@oss.sgi.com>
+To: Stephan Jansen <jansen@astro.wisc.edu>
+Cc: xfs@oss.sgi.com
 
-Shailendra Tripathi wrote:
-> 
-> Hi Tim,
-> 
->> I'm not that au fait with RAID and md, but looking at what you wrote,
->> Shailendra, and the md code, instead of your suggestions
->> (what I think are your suggestions:) of:
->>
->> (1) subtracting parity from md.raid_disk (instead of md.nr_disks)
->>     where we work out parity by switching on md.level
->> or
->> (2) using directly: (md.nr_disks - md.spares);
->>
->> that instead we could use:
->> (3) using directly:  md.active_disks
->>
->> i.e.
->> *swidth = *sunit * md.active_disks;
->> I presume that active is the working non spares and non-parity.
->>
->> Does that make sense?
->       I agree with you that for operational raid since there would not 
-> be any faulty disks, active disks should the number of disks. However, I 
-> am just concerned that active disks tracks live disks (not failed 
-> disks). If we ever used these commands when the system has faulty drive, 
-> the information returned wouldn't be correct. Though, from XFS 
-> perspective, I can't think of where it can happen.
->       I would still say that lets rely more on raid_disks to be more 
-> conservative, just my choice.
+Hi,
 
-I see your point.
-I can just change md_get_subvol_stripe(): s/nr_disks/raid_disks/
-I just liked the idea of removing the switch statement which could
-potentially get out of date in the future. Too bad :)
+Stephan Jansen wrote:
+>
+> Hi,
+>
+> I was just going to create a 3TB filesystem on a 32 bit system.  So
+> xfs_check will not work?  How about xfs_repair?  I assume that will
+> work but would like to know beforehand.
+>
+> [stuff deleted]
+>
+>
+> ----- Stephan
+>
 
---Tim
+I have a couple of 3.1TB FC arrays here and I had no real problems with
+xfs on them so far. We have to reset the machines from time to time,
+'cause nvidia drivers and data moving locks up the complete machine, but
+even then no data losses occured. The lastest kernels we use (2.6.16)
+checks the filesystems/logs without any hickups during mount phase.
+
+Commandline xfs_check won't work (out of memory error), but checking
+with xfs_repair works fine here. It will need a lot of memory though, so
+have at least 3GB RAM installed.
+
+    Cheers,
+                   Frank...
+
+-- 
+--------------------------------------------------------------------------
+Frank Hellmann          Optical Art GmbH           Waterloohain 7a
+DI Supervisor           http://www.opticalart.de   22769 Hamburg
+frank@opticalart.de     Tel: ++49 40 5111051       Fax: ++49 40 43169199 
