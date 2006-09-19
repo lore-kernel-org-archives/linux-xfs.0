@@ -1,62 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 09:07:44 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8JG7ZaG028247
-	for <linux-xfs@oss.sgi.com>; Tue, 19 Sep 2006 09:07:35 -0700
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA641D1783BB
-	for <linux-xfs@oss.sgi.com>; Tue, 19 Sep 2006 08:02:57 -0700 (PDT)
-Message-ID: <4510069A.6050508@sandeen.net>
-Date: Tue, 19 Sep 2006 10:02:50 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 09:59:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8JGx0aG007093
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 09:59:01 -0700
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76E44457987
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 09:58:22 -0700 (PDT)
+Received: from agami.com ([192.168.168.132])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id k8JGwH2c023378
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 09:58:21 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id k8JGwC9v002380
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 09:58:12 -0700
+Message-ID: <451021C0.8040701@agami.com>
+Date: Tue, 19 Sep 2006 22:28:40 +0530
+From: Shailendra Tripathi <stripathi@agami.com>
 MIME-Version: 1.0
-Subject: Re: xfs_check - out of memory | xfs_repair - superblock error reading
-References: <200609181519.18448.christian.gattermair@mci.edu> <450EB025.5020007@oss.sgi.com> <200609191203.22083.christian.gattermair@mci.edu>
-In-Reply-To: <200609191203.22083.christian.gattermair@mci.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: swidth with mdadm and RAID6
+References: <Pine.LNX.4.10.10609191233310.2460-100000@limpet.umeoce.maine.edu>
+In-Reply-To: <Pine.LNX.4.10.10609191233310.2460-100000@limpet.umeoce.maine.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: christian gattermair <christian.gattermair@mci.edu>
-Cc: linux-xfs@oss.sgi.com
+To: cousins@umit.maine.edu
+Cc: xfs@oss.sgi.com
 
-christian gattermair wrote:
-> hi!
+> Hi Shailendra,
 > 
-> thanks for all your answers
+> I ran the program and it reports:
 > 
+> 	Level 6, disks=11 spare_disks=1 raid_disks=10
 > 
-> parted:
+> which looks good.   I don't understand why you got:
 > 
-> Disk geometry for /dev/sda: 0.000-3147012,000 megabytes
-> Disk label type: msdos
-> Minor    Start       End     Type      Filesystem  Flags
-> 1          0,031 1049854,423  primary   xfs
+> 	Level 5, disks=7 spare_disks=3 raid_disks=5
 > 
-> cat /proc/partitions
-> 
->   8     0 3222540288 sda
->    8     1 1075050898 sda1
+> Why would it have 3 spare_disks?
 
-sda1 is only 1 terabyte.  sda itself appears to be about 3 terabytes.
-
-I think you need to sort out where your filesystem is living...
-
-Did someone repartition sda?
-
->   Vendor: AMCC      Model: 9500S-12   DISK   Rev: 2.06
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> sda : very big device. try to use READ CAPACITY(16).
-
-Or perhaps this is the 2T lun problem... although you say it was working
-before.  At any rate this isn't looking like an xfs problem at this
-stage - your kernel thinks that your storage is smaller than you think
-it is.
-
--Eric
-
-> SCSI device sda: 6445080576 512-byte hdwr sectors (3299881 MB)
-> SCSI device sda: drive cache: write back, no read (daft)
->  /dev/scsi/host0/bus0/target0/lun0: p1
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Perhaps you are running more recent kernel than mine, and, spare_disks 
+now reports only actual spares. It did appear little weired that it 
+reported spare_disks as 3. get_array_info is changed in recent kernels 
+and that should explain this difference.
