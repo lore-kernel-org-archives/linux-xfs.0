@@ -1,52 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 13:07:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8JK7laG005828
-	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:07:48 -0700
-Received: from limpet.umeoce.maine.edu (limpet.umeoce.maine.edu [130.111.192.115])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EC2E456BC7
-	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:07:09 -0700 (PDT)
-Date: Tue, 19 Sep 2006 13:52:45 -0400 (EDT)
-From: Steve Cousins <cousins@limpet.umeoce.maine.edu>
-Reply-To: cousins@umit.maine.edu
-Subject: Re: swidth with mdadm and RAID6
-In-Reply-To: <fc.004c4d192b3470d73b9aca0029fcf469.2b349301@umit.maine.edu>
-Message-ID: <Pine.LNX.4.10.10609191335491.2460-100000@limpet.umeoce.maine.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Sep 2006 13:20:55 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8JKKpaG008310
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:20:53 -0700
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 22947D17675C
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:20:10 -0700 (PDT)
+Received: from agami.com ([192.168.168.132])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id k8JKK62c026002
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:20:08 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id k8JKK1Zb005927
+	for <xfs@oss.sgi.com>; Tue, 19 Sep 2006 13:20:01 -0700
+Message-ID: <451050E7.40806@agami.com>
+Date: Wed, 20 Sep 2006 01:49:51 +0530
+From: Shailendra Tripathi <stripathi@agami.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: swidth with mdadm and RAID6
+References: <Pine.LNX.4.10.10609191517590.2460-100000@limpet.umeoce.maine.edu>
+In-Reply-To: <Pine.LNX.4.10.10609191517590.2460-100000@limpet.umeoce.maine.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Shailendra Tripathi <stripathi@agami.com>
+To: cousins@umit.maine.edu
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+Steve Cousins wrote:
 
+>>a 2.6.17 kernel.  So, with this in mind, is there a change that I
+>>should try in libdisk/md.c?  Tim had suggested:
+>>
+>>	s/nr_disks/raid_disks/
+>>
+>>Would this be sufficient? Or should nr_disks be initialized as raid_disks
+>>and then go into the switch clause?
+>>    
+>>
+>
+>I ended up just adding:
+>
+>	md.nr_disks = md.raid_disks;
+>
+>right be fore the switch statement and it worked fine in my situation.
+>Not sure how this would work with other kernels etc. but I'll let you
+>figure that out.  
+>
+>Thanks very much for your help.
+>
+>Steve
+>
+>  
+>
+Hi Steve,
+             Technically speaking, you are doing the same thing. 
+However, just write the function below to avoid any confusion.
 
-On Tue, 19 Sep 2006, Shailendra Tripathi wrote:
+int
+md_get_subvol_stripe(
+	char		*dfile,
+	sv_type_t	type,
+	int		*sunit,
+	int		*swidth,
+	int		*sectalign,
+	struct stat64	*sb)
+{
+	if (mnt_is_md_subvol(sb->st_rdev)) {
+		struct md_array_info	md;
+		int			fd;
 
-> >> Hi Shailendra,
-> >> 
-> >> I ran the program and it reports:
-> >> 
-> >> 	Level 6, disks=11 spare_disks=1 raid_disks=10
-> >> 
-> >> which looks good.   I don't understand why you got:
-> >> 
-> >> 	Level 5, disks=7 spare_disks=3 raid_disks=5
-> >> 
-> >> Why would it have 3 spare_disks?
-> >
-> Perhaps you are running more recent kernel than mine, and, spare_disks 
-> now reports only actual spares. It did appear little weired that it 
-> reported spare_disks as 3. get_array_info is changed in recent kernels 
-> and that should explain this difference.
+		/* Open device */
+		fd = open(dfile, O_RDONLY);
+		if (fd == -1)
+			return 0;
 
-This is a 2.6.17 kernel.  So, with this in mind, is there a change that I
-should try in libdisk/md.c?  Tim had suggested:
+		/* Is this thing on... */
+		if (ioctl(fd, GET_ARRAY_INFO, &md)) {
+			fprintf(stderr,
+				_("Error getting MD array info from %s\n"),
+				dfile);
+			exit(1);
+		}
+		close(fd);
 
-	s/nr_disks/raid_disks/
+		/*
+		 * Ignore levels we don't want aligned (e.g. linear)
+		 * and deduct disk(s) from stripe width on RAID4/5/6
+		 */
+		switch (md.level) {
+		case 6:
+			md.raid_disks--;
+			/* fallthrough */
+		case 5:
+		case 4:
+			md.raid_disks--;
+			/* fallthrough */
+		case 1:
+		case 0:
+		case 10:
+			break;
+		default:
+			return 0;
+		}
 
-Would this be sufficient? Or should nr_disks be initialized as raid_disks
-and then go into the switch clause?
+		/* Update sizes */
+		*sunit = md.chunk_size >> 9;
+		*swidth = *sunit * md.raid_disks;
+		*sectalign = (md.level == 4 || md.level == 5 || md.level == 6);
 
-Steve
+		return 1;
+	}
+	return 0;
+}
