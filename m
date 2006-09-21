@@ -1,109 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 15:34:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8LMYOaG016984
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:34:25 -0700
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 357B745BDEC
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:33:45 -0700 (PDT)
-Message-ID: <45131334.6050803@sandeen.net>
-Date: Thu, 21 Sep 2006 17:33:24 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 17:07:57 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8M07laG029790
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 17:07:48 -0700
+Received: from excu-mxob-1.symantec.com (excu-mxob-1.symantec.com [198.6.49.12])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1ED5BD10E76D
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:52:22 -0700 (PDT)
+Received: from tus1opsmtapin01.ges.symantec.com (tus1opsmtapin01.ges.symantec.com [192.168.214.43])
+	by excu-mxob-1.symantec.com (8.13.7/8.13.7) with ESMTP id k8LMqJoB016263
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:52:20 -0700 (PDT)
+Received: from [10.137.18.172] (helo=SVLXCHCON2.enterprise.veritas.com)
+	by tus1opsmtapin01.ges.symantec.com with esmtp (Exim 4.52)
+	id 1GQXOz-000820-36
+	for xfs@oss.sgi.com; Thu, 21 Sep 2006 15:52:17 -0700
 MIME-Version: 1.0
-Subject: [PATCH -mm] rescue large xfs preferred iosize from the inode diet
- patch
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: xfs_read_buf error 5.
+Date: Thu, 21 Sep 2006 15:52:18 -0700
+Message-ID: <43FB1967D03EC7449A77FA91322E364802A9AA07@SVL1XCHCLUPIN01.enterprise.veritas.com>
+From: "Nikhil Kulkarni" <nikhil_kulkarni@symantec.com>
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-The inode diet patch in -mm unhooked xfs_preferred_iosize from the stat call:
+Hi,
 
---- a/fs/xfs/linux-2.6/xfs_vnode.c
-+++ b/fs/xfs/linux-2.6/xfs_vnode.c
-@@ -122,7 +122,6 @@ vn_revalidate_core(
-        inode->i_blocks     = vap->va_nblocks;
-        inode->i_mtime      = vap->va_mtime;
-        inode->i_ctime      = vap->va_ctime;
--       inode->i_blksize    = vap->va_blocksize;
-        if (vap->va_xflags & XFS_XFLAG_IMMUTABLE)
-
-This in turn breaks the largeio mount option for xfs:
-
-  largeio/nolargeio
-        If "nolargeio" is specified, the optimal I/O reported in
-        st_blksize by stat(2) will be as small as possible to allow user
-        applications to avoid inefficient read/modify/write I/O.
-        If "largeio" specified, a filesystem that has a "swidth" specified
-        will return the "swidth" value (in bytes) in st_blksize. If the
-        filesystem does not have a "swidth" specified but does specify
-        an "allocsize" then "allocsize" (in bytes) will be returned
-        instead.
-        If neither of these two options are specified, then filesystem
-        will behave as if "nolargeio" was specified.
-
-and the (undocumented?) allocsize mount option as well.
-
-For a filesystem like this with sunit/swidth specified,
-
-meta-data=/dev/sda1              isize=512    agcount=32, agsize=7625840 blks
-         =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=244026880, imaxpct=25
-         =                       sunit=16     swidth=16 blks, unwritten=1
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=32768, version=1
-         =                       sectsz=512   sunit=0 blks
-realtime =none                   extsz=65536  blocks=0, rtextents=0
-
-stat on a stock FC6 kernel w/ the largeio mount option returns only the page size:
-
-[root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
-[root@link-07]# stat -c %o /mnt/test/foo
-4096
-
-with the following patch, it does what it should:
-
-[root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
-[root@link-07]# stat -c %o /mnt/test/foo
-65536
-
-same goes for filesystems w/o sunit,swidth but with the allocsize mount option.
-
-stock:
-[root@link-07]# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
-[root@link-07]# stat -c %o /mnt/test/foo
-4096
-
-w/ patch:
-[root@link-07# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
-[root@link-07]# stat -c %o /mnt/test/foo
-32768
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-XFS guys, does this look ok?
-
-Index: linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6.18.orig/fs/xfs/linux-2.6/xfs_iops.c
-+++ linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
-@@ -623,12 +623,16 @@ xfs_vn_getattr(
- {
- 	struct inode	*inode = dentry->d_inode;
- 	bhv_vnode_t	*vp = vn_from_inode(inode);
-+	xfs_inode_t	*ip;
- 	int		error = 0;
  
- 	if (unlikely(vp->v_flag & VMODIFIED))
- 		error = vn_revalidate(vp);
--	if (!error)
-+	if (!error) {
- 		generic_fillattr(inode, stat);
-+		ip = xfs_vtoi(vp);
-+		stat->blksize = xfs_preferred_iosize(ip->i_mount);
-+	}
- 	return -error;
- }
+
+We are running the latest stable kernel 2.6.18 on RedHat Enterprise 4
+Update 4.
+
+When I create an xfs partition and assign it a size > 2GB, I get the
+following errors during bootup:
+
  
+
+Sep 21 15:44:06 ssimppi7 kernel:  sda: sda1
+
+Sep 21 15:44:06 ssimppi7 kernel: sda1: rw=0, want=7167993856,
+limit=2873026796
+
+Sep 21 15:44:06 ssimppi7 kernel: I/O error in filesystem ("sda1")
+meta-data dev sda1 block 0x1ab3ee7ff       ("xfs_read_buf") error 5 buf
+count 512
+
+Sep 21 15:43:51 ssimppi7 mount: mount: /dev/sda1: can't read superblock
+
+ 
+
+If the partition size is < 2GB then everything works smoothly. The
+filesystem mounts successfully.
+
+ 
+
+I searched the archives but could not find anything that would help me
+in debugging this issue.
+
+ 
+
+I was wondering if anyone else has reported the same issue or if I am
+missing a step or if this is a defect in the code or
+
+something??
+
+ 
+
+Your response is greatly appreciated.
+
+ 
+
+Thanks,
+
+Nikhil
+
+
+
+[[HTML alternate version deleted]]
