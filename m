@@ -1,76 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 12:41:04 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8LJeuaG023182
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 12:40:57 -0700
-Received: from agminet01.oracle.com (agminet01.oracle.com [141.146.126.228])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25FD2D10D3B6
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 11:38:50 -0700 (PDT)
-Message-ID: <4512DC15.8050101@oracle.com>
-Date: Thu, 21 Sep 2006 11:38:13 -0700
-From: Zach Brown <zach.brown@oracle.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 15:34:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8LMYOaG016984
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:34:25 -0700
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 357B745BDEC
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 15:33:45 -0700 (PDT)
+Message-ID: <45131334.6050803@sandeen.net>
+Date: Thu, 21 Sep 2006 17:33:24 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [RFC 0/5] dio: clean up completion phase of direct_io_worker()
-References: <OFBE544A3C.7C1B2C64-ON652571F0.003C21B6-652571F0.003C2DF3@in.ibm.com>
-In-Reply-To: <OFBE544A3C.7C1B2C64-ON652571F0.003C21B6-652571F0.003C2DF3@in.ibm.com>
+Subject: [PATCH -mm] rescue large xfs preferred iosize from the inode diet
+ patch
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Veerendra Chandrappa <veerendra.chandrappa@in.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-kernel@vger.kernel.org, suparna@in.ibm.com, xfs@oss.sgi.com
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
+The inode diet patch in -mm unhooked xfs_preferred_iosize from the stat call:
 
-> on EXT2, EXT3 and XFS filesystems. For the EXT2 and EXT3 filesystems the
-> tests went okay. But I got stack trace on XFS filesystem and the machine
-> went down.
+--- a/fs/xfs/linux-2.6/xfs_vnode.c
++++ b/fs/xfs/linux-2.6/xfs_vnode.c
+@@ -122,7 +122,6 @@ vn_revalidate_core(
+        inode->i_blocks     = vap->va_nblocks;
+        inode->i_mtime      = vap->va_mtime;
+        inode->i_ctime      = vap->va_ctime;
+-       inode->i_blksize    = vap->va_blocksize;
+        if (vap->va_xflags & XFS_XFLAG_IMMUTABLE)
 
-Fantastic, thanks for running these tests.
+This in turn breaks the largeio mount option for xfs:
 
-> kernel BUG at kernel/workqueue.c:113!
+  largeio/nolargeio
+        If "nolargeio" is specified, the optimal I/O reported in
+        st_blksize by stat(2) will be as small as possible to allow user
+        applications to avoid inefficient read/modify/write I/O.
+        If "largeio" specified, a filesystem that has a "swidth" specified
+        will return the "swidth" value (in bytes) in st_blksize. If the
+        filesystem does not have a "swidth" specified but does specify
+        an "allocsize" then "allocsize" (in bytes) will be returned
+        instead.
+        If neither of these two options are specified, then filesystem
+        will behave as if "nolargeio" was specified.
 
-> EIP is at queue_work+0x86/0x90
+and the (undocumented?) allocsize mount option as well.
 
-We were able to set the pending bit but then found that list_empty()
-failed on the work queue's entry list_head.  Let's call this memory
-corruption of some kind.
+For a filesystem like this with sunit/swidth specified,
 
->  [<c02b43a2>] xfs_finish_ioend+0x20/0x22
->  [<c02b5e2f>] xfs_end_io_direct+0x3c/0x68
->  [<c018e77a>] dio_complete+0xe3/0xfe
->  [<c018e82d>] dio_bio_end_aio+0x98/0xb1
->  [<c016e889>] bio_endio+0x4e/0x78
->  [<c02cdc89>] __end_that_request_first+0xcd/0x416
+meta-data=/dev/sda1              isize=512    agcount=32, agsize=7625840 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=244026880, imaxpct=25
+         =                       sunit=16     swidth=16 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
 
-It was completing an AIO request.
+stat on a stock FC6 kernel w/ the largeio mount option returns only the page size:
 
-        ret = blockdev_direct_IO_own_locking(rw, iocb, inode,
-                iomap.iomap_target->bt_bdev,
-                iov, offset, nr_segs,
-                xfs_get_blocks_direct,
-                xfs_end_io_direct);
+[root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
+[root@link-07]# stat -c %o /mnt/test/foo
+4096
 
-        if (unlikely(ret <= 0 && iocb->private))
-                xfs_destroy_ioend(iocb->private);
+with the following patch, it does what it should:
 
-It looks like xfs_vm_direct_io() is destroying the ioend in the case
-where direct IO is returning -EIOCBQUEUED.  Later the AIO will complete
-and try to call queue_work on the freed ioend.  This wasn't a problem
-before when blkdev_direct_IO_*() would just return the number of bytes
-in the op that was in flight.  That test should be
+[root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
+[root@link-07]# stat -c %o /mnt/test/foo
+65536
 
-        if (unlikely(ret != -EIOCBQUEUED && iocb->private))
+same goes for filesystems w/o sunit,swidth but with the allocsize mount option.
 
-I'll update the patch set and send it out.
+stock:
+[root@link-07]# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
+[root@link-07]# stat -c %o /mnt/test/foo
+4096
 
-This makes me worry that XFS might have other paths that need to know
-about the magical -EIOCBQUEUED case which actually means that a AIO DIO
-is in flight.
+w/ patch:
+[root@link-07# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
+[root@link-07]# stat -c %o /mnt/test/foo
+32768
 
-Could I coerce some XFS guys into investigating if we might have other
-problems with trying to bubble -EIOCBQUEUED up from
-blockdev_direct_IO_own_locking() up through to xfs_file_aio_write()'s
-caller before calling xfs_end_io_direct()?
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-- z
+XFS guys, does this look ok?
+
+Index: linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- linux-2.6.18.orig/fs/xfs/linux-2.6/xfs_iops.c
++++ linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
+@@ -623,12 +623,16 @@ xfs_vn_getattr(
+ {
+ 	struct inode	*inode = dentry->d_inode;
+ 	bhv_vnode_t	*vp = vn_from_inode(inode);
++	xfs_inode_t	*ip;
+ 	int		error = 0;
+ 
+ 	if (unlikely(vp->v_flag & VMODIFIED))
+ 		error = vn_revalidate(vp);
+-	if (!error)
++	if (!error) {
+ 		generic_fillattr(inode, stat);
++		ip = xfs_vtoi(vp);
++		stat->blksize = xfs_preferred_iosize(ip->i_mount);
++	}
+ 	return -error;
+ }
+ 
