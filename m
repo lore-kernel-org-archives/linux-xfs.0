@@ -1,61 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 19:44:14 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8M2i7aG014576
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 19:44:08 -0700
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F37FC45A5B8
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 19:43:28 -0700 (PDT)
-Message-ID: <45134DC5.4070607@sandeen.net>
-Date: Thu, 21 Sep 2006 21:43:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 22:41:01 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8M5eqaG004077
+	for <linux-xfs@oss.sgi.com>; Thu, 21 Sep 2006 22:40:54 -0700
+Received: from cfa.harvard.edu (cfa.harvard.edu [131.142.10.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAAD0D10E762
+	for <linux-xfs@oss.sgi.com>; Thu, 21 Sep 2006 21:32:10 -0700 (PDT)
+Received: from titan (titan [131.142.24.40])
+	by cfa.harvard.edu (8.13.7/8.13.7/cfunix Mast-Sol 1.0) with ESMTP id k8M4W9ci006928
+	for <linux-xfs@oss.sgi.com>; Fri, 22 Sep 2006 00:32:09 -0400 (EDT)
+Date: Fri, 22 Sep 2006 00:32:09 -0400 (EDT)
+From: Gaspar Bakos <gbakos@cfa.harvard.edu>
+Reply-To: gbakos@cfa.harvard.edu
+Subject: mkfs.xfs on hw RAID6
+In-Reply-To: <Pine.SOL.4.58.0402092229300.4489@antu.cfa.harvard.edu>
+Message-ID: <Pine.SOL.4.58.0609212333020.28643@titan.cfa.harvard.edu>
+References: <Pine.SOL.4.58.0402092229300.4489@antu.cfa.harvard.edu>
 MIME-Version: 1.0
-Subject: Re: [PATCH -mm] rescue large xfs preferred iosize from the inode
- diet patch
-References: <45131334.6050803@sandeen.net> <45134472.7080002@sgi.com> <4513493F.8090005@sandeen.net>
-In-Reply-To: <4513493F.8090005@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs mailing list <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Timothy Shimmin wrote:
-> 
->> Looked at your patch and then at our xfs code in the tree and
->> the existing code is different than what yours is based on.
->> I then noticed in the logs Nathan has actually made changes for this:
->>
->> ----------------------------
->> revision 1.254
->> date: 2006/07/17 10:46:05;  author: nathans;  state: Exp;  lines: +20 -5
->> modid: xfs-linux-melb:xfs-kern:26565a
->> Update XFS for i_blksize removal from generic inode structure
->> ----------------------------
->> I even reviewed the change (and I don't remember it - getting old).
->>
->> I looked at the mods scheduled for 2.6.19 and this is one of them.
->>
->> So the fix for this is coming soon (and the fix is different from the
->> one above).
-> 
-> 
-> Ah, ok, thanks guys.  Should have checked CVS I guess.
-> 
-> -Eric
-> 
+Hi,
 
-cc -= lkml;
+I am trying to create an XFS filesystem on a hardware RAID-6 partition
+that consists of 12 x 500Gb disks, i.e. the total disk space is 5Tb. All
+this is one big partition, created by parted. Typical filesize will
+range from 100Kb to 30Mb, but very small files are not typical.
 
-actually the patch nathan put in seems like a lot of replicated code.
+I wonder about the usual magic; with a raid setup the su,sw and log su,size
+parameters can be optimized.
 
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.254&r2=text&tr2=1.253&f=h
+The RAID stripe size is 64K in my case.
 
-But maybe he's solving some problem I didn't think of.
+In other words:
 
-Any idea what?
+mkfs.xfs -b size=$BS -d su=$SU,sw=$SW -i size=$ISIZE -l su=$LSU,size=$LS -L BIG /dev/sdc1
+BS=?
+SU=?
+SW=?
+ISIZE=?
+LSU=?
+LS=?
 
--Eric
+I would say:
+
+mkfs.xfs -b size=4k -d su=64k,sw=10 -f -i size=512 -l su=64k,size=32m -L BIG /dev/sdc1
+
+I read somewhere some time ago that
+recommended sw = (num_of_disks - 1) with RAID-5 .
+The current sw = 10 is intuitive for RAID-6.
+
+I can also imagine that with hardware RAID all this is not that important.
+
+Thanks in advance for suggestions!
+
+Cheers,
+Gaspar
