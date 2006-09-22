@@ -1,30 +1,93 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 18:04:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Sep 2006 19:03:32 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8M145aG003281
-	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 18:04:07 -0700
-Date: Fri, 22 Sep 2006 11:03:16 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH -mm] rescue large xfs preferred iosize from the inode diet patch
-Message-ID: <20060922010316.GY3034@melbourne.sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8M23LaG009009
+	for <xfs@oss.sgi.com>; Thu, 21 Sep 2006 19:03:23 -0700
+Message-ID: <45134472.7080002@sgi.com>
+Date: Fri, 22 Sep 2006 12:03:30 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH -mm] rescue large xfs preferred iosize from the inode
+ diet patch
 References: <45131334.6050803@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <45131334.6050803@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Sep 21, 2006 at 05:33:24PM -0500, Eric Sandeen wrote:
+Hi Eric,
+
+Eric Sandeen wrote:
 > The inode diet patch in -mm unhooked xfs_preferred_iosize from the stat call:
-....
+> 
+> --- a/fs/xfs/linux-2.6/xfs_vnode.c
+> +++ b/fs/xfs/linux-2.6/xfs_vnode.c
+> @@ -122,7 +122,6 @@ vn_revalidate_core(
+>         inode->i_blocks     = vap->va_nblocks;
+>         inode->i_mtime      = vap->va_mtime;
+>         inode->i_ctime      = vap->va_ctime;
+> -       inode->i_blksize    = vap->va_blocksize;
+>         if (vap->va_xflags & XFS_XFLAG_IMMUTABLE)
+> 
+> This in turn breaks the largeio mount option for xfs:
+> 
+>   largeio/nolargeio
+>         If "nolargeio" is specified, the optimal I/O reported in
+>         st_blksize by stat(2) will be as small as possible to allow user
+>         applications to avoid inefficient read/modify/write I/O.
+>         If "largeio" specified, a filesystem that has a "swidth" specified
+>         will return the "swidth" value (in bytes) in st_blksize. If the
+>         filesystem does not have a "swidth" specified but does specify
+>         an "allocsize" then "allocsize" (in bytes) will be returned
+>         instead.
+>         If neither of these two options are specified, then filesystem
+>         will behave as if "nolargeio" was specified.
+> 
+> and the (undocumented?) allocsize mount option as well.
+> 
+> For a filesystem like this with sunit/swidth specified,
+> 
+> meta-data=/dev/sda1              isize=512    agcount=32, agsize=7625840 blks
+>          =                       sectsz=512   attr=0
+> data     =                       bsize=4096   blocks=244026880, imaxpct=25
+>          =                       sunit=16     swidth=16 blks, unwritten=1
+> naming   =version 2              bsize=4096
+> log      =internal               bsize=4096   blocks=32768, version=1
+>          =                       sectsz=512   sunit=0 blks
+> realtime =none                   extsz=65536  blocks=0, rtextents=0
+> 
+> stat on a stock FC6 kernel w/ the largeio mount option returns only the page size:
+> 
+> [root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
+> [root@link-07]# stat -c %o /mnt/test/foo
+> 4096
+> 
+> with the following patch, it does what it should:
+> 
+> [root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
+> [root@link-07]# stat -c %o /mnt/test/foo
+> 65536
+> 
+> same goes for filesystems w/o sunit,swidth but with the allocsize mount option.
+> 
+> stock:
+> [root@link-07]# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
+> [root@link-07]# stat -c %o /mnt/test/foo
+> 4096
+> 
+> w/ patch:
+> [root@link-07# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
+> [root@link-07]# stat -c %o /mnt/test/foo
+> 32768
+> 
 > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > 
 > XFS guys, does this look ok?
->
+> 
 > Index: linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
 > ===================================================================
 > --- linux-2.6.18.orig/fs/xfs/linux-2.6/xfs_iops.c
@@ -46,13 +109,24 @@ On Thu, Sep 21, 2006 at 05:33:24PM -0500, Eric Sandeen wrote:
 > +	}
 >  	return -error;
 >  }
+>  
 
-ACK. Looks good, Eric. Good catch.
+Looked at your patch and then at our xfs code in the tree and
+the existing code is different than what yours is based on.
+I then noticed in the logs Nathan has actually made changes for this:
+
+----------------------------
+revision 1.254
+date: 2006/07/17 10:46:05;  author: nathans;  state: Exp;  lines: +20 -5
+modid: xfs-linux-melb:xfs-kern:26565a
+Update XFS for i_blksize removal from generic inode structure
+----------------------------
+I even reviewed the change (and I don't remember it - getting old).
+
+I looked at the mods scheduled for 2.6.19 and this is one of them.
+
+So the fix for this is coming soon (and the fix is different from the
+one above).
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Tim.
