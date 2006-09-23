@@ -1,146 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Sep 2006 17:34:37 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8N0YVaG015826
-	for <xfs@oss.sgi.com>; Fri, 22 Sep 2006 17:34:31 -0700
-Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.4])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7118D45A7EA
-	for <xfs@oss.sgi.com>; Fri, 22 Sep 2006 16:11:10 -0700 (PDT)
-Date: Fri, 22 Sep 2006 16:10:40 -0700
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH -mm] rescue large xfs preferred iosize from the inode
- diet patch
-Message-Id: <20060922161040.609286fa.akpm@osdl.org>
-In-Reply-To: <45134472.7080002@sgi.com>
-References: <45131334.6050803@sandeen.net>
-	<45134472.7080002@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 23 Sep 2006 07:41:01 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8NEesaG030199
+	for <xfs@oss.sgi.com>; Sat, 23 Sep 2006 07:40:55 -0700
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.190])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E4392D111DF6
+	for <xfs@oss.sgi.com>; Sat, 23 Sep 2006 06:28:15 -0700 (PDT)
+Received: from [212.227.126.203] (helo=mrvnet.kundenserver.de)
+	by moutng.kundenserver.de with esmtp (Exim 3.35 #1)
+	id 1GR7Xx-0001do-00
+	for xfs@oss.sgi.com; Sat, 23 Sep 2006 15:27:57 +0200
+Received: from [172.23.1.26] (helo=xchgsmtp.exchange.xchg)
+	by mrvnet.kundenserver.de with smtp (Exim 3.35 #1)
+	id 1GR7Xx-0001Rn-00
+	for xfs@oss.sgi.com; Sat, 23 Sep 2006 15:27:57 +0200
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: largeio mount and performance impact
+Date: Sat, 23 Sep 2006 15:27:45 +0200
+Message-ID: <55EF1E5D5804A542A6CA37E446DDC206655888@mapibe17.exchange.xchg>
+From: "Sebastian Brings" <sebas@silexmedia.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Fri, 22 Sep 2006 12:03:30 +1000
-Timothy Shimmin <tes@sgi.com> wrote:
+In a different thread I read about the largeio mount option for XFS. Now
+I wonder if the problems I recently ran in have been caused by this.
 
-> Hi Eric,
-> 
-> Eric Sandeen wrote:
-> > The inode diet patch in -mm unhooked xfs_preferred_iosize from the stat call:
-> > 
-> > --- a/fs/xfs/linux-2.6/xfs_vnode.c
-> > +++ b/fs/xfs/linux-2.6/xfs_vnode.c
-> > @@ -122,7 +122,6 @@ vn_revalidate_core(
-> >         inode->i_blocks     = vap->va_nblocks;
-> >         inode->i_mtime      = vap->va_mtime;
-> >         inode->i_ctime      = vap->va_ctime;
-> > -       inode->i_blksize    = vap->va_blocksize;
-> >         if (vap->va_xflags & XFS_XFLAG_IMMUTABLE)
-> > 
-> > This in turn breaks the largeio mount option for xfs:
-> > 
-> >   largeio/nolargeio
-> >         If "nolargeio" is specified, the optimal I/O reported in
-> >         st_blksize by stat(2) will be as small as possible to allow user
-> >         applications to avoid inefficient read/modify/write I/O.
-> >         If "largeio" specified, a filesystem that has a "swidth" specified
-> >         will return the "swidth" value (in bytes) in st_blksize. If the
-> >         filesystem does not have a "swidth" specified but does specify
-> >         an "allocsize" then "allocsize" (in bytes) will be returned
-> >         instead.
-> >         If neither of these two options are specified, then filesystem
-> >         will behave as if "nolargeio" was specified.
-> > 
-> > and the (undocumented?) allocsize mount option as well.
-> > 
-> > For a filesystem like this with sunit/swidth specified,
-> > 
-> > meta-data=/dev/sda1              isize=512    agcount=32, agsize=7625840 blks
-> >          =                       sectsz=512   attr=0
-> > data     =                       bsize=4096   blocks=244026880, imaxpct=25
-> >          =                       sunit=16     swidth=16 blks, unwritten=1
-> > naming   =version 2              bsize=4096
-> > log      =internal               bsize=4096   blocks=32768, version=1
-> >          =                       sectsz=512   sunit=0 blks
-> > realtime =none                   extsz=65536  blocks=0, rtextents=0
-> > 
-> > stat on a stock FC6 kernel w/ the largeio mount option returns only the page size:
-> > 
-> > [root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
-> > [root@link-07]# stat -c %o /mnt/test/foo
-> > 4096
-> > 
-> > with the following patch, it does what it should:
-> > 
-> > [root@link-07]# mount -o largeio /dev/sda1 /mnt/test/
-> > [root@link-07]# stat -c %o /mnt/test/foo
-> > 65536
-> > 
-> > same goes for filesystems w/o sunit,swidth but with the allocsize mount option.
-> > 
-> > stock:
-> > [root@link-07]# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
-> > [root@link-07]# stat -c %o /mnt/test/foo
-> > 4096
-> > 
-> > w/ patch:
-> > [root@link-07# mount -o largeio,allocsize=32768 /dev/sda1 /mnt/test/
-> > [root@link-07]# stat -c %o /mnt/test/foo
-> > 32768
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> > 
-> > XFS guys, does this look ok?
-> > 
-> > Index: linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
-> > ===================================================================
-> > --- linux-2.6.18.orig/fs/xfs/linux-2.6/xfs_iops.c
-> > +++ linux-2.6.18/fs/xfs/linux-2.6/xfs_iops.c
-> > @@ -623,12 +623,16 @@ xfs_vn_getattr(
-> >  {
-> >  	struct inode	*inode = dentry->d_inode;
-> >  	bhv_vnode_t	*vp = vn_from_inode(inode);
-> > +	xfs_inode_t	*ip;
-> >  	int		error = 0;
-> >  
-> >  	if (unlikely(vp->v_flag & VMODIFIED))
-> >  		error = vn_revalidate(vp);
-> > -	if (!error)
-> > +	if (!error) {
-> >  		generic_fillattr(inode, stat);
-> > +		ip = xfs_vtoi(vp);
-> > +		stat->blksize = xfs_preferred_iosize(ip->i_mount);
-> > +	}
-> >  	return -error;
-> >  }
-> >  
-> 
-> Looked at your patch and then at our xfs code in the tree and
-> the existing code is different than what yours is based on.
-> I then noticed in the logs Nathan has actually made changes for this:
-> 
-> ----------------------------
-> revision 1.254
-> date: 2006/07/17 10:46:05;  author: nathans;  state: Exp;  lines: +20 -5
-> modid: xfs-linux-melb:xfs-kern:26565a
-> Update XFS for i_blksize removal from generic inode structure
-> ----------------------------
-> I even reviewed the change (and I don't remember it - getting old).
-> 
-> I looked at the mods scheduled for 2.6.19 and this is one of them.
-> 
-> So the fix for this is coming soon (and the fix is different from the
-> one above).
-> 
+After a system uprgade from sles9 sp2 to sp3 one app started
+misbehaving. Before the upgrade it used 15% CPU, after the upgrade it
+was 90+% and the performance dropped by about 50%. The app is writing a
+wave audio file, and for every 3840 bytes of audio samples it appends,
+it updates the RIFF header of the file. All of this was done using the
+buffered fopen/fwrite/... C library functions. 
+An strace showed that seeking to the beginning of the file also
+triggered a 12MiB read(2) call, and seeking to the end, for example to
+13MiB, translated to a seek(2) to offset 1mib and a read(2) of 12 MiB.
 
-eh?  Eric's patch is based on -mm, which includes the XFS git tree.  If I
-go and merge the inode-diet patches from -mm, XFS gets broken until you
-guys merge the above mystery patch.  (I prefer to merge the -mm patches
-after all the git trees have gone, but sometimes maintainers dawdle and I
-get bored of waiting).
+Initiall I assumed something very strange had happened to the C lib
+defaults. Otoh 12MiB is the swidth of the filesystem, so I assume that
+the C lib got the 12 MiB optimal IO size from XFS and therefore behaved
+as described above. Could that be?
 
-Is git://oss.sgi.com:8090/nathans/xfs-2.6 obsolete, or are you hiding stuff
-from me?  ;)
+Regards
+
+Sebastian 
