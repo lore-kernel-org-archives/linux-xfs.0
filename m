@@ -1,78 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Sep 2006 07:33:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Sep 2006 07:56:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8PEXNaG026464
-	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:33:24 -0700
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9DC4B45E459
-	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:32:44 -0700 (PDT)
-Message-ID: <4517E88E.4020809@sandeen.net>
-Date: Mon, 25 Sep 2006 09:32:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8PEuaaG029014
+	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:56:37 -0700
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2453B45CA3F
+	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:55:56 -0700 (PDT)
+Received: from agami.com ([192.168.168.146])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id k8PEttQ2009116
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:55:55 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id k8PEto3a008522
+	for <xfs@oss.sgi.com>; Mon, 25 Sep 2006 07:55:50 -0700
+Message-ID: <4517ED41.8090305@agami.com>
+Date: Mon, 25 Sep 2006 20:22:49 +0530
+From: Shailendra Tripathi <stripathi@agami.com>
 MIME-Version: 1.0
 Subject: Re: Data type overflow in xfs_trans_unreserve_and_mod_sb
-References: <55EF1E5D5804A542A6CA37E446DDC206655888@mapibe17.exchange.xchg> <45179573.3020007@agami.com>
-In-Reply-To: <45179573.3020007@agami.com>
+References: <55EF1E5D5804A542A6CA37E446DDC206655888@mapibe17.exchange.xchg> <45179573.3020007@agami.com> <4517E88E.4020809@sandeen.net>
+In-Reply-To: <4517E88E.4020809@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Shailendra Tripathi <stripathi@agami.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Timothy Shimmin <tes@sgi.com>
 
-Shailendra Tripathi wrote:
-> Hi David,
->           As part of fixing xfs_reserve_blocks issue, you might want to 
-> fix an issue in xfs_trans_unreserve_and_mod_sb as well. Since, I am on 
-> much older version, my patch is not applicable on newer trees. However, 
-> the patch is attached for your reference.
-> 
-> The problem is as below:
-> 
-> Superblock modifications required during transaction are stored in delta 
-> fields in transaction. These fields are applied to the superblock when 
-> transaction commits.
-> 
-> The in-core superblock changes are done in 
-> xfs_trans_unreserve_and_mod_sb. It calls xfs_mod_incore_sb_batch 
-> function to apply the changes. This function tries to apply the deltas 
-> and if it fails for any reason, it backs out all the changes. One 
-> typical modification done is like that:
-> 
->         case XFS_SBS_DBLOCKS:
->                 lcounter = (long long)mp->m_sb.sb_dblocks;
->                 lcounter += delta;
->                 if (lcounter < 0) {
->                         ASSERT(0);
->                         return (XFS_ERROR(EINVAL));
->                 }
->                 mp->m_sb.sb_dblocks = lcounter;
->                 return (0);
-> 
-> So, when it returns EINVAL, the second part of the code backs out the 
-> changes made to superblock. However, the worst part is that 
-> xfs_trans_unreserve_and_mod_sb does not return any error value. 
 
-Hm, yep, just ASSERT(error == 0);
 
-I suppose this is the trickiness of canceling a transaction at some points...
-
-> The 
-> transaction appears to be committed peacefully without returning the 
-> error. You don't notice this unless you do I/O on the filesystem. Later, 
-> it hits some sort of in-memory corruption or other errors.
+Eric Sandeen wrote:
+> Hm, yep, just ASSERT(error == 0);
 > 
-> We hit this issue in our testing we tried to grow the filesystem from 
-> from 100GB to 10000GB. This is beyond the interger (31 bits) limit and, 
-> hence, for dblocks and fdblocks,  xfs_mod_sb struct does not pass in 
-> correct data.
+> I suppose this is the trickiness of canceling a transaction at some 
+> points...
+
+Yes, you are right. At the point where it is being applied, all the 
+things can't be reverted back as XFS does not store the "before-image". 
+However, typically in most of such cases, XFS goes ahead with shutting 
+down the filesystem assuming these to be catastrophic or incorrigible 
+errors requiring manual intervention.
+
+> First thoughts, "long" won't help on 32 bit machines, perhaps this 
+> should be an explicitly-sized 64-bit type
+
+> -Eric
 > 
+> p.s. good to see agami's recently active participation on the list!
 > 
-
-First thoughts, "long" won't help on 32 bit machines, perhaps this should be an 
-explicitly-sized 64-bit type?
-
--Eric
-
-p.s. good to see agami's recently active participation on the list!
