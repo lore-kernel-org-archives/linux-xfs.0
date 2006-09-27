@@ -1,47 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Sep 2006 15:48:32 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8QMmJaG016192
-	for <xfs@oss.sgi.com>; Tue, 26 Sep 2006 15:48:20 -0700
-Received: from smtp114.sbc.mail.mud.yahoo.com (smtp114.sbc.mail.mud.yahoo.com [68.142.198.213])
-	by cuda.sgi.com (Spam Firewall) with SMTP id C1AAAD118FE7
-	for <xfs@oss.sgi.com>; Tue, 26 Sep 2006 15:47:40 -0700 (PDT)
-Date: Tue, 26 Sep 2006 15:40:53 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: LVM and XFS cannot set blocksize on block device
-Message-ID: <20060926224053.GA31542@tuatara.stupidest.org>
-References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Sep 2006 21:31:23 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8R4V8aG021494
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Sep 2006 21:31:10 -0700
+Message-ID: <4519FE80.4000609@sgi.com>
+Date: Wed, 27 Sep 2006 14:30:56 +1000
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45193204.3030500@tulane.edu>
+Subject: PARTIAL TAKE 955274: DMAPI qa test fixes
+References: <44CE9F23.7000605@sgi.com>
+In-Reply-To: <44CE9F23.7000605@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Rene Salmon <rsalmon@tulane.edu>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
 
-On Tue, Sep 26, 2006 at 08:58:28AM -0500, Rene Salmon wrote:
+pv 955274 - Limit the random generated file size attribute to 1 TB (if 
+size is too big the kernel panics)
 
-> Thanks for the reply. The "-s size=4096" helped I was able to create
-> the file system, then mount it and use it.  I did however get a
-> warning still about "cannot set blocksize on block device".
+Date:  Wed Sep 27 14:28:03 AEST 2006
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/xfs-cmds
+Inspected by:  none
+Author:  vapo
 
-I don't know much about the LVM code, my guess is that
-ioctl(... ,BLKBSZSET, ...) is failing, strace would confirm this.
-
-> Everything seems to be working but I am a bit worried about the
-> warning message.  Following is the message.  Any ideas if it is safe
-> to ignore this or any way to get rid of it?
-
-What does:
-
-  blockdev --getbsz /dev/vg_u00/lv_u00
-
-say?
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-If mkfs.xfs is trying to set a blocksize that already matches the
-underlying device, it woudn't be hard to silence the warning by doing
-a check before unconditionally setting it, though I don't know that
-it's worth it.
+Modid:  master-melb:xfs-cmds:27060a
+xfstests/dmapi/src/suite2/src/test_fileattr.c - 1.9 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/dmapi/src/suite2/src/test_fileattr.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
+        - pv 955274 - Limit the random generated file size attribute to 
+1 TB (if size is too big the kernel panics)
