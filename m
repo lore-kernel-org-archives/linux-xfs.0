@@ -1,54 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 08:23:01 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8SFMvaG006953
-	for <linux-xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:22:58 -0700
-Message-ID: <451BD844.4000509@melbourne.sgi.com>
-Date: Fri, 29 Sep 2006 00:12:20 +1000
-From: David Chatterton <chatz@melbourne.sgi.com>
-Reply-To: chatz@melbourne.sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 08:59:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8SFxgaG012355
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:59:43 -0700
+Received: from smtp113.sbc.mail.mud.yahoo.com (smtp113.sbc.mail.mud.yahoo.com [68.142.198.212])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 8B53B463390
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:59:04 -0700 (PDT)
+Date: Thu, 28 Sep 2006 08:32:18 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: LVM and XFS cannot set blocksize on block device
+Message-ID: <20060928153218.GA26366@tuatara.stupidest.org>
+References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu> <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com> <451BA2AF.9090703@sgi.com>
 MIME-Version: 1.0
-Subject: Re: about performace
-References: <20060928065113.70796.qmail@web8511.mail.in.yahoo.com>
-In-Reply-To: <20060928065113.70796.qmail@web8511.mail.in.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <451BA2AF.9090703@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nagesh kollu <nagesh_20k@yahoo.co.in>
-Cc: linux-xfs@oss.sgi.com
+To: Tim Shimmin <tes@sgi.com>
+Cc: Shailendra Tripathi <stripathi@agami.com>, Rene Salmon <rsalmon@tulane.edu>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
 
-In general (no experience or suggestions for ARM processors), for video streaming:
+On Thu, Sep 28, 2006 at 08:23:43PM +1000, Tim Shimmin wrote:
 
-- preallocate space for the files when writing, see xfsctl(3) and  XFS_IOC_RESVSP
+> I'll have a look soon at passing the mkfs.xfs -s option thru to
+> libxfs which is consistent with the existing code.
 
-- use direct I/O, the larger the better. ie a MB or more at a time,
-  but at least ensure the direct I/O requests are aligned on page or
-  filesystem block boundaries, whichever is larger
+(following up on something mentioned off the list)
 
-- use asynchronous I/O or multiple threads to keep the disks busy
+When you do this change please consider *not* making the code fallback
+to a different blocksize if the ioctl fails when "-s size=" is given.
 
-David
-
-nagesh kollu wrote:
-> hi,,
->   i'm new to xfs ..i want to know the performance details of xfs..
->   how much time it will take to write /read ...can anyone done this on ARM processor...the block size is 2^n only in xfs ..but for video streaming the incoming packet is 188 bytes .the sector size is 512 ...so the i/o buffer size is 188*512 ...how can we do this in xfs....cany anyone send the xfs performance details..
->    
->    
->   thanx!
->   nagesh.k
-> 
->  				
-> ---------------------------------
->  Find out what India is talking about on  - Yahoo! Answers India 
->  Send FREE SMS to your friend's mobile from Yahoo! Messenger Version 8. Get it NOW
-> 
-> [[HTML alternate version deleted]]
-> 
-
--- 
-David Chatterton
-XFS Engineering Manager
-SGI Australia
+The logic here is that if someone clearly wants a specific value and
+if that cannot be met it should error out with a suitable message, not
+silently do something else.
