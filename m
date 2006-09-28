@@ -1,36 +1,125 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 08:59:47 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 10:07:57 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8SFxgaG012355
-	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:59:43 -0700
-Received: from smtp113.sbc.mail.mud.yahoo.com (smtp113.sbc.mail.mud.yahoo.com [68.142.198.212])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 8B53B463390
-	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:59:04 -0700 (PDT)
-Date: Thu, 28 Sep 2006 08:32:18 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: LVM and XFS cannot set blocksize on block device
-Message-ID: <20060928153218.GA26366@tuatara.stupidest.org>
-References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu> <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com> <451BA2AF.9090703@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <451BA2AF.9090703@sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8SH7raG022359
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 10:07:54 -0700
+Received: from tabit.netstar.se (tabit.netstar.se [195.178.179.33])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 6A8BD461DC9
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:56:09 -0700 (PDT)
+Subject: xfs_repair said "cache_purge: shake on cache 0x80f5288 left 1
+	inodes!?"
+From: =?ISO-8859-1?Q?H=E5kan?= Lindqvist <lindqvist@netstar.se>
+Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-kNkP7lcRRzSX8uDp4v28"
+Date: Thu, 28 Sep 2006 17:49:25 +0200
+Message-Id: <1159458565.28220.12.camel@lasse>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Tim Shimmin <tes@sgi.com>
-Cc: Shailendra Tripathi <stripathi@agami.com>, Rene Salmon <rsalmon@tulane.edu>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
+To: xfs@oss.sgi.com
 
-On Thu, Sep 28, 2006 at 08:23:43PM +1000, Tim Shimmin wrote:
+--=-kNkP7lcRRzSX8uDp4v28
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-> I'll have a look soon at passing the mkfs.xfs -s option thru to
-> libxfs which is consistent with the existing code.
+Hi!
 
-(following up on something mentioned off the list)
+When I ran xfs_repair (2.8.11) to fix a filesystem that had been bitten
+by the Linux 2.6.17.<7 bug the following happened:
 
-When you do this change please consider *not* making the code fallback
-to a different blocksize if the ioctl fails when "-s size=" is given.
+All seemed to go well, xfs_repair found the problematic directory inode
+and rebuilded it.
 
-The logic here is that if someone clearly wants a specific value and
-if that cannot be met it should error out with a suitable message, not
-silently do something else.
+At the end (right before printing "done"), it did however say
+"cache_purge: shake on cache 0x80f5288 left 1 inodes!?" thrice.
+
+The filesystem appears to be fine so far (and the directory that
+previously caused the filesystem to shut down is ok again), but that
+error/warning message sounded a little scary.
+
+Is this problem harmless or should I be worried?
+
+
+Regards,
+H=E5kan Lindqvist
+
+(Please CC me on any replies as I'm not subscribed to the list.)
+
+--=-kNkP7lcRRzSX8uDp4v28
+Content-Type: application/x-pkcs7-signature; name=smime.p7s
+Content-Disposition: attachment; filename=smime.p7s
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEH
+AQAAoIIJDzCCAuIwggJLoAMCAQICEG8tZl0422Qyf40yQ7wKJPEwDQYJKoZI
+hvcNAQEEBQAwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25z
+dWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBG
+cmVlbWFpbCBJc3N1aW5nIENBMB4XDTA1MTIxMjE2MzIyOFoXDTA2MTIxMjE2
+MzIyOFowRjEfMB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEjMCEG
+CSqGSIb3DQEJARYUbGluZHF2aXN0QG5ldHN0YXIuc2UwggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQDWlz+4yiQCdZe4w3Ts+vcIqiaaZHSSE3pd
+wQVcI6IQikTTLXfTV04ByLx7CmxvN0bqHNI0afVpO5gP4p0zs4+HK9qLQkZ8
+DcwlscT6ds71dahPb7LVKlz/e069LNWQY6cBHltS6kBudK23pjz7tYWrmWLo
+tjmJfczN0+wu+E+SDpdO4qPEqb16ZdgxGo3vjg0d7+3F7UC0SOgxWXkZSRt9
+I9wLt8X4okDWDB96Vg/lNeQQjnExhJzR7vFrcoWThsNRolAmEfNf8m03RnhA
+f14+Q7MUipxiPis2OkKsMi/WNoiVEIhh3Q5AuLmJn9EcUO7D4JDgEI0qQ+OX
+eeGqoWJPAgMBAAGjMTAvMB8GA1UdEQQYMBaBFGxpbmRxdmlzdEBuZXRzdGFy
+LnNlMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEEBQADgYEAV/Y6eLppyWP5
+Gw1d+oiwyoqfKJboPWarruo4UDk9jG8ic1gG5IDbWSfczhg1WvX9NfSjm+s+
+wI7R7HP8hhr9quSBdscfH1BD9xtO5AT8sVfMjJEZpiXb8XQHmbz4roq0xBHr
+O0QgbGAK/iOp/Irb07tVeLPqcv8NRWWzz54GLNMwggLiMIICS6ADAgECAhBv
+LWZdONtkMn+NMkO8CiTxMA0GCSqGSIb3DQEBBAUAMGIxCzAJBgNVBAYTAlpB
+MSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYD
+VQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTAeFw0w
+NTEyMTIxNjMyMjhaFw0wNjEyMTIxNjMyMjhaMEYxHzAdBgNVBAMTFlRoYXd0
+ZSBGcmVlbWFpbCBNZW1iZXIxIzAhBgkqhkiG9w0BCQEWFGxpbmRxdmlzdEBu
+ZXRzdGFyLnNlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1pc/
+uMokAnWXuMN07Pr3CKommmR0khN6XcEFXCOiEIpE0y1301dOAci8ewpsbzdG
+6hzSNGn1aTuYD+KdM7OPhyvai0JGfA3MJbHE+nbO9XWoT2+y1Spc/3tOvSzV
+kGOnAR5bUupAbnStt6Y8+7WFq5li6LY5iX3MzdPsLvhPkg6XTuKjxKm9emXY
+MRqN744NHe/txe1AtEjoMVl5GUkbfSPcC7fF+KJA1gwfelYP5TXkEI5xMYSc
+0e7xa3KFk4bDUaJQJhHzX/JtN0Z4QH9ePkOzFIqcYj4rNjpCrDIv1jaIlRCI
+Yd0OQLi5iZ/RHFDuw+CQ4BCNKkPjl3nhqqFiTwIDAQABozEwLzAfBgNVHREE
+GDAWgRRsaW5kcXZpc3RAbmV0c3Rhci5zZTAMBgNVHRMBAf8EAjAAMA0GCSqG
+SIb3DQEBBAUAA4GBAFf2Oni6aclj+RsNXfqIsMqKnyiW6D1mq67qOFA5PYxv
+InNYBuSA21kn3M4YNVr1/TX0o5vrPsCO0exz/IYa/arkgXbHHx9QQ/cbTuQE
+/LFXzIyRGaYl2/F0B5m8+K6KtMQR6ztEIGxgCv4jqfyK29O7VXiz6nL/DUVl
+s8+eBizTMIIDPzCCAqigAwIBAgIBDTANBgkqhkiG9w0BAQUFADCB0TELMAkG
+A1UEBhMCWkExFTATBgNVBAgTDFdlc3Rlcm4gQ2FwZTESMBAGA1UEBxMJQ2Fw
+ZSBUb3duMRowGAYDVQQKExFUaGF3dGUgQ29uc3VsdGluZzEoMCYGA1UECxMf
+Q2VydGlmaWNhdGlvbiBTZXJ2aWNlcyBEaXZpc2lvbjEkMCIGA1UEAxMbVGhh
+d3RlIFBlcnNvbmFsIEZyZWVtYWlsIENBMSswKQYJKoZIhvcNAQkBFhxwZXJz
+b25hbC1mcmVlbWFpbEB0aGF3dGUuY29tMB4XDTAzMDcxNzAwMDAwMFoXDTEz
+MDcxNjIzNTk1OVowYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
+b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25h
+bCBGcmVlbWFpbCBJc3N1aW5nIENBMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB
+iQKBgQDEpjxVc1X7TrnKmVoeaMB1BHCd3+n/ox7svc31W/Iadr1/DDph8r9R
+zgHU5VAKMNcCY1osiRVwjt3J8CuFWqo/cVbLrzwLB+fxH5E2JCoTzyvV84J3
+PQO+K/67GD4Hv0CAAmTXp6a7n2XRxSpUhQ9IBH+nttE8YQRAHmQZcmC3+wID
+AQABo4GUMIGRMBIGA1UdEwEB/wQIMAYBAf8CAQAwQwYDVR0fBDwwOjA4oDag
+NIYyaHR0cDovL2NybC50aGF3dGUuY29tL1RoYXd0ZVBlcnNvbmFsRnJlZW1h
+aWxDQS5jcmwwCwYDVR0PBAQDAgEGMCkGA1UdEQQiMCCkHjAcMRowGAYDVQQD
+ExFQcml2YXRlTGFiZWwyLTEzODANBgkqhkiG9w0BAQUFAAOBgQBIjNFQg+oL
+LswNo2asZw9/r6y+whehQ5aUnX9MIbj4Nh+qLZ82L8D0HFAgk3A8/a3hYWLD
+2ToZfoSxmRsAxRoLgnSeJVCUYsfbJ3FXJY3dqZw5jowgT2Vfldr394fWxghO
+rvbqNOUQGls1TXfjViF4gtwhGTXeJLHTHUb/XV9lTzGCAxAwggMMAgEBMHYw
+YjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQ
+dHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJ
+c3N1aW5nIENBAhBvLWZdONtkMn+NMkO8CiTxMAkGBSsOAwIaBQCgggFvMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDky
+ODE1NDkyNVowIwYJKoZIhvcNAQkEMRYEFPdpIR2XRNTFW3ffz/4NozkRIOXp
+MIGFBgkrBgEEAYI3EAQxeDB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxU
+aGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3dGUg
+UGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIQby1mXTjbZDJ/jTJDvAok
+8TCBhwYLKoZIhvcNAQkQAgsxeKB2MGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQK
+ExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNUaGF3
+dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIQby1mXTjbZDJ/jTJD
+vAok8TANBgkqhkiG9w0BAQEFAASCAQAEiuayQzqut8FUtpo038Kw06vpOtL2
+kix+xCBvVXPkiuPT1e7NqEAiN3zBoKJKgYinbiurzbYIazbhgO9QsgzFrahi
+OlOINajddblxY5/j8jxhuA7zTK+sU2+/Lo3G/NMsJs0ycbtA/nj7gqVnXxso
+yA3Y5z3qoG9EZQpKcxpPX1lGe5LFbPG9t3mHbbnqrWCxCAXskxhdpalHcjPN
+pBhMUhuL3vPJoaMtPXAH0CjwVx/Pg5PWUa+kRNzWH9YhLoWHYCQUcUdRNS50
+auEsqE6mMW4OxPxGI2p1nhWjGLDgsoaMHzxiZxQWAJHlRl1J4QszJWfFGg6y
+J9ubfST+P/vRAAAAAAAA
+
+--=-kNkP7lcRRzSX8uDp4v28--
