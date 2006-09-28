@@ -1,39 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 03:34:44 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8SAYbaG022037
-	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 03:34:39 -0700
-Message-ID: <451BA50B.4090300@sgi.com>
-Date: Thu, 28 Sep 2006 20:33:47 +1000
-From: Tim Shimmin <tes@sgi.com>
-Reply-To: tes@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 08:17:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8SFHDaG001619
+	for <linux-xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:17:14 -0700
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2850A462FC9
+	for <linux-xfs@oss.sgi.com>; Thu, 28 Sep 2006 08:16:33 -0700 (PDT)
+Message-ID: <451BE74F.3030205@sandeen.net>
+Date: Thu, 28 Sep 2006 10:16:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: LVM and XFS cannot set blocksize on block device
-References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu> <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com> <451A79BC.1010302@tulane.edu>
-In-Reply-To: <451A79BC.1010302@tulane.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: about performace
+References: <20060928065113.70796.qmail@web8511.mail.in.yahoo.com>
+In-Reply-To: <20060928065113.70796.qmail@web8511.mail.in.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Rene Salmon <rsalmon@tulane.edu>
-Cc: Shailendra Tripathi <stripathi@agami.com>, Chris Wedgwood <cw@f00f.org>, xfs@oss.sgi.com
+To: nagesh kollu <nagesh_20k@yahoo.co.in>
+Cc: linux-xfs@oss.sgi.com
 
-Hi Rene,
+nagesh kollu wrote:
+> hi,,
+>   i'm new to xfs ..i want to know the performance details of xfs..
+>   how much time it will take to write /read ...can anyone done this on ARM processor...the block size is 2^n only in xfs ..but for video streaming the incoming packet is 188 bytes .the sector size is 512 ...so the i/o buffer size is 188*512 ...how can we do this in xfs....cany anyone send the xfs performance details..
 
-Rene Salmon wrote:
->
-> Should I report this as a bug?
+It sounds like you have a very specific environment that would be best
+tested and evaluated by... you :)
 
-Well I know it now :)
-but it is good to have a record of it.
+Yes, the blocksizes are powers of two, but of course you can do any
+arbitrary sized write, if that's what you're asking.
 
-> If so Can someone point me to the 
-> bugzilla page or something of the sorts?
->
-
-http://oss.sgi.com/bugzilla/
-Product: Linux XFS.
-
-Thanks,
---Tim
+-Eric
