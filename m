@@ -1,37 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Sep 2006 17:49:30 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8S0nNaG022428
-	for <xfs@oss.sgi.com>; Wed, 27 Sep 2006 17:49:25 -0700
-Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA01292 for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 10:48:44 +1000
-Subject: TAKE xfs_db - ring command fix
-Message-Id: <20060928004844.4D83758CF853@chook.melbourne.sgi.com>
-Date: Thu, 28 Sep 2006 10:48:44 +1000 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Sep 2006 19:07:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8S27caG001649
+	for <xfs@oss.sgi.com>; Wed, 27 Sep 2006 19:07:39 -0700
+Received: from prod.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DA05D112418
+	for <xfs@oss.sgi.com>; Wed, 27 Sep 2006 17:55:38 -0700 (PDT)
+Received: from page.mel.office.aconex.com (unknown [192.168.0.210])
+	by prod.aconex.com (Postfix) with ESMTP id C14AF289B5
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 10:55:33 +1000 (EST)
+Received: from localhost (page.mel.aconex.com [127.0.0.1])
+	by page.mel.office.aconex.com (Postfix) with ESMTP id A2DA353403A
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 10:55:33 +1000 (EST)
+Received: from page.mel.office.aconex.com ([127.0.0.1])
+ by localhost (mail.aconex.com [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 30205-01-25 for <xfs@oss.sgi.com>;
+ Thu, 28 Sep 2006 10:55:32 +1000 (EST)
+Received: from edge (unknown [192.168.0.246])
+	by page.mel.office.aconex.com (Postfix) with ESMTP id AD9AF534039
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 10:55:31 +1000 (EST)
+Subject: [PATCH] fix xfs_admin command PATH
+From: Nathan Scott <nathans@xfs.org>
+Content-Type: multipart/mixed; boundary="=-gmm4poRh7ZPYp3P0vKCl"
+Date: Thu, 28 Sep 2006 10:53:36 +1000
+Message-Id: <1159404816.3497.15.camel@edge>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Fix up ring command in xfs_db for its argument handling
-of the index.
+--=-gmm4poRh7ZPYp3P0vKCl
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+I noticed an error labelling a filesystem on Fedora the other day,
+this should fix it.  Possibly other scripts are affected, dunno -
+the problem occurs when /usr/sbin is not in the PATH (it typically
+happens after a su to root).
+
+cheers.
+
+--
+Nathan
 
 
-Date:  Thu Sep 28 10:47:51 AEST 2006
-Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
-Inspected by:  utako@tnes.nec.co.jp
+--=-gmm4poRh7ZPYp3P0vKCl
+Content-Disposition: attachment; filename=admin.patch
+Content-Type: text/x-patch; name=admin.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+--- /fedora/usr/sbin/xfs_admin.orig	2006-09-26 16:01:10.000000000 +1000
++++ /fedora/usr/sbin/xfs_admin	2006-09-26 16:01:47.000000000 +1000
+@@ -33,6 +33,7 @@
+ 
+ OPTS=""
+ USAGE="Usage: xfs_admin [-efluV] [-L label] [-U uuid] special"
++export PATH="/sbin:/usr/sbin:$PATH"
+ 
+ while getopts "efluL:U:V" c
+ do
 
-
-Modid:  master-melb:xfs-cmds:27071a
-xfsprogs/db/io.c - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/io.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-	- Fix up ring command in xfs_db for its argument handling
-	  of the index.
-	  Fix from utako@tnes.nec.co.jp (Utako Kusaka).
-
-xfsprogs/doc/CHANGES - 1.221 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.221&r2=text&tr2=1.220&f=h
-	- Add xfs_db ring command fix
+--=-gmm4poRh7ZPYp3P0vKCl--
