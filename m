@@ -1,35 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 01:07:45 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8S87faG032342
-	for <linux-xfs@oss.sgi.com>; Thu, 28 Sep 2006 01:07:42 -0700
-Received: from web8511.mail.in.yahoo.com (web8511.mail.in.yahoo.com [202.43.219.104])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 18081D1123E8
-	for <linux-xfs@oss.sgi.com>; Wed, 27 Sep 2006 23:57:55 -0700 (PDT)
-Message-ID: <20060928065113.70796.qmail@web8511.mail.in.yahoo.com>
-Date: Thu, 28 Sep 2006 07:51:13 +0100 (BST)
-From: nagesh kollu <nagesh_20k@yahoo.co.in>
-Subject: about performace 
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Sep 2006 03:24:53 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k8SAObaG020269
+	for <xfs@oss.sgi.com>; Thu, 28 Sep 2006 03:24:40 -0700
+Message-ID: <451BA2AF.9090703@sgi.com>
+Date: Thu, 28 Sep 2006 20:23:43 +1000
+From: Tim Shimmin <tes@sgi.com>
+Reply-To: tes@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Disposition: inline
+Subject: Re: LVM and XFS cannot set blocksize on block device
+References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu> <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com>
+In-Reply-To: <451A669D.9020503@agami.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Shailendra Tripathi <stripathi@agami.com>
+Cc: Chris Wedgwood <cw@f00f.org>, Rene Salmon <rsalmon@tulane.edu>, xfs@oss.sgi.com
 
-hi,,
-  i'm new to xfs ..i want to know the performance details of xfs..
-  how much time it will take to write /read ...can anyone done this on ARM processor...the block size is 2^n only in xfs ..but for video streaming the incoming packet is 188 bytes .the sector size is 512 ...so the i/o buffer size is 188*512 ...how can we do this in xfs....cany anyone send the xfs performance details..
-   
-   
-  thanx!
-  nagesh.k
+Shailendra Tripathi wrote:
+>>> Thanks for the reply. The "-s size=4096" helped I was able to create
+>>> the file system, then mount it and use it.  I did however get a
+>>> warning still about "cannot set blocksize on block device".
+> 
+>>
+>> I don't know much about the LVM code, my guess is that
+>> ioctl(... ,BLKBSZSET, ...) is failing, strace would confirm this.
+> 
+> 
+> libxfs_device_open () seems to be working with the pre-conceived notion 
+> of assuming block devices of only 512 bytes in size.
+> 
+> if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK)
+>    platform_set_blocksize(fd, path, statb.st_rdev, 512);
+> 
+> This eventually calls to set the blk sz to 512. Since, your volume does 
+> not support less than 4k, it returns EINVAL. I think, libxfs_init should 
+> be modified to take pass on the -s size option to this call so that it 
+> does not happen.
+>      However, I don't see any problem despite this failure. Everything 
+> else should work fine.
+> 
+> 
+Sounds reasonable.
+I'll have a look soon at passing the mkfs.xfs -s option thru to libxfs
+which is consistent with the existing code.
 
- 				
----------------------------------
- Find out what India is talking about on  - Yahoo! Answers India 
- Send FREE SMS to your friend's mobile from Yahoo! Messenger Version 8. Get it NOW
-
-[[HTML alternate version deleted]]
+--Tim
