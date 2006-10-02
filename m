@@ -1,49 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Sep 2006 10:07:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k8TH7KaG007480
-	for <xfs@oss.sgi.com>; Fri, 29 Sep 2006 10:07:21 -0700
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21C44D11900E
-	for <xfs@oss.sgi.com>; Fri, 29 Sep 2006 10:06:39 -0700 (PDT)
-Message-ID: <451D527A.6080904@sandeen.net>
-Date: Fri, 29 Sep 2006 12:06:02 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Oct 2006 00:27:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k927RQaG030957
+	for <xfs@oss.sgi.com>; Mon, 2 Oct 2006 00:27:28 -0700
+Message-ID: <4520BF8A.4090602@sgi.com>
+Date: Mon, 02 Oct 2006 17:28:10 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] Remove unused stuff
-References: <20060929032916.AB75B18001A5F@sandeen.net>
-In-Reply-To: <20060929032916.AB75B18001A5F@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: LVM and XFS cannot set blocksize on block device
+References: <45185424.2030707@tulane.edu> <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu> <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com> <451BA2AF.9090703@sgi.com> <20060928153218.GA26366@tuatara.stupidest.org>
+In-Reply-To: <20060928153218.GA26366@tuatara.stupidest.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: xfs@oss.sgi.com
+To: Chris Wedgwood <cw@f00f.org>
+Cc: Shailendra Tripathi <stripathi@agami.com>, Rene Salmon <rsalmon@tulane.edu>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
 
-sandeen@sandeen.net wrote:
-> And now that things are static, remove things that are not used.
+Chris Wedgwood wrote:
+> On Thu, Sep 28, 2006 at 08:23:43PM +1000, Tim Shimmin wrote:
 > 
->  xfs_bmap.c       |   36 ------------------
->  xfs_bmap_btree.c |   74 -------------------------------------
->  xfs_bmap_btree.h |   11 -----
->  xfs_da_btree.c   |   15 -------
->  xfs_da_btree.h   |    1 
->  xfs_error.c      |   26 -------------
->  xfs_error.h      |    1 
->  xfs_rtalloc.c    |  108 -------------------------------------------------------
->  xfs_rtalloc.h    |   18 ---------
->  9 files changed, 290 deletions(-)
+>> I'll have a look soon at passing the mkfs.xfs -s option thru to
+>> libxfs which is consistent with the existing code.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> (following up on something mentioned off the list)
+> 
+> When you do this change please consider *not* making the code fallback
+> to a different blocksize if the ioctl fails when "-s size=" is given.
+> 
+> The logic here is that if someone clearly wants a specific value and
+> if that cannot be met it should error out with a suitable message, not
+> silently do something else.
 
+I agree.
+I prefer default behaviour to happen when we are using the defaults -
+so we can do fallback behaviour under the assumption the user
+doesn't mind.
+But when we ask for something explicitly, then do it or error out.
+:)
 
-I suppose that if this code is deemed useful, maybe it could be moved to
-some xfs_*_debug.[ch] files so it's not lost....
+I'd be tempted to reuse libxfs_init_t's setblksize to be 1 as it currently
+is if one wants the device blksize to be set and
+ >1 (really > 512 etc...) if one wants to set it to a particular value.
 
-Hm, or looks like some of it is used in userspace (xfs_da_log2_roundup)
-it could be moved there if not ever used in the kernel.  (although from
-a quick look I'm not sure that's doing anything useful there either,
-anymore).
-
--Eric
+--Tim
