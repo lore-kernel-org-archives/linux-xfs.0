@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Oct 2006 22:07:54 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Oct 2006 22:14:23 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9357faG026731
-	for <xfs@oss.sgi.com>; Mon, 2 Oct 2006 22:07:43 -0700
-Date: Tue, 3 Oct 2006 15:06:54 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k935EBaG027514
+	for <xfs@oss.sgi.com>; Mon, 2 Oct 2006 22:14:14 -0700
+Date: Tue, 3 Oct 2006 15:13:25 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Review: prevent deadlock via async iput from xfs_iunpin
-Message-ID: <20061003050654.GQ4695059@melbourne.sgi.com>
+Subject: Review: clean up inode i_flags handling
+Message-ID: <20061003051325.GR4695059@melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -17,24 +17,10 @@ To: xfs-dev@sgi.com
 Cc: xfs@oss.sgi.com
 
 
-In fixing the recent problems with inode use-after-free in
-xfs_iunpin, we introduced a new deadlock. When iput() is called, it
-can trigger new transactions on the inode if we are dropping the
-final reference. This is a bad thing to do from a xfslogd because it
-is theonly thread that can move the tail of the log forwards.
-
-Hence if we attempt to reservespace for the transaction from
-xfslogd, and we then need to push the tail of the log forward to
-make space, we may end up going to sleep  waiting for space to
-become available.  This is a deadlock condition because the only
-thing that can move the tail forward at this point is by running the
-remaining log callbacks that are pending and only the xfslogd can do
-this.
-
-Hence we cannot call iput() directly from xfs_iunpin. The simple
-solution is to push the iput() call off to a different thread to
-drop the reference we gained via igrab() earlier in xfs_iunpin().
-The patch below does this by pushing the iput to the xfssyncd.
+As a followup to the recent inode i_flags modification and the
+introduction of the i_flags_lock, introduce a set of wrapper
+functions for setting, clearing and testing flags in the i_flags
+field and convert all the code to use the helper functions.
 
 Cheers,
 
@@ -46,70 +32,234 @@ SGI Australian Software Group
 
 
 ---
- fs/xfs/linux-2.6/xfs_super.c |   26 ++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_super.h |    1 +
- fs/xfs/xfs_inode.c           |    2 +-
- 3 files changed, 28 insertions(+), 1 deletion(-)
+ fs/xfs/linux-2.6/xfs_super.c |    4 +---
+ fs/xfs/xfs_iget.c            |   20 ++++++--------------
+ fs/xfs/xfs_inode.c           |   17 +++++------------
+ fs/xfs/xfs_inode.h           |   41 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_vnodeops.c        |   10 ++++------
+ 5 files changed, 57 insertions(+), 35 deletions(-)
 
 Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.c	2006-09-21 13:29:17.784671067 +1000
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c	2006-09-21 14:56:58.546131524 +1000
-@@ -551,6 +551,32 @@ xfs_flush_device(
- 	xfs_log_force(ip->i_mount, (xfs_lsn_t)0, XFS_LOG_FORCE|XFS_LOG_SYNC);
- }
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.c	2006-09-14 11:18:52.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c	2006-09-14 12:34:26.366526717 +1000
+@@ -228,9 +228,7 @@ xfs_initialize_vnode(
+ 		xfs_revalidate_inode(XFS_BHVTOM(bdp), vp, ip);
+ 		xfs_set_inodeops(inode);
  
-+/*
-+ * If xfs_iunpin was unfortunate enough to be the last holder of an
-+ * inode reference, the iput() call could issues transactions. This is a
-+ * bad thing to do from xfslogd as it can deadlock waiting for log
-+ * space that only it can free up. hence we simply push the iput off into
-+ * the xfssyncd so that any transactions that are needed can occur without
-+ * fear of deadlock.
-+ */
-+STATIC void
-+xfs_inode_iput_work(
-+	bhv_vfs_t	*vfs,
-+	void		*inode)
-+{
-+	iput((struct inode *)inode);
-+}
-+
-+void
-+xfs_inode_iput(
-+	xfs_inode_t	*ip)
-+{
-+	struct inode	*inode = vn_to_inode(XFS_ITOV(ip));
-+	struct bhv_vfs	*vfs = XFS_MTOVFS(ip->i_mount);
-+
-+	xfs_syncd_queue_work(vfs, inode, xfs_inode_iput_work);
-+}
-+
- STATIC void
- vfs_sync_worker(
- 	bhv_vfs_t	*vfsp,
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.h
+-		spin_lock(&ip->i_flags_lock);
+-		ip->i_flags &= ~XFS_INEW;
+-		spin_unlock(&ip->i_flags_lock);
++		xfs_iflags_clear(ip, XFS_INEW);
+ 		barrier();
+ 
+ 		unlock_new_inode(inode);
+Index: 2.6.x-xfs-new/fs/xfs/xfs_iget.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.h	2006-09-21 13:29:17.788670542 +1000
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.h	2006-09-21 13:32:53.216411081 +1000
-@@ -81,6 +81,7 @@ extern void xfs_initialize_vnode(bhv_des
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_iget.c	2006-09-14 11:18:52.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_iget.c	2006-09-14 12:01:04.648209950 +1000
+@@ -215,7 +215,7 @@ again:
+ 			 * If INEW is set this inode is being set up
+ 			 * we need to pause and try again.
+ 			 */
+-			if (ip->i_flags & XFS_INEW) {
++			if (xfs_iflags_test(ip, XFS_INEW)) {
+ 				read_unlock(&ih->ih_lock);
+ 				delay(1);
+ 				XFS_STATS_INC(xs_ig_frecycle);
+@@ -230,7 +230,7 @@ again:
+ 				 * on its way out of the system,
+ 				 * we need to pause and try again.
+ 				 */
+-				if (ip->i_flags & XFS_IRECLAIM) {
++				if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
+ 					read_unlock(&ih->ih_lock);
+ 					delay(1);
+ 					XFS_STATS_INC(xs_ig_frecycle);
+@@ -243,9 +243,7 @@ again:
  
- extern void xfs_flush_inode(struct xfs_inode *);
- extern void xfs_flush_device(struct xfs_inode *);
-+extern void xfs_inode_iput(struct xfs_inode *);
+ 				XFS_STATS_INC(xs_ig_found);
  
- extern int  xfs_blkdev_get(struct xfs_mount *, const char *,
- 				struct block_device **);
+-				spin_lock(&ip->i_flags_lock);
+-				ip->i_flags &= ~XFS_IRECLAIMABLE;
+-				spin_unlock(&ip->i_flags_lock);
++				xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
+ 				version = ih->ih_version;
+ 				read_unlock(&ih->ih_lock);
+ 				xfs_ihash_promote(ih, ip, version);
+@@ -299,10 +297,7 @@ finish_inode:
+ 			if (lock_flags != 0)
+ 				xfs_ilock(ip, lock_flags);
+ 
+-			spin_lock(&ip->i_flags_lock);
+-			ip->i_flags &= ~XFS_ISTALE;
+-			spin_unlock(&ip->i_flags_lock);
+-
++			xfs_iflags_clear(ip, XFS_ISTALE);
+ 			vn_trace_exit(vp, "xfs_iget.found",
+ 						(inst_t *)__return_address);
+ 			goto return_ip;
+@@ -371,10 +366,7 @@ finish_inode:
+ 	ih->ih_next = ip;
+ 	ip->i_udquot = ip->i_gdquot = NULL;
+ 	ih->ih_version++;
+-	spin_lock(&ip->i_flags_lock);
+-	ip->i_flags |= XFS_INEW;
+-	spin_unlock(&ip->i_flags_lock);
+-
++	xfs_iflags_set(ip, XFS_INEW);
+ 	write_unlock(&ih->ih_lock);
+ 
+ 	/*
+@@ -625,7 +617,7 @@ xfs_iput_new(xfs_inode_t	*ip,
+ 	vn_trace_entry(vp, "xfs_iput_new", (inst_t *)__return_address);
+ 
+ 	if ((ip->i_d.di_mode == 0)) {
+-		ASSERT(!(ip->i_flags & XFS_IRECLAIMABLE));
++		ASSERT(!xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+ 		vn_mark_bad(vp);
+ 	}
+ 	if (inode->i_state & I_NEW)
 Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2006-09-21 13:29:17.812667394 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2006-09-21 13:32:53.240407934 +1000
-@@ -2773,7 +2773,7 @@ xfs_iunpin(
- 		spin_unlock(&ip->i_flags_lock);
- 		wake_up(&ip->i_ipin_wait);
- 		if (inode)
--			iput(inode);
-+			xfs_inode_iput(ip);
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2006-09-14 11:19:03.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2006-09-14 12:05:38.245023661 +1000
+@@ -2193,7 +2193,7 @@ xfs_ifree_cluster(
+ 			/* Inode not in memory or we found it already,
+ 			 * nothing to do
+ 			 */
+-			if (!ip || (ip->i_flags & XFS_ISTALE)) {
++			if (!ip || xfs_iflags_test(ip, XFS_ISTALE)) {
+ 				read_unlock(&ih->ih_lock);
+ 				continue;
+ 			}
+@@ -2215,10 +2215,7 @@ xfs_ifree_cluster(
+ 
+ 			if (ip == free_ip) {
+ 				if (xfs_iflock_nowait(ip)) {
+-					spin_lock(&ip->i_flags_lock);
+-					ip->i_flags |= XFS_ISTALE;
+-					spin_unlock(&ip->i_flags_lock);
+-
++					xfs_iflags_set(ip, XFS_ISTALE);
+ 					if (xfs_inode_clean(ip)) {
+ 						xfs_ifunlock(ip);
+ 					} else {
+@@ -2231,9 +2228,7 @@ xfs_ifree_cluster(
+ 
+ 			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+ 				if (xfs_iflock_nowait(ip)) {
+-					spin_lock(&ip->i_flags_lock);
+-					ip->i_flags |= XFS_ISTALE;
+-					spin_unlock(&ip->i_flags_lock);
++					xfs_iflags_set(ip, XFS_ISTALE);
+ 
+ 					if (xfs_inode_clean(ip)) {
+ 						xfs_ifunlock(ip);
+@@ -2263,9 +2258,7 @@ xfs_ifree_cluster(
+ 				AIL_LOCK(mp,s);
+ 				iip->ili_flush_lsn = iip->ili_item.li_lsn;
+ 				AIL_UNLOCK(mp, s);
+-				spin_lock(&iip->ili_inode->i_flags_lock);
+-				iip->ili_inode->i_flags |= XFS_ISTALE;
+-				spin_unlock(&iip->ili_inode->i_flags_lock);
++				xfs_iflags_set(ip, XFS_ISTALE);
+ 				pre_flushed++;
+ 			}
+ 			lip = lip->li_bio_list;
+@@ -2764,7 +2757,7 @@ xfs_iunpin(
+ 		struct inode *inode = NULL;
+ 
+ 		spin_lock(&ip->i_flags_lock);
+-		if (!(ip->i_flags & (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
++		if (!__xfs_iflags_test(ip, XFS_IRECLAIM|XFS_IRECLAIMABLE)) {
+ 			bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
+ 
+ 			/* make sync come back and flush this inode */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.h	2006-09-14 11:18:52.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.h	2006-09-14 12:32:16.395321563 +1000
+@@ -305,6 +305,47 @@ typedef struct xfs_inode {
+ #endif
+ } xfs_inode_t;
+ 
++
++/*
++ * i_flags helper functions
++ */
++static inline void
++__xfs_iflags_set(xfs_inode_t *ip, unsigned short flags)
++{
++	ip->i_flags |= flags;
++}
++
++static inline void
++xfs_iflags_set(xfs_inode_t *ip, unsigned short flags)
++{
++	spin_lock(&ip->i_flags_lock);
++	__xfs_iflag_set(ip, flags);
++	spin_unlock(&ip->i_flags_lock);
++}
++
++static inline void
++xfs_iflags_clear(xfs_inode_t *ip, unsigned short flags)
++{
++	spin_lock(&ip->i_flags_lock);
++	ip->i_flags &= ~flags;
++	spin_unlock(&ip->i_flags_lock);
++}
++
++static inline int
++__xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
++{
++	return (ip->i_flags & flags);
++}
++
++static inline int
++xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
++{
++	int ret;
++	spin_lock(&ip->i_flags_lock);
++	ret = __xfs_iflags_test(ip, flags);
++	spin_unlock(&ip->i_flags_lock);
++	return ret;
++}
+ #endif	/* __KERNEL__ */
+ 
+ 
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vnodeops.c	2006-09-14 11:18:52.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c	2006-09-14 12:15:25.249566668 +1000
+@@ -3844,9 +3844,7 @@ xfs_reclaim(
+ 		XFS_MOUNT_ILOCK(mp);
+ 		vn_bhv_remove(VN_BHV_HEAD(vp), XFS_ITOBHV(ip));
+ 		list_add_tail(&ip->i_reclaim, &mp->m_del_inodes);
+-		spin_lock(&ip->i_flags_lock);
+-		ip->i_flags |= XFS_IRECLAIMABLE;
+-		spin_unlock(&ip->i_flags_lock);
++		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 		XFS_MOUNT_IUNLOCK(mp);
  	}
- }
+ 	return 0;
+@@ -3872,8 +3870,8 @@ xfs_finish_reclaim(
+ 	 */
+ 	write_lock(&ih->ih_lock);
+ 	spin_lock(&ip->i_flags_lock);
+-	if ((ip->i_flags & XFS_IRECLAIM) ||
+-	    (!(ip->i_flags & XFS_IRECLAIMABLE) && vp == NULL)) {
++	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
++	    (!__xfs_iflags_test(ip, XFS_IRECLAIMABLE) && vp == NULL)) {
+ 		spin_unlock(&ip->i_flags_lock);
+ 		write_unlock(&ih->ih_lock);
+ 		if (locked) {
+@@ -3882,7 +3880,7 @@ xfs_finish_reclaim(
+ 		}
+ 		return 1;
+ 	}
+-	ip->i_flags |= XFS_IRECLAIM;
++	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+ 	write_unlock(&ih->ih_lock);
  
