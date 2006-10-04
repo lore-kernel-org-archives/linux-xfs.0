@@ -1,67 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Oct 2006 18:44:54 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k941ihaG006744
-	for <xfs@oss.sgi.com>; Tue, 3 Oct 2006 18:44:46 -0700
-Date: Wed, 4 Oct 2006 11:43:34 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [RFC 0/3] Convert XFS inode hashes to radix trees
-Message-ID: <20061004014334.GZ4695059@melbourne.sgi.com>
-References: <20061003060610.GV3024@melbourne.sgi.com> <20061003212335.GA13120@tuatara.stupidest.org> <20061003222256.GW4695059@melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061003222256.GW4695059@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Oct 2006 02:41:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k949fJaG008827
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 02:41:20 -0700
+Received: from mail.automatix.de (www.automatix.de [213.131.230.237])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BE96405B62
+	for <xfs@oss.sgi.com>; Wed,  4 Oct 2006 01:39:47 -0700 (PDT)
+Received: from uucp by mail.automatix.de with local-bsmtp (Exim 3.36 #1)
+	id 1GV2L5-0007mS-00
+	for xfs@oss.sgi.com; Wed, 04 Oct 2006 10:42:51 +0200
+Received: from pc2.s.automatix.de ([192.168.11.12])
+	by s.automatix.de with esmtp (Exim 3.36 #1)
+	id 1GV2Eq-0004DW-00
+	for xfs@oss.sgi.com; Wed, 04 Oct 2006 10:36:24 +0200
+From: Juergen Sauer <juergen.sauer@automatix.de>
+Reply-To: juergen.sauer@automatix.de
+Subject: Critical Bugreport: Linux Kernel 2.6.17.13, UNUSABLE
+Date: Wed, 4 Oct 2006 10:36:19 +0200
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1611629.BaUTkEGrPR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Message-Id: <200610041036.23291.juergen.sauer@automatix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Chris Wedgwood <cw@f00f.org>, xfs-dev@sgi.com, xfs@oss.sgi.com, dhowells@redhat.com, LKML <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, Oct 04, 2006 at 08:22:56AM +1000, David Chinner wrote:
-> On Tue, Oct 03, 2006 at 02:23:35PM -0700, Chris Wedgwood wrote:
-> > On Tue, Oct 03, 2006 at 04:06:10PM +1000, David Chinner wrote:
-> > > Overall, the patchset removes more than 200 lines of code from the
-> > > xfs inode caching and lookup code and provides more consistent
-> > > scalability for large numbers of cached inodes. The only down side
-> > > is that it limits us to 32 bit inode numbers of 32 bit platforms due
-> > > to the way the radix tree uses unsigned longs for it's indexes
-> > 
-> >     commit afefdbb28a0a2af689926c30b94a14aea6036719
-> >     tree 6ee500575cac928cd90045bcf5b691cf2b8daa09
-> >     parent 1d32849b14bc8792e6f35ab27dd990d74b16126c
-> >     author David Howells <dhowells@redhat.com> 1159863226 -0700
-> >     committer Linus Torvalds <torvalds@g5.osdl.org> 1159887820 -0700
-> > 
-> >     [PATCH] VFS: Make filldir_t and struct kstat deal in 64-bit inode numbers
-> > 
-> >     These patches make the kernel pass 64-bit inode numbers internally when
-> >     communicating to userspace, even on a 32-bit system.  They are required
-> >     because some filesystems have intrinsic 64-bit inode numbers: NFS3+ and XFS
-> >     for example.  The 64-bit inode numbers are then propagated to userspace
-> >     automatically where the arch supports it.
-> >     [...]
-> > 
-> > Doing this will mean XFS won't be able to support 32-bit inodes on
-> > 32-bit platforms the above (merged) patch --- though given that cheap
-> > 64-bit systems are now abundant does anyone really care?
-> 
-> That's a good question. In a recent thread on linux-fsdevel about
-> these patches Christoph Hellwig pointed out that 32bit user space is
-> not ready for 64 bit inodes, so it's probably going to be a while
-> before the second half of this mod is ready (which exports 64 bit
-> inodes ito userspace on 32bit platforms).
+--nextPart1611629.BaUTkEGrPR
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Ahhh.... I think I misread what Chris wrote here - _32_ bit inodes on
-32 bit platforms not working? I can't see how this would be the
-case with the mods I posted given that they are entirely internal to
-XFS and don't change any external inode number interfaces. And the
-above commit shouldn't break XFS either.
+Hi!
+The XFS System in Kernel 2.6.17.13 is unusable broken.
+I have several servers and clients using XFS as root FS.
 
-Cheers,
+The Last screen of death (digicam):
+http://www.automatix.de/~jojo/xfs-error-kernel-2.6.17.13.jpg
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+On many systems (Ubuntu 6.06.1 LTS) with own kernel 2.6.17.13 it happens,
+that the kernel crashes like the "upper screen dump".
+
+Booting form Knoppix 5.01 CD can _not_ xfs_repair the filesystem.
+
+This bug make the system completely unusable.
+It is not possible to "rm -rf" or to get the filesystem in any clean/usable=
+ state.
+
+There are no "badblocks" (since hardware RAID 5 controllers like mgega_raid=
+, icp vortex, 3ware)
+are used.
+Installing a fresh, system does show up the problem after somewhat time in =
+production again.
+
+So what to do ?
+Please help!
+
+mfG
+J. Sauer
+
+--=20
+J=C3=BCrgen Sauer - AutomatiX GmbH, +49-4209-4699, jojo@automatix.de
+Das Linux Systemhaus - Service - Support - Server - L=C3=B6sungen
+http://www.automatix.de OpenOffice erhalten Sie hier kostenfrei http://de.o=
+penoffice.org/
+
+--nextPart1611629.BaUTkEGrPR
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD4DBQBFI3KHW7UKI9EqarERArmXAJ9UiXIMy3qOJ5OwAiUOdroB82FC0ACXXcPK
+PH64PtR0joV9KzipA3/h0g==
+=YZ8A
+-----END PGP SIGNATURE-----
+
+--nextPart1611629.BaUTkEGrPR--
