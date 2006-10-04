@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Oct 2006 17:54:37 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k940sWaG002037
-	for <xfs@oss.sgi.com>; Tue, 3 Oct 2006 17:54:33 -0700
-Received: from smtp110.sbc.mail.mud.yahoo.com (smtp110.sbc.mail.mud.yahoo.com [68.142.198.209])
-	by cuda.sgi.com (Spam Firewall) with SMTP id B8DB24676ED
-	for <xfs@oss.sgi.com>; Tue,  3 Oct 2006 17:53:50 -0700 (PDT)
-Date: Tue, 3 Oct 2006 17:47:08 -0700
-From: Chris Wedgwood <cw@f00f.org>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Oct 2006 18:44:54 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k941ihaG006744
+	for <xfs@oss.sgi.com>; Tue, 3 Oct 2006 18:44:46 -0700
+Date: Wed, 4 Oct 2006 11:43:34 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: [RFC 0/3] Convert XFS inode hashes to radix trees
-Message-ID: <20061004004708.GA17969@tuatara.stupidest.org>
+Message-ID: <20061004014334.GZ4695059@melbourne.sgi.com>
 References: <20061003060610.GV3024@melbourne.sgi.com> <20061003212335.GA13120@tuatara.stupidest.org> <20061003222256.GW4695059@melbourne.sgi.com>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20061003222256.GW4695059@melbourne.sgi.com>
@@ -19,29 +16,52 @@ Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com, dhowells@redhat.com, LKML <linux-kernel@vger.kernel.org>
+Cc: Chris Wedgwood <cw@f00f.org>, xfs-dev@sgi.com, xfs@oss.sgi.com, dhowells@redhat.com, LKML <linux-kernel@vger.kernel.org>
 
 On Wed, Oct 04, 2006 at 08:22:56AM +1000, David Chinner wrote:
-
+> On Tue, Oct 03, 2006 at 02:23:35PM -0700, Chris Wedgwood wrote:
+> > On Tue, Oct 03, 2006 at 04:06:10PM +1000, David Chinner wrote:
+> > > Overall, the patchset removes more than 200 lines of code from the
+> > > xfs inode caching and lookup code and provides more consistent
+> > > scalability for large numbers of cached inodes. The only down side
+> > > is that it limits us to 32 bit inode numbers of 32 bit platforms due
+> > > to the way the radix tree uses unsigned longs for it's indexes
+> > 
+> >     commit afefdbb28a0a2af689926c30b94a14aea6036719
+> >     tree 6ee500575cac928cd90045bcf5b691cf2b8daa09
+> >     parent 1d32849b14bc8792e6f35ab27dd990d74b16126c
+> >     author David Howells <dhowells@redhat.com> 1159863226 -0700
+> >     committer Linus Torvalds <torvalds@g5.osdl.org> 1159887820 -0700
+> > 
+> >     [PATCH] VFS: Make filldir_t and struct kstat deal in 64-bit inode numbers
+> > 
+> >     These patches make the kernel pass 64-bit inode numbers internally when
+> >     communicating to userspace, even on a 32-bit system.  They are required
+> >     because some filesystems have intrinsic 64-bit inode numbers: NFS3+ and XFS
+> >     for example.  The 64-bit inode numbers are then propagated to userspace
+> >     automatically where the arch supports it.
+> >     [...]
+> > 
+> > Doing this will mean XFS won't be able to support 32-bit inodes on
+> > 32-bit platforms the above (merged) patch --- though given that cheap
+> > 64-bit systems are now abundant does anyone really care?
+> 
 > That's a good question. In a recent thread on linux-fsdevel about
 > these patches Christoph Hellwig pointed out that 32bit user space is
 > not ready for 64 bit inodes, so it's probably going to be a while
 > before the second half of this mod is ready (which exports 64 bit
 > inodes ito userspace on 32bit platforms).
 
-yes a patch changing struct kstat and filldir* was merged...
+Ahhh.... I think I misread what Chris wrote here - _32_ bit inodes on
+32 bit platforms not working? I can't see how this would be the
+case with the mods I posted given that they are entirely internal to
+XFS and don't change any external inode number interfaces. And the
+above commit shouldn't break XFS either.
 
-> http://marc.theaimsgroup.com/?l=linux-fsdevel&m=115946211808497&w=2
-> http://marc.theaimsgroup.com/?l=linux-fsdevel&m=115948836023569&w=2
+Cheers,
 
-> As it stands, there's still a few barriers to getting 64 bit inodes
-> on 32 bit platforms and I can't see them going away quickly. Right
-> now I see little reason in moving to 64 bit inodes for 32 bit
-> platforms for XFS because of the 16TB filesystem size limit (that
-> only needs 33-36 bit inodes depending on the inode size) and no
-> 32bit platform is currently able to repair a filesystem of that
-> size.
-
-so that leaves NFS3+
-
-is it really worth the pain then?
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
