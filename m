@@ -1,41 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Oct 2006 16:59:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Oct 2006 17:54:37 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k93NxOaG028101
-	for <xfs@oss.sgi.com>; Tue, 3 Oct 2006 16:59:26 -0700
-Received: from prod.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57C7246A3A7
-	for <xfs@oss.sgi.com>; Tue,  3 Oct 2006 16:58:43 -0700 (PDT)
-Subject: Re: Review: clean up inode i_flags handling
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <1159914373.32536.9.camel@edge>
-References: <20061003051325.GR4695059@melbourne.sgi.com>
-	 <1159914373.32536.9.camel@edge>
-Content-Type: text/plain
-Date: Wed, 04 Oct 2006 09:58:50 +1000
-Message-Id: <1159919930.32536.14.camel@edge>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k940sWaG002037
+	for <xfs@oss.sgi.com>; Tue, 3 Oct 2006 17:54:33 -0700
+Received: from smtp110.sbc.mail.mud.yahoo.com (smtp110.sbc.mail.mud.yahoo.com [68.142.198.209])
+	by cuda.sgi.com (Spam Firewall) with SMTP id B8DB24676ED
+	for <xfs@oss.sgi.com>; Tue,  3 Oct 2006 17:53:50 -0700 (PDT)
+Date: Tue, 3 Oct 2006 17:47:08 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: [RFC 0/3] Convert XFS inode hashes to radix trees
+Message-ID: <20061004004708.GA17969@tuatara.stupidest.org>
+References: <20061003060610.GV3024@melbourne.sgi.com> <20061003212335.GA13120@tuatara.stupidest.org> <20061003222256.GW4695059@melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20061003222256.GW4695059@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com, dhowells@redhat.com, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, 2006-10-04 at 08:26 +1000, Nathan Scott wrote:
-> On Tue, 2006-10-03 at 15:13 +1000, David Chinner wrote:
-> > 
-> 
-> This part seems like overkill, I'd just do that inline like the clear
-> variant, since its just one instruction ...
-> 
+On Wed, Oct 04, 2006 at 08:22:56AM +1000, David Chinner wrote:
 
-..but I guess you did it for consistency, as that one instruction is
-otherwise going to have to be open coded in a few places ... *shrug*
-looks good to me either way.
+> That's a good question. In a recent thread on linux-fsdevel about
+> these patches Christoph Hellwig pointed out that 32bit user space is
+> not ready for 64 bit inodes, so it's probably going to be a while
+> before the second half of this mod is ready (which exports 64 bit
+> inodes ito userspace on 32bit platforms).
 
-cheers.
+yes a patch changing struct kstat and filldir* was merged...
 
--- 
-Nathan
+> http://marc.theaimsgroup.com/?l=linux-fsdevel&m=115946211808497&w=2
+> http://marc.theaimsgroup.com/?l=linux-fsdevel&m=115948836023569&w=2
+
+> As it stands, there's still a few barriers to getting 64 bit inodes
+> on 32 bit platforms and I can't see them going away quickly. Right
+> now I see little reason in moving to 64 bit inodes for 32 bit
+> platforms for XFS because of the 16TB filesystem size limit (that
+> only needs 33-36 bit inodes depending on the inode size) and no
+> 32bit platform is currently able to repair a filesystem of that
+> size.
+
+so that leaves NFS3+
+
+is it really worth the pain then?
