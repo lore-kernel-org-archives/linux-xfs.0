@@ -1,46 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Oct 2006 11:07:50 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Oct 2006 12:07:43 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k94I7haG032704
-	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 11:07:45 -0700
-Received: from mail.clusterfs.com (mail.clusterfs.com [206.168.112.78])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB6BAD178B4B
-	for <xfs@oss.sgi.com>; Wed,  4 Oct 2006 09:56:59 -0700 (PDT)
-Date: Wed, 4 Oct 2006 10:56:56 -0600
-From: Andreas Dilger <adilger@clusterfs.com>
-Subject: Directories > 2GB
-Message-ID: <20061004165655.GD22010@schatzie.adilger.int>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k94J7baG004879
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 12:07:38 -0700
+Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 92FCFD17BB72
+	for <xfs@oss.sgi.com>; Wed,  4 Oct 2006 10:51:25 -0700 (PDT)
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k94HpWUo029324
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 13:51:32 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k94HpN4f255618
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 13:51:23 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k94HpNuq018399
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 13:51:23 -0400
+Subject: Re: Directories > 2GB
+From: Dave Kleikamp <shaggy@austin.ibm.com>
+In-Reply-To: <20061004165655.GD22010@schatzie.adilger.int>
+References: <20061004165655.GD22010@schatzie.adilger.int>
+Content-Type: text/plain
+Date: Wed, 04 Oct 2006 12:51:20 -0500
+Message-Id: <1159984281.10427.7.camel@kleikamp.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Andreas Dilger <adilger@clusterfs.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-For ext4 we are exploring the possibility of directories being larger
-than 2GB in size.  For ext3/ext4 the 2GB limit is about 50M files, and
-the 2-level htree limit is about 25M files (this is a kernel code and not
-disk format limit).
+On Wed, 2006-10-04 at 10:56 -0600, Andreas Dilger wrote:
+> For ext4 we are exploring the possibility of directories being larger
+> than 2GB in size.  For ext3/ext4 the 2GB limit is about 50M files, and
+> the 2-level htree limit is about 25M files (this is a kernel code and not
+> disk format limit).
+> 
+> Amusingly (or not) some users of very large filesystems hit this limit
+> with their HPC batch jobs because they have 10,000 or 128,000 processes
+> creating files in a directory on an hourly basis (job restart files,
+> data dumps for visualization, etc) and it is not always easy to change
+> the apps.
+> 
+> My question (esp. for XFS folks) is if anyone has looked at this problem
+> before, and what kind of problems they might have hit in userspace and in
+> the kernel due to "large" directory sizes (i.e. > 2GB).  It appears at
+> first glance that 64-bit systems will do OK because off_t is a long
+> (for telldir output), but that 32-bit systems would need to use O_LARGEFILE
+> when opening the file in order to be able to read the full directory
+> contents.  It might also be possible to return -EFBIG only in the case
+> that telldir is used beyond 2GB (the LFS spec doesn't really talk about
+> large directories at all).
 
-Amusingly (or not) some users of very large filesystems hit this limit
-with their HPC batch jobs because they have 10,000 or 128,000 processes
-creating files in a directory on an hourly basis (job restart files,
-data dumps for visualization, etc) and it is not always easy to change
-the apps.
+ext3 directory entries are always multiples of 4 bytes in length.  So
+the lowest 2 bits of the offset are always zero.  Right?  Why not shift
+the returned offset and f_pos 2 bits right?
 
-My question (esp. for XFS folks) is if anyone has looked at this problem
-before, and what kind of problems they might have hit in userspace and in
-the kernel due to "large" directory sizes (i.e. > 2GB).  It appears at
-first glance that 64-bit systems will do OK because off_t is a long
-(for telldir output), but that 32-bit systems would need to use O_LARGEFILE
-when opening the file in order to be able to read the full directory
-contents.  It might also be possible to return -EFBIG only in the case
-that telldir is used beyond 2GB (the LFS spec doesn't really talk about
-large directories at all).
-
-Cheers, Andreas
---
-Andreas Dilger
-Principal Software Engineer
-Cluster File Systems, Inc.
+JFS uses an index into an array for the position (which isn't even in
+the directory traversal order) so it can handle about 2G files in a
+directory (although deleted entries aren't reused).
+-- 
+David Kleikamp
+IBM Linux Technology Center
