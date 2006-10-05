@@ -1,78 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Oct 2006 13:34:57 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k94KYeaG016835
-	for <linux-xfs@OSS.SGI.com>; Wed, 4 Oct 2006 13:34:43 -0700
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE20B46B423
-	for <linux-xfs@OSS.SGI.com>; Wed,  4 Oct 2006 12:11:00 -0700 (PDT)
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
-	id 1GVC8W-00072I-Er
-	for <linux-xfs@OSS.SGI.com>; Wed, 04 Oct 2006 20:10:32 +0100
-Resent-Message-ID: <17700.1830.717329.976455@base.ty.sabi.co.UK>
-Resent-To: linux-xfs@oss.sgi.com
-Content-Transfer-Encoding: 7bit
-Subject: Re: Directories > 2GB
-Date: Wed, 4 Oct 2006 20:09:41 +0100
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Oct 2006 17:38:19 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k950c5aG007803
+	for <xfs@oss.sgi.com>; Wed, 4 Oct 2006 17:38:07 -0700
+Date: Thu, 5 Oct 2006 10:37:12 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [RFC 0/3] Convert XFS inode hashes to radix trees
+Message-ID: <20061005003712.GD3024@melbourne.sgi.com>
+References: <20061003060610.GV3024@melbourne.sgi.com> <20061003212335.GA13120@tuatara.stupidest.org> <20061003222256.GW4695059__33273.3314754025$1159914338$gmane$org@melbourne.sgi.com> <p73y7rwynbg.fsf@verdi.suse.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
-Message-ID: <17700.1781.695334.941154@base.ty.sabi.co.UK>
-References: <20061004165655.GD22010@schatzie.adilger.int>
-In-Reply-To: <20061004165655.GD22010@schatzie.adilger.int>
+Content-Disposition: inline
+In-Reply-To: <p73y7rwynbg.fsf@verdi.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andreas Dilger <adilger@clusterfs.com>
+To: Andi Kleen <ak@suse.de>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com, dhowells@redhat.com, LKML <linux-kernel@vger.kernel.org>
 
->>> On Wed, 4 Oct 2006 10:56:56 -0600, Andreas Dilger
->>> <adilger@clusterfs.com> said:
+On Wed, Oct 04, 2006 at 07:59:15PM +0200, Andi Kleen wrote:
+> David Chinner <dgc@sgi.com> writes:
+> > 
+> > And yes, 64 bit systems are cheap, cheap, cheap so IMO this
+> > functionality is really irrelevant moving forward. If it had come
+> > along a couple of years ago then it would be different, but I think
+> > mainstream technology is finally catching up with XFS so it's not a
+> > critical issue anymore... ;)
+> 
+> One issue is that people often still run a lot of 32bit userland
+> even with 64bit kernels.
 
-adilger> For ext4 we are exploring the possibility of
-adilger> directories being larger than 2GB in size. For
-adilger> ext3/ext4 the 2GB limit is about 50M files, and the
-adilger> 2-level htree limit is about 25M files (this is a
-adilger> kernel code and not disk format limit).
+Which is one of the reasons why XFS uses 32 bit inodes by default
+even on 64 bit kernels. XFS does not use 64 bit inodes unless you
+tell it to via the inode64 mount option....
 
-H-trees here have some serious performance problems:
+Cheers,
 
-  http://WWW.sabi.co.UK/Notes/anno05-4th.html#051204
-
-which is perhaps because of poor locality, and I suspect that
-large hash trees would suffer from it even more.
-
-adilger> Amusingly (or not) some users of very large filesystems
-adilger> hit this limit with their HPC batch jobs because they
-adilger> have 10,000 or 128,000 processes creating files in a
-adilger> directory on an hourly basis (job restart files, data
-adilger> dumps for visualization, etc) and it is not always easy
-adilger> to change the apps.
-
-Perhaps the users should be gently introduced to the recent idea
-of subdirectories or, if the apps can be changed, the even more
-novel and experimental notion of DBMSes... :-). And even if apps
-cannot be changed one can always use 'LD_PRELOAD' and ''advise''
-the 'open' call suitably...
-
-adilger> [ ... ] but that 32-bit systems would need to use
-adilger> O_LARGEFILE when opening the file in order to be able
-adilger> to read the full directory contents. It might also be
-adilger> possible to return -EFBIG only in the case that telldir
-adilger> is used beyond 2GB [ ... ]
-
-Well, in theory apps use 'readdir' and 'getdents' so they should
-be immunized from exactly how directories are represented. On my
-32 bit system with Fedora with GNU LIBC 2.4 I see:
-
-  $ strace ls /
-  [ ... ]
-  open("/", O_RDONLY|O_NONBLOCK|O_LARGEFILE|O_DIRECTORY) = 3
-  fstat64(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
-  fcntl64(3, F_SETFD, FD_CLOEXEC)         = 0
-  getdents64(3, /* 38 entries */, 4096)   = 1024
-  getdents64(3, /* 0 entries */, 4096)    = 0
-  close(3)                                = 0
-  [ ... ]
-
-and this should give some hope.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
