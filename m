@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 02:57:22 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 03:27:18 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k969v3aI025887
-	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 02:57:11 -0700
-Received: from puffy.melbourne.sgi.com (puffy.melbourne.sgi.com [134.14.55.166]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA05439 for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 18:55:07 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k96AR5aG029221
+	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 03:27:07 -0700
+Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id TAA05947 for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 19:22:46 +1000
+Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k969Mj7Y844082
+	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 19:22:46 +1000 (AEST)
+Received: (from tes@localhost)
+	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k969Mj9M849212
+	for xfs@oss.sgi.com; Fri, 6 Oct 2006 19:22:45 +1000 (AEST)
+Date: Fri, 6 Oct 2006 19:22:45 +1000 (AEST)
+From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
+Message-Id: <200610060922.k969Mj9M849212@snort.melbourne.sgi.com>
 Subject: TAKE 954482 956881 - copy fix and mkfs/libxfs fix
-Message-Id: <20061006084804.033FA11F@puffy.melbourne.sgi.com>
-Date: Fri,  6 Oct 2006 18:48:04 +1000 (EST)
-From: tes@puffy.melbourne.sgi.com (Timothy Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@puffy.melbourne.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 Copy fix.
 Fix up variable argument handling around vfprintf's.
