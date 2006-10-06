@@ -1,77 +1,191 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 07:05:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 10:41:35 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k96E5baG014698
-	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 07:05:37 -0700
-Date: Fri, 6 Oct 2006 09:25:28 -0400 (EDT)
-From: Stephane Doyon <sdoyon@max-t.com>
-In-Reply-To: <20061006003339.GF19345@melbourne.sgi.com>
-Message-ID: <Pine.LNX.4.64.0610060903280.31641@madrid.max-t.internal>
-References: <Pine.LNX.4.64.0609191533240.25914@madrid.max-t.internal>
- <451A618B.5080901@agami.com> <Pine.LNX.4.64.0610020939450.5072@madrid.max-t.internal>
- <20061002223056.GN4695059@melbourne.sgi.com> <Pine.LNX.4.64.0610030917060.31738@madrid.max-t.internal>
- <1159893642.5592.12.camel@lade.trondhjem.org> <Pine.LNX.4.64.0610051108140.9190@madrid.max-t.internal>
- <20061006003339.GF19345@melbourne.sgi.com>
-MIME-Version: 1.0
-Subject: Re: several messages
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k96HfRaG030612
+	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 10:41:29 -0700
+Subject: Re: review: set blocksize patch - libxfs & mkfs
+From: Russell Cattelan <cattelan@thebarn.com>
+In-Reply-To: <778901771D2CDD34FDDE6CFA@timothy-shimmins-power-mac-g5.local>
+References: <778901771D2CDD34FDDE6CFA@timothy-shimmins-power-mac-g5.local>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gv0KoLYZIXRwJ3syxEVk"
+Date: Fri, 06 Oct 2006 10:58:10 -0500
+Message-Id: <1160150291.11159.29.camel@xenon.msp.redhat.com>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Trond Myklebust <trond.myklebust@fys.uio.no>, xfs@oss.sgi.com, nfs@lists.sourceforge.net, Shailendra Tripathi <stripathi@agami.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Fri, 6 Oct 2006, David Chinner wrote:
+--=-gv0KoLYZIXRwJ3syxEVk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> On Thu, Oct 05, 2006 at 11:39:45AM -0400, Stephane Doyon wrote:
->>
->> I hadn't realized that the issue isn't just with the final flush on
->> close(). It's actually been flushing all along, delaying some of the
->> subsequent write()s, getting NOSPC errors but not reporting them until the
->> end.
->
-> Other NFS clients will report an ENOSPC on the next write() or close()
-> if the error is reported during async writeback. The clients that typically
-> do this throw away any unwritten data as well on the basis that the
-> application was returned an error ASAP and it is now Somebody Else's
-> Problem (i.e. the application needs to handle it from there).
+On Fri, 2006-10-06 at 16:34 +1000, Timothy Shimmin wrote:
 
-Well the client wouldn't necessarily have to throw away cached data. It 
-could conceivably be made to return ENOSPC on some subsequent write. It 
-would need to throw away the data for that write, but not necessarily 
-destroy its cache. It could then clear the error condition and allow the 
-application to keep trying if it wants to...
+>  }
+> Index: xfsprogs/libxfs/init.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/libxfs/init.c.orig	2006-10-06 14:12:27.000000000 +1000
+> +++ xfsprogs/libxfs/init.c	2006-10-06 14:14:03.000000000 +1000
+> @@ -116,8 +116,16 @@
+>  		exit(1);
+>  	}
+>=20
+> -	if (!readonly && setblksize && (statb.st_mode & S_IFMT) =3D=3D S_IFBLK)
+> -		platform_set_blocksize(fd, path, statb.st_rdev, 512);
+> +	if (!readonly && setblksize && (statb.st_mode & S_IFMT) =3D=3D S_IFBLK)=
+ {
+> +		if (setblksize =3D=3D 1)
+> +			/* use the default blocksize */
+> +			(void)platform_set_blocksize(fd, path, statb.st_rdev,=20
+> XFS_MIN_SECTORSIZE, 0);
+> +		else {
+> +			/* given an explicit blocksize to use */
+> +			if (platform_set_blocksize(fd, path, statb.st_rdev, setblksize, 1))
+> +			    exit(1);
+> +		}
+should the return code always be checked for failure?
+mybe something like
+if (platform_set_blocksize(fd, path, statb.st_rdev,
+		((setblksize =3D=3D 1)?XFS_MIN_SECTORSIZE:setblksize) 1))
 
->> Would it be incorrect for a subsequent write to return the error that
->> occurred while flushing data from previous writes? Then the app could
->> decide whether to continue and retry or not. But I guess I can see how
->> that might get convoluted.
->
-> .... there's many entertaining hoops to jump through to do this
-> reliably.
+would be bit cleaner
 
-I imagine there would be...
 
-> For example: when you have large amounts of cached data, expedient
-> error reporting and tossing unwritten data leads to much faster
-> error recovery than trying to write every piece of data (hence the
-> Irix use of this method).
+> +	}
+>=20
+>  	/*
+>  	 * Get the device number from the stat buf - unless
+> Index: xfsprogs/libxfs/irix.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/libxfs/irix.c.orig	2006-10-06 14:12:27.000000000 +1000
+> +++ xfsprogs/libxfs/irix.c	2006-10-06 14:14:03.000000000 +1000
+> @@ -36,8 +36,8 @@
+>  	return 1;
+>  }
+>=20
+> -void
+> -platform_set_blocksize(int fd, char *path, dev_t device, int blocksize)
+> +int
+> +platform_set_blocksize(int fd, char *path, dev_t device, int blocksize,=
+=20
+> int fatal)
+>  {
+>  	return;
+>  }
+> Index: xfsprogs/libxfs/linux.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/libxfs/linux.c.orig	2006-10-06 14:12:27.000000000 +1000
+> +++ xfsprogs/libxfs/linux.c	2006-10-06 14:14:03.000000000 +1000
+> @@ -102,16 +102,20 @@
+>  	return sts;
+>  }
+>=20
+> -void
+> -platform_set_blocksize(int fd, char *path, dev_t device, int blocksize)
+> +int
+> +platform_set_blocksize(int fd, char *path, dev_t device, int blocksize,=
+=20
+> int fatal)
+>  {
+> +	int error =3D 0;
+> +
+>  	if (major(device) !=3D RAMDISK_MAJOR) {
+> -		if (ioctl(fd, BLKBSZSET, &blocksize) < 0) {
+> -			fprintf(stderr, _("%s: warning - cannot set blocksize "
+> +		if ((error =3D ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
+> +			fprintf(stderr, _("%s: %s - cannot set blocksize "
+>  					"on block device %s: %s\n"),
+> -				progname, path, strerror(errno));
+> +				progname, fatal ? "error": "warning",
+> +				path, strerror(errno));
+>  		}
+>  	}
+> +	return error;
+>  }
+>=20
+>  void
+> Index: xfsprogs/mkfs/xfs_mkfs.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/mkfs/xfs_mkfs.c.orig	2006-10-06 14:12:27.000000000 +1000
+> +++ xfsprogs/mkfs/xfs_mkfs.c	2006-10-06 14:14:03.000000000 +1000
+> @@ -634,7 +634,6 @@
+>  	bzero(&fsx, sizeof(fsx));
+>=20
+>  	bzero(&xi, sizeof(xi));
+> -	xi.setblksize =3D 1;
+>  	xi.isdirect =3D LIBXFS_DIRECT;
+>  	xi.isreadonly =3D LIBXFS_EXCLUSIVELY;
+>=20
+> @@ -1506,6 +1505,11 @@
+>  	calc_stripe_factors(dsu, dsw, sectorsize, lsu, lsectorsize,
+>  				&dsunit, &dswidth, &lsunit);
+>=20
+> +	if (slflag || ssflag)
+> +	    xi.setblksize =3D sectorsize;
+> +	else
+> +	    xi.setblksize =3D 1;
+> +
+>  	/*
+>  	 * Initialize.  This will open the log and rt devices as well.
+>  	 */
+> Index: xfsprogs/libxfs/init.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/libxfs/init.h.orig	2006-10-06 14:12:27.000000000 +1000
+> +++ xfsprogs/libxfs/init.h	2006-10-06 14:14:03.000000000 +1000
+> @@ -25,7 +25,7 @@
+>  extern int platform_check_iswritable (char *path, char *block,
+>  					struct stat64 *sptr, int fatal);
+>  extern void platform_findsizes (char *path, int fd, long long *sz, int=
+=20
+> *bsz);
+> -extern void platform_set_blocksize (int fd, char *path, dev_t device, in=
+t=20
+> bsz);
+> +extern int platform_set_blocksize (int fd, char *path, dev_t device, int=
+=20
+> bsz, int fatal);
+>  extern void platform_flush_device (int fd, dev_t device);
+>  extern char *platform_findrawpath(char *path);
+>  extern char *platform_findrawpath (char *path);
+> Index: xfsprogs/VERSION
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- xfsprogs/VERSION.orig	2006-10-06 14:28:43.000000000 +1000
+> +++ xfsprogs/VERSION	2006-10-06 14:22:40.000000000 +1000
+> @@ -3,5 +3,5 @@
+>  #
+>  PKG_MAJOR=3D2
+>  PKG_MINOR=3D8
+> -PKG_REVISION=3D13
+> +PKG_REVISION=3D14
+>  PKG_BUILD=3D1
+>=20
+--=20
+Russell Cattelan <cattelan@thebarn.com>
 
-In my case, I didn't think I was caching that much data though, only a few 
-hundred MBs, and I wouldn't have minded so much if an error had been 
-returned after that much. The way it's implemented though, I can write an 
-unbounded amount of data through that cache and not be told of the problem 
-until I close or fsync. It may not be technically wrong, but given the 
-outrageous delay I saw in my particular situation, it felt pretty 
-suboptimal.
+--=-gv0KoLYZIXRwJ3syxEVk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> There's no clear right or wrong approach here - both have their
-> advantages and disadvantages for different workloads. If it
-> weren't for the sub-optimal behaviour of XFS in this case, you
-> probably wouldn't have even cared about this....
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Indeed not! In fact, changing the client is not practical for me, what I 
-need is a fix for the XFS behavior. I just thought it was also worth 
-reporting what I perceived to be an issue with the NFS client.
+iD8DBQBFJn0SNRmM+OaGhBgRApeFAJ9NxbBIXGwi5mV8g0rsM8E4FyYLQACfXngq
+EdDUSGj+ZOkj5E380SKzxfI=
+=K22B
+-----END PGP SIGNATURE-----
 
-Thanks
+--=-gv0KoLYZIXRwJ3syxEVk--
