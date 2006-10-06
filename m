@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 06:18:20 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 07:05:48 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k96DI6aG005963
-	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 06:18:06 -0700
-Date: Fri, 6 Oct 2006 09:03:03 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k96E5baG014698
+	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 07:05:37 -0700
+Date: Fri, 6 Oct 2006 09:25:28 -0400 (EDT)
 From: Stephane Doyon <sdoyon@max-t.com>
-In-Reply-To: <20061005232935.GE19345@melbourne.sgi.com>
-Message-ID: <Pine.LNX.4.64.0610060859270.31641@madrid.max-t.internal>
+In-Reply-To: <20061006003339.GF19345@melbourne.sgi.com>
+Message-ID: <Pine.LNX.4.64.0610060903280.31641@madrid.max-t.internal>
 References: <Pine.LNX.4.64.0609191533240.25914@madrid.max-t.internal>
  <451A618B.5080901@agami.com> <Pine.LNX.4.64.0610020939450.5072@madrid.max-t.internal>
  <20061002223056.GN4695059@melbourne.sgi.com> <Pine.LNX.4.64.0610030917060.31738@madrid.max-t.internal>
- <20061005083015.GC19345@melbourne.sgi.com> <Pine.LNX.4.64.0610051139540.31641@madrid.max-t.internal>
- <20061005232935.GE19345@melbourne.sgi.com>
+ <1159893642.5592.12.camel@lade.trondhjem.org> <Pine.LNX.4.64.0610051108140.9190@madrid.max-t.internal>
+ <20061006003339.GF19345@melbourne.sgi.com>
 MIME-Version: 1.0
 Subject: Re: several messages
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
@@ -23,29 +23,55 @@ Cc: Trond Myklebust <trond.myklebust@fys.uio.no>, xfs@oss.sgi.com, nfs@lists.sou
 
 On Fri, 6 Oct 2006, David Chinner wrote:
 
->> The backtrace looked like this:
+> On Thu, Oct 05, 2006 at 11:39:45AM -0400, Stephane Doyon wrote:
 >>
->> ... nfsd_write nfsd_vfs_write vfs_writev do_readv_writev xfs_file_writev
->> xfs_write generic_file_buffered_write xfs_get_blocks __xfs_get_blocks
->> xfs_bmap xfs_iomap xfs_iomap_write_delay xfs_flush_space xfs_flush_device
->> schedule_timeout_uninterruptible.
+>> I hadn't realized that the issue isn't just with the final flush on
+>> close(). It's actually been flushing all along, delaying some of the
+>> subsequent write()s, getting NOSPC errors but not reporting them until the
+>> end.
 >
-> Ahhh, this gets hit on the ->prepare_write path (xfs_iomap_write_delay()),
+> Other NFS clients will report an ENOSPC on the next write() or close()
+> if the error is reported during async writeback. The clients that typically
+> do this throw away any unwritten data as well on the basis that the
+> application was returned an error ASAP and it is now Somebody Else's
+> Problem (i.e. the application needs to handle it from there).
 
-Yes.
+Well the client wouldn't necessarily have to throw away cached data. It 
+could conceivably be made to return ENOSPC on some subsequent write. It 
+would need to throw away the data for that write, but not necessarily 
+destroy its cache. It could then clear the error condition and allow the 
+application to keep trying if it wants to...
 
-> not the allocate path (xfs_iomap_write_allocate()). Sorry - I got myself
-> (and probably everyone else) confused there which why I suspected sync
-> writes - they trigger the allocate path in the write call. I don't think
-> 2.6.18 will change anything.
+>> Would it be incorrect for a subsequent write to return the error that
+>> occurred while flushing data from previous writes? Then the app could
+>> decide whether to continue and retry or not. But I guess I can see how
+>> that might get convoluted.
 >
-> FWIW, I don't think we can avoid this sleep when we first hit ENOSPC
-> conditions, but perhaps once we are certain of the ENOSPC status
-> we can tag the filesystem with this state (say an xfs_mount flag)
-> and only clear that tag when something is freed. We could then
-> use the tag to avoid continually trying extremely hard to allocate
-> space when we know there is none available....
+> .... there's many entertaining hoops to jump through to do this
+> reliably.
 
-Yes! That's what I was trying to suggest :-). Thank you.
+I imagine there would be...
 
-Is that hard to do?
+> For example: when you have large amounts of cached data, expedient
+> error reporting and tossing unwritten data leads to much faster
+> error recovery than trying to write every piece of data (hence the
+> Irix use of this method).
+
+In my case, I didn't think I was caching that much data though, only a few 
+hundred MBs, and I wouldn't have minded so much if an error had been 
+returned after that much. The way it's implemented though, I can write an 
+unbounded amount of data through that cache and not be told of the problem 
+until I close or fsync. It may not be technically wrong, but given the 
+outrageous delay I saw in my particular situation, it felt pretty 
+suboptimal.
+
+> There's no clear right or wrong approach here - both have their
+> advantages and disadvantages for different workloads. If it
+> weren't for the sub-optimal behaviour of XFS in this case, you
+> probably wouldn't have even cared about this....
+
+Indeed not! In fact, changing the client is not practical for me, what I 
+need is a fix for the XFS behavior. I just thought it was also worth 
+reporting what I perceived to be an issue with the NFS client.
+
+Thanks
