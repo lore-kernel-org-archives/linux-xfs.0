@@ -1,93 +1,129 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 03:27:18 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k96AR5aG029221
-	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 03:27:07 -0700
-Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id TAA05947 for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 19:22:46 +1000
-Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k969Mj7Y844082
-	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 19:22:46 +1000 (AEST)
-Received: (from tes@localhost)
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id k969Mj9M849212
-	for xfs@oss.sgi.com; Fri, 6 Oct 2006 19:22:45 +1000 (AEST)
-Date: Fri, 6 Oct 2006 19:22:45 +1000 (AEST)
-From: Timothy Shimmin <tes@snort.melbourne.sgi.com>
-Message-Id: <200610060922.k969Mj9M849212@snort.melbourne.sgi.com>
-Subject: TAKE 954482 956881 - copy fix and mkfs/libxfs fix
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 06 Oct 2006 04:57:55 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k96BviaG027152
+	for <xfs@oss.sgi.com>; Fri, 6 Oct 2006 04:57:45 -0700
+Received: from ipmail02.adl2.internode.on.net (ipmail02.adl2.internode.on.net [203.16.214.141])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C42CDD17B0E7
+	for <xfs@oss.sgi.com>; Fri,  6 Oct 2006 03:49:45 -0700 (PDT)
+Subject: Re: XFS filesystem structure document
+From: Stewart Smith <stewart@flamingspork.com>
+In-Reply-To: <200610050632.QAA03593@larry.melbourne.sgi.com>
+References: <200610050632.QAA03593@larry.melbourne.sgi.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LnuZ+iRfbCs5Nt9EasW2"
+Date: Fri, 06 Oct 2006 20:49:41 +1000
+Message-Id: <1160131781.4385.104.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Copy fix.
-Fix up variable argument handling around vfprintf's.
-Crashing on x86_64 otherwise and is just plain wrong.
+--=-LnuZ+iRfbCs5Nt9EasW2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2006-10-05 at 16:38 +1000, Barry Naujok wrote:
+> I have attached a PDF document describing the on-disk layout of the XFS
+> filesystem for review. It's a first draft and some sections are still
+> incomplete. When it is in a suitable state, it will be published on the
+> oss.sgi.com website.
 
-Date:  Fri Oct  6 17:36:19 AEST 2006
-Workarea:  puffy.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  dgc@sgi.com
+Heya Barry, long time no see!
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+Hope things are well.
 
+a few comments and suggestions:
 
-Modid:  master-melb:xfs-cmds:27143a
-xfsprogs/copy/xfs_copy.c - 1.16 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/copy/xfs_copy.c.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-	- Fix up variable argument handling around vfprintf's.
-	  Crashing on x86_64 otherwise and is just plain wrong.
+Introduction
+------------
+ perhaps expand introduction to have a bit about history of XFS and
+explicitly state that this is on-disk format documentation
 
+- state what endian everything is stored in (or if both, later describe
+how)
+
+Common XFS Types
+----------------
+first time mentioning Allocation Groups, write as two words, instead of
+AG
+perhaps describe (explicitly) that all xfs types are xfs_TYPE_t, but may
+be structs.
+also why some are xfs_dBLAH_t (i.e. what d stands for - or the
+hysterical raisins).
+
+Perhaps first it needs explaining of the idea of subvolumes? journal,
+data and realtime?=20
+
+Allocation Groups
+-----------------
+edit (add the and): "Immediately after a mkfs.xfs, the primary AG has
+the following disk layout *AND* the subsequent AGs do not have any
+inodes allocated:"
+
+probably need to have quick 1 sentence explanation of interpretation of
+sector and block.
+
+Superblocks
 -----------
+may want to explicitly state that these structs don't have padding.
+maybe sizeof() as well? so as to know how much "free" space in a block
+with a struct of these? and what this "free" space should be initialized
+to (if anything).
 
-Libxfs/mkfs blocksize fix 
+In list of fields with descriptions, would be also useful to list type
+next to it (along with definition such as "unsigned 64bit int").
 
-Allow the requested sector size to be set for the ioctl setting the
-blocksize on the device.
+Mentions "real time device" when previously was described as sub volume.
 
-Date:  Fri Oct  6 17:50:50 AEST 2006
-Workarea:  puffy.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  dgc@sgi.com
+perhaps explicitly mention of sb_logblocks is/isn't set for external
+logs.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+"The value must be 4 including the following flags:" except there's a
+lot of flags there. perhaps needs to be more precise.
+
+Wouldn't XFS_SB_VERSION_DRV2BIT and XFS_SB_VERSION_EXTFLGBIT not be set
+on really really really old file systems? Can't you also disable
+unwritten extents with an mkfs option, or am i just dreaming (err...
+nightmaring :) ?
+
+Would be good to state if sb_inodesize can be bigger than sb_blocksize
+and if so, what the value of sb_inopblock would be - or if in this case
+the FS is not valid.
+
+encoding of sb_fname, or if it's just a bunch of bytes and we don't
+care.
+
+shouldn't log2 have the 2 as subscript not super?
+
+for sb_logsectlog and sb_logsectsize, what should be values if internal
+log?
+
+AG Free List
+------------
+May need to more explictly state that the free list is always full, and
+in what situations it isn't, and how that's represented on disk.
 
 
-Modid:  master-melb:xfs-cmds:27144a
-xfsprogs/VERSION - 1.164 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.164&r2=text&tr2=1.163&f=h
-	- bump
+looks like a good start though!
 
-xfsprogs/doc/CHANGES - 1.222 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.222&r2=text&tr2=1.221&f=h
-	- Add blocksize libxfs changes and xfs_copy changes for this version.
+(look forward to reading the journaling part especilaly)
+--=20
+Stewart Smith (stewart@flamingspork.com)
+http://www.flamingspork.com/
 
-xfsprogs/mkfs/xfs_mkfs.c - 1.78 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c.diff?r1=text&tr1=1.78&r2=text&tr2=1.77&f=h
-	- Pass on the mkfs -s option size to libxfs.
 
-xfsprogs/libxfs/init.c - 1.51 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/init.c.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
-	- Pass in a given blksize to the platform_set_blocksize() instead of always
-	  512 bytes.
+--=-LnuZ+iRfbCs5Nt9EasW2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-xfsprogs/libxfs/init.h - 1.12 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/init.h.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
-	- Add fatal param to proto.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
 
-xfsprogs/libxfs/linux.c - 1.16 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/linux.c.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-	- Change platform_set_blocksize to return an error and
-	  to print either an error msg or warning msg depending on fatal param.
+iD8DBQBFJjTEKglWCUL+FDoRAvXLAJ9X2oP+TonTzR9/dpCzWeoU4tq93gCdHWIN
+bNSMKwgpFpvaRueznO8EM9A=
+=2A8j
+-----END PGP SIGNATURE-----
 
-xfsprogs/libxfs/darwin.c - 1.12 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/darwin.c.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
-	- handle extra fatal param
-
-xfsprogs/libxfs/irix.c - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/irix.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-	- Add fatal param to proto.
-
-xfsprogs/libxfs/freebsd.c - 1.15 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/freebsd.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
-	- handle extra fatal param
+--=-LnuZ+iRfbCs5Nt9EasW2--
