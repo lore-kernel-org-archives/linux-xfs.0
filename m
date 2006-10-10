@@ -1,72 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Oct 2006 19:16:22 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Oct 2006 19:21:56 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9A2GJaG005711
-	for <xfs@oss.sgi.com>; Mon, 9 Oct 2006 19:16:19 -0700
-Received: from relay04.roc.ny.frontiernet.net (relay04.roc.ny.frontiernet.net [66.133.182.167])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9136E47ED70
-	for <xfs@oss.sgi.com>; Mon,  9 Oct 2006 19:15:36 -0700 (PDT)
-Message-ID: <452B0240.60203@xfs.org>
-Date: Mon, 09 Oct 2006 21:15:28 -0500
-From: Steve Lord <lord@xfs.org>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9A2LraG006398
+	for <xfs@oss.sgi.com>; Mon, 9 Oct 2006 19:21:54 -0700
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0826648DCA4
+	for <xfs@oss.sgi.com>; Mon,  9 Oct 2006 19:21:12 -0700 (PDT)
+Message-ID: <452B0396.8060506@sandeen.net>
+Date: Mon, 09 Oct 2006 21:21:10 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Directories > 2GB
-References: <20061004165655.GD22010@schatzie.adilger.int> <452AC4BE.6090905@xfs.org> <20061010015512.GQ11034@melbourne.sgi.com>
-In-Reply-To: <20061010015512.GQ11034@melbourne.sgi.com>
+Subject: Re: xfs vs. lockdep
+References: <452A8DE2.4000608@sandeen.net> <20061010004726.GO11034@melbourne.sgi.com> <C013892BDA68824F76A0474A@boing.melbourne.sgi.com>
+In-Reply-To: <C013892BDA68824F76A0474A@boing.melbourne.sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-Hi Dave,
+Timothy Shimmin wrote:
+>> Hence by the time we have the lock here in xfs_ireclaim we have 
+>> guaranteed
+>> that there are no other outstanding references and no new references
+>> can occur. Therefore it should be safe to drop the lock before destroying
+>> it.
+>>
+> Yeah, there really seems like something would be wrong if you can't
+> unlock it before destroying it.
 
-My recollection is that it used to default to on, it was disabled
-because it needs to map the buffer into a single contiguous chunk
-of kernel memory. This was placing a lot of pressure on the memory
-remapping code, so we made it not default to on as reworking the
-code to deal with non contig memory was looking like a major
-effort.
+I thought so too; if anybody else might catch it post-unlock pre-free, they're 
+in for a big surprise anyway :)
 
-Steve
+> I would have thought you'd need to guarantee that you are the only
+> one with access to it before destroying it otherwise there'd be problems :)
+> (Which as you say we do)
 
+right.
 
-David Chinner wrote:
-> On Mon, Oct 09, 2006 at 04:53:02PM -0500, Steve Lord wrote:
->> You might want to think about keeping the directory a little
->> more contiguous than individual disk blocks. XFS does have
->> code in it to allocate the directory in chunks larger than
->> a single file system block. It does not get used on linux
->> because the code was written under the assumption you can
->> see the whole chunk as a single piece of memory which does not
->> work to well in the linux kernel.
-> 
-> This code is enabled and seems to work in Linux. I don't know if it
-> passes xfsqa  so I don't know how reliable this feature is. TO check
-> it all I did was run a quick test on a x86_64 kernel (4k page
-> size) using 16k directory blocks (4 pages):
+> This one rings a bell. I seem to recall multiple places where we destroy
+> without releasing the lock first.
+> And I vaguely remember Nathan mentioning that this was causing grief
+> for lockdep:)
 
 
+Ok, cool.  Want a formal patch or you guys want to just free it up...
 
-> 
-> # mkfs.xfs -f -n size=16384 /dev/ubd/1
-> .....
-> # xfs_db -r -c "sb 0" -c "p dirblklog" /dev/ubd/1
-> dirblklog = 2
-> # mount /dev/ubd/1 /mnt/xfs
-> # for i in `seq 0 1 100000`; do touch fred.$i; done
-> # umount /mnt/xfs
-> # mount /mnt/xfs
-> # ls /mnt/xfs |wc -l
-> 100000
-> # rm -rf /mnt/xfs/*
-> # ls /mnt/xfs |wc -l
-> 0
-> # umount /mnt/xfs
-> #
-> 
-> Cheers,
-> 
-> Dave.
+         /*
+          * Free all memory associated with the inode.
+          */
++       xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+         xfs_idestroy(ip);
+
+Thanks,
+
+-Eric
