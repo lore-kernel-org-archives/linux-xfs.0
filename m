@@ -1,39 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Oct 2006 03:00:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9BA09aG012885
-	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 03:00:11 -0700
-Date: Wed, 11 Oct 2006 19:59:14 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: LVM and XFS cannot set blocksize on block device
-Message-ID: <2C085E259B9DC6D3BAB2BCB2@boing.melbourne.sgi.com>
-In-Reply-To: <4526BE61.8020305@tulane.edu>
-References: <45185424.2030707@tulane.edu>
- <20060926001737.GA10224@tuatara.stupidest.org> <45193204.3030500@tulane.edu>
- <20060926224053.GA31542@tuatara.stupidest.org> <451A669D.9020503@agami.com>
- <452212CB.60103@sgi.com> <4526BE61.8020305@tulane.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Oct 2006 07:16:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9BEGXaG008473
+	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 07:16:33 -0700
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C73ED18D6AD
+	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 07:15:50 -0700 (PDT)
+Message-ID: <452CF770.5050902@sandeen.net>
+Date: Wed, 11 Oct 2006 08:53:52 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: Software raid 5 with XFS causing strange lockup problems
+References: <acd894d40610102307n7fd07108u67d1b1015eeeb594@mail.gmail.com>
+In-Reply-To: <acd894d40610102307n7fd07108u67d1b1015eeeb594@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Rene Salmon <rsalmon@tulane.edu>
-Cc: Shailendra Tripathi <stripathi@agami.com>, Chris Wedgwood <cw@f00f.org>, xfs@oss.sgi.com
+To: Ian Williamson <notian@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi Rene,
+Ian Williamson wrote:
+> I am running XFS on a software raid 5. I am doing this with a PCI
+> controller with 4 SATA drives attached to it.
+> 
+> When I play my music over the network through Samba from the raid
+> volume my audio client will often loose the connection. This isn't
+> remediated until I restart the machine with the raid controller or
+> wait for an unknown amount of time. Either way, the problem still
+> persists.
+> 
+> Initially I though that this was Samba's fault, but I think it may be
+> xfs related due to what was in /var/log/messages:
+> 
+> Oct  9 22:37:33 ionlinux kernel: [105657.982701] Modules linked in:
+> serio_raw i2c_nforce2 pcspkr forcedeth r8169 nvidia_agp agpgart
+> i2c_core psmouse sg evdev xfs dm_mod sd_mod generic sata_nv ide_disk
+> ehci_hcd ide_cd cdrom sata_sil ohci_hcd usbcore libata scsi_mod
+> ide_generic processor
+> Oct  9 22:37:33 ionlinux kernel: [105657.982985] EIP:
+> 0060:[<f8a1353e>]    Not tainted VLI
+> Oct  9 22:37:33 ionlinux kernel: [105657.982986] EFLAGS: 00010246   
+> (2.6.18 #1)
 
---On 6 October 2006 3:36:49 PM -0500 Rene Salmon <rsalmon@tulane.edu> wrote:
-> We are currently running SLES 10 on this box.  I have called IBM and they
-> submitted a bug report to Novell and LTC Bugzilla 28003.
-Ok.
+It looks like you've edited this a bit too much, what came before this in the logs?
 
->
-> Is this all we need to do to get the patch into maybe SLES 10 SP1?
->
-We will have an xfsprogs update (which will include this fix
-amongst others) for sles10 sp1.
+Are you running on 4k stacks, out of curiosity?
 
-Cheers,
-Tim.
+-Eric
