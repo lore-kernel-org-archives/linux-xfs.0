@@ -1,61 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Oct 2006 13:34:46 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Oct 2006 14:19:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9BKYYaG018660
-	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 13:34:36 -0700
-Received: from mailer.gwdg.de (mailer.gwdg.de [134.76.10.26])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD0B84913BC
-	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 12:32:17 -0700 (PDT)
-Date: Wed, 11 Oct 2006 21:30:27 +0200 (MEST)
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: GRIO in Linux XFS?
-In-Reply-To: <CAEAF2308EEED149B26C2C164DFB20F4DDE78B@ALPMLVEM06.e2k.ad.ge.com>
-Message-ID: <Pine.LNX.4.61.0610112129060.9822@yvahk01.tjqt.qr>
-References: <CAEAF2308EEED149B26C2C164DFB20F4DDE78B@ALPMLVEM06.e2k.ad.ge.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9BLJ7aG022501
+	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 14:19:07 -0700
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C328848FA3C
+	for <xfs@oss.sgi.com>; Wed, 11 Oct 2006 14:18:24 -0700 (PDT)
+Message-ID: <452D5F49.70808@sandeen.net>
+Date: Wed, 11 Oct 2006 16:16:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: GRIO in Linux XFS?
+References: <CAEAF2308EEED149B26C2C164DFB20F4DDE78B@ALPMLVEM06.e2k.ad.ge.com> <Pine.LNX.4.61.0610112129060.9822@yvahk01.tjqt.qr>
+In-Reply-To: <Pine.LNX.4.61.0610112129060.9822@yvahk01.tjqt.qr>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Phetteplace, Thad (GE Healthcare, consultant)" <Thad.Phetteplace@ge.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: "Phetteplace, Thad (GE Healthcare, consultant)" <Thad.Phetteplace@ge.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
->
->what is the status of GRIO support in the Linux port of XFS?
-
-Called realtime volume.
-(http://en.wikipedia.org/wiki/XFS section 2.11)
-
->Also, if the answer is 'non existent', what is the recommended
->alternative?  I've got an application that needs to stream a
->huge amount of data to the harddrive without dropping any and
->without blocking the sender.  We will be pushing the limits
->of our high-end raid striped disks.  This seems the exactly
->the type of thing GRIO was made for, but last I heard it was
->missing from Linux XFS with no plans to add it.  Any change
->in that?  I know I can get almost there with I/O priorities
->and the RT features in 2.6... but its not quite the same
->thing.
+Jan Engelhardt wrote:
+>> what is the status of GRIO support in the Linux port of XFS?
 > 
->Apologies if this has been beat to death here or elsewhere...
->I've googled the heck out of this and rummaged around in the
->list archives (as much as this fscking corporate firewall will
->let me) with little result.  I'll gladly RTFM if someone can
->point me at the right one.  :-/
->
->Feel free to CC me on replies, as I read the LKML in digest
->format.
->
->Thanks,
->
->Thad Phetteplace
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
->
+> Called realtime volume.
+> (http://en.wikipedia.org/wiki/XFS section 2.11)
 
-	-`J'
--- 
+Well, not really.  realtime was a part of the old griov1 setup on Irix,
+but realtime != GRIO.
+
+-Eric
