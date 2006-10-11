@@ -1,51 +1,149 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Oct 2006 16:32:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Oct 2006 18:11:42 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9ANWJaG017607
-	for <xfs@oss.sgi.com>; Tue, 10 Oct 2006 16:32:21 -0700
-Date: Wed, 11 Oct 2006 09:31:24 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Directories > 2GB
-Message-ID: <20061010233124.GX11034@melbourne.sgi.com>
-References: <20061004165655.GD22010@schatzie.adilger.int> <452AC4BE.6090905@xfs.org> <20061010015512.GQ11034@melbourne.sgi.com> <452B0240.60203@xfs.org> <20061010091904.GA395@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061010091904.GA395@infradead.org>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9B1BWaG024588
+	for <xfs@oss.sgi.com>; Tue, 10 Oct 2006 18:11:33 -0700
+Message-ID: <452C44A2.7000907@sgi.com>
+Date: Wed, 11 Oct 2006 11:10:58 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfs_bmap_add_extent_delay_real: Uninited r[3] corrupts startoff
+References: <4529F8A8.6080900@agami.com>
+In-Reply-To: <4529F8A8.6080900@agami.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Steve Lord <lord@xfs.org>, David Chinner <dgc@sgi.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Shailendra Tripathi <stripathi@agami.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>, xfs-dev@sgi.com
 
-On Tue, Oct 10, 2006 at 10:19:04AM +0100, Christoph Hellwig wrote:
-> On Mon, Oct 09, 2006 at 09:15:28PM -0500, Steve Lord wrote:
-> > Hi Dave,
-> > 
-> > My recollection is that it used to default to on, it was disabled
-> > because it needs to map the buffer into a single contiguous chunk
-> > of kernel memory. This was placing a lot of pressure on the memory
-> > remapping code, so we made it not default to on as reworking the
-> > code to deal with non contig memory was looking like a major
-> > effort.
-> 
-> Exactly.  The code works but tends to go OOM pretty fast at least
-> when the dir blocksize code is bigger than the page size.  I should
-> give the code a spin on my ppc box with 64k pages if it works better
-> there.
+Hi Shailendra,
 
-The pagebuf code doesn't use high-order allocations anymore; it uses
-scatter lists and remapping to allow physically discontiguous pages
-in a multi-page buffer. That is, the pages are sourced via
-find_or_create_page() from the address space of the backing device,
-and then mapped via vmap() to provide a virtually contigous mapping
-of the multi-page buffer.
+Shailendra Tripathi wrote:
+> Hi,
+>     It appears that uninitialized r[3] in 
+> xfs_bmap_add_extent_delay_real can potentially corrupt the startoff 
+> for a particular case.
+>
+> This sequence is below:
+>
+>        xfs_bmap_add_extent_delay_real (
+>        ...
+>        xfs_bmbt_irec_t         r[3];   /* neighbor extent entries */
+>
+> case 0:
+>          /*
+>           * Filling in the middle part of a previous delayed allocation.
+>           * Contiguity is impossible here.
+>           * This case is avoided almost all the time.
+>           */
+> temp = new->br_startoff - PREV.br_startoff;
+> xfs_bmbt_set_blockcount(ep, temp);
+> r[0] = *new;
+> r[1].br_startoff = new_endoff;
+> temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
+> r[1].br_blockcount = temp2;
+> xfs_bmap_insert_exlist(ip, idx + 1, 2, &r[0], XFS_DATA_FORK);
+> ip->i_df.if_lastex = idx + 1;
+> ip->i_d.di_nextents++;
+>
+> Look at extent r[1]. It does not set br_startblock. That is, it is any 
+> random value. Now, look at the xfs_bmbt_set_all. Though, it sets the 
+> blockcount later, the startoff does not get changed.
+>
+> #if XFS_BIG_BLKNOS
+>         ASSERT((s->br_startblock & XFS_MASK64HI(12)) == 0);
+>         r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
+>                  ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
+>                  ((xfs_bmbt_rec_base_t)s->br_startblock >> 43);
+> Top 21 bits are taken as it is. However, only 9 bit should be taken. 
+> So, for random values, it corrupts the startoff which from 9-63 bits.
+ From the code inspection I agree with you that br_startblock doesn't 
+appear
+to be initialized in this scenario. Otherwise I think the code looks good.
+If the br_startblock is initialized  it should be a value that fits
+in 52 bits out of 64 (this is what the ASSERT is for) and the top 12 
+bits will be 0.
+The r->l0 gets the top 21 bits of br_startblock, the most significant 12 
+bits of
+which are 0 and least significant 9 could be non 0. The r->l1 gets the
+rest 43 (= 52-9 = 64-21) bits of br_startblock.
 
-So I don't think this problem exists anymore...
+I will open a bug report for the uninitialized br_startblock.
 
-Cheers,
+Thank you for finding this problem.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Regards,
+Vlad
+
+>
+>         r->l1 = ((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
+>                  ((xfs_bmbt_rec_base_t)s->br_blockcount &
+>                  (xfs_bmbt_rec_base_t)XFS_MASK64LO(21));
+>
+> I have attached a small program which does the same thing as it is 
+> being done here. I would appreciate if someone can verify that 
+> assertion is correct.
+>
+>
+> Regards,
+> Shailendra
+> ------------------------------------------------------------------------
+>
+> #include <stdio.h>
+> typedef unsigned long __uint64_t;
+> typedef struct xfs_bmbt_rec_64
+> {
+>         __uint64_t              l0, l1;
+> } xfs_bmbt_rec_64_t;
+>
+> typedef __uint64_t      xfs_bmbt_rec_base_t;    
+> typedef xfs_bmbt_rec_64_t xfs_bmbt_rec_t, xfs_bmdr_rec_t;
+>
+> typedef enum {
+>        XFS_EXT_NORM, XFS_EXT_UNWRITTEN,
+>        XFS_EXT_DMAPI_OFFLINE
+> } xfs_exntst_t;
+>
+> typedef struct xfs_bmbt_irec
+> {
+> 	__uint64_t   br_startoff;    /* starting file offset */
+> 	__uint64_t   br_startblock;  /* starting block number */
+> 	__uint64_t   br_blockcount;  /* number of blocks */
+> 	xfs_exntst_t    br_state;       /* extent state */
+> } xfs_bmbt_irec_t;
+>
+> #define XFS_MASK64LO(n)         (((__uint64_t)1 << (n)) - 1)
+> #define XFS_MASK64HI(n)         ((__uint64_t)-1 << (64 - (n)))
+>
+> int main(void) 
+> {
+> 	xfs_bmbt_irec_t s;
+> 	xfs_bmbt_rec_t  r;
+> 	int extent_flag;
+>
+> 	s.br_startoff = 0;
+> 	s.br_blockcount = 5;
+> 	s.br_startblock = 0xfffffffffffffff0;
+> 	extent_flag = (s.br_state == XFS_EXT_NORM) ? 0 : 1;
+>
+> 	printf("blockcount = 0x%llx\n", s.br_startblock);
+> 	r.l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
+> 	          ((xfs_bmbt_rec_base_t)s.br_startoff << 9) |
+> 	          ((xfs_bmbt_rec_base_t)s.br_startblock >> 43);
+> 	r.l1 = ((xfs_bmbt_rec_base_t)s.br_startblock << 21) |
+> 	         ((xfs_bmbt_rec_base_t)s.br_blockcount &
+> 	         (xfs_bmbt_rec_base_t)XFS_MASK64LO(21));
+>
+> 	printf("l0 = 0x%llx l1 = 0x%llx\n", r.l0, r.l1);
+>
+> 	r.l0 = (r.l0 & (xfs_bmbt_rec_base_t)XFS_MASK64HI(55)) |
+> 	        (xfs_bmbt_rec_base_t)((__uint64_t)100 >> 43);
+> 	r.l1 = (r.l1 & (xfs_bmbt_rec_base_t)XFS_MASK64LO(21)) |
+> 	        (xfs_bmbt_rec_base_t)((__uint64_t)100 << 21);
+>
+> 	printf("l0 = 0x%llx l1 = 0x%llx\n", r.l0, r.l1);
+> 	return 0;
+> }
+>   
