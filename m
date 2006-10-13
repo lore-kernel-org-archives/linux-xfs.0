@@ -1,185 +1,124 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Oct 2006 17:57:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9D0vPaG020554
-	for <xfs@oss.sgi.com>; Thu, 12 Oct 2006 17:57:26 -0700
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0F149B69D
-	for <xfs@oss.sgi.com>; Thu, 12 Oct 2006 17:56:42 -0700 (PDT)
-Subject: [PATCH] Remove DIO_OWN_LOCKING
-From: Russell Cattelan <cattelan@thebarn.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T+bzAtvc/vPuZMwJaZu2"
-Date: Thu, 12 Oct 2006 19:56:38 -0500
-Message-Id: <1160700998.5723.65.camel@xenon.msp.redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Oct 2006 18:48:00 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9D1llaG025172
+	for <xfs@oss.sgi.com>; Thu, 12 Oct 2006 18:47:48 -0700
+Date: Fri, 13 Oct 2006 11:46:51 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [patch] Fix xfs_iunpin() sets I_DIRTY_SYNC after clear_inode().
+Message-ID: <20061013014651.GC19345@melbourne.sgi.com>
+References: <45237CCE.4010007@ah.jp.nec.com> <20061006032617.GC11034@melbourne.sgi.com> <20061011064357.GN19345@melbourne.sgi.com> <452E32FF.8010109@ah.jp.nec.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <452E32FF.8010109@ah.jp.nec.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
+To: Takenori Nagano <t-nagano@ah.jp.nec.com>
 Cc: xfs@oss.sgi.com
 
---=-T+bzAtvc/vPuZMwJaZu2
-Content-Type: multipart/mixed; boundary="=-U0Z3Kp5ZGershjKcRFxU"
+On Thu, Oct 12, 2006 at 09:20:15PM +0900, Takenori Nagano wrote:
+> Hi David,
+> 
+> I tried those patches, but they caused degradation.
+> These are results of "vmstat 10" while my test program was running.
+> 
+> - Before applying those patches:
+> procs -----------memory---------- ---swap-- -----io---- -system-- -----cpu------
+>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+>  7  0      0 2768240  37632 210512    0    0     7 43367  268  676  1 49 50  0  0
+>  9  0      0 2716352  37632 210672    0    0     0 362864 2154 47915  1 51 48  0  0
+>  9  0      0 2663136  37664 210048    0    0     0 361745 2154 48258  1 50 49  0  0
+> 10  0      0 2610688  37664 211184    0    0     0 360908 2152 48068  1 51 49  0  0
+>  9  0      0 2557904  37680 210512    0    0     0 360254 2154 49036  1 51 48  0  0
+> 10  0      0 2504832  37696 210304    0    0     0 362525 2153 48460  1 50 49  0  0
+> 
+> 
+> - After applying those patches:
+> procs -----------memory---------- ---swap-- -----io---- -system-- -----cpu------
+>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+>  0  0      0 15584608  21776 153072    0    0    69   403  256  394  1  3 95  1  0
+>  0  0      0 15586032  21824 153024    0    0     1  2319 2161 2944  0  2 98  0  0
+>  1  0      0 15585920  21824 153104    0    0     0  2342 2161 2951  0  2 98  0  0
+>  0  0      0 15585696  21824 152976    0    0     0  2364 2160 2978  0  2 98  0  0
+>  1  0      0 15585360  21824 153168    0    0     0  2380 2161 3027  0  2 98  0  0
+>  0  0      0 15585248  21824 152976    0    0     0  2348 2161 2983  0  2 98  0  0
+> 
+> 
+> Block I/O performance degradation was very serious.
 
---=-U0Z3Kp5ZGershjKcRFxU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That was unexpected. :/
 
-While trying to fix up GFS2 directio and reading through the code
-involving the various lock flags I discovered the DIO_OWN_LOCKING=20
-flag is no longer used.
-=20
-XFS recently changed it xfs_vm_direct_IO function to call
-blockdev_direct_IO_no_locking for reads and
-blockdev_direct_IO_own_locking
-for writes. But DIO_OWN_LOCKING is only used in the direct IO read case
-so effectively the flag is never checked an therefore can probably be
-removed.
+> Now, I am trying to ease the degradation.
+> Do you have any idea for resolving the degradation?
 
---=20
-Russell Cattelan <cattelan@thebarn.com>
+Did you see a degradation with your original fix? I suspect
+not.
 
---=-U0Z3Kp5ZGershjKcRFxU
-Content-Disposition: attachment; filename=wack_own_locking
-Content-Type: text/x-patch; name=wack_own_locking; charset=UTF-8
-Content-Transfer-Encoding: base64
+I think that the lsn based flush is tripping over a sync
+transaction "optimisation" - if the previous log buffer needs
+syncing or is currently being synced, then we don't try to flush the
+active log buffer straight away - we wait for the previous log
+buffer to complete it's I/O in the hope that we get more
+transactions into the current log buffer.
 
-SW5kZXg6IHdvcmtfZ2ZzL2ZzL2RpcmVjdC1pby5jDQo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09DQotLS0gd29ya19nZnMub3JpZy9mcy9kaXJlY3QtaW8uYwky
-MDA2LTEwLTEyIDE4OjAxOjA5LjAwMDAwMDAwMCAtMDUwMA0KKysrIHdvcmtf
-Z2ZzL2ZzL2RpcmVjdC1pby5jCTIwMDYtMTAtMTIgMTk6NDk6MjYuMzQ4ODQz
-OTI3IC0wNTAwDQpAQCAtNjcsOSArNjcsNyBAQCBpbnQgZGlvX2RlYnVnID0g
-MHgwOw0KICAqIGxvY2tfdHlwZSBpcyBESU9fTE9DS0lORyBmb3IgcmVndWxh
-ciBmaWxlcyBvbiBkaXJlY3QtSU8tbmFpdmUgZmlsZXN5c3RlbXMuDQogICog
-VGhpcyBkZXRlcm1pbmVzIHdoZXRoZXIgd2UgbmVlZCB0byBkbyB0aGUgZmFu
-Y3kgbG9ja2luZyB3aGljaCBwcmV2ZW50cw0KICAqIGRpcmVjdC1JTyBmcm9t
-IGJlaW5nIGFibGUgdG8gcmVhZCB1bmluaXRpYWxpc2VkIGRpc2sgYmxvY2tz
-LiAgSWYgaXRzIHplcm8NCi0gKiAoYmxvY2tkZXYpIHRoaXMgbG9ja2luZyBp
-cyBub3QgZG9uZSwgYW5kIGlmIGl0IGlzIERJT19PV05fTE9DS0lORyBpX211
-dGV4IGlzDQotICogbm90IGhlbGQgZm9yIHRoZSBlbnRpcmUgZGlyZWN0IHdy
-aXRlICh0YWtlbiBicmllZmx5LCBpbml0aWFsbHksIGR1cmluZyBhDQotICog
-ZGlyZWN0IHJlYWQgdGhvdWdoLCBidXQgaXRzIG5ldmVyIGhlbGQgZm9yIHRo
-ZSBkdXJhdGlvbiBvZiBhIGRpcmVjdC1JTykuDQorICogKGJsb2NrZGV2KSB0
-aGlzIGxvY2tpbmcgaXMgbm90IGRvbmUuDQogICovDQogDQogc3RydWN0IGRp
-byB7DQpAQCAtMTE3OSwxMiArMTE3Nyw2IEBAIGRpcmVjdF9pb193b3JrZXIo
-aW50IHJ3LCBzdHJ1Y3Qga2lvY2IgKmkNCiAgKiBGb3IgcmVhZHMsIGlfbXV0
-ZXggaXMgbm90IGhlbGQgb24gZW50cnksIGJ1dCBpdCBpcyB0YWtlbiBhbmQg
-ZHJvcHBlZCBiZWZvcmUNCiAgKiByZXR1cm5pbmcuDQogICoNCi0gKiBESU9f
-T1dOX0xPQ0tJTkcgKGZpbGVzeXN0ZW0gcHJvdmlkZXMgc3luY2hyb25pc2F0
-aW9uIGFuZCBoYW5kbGluZyBvZg0KLSAqCXVuaW5pdGlhbGlzZWQgZGF0YSwg
-YWxsb3dpbmcgcGFyYWxsZWwgZGlyZWN0IHJlYWRlcnMgYW5kIHdyaXRlcnMp
-DQotICogRm9yIHdyaXRlcyB3ZSBhcmUgY2FsbGVkIHdpdGhvdXQgaV9tdXRl
-eCwgcmV0dXJuIHdpdGhvdXQgaXQsIG5ldmVyIHRvdWNoIGl0Lg0KLSAqIEZv
-ciByZWFkcyB3ZSBhcmUgY2FsbGVkIHVuZGVyIGlfbXV0ZXggYW5kIHJldHVy
-biB3aXRoIGlfbXV0ZXggaGVsZCwgZXZlbg0KLSAqIHRob3VnaCBpdCBtYXkg
-YmUgaW50ZXJuYWxseSBkcm9wcGVkLg0KLSAqDQogICogQWRkaXRpb25hbCBp
-X2FsbG9jX3NlbSBsb2NraW5nIHJlcXVpcmVtZW50cyBkZXNjcmliZWQgaW5s
-aW5lIGJlbG93Lg0KICAqLw0KIHNzaXplX3QNCkBAIC0xMjAyLDggKzExOTQs
-NiBAQCBfX2Jsb2NrZGV2X2RpcmVjdF9JTyhpbnQgcncsIHN0cnVjdCBraW9j
-DQogCXNzaXplX3QgcmV0dmFsID0gLUVJTlZBTDsNCiAJbG9mZl90IGVuZCA9
-IG9mZnNldDsNCiAJc3RydWN0IGRpbyAqZGlvOw0KLQlpbnQgcmVsZWFzZV9p
-X211dGV4ID0gMDsNCi0JaW50IGFjcXVpcmVfaV9tdXRleCA9IDA7DQogDQog
-CWlmIChydyAmIFdSSVRFKQ0KIAkJcncgPSBXUklURV9TWU5DOw0KQEAgLTEy
-NDQsMzIgKzEyMzQsMjQgQEAgX19ibG9ja2Rldl9kaXJlY3RfSU8oaW50IHJ3
-LCBzdHJ1Y3Qga2lvYw0KIAkgKiBGb3IgcmVndWxhciBmaWxlcyB1c2luZyBE
-SU9fTE9DS0lORywNCiAJICoJcmVhZGVycyBuZWVkIHRvIGdyYWIgaV9tdXRl
-eCBhbmQgaV9hbGxvY19zZW0NCiAJICoJd3JpdGVycyBuZWVkIHRvIGdyYWIg
-aV9hbGxvY19zZW0gb25seSAoaV9tdXRleCBpcyBhbHJlYWR5IGhlbGQpDQot
-CSAqIEZvciByZWd1bGFyIGZpbGVzIHVzaW5nIERJT19PV05fTE9DS0lORywN
-Ci0JICoJbmVpdGhlciByZWFkZXJzIG5vciB3cml0ZXJzIHRha2UgYW55IGxv
-Y2tzIGhlcmUNCiAJICovDQogCWRpby0+bG9ja190eXBlID0gZGlvX2xvY2tf
-dHlwZTsNCiAJaWYgKGRpb19sb2NrX3R5cGUgIT0gRElPX05PX0xPQ0tJTkcp
-IHsNCiAJCS8qIHdhdGNoIG91dCBmb3IgYSAwIGxlbiBpbyBmcm9tIGEgdHJp
-Y2tzeSBmcyAqLw0KIAkJaWYgKHJ3ID09IFJFQUQgJiYgZW5kID4gb2Zmc2V0
-KSB7DQogCQkJc3RydWN0IGFkZHJlc3Nfc3BhY2UgKm1hcHBpbmc7DQotDQog
-CQkJbWFwcGluZyA9IGlvY2ItPmtpX2ZpbHAtPmZfbWFwcGluZzsNCi0JCQlp
-ZiAoZGlvX2xvY2tfdHlwZSAhPSBESU9fT1dOX0xPQ0tJTkcpIHsNCi0JCQkJ
-bXV0ZXhfbG9jaygmaW5vZGUtPmlfbXV0ZXgpOw0KLQkJCQlyZWxlYXNlX2lf
-bXV0ZXggPSAxOw0KLQkJCX0NCisNCisJCQltdXRleF9sb2NrKCZpbm9kZS0+
-aV9tdXRleCk7DQogDQogCQkJcmV0dmFsID0gZmlsZW1hcF93cml0ZV9hbmRf
-d2FpdF9yYW5nZShtYXBwaW5nLCBvZmZzZXQsDQogCQkJCQkJCSAgICAgIGVu
-ZCAtIDEpOw0KIAkJCWlmIChyZXR2YWwpIHsNCisJCQkJbXV0ZXhfdW5sb2Nr
-KCZpbm9kZS0+aV9tdXRleCk7DQogCQkJCWtmcmVlKGRpbyk7DQogCQkJCWdv
-dG8gb3V0Ow0KIAkJCX0NCiANCi0JCQlpZiAoZGlvX2xvY2tfdHlwZSA9PSBE
-SU9fT1dOX0xPQ0tJTkcpIHsNCi0JCQkJbXV0ZXhfdW5sb2NrKCZpbm9kZS0+
-aV9tdXRleCk7DQotCQkJCWFjcXVpcmVfaV9tdXRleCA9IDE7DQotCQkJfQ0K
-IAkJfQ0KIA0KIAkJaWYgKGRpb19sb2NrX3R5cGUgPT0gRElPX0xPQ0tJTkcp
-DQpAQCAtMTI4OSwxNCArMTI3MSw3IEBAIF9fYmxvY2tkZXZfZGlyZWN0X0lP
-KGludCBydywgc3RydWN0IGtpb2MNCiAJcmV0dmFsID0gZGlyZWN0X2lvX3dv
-cmtlcihydywgaW9jYiwgaW5vZGUsIGlvdiwgb2Zmc2V0LA0KIAkJCQlucl9z
-ZWdzLCBibGtiaXRzLCBnZXRfYmxvY2ssIGVuZF9pbywgZGlvKTsNCiANCi0J
-aWYgKHJ3ID09IFJFQUQgJiYgZGlvX2xvY2tfdHlwZSA9PSBESU9fTE9DS0lO
-RykNCi0JCXJlbGVhc2VfaV9tdXRleCA9IDA7DQotDQogb3V0Og0KLQlpZiAo
-cmVsZWFzZV9pX211dGV4KQ0KLQkJbXV0ZXhfdW5sb2NrKCZpbm9kZS0+aV9t
-dXRleCk7DQotCWVsc2UgaWYgKGFjcXVpcmVfaV9tdXRleCkNCi0JCW11dGV4
-X2xvY2soJmlub2RlLT5pX211dGV4KTsNCiAJcmV0dXJuIHJldHZhbDsNCiB9
-DQogRVhQT1JUX1NZTUJPTChfX2Jsb2NrZGV2X2RpcmVjdF9JTyk7DQpJbmRl
-eDogd29ya19nZnMvZnMveGZzL2xpbnV4LTIuNi94ZnNfYW9wcy5jDQo9PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09DQotLS0gd29ya19nZnMub3JpZy9mcy94ZnMv
-bGludXgtMi42L3hmc19hb3BzLmMJMjAwNi0xMC0wMiAxMjozMTowMS4wMDAw
-MDAwMDAgLTA1MDANCisrKyB3b3JrX2dmcy9mcy94ZnMvbGludXgtMi42L3hm
-c19hb3BzLmMJMjAwNi0xMC0xMiAxOToxMDo1MS4wNjgwNjY4NTcgLTA1MDAN
-CkBAIC0xMzg5LDE5ICsxMzg5LDExIEBAIHhmc192bV9kaXJlY3RfSU8oDQog
-DQogCWlvY2ItPnByaXZhdGUgPSB4ZnNfYWxsb2NfaW9lbmQoaW5vZGUsIElP
-TUFQX1VOV1JJVFRFTik7DQogDQotCWlmIChydyA9PSBXUklURSkgew0KLQkJ
-cmV0ID0gYmxvY2tkZXZfZGlyZWN0X0lPX293bl9sb2NraW5nKHJ3LCBpb2Ni
-LCBpbm9kZSwNCi0JCQlpb21hcC5pb21hcF90YXJnZXQtPmJ0X2JkZXYsDQot
-CQkJaW92LCBvZmZzZXQsIG5yX3NlZ3MsDQotCQkJeGZzX2dldF9ibG9ja3Nf
-ZGlyZWN0LA0KLQkJCXhmc19lbmRfaW9fZGlyZWN0KTsNCi0JfSBlbHNlIHsN
-Ci0JCXJldCA9IGJsb2NrZGV2X2RpcmVjdF9JT19ub19sb2NraW5nKHJ3LCBp
-b2NiLCBpbm9kZSwNCi0JCQlpb21hcC5pb21hcF90YXJnZXQtPmJ0X2JkZXYs
-DQotCQkJaW92LCBvZmZzZXQsIG5yX3NlZ3MsDQotCQkJeGZzX2dldF9ibG9j
-a3NfZGlyZWN0LA0KLQkJCXhmc19lbmRfaW9fZGlyZWN0KTsNCi0JfQ0KKwly
-ZXQgPSBibG9ja2Rldl9kaXJlY3RfSU9fbm9fbG9ja2luZyhydywgaW9jYiwg
-aW5vZGUsDQorCQkJCQkgICAgaW9tYXAuaW9tYXBfdGFyZ2V0LT5idF9iZGV2
-LA0KKwkJCQkJICAgIGlvdiwgb2Zmc2V0LCBucl9zZWdzLA0KKwkJCQkJICAg
-IHhmc19nZXRfYmxvY2tzX2RpcmVjdCwNCisJCQkJCSAgICB4ZnNfZW5kX2lv
-X2RpcmVjdCk7DQogDQogCWlmICh1bmxpa2VseShyZXQgPD0gMCAmJiBpb2Ni
-LT5wcml2YXRlKSkNCiAJCXhmc19kZXN0cm95X2lvZW5kKGlvY2ItPnByaXZh
-dGUpOw0KSW5kZXg6IHdvcmtfZ2ZzL2luY2x1ZGUvbGludXgvZnMuaA0KPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQ0KLS0tIHdvcmtfZ2ZzLm9yaWcvaW5jbHVk
-ZS9saW51eC9mcy5oCTIwMDYtMTAtMDYgMTU6NDI6NDQuMDAwMDAwMDAwIC0w
-NTAwDQorKysgd29ya19nZnMvaW5jbHVkZS9saW51eC9mcy5oCTIwMDYtMTAt
-MTIgMTk6NDg6MzEuNDE2MTYwNDEyIC0wNTAwDQpAQCAtMTcyMyw3ICsxNzIz
-LDYgQEAgc3NpemVfdCBfX2Jsb2NrZGV2X2RpcmVjdF9JTyhpbnQgcncsIHN0
-cg0KIGVudW0gew0KIAlESU9fTE9DS0lORyA9IDEsIC8qIG5lZWQgbG9ja2lu
-ZyBiZXR3ZWVuIGJ1ZmZlcmVkIGFuZCBkaXJlY3QgYWNjZXNzICovDQogCURJ
-T19OT19MT0NLSU5HLCAgLyogYmRldjsgbm8gbG9ja2luZyBhdCBhbGwgYmV0
-d2VlbiBidWZmZXJlZC9kaXJlY3QgKi8NCi0JRElPX09XTl9MT0NLSU5HLCAv
-KiBmaWxlc3lzdGVtIGxvY2tzIGJ1ZmZlcmVkIGFuZCBkaXJlY3QgaW50ZXJu
-YWxseSAqLw0KIH07DQogDQogc3RhdGljIGlubGluZSBzc2l6ZV90IGJsb2Nr
-ZGV2X2RpcmVjdF9JTyhpbnQgcncsIHN0cnVjdCBraW9jYiAqaW9jYiwNCkBA
-IC0xNzQ0LDE1ICsxNzQzLDYgQEAgc3RhdGljIGlubGluZSBzc2l6ZV90IGJs
-b2NrZGV2X2RpcmVjdF9JTw0KIAkJCQlucl9zZWdzLCBnZXRfYmxvY2ssIGVu
-ZF9pbywgRElPX05PX0xPQ0tJTkcpOw0KIH0NCiANCi1zdGF0aWMgaW5saW5l
-IHNzaXplX3QgYmxvY2tkZXZfZGlyZWN0X0lPX293bl9sb2NraW5nKGludCBy
-dywgc3RydWN0IGtpb2NiICppb2NiLA0KLQlzdHJ1Y3QgaW5vZGUgKmlub2Rl
-LCBzdHJ1Y3QgYmxvY2tfZGV2aWNlICpiZGV2LCBjb25zdCBzdHJ1Y3QgaW92
-ZWMgKmlvdiwNCi0JbG9mZl90IG9mZnNldCwgdW5zaWduZWQgbG9uZyBucl9z
-ZWdzLCBnZXRfYmxvY2tfdCBnZXRfYmxvY2ssDQotCWRpb19pb2RvbmVfdCBl
-bmRfaW8pDQotew0KLQlyZXR1cm4gX19ibG9ja2Rldl9kaXJlY3RfSU8ocncs
-IGlvY2IsIGlub2RlLCBiZGV2LCBpb3YsIG9mZnNldCwNCi0JCQkJbnJfc2Vn
-cywgZ2V0X2Jsb2NrLCBlbmRfaW8sIERJT19PV05fTE9DS0lORyk7DQotfQ0K
-LQ0KIGV4dGVybiBjb25zdCBzdHJ1Y3QgZmlsZV9vcGVyYXRpb25zIGdlbmVy
-aWNfcm9fZm9wczsNCiANCiAjZGVmaW5lIHNwZWNpYWxfZmlsZShtKSAoU19J
-U0NIUihtKXx8U19JU0JMSyhtKXx8U19JU0ZJRk8obSl8fFNfSVNTT0NLKG0p
-KQ0K
+IOWs, we introduce a pipeline bubble where we don't force the
+current log buffer until the I/O on the previous log buffer has
+completed and this effectively serialises these log forces. I
+suspect that this is not needed anymore, but I'll look
+inot this separately.
 
---=-U0Z3Kp5ZGershjKcRFxU--
+When flushing the entire log, (using 0 as the lsn as your
+original patch did), we simply close off the current buffer
+and flush it out, waiting on it completion if we need a sync
+flush. IOWs, no pipeline bubble is introduced and we continue
+to issue concurrent log I/O.
 
---=-T+bzAtvc/vPuZMwJaZu2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Can you test this patch (on top of the last patch I sent)
+and see if it fixes the degradation?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Regards,
 
-iD8DBQBFLuRGNRmM+OaGhBgRAreLAJ9D+RFFmZ7PqgN/eb/w6xpzJWE1ggCfRg4i
-bna5GAFYm6ZNH/e1B9lEhyY=
-=SWcF
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
---=-T+bzAtvc/vPuZMwJaZu2--
+---
+ fs/xfs/xfs_inode.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2006-10-11 17:09:12.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2006-10-13 11:43:38.236562541 +1000
+@@ -2773,26 +2773,16 @@ void
+ xfs_iunpin_wait(
+ 	xfs_inode_t	*ip)
+ {
+-	xfs_inode_log_item_t	*iip;
+-	xfs_lsn_t	lsn;
+-
+ 	ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE | MR_ACCESS));
+ 
+ 	if (atomic_read(&ip->i_pincount) == 0) {
+ 		return;
+ 	}
+ 
+-	iip = ip->i_itemp;
+-	if (iip && iip->ili_last_lsn) {
+-		lsn = iip->ili_last_lsn;
+-	} else {
+-		lsn = (xfs_lsn_t)0;
+-	}
+-
+ 	/*
+ 	 * Give the log a push so we don't wait here too long.
+ 	 */
+-	xfs_log_force(ip->i_mount, lsn, XFS_LOG_FORCE);
++	xfs_log_force(ip->i_mount, 0, XFS_LOG_FORCE);
+ 
+ 	wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 0));
+ }
