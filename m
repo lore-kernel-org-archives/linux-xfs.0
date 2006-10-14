@@ -1,56 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Oct 2006 12:46:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9DJkpaG024288
-	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 12:46:52 -0700
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C41FCD134CA8
-	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 12:46:08 -0700 (PDT)
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k9DJk7LE021019
-	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 15:46:07 -0400
-Received: from pobox-2.corp.redhat.com (pobox-2.corp.redhat.com [10.11.255.15])
-	by int-mx1.corp.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k9DJk7Xi014804
-	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 15:46:07 -0400
-Received: from [10.15.80.10] (neon.msp.redhat.com [10.15.80.10])
-	by pobox-2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id k9DJk7Zr016376
-	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 15:46:07 -0400
-Message-ID: <452FECFE.5050902@sandeen.net>
-Date: Fri, 13 Oct 2006 14:46:06 -0500
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Oct 2006 21:32:48 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9E4WWaG028947
+	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 21:32:33 -0700
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4322E4A361A
+	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 21:31:49 -0700 (PDT)
+Received: from [10.0.0.4] (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id CA8841809E77A
+	for <xfs@oss.sgi.com>; Fri, 13 Oct 2006 23:31:48 -0500 (CDT)
+Message-ID: <45306834.5050008@sandeen.net>
+Date: Fri, 13 Oct 2006 23:31:48 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: corrupted log causes infinite loop at mount
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH 1/2] Make stuff static
+References: <20060929032856.8DA9C18001A5E@sandeen.net>
+In-Reply-To: <20060929032856.8DA9C18001A5E@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-While playing with some filesystem corruption testers, I ran into this.
+sandeen@sandeen.net wrote:
+> Make things static which can be.
+> 
+>  linux-2.4/xfs_vfs.c   |    2 -
+>  linux-2.4/xfs_vfs.h   |    1 
+>  linux-2.4/xfs_vnode.c |    2 -
+>  linux-2.6/xfs_vfs.c   |    2 -
+>  linux-2.6/xfs_vfs.h   |    1 
+>  linux-2.6/xfs_vnode.c |    2 -
+>  quota/xfs_dquot.c     |    2 -
+>  quota/xfs_qm_bhv.c    |    2 -
+>  xfs_attr.c            |    3 +-
 
-http://sandeen.net/xfs.31.img.bz2
+....
 
-If you try to mount, it gets into xfs_buf_get_noaddr via log replay with
-a len of 0, and I think this causes an infinite loop in the goto:
+Ugh, forgot a quilt refresh, there are a couple files missing here.
 
- try_again:
-        data = kmem_alloc(malloc_len, KM_SLEEP | KM_MAYFAIL);
-        if (unlikely(data == NULL))
-                goto fail_free_buf;
+Is there any interest in this change?  if so I'll send the update.
 
-        /* check whether alignment matches.. */
-        if ((__psunsigned_t)data !=
-            ((__psunsigned_t)data & ~target->bt_smask)) {
-                /* .. else double the size and try again */
-                kmem_free(data, malloc_len);
-                malloc_len <<= 1;
-                goto try_again;
-        }
-
-Up the callchain a bit there is an ASSERT that the size is > 0, but of
-course that doesn't help on a non-debug kernel...
-
-haven't had time to investigate beyond that.
+Thanks,
 
 -Eric
