@@ -1,50 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 04:34:58 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9GBYiaG031608
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 04:34:45 -0700
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.187])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DDB24AEFE8
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 03:34:16 -0700 (PDT)
-Received: by nf-out-0910.google.com with SMTP id n29so1590073nfc
-        for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 03:34:15 -0700 (PDT)
-Message-ID: <2117b660610160232p1ffb28e0necfeeb377b5d4ead@mail.gmail.com>
-Date: Mon, 16 Oct 2006 11:32:19 +0200
-From: "Honza Fikar" <j.fikar@gmail.com>
-Subject: recover xfs with v1 dirs on linux?
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 06:50:14 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9GDo3aG017289
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 06:50:05 -0700
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D968AD198454
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 06:49:20 -0700 (PDT)
+Message-ID: <45338DDE.8020903@sandeen.net>
+Date: Mon, 16 Oct 2006 08:49:18 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Disposition: inline
+Subject: Re: [PATCH 1/2] Make stuff static
+References: <20060929032856.8DA9C18001A5E@sandeen.net> <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi everybody,
+Timothy Shimmin wrote:
+> Okay, started looking :-)
+> 
+> Some comments below...
+> 
+> --Tim
 
-I want to recover old SGI Irix xfs disks, but I don't have any more the old
-hardware. I was able to copy the xfs partition in a file with dd and I could
-run xfs_recover, xfs_check and xfs_ncheck, which gives me the filenames. But
-I was not able to mount this file. Kernel 2.6.17 gives "Function not
-implemented", while 2.6.5 mounts, but the disk looks empty.
+Thanks Tim! :)
 
-I think the reason is "v1 dirs":
+>> --- xfs-linux.orig/linux-2.4/xfs_vnode.c
+>> +++ xfs-linux/linux-2.4/xfs_vnode.c
+>> @@ -17,7 +17,7 @@
+>>  #include "xfs.h"
+>>
+>>  uint64_t vn_generation;        /* vnode generation number */
+>> -spinlock_t vnumber_lock = SPIN_LOCK_UNLOCKED;
+>> +static spinlock_t vnumber_lock = SPIN_LOCK_UNLOCKED;
+>>
+> 
+> Not STATIC? Curious.
 
-file img4.xfs
-img4.xfs: SGI XFS filesystem data (blksz 4096, inosz 256, v1 dirs)
+Yeah, probably should be; IIRC there were other "statics" in that file, was just 
+following the convention.  I'll make sure it builds OK w/ STATIC and send an 
+updated patch (need to do that anyway).
 
-Is there a way to get the files? I have the innode numbers and filenames as
-an output of xfs_ncheck:
-....
-947364 abc/MIXDUM/MD110/20K/step9/dynrt.out.gz
-184821 aa/Monteal/fmd3kev-45K/cluster.I.076.gz
-1286273 abc/MIXDUM/MD111/250K/step10/dyn5.f1.gz
-...
+> Yep for all xfs_iext_ funcs.
+> 
+> Well actually it looks like xfs_bmap.c uses these:
+> --------------------
+> xfs_iext_add
+> xfs_iext_bno_to_ext
+> xfs_iext_get_ext
+> xfs_iext_insert
+> xfs_iext_remove
+> ---------------------
+> 
+> So I'm not sure why some are still here...
+> xfs_iext_destroy
 
+Exported... maybe you can tell me why? :)
 
-Thank you,
-Jan
+> xfs_iext_idx_to_irec
 
+Same deal.
 
-[[HTML alternate version deleted]]
+> xfs_iext_realloc  (only exists in header???)
+
+Odd, missed that one, guess it can go too?  Maybe others lurk as well.
+
+Thanks!
+
+-Eric
+
+> --Tim
+> 
+> 
+> 
