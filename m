@@ -1,56 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 20:17:43 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H3HVaG013869
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 20:17:33 -0700
-Received: from prod.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47871D134415
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 20:16:48 -0700 (PDT)
-Subject: Re: [PATCH 1/2] Make stuff static
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20061017030908.GP11034@melbourne.sgi.com>
-References: <20060929032856.8DA9C18001A5E@sandeen.net>
-	 <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local>
-	 <45338DDE.8020903@sandeen.net> <4533FAEA.2080500@sandeen.net>
-	 <20061016232250.GM11034@melbourne.sgi.com>
-	 <1161042943.5723.117.camel@xenon.msp.redhat.com>
-	 <20061017005038.GN11034@melbourne.sgi.com> <45342BF3.8020609@sandeen.net>
-	 <20061017030908.GP11034@melbourne.sgi.com>
-Content-Type: text/plain
-Date: Tue, 17 Oct 2006 13:18:04 +1000
-Message-Id: <1161055084.17754.7.camel@edge>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 22:36:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H5ZxaG001538
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 22:36:00 -0700
+Received: from home.jason.bur.st (ppp77-57.lns1.mel3.internode.on.net [59.167.77.57])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C418B4AEBCC
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 22:35:16 -0700 (PDT)
+Date: Tue, 17 Oct 2006 15:35:14 +1000
+From: Jason White <jasonjgw@internode.on.net>
+Subject: Re: FS corruption and repair problem
+Message-ID: <20061017053514.GA5095@jdc>
+References: <20061016082532.GA5574@jdc> <45338FEA.3060709@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <45338FEA.3060709@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Russell Cattelan <cattelan@thebarn.com>, Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2006-10-17 at 13:09 +1000, David Chinner wrote:
-> On Mon, Oct 16, 2006 at 08:03:47PM -0500, Eric Sandeen wrote:
-> > David Chinner wrote:
-> > 
-> Of course, no plan ever survives contact with the enemy. :/
-> 
-> STATIC is also used for defining various structure tables.
-> And variables.  They'll all get changed to "static"....
-> 
-> Then there's __inline and __inline__ still used in places.....
-> 
-> The patch that follows does the noinline change, de-inlines
-> xfs_cleanup_inode() and cleans up all the inline cruft hanging around.
-> 
-> Comments?
-> 
+On Mon, Oct 16, 2006 at 08:58:02AM -0500, Eric Sandeen wrote:
+ 
+> The original reason for the shutdown would probably be interesting here, that's 
+> missing information about the first problem you encountered.
 
-Be careful of userspace, where much of this code is also compiled in
-libxfs, and STATIC is always #defined away to nothingness there (as
-there's need for some routines to be accessed outside of one source
-file there, differently to the kernel, IIRC).
+Unfortunately, yes. The first I knew about it came in the form of i/o errors
+and processes terminating with error 990.
+> 
+> But, from the repair output, it looks like corrupted directory data on disk, 
+> hard to say when/why it occurred.  Newer repair is always a good idea, but if 
+> the directory is badly corrupted then there's not a lot of magic to be done.
 
-cheers.
+The newer repair ran to completion and corrected more errors. 
 
--- 
-Nathan
+If the corruption recurs, the next step will be to reinstall everything.
+Fortunately, I have multiple backups of important files, though one of them
+was to an XFS file system created under kernel 2.6.17, which had minor
+directory corruption that was fixed by xfs_repair. After mounting that drive
+under 2.6.18, I created an entirely new backup and compared it with the old;
+the only files which had changed were those which I knew to have been updated
+since the previous backup.
+
+After unmounting the backup fs I ran xfs_check, which reported no problems.
+Thus I suspect that in the case of the backup drive, the FS corruption was due
+to the 2.6.17 bug, since copying gigabytes of files to it failed to reproduce
+the problem, and all seems fine under 2.6.18.
+
+I am still pleased with XFS as I have been using it since 2001, and the only
+problems have been due to bugs that were quickly fixed by the developers, and
+most of these happened prior to the integration of XFS into the mainline.
