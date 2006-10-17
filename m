@@ -1,64 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 01:51:37 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 02:32:01 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H8pTaG005367
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 01:51:29 -0700
-Received: from mondschein.lichtvoll.de (mondschein.lichtschiff.de [194.150.191.238])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E6894AF6C0
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 00:37:53 -0700 (PDT)
-Received: from deepdance.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mondschein.lichtvoll.de (Postfix) with ESMTP id CF3D9FA0AD
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 09:35:47 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: FS corruption and repair problem
-Date: Tue, 17 Oct 2006 09:37:30 +0200
-References: <20061016082532.GA5574@jdc> <45338FEA.3060709@sandeen.net> <20061017053514.GA5095@jdc>
-In-Reply-To: <20061017053514.GA5095@jdc>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H9VraG009916
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:54 -0700
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.186])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E15304B03D5
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:09 -0700 (PDT)
+Received: by nf-out-0910.google.com with SMTP id n29so213336nfc
+        for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:08 -0700 (PDT)
+Message-ID: <2117b660610170231k1215aaf5k987b92c7a90c79d5@mail.gmail.com>
+Date: Tue, 17 Oct 2006 11:31:07 +0200
+From: "Honza Fikar" <j.fikar@gmail.com>
+Subject: Re: recover xfs with v1 dirs on linux?
+In-Reply-To: <45338EC9.9010501@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200610170937.31036.Martin@lichtvoll.de>
+References: <2117b660610160232p1ffb28e0necfeeb377b5d4ead@mail.gmail.com>
+	 <45338EC9.9010501@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Am Dienstag 17 Oktober 2006 07:35 schrieb Jason White:
-
-> Unfortunately, yes. The first I knew about it came in the form of i/o
-> errors and processes terminating with error 990.
-
-Hello Jason,
-
-this is the error code XFS returns when it detects corruption. AFAIK it 
-has been changed to something more meaningful lately.
-
-> After unmounting the backup fs I ran xfs_check, which reported no
-> problems. Thus I suspect that in the case of the backup drive, the FS
-> corruption was due to the 2.6.17 bug, since copying gigabytes of files
-> to it failed to reproduce the problem, and all seems fine under 2.6.18.
+> v1dir support was removed a short while ago, they never really worked on Linux.
 >
-> I am still pleased with XFS as I have been using it since 2001, and the
-> only problems have been due to bugs that were quickly fixed by the
-> developers, and most of these happened prior to the integration of XFS
-> into the mainline.
+> http://oss.sgi.com/projects/xfs/faq.html#useirixxfs
+>
+> Older kernels had rudimentary v1 support, and you may find some degree of
+> functionality, or, as it seems in your case, no functionality at all.
+>
+> If this is terribly important data, then some finite amount of work (involving a
+> patched glibc, IIRC) might be able to get you going.
 
-Since 2.6.17.7 I had no fs corruption with XFS anymore. Neither on my 
-laptop nor on my workstation. On my laptop I had quite some issues with 
-2.6.16 which I omitted on my Workstation except 2.6.16rc1.
+Can you please provide some hints, unfortunately I was not able to
+find it with google.
 
-I am currently running 2.6.18 and am pretty pleased.
-
-Make sure that write barriers are enabled (is default since 2.6.17, was 
-not the default 2.6.16 which IMHO at least partly contributed to my 
-problems with it). Umount an XFS partition, do tail -f /var/log/syslog or 
-tail -f /var/log/messages and mount it again. If XFS can't do write 
-barriers on your machine, it should put an error message into log. You 
-can find more about this is in the approbiate log entry.
-
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Jan
