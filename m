@@ -1,48 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 18:04:57 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H14laG026232
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 18:04:48 -0700
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D456D19B91E
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 18:04:03 -0700 (PDT)
-Message-ID: <45342BF3.8020609@sandeen.net>
-Date: Mon, 16 Oct 2006 20:03:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 18:23:12 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9H1N2aG029209
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 18:23:06 -0700
+Message-Id: <200610170122.LAA26844@larry.melbourne.sgi.com>
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Subject: RE: LEAFN node level is N -- bogus warning
+Date: Tue, 17 Oct 2006 11:25:34 +1000
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] Make stuff static
-References: <20060929032856.8DA9C18001A5E@sandeen.net> <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local> <45338DDE.8020903@sandeen.net> <4533FAEA.2080500@sandeen.net> <20061016232250.GM11034@melbourne.sgi.com> <1161042943.5723.117.camel@xenon.msp.redhat.com> <20061017005038.GN11034@melbourne.sgi.com>
-In-Reply-To: <20061017005038.GN11034@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <002601c6d687$ad012420$6701a8c0@BODDINGTON>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Russell Cattelan <cattelan@thebarn.com>, Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: 'Roger Willcocks' <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
 
-David Chinner wrote:
+Hi Roger,
 
->> So you are proposing?
->> /* non-debug */
->> #define STATIC static inline
->> /* debug */
->> #define STATIC noinline
-> 
-> No.
-> 
-> Currently STATIC is defined in fs/xfs/support/debug.h as:
-> 
-> #ifndef STATIC
-> #define STATIC static
-> #endif
-> 
-> I'm proposing that gets changed to:
-> 
->> #define STATIC static noinline
-> 
-> This.
+Just to let you know, I now have a filesystem that is displaying this
+warning, so I am looking into it in combination with your patch. I'll let
+you know how it goes.
 
-This sounds reasonable to me, David.
+Regards,
+Barry. 
 
--Eric
+> -----Original Message-----
+> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
+> On Behalf Of Roger Willcocks
+> Sent: Wednesday, 13 September 2006 2:23 AM
+> To: xfs@oss.sgi.com
+> Subject: LEAFN node level is N -- bogus warning
+> 
+> In xfs_repair / dir2.c there's a check for the 'level' of a 
+> directory leaf node within the btree hierarchy. A warning 
+> 'LEAFN node level is N' is generated if the level >= 1.
+>  
+> But leaf nodes don't have a /level/ member, although internal 
+> nodes do (compare xfs_dir2_leaf_hdr_t and xfs_da_intnode_t). 
+> xfs_repair is actually testing leaf->hdr.stale - so the 
+> warning is bogus.
+>  
+> The attached patch removes the test and make the relationship 
+> between magic numbers and pointer types more explicit.
+>  
+> --
+> Roger
+>  
+>  
+> 
