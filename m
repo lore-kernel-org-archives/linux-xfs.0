@@ -1,41 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 02:32:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H9VraG009916
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:54 -0700
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.186])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E15304B03D5
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:09 -0700 (PDT)
-Received: by nf-out-0910.google.com with SMTP id n29so213336nfc
-        for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 02:31:08 -0700 (PDT)
-Message-ID: <2117b660610170231k1215aaf5k987b92c7a90c79d5@mail.gmail.com>
-Date: Tue, 17 Oct 2006 11:31:07 +0200
-From: "Honza Fikar" <j.fikar@gmail.com>
-Subject: Re: recover xfs with v1 dirs on linux?
-In-Reply-To: <45338EC9.9010501@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 07:24:39 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9HEORaG010670
+	for <linux-xfs@oss.sgi.com>; Tue, 17 Oct 2006 07:24:29 -0700
+Received: from mondschein.lichtvoll.de (mondschein.lichtschiff.de [194.150.191.238])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F1BFD1998A6
+	for <linux-xfs@oss.sgi.com>; Tue, 17 Oct 2006 06:19:01 -0700 (PDT)
+Received: from deepdance.of.teamix.net (blackhole.teamix.net [194.150.191.251])
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id 71E5CF9FB1
+	for <linux-xfs@oss.sgi.com>; Tue, 17 Oct 2006 15:17:10 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: FS corruption and repair problem
+Date: Tue, 17 Oct 2006 15:18:55 +0200
+References: <20061016082532.GA5574@jdc> <20061017053514.GA5095@jdc> <200610170937.31036.Martin@lichtvoll.de>
+In-Reply-To: <200610170937.31036.Martin@lichtvoll.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-References: <2117b660610160232p1ffb28e0necfeeb377b5d4ead@mail.gmail.com>
-	 <45338EC9.9010501@sandeen.net>
+Message-Id: <200610171518.55730.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-> v1dir support was removed a short while ago, they never really worked on Linux.
->
-> http://oss.sgi.com/projects/xfs/faq.html#useirixxfs
->
-> Older kernels had rudimentary v1 support, and you may find some degree of
-> functionality, or, as it seems in your case, no functionality at all.
->
-> If this is terribly important data, then some finite amount of work (involving a
-> patched glibc, IIRC) might be able to get you going.
+Am Dienstag 17 Oktober 2006 09:37 schrieb Martin Steigerwald:
 
-Can you please provide some hints, unfortunately I was not able to
-find it with google.
+> or tail -f /var/log/messages and mount it again. If XFS can't do write
+> barriers on your machine, it should put an error message into log. You
+> can find more about this is in the approbiate log entry.
 
-Jan
+Sorry, XFS faq entry that is...
+
+-- 
+Martin
