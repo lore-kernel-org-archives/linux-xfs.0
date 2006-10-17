@@ -1,81 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 00:41:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9H7f1aG025622
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 00:41:03 -0700
-Reply-To: <mg@sgi.com>
-From: "Mike Gigante" <mg@sgi.com>
-Subject: RE: recover xfs with v1 dirs on linux?
-Date: Tue, 17 Oct 2006 16:34:13 +1000
-Message-ID: <004401c6f1b6$441f1f30$10370e86@SGIGORT>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 01:51:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H8pTaG005367
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 01:51:29 -0700
+Received: from mondschein.lichtvoll.de (mondschein.lichtschiff.de [194.150.191.238])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E6894AF6C0
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 00:37:53 -0700 (PDT)
+Received: from deepdance.of.teamix.net (blackhole.teamix.net [194.150.191.251])
+	by mondschein.lichtvoll.de (Postfix) with ESMTP id CF3D9FA0AD
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 09:35:47 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: FS corruption and repair problem
+Date: Tue, 17 Oct 2006 09:37:30 +0200
+References: <20061016082532.GA5574@jdc> <45338FEA.3060709@sandeen.net> <20061017053514.GA5095@jdc>
+In-Reply-To: <20061017053514.GA5095@jdc>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <45338EC9.9010501@sandeen.net>
+Content-Disposition: inline
+Message-Id: <200610170937.31036.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Eric Sandeen' <sandeen@sandeen.net>, 'Honza Fikar' <j.fikar@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+Am Dienstag 17 Oktober 2006 07:35 schrieb Jason White:
 
-Actually the real answer is that this is something that SGI Managed Services
-can do for a one-off fee. We will not be supporting V1 directories on Linux
-and there is simply not sufficient demand/$$ to justify SGI engineering
-doing the work required to implement a tool.
+> Unfortunately, yes. The first I knew about it came in the form of i/o
+> errors and processes terminating with error 990.
 
-I spoke to the local SGI Customer Support Manager and he assures me that any
-SGI service organisation worldwide would happily do this kind of service.
+Hello Jason,
 
-Mike
+this is the error code XFS returns when it detects corruption. AFAIK it 
+has been changed to something more meaningful lately.
 
----
-Mike Gigante
-Engineering Director, Fileserving Technologies
-SGI, Melbourne, Australia
-NOTE: new phone number +61 3 9963 1951
+> After unmounting the backup fs I ran xfs_check, which reported no
+> problems. Thus I suspect that in the case of the backup drive, the FS
+> corruption was due to the 2.6.17 bug, since copying gigabytes of files
+> to it failed to reproduce the problem, and all seems fine under 2.6.18.
+>
+> I am still pleased with XFS as I have been using it since 2001, and the
+> only problems have been due to bugs that were quickly fixed by the
+> developers, and most of these happened prior to the integration of XFS
+> into the mainline.
 
------Original Message-----
-From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] On Behalf Of
-Eric Sandeen
-Sent: Monday, October 16, 2006 11:53 PM
-To: Honza Fikar
-Cc: xfs@oss.sgi.com
-Subject: Re: recover xfs with v1 dirs on linux?
+Since 2.6.17.7 I had no fs corruption with XFS anymore. Neither on my 
+laptop nor on my workstation. On my laptop I had quite some issues with 
+2.6.16 which I omitted on my Workstation except 2.6.16rc1.
 
-Honza Fikar wrote:
-> Hi everybody,
-> 
-> I want to recover old SGI Irix xfs disks, but I don't have any more 
-> the old hardware. I was able to copy the xfs partition in a file with 
-> dd and I could run xfs_recover, xfs_check and xfs_ncheck, which gives 
-> me the filenames. But I was not able to mount this file. Kernel 2.6.17 
-> gives "Function not implemented", while 2.6.5 mounts, but the disk looks
-empty.
-> 
-> I think the reason is "v1 dirs":
-> 
-> file img4.xfs
-> img4.xfs: SGI XFS filesystem data (blksz 4096, inosz 256, v1 dirs)
-> 
-> Is there a way to get the files? I have the innode numbers and 
-> filenames as an output of xfs_ncheck:
-> ....
-> 947364 abc/MIXDUM/MD110/20K/step9/dynrt.out.gz
-> 184821 aa/Monteal/fmd3kev-45K/cluster.I.076.gz
-> 1286273 abc/MIXDUM/MD111/250K/step10/dyn5.f1.gz
-> ...
+I am currently running 2.6.18 and am pretty pleased.
 
-v1dir support was removed a short while ago, they never really worked on
-Linux.
+Make sure that write barriers are enabled (is default since 2.6.17, was 
+not the default 2.6.16 which IMHO at least partly contributed to my 
+problems with it). Umount an XFS partition, do tail -f /var/log/syslog or 
+tail -f /var/log/messages and mount it again. If XFS can't do write 
+barriers on your machine, it should put an error message into log. You 
+can find more about this is in the approbiate log entry.
 
-http://oss.sgi.com/projects/xfs/faq.html#useirixxfs
-
-Older kernels had rudimentary v1 support, and you may find some degree of
-functionality, or, as it seems in your case, no functionality at all.
-
-If this is terribly important data, then some finite amount of work
-(involving a patched glibc, IIRC) might be able to get you going.
-
--Eric
+Regards,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
