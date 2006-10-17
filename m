@@ -1,52 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 18:23:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9H1N2aG029209
-	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 18:23:06 -0700
-Message-Id: <200610170122.LAA26844@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: LEAFN node level is N -- bogus warning
-Date: Tue, 17 Oct 2006 11:25:34 +1000
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Oct 2006 18:51:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9H1pKaG001033
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 18:51:21 -0700
+Received: from mexforward.lss.emc.com (mexforward.lss.emc.com [128.222.32.20])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A4B14ADE6C
+	for <xfs@oss.sgi.com>; Mon, 16 Oct 2006 17:42:08 -0700 (PDT)
+Message-ID: <4534268E.9030201@emc.com>
+Date: Mon, 16 Oct 2006 20:40:46 -0400
+From: Ric Wheeler <ric@emc.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Subject: CFP: Linux 2007 File System & IO Workshop
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <002601c6d687$ad012420$6701a8c0@BODDINGTON>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Roger Willcocks' <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org
+Cc: lsf07pc@usenix.org
 
-Hi Roger,
+On  February 12-13, we have put together a combined Linux file system & 
+IO 2-day workshop in San Jose, CA. Note that the USENIX File System and 
+Storage Technologies conference follows us in the same venue, so we hope 
+to get some interaction between the two groups as well as leverage the 
+USENIX people to help us get this done.
 
-Just to let you know, I now have a filesystem that is displaying this
-warning, so I am looking into it in combination with your patch. I'll let
-you know how it goes.
+For more information, please see:
+
+http://www.usenix.org/events/lsf07/
+
+Please direct question to the program committee members. If you want to 
+hit all of us in one go, you can use:
+
+lsf07pc@usenix.org
 
 Regards,
-Barry. 
 
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Roger Willcocks
-> Sent: Wednesday, 13 September 2006 2:23 AM
-> To: xfs@oss.sgi.com
-> Subject: LEAFN node level is N -- bogus warning
-> 
-> In xfs_repair / dir2.c there's a check for the 'level' of a 
-> directory leaf node within the btree hierarchy. A warning 
-> 'LEAFN node level is N' is generated if the level >= 1.
->  
-> But leaf nodes don't have a /level/ member, although internal 
-> nodes do (compare xfs_dir2_leaf_hdr_t and xfs_da_intnode_t). 
-> xfs_repair is actually testing leaf->hdr.stale - so the 
-> warning is bogus.
->  
-> The attached patch removes the test and make the relationship 
-> between magic numbers and pointer types more explicit.
->  
-> --
-> Roger
->  
->  
-> 
+ric
+
+
+*
+*
