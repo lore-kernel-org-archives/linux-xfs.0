@@ -1,359 +1,464 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 03:41:10 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9IAexaG026686
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 03:41:00 -0700
-Received: from mxb.liv.ac.uk (mxb.liv.ac.uk [138.253.100.102])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF960D199F18
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 02:35:22 -0700 (PDT)
-Received: from mailhuba.liv.ac.uk ([138.253.100.36])
-	by mxb.liv.ac.uk with esmtp (Exim 4.62)
-	(envelope-from <jrc@ns.ph.liv.ac.uk>)
-	id 1Ga7pY-0000yI-D8
-	for xfs@oss.sgi.com; Wed, 18 Oct 2006 10:35:20 +0100
-Received: from localhost ([127.0.0.1] helo=mailhuba.liv.ac.uk)
-	by mailhuba.liv.ac.uk with esmtp (Exim 4.54)
-	id 1Ga7pY-0003Jc-BK
-	for xfs@oss.sgi.com; Wed, 18 Oct 2006 10:35:20 +0100
-Received: from npa.ph.liv.ac.uk ([138.253.148.32])
-	by mailhuba.liv.ac.uk with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.54)
-	id 1Ga7pY-0003JY-Af
-	for xfs@oss.sgi.com; Wed, 18 Oct 2006 10:35:20 +0100
-Received: from smartpet.ph.liv.ac.uk (root@smartpet.ph.liv.ac.uk [138.253.148.194])
-	by npa.ph.liv.ac.uk (8.13.8/8.13.8/Debian-2) with ESMTP id k9I9ZKX7009553
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 10:35:20 +0100
-Received: from smartpet.ph.liv.ac.uk (jrc@localhost.localdomain [127.0.0.1])
-	by smartpet.ph.liv.ac.uk (8.13.4/8.13.4/Debian-3) with ESMTP id k9I9ZKo3014553
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 10:35:20 +0100
-Received: (from jrc@localhost)
-	by smartpet.ph.liv.ac.uk (8.13.4/8.13.4/Submit) id k9I9ZKYD014552
-	for xfs@oss.sgi.com; Wed, 18 Oct 2006 10:35:20 +0100
-From: John Cresswell <jrc@ns.ph.liv.ac.uk>
-Message-Id: <200610180935.k9I9ZKYD014552@smartpet.ph.liv.ac.uk>
-Subject: Xfsdump error
-Date: Wed, 18 Oct 2006 10:35:20 +0100 (BST)
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 10:53:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9IHrjaG009569
+	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 10:53:47 -0700
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D856C4AF5A0
+	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 10:52:52 -0700 (PDT)
+Subject: Re: [xfs-masters] Re: [PATCH] fs/xfs: Handcrafted MIN/MAX macro
+	removal
+From: Russell Cattelan <cattelan@thebarn.com>
+In-Reply-To: <1161169068.20400.149.camel@amol.verismonetworks.com>
+References: <1161169068.20400.149.camel@amol.verismonetworks.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KJIyv+dAKFYNNReoTdXg"
+Date: Wed, 18 Oct 2006 12:51:25 -0500
+Message-Id: <1161193885.5723.168.camel@xenon.msp.redhat.com>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Amol Lad <amol@verismonetworks.com>
+Cc: linux kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-I hope sombody can help me with this problem.
-I have had to physically move our server, and
-though connections and tape drives are the same, backups no longer work.
-The tape drive can be written and read OK using tar, for example,
-but not using xfsdump. A truncated example follows ...
+--=-KJIyv+dAKFYNNReoTdXg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-xfsdump: RLIMIT_AS org cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: RLIMIT_STACK org cur 0x800000 max 0xffffffffffffffff
-xfsdump: raising stack size soft limit from 0x800000 to 0x2000000
-xfsdump: RLIMIT_STACK new cur 0x2000000 max 0xffffffffffffffff
-xfsdump: RLIMIT_DATA org cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: RLIMIT_FSIZE org cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: RLIMIT_FSIZE now cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: RLIMIT_CPU cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: RLIMIT_CPU now cur 0xffffffffffffffff max 0xffffffffffffffff
-xfsdump: INTGENMAX == 2147483647 (0x7fffffff)
-xfsdump: UINTGENMAX == 4294967295 (0xffffffff)
-xfsdump: OFF64MAX == 9223372036854775807 (0x7fffffffffffffff)
-xfsdump: OFFMAX == -1 (0x7fffffff)
-xfsdump: SIZEMAX == 4294967295 (0xffffffff)
-xfsdump: INOMAX == 4294967295 (0xffffffff)
-xfsdump: TIMEMAX == 2147483647 (0x7fffffff)
-xfsdump: SIZE64MAX == 18446744073709551615 (0xffffffffffffffff)
-xfsdump: INO64MAX == 18446744073709551615 (0xffffffffffffffff)
-xfsdump: UINT64MAX == 18446744073709551615 (0xffffffffffffffff)
-xfsdump: INT64MAX == 9223372036854775807 (0x7fffffffffffffff)
-xfsdump: UINT32MAX == 4294967295 (0xffffffff)
-xfsdump: INT32MAX == 2147483647 (0x7fffffff)
-xfsdump: INT16MAX == 32767 (0x7fff)
-xfsdump: UINT16MAX == 65535 (0xffff)
-xfsdump: getpagesize( ) returns 4096
-xfsdump: parent pid is 7297
-xfsdump: effective user id is 0
-xfsdump: using scsi tape (drive_scsitape) strategy
-xfsdump: tty fd: 0; terminal interrupt character:  (03)
-xfsdump: version 2.2.38 (dump format 3.0) - Running single-threaded
-xfsdump: fs /export uuid [d59b77df-6e56-49b7-856d-7c2bacb7c57a]
-xfsdump: creating directory /var/lib/xfsdump
-xfsdump: resume range stream 0 ino 0:0 to end
-xfsdump: WARNING: most recent level 0 dump was interrupted, but not resuming that dump since resume (-R) option not specified
-xfsdump: level 0 dump of npa:/export
-xfsdump: dump date: Wed Oct 18 09:56:01 2006
-xfsdump: session id: 77440a1f-d61f-4315-9e12-ccd096fa858e
-xfsdump: session label: "/export"
-xfsdump: ino map phase 1: constructing initial dump list
-xfsdump: bulkstat iteration initiated: start_ino == 0
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 128
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 2230883
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 2785347
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 3588899
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 4113891
-xfsdump: ino 4540232 needed second bulkstat
-xfsdump: ino 4545271 needed second bulkstat
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 5375201
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 7842945
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 9222497
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 9736641
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 75575268
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 76707332
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 77242663
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 77422823
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 78178664
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 79292758
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 80733591
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 83899577
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 84257849
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 136783452
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 137734076
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 141140476
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 141728988
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 142489212
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 143249328
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 143281968
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 143936176
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 145334544
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 145775696
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 201680272
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 208763379
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 209858739
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 210436659
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 211180467
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 214054426
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 215593183
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 216111071
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 217291263
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 273758656
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 274418496
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 277780772
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 278588324
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 279454859
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 284168267
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 284755275
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 285215467
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 285503627
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 337274924
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 338171052
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 339546220
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 340043340
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 340992265
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 342762057
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 343076495
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 344008943
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 344511183
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 345227919
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 420142481
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 420809489
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 421786033
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 422572785
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 423664947
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 424436998
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 426447494
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 427601286
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 475055112
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 477004168
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 477632424
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 479016360
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 479412040
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 480766906
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 483064993
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 483435617
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 485800065
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 486061025
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 547300066
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 548584128
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 549429280
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 549713856
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 550381568
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 551134178
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 551933346
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 552581890
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 603979939
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 608241813
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 609062421
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 609567061
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 610336085
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 610596469
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 612194039
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 617336539
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 617982715
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 618639227
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 672791504
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 675193712
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 677938608
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 678411024
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 678710193
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 679546549
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 682810133
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 683599925
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 685319189
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 685606325
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 766982390
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 767990806
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 770229430
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 771004374
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 774490396
-xfsdump: calling bulkstat
-...
-xfsdump: bulkstat returns buflen 4096 ino 1018623604
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4011 ino 1019807284
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 0
-xfsdump: ino map phase 2: skipping (no pruning necessary)
-xfsdump: ino map phase 3: skipping (only one dump stream)
-xfsdump: bulkstat iteration initiated: start_ino == 0
-xfsdump: calling bulkstat
-xfsdump: bulkstat returns buflen 4096 ino 128
-xfsdump: ino map construction complete
-xfsdump: estimated dump size: 81317119424 bytes
-xfsdump: estimated dump header size: 19318112 bytes
-xfsdump: estimated component sizes: global hdr: 1337006139379712 bytes, inomap: 81616060935045120 bytes,  dir entries: 734544548415406080 bytes, file hdrs: 16395459996558557184 bytes, datasz: 578909639576387602 bytes
-xfsdump: drive op: init
-xfsdump: drive op: sync
-xfsdump: Media op: begin media file
-xfsdump: drive op: begin read
-xfsdump: preparing drive
-xfsdump: tape op: opening drive
-xfsdump: tape op: get status
-xfsdump: tape status = bot onl 
-xfsdump: tape op: get block size info
-xfsdump: max=1048576 cur=0
-xfsdump: variable block size tape drive at /dev/st0
-xfsdump: tape op: get block size info
-xfsdump: max=1048576 cur=0
-xfsdump: recommended tape media file size set to 0x7fffffffffffffff bytes
-xfsdump: recommended tape media mark separation set to 0x1000000 bytes
-xfsdump: determining tape record size: trying 1048576 (0x100000) bytes
-xfsdump: tape op: get status
-xfsdump: tape status = bot onl 
-xfsdump: tape positioned at BOT: doing redundant rewind
-xfsdump: tape op: rewind 0
-xfsdump: tape op: get status
-xfsdump: tape status = bot onl 
-xfsdump: tape op: reading 1048576 bytes
-xfsdump: tape op read of 1048576 bytes failed: errno == 16 (Device or resource busy)
-xfsdump: tape op: get status
-xfsdump: tape status = onl 
-xfsdump: ERROR: unexpected tape error: errno 16 nread -1 blksz 1048576 recsz 1048576 isvar 1 wasatbot 1 eod 0 fmk 0 eot 0 onl 1 wprot 0 ew 0 
-xfsdump: ERROR: unexpected error from do_begin_read: 10
-xfsdump: content.c: 2291: mlog_exit called: exit_code: FAULT return: CORE (fatal error - core dumped)
-xfsdump: dump size (non-dir files) : 0 bytes
-xfsdump: NOTE: dump interrupted: 1 seconds elapsed: may resume later using -R option
-xfsdump: content.c: 2731: mlog_exit_hint called: hint: INTERRUPT (dump interrupted)
-xfsdump: main.c: 621: mlog_exit called: exit_code: FAULT return: UNKNOWN (unknown error)
-xfsdump: closing inventory stream 0: interrupted
-xfsdump: content.c: 5593: mlog_exit_hint called: hint: INTERRUPT (dump interrupted)
-xfsdump: Dump Status: INTERRUPT
-.
+This change doesn't seem to do anything?
+
+The existing macros already handle the types correctly,
+are named such that it's obvious as to their purpose, so
+it doesn't seem to make the code clearer.
+
+This is also putting linux defined macros into the common
+code and thereby creating more frustrations for the other XFS ports.
+
+
+On Wed, 2006-10-18 at 16:27 +0530, Amol Lad wrote:
+> Incroporated comments from Christoph Hellwig
+>=20
+> Cleanups done to use min/max macros from kernel.h. Handcrafted MIN/MAX
+> macros are changed to use macros in kernel.h
+>=20
+> Tested using allmodconfig
+>=20
+> Signed-off-by: Amol Lad <amol@verismonetworks.com>
+> ---
+> Christoph,=20
+>=20
+> I'm going on vacation. If you have more comments, I'll take them after I
+> come back after 5 days..
+>=20
+> Thanks
+> ---
+>  xfs_alloc.c   |   24 +++++++++++-------------
+>  xfs_bmap.c    |   32 ++++++++++++++------------------
+>  xfs_btree.h   |   29 -----------------------------
+>  xfs_inode.c   |    2 +-
+>  xfs_iomap.c   |    2 +-
+>  xfs_rtalloc.c |   16 ++++++++--------
+>  xfs_rtalloc.h |    3 ---
+>  7 files changed, 35 insertions(+), 73 deletions(-)
+> ---
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_alloc.c linux-2.6.19-rc2/fs/xfs/xfs_alloc.c
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_alloc.c	2006-10-18 09:29:18.00000000=
+0 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_alloc.c	2006-10-18 16:13:44.000000000 +05=
+30
+> @@ -151,11 +151,11 @@ xfs_alloc_compute_diff(
+>  		if (newbno1 >=3D freeend)
+>  			newbno1 =3D NULLAGBLOCK;
+>  		else
+> -			newlen1 =3D XFS_EXTLEN_MIN(wantlen, freeend - newbno1);
+> +			newlen1 =3D min_t(xfs_extlen_t, wantlen, freeend - newbno1);
+>  		if (newbno2 < freebno)
+>  			newbno2 =3D NULLAGBLOCK;
+>  		else
+> -			newlen2 =3D XFS_EXTLEN_MIN(wantlen, freeend - newbno2);
+> +			newlen2 =3D min_t(xfs_extlen_t, wantlen, freeend - newbno2);
+>  		if (newbno1 !=3D NULLAGBLOCK && newbno2 !=3D NULLAGBLOCK) {
+>  			if (newlen1 < newlen2 ||
+>  			    (newlen1 =3D=3D newlen2 &&
+> @@ -686,7 +686,7 @@ xfs_alloc_ag_vextent_exact(
+>  	 * End of extent will be smaller of the freespace end and the
+>  	 * maximal requested end.
+>  	 */
+> -	end =3D XFS_AGBLOCK_MIN(fend, maxend);
+> +	end =3D min_t(xfs_agblock_t, fend, maxend);
+>  	/*
+>  	 * Fix the length according to mod and prod if given.
+>  	 */
+> @@ -850,7 +850,7 @@ xfs_alloc_ag_vextent_near(
+>  					args->alignment, args->minlen,
+>  					&ltbnoa, &ltlena))
+>  				continue;
+> -			args->len =3D XFS_EXTLEN_MIN(ltlena, args->maxlen);
+> +			args->len =3D min_t(xfs_extlen_t, ltlena, args->maxlen);
+>  			xfs_alloc_fix_len(args);
+>  			ASSERT(args->len >=3D args->minlen);
+>  			if (args->len < blen)
+> @@ -1007,7 +1007,7 @@ xfs_alloc_ag_vextent_near(
+>  			/*
+>  			 * Fix up the length.
+>  			 */
+> -			args->len =3D XFS_EXTLEN_MIN(ltlena, args->maxlen);
+> +			args->len =3D min_t(xfs_extlen_t, ltlena, args->maxlen);
+>  			xfs_alloc_fix_len(args);
+>  			rlen =3D args->len;
+>  			ltdiff =3D xfs_alloc_compute_diff(args->agbno, rlen,
+> @@ -1045,8 +1045,7 @@ xfs_alloc_ag_vextent_near(
+>  					 */
+>  					if (gtlena >=3D args->minlen) {
+>  						args->len =3D
+> -							XFS_EXTLEN_MIN(gtlena,
+> -								args->maxlen);
+> +							min_t(xfs_extlen_t, gtlena, args->maxlen);
+>  						xfs_alloc_fix_len(args);
+>  						rlen =3D args->len;
+>  						gtdiff =3D xfs_alloc_compute_diff(
+> @@ -1104,7 +1103,7 @@ xfs_alloc_ag_vextent_near(
+>  			/*
+>  			 * Fix up the length.
+>  			 */
+> -			args->len =3D XFS_EXTLEN_MIN(gtlena, args->maxlen);
+> +			args->len =3D min_t(xfs_extlen_t, gtlena, args->maxlen);
+>  			xfs_alloc_fix_len(args);
+>  			rlen =3D args->len;
+>  			gtdiff =3D xfs_alloc_compute_diff(args->agbno, rlen,
+> @@ -1141,8 +1140,7 @@ xfs_alloc_ag_vextent_near(
+>  					 * compare the two and pick the best.
+>  					 */
+>  					if (ltlena >=3D args->minlen) {
+> -						args->len =3D XFS_EXTLEN_MIN(
+> -							ltlena, args->maxlen);
+> +						args->len =3D min_t(xfs_extlen_t, ltlena, args->maxlen);
+>  						xfs_alloc_fix_len(args);
+>  						rlen =3D args->len;
+>  						ltdiff =3D xfs_alloc_compute_diff(
+> @@ -1221,7 +1219,7 @@ xfs_alloc_ag_vextent_near(
+>  	 * Fix up the length and compute the useful address.
+>  	 */
+>  	ltend =3D ltbno + ltlen;
+> -	args->len =3D XFS_EXTLEN_MIN(ltlena, args->maxlen);
+> +	args->len =3D min_t(xfs_extlen_t, ltlena, args->maxlen);
+>  	xfs_alloc_fix_len(args);
+>  	if (!xfs_alloc_fix_minleft(args)) {
+>  		TRACE_ALLOC("nominleft", args);
+> @@ -1320,7 +1318,7 @@ xfs_alloc_ag_vextent_size(
+>  	 */
+>  	xfs_alloc_compute_aligned(fbno, flen, args->alignment, args->minlen,
+>  		&rbno, &rlen);
+> -	rlen =3D XFS_EXTLEN_MIN(args->maxlen, rlen);
+> +	rlen =3D min_t(xfs_extlen_t, args->maxlen, rlen);
+>  	XFS_WANT_CORRUPTED_GOTO(rlen =3D=3D 0 ||
+>  			(rlen <=3D flen && rbno + rlen <=3D fbno + flen), error0);
+>  	if (rlen < args->maxlen) {
+> @@ -1346,7 +1344,7 @@ xfs_alloc_ag_vextent_size(
+>  				break;
+>  			xfs_alloc_compute_aligned(fbno, flen, args->alignment,
+>  				args->minlen, &rbno, &rlen);
+> -			rlen =3D XFS_EXTLEN_MIN(args->maxlen, rlen);
+> +			rlen =3D min_t(xfs_extlen_t, args->maxlen, rlen);
+>  			XFS_WANT_CORRUPTED_GOTO(rlen =3D=3D 0 ||
+>  				(rlen <=3D flen && rbno + rlen <=3D fbno + flen),
+>  				error0);
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_bmap.c linux-2.6.19-rc2/fs/xfs/xfs_bmap.c
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_bmap.c	2006-10-18 09:29:18.000000000=
+ +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_bmap.c	2006-10-18 16:17:59.000000000 +0530
+> @@ -1005,7 +1005,7 @@ xfs_bmap_add_extent_delay_real(
+>  					LEFT.br_state)))
+>  				goto done;
+>  		}
+> -		temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +		temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp),
+>  			STARTBLOCKVAL(PREV.br_startblock));
+>  		xfs_bmbt_set_startblock(ep, NULLSTARTBLOCK((int)temp));
+>  		xfs_bmap_trace_post_update(fname, "LF|LC", ip, idx,
+> @@ -1054,7 +1054,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> -		temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +		temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp),
+>  			STARTBLOCKVAL(PREV.br_startblock) -
+>  			(cur ? cur->bc_private.b.allocated : 0));
+>  		ep =3D xfs_iext_get_ext(ifp, idx + 1);
+> @@ -1101,7 +1101,7 @@ xfs_bmap_add_extent_delay_real(
+>  					RIGHT.br_state)))
+>  				goto done;
+>  		}
+> -		temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +		temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp),
+>  			STARTBLOCKVAL(PREV.br_startblock));
+>  		xfs_bmbt_set_startblock(ep, NULLSTARTBLOCK((int)temp));
+>  		xfs_bmap_trace_post_update(fname, "RF|RC", ip, idx,
+> @@ -1149,7 +1149,7 @@ xfs_bmap_add_extent_delay_real(
+>  			if (error)
+>  				goto done;
+>  		}
+> -		temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +		temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp),
+>  			STARTBLOCKVAL(PREV.br_startblock) -
+>  			(cur ? cur->bc_private.b.allocated : 0));
+>  		ep =3D xfs_iext_get_ext(ifp, idx);
+> @@ -3186,8 +3186,7 @@ xfs_bmap_del_extent(
+>  		xfs_bmbt_set_blockcount(ep, temp);
+>  		ifp->if_lastex =3D idx;
+>  		if (delay) {
+> -			temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> -				da_old);
+> +			temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp), da_old=
+);
+>  			xfs_bmbt_set_startblock(ep, NULLSTARTBLOCK((int)temp));
+>  			xfs_bmap_trace_post_update(fname, "2", ip, idx,
+>  				whichfork);
+> @@ -3215,8 +3214,7 @@ xfs_bmap_del_extent(
+>  		xfs_bmbt_set_blockcount(ep, temp);
+>  		ifp->if_lastex =3D idx;
+>  		if (delay) {
+> -			temp =3D XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> -				da_old);
+> +			temp =3D min_t(xfs_filblks_t, xfs_bmap_worst_indlen(ip, temp), da_old=
+);
+>  			xfs_bmbt_set_startblock(ep, NULLSTARTBLOCK((int)temp));
+>  			xfs_bmap_trace_post_update(fname, "1", ip, idx,
+>  				whichfork);
+> @@ -4346,7 +4344,7 @@ xfs_bmap_first_unused(
+>  			return 0;
+>  		}
+>  		lastaddr =3D off + xfs_bmbt_get_blockcount(ep);
+> -		max =3D XFS_FILEOFF_MAX(lastaddr, lowest);
+> +		max =3D max_t(xfs_fileoff_t, lastaddr, lowest);
+>  	}
+>  	*first_unused =3D max;
+>  	return 0;
+> @@ -4861,17 +4859,15 @@ xfs_bmapi(
+>  				}
+>  			} else if (wasdelay) {
+>  				alen =3D (xfs_extlen_t)
+> -					XFS_FILBLKS_MIN(len,
+> -						(got.br_startoff +
+> -						 got.br_blockcount) - bno);
+> +					min_t(xfs_filblks_t, len,
+> +						(got.br_startoff + got.br_blockcount) - bno);
+>  				aoff =3D bno;
+>  			} else {
+>  				alen =3D (xfs_extlen_t)
+> -					XFS_FILBLKS_MIN(len, MAXEXTLEN);
+> +					min_t(xfs_filblks_t, len, MAXEXTLEN);
+>  				if (!eof)
+>  					alen =3D (xfs_extlen_t)
+> -						XFS_FILBLKS_MIN(alen,
+> -							got.br_startoff - bno);
+> +						min_t(xfs_filblks_t, alen, got.br_startoff - bno);
+>  				aoff =3D bno;
+>  			}
+>  			minlen =3D (flags & XFS_BMAPI_CONTIG) ? alen : 1;
+> @@ -5098,7 +5094,7 @@ xfs_bmapi(
+>  			mval->br_startoff =3D bno;
+>  			mval->br_startblock =3D HOLESTARTBLOCK;
+>  			mval->br_blockcount =3D
+> -				XFS_FILBLKS_MIN(len, got.br_startoff - bno);
+> +				min_t(xfs_filblks_t, len, got.br_startoff - bno);
+>  			mval->br_state =3D XFS_EXT_NORM;
+>  			bno +=3D mval->br_blockcount;
+>  			len -=3D mval->br_blockcount;
+> @@ -5133,7 +5129,7 @@ xfs_bmapi(
+>  			 * didn't overlap what was asked for.
+>  			 */
+>  			mval->br_blockcount =3D
+> -				XFS_FILBLKS_MIN(end - bno, got.br_blockcount -
+> +				min_t(xfs_filblks_t, end - bno, got.br_blockcount -
+>  					(bno - got.br_startoff));
+>  			mval->br_state =3D got.br_state;
+>  			ASSERT(mval->br_blockcount <=3D len);
+> @@ -5473,7 +5469,7 @@ xfs_bunmapi(
+>  		 * Is the last block of this extent before the range
+>  		 * we're supposed to delete?  If so, we're done.
+>  		 */
+> -		bno =3D XFS_FILEOFF_MIN(bno,
+> +		bno =3D min_t(xfs_fileoff_t, bno,
+>  			got.br_startoff + got.br_blockcount - 1);
+>  		if (bno < start)
+>  			break;
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_btree.h linux-2.6.19-rc2/fs/xfs/xfs_btree.h
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_btree.h	2006-10-18 09:29:18.00000000=
+0 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_btree.h	2006-10-18 15:56:01.000000000 +05=
+30
+> @@ -440,35 +440,6 @@ xfs_btree_setbuf(
+>=20=20
+>  #endif	/* __KERNEL__ */
+>=20=20
+> -
+> -/*
+> - * Min and max functions for extlen, agblock, fileoff, and filblks types.
+> - */
+> -#define	XFS_EXTLEN_MIN(a,b)	\
+> -	((xfs_extlen_t)(a) < (xfs_extlen_t)(b) ? \
+> -		(xfs_extlen_t)(a) : (xfs_extlen_t)(b))
+> -#define	XFS_EXTLEN_MAX(a,b)	\
+> -	((xfs_extlen_t)(a) > (xfs_extlen_t)(b) ? \
+> -		(xfs_extlen_t)(a) : (xfs_extlen_t)(b))
+> -#define	XFS_AGBLOCK_MIN(a,b)	\
+> -	((xfs_agblock_t)(a) < (xfs_agblock_t)(b) ? \
+> -		(xfs_agblock_t)(a) : (xfs_agblock_t)(b))
+> -#define	XFS_AGBLOCK_MAX(a,b)	\
+> -	((xfs_agblock_t)(a) > (xfs_agblock_t)(b) ? \
+> -		(xfs_agblock_t)(a) : (xfs_agblock_t)(b))
+> -#define	XFS_FILEOFF_MIN(a,b)	\
+> -	((xfs_fileoff_t)(a) < (xfs_fileoff_t)(b) ? \
+> -		(xfs_fileoff_t)(a) : (xfs_fileoff_t)(b))
+> -#define	XFS_FILEOFF_MAX(a,b)	\
+> -	((xfs_fileoff_t)(a) > (xfs_fileoff_t)(b) ? \
+> -		(xfs_fileoff_t)(a) : (xfs_fileoff_t)(b))
+> -#define	XFS_FILBLKS_MIN(a,b)	\
+> -	((xfs_filblks_t)(a) < (xfs_filblks_t)(b) ? \
+> -		(xfs_filblks_t)(a) : (xfs_filblks_t)(b))
+> -#define	XFS_FILBLKS_MAX(a,b)	\
+> -	((xfs_filblks_t)(a) > (xfs_filblks_t)(b) ? \
+> -		(xfs_filblks_t)(a) : (xfs_filblks_t)(b))
+> -
+>  #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+>  	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+>  		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_inode.c linux-2.6.19-rc2/fs/xfs/xfs_inode.c
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_inode.c	2006-10-18 09:29:18.00000000=
+0 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_inode.c	2006-10-18 16:18:41.000000000 +05=
+30
+> @@ -1342,7 +1342,7 @@ xfs_file_last_byte(
+>  		last_block =3D 0;
+>  	}
+>  	size_last_block =3D XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_d.di_size);
+> -	last_block =3D XFS_FILEOFF_MAX(last_block, size_last_block);
+> +	last_block =3D max_t(xfs_fileoff_t, last_block, size_last_block);
+>=20=20
+>  	last_byte =3D XFS_FSB_TO_B(mp, last_block);
+>  	if (last_byte < 0) {
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_iomap.c linux-2.6.19-rc2/fs/xfs/xfs_iomap.c
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_iomap.c	2006-10-18 09:29:18.00000000=
+0 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_iomap.c	2006-10-18 15:54:13.000000000 +05=
+30
+> @@ -822,7 +822,7 @@ xfs_iomap_write_allocate(
+>  			end_fsb =3D XFS_B_TO_FSB(mp, ip->i_d.di_size);
+>  			xfs_bmap_last_offset(NULL, ip, &last_block,
+>  				XFS_DATA_FORK);
+> -			last_block =3D XFS_FILEOFF_MAX(last_block, end_fsb);
+> +			last_block =3D max_t(xfs_fileoff_t,last_block, end_fsb);
+>  			if ((map_start_fsb + count_fsb) > last_block) {
+>  				count_fsb =3D last_block - map_start_fsb;
+>  				if (count_fsb =3D=3D 0) {
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_rtalloc.c linux-2.6.19-rc2/fs/xfs/xfs_rtalloc.c
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_rtalloc.c	2006-10-18 09:29:18.000000=
+000 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_rtalloc.c	2006-10-18 16:06:37.000000000 +=
+0530
+> @@ -699,8 +699,8 @@ xfs_rtallocate_extent_size(
+>  			 * this summary level.
+>  			 */
+>  			error =3D xfs_rtallocate_extent_block(mp, tp, i,
+> -					XFS_RTMAX(minlen, 1 << l),
+> -					XFS_RTMIN(maxlen, (1 << (l + 1)) - 1),
+> +					max_t(xfs_extlen_t, minlen, 1 << l),
+> +					min_t(xfs_extlen_t, maxlen, (1 << (l + 1)) - 1),
+>  					len, &n, rbpp, rsb, prod, &r);
+>  			if (error) {
+>  				return error;
+> @@ -1020,7 +1020,7 @@ xfs_rtcheck_range(
+>  		/*
+>  		 * Compute first bit not examined.
+>  		 */
+> -		lastbit =3D XFS_RTMIN(bit + len, XFS_NBWORD);
+> +		lastbit =3D min_t(xfs_extlen_t, bit + len, XFS_NBWORD);
+>  		/*
+>  		 * Mask of relevant bits.
+>  		 */
+> @@ -1238,7 +1238,7 @@ xfs_rtfind_back(
+>  		 * Calculate first (leftmost) bit number to look at,
+>  		 * and mask for all the relevant bits in this word.
+>  		 */
+> -		firstbit =3D XFS_RTMAX((xfs_srtblock_t)(bit - len + 1), 0);
+> +		firstbit =3D max_t(xfs_srtblock_t, bit - len + 1, 0);
+>  		mask =3D (((xfs_rtword_t)1 << (bit - firstbit + 1)) - 1) <<
+>  			firstbit;
+>  		/*
+> @@ -1413,7 +1413,7 @@ xfs_rtfind_forw(
+>  		 * Calculate last (rightmost) bit number to look at,
+>  		 * and mask for all the relevant bits in this word.
+>  		 */
+> -		lastbit =3D XFS_RTMIN(bit + len, XFS_NBWORD);
+> +		lastbit =3D min_t(xfs_rtblock_t, bit + len, XFS_NBWORD);
+>  		mask =3D (((xfs_rtword_t)1 << (lastbit - bit)) - 1) << bit;
+>  		/*
+>  		 * Calculate the difference between the value there
+> @@ -1724,7 +1724,7 @@ xfs_rtmodify_range(
+>  		/*
+>  		 * Compute first bit not changed and mask of relevant bits.
+>  		 */
+> -		lastbit =3D XFS_RTMIN(bit + len, XFS_NBWORD);
+> +		lastbit =3D min_t(xfs_extlen_t, bit + len, XFS_NBWORD);
+>  		mask =3D (((xfs_rtword_t)1 << (lastbit - bit)) - 1) << bit;
+>  		/*
+>  		 * Set/clear the active bits.
+> @@ -1998,7 +1998,7 @@ xfs_growfs_rt(
+>  		nsbp->sb_rextsize =3D in->extsize;
+>  		nsbp->sb_rbmblocks =3D bmbno + 1;
+>  		nsbp->sb_rblocks =3D
+> -			XFS_RTMIN(nrblocks,
+> +			min_t(xfs_drfsbno_t, nrblocks,
+>  				  nsbp->sb_rbmblocks * NBBY *
+>  				  nsbp->sb_blocksize * nsbp->sb_rextsize);
+>  		nsbp->sb_rextents =3D nsbp->sb_rblocks;
+> @@ -2424,7 +2424,7 @@ xfs_rtprint_summary(
+>  			if (c) {
+>  				if (!p) {
+>  					cmn_err(CE_DEBUG, "%Ld-%Ld:", 1LL << l,
+> -						XFS_RTMIN((1LL << l) +
+> +						min((1LL << l) +
+>  							  ((1LL << l) - 1LL),
+>  							 mp->m_sb.sb_rextents));
+>  					p =3D 1;
+> diff -uprN -X linux-2.6.19-rc2-orig/Documentation/dontdiff linux-2.6.19-r=
+c2-orig/fs/xfs/xfs_rtalloc.h linux-2.6.19-rc2/fs/xfs/xfs_rtalloc.h
+> --- linux-2.6.19-rc2-orig/fs/xfs/xfs_rtalloc.h	2006-08-24 02:46:33.000000=
+000 +0530
+> +++ linux-2.6.19-rc2/fs/xfs/xfs_rtalloc.h	2006-10-18 15:46:53.000000000 +=
+0530
+> @@ -57,9 +57,6 @@ struct xfs_trans;
+>  #define	XFS_BITTOWORD(mp,bi)	\
+>  	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
+>=20=20
+> -#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+> -#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+> -
+>  #define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+>  #define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+>=20=20
+>=20
+
+--=20
+Russell Cattelan <cattelan@thebarn.com>
+
+--=-KJIyv+dAKFYNNReoTdXg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFNmmdNRmM+OaGhBgRAvdSAJ9fMLgGBneq5ZJR3+dV9rYw1oNTygCdHFV2
+YN8wd5iesE0xMwGbzczHTkc=
+=4GrX
+-----END PGP SIGNATURE-----
+
+--=-KJIyv+dAKFYNNReoTdXg--
