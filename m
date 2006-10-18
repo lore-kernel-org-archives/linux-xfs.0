@@ -1,120 +1,117 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 19:34:32 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9I2YKaG015428
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 19:34:24 -0700
-Date: Wed, 18 Oct 2006 12:33:25 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [patch] Fix xfs_iunpin() sets I_DIRTY_SYNC after clear_inode().
-Message-ID: <20061018023325.GL8394166@melbourne.sgi.com>
-References: <45237CCE.4010007@ah.jp.nec.com> <20061006032617.GC11034@melbourne.sgi.com> <20061011064357.GN19345@melbourne.sgi.com> <452E32FF.8010109@ah.jp.nec.com> <20061013014651.GC19345@melbourne.sgi.com> <452F83BD.8050501@ah.jp.nec.com> <20061017020218.GE8394166@melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061017020218.GE8394166@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 20:47:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9I3lmaG027987
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 20:47:51 -0700
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 71F59D19843E
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 20:47:06 -0700 (PDT)
+Message-ID: <4535A3BE.9000006@sandeen.net>
+Date: Tue, 17 Oct 2006 22:47:10 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: corrupted log causes infinite loop at mount
+References: <452FECFE.5050902@sandeen.net> <4531CC5D.5010705@melbourne.sgi.com> <45323F7F.80807@sandeen.net>
+In-Reply-To: <45323F7F.80807@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Takenori Nagano <t-nagano@ah.jp.nec.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: chatz@melbourne.sgi.com, xfs@oss.sgi.com
 
-On Tue, Oct 17, 2006 at 12:02:18PM +1000, David Chinner wrote:
-> In doing the previous patch that removed the igrab/iput, I used the
-> log force to provide synchronisation that prevented the unpin from
-> ever seeing an invalid state and hence we couldn't ever get a
-> use-after-free situation. What I failed to see was that we already
-> have this mechanism - the i_flags_lock and the XFS_IRECLAIM* flags.
+Eric Sandeen wrote:
+> David Chatterton wrote:
+>> I assume the loop is further up the chain since kmem_alloc should 
+>> return NULL
+>> when asked to alloc 0. So then the problem also lies further up the 
+>> chain in
+>> checking for a 0 length before calling down, and/or not assuming we 
+>> are out of
+>> memory when xfs_buf_get_noaddr fails.
 > 
-> If we synchronise the setting of either of the XFS_IRECLAIM* flags
-> with the breakage of the bhv_vnode<->xfs_inode link, then we can
-> never get the state in xfs_iunpin() where the link has been broken
-> and the XFS_IRECLAIM* flags are not set. The current usage of
-> the i_flags_lock in xfs_iunpin is sufficient to provide this
-> guarantee, but we are breaking the link before setting the
-> XFS_IRECLAIMABLE flag in xfs_reclaim()....
+> Well, I set kdb breakpoints, and we only entered xfs_buf_get_noaddr 
+> once, so I assume it's looping inside.  But I was looking for bugs on, 
+> um, another filesystem at the time, so didn't investigate much.
 > 
-> So, here's another patch that doesn't have the performance problems,
-> but removes the iput/igrab while still (I think) fixing the use
-> after free problem. Can you try this one out, Takenori? I've
-> run it through some stress tests and haven't been able to trigger
-> problems.
+> I can put it on my list of spare-time bugs to look at, or just thought 
+> you guys may be interested as well.
 
-I just hit the BUG_ON(vp == NULL) that I put in xfs_iunpin()
-in this patch. The xfs inode had no link to the bhv_vnode, nor
-did it have either XFS_IRECLAIM* flag set, and hence it triggered
-the BUG.
+<spare-time>
 
-The problem appears to be  a race with on lookup with an inode that
-is getting deleted - xfs_iget_core() finds the xfs_inode in the
-cache with the XFS_IRECLAIMABLE flag set, so it removes that flag.
-It then removes the inode from the reclaim list. Then it checks to
-see if the inode has been unlinked, and if the create flag is not
-set we return ENOENT.
+well, as a quick fix, this seems to do the trick:
 
-Hence if we have transactions still to be written to disk on this
-inode, when xfs_iunpin finally gets called there is no reclaim flag
-set so it assumes that there's a vnode assoicated with the xfs inode
-and we got kaboom.
+--- linux-2.6.18.orig/fs/xfs/xfs_log_recover.c
++++ linux-2.6.18/fs/xfs/xfs_log_recover.c
+@@ -75,6 +75,9 @@ xlog_get_bp(
+         int             num_bblks)
+  {
+         ASSERT(num_bblks > 0);
++       if (num_bblks <= 0) {
++               return NULL;
++       }
 
-I think this is a pre-existing bug in xfs_iget_core() that can
-result in a memory leak because xfs_iget_core() removes it from
-the reclaim list and then forgets about at...
+         if (log->l_sectbb_log) {
+                 if (num_bblks > 1)
 
-The following patch sits on top of the others - it may not apply
-because the tree I just pulled it from has the radix tree
-inode cache patches applied earlier in the series.
+but it's not the most helpful output:
 
-Comments?
+XFS: Log inconsistent (didn't find previous header)
+XFS: empty log check failed
+XFS: log mount/recovery failed: error 5
+XFS: log mount failed
 
-Cheers,
+... but not that bad I guess.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+it's getting the 0 allocation because last & start are equal here:
 
+num_blks 0 last 2756 start 2756
 
----
- fs/xfs/xfs_iget.c |   28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+  [<dec87bd5>] xlog_find_verify_log_record+0x45/0x2f2 [xfs]
+  [<dec88254>] xlog_find_tail+0x20e/0xb8d [xfs]
+  [<dec88be9>] xlog_recover+0x16/0x22d [xfs]
+  [<dec84338>] xfs_log_mount+0x4e4/0x530 [xfs]
+  [<dec8b2af>] xfs_mountfs+0xa58/0xf61 [xfs]
+  [<dec7dd7b>] xfs_ioinit+0x1e/0x23 [xfs]
+  [<dec91db8>] xfs_mount+0x7a8/0x875 [xfs]
+  [<deca2713>] vfs_mount+0x17/0x1a [xfs]
+  [<deca25b5>] xfs_fs_fill_super+0x6c/0x1b3 [xfs]
+  [<c047bd7b>] get_sb_bdev+0xd1/0x11f
+  [<deca1ac9>] xfs_fs_get_sb+0x20/0x25 [xfs]
+  [<c047b933>] vfs_kern_mount+0x83/0xf6
+  [<c047b9e8>] do_kern_mount+0x2d/0x3e
+  [<c048ee67>] do_mount+0x5fe/0x671
+  [<c048ef51>] sys_mount+0x77/0xae
+  [<c0403fb3>] syscall_call+0x7/0xb
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_iget.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_iget.c	2006-10-18 11:27:04.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_iget.c	2006-10-18 12:20:20.748107559 +1000
-@@ -164,6 +164,34 @@ again:
- 
- 				goto again;
- 			}
-+
-+			/*
-+			 * If IRECLAIMABLE is set on this inode and lookup is
-+			 * racing with unlink, then we should return an error
-+			 * immediately so we don't remove it from the reclaim
-+			 * list and potentially leak the inode.
-+			 *
-+			 * Also, there may be transactions sitting in the
-+			 * incore log buffers or being flushed to disk at this
-+			 * time.  We can't clear the XFS_IRECLAIMABLE flag
-+			 * until these transactions have hit the disk,
-+			 * otherwise we will void the guarantee the flag
-+			 * provides xfs_iunpin()
-+			 */
-+			if (xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
-+				if (ip->i_d.di_mode == 0) &&
-+				    !(flags & XFS_IGET_CREATE)) {
-+					read_unlock(&ih->ih_lock);
-+					return ENOENT;
-+				}
-+				if (xfs_ipincount(ip)) {
-+					read_unlock(&ih->ih_lock);
-+					xfs_log_force(mp, 0,
-+						XFS_LOG_FORCE|XFS_LOG_SYNC);
-+					XFS_STATS_INC(xs_ig_frecycle);
-+					goto again;
-+				}
-+			}
- 			vn_trace_exit(vp, "xfs_iget.alloc",
- 				(inst_t *)__return_address);
- 
+and they're equal because in xlog_find_zeroed():
+
+         start_blk = last_blk - num_scan_bblks;
+
+/* here, start 2756 last 3268 num_scan_bblks 512 */
+
+         /*
+          * We search for any instances of cycle number 0 that occur before
+          * our current estimate of the head.  What we're trying to detect is
+          *        1 ... | 0 | 1 | 0...
+          *                       ^ binary search ends here
+          */
+         if ((error = xlog_find_verify_cycle(log, start_blk,
+                                          (int)num_scan_bblks, 0, &new_blk)))
+                 goto bp_err;
+         if (new_blk != -1)
+                 last_blk = new_blk;
+
+/* now new last_blk == new_blk == 2756, same as start */
+
+         /*
+          * Potentially backup over partial log record write.  We don't need
+          * to search the end of the log because we know it is zero.
+          */
+         if ((error = xlog_find_verify_log_record(log, start_blk,
+                                 &last_blk, 0)) == -1) {
+
+Maybe that's enough for Tim to come up with a better check :)
+
+-Eric
