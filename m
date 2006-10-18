@@ -1,117 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 20:47:58 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9I3lmaG027987
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 20:47:51 -0700
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71F59D19843E
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 20:47:06 -0700 (PDT)
-Message-ID: <4535A3BE.9000006@sandeen.net>
-Date: Tue, 17 Oct 2006 22:47:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 21:07:21 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9I476aG029842
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 21:07:11 -0700
+Date: Wed, 18 Oct 2006 14:06:11 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: [PATCH 1/2] Make stuff static
+Message-ID: <3A69E64373AA5E3A31AB1326@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20061017215706.GI8394166@melbourne.sgi.com>
+References: <20060929032856.8DA9C18001A5E@sandeen.net>
+ <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local> <45338DDE.8020903@sandeen.net>
+ <4533FAEA.2080500@sandeen.net> <20061016232250.GM11034@melbourne.sgi.com>
+ <1161042943.5723.117.camel@xenon.msp.redhat.com> <20061017005038.GN11034@melbourne.sgi.com>
+ <AED98B89E193744D39BAC541@pmmelb207.melbourne.sgi.com> <20061017215706.GI8394166@melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: corrupted log causes infinite loop at mount
-References: <452FECFE.5050902@sandeen.net> <4531CC5D.5010705@melbourne.sgi.com> <45323F7F.80807@sandeen.net>
-In-Reply-To: <45323F7F.80807@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: chatz@melbourne.sgi.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Russell Cattelan <cattelan@thebarn.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> David Chatterton wrote:
->> I assume the loop is further up the chain since kmem_alloc should 
->> return NULL
->> when asked to alloc 0. So then the problem also lies further up the 
->> chain in
->> checking for a 0 length before calling down, and/or not assuming we 
->> are out of
->> memory when xfs_buf_get_noaddr fails.
-> 
-> Well, I set kdb breakpoints, and we only entered xfs_buf_get_noaddr 
-> once, so I assume it's looping inside.  But I was looking for bugs on, 
-> um, another filesystem at the time, so didn't investigate much.
-> 
-> I can put it on my list of spare-time bugs to look at, or just thought 
-> you guys may be interested as well.
+Dave,
 
-<spare-time>
+--On 18 October 2006 7:57:06 AM +1000 David Chinner <dgc@sgi.com> wrote:
 
-well, as a quick fix, this seems to do the trick:
+> On Tue, Oct 17, 2006 at 05:13:01PM +1000, Tim Shimmin wrote:
+>> --On 17 October 2006 10:50:38 AM +1000 David Chinner <dgc@sgi.com> wrote:
+>> > Fix them - inline functions in header files should always be "static
+>> > inline".  Inline functions in .c files should always be static as
+>> > well - if they need to be accessed from different source files then
+>> > they need to be in header files.  Hence "STATIC inline" is broken
+>> > code and should be fixed anyway. Luckily, there are very few of
+>> > these to fix and they are all in .c files:
+>> >
+>> > chook 137% grep -rIw "STATIC inline" fs/xfs | wc -l
+>> > 21
+>>
+>> So you are saying that "static inline"s should always be.
+>
+> Yup.
+>
+>> So for CONFIG_XFS_DEBUG where we define STATIC and so make static
+>> disappear for uses of STATIC, we will no longer touch these
+>> "static inline" functions.
+>
+> Yup. The function will still get inlined, so changing it's scope on
+> debug builds doesn't provide any benefit IMO. FWIW, for debug
+> builds we probably want noinline....
+>
+Yep. That's what I was meaning.
+On debug I want the STATIC_INLINE's to go away (well, noinline),
+so that I can see the funcs in the debug trace.
 
---- linux-2.6.18.orig/fs/xfs/xfs_log_recover.c
-+++ linux-2.6.18/fs/xfs/xfs_log_recover.c
-@@ -75,6 +75,9 @@ xlog_get_bp(
-         int             num_bblks)
-  {
-         ASSERT(num_bblks > 0);
-+       if (num_bblks <= 0) {
-+               return NULL;
-+       }
+>> I thought that for debug, we could stop them from being inline
+>> for easier debugging. We could have a STATIC_INLINE :-)
+>
+> We could, but I don't think it gains us anything.
+It gives us what we said above, i.e. on debug they become noinline.
+And like Russell said, it makes it clearer what is happening.
 
-         if (log->l_sectbb_log) {
-                 if (num_bblks > 1)
+On non-debug,
+STATIC        -> static noinline
+STATIC_INLINE -> static inline
 
-but it's not the most helpful output:
+On debug,
+STATIC        -> noinline
+STATIC_INLINE -> noinline
 
-XFS: Log inconsistent (didn't find previous header)
-XFS: empty log check failed
-XFS: log mount/recovery failed: error 5
-XFS: log mount failed
+Although for STATIC_INLINE in headers, it won't work on debug b/c of
+multiple definitions. D'oh.
 
-... but not that bad I guess.
-
-it's getting the 0 allocation because last & start are equal here:
-
-num_blks 0 last 2756 start 2756
-
-  [<dec87bd5>] xlog_find_verify_log_record+0x45/0x2f2 [xfs]
-  [<dec88254>] xlog_find_tail+0x20e/0xb8d [xfs]
-  [<dec88be9>] xlog_recover+0x16/0x22d [xfs]
-  [<dec84338>] xfs_log_mount+0x4e4/0x530 [xfs]
-  [<dec8b2af>] xfs_mountfs+0xa58/0xf61 [xfs]
-  [<dec7dd7b>] xfs_ioinit+0x1e/0x23 [xfs]
-  [<dec91db8>] xfs_mount+0x7a8/0x875 [xfs]
-  [<deca2713>] vfs_mount+0x17/0x1a [xfs]
-  [<deca25b5>] xfs_fs_fill_super+0x6c/0x1b3 [xfs]
-  [<c047bd7b>] get_sb_bdev+0xd1/0x11f
-  [<deca1ac9>] xfs_fs_get_sb+0x20/0x25 [xfs]
-  [<c047b933>] vfs_kern_mount+0x83/0xf6
-  [<c047b9e8>] do_kern_mount+0x2d/0x3e
-  [<c048ee67>] do_mount+0x5fe/0x671
-  [<c048ef51>] sys_mount+0x77/0xae
-  [<c0403fb3>] syscall_call+0x7/0xb
-
-and they're equal because in xlog_find_zeroed():
-
-         start_blk = last_blk - num_scan_bblks;
-
-/* here, start 2756 last 3268 num_scan_bblks 512 */
-
-         /*
-          * We search for any instances of cycle number 0 that occur before
-          * our current estimate of the head.  What we're trying to detect is
-          *        1 ... | 0 | 1 | 0...
-          *                       ^ binary search ends here
-          */
-         if ((error = xlog_find_verify_cycle(log, start_blk,
-                                          (int)num_scan_bblks, 0, &new_blk)))
-                 goto bp_err;
-         if (new_blk != -1)
-                 last_blk = new_blk;
-
-/* now new last_blk == new_blk == 2756, same as start */
-
-         /*
-          * Potentially backup over partial log record write.  We don't need
-          * to search the end of the log because we know it is zero.
-          */
-         if ((error = xlog_find_verify_log_record(log, start_blk,
-                                 &last_blk, 0)) == -1) {
-
-Maybe that's enough for Tim to come up with a better check :)
-
--Eric
+--Tim
