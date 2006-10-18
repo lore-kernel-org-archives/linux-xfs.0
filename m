@@ -1,43 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 16:47:55 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9HNliaG024083
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 16:47:46 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Oct 2006 17:04:13 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9I045aG026555
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 17:04:05 -0700
 Received: from hancock.sc.steeleye.com (stat9.steeleye.com [209.192.50.41])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DECAD192898
-	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 15:42:22 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D898C4B18E0
+	for <xfs@oss.sgi.com>; Tue, 17 Oct 2006 17:03:21 -0700 (PDT)
 Subject: Re: CFP: Linux 2007 File System & IO Workshop
 From: James Bottomley <James.Bottomley@SteelEye.com>
-In-Reply-To: <4534268E.9030201@emc.com>
-References: <4534268E.9030201@emc.com>
+In-Reply-To: <20061017232506.36297.qmail@web31805.mail.mud.yahoo.com>
+References: <20061017232506.36297.qmail@web31805.mail.mud.yahoo.com>
 Content-Type: text/plain
-Date: Tue, 17 Oct 2006 18:40:34 -0400
-Message-Id: <1161124834.6245.51.camel@mulgrave.il.steeleye.com>
+Date: Tue, 17 Oct 2006 20:00:08 -0400
+Message-Id: <1161129608.6245.61.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ric Wheeler <ric@emc.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
+To: ltuikov@yahoo.com
+Cc: Ric Wheeler <ric@emc.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
 
-On Mon, 2006-10-16 at 20:40 -0400, Ric Wheeler wrote:
-> On  February 12-13, we have put together a combined Linux file system & 
-> IO 2-day workshop in San Jose, CA. Note that the USENIX File System and 
-> Storage Technologies conference follows us in the same venue, so we hope 
-> to get some interaction between the two groups as well as leverage the 
-> USENIX people to help us get this done.
-> 
-> For more information, please see:
-> 
-> http://www.usenix.org/events/lsf07/
+On Tue, 2006-10-17 at 16:25 -0700, Luben Tuikov wrote:
+> The only mentioning of "Vancouver Storage summit" in the web content
+> therein was, quoting from http://www.usenix.org/events/lsf07/cfp/ :
+>  ...
+>  * Progress reports on implementation of features discussed at the
+>    Vancouver Storage Summit
+>  ...
+> So by "follow on" you mean "progress report" only?  Or will this
+> event also accept and/or discuss new material?
 
-Just to clarify, this event is a follow on to the Vancouver Storage
-summit.   Although USENIX is helping us to run it, you don't have to be
-a USENIX member to submit a position paper.  The idea of the position
-papers is to give the limited number of places (for storage we've got
-about 20-25 and about the same again for fs) to people who have
-interesting topics they need to discuss---so if you submit, be prepared
-to make a presentation of it.
+That was only one of the topics ... there are several other suggestions
+in the list you pulled that quote from.
+
+> > Although USENIX is helping us to run it, you don't have to be
+> > a USENIX member to submit a position paper.  The idea of the position
+> > papers is to give the limited number of places (for storage we've got
+> > about 20-25 and about the same again for fs) to people who have
+> > interesting topics they need to discuss---so if you submit, be prepared
+> > to make a presentation of it.
+> 
+> Can I make a presentation of this paper:
+
+You can submit it as your position paper, certainly.
+
+However, the object of this event is not to collect a list of papers to
+be presented: it's not a conference with hundreds of attendees (if you
+want to present to an audience, you should submit to FAST, which is such
+a conference, with which we're co-located).  It's a roundtable type
+discussion with 20-25 people in the field; plus some plenary sessions to
+get input and ideas from people working on the filesystem layer.  The
+object is to stimulate discussion of important issues (which may be
+guided by papers or other materials).  The position paper thing is only
+to ensure people actually have things they want to discuss (and to allow
+the programme committee to pick the attendees if there would be too
+many).
 
 James
