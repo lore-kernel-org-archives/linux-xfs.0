@@ -1,24 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Oct 2006 05:40:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9JCdpaG029923
-	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 05:39:52 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Oct 2006 06:39:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9JDcnaG005512
+	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 06:38:50 -0700
 Received: from mail.gmx.net (mail.gmx.net [213.165.64.20])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 0C86E4B5904
-	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 05:38:43 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with SMTP id 4CA12D199F06
+	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 06:38:03 -0700 (PDT)
 Content-Disposition: inline
 From: peyytmek@gmx.de
 Subject: Fwd: Re: xfs mounting problem, hdb1 just freezes
-Date: Thu, 19 Oct 2006 14:36:13 +0000
+Date: Thu, 19 Oct 2006 14:35:47 +0000
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Message-Id: <200610191436.13773.peyytmek@gmx.de>
+Message-Id: <200610191435.47390.peyytmek@gmx.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+
+
+
+----------  Weitergeleitete Nachricht  ----------
+
+Subject: Re: xfs mounting problem, hdb1 just freezes
+Date: Donnerstag, 19. Oktober 2006 14:33
+From: peyytmek@gmx.de
+To: Timothy Shimmin <tes@sgi.com>
 
 Hello.
 Thanks for your answer.
