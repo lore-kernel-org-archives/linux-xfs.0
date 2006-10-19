@@ -1,31 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 18:35:20 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 18:40:33 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9J1Z6aG023235
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 18:35:08 -0700
-Date: Thu, 19 Oct 2006 11:34:16 +1000 (AEST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9J1eNaG024608
+	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 18:40:26 -0700
+Date: Thu, 19 Oct 2006 11:39:34 +1000 (AEST)
 From: Barry Naujok <bnaujok@snort.melbourne.sgi.com>
-Message-Id: <200610190134.k9J1YGGc11073613@snort.melbourne.sgi.com>
-Subject: TAKE 957164 - 
+Message-Id: <200610190139.k9J1dYUV11075412@snort.melbourne.sgi.com>
+Subject: TAKE 957194 - Fix LEAFN node level is 1 bogus warning in xfs_repair
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-Fix up prefetched v1 inode nlink check and repair in xfs_repair
 
-
-Date:  Thu Oct 19 11:33:46 AEST 2006
+Date:  Thu Oct 19 11:38:43 AEST 2006
 Workarea:  snort.melbourne.sgi.com:/home/bnaujok/isms/repair
-Inspected by:  mvalluri@sgi.com
+Inspected by:  roger@filmlight.ltd.uk
 
 The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  master-melb:xfs-cmds:27235a
-xfsprogs/repair/phase7.c - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase7.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-	- pv:957164
-	  Fix up prefetched v1 inode nlink check and repair in xfs_repair
+Modid:  master-melb:xfs-cmds:27238a
+xfsprogs/VERSION - 1.165 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.165&r2=text&tr2=1.164&f=h
+xfsprogs/doc/CHANGES - 1.223 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.223&r2=text&tr2=1.222&f=h
+	- Bump version to 2.8.15
+
+xfsprogs/repair/dir2.c - 1.20 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dir2.c.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+	- pv:957194
+	  Fix LEAFN node level is 1 bogus warning in xfs_repair
