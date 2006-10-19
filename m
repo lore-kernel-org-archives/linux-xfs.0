@@ -1,245 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 19:02:16 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9J229aG028220
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 19:02:10 -0700
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF9B0D198E17
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 19:01:26 -0700 (PDT)
-Subject: [PATCH] remove old irix log replay cases
-Message-Id: <20061019020125.25D9718D90452@sandeen.net>
-Date: Wed, 18 Oct 2006 21:01:25 -0500 (CDT)
-From: sandeen@sandeen.net
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 21:22:38 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9J4MNaG020153
+	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 21:22:26 -0700
+Date: Thu, 19 Oct 2006 14:21:43 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: Xfsdump error
+Message-ID: <80F9EC9DBCD1D89054F253DC@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <200610180935.k9I9ZKYD014552@smartpet.ph.liv.ac.uk>
+References: <200610180935.k9I9ZKYD014552@smartpet.ph.liv.ac.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: John Cresswell <jrc@ns.ph.liv.ac.uk>, xfs@oss.sgi.com
 
-I think the irix 5.3 and 6.1 log handling can go, since linux
-refuses outright to do anything with irix-style logs, no?
+Hi John,
 
-The remaining single-case switch statements might be a little
-odd, but I suppose that they still show there's flexibility
-for log format...
+--On 18 October 2006 10:35:20 AM +0100 John Cresswell <jrc@ns.ph.liv.ac.uk> wrote:
 
-Maybe the #defines could stay, or at least as comments, for
-hysterical raisins...
+> I hope sombody can help me with this problem.
+> I have had to physically move our server, and
+> though connections and tape drives are the same, backups no longer work.
 
--Eric
+OOI, Did you change anything else? The kernel or st driver?
+What version of xfsdump?
 
- xfs_buf_item.h    |   18 ----------------
- xfs_log_recover.c |   58 +-----------------------------------------------------
- xfs_trans.h       |    4 ---
- 3 files changed, 3 insertions(+), 77 deletions(-)
+> The tape drive can be written and read OK using tar, for example,
+> but not using xfsdump. A truncated example follows ...
+>
+> xfsdump: using scsi tape (drive_scsitape) strategy
+...
+> xfsdump: estimated dump size: 81317119424 bytes
+> xfsdump: estimated dump header size: 19318112 bytes
+> xfsdump: estimated component sizes: global hdr: 1337006139379712 bytes, inomap: 81616060935045120
+> bytes,  dir entries: 734544548415406080 bytes, file hdrs: 16395459996558557184 bytes, datasz:
+> 578909639576387602 bytes xfsdump: drive op: init
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+hmmm, ridiculous size numbers but this wouldn't effect you
+I don't believe.
 
-Index: xfs-linux-allpatches/xfs_buf_item.h
-===================================================================
---- xfs-linux-allpatches.orig/xfs_buf_item.h
-+++ xfs-linux-allpatches/xfs_buf_item.h
-@@ -21,23 +21,7 @@
- /*
-  * This is the structure used to lay out a buf log item in the
-  * log.  The data map describes which 128 byte chunks of the buffer
-- * have been logged.  This structure works only on buffers that
-- * reside up to the first TB in the filesystem.  These buffers are
-- * generated only by pre-6.2 systems and are known as XFS_LI_6_1_BUF.
-- */
--typedef struct xfs_buf_log_format_v1 {
--	unsigned short	blf_type;	/* buf log item type indicator */
--	unsigned short	blf_size;	/* size of this item */
--	__int32_t	blf_blkno;	/* starting blkno of this buf */
--	ushort		blf_flags;	/* misc state */
--	ushort		blf_len;	/* number of blocks in this buf */
--	unsigned int	blf_map_size;	/* size of data bitmap in words */
--	unsigned int	blf_data_map[1];/* variable size bitmap of */
--					/*   regions of buffer in this item */
--} xfs_buf_log_format_v1_t;
--
--/*
-- * This is a form of the above structure with a 64 bit blkno field.
-+ * have been logged.
-  * For 6.2 and beyond, this is XFS_LI_BUF.  We use this to log everything.
-  */
- typedef struct xfs_buf_log_format_t {
-Index: xfs-linux-allpatches/xfs_log_recover.c
-===================================================================
---- xfs-linux-allpatches.orig/xfs_log_recover.c
-+++ xfs-linux-allpatches/xfs_log_recover.c
-@@ -1514,7 +1514,6 @@ xlog_recover_reorder_trans(
- {
- 	xlog_recover_item_t	*first_item, *itemq, *itemq_next;
- 	xfs_buf_log_format_t	*buf_f;
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	ushort			flags = 0;
- 
- 	first_item = itemq = trans->r_itemq;
-@@ -1522,29 +1521,16 @@ xlog_recover_reorder_trans(
- 	do {
- 		itemq_next = itemq->ri_next;
- 		buf_f = (xfs_buf_log_format_t *)itemq->ri_buf[0].i_addr;
--		switch (ITEM_TYPE(itemq)) {
--		case XFS_LI_BUF:
--			flags = buf_f->blf_flags;
--			break;
--		case XFS_LI_6_1_BUF:
--		case XFS_LI_5_3_BUF:
--			obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--			flags = obuf_f->blf_flags;
--			break;
--		}
- 
- 		switch (ITEM_TYPE(itemq)) {
- 		case XFS_LI_BUF:
--		case XFS_LI_6_1_BUF:
--		case XFS_LI_5_3_BUF:
-+			flags = buf_f->blf_flags;
- 			if (!(flags & XFS_BLI_CANCEL)) {
- 				xlog_recover_insert_item_frontq(&trans->r_itemq,
- 								itemq);
- 				break;
- 			}
- 		case XFS_LI_INODE:
--		case XFS_LI_6_1_INODE:
--		case XFS_LI_5_3_INODE:
- 		case XFS_LI_DQUOT:
- 		case XFS_LI_QUOTAOFF:
- 		case XFS_LI_EFD:
-@@ -1583,7 +1569,6 @@ xlog_recover_do_buffer_pass1(
- 	xfs_buf_cancel_t	*nextp;
- 	xfs_buf_cancel_t	*prevp;
- 	xfs_buf_cancel_t	**bucket;
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	xfs_daddr_t		blkno = 0;
- 	uint			len = 0;
- 	ushort			flags = 0;
-@@ -1594,13 +1579,6 @@ xlog_recover_do_buffer_pass1(
- 		len = buf_f->blf_len;
- 		flags = buf_f->blf_flags;
- 		break;
--	case XFS_LI_6_1_BUF:
--	case XFS_LI_5_3_BUF:
--		obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--		blkno = (xfs_daddr_t) obuf_f->blf_blkno;
--		len = obuf_f->blf_len;
--		flags = obuf_f->blf_flags;
--		break;
- 	}
- 
- 	/*
-@@ -1746,7 +1724,6 @@ xlog_recover_do_buffer_pass2(
- 	xlog_t			*log,
- 	xfs_buf_log_format_t	*buf_f)
- {
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	xfs_daddr_t		blkno = 0;
- 	ushort			flags = 0;
- 	uint			len = 0;
-@@ -1757,13 +1734,6 @@ xlog_recover_do_buffer_pass2(
- 		flags = buf_f->blf_flags;
- 		len = buf_f->blf_len;
- 		break;
--	case XFS_LI_6_1_BUF:
--	case XFS_LI_5_3_BUF:
--		obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--		blkno = (xfs_daddr_t) obuf_f->blf_blkno;
--		flags = obuf_f->blf_flags;
--		len = (xfs_daddr_t) obuf_f->blf_len;
--		break;
- 	}
- 
- 	return xlog_check_buffer_cancelled(log, blkno, len, flags);
-@@ -1799,7 +1769,6 @@ xlog_recover_do_inode_buffer(
- 	int			inodes_per_buf;
- 	xfs_agino_t		*logged_nextp;
- 	xfs_agino_t		*buffer_nextp;
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	unsigned int		*data_map = NULL;
- 	unsigned int		map_size = 0;
- 
-@@ -1808,12 +1777,6 @@ xlog_recover_do_inode_buffer(
- 		data_map = buf_f->blf_data_map;
- 		map_size = buf_f->blf_map_size;
- 		break;
--	case XFS_LI_6_1_BUF:
--	case XFS_LI_5_3_BUF:
--		obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--		data_map = obuf_f->blf_data_map;
--		map_size = obuf_f->blf_map_size;
--		break;
- 	}
- 	/*
- 	 * Set the variables corresponding to the current region to
-@@ -1912,7 +1875,6 @@ xlog_recover_do_reg_buffer(
- 	int			i;
- 	int			bit;
- 	int			nbits;
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	unsigned int		*data_map = NULL;
- 	unsigned int		map_size = 0;
- 	int                     error;
-@@ -1922,12 +1884,6 @@ xlog_recover_do_reg_buffer(
- 		data_map = buf_f->blf_data_map;
- 		map_size = buf_f->blf_map_size;
- 		break;
--	case XFS_LI_6_1_BUF:
--	case XFS_LI_5_3_BUF:
--		obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--		data_map = obuf_f->blf_data_map;
--		map_size = obuf_f->blf_map_size;
--		break;
- 	}
- 	bit = 0;
- 	i = 1;  /* 0 is the buf format structure */
-@@ -2160,7 +2116,6 @@ xlog_recover_do_buffer_trans(
- 	int			pass)
- {
- 	xfs_buf_log_format_t	*buf_f;
--	xfs_buf_log_format_v1_t	*obuf_f;
- 	xfs_mount_t		*mp;
- 	xfs_buf_t		*bp;
- 	int			error;
-@@ -2197,13 +2152,6 @@ xlog_recover_do_buffer_trans(
- 		len = buf_f->blf_len;
- 		flags = buf_f->blf_flags;
- 		break;
--	case XFS_LI_6_1_BUF:
--	case XFS_LI_5_3_BUF:
--		obuf_f = (xfs_buf_log_format_v1_t*)buf_f;
--		blkno = obuf_f->blf_blkno;
--		len = obuf_f->blf_len;
--		flags = obuf_f->blf_flags;
--		break;
- 	default:
- 		xfs_fs_cmn_err(CE_ALERT, log->l_mp,
- 			"xfs_log_recover: unknown buffer type 0x%x, logdev %s",
-@@ -2830,9 +2778,7 @@ xlog_recover_do_trans(
- 		 * where xfs_daddr_t is 32-bits but mount will warn us
- 		 * off a > 1 TB filesystem before we get here.
- 		 */
--		if ((ITEM_TYPE(item) == XFS_LI_BUF) ||
--		    (ITEM_TYPE(item) == XFS_LI_6_1_BUF) ||
--		    (ITEM_TYPE(item) == XFS_LI_5_3_BUF)) {
-+		if ((ITEM_TYPE(item) == XFS_LI_BUF)) {
- 			if  ((error = xlog_recover_do_buffer_trans(log, item,
- 								 pass)))
- 				break;
-Index: xfs-linux-allpatches/xfs_trans.h
-===================================================================
---- xfs-linux-allpatches.orig/xfs_trans.h
-+++ xfs-linux-allpatches/xfs_trans.h
-@@ -39,13 +39,9 @@ typedef struct xfs_trans_header {
- /*
-  * Log item types.
-  */
--#define	XFS_LI_5_3_BUF		0x1234	/* v1 bufs, 1-block inode buffers */
--#define	XFS_LI_5_3_INODE	0x1235	/* 1-block inode buffers */
- #define	XFS_LI_EFI		0x1236
- #define	XFS_LI_EFD		0x1237
- #define	XFS_LI_IUNLINK		0x1238
--#define	XFS_LI_6_1_INODE	0x1239	/* 4K non-aligned inode bufs */
--#define	XFS_LI_6_1_BUF		0x123a	/* v1, 4K inode buffers */
- #define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
- #define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
- #define	XFS_LI_DQUOT		0x123d
+> xfsdump: drive op: sync
+> xfsdump: Media op: begin media file
+> xfsdump: drive op: begin read
+> xfsdump: preparing drive
+> xfsdump: tape op: opening drive
+> xfsdump: tape op: get status
+> xfsdump: tape status = bot onl
+> xfsdump: tape op: get block size info
+> xfsdump: max=1048576 cur=0
+> xfsdump: variable block size tape drive at /dev/st0
+> xfsdump: tape op: get block size info
+> xfsdump: max=1048576 cur=0
+> xfsdump: recommended tape media file size set to 0x7fffffffffffffff bytes
+> xfsdump: recommended tape media mark separation set to 0x1000000 bytes
+> xfsdump: determining tape record size: trying 1048576 (0x100000) bytes
+> xfsdump: tape op: get status
+> xfsdump: tape status = bot onl
+> xfsdump: tape positioned at BOT: doing redundant rewind
+> xfsdump: tape op: rewind 0
+> xfsdump: tape op: get status
+> xfsdump: tape status = bot onl
+> xfsdump: tape op: reading 1048576 bytes
+> xfsdump: tape op read of 1048576 bytes failed: errno == 16 (Device or resource busy)
+> xfsdump: tape op: get status
+> xfsdump: tape status = onl
+> xfsdump: ERROR: unexpected tape error: errno 16 nread -1 blksz 1048576 recsz 1048576 isvar 1
+> wasatbot 1 eod 0 fmk 0 eot 0 onl 1 wprot 0 ew 0  xfsdump: ERROR: unexpected error from
+> do_begin_read: 10
+
+Looks like it is just doing a read of 1,048,576 bytes and failing with error 16.
+Although, after the read the tape is no longer at the start (BOT).
+IIRC, tar uses fairly small record sizes for I/O - 10K or so.
+Perhaps you could try dd'ing various size blocks from the tape and see what works.
+IIRC, Kai Makisara (scsi tape driver guy) later recommended using a block size
+of 256K (262144 bytes) - reckoned that was big enough for streaming.
+So you might like to try running with "-b 262144" for dump and restore.
+It may not be the size of the read that is the issue, particularly since
+the error code is for device busy, but it is one difference that I can think
+of why tar might work but dump not here. Why it was working before, however,
+is a good question then.
+
+--Tim
