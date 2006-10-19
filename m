@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 14:07:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9IL7faG011834
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 14:07:43 -0700
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.190])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EA5AD198E29
-	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 13:07:35 -0700 (PDT)
-Received: by nf-out-0910.google.com with SMTP id n29so746086nfc
-        for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 13:07:34 -0700 (PDT)
-Message-ID: <84144f020610181307r7566aa2bp3d7f31388574d457@mail.gmail.com>
-Date: Wed, 18 Oct 2006 23:07:33 +0300
-From: "Pekka Enberg" <penberg@cs.helsinki.fi>
-Subject: Re: Re: [xfs-masters] Re: [PATCH] fs/xfs: Handcrafted MIN/MAX macro removal
-In-Reply-To: <1161193885.5723.168.camel@xenon.msp.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <1161169068.20400.149.camel@amol.verismonetworks.com>
-	 <1161193885.5723.168.camel@xenon.msp.redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Oct 2006 18:35:20 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9J1Z6aG023235
+	for <xfs@oss.sgi.com>; Wed, 18 Oct 2006 18:35:08 -0700
+Date: Thu, 19 Oct 2006 11:34:16 +1000 (AEST)
+From: Barry Naujok <bnaujok@snort.melbourne.sgi.com>
+Message-Id: <200610190134.k9J1YGGc11073613@snort.melbourne.sgi.com>
+Subject: TAKE 957164 - 
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Amol Lad <amol@verismonetworks.com>, linux kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On 10/18/06, Russell Cattelan <cattelan@thebarn.com> wrote:
-> This change doesn't seem to do anything?
+Fix up prefetched v1 inode nlink check and repair in xfs_repair
 
-It kills useless wrappers from kernel code making it easier to read
-and maintain for _Linux_ developers.
+
+Date:  Thu Oct 19 11:33:46 AEST 2006
+Workarea:  snort.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  mvalluri@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:27235a
+xfsprogs/repair/phase7.c - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase7.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- pv:957164
+	  Fix up prefetched v1 inode nlink check and repair in xfs_repair
