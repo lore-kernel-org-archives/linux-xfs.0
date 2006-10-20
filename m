@@ -1,71 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Oct 2006 21:19:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Oct 2006 21:26:39 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9K4JGaG001666
-	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 21:19:17 -0700
-Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 93734D198E12
-	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 21:18:33 -0700 (PDT)
-Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162] (may be forged))
-	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id k9K4ITG6004035
-	for <xfs@oss.sgi.com>; Fri, 20 Oct 2006 13:18:29 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id k9K4IT920446 for xfs@oss.sgi.com; Fri, 20 Oct 2006 13:18:29 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv5.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id k9K4ITo19300 for <xfs@oss.sgi.com>; Fri, 20 Oct 2006 13:18:29 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20061020.132253.96801856 for <xfs@oss.sgi.com>
-	; Fri, 20 Oct 2006 13:22:54 +0900
-Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
-	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id DFF96AE4B0
-	for <xfs@oss.sgi.com>; Fri, 20 Oct 2006 13:18:27 +0900 (JST)
-Received: from TNESG9305.tnes.nec.co.jp (TNESG9305.bsd.tnes.nec.co.jp [10.1.104.199])
-	by rifu.bsd.tnes.nec.co.jp (8.12.11/3.7W/BSD-TNES-MX01) with SMTP id k9K4IRaC009766
-	for <xfs@oss.sgi.com>; Fri, 20 Oct 2006 13:18:27 +0900
-Message-Id: <200610200418.AA04613@TNESG9305.tnes.nec.co.jp>
-Date: Fri, 20 Oct 2006 13:18:24 +0900
-Subject: [PATCH] xfs_bmap -n fix
-From: Utako Kusaka <utako@tnes.nec.co.jp>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9K4QVaG003063
+	for <xfs@oss.sgi.com>; Thu, 19 Oct 2006 21:26:32 -0700
+Message-ID: <45384FC6.5040000@ah.jp.nec.com>
+Date: Fri, 20 Oct 2006 13:25:42 +0900
+From: Takenori Nagano <t-nagano@ah.jp.nec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Subject: Re: [patch] Fix xfs_iunpin() sets I_DIRTY_SYNC after clear_inode().
+References: <45237CCE.4010007@ah.jp.nec.com> <20061006032617.GC11034@melbourne.sgi.com> <20061011064357.GN19345@melbourne.sgi.com> <452E32FF.8010109@ah.jp.nec.com> <20061013014651.GC19345@melbourne.sgi.com> <452F83BD.8050501@ah.jp.nec.com> <20061017020218.GE8394166@melbourne.sgi.com> <20061018023325.GL8394166@melbourne.sgi.com> <20061018090701.GU11034@melbourne.sgi.com> <4536E186.5040301@ah.jp.nec.com> <20061019045851.GZ11034@melbourne.sgi.com>
+In-Reply-To: <20061019045851.GZ11034@melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
 Hi,
 
-This patch fixes the issue that
-"xfs_bmap -n [nnn]" doesn't work correctly.
+David Chinner wrote:
+> I don't think so - in the lookup code where we find an existing
+> inode, we don't destroy the inode if XFS_IRECLAIMABLE is set.
+> Instead we do a log force and repeat the lookup. We only destroy
+> the inode in xfs_iget_core() if we raced with another thread
+> reading the inode in off disk after the cache lookup has
+> failed. In this case, we free the inode we read off disk which,
+> by definition, cannot be dirty or pinned at this point so we
+> don't need to wait for anything to be unpinned.
+> 
+> In the case of reclaim, when we flush a dirty inode we already
+> do a xfs_iunpin_wait() (xfs_finish_reclaim()->xfs_iflush()->wait)
+> so we should never get to the point of xfs_idestroy with an inode
+> that is still pinned.
+> 
+> Hence I don't think this is patch is necessary. Did I miss something
+> that I shouldn't have, Takenori?
 
-Example：
-# xfs_io -c "bmap -n 3" test/file2
-test/file2:
-        0: [0..4849151]: 41943136..46792287
-        1: [4849152..51641343]: 46792768..93584959
-        2: [51641344..68418047]: 93585472..110362175
-# xfs_bmap -n 3 test/file2
-test/file2:
-        0: [0..4849151]: 41943136..46792287
-        1: [4849152..51641343]: 46792768..93584959
-        2: [51641344..98433535]: 93585472..140377663
-        3: [98433536..131987455]: 140378176..173932095
-        4: [131987456..145225727]: 173932104..187170375
-        5: [145225728..192017919]: 187170880..233963071
-        6: [192017920..209715199]: 233963584..251660863
+Sorry, you are right. I forgot xfs_iget_core() was modified that it don't reuse
+xfs_inode while i_pincount > 0.
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
+> 
+> FYI, the three patches have survived my testing for almost a day now,
+> so if they pass your testing I think we have a viable fix. I'll
+> sned out a set of updated patches later this afternoon.
 
---- xfsprogs-2.8.11-orgn/io/xfs_bmap.sh 2006-06-26 14:01:15.000000000 +0900
-+++ xfsprogs-2.8.11/io/xfs_bmap.sh      2006-10-20 12:22:19.771009697 +0900
-@@ -14,7 +14,7 @@ do
-        a)      OPTS=$OPTS" -a";;
-        d)      OPTS=$OPTS" -d";;
-        l)      OPTS=$OPTS" -l";;
--       n)      OPTS=$OPTS" '-n "$OPTARG"'";;
-+       n)      OPTS=$OPTS" -n "$OPTARG"";;
-        p)      OPTS=$OPTS" -p";;
-        v)      OPTS=$OPTS" -v";;
-        V)      VERSION=true;;
+Your patches have been working well for 20 hours. I intend to continue
+testing your patches until next Monday, and I'll report the result.
+
+Best Regards,
+-- 
+Takenori Nagano
+<t-nagano@ah.jp.nec.com>
