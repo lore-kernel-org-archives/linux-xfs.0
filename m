@@ -1,55 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Oct 2006 21:26:49 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9N4QaaG003985
-	for <xfs@oss.sgi.com>; Sun, 22 Oct 2006 21:26:39 -0700
-Date: Mon, 23 Oct 2006 14:26:07 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: xfs_ncheck gives outdated and partial result
-Message-ID: <C87D713C7D1338DB3D8FC45A@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <200610200858.08718.daniele@interline.it>
-References: <200610200858.08718.daniele@interline.it>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Oct 2006 23:54:38 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9N6sWaG019084
+	for <xfs@oss.sgi.com>; Sun, 22 Oct 2006 23:54:32 -0700
+Message-ID: <453C66F6.2060103@ah.jp.nec.com>
+Date: Mon, 23 Oct 2006 15:53:42 +0900
+From: Takenori Nagano <t-nagano@ah.jp.nec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: [patch] Fix xfs_iunpin() sets I_DIRTY_SYNC after clear_inode().
+References: <45237CCE.4010007@ah.jp.nec.com> <20061006032617.GC11034@melbourne.sgi.com> <20061011064357.GN19345@melbourne.sgi.com> <452E32FF.8010109@ah.jp.nec.com> <20061013014651.GC19345@melbourne.sgi.com> <452F83BD.8050501@ah.jp.nec.com> <20061017020218.GE8394166@melbourne.sgi.com> <20061018023325.GL8394166@melbourne.sgi.com> <20061018090701.GU11034@melbourne.sgi.com> <4536E186.5040301@ah.jp.nec.com> <20061019045851.GZ11034@melbourne.sgi.com> <45384FC6.5040000@ah.jp.nec.com>
+In-Reply-To: <45384FC6.5040000@ah.jp.nec.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Daniele P." <daniele@interline.it>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
+Hi David,
 
+Your patches are surviving my testing. I have checked results of vmstat and
+/var/log/messages, but I can't see any errors and degradation. I think they are
+a viable fix, too.
 
---On 20 October 2006 8:58:08 AM +0200 "Daniele P." <daniele@interline.it> wrote:
+Takenori Nagano wrote:
+> Hi,
+> 
+> David Chinner wrote:
+>> I don't think so - in the lookup code where we find an existing
+>> inode, we don't destroy the inode if XFS_IRECLAIMABLE is set.
+>> Instead we do a log force and repeat the lookup. We only destroy
+>> the inode in xfs_iget_core() if we raced with another thread
+>> reading the inode in off disk after the cache lookup has
+>> failed. In this case, we free the inode we read off disk which,
+>> by definition, cannot be dirty or pinned at this point so we
+>> don't need to wait for anything to be unpinned.
+>>
+>> In the case of reclaim, when we flush a dirty inode we already
+>> do a xfs_iunpin_wait() (xfs_finish_reclaim()->xfs_iflush()->wait)
+>> so we should never get to the point of xfs_idestroy with an inode
+>> that is still pinned.
+>>
+>> Hence I don't think this is patch is necessary. Did I miss something
+>> that I shouldn't have, Takenori?
+> 
+> Sorry, you are right. I forgot xfs_iget_core() was modified that it don't reuse
+> xfs_inode while i_pincount > 0.
+> 
+>> FYI, the three patches have survived my testing for almost a day now,
+>> so if they pass your testing I think we have a viable fix. I'll
+>> sned out a set of updated patches later this afternoon.
+> 
+> Your patches have been working well for 20 hours. I intend to continue
+> testing your patches until next Monday, and I'll report the result.
+> 
+> Best Regards,
 
-> Hi All,
-> I'm here to ask a couple of question regarding xfs_ncheck.
-> I'm using xfs_db version 2.6.20
->
-...
-> And why it's print only the first file name for inodes pointed
-> by multiple files (2)?
->
-
-I presume you are referring to hardlinks - with multiple directory
-entries pointing to the same inode.
-Looking at db/check.c/addname_inode() it looks like it only stores
-the first name that it comes across during directory processing when
-scanning happens in the blockget command.
-
-
-addname_inode(
-        inodata_t       *id,
-        char            *name,
-        int             namelen)
-{
-        if (!nflag || id->name)  <---- if name exists, then return
-                return;
-        id->name = xmalloc(namelen + 1);
-        memcpy(id->name, name, namelen);
-        id->name[namelen] = '\0';
-}
-
-So we just get one valid path.
-
---Tim
+-- 
+Takenori Nagano <t-nagano@ah.jp.nec.com>
