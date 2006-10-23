@@ -1,61 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Oct 2006 23:54:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Oct 2006 01:35:33 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9N6sWaG019084
-	for <xfs@oss.sgi.com>; Sun, 22 Oct 2006 23:54:32 -0700
-Message-ID: <453C66F6.2060103@ah.jp.nec.com>
-Date: Mon, 23 Oct 2006 15:53:42 +0900
-From: Takenori Nagano <t-nagano@ah.jp.nec.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9N8ZOaG005124
+	for <xfs@oss.sgi.com>; Mon, 23 Oct 2006 01:35:25 -0700
+Received: from web8512.mail.in.yahoo.com (web8512.mail.in.yahoo.com [202.43.219.105])
+	by cuda.sgi.com (Spam Firewall) with SMTP id C81FED1A2AD1
+	for <xfs@oss.sgi.com>; Mon, 23 Oct 2006 00:32:56 -0700 (PDT)
+Message-ID: <20061023072613.33372.qmail@web8512.mail.in.yahoo.com>
+Date: Mon, 23 Oct 2006 08:26:13 +0100 (BST)
+From: satish kumar <imemyself126@yahoo.co.in>
+Subject: mount problem with xfs
 MIME-Version: 1.0
-Subject: Re: [patch] Fix xfs_iunpin() sets I_DIRTY_SYNC after clear_inode().
-References: <45237CCE.4010007@ah.jp.nec.com> <20061006032617.GC11034@melbourne.sgi.com> <20061011064357.GN19345@melbourne.sgi.com> <452E32FF.8010109@ah.jp.nec.com> <20061013014651.GC19345@melbourne.sgi.com> <452F83BD.8050501@ah.jp.nec.com> <20061017020218.GE8394166@melbourne.sgi.com> <20061018023325.GL8394166@melbourne.sgi.com> <20061018090701.GU11034@melbourne.sgi.com> <4536E186.5040301@ah.jp.nec.com> <20061019045851.GZ11034@melbourne.sgi.com> <45384FC6.5040000@ah.jp.nec.com>
-In-Reply-To: <45384FC6.5040000@ah.jp.nec.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi David,
+I formatted a partition of size 5GB with xfs block size=16K
+I am not able to mount
+I get the following problem
+mount:functon not implemented
 
-Your patches are surviving my testing. I have checked results of vmstat and
-/var/log/messages, but I can't see any errors and degradation. I think they are
-a viable fix, too.
+help me out
 
-Takenori Nagano wrote:
-> Hi,
-> 
-> David Chinner wrote:
->> I don't think so - in the lookup code where we find an existing
->> inode, we don't destroy the inode if XFS_IRECLAIMABLE is set.
->> Instead we do a log force and repeat the lookup. We only destroy
->> the inode in xfs_iget_core() if we raced with another thread
->> reading the inode in off disk after the cache lookup has
->> failed. In this case, we free the inode we read off disk which,
->> by definition, cannot be dirty or pinned at this point so we
->> don't need to wait for anything to be unpinned.
->>
->> In the case of reclaim, when we flush a dirty inode we already
->> do a xfs_iunpin_wait() (xfs_finish_reclaim()->xfs_iflush()->wait)
->> so we should never get to the point of xfs_idestroy with an inode
->> that is still pinned.
->>
->> Hence I don't think this is patch is necessary. Did I miss something
->> that I shouldn't have, Takenori?
-> 
-> Sorry, you are right. I forgot xfs_iget_core() was modified that it don't reuse
-> xfs_inode while i_pincount > 0.
-> 
->> FYI, the three patches have survived my testing for almost a day now,
->> so if they pass your testing I think we have a viable fix. I'll
->> sned out a set of updated patches later this afternoon.
-> 
-> Your patches have been working well for 20 hours. I intend to continue
-> testing your patches until next Monday, and I'll report the result.
-> 
-> Best Regards,
+regards
 
--- 
-Takenori Nagano <t-nagano@ah.jp.nec.com>
+ 				
+---------------------------------
+ Find out what India is talking about on  - Yahoo! Answers India 
+ Send FREE SMS to your friend's mobile from Yahoo! Messenger Version 8. Get it NOW
+
+[[HTML alternate version deleted]]
