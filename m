@@ -1,64 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 09:41:20 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9OGf8aG027407
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 09:41:10 -0700
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 87A69D1A56E6
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 08:31:20 -0700 (PDT)
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Date: Tue, 24 Oct 2006 17:29:59 +0200
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610231236.54317.rjw@sisk.pl> <20061024144446.GD11034@melbourne.sgi.com>
-In-Reply-To: <20061024144446.GD11034@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 09:52:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9OGqHaG029961
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 09:52:18 -0700
+Received: from postal1.et.byu.edu (postal1.et.byu.edu [128.187.48.11])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F4064D19FA
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 08:48:14 -0700 (PDT)
+Date: Tue, 24 Oct 2006 09:48:07 -0600 (MDT)
+From: David Dougall <davidd@et.byu.edu>
+Subject: kernel panic after upgrading to 2.6
+Message-ID: <Pine.LNX.4.58.0610240938400.8370@lewis.et.byu.edu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200610241730.00488.rjw@sisk.pl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nigel Cunningham <ncunningham@linuxmail.org>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, Pavel Machek <pavel@ucw.cz>, xfs@oss.sgi.com
+To: nfs@lists.sourceforge.net, xfs@oss.sgi.com
 
-On Tuesday, 24 October 2006 16:44, David Chinner wrote:
-> On Mon, Oct 23, 2006 at 12:36:53PM +0200, Rafael J. Wysocki wrote:
-> > On Monday, 23 October 2006 06:12, Nigel Cunningham wrote:
-> > > XFS can continue to submit I/O from a timer routine, even after
-> > > freezeable kernel and userspace threads are frozen. This doesn't seem to
-> > > be an issue for current swsusp code,
-> > 
-> > So it doesn't look like we need the patch _now_.
-> > 
-> > > but is definitely an issue for Suspend2, where the pages being written could
-> > > be overwritten by Suspend2's atomic copy.
-> > 
-> > And IMO that's a good reason why we shouldn't use RCU pages for storing the
-> > image.  XFS is one known example that breaks things if we do so and
-> > there may be more such things that we don't know of.  The fact that they
-> > haven't appeared in testing so far doesn't mean they don't exist and
-> > moreover some things like that may appear in the future.
-> 
-> Could you please tell us which XFS bits are broken so we can get
-> them fixed?  The XFS daemons should all be checking if they are
-> supposed to freeze (i.e. they call try_to_freeze() after they wake
-> up due to timer expiry) so I thought they were doing the right
-> thing.
-> 
-> However, I have to say that I agree with freezing the filesystems
-> before suspend - at least XFS will be in a consistent state that can
-> be recovered from without corruption if your machine fails to
-> resume....
+I am running kernel 2.6.18 after trying 2.6.17.6 and 2.6.17.13 with
+similar results.  I continue to have nfs servers kernel panic on a very
+regular basis, every few days.  Sometimes I need to do an xfs_repair to
+get the filesystem to remount.  I got the following kernel panic message
+from the syslog this time:
+Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+nfs09 kernel: Oops: 0000 [#1]
 
-Do you mean calling sys_sync() after the userspace has been frozen
-may not be sufficient?
+Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+nfs09 kernel: CPU:    0
 
-Greetings,
-Rafael
+Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+nfs09 kernel: EIP is at xfs_alloc_fix_freelist+0x20/0x486
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+nfs09 kernel: eax: f7dbb000   ebx: 0009a000   ecx: 00000016   edx:
+f8cc8c20
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+nfs09 kernel: esi: 00000016   edi: edab7c90   ebp: d8fd8b64   esp:
+edab7bd0
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel: ds: 007b   es: 007b   ss: 0068
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel: Process nfsd (pid: 4837, ti=edab6000 task=eda8f030
+task.ti=edab6000)
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel: Stack: 00000000 00001a9a 00000009 00000200 00000002 c026fffe
+f0995b80 f7dbb000
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel:        d8fd8b64 f8cc8c20 c0225507 fffffffe 00000000 0000000b
+00000000 00000000
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel:        d8fd8b64 f7dbb000 c0226fef 00000001 00000001 00000000
+00000000 0000000b
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
+nfs09 kernel: Call Trace:
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:16 2006 ...
+nfs09 kernel: Code: 24 04 46 06 00 00 e9 9f fe ff ff 55 57 56 53 81 ec 8c
+00 00 00 89 c7 89 54 24 10 8b 40 04 89 44 24 1c 8b 57 0c 89 54 24 24 8b 2f
+<80> 3a 00 0f 84 e7 02 00 00 c7 84 24 88 00 00 00 00 00 00 00 8b
+
+Message from syslogd@nfs09 at Tue Oct 24 09:35:16 2006 ...
+nfs09 kernel: EIP: [<c022742e>] xfs_alloc_fix_freelist+0x20/0x486 SS:ESP
+0068:edab7bd0
 
 
--- 
-You never change things by fighting the existing reality.
-		R. Buckminster Fuller
+
+I am guessing this is an xfs bug, but I am not sure.  Would anybody please
+confirm this form me.
+I am running nfs-utils-1.0.9 and xfsprogs 2.8.10.
+If there is any more information you need, please let me know.
+Please advise.
+--David Dougall
