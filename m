@@ -1,40 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 15:41:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 16:25:00 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9OMf3aG017622
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 15:41:04 -0700
-Received: from amd.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D94AD1AA4E4
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 14:38:29 -0700 (PDT)
-Date: Tue, 24 Oct 2006 23:37:37 +0200
-From: Pavel Machek <pavel@ucw.cz>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9ONOnaG032703
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 16:24:50 -0700
+Received: from pop5-1.us4.outblaze.com (pop5-1.us4.outblaze.com [205.158.62.125])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 9F366D1A46EE
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 15:19:28 -0700 (PDT)
 Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Message-ID: <20061024213737.GD5662@elf.ucw.cz>
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610231236.54317.rjw@sisk.pl> <20061024144446.GD11034@melbourne.sgi.com> <200610241730.00488.rjw@sisk.pl> <20061024163345.GG11034@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061024163345.GG11034@melbourne.sgi.com>
+From: Nigel Cunningham <ncunningham@linuxmail.org>
+In-Reply-To: <20061024144446.GD11034@melbourne.sgi.com>
+References: <1161576735.3466.7.camel@nigel.suspend2.net>
+	 <200610231236.54317.rjw@sisk.pl> <20061024144446.GD11034@melbourne.sgi.com>
+Content-Type: text/plain
+Date: Wed, 25 Oct 2006 08:19:26 +1000
+Message-Id: <1161728366.22729.28.camel@nigel.suspend2.net>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Nigel Cunningham <ncunningham@linuxmail.org>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, Pavel Machek <pavel@ucw.cz>, xfs@oss.sgi.com
 
-Hi!
+Hi David.
 
-> > Do you mean calling sys_sync() after the userspace has been frozen
-> > may not be sufficient?
+On Wed, 2006-10-25 at 00:44 +1000, David Chinner wrote:
+> On Mon, Oct 23, 2006 at 12:36:53PM +0200, Rafael J. Wysocki wrote:
+> > On Monday, 23 October 2006 06:12, Nigel Cunningham wrote:
+> > > XFS can continue to submit I/O from a timer routine, even after
+> > > freezeable kernel and userspace threads are frozen. This doesn't seem to
+> > > be an issue for current swsusp code,
+> > 
+> > So it doesn't look like we need the patch _now_.
+> > 
+> > > but is definitely an issue for Suspend2, where the pages being written could
+> > > be overwritten by Suspend2's atomic copy.
+> > 
+> > And IMO that's a good reason why we shouldn't use RCU pages for storing the
+> > image.  XFS is one known example that breaks things if we do so and
+> > there may be more such things that we don't know of.  The fact that they
+> > haven't appeared in testing so far doesn't mean they don't exist and
+> > moreover some things like that may appear in the future.
 > 
-> In most cases it probably is, but sys_sync() doesn't provide any
-> guarantees that the filesystem is not being used or written to after
-> it completes. Given that every so often I hear about an XFS filesystem
-> that was corrupted by suspend, I don't think this is sufficient...
+> Could you please tell us which XFS bits are broken so we can get
+> them fixed?  The XFS daemons should all be checking if they are
+> supposed to freeze (i.e. they call try_to_freeze() after they wake
+> up due to timer expiry) so I thought they were doing the right
+> thing.
 
-Userspace is frozen. There's noone that can write to the XFS
-filesystem.
+The problem (in my experience) isn't the threads but a timer that
+submits I/O even when the threads are frozen. It stops when the bdev is
+frozen. The last report I've seen was before I added bdev freezing to
+suspend2, which was 2.6.14, so you guys may have fixed it since then.
 
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+I can seek to get a trace if you like.
+
+Regards,
+
+Nigel
