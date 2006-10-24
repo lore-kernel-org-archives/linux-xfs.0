@@ -1,80 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 09:52:27 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9OGqHaG029961
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 09:52:18 -0700
-Received: from postal1.et.byu.edu (postal1.et.byu.edu [128.187.48.11])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F4064D19FA
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 08:48:14 -0700 (PDT)
-Date: Tue, 24 Oct 2006 09:48:07 -0600 (MDT)
-From: David Dougall <davidd@et.byu.edu>
-Subject: kernel panic after upgrading to 2.6
-Message-ID: <Pine.LNX.4.58.0610240938400.8370@lewis.et.byu.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 10:13:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9OHDJaG002538
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 10:13:20 -0700
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D392CD1A65BD
+	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 10:12:34 -0700 (PDT)
+Message-ID: <453E494F.8080808@sandeen.net>
+Date: Tue, 24 Oct 2006 12:11:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: kernel panic after upgrading to 2.6
+References: <Pine.LNX.4.58.0610240938400.8370@lewis.et.byu.edu>
+In-Reply-To: <Pine.LNX.4.58.0610240938400.8370@lewis.et.byu.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nfs@lists.sourceforge.net, xfs@oss.sgi.com
+To: David Dougall <davidd@et.byu.edu>
+Cc: nfs@lists.sourceforge.net, xfs@oss.sgi.com
 
-I am running kernel 2.6.18 after trying 2.6.17.6 and 2.6.17.13 with
-similar results.  I continue to have nfs servers kernel panic on a very
-regular basis, every few days.  Sometimes I need to do an xfs_repair to
-get the filesystem to remount.  I got the following kernel panic message
-from the syslog this time:
-Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
-nfs09 kernel: Oops: 0000 [#1]
+David Dougall wrote:
+> I am running kernel 2.6.18 after trying 2.6.17.6 and 2.6.17.13 with
+> similar results.  I continue to have nfs servers kernel panic on a very
+> regular basis, every few days.  Sometimes I need to do an xfs_repair to
+> get the filesystem to remount.  I got the following kernel panic message
+> from the syslog this time:
+> Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
+> nfs09 kernel: Oops: 0000 [#1]
 
-Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
-nfs09 kernel: CPU:    0
+If you ran 2.6.17 < 2.6.17.7, there was a bug:
 
-Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
-nfs09 kernel: EIP is at xfs_alloc_fix_freelist+0x20/0x486
+http://oss.sgi.com/projects/xfs/faq.html#dir2
 
-Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
-nfs09 kernel: eax: f7dbb000   ebx: 0009a000   ecx: 00000016   edx:
-f8cc8c20
+I would suggest getting xfsprogs v. 2.8.10 or newer, as referenced in
+the faq, repair your filesystem, and see if the problem is resolved.
 
-Message from syslogd@nfs09 at Tue Oct 24 09:35:14 2006 ...
-nfs09 kernel: esi: 00000016   edi: edab7c90   ebp: d8fd8b64   esp:
-edab7bd0
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel: ds: 007b   es: 007b   ss: 0068
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel: Process nfsd (pid: 4837, ti=edab6000 task=eda8f030
-task.ti=edab6000)
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel: Stack: 00000000 00001a9a 00000009 00000200 00000002 c026fffe
-f0995b80 f7dbb000
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel:        d8fd8b64 f8cc8c20 c0225507 fffffffe 00000000 0000000b
-00000000 00000000
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel:        d8fd8b64 f7dbb000 c0226fef 00000001 00000001 00000000
-00000000 0000000b
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:15 2006 ...
-nfs09 kernel: Call Trace:
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:16 2006 ...
-nfs09 kernel: Code: 24 04 46 06 00 00 e9 9f fe ff ff 55 57 56 53 81 ec 8c
-00 00 00 89 c7 89 54 24 10 8b 40 04 89 44 24 1c 8b 57 0c 89 54 24 24 8b 2f
-<80> 3a 00 0f 84 e7 02 00 00 c7 84 24 88 00 00 00 00 00 00 00 8b
-
-Message from syslogd@nfs09 at Tue Oct 24 09:35:16 2006 ...
-nfs09 kernel: EIP: [<c022742e>] xfs_alloc_fix_freelist+0x20/0x486 SS:ESP
-0068:edab7bd0
-
-
-
-I am guessing this is an xfs bug, but I am not sure.  Would anybody please
-confirm this form me.
-I am running nfs-utils-1.0.9 and xfsprogs 2.8.10.
-If there is any more information you need, please let me know.
-Please advise.
---David Dougall
+-Eric
