@@ -1,66 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Oct 2006 17:14:44 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9P0EUaG015019
-	for <xfs@oss.sgi.com>; Tue, 24 Oct 2006 17:14:32 -0700
-Date: Wed, 25 Oct 2006 10:13:31 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Oct 2006 01:07:08 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9P86taG023203
+	for <xfs@oss.sgi.com>; Wed, 25 Oct 2006 01:06:56 -0700
+Received: from amd.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D6104D6F73
+	for <xfs@oss.sgi.com>; Wed, 25 Oct 2006 01:06:09 -0700 (PDT)
+Date: Wed, 25 Oct 2006 10:05:58 +0200
+From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Message-ID: <20061025001331.GP8394166@melbourne.sgi.com>
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610231236.54317.rjw@sisk.pl> <20061024144446.GD11034@melbourne.sgi.com> <200610241730.00488.rjw@sisk.pl> <20061024163345.GG11034@melbourne.sgi.com> <20061024213737.GD5662@elf.ucw.cz>
-Mime-Version: 1.0
+Message-ID: <20061025080558.GK5851@elf.ucw.cz>
+References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610231236.54317.rjw@sisk.pl> <20061024144446.GD11034@melbourne.sgi.com> <200610241730.00488.rjw@sisk.pl> <slrnejsfms.93p.olecom@flower.upol.cz>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20061024213737.GD5662@elf.ucw.cz>
+In-Reply-To: <slrnejsfms.93p.olecom@flower.upol.cz>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Pavel Machek <pavel@ucw.cz>
-Cc: David Chinner <dgc@sgi.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Nigel Cunningham <ncunningham@linuxmail.org>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Oleg Verych <olecom@flower.upol.cz>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, David Chinner <dgc@sgi.com>, Nigel Cunningham <ncunningham@linuxmail.org>, Andrew Morton <akpm@osdl.org>, xfs@oss.sgi.com
 
-On Tue, Oct 24, 2006 at 11:37:37PM +0200, Pavel Machek wrote:
-> Hi!
+Hi!
+
+> >> However, I have to say that I agree with freezing the filesystems
+> >> before suspend - at least XFS will be in a consistent state that can
+> >> be recovered from without corruption if your machine fails to
+> >> resume....
+> >
+> > Do you mean calling sys_sync() after the userspace has been frozen
+> > may not be sufficient?
 > 
-> > > Do you mean calling sys_sync() after the userspace has been frozen
-> > > may not be sufficient?
-> > 
-> > In most cases it probably is, but sys_sync() doesn't provide any
-> > guarantees that the filesystem is not being used or written to after
-> > it completes. Given that every so often I hear about an XFS filesystem
-> > that was corrupted by suspend, I don't think this is sufficient...
+> Please see
+> <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=317479;msg=105;att=0>
 > 
-> Userspace is frozen. There's noone that can write to the XFS
-> filesystem.
+> it's bottom of
+> <http://bugs.debian.org/317479>
+> 
+> IMHO it's may be helpful.
 
-Sure, no new userspace processes can write data, but what about the
-internal state of the filesystem?
+Heh, ouch.
 
-All a sync guarantees is that the filesystem is consistent when the
-sync returns and XFS provides this guarantee by writing all data and
-ensuring all metadata changes are logged so if a crash occurs it can
-be recovered (which provides the sync guarantee). hence after a
-sys_sync(), XFS will still have lots of dirty metadata that needs to
-be written to disk at some time in the future so the transactions
-can be removed from the log.
+Okay, so what happens is that Debian's scripts attempt to change
+/boot/../grub.conf.something (xfs mounted). Changes are properly
+propagated to the journal, but grub can't parse the journal, and
+fails.
 
-This dirty metadata can be flushed at any time, and the dirty state
-is kept in XFS structures and not always in page structures (think
-multipage metadata buffers). Hence I cannot see how suspend can
-guarantee that it has saved all the dirty data in XFS, nor
-restore it correctly on resume. Once you toss dirty metadata that
-is currently in the log, further operations will result in that log
-transaction being overwritten without it ever being written to disk.
-That then means any subsequent operations after resume will corrupt
-the filesystem....
+Ouch.
 
-Hence the only way to correctly rebuild the XFS state on resume is
-to quiesce the filesystem on suspend and thaw it on resume so as to
-trigger log recovery.
+Either
 
-Cheers,
+1) fix grub to parse the journal (not practical, I guess)
 
-Dave.
+2) do not modify grub configuration from hibernate scripts
+
+or
+
+3) fix hibernate scripts to sync down to disk, properly.
+
+swsusp does not guarantee any particular state of filesystems when
+system is suspended. Sorry.
+								Pavel
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
