@@ -1,27 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 01:58:10 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9Q8vuaG013770
-	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 01:57:58 -0700
-Date: Thu, 26 Oct 2006 18:57:00 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 02:10:00 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9Q99paG016804
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:09:53 -0700
+Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A12F4D98BF
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:09:06 -0700 (PDT)
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Message-ID: <20061026085700.GI8394166@melbourne.sgi.com>
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610251432.41958.rjw@sisk.pl> <1161782620.3638.0.camel@nigel.suspend2.net> <200610252105.56862.rjw@sisk.pl> <20061026073022.GG8394166@melbourne.sgi.com> <1161850709.17293.23.camel@nigel.suspend2.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date: Thu, 26 Oct 2006 11:08:22 +0200
+References: <1161576735.3466.7.camel@nigel.suspend2.net> <20061026073022.GG8394166@melbourne.sgi.com> <1161850709.17293.23.camel@nigel.suspend2.net>
 In-Reply-To: <1161850709.17293.23.camel@nigel.suspend2.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200610261108.23390.rjw@sisk.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Nigel Cunningham <ncunningham@linuxmail.org>
-Cc: David Chinner <dgc@sgi.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: David Chinner <dgc@sgi.com>, Pavel Machek <pavel@ucw.cz>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi Nigel,
-
-On Thu, Oct 26, 2006 at 06:18:29PM +1000, Nigel Cunningham wrote:
+On Thursday, 26 October 2006 10:18, Nigel Cunningham wrote:
+> Hi Dave.
+> 
 > On Thu, 2006-10-26 at 17:30 +1000, David Chinner wrote:
+> > On Wed, Oct 25, 2006 at 09:05:56PM +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, 25 October 2006 15:23, Nigel Cunningham wrote:
+> > > > > 
+> > > > > Well, my impression is that this is exactly what happens here: Something
+> > > > > in the XFS code causes metadata to be written to disk _after_ the atomic
+> > > > > snapshot.
+> > > > > 
+> > > > > That's why I asked if the dirty XFS metadata were flushed by a kernel thread.
+> > > > 
+> > > > When I first added bdev freezing it was because there was an XFS timer
+> > > > doing writes.
+> > > 
+> > > Yes, I noticed you said that, but I'd like someone from the XFS team to either
+> > > confirm or deny it.
+> > 
 > > We have daemons running in the background that can definitely do stuff
 > > after a sync. hmm - one does try_to_freeze() after a wakeup, the
 > > other does:
@@ -46,22 +66,15 @@ On Thu, Oct 26, 2006 at 06:18:29PM +1000, Nigel Cunningham wrote:
 > The issue I've seen in the past related not to threads but to timer
 > based activity. Admittedly it was 2.6.14 when I last looked at it, but
 > there used to be a possibility for XFS to submit I/O from a timer when
-> the threads are frozen but the bdev isn't frozen. Has that changed?
+> the threads are frozen but the bdev isn't frozen.
 
-I didn't think we've ever done that - periodic or delayed operations
-are passed off to the kernel threads to execute. A stack trace
-(if you still have it) would be really help here.
+Also there may be a problem if a workqueue is used for that, because
+worker_threads run with PF_NOFREEZE set.
 
-Hmmm - we have a couple of per-cpu work queues as well that are
-used on I/O completion and that can, in some circumstances,
-trigger new transactions. If we are only flush metadata, then
-I don't think that any more I/o will be issued, but I could be
-wrong (maze of twisty passages).
+Greetings,
+Rafael
 
-Cheers,
 
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+You never change things by fighting the existing reality.
+		R. Buckminster Fuller
