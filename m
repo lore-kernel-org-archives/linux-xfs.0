@@ -1,78 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 02:44:42 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9Q9iWaG025531
-	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:44:33 -0700
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE8EA4DB07A
-	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:43:45 -0700 (PDT)
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Date: Thu, 26 Oct 2006 11:11:29 +0200
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <1161850709.17293.23.camel@nigel.suspend2.net> <20061026085700.GI8394166@melbourne.sgi.com>
-In-Reply-To: <20061026085700.GI8394166@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 02:47:59 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9Q9llaG026405
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:47:49 -0700
+Date: Thu, 26 Oct 2006 19:46:42 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [REVIEW 1 of 4] Clean up i_flags handling
+Message-ID: <20061026094642.GM8394166@melbourne.sgi.com>
+References: <20061024071723.GR11034@melbourne.sgi.com> <20061024213822.GA23909@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Message-Id: <200610261111.30486.rjw@sisk.pl>
+In-Reply-To: <20061024213822.GA23909@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nigel Cunningham <ncunningham@linuxmail.org>, Pavel Machek <pavel@ucw.cz>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, t-nagano@ah.jp.nec.com, xfs-dev@sgi.com
 
-Hi,
-
-On Thursday, 26 October 2006 10:57, David Chinner wrote:
-> Hi Nigel,
+On Tue, Oct 24, 2006 at 10:38:22PM +0100, Christoph Hellwig wrote:
+> > +static inline int
+> > +__xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
+> > +{
+> > +	return (ip->i_flags & flags);
+> > +}
+> > +
+> > +static inline int
+> > +xfs_iflags_test(xfs_inode_t *ip, unsigned short flags)
+> > +{
+> > +	int ret;
+> > +	spin_lock(&ip->i_flags_lock);
+> > +	ret = __xfs_iflags_test(ip, flags);
+> > +	spin_unlock(&ip->i_flags_lock);
+> > +	return ret;
 > 
-> On Thu, Oct 26, 2006 at 06:18:29PM +1000, Nigel Cunningham wrote:
-> > On Thu, 2006-10-26 at 17:30 +1000, David Chinner wrote:
-> > > We have daemons running in the background that can definitely do stuff
-> > > after a sync. hmm - one does try_to_freeze() after a wakeup, the
-> > > other does:
-> > > 
-> > >                 if (unlikely(freezing(current))) {
-> > >                         set_bit(XBT_FORCE_SLEEP, &target->bt_flags);
-> > >                         refrigerator();
-> > >                 } else {
-> > >                         clear_bit(XBT_FORCE_SLEEP, &target->bt_flags);
-> > >                 }
-> > > 
-> > > before it goes to sleep. So that one (xfsbufd - metadata buffer flushing)
-> > > can definitely wake up after the sync and do work, and the other could if
-> > > the kernel thread freeze occurs after the sync.
-> > > 
-> > > Another good question at this point - exactly how should we be putting
-> > > these thread to to sleep? Are both these valid methods for freezing them?
-> > > And should we be freezing when we wake up instead of before we go to
-> > > sleep? i.e. what are teh rules we are supposed to be following?
-> > 
-> > As you have them at the moment, the threads seem to be freezing fine.
-> > The issue I've seen in the past related not to threads but to timer
-> > based activity. Admittedly it was 2.6.14 when I last looked at it, but
-> > there used to be a possibility for XFS to submit I/O from a timer when
-> > the threads are frozen but the bdev isn't frozen. Has that changed?
-> 
-> I didn't think we've ever done that - periodic or delayed operations
-> are passed off to the kernel threads to execute. A stack trace
-> (if you still have it) would be really help here.
-> 
-> Hmmm - we have a couple of per-cpu work queues as well that are
-> used on I/O completion and that can, in some circumstances,
-> trigger new transactions. If we are only flush metadata, then
-> I don't think that any more I/o will be issued, but I could be
-> wrong (maze of twisty passages).
+> This is not actually guaranteed to work on machiens with very weak
+> memory ordering.  Please use the *_bit routines from bitops.h instead.
 
-Well, I think this exactly is the problem, because worker_threads run with
-PF_NOFREEZE set (as I've just said in another message).
+Hmm - don't you have that the wrong way around?
 
-Greetings,
-Rafael
+Documentation/memory-barriers.txt:
 
+...
+Therefore, from (1), (2) and (4) an UNLOCK followed by an unconditional LOCK is
+equivalent to a full barrier, but a LOCK followed by an UNLOCK is not.
+....
 
+But the bitops don't guarantee ordering or barriers e.g. from
+include/asm-i386/bitops.h:
+
+/**
+ * set_bit - Atomically set a bit in memory
+ * @nr: the bit to set
+ * @addr: the address to start counting from
+ *
+ * This function is atomic and may not be reordered.  See __set_bit()
+ * if you do not require the atomic guarantees.
+ *
+ * Note: there are no guarantees that this function will not be reordered
+ * on non x86 architectures, so if you are writting portable code,
+ * make sure not to rely on its reordering guarantees.
+ *
+ * Note that @nr may be almost arbitrarily large; this function is not
+ * restricted to acting on a single-word quantity.
+ */
+
+So I think the code is fine as it stands.
+
+Cheers,
+
+Dave.
 -- 
-You never change things by fighting the existing reality.
-		R. Buckminster Fuller
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
