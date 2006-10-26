@@ -1,57 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 03:00:02 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9Q9xqaG029530
-	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 02:59:54 -0700
-Date: Thu, 26 Oct 2006 19:58:49 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [REVIEW 3 of 4] Fix recalim handling in xfs_iget_core
-Message-ID: <20061026095849.GN8394166@melbourne.sgi.com>
-References: <20061024072054.GT11034@melbourne.sgi.com> <453E5A0F.4070902@agami.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <453E5A0F.4070902@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Oct 2006 07:33:20 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9QEXAaG028480
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 07:33:11 -0700
+Received: from mx1.blinkenlights.nl (mx1.blinkenlights.nl [80.84.249.153])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E44E4DC518
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 06:46:03 -0700 (PDT)
+Received: from zaphod.blinkenlights.nl (zaphod.blinkenlights.nl [IPv6:2001:980:ffe:3:2e0:81ff:fe2f:bb6a])
+	by mx1.blinkenlights.nl (Postfix) with ESMTP id 2982C73038
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 15:46:00 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by zaphod.blinkenlights.nl (Postfix) with ESMTP id EBAE617F455
+	for <xfs@oss.sgi.com>; Thu, 26 Oct 2006 15:45:59 +0200 (CEST)
+Date: Thu, 26 Oct 2006 15:45:59 +0200 (CEST)
+From: Sten Spans <sten@blinkenlights.nl>
+Subject: Re: xfs_quota project + symlinks
+In-Reply-To: <Pine.LNX.4.64.0610261519250.30903@zaphod.blinkenlights.nl>
+Message-ID: <Pine.LNX.4.64.0610261544020.31061@zaphod.blinkenlights.nl>
+References: <Pine.LNX.4.64.0610261519250.30903@zaphod.blinkenlights.nl>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Shailendra Tripathi <stripathi@agami.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, t-nagano@ah.jp.nec.com, xfs-dev@sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Oct 24, 2006 at 11:23:11AM -0700, Shailendra Tripathi wrote:
-> Hi David,
->               I can't really see why we need this test:
->                if (xfs_iflags_test(ip, XFS_IRECLAIMABLE))
->                I think, An inode with no VP can be possibly in only 3 
-> states (NEW, RECLAIM or RECLAIMABLE). This check is being made inside 
-> (inode_vp == NULL)  check. If I am correct, may be we can omit an extra 
-> instruction here.
+On Thu, 26 Oct 2006, Sten Spans wrote:
 
-We can't have an I_NEW here - that is checked even before we we try
-to get the vnode. Hence we can be in either RECLAIM or RECLAIMABLE state.
-Then we check RECLAIm and retry. So only reclaimable can get here.
+>
+> This is with
+>
+> root@backup:/root/backup# xfs_quota -V
+> xfs_quota version 2.8.11
+> root@backup:/backup# ln -s foo bar
+> root@backup:/backup# xfs_quota -x -c 'project -c 0'
+> Checking project 7 (path /backup)...
+> xfs_quota: cannot open /backup/bar: No such file or directory
+> Processed 1 /etc/projects paths for project 0
+>
+> Would it be possible to handle symlinks better ?
+> Perhaps a check for symlinks in project.c ?
 
-Yes, I think you're right. Good catch. I'll replace the test
-with an ASSERT.
+      86         if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
+      87                 fprintf(stderr, _("%s: cannot open %s: %s\n"),
+      88                         progname, path, strerror(errno));
+      89         else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
 
->              It appears that you can see inode with XFS_ISTALE can 
-> potentially reach. I am not sure how it should reach that path. 
-> Following code just after this assumes that it must be in reclaimable path:
->        
->                                XFS_MOUNT_ILOCK(mp);
->                                list_del_init(&ip->i_reclaim);
->                                XFS_MOUNT_IUNLOCK(mp);
-
-That's a no-op if it's not on the reclaim list (next and prev both
-point to itself) so it should be safe even on non-IRECLAIMABLE
-inodes.
-
-Thanks, Shailendra.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+If path is a symlink, then the project id is applied to a file
+potentially on another filesystem. Wouldn't it be better to
+add O_NOFOLLOW here ?
