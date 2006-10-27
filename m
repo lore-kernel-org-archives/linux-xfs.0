@@ -1,63 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Oct 2006 07:40:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Oct 2006 09:45:45 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9REeQaG011176
-	for <xfs@oss.sgi.com>; Fri, 27 Oct 2006 07:40:28 -0700
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66D1B4DE20E
-	for <xfs@oss.sgi.com>; Fri, 27 Oct 2006 07:38:38 -0700 (PDT)
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Date: Fri, 27 Oct 2006 16:37:21 +0200
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <200610261111.30486.rjw@sisk.pl> <20061027013802.GQ8394166@melbourne.sgi.com>
-In-Reply-To: <20061027013802.GQ8394166@melbourne.sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9RGjXaG017683
+	for <xfs@oss.sgi.com>; Fri, 27 Oct 2006 09:45:34 -0700
+Received: from emailer.gwdg.de (emailer.gwdg.de [134.76.10.24])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D6E324DC114
+	for <xfs@oss.sgi.com>; Fri, 27 Oct 2006 09:44:47 -0700 (PDT)
+Date: Fri, 27 Oct 2006 18:41:56 +0200 (MEST)
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: [opensuse] xfs file system
+In-Reply-To: <20061027145304.GA8247@arcor.de>
+Message-ID: <Pine.LNX.4.61.0610271834480.13894@yvahk01.tjqt.qr>
+References: <8a24510d0610191243t164993ecj7fa04d1110ffa0bc@mail.gmail.com>
+ <200610210440.22170.gholmer@ameritech.net> <45421504.6040501@grafikern.no>
+ <20061027145304.GA8247@arcor.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200610271637.21863.rjw@sisk.pl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nigel Cunningham <ncunningham@linuxmail.org>, Pavel Machek <pavel@ucw.cz>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
-
-On Friday, 27 October 2006 03:38, David Chinner wrote:
-> On Thu, Oct 26, 2006 at 11:11:29AM +0200, Rafael J. Wysocki wrote:
-> > On Thursday, 26 October 2006 10:57, David Chinner wrote:
-> > > On Thu, Oct 26, 2006 at 06:18:29PM +1000, Nigel Cunningham wrote:
-> > > > As you have them at the moment, the threads seem to be freezing fine.
-> > > > The issue I've seen in the past related not to threads but to timer
-> > > > based activity. Admittedly it was 2.6.14 when I last looked at it, but
-> > > > there used to be a possibility for XFS to submit I/O from a timer when
-> > > > the threads are frozen but the bdev isn't frozen. Has that changed?
-> > > 
-> > > I didn't think we've ever done that - periodic or delayed operations
-> > > are passed off to the kernel threads to execute. A stack trace
-> > > (if you still have it) would be really help here.
-> > > 
-> > > Hmmm - we have a couple of per-cpu work queues as well that are
-> > > used on I/O completion and that can, in some circumstances,
-> > > trigger new transactions. If we are only flush metadata, then
-> > > I don't think that any more I/o will be issued, but I could be
-> > > wrong (maze of twisty passages).
-> > 
-> > Well, I think this exactly is the problem, because worker_threads run with
-> > PF_NOFREEZE set (as I've just said in another message).
-> 
-> Ok, so freezing the filesystem is the only way you can prevent
-> this as the workqueues are flushed as part of quiescing the filesystem.
-
-Yes, I think so.
-
-Now at last I know what the problem actually is and why we need the freezing
-of filesystems, so thanks for helping me understand that. :-)
-
-Greetings,
-Rafael
+To: "Matthias G. Eckermann" <mge@arcor.de>
+Cc: "Kenneth Aar, Grafikern.no" <kenneth@grafikern.no>, opensuse@opensuse.org, xfs@oss.sgi.com
 
 
+>> | > my question is, are there people here who have some 
+>> | > experience with XFS?
+>> |
+>> | I've been using it for several years, both at home and on the
+>> | servers at| work.  Never had a problem.
+>>
+>> I have heard that it is more prone to fault/corruption if you
+>> yank the powercord or experience any form of unexpected
+>> poweroutage...
+>
+>* "heard" from whom?
+>* "more"  than what?
+>
+>Well, every filesystem will have to recover after "yank the
+>powercord or experience any form of unexpected poweroutage".
+>
+>But compared to other FSs "xfs" is like heaven, xfs_repair
+>works pretty reliable, especially after "forced crashes".
+
+
+Added xfs list for great justice:
+
+Yeah but I would be more happy if it did not zero out files (perhaps 
+adding a new mount option?) but leave them as-is. I am more concerned 
+about text files keeping their shape as far as possible rather than 
+running into a corrupt binary configuration file.
+
+
+	-`J'
 -- 
-You never change things by fighting the existing reality.
-		R. Buckminster Fuller
