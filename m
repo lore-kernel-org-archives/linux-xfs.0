@@ -1,55 +1,129 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Oct 2006 09:36:58 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9THanaG025124
-	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 09:36:50 -0800
-Received: from amd.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DA0DAD1B2079
-	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 09:36:02 -0800 (PST)
-Date: Sun, 29 Oct 2006 18:35:37 +0100
-From: Pavel Machek <pavel@ucw.cz>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Oct 2006 15:59:39 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9TNxUaG008451
+	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 15:59:30 -0800
+Received: from pop5-1.us4.outblaze.com (pop5-1.us4.outblaze.com [205.158.62.125])
+	by cuda.sgi.com (Spam Firewall) with SMTP id C1FE64DF02F
+	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 15:58:42 -0800 (PST)
 Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-Message-ID: <20061029173537.GA3022@elf.ucw.cz>
-References: <1161576735.3466.7.camel@nigel.suspend2.net> <1161850709.17293.23.camel@nigel.suspend2.net> <20061026085700.GI8394166@melbourne.sgi.com> <200610261111.30486.rjw@sisk.pl> <20061027013802.GQ8394166@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061027013802.GQ8394166@melbourne.sgi.com>
+From: Nigel Cunningham <ncunningham@linuxmail.org>
+In-Reply-To: <200610300029.25555.rjw@sisk.pl>
+References: <1161576735.3466.7.camel@nigel.suspend2.net>
+	 <20061027013802.GQ8394166@melbourne.sgi.com>
+	 <20061029173537.GA3022@elf.ucw.cz>  <200610300029.25555.rjw@sisk.pl>
+Content-Type: text/plain
+Date: Mon, 30 Oct 2006 10:46:26 +1100
+Message-Id: <1162165587.16177.7.camel@nigel.suspend2.net>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Nigel Cunningham <ncunningham@linuxmail.org>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Pavel Machek <pavel@ucw.cz>, David Chinner <dgc@sgi.com>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
 
-Hi!
+Hi.
 
-> > > > As you have them at the moment, the threads seem to be freezing fine.
-> > > > The issue I've seen in the past related not to threads but to timer
-> > > > based activity. Admittedly it was 2.6.14 when I last looked at it, but
-> > > > there used to be a possibility for XFS to submit I/O from a timer when
-> > > > the threads are frozen but the bdev isn't frozen. Has that changed?
-> > > 
-> > > I didn't think we've ever done that - periodic or delayed operations
-> > > are passed off to the kernel threads to execute. A stack trace
-> > > (if you still have it) would be really help here.
-> > > 
-> > > Hmmm - we have a couple of per-cpu work queues as well that are
-> > > used on I/O completion and that can, in some circumstances,
-> > > trigger new transactions. If we are only flush metadata, then
-> > > I don't think that any more I/o will be issued, but I could be
-> > > wrong (maze of twisty passages).
-> > 
-> > Well, I think this exactly is the problem, because worker_threads run with
-> > PF_NOFREEZE set (as I've just said in another message).
+On Mon, 2006-10-30 at 00:29 +0100, Rafael J. Wysocki wrote:
+> Hi,
 > 
-> Ok, so freezing the filesystem is the only way you can prevent
-> this as the workqueues are flushed as part of quiescing the filesystem.
+> On Sunday, 29 October 2006 18:35, Pavel Machek wrote:
+> > Hi!
+> > 
+> > > > > > As you have them at the moment, the threads seem to be freezing fine.
+> > > > > > The issue I've seen in the past related not to threads but to timer
+> > > > > > based activity. Admittedly it was 2.6.14 when I last looked at it, but
+> > > > > > there used to be a possibility for XFS to submit I/O from a timer when
+> > > > > > the threads are frozen but the bdev isn't frozen. Has that changed?
+> > > > > 
+> > > > > I didn't think we've ever done that - periodic or delayed operations
+> > > > > are passed off to the kernel threads to execute. A stack trace
+> > > > > (if you still have it) would be really help here.
+> > > > > 
+> > > > > Hmmm - we have a couple of per-cpu work queues as well that are
+> > > > > used on I/O completion and that can, in some circumstances,
+> > > > > trigger new transactions. If we are only flush metadata, then
+> > > > > I don't think that any more I/o will be issued, but I could be
+> > > > > wrong (maze of twisty passages).
+> > > > 
+> > > > Well, I think this exactly is the problem, because worker_threads run with
+> > > > PF_NOFREEZE set (as I've just said in another message).
+> > > 
+> > > Ok, so freezing the filesystem is the only way you can prevent
+> > > this as the workqueues are flushed as part of quiescing the filesystem.
+> > 
+> > Well, alternative is to teach XFS to sense that we are being frozen
+> > and stop disk writes in such case.
+> > 
+> > OTOH freeze_bdevs is perhaps not that bad solution... 
+> 
+> Okay, appended is a patch that implements the freezing of bdevs in a slightly
+> different way than the Nigel's patch did it.
 
-Well, alternative is to teach XFS to sense that we are being frozen
-and stop disk writes in such case.
+> As Christoph suggested, I have put freeze_filesystems() and thaw_filesystems()
+> into fs/buffer.c and indroduced the MS_FROZEN flag to mark frozen
+> filesystems.
+> 
+> It seems to work fine, except I get the following trace from lockdep during
+> the suspend on a regular basis (not 100% reproducible, though):
+> 
+> Stopping tasks...
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.19-rc2-mm2 #15
+> ---------------------------------------------
+> s2disk/5564 is trying to acquire lock:
+>  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
+> 
+> but task is already holding lock:
+>  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
+> 
+> other info that might help us debug this:
+> 3 locks held by s2disk/5564:
+>  #0:  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
+>  #1:  (&type->s_umount_key#16){----}, at: [<ffffffff80291647>] get_super+0x67/0xc0
+>  #2:  (&journal->j_barrier){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
+> 
+> stack backtrace:
+> 
+> Call Trace:
+>  [<ffffffff8020af79>] dump_trace+0xb9/0x430
+>  [<ffffffff8020b333>] show_trace+0x43/0x60
+>  [<ffffffff8020b635>] dump_stack+0x15/0x20
+>  [<ffffffff8024a1d1>] __lock_acquire+0x881/0xc60
+>  [<ffffffff8024a94d>] lock_acquire+0x8d/0xc0
+>  [<ffffffff80475cd4>] __mutex_lock_slowpath+0xd4/0x270
+>  [<ffffffff80475e79>] mutex_lock+0x9/0x10
+>  [<ffffffff802b2bb6>] freeze_bdev+0x16/0x80
+>  [<ffffffff802b3105>] freeze_filesystems+0x55/0x80
+>  [<ffffffff80255942>] freeze_processes+0x1e2/0x360
+>  [<ffffffff802592a3>] snapshot_ioctl+0x163/0x610
+>  [<ffffffff8029cf0b>] do_ioctl+0x6b/0xa0
+>  [<ffffffff8029d1eb>] vfs_ioctl+0x2ab/0x2d0
+>  [<ffffffff8029d27a>] sys_ioctl+0x6a/0xa0
+>  [<ffffffff80209c2e>] system_call+0x7e/0x83
+>  [<00002afb13a4d8a9>]
+> 
+> done.
+> Shrinking memory... done (19126 pages freed)
+> 
+> Greetings,
+> Rafael
+> 
+> 
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-OTOH freeze_bdevs is perhaps not that bad solution... 
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Heh. I've just prepared almost exactly the same patch (except for
+unwinding the process thawing).
+
+I haven't ever seen those mutex warnings - is that due to something new
+in -mm or one of those gazillion new warnings you can enable in vanilla?
+
+Apart from that, I'll add:
+
+Signed-off-by: Nigel Cunningham <nigel@suspend2.net>
+
+Regards,
+
+Nigel
