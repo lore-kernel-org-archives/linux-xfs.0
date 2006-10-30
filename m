@@ -1,129 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Oct 2006 15:59:39 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9TNxUaG008451
-	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 15:59:30 -0800
-Received: from pop5-1.us4.outblaze.com (pop5-1.us4.outblaze.com [205.158.62.125])
-	by cuda.sgi.com (Spam Firewall) with SMTP id C1FE64DF02F
-	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 15:58:42 -0800 (PST)
-Subject: Re: [PATCH] Freeze bdevs when freezing processes.
-From: Nigel Cunningham <ncunningham@linuxmail.org>
-In-Reply-To: <200610300029.25555.rjw@sisk.pl>
-References: <1161576735.3466.7.camel@nigel.suspend2.net>
-	 <20061027013802.GQ8394166@melbourne.sgi.com>
-	 <20061029173537.GA3022@elf.ucw.cz>  <200610300029.25555.rjw@sisk.pl>
-Content-Type: text/plain
-Date: Mon, 30 Oct 2006 10:46:26 +1100
-Message-Id: <1162165587.16177.7.camel@nigel.suspend2.net>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Oct 2006 21:39:51 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id k9U5daaG018867
+	for <xfs@oss.sgi.com>; Sun, 29 Oct 2006 21:39:39 -0800
+Date: Mon, 30 Oct 2006 15:39:32 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: xfs_quota project + symlinks
+Message-ID: <2F2FC01C6C9DD207E49DFC0B@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <Pine.LNX.4.64.0610261544020.31061@zaphod.blinkenlights.nl>
+References: <Pine.LNX.4.64.0610261519250.30903@zaphod.blinkenlights.nl>
+ <Pine.LNX.4.64.0610261544020.31061@zaphod.blinkenlights.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Pavel Machek <pavel@ucw.cz>, David Chinner <dgc@sgi.com>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+To: Sten Spans <sten@blinkenlights.nl>, xfs@oss.sgi.com
 
-Hi.
+Hi,
 
-On Mon, 2006-10-30 at 00:29 +0100, Rafael J. Wysocki wrote:
-> Hi,
-> 
-> On Sunday, 29 October 2006 18:35, Pavel Machek wrote:
-> > Hi!
-> > 
-> > > > > > As you have them at the moment, the threads seem to be freezing fine.
-> > > > > > The issue I've seen in the past related not to threads but to timer
-> > > > > > based activity. Admittedly it was 2.6.14 when I last looked at it, but
-> > > > > > there used to be a possibility for XFS to submit I/O from a timer when
-> > > > > > the threads are frozen but the bdev isn't frozen. Has that changed?
-> > > > > 
-> > > > > I didn't think we've ever done that - periodic or delayed operations
-> > > > > are passed off to the kernel threads to execute. A stack trace
-> > > > > (if you still have it) would be really help here.
-> > > > > 
-> > > > > Hmmm - we have a couple of per-cpu work queues as well that are
-> > > > > used on I/O completion and that can, in some circumstances,
-> > > > > trigger new transactions. If we are only flush metadata, then
-> > > > > I don't think that any more I/o will be issued, but I could be
-> > > > > wrong (maze of twisty passages).
-> > > > 
-> > > > Well, I think this exactly is the problem, because worker_threads run with
-> > > > PF_NOFREEZE set (as I've just said in another message).
-> > > 
-> > > Ok, so freezing the filesystem is the only way you can prevent
-> > > this as the workqueues are flushed as part of quiescing the filesystem.
-> > 
-> > Well, alternative is to teach XFS to sense that we are being frozen
-> > and stop disk writes in such case.
-> > 
-> > OTOH freeze_bdevs is perhaps not that bad solution... 
-> 
-> Okay, appended is a patch that implements the freezing of bdevs in a slightly
-> different way than the Nigel's patch did it.
+--On 26 October 2006 3:45:59 PM +0200 Sten Spans <sten@blinkenlights.nl> wrote:
 
-> As Christoph suggested, I have put freeze_filesystems() and thaw_filesystems()
-> into fs/buffer.c and indroduced the MS_FROZEN flag to mark frozen
-> filesystems.
-> 
-> It seems to work fine, except I get the following trace from lockdep during
-> the suspend on a regular basis (not 100% reproducible, though):
-> 
-> Stopping tasks...
-> =============================================
-> [ INFO: possible recursive locking detected ]
-> 2.6.19-rc2-mm2 #15
-> ---------------------------------------------
-> s2disk/5564 is trying to acquire lock:
->  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
-> 
-> but task is already holding lock:
->  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
-> 
-> other info that might help us debug this:
-> 3 locks held by s2disk/5564:
->  #0:  (&bdev->bd_mount_mutex){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
->  #1:  (&type->s_umount_key#16){----}, at: [<ffffffff80291647>] get_super+0x67/0xc0
->  #2:  (&journal->j_barrier){--..}, at: [<ffffffff80475e79>] mutex_lock+0x9/0x10
-> 
-> stack backtrace:
-> 
-> Call Trace:
->  [<ffffffff8020af79>] dump_trace+0xb9/0x430
->  [<ffffffff8020b333>] show_trace+0x43/0x60
->  [<ffffffff8020b635>] dump_stack+0x15/0x20
->  [<ffffffff8024a1d1>] __lock_acquire+0x881/0xc60
->  [<ffffffff8024a94d>] lock_acquire+0x8d/0xc0
->  [<ffffffff80475cd4>] __mutex_lock_slowpath+0xd4/0x270
->  [<ffffffff80475e79>] mutex_lock+0x9/0x10
->  [<ffffffff802b2bb6>] freeze_bdev+0x16/0x80
->  [<ffffffff802b3105>] freeze_filesystems+0x55/0x80
->  [<ffffffff80255942>] freeze_processes+0x1e2/0x360
->  [<ffffffff802592a3>] snapshot_ioctl+0x163/0x610
->  [<ffffffff8029cf0b>] do_ioctl+0x6b/0xa0
->  [<ffffffff8029d1eb>] vfs_ioctl+0x2ab/0x2d0
->  [<ffffffff8029d27a>] sys_ioctl+0x6a/0xa0
->  [<ffffffff80209c2e>] system_call+0x7e/0x83
->  [<00002afb13a4d8a9>]
-> 
-> done.
-> Shrinking memory... done (19126 pages freed)
-> 
-> Greetings,
-> Rafael
-> 
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> On Thu, 26 Oct 2006, Sten Spans wrote:
+>
+>>
+>> This is with
+>>
+>> root@backup:/root/backup# xfs_quota -V
+>> xfs_quota version 2.8.11
+>> root@backup:/backup# ln -s foo bar
+>> root@backup:/backup# xfs_quota -x -c 'project -c 0'
+>> Checking project 7 (path /backup)...
+>> xfs_quota: cannot open /backup/bar: No such file or directory
+>> Processed 1 /etc/projects paths for project 0
+>>
+>> Would it be possible to handle symlinks better ?
+>> Perhaps a check for symlinks in project.c ?
+>
+>       86         if ((fd = open(path, O_RDONLY|O_NOCTTY)) == -1)
+>       87                 fprintf(stderr, _("%s: cannot open %s: %s\n"),
+>       88                         progname, path, strerror(errno));
+>       89         else if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0)
+>
+> If path is a symlink, then the project id is applied to a file
+> potentially on another filesystem. Wouldn't it be better to
+> add O_NOFOLLOW here ?
+>
+You want it to error out if it is a symlink.
 
-Heh. I've just prepared almost exactly the same patch (except for
-unwinding the process thawing).
+I'm not familiar with O_NOFOLLOW. Looking at man page:
+    If  pathname  is  a  symbolic  link, then the open fails.
+    Symbolic links in earlier components of the pathname will still be followed.
+So it would still allow you to follow onto another filesystem if part of the path
+contained symlinks, by the look of it.
+So I'm not sure that is what we want. Also this source is shared on IRIX and
+I don't believe O_NOFOLLOW exists there.
 
-I haven't ever seen those mutex warnings - is that due to something new
-in -mm or one of those gazillion new warnings you can enable in vanilla?
+I'm not that familiar with quotas (Nathan?, Donald?), but I would presume
+that since symlinks take up space depending on the symlink path, that they should
+have quota control on the space they take up.
+In which case, one would actually not want to follow the symlink but rather
+apply a limit to that actual symlink inode.
+I don't know if this is the case though.
 
-Apart from that, I'll add:
+But I agree, I doubt one wants to follow the symlinks - it would get rather
+confusing.
 
-Signed-off-by: Nigel Cunningham <nigel@suspend2.net>
-
-Regards,
-
-Nigel
+--Tim
