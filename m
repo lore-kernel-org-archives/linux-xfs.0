@@ -1,43 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Oct 2006 17:59:00 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id k9V1wpaG009102
-	for <xfs@oss.sgi.com>; Mon, 30 Oct 2006 17:58:53 -0800
-Received: from prod.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 305534E40D5
-	for <xfs@oss.sgi.com>; Mon, 30 Oct 2006 17:58:06 -0800 (PST)
-Subject: Re: xfs_quota project + symlinks
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <EFAEF35C8D3C3C927A1C43D3@timothy-shimmins-power-mac-g5.local>
-References: <Pine.LNX.4.64.0610261519250.30903@zaphod.blinkenlights.nl>
-	 <Pine.LNX.4.64.0610261544020.31061@zaphod.blinkenlights.nl>
-	 <2F2FC01C6C9DD207E49DFC0B@timothy-shimmins-power-mac-g5.local>
-	 <1162247043.17754.160.camel@edge>
-	 <EFAEF35C8D3C3C927A1C43D3@timothy-shimmins-power-mac-g5.local>
-Content-Type: text/plain
-Date: Tue, 31 Oct 2006 13:01:43 +1100
-Message-Id: <1162260103.17754.165.camel@edge>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 31 Oct 2006 16:24:30 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kA10ONaG008421
+	for <linux-xfs@oss.sgi.com>; Tue, 31 Oct 2006 16:24:23 -0800
+Received: from n007.sc1.cp.net (smtpout1472.sc1.he.tucows.com [64.97.157.172])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 138D0D1B5B54
+	for <linux-xfs@oss.sgi.com>; Tue, 31 Oct 2006 15:21:16 -0800 (PST)
+Message-ID: <4547DA70.4040107@Groves.net>
+Date: Tue, 31 Oct 2006 17:21:20 -0600
+From: John Groves <John@Groves.net>
+MIME-Version: 1.0
+Subject: XFS dmapi: dm_path_to_handle fails if the path is a directory
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Sten Spans <sten@blinkenlights.nl>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
+Cc: Dean Roehrich <roehrich@clink.americas.sgi.com>
 
-On Tue, 2006-10-31 at 11:08 +1000, Timothy Shimmin wrote:
-> 
-> Okay, thanks, Nathan,
-> 
-> So does that mean we need a way for FSGETXATTR and FSSETXATTR
-> ioctls to work on the symlink inode? Is this (symlink ioctls)
-> done elsewhere? :)
+I'm running up against a difficult situation because dm_path_to_handle 
+does not return a handle, if the path is to a directory.  Is this a 
+known issue, or perhaps fixed in a recent version?  Or is there another 
+way get the handle of a directory by path?  When any file type is 
+renamed, I (for various reasons) *must* know not just the old & new 
+parent handles, but also the handle of the renamed thingy.  If the 
+thingy is a directory, I'm stuck at the moment.
 
-The by-handle interfaces xfsdump is using must support symlinks,
-right?  So, I assume theres a way (but I don't know for sure).
+My test system has dmapi 2.2.1-5, which I don't think is current, but I 
+can't seem to get access to the oss.sgi.com server to check.
 
-cheers.
+Any advice or info appreciated.  I'm willing to try and submit a patch, 
+but I'd appreciate first knowing whether there was a specific reason or 
+problem that led to the current behavior.
 
--- 
-Nathan
+Thanks,
+John Groves
