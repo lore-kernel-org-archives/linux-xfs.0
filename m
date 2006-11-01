@@ -1,75 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 31 Oct 2006 16:58:32 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA10wJaG014068
-	for <linux-xfs@oss.sgi.com>; Tue, 31 Oct 2006 16:58:21 -0800
-Message-ID: <4547F0FC.5060502@sgi.com>
-Date: Wed, 01 Nov 2006 11:57:32 +1100
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Nov 2006 15:51:38 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kA1NpUaG032113
+	for <xfs@oss.sgi.com>; Wed, 1 Nov 2006 15:51:31 -0800
+Received: from mail.mmtab.se (unknown [212.209.150.85])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8515C4EA816
+	for <xfs@oss.sgi.com>; Wed,  1 Nov 2006 14:37:09 -0800 (PST)
+Received: from [10.0.0.145] ([212.209.150.84])
+	(authenticated bits=0)
+	by mail.mmtab.se (8.13.7/8.13.7) with ESMTP id kA1Mb71W003236
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 1 Nov 2006 23:37:08 +0100
+Message-ID: <4549218B.2020807@mmtab.se>
+Date: Wed, 01 Nov 2006 23:36:59 +0100
+From: Per Mellander <per.m@mmtab.se>
 MIME-Version: 1.0
-Subject: Re: XFS dmapi: dm_path_to_handle fails if the path is a directory
-References: <4547DA70.4040107@Groves.net> <4547EDFD.8020407@sgi.com>
-In-Reply-To: <4547EDFD.8020407@sgi.com>
+Subject: xfs_growfs after lvextend don't increase mounted size.
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: John Groves <John@Groves.net>
-Cc: Vlad Apostolov <vapo@sgi.com>, linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Vlad Apostolov wrote:
-> John Groves wrote:
->> I'm running up against a difficult situation because 
->> dm_path_to_handle does not return a handle, if the path is to a 
->> directory.  Is this a known issue, or perhaps fixed in a recent 
->> version?  Or is there another way get the handle of a directory by 
->> path?  When any file type is renamed, I (for various reasons) *must* 
->> know not just the old & new parent handles, but also the handle of 
->> the renamed thingy.  If the thingy is a directory, I'm stuck at the 
->> moment.
->>
->> My test system has dmapi 2.2.1-5, which I don't think is current, but 
->> I can't seem to get access to the oss.sgi.com server to check.
->>
->> Any advice or info appreciated.  I'm willing to try and submit a 
->> patch, but I'd appreciate first knowing whether there was a specific 
->> reason or problem that led to the current behavior.
->>
->> Thanks,
->> John Groves
->>
-> Hi John,
->
-> If your path is longer than 2000 characters dm_path_to_handle used to 
-> fail.
-> This bug was fixed in August 2006. Please update your tree from here:
->
-> http://oss.sgi.com/projects/xfs/download.html
->
-> Regards,
-> Vlad
->
-You could also see an example of how to use dm_path_to_handle() in
+Hi!
 
-xfs-cmds/xfstests/dmapi/src/suite1/cmd/path_to_handle.c
+I've got a 6.5TB xfs filesystem on a LVM2 volume. I wanted to increase 
+the size of the fs so I added another ~10TB to the volume. Every step 
+taken was successfull, (ie no errors) but the filesystem size remained 
+unchanged even after the xfs_growfs.
 
-Here is the output for a regular file and a directory:
+What I did was the following:
 
-vapo@emu ~/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd> ls -al /mnt/scratch1
-total 8
-drwxrwxrwx 4 root root    46 2006-11-01 12:04 .
-drwxr-xr-x 8 root root    89 2006-10-30 14:23 ..
-drwxr-xr-x 7 root root  4096 2006-10-26 10:56 dmapi
-drwxr-xr-x 8 root root  4096 2006-10-26 10:56 dmapi_test
--rw-r--r-- 1 vapo cdrom    0 2006-11-01 12:04 file
-vapo@emu ~/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd> sudo  
-./path_to_handle /mnt/scratch1/file
-5d1111a90e4800000e000000710100009600000000000000
-vapo@emu ~/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd> sudo  
-./path_to_handle /mnt/scratch1/dmapi
-5d1111a90e4800000e0000006e0000008300000000000000
-vapo@emu ~/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd>
+I extended the lvm using pvcreate, vgextend and finally lvextend. pvscan 
+gives:
 
-Regards,
-Vlad
+   PV /dev/sda1   VG vg01   lvm2 [1.59 TB / 0    free]
+   PV /dev/sdb1   VG vg01   lvm2 [1.59 TB / 0    free]
+   PV /dev/sdc1   VG vg01   lvm2 [1.59 TB / 0    free]
+   PV /dev/sdd1   VG vg01   lvm2 [1.59 TB / 0    free]
+   PV /dev/sde1   VG vg01   lvm2 [2.00 TB / 0    free]
+   PV /dev/sdf1   VG vg01   lvm2 [2.00 TB / 0    free]
+   PV /dev/sdg1   VG vg01   lvm2 [2.00 TB / 0    free]
+   PV /dev/sdh1   VG vg01   lvm2 [2.00 TB / 0    free]
+   PV /dev/sdi1   VG vg01   lvm2 [1.55 TB / 0    free]
+   Total: 9 [15.91 TB] / in use: 9 [15.91 TB] / in no VG: 0 [0   ]
+
+and lvdisplay:
+
+   --- Logical volume ---
+   LV Name                /dev/vg01/lv01
+   VG Name                vg01
+   LV UUID                rDSEQ3-DdhV-oLci-nNYT-dMdX-cppA-7v1r3e
+   LV Write Access        read/write
+   LV Status              available
+   # open                 1
+   LV Size                15.91 TB
+   Current LE             4169996
+   Segments               9
+   Allocation             inherit
+   Read ahead sectors     0
+   Block device           253:0
+
+After xfs_growfs /vol1 ( mounted fs ) df -h gives:
+
+/dev/mapper/vg01-lv01
+                       6.4T  6.4T   36G 100% /vol1
+
+The fs remains in previous size!!
+
+# cat /sys/block/dm-0/size
+34160607232
+
+which is equal to 15.91 TB
+
+Have I missed something when I extended the volume / growed the xfs fs?
+
+The system running xfs is a Fedora Core 4, 2.6.15-1.1831_FC4smp, 
+lvm2-2.01.08-2.1, xfsprogs-2.6.13-4
+
+Per
+_________________________________
+This email has been ClamScanned !
+          www.clamav.net
