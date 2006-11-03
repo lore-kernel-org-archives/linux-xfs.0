@@ -1,161 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Nov 2006 16:58:26 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Nov 2006 18:42:41 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA30wIaG009337
-	for <xfs@oss.sgi.com>; Thu, 2 Nov 2006 16:58:20 -0800
-Date: Fri, 03 Nov 2006 10:58:31 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: Xfs-mailinglist question  (xfs mounting problem, hdb1 just freezes)
-Message-ID: <3B2B6490C980DD2C8B4C9645@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <200611012255.46008.peyytmek@gmx.de>
-References: <200611012255.46008.peyytmek@gmx.de>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA32gXaG021241
+	for <linux-xfs@oss.sgi.com>; Thu, 2 Nov 2006 18:42:34 -0800
+Message-ID: <454AAC6B.7010406@sgi.com>
+Date: Fri, 03 Nov 2006 13:41:47 +1100
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Subject: Re: XFS dmapi: dm_path_to_handle fails if the path is a directory
+References: <4547DA70.4040107@Groves.net> <4547EDFD.8020407@sgi.com> <454A94A6.6040907@johngroves.net>
+In-Reply-To: <454A94A6.6040907@johngroves.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: peyytmek@gmx.de
-Cc: xfs@oss.sgi.com
+To: jgl@johngroves.net
+Cc: linux-xfs@oss.sgi.com, John Groves <John@Groves.net>, Dean Roehrich <roehrich@sgi.com>
 
-Hi there,
+John Groves wrote:
+> Thanks for your replies, Vlad, although I don't find anything so far 
+> that helps with my problem (my paths are not long, and my calls to 
+> dm_path_to_handle have been running in production environments for a 
+> couple of years).  As far as I can see, dm_path_to_handle does not 
+> work on a directory (?), although it works perfectly on a file.  I 
+> will try to dig deeper into this over the next few days, but here is a 
+> somewhat clearer explanation of the behavior I am seeing.
+>
+> I have updated to the latest kernel from SGI's CVS server, but the 
+> problem is still there.  I am tracing through kernel code, and will be 
+> happy to pull together some test code that demonstrates the problem, 
+> or to post a patch if I figure it out, but this will take a few days.
+>
+> The sequence in which I find this problem is:
+>
+>    1. Receive a pre-rename event
+>    2. Use the first handle parameter to resolve the pre-rename parent 
+> directory path (not via dm_handle_to_path -- I had to roll my own 
+> mechanisms for turning handles into paths).
+>    3. Concatenate the first name parameter to the first parent 
+> directory path, to get the relative path from mount point to actual 
+> file being renamed.
+>    4. Call dm_path_to_handle on that path, hoping to get the handle of 
+> the file-being-renamed.
+>
+> If the renamed-thing is a file, this works.  If it's a directory, 
+> dm_path_to_handle fails.
+>
+> With my dmapi event handler installed and running, I can reproduce it 
+> by doing the following in the root directory of the filesystem:
+>
+> mkdir -p x/y/z
+> mv x/y x/w
+>
+> In the pre-rename event, prior to responding to the event, my handler 
+> correctly determines that x/y is being renamed to x/w, but 
+> dm_path_to_handle does not return the handle of x/y.  My post-rename 
+> event handler also correctly resolves the paths, but dm_path_to_handle 
+> does not return the handle of x/w.
+>
+> If x/y is a file (rather than a directory) it all works properly.
+>
+> Let me know if you can think of anything specific I should look at, or 
+> of a different way of getting the handle of the renamed thingy.
+Hi John,
 
-Sorry about not getting back to you.
+I did try this on my dmapi filesystem:
 
-The inode details you sent me look reasonable to me (AFAICS).
-However, the inode that we are processing which has problems
-is probably coming from the log.
-Basically, during log replay we reinstate metadata such as inodes,
-inode buffers,
-and later process an unlinked-list which this inode appears to be on.
-It's during the truncating (as part of inactivating the inode) that we have problems
-when looking at its extents.
+emu:/mnt/scratch1/dmapi_test # mkdir -p x/y/z
+emu:/mnt/scratch1/dmapi_test # 
+/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd/path_to_handle x/y
+5d1111a90e4800000e00000003000000d903400000000000
+emu:/mnt/scratch1/dmapi_test # mv x/y x/w
+emu:/mnt/scratch1/dmapi_test # 
+/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd/path_to_handle x/w
+5d1111a90e4800000e00000003000000d903400000000000
+emu:/mnt/scratch1/dmapi_test #
 
-You should be able to see this inode in the log if you use:
-# xfs_logprint -ti device
-(or possibly I guess
- # xfs_logrpint -tibo device - if the inode is in a buffer of inodes)
-I'd be curious to see this.
-
-My thoughts for a plan of action were either:
-(1) forget the log and do an "xfs_repair -L" to zero it out and repair
-or
-(2) somehow try to do a mount which avoids the unlinked list processing
-(an older kernel (pre May 26)  would do this because of a bug in recovery);
-then unmount, then do a normal "xfs_repair"
-or
-(3) we try to stop this particular inode from being processed in the
-unlinked-list inode processing during mount; unmount; repair and then mount again
-
-The simplest is to do option (1). However, it means that any other outstanding
-metadata changes would be lost.
-Option (2) might be a goer but you need such a kernel and in that case it
-won't do any unlinked processing for a group of such inodes (one's hashed to
-that bucket in the AGI's). I'm unsure on how to stop this unlinked processing
-otherwise.
-Option (3) I'm unsure as how to do. Also, there could be more inodes in
-the same boat which could cause recovery to crash.
-
-May be others have suggestions.
+I also tried path_to_handle with relative path to a directory it worked 
+fine too. When you say
+dm_path_to_handle fails, what is the error returned?
 
 Regards,
-Tim.
-
---On 1 November 2006 10:55:43 PM +0000 peyytmek@gmx.de wrote:
-
-> Hello,
-> Thanks for your last answer. Since you didn't answer my email for 2 weeks i
-> thought you might have deleted it accidently
->
-> Here's the email conversation:
->
->> > Hello.
->> > Thanks for your answer.
->> >
->> > That's what i have: dmesg print with kernel-2.6.16-gentoo-r3 and an print
->> > of xfs_bg.
->> >
->> >> You could print out the offending inode with xfs_db to show us
->> >> what it looks like: $xfs_db -r /dev/hdb1 -c "inode 950759" -c "print".
->> >
->> > I don't know what you mean with it but i added it anyway. (done with
->> > kernel-2.6.18-gentoo if it matters)
->> >
->> > xfs_db:
->> >
->> > CLX ~ # xfs_db -r /dev/hdb1 -c "inode 950759" -c "print"
->> > core.magic = 0x494e
->> > core.mode = 0100644
->> > core.version = 1
->> > core.format = 3 (btree)
->> > core.nlinkv1 = 0
->> > core.uid = 1000
->> > core.gid = 100
->> > core.flushiter = 0
->> > core.atime.sec = Sun Aug 27 14:56:52 2006
->> > core.atime.nsec = 657389250
->> > core.mtime.sec = Sun Aug 27 16:29:40 2006
->> > core.mtime.nsec = 080196250
->> > core.ctime.sec = Thu Oct  5 01:17:40 2006
->> > core.ctime.nsec = 976565958
->> > core.size = 32071862
->> > core.nblocks = 7833
->> > core.extsize = 0
->> > core.nextents = 28
->> > core.naextents = 0
->> > core.forkoff = 0
->> > core.aformat = 2 (extents)
->> > core.dmevmask = 0
->> > core.dmstate = 0
->> > core.newrtbm = 0
->> > core.prealloc = 0
->> > core.realtime = 0
->> > core.immutable = 0
->> > core.append = 0
->> > core.sync = 0
->> > core.noatime = 0
->> > core.nodump = 0
->> > core.rtinherit = 0
->> > core.projinherit = 0
->> > core.nosymlinks = 0
->> > core.extsz = 0
->> > core.extszinherit = 0
->> > core.gen = 0
->> > next_unlinked = null
->> > u.bmbt.level = 1
->> > u.bmbt.numrecs = 1
->> > u.bmbt.keys[1] = [startoff] 1:[0]
->> > u.bmbt.ptrs[1] = 1:185933
->>
->> And now:
->>
->> xfs_db -r /dev/hadb1 -c "fsb 185933" -c "type bmapbtd" -c "p"
->>
->> to look at the 28 extent records.
->>
->> --Tim
->
-> Here's the content of my last Email
->
->
-> Hello, thanks again for your fast answer
-> Sorry for the double post last time.
-> here it comes
->
->
-> CLX ~ # xfs_db -r /dev/hdb1 -c "fsb 185933" -c "type bmapbtd" -c "p"
-> magic = 0x424d4150
-> level = 0
-> numrecs = 27
-> leftsib = null
-> rightsib = null
-> recs[1-27] = [startoff,startblock,blockcount,extentflag] 1:[0,185637,16,0] 2:
-> [16,185537,8,0] 3:[24,185718,8,0] 4:[32,185706,8,0] 5:[40,185836,8,0] 6:
-> [48,185848,16,0] 7:[64,185865,16,0] 8:[80,185882,8,0] 9:[96,185899,16,0] 10:
-> [112,185916,16,0] 11:[340,185934,2,0] 12:[342,4768704,1320,0] 13:
-> [1662,4770389,239,0] 14:[1901,4770919,264,0] 15:[2165,4771391,165,0] 16:
-> [2330,4771860,227,0] 17:[2557,4861204,351,0] 18:[2908,4861800,257,0] 19:
-> [3165,4862282,349,0] 20:[3514,4862934,230,0] 21:[3744,4863506,383,0] 22:
-> [4127,4864141,348,0] 23:[4475,4864871,228,0] 24:[4703,4865358,268,0] 25:
-> [4971,4865882,593,0] 26:[5564,4866818,339,0] 27:[5903,4867729,1928,0]
+Vlad
