@@ -1,71 +1,161 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Nov 2006 16:42:54 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Nov 2006 16:58:26 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA30gjaG007494
-	for <xfs@oss.sgi.com>; Thu, 2 Nov 2006 16:42:49 -0800
-Date: Fri, 3 Nov 2006 11:41:42 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: mount failed after xfs_growfs beyond 16 TB
-Message-ID: <20061103004142.GI8394166@melbourne.sgi.com>
-References: <20061102172608.GA27769@pc51072.physik.uni-regensburg.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA30wIaG009337
+	for <xfs@oss.sgi.com>; Thu, 2 Nov 2006 16:58:20 -0800
+Date: Fri, 03 Nov 2006 10:58:31 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: Xfs-mailinglist question  (xfs mounting problem, hdb1 just freezes)
+Message-ID: <3B2B6490C980DD2C8B4C9645@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <200611012255.46008.peyytmek@gmx.de>
+References: <200611012255.46008.peyytmek@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20061102172608.GA27769@pc51072.physik.uni-regensburg.de>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Guggenberger <christian.guggenberger@physik.uni-regensburg.de>
+To: peyytmek@gmx.de
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 02, 2006 at 06:26:08PM +0100, Christian Guggenberger wrote:
-> Hi,
-> 
-> a colleague recently tried to grow a 16 TB filesystem (x86, 32bit) on
-> top of lvm2 to 17TB. (I am not even sure if that's supposed work with
-> linux-2.6, 32bit)
+Hi there,
 
-Not supported - any metadata access past 16TB will wrap the 32 bit page cache
-index for the metadata address space and you'll corrupt the filesystem.
+Sorry about not getting back to you.
 
-> used kernel seems to be debian sarge's 2.6.8
-> 
-> xfs_growfs seemed to succeed (AFAIK..)
-> 
-> however, the fs shut down:
-> 
-> XFS internal error
-> XFS_WANT_CORRUPTED_GOTO at line 1583 of file fs/xfs/xfs_alloc.c.  Caller
-> 0xf89978a8
-> [__crc_pm_idle+550816/2056674] xfs_free_ag_extent+0x454/0x78a [xfs]
-> [__crc_pm_idle+555561/2056674] xfs_free_extent+0xea/0x10f [xfs]
-> [__crc_pm_idle+555561/2056674] xfs_free_extent+0xea/0x10f [xfs]
-> [__crc_pm_idle+553757/2056674] xfs_alloc_read_agf+0xbe/0x1e4 [xfs]
-> [__crc_pm_idle+764480/2056674] xfs_growfs_data_private+0xd80/0xec0 [xfs]
+The inode details you sent me look reasonable to me (AFAICS).
+However, the inode that we are processing which has problems
+is probably coming from the log.
+Basically, during log replay we reinstate metadata such as inodes,
+inode buffers,
+and later process an unlinked-list which this inode appears to be on.
+It's during the truncating (as part of inactivating the inode) that we have problems
+when looking at its extents.
 
-No, growfs failed trying to extend the data partition and shut
-down the filesystem.
+You should be able to see this inode in the log if you use:
+# xfs_logprint -ti device
+(or possibly I guess
+ # xfs_logrpint -tibo device - if the inode is in a buffer of inodes)
+I'd be curious to see this.
 
-> mounting fails with:
-> 
-> XFS: SB sanity check 2 failed
-.....
-> and finally, xfs_repair stops at
-> 
-> bad primary superblock: inconsistent file geometrie information
+My thoughts for a plan of action were either:
+(1) forget the log and do an "xfs_repair -L" to zero it out and repair
+or
+(2) somehow try to do a mount which avoids the unlinked list processing
+(an older kernel (pre May 26)  would do this because of a bug in recovery);
+then unmount, then do a normal "xfs_repair"
+or
+(3) we try to stop this particular inode from being processed in the
+unlinked-list inode processing during mount; unmount; repair and then mount again
 
-Probably because growfs failed part way through and left inconsistent
-state behind.
+The simplest is to do option (1). However, it means that any other outstanding
+metadata changes would be lost.
+Option (2) might be a goer but you need such a kernel and in that case it
+won't do any unlinked processing for a group of such inodes (one's hashed to
+that bucket in the AGI's). I'm unsure on how to stop this unlinked processing
+otherwise.
+Option (3) I'm unsure as how to do. Also, there could be more inodes in
+the same boat which could cause recovery to crash.
 
-> found candidate secondary superblock...
-> superblock read failed, offset 10093861404672, size 2048, ag 0, rval 29
+May be others have suggestions.
 
-Does LVM2 even support volumes larger than 16TB on 32 bit machines?
+Regards,
+Tim.
 
-Cheers,
+--On 1 November 2006 10:55:43 PM +0000 peyytmek@gmx.de wrote:
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> Hello,
+> Thanks for your last answer. Since you didn't answer my email for 2 weeks i
+> thought you might have deleted it accidently
+>
+> Here's the email conversation:
+>
+>> > Hello.
+>> > Thanks for your answer.
+>> >
+>> > That's what i have: dmesg print with kernel-2.6.16-gentoo-r3 and an print
+>> > of xfs_bg.
+>> >
+>> >> You could print out the offending inode with xfs_db to show us
+>> >> what it looks like: $xfs_db -r /dev/hdb1 -c "inode 950759" -c "print".
+>> >
+>> > I don't know what you mean with it but i added it anyway. (done with
+>> > kernel-2.6.18-gentoo if it matters)
+>> >
+>> > xfs_db:
+>> >
+>> > CLX ~ # xfs_db -r /dev/hdb1 -c "inode 950759" -c "print"
+>> > core.magic = 0x494e
+>> > core.mode = 0100644
+>> > core.version = 1
+>> > core.format = 3 (btree)
+>> > core.nlinkv1 = 0
+>> > core.uid = 1000
+>> > core.gid = 100
+>> > core.flushiter = 0
+>> > core.atime.sec = Sun Aug 27 14:56:52 2006
+>> > core.atime.nsec = 657389250
+>> > core.mtime.sec = Sun Aug 27 16:29:40 2006
+>> > core.mtime.nsec = 080196250
+>> > core.ctime.sec = Thu Oct  5 01:17:40 2006
+>> > core.ctime.nsec = 976565958
+>> > core.size = 32071862
+>> > core.nblocks = 7833
+>> > core.extsize = 0
+>> > core.nextents = 28
+>> > core.naextents = 0
+>> > core.forkoff = 0
+>> > core.aformat = 2 (extents)
+>> > core.dmevmask = 0
+>> > core.dmstate = 0
+>> > core.newrtbm = 0
+>> > core.prealloc = 0
+>> > core.realtime = 0
+>> > core.immutable = 0
+>> > core.append = 0
+>> > core.sync = 0
+>> > core.noatime = 0
+>> > core.nodump = 0
+>> > core.rtinherit = 0
+>> > core.projinherit = 0
+>> > core.nosymlinks = 0
+>> > core.extsz = 0
+>> > core.extszinherit = 0
+>> > core.gen = 0
+>> > next_unlinked = null
+>> > u.bmbt.level = 1
+>> > u.bmbt.numrecs = 1
+>> > u.bmbt.keys[1] = [startoff] 1:[0]
+>> > u.bmbt.ptrs[1] = 1:185933
+>>
+>> And now:
+>>
+>> xfs_db -r /dev/hadb1 -c "fsb 185933" -c "type bmapbtd" -c "p"
+>>
+>> to look at the 28 extent records.
+>>
+>> --Tim
+>
+> Here's the content of my last Email
+>
+>
+> Hello, thanks again for your fast answer
+> Sorry for the double post last time.
+> here it comes
+>
+>
+> CLX ~ # xfs_db -r /dev/hdb1 -c "fsb 185933" -c "type bmapbtd" -c "p"
+> magic = 0x424d4150
+> level = 0
+> numrecs = 27
+> leftsib = null
+> rightsib = null
+> recs[1-27] = [startoff,startblock,blockcount,extentflag] 1:[0,185637,16,0] 2:
+> [16,185537,8,0] 3:[24,185718,8,0] 4:[32,185706,8,0] 5:[40,185836,8,0] 6:
+> [48,185848,16,0] 7:[64,185865,16,0] 8:[80,185882,8,0] 9:[96,185899,16,0] 10:
+> [112,185916,16,0] 11:[340,185934,2,0] 12:[342,4768704,1320,0] 13:
+> [1662,4770389,239,0] 14:[1901,4770919,264,0] 15:[2165,4771391,165,0] 16:
+> [2330,4771860,227,0] 17:[2557,4861204,351,0] 18:[2908,4861800,257,0] 19:
+> [3165,4862282,349,0] 20:[3514,4862934,230,0] 21:[3744,4863506,383,0] 22:
+> [4127,4864141,348,0] 23:[4475,4864871,228,0] 24:[4703,4865358,268,0] 25:
+> [4971,4865882,593,0] 26:[5564,4866818,339,0] 27:[5903,4867729,1928,0]
