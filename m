@@ -1,106 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Nov 2006 20:41:11 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Nov 2006 01:33:03 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kA34f3aG007783
-	for <linux-xfs@oss.sgi.com>; Thu, 2 Nov 2006 20:41:05 -0800
-Received: from ruth.realtime.net (mercury.realtime.net [205.238.132.86])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA791D1B7DD9
-	for <linux-xfs@oss.sgi.com>; Thu,  2 Nov 2006 19:41:57 -0800 (PST)
-Message-ID: <454A94A6.6040907@johngroves.net>
-Date: Thu, 02 Nov 2006 19:00:22 -0600
-From: John Groves <jgl@johngroves.net>
-Reply-To: jgl@johngroves.net
-MIME-Version: 1.0
-Subject: Re: XFS dmapi: dm_path_to_handle fails if the path is a directory
-References: <4547DA70.4040107@Groves.net> <4547EDFD.8020407@sgi.com>
-In-Reply-To: <4547EDFD.8020407@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kA39WraG017853
+	for <xfs@oss.sgi.com>; Fri, 3 Nov 2006 01:32:59 -0800
+Received: from rrzmta2.rz.uni-regensburg.de (rrzmta2.rz.uni-regensburg.de [132.199.1.17])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 15071D1B8CD7
+	for <xfs@oss.sgi.com>; Fri,  3 Nov 2006 01:32:06 -0800 (PST)
+Date: Fri, 3 Nov 2006 10:32:03 +0100
+From: Christian Guggenberger <christian.guggenberger@physik.uni-regensburg.de>
+Subject: Re: mount failed after xfs_growfs beyond 16 TB
+Message-ID: <20061103093203.GA18010@pc51072.physik.uni-regensburg.de>
+Reply-To: christian.guggenberger@physik.uni-regensburg.de
+References: <20061102172608.GA27769@pc51072.physik.uni-regensburg.de> <454A3B28.7010405@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <454A3B28.7010405@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
-Cc: Vlad Apostolov <vapo@sgi.com>, John Groves <John@Groves.net>, Dean Roehrich <roehrich@sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, dgc@sgi.com
+Cc: christian.guggenberger@physik.uni-regensburg.de, xfs@oss.sgi.com
 
-Thanks for your replies, Vlad, although I don't find anything so far 
-that helps with my problem (my paths are not long, and my calls to 
-dm_path_to_handle have been running in production environments for a 
-couple of years).  As far as I can see, dm_path_to_handle does not work 
-on a directory (?), although it works perfectly on a file.  I will try 
-to dig deeper into this over the next few days, but here is a somewhat 
-clearer explanation of the behavior I am seeing.
+Eric, Dave,
 
-I have updated to the latest kernel from SGI's CVS server, but the 
-problem is still there.  I am tracing through kernel code, and will be 
-happy to pull together some test code that demonstrates the problem, or 
-to post a patch if I figure it out, but this will take a few days.
-
-The sequence in which I find this problem is:
-
-    1. Receive a pre-rename event
-    2. Use the first handle parameter to resolve the pre-rename parent 
-directory path (not via dm_handle_to_path -- I had to roll my own 
-mechanisms for turning handles into paths).
-    3. Concatenate the first name parameter to the first parent 
-directory path, to get the relative path from mount point to actual file 
-being renamed.
-    4. Call dm_path_to_handle on that path, hoping to get the handle of 
-the file-being-renamed.
-
-If the renamed-thing is a file, this works.  If it's a directory, 
-dm_path_to_handle fails.
-
-With my dmapi event handler installed and running, I can reproduce it by 
-doing the following in the root directory of the filesystem:
-
-mkdir -p x/y/z
-mv x/y x/w
-
-In the pre-rename event, prior to responding to the event, my handler 
-correctly determines that x/y is being renamed to x/w, but 
-dm_path_to_handle does not return the handle of x/y.  My post-rename 
-event handler also correctly resolves the paths, but dm_path_to_handle 
-does not return the handle of x/w.
-
-If x/y is a file (rather than a directory) it all works properly.
-
-Let me know if you can think of anything specific I should look at, or 
-of a different way of getting the handle of the renamed thingy.
-
-Thanks,
-John Groves
-
-Vlad Apostolov wrote:
-> John Groves wrote:
 > 
->> I'm running up against a difficult situation because dm_path_to_handle 
->> does not return a handle, if the path is to a directory.  Is this a 
->> known issue, or perhaps fixed in a recent version?  Or is there 
->> another way get the handle of a directory by path?  When any file type 
->> is renamed, I (for various reasons) *must* know not just the old & new 
->> parent handles, but also the handle of the renamed thingy.  If the 
->> thingy is a directory, I'm stuck at the moment.
->>
->> My test system has dmapi 2.2.1-5, which I don't think is current, but 
->> I can't seem to get access to the oss.sgi.com server to check.
->>
->> Any advice or info appreciated.  I'm willing to try and submit a 
->> patch, but I'd appreciate first knowing whether there was a specific 
->> reason or problem that led to the current behavior.
->>
->> Thanks,
->> John Groves
->>
-> Hi John,
+> xfs_db> sb 0
+> xfs_db> p
 > 
-> If your path is longer than 2000 characters dm_path_to_handle used to fail.
-> This bug was fixed in August 2006. Please update your tree from here:
+> let's see what you've got.
 > 
-> http://oss.sgi.com/projects/xfs/download.html
+
+xfs_db: read failed: Invalid argument
+xfs_db: data size check failed
+xfs_db> sb 0
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 18446744070056148512
+rblocks = 0
+rextents = 0
+uuid = 27d35a50-724e-440b-ae1a-79f934f7915a
+logstart = 2147483652
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 16
+agblocks = 84976608
+agcount = 570
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x30c4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 27
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 1298880
+ifree = 376826
+fdblocks = 18446744067363131928
+frextents = 0
+uquotino = 131
+gquotino = null
+qflags = 0x7
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+xfs_db> 
+
+> Also how big does /proc/partitions think your new device is?
 > 
-> Regards,
-> Vlad
+it thinks it's 26983133184 blocks, which seems to be correct:
+
+  --- Logical volume ---
+    LV Name                /dev/data/project
+    VG Name                data
+    LV UUID                4RIXaW-QxWj-KOr5-CysS-TmLF-Jebu-lPyPOU
+    LV Write Access        read/write
+    LV Status              available
+    # open                 1
+    LV Size                25.13 TB
+    Current LE             6587679
+    Segments               4
+    Allocation             inherit
+    Read ahead sectors     0
+    Block device           254:1
+
+note, the fs was first grown with (originally mounted on /data/projects)
+
+xfs_growfs -D 4294966000 /data/projects
+which succeeded.
+
+a further
+
+xfs_growfs -D 4300000000 /data/projects
+
+shut the fs down.
+
+> > found candidate secondary superblock...
+> > superblock read failed, offset 10093861404672, size 2048, ag 0, rval 29
 > 
+> hmm that offset is about 9.4 terabytes.
 > 
+> any kernel messages when this happens?
 > 
-> 
+> rval 29 is ESPIPE / illegal seek.
+
+not that I know of, unfortunately.
+
+As Dave already stated that > 16TB is not supported on 32bits - is there
+any way to step back ? 
+
+cheers.
+ - Christian
+ 
