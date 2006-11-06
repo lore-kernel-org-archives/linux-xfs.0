@@ -1,63 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 05 Nov 2006 14:38:08 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 05 Nov 2006 17:15:12 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA5Mc0aG007297
-	for <linux-xfs@oss.sgi.com>; Sun, 5 Nov 2006 14:38:03 -0800
-Message-ID: <454E6795.1040900@sgi.com>
-Date: Mon, 06 Nov 2006 09:37:09 +1100
-From: Vlad Apostolov <vapo@sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kA61F6aG024803
+	for <xfs@oss.sgi.com>; Sun, 5 Nov 2006 17:15:08 -0800
+Date: Mon, 06 Nov 2006 11:15:22 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: mount failed after xfs_growfs beyond 16 TB
+Message-ID: <FFDFD6610F310171562D474B@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <454B5833.9030008@sandeen.net>
+References: <20061102172608.GA27769@pc51072.physik.uni-regensburg.de>
+ <20061103004142.GI8394166@melbourne.sgi.com> <454B5833.9030008@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS dmapi: dm_path_to_handle fails if the path is a directory
-References: <4547DA70.4040107@Groves.net> <4547EDFD.8020407@sgi.com> <454A94A6.6040907@johngroves.net> <454AAC6B.7010406@sgi.com> <454AAF31.8050104@Groves.net> <454AB0A0.7050309@sgi.com> <454B58E4.6000802@johngroves.net>
-In-Reply-To: <454B58E4.6000802@johngroves.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: jgl@johngroves.net
-Cc: John Groves <John@Groves.net>, linux-xfs@oss.sgi.com, Dean Roehrich <roehrich@sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: David Chinner <dgc@sgi.com>, Christian Guggenberger <christian.guggenberger@physik.uni-regensburg.de>, xfs@oss.sgi.com
 
-John Groves wrote:
->
->
-> Vlad Apostolov wrote:
->
->> Just a note that dm_path_to_handle works fine with relative paths on 
->> my machine.
->
-> In your case, could it be applying the "current working directory" 
-> from the process context to resolve a full path?  Mine is a daemon, 
-> and the relative paths are not valid relative to the "cwd" in which 
-> the daemon was started.
->
-> ...just a thought.  Otherwise, for the moment I may have to just 
-> accept it as weird...
->
-> Thanks again,
-> John
-I am using
+Good idea, Eric.
+I've created a pv.
+I noticed this was taken from xfs_mount_validate_sb() for the dblocks test.
+I guess it would be nice to abstract this test in a macro for use in multiple places.
 
-xfs-cmds/xfstests/dmapi/src/suite1/cmd/path_to_handle
+Cheers,
+Tim.
 
-and the relative path passed as an argument is directly given to 
-dm_path_to_handle().
-The current working directory
-I can't really explain why it doesn't work in your case. Here is an 
-example of a directory
-path to handle I get:
+--On 3 November 2006 8:54:43 AM -0600 Eric Sandeen <sandeen@sandeen.net> wrote:
 
-emu:/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd # 
-./path_to_handle /mnt/scratch1/dmapi
-5d1111a90e4800000e0000006e0000008300000000000000
-emu:/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd # 
-./path_to_handle ../../../../../../../../../mnt/scratch1/dmapi
-5d1111a90e4800000e0000006e0000008300000000000000
-emu:/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd # cd /
-emu:/ # 
-/home/vapo/isms/xfs-cmds/xfstests/dmapi/src/suite1/cmd/path_to_handle 
-../../../../../../../../../mnt/scratch1/dmapi
-5d1111a90e4800000e0000006e0000008300000000000000
-
-Regards,
-Vlad
+> David Chinner wrote:
+>> On Thu, Nov 02, 2006 at 06:26:08PM +0100, Christian Guggenberger wrote:
+>>> Hi,
+>>>
+>>> a colleague recently tried to grow a 16 TB filesystem (x86, 32bit) on
+>>> top of lvm2 to 17TB. (I am not even sure if that's supposed work with
+>>> linux-2.6, 32bit)
+>>
+>> Not supported - any metadata access past 16TB will wrap the 32 bit page cache
+>> index for the metadata address space and you'll corrupt the filesystem.
+>
+>
+> Ohhhh right.  I've been in x86_64 land for too long, sorry for the earlier false assertion....  :(
+>
+> xfs guys, if it's not there already (and I don't see it from a quick look..) growfs -really-
+> should refuse (in the kernel) to grow a filesystem past 16T on a 32-bit machine, just as we
+> refuse to mount one.  something like this in xfs_growfs_data_private:
+>
+># if XFS_BIG_BLKNOS     /* Limited by ULONG_MAX of page cache index */
+>          if (unlikely(
+>              (nb >> (PAGE_SHIFT - sbp->sb_blocklog)) > ULONG_MAX) {
+># else                  /* Limited by UINT_MAX of sectors */
+>          if (unlikely(
+>              (nb << (sbp->sb_blocklog - BBSHIFT)) > UINT_MAX) {
+># endif
+>                  cmn_err(CE_WARN,
+>                          "new filesystem size too large for this system.");
+>                  return XFS_ERROR(E2BIG);
+>          }
+>
+> and something similar in xfs_growfs_rt ?
+>
+> -Eric
+>
