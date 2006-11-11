@@ -1,134 +1,156 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Nov 2006 20:26:39 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAB4QUaG023465
-	for <xfs@oss.sgi.com>; Fri, 10 Nov 2006 20:26:31 -0800
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AA9E4DE9EF
-	for <xfs@oss.sgi.com>; Fri, 10 Nov 2006 20:25:43 -0800 (PST)
-Received: from [10.0.0.4] (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 3F7B618CF23E6
-	for <xfs@oss.sgi.com>; Fri, 10 Nov 2006 21:52:19 -0600 (CST)
-Message-ID: <455548F2.4060500@sandeen.net>
-Date: Fri, 10 Nov 2006 21:52:18 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Nov 2006 22:33:49 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAB6XdaG031745
+	for <xfs@oss.sgi.com>; Fri, 10 Nov 2006 22:33:40 -0800
+Date: Sat, 11 Nov 2006 16:34:22 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: XFS update for 2.6.19
+Message-ID: <76708453565F2C45356A563E@timothy-shimmins-power-mac-g5.local>
 MIME-Version: 1.0
-Subject: [PATCH] remove unused xflags parameter from sync routines
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: torvalds@osdl.org
+Cc: akpm@osdl.org, xfs@oss.sgi.com
 
-xfs_syncsub & xfs_sync_inodes have an xflags parameter which
-is never used.
+Hi Linus,
 
--Eric
+Please pull from:
+	git://oss.sgi.com:8090/xfs/xfs-2.6
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+It contains some bug fixes (notably inode iunpin fix),
+a couple of patches Andrew Morton was carrying and
+a few other fixups/support.
 
- quota/xfs_qm_syscalls.c |    2 +-
- xfs_mount.h             |    4 ++--
- xfs_vfsops.c            |   18 +++++-------------
- 3 files changed, 8 insertions(+), 16 deletions(-)
+This will update the following files:
+
+ fs/xfs/linux-2.6/xfs_ioctl.c |    5 +--
+ fs/xfs/linux-2.6/xfs_super.c |    4 ++-
+ fs/xfs/support/move.c        |    2 +
+ fs/xfs/support/move.h        |    2 +
+ fs/xfs/xfs_dir2.c            |    2 +
+ fs/xfs/xfs_iget.c            |   51 +++++++++------------------------
+ fs/xfs/xfs_inode.c           |   64 ++++++++++++++++++++++++------------------
+ fs/xfs/xfs_inode.h           |   41 ---------------------------
+ fs/xfs/xfs_vnodeops.c        |   33 +++++++++-------------
+ 9 files changed, 72 insertions(+), 132 deletions(-)
+
+through these commits:
+
+commit de5ab811cd0fd738d78c24b970337121ea4c1e07
+Author: David Chinner <dgc@sgi.com>
+Date:   Sat Nov 11 15:23:35 2006 +1100
+
+    [XFS] Remove KERNEL_VERSION macros from xfs_dmapi.h
+
+    SGI-PV: 957005
+    SGI-Modid: xfs-linux-melb:xfs-kern:27398a
+
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
 
 
-Index: xfs-linux-allpatches/quota/xfs_qm_syscalls.c
-===================================================================
---- xfs-linux-allpatches.orig/quota/xfs_qm_syscalls.c
-+++ xfs-linux-allpatches/quota/xfs_qm_syscalls.c
-@@ -134,7 +134,7 @@ xfs_qm_quotactl(
- 		break;
- 
- 	case Q_XQUOTASYNC:
--		return (xfs_sync_inodes(mp, SYNC_DELWRI, 0, NULL));
-+		return (xfs_sync_inodes(mp, SYNC_DELWRI, NULL));
- 
- 	default:
- 		break;
-Index: xfs-linux-allpatches/xfs_mount.h
-===================================================================
---- xfs-linux-allpatches.orig/xfs_mount.h
-+++ xfs-linux-allpatches/xfs_mount.h
-@@ -587,8 +587,8 @@ extern struct xfs_buf *xfs_getsb(xfs_mou
- extern int	xfs_readsb(xfs_mount_t *, int);
- extern void	xfs_freesb(xfs_mount_t *);
- extern void	xfs_do_force_shutdown(bhv_desc_t *, int, char *, int);
--extern int	xfs_syncsub(xfs_mount_t *, int, int, int *);
--extern int	xfs_sync_inodes(xfs_mount_t *, int, int, int *);
-+extern int	xfs_syncsub(xfs_mount_t *, int, int *);
-+extern int	xfs_sync_inodes(xfs_mount_t *, int, int *);
- extern xfs_agnumber_t	xfs_initialize_perag(struct bhv_vfs *, xfs_mount_t *,
- 						xfs_agnumber_t);
- extern void	xfs_xlatesb(void *, struct xfs_sb *, int, __int64_t);
-Index: xfs-linux-allpatches/xfs_vfsops.c
-===================================================================
---- xfs-linux-allpatches.orig/xfs_vfsops.c
-+++ xfs-linux-allpatches/xfs_vfsops.c
-@@ -640,7 +640,7 @@ xfs_quiesce_fs(
- 	 * we can write the unmount record.
- 	 */
- 	do {
--		xfs_syncsub(mp, SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT, 0, NULL);
-+		xfs_syncsub(mp, SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT, NULL);
- 		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 		if (!pincount) {
- 			delay(50);
-@@ -886,24 +886,20 @@ xfs_sync(
- 	if (unlikely(flags == SYNC_QUIESCE))
- 		return xfs_quiesce_fs(mp);
- 	else
--		return xfs_syncsub(mp, flags, 0, NULL);
-+		return xfs_syncsub(mp, flags, NULL);
- }
- 
- /*
-  * xfs sync routine for internal use
-  *
-  * This routine supports all of the flags defined for the generic vfs_sync
-- * interface as explained above under xfs_sync.  In the interests of not
-- * changing interfaces within the 6.5 family, additional internally-
-- * required functions are specified within a separate xflags parameter,
-- * only available by calling this routine.
-+ * interface as explained above under xfs_sync.
-  *
-  */
- int
- xfs_sync_inodes(
- 	xfs_mount_t	*mp,
- 	int		flags,
--	int             xflags,
- 	int             *bypassed)
- {
- 	xfs_inode_t	*ip = NULL;
-@@ -1412,17 +1408,13 @@ xfs_sync_inodes(
-  * xfs sync routine for internal use
-  *
-  * This routine supports all of the flags defined for the generic vfs_sync
-- * interface as explained above under xfs_sync.  In the interests of not
-- * changing interfaces within the 6.5 family, additional internally-
-- * required functions are specified within a separate xflags parameter,
-- * only available by calling this routine.
-+ * interface as explained above under xfs_sync.
-  *
-  */
- int
- xfs_syncsub(
- 	xfs_mount_t	*mp,
- 	int		flags,
--	int             xflags,
- 	int             *bypassed)
- {
- 	int		error = 0;
-@@ -1444,7 +1436,7 @@ xfs_syncsub(
- 		if (flags & SYNC_BDFLUSH)
- 			xfs_finish_reclaim_all(mp, 1);
- 		else
--			error = xfs_sync_inodes(mp, flags, xflags, bypassed);
-+			error = xfs_sync_inodes(mp, flags, bypassed);
- 	}
- 
- 	/*
+commit d716594813bf897e6f0255b03d0b43cc00f46c0c
+Author: David Chinner <dgc@sgi.com>
+Date:   Sat Nov 11 15:18:35 2006 +1100
+
+    [XFS] Prevent a deadlock when xfslogd unpins inodes.
+
+    The previous fixes for the use after free in xfs_iunpin left a nasty log
+    deadlock when xfslogd unpinned the inode and dropped the last reference to
+    the inode. the ->clear_inode() method can issue transactions, and if the
+    log was full, the transaction could push on the log and get stuck trying
+    to push the inode it was currently unpinning.
+
+    To fix this, we provide xfs_iunpin a guarantee that it will always have a
+    valid xfs_inode <-> linux inode link or a particular flag will be set on
+    the inode. We then use log forces during lookup to ensure transactions are
+    completed before we recycle the inode. This ensures that xfs_iunpin will
+    never use the linux inode after it is being freed, and any lookup on an
+    inode on the reclaim list will wait until it is safe to attach a new linux
+    inode to the xfs inode.
+
+    SGI-PV: 956832
+    SGI-Modid: xfs-linux-melb:xfs-kern:27359a
+
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Shailendra Tripathi <stripathi@agami.com>
+    Signed-off-by: Takenori Nagano <t-nagano@ah.jp.nec.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+
+commit 283e9cb79215cc159386daba72363469640a4ddf
+Author: David Chinner <dgc@sgi.com>
+Date:   Sat Nov 11 15:07:41 2006 +1100
+
+    [XFS] Clean up i_flags and i_flags_lock handling.
+
+    SGI-PV: 956832
+    SGI-Modid: xfs-linux-melb:xfs-kern:27358a
+
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Nathan Scott <nscott@aconex.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+
+commit 4debb1aff0c7a37a37a1fa200958d5b89668e474
+Author: Vlad Apostolov <vapo@sgi.com>
+Date:   Sat Nov 11 15:07:34 2006 +1100
+
+    [XFS] 956664: dm_read_invis() changes i_atime
+
+    SGI-PV: 956664
+    SGI-Modid: xfs-linux-melb:xfs-kern:27315a
+
+    Signed-off-by: Vlad Apostolov <vapo@sgi.com>
+    Signed-off-by: Sam Vaughan <sjv@sgi.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+
+commit 9945a9f7fa5b394ea46ffb7da12846418bc418a9
+Author: Vlad Apostolov <vapo@sgi.com>
+Date:   Sat Nov 11 15:07:28 2006 +1100
+
+    [XFS] rename uio_read() to xfs_uio_read()
+
+    SGI-PV: 957004
+    SGI-Modid: xfs-linux-melb:xfs-kern:27231a
+
+    Signed-off-by: Vlad Apostolov <vapo@sgi.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+
+commit f8bfdc2384a51054d50a1fe3564b39c0f13327a6
+Author: Tim Shimmin <tes@sgi.com>
+Date:   Sat Nov 11 15:07:19 2006 +1100
+
+    [XFS] Keep lockdep happy.
+
+    SGI-PV: 956964
+    SGI-Modid: xfs-linux-melb:xfs-kern:27200a
+
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+commit f534f2a21d5b2979913bdbae05e74a1d015a62ef
+Author: Vlad Apostolov <vapo@sgi.com>
+Date:   Sat Nov 11 14:17:37 2006 +1100
+
+    [XFS] 956618: Linux crashes on boot with XFS-DMAPI filesystem when
+    CONFIG_XFS_TRACE is on
+
+    SGI-PV: 956618
+    SGI-Modid: xfs-linux-melb:xfs-kern:27196a
+
+    Signed-off-by: Vlad Apostolov <vapo@sgi.com>
+    Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+Thanks,
+--Tim
