@@ -1,188 +1,94 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Nov 2006 17:12:36 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAD1CQaG009191
-	for <xfs@oss.sgi.com>; Sun, 12 Nov 2006 17:12:27 -0800
-Date: Mon, 13 Nov 2006 11:13:12 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: XFS Update for 2.6.19 - signed-off-by issues
-Message-ID: <8E9FE4A0A565B567E6AA0D02@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <4557A823.6070609@sgi.com>
-References: <E3D44718E107CCFE3EE40746@timothy-shimmins-power-mac-g5.local>
- <4557A823.6070609@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Nov 2006 17:51:10 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAD1p1aG012469
+	for <xfs@oss.sgi.com>; Sun, 12 Nov 2006 17:51:02 -0800
+Received: from mailgate.mysql.com (mailgate-out2.mysql.com [213.136.52.68])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64256D1D00E0
+	for <xfs@oss.sgi.com>; Sun, 12 Nov 2006 17:33:39 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mailgate.mysql.com (8.13.4/8.13.4) with ESMTP id kAD1Xbtd004709
+	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 02:33:37 +0100
+Received: from mail.mysql.com ([10.222.1.99])
+ by localhost (mailgate.mysql.com [10.222.1.98]) (amavisd-new, port 10026)
+ with LMTP id 22554-06 for <xfs@oss.sgi.com>;
+ Mon, 13 Nov 2006 02:33:37 +0100 (CET)
+Received: from [192.168.1.100] (ppp163-199.static.internode.on.net [150.101.163.199])
+	(authenticated bits=0)
+	by mail.mysql.com (8.13.3/8.13.3) with ESMTP id kAD1XNiT032097
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 02:33:31 +0100
+Subject: XFS_IOC_RESVSP64 versus XFS_IOC_ALLOCSP64 with multiple threads
+From: Stewart Smith <stewart@mysql.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yf2iUCshWZ67mA/P20R0"
+Date: Mon, 13 Nov 2006 12:33:22 +1100
+Message-Id: <1163381602.11914.10.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Vlad Apostolov <vapo@sgi.com>
-Cc: xfs-dev <xfs-dev@corp.sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Vlad,
+--=-yf2iUCshWZ67mA/P20R0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---On 13 November 2006 10:02:59 AM +1100 Vlad Apostolov <vapo@sgi.com> wrote:
+I recently (finally) wrote my patch to use the xfsctl to get better
+allocation for NDB disk data files (datafiles and undofiles).
+patch at:
+http://lists.mysql.com/commits/15088
 
-> I don't know what I have done wrong but some of the patches bellow signed
-> by me a actually patches from the comunity that I just have verified and
-> checked in our XFS source management system. I guess, I didn't clearly identified
-> the real authors of the fixes (although I think I put their names when I checked in
-> the patch).
->
+This actually ends up giving us a rather nice speed boost in some of the
+test suite runs.
 
-We'll address this going forward (since Vlad's patch commits were rather simple)
-and hopefully get it right next time :)
-Unless anyone has a strong objection or some other problems come up.
+The problem is:
+- two cluster nodes on 1 host (in the case of the mysql-test-run script)
+- each node has a complete copy of the database
+- ALTER TABLESPACE ADD DATAFILE / ALTER LOGFILEGROUP ADD UNDOFILE
+creates files on *both* nodes. We want to zero these out.
+- files are opened with O_SYNC (IIRC)
 
->From the outside contributors point of view, a signed-off-by line in the
-contributed patch is appreciated but not necessary as we (SGI) will/should do this.
+The patch I committed uses XFS_IOC_RESVSP64 to allocate (unwritten)
+extents and then posix_fallocate to zero out the file (the glibc
+implementation of this call just writes zeros out).
 
->From SGI engineering point of view:
+Now, ideally it would be beneficial (and probably faster) to have XFS do
+this in kernel. Asynchronously would be pretty cool too.. but hey :)
 
-There were 2 problems with the sgi ptools checkin Vlad was referring to AFAICT:
+The reason we don't want unwritten extents is that NDB has some realtime
+properties, and futzing about with extents and the like in the FS during
+transactions isn't such a good idea.
 
-1. If the original author should be the git author then we need a "Signed-off-by:"
-   clause in the body of the ptools checkin description. This was missing in the
-   checkin description here.
-   This will be the SGI engineer's responsibility to check if there is one already
-   or add one in. This way our scripts know who the intended git author was and not
-   who the ptools author who checked in the fix was.
+So, this would lead me to try XFS_IOC_ALLOCSP64 - which doesn't have the
+"unwritten extents" warning that RESVSP64 does. However, with the two
+processes writing the files out, I get heavy fragmentation. Even with a
+RESVSP followed by ALLOCSP I get the same result.
 
-2. If we want reviewers including outside reviewers as signed off then the reviewers
-   should be placed on separate lines in the ptools "Inspected by" fields and need to
-   be added to our developers.pl database (I can do the last bit as I did this time
-   for a few mods/commits).
-   However, I'll update the script to handle comma or space separated reviewer names for the future
-   (the mods in question had comma separated ones).
+So it seems that ALLOCSP re-allocates extents (even if it doesn't have
+to) and really doesn't give you much (didn't do too much timing to see
+if it was any quicker).
 
-If anyone has a better plan then let me know.
+Is this expected behaviour? (it wasn't for me)
+--=20
+Stewart Smith, Software Engineer
+MySQL AB, www.mysql.com
+Office: +14082136540 Ext: 6616
+VoIP: 6616@sip.us.mysql.com
+Mobile: +61 4 3 8844 332
 
-Thanks.
-I hope this clarifies things a bit.
+Jumpstart your cluster:
+http://www.mysql.com/consulting/packaged/cluster.html
 
---Tim
+--=-yf2iUCshWZ67mA/P20R0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-The sgi-ptools to git converstion scripts
-> Vlad
->
-> Timothy Shimmin wrote:
->>
->>
->> commit 93c189c1148a5e39bcc8f62568f42a77f93477c5
->> Author: Vlad Apostolov <vapo@sgi.com>
->> Date: Sat Nov 11 18:03:49 2006 +1100
->>
->> [XFS] 956618: Linux crashes on boot with XFS-DMAPI filesystem when
->> CONFIG_XFS_TRACE is on
->>
->> SGI-PV: 956618
->> SGI-Modid: xfs-linux-melb:xfs-kern:27196a
->>
->> Signed-off-by: Vlad Apostolov <vapo@sgi.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->>
->> commit 439b8434792d0b62e32ab1416f214a18a640cc03
->> Author: Tim Shimmin <tes@sgi.com>
->> Date: Sat Nov 11 18:04:34 2006 +1100
->>
->> [XFS] Keep lockdep happy.
->>
->> SGI-PV: 956964
->> SGI-Modid: xfs-linux-melb:xfs-kern:27200a
->>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->> Signed-off-by: David Chinner <dgc@sgi.com>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->>
->>
->> commit 70a505285f9859f77e07f7c12371b0d29ecf3d82
->> Author: Vlad Apostolov <vapo@sgi.com>
->> Date: Sat Nov 11 18:04:41 2006 +1100
->>
->> [XFS] rename uio_read() to xfs_uio_read()
->>
->> SGI-PV: 957004
->> SGI-Modid: xfs-linux-melb:xfs-kern:27231a
->>
->> Signed-off-by: Vlad Apostolov <vapo@sgi.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->>
->> commit 2e2e7bb1fd857b9fc83b0cd77b6b647ebb423301
->> Author: Vlad Apostolov <vapo@sgi.com>
->> Date: Sat Nov 11 18:04:47 2006 +1100
->>
->> [XFS] 956664: dm_read_invis() changes i_atime
->>
->> SGI-PV: 956664
->> SGI-Modid: xfs-linux-melb:xfs-kern:27315a
->>
->> Signed-off-by: Vlad Apostolov <vapo@sgi.com>
->> Signed-off-by: Sam Vaughan <sjv@sgi.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->>
->> commit 7a18c386078eaf17ae54595f66c0d64d9c1cb29c
->> Author: David Chinner <dgc@sgi.com>
->> Date: Sat Nov 11 18:04:54 2006 +1100
->>
->> [XFS] Clean up i_flags and i_flags_lock handling.
->>
->> SGI-PV: 956832
->> SGI-Modid: xfs-linux-melb:xfs-kern:27358a
->>
->> Signed-off-by: David Chinner <dgc@sgi.com>
->> Signed-off-by: Nathan Scott <nscott@aconex.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->>
->> commit 4c60658e0f4e253cf275f12b7c76bf128515a774
->> Author: David Chinner <dgc@sgi.com>
->> Date: Sat Nov 11 18:05:00 2006 +1100
->>
->> [XFS] Prevent a deadlock when xfslogd unpins inodes.
->>
->> The previous fixes for the use after free in xfs_iunpin left a nasty log
->> deadlock when xfslogd unpinned the inode and dropped the last
->> reference to
->> the inode. the ->clear_inode() method can issue transactions, and if the
->> log was full, the transaction could push on the log and get stuck trying
->> to push the inode it was currently unpinning.
->>
->> To fix this, we provide xfs_iunpin a guarantee that it will always have a
->> valid xfs_inode <-> linux inode link or a particular flag will be set on
->> the inode. We then use log forces during lookup to ensure transactions
->> are
->> completed before we recycle the inode. This ensures that xfs_iunpin will
->> never use the linux inode after it is being freed, and any lookup on an
->> inode on the reclaim list will wait until it is safe to attach a new
->> linux
->> inode to the xfs inode.
->>
->> SGI-PV: 956832
->> SGI-Modid: xfs-linux-melb:xfs-kern:27359a
->>
->> Signed-off-by: David Chinner <dgc@sgi.com>
->> Signed-off-by: Shailendra Tripathi <stripathi@agami.com>
->> Signed-off-by: Takenori Nagano <t-nagano@ah.jp.nec.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->>
->> commit 050e714eb2bc662e9df6bf048ce86b4fbdd9bcd3
->> Author: David Chinner <dgc@sgi.com>
->> Date: Sat Nov 11 18:05:06 2006 +1100
->>
->> [XFS] Remove KERNEL_VERSION macros from xfs_dmapi.h
->>
->> SGI-PV: 957005
->> SGI-Modid: xfs-linux-melb:xfs-kern:27398a
->>
->> Signed-off-by: David Chinner <dgc@sgi.com>
->> Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
->> Signed-off-by: Tim Shimmin <tes@sgi.com>
->>
->> --Tim
->>
->>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQBFV8tiKglWCUL+FDoRAl49AJ9H5/9h+KJmLLMeY0HBmxH89cRb5gCgo2ej
+IK6ccyggyyTBs7vVBroRbFo=
+=UFYp
+-----END PGP SIGNATURE-----
+
+--=-yf2iUCshWZ67mA/P20R0--
