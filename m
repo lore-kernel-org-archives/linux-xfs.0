@@ -1,33 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Nov 2006 08:09:18 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Nov 2006 08:16:03 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kADG98aG021477
-	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 08:09:09 -0800
-Received: from moving-picture.com (mpc-26.sohonet.co.uk [193.203.82.251])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C81694A5B5D
-	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 07:48:33 -0800 (PST)
-Received: from minion.mpc.local ([172.16.11.112] helo=moving-picture.com)
-	by moving-picture.com with esmtp (Exim 4.43)
-	id 1Gje2h-0004bg-0C
-	for xfs@oss.sgi.com; Mon, 13 Nov 2006 15:48:15 +0000
-Message-ID: <455893BE.4010208@moving-picture.com>
-Date: Mon, 13 Nov 2006 15:48:14 +0000
-From: James Pearson <james-p@moving-picture.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kADGFraG022699
+	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 08:15:54 -0800
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 954FF51C2B6
+	for <xfs@oss.sgi.com>; Mon, 13 Nov 2006 08:15:04 -0800 (PST)
+Message-ID: <45589A06.7040503@sandeen.net>
+Date: Mon, 13 Nov 2006 10:15:02 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Update for the RHEL4 XFS module?
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: Update for the RHEL4 XFS module?
+References: <455893BE.4010208@moving-picture.com>
+In-Reply-To: <455893BE.4010208@moving-picture.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: James Pearson <james-p@moving-picture.com>
+Cc: xfs@oss.sgi.com
 
-The RHEL4 XFS module code at 
-<ftp://oss.sgi.com/projects/xfs/testing/RHEL4/> is now about a year old.
+James Pearson wrote:
+> The RHEL4 XFS module code at 
+> <ftp://oss.sgi.com/projects/xfs/testing/RHEL4/> is now about a year old.
+> 
+> Is there any chance that it could be updated with something based on 
+> more recent code?
+> 
+> Thanks
+> 
+> James Pearson
+> 
+> 
 
-Is there any chance that it could be updated with something based on 
-more recent code?
+Funny you should ask, I just started looking at this last night :)
 
-Thanks
+It was originally based on the SLES9 xfs code; my plan is to simply update it to 
+the latest sles9 xfs codebase, as that has been tended to with a goal of 
+stability by the fine folks at sgi....  so, no bleeding-edge xfs for now (I 
+don't particularly want to backport 2.6.18 xfs code to 2.6.9....)
 
-James Pearson
+BTW I have test RHEL5 xfs rpms too, in very test-y state:
+
+http://sandeen.net/rhel5_xfs/
+
+-Eric
