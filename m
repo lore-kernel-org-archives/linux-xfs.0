@@ -1,122 +1,215 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Nov 2006 17:21:24 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAF1LFaG022077
-	for <xfs@oss.sgi.com>; Tue, 14 Nov 2006 17:21:17 -0800
-Message-ID: <455A68AF.8030309@agami.com>
-Date: Tue, 14 Nov 2006 17:09:03 -0800
-From: Shailendra Tripathi <stripathi@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Nov 2006 17:22:27 -0800 (PST)
+Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAF1MHaG022236
+	for <xfs@oss.sgi.com>; Tue, 14 Nov 2006 17:22:19 -0800
+Message-ID: <455A6B92.9060805@sgi.com>
+Date: Wed, 15 Nov 2006 01:21:22 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: [RFC 0/3] Convert XFS inode hashes to radix trees
-References: <20061003060610.GV3024@melbourne.sgi.com>
-In-Reply-To: <20061003060610.GV3024@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: xfs_bmap_add_extent_delay_real: Uninited r[3] corrupts startoff
+References: <4529F8A8.6080900@agami.com> <452C44A2.7000907@sgi.com> <455A589E.4040607@sgi.com> <455A600D.8010803@agami.com>
+In-Reply-To: <455A600D.8010803@agami.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: Shailendra Tripathi <stripathi@agami.com>
+Cc: Vlad Apostolov <vapo@sgi.com>, xfs mailing list <xfs@oss.sgi.com>, xfs-dev@sgi.com
 
-Hi David,
-                I regret for making comments and questions on this quite 
-late (somehow I missed to email).
-It does appear to me that using this approach can potentially help in 
-cluster hash list related manipulations.
-However, this appears (to me) to be at the cost of regular inode lookup.
+I considered that approach but wasn't keen on setting br_startblock to 0
+when it should be NULLSTARTBLOCK.  Subsequent calls to xfs_bmbt_set_all()
+handle NULLSTARTBLOCK differently but the net result ends up being the
+same and the startblock eventually gets overridden anyway.  I'll go with
+your suggestion.
 
-As of now, each of the hash buckets have their own lock. This helps in 
-not making the xfs_iget
-operations hot. I have not seen of xfs_iget anywhere on the top in my 
-profiling of Linux for SPECFS. 
-With this code, the number of hash buckets can be appropriately sized 
-(based upon memory availability).
-
-However, it appears to be that radix tree (even with 15) can become a 
-bottleneck. Lets assume that there are
-600K inodes on a reasonably big end system and assuming fare 
-distribution, each of the radix tree will
-have 600K/15 ~ 40K inodes per hash tree. Insertion and deletion  to the 
-list have to take writer_lock and
-given their frequency, both readers (lookups) and writers will be affected.
- 
-That means, if one tree is locked for insertion or deletion, remaining 
-40K inodes will be just serialized. However, in
-current design, by sacrificing little extra memory, we can allocate more 
-hash buckets and eventually the locked down
-inodes can be made pretty small.  My knowledge on radix tree is little 
-limited, but I think, increasing the number of trees
-would be much more costly in memory terms. Given less memory usage and 
-performance, I tend to believe that hash
-table is more scalable than radix tree for inode tables.
-        Have you done any performance testing with these patches. I am 
-quite curious to know the results. If not, may be I can
-try do some perf. testing with these changes albeit on a old kernel tree.
-       Am I missing something here ? Please let me know.
-
-Thanks and Regards,
-Shailendra
-
-David Chinner wrote:
-> One of the long standing problems with XFS on large machines and
-> filesystems is the sizing of the inode cache hashes used by XFS to
-> index the xfs_inode_t structures. The mount option ihashsize became
-> a necessity because the default calculations simply can't get it
-> right for all situations.
->
-> On top of that, as we increase the size of the inode hash and cache
-> more inodes, the inode cluster hash becomes the limiting factor,
-> especially when we have sparse cluster population.  The result of
-> this is that we can always get to the point where either the ihash
-> or the chash is a scalability or performance limitation.
->
-> The following three patches replace the hashes with a more scalable
-> solution that should not require tweaking in most situations.
->
-> I chose a radix tree to replace the hash chains because of a neat
-> alignment of XFS inode structures and the kernel radix tree fanout.
-> XFS allocates inodes in clusters of 64 inodes and the radix tree
-> keeps 64 sequential entries per node.  That means all for the inodes
-> in a cluster will always sit in the same node of the radix tree.
->
-> Using this relationship, we completely remove the need for the
-> cluster hash to track clusters because we can use a gang lookup on
-> the radix tree to search for an existing inode in the cluster in an
-> efficient manner.
->
-> The following three patches sit on top of the recently posted
-> i_flags cleanup patch.
-> (http://marc.theaimsgroup.com/?l=linux-xfs&m=115985254820322&w=2)
->
-> The first patch replaces the inode hash chains with radix trees.  A
-> single radix tree with a read/write lock does not provide enough
-> parallelism to prevent performance regressions under simultanenous
-> create/unlink workloadds, so we hash the inode clusters into
-> different radix trees each with their own read/write lock. The
-> default is to create (2*ncpus)-1 radix trees up to a maximum of 15.
-> At this point I have left the ihashsize mount option alone but
-> limited the maximum number it can take to 128. if you specify more
-> than 128 (i.e. everyone currently using this mount option), it
-> falls back to the default.
->
-> The second patch introduces a per-cluster object lock for chaining
-> the inodes in the cluster together (for xfs_iflush()). The inode
-> chain is currently locked by cluster hash chain lock, so we need
-> some other method of locking if we are to remove the cluster hash
-> altogether.
->
-> The third patch removes the cluster hash and replaces it with some
-> masking and a radix tree gang lookup.
->
-> Overall, the patchset removes more than 200 lines of code from the
-> xfs inode caching and lookup code and provides more consistent
-> scalability for large numbers of cached inodes. The only down side
-> is that it limits us to 32 bit inode numbers of 32 bit platforms due
-> to the way the radix tree uses unsigned longs for it's indexes
->
-> Comments, thoughts, etc are welcome.
->
-> Cheers,
->
-> Dave.
->   
+Shailendra Tripathi wrote:
+> Hi Lachlan,
+>        I would prefer manual assignment here than struct assignment. 
+> r[1].br_startoff and r[1].br_blockcount will be
+> modified immediately, so it is not worth assigning via ( r[1] = PREV) as 
+> it does extra instructions.
+> Compiler would most likely eliminate the extra assignment but, why to 
+> leave on the wit of the compiler.
+> 
+> It should be like
+> r[1].br_state = PREV.br_state;
+> r[1].br_startblock = 0 ; /* No fancy stuff required here as the aim here 
+> is that br_startoff does not get any thing random */
+> 
+> Regards,
+> Shailendra
+> 
+> Lachlan McIlroy wrote:
+> 
+>> This should be all that's needed.  This code handles the case where 
+>> the middle
+>> portion of a delayed allocation is being converted and splits the 
+>> extent into
+>> three.  The r[1] extent is the rightmost extent that will remain a 
+>> delayed
+>> allocation.  Both br_startblock and br_state need to be setup and they 
+>> will be
+>> the same as the original delayed allocation (PREV) so we just inherit 
+>> those
+>> values.  Comments?
+>>
+>> --- fs/xfs/xfs_bmap.c_1.358     2006-11-01 14:44:38.000000000 +0000
+>> +++ fs/xfs/xfs_bmap.c   2006-11-02 13:22:41.000000000 +0000
+>> @@ -1171,6 +1171,7 @@
+>>                 xfs_bmap_trace_pre_update(fname, "0", ip, idx, 
+>> XFS_DATA_FORK);
+>>                 xfs_bmbt_set_blockcount(ep, temp);
+>>                 r[0] = *new;
+>> +               r[1] = PREV;
+>>                 r[1].br_startoff = new_endoff;
+>>                 temp2 = PREV.br_startoff + PREV.br_blockcount - 
+>> new_endoff;
+>>                 r[1].br_blockcount = temp2;
+>>
+>> Lachlan
+>>
+>> Vlad Apostolov wrote:
+>>
+>>> Hi Shailendra,
+>>>
+>>> Shailendra Tripathi wrote:
+>>>
+>>>> Hi,
+>>>>     It appears that uninitialized r[3] in 
+>>>> xfs_bmap_add_extent_delay_real can potentially corrupt the startoff 
+>>>> for a particular case.
+>>>>
+>>>> This sequence is below:
+>>>>
+>>>>        xfs_bmap_add_extent_delay_real (
+>>>>        ...
+>>>>        xfs_bmbt_irec_t         r[3];   /* neighbor extent entries */
+>>>>
+>>>> case 0:
+>>>>          /*
+>>>>           * Filling in the middle part of a previous delayed 
+>>>> allocation.
+>>>>           * Contiguity is impossible here.
+>>>>           * This case is avoided almost all the time.
+>>>>           */
+>>>> temp = new->br_startoff - PREV.br_startoff;
+>>>> xfs_bmbt_set_blockcount(ep, temp);
+>>>> r[0] = *new;
+>>>> r[1].br_startoff = new_endoff;
+>>>> temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
+>>>> r[1].br_blockcount = temp2;
+>>>> xfs_bmap_insert_exlist(ip, idx + 1, 2, &r[0], XFS_DATA_FORK);
+>>>> ip->i_df.if_lastex = idx + 1;
+>>>> ip->i_d.di_nextents++;
+>>>>
+>>>> Look at extent r[1]. It does not set br_startblock. That is, it is 
+>>>> any random value. Now, look at the xfs_bmbt_set_all. Though, it sets 
+>>>> the blockcount later, the startoff does not get changed.
+>>>>
+>>>> #if XFS_BIG_BLKNOS
+>>>>         ASSERT((s->br_startblock & XFS_MASK64HI(12)) == 0);
+>>>>         r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
+>>>>                  ((xfs_bmbt_rec_base_t)s->br_startoff << 9) |
+>>>>                  ((xfs_bmbt_rec_base_t)s->br_startblock >> 43);
+>>>> Top 21 bits are taken as it is. However, only 9 bit should be taken. 
+>>>> So, for random values, it corrupts the startoff which from 9-63 bits.
+>>>
+>>>
+>>>  From the code inspection I agree with you that br_startblock doesn't 
+>>> appear
+>>> to be initialized in this scenario. Otherwise I think the code looks 
+>>> good.
+>>> If the br_startblock is initialized  it should be a value that fits
+>>> in 52 bits out of 64 (this is what the ASSERT is for) and the top 12 
+>>> bits will be 0.
+>>> The r->l0 gets the top 21 bits of br_startblock, the most significant 
+>>> 12 bits of
+>>> which are 0 and least significant 9 could be non 0. The r->l1 gets the
+>>> rest 43 (= 52-9 = 64-21) bits of br_startblock.
+>>>
+>>> I will open a bug report for the uninitialized br_startblock.
+>>>
+>>> Thank you for finding this problem.
+>>>
+>>> Regards,
+>>> Vlad
+>>>
+>>>>
+>>>>         r->l1 = ((xfs_bmbt_rec_base_t)s->br_startblock << 21) |
+>>>>                  ((xfs_bmbt_rec_base_t)s->br_blockcount &
+>>>>                  (xfs_bmbt_rec_base_t)XFS_MASK64LO(21));
+>>>>
+>>>> I have attached a small program which does the same thing as it is 
+>>>> being done here. I would appreciate if someone can verify that 
+>>>> assertion is correct.
+>>>>
+>>>>
+>>>> Regards,
+>>>> Shailendra
+>>>> ------------------------------------------------------------------------ 
+>>>>
+>>>>
+>>>> #include <stdio.h>
+>>>> typedef unsigned long __uint64_t;
+>>>> typedef struct xfs_bmbt_rec_64
+>>>> {
+>>>>         __uint64_t              l0, l1;
+>>>> } xfs_bmbt_rec_64_t;
+>>>>
+>>>> typedef __uint64_t      xfs_bmbt_rec_base_t;    typedef 
+>>>> xfs_bmbt_rec_64_t xfs_bmbt_rec_t, xfs_bmdr_rec_t;
+>>>>
+>>>> typedef enum {
+>>>>        XFS_EXT_NORM, XFS_EXT_UNWRITTEN,
+>>>>        XFS_EXT_DMAPI_OFFLINE
+>>>> } xfs_exntst_t;
+>>>>
+>>>> typedef struct xfs_bmbt_irec
+>>>> {
+>>>>     __uint64_t   br_startoff;    /* starting file offset */
+>>>>     __uint64_t   br_startblock;  /* starting block number */
+>>>>     __uint64_t   br_blockcount;  /* number of blocks */
+>>>>     xfs_exntst_t    br_state;       /* extent state */
+>>>> } xfs_bmbt_irec_t;
+>>>>
+>>>> #define XFS_MASK64LO(n)         (((__uint64_t)1 << (n)) - 1)
+>>>> #define XFS_MASK64HI(n)         ((__uint64_t)-1 << (64 - (n)))
+>>>>
+>>>> int main(void) {
+>>>>     xfs_bmbt_irec_t s;
+>>>>     xfs_bmbt_rec_t  r;
+>>>>     int extent_flag;
+>>>>
+>>>>     s.br_startoff = 0;
+>>>>     s.br_blockcount = 5;
+>>>>     s.br_startblock = 0xfffffffffffffff0;
+>>>>     extent_flag = (s.br_state == XFS_EXT_NORM) ? 0 : 1;
+>>>>
+>>>>     printf("blockcount = 0x%llx\n", s.br_startblock);
+>>>>     r.l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
+>>>>               ((xfs_bmbt_rec_base_t)s.br_startoff << 9) |
+>>>>               ((xfs_bmbt_rec_base_t)s.br_startblock >> 43);
+>>>>     r.l1 = ((xfs_bmbt_rec_base_t)s.br_startblock << 21) |
+>>>>              ((xfs_bmbt_rec_base_t)s.br_blockcount &
+>>>>              (xfs_bmbt_rec_base_t)XFS_MASK64LO(21));
+>>>>
+>>>>     printf("l0 = 0x%llx l1 = 0x%llx\n", r.l0, r.l1);
+>>>>
+>>>>     r.l0 = (r.l0 & (xfs_bmbt_rec_base_t)XFS_MASK64HI(55)) |
+>>>>             (xfs_bmbt_rec_base_t)((__uint64_t)100 >> 43);
+>>>>     r.l1 = (r.l1 & (xfs_bmbt_rec_base_t)XFS_MASK64LO(21)) |
+>>>>             (xfs_bmbt_rec_base_t)((__uint64_t)100 << 21);
+>>>>
+>>>>     printf("l0 = 0x%llx l1 = 0x%llx\n", r.l0, r.l1);
+>>>>     return 0;
+>>>> }
+>>>>   
+>>>
+>>>
+>>>
+>>>
+> 
+> 
