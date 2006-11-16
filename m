@@ -1,52 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 16 Nov 2006 14:04:07 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 16 Nov 2006 14:11:43 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAGM3xaG019803
-	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 14:04:00 -0800
-Message-ID: <455CDBA5.5070809@agami.com>
-Date: Thu, 16 Nov 2006 13:44:05 -0800
-From: Shailendra Tripathi <stripathi@agami.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAGMBZaG020895
+	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 14:11:36 -0800
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 59D97D1CF292
+	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 14:10:47 -0800 (PST)
+Message-ID: <455CE1E3.7020703@sandeen.net>
+Date: Thu, 16 Nov 2006 16:10:43 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH][RFC][resend] potential NULL pointer deref in XFS on failed
- mount
-References: <200611162218.26945.jesper.juhl@gmail.com>	 <455CD6C8.5030907@agami.com> <9a8748490611161343x44e759acs9b70247c84452ba5@mail.gmail.com>
-In-Reply-To: <9a8748490611161343x44e759acs9b70247c84452ba5@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
+References: <455CB54F.8080901@sandeen.net>
+In-Reply-To: <455CB54F.8080901@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, nathans@sgi.com, Andrew Morton <akpm@osdl.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Jesper Juhl wrote:
+Eric Sandeen wrote:
+> see also https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=212201
+> 
+> Bugzilla Bug 212201: Cannot build sysem with XFS file system.
+> 
+> I turned on attr2 in FC6 at nathan's suggestion, for selinux goodness 
+> with more efficient xattr space usage.
+> 
+> But, many reports that this was totally broken in fc6, on x86_64.
 
-> The reason I want to fix it in the freeing function is that many other
-> functions in the kernel that free resources are safe to call with NULL
-> pointers and this would make xfs_free_buftarg() follow that
-> convention.  This would perhaps also allow for some cleanups in other
-> places that call the function since then there's no longer a need for
-> explicit NULL checks any more (haven't checked if there's anything to
-> gain there though).
-> I don't think the function call overhead matters much since this is in
-> a case of a failed mount, so it should happen very rarely.
->
-I agree with you.  However, cleanup functions should(/must?) check for  
-NULL etc and
-in this case it is already doing so for other cases. So, perhaps not 
-required. Just a different viewpoint.
-Your choice.
+ugh.  it's broken on x86 too, so it's not just the alignment/padding,
+although that should be fixed for cross-arch mounts.
 
->> void
->> xfs_unmountfs_close(xfs_mount_t *mp, struct cred *cr)
->> {
->>        if (mp->m_logdev_targp && (mp->m_logdev_targp != 
->> mp->m_ddev_targp))
->>                 xfs_free_buftarg(mp->m_logdev_targp, 1);
->>         if (mp->m_rtdev_targp)
->>                 xfs_free_buftarg(mp->m_rtdev_targp, 1);
->>         xfs_free_buftarg(mp->m_ddev_targp, 0);
->> }
->>
->
->
+-Eric
