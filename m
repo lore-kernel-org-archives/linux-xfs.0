@@ -1,64 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 15 Nov 2006 20:55:42 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAG4tWaG018479
-	for <xfs@oss.sgi.com>; Wed, 15 Nov 2006 20:55:34 -0800
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [210.143.35.52])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42F34521C3A
-	for <xfs@oss.sgi.com>; Wed, 15 Nov 2006 20:54:43 -0800 (PST)
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.193])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id kAG4sfLZ019559
-	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:54:42 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id kAG4sfN18472 for xfs@oss.sgi.com; Thu, 16 Nov 2006 13:54:41 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id kAG4sQ806476 for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:54:26 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20061116.135929.68702252 for <xfs@oss.sgi.com>
-	; Thu, 16 Nov 2006 13:59:29 +0900
-Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
-	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id 46A63AE4B0
-	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:54:26 +0900 (JST)
-Message-Id: <200611160454.AA04682@TNESG9305.tnes.nec.co.jp>
-Date: Thu, 16 Nov 2006 13:54:26 +0900
-Subject: [PATCH] xfs_db initialization
-From: Utako Kusaka <utako@tnes.nec.co.jp>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 16 Nov 2006 13:17:35 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAGLHQaG013918
+	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:17:27 -0800
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.188])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A2F6D1E05F2
+	for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:16:36 -0800 (PST)
+Received: by nf-out-0910.google.com with SMTP id x30so1069256nfb
+        for <xfs@oss.sgi.com>; Thu, 16 Nov 2006 13:16:35 -0800 (PST)
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH][RFC][resend] potential NULL pointer deref in XFS on failed mount
+Date: Thu, 16 Nov 2006 22:18:26 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Message-Id: <200611162218.26945.jesper.juhl@gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: xfs@oss.sgi.com, xfs-masters@oss.sgi.com, nathans@sgi.com, Jesper Juhl <jesper.juhl@gmail.com>, Andrew Morton <akpm@osdl.org>
 
-Hi,
+(got no reply on this when I originally send it on 20061031, so resending
+ now that a bit of time has passed.  The patch still applies cleanly to
+ Linus' git tree as of today.)
 
-This patch fixes the issue that xfs_db causes segmentation fault
-when a corrupt file system is specified. 
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+The Coverity checker spotted a potential problem in XFS.
+
+The problem is that if, in xfs_mount(), this code triggers:
+
+	...
+	if (!mp->m_logdev_targp)
+		goto error0;
+	...
+
+Then we'll end up calling xfs_unmountfs_close() with a NULL 
+'mp->m_logdev_targp'. 
+This in turn will result in a call to xfs_free_buftarg() with its 'btp' 
+argument == NULL. xfs_free_buftarg() dereferences 'btp' leading to
+a NULL pointer dereference and crash.
+
+I think this can happen, since the fatal call to xfs_free_buftarg() 
+happens when 'm_logdev_targp != m_ddev_targp' and due to a check of
+'m_ddev_targp' against NULL in xfs_mount() (and subsequent return if it is 
+NULL) the two will never both be NULL when we hit the error0 label from 
+the two lines cited above.
+
+Comments welcome (please keep me on Cc: on replies).
+
+Here's a proposed patch to fix this by testing 'btp' against NULL in 
+xfs_free_buftarg().
+
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
 ---
 
---- xfsprogs-2.8.15-orgn/libxfs/init.c	2006-10-18 01:10:14.000000000 +0900
-+++ xfsprogs-2.8.15/libxfs/init.c	2006-11-16 10:03:18.575412805 +0900
-@@ -595,8 +595,8 @@ libxfs_mount(
- 		fprintf(stderr, _("%s: data size check failed\n"), progname);
- 		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
- 			return NULL;
--	}
--	libxfs_putbuf(bp);
-+	} else
-+		libxfs_putbuf(bp);
- 
- 	if (mp->m_logdev && mp->m_logdev != mp->m_dev) {
- 		d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-@@ -610,7 +610,8 @@ libxfs_mount(
- 			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
- 				return NULL;
- 		}
--		libxfs_putbuf(bp);
-+		if (bp)
-+			libxfs_putbuf(bp);
- 	}
- 
- 	/* Initialize realtime fields in the mount structure */
+ fs/xfs/linux-2.6/xfs_buf.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index db5f5a3..6ef1860 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1450,6 +1450,9 @@ xfs_free_buftarg(
+ 	xfs_buftarg_t		*btp,
+ 	int			external)
+ {
++	if (unlikely(!btp))
++		return;
++
+ 	xfs_flush_buftarg(btp, 1);
+ 	if (external)
+ 		xfs_blkdev_put(btp->bt_bdev);
