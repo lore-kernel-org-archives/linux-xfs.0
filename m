@@ -1,90 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Nov 2006 12:51:01 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [66.45.37.187])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAKKoraG003241
-	for <xfs@oss.sgi.com>; Mon, 20 Nov 2006 12:50:54 -0800
-Received: from localhost (localhost [127.0.0.1])
-	by lucidpixels.com (Postfix) with ESMTP id F040416172EB3
-	for <xfs@oss.sgi.com>; Mon, 20 Nov 2006 15:50:02 -0500 (EST)
-Date: Mon, 20 Nov 2006 15:50:02 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: XFS CORRUPTION 2.6.17.13?
-In-Reply-To: <Pine.LNX.4.64.0611201459420.17165@p34.internal.lan>
-Message-ID: <Pine.LNX.4.64.0611201549510.20082@p34.internal.lan>
-References: <Pine.LNX.4.64.0611201459420.17165@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Nov 2006 20:03:17 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAL439aG007613
+	for <xfs@oss.sgi.com>; Mon, 20 Nov 2006 20:03:10 -0800
+Message-ID: <45627A4D.3020502@sandeen.net>
+Date: Mon, 20 Nov 2006 22:02:21 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
+References: <455CB54F.8080901@sandeen.net> <455CE1E3.7020703@sandeen.net> <45612621.5010404@sandeen.net>
+In-Reply-To: <45612621.5010404@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-I meant 2.6.17.6 w/patch -> 2.6.17.13
+Eric Sandeen wrote:
 
-On Mon, 20 Nov 2006, Justin Piszcz wrote:
+> Eric Sandeen wrote:
+>   
+>> ugh.  it's broken on x86 too, so it's not just the alignment/padding,
+>>     
+>> although that should be fixed for cross-arch mounts.
+>>     
+>> -Eric
+>>     
+>>     
+> here's a testcase to corrupt it FWIW.
+>   
+>   
+Ok, with expert collaboration from Russell, Barry, Tim, 
+Nathan, David, et al, how about this:
 
-> Anyone know what could cause this?
-> Is the last good kernel to use 2.6.17.6 w/XFS bugfix patch?
-> 
-> Was a new bug introduced from 2.6.16.6 -> 2.6.17.13?
-> 
-> Nov 20 13:16:58 box [4299533.469000] 0x0: 00 00 00 00 00 00 00 00 00 00 00 
-> 00 00
-> 00 00 00
-> Nov 20 13:16:58 box [4299533.469000] Filesystem "hda2": XFS internal error
-> xfs_da_do_buf(2) at line 2212 of file fs/xfs/xfs_da_btree.c.  Caller 
-> 0xc01ffcad
-> Nov 20 13:16:58 box [4299533.469000]  <c02126fd>
-> Nov 20 13:16:58 box xfs_corruption_error+0xf2/0x11a
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c01ffcad>
-> Nov 20 13:16:58 box xfs_da_read_buf+0x3b/0x3f
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.469000]  <c0241320>
-> Nov 20 13:16:58 box kmem_zone_alloc+0x60/0xdd
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c01ff227>
-> Nov 20 13:16:58 box xfs_da_buf_make+0xf7/0x14c
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.469000]  <c01ffbb1>
-> Nov 20 13:16:58 box xfs_da_do_buf+0x935/0x98d
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c01ffcad>
-> Nov 20 13:16:58 box xfs_da_read_buf+0x3b/0x3f
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.469000]  <c013dd54>
-> Nov 20 13:16:58 box __alloc_pages+0x53/0x2d6
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c01ffcad>
-> Nov 20 13:16:58 box xfs_da_read_buf+0x3b/0x3f
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.469000]  <c0202a79>
-> Nov 20 13:16:58 box xfs_da_node_lookup_int+0xd0/0x399
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c0202a79>
-> Nov 20 13:16:58 box xfs_da_node_lookup_int+0xd0/0x399
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.469000]  <c020a921>
-> Nov 20 13:16:58 box xfs_dir2_node_lookup+0x3f/0xb9
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c020549a>
-> Nov 20 13:16:58 box xfs_dir2_lookup+0x137/0x139
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.470000]  <c013dd54>
-> Nov 20 13:16:58 box __alloc_pages+0x53/0x2d6
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c0236080>
-> Nov 20 13:16:58 box xfs_dir_lookup_int+0x40/0x125
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.470000]  <c023a72f>
-> Nov 20 13:16:58 box xfs_lookup+0x5f/0x88
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c0248d0f>
-> Nov 20 13:16:58 box xfs_vn_lookup+0x4f/0x93
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box [4299533.470000]  <c0164009>
-> Nov 20 13:16:58 box do_lookup+0x12d/0x15f
-> Nov 20 13:16:58 box
-> Nov 20 13:16:58 box  <c0165387>
-> 
-> 
+For btree dirs, we need a different calculation for the space
+used in di_u, to set the minimum threshold for the fork offset...
+
+This fixes my testcase, but as Tim points out -now- we need to compact
+the btree ptrs, if we return (and use) an offset < current forkoff...
+
+whee....
+
+-Eric
+
+
+Index: linux-2.6.18/fs/xfs.orig/xfs_attr_leaf.c
+===================================================================
+--- linux-2.6.18.orig/fs/xfs.orig/xfs_attr_leaf.c
++++ linux-2.6.18/fs/xfs.orig/xfs_attr_leaf.c
+@@ -116,6 +116,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
+ 	int minforkoff;	/* lower limit on valid forkoff locations */
+ 	int maxforkoff;	/* upper limit on valid forkoff locations */
+ 	xfs_mount_t *mp = dp->i_mount;
++	int dsize = 0;
+ 
+ 	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
+ 
+@@ -134,8 +135,21 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
+ 		return 0;
+ 	}
+ 
++	switch (dp->i_d.di_format) {
++	case XFS_DINODE_FMT_LOCAL:
++	case XFS_DINODE_FMT_EXTENTS:
++		dsize = dp->i_df.if_bytes;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		dsize = XFS_BMDR_SPACE_CALC(
++			XFS_BMAP_BROOT_NUMRECS(dp->i_df.if_broot));
++		break;
++	default:
++		/* should bail, unknown format, .... */
++	}
++
+ 	/* data fork btree root can have at least this many key/ptr pairs */
+-	minforkoff = MAX(dp->i_df.if_bytes, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
++	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+ 	minforkoff = roundup(minforkoff, 8) >> 3;
+ 
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
