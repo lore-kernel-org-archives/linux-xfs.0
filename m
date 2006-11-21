@@ -1,63 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 00:40:40 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAL8eSaG024965
-	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 00:40:30 -0800
-Date: Tue, 21 Nov 2006 19:41:48 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: XFS Update for 2.6.19
-Message-ID: <72BEC048EB6E8F7B2893FAAF@timothy-shimmins-power-mac-g5.local>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 11:42:59 -0800 (PST)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kALJgkaG005295
+	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 11:42:47 -0800
+Date: Tue, 21 Nov 2006 19:09:41 +0000 (GMT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: 2.6.19-rc5-git4 benchmarks
+Message-ID: <Pine.LNX.4.64.0611211802570.6933@sheep.housecafe.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@osdl.org
-Cc: akpm@osdl.org, xfs@oss.sgi.com
+To: ext3-users@redhat.com
+Cc: jfs-discussion@lists.sourceforge.net, linux-crypto@nl.linux.org, reiserfs-list@namesys.com, xfs@oss.sgi.com
 
-Hi Linus,
+Apologies for the wide alias, but as it may interest serveral
+fs groups, here it is:
 
-A couple of small XFS fixes for some apparent bugs.
-Thanks.
+In the everlasting search for the best fs for my shiny new disks, I
+was interested in some numbers, here're the results:
 
-Please pull from:
-	git://oss.sgi.com:8090/xfs/xfs-2.6
+http://nerdbynature.de/bench/amd64/2.6.19-rc5-git4/test-3/dm-crypt-3.html
 
-This will update the following files:
+details: http://nerdbynature.de/wp/?cat=4
 
- fs/xfs/xfs_bmap.c  |    2 ++
- fs/xfs/xfs_inode.c |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+(in short: ext3 pretty fast in all operations. then again, the numbers 
+suggest that sometimes a crypto-fs is faster than withou crypto, eg.
+'ext3_no-cipher' vs. 'ext3_aes-cbc-essiv:md5'...that's strange, no?)
 
-through these commits:
+Thanks,
+Christian.
+-- 
+BOFH excuse #11:
 
-commit d2133717d5f994cca970b5aeb9d4664feeb92ff4
-Author: Lachlan McIlroy <lachlan@sgi.com>
-Date:   Tue Nov 21 18:55:16 2006 +1100
-
-    [XFS] Fix uninitialized br_state and br_startoff in
-    xfs_bmap_add_extent_delay_real()
-
-    SGI-PV: 957008
-    SGI-Modid: xfs-linux-melb:xfs-kern:27457a
-
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
-    Signed-off-by: Shailendra Tripathi <stripathi@agami.com>
-    Signed-off-by: Tim Shimmin <tes@sgi.com>
-
-
-commit e5ffd2bb62c3f2c0d9f34e0d16fab6e2c8b056fb
-Author: David Chinner <dgc@sgi.com>
-Date:   Tue Nov 21 18:55:33 2006 +1100
-
-    [XFS] Stale the correct inode when freeing clusters.
-
-    SGI-PV: 958376
-    SGI-Modid: xfs-linux-melb:xfs-kern:27503a
-
-    Signed-off-by: David Chinner <dgc@sgi.com>
-    Signed-off-by: Tim Shimmin <tes@sgi.com>
-
---Tim
+magnetic interference from money/credit cards
