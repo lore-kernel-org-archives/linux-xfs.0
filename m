@@ -1,110 +1,102 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 13:26:49 -0800 (PST)
-Received: from mail.wrs.com (mail.windriver.com [147.11.1.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kALLQaaG028711
-	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 13:26:36 -0800
-Received: from ALA-MAIL03.corp.ad.wrs.com (ala-mail03 [147.11.57.144])
-	by mail.wrs.com (8.13.6/8.13.3) with ESMTP id kALHGL6M025750
-	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 09:16:21 -0800 (PST)
-MIME-Version: 1.0
-Subject: XFS sync hang
-Date: Tue, 21 Nov 2006 09:16:19 -0800
-Message-ID: <37B62E0F71C9E14B9859FADB1FC3E3E1077D84@ala-mail02.corp.ad.wrs.com>
-From: "Kottaridis, Chris" <chris.kottaridis@windriver.com>
-Content-Type: text/plain
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 16:43:24 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAM0hDaG027796
+	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 16:43:15 -0800
+Date: Wed, 22 Nov 2006 11:42:17 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/2] Make stuff static
+Message-ID: <20061122004216.GT11034@melbourne.sgi.com>
+References: <20060929032856.8DA9C18001A5E@sandeen.net> <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local> <45338DDE.8020903@sandeen.net> <4533FAEA.2080500@sandeen.net> <20061016232250.GM11034@melbourne.sgi.com> <1161042943.5723.117.camel@xenon.msp.redhat.com> <20061017005038.GN11034@melbourne.sgi.com> <AED98B89E193744D39BAC541@pmmelb207.melbourne.sgi.com> <20061017215706.GI8394166@melbourne.sgi.com> <1161125131.5723.158.camel@xenon.msp.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1161125131.5723.158.camel@xenon.msp.redhat.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: David Chinner <dgc@sgi.com>, Tim Shimmin <tes@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-I have a system based off of 2.6.10 with XFS on top of LVM2 on top of
-RAID 1 of SCSI disks. The sync commands hang it looks like waiting for a
-lock. One of them seems to be trying to lock xfs_buf at least two others
-are waiting on a super lock. I see this in the log files:
- 
-One of the sync commands is waiting for the xfs_buf lock:
+On Tue, Oct 17, 2006 at 05:45:31PM -0500, Russell Cattelan wrote:
+> On Wed, 2006-10-18 at 07:57 +1000, David Chinner wrote:
+> > On Tue, Oct 17, 2006 at 05:13:01PM +1000, Tim Shimmin wrote:
+> > > I thought that for debug, we could stop them from being inline
+> > > for easier debugging. We could have a STATIC_INLINE :-)
+> > 
+> > We could, but I don't think it gains us anything.
+> I agree with Tim on this.
+> when I see STATIC in the code it's generally assumed to 
+> be a way to toggle of static on/off. Adding static inline 
+> to the #define STATIC starts to overload the the macro 
+> and creates an obfuscation that isn't immediately obvious.
+> STATIC_INLINE should be fairly obvious.
 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: sync D C3370BF0 0 8602 1
-15685 (NOTLB)
-Nov 13 19:13:34 typhoon-base-unit0 kernel: db40de44 00000046 e94e2c70
-c3370bf0 c3245ee0 f7eb9680 00000000 f7ebe000 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: f8d44c77 c02c57f1 00000000
-00000000 00000000 c3245060 00000002 00000732 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: ee94e205 00000152 c3370bf0
-e94e2c70 e94e2de4 0000219a c3370bf0 00000002 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: Call Trace:
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0461796>] __down+0x76/0xde
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0461922>]
-__down_failed+0xa/0x10
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0276642>]
-.text.lock.xfs_buf+0x4b/0x51
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c02724dd>]
-xfs_bwrite+0x9a/0xe7
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c026a1f1>]
-xfs_syncsub+0x148/0x34f
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c026973a>]
-xfs_sync+0x2a/0x2c
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c027bd93>]
-linvfs_sync_super+0x41/0xf5
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c016dbe2>]
-sync_filesystems+0xe2/0xef
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0168f0c>]
-do_sync+0x4f/0x83
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0168f52>]
-sys_sync+0x12/0x16
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0102554>]
-no_dpa_vsyscall_enter+0x8/0x1b
+Ok, so I've had time to look at this again. Here's the definitions
+of STATIC and STATIC_INLINE for debug and nondebug from the
+patch (whitespace damaged):
 
-There are two other sync comamnds waiting on the super lock, which I
-assume the above
-sync has:
+Index: 2.6.x-xfs-new/fs/xfs/support/debug.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/support/debug.h   2006-11-22 10:54:37.089984780 +1100
++++ 2.6.x-xfs-new/fs/xfs/support/debug.h        2006-11-22 11:30:20.433326839 +1100
+@@ -38,13 +38,37 @@ extern void assfail(char *expr, char *f,
 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: sync D C04CAB60 0 15093 24660
-(NOTLB)
-Nov 13 19:13:34 typhoon-base-unit0 kernel: da407f38 00000046 f024f250
-c04cab60 c3235ee0 0004037f da407f54 c0145da1 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: f8d2cbb7 f29e2e10 da407f04
-00000000 00000000 c3235060 00000000 00000c17 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: c1b08a89 0000015b c04cab60
-f024f250 f024f3c4 00003af5 c04cab60 00000002 
-Nov 13 19:13:34 typhoon-base-unit0 kernel: Call Trace:
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0461796>] __down+0x76/0xde
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0461922>]
-__down_failed+0xa/0x10
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c016e5c7>]
-.text.lock.super+0xad/0x192
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0168f04>]
-do_sync+0x47/0x83
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0168f52>]
-sys_sync+0x12/0x16
-Nov 13 19:13:34 typhoon-base-unit0 kernel: [<c0102554>]
-no_dpa_vsyscall_enter+0x8/0x1b
+ #ifndef DEBUG
+ # define ASSERT(expr)  ((void)0)
+-#else
++
++#ifndef STATIC
++# define STATIC static noinline
++#endif
++
++#ifndef STATIC_INLINE
++# define STATIC_INLINE static inline
++#endif
++
++#else /* DEBUG */
++
+ # define ASSERT(expr)  ASSERT_ALWAYS(expr)
+ extern unsigned long random(void);
+-#endif
 
-I couldn't actually find a .text.lock.xfs_buf routine anywhere until I
-compiled with -save-temps and found it in an assembly file generated at
-compile time. I assume this is in the pagebuf_lock routine. I assume
-some other process has the lock on the pagebuf and it either died
-without unlocking or is hung up some way that isn't obvious from the
-logs.
- 
-I see a PAGEBUF_LOCK_TRACKING option that will add a field to the pb
-struct to try and track who has the lock. It gets enabled by setting
-CONFIG_XFS_DEBUG, but I've heard that enabling CONFIG_XFS_DEBUG has it's
-own problem. So, I thought I'd just try and set the
-PAGEBUF_LOCK_TRACKING macro and see if I can;t determine the process
-that is not free'ing the lock.
- 
-Any advice or comments are appreciated.
- 
-Thanks
- 
-Chris Kottaridis
-Senior Engineer
-Wind River Systems
-719-522-9786
- 
+ #ifndef STATIC
+-# define STATIC static
++# define STATIC noinline
++#endif
++
++/*
++ * We stop inlining of inline functions in debug mode.
++ * Unfortunately, this means static inline in header files
++ * get multiple definitions, so they need to remain static.
++ * This then gives tonnes of warnings about unused but defined
++ * functions, so we need to add the unused attribute to prevent
++ * these spurious warnings.
++ */
++#ifndef STATIC_INLINE
++# define STATIC_INLINE static __attribute__ ((unused)) noinline
+ #endif
 
++#endif /* DEBUG */
++
++
+ #endif  /* __XFS_SUPPORT_DEBUG_H__ */
 
-[[HTML alternate version deleted]]
+------
+
+Is this acceptible to everyone?
+
+FWIW, there is one other thing that this conversion causes
+problems with, and that's variable definitions. i.e. we can't
+use STATIC on them any more because of the "noinline" attribute
+it has. Do we care about this and if so, any suggestions on
+how to keep this functionality (a different STATIC_xxx define
+for structures)?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
