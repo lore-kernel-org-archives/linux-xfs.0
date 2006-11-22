@@ -1,263 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 17:23:31 -0800 (PST)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAM1NNaG001397
-	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 17:23:25 -0800
-Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
-From: Russell Cattelan <cattelan@thebarn.com>
-In-Reply-To: <45627A4D.3020502@sandeen.net>
-References: <455CB54F.8080901@sandeen.net> <455CE1E3.7020703@sandeen.net>
-	 <45612621.5010404@sandeen.net>  <45627A4D.3020502@sandeen.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-16+a/A7x3nE0fpFlpUP4"
-Date: Tue, 21 Nov 2006 19:02:16 -0600
-Message-Id: <1164157336.19915.43.camel@xenon.msp.redhat.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Nov 2006 18:17:34 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAM2HMaG007921
+	for <xfs@oss.sgi.com>; Tue, 21 Nov 2006 18:17:24 -0800
+Message-ID: <4563B2F1.6040603@melbourne.sgi.com>
+Date: Wed, 22 Nov 2006 13:16:17 +1100
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] Make stuff static
+References: <20060929032856.8DA9C18001A5E@sandeen.net>	 <23F15D6AE8566A54B81188AC@timothy-shimmins-power-mac-g5.local>	 <45338DDE.8020903@sandeen.net> <4533FAEA.2080500@sandeen.net>	 <20061016232250.GM11034@melbourne.sgi.com>	 <1161042943.5723.117.camel@xenon.msp.redhat.com>	 <20061017005038.GN11034@melbourne.sgi.com>	 <AED98B89E193744D39BAC541@pmmelb207.melbourne.sgi.com>	 <20061017215706.GI8394166@melbourne.sgi.com>	 <1161125131.5723.158.camel@xenon.msp.redhat.com>	 <20061122004216.GT11034@melbourne.sgi.com> <1164157783.19915.46.camel@xenon.msp.redhat.com>
+In-Reply-To: <1164157783.19915.46.camel@xenon.msp.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
-
---=-16+a/A7x3nE0fpFlpUP4
-Content-Type: multipart/mixed; boundary="=-q0sPS2kuB9bq3XAmCC+M"
-
---=-q0sPS2kuB9bq3XAmCC+M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2006-11-20 at 22:02 -0600, Eric Sandeen wrote:
-> Eric Sandeen wrote:
->=20
-> > Eric Sandeen wrote:
-> >=20=20=20
-> >> ugh.  it's broken on x86 too, so it's not just the alignment/padding,
-> >>=20=20=20=20=20
-> >> although that should be fixed for cross-arch mounts.
-> >>=20=20=20=20=20
-> >> -Eric
-> >>=20=20=20=20=20
-> >>=20=20=20=20=20
-> > here's a testcase to corrupt it FWIW.
-> >=20=20=20
-> >=20=20=20
-> Ok, with expert collaboration from Russell, Barry, Tim,=20
-> Nathan, David, et al, how about this:
->=20
-> For btree dirs, we need a different calculation for the space
-> used in di_u, to set the minimum threshold for the fork offset...
->=20
-> This fixes my testcase, but as Tim points out -now- we need to compact
-> the btree ptrs, if we return (and use) an offset < current forkoff...
->=20
-> whee....
->=20
-> -Eric
->=20
-It turns out this only fixes one of the problems it is still quite easy=20
-to corrupt indoes with attr2.
-
-The following patch is a short term fix that address the problem of
-forkoff
-moving without re-factoring the root inode btree root block.
-
-Once the inode has be flipped to BTREE for the data space the forkoff is
-fixed
-to the that size, currently due to the way attr1 worked (fixed size
-forkoff) the code is not handling the size to the root btree node due to
-size changes in the attr portion of the inode.
-
-The optimal solution is to adjust the data portion of the inode root
-btree block down if space exists.
-
-One easy fix that was resulting all attr add being pushed out of line is
-added
-the header size to the initial split of the inode, at least the first
-attr add
-should go inline now. Which should be a win the big attr user right now=20
-SElinux.
-
-Including the 2 test script that have been used.
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: David Chinner <dgc@sgi.com>, Tim Shimmin <tes@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
 
 
---=20
-Russell Cattelan <cattelan@thebarn.com>
+Russell Cattelan wrote:
+> On Wed, 2006-11-22 at 11:42 +1100, David Chinner wrote:
+>> On Tue, Oct 17, 2006 at 05:45:31PM -0500, Russell Cattelan wrote:
+>>> On Wed, 2006-10-18 at 07:57 +1000, David Chinner wrote:
+>>>> On Tue, Oct 17, 2006 at 05:13:01PM +1000, Tim Shimmin wrote:
+>>>>> I thought that for debug, we could stop them from being inline
+>>>>> for easier debugging. We could have a STATIC_INLINE :-)
+>>>> We could, but I don't think it gains us anything.
+>>> I agree with Tim on this.
+>>> when I see STATIC in the code it's generally assumed to 
+>>> be a way to toggle of static on/off. Adding static inline 
+>>> to the #define STATIC starts to overload the the macro 
+>>> and creates an obfuscation that isn't immediately obvious.
+>>> STATIC_INLINE should be fairly obvious.
+>> Ok, so I've had time to look at this again. Here's the definitions
+>> of STATIC and STATIC_INLINE for debug and nondebug from the
+>> patch (whitespace damaged):
+>>
+>> Index: 2.6.x-xfs-new/fs/xfs/support/debug.h
+>> ===================================================================
+>> --- 2.6.x-xfs-new.orig/fs/xfs/support/debug.h   2006-11-22 10:54:37.089984780 +1100
+>> +++ 2.6.x-xfs-new/fs/xfs/support/debug.h        2006-11-22 11:30:20.433326839 +1100
+>> @@ -38,13 +38,37 @@ extern void assfail(char *expr, char *f,
+>>
+>>  #ifndef DEBUG
+>>  # define ASSERT(expr)  ((void)0)
+>> -#else
+>> +
+>> +#ifndef STATIC
+>> +# define STATIC static noinline
+>> +#endif
+>> +
+>> +#ifndef STATIC_INLINE
+>> +# define STATIC_INLINE static inline
+>> +#endif
+>> +
+>> +#else /* DEBUG */
+>> +
+>>  # define ASSERT(expr)  ASSERT_ALWAYS(expr)
+>>  extern unsigned long random(void);
+>> -#endif
+>>
+>>  #ifndef STATIC
+>> -# define STATIC static
+>> +# define STATIC noinline
+>> +#endif
+>> +
+>> +/*
+>> + * We stop inlining of inline functions in debug mode.
+>> + * Unfortunately, this means static inline in header files
+>> + * get multiple definitions, so they need to remain static.
+>> + * This then gives tonnes of warnings about unused but defined
+>> + * functions, so we need to add the unused attribute to prevent
+>> + * these spurious warnings.
+>> + */
+>> +#ifndef STATIC_INLINE
+>> +# define STATIC_INLINE static __attribute__ ((unused)) noinline
+>>  #endif
+>>
+>> +#endif /* DEBUG */
+>> +
+>> +
+>>  #endif  /* __XFS_SUPPORT_DEBUG_H__ */
+>>
+>> ------
+>>
+>> Is this acceptible to everyone?
+> Yup.
+> 
+>> FWIW, there is one other thing that this conversion causes
+>> problems with, and that's variable definitions. i.e. we can't
+>> use STATIC on them any more because of the "noinline" attribute
+>> it has. Do we care about this and if so, any suggestions on
+>> how to keep this functionality (a different STATIC_xxx define
+>> for structures)?
+> So I know things like systemtap kgdb oprofile all work better when
+> functions are not static, but what about variables/structures?
+> do things really get that confused?
+> Maybe we shouldn't worry about conditioning them and just make them
+> static
+> 
 
---=-q0sPS2kuB9bq3XAmCC+M
-Content-Disposition: attachment; filename=attr2_patch
-Content-Type: text/x-patch; name=attr2_patch; charset=utf-8
-Content-Transfer-Encoding: base64
+I agree with Russell, is there a case for not defining a structure static?
+I can't think of one, unless it kdb/lcrash is going to work better if they are
+not static in a debug build. Otherwise, we should just use "static" and not
+"STATIC". Some for static file variables.
 
-SW5kZXg6IHdvcmtfZ2ZzL2ZzL3hmcy94ZnNfYXR0ci5jDQo9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09DQotLS0gd29ya19nZnMub3JpZy9mcy94ZnMveGZzX2F0
-dHIuYwkyMDA2LTExLTIxIDE4OjM4OjI3LjU3Mjk0OTMwMyAtMDYwMA0KKysr
-IHdvcmtfZ2ZzL2ZzL3hmcy94ZnNfYXR0ci5jCTIwMDYtMTEtMjEgMTg6NDQ6
-NTEuNjY2MDMzNDIyIC0wNjAwDQpAQCAtMjEwLDggKzIxMCwyMCBAQCB4ZnNf
-YXR0cl9zZXRfaW50KHhmc19pbm9kZV90ICpkcCwgY29uc3QgDQogCSAqIChp
-bm9kZSBtdXN0IG5vdCBiZSBsb2NrZWQgd2hlbiB3ZSBjYWxsIHRoaXMgcm91
-dGluZSkNCiAJICovDQogCWlmIChYRlNfSUZPUktfUShkcCkgPT0gMCkgew0K
-LQkJaWYgKChlcnJvciA9IHhmc19ibWFwX2FkZF9hdHRyZm9yayhkcCwgc2l6
-ZSwgcnN2ZCkpKQ0KLQkJCXJldHVybihlcnJvcik7DQorCQlpZiAoKGRwLT5p
-X2QuZGlfYWZvcm1hdCA9PSBYRlNfRElOT0RFX0ZNVF9MT0NBTCkgfHwNCisJ
-CSAgICAoKGRwLT5pX2QuZGlfYWZvcm1hdCA9PSBYRlNfRElOT0RFX0ZNVF9F
-WFRFTlRTKSAmJg0KKwkJICAgICAoZHAtPmlfZC5kaV9hbmV4dGVudHMgPT0g
-MCkpKSB7DQorCQkJLyogeGZzX2JtYXBfYWRkX2F0dHJmb3JrIHdpbGwgc2V0
-IHRoZSBmb3Jrb2Zmc2V0IGJhc2VkIG9uDQorCQkJICogdGhlIHNpemUgbmVl
-ZGVkLCB0aGUgbG9jYWwgYXR0ciBjYXNlIG5lZWRzIHRoZSBzaXplDQorCQkJ
-ICogYXR0ciBwbHVzIHRoZSBzaXplIG9mIHRoZSBoZHIsIGlmIHRoZSBzaXpl
-IG9mDQorCQkJICogaGVhZGVyIGlzIG5vdCBhY2NvdW50ZWQgZm9yIGluaXRp
-YWxseSB0aGUgZm9ya29mZnNldA0KKwkJCSAqIHdvbid0IGFsbG93IGVub3Vn
-aCBzcGFjZSwgdGhlIGFjdHVhbGx5IGF0dHIgYWRkIHdpbGwNCisJCQkgKiB0
-aGVuIGJlIGZvcmNlZCBvdXQgb3V0IGxpbmUgdG8gZXh0ZW50cw0KKwkJCSAq
-Lw0KKwkJCXNpemUgKz0gc2l6ZW9mKHhmc19hdHRyX3NmX2hkcl90KTsNCisJ
-CQlpZiAoKGVycm9yID0geGZzX2JtYXBfYWRkX2F0dHJmb3JrKGRwLCBzaXpl
-LCByc3ZkKSkpDQorCQkJCXJldHVybihlcnJvcik7DQorCQl9DQogCX0NCiAN
-CiAJLyoNCkluZGV4OiB3b3JrX2dmcy9mcy94ZnMveGZzX2F0dHJfbGVhZi5j
-DQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0gd29ya19nZnMub3JpZy9m
-cy94ZnMveGZzX2F0dHJfbGVhZi5jCTIwMDYtMTEtMjEgMTg6Mzg6MjcuNTcy
-OTQ5MzAzIC0wNjAwDQorKysgd29ya19nZnMvZnMveGZzL3hmc19hdHRyX2xl
-YWYuYwkyMDA2LTExLTIxIDE4OjQ1OjE2LjA5NDM2MDkxOSAtMDYwMA0KQEAg
-LTE0OCw0MCArMTQ4LDc2IEBAIGludA0KIHhmc19hdHRyX3Nob3J0Zm9ybV9i
-eXRlc2ZpdCh4ZnNfaW5vZGVfdCAqZHAsIGludCBieXRlcykNCiB7DQogCWlu
-dCBvZmZzZXQ7DQotCWludCBtaW5mb3Jrb2ZmOwkvKiBsb3dlciBsaW1pdCBv
-biB2YWxpZCBmb3Jrb2ZmIGxvY2F0aW9ucyAqLw0KLQlpbnQgbWF4Zm9ya29m
-ZjsJLyogdXBwZXIgbGltaXQgb24gdmFsaWQgZm9ya29mZiBsb2NhdGlvbnMg
-Ki8NCisJaW50IG1pbmZvcmtvZmYgPSAwOwkvKiBsb3dlciBsaW1pdCBvbiB2
-YWxpZCBmb3Jrb2ZmIGxvY2F0aW9ucyAqLw0KKwlpbnQgbWF4Zm9ya29mZiA9
-IDA7CS8qIHVwcGVyIGxpbWl0IG9uIHZhbGlkIGZvcmtvZmYgbG9jYXRpb25z
-ICovDQogCXhmc19tb3VudF90ICptcCA9IGRwLT5pX21vdW50Ow0KKwlpbnQg
-cmVzdWx0ID0gMDsNCisJaW50IGRzaXplID0gMDsNCiANCiAJb2Zmc2V0ID0g
-KFhGU19MSVRJTk8obXApIC0gYnl0ZXMpID4+IDM7IC8qIHJvdW5kZWQgZG93
-biAqLw0KIA0KIAlzd2l0Y2ggKGRwLT5pX2QuZGlfZm9ybWF0KSB7DQogCWNh
-c2UgWEZTX0RJTk9ERV9GTVRfREVWOg0KIAkJbWluZm9ya29mZiA9IHJvdW5k
-dXAoc2l6ZW9mKHhmc19kZXZfdCksIDgpID4+IDM7DQotCQlyZXR1cm4gKG9m
-ZnNldCA+PSBtaW5mb3Jrb2ZmKSA/IG1pbmZvcmtvZmYgOiAwOw0KKwkJcmVz
-dWx0ID0gKG9mZnNldCA+PSBtaW5mb3Jrb2ZmKSA/IG1pbmZvcmtvZmYgOiAw
-Ow0KKwkJZ290byByZXN1bHQ7DQogCWNhc2UgWEZTX0RJTk9ERV9GTVRfVVVJ
-RDoNCiAJCW1pbmZvcmtvZmYgPSByb3VuZHVwKHNpemVvZih1dWlkX3QpLCA4
-KSA+PiAzOw0KLQkJcmV0dXJuIChvZmZzZXQgPj0gbWluZm9ya29mZikgPyBt
-aW5mb3Jrb2ZmIDogMDsNCisJCXJlc3VsdCA9IChvZmZzZXQgPj0gbWluZm9y
-a29mZikgPyBtaW5mb3Jrb2ZmIDogMDsNCisJCWdvdG8gcmVzdWx0Ow0KIAl9
-DQogDQogCWlmICghKG1wLT5tX2ZsYWdzICYgWEZTX01PVU5UX0FUVFIyKSkg
-ew0KLQkJaWYgKGJ5dGVzIDw9IFhGU19JRk9SS19BU0laRShkcCkpDQotCQkJ
-cmV0dXJuIG1wLT5tX2F0dHJvZmZzZXQgPj4gMzsNCi0JCXJldHVybiAwOw0K
-KwkJaWYgKGJ5dGVzIDw9IFhGU19JRk9SS19BU0laRShkcCkpIHsNCisJCQly
-ZXN1bHQgPSBtcC0+bV9hdHRyb2Zmc2V0ID4+IDM7DQorCQkJZ290byByZXN1
-bHQ7DQorCQl9DQorCQlyZXN1bHQgPSAwOw0KKwkJZ290byByZXN1bHQ7DQog
-CX0NCiANCiAJLyogZGF0YSBmb3JrIGJ0cmVlIHJvb3QgY2FuIGhhdmUgYXQg
-bGVhc3QgdGhpcyBtYW55IGtleS9wdHIgcGFpcnMgKi8NCi0JbWluZm9ya29m
-ZiA9IE1BWChkcC0+aV9kZi5pZl9ieXRlcywgWEZTX0JNRFJfU1BBQ0VfQ0FM
-QyhNSU5EQlRQVFJTKSk7DQorCXN3aXRjaCAoZHAtPmlfZC5kaV9mb3JtYXQp
-IHsNCisJY2FzZSBYRlNfRElOT0RFX0ZNVF9MT0NBTDoNCisJY2FzZSBYRlNf
-RElOT0RFX0ZNVF9FWFRFTlRTOg0KKwkJZHNpemUgPSBkcC0+aV9kZi5pZl9i
-eXRlczsNCisJCWJyZWFrOw0KKwljYXNlIFhGU19ESU5PREVfRk1UX0JUUkVF
-Og0KKwkJaWYgKGRwLT5pX2QuZGlfZm9ya29mZikNCisJCQlkc2l6ZSA9IGRw
-LT5pX2QuZGlfZm9ya29mZiA8PCAzOw0KKwkJZWxzZQ0KKwkJCWRzaXplID0g
-WEZTX0JNRFJfU1BBQ0VfQ0FMQygNCisJCQkgIFhGU19CTUFQX0JST09UX05V
-TVJFQ1MoZHAtPmlfZGYuaWZfYnJvb3QpKTsNCisJCWJyZWFrOw0KKwlkZWZh
-dWx0Og0KKwkJYnJlYWs7DQorCX0NCisNCisJbWluZm9ya29mZiA9IE1BWChk
-c2l6ZSwgWEZTX0JNRFJfU1BBQ0VfQ0FMQyhNSU5EQlRQVFJTKSk7DQogCW1p
-bmZvcmtvZmYgPSByb3VuZHVwKG1pbmZvcmtvZmYsIDgpID4+IDM7DQogDQog
-CS8qIGF0dHIgZm9yayBidHJlZSByb290IGNhbiBoYXZlIGF0IGxlYXN0IHRo
-aXMgbWFueSBrZXkvcHRyIHBhaXJzICovDQogCW1heGZvcmtvZmYgPSBYRlNf
-TElUSU5PKG1wKSAtIFhGU19CTURSX1NQQUNFX0NBTEMoTUlOQUJUUFRSUyk7
-DQogCW1heGZvcmtvZmYgPSBtYXhmb3Jrb2ZmID4+IDM7CS8qIHJvdW5kZWQg
-ZG93biAqLw0KIA0KLQlpZiAob2Zmc2V0ID49IG1pbmZvcmtvZmYgJiYgb2Zm
-c2V0IDwgbWF4Zm9ya29mZikNCi0JCXJldHVybiBvZmZzZXQ7DQotCWlmIChv
-ZmZzZXQgPj0gbWF4Zm9ya29mZikNCi0JCXJldHVybiBtYXhmb3Jrb2ZmOw0K
-LQlyZXR1cm4gMDsNCisJaWYgKG9mZnNldCA+PSBtaW5mb3Jrb2ZmICYmIG9m
-ZnNldCA8IG1heGZvcmtvZmYpIHsNCisJCXJlc3VsdCA9IG9mZnNldDsNCisJ
-fQ0KKw0KKwlpZiAob2Zmc2V0ID49IG1heGZvcmtvZmYpIHsNCisJCXJlc3Vs
-dCA9IG1heGZvcmtvZmY7DQorCX0NCisNCisJLyogdGhlIGNhc2Ugb2YgYnRy
-ZWUgd2UgZG9uJ3Qgd2FudCB0byBtb3ZlIHRoZSBmb3Jrb2ZmDQorCSAqIHNp
-bmNlIHRoYXQgd291bGQgcmVxdWlyZSBhIHJlYmFsYW5jZSBvZiB0aGUgYnRy
-ZWUNCisJICogd2hpY2ggaXMgY3VycmVudGx5IG5vdCBpbXBsZW1lbnRlZCBm
-b3IgYXR0cjINCisJICovDQorDQorCWlmIChkcC0+aV9kLmRpX2Zvcm1hdCA9
-PSBYRlNfRElOT0RFX0ZNVF9CVFJFRSAmJiByZXN1bHQpIHsNCisJCXJlc3Vs
-dCA9IGRzaXplID4+IDM7DQorCX0NCityZXN1bHQ6DQorCXJldHVybiByZXN1
-bHQ7DQogfQ0KIA0KIC8qDQpJbmRleDogd29ya19nZnMvZnMveGZzL3hmc19i
-bWFwLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0tLSB3b3JrX2dmcy5v
-cmlnL2ZzL3hmcy94ZnNfYm1hcC5jCTIwMDYtMTEtMjEgMTg6Mzg6MjcuNTcy
-OTQ5MzAzIC0wNjAwDQorKysgd29ya19nZnMvZnMveGZzL3hmc19ibWFwLmMJ
-MjAwNi0xMS0yMSAxODo0NTozOC40NDY2NjA0NDUgLTA2MDANCkBAIC0zNjMy
-LDcgKzM2MzIsMjYgQEAgeGZzX2JtYXBfbG9jYWxfdG9fZXh0ZW50cygNCiAJ
-CWZsYWdzIHw9IFhGU19JTE9HX0ZFWFQod2hpY2hmb3JrKTsNCiAJfSBlbHNl
-IHsNCiAJCUFTU0VSVChYRlNfSUZPUktfTkVYVEVOVFMoaXAsIHdoaWNoZm9y
-aykgPT0gMCk7DQotCQl4ZnNfYm1hcF9mb3Jrb2ZmX3Jlc2V0KGlwLT5pX21v
-dW50LCBpcCwgd2hpY2hmb3JrKTsNCisNCisJCS8qIENoYW5naW5nIHRoZSBm
-b3Jrb2ZmIHJlcXVpcmVzIGEgcmViYWxhbmNlDQorCQkgICBvZiB0aGUgZGF0
-YSBidHJlZS4NCisJCSAgIE9uY2UgZm9ya29mZiBpcyBzZXQgbGVhdmUgaXQg
-Zml4ZWQgd2hpbGUNCisJCSAgIGRhdGEgZm9ybWF0IGlzIHN0b3JlZCBpbiBh
-IGJ0cmVlLg0KKw0KKwkJICAgR3JhbnRlZCB0aGUgaW5vZGUgYnRyZWUgYmxv
-Y2sgaW4gaW5pdGlhbGx5DQorCQkgICBzZXR1cCB3aXRoIHRoZSBtYXggYXZh
-bGlibGUgRFNJWkUgc3BhY2Ugc28NCisJCSAgIG1pZ2h0IGJlIGEgc2xpZ2h0
-IHdhc3RlIG9mIHNwYWNlIHRvIG5vdA0KKwkJICAgcmViYWxhbmNlLg0KKwkJ
-ICAgQnV0IHNpbmNlIHRoZSBhdHRyMSBjb2RlIGRpZCBub3QgaGF2ZSBhDQor
-CQkgICB2YXJpYWJsZSBmb3Jrb2ZmIGFzIGF0dHIyIG5vdyBoYXMgdGhlDQor
-CQkgICBkZXRlY3Rpb24gcG9pbnRzIGFuZCB0aGUgcmVibGFuYWNlIGNvZGUN
-CisJCSAgIGl0IG5vdCBpbiBwbGFjZS4NCisJCSAgIFRha2UgdGhlIGVhc3kg
-d2F5IG91dCBmb3Igbm93DQorCQkqLw0KKw0KKwkJaWYgKGlwLT5pX2QuZGlf
-Zm9ybWF0ICE9IFhGU19ESU5PREVfRk1UX0JUUkVFKQ0KKwkJCXhmc19ibWFw
-X2ZvcmtvZmZfcmVzZXQoaXAtPmlfbW91bnQsIGlwLCB3aGljaGZvcmspOw0K
-Kw0KIAl9DQogCWlmcC0+aWZfZmxhZ3MgJj0gflhGU19JRklOTElORTsNCiAJ
-aWZwLT5pZl9mbGFncyB8PSBYRlNfSUZFWFRFTlRTOw0K
+David
 
---=-q0sPS2kuB9bq3XAmCC+M
-Content-Disposition: attachment; filename=r2.sh
-Content-Type: application/x-shellscript; name=r2.sh
-Content-Transfer-Encoding: base64
-
-IyEvYmluL3NoCgpmaWxlPWZzZmlsZTMKCnJlbW91bnQoKSB7CiAgICB1bW91
-bnQgbW50CiAgICB4ZnNfZGIgLXIgJGZpbGUgLWMgImlub2RlIDEzMSIgLWMg
-InAgY29yZS5mb3Jrb2ZmIiAtYyAicCB1IiAtYyAicCBhIgogICAgbW91bnQg
-LW8gbG9vcCAkZmlsZSBtbnQvCn0KCnVtb3VudCBtbnQvCnJtIC1mICRmaWxl
-Cm1rZnMueGZzIC1kZmlsZSxuYW1lPSRmaWxlLHNpemU9MTAwbSAtaWF0dHI9
-Mgptb3VudCAtbyBsb29wICRmaWxlIG1udC8KbWtkaXIgbW50L2RpcgoKc2V0
-ZmF0dHIgLW4gdXNlci5yaXR5LnNlbGludXggLXYgdXNlcl9mb286YmxhaF9m
-b286bW50X3doYXQ6MCBtbnQvZGlyLwpmb3IgSSBpbiBgc2VxIDEwMCAxNDAw
-YDsgZG8gdG91Y2ggbW50L2Rpci9maWxlJEk7IGRvbmUKCnJlbW91bnQKc2V0
-ZmF0dHIgLW4gdXNlci5GT08uQkFSIC12IHVzZXJfZm9vOmJsYWhfZm9vOm1u
-dF93aGF0OjAgbW50L2Rpci8KCmVjaG8gInVubW91bnRpbmciCnVtb3VudCBt
-bnQvCnhmc19kYiAtciAkZmlsZSAtYyAiaW5vZGUgMTMxIiAtYyAicCBjb3Jl
-LmZvcmtvZmYiIC1jICJwIHUiIC1jICJwIGEiIAo=
-
---=-q0sPS2kuB9bq3XAmCC+M
-Content-Disposition: attachment; filename=e2
-Content-Type: application/x-shellscript; name=e2
-Content-Transfer-Encoding: base64
-
-IyEvYmluL3NoCgpyZW1vdW50KCkgewogICAgdW1vdW50IG1udAogICAgeGZz
-X2RiIC1yIGZzZmlsZTIgLWMgImlub2RlIDEzMSIgLWMgInAgY29yZS5mb3Jr
-b2ZmIiAtYyAicCB1IiAtYyAicCBhIgogICAgbW91bnQgLW8gbG9vcCBmc2Zp
-bGUyIG1udC8KfQoKdW1vdW50IG1udC8Kcm0gLWYgZnNmaWxlMgpta2ZzLnhm
-cyAtZGZpbGUsbmFtZT1mc2ZpbGUyLHNpemU9MTAwbSAtaWF0dHI9Mgptb3Vu
-dCAtbyBsb29wIGZzZmlsZTIgbW50Lwpta2RpciBtbnQvZGlyCnNldGZhdHRy
-IC1uIHVzZXIucml0eS5zZWxpbnV4IC12IHVzZXJfZm9vOmJsYWhfZm9vOm1u
-dF93aGF0OjAgbW50L2Rpci8KZm9yIEkgaW4gYHNlcSAxMCAyMGA7IGRvIHRv
-dWNoIG1udC9maWxlJEk7IGRvbmUKZm9yIEkgaW4gYHNlcSAxMDAgNzAwYDsg
-ZG8gdG91Y2ggbW50L2Rpci9maWxlJEk7IGRvbmUKcmVtb3VudApmb3IgSSBp
-biBgc2VxIDEwMDAgMTQwMGA7IGRvIHRvdWNoIG1udC9kaXIvZmlsZSRJOyBk
-b25lCgojcmVtb3VudCAjIHdvcmtzIGlmIHdlIGRvIHJlbW91bnQgaGVyZQpz
-ZXRmYXR0ciAtbiB1c2VyLnJpdHkuc2VsaW51eCAtdiB1c2VyX2ZvbzpibGFo
-X2ZvbzptbnRfd2hhdDowIG1udC9kaXIvCgplY2hvICJ1bm1vdW50aW5nIgp1
-bW91bnQgbW50Lwp4ZnNfZGIgLXIgZnNmaWxlMiAtYyAiaW5vZGUgMTMxIiAt
-YyAicCBjb3JlLmZvcmtvZmYiIC1jICJwIHUiIC1jICJwIGEiIAo=
-
---=-q0sPS2kuB9bq3XAmCC+M--
-
---=-16+a/A7x3nE0fpFlpUP4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFY6GXNRmM+OaGhBgRAoguAJ9aEGwNw4p6JFNA0MiiHc+FbqivMgCeMEg1
-eaCDHFbCVkLirAJIEvJLy7c=
-=cD7Z
------END PGP SIGNATURE-----
-
---=-16+a/A7x3nE0fpFlpUP4--
+-- 
+David Chatterton
+XFS Engineering Manager
+SGI Australia
