@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Nov 2006 12:40:43 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Nov 2006 12:40:44 -0800 (PST)
 Received: from mail.groll.co.za (mail.groll.co.za [67.18.176.185])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAMKeYaG018812
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAMKeYaG018814
 	for <xfs@oss.sgi.com>; Wed, 22 Nov 2006 12:40:36 -0800
-Date: Wed, 22 Nov 2006 22:11:31 +0200
+Date: Wed, 22 Nov 2006 22:08:11 +0200
 From: Jonathan Groll <lists@groll.co.za>
 Subject: Unexpected inode type 0160000 causes abort of xfs_repair
-Message-ID: <20061122201131.GD2493@groll.co.za>
+Message-ID: <20061122200811.GB2493@groll.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
