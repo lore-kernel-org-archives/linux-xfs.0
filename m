@@ -1,164 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Nov 2006 09:38:50 -0800 (PST)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kANHcfaG019084
-	for <xfs@oss.sgi.com>; Thu, 23 Nov 2006 09:38:43 -0800
-Message-ID: <4565DC6A.9080602@thebarn.com>
-Date: Thu, 23 Nov 2006 11:37:46 -0600
-From: Russell Cattelan <cattelan@thebarn.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
-References: <455CB54F.8080901@sandeen.net> <455CE1E3.7020703@sandeen.net>	 <45612621.5010404@sandeen.net>  <45627A4D.3020502@sandeen.net>	 <1164157336.19915.43.camel@xenon.msp.redhat.com>	 <5A1AC29043EE33BEB778198A@timothy-shimmins-power-mac-g5.local>	 <45647042.2040604@sandeen.net> <1164212695.19915.65.camel@xenon.msp.redhat.com> <45647CF8.8020104@sandeen.net> <26F2AE58A7D40E5170649BC2@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <26F2AE58A7D40E5170649BC2@timothy-shimmins-power-mac-g5.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Nov 2006 14:08:48 -0800 (PST)
+Received: from page.mel.office.aconex.com (mail.aconex.com [150.101.159.26])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kANM8caG022645
+	for <xfs@oss.sgi.com>; Thu, 23 Nov 2006 14:08:40 -0800
+Subject: Re: [xfs-masters] Re: 2.6.19-rc6 : Spontaneous reboots, stack
+	overflows - seems to implicate xfs, scsi, networking, SMP
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <1164269545.31358.771.camel@laptopd505.fenrus.org>
+References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
+	 <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
+	 <20061123011809.GY37654165@melbourne.sgi.com>
+	 <20061122.201013.112290046.davem@davemloft.net>
+	 <20061123043543.GI3078@ftp.linux.org.uk>
+	 <1164269545.31358.771.camel@laptopd505.fenrus.org>
+Content-Type: text/plain
+Date: Fri, 24 Nov 2006 09:08:45 +1100
+Message-Id: <1164319725.4695.367.camel@edge>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs-masters@oss.sgi.com
+Cc: Al Viro <viro@ftp.linux.org.uk>, David Miller <davem@davemloft.net>, dgc@sgi.com, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Timothy Shimmin wrote:
+On Thu, 2006-11-23 at 09:12 +0100, Arjan van de Ven wrote:
+> On Thu, 2006-11-23 at 04:35 +0000, Al Viro wrote:
+> > > I would even say 10 function calls deep to allocate file blocks
+> > > is overkill, but 22 it just astronomically bad.
+> > 
+> > Especially since a large part is due to cxfs...
+> > -
+> 
+> it's a bit sad to see XFS this crippled in linux due to an external,
+> proprietary module ;(
 
-> Hi Guys,
->
-> So just looking at the first part, which as Eric suggested can be 
-> considered
-> on its own.
->
-> Index: work_gfs/fs/xfs/xfs_attr.c
-> ===================================================================
-> --- work_gfs.orig/fs/xfs/xfs_attr.c    2006-11-21 18:38:27.572949303 
-> -0600
-> +++ work_gfs/fs/xfs/xfs_attr.c    2006-11-21 18:44:51.666033422 -0600
-> @@ -210,8 +210,20 @@ xfs_attr_set_int(xfs_inode_t *dp, const
->      * (inode must not be locked when we call this routine)
->      */
->     if (XFS_IFORK_Q(dp) == 0) {
-> -        if ((error = xfs_bmap_add_attrfork(dp, size, rsvd)))
-> -            return(error);
-> +        if ((dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) ||
-> +            ((dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS) &&
-> +             (dp->i_d.di_anextents == 0))) {
-> +            /* xfs_bmap_add_attrfork will set the forkoffset based on
-> +             * the size needed, the local attr case needs the size
-> +             * attr plus the size of the hdr, if the size of
-> +             * header is not accounted for initially the forkoffset
-> +             * won't allow enough space, the actually attr add will
-> +             * then be forced out out line to extents
-> +             */
-> +            size += sizeof(xfs_attr_sf_hdr_t);
-> +            if ((error = xfs_bmap_add_attrfork(dp, size, rsvd)))
-> +                return(error);
-> +        }
->     }
->
-> --On 22 November 2006 10:38:16 AM -0600 Eric Sandeen 
-> <sandeen@sandeen.net> wrote:
->
->>> By fixing the initial size calculation at least things like SElinux
->>> which is adding one attr won't cause the attr segment to flip to 
->>> extents
->>> immediately.
->>> The second attr will cause the flip but not the first one.
->>
->>
->> I'd say this part (fixing up proper space for the initial attr fork 
->> setup) should probably go in
->> soon if it gets good reviews (with the removal of the extra tests, as 
->> we discussed on irc last
->> night).  I think this proper change stands on its own just fine.
->>
->
-> So yeah, as you said in IRC, the brace is in the wrong spot and
-> the di_aformat tests don't make any sense here.
-> Basically, we know that fork offset is zero and therefore that the 
-> di_aformat should be
-> set at XFS_DINODE_FMT_EXTENTS and di_anetents will be zero.
-> As this is the state before we add in an attribute fork.
-> Why we have this initial state as extents, I'm not too sure and 
-> wondered in the
-> past. Maybe because this state is one which doesn't occupy any space 
-> in the literal area.
-> A shortform EA has a header at least.
->
-> My next concern is that the size that is calculated is presumably 
-> trying to accomodate
-> the shortform EA. However, the calculation is for the sf header and 
-> the space for a
-> a xfs_attr_leaf_name_local with given namelen and valuelen.
-> It would be better to base it on an xfs_attr_sf_entry type.
-> So I think we need to rework this calculation.
->
-> Which leads me on to the next issue.
-> We don't know what EA form we are going to take,
-> so we can't really assume that it will be shortform.
-> If the EA name or value is big then the EA will go into extents and 
-> could occupy very
-> little room in the inode.
-> With the current & proposed test this could make the bytesfit function 
-> return 0
-> (the offset calculated in bytesfit could also go negative) and
-> then we would set the forkoff back at the old attr1 default.
-> So we might have 1 EA extent in the inode taking little space and yet 
-> setting the forkoff
-> in the middle.
+Heh, never let reality get in the way of a good conspiracy theory.
+The stack depth in XFS is more a factor of the complexity of the
+XFS space allocation algorithms, and is unrelated to CXFS.
 
-Yes I agree worst cast scenario is that the inode has reverted to an 
-attr1 split and
-that space is being wasted in the attr portion. By the time an inode has 
-flipped to
-btree mode for di_u how much of a performance hit is really going to be 
-noticed?
-mapping the blocks for that inode is going to take multiple reads.
-Attr2 seems most effective at space optimization for the local and extent
-versions of di_u and probably not so much for btree.
+I'm sure if people would point to specific stack issues they would
+(continue to) get addressed.  Its just so much easier to speculate
+randomly though...
 
-At least by fixing the size calculation the shortforms that do fit  into 
-di_a will now
-be added inline.  What is happening now the btree is being re factored
-which is probably expensive and the attr is being added as extents since the
-original size used for the btree refactoring wasn't enough.
+cheers.
 
-So the change to add in the header size will at least make single case
-attrs more efficient since they will now be inline.
-If the attr does not fit inline then worst case the forkoff flips to attr1
-default  or a half and half split.
-
-Given the cost of refactoring a btree it might be better to have attr1 
-behavior?
-Since di_a will have extra space additional attr adds won't  cause 
-forkoff to
-move and thus won't cause a rebalance of di_u.
-
-So in thinking about this more does it make sense to actually not
-try to optimize the space needed for di_u when it is a btree?
-Maybe the first time an attr is added simply split the inode
-space doing the rebalance once?
-That would allow for more attrs to be added without rebalancing
-the data btree.
-The other scheme of space optimzation if the root btree node
-is sparse would say sure give more space to di_a but at
-the expense of a reblanace.
-
-So ya it's a bit of a guessing game.
-
->
-> Of course the setting of the forkoff is a bit of a guessing game since 
-> we can't
-> predict the future usage but I think the plan is to set it to the 
-> minimum to fit
-> on a first come first served basis.
->
-> So I'm thinking that we should set it based on the size of shortform 
-> if that
-> is how it will be stored or to the size taken up by the EA extents -
-> I was initially thinking that this would be 1 extent but with a remote 
-> value
-> block of up to 64K this could in theory be an extent for each fsb of 
-> the value
-> I guess.
-> Have to think about this some more.
->
-> --Tim
->
+-- 
+Nathan
