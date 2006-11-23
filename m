@@ -1,50 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Nov 2006 14:51:09 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Nov 2006 15:09:08 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kANMouaG027386
-	for <xfs@oss.sgi.com>; Thu, 23 Nov 2006 14:51:00 -0800
-Date: Fri, 24 Nov 2006 09:49:52 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kANN8uaG029512
+	for <xfs@oss.sgi.com>; Thu, 23 Nov 2006 15:08:58 -0800
+Date: Fri, 24 Nov 2006 10:07:44 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
-Message-ID: <20061123224952.GZ11034@melbourne.sgi.com>
-References: <455CB54F.8080901@sandeen.net> <455CE1E3.7020703@sandeen.net> <45612621.5010404@sandeen.net> <45627A4D.3020502@sandeen.net> <1164157336.19915.43.camel@xenon.msp.redhat.com> <5A1AC29043EE33BEB778198A@timothy-shimmins-power-mac-g5.local> <45647042.2040604@sandeen.net> <1164212695.19915.65.camel@xenon.msp.redhat.com>
+Subject: Re: XFS CORRUPTION 2.6.17.13?
+Message-ID: <20061123230744.GA11034@melbourne.sgi.com>
+References: <Pine.LNX.4.64.0611201459420.17165@p34.internal.lan> <1164231716.19915.68.camel@xenon.msp.redhat.com> <Pine.LNX.4.64.0611231139040.32343@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1164212695.19915.65.camel@xenon.msp.redhat.com>
+In-Reply-To: <Pine.LNX.4.64.0611231139040.32343@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
 
-On Wed, Nov 22, 2006 at 10:24:55AM -0600, Russell Cattelan wrote:
-> On Wed, 2006-11-22 at 09:44 -0600, Eric Sandeen wrote:
-> > Timothy Shimmin wrote:
-> > > Thanks, Russell.
-> > > 
-> > > I've been going thru the irc and just started looking at the patch.
-> > > I'll get back to you about it tomorrow.
-> > > 
-> > > I agree it would be good to have the fixed forkoff for data btree roots
-> > > as the first fix. And look into redoing the btree root for a later change.
-> > 
-> > My only question is, how much does this defeat the purpose of attr2?
-> Well from the standpoint that attr2 currently corrupts inodes anything
-> to prevent that is good, since  currently attr2 can't be used at all.
-> When the di_u is extent based the attr2 code works as expected, giving
-> space to which ever segment gets there first.The attr2 code should still
-> be a big win for most file/dir inodes since they are probably able to do
-> their block mapping with local or extent mode.
+On Thu, Nov 23, 2006 at 11:40:38AM -0500, Justin Piszcz wrote:
+> Here is the info:
+> 
+> Script started on Thu Nov 23 09:55:38 2006
+> 1;36mroot@1[~]#0;39m xfs_repair -n /dev/hda2
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - agno = 6
+>         - agno = 7
+> data fork in regular inode 939526080 claims used block 114661
+> bad data fork in inode 939526080
+> would have cleared inode 939526080
+......
+> data fork in regular inode 939526111 claims used block 114692
+> bad data fork in inode 939526111
+> would have cleared inode 939526111
 
-I suggest that dbench -x might be the best way to determine the
-perfomrance impact - attr1 on a single disk would get ~5MB/s; attr2
-on the same disk for the same test gave about 50MB/s (IIRC). I'd
-hope that this fix retains that kind of advantage for attr2....
+Looks like half an inode cluster has been trashed in some way (32
+consecutive inodes are bad). All the following errors appear to be a
+direct result of these inodes being trashed. Are you using 256 byte
+inodes? if it is, that means that the 32 inodes would have been
+written in a single buffer, and so that buffer write would be
+suspect.
+
+FWIW, Irix XFS actually validates inode buffers before they get
+written out, so if it was a bad write that might have been caught on
+irix. Unfortunately, we don't do those checks in Linux (most of the
+hooks are there, just not used) so it is possible that some kind of
+memory corruption has lead to this damaged state on disk.
+
+Seeing as you've repair the filesystem, we can't really get a dump
+of the raw inode data to find out exactly how they were corrupted.
+Unless you have a copy of the fs around somewhere?
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 Principal Engineer
