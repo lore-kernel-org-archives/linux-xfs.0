@@ -1,39 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Dec 2006 08:04:10 -0800 (PST)
-Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBKG45qw012811
-	for <xfs@oss.sgi.com>; Wed, 20 Dec 2006 08:04:05 -0800
-Message-ID: <45895EBA.8010208@sgi.com>
-Date: Wed, 20 Dec 2006 16:03:06 +0000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Dec 2006 10:42:06 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBKIfwqw005169
+	for <xfs@oss.sgi.com>; Wed, 20 Dec 2006 10:42:00 -0800
+Message-Id: <200611232353.KAA09617@larry.melbourne.sgi.com>
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Subject: RE: Unexpected inode type 0160000 causes abort of xfs_repair
+Date: Fri, 24 Nov 2006 10:58:08 +1100
 MIME-Version: 1.0
-Subject: Re: [PATCH] rethink removal of xattr syscall stubs (for now)
-References: <1166490658.5572.89.camel@edge>	 <20061219100506.GA22779@infradead.org> <1166571069.5572.117.camel@edge>
-In-Reply-To: <1166571069.5572.117.camel@edge>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <20061123131405.GA27453@groll.co.za>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Christoph Hellwig <hch@infradead.org>, bnaujok@sgi.com, xfs@oss.sgi.com, agruen@suse.de
+To: 'Jonathan Groll' <lists@groll.co.za>, xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Tue, 2006-12-19 at 10:05 +0000, Christoph Hellwig wrote:
-> | > Please apply as an interim fix to the original problem and to
-> | > the accidental new problems its caused, and I'll push through a
-> | > new patch in the new year.
-> | 
-> | There is a way to re-export symbols you imported from another
-> | library with symbol versioning.  That how for example libpthread
-> | works on recent Solaris versions.  I'll find out how exactly that
-> | should be implemented.
+Yes, this patch will be incorporated in the next xfsprogs update.
+
+And yes, it did blast the inode away, as it wasn't really an inode (or
+very very corrupted if it was). 
+
+> -----Original Message-----
+> From: Jonathan Groll [mailto:lists@groll.co.za] 
+> Sent: Friday, 24 November 2006 12:14 AM
+> To: Barry Naujok; xfs@oss.sgi.com
+> Subject: Re: Unexpected inode type 0160000 causes abort of xfs_repair
 > 
-> Ah, that sounds ideal - thanks!
+> On Thu, Nov 23, 2006 at 11:51:11AM +1100, Barry Naujok wrote:
+> > Can you try the attached patch and see how xfs_repair goes? 
 > 
-
-Nathan, do you still need your patch applied or will you look into
-this new approach instead?
-
-Lachlan
+> Many thanks, the patch worked like a charm! Is it going to be
+> incorporated into the package in future?
+> 
+> Luckily I didn't have to blast the inode away, but I suspect that is
+> exactly what the effect of the patch was ;-)
+> 
+> Thanks again,
+> Jonathan
