@@ -1,42 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Nov 2006 15:59:15 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kARNx2aG022699
-	for <linux-xfs@oss.sgi.com>; Mon, 27 Nov 2006 15:59:04 -0800
-Message-ID: <456B7C1A.90209@sgi.com>
-Date: Tue, 28 Nov 2006 11:00:26 +1100
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Nov 2006 06:10:54 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kASEAiaG023931
+	for <xfs@oss.sgi.com>; Tue, 28 Nov 2006 06:10:46 -0800
+Message-ID: <456C432E.2050601@redhat.com>
+Date: Tue, 28 Nov 2006 08:09:50 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: TAKE 956783 - xfs_dm_getall_dmattr() doesn't check if the user
- buffer is at valid address
-References: <45629AD8.8000800@sgi.com> <20061127055859.GC1374@infradead.org>
-In-Reply-To: <20061127055859.GC1374@infradead.org>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: [PATCH/RFC] pass dio_complete proper offset from finished_one_bio
+References: <45691753.60500@redhat.com>
+In-Reply-To: <45691753.60500@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, rtc@gmx.de
 
-Christoph Hellwig wrote:
-> On Tue, Nov 21, 2006 at 05:21:12PM +1100, Vlad Apostolov wrote:
->   
->> No EFAULT error when dm_getall_dmattr() called with an invalid user 
->> buffer address.
->>     
->
-> This fix is broken.  access_ok is not enough to verify the buffer,
-> it just does very few static check (basically the address space limit)
->
-> You need to use copy_{from,to}_user to access user pointers.  I had
-> an untested patch to fix this at my good old SGI time, but Dean wanted
-> to review and test it a lot more.  I'll try to dig up that patch if you care.
->   
-The fix is actually fine as it gives an early indication (even not complete)
-that the user pointer is bad. There is another problem you are pointing at and 
-it is the userspace pointer dereference later on without using copy_to_user(). 
-If you have any patch fixing this problem it would be great.
+Eric Sandeen wrote:
+> We saw problems w/ xfs doing AIO+DIO into a sparse file.
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=217098
+> 
+> It seemed that xfs was doing "extent conversion" at the wrong offsets, so
+> written regions came up as unwritten (zeros) and stale data was exposed
+> in the region after the write.  Thanks to Peter Backes for the very
+> nice testcase.
+> 
+> This also broke xen with blktap over xfs.
 
-Thanks and regards,
-Vlad
+Hrmph.  Zach's changes in -mm magically made this go away... I was about 
+to submit a proper patch against -mm but it seem to be not needed.
+
+So, now digging around to see why that is, and what exactly "fixed" things.
+
+-Eric
