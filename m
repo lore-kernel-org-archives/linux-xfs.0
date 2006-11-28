@@ -1,29 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Dec 2006 01:51:43 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Dec 2006 01:51:47 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBM9pWqw005622
-	for <xfs@oss.sgi.com>; Fri, 22 Dec 2006 01:51:35 -0800
-Subject: PARTIAL TAKE 958376 - xfs warnings about potential use of uninitialized variables 
-Message-Id: <20061120231336.6420758FF4ED@chook.melbourne.sgi.com>
-Date: Tue, 21 Nov 2006 10:13:36 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBM9pZqw005632
+	for <xfs@oss.sgi.com>; Fri, 22 Dec 2006 01:51:37 -0800
+Message-ID: <456CCC77.7000001@sgi.com>
+Date: Wed, 29 Nov 2006 10:55:35 +1100
+From: Donald Douwsma <donaldd@sgi.com>
+MIME-Version: 1.0
+Subject: Re: get xfs_quota info as regular user
+References: <C191AFC3.1D43%rsalmon@tulane.edu>
+In-Reply-To: <C191AFC3.1D43%rsalmon@tulane.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Rene Salmon <rsalmon@tulane.edu>
+Cc: xfs@oss.sgi.com
 
-Stale the correct inode when freeing clusters.
+Rene Salmon wrote:
+> Hi,
+> 
+> 
+> Did some searches on the list archives but could not find any useful info on
+> this.
+> 
+> Is there a way for a regular user to get info about his or her quota usage?
+> 
+> I tried both of these as a regular user and get nothing:
+> 
+> 120> xfs_quota -c "quota userid"
+> 121> xfs_quota -x -c "quota userid"
 
-Date:  Tue Nov 21 10:11:46 AEDT 2006
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  tes
+By default the quota command does not display anything unless the user is overquota.
+To display the limits set for a user you need to specify the -v option.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+xfs_quota -c 'quota -v'
 
+Note there is currently a bug in xfs-cmds that causes xfs_quota to display results multiple times
+(once for each xfs filesystem). One work around for this is to specify the specific filesystem on
+the commandline.
 
-Modid:  xfs-linux-melb:xfs-kern:27503a
-fs/xfs/xfs_inode.c - 1.455 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.455&r2=text&tr2=1.454&f=h
-	- Fix xfs_ifree_cluster to stale the correct inode when
-	  walking the log items attached to the cluster buffer.
+xfs_quota -c 'quota -v' /home
+
+Donald
