@@ -1,67 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 06:04:35 -0800 (PST)
-Received: from EX01.ad.tulane.edu (ex01.ad.tulane.edu [129.81.114.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATE4QaG019672
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 06:04:27 -0800
-Date: Wed, 29 Nov 2006 08:03:34 -0600
-Subject: Re: get xfs_quota info as regular user
-From: Rene Salmon <rsalmon@tulane.edu>
-Message-ID: <C192EF56.1DC3%rsalmon@tulane.edu>
-In-Reply-To: <456CCC77.7000001@sgi.com>
-Mime-version: 1.0
-Content-type: text/plain;
-	charset="US-ASCII"
-Content-transfer-encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 07:37:23 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATFbGaG001344
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Nov 2006 07:37:17 -0800
+Date: Wed, 29 Nov 2006 15:11:46 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: TAKE 956783 - xfs_dm_getall_dmattr() doesn't check if the user buffer is at valid address
+Message-ID: <20061129151146.GA4746@infradead.org>
+References: <45629AD8.8000800@sgi.com> <20061127055859.GC1374@infradead.org> <456B7C1A.90209@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <456B7C1A.90209@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Vlad Apostolov <vapo@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
 
-Great that is what I needed!  Thank you
-Rene
+On Tue, Nov 28, 2006 at 11:00:26AM +1100, Vlad Apostolov wrote:
+> The fix is actually fine as it gives an early indication (even not complete)
+> that the user pointer is bad. There is another problem you are pointing at 
+> and it is the userspace pointer dereference later on without using 
+> copy_to_user(). If you have any patch fixing this problem it would be great.
 
-
-
-On 11/28/06 5:55 PM, "Donald Douwsma" <donaldd@sgi.com> wrote:
-
-> Rene Salmon wrote:
->> Hi,
->> 
->> 
->> Did some searches on the list archives but could not find any useful info on
->> this.
->> 
->> Is there a way for a regular user to get info about his or her quota usage?
->> 
->> I tried both of these as a regular user and get nothing:
->> 
->> 120> xfs_quota -c "quota userid"
->> 121> xfs_quota -x -c "quota userid"
-> 
-> By default the quota command does not display anything unless the user is
-> overquota.
-> To display the limits set for a user you need to specify the -v option.
-> 
-> xfs_quota -c 'quota -v'
-> 
-> Note there is currently a bug in xfs-cmds that causes xfs_quota to display
-> results multiple times
-> (once for each xfs filesystem). One work around for this is to specify the
-> specific filesystem on
-> the commandline.
-> 
-> xfs_quota -c 'quota -v' /home
-> 
-> Donald
-> 
-> 
-
--- 
-        Rene Salmon
-        Tulane University
-        Center for Computational Science
-        http://www.ccs.tulane.edu
-        rsalmon@tulane.edu
-        Tel 504-862-8393
-        Fax 504-862-8392
+Unfortunately I haven't found my patch, I'm sorry.  I have on the other
+hand found various old trivial XFS patches of mine that I'll submit.
