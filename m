@@ -1,46 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 08:02:05 -0800 (PST)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATG1oaK005193
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 08:01:54 -0800
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id kATFifWv006555
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:44:42 +0100
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id kATFiffi006553
-	for xfs@oss.sgi.com; Wed, 29 Nov 2006 16:44:41 +0100
-Date: Wed, 29 Nov 2006 16:44:41 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix sparse warning in xfs_da_btree.c
-Message-ID: <20061129154441.GA6400@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 09:16:22 -0800 (PST)
+Received: from mail.pacifica.ch (HSI-KBW-085-216-115-221.hsi.kabelbw.de [85.216.115.221])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATHGDaG019575
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:16:17 -0800
+Received: from uranus.atlantica
+	([fec0::1:2a0:24ff:fe57:9888] helo=localhost ident=jasmin)
+	by mail.pacifica.ch with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <jasmin@pacifica.ch>)
+	id 1GpSZF-000806-Um
+	for xfs@oss.sgi.com; Wed, 29 Nov 2006 17:45:54 +0100
+Date: Wed, 29 Nov 2006 17:45:53 +0100
+From: Jasmin Buchert <jasmin@pacifica.ch>
+Subject: mkfs.xfs questions
+Message-Id: <20061129174553.e0ef3465.jasmin@pacifica.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-The first use in xfs_da_node_lookup_int would have to be __be32.
-But we can just remove this temporary variable use completely and
-make sparse happy.  The variable is used later in the function for
-a native endian variable so we'll have to keep it.
+Hi,
 
+I'm planning to use XFS but have some questions..
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Is there any real advantage of making the log size 32-64 MB and
+what is the difference between log version 1 and 2 regarding to
+efficency/performance?
 
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index a68bc1f..cccf69e 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -1090,8 +1090,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
- 		if (blk->magic == XFS_DA_NODE_MAGIC) {
- 			node = blk->bp->data;
- 			max = be16_to_cpu(node->hdr.count);
--			btreehashval = node->btree[max-1].hashval;
--			blk->hashval = be32_to_cpu(btreehashval);
-+			blk->hashval = be32_to_cpu(node->btree[max-1].hashval);
- 
- 			/*
- 			 * Binary search.  (note: small blocks will skip loop)
+Is it true that a small agcount is better for most systems
+(Gentoo and some other sources recommend this)? It's a desktop machine.
+
+Greetings,
+Jasmin Buchert
