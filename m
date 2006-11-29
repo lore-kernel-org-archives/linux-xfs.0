@@ -1,28 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 07:37:23 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATFbGaG001344
-	for <linux-xfs@oss.sgi.com>; Wed, 29 Nov 2006 07:37:17 -0800
-Date: Wed, 29 Nov 2006 15:11:46 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: TAKE 956783 - xfs_dm_getall_dmattr() doesn't check if the user buffer is at valid address
-Message-ID: <20061129151146.GA4746@infradead.org>
-References: <45629AD8.8000800@sgi.com> <20061127055859.GC1374@infradead.org> <456B7C1A.90209@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 08:02:00 -0800 (PST)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATG1oaI005193
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 08:01:53 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id kATFk7Wv006744
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:46:08 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id kATFk7Y9006742
+	for xfs@oss.sgi.com; Wed, 29 Nov 2006 16:46:07 +0100
+Date: Wed, 29 Nov 2006 16:46:07 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] use struct kvec in struct uio
+Message-ID: <20061129154607.GB6400@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <456B7C1A.90209@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Vlad Apostolov <vapo@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, sgi.bugs.xfs@engr.sgi.com, linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Nov 28, 2006 at 11:00:26AM +1100, Vlad Apostolov wrote:
-> The fix is actually fine as it gives an early indication (even not complete)
-> that the user pointer is bad. There is another problem you are pointing at 
-> and it is the userspace pointer dereference later on without using 
-> copy_to_user(). If you have any patch fixing this problem it would be great.
+All but one useage of struct uio are for kernel pointers, so let's use
+struct kvec instead of struct iovec.  Because readlink by handle still
+uses it with a user pointer we still have two sparse warnings, but the
+noise level is reduced quite a bit by this.
 
-Unfortunately I haven't found my patch, I'm sorry.  I have on the other
-hand found various old trivial XFS patches of mine that I'll submit.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/fs/xfs/support/move.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/support/move.h	2006-11-29 16:27:25.000000000 +0100
++++ linux-2.6/fs/xfs/support/move.h	2006-11-29 16:30:18.000000000 +0100
+@@ -55,7 +55,7 @@
+ };
+ 
+ struct uio {
+-	struct iovec	*uio_iov;   /* pointer to array of iovecs */
++	struct kvec	*uio_iov;   /* pointer to array of iovecs */
+ 	int		uio_iovcnt; /* number of iovecs in array */
+ 	xfs_off_t	uio_offset; /* offset in file this uio corresponds to */
+ 	int		uio_resid;  /* residual i/o count */
+@@ -63,7 +63,7 @@
+ };
+ 
+ typedef struct uio uio_t;
+-typedef struct iovec iovec_t;
++typedef struct kvec iovec_t;
+ 
+ extern int	xfs_uio_read (caddr_t, size_t, uio_t *);
+ 
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2006-11-29 16:33:37.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c	2006-11-29 16:34:43.000000000 +0100
+@@ -388,7 +388,7 @@
+ 	aiov.iov_len	= olen;
+ 	aiov.iov_base	= hreq.ohandle;
+ 
+-	auio.uio_iov	= &aiov;
++	auio.uio_iov	= (struct kvec *)&aiov;
+ 	auio.uio_iovcnt	= 1;
+ 	auio.uio_offset	= 0;
+ 	auio.uio_segflg	= UIO_USERSPACE;
