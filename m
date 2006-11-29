@@ -1,37 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 09:16:22 -0800 (PST)
-Received: from mail.pacifica.ch (HSI-KBW-085-216-115-221.hsi.kabelbw.de [85.216.115.221])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATHGDaG019575
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:16:17 -0800
-Received: from uranus.atlantica
-	([fec0::1:2a0:24ff:fe57:9888] helo=localhost ident=jasmin)
-	by mail.pacifica.ch with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.63)
-	(envelope-from <jasmin@pacifica.ch>)
-	id 1GpSZF-000806-Um
-	for xfs@oss.sgi.com; Wed, 29 Nov 2006 17:45:54 +0100
-Date: Wed, 29 Nov 2006 17:45:53 +0100
-From: Jasmin Buchert <jasmin@pacifica.ch>
-Subject: mkfs.xfs questions
-Message-Id: <20061129174553.e0ef3465.jasmin@pacifica.ch>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 14:24:51 -0800 (PST)
+Received: from page.mel.office.aconex.com (eth2333.vic.adsl.internode.on.net [150.101.159.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kATMOgaG025573
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 14:24:43 -0800
+Subject: Re: [PATCH 1/2]segmentation fault in xfs_io mread/mwrite command
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <200611290026.AA04738@TNESG9305.tnes.nec.co.jp>
+References: <200611290026.AA04738@TNESG9305.tnes.nec.co.jp>
+Content-Type: text/plain
+Date: Thu, 30 Nov 2006 09:22:41 +1100
+Message-Id: <1164838961.4992.29.camel@edge>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Utako Kusaka <utako@tnes.nec.co.jp>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Wed, 2006-11-29 at 09:26 +0900, Utako Kusaka wrote:
+> Hi,
+> 
+> I found the following issues in xfs_io.
+>  mread command:
+>   a) Causes a segmentation fault.
+>      Because "length"+1 bytes data is copied to buffer in read_mapping(),
+>      but buffer size is "length".
+>   b) Reads from wrong offset.
+>   c) The first byte of dump data is incorrect when length > page size.
+>  mwrite command:
+>   d) Data placement is incorrect when -r option is specified
+>      because of wrong for-loop counter.
+> 
+> This patch fixes them.
+> 
 
-I'm planning to use XFS but have some questions..
+Looks OK - could you send explicit test cases that demonstrate each
+problem please?  (i.e. actual xfs_io invocations).  Particularly the
+segfault should be easy to show, something like:
+xfs_io -f -c 'mmap ...' -c 'mread ...' /tmp/foo)
 
-Is there any real advantage of making the log size 32-64 MB and
-what is the difference between log version 1 and 2 regarding to
-efficency/performance?
+That way they can be added to the regression test suite to ensure these
+things don't spontaneously break themselves in the future.
 
-Is it true that a small agcount is better for most systems
-(Gentoo and some other sources recommend this)? It's a desktop machine.
+thanks!
 
-Greetings,
-Jasmin Buchert
+-- 
+Nathan
