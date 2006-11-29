@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Nov 2006 16:54:01 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Nov 2006 17:26:20 -0800 (PST)
 Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAT0roaG016794
-	for <xfs@oss.sgi.com>; Tue, 28 Nov 2006 16:53:56 -0800
-Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id kAT0r1nU004318
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:53:02 +0900 (JST)
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.195])
-	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id kAT0kPX8012205
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:46:25 +0900 (JST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAT1QBaG021590
+	for <xfs@oss.sgi.com>; Tue, 28 Nov 2006 17:26:13 -0800
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id kAT0S06T026813
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:28:00 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.197])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id kAT0RmEt016920
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:27:48 +0900 (JST)
 Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id kAT0kPN07315 for xfs@oss.sgi.com; Wed, 29 Nov 2006 09:46:25 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv4.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id kAT0kOu16052 for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:46:24 +0900 (JST)
+	id kAT0RmN12385 for xfs@oss.sgi.com; Wed, 29 Nov 2006 09:27:48 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv5.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id kAT0Rla24782 for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:27:47 +0900 (JST)
 Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
 	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20061129.095146.06200516 for <xfs@oss.sgi.com>
-	; Wed, 29 Nov 2006 09:51:46 +0900
+	id 20061129.093309.14002448 for <xfs@oss.sgi.com>
+	; Wed, 29 Nov 2006 09:33:09 +0900
 Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
-	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id C9D5EAE4B0
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:45:34 +0900 (JST)
-Message-Id: <200611290046.AA04743@TNESG9305.tnes.nec.co.jp>
-Date: Wed, 29 Nov 2006 09:46:19 +0900
-Subject: [PATCH] infinite loop in xfs_db
+	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id 44A8EAE4B0
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 09:27:17 +0900 (JST)
+Message-Id: <200611290027.AA04740@TNESG9305.tnes.nec.co.jp>
+Date: Wed, 29 Nov 2006 09:27:42 +0900
+Subject: [PATCH 2/2]xfs_io man page
 From: Utako Kusaka <utako@tnes.nec.co.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -33,63 +33,50 @@ To: xfs@oss.sgi.com
 
 Hi,
 
-I found two issues in xfs_db.
-1)bmap, ablock and dblock command hangs up when the target file has
-  either data fork or attr fork which is set XFS_DINODE_FMT_LOCAL. 
-  Because bmap() in db/bmap.c performs XFS_DINODE_FMT_BTREE if-block
-  and goes into an infinite loop.
-2)bmap command does not show attribute area correctly when no option is specified.
-  Because an offset for attr fork is changed by following code: 
-    co = be.startoff + be.blockcount;
-
-This patch fixes them.
+This patch adds offset and length parameter to the man page for 
+pread, pwrite, mread and mwrite command in xfs_io(8).
+I guess this is useful for testers.
+What do you think of it?
 
 Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
 ---
 
---- xfsprogs-2.8.15-orgn/db/bmap.c	2006-05-30 23:35:06.000000000 +0900
-+++ xfsprogs-2.8.15/db/bmap.c	2006-11-22 14:41:35.004978096 +0900
-@@ -77,7 +77,8 @@ bmap(
- 	fmt = (xfs_dinode_fmt_t)XFS_DFORK_FORMAT(dip, whichfork);
- 	typ = whichfork == XFS_DATA_FORK ? TYP_BMAPBTD : TYP_BMAPBTA;
- 	ASSERT(typtab[typ].typnm == typ);
--	ASSERT(fmt == XFS_DINODE_FMT_EXTENTS || fmt == XFS_DINODE_FMT_BTREE);
-+	ASSERT(fmt == XFS_DINODE_FMT_LOCAL || fmt == XFS_DINODE_FMT_EXTENTS ||
-+		fmt == XFS_DINODE_FMT_BTREE);
- 	if (fmt == XFS_DINODE_FMT_EXTENTS) {
- 		nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
- 		xp = (xfs_bmbt_rec_64_t *)XFS_DFORK_PTR(dip, whichfork);
-@@ -85,7 +86,7 @@ bmap(
- 			if (!bmap_one_extent(ep, &curoffset, eoffset, &n, bep))
- 				break;
- 		}
--	} else {
-+	} else if (fmt == XFS_DINODE_FMT_BTREE) {
- 		push_cur();
- 		bno = NULLFSBLOCK;
- 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
-@@ -147,7 +148,7 @@ bmap_f(
- 	int		afork = 0;
- 	bmap_ext_t	be;
- 	int		c;
--	xfs_dfiloff_t	co;
-+	xfs_dfiloff_t	co, cosave;
- 	int		dfork = 0;
- 	xfs_dinode_t	*dip;
- 	xfs_dfiloff_t	eo;
-@@ -205,6 +206,7 @@ bmap_f(
- 		co = 0;
- 		eo = -1;
- 	}
-+	cosave = co;
- 	for (whichfork = XFS_DATA_FORK;
- 	     whichfork <= XFS_ATTR_FORK;
- 	     whichfork++) {
-@@ -226,6 +228,7 @@ bmap_f(
- 				be.blockcount, be.flag);
- 			co = be.startoff + be.blockcount;
- 		}
-+		co = cosave;
- 	}
- 	return 0;
- }
+--- xfsprogs-2.8.15-orgn/man/man8/xfs_io.8	2006-07-04 20:57:05.000000000 +0900
++++ xfsprogs-2.8.15/man/man8/xfs_io.8	2006-11-16 15:55:34.566928372 +0900
+@@ -99,7 +99,7 @@ Closes the current open file, marking th
+ \f3c\f1
+ See the \f3close\f1 command.
+ .TP
+-\f3pread\f1 [ \f2\-b bsize\f1 ] [ \f2\-v\f1 ]
++\f3pread\f1 [ \f2\-b bsize\f1 ] [ \f2\-v\f1 ] \f2offset\f1 \f2length\f1
+ Reads a range of bytes in a specified blocksize from the given offset.
+ .br
+ The \f3\-b\f1 option can be used to set the blocksize into which the
+@@ -112,7 +112,7 @@ by default only the count of bytes actua
+ \f3r\f1
+ See the \f3pread\f1 command.
+ .TP
+-\f3pwrite\f1 [ \f2\-i file\f1 ] [ \f2\-d\f1 ] [ \f2\-s skip\f1 ] [ \f2\-b size\f1 ] [ \f2\-S seed\f1 ]
++\f3pwrite\f1 [ \f2\-i file\f1 ] [ \f2\-d\f1 ] [ \f2\-s skip\f1 ] [ \f2\-b size\f1 ] [ \f2\-S seed\f1 ] \f2offset
+\f1 \f2length\f1
+ Writes a range of bytes in a specified blocksize from the given offset.
+ The bytes written can be either a set pattern or read in from another
+ file before writing.
+@@ -211,7 +211,7 @@ Unmaps the current memory mapping.
+ \f3mu\f1
+ See the \f3munmap\f1 command.
+ .TP
+-\f3mread\f1 [ \-\f2frv\f1 ]
++\f3mread\f1 [ \-\f2frv\f1 ] [ \f2offset\f1 \f2length\f1 ]
+ Accesses a segment of the current memory mapping, optionally dumping it to
+ the standard output stream (with \f2-v\f1 or \f2-f\f1 option) for inspection.
+ The accesses are performed sequentially from the start offset by default,
+@@ -224,7 +224,7 @@ offsets relative to the start of the map
+ \f3mr\f1
+ See the \f3mread\f1 command.
+ .TP
+-\f3mwrite\f1 [ \f2-r\f1 ] [ \f2-S seed\f1 ]
++\f3mwrite\f1 [ \f2-r\f1 ] [ \f2-S seed\f1 ] [ \f2offset\f1 \f2length\f1 ]
+ Stores a byte into memory for a range within a mapping.
+ The default stored value is 'X', repeated to fill the range specified,
+ but this can be changed using the \f2-S\f1 option.
