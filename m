@@ -1,41 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 16:11:09 -0800 (PST)
-Received: from hapkido.dreamhost.com (hapkido.dreamhost.com [66.33.216.122])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAU0B0aG000689
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:11:02 -0800
-Received: from randymail-a9.dreamhost.com (sd-green-bigip-207.dreamhost.com [208.97.132.207])
-	by hapkido.dreamhost.com (Postfix) with ESMTP id BE4B71845EC
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 15:43:09 -0800 (PST)
-Received: from [10.2.255.104] (unknown [208.51.196.2])
-	by randymail-a9.dreamhost.com (Postfix) with ESMTP id DF695EEDBE
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 15:43:05 -0800 (PST)
-Message-ID: <456E1B08.7090802@delusion.com>
-Date: Wed, 29 Nov 2006 15:43:04 -0800
-From: Deanan <delusion@delusion.com>
-MIME-Version: 1.0
-Subject: inode64 workaround
-References: <200611290027.AA04740@TNESG9305.tnes.nec.co.jp> <1164838985.4992.30.camel@edge>
-In-Reply-To: <1164838985.4992.30.camel@edge>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 16:32:04 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAU0VraG008284
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:31:55 -0800
+Date: Thu, 30 Nov 2006 11:30:50 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] remove v_number
+Message-ID: <20061130003050.GG33919298@melbourne.sgi.com>
+References: <20061129154729.GC6400@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20061129154729.GC6400@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
+On Wed, Nov 29, 2006 at 04:47:29PM +0100, Christoph Hellwig wrote:
+> v_number is unused except for the naming some locks (which is a
+> functionality totally unused by Linux), so remove it and assorted
+> crap.  Besides saving two words in struct vnode this also gets rid
+> of a spinlock per inode allocation.
 
-Hi,
+Hmm - given that I've just used the v_number in post-mortem analysis
+of a nasty bug to correlate the sequence of events during a series
+of mkdir operations (i.e. transactions in the incore log buffers,
+the resulting xfs_inodes and some screwed up dentries) that lead to
+a BUG_ON being tripped in d_instantiate.
 
-I've got some systems that I can't change the kernel on (external 
-vendor) that
-are 32bit but I'm running into the performance problem that is fixed by 
-using
-inode64. Is there any known way of working around the problem on a 32bit 
-kernel?
+So, while it appears to be unused, it is _very_ useful for
+determining the SOE that has occurred in certain types of problems.
 
-In our case, the problem occurs as soon as you start to delete files and 
-write new ones.
+FWIW, while analysing this crash dump a couple of days ago I was
+wishing that dentries had an equivalent sequence number because
+there is no way to tell what dentry was supposed to be related to
+what inode after it got screwed up...
 
 Cheers,
 
-Deanan
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
