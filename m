@@ -1,94 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 10:04:38 -0800 (PST)
-Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAUI4VaG017106
-	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 10:04:31 -0800
-Message-ID: <456F1CFC.2060705@sgi.com>
-Date: Thu, 30 Nov 2006 18:03:40 +0000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 12:34:42 -0800 (PST)
+Received: from randymail-a9.dreamhost.com (sd-green-bigip-119.dreamhost.com [208.97.132.119])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kAUKYWaG006800
+	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 12:34:35 -0800
+Message-ID: <456F401F.3030902@delusion.com>
+Date: Thu, 30 Nov 2006 12:33:35 -0800
+From: Deanan <delusion@delusion.com>
 MIME-Version: 1.0
-Subject: Re: Review: Reduce in-core superblock lock contention near ENOSPC
-References: <20061123044122.GU11034@melbourne.sgi.com>
-In-Reply-To: <20061123044122.GU11034@melbourne.sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: inode64 workaround
+References: <200611290027.AA04740@TNESG9305.tnes.nec.co.jp> <1164838985.4992.30.camel@edge> <456E1B08.7090802@delusion.com> <456E2A30.4010101@melbourne.sgi.com> <456E2D0E.2000007@delusion.com> <456E30A5.6080109@melbourne.sgi.com> <456E35CA.2000601@delusion.com> <456E67EB.2030008@sandeen.net>
+In-Reply-To: <456E67EB.2030008@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: chatz@melbourne.sgi.com, xfs@oss.sgi.com
 
-Dave,
+It's a generic 2.6.9 kernel (AFAIK).
+I tried the same setting on a different box with SLES 9 SP3 (2.6.5) 
+which does have rotorstep.
+With inode64 I can sustain 235+MB/s on the same array test after test.
+When I do not mount with inode64, I get the same results as the 32bit 
+machine (~100-130MB/s)
+Without inode64 plus rotorstep (set to 255), the perfomance improves to 
+about 140-160MB/s.
 
-Could you have changed the SB_LOCK from a spinlock to a blocking
-mutex and have achieved a similar effect?
+Generally the first test is fast and then drops over the next few tests 
+(even writing as few
+as 100 16mb files per test).
 
-Has this change had much testing on a large machine?
+Thanks,
 
-These changes wouldn't apply cleanly to tot (3 hunks failed in
-xfs_mount.c) but I couldn't see why.
+Deanan
 
-The changes look fine to me, couple of comments below.
-
-Lachlan
-
-
-@@ -1479,9 +1479,11 @@ xfs_mod_incore_sb_batch(xfs_mount_t *mp,
-  		case XFS_SBS_IFREE:
-  		case XFS_SBS_FDBLOCKS:
-  			if (!(mp->m_flags & XFS_MOUNT_NO_PERCPU_SB)) {
--				status = xfs_icsb_modify_counters_locked(mp,
-+				XFS_SB_UNLOCK(mp, s);
-+				status = xfs_icsb_modify_counters(mp,
-  							msbp->msb_field,
-  							msbp->msb_delta, rsvd);
-+				s = XFS_SB_LOCK(mp);
-  				break;
-  			}
-  			/* FALLTHROUGH */
-
-Is it safe to be releasing the SB_LOCK?  Is it assumed that the
-superblock wont change while we process the list of xfs_mod_sb
-structures?
-
-
-@@ -1515,11 +1517,12 @@ xfs_mod_incore_sb_batch(xfs_mount_t *mp,
-  			case XFS_SBS_IFREE:
-  			case XFS_SBS_FDBLOCKS:
-  				if (!(mp->m_flags & XFS_MOUNT_NO_PERCPU_SB)) {
--					status =
--					    xfs_icsb_modify_counters_locked(mp,
-+					XFS_SB_UNLOCK(mp, s);
-+					status = xfs_icsb_modify_counters(mp,
-  							msbp->msb_field,
-  							-(msbp->msb_delta),
-  							rsvd);
-+					s = XFS_SB_LOCK(mp);
-  					break;
-  				}
-  				/* FALLTHROUGH */
-
-Same as above.
-
-
-@@ -1882,6 +1895,17 @@ xfs_icsb_disable_counter(
-
-  	ASSERT((field >= XFS_SBS_ICOUNT) && (field <= XFS_SBS_FDBLOCKS));
-
-+	/*
-+	 * If we are already disabled, then there is nothing to do
-+	 * here. We check before locking all the counters to avoid
-+	 * the expensive lock operation when being called in the
-+	 * slow path and the counter is already disabled. This is
-+	 * safe because the only time we set or clear this state is under
-+	 * the m_icsb_mutex.
-+	 */
-+	if (xfs_icsb_counter_disabled(mp, field))
-+		return 0;
-+
-  	xfs_icsb_lock_all_counters(mp);
-  	if (!test_and_set_bit(field, &mp->m_icsb_counters)) {
-  		/* drain back to superblock */
-
-Nice one, that will avoid a lot of unnecessary work.
+> Deanan wrote:
+>> Thanks. Unfortunately 2.6.9 doesn't have it. :(
+>
+> Is this rhel4?
+>
+> You could probably pretty easily add the inode rotor code into the xfs 
+> modules that you're using, if that's the case.
+>
+> -Eric
+>
+>>> This is a sysctl, see sysctl(8).
+>>>
+>>> It was introduced to XFS in October 2004, I'm not sure if it made 
+>>> 2.6.9.
+>>>
+>>> If this doesn't help a little then I'm unsure why you think that 
+>>> inode64 is
+>>> going to solve your problem?
+>>>
+>>> David
+>>>   
+>>
+>>
+>
+>
