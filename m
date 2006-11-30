@@ -1,47 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 16:32:04 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Nov 2006 16:48:53 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAU0VraG008284
-	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:31:55 -0800
-Date: Thu, 30 Nov 2006 11:30:50 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] remove v_number
-Message-ID: <20061130003050.GG33919298@melbourne.sgi.com>
-References: <20061129154729.GC6400@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061129154729.GC6400@lst.de>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAU0mdaG010803
+	for <xfs@oss.sgi.com>; Wed, 29 Nov 2006 16:48:42 -0800
+Message-ID: <456E2A30.4010101@melbourne.sgi.com>
+Date: Thu, 30 Nov 2006 11:47:44 +1100
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
+MIME-Version: 1.0
+Subject: Re: inode64 workaround
+References: <200611290027.AA04740@TNESG9305.tnes.nec.co.jp> <1164838985.4992.30.camel@edge> <456E1B08.7090802@delusion.com>
+In-Reply-To: <456E1B08.7090802@delusion.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Deanan <delusion@delusion.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 29, 2006 at 04:47:29PM +0100, Christoph Hellwig wrote:
-> v_number is unused except for the naming some locks (which is a
-> functionality totally unused by Linux), so remove it and assorted
-> crap.  Besides saving two words in struct vnode this also gets rid
-> of a spinlock per inode allocation.
+Deanan,
 
-Hmm - given that I've just used the v_number in post-mortem analysis
-of a nasty bug to correlate the sequence of events during a series
-of mkdir operations (i.e. transactions in the incore log buffers,
-the resulting xfs_inodes and some screwed up dentries) that lead to
-a BUG_ON being tripped in d_instantiate.
+Would something like the inode rotor help?
 
-So, while it appears to be unused, it is _very_ useful for
-determining the SOE that has occurred in certain types of problems.
+  fs.xfs.rotorstep              (Min: 1  Default: 1  Max: 256)
 
-FWIW, while analysing this crash dump a couple of days ago I was
-wishing that dentries had an equivalent sequence number because
-there is no way to tell what dentry was supposed to be related to
-what inode after it got screwed up...
+        In "inode32" allocation mode, this option determines how many
 
-Cheers,
+        files the allocator attempts to allocate in the same allocation
 
-Dave.
+        group before moving to the next allocation group.  The intent
+
+        is to control the rate at which the allocator moves between
+
+        allocation groups when allocating extents for new files.
+
+David
+
+
+Deanan wrote:
+> 
+> Hi,
+> 
+> I've got some systems that I can't change the kernel on (external
+> vendor) that
+> are 32bit but I'm running into the performance problem that is fixed by
+> using
+> inode64. Is there any known way of working around the problem on a 32bit
+> kernel?
+> 
+> In our case, the problem occurs as soon as you start to delete files and
+> write new ones.
+> 
+> Cheers,
+> 
+> Deanan
+> 
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+David Chatterton
+XFS Engineering Manager
+SGI Australia
