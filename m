@@ -1,64 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 20:24:33 -0800 (PST)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB14OOaG007564
-	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 20:24:25 -0800
-Date: Fri, 1 Dec 2006 04:23:41 +0000 (GMT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: mkfs.xfs questions
-In-Reply-To: <20061129174553.e0ef3465.jasmin@pacifica.ch>
-Message-ID: <Pine.LNX.4.64.0612010410530.3735@sheep.housecafe.de>
-References: <20061129174553.e0ef3465.jasmin@pacifica.ch>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 21:17:26 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB15HEaG013072
+	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 21:17:16 -0800
+Subject: TAKE 958736 - fix up xfsidbg.c for removal of old items
+Message-Id: <20061201051619.7864858FF58C@chook.melbourne.sgi.com>
+Date: Fri,  1 Dec 2006 16:16:19 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jasmin Buchert <jasmin@pacifica.ch>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Wed, 29 Nov 2006, Jasmin Buchert wrote:
-> Is there any real advantage of making the log size 32-64 MB and
+Oops, I lost my kdb in my .config and so didn't build xfsidbg.c
+So now need to fix up the corresponding log item changes for xfsidbg.c.
 
->From 'man mkfs.xfs':
 
-    If the  log  is  contained within the data section and size isn't
-    specified, mkfs.xfs will try to select a suitable log
-    size depending on the size of the filesystem.  The actual
-    logsize depends on the filesystem block size and the directory
-    block size.
+Date:  Fri Dec  1 16:15:37 AEDT 2006
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs
+Inspected by:  vapo@sgi.com
 
-    Otherwise, the size suboption is only needed if the log
-    section of the filesystem should occupy less space than the size
-    of the special file.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-So, if you're not limited by very special space restrictions, you won't 
-need the "size" option.
 
-> what is the difference between log version 1 and 2 regarding to
-> efficency/performance?
-
-The "version" option should have no effect on performance, from 'man 
-mkfs.xfs' again:
-
-      Using the version suboption to specify a version 2 log enables the
-      sunit  suboption,  and  allows  the  logbsize  to  be increased
-      beyond  32K.
-
-The "sunit" options can be tweaked to provide better performace in raid5 
-environments, same for the "agcount" option: for special needs only but 
-I'm not aware of any benchmarks for different sunit/agcount values.
-
-> Is it true that a small agcount is better for most systems
-> (Gentoo and some other sources recommend this)? It's a desktop machine.
-
-Hm, some people are indeed suggesting this [0], you might ask the author 
-of the doc why he's doing this or test this by yourself.
-
-Christian.
-
-[0] http://www.rootforum.de/wiki/howto/gentoo/basesystem#formatieren_der_partitionen
--- 
-BOFH excuse #244:
-
-Your cat tried to eat the mouse.
+Modid:  xfs-linux-melb:xfs-kern:27602a
+fs/xfs/xfsidbg.c - 1.309 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.309&r2=text&tr2=1.308&f=h
+	- Fix up old uses of log items for pv#958736.
+	  Also abstract out the item string lookup table.
+	  And add in a missing item string (quotaoff) while we are there.
