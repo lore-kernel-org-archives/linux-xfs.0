@@ -1,44 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 19:34:26 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB13YGaG029130
-	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 19:34:17 -0800
-Subject: TAKE 958736 - cleanup old 5.3/6.1 log items - from Eric
-Message-Id: <20061201033321.4F8B658FF58C@chook.melbourne.sgi.com>
-Date: Fri,  1 Dec 2006 14:33:21 +1100 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 20:24:33 -0800 (PST)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB14OOaG007564
+	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 20:24:25 -0800
+Date: Fri, 1 Dec 2006 04:23:41 +0000 (GMT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: mkfs.xfs questions
+In-Reply-To: <20061129174553.e0ef3465.jasmin@pacifica.ch>
+Message-ID: <Pine.LNX.4.64.0612010410530.3735@sheep.housecafe.de>
+References: <20061129174553.e0ef3465.jasmin@pacifica.ch>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Jasmin Buchert <jasmin@pacifica.ch>
+Cc: xfs@oss.sgi.com
 
-Get rid of old 5.3/6.1 v1 log items.
-Cleanup patch sent in by Eric Sandeen.
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+On Wed, 29 Nov 2006, Jasmin Buchert wrote:
+> Is there any real advantage of making the log size 32-64 MB and
 
-Date:  Fri Dec  1 14:31:05 AEDT 2006
-Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs
-Inspected by:  tes@sgi.com,sandeen@sandeen.net
+>From 'man mkfs.xfs':
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+    If the  log  is  contained within the data section and size isn't
+    specified, mkfs.xfs will try to select a suitable log
+    size depending on the size of the filesystem.  The actual
+    logsize depends on the filesystem block size and the directory
+    block size.
 
+    Otherwise, the size suboption is only needed if the log
+    section of the filesystem should occupy less space than the size
+    of the special file.
 
-Modid:  xfs-linux-melb:xfs-kern:27596a
-fs/xfs/xfs_buf_item.h - 1.44 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_buf_item.h.diff?r1=text&tr1=1.44&r2=text&tr2=1.43&f=h
-	- Get rid of old 5.3/6.1 v1 log items.
-	  Cleanup patch sent in by Eric Sandeen.
-	  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+So, if you're not limited by very special space restrictions, you won't 
+need the "size" option.
 
-fs/xfs/xfs_log_recover.c - 1.314 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.314&r2=text&tr2=1.313&f=h
-	- Get rid of old 5.3/6.1 v1 log items.
-	  Cleanup patch sent in by Eric Sandeen.
-	  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> what is the difference between log version 1 and 2 regarding to
+> efficency/performance?
 
-fs/xfs/xfs_trans.h - 1.142 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.h.diff?r1=text&tr1=1.142&r2=text&tr2=1.141&f=h
-	- Get rid of old 5.3/6.1 v1 log items.
-	  Cleanup patch sent in by Eric Sandeen.
-	  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+The "version" option should have no effect on performance, from 'man 
+mkfs.xfs' again:
+
+      Using the version suboption to specify a version 2 log enables the
+      sunit  suboption,  and  allows  the  logbsize  to  be increased
+      beyond  32K.
+
+The "sunit" options can be tweaked to provide better performace in raid5 
+environments, same for the "agcount" option: for special needs only but 
+I'm not aware of any benchmarks for different sunit/agcount values.
+
+> Is it true that a small agcount is better for most systems
+> (Gentoo and some other sources recommend this)? It's a desktop machine.
+
+Hm, some people are indeed suggesting this [0], you might ask the author 
+of the doc why he's doing this or test this by yourself.
+
+Christian.
+
+[0] http://www.rootforum.de/wiki/howto/gentoo/basesystem#formatieren_der_partitionen
+-- 
+BOFH excuse #244:
+
+Your cat tried to eat the mouse.
