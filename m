@@ -1,102 +1,283 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 31 Dec 2006 06:32:58 -0800 (PST)
-Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBVEWpqw020522
-	for <xfs@oss.sgi.com>; Sun, 31 Dec 2006 06:32:52 -0800
-Received: from linux01.gwdg.de ([134.76.13.21])
-	by mailer.gwdg.de with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.60)
-	(envelope-from <jengelh@linux01.gwdg.de>)
-	id 1H10w1-0003K3-4P
-	for xfs@oss.sgi.com; Sun, 31 Dec 2006 14:41:09 +0100
-Received: from linux01.gwdg.de (localhost [127.0.0.1])
-	by linux01.gwdg.de (8.13.3/8.13.3/SuSE Linux 0.7) with ESMTP id kBVDf9Lr019441
-	for <xfs@oss.sgi.com>; Sun, 31 Dec 2006 14:41:11 +0100
-Received: from localhost (jengelh@localhost)
-	by linux01.gwdg.de (8.13.3/8.13.3/Submit) with ESMTP id kBVDf9I4019435
-	for <xfs@oss.sgi.com>; Sun, 31 Dec 2006 14:41:09 +0100
-Date: Sun, 31 Dec 2006 14:41:09 +0100 (MET)
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: xfs internal error on sparc64
-Message-ID: <Pine.LNX.4.61.0612311413130.32449@yvahk01.tjqt.qr>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Dec 2006 06:59:32 -0800 (PST)
+Received: from MailServer (199-241-81-62.libre.auna.net [62.81.241.199] (may be forged))
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB1ExLaG028874
+	for <xfs@oss.sgi.com>; Fri, 1 Dec 2006 06:59:22 -0800
+Received: from localhost (N2BSolutions [127.0.0.1])
+	by MailServer (Postfix) with ESMTP id DFA1B17ACA6
+	for <xfs@oss.sgi.com>; Fri,  1 Dec 2006 14:29:35 +0000 (WET)
+Received: from MailServer ([127.0.0.1])
+	by localhost (N2BSolutions [127.0.0.1]) (amavisd-new, port 10024)
+	with SMTP id 14792-03 for <xfs@oss.sgi.com>;
+	Fri, 1 Dec 2006 14:29:33 +0000 (WET)
+Received: from correo.adeje.es (firewall [62.81.241.197])
+	by MailServer (Postfix) with ESMTP id 3B8BD16E9F6
+	for <xfs@oss.sgi.com>; Fri,  1 Dec 2006 14:29:33 +0000 (WET)
+Subject: One problems with mount my partition xfs
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <OFB409A2DF.20A14DA1-ON80257237.004FD9BB-80257237.00503D88@adeje.es>
+From: alejanhd@adeje.es
+Date: Fri, 1 Dec 2006 14:37:40 +0000
+Content-Type: multipart/related; boundary="=_related 00503D8180257237_="
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hi list,
+Este es un mensaje de varios componentes en formato MIME.
+--=_related 00503D8180257237_=
+Content-Type: multipart/alternative; boundary="=_alternative 00503D8380257237_="
+
+--=_alternative 00503D8380257237_=
+Content-Type: text/plain; charset="US-ASCII"
+
+Hello, my name is Alejandro, I live in Tenerife, Canary Islands in Spain
+
+Sorry for my english is very bad,
+
+My question is:
+
+In my server Supermicro, with debian sarge2 installed, I have any problems 
+mounting my disc xfs, is posible you send me information of mount 
+partition in xfs???
 
 
-just catched this in dmesg:
-
-xfs_da_do_buf: bno 16777216
-dir: inode 134659821
-Filesystem "sdf5": XFS internal error xfs_da_do_buf(1) at line 1992 of 
-file fs/xfs/xfs_da_btree.c.  Caller 0x000000001002b53c
-Call Trace:
- [00000000100325c4] xfs_dir2_node_removename+0x1e4/0x400 [xfs]
- [000000001002def4] xfs_dir_removename+0x12c/0x138 [xfs]
- [00000000100583e4] xfs_remove+0x258/0x410 [xfs]
- [0000000010061afc] xfs_vn_unlink+0x24/0x58 [xfs]
- [00000000004b2c40] vfs_unlink+0xf4/0x144
- [00000000004b4fa4] do_unlinkat+0xa8/0x148
- [0000000000406c54] linux_sparc_syscall32+0x3c/0x40
- [000000000001f898] 0x1f8a0
-Filesystem "sdf5": XFS internal error xfs_trans_cancel at line 1138 of 
-file fs/xfs/xfs_trans.c.  Caller 0x0000000010058568
-Call Trace:
- [0000000010061afc] xfs_vn_unlink+0x24/0x58 [xfs]
- [00000000004b2c40] vfs_unlink+0xf4/0x144
- [00000000004b4fa4] do_unlinkat+0xa8/0x148
- [0000000000406c54] linux_sparc_syscall32+0x3c/0x40
- [000000000001f898] 0x1f8a0
-xfs_force_shutdown(sdf5,0x8) called from line 1139 of file 
-fs/xfs/xfs_trans.c.
-Return address = 0x0000000010064ce4
-Filesystem "sdf5": Corruption of in-memory data detected.  Shutting down 
-filesystem: sdf5
-Please umount the filesystem, and rectify the problem(s)
-xfs_force_shutdown(sdf5,0x1) called from line 424 of file 
-fs/xfs/xfs_rw.c.  Return address = 0x0000000010064ce4
-xfs_force_shutdown(sdf5,0x1) called from line 424 of file 
-fs/xfs/xfs_rw.c.  Return address = 0x0000000010064ce4
-
-/proc/modules:
-xfs 468241 1 - Live 0x000000001000a000
-
-Currently-running kernel is 2.6.18-1.2798.al3.1smp. Beforehand, only 
-2.6.16-1.2241sp7smp and 2.6.13-1.1603sp13smp were running, so I do not 
-think it is the directory corruption bug that slipped in in 2.6.17.
-
-# umount /dev/sdf5
-# xfs_check /dev/sdf5
-ERROR: The filesystem has valuable metadata changes in a log which needs 
-to be replayed.  Mount the filesystem to replay the log, and unmount it 
-before re-running xfs_ncheck.  If you are unable to mount the 
-filesystem, then use the xfs_repair -L option to destroy the log and 
-attempt a repair. Note that destroying the log may cause corruption -- 
-please attempt a mount of the filesystem before doing this. must run 
-blockget -n first
-# mount /dev/sdf5
-# umount /dev/sdf5
-# xfs_check /dev/sdf5
-bad free block nused 9 should be 31 for dir ino 520 block 16777216
-bad free block nused 0 should be 32 for dir ino 17294340 block 16777216
-bad free block nused 0 should be 26 for dir ino 17554166 block 16777216
-bad free block nused 0 should be 32 for dir ino 17554169 block 16777216
-bad free block nused 2 should be 9 for dir ino 33809210 block 16777216
-bad free block nused 1 should be 16 for dir ino 33902514 block 16777216
-bad free block nused 0 should be 26 for dir ino 50408697 block 16777216
-bad free block nused 0 should be 45 for dir ino 83894051 block 16777216
-bad free block nused 0 should be 43 for dir ino 100746327 block 16777216
-bad free block nused 0 should be 5 for dir ino 134490771 block 16777216
-missing free index for data block 0 in dir ino 134659821
-
-It's still the 16777216 bug? Anyway, I am going to run xfs_repair 2.8.11 
-now and see.
+Thanks
 
 
-	-`J'
--- 
+
+--=_alternative 00503D8380257237_=
+Content-Type: text/html; charset="US-ASCII"
+
+
+<br><font size=2 face="sans-serif">Hello, my name is Alejandro, I live
+in Tenerife, Canary Islands in Spain</font>
+<br>
+<br><font size=2 face="sans-serif">Sorry for my english is very bad,</font>
+<br>
+<br><font size=2 face="sans-serif">My question is:</font>
+<br>
+<br><font size=2 face="sans-serif">In my server Supermicro, with debian
+sarge2 installed, I have any problems mounting my disc xfs, is posible
+you send me information of mount partition in xfs???</font>
+<br>
+<br>
+<br><font size=2 face="sans-serif">Thanks</font>
+<br>
+<br><font size=2 face="sans-serif"><br>
+</font><img src=cid:_2_0461B8380461B6F000503D8080257237>
+--=_alternative 00503D8380257237_=--
+
+--=_related 00503D8180257237_=
+Content-Type: image/jpeg
+Content-ID: <_2_0461B8380461B6F000503D8080257237>
+Content-Transfer-Encoding: base64
+
+/9j/4AAQSkZJRgABAQEAYABgAAD/4QAWRXhpZgAASUkqAAgAAAAAAAAAAAD/
+2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIs
+IxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIy
+MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy
+MjL/wAARCADDAOoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAEC
+AwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1Fh
+ByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RF
+RkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZ
+mqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo
+6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL
+/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKR
+obHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RV
+VldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaan
+qKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3
++Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKyrq8mu
+Zza2Z2gcSTensKALl1qFrZLm4nSP2JyT+HWs4+I4mIFvZ3cxJwCECj8yadHp
+0EB3CMPJnJkfkmlkBx7UAVZfFEkM4ibS52YjPyOrHH4VJH4r08kLcJcWpP8A
+z2iP8xmomQAkhQCepAxUEuxlKyKGU9mGaYHSQXMN1EJYJUlQ9GRgRUtcC9vJ
+YSm70yRoZRyyA/K/1FdVoutRavaCQYSZeJEz0PtSA1KKKKACiiigAooooAKK
+KKACiiigAooooAKKKKACiiigAooooAKKKKACiiigCtfTmCAbTh3YIp9Ce9Vd
+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
+
+--=_related 00503D8180257237_=--
