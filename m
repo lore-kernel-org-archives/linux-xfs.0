@@ -1,39 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 15:42:58 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Nov 2006 16:28:05 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kAUNgmaG031346
-	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 15:42:50 -0800
-Date: Fri, 1 Dec 2006 10:41:46 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: TAKE 957159 - Reduce XFS 4k stack kernel issues
-Message-ID: <20061130234146.GR37654165@melbourne.sgi.com>
-References: <20061130080359.E3F7C58FF58B@chook.melbourne.sgi.com> <456F4A25.80709@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <456F4A25.80709@sandeen.net>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB10RraG008351
+	for <xfs@oss.sgi.com>; Thu, 30 Nov 2006 16:27:56 -0800
+Date: Fri, 1 Dec 2006 11:26:56 +1100 (AEDT)
+From: Barry Naujok <bnaujok@snort.melbourne.sgi.com>
+Message-Id: <200612010026.kB10QuG449074185@snort.melbourne.sgi.com>
+Subject: TAKE 958517 - mkfs.xfs can create a corrupt filesystem
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 30, 2006 at 03:16:21PM -0600, Eric Sandeen wrote:
-> David, did this add any new static declarations, or just get the
-> existing ones into shape?
+Fix up mkfs.xfs which can create a corrupt filesystem with large block sizes.
 
-It just got the existing stuff into shape and fixed the
-xfs_clear_inode inlining problems.
 
-> IOW, I think I should rework my make-more-things-static patch?
+Date:  Fri Dec  1 11:26:25 AEDT 2006
+Workarea:  snort.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  dgc@sgi.com
 
-Sure - it would be good to get it in before the .20-rc1 merge
-window closes....
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Modid:  master-melb:xfs-cmds:27594a
+xfsprogs/doc/CHANGES - 1.227 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.227&r2=text&tr2=1.226&f=h
+xfsprogs/mkfs/xfs_mkfs.c - 1.79 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
+	- Fix up determination of realtime extent size so mkfs can't create
+	  a corrupt filesystem
+
+xfsprogs/include/xfs_rtalloc.h - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/xfs_rtalloc.h.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Remove default realtime extent size definition.
