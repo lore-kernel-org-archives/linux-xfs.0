@@ -1,55 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Dec 2006 04:26:27 -0800 (PST)
-Received: from astra.simleu.ro (astra.simleu.ro [80.97.18.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB2CQFaG002586
-	for <xfs@oss.sgi.com>; Sat, 2 Dec 2006 04:26:17 -0800
-Date: Sat, 2 Dec 2006 12:15:46 +0100
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: mkfs.xfs questions
-Message-ID: <20061202111546.GA18661@teal.hq.k1024.org>
-References: <20061129174553.e0ef3465.jasmin@pacifica.ch> <Pine.LNX.4.64.0612010410530.3735@sheep.housecafe.de> <20061201183034.GA20595@teal.hq.k1024.org> <Pine.LNX.4.64.0612012349020.3735@sheep.housecafe.de>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Dec 2006 15:50:32 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB3NoKaG032621
+	for <xfs@oss.sgi.com>; Sun, 3 Dec 2006 15:50:22 -0800
+Date: Mon, 4 Dec 2006 10:49:28 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: Reduce in-core superblock lock contention near ENOSPC
+Message-ID: <20061203234928.GA37654165@melbourne.sgi.com>
+References: <20061123044122.GU11034@melbourne.sgi.com> <456F1CFC.2060705@sgi.com> <20061130223810.GO37654165@melbourne.sgi.com> <457080EA.1010807@sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0612012349020.3735@sheep.housecafe.de>
+In-Reply-To: <457080EA.1010807@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Fri, Dec 01, 2006 at 11:59:08PM +0000, Christian Kujau wrote:
-> On Fri, 1 Dec 2006, Iustin Pop wrote:
-> >I don't understand how you took that conclusion. The explanations refer
-> >to the default log size. I believe the original poster asked about the
-> >performance advantage of *raising* the log size above the default values
-> >for internal logs,
+On Fri, Dec 01, 2006 at 07:22:18PM +0000, Lachlan McIlroy wrote:
+> David Chinner wrote:
+> >On Thu, Nov 30, 2006 at 06:03:40PM +0000, Lachlan McIlroy wrote:
+> >I think the slow path code is somewhat clearer with a separate
+> >mutex - it clearly documents the serialisation barrier that
+> >the slow path uses and allows us to do slow path checks on the
+> >per-cpu counters without needing the SB_LOCK.
 > 
-> I was under the assumption that the OP asked about altering the size of 
-> the log at all and the manpage only states a reason for *decreasing* the 
-> logsize.
-Ah, I see. Sorry for the confusion.
-
-> >and my impression is that metadata-intensive
-> >workloads benefit from increasing the log size (however no hard numbers
-> >are available).
+> It's certainly an improvement over the original code.
 > 
-> As no numbers are known to me either, I did not see a point in 
-> increasing the log, hence my statement.
-Hmm, I am pretty sure that it makes a difference, but only from personal
-experience, not from benchmarks. A while ago, mkfs.xfs used to make <8M
-logs even for big filesystems[0]. Nowadays it chooses a more sane value.
-
-> >A while back when mkfs.xfs had more conservative default value, bigger log
-> >sizes indeed helped for big filesystems.
+> >
+> >It also means that in future, we can slowly remove the need for
+> >holding the SB_LOCK across the entire rebalance operation and only
+> >use it when referencing the global superblock fields during
+> >the rebalance.
 > 
-> As I've done a few benchmarks[0] for different filesystems lately I 
-> might find some time to play around with different fs tweaks...
+> Sounds good.
+> 
+> >
+> >If the need arises, it also means we can move to a mutex per counter
+> >so we can independently rebalance different types of counters at the
+> >same time (which we can't do right now).
+> 
+> That seems so obvious - I'm surprised we can't do it now.
 
-That would be interesting!
+Well, the reason I didn't go down this path in the first place
+was that typically only one type of counter would need rebalancing
+at a time (e.g. free blocks or free inodes, but not both at the
+same time). I tested this out on revenue2 with simultaneous creates
+and deletes of small files but could not cause contention on the
+single global lock under these loads. i also tried parallel
+writes of large files with creates and deletes, but hte create/delete
+was slowed sufficiently by the parallel writes that it once again
+didn't cause an issue.
 
-[0] http://oss.sgi.com/archives/xfs/2002-04/msg00443.html and the
-    corresponding thread, especially
-    http://oss.sgi.com/archives/xfs/2002-04/msg00441.html
+Hence it didn't seem to be an issue and a single lock simplified
+the initial implementation. What I'm thinking now is that it may
+become an issue with MDFS as acheivable create and delete rates
+should be much higher on one of these filesystems and then it may
+prove to be an issue.
 
-Iustin
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
