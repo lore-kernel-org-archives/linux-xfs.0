@@ -1,54 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Dec 2006 16:26:24 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Dec 2006 17:36:27 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB40QAaG009199
-	for <xfs@oss.sgi.com>; Sun, 3 Dec 2006 16:26:15 -0800
-Subject: TAKE 952227 - Severe lock contention in xfs_icsb_xxxx running
-Message-Id: <20061204002515.1994758FF58C@chook.melbourne.sgi.com>
-Date: Mon,  4 Dec 2006 11:25:15 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kB41aHaG017481
+	for <xfs@oss.sgi.com>; Sun, 3 Dec 2006 17:36:19 -0800
+Date: Mon, 4 Dec 2006 12:35:20 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: "BUG: held lock freed!" lock validator tripped by kswapd & xfs
+Message-ID: <20061204013520.GI44411608@melbourne.sgi.com>
+References: <20061201095349.2a92c997@reforged> <feed8cdd0612011434n4c025fcbvd9997485d8b35149@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <feed8cdd0612011434n4c025fcbvd9997485d8b35149@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Stephen Pollei <stephen.pollei@gmail.com>
+Cc: Mike Mattie <codermattie@gmail.com>, "linux-kernel @ vger. kernel. org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Reduction global superblock lock contention near ENOSPC.
+On Fri, Dec 01, 2006 at 02:34:42PM -0800, Stephen Pollei wrote:
+> On 12/1/06, Mike Mattie <codermattie@gmail.com> wrote:
+> 
+> >In an attempt to debug another kernel issue I turned on the lock validator 
+> >and
+> >managed to generate this report.
+> >
+> >As a side note the first attempt to boot with the lock validator failed 
+> >with
+> >a message indicating I had exceeded MAX_LOCK_DEPTH. To get this trace
+> >I patched sched.h: MAX_LOCK_DEPTH to 60.
+> >
+> >Dec  1 08:35:41 reforged [ 3052.513931] =========================
+> >Dec  1 08:35:41 reforged [ 3052.513937] [ BUG: held lock freed! ]
+> >Dec  1 08:35:41 reforged [ 3052.513939] -------------------------
+> >Dec  1 08:35:41 reforged [ 3052.513943] kswapd0/183 is freeing memory
+> >c3458000-c3458fff, with a lock still held there! Dec  1 08:35:41
+> >reforged [ 3052.513947]  (&(&ip->i_iolock)->mr_lock){....}, at:
+> >[<c0222289>] xfs_ilock+0x20/0x75 Dec  1 08:35:41 reforged
+> >[ 3052.513959] 28 locks held by kswapd0/183: Dec  1 08:35:41 reforged
+> >[ 3052.513961]  #0:  (&(&ip->i_iolock)->mr_lock){....}, at:
+> >[<c0222289>] xfs_ilock+0x20/0x75 Dec  1 08:35:41 reforged
+> >[ 3052.513968]  #1:  (&(&ip->i_lock)->mr_lock){....}, at: [<c02222bb>]
+> >xfs_ilock+0x52/0x75 Dec  1 08:35:41 reforged [ 3052.513975]
+> 
+> seems to alternate between same two locks. But both c0222289 and
+> c02222bb are not between the page(oxfff=4095 or about 4k) which kswapd
+> is trying to get rid of.
+> I think this trace is on crack somehow.
 
-The existing per-cpu superblock counter code uses the global
-superblock spin lock when we approach ENOSPC for global
-synchronisation. On larger machines than this code was originally
-tested on this can still get catastrophic spinlock contention due
-increasing rebalance frequency near ENOSPC.
+IIRC, lockdep doesn't understand the xfs inode locks yet. We've
+got a patch to fix most of this, but I don't think it's been merged.
 
-By introducing a sleeping lock that is used to serialise balances
-and modifications near ENOSPC we prevent contention from needlessly
-from wasting the CPU time of potentially hundreds of CPUs.
+Cheers,
 
-To reduce the number of balances occuring, we separate the need
-rebalance case from the slow allocate case.  Now, a counter
-running dry will trigger a rebalance during which counters are
-disabled. Any thread that sees a disabled counter enters a different
-path where it waits on the new mutex. When it gets the new mutex, it
-checks if the counter is disabled.  If the counter is disabled, then
-we _know_ that we have to use the global counter and lock and it is
-safe to do so immediately.  Otherwise, we drop the mutex and go back
-to trying the per-cpu counters which we know were re-enabled.
-
-Date:  Mon Dec  4 11:24:40 AEDT 2006
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:27612a
-fs/xfs/xfs_mount.h - 1.228 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.228&r2=text&tr2=1.227&f=h
-	- Add a new per-cpu counter synchronisation mutex.
-
-fs/xfs/xfs_mount.c - 1.388 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.388&r2=text&tr2=1.387&f=h
-	- Reduce contention on the XFS_SB_LOCK() near ENOSPC by introducing
-	  a sleeping mutex for per-cpu superblock counter synchronisation
-	  and reworking the slow path to reduce counter rebalance frequency.
+Dave
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
