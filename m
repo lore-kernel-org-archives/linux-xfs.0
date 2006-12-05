@@ -1,53 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Dec 2006 14:29:16 -0800 (PST)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB5MT7aG015152
-	for <xfs@oss.sgi.com>; Tue, 5 Dec 2006 14:29:08 -0800
-Date: Tue, 5 Dec 2006 22:28:18 +0000 (GMT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: mkfs.xfs questions
-In-Reply-To: <20061205212649.GV44411608@melbourne.sgi.com>
-Message-ID: <Pine.LNX.4.64.0612052219440.22257@sheep.housecafe.de>
-References: <20061129174553.e0ef3465.jasmin@pacifica.ch>
- <Pine.LNX.4.64.0612010410530.3735@sheep.housecafe.de>
- <20061201183034.GA20595@teal.hq.k1024.org> <Pine.LNX.4.64.0612012349020.3735@sheep.housecafe.de>
- <20061202111546.GA18661@teal.hq.k1024.org> <Pine.LNX.4.64.0612051741520.22257@sheep.housecafe.de>
- <20061205212649.GV44411608@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Dec 2006 15:07:34 -0800 (PST)
+Received: from page.mel.office.aconex.com (eth2333.vic.adsl.internode.on.net [150.101.159.28])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB5N7PaG018926
+	for <xfs@oss.sgi.com>; Tue, 5 Dec 2006 15:07:28 -0800
+Subject: Recent changes in xfsprogs
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+Content-Type: text/plain
+Date: Wed, 06 Dec 2006 10:06:10 +1100
+Message-Id: <1165359970.1281.51.camel@edge>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Iustin Pop <iusty@k1024.org>, xfs@oss.sgi.com
+To: bnaujok@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, 6 Dec 2006, David Chinner wrote:
-> For that data set size you tested. However you might find a
-> difference if your tests actually write the data back to disk
-> because a lot of the tests are running out of cache.
+Yo Barry,
 
-Ha, thanks for reminding me!
-Now I remember why all my other tests were done with 2GB of data, having 
-1GB of RAM ;)
+xfsprogs/doc/CHANGES
 
-> Typically, you need to be writing/reading files at least 2x the
-> size of memory
+        - Rename include/list.h to xfs_list.h so that other applications
+          do not accidentally use it.
 
-I started a test with 4GB of data (bonnie++ -s 4096m) an hour ago...
+What was the problem here?  This doesnt sound like the right fix -
+there should be no applications outside of the XFS userspace that
+use libxfs.h - thats what <xfs/xfs.h> is for (exactly this reason,
+preventing namespace collision, by reducing all the XFS internals
+being exposed).
 
-> and create/delete a fileset of at least 1,000,000
-> files to really determine differences in performance from
+Also, there seems to be lots of checkin mail not making it out to
+oss.sgi.com (let alone review mail), making it difficult for people
+to keep up to date with changes (and keep distros, like Debian,
+uptodate) ... could y'all make some effort to keep us "on the
+outside" in the loop?
 
-hm, that would be 'bonnie++ -n 1000' instead of the "-n 100" I'm testing 
-right now.
+Oh, noone is updating oss.sgi.com/projects/xfs/{news,index}.html
+with recent changes either - seems like progress has come to a
+halt to those of us no longer in the secret cabal, anyway ;) ...
+just FYI.
 
-Thanks for the hints, David! If you/someone know any 
-better/closer-to-real-usage benchmarks, please let me know. I'm testing 
-with bonnie++ because it I don't know any better. is iozone any 
-good? is tiobench still worth to try?
+cheers.
 
-Christian.
 -- 
-BOFH excuse #208:
-
-Your mail is being routed through Germany ... and they're censoring us.
+Nathan
