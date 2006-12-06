@@ -1,65 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Dec 2006 18:09:44 -0800 (PST)
-Received: from page.mel.office.aconex.com (eth2333.vic.adsl.internode.on.net [150.101.159.28])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB629aaG012288
-	for <xfs@oss.sgi.com>; Tue, 5 Dec 2006 18:09:37 -0800
-Subject: Re: Recent changes in xfsprogs
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <457621A2.7000605@melbourne.sgi.com>
-References: <1165359970.1281.51.camel@edge>
-	 <457621A2.7000605@melbourne.sgi.com>
-Content-Type: text/plain
-Date: Wed, 06 Dec 2006 13:08:22 +1100
-Message-Id: <1165370902.1281.72.camel@edge>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Dec 2006 00:44:48 -0800 (PST)
+Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB68idaG006283
+	for <xfs@oss.sgi.com>; Wed, 6 Dec 2006 00:44:40 -0800
+Message-ID: <457682C3.6000802@sgi.com>
+Date: Wed, 06 Dec 2006 08:43:47 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: Review: Reduce in-core superblock lock contention near ENOSPC
+References: <20061123044122.GU11034@melbourne.sgi.com> <456F1CFC.2060705@sgi.com> <20061130223810.GO37654165@melbourne.sgi.com> <457080EA.1010807@sgi.com> <20061203234928.GA37654165@melbourne.sgi.com> <45755C26.2080505@gmx.net> <20061205215503.GW44411608@melbourne.sgi.com>
+In-Reply-To: <20061205215503.GW44411608@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: chatz@melbourne.sgi.com
-Cc: bnaujok@sgi.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Klaus Strebel <klaus.strebel@gmx.net>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Wed, 2006-12-06 at 12:49 +1100, David Chatterton wrote:
-> ...
-> A classic problem with cpp is that it is possible for someone else to
-> introduce a header that breaks your build.
-
-Heh, its a poor tradesman who blames his tools. :)
-
->  By introducing a header
-> called list.h, a very common name, we have exposed products whose build
-> may not have strictly doing the right thing (adding /usr/include/xfs to
-> their include path) to pulling in this file rather than the one they
-> intended.
-
-Well, clearly they're doing the wrong thing.  We've now introduced
-a half-baked scheme where one random header is inconsistent with
-the rest, because of some other broken application.  That's dopey.
-
-The convention there now is such that its easy to tell what include/
-files have kernel counterparts (the xfs_* prefixed ones), and the
-rest are generically named (list.h, cache.h, parent.h, paths.h,
-linux.h, etc).  This change now makes list.h sit in no-mans-land...
-please revert it back, since the app is fixed anyway (you are also,
-of course, ignoring the flip side of your own argument, which is that
-other equally broken apps could be using <xfs/list.h>, which moved
-and hence broke their builds).  You can't win by pandering to broken
-3rd party applications... best you can do is keep the XFS stuff sane
-and internally consistent.
-
-> > Oh, noone is updating oss.sgi.com/projects/xfs/{news,index}.html
-> > with recent changes either - seems like progress has come to a
-> > halt to those of us no longer in the secret cabal, anyway ;) ...
-> > just FYI.
-> > 
+David Chinner wrote:
+> On Tue, Dec 05, 2006 at 12:46:46PM +0100, Klaus Strebel wrote:
 > 
-> Its now on my list of things to do.
+>>Hi guys,
+>>
+>>just updated my CVS copy from oss.sgi.com ( the linux-2.6-xfs ) and 
+>>tried to compile ... but your patch failes to compile if HAVE_PERCPU_SB 
+>>is #ifndef'd :-(, the m_icsb_mutex is not in the struct see xfs_mount.h. 
+>>Make oldconfig didn't show HAVE_PERCPU_SB as option for .config, looks 
+>>like nobody tested on a single processor config ??
 > 
+> 
+> Sorry - my bad. The code did not change for UP, so I didn't think to
+> test it.  The patch below abstracts the icsb_mutex so that it
+> doesn't get directly referenced by code outside the per-cpu counter
+> code. Builds with and without HAVE_PERCPU_SB defined.
+> 
+> I'll run a test cycle on it and get it fixed up.
+> 
+> Cheers,
+> 
+> Dave.
 
-Great - thanks!
+@@ -1803,6 +1803,7 @@ xfs_icsb_destroy_counters(
+  		unregister_hotcpu_notifier(&mp->m_icsb_notifier);
+  		free_percpu(mp->m_sb_cnts);
+  	}
++	mutex_destroy(&mp->m_icsb_mutex);
+  }
 
-cheers.
+Do you need to abstract the call to mutex_destroy too?
 
--- 
-Nathan
+The rest of the change looks good.
+
+Lachlan
