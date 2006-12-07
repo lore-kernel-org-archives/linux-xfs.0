@@ -1,41 +1,42 @@
-Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Dec 2006 05:54:49 -0800 (PST)
-Received: from web32704.mail.mud.yahoo.com (web32704.mail.mud.yahoo.com [68.142.207.248])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBFDseqw015233
-	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 05:54:41 -0800
-Date: Fri, 15 Dec 2006 04:53:49 -0800 (PST)
-From: chandrasekar mahalingam <sekar1175@yahoo.com>
-Subject: not able to create XFS filesystem
+Return-Path: <geir.myrestrand@falconstor.com>
+Message-ID: <45788927.4030207@falconstor.com>
+Date: Thu, 07 Dec 2006 16:35:35 -0500
+From: "Geir A. Myrestrand" <geir.myrestrand@falconstor.com>
+Reply-To: geir.myrestrand@falconstor.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Message-ID: <743683.94860.qm@web32704.mail.mud.yahoo.com>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-List-Id: xfs
+Subject: Re: New CentOS4/RHEL4-compatible xfs module rpms
+References: <4560AB84.9060200@sandeen.net> <45784E71.4080605@falconstor.com>	 <457854CB.5030507@sandeen.net>  <45787ED4.5070801@falconstor.com> <1165525906.30459.25.camel@edge>
+In-Reply-To: <1165525906.30459.25.camel@edge>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 To: xfs@oss.sgi.com
+Cc: nscott@aconex.com, Eric Sandeen <sandeen@sandeen.net>
+List-ID: <xfs>
 
-Hi
-   my RHEL 4 machine (Linux spea44 2.6.9-42.ELsmp #1
-SMP Wed Jul 12 23:32:02 EDT 2006 x86_64 x86_64 x86_64
-GNU/Linux) has the rpm installed for XFS . 
+Nathan Scott wrote:
+> Does it happen with mainline (current) kernels?  This is ringing some
+> distant bells, something to do with an atomic_inc being in the wrong
+> spot in [_]xfs_trans_alloc ... or maybe a wrong call to xfs_trans_alloc
+> instead of the '_' prefixed version - details are murky now though.  I
+> do remember fixing ... something in here, a few months back, that fix
+> may not be in Eric's codebase yet.
+> 
+> cheers.
 
-xorg-x11-xfs-6.8.2-1.EL.13.36 and
-xorg-x11-libs-6.8.2-1.EL.13.36
+I've only tried this on RHELAS4 with the kernel shipped with Update 2. I 
+have not tried to update the kernel, or install Update 4 or whatever is 
+current now. My kernel is 2.6.9-22.ELsmp.
 
-when i try to create a file system using
- "mkfs -t xfs /dev/sekarvg/simple1" it says "mkfs.XFS:
-No such file or directory" . "lsmod|grep -i xfs " does
-not list xfs . 
+It wouldn't be easy for me to switch to a newer kernel, because it is 
+not just a matter of my machine --we have a product built for this 
+particular configuration. Switching to a new kernel would reset our QA 
+efforts.
 
-Please let me know as what needs to be done to proceed
-further.
+If this may be fixed in the XFS modules on the other hand, then it would 
+be awesome if we could get it resolved with an updated XFS package for 
+RHEL4. I would be more than willing to put in an extra effort and work 
+with anyone on this.
 
-Thanks & Regards
-M.Chandrasekar.
+-- 
 
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+Geir A. Myrestrand
