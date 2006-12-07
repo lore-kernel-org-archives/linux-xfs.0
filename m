@@ -1,53 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Dec 2006 19:56:57 -0800 (PST)
-Received: from mail.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB73umaG012980
-	for <xfs@oss.sgi.com>; Wed, 6 Dec 2006 19:56:50 -0800
-Subject: Re: [RFC][PATCH] Secure Deletion and Trash-Bin Support for Ext4
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20061206091100.GA33919298@melbourne.sgi.com>
-References: <Pine.GSO.4.53.0612041256180.15321@compserv1>
-	 <20061204235042.GS33919298@melbourne.sgi.com>
-	 <Pine.GSO.4.53.0612051049200.27677@compserv1>
-	 <20061206091100.GA33919298@melbourne.sgi.com>
-Content-Type: text/plain
-Date: Thu, 07 Dec 2006 09:16:31 +1100
-Message-Id: <1165443391.1281.135.camel@edge>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Dec 2006 09:38:52 -0800 (PST)
+Received: from evaldomino.Falconstor.com (mail1.falconstor.com [216.223.47.230])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB7HciaG027043
+	for <xfs@oss.sgi.com>; Thu, 7 Dec 2006 09:38:45 -0800
+Message-ID: <45784E71.4080605@falconstor.com>
+Date: Thu, 07 Dec 2006 12:25:05 -0500
+From: "Geir A. Myrestrand" <geir.myrestrand@falconstor.com>
+Reply-To: geir.myrestrand@falconstor.com
+MIME-Version: 1.0
+Subject: Re: New CentOS4/RHEL4-compatible xfs module rpms
+References: <4560AB84.9060200@sandeen.net>
+In-Reply-To: <4560AB84.9060200@sandeen.net>
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Nikolai Joukov <kolya@cs.sunysb.edu>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, 2006-12-06 at 20:11 +1100, David Chinner wrote:
-> ...
-> If all we need to add to XFS is support for those flags, then XFS
-> support would be trivial to add.
+Eric Sandeen wrote:
+> http://sandeen.net/rhel4_xfs/kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm 
 > 
-> Oh, damn. I take that back. We're almost out of flag space in the on
-> disk inode - these two flags would use the last 2 flag bits so this
-> may require an on disk inode format change in XFS. This will be
-> a little more complex than I first thought, ...
+> 
+> rpmbuild --rebuild --target i686 
+> kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm
+> 
+> will build against the currently running kernel, or
+> 
+> rpmbuild --rebuild --target i686 --define "kernel_topdir 
+> /lib/modules/2.6.9-42.0.2.EL/build" 
+> kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm
+> 
+> will build against what is defined in kernel_topdir
+> 
+> you need matching kernel & kernel-devel rpms installed to build.
+> 
 
-It should be OK - you can do it without an inode version revision
-if you take a second 16 bits for "di_flags2" from here...
+I built this for RHELAS4U2 x86_64 with the 2.6.9-22.ELsmp kernel.
 
-xfs_dinode_core {
-	...
-        __uint8_t       di_pad[8];      /* unused, zeroed space */
+I did enable the xfs_direct_io_locking.patch (see inside 
+kernel-module-xfs.spec for details).
 
-Its guaranteed zeroed initially (i.e. all flags unset) and the XFS
-get/set flags APIs are 32 bits, so you should be OK there.
+However, I run into issues with xfs_freeze as it often locks up when I 
+try to freeze a file system where there is I/O activity. Sometimes it 
+happen on the first xfs_freeze invocation to freeze the file system, 
+other times I have to unfreeze and then it happens on the second time I 
+freeze. xfs_freeze never returns when this happens.
 
-Also, it may also be possible to reclaim di_onlink at some point (maybe
-now, since 16 bits would be good here) if mkfs.xfs is changed to always
-create v2 inodes (dynamic conversion ATM IIRC)... not 100% sure though,
-needs more code analysis.
+Looks like xfs_io get stuck --see partial output from `ps auxf`:
 
-cheers.
+strace -ff -o freeze.txt xfs_freeze -f /mnt/xfs
+  \_ /bin/sh -f /usr/sbin/xfs_freeze -f /mnt/xfs
+      \_ /usr/sbin/xfs_io -r -p xfs_freeze -x -c freeze /mnt/xfs
+
+Anyone else encountering this issue?
 
 -- 
-Nathan
+
+Geir A. Myrestrand
