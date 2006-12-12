@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Dec 2006 23:04:04 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Dec 2006 01:22:06 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.233.200])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBC73iqw030368
-	for <xfs@oss.sgi.com>; Mon, 11 Dec 2006 23:03:46 -0800
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBC9Lmqw018593
+	for <xfs@oss.sgi.com>; Tue, 12 Dec 2006 01:21:50 -0800
 Subject: Re: [PATCH]  incorrect error handling inside generic_file_direct_write
 References: <87k60y1rq4.fsf@sw.ru> <20061211124052.144e69a0.akpm@osdl.org>
 From: Dmitriy Monakhov <dmonakhov@sw.ru>
-Date: Tue, 12 Dec 2006 12:22:14 +0300
+Date: Tue, 12 Dec 2006 15:20:52 +0300
 In-Reply-To: <20061211124052.144e69a0.akpm@osdl.org> (Andrew Morton's message of "Mon, 11 Dec 2006 12:40:52 -0800")
-Message-ID: <87lkld31vd.fsf@sw.ru>
+Message-ID: <87bqm9tie3.fsf@sw.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
@@ -70,29 +70,7 @@ Andrew Morton <akpm@osdl.org> writes:
 >>  
 >
 > XFS (at least) can call generic_file_direct_write() with i_mutex not held. 
-How could it be ?
-
-from mm/filemap.c:2046 generic_file_direct_write() comment right after 
-place where i want to add vmtruncate()
-/*
-	 * Sync the fs metadata but not the minor inode changes and
-	 * of course not the data as we did direct DMA for the IO.
-	 * i_mutex is held, which protects generic_osync_inode() from
-	 * livelocking.
-	 */
-
 > And vmtruncate() expects i_mutex to be held.
-generic_file_direct_IO must called under i_mutex too
-from mm/filemap.c:2388
-  /*
-   * Called under i_mutex for writes to S_ISREG files.   Returns -EIO if something
-   * went wrong during pagecache shootdown.
-   */
-  static ssize_t
-  generic_file_direct_IO(int rw, struct kiocb *iocb, const struct iovec *iov,
-
-This means XFS generic_file_direct_write() call generic_file_direct_IO() without
-i_mutex held too?
 >
 > I guess a suitable solution would be to push this problem back up to the
 > callers: let them decide whether to run vmtruncate() and if so, to ensure
@@ -100,3 +78,13 @@ i_mutex held too?
 >
 > The existence of generic_file_aio_write_nolock() makes that rather messy
 > though.
+This means we may call generic_file_aio_write_nolock() without i_mutex, right?
+but call trace is :
+  generic_file_aio_write_nolock() 
+  ->generic_file_buffered_write() /* i_mutex not held here */ 
+but according to filemaps locking rules: mm/filemap.c:77
+ ..
+ *  ->i_mutex			(generic_file_buffered_write)
+ *    ->mmap_sem		(fault_in_pages_readable->do_page_fault)
+ ..
+I'm confused a litle bit, where is the truth? 
