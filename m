@@ -1,45 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Dec 2006 15:30:29 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBBNUJqw009674
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Dec 2006 15:30:22 -0800
-Message-ID: <457DEA62.8020008@sgi.com>
-Date: Tue, 12 Dec 2006 10:31:46 +1100
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Dec 2006 16:41:16 -0800 (PST)
+Received: from omx1.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBC0f4qw022399
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Dec 2006 16:41:05 -0800
+Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
+	by omx1.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id kBC0eEDW026110
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Dec 2006 18:40:14 -0600
+Message-ID: <457DFA6A.9050200@sgi.com>
+Date: Tue, 12 Dec 2006 00:40:10 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: TAKE 959109: [clone 958105] A mmap call of an offline file does not
- generate a dmapi event.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: invalid directory entry - bad magic number on inode
+References: <200612082100.00395.Martin@lichtvoll.de> <457D65A1.8030609@sgi.com> <200612112111.08209.Martin@lichtvoll.de>
+In-Reply-To: <200612112111.08209.Martin@lichtvoll.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: linux-xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com, xfs-dev@sgi.com
 
-Fix XFS to include DMAPI specific code in both cases of including DMAPI,
-as a module or statically linked with the kernel.
+Martin Steigerwald wrote:
+> Am Montag 11 Dezember 2006 15:05 schrieb Lachlan McIlroy:
+> 
+> 
+>>>Any hints on what I could try if it ever happens again? Suppose I can
+>>>save out the bad inode contents before I let xfs_repair fix it...
+>>
+>>If you see it again could you run xfs_check in verbose mode (ie
+>>xfs_check -v /dev/hda5 and xfs_check -v -i <inode number> /dev/hda5)?
+> 
+> 
+> Hello Lachlan,
+> 
+> thanks for the hints. So far it didn't occur again (at least not that I am 
+> aware of) - well I don't expect it to happen often and am not really sure 
+> whether it will happen again at all.
+> 
+> 
+>>Thanks for reporting this problem.
+> 
+> 
+> You are welcome. Without further info reporting it to the bugtracker 
+> doesn't make much sense to me. I will keep an eye on it. If it happens 
+> again, I  will try the hints you gave me. I run xfs_check anyway and thus 
+> can easily give it a "-v >xfs_check.txt". I thought I would have to use 
+> xfs_db stuff to get further info.
 
-Date:  Tue Dec 12 10:21:45 AEDT 2006
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
-Inspected by:  dgc
-Author:  vapo
+Now that you mention it, printing out the inode in xfs_db might be useful.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:27696a
-fs/xfs/linux-2.6/xfs_linux.h - 1.152 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.152&r2=text&tr2=1.151&f=h
-        - pv 959109, rv dgc - define HAVE_DMAPI for modular 
-(CONFIG_XFS_DMAPI_MODULE)
-          and static link (CONFIG_XFS_DMAPI) of dmapi.
-
-fs/xfs/linux-2.6/xfs_file.c - 1.147 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_file.c.diff?r1=text&tr1=1.147&r2=text&tr2=1.146&f=h
-fs/xfs/linux-2.4/xfs_file.c - 1.130 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_file.c.diff?r1=text&tr1=1.130&r2=text&tr2=1.129&f=h
-        - pv 959109, rv dgc - CONFIG_XFS_DMAPI is used as both - 
-environment var and
-          compile time def. Change it to HAVE_DMAPI fro compile time def.
+> 
+> Regards,
