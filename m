@@ -1,37 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Dec 2006 22:47:54 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBD6ljqw024435
-	for <xfs@oss.sgi.com>; Tue, 12 Dec 2006 22:47:47 -0800
-Received: from pcbnaujok (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id RAA25351 for <xfs@oss.sgi.com>; Wed, 13 Dec 2006 17:46:54 +1100
-Message-Id: <200612130646.RAA25351@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: xfsprogs 2.8.18 source tarball available on ftp
-Date: Wed, 13 Dec 2006 17:52:38 +1100
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 13 Dec 2006 07:07:33 -0800 (PST)
+Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.178])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBDF7Qqw017753
+	for <xfs@oss.sgi.com>; Wed, 13 Dec 2006 07:07:27 -0800
+Received: by py-out-1112.google.com with SMTP id p76so112532pyb
+        for <xfs@oss.sgi.com>; Wed, 13 Dec 2006 07:06:35 -0800 (PST)
+Message-ID: <5d96567b0612130640s5bae22c8kdc6acad72661932b@mail.gmail.com>
+Date: Wed, 13 Dec 2006 16:40:03 +0200
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: xfs over linux raid5 perffered blocksize
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
+Hello
 
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs_2.8.18-1.tar.gz
+I need to create a writer which creates files over linux software raid5.
+the files must be aligned by the stripe unit and so as the extents.
 
-CHANGES since 2.8.16:
+If an extent SIZE is not a factor of the stripe unit it is as if i have
+done nothing.
 
-- Fix "pointer targets in assignment differ in signedness" warnings
-- Update Debian packaging.
-- Fix up two issues with xfs_db and bmap. If the data/attr fork is
-  local, it either infinite loops or crashes. If both are displayed,
-  the attrs are wrong.
-- Fix up xfs_io mmap read that read from the wrong offset.
-- Updated xfs_io man page.
-- Fix up libxfs SEGV when attempting to mount a non-XFS filesystem.
-  Thanks to Utako Kusaka <utako@tnes.nec.co.jp> for the above four
-  fixes.
-- Fix up xfs_repair aborting if it finds an inode with an invalid 
-  inode type.
-- Fix up mkfs.xfs default realtime extent size for large block sizes.
+I have learned by reading the documentatiom that the preffered io size
+is the stripe width. that seems to work. I am reserving space and writing
+3MB size buffers to raid5 with 1MB stripe unit over 4 disks.
+
+my question:
+Can I rely on it ?
+Can I enforce this behaviour ?
+
+thank you
+-- 
+Raz
