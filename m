@@ -1,61 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Dec 2006 10:54:19 -0800 (PST)
-Received: from mga01.intel.com ([192.55.52.88])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBFIs8qw024312
-	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 10:54:10 -0800
-From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Subject: RE: [PATCH]  incorrect error handling inside generic_file_direct_write
-Date: Fri, 15 Dec 2006 10:53:18 -0800
-Message-ID: <000101c7207a$48c138f0$ff0da8c0@amr.corp.intel.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Dec 2006 13:42:51 -0800 (PST)
+Received: from coraid.com (ns1.coraid.com [65.14.39.133])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBFLgfqw010026
+	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 13:42:42 -0800
+Date: Fri, 15 Dec 2006 16:37:03 -0500
+From: "Ed L. Cashin" <ecashin@coraid.com>
+Subject: Re: Fw: [Bugme-new] [Bug 7662] New: AOE filesystem corruption on Alpha
+Message-ID: <20061215213703.GN15592@coraid.com>
+Reply-To: support@coraid.com
+References: <20061209234305.c65b4e14.akpm@osdl.org> <20061214224826.GI10048@coraid.com> <20061215073905.GA31821@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <20061215104341.GA20089@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20061215073905.GA31821@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'Andrew Morton' <akpm@osdl.org>, Dmitriy Monakhov <dmonakhov@sw.ru>, Dmitriy Monakhov <dmonakhov@openvz.org>, linux-kernel@vger.kernel.org, Linux Memory Management <linux-mm@kvack.org>, devel@openvz.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, support@coraid.com, Greg KH <greg@kroah.com>, boddingt@optusnet.com.au, xfs@oss.sgi.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-Christoph Hellwig wrote on Friday, December 15, 2006 2:44 AM
-> So we're doing the sync_page_range once in __generic_file_aio_write
-> with i_mutex held.
-> 
-> 
-> >  	mutex_lock(&inode->i_mutex);
-> > -	ret = __generic_file_aio_write_nolock(iocb, iov, nr_segs,
-> > -			&iocb->ki_pos);
-> > +	ret = __generic_file_aio_write(iocb, iov, nr_segs, pos);
-> >  	mutex_unlock(&inode->i_mutex);
-> >  
-> >  	if (ret > 0 && ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
-> 
-> And then another time after it's unlocked, this seems wrong.
+On Fri, Dec 15, 2006 at 07:39:05AM +0000, Christoph Hellwig wrote:
+...
+> It's a kmalloced page.  The same can happen with ext3 aswell, but only
+> when doing log recovery.  The last time this came up (vs iscsi) the
+> conclusion was that the driver needs to handle this case.  
 
+I found this conversation:
 
-I didn't invent that mess though.
+  Subject: tcp_sendpage and page allocation lifetime vs. iscsi
+  Date: 2005-04-25 17:02:59 GMT (1 year, 33 weeks, 2 days, 21 hours and 57 minutes ago)
+  http://article.gmane.org/gmane.linux.kernel/298377  
 
-I should've ask the question first: in 2.6.20-rc1, generic_file_aio_write
-will call sync_page_range twice, once from __generic_file_aio_write_nolock
-and once within the function itself.  Is it redundant?  Can we delete the
-one in the top level function?  Like the following?
+Do you have another conversation in mind?
 
-
---- ./mm/filemap.c.orig	2006-12-15 09:02:58.000000000 -0800
-+++ ./mm/filemap.c	2006-12-15 09:03:19.000000000 -0800
-@@ -2370,14 +2370,6 @@ ssize_t generic_file_aio_write(struct ki
- 	ret = __generic_file_aio_write_nolock(iocb, iov, nr_segs,
- 			&iocb->ki_pos);
- 	mutex_unlock(&inode->i_mutex);
--
--	if (ret > 0 && ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
--		ssize_t err;
--
--		err = sync_page_range(inode, mapping, pos, ret);
--		if (err < 0)
--			ret = err;
--	}
- 	return ret;
- }
- EXPORT_SYMBOL(generic_file_aio_write);
+-- 
+  Ed L Cashin <ecashin@coraid.com>
