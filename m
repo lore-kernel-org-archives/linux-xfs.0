@@ -1,52 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Dec 2006 02:44:55 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBFAiiqw020935
-	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 02:44:46 -0800
-Date: Fri, 15 Dec 2006 10:43:41 +0000
-From: "'Christoph Hellwig'" <hch@infradead.org>
-Subject: Re: [PATCH]  incorrect error handling inside generic_file_direct_write
-Message-ID: <20061215104341.GA20089@infradead.org>
-References: <20061212024027.6c2a79d3.akpm@osdl.org> <000001c71e60$7df9e010$e434030a@amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000001c71e60$7df9e010$e434030a@amr.corp.intel.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Dec 2006 03:07:41 -0800 (PST)
+Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBFB7Xqw024072
+	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 03:07:34 -0800
+Received: from localhost (localhost [127.0.0.1])
+	by deliver.uni-koblenz.de (Postfix) with ESMTP id BC15DB8F81B
+	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 11:36:49 +0100 (CET)
+Received: from deliver.uni-koblenz.de ([127.0.0.1])
+ by localhost (deliver [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 02698-09 for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 11:36:47 +0100 (CET)
+Received: from bliss.uni-koblenz.de (bliss.uni-koblenz.de [141.26.64.65])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by deliver.uni-koblenz.de (Postfix) with ESMTP id C14C8B8FAD3
+	for <xfs@oss.sgi.com>; Fri, 15 Dec 2006 11:36:47 +0100 (CET)
+From: Rainer Krienke <krienke@uni-koblenz.de>
+Subject: LEAFN node level is 1 warning in xfs_repair
+Date: Fri, 15 Dec 2006 11:36:46 +0100
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart7248808.pHeuGFeSMS";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Message-Id: <200612151136.47182.krienke@uni-koblenz.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Cc: 'Andrew Morton' <akpm@osdl.org>, Dmitriy Monakhov <dmonakhov@sw.ru>, 'Christoph Hellwig' <hch@infradead.org>, Dmitriy Monakhov <dmonakhov@openvz.org>, linux-kernel@vger.kernel.org, Linux Memory Management <linux-mm@kvack.org>, devel@openvz.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> +ssize_t
-> +__generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
-> +				unsigned long nr_segs, loff_t pos)
+--nextPart7248808.pHeuGFeSMS
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I'd still call this generic_file_aio_write_nolock.
+Hello,
 
-> +	loff_t		*ppos = &iocb->ki_pos;
+I have a xfs filesystem on a SuSE SLES10 (kernel 2.6.16.21) system that was=
+=20
+created just a week ago. Because I wanted to know how long it might take to=
+=20
+run xfs_repair in case it might be needed I started xfs_repair on it withou=
+t=20
+that I thought I would actually need it.
 
-I'd rather use iocb->ki_pos directly in the few places ppos is referenced
-currently.
+Now for several inodes xfs_repair reports in Phase 3 and 4=20
 
->  	if (ret > 0 && ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
-> -		ssize_t err;
-> -
->  		err = sync_page_range_nolock(inode, mapping, pos, ret);
->  		if (err < 0)
->  			ret = err;
->  	}
+LEAFN node level is 1=20
 
-So we're doing the sync_page_range once in __generic_file_aio_write
-with i_mutex held.
+warning. In the mailinglists I found that other people have the same=20
+experience.=20
 
+The question is, if this warning anything serious that might lead into a=20
+filesystem corruption later. Or can I just forget about this warning?
 
->  	mutex_lock(&inode->i_mutex);
-> -	ret = __generic_file_aio_write_nolock(iocb, iov, nr_segs,
-> -			&iocb->ki_pos);
-> +	ret = __generic_file_aio_write(iocb, iov, nr_segs, pos);
->  	mutex_unlock(&inode->i_mutex);
->  
->  	if (ret > 0 && ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
+Thanks
+Rainer
+--=20
+---------------------------------------------------------------------------
+Rainer Krienke, Universitaet Koblenz, Rechenzentrum, Raum A022
+Universitaetsstrasse 1, 56070 Koblenz, Tel: +49 261287 -1312, Fax: -1001312
+Mail: krienke@uni-koblenz.de, Web: http://www.uni-koblenz.de/~krienke
+Get my public PGP key: http://www.uni-koblenz.de/~krienke/mypgp.html
+---------------------------------------------------------------------------
 
-And then another time after it's unlocked, this seems wrong.
+--nextPart7248808.pHeuGFeSMS
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBFgnq/aldtjc/KDEoRAqufAJ45aPnItnLemRloOImjo7UsSItUDwCdHfF/
+nk4IjD0bcpxkYxF1+qyydVQ=
+=Y2X/
+-----END PGP SIGNATURE-----
+
+--nextPart7248808.pHeuGFeSMS--
