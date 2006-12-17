@@ -1,51 +1,157 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Dec 2006 15:59:59 -0800 (PST)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kB1NxoaG005694
-	for <xfs@oss.sgi.com>; Fri, 1 Dec 2006 15:59:52 -0800
-Date: Fri, 1 Dec 2006 23:59:08 +0000 (GMT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: mkfs.xfs questions
-In-Reply-To: <20061201183034.GA20595@teal.hq.k1024.org>
-Message-ID: <Pine.LNX.4.64.0612012349020.3735@sheep.housecafe.de>
-References: <20061129174553.e0ef3465.jasmin@pacifica.ch>
- <Pine.LNX.4.64.0612010410530.3735@sheep.housecafe.de>
- <20061201183034.GA20595@teal.hq.k1024.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Dec 2006 15:58:30 -0800 (PST)
+Received: from netcenter.hu (ns.netcenter.hu [195.228.254.57])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBHNwLqw007194
+	for <linux-xfs@oss.sgi.com>; Sun, 17 Dec 2006 15:58:22 -0800
+Message-ID: <026501c72237$0464f7a0$0400a8c0@dcccs>
+From: =?iso-8859-1?Q?Haar_J=E1nos?= <djani22@netcenter.hu>
+References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com>
+Subject: Re: xfslogd-spinlock bug?
+Date: Mon, 18 Dec 2006 00:56:41 +0100
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Iustin Pop <iusty@k1024.org>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Fri, 1 Dec 2006, Iustin Pop wrote:
-> I don't understand how you took that conclusion. The explanations refer
-> to the default log size. I believe the original poster asked about the
-> performance advantage of *raising* the log size above the default values
-> for internal logs,
 
-I was under the assumption that the OP asked about altering the size of 
-the log at all and the manpage only states a reason for *decreasing* the 
-logsize.
+----- Original Message ----- 
+From: "David Chinner" <dgc@sgi.com>
+To: "Haar János" <djani22@netcenter.hu>
+Cc: <linux-xfs@oss.sgi.com>; <linux-kernel@vger.kernel.org>
+Sent: Sunday, December 17, 2006 11:44 PM
+Subject: Re: xfslogd-spinlock bug?
 
-> and my impression is that metadata-intensive
-> workloads benefit from increasing the log size (however no hard numbers
-> are available).
 
-As no numbers are known to me either, I did not see a point in 
-increasing the log, hence my statement.
+> On Sat, Dec 16, 2006 at 12:19:45PM +0100, Haar János wrote:
+> > Hi
+> >
+> > I have some news.
+> >
+> > I dont know there is a context between 2 messages, but i can see, the
+> > spinlock bug comes always on cpu #3.
+> >
+> > Somebody have any idea?
+>
+> Your disk interrupts are directed to CPU 3, and so log I/O completion
+> occurs on that CPU.
 
-> A while back when mkfs.xfs had more conservative default value, bigger log
-> sizes indeed helped for big filesystems.
+           CPU0       CPU1       CPU2       CPU3
+  0:        100          0          0    4583704   IO-APIC-edge      timer
+  1:          0          0          0          2   IO-APIC-edge      i8042
+  4:          0          0          0    3878668   IO-APIC-edge      serial
+  8:          0          0          0          0   IO-APIC-edge      rtc
+  9:          0          0          0          0   IO-APIC-fasteoi   acpi
+ 12:          0          0          0          3   IO-APIC-edge      i8042
+ 14:    3072118          0          0        181   IO-APIC-edge      ide0
+ 16:          0          0          0          0   IO-APIC-fasteoi
+uhci_hcd:usb2
+ 18:          0          0          0          0   IO-APIC-fasteoi
+uhci_hcd:usb4
+ 19:          0          0          0          0   IO-APIC-fasteoi
+uhci_hcd:usb3
+ 23:          0          0          0          0   IO-APIC-fasteoi
+ehci_hcd:usb1
+ 52:          0          0          0  213052723   IO-APIC-fasteoi   eth1
+ 53:          0          0          0   91913759   IO-APIC-fasteoi   eth2
+100:          0          0          0   16776910   IO-APIC-fasteoi   eth0
+NMI:      42271      43187      42234      43168
+LOC:    4584247    4584219    4584215    4584198
+ERR:          0
 
-As I've done a few benchmarks[0] for different filesystems lately I 
-might find some time to play around with different fs tweaks...
+Maybe....
+I have 3 XFS on this system, with 3 source.
 
-Christian.
+1. 200G one ide hdd.
+2. 2x200G mirror on 1 ide + 1 sata hdd.
+3. 4x3.3TB strip on NBD.
 
-[0] http://nerdbynature.de/wp/?cat=4
--- 
-BOFH excuse #353:
+The NBD serves through eth1, and it is on the CPU3, but the ide0 is on the
+CPU0.
 
-Second-system effect.
+
+>
+> > Dec 16 12:08:36 dy-base BUG: spinlock bad magic on CPU#3, xfslogd/3/317
+> > Dec 16 12:08:36 dy-base general protection fault: 0000 [1]
+> > Dec 16 12:08:36 dy-base SMP
+> > Dec 16 12:08:36 dy-base
+> > Dec 16 12:08:36 dy-base CPU 3
+> > Dec 16 12:08:36 dy-base
+> > Dec 16 12:08:36 dy-base Modules linked in:
+> > Dec 16 12:08:36 dy-base  nbd
+>
+> Are you using XFS on a NBD?
+
+Yes, on the 3. source.
+I used it about 1.5 years.
+
+(The nbd deadlock is fixed on my system, thanks to Herbert Xu on 2.6.14.)
+
+>
+> > Dec 16 12:08:36 dy-base  rd
+> > Dec 16 12:08:36 dy-base  netconsole
+> > Dec 16 12:08:36 dy-base  e1000
+> > Dec 16 12:08:36 dy-base  video
+> > Dec 16 12:08:36 dy-base
+> > Dec 16 12:08:36 dy-base Pid: 317, comm: xfslogd/3 Not tainted 2.6.19 #1
+> > Dec 16 12:08:36 dy-base RIP: 0010:[<ffffffff803f3aba>]
+> > Dec 16 12:08:36 dy-base  [<ffffffff803f3aba>] spin_bug+0x69/0xdf
+> > Dec 16 12:08:36 dy-base RSP: 0018:ffff81011fdedbc0  EFLAGS: 00010002
+> > Dec 16 12:08:36 dy-base RAX: 0000000000000033 RBX: 6b6b6b6b6b6b6b6b RCX:
+>                                                      ^^^^^^^^^^^^^^^^
+> Anyone recognise that pattern?
+
+I think i have one idea.
+This issue can stops sometimes the 5sec automatic restart on crash, and this
+shows possible memory corruption, and if the bug occurs in the IRQ
+handling.... :-)
+I have a lot of logs about this issue, and the RAX, RBX always the same.
+
+>
+> > Dec 16 12:08:36 dy-base Call Trace:
+> > Dec 16 12:08:36 dy-base  [<ffffffff803f3bdc>] _raw_spin_lock+0x23/0xf1
+> > Dec 16 12:08:36 dy-base  [<ffffffff805e7f2b>]
+_spin_lock_irqsave+0x11/0x18
+> > Dec 16 12:08:36 dy-base  [<ffffffff80222aab>] __wake_up+0x22/0x50
+> > Dec 16 12:08:36 dy-base  [<ffffffff803c97f9>] xfs_buf_unpin+0x21/0x23
+> > Dec 16 12:08:36 dy-base  [<ffffffff803970a4>]
+xfs_buf_item_unpin+0x2e/0xa6
+>
+> This implies a spinlock inside a wait_queue_head_t is corrupt.
+>
+> What are you type of system do you have, and what sort of
+> workload are you running?
+
+OS: Fedora 5, 64bit.
+HW: dual xeon, with HT, ram 4GB.
+(the min_free_kbytes limit is set to 128000, because sometimes the e1000
+driver run out the reserved memory during irq handling.)
+
+Workload:
+
+I use this system for free web storage.
+(2x apache 2.0.xx,   12x pure-ftpd, 2x mysql but sql only use the source #2
+fs.)
+
+The normal system load is ~20-40, but currently i have a little problem with
+apache, because it sometimes starts to read a lot from the big XFS device,
+and eats all memory, the load is rising to 700-800.
+At this point i use httpd restart, and everithing go back to normal, but if
+i offline.....
+
+Thanks a lot!
+
+Janos
+
+>
+> Cheers,
+>
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
