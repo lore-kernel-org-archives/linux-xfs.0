@@ -1,157 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Dec 2006 15:58:30 -0800 (PST)
-Received: from netcenter.hu (ns.netcenter.hu [195.228.254.57])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBHNwLqw007194
-	for <linux-xfs@oss.sgi.com>; Sun, 17 Dec 2006 15:58:22 -0800
-Message-ID: <026501c72237$0464f7a0$0400a8c0@dcccs>
-From: =?iso-8859-1?Q?Haar_J=E1nos?= <djani22@netcenter.hu>
-References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com>
-Subject: Re: xfslogd-spinlock bug?
-Date: Mon, 18 Dec 2006 00:56:41 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Dec 2006 16:59:27 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBI0xGqw018038
+	for <xfs@oss.sgi.com>; Sun, 17 Dec 2006 16:59:17 -0800
+Message-Id: <200612180058.LAA20709@larry.melbourne.sgi.com>
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Subject: RE: LEAFN node level is 1 warning in xfs_repair
+Date: Mon, 18 Dec 2006 12:04:09 +1100
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <200612151136.47182.krienke@uni-koblenz.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: 'Rainer Krienke' <krienke@uni-koblenz.de>, xfs@oss.sgi.com
 
+ 
 
------ Original Message ----- 
-From: "David Chinner" <dgc@sgi.com>
-To: "Haar János" <djani22@netcenter.hu>
-Cc: <linux-xfs@oss.sgi.com>; <linux-kernel@vger.kernel.org>
-Sent: Sunday, December 17, 2006 11:44 PM
-Subject: Re: xfslogd-spinlock bug?
+> -----Original Message-----
+> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
+> On Behalf Of Rainer Krienke
+> Sent: Friday, 15 December 2006 9:37 PM
+> To: xfs@oss.sgi.com
+> Subject: LEAFN node level is 1 warning in xfs_repair
+> 
+> Hello,
+> 
+> I have a xfs filesystem on a SuSE SLES10 (kernel 2.6.16.21) 
+> system that was 
+> created just a week ago. Because I wanted to know how long it 
+> might take to 
+> run xfs_repair in case it might be needed I started 
+> xfs_repair on it without 
+> that I thought I would actually need it.
+> 
+> Now for several inodes xfs_repair reports in Phase 3 and 4 
+> 
+> LEAFN node level is 1 
+> 
+> warning. In the mailinglists I found that other people have the same 
+> experience. 
+> 
+> The question is, if this warning anything serious that might 
+> lead into a 
+> filesystem corruption later. Or can I just forget about this warning?
 
+It is a bogus warning that has been fixed in xfsprogs 2.8.15 and later.
 
-> On Sat, Dec 16, 2006 at 12:19:45PM +0100, Haar János wrote:
-> > Hi
-> >
-> > I have some news.
-> >
-> > I dont know there is a context between 2 messages, but i can see, the
-> > spinlock bug comes always on cpu #3.
-> >
-> > Somebody have any idea?
->
-> Your disk interrupts are directed to CPU 3, and so log I/O completion
-> occurs on that CPU.
+You can forget about the warning.
 
-           CPU0       CPU1       CPU2       CPU3
-  0:        100          0          0    4583704   IO-APIC-edge      timer
-  1:          0          0          0          2   IO-APIC-edge      i8042
-  4:          0          0          0    3878668   IO-APIC-edge      serial
-  8:          0          0          0          0   IO-APIC-edge      rtc
-  9:          0          0          0          0   IO-APIC-fasteoi   acpi
- 12:          0          0          0          3   IO-APIC-edge      i8042
- 14:    3072118          0          0        181   IO-APIC-edge      ide0
- 16:          0          0          0          0   IO-APIC-fasteoi
-uhci_hcd:usb2
- 18:          0          0          0          0   IO-APIC-fasteoi
-uhci_hcd:usb4
- 19:          0          0          0          0   IO-APIC-fasteoi
-uhci_hcd:usb3
- 23:          0          0          0          0   IO-APIC-fasteoi
-ehci_hcd:usb1
- 52:          0          0          0  213052723   IO-APIC-fasteoi   eth1
- 53:          0          0          0   91913759   IO-APIC-fasteoi   eth2
-100:          0          0          0   16776910   IO-APIC-fasteoi   eth0
-NMI:      42271      43187      42234      43168
-LOC:    4584247    4584219    4584215    4584198
-ERR:          0
-
-Maybe....
-I have 3 XFS on this system, with 3 source.
-
-1. 200G one ide hdd.
-2. 2x200G mirror on 1 ide + 1 sata hdd.
-3. 4x3.3TB strip on NBD.
-
-The NBD serves through eth1, and it is on the CPU3, but the ide0 is on the
-CPU0.
-
-
->
-> > Dec 16 12:08:36 dy-base BUG: spinlock bad magic on CPU#3, xfslogd/3/317
-> > Dec 16 12:08:36 dy-base general protection fault: 0000 [1]
-> > Dec 16 12:08:36 dy-base SMP
-> > Dec 16 12:08:36 dy-base
-> > Dec 16 12:08:36 dy-base CPU 3
-> > Dec 16 12:08:36 dy-base
-> > Dec 16 12:08:36 dy-base Modules linked in:
-> > Dec 16 12:08:36 dy-base  nbd
->
-> Are you using XFS on a NBD?
-
-Yes, on the 3. source.
-I used it about 1.5 years.
-
-(The nbd deadlock is fixed on my system, thanks to Herbert Xu on 2.6.14.)
-
->
-> > Dec 16 12:08:36 dy-base  rd
-> > Dec 16 12:08:36 dy-base  netconsole
-> > Dec 16 12:08:36 dy-base  e1000
-> > Dec 16 12:08:36 dy-base  video
-> > Dec 16 12:08:36 dy-base
-> > Dec 16 12:08:36 dy-base Pid: 317, comm: xfslogd/3 Not tainted 2.6.19 #1
-> > Dec 16 12:08:36 dy-base RIP: 0010:[<ffffffff803f3aba>]
-> > Dec 16 12:08:36 dy-base  [<ffffffff803f3aba>] spin_bug+0x69/0xdf
-> > Dec 16 12:08:36 dy-base RSP: 0018:ffff81011fdedbc0  EFLAGS: 00010002
-> > Dec 16 12:08:36 dy-base RAX: 0000000000000033 RBX: 6b6b6b6b6b6b6b6b RCX:
->                                                      ^^^^^^^^^^^^^^^^
-> Anyone recognise that pattern?
-
-I think i have one idea.
-This issue can stops sometimes the 5sec automatic restart on crash, and this
-shows possible memory corruption, and if the bug occurs in the IRQ
-handling.... :-)
-I have a lot of logs about this issue, and the RAX, RBX always the same.
-
->
-> > Dec 16 12:08:36 dy-base Call Trace:
-> > Dec 16 12:08:36 dy-base  [<ffffffff803f3bdc>] _raw_spin_lock+0x23/0xf1
-> > Dec 16 12:08:36 dy-base  [<ffffffff805e7f2b>]
-_spin_lock_irqsave+0x11/0x18
-> > Dec 16 12:08:36 dy-base  [<ffffffff80222aab>] __wake_up+0x22/0x50
-> > Dec 16 12:08:36 dy-base  [<ffffffff803c97f9>] xfs_buf_unpin+0x21/0x23
-> > Dec 16 12:08:36 dy-base  [<ffffffff803970a4>]
-xfs_buf_item_unpin+0x2e/0xa6
->
-> This implies a spinlock inside a wait_queue_head_t is corrupt.
->
-> What are you type of system do you have, and what sort of
-> workload are you running?
-
-OS: Fedora 5, 64bit.
-HW: dual xeon, with HT, ram 4GB.
-(the min_free_kbytes limit is set to 128000, because sometimes the e1000
-driver run out the reserved memory during irq handling.)
-
-Workload:
-
-I use this system for free web storage.
-(2x apache 2.0.xx,   12x pure-ftpd, 2x mysql but sql only use the source #2
-fs.)
-
-The normal system load is ~20-40, but currently i have a little problem with
-apache, because it sometimes starts to read a lot from the big XFS device,
-and eats all memory, the load is rising to 700-800.
-At this point i use httpd restart, and everithing go back to normal, but if
-i offline.....
-
-Thanks a lot!
-
-Janos
-
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
+Regards,
+Barry.
