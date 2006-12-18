@@ -1,69 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 14:37:43 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 15:34:21 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBIMbaqw024131
-	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 14:37:38 -0800
-Date: Tue, 19 Dec 2006 09:36:37 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfslogd-spinlock bug?
-Message-ID: <20061218223637.GP44411608@melbourne.sgi.com>
-References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <027b01c7227d$0e26d1f0$0400a8c0@dcccs>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBINYDqw029941
+	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 15:34:15 -0800
+Date: Tue, 19 Dec 2006 10:17:01 +1100 (AEDT)
+From: Allan Randall <allanr@snort.melbourne.sgi.com>
+Message-Id: <200612182317.kBINH1FZ66570784@snort.melbourne.sgi.com>
+Subject: TAKE 958893 - Integrate existing dmapi qa tests into xfs qa infrastructure
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>
-Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: asg-qa@melbourne.sgi.com, allanr@melbourne.sgi.com, linux-xfs@oss.sgi.com
 
-On Mon, Dec 18, 2006 at 09:17:50AM +0100, Haar János wrote:
-> From: "David Chinner" <dgc@sgi.com>
-> > > The NBD serves through eth1, and it is on the CPU3, but the ide0 is on
-> the
-> > > CPU0.
-> >
-> > I'd say your NBD based XFS filesystem is having trouble.
-> >
-> > > > Are you using XFS on a NBD?
-> > >
-> > > Yes, on the 3. source.
-> >
-> > Ok, I've never heard of a problem like this before and you are doing
-> > something that very few ppl are doing (i.e. XFS on NBD). I'd start
-> > Hence  I'd start by suspecting a bug in the NBD driver.
-> 
-> Ok, if you have right, this also can be in context with the following issue:
-> 
-> http://download.netcenter.hu/bughunt/20061217/messages.txt   (10KB)
+Integrate existing dmapi qa tests into xfs qa infrastructure
 
-Which appears to be a crash in wake_up_process() when doing memory
-reclaim (waking the xfsbufd).
+Date:  Tue Dec 19 10:16:15 AEDT 2006
+Workarea:  snort.melbourne.sgi.com:/home/allanr/isms/xfs-cmds-2
+Inspected by:  vapo
 
-> > > > > Dec 16 12:08:36 dy-base RSP: 0018:ffff81011fdedbc0  EFLAGS: 00010002
-> > > > > Dec 16 12:08:36 dy-base RAX: 0000000000000033 RBX: 6b6b6b6b6b6b6b6b
-> RCX:
-> > > >                                                      ^^^^^^^^^^^^^^^^
-> > > > Anyone recognise that pattern?
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Ok, I've found this pattern:
 
-#define POISON_FREE 0x6b
+Modid:  master-melb:xfs-cmds:27764a
+xfstests/142 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/142
+	- Dmapi get/set_dmattr
 
-Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
+xfstests/142.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/142.out
+	- Dmapi get/set_dmattr golden output
 
-If so, we have a use after free occurring here and it would also
-explain why no-one has reported it before.
+xfstests/143 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/143
+	- Dmapi get/set_eventlist
 
-FWIW, can you turn on CONFIG_XFS_DEBUG=y and see if that triggers
-a different bug check prior to the above dump?
+xfstests/143.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/143.out
+	- Dmapi get/set_eventlist golden output
 
-Cheers,
+xfstests/144 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/144
+	- Dmapi get/set_fileattr, get_bulkattr, get_dirattrs
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+xfstests/144.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/144.out
+	- Dmapi get/set_fileattr, get_bulkattr, get_dirattrs golden output
+
+xfstests/145 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/145
+	- Dmapi probe/punch_hole
+
+xfstests/145.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/145.out
+	- Dmapi probe/punch_hole golden output
+
+xfstests/146 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/146
+	- Dmapi read/write_invis
+
+xfstests/146.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/146.out
+	- Dmapi read/write_invis golden output
+
+xfstests/147 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/147
+	- Dmapi get/set_region
+
+xfstests/147.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/147.out
+	- Dmapi get/set_region golden output
+
+xfstests/common.dmapi - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/common.dmapi
+	- common dmapi functions
+
+xfstests/common.rc - 1.62 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/common.rc.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
+	- added filter to set dmapi's mtpt to correct mount point in _mount
+
+xfstests/Makefile - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/Makefile.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- added dmapi to makefile subdirs
+
+xfstests/group - 1.97 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.97&r2=text&tr2=1.96&f=h
+	- added tests 142-147
+
+xfstests/include/buildmacros - 1.6 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/include/buildmacros.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
+	- added dmapi commands for building dmapi subdir
