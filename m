@@ -1,97 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 14:16:22 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 14:37:43 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBIMGDqw021667
-	for <xfs@oss.sgi.com>; Mon, 18 Dec 2006 14:16:16 -0800
-Date: Tue, 19 Dec 2006 09:15:15 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBIMbaqw024131
+	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 14:37:38 -0800
+Date: Tue, 19 Dec 2006 09:36:37 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] incorrect direct io error handling
-Message-ID: <20061218221515.GN44411608@melbourne.sgi.com>
-References: <87d56he3tn.fsf@sw.ru>
+Subject: Re: xfslogd-spinlock bug?
+Message-ID: <20061218223637.GP44411608@melbourne.sgi.com>
+References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <87d56he3tn.fsf@sw.ru>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <027b01c7227d$0e26d1f0$0400a8c0@dcccs>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dmitriy Monakhov <dmonakhov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, devel@openvz.org, Andrew Morton <akpm@osdl.org>, xfs@oss.sgi.com
+To: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>
+Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Mon, Dec 18, 2006 at 04:22:44PM +0300, Dmitriy Monakhov wrote:
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 8332c77..7c571dd 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2044,8 +2044,9 @@ generic_file_direct_write(struct kiocb *
->  	/*
->  	 * Sync the fs metadata but not the minor inode changes and
->  	 * of course not the data as we did direct DMA for the IO.
-> -	 * i_mutex is held, which protects generic_osync_inode() from
-> -	 * livelocking.  AIO O_DIRECT ops attempt to sync metadata here.
-> +	 * i_mutex may not being held (XFS does this), if so some specific locking
-> +	 * ordering must protect generic_osync_inode() from livelocking.
-> +	 * AIO O_DIRECT ops attempt to sync metadata here.
->  	 */
->  	if ((written >= 0 || written == -EIOCBQUEUED) &&
->  	    ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
-> @@ -2279,6 +2280,17 @@ __generic_file_aio_write_nolock(struct k
->  
->  		written = generic_file_direct_write(iocb, iov, &nr_segs, pos,
->  							ppos, count, ocount);
-> +		/*
-> +		 * If host is not S_ISBLK generic_file_direct_write() may 
-> +		 * have instantiated a few blocks outside i_size  files
-> +		 * Trim these off again.
-> +		 */
-> +		if (unlikely(written < 0) && !S_ISBLK(inode->i_mode)) {
-> +			loff_t isize = i_size_read(inode);
-> +			if (pos + count > isize)
-> +				vmtruncate(inode, isize);
-> +		}
-> +
->  		if (written < 0 || written == count)
->  			goto out;
+On Mon, Dec 18, 2006 at 09:17:50AM +0100, Haar János wrote:
+> From: "David Chinner" <dgc@sgi.com>
+> > > The NBD serves through eth1, and it is on the CPU3, but the ide0 is on
+> the
+> > > CPU0.
+> >
+> > I'd say your NBD based XFS filesystem is having trouble.
+> >
+> > > > Are you using XFS on a NBD?
+> > >
+> > > Yes, on the 3. source.
+> >
+> > Ok, I've never heard of a problem like this before and you are doing
+> > something that very few ppl are doing (i.e. XFS on NBD). I'd start
+> > Hence  I'd start by suspecting a bug in the NBD driver.
+> 
+> Ok, if you have right, this also can be in context with the following issue:
+> 
+> http://download.netcenter.hu/bughunt/20061217/messages.txt   (10KB)
 
-You comment in the first hunk that i_mutex may not be held here,
-but there's no comment in __generic_file_aio_write_nolock() that the
-i_mutex must be held for !S_ISBLK devices.
+Which appears to be a crash in wake_up_process() when doing memory
+reclaim (waking the xfsbufd).
 
-> @@ -2341,6 +2353,13 @@ ssize_t generic_file_aio_write_nolock(st
->  	ssize_t ret;
->  
->  	BUG_ON(iocb->ki_pos != pos);
-> +	/*
-> +	 *  generic_file_buffered_write() may be called inside 
-> +	 *  __generic_file_aio_write_nolock() even in case of
-> +	 *  O_DIRECT for non S_ISBLK files. So i_mutex must be held.
-> +	 */
-> +	if (!S_ISBLK(inode->i_mode))
-> +		BUG_ON(!mutex_is_locked(&inode->i_mutex));
->  
->  	ret = __generic_file_aio_write_nolock(iocb, iov, nr_segs,
->  			&iocb->ki_pos);
+> > > > > Dec 16 12:08:36 dy-base RSP: 0018:ffff81011fdedbc0  EFLAGS: 00010002
+> > > > > Dec 16 12:08:36 dy-base RAX: 0000000000000033 RBX: 6b6b6b6b6b6b6b6b
+> RCX:
+> > > >                                                      ^^^^^^^^^^^^^^^^
+> > > > Anyone recognise that pattern?
 
-I note that you comment here in generic_file_aio_write_nolock(),
-but it's not immediately obvious that this is refering to the
-vmtruncate() call in __generic_file_aio_write_nolock().
+Ok, I've found this pattern:
 
-IOWs, wouldn't it be better to put this comment and check in
-__generic_file_aio_write_nolock() directly above the vmtruncate()
-call that cares about this?
+#define POISON_FREE 0x6b
 
-> @@ -2383,8 +2402,8 @@ ssize_t generic_file_aio_write(struct ki
->  EXPORT_SYMBOL(generic_file_aio_write);
->  
->  /*
-> - * Called under i_mutex for writes to S_ISREG files.   Returns -EIO if something
-> - * went wrong during pagecache shootdown.
-> + * May be called without i_mutex for writes to S_ISREG files. XFS does this.
-> + * Returns -EIO if something went wrong during pagecache shootdown.
->   */
+Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
 
-Not sure you need to say "XFS does this" - other filesystems may do this
-in the future.....
+If so, we have a use after free occurring here and it would also
+explain why no-one has reported it before.
+
+FWIW, can you turn on CONFIG_XFS_DEBUG=y and see if that triggers
+a different bug check prior to the above dump?
 
 Cheers,
 
