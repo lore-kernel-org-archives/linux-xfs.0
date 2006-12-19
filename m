@@ -1,374 +1,114 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 17:11:14 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBJ1B6qw014316
-	for <xfs@oss.sgi.com>; Mon, 18 Dec 2006 17:11:07 -0800
-Subject: [PATCH] rethink removal of xattr syscall stubs (for now)
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-Content-Type: multipart/mixed; boundary="=-dpJpTHodwH2NZsc/s/EW"
-Date: Tue, 19 Dec 2006 12:10:58 +1100
-Message-Id: <1166490658.5572.89.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 18:53:40 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBJ2rXqw028437
+	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 18:53:35 -0800
+Date: Tue, 19 Dec 2006 13:52:29 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfslogd-spinlock bug?
+Message-ID: <20061219025229.GT33919298@melbourne.sgi.com>
+References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs> <20061218223637.GP44411608@melbourne.sgi.com> <001a01c722fd$df5ca710$0400a8c0@dcccs>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <001a01c722fd$df5ca710$0400a8c0@dcccs>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: bnaujok@sgi.com, xfs@oss.sgi.com
-Cc: agruen@suse.de
+To: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>
+Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
---=-dpJpTHodwH2NZsc/s/EW
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+On Tue, Dec 19, 2006 at 12:39:46AM +0100, Haar János wrote:
+> From: "David Chinner" <dgc@sgi.com>
+> > On Mon, Dec 18, 2006 at 09:17:50AM +0100, Haar János wrote:
+> > > From: "David Chinner" <dgc@sgi.com>
+> > > > Ok, I've never heard of a problem like this before and you are doing
+> > > > something that very few ppl are doing (i.e. XFS on NBD). I'd start
+> > > > Hence  I'd start by suspecting a bug in the NBD driver.
+> > >
+> > > Ok, if you have right, this also can be in context with the following
+> issue:
+> > >
+> > > http://download.netcenter.hu/bughunt/20061217/messages.txt   (10KB)
+> >
+> > Which appears to be a crash in wake_up_process() when doing memory
+> > reclaim (waking the xfsbufd).
+> 
+> Sorry, can you translate it to "poor mans language"? :-)
+> This is a different bug?
 
-Hi,
+Don't know - it's a different crash, but once again one that I've
+never heard of occurring before.
 
-It turns out (*cough*) that we use an export file with libattr,
-that I completely forgot about, which specifies the *xattr calls
-as part of the ATTR_1 interface.  This patch reverts the syscall
-stub removal patch from before, includes Lennerts patch to fix
-the original problem ARM EABI, and I'll go think some more about
-how to properly fix this (I think we'll need an ATTR_2 interface
-in the end here, Andreas?)
+> > Ok, I've found this pattern:
+> >
+> > #define POISON_FREE 0x6b
+> >
+> > Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
+> 
+> Yes, i build with this option enabled.
+> Is this wrong?
 
-Please apply as an interim fix to the original problem and to
-the accidental new problems its caused, and I'll push through a
-new patch in the new year.
+No, but it does slow your machine down.
 
-cheers.
+> > If so, we have a use after free occurring here and it would also
+> > explain why no-one has reported it before.
+> >
+> > FWIW, can you turn on CONFIG_XFS_DEBUG=y and see if that triggers
+> > a different bug check prior to the above dump?
+> 
+> [root@X64 linux-2.6.19]# make bzImage
+> scripts/kconfig/conf -s arch/x86_64/Kconfig
+> .config:7:warning: trying to assign nonexistent symbol XFS_DEBUG
+> 
+> I have missed something?
 
+No - I forgot that config option doesn't exist in mainline XFS - it's
+only in the dev tree.
+
+FWIW, I've run XFSQA twice now on a scsi disk with slab debuggin turned
+on and I haven't seen this problem. I'm not sure how to track down
+the source of the problem without a test case, but as a quick test, can
+you try the following patch?
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
---=-dpJpTHodwH2NZsc/s/EW
-Content-Disposition: attachment; filename=fix-exports-screwup
-Content-Type: text/x-patch; name=fix-exports-screwup; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-Index: attr/VERSION
-===================================================================
---- attr.orig/VERSION	2006-12-19 09:44:46.333133250 +1100
-+++ attr/VERSION	2006-12-19 09:45:05.570335500 +1100
-@@ -3,5 +3,5 @@
- #
- PKG_MAJOR=2
- PKG_MINOR=4
--PKG_REVISION=35
-+PKG_REVISION=36
- PKG_BUILD=0
-Index: attr/debian/changelog
-===================================================================
---- attr.orig/debian/changelog	2006-12-19 09:44:46.417138500 +1100
-+++ attr/debian/changelog	2006-12-19 11:25:44.527746750 +1100
-@@ -1,3 +1,11 @@
-+attr (2.4.36-1) unstable; urgency=high
-+
-+  * New upstream release
-+  * Reinstate xattr syscall entry points (closes: #403585)
-+  * Fix ARM EABI issue differently, thanks to Lennert Buytenhek.
-+
-+ -- Nathan Scott <nathans@debian.org>  Tue, 19 Dec 2006 09:46:05 +1100
-+
- attr (2.4.35-1) unstable; urgency=low
- 
-   * New upstream release
-Index: attr/doc/CHANGES
-===================================================================
---- attr.orig/doc/CHANGES	2006-12-19 09:44:46.353134500 +1100
-+++ attr/doc/CHANGES	2006-12-19 11:17:54.050343750 +1100
-@@ -1,3 +1,9 @@
-+attr-2.4.36 (19 December 2006)
-+	- Reinstate xattr syscall entry points (these symbols are
-+	  explicitly exported from the library - d'oh!).
-+	- Fix the original ARM EABI issue a different way, thanks
-+	  to Lennert Buytenhek.
-+
- attr-2.4.35 (8 December 2006)
- 	- Remove system call stubs from libattr, we always defer to
- 	  the libc interfaces in this day and age.  Removes a SIGILL
-Index: attr/libattr/Makefile
-===================================================================
---- attr.orig/libattr/Makefile	2006-12-19 09:44:59.025926500 +1100
-+++ attr/libattr/Makefile	2006-12-19 09:50:08.757283500 +1100
-@@ -15,6 +15,12 @@ LT_AGE = 1
- CFILES = libattr.c attr_copy_fd.c attr_copy_file.c attr_copy_check.c
- HFILES = libattr.h
- 
-+ifeq ($(PKG_PLATFORM),linux)
-+CFILES += syscalls.c
-+else
-+LSRCFILES = syscalls.c
-+endif
-+
- LCFLAGS = -include libattr.h
- 
- default: $(LTLIBRARY)
-Index: attr/libattr/syscalls.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ attr/libattr/syscalls.c	2006-12-19 11:17:22.532374000 +1100
-@@ -0,0 +1,263 @@
-+/*
-+ * Copyright (c) 2001-2002 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+/*
-+ * The use of the syscall() function is an additional level of
-+ * indirection.  This avoids the dependency on kernel sources.
-+ */
-+
-+#include <errno.h>
-+#include <unistd.h>
-+
-+#if defined (__i386__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		226
-+# define __NR_lsetxattr		227
-+# define __NR_fsetxattr		228
-+# define __NR_getxattr		229
-+# define __NR_lgetxattr		230
-+# define __NR_fgetxattr		231
-+# define __NR_listxattr		232
-+# define __NR_llistxattr	233
-+# define __NR_flistxattr	234
-+# define __NR_removexattr	235
-+# define __NR_lremovexattr	236
-+# define __NR_fremovexattr	237
-+#elif defined (__sparc__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		169
-+# define __NR_lsetxattr		170
-+# define __NR_fsetxattr		171
-+# define __NR_getxattr		172
-+# define __NR_lgetxattr		173
-+# define __NR_fgetxattr		177
-+# define __NR_listxattr		178
-+# define __NR_llistxattr	179
-+# define __NR_flistxattr	180
-+# define __NR_removexattr	181
-+# define __NR_lremovexattr	182
-+# define __NR_fremovexattr	186
-+#elif defined (__ia64__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		1217
-+# define __NR_lsetxattr		1218
-+# define __NR_fsetxattr		1219
-+# define __NR_getxattr		1220
-+# define __NR_lgetxattr		1221
-+# define __NR_fgetxattr		1222
-+# define __NR_listxattr		1223
-+# define __NR_llistxattr	1224
-+# define __NR_flistxattr	1225
-+# define __NR_removexattr	1226
-+# define __NR_lremovexattr	1227
-+# define __NR_fremovexattr	1228
-+#elif defined (__powerpc__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		209
-+# define __NR_lsetxattr		210
-+# define __NR_fsetxattr		211
-+# define __NR_getxattr		212
-+# define __NR_lgetxattr		213
-+# define __NR_fgetxattr		214
-+# define __NR_listxattr		215
-+# define __NR_llistxattr	216
-+# define __NR_flistxattr	217
-+# define __NR_removexattr	218
-+# define __NR_lremovexattr	219
-+# define __NR_fremovexattr	220
-+#elif defined (__x86_64__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		188
-+# define __NR_lsetxattr		189
-+# define __NR_fsetxattr		190
-+# define __NR_getxattr		191
-+# define __NR_lgetxattr		192
-+# define __NR_fgetxattr		193
-+# define __NR_listxattr		194
-+# define __NR_llistxattr	195
-+# define __NR_flistxattr	196
-+# define __NR_removexattr	197
-+# define __NR_lremovexattr	198
-+# define __NR_fremovexattr	199
-+#elif defined (__s390__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		224
-+# define __NR_lsetxattr		225
-+# define __NR_fsetxattr		226
-+# define __NR_getxattr		227
-+# define __NR_lgetxattr		228
-+# define __NR_fgetxattr		229
-+# define __NR_listxattr		230
-+# define __NR_llistxattr	231
-+# define __NR_flistxattr	232
-+# define __NR_removexattr	233
-+# define __NR_lremovexattr	234
-+# define __NR_fremovexattr	235
-+#elif defined (__arm__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# if defined(__ARM_EABI__) || defined(__thumb__)
-+#  define __NR_SYSCALL_BASE 0
-+# else
-+#  define __NR_SYSCALL_BASE 0x900000
-+# endif
-+# define __NR_setxattr		(__NR_SYSCALL_BASE+226)
-+# define __NR_lsetxattr		(__NR_SYSCALL_BASE+227)
-+# define __NR_fsetxattr		(__NR_SYSCALL_BASE+228)
-+# define __NR_getxattr		(__NR_SYSCALL_BASE+229)
-+# define __NR_lgetxattr		(__NR_SYSCALL_BASE+230)
-+# define __NR_fgetxattr		(__NR_SYSCALL_BASE+231)
-+# define __NR_listxattr		(__NR_SYSCALL_BASE+232)
-+# define __NR_llistxattr	(__NR_SYSCALL_BASE+233)
-+# define __NR_flistxattr	(__NR_SYSCALL_BASE+234)
-+# define __NR_removexattr	(__NR_SYSCALL_BASE+235)
-+# define __NR_lremovexattr	(__NR_SYSCALL_BASE+236)
-+# define __NR_fremovexattr	(__NR_SYSCALL_BASE+237)
-+#elif defined (__mips64__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_Linux 5000
-+# define __NR_setxattr		(__NR_Linux + 217)
-+# define __NR_lsetxattr		(__NR_Linux + 218)
-+# define __NR_fsetxattr		(__NR_Linux + 219)
-+# define __NR_getxattr		(__NR_Linux + 220)
-+# define __NR_lgetxattr		(__NR_Linux + 221)
-+# define __NR_fgetxattr		(__NR_Linux + 222)
-+# define __NR_listxattr		(__NR_Linux + 223)
-+# define __NR_llistxattr	(__NR_Linux + 224)
-+# define __NR_flistxattr	(__NR_Linux + 225)
-+# define __NR_removexattr	(__NR_Linux + 226)
-+# define __NR_lremovexattr	(__NR_Linux + 227)
-+# define __NR_fremovexattr	(__NR_Linux + 228)
-+#elif defined (__mips__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_Linux 4000
-+# define __NR_setxattr		(__NR_Linux + 224)
-+# define __NR_lsetxattr		(__NR_Linux + 225)
-+# define __NR_fsetxattr		(__NR_Linux + 226)
-+# define __NR_getxattr		(__NR_Linux + 227)
-+# define __NR_lgetxattr		(__NR_Linux + 228)
-+# define __NR_fgetxattr		(__NR_Linux + 229)
-+# define __NR_listxattr		(__NR_Linux + 230)
-+# define __NR_llistxattr	(__NR_Linux + 231)
-+# define __NR_flistxattr	(__NR_Linux + 232)
-+# define __NR_removexattr	(__NR_Linux + 233)
-+# define __NR_lremovexattr	(__NR_Linux + 234)
-+# define __NR_fremovexattr	(__NR_Linux + 235)
-+#elif defined (__alpha__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		382
-+# define __NR_lsetxattr		383
-+# define __NR_fsetxattr		384
-+# define __NR_getxattr		385
-+# define __NR_lgetxattr		386
-+# define __NR_fgetxattr		387
-+# define __NR_listxattr		388
-+# define __NR_llistxattr	389
-+# define __NR_flistxattr	390
-+# define __NR_removexattr	391
-+# define __NR_lremovexattr	392
-+# define __NR_fremovexattr	393
-+#elif defined (__mc68000__)
-+# define HAVE_XATTR_SYSCALLS 1
-+# define __NR_setxattr		223
-+# define __NR_lsetxattr		224
-+# define __NR_fsetxattr		225
-+# define __NR_getxattr		226
-+# define __NR_lgetxattr		227
-+# define __NR_fgetxattr		228
-+# define __NR_listxattr		229
-+# define __NR_llistxattr	230
-+# define __NR_flistxattr	231
-+# define __NR_removexattr	232
-+# define __NR_lremovexattr	233
-+# define __NR_fremovexattr	234
-+#else
-+# warning "Extended attribute syscalls undefined for this architecture"
-+# define HAVE_XATTR_SYSCALLS 0
-+#endif
-+
-+#if HAVE_XATTR_SYSCALLS
-+# define SYSCALL(args...)	syscall(args)
-+#else
-+# define SYSCALL(args...)	( errno = ENOSYS, -1 )
-+#endif
-+
-+int setxattr (const char *path, const char *name,
-+			void *value, size_t size, int flags)
-+{
-+	return SYSCALL(__NR_setxattr, path, name, value, size, flags);
-+}
-+
-+int lsetxattr (const char *path, const char *name,
-+			void *value, size_t size, int flags)
-+{
-+	return SYSCALL(__NR_lsetxattr, path, name, value, size, flags);
-+}
-+
-+int fsetxattr (int filedes, const char *name,
-+			void *value, size_t size, int flags)
-+{
-+	return SYSCALL(__NR_fsetxattr, filedes, name, value, size, flags);
-+}
-+
-+ssize_t getxattr (const char *path, const char *name,
-+				void *value, size_t size)
-+{
-+	return SYSCALL(__NR_getxattr, path, name, value, size);
-+}
-+
-+ssize_t lgetxattr (const char *path, const char *name,
-+				void *value, size_t size)
-+{
-+	return SYSCALL(__NR_lgetxattr, path, name, value, size);
-+}
-+
-+ssize_t fgetxattr (int filedes, const char *name,
-+				void *value, size_t size)
-+{
-+	return SYSCALL(__NR_fgetxattr, filedes, name, value, size);
-+}
-+
-+ssize_t listxattr (const char *path, char *list, size_t size)
-+{
-+	return SYSCALL(__NR_listxattr, path, list, size);
-+}
-+
-+ssize_t llistxattr (const char *path, char *list, size_t size)
-+{
-+	return SYSCALL(__NR_llistxattr, path, list, size);
-+}
-+
-+ssize_t flistxattr (int filedes, char *list, size_t size)
-+{
-+	return SYSCALL(__NR_flistxattr, filedes, list, size);
-+}
-+
-+int removexattr (const char *path, const char *name)
-+{
-+	return SYSCALL(__NR_removexattr, path, name);
-+}
-+
-+int lremovexattr (const char *path, const char *name)
-+{
-+	return SYSCALL(__NR_lremovexattr, path, name);
-+}
-+
-+int fremovexattr (int filedes, const char *name)
-+{
-+	return SYSCALL(__NR_fremovexattr, filedes, name);
-+}
+---
+ fs/xfs/linux-2.6/xfs_buf.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
---=-dpJpTHodwH2NZsc/s/EW--
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_buf.c	2006-12-19 12:22:54.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_buf.c	2006-12-19 13:48:36.937118569 +1100
+@@ -942,11 +942,14 @@ xfs_buf_unlock(
+ /*
+  *	Pinning Buffer Storage in Memory
+  *	Ensure that no attempt to force a buffer to disk will succeed.
++ *	Hold the buffer so we don't attempt to free it while it
++ *	is pinned.
+  */
+ void
+ xfs_buf_pin(
+ 	xfs_buf_t		*bp)
+ {
++	xfs_buf_hold(bp);
+ 	atomic_inc(&bp->b_pin_count);
+ 	XB_TRACE(bp, "pin", (long)bp->b_pin_count.counter);
+ }
+@@ -958,6 +961,7 @@ xfs_buf_unpin(
+ 	if (atomic_dec_and_test(&bp->b_pin_count))
+ 		wake_up_all(&bp->b_waiters);
+ 	XB_TRACE(bp, "unpin", (long)bp->b_pin_count.counter);
++	xfs_buf_rele(bp);
+ }
+ 
+ int
