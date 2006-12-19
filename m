@@ -1,78 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 20:48:12 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 21:31:18 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBJ4m4qw014371
-	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 20:48:06 -0800
-Date: Tue, 19 Dec 2006 15:47:00 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBJ5VAqw020375
+	for <xfs@oss.sgi.com>; Mon, 18 Dec 2006 21:31:13 -0800
+Date: Tue, 19 Dec 2006 16:30:12 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: xfslogd-spinlock bug?
-Message-ID: <20061219044700.GW33919298@melbourne.sgi.com>
-References: <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs> <20061218223637.GP44411608@melbourne.sgi.com> <001a01c722fd$df5ca710$0400a8c0@dcccs> <20061219025229.GT33919298@melbourne.sgi.com>
+Subject: Review: Fix use after free on forced shutdown
+Message-ID: <20061219053012.GY33919298@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20061219025229.GT33919298@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: xfs-dev@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 19, 2006 at 01:52:29PM +1100, David Chinner wrote:
-> On Tue, Dec 19, 2006 at 12:39:46AM +0100, Haar János wrote:
-> > From: "David Chinner" <dgc@sgi.com>
-> > > #define POISON_FREE 0x6b
-> > >
-> > > Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
-> > 
-> > Yes, i build with this option enabled.
+As found earlier today trying to reproduce a different use
+after free, a machine with CONFIG_SLAB_DEBUG will panic on
+a forced shutdown if the inode has an assocaited item
+in the AIL.
 
-......
-
-> FWIW, I've run XFSQA twice now on a scsi disk with slab debuggin turned
-> on and I haven't seen this problem. I'm not sure how to track down
-> the source of the problem without a test case, but as a quick test, can
-> you try the following patch?
-
-Third try an I got a crash on a poisoned object:
-
-[1]kdb> md8c40 e00000300d7d5100
-0xe00000300d7d5100 000000005a2cf071 0000000000000000   q.,Z............
-0xe00000300d7d5110 000000005a2cf071 6b6b6b6b6b6b6b6b   q.,Z....kkkkkkkk
-0xe00000300d7d5120 e0000039eb7b6320 6b6b6b6b6b6b6b6b    c{.9...kkkkkkkk
-0xe00000300d7d5130 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d5140 6b6b6b6f6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkokkkkkkkkkkk
-0xe00000300d7d5150 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d5160 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d5170 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d5180 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d5190 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d51a0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d51b0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d51c0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
-0xe00000300d7d51d0 6b6b6b6b6b6b6b6b a56b6b6b6b6b6b6b   kkkkkkkkkkkkkkk.
-0xe00000300d7d51e0 000000005a2cf071 a000000100468c30   q.,Z....0.F.....
-[1]kdb> mds 0xe00000300d7d51e0
-0xe00000300d7d51e0 5a2cf071   q.,Z....
-0xe00000300d7d51e8 a000000100468c30 xfs_inode_item_destroy+0x30
-
-So the use-after-free here is on an inode item. You're tripping
-over a buffer item.
-
-Unfortunately, it is not the same problem - the problem I've just
-hit is to do with a QA test that does a forced shutdown on an active
-filesystem, and:
-
-[1]kdb> xmount 0xe00000304393e238
-.....
-flags 0x440010 <FSSHUTDOWN IDELETE COMPAT_IOSIZE >
-
-The filesystem was being shutdown so xfs_inode_item_destroy() just
-frees the inode log item without removing it from the AIL. I'll fix that,
-and see if i have any luck....
-
-So I'd still try that patch i sent in the previous email...
+Trivial fix is to remove the item from the AIL before
+freeing it.
 
 Cheers,
 
@@ -81,3 +31,41 @@ Dave.
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
+
+---
+ fs/xfs/xfs_inode.c |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2006-12-12 15:40:58.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2006-12-19 15:44:09.675298719 +1100
+@@ -2704,10 +2704,24 @@ xfs_idestroy(
+ 	ktrace_free(ip->i_dir_trace);
+ #endif
+ 	if (ip->i_itemp) {
+-		/* XXXdpd should be able to assert this but shutdown
+-		 * is leaving the AIL behind. */
+-		ASSERT(((ip->i_itemp->ili_item.li_flags & XFS_LI_IN_AIL) == 0) ||
+-		       XFS_FORCED_SHUTDOWN(ip->i_mount));
++		/*
++		 * Only if we are shutting down the fs will we see an
++		 * inode still in the AIL. If it is there, we should remove
++		 * it to prevent a use-after-free from occurring.
++		 */
++		xfs_mount_t	*mp = ip->i_mount;
++		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
++		int		s;
++
++		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
++				       XFS_FORCED_SHUTDOWN(ip->i_mount));
++		if (lip->li_flags & XFS_LI_IN_AIL) {
++			AIL_LOCK(mp, s);
++			if (lip->li_flags & XFS_LI_IN_AIL)
++				xfs_trans_delete_ail(mp, lip, s);
++			else
++				AIL_UNLOCK(mp, s);
++		}
+ 		xfs_inode_item_destroy(ip);
+ 	}
+ 	kmem_zone_free(xfs_inode_zone, ip);
