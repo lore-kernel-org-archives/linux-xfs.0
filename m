@@ -1,76 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 18:53:40 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Dec 2006 20:48:12 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBJ2rXqw028437
-	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 18:53:35 -0800
-Date: Tue, 19 Dec 2006 13:52:29 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBJ4m4qw014371
+	for <linux-xfs@oss.sgi.com>; Mon, 18 Dec 2006 20:48:06 -0800
+Date: Tue, 19 Dec 2006 15:47:00 +1100
 From: David Chinner <dgc@sgi.com>
 Subject: Re: xfslogd-spinlock bug?
-Message-ID: <20061219025229.GT33919298@melbourne.sgi.com>
-References: <003701c71d78$33ed28d0$0400a8c0@dcccs> <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs> <20061218223637.GP44411608@melbourne.sgi.com> <001a01c722fd$df5ca710$0400a8c0@dcccs>
+Message-ID: <20061219044700.GW33919298@melbourne.sgi.com>
+References: <Pine.LNX.4.64.0612120932220.19050@p34.internal.lan> <00ab01c71e53$942af2f0$0400a8c0@dcccs> <000d01c72127$3d7509b0$0400a8c0@dcccs> <20061217224457.GN33919298@melbourne.sgi.com> <026501c72237$0464f7a0$0400a8c0@dcccs> <20061218062444.GH44411608@melbourne.sgi.com> <027b01c7227d$0e26d1f0$0400a8c0@dcccs> <20061218223637.GP44411608@melbourne.sgi.com> <001a01c722fd$df5ca710$0400a8c0@dcccs> <20061219025229.GT33919298@melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <001a01c722fd$df5ca710$0400a8c0@dcccs>
+In-Reply-To: <20061219025229.GT33919298@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>
-Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: Haar =?iso-8859-1?Q?J=E1nos?= <djani22@netcenter.hu>, linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Tue, Dec 19, 2006 at 12:39:46AM +0100, Haar János wrote:
-> From: "David Chinner" <dgc@sgi.com>
-> > On Mon, Dec 18, 2006 at 09:17:50AM +0100, Haar János wrote:
-> > > From: "David Chinner" <dgc@sgi.com>
-> > > > Ok, I've never heard of a problem like this before and you are doing
-> > > > something that very few ppl are doing (i.e. XFS on NBD). I'd start
-> > > > Hence  I'd start by suspecting a bug in the NBD driver.
+On Tue, Dec 19, 2006 at 01:52:29PM +1100, David Chinner wrote:
+> On Tue, Dec 19, 2006 at 12:39:46AM +0100, Haar János wrote:
+> > From: "David Chinner" <dgc@sgi.com>
+> > > #define POISON_FREE 0x6b
 > > >
-> > > Ok, if you have right, this also can be in context with the following
-> issue:
-> > >
-> > > http://download.netcenter.hu/bughunt/20061217/messages.txt   (10KB)
-> >
-> > Which appears to be a crash in wake_up_process() when doing memory
-> > reclaim (waking the xfsbufd).
-> 
-> Sorry, can you translate it to "poor mans language"? :-)
-> This is a different bug?
+> > > Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
+> > 
+> > Yes, i build with this option enabled.
 
-Don't know - it's a different crash, but once again one that I've
-never heard of occurring before.
+......
 
-> > Ok, I've found this pattern:
-> >
-> > #define POISON_FREE 0x6b
-> >
-> > Can you confirm that you are running with CONFIG_DEBUG_SLAB=y?
-> 
-> Yes, i build with this option enabled.
-> Is this wrong?
+> FWIW, I've run XFSQA twice now on a scsi disk with slab debuggin turned
+> on and I haven't seen this problem. I'm not sure how to track down
+> the source of the problem without a test case, but as a quick test, can
+> you try the following patch?
 
-No, but it does slow your machine down.
+Third try an I got a crash on a poisoned object:
 
-> > If so, we have a use after free occurring here and it would also
-> > explain why no-one has reported it before.
-> >
-> > FWIW, can you turn on CONFIG_XFS_DEBUG=y and see if that triggers
-> > a different bug check prior to the above dump?
-> 
-> [root@X64 linux-2.6.19]# make bzImage
-> scripts/kconfig/conf -s arch/x86_64/Kconfig
-> .config:7:warning: trying to assign nonexistent symbol XFS_DEBUG
-> 
-> I have missed something?
+[1]kdb> md8c40 e00000300d7d5100
+0xe00000300d7d5100 000000005a2cf071 0000000000000000   q.,Z............
+0xe00000300d7d5110 000000005a2cf071 6b6b6b6b6b6b6b6b   q.,Z....kkkkkkkk
+0xe00000300d7d5120 e0000039eb7b6320 6b6b6b6b6b6b6b6b    c{.9...kkkkkkkk
+0xe00000300d7d5130 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d5140 6b6b6b6f6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkokkkkkkkkkkk
+0xe00000300d7d5150 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d5160 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d5170 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d5180 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d5190 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d51a0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d51b0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d51c0 6b6b6b6b6b6b6b6b 6b6b6b6b6b6b6b6b   kkkkkkkkkkkkkkkk
+0xe00000300d7d51d0 6b6b6b6b6b6b6b6b a56b6b6b6b6b6b6b   kkkkkkkkkkkkkkk.
+0xe00000300d7d51e0 000000005a2cf071 a000000100468c30   q.,Z....0.F.....
+[1]kdb> mds 0xe00000300d7d51e0
+0xe00000300d7d51e0 5a2cf071   q.,Z....
+0xe00000300d7d51e8 a000000100468c30 xfs_inode_item_destroy+0x30
 
-No - I forgot that config option doesn't exist in mainline XFS - it's
-only in the dev tree.
+So the use-after-free here is on an inode item. You're tripping
+over a buffer item.
 
-FWIW, I've run XFSQA twice now on a scsi disk with slab debuggin turned
-on and I haven't seen this problem. I'm not sure how to track down
-the source of the problem without a test case, but as a quick test, can
-you try the following patch?
+Unfortunately, it is not the same problem - the problem I've just
+hit is to do with a QA test that does a forced shutdown on an active
+filesystem, and:
+
+[1]kdb> xmount 0xe00000304393e238
+.....
+flags 0x440010 <FSSHUTDOWN IDELETE COMPAT_IOSIZE >
+
+The filesystem was being shutdown so xfs_inode_item_destroy() just
+frees the inode log item without removing it from the AIL. I'll fix that,
+and see if i have any luck....
+
+So I'd still try that patch i sent in the previous email...
 
 Cheers,
 
@@ -79,36 +81,3 @@ Dave.
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
-
-
----
- fs/xfs/linux-2.6/xfs_buf.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_buf.c	2006-12-19 12:22:54.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_buf.c	2006-12-19 13:48:36.937118569 +1100
-@@ -942,11 +942,14 @@ xfs_buf_unlock(
- /*
-  *	Pinning Buffer Storage in Memory
-  *	Ensure that no attempt to force a buffer to disk will succeed.
-+ *	Hold the buffer so we don't attempt to free it while it
-+ *	is pinned.
-  */
- void
- xfs_buf_pin(
- 	xfs_buf_t		*bp)
- {
-+	xfs_buf_hold(bp);
- 	atomic_inc(&bp->b_pin_count);
- 	XB_TRACE(bp, "pin", (long)bp->b_pin_count.counter);
- }
-@@ -958,6 +961,7 @@ xfs_buf_unpin(
- 	if (atomic_dec_and_test(&bp->b_pin_count))
- 		wake_up_all(&bp->b_waiters);
- 	XB_TRACE(bp, "unpin", (long)bp->b_pin_count.counter);
-+	xfs_buf_rele(bp);
- }
- 
- int
