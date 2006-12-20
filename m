@@ -1,97 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Dec 2006 10:42:14 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBKIg4qw005191
-	for <xfs@oss.sgi.com>; Wed, 20 Dec 2006 10:42:07 -0800
-Message-Id: <200611230052.LAA09114@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: Re: Unexpected inode type 0160000 causes abort of xfs_repair
-Date: Thu, 23 Nov 2006 11:55:35 +1100
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_1289_01C70EF6.496D6C00"
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Dec 2006 13:40:33 -0800 (PST)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBKLeQqw029236
+	for <xfs@oss.sgi.com>; Wed, 20 Dec 2006 13:40:28 -0800
+Subject: Re: [PATCH] rethink removal of xattr syscall stubs (for now)
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <45895EBA.8010208@sgi.com>
+References: <1166490658.5572.89.camel@edge>
+	 <20061219100506.GA22779@infradead.org> <1166571069.5572.117.camel@edge>
+	 <45895EBA.8010208@sgi.com>
+Content-Type: text/plain
+Date: Thu, 21 Dec 2006 08:40:31 +1100
+Message-Id: <1166650831.5572.164.camel@edge>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Jonathan Groll' <lists@groll.co.za>
-Cc: xfs@oss.sgi.com
+To: lachlan@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, bnaujok@sgi.com, xfs@oss.sgi.com, agruen@suse.de
 
-This is a multi-part message in MIME format.
-
-------=_NextPart_000_1289_01C70EF6.496D6C00
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-
-Can you try the attached patch and see how xfs_repair goes? 
-
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Jonathan Groll
-> Sent: Thursday, 23 November 2006 7:12 AM
-> To: xfs@oss.sgi.com
-> Subject: Unexpected inode type 0160000 causes abort of xfs_repair
+On Wed, 2006-12-20 at 16:03 +0000, Lachlan McIlroy wrote:
+> Nathan Scott wrote:
+> > On Tue, 2006-12-19 at 10:05 +0000, Christoph Hellwig wrote:
+> > | > Please apply as an interim fix to the original problem and to
+> > | > the accidental new problems its caused, and I'll push through a
+> > | > new patch in the new year.
+> > | 
+> > | There is a way to re-export symbols you imported from another
+> > | library with symbol versioning.  That how for example libpthread
+> > | works on recent Solaris versions.  I'll find out how exactly that
+> > | should be implemented.
+> > 
+> > Ah, that sounds ideal - thanks!
+> > 
 > 
-> I'm unsuccesfully trying to repair an XFS filesystem 
-> 
-> xfs_repair /dev/md1 and the same with -L both end with
-> bad (negative) size -2150115811482766770 on inode 1539849750
-> cleared inode 1539849750
-> bad magic number 0x859b on inode 1539849751, resetting magic number
-> bad version number 0xffffff88 on inode 1539849751, resetting version
-> number
-> Unexpected inode type 0160000 inode 1539849751
-> Aborted
-> 
-> OS: debian sarge (stable)
-> Kernel: 2.6.15.7
-> xfsprogs       2.8.11-1
-> 
-> Is there anything I can possibly do?
-> 
-> Many thanks,
-> Jonathan Groll
-> 
+> Nathan, do you still need your patch applied or will you look into
+> this new approach instead?
 > 
 
+The patch needs to be applied, thanks.  At a later date we'll fix it
+differently, but that will take some time.
 
+cheers.
 
-
-------=_NextPart_000_1289_01C70EF6.496D6C00
-Content-Type: application/octet-stream;
-	name="xfs_repair.diff"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="xfs_repair.diff"
-
---- a/xfsprogs/repair/dinode.c	2006-11-23 11:47:17.000000000 +1100
-+++ b/xfsprogs/repair/dinode.c	2006-11-23 11:40:31.219340329 +1100
-@@ -2060,11 +2060,21 @@
- 		type =3D XR_INO_FIFO;
- 		break;
- 	default:
--		type =3D XR_INO_UNKNOWN;
--		do_warn(_("Unexpected inode type %#o inode %llu\n"),
--			(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
--		abort();
--		break;
-+		retval++;
-+		if (!verify_mode)  {
-+			do_warn(_("bad inode type %#o inode %llu\n"),
-+				(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
-+			if (!no_modify)=20=20
-+				*dirty +=3D clear_dinode(mp, dino, lino);
-+			else=20
-+				*dirty =3D 1;
-+			*cleared =3D 1;
-+			*used =3D is_free;
-+		} else if (!uncertain)  {
-+			do_warn(_("bad inode type %#o inode %llu\n"),
-+				(int) (INT_GET(dinoc->di_mode, ARCH_CONVERT) & S_IFMT), lino);
-+		}
-+		return 1;
- 	}
-=20
- 	/*
-
-------=_NextPart_000_1289_01C70EF6.496D6C00--
+-- 
+Nathan
