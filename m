@@ -1,118 +1,134 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Dec 2006 17:00:48 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Dec 2006 22:29:31 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBK10fqw021526
-	for <linux-xfs@oss.sgi.com>; Tue, 19 Dec 2006 17:00:43 -0800
-Message-Id: <200612200059.LAA04335@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: xfs_ncheck (actually xfs_db) eats a lot of memory and is killed
-Date: Wed, 20 Dec 2006 12:05:47 +1100
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
-In-Reply-To: <em84t3$b27$1@sea.gmane.org>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBK6TJqw022586
+	for <xfs@oss.sgi.com>; Tue, 19 Dec 2006 22:29:23 -0800
+Date: Wed, 20 Dec 2006 17:28:13 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Review: Clear unwritten flag on during partial page truncation
+Message-ID: <20061220062813.GU44411608@melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-2?Q?'Marcin_Zaj=B1czkowski'?= <mszpak@wp.pl>, linux-xfs@oss.sgi.com
+To: xfs-dev@sgi.com
+Cc: xfs@oss.sgi.com
 
+For a long time now we've been getting assert failures in XFSQA test
+083 which is a fsstress test near ENOSPC.
+
+The failure mode is:
+
+<4>Assertion failed: !(iomapp->iomap_flags & IOMAP_DELAY), file: fs/xfs/linux-2.6/xfs_aops.c, line: 510
+
+A inode read-write trace uncovered what the problem was.  We had a
+page with an unwritten extent lying partially over it (last block on
+the page), and then we truncated the file to the first block on the
+page. Because it is a partial page truncation, we walk the buffers
+on the page and clear the flags on the buffers past end of file so
+that if we write to them again the correct flags are set on the
+buffers.
+
+block_invalidatepage() call discard_buffers() to do this, which
+clears all the common state from the buffers past EOF. The problem
+stems from the fact that the buffer_unwritten() flag is an XFS
+private flag, and hence does not get cleared from the buffer.
+
+If we then extend the file with a write to within the buffer that we
+failed to clear the unwritten flag from, we then make the wrong
+decision in xfs_convert_page_state() when trying to map that buffer
+- we see buffer_unwritten() instead of buffer_delay(), but the
+extent map we got for that range from xfs_bmapi() correctly says
+IOMAP_DELAY.
+
+Hence the solution is to clear the private buffer flags in
+xfs_vm_invalidatepage() so that when we extend the file the buffers
+on the page are all consistent.
+
+Patch below. Comments?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+
+---
+ fs/xfs/linux-2.6/xfs_aops.c |   38 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 37 insertions(+), 1 deletion(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_aops.c	2006-11-30 19:24:46.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c	2006-11-30 23:17:14.123674539 +1100
+@@ -41,6 +41,8 @@
+ #include <linux/pagevec.h>
+ #include <linux/writeback.h>
  
-
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Marcin Zajaczkowski
-> Sent: Tuesday, 19 December 2006 6:39 PM
-> To: linux-xfs@oss.sgi.com
-> Subject: Re: xfs_ncheck (actually xfs_db) eats a lot of 
-> memory and is killed
-> 
-> Marcin Zaj±czkowski wrote:
-> > Barry Naujok wrote:
-> >>> Subject: xfs_ncheck (actually xfs_db) eats a lot of 
-> memory and is killed
-> > (...)
-> >>> Recently I've got rescue CD with xfs_progs in version 2.8.11 and 
-> >>> tried to repair it. xfs_repair gave me about 150 files with names 
-> >>> like inode numbers in /lost+found and 1500 "normal" named 
-> files in 
-> >>> its subdirectory.
-> >>> I've tried to use "xfs_ncheck -i inode /dev/hdX" to got names 
-> >>> corresponding with specified inode(s), but program had 
-> been runing 
-> >>> several minutes, xfs_db had eaten all available memory 
-> (768MB) and 
-> >>> was killed by system (whole system hung too). The second time I 
-> >>> killed it (kill -15) when it ate whole available memory.
-> >>> My file system has about 6GB and is filled with 95%.
-> >>
-> >> This is the second report of a smallish filesystem using all of the
-> >> system's memory (the other being xfs_repair). Hopefully 
-> when I diagnose
-> >> the problem with the previous report, I can fix the same issue with
-> >> xfs_db and your filesystem.
-> >>
-> >> If it at all possible, can you xfs_copy the offending 
-> filesystem to a
-> >> file and compress it and make it available to me to find/fix the
-> >> problem.
-> > 
-> > Hmm, it won't be so easy. Compressed dump of a fielsystem 
-> before repair 
-> > (I had to use dd, because xfsdump refused to cooperate) has 2,5GB.
-> > Damaged files were (probably) only in one directory 
-> /usr/bin. Maybe I 
-> > could reduce size of the image excluding few other directories (in 
-> > xfsdump)?
-> > Do you think that error would still occur?
-> 
-> What do you think about that?
-
-xfs_dump won't recreate the filesystem that causes xfs_db to gobble up
-memory unfortunately, xfs_copy copies the filesystem as it is, block for
-block.
-
-> Btw, is it possible to mount XFS filesystem from the file created by 
-> xfs_copy?
-> If not, is it possible to restore file system "backuped" to file (by 
-> xfs_copy)? I read in the manual that the first parameter 
-> xfs_copy has to 
-> be device (not file). xfs_restore will work with that "dump"?
++STATIC void xfs_vm_invalidatepage(struct page *, unsigned long);
++
+ STATIC void
+ xfs_count_page_state(
+ 	struct page		*page,
+@@ -1061,7 +1063,7 @@ error:
+ 	 */
+ 	if (err != -EAGAIN) {
+ 		if (!unmapped)
+-			block_invalidatepage(page, 0);
++			xfs_vm_invalidatepage(page, 0);
+ 		ClearPageUptodate(page);
+ 	}
+ 	return err;
+@@ -1451,6 +1453,14 @@ xfs_vm_readpages(
+ 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+ }
  
-Yes, you can mount an XFS filesystem file using the "-o loop" mount
-option and specifying the file for the device.
-
-Yes, you can xfs_copy from a file back to a device. From the man page:
-"The first (source) argument must be the pathname of the device or file
-containing the XFS filesystem.". 
-
-xfs_dump/xfs_restore is more like tar copying all metadata, but not disk
-layout.
++/*
++ * block_invalidatepage() doesn't clear private buffer flags like the unwritten
++ * flag. Leaving the unwritten flag behind on buffers that have been
++ * invalidated but are still attached to a page (i.e.  buffer size < page size
++ * and partial page invalidation) will result in incorrect allocation occurring
++ * during writeback if the file is extended to within or past the invalidated
++ * block before writeback.
++ */
+ STATIC void
+ xfs_vm_invalidatepage(
+ 	struct page		*page,
+@@ -1458,6 +1468,32 @@ xfs_vm_invalidatepage(
+ {
+ 	xfs_page_trace(XFS_INVALIDPAGE_ENTER,
+ 			page->mapping->host, page, offset);
++
++	/*
++	 * Need to clear private flags from buffers on partial
++	 * page truncations ourselves. Same inner loop as
++	 * block_invalidatepage() is used.
++	 */
++	if (offset && page_has_buffers(page)) {
++		struct buffer_head *head, *bh, *next;
++		unsigned int curr_off = 0;
++
++		head = page_buffers(page);
++		bh = head;
++		do {
++			unsigned int next_off = curr_off + bh->b_size;
++			next = bh->b_this_page;
++
++			/*
++			 * is this block fully invalidated?
++			 */
++			if (offset <= curr_off)
++				clear_buffer_unwritten(bh);
++			curr_off = next_off;
++			bh = next;
++		} while (bh != head);
++	}
++
+ 	block_invalidatepage(page, offset);
+ }
  
-> >>> Am I doing something wrong with xfs_db?
-> >>> Is there any easier way to restore my files?
-> >>
-> >> Your files have been restored as much as possible. You'll 
-> have to work
-> >> out what is in lost+found and move them back to their appropriate
-> >> locations.
-> > 
-> > With files with "normal" names there is no problem. There 
-> are all from 
-> > one directory (/usr/bin), but I'm unable (without 
-> xfs_ncheck) to map 
-> > files with inode-like names with their normal names (150+ files). I 
-> > tried with xfs_db and the way described in your FAQ, but I had some 
-> > problems too.
-> 
-> Currently I have to use LiveCD (/usr/bin is a quite important 
-> directory 
-> ;) ). Do you suggest to try to repair it manually (copy files with 
-> names, try to boot and try to use RPM to repair broken packages 
-> (restore missing files) or there could be an easiest way (at the xfs 
-> layer to match numbers with proper names)?
-
-If the /usr/bin directory was trashed, I think you can only restore from
-the original packages, I don't think you'll have much luck doing it
-manually. (xfs_repair 2.8.10 onwards will restore the same files that
-the manual approach can retrieve.)
