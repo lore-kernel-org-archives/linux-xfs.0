@@ -1,36 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Dec 2006 14:36:52 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Dec 2006 15:20:01 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBLMajqw019072
-	for <xfs@oss.sgi.com>; Thu, 21 Dec 2006 14:36:47 -0800
-Subject: TAKE 957005 - fs/xfs/xfs_dmapi.h Removal of old code
-Message-Id: <20061110020305.5809258FA286@chook.melbourne.sgi.com>
-Date: Fri, 10 Nov 2006 13:03:05 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBLNJsqw023740
+	for <linux-xfs@oss.sgi.com>; Thu, 21 Dec 2006 15:19:55 -0800
+Date: Fri, 22 Dec 2006 10:05:29 +1100 (AEDT)
+From: Barry Naujok <bnaujok@snort.melbourne.sgi.com>
+Message-Id: <200612212305.kBLN5T7f70006633@snort.melbourne.sgi.com>
+Subject: TAKE 959492 - xfs_growfs should return an error on failure
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: linux-xfs@oss.sgi.com
 
-Remove KERNEL_VERSION macros from xfs_dmapi.h
+Return error (1) if something fails in xfs_growfs
 
-Date:  Fri Nov 10 13:01:22 AEDT 2006
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  tes,michal.k.k.piotrowski@gmail.com
+
+Date:  Fri Dec 22 10:05:06 AEDT 2006
+Workarea:  snort.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  nathans@debian.org,sandeen@sandeen.net
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:27398a
-fs/xfs/linux-2.4/xfs_dmapi_priv.h - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_dmapi_priv.h
-	- Move 2.4 specific dmapi macros here.
-
-fs/xfs/linux-2.6/xfs_dmapi_priv.h - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_dmapi_priv.h
-	- Move 2.6 specific dmapi macros here.
-
-fs/xfs/xfs_dmapi.h - 1.58 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dmapi.h.diff?r1=text&tr1=1.58&r2=text&tr2=1.57&f=h
-	- Split platform specific macros out into platform specifc headers.
+Modid:  master-melb:xfs-cmds:27802a
+xfsprogs/growfs/xfs_growfs.c - 1.25 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/growfs/xfs_growfs.c.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
+	- Return error (1) if something fails in xfs_growfs
