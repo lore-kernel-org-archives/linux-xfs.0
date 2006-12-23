@@ -1,45 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Dec 2006 15:38:57 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBMNcpqw018710
-	for <linux-xfs@oss.sgi.com>; Fri, 22 Dec 2006 15:38:53 -0800
-Message-ID: <458C6C5A.6090504@sandeen.net>
-Date: Fri, 22 Dec 2006 17:38:02 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: unexpected XFS SB magic number
-References: <Pine.SOL.4.58.0612221219570.2514@titan.cfa.harvard.edu> <458C6719.6080106@sandeen.net> <Pine.SOL.4.58.0612221824500.2856@titan.cfa.harvard.edu>
-In-Reply-To: <Pine.SOL.4.58.0612221824500.2856@titan.cfa.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Dec 2006 18:57:10 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBN2v0qw012773
+	for <xfs@oss.sgi.com>; Fri, 22 Dec 2006 18:57:02 -0800
+Date: Sat, 23 Dec 2006 13:55:58 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: Clear unwritten flag on during partial page truncation
+Message-ID: <20061223025558.GJ44411608@melbourne.sgi.com>
+References: <20061220062813.GU44411608@melbourne.sgi.com> <1166681818.5572.190.camel@edge> <20061222132142.GA23416@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20061222132142.GA23416@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: gbakos@cfa.harvard.edu
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nathan Scott <nscott@aconex.com>, David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-Gaspar Bakos wrote:
-
-> This reminds me: what paranoid safety measures can one take? E.g keep
-> an external log of the filesystem as well?
-
-it looks like you wound up with an efi bootloader splatted over the 
-front of your partition.  maybe the raid got scrambled around?  Or maybe 
-someone actually installed a bootloader over an otherwise-ok filesystem? 
-  hard to say.  not sure what could have prevented either of those.
-
-are you sure the raid is in the right shape, and in the right order of 
-disks?
-
-i also remember something about parted (maybe...) finding a backup gpt 
-signature at the end of a disk, and "helpfully" copying it over the 
-front end if so.  This was a bug.  sgi guys do you remember?
-
--Eric
-
-
-
-> Thanks for the thoughts!
+On Fri, Dec 22, 2006 at 01:21:42PM +0000, Christoph Hellwig wrote:
+> On Thu, Dec 21, 2006 at 05:16:58PM +1100, Nathan Scott wrote:
+> > On Wed, 2006-12-20 at 17:28 +1100, David Chinner wrote:
+> > > Hence the solution is to clear the private buffer flags in
+> > > xfs_vm_invalidatepage() so that when we extend the file the buffers
+> > > on the page are all consistent.
+> > > 
+> > > Patch below. Comments?
+> > 
+> > Looks good Dave, nice sleuthing.
+> > 
+> > In hindsight, it'd have been really good to have gone for the real
+> > BH_Unwritten flag upfront, and then being able to clear that inside
+> > discard_buffer (like was done for BH_Delay)... if we did that, then
+> > all this new code we're adding here (to just clear_buffer_unwritten,
+> > ultimately) and also the complete hack in xfs_count_page_state could
+> > be removed.  It still might be worth considering doing that, in case
+> > there's other hard-to-hit-but-not-yet-uncovered bugs lurking along
+> > the same lines.  But alot of effort, with the possibility of it not
+> > being merged at all, as it touches code outside XFS.  D'oh.
 > 
-> Gaspar
-> 
+> Getting code into buffer.c to fix this properly should be no problem
+> at all.  As usual we prefer to fix core code instead of working around
+> it.  This would also fix the data loss issue after we write through mmap
+> into an unwritten extent.
+
+Ok, I'll work up a patch for it in the new year, Christoph.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
