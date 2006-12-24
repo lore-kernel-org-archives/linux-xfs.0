@@ -1,66 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 23 Dec 2006 16:37:32 -0800 (PST)
-Received: from deflector.emaze.net (deflector.emaze.net [213.178.220.4])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBO0bOqw011126
-	for <linux-xfs@oss.sgi.com>; Sat, 23 Dec 2006 16:37:27 -0800
-Received: from localhost (localhost [127.0.0.1])
-	by deflector.emaze.net (Postfix) with ESMTP id B1957F2816D
-	for <linux-xfs@oss.sgi.com>; Sun, 24 Dec 2006 01:35:17 +0100 (CET)
-Received: from deflector.emaze.net ([127.0.0.1])
-	by localhost (deflector [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 09604-09 for <linux-xfs@oss.sgi.com>;
-	Sun, 24 Dec 2006 01:35:17 +0100 (CET)
-Received: from [192.168.10.55] (host68-236-dynamic.5-87-r.retail.telecomitalia.it [87.5.236.68])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by deflector.emaze.net (Postfix) with ESMTP id 3DDF6F28080
-	for <linux-xfs@oss.sgi.com>; Sun, 24 Dec 2006 01:35:17 +0100 (CET)
-Message-ID: <458DCB8D.3040804@emaze.net>
-Date: Sun, 24 Dec 2006 01:36:29 +0100
-From: fdegrassi <francesco.degrassi@emaze.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 23 Dec 2006 20:06:28 -0800 (PST)
+Received: from s-utl01-dcpop.stsn.net (s-utl01-dcpop.stsn.net [72.255.0.201])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBO46Lqx030511
+	for <linux-xfs@oss.sgi.com>; Sat, 23 Dec 2006 20:06:23 -0800
+Message-ID: <458DF8F7.5030104@sandeen.net>
+Date: Sat, 23 Dec 2006 21:50:15 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Possible performance problem introduced between kernel 2.6.15
- and 2.6.17 on xfs code
-References: <458D4845.2010803@emaze.net> <458D4EEB.3060501@sandeen.net>
-In-Reply-To: <458D4EEB.3060501@sandeen.net>
+Subject: Re: unexpected XFS SB magic number
+References: <Pine.SOL.4.58.0612221219570.2514@titan.cfa.harvard.edu> <458C6719.6080106@sandeen.net> <Pine.SOL.4.58.0612221824500.2856@titan.cfa.harvard.edu> <458C6C5A.6090504@sandeen.net> <Pine.SOL.4.58.0612231748450.3446@titan.cfa.harvard.edu>
+In-Reply-To: <Pine.SOL.4.58.0612231748450.3446@titan.cfa.harvard.edu>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: gbakos@cfa.harvard.edu
+Cc: linux-xfs@oss.sgi.com
 
-The specific problem is related to gnome point-n-click only.
-Anyway, I could be wrong, but i don't think it is a bug in gnome because:
-1. it affects specifically local XFS filesystems only
-2. the problem is not present on kernel 2.6.15 (I tested 2.6.17 and 
-2.6.15, both on ubuntu 6.10)
-3. the problem does not manifest if i disable the call to 
-gnome_vfs_forget_cache, that, for what i understand, simply calls 
-fadvice POSIX_FADV_DONTNEED.
+Gaspar Bakos wrote:
+> Hi, Eric,
 
-More info can be found on gnome bugzilla entry.
-Francesco Degrassi
+> One of the users was running quite memory and disk IO intensive tasks
+> past week. This lead to a crash. (I was not around to keep an eye on
+> it). The computer rebooted, and few days later another crash, etc.
+> Finally, when I returned this week, I found it powered off.
+> 
+> And then I realized that the sdc1 partition can not be mounted any more.
 
+Well, something put a gpt label on top of your xfs partition... and it 
+wasn't xfs :)
 
-Eric Sandeen wrote:
-> fdegrassi wrote:
->> Hi all,
->> i noticed that changing from kernel 2.6.15 to 2.6.17, gnomevfs-copy 
->> operations suffered an heavy performance hit (20 times slower).
->> I checked quickly (i am not a kernel hacker) and i think it could be 
->> related to libgnomevfs calling fadvice POSIX_FADV_DONTNEED  (in 
->> gnome_vfs_forget_cache, disabling this behaviour gets back normal 
->> performance).
->> I am not able to dig deeper than this, anyway it could be a starting 
->> point.
->> The relevant gnome bugzilla reference is the following: 
->> http://bugzilla.gnome.org/show_bug.cgi?id=363400
->>
->> Francesco Degrassi
->>
->>
->
-> Is a copy command from the shell affected, or just gnome point-n-click?
->
-> -Eric
+>> i also remember something about parted (maybe...) finding a backup gpt
+>> signature at the end of a disk, and "helpfully" copying it over the
+>> front end if so.  This was a bug.  sgi guys do you remember?
+> 
+> But for this one has to invoke parted, and commit the operations done,
+> am I right?
+
+if I recall, even invoking parted could do this.
+
+> Maybe there is a nasty daemon doing something. The fs was also exported
+> as NFS and mounted by two other hosts.
+> 
+> ---------
+> So the questions are:
+> - what partition type to choose next time?
+> - is there a simpler way of recovery (than xfs_recovery), i.e. the
+>   first few bytes of the partition need to be changed back to something
+>   XFS magic, and the rest is probably untouched?
+
+i'd google around and find out how big the gpt header is; try to find 
+out how much of the front of your partition got clobbered.  that'll give 
+a clue as to how much you may have lost.
+
+-Eric
