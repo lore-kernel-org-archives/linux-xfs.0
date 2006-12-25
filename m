@@ -1,32 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Dec 2006 04:40:14 -0800 (PST)
-Received: from astra.simleu.ro (astra.simleu.ro [80.97.18.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBOCe8qw029652
-	for <linux-xfs@oss.sgi.com>; Sun, 24 Dec 2006 04:40:09 -0800
-Date: Sun, 24 Dec 2006 13:16:22 +0100
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: unexpected XFS SB magic number
-Message-ID: <20061224121622.GA22721@teal.hq.k1024.org>
-References: <Pine.SOL.4.58.0612221219570.2514@titan.cfa.harvard.edu> <458C6719.6080106@sandeen.net> <Pine.SOL.4.58.0612221824500.2856@titan.cfa.harvard.edu> <458C6C5A.6090504@sandeen.net> <Pine.SOL.4.58.0612231748450.3446@titan.cfa.harvard.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Dec 2006 02:00:28 -0800 (PST)
+Received: from taiwan.yingternet.net (taiwan.yingternet.net [59.124.122.220])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBPA0Iqw008793
+	for <linux-xfs@oss.sgi.com>; Mon, 25 Dec 2006 02:00:21 -0800
+Message-ID: <458FA0F8.1020107@yingternet.com>
+Date: Mon, 25 Dec 2006 17:59:20 +0800
+From: Ying-Hung Chen <ying@yingternet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.SOL.4.58.0612231748450.3446@titan.cfa.harvard.edu>
+Subject: Re: xfs_repair xfsprogs version > 2.8.11
+References: <458E643D.3090008@yingternet.com>
+In-Reply-To: <458E643D.3090008@yingternet.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Gaspar Bakos <gbakos@cfa.harvard.edu>
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
+Cc: Ying-Hung Chen <ying@yingternet.com>
 
-On Sat, Dec 23, 2006 at 06:08:58PM -0500, Gaspar Bakos wrote:
-> So the questions are:
-> - what partition type to choose next time?
+Hi there,
 
-In cases where I want to use the whole disk, I usually make the
-filesystem directly over the disk (e.g. /dev/sdc) instead of
-partitioning it.
+actually, i have trace the code in to xfs_repair/threads.c (taken from
+2.8.18)
 
-Never had any problem with this setup.
+void
+thread_init(void)
+{
+    ....
+    if ((status = pthread_attr_getstacksize(&attr, &stacksize)) != 0)
+        do_error(_("status from pthread_attr_getstacksize: %d"),
+        status);
 
-Regards,
-Iustin
+    stacksize *= 4;
+
+    if ((status = pthread_attr_setstacksize(&attr, stacksize)) != 0)
+        do_error(_("status from pthread_attr_setstacksize: %d"),
+        status);
+ ....
+ }
+
+the repair program dies in pthread_attr_setstacksize(&attr, stacksize)).
+is there any reason why the program is trying to set the stacksize into
+4 times the current size?
+
+just for testing purposes, I remove the stacksize *= 4; the xfs_repair
+seems to 'work', at least from user's point of view.
+
+I have tested with x86 32bits machines with 2.4 and 2.6 kernels, they
+both yield with the same results,
+
+Thanks,
+
+-Ying
+
+Ying-Hung Chen wrote:
+> Hi there,
+> 
+> I found that xfs_repair always returns the following message with the
+> xfsprogs version > 2.8.11
+> 
+> [root@yroro i586]# xfs_repair /dev/hdb1
+> 
+> fatal error -- status from pthread_attr_setstacksize: 22
+> 
+> from the ChangeLog, seems like there is some internal changes with
+> threads starting 2.8.11 .. the xfs_repair works for me up to 2.8.11, it
+> fails to work on 2.8.16 and 2.8.18,
+> 
+> how do I work around this problem?
+> 
+> Thanks,
+> 
+> -Ying
+> 
