@@ -1,52 +1,94 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Dec 2006 01:51:28 -0800 (PST)
-Received: from deflector.emaze.net (deflector.emaze.net [213.178.220.4])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id kBS9pJqw024375
-	for <linux-xfs@oss.sgi.com>; Thu, 28 Dec 2006 01:51:21 -0800
-Message-ID: <459394EA.3000304@emaze.net>
-Date: Thu, 28 Dec 2006 10:56:58 +0100
-From: Francesco Degrassi <francesco.degrassi@emaze.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Dec 2006 02:42:49 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id kBSAgeqw029912
+	for <linux-xfs@oss.sgi.com>; Thu, 28 Dec 2006 02:42:42 -0800
+Message-ID: <45939ABD.6010600@melbourne.sgi.com>
+Date: Thu, 28 Dec 2006 21:21:49 +1100
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
 MIME-Version: 1.0
-Subject: Re: Possible performance problem introduced between kernel 2.6.15
- and 2.6.17 on xfs code
-References: <458D4845.2010803@emaze.net> <458D4EEB.3060501@sandeen.net> <458DCB8D.3040804@emaze.net> <4592942C.5000306@sandeen.net> <4592B581.7080806@emaze.net> <20061227180542.GA6888@teal.hq.k1024.org>
-In-Reply-To: <20061227180542.GA6888@teal.hq.k1024.org>
+Subject: Re: xfs_repair xfsprogs version > 2.8.11
+References: <458E643D.3090008@yingternet.com> <458FA0F8.1020107@yingternet.com>
+In-Reply-To: <458FA0F8.1020107@yingternet.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: iusty@k1024.org
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@oss.sgi.com
+To: Ying-Hung Chen <ying@yingternet.com>
+Cc: linux-xfs@oss.sgi.com
 
-Hi Iustin,
-i tried and it and indeed the performance problem does not manifest if i
-mount the xfs filesystem with the -o nobarrier option. Seems like we are
-a little bit closer to the real problem now.
-The code in gnomevfs-copy calls fadvice POSIX_FADV_DONTNEED (in
-gnome_vfs_forget_cache) and disabling this behaviour gets back normal
-performance, so it has something to do with that.
+Ying-Hung,
 
-Thanks for your help
+Can you please provide some info on your configuration? Obviously we are
+not seeing this problem in our own tests and reproducing this will help
+to resolve it.
 
-Francesco
+Thanks,
+
+David
 
 
-Iustin Pop wrote:
-> On Wed, Dec 27, 2006 at 07:03:45PM +0100, Francesco Degrassi wrote:
->> I tried ext2, ext3, jfs, reiser3, vfat and the problem does not show up.
->> Anyway i discovered that if i create a regular file in an XFS partition,
->> create an XFS filesystem on it as if it was a regular block device, and
->> mount it with the loop device, the problem does NOT manifest.
->> So it seems to affect XFS filesystems on regular block devices only ?
->> I'm confused.
+Ying-Hung Chen wrote:
+> Hi there,
 > 
-> This is probably not related, but I remember that barriers were added
-> sometime between 2.6.15 and 2.6.17 and probably barriers are not enabled
-> on a loop filesystem. Maybe the gnome vfs thing does some sync which
-> force flushes or such. I'm no expert, just guessing.
+> actually, i have trace the code in to xfs_repair/threads.c (taken from
+> 2.8.18)
 > 
-> Just to invalidate this (probably wrong) guess, could you try to mount
-> /tmp with "-o nobarrier" and re-test?
+> void
+> thread_init(void)
+> {
+>     ....
+>     if ((status = pthread_attr_getstacksize(&attr, &stacksize)) != 0)
+>         do_error(_("status from pthread_attr_getstacksize: %d"),
+>         status);
 > 
-> Iustin, who wishes md raid1 would support barriers.
+>     stacksize *= 4;
+> 
+>     if ((status = pthread_attr_setstacksize(&attr, stacksize)) != 0)
+>         do_error(_("status from pthread_attr_setstacksize: %d"),
+>         status);
+>  ....
+>  }
+> 
+> the repair program dies in pthread_attr_setstacksize(&attr, stacksize)).
+> is there any reason why the program is trying to set the stacksize into
+> 4 times the current size?
+> 
+> just for testing purposes, I remove the stacksize *= 4; the xfs_repair
+> seems to 'work', at least from user's point of view.
+> 
+> I have tested with x86 32bits machines with 2.4 and 2.6 kernels, they
+> both yield with the same results,
+> 
+> Thanks,
+> 
+> -Ying
+> 
+> Ying-Hung Chen wrote:
+>> Hi there,
+>>
+>> I found that xfs_repair always returns the following message with the
+>> xfsprogs version > 2.8.11
+>>
+>> [root@yroro i586]# xfs_repair /dev/hdb1
+>>
+>> fatal error -- status from pthread_attr_setstacksize: 22
+>>
+>> from the ChangeLog, seems like there is some internal changes with
+>> threads starting 2.8.11 .. the xfs_repair works for me up to 2.8.11, it
+>> fails to work on 2.8.16 and 2.8.18,
+>>
+>> how do I work around this problem?
+>>
+>> Thanks,
+>>
+>> -Ying
+>>
+> 
+
+-- 
+David Chatterton
+XFS Engineering Manager
+SGI Australia
