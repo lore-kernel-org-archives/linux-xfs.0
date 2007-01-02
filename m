@@ -1,33 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Jan 2007 23:36:59 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l027aqqw013711
-	for <linux-xfs@oss.sgi.com>; Mon, 1 Jan 2007 23:36:53 -0800
-Date: Tue, 2 Jan 2007 18:35:58 +1100 (AEDT)
-From: Allan Randall <allanr@snort.melbourne.sgi.com>
-Message-Id: <200701020735.l027Zwpt80352840@snort.melbourne.sgi.com>
-Subject: TAKE  - Dmapi QA build
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Jan 2007 03:36:10 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l02Ba3qw010191
+	for <xfs@oss.sgi.com>; Tue, 2 Jan 2007 03:36:04 -0800
+Date: Tue, 2 Jan 2007 11:17:46 +0000
+From: "'Christoph Hellwig'" <hch@infradead.org>
+Subject: Re: [PATCH]  incorrect error handling inside generic_file_direct_write
+Message-ID: <20070102111746.GA22657@infradead.org>
+References: <20061215104341.GA20089@infradead.org> <000101c7207a$48c138f0$ff0da8c0@amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <000101c7207a$48c138f0$ff0da8c0@amr.corp.intel.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com, asg-qa@melbourne.sgi.com
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, 'Andrew Morton' <akpm@osdl.org>, Dmitriy Monakhov <dmonakhov@sw.ru>, Dmitriy Monakhov <dmonakhov@openvz.org>, linux-kernel@vger.kernel.org, Linux Memory Management <linux-mm@kvack.org>, devel@openvz.org, xfs@oss.sgi.com
 
-Dmapi QA build fix
+On Fri, Dec 15, 2006 at 10:53:18AM -0800, Chen, Kenneth W wrote:
+> Christoph Hellwig wrote on Friday, December 15, 2006 2:44 AM
+> > So we're doing the sync_page_range once in __generic_file_aio_write
+> > with i_mutex held.
+> > 
+> > 
+> > >  	mutex_lock(&inode->i_mutex);
+> > > -	ret = __generic_file_aio_write_nolock(iocb, iov, nr_segs,
+> > > -			&iocb->ki_pos);
+> > > +	ret = __generic_file_aio_write(iocb, iov, nr_segs, pos);
+> > >  	mutex_unlock(&inode->i_mutex);
+> > >  
+> > >  	if (ret > 0 && ((file->f_flags & O_SYNC) || IS_SYNC(inode))) {
+> > 
+> > And then another time after it's unlocked, this seems wrong.
+> 
+> 
+> I didn't invent that mess though.
+> 
+> I should've ask the question first: in 2.6.20-rc1, generic_file_aio_write
+> will call sync_page_range twice, once from __generic_file_aio_write_nolock
+> and once within the function itself.  Is it redundant?  Can we delete the
+> one in the top level function?  Like the following?
 
+Really?  I'm looking at -rc3 now as -rc1 is rather old and it's definitly
+not the case there.  I also can't remember ever doing this - when I
+started the generic read/write path untangling I had exactly the same
+situation that's now in -rc3:
 
-Date:  Tue Jan  2 18:34:57 AEDT 2007
-Workarea:  snort.melbourne.sgi.com:/home/allanr/isms/xfs-cmds-2
-Inspected by:  ddiss
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:27826a
-xfstests/dmapi/Makefile.in - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/dmapi/Makefile.in.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-	- added default make option
-
-xfstests/include/buildmacros - 1.8 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/include/buildmacros.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
-	- removed special case for dmapi dir
+  - generic_file_aio_write_nolock calls sync_page_range_nolock
+  - generic_file_aio_write calls sync_page_range
+  - __generic_file_aio_write_nolock doesn't call any sync_page_range variant
