@@ -1,60 +1,108 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Jan 2007 13:38:45 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Jan 2007 14:25:00 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l07Lccqw000700
-	for <xfs@oss.sgi.com>; Sun, 7 Jan 2007 13:38:40 -0800
-Date: Mon, 8 Jan 2007 08:37:34 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l07MOoqw008067
+	for <xfs@oss.sgi.com>; Sun, 7 Jan 2007 14:24:53 -0800
+Date: Mon, 8 Jan 2007 09:23:41 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs_file_ioctl / xfs_freeze: BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock()
-Message-ID: <20070107213734.GS44411608@melbourne.sgi.com>
-References: <20070104001420.GA32440@m.safari.iki.fi>
+Subject: Re: BUG: warning at mm/truncate.c:60/cancel_dirty_page()
+Message-ID: <20070107222341.GT33919298@melbourne.sgi.com>
+References: <20070106023907.GA7766@m.safari.iki.fi> <Pine.LNX.4.64.0701062051570.24997@blonde.wat.veritas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070104001420.GA32440@m.safari.iki.fi>
+In-Reply-To: <Pine.LNX.4.64.0701062051570.24997@blonde.wat.veritas.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: xfs@oss.sgi.com
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Sami Farin <7atbggg02@sneakemail.com>, Nathan Scott <nathans@sgi.com>, xfs@oss.sgi.com, Nick Piggin <nickpiggin@yahoo.com.au>, linux-kernel@vger.kernel.org
 
-On Thu, Jan 04, 2007 at 02:14:21AM +0200, Sami Farin wrote:
-> just a simple test I did...
-> xfs_freeze -f /mnt/newtest
-> cp /etc/fstab /mnt/newtest
-> xfs_freeze -u /mnt/newtest
+On Sat, Jan 06, 2007 at 09:11:07PM +0000, Hugh Dickins wrote:
+> On Sat, 6 Jan 2007, Sami Farin wrote:
 > 
-> 2007-01-04 01:44:30.341979500 <4>BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock()
-> 2007-01-04 01:44:30.385771500 <4> [<c0103cfb>] dump_trace+0x215/0x21a
-> 2007-01-04 01:44:30.385774500 <4> [<c0103da3>] show_trace_log_lvl+0x1a/0x30
-> 2007-01-04 01:44:30.385775500 <4> [<c0103dcb>] show_trace+0x12/0x14
-> 2007-01-04 01:44:30.385777500 <4> [<c0103ec8>] dump_stack+0x19/0x1b
-> 2007-01-04 01:44:30.385778500 <4> [<c013a3af>] debug_mutex_unlock+0x69/0x120
-> 2007-01-04 01:44:30.385779500 <4> [<c04b4aac>] __mutex_unlock_slowpath+0x44/0xf0
-> 2007-01-04 01:44:30.385780500 <4> [<c04b4887>] mutex_unlock+0x8/0xa
-> 2007-01-04 01:44:30.385782500 <4> [<c018d0ba>] thaw_bdev+0x57/0x6e
-> 2007-01-04 01:44:30.385791500 <4> [<c026a6cf>] xfs_ioctl+0x7ce/0x7d3
-> 2007-01-04 01:44:30.385793500 <4> [<c0269158>] xfs_file_ioctl+0x33/0x54
-> 2007-01-04 01:44:30.385794500 <4> [<c01793f2>] do_ioctl+0x76/0x85
-> 2007-01-04 01:44:30.385795500 <4> [<c0179570>] vfs_ioctl+0x59/0x1aa
-> 2007-01-04 01:44:30.385796500 <4> [<c0179728>] sys_ioctl+0x67/0x77
-> 2007-01-04 01:44:30.385797500 <4> [<c0102e73>] syscall_call+0x7/0xb
-> 2007-01-04 01:44:30.385799500 <4> [<001be410>] 0x1be410
-> 2007-01-04 01:44:30.385800500 <4> =======================
+> > Linux 2.6.19.1 SMP [2] on Pentium D...
+> > I was running dt-15.14 [2] and I ran
+> > "cinfo datafile" (it does mincore()).
+> > Well it went OK but when I ran "strace cinfo datafile"...:
+> > 04:18:48.062466 mincore(0x37f1f000, 2147266560, 
 > 
-> fstab was there just fine after -u.
+> You rightly noted in a followup that there have been changes to
+> mincore, but I doubt they have any bearing on this: I think the
+> BUG just happened at the same time as your mincore.
+> 
+> > ...
+> > 2007-01-06 04:19:03.788181500 <4>BUG: warning at mm/truncate.c:60/cancel_dirty_page()
+> > 2007-01-06 04:19:03.788221500 <4> [<c0103cfb>] dump_trace+0x215/0x21a
+> > 2007-01-06 04:19:03.788223500 <4> [<c0103da3>] show_trace_log_lvl+0x1a/0x30
+> > 2007-01-06 04:19:03.788224500 <4> [<c0103dcb>] show_trace+0x12/0x14
+> > 2007-01-06 04:19:03.788225500 <4> [<c0103ec8>] dump_stack+0x19/0x1b
+> > 2007-01-06 04:19:03.788227500 <4> [<c01546a6>] cancel_dirty_page+0x7e/0x80
+> > 2007-01-06 04:19:03.788228500 <4> [<c01546c2>] truncate_complete_page+0x1a/0x47
+> > 2007-01-06 04:19:03.788229500 <4> [<c0154854>] truncate_inode_pages_range+0x114/0x2ae
+> > 2007-01-06 04:19:03.788245500 <4> [<c0154a08>] truncate_inode_pages+0x1a/0x1c
+> > 2007-01-06 04:19:03.788247500 <4> [<c0269244>] fs_flushinval_pages+0x40/0x77
+> > 2007-01-06 04:19:03.788248500 <4> [<c026d48c>] xfs_write+0x8c4/0xb68
+> > 2007-01-06 04:19:03.788250500 <4> [<c0268b14>] xfs_file_aio_write+0x7e/0x95
+> > 2007-01-06 04:19:03.788251500 <4> [<c016d66c>] do_sync_write+0xca/0x119
+> > 2007-01-06 04:19:03.788265500 <4> [<c016d842>] vfs_write+0x187/0x18c
+> > 2007-01-06 04:19:03.788267500 <4> [<c016d8e8>] sys_write+0x3d/0x64
+> > 2007-01-06 04:19:03.788268500 <4> [<c0102e73>] syscall_call+0x7/0xb
+> > 2007-01-06 04:19:03.788269500 <4> [<001cf410>] 0x1cf410
+> > 2007-01-06 04:19:03.788289500 <4> =======================
+> 
+> So... XFS uses truncate_inode_pages when serving the write system call.
 
-Oh, that still hasn't been fixed? Generic bug, not XFS - the global
-semaphore->mutex cleanup converted the bd_mount_sem to a mutex, and
-mutexes complain loudly when a the process unlocking the mutex is
-not the process that locked it.
+Only when you are doing direct I/O. XFS does direct writes without
+the i_mutex held, so it has to invalidate the range of cached pages
+while holding it's own locks to ensure direct I/O cache semantics are
+kept.
 
-Basically, the generic code is broken - the bd_mount_mutex needs to
-be reverted back to a semaphore because it is locked and unlocked
-by different processes. The following patch does this....
+> That's very inventive,
 
-BTW, Sami, can you cc xfs@oss.sgi.com on XFS bug reports in future;
-you'll get more XFS savvy eyes there.....
+Not really - been doing it for years.
+
+> and now it looks like Linus' cancel_dirty_page
+> and new warning have caught it out.  VM people expect it to be called
+> either when freeing an inode no longer in use, or when doing a truncate,
+> after ensuring that all pages mapped into userspace have been taken out.
+
+Ok, so we are punching a hole in the middle of the address space
+because we are doing direct I/O on it and need to invalidate the
+cache.
+
+How are you supposed to invalidate a range of pages in a mapping for
+this case, then? invalidate_mapping_pages() would appear to be the
+candidate (the generic code uses this), but it _skips_ pages that
+are already mapped.  invalidate_mapping_pages() then advises you to
+use truncate_inode_pages():
+
+/**
+ * invalidate_mapping_pages - Invalidate all the unlocked pages of one inode
+ * @mapping: the address_space which holds the pages to invalidate
+ * @start: the offset 'from' which to invalidate
+ * @end: the offset 'to' which to invalidate (inclusive)
+ *
+ * This function only removes the unlocked pages, if you want to
+ * remove all the pages of one inode, you must call truncate_inode_pages.
+ *
+ * invalidate_mapping_pages() will not block on IO activity. It will not
+ * invalidate pages which are dirty, locked, under writeback or mapped into
+ * pagetables.
+ */
+
+We want to remove all pages within the range given, so, as directed by
+the comment here, we use truncate_inode_pages(). Says nothing about
+mappings needing to be removed first so I guess that's where we've
+been caught.....
+
+I think we can use invalidate_inode_pages2_range(), but that doesn't
+handle partial page invalidations. I think this will be ok, but it's
+going to need some serious fsx testing on blocksize != page size
+configs.
+
+So, am I correct in assuming we should be calling invalidate_inode_pages2_range()
+instead of truncate_inode_pages()?
 
 Cheers,
 
@@ -63,109 +111,3 @@ Dave.
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
-
----
-
-Revert bd_mount_mutex back to a semaphore so that xfs_freeze -f /mnt/newtest;
-xfs_freeze -u /mnt/newtest works safely and doesn't produce lockdep warnings.
-
-Signed-off-by: Dave Chinner <dgc@sgi.com>
-
-
----
- fs/block_dev.c       |    2 +-
- fs/buffer.c          |    6 +++---
- fs/gfs2/ops_fstype.c |    4 ++--
- fs/super.c           |    4 ++--
- include/linux/fs.h   |    2 +-
- 5 files changed, 9 insertions(+), 9 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/block_dev.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/block_dev.c	2006-12-22 10:53:20.000000000 +1100
-+++ 2.6.x-xfs-new/fs/block_dev.c	2007-01-08 08:26:15.843378600 +1100
-@@ -263,7 +263,7 @@ static void init_once(void * foo, kmem_c
- 	{
- 		memset(bdev, 0, sizeof(*bdev));
- 		mutex_init(&bdev->bd_mutex);
--		mutex_init(&bdev->bd_mount_mutex);
-+		sema_init(&bdev->bd_mount_sem, 1);
- 		INIT_LIST_HEAD(&bdev->bd_inodes);
- 		INIT_LIST_HEAD(&bdev->bd_list);
- #ifdef CONFIG_SYSFS
-Index: 2.6.x-xfs-new/fs/buffer.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/buffer.c	2006-12-12 12:04:51.000000000 +1100
-+++ 2.6.x-xfs-new/fs/buffer.c	2007-01-08 08:28:40.832542651 +1100
-@@ -179,7 +179,7 @@ int fsync_bdev(struct block_device *bdev
-  * freeze_bdev  --  lock a filesystem and force it into a consistent state
-  * @bdev:	blockdevice to lock
-  *
-- * This takes the block device bd_mount_mutex to make sure no new mounts
-+ * This takes the block device bd_mount_sem to make sure no new mounts
-  * happen on bdev until thaw_bdev() is called.
-  * If a superblock is found on this device, we take the s_umount semaphore
-  * on it to make sure nobody unmounts until the snapshot creation is done.
-@@ -188,7 +188,7 @@ struct super_block *freeze_bdev(struct b
- {
- 	struct super_block *sb;
- 
--	mutex_lock(&bdev->bd_mount_mutex);
-+	down(&bdev->bd_mount_sem);
- 	sb = get_super(bdev);
- 	if (sb && !(sb->s_flags & MS_RDONLY)) {
- 		sb->s_frozen = SB_FREEZE_WRITE;
-@@ -230,7 +230,7 @@ void thaw_bdev(struct block_device *bdev
- 		drop_super(sb);
- 	}
- 
--	mutex_unlock(&bdev->bd_mount_mutex);
-+	up(&bdev->bd_mount_sem);
- }
- EXPORT_SYMBOL(thaw_bdev);
- 
-Index: 2.6.x-xfs-new/fs/gfs2/ops_fstype.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/gfs2/ops_fstype.c	2006-12-12 12:04:58.000000000 +1100
-+++ 2.6.x-xfs-new/fs/gfs2/ops_fstype.c	2007-01-08 08:27:12.847973663 +1100
-@@ -867,9 +867,9 @@ static int gfs2_get_sb_meta(struct file_
- 		error = -EBUSY;
- 		goto error;
- 	}
--	mutex_lock(&sb->s_bdev->bd_mount_mutex);
-+	down(&sb->s_bdev->bd_mount_sem);
- 	new = sget(fs_type, test_bdev_super, set_bdev_super, sb->s_bdev);
--	mutex_unlock(&sb->s_bdev->bd_mount_mutex);
-+	up(&sb->s_bdev->bd_mount_sem);
- 	if (IS_ERR(new)) {
- 		error = PTR_ERR(new);
- 		goto error;
-Index: 2.6.x-xfs-new/fs/super.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/super.c	2006-12-22 11:45:59.000000000 +1100
-+++ 2.6.x-xfs-new/fs/super.c	2007-01-08 08:24:20.718330640 +1100
-@@ -736,9 +736,9 @@ int get_sb_bdev(struct file_system_type 
- 	 * will protect the lockfs code from trying to start a snapshot
- 	 * while we are mounting
- 	 */
--	mutex_lock(&bdev->bd_mount_mutex);
-+	down(&bdev->bd_mount_sem);
- 	s = sget(fs_type, test_bdev_super, set_bdev_super, bdev);
--	mutex_unlock(&bdev->bd_mount_mutex);
-+	up(&bdev->bd_mount_sem);
- 	if (IS_ERR(s))
- 		goto error_s;
- 
-Index: 2.6.x-xfs-new/include/linux/fs.h
-===================================================================
---- 2.6.x-xfs-new.orig/include/linux/fs.h	2006-12-12 12:06:31.000000000 +1100
-+++ 2.6.x-xfs-new/include/linux/fs.h	2007-01-08 08:24:53.602060200 +1100
-@@ -456,7 +456,7 @@ struct block_device {
- 	struct inode *		bd_inode;	/* will die */
- 	int			bd_openers;
- 	struct mutex		bd_mutex;	/* open/close mutex */
--	struct mutex		bd_mount_mutex;	/* mount mutex */
-+	struct semaphore	bd_mount_sem;
- 	struct list_head	bd_inodes;
- 	void *			bd_holder;
- 	int			bd_holders;
