@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 07:13:21 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 07:13:19 -0800 (PST)
 Received: from extgat1.local.navi.pl (ip-83-238-212-180.netia.com.pl [83.238.212.180])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08FDDr0027209
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 07:13:16 -0800
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08FDDqw027209
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 07:13:15 -0800
+Received: from venus.local.navi.pl (www.local.navi.pl [192.168.1.10])
+	by extgat1.local.navi.pl (8.13.1/8.13.1) with ESMTP id l08EobEL003960
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 15:50:37 +0100
+Received: from venus.local.navi.pl (venus.local.navi.pl [192.168.1.10])
+	by venus.local.navi.pl (8.13.1/8.13.1) with ESMTP id l08Eobxm032566
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 15:50:37 +0100
 Subject: Re: What's wrong with XFS?
-From: Olaf Fraczyk <olaf@navi.pl>
+From: Olaf =?iso-8859-2?Q?Fr=B1czyk?= <olaf@cbk.poznan.pl>
 In-Reply-To: <936386.57179.qm@web59111.mail.re1.yahoo.com>
 References: <936386.57179.qm@web59111.mail.re1.yahoo.com>
-Content-Type: text/plain
-Date: Mon, 08 Jan 2007 15:49:15 +0100
-Message-Id: <1168267755.29690.13.camel@venus.local.navi.pl>
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 08 Jan 2007 15:50:37 +0100
+Message-Id: <1168267837.29690.14.camel@venus.local.navi.pl>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave N <mutex1@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 On Mon, 2007-01-08 at 05:13 -0800, Dave N wrote:
 > Hi,
@@ -31,6 +36,7 @@ On Mon, 2007-01-08 at 05:13 -0800, Dave N wrote:
 > Thanks for listening to my preaching here guys
 > 
 > Cheers!
+
 Hi,
 
 It is nothing wrong with XFS - your expectations are wrong.
@@ -50,5 +56,4 @@ Regards,
 
 Olaf
 -- 
-Olaf Fraczyk <olaf@navi.pl>
-NAVI
+Olaf Frączyk <olaf@cbk.poznan.pl>
