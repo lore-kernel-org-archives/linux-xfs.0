@@ -1,41 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 02:53:02 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08Aquqw008011
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 02:52:57 -0800
-Date: Mon, 8 Jan 2007 10:52:03 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: fix block reservation to work with per-cpu counters
-Message-ID: <20070108105203.GA31252@infradead.org>
-References: <20070108061040.GD44411608@melbourne.sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 04:14:14 -0800 (PST)
+Received: from pne-smtpout4-sn1.fre.skanova.net (pne-smtpout4-sn1.fre.skanova.net [81.228.11.168])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08CE5qw021469
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 04:14:08 -0800
+Received: from safari.iki.fi (80.223.106.128) by pne-smtpout4-sn1.fre.skanova.net (7.2.075)
+        id 44A36A0A008DA590 for xfs@oss.sgi.com; Mon, 8 Jan 2007 12:03:24 +0100
+Date: Mon, 8 Jan 2007 13:03:23 +0200
+From: Sami Farin <safari-xfs@safari.iki.fi>
+Subject: Re: xfs_file_ioctl / xfs_freeze: BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock()
+Message-ID: <20070108110323.GA3803@m.safari.iki.fi>
+References: <20070104001420.GA32440@m.safari.iki.fi> <20070107213734.GS44411608@melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070108061040.GD44411608@melbourne.sgi.com>
+In-Reply-To: <20070107213734.GS44411608@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Jan 08, 2007 at 05:10:40PM +1100, David Chinner wrote:
-> Currently, XFS_IOC_SET_RESBLKS will not work properly when
-> per-cpu superblock counters are enabled. Reservations can be lost
-> silently as they are applied to the incore superblock instead of
-> the currently active counters.
+On Mon, Jan 08, 2007 at 08:37:34 +1100, David Chinner wrote:
+...
+> > fstab was there just fine after -u.
 > 
-> Rather than try to shoe-horn the current reservation code into
-> the per-cpu counters or vice-versa, we lock the superblock
-> and snap the current counter state and work on that number.
-> Once we work out exactly how much we need to "allocate" to
-> the reserved area, we drop the lock and call xfs_mod_incore_sb()
-> which will do all the right things w.r.t to the counter state.
-> 
-> If we fail to get as much as we want (i.e. ENOSPC is returned)
-> we go back to the start and try to allocate as much of what is
-> left.
-> 
-> Comments?
+> Oh, that still hasn't been fixed?
 
-Sounds okay.  Reservations shouldn't be frequent enough for this
-to have a performance impact.
+Looked like it =)
+
+> Generic bug, not XFS - the global
+> semaphore->mutex cleanup converted the bd_mount_sem to a mutex, and
+> mutexes complain loudly when a the process unlocking the mutex is
+> not the process that locked it.
+> 
+> Basically, the generic code is broken - the bd_mount_mutex needs to
+> be reverted back to a semaphore because it is locked and unlocked
+> by different processes. The following patch does this....
+> 
+> BTW, Sami, can you cc xfs@oss.sgi.com on XFS bug reports in future;
+> you'll get more XFS savvy eyes there.....
+
+Forgot to.
+
+Thanks for patch.  It fixed the issue, no more warnings.
+
+BTW. the fix is not in 2.6.git, either.
+
+-- 
+Do what you love because life is too short for anything else.
