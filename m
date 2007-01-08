@@ -1,37 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 05:40:59 -0800 (PST)
-Received: from web59111.mail.re1.yahoo.com (web59111.mail.re1.yahoo.com [66.196.101.22])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l08Deqqw009792
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 05:40:54 -0800
-Date: Mon, 8 Jan 2007 05:13:12 -0800 (PST)
-From: Dave N <mutex1@yahoo.com>
-Subject: What's wrong with XFS?
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 06:47:03 -0800 (PST)
+Received: from smtp113.sbc.mail.mud.yahoo.com (smtp113.sbc.mail.mud.yahoo.com [68.142.198.212])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l08Eksqw022022
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 06:46:55 -0800
+Date: Mon, 8 Jan 2007 06:45:49 -0800
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: What's wrong with XFS?
+Message-ID: <20070108144549.GA12073@tuatara.stupidest.org>
+References: <936386.57179.qm@web59111.mail.re1.yahoo.com>
 MIME-Version: 1.0
-Message-ID: <936386.57179.qm@web59111.mail.re1.yahoo.com>
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <936386.57179.qm@web59111.mail.re1.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Dave N <mutex1@yahoo.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Mon, Jan 08, 2007 at 05:13:12AM -0800, Dave N wrote:
 
-Can someone enlighten me what the issue is with XFS? I've been hearing a lot of good things on the Net about XFS. How it's lightening fast, how it has features other file systems do not have (like GRIO, real time volumes, allocate on flush, etc), how it scales very well, etc... but what I didn't hear about is how fast XFS screws things up if something wrong happens. Because of the good things I heard about XFS, I too decided to try it out (been using Ext3 or ReiserFS here for most of the time). Now I'm very disappointed in XFS. I live in an area where power outages are common and I do not have an UPS here. I have a few computers all running on XFS and thought that XFS will give me similar data-integrity like Ext3 or ReiserFS. Now, for the past few weeks I've been experiencing "strange behavior" from XFS. One time, I was reading an article on the Net and had only my Firefox browser open. Then we had a power outage for a short period of time, and when I logged in again into
- KDE, I was surprised to find out that all my desktop icons were messed up all over the place. The other time, again power outage, only this time I was working on a small text file. Booted up again only to find out that the file I was working on contained garbage and I had to start all over again. 
+>  KDE, I was surprised to find out that all my desktop icons were
+>  messed up all over the place.
 
-I also heard that XFS depends heavily on the application side for its data-integrity. XFS "thinks" that the application will use the proper calls when writing to disk. What???? How is it the task of the application to ensure the safety of your files??? IMO, programs are there to provide the tools to be productive, NOT to ensure the data safety of your files, that's the task of the file system. Even MySQL provides me with better data-integrity here. If I'm doing some database transaction and the power fails, I can be pretty sure that *most* of the time, MySQL will be just fine next time I boot up.
+KDE made assumptions which are not only not true on linux but not true
+elsewhere either.  Last I checked KDE dealt with the common cases that
+were problematic much better now.
 
-Why oh why such a beautiful file system like XFS is so terrible at data-integrity? Look what Sun Microsystems did with their new ZFS file system... full atomicity, CRC checksumming and other features to ensure data-integrity... why can't XFS have such things?
+>  The other time, again power outage, only this time I was working on
+>  a small text file. Booted up again only to find out that the file I
+>  was working on contained garbage and I had to start all over again.
 
-Thanks for listening to my preaching here guys
+The file should not have contained garbage.  Also, if you
+open+truncate+write a file it should be flushed very soon after close
+these days, the window is fairly small now.
 
-Cheers!
+> I also heard that XFS depends heavily on the application side for
+> its data-integrity.  XFS "thinks" that the application will use the
+> proper calls when writing to disk. What???? How is it the task of
+> the application to ensure the safety of your files???
 
- __________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+It's always been that way, for many many years, even before Linux
+existed.  If you want your applictions to be portable and reliable
+then you have to do do it right.
 
-[[HTML alternate version deleted]]
+MTAs are a good example of applications which typically get this right
+because people case about lost email and the authors typically take
+some effort into make sure it's right.
+
+> IMO, programs are there to provide the tools to be productive, NOT
+> to ensure the data safety of your files, that's the task of the file
+> system. Even MySQL provides me with better data-integrity here.
+
+Does MySQL allow me to read or write 100s of MB/s continuously on
+cheap hardware (for not so cheap hardware I could ask 7GB/s).
+
+> Why oh why such a beautiful file system like XFS is so terrible at
+> data-integrity?
+
+There is a cost to full data journalling.  Personally even with ext3 I
+find the impact of this high enough I don't use it.
+
+> Look what Sun Microsystems did with their new ZFS file
+> system... full atomicity, CRC checksumming and other features to
+> ensure data-integrity...
+
+You could argue XFS is showing it's age, it's far from a new
+filesystem these days.
+
+ZFS is a very different animal to most traditional filesystems.
+
+> why can't XFS have such things?
+
+Because the realities of life sometime collide with what people want
+ideally.
+
+Linux can't have ZFS for licensing reasons but you can have Solaris
+with ZFS:  http://opensolaris.org/os/downloads/on/
