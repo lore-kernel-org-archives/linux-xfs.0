@@ -1,89 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 09:33:07 -0800 (PST)
-Received: from service.eng.exegy.net (68-191-203-42.static.stls.mo.charter.com [68.191.203.42])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08HX1qw028138
-	for <linux-xfs@oss.sgi.com>; Mon, 8 Jan 2007 09:33:03 -0800
-Message-ID: <45A27BC7.2020709@exegy.com>
-Date: Mon, 08 Jan 2007 11:13:43 -0600
-From: "Mr. Berkley Shands" <bshands@exegy.com>
-MIME-Version: 1.0
-Subject: XFS and 2.6.18 -> 2.6.20-rc3
-Content-Type: text/plain
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 15:02:25 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l08N2Iqw018556
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 15:02:20 -0800
+Date: Tue, 9 Jan 2007 10:01:19 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: make growing by >2TB work
+Message-ID: <20070108230119.GA33919298@melbourne.sgi.com>
+References: <20070108044414.GC44411608@melbourne.sgi.com> <20070108091218.GB17121@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20070108091218.GB17121@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Lloyd <dlloyd@exegy.com>, linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-My testbench is a 4 core Opteron (dual 275's) into
-two LSI8408E SAS controllers, into 16 Seagate 7200.10 320GB satas.
-Redhat ES4.4 (Centos 4.4). A slightly newer parted is needed
-than the contemporary of Moses that is shipped with the O/S.
+On Mon, Jan 08, 2007 at 09:12:18AM +0000, Christoph Hellwig wrote:
+> On Mon, Jan 08, 2007 at 03:44:14PM +1100, David Chinner wrote:
+> > Growing a filesystem by > 2TB currently causes an overflow
+> > in the transaction subsystem. Make transaction deltas and associated
+> > elements explicitly 64 bit types so that we don't get overflows.
+> > 
+> > Comments?
+> 
+> Looks good.
+> 
+> >  
+> > -	AIL_LOCKINIT(&mp->m_ail_lock, "xfs_ail");
+> >  	spinlock_init(&mp->m_sb_lock, "xfs_sb");
+> >  	mutex_init(&mp->m_ilock);
+> >  	initnsema(&mp->m_growlock, 1, "xfs_grow");
+> > -	/*
+> > -	 * Initialize the AIL.
+> > -	 */
+> > -	xfs_trans_ail_init(mp);
+> 
+> This seems unrelated (?)
 
-I have a standard burn in script that takes the 4 4-drive raid0's
-and puts a GPT label on them, aligns the partitions to stripe
-boundary's. It then proceeds to write 8GB files concurrently
-onto all 4 raid drives.
+Ahhh - leakage from a recent patch series reordering....
 
-Under 2.6.18.1 the write speeds start at 265MB/Sec and decrease
-mostly monotonically down to ~160MB/Sec, indicating that
-the files start on the outside (fastest tracks) and work in.
-All 4 raids are within 7-8MB/Sec of each other (usually they
-are identical in speed).
+> > -xfs_mod_incore_sb(xfs_mount_t *mp, xfs_sb_field_t field, int delta, int rsvd)
+> > +xfs_mod_incore_sb(xfs_mount_t *mp, xfs_sb_field_t field, int64_t delta, int rsvd)
+> 
+> This seems to be over 80 chars linelength with your patch, just break
+> the line.
 
-By the time of 2.6.20-rc3, the same testbench shows
-a 10% across the board decrease in throughput for writes.
-Reads are unaffected.
-But now the allocation order for virgin file systems are random,
-usually starting at the slow 140MB/Sec, then bouncing up to 220MB/Sec,
-then around and around. No two raids get the same write speeds at the 
-same time.
+Will do.
 
-Dave Lloyd (our in-house Idea Guy) looked at the allocation groups...
-Non-sequential, random...
+Thanks, Christoph.
 
-What data would you like to see?
+Cheers,
 
-The run logs from 2.6.18.1 and 2.6.20-rc3?
-Want the scripts?
-The xfs-debug dumps of a few files?
-
-Berkley
-
+Dave.
 -- 
-
-//E. F. Berkley Shands, MSc//
-
-**Exegy Inc.**
-
-3668 S. Geyer Road, Suite 300
-
-St. Louis, MO  63127
-
-Direct:  (314) 450-5348
-
-Cell:  (314) 303-2546
-
-Office:  (314) 450-5353
-
-Fax:  (314) 450-5354
-
- 
-
-This e-mail and any documents accompanying it may contain legally 
-privileged and/or confidential information belonging to Exegy, Inc.  
-Such information may be protected from disclosure by law.  The 
-information is intended for use by only the addressee.  If you are not 
-the intended recipient, you are hereby notified that any disclosure or 
-use of the information is strictly prohibited.  If you have received 
-this e-mail in error, please immediately contact the sender by e-mail or 
-phone regarding instructions for return or destruction and do not use or 
-disclose the content to others.
-
- 
-
-
-
-[[HTML alternate version deleted]]
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
