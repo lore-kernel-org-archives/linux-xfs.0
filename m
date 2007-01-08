@@ -1,44 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 01:21:16 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l089LAqw025065
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 01:21:11 -0800
-Date: Mon, 8 Jan 2007 09:09:16 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: fix mapping invalidation callouts
-Message-ID: <20070108090916.GA17121@infradead.org>
-References: <20070108040309.GX33919298@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 02:46:00 -0800 (PST)
+Received: from gw02.mail.saunalahti.fi (gw02.mail.saunalahti.fi [195.197.172.116])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08Ajsqw006620
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 02:45:56 -0800
+Received: from mrp2.mail.saunalahti.fi (mrp2.mail.saunalahti.fi [62.142.5.31])
+	by gw02.mail.saunalahti.fi (Postfix) with ESMTP id 0EDFE13978A
+	for <xfs@oss.sgi.com>; Mon,  8 Jan 2007 12:23:34 +0200 (EET)
+Received: from [192.168.0.151] (unknown [62.142.247.178])
+	(using SSLv3 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mrp2.mail.saunalahti.fi (Postfix) with ESMTP id E1752598004
+	for <xfs@oss.sgi.com>; Mon,  8 Jan 2007 12:23:32 +0200 (EET)
+Subject: xfs_repair: corrupt inode error
+From: Jyrki Muukkonen <jyrki.muukkonen@futurice.fi>
+Content-Type: text/plain
+Date: Mon, 08 Jan 2007 12:23:32 +0200
+Message-Id: <1168251812.20568.8.camel@mustis>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070108040309.GX33919298@melbourne.sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 08, 2007 at 03:03:09PM +1100, David Chinner wrote:
-> With the recent cancel_dirty_page() changes, a warning was
-> added if we cancel a dirty page that is still mapped into
-> the page tables.
-> This happens in XFS from fs_tosspages() and fs_flushinval_pages()
-> because they call truncate_inode_pages().
-> 
-> truncate_inode_pages() does not invalidate existing page mappings;
-> it is expected taht this is called only when truncating the file
-> or destroying the inode and on both these cases there can be
-> no mapped ptes. However, we call this when doing direct I/O writes
-> to remove pages from the page cache. As a result, we can rip
-> a page from the page cache that still has mappings attached.
-> 
-> The correct fix is to use invalidate_inode_pages2_range() instead
-> of truncate_inode_pages(). They essentially do the same thing, but
-> the former also removes any pte mappings before removing the page
-> from the page cache.
-> 
-> Comments?
+Got this error in phase 6 when running xfs_repair 2.8.18 on ~1.2TB
+partition over the weekend (it took around 60 hours to get to this
+point :). On earlier versions xfs_repair aborted after ~15-20 hours with
+"invalid inode type" error.
 
-Generally looks good.  But I feel a little cautios about changes in this
-area, so we should throw all possible test loads at this before commiting
-it.
+...
+disconnected inode 4151889519, moving to lost+found
+disconnected inode 4151889543, moving to lost+found
+corrupt inode 4151889543 (btree).  This is a bug.
+Please report it to xfs@oss.sgi.com.
+cache_node_purge: refcount was 1, not zero (node=0x132650d0)
+
+fatal error -- 117 - couldn't iget disconnected inode
+
+I've got the full log (both stderr and stdout) and can put that
+somewhere if needed. It's about 80MB uncompressed and around 7MB
+gzipped. Running the xfs_repair without multithreading and with -v might
+also be possible if that's going to help.
+
+-- 
+Jyrki Muukkonen
+Futurice Oy
+jyrki.muukkonen@futurice.fi
++358 41 501 7322
