@@ -1,44 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 15:48:43 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l08NmZqw026489
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 15:48:37 -0800
-Date: Tue, 9 Jan 2007 10:47:28 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: bd_mount_mutex -> bd_mount_sem (was Re: xfs_file_ioctl / xfs_freeze: BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock())
-Message-ID: <20070108234728.GC33919298@melbourne.sgi.com>
-References: <20070104001420.GA32440@m.safari.iki.fi> <20070107213734.GS44411608@melbourne.sgi.com> <20070108110323.GA3803@m.safari.iki.fi> <45A27416.8030600@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 15:58:26 -0800 (PST)
+Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.24])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l08NwJqw028326
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 15:58:20 -0800
+Date: Mon, 8 Jan 2007 15:56:36 -0800
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: xfs_file_ioctl / xfs_freeze: BUG: warning at
+ kernel/mutex-debug.c:80/debug_mutex_unlock()
+Message-Id: <20070108155636.a68dce33.akpm@osdl.org>
+In-Reply-To: <20070107213734.GS44411608@melbourne.sgi.com>
+References: <20070104001420.GA32440@m.safari.iki.fi>
+	<20070107213734.GS44411608@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45A27416.8030600@sandeen.net>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, akpm@osdl.org
+To: David Chinner <dgc@sgi.com>
+Cc: linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Ingo Molnar <mingo@elte.hu>
 
-On Mon, Jan 08, 2007 at 10:40:54AM -0600, Eric Sandeen wrote:
-> Sami Farin wrote:
-> > On Mon, Jan 08, 2007 at 08:37:34 +1100, David Chinner wrote:
-> > ...
-> >>> fstab was there just fine after -u.
-> >> Oh, that still hasn't been fixed?
+On Mon, 8 Jan 2007 08:37:34 +1100
+David Chinner <dgc@sgi.com> wrote:
+
+> On Thu, Jan 04, 2007 at 02:14:21AM +0200, Sami Farin wrote:
+> > just a simple test I did...
+> > xfs_freeze -f /mnt/newtest
+> > cp /etc/fstab /mnt/newtest
+> > xfs_freeze -u /mnt/newtest
 > > 
-> > Looked like it =)
+> > 2007-01-04 01:44:30.341979500 <4>BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock()
+> > 2007-01-04 01:44:30.385771500 <4> [<c0103cfb>] dump_trace+0x215/0x21a
+> > 2007-01-04 01:44:30.385774500 <4> [<c0103da3>] show_trace_log_lvl+0x1a/0x30
+> > 2007-01-04 01:44:30.385775500 <4> [<c0103dcb>] show_trace+0x12/0x14
+> > 2007-01-04 01:44:30.385777500 <4> [<c0103ec8>] dump_stack+0x19/0x1b
+> > 2007-01-04 01:44:30.385778500 <4> [<c013a3af>] debug_mutex_unlock+0x69/0x120
+> > 2007-01-04 01:44:30.385779500 <4> [<c04b4aac>] __mutex_unlock_slowpath+0x44/0xf0
+> > 2007-01-04 01:44:30.385780500 <4> [<c04b4887>] mutex_unlock+0x8/0xa
+> > 2007-01-04 01:44:30.385782500 <4> [<c018d0ba>] thaw_bdev+0x57/0x6e
+> > 2007-01-04 01:44:30.385791500 <4> [<c026a6cf>] xfs_ioctl+0x7ce/0x7d3
+> > 2007-01-04 01:44:30.385793500 <4> [<c0269158>] xfs_file_ioctl+0x33/0x54
+> > 2007-01-04 01:44:30.385794500 <4> [<c01793f2>] do_ioctl+0x76/0x85
+> > 2007-01-04 01:44:30.385795500 <4> [<c0179570>] vfs_ioctl+0x59/0x1aa
+> > 2007-01-04 01:44:30.385796500 <4> [<c0179728>] sys_ioctl+0x67/0x77
+> > 2007-01-04 01:44:30.385797500 <4> [<c0102e73>] syscall_call+0x7/0xb
+> > 2007-01-04 01:44:30.385799500 <4> [<001be410>] 0x1be410
+> > 2007-01-04 01:44:30.385800500 <4> =======================
+> > 
+> > fstab was there just fine after -u.
 > 
-> Hm, it was proposed upstream a while ago:
+> Oh, that still hasn't been fixed? Generic bug, not XFS - the global
+> semaphore->mutex cleanup converted the bd_mount_sem to a mutex, and
+> mutexes complain loudly when a the process unlocking the mutex is
+> not the process that locked it.
 > 
-> http://lkml.org/lkml/2006/9/27/137
+> Basically, the generic code is broken - the bd_mount_mutex needs to
+> be reverted back to a semaphore because it is locked and unlocked
+> by different processes. The following patch does this....
 > 
-> I guess it got lost?
+> ...
+> 
+> Revert bd_mount_mutex back to a semaphore so that xfs_freeze -f /mnt/newtest;
+> xfs_freeze -u /mnt/newtest works safely and doesn't produce lockdep warnings.
 
-Seems like it. Andrew, did this ever get queued for merge?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Sad.  The alternative would be to implement
+mutex_unlock_dont_warn_if_a_different_task_did_it().  Ingo?  Possible?
