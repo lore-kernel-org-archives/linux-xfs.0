@@ -1,62 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 22:00:22 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0960Gqw029476
-	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 22:00:17 -0800
-Subject: Re: [**BULK SPAM**]  Re: bd_mount_mutex -> bd_mount_sem (was Re:
-	xfs_file_ioctl / xfs_freeze: BUG: warning at
-	kernel/mutex-debug.c:80/debug_mutex_unlock())
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20070109044907.GH33919298@melbourne.sgi.com>
-References: <20070107213734.GS44411608@melbourne.sgi.com>
-	 <20070108110323.GA3803@m.safari.iki.fi> <45A27416.8030600@sandeen.net>
-	 <20070108234728.GC33919298@melbourne.sgi.com>
-	 <20070108161917.73a4c2c6.akpm@osdl.org> <45A30828.6000508@sandeen.net>
-	 <20070108191800.9d83ff5e.akpm@osdl.org> <45A30E1D.4030401@sandeen.net>
-	 <20070108195127.67fe86b8.akpm@osdl.org> <1168316223.32113.83.camel@edge>
-	 <20070109044907.GH33919298@melbourne.sgi.com>
-Content-Type: text/plain
-Date: Tue, 09 Jan 2007 17:02:53 +1100
-Message-Id: <1168322573.32113.86.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 23:26:44 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l097QZqw011375
+	for <linux-xfs@oss.sgi.com>; Mon, 8 Jan 2007 23:26:37 -0800
+Date: Tue, 9 Jan 2007 18:25:35 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS and 2.6.18 -> 2.6.20-rc3
+Message-ID: <20070109072535.GH44411608@melbourne.sgi.com>
+References: <45A27BC7.2020709@exegy.com> <20070109012212.GG44411608@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070109012212.GG44411608@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Andrew Morton <akpm@osdl.org>, Eric Sandeen <sandeen@sandeen.net>, linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: "Mr. Berkley Shands" <bshands@exegy.com>, Eric Sandeen <sandeen@sandeen.net>, Dave Lloyd <dlloyd@exegy.com>, linux-xfs@oss.sgi.com
 
-On Tue, 2007-01-09 at 15:49 +1100, David Chinner wrote:
-> On Tue, Jan 09, 2007 at 03:17:03PM +1100, Nathan Scott wrote:
-> > On Mon, 2007-01-08 at 19:51 -0800, Andrew Morton wrote:
-> > > If that's not true, then what _is_ happening in there?
+On Tue, Jan 09, 2007 at 12:22:12PM +1100, David Chinner wrote:
+> On Mon, Jan 08, 2007 at 11:13:43AM -0600, Mr. Berkley Shands wrote:
+> > My testbench is a 4 core Opteron (dual 275's) into
+> > two LSI8408E SAS controllers, into 16 Seagate 7200.10 320GB satas.
+> > Redhat ES4.4 (Centos 4.4). A slightly newer parted is needed
+> > than the contemporary of Moses that is shipped with the O/S.
 > > 
-> > This particular case was a device mapper stack trace, hence the
-> > confusion, I think.  Both XFS and DM are making the same generic
-> > block layer call here though (freeze_bdev).
-> 
-> Yup. it's the freeze_bdev/thaw_bdev use of the bd_mount_mutex()
-> that's the problem. I fail to see _why_ we need to hold a lock
-> across the freeze/thaw - the only reason i can think of is to
-> hold out new calls to sget() (via get_sb_bdev()) while the
-> filesystem is frozen though I'm not sure why you'd need to
-> do that. Can someone explain why we are holding the lock from
-> freeze to thaw?
+> > I have a standard burn in script that takes the 4 4-drive raid0's
+> > and puts a GPT label on them, aligns the partitions to stripe
+> > boundary's. It then proceeds to write 8GB files concurrently
+> > onto all 4 raid drives.
 
-Not me.  If it's really not needed, then...
+I just ran up a similar test - single large file per device on a 4
+core Xeon (woodcrest) with 16GB RAM, a single PCI-X SAS HBA and
+12x10krpm 300GB SAS disks split into 3x4 disk dm raid zero stripes
+on 2.6.18 and 2.6.20-rc3.
 
-> > > If that _is_ true then, well, that sucks a bit.
-> > 
-> > Indeed, its a fairly ordinary interface, but thats too late to go
-> > fix now I guess (since its exposed to userspace already). 
-> 
-> Userspace knows nothing about that lock, so we can change that without
-> changing the the userspace API.
+I see the same thing - 2.6.20-rc3 is more erractic and quite a
+bit slower than 2.6.18 when going through XFS.
 
-...that would be true, AFAICS.
+I suggest trying this on 2.6.20-rc3:
 
-cheers.
+# echo 10 > /proc/sys/vm/dirty_ratio
 
+That restored most of the lost performance and consistency
+in my testing....
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
