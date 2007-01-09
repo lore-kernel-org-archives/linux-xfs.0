@@ -1,54 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 23:26:44 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l097QZqw011375
-	for <linux-xfs@oss.sgi.com>; Mon, 8 Jan 2007 23:26:37 -0800
-Date: Tue, 9 Jan 2007 18:25:35 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS and 2.6.18 -> 2.6.20-rc3
-Message-ID: <20070109072535.GH44411608@melbourne.sgi.com>
-References: <45A27BC7.2020709@exegy.com> <20070109012212.GG44411608@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Jan 2007 23:57:06 -0800 (PST)
+Received: from fallback.mail.elte.hu (fallback.mail.elte.hu [157.181.151.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l097uwqw016475
+	for <xfs@oss.sgi.com>; Mon, 8 Jan 2007 23:57:01 -0800
+Received: from mx2.mail.elte.hu ([157.181.151.9])
+	by fallback.mail.elte.hu with esmtp (Exim)
+	id 1H4Ak5-00074g-52
+	from <mingo@elte.hu>
+	for <xfs@oss.sgi.com>; Tue, 09 Jan 2007 07:45:53 +0100
+Date: Tue, 9 Jan 2007 07:41:13 +0100
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: xfs_file_ioctl / xfs_freeze: BUG: warning at kernel/mutex-debug.c:80/debug_mutex_unlock()
+Message-ID: <20070109064113.GB5569@elte.hu>
+References: <20070104001420.GA32440@m.safari.iki.fi> <20070107213734.GS44411608@melbourne.sgi.com> <20070108155636.a68dce33.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070109012212.GG44411608@melbourne.sgi.com>
+In-Reply-To: <20070108155636.a68dce33.akpm@osdl.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Mr. Berkley Shands" <bshands@exegy.com>, Eric Sandeen <sandeen@sandeen.net>, Dave Lloyd <dlloyd@exegy.com>, linux-xfs@oss.sgi.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: David Chinner <dgc@sgi.com>, linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Arjan van de Ven <arjan@infradead.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>
 
-On Tue, Jan 09, 2007 at 12:22:12PM +1100, David Chinner wrote:
-> On Mon, Jan 08, 2007 at 11:13:43AM -0600, Mr. Berkley Shands wrote:
-> > My testbench is a 4 core Opteron (dual 275's) into
-> > two LSI8408E SAS controllers, into 16 Seagate 7200.10 320GB satas.
-> > Redhat ES4.4 (Centos 4.4). A slightly newer parted is needed
-> > than the contemporary of Moses that is shipped with the O/S.
-> > 
-> > I have a standard burn in script that takes the 4 4-drive raid0's
-> > and puts a GPT label on them, aligns the partitions to stripe
-> > boundary's. It then proceeds to write 8GB files concurrently
-> > onto all 4 raid drives.
 
-I just ran up a similar test - single large file per device on a 4
-core Xeon (woodcrest) with 16GB RAM, a single PCI-X SAS HBA and
-12x10krpm 300GB SAS disks split into 3x4 disk dm raid zero stripes
-on 2.6.18 and 2.6.20-rc3.
+* Andrew Morton <akpm@osdl.org> wrote:
 
-I see the same thing - 2.6.20-rc3 is more erractic and quite a
-bit slower than 2.6.18 when going through XFS.
+> > Revert bd_mount_mutex back to a semaphore so that xfs_freeze -f 
+> > /mnt/newtest; xfs_freeze -u /mnt/newtest works safely and doesn't 
+> > produce lockdep warnings.
+> 
+> Sad.  The alternative would be to implement 
+> mutex_unlock_dont_warn_if_a_different_task_did_it().  Ingo?  Possible?
 
-I suggest trying this on 2.6.20-rc3:
+i'd like to avoid it as much as i'd like to avoid having to add 
+spin_unlock_dont_warn_if_a_different_task_did_it(). Unlocking by a 
+different task is usually a sign of messy locking and bugs lurking. Is 
+it really true that XFS's use of bd_mount_mutex is safe and justified?
 
-# echo 10 > /proc/sys/vm/dirty_ratio
-
-That restored most of the lost performance and consistency
-in my testing....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+	Ingo
