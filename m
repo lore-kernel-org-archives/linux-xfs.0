@@ -1,52 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Jan 2007 21:44:23 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Jan 2007 22:24:50 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0A5iFqw006143
-	for <xfs@oss.sgi.com>; Tue, 9 Jan 2007 21:44:16 -0800
-Subject: TAKE 956323 - File system block reservation mechanism is broken
-Message-Id: <20070110054314.A64F058CF82A@chook.melbourne.sgi.com>
-Date: Wed, 10 Jan 2007 16:43:14 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0A6Ohqw012997
+	for <xfs@oss.sgi.com>; Tue, 9 Jan 2007 22:24:45 -0800
+Date: Wed, 10 Jan 2007 17:23:44 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: fix mapping invalidation callouts
+Message-ID: <20070110062344.GR33919298@melbourne.sgi.com>
+References: <20070108040309.GX33919298@melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070108040309.GX33919298@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
-Cc: sdoyon@max-t.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-Fix block reservation mechanism.
+On Mon, Jan 08, 2007 at 03:03:09PM +1100, David Chinner wrote:
+> With the recent cancel_dirty_page() changes, a warning was
+> added if we cancel a dirty page that is still mapped into
+> the page tables.
+> This happens in XFS from fs_tosspages() and fs_flushinval_pages()
+> because they call truncate_inode_pages().
+> 
+> truncate_inode_pages() does not invalidate existing page mappings;
+> it is expected taht this is called only when truncating the file
+> or destroying the inode and on both these cases there can be
+> no mapped ptes. However, we call this when doing direct I/O writes
+> to remove pages from the page cache. As a result, we can rip
+> a page from the page cache that still has mappings attached.
+> 
+> The correct fix is to use invalidate_inode_pages2_range() instead
+> of truncate_inode_pages(). They essentially do the same thing, but
+> the former also removes any pte mappings before removing the page
+> from the page cache.
+> 
+> Comments?
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+> 
+> 
+> ---
+>  fs/xfs/linux-2.6/xfs_fs_subr.c |   10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_fs_subr.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_fs_subr.c	2006-12-12 12:05:17.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_fs_subr.c	2007-01-08 09:30:22.056571711 +1100
+> @@ -21,6 +21,8 @@ int  fs_noerr(void) { return 0; }
+>  int  fs_nosys(void) { return ENOSYS; }
+>  void fs_noval(void) { return; }
+>  
+> +#define XFS_OFF_TO_PCSIZE(off)	\
+> +	(((off) + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT)
 
-The block reservation mechanism has been broken since the per-cpu
-superblock counters were introduced. Make the block reservation code
-work with the per-cpu counters by syncing the counters, snapshotting
-the amount of available space and then doing a modifcation of the
-counter state according to the result. Continue in a loop until we
-either have no space available or we reserve some space.
+I don't think this is right.
 
+Assuming 4k page size, first = 2k, last = 6k will result in
+invalidating page indexes 1 and 2 i.e. offset 4k -> 12k. In fact,
+we want to invalidate pages 0 and 1.
 
-Date:  Wed Jan 10 16:42:29 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  hch@infradead.org
+IOWs, I think it should be:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
++#define XFS_OFF_TO_PCINDEX(off)	((off) >> PAGE_CACHE_SHIFT)
 
+Comments?
 
-Modid:  xfs-linux-melb:xfs-kern:27895a
-fs/xfs/xfs_vfsops.c - 1.513 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.513&r2=text&tr2=1.512&f=h
-	- Use the flags superblock counter sync function variant.
+Cheers,
 
-fs/xfs/xfs_mount.h - 1.232 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.232&r2=text&tr2=1.231&f=h
-	- Change the per-cpu counter sync interface to export a flags variant
-	  rather than specific, similar functions.
-
-fs/xfs/xfs_mount.c - 1.391 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.391&r2=text&tr2=1.390&f=h
-	- Change the per-cpu counter sync interface to export a flags variant
-	  rather than specific, similar functions.
-
-fs/xfs/xfs_fsops.c - 1.120 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fsops.c.diff?r1=text&tr1=1.120&r2=text&tr2=1.119&f=h
-	- Fix the block reservation mechanism to work with per-cpu superblock
-	  counters.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
