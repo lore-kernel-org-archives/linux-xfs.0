@@ -1,138 +1,127 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 10 Jan 2007 05:30:15 -0800 (PST)
-Received: from service.eng.exegy.net (68-191-203-42.static.stls.mo.charter.com [68.191.203.42])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0ADU9qw029849
-	for <linux-xfs@oss.sgi.com>; Wed, 10 Jan 2007 05:30:10 -0800
-Message-ID: <45A4EA2B.5050505@exegy.com>
-Date: Wed, 10 Jan 2007 07:29:15 -0600
-From: "Mr. Berkley Shands" <bshands@exegy.com>
-MIME-Version: 1.0
-Subject: Re: XFS and 2.6.18 -> 2.6.20-rc3
-References: <45A27BC7.2020709@exegy.com> <20070109012212.GG44411608@melbourne.sgi.com>
-	<20070109072535.GH44411608@melbourne.sgi.com>
-In-Reply-To: <20070109072535.GH44411608@melbourne.sgi.com>
-Content-Type: text/plain
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 10 Jan 2007 05:56:16 -0800 (PST)
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0ADuAqw002875
+	for <linux-xfs@oss.sgi.com>; Wed, 10 Jan 2007 05:56:12 -0800
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1H4duw-0001C7-G7
+	for linux-xfs@oss.sgi.com; Wed, 10 Jan 2007 14:55:02 +0100
+Received: from p54a57214.dip.t-dialin.net ([84.165.114.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Wed, 10 Jan 2007 14:55:02 +0100
+Received: from christoph.bier by p54a57214.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Wed, 10 Jan 2007 14:55:02 +0100
+From: Christoph Bier <christoph.bier@web.de>
+Subject: Mounting an external HDD fails each second time after xfs_repair
+Date: Wed, 10 Jan 2007 14:35:34 +0100
+Message-ID: <eo2q35$h6e$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Lloyd <dlloyd@exegy.com>, linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-With a fresh install of the O/S on a non-broken motherboard, the change to
+Hi all,
 
-/proc/sys/vm/dirty_ratio
+I use 14 partitions (one extended partition; partition table see
+below) on my new external 400GB HDD that is managed by LVM2 on
+Debian Sarge with a vanilla kernel 2.6.19.
 
-restores most of the lost performance from 2.6.18,
-as of 2.6.20-rc4. The difference is 10% to 15% without the dirty_ratio
-change (40 is the default, 10 gives the old performance).
+The first time I mounted the HDD on my desktop everything worked
+fine and I was able to copy 71GB of data. I unmounted and exported
+the HDD and imported and mounted it on my laptop (commands see
+below) running Ubuntu Edgy. Fine, too, I was able to read the data.
+I exported again and imported again on my desktop. But now mounting
+fails with
 
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33571 MS, Rate:   244.020, to /s0/GigaData.0
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33480 MS, Rate:   244.683, to /s2/GigaData.0
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33570 MS, Rate:   244.027, to /s1/GigaData.0
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33579 MS, Rate:   243.962, to /s3/GigaData.0
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 31486 MS, Rate:   260.179, to /s0/GigaData.1
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 31537 MS, Rate:   259.758, to /s2/GigaData.1
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 31538 MS, Rate:   259.750, to /s3/GigaData.1
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 31549 MS, Rate:   259.660, to /s1/GigaData.1
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 32205 MS, Rate:   254.370, to /s2/GigaData.2
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 32205 MS, Rate:   254.370, to /s1/GigaData.2
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 32218 MS, Rate:   254.268, to /s3/GigaData.2
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 32220 MS, Rate:   254.252, to /s0/GigaData.2
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33536 MS, Rate:   244.275, to /s0/GigaData.3
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 33583 MS, Rate:   243.933, to /s3/GigaData.3
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34016 MS, Rate:   240.828, to /s1/GigaData.3
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34018 MS, Rate:   240.814, to /s2/GigaData.3
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34121 MS, Rate:   240.087, to /s1/GigaData.4
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34123 MS, Rate:   240.073, to /s0/GigaData.4
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34114 MS, Rate:   240.136, to /s2/GigaData.4
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 34122 MS, Rate:   240.080, to /s3/GigaData.4
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30386 MS, Rate:   269.598, to /s0/GigaData.9
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30384 MS, Rate:   269.616, to /s1/GigaData.9
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30717 MS, Rate:   266.693, to /s3/GigaData.9
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30726 MS, Rate:   266.615, to /s2/GigaData.9
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30088 MS, Rate:   272.268, to /s0/GigaData.10
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30079 MS, Rate:   272.349, to /s2/GigaData.10
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 30086 MS, Rate:   272.286, to /s1/GigaData.10
-Data: Writing, 8192 MB, Buffer: 128 KB, Time: 29989 MS, Rate:   273.167, to /s3/GigaData.10
+	mount: /dev/mm-extern/audiovideo: can't read superblock
 
-So whatever needs to be tweaked in the VM system seems to be the key.
+/var/log/syslog prints:
+[Output:
+http://www.zvisionwelt.de/tmpdownloads/mount-failure-syslog.output]
 
-Thanks to all for getting this regression repaired.
+The funny thing is that I just wanted to have a recent syslog print
+to post here and tried again to mount the HDD and now it works!
+[/var/log/syslog output:
+http://www.zvisionwelt.de/tmpdownloads/mount-success-syslog.output]
 
-Berkley
+I didn't change anything else after the mount failure mentioned
+above! BUT: Reading fails while I wanted to have a look at the files
+in lost+found.
+[/var/log/syslog output:
+http://www.zvisionwelt.de/tmpdownloads/read-failure-syslog.output]
 
+Yesterday I used xfs_repair after the mount failure with the result
+that two directories were removed:
 
-David Chinner wrote:
-> On Tue, Jan 09, 2007 at 12:22:12PM +1100, David Chinner wrote:
->   
->> On Mon, Jan 08, 2007 at 11:13:43AM -0600, Mr. Berkley Shands wrote:
->>     
->>> My testbench is a 4 core Opteron (dual 275's) into
->>> two LSI8408E SAS controllers, into 16 Seagate 7200.10 320GB satas.
->>> Redhat ES4.4 (Centos 4.4). A slightly newer parted is needed
->>> than the contemporary of Moses that is shipped with the O/S.
->>>
->>> I have a standard burn in script that takes the 4 4-drive raid0's
->>> and puts a GPT label on them, aligns the partitions to stripe
->>> boundary's. It then proceeds to write 8GB files concurrently
->>> onto all 4 raid drives.
->>>       
->
-> I just ran up a similar test - single large file per device on a 4
-> core Xeon (woodcrest) with 16GB RAM, a single PCI-X SAS HBA and
-> 12x10krpm 300GB SAS disks split into 3x4 disk dm raid zero stripes
-> on 2.6.18 and 2.6.20-rc3.
->
-> I see the same thing - 2.6.20-rc3 is more erractic and quite a
-> bit slower than 2.6.18 when going through XFS.
->
-> I suggest trying this on 2.6.20-rc3:
->
-> # echo 10 > /proc/sys/vm/dirty_ratio
->
-> That restored most of the lost performance and consistency
-> in my testing....
->
-> Cheers,
->
-> Dave.
->   
+# xfs_repair /dev/mm-extern/audiovideo
+[Output: http://www.zvisionwelt.de/tmpdownloads/xfs_repair.output]
 
+Then mounting worked again. But this morning it failed again as I
+wrote above. I could repeat the scenario: xfs_repair -> mounting
+works -> unmount -> mounting again fails -> xfs_repair -> mounting
+works -> unmount -> mounting again fails -> waiting for about 90
+minutes (without xfs_repair) it worked again. Strange ...
 
+Looking for answers I found this message tonight:
+<news:20031210174704.20943.qmail@web12304.mail.yahoo.com> Citation
+from this message: "After [xfs_repair] the file system is mountable
+for one time again."
+
+Any ideas what's going wrong here? I found
+<http://oss.sgi.com/projects/xfs/faq.html#dir2>. But this should be
+fixed since 2.6.17.7.
+
+Here is some more information:
+
+Partition table:
+http://www.zvisionwelt.de/tmpdownloads/partition-table.txt
+
+The HDD has one volume group named "mm-extern". The logical volume
+is named "audiovideo".
+
+fstab entry:
+/dev/mm-extern/audiovideo /media/samsung xfs defaults,noatime   0
+    0
+
+# xfs_info /media/samsung/
+meta-data=/media/samsung         isize=256    agcount=16,
+agsize=6104384 blks
+         =                       sectsz=512
+data     =                       bsize=4096   blocks=97670144,
+imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+Importing and mounting of the external HDD:
+	vgscan
+	vgimport mm-extern
+	vgchange -a y /dev/mm-extern
+	mount /media/samsung
+
+Exporting and unmounting:
+	umount /media/samsung
+	vgchange -a n /dev/mm-extern
+	vgexport mm-extern
+
+# dpkg -l lvm\* | grep ^ii
+ii  lvm-common     1.5.17         The Logical Volume Manager for
+Linux (common
+ii  lvm2           2.01.04-5      The Linux Logical Volume Manager
+# dpkg -l xfsprogs | grep ^ii
+ii  xfsprogs       2.6.20-1       Utilities for managing the XFS
+filesystem
+
+I successfully use xfs with LVM2 on an internal HDD.
+
+Best,
+  Christoph
 -- 
-
-//E. F. Berkley Shands, MSc//
-
-**Exegy Inc.**
-
-3668 S. Geyer Road, Suite 300
-
-St. Louis, MO  63127
-
-Direct:  (314) 450-5348
-
-Cell:  (314) 303-2546
-
-Office:  (314) 450-5353
-
-Fax:  (314) 450-5354
-
- 
-
-This e-mail and any documents accompanying it may contain legally 
-privileged and/or confidential information belonging to Exegy, Inc.  
-Such information may be protected from disclosure by law.  The 
-information is intended for use by only the addressee.  If you are not 
-the intended recipient, you are hereby notified that any disclosure or 
-use of the information is strictly prohibited.  If you have received 
-this e-mail in error, please immediately contact the sender by e-mail or 
-phone regarding instructions for return or destruction and do not use or 
-disclose the content to others.
-
- 
-
-
-
-[[HTML alternate version deleted]]
++++ Typografie-Regeln: http://zvisionwelt.de/downloads.html (1.6)
