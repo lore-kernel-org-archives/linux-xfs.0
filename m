@@ -1,40 +1,100 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 10 Jan 2007 22:24:53 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 10 Jan 2007 22:51:00 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0B6Ojqw009412
-	for <xfs@oss.sgi.com>; Wed, 10 Jan 2007 22:24:46 -0800
-Subject: TAKE 960028 - XFS tripping bug in cancel_dirty_pages in 2.6.20-rc3
-Message-Id: <20070111062346.7D6AC58CF82A@chook.melbourne.sgi.com>
-Date: Thu, 11 Jan 2007 17:23:46 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0B6orqw014825
+	for <xfs@oss.sgi.com>; Wed, 10 Jan 2007 22:50:55 -0800
+Date: Thu, 11 Jan 2007 17:49:58 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: fix mapping invalidation callouts
+Message-ID: <20070111064958.GC33919298@melbourne.sgi.com>
+References: <20070108040309.GX33919298@melbourne.sgi.com> <20070110062344.GR33919298@melbourne.sgi.com> <45A4A645.5010708@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <45A4A645.5010708@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-Unmap pages before removing them from the page cache.
+On Wed, Jan 10, 2007 at 08:39:33AM +0000, Lachlan McIlroy wrote:
+> David Chinner wrote:
+> >On Mon, Jan 08, 2007 at 03:03:09PM +1100, David Chinner wrote:
+> >
+> >>With the recent cancel_dirty_page() changes, a warning was
+> >>added if we cancel a dirty page that is still mapped into
+> >>the page tables.
+> >>This happens in XFS from fs_tosspages() and fs_flushinval_pages()
+> >>because they call truncate_inode_pages().
+> >>
+> >>truncate_inode_pages() does not invalidate existing page mappings;
+> >>it is expected taht this is called only when truncating the file
+> >>or destroying the inode and on both these cases there can be
+> >>no mapped ptes. However, we call this when doing direct I/O writes
+> >>to remove pages from the page cache. As a result, we can rip
+> >>a page from the page cache that still has mappings attached.
+> >>
+> >>The correct fix is to use invalidate_inode_pages2_range() instead
+> >>of truncate_inode_pages(). They essentially do the same thing, but
+> >>the former also removes any pte mappings before removing the page
+> >>from the page cache.
+> >>
+> >>Comments?
+> >>
+> >>Cheers,
+> >>
+> >>Dave.
+> >>-- 
+> >>Dave Chinner
+> >>Principal Engineer
+> >>SGI Australian Software Group
+> >>
+> >>
+> >>---
+> >>fs/xfs/linux-2.6/xfs_fs_subr.c |   10 ++++++++--
+> >>1 file changed, 8 insertions(+), 2 deletions(-)
+> >>
+> >>Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_fs_subr.c
+> >>===================================================================
+> >>--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_fs_subr.c	2006-12-12 
+> >>12:05:17.000000000 +1100
+> >>+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_fs_subr.c	2007-01-08 
+> >>09:30:22.056571711 +1100
+> >>@@ -21,6 +21,8 @@ int  fs_noerr(void) { return 0; }
+> >>int  fs_nosys(void) { return ENOSYS; }
+> >>void fs_noval(void) { return; }
+> >>
+> >>+#define XFS_OFF_TO_PCSIZE(off)	\
+> >>+	(((off) + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT)
+> >
+> >
+> >I don't think this is right.
+> >
+> >Assuming 4k page size, first = 2k, last = 6k will result in
+> >invalidating page indexes 1 and 2 i.e. offset 4k -> 12k. In fact,
+> >we want to invalidate pages 0 and 1.
+> >
+> >IOWs, I think it should be:
+> >
+> >+#define XFS_OFF_TO_PCINDEX(off)	((off) >> PAGE_CACHE_SHIFT)
+> >
+> >Comments?
+> >
+> 
+> Makes sense to me.
 
-The new cancel_dirty_pages() code found that XFS was removing
-page from the page cache that had dirty page table entries.
-XFS invalidates page cache pages via internal interfaces which
-are implemented via truncate_inode_pages which does not remove
-the page mapping first.
+Yeah, you'd think so. The first xfsqa run I do -after- checking it in
+(been running for 24 hours) I get a stack dump with the warning
+in cancel_dirty_page(), so clearly this isn't right either. I'm
+not sure WTF is going on here.
 
-Switch to using invalidate_inode_pages2_range() which does almost
-the same thing except it also removes page table mappings as
-expected by cancel_dirty_pages.
+Chatz, don't push that mod yet....
 
-Date:  Thu Jan 11 17:23:10 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  hch@infradead.org,lachlan
+Cheers,
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:27909a
-fs/xfs/linux-2.6/xfs_fs_subr.c - 1.48 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.c.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
-	- Convert truncate_inode_pages to invalidate_inode_pages2_range
-	  so that page table mappings are removed before we remove the
-	  pages from the page cache.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
