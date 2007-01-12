@@ -1,141 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 12 Jan 2007 00:49:17 -0800 (PST)
-Received: from gw02.mail.saunalahti.fi (gw02.mail.saunalahti.fi [195.197.172.116])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0C8nAqw016756
-	for <xfs@oss.sgi.com>; Fri, 12 Jan 2007 00:49:12 -0800
-Subject: RE: xfs_repair: corrupt inode error
-From: Jyrki Muukkonen <jyrki.muukkonen@futurice.fi>
-In-Reply-To: <200701120120.MAA18610@larry.melbourne.sgi.com>
-References: <200701120120.MAA18610@larry.melbourne.sgi.com>
-Content-Type: text/plain
-Date: Fri, 12 Jan 2007 10:48:12 +0200
-Message-Id: <1168591692.6015.1.camel@mustis>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 12 Jan 2007 06:34:56 -0800 (PST)
+Received: from hobbit.corpit.ru (hobbit.corpit.ru [81.13.94.6])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0CEYkqw020912
+	for <xfs@oss.sgi.com>; Fri, 12 Jan 2007 06:34:48 -0800
+Message-ID: <45A794B4.5020608@tls.msk.ru>
+Date: Fri, 12 Jan 2007 17:01:24 +0300
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+Subject: Re: Linux Software RAID 5 Performance Optimizations: 2.6.19.1: (211MB/s
+ read & 195MB/s write)
+References: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0701111832080.3673@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@melbourne.sgi.com>
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-On pe, 2007-01-12 at 12:25 +1100, Barry Naujok wrote:
->  
-> > -----Original Message-----
-> > From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> > On Behalf Of Jyrki Muukkonen
-> > Sent: Tuesday, 9 January 2007 3:07 AM
-> > To: xfs@oss.sgi.com
-> > Subject: Re: xfs_repair: corrupt inode error
-> > 
-> > On ma, 2007-01-08 at 12:23 +0200, Jyrki Muukkonen wrote:
-> > > Got this error in phase 6 when running xfs_repair 2.8.18 on ~1.2TB
-> > > partition over the weekend (it took around 60 hours to get to this
-> > > point :). On earlier versions xfs_repair aborted after 
-> > ~15-20 hours with
-> > > "invalid inode type" error.
-> > > 
-> > > ...
-> > > disconnected inode 4151889519, moving to lost+found
-> > > disconnected inode 4151889543, moving to lost+found
-> > > corrupt inode 4151889543 (btree).  This is a bug.
-> > > Please report it to xfs@oss.sgi.com.
-> > > cache_node_purge: refcount was 1, not zero (node=0x132650d0)
-> > > 
-> > > fatal error -- 117 - couldn't iget disconnected inode
-> > > 
-> > > I've got the full log (both stderr and stdout) and can put that
-> > > somewhere if needed. It's about 80MB uncompressed and around 7MB
-> > > gzipped. Running the xfs_repair without multithreading and 
-> > with -v might
-> > > also be possible if that's going to help.
-> > > 
-> > 
-> > Some more information:
-> > - running 64bit Ubuntu Edgy 2.6.17-10-generic
-> > - one processor so xfs_repair was run with two threads
-> > - 1.5GB RAM, 3GB swap (at some point the xfs_repair process took a bit
-> > over 2GB)
-> > - filesystem is ~1.14TB with about ~1.4 million files
-> > - most of the files are in subdirectories by date
-> > (/something/YYYY/MM/DD/), ~2-10 thousand per day
-> > 
-> > So is there a way to skip / ignore this error? I could do some testing
-> > with different command line options and small code patches if that's
-> > going to help solve the bug.
-> > 
-> > Most of the files have been recovered from backups, raw disk 
-> > images etc.
-> > but unfortunately some are still missing.
-> > 
-> > -- 
-> > Jyrki Muukkonen
-> > Futurice Oy
-> > jyrki.muukkonen@futurice.fi
-> > +358 41 501 7322
+Justin Piszcz wrote:
+> Using 4 raptor 150s:
 > 
-> Would it be possible to run xfs_db and print out the inode above:
+> Without the tweaks, I get 111MB/s write and 87MB/s read.
+> With the tweaks, 195MB/s write and 211MB/s read.
 > 
-> # xfs_db <dev>
-> xfs_db> inode 4151889543
-> xfs_db> print
+> Using kernel 2.6.19.1.
 > 
-> and email the output back?
+> Without the tweaks and with the tweaks:
 > 
-> Regards,
-> Barry.
+> # Stripe tests:
+> echo 8192 > /sys/block/md3/md/stripe_cache_size
 > 
+> # DD TESTS [WRITE]
 > 
+> DEFAULT: (512K)
+> $ dd if=/dev/zero of=10gb.no.optimizations.out bs=1M count=10240
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 96.6988 seconds, 111 MB/s
+[]
+> 8192K READ AHEAD
+> $ dd if=10gb.16384k.stripe.out of=/dev/null bs=1M
+> 10240+0 records in
+> 10240+0 records out
+> 10737418240 bytes (11 GB) copied, 64.9454 seconds, 165 MB/s
 
-OK, here it is:
+What exactly are you measuring?  Linear read/write, like copying one
+device to another (or to /dev/null), in large chunks?
 
-xfs_db> inode 4151889543
-xfs_db> print
-core.magic = 0x494e
-core.mode = 0102672
-core.version = 1
-core.format = 3 (btree)
-core.nlinkv1 = 2308
-core.uid = 721387
-core.gid = 475570
-core.flushiter = 7725
-core.atime.sec = Sun Mar 16 17:15:13 2008
-core.atime.nsec = 000199174
-core.mtime.sec = Wed Dec 28 01:58:50 2011
-core.mtime.nsec = 016845061
-core.ctime.sec = Tue Aug 22 19:57:39 2006
-core.ctime.nsec = 148761321
-core.size = 1880085426117611906
-core.nblocks = 0
-core.extsize = 0
-core.nextents = 0
-core.naextents = 0
-core.forkoff = 0
-core.aformat = 2 (extents)
-core.dmevmask = 0x1010905
-core.dmstate = 11
-core.newrtbm = 0
-core.prealloc = 1
-core.realtime = 0
-core.immutable = 0
-core.append = 0
-core.sync = 0
-core.noatime = 0
-core.nodump = 0
-core.rtinherit = 0
-core.projinherit = 1
-core.nosymlinks = 0
-core.extsz = 0
-core.extszinherit = 0
-core.nodefrag = 0
-core.gen = 51072068
-next_unlinked = null
-u.bmbt.level = 18550
-u.bmbt.numrecs = 0
+I don't think it's an interesting test.  Hint: how many times a day
+you plan to perform such a copy?
 
+(By the way, for a copy of one block device to another, try using
+O_DIRECT, with two dd processes doing the copy - one reading, and
+another writing - this way, you'll get best results without huge
+affect on other things running on the system.  Like this:
 
+ dd if=/dev/onedev bs=1M iflag=direct |
+ dd of=/dev/twodev bs=1M oflag=direct
+)
 
--- 
-Jyrki Muukkonen
-Futurice Oy
-jyrki.muukkonen@futurice.fi
-+358 41 501 7322
+/mjt
