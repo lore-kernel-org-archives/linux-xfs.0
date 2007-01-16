@@ -1,60 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 16 Jan 2007 04:07:39 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 16 Jan 2007 04:29:25 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0GC7Sqw024516
-	for <xfs@oss.sgi.com>; Tue, 16 Jan 2007 04:07:31 -0800
-Message-ID: <45ACBFB4.5060405@melbourne.sgi.com>
-Date: Tue, 16 Jan 2007 23:06:12 +1100
-From: David Chatterton <chatz@melbourne.sgi.com>
-Reply-To: chatz@melbourne.sgi.com
-MIME-Version: 1.0
-Subject: Re: Review: fix block reservation to work with per-cpu counters
-References: <45ABF2AA.2010209@bycast.com> <20070115234710.GI44411608@melbourne.sgi.com>
-In-Reply-To: <20070115234710.GI44411608@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0GCTHqw002343
+	for <xfs@oss.sgi.com>; Tue, 16 Jan 2007 04:29:19 -0800
+Subject: TAKE 956323 - File system block reservation mechanism is broken
+Message-Id: <20070116120407.59C3A58F92CD@chook.melbourne.sgi.com>
+Date: Tue, 16 Jan 2007 23:04:07 +1100 (EST)
+From: chatz@sgi.com (David Chatterton)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Kevin Jamieson <kjamieson@bycast.com>, xfs@oss.sgi.com, chatz@sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
+
+Fix block reservation changes for non-SMP systems.
+
+Signed-off-by: Kevin Jamieson <kjamieson@bycast.com>
 
 
+Date:  Tue Jan 16 23:03:21 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/chatz/isms/xfs-linux
+Inspected by:  kjamieson,dgc
 
-David Chinner wrote:
-> On Mon, Jan 15, 2007 at 01:31:22PM -0800, Kevin Jamieson wrote:
->> This fails to build on non-SMP systems:
->>
->>  CC [M]  fs/xfs/xfs_fsops.o
->> fs/xfs/xfs_fsops.c: In function 'xfs_fs_counts':
->> fs/xfs/xfs_fsops.c:463: warning: implicit declaration of function 
->> 'xfs_icsb_sync_counters_flags'
->> fs/xfs/xfs_fsops.c:463: error: 'XFS_ICSB_LAZY_COUNT' undeclared (first use 
->> in this function)
->> fs/xfs/xfs_fsops.c:463: error: (Each undeclared identifier is reported only 
->> once
->> fs/xfs/xfs_fsops.c:463: error: for each function it appears in.)
->> fs/xfs/xfs_fsops.c: In function 'xfs_reserve_blocks':
->> fs/xfs/xfs_fsops.c:525: error: 'XFS_ICSB_SB_LOCKED' undeclared (first use 
->> in this function)
->> make[1]: *** [fs/xfs/xfs_fsops.o] Error 1
->> make: *** [fs/xfs/xfs.ko] Error 2
->>
->>
->> The define for not HAVE_PERCPU_SB needs to be changed:
-> 
-> Sorry about that - my fault. This fix looks good - I'll try to find some
-> time to check this in (I'm at LCA right now and have limited net
-> access).
-> 
-> Chatz, maybe you could check this in?
-> 
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-kern/xfs-linux-melb
 
-Done.
 
-David
-
--- 
-David Chatterton
-XFS Engineering Manager
-SGI Australia
+Modid:  xfs-linux-melb:xfs-kern:27940a
+xfs_mount.h - 1.233 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.233&r2=text&tr2=1.232&f=h
+	- No-op xfs_icsb_sync_counters_flags on non-SMP builds.
