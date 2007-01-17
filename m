@@ -1,90 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Jan 2007 09:39:01 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0HHcqqw002128
-	for <xfs@oss.sgi.com>; Wed, 17 Jan 2007 09:38:53 -0800
-Message-ID: <45AE5EF5.8050604@sandeen.net>
-Date: Wed, 17 Jan 2007 11:37:57 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Jan 2007 14:52:36 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0HMqSqw006264
+	for <xfs@oss.sgi.com>; Wed, 17 Jan 2007 14:52:30 -0800
+Message-ID: <45AEA86E.1060003@melbourne.sgi.com>
+Date: Thu, 18 Jan 2007 09:51:26 +1100
+From: David Chatterton <chatz@melbourne.sgi.com>
+Reply-To: chatz@melbourne.sgi.com
 MIME-Version: 1.0
-Subject: Re: [xfs-masters] [PATCH 14/59] sysctl: C99 convert xfs ctl_tables
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656301563-git-send-email-ebiederm@xmission.com>
-In-Reply-To: <11689656301563-git-send-email-ebiederm@xmission.com>
+Subject: Re: problem with latest xfsprogs progress code
+References: <32920.193.203.83.22.1168965042.squirrel@colo.loreland.org> <53858.193.203.83.22.1169031614.squirrel@colo.loreland.org> <45AE2DDF.5000602@gmx.net> <45AE46C2.6090005@sandeen.net>
+In-Reply-To: <45AE46C2.6090005@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-masters@oss.sgi.com
-Cc: "<Andrew Morton" <akpm@osdl.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, "Eric W. Biederman" <ebiederm@xmission.com>
+To: jamesb@loreland.org
+Cc: Eric Sandeen <sandeen@sandeen.net>, Klaus Strebel <klaus.strebel@gmx.net>, xfs@oss.sgi.com
 
-Eric W. Biederman wrote:
-> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
+
+
+Eric Sandeen wrote:
+> Klaus Strebel wrote:
 > 
-> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
-> ---
->  fs/xfs/linux-2.6/xfs_sysctl.c |  258 ++++++++++++++++++++++++++++------------
->  1 files changed, 180 insertions(+), 78 deletions(-)
+>>>> Running 2.8.18 xfs_repair on a largeish (65TB, ~70M inodes) filesystem on
+>>>> an x86_64 machine gives the following "progress" output:
+>>>>
+>>>> 12:15:36: process known inodes and inode discovery - 1461632 of 0 inod
+>>>> es done
+>>>> 12:15:36: Phase 3: elapsed time 14 minutes, 32 seconds - processed 100
+>>>> 571 inodes per minute
+>>>> 12:15:36: Phase 3: 0% done - estimated remaining time 3364 weeks, 3 da
+>>>> ys, 7 hours, 30 minutes, 45 seconds
+>>>>
+>>>> Is this a known bug?
+>> Hi James,
+>>
+>> why do you think that this is a bug? You have an almost infinitely large
+>> filesystem, so the file-system check will also run for an almost
+>> infinitely long time ;-).
+>>
+>> You see, not all that's possible is really desirable.
+> 
+> Well, while 65TB is impressive*, and repairing it quickly is indeed a
+> challenge, it probably still should not take 64+ years.  ;-)
+> 
+> Sounds like something is in fact going wrong.
+> 
+> -Eric
+> 
+> *it amuses me to see xfs users refer to nearly 100T as largeISH; clearly
+>  you all do not suffer from lowered expectations.  :)
+> 
 
-Oh no, 100 more XFS LOC! ;)
+Barry is at linux.conf.au this week, he knows this code better than
+anyone else.
 
-Minor nits below...
+Phase 3 is scanning the inodes in each allocation group, building up a
+map of filesystem blocks that are marked as used.
 
-> +	{
-> +		.ctl_name	= XFS_PANIC_MASK,
-> +		.procname	= "panic_mask",
-> +		.data		= &xfs_params.panic_mask.val,
-> +		.maxlen		= sizeof(int),
-> +		.mode		= 0644,
-> +		.proc_handler	=  &proc_dointvec_minmax,
+See http://oss.sgi.com/projects/xfs/training/xfs_slides_11_repair.pdf
 
-Extra space here
+Scanning an AG and its inodes should not be taking this long.
+Are you under memory pressure and the machine is just swapping to death?
+Are you seeing I/O errors on the storage?
+Is the storage using AVT mode and the luns are flipping between controllers?
 
-> +	{
-> +		.ctl_name	= XFS_INHERIT_NODUMP,
-> +		.procname	= "inherit_nodump",
-> +		.data		= &xfs_params.inherit_nodump.val,
-> +		.maxlen		= sizeof(int),
-> +		.mode		= 0644,
-> +		.proc_handler	= &proc_dointvec_minmax,
-> +		.strategy	= &sysctl_intvec, NULL,
-
-don't think you want the NULL here
-
-> +		.extra1		= &xfs_params.inherit_nodump.min,
-> +		.extra2		= &xfs_params.inherit_nodump.max
-> +	},
-> +	{
-> +		.ctl_name	= XFS_INHERIT_NOATIME,
-> +		.procname	= "inherit_noatime",
-> +		.data		= &xfs_params.inherit_noatim.val,
-> +		.maxlen		= sizeof(int),
-> +		.mode		= 0644,
-> +		.proc_handler	= &proc_dointvec_minmax,
-> +		.strategy	= &sysctl_intvec, NULL,
-
-or here
-
-> +	{
-> +		.ctl_name	= XFS_BUF_AGE,
-> +		.procname	= "age_buffer_centisecs",
-> +		.data		= &xfs_params.xfs_buf_age.val,
-> +		.maxlen		= sizeof(int),
-> +		.mode		= 0644,
-> +		.proc_handler	= &proc_dointvec_minmax,
-> +		.strategy	= &sysctl_intvec, NULL,
-
-or here
-
-> +	{
-> +		.ctl_name	= XFS_STATS_CLEAR,
-> +		.procname	= "stats_clear",
-> +		.data		= &xfs_params.stats_clear.val,
-> +		.maxlen		= sizeof(int),
-> +		.mode		= 0644,
-> +		.proc_handler	=  &xfs_stats_clear_proc_handler,
-
-extra space here
 
 Thanks,
--Eric
+
+David
+
+-- 
+David Chatterton
+XFS Engineering Manager
+SGI Australia
