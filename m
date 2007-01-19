@@ -1,86 +1,101 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Jan 2007 08:49:54 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0IGnnqw014331
-	for <linux-xfs@oss.sgi.com>; Thu, 18 Jan 2007 08:49:49 -0800
-Message-ID: <45AFA4F6.5040806@sandeen.net>
-Date: Thu, 18 Jan 2007 10:48:54 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Jan 2007 08:25:27 -0800 (PST)
+Received: from coraid.com (ns1.coraid.com [65.14.39.133])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0JGP9qw026643
+	for <xfs@oss.sgi.com>; Fri, 19 Jan 2007 08:25:12 -0800
+Date: Fri, 19 Jan 2007 11:21:08 -0500
+From: "Ed L. Cashin" <ecashin@coraid.com>
+Subject: Re: Re: bio pages with zero page reference count
+Message-ID: <20070119162108.GG16715@coraid.com>
+Reply-To: support@coraid.com
+References: <20061209234305.c65b4e14.akpm@osdl.org> <20061218175300.GM23156@coraid.com> <20061218222109.GA23156@coraid.com> <20061218225343.GA30167@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfs-questions
-References: <45AF4A1A.50805@science.ru.nl>
-In-Reply-To: <45AF4A1A.50805@science.ru.nl>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20061218225343.GA30167@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Wim Janssen <WGHM.Janssen@science.ru.nl>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, xfs@oss.sgi.com, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Wim Janssen wrote:
-> Hello Folks,
+On Mon, Dec 18, 2006 at 10:53:43PM +0000, Christoph Hellwig wrote:
+> On Mon, Dec 18, 2006 at 05:21:09PM -0500, Ed L. Cashin wrote:
+...
+> > If anyone has a better reference, I'd like to see it.
 > 
-> Yesterday I downloaded from the SGI-ftpsite the module:
->        kernel-module-xfs-2.6.9-22.EL-0.1-1.src.rpm
-> This because I like to work with the xfs-filesystem on my storage-unit.
->  ( a Dell PowerEdge1950 with a MD1000-diskarray )
-> As Eric pointed out in the readme-file he tested it a bit with the 
-> 2.6.9-22 kernel
-> and it might also work with other RHEL kernels.
-> On my storage-unit I installed the 64-bit RHEL4 AS with the kernel:
->    2.6.9-42.ELsmp  x86_64
-
-I would suggest
-http://sandeen.net/rhel4_xfs/kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm
-
-which is a little more up to date; see also
-http://sandeen.net/rhel4_xfs/
-for more info
-
-> My questions:
-> - If I install the xfs-module, how can I test that it is working 
-> properly ???
-
-you could use the xfstests suite in xfs cvs
-
-> - How can I be sure about the stability ???
-
-or you could test it in your environment
-
->   Do you have some test about this ???
-> - Does a more recent version of the module exists ???
-
-see above
-
-> - How do I have to deal with the kernel-updates I get from RedHat ???
-
-This does not change your kernel, though it may change your support when
-it's loaded.  When you update your rh kernel, you'll need to rebuild the
-above src.rpm for the new kernel.
-
-> - Can you give me some hints/advice how to proceed and avoid difficulties.
->   Because the storage-unit is going to be a very critical part of our 
-> IT-infra-structure.
-
-Then you should test the heck out of it before it's fully deployed :)
-
-Let me know if you have trouble,
-
-Thanks,
--Eric
-
-> For many years I have worked with the xfs-filesystem on the SGI Indigo- and
-> Challenge-systems and was always very pleased with the stability, 
-> performance
-> and managability. That's why I consider to implement the xfs-filesystem 
-> for our storage-unit.
-> I hope you can help me with my questions.
+> I searched around a little bit and found these:
 > 
-> Kind regards and many thanks in advance,
+> 	http://groups.google.at/group/open-iscsi/browse_frm/thread/17fbe253cf1f69dd/f26cf19b0fee9147?tvc=1&q=kmalloc+iscsi+%22christoph+hellwig%22&hl=de#f26cf19b0fee9147
+> 	http://www.ussg.iu.edu/hypermail/linux/kernel/0408.3/0061.html
 > 
->                                                                          
->                                    Wim Janssen
-> P.S.
-> It would be nice if I can report a success in the neaar future.
-> 
+> But that's not the conclusion I was looking for.  
+
+So it sounds like you've been advocating a general discussion of this
+issue for a few years now.
+
+To summarize the issue:
+
+  1) users of the block layer assume that it's fine to associate pages
+     that have a zero reference count with a bio before requesting
+     I/O,
+
+  2) intermediaries like iscsi, aoe, and drbd, associate the pages
+     with the frags of skbuffs, but
+
+  3) when the network layer has to linearize the skbuff for a network
+     device that doesn't support scatter gather, it winds up doing a
+     get_page and put_page on each page in the frags, despite the fact
+     that the page reference count on each may already be zero.  The
+     network layer is assuming that it's OK to do use these operations
+     on any page in the frags.
+
+Maybe the discussion is slow to start because too many parts of the
+kernel are involved.  Here are a couple of specific questions.  Maybe
+they'll help get the ball rolling.
+
+ 1) What are the disadvantages of making the network layer *not*
+    to assume it's correct to use get/put_page on the frags when it
+    linearizes an sk_buff?
+
+    For example, the network layer could omit the get/put_page when
+    the page reference count is zero.
+
+ 2) What are the disadvantages of having one part of the kernel (e.g.,
+    XFS) reference a page before handing it off to another part of the
+    kernel, e.g., in a bio?
+
+    This change would require multiple parts of the kernel to change
+    behavior, but it seems conceptually cleaner, since the reference
+    count would reflect the reality that the page does have an owner
+    (XFS or whoever).  I don't know how practical the implementation
+    would be.
+
+ 3) It seems messy to handle this is in each of the individual
+    intermediary drivers that sit between the block and network
+    layers, but if that really is the place to do it, then is there a
+    problem with simply incrementing the page reference counts upon
+    getting a bio from the block layer, and later decrementing them
+    before giving them back with bio_endio?
+
+        bio_for_each_segment(bv, bio, i)
+                atomic_inc(&bv->bv_page->_count);
+
+    ... [and later]
+
+        bio_for_each_segment(bv, bio, i)
+                atomic_dec(&bv->bv_page->_count);
+
+        bio_endio(bio, bytes_done, error);
+
+    That seems to eliminate problems aoe users have with XFS on AoE
+    devices that are accessible via network devices that don't support
+    scatter gather, but is it the right fix?
+
+    Andrew Morton changed "count" to "_count" to stop folks from
+    directly manipulating the page struct member, but I don't see any
+    get/put_page type operations that fit what the aoe driver has to
+    do in this case.
+
+-- 
+  Ed L Cashin <ecashin@coraid.com>
