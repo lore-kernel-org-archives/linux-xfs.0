@@ -1,36 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Jan 2007 17:13:18 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0K1D9qw030820
-	for <xfs@oss.sgi.com>; Fri, 19 Jan 2007 17:13:12 -0800
-Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA24248 for <xfs@oss.sgi.com>; Sat, 20 Jan 2007 11:51:51 +1100
-Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id l0K0pp7Y97493958
-	for <xfs@oss.sgi.com>; Sat, 20 Jan 2007 11:51:51 +1100 (AEDT)
-Received: (from mg@localhost)
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id l0K0polh75392878
-	for xfs@oss.sgi.com; Sat, 20 Jan 2007 11:51:50 +1100 (EST)
-Date: Sat, 20 Jan 2007 11:51:50 +1100 (EST)
-From: Michael Gigante <mg@snort.melbourne.sgi.com>
-Message-Id: <200701200051.l0K0polh75392878@snort.melbourne.sgi.com>
-Subject: Work on XFS at SGI?
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Jan 2007 19:04:04 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0K33vqw012840
+	for <linux-xfs@oss.sgi.com>; Fri, 19 Jan 2007 19:03:59 -0800
+Message-ID: <45B18665.8070703@sandeen.net>
+Date: Fri, 19 Jan 2007 21:03:01 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfs-questions
+References: <45AF4A1A.50805@science.ru.nl> <45AFA4F6.5040806@sandeen.net> <45B136D2.5080305@atipa.com>
+In-Reply-To: <45B136D2.5080305@atipa.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Roger Heflin <rheflin@atipa.com>
+Cc: linux-xfs@oss.sgi.com
 
+Roger Heflin wrote:
 
-We have an opening in the XFS team for an experienced filesystems
-engineer.
+> Eric,
+> 
+> Very nice, it is very annoying the Redhat has a 8TB limit
+> on filesystems.
 
-The position is located in SGI's Melbourne engineering team. 
+Well, ext3 can do 16T now... upstream and in RHEL5 as a preview.  Feel 
+free to test that too if you need a RHEL-supported solution (and if 16T 
+is enough for you).
 
-Please contact Mark Goodwin (markgw) and I if you would like further details.
+> I am testing it with 2.6.9-42.0.3.
 
-Mike
+Great, let me know if you have trouble.
 
+Thanks,
+-Eric
 
------------------------------------------------------------------------
-Michael Gigante,                                             mg@sgi.com
-Director, File Serving Technologies                     +61 3 9834 8251
-Silicon Graphics Inc,  Australian Software Group,   Melbourne Australia
+>                          Roger
+> 
