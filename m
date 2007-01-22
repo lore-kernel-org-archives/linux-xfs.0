@@ -1,53 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Jan 2007 23:59:02 -0800 (PST)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0M7wtqw012650
-	for <xfs@oss.sgi.com>; Sun, 21 Jan 2007 23:58:56 -0800
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l0M7w0AW002165
-	for <xfs@oss.sgi.com>; Mon, 22 Jan 2007 16:58:00 +0900 (JST)
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.195])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l0M7sd8I029066
-	for <xfs@oss.sgi.com>; Mon, 22 Jan 2007 16:54:39 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l0M7scd17409 for xfs@oss.sgi.com; Mon, 22 Jan 2007 16:54:38 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv4.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l0M7scp12576 for <xfs@oss.sgi.com>; Mon, 22 Jan 2007 16:54:38 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070122.165438.07803072 for <xfs@oss.sgi.com>
-	; Mon, 22 Jan 2007 16:54:38 +0900
-Message-Id: <200701220754.AA04898@TNESG9305.tnes.nec.co.jp>
-Date: Mon, 22 Jan 2007 16:54:30 +0900
-Subject: [PATCH]segmentation fault in xfs_io mwrite command #2
-From: Utako Kusaka <utako@tnes.nec.co.jp>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Jan 2007 05:15:42 -0800 (PST)
+Received: from mx2.suse.de (ns2.suse.de [195.135.220.15])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0MDFZqw031582
+	for <xfs@oss.sgi.com>; Mon, 22 Jan 2007 05:15:36 -0800
+Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id 6FFAE21270
+	for <xfs@oss.sgi.com>; Mon, 22 Jan 2007 13:55:21 +0100 (CET)
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Memory allocation in xfs
+Date: Mon, 22 Jan 2007 13:58:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200701221358.09300.jdelvare@suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hi,
+Hi all,
 
-My previous patch is not enough.
-If mmap offset is not 0, segmentation fault occurs in mwrite.
-This patch fixes it.
+While investigating a customer-reported issue, I noticed the following code in 
+the xfs filesystem (in linux/fs/xfs/linux-2.6/kmem.c):
 
-Example:
-# xfs_io -f file7 -c "mmap 4096 4096" -c "mwrite"
-Segmentation fault
+#define MAX_VMALLOCS    6
+#define MAX_SLAB_SIZE   0x20000
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
+void *
+kmem_alloc(size_t size, int flags)
+{
+        int     retries = 0;
+        int     lflags = kmem_flags_convert(flags);
+        void    *ptr;
 
---- xfsprogs-2.8.18-orgn/io/mmap.c      2006-12-13 13:57:22.000000000 +0900
-+++ xfsprogs-2.8.18/io/mmap.c   2007-01-19 16:29:44.000000000 +0900
-@@ -562,6 +562,7 @@ mwrite_f(
-        if (!start)
-                return 0;
+        do {
+                if (size < MAX_SLAB_SIZE || retries > MAX_VMALLOCS)
+                        ptr = kmalloc(size, lflags);
+                else
+                        ptr = __vmalloc(size, lflags, PAGE_KERNEL);
+                if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+                        return ptr;
+                if (!(++retries % 100))
+                        printk(KERN_ERR "XFS: possible memory allocation "
+                                        "deadlock in %s (mode:0x%x)\n",
+                                        __FUNCTION__, lflags);
+                blk_congestion_wait(WRITE, HZ/50);
+        } while (1);
+}
 
-+       offset -= mapping->offset;
-        if (rflag) {
-                for (tmp = offset + length -1; tmp >= offset; tmp--)
-                        ((char *)mapping->addr)[tmp] = seed;
+If I read it correctly, it first chooses between kmalloc and vmalloc based on 
+size, picking kmalloc if the size is less than 128 kB, and vmalloc if it's 
+larger. So far, so good, makes sense to me.
+
+Then, if 6 attempts at vmalloc failed, it switches to kmalloc regardless of 
+the size. I read in LDD3 that some architectures have a relatively small 
+address space reserved for vmalloc, I guess this explains why this fallback 
+was implemented. Am I correct? I wonder if it's really a good idea to then 
+insist on kmalloc if kmalloc fails too, but at this point it probably no 
+longer matters, we're doomed...
+
+What I am curious about is why the fallback in the other direction wasn't 
+implemented. If we need an amount of memory less than 128 kB and kmalloc 
+keeps failing, isn't it worth trying vmalloc? Disclaimer: I am just trying to 
+learn how the memory management works in Linux 2.6, so I might as well be 
+totally wrong.
+
+Thanks,
+-- 
+Jean Delvare
+Suse L3
