@@ -1,77 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 09:45:52 -0800 (PST)
-Received: from evaldomino.Falconstor.com (mail1.falconstor.com [216.223.47.230])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0NHjgqw021570
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jan 2007 09:45:43 -0800
-Message-ID: <45B64383.4030603@falconstor.com>
-Date: Tue, 23 Jan 2007 12:18:59 -0500
-From: "Geir A. Myrestrand" <geir.myrestrand@falconstor.com>
-Reply-To: geir.myrestrand@falconstor.com
-MIME-Version: 1.0
-Subject: Re: Will xfs_growfs succeed on a full file system?
-References: <45B6277F.20506@falconstor.com> <45B63AA1.8010504@sandeen.net>
-In-Reply-To: <45B63AA1.8010504@sandeen.net>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 11:18:41 -0800 (PST)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0NJIXqw006151
+	for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 11:18:33 -0800
+Subject: Re: [OT] Spam on this list
+From: Russell Cattelan <cattelan@thebarn.com>
+In-Reply-To: <20070122212957.GN27538@charite.de>
+References: <68c491a60701221252i30d28955pde6a4e987a1d248f@mail.gmail.com>
+	 <20070122212957.GN27538@charite.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o8q4PfncurwXPU5RyGBX"
+Date: Mon, 22 Jan 2007 16:29:59 -0600
+Message-Id: <1169504999.28100.45.camel@xenon.msp.redhat.com>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Ralf Hildebrandt <Ralf.Hildebrandt@charite.de>
+Cc: Martin =?ISO-8859-1?Q?Schr=F6der?= <martin@oneiros.de>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Geir A. Myrestrand wrote:
->> Does xfs_growfs depend on some space left on the file system in order to 
->> be able to grow it?
->>
->> I have a colleague who ran into an issue where a file system resize 
->> failed. The file system is 100% full.
->>
->> Aside from analyzing what happened in his case, should XFS be able to 
->> grow a file system that is 100% full?
->>
->> The device has already been expanded, it is the XFS file system that 
->> fails to resize. I just wonder if that is by design, or whether it is an 
->> issue.
->>
-> 
-> Off the top of my head, I think it should work ok even if full, although
-> I could be (and apparently I am) wrong here.  How exactly did the growfs
-> fail?
-> 
-> I actually wasn't able to completely fill my filesystem, got stuck at
-> 20k left.  :)  but growing that from 50M to 100M worked fine for me.
-> 
-> -Eric
+--=-o8q4PfncurwXPU5RyGBX
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-The only error I saw in his output was this line:
+On Mon, 2007-01-22 at 22:29 +0100, Ralf Hildebrandt wrote:
+> * Martin Schr=C3=B6der <martin@oneiros.de>:
+> > This list is a constant distributor of spam, maybe because it accepts
+> > non-member contributions.
+> >=20
+> > A plea to those who are able to do so: Please fix this by allowing
+> > only contributions from members.
+>=20
+> Yes please. It's extremely annoying.
+We tried that once ... the screaming from people who only wanted to=20
+subscribe once but post from multiple emails (work, home, gmail) etc...
+was also quite loud.
 
-xfs_growfs:
-XFS_IOC_FSGROWFSDATA xfsctl failed: No space left on device
+It's probably time to update SA on oss since the spam count has been=20
+going up a bit.
 
-He claims that the file system is actually resized after it has been 
-re-mounted. He verifies with df:
+>=20
+--=20
+Russell Cattelan <cattelan@thebarn.com>
 
-After expansion (with xfs_growfs):
+--=-o8q4PfncurwXPU5RyGBX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-# df -k
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/vbdi6               93504     93504         0 100% /nas/NASDisk-00006
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-# df -i
-Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-/dev/vbdi6                64       6      58   10% /nas/NASDisk-00006
+iD8DBQBFtTrnNRmM+OaGhBgRAjRaAJ9W3OgAY4M3Pdz4Y6aFrD30w9uJ8gCbBuYt
+i/ijKIn2n4bOSWGud6kJXp4=
+=vANp
+-----END PGP SIGNATURE-----
 
-After re-mount:
-
-# df -k
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/vbdi6              200000     93516    106484  47% /nas/NASDisk-00006
-
-# df -i
-Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-/dev/vbdi6            204800       6  204794    1% /nas/NASDisk-00006
-
-
--- 
-
-Geir A. Myrestrand
+--=-o8q4PfncurwXPU5RyGBX--
