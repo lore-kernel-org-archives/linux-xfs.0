@@ -1,34 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 07:35:52 -0800 (PST)
-Received: from evaldomino.Falconstor.com (mail1.falconstor.com [216.223.47.230])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0NFZiqw021667
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jan 2007 07:35:45 -0800
-Message-ID: <45B6277F.20506@falconstor.com>
-Date: Tue, 23 Jan 2007 10:19:27 -0500
-From: "Geir A. Myrestrand" <geir.myrestrand@falconstor.com>
-Reply-To: geir.myrestrand@falconstor.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 07:44:36 -0800 (PST)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.238])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0NFiUqw023519
+	for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 07:44:31 -0800
+Received: by wx-out-0506.google.com with SMTP id t4so1560680wxc
+        for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 07:43:36 -0800 (PST)
+Message-ID: <d55656c10701230716x1ae7cf49kd8a854fd73429c4f@mail.gmail.com>
+Date: Tue, 23 Jan 2007 16:16:59 +0100
+From: "Peter Gervai" <grinapo@gmail.com>
+Subject: how to sync / commit data to disk?
 MIME-Version: 1.0
-Subject: Will xfs_growfs succeed on a full file system?
-Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Does xfs_growfs depend on some space left on the file system in order to 
-be able to grow it?
+Hello,
 
-I have a colleague who ran into an issue where a file system resize 
-failed. The file system is 100% full.
+[Tried to search archieves, found nothing, probably my keywords are bad. :-)]
 
-Aside from analyzing what happened in his case, should XFS be able to 
-grow a file system that is 100% full?
+What is the recommended way to make sure that a file is written
+physically to the disk? (apart from the cache of the disk.)
 
-The device has already been expanded, it is the XFS file system that 
-fails to resize. I just wonder if that is by design, or whether it is an 
-issue.
+This problem seem to have arisen in grub bootloader under Debian linux
+(and most probably everywhere else): it must be sure that the copied
+files are there, and can be addressed by C/H/S and modified there, at
+the given sector address.
+
+My educated guess would be
+xfs_freeze -f
+sync
+xfs_freeze -u
+
+but I give a large chance to be wrong about it.
+
+Ideas?
+
+Please cc on me if possible. Thanks.
 
 -- 
-
-Geir A. Myrestrand
+ byte-byte,
+    grin
