@@ -1,73 +1,89 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 14:48:11 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 15:00:04 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0OMm1qw003023
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 14:48:03 -0800
-Date: Thu, 25 Jan 2007 09:46:54 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0OMxvqw005536
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 14:59:59 -0800
+Date: Thu, 25 Jan 2007 09:58:52 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
-Message-ID: <20070124224654.GN33919298@melbourne.sgi.com>
-References: <20070123223702.GF33919298@melbourne.sgi.com> <1169640835.6189.14.camel@twins> <45B7627B.8050202@yahoo.com.au>
+Subject: Re: [DISCUSS] xfs allocation bitmap method over linux raid
+Message-ID: <20070124225852.GO33919298@melbourne.sgi.com>
+References: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <45B7627B.8050202@yahoo.com.au>
+In-Reply-To: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: dgc@sgi.com, xfs@oss.sgi.com
 
-On Thu, Jan 25, 2007 at 12:43:23AM +1100, Nick Piggin wrote:
-> Peter Zijlstra wrote:
-> >On Wed, 2007-01-24 at 09:37 +1100, David Chinner wrote:
-> >
-> >>With the recent changes to cancel_dirty_pages(), XFS will
-> >>dump warnings in the syslog because it can truncate_inode_pages()
-> >>on dirty mapped pages.
-> >>
-> >>I've determined that this is indeed correct behaviour for XFS
-> >>as this can happen in the case of races on mmap()d files with
-> >>direct I/O. In this case when we do a direct I/O read, we
-> >>flush the dirty pages to disk, then truncate them out of the
-> >>page cache. Unfortunately, between the flush and the truncate
-> >>the mmap could dirty the page again. At this point we toss a
-> >>dirty page that is mapped.
-> >
-> >
-> >This sounds iffy, why not just leave the page in the pagecache if its
-> >mapped anyway?
+On Wed, Jan 24, 2007 at 08:34:22AM +0200, Raz Ben-Jehuda(caro) wrote:
+> David Hello.
+> I have looked up in LKML and hopefully you are the one to ask in
+> regard to xfs file system in Linux.
+> My name is Raz and I work for a video servers company.
+> These servers demand high throughput from the storage.
+> We applied XFS file system on our machines.
 > 
-> And why not just leave it in the pagecache and be done with it?
-
-because what is in cache is then not coherent with what is on disk,
-and a direct read is supposed to read the data that is present
-in the file at the time it is issued. 
-
-> All you need is to do a writeout before a direct IO read, which is
-> what generic dio code does.
-
-No, that's not good enough - after writeout but before the
-direct I/O read is issued a process can fault the page and dirty
-it. If you do a direct read, followed by a buffered read you should
-get the same data. The only way to guarantee this is to chuck out
-any cached pages across the range of the direct I/O so they are
-fetched again from disk on the next buffered I/O. i.e. coherent
-at the time the direct I/O is issued.
-
-> I guess you'll say that direct writes still need to remove pages,
+> A video server reads a file in a sequential manner. So, if a
+> file extent size is not a factor of the stripe unit size a sequential
+> read over a raid would break into several small pieces which
+> is undesirable for performance.
+> 
+> I have been examining the bitmap of a file over Linux raid5.
+> According to the documentation XFS tries to align a file on
+> stripe unit size.
 
 Yup.
 
-> but in that case you'll either have to live with some racyness
-> (which is what the generic code does), or have a higher level
-> synchronisation to prevent buffered + direct IO writes I suppose?
+> What I have done is to fix the bitmap allocation method during
+> the writing to be aligned by the stripe unit size.
+> The thing is , though this seems to work , I do not know whether I
+> missed something.
+> 
+> The bellow is a patch (a mere two lines) i have applied to the
+> file system and I would be really grateful to have your opinion.
+> 
+> 
+> diff -ru --exclude='*.o'
+> /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
+> linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
+> --- /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c  2006-06-18
+> 01:49:35.000000000 +0000
+> +++ linux-2.6.17-UNI/fs/xfs/xfs_iomap.c 2006-12-26 14:11:02.000000000 +0000
+> @@ -441,8 +441,8 @@
+>    if (unlikely(rt)) {
+>        if (!(extsz = ip->i_d.di_extsize))
+>            extsz = mp->m_sb.sb_rextsize;
+> -   } else {
+> -       extsz = ip->i_d.di_extsize;
+> +   } else {
+> +        extsz =  mp->m_dalign; // raz fix alignment to raid stripe unit
+>    }
+> 
+>    isize = ip->i_d.di_size;
+> @@ -663,7 +663,7 @@
+>        if (!(extsz = ip->i_d.di_extsize))
+>            extsz = mp->m_sb.sb_rextsize;
+>    } else {
+> -       extsz = ip->i_d.di_extsize;
+> +       extsz =  mp->m_dalign; //  raz fix alignment to raid stripe unit
+>    }
+> 
+>    offset_fsb = XFS_B_TO_FSBT(mp, offset);
 
-The XFS inode iolock - direct I/O writes take it shared, buffered
-writes takes it exclusive - so you can't do both at once. Buffered
-reads take is shared, which is another reason why we need to purge
-the cache on direct I/O writes - they can operate concurrently
-(and coherently) with buffered reads.
+No, that changes the default behaviour of XFS and breaks the extent
+allocation size hint code, which is what you should be using to
+do this. i.e:
+
+# xfs_io -c "chattr -R +e +E" -c "extsize <sunit>" /path/to/mnt
+
+Will set the inode extent size on all new files and directories in the
+filesystem to <sunit>. You'll get a bunch of errors from this
+command because you cannot change the extsize of a file that already
+has extents allocated to it, so it's best to apply this right after
+mkfs when the filesystem is empty.
 
 Cheers,
 
