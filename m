@@ -1,59 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 06:41:11 -0800 (PST)
-Received: from amsfep11-int.chello.nl (amsfep19-int.chello.nl [213.46.243.16] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0OEf2qw022475
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 06:41:04 -0800
-Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
-From: Peter Zijlstra <a.p.zijlstra@chello.nl>
-In-Reply-To: <45B7627B.8050202@yahoo.com.au>
-References: <20070123223702.GF33919298@melbourne.sgi.com>
-	 <1169640835.6189.14.camel@twins>  <45B7627B.8050202@yahoo.com.au>
-Content-Type: text/plain
-Date: Wed, 24 Jan 2007 15:40:04 +0100
-Message-Id: <1169649604.6189.27.camel@twins>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 08:45:07 -0800 (PST)
+Received: from internal-mail-relay1.corp.sgi.com (internal-mail-relay1.corp.sgi.com [198.149.32.52])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0OGj0qw024255
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 08:45:01 -0800
+Message-ID: <45B78CD4.1060400@sgi.com>
+Date: Wed, 24 Jan 2007 16:44:04 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: Review: Fix sub-page zeroing for buffered writes into unwritten
+ extents
+References: <20070123224704.GH33919298@melbourne.sgi.com>
+In-Reply-To: <20070123224704.GH33919298@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Thu, 2007-01-25 at 00:43 +1100, Nick Piggin wrote:
+Dave,
 
-> > Have you seen the new launder_page() a_op? called from
-> > invalidate_inode_pages2_range()
+I'm trying to understand what the sequence of events is here.
+
+If we write to an unwritten extent then will __xfs_get_blocks()
+be called with create=1 and flags=BMAPI_WRITE?  And calling
+bhv_vop_bmap() with flags set to BMAPI_WRITE will cause xfs_iomap()
+to set iomap_flags to IOMAP_NEW?  The combination of create=1 and
+iomap_flags=IOMAP_NEW in __xfs_get_blocks() should result in calling
+set_buffer_new(), right?
+
+I must be missing something...
+
+Lachlan
+
+David Chinner wrote:
+> Simple test case:
 > 
-> It would have been nice to make that one into a more potentially
-> useful generic callback.
-
-That can still be done when the need arises, right?
-
-> But why was it introduced, exactly? I can't tell from the code or
-> the discussion why NFS couldn't start the IO, and signal the caller
-> to wait_on_page_writeback and retry? That seemed to me like the
-> convetional fix.
-
-to quote a bit:
-
-On Tue, 19 Dec 2006 18:19:38 -0500
-Trond Myklebust <trond.myklebust@fys.uio.no> wrote:
-
->     NFS: Fix race in nfs_release_page()
->     
->     invalidate_inode_pages2() may set the dirty bit on a page owing to the call
->     to unmap_mapping_range() after the page was locked. In order to fix this,
->     NFS has hooked the releasepage() method. This, however leads to deadlocks
->     in other parts of the VM.
-
-and:
-
-> > Now, arguably the VM shouldn't be calling try_to_release_page() with
-> > __GFP_FS when it's holding a lock on a page.
-> > 
-> > But otoh, NFS should never be running lock_page() within nfs_release_page()
-> > against the page which was passed into nfs_release_page().  It'll deadlock
-> > for sure.
+> prealloc large file
+> write 3000 bytes to the middle of the file
+> read back file
 > 
-> The reason why it is happening is that the last dirty page from that
-> inode gets cleaned, resulting in a call to dput().
+> The data in the block where the 3000 bytes was written has
+> non-zero garbage around it both in memory and on disk.
+> 
+> The problem is a buffer mapping problem. When we copy data
+> into an unwritten buffer, we have the create flag set which
+> means we map the buffer. We then mark the buffer as unwritten,
+> and do some more checks. Because the buffer is mapped, we do
+> not set the buffer_new() flag on the buffer, which means when
+> we return to the generic code, it does not do sub-block zeroing
+> of the unwritten areas of the block.
+> 
+> The following patch fixes the problem. Comments?
+> 
+> Cheers,
+> 
+> Dave.
