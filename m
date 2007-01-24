@@ -1,77 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 22:22:58 -0800 (PST)
-Received: from smtp101.sbc.mail.mud.yahoo.com (smtp101.sbc.mail.mud.yahoo.com [68.142.198.200])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0O6Mqqw002766
-	for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 22:22:53 -0800
-Date: Tue, 23 Jan 2007 22:21:50 -0800
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: how to sync / commit data to disk?
-Message-ID: <20070124062150.GA12989@tuatara.stupidest.org>
-References: <d55656c10701230716x1ae7cf49kd8a854fd73429c4f@mail.gmail.com> <45B632F6.50705@sandeen.net> <d55656c10701231233kf7faf02xbdd59ec1e218afa4@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 23:01:32 -0800 (PST)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.239])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0O71Qqw010579
+	for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 23:01:27 -0800
+Received: by nz-out-0506.google.com with SMTP id m22so76118nzf
+        for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 23:00:31 -0800 (PST)
+Message-ID: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
+Date: Wed, 24 Jan 2007 08:34:22 +0200
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: [DISCUSS] xfs allocation bitmap method over linux raid
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <d55656c10701231233kf7faf02xbdd59ec1e218afa4@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Gervai <grinapo@gmail.com>
+To: dgc@sgi.com
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 23, 2007 at 09:33:01PM +0100, Peter Gervai wrote:
+David Hello.
+I have looked up in LKML and hopefully you are the one to ask in
+regard to xfs file system in Linux.
+My name is Raz and I work for a video servers company.
+These servers demand high throughput from the storage.
+We applied XFS file system on our machines.
 
-> Now, for me it seems to be a very interesting question that why
-> people would CARE whether it's synced or not, since they write it by
-> the filesystem layer anyway? I do not know, and investigating the
-> reason why 'grub-install' would worry about sync is beyond my
-> available time.
+A video server reads a file in a sequential manner. So, if a
+file extent size is not a factor of the stripe unit size a sequential
+read over a raid would break into several small pieces which
+is undesirable for performance.
 
-there was/is a case where grub assumes a sync will put the file in
-it's fine place, it then pokes about using it's own fs code talking to
-the block device --- and that's where it breaks
+I have been examining the bitmap of a file over Linux raid5.
+According to the documentation XFS tries to align a file on
+stripe unit size.
 
-the reason is sync/fsync have to put the data down somewhere that's
-not volatile, that isn't going to get lost --- the specification
-doesn't require those system calls should put the data down in their
-final place or indeed put the filesystem in a state where it's safe to
-poke about under a mounted filesystem (though freeze essentialyl does
-that)
+What I have done is to fix the bitmap allocation method during
+the writing to be aligned by the stripe unit size.
+The thing is , though this seems to work , I do not know whether I
+missed something.
 
-> The original problem was because grub-install froze xfs, then tried
-> to do the above, which magically fail on the frozen filesystem,
-> hanging the install till the cows come home. I tried to fix this,
-> then started wondering how to do it properly, and now that you
-> mentioned and I checked the trace I really start wondering about why
-> to care... :-o
+The bellow is a patch (a mere two lines) i have applied to the
+file system and I would be really grateful to have your opinion.
 
-i guess it wouldn't be hard to add an freeze/unfreeze hacky thing to
-use as a super-duper-sync to allow people to do nasty things, i'm not
-sure if that's really a good idea long term though
 
-> Apart from that it is so far he best boot manager I found (still I'm
-> open to suggestions of better, free boot managers, but please not on
-> this list), which is completely based on my extremely subjective
-> point of view (which includes XFS support, naturally), and which may
-> be completely opposite to the point of view of any human or nonhuman
-> being, it is not, as you have seen above. It uses a dirty hack which
-> works, I accept that. Specifying --stage2 seems to avoid that hack
-> altogether anyway.
+diff -ru --exclude='*.o'
+/d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
+linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
+--- /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c  2006-06-18
+01:49:35.000000000 +0000
++++ linux-2.6.17-UNI/fs/xfs/xfs_iomap.c 2006-12-26 14:11:02.000000000 +0000
+@@ -441,8 +441,8 @@
+    if (unlikely(rt)) {
+        if (!(extsz = ip->i_d.di_extsize))
+            extsz = mp->m_sb.sb_rextsize;
+-   } else {
+-       extsz = ip->i_d.di_extsize;
++   } else {
++        extsz =  mp->m_dalign; // raz fix alignment to raid stripe unit
+    }
 
-to be quite honest, almost all the bootloaders suck in one way or
-another, you're just best off picking whatever has the least pain and
-living with it (arguably this applies to most software in general but
-boot-loaders are most definately nasty in places)
+    isize = ip->i_d.di_size;
+@@ -663,7 +663,7 @@
+        if (!(extsz = ip->i_d.di_extsize))
+            extsz = mp->m_sb.sb_rextsize;
+    } else {
+-       extsz = ip->i_d.di_extsize;
++       extsz =  mp->m_dalign; //  raz fix alignment to raid stripe unit
+    }
 
-> I accept the "BROKEN" comment regarding this one. ;-) It is a broken
-> implementation. Freeze, ten tries to write. Doomed to fail.
+    offset_fsb = XFS_B_TO_FSBT(mp, offset);
+~
 
-right, so freeze/unfreeze in one call might be a better idea so there
-is no chance of having it stuck frozen and breaking things
 
-> I thought that freeze lets already written but unsynced data to be
-> written.
-
-freeze should push all unwritten data and metadata out to the fs and
-leave it in a decent state suitable for taking a snapshot,
-freeze/unfreeze in one go won't really do this, but it might be good
-enough for grub
+Thank you.
+-- 
+Raz
