@@ -1,88 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 14:40:16 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0OMe6qw001285
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 14:40:10 -0800
-Subject: Re: [DISCUSS] xfs allocation bitmap method over linux raid
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
-References: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 25 Jan 2007 09:38:13 +1100
-Message-Id: <1169678294.18017.200.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 14:48:11 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0OMm1qw003023
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 14:48:03 -0800
+Date: Thu, 25 Jan 2007 09:46:54 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
+Message-ID: <20070124224654.GN33919298@melbourne.sgi.com>
+References: <20070123223702.GF33919298@melbourne.sgi.com> <1169640835.6189.14.camel@twins> <45B7627B.8050202@yahoo.com.au>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <45B7627B.8050202@yahoo.com.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
 
-Hi Raz,
-
-On Wed, 2007-01-24 at 08:34 +0200, Raz Ben-Jehuda(caro) wrote:
-> David Hello.
-> I have looked up in LKML and hopefully you are the one to ask in
-> regard to xfs file system in Linux.
-> My name is Raz and I work for a video servers company.
-
-OOC, which one?  (would be nice to put an entry for your company
-on the http://oss.sgi.com/projects/xfs/users.html page).
-
-> These servers demand high throughput from the storage.
-> We applied XFS file system on our machines.
+On Thu, Jan 25, 2007 at 12:43:23AM +1100, Nick Piggin wrote:
+> Peter Zijlstra wrote:
+> >On Wed, 2007-01-24 at 09:37 +1100, David Chinner wrote:
+> >
+> >>With the recent changes to cancel_dirty_pages(), XFS will
+> >>dump warnings in the syslog because it can truncate_inode_pages()
+> >>on dirty mapped pages.
+> >>
+> >>I've determined that this is indeed correct behaviour for XFS
+> >>as this can happen in the case of races on mmap()d files with
+> >>direct I/O. In this case when we do a direct I/O read, we
+> >>flush the dirty pages to disk, then truncate them out of the
+> >>page cache. Unfortunately, between the flush and the truncate
+> >>the mmap could dirty the page again. At this point we toss a
+> >>dirty page that is mapped.
+> >
+> >
+> >This sounds iffy, why not just leave the page in the pagecache if its
+> >mapped anyway?
 > 
-> A video server reads a file in a sequential manner. So, if a
+> And why not just leave it in the pagecache and be done with it?
 
-Do you write the file sequentially?  Buffered or direct writes?
+because what is in cache is then not coherent with what is on disk,
+and a direct read is supposed to read the data that is present
+in the file at the time it is issued. 
 
-> file extent size is not a factor of the stripe unit size a sequential
-> read over a raid would break into several small pieces which
-> is undesirable for performance.
-> 
-> I have been examining the bitmap of a file over Linux raid5.
+> All you need is to do a writeout before a direct IO read, which is
+> what generic dio code does.
 
-I've found that, in combination with Jens Axboe's blktrace toolkit
-to be very useful - if you have a sufficiently recent kernel, I'd
-highly recommend you check out blktrace, it should help you alot.
+No, that's not good enough - after writeout but before the
+direct I/O read is issued a process can fault the page and dirty
+it. If you do a direct read, followed by a buffered read you should
+get the same data. The only way to guarantee this is to chuck out
+any cached pages across the range of the direct I/O so they are
+fetched again from disk on the next buffered I/O. i.e. coherent
+at the time the direct I/O is issued.
 
-(bmap == block map, theres no bitmap involved)
+> I guess you'll say that direct writes still need to remove pages,
 
-> According to the documentation XFS tries to align a file on
-> stripe unit size.
-> 
-> What I have done is to fix the bitmap allocation method during
-> the writing to be aligned by the stripe unit size.
+Yup.
 
-Thats not quite what the patch does, FWIW - it does two things:
-- forces allocations to be stripe unit sized (not aligned)
-- and, er, removes some of the per-inode extsize hint code :)
+> but in that case you'll either have to live with some racyness
+> (which is what the generic code does), or have a higher level
+> synchronisation to prevent buffered + direct IO writes I suppose?
 
-> /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
-> linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
-> --- /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c  2006-06-18
-> 01:49:35.000000000 +0000
-> +++ linux-2.6.17-UNI/fs/xfs/xfs_iomap.c 2006-12-26 14:11:02.000000000 +0000
-> @@ -441,8 +441,8 @@
->     if (unlikely(rt)) {
->         if (!(extsz = ip->i_d.di_extsize))
->             extsz = mp->m_sb.sb_rextsize;
-> -   } else {
-> -       extsz = ip->i_d.di_extsize;
-> +   } else {
-> +        extsz =  mp->m_dalign; // raz fix alignment to raid stripe unit
->     }
+The XFS inode iolock - direct I/O writes take it shared, buffered
+writes takes it exclusive - so you can't do both at once. Buffered
+reads take is shared, which is another reason why we need to purge
+the cache on direct I/O writes - they can operate concurrently
+(and coherently) with buffered reads.
 
-The real question is, why are your initial writes not being affected by
-the code in xfs_iomap_eof_align_last_fsb which rounds requests to a
-stripe unit boundary?  Provided you are writing sequentially, you should
-be seeing xfs_iomap_eof_want_preallocate return true, then later doing
-stripe unit alignment in xfs_iomap_eof_align_last_fsb (because prealloc
-got set earlier) ... can you trace your requests through the routines
-you've modified and find why this is _not_ happening?
+Cheers,
 
-cheers.
-
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
