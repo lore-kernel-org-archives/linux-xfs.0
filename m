@@ -1,78 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Jan 2007 23:01:32 -0800 (PST)
-Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.239])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0O71Qqw010579
-	for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 23:01:27 -0800
-Received: by nz-out-0506.google.com with SMTP id m22so76118nzf
-        for <xfs@oss.sgi.com>; Tue, 23 Jan 2007 23:00:31 -0800 (PST)
-Message-ID: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
-Date: Wed, 24 Jan 2007 08:34:22 +0200
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: [DISCUSS] xfs allocation bitmap method over linux raid
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 04:31:02 -0800 (PST)
+Received: from amsfep18-int.chello.nl (amsfep17-int.chello.nl [213.46.243.15] (may be forged))
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0OCUlqw024860
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 04:30:54 -0800
+Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
+From: Peter Zijlstra <a.p.zijlstra@chello.nl>
+In-Reply-To: <20070123223702.GF33919298@melbourne.sgi.com>
+References: <20070123223702.GF33919298@melbourne.sgi.com>
+Content-Type: text/plain
+Date: Wed, 24 Jan 2007 13:13:55 +0100
+Message-Id: <1169640835.6189.14.camel@twins>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: dgc@sgi.com
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
 
-David Hello.
-I have looked up in LKML and hopefully you are the one to ask in
-regard to xfs file system in Linux.
-My name is Raz and I work for a video servers company.
-These servers demand high throughput from the storage.
-We applied XFS file system on our machines.
+On Wed, 2007-01-24 at 09:37 +1100, David Chinner wrote:
+> With the recent changes to cancel_dirty_pages(), XFS will
+> dump warnings in the syslog because it can truncate_inode_pages()
+> on dirty mapped pages.
+> 
+> I've determined that this is indeed correct behaviour for XFS
+> as this can happen in the case of races on mmap()d files with
+> direct I/O. In this case when we do a direct I/O read, we
+> flush the dirty pages to disk, then truncate them out of the
+> page cache. Unfortunately, between the flush and the truncate
+> the mmap could dirty the page again. At this point we toss a
+> dirty page that is mapped.
 
-A video server reads a file in a sequential manner. So, if a
-file extent size is not a factor of the stripe unit size a sequential
-read over a raid would break into several small pieces which
-is undesirable for performance.
+This sounds iffy, why not just leave the page in the pagecache if its
+mapped anyway?
 
-I have been examining the bitmap of a file over Linux raid5.
-According to the documentation XFS tries to align a file on
-stripe unit size.
+> None of the existing functions for truncating pages or invalidating
+> pages work in this situation. Invalidating a page only works for
+> non-dirty pages with non-dirty buffers, and they only work for
+> whole pages and XFS requires partial page truncation.
+> 
+> On top of that the page invalidation functions don't actually
+> call into the filesystem to invalidate the page and so the filesystem
+> can't actually invalidate the page properly (e.g. do stuff based on
+> private buffer head flags).
 
-What I have done is to fix the bitmap allocation method during
-the writing to be aligned by the stripe unit size.
-The thing is , though this seems to work , I do not know whether I
-missed something.
+Have you seen the new launder_page() a_op? called from
+invalidate_inode_pages2_range()
 
-The bellow is a patch (a mere two lines) i have applied to the
-file system and I would be really grateful to have your opinion.
+> So that leaves us needing to use truncate semantics and the problem
+> is that none of them unmap pages in a non-racy manner - if they
+> unmap pages they do it separately to the truncate of the page,
+> leading to races with mmap redirtying the page between the unmap and
+> the truncate ofthe page.
 
+Isn't there still a race where the page fault path doesn't yet lock the
+page and can just reinsert it?
 
-diff -ru --exclude='*.o'
-/d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
-linux-2.6.17-UNI/fs/xfs/xfs_iomap.c
---- /d1/rt/kernels/linux-2.6.17-UNI/fs/xfs/xfs_iomap.c  2006-06-18
-01:49:35.000000000 +0000
-+++ linux-2.6.17-UNI/fs/xfs/xfs_iomap.c 2006-12-26 14:11:02.000000000 +0000
-@@ -441,8 +441,8 @@
-    if (unlikely(rt)) {
-        if (!(extsz = ip->i_d.di_extsize))
-            extsz = mp->m_sb.sb_rextsize;
--   } else {
--       extsz = ip->i_d.di_extsize;
-+   } else {
-+        extsz =  mp->m_dalign; // raz fix alignment to raid stripe unit
-    }
+Nick's pagefault rework should rid us of this by always locking the page
+in the fault path.
 
-    isize = ip->i_d.di_size;
-@@ -663,7 +663,7 @@
-        if (!(extsz = ip->i_d.di_extsize))
-            extsz = mp->m_sb.sb_rextsize;
-    } else {
--       extsz = ip->i_d.di_extsize;
-+       extsz =  mp->m_dalign; //  raz fix alignment to raid stripe unit
-    }
-
-    offset_fsb = XFS_B_TO_FSBT(mp, offset);
-~
-
-
-Thank you.
--- 
-Raz
+> Hence we need a truncate function that unmaps the pages while they
+> are locked for truncate in a similar fashion to
+> invalidate_inode_pages2_range(). The following patch (unchanged from
+> the last time it was sent) does this. The XFS changes are in a
+> second patch.
+> 
+> The patch has been test on ia64 and x86-64 via XFSQA and a lot
+> of fsx mixing mmap and direct I/O operations.
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
