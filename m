@@ -1,71 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 16:48:44 -0800 (PST)
-Received: from smtp106.mail.mud.yahoo.com (smtp106.mail.mud.yahoo.com [209.191.85.216])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0P0mbqw003752
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 16:48:38 -0800
-Message-ID: <45B7FE1C.3070807@yahoo.com.au>
-Date: Thu, 25 Jan 2007 11:47:24 +1100
-From: Nick Piggin <nickpiggin@yahoo.com.au>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 16:59:49 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0P0xdqw006488
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 16:59:40 -0800
+Date: Wed, 24 Jan 2007 19:58:44 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
+ 2.16.19.2
+In-Reply-To: <20070125003242.GA23343@elf.ucw.cz>
+Message-ID: <Pine.LNX.4.64.0701241945090.3841@p34.internal.lan>
+References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
+ <20070122133735.GB4493@ucw.cz> <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
+ <Pine.LNX.4.64.0701241837550.2930@p34.internal.lan> <20070125003242.GA23343@elf.ucw.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
-References: <20070123223702.GF33919298@melbourne.sgi.com> <1169640835.6189.14.camel@twins> <45B7627B.8050202@yahoo.com.au> <20070124224654.GN33919298@melbourne.sgi.com> <45B7F5F9.2070308@yahoo.com.au> <20070125003536.GS33919298@melbourne.sgi.com>
-In-Reply-To: <20070125003536.GS33919298@melbourne.sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Thu, Jan 25, 2007 at 11:12:41AM +1100, Nick Piggin wrote:
 
->>... so surely if you do a direct read followed by a buffered read,
->>you should *not* get the same data if there has been some activity
->>to modify that part of the file in the meantime (whether that be a
->>buffered or direct write).
+
+On Thu, 25 Jan 2007, Pavel Machek wrote:
+
+> Hi!
 > 
+> > > Is it highmem-related? Can you try it with mem=256M?
+> > 
+> > Bad idea, the kernel crashes & burns when I use mem=256, I had to boot 
+> > 2.6.20-rc5-6 single to get back into my machine, very nasty.  Remember I 
+> > use an onboard graphics controller that has 128MB of RAM allocated to it 
+> > and I believe the ICH8 chipset also uses some memory, in any event mem=256 
+> > causes the machine to lockup before it can even get to the boot/init 
+> > processes, the two leds on the keyboard were blinking, caps lock and 
+> > scroll lock and I saw no console at all!
 > 
-> Right. And that is what happens in XFS because it purges the
-> caches on direct I/O and forces data to be re-read from disk.
-
-And that is critical for direct IO writes, of course.
-
-> Effectively, if you are mixing direct I/O with other types of I/O
-> (buffered or mmap) then the application really needs to be certain
-> it is doing the right thing because there are races that can occur
-> below the filesystem. All we care about in the filesystem is that
-> what we cache is the same as what is on disk, and that implies that
-> direct I/O needs to purge the cache regardless of the state it is in....
+> Okay, so try mem=700M or disable CONFIG_HIGHMEM or something.
+> 									Pavel
+> -- 
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Hence we need to unmap pages and use truncate semantics on them to
-> ensure they are removed from the page cache....
 
-OK, I understand that this does need to happen (at least for writes),
-so you need to fix it regardless of the DIO read issue.
+Looks like you may be onto something Pavel, has not invoked the OOM killer 
+yet using mem=700M, I see the swap increasing and the speed of the copy is 
+only 14-15MB/s, when mem= is off (giving me all memory w/preempt) I get 
+45-65MB/s.
 
-But I'm just interested about DIO reads. I think you can get pretty
-reasonable semantics without discarding pagecache, but the semantics
-are weaker in one aspect.
+With append="mem=700M", seen below:
 
-DIO read
-1. writeback page
-2. read from disk
+top - 19:38:46 up 1 min,  3 users,  load average: 1.24, 0.38, 0.13
+Tasks: 172 total,   1 running, 171 sleeping,   0 stopped,   0 zombie
+Cpu(s): 10.6%us,  4.6%sy,  1.3%ni, 69.6%id, 13.9%wa,  0.0%hi,  0.1%si,  0.0%st
+Mem:    705512k total,   699268k used,     6244k free,       12k buffers
+Swap:  2200760k total,    18520k used,  2182240k free,    34968k cached
 
-Now your read will pick up data no older than 1. And if a buffered
-write happens after 2, then there is no problem either.
 
-So if you are doing a buffered write and DIO read concurrently, you
-want synchronisation so the buffered write happens either before 1
-or after 2 -- the DIO read will see either all or none of the write.
+(with mem=700M):
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+ 2  0  40276   7456     12  23184    0    0 13196 14904 1204 4756  1  2 50 47
+ 0  2  40276   6156     12  24264    0    0 20096 18352 1293 6400  1  4 49 46
+ 0  2  40276   6264     12  24264    0    0 15504 17836 1219 5202  0  2 50 48
+ 0  2  40276   6144     12  24376    0    0 14348 14453 1190 4815  0  3 49 48
+ 0  2  40276   6156     12  24504    0    0 11396 12724 1169 3724  1  2 50 48
+ 0  1  40276   7532     12  23272    0    0 11412 13121 1183 4017  0  2 50 48
+ 0  1  40276   7944     12  22644    0    0 19084 19144 1234 6548  0  4 50 46
 
-Supposing your pagecache isn't invalidated, then a buffered write
-(from mmap, if XFS doesn't allow write(2)) comes in between 1 and 2,
-then the DIO read will find either none, some, or all of that write.
 
-So I guess what you are preventing is the "some" case. Am I right?
+Almost there, looks like its going to make it.
+-rw-r--r-- 1 user group 18630127104 2007-01-21 12:41 18gb
+-rw-r--r-- 1 user group 15399329792 2007-01-24 19:55 18gb.copy
 
--- 
-SUSE Labs, Novell Inc.
-Send instant messages to your online friends http://au.messenger.yahoo.com 
+Hrmm, with preempt off it works and with preempt ON and mem=700M it works.
+I guess I will run with preempt off as I'd prefer to have the memory 
+available-- and tolerate the large lag bursts w/ no preemption.
+
+
+Yup it worked.
+
+-rw-r--r-- 1 user group 18630127104 2007-01-21 12:41 18gb
+-rw-r--r-- 1 user group 18630127104 2007-01-21 12:41 18gb.copy
+
+Justin.
