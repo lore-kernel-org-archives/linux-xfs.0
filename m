@@ -1,102 +1,91 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 23:41:36 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0P7fRqw027409
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 23:41:29 -0800
-Date: Thu, 25 Jan 2007 18:40:18 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
-Message-ID: <20070125074018.GB33919298@melbourne.sgi.com>
-References: <1169640835.6189.14.camel@twins> <45B7627B.8050202@yahoo.com.au> <20070124224654.GN33919298@melbourne.sgi.com> <45B7F5F9.2070308@yahoo.com.au> <20070125003536.GS33919298@melbourne.sgi.com> <45B7FE1C.3070807@yahoo.com.au> <20070125015204.GV33919298@melbourne.sgi.com> <45B80F65.6010206@yahoo.com.au> <20070125034227.GX33919298@melbourne.sgi.com> <45B83139.1040007@yahoo.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45B83139.1040007@yahoo.com.au>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Jan 2007 01:10:33 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0P99Uqw017438
+	for <xfs@oss.sgi.com>; Thu, 25 Jan 2007 01:09:31 -0800
+Date: Thu, 25 Jan 2007 04:08:36 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
+ 2.16.19.2
+In-Reply-To: <20070125003242.GA23343@elf.ucw.cz>
+Message-ID: <Pine.LNX.4.64.0701250407590.3673@p34.internal.lan>
+References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
+ <20070122133735.GB4493@ucw.cz> <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
+ <Pine.LNX.4.64.0701241837550.2930@p34.internal.lan> <20070125003242.GA23343@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: David Chinner <dgc@sgi.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 25, 2007 at 03:25:29PM +1100, Nick Piggin wrote:
-> David Chinner wrote:
-> >On Thu, Jan 25, 2007 at 01:01:09PM +1100, Nick Piggin wrote:
-> >
-> >>David Chinner wrote:
+
+
+On Thu, 25 Jan 2007, Pavel Machek wrote:
+
+> Hi!
 > 
-> >>>No. The only thing that will happen here is that the direct read
-> >>>will see _none_ of the write because the mmap write occurred during
-> >>>the DIO read to a different set of pages in memory. There is no
-> >>>"some" or "all" case here.
-> >>
-> >>But if the buffers get partially or completely written back in the
-> >>meantime, then the DIO read could see that.
-> >
-> >
-> >Only if you can dirty them and flush them to disk while the direct
-> >read is waiting in the I/O queue (remember, the direct read flushes
-> >dirty cached data before being issued). Given that we don't lock the
-> >inode in the buffered I/O *writeback* path, we have to stop pages being
-> >dirtied in the page cache up front so we don't have mmap writeback
-> >over the top of the direct read.
+> > > Is it highmem-related? Can you try it with mem=256M?
+> > 
+> > Bad idea, the kernel crashes & burns when I use mem=256, I had to boot 
+> > 2.6.20-rc5-6 single to get back into my machine, very nasty.  Remember I 
+> > use an onboard graphics controller that has 128MB of RAM allocated to it 
+> > and I believe the ICH8 chipset also uses some memory, in any event mem=256 
+> > causes the machine to lockup before it can even get to the boot/init 
+> > processes, the two leds on the keyboard were blinking, caps lock and 
+> > scroll lock and I saw no console at all!
 > 
-> However unlikely it may be, that is what I'm talking about in my "some"
-> or "all" cases. Note that I'm not talking about a specific implementation
-> (eg. XFS I guess avoids "some"), but just the possible scenarios.
-
-Unfortunately, behaviour is different for different filesystems. I
-can only answer for XFS, which is different to most of the other
-filesystems in both locking and the way it treats the page cache.
-IOWs, if you want to talk about details, then have to talk about
-specific implementations because.....
-
-
-> >Hence we have to prevent mmap for dirtying the same file offset we
-> >are doing direct reads on until the direct read has been issued.
-> >
-> >i.e. we need a barrier.
+> Okay, so try mem=700M or disable CONFIG_HIGHMEM or something.
+> 									Pavel
+> -- 
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> So you need to eliminate the "some" case? Because of course "none" and
-> "all" are unavoidable.
 
-"all" is avoidable, too, once you've kicked the pages out of
-the page cache - you just have to block the buffered read triggered
-by refaulting the page will cause until the direct I/O completes.
+I forgot to remove the mem=700M with PREEMPT off and this is what I saw 
+this morning:
 
-> >>>IOWs, at a single point in time we have 2 different views
-> >>>of the one file which are both apparently valid and that is what
-> >>>we are trying to avoid. We have a coherency problem here which is
-> >>>solved by forcing the mmap write to reread the data off disk....
-> >>
-> >>I don't see why the mmap write needs to reread data off disk. The
-> >>data on disk won't get changed by the DIO read.
-> >
-> >
-> >No, but the data _in memory_ will, and now when the direct read
-> >completes it will data that is different to what is in the page
-> >cache. For direct I/O we define the correct data to be what is on
-> >disk, not what is in memory, so any time we bypass what is in
-> >memory, we need to ensure that we prevent the data being changed
-> >again in memory before we issue the disk I/O.
-> 
-> But when you drop your locks, before the direct IO read returns, some
-> guy can mmap and dirty the pagecache anyway.
-> By the time the read returns, the data is stale.
+[18005.261875] Killed process 4768 (screen)
+[18005.262343] Out of memory: kill process 4793 (screen) score 385 or a 
+child
+[18005.262350] Killed process 4793 (screen)
+[18005.378536] Out of memory: kill process 4825 (screen) score 385 or a 
+child
+[18005.378542] Killed process 4825 (screen)
+[18005.378547] Out of memory: kill process 4825 (screen) score 385 or a 
+child
+[18005.378553] Killed process 4825 (screen)
+[18005.413072] Out of memory: kill process 4875 (screen) score 385 or a 
+child
+[18005.413079] Killed process 4875 (screen)
+[18005.423735] Out of memory: kill process 4970 (screen) score 385 or a 
+child
+[18005.423742] Killed process 4970 (screen)
+[18005.431391] Out of memory: kill process 21365 (xfs_fsr) score 286 or a 
+child
+[18005.431398] Killed process 21365 (xfs_fsr)
+ 
+$ screen -ls
+  There are screens on:
+        2532.pts-0.p34  (Dead ???)
+        3776.pts-2.p34  (Dead ???)
+        4768.pts-7.p34  (Dead ???)
+        4793.pts-9.p34  (Dead ???)
+        4825.pts-11.p34 (Dead ???)
+        4875.pts-13.p34 (Dead ???)
+        4970.pts-15.p34 (Dead ???)
+ 
 
-Only if we leave the page in the page cache. If we toss the page,
-the time it takes to do the I/O for the page fault is enough for
-the direct I/o to complete. Sure it's not an absolute guarantee,
-but if you want an absolute guarantee:
+Lovely...
 
-> This obviously must be synchronised in
-> userspace.
+$ uname -r
+2.6.20-rc5
 
-As I said earlier.....
+Something is seriously wrong with that OOM killer.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Justin.
