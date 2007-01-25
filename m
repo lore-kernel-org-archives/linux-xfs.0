@@ -1,117 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 16:11:17 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0P0BAqw022058
-	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 16:11:11 -0800
-Date: Wed, 24 Jan 2007 19:10:16 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
- 2.16.19.2
-In-Reply-To: <20070122115703.97ed54f3.akpm@osdl.org>
-Message-ID: <Pine.LNX.4.64.0701241909120.2930@p34.internal.lan>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
- <20070122115703.97ed54f3.akpm@osdl.org>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Jan 2007 16:14:01 -0800 (PST)
+Received: from smtp110.mail.mud.yahoo.com (smtp110.mail.mud.yahoo.com [209.191.85.220])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0P0Dpqw022950
+	for <xfs@oss.sgi.com>; Wed, 24 Jan 2007 16:13:52 -0800
+Message-ID: <45B7F5F9.2070308@yahoo.com.au>
+Date: Thu, 25 Jan 2007 11:12:41 +1100
+From: Nick Piggin <nickpiggin@yahoo.com.au>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: [PATCH 1/2]: Fix BUG in cancel_dirty_pages on XFS
+References: <20070123223702.GF33919298@melbourne.sgi.com> <1169640835.6189.14.camel@twins> <45B7627B.8050202@yahoo.com.au> <20070124224654.GN33919298@melbourne.sgi.com>
+In-Reply-To: <20070124224654.GN33919298@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@osdl.org
 
+David Chinner wrote:
+> On Thu, Jan 25, 2007 at 12:43:23AM +1100, Nick Piggin wrote:
 
+>>And why not just leave it in the pagecache and be done with it?
+> 
+> 
+> because what is in cache is then not coherent with what is on disk,
+> and a direct read is supposed to read the data that is present
+> in the file at the time it is issued. 
 
-On Mon, 22 Jan 2007, Andrew Morton wrote:
+So after a writeout it will be coherent of course, so the point in
+question is what happens when someone comes in and dirties it at the
+worst possible moment? That relates to the paragraph below...
 
-> > On Sun, 21 Jan 2007 14:27:34 -0500 (EST) Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> > Why does copying an 18GB on a 74GB raptor raid1 cause the kernel to invoke 
-> > the OOM killer and kill all of my processes?
-> 
-> What's that?   Software raid or hardware raid?  If the latter, which driver?
-> 
-> > Doing this on a single disk 2.6.19.2 is OK, no issues.  However, this 
-> > happens every time!
-> > 
-> > Anything to try?  Any other output needed?  Can someone shed some light on 
-> > this situation?
-> > 
-> > Thanks.
-> > 
-> > 
-> > The last lines of vmstat 1 (right before it kill -9'd my shell/ssh)
-> > 
-> > procs -----------memory---------- ---swap-- -----io---- -system-- 
-> > ----cpu----
-> >  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id 
-> > wa
-> >  0  7    764  50348     12 1269988    0    0 53632   172 1902 4600  1  8 
-> > 29 62
-> >  0  7    764  49420     12 1260004    0    0 53632 34368 1871 6357  2 11 
-> > 48 40
-> 
-> The wordwrapping is painful :(
-> 
-> > 
-> > The last lines of dmesg:
-> > [ 5947.199985] lowmem_reserve[]: 0 0 0
-> > [ 5947.199992] DMA: 0*4kB 1*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 
-> > 0*512kB 1*1024kB 1*2048kB 0*4096kB = 3544kB
-> > [ 5947.200010] Normal: 1*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 0*256kB 
-> > 1*512kB 0*1024kB 1*2048kB 0*4096kB = 2740kB
-> > [ 5947.200035] HighMem: 98*4kB 35*8kB 9*16kB 69*32kB 4*64kB 1*128kB 
-> > 1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 3664kB
-> > [ 5947.200052] Swap cache: add 789, delete 189, find 16/17, race 0+0
-> > [ 5947.200055] Free swap  = 2197628kB
-> > [ 5947.200058] Total swap = 2200760kB
-> > [ 5947.200060] Free swap:       2197628kB
-> > [ 5947.205664] 517888 pages of RAM 
-> > [ 5947.205671] 288512 pages of HIGHMEM
-> > [ 5947.205673] 5666 reserved pages 
-> > [ 5947.205675] 257163 pages shared
-> > [ 5947.205678] 600 pages swap cached 
-> > [ 5947.205680] 88876 pages dirty
-> > [ 5947.205682] 115111 pages writeback
-> > [ 5947.205684] 5608 pages mapped
-> > [ 5947.205686] 49367 pages slab
-> > [ 5947.205688] 541 pages pagetables
-> > [ 5947.205795] Out of memory: kill process 1853 (named) score 9937 or a 
-> > child
-> > [ 5947.205801] Killed process 1853 (named)
-> > [ 5947.206616] bash invoked oom-killer: gfp_mask=0x84d0, order=0, 
-> > oomkilladj=0
-> > [ 5947.206621]  [<c013e33b>] out_of_memory+0x17b/0x1b0
-> > [ 5947.206631]  [<c013fcac>] __alloc_pages+0x29c/0x2f0
-> > [ 5947.206636]  [<c01479ad>] __pte_alloc+0x1d/0x90
-> > [ 5947.206643]  [<c0148bf7>] copy_page_range+0x357/0x380
-> > [ 5947.206649]  [<c0119d75>] copy_process+0x765/0xfc0
-> > [ 5947.206655]  [<c012c3f9>] alloc_pid+0x1b9/0x280
-> > [ 5947.206662]  [<c011a839>] do_fork+0x79/0x1e0
-> > [ 5947.206674]  [<c015f91f>] do_pipe+0x5f/0xc0
-> > [ 5947.206680]  [<c0101176>] sys_clone+0x36/0x40
-> > [ 5947.206686]  [<c0103138>] syscall_call+0x7/0xb
-> > [ 5947.206691]  [<c0420033>] __sched_text_start+0x853/0x950
-> > [ 5947.206698]  ======================= 
-> 
-> Important information from the oom-killing event is missing.  Please send
-> it all.
-> 
-> >From your earlier reports we have several hundred MB of ZONE_NORMAL memory
-> which has gone awol.
-> 
-> Please include /proc/meminfo from after the oom-killing.
-> 
-> Please work out what is using all that slab memory, via /proc/slabinfo.
-> 
-> After the oom-killing, please see if you can free up the ZONE_NORMAL memory
-> via a few `echo 3 > /proc/sys/vm/drop_caches' commands.  See if you can
-> work out what happened to the missing couple-of-hundred MB from
-> ZONE_NORMAL.
+>>All you need is to do a writeout before a direct IO read, which is
+>>what generic dio code does.
 > 
 > 
+> No, that's not good enough - after writeout but before the
+> direct I/O read is issued a process can fault the page and dirty
+> it. If you do a direct read, followed by a buffered read you should
+> get the same data. The only way to guarantee this is to chuck out
+> any cached pages across the range of the direct I/O so they are
+> fetched again from disk on the next buffered I/O. i.e. coherent
+> at the time the direct I/O is issued.
 
-Running with PREEMPT OFF lets me copy the file!!  The machine LAGS 
-occasionally every 5-30-60 seconds or so VERY BADLY, talking 5-10 seconds 
-of lag, but hey, it does not crash!! I will boot the older kernel with 
-preempt on and see if I can get you that information you requested.
+... so surely if you do a direct read followed by a buffered read,
+you should *not* get the same data if there has been some activity
+to modify that part of the file in the meantime (whether that be a
+buffered or direct write).
 
-Justin.
+>>but in that case you'll either have to live with some racyness
+>>(which is what the generic code does), or have a higher level
+>>synchronisation to prevent buffered + direct IO writes I suppose?
+> 
+> 
+> The XFS inode iolock - direct I/O writes take it shared, buffered
+> writes takes it exclusive - so you can't do both at once. Buffered
+> reads take is shared, which is another reason why we need to purge
+> the cache on direct I/O writes - they can operate concurrently
+> (and coherently) with buffered reads.
+
+Ah, I'm glad to see somebody cares about doing the right thing ;)
+Maybe I'll use XFS for my filesystems in future.
+
+-- 
+SUSE Labs, Novell Inc.
+Send instant messages to your online friends http://au.messenger.yahoo.com 
