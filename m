@@ -1,96 +1,106 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Jan 2007 01:26:48 -0800 (PST)
-Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.24])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0Q9Qbqw016865
-	for <xfs@oss.sgi.com>; Fri, 26 Jan 2007 01:26:38 -0800
-Date: Fri, 26 Jan 2007 01:25:05 -0800
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba ->
- RAID5)
-Message-Id: <20070126012505.d8cb07f2.akpm@osdl.org>
-In-Reply-To: <Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Jan 2007 02:35:50 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0QAZfqw027958
+	for <xfs@oss.sgi.com>; Fri, 26 Jan 2007 02:35:42 -0800
+Date: Fri, 26 Jan 2007 04:37:55 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba -> RAID5)
+In-Reply-To: <20070126012505.d8cb07f2.akpm@osdl.org>
+Message-ID: <Pine.LNX.4.64.0701260437090.11888@p34.internal.lan>
 References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
-	<45B5261B.1050104@redhat.com>
-	<Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+ <45B5261B.1050104@redhat.com> <Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
+ <20070126012505.d8cb07f2.akpm@osdl.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Andrew Morton <akpm@osdl.org>
 Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Neil Brown <neilb@suse.de>
 
-On Wed, 24 Jan 2007 18:37:15 -0500 (EST)
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-> > Without digging too deeply, I'd say you've hit the same bug Sami Farin and
-> > others
-> > have reported starting with 2.6.19: pages mapped with kmap_atomic() become
-> > unmapped
-> > during memcpy() or similar operations.  Try disabling preempt -- that seems to
-> > be the
-> > common factor.
-> > 
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > 
+
+On Fri, 26 Jan 2007, Andrew Morton wrote:
+
+> On Wed, 24 Jan 2007 18:37:15 -0500 (EST)
+> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 > 
-> After I run some other tests, I am going to re-run this test and see if it 
-> OOPSes again with PREEMPT off.
+> > > Without digging too deeply, I'd say you've hit the same bug Sami Farin and
+> > > others
+> > > have reported starting with 2.6.19: pages mapped with kmap_atomic() become
+> > > unmapped
+> > > during memcpy() or similar operations.  Try disabling preempt -- that seems to
+> > > be the
+> > > common factor.
+> > > 
+> > > 
+> > > -
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > > 
+> > 
+> > After I run some other tests, I am going to re-run this test and see if it 
+> > OOPSes again with PREEMPT off.
+> 
+> Strange.  The below debug patch might catch it - please run with this
+> applied.  
+> 
+> 
+> --- a/arch/i386/mm/highmem.c~kmap_atomic-debugging
+> +++ a/arch/i386/mm/highmem.c
+> @@ -30,7 +30,43 @@ void *kmap_atomic(struct page *page, enu
+>  {
+>  	enum fixed_addresses idx;
+>  	unsigned long vaddr;
+> +	static unsigned warn_count = 10;
+>  
+> +	if (unlikely(warn_count == 0))
+> +		goto skip;
+> +
+> +	if (unlikely(in_interrupt())) {
+> +		if (in_irq()) {
+> +			if (type != KM_IRQ0 && type != KM_IRQ1 &&
+> +			    type != KM_BIO_SRC_IRQ && type != KM_BIO_DST_IRQ &&
+> +			    type != KM_BOUNCE_READ) {
+> +				WARN_ON(1);
+> +				warn_count--;
+> +			}
+> +		} else if (!irqs_disabled()) {	/* softirq */
+> +			if (type != KM_IRQ0 && type != KM_IRQ1 &&
+> +			    type != KM_SOFTIRQ0 && type != KM_SOFTIRQ1 &&
+> +			    type != KM_SKB_SUNRPC_DATA &&
+> +			    type != KM_SKB_DATA_SOFTIRQ &&
+> +			    type != KM_BOUNCE_READ) {
+> +				WARN_ON(1);
+> +				warn_count--;
+> +			}
+> +		}
+> +	}
+> +
+> +	if (type == KM_IRQ0 || type == KM_IRQ1 || type == KM_BOUNCE_READ) {
+> +		if (!irqs_disabled()) {
+> +			WARN_ON(1);
+> +			warn_count--;
+> +		}
+> +	} else if (type == KM_SOFTIRQ0 || type == KM_SOFTIRQ1) {
+> +		if (irq_count() == 0 && !irqs_disabled()) {
+> +			WARN_ON(1);
+> +			warn_count--;
+> +		}
+> +	}
+> +skip:
+>  	/* even !CONFIG_PREEMPT needs this, for in_atomic in do_page_fault */
+>  	pagefault_disable();
+>  	if (!PageHighMem(page))
+> _
+> 
+> 
 
-Strange.  The below debug patch might catch it - please run with this
-applied.  
+The RAID5 bug may be hard to trigger, I have only made it happen once so 
+far (but only tried it once, don't like locking up the raid :)), I will 
+re-run the test after applying this patch.
 
-
---- a/arch/i386/mm/highmem.c~kmap_atomic-debugging
-+++ a/arch/i386/mm/highmem.c
-@@ -30,7 +30,43 @@ void *kmap_atomic(struct page *page, enu
- {
- 	enum fixed_addresses idx;
- 	unsigned long vaddr;
-+	static unsigned warn_count = 10;
- 
-+	if (unlikely(warn_count == 0))
-+		goto skip;
-+
-+	if (unlikely(in_interrupt())) {
-+		if (in_irq()) {
-+			if (type != KM_IRQ0 && type != KM_IRQ1 &&
-+			    type != KM_BIO_SRC_IRQ && type != KM_BIO_DST_IRQ &&
-+			    type != KM_BOUNCE_READ) {
-+				WARN_ON(1);
-+				warn_count--;
-+			}
-+		} else if (!irqs_disabled()) {	/* softirq */
-+			if (type != KM_IRQ0 && type != KM_IRQ1 &&
-+			    type != KM_SOFTIRQ0 && type != KM_SOFTIRQ1 &&
-+			    type != KM_SKB_SUNRPC_DATA &&
-+			    type != KM_SKB_DATA_SOFTIRQ &&
-+			    type != KM_BOUNCE_READ) {
-+				WARN_ON(1);
-+				warn_count--;
-+			}
-+		}
-+	}
-+
-+	if (type == KM_IRQ0 || type == KM_IRQ1 || type == KM_BOUNCE_READ) {
-+		if (!irqs_disabled()) {
-+			WARN_ON(1);
-+			warn_count--;
-+		}
-+	} else if (type == KM_SOFTIRQ0 || type == KM_SOFTIRQ1) {
-+		if (irq_count() == 0 && !irqs_disabled()) {
-+			WARN_ON(1);
-+			warn_count--;
-+		}
-+	}
-+skip:
- 	/* even !CONFIG_PREEMPT needs this, for in_atomic in do_page_fault */
- 	pagefault_disable();
- 	if (!PageHighMem(page))
-_
+Justin.
