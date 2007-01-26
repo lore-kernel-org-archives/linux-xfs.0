@@ -1,54 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Jan 2007 16:23:05 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0Q0Mwqw011796
-	for <xfs@oss.sgi.com>; Thu, 25 Jan 2007 16:23:00 -0800
-Date: Thu, 25 Jan 2007 19:22:04 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.20-rc5: cp 18gb 18gb.2 = OOM killer, reproducible just like
- 2.16.19.2
-In-Reply-To: <Pine.LNX.4.64.0701251731160.20455@coffee.psychology.mcmaster.ca>
-Message-ID: <Pine.LNX.4.64.0701251921430.30148@p34.internal.lan>
-References: <Pine.LNX.4.64.0701211424170.2552@p34.internal.lan>
- <20070122133735.GB4493@ucw.cz> <Pine.LNX.4.64.0701221348020.11525@p34.internal.lan>
- <Pine.LNX.4.64.0701241837550.2930@p34.internal.lan> <20070125003242.GA23343@elf.ucw.cz>
- <Pine.LNX.4.64.0701250407590.3673@p34.internal.lan>
- <Pine.LNX.4.64.0701251731160.20455@coffee.psychology.mcmaster.ca>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Jan 2007 01:26:48 -0800 (PST)
+Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.24])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0Q9Qbqw016865
+	for <xfs@oss.sgi.com>; Fri, 26 Jan 2007 01:26:38 -0800
+Date: Fri, 26 Jan 2007 01:25:05 -0800
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Kernel 2.6.19.2 New RAID 5 Bug (oops when writing Samba ->
+ RAID5)
+Message-Id: <20070126012505.d8cb07f2.akpm@osdl.org>
+In-Reply-To: <Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
+References: <Pine.LNX.4.64.0701200718290.29223@p34.internal.lan>
+	<45B5261B.1050104@redhat.com>
+	<Pine.LNX.4.64.0701241836590.2930@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Hahn <hahn@mcmaster.ca>
-Cc: Pavel Machek <pavel@ucw.cz>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Neil Brown <neilb@suse.de>
 
+On Wed, 24 Jan 2007 18:37:15 -0500 (EST)
+Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-
-On Thu, 25 Jan 2007, Mark Hahn wrote:
-
-> > Something is seriously wrong with that OOM killer.
+> > Without digging too deeply, I'd say you've hit the same bug Sami Farin and
+> > others
+> > have reported starting with 2.6.19: pages mapped with kmap_atomic() become
+> > unmapped
+> > during memcpy() or similar operations.  Try disabling preempt -- that seems to
+> > be the
+> > common factor.
+> > 
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > 
 > 
-> do you know you don't have to operate in OOM-slaughter mode?
-> 
-> "vm.overcommit_memory = 2" in your /etc/sysctl.conf puts you into a mode where
-> the kernel tracks your "committed" memory needs, and will eventually cause
-> some allocations to fail.
-> this is often much nicer than the default random OOM slaughter.
-> (you probably also need to adjust vm.overcommit_ratio with some knowlege of
-> your MemTotal and SwapTotal.)
-> 
-> regards, mark hahn.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> After I run some other tests, I am going to re-run this test and see if it 
+> OOPSes again with PREEMPT off.
 
-# sysctl -a | grep vm.over
-vm.overcommit_ratio = 50
-vm.overcommit_memory = 0
+Strange.  The below debug patch might catch it - please run with this
+applied.  
 
-I'll have to experiment with these options, thanks for the info!
 
-Justin.
+--- a/arch/i386/mm/highmem.c~kmap_atomic-debugging
++++ a/arch/i386/mm/highmem.c
+@@ -30,7 +30,43 @@ void *kmap_atomic(struct page *page, enu
+ {
+ 	enum fixed_addresses idx;
+ 	unsigned long vaddr;
++	static unsigned warn_count = 10;
+ 
++	if (unlikely(warn_count == 0))
++		goto skip;
++
++	if (unlikely(in_interrupt())) {
++		if (in_irq()) {
++			if (type != KM_IRQ0 && type != KM_IRQ1 &&
++			    type != KM_BIO_SRC_IRQ && type != KM_BIO_DST_IRQ &&
++			    type != KM_BOUNCE_READ) {
++				WARN_ON(1);
++				warn_count--;
++			}
++		} else if (!irqs_disabled()) {	/* softirq */
++			if (type != KM_IRQ0 && type != KM_IRQ1 &&
++			    type != KM_SOFTIRQ0 && type != KM_SOFTIRQ1 &&
++			    type != KM_SKB_SUNRPC_DATA &&
++			    type != KM_SKB_DATA_SOFTIRQ &&
++			    type != KM_BOUNCE_READ) {
++				WARN_ON(1);
++				warn_count--;
++			}
++		}
++	}
++
++	if (type == KM_IRQ0 || type == KM_IRQ1 || type == KM_BOUNCE_READ) {
++		if (!irqs_disabled()) {
++			WARN_ON(1);
++			warn_count--;
++		}
++	} else if (type == KM_SOFTIRQ0 || type == KM_SOFTIRQ1) {
++		if (irq_count() == 0 && !irqs_disabled()) {
++			WARN_ON(1);
++			warn_count--;
++		}
++	}
++skip:
+ 	/* even !CONFIG_PREEMPT needs this, for in_atomic in do_page_fault */
+ 	pagefault_disable();
+ 	if (!PageHighMem(page))
+_
