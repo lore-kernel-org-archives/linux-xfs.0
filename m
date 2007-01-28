@@ -1,64 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 28 Jan 2007 14:23:53 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 28 Jan 2007 15:54:12 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0SMNkqw020598
-	for <xfs@oss.sgi.com>; Sun, 28 Jan 2007 14:23:48 -0800
-Date: Mon, 29 Jan 2007 09:22:49 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0SNs2qw031932
+	for <linux-xfs@oss.sgi.com>; Sun, 28 Jan 2007 15:54:05 -0800
+Date: Mon, 29 Jan 2007 10:52:55 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Review: Fix sub-page zeroing for buffered writes into unwritten extents
-Message-ID: <20070128222249.GL33919298@melbourne.sgi.com>
-References: <20070123224704.GH33919298@melbourne.sgi.com> <45B78CD4.1060400@sgi.com>
+Subject: Re: [DISCUSS] xfs allocation bitmap method over linux raid
+Message-ID: <20070128235255.GS33919298@melbourne.sgi.com>
+References: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com> <1169678294.18017.200.camel@edge> <5d96567b0701280232w17e1a187r95d2c59711799b1a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <45B78CD4.1060400@sgi.com>
+In-Reply-To: <5d96567b0701280232w17e1a187r95d2c59711799b1a@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: nscott@aconex.com, linux-xfs@oss.sgi.com
 
-On Wed, Jan 24, 2007 at 04:44:04PM +0000, Lachlan McIlroy wrote:
-> Dave,
+On Sun, Jan 28, 2007 at 12:32:23PM +0200, Raz Ben-Jehuda(caro) wrote:
+> first many thanks to your reply.
+> see bellow.
 > 
-> I'm trying to understand what the sequence of events is here.
+> On 1/25/07, Nathan Scott <nscott@aconex.com> wrote:
+> >Hi Raz,
+> >
+> >On Wed, 2007-01-24 at 08:34 +0200, Raz Ben-Jehuda(caro) wrote:
+> >> David Hello.
+> >> I have looked up in LKML and hopefully you are the one to ask in
+> >> regard to xfs file system in Linux.
 > 
-> If we write to an unwritten extent then will __xfs_get_blocks()
-> be called with create=1 and flags=BMAPI_WRITE?
+> >
+> >OOC, which one?  (would be nice to put an entry for your company
+> >on the http://oss.sgi.com/projects/xfs/users.html page).
+> >
+> >> These servers demand high throughput from the storage.
+> >> We applied XFS file system on our machines.
+> >>
+> >> A video server reads a file in a sequential manner. So, if a
+> >
+> >Do you write the file sequentially?  Buffered or direct writes?
+> does not matter. even command like:
+> dd if=/dev/zero of=/d1/xxx bs=1M count=1000
+> will reveil extents of size modulo(stripe unit ) !=  0
 
-Yup.
-
-> And calling
-> bhv_vop_bmap() with flags set to BMAPI_WRITE will cause xfs_iomap()
-> to set iomap_flags to IOMAP_NEW?
-
-Only if we allocate an extent in xfs_iomap:
-
-In xfs_iomap:
-
-    258 phase2:
-    259         switch (flags & (BMAPI_WRITE|BMAPI_ALLOCATE|BMAPI_UNWRITTEN)) {
-    260         case BMAPI_WRITE:
-    261                 /* If we found an extent, return it */
-    262                 if (nimaps &&
-    263                     (imap.br_startblock != HOLESTARTBLOCK) &&
-    264                     (imap.br_startblock != DELAYSTARTBLOCK)) {
-    265                         xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
-    266                                         offset, count, iomapp, &imap, flags);
-    267                         break;
-    268                 }
-
-
-We found an extent - an unwritten extent - which means we have a map
-and the startblock is a real number (i.e. not a hole or delalloc region).
-Hence we break here and never set the IOMAP_NEW flag which is correct
-because we didn't just do an allocation.
-
-> The combination of create=1 and
-> iomap_flags=IOMAP_NEW in __xfs_get_blocks() should result in calling
-> set_buffer_new(), right?
-
-Yes, it would, but unwritten extents are not new extents.....
+Did you make the filesystem with a stripe unit set properly?
+Can you post the output of 'xfs_info -n /path/to/mntpt'?
 
 Cheers,
 
