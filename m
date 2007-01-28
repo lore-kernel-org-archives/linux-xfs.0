@@ -1,79 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 28 Jan 2007 13:51:26 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0SLpJqw015508
-	for <xfs@oss.sgi.com>; Sun, 28 Jan 2007 13:51:21 -0800
-Subject: Re: [DISCUSS] xfs allocation bitmap method over linux raid
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <5d96567b0701280232w17e1a187r95d2c59711799b1a@mail.gmail.com>
-References: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
-	 <1169678294.18017.200.camel@edge>
-	 <5d96567b0701280232w17e1a187r95d2c59711799b1a@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 29 Jan 2007 08:49:56 +1100
-Message-Id: <1170020997.18017.236.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 28 Jan 2007 14:23:53 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0SMNkqw020598
+	for <xfs@oss.sgi.com>; Sun, 28 Jan 2007 14:23:48 -0800
+Date: Mon, 29 Jan 2007 09:22:49 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Review: Fix sub-page zeroing for buffered writes into unwritten extents
+Message-ID: <20070128222249.GL33919298@melbourne.sgi.com>
+References: <20070123224704.GH33919298@melbourne.sgi.com> <45B78CD4.1060400@sgi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <45B78CD4.1060400@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Sun, 2007-01-28 at 12:32 +0200, Raz Ben-Jehuda(caro) wrote:
-> > OOC, which one?  (would be nice to put an entry for your company
-> > on the http://oss.sgi.com/projects/xfs/users.html page).
-> >
-> dd if=/dev/zero of=/d1/xxx bs=1M count=1000
-> will reveil extents of size modulo(stripe unit ) !=  0
-
-Does using direct IO change things (oflag=direct to dd iirc).
-
-> > - and, er, removes some of the per-inode extsize hint code :)
-> what is it?
-
-See the "extsize" command within xfs_io(8).
-
-> could my fix make any damage  ?
-> what sort of a damage ?
-
-Not really "damage" (as in filesystem integrity), its more that it
-accidentally breaks existing functionality.
-
-> > The real question is, why are your initial writes not being affected by
-> > the code in xfs_iomap_eof_align_last_fsb which rounds requests to a
-> > stripe unit boundary?
+On Wed, Jan 24, 2007 at 04:44:04PM +0000, Lachlan McIlroy wrote:
+> Dave,
 > 
-> I debugged  xfs_iomap_write_delay:
-> ip->i_d.di_extsize is zero and prealloc is zero. is it correct ?
+> I'm trying to understand what the sequence of events is here.
+> 
+> If we write to an unwritten extent then will __xfs_get_blocks()
+> be called with create=1 and flags=BMAPI_WRITE?
 
-prealloc shouldn't be zero for writes that will extend the file size;
-but now that I think about it, I'm not sure how it could ever get set
-for a buffered write (delalloc), since by the time we come to do the
-actual allocation and writes to disk, the inode size will be beyond
-the allocation offset.  Hmm, maybe the logic in there needs a rethink
-(any thoughts there, Dave/Lachlan?)
+Yup.
 
-> isn't it suppose stripe unit size in pages ?
+> And calling
+> bhv_vop_bmap() with flags set to BMAPI_WRITE will cause xfs_iomap()
+> to set iomap_flags to IOMAP_NEW?
 
-No, extsize is not and should not be set unless its explicitly been
-asked for (see the man page I refered to above).
+Only if we allocate an extent in xfs_iomap:
 
-> Also , xfs_iomap_eof_align_last_fsb has this line :
->    if (io->io_flags & XFS_IOCORE_RT)
+In xfs_iomap:
 
-Are you using the realtime subvolume?  You didn't mention that before,
-so I guess you're not - in which case, the above line is not relevent
-in your case.
+    258 phase2:
+    259         switch (flags & (BMAPI_WRITE|BMAPI_ALLOCATE|BMAPI_UNWRITTEN)) {
+    260         case BMAPI_WRITE:
+    261                 /* If we found an extent, return it */
+    262                 if (nimaps &&
+    263                     (imap.br_startblock != HOLESTARTBLOCK) &&
+    264                     (imap.br_startblock != DELAYSTARTBLOCK)) {
+    265                         xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
+    266                                         offset, count, iomapp, &imap, flags);
+    267                         break;
+    268                 }
 
-> >  Provided you are writing sequentially, you should
-> > be seeing xfs_iomap_eof_want_preallocate return true, then later doing
-> > stripe unit alignment in xfs_iomap_eof_align_last_fsb (because prealloc
-> > got set earlier) ... can you trace your requests through the routines
-> > you've modified and find why this is _not_ happening?
 
-cheers.
+We found an extent - an unwritten extent - which means we have a map
+and the startblock is a real number (i.e. not a hole or delalloc region).
+Hence we break here and never set the IOMAP_NEW flag which is correct
+because we didn't just do an allocation.
 
+> The combination of create=1 and
+> iomap_flags=IOMAP_NEW in __xfs_get_blocks() should result in calling
+> set_buffer_new(), right?
+
+Yes, it would, but unwritten extents are not new extents.....
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
