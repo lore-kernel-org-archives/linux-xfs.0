@@ -1,33 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 00:16:14 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0T8G4qw026729
-	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 00:16:06 -0800
-Subject: PARTIAL TAKE 960028 - XFS tripping bug in cancel_dirty_pages in 2.6.20-rc3
-Message-Id: <20070129081505.674F558FF492@chook.melbourne.sgi.com>
-Date: Mon, 29 Jan 2007 19:15:05 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 04:56:57 -0800 (PST)
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0TCunqw000786
+	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 04:56:50 -0800
+Message-ID: <45BDEED7.4040500@sgi.com>
+Date: Mon, 29 Jan 2007 12:55:51 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: Review: Fix sub-page zeroing for buffered writes into unwritten
+ extents
+References: <20070123224704.GH33919298@melbourne.sgi.com> <45B78CD4.1060400@sgi.com> <20070128222249.GL33919298@melbourne.sgi.com>
+In-Reply-To: <20070128222249.GL33919298@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-Revert broken and obsolete change to page invalidation.
+David Chinner wrote:
+> On Wed, Jan 24, 2007 at 04:44:04PM +0000, Lachlan McIlroy wrote:
+> 
+>>Dave,
+>>
+>>I'm trying to understand what the sequence of events is here.
+>>
+>>If we write to an unwritten extent then will __xfs_get_blocks()
+>>be called with create=1 and flags=BMAPI_WRITE?
+> 
+> 
+> Yup.
+> 
+> 
+>>And calling
+>>bhv_vop_bmap() with flags set to BMAPI_WRITE will cause xfs_iomap()
+>>to set iomap_flags to IOMAP_NEW?
+> 
+> 
+> Only if we allocate an extent in xfs_iomap:
+> 
+> In xfs_iomap:
+> 
+>     258 phase2:
+>     259         switch (flags & (BMAPI_WRITE|BMAPI_ALLOCATE|BMAPI_UNWRITTEN)) {
+>     260         case BMAPI_WRITE:
+>     261                 /* If we found an extent, return it */
+>     262                 if (nimaps &&
+>     263                     (imap.br_startblock != HOLESTARTBLOCK) &&
+>     264                     (imap.br_startblock != DELAYSTARTBLOCK)) {
+>     265                         xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
+>     266                                         offset, count, iomapp, &imap, flags);
+>     267                         break;
+>     268                 }
+> 
+> 
+> We found an extent - an unwritten extent - which means we have a map
+> and the startblock is a real number (i.e. not a hole or delalloc region).
+> Hence we break here and never set the IOMAP_NEW flag which is correct
+> because we didn't just do an allocation.
 
-The changes checked in under mod xfs-linux-melb:xfs-kern:27909a
-are broken. 2.6.20 will release with the troublesome warning
-turned off so by reverting this mod we will have the same
-behaviour as 2.6.19 w.r.t to fs_tosspages and fs_flushinval_pages.
+I must have skimmed over the break statement.  Your fix makes sense to me now.
 
-Date:  Mon Jan 29 19:14:25 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  dgc
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:27998a
-fs/xfs/linux-2.6/xfs_fs_subr.c - 1.49 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.c.diff?r1=text&tr1=1.49&r2=text&tr2=1.48&f=h
-	- Revert broken mod xfs-linux-melb:xfs-kern:27909a.
+> 
+> 
+>>The combination of create=1 and
+>>iomap_flags=IOMAP_NEW in __xfs_get_blocks() should result in calling
+>>set_buffer_new(), right?
+> 
+> 
+> Yes, it would, but unwritten extents are not new extents.....
+> 
+> Cheers,
+> 
+> Dave.
