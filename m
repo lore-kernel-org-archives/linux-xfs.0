@@ -1,77 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 04:56:57 -0800 (PST)
-Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0TCunqw000786
-	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 04:56:50 -0800
-Message-ID: <45BDEED7.4040500@sgi.com>
-Date: Mon, 29 Jan 2007 12:55:51 +0000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: Review: Fix sub-page zeroing for buffered writes into unwritten
- extents
-References: <20070123224704.GH33919298@melbourne.sgi.com> <45B78CD4.1060400@sgi.com> <20070128222249.GL33919298@melbourne.sgi.com>
-In-Reply-To: <20070128222249.GL33919298@melbourne.sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 05:50:15 -0800 (PST)
+Received: from omx1.sgi.com (omx1.americas.sgi.com [198.149.16.13])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0TDo7qw007883
+	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 05:50:08 -0800
+Received: from lab41.emea.sgi.com (lab41.emea.sgi.com [144.253.75.41])
+	by omx1.sgi.com (8.12.10/8.12.9/linux-outbound_gateway-1.1) with ESMTP id l0TDOWDW019749
+	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 07:24:33 -0600
+Subject: TAKE 957348 - Re-initialize the per-cpu superblock counters after recovery.
+Message-Id: <20070129134125.3CC0557B6F@lab41.emea.sgi.com>
+Date: Mon, 29 Jan 2007 13:41:25 +0000 (GMT)
+From: lachlan@lab41.emea.sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Wed, Jan 24, 2007 at 04:44:04PM +0000, Lachlan McIlroy wrote:
-> 
->>Dave,
->>
->>I'm trying to understand what the sequence of events is here.
->>
->>If we write to an unwritten extent then will __xfs_get_blocks()
->>be called with create=1 and flags=BMAPI_WRITE?
-> 
-> 
-> Yup.
-> 
-> 
->>And calling
->>bhv_vop_bmap() with flags set to BMAPI_WRITE will cause xfs_iomap()
->>to set iomap_flags to IOMAP_NEW?
-> 
-> 
-> Only if we allocate an extent in xfs_iomap:
-> 
-> In xfs_iomap:
-> 
->     258 phase2:
->     259         switch (flags & (BMAPI_WRITE|BMAPI_ALLOCATE|BMAPI_UNWRITTEN)) {
->     260         case BMAPI_WRITE:
->     261                 /* If we found an extent, return it */
->     262                 if (nimaps &&
->     263                     (imap.br_startblock != HOLESTARTBLOCK) &&
->     264                     (imap.br_startblock != DELAYSTARTBLOCK)) {
->     265                         xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
->     266                                         offset, count, iomapp, &imap, flags);
->     267                         break;
->     268                 }
-> 
-> 
-> We found an extent - an unwritten extent - which means we have a map
-> and the startblock is a real number (i.e. not a hole or delalloc region).
-> Hence we break here and never set the IOMAP_NEW flag which is correct
-> because we didn't just do an allocation.
+Re-initialize the per-cpu superblock counters after recovery.
 
-I must have skimmed over the break statement.  Your fix makes sense to me now.
+After filesystem recovery the superblock is re-read to bring in
+any changes.  If the per-cpu superblock counters are not re-initialized
+from the superblock then the next time the per-cpu counters are
+disabled they might overwrite the global counter with a bogus value.
 
-> 
-> 
->>The combination of create=1 and
->>iomap_flags=IOMAP_NEW in __xfs_get_blocks() should result in calling
->>set_buffer_new(), right?
-> 
-> 
-> Yes, it would, but unwritten extents are not new extents.....
-> 
-> Cheers,
-> 
-> Dave.
+Date:  Tue Jan 30 00:18:02 AEDT 2007
+Workarea:  vpn-emea-sw-emea-160-31.emea.sgi.com:/home/lachlan/isms/2.6.x-xfs
+Inspected by:  dgc
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:27999a
+fs/xfs/xfs_log_recover.c - 1.315 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.315&r2=text&tr2=1.314&f=h
+fs/xfs/xfs_mount.h - 1.234 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.234&r2=text&tr2=1.233&f=h
+fs/xfs/xfs_mount.c - 1.392 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.392&r2=text&tr2=1.391&f=h
+	- Re-initialize the per-cpu superblock counters after recovery.
