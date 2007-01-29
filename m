@@ -1,534 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 08:39:00 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0TGcrqw000628
-	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 08:38:54 -0800
-Message-ID: <45BE22FD.1040508@sandeen.net>
-Date: Mon, 29 Jan 2007 10:38:21 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH] kill off unused xfs_mac, xfs_cap headers
-Content-Type: text/plain; charset=ISO-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 13:51:04 -0800 (PST)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0TLovqw014819
+	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 13:50:59 -0800
+Subject: Re: [DISCUSS] xfs allocation bitmap method over linux raid
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <1170020997.18017.236.camel@edge>
+References: <5d96567b0701232234y2ff15762sbd1aaada5c3a0a0@mail.gmail.com>
+	 <1169678294.18017.200.camel@edge>
+	 <5d96567b0701280232w17e1a187r95d2c59711799b1a@mail.gmail.com>
+	 <1170020997.18017.236.camel@edge>
+Content-Type: text/plain
+Date: Tue, 30 Jan 2007 08:49:43 +1100
+Message-Id: <1170107383.18017.245.camel@edge>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: rpjday@mindspring.com
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Followup to Robert's initial noticing of the unused bits.
+On Mon, 2007-01-29 at 08:49 +1100, Nathan Scott wrote:
+> prealloc shouldn't be zero for writes that will extend the file size;
+> but now that I think about it, I'm not sure how it could ever get set
+> for a buffered write (delalloc), since by the time we come to do the
+> actual allocation and writes to disk, the inode size will be beyond
+> the allocation offset.  Hmm, maybe the logic in there needs a rethink
+> (any thoughts there, Dave/Lachlan?)
 
-compile-tested on 2.6, x86_64
+I had a closer look, and remember now how this works - I was looking
+in the wrong place entirely.  For real (not delayed) allocations, the
+stripe alignment is performed within the allocator, so deep down in
+the xfs_bmapi -> xfs_bmap_alloc -> xfs_bmap_btalloc call path.
 
----
+In particular, see the big comment mid-way through xfs_bmap_btalloc..
 
-Remove unused xfs_mac.h, xfs_cap.h headers
+         * If we are not low on available data blocks, and the
+         * underlying logical volume manager is a stripe, and
+         * the file offset is zero then try to allocate data
+         * blocks on stripe unit boundary.
+         * NOTE: ap->aeof is only set if the allocation length
+         * is >= the stripe unit and the allocation offset is
+         * at the end of file.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+(the "file offset is zero" part seems misleading to me, since it
+is not only aligning in that case).
 
- xfs-linux/linux-2.4/xfs_ioctl.c   |    2 
- xfs-linux/linux-2.4/xfs_iops.c    |    2 
- xfs-linux/linux-2.4/xfs_ksyms.c   |    2 
- xfs-linux/linux-2.4/xfs_lrw.c     |    2 
- xfs-linux/linux-2.4/xfs_super.c   |    2 
- xfs-linux/linux-2.6/xfs_ioctl.c   |    2 
- xfs-linux/linux-2.6/xfs_iops.c    |    2 
- xfs-linux/linux-2.6/xfs_ksyms.c   |    2 
- xfs-linux/linux-2.6/xfs_lrw.c     |    2 
- xfs-linux/linux-2.6/xfs_super.c   |    2 
- xfs-linux/quota/xfs_dquot.c       |    2 
- xfs-linux/quota/xfs_dquot_item.c  |    2 
- xfs-linux/quota/xfs_qm.c          |    2 
- xfs-linux/quota/xfs_qm_bhv.c      |    2 
- xfs-linux/quota/xfs_qm_stats.c    |    2 
- xfs-linux/quota/xfs_qm_syscalls.c |    2 
- xfs-linux/quota/xfs_trans_dquot.c |    2 
- xfs-linux/xfs_acl.c               |    1 
- xfs-linux/xfs_dfrag.c             |    1 
- xfs-linux/xfs_inode.c             |    1 
- xfs-linux/xfs_iomap.c             |    2 
- xfs-linux/xfs_rw.c                |    1 
- xfs-linux/xfs_vnodeops.c          |    1 
- xfs_cap.h                         |   70 -------------------------
- xfs_mac.h                         |  106 --------------------------------------
+So, the real answer to your "why isn't it aligning" question lies
+in there - if you can instrument that code and figure out why you
+aren't seeing allocation alignment adjustnments inside there, you
+should be 99% of the way to understanding your problem.
 
-Index: xfs-linux/linux-2.4/xfs_ioctl.c
-===================================================================
---- xfs-linux.orig/linux-2.4/xfs_ioctl.c
-+++ xfs-linux/linux-2.4/xfs_ioctl.c
-@@ -42,8 +42,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/linux-2.4/xfs_iops.c
-===================================================================
---- xfs-linux.orig/linux-2.4/xfs_iops.c
-+++ xfs-linux/linux-2.4/xfs_iops.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/linux-2.4/xfs_ksyms.c
-===================================================================
---- xfs-linux.orig/linux-2.4/xfs_ksyms.c
-+++ xfs-linux/linux-2.4/xfs_ksyms.c
-@@ -53,8 +53,6 @@
- #include "xfs_dir2_node.h"
- #include "xfs_dir2_trace.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_inode_item.h"
-Index: xfs-linux/linux-2.4/xfs_lrw.c
-===================================================================
---- xfs-linux.orig/linux-2.4/xfs_lrw.c
-+++ xfs-linux/linux-2.4/xfs_lrw.c
-@@ -44,8 +44,6 @@
- #include "xfs_rw.h"
- #include "xfs_refcache.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_inode_item.h"
- #include "xfs_buf_item.h"
-Index: xfs-linux/linux-2.4/xfs_super.c
-===================================================================
---- xfs-linux.orig/linux-2.4/xfs_super.c
-+++ xfs-linux/linux-2.4/xfs_super.c
-@@ -44,8 +44,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/linux-2.6/xfs_ioctl.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_ioctl.c
-+++ xfs-linux/linux-2.6/xfs_ioctl.c
-@@ -41,8 +41,6 @@
- #include "xfs_error.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_bmap.h"
- #include "xfs_buf_item.h"
-Index: xfs-linux/linux-2.6/xfs_iops.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_iops.c
-+++ xfs-linux/linux-2.6/xfs_iops.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/linux-2.6/xfs_ksyms.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_ksyms.c
-+++ xfs-linux/linux-2.6/xfs_ksyms.c
-@@ -53,8 +53,6 @@
- #include "xfs_dir2_node.h"
- #include "xfs_dir2_trace.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_inode_item.h"
-Index: xfs-linux/linux-2.6/xfs_lrw.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_lrw.c
-+++ xfs-linux/linux-2.6/xfs_lrw.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_inode_item.h"
- #include "xfs_buf_item.h"
-Index: xfs-linux/linux-2.6/xfs_super.c
-===================================================================
---- xfs-linux.orig/linux-2.6/xfs_super.c
-+++ xfs-linux/linux-2.6/xfs_super.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/quota/xfs_dquot.c
-===================================================================
---- xfs-linux.orig/quota/xfs_dquot.c
-+++ xfs-linux/quota/xfs_dquot.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
-Index: xfs-linux/quota/xfs_dquot_item.c
-===================================================================
---- xfs-linux.orig/quota/xfs_dquot_item.c
-+++ xfs-linux/quota/xfs_dquot_item.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_priv.h"
-Index: xfs-linux/quota/xfs_qm.c
-===================================================================
---- xfs-linux.orig/quota/xfs_qm.c
-+++ xfs-linux/quota/xfs_qm.c
-@@ -44,8 +44,6 @@
- #include "xfs_bmap.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
-Index: xfs-linux/quota/xfs_qm_bhv.c
-===================================================================
---- xfs-linux.orig/quota/xfs_qm_bhv.c
-+++ xfs-linux/quota/xfs_qm_bhv.c
-@@ -44,8 +44,6 @@
- #include "xfs_error.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_qm.h"
-Index: xfs-linux/quota/xfs_qm_stats.c
-===================================================================
---- xfs-linux.orig/quota/xfs_qm_stats.c
-+++ xfs-linux/quota/xfs_qm_stats.c
-@@ -43,8 +43,6 @@
- #include "xfs_error.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_qm.h"
-Index: xfs-linux/quota/xfs_qm_syscalls.c
-===================================================================
---- xfs-linux.orig/quota/xfs_qm_syscalls.c
-+++ xfs-linux/quota/xfs_qm_syscalls.c
-@@ -46,8 +46,6 @@
- #include "xfs_error.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
-Index: xfs-linux/quota/xfs_trans_dquot.c
-===================================================================
---- xfs-linux.orig/quota/xfs_trans_dquot.c
-+++ xfs-linux/quota/xfs_trans_dquot.c
-@@ -43,8 +43,6 @@
- #include "xfs_error.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_priv.h"
-Index: xfs-linux/xfs_acl.c
-===================================================================
---- xfs-linux.orig/xfs_acl.c
-+++ xfs-linux/xfs_acl.c
-@@ -31,7 +31,6 @@
- #include "xfs_inode.h"
- #include "xfs_btree.h"
- #include "xfs_acl.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- 
- #include <linux/capability.h>
-Index: xfs-linux/xfs_cap.h
-===================================================================
---- xfs-linux.orig/xfs_cap.h
-+++ /dev/null
-@@ -1,70 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_CAP_H__
--#define __XFS_CAP_H__
--
--/*
-- * Capabilities
-- */
--typedef __uint64_t xfs_cap_value_t;
--
--typedef struct xfs_cap_set {
--	xfs_cap_value_t	cap_effective;	/* use in capability checks */
--	xfs_cap_value_t	cap_permitted;	/* combined with file attrs */
--	xfs_cap_value_t	cap_inheritable;/* pass through exec */
--} xfs_cap_set_t;
--
--/* On-disk XFS extended attribute names */
--#define SGI_CAP_FILE	"SGI_CAP_FILE"
--#define SGI_CAP_FILE_SIZE	(sizeof(SGI_CAP_FILE)-1)
--#define SGI_CAP_LINUX	"SGI_CAP_LINUX"
--#define SGI_CAP_LINUX_SIZE	(sizeof(SGI_CAP_LINUX)-1)
--
--/*
-- * For Linux, we take the bitfields directly from capability.h
-- * and no longer attempt to keep this attribute ondisk compatible
-- * with IRIX.  Since this attribute is only set on executables,
-- * it just doesn't make much sense to try.  We do use a different
-- * named attribute though, to avoid confusion.
-- */
--
--#ifdef __KERNEL__
--
--#ifdef CONFIG_FS_POSIX_CAP
--
--#include <linux/posix_cap_xattr.h>
--
--struct bhv_vnode;
--
--extern int xfs_cap_vhascap(struct bhv_vnode *);
--extern int xfs_cap_vset(struct bhv_vnode *, void *, size_t);
--extern int xfs_cap_vget(struct bhv_vnode *, void *, size_t);
--extern int xfs_cap_vremove(struct bhv_vnode *);
--
--#define _CAP_EXISTS		xfs_cap_vhascap
--
--#else
--#define xfs_cap_vset(v,p,sz)	(-EOPNOTSUPP)
--#define xfs_cap_vget(v,p,sz)	(-EOPNOTSUPP)
--#define xfs_cap_vremove(v)	(-EOPNOTSUPP)
--#define _CAP_EXISTS		(NULL)
--#endif
--
--#endif	/* __KERNEL__ */
--
--#endif  /* __XFS_CAP_H__ */
-Index: xfs-linux/xfs_dfrag.c
-===================================================================
---- xfs-linux.orig/xfs_dfrag.c
-+++ xfs-linux/xfs_dfrag.c
-@@ -41,7 +41,6 @@
- #include "xfs_itable.h"
- #include "xfs_dfrag.h"
- #include "xfs_error.h"
--#include "xfs_mac.h"
- #include "xfs_rw.h"
- 
- /*
-Index: xfs-linux/xfs_inode.c
-===================================================================
---- xfs-linux.orig/xfs_inode.c
-+++ xfs-linux/xfs_inode.c
-@@ -47,7 +47,6 @@
- #include "xfs_utils.h"
- #include "xfs_dir2_trace.h"
- #include "xfs_quota.h"
--#include "xfs_mac.h"
- #include "xfs_acl.h"
- 
- 
-Index: xfs-linux/xfs_iomap.c
-===================================================================
---- xfs-linux.orig/xfs_iomap.c
-+++ xfs-linux/xfs_iomap.c
-@@ -43,8 +43,6 @@
- #include "xfs_itable.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
--#include "xfs_cap.h"
--#include "xfs_mac.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
-Index: xfs-linux/xfs_mac.h
-===================================================================
---- xfs-linux.orig/xfs_mac.h
-+++ /dev/null
-@@ -1,106 +0,0 @@
--/*
-- * Copyright (c) 2001-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_MAC_H__
--#define __XFS_MAC_H__
--
--/*
-- * Mandatory Access Control
-- *
-- * Layout of a composite MAC label:
-- * ml_list contains the list of categories (MSEN) followed by the list of
-- * divisions (MINT). This is actually a header for the data structure which
-- * will have an ml_list with more than one element.
-- *
-- *      -------------------------------
-- *      | ml_msen_type | ml_mint_type |
-- *      -------------------------------
-- *      | ml_level     | ml_grade     |
-- *      -------------------------------
-- *      | ml_catcount                 |
-- *      -------------------------------
-- *      | ml_divcount                 |
-- *      -------------------------------
-- *      | category 1                  |
-- *      | . . .                       |
-- *      | category N                  | (where N = ml_catcount)
-- *      -------------------------------
-- *      | division 1                  |
-- *      | . . .                       |
-- *      | division M                  | (where M = ml_divcount)
-- *      -------------------------------
-- */
--#define XFS_MAC_MAX_SETS	250
--typedef struct xfs_mac_label {
--	__uint8_t	ml_msen_type;	/* MSEN label type */
--	__uint8_t	ml_mint_type;	/* MINT label type */
--	__uint8_t	ml_level;	/* Hierarchical level */
--	__uint8_t	ml_grade;	/* Hierarchical grade */
--	__uint16_t	ml_catcount;	/* Category count */
--	__uint16_t	ml_divcount;	/* Division count */
--					/* Category set, then Division set */
--	__uint16_t	ml_list[XFS_MAC_MAX_SETS];
--} xfs_mac_label_t;
--
--/* MSEN label type names. Choose an upper case ASCII character.  */
--#define XFS_MSEN_ADMIN_LABEL	'A'	/* Admin: low<admin != tcsec<high */
--#define XFS_MSEN_EQUAL_LABEL	'E'	/* Wildcard - always equal */
--#define XFS_MSEN_HIGH_LABEL	'H'	/* System High - always dominates */
--#define XFS_MSEN_MLD_HIGH_LABEL	'I'	/* System High, multi-level dir */
--#define XFS_MSEN_LOW_LABEL	'L'	/* System Low - always dominated */
--#define XFS_MSEN_MLD_LABEL	'M'	/* TCSEC label on a multi-level dir */
--#define XFS_MSEN_MLD_LOW_LABEL	'N'	/* System Low, multi-level dir */
--#define XFS_MSEN_TCSEC_LABEL	'T'	/* TCSEC label */
--#define XFS_MSEN_UNKNOWN_LABEL	'U'	/* unknown label */
--
--/* MINT label type names. Choose a lower case ASCII character.  */
--#define XFS_MINT_BIBA_LABEL	'b'	/* Dual of a TCSEC label */
--#define XFS_MINT_EQUAL_LABEL	'e'	/* Wildcard - always equal */
--#define XFS_MINT_HIGH_LABEL	'h'	/* High Grade - always dominates */
--#define XFS_MINT_LOW_LABEL	'l'	/* Low Grade - always dominated */
--
--/* On-disk XFS extended attribute names */
--#define SGI_MAC_FILE	"SGI_MAC_FILE"
--#define SGI_MAC_FILE_SIZE	(sizeof(SGI_MAC_FILE)-1)
--
--
--#ifdef __KERNEL__
--
--#ifdef CONFIG_FS_POSIX_MAC
--
--/* NOT YET IMPLEMENTED */
--
--#define MACEXEC		00100
--#define MACWRITE	00200
--#define MACREAD		00400
--
--struct xfs_inode;
--extern int  xfs_mac_iaccess(struct xfs_inode *, mode_t, cred_t *);
--
--#define _MAC_XFS_IACCESS(i,m,c) (xfs_mac_iaccess(i,m,c))
--#define _MAC_VACCESS(v,c,m)	(xfs_mac_vaccess(v,c,m))
--#define _MAC_EXISTS		xfs_mac_vhaslabel
--
--#else
--#define _MAC_XFS_IACCESS(i,m,c)	(0)
--#define _MAC_VACCESS(v,c,m)	(0)
--#define _MAC_EXISTS		(NULL)
--#endif
--
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_MAC_H__ */
-Index: xfs-linux/xfs_rw.c
-===================================================================
---- xfs-linux.orig/xfs_rw.c
-+++ xfs-linux/xfs_rw.c
-@@ -42,7 +42,6 @@
- #include "xfs_attr.h"
- #include "xfs_bmap.h"
- #include "xfs_acl.h"
--#include "xfs_mac.h"
- #include "xfs_error.h"
- #include "xfs_buf_item.h"
- #include "xfs_rw.h"
-Index: xfs-linux/xfs_vnodeops.c
-===================================================================
---- xfs-linux.orig/xfs_vnodeops.c
-+++ xfs-linux/xfs_vnodeops.c
-@@ -51,7 +51,6 @@
- #include "xfs_refcache.h"
- #include "xfs_trans_space.h"
- #include "xfs_log_priv.h"
--#include "xfs_mac.h"
- 
- STATIC int
- xfs_open(
+cheers.
+
+-- 
+Nathan
