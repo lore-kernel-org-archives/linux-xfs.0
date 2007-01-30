@@ -1,36 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Jan 2007 16:59:41 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0U0xWqw009195
-	for <xfs@oss.sgi.com>; Mon, 29 Jan 2007 16:59:34 -0800
-Subject: PARTIAL TAKE 960328 - Garbage found in a preallocated file on XFS
-Message-Id: <20070130005829.9645D58FF492@chook.melbourne.sgi.com>
-Date: Tue, 30 Jan 2007 11:58:29 +1100 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Jan 2007 05:46:55 -0800 (PST)
+Received: from pem-exsmtp01.silverapp.local (pem-smtp01.silverapp.com [209.43.6.67] (may be forged))
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0UDkkqw009423
+	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 05:46:47 -0800
+Message-ID: <45BF4C0F.8040004@apparatus.net>
+Date: Tue, 30 Jan 2007 08:45:51 -0500
+From: Andrew Jones <ajones@apparatus.net>
+MIME-Version: 1.0
+Subject: Re: RE: xfs_repair leaves things un-repaired.
+References: <200701300010.LAA00558@larry.melbourne.sgi.com>
+In-Reply-To: <200701300010.LAA00558@larry.melbourne.sgi.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>, xfs@oss.sgi.com
 
-Fix sub-block zeroing for buffered writes into unwritten extents.
+Barry Naujok wrote:
 
-When writing less than a filesystem block of data into an unwritten
-extent via buffered I/O, __xfs_get_blocks fails to set the buffer
-new flag. As a result, the generic code will not zero either edge
-of the block resulting in garbage being written to disk either side
-of the real data. Set the buffer new state on bufferd writes to
-unwritten extents to ensure that zeroing occurs.
-
-Date:  Tue Jan 30 11:57:42 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:28000a
-fs/xfs/linux-2.6/xfs_aops.c - 1.140 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.140&r2=text&tr2=1.139&f=h
-	- Set the buffer_new state when writing into unwritten extents so that
-	  sub-block zeroing will occur for buffered writes if necessary.
+>Hi Andrew,
+>
+>The xfs_repair output is valid. All the inodes that are reporting errors
+>are orphaned inodes that were moved into lost+found. At the start of
+>phase 4, the lost+found directory is deleted which causes all the inodes
+>in lost+found to be re-orphaned. The current solution to this problem is
+>to rename lost+found after an xfs_repair run and then unmount and try
+>xfs_repair again.
+>
+>Regarding the shutdown, that is not normal and I personally don't know
+>what the problem is from the trace. If it's a corrupt lost+found that
+>xfs_repair is generating (I gather you are rm'ing lost+found), the
+>second xfs_repair run after a rename should identify the problem with
+>the directory. You can also try running xfs_check on the device as it
+>may pick up something xfs_repair is missing.
+>
+>Regards,
+>Barry.
+>  
+>
+Thanks a lot for the clear explanation.   I still don't know why it 
+bombs out and shuts down the filesystem when the corrupt directories are 
+manipulated, but I don't particularly care, in this case.  Moving 
+lost+found and re-running xfs_repair has worked out the problem. I can 
+now manipulate the contents of lost+found safely.
