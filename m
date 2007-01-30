@@ -1,81 +1,166 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Jan 2007 14:00:57 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0UM0nqw008903
-	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 14:00:52 -0800
-Subject: [PATCH] bump xfsprogs version for xfs_quota(8) update
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-Content-Type: multipart/mixed; boundary="=-rORJjqAxnrUzuSF4hvNr"
-Date: Wed, 31 Jan 2007 08:59:43 +1100
-Message-Id: <1170194383.18017.293.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Jan 2007 14:04:38 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0UM4Rqw009728
+	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 14:04:29 -0800
+Date: Wed, 31 Jan 2007 09:03:26 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Review: freezing sometimes leaves the log dirty
+Message-ID: <20070130220326.GM33919298@melbourne.sgi.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: bnaujok@sgi.com, donaldd@sgi.com
+To: xfs-dev@sgi.com
 Cc: xfs@oss.sgi.com
 
---=-rORJjqAxnrUzuSF4hvNr
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+When we freeze the filesystem on a system that is under
+heavy load, the fleeze can complete it's flushes while there
+are still transactions active. Hence the freeze completes
+with a dirty log and dirty metadata buffers still in memory.
 
-Hi guys,
+The Linux freeze path is a tangled mess - I had to go back
+to the irix code to work out exactly what we should be doing
+to work out why the linux code was failing because of
+the convoluted paths the linux code takes through the
+generic layers.
 
-Those xfs_quota(8) errors were reported as a Debian bug today -
-could you guys bump the version & update the docs (as in this
-patch) for me?
+In short, when we freeze the writes, we should not be
+quiescing the filesystem at this point. All we should
+be doing is a blocking data sync because we haven't shut down
+the transaction subsystem yet. We also need to wait
+for all direct I/O writes to complete as well.
 
-thanks.
+Once the data sync is complete, we can return to the generic
+code for it to freeze new transactions. Then we can wait for
+all active transactions to complete before we quiesce the
+filesystem which flushes out all the dirty metadata buffers.
 
+At this point we have a clean filesystem and an empty log
+so we can safely write the unmount record followed by a
+dummy record to dirty the log to ensure unlinked list
+processing on remount if we crash or shut down the machine
+while the filesystem is frozen.
+
+Comments?
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
+---
+ fs/xfs/linux-2.6/xfs_super.c |   14 +++++++++++---
+ fs/xfs/linux-2.6/xfs_vfs.h   |    1 +
+ fs/xfs/xfs_vfsops.c          |   26 ++++++++++++++++++++++----
+ 3 files changed, 34 insertions(+), 7 deletions(-)
 
---=-rORJjqAxnrUzuSF4hvNr
-Content-Disposition: attachment; filename=bump-debian
-Content-Type: text/x-patch; name=bump-debian; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Index: xfsprogs/VERSION
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- xfsprogs.orig/VERSION	2007-01-31 08:53:02.371648250 +1100
-+++ xfsprogs/VERSION	2007-01-31 08:53:10.748171750 +1100
-@@ -3,5 +3,5 @@
- #
- PKG_MAJOR=2
- PKG_MINOR=8
--PKG_REVISION=18
-+PKG_REVISION=19
- PKG_BUILD=1
-Index: xfsprogs/debian/changelog
-===================================================================
---- xfsprogs.orig/debian/changelog	2007-01-31 08:52:38.182136500 +1100
-+++ xfsprogs/debian/changelog	2007-01-31 08:54:18.016375750 +1100
-@@ -1,3 +1,9 @@
-+xfsprogs (2.8.19-1) unstable; urgency=low
-+
-+  * New upstream release (closes: #409063)
-+
-+ -- Nathan Scott <nathans@debian.org>  Wed, 31 Jan 2007 08:53:32 +1100
-+
- xfsprogs (2.8.18-1) unstable; urgency=low
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.c	2007-01-08 14:32:40.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c	2007-01-08 22:46:12.520522391 +1100
+@@ -730,9 +730,17 @@ xfs_fs_sync_super(
+ 	int			error;
+ 	int			flags;
  
-   * New upstream release (closes: #399888)
-Index: xfsprogs/doc/CHANGES
-===================================================================
---- xfsprogs.orig/doc/CHANGES	2007-01-31 08:52:38.202137750 +1100
-+++ xfsprogs/doc/CHANGES	2007-01-31 08:55:09.939620750 +1100
-@@ -1,8 +1,9 @@
--xfsprogs-2.8.x (25 January 2007)
-+xfsprogs-2.8.19 (31 January 2007)
- 	- Fix pthread stack size setting in xfs_repair.
- 	- Fix xfs_bmap -n option displaying a truncated extent.
- 	- Fix xfs_io mwrite segfault. Thanks to Utako Kusaka for these two
- 	  fixes.
-+	- Fix errors in xfs_quota(8) man page.
+-	if (unlikely(sb->s_frozen == SB_FREEZE_WRITE))
+-		flags = SYNC_QUIESCE;
+-	else
++	if (unlikely(sb->s_frozen == SB_FREEZE_WRITE)) {
++		/*
++		 * First stage of freeze - no more writers will make progress
++		 * now we are here, so we flush delwri and delalloc buffers
++		 * here, then wait for all I/O to complete.  Data is frozen at
++		 * that point. Metadata is not frozen, transactions can still
++		 * occur here so don't bother flushing the buftarg (i.e
++		 * SYNC_QUIESCE) because it'll just get dirty again.
++		 */
++		flags = SYNC_FSDATA | SYNC_DELWRI | SYNC_WAIT | SYNC_DIO_WAIT;
++	} else
+ 		flags = SYNC_FSDATA | (wait ? SYNC_WAIT : 0);
  
- xfsprogs-2.8.18 (8 December 2006)
-  	- <xfs/list.h> is an installed file, we cannot simply rename it,
-
---=-rORJjqAxnrUzuSF4hvNr--
+ 	error = bhv_vfs_sync(vfsp, flags, NULL);
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_vfs.h	2006-12-22 10:53:22.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h	2007-01-08 22:27:26.366619320 +1100
+@@ -92,6 +92,7 @@ typedef enum {
+ #define SYNC_REFCACHE		0x0040  /* prune some of the nfs ref cache */
+ #define SYNC_REMOUNT		0x0080  /* remount readonly, no dummy LRs */
+ #define SYNC_QUIESCE		0x0100  /* quiesce fileystem for a snapshot */
++#define SYNC_DIO_WAIT		0x0200  /* wait for direct I/O to complete */
+ 
+ #define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
+ #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vfsops.c	2007-01-08 20:06:55.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c	2007-01-08 23:27:54.696637946 +1100
+@@ -881,6 +881,10 @@ xfs_statvfs(
+  *		       this by simply making sure the log gets flushed
+  *		       if SYNC_BDFLUSH is set, and by actually writing it
+  *		       out otherwise.
++ *	SYNC_DIO_WAIT - The caller wants us to wait for all direct I/Os
++ *		       as well to ensure all data I/O completes before we
++ *		       return. Forms the drain side of the write barrier needed
++ *		       to safely quiesce the filesystem.
+  *
+  */
+ /*ARGSUSED*/
+@@ -892,10 +896,7 @@ xfs_sync(
+ {
+ 	xfs_mount_t	*mp = XFS_BHVTOM(bdp);
+ 
+-	if (unlikely(flags == SYNC_QUIESCE))
+-		return xfs_quiesce_fs(mp);
+-	else
+-		return xfs_syncsub(mp, flags, NULL);
++	return xfs_syncsub(mp, flags, NULL);
+ }
+ 
+ /*
+@@ -1181,6 +1182,12 @@ xfs_sync_inodes(
+ 			}
+ 
+ 		}
++		/*
++		 * When freezing, we need to wait ensure direct I/O is complete
++		 * as well to ensure all data modification is complete here
++		 */
++		if (flags & SYNC_DIO_WAIT)
++			vn_iowait(vp);
+ 
+ 		if (flags & SYNC_BDFLUSH) {
+ 			if ((flags & SYNC_ATTR) &&
+@@ -1959,15 +1966,26 @@ xfs_showargs(
+ 	return 0;
+ }
+ 
++/*
++ * Second stage of a freeze. The data is already frozen, now we have to take
++ * care of the metadata. New transactions are already blocked, so we need to
++ * wait for any remaining transactions to drain out before proceding.
++ */
+ STATIC void
+ xfs_freeze(
+ 	bhv_desc_t	*bdp)
+ {
+ 	xfs_mount_t	*mp = XFS_BHVTOM(bdp);
+ 
++	/* wait for all modifications to complete */
+ 	while (atomic_read(&mp->m_active_trans) > 0)
+ 		delay(100);
+ 
++	/* flush inodes and push all remaining buffers out to disk */
++	xfs_quiesce_fs(mp);
++
++	BUG_ON(atomic_read(&mp->m_active_trans) > 0);
++
+ 	/* Push the superblock and write an unmount record */
+ 	xfs_log_unmount_write(mp);
+ 	xfs_unmountfs_writesb(mp);
