@@ -1,38 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Jan 2007 17:39:14 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l0V1d4qw003791
-	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 17:39:05 -0800
-Message-ID: <45BFF357.3010806@sgi.com>
-Date: Wed, 31 Jan 2007 12:39:35 +1100
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: Re: Review: Fix bulkstat block count units
-References: <20070131012915.GO33919298@melbourne.sgi.com>
-In-Reply-To: <20070131012915.GO33919298@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Jan 2007 20:13:57 -0800 (PST)
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l0V4Drqw017450
+	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 20:13:53 -0800
+Received: from clink.americas.sgi.com (clink.americas.sgi.com [128.162.236.153])
+	by imr2.americas.sgi.com (8.12.9/8.12.10/SGI_generic_relay-1.2) with ESMTP id l0V3gUnc80592736
+	for <xfs@oss.sgi.com>; Tue, 30 Jan 2007 19:42:31 -0800 (PST)
+Received: (from mvalluri@localhost)
+	by clink.americas.sgi.com (SGI-8.12.5/8.12.5/Submit) id l0V4Cusv14683285
+	for xfs@oss.sgi.com; Tue, 30 Jan 2007 22:12:56 -0600 (CST)
+Date: Tue, 30 Jan 2007 22:12:56 -0600 (CST)
+From: Madan Valluri <mvalluri@sgi.com>
+Message-Id: <200701310412.l0V4Cusv14683285@clink.americas.sgi.com>
+Subject: TAKE 959451 - 
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-The patch is looking good Dave.
+xfs_repair - 031 QA failure with platform that don't use the uuid field in the super block.
 
-Regards,
-Vlad
 
-David Chinner wrote:
-> The recent bulkstat improvements introduced a minor
-> regression - they changed the units of the dt_count field
-> from 512 byte blocks to filesystem blocks. This changes
-> the userspace visible fields and can break existing applications
-> that use bulkstat.
->
-> Comments?
->
-> Cheers,
->
-> Dave.
->   
+Date:  Tue Jan 30 20:11:16 PST 2007
+Workarea:  clink.americas.sgi.com:/data/clink/a01/mvalluri/totrepair
+Inspected by:  bnaujok@sgi.com
+
+The following file(s) were checked into:
+  bonnie.engr.sgi.com:/isms/xfs-cmds/master
+
+
+Modid:  master:xfs-cmds:220542a
+xfsprogs/libxlog/xfs_log_recover.c - 1.31 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxlog/xfs_log_recover.c.diff?r1=text&tr1=1.31&r2=text&tr2=1.30&f=h
+	- Do not call xlog_header_check_mount(), if platform does not support uuid in super block.
+
+xfsprogs/libxfs/init.h - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/init.h.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Declared platform_has_uuid.
+
+xfsprogs/libxfs/linux.c - 1.17 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/linux.c.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+	- Linux has uuid in super block.
+
+xfsprogs/libxfs/darwin.c - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/darwin.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Darwin has uuid in super block.
+
+xfsprogs/libxfs/irix.c - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/irix.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- Irix does not have uuid in super block.
+
+xfsprogs/libxfs/freebsd.c - 1.16 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/freebsd.c.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+	- Freebsd has uuid in super block.
