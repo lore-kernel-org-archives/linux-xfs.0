@@ -1,28 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Feb 2007 10:07:18 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l12I79qw026205
-	for <xfs@oss.sgi.com>; Fri, 2 Feb 2007 10:07:12 -0800
-Date: Fri, 2 Feb 2007 18:06:14 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: Don't use kmap() in xfs_iozero().
-Message-ID: <20070202180614.GA13938@infradead.org>
-References: <20070202054044.GO33919298@melbourne.sgi.com> <20070202114830.GB23187@infradead.org> <20070202133941.GW33919298@melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 03 Feb 2007 10:25:16 -0800 (PST)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.173])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l13IPAqw009923
+	for <xfs@oss.sgi.com>; Sat, 3 Feb 2007 10:25:11 -0800
+Received: by ug-out-1314.google.com with SMTP id a2so1034036ugf
+        for <xfs@oss.sgi.com>; Sat, 03 Feb 2007 10:24:12 -0800 (PST)
+Message-ID: <f0e429340702030959r7b8b815sb58c01238c19495e@mail.gmail.com>
+Date: Sat, 3 Feb 2007 18:59:29 +0100
+From: "KE Liew" <ke.liew@gmail.com>
+Subject: bad magic and dubious inode
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20070202133941.GW33919298@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Feb 03, 2007 at 12:39:41AM +1100, David Chinner wrote:
-> Even on 64 bit platforms? I just added an explicit cast as a matter
-> of avoiding potential gcc warnings on other platforms/compiler
-> versions. Maybe I'm just being paranoid and I can remove it?
+Hello,
 
-Yes, it's fine on 64bit platforms aswell - I just built my equivalent
-buffer.c changes on 64bit powerpc and we have lots of similar cases
-all over the tree.
+It's been a great day, and this is the situation. Files were being
+transfered from one hdd to another, SATA to IDE, and BANG and error
+occured, can't remember exactly what, but I had to umount it.
+Successful, and ran xfs_check
+
+====================
+eXiStEnCe:~# xfs_check -s /dev/hdb
+bad magic # 0 in inobt block 15/916145
+====================
+
+Doesn't look good at all. I attempted the famous xfs_repair :)
+
+====================
+eXiStEnCe:~# xfs_repair -n /dev/hdb
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+bad magic # 0 in inobt block 15/916145
+dubious inode btree block header 15/916145
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+No modify flag set, skipping phase 5
+Inode allocation btrees are too corrupted, skipping phases 6 and 7
+No modify flag set, skipping filesystem flush and exiting.
+====================
+
+As you can see, it's almost dead? I haven't mount it yet, so I hope
+it's all safe and cool. What should be the next step for me to take?
+
+
+
+Kwang
