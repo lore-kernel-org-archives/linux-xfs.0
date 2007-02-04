@@ -1,63 +1,27 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 03 Feb 2007 15:43:36 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l13NhNqw030805
-	for <xfs@oss.sgi.com>; Sat, 3 Feb 2007 15:43:28 -0800
-Date: Sun, 4 Feb 2007 10:42:21 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: bad magic and dubious inode
-Message-ID: <20070203234221.GE44411608@melbourne.sgi.com>
-References: <f0e429340702030959r7b8b815sb58c01238c19495e@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f0e429340702030959r7b8b815sb58c01238c19495e@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 Feb 2007 05:26:05 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l14DPwqw032356
+	for <xfs@oss.sgi.com>; Sun, 4 Feb 2007 05:26:01 -0800
+Received: from localhost (localhost [127.0.0.1])
+	by lucidpixels.com (Postfix) with ESMTP id 49483A050A86
+	for <xfs@oss.sgi.com>; Sun,  4 Feb 2007 08:25:04 -0500 (EST)
+Date: Sun, 4 Feb 2007 08:25:04 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Spam on list?
+Message-ID: <Pine.LNX.4.64.0702040822520.14035@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: KE Liew <ke.liew@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Feb 03, 2007 at 06:59:29PM +0100, KE Liew wrote:
-> Hello,
-> 
-> It's been a great day, and this is the situation. Files were being
-> transfered from one hdd to another, SATA to IDE, and BANG and error
-> occured, can't remember exactly what, but I had to umount it.
+Who runs the XFS mailing list admin-wise?
 
-Can you look in your syslog for the forced shutdown messages?
+Could we add some basic anti-spam measures, I am not subscribed to many 
+mailing lists but this one seems to generate the most spam.
 
-> Successful, and ran xfs_check
-> 
-> ====================
-> eXiStEnCe:~# xfs_check -s /dev/hdb
-> bad magic # 0 in inobt block 15/916145
-> ====================
-> 
-> Doesn't look good at all. I attempted the famous xfs_repair :)
+Any chance they'd consider switching from Sendmail -> Postfix?
 
-You ran "xfs_repair -n" which means it didn't fix anything;
-it just told you about errors it found.
-
-> No modify flag set, skipping phase 5
-> Inode allocation btrees are too corrupted, skipping phases 6 and 7
-> No modify flag set, skipping filesystem flush and exiting.
-> ====================
-> 
-> As you can see, it's almost dead?
-
-No, it's not dead - xfs-repair should be able to fix the problem
-if you let it.
-
-> I haven't mount it yet, so I hope
-> it's all safe and cool. What should be the next step for me to take?
-
-run xfs_repair without the -n flag.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Justin.
