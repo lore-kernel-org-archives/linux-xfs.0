@@ -1,57 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 13:58:25 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15LwG3c006930
-	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 13:58:19 -0800
-Subject: Re: Spam on list?
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <45C73CB9.5000402@sandeen.net>
-References: <Pine.LNX.4.64.0702040822520.14035@p34.internal.lan>
-	 <p73wt2wnbd2.fsf@bingen.suse.de>
-	 <68c491a60702050352t278e8381l72795ed9ea880029@mail.gmail.com>
-	 <200702051306.34279.ak@suse.de>  <45C73CB9.5000402@sandeen.net>
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 06 Feb 2007 08:58:50 +1100
-Message-Id: <1170712730.18017.452.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 14:08:47 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15M8e3c009160
+	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 14:08:42 -0800
+Date: Mon, 5 Feb 2007 21:09:13 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Review: freezing sometimes leaves the log dirty
+Message-ID: <20070205210913.GA6062@infradead.org>
+References: <20070130220326.GM33919298@melbourne.sgi.com> <20070202114623.GA23187@infradead.org> <20070202140706.GX33919298@melbourne.sgi.com> <20070205210245.GP44411608@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070205210245.GP44411608@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Andi Kleen <ak@suse.de>, Martin =?ISO-8859-1?Q?Schr=F6der?= <martin@oneiros.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Mon, 2007-02-05 at 08:18 -0600, Eric Sandeen wrote:
-> Andi Kleen wrote:
-> > On Monday 05 February 2007 12:52, Martin Schröder wrote:
-> >> 05 Feb 2007 11:32:25 +0100, Andi Kleen <ak@suse.de>:
-> >>> Please don't do that. It means nothing can be cross posted
-> >>> from l-k anymore, which would be pretty bad.
-> >> Then set up a list admin who can approve such postings.
-> > 
-> > That adds unacceptable latency. Also lists who spam senders
-> > with bounce messages tend to be dropped quickly from cc lists.
-> > 
-> > Also you couldn't list xfs@ as bug report address anymore because
-> > bug report addresses must be available to everyone.
-> > 
-> > In general it's a bad idea.
-
-*nod*, it really cannot become a closed list.
-
+On Tue, Feb 06, 2007 at 08:02:45AM +1100, David Chinner wrote:
+> On Sat, Feb 03, 2007 at 01:07:06AM +1100, David Chinner wrote:
+> > Patch below cleans all this up and also fixes the 2.4 tree as well.
 > 
-> Well, I agree w/ those arguments too, Andi.
+> Can I get an ack from someone on this?
 > 
-> I honestly don't know why oss seems to have so much more spam than, say, 
-> LKML.  It is getting to a really bad level, and I sympathize with those 
-> whose inboxes are bombarded, too.
 
-Another option would be to move the list to vger.kernel.org and have
-it spam protected by whatever they're successfully using over there
-already (or maybe ask Davem what they're using and replicate on oss?).
-
-cheers.
-
--- 
-Nathan
+Looks good to me.
