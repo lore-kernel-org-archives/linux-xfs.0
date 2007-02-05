@@ -1,44 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 Feb 2007 15:46:26 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l14NkI3c024088
-	for <xfs@oss.sgi.com>; Sun, 4 Feb 2007 15:46:20 -0800
-Date: Mon, 5 Feb 2007 10:45:15 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Review: freezing sometimes leaves the log dirty
-Message-ID: <20070204234515.GI44411608@melbourne.sgi.com>
-References: <20070130220326.GM33919298@melbourne.sgi.com> <20070202114623.GA23187@infradead.org> <1170626215.18017.394.camel@edge>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 01:33:08 -0800 (PST)
+Received: from mx1.suse.de (ns.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l159Wx3c030924
+	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 01:33:00 -0800
+Subject: Re: Spam on list?
+References: <Pine.LNX.4.64.0702040822520.14035@p34.internal.lan>
+	<45C62982.1090206@sandeen.net>
+From: Andi Kleen <ak@suse.de>
+Date: 05 Feb 2007 11:32:25 +0100
+In-Reply-To: <45C62982.1090206@sandeen.net>
+Message-ID: <p73wt2wnbd2.fsf@bingen.suse.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1170626215.18017.394.camel@edge>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nscott@aconex.com>
-Cc: Christoph Hellwig <hch@infradead.org>, David Chinner <dgc@sgi.com>, xfs-dev@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
 
-On Mon, Feb 05, 2007 at 08:56:55AM +1100, Nathan Scott wrote:
-> On Fri, 2007-02-02 at 11:46 +0000, Christoph Hellwig wrote:
-> > On Wed, Jan 31, 2007 at 09:03:26AM +1100, David Chinner wrote:
-> > > +	/* flush inodes and push all remaining buffers out to disk */
-> > > +	xfs_quiesce_fs(mp);
-> > > +
-> > > +	BUG_ON(atomic_read(&mp->m_active_trans) > 0);
-> > > +
-> > 
-> > xfs_vfsops.c is considered common code, so you should probably use
-> > ASSERT here, not BUG_ON.
+Eric Sandeen <sandeen@sandeen.net> writes:
 > 
-> There's also an ASSERT_ALWAYS macro IIRC, if you want the equivalent
-> functionality of BUG_ON (i.e. always check).
+> I think it may be time to revisit that decision.  It's gotten really
+> bad lately.
 
-True, I forgot about that one. Thx, Nathan....
+Please don't do that. It means nothing can be cross posted
+from l-k anymore, which would be pretty bad.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+-Andi
