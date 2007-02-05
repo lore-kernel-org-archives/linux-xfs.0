@@ -1,28 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 14:08:47 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15M8e3c009160
-	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 14:08:42 -0800
-Date: Mon, 5 Feb 2007 21:09:13 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: freezing sometimes leaves the log dirty
-Message-ID: <20070205210913.GA6062@infradead.org>
-References: <20070130220326.GM33919298@melbourne.sgi.com> <20070202114623.GA23187@infradead.org> <20070202140706.GX33919298@melbourne.sgi.com> <20070205210245.GP44411608@melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 14:26:37 -0800 (PST)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l15MQV3c012456
+	for <linux-xfs@oss.sgi.com>; Mon, 5 Feb 2007 14:26:33 -0800
+From: Bernd Schubert <bernd-schubert@gmx.de>
+Subject: Re: XFS "no space left" problem
+Date: Mon, 5 Feb 2007 22:59:47 +0100
+References: <20070203183723.GA1652@dunno.espix.org> <eq7r7c$b1n$1@sea.gmane.org> <45C7775F.9070408@sandeen.net>
+In-Reply-To: <45C7775F.9070408@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Disposition: inline
-In-Reply-To: <20070205210245.GP44411608@melbourne.sgi.com>
+Message-Id: <200702052259.48018.bernd-schubert@gmx.de>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@oss.sgi.com
 
-On Tue, Feb 06, 2007 at 08:02:45AM +1100, David Chinner wrote:
-> On Sat, Feb 03, 2007 at 01:07:06AM +1100, David Chinner wrote:
-> > Patch below cleans all this up and also fixes the 2.4 tree as well.
-> 
-> Can I get an ack from someone on this?
-> 
+On Monday 05 February 2007 19:28, you wrote:
+> Bernd Schubert wrote:
+> > David Chinner wrote:
+> xfs is generally fully 64 bit, even on a 32 bit machine.  see more below...
+>
+> > Btw, if you need 64-bit integers, why don't you use long long, or even
+> > better with C99 int64_t?
+>
+> 32-bit machines can only do 32-bit inodes (vfs limitation) (at least
+> 'til recently), so by default xfs doesn't let inode numbers go above 32
+> bits - even though -internally- it -does-  use a 64-bit container.
 
-Looks good to me.
+Ah, I see, linux vfs limitation.
+
+>
+> The xfs inode number encodes its location on disk, so this restriction
+> also restricts which blocks can be allocated as inodes.
+>
+> xfs tries to reserve enough of these low blocks that you won't run out
+> of potential inode blocks, but i've seen that get sideways.  The
+> original poster probably ran into trouble because he started with a 100G
+> filesystem & grew it 10 or so times.
+
+Well, we just also switched to a new raid device and before we bought it, we 
+also made sure its possible to do an online expansion. So a migration from 6 
+TB to 12 TB will come... I guess in two or three years. 
+ 
+>
+> if you mount with inode64 you'll allow inodes to be allocated with more
+>   than 32 bits set.  But this can only work on a 64 bit machine.
+
+Ah, its a mount option! And even undocumented in "man 8 mount". Thanks will 
+add this to our wiki and write a debian bugreport.
+
+>
+> and then you have to be sure your userspace can cope w/ 64 bit inode
+> numbers too.
+
+Hmm, sizeof(ino_t) is 4 on x86_32, that will be a problem. We do have quite a 
+lot of programs, not written very well and not compilable with recent 
+compilers. On the other side, the linux nfs client converts inode numbers to 
+32 bit, if it would cause an overflow. However, it doesn't do that on x86_64 
+for 32bit programs. I know that quite well, due to another problem.
+
+
+Thanks a lot for your insights,
+Bernd
+
+
+-- 
+Bernd Schubert
+PCI / Theoretische Chemie
+Universität Heidelberg
+INF 229
+69120 Heidelberg
