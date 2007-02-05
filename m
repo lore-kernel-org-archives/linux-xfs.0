@@ -1,41 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 15:48:03 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15Nlt3c026057
-	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 15:47:56 -0800
-Message-ID: <45C7C228.2090609@sandeen.net>
-Date: Mon, 05 Feb 2007 17:47:52 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 17:25:49 -0800 (PST)
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l161Pd3c012032
+	for <linux-xfs@oss.sgi.com>; Mon, 5 Feb 2007 17:25:41 -0800
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1HEF51-00012E-9n
+	for linux-xfs@oss.sgi.com; Tue, 06 Feb 2007 02:25:07 +0100
+Received: from ppp79-69.lns1.mel3.internode.on.net ([59.167.79.69])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Tue, 06 Feb 2007 02:25:02 +0100
+Received: from jasonjgw by ppp79-69.lns1.mel3.internode.on.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Tue, 06 Feb 2007 02:25:02 +0100
+From: Jason White <jasonjgw@internode.on.net>
 Subject: Re: Spam on list?
-References: <Pine.LNX.4.64.0702040822520.14035@p34.internal.lan>	 <p73wt2wnbd2.fsf@bingen.suse.de>	 <68c491a60702050352t278e8381l72795ed9ea880029@mail.gmail.com>	 <200702051306.34279.ak@suse.de>  <45C73CB9.5000402@sandeen.net> <1170712730.18017.452.camel@edge>
-In-Reply-To: <1170712730.18017.452.camel@edge>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Date: Mon, 5 Feb 2007 09:59:14 +0000 (UTC)
+Message-ID: <slrnesdvvi.88v.jasonjgw@jdc.local>
+References: <Pine.LNX.4.64.0702040822520.14035@p34.internal.lan> <45C62982.1090206@sandeen.net> <p73wt2wnbd2.fsf@bingen.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Andi Kleen <ak@suse.de>, =?UTF-8?B?TWFydGluIFNjaHLDtmRlcg==?= <martin@oneiros.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Mon, 2007-02-05 at 08:18 -0600, Eric Sandeen wrote:
->> Andi Kleen wrote:
->>> On Monday 05 February 2007 12:52, Martin Schröder wrote:
->>>> 05 Feb 2007 11:32:25 +0100, Andi Kleen <ak@suse.de>:
->>>>> Please don't do that. It means nothing can be cross posted
->>>>> from l-k anymore, which would be pretty bad.
->>>> Then set up a list admin who can approve such postings.
->>> That adds unacceptable latency. Also lists who spam senders
->>> with bounce messages tend to be dropped quickly from cc lists.
->>>
->>> Also you couldn't list xfs@ as bug report address anymore because
->>> bug report addresses must be available to everyone.
->>>
->>> In general it's a bad idea.
-> 
-> *nod*, it really cannot become a closed list.
+On 2007-02-05, Andi Kleen <ak@suse.de> wrote:
+> Eric Sandeen <sandeen@sandeen.net> writes:
+>> 
+>> I think it may be time to revisit that decision.  It's gotten really
+>> bad lately.
 
-Ok ok everyone, it was just a thought ;-)
+I agree.
+>
+> Please don't do that. It means nothing can be cross posted
+> from l-k anymore, which would be pretty bad.
 
--Eric
+Posting from Gmane (nntp://news.gmane.org/) is also desirable, and
+(relatively) safe as it implements a challenge/response procedure and has
+other anti-spam controls.
+
+Is it possible to configure the list server to be more selective about who can
+post (i.e., detecting header contents that include known good lists, Gmane
+  postings, etc.)? There's always "greylisting", too.
