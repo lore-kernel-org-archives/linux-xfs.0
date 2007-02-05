@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 06:44:12 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Feb 2007 06:44:01 -0800 (PST)
 Received: from host125.host125-server.com (host125.host125-server.com [66.49.238.194])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15Ehq3e021320
-	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 06:44:00 -0800
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l15Ehq3c021320
+	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 06:43:53 -0800
 Received: from host125.host125-server.com (localhost [127.0.0.1])
-	by host125.host125-server.com (8.12.10/8.12.10) with ESMTP id l15E1Yrq020599
-	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 09:01:34 -0500
-Date: Mon, 5 Feb 2007 09:01:34 -0500
-Message-Id: <200702051401.l15E1Yp2020597@host125.host125-server.com>
+	by host125.host125-server.com (8.12.10/8.12.10) with ESMTP id l15DxPrq018880
+	for <xfs@oss.sgi.com>; Mon, 5 Feb 2007 08:59:25 -0500
+Date: Mon, 5 Feb 2007 08:59:25 -0500
+Message-Id: <200702051359.l15DxPSs018878@host125.host125-server.com>
 Subject: Periodic Account Review 
 From: ©Bank Of America <updates@bankofamerica.com>
 Reply-To: 
