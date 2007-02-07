@@ -1,53 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 05:05:40 -0800 (PST)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17D5Sm9002340
-	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 05:05:32 -0800
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l17Csbb2007791
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 13:54:38 +0100
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l17Csb8m007789
-	for xfs@oss.sgi.com; Wed, 7 Feb 2007 13:54:37 +0100
-Date: Wed, 7 Feb 2007 13:54:37 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fix sparse warning in xfs_da_btree.c
-Message-ID: <20070207125437.GA7740@lst.de>
-References: <20061129154441.GA6400@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20061129154441.GA6400@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 05:16:34 -0800 (PST)
+Received: from extu-mxob-2.symantec.com (extu-mxob-2.symantec.com [216.10.194.135])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17DGRm7005471
+	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 05:16:28 -0800
+Date: Wed, 7 Feb 2007 13:00:28 +0000 (GMT)
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: [PATCH 1 of 2] Implement generic block_page_mkwrite() functionality
+In-Reply-To: <20070207124922.GK44411608@melbourne.sgi.com>
+Message-ID: <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com>
+References: <20070207124922.GK44411608@melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Nov 29, 2006 at 04:44:41PM +0100, Christoph Hellwig wrote:
-> The first use in xfs_da_node_lookup_int would have to be __be32.
-> But we can just remove this temporary variable use completely and
-> make sparse happy.  The variable is used later in the function for
-> a native endian variable so we'll have to keep it.
+On Wed, 7 Feb 2007, David Chinner wrote:
 
-ping?
+> On Christoph's suggestion, take the guts of the proposed
+> xfs_vm_page_mkwrite function and implement it as a generic
+> core function as it used no specific XFS code at all.
+> 
+> This allows any filesystem to easily hook the ->page_mkwrite()
+> VM callout to allow them to set up pages dirtied by mmap
+> writes correctly for later writeout.
+> 
+> Signed-Off-By: Dave Chinner <dgc@sgi.com>
+
+I'm worried about concurrent truncation.  Isn't it the case that
+i_mutex is held when prepare_write and commit_write are normally
+called?  But not here when page_mkwrite is called.
+
+Hugh
 
 > 
+> ---
+>  fs/buffer.c                 |   30 ++++++++++++++++++++++++++++++
+>  include/linux/buffer_head.h |    2 ++
+>  2 files changed, 32 insertions(+)
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-> index a68bc1f..cccf69e 100644
-> --- a/fs/xfs/xfs_da_btree.c
-> +++ b/fs/xfs/xfs_da_btree.c
-> @@ -1090,8 +1090,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
->  		if (blk->magic == XFS_DA_NODE_MAGIC) {
->  			node = blk->bp->data;
->  			max = be16_to_cpu(node->hdr.count);
-> -			btreehashval = node->btree[max-1].hashval;
-> -			blk->hashval = be32_to_cpu(btreehashval);
-> +			blk->hashval = be32_to_cpu(node->btree[max-1].hashval);
+> Index: 2.6.x-xfs-new/fs/buffer.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/buffer.c	2007-02-07 23:00:05.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/buffer.c	2007-02-07 23:09:47.642356116 +1100
+> @@ -2194,6 +2194,36 @@ int generic_commit_write(struct file *fi
+>  	return 0;
+>  }
 >  
->  			/*
->  			 * Binary search.  (note: small blocks will skip loop)
----end quoted text---
+> +/*
+> + * block_page_mkwrite() is not allowed to change the file size as
+> + * it gets called from a page fault handler when a page is first
+> + * dirtied. Hence we must be careful to check for EOF conditions
+> + * here. We set the page up correctly for a written page which means
+> + * we get ENOSPC checking when writing into holes and correct
+> + * delalloc and unwritten extent mapping on filesystems that support
+> + * these features.
+> + */
+> +int
+> +block_page_mkwrite(struct vm_area_struct *vma, struct page *page,
+> +		   get_block_t get_block)
+> +{
+> +	struct inode	*inode = vma->vm_file->f_path.dentry->d_inode;
+> +	unsigned long	end;
+> +	int		ret = 0;
+> +
+> +	if (((page->index + 1) << PAGE_CACHE_SHIFT) > i_size_read(inode))
+> +		end = i_size_read(inode) & ~PAGE_CACHE_MASK;
+> +	else
+> +		end = PAGE_CACHE_SIZE;
+> +
+> +	lock_page(page);
+> +	ret = block_prepare_write(page, 0, end, get_block);
+> +	if (!ret)
+> +		ret = block_commit_write(page, 0, end);
+> +	unlock_page(page);
+> +
+> +	return ret;
+> +}
+>  
+>  /*
+>   * nobh_prepare_write()'s prereads are special: the buffer_heads are freed
+> Index: 2.6.x-xfs-new/include/linux/buffer_head.h
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/include/linux/buffer_head.h	2007-02-07 23:00:02.000000000 +1100
+> +++ 2.6.x-xfs-new/include/linux/buffer_head.h	2007-02-07 23:12:33.156749344 +1100
+> @@ -206,6 +206,8 @@ int cont_prepare_write(struct page*, uns
+>  int generic_cont_expand(struct inode *inode, loff_t size);
+>  int generic_cont_expand_simple(struct inode *inode, loff_t size);
+>  int block_commit_write(struct page *page, unsigned from, unsigned to);
+> +int block_page_mkwrite(struct vma_area_struct *vma, struct page *page,
+> +				get_block_t get_block);
+>  void block_sync_page(struct page *);
+>  sector_t generic_block_bmap(struct address_space *, sector_t, get_block_t *);
+>  int generic_commit_write(struct file *, struct page *, unsigned, unsigned);
