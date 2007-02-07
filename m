@@ -1,164 +1,139 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Feb 2007 21:06:13 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1755w3c024523
-	for <xfs@oss.sgi.com>; Tue, 6 Feb 2007 21:06:01 -0800
-Received: from [10.0.0.4] (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 5C37018003EF5
-	for <xfs@oss.sgi.com>; Tue,  6 Feb 2007 23:05:58 -0600 (CST)
-Message-ID: <45C95E36.7020200@sandeen.net>
-Date: Tue, 06 Feb 2007 23:05:58 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH] remove more misc. unused args
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 02:38:52 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17Acgm7005663
+	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 02:38:44 -0800
+Date: Wed, 7 Feb 2007 10:18:23 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] Implement ->page_mkwrite for XFS
+Message-ID: <20070207101823.GA2703@infradead.org>
+References: <20070206225325.GP33919298@melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070206225325.GP33919298@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-more misc. unused args
+On Wed, Feb 07, 2007 at 09:53:25AM +1100, David Chinner wrote:
+> Folks,
+> 
+> I'm not sure of the exact locking rules and constraints for
+> ->page_mkwrite(), so I thought I better fish around for comments.
+> 
+> With XFS, we need to hook pages being dirtied by mmap writes so that
+> we can attach buffers of the correct state tothe pages.  This means
+> that when we write them back, the correct thing happens.
+> 
+> For example, if you mmap an unwritten extent (preallocated),
+> currently your data will get written to disk but the extent will not
+> get converted to a written extent. IOWs, you lose the data because
+> when you read it back it will seen as unwritten and treated as a
+> hole.
+> 
+> AFAICT, it is safe to lock the page during ->page_mkwrite and that
+> it is safe to issue I/O (e.g. metadata reads) to determine the
+> current state of the file.  I am also assuming that, at this point,
+> we are not allowed to change the file size and so we have to be
+> careful in ->page_mkwrite we don't do that. What else have I missed
+> here?
+> 
+> IOWs, I've basically treated ->page_mkwrite() as wrapper for
+> block_prepare_write/block_commit_write because they do all the
+> buffer mapping and state manipulation I think is necessary.  Is it
+> safe to call these functions, or are there some other constraints we
+> have to work under here?
+> 
+> Patch below. Comments?
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+> 
+> 
+> ---
+>  fs/xfs/linux-2.6/xfs_file.c |   34 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 34 insertions(+)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_file.c	2007-01-16 10:54:15.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c	2007-02-07 09:49:00.508017483 +1100
+> @@ -446,6 +446,38 @@ xfs_file_open_exec(
+>  }
+>  #endif /* HAVE_FOP_OPEN_EXEC */
+>  
+> +/*
+> + * mmap()d file has taken write protection fault and is being made
+> + * writable. We can set the page state up correctly for a writable
+> + * page, which means we can do correct delalloc accounting (ENOSPC
+> + * checking!) and unwritten extent mapping.
+> + */
+> +STATIC int
+> +xfs_vm_page_mkwrite(
+> +	struct vm_area_struct	*vma,
+> +	struct page		*page)
+> +{
+> +	struct inode	*inode = vma->vm_file->f_path.dentry->d_inode;
+> +	unsigned long	end;
+> +	int		ret = 0;
+> +
+> +	end = page->index + 1;
+> +	end <<= PAGE_CACHE_SHIFT;
+> +	if (end > i_size_read(inode))
+> +		end = i_size_read(inode) & ~PAGE_CACHE_MASK;
+> +	else
+> +		end = PAGE_CACHE_SIZE;
+> +
+> +	lock_page(page);
+> +	ret = block_prepare_write(page, 0, end, xfs_get_blocks);
+> +	if (!ret)
+> +		ret = block_commit_write(page, 0, end);
+> +	unlock_page(page);
+> +
+> +	return ret;
+> +}
 
- xfs_bmap.c        |   10 +++-------
- xfs_log_recover.c |    8 +++-----
- xfs_vnodeops.c    |    5 ++---
- 3 files changed, 8 insertions(+), 15 deletions(-)
+This looks to me.  But given that this is generic code except for the
+get_block callback, shouldn't we put the guts into buffer.c and wire
+all filesystems up to use it? e.g.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Index: linux/fs/xfs/xfs_bmap.c
-===================================================================
---- linux/fs/xfs.orig/xfs_bmap.c
-+++ linux/fs/xfs/xfs_bmap.c
-@@ -130,7 +130,6 @@ STATIC int				/* error */
- xfs_bmap_add_extent_hole_delay(
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_extnum_t		idx,	/* extent number to update/insert */
--	xfs_btree_cur_t		*cur,	/* if null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
- 	int			*logflagsp,/* inode logging flags */
- 	xfs_extdelta_t		*delta, /* Change made to incore extents */
-@@ -399,7 +398,6 @@ xfs_bmap_count_leaves(
- 
- STATIC int
- xfs_bmap_disk_count_leaves(
--	xfs_ifork_t		*ifp,
- 	xfs_extnum_t		idx,
- 	xfs_bmbt_block_t	*block,
- 	int			numrecs,
-@@ -580,7 +578,7 @@ xfs_bmap_add_extent(
- 		if (cur)
- 			ASSERT((cur->bc_private.b.flags &
- 				XFS_BTCUR_BPRV_WASDEL) == 0);
--		if ((error = xfs_bmap_add_extent_hole_delay(ip, idx, cur, new,
-+		if ((error = xfs_bmap_add_extent_hole_delay(ip, idx, new,
- 				&logflags, delta, rsvd)))
- 			goto done;
- 	}
-@@ -1841,7 +1839,6 @@ STATIC int				/* error */
- xfs_bmap_add_extent_hole_delay(
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_extnum_t		idx,	/* extent number to update/insert */
--	xfs_btree_cur_t		*cur,	/* if null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
- 	int			*logflagsp, /* inode logging flags */
- 	xfs_extdelta_t		*delta, /* Change made to incore extents */
-@@ -6425,8 +6422,8 @@ xfs_bmap_count_tree(
- 		for (;;) {
- 			nextbno = be64_to_cpu(block->bb_rightsib);
- 			numrecs = be16_to_cpu(block->bb_numrecs);
--			if (unlikely(xfs_bmap_disk_count_leaves(ifp,
--					0, block, numrecs, count) < 0)) {
-+			if (unlikely(xfs_bmap_disk_count_leaves(0,
-+					block, numrecs, count) < 0)) {
- 				xfs_trans_brelse(tp, bp);
- 				XFS_ERROR_REPORT("xfs_bmap_count_tree(2)",
- 						 XFS_ERRLEVEL_LOW, mp);
-@@ -6472,7 +6469,6 @@ xfs_bmap_count_leaves(
-  */
- int
- xfs_bmap_disk_count_leaves(
--	xfs_ifork_t		*ifp,
- 	xfs_extnum_t		idx,
- 	xfs_bmbt_block_t	*block,
- 	int			numrecs,
-Index: linux/fs/xfs/xfs_log_recover.c
-===================================================================
---- linux/fs/xfs.orig/xfs_log_recover.c
-+++ linux/fs/xfs/xfs_log_recover.c
-@@ -1509,7 +1509,6 @@ xlog_recover_insert_item_frontq(
- 
- STATIC int
- xlog_recover_reorder_trans(
--	xlog_t			*log,
- 	xlog_recover_t		*trans)
- {
- 	xlog_recover_item_t	*first_item, *itemq, *itemq_next;
-@@ -1867,7 +1866,6 @@ xlog_recover_do_inode_buffer(
- /*ARGSUSED*/
- STATIC void
- xlog_recover_do_reg_buffer(
--	xfs_mount_t		*mp,
- 	xlog_recover_item_t	*item,
- 	xfs_buf_t		*bp,
- 	xfs_buf_log_format_t	*buf_f)
-@@ -2083,7 +2081,7 @@ xlog_recover_do_dquot_buffer(
- 	if (log->l_quotaoffs_flag & type)
- 		return;
- 
--	xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
-+	xlog_recover_do_reg_buffer(item, bp, buf_f);
- }
- 
- /*
-@@ -2184,7 +2182,7 @@ xlog_recover_do_buffer_trans(
- 		  (XFS_BLI_UDQUOT_BUF|XFS_BLI_PDQUOT_BUF|XFS_BLI_GDQUOT_BUF)) {
- 		xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
- 	} else {
--		xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
-+		xlog_recover_do_reg_buffer(item, bp, buf_f);
- 	}
- 	if (error)
- 		return XFS_ERROR(error);
-@@ -2765,7 +2763,7 @@ xlog_recover_do_trans(
- 	int			error = 0;
- 	xlog_recover_item_t	*item, *first_item;
- 
--	if ((error = xlog_recover_reorder_trans(log, trans)))
-+	if ((error = xlog_recover_reorder_trans(trans)))
- 		return error;
- 	first_item = item = trans->r_itemq;
- 	do {
-Index: linux/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux/fs/xfs.orig/xfs_vnodeops.c
-+++ linux/fs/xfs/xfs_vnodeops.c
-@@ -2120,7 +2120,6 @@ int xfs_rm_attempts;
- STATIC int
- xfs_lock_dir_and_entry(
- 	xfs_inode_t	*dp,
--	bhv_vname_t	*dentry,
- 	xfs_inode_t	*ip)	/* inode of entry 'name' */
- {
- 	int		attempts;
-@@ -2439,7 +2438,7 @@ xfs_remove(
- 		return error;
- 	}
- 
--	error = xfs_lock_dir_and_entry(dp, dentry, ip);
-+	error = xfs_lock_dir_and_entry(dp, ip);
- 	if (error) {
- 		REMOVE_DEBUG_TRACE(__LINE__);
- 		xfs_trans_cancel(tp, cancel_flags);
-@@ -3095,7 +3094,7 @@ xfs_rmdir(
- 	 * that the directory entry for the child directory inode has
- 	 * not changed while we were obtaining a log reservation.
- 	 */
--	error = xfs_lock_dir_and_entry(dp, dentry, cdp);
-+	error = xfs_lock_dir_and_entry(dp, cdp);
- 	if (error) {
- 		xfs_trans_cancel(tp, cancel_flags);
- 		IRELE(cdp);
+int block_page_mkwrite(struct vm_area_struct  *vma, struct page *page,
+		get_block_t get_block)
+{
+	struct inode *inode = vma->vm_file->f_path.dentry->d_inode;
+	unsigned long end;
+	int ret = 0;
+
+	if ((page->index + 1) << PAGE_CACHE_SHIFT > i_size_read(inode))
+		end = i_size_read(inode) & ~PAGE_CACHE_MASK;
+	else
+		end = PAGE_CACHE_SIZE;
+
+	lock_page(page);
+	ret = block_prepare_write(page, 0, end, block);
+	if (!ret)
+		ret = block_commit_write(page, 0, end);
+	unlock_page(page);
+	return ret;
+}
+
+and then in xfs and similar in other filesystems:
+
+STATIC int
+xfs_vm_page_mkwrite(
+	struct vm_area_struct	*vma,
+	struct page		*page)
+{
+	return block_page_mkwrite(vma, page, xfs_get_blocks);
+}
+
+BTW, why is xfs_get_blocks not called xfs_get_block?
