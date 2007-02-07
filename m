@@ -1,65 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 08:49:09 -0800 (PST)
-Received: from rgminet02.oracle.com (rgminet02.oracle.com [148.87.113.119])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17Gmxm7003766
-	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 08:49:00 -0800
-Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
-	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l17FtAmE031931
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 08:55:10 -0700
-Date: Wed, 7 Feb 2007 10:52:45 -0500
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [PATCH 1 of 2] Implement generic block_page_mkwrite() functionality
-Message-ID: <20070207155245.GB11967@think.oraclecorp.com>
-References: <20070207124922.GK44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com> <20070207144415.GN44411608@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 09:58:10 -0800 (PST)
+Received: from imr2.americas.sgi.com (imr2.americas.sgi.com [198.149.16.18])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17Hw2m7016092
+	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 09:58:03 -0800
+Message-ID: <45CA1327.2030005@sgi.com>
+Date: Wed, 07 Feb 2007 17:57:59 +0000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070207144415.GN44411608@melbourne.sgi.com>
+Subject: Re: [PATCH] fix sparse warning in xfs_da_btree.c
+References: <20061129154441.GA6400@lst.de> <20070207125437.GA7740@lst.de>
+In-Reply-To: <20070207125437.GA7740@lst.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Hugh Dickins <hugh@veritas.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 08, 2007 at 01:44:15AM +1100, David Chinner wrote:
-> On Wed, Feb 07, 2007 at 01:00:28PM +0000, Hugh Dickins wrote:
-> > On Wed, 7 Feb 2007, David Chinner wrote:
-> > 
-> > > On Christoph's suggestion, take the guts of the proposed
-> > > xfs_vm_page_mkwrite function and implement it as a generic
-> > > core function as it used no specific XFS code at all.
-> > > 
-> > > This allows any filesystem to easily hook the ->page_mkwrite()
-> > > VM callout to allow them to set up pages dirtied by mmap
-> > > writes correctly for later writeout.
-> > > 
-> > > Signed-Off-By: Dave Chinner <dgc@sgi.com>
-> > 
-> > I'm worried about concurrent truncation.  Isn't it the case that
-> > i_mutex is held when prepare_write and commit_write are normally
-> > called?  But not here when page_mkwrite is called.
+Christoph,
+
+I merged this change a while ago but it looks like the take message
+didn't make it to oss.
+
+mod xfs-linux-melb:xfs-kern:27702a TAKE message
+================================================
+Subject: TAKE 954580 -
+
+fix sparse warning in xfs_da_btree.c
+
+Date:  Tue Dec 12 13:15:55 AEDT 2006
+Workarea:  vpn-emea-sw-emea-160-4.emea.sgi.com:/home/lachlan/isms/2.6.x-xfs
+Inspected by:  hch
+Author:  lachlan
+
+The following file(s) were checked into:
+   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:27702a
+fs/xfs/xfs_da_btree.c - 1.173 - changed
+
+Lachlan
+
+Christoph Hellwig wrote:
+> On Wed, Nov 29, 2006 at 04:44:41PM +0100, Christoph Hellwig wrote:
 > 
-> I'm not holding i_mutex. I assumed that it was probably safe to do
-> because we are likely to be reading the page off disk just before we
-> call mkwrite and that has to be synchronised with truncate in some
-> manner....
-
-In general, commit_write is allowed to update i_size, and prepare/commit
-are called with i_mutex.  block_prepare_write and block_commit_write
-both look safe to me for calling with only the page lock held.  It more
-or less translates to: call get_block in a sane fashion and zero out the
-parts of the page past eof.
-
-But, if someone copies the code and puts their own fancy
-prepare/commit_write in there, they will get in trouble in a hurry...
-
+>>The first use in xfs_da_node_lookup_int would have to be __be32.
+>>But we can just remove this temporary variable use completely and
+>>make sparse happy.  The variable is used later in the function for
+>>a native endian variable so we'll have to keep it.
 > 
-> So, do I need to grab the i_mutex here? Is that safe to do that in
-> the middle of a page fault? If we do race with a truncate and the
-> page is now beyond EOF, what am I supposed to return?
-
-Should it check to make sure the page is still in the address space
-after locking it?
-
--chris
+> 
+> ping?
+> 
+> 
+>>
+>>Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>
+>>diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+>>index a68bc1f..cccf69e 100644
+>>--- a/fs/xfs/xfs_da_btree.c
+>>+++ b/fs/xfs/xfs_da_btree.c
+>>@@ -1090,8 +1090,7 @@ xfs_da_node_lookup_int(xfs_da_state_t *s
+>> 		if (blk->magic == XFS_DA_NODE_MAGIC) {
+>> 			node = blk->bp->data;
+>> 			max = be16_to_cpu(node->hdr.count);
+>>-			btreehashval = node->btree[max-1].hashval;
+>>-			blk->hashval = be32_to_cpu(btreehashval);
+>>+			blk->hashval = be32_to_cpu(node->btree[max-1].hashval);
+>> 
+>> 			/*
+>> 			 * Binary search.  (note: small blocks will skip loop)
+> 
+> ---end quoted text---
+> 
+> 
