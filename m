@@ -1,97 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 05:16:34 -0800 (PST)
-Received: from extu-mxob-2.symantec.com (extu-mxob-2.symantec.com [216.10.194.135])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l17DGRm7005471
-	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 05:16:28 -0800
-Date: Wed, 7 Feb 2007 13:00:28 +0000 (GMT)
-From: Hugh Dickins <hugh@veritas.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Feb 2007 06:44:37 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l17EiRm7029446
+	for <xfs@oss.sgi.com>; Wed, 7 Feb 2007 06:44:29 -0800
+Date: Thu, 8 Feb 2007 01:44:15 +1100
+From: David Chinner <dgc@sgi.com>
 Subject: Re: [PATCH 1 of 2] Implement generic block_page_mkwrite() functionality
-In-Reply-To: <20070207124922.GK44411608@melbourne.sgi.com>
-Message-ID: <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com>
-References: <20070207124922.GK44411608@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <20070207144415.GN44411608@melbourne.sgi.com>
+References: <20070207124922.GK44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, 7 Feb 2007, David Chinner wrote:
-
-> On Christoph's suggestion, take the guts of the proposed
-> xfs_vm_page_mkwrite function and implement it as a generic
-> core function as it used no specific XFS code at all.
+On Wed, Feb 07, 2007 at 01:00:28PM +0000, Hugh Dickins wrote:
+> On Wed, 7 Feb 2007, David Chinner wrote:
 > 
-> This allows any filesystem to easily hook the ->page_mkwrite()
-> VM callout to allow them to set up pages dirtied by mmap
-> writes correctly for later writeout.
+> > On Christoph's suggestion, take the guts of the proposed
+> > xfs_vm_page_mkwrite function and implement it as a generic
+> > core function as it used no specific XFS code at all.
+> > 
+> > This allows any filesystem to easily hook the ->page_mkwrite()
+> > VM callout to allow them to set up pages dirtied by mmap
+> > writes correctly for later writeout.
+> > 
+> > Signed-Off-By: Dave Chinner <dgc@sgi.com>
 > 
-> Signed-Off-By: Dave Chinner <dgc@sgi.com>
+> I'm worried about concurrent truncation.  Isn't it the case that
+> i_mutex is held when prepare_write and commit_write are normally
+> called?  But not here when page_mkwrite is called.
 
-I'm worried about concurrent truncation.  Isn't it the case that
-i_mutex is held when prepare_write and commit_write are normally
-called?  But not here when page_mkwrite is called.
+I'm not holding i_mutex. I assumed that it was probably safe to do
+because we are likely to be reading the page off disk just before we
+call mkwrite and that has to be synchronised with truncate in some
+manner....
 
-Hugh
+So, do I need to grab the i_mutex here? Is that safe to do that in
+the middle of a page fault? If we do race with a truncate and the
+page is now beyond EOF, what am I supposed to return?
 
-> 
-> ---
->  fs/buffer.c                 |   30 ++++++++++++++++++++++++++++++
->  include/linux/buffer_head.h |    2 ++
->  2 files changed, 32 insertions(+)
-> 
-> Index: 2.6.x-xfs-new/fs/buffer.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/buffer.c	2007-02-07 23:00:05.000000000 +1100
-> +++ 2.6.x-xfs-new/fs/buffer.c	2007-02-07 23:09:47.642356116 +1100
-> @@ -2194,6 +2194,36 @@ int generic_commit_write(struct file *fi
->  	return 0;
->  }
->  
-> +/*
-> + * block_page_mkwrite() is not allowed to change the file size as
-> + * it gets called from a page fault handler when a page is first
-> + * dirtied. Hence we must be careful to check for EOF conditions
-> + * here. We set the page up correctly for a written page which means
-> + * we get ENOSPC checking when writing into holes and correct
-> + * delalloc and unwritten extent mapping on filesystems that support
-> + * these features.
-> + */
-> +int
-> +block_page_mkwrite(struct vm_area_struct *vma, struct page *page,
-> +		   get_block_t get_block)
-> +{
-> +	struct inode	*inode = vma->vm_file->f_path.dentry->d_inode;
-> +	unsigned long	end;
-> +	int		ret = 0;
-> +
-> +	if (((page->index + 1) << PAGE_CACHE_SHIFT) > i_size_read(inode))
-> +		end = i_size_read(inode) & ~PAGE_CACHE_MASK;
-> +	else
-> +		end = PAGE_CACHE_SIZE;
-> +
-> +	lock_page(page);
-> +	ret = block_prepare_write(page, 0, end, get_block);
-> +	if (!ret)
-> +		ret = block_commit_write(page, 0, end);
-> +	unlock_page(page);
-> +
-> +	return ret;
-> +}
->  
->  /*
->   * nobh_prepare_write()'s prereads are special: the buffer_heads are freed
-> Index: 2.6.x-xfs-new/include/linux/buffer_head.h
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/include/linux/buffer_head.h	2007-02-07 23:00:02.000000000 +1100
-> +++ 2.6.x-xfs-new/include/linux/buffer_head.h	2007-02-07 23:12:33.156749344 +1100
-> @@ -206,6 +206,8 @@ int cont_prepare_write(struct page*, uns
->  int generic_cont_expand(struct inode *inode, loff_t size);
->  int generic_cont_expand_simple(struct inode *inode, loff_t size);
->  int block_commit_write(struct page *page, unsigned from, unsigned to);
-> +int block_page_mkwrite(struct vma_area_struct *vma, struct page *page,
-> +				get_block_t get_block);
->  void block_sync_page(struct page *);
->  sector_t generic_block_bmap(struct address_space *, sector_t, get_block_t *);
->  int generic_commit_write(struct file *, struct page *, unsigned, unsigned);
+I'm fishing for what I'm supposed to be doing here because there's
+zero implementations of this callout in the kernel and the comments
+in the code explaining the interface constraints are
+non-existant....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
