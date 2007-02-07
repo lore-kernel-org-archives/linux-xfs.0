@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Feb 2007 20:55:26 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Feb 2007 21:03:37 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l174tF3c022565
-	for <xfs@oss.sgi.com>; Tue, 6 Feb 2007 20:55:16 -0800
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1753O3c023824
+	for <xfs@oss.sgi.com>; Tue, 6 Feb 2007 21:03:25 -0800
 Received: from [10.0.0.4] (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 4518518003EF5
-	for <xfs@oss.sgi.com>; Tue,  6 Feb 2007 22:55:11 -0600 (CST)
-Message-ID: <45C95BAF.6080005@sandeen.net>
-Date: Tue, 06 Feb 2007 22:55:11 -0600
+	by sandeen.net (Postfix) with ESMTP id 914E118003EF5
+	for <xfs@oss.sgi.com>; Tue,  6 Feb 2007 23:03:24 -0600 (CST)
+Message-ID: <45C95D9C.7080904@sandeen.net>
+Date: Tue, 06 Feb 2007 23:03:24 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] remove unused "lsn" argument of xfs_trans_commit
+Subject: [PATCH] remove unused "aendp" arg to xfs_dir2_data_freescan
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -20,628 +20,159 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
- The last argument "lsn" of xfs_trans_commit() is always called with NULL.
- 
- dmapi/xfs_dm.c          |    4 ++--
- quota/xfs_dquot.c       |    3 +--
- quota/xfs_qm.c          |    5 ++---
- quota/xfs_qm_syscalls.c |    6 +++---
- xfs_attr.c              |   12 ++++--------
- xfs_attr_leaf.c         |    2 +-
- xfs_bmap.c              |    4 ++--
- xfs_dfrag.c             |    2 +-
- xfs_fsops.c             |    4 ++--
- xfs_inode.c             |    2 +-
- xfs_iomap.c             |    7 +++----
- xfs_log_recover.c       |    4 ++--
- xfs_mount.c             |    2 +-
- xfs_qmops.c             |    2 +-
- xfs_rename.c            |    2 +-
- xfs_rtalloc.c           |    6 +++---
- xfs_rw.c                |    4 ++--
- xfs_trans.c             |    6 ------
- xfs_trans.h             |    4 +---
- xfs_utils.c             |    5 ++---
- xfs_vfsops.c            |    2 +-
- xfs_vnodeops.c          |   33 ++++++++++++++++-----------------
- 22 files changed, 52 insertions(+), 69 deletions(-)
- 
- Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
- 
- ---
- 
- Index: linux/fs/xfs/dmapi/xfs_dm.c
+the "aendp" arg to xfs_dir2_data_freescan is always NULL, remove it.
+
+ xfs_dir2_block.c |   14 +++++---------
+ xfs_dir2_data.c  |    7 ++-----
+ xfs_dir2_data.h  |    2 +-
+ xfs_dir2_leaf.c  |    7 +++----
+ xfs_dir2_node.c  |    4 ++--
+ 5 files changed, 13 insertions(+), 21 deletions(-)
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Index: linux/fs/xfs/xfs_dir2_block.c
 ===================================================================
---- linux/fs/xfs.orig/dmapi/xfs_dm.c
-+++ linux/fs/xfs/dmapi/xfs_dm.c
-@@ -1168,7 +1168,7 @@ xfs_dm_f_set_eventlist(
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	VN_HOLD(vp);
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- 
- 	return(0);
- }
-@@ -3021,7 +3021,7 @@ xfs_dm_set_region(
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	VN_HOLD(vp);
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- 
- 	/* Return the proper value for *exactflagp depending upon whether or not
- 	   we "changed" the user's managed region.  In other words, if the user
-Index: linux/fs/xfs/quota/xfs_dquot.c
-===================================================================
---- linux/fs/xfs.orig/quota/xfs_dquot.c
-+++ linux/fs/xfs/quota/xfs_dquot.c
-@@ -753,8 +753,7 @@ xfs_qm_idtodq(
- 		goto error0;
- 	}
- 	if (tp) {
--		if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES,
--					     NULL)))
-+		if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES)))
- 			goto error1;
- 	}
- 
-Index: linux/fs/xfs/quota/xfs_qm.c
-===================================================================
---- linux/fs/xfs.orig/quota/xfs_qm.c
-+++ linux/fs/xfs/quota/xfs_qm.c
-@@ -1453,8 +1453,7 @@ xfs_qm_qino_alloc(
- 	XFS_SB_UNLOCK(mp, s);
- 	xfs_mod_sb(tp, sbfields);
- 
--	if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES,
--				     NULL))) {
-+	if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES))) {
- 		xfs_fs_cmn_err(CE_ALERT, mp, "XFS qino_alloc failed!");
- 		return error;
- 	}
-@@ -2405,7 +2404,7 @@ xfs_qm_write_sb_changes(
- 	}
- 
- 	xfs_mod_sb(tp, flags);
--	(void) xfs_trans_commit(tp, 0, NULL);
-+	(void) xfs_trans_commit(tp, 0);
- 
- 	return 0;
- }
-Index: linux/fs/xfs/quota/xfs_qm_syscalls.c
-===================================================================
---- linux/fs/xfs.orig/quota/xfs_qm_syscalls.c
-+++ linux/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -735,7 +735,7 @@ xfs_qm_scall_setqlim(
- 	xfs_trans_log_dquot(tp, dqp);
- 
- 	xfs_dqtrace_entry(dqp, "Q_SETQLIM: COMMIT");
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- 	xfs_qm_dqprint(dqp);
- 	xfs_qm_dqrele(dqp);
- 	mutex_unlock(&(XFS_QI_QOFFLOCK(mp)));
-@@ -809,7 +809,7 @@ xfs_qm_log_quotaoff_end(
- 	 * We don't care about quotoff's performance.
- 	 */
- 	xfs_trans_set_sync(tp);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 	return (error);
- }
- 
-@@ -852,7 +852,7 @@ xfs_qm_log_quotaoff(
- 	 * We don't care about quotoff's performance.
- 	 */
- 	xfs_trans_set_sync(tp);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 
- error0:
- 	if (error) {
-Index: linux/fs/xfs/xfs_attr.c
-===================================================================
---- linux/fs/xfs.orig/xfs_attr.c
-+++ linux/fs/xfs/xfs_attr.c
-@@ -328,8 +328,7 @@ xfs_attr_set_int(xfs_inode_t *dp, const 
- 				xfs_trans_set_sync(args.trans);
- 			}
- 			err2 = xfs_trans_commit(args.trans,
--						 XFS_TRANS_RELEASE_LOG_RES,
--						 NULL);
-+						 XFS_TRANS_RELEASE_LOG_RES);
- 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 			/*
-@@ -397,8 +396,7 @@ xfs_attr_set_int(xfs_inode_t *dp, const 
- 	 * Commit the last in the sequence of transactions.
- 	 */
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
--	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES,
--				 NULL);
-+	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 	/*
-@@ -544,8 +542,7 @@ xfs_attr_remove_int(xfs_inode_t *dp, con
- 	 * Commit the last in the sequence of transactions.
- 	 */
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
--	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES,
--				 NULL);
-+	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 	/*
-@@ -859,8 +856,7 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	 * Commit the last in the sequence of transactions.
- 	 */
- 	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
--	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES,
--				 NULL);
-+	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 	return(error);
-Index: linux/fs/xfs/xfs_attr_leaf.c
-===================================================================
---- linux/fs/xfs.orig/xfs_attr_leaf.c
-+++ linux/fs/xfs/xfs_attr_leaf.c
-@@ -3053,7 +3053,7 @@ xfs_attr_rolltrans(xfs_trans_t **transp,
- 	 * is in progress. The caller takes the responsibility to cancel
- 	 * the duplicate transaction that gets returned.
- 	 */
--	if ((error = xfs_trans_commit(trans, 0, NULL)))
-+	if ((error = xfs_trans_commit(trans, 0)))
- 		return (error);
- 
- 	trans = *transp;
-Index: linux/fs/xfs/xfs_bmap.c
-===================================================================
---- linux/fs/xfs.orig/xfs_bmap.c
-+++ linux/fs/xfs/xfs_bmap.c
-@@ -4071,7 +4071,7 @@ xfs_bmap_add_attrfork(
- 	}
- 	if ((error = xfs_bmap_finish(&tp, &flist, &committed)))
- 		goto error2;
--	error = xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(ip->i_df.if_ext_max ==
- 	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
- 	return error;
-@@ -4227,7 +4227,7 @@ xfs_bmap_finish(
- 	logres = ntp->t_log_res;
- 	logcount = ntp->t_log_count;
- 	ntp = xfs_trans_dup(*tp);
--	error = xfs_trans_commit(*tp, 0, NULL);
-+	error = xfs_trans_commit(*tp, 0);
- 	*tp = ntp;
- 	*committed = 1;
- 	/*
-Index: linux/fs/xfs/xfs_dfrag.c
-===================================================================
---- linux/fs/xfs.orig/xfs_dfrag.c
-+++ linux/fs/xfs/xfs_dfrag.c
-@@ -382,7 +382,7 @@ xfs_swap_extents(
- 		xfs_trans_set_sync(tp);
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_SWAPEXT, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_SWAPEXT);
- 	locked = 0;
- 
-  error0:
-Index: linux/fs/xfs/xfs_fsops.c
-===================================================================
---- linux/fs/xfs.orig/xfs_fsops.c
-+++ linux/fs/xfs/xfs_fsops.c
-@@ -346,7 +346,7 @@ xfs_growfs_data_private(
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, nfree);
- 	if (dpct)
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 	if (error) {
- 		return error;
- 	}
-@@ -605,7 +605,7 @@ xfs_fs_log_dummy(
- 	xfs_trans_ihold(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- }
-Index: linux/fs/xfs/xfs_inode.c
-===================================================================
---- linux/fs/xfs.orig/xfs_inode.c
-+++ linux/fs/xfs/xfs_inode.c
-@@ -1746,7 +1746,7 @@ xfs_itruncate_finish(
- 			xfs_trans_log_inode(ntp, ip, XFS_ILOG_CORE);
- 		}
- 		ntp = xfs_trans_dup(ntp);
--		(void) xfs_trans_commit(*tp, 0, NULL);
-+		(void) xfs_trans_commit(*tp, 0);
- 		*tp = ntp;
- 		error = xfs_trans_reserve(ntp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
- 					  XFS_TRANS_PERM_LOG_RES,
-Index: linux/fs/xfs/xfs_iomap.c
-===================================================================
---- linux/fs/xfs.orig/xfs_iomap.c
-+++ linux/fs/xfs/xfs_iomap.c
-@@ -543,7 +543,7 @@ xfs_iomap_write_direct(
- 	error = xfs_bmap_finish(&tp, &free_list, &committed);
- 	if (error)
- 		goto error0;
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error)
- 		goto error_out;
- 
-@@ -840,8 +840,7 @@ xfs_iomap_write_allocate(
- 			if (error)
- 				goto trans_cancel;
- 
--			error = xfs_trans_commit(tp,
--					XFS_TRANS_RELEASE_LOG_RES, NULL);
-+			error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 			if (error)
- 				goto error0;
- 
-@@ -948,7 +947,7 @@ xfs_iomap_write_unwritten(
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (error)
- 			return XFS_ERROR(error);
-Index: linux/fs/xfs/xfs_log_recover.c
-===================================================================
---- linux/fs/xfs.orig/xfs_log_recover.c
-+++ linux/fs/xfs/xfs_log_recover.c
-@@ -3016,7 +3016,7 @@ xlog_recover_process_efi(
- 	}
- 
- 	efip->efi_flags |= XFS_EFI_RECOVERED;
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- }
- 
- /*
-@@ -3143,7 +3143,7 @@ xlog_recover_clear_agi_bucket(
- 	xfs_trans_log_buf(tp, agibp, offset,
- 			  (offset + sizeof(xfs_agino_t) - 1));
- 
--	(void) xfs_trans_commit(tp, 0, NULL);
-+	(void) xfs_trans_commit(tp, 0);
- }
- 
- /*
-Index: linux/fs/xfs/xfs_mount.c
-===================================================================
---- linux/fs/xfs.orig/xfs_mount.c
-+++ linux/fs/xfs/xfs_mount.c
-@@ -1653,7 +1653,7 @@ xfs_mount_log_sbunit(
- 		return;
- 	}
- 	xfs_mod_sb(tp, fields);
--	xfs_trans_commit(tp, 0, NULL);
-+	xfs_trans_commit(tp, 0);
- }
- 
- 
-Index: linux/fs/xfs/xfs_qmops.c
-===================================================================
---- linux/fs/xfs.orig/xfs_qmops.c
-+++ linux/fs/xfs/xfs_qmops.c
-@@ -78,7 +78,7 @@ xfs_mount_reset_sbqflags(xfs_mount_t *mp
- 		return error;
- 	}
- 	xfs_mod_sb(tp, XFS_SB_QFLAGS);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 	return error;
- }
- 
-Index: linux/fs/xfs/xfs_rename.c
-===================================================================
---- linux/fs/xfs.orig/xfs_rename.c
-+++ linux/fs/xfs/xfs_rename.c
-@@ -584,7 +584,7 @@ xfs_rename(
- 	 * trans_commit will unlock src_ip, target_ip & decrement
- 	 * the vnode references.
- 	 */
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (target_ip != NULL) {
- 		xfs_refcache_purge_ip(target_ip);
- 		IRELE(target_ip);
-Index: linux/fs/xfs/xfs_rtalloc.c
-===================================================================
---- linux/fs/xfs.orig/xfs_rtalloc.c
-+++ linux/fs/xfs/xfs_rtalloc.c
-@@ -150,7 +150,7 @@ xfs_growfs_rt_alloc(
- 		error = xfs_bmap_finish(&tp, &flist, &committed);
- 		if (error)
- 			goto error_exit;
--		xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+		xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 		/*
- 		 * Now we need to clear the allocated blocks.
- 		 * Do this one block per transaction, to keep it simple.
-@@ -187,7 +187,7 @@ xfs_growfs_rt_alloc(
- 			/*
- 			 * Commit the transaction.
- 			 */
--			xfs_trans_commit(tp, 0, NULL);
-+			xfs_trans_commit(tp, 0);
- 		}
- 		/*
- 		 * Go on to the next extent, if any.
-@@ -2042,7 +2042,7 @@ xfs_growfs_rt(
- 		/*
- 		 * Commit the transaction.
+--- linux/fs/xfs.orig/xfs_dir2_block.c
++++ linux/fs/xfs/xfs_dir2_block.c
+@@ -282,8 +282,7 @@ xfs_dir2_block_addname(
+ 		 * This needs to happen before the next call to use_free.
  		 */
--		xfs_trans_commit(tp, 0, NULL);
-+		xfs_trans_commit(tp, 0);
- 	}
- 
- 	if (error)
-Index: linux/fs/xfs/xfs_rw.c
-===================================================================
---- linux/fs/xfs.orig/xfs_rw.c
-+++ linux/fs/xfs/xfs_rw.c
-@@ -83,7 +83,7 @@ xfs_write_clear_setuid(
- 	}
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return 0;
- }
-@@ -164,7 +164,7 @@ xfs_write_sync_logforce(
- 			xfs_trans_ihold(tp, ip);
- 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 			xfs_trans_set_sync(tp);
--			error = xfs_trans_commit(tp, 0, NULL);
-+			error = xfs_trans_commit(tp, 0);
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (needscan) {
+-			xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block,
+-				&needlog, NULL);
++			xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog);
+ 			needscan = 0;
  		}
  	}
-Index: linux/fs/xfs/xfs_trans.c
+@@ -333,7 +332,7 @@ xfs_dir2_block_addname(
+ 		 */
+ 		if (needscan) {
+ 			xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block,
+-				&needlog, NULL);
++				&needlog);
+ 			needscan = 0;
+ 		}
+ 		/*
+@@ -418,8 +417,7 @@ xfs_dir2_block_addname(
+ 	 * Clean up the bestfree array and log the header, tail, and entry.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog,
+-			NULL);
++		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, bp);
+ 	xfs_dir2_block_log_tail(tp, bp);
+@@ -798,8 +796,7 @@ xfs_dir2_block_removename(
+ 	 * Fix up bestfree, log the header if necessary.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog,
+-			NULL);
++		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, bp);
+ 	xfs_dir2_data_check(dp, bp);
+@@ -996,8 +993,7 @@ xfs_dir2_leaf_to_block(
+ 	 * Scan the bestfree if we need it and log the data block header.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog,
+-			NULL);
++		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	/*
+Index: linux/fs/xfs/xfs_dir2_data.c
 ===================================================================
---- linux/fs/xfs.orig/xfs_trans.c
-+++ linux/fs/xfs/xfs_trans.c
-@@ -753,7 +753,6 @@ int
- _xfs_trans_commit(
- 	xfs_trans_t	*tp,
- 	uint		flags,
--	xfs_lsn_t	*commit_lsn_p,
- 	int		*log_flushed)
+--- linux/fs/xfs.orig/xfs_dir2_data.c
++++ linux/fs/xfs/xfs_dir2_data.c
+@@ -324,8 +324,7 @@ void
+ xfs_dir2_data_freescan(
+ 	xfs_mount_t		*mp,		/* filesystem mount point */
+ 	xfs_dir2_data_t		*d,		/* data block pointer */
+-	int			*loghead,	/* out: log data header */
+-	char			*aendp)		/* in: caller's endp */
++	int			*loghead)	/* out: log data header */
  {
- 	xfs_log_iovec_t		*log_vector;
-@@ -812,8 +811,6 @@ shut_us_down:
- 		xfs_trans_free_busy(tp);
- 		xfs_trans_free(tp);
- 		XFS_STATS_INC(xs_trans_empty);
--		if (commit_lsn_p)
--			*commit_lsn_p = commit_lsn;
- 		return (shutdown);
- 	}
- 	ASSERT(tp->t_ticket != NULL);
-@@ -864,9 +861,6 @@ shut_us_down:
- 		kmem_free(log_vector, nvec * sizeof(xfs_log_iovec_t));
- 	}
- 
--	if (commit_lsn_p)
--		*commit_lsn_p = commit_lsn;
--
- 	/*
- 	 * If we got a log write error. Unpin the logitems that we
- 	 * had pinned, clean up, free trans structure, and return error.
-Index: linux/fs/xfs/xfs_trans.h
-===================================================================
---- linux/fs/xfs.orig/xfs_trans.h
-+++ linux/fs/xfs/xfs_trans.h
-@@ -988,10 +988,8 @@ void		xfs_trans_log_efd_extent(xfs_trans
- 					 xfs_extlen_t);
- int		_xfs_trans_commit(xfs_trans_t *,
- 				  uint flags,
--				  xfs_lsn_t *,
- 				  int *);
--#define xfs_trans_commit(tp, flags, lsn) \
--	_xfs_trans_commit(tp, flags, lsn, NULL)
-+#define xfs_trans_commit(tp, flags)	_xfs_trans_commit(tp, flags, NULL)
- void		xfs_trans_cancel(xfs_trans_t *, int);
- void		xfs_trans_ail_init(struct xfs_mount *);
- xfs_lsn_t	xfs_trans_push_ail(struct xfs_mount *, xfs_lsn_t);
-Index: linux/fs/xfs/xfs_utils.c
-===================================================================
---- linux/fs/xfs.orig/xfs_utils.c
-+++ linux/fs/xfs/xfs_utils.c
-@@ -222,7 +222,7 @@ xfs_dir_ialloc(
- 		}
- 
- 		ntp = xfs_trans_dup(tp);
--		code = xfs_trans_commit(tp, 0, NULL);
-+		code = xfs_trans_commit(tp, 0);
- 		tp = ntp;
- 		if (committed != NULL) {
- 			*committed = 1;
-@@ -460,8 +460,7 @@ xfs_truncate_file(
- 				 XFS_TRANS_ABORT);
- 	} else {
- 		xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES,
--					 NULL);
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
- 
-Index: linux/fs/xfs/xfs_vfsops.c
-===================================================================
---- linux/fs/xfs.orig/xfs_vfsops.c
-+++ linux/fs/xfs/xfs_vfsops.c
-@@ -1539,7 +1539,7 @@ xfs_syncsub(
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ihold(tp, ip);
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		error = xfs_trans_commit(tp, 0, NULL);
-+		error = xfs_trans_commit(tp, 0);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
- 	}
-Index: linux/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux/fs/xfs.orig/xfs_vnodeops.c
-+++ linux/fs/xfs/xfs_vnodeops.c
-@@ -873,7 +873,7 @@ xfs_setattr(
- 		if (mp->m_flags & XFS_MOUNT_WSYNC)
- 			xfs_trans_set_sync(tp);
- 
--		code = xfs_trans_commit(tp, commit_flags, NULL);
-+		code = xfs_trans_commit(tp, commit_flags);
- 	}
- 
- 	/*
-@@ -1176,7 +1176,7 @@ xfs_fsync(
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		if (flag & FSYNC_WAIT)
- 			xfs_trans_set_sync(tp);
--		error = _xfs_trans_commit(tp, 0, NULL, &log_flushed);
-+		error = _xfs_trans_commit(tp, 0, &log_flushed);
- 
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
-@@ -1291,8 +1291,7 @@ xfs_inactive_free_eofblocks(
- 					  XFS_TRANS_ABORT));
- 		} else {
- 			error = xfs_trans_commit(tp,
--						XFS_TRANS_RELEASE_LOG_RES,
--						NULL);
-+						XFS_TRANS_RELEASE_LOG_RES);
- 		}
- 		xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
- 	}
-@@ -1406,7 +1405,7 @@ xfs_inactive_symlink_rmt(
- 	 * we need to unlock the inode since the new transaction doesn't
- 	 * have the inode attached.
+ 	xfs_dir2_block_tail_t	*btp;		/* block tail */
+ 	xfs_dir2_data_entry_t	*dep;		/* active data entry */
+@@ -346,9 +345,7 @@ xfs_dir2_data_freescan(
+ 	 * Set up pointers.
  	 */
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 	tp = ntp;
- 	if (error) {
- 		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-@@ -1503,7 +1502,7 @@ xfs_inactive_attrs(
- 	tp = *tpp;
- 	mp = ip->i_mount;
- 	ASSERT(ip->i_d.di_forkoff != 0);
--	xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	error = xfs_attr_inactive(ip);
-@@ -1790,7 +1789,7 @@ xfs_inactive(
- 		 * nothing we can do except to try to keep going.
- 		 */
- 		(void) xfs_bmap_finish(&tp,  &free_list, &committed);
--		(void) xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+		(void) xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	}
+ 	p = (char *)d->u;
+-	if (aendp)
+-		endp = aendp;
+-	else if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
++	if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
+ 		btp = XFS_DIR2_BLOCK_TAIL_P(mp, (xfs_dir2_block_t *)d);
+ 		endp = (char *)XFS_DIR2_BLOCK_LEAF_P(btp);
+ 	} else
+Index: linux/fs/xfs/xfs_dir2_data.h
+===================================================================
+--- linux/fs/xfs.orig/xfs_dir2_data.h
++++ linux/fs/xfs/xfs_dir2_data.h
+@@ -166,7 +166,7 @@ extern xfs_dir2_data_free_t *xfs_dir2_da
+ extern xfs_dir2_data_free_t *xfs_dir2_data_freeinsert(xfs_dir2_data_t *d,
+ 				xfs_dir2_data_unused_t *dup, int *loghead);
+ extern void xfs_dir2_data_freescan(struct xfs_mount *mp, xfs_dir2_data_t *d,
+-				int *loghead, char *aendp);
++				int *loghead);
+ extern int xfs_dir2_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
+ 				struct xfs_dabuf **bpp);
+ extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_dabuf *bp,
+Index: linux/fs/xfs/xfs_dir2_leaf.c
+===================================================================
+--- linux/fs/xfs.orig/xfs_dir2_leaf.c
++++ linux/fs/xfs/xfs_dir2_leaf.c
+@@ -133,8 +133,7 @@ xfs_dir2_block_to_leaf(
+ 	 */
+ 	block->hdr.magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog,
+-			NULL);
++		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)block, &needlog);
  	/*
- 	 * Release the dquots held by inode, if any.
-@@ -2026,7 +2025,7 @@ xfs_create(
- 		goto abort_rele;
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error) {
- 		IRELE(ip);
- 		tp = NULL;
-@@ -2511,7 +2510,7 @@ xfs_remove(
- 		goto error_rele;
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error) {
- 		IRELE(ip);
- 		goto std_return;
-@@ -2719,7 +2718,7 @@ xfs_link(
- 		goto abort_return;
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error)
- 		goto std_return;
- 
-@@ -2936,7 +2935,7 @@ xfs_mkdir(
- 		goto error2;
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	XFS_QM_DQRELE(mp, udqp);
- 	XFS_QM_DQRELE(mp, gdqp);
- 	if (error) {
-@@ -3190,7 +3189,7 @@ xfs_rmdir(
- 		goto std_return;
- 	}
- 
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error) {
- 		IRELE(cdp);
- 		goto std_return;
-@@ -3535,7 +3534,7 @@ xfs_symlink(
- 	if (error) {
- 		goto error2;
- 	}
--	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	XFS_QM_DQRELE(mp, udqp);
- 	XFS_QM_DQRELE(mp, gdqp);
- 
-@@ -3790,7 +3789,7 @@ xfs_set_dmattrs (
- 
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	IHOLD(ip);
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 
- 	return error;
- }
-@@ -4148,7 +4147,7 @@ retry:
- 			goto error0;
- 		}
- 
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (error) {
- 			break;
-@@ -4455,7 +4454,7 @@ xfs_free_file_space(
- 			goto error0;
- 		}
- 
--		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES, NULL);
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
- 
-@@ -4649,7 +4648,7 @@ xfs_change_file_space(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
- 
--	error = xfs_trans_commit(tp, 0, NULL);
-+	error = xfs_trans_commit(tp, 0);
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
+ 	 * Set up leaf tail and bests table.
+ 	 */
+@@ -414,7 +413,7 @@ xfs_dir2_leaf_addname(
+ 	 * Need to scan fix up the bestfree table.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog, NULL);
++		xfs_dir2_data_freescan(mp, data, &needlog);
+ 	/*
+ 	 * Need to log the data block's header.
+ 	 */
+@@ -1496,7 +1495,7 @@ xfs_dir2_leaf_removename(
+ 	 * log the data block header if necessary.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog, NULL);
++		xfs_dir2_data_freescan(mp, data, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	/*
+Index: linux/fs/xfs/xfs_dir2_node.c
+===================================================================
+--- linux/fs/xfs.orig/xfs_dir2_node.c
++++ linux/fs/xfs/xfs_dir2_node.c
+@@ -904,7 +904,7 @@ xfs_dir2_leafn_remove(
+ 	 * Log the data block header if needed.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog, NULL);
++		xfs_dir2_data_freescan(mp, data, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	xfs_dir2_data_check(dp, dbp);
+@@ -1705,7 +1705,7 @@ xfs_dir2_node_addname_int(
+ 	 * Rescan the block for bestfree if needed.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog, NULL);
++		xfs_dir2_data_freescan(mp, data, &needlog);
+ 	/*
+ 	 * Log the data block header if needed.
+ 	 */
