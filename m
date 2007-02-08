@@ -1,57 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Feb 2007 14:31:24 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Feb 2007 15:06:57 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l18MVGm7005141
-	for <xfs@oss.sgi.com>; Thu, 8 Feb 2007 14:31:18 -0800
-Date: Fri, 9 Feb 2007 09:30:58 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1 of 2] Implement generic block_page_mkwrite() functionality
-Message-ID: <20070208223058.GV44411608@melbourne.sgi.com>
-References: <20070207124922.GK44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com> <20070207144415.GN44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071454250.32223@blonde.wat.veritas.com> <20070207225013.GQ44411608@melbourne.sgi.com> <20070208131100.GH11967@think.oraclecorp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070208131100.GH11967@think.oraclecorp.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l18N6lm7009160
+	for <xfs@oss.sgi.com>; Thu, 8 Feb 2007 15:06:51 -0800
+Message-ID: <45CB9EA6.9090301@sgi.com>
+Date: Fri, 09 Feb 2007 09:05:26 +1100
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: PARTIAL TAKE 960369: XFS-QA-144-ERROR: get_bulkattr found 0 matching
+ files (expected 50) in NUM loops
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Mason <chris.mason@oracle.com>
-Cc: David Chinner <dgc@sgi.com>, Hugh Dickins <hugh@veritas.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Feb 08, 2007 at 08:11:00AM -0500, Chris Mason wrote:
-> On Thu, Feb 08, 2007 at 09:50:13AM +1100, David Chinner wrote:
-> > > You don't need to lock out all truncation, but you do need to lock
-> > > out truncation of the page in question.  Instead of your i_size
-> > > checks, check page->mapping isn't NULL after the lock_page?
-> > 
-> > Yes, that can be done, but we still need to know if part of
-> > the page is beyond EOF for when we call block_commit_write()
-> > and mark buffers dirty. Hence we need to check the inode size.
-> > 
-> > I guess if we block the truncate with the page lock, then the
-> > inode size is not going to change until we unlock the page.
-> > If the inode size has already been changed but the page not yet
-> > removed from the mapping we'll be beyond EOF.
-> > 
-> > So it seems to me that we can get away with not using the i_mutex
-> > in the generic code here.
-> 
-> vmtruncate changes the inode size before waiting on any pages.  So,
-> i_size could change any time during page_mkwrite.
+A dmapi enabled xfs filesytem can be mounted with any of the alias mount
+options "dmapi", "xdsm" or "dmi". Libdm is missing a check for "dmi"
+hence the failure in xfs qa test 144.
 
-Which would put us beyond EOF. Ok.
+Date:  Fri Feb  9 09:57:59 AEDT 2007
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/xfs-cmds-pv960369
+Inspected by:  dgc
+Author:  vapo
 
-> It would be a good idea to read i_size once and put it in a local var
-> instead.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Will do - I'll snap it once the page is locked....
 
-Thanks Chris.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Modid:  master-melb:xfs-cmds:28053a
+dmapi/VERSION - 1.28 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/VERSION.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
+dmapi/doc/CHANGES - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/doc/CHANGES.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+dmapi/libdm/dm_handle2path.c - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/libdm/dm_handle2path.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+        - pv 960369, rv dgc - libdm is missing a check for "dmi" mount 
+option in get_mnt()
