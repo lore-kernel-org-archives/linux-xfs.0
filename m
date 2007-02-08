@@ -1,39 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Feb 2007 12:38:53 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l18Kckm7024463
-	for <xfs@oss.sgi.com>; Thu, 8 Feb 2007 12:38:47 -0800
-Message-ID: <45CB8A61.6060902@redhat.com>
-Date: Thu, 08 Feb 2007 14:38:57 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] don't special-case 32MB machines
-References: <45CA7D7B.3060307@redhat.com> <20070208192712.GA1461@infradead.org>
-In-Reply-To: <20070208192712.GA1461@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Feb 2007 14:31:24 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l18MVGm7005141
+	for <xfs@oss.sgi.com>; Thu, 8 Feb 2007 14:31:18 -0800
+Date: Fri, 9 Feb 2007 09:30:58 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1 of 2] Implement generic block_page_mkwrite() functionality
+Message-ID: <20070208223058.GV44411608@melbourne.sgi.com>
+References: <20070207124922.GK44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071256530.25060@blonde.wat.veritas.com> <20070207144415.GN44411608@melbourne.sgi.com> <Pine.LNX.4.64.0702071454250.32223@blonde.wat.veritas.com> <20070207225013.GQ44411608@melbourne.sgi.com> <20070208131100.GH11967@think.oraclecorp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070208131100.GH11967@think.oraclecorp.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Chris Mason <chris.mason@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, Hugh Dickins <hugh@veritas.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Christoph Hellwig wrote:
-> On Wed, Feb 07, 2007 at 07:31:39PM -0600, Eric Sandeen wrote:
->> This one may be a bit silly, but:
->>
->> All the special cases for 32MB machines probably aren't so useful anymore...
->>
->> Or maybe this points to the need to bump up the scaling points & sizes a 
->> bit?
->>
->> Also remove duplicate, unused XFS_MAX_RW_NBMAPS definitions in linux 
->> subdirs.
+On Thu, Feb 08, 2007 at 08:11:00AM -0500, Chris Mason wrote:
+> On Thu, Feb 08, 2007 at 09:50:13AM +1100, David Chinner wrote:
+> > > You don't need to lock out all truncation, but you do need to lock
+> > > out truncation of the page in question.  Instead of your i_size
+> > > checks, check page->mapping isn't NULL after the lock_page?
+> > 
+> > Yes, that can be done, but we still need to know if part of
+> > the page is beyond EOF for when we call block_commit_write()
+> > and mark buffers dirty. Hence we need to check the inode size.
+> > 
+> > I guess if we block the truncate with the page lock, then the
+> > inode size is not going to change until we unlock the page.
+> > If the inode size has already been changed but the page not yet
+> > removed from the mapping we'll be beyond EOF.
+> > 
+> > So it seems to me that we can get away with not using the i_mutex
+> > in the generic code here.
 > 
-> Sounds good.  Any chance you could kill off xfs_physmem completely?
-> 
+> vmtruncate changes the inode size before waiting on any pages.  So,
+> i_size could change any time during page_mkwrite.
 
-Hm, why out of curiosity?  Because you think xfs should never be looking
-at system memory, or because you don't like the name, or ...?
+Which would put us beyond EOF. Ok.
 
--Eric
+> It would be a good idea to read i_size once and put it in a local var
+> instead.
+
+Will do - I'll snap it once the page is locked....
+
+Thanks Chris.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
