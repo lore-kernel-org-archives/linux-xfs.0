@@ -1,85 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 Feb 2007 12:48:25 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 Feb 2007 17:30:33 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1EKmFm7004255
-	for <xfs@oss.sgi.com>; Wed, 14 Feb 2007 12:48:17 -0800
-Date: Thu, 15 Feb 2007 07:48:03 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: a modest proposal for 4kstacks & xfs
-Message-ID: <20070214204803.GR44411608@melbourne.sgi.com>
-References: <45D1FDFC.20407@sandeen.net> <20070213201306.GA10237@tuatara.stupidest.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1F1UPm7004045
+	for <linux-xfs@oss.sgi.com>; Wed, 14 Feb 2007 17:30:27 -0800
+Date: Thu, 15 Feb 2007 12:19:16 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: mkfs and mount tips?
+Message-ID: <5BFF2CB07B4CB49FEC7310C7@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20070213085037.216BE12C53@mail.edu.haifa.ac.il>
+References: <20070213085037.216BE12C53@mail.edu.haifa.ac.il>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20070213201306.GA10237@tuatara.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Leon Kolchinsky <leonk@construct.haifa.ac.il>, linux-xfs@oss.sgi.com
 
-On Tue, Feb 13, 2007 at 12:13:06PM -0800, Chris Wedgwood wrote:
-> On Tue, Feb 13, 2007 at 10:05:48AM -0800, Eric Sandeen wrote:
-> 
-> > XFS continues to come up against 4k stacks, despite the best efforts
-> > of several people to slim down xfs a bit (and in fact it seems ok
-> > over simple storage these days), people are always able to stack up
-> > enough IO path to push the limits of a 4k stack.
-> 
-> i'll argue "if XFS is enabled 4K stacks should be disabled"
+Hi Leon,
 
-Only way to be sure, IMO....
+--On 13 February 2007 10:48:15 AM +0200 Leon Kolchinsky <leonk@construct.haifa.ac.il> wrote:
 
-> the only people this is really going to bother surely are people
-> running stock RH kernels where XFS isn't supported anyhow
-> 
-> > modprobe xfs 4kstacks_may_break=1
-> >
-> > or somesuch; and without this modprobe would fail on a 4kstacks
-> > kernel with a "helpful" message.
-> 
-> won't people just add the param and continue anyhow w/o thinking about
-> the issue(s)?
-> 
-> > I hate to further the meme of "xfs won't work with 4kstacks" but the
-> > truth is that there are IO path scenarios where it can lead to
-> > problems.
-> 
-> i have a setup here with ENOSPC conditions will wedge up tight wen
-> using 4k stacks (the allocator has a path where it calls back into
-> itself i think)
+> I've also seen "–d unwritten=0" option:
+>
+> So my question:
+> Is it safe to add –d unwritten=0 option to increase performance like this
+> (or will I lose some essential functionality)?:
+>
 
-Memory reclaim will call the writeback path if you are not within
-filesystem code when a kernel allocation fails. So if you fail a
-memory allocation and enter reclaim when you are already using half
-the stack....
+My understanding (although I'm not familiar with that code),
+is that unwritten extents are used in space preallocation.
+So unless you reserve space for a file it will not have an effect.
+And if you do, then setting "unwritten=0" will speed up writes because it doesn't
+need to flag the unwritten extents and write out the extra transactions for this.
+If the unwritten extents aren't flagged as such then there can be a security issue
+where one can read old data (other's data) for these unwritten parts.
+In fact, the security issue on preallocation (1997-98 sgi-pv#705217) was what motivated
+the idea of flagging extents as unwritten in the first place.
 
-> > What do folks think; useful?  pointless?  too heavy-handed?
-> 
-> i prefer kconfig magic to simply disallow compilation of XFS w/ 4k
-> stacks, it's not in the past you had to try hard to break xfs in these
-> conditions --- is it really much harder now?
-> 
-> also, someone claimed gcc 4.1+ reused stack slots --- if that's the
-> case it might make things a lot better than older compilers?
-> checkstack.pl should show a difference though
-
-gcc 4.0+ inline single use static functions by default, so it defeats
-the code we moved out of the bad functions to reduce the stack usage.
-IOWs, it undoes a lot of the previous things we've done to reduce stack
-usage in the critical path. That's why we had to add the "noinline"
-keywork to all our "STATIC" declarations....
-
-Basically, the only real compiler thing you can do that changes stack
-us�ge is turn on "optimise for size" which reduces stack usage by
-20-25%. It is significant, but you can probably still blow a 4k
-stack if you add enough layers....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--Tim
