@@ -1,134 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Feb 2007 08:50:13 -0800 (PST)
-Received: from info11.gawab.com (info11.gawab.com [204.97.230.49])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1FGo5m7022369
-	for <xfs@oss.sgi.com>; Thu, 15 Feb 2007 08:50:07 -0800
-Message-ID: <20070215161932.3230.qmail@info11.gawab.com>
-From: "Ahmed El Zein" <a.elzein@gawab.net>
-Subject: Re: xfs internal error on a new filesystem
-Date: Thu, 15 Feb 2007 16:19:32 GMT
-Content-Type: text/plain ; charset="ISO-8859-1"
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Feb 2007 21:32:32 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1G5WNm7019083
+	for <xfs@oss.sgi.com>; Thu, 15 Feb 2007 21:32:25 -0800
+Message-ID: <45D541CF.2070106@sgi.com>
+Date: Fri, 16 Feb 2007 16:31:59 +1100
+From: Donald Douwsma <donaldd@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix the grace time in xfs_quota
+References: <200702150739.AA04964@TNESG9305.tnes.nec.co.jp>
+In-Reply-To: <200702150739.AA04964@TNESG9305.tnes.nec.co.jp>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Ramy M. Hassan " <ramy@gawab.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Utako Kusaka <utako@tnes.nec.co.jp>
+Cc: xfs@oss.sgi.com
 
+Hi Utako,
 
+I was unable to reproduce these results internally (sgi-xfsprogs-2.8.16-1sgi100b2chatz).
+But I think your patch looks good, these really should be time_t's.
 
-David Chinner <dgc@sgi.com> wrote on 15 Feb 2007, 11:16 AM:
-Subject: Re: xfs internal error on a new filesystem
->On Wed, Feb 14, 2007 at 10:24:27AM +0000, Ramy M. Hassan  wrote:
->> Hello,
->> We got the following xfs internal error on one of our production servers:
->> 
->> Feb 14 08:28:52 info6 kernel: [238186.676483] Filesystem "sdd8": XFS
->> internal error xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c. 
->> Caller 0xf8b906e7
->
->Real stack looks to be:
->
-> xfs_trans_cancel
-> xfs_mkdir
-> xfs_vn_mknod
-> xfs_vn_mkdir
-> vfs_mkdir
-> sys_mkdirat
-> sys_mkdir
->
->We aborted a transaction for some reason. We got an error somewhere in
->a mkdir while we had a dirty transaction.  Unfortunately, this tells us
->very
->little about the error that actually caused the shutdown.
->
->What is your filessytem layout? (xfs_info <mntpt>) How much memory
->do you have and were you near enomem conditions?
+$ sudo /usr/sbin/xfs_quota -xc report /mnt/test
+User quota on /mnt/test (/dev/sdb5)
+                               Blocks
+User ID          Used       Soft       Hard    Warn/Grace
+---------- --------------------------------------------------
+bin               168          0          0     00 [--------]
+games             608          0          0     00 [--------]
+root           125948          0          0     00  [0 days]
+donaldd         15000      10240      20480     00 [00:00:11]
 
-We have 1536 MB of ram. It is possible that at the time of the crash we
-were near enomem conditions, I don;t know for sure but we have seen such
-spikes on our servers.
+$ sudo /usr/sbin/xfs_quota -xc report /mnt/test
+User quota on /mnt/test (/dev/sdb5)
+                               Blocks
+User ID          Used       Soft       Hard    Warn/Grace
+---------- --------------------------------------------------
+bin               168          0          0     00 [--------]
+games             608          0          0     00 [--------]
+root           125948          0          0     00  [0 days]
+donaldd         15000      10240      20480     00  [0 days]
 
-root@info6:~# xfs_info /vol/6/
-meta-data=/dev/sdd8              isize=256    agcount=16, agsize=7001584
-blks
-         =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=112025248, imaxpct=25
-         =                       sunit=16     swidth=64 blks, unwritten=0
-naming   =version 2              bsize=4096  
-log      =internal               bsize=4096   blocks=32768, version=1
-         =                       sectsz=512   sunit=0 blks
-realtime =none                   extsz=65536  blocks=0, rtextents=0
+Thanks for the patch,
+Donald
 
+Utako Kusaka wrote:
+...
+> Example:
+> xfs_quota> report
+> User quota on /home/utako/mpnt (/dev/sda6)
+>                                Blocks
+> User ID          Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> root          3145728       1000       2000     00 [--none--]
+> utako            1000       1000       2000     00 [00:00:4294967286]  <--
+> 
+> Group quota on /home/utako/mpnt (/dev/sda6)
+>                                Blocks
+> Group ID         Used       Soft       Hard    Warn/Grace
+> ---------- --------------------------------------------------
+> root          3145728          0          0     00 [--------]
+> users            1000          0          0     00 [--------]
 
->
->> We were able to unmount/remount the volume (didn't do xfs_repair because
->we
->> thought it might take long time, and the server was already in production
->> at the moement)
->
->Risky to run a production system on a filesystem that might be corrupted.
->You risk further problems if you don't run repair....
->
->> The file system was created less than 48hours ago, and 370G of sensitve
->> production data was moved to the server before it xfs crash.
->
->So that's not a "new" filesystem at all...
-By new we meant 48 hours old.
-
->
->FWIW, did you do any offline testing before you put it into production?
-
-We did some basic testing. But as a filesystem developer, how would you
-test a filesystem so that you would be comfortable with the stability of 
-the filesystem and be worry free in terms of faulty hardware? 
-
->
->> System details :
->> Kernel: 2.6.18
->> Controller: 3ware 9550SX-8LP (RAID 10)
->
->Can you describe your dm/md volume layout?
-
-one unit, 8HDDs, a stripe of 4 mirrors.
-
->
->> We are wondering here if this problem is an indicator to data corruption
->on
->> disk ?
->
->It might be. You didn't run xfs_check or xfs_repair, so we don't know if
->there is any on disk corruption here.
->
->> is it really necessary to run xfs_repair ?
->
->If you want to know if you haven't left any landmines around for the
->filesystem to trip over again. i.e. You should run repair after any
->sort of XFS shutdown to make sure nothing is corrupted on disk.
->If nothing is corrupted on disk, then we are looking at an in-memory
->problem....
-we will run repair tonight.
-
->
->> Do u recommend that we switch back to reiserfs ?
->
->Not yet.
->
->> Could it be a hardware related problems  ?
->
->Yes. Do you have ECC memory on your server? Have you run memtest86?
->Were there any I/O errors in the log prior to the shutdown message?
-Yes, we have ECC memory.
-We will try to run memtest86 as soon as possible.
-There were no I/O errors in the log prior to the shutdown message.
-
-Btw, this is a vmware image. /vol/6 is an exported physical partition.
-
->Cheers,
->
->Dave.
->-- 
->Dave Chinner
->Principal Engineer
->SGI Australian Software Group
->
+> Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+> ---
+> 
+> --- xfsprogs-2.8.18-orgn/quota/quota.h	2006-12-13 13:57:23.000000000 +0900
+> +++ xfsprogs-2.8.18/quota/quota.h	2007-02-15 11:51:20.000000000 +0900
+> @@ -49,7 +49,7 @@ enum {
+>   */
+>  extern char *type_to_string(uint __type);
+>  extern char *form_to_string(uint __form);
+> -extern char *time_to_string(__uint32_t __time, uint __flags);
+> +extern char *time_to_string(time_t __time, uint __flags);
+>  extern char *bbs_to_string(__uint64_t __v, char *__c, uint __size);
+>  extern char *num_to_string(__uint64_t __v, char *__c, uint __size);
+>  extern char *pct_to_string(__uint64_t __v, __uint64_t __t, char *__c, uint __s);
+> 
+> 
+> --- xfsprogs-2.8.18-orgn/quota/util.c	2006-12-13 13:57:23.000000000 +0900
+> +++ xfsprogs-2.8.18/quota/util.c	2007-02-15 11:51:51.000000000 +0900
+> @@ -29,7 +29,7 @@
+>  
+>  char *
+>  time_to_string(
+> -	__uint32_t	origin,
+> +	time_t		origin,
+>  	uint		flags)
+>  {
+>  	static char	timestamp[32];
+> 
+> 
