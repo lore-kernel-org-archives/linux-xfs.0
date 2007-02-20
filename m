@@ -1,35 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 11:13:24 -0800 (PST)
-Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1KJDKm7005749
-	for <linux-xfs@oss.sgi.com>; Tue, 20 Feb 2007 11:13:21 -0800
-Received: from [72.21.53.38] (helo=jubjub.nabble.com)
-	by talk.nabble.com with esmtp (Exim 4.50)
-	id 1HJa9v-0002ZF-Tn
-	for linux-xfs@oss.sgi.com; Tue, 20 Feb 2007 10:56:15 -0800
-Message-ID: <9068053.post@talk.nabble.com>
-Date: Tue, 20 Feb 2007 10:56:15 -0800 (PST)
-From: pgf111000 <junkmail@petergfrazier.com>
-Subject: mkfs.xfs, lvm, multi-terrabyte hardware array and luks
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 11:34:39 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1KJYWm7008598
+	for <linux-xfs@oss.sgi.com>; Tue, 20 Feb 2007 11:34:34 -0800
+Message-ID: <45DB4CE1.3040302@sandeen.net>
+Date: Tue, 20 Feb 2007 13:32:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: mkfs.xfs, lvm, multi-terrabyte hardware array and luks
+References: <9068053.post@talk.nabble.com>
+In-Reply-To: <9068053.post@talk.nabble.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: pgf111000 <junkmail@petergfrazier.com>
+Cc: linux-xfs@oss.sgi.com
 
+pgf111000 wrote:
+> When I try to format partitions above 2-3gb my opteron experiences heavy io
+> wait; the mkfs.xfs fails, and I receive the following....
+> 
+>  "mkfs.xfs: libxfs_device_zero write failed: Input/output error"
+> 
+> When I format partions below 2-3gb, there is no problem whatsoever.  I can
+> mkfs.xfs on a +2-3GB non-luks formated partition without a problem... any
+> thoughts?
 
-When I try to format partitions above 2-3gb my opteron experiences heavy io
-wait; the mkfs.xfs fails, and I receive the following....
+Sounds like a LUKS problem, maybe it can't do those large offsets?  xfs
+certainly can...
 
- "mkfs.xfs: libxfs_device_zero write failed: Input/output error"
+I bet you'll find that the 2GB size is the threshold... xfs is just
+trying a write():
 
-When I format partions below 2-3gb, there is no problem whatsoever.  I can
-mkfs.xfs on a +2-3GB non-luks formated partition without a problem... any
-thoughts?
+        if ((bytes = write(fd, z, bytes)) < 0) {
+                fprintf(stderr, _("%s: %s write failed: %s\n"),
+                        progname, __FUNCTION__, strerror(errno));
 
+maybe try a simple dd write at the end of your large luks device, see
+how that goes.
 
--- 
-View this message in context: http://www.nabble.com/mkfs.xfs%2C-lvm%2C-multi-terrabyte-hardware-array-and-luks-tf3262532.html#a9068053
-Sent from the linux-xfs mailing list archive at Nabble.com.
+-Eric
