@@ -1,30 +1,107 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Feb 2007 15:42:42 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Feb 2007 19:31:32 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1JNgYm7024609
-	for <xfs@oss.sgi.com>; Mon, 19 Feb 2007 15:42:37 -0800
-Subject: TAKE 961289 - Clean up old LBS cruft in xfs-cmds root makefile
-Message-Id: <20070219234229.B9BA258CA547@chook.melbourne.sgi.com>
-Date: Tue, 20 Feb 2007 10:42:29 +1100 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1K3VNm7032103
+	for <xfs@oss.sgi.com>; Mon, 19 Feb 2007 19:31:25 -0800
+Date: Tue, 20 Feb 2007 14:31:58 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: lock checking feedback (bug?) 2.6.20(xfs)/i386 during boot
+Message-ID: <12954EC2E224B896D61E6A34@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <45D8C765.7080306@tlinx.org>
+References: <45D8C765.7080306@tlinx.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Linda Walsh <xfs@tlinx.org>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Remove old SGI build stuff from root makefile.
+Thanks for the report, Linda.
+This and other lockdep reports are on our todo/bug list
+and I've added this one.
+(Nathan looked at some of these lock related changes I believe and we still have
+ a pending patch of his to go thru)
 
+--Tim
 
-Date:  Tue Feb 20 10:41:45 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  hch@infradead.org
+--On 18 February 2007 1:38:45 PM -0800 Linda Walsh <xfs@tlinx.org> wrote:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:28135a
-GNUmakefile - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/GNUmakefile.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-	- Remove old SGI build stuff and set final RPM location from the environment.
+> Turned on lock testing/proving/deadlock detection.  Not chasing any particular
+> problem, but looking for things "oddities".
+>
+> Turned on options (under kernel hacking):
+>    Locking API boot-time self-tests
+>    RT Mutex debugging, deadlock detection
+>    Lock debugging: prove locking correctness
+>
+> Multiple reboots show it to be a constant.
+> I had tried the new "Asynchronous SCSI scanning" -- thought that might have been
+> related, but turning it off makes no difference.
+>
+> I'm guessing this "error" has been present before this, but the lock
+> proving algorithms are bringing it to light?  So I don't know how serious
+> this is (if it is anything), but at the least, it doesn't look too clean...
+>
+>
+> Maybe that
+> ....
+> SCSI device sda: write cache: enabled, read cache: enabled, supports DPO and FUA
+>  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
+> sd 0:0:0:0: Attached scsi disk sda
+> UDF-fs: No VRS found
+> XFS mounting filesystem sda3
+> Ending clean XFS mount for filesystem: sda3
+> VFS: Mounted root (xfs filesystem) readonly.
+> Freeing unused kernel memory: 316k freed
+>
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.20 #3
+> ---------------------------------------------
+> rm/682 is trying to acquire lock:
+>  (&(&ip->i_lock)->mr_lock){----}, at: [<b024068d>] xfs_ilock+0x7d/0xb0
+>
+> but task is already holding lock:
+>  (&(&ip->i_lock)->mr_lock){----}, at: [<b024068d>] xfs_ilock+0x7d/0xb0
+>
+> other info that might help us debug this:
+> 3 locks held by rm/682:
+>  #0:  (&inode->i_mutex/1){--..}, at: [<b016f946>] do_unlinkat+0x96/0x170
+>  #1:  (&inode->i_mutex){--..}, at: [<b016db9a>] vfs_unlink+0x5a/0xd0
+>  #2:  (&(&ip->i_lock)->mr_lock){----}, at: [<b024068d>] xfs_ilock+0x7d/0xb0
+>
+> stack backtrace:
+>  [<b013aaf1>] __lock_acquire+0xaf1/0xdf0
+>  [<b013ae47>] lock_acquire+0x57/0x70
+>  [<b024068d>] xfs_ilock+0x7d/0xb0
+>  [<b0135d7f>] down_write+0x2f/0x50
+>  [<b024068d>] xfs_ilock+0x7d/0xb0
+>  [<b024068d>] xfs_ilock+0x7d/0xb0
+>  [<b025ff2d>] xfs_lock_dir_and_entry+0xfd/0x100
+>  [<b0263c68>] xfs_remove+0x198/0x4e0
+>  [<b025fff6>] xfs_access+0x26/0x50
+>  [<b025fff6>] xfs_access+0x26/0x50
+>  [<b016db9a>] vfs_unlink+0x5a/0xd0
+>  [<b026d8f3>] xfs_vn_unlink+0x23/0x60
+>  [<b0417f72>] __mutex_lock_slowpath+0x152/0x2a0
+>  [<b01398bb>] mark_held_locks+0x6b/0x90
+>  [<b0417f72>] __mutex_lock_slowpath+0x152/0x2a0
+>  [<b0417f72>] __mutex_lock_slowpath+0x152/0x2a0
+>  [<b0139a67>] trace_hardirqs_on+0xc7/0x170
+>  [<b0417f65>] __mutex_lock_slowpath+0x145/0x2a0
+>  [<b016db9a>] vfs_unlink+0x5a/0xd0
+>  [<b016d077>] permission+0x137/0x140
+>  [<b016dbd0>] vfs_unlink+0x90/0xd0
+>  [<b016f983>] do_unlinkat+0xd3/0x170
+>  [<b0113807>] do_page_fault+0x327/0x630
+>  [<b0102fda>] sysenter_past_esp+0x5f/0x99
+>  =======================
+> XFS mounting filesystem sda1
+> Ending clean XFS mount for filesystem: sda1
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
