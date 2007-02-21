@@ -1,36 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 13:00:08 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1KL02m7025858
-	for <linux-xfs@oss.sgi.com>; Tue, 20 Feb 2007 13:00:03 -0800
-Message-ID: <45DB60E9.5040809@sandeen.net>
-Date: Tue, 20 Feb 2007 14:58:17 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 16:06:29 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1L06Mm7022159
+	for <xfs@oss.sgi.com>; Tue, 20 Feb 2007 16:06:24 -0800
+Date: Wed, 21 Feb 2007 11:07:01 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: xfsdump/xfsrestore question
+Message-ID: <80FFF742E8A3FFB101CF1455@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20070220142114.2B52C1C9C6@mail.edu.haifa.ac.il>
+References: <20070220142114.2B52C1C9C6@mail.edu.haifa.ac.il>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs.xfs, lvm, multi-terrabyte hardware array and luks
-References: <9068053.post@talk.nabble.com> <45DB4CE1.3040302@sandeen.net> <9069238.post@talk.nabble.com>
-In-Reply-To: <9069238.post@talk.nabble.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: pgf111000 <junkmail@petergfrazier.com>
-Cc: linux-xfs@oss.sgi.com
+To: Leon Kolchinsky <leonk@construct.haifa.ac.il>, xfs@oss.sgi.com
 
-pgf111000 wrote:
-> Thank you for the quick response.  I have posted on a few luks forums to try
-> to delve into this issue a little deeper; if they are aware of a resolution
-> I'll make sure to post it.  The interesting thing is that when I mkfs.ext3
-> on luks partitions above 2-3gb all is fine; I wish xfs and luks would play
-> nice.....
+Hi,
 
-mkfs.xfs actually does writes out at the end of the device and verifies
-them; I'm not sure ext3 is doing the same.  You may find yourself in
-trouble on ext3 post-mkfs (or you may not...)  I seem to recall that xfs
-has shaken out similar problems on other block devices for this reason.
+--On 20 February 2007 4:16:31 PM +0200 Leon Kolchinsky <leonk@construct.haifa.ac.il> wrote:
 
-I'd do some simple device-level read/write tests around 2GB just for
-fun, see how it goes.
+> Hello All,
+>
+> I have a question about xfsdump/xfsrestore usage on Linux.
+>
+> Now the questions:
+>
+> 1) If I get the xfsdump synax correctly I just have to do:
+>
+># cd /
+># xfsdump -f /data/backup.file /
+>
+> Is it right?
+> What about opened and "currently in use by the system" files? Are they
+> backuped in a proper way? What about tmpfs like /proc, are they been
+> ignored?
+>
 
--Eric
+Yes, the dump line looks reasonable (since /data is a different filesystem).
+As Justin mentioned the dump wants a couple of ids (session-id, media-id) which
+will be prompted for or you can specify then as command arguments.
+>From the file xfsdump/doc/README.xfsdump:
+  1. Dumping a filesystem to a dump file:
+     xfsdump -f dump_file -L session_label -M media_label file_system
+     e.g. xfsdump -f ./mydump -L 'session1' -M 'media1" /mnt/xfs0
+Yes it is meant to handle a changing filesystem - you do see warning msgs sometimes because
+it can't see a particular inode anymore, which can happen as we do multiple
+scans of the inodes and if they get deleted then it obviously can't do anything
+with it anymore or if the inode is reused as a dir instead of a reg-file etc...
+It won't dump out foreign filesystems mounted under / because it doesn't
+actually do a directory walk to dump data but actually iterates through
+all the inodes of the filesystem (using an xfs ioctl called bulkstat) (and
+for a directory inode it will just dump out the dirents).
+It won't dump out /var/lib/xfsdump which contains the dump inventory which is
+used for info for incremental dumps and resumed dumps.
+
+> 2) If I'd have to restore my system from the dump, how would you recommend
+> to do it? Booting from LiveCD and making # xfsrestore -f / data/backup.file
+> / ?
+>
+Booting from a filesystem other than the one your are restoring to - yes:)
+
+> Would it be a bootable/operational system?
+Should be.
+(Try it out:)
+
+--Tim
