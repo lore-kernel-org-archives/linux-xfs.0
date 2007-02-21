@@ -1,70 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 16:06:29 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l1L06Mm7022159
-	for <xfs@oss.sgi.com>; Tue, 20 Feb 2007 16:06:24 -0800
-Date: Wed, 21 Feb 2007 11:07:01 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: xfsdump/xfsrestore question
-Message-ID: <80FFF742E8A3FFB101CF1455@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <20070220142114.2B52C1C9C6@mail.edu.haifa.ac.il>
-References: <20070220142114.2B52C1C9C6@mail.edu.haifa.ac.il>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 Feb 2007 16:32:22 -0800 (PST)
+Received: from talk.nabble.com (www.nabble.com [72.21.53.35])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1L0WHm7031904
+	for <linux-xfs@oss.sgi.com>; Tue, 20 Feb 2007 16:32:18 -0800
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1HJfP7-00087L-5X
+	for linux-xfs@oss.sgi.com; Tue, 20 Feb 2007 16:32:17 -0800
+Message-ID: <9073464.post@talk.nabble.com>
+Date: Tue, 20 Feb 2007 16:32:17 -0800 (PST)
+From: pgf111000 <junkmail@petergfrazier.com>
+Subject: Re: [PATCH] mkfs.xfs, lvm, multi-terrabyte hardware array and luks
+In-Reply-To: <9069238.post@talk.nabble.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+References: <9068053.post@talk.nabble.com> <45DB4CE1.3040302@sandeen.net> <9069238.post@talk.nabble.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Leon Kolchinsky <leonk@construct.haifa.ac.il>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hi,
 
---On 20 February 2007 4:16:31 PM +0200 Leon Kolchinsky <leonk@construct.haifa.ac.il> wrote:
+Eric thanks for the help.  It seems that you are likely correct in regard to
+the LUKS 2gb threshold.  I am in the process of urandoming (via dd) a large
+[20gb] LUKS based ext3 partition to see if the writes fail while less than
+20gb... I haven't gotten the results yet... because it takes forever.  If
+this fails to fill the 20gb ext3 with random data then it would be fair to
+conclude that LUKS has a problem with large partitions [and ext3 has a
+problem verifying the underlying partition size], right?
 
-> Hello All,
->
-> I have a question about xfsdump/xfsrestore usage on Linux.
->
-> Now the questions:
->
-> 1) If I get the xfsdump synax correctly I just have to do:
->
-># cd /
-># xfsdump -f /data/backup.file /
->
-> Is it right?
-> What about opened and "currently in use by the system" files? Are they
-> backuped in a proper way? What about tmpfs like /proc, are they been
-> ignored?
->
+In the meantime I have executed a few trial and error tests (by creating
+various sized lv/LUKS partitions and then mkfs.xfs on them); the results
+overwhelming suggest that there is a 2gb xfs limitation on LUKS partitions
+(probably more politically correct to say it the other way around).  Besides
+relying on LUKS forums are there any other resources that you know of
+that/who would/could provide a quick solution?
 
-Yes, the dump line looks reasonable (since /data is a different filesystem).
-As Justin mentioned the dump wants a couple of ids (session-id, media-id) which
-will be prompted for or you can specify then as command arguments.
->From the file xfsdump/doc/README.xfsdump:
-  1. Dumping a filesystem to a dump file:
-     xfsdump -f dump_file -L session_label -M media_label file_system
-     e.g. xfsdump -f ./mydump -L 'session1' -M 'media1" /mnt/xfs0
-Yes it is meant to handle a changing filesystem - you do see warning msgs sometimes because
-it can't see a particular inode anymore, which can happen as we do multiple
-scans of the inodes and if they get deleted then it obviously can't do anything
-with it anymore or if the inode is reused as a dir instead of a reg-file etc...
-It won't dump out foreign filesystems mounted under / because it doesn't
-actually do a directory walk to dump data but actually iterates through
-all the inodes of the filesystem (using an xfs ioctl called bulkstat) (and
-for a directory inode it will just dump out the dirents).
-It won't dump out /var/lib/xfsdump which contains the dump inventory which is
-used for info for incremental dumps and resumed dumps.
+Is there anyway that lvm2 could be contributing to this problem?  Are there
+any mkfs.xfs commands that I must issue in this [lvm2/LUKS/Large hardware
+raid6 array] environment?  Are there certain properties that must remain
+congruent in regard to the raid array, the lvm2 environment, LUKS and/or
+XFS?
 
-> 2) If I'd have to restore my system from the dump, how would you recommend
-> to do it? Booting from LiveCD and making # xfsrestore -f / data/backup.file
-> / ?
->
-Booting from a filesystem other than the one your are restoring to - yes:)
+Again, thanks for your time and help.
 
-> Would it be a bootable/operational system?
-Should be.
-(Try it out:)
 
---Tim
+
+pgf111000 wrote:
+> 
+> Thank you for the quick response.  I have posted on a few luks forums to
+> try to delve into this issue a little deeper; if they are aware of a
+> resolution I'll make sure to post it.  The interesting thing is that when
+> I mkfs.ext3 on luks partitions above 2-3gb all is fine; I wish xfs and
+> luks would play nice.....
+> 
+> 
+> Eric Sandeen-3 wrote:
+>> 
+>> pgf111000 wrote:
+>>> When I try to format partitions above 2-3gb my opteron experiences heavy
+>>> io
+>>> wait; the mkfs.xfs fails, and I receive the following....
+>>> 
+>>>  "mkfs.xfs: libxfs_device_zero write failed: Input/output error"
+>>> 
+>>> When I format partions below 2-3gb, there is no problem whatsoever.  I
+>>> can
+>>> mkfs.xfs on a +2-3GB non-luks formated partition without a problem...
+>>> any
+>>> thoughts?
+>> 
+>> Sounds like a LUKS problem, maybe it can't do those large offsets?  xfs
+>> certainly can...
+>> 
+>> I bet you'll find that the 2GB size is the threshold... xfs is just
+>> trying a write():
+>> 
+>>         if ((bytes = write(fd, z, bytes)) < 0) {
+>>                 fprintf(stderr, _("%s: %s write failed: %s\n"),
+>>                         progname, __FUNCTION__, strerror(errno));
+>> 
+>> maybe try a simple dd write at the end of your large luks device, see
+>> how that goes.
+>> 
+>> -Eric
+>> 
+>> 
+>> 
+>> 
+> 
+> 
+
+-- 
+View this message in context: http://www.nabble.com/mkfs.xfs%2C-lvm%2C-multi-terrabyte-hardware-array-and-luks-tf3262532.html#a9073464
+Sent from the linux-xfs mailing list archive at Nabble.com.
