@@ -1,65 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Feb 2007 05:02:18 -0800 (PST)
-Received: from zeus.office.navi.pl (ip-83-238-212-180.netia.com.pl [83.238.212.180])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1MD2Bm7026734
-	for <xfs@oss.sgi.com>; Thu, 22 Feb 2007 05:02:12 -0800
-Subject: Re: xfsdump/xfsrestore question
-From: Olaf =?iso-8859-2?Q?Fr=B1czyk?= <olaf@cbk.poznan.pl>
-In-Reply-To: <80FFF742E8A3FFB101CF1455@timothy-shimmins-power-mac-g5.local>
-References: <20070220142114.2B52C1C9C6@mail.edu.haifa.ac.il>
-	 <80FFF742E8A3FFB101CF1455@timothy-shimmins-power-mac-g5.local>
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 22 Feb 2007 13:48:17 +0100
-Message-Id: <1172148497.4634.36.camel@venus.local.navi.pl>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Feb 2007 20:50:16 -0800 (PST)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1N4o8m7015649
+	for <xfs@oss.sgi.com>; Thu, 22 Feb 2007 20:50:09 -0800
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1N4S1qD009451
+	for <xfs@oss.sgi.com>; Fri, 23 Feb 2007 13:28:04 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.192])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1N4MdcU004301
+	for <xfs@oss.sgi.com>; Fri, 23 Feb 2007 13:22:39 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l1N4Md110319 for xfs@oss.sgi.com; Fri, 23 Feb 2007 13:22:39 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv5.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l1N4Mc229500 for <xfs@oss.sgi.com>; Fri, 23 Feb 2007 13:22:38 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070223.132238.46902096 for <xfs@oss.sgi.com>
+	; Fri, 23 Feb 2007 13:22:38 +0900
+Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
+	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id 8E7E1AE4B0
+	for <xfs@oss.sgi.com>; Fri, 23 Feb 2007 13:22:33 +0900 (JST)
+Received: from TNESG9700 (TNESG9700.bsd.tnes.nec.co.jp [10.1.104.115])
+	by rifu.bsd.tnes.nec.co.jp (8.12.11/3.7W/BSD-TNES-MX01) with SMTP id l1N4MbrZ021664
+	for <xfs@oss.sgi.com>; Fri, 23 Feb 2007 13:22:37 +0900
+Subject: [PATCH 1/2] Fix failure of switch on group quota enforcement
+Message-Id: <20070223132239k-ooizumi@rifu.bsd.tnes.nec.co.jp>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Kouta Ooizumi <k-ooizumi@tnes.nec.co.jp>
+Date: Fri, 23 Feb 2007 13:22:39 +0900
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Leon Kolchinsky <leonk@construct.haifa.ac.il>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 2007-02-21 at 11:07 +1100, Timothy Shimmin wrote:
-> Hi,
-> 
-> --On 20 February 2007 4:16:31 PM +0200 Leon Kolchinsky <leonk@construct.haifa.ac.il> wrote:
-> 
-> > Hello All,
-> >
-> > I have a question about xfsdump/xfsrestore usage on Linux.
-> >
-> > Now the questions:
-> >
-> > 1) If I get the xfsdump synax correctly I just have to do:
-> >
-> ># cd /
-> ># xfsdump -f /data/backup.file /
-> >
-> > Is it right?
-> > What about opened and "currently in use by the system" files? Are they
-> > backuped in a proper way? What about tmpfs like /proc, are they been
-> > ignored?
-> >
-(...)
-> Yes it is meant to handle a changing filesystem - you do see warning msgs sometimes because
-> it can't see a particular inode anymore, which can happen as we do multiple
-> scans of the inodes and if they get deleted then it obviously can't do anything
-> with it anymore or if the inode is reused as a dir instead of a reg-file etc...
-Hmm,
-I suppose he asked about something else:
-Unless you use lvm snapshots (or something alike) you may get incorrect
-files that are in use. Consider having 20GB file:
-1. Dump starts reading the file
-2. Dump is at 18th GB
-3. You change the data in 1-5 GB region.
-4. You have inconsistent data.
+Hi!
 
-So after dump you get consistent filesystem but not necessairly
-consistent data.
+I found that "quotaon -g /mnt" fails to switch on group quota enforcement.
 
-Regards,
+Example:
+# mount -t xfs -o gqnoenforce /dev/sda6 /mnt/xfs
 
-Olaf
+# quotaon -g /mnt/xfs
+Enabling group quota accounting on /dev/sda6
+quotaon: quotactl on /dev/sda6: Invalid argument
 
--- 
-Olaf Frączyk <olaf@cbk.poznan.pl>
+The problem is the following:
+
+  fs/xfs/quota/xfs_qm_syscalls.c  455L
+        if (((flags & XFS_UQUOTA_ACCT) == 0 &&
+            (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
+            (flags & XFS_UQUOTA_ENFD))
+            ||
+            ((flags & XFS_PQUOTA_ACCT) == 0 &&                    **
+            (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&        **
+            (flags & XFS_OQUOTA_ENFD))                            **
+            ||                                                    **
+            ((flags & XFS_GQUOTA_ACCT) == 0 &&                    **
+            (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&        **
+            (flags & XFS_OQUOTA_ENFD))) {                         **
+                qdprintk("Can't enforce without acct, flags=%x sbflags=%x\n",
+                        flags, mp->m_sb.sb_qflags);
+                return XFS_ERROR(EINVAL);
+        }
+
+
+XFS_PQUOTA_ACCT and XFS_GQUOTA_ACCT cannot be enabled at the same time.
+But this if-statement is not considered it.
+
+Here is the patch.
+
+
+Signed-off-by: Kouta Ooizumi <k-ooizumi@tnes.nec.co.jp>
+
+
+--- linux-2.6.20/fs/xfs/quota/xfs_qm_syscalls.c.orig	2007-02-20 15:41:58.000000000 +0900
++++ linux-2.6.20/fs/xfs/quota/xfs_qm_syscalls.c	2007-02-20 15:43:49.000000000 +0900
+@@ -458,9 +458,7 @@ xfs_qm_scall_quotaon(
+ 	    ||
+ 	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+ 	    (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+-	    (flags & XFS_OQUOTA_ENFD))
+-	    ||
+-	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
++	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+ 	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+ 	    (flags & XFS_OQUOTA_ENFD))) {
+ 		qdprintk("Can't enforce without acct, flags=%x sbflags=%x\n",
