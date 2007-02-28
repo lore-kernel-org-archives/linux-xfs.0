@@ -1,51 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Feb 2007 11:10:20 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1QJAFm7015358
-	for <xfs@oss.sgi.com>; Mon, 26 Feb 2007 11:10:16 -0800
-Message-ID: <45E32FE0.4070204@sandeen.net>
-Date: Mon, 26 Feb 2007 13:07:12 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Feb 2007 23:43:18 -0800 (PST)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1S7hC6p018433
+	for <xfs@oss.sgi.com>; Tue, 27 Feb 2007 23:43:13 -0800
+Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1S7h0tP000601
+	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:43:11 +0900 (JST)
+Received: from mailgate4.nec.co.jp (mailgate53.nec.co.jp [10.7.69.184])
+	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1S7XYGG004155
+	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:34 +0900 (JST)
+Received: (from root@localhost) by mailgate4.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l1S7XXZ20581 for xfs@oss.sgi.com; Wed, 28 Feb 2007 16:33:33 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l1S7XXL06601 for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:33 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070228.153316.92101888 for <xfs@oss.sgi.com>
+	; Wed, 28 Feb 2007 15:33:17 +0900
+Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
+	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id 6A238AE4B0
+	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:29 +0900 (JST)
+Received: from TNESG9305.tnes.nec.co.jp (TNESG9305.bsd.tnes.nec.co.jp [10.1.104.199])
+	by rifu.bsd.tnes.nec.co.jp (8.12.11/3.7W/BSD-TNES-MX01) with SMTP id l1S7XWII002421
+	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:32 +0900
+Message-Id: <200702280733.AA05017@TNESG9305.tnes.nec.co.jp>
+Date: Wed, 28 Feb 2007 16:33:17 +0900
+Subject: [PATCH] repquota does't report correct space usage
+From: Utako Kusaka <utako@tnes.nec.co.jp>
 MIME-Version: 1.0
-Subject: Re: 8.2TB->16.4TB xfs_growfs problem
-References: <Pine.OSX.4.64.0702261301250.1185@powerbook.localdomain>
-In-Reply-To: <Pine.OSX.4.64.0702261301250.1185@powerbook.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgixfs@foxengines.net
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-XFS User wrote:
-> Hello,
-> 
-> I am experiencing a problem that I'm not sure how to resolve. I do not see
-> this in the FAQ, nor have I found it in Bugzilla or the mailing lists, 
-> (they both seemed to be having search problems last week which prevented 
-> me from using them, I used Google to search into the site so I might've missed 
-> something).
-> 
-> In summary, I have an 8.2TB filesystem on an 16.4TB LVM2 volume on a
-> Linux 2.6.18 x86_64 with 4GB RAM.
-> If I issue the 'xfs_growfs /mounted_volume' command, the command will
-> complete without printing any errors and the command exits on 0.
-> 
-> I can umount, then mount again, see the new 16TB volume.
-> 
-> If for any reason, I run xfs_repair, all changes will be lost and the
-> filesystem size will revert to it's original size (e.g it'll shrink
-> back down to 8.2TB).
+Hi,
 
-There have been userspace & kernelspace fixes to growfs lately...
+repquota may report incorrect space usage when the filesystem is mounted
+repeatedly with different quota options.
+The cause of the problem is that xfs_qm_quotacheck() is not called because
+the `CHKD' flag in mp->m_qflags is not cleared until it is mounted with 
+no quota option. This patch fixes it.
 
-TAKE 959492 - xfs_growfs should return an error on failure
-http://oss.sgi.com/archives/xfs/2006-12/msg00224.html
+Test case:
+mkfs.xfs -f /dev/sda6
 
-TAKE 959978 - growing an XFS filesystem by more than 2TB is broken
-http://oss.sgi.com/archives/xfs/2007-01/msg00082.html
+mount -t xfs -o usrquota,grpquota /dev/sda6 mpnt/
+setquota -u utako 3000 4000 0 0 /dev/sda6
+setquota -u xfs 1500 2000 0 0 /dev/sda6
+setquota -g users 1000 1500 0 0 /dev/sda6
+repquota -ugv -a
+umount mpnt/
 
-I'd make sure you have those fixes, first.
+mount -t xfs -o usrquota /dev/sda6 mpnt/
+xfs_mkfile 3m mpnt/file1
+xfs_mkfile 1m mpnt/file2
+chown utako mpnt/file1
+chown xfs mpnt/file2
+chgrp users mpnt/file*
+repquota -ugv -a
+umount mpnt/
 
--Eric
+mount -t xfs -o grpquota /dev/sda6 mpnt/
+repquota -ugv -a
+rm mpnt/file1
+repquota -ugv -a
+
+Result:
+*** Report for group quotas on device /dev/sda6
+Block grace time: 7days; Inode grace time: 7days
+                        Block limits                File limits
+Group           used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+root      --       0       0       0              3     0     0
+users     +- 18014398509478912    1000    1500  7days 18446744073709551615     0     0
+
+*** Status for group quotas on device /dev/sda6
+Accounting: ON; Enforcement: ON
+Inode: #132 (2 blocks, 2 extents)
+
+
+Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+---
+
+--- linux-2.6.20-orgn/fs/xfs/quota/xfs_qm.c.orgn        2007-02-22 17:30:07.000000000 +0900
++++ linux-2.6.20/fs/xfs/xfs_qm.c        2007-02-22 17:30:58.000000000 +0900
+@@ -1175,8 +1175,6 @@ xfs_qm_init_quotainfo(
+        qinf->qi_dqperchunk = BBTOB(qinf->qi_dqchunklen);
+        do_div(qinf->qi_dqperchunk, sizeof(xfs_dqblk_t));
+
+-       mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+-
+        /*
+         * We try to get the limits from the superuser's limits fields.
+         * This is quite hacky, but it is standard quota practice.
