@@ -1,96 +1,123 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Feb 2007 23:43:18 -0800 (PST)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l1S7hC6p018433
-	for <xfs@oss.sgi.com>; Tue, 27 Feb 2007 23:43:13 -0800
-Received: from tyo201.gate.nec.co.jp ([10.7.69.201])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1S7h0tP000601
-	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:43:11 +0900 (JST)
-Received: from mailgate4.nec.co.jp (mailgate53.nec.co.jp [10.7.69.184])
-	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l1S7XYGG004155
-	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:34 +0900 (JST)
-Received: (from root@localhost) by mailgate4.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l1S7XXZ20581 for xfs@oss.sgi.com; Wed, 28 Feb 2007 16:33:33 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l1S7XXL06601 for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:33 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070228.153316.92101888 for <xfs@oss.sgi.com>
-	; Wed, 28 Feb 2007 15:33:17 +0900
-Received: from rifu.bsd.tnes.nec.co.jp (rifu.bsd.tnes.nec.co.jp [10.1.104.1])
-	by tnessv1.tnes.nec.co.jp (Postfix) with ESMTP id 6A238AE4B0
-	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:29 +0900 (JST)
-Received: from TNESG9305.tnes.nec.co.jp (TNESG9305.bsd.tnes.nec.co.jp [10.1.104.199])
-	by rifu.bsd.tnes.nec.co.jp (8.12.11/3.7W/BSD-TNES-MX01) with SMTP id l1S7XWII002421
-	for <xfs@oss.sgi.com>; Wed, 28 Feb 2007 16:33:32 +0900
-Message-Id: <200702280733.AA05017@TNESG9305.tnes.nec.co.jp>
-Date: Wed, 28 Feb 2007 16:33:17 +0900
-Subject: [PATCH] repquota does't report correct space usage
-From: Utako Kusaka <utako@tnes.nec.co.jp>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Mar 2007 08:16:53 -0800 (PST)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.225])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l21GGj6p017391
+	for <xfs@oss.sgi.com>; Thu, 1 Mar 2007 08:16:46 -0800
+Received: by nz-out-0506.google.com with SMTP id m22so431561nzf
+        for <xfs@oss.sgi.com>; Thu, 01 Mar 2007 08:16:45 -0800 (PST)
+Message-ID: <29a617af0703010748g51ef81b1x9c0467602d09793@mail.gmail.com>
+Date: Thu, 1 Mar 2007 16:48:41 +0100
+From: "M Kili" <m0kili@gmail.com>
+Subject: can't mount xfs partition
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hi,
+Background:
 
-repquota may report incorrect space usage when the filesystem is mounted
-repeatedly with different quota options.
-The cause of the problem is that xfs_qm_quotacheck() is not called because
-the `CHKD' flag in mp->m_qflags is not cleared until it is mounted with 
-no quota option. This patch fixes it.
+Windows XP installation overwrote the MBR with broken partition
+layout. I used gpart to figure out the partition table. Primary
+partitions were detected correctly and can be mounted, unfortunately
+all important data are in logical partitions, most of which are XFS.
+The beginings of the partitions were found, but the ends might be a
+little off, I don't know.
 
-Test case:
-mkfs.xfs -f /dev/sda6
+If I try to mount any of the XFS partitions, I get this message:
 
-mount -t xfs -o usrquota,grpquota /dev/sda6 mpnt/
-setquota -u utako 3000 4000 0 0 /dev/sda6
-setquota -u xfs 1500 2000 0 0 /dev/sda6
-setquota -g users 1000 1500 0 0 /dev/sda6
-repquota -ugv -a
-umount mpnt/
+mount: /dev/hda5: can't read superblock
 
-mount -t xfs -o usrquota /dev/sda6 mpnt/
-xfs_mkfile 3m mpnt/file1
-xfs_mkfile 1m mpnt/file2
-chown utako mpnt/file1
-chown xfs mpnt/file2
-chgrp users mpnt/file*
-repquota -ugv -a
-umount mpnt/
+I dded this partition to a file and run xfs_repair with this result:
 
-mount -t xfs -o grpquota /dev/sda6 mpnt/
-repquota -ugv -a
-rm mpnt/file1
-repquota -ugv -a
+# xfs_repair -f hda5.img
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - clear lost+found (if it exists) ...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - ensuring existence of lost+found directory
+        - traversing filesystem starting at / ...
+        - traversal finished ...
+        - traversing all unattached subtrees ...
+        - traversals finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+------------------------------------------------
 
-Result:
-*** Report for group quotas on device /dev/sda6
-Block grace time: 7days; Inode grace time: 7days
-                        Block limits                File limits
-Group           used    soft    hard  grace    used  soft  hard  grace
-----------------------------------------------------------------------
-root      --       0       0       0              3     0     0
-users     +- 18014398509478912    1000    1500  7days 18446744073709551615     0     0
+xfs_check doesn't give any message, and still, the image can't be
+mounted, with the same error:
+# mount -o loop hda5.img /mnt/
+mount: /dev/loop0: can't read superblock
 
-*** Status for group quotas on device /dev/sda6
-Accounting: ON; Enforcement: ON
-Inode: #132 (2 blocks, 2 extents)
+Output of fdisk print partition table (5, 6, 7, and 9 are XFS):
 
+Disk /dev/hda: 320.0 GB, 320072933376 bytes
+86 heads, 15 sectors/track, 484606 cylinders, total 625142448 sectors
+Units = sectors of 1 * 512 = 512 bytes
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1              63    37752742    18876340   83  Linux
+/dev/hda2        37752750    37833073       40162   83  Linux
+/dev/hda3        37833075    48323504     5245215   83  Linux
+/dev/hda4        48323505   625142447   288409471+   5  Extended
+/dev/hda5        48323521    87389120    19532800   83  Linux
+/dev/hda6        87409666   560228673   236409504   83  Linux
+/dev/hda7       560459656   581660935    10600640   83  Linux
+/dev/hda8       581681521   582741795      530137+  82  Linux swap / Solaris
+/dev/hda9       582741811   625116634    21187412   83  Linux
 
---- linux-2.6.20-orgn/fs/xfs/quota/xfs_qm.c.orgn        2007-02-22 17:30:07.000000000 +0900
-+++ linux-2.6.20/fs/xfs/xfs_qm.c        2007-02-22 17:30:58.000000000 +0900
-@@ -1175,8 +1175,6 @@ xfs_qm_init_quotainfo(
-        qinf->qi_dqperchunk = BBTOB(qinf->qi_dqchunklen);
-        do_div(qinf->qi_dqperchunk, sizeof(xfs_dqblk_t));
+Is there any help?
 
--       mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
--
-        /*
-         * We try to get the limits from the superuser's limits fields.
-         * This is quite hacky, but it is standard quota practice.
+Another question: I'm running now on one older hd, however, it has
+some read errors. Is it possible to use the already discovered
+
+Thanks, Marek
