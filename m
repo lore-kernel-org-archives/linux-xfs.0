@@ -1,42 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Mar 2007 10:10:17 -0800 (PST)
-Received: from lab41.emea.sgi.com (lab41.emea.sgi.com [144.253.75.41])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l22IAC6p021194
-	for <xfs@oss.sgi.com>; Fri, 2 Mar 2007 10:10:14 -0800
-Subject: TAKE 961695 - remove more misc. unused args
-Message-Id: <20070302182906.43F8D52AEA@lab41.emea.sgi.com>
-Date: Fri,  2 Mar 2007 18:29:06 +0000 (GMT)
-From: lachlan@lab41.emea.sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 Mar 2007 22:18:37 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l256IT6p022537
+	for <xfs@oss.sgi.com>; Sun, 4 Mar 2007 22:18:31 -0800
+Message-ID: <45EBB613.5040803@sgi.com>
+Date: Mon, 05 Mar 2007 17:17:55 +1100
+From: Donald Douwsma <donaldd@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] repquota doesn't report correct space usage #2
+References: <45E76138.2020202@sgi.com> <200703020634.AA05027@TNESG9305.tnes.nec.co.jp>
+In-Reply-To: <200703020634.AA05027@TNESG9305.tnes.nec.co.jp>
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Utako Kusaka <utako@tnes.nec.co.jp>
+Cc: xfs@oss.sgi.com
 
-remove more misc. unused args
+Hi Utako,
 
-Patch provided by Eric Sandeen.
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+That's closer to what I was thinking of but I'd prefer to do the
+manipulation separate to init. Putting it in xfs_qm_mount_quotas()
+minimizes the number of places changes are made to the superblock.
 
-
-
-
-Date:  Sat Mar  3 04:58:03 AEDT 2007
-Workarea:  vpn-emea-sw-emea-160-1.emea.sgi.com:/home/lachlan/isms/2.6.x-xfs
-Inspected by:  
-lachlan
-sandeen@sandeen.net
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+We dont need to worry about group/project differences as a
+quotacheck is forced by XFS_QM_NEED_QUOTACHECK() if there are
+incompatibilities.
 
 
-Modid:  xfs-linux-melb:xfs-kern:28205a
-fs/xfs/xfs_vnodeops.c - 1.691 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.691&r2=text&tr2=1.690&f=h
-fs/xfs/xfs_log_recover.c - 1.317 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.317&r2=text&tr2=1.316&f=h
-fs/xfs/xfs_bmap.c - 1.366 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.366&r2=text&tr2=1.365&f=h
-	- remove more misc. unused args
-	  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Donald Douwsma <donaldd@sgi.com>
+
+--- a/fs/xfs/quota/xfs_qm.c     2007-03-05 16:50:11.000000000 +1100
++++ b/fs/xfs/quota/xfs_qm.c     2007-03-05 15:36:12.000000000 +1100
+@@ -388,6 +388,17 @@ xfs_qm_mount_quotas(
+                        return XFS_ERROR(error);
+                }
+        }
++	/*
++	 * If one type of quotas is off, then it will lose its
++	 * quotachecked status, since we won't be doing accounting for
++	 * that type anymore.
++	 */
++	if (!XFS_IS_UQUOTA_ON(mp)) {
++		mp->m_qflags &= ~XFS_UQUOTA_CHKD;
++	}
++	if (!(XFS_IS_GQUOTA_ON(mp) || XFS_IS_PQUOTA_ON(mp))) {
++		mp->m_qflags &= ~XFS_OQUOTA_CHKD;
++	}
+
+  write_changes:
+        /*
+
+
+Utako Kusaka wrote:
+> Hi,
+> 
+> This new patch skips the quota check when the filesystem is mounted
+> with the same quota option. 
+> 
+> Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+> ---
+> 
+> --- fs/xfs/quota/xfs_qm.c.orgn	2007-02-22 17:30:07.000000000 +0900
+> +++ fs/xfs/quota/xfs_qm.c	2007-03-02 15:01:44.000000000 +0900
+> @@ -1175,7 +1175,12 @@ xfs_qm_init_quotainfo(
+>  	qinf->qi_dqperchunk = BBTOB(qinf->qi_dqchunklen);
+>  	do_div(qinf->qi_dqperchunk, sizeof(xfs_dqblk_t));
+>  
+> -	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+> +	if (XFS_IS_UQUOTA_ON(mp) && (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT))
+> +		mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD);
+> +	if (XFS_IS_GQUOTA_ON(mp) && (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))
+> +		mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
+> +	if (XFS_IS_PQUOTA_ON(mp) && (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT))
+> +		mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
+>  
+>  	/*
+>  	 * We try to get the limits from the superuser's limits fields.
