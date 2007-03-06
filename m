@@ -1,39 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 Mar 2007 18:09:43 -0800 (PST)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2629a6p026087
-	for <xfs@oss.sgi.com>; Mon, 5 Mar 2007 18:09:37 -0800
-Subject: Re: Spanish and Galician translation
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <45EC7F67.3050308@mundo-r.com>
-References: <45EC7F67.3050308@mundo-r.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Mar 2007 03:10:50 -0800 (PST)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.173])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l26BAh6p018947
+	for <linux-xfs@oss.sgi.com>; Tue, 6 Mar 2007 03:10:45 -0800
+Received: by ug-out-1314.google.com with SMTP id a2so138217ugf
+        for <linux-xfs@oss.sgi.com>; Tue, 06 Mar 2007 03:10:43 -0800 (PST)
+Message-ID: <5d96567b0703060214n45838ceh9375545613a1557c@mail.gmail.com>
+Date: Tue, 6 Mar 2007 12:14:47 +0200
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: xfs_repair and extents size
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 06 Mar 2007 23:06:24 +1100
-Message-Id: <1173182784.5051.7.camel@edge>
-Mime-Version: 1.0
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Antonio Trueba <atrueba@mundo-r.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, 2007-03-05 at 21:36 +0100, Antonio Trueba wrote:
-> Hello,
-> 
-> I'd like to know if someone is already translating XFS to Spanish (es) 
-> or Galician (gl). If not, I'd like to do both myself.
+Hello.
+I am having some problems with extents sizes and xfs_repair.
+Problem is that my files and directories are not real time files
+and i am setting the extent size to 1MB. I have managed to
+set the extent size to 1M by setting parent directory extent
+to 1M and setting the inherit flag on.
+But if I am running xfs_repair all extents on all directories in
+the file system are being reset to zero.
+I am using last xfsprogs 2.8.18 downloaded from sgi web
+site.
 
-Go for it, noone else if working on those AFAIK.  You should probably
-rebuild the translation database ("cd xfsprogs/po && make xfsprogs.pot"
-IIRC) first, its probably not been updated in awhile, and there's new
-strings in xfs_repair at least.
-
-Let me know if theres any issues getting it working - I know a little
-bit about the build system in this area, so can help.
-
-cheers.
-
+thank you
 -- 
-Nathan
+Raz
+
+
+[[HTML alternate version deleted]]
