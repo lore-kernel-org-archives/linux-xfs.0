@@ -1,41 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Mar 2007 04:40:40 -0800 (PST)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l27CeZ6p011221
-	for <xfs@oss.sgi.com>; Wed, 7 Mar 2007 04:40:36 -0800
-Date: Wed, 7 Mar 2007 13:38:24 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] xfs: stop using kmalloc in xfs_buf_get_noaddr
-Message-ID: <20070307123824.GA3996@lst.de>
-References: <20070307101324.GC30587@lst.de> <45EEACA0.4050206@agami.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45EEACA0.4050206@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Mar 2007 06:34:59 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l27EYq6p009623
+	for <xfs@oss.sgi.com>; Wed, 7 Mar 2007 06:34:53 -0800
+Message-ID: <45EECD8A.7000503@sandeen.net>
+Date: Wed, 07 Mar 2007 08:34:50 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] get rid of fname[] for tracing functions
+References: <45EE2EF3.8090707@sandeen.net> <20070307082753.GA5469@infradead.org>
+In-Reply-To: <20070307082753.GA5469@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Shailendra Tripathi <stripathi@agami.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Mar 07, 2007 at 05:44:24PM +0530, Shailendra Tripathi wrote:
-> Hi Christoph,
-> 	     Did you do some testing for recovery when end of the physical 
-> 	     log is seen ?
+Christoph Hellwig wrote:
+>> the vn tracing could probably get a similar treatment, so that every 
+>> call to vn_trace_foo wouldn't have to include a function name and a 
+>> __builtin_return_address, but could be done via macros... it's currently 
+>> a mishmash of __FUNCTION__ and "function" *shrug* what do you think?
+> 
+> It should probably use __FUNCTION__ and hide use of both __FUNCTION__
+> and __builtin_return_address behind a macro.
+> 
 
-I ran xfsqa over it, which should catch this case.
+Yep, that's exactly what I meant, I've started a patch to do that too.
 
-> 	     When you will be dealing with striped ICLOG buffers or big 
-> 	     sized ICLOGs, header size might range from 512 to 2k. Also, this header 
-> might be split into 2 parts at the end of physical log. Then, you don't 
-> have page size buffer. Please verify that XFS_BUF_SETP_PTRs work correctly 
-> for those cases.
-> 	 Same thing is true when data section is split around physical log. 
-> 	 You can get one part which is not PAGE sized. 	
-
-I should have made my wording more clear, we always do PAGE_SIZE +
-buffer allocations.  After XFS_BUF_SETP_PTR the actually used buffer
-might be smaller.  I tested XFS_BUF_SETP_PTR manually with
-artifical test code aswell, and made sure it still works.
-Long term I have a plan to replace XFS_BUF_SETP_PTR with better
-schemes, but that's irrelevant for this patch.
+-Eric
