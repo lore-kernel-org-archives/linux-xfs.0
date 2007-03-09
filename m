@@ -1,131 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 09 Mar 2007 03:55:29 -0800 (PST)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l29BtJ6p003153
-	for <xfs@oss.sgi.com>; Fri, 9 Mar 2007 03:55:22 -0800
-Date: Fri, 9 Mar 2007 12:55:11 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] xfs: stop using kmalloc in xfs_buf_get_noaddr
-Message-ID: <20070309115511.GA20426@lst.de>
-References: <20070307101324.GC30587@lst.de>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 09 Mar 2007 07:34:00 -0800 (PST)
+Received: from youju.siksai.co.uk (youju.siksai.co.uk [87.127.14.180])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l29FXs6p024336
+	for <xfs@oss.sgi.com>; Fri, 9 Mar 2007 07:33:56 -0800
+Received: from xiao.siksai.co.uk ([87.127.14.179] ident=rhowe)
+	by youju.siksai.co.uk with smtp (Exim 4.50)
+	id 1HPgSY-0005BH-QQ
+	for xfs@oss.sgi.com; Fri, 09 Mar 2007 14:52:52 +0000
+From: "Russell Howe" <rhowe@siksai.co.uk>
+Date: Fri, 9 Mar 2007 14:54:01 +0000
+Subject: Andrew Morton talking about filesystems at FOSDEM 2007
+Message-ID: <20070309145400.GA23808@xiao.rsnet>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070307101324.GC30587@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org
-Cc: linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Ed Cashin found a bug in the error handling code for the case where
-a page allocation fails.  Here's the updated version:
+Just thought this might be of interest to some folks on the list - akpm
+gave a talk at FOSDEM about the kernel and various bits & pieces and
+someone asked about filesystems during the Q&A session.
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2007-03-08 19:08:38.000000000 +0100
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2007-03-09 08:59:15.000000000 +0100
-@@ -314,7 +314,7 @@
- 
- 	ASSERT(list_empty(&bp->b_hash_list));
- 
--	if (bp->b_flags & _XBF_PAGE_CACHE) {
-+	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
- 		uint		i;
- 
- 		if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1))
-@@ -323,18 +323,11 @@
- 		for (i = 0; i < bp->b_page_count; i++) {
- 			struct page	*page = bp->b_pages[i];
- 
--			ASSERT(!PagePrivate(page));
-+			if (bp->b_flags & _XBF_PAGE_CACHE)
-+				ASSERT(!PagePrivate(page));
- 			page_cache_release(page);
- 		}
- 		_xfs_buf_free_pages(bp);
--	} else if (bp->b_flags & _XBF_KMEM_ALLOC) {
--		 /*
--		  * XXX(hch): bp->b_count_desired might be incorrect (see
--		  * xfs_buf_associate_memory for details), but fortunately
--		  * the Linux version of kmem_free ignores the len argument..
--		  */
--		kmem_free(bp->b_addr, bp->b_count_desired);
--		_xfs_buf_free_pages(bp);
- 	}
- 
- 	xfs_buf_deallocate(bp);
-@@ -764,41 +757,41 @@
- 	size_t			len,
- 	xfs_buftarg_t		*target)
- {
--	size_t			malloc_len = len;
-+	unsigned long		page_count = PAGE_ALIGN(len) >> PAGE_SHIFT;
-+	int			error, i;
- 	xfs_buf_t		*bp;
--	void			*data;
--	int			error;
- 
- 	bp = xfs_buf_allocate(0);
- 	if (unlikely(bp == NULL))
- 		goto fail;
- 	_xfs_buf_initialize(bp, target, 0, len, 0);
- 
-- try_again:
--	data = kmem_alloc(malloc_len, KM_SLEEP | KM_MAYFAIL | KM_LARGE);
--	if (unlikely(data == NULL))
-+	error = _xfs_buf_get_pages(bp, page_count, 0);
-+	if (error)
- 		goto fail_free_buf;
- 
--	/* check whether alignment matches.. */
--	if ((__psunsigned_t)data !=
--	    ((__psunsigned_t)data & ~target->bt_smask)) {
--		/* .. else double the size and try again */
--		kmem_free(data, malloc_len);
--		malloc_len <<= 1;
--		goto try_again;
--	}
--
--	error = xfs_buf_associate_memory(bp, data, len);
--	if (error)
-+	for (i = 0; i < page_count; i++) {
-+		bp->b_pages[i] = alloc_page(GFP_KERNEL);
-+		if (!bp->b_pages[i])
-+			goto fail_free_mem;
-+	}
-+	bp->b_flags |= _XBF_PAGES;
-+
-+	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
-+	if (unlikely(error)) {
-+		printk(KERN_WARNING "%s: failed to map pages\n",
-+				__FUNCTION__);
- 		goto fail_free_mem;
--	bp->b_flags |= _XBF_KMEM_ALLOC;
-+	}
- 
- 	xfs_buf_unlock(bp);
- 
- 	XB_TRACE(bp, "no_daddr", data);
- 	return bp;
-+
-  fail_free_mem:
--	kmem_free(data, malloc_len);
-+ 	for ( ; i >= 0; i--)
-+		__free_page(bp->b_pages[i]);
-  fail_free_buf:
- 	xfs_buf_free(bp);
-  fail:
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.h	2007-03-08 19:08:38.000000000 +0100
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.h	2007-03-09 08:58:50.000000000 +0100
-@@ -63,7 +63,7 @@
- 
- 	/* flags used only internally */
- 	_XBF_PAGE_CACHE = (1 << 17),/* backed by pagecache		   */
--	_XBF_KMEM_ALLOC = (1 << 18),/* backed by kmem_alloc()		   */
-+	_XBF_PAGES = (1 << 18),	    /* backed by refcounted pages	   */
- 	_XBF_RUN_QUEUES = (1 << 19),/* run block device task queue	   */
- 	_XBF_DELWRI_Q = (1 << 21),   /* buffer on delwri queue		   */
- } xfs_buf_flags_t;
+Full video available from http://www.fosdem.org/2007/media/video
+
+"Hi. Um, earlier you were a little bit scathing about ext4. Um, what are the
+alternatives? Hans Reiser doesn't appear to be at FOSDEM this year. Is ZFS
+likely to get merged in, or are there any other possibilities there and what
+sucks about ext4? What don't you like?"
+
+"Sorry, which filesystems did you mention?"
+
+"ext4?"
+
+"Yep, I thought you mentioned some other filesystems"
+
+"Oh, ZFS, the Sun..."
+
+"ZFS? Well, um I've yet to see the patch [chuckles]. I'm not aware of any
+Sun-supported effort to do that. ext3? Well, I've worked on ext3 for so long
+I'm kinda sick of it I guess. It doesn't perform very well. The way in which it
+journals is a little bit klunky, and there are many things I'd like to do to it
+but simply do not have time to. So I think the block based journalling probably
+wasn't the right way to do it. It was a good way to get a journalling
+filesystem that was compatible with ext2 but I think logical journalling is
+probably / would have been a smarter approach to take. Also, the performance of
+ext3 is not great. Occasionally when I get time I'll get down and run some
+benchmarks against XFS and I just scratch my head and I just do not know how
+XFS does some of the things it does. Particularly with respect to file layout,
+it is astonishingly good. But unfortunately with XFS the codebase is so complex
+we're not / really vendors are not supporting it, so erm in some ways that's
+just [??] so few people understand XFS internals, one of the attractive things
+about ext3 and ext4 is that so many different companies have engineers working
+on it. So erm given we got this excellent performance but very complicated
+codebase which few people understand and on the other side we've got one which
+doesn't perform so well but a lot of people understand it seems the decision's
+been taken to evolve the slower but well understood one. It could be JFS is a
+good filesystem now as well. JFS had reputational problems in the first couple
+of years when it tended to crash a lot. That may not be the case any more but
+I'm just not aware of anybody who's using JFS much any more. But I'd imagine
+xfs... ext4 should be getting as good as XFS on file layout by the end of the
+year. How it'll compare on the benchmarks I don't know yet."
+
+[question indistinct] "... shadow copying, things like that?"
+
+"Nope, no there are no plans for fancy features like that that I'm aware of. At
+this stage we're simply trying to get the bandwidth, lock contention, file
+layout and those sorts of issues sorted out."
+
+
+-- 
+Russell Howe       | Why be just another cog in the machine,
+rhowe@siksai.co.uk | when you can be the spanner in the works?
