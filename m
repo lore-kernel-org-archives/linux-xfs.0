@@ -1,34 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 20:04:18 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 20:17:52 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2944B6p004445
-	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 20:04:12 -0800
-From: donaldd@sgi.com
-Subject: TAKE 961964 - xfs quota information can become stale when mounted with different quota types.
-Message-Id: <20070309040405.35F48250DE15@linuxbuild.melbourne.sgi.com>
-Date: Fri,  9 Mar 2007 15:04:05 +1100 (EST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l294Hg6p009325
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 20:17:46 -0800
+Subject: TAKE 961970 - __u32 test in package m4 macro instead of AC_CHECK_TYPES
+Message-Id: <20070309041738.3C36B58F9284@chook.melbourne.sgi.com>
+Date: Fri,  9 Mar 2007 15:17:38 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Invalidate quotacheck when mounting without a quota type. 
+Need to check for __u32 in our own m4 macro instead of using AC_CHECK_TYPES
+which doesn't exist on some older autoconf's.
 
-When quotas are mounted or remounted without a particular quota
-type the quota accounting for that type becomes invalid. 
-Previously we were ignoring this leading to accounting errors. 
-
-Thanks to Utako Kursaka for finding this and helping develop the fix.
-
-Date:  Fri Mar  9 15:02:34 AEDT 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  Utako Kusaka <utako@tnes.nec.co.jp>,vapo
+Date:  Fri Mar  9 15:16:33 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  nscott@aconex.com
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:28225a
-fs/xfs/quota/xfs_qm.c - 1.48 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
-	- Invalidate quotacheck state when mounting without a paticular quota type.
+Modid:  master-melb:xfs-cmds:28226a
+xfsprogs/configure.in - 1.38 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/configure.in.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
+xfsprogs/doc/CHANGES - 1.236 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
+xfsprogs/aclocal.m4 - 1.25 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/aclocal.m4.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
+xfsprogs/m4/package_types.m4 - 1.3 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/m4/package_types.m4.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+	- Need to check for __u32 in our own m4 macro instead of using AC_CHECK_TYPES
+	  which doesn't exist on some older autoconf's.
