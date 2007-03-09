@@ -1,36 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 20:17:52 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 20:26:22 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l294Hg6p009325
-	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 20:17:46 -0800
-Subject: TAKE 961970 - __u32 test in package m4 macro instead of AC_CHECK_TYPES
-Message-Id: <20070309041738.3C36B58F9284@chook.melbourne.sgi.com>
-Date: Fri,  9 Mar 2007 15:17:38 +1100 (EST)
-From: tes@sgi.com (Tim Shimmin)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l294QD6p017080
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 20:26:15 -0800
+From: donaldd@sgi.com
+Subject: TAKE 961964 - Enabling group quota enforcement on a filesystem with group accounting fails.
+Message-Id: <20070309042608.EA86225933C5@linuxbuild.melbourne.sgi.com>
+Date: Fri,  9 Mar 2007 15:26:08 +1100 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Need to check for __u32 in our own m4 macro instead of using AC_CHECK_TYPES
-which doesn't exist on some older autoconf's.
+Fix quotaon syscall failures for group enforcement requests.
 
-Date:  Fri Mar  9 15:16:33 AEDT 2007
-Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
-Inspected by:  nscott@aconex.com
+xfs_qm_scall_quotaon was incorrectly failing requests to enable 
+group quota enforcement. Fixes logic error in OQUOTA handling. 
+
+Patch provided by Kouta Ooizumi.
+
+Signed-off-by: Kouta Ooizumi <k-ooizumi@tnes.nec.co.jp>
+
+Date:  Fri Mar  9 15:22:52 AEDT 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  donaldd
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  master-melb:xfs-cmds:28226a
-xfsprogs/configure.in - 1.38 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/configure.in.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
-xfsprogs/doc/CHANGES - 1.236 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
-xfsprogs/aclocal.m4 - 1.25 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/aclocal.m4.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
-xfsprogs/m4/package_types.m4 - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/m4/package_types.m4.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-	- Need to check for __u32 in our own m4 macro instead of using AC_CHECK_TYPES
-	  which doesn't exist on some older autoconf's.
+Modid:  xfs-linux-melb:xfs-kern:28227a
+fs/xfs/quota/xfs_qm_syscalls.c - 1.32 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+	- Fix handling of OQUOTA in xfs_qm_scall_quotaon.
