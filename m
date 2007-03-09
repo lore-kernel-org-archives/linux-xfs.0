@@ -1,75 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 09 Mar 2007 07:34:00 -0800 (PST)
-Received: from youju.siksai.co.uk (youju.siksai.co.uk [87.127.14.180])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l29FXs6p024336
-	for <xfs@oss.sgi.com>; Fri, 9 Mar 2007 07:33:56 -0800
-Received: from xiao.siksai.co.uk ([87.127.14.179] ident=rhowe)
-	by youju.siksai.co.uk with smtp (Exim 4.50)
-	id 1HPgSY-0005BH-QQ
-	for xfs@oss.sgi.com; Fri, 09 Mar 2007 14:52:52 +0000
-From: "Russell Howe" <rhowe@siksai.co.uk>
-Date: Fri, 9 Mar 2007 14:54:01 +0000
-Subject: Andrew Morton talking about filesystems at FOSDEM 2007
-Message-ID: <20070309145400.GA23808@xiao.rsnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 09 Mar 2007 09:23:05 -0800 (PST)
+Received: from lab41.emea.sgi.com (lab41.emea.sgi.com [144.253.75.41])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l29HMu6p019124
+	for <xfs@oss.sgi.com>; Fri, 9 Mar 2007 09:22:57 -0800
+Subject: TAKE 961990 - propogate return codes from flush routines
+Message-Id: <20070309174215.E9FA222ADE@lab41.emea.sgi.com>
+Date: Fri,  9 Mar 2007 17:42:15 +0000 (GMT)
+From: lachlan@lab41.emea.sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Just thought this might be of interest to some folks on the list - akpm
-gave a talk at FOSDEM about the kernel and various bits & pieces and
-someone asked about filesystems during the Q&A session.
+propogate return codes from flush routines
 
-Full video available from http://www.fosdem.org/2007/media/video
+This patch handles error return values in fs_flush_pages and fs_flushinval_pages.
+It changes the prototype of fs_flushinval_pages so we can propogate the errors
+and handle them at higher layers.  I also modified xfs_itruncate_start so that
+it could propogate the error further.
 
-"Hi. Um, earlier you were a little bit scathing about ext4. Um, what are the
-alternatives? Hans Reiser doesn't appear to be at FOSDEM this year. Is ZFS
-likely to get merged in, or are there any other possibilities there and what
-sucks about ext4? What don't you like?"
+Date:  Sat Mar 10 04:19:34 AEDT 2007
+Workarea:  vpn-emea-sw-emea-160-34.emea.sgi.com:/home/lachlan/isms/2.6.x-mod
+Inspected by:  stewart@flamingspork.com
+Author:  lachlan
 
-"Sorry, which filesystems did you mention?"
-
-"ext4?"
-
-"Yep, I thought you mentioned some other filesystems"
-
-"Oh, ZFS, the Sun..."
-
-"ZFS? Well, um I've yet to see the patch [chuckles]. I'm not aware of any
-Sun-supported effort to do that. ext3? Well, I've worked on ext3 for so long
-I'm kinda sick of it I guess. It doesn't perform very well. The way in which it
-journals is a little bit klunky, and there are many things I'd like to do to it
-but simply do not have time to. So I think the block based journalling probably
-wasn't the right way to do it. It was a good way to get a journalling
-filesystem that was compatible with ext2 but I think logical journalling is
-probably / would have been a smarter approach to take. Also, the performance of
-ext3 is not great. Occasionally when I get time I'll get down and run some
-benchmarks against XFS and I just scratch my head and I just do not know how
-XFS does some of the things it does. Particularly with respect to file layout,
-it is astonishingly good. But unfortunately with XFS the codebase is so complex
-we're not / really vendors are not supporting it, so erm in some ways that's
-just [??] so few people understand XFS internals, one of the attractive things
-about ext3 and ext4 is that so many different companies have engineers working
-on it. So erm given we got this excellent performance but very complicated
-codebase which few people understand and on the other side we've got one which
-doesn't perform so well but a lot of people understand it seems the decision's
-been taken to evolve the slower but well understood one. It could be JFS is a
-good filesystem now as well. JFS had reputational problems in the first couple
-of years when it tended to crash a lot. That may not be the case any more but
-I'm just not aware of anybody who's using JFS much any more. But I'd imagine
-xfs... ext4 should be getting as good as XFS on file layout by the end of the
-year. How it'll compare on the benchmarks I don't know yet."
-
-[question indistinct] "... shadow copying, things like that?"
-
-"Nope, no there are no plans for fancy features like that that I'm aware of. At
-this stage we're simply trying to get the bandwidth, lock contention, file
-layout and those sorts of issues sorted out."
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
--- 
-Russell Howe       | Why be just another cog in the machine,
-rhowe@siksai.co.uk | when you can be the spanner in the works?
+Modid:  xfs-linux-melb:xfs-kern:28231a
+fs/xfs/xfs_vnodeops.c - 1.692 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.692&r2=text&tr2=1.691&f=h
+fs/xfs/xfs_vfsops.c - 1.517 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.517&r2=text&tr2=1.516&f=h
+fs/xfs/xfs_dfrag.c - 1.59 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dfrag.c.diff?r1=text&tr1=1.59&r2=text&tr2=1.58&f=h
+fs/xfs/xfs_inode.c - 1.462 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.462&r2=text&tr2=1.461&f=h
+fs/xfs/xfs_inode.h - 1.218 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.218&r2=text&tr2=1.217&f=h
+fs/xfs/xfs_utils.c - 1.74 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.c.diff?r1=text&tr1=1.74&r2=text&tr2=1.73&f=h
+fs/xfs/linux-2.6/xfs_lrw.c - 1.257 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.257&r2=text&tr2=1.256&f=h
+fs/xfs/linux-2.6/xfs_vnode.h - 1.127 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.127&r2=text&tr2=1.126&f=h
+fs/xfs/linux-2.6/xfs_fs_subr.c - 1.50 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
+fs/xfs/linux-2.6/xfs_fs_subr.h - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.h.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+fs/xfs/linux-2.4/xfs_vnode.h - 1.115 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.h.diff?r1=text&tr1=1.115&r2=text&tr2=1.114&f=h
+fs/xfs/linux-2.4/xfs_fs_subr.c - 1.49 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.c.diff?r1=text&tr1=1.49&r2=text&tr2=1.48&f=h
+fs/xfs/linux-2.4/xfs_fs_subr.h - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- propogate return codes from flush routines
