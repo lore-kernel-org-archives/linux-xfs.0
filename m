@@ -1,35 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 20:26:22 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l294QD6p017080
-	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 20:26:15 -0800
-From: donaldd@sgi.com
-Subject: TAKE 961964 - Enabling group quota enforcement on a filesystem with group accounting fails.
-Message-Id: <20070309042608.EA86225933C5@linuxbuild.melbourne.sgi.com>
-Date: Fri,  9 Mar 2007 15:26:08 +1100 (EST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 22:05:43 -0800 (PST)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2965U6p010711
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 22:05:32 -0800
+Received: from agami.com (mail [192.168.168.5])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id l2965T3A030392
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 22:05:29 -0800
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id l2965auY010732
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 22:05:36 -0800
+Message-ID: <45F0F7B6.9070406@agami.com>
+Date: Fri, 09 Mar 2007 11:29:18 +0530
+From: Shailendra Tripathi <stripathi@agami.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_repair doesn't detect corrupt btree roots in nodes
+References: <200703090358.OAA12270@larry.melbourne.sgi.com>
+In-Reply-To: <200703090358.OAA12270@larry.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
+Cc: xfs@oss.sgi.com, xfs-dev@sgi.com
 
-Fix quotaon syscall failures for group enforcement requests.
+Looks ok to me.
 
-xfs_qm_scall_quotaon was incorrectly failing requests to enable 
-group quota enforcement. Fixes logic error in OQUOTA handling. 
+Can you test if it works by manually corrupting some B+Tree using xfs_db 
+(or in fact, you can write a small program which does so. You can just 
+write a program which reads the location on the disk directly, modify 
+the 512 size sector corresponding to these with some selected fields and 
+write them out.)
 
-Patch provided by Kouta Ooizumi.
+Try the code when major B+Trees are corrupted --> AGI /BCNTi/BSIZE tree.
 
-Signed-off-by: Kouta Ooizumi <k-ooizumi@tnes.nec.co.jp>
+-shailendra
 
-Date:  Fri Mar  9 15:22:52 AEDT 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  donaldd
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:28227a
-fs/xfs/quota/xfs_qm_syscalls.c - 1.32 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
-	- Fix handling of OQUOTA in xfs_qm_scall_quotaon.
+Barry Naujok wrote:
+> Ping?
+> 
+> 
+>>-----Original Message-----
+>>From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
+>>On Behalf Of Barry Naujok
+>>Sent: Thursday, 22 February 2007 12:33 PM
+>>To: xfs@oss.sgi.com
+>>Cc: xfs-dev@sgi.com
+>>Subject: [PATCH] xfs_repair doesn't detect corrupt btree 
+>>roots in nodes
+>>
+>>The attached patch detect invalid btree root field (numrecs = 
+>>0, levels >
+>>permissable value).
+>>
+>>The patch also does some cleanup with the level and numrecs 
+>>usage for the
+>>process_btinode function.
+>>
+>>
