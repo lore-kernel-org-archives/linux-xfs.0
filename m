@@ -1,167 +1,201 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Mar 2007 10:02:43 -0800 (PST)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l27I2E6p008255
-	for <xfs@oss.sgi.com>; Wed, 7 Mar 2007 10:02:18 -0800
-Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id l27H4e3A025528
-	for <xfs@oss.sgi.com>; Wed, 7 Mar 2007 09:04:41 -0800
-Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id l27H4mNH013692
-	for <xfs@oss.sgi.com>; Wed, 7 Mar 2007 09:04:48 -0800
-Message-ID: <45EEF0B5.40905@agami.com>
-Date: Wed, 07 Mar 2007 09:04:53 -0800
-From: Michael Nishimoto <miken@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 Mar 2007 19:58:25 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l293wE6p002149
+	for <xfs@oss.sgi.com>; Thu, 8 Mar 2007 19:58:18 -0800
+Message-Id: <200703090358.OAA12270@larry.melbourne.sgi.com>
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Subject: RE: [PATCH] xfs_repair doesn't detect corrupt btree roots in nodes
+Date: Fri, 9 Mar 2007 14:59:10 +1100
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: stop using kmalloc in xfs_buf_get_noaddr
-References: <20070307101324.GC30587@lst.de>
-In-Reply-To: <20070307101324.GC30587@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0083_01C7625B.7E6A2520"
+In-Reply-To: <200702220126.MAA19208@larry.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: xfs-dev@sgi.com
 
-Incore log buffers are not always a power of two of the page size.
-In particular, when xfs is running over software raid devices, the
-log buffers are allocated to match the size of a stripe.
+This is a multi-part message in MIME format.
 
-However, they are always a multiple of PAGE_SIZE, so we are still safe.
+------=_NextPart_000_0083_01C7625B.7E6A2520
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-   Michael
+Ping?
 
-Christoph Hellwig wrote:
+> -----Original Message-----
+> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
+> On Behalf Of Barry Naujok
+> Sent: Thursday, 22 February 2007 12:33 PM
+> To: xfs@oss.sgi.com
+> Cc: xfs-dev@sgi.com
+> Subject: [PATCH] xfs_repair doesn't detect corrupt btree 
+> roots in nodes
+> 
+> The attached patch detect invalid btree root field (numrecs = 
+> 0, levels >
+> permissable value).
+> 
+> The patch also does some cleanup with the level and numrecs 
+> usage for the
+> process_btinode function.
+> 
+> 
 
->Currently xfs_buf_get_noaddr allocates memory using kmem_alloc which
->can end up either in kmalloc or vmalloc and assigns it to the buffer.
->This patch changes it to allocate individual pages and if there is
->more then one maps it into kernel virtual space using vmap.
->
->This means the minimum buffer allocation is PAGE_SIZE now.  For two
->of the three caller (log buffers, log recovery) that is perfectly
->fine, because they always allocate buffers that are a power of two
->of the page size anyway.  For xfs_zero_remaining_bytes the minimum
->allocation goes up from blocksize to pagesize and thus there is
->a potential waste of memory for blocksize < pagesize allocations,
->which is unfortunate but not directly solveable when block
->drivers expect reference countable pages.  To fix this waste
->xfs_zero_remaining_bytes could be rewritten to zero more than
->a single block at a time, which sounds like a good idea in general.
->
->
->Signed-off-by: Christoph Hellwig <hch@lst.de>
->
->Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
->===================================================================
->--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2007-03-05 15:54:40.000000000 +0100
->+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2007-03-05 15:54:47.000000000 +0100
->@@ -314,7 +314,7 @@
-> 
-> 	ASSERT(list_empty(&bp->b_hash_list));
-> 
->-	if (bp->b_flags & _XBF_PAGE_CACHE) {
->+	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
-> 		uint		i;
-> 
-> 		if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1))
->@@ -323,18 +323,11 @@
-> 		for (i = 0; i < bp->b_page_count; i++) {
-> 			struct page	*page = bp->b_pages[i];
-> 
->-			ASSERT(!PagePrivate(page));
->+			if (bp->b_flags & _XBF_PAGE_CACHE)
->+				ASSERT(!PagePrivate(page));
-> 			page_cache_release(page);
-> 		}
-> 		_xfs_buf_free_pages(bp);
->-	} else if (bp->b_flags & _XBF_KMEM_ALLOC) {
->-		 /*
->-		  * XXX(hch): bp->b_count_desired might be incorrect (see
->-		  * xfs_buf_associate_memory for details), but fortunately
->-		  * the Linux version of kmem_free ignores the len argument..
->-		  */
->-		kmem_free(bp->b_addr, bp->b_count_desired);
->-		_xfs_buf_free_pages(bp);
-> 	}
-> 
-> 	xfs_buf_deallocate(bp);
->@@ -764,41 +757,41 @@
-> 	size_t			len,
-> 	xfs_buftarg_t		*target)
-> {
->-	size_t			malloc_len = len;
->+	unsigned long		page_count = PAGE_ALIGN(len) >> PAGE_SHIFT;
->+	int			error, i;
-> 	xfs_buf_t		*bp;
->-	void			*data;
->-	int			error;
-> 
-> 	bp = xfs_buf_allocate(0);
-> 	if (unlikely(bp == NULL))
-> 		goto fail;
-> 	_xfs_buf_initialize(bp, target, 0, len, 0);
-> 
->- try_again:
->-	data = kmem_alloc(malloc_len, KM_SLEEP | KM_MAYFAIL | KM_LARGE);
->-	if (unlikely(data == NULL))
->+	error = _xfs_buf_get_pages(bp, page_count, 0);
->+	if (error)
-> 		goto fail_free_buf;
-> 
->-	/* check whether alignment matches.. */
->-	if ((__psunsigned_t)data !=
->-	    ((__psunsigned_t)data & ~target->bt_smask)) {
->-		/* .. else double the size and try again */
->-		kmem_free(data, malloc_len);
->-		malloc_len <<= 1;
->-		goto try_again;
->-	}
->-
->-	error = xfs_buf_associate_memory(bp, data, len);
->-	if (error)
->+	for (i = 0; i < page_count; i++) {
->+		bp->b_pages[i] = alloc_page(GFP_KERNEL);
->+		if (!bp->b_pages[i])
->+			goto fail_free_mem;
->+	}
->+	bp->b_flags |= _XBF_PAGES;
->+
->+	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
->+	if (unlikely(error)) {
->+		printk(KERN_WARNING "%s: failed to map pages\n",
->+				__FUNCTION__);
-> 		goto fail_free_mem;
->-	bp->b_flags |= _XBF_KMEM_ALLOC;
->+	}
-> 
-> 	xfs_buf_unlock(bp);
-> 
-> 	XB_TRACE(bp, "no_daddr", data);
-> 	return bp;
->+
->  fail_free_mem:
->-	kmem_free(data, malloc_len);
->+ 	for ( ; i >= 0; i++)
->+		__free_page(bp->b_pages[i]);
->  fail_free_buf:
-> 	xfs_buf_free(bp);
->  fail:
->Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
->===================================================================
->--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.h	2007-03-05 15:54:40.000000000 +0100
->+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.h	2007-03-05 15:55:06.000000000 +0100
->@@ -63,7 +63,7 @@
-> 
-> 	/* flags used only internally */
-> 	_XBF_PAGE_CACHE = (1 << 17),/* backed by pagecache		   */
->-	_XBF_KMEM_ALLOC = (1 << 18),/* backed by kmem_alloc()		   */
->+	_XBF_PAGES = (1 << 18),	    /* backed by refcounted pages	   */
-> 	_XBF_RUN_QUEUES = (1 << 19),/* run block device task queue	   */
-> 	_XBF_DELWRI_Q = (1 << 21),   /* buffer on delwri queue		   */
-> } xfs_buf_flags_t;
->
->
->  
->
+------=_NextPart_000_0083_01C7625B.7E6A2520
+Content-Type: application/octet-stream;
+	name="detect_bad_btree_root.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="detect_bad_btree_root.diff"
+
+--- a/xfsprogs/repair/dinode.c	2007-03-09 14:57:49.000000000 +1100
++++ b/xfsprogs/repair/dinode.c	2007-03-09 14:54:59.354264507 +1100
+@@ -1223,6 +1223,8 @@ process_btinode(
+ 	xfs_bmbt_key_t		*pkey;
+ 	char			*forkname;
+ 	int			i;
++	int			level;
++	int			numrecs;
+ 	bmap_cursor_t		cursor;
+=20
+ 	dib =3D (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+@@ -1235,13 +1237,11 @@ process_btinode(
+ 	else
+ 		forkname =3D _("attr");
+=20
+-	if (INT_GET(dib->bb_level, ARCH_CONVERT) =3D=3D 0) {
++	level =3D INT_GET(dib->bb_level, ARCH_CONVERT);
++	numrecs =3D INT_GET(dib->bb_numrecs, ARCH_CONVERT);
++
++	if ((level =3D=3D 0) || (level > XFS_BM_MAXLEVELS(mp, whichfork))) {
+ 		/*
+-		 * This should never happen since a btree inode
+-		 * has to have at least one other block in the
+-		 * bmap in addition to the root block in the
+-		 * inode's data fork.
+-		 *
+ 		 * XXX - if we were going to fix up the inode,
+ 		 * we'd try to treat the fork as an interior
+ 		 * node and see if we could get an accurate
+@@ -1249,28 +1249,30 @@ process_btinode(
+ 		 * to by the pointers in the fork.  For now
+ 		 * though, we just bail (and blow out the inode).
+ 		 */
+-		do_warn(_("bad level 0 in inode %llu bmap btree root block\n"),
++		do_warn(_("bad level %d in inode %llu bmap btree root block\n"),
++			level, XFS_AGINO_TO_INO(mp, agno, ino));
++		return(1);
++	}
++	if (numrecs =3D=3D 0) {
++		do_warn(_("bad numrecs 0 in inode %llu bmap btree root block\n"),
+ 			XFS_AGINO_TO_INO(mp, agno, ino));
+ 		return(1);
+ 	}
+ 	/*
+ 	 * use bmdr/dfork_dsize since the root block is in the data fork
+ 	 */
+-	init_bm_cursor(&cursor, INT_GET(dib->bb_level, ARCH_CONVERT) + 1);
+-
+-	if (XFS_BMDR_SPACE_CALC(INT_GET(dib->bb_numrecs, ARCH_CONVERT)) >
+-			((whichfork =3D=3D XFS_DATA_FORK) ?
++	if (XFS_BMDR_SPACE_CALC(numrecs) > ((whichfork =3D=3D XFS_DATA_FORK) ?
+ 			XFS_DFORK_DSIZE(dip, mp) :
+ 			XFS_DFORK_ASIZE(dip, mp)))  {
+ 		do_warn(
+ 	_("indicated size of %s btree root (%d bytes) greater than space in "
+ 	  "inode %llu %s fork\n"),
+-			forkname, XFS_BMDR_SPACE_CALC(INT_GET(dib->bb_numrecs,
+-				ARCH_CONVERT)),
+-			lino, forkname);
++			forkname, XFS_BMDR_SPACE_CALC(numrecs), lino, forkname);
+ 		return(1);
+ 	}
+=20
++	init_bm_cursor(&cursor, level + 1);
++
+ 	pp =3D XFS_BTREE_PTR_ADDR(
+ 			XFS_DFORK_SIZE(dip, mp, whichfork),
+ 		xfs_bmdr, dib, 1,
+@@ -1286,7 +1288,7 @@ process_btinode(
+=20
+ 	last_key =3D NULLDFILOFF;
+=20
+-	for (i =3D 0; i < INT_GET(dib->bb_numrecs, ARCH_CONVERT); i++)  {
++	for (i =3D 0; i < numrecs; i++)  {
+ 		/*
+ 		 * XXX - if we were going to do more to fix up the inode
+ 		 * btree, we'd do it right here.  For now, if there's a
+@@ -1298,8 +1300,8 @@ process_btinode(
+ 			return(1);
+ 		}
+=20
+-		if (scan_lbtree((xfs_dfsbno_t)INT_GET(pp[i], ARCH_CONVERT), INT_GET(dib-=
+>bb_level, ARCH_CONVERT),
+-				    scanfunc_bmap, type, whichfork,
++		if (scan_lbtree((xfs_dfsbno_t)INT_GET(pp[i], ARCH_CONVERT),
++				    level, scanfunc_bmap, type, whichfork,
+ 				    lino, tot, nex, blkmapp, &cursor,
+ 				    1, check_dups))
+ 			return(1);
+@@ -1310,8 +1312,7 @@ process_btinode(
+ 		 * blocks but the parent hasn't been updated
+ 		 */
+ 		if (check_dups =3D=3D 0 &&
+-		    cursor.level[INT_GET(dib->bb_level,
+-				ARCH_CONVERT)-1].first_key !=3D
++		    cursor.level[level-1].first_key !=3D
+ 		    INT_GET(pkey[i].br_startoff, ARCH_CONVERT))  {
+ 			if (!no_modify)  {
+ 				do_warn(
+@@ -1319,22 +1320,19 @@ process_btinode(
+ 	  "%llu %s fork\n"),
+ 					INT_GET(pkey[i].br_startoff,
+ 						ARCH_CONVERT),
+-					cursor.level[INT_GET(dib->bb_level,
+-						ARCH_CONVERT)-1].first_key,
++					cursor.level[level-1].first_key,
+ 					XFS_AGINO_TO_INO(mp, agno, ino),
+ 					forkname);
+ 				*dirty =3D 1;
+ 				INT_SET(pkey[i].br_startoff, ARCH_CONVERT,
+-					cursor.level[INT_GET(dib->bb_level,
+-						ARCH_CONVERT)-1].first_key);
++					cursor.level[level-1].first_key);
+ 			} else  {
+ 				do_warn(
+ 	_("bad key in bmbt root (is %llu, would reset to %llu) in inode "
+ 	  "%llu %s fork\n"),
+ 					INT_GET(pkey[i].br_startoff,
+ 						ARCH_CONVERT),
+-					cursor.level[INT_GET(dib->bb_level,
+-						ARCH_CONVERT)-1].first_key,
++					cursor.level[level-1].first_key,
+ 					XFS_AGINO_TO_INO(mp, agno, ino),
+ 					forkname);
+ 			}
+@@ -1345,8 +1343,7 @@ process_btinode(
+ 		 */
+ 		if (check_dups =3D=3D 0)  {
+ 			if (last_key !=3D NULLDFILOFF && last_key >=3D
+-			    cursor.level[INT_GET(dib->bb_level,
+-					ARCH_CONVERT)-1].first_key)  {
++			    cursor.level[level-1].first_key)  {
+ 				do_warn(
+ 		_("out of order bmbt root key %llu in inode %llu %s fork\n"),
+ 					first_key,
+@@ -1354,8 +1351,7 @@ process_btinode(
+ 					forkname);
+ 				return(1);
+ 			}
+-			last_key =3D cursor.level[INT_GET(dib->bb_level,
+-						ARCH_CONVERT)-1].first_key;
++			last_key =3D cursor.level[level-1].first_key;
+ 		}
+ 	}
+ 	/*
+
+------=_NextPart_000_0083_01C7625B.7E6A2520--
