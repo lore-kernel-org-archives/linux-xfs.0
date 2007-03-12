@@ -1,88 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Mar 2007 21:41:54 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2C4fZ6p026772
-	for <xfs@oss.sgi.com>; Sun, 11 Mar 2007 21:41:37 -0700
-Date: Mon, 12 Mar 2007 15:41:17 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/2] xfs: use xfs_get_buf_noaddr for iclogs
-Message-ID: <20070312044117.GK6095633@melbourne.sgi.com>
-References: <20070307101314.GB30587@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Mar 2007 12:14:48 -0700 (PDT)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2CJEW6p004126
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2007 12:14:34 -0700
+MIME-Version: 1.0
+Subject: one question about XFS file system
+Date: Mon, 12 Mar 2007 12:03:33 -0700
+Message-ID: <F3D352D50EDBEE4091E70AACBEDED2E101CFA846@fmsmsx415.amr.corp.intel.com>
+From: "Meng, Nick" <nick.meng@intel.com>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20070307101314.GB30587@lst.de>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Wed, Mar 07, 2007 at 11:13:14AM +0100, Christoph Hellwig wrote:
-> xfs_buf_get_noaddr.  There's a subtile change because
-> xfs_buf_get_empty returns the buffer locked, but xfs_buf_get_noaddr
-> returns it unlocked.  From my auditing and testing nothing in the
-> log I/O code cares about this distincition, but I'd be happy if
-> someone could try to prove this independently.
+Hi XFSers,
 
-Looks safe to me - we initialise all the fields in the xfs_buf_t
-when we allocate out of the slab, so it doesn't really matter what
-state the buffer is in when we free it.
+ 
 
-OTOH, all other buffers are supposed to be locked when under I/O.
-This change makes a special case for the log buffers, and I'd prefer
-not to have to remember that this behaviour changed fo log buffers
-at some point in time.
+      I am planning to build a XFS file system in an EM64T/RHEL4U2
+system.  Here is my question:
 
-I suggest that adding:
+ 
 
-> -		iclog->hic_data = (xlog_in_core_2_t *)
-> -			  kmem_zalloc(iclogsize, KM_SLEEP | KM_LARGE);
-> -
->  		iclog->ic_prev = prev_iclog;
->  		prev_iclog = iclog;
-> +
-> +		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
-> +		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-> +		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
-> +		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+   Can I build a XFS file system with 2 x U320SCSI controllers and 8 x
+R15K high speed Disks in my EM64T/RHEL4U2?
 
-+		XFS_BUF_PSEMA(bp, PRIBIO);
+ 
 
-> +		iclog->ic_bp = bp;
-> +		iclog->hic_data = bp->b_addr;
-> +
->  		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
->  
->  		head = &iclog->ic_header;
+===================================
 
-To lock the buffer should be added here. That way we don't change
-any semantics of the code at all.
+SEAGATE         ST373454LC              0005
 
-> @@ -1216,11 +1221,6 @@
->  		INT_SET(head->h_fmt, ARCH_CONVERT, XLOG_FMT);
->  		memcpy(&head->h_fs_uuid, &mp->m_sb.sb_uuid, sizeof(uuid_t));
->  
-> -		bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
-> -		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-> -		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
-> -		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
-> -		iclog->ic_bp = bp;
->  
->  		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
->  		iclog->ic_state = XLOG_STATE_ACTIVE;
-> @@ -1229,7 +1229,6 @@
->  		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
->  
->  		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
-> -		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
+SEAGATE         ST373454LC              0005
 
-And this assert can then stay...
+SEAGATE         ST373454LC              0005
 
-Cheers,
+SEAGATE         ST373454LC              0005
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+SEAGATE         ST373454LC              0005
+
+SEAGATE         ST373454LC              0005
+
+SEAGATE         ST373454LC              0005
+
+SEAGATE         ST373454LC              0005
+
+===================================
+
+ 
+
+  Any input will be appreciated.
+
+ 
+
+Best Regards,
+
+ 
+
+Nick Meng
+
+ 
+
+ 
+
+
+
+[[HTML alternate version deleted]]
