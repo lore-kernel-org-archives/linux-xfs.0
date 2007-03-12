@@ -1,58 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 09 Mar 2007 09:23:05 -0800 (PST)
-Received: from lab41.emea.sgi.com (lab41.emea.sgi.com [144.253.75.41])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l29HMu6p019124
-	for <xfs@oss.sgi.com>; Fri, 9 Mar 2007 09:22:57 -0800
-Subject: TAKE 961990 - propogate return codes from flush routines
-Message-Id: <20070309174215.E9FA222ADE@lab41.emea.sgi.com>
-Date: Fri,  9 Mar 2007 17:42:15 +0000 (GMT)
-From: lachlan@lab41.emea.sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Mar 2007 21:41:54 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2C4fZ6p026772
+	for <xfs@oss.sgi.com>; Sun, 11 Mar 2007 21:41:37 -0700
+Date: Mon, 12 Mar 2007 15:41:17 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/2] xfs: use xfs_get_buf_noaddr for iclogs
+Message-ID: <20070312044117.GK6095633@melbourne.sgi.com>
+References: <20070307101314.GB30587@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070307101314.GB30587@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-propogate return codes from flush routines
+On Wed, Mar 07, 2007 at 11:13:14AM +0100, Christoph Hellwig wrote:
+> xfs_buf_get_noaddr.  There's a subtile change because
+> xfs_buf_get_empty returns the buffer locked, but xfs_buf_get_noaddr
+> returns it unlocked.  From my auditing and testing nothing in the
+> log I/O code cares about this distincition, but I'd be happy if
+> someone could try to prove this independently.
 
-This patch handles error return values in fs_flush_pages and fs_flushinval_pages.
-It changes the prototype of fs_flushinval_pages so we can propogate the errors
-and handle them at higher layers.  I also modified xfs_itruncate_start so that
-it could propogate the error further.
+Looks safe to me - we initialise all the fields in the xfs_buf_t
+when we allocate out of the slab, so it doesn't really matter what
+state the buffer is in when we free it.
 
-Date:  Sat Mar 10 04:19:34 AEDT 2007
-Workarea:  vpn-emea-sw-emea-160-34.emea.sgi.com:/home/lachlan/isms/2.6.x-mod
-Inspected by:  stewart@flamingspork.com
-Author:  lachlan
+OTOH, all other buffers are supposed to be locked when under I/O.
+This change makes a special case for the log buffers, and I'd prefer
+not to have to remember that this behaviour changed fo log buffers
+at some point in time.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+I suggest that adding:
 
+> -		iclog->hic_data = (xlog_in_core_2_t *)
+> -			  kmem_zalloc(iclogsize, KM_SLEEP | KM_LARGE);
+> -
+>  		iclog->ic_prev = prev_iclog;
+>  		prev_iclog = iclog;
+> +
+> +		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
+> +		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+> +		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
+> +		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
 
-Modid:  xfs-linux-melb:xfs-kern:28231a
-fs/xfs/xfs_vnodeops.c - 1.692 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.692&r2=text&tr2=1.691&f=h
-fs/xfs/xfs_vfsops.c - 1.517 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.517&r2=text&tr2=1.516&f=h
-fs/xfs/xfs_dfrag.c - 1.59 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dfrag.c.diff?r1=text&tr1=1.59&r2=text&tr2=1.58&f=h
-fs/xfs/xfs_inode.c - 1.462 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.462&r2=text&tr2=1.461&f=h
-fs/xfs/xfs_inode.h - 1.218 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.218&r2=text&tr2=1.217&f=h
-fs/xfs/xfs_utils.c - 1.74 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.c.diff?r1=text&tr1=1.74&r2=text&tr2=1.73&f=h
-fs/xfs/linux-2.6/xfs_lrw.c - 1.257 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.257&r2=text&tr2=1.256&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.127 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.127&r2=text&tr2=1.126&f=h
-fs/xfs/linux-2.6/xfs_fs_subr.c - 1.50 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
-fs/xfs/linux-2.6/xfs_fs_subr.h - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.h.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-fs/xfs/linux-2.4/xfs_vnode.h - 1.115 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.h.diff?r1=text&tr1=1.115&r2=text&tr2=1.114&f=h
-fs/xfs/linux-2.4/xfs_fs_subr.c - 1.49 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.c.diff?r1=text&tr1=1.49&r2=text&tr2=1.48&f=h
-fs/xfs/linux-2.4/xfs_fs_subr.h - 1.18 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
-	- propogate return codes from flush routines
++		XFS_BUF_PSEMA(bp, PRIBIO);
+
+> +		iclog->ic_bp = bp;
+> +		iclog->hic_data = bp->b_addr;
+> +
+>  		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
+>  
+>  		head = &iclog->ic_header;
+
+To lock the buffer should be added here. That way we don't change
+any semantics of the code at all.
+
+> @@ -1216,11 +1221,6 @@
+>  		INT_SET(head->h_fmt, ARCH_CONVERT, XLOG_FMT);
+>  		memcpy(&head->h_fs_uuid, &mp->m_sb.sb_uuid, sizeof(uuid_t));
+>  
+> -		bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
+> -		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+> -		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
+> -		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+> -		iclog->ic_bp = bp;
+>  
+>  		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
+>  		iclog->ic_state = XLOG_STATE_ACTIVE;
+> @@ -1229,7 +1229,6 @@
+>  		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
+>  
+>  		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
+> -		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
+
+And this assert can then stay...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
