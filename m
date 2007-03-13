@@ -1,82 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Mar 2007 16:04:28 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2CN4L6p022578
-	for <xfs@oss.sgi.com>; Mon, 12 Mar 2007 16:04:23 -0700
-Date: Mon, 12 Mar 2007 19:04:21 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: one question about XFS file system
-In-Reply-To: <F3D352D50EDBEE4091E70AACBEDED2E101CFA846@fmsmsx415.amr.corp.intel.com>
-Message-ID: <Pine.LNX.4.64.0703121904160.7423@p34.internal.lan>
-References: <F3D352D50EDBEE4091E70AACBEDED2E101CFA846@fmsmsx415.amr.corp.intel.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Mar 2007 17:09:06 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2D08x6p007327
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2007 17:09:01 -0700
+Date: Tue, 13 Mar 2007 11:08:29 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: [PATCH 2/2] xfs: stop using kmalloc in xfs_buf_get_noaddr
+Message-ID: <73E41C01F3C8F79AD31CEDAF@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20070309115511.GA20426@lst.de>
+References: <20070307101324.GC30587@lst.de> <20070309115511.GA20426@lst.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Meng, Nick" <nick.meng@intel.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org
 
+Hi,
 
+--On 9 March 2007 12:55:11 PM +0100 Christoph Hellwig <hch@lst.de> wrote:
 
-On Mon, 12 Mar 2007, Meng, Nick wrote:
+> Ed Cashin found a bug in the error handling code for the case where
+> a page allocation fails.  Here's the updated version:
+>
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2007-03-08 19:08:38.000000000 +0100
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2007-03-09 08:59:15.000000000 +0100
+....
+> +	for (i = 0; i < page_count; i++) {
+> +		bp->b_pages[i] = alloc_page(GFP_KERNEL);
+> +		if (!bp->b_pages[i])
+> +			goto fail_free_mem;
+> +	}
+> +	bp->b_flags |= _XBF_PAGES;
+> +
+> +	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
+> +	if (unlikely(error)) {
+> +		printk(KERN_WARNING "%s: failed to map pages\n",
+> +				__FUNCTION__);
+>  		goto fail_free_mem;
+> -	bp->b_flags |= _XBF_KMEM_ALLOC;
+> +	}
+>
+>  	xfs_buf_unlock(bp);
+>
+>  	XB_TRACE(bp, "no_daddr", data);
+>  	return bp;
+> +
+>   fail_free_mem:
+> -	kmem_free(data, malloc_len);
+> + 	for ( ; i >= 0; i--)
+> +		__free_page(bp->b_pages[i]);
+>   fail_free_buf:
+>  	xfs_buf_free(bp);
+>   fail:
 
-> Hi XFSers,
->
->
->
->      I am planning to build a XFS file system in an EM64T/RHEL4U2
-> system.  Here is my question:
->
->
->
->   Can I build a XFS file system with 2 x U320SCSI controllers and 8 x
-> R15K high speed Disks in my EM64T/RHEL4U2?
->
->
->
-> ===================================
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> SEAGATE         ST373454LC              0005
->
-> ===================================
->
->
->
->  Any input will be appreciated.
->
->
->
-> Best Regards,
->
->
->
-> Nick Meng
->
->
->
->
->
->
->
-> [[HTML alternate version deleted]]
->
->
+It looks like you might need: for (i--; i >= 0; i--)
+(or: for (j = 0; j < i; j++) etc.)
 
-I don't see why not?
+Because if the initial alloc_page loop goes to completion then:
+  i == pagecount
+and if alloc_page loop terminates early then
+  bp->b_pages[i] == NULL
+So we have gone 1 too far in both cases and need to
+start free'ing back one.
+Unless I missed something.
 
-Justin.
+--Tim
