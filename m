@@ -1,43 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 06:07:42 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2FD7a6p019729
-	for <linux-xfs@oss.sgi.com>; Thu, 15 Mar 2007 06:07:38 -0700
-Received: from localhost (dslb-084-056-091-239.pools.arcor-ip.net [84.56.91.239])
-	by mail.lichtvoll.de (Postfix) with ESMTP id CC7095ADEC
-	for <linux-xfs@oss.sgi.com>; Thu, 15 Mar 2007 14:07:35 +0100 (CET)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: cache+barriers vs cache+nobarriers vs disabled cache+barriers vs disabled cache+nobarriers
-Date: Thu, 15 Mar 2007 14:07:34 +0100
-References: <20070315092220.1B09B193FE@mail.edu.haifa.ac.il> <200703151339.36259.Martin@lichtvoll.de>
-In-Reply-To: <200703151339.36259.Martin@lichtvoll.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 07:06:55 -0700 (PDT)
+Received: from donner.stsci.edu (donner.stsci.edu [130.167.251.65])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2FE6n6p031608
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 07:06:50 -0700
+Message-ID: <45F952F2.6000008@stsci.edu>
+Date: Thu, 15 Mar 2007 10:06:42 -0400
+From: Thomas Walker <walker@stsci.edu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Disposition: inline
-Message-Id: <200703151407.34419.Martin@lichtvoll.de>
+Subject: Re: Should xfs_repair take this long?
+References: <45F92D8C.3090708@stsci.edu> <20070315150422.7bc5d178@harpe.intellique.com>
+In-Reply-To: <20070315150422.7bc5d178@harpe.intellique.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-Am Donnerstag 15 März 2007 schrieb Martin Steigerwald:
 
-> But why do you want to disable write cache in the first case? As long
-> as you are using 2.6.17.7 or later you can safely enable barriers and
-> and write cache. 
+     The terminal shows a lot of "." dots running across the screen 
+quickly, and every few hours it says this;
 
-Hello again, Leon,
 
-of couse using write barriers is only possible if the hardware 
-requirements (cache flushes or similar mechanisms) are met. XFS complains 
-if it can't use barriers. See dmesg or log for details.
+.....................................................found candidate 
+secondary superblock...
+unable to verify superblock, continuing...
+found candidate secondary superblock...
+unable to verify superblock, continuing...
 
-It seems that the mailinglist software broke my GPG signature. It was 
-correct as I sent out the mail.
+      Thomas Walker
 
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+Emmanuel Florac wrote:
+
+>Le Thu, 15 Mar 2007 07:27:08 -0400
+>Thomas Walker <walker@stsci.edu> écrivait:
+>
+>  
+>
+>>xfs_repair -o assume_xfs /dev/mapper/vg0-hladata3
+>>
+>>   This command has been running for two days now. 
+>>    
+>>
+>
+>Is there any output from xfs_repair ? This doesn't sound good. I've run
+>xfs_repair on some badly corrupted fs up to 13 TB, and it never took
+>more than a couple of minutes.
+>
+>  
+>
