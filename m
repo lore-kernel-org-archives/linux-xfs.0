@@ -1,75 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 04:35:17 -0700 (PDT)
-Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2FBZB6p000450
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 04:35:12 -0700
-Received: from svlexrs02.hq.netapp.com (svlexrs02.corp.netapp.com [10.57.156.154])
-	by smtp2.corp.netapp.com (8.13.1/8.13.1/NTAP-1.6) with ESMTP id l2FBZA13004966
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 04:35:10 -0700 (PDT)
-Date: Thu, 15 Mar 2007 07:34:37 -0400
-From: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
-Subject: Re: Strange XFS issue on tiny-NAS ARM NFS server
-In-Reply-To: <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
-References: <EXNANE01iR9Odutox7n000000c6@exnane01.hq.netapp.com>
- <45F85BFA.1070505@sandeen.net>
- <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 04:39:42 -0700 (PDT)
+Received: from donner.stsci.edu (donner.stsci.edu [130.167.251.65])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2FBdZ6p001711
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 04:39:38 -0700
+Message-ID: <45F92D8C.3090708@stsci.edu>
+Date: Thu, 15 Mar 2007 07:27:08 -0400
+From: Thomas Walker <walker@stsci.edu>
+MIME-Version: 1.0
+Subject: Should xfs_repair take this long?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
-Cc: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
 
-Evidently that was not the only compiling issue (surprise):
+ 
+   I am trying to restore a corrupt xfs partition.  It is 6TB total, it 
+is an LVM of two 3TB fiber channel SAN volumes.  The host is running 
+RHEL4, 2.6.9-42.0.2.ELsmp, and the version of xfsprogs is 
+xfsprogs-2.6.13-2.  The host has four threaded AMD Opterons, 4GB of RAM 
+and 2GB of swap located on an internal SCSI disk.  It is unclear how the 
+xfs partition was damaged, but it reports a bad superblock and will not 
+mount.  I am running this command;
 
-><6>attempt to access beyond end of device
-><6>sda3: rw=2, want=2574098408, limit=154272195
-><6>attempt to access beyond end of device
-><6>sda3: rw=2, want=2574098408, limit=154272195
-><6>attempt to access beyond end of device
-><6>sda3: rw=2, want=2574098408, limit=154272195
-><6>attempt to access beyond end of device
-><6>sda3: rw=0, want=2574098408, limit=154272195
-><1>I/O error in filesystem ("sda3") meta-data dev sda3 block 0x996d9fe0       ("xfs_trans_read_buf") error 5 buf count 4096
+xfs_repair -o assume_xfs /dev/mapper/vg0-hladata3
 
-Oh, well.
+   This command has been running for two days now.  There is cpu 
+activity and i/o activity on the physical SAN.  There is some swapping 
+but not an unusual amount and swapon -s shows only a small amount in 
+use.  I have seen information implying xfs_repair needs a large amount 
+of memory to work well, otherwise it will take a long time.  My question 
+is, giving my setup, is there an estimate of how long I should wait 
+before expecting a result?  Should I add swap space?  Is there anything 
+else I should do?
 
-Tom.
+    thanks in advance for any help.
 
-
-At 05:19 PM 3/14/2007, Talpey, Thomas wrote:
->Wow good memory, 3 years ago:
-><http://lists.arm.linux.org.uk/pipermail/linux-arm-kernel/2004-March/0>20287.html>
->
->I'm compiling with gcc4.1.1 for arm5t big endian, patched for multiple
->arm ports (OpenEmbedded) and it still botches that code today.
->Works fine with the arithmetic decomposition in the message.
->And I never blame the compiler! ;-)
->
->Thanks!
->
->BTW, XFS gives this little machine a nice bump in NFS write
->bandwidth. Goes from ~6MB/sec to ~7MB/s. CPU limited, mainly.
->
->Tom.
->
->At 04:32 PM 3/14/2007, Eric Sandeen wrote:
->>Talpey, Thomas wrote:
->>> This might be pilot error, but a *very* strange thing happens with
->>> an XFS filesystem on an NFS server I'm experimenting with. This is
->>> an NSLU2 ARM-based machine, running 2.6.20.1 and an XFS filesystem
->>> freshly built on a usb-attached 2.5" drive.
->>> 
->>> Running Connectathon 04 basic tests against the server, things are
->>> fine with an EXT-formatted filesystem. However, reformatting the
->>> export as a default XFS filesystem (mkfs.xfs -f /dev/sda3), the
->>> following occurs:
->>
->>arm compiler has bugs that miscompile xfs... I think if you google arm + 
->>xfs and maybe search the list archives, you'll find a possible workaround.
->>
->>-Eric
->>
->>
+    Thomas Walker
