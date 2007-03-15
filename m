@@ -1,55 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 02:16:51 -0700 (PDT)
-Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2F9Gi6p028910
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 02:16:46 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 61C0314BA0C
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 11:22:20 +0200 (IST)
-Received: from mail.edu.haifa.ac.il ([127.0.0.1])
-	by localhost (mail.edu.haifa.ac.il [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id Pycjp+m-uYkd for <xfs@oss.sgi.com>;
-	Thu, 15 Mar 2007 11:22:20 +0200 (IST)
-Received: from kozanostra (leon.edu.haifa.ac.il [132.74.41.33])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 1B09B193FE
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 11:22:20 +0200 (IST)
-From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
-Subject: cache+barriers vs cache+nobarriers vs disabled cache+barriers vs disabled cache+nobarriers
-Date: Thu, 15 Mar 2007 11:16:38 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1255"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20070315092220.1B09B193FE@mail.edu.haifa.ac.il>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 04:35:17 -0700 (PDT)
+Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2FBZB6p000450
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 04:35:12 -0700
+Received: from svlexrs02.hq.netapp.com (svlexrs02.corp.netapp.com [10.57.156.154])
+	by smtp2.corp.netapp.com (8.13.1/8.13.1/NTAP-1.6) with ESMTP id l2FBZA13004966
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 04:35:10 -0700 (PDT)
+Date: Thu, 15 Mar 2007 07:34:37 -0400
+From: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
+Subject: Re: Strange XFS issue on tiny-NAS ARM NFS server
+In-Reply-To: <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
+References: <EXNANE01iR9Odutox7n000000c6@exnane01.hq.netapp.com>
+ <45F85BFA.1070505@sandeen.net>
+ <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
 
-Hello All,
+Evidently that was not the only compiling issue (surprise):
 
+><6>attempt to access beyond end of device
+><6>sda3: rw=2, want=2574098408, limit=154272195
+><6>attempt to access beyond end of device
+><6>sda3: rw=2, want=2574098408, limit=154272195
+><6>attempt to access beyond end of device
+><6>sda3: rw=2, want=2574098408, limit=154272195
+><6>attempt to access beyond end of device
+><6>sda3: rw=0, want=2574098408, limit=154272195
+><1>I/O error in filesystem ("sda3") meta-data dev sda3 block 0x996d9fe0       ("xfs_trans_read_buf") error 5 buf count 4096
 
-After reading http://oss.sgi.com/projects/xfs/faq.html#wcache 
-and some posts on the list I've got the following question:
+Oh, well.
 
-If I have disabled write cache on the disk (hdparm -W0 /dev/hda) and by
-default FS is mounted with "barrier" enabled, Is there any taste in enabling
-"barrier"(by default) because write cache is disabled anyway or may be it's
-a good idea to mount with "nobarriers" in this case?
-
-Or may be I'm wrong here and write cache has nothing to do with "barrier"
-option?
-
-I thought that "barrier" is on by default to somewhat minimize potential
-dangers of enabled write cache? But if write cache is disabled, would
-"barrier" option just slow down the FS performance (which is already slowed
-down by "hdparm -W0 /dev/had" anyway)?
-
-Any inside wisdom on the subject of this mail would be much appreciated :)
+Tom.
 
 
-
-Best Regards,
-Leon Kolchinsky
+At 05:19 PM 3/14/2007, Talpey, Thomas wrote:
+>Wow good memory, 3 years ago:
+><http://lists.arm.linux.org.uk/pipermail/linux-arm-kernel/2004-March/0>20287.html>
+>
+>I'm compiling with gcc4.1.1 for arm5t big endian, patched for multiple
+>arm ports (OpenEmbedded) and it still botches that code today.
+>Works fine with the arithmetic decomposition in the message.
+>And I never blame the compiler! ;-)
+>
+>Thanks!
+>
+>BTW, XFS gives this little machine a nice bump in NFS write
+>bandwidth. Goes from ~6MB/sec to ~7MB/s. CPU limited, mainly.
+>
+>Tom.
+>
+>At 04:32 PM 3/14/2007, Eric Sandeen wrote:
+>>Talpey, Thomas wrote:
+>>> This might be pilot error, but a *very* strange thing happens with
+>>> an XFS filesystem on an NFS server I'm experimenting with. This is
+>>> an NSLU2 ARM-based machine, running 2.6.20.1 and an XFS filesystem
+>>> freshly built on a usb-attached 2.5" drive.
+>>> 
+>>> Running Connectathon 04 basic tests against the server, things are
+>>> fine with an EXT-formatted filesystem. However, reformatting the
+>>> export as a default XFS filesystem (mkfs.xfs -f /dev/sda3), the
+>>> following occurs:
+>>
+>>arm compiler has bugs that miscompile xfs... I think if you google arm + 
+>>xfs and maybe search the list archives, you'll find a possible workaround.
+>>
+>>-Eric
+>>
+>>
