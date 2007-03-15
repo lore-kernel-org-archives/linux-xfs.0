@@ -1,41 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 16:00:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 16:10:52 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2FN076p016934
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 16:00:09 -0700
-Date: Fri, 16 Mar 2007 09:59:59 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2FNAj6p018535
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 16:10:47 -0700
+Date: Fri, 16 Mar 2007 10:10:31 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Strange XFS issue on tiny-NAS ARM NFS server
-Message-ID: <20070315225959.GO6095633@melbourne.sgi.com>
-References: <EXNANE01iR9Odutox7n000000c6@exnane01.hq.netapp.com> <45F85BFA.1070505@sandeen.net> <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com> <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
+Subject: Re: Should xfs_repair take this long?
+Message-ID: <20070315231031.GP6095633@melbourne.sgi.com>
+References: <45F92D8C.3090708@stsci.edu> <20070315150422.7bc5d178@harpe.intellique.com> <45F952F2.6000008@stsci.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
+In-Reply-To: <45F952F2.6000008@stsci.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
-Cc: xfs@oss.sgi.com
+To: Thomas Walker <walker@stsci.edu>
+Cc: Emmanuel Florac <eflorac@intellique.com>, xfs@oss.sgi.com
 
-On Thu, Mar 15, 2007 at 07:34:37AM -0400, Talpey, Thomas wrote:
-> Evidently that was not the only compiling issue (surprise):
+On Thu, Mar 15, 2007 at 10:06:42AM -0400, Thomas Walker wrote:
 > 
-> ><6>attempt to access beyond end of device
-> ><6>sda3: rw=2, want=2574098408, limit=154272195
-> ><6>attempt to access beyond end of device
-> ><6>sda3: rw=2, want=2574098408, limit=154272195
-> ><6>attempt to access beyond end of device
-> ><6>sda3: rw=2, want=2574098408, limit=154272195
-> ><6>attempt to access beyond end of device
-> ><6>sda3: rw=0, want=2574098408, limit=154272195
-> ><1>I/O error in filesystem ("sda3") meta-data dev sda3 block 0x996d9fe0       ("xfs_trans_read_buf") error 5 buf count 4096
+>     The terminal shows a lot of "." dots running across the screen 
+> quickly, and every few hours it says this;
+> 
+> 
+> .....................................................found candidate 
+> secondary superblock...
+> unable to verify superblock, continuing...
+> found candidate secondary superblock...
+> unable to verify superblock, continuing...
 
-That's a long way past the end of the partition.
+The primary superblock is not good, and it's trying to find a valid
+secondary superblock. Doesn't sound promising so far - reapir can't
+start until a valid superblok is found....
 
-Tom, did you run xfs_repair on that filesystem after
-running with a busted compiler? Who knows how
-it broke stuff on disk.....
+Can you dump the first sector of the device the fielsystem is
+on:
+
+# dd if=/dev/mapper/vg0-hladata3 bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
+
+So we can see if that really holds a primary XFS superblock?
 
 Cheers,
 
