@@ -1,74 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 02:07:45 -0700 (PDT)
-Received: from amsfep13-int.chello.nl (amsfep17-int.chello.nl [213.46.243.15] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2F97a6p027218
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 02:07:40 -0700
-From: clflush <clflush@chello.be>
-Subject: Re: Questions about XFS
-Date: Thu, 15 Mar 2007 10:07:32 +0100
-References: <200703131440.56678.clflush@chello.be> <1173890016.20671.11.camel@localhost.localdomain> <45F8CAEA.3050408@list.rakugaki.org>
-In-Reply-To: <45F8CAEA.3050408@list.rakugaki.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 02:16:51 -0700 (PDT)
+Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2F9Gi6p028910
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 02:16:46 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 61C0314BA0C
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 11:22:20 +0200 (IST)
+Received: from mail.edu.haifa.ac.il ([127.0.0.1])
+	by localhost (mail.edu.haifa.ac.il [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id Pycjp+m-uYkd for <xfs@oss.sgi.com>;
+	Thu, 15 Mar 2007 11:22:20 +0200 (IST)
+Received: from kozanostra (leon.edu.haifa.ac.il [132.74.41.33])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 1B09B193FE
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 11:22:20 +0200 (IST)
+From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
+Subject: cache+barriers vs cache+nobarriers vs disabled cache+barriers vs disabled cache+nobarriers
+Date: Thu, 15 Mar 2007 11:16:38 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-2022-jp"
-Content-Disposition: inline
-Message-Id: <200703151007.32630.clflush@chello.be>
-Content-Transfer-Encoding: 8bit
+	charset="windows-1255"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20070315092220.1B09B193FE@mail.edu.haifa.ac.il>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Taisuke Yamada <tyamadajp@list.rakugaki.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
->From what I know, and correct me if I'm wrong, XFS relies on the application 
-side to do the right job but real world experience shows us that *a lot* of 
-applications out there behave badly and cannot be trusted hence if something 
-happens, XFS cannot "correct" the problem leaving you with headaches behind 
-depending on how much data you lost/corrupted and the importance of it. IMHO, 
-XFS *should* do some effort at assuring integrity to minimize the bad 
-behavior of badly written applications out there. I know that XFS wasn't 
-written for PC class hardware in the first place, but most people do not read 
-enough to understand XFS and use it on their desktops/laptops because to be 
-honest Linux doesn't really have a good file system, and XFS out of all 
-available file systems, is the best in performance and scalability terms. 
-
-On the one hand you have the old Ext3 FS which doesn't perform very well in 
-many areas but IMO is a lot safer to work on (doesn't loose data that easily 
-compared to XFS - and I'm talking from experience here because I use both 
-file systems and I lost much more on the XFS system than on the Ext3 one) and 
-on the other hand you have this excellent XFS file system with its clean 
-layout and awesome performance + fancy features like GRIO, extents, allocate 
-on flush, real time volumes, etc *but* is not "safe" enough to work with if 
-you have unreliable hardware and/or a lot of power outage issues  - I've 
-never lost data on Ext3 during a power outage but already lost 2 times data 
-on XFS
-
-Just my $0.02
+Hello All,
 
 
-On Thursday 15 March 2007 05:26:18 you wrote:
-> From end-user's POV, this infamous XFS behavior is somewhat
-> taken as XFS's inferiority compared to other filesystems.
-> Even with "bad" applications (ex. firefox), this rarely happens
-> on others, so regardless of what's on the FAQ, people logically
-> concludes that the fault belongs to XFS anyway.
->
-> So, what is the correct way to do IO?
-> Is what firefox (and other bad apps) doing is so obvious(ly buggy),
-> that it'll be acknowledged as a bug once reported? Or is it simply
-> a mismatch between application expectation and XFS behavior,
-> requiring a non-(obvious|generic) fix?
->
-> Although I'm not a filesystem developer, I'm pretty impressed with
-> XFS and willing to file a report/patch to those "buggy" apps if the
-> issue is explainable to other app developers.
->
-> >> was to press the reset button on the computer. After the reboot, when I
-> >> opened Firefox again, I noticed that all my bookmarks were gone. Those
-> >> bookmarks were imported from my desktop machine a few days after I
-> >> configured the new server.
-> >
-> > This is a firefox bug - I've seen it before (on my mother's machine).
-> >
-> > It's due to firefox not doing the correct thing with IO on the bookmarks
-> > file.
+After reading http://oss.sgi.com/projects/xfs/faq.html#wcache 
+and some posts on the list I've got the following question:
+
+If I have disabled write cache on the disk (hdparm -W0 /dev/hda) and by
+default FS is mounted with "barrier" enabled, Is there any taste in enabling
+"barrier"(by default) because write cache is disabled anyway or may be it's
+a good idea to mount with "nobarriers" in this case?
+
+Or may be I'm wrong here and write cache has nothing to do with "barrier"
+option?
+
+I thought that "barrier" is on by default to somewhat minimize potential
+dangers of enabled write cache? But if write cache is disabled, would
+"barrier" option just slow down the FS performance (which is already slowed
+down by "hdparm -W0 /dev/had" anyway)?
+
+Any inside wisdom on the subject of this mail would be much appreciated :)
+
+
+
+Best Regards,
+Leon Kolchinsky
