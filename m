@@ -1,41 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 04:31:28 -0700 (PDT)
-Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GBVM6p020213
-	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 04:31:24 -0700
-Date: Fri, 16 Mar 2007 07:30:28 -0400
-From: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
-Subject: Re: Strange XFS issue on tiny-NAS ARM NFS server
-In-Reply-To: <20070315225959.GO6095633@melbourne.sgi.com>
-References: <EXNANE01iR9Odutox7n000000c6@exnane01.hq.netapp.com>
- <45F85BFA.1070505@sandeen.net>
- <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
- <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
- <20070315225959.GO6095633@melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <EXNANE01FRaqbC8wSA1000000db@exnane01.hq.netapp.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 07:08:07 -0700 (PDT)
+Received: from evaldomino.Falconstor.com (mail1.falconstor.com [216.223.47.230])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GE826p017322
+	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 07:08:04 -0700
+Message-ID: <45FAA4BB.20908@falconstor.com>
+Date: Fri, 16 Mar 2007 10:07:55 -0400
+From: "Geir A. Myrestrand" <geir.myrestrand@falconstor.com>
+Reply-To: geir.myrestrand@falconstor.com
+MIME-Version: 1.0
+Subject: Re: XFS on Redhat4 U4
+References: <4BE67D4A1485054E99B21710FF21A9CD020BE8A8@swsmsx411.ger.corp.intel.com> <45F95E77.10207@falconstor.com> <45FA035B.2070505@sandeen.net>
+In-Reply-To: <45FA035B.2070505@sandeen.net>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Talpey, Thomas" <Thomas.Talpey@netapp.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-At 06:59 PM 3/15/2007, David Chinner wrote:
->On Thu, Mar 15, 2007 at 07:34:37AM -0400, Talpey, Thomas wrote:
->> Evidently that was not the only compiling issue (surprise):
->> 
->> ><6>attempt to access beyond end of device
->> ><6>sda3: rw=2, want=2574098408, limit=154272195...
->That's a long way past the end of the partition.
->
->Tom, did you run xfs_repair on that filesystem after
->running with a busted compiler? Who knows how
->it broke stuff on disk.....
+Eric Sandeen wrote:
+> Centos has the latest version of what I've done... sgi guys, you might 
+> actually take down the above link, or redirect it.
+> 
+> The src.rpms are also mirrored at http://sandeen.net/rhel4_xfs (*)
+> 
+> Grabbing the pre-built stuff from centos may be simplest, though.
+> 
+> -Eric
+> 
+> *rhel5_xfs for the adventurous...
 
-No, this was a freshly rebuilt ~80GB xfs. I was running a test on
-it over NFS which wrote and read 500MB files repeatedly. And, it
-ran for quite some time before failing. I haven't had a chance to
-track it down at all.
+I've started using your XFS modules for RHEL5, but it takes another week 
+before I've ported our application so that I can start giving it a more 
+serious spin.
 
-Tom.
+-- 
+
+Geir A. Myrestrand
