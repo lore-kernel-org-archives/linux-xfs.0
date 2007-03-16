@@ -1,63 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 12:37:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 13:00:11 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2GJbX6p028624
-	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 12:37:35 -0700
-Date: Sat, 17 Mar 2007 06:37:22 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2GK016p001050
+	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 13:00:05 -0700
+Date: Sat, 17 Mar 2007 06:59:51 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Should xfs_repair take this long?
-Message-ID: <20070316193722.GA5743@melbourne.sgi.com>
-References: <45F92D8C.3090708@stsci.edu> <20070315150422.7bc5d178@harpe.intellique.com> <45F952F2.6000008@stsci.edu> <20070315231031.GP6095633@melbourne.sgi.com> <45FAB480.908@stsci.edu>
+Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
+Message-ID: <20070316195951.GB5743@melbourne.sgi.com>
+References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <45FAB480.908@stsci.edu>
+In-Reply-To: <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Thomas Walker <walker@stsci.edu>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: Marco Berizzi <pupilla@hotmail.com>
+Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Mar 16, 2007 at 11:15:12AM -0400, Thomas Walker wrote:
->   So maybe I got bit the same way.  parted may be overwritten something 
-> at the head of the volume.
+On Fri, Mar 16, 2007 at 12:05:33PM +0100, Marco Berizzi wrote:
+> David Chinner wrote:
+> 
+> > can
+> > you post a url to the commit?
+> 
+> http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.19.y.git;a=commit;h=7fbbb01dca7704d52ace6f45a805c98a5b0362f9
 
-Doesn't look like partition blocks at the start of each volume, though.
+Ok, so an ipsec change. And I see from the history below it
+really has nothing to do with this problem. it seems the problem
+has something to do with changes between 2.6.19.1 and 2.6.19.2.
 
-> Is there any way to repair the super block 
-> though?  It seems that everyone agrees xfs can't do anything until it 
-> has a super block somewhere and I don't seem to have one.
+There were no changes to XFS between 2.6.19.1 and 2.6.19.2,
+so I'm thinking that your problems are related to something
+other than XFS. Can you do a git bisect to determine what the
+bad patch is?
 
-That's beacuse repair can't work out where things are supposed to
-be without a superblock to tell it critical information.
-Manually trying to find and repair a superblock is a hit and miss
-affair - at this point we don't even know if the primary superblocks
-have been overwritten or whether something else is wrong with LVM...
+> > Can you run xfs_repair on that filesystem and see if reports
+> > (and fixes) any problems?
+> 
+> I don't need to run xfs_repair to fix the problem,
 
-> If there's no 
-> way to repair, then what about recovery? 
+Except that the trigger might be on-disk corruption so we
+need to rule that out first.
 
-In a word: backups.
+> I only unplug the power cable and reboot the system,
+> xfs filesystem are correctly mounted.
+> However tell me if I must run xfs_repair to check
+> the filesystem.
 
-> I see mention of possibly 
-> doing an xfs dump to another disk, reformat the original volume, and 
-> then xfs restore back.  Is there any online procedure for how to do that 
-> if it applies to me here?
-
-You need to be able to mount the filesystem to dump it, so until you
-can run repair there's no simple recovery option.
-
-If the lvm config is correct and repair cannot find a valid
-secondary superblock, then you really need to start doing dangerous
-things to try to recover. i'd suggest taking a copy of the lvm
-volumes before doing anything else.
-
-Then, find a secondary superblock in the volume (first 4 bytes of
-the sector are "XFSB" in hex) and copy that sector to block zero of
-the filesystem. If repair still won't do it's stuff, then you need
-to use xfs_db to modify that superblock until it does.  Then when
-repair runs, you get to look in lost+found and try to work out what
-all the broken bits are.....
+Yes, you need to run xfs_repair.
 
 Cheers,
 
