@@ -1,135 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 04:15:16 -0700 (PDT)
-Received: from donner.stsci.edu (donner.stsci.edu [130.167.251.65])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GBFA6p011369
-	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 04:15:12 -0700
-Message-ID: <45FA7C37.4070001@stsci.edu>
-Date: Fri, 16 Mar 2007 07:15:03 -0400
-From: Thomas Walker <walker@stsci.edu>
-MIME-Version: 1.0
-Subject: Re: Should xfs_repair take this long?
-References: <20070315202027.CNS24438@comet.stsci.edu> <20070316013227.GO5743@melbourne.sgi.com>
-In-Reply-To: <20070316013227.GO5743@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 04:31:28 -0700 (PDT)
+Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GBVM6p020213
+	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 04:31:24 -0700
+Date: Fri, 16 Mar 2007 07:30:28 -0400
+From: "Talpey, Thomas" <Thomas.Talpey@netapp.com>
+Subject: Re: Strange XFS issue on tiny-NAS ARM NFS server
+In-Reply-To: <20070315225959.GO6095633@melbourne.sgi.com>
+References: <EXNANE01iR9Odutox7n000000c6@exnane01.hq.netapp.com>
+ <45F85BFA.1070505@sandeen.net>
+ <EXNANE01yeKzGZuNY1S000000cb@exnane01.hq.netapp.com>
+ <EXNANE01pH71yEXUIEA000000d3@exnane01.hq.netapp.com>
+ <20070315225959.GO6095633@melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <EXNANE01FRaqbC8wSA1000000db@exnane01.hq.netapp.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: "Talpey, Thomas" <Thomas.Talpey@netapp.com>, xfs@oss.sgi.com
 
-
-    No problem.  The error was with the iflag=direct, apparently RHEL4 
-doesn't like that option so I took it out.  Here's the output from each 
-of the xfs volumes;
-
-[root@hla-ags ~]# dd if=/dev/mapper/vg0-hladata3 bs=512 count=1 | od -Ax -x
-1+0 records in
-1+0 records out
-000000 0000 6419 0000 0c00 0000 7419 0000 0c00
-000010 0000 8419 0000 0c00 0000 9419 0000 0c00
-000020 0000 a419 0000 0c00 0000 b419 0000 0c00
-000030 0000 c419 0000 0c00 0000 d419 0000 0c00
-000040 0000 e419 0000 0c00 0000 f419 0000 0c00
-000050 0000 041a 0000 0c00 0000 141a 0000 0c00
-000060 0000 241a 0000 0c00 0000 341a 0000 0c00
-000070 0000 441a 0000 0c00 0000 541a 0000 0c00
-000080 0000 641a 0000 0c00 0000 741a 0000 0c00
-000090 0000 841a 0000 0c00 0000 941a 0000 0c00
-0000a0 0000 a41a 0000 0c00 0000 b41a 0000 0c00
-0000b0 0000 c41a 0000 0c00 0000 d41a 0000 0c00
-0000c0 0000 e41a 0000 0c00 0000 f41a 0000 0c00
-0000d0 0000 041b 0000 0c00 0000 141b 0000 0c00
-0000e0 0000 241b 0000 0c00 0000 341b 0000 0c00
-0000f0 0000 441b 0000 0c00 0000 541b 0000 0c00
-000100 0000 641b 0000 0c00 0000 741b 0000 0c00
-000110 0000 841b 0000 0c00 0000 941b 0000 0c00
-000120 0000 a41b 0000 0c00 0000 b41b 0000 0c00
-000130 0000 c41b 0000 0c00 0000 d41b 0000 0c00
-000140 0000 e41b 0000 0c00 0000 f41b 0000 0c00
-000150 0000 041c 0000 0c00 0000 141c 0000 0c00
-000160 0000 241c 0000 0c00 0000 341c 0000 0c00
-000170 0000 441c 0000 0c00 0000 541c 0000 0c00
-000180 0000 641c 0000 0c00 0000 741c 0000 0c00
-000190 0000 841c 0000 0c00 0000 941c 0000 0c00
-0001a0 0000 a41c 0000 0c00 0000 b41c 0000 0c00
-0001b0 0000 c41c 0000 0c00 0000 d41c 0000 0c00
-0001c0 0000 e41c 0000 0c00 0000 f41c 0000 0c00
-0001d0 0000 041d 0000 0c00 0000 141d 0000 0c00
-0001e0 0000 241d 0000 0c00 0000 341d 0000 0c00
-0001f0 0000 441d 0000 0c00 0000 541d 0000 0c00
-000200
-
-
-
-[root@hla-ags ~]# dd if=/dev/mapper/vg1-hladata2 bs=512 count=1 | od -Ax -x
-1+0 records in
-000000 7970 6f72 746f 203a 2030 0a2f 500a 414c
-1+0 records out
-000010 4e49 4b0a 3120 410a 560a 3120 0a34 6964
-000020 2072 2e31 2e30 3572 392f 3830 4b0a 3420
-000030 690a 746f 0a61 2056 3531 660a 6c69 2065
-000040 2e6b 2e30 3472 362f 3833 450a 444e 450a
-000050 444e 4552 0a50 6469 203a 2e30 2e30 3572
-000060 312f 3131 0a30 7974 6570 203a 6964 0a72
-000070 7270 6465 203a 2e30 2e30 3472 382f 3034
-000080 630a 756f 746e 203a 0a35 6574 7478 203a
-000090 2035 3031 3733 3620 2030 3036 3220 6262
-0000a0 3538 6237 3138 3165 3235 6134 3939 6163
-0000b0 6337 6165 3163 3636 3433 6663 0a66 7063
-0000c0 7461 3a68 2f20 630a 706f 7279 6f6f 3a74
-0000d0 3020 2f20 0a0a 2e63 2e30 3372 392f 3135
-0000e0 6420 6c65 7465 2065 6166 736c 2065 6166
-0000f0 736c 2065 412f 442f 472f 722f 6f68 0a0a
-000100 2e6c 2e30 3474 312d 6d20 646f 6669 2079
-000110 7274 6575 6620 6c61 6573 2f20 2f41 2f43
-000120 7065 6973 6f6c 0a6e 0a0a 3131 3031 3120
-000130 3332 0a38 0000 0000 0000 0000 0000 0000
-000140 0000 0000 0000 0000 0000 0000 0000 0000
-*
-000200
-
-
-         Does that help with a diag?
-
-     Thomas Walker
-David Chinner wrote:
-
->On Thu, Mar 15, 2007 at 08:20:27PM -0400, Thomas Walker wrote:
->  
+At 06:59 PM 3/15/2007, David Chinner wrote:
+>On Thu, Mar 15, 2007 at 07:34:37AM -0400, Talpey, Thomas wrote:
+>> Evidently that was not the only compiling issue (surprise):
+>> 
+>> ><6>attempt to access beyond end of device
+>> ><6>sda3: rw=2, want=2574098408, limit=154272195...
+>That's a long way past the end of the partition.
 >
->>  Ok, here's the output of the command you wanted.  I ran it on both of the xfs file systems we have, both say bad superblock when trying to mount;
->>
->>[root@hla-ags ~]# dd if=/dev/mapper/vg0-hladata3 bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
->>000000
->>    
->>
->
->That failed - the output should be like:
->
-> # dd if=/dev/mapper/test_vg-fred bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
->000000 4658 4253 0000 0010 0000 0000 1000 0000
->000010 0000 0000 0000 0000 0000 0000 0000 0000
->000020 34a8 5343 d8e3 8d46 01a5 b1e4 3a76 ac05
->000030 0000 0000 0800 0400 0000 0000 0000 8000
->000040 0000 0000 0000 8100 0000 0000 0000 8200
->000050 0000 0100 0200 0000 0000 0800 0000 0000
->000060 0000 000a b430 0002 0001 1000 0000 0000
->000070 0000 0000 0000 0000 090c 0408 0011 1900
->000080 0000 0000 0000 803c 0000 0000 0000 0606
->000090 0000 0000 0c00 16f5 0000 0000 0000 0000
->0000a0 0000 0000 0000 0000 0000 0000 0000 0000
->0000b0 0000 0000 0000 0200 0000 0000 0000 0000
->0000c0 0000 0000 0000 0000 0000 0000 0000 0000
->*
->000200
->
->Can you remove the redirect to /dev/null so we can see the error message?
->
->Sorry about that.
->
->Cheers,
->
->Dave.
->  
->
+>Tom, did you run xfs_repair on that filesystem after
+>running with a busted compiler? Who knows how
+>it broke stuff on disk.....
+
+No, this was a freshly rebuilt ~80GB xfs. I was running a test on
+it over NFS which wrote and read 500MB files repeatedly. And, it
+ran for quite some time before failing. I haven't had a chance to
+track it down at all.
+
+Tom.
