@@ -1,57 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 19:02:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 19:18:59 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2G2226p019973
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 19:02:04 -0700
-Date: Fri, 16 Mar 2007 12:32:27 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Should xfs_repair take this long?
-Message-ID: <20070316013227.GO5743@melbourne.sgi.com>
-References: <20070315202027.CNS24438@comet.stsci.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070315202027.CNS24438@comet.stsci.edu>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2G2Iq6p023460
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 19:18:54 -0700
+Subject: TAKE 961389 - xfs_repair - invalid levels and 0 records for a btree root not detected
+Message-Id: <20070316021846.7518058FA1B6@chook.melbourne.sgi.com>
+Date: Fri, 16 Mar 2007 13:18:46 +1100 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Thomas Walker <walker@stsci.edu>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 15, 2007 at 08:20:27PM -0400, Thomas Walker wrote:
-> 
->   Ok, here's the output of the command you wanted.  I ran it on both of the xfs file systems we have, both say bad superblock when trying to mount;
-> 
-> [root@hla-ags ~]# dd if=/dev/mapper/vg0-hladata3 bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
-> 000000
+Make sure xfs_repair detects invalid btree roots in inodes
 
-That failed - the output should be like:
 
- # dd if=/dev/mapper/test_vg-fred bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
-000000 4658 4253 0000 0010 0000 0000 1000 0000
-000010 0000 0000 0000 0000 0000 0000 0000 0000
-000020 34a8 5343 d8e3 8d46 01a5 b1e4 3a76 ac05
-000030 0000 0000 0800 0400 0000 0000 0000 8000
-000040 0000 0000 0000 8100 0000 0000 0000 8200
-000050 0000 0100 0200 0000 0000 0800 0000 0000
-000060 0000 000a b430 0002 0001 1000 0000 0000
-000070 0000 0000 0000 0000 090c 0408 0011 1900
-000080 0000 0000 0000 803c 0000 0000 0000 0606
-000090 0000 0000 0c00 16f5 0000 0000 0000 0000
-0000a0 0000 0000 0000 0000 0000 0000 0000 0000
-0000b0 0000 0000 0000 0200 0000 0000 0000 0000
-0000c0 0000 0000 0000 0000 0000 0000 0000 0000
-*
-000200
+Date:  Fri Mar 16 13:18:10 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  Shailendra Tripathi [stripathi@agami.com]
 
-Can you remove the redirect to /dev/null so we can see the error message?
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Sorry about that.
 
-Cheers,
+Modid:  master-melb:xfs-cmds:28254a
+xfsprogs/VERSION - 1.170 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.170&r2=text&tr2=1.169&f=h
+xfsprogs/doc/CHANGES - 1.237 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.237&r2=text&tr2=1.236&f=h
+xfsprogs/debian/changelog - 1.150 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/debian/changelog.diff?r1=text&tr1=1.150&r2=text&tr2=1.149&f=h
+	- Bump version to 2.8.20
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+xfsprogs/repair/dir2.c - 1.21 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dir2.c.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
+	- Fix a warning
+
+xfsprogs/repair/dinode.c - 1.27 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dinode.c.diff?r1=text&tr1=1.27&r2=text&tr2=1.26&f=h
+	- Validate the btree root values in inodes
+
+xfsprogs/io/pwrite.c - 1.25 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/io/pwrite.c.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
+	- Fix a warning
