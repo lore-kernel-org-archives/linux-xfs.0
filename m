@@ -1,52 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 12:30:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GJUZ6p027199
-	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 12:30:38 -0700
-Message-ID: <45FAF061.8070800@sandeen.net>
-Date: Fri, 16 Mar 2007 14:30:41 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 12:37:40 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2GJbX6p028624
+	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 12:37:35 -0700
+Date: Sat, 17 Mar 2007 06:37:22 +1100
+From: David Chinner <dgc@sgi.com>
 Subject: Re: Should xfs_repair take this long?
-References: <20070315202027.CNS24438@comet.stsci.edu> <20070316013227.GO5743@melbourne.sgi.com> <45FA7C37.4070001@stsci.edu> <20070316192037.GZ5743@melbourne.sgi.com>
-In-Reply-To: <20070316192037.GZ5743@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20070316193722.GA5743@melbourne.sgi.com>
+References: <45F92D8C.3090708@stsci.edu> <20070315150422.7bc5d178@harpe.intellique.com> <45F952F2.6000008@stsci.edu> <20070315231031.GP6095633@melbourne.sgi.com> <45FAB480.908@stsci.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <45FAB480.908@stsci.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Thomas Walker <walker@stsci.edu>, xfs@oss.sgi.com
+To: Thomas Walker <walker@stsci.edu>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Fri, Mar 16, 2007 at 07:15:03AM -0400, Thomas Walker wrote:
->>    No problem.  The error was with the iflag=direct, apparently RHEL4 
->> doesn't like that option so I took it out.  Here's the output from each 
->> of the xfs volumes;
->>
->> [root@hla-ags ~]# dd if=/dev/mapper/vg0-hladata3 bs=512 count=1 | od -Ax -x
->> 1+0 records in
->> 1+0 records out
->> 000000 0000 6419 0000 0c00 0000 7419 0000 0c00
->> 000010 0000 8419 0000 0c00 0000 9419 0000 0c00
-> 
-> That's not a XFS superblock :(
+On Fri, Mar 16, 2007 at 11:15:12AM -0400, Thomas Walker wrote:
+>   So maybe I got bit the same way.  parted may be overwritten something 
+> at the head of the volume.
 
-lmdd pattern?
+Doesn't look like partition blocks at the start of each volume, though.
 
->> [root@hla-ags ~]# dd if=/dev/mapper/vg1-hladata2 bs=512 count=1 | od -Ax -x
->> 1+0 records in
->> 000000 7970 6f72 746f 203a 2030 0a2f 500a 414c
->> 000010 4e49 4b0a 3120 410a 560a 3120 0a34 6964
->> 000020 2072 2e31 2e30 3572 392f 3830 4b0a 3420
->> 000030 690a 746f 0a61 2056 3531 660a 6c69 2065
-> 
-> Neither is that - it's a bunch of text that doesn't
-> make much sense to me....
+> Is there any way to repair the super block 
+> though?  It seems that everyone agrees xfs can't do anything until it 
+> has a super block somewhere and I don't seem to have one.
 
-[esandeen@neon ~]$ echo "pyroot" | hexdump
-0000000 7970 6f72 746f 000a
+That's beacuse repair can't work out where things are supposed to
+be without a superblock to tell it critical information.
+Manually trying to find and repair a superblock is a hit and miss
+affair - at this point we don't even know if the primary superblocks
+have been overwritten or whether something else is wrong with LVM...
 
-python?
+> If there's no 
+> way to repair, then what about recovery? 
 
-*shrug*
+In a word: backups.
+
+> I see mention of possibly 
+> doing an xfs dump to another disk, reformat the original volume, and 
+> then xfs restore back.  Is there any online procedure for how to do that 
+> if it applies to me here?
+
+You need to be able to mount the filesystem to dump it, so until you
+can run repair there's no simple recovery option.
+
+If the lvm config is correct and repair cannot find a valid
+secondary superblock, then you really need to start doing dangerous
+things to try to recover. i'd suggest taking a copy of the lvm
+volumes before doing anything else.
+
+Then, find a secondary superblock in the volume (first 4 bytes of
+the sector are "XFSB" in hex) and copy that sector to block zero of
+the filesystem. If repair still won't do it's stuff, then you need
+to use xfs_db to modify that superblock until it does.  Then when
+repair runs, you get to look in lost+found and try to work out what
+all the broken bits are.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
