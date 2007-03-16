@@ -1,48 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 19:39:23 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2G2dJ6p026825
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 19:39:20 -0700
-Message-ID: <45FA035B.2070505@sandeen.net>
-Date: Thu, 15 Mar 2007 21:39:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS on Redhat4 U4
-References: <4BE67D4A1485054E99B21710FF21A9CD020BE8A8@swsmsx411.ger.corp.intel.com> <45F95E77.10207@falconstor.com>
-In-Reply-To: <45F95E77.10207@falconstor.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 20:25:48 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2G3Pg6p005632
+	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 20:25:43 -0700
+Subject: xfsdump buglets
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+Content-Type: text/plain
+Date: Fri, 16 Mar 2007 14:25:36 +1100
+Message-Id: <1174015536.5051.193.camel@edge>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: geir.myrestrand@falconstor.com
+To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
-Geir A. Myrestrand wrote:
-> Carassale, Mario wrote:
->> Hi,
->>
->>  
->>
->>  
->>
->> Is there any way to run XFS on RedHat 4 U4.
->>
-> 
-> Yes.
-> 
-> Eric Sandeen made a source RPM for the XFS kernel modules for RHEL4:
-> ftp://oss.sgi.com/projects/xfs/testing/RHEL4/
-> 
-> 
+Hey Bill,
 
-Centos has the latest version of what I've done... sgi guys, you might 
-actually take down the above link, or redirect it.
+Got a couple of minor xfsdump problems reported to me, they're probably
+straightforward for someone who knows xfsdump well - here ya go...
 
-The src.rpms are also mirrored at http://sandeen.net/rhel4_xfs (*)
+cheers.
 
-Grabbing the pre-built stuff from centos may be simplest, though.
+-------- Forwarded Message --------
+From: Peter Chubb <peterc@gelato.unsw.edu.au>
+Reply-To: Peter Chubb <peterc@gelato.unsw.edu.au>,
+415080@bugs.debian.org
+To: submit@bugs.debian.org
+Subject: Bug#415080: Poor error message from xfsdump for incorrect args
+Date: Fri, 16 Mar 2007 09:47:50 +1100
 
--Eric
+Package: xfsdump
+Version: 2.2.38-1 
 
-*rhel5_xfs for the adventurous...
+I do:
+	xfsdump -l 0 -p -f afile filesystem
+and get
+	xfsdump: ERROR: -^@ argument missing
+because -p needs a numeric argument.
+
+The message should say -p argument missing.
+--
+Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
+http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
+
+
+------- Forwarded Message --------
+From: Peter Chubb <peterc@gelato.unsw.edu.au>
+Reply-To: Peter Chubb <peterc@gelato.unsw.edu.au>,
+415081@bugs.debian.org
+To: submit@bugs.debian.org
+Subject: Bug#415081: xfsdump doesn't accept relative pathnames to
+mountpoints
+Date: Fri, 16 Mar 2007 09:54:52 +1100
+
+Package: xfsdump
+Version: 2.2.38-1
+
+I have a filesystem mounted at /export.
+
+I do:
+	cd /
+	xfsdump -l 0 -f /path/to/file export
+and see
+xfsdump: ERROR: export does not identify a file system
+
+	xfsdump -l 0 -f /path/to/file /export 
+
+works.
+--
+Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
+http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
+
+
+-- 
+Nathan
