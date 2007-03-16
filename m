@@ -1,91 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Mar 2007 23:02:01 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2G61r6p023662
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2007 23:01:55 -0700
-Subject: Re: [xfs-masters] XFS and booting
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <45FA1605.6080405@zytor.com>
-References: <45FA1605.6080405@zytor.com>
-Content-Type: text/plain
-Date: Fri, 16 Mar 2007 17:01:48 +1100
-Message-Id: <1174024908.5051.230.camel@edge>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 03:36:41 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2GAaY6p003661
+	for <linux-xfs@oss.sgi.com>; Fri, 16 Mar 2007 03:36:36 -0700
+Received: from localhost (dslb-084-056-083-057.pools.arcor-ip.net [84.56.83.57])
+	by mail.lichtvoll.de (Postfix) with ESMTP id 7CC525ADE6
+	for <linux-xfs@oss.sgi.com>; Fri, 16 Mar 2007 11:36:33 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Questions about XFS
+Date: Fri, 16 Mar 2007 11:36:31 +0100
+References: <200703131440.56678.clflush@chello.be> <45F8CAEA.3050408@list.rakugaki.org> <200703151007.32630.clflush@chello.be>
+In-Reply-To: <200703151007.32630.clflush@chello.be>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Disposition: inline
+Message-Id: <200703161136.32234.Martin@lichtvoll.de>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-masters@oss.sgi.com
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hi,
+Am Donnerstag 15 März 2007 schrieb clflush:
+> From what I know, and correct me if I'm wrong, XFS relies on the
+> application side to do the right job but real world experience shows us
+> that *a lot* of applications out there behave badly and cannot be
+> trusted hence if something happens, XFS cannot "correct" the problem
+> leaving you with headaches behind depending on how much data you
+> lost/corrupted and the importance of it. IMHO, XFS *should* do some
+> effort at assuring integrity to minimize the bad behavior of badly
+> written applications out there.
 
-On Thu, 2007-03-15 at 20:59 -0700, H. Peter Anvin wrote:
-> I have been looking at adding XFS support to the syslinux bootloader 
-> suite, and discovered, to my dismay:
-> 
-> No, for root partition installations because the XFS superblock is 
-> written at block zero, where LILO would be installed. This is to 
-> maintain compatibility with the IRIX on-disk format, and will not be 
-> changed.
+Hello,
 
-This FAQ entry could probably be worded a bit more diplomatically.
-It is both the IRIX format (11+ years) and the last 6+ years of use
-of XFS on Linux by many, many people (and many SGI / other companies
-paying customers) that prevents this kind of change at this stage.
+as Eric wrote in this thread recent versions of XFS do an effort on 
+avoiding these zeros in files:
 
-> This means that it's impossible to write a boot loader that actually 
-> plays by the x86 platform rules and still can boot from XFS.  Other than 
+"On the other hand, there were some changes made to xfs to explicitly 
+sync files on close, if they have been truncated, which should help this 
+sort of problem.  Depending on what's in OpenSuSE 10.2, that change may 
+or may not be in your code..."
 
-Using lilo with an xfs root via the boot=/dev/hda and root=/dev/hda1
-method (i.e. non-root-partition MBR) has been working OK for me and
-others.  Is that not playing by the rules?  Is that an option for
-your setup?  It's a third option to the two you listed anyway (grub
-vs /boot, I mean).
+> On the one hand you have the old Ext3 FS which doesn't perform very
+> well in many areas but IMO is a lot safer to work on (doesn't loose
+> data that easily compared to XFS - and I'm talking from experience here
+> because I use both file systems and I lost much more on the XFS system
+> than on the Ext3 one) and on the other hand you have this excellent XFS
+> file system with its clean layout and awesome performance + fancy
+> features like GRIO, extents, allocate on flush, real time volumes, etc
+> *but* is not "safe" enough to work with if you have unreliable hardware
+> and/or a lot of power outage issues  - I've never lost data on Ext3
+> during a power outage but already lost 2 times data on XFS
 
-> the GRUB option of spreading itself all over the disk in places it 
-> shouldn't be, like the MBR, thus breaking e.g. softraid and creating all 
-> kinds of unnecessary interoperability problems.
-> 
-> Anyway, since it looks like the damage of not offsetting the filesystem 
-> has already been done, I'm trying to figure out what, if anything, can 
+Since 2.6.17.7 and enabled write barriers I didn't loose meta data 
+consistency on my laptop anymore and I can tell you that it crashed a lot 
+due to my experiments with what not (especially OSS radeon drivers and 
+beryl;-). I also had some classical power outages. I usually do not put a 
+battery into my laptop if not needed.
 
-Or, worded another way, "the damage of designing a system having an MBR
-in the first sector of space that is then allocated to filesystems" -
-it's a shocker of a layering violation.
+And with recent XFS I did not encounter any data losses at all. Might have 
+been luck, but before after a crash or power outage Akkregator told me 
+sometimes that the file with the newsfeed stuff was corrupted and a 
+backup has been restored. I didn't see this dialog since a long time on 
+my laptop.
 
-> be done about it.  A standard MBR will never be able to boot an XFS, but 
-> perhaps a slightly modified MBR can be made to do that, without 
-> introducing filesystem-instance-specific issues.  In particular, if 
-> there is space anywhere in the superblock for a "boot sector pointer", 
-> *and* there is a way to safely write this pointer, then a slightly 
-> modified MBR could detect an XFS superblock and re-read a boot sector at 
-> that offset.
-> 
-> Is this something that could be done?
+That given I would like to have more safety built into the filesystem 
+itself, but at least current ext3 is too ancient technology for me. 
+Coming from the Amiga a filesystem with a hard maximum number of inodes 
+just doesn't fit my expectations (although original Amiga FFS has lot of 
+shortcomings too;-).
 
-It could be done - thats not the sound of me volunteering though ;) -
-there is space available in most XFS filesystem geometries that could
-be reclaimed for this kind of thing.
+The real challenge is to implement safety without serious loss of 
+performance. You have more data safety in ext3, but less performance, and 
+more performance in XFS, but potential less data safety with badly 
+written applications. Not almost every bit of additional performance in 
+XFS comes from transferring responsibility of data safety to the 
+application, but I believe there is a relationship between safety and 
+performance.
 
-For example, for a 512 byte sector filesystem with a 4K blocksize, we
-have unused sectors at bytes 2048->4096 (following the space used for
-the first 4 sectors - SB, AGI AGF, AGFL, but before the first fsblock).
-This is the default mkfs geometry, so by far most filesystems have the
-free space here that could be utilised by a boot loader.  And there's
-plenty of space in the superblock for a field with the meaning "the
-boot sector lives here".  Actually, it'd be pretty straightforward to
-do this in XFS - the trickier part is working out in mkfs all of the
-geometries which do not result in freespace available for a boot sector,
-but thats not really very hard either.
+Maybe wandering logs / a log structured approach as (partly) seen in 
+Reiser 4 and NetApp's WAFL might be a good approach to get more data 
+safety without (much) less performance. (Well in the NetApp FAS non 
+volatile RAM plays an important role, too.)
 
-The important question is, would anyone use it, if such a feature was
-available?  Eric/I/... well, anyone could probably hack up the XFS code
-in a weekend to allow someone to test this out, but I'd want to be very
-sure it wasn't going to be wasted effort...
-
-cheers.
-
+Regards,
 -- 
-Nathan
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
