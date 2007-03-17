@@ -1,91 +1,144 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 17:35:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Mar 2007 17:36:27 -0700 (PDT)
 Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2H0ZX6p017138
-	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 17:35:35 -0700
-Date: Sat, 17 Mar 2007 01:35:24 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2H0aL6p017384
+	for <xfs@oss.sgi.com>; Fri, 16 Mar 2007 17:36:22 -0700
+Date: Sat, 17 Mar 2007 01:36:17 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] xfs: use xfs_get_buf_noaddr for iclogs
-Message-ID: <20070317003524.GA17362@lst.de>
-References: <20070307101314.GB30587@lst.de> <20070312044117.GK6095633@melbourne.sgi.com>
+Subject: Re: [PATCH 2/2] xfs: stop using kmalloc in xfs_buf_get_noaddr
+Message-ID: <20070317003617.GB17362@lst.de>
+References: <20070307101324.GC30587@lst.de> <20070309115511.GA20426@lst.de> <73E41C01F3C8F79AD31CEDAF@timothy-shimmins-power-mac-g5.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070312044117.GK6095633@melbourne.sgi.com>
+In-Reply-To: <73E41C01F3C8F79AD31CEDAF@timothy-shimmins-power-mac-g5.local>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
+To: Timothy Shimmin <tes@sgi.com>
 Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com, ecashin@coraid.com, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-On Mon, Mar 12, 2007 at 03:41:17PM +1100, David Chinner wrote:
-> OTOH, all other buffers are supposed to be locked when under I/O.
-> This change makes a special case for the log buffers, and I'd prefer
-> not to have to remember that this behaviour changed fo log buffers
-> at some point in time.
+> It looks like you might need: for (i--; i >= 0; i--)
+> (or: for (j = 0; j < i; j++) etc.)
 > 
-> I suggest that adding:
+> Because if the initial alloc_page loop goes to completion then:
+>  i == pagecount
+> and if alloc_page loop terminates early then
+>  bp->b_pages[i] == NULL
+> So we have gone 1 too far in both cases and need to
+> start free'ing back one.
+> Unless I missed something.
 
-...
+No, I was missing something :)
 
-> +		XFS_BUF_PSEMA(bp, PRIBIO);
-
-...
-
-> To lock the buffer should be added here. That way we don't change
-> any semantics of the code at all.
-
-Here's a patch with your suggestion implemented.  Seems to work
-fine under heavy NFS load for me.  Note that the log recovery has
-some inconsistancies already about doing I/O both on locked and
-unlocked buffers.  Long-term it might be a good idea to change
-xfs_get_buf_noaddr to return a locked buffer like xfs_get_buf(_flags)
-does already.
+Here's the updated version:
 
 
-Index: linux-2.6/fs/xfs/xfs_log.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_log.c	2007-03-16 15:21:43.000000000 +0100
-+++ linux-2.6/fs/xfs/xfs_log.c	2007-03-16 15:34:15.000000000 +0100
-@@ -1199,11 +1199,18 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		*iclogp = (xlog_in_core_t *)
- 			  kmem_zalloc(sizeof(xlog_in_core_t), KM_SLEEP);
- 		iclog = *iclogp;
--		iclog->hic_data = (xlog_in_core_2_t *)
--			  kmem_zalloc(iclogsize, KM_SLEEP | KM_LARGE);
--
- 		iclog->ic_prev = prev_iclog;
- 		prev_iclog = iclog;
-+
-+		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
-+		if (!XFS_BUF_CPSEMA(bp))
-+			ASSERT(0);
-+		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-+		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
-+		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
-+		iclog->ic_bp = bp;
-+		iclog->hic_data = bp->b_addr;
-+
- 		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2007-03-16 15:32:20.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2007-03-16 15:35:10.000000000 +0100
+@@ -314,7 +314,7 @@ xfs_buf_free(
  
- 		head = &iclog->ic_header;
-@@ -1216,11 +1223,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		INT_SET(head->h_fmt, ARCH_CONVERT, XLOG_FMT);
- 		memcpy(&head->h_fs_uuid, &mp->m_sb.sb_uuid, sizeof(uuid_t));
+ 	ASSERT(list_empty(&bp->b_hash_list));
  
--		bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
--		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
--		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
--		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
--		iclog->ic_bp = bp;
+-	if (bp->b_flags & _XBF_PAGE_CACHE) {
++	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
+ 		uint		i;
  
- 		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
- 		iclog->ic_state = XLOG_STATE_ACTIVE;
-@@ -1528,7 +1530,6 @@ xlog_dealloc_log(xlog_t *log)
+ 		if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1))
+@@ -323,18 +323,11 @@ xfs_buf_free(
+ 		for (i = 0; i < bp->b_page_count; i++) {
+ 			struct page	*page = bp->b_pages[i];
+ 
+-			ASSERT(!PagePrivate(page));
++			if (bp->b_flags & _XBF_PAGE_CACHE)
++				ASSERT(!PagePrivate(page));
+ 			page_cache_release(page);
  		}
- #endif
- 		next_iclog = iclog->ic_next;
--		kmem_free(iclog->hic_data, log->l_iclog_size);
- 		kmem_free(iclog, sizeof(xlog_in_core_t));
- 		iclog = next_iclog;
+ 		_xfs_buf_free_pages(bp);
+-	} else if (bp->b_flags & _XBF_KMEM_ALLOC) {
+-		 /*
+-		  * XXX(hch): bp->b_count_desired might be incorrect (see
+-		  * xfs_buf_associate_memory for details), but fortunately
+-		  * the Linux version of kmem_free ignores the len argument..
+-		  */
+-		kmem_free(bp->b_addr, bp->b_count_desired);
+-		_xfs_buf_free_pages(bp);
  	}
+ 
+ 	xfs_buf_deallocate(bp);
+@@ -764,41 +757,41 @@ xfs_buf_get_noaddr(
+ 	size_t			len,
+ 	xfs_buftarg_t		*target)
+ {
+-	size_t			malloc_len = len;
++	unsigned long		page_count = PAGE_ALIGN(len) >> PAGE_SHIFT;
++	int			error, i;
+ 	xfs_buf_t		*bp;
+-	void			*data;
+-	int			error;
+ 
+ 	bp = xfs_buf_allocate(0);
+ 	if (unlikely(bp == NULL))
+ 		goto fail;
+ 	_xfs_buf_initialize(bp, target, 0, len, 0);
+ 
+- try_again:
+-	data = kmem_alloc(malloc_len, KM_SLEEP | KM_MAYFAIL | KM_LARGE);
+-	if (unlikely(data == NULL))
++	error = _xfs_buf_get_pages(bp, page_count, 0);
++	if (error)
+ 		goto fail_free_buf;
+ 
+-	/* check whether alignment matches.. */
+-	if ((__psunsigned_t)data !=
+-	    ((__psunsigned_t)data & ~target->bt_smask)) {
+-		/* .. else double the size and try again */
+-		kmem_free(data, malloc_len);
+-		malloc_len <<= 1;
+-		goto try_again;
+-	}
+-
+-	error = xfs_buf_associate_memory(bp, data, len);
+-	if (error)
++	for (i = 0; i < page_count; i++) {
++		bp->b_pages[i] = alloc_page(GFP_KERNEL);
++		if (!bp->b_pages[i])
++			goto fail_free_mem;
++	}
++	bp->b_flags |= _XBF_PAGES;
++
++	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
++	if (unlikely(error)) {
++		printk(KERN_WARNING "%s: failed to map pages\n",
++				__FUNCTION__);
+ 		goto fail_free_mem;
+-	bp->b_flags |= _XBF_KMEM_ALLOC;
++	}
+ 
+ 	xfs_buf_unlock(bp);
+ 
+ 	XB_TRACE(bp, "no_daddr", data);
+ 	return bp;
++
+  fail_free_mem:
+-	kmem_free(data, malloc_len);
++ 	while (--i >= 0)
++		__free_page(bp->b_pages[i]);
+  fail_free_buf:
+ 	xfs_buf_free(bp);
+  fail:
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.h	2007-03-13 18:18:05.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.h	2007-03-16 15:34:20.000000000 +0100
+@@ -63,7 +63,7 @@ typedef enum {
+ 
+ 	/* flags used only internally */
+ 	_XBF_PAGE_CACHE = (1 << 17),/* backed by pagecache		   */
+-	_XBF_KMEM_ALLOC = (1 << 18),/* backed by kmem_alloc()		   */
++	_XBF_PAGES = (1 << 18),	    /* backed by refcounted pages	   */
+ 	_XBF_RUN_QUEUES = (1 << 19),/* run block device task queue	   */
+ 	_XBF_DELWRI_Q = (1 << 21),   /* buffer on delwri queue		   */
+ } xfs_buf_flags_t;
