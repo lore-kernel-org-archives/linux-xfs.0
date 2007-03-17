@@ -1,63 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 Mar 2007 06:01:26 -0700 (PDT)
-Received: from bay0-omc3-s31.bay0.hotmail.com (bay0-omc3-s31.bay0.hotmail.com [65.54.246.231])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2HD1K6p008578
-	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 06:01:21 -0700
-Message-ID: <BAY103-DAV1484A3797D5368C28969CBB2700@phx.gbl>
-From: "Marco Berizzi" <pupilla@hotmail.com>
-References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl> <20070316195951.GB5743@melbourne.sgi.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
-Date: Sat, 17 Mar 2007 14:00:30 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 Mar 2007 07:32:52 -0700 (PDT)
+Received: from mtagate1.uk.ibm.com (mtagate1.uk.ibm.com [195.212.29.134])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2HEWe6p025842
+	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 07:32:42 -0700
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate1.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l2HEWcAX084742
+	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 14:32:38 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2HEWcUc1626332
+	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 14:32:38 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2HEWb7Z005719
+	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 14:32:38 GMT
+Date: Sat, 17 Mar 2007 15:30:43 +0100
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [RFC][PATCH] sys_fallocate() system call
+Message-ID: <20070317143043.GA8577@osiris.ibm.com>
+References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <17915.48105.70494.958220@cargo.ozlabs.ibm.com> <20070317110706.GB29931@parisc-linux.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070317110706.GB29931@parisc-linux.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Paul Mackerras <paulus@samba.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>, suparna@in.ibm.com, cmm@us.ibm.com, alex@clusterfs.com, suzuki@in.ibm.com
 
-David Chinner wrote:
-
-> Ok, so an ipsec change. And I see from the history below it
-> really has nothing to do with this problem. it seems the problem
-> has something to do with changes between 2.6.19.1 and 2.6.19.2.
-
-indeed. Yesterday at 13:00 I have switched from 2.6.19.1 to 2.6.19.2
-(without the ipsec fix) and at about 17:30 linux has crashed again.
-I have recompiled 2.6.19.2 with all kernel debugging options enabled
-and rebooted. Now I'm waiting for the crash...
-
-> There were no changes to XFS between 2.6.19.1 and 2.6.19.2,
-> so I'm thinking that your problems are related to something
-> other than XFS. Can you do a git bisect to determine what the
-> bad patch is?
-
-Ok, monday morning I will try to do a git bisect. I just want tell you
-that this machine is a firewall (3 nic) + ipsec gateway (openswan) +
-http proxy (squid). I think that the problem is related to the networking.
-I have other 2.6.19/2.6.20 linux boxes acting as proftpd/samba/sendmail
-without any problem.
-
->> > Can you run xfs_repair on that filesystem and see if reports
->> > (and fixes) any problems?
->> 
->> I don't need to run xfs_repair to fix the problem,
+On Sat, Mar 17, 2007 at 05:07:06AM -0600, Matthew Wilcox wrote:
+> On Sat, Mar 17, 2007 at 08:59:05PM +1100, Paul Mackerras wrote:
+> > ... but wouldn't work on 32-bit powerpc. :(  We would end up with a
+> > pad argument between fd and offset, giving 7 arguments in all
+> > (counting the loff_t's as 2), but we only support 6.
 > 
-> Except that the trigger might be on-disk corruption so we
-> need to rule that out first.
+> Ditto mips and parisc.
 
-Ok I will run xfs_repair and post results.
+Can't be. Or: mips supports 7 arguments and parisc doesn't pad.
+Otherwise they couldn't have wired up
 
->> I only unplug the power cable and reboot the system,
->> xfs filesystem are correctly mounted.
->> However tell me if I must run xfs_repair to check
->> the filesystem.
-> 
-> Yes, you need to run xfs_repair.
+sys_sync_file_range(int fd, loff_t offset, loff_t nbytes, unsigned int flags)
 
-ok , thanks a lot for the feedback.
-
-PS: I'm running slackware 11 with xfsprogs-2.8.10. Are they fine
-or should I upgrade?
+But from what I read, it's currently not possible for 32-bit powerpc to
+wire up the already present sync_file_range system call.
