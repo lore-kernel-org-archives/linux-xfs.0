@@ -1,35 +1,27 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 Mar 2007 04:43:01 -0700 (PDT)
-Received: from mail.parisc-linux.org ([192.25.206.14])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2HBgq6p028048
-	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 04:42:53 -0700
-Date: Sat, 17 Mar 2007 05:10:37 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC][PATCH] sys_fallocate() system call
-Message-ID: <20070317111036.GC29931@parisc-linux.org>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 Mar 2007 04:45:28 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2HBjL6p028607
+	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 04:45:24 -0700
+Date: Sat, 17 Mar 2007 11:45:20 +0000
+From: "'Christoph Hellwig'" <hch@infradead.org>
+Subject: Re: [PATCH] New xfs_repair handling for inode nlink counts
+Message-ID: <20070317114519.GA7922@infradead.org>
+References: <20070309073410.GA8798@infradead.org> <200703130151.MAA03235@larry.melbourne.sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070316161704.GE8525@osiris.boeblingen.de.ibm.com>
+In-Reply-To: <200703130151.MAA03235@larry.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>, suparna@in.ibm.com, cmm@us.ibm.com, alex@clusterfs.com, suzuki@in.ibm.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, xfs@oss.sgi.com, xfs-dev@sgi.com
 
-On Fri, Mar 16, 2007 at 05:17:04PM +0100, Heiko Carstens wrote:
-> > +asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
+On Tue, Mar 13, 2007 at 12:51:35PM +1100, Barry Naujok wrote:
+> Hi Christoph,
 > 
-> e.g.
-> 
-> asmlinkage long sys_fallocate(int fd, loff_t offset, loff_t len, int mode)
-> 
-> would work even on s390 ;)
+> Thanks for the feedback. I've attached an update to the trackmem stuff 
+> for review. globals.c is now unmodified.
 
-How about:
-
-asmlinkage long sys_fallocate(int fd, int mode, u32 off_low, u32 off_high,
-				u32 len_low, u32 len_high);
-
-That way we all suffer equally ...
+Looks good to me.
