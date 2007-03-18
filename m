@@ -1,30 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 Mar 2007 15:00:56 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2HM0o6p021658
-	for <xfs@oss.sgi.com>; Sat, 17 Mar 2007 15:00:51 -0700
-Message-ID: <45FC650F.70208@sandeen.net>
-Date: Sat, 17 Mar 2007 17:00:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 Mar 2007 03:07:30 -0700 (PDT)
+Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2IA7M6p005390
+	for <linux-xfs@oss.sgi.com>; Sun, 18 Mar 2007 03:07:25 -0700
+From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
+Subject: RE: cache+barriers vs cache+nobarriers vs disabled cache+barriers vs disabled cache+nobarriers
+Date: Sun, 18 Mar 2007 12:07:11 +0200
 MIME-Version: 1.0
-Subject: Re: HAVE_FORMAT32 never enabled in mainline
-References: <20070317154028.GA18997@lst.de>
-In-Reply-To: <20070317154028.GA18997@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="windows-1255"
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <200703151339.36259.Martin@lichtvoll.de>
+Message-Id: <20070318101304.BAA2E193E9@mail.edu.haifa.ac.il>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: tes@melbourne.sgi.com, xfs@oss.sgi.com
+To: 'Martin Steigerwald' <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Looks like the code for dealing with x86/amd64 logs is never actually 
-> enable in mainline because nothing defines HAVE_FORMAT32.
+> > Hello All,
+> >
+> >
+> > After reading http://oss.sgi.com/projects/xfs/faq.html#wcache
+> > and some posts on the list I've got the following question:
+> >
+> > If I have disabled write cache on the disk (hdparm -W0 /dev/hda) and by
+> > default FS is mounted with "barrier" enabled, Is there any taste in
+> > enabling "barrier"(by default) because write cache is disabled anyway
+> > or may be it's a good idea to mount with "nobarriers" in this case?
+> 
+> Hello Leon!
+> 
+> It is not needed to enable barriers when write cache is disabled. Enabling
+> barriers in this case shouldn't have any visible effect I think.
+> 
 
-Actually since it's all #ifndef (note the n) everything under the 
-#ifndefs -is- enabled (since it's never defined), so I think it's all 
-functional.... structures under the #ifndefs are used outside the 
-#ifndefs, so the #ifndefs can probably just be removed...?
+Thanks for your reply Martin,
 
--Eric
+My goal is to avoid filesystem corruption at any cost (while trying to use
+fastest FS for linux) and according to the FAQ disabling write cache is the
+right way to do it. 
+Power/Hardware failure may occur in-between the flushes (with write barrier
+enabled) so the safe way (I think) is to disable write cache.
+
+It's interesting if there is a significant drop in the performance with
+disabled disk "write cache" and XFS filesystem comparing to ext3+enabled
+"write cache".
+
+Has anyone some statistics or tests comparing ext3+enabled write cache vs.
+xfs+disabled write cache?
+
+
+Best Regards,
+Leon Kolchinsky
