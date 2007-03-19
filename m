@@ -1,241 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 00:49:28 -0700 (PDT)
-Received: from relay.sw.ru (mailhub.sw.ru [195.214.233.200])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2J7nJ6p027244
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 00:49:21 -0700
-Subject: [PATCH 1/2] fs: remove duplicated iovec checking code v8
-From: Dmitriy Monakhov <dmonakhov@openvz.org>
-Date: Mon, 19 Mar 2007 10:49:01 +0300
-Message-ID: <87slc18yhe.fsf@sw.ru>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 02:31:39 -0700 (PDT)
+Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2J9VR6p020551
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 02:31:28 -0700
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2J9VOvt026036
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 05:31:24 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2J9U83A183388
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 05:30:08 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2J9U7Zk011279
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 05:30:08 -0400
+Date: Mon, 19 Mar 2007 15:00:06 +0530
+From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Subject: Re: [RFC][PATCH] sys_fallocate() system call
+Message-ID: <20070319093006.GB12092@amitarora.in.ibm.com>
+References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070317163350.6b676c26.sfr@canb.auug.org.au>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070317163350.6b676c26.sfr@canb.auug.org.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, xfs@oss.sgi.com, devel@openvz.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>, suparna@in.ibm.com, cmm@us.ibm.com, alex@clusterfs.com, suzuki@in.ibm.com
 
+On Sat, Mar 17, 2007 at 04:33:50PM +1100, Stephen Rothwell wrote:
+> On Fri, 16 Mar 2007 20:01:01 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
+> >
+> 
+> > +asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
+> >
+> > --- linux-2.6.20.1.orig/include/asm-powerpc/systbl.h
+> > +++ linux-2.6.20.1/include/asm-powerpc/systbl.h
+> > @@ -305,3 +305,4 @@ SYSCALL_SPU(faccessat)
+> >  COMPAT_SYS_SPU(get_robust_list)
+> >  COMPAT_SYS_SPU(set_robust_list)
+> >  COMPAT_SYS(move_pages)
+> > +SYSCALL(fallocate)
+> 
+> It is going to need to be a COMPAT_SYS call in powerpc because 32 bit
+> powerpc will pass the two loff_t's in pairs of registers while
+> 64bit passes them in one register each.
 
-Where are several places where the same code used for iovec checks.
-This patch just move this code to separate helper function, and replace
-duplicated code with it. IMHO it is better because these are checks that
-we want for all filesystems/drivers that use vectored I/O.
+Ok. Will make that change, unless it is decided to pass each loff_t
+argument as two "u32"s. Thanks!
 
-Signed-off-by: Dmitriy Monakhov <dmonakhov@openvz.org>
----
- fs/ntfs/file.c             |   21 +++------------------
- fs/read_write.c            |   40 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_lrw.c |   22 +++-------------------
- include/linux/fs.h         |    3 +++
- mm/filemap.c               |   43 ++++++-------------------------------------
- 5 files changed, 55 insertions(+), 74 deletions(-)
-
-diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
-index dbbac55..2c672a4 100644
---- a/fs/ntfs/file.c
-+++ b/fs/ntfs/file.c
-@@ -2129,28 +2129,13 @@ static ssize_t ntfs_file_aio_write_nolock(struct kiocb *iocb,
- 	struct address_space *mapping = file->f_mapping;
- 	struct inode *inode = mapping->host;
- 	loff_t pos;
--	unsigned long seg;
- 	size_t count;		/* after file limit checks */
- 	ssize_t written, err;
- 
- 	count = 0;
--	for (seg = 0; seg < nr_segs; seg++) {
--		const struct iovec *iv = &iov[seg];
--		/*
--		 * If any segment has a negative length, or the cumulative
--		 * length ever wraps negative then return -EINVAL.
--		 */
--		count += iv->iov_len;
--		if (unlikely((ssize_t)(count|iv->iov_len) < 0))
--			return -EINVAL;
--		if (access_ok(VERIFY_READ, iv->iov_base, iv->iov_len))
--			continue;
--		if (!seg)
--			return -EFAULT;
--		nr_segs = seg;
--		count -= iv->iov_len;	/* This segment is no good */
--		break;
--	}
-+	err = generic_iovec_checks(iov, &nr_segs, &count, VERIFY_READ);
-+	if (err)
-+		return err;
- 	pos = *ppos;
- 	vfs_check_frozen(inode->i_sb, SB_FREEZE_WRITE);
- 	/* We can write back this queue in page reclaim. */
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 4d03008..22ec324 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -217,6 +217,46 @@ Einval:
- 	return -EINVAL;
- }
- 
-+/*
-+ * Performs necessary iovec checks before doing a write
-+ * @iov:	io vector request
-+ * @nr_segs:	number of segments in the iovec
-+ * @count:	number of bytes to write
-+ * @access_flags: type of access: %VERIFY_READ or %VERIFY_WRITE
-+ *
-+ * Adjust number of segments and amount of bytes to write (nr_segs should be
-+ * properly initialized first). Returns appropriate error code that caller
-+ * should return or zero in case that write should be allowed.
-+ */
-+int generic_iovec_checks(const struct iovec *iov,
-+			unsigned long *nr_segs, size_t *count,
-+			unsigned long access_flags)
-+{
-+	unsigned long   seg;
-+	size_t cnt = 0;
-+	for (seg = 0; seg < *nr_segs; seg++) {
-+		const struct iovec *iv = &iov[seg];
-+
-+		/*
-+		 * If any segment has a negative length, or the cumulative
-+		 * length ever wraps negative then return -EINVAL.
-+		 */
-+		cnt += iv->iov_len;
-+		if (unlikely((ssize_t)(cnt|iv->iov_len) < 0))
-+			return -EINVAL;
-+		if (access_ok(access_flags, iv->iov_base, iv->iov_len))
-+			continue;
-+		if (seg == 0)
-+			return -EFAULT;
-+		*nr_segs = seg;
-+		cnt -= iv->iov_len;	/* This segment is no good */
-+		break;
-+	}
-+	*count = cnt;
-+	return 0;
-+}
-+EXPORT_SYMBOL(generic_iovec_checks);
-+
- static void wait_on_retry_sync_kiocb(struct kiocb *iocb)
- {
- 	set_current_state(TASK_UNINTERRUPTIBLE);
-diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
-index ff8d64e..9a11b00 100644
---- a/fs/xfs/linux-2.6/xfs_lrw.c
-+++ b/fs/xfs/linux-2.6/xfs_lrw.c
-@@ -639,7 +639,6 @@ xfs_write(
- 	xfs_fsize_t		isize, new_size;
- 	xfs_iocore_t		*io;
- 	bhv_vnode_t		*vp;
--	unsigned long		seg;
- 	int			iolock;
- 	int			eventsent = 0;
- 	bhv_vrwlock_t		locktype;
-@@ -652,24 +651,9 @@ xfs_write(
- 	vp = BHV_TO_VNODE(bdp);
- 	xip = XFS_BHVTOI(bdp);
- 
--	for (seg = 0; seg < segs; seg++) {
--		const struct iovec *iv = &iovp[seg];
--
--		/*
--		 * If any segment has a negative length, or the cumulative
--		 * length ever wraps negative then return -EINVAL.
--		 */
--		ocount += iv->iov_len;
--		if (unlikely((ssize_t)(ocount|iv->iov_len) < 0))
--			return -EINVAL;
--		if (access_ok(VERIFY_READ, iv->iov_base, iv->iov_len))
--			continue;
--		if (seg == 0)
--			return -EFAULT;
--		segs = seg;
--		ocount -= iv->iov_len;  /* This segment is no good */
--		break;
--	}
-+	error = generic_iovec_checks(iovp, &segs, &ocount, VERIFY_READ);
-+	if (error)
-+		return error;
- 
- 	count = ocount;
- 	pos = *offset;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b07d505..032b907 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1771,6 +1771,9 @@ extern ssize_t generic_file_sendfile(struct file *, loff_t *, size_t, read_actor
- extern void do_generic_mapping_read(struct address_space *mapping,
- 				    struct file_ra_state *, struct file *,
- 				    loff_t *, read_descriptor_t *, read_actor_t);
-+extern int generic_iovec_checks(const struct iovec *iov,
-+		unsigned long *nr_segs, size_t *count,
-+		unsigned long access_flags);
- 
- /* fs/splice.c */
- extern ssize_t generic_file_splice_read(struct file *, loff_t *,
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 8e1849a..bbef42f 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1180,24 +1180,9 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
- 	loff_t *ppos = &iocb->ki_pos;
- 
- 	count = 0;
--	for (seg = 0; seg < nr_segs; seg++) {
--		const struct iovec *iv = &iov[seg];
--
--		/*
--		 * If any segment has a negative length, or the cumulative
--		 * length ever wraps negative then return -EINVAL.
--		 */
--		count += iv->iov_len;
--		if (unlikely((ssize_t)(count|iv->iov_len) < 0))
--			return -EINVAL;
--		if (access_ok(VERIFY_WRITE, iv->iov_base, iv->iov_len))
--			continue;
--		if (seg == 0)
--			return -EFAULT;
--		nr_segs = seg;
--		count -= iv->iov_len;	/* This segment is no good */
--		break;
--	}
-+	retval = generic_iovec_checks(iov, &nr_segs, &count, VERIFY_WRITE);
-+	if (retval)
-+		return retval;
- 
- 	/* coalesce the iovecs and go direct-to-BIO for O_DIRECT */
- 	if (filp->f_flags & O_DIRECT) {
-@@ -2094,30 +2079,14 @@ __generic_file_aio_write_nolock(struct kiocb *iocb, const struct iovec *iov,
- 	size_t ocount;		/* original count */
- 	size_t count;		/* after file limit checks */
- 	struct inode 	*inode = mapping->host;
--	unsigned long	seg;
- 	loff_t		pos;
- 	ssize_t		written;
- 	ssize_t		err;
- 
- 	ocount = 0;
--	for (seg = 0; seg < nr_segs; seg++) {
--		const struct iovec *iv = &iov[seg];
--
--		/*
--		 * If any segment has a negative length, or the cumulative
--		 * length ever wraps negative then return -EINVAL.
--		 */
--		ocount += iv->iov_len;
--		if (unlikely((ssize_t)(ocount|iv->iov_len) < 0))
--			return -EINVAL;
--		if (access_ok(VERIFY_READ, iv->iov_base, iv->iov_len))
--			continue;
--		if (seg == 0)
--			return -EFAULT;
--		nr_segs = seg;
--		ocount -= iv->iov_len;	/* This segment is no good */
--		break;
--	}
-+	err = generic_iovec_checks(iov, &nr_segs, &ocount, VERIFY_READ);
-+	if (err)
-+		return err;
- 
- 	count = ocount;
- 	pos = *ppos;
--- 
-1.4.4.2
+--
+Regards,
+Amit Arora
