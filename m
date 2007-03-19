@@ -1,63 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 Mar 2007 14:33:21 -0700 (PDT)
-Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2ILXG6p005661
-	for <linux-xfs@oss.sgi.com>; Sun, 18 Mar 2007 14:33:18 -0700
-Date: Sun, 18 Mar 2007 14:33:13 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: cache+barriers vs cache+nobarriers vs disabled cache+barriers vs disabled cache+nobarriers
-Message-ID: <20070318213313.GA23121@tuatara.stupidest.org>
-References: <200703151339.36259.Martin@lichtvoll.de> <20070318101304.BAA2E193E9@mail.edu.haifa.ac.il>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 Mar 2007 18:04:16 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2J1496p023688
+	for <xfs@oss.sgi.com>; Sun, 18 Mar 2007 18:04:11 -0700
+Date: Mon, 19 Mar 2007 12:04:00 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: HAVE_FORMAT32 never enabled in mainline
+Message-ID: <EFC23B1F6DEB80902BB22B79@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20070317154028.GA18997@lst.de>
+References: <20070317154028.GA18997@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20070318101304.BAA2E193E9@mail.edu.haifa.ac.il>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Leon Kolchinsky <leonk@construct.haifa.ac.il>
-Cc: 'Martin Steigerwald' <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, tes@melbourne.sgi.com, xfs@oss.sgi.com
 
-On Sun, Mar 18, 2007 at 12:07:11PM +0200, Leon Kolchinsky wrote:
+Hi Christoph,
 
-> My goal is to avoid filesystem corruption at any cost
+--On 17 March 2007 4:40:28 PM +0100 Christoph Hellwig <hch@lst.de> wrote:
 
-doing what?  applications can still lose data if they're not careful
+> Looks like the code for dealing with x86/amd64 logs is never actually
+> enable in mainline because nothing defines HAVE_FORMAT32.
 
-> (while trying to use fastest FS for linux) and according to the FAQ
-> disabling write cache is the right way to do it.
+It is enabled, the HAVE_FORMAT32 is #ifndef around some particular type
+definitions. (The code has been tested:)
 
-unless you applications are care, it's typical that reliability is
-going to cost in terms of performance
+It is currently used because those header files are shared between
+userspace and kernel. And in userspace, there is a case where the 32bit
+format definition is already defined in another header file - that
+case is for IRIX, whose pack syntax is different with its compiler.
+So if this is a concern then I would need to have these defined elsewhere
+or break the kernel/userspace link on this file, etc...
+Suggestions welcome...
 
-> Power/Hardware failure may occur in-between the flushes (with write
-> barrier enabled) so the safe way (I think) is to disable write
-> cache.
-
-i've heard (but nobody has been able to give conrete details on this)
-that disabling the write-cache on modern drives will lessen their
-lifespan, often considerably
-
-with write barriers sane applications should be just as safe as when
-you disable the write cache
-
-> It's interesting if there is a significant drop in the performance
-> with disabled disk "write cache" and XFS filesystem comparing to
-> ext3+enabled "write cache".
-
-that's expected, w/o the write-cache drives are typically a lot slower
-for many loads (why else would they put a write cache in disks afetr
-all)
-
-> Has anyone some statistics or tests comparing ext3+enabled write
-> cache vs.  xfs+disabled write cache?
-
-why would you compare those two?  why ext3 w/ caches enabled and xfs
-w/ caches disabled?
-
-
-anyhow, it depends on your load, for some loads ext3 is faster and
-others xfs is faster
-
-
-what access patterns are you expecting?
+--Tim
