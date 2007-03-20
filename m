@@ -1,67 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 20:26:15 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2K3Q56p031541
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 20:26:09 -0700
-Date: Tue, 20 Mar 2007 14:26:00 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: But wait, theres more... [Fwd: Bug#415123: -R option can't append to a plain file]
-Message-ID: <17CB3A8C59A80064581C0A32@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <1174252993.5051.233.camel@edge>
-References: <1174252993.5051.233.camel@edge>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 22:36:29 -0700 (PDT)
+Received: from mx1.suse.de (mail.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2K5aL6p005294
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 22:36:22 -0700
+Date: Tue, 20 Mar 2007 06:36:18 +0100
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: Announce: new-aops-1 for 2.6.21-rc3
+Message-ID: <20070320053618.GB30766@wotan.suse.de>
+References: <20070315161704.GH8321@wotan.suse.de> <20070315234713.GH21942@ca-server1.us.oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20070315234713.GH21942@ca-server1.us.oracle.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com, wkendall@sgi.com
-Cc: xfs@oss.sgi.com
+To: Mark Fasheh <mark.fasheh@oracle.com>
+Cc: Linux Filesystems <linux-fsdevel@vger.kernel.org>, reiserfs-list@namesys.com, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, nfs@lists.sourceforge.net, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net
 
-Hi,
+On Thu, Mar 15, 2007 at 04:47:13PM -0700, Mark Fasheh wrote:
+> On Thu, Mar 15, 2007 at 05:17:04PM +0100, Nick Piggin wrote:
+> > (excludes the OCFS2 patch that Mark sent, in anticipation of an update)
+> 
+> Attached is said patch. I needed to export __grab_cache_page (ext2/ext3 also
+> need this if they're to be built as modules), so a patch to do that is also
+> attached.
+> 
+> This passed some preliminary testing on a two node cluster I have here at
+> Oracle.
 
-I'll leave this to Bill. Just a couple of comments.
+Thanks Mark, I've merged these.
 
-I don't know if you can call it a "bug", more of a restriction.
-There is a layer provided for the I/O using drive_*.c -
-i.e drive_scsitape.c, drive_minrmt.c, drive_simple.c (which show up
-as a "drive strategy" on output).
-As part of the ds_instantiate() interface one typically sets up the d_capabilities
-that this drive strategy supports and for files (drive_simple), DRIVE_CAP_APPEND is
-not given. What the ramifications for drive_simple (file strategy) are,
-I wouldn't know without looking at the code and playing with it.
-But I'd call it an RFE :)
-
---Tim
-
---On 19 March 2007 8:23:13 AM +1100 Nathan Scott <nscott@aconex.com> wrote:
-
-> And a free set of steak knives if you fix this bug...  ;-)
->
-> -------- Forwarded Message --------
-> From: Peter Chubb <peterc@gelato.unsw.edu.au>
-> Reply-To: Peter Chubb <peterc@gelato.unsw.edu.au>,
-> 415123@bugs.debian.org
-> To: submit@bugs.debian.org
-> Subject: Bug#415123: -R option can't append to a plain file
-> Date: Fri, 16 Mar 2007 19:54:37 +1100
->
-> Package: xfsdump
-> Version: 2.2.38-1
->
-> If I use xfsdump to dump to a plain file, interrupt it, then restart
-> with the -R option, xfsdump complains:
->
-> xfsdump: ERROR: media contains valid xfsdump but does not support append
->
-> which is misleading: of *course* you can append to a regular file if
-> there's space on the filesystem.
->
-> --
-> Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
-> http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
->
-> --
-> Nathan
->
+Nick
