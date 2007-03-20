@@ -1,54 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 04:25:23 -0700 (PDT)
-Received: from mtagate4.uk.ibm.com (mtagate4.uk.ibm.com [195.212.29.137])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2JBPB6p020176
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 04:25:13 -0700
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate4.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l2JBP8s6025314
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 11:25:08 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2JBP8sj2039814
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 11:25:08 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2JBP7Pc017691
-	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 11:25:08 GMT
-Date: Mon, 19 Mar 2007 12:23:12 +0100
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [RFC][PATCH] sys_fallocate() system call
-Message-ID: <20070319112312.GA8331@osiris.boeblingen.de.ibm.com>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316152103.GD8525@osiris.boeblingen.de.ibm.com> <20070319092404.GA12092@amitarora.in.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070319092404.GA12092@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 Mar 2007 17:59:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2K0xM6p023091
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2007 17:59:25 -0700
+From: donaldd@sgi.com
+Subject: TAKE 962291 - Quota enforcement active for all quota types when enforcement is active for any
+Message-Id: <20070320005916.2197B26AB4C4@linuxbuild.melbourne.sgi.com>
+Date: Tue, 20 Mar 2007 11:59:15 +1100 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>, suparna@in.ibm.com, cmm@us.ibm.com, alex@clusterfs.com, suzuki@in.ibm.com, Matthew Wilcox <matthew@wil.cx>, Paul Mackerras <paulus@samba.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Russell King <rmk+lkml@arm.linux.org.uk>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Mon, Mar 19, 2007 at 02:54:04PM +0530, Amit K. Arora wrote:
-> On Fri, Mar 16, 2007 at 04:21:03PM +0100, Heiko Carstens wrote:
-> > On Fri, Mar 16, 2007 at 08:01:01PM +0530, Amit K. Arora wrote:
-> > >  asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
-> > > 
-> > > Currently we have two modes FA_ALLOCATE and FA_DEALLOCATE, for
-> > > preallocation and deallocation of preallocated blocks respectively. More
-> > > modes can be added, when required. And these modes can be renamed, since
-> > > I am sure these are no way the best ones ! :)
-> > > 
-> Yes, the problem was adding compat wrapper for this. I will appreciate
-> your help in writing it. Only thing is that we might have to wait till
-> the order of the arguments is decided upon. Thanks!
+Fix uquota and oquota enforcement problems.
 
-There is probably not much choice. If you want to stay with the loff_t
-arguments it won't work on 31-bit s390 or 32-bit powerpc dependent on the
-order of the arguments.
-So you should go for what Matthew Wilcox suggested:
+When uquota and oquota (gquota/pquota) are enabled for accounting both
+are enforced if ether has enforcement active. 
 
-asmlinkage long sys_fallocate(int fd, int mode, u32 off_low, u32 off_high,
-			      u32 len_low, u32 len_high);
+Conditions:
+ - Both XFS_UQUOTA_ACCT and XFS_GQUOTA_ACCT are enabled.
+ - Either XFS_UQUOTA_ENFD or XFS_OQUOTA_ENFD is enabled.
+ - The usage without enforce is reached at the soft limit.
 
-That way it will work an all architectures and in addition no architecture
-has to do some magic to combine the splitted 64 bit arguments in compat
-mode.
+Problems:
+ 1. "repquota" shows all grace time even if no enforcement. 
+ 2. we cannot make a file over a hard limits even if no enforcement.
+
+Signed-off-by: Kouta Ooizumi <k-ooizumi@tnes.nec.co.jp>
+
+
+
+Date:  Tue Mar 20 11:54:43 AEDT 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  doanldd
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:28272a
+fs/xfs/xfs_quota.h - 1.48 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_quota.h.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
+	- Split out XFS_IS_QUOTA_ENFORCED into XFS_IS_UQUOTA_ENFORCED and XFS_IS_OQUOTA_ENFORCED.
+
+fs/xfs/quota/xfs_trans_dquot.c - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_trans_dquot.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+	- Fix uquota and oquota enforcement problems.
+
+fs/xfs/quota/xfs_qm_syscalls.c - 1.33 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.33&r2=text&tr2=1.32&f=h
+	- Fix uquota and oquota enforcement problems.
