@@ -1,56 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Mar 2007 09:44:20 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Mar 2007 10:41:49 -0700 (PDT)
 Received: from service.eng.exegy.net (68-191-203-42.static.stls.mo.charter.com [68.191.203.42])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2MGiE6p005768
-	for <linux-xfs@oss.sgi.com>; Thu, 22 Mar 2007 09:44:16 -0700
-Received: from HANAFORD.eng.exegy.net (hanaford.eng.exegy.net [10.19.1.4])
-	by service.eng.exegy.net (8.13.1/8.13.1) with ESMTP id l2MGiDJr026289
-	for <linux-xfs@oss.sgi.com>; Thu, 22 Mar 2007 11:44:13 -0500
-Message-ID: <4602B25A.80009@exegy.com>
-Date: Thu, 22 Mar 2007 11:44:10 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2MHfi6p018498
+	for <linux-xfs@oss.sgi.com>; Thu, 22 Mar 2007 10:41:46 -0700
+Message-ID: <4602BF9A.2080402@exegy.com>
+Date: Thu, 22 Mar 2007 12:40:42 -0500
 From: "Mr. Berkley Shands" <bshands@exegy.com>
 Content-Class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: 2.6.20 XFS and LSI8888ELP race with 8 Virtual drives
+Subject: 2.6.20 (+2.6.21-rc4) write hang modifier
 Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Dave Lloyd <dlloyd@exegy.com>
 
-I have a uniwide 3346, 20GB 8-core Opteron (2.2GHz)
-With one LSI-8888ELP PCI-e SAS controller.
-Each of the two external mini-sas 4-lane connectors goes to
-an Xtore XJ-SAxx-316J-2 (16 drive 3U with dual SAS ports).
-Running both Centos 4.4 or RedHat-5 Server with kernel 2.6.20.
+If I set /proc/sys/vm/dirty_ratio to "5" the write lockup happens within
+the first MilliSecond, at about 100MB per file system.
+If I slew the dirty_ratio to 80, the lockup happens
+at about 2GB per file system.
 
-The raids are all 4 drive raid0, 128KB stripes, using Seagate 7200.10
-320GB drives (all firmware AAJ or later) Sata-II drives.
-XFS filesystem, properly aligned, mkfs'ed etc.
-
-If I write to all 4 VDs on one Xtore at a time, I get ~550MB/Sec
-combined write rate. If I try writing to 7 of the 8 VDs at one time,
-I get just under 800MB/Sec. Any 7 of 8 VDs.
-But If I try to write to ALL 8 at once, the system crawls to a stop,
-and I get Micro-Bytes per second.
-
-xfs_datad/<N> process runs every few seconds, then pdflush runs
-two or three at a time every few seconds. But iostat reports 0 writes.
-every 10 seconds or so (iostat 5) reports a burst of write activity,
-and then 10 seconds of nothing.
-
-If I use  the Adaptec 4805 (two of them), I get about
-the same write rate, but it does not hang (AACRAID driver).
-same type of file systems, same external enclosures.
-
-I had a "echo 10 > /proc/sys/vm/dirty_ratio" fix in to correct slow
-writes (vs 2.6.18), but altering this value changed nothing. It still
-runs oh-so-slow.
-
-What to look at next? 2.6.21-rc4 ?
+2.6.21-rc4 has the same symptoms, and same lockups.
+It appears that mptsas is dropping something.
 
 berkley
+
 -- 
 
 //E. F. Berkley Shands, MSc//
