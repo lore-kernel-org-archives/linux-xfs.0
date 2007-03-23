@@ -1,83 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Mar 2007 03:12:41 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2NACa6p002894
-	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 03:12:37 -0700
-Date: Fri, 23 Mar 2007 09:50:55 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS and write barriers.
-Message-ID: <20070323095055.GA13478@infradead.org>
-References: <17923.11463.459927.628762@notabene.brown> <20070323053043.GD32602149@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Mar 2007 06:29:04 -0700 (PDT)
+Received: from srv-mailrelais-dz1.argus.int (smtp.argus-presse.fr [213.244.9.225])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2NDSs6p013977
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 06:28:56 -0700
+Received: from srv-mail-dz2.argus.int (srv-mail-dz2.argus.int [192.168.2.10])
+	by srv-mailrelais-dz1.argus.int (Postfix) with ESMTP id 6979426968
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 14:10:42 +0100 (CET)
+Received: from [10.0.0.111] (pnoel-as.argus.int [10.0.0.111])
+	by srv-mail-dz2.argus.int (Postfix) with ESMTP id 595283D94
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 14:10:42 +0100 (CET)
+Subject: xfs_repair on Debian testing 64bits
+From: Patrick =?ISO-8859-1?Q?No=EBl?= <patrick.noel@argus-presse.fr>
+Content-Type: text/plain
+Date: Fri, 23 Mar 2007 14:10:42 +0100
+Message-Id: <1174655443.5441.37.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070323053043.GD32602149@melbourne.sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Neil Brown <neilb@suse.de>, xfs@oss.sgi.com, hch@infradead.org
+To: xfs@oss.sgi.com
 
-On Fri, Mar 23, 2007 at 04:30:43PM +1100, David Chinner wrote:
-> On Fri, Mar 23, 2007 at 12:26:31PM +1100, Neil Brown wrote:
-> > 
-> > Hi,
-> >  I have two concerns related to XFS and write barrier support that I'm
-> >  hoping can be resolved.
-> > 
-> > Firstly in xfs_mountfs_check_barriers in fs/xfs/linux-2.6/xfs_super.c,
-> > it tests ....->queue->ordered to see if that is QUEUE_ORDERED_NONE.
-> > If it is, then barriers are disabled.
-> > 
-> > I think this is a layering violation - xfs really has no business
-> > looking that deeply into the device.
-> 
-> Except that the device behaviour determines what XFS needs to do
-> and there used to be no other way to find out.
-> 
-> Christoph, any reason for needing this check anymore? I can't see
-> any particular reason for needing to do this as __make_request()
-> will check it for us when we test now.
 
-When I first implemented it I really dislike the idea of having request
-fail asynchrnously due to the lack of barriers.  Then someone (Jens?)
-told me we need to do this check anyway because devices might lie to
-us, at which point I implemented the test superblock writeback to
-check if it actually works.
+Hi,
 
-So yes, we could probably get rid of the check now, although I'd
-prefer the block layer exporting an API to the filesystem to tell
-it whether there is any point in trying to use barriers.
+i have a device with 5,3To under a debian (sarge) 32bits server.
 
-> > Secondly, if a barrier write fails due to EOPNOTSUPP, it should be
-> > retried without the barrier (after possibly waiting for dependant
-> > requests to complete).  This is what other filesystems do, but I
-> > cannot find the code in xfs which does this.
-> 
-> XFS doesn't handle this - I was unaware that the barrier status of the
-> underlying block device could change....
-> 
-> OOC, when did this behaviour get introduced?
+When i try a xfs_repair (2.8.20) on 5,3To i have a message :
 
-That would be really bad.  XFS metadata buffers can have multiple bios
-and retrying a single one would be rather difficult.
+xfs_repair: libxfs_initbuf can't memalign 4096 bytes: Cannot allocate
+memory [ ... ] 
 
-> +	/*
-> +	 * We can get an EOPNOTSUPP to ordered writes.  Here we clear the
-> +	 * ordered flag and reissue them.  Because we can't tell the higher
-> +	 * layers directly that they should not issue ordered I/O anymore, they
-> +	 * need to check if the ordered flag was cleared during I/O completion.
-> +	 */
-> +	if ((bp->b_error == EOPNOTSUPP) &&
-> +	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
-> +		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
-> +		bp->b_flags &= ~XBF_ORDERED;
-> +		xfs_buf_iorequest(bp);
-> +	} else if (bp->b_iodone)
->  		(*(bp->b_iodone))(bp);
->  	else if (bp->b_flags & XBF_ASYNC)
->  		xfs_buf_relse(bp);
+i tried mounting the device on a 64 bits (Debian testing) and with
+xfs_repair 2.8.20 there is no problem with memory but is very long (12
+hours between phase 1 and phase 6)
 
-So you're retrying the whole I/O, this is probably better than trying
-to handle this at the bio level.  I still don't quite like doing another
-I/O from the I/O completion handler.
+when i use xfs_repair on 32 bits i saw 8 thread but on 64 bits just only
+on thread.
+
+i try to force 8 thread with -o thread=8
+
+and i have this message :
+
+ xfs_repair -o thread=8 /dev/sdb1
+ - creating 8 worker thread(s)
+
+
+but with ps xa  | grep repair i see only one thread.
+
+have an idea to have several thread ?
+
+Thanks
+
+Patrick 
