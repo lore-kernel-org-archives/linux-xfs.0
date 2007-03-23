@@ -1,79 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Mar 2007 01:00:56 -0700 (PDT)
-Received: from mx2.suse.de (ns2.suse.de [195.135.220.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2N80q6p012514
-	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 01:00:53 -0700
-From: Neil Brown <neilb@suse.de>
-Date: Fri, 23 Mar 2007 19:00:46 +1100
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Mar 2007 01:37:34 -0700 (PDT)
+Received: from mail.interline.it (mail.interline.it [195.182.241.4])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2N8bS6p018402
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 01:37:31 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.interline.it (Postfix) with ESMTP id D864D103B
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 09:28:23 +0100 (CET)
+Received: from mail.interline.it ([127.0.0.1])
+	by localhost (pin [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+	id 27574-05 for <xfs@oss.sgi.com>;
+	Fri, 23 Mar 2007 09:28:17 +0100 (CET)
+From: "Daniele P." <daniele@interline.it>
+Subject: Re: xfsrepair memory consumption
+Date: Fri, 23 Mar 2007 09:36:47 +0100
+References: <200703210843.TAA08491@larry.melbourne.sgi.com> <200703211208.27665.daniele@interline.it> <20070321213611.GB1208@tuatara.stupidest.org>
+In-Reply-To: <20070321213611.GB1208@tuatara.stupidest.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Message-Id: <200703230936.47788.daniele@interline.it>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Message-ID: <17923.35118.139991.252734@notabene.brown>
-Subject: Re: XFS and write barriers.
-In-Reply-To: message from Timothy Shimmin on Friday March 23
-References: <17923.11463.459927.628762@notabene.brown>
-	<1755676AA526FF7790546385@timothy-shimmins-power-mac-g5.local>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Friday March 23, tes@sgi.com wrote:
-> >
-> > I think this test should just be removed and the xfs_barrier_test
-> > should be the main mechanism for seeing if barriers work.
-> >
-> Oh okay.
-> This is all Christoph's (hch) code, so it would be good for him to comment here.
-> The external log and readonly tests can stay though.
-> 
+On Wednesday 21 March 2007 22:36, Chris Wedgwood wrote:
+> On Wed, Mar 21, 2007 at 12:08:27PM +0100, Daniele P. wrote:
+> > Phase 6 still uses little more memory (killed!).
+> > I will add more memory and will test later.
+>
+> Stupid question (Sorry, I didn't read the thread that carefully), is
+> there any reason you can't just add swap-space and let it thrash a
+> little?
 
-Why no barriers on an external log device??? Not important, just
-curious.
+Oh, it's less expensive (less typing) to add ram because it's a
+virtual machine.
+Finally using the 2.8.20-1 version requires 1 GB of memory vs 750 MB for
+2.6.20-1.
+Next time I will add more swap by default.
 
-> 2.
-> > Secondly, if a barrier write fails due to EOPNOTSUPP, it should be
-> > retried without the barrier (after possibly waiting for dependant
-> > requests to complete).  This is what other filesystems do, but I
-> > cannot find the code in xfs which does this.
-> > The approach taken by xfs_barrier_test seems to suggest that xfs does
-> > do this... could someone please point me to the code ?
-> >
-> You got me confused here.
-> I was wondering why the test write of the superblock (in xfs_barrier_test)
-> should be retried without barriers :)
-> But you were referring to the writing of the log buffers using barriers.
-> Yeah, if we get an EOPNOTSUPP AFAIK, we will report the error and shutdown
-> the filesystem (xlog_iodone()). This will happen when one of our (up to 8)
-> incore log buffers I/O completes and xlog_iodone handler is called.
-> I don't believe we have a notion of barrier'ness changing for us, and
-> we just test it at mount time.
-> Which bit of code led you to believe we do a retry?
-
-Uhmm.. I think I just got confused reading xfs_barrier_test,  I cannot
-see it anymore (I think I didn't see the error return and so assumed
-some lower layer but be setting some state flag).
-
-> 
-> > This is particularly important for md/raid1 as it is quite possible
-> > that barriers will be supported at first, but after a failure and
-> > different device on a different controller could be swapped in that
-> > does not support barriers.
-> >
-> 
-> Oh okay, I see. And then later one that supported them can be swapped back in?
-> So the other FSs are doing a sync'ed write out and then if there is an
-> EOPNOTSUPP they retry and disable barrier support henceforth?
-> Yeah, I guess we could do that in xlog_iodone() on failed completion and retry the write without
-> the ORDERED flag on EOPNOTSUPP error case (and turn off the flag).
-> Dave (dgc) can you see a problem with that?
-
-If an md/raid1 disables barriers and subsequently is restored to a
-state where all drives support barriers, it currently does *not*
-re-enable them device-wide.  This would probably be quite easy to
-achieve, but as no existing filesystem would ever try barriers
-again.....
-
-Thanks,
-NeilBrown
+Regards,
+Daniele P.
