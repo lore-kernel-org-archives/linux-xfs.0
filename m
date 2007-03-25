@@ -1,107 +1,93 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Mar 2007 21:18:14 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2P4I86p030386
-	for <xfs@oss.sgi.com>; Sat, 24 Mar 2007 21:18:09 -0700
-Date: Sun, 25 Mar 2007 15:17:55 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS and write barriers.
-Message-ID: <20070325041755.GJ32602149@melbourne.sgi.com>
-References: <17923.11463.459927.628762@notabene.brown> <20070323053043.GD32602149@melbourne.sgi.com> <17923.34462.210758.852042@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <17923.34462.210758.852042@notabene.brown>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 Mar 2007 06:09:19 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2PD996p031553
+	for <linux-xfs@OSS.SGI.com>; Sun, 25 Mar 2007 06:09:11 -0700
+Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.62 #1)
+	id 1HVReN-0008Mo-FG
+	for <linux-xfs@OSS.SGI.com>; Sun, 25 Mar 2007 13:16:43 +0100
+Resent-Message-ID: <17926.26665.807869.199983@base.ty.sabi.co.UK>
+Resent-To: linux-xfs@oss.sgi.com
+Subject: Re: xfs_repair on Debian testing 64bits
+Date: Sun, 25 Mar 2007 13:10:33 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
+Message-ID: <17926.26297.892974.270267@base.ty.sabi.co.UK>
+References: <1174655443.5441.37.camel@localhost.localdomain>
+In-Reply-To: <1174655443.5441.37.camel@localhost.localdomain>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Neil Brown <neilb@suse.de>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, hch@infradead.org
+To: Linux XFS <linux-xfs@oss.sgi.com>
 
-On Fri, Mar 23, 2007 at 06:49:50PM +1100, Neil Brown wrote:
-> On Friday March 23, dgc@sgi.com wrote:
-> > On Fri, Mar 23, 2007 at 12:26:31PM +1100, Neil Brown wrote:
-> > > Secondly, if a barrier write fails due to EOPNOTSUPP, it should be
-> > > retried without the barrier (after possibly waiting for dependant
-> > > requests to complete).  This is what other filesystems do, but I
-> > > cannot find the code in xfs which does this.
-> > 
-> > XFS doesn't handle this - I was unaware that the barrier status of the
-> > underlying block device could change....
-> > 
-> > OOC, when did this behaviour get introduced?
-> 
-> Probably when md/raid1 started supported barriers....
-> 
-> The problem is that this interface is (as far as I can see) undocumented
-> and not fully specified.
+>>> On Fri, 23 Mar 2007 14:10:42 +0100, Patrick Noël
+>>> <patrick.noel@argus-presse.fr> said:
 
-And not communicated very far, either.
+patrick.noel> Hi, i have a device with 5,3To under a debian
+patrick.noel> (sarge) 32bits server.  When i try a xfs_repair
+patrick.noel> (2.8.20) on 5,3To i have a message : xfs_repair:
+patrick.noel> libxfs_initbuf can't memalign 4096 bytes: Cannot
+patrick.noel> allocate memory
 
-> Barriers only make sense inside drive firmware.
+  http://OSS.SGI.com/archives/linux-xfs/2005-08/msg00045.html
 
-I disagree. e.g. Barriers have to be handled by the block layer to
-prevent reordering of I/O in the request queues as well. The
-block layer is responsible for ensuring barrier I/Os, as
-indicated by the filesystem, act as real barriers.
+    «From some quick tests I just ran, for 32bit binaries
+     xfs_check needs around 1GiB RAM per TiB of filesystem plus
+     about 100MiB RAM per 1million inodes in the filesystem (more
+     if you have lots of fragmented files). Double this for 64bit
+     binaries.  e.g. it took 1.5GiB RAM for 32bit xfs_check and
+     2.7GiB RAM for a 64bit xfs_check on a 1.1TiB filesystem with
+     3million inodes in it.»
 
-> Trying to emulate it
-> in the md layer doesn't make any sense as the filesystem is in a much
-> better position to do any emulation required.
+And from a message that is missing from the list archive:
 
-You're saying that the emulation of block layer functionality is the
-responsibility of layers above the block layer. Why is this not
-considered a layering violation?
+   «To successfully check or run repair on a multi-terabyte
+    filesystem, you need:
 
-> > > This is particularly important for md/raid1 as it is quite possible
-> > > that barriers will be supported at first, but after a failure and
-> > > different device on a different controller could be swapped in that
-> > > does not support barriers.
-> > 
-> > I/O errors are not the way this should be handled. What happens if
-> > the opposite happens? A drive that needs barriers is used as a
-> > replacement on a filesystem that has barriers disabled because they
-> > weren't needed? Now a crash can result in filesystem corruption, but
-> > the filesystem has not been able to warn the admin that this
-> > situation occurred. 
-> 
-> There should never be a possibility of filesystem corruption.
-> If the a barrier request fails, the filesystem should:
->   wait for any dependant request to complete
->   call blkdev_issue_flush
->   schedule the write of the 'barrier' block
->   call blkdev_issue_flush again.
+	- a 64bit machine
+	- a 64bit xfs_repair/xfs_check binary
+	- ~2GB RAM per terabyte of filesystem
+	- 100-200MB of RAM per million inodes in the filesystem.
 
-IOWs, the filesystem has to use block device calls to emulate a block device
-barrier I/O. Why can't the block layer, on reception of a barrier write
-and detecting that barriers are no longer supported by the underlying
-device (i.e. in MD), do:
+    xfs_repair will usually use less memory than this, but these
+    numbers give you a ballpark figure for what a large
+    filesystem that is > 80% full can require to repair.
 
-	wait for all queued I/Os to complete
-	call blkdev_issue_flush
-	schedule the write of the 'barrier' block
-	call blkdev_issue_flush again.
+    FWIW, last time this came up internally, the 29TB filesystem
+    in question took ~75GB of RAM+swap to repair.»
 
-And not involve the filesystem at all? i.e. why should the filesystem
-have to do this?
+patrick.noel> [ ... ] i tried mounting the device on a 64 bits
+patrick.noel> (Debian testing) and with xfs_repair 2.8.20 there
+patrick.noel> is no problem with memory but is very long (12
+patrick.noel> hours between phase 1 and phase 6) [ ... ]
 
-> My understand is that that sequence is as safe as a barrier, but maybe
-> not as fast.
+That seems to me quite fast, like 500GB per hour; you don't say
+how many files, but assuming say 50KB/file that's 10M files/hour.
 
-Yes, and my understanding is that the block device is perfectly capable
-of implementing this just as safely as the filesystem.
+For comparison sometimes it takes more than two months to 'fsck' a
+1.5TB filesystem with 'ext3':
 
-> The patch looks at least believable.  As you can imagine it is awkward
-> to test thoroughly.
+  http://UKAI.org/b/log/debian/snapshot/1_month_fsck-2005-07-22-00-00.html
+  http://UKAI.org/b/log/debian/snapshot/fsck_completed_but-2005-09-04-15-00.html
 
-As well as being pretty much impossible to test reliably with an
-automated testing framework. Hence so ongoing test coverage will
-approach zero.....
+A rarely appreciated aspect of 'fsck' is that check and repair of
+an error-free filesystem is usually *much* faster than for one
+with errors. From some small scale tests I did some time ago:
 
-Cheers,
+  http://WWW.sabi.co.UK/blog/anno06-2nd.html#060424b
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+   «If one extrapolates linearly from the larger filesystem, which
+    has an 800KiB average file size, a filesystem with 6.5TiB of
+    data in 8.5M inodes will take at least 50 minutes to check,
+    and one with 65TiB of data in around 85M inodes at least 11
+    hours. If one extrapolates from the smaller filesystem, which
+    has a 16KiB average file size, those times must be at least 4
+    times larger.
+
+    Again, these are optimal times, assuming that there the
+    filesystem is freshly restored and there are no errors. One
+    can imagine that recovery in a filesystem with damage and
+    fragmentation be a lot slower.»
