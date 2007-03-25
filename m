@@ -1,57 +1,26 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Mar 2007 20:51:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Mar 2007 21:18:14 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2P3pa6p025220
-	for <xfs@oss.sgi.com>; Sat, 24 Mar 2007 20:51:38 -0700
-Date: Sun, 25 Mar 2007 14:51:26 +1100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2P4I86p030386
+	for <xfs@oss.sgi.com>; Sat, 24 Mar 2007 21:18:09 -0700
+Date: Sun, 25 Mar 2007 15:17:55 +1100
 From: David Chinner <dgc@sgi.com>
 Subject: Re: XFS and write barriers.
-Message-ID: <20070325035126.GI32602149@melbourne.sgi.com>
-References: <17923.11463.459927.628762@notabene.brown> <20070323053043.GD32602149@melbourne.sgi.com> <20070323095055.GA13478@infradead.org>
+Message-ID: <20070325041755.GJ32602149@melbourne.sgi.com>
+References: <17923.11463.459927.628762@notabene.brown> <20070323053043.GD32602149@melbourne.sgi.com> <17923.34462.210758.852042@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070323095055.GA13478@infradead.org>
+In-Reply-To: <17923.34462.210758.852042@notabene.brown>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: David Chinner <dgc@sgi.com>, Neil Brown <neilb@suse.de>, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, hch@infradead.org
 
-On Fri, Mar 23, 2007 at 09:50:55AM +0000, Christoph Hellwig wrote:
-> On Fri, Mar 23, 2007 at 04:30:43PM +1100, David Chinner wrote:
+On Fri, Mar 23, 2007 at 06:49:50PM +1100, Neil Brown wrote:
+> On Friday March 23, dgc@sgi.com wrote:
 > > On Fri, Mar 23, 2007 at 12:26:31PM +1100, Neil Brown wrote:
-> > > 
-> > > Hi,
-> > >  I have two concerns related to XFS and write barrier support that I'm
-> > >  hoping can be resolved.
-> > > 
-> > > Firstly in xfs_mountfs_check_barriers in fs/xfs/linux-2.6/xfs_super.c,
-> > > it tests ....->queue->ordered to see if that is QUEUE_ORDERED_NONE.
-> > > If it is, then barriers are disabled.
-> > > 
-> > > I think this is a layering violation - xfs really has no business
-> > > looking that deeply into the device.
-> > 
-> > Except that the device behaviour determines what XFS needs to do
-> > and there used to be no other way to find out.
-> > 
-> > Christoph, any reason for needing this check anymore? I can't see
-> > any particular reason for needing to do this as __make_request()
-> > will check it for us when we test now.
-> 
-> When I first implemented it I really dislike the idea of having request
-> fail asynchrnously due to the lack of barriers.  Then someone (Jens?)
-> told me we need to do this check anyway because devices might lie to
-> us, at which point I implemented the test superblock writeback to
-> check if it actually works.
-> 
-> So yes, we could probably get rid of the check now, although I'd
-> prefer the block layer exporting an API to the filesystem to tell
-> it whether there is any point in trying to use barriers.
-
-Ditto.
-
 > > > Secondly, if a barrier write fails due to EOPNOTSUPP, it should be
 > > > retried without the barrier (after possibly waiting for dependant
 > > > requests to complete).  This is what other filesystems do, but I
@@ -62,39 +31,72 @@ Ditto.
 > > 
 > > OOC, when did this behaviour get introduced?
 > 
-> That would be really bad.  XFS metadata buffers can have multiple bios
-> and retrying a single one would be rather difficult.
+> Probably when md/raid1 started supported barriers....
 > 
-> > +	/*
-> > +	 * We can get an EOPNOTSUPP to ordered writes.  Here we clear the
-> > +	 * ordered flag and reissue them.  Because we can't tell the higher
-> > +	 * layers directly that they should not issue ordered I/O anymore, they
-> > +	 * need to check if the ordered flag was cleared during I/O completion.
-> > +	 */
-> > +	if ((bp->b_error == EOPNOTSUPP) &&
-> > +	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
-> > +		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
-> > +		bp->b_flags &= ~XBF_ORDERED;
-> > +		xfs_buf_iorequest(bp);
-> > +	} else if (bp->b_iodone)
-> >  		(*(bp->b_iodone))(bp);
-> >  	else if (bp->b_flags & XBF_ASYNC)
-> >  		xfs_buf_relse(bp);
+> The problem is that this interface is (as far as I can see) undocumented
+> and not fully specified.
+
+And not communicated very far, either.
+
+> Barriers only make sense inside drive firmware.
+
+I disagree. e.g. Barriers have to be handled by the block layer to
+prevent reordering of I/O in the request queues as well. The
+block layer is responsible for ensuring barrier I/Os, as
+indicated by the filesystem, act as real barriers.
+
+> Trying to emulate it
+> in the md layer doesn't make any sense as the filesystem is in a much
+> better position to do any emulation required.
+
+You're saying that the emulation of block layer functionality is the
+responsibility of layers above the block layer. Why is this not
+considered a layering violation?
+
+> > > This is particularly important for md/raid1 as it is quite possible
+> > > that barriers will be supported at first, but after a failure and
+> > > different device on a different controller could be swapped in that
+> > > does not support barriers.
+> > 
+> > I/O errors are not the way this should be handled. What happens if
+> > the opposite happens? A drive that needs barriers is used as a
+> > replacement on a filesystem that has barriers disabled because they
+> > weren't needed? Now a crash can result in filesystem corruption, but
+> > the filesystem has not been able to warn the admin that this
+> > situation occurred. 
 > 
-> So you're retrying the whole I/O, this is probably better than trying
-> to handle this at the bio level.  I still don't quite like doing another
-> I/O from the I/O completion handler.
+> There should never be a possibility of filesystem corruption.
+> If the a barrier request fails, the filesystem should:
+>   wait for any dependant request to complete
+>   call blkdev_issue_flush
+>   schedule the write of the 'barrier' block
+>   call blkdev_issue_flush again.
 
-You're not the only one, Christoph. This may be better than trying
-to handle it at lower layers, and far better than having to handle
-it at every point in the higher layers where we may issue barrier
-I/Os. 
+IOWs, the filesystem has to use block device calls to emulate a block device
+barrier I/O. Why can't the block layer, on reception of a barrier write
+and detecting that barriers are no longer supported by the underlying
+device (i.e. in MD), do:
 
-But I *seriously dislike* having to reissue async I/Os in this
-manner and then having to rely on a higher layer's I/o completion
-handler to detect the fact that the I/O was retried to change the
-way the filesystem issues I/Os in the future. It's a really crappy
-way of communicating between layers....
+	wait for all queued I/Os to complete
+	call blkdev_issue_flush
+	schedule the write of the 'barrier' block
+	call blkdev_issue_flush again.
+
+And not involve the filesystem at all? i.e. why should the filesystem
+have to do this?
+
+> My understand is that that sequence is as safe as a barrier, but maybe
+> not as fast.
+
+Yes, and my understanding is that the block device is perfectly capable
+of implementing this just as safely as the filesystem.
+
+> The patch looks at least believable.  As you can imagine it is awkward
+> to test thoroughly.
+
+As well as being pretty much impossible to test reliably with an
+automated testing framework. Hence so ongoing test coverage will
+approach zero.....
 
 Cheers,
 
