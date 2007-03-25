@@ -1,50 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Mar 2007 14:32:54 -0700 (PDT)
-Received: from postfix1-g20.free.fr (postfix1-g20.free.fr [212.27.60.42])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2NLWn6p017830
-	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 14:32:50 -0700
-Received: from smtp5-g19.free.fr (smtp5-g19.free.fr [212.27.42.35])
-	by postfix1-g20.free.fr (Postfix) with ESMTP id 76297BFDD98
-	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 22:10:22 +0100 (CET)
-Received: from [192.168.100.11] (alf94-14-88-166-211-59.fbx.proxad.net [88.166.211.59])
-	by smtp5-g19.free.fr (Postfix) with ESMTP id BE7798B9D
-	for <xfs@oss.sgi.com>; Fri, 23 Mar 2007 22:10:19 +0100 (CET)
-Subject: Re: xfs_repair on Debian testing 64bits
-From: Patrick Noel <patrick.noel.g@free.fr>
-In-Reply-To: <20070323162522.GA27240@pc51072.physik.uni-regensburg.de>
-References: <1174655443.5441.37.camel@localhost.localdomain>
-	 <20070323162522.GA27240@pc51072.physik.uni-regensburg.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Date: Fri, 23 Mar 2007 22:10:14 +0100
-Message-Id: <1174684214.5758.6.camel@localhost.localdomain>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Mar 2007 20:19:51 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2P3Jj6p018695
+	for <xfs@oss.sgi.com>; Sat, 24 Mar 2007 20:19:47 -0700
+Date: Sun, 25 Mar 2007 14:19:27 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS and write barriers.
+Message-ID: <20070325031927.GG32602149@melbourne.sgi.com>
+References: <17923.11463.459927.628762@notabene.brown> <1755676AA526FF7790546385@timothy-shimmins-power-mac-g5.local> <17923.35118.139991.252734@notabene.brown>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <17923.35118.139991.252734@notabene.brown>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
 
-Yes H for show threads as if they were processes
-
-with ps xa under debian sarge i saw the threads
-
-Thanks
-
-Patrick
-
-Le vendredi 23 mars 2007 à 17:25 +0100, Christian Guggenberger a écrit :
-> > i try to force 8 thread with -o thread=8
+On Fri, Mar 23, 2007 at 07:00:46PM +1100, Neil Brown wrote:
+> On Friday March 23, tes@sgi.com wrote:
+> > >
+> > > I think this test should just be removed and the xfs_barrier_test
+> > > should be the main mechanism for seeing if barriers work.
+> > >
+> > Oh okay.
+> > This is all Christoph's (hch) code, so it would be good for him to comment here.
+> > The external log and readonly tests can stay though.
 > > 
-> > and i have this message :
-> > 
-> >  xfs_repair -o thread=8 /dev/sdb1
-> >  - creating 8 worker thread(s)
-> > 
-> > 
-> > but with ps xa  | grep repair i see only one thread.
-> >
 > 
-> IMHO, you'll need 'ps xaH' 
+> Why no barriers on an external log device??? Not important, just
+> curious.
+
+because we need to synchronize across 2 devices, not one, so issuing
+barriers on an external log device does nothing to order the metadata
+written to the other device...
+
+> > > This is particularly important for md/raid1 as it is quite possible
+> > > that barriers will be supported at first, but after a failure and
+> > > different device on a different controller could be swapped in that
+> > > does not support barriers.
+> > >
+> > 
+> > Oh okay, I see. And then later one that supported them can be swapped back in?
+> > So the other FSs are doing a sync'ed write out and then if there is an
+> > EOPNOTSUPP they retry and disable barrier support henceforth?
+> > Yeah, I guess we could do that in xlog_iodone() on failed completion and retry the write without
+> > the ORDERED flag on EOPNOTSUPP error case (and turn off the flag).
+> > Dave (dgc) can you see a problem with that?
 > 
-> cheers.
->  - Christian
+> If an md/raid1 disables barriers and subsequently is restored to a
+> state where all drives support barriers, it currently does *not*
+> re-enable them device-wide.  This would probably be quite easy to
+> achieve, but as no existing filesystem would ever try barriers
+> again.....
+
+And this is exactly why I think we need a block->fs communications
+channel for these sorts of things. Think of something like the CPU
+hotplug notifier mechanisms as a rough example framework....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
