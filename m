@@ -1,168 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 02:05:20 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2Q95C6p004018
-	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 02:05:15 -0700
-Date: Mon, 26 Mar 2007 20:04:56 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS and write barriers.
-Message-ID: <20070326090456.GO32597093@melbourne.sgi.com>
-References: <17923.11463.459927.628762@notabene.brown> <20070323053043.GD32602149@melbourne.sgi.com> <17923.34462.210758.852042@notabene.brown> <20070325041755.GJ32602149@melbourne.sgi.com> <17927.1031.996460.858328@notabene.brown> <20070326031407.GG32597093@melbourne.sgi.com> <17927.19372.553410.527506@notabene.brown>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 03:14:55 -0700 (PDT)
+Received: from srv-mailrelais-dz1.argus.int (smtp.argus-presse.fr [213.244.9.225])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2QAEi6p018549
+	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 03:14:46 -0700
+Subject: Re: xfs_repair on Debian testing 64bits
+From: Patrick =?ISO-8859-1?Q?No=EBl?= <patrick.noel@argus-presse.fr>
+In-Reply-To: <17926.26297.892974.270267@base.ty.sabi.co.UK>
+References: <1174655443.5441.37.camel@localhost.localdomain>
+	 <17926.26297.892974.270267@base.ty.sabi.co.UK>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Mon, 26 Mar 2007 12:14:38 +0200
+Message-Id: <1174904078.5978.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <17927.19372.553410.527506@notabene.brown>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Neil Brown <neilb@suse.de>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, hch@infradead.org
+To: Peter Grandi <pg_xfs@xfs.for.sabi.co.UK>, xfs@oss.sgi.com
 
-On Mon, Mar 26, 2007 at 02:27:24PM +1000, Neil Brown wrote:
-> On Monday March 26, dgc@sgi.com wrote:
-> > On Mon, Mar 26, 2007 at 09:21:43AM +1000, Neil Brown wrote:
-> > > My point was that if the functionality cannot be provided in the
-> > > lowest-level firmware (as it cannot for raid0 as there is no single
-> > > lowest-level firmware), then it should be implemented at the
-> > > filesystem level.  Implementing barriers in md or dm doesn't make any
-> > > sense (though passing barriers through can in some situations).
-> > 
-> > Hold on - you've said that the barrier support in a block deivce
-> > can change because of MD doing hot swap. Now you're saying
-> > there is no barrier implementation in md. Can you explain
-> > *exactly* what barrier support there is in MD?
+Le dimanche 25 mars 2007 à 13:10 +0100, Peter Grandi a écrit :
+
+
+>    «To successfully check or run repair on a multi-terabyte
+>     filesystem, you need:
 > 
-> For all levels other than md/raid1, md rejects bio_barrier() requests
-> as -EOPNOTSUPP.
+> 	- a 64bit machine
+> 	- a 64bit xfs_repair/xfs_check binary
+> 	- ~2GB RAM per terabyte of filesystem
+> 	- 100-200MB of RAM per million inodes in the filesystem.
 > 
-> For raid1 it tests barrier support when writing the superblock and the
-> if all devices support barriers, then md/raid1 will allow
-> bio_barrier() down.  If it gets an unexpected failure it just rewrites
-> it without the barrier flag and fails any future write requests (which
-> isn't ideal, but is the best available, and should happen effectively
-> never).
-> 
-> So md/raid1 barrier support is completely dependant on the underlying
-> devices.  md/raid1 is aware of barriers but does not *implement*
-> them.  Does that make it clearer?
+>     
 
-Ah, that clears up the picture - thanks Neil.
+for 5,3To 
 
-> > > The most straight-forward way to implement this is to make sure all
-> > > preceding blocks have been written before writing the barrier block.
-> > > All filesystems should be able to do this (if it is important to them).
-> >                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > 
-> > And that is the key point - XFS provides no guarantee that your
-> > data is on spinning rust other than I/O barriers when you have
-> > volatile write caches.
-> > 
-> > IOWs, if you turn barriers off, we provide *no guarantees*
-> > about the consistency of your filesystem after a power failure
-> > if you are using volatile write caching. This mode is for
-> > use with non-cached disks or disks with NVRAM caches where there
-> > is no need for barriers.
-> 
-> But.... as the block layer can re-order writes, even non-cached disks
-> could get the writes in a different or to the order in which you sent
-> them.
+	2GB * 5,3 = 10,6Go
+	
+	100MB/million inodes * 45 = 4,5Go
 
-But on a non-cached disk we've had an to have received an I/O completion
-before the tail of the log moves, and hence the metadata is on stable
-storage. The problem arises when volatile write caches are used and
-I/O completion no longer means "data on stable storage".
+Total = 16Go Ram
 
-> I have a report of xfs over md/raid1 going about 10% faster once we
-> managed to let barrier writes through, so presumably XFS does
-> something different if barriers are not enabled ???  What does it do
-> differently?
+i presume the number of inodes is the number of used inodes because the
+number of inode on 5,3To is 5119 million.
 
-I bet that the disk doesn't have it's write cache turned on. For
-disks with write cache turned on, barriers can slow down XFS by a factor
-of 5. Safety, not speed, was all we are after with barriers.
+The goal is to use a device of 15To with the same data, consider the
+amount total of RAM at 45Go.
 
-> > > Because block IO tends to have long pipelines and because this
-> > > operation will stall the pipeline, it makes sense for a block IO
-> > > subsystem to provide the possibility of implementing this sequencing
-> > > without a complete stall, and the 'barrier' flag makes that possible.
-> > > But that doesn't mean it is block-layer functionality.  It means (to
-> > > me) it is common fs functionality that the block layer is helping out
-> > > with.
-> > 
-> > I disagree - it is a function supported and defined by the block
-> > layer. Errors returned to the filesystem are directly defined
-> > in the block layer, the ordering guarantees are provided by the
-> > block layer and changes in semantics appear to be defined by
-> > the block layer......
-> 
-> chuckle....
-> You can tell we are on different sides of the fence, can't you ?
+I will go to the store of the corner to buy RAM :)
 
-Yup - no fence sitting here ;)
+Thanks
 
-> There is certainly some validity in your position...
-
-And likewise yours - I just don't think the responsibility here
-is quite so black and white...
-
-> > > > 	wait for all queued I/Os to complete
-> > > > 	call blkdev_issue_flush
-> > > > 	schedule the write of the 'barrier' block
-> > > > 	call blkdev_issue_flush again.
-> > > > 
-> > > > And not involve the filesystem at all? i.e. why should the filesystem
-> > > > have to do this?
-> > > 
-> > > Certainly it could.
-> > > However
-> > >  a/ The the block layer would have to wait for *all* queued I/O,
-> > >     where-as the filesystem would only have to wait for queued IO
-> > >     which has a semantic dependence on the barrier block.  So the
-> > >     filesystem can potentially perform the operation more efficiently.
-> > 
-> > Assuming the filesystem can do it more efficiently. What if it
-> > can't? What if, like XFS, when barriers are turned off, the
-> > filesystem provides *no* guarantees?
-> 
-> (Yes.... Ted T'so like casting aspersions on XFS... I guess this is
-> why :-)
-
-Different design criteria. ext3 is great doing what it was designed
-for, and the same can be said for XFS. Take them outside their
-comfort area (like putting XFS on commodity disks with volatile
-write caches or putting millions of files into a single directory in
-ext3) and you get problems. it's just that they were designed for
-different purposes, and that includes data resilience during failure
-conditions.
-
-That being said, we are doing a lot in XFS to address some of these
-shortcomings - it's just that ordered writes can be very difficult
-to retrofit to an existing filesystem....
-
-> Is there some mount flag to say "cope without barriers" or "require
-> barriers" ??
-
-XFs has "-o nobarrier" to say don't use barriers, and this is
-*not* the default. If barriers don't work, we drop back to "-o nobarrier"
-after leaving a loud warning inthe log....
-
-> I can imagine implementing barriers in raid5 (which keeps careful
-> track of everything) but I suspect it would be a performance hit.  It
-> might be nice if the sysadmin has to explicitly ask...
-> 
-> For that matter, I could get raid1 to reject replacement devices that
-> didn't support barriers, if there was a way for the filesystem to
-> explicitly ask for them.  I think we are getting back to interface
-> issues, aren't we? 
-
-Yeah, very much so. If you need the filesystem to be aware of smart
-things the block deivce can do or tell it, then we really don't
-want to have to communicate them via mount options ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Patrick
