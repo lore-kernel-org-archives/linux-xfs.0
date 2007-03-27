@@ -1,35 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 18:41:27 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 19:07:19 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2R1fI6p018034
-	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 18:41:20 -0700
-Date: Tue, 27 Mar 2007 11:41:47 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: New ACL translations
-Message-ID: <6F618AD8B7E7C29C505E6AA6@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <4606B617.4020807@mundo-r.com>
-References: <4606B617.4020807@mundo-r.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2R27C6p025803
+	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 19:07:14 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA18855 for <xfs@oss.sgi.com>; Tue, 27 Mar 2007 12:07:10 +1000
+Subject: TAKE Add some more ACL translations.
+Message-Id: <20070327020710.409A258FF76B@chook.melbourne.sgi.com>
+Date: Tue, 27 Mar 2007 12:07:10 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Antonio Trueba <atrueba@mundo-r.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Antonio,
-
-Thanks. I'll add them in now...
+Add Spanish and Galician translations.
+Thanks to Antonio Trueba.
 
 --Tim
 
---On 25 March 2007 7:49:11 PM +0200 Antonio Trueba <atrueba@mundo-r.com> wrote:
+Date:  Tue Mar 27 12:06:04 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  atrueba@mundo-r.com
 
-> Hello all,
->
-> Here I send new ACL translations to Spanish (es) and Galician (gl), both
-> against current CVS tree.
->
-> Regards,
-> --
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:28306a
+acl/po/gl.po - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/po/gl.po
+	- Add Galician translation.
+
+acl/po/es.po - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/po/es.po
+	- Add Spanish translation.
+
+acl/VERSION - 1.84 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/VERSION.diff?r1=text&tr1=1.84&r2=text&tr2=1.83&f=h
+	- Bump verion# for Spanish and Galician translations.
+
+acl/doc/CHANGES - 1.94 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/doc/CHANGES.diff?r1=text&tr1=1.94&r2=text&tr2=1.93&f=h
+acl/po/Makefile - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/po/Makefile.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Add Spanish and Galician translations.
