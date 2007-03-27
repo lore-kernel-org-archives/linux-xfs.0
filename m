@@ -1,47 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 15:09:19 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2QM9E6p003285
-	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 15:09:15 -0700
-Subject: Re: changing xfs file system tunnings(sunit,swidth) after mkfs.xfs
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <5d96567b0703261325m8f17b2eg55e04264fee4832a@mail.gmail.com>
-References: <5d96567b0703261325m8f17b2eg55e04264fee4832a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 27 Mar 2007 08:10:30 +1000
-Message-Id: <1174947030.5051.586.camel@edge>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 18:41:27 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2R1fI6p018034
+	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 18:41:20 -0700
+Date: Tue, 27 Mar 2007 11:41:47 +1100
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: New ACL translations
+Message-ID: <6F618AD8B7E7C29C505E6AA6@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <4606B617.4020807@mundo-r.com>
+References: <4606B617.4020807@mundo-r.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Antonio Trueba <atrueba@mundo-r.com>, xfs@oss.sgi.com
 
-On Mon, 2007-03-26 at 22:25 +0200, Raz Ben-Jehuda(caro) wrote:
-> I want to change the sunit,swidth of a file system which
-> was already created with a different tunnings, or at least
-> mount it with a different values.
-> Is it possible ?
+Hi Antonio,
 
->From the XFS section in mount(8) ...
+Thanks. I'll add them in now...
 
-   sunit=value and swidth=value
-       Used to specify the stripe unit and width for a RAID device or a
-       stripe volume.  value must be specified in 512-byte block units.
-       If this option is not specified and the filesystem was made on a
-       stripe volume or the stripe width or unit were specified for the
-       RAID device at mkfs  time,  then  the  mount  system  call  will
-       restore the value from the superblock.  For filesystems that are
-       made directly on RAID devices, these  options  can  be  used  to
-       override  the  information  in  the superblock if the underlying
-       disk layout changes after the filesystem has been created.   The
-       swidth  option  is  required if the sunit option has been speci‐
-       fied, and must be a multiple of the sunit value.
+--Tim
 
+--On 25 March 2007 7:49:11 PM +0200 Antonio Trueba <atrueba@mundo-r.com> wrote:
 
-cheers.
-
--- 
-Nathan
+> Hello all,
+>
+> Here I send new ACL translations to Spanish (es) and Galician (gl), both
+> against current CVS tree.
+>
+> Regards,
+> --
