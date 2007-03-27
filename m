@@ -1,68 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 Mar 2007 21:57:46 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2R4vd6p007222
-	for <xfs@oss.sgi.com>; Mon, 26 Mar 2007 21:57:41 -0700
-Date: Tue, 27 Mar 2007 14:58:06 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: XFS and write barriers.
-Message-ID: <E4668B41AB231E3CEA239371@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <20070325031927.GG32602149@melbourne.sgi.com>
-References: <17923.11463.459927.628762@notabene.brown>
- <1755676AA526FF7790546385@timothy-shimmins-power-mac-g5.local>
- <17923.35118.139991.252734@notabene.brown> <20070325031927.GG32602149@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Mar 2007 01:09:48 -0700 (PDT)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.174])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2R89h6p023517
+	for <xfs@oss.sgi.com>; Tue, 27 Mar 2007 01:09:45 -0700
+Received: by ug-out-1314.google.com with SMTP id a2so1733593ugf
+        for <xfs@oss.sgi.com>; Tue, 27 Mar 2007 01:09:41 -0700 (PDT)
+Message-ID: <5d96567b0703270004j72d89618xe27bbf3d5e44eea1@mail.gmail.com>
+Date: Tue, 27 Mar 2007 09:04:33 +0200
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: changing xfs file system tunnings(sunit,swidth) after mkfs.xfs
+In-Reply-To: <1174947030.5051.586.camel@edge>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-2022-JP; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+References: <5d96567b0703261325m8f17b2eg55e04264fee4832a@mail.gmail.com>
+	 <1174947030.5051.586.camel@edge>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, Neil Brown <neilb@suse.de>
+To: nscott@aconex.com
 Cc: xfs@oss.sgi.com
 
---On 25 March 2007 2:19:27 PM +1100 David Chinner <dgc@sgi.com> wrote:
+ahha...
+but did you ever tried to set an sunit value bigger than the one
+set during the mkfs.xfs ?
 
-> On Fri, Mar 23, 2007 at 07:00:46PM +1100, Neil Brown wrote:
->> On Friday March 23, tes@sgi.com wrote:
->> > >
->> > > I think this test should just be removed and the xfs_barrier_test
->> > > should be the main mechanism for seeing if barriers work.
->> > >
->> > Oh okay.
->> > This is all Christoph's (hch) code, so it would be good for him to comment here.
->> > The external log and readonly tests can stay though.
->> >
->>
->> Why no barriers on an external log device??? Not important, just
->> curious.
+On 3/27/07, Nathan Scott <nscott@aconex.com> wrote:
+> On Mon, 2007-03-26 at 22:25 +0200, Raz Ben-Jehuda(caro) wrote:
+> > I want to change the sunit,swidth of a file system which
+> > was already created with a different tunnings, or at least
+> > mount it with a different values.
+> > Is it possible ?
 >
-> because we need to synchronize across 2 devices, not one, so issuing
-> barriers on an external log device does nothing to order the metadata
-> written to the other device...
+> >From the XFS section in mount(8) ...
+>
+>    sunit=value and swidth=value
+>        Used to specify the stripe unit and width for a RAID device or a
+>        stripe volume.  value must be specified in 512-byte block units.
+>        If this option is not specified and the filesystem was made on a
+>        stripe volume or the stripe width or unit were specified for the
+>        RAID device at mkfs  time,  then  the  mount  system  call  will
+>        restore the value from the superblock.  For filesystems that are
+>        made directly on RAID devices, these  options  can  be  used  to
+>        override  the  information  in  the superblock if the underlying
+>        disk layout changes after the filesystem has been created.   The
+>        swidth  option  is  required if the sunit option has been speci‐
+>        fied, and must be a multiple of the sunit value.
+>
+>
+> cheers.
+>
+> --
+> Nathan
+>
 >
 
-I have wondered in the past (sgi-bug#954969) about doing a blk_issue_flush
-on the metadata device at xlog_sync time prior to the log write on
-the log device.
 
-  27/July/06 - pv#954969
-  Currently, if one uses external logs then the barrier support is turned off.
-  The reaon for this is that a write barrier is normally only done on the data
-  device which has the log.
-  With an external log it means that a write barrier on a log device will not
-  do any flushing on the metadata device.
-  This pv is opened to explore the possibility of issuing an explicit metadata
-  device flush at xlog_sync time before doing a write barrier on the log data
-  to the log device.
-  This would guarantee if the tail moved because a metadata thought its
-  data was really on disk, would now be true as we would do a flush of
-  its device. Then we could do our log write without worrying that
-  our log write will overwrite log data when its metadata hadn't really made it.
-  Perhaps I'm missing something.
-  Dave (dgc) said he'd think about it.
-  I haven't heard back from Christoph yet, and he added the
-  code for our barrier support in xfs.
-  --Tim
-
---Tim
+-- 
+Raz
