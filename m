@@ -1,50 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 09:35:37 -0700 (PDT)
-Received: from smtp112.sbc.mail.mud.yahoo.com (smtp112.sbc.mail.mud.yahoo.com [68.142.198.211])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2TGZP6p013100
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 09:35:26 -0700
-Date: Thu, 29 Mar 2007 09:35:20 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: Interface for the new fallocate() system call
-Message-ID: <20070329163520.GA16632@tuatara.stupidest.org>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 09:49:55 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2TGnm6p016654
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Mar 2007 09:49:50 -0700
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: XFS and write barriers.
+Date: Thu, 29 Mar 2007 18:49:38 +0200
+References: <17923.11463.459927.628762@notabene.brown> <200703291656.22084.Martin@lichtvoll.de> <20070329151858.GI32597093@melbourne.sgi.com>
+In-Reply-To: <20070329151858.GI32597093@melbourne.sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070329115126.GB7374@amitarora.in.ibm.com>
+Content-Type: multipart/signed;
+  boundary="nextPart5603208.FTvvu8bBA2";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Message-Id: <200703291849.44297.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: linux-xfs@oss.sgi.com
+Cc: David Chinner <dgc@sgi.com>
 
-On Thu, Mar 29, 2007 at 05:21:26PM +0530, Amit K. Arora wrote:
+--nextPart5603208.FTvvu8bBA2
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
->    int fallocate(int fd, loff_t offset, loff_t len, int mode)
+Am Donnerstag 29 M=E4rz 2007 schrieb David Chinner:
+> On Thu, Mar 29, 2007 at 04:56:21PM +0200, Martin Steigerwald wrote:
+> > Am Montag 26 M=E4rz 2007 schrieb David Chinner:
+> > > > Is there some mount flag to say "cope without barriers" or
+> > > > "require barriers" ??
+> > >
+> > > XFs has "-o nobarrier" to say don't use barriers, and this is
+> > > *not* the default. If barriers don't work, we drop back to "-o
+> > > nobarrier" after leaving a loud warning inthe log....
+> >
+> > Hello David!
+> >
+> > Just a thought, maybe it shouldn't do that automatically, but require
+> > the sysadmin to explicitely state "-o nobarrier" in that case.
+>
+> And prevent most existing XFS filesystems from mounting after
+> a kernel upgrade? Think about the problems that might cause
+> with XFs root filesystems on hardware/software that doesn't
+> support barriers....
 
-Right now there are only two possible values for mode --- it's not
-clear what additional values there will be in the future.
+Hello David!
 
-How about two syscalls?  If we decide later on we need something more
-complicated we can revisit this and *THEN* add another system call
-which may end up being a superset of the other two.
+Granted. So it might turn out to be a decision between does not boot or is=
+=20
+not totally safe in power outages or crashes. I see no easy default=20
+answer to that.
 
-I know that sounds somewhat icky but:
+So while probably being a layering violation at least trying to disable=20
+the write cache on devices without cache flush support unless "-o=20
+nobarrier" (as in "I know what I am doing") is given, might help safety.=20
+But this adds complexity and a possible source for bugs. And maybe trying=
+=20
+to disable write cache isn't safe on all setups?
 
-  * it's fairly simple
+Regards,
+--=20
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
-  * we get nice argument handling on all arches by dropping u32 mode
-    (don't we?)
+--nextPart5603208.FTvvu8bBA2
+Content-Type: application/pgp-signature
 
-  * syscalls don't really cost a lot to keep about, they do cost in
-    terms on maintenance though, but in this case i don't see it being
-    all that much of a problem
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-  * IMO badly/over designed syscalls are going to be a bigger problem
-    long term
+iD8DBQBGC+4omRvqrKWZhMcRAqBqAJ9aGM4oYzmMEyfYl3OpLCz/0jacIQCfUBeQ
+L4Oc/JUnOhYE/bkd78nHygk=
+=EVVf
+-----END PGP SIGNATURE-----
 
-Given that *NO* single fs in mainline right now can *reliably* use
-this functionality for a while maybe whatever solution people come up
-with next should sit in -mm for a while?  At least that gives people
-exposure to it and a chance to make some changes as once it's merged
-to mainline it's pretty hard to change.
+--nextPart5603208.FTvvu8bBA2--
