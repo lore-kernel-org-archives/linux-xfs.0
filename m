@@ -1,80 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 09:49:55 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2TGnm6p016654
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Mar 2007 09:49:50 -0700
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: XFS and write barriers.
-Date: Thu, 29 Mar 2007 18:49:38 +0200
-References: <17923.11463.459927.628762@notabene.brown> <200703291656.22084.Martin@lichtvoll.de> <20070329151858.GI32597093@melbourne.sgi.com>
-In-Reply-To: <20070329151858.GI32597093@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 10:36:23 -0700 (PDT)
+Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2THaD6p026706
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 10:36:14 -0700
+Date: Thu, 29 Mar 2007 19:01:54 +0200 (MEST)
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: Interface for the new fallocate() system call
+In-Reply-To: <20070329115126.GB7374@amitarora.in.ibm.com>
+Message-ID: <Pine.LNX.4.61.0703291854000.31834@yvahk01.tjqt.qr>
+References: <20070117094658.GA17390@amitarora.in.ibm.com>
+ <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com>
+ <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com>
+ <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com>
+ <20070329115126.GB7374@amitarora.in.ibm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5603208.FTvvu8bBA2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Message-Id: <200703291849.44297.Martin@lichtvoll.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
-Cc: David Chinner <dgc@sgi.com>
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
---nextPart5603208.FTvvu8bBA2
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi,
 
-Am Donnerstag 29 M=E4rz 2007 schrieb David Chinner:
-> On Thu, Mar 29, 2007 at 04:56:21PM +0200, Martin Steigerwald wrote:
-> > Am Montag 26 M=E4rz 2007 schrieb David Chinner:
-> > > > Is there some mount flag to say "cope without barriers" or
-> > > > "require barriers" ??
-> > >
-> > > XFs has "-o nobarrier" to say don't use barriers, and this is
-> > > *not* the default. If barriers don't work, we drop back to "-o
-> > > nobarrier" after leaving a loud warning inthe log....
-> >
-> > Hello David!
-> >
-> > Just a thought, maybe it shouldn't do that automatically, but require
-> > the sysadmin to explicitely state "-o nobarrier" in that case.
+On Mar 29 2007 17:21, Amit K. Arora wrote:
 >
-> And prevent most existing XFS filesystems from mounting after
-> a kernel upgrade? Think about the problems that might cause
-> with XFs root filesystems on hardware/software that doesn't
-> support barriers....
+>We need to come up with the best possible layout of arguments for the
+>fallocate() system call. Various architectures have different
+>requirements for how the arguments should look like. Since the mail
+>chain has become huge, here is the summary of various inputs received
+>so far.
 
-Hello David!
+>s390 prefers following layout:
+>   int fallocate(int fd, loff_t offset, loff_t len, int mode)
+>For details on why and how "int, int, loff_t, loff_t" is a problem on
+>s390, please see Heiko's mail on 16th March. Here is the link:
+>http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg133595.html
 
-Granted. So it might turn out to be a decision between does not boot or is=
-=20
-not totally safe in power outages or crashes. I see no easy default=20
-answer to that.
+Quoting that...
+	|len -> r6 + second halve on stack
 
-So while probably being a layering violation at least trying to disable=20
-the write cache on devices without cache flush support unless "-o=20
-nobarrier" (as in "I know what I am doing") is given, might help safety.=20
-But this adds complexity and a possible source for bugs. And maybe trying=
-=20
-to disable write cache isn't safe on all setups?
+Then, is not this a gcc glitch? (IMO, it should put all of "len" on the 
+stack)
 
-Regards,
---=20
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+>Platform: ppc, arm
+>------------------
+>6 arguments. Thus the desired layout by ppc32 is:
+>   int fallocate(int fd, int mode, loff_t offset, loff_t len)
+>
+>Option of loff_t => high u32 + low u32
+>--------------------------------------
+>Matthew and Russell have suggested another option of breaking each
+>"loff_t" into two "u32"s. This will result in 6 arguments in total.
+>
+>What are your thoughts on this ? What layout should we finalize on ?
+>Perhaps, since sync_file_range() system call has similar arguments, we
+>can take hint from the challenges faced on implementing it on various
+>architectures, and decide.
+>
+>Please suggest. Thanks!
 
---nextPart5603208.FTvvu8bBA2
-Content-Type: application/pgp-signature
+Does it actually matter? Glibc can have its own argument ordering
+different from the syscalls, so at least it would be possible to lay out
+the syscall arguments in the most portable way while retaining nice
+userspace C code. Hey, glibc might even wrap it up in a struct! (Using a 
+pointer, as suggested in one of the proposals.)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+int fallocate(int fd, loff_t offset, loff_t len, int mode)
+{
+	struct fallocate_foobar d = {fd, offset, len, mode};
+	return _syscall(..., &d);
+}
 
-iD8DBQBGC+4omRvqrKWZhMcRAqBqAJ9aGM4oYzmMEyfYl3OpLCz/0jacIQCfUBeQ
-L4Oc/JUnOhYE/bkd78nHygk=
-=EVVf
------END PGP SIGNATURE-----
 
---nextPart5603208.FTvvu8bBA2--
+
+
+Jan
+-- 
