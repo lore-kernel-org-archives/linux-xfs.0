@@ -1,81 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 04:51:31 -0700 (PDT)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2TBpP6p011068
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 04:51:27 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2TBq9Ub012186
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 07:52:09 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2TBpMb9293154
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 07:51:22 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2TBpMb0030817
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 07:51:22 -0400
-Date: Thu, 29 Mar 2007 17:21:26 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Interface for the new fallocate() system call
-Message-ID: <20070329115126.GB7374@amitarora.in.ibm.com>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 05:07:38 -0700 (PDT)
+Received: from rgminet02.oracle.com (rgminet02.oracle.com [148.87.113.119])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2TC7X6p015022
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 05:07:33 -0700
+Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
+	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l2TBEgl4031466
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 05:14:42 -0600
+Date: Thu, 29 Mar 2007 13:14:07 +0200
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Corrupt XFS -Filesystems on new Hardware and Kernel
+Message-ID: <20070329111407.GA9959@kernel.dk>
+References: <46094344.4090007@j-o-a.de> <20070328113141.GQ32597093@melbourne.sgi.com> <460A6298.4040702@j-o-a.de> <460A821B.4080308@sandeen.net> <460AC857.6040305@j-o-a.de> <460B068C.6060903@tlinx.org> <460B25BE.3050808@tlinx.org> <20070329093400.GB14616@atrey.karlin.mff.cuni.cz>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070321120425.GA27273@amitarora.in.ibm.com>
+In-Reply-To: <20070329093400.GB14616@atrey.karlin.mff.cuni.cz>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@osdl.org, akpm@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: Jan Kara <jack@suse.cz>
+Cc: Linda Walsh <lkml@tlinx.org>, Oliver Joa <oliver@j-o-a.de>, Eric Sandeen <sandeen@sandeen.net>, David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-Hello,
+On Thu, Mar 29 2007, Jan Kara wrote:
+> > Oliver Joa wrote:
+> > >>eason or another, xfs has detected a corrupted on-disk inode format 
+> > >>which it cannot recognize, and shuts down.
+> > ----
+> > Oh, one other thing that may not apply in your case, but may.
+> > Does your SATA disk support write caching?  Does it support
+> > something called a barrier function?  (not real clear on all
+> > the ways this can go wrong, but I believe barriers are supposed
+> > to guarantee previous data has been fixed on disk (not in write
+> > cache).  If the SATA controller issues a reset, it may very well
+> > purge the write cache.  Theoretically, I can think of a _possibility_,
+> > that the reset disk would purge the write cache and the barrier
+> > indicator would tell xfs to resume writing.  From a recent thread
+> > on the xfs list, it would appear this could be a "bad" thing (like
+> > crossing the streams ala "ghostbusters", but in a data-integrity
+> > context).
+>   As far as I can remember, barrier does not mean that data is fixed on
+> disk. It is only a command that forces all the writes before the barrier
+> to be performed before all the writes after the barrier. So this is more
+> an ordering restriction than a data integrity thing...
 
-We need to come up with the best possible layout of arguments for the
-fallocate() system call. Various architectures have different
-requirements for how the arguments should look like. Since the mail
-chain has become huge, here is the summary of various inputs received
-so far.
+A barrier write guarentees both data before barrier is on disk, as well
+as the barrier itself when completion is signalled.
 
-Platform: s390
---------------
-s390 prefers following layout:
-
-   int fallocate(int fd, loff_t offset, loff_t len, int mode)
-
-For details on why and how "int, int, loff_t, loff_t" is a problem on
-s390, please see Heiko's mail on 16th March. Here is the link:
-http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg133595.html
-
-Platform: ppc, arm
-------------------
-ppc (32 bit) has a problem with "int, loff_t, loff_t, int" layout,
-since this will result in a pad between fd and offset, making seven
-arguments total - which is not supported by ppc32. It supports only
-6 arguments. Thus the desired layout by ppc32 is:
-
-   int fallocate(int fd, int mode, loff_t offset, loff_t len)
-
-Even ARM prefers above kind of layout. For details please see the
-definition of sys_arm_sync_file_range().
-
-Option of loff_t => high u32 + low u32
---------------------------------------
-Matthew and Russell have suggested another option of breaking each
-"loff_t" into two "u32"s. This will result in 6 arguments in total.
-
-Following think that this is a good alternative:
-Matthew Wilcox, Russell King, Heiko Carstens
-
-Following do not like this idea:
-Chris Wedgwood
-
-
-What are your thoughts on this ? What layout should we finalize on ?
-Perhaps, since sync_file_range() system call has similar arguments, we
-can take hint from the challenges faced on implementing it on various
-architectures, and decide.
-
-Please suggest. Thanks!
-
---
-Regards,
-Amit Arora
+-- 
+Jens Axboe
