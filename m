@@ -1,52 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 08:33:31 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2TFXL6p030157
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Mar 2007 08:33:23 -0700
-Date: Fri, 30 Mar 2007 02:18:58 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS and write barriers.
-Message-ID: <20070329151858.GI32597093@melbourne.sgi.com>
-References: <17923.11463.459927.628762@notabene.brown> <17927.19372.553410.527506@notabene.brown> <20070326090456.GO32597093@melbourne.sgi.com> <200703291656.22084.Martin@lichtvoll.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 09:35:37 -0700 (PDT)
+Received: from smtp112.sbc.mail.mud.yahoo.com (smtp112.sbc.mail.mud.yahoo.com [68.142.198.211])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2TGZP6p013100
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 09:35:26 -0700
+Date: Thu, 29 Mar 2007 09:35:20 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: Interface for the new fallocate() system call
+Message-ID: <20070329163520.GA16632@tuatara.stupidest.org>
+References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <200703291656.22084.Martin@lichtvoll.de>
+In-Reply-To: <20070329115126.GB7374@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-On Thu, Mar 29, 2007 at 04:56:21PM +0200, Martin Steigerwald wrote:
-> Am Montag 26 März 2007 schrieb David Chinner:
-> 
-> > > Is there some mount flag to say "cope without barriers" or "require
-> > > barriers" ??
-> >
-> > XFs has "-o nobarrier" to say don't use barriers, and this is
-> > *not* the default. If barriers don't work, we drop back to "-o
-> > nobarrier" after leaving a loud warning inthe log....
-> 
-> Hello David!
-> 
-> Just a thought, maybe it shouldn't do that automatically, but require the 
-> sysadmin to explicitely state "-o nobarrier" in that case. 
+On Thu, Mar 29, 2007 at 05:21:26PM +0530, Amit K. Arora wrote:
 
-And prevent most existing XFS filesystems from mounting after
-a kernel upgrade? Think about the problems that might cause
-with XFs root filesystems on hardware/software that doesn't
-support barriers....
+>    int fallocate(int fd, loff_t offset, loff_t len, int mode)
 
-Default behaviour is tolerant - it tries the safest method
-known and if it can't use that it tells you and then continues
-onwards. That's a good default to have.
+Right now there are only two possible values for mode --- it's not
+clear what additional values there will be in the future.
 
-Cheers,
+How about two syscalls?  If we decide later on we need something more
+complicated we can revisit this and *THEN* add another system call
+which may end up being a superset of the other two.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+I know that sounds somewhat icky but:
+
+  * it's fairly simple
+
+  * we get nice argument handling on all arches by dropping u32 mode
+    (don't we?)
+
+  * syscalls don't really cost a lot to keep about, they do cost in
+    terms on maintenance though, but in this case i don't see it being
+    all that much of a problem
+
+  * IMO badly/over designed syscalls are going to be a bigger problem
+    long term
+
+Given that *NO* single fs in mainline right now can *reliably* use
+this functionality for a while maybe whatever solution people come up
+with next should sit in -mm for a while?  At least that gives people
+exposure to it and a chance to make some changes as once it's merged
+to mainline it's pretty hard to change.
