@@ -1,34 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 17:46:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 17:46:18 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2U0k16p013360
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 17:46:03 -0700
-Date: Fri, 30 Mar 2007 10:46:42 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: New ATTR translations
-Message-ID: <227C987A103A946C20981C05@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <460BDC1F.9030300@mundo-r.com>
-References: <460BDC1F.9030300@mundo-r.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2U0kA6p013392
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 17:46:11 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA29655 for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 10:46:07 +1000
+Subject: TAKE attr translations - Spanish and Galician
+Message-Id: <20070330004607.5037658FF808@chook.melbourne.sgi.com>
+Date: Fri, 30 Mar 2007 10:46:07 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Antonio Trueba <atrueba@mundo-r.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-I will check them in.
-Thanks.
+Attr translations for Spanish (es) and Galician (gl).
+Contributed by Antonio Trueba.
 
 --Tim
 
---On 29 March 2007 5:32:47 PM +0200 Antonio Trueba <atrueba@mundo-r.com> wrote:
+Date:  Fri Mar 30 10:44:37 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  atrueba@mundo-r.com
 
-> Hello all,
->
-> Atached are new translations of attr to Spanish (es) and Galician (gl),
-> both complete against current CVS tree.
->
-> Regards,
-> --
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:28323a
+attr/po/gl.po - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/gl.po
+	- Add Galician translation.
+
+attr/po/es.po - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/es.po
+	- Add Spanish translation.
+
+attr/VERSION - 1.68 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/VERSION.diff?r1=text&tr1=1.68&r2=text&tr2=1.67&f=h
+	- Bump version# for Attr translations for Spanish (es) and Galician (gl).
+
+attr/doc/CHANGES - 1.80 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/doc/CHANGES.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
+attr/po/Makefile - 1.10 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/Makefile.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
+	- Add Attr translations for Spanish (es) and Galician (gl).
