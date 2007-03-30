@@ -1,46 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 17:46:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Mar 2007 18:03:28 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2U0kA6p013392
-	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 17:46:11 -0700
-Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA29655 for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 10:46:07 +1000
-Subject: TAKE attr translations - Spanish and Galician
-Message-Id: <20070330004607.5037658FF808@chook.melbourne.sgi.com>
-Date: Fri, 30 Mar 2007 10:46:07 +1000 (EST)
-From: tes@sgi.com (Tim Shimmin)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2U13M6p016348
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2007 18:03:23 -0700
+Message-ID: <460C5E38.5040006@sgi.com>
+Date: Fri, 30 Mar 2007 10:47:52 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Review: Make xfs_dm_sync_by_handle really sync data
+References: <20070329233323.GM32597093@melbourne.sgi.com>
+In-Reply-To: <20070329233323.GM32597093@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Attr translations for Spanish (es) and Galician (gl).
-Contributed by Antonio Trueba.
+It is looking good Dave. I will test it today.
 
---Tim
+Regards,
+Vlad
 
-Date:  Fri Mar 30 10:44:37 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
-Inspected by:  atrueba@mundo-r.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:28323a
-attr/po/gl.po - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/gl.po
-	- Add Galician translation.
-
-attr/po/es.po - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/es.po
-	- Add Spanish translation.
-
-attr/VERSION - 1.68 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/VERSION.diff?r1=text&tr1=1.68&r2=text&tr2=1.67&f=h
-	- Bump version# for Attr translations for Spanish (es) and Galician (gl).
-
-attr/doc/CHANGES - 1.80 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/doc/CHANGES.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
-attr/po/Makefile - 1.10 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/po/Makefile.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
-	- Add Attr translations for Spanish (es) and Galician (gl).
+David Chinner wrote:
+> xfs_dm_sync_by_handle doesn't sync data right now. Never has.
+> It is supposed to work exactly like fsync(), except that it
+> only ever calls XFS functions that log the inode and
+> not the generic functions that actually sync out the data.
+>
+> Fix it.
+>
+>   
