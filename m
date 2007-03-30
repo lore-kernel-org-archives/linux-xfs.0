@@ -1,54 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 30 Mar 2007 00:00:33 -0700 (PDT)
-Received: from mtagate7.uk.ibm.com (mtagate7.uk.ibm.com [195.212.29.140])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l2U70K6p009382
-	for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 00:00:22 -0700
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate7.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l2U70I6Z109950
-	for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 07:00:18 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2U70H672773026
-	for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 08:00:17 +0100
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2U70GxP004510
-	for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 08:00:17 +0100
-Date: Fri, 30 Mar 2007 09:00:16 +0200
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: Interface for the new fallocate() system call
-Message-ID: <20070330070016.GB8365@osiris.boeblingen.de.ibm.com>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <Pine.LNX.4.61.0703291854000.31834@yvahk01.tjqt.qr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0703291854000.31834@yvahk01.tjqt.qr>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 30 Mar 2007 00:04:43 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l2U74b6p010395
+	for <xfs@oss.sgi.com>; Fri, 30 Mar 2007 00:04:39 -0700
+Subject: TAKE 962571 - xfs_dm_sync_by_handle is busted
+Message-Id: <20070330064158.7663458FF807@chook.melbourne.sgi.com>
+Date: Fri, 30 Mar 2007 16:41:58 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Mar 29, 2007 at 07:01:54PM +0200, Jan Engelhardt wrote:
-> Hi,
-> 
-> On Mar 29 2007 17:21, Amit K. Arora wrote:
-> >
-> >We need to come up with the best possible layout of arguments for the
-> >fallocate() system call. Various architectures have different
-> >requirements for how the arguments should look like. Since the mail
-> >chain has become huge, here is the summary of various inputs received
-> >so far.
-> 
-> >s390 prefers following layout:
-> >   int fallocate(int fd, loff_t offset, loff_t len, int mode)
-> >For details on why and how "int, int, loff_t, loff_t" is a problem on
-> >s390, please see Heiko's mail on 16th March. Here is the link:
-> >http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg133595.html
-> 
-> Quoting that...
-> 	|len -> r6 + second halve on stack
-> 
-> Then, is not this a gcc glitch? (IMO, it should put all of "len" on the 
-> stack)
+xfs_dm_sync_by_handle does not sync file data.
 
-It _does_ put all of "len" on the stack. That is what I tried to explain
-in the section that follows what you quoted.
+xfs_dm_sync_by_handle() is supposed to behave like fsync.
+When it returns the handle against which it was called is supposed
+to be completely on stable storage. xfs_dm_sync_by_handle
+syncs the inode but not the data. Make it sync hte data as well.
+
+Date:  Fri Mar 30 16:41:20 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  vapo
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:28329a
+fs/xfs/dmapi/xfs_dm.c - 1.35 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
+	- sync data as well as the inode in xfs_dm_sync_by_handle().
