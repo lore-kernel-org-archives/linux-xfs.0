@@ -1,75 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Apr 2007 11:24:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l32IO2kH008050
-	for <xfs@oss.sgi.com>; Mon, 2 Apr 2007 11:24:04 -0700
-Date: Mon, 02 Apr 2007 16:31:52 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: review: remove unused ilen var from xfs_vnodeops.c
-Message-ID: <B2C0ED44991A4A556F5258C3@timothy-shimmins-power-mac-g5.local>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Apr 2007 11:35:14 -0700 (PDT)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l32IXskH011758
+	for <xfs@oss.sgi.com>; Mon, 2 Apr 2007 11:35:11 -0700
+Received: from [77.99.119.196] (helo=77-99-119-196.cable.ubr04.linl.blueyonder.co.uk)
+	by mail.g-house.de with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
+	(Exim 4.50)
+	id 1HYR6a-0002wK-26
+	for xfs@oss.sgi.com; Mon, 02 Apr 2007 20:18:12 +0200
+Date: Mon, 2 Apr 2007 19:18:01 +0100 (BST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: possible recursive locking detected
+Message-ID: <Pine.LNX.4.64.0704021914060.3963@sheep.housecafe.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-simple cleanup patch
+Hi,
+
+when I enabled a few more debug-options in the kernel (vanilla 
+2.6.21-rc5), I came across:
+
+[ INFO: possible recursive locking detected ]
+2.6.21-rc5 #2
+---------------------------------------------
+rm/32198 is trying to acquire lock:
+xfs_ilock+0x71/0xa0
+
+but task is already holding lock:
+xfs_ilock+0x71/0xa0
+
+other info that might help us debug this:
+3 locks held by rm/32198:
+do_unlinkat+0x96/0x160
+vfs_unlink+0x75/0xe0
+xfs_ilock+0x71/0xa0
+
+stack backtrace:
+__lock_acquire+0xa99/0x1010
+lock_acquire+0x57/0x70
+xfs_ilock+0x71/0xa0
+down_write+0x38/0x50
+xfs_ilock+0x71/0xa0
+xfs_ilock+0x71/0xa0
+xfs_lock_dir_and_entry+0xf6/0x100
+xfs_remove+0x197/0x4e0
+d_instantiate+0x19/0x40
+d_rehash+0x20/0x50
+vfs_unlink+0x75/0xe0
+xfs_vn_unlink+0x23/0x60
+__mutex_lock_slowpath+0x13f/0x280
+mark_held_locks+0x6b/0x90
+__mutex_lock_slowpath+0x13f/0x280
+__mutex_lock_slowpath+0x13f/0x280
+trace_hardirqs_on+0xb9/0x160
+vfs_unlink+0x75/0xe0
+__mutex_lock_slowpath+0x132/0x280
+vfs_unlink+0x75/0xe0
+permission+0x91/0xf0
+vfs_unlink+0x89/0xe0
+do_unlinkat+0xd2/0x160
+sysenter_past_esp+0x8d/0x99
+trace_hardirqs_on+0xb9/0x160
+sysenter_past_esp+0x5d/0x99
+  =======================
 
 
-===========================================================================
-Index: fs/xfs/xfs_vnodeops.c
-===========================================================================
+Is this something I have to worry about?
+Please see http://nerdbynature.de/bits/2.6.21-rc5/ for a few more 
+details.
 
---- a/fs/xfs/xfs_vnodeops.c	2007-04-02 15:56:30.000000000 +1000
-+++ b/fs/xfs/xfs_vnodeops.c	2007-04-02 15:19:42.926081759 +1000
-@@ -4289,7 +4289,6 @@ xfs_free_file_space(
- 	int			error;
- 	xfs_fsblock_t		firstfsb;
- 	xfs_bmap_free_t		free_list;
--	xfs_off_t		ilen;
- 	xfs_bmbt_irec_t		imap;
- 	xfs_off_t		ioffset;
- 	xfs_extlen_t		mod=0;
-@@ -4338,10 +4337,7 @@ xfs_free_file_space(
- 	}
+Thanks,
+Christian.
+-- 
+BOFH excuse #372:
 
- 	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, NBPP);
--	ilen = len + (offset & (rounding - 1));
- 	ioffset = offset & ~(rounding - 1);
--	if (ilen & (rounding - 1))
--		ilen = (ilen + rounding) & ~(rounding - 1);
-
- 	if (VN_CACHED(vp) != 0) {
- 		xfs_inval_cached_trace(&ip->i_iocore, ioffset, -1,
-
-=============================================================================
-
-
-
-
-I think ilen was removed a while back when we changed a call interface...
-  revision 1.534
-  date: 2002/07/08 22:09:30;  author: lord;  state: Exp;  lines: +1 -2
-  modid: 2.4.x-xfs:slinx:122666a
-  changes xfs_inval_cached_pages interface
-===========================================================================
-Index: fs/xfs/xfs_vnodeops.c
-===========================================================================
-
---- a/fs/xfs/xfs_vnodeops.c     2007-04-02 15:38:34.000000000 +1000
-+++ b/fs/xfs/xfs_vnodeops.c     2007-04-02 15:38:34.000000000 +1000
-@@ -5459,8 +5459,7 @@ xfs_free_file_space(
-        ioffset = offset & ~(rounding - 1);
-        if (ilen & (rounding - 1))
-                ilen = (ilen + rounding) & ~(rounding - 1);
--       xfs_inval_cached_pages(XFS_ITOV(ip), &(ip->i_iocore),
--                               ioffset, ilen, NULL, 0);
-+       xfs_inval_cached_pages(XFS_ITOV(ip), &(ip->i_iocore), ioffset, 0, 0);
-        /*
-         * Need to zero the stuff we're not freeing, on disk.
-         * If its specrt (realtime & can't use unwritten extents) then
-
---Tim
+Forced to support NT servers; sysadmins quit.
