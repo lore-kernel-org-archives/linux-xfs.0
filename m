@@ -1,83 +1,122 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Apr 2007 05:01:56 -0700 (PDT)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l33C1lfB004228
-	for <xfs@oss.sgi.com>; Tue, 3 Apr 2007 05:01:48 -0700
-Received: by an-out-0708.google.com with SMTP id c5so1529305anc
-        for <xfs@oss.sgi.com>; Tue, 03 Apr 2007 05:01:47 -0700 (PDT)
-Message-ID: <12fac1030704030403t3ffc3599w5a0191476eb8b865@mail.gmail.com>
-Date: Tue, 3 Apr 2007 13:03:39 +0200
-From: Sencer <alisencer@gmail.com>
-Subject: md/dm devices, barrier support, commodity hardware and data integrity
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Apr 2007 12:41:00 -0700 (PDT)
+Received: from barcelona.int.jammed.com (jammed.com [216.99.218.161])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l33JevfB027379
+	for <xfs@oss.sgi.com>; Tue, 3 Apr 2007 12:40:58 -0700
+Received: from barcelona.int.jammed.com (barcelona.int.jammed.com [172.16.64.15])
+	by barcelona.int.jammed.com (Postfix) with ESMTP id D5AA2BD6E
+	for <xfs@oss.sgi.com>; Tue,  3 Apr 2007 12:11:46 -0700 (PDT)
+Date: Tue, 3 Apr 2007 12:11:46 -0700 (PDT)
+From: "James W. Abendschan" <jwa@jammed.com>
+Subject: xfs_repair segfault
+Message-ID: <Pine.LNX.4.44.0704031149070.6675-100000@barcelona.int.jammed.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hello,
+Hi there -- I have a 6.9TB XFS volume that is acting up
+after a power failure (I understand XFS + no UPS + PC
+hardware == badness.  Not my decision.)
 
-After reading up on XFS, there are a couple of issues that still seem
-kind of cloudy to me. I am merely a user of filesystems, so forgive me
-if some issues seem obvious. If you could confirm/clarify/answer the
-following issues, it would be very helpful to me.
+The machine is a dual proc x86 (intel xeon 5130) w/ 8GB RAM
+running a custom 2.6.18 kernel on top of Ubuntu 6.06.
 
-Situation 1)
-We are currently using XFS on a commodity x86 server with SATA drives
-(with NCQ) on Debian Etch (Kernel: 2.6.18-3-k7). We are also using
-Software-Raid1 (mdadm). All partitions except /boot are XFS. If I
-understand the FAQ and recent ml-discussions right, then
+Since xfs_check can't repair volumes of this size without
+scads of memory, I've been using xfs_repair to correct
+power-related problems before.
 
-1a) without software-raid, we would enjoy write barrier support,
-however given that we are using md-devices this is not the case
-(kern.log confirms this by explicitly stating barrier support is
-disabled for mdX ...). Did this (barrier support with XFS on md)
-change in later kernels or is it likely to change in the near (or far)
-future? (I think I read mentions of md, and some kind of
-barrier-awareness on the ml, but didn't quite understand what
-effectively  follows from it from a users POV).
+Unfortunately, for some reason xfs_repair is segfaulting:
 
-1b) Given the current circumstances above, we should disable write
-cache as suggested in the faq (there are actually UPS's but they've
-failed before) to reduce the possibility of loosing data. Correct? We
-did need to do some hard-resets, and had power failure, though as of
-yet we never had problems with lost data on any xfs partitions, and
-I'd like to make sure it stays that way.
+# ulimit -c unlimited
+# xfs_repair -v /dev/md1
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+zero_log: head block 8 tail block 8
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - agno = 23
+        - agno = 24
+        - agno = 25
+        - agno = 26
+        - agno = 27
+        - agno = 28
+        - agno = 29
+        - agno = 30
+        - agno = 31
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - clear lost+found (if it exists) ...
+        - clearing existing "lost+found" inode
+Segmentation fault      (core dumped)
 
-1c) We have backup strategies in place, so I can live with having a
-few partly damaged files and restoring them from backups. However I am
-not sure how we would make sure that we can find out about all such
-damaged files or if any such files exist ( referring to
-http://oss.sgi.com/projects/xfs/faq.html#nulls ). Are there tools for
-finding potential candidates for corruption? I am assuming that there
-would be a way to find out which files were the most recently touched
-with the help of the journal. Or do I just use shell-magic and  find
-files by mtime and check if there are Nulls at the end of those file
-modified within the last minute or two before the crash?
 
-Situation 2)
-I hear many people saying that using XFS on machines that have no UPS
-(as in Notebooks [battery removed], Desktops etc.) is something that
-is not recommended. But after reading up on the issues, the
-recommendation should really go for every FS that only does meta-data
-journaling, as alluded to in the FAQ.
-
-2a) And with the recent changes (barrier support and sync on
-truncated+modified+closed files) I assume there is really no reason to
-choose another meta-data journaling FS over XFS for such machines in
-terms of likelihood of damaged files after hard-resets and power
-failures - would you agree?
-
-2b) When dm-crypt+luks is being used, there is no barrier support
-available (for XFS) even if the underlying hdd supports it, correct?
-Should this be expected to change, or is it more likely to stay that
-way? (due to limited dev. resources and priorities? or due to
-principal issues with it?)
+gdb doesn't show anything useful (I don't know how to interpret
+the I/O error) :
 
 
-Thanks in advance
+# gdb /sbin/xfs_repair core
+GNU gdb 6.4-debian
+Copyright 2005 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i486-linux-gnu"...(no debugging symbols found)
+Using host libthread_db library "/lib/tls/i686/cmov/libthread_db.so.1".
 
-Sencer
+(no debugging symbols found)
+Core was generated by `xfs_repair -v /dev/md1'.
+Program terminated with signal 11, Segmentation fault.
+
+warning: Can't read pathname for load map: Input/output error.
+Reading symbols from /lib/libuuid.so.1...(no debugging symbols found)...done.
+Loaded symbols for /lib/libuuid.so.1
+Reading symbols from /lib/tls/i686/cmov/libc.so.6...(no debugging symbols found)
+Loaded symbols for /lib/tls/i686/cmov/libc.so.6
+Reading symbols from /lib/ld-linux.so.2...(no debugging symbols found)...done.
+Loaded symbols for /lib/ld-linux.so.2
+
+#0  0x08052f42 in ?? ()
+(gdb) bt
+#0  0x08052f42 in ?? ()
+#1  0x000088e9 in ?? ()
+#2  0x00000800 in ?? ()
+#3  0x00000080 in ?? ()
+#4  0x00000000 in ?? ()
+
+
+What's the next step?
+
+Thanks,
+James
