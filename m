@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Apr 2007 16:46:22 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l32NkIfB010080
-	for <xfs@oss.sgi.com>; Mon, 2 Apr 2007 16:46:20 -0700
-Message-ID: <46119596.1020900@sandeen.net>
-Date: Mon, 02 Apr 2007 18:45:26 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: review: remove unused ilen var from xfs_vnodeops.c
-References: <B2C0ED44991A4A556F5258C3@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <B2C0ED44991A4A556F5258C3@timothy-shimmins-power-mac-g5.local>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Apr 2007 17:54:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l330s9fB000643
+	for <xfs@oss.sgi.com>; Mon, 2 Apr 2007 17:54:11 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA23394 for <xfs@oss.sgi.com>; Tue, 3 Apr 2007 10:54:07 +1000
+Subject: TAKE cleanup - remove ilen refs from vnodeops.c
+Message-Id: <20070403005407.C15D458FF80A@chook.melbourne.sgi.com>
+Date: Tue,  3 Apr 2007 10:54:07 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Timothy Shimmin wrote:
-> simple cleanup patch
-> 
+Remove unused ilen variable and references.
 
-Hey that's my job! ;-)
 
-Looks good
+Date:  Tue Apr  3 10:53:20 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs
+Inspected by:  lachlan@sgi.com,sandeen@sandeen.net
 
--Eric
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:28344a
+fs/xfs/xfs_vnodeops.c - 1.694 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.694&r2=text&tr2=1.693&f=h
+	- Remove unused ilen variable and references.
