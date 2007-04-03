@@ -1,201 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Apr 2007 23:09:40 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3369YfB022611
-	for <xfs@oss.sgi.com>; Mon, 2 Apr 2007 23:09:36 -0700
-Date: Tue, 03 Apr 2007 16:10:38 +1100
-From: Timothy Shimmin <tes@sgi.com>
-Subject: review: export xfs_buftarg_list for use by xfsidbg
-Message-ID: <C012E350427BA5552771BCD5@timothy-shimmins-power-mac-g5.local>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Apr 2007 05:01:56 -0700 (PDT)
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l33C1lfB004228
+	for <xfs@oss.sgi.com>; Tue, 3 Apr 2007 05:01:48 -0700
+Received: by an-out-0708.google.com with SMTP id c5so1529305anc
+        for <xfs@oss.sgi.com>; Tue, 03 Apr 2007 05:01:47 -0700 (PDT)
+Message-ID: <12fac1030704030403t3ffc3599w5a0191476eb8b865@mail.gmail.com>
+Date: Tue, 3 Apr 2007 13:03:39 +0200
+From: Sencer <alisencer@gmail.com>
+Subject: md/dm devices, barrier support, commodity hardware and data integrity
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: xfs@oss.sgi.com
 
-Hi,
+Hello,
 
-This patch addresses the problem of having xfs_buftarg_list global for use
-by kdb and xfsidbg, where otherwise it would be static.
-If we are using xfsidbg, then we export the xfs_get_buftarg_list function
-to it.
-Previous to Dave's (dgc) static changes, we were only globalizing it if
-we were in DEBUG - when really it is a question of xfsidbg.
-Using CONFIG_KDB_MODULES as this is what we use in the Makefiles for
-determining if xfsidbg is used.
+After reading up on XFS, there are a couple of issues that still seem
+kind of cloudy to me. I am merely a user of filesystems, so forgive me
+if some issues seem obvious. If you could confirm/clarify/answer the
+following issues, it would be very helpful to me.
 
---Tim
+Situation 1)
+We are currently using XFS on a commodity x86 server with SATA drives
+(with NCQ) on Debian Etch (Kernel: 2.6.18-3-k7). We are also using
+Software-Raid1 (mdadm). All partitions except /boot are XFS. If I
+understand the FAQ and recent ml-discussions right, then
 
- linux-2.4/xfs_buf.c   |    8 ++++++++
- linux-2.4/xfs_buf.h   |    3 +++
- linux-2.4/xfs_ksyms.c |    5 ++---
- linux-2.6/xfs_buf.c   |   10 +++++++++-
- linux-2.6/xfs_buf.h   |    3 +++
- linux-2.6/xfs_ksyms.c |    5 ++---
- xfsidbg.c             |    9 +++------
- 7 files changed, 30 insertions(+), 13 deletions(-)
+1a) without software-raid, we would enjoy write barrier support,
+however given that we are using md-devices this is not the case
+(kern.log confirms this by explicitly stating barrier support is
+disabled for mdX ...). Did this (barrier support with XFS on md)
+change in later kernels or is it likely to change in the near (or far)
+future? (I think I read mentions of md, and some kind of
+barrier-awareness on the ml, but didn't quite understand what
+effectively  follows from it from a users POV).
 
-===========================================================================
-Index: fs/xfs/linux-2.4/xfs_buf.c
-===========================================================================
+1b) Given the current circumstances above, we should disable write
+cache as suggested in the faq (there are actually UPS's but they've
+failed before) to reduce the possibility of loosing data. Correct? We
+did need to do some hard-resets, and had power failure, though as of
+yet we never had problems with lost data on any xfs partitions, and
+I'd like to make sure it stays that way.
 
---- a/fs/xfs/linux-2.4/xfs_buf.c	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.4/xfs_buf.c	2007-04-03 15:45:23.930213823 +1000
-@@ -2335,3 +2335,11 @@ xfs_buf_terminate(void)
- 	kmem_zone_destroy(xfs_buf_zone);
- 	kmem_shake_deregister(xfs_buf_shake);
- }
-+
-+#ifdef CONFIG_KDB_MODULES
-+struct list_head *
-+xfs_get_buftarg_list(void)
-+{
-+	return &xfs_buftarg_list;
-+}
-+#endif
+1c) We have backup strategies in place, so I can live with having a
+few partly damaged files and restoring them from backups. However I am
+not sure how we would make sure that we can find out about all such
+damaged files or if any such files exist ( referring to
+http://oss.sgi.com/projects/xfs/faq.html#nulls ). Are there tools for
+finding potential candidates for corruption? I am assuming that there
+would be a way to find out which files were the most recently touched
+with the help of the journal. Or do I just use shell-magic and  find
+files by mtime and check if there are Nulls at the end of those file
+modified within the last minute or two before the crash?
 
-===========================================================================
-Index: fs/xfs/linux-2.4/xfs_buf.h
-===========================================================================
+Situation 2)
+I hear many people saying that using XFS on machines that have no UPS
+(as in Notebooks [battery removed], Desktops etc.) is something that
+is not recommended. But after reading up on the issues, the
+recommendation should really go for every FS that only does meta-data
+journaling, as alluded to in the FAQ.
 
---- a/fs/xfs/linux-2.4/xfs_buf.h	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.4/xfs_buf.h	2007-04-03 15:46:59.997634360 +1000
-@@ -500,6 +500,9 @@ extern void xfs_free_buftarg(xfs_buftarg
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
- extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
-+#ifdef CONFIG_KDB_MODULES
-+extern struct list_head *xfs_get_buftarg_list(void);
-+#endif
+2a) And with the recent changes (barrier support and sync on
+truncated+modified+closed files) I assume there is really no reason to
+choose another meta-data journaling FS over XFS for such machines in
+terms of likelihood of damaged files after hard-resets and power
+failures - would you agree?
 
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_kdev)
- #define xfs_readonly_buftarg(buftarg)	is_read_only((buftarg)->bt_kdev)
-
-===========================================================================
-Index: fs/xfs/linux-2.4/xfs_ksyms.c
-===========================================================================
-
---- a/fs/xfs/linux-2.4/xfs_ksyms.c	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.4/xfs_ksyms.c	2007-04-03 15:46:29.489629322 +1000
-@@ -124,9 +124,8 @@ EXPORT_SYMBOL(xfs_params);
- EXPORT_SYMBOL(xfs_bmbt_disk_get_all);
- #endif
-
--#if defined(CONFIG_XFS_DEBUG)
--extern struct list_head xfs_buftarg_list;
--EXPORT_SYMBOL(xfs_buftarg_list);
-+#if defined(CONFIG_KDB_MODULES)
-+EXPORT_SYMBOL(xfs_get_buftarg_list);
- #endif
-
- /*
-
-===========================================================================
-Index: fs/xfs/linux-2.6/xfs_buf.c
-===========================================================================
-
---- a/fs/xfs/linux-2.6/xfs_buf.c	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.6/xfs_buf.c	2007-04-03 15:11:15.778300965 +1000
-@@ -1426,7 +1426,7 @@ xfs_free_bufhash(
- /*
-  *	buftarg list for delwrite queue processing
-  */
--LIST_HEAD(xfs_buftarg_list);
-+static LIST_HEAD(xfs_buftarg_list);
- static DEFINE_SPINLOCK(xfs_buftarg_lock);
-
- STATIC void
-@@ -1867,3 +1867,11 @@ xfs_buf_terminate(void)
- 	ktrace_free(xfs_buf_trace_buf);
- #endif
- }
-+
-+#ifdef CONFIG_KDB_MODULES
-+struct list_head *
-+xfs_get_buftarg_list(void)
-+{
-+	return &xfs_buftarg_list;
-+}
-+#endif
-
-===========================================================================
-Index: fs/xfs/linux-2.6/xfs_buf.h
-===========================================================================
-
---- a/fs/xfs/linux-2.6/xfs_buf.h	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.6/xfs_buf.h	2007-04-03 15:22:51.547106965 +1000
-@@ -411,6 +411,9 @@ extern void xfs_free_buftarg(xfs_buftarg
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
- extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
-+#ifdef CONFIG_KDB_MODULES
-+extern struct list_head *xfs_get_buftarg_list(void);
-+#endif
-
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-
-===========================================================================
-Index: fs/xfs/linux-2.6/xfs_ksyms.c
-===========================================================================
-
---- a/fs/xfs/linux-2.6/xfs_ksyms.c	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/linux-2.6/xfs_ksyms.c	2007-04-03 14:52:27.011000730 +1000
-@@ -125,9 +125,8 @@ EXPORT_SYMBOL(xfs_params);
- EXPORT_SYMBOL(xfs_bmbt_disk_get_all);
- #endif
-
--#if defined(CONFIG_XFS_DEBUG)
--extern struct list_head xfs_buftarg_list;
--EXPORT_SYMBOL(xfs_buftarg_list);
-+#if defined(CONFIG_KDB_MODULES)
-+EXPORT_SYMBOL(xfs_get_buftarg_list);
- #endif
-
- /*
-
-===========================================================================
-Index: fs/xfs/xfsidbg.c
-===========================================================================
-
---- a/fs/xfs/xfsidbg.c	2007-04-03 15:47:15.000000000 +1000
-+++ b/fs/xfs/xfsidbg.c	2007-04-03 15:24:02.201877199 +1000
-@@ -62,6 +62,7 @@
- #include "xfs_quota.h"
- #include "quota/xfs_qm.h"
- #include "xfs_iomap.h"
-+#include "xfs_buf.h"
-
- MODULE_AUTHOR("Silicon Graphics, Inc.");
- MODULE_DESCRIPTION("Additional kdb commands for debugging XFS");
-@@ -2350,8 +2351,7 @@ kdbm_bp(int argc, const char **argv)
- static int
- kdbm_bpdelay(int argc, const char **argv)
- {
--#ifdef DEBUG
--	extern struct list_head xfs_buftarg_list;
-+	struct list_head	*xfs_buftarg_list = xfs_get_buftarg_list();
- 	struct list_head	*curr, *next;
- 	xfs_buftarg_t		*tp, *n;
- 	xfs_buf_t		bp;
-@@ -2372,7 +2372,7 @@ kdbm_bpdelay(int argc, const char **argv
- 	}
+2b) When dm-crypt+luks is being used, there is no barrier support
+available (for XFS) even if the underlying hdd supports it, correct?
+Should this be expected to change, or is it more likely to stay that
+way? (due to limited dev. resources and priorities? or due to
+principal issues with it?)
 
 
--	list_for_each_entry_safe(tp, n, &xfs_buftarg_list, bt_list) {
-+	list_for_each_entry_safe(tp, n, xfs_buftarg_list, bt_list) {
- 		list_for_each_safe(curr, next, &tp->bt_delwrite_queue) {
- 			addr = (unsigned long)list_entry(curr, xfs_buf_t, b_list);
- 			if ((diag = kdb_getarea(bp, addr)))
-@@ -2388,9 +2388,6 @@ kdbm_bpdelay(int argc, const char **argv
- 			}
- 		}
- 	}
--#else
--	kdb_printf("bt_delwrite_queue inaccessible (non-debug)\n");
--#endif
- 	return 0;
- }
+Thanks in advance
+
+Sencer
