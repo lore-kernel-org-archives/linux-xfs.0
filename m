@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Apr 2007 11:36:54 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Apr 2007 13:45:12 -0700 (PDT)
 Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l34IadfB001401
-	for <xfs@oss.sgi.com>; Wed, 4 Apr 2007 11:36:40 -0700
-Date: Wed, 4 Apr 2007 14:36:37 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l34Kj4fB005320
+	for <xfs@oss.sgi.com>; Wed, 4 Apr 2007 13:45:08 -0700
+Date: Wed, 4 Apr 2007 16:45:03 -0400 (EDT)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Strange delete performance using XFS
-In-Reply-To: <20070404134724.GF18320@mail3b.westend.com>
-Message-ID: <Pine.LNX.4.64.0704041436140.16731@p34.internal.lan>
+In-Reply-To: <20070404143533.GF12481@mail3b.westend.com>
+Message-ID: <Pine.LNX.4.64.0704041644460.20373@p34.internal.lan>
 References: <20070404130535.GE18320@mail3b.westend.com>
  <Pine.LNX.4.64.0704040928110.7309@p34.internal.lan> <20070404134724.GF18320@mail3b.westend.com>
+ <Pine.LNX.4.64.0704040957120.7309@p34.internal.lan>
+ <Pine.LNX.4.64.0704041012330.7309@p34.internal.lan> <20070404142142.GG18320@mail3b.westend.com>
+ <Pine.LNX.4.64.0704041023570.7309@p34.internal.lan> <20070404143533.GF12481@mail3b.westend.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1108556179-1175711797=:16731"
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1667215911-1175719503=:20373"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -21,7 +24,7 @@ Cc: xfs@oss.sgi.com
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
----1463747160-1108556179-1175711797=:16731
+---1463747160-1667215911-1175719503=:20373
 Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 
@@ -31,44 +34,47 @@ On Wed, 4 Apr 2007, Thomas Kaehn wrote:
 
 > Hi Justin,
 >
-> On Wed, Apr 04, 2007 at 09:29:46AM -0400, Justin Piszcz wrote:
->>> Please see below for "time" output.
->>>
->>> | # time for i in `seq 1 100000`; do dd if=3D/dev/zero of=3D$i bs=3D1k =
+> On Wed, Apr 04, 2007 at 10:24:42AM -0400, Justin Piszcz wrote:
+>>> On Wed, Apr 04, 2007 at 10:12:48AM -0400, Justin Piszcz wrote:
+>>>> On Wed, 4 Apr 2007, Justin Piszcz wrote:
+>>>>> On Wed, 4 Apr 2007, Thomas Kaehn wrote:
+>>>>> $ time for i in `seq 1 100000`; do dd if=3D/dev/zero of=3D$i bs=3D1k =
 count=3D20
->>>> /dev/null 2>&1; done
->>> |
->>> | real    6m6.814s
->>> | user    0m30.290s
->>> | sys     2m42.562s
->>> | # time rm -rf y
->>> |
->>> | real    5m18.034s
->>> | user    0m0.036s
->>> | sys     0m8.169s
+>>>>>> /dev/null 2>&1; done
+>>>>>
+>> My guess is mkfs.xfs cannot optimzie for your array like it can with a SW
+>> RAID device because it cannot see what is undereath it.  Have you tried
+>> making a SW RAID?  I also use optimized parameters for my SW RAID1/5 as
+>> well FYI.
 >
->> Deletes on XFS is one area that is a little slower than other filesystem=
-s.
->> You can increase the log size during the creation of the filesystem and
->> also increase logbufs to 8 and that might help.
+> I guess this might be the problem. I've already tried to alter
+> the stripe unit to match the RAID stripe size: "-d su=3D64k,sw=3D2 -l su=
+=3D64k".
 >
-> Thanks for your suggestions.
+> Maybe the 3ware controller can't deal with the kind of read and write
+> patterns needed by XFS. But in this case other people should have
+> realized similar problems.
 >
-> I also tried to increase the log size and logbufs mount option. This
-> optimizes create and delete times to the above values (with default optio=
-ns
-> both are around 9-10 minutes).
+> On a different system with a 3ware 9500S-4LP using 4 disks as RAID5
+> setup I get a better (but not really good) result for delete
+> performance (I've taken only 50000 files in this case as the system's
+> CPU is much slower):
 >
-> The strange thing is that on a similar Dell machines using XFS, too,
-> deletes take only ten seconds which would match user and system time.
+> | # time for i in `seq 1 50000`; do dd if=3D/dev/zero of=3D$i
+> | bs=3D1k count=3D20 >/dev/null 2>&1; done
+> |
+> | real    18m21.643s
+> | user    0m55.727s
+> | sys     3m12.140s
+> | backup:/srv/x# cd ..
+> | backup:/srv# rm -rf x
+> |
+> | # time rm -rf x
+> |
+> | real    5m7.845s
+> | user    0m0.160s
+> | sys     0m11.369s
 >
-> More than five minutes for deleting 100000 files where ext3 needs
-> 3 seconds on the same machine is actually more than a little bit slower
-> - to my mind there must be something wrong. JFS needs around 18 seconds.
->
-> However I am not sure if the problem is hardware or software related.
-> I've also tried to use the newest 3ware firmware - but this did not lead
-> to an improvement.
 >
 > Ciao,
 > Thomas
@@ -84,6 +90,6 @@ er
 Kolb
 >
 
-For the ext3, try time bash -c 'rm -rf test; sync'
+What do you get with ext3 when using time bash -c 'rm -f file; sync'=
 
----1463747160-1108556179-1175711797=:16731--
+---1463747160-1667215911-1175719503=:20373--
