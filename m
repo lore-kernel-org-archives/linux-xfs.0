@@ -1,153 +1,86 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Apr 2007 17:42:42 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l340gbfB023972
-	for <xfs@oss.sgi.com>; Tue, 3 Apr 2007 17:42:39 -0700
-Message-Id: <200704040042.KAA01820@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: xfs_repair segfault
-Date: Wed, 4 Apr 2007 10:45:47 +1000
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.44.0704031149070.6675-100000@barcelona.int.jammed.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Apr 2007 06:24:27 -0700 (PDT)
+Received: from mail3b1.westend.com (mail3b.westend.com [212.117.79.78])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l34DOKfB022642
+	for <xfs@oss.sgi.com>; Wed, 4 Apr 2007 06:24:21 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail3b1.westend.com (Postfix) with ESMTP id 373B8BF30
+	for <xfs@oss.sgi.com>; Wed,  4 Apr 2007 15:05:39 +0200 (CEST)
+Received: from mail3b1.westend.com ([127.0.0.1])
+	by localhost (mail3b [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 11168-04 for <xfs@oss.sgi.com>;
+	Wed, 4 Apr 2007 15:05:35 +0200 (CEST)
+Date: Wed, 4 Apr 2007 15:05:35 +0200
+From: Thomas Kaehn <tk@westend.com>
+Subject: Strange delete performance using XFS
+Message-ID: <20070404130535.GE18320@mail3b.westend.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "'James W. Abendschan'" <jwa@jammed.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi James,
+Hi,
 
-Would it be possible for you apply the patch I posted to xfs@oss
-in Feb http://oss.sgi.com/archives/xfs/2007-02/msg00072.html
-to the latest xfsprogs source, make and install it and run:
+I've got a strange problem on one machine using XFS. Deleting large
+directories (containing about 100000 files, 20k each) using "rm -rf"
+lasts nearly as long as creating the the files using a bash loop.
 
-# xfs_metadump /dev/md1 - | bzip2 > /tmp/bad_xfs.bz2
+The machine is running Debian Sarge with a vanilla 2.6.20.3 kernel.
+CPU: Dual Xeon(TM) CPU 3.20GHz
+RAM: 4 GB
+RAID10: 4x 320 GB disks connected to 3ware 9550SXU-8LP 
+ (Firmware Version = FE9X 3.08.00.004)
 
-And make the image available for me to download and analyse?
+The XFS was first created using default options and later on with
+"-d su=64k,sw=2 -l su=64k" which improved overall performance
+but not delete performance.
 
-Regards,
-Barry.
+Has anyone realized similar effects? On a different server (Dell 6850)
+the directory can be deleted within seconds. What could be the reason
+for the huge difference in delete performance?
 
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of James W. Abendschan
-> Sent: Wednesday, 4 April 2007 5:12 AM
-> To: xfs@oss.sgi.com
-> Subject: xfs_repair segfault
-> 
-> Hi there -- I have a 6.9TB XFS volume that is acting up
-> after a power failure (I understand XFS + no UPS + PC
-> hardware == badness.  Not my decision.)
-> 
-> The machine is a dual proc x86 (intel xeon 5130) w/ 8GB RAM
-> running a custom 2.6.18 kernel on top of Ubuntu 6.06.
-> 
-> Since xfs_check can't repair volumes of this size without
-> scads of memory, I've been using xfs_repair to correct
-> power-related problems before.
-> 
-> Unfortunately, for some reason xfs_repair is segfaulting:
-> 
-> # ulimit -c unlimited
-> # xfs_repair -v /dev/md1
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
-> zero_log: head block 8 tail block 8
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - agno = 7
->         - agno = 8
->         - agno = 9
->         - agno = 10
->         - agno = 11
->         - agno = 12
->         - agno = 13
->         - agno = 14
->         - agno = 15
->         - agno = 16
->         - agno = 17
->         - agno = 18
->         - agno = 19
->         - agno = 20
->         - agno = 21
->         - agno = 22
->         - agno = 23
->         - agno = 24
->         - agno = 25
->         - agno = 26
->         - agno = 27
->         - agno = 28
->         - agno = 29
->         - agno = 30
->         - agno = 31
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - clear lost+found (if it exists) ...
->         - clearing existing "lost+found" inode
-> Segmentation fault      (core dumped)
-> 
-> 
-> gdb doesn't show anything useful (I don't know how to interpret
-> the I/O error) :
-> 
-> 
-> # gdb /sbin/xfs_repair core
-> GNU gdb 6.4-debian
-> Copyright 2005 Free Software Foundation, Inc.
-> GDB is free software, covered by the GNU General Public 
-> License, and you are
-> welcome to change it and/or distribute copies of it under 
-> certain conditions.
-> Type "show copying" to see the conditions.
-> There is absolutely no warranty for GDB.  Type "show 
-> warranty" for details.
-> This GDB was configured as "i486-linux-gnu"...(no debugging 
-> symbols found)
-> Using host libthread_db library 
-> "/lib/tls/i686/cmov/libthread_db.so.1".
-> 
-> (no debugging symbols found)
-> Core was generated by `xfs_repair -v /dev/md1'.
-> Program terminated with signal 11, Segmentation fault.
-> 
-> warning: Can't read pathname for load map: Input/output error.
-> Reading symbols from /lib/libuuid.so.1...(no debugging 
-> symbols found)...done.
-> Loaded symbols for /lib/libuuid.so.1
-> Reading symbols from /lib/tls/i686/cmov/libc.so.6...(no 
-> debugging symbols found)
-> Loaded symbols for /lib/tls/i686/cmov/libc.so.6
-> Reading symbols from /lib/ld-linux.so.2...(no debugging 
-> symbols found)...done.
-> Loaded symbols for /lib/ld-linux.so.2
-> 
-> #0  0x08052f42 in ?? ()
-> (gdb) bt
-> #0  0x08052f42 in ?? ()
-> #1  0x000088e9 in ?? ()
-> #2  0x00000800 in ?? ()
-> #3  0x00000080 in ?? ()
-> #4  0x00000000 in ?? ()
-> 
-> 
-> What's the next step?
-> 
-> Thanks,
-> James
-> 
-> 
-> 
+Please see below for "time" output. 
+
+| # time for i in `seq 1 100000`; do dd if=/dev/zero of=$i bs=1k count=20 >/dev/null 2>&1; done
+| 
+| real    6m6.814s
+| user    0m30.290s
+| sys     2m42.562s
+| # time rm -rf y
+| 
+| real    5m18.034s
+| user    0m0.036s
+| sys     0m8.169s
+
+In contrast to this the result on the Dell machine looks more
+reasonable:
+
+| # time for i in `seq 1 100000`; do dd if=/dev/zero of=$i bs=1k count=20 >/dev/null 2>&1; done
+| 
+| real    9m26.658s
+| user    0m24.134s
+| sys     3m3.623s
+| # time rm -rf x
+| 
+| real    0m10.254s
+| user    0m0.124s
+| sys     0m10.105s
+
+Ciao,
+Thomas
+
+PS: Using JFS and ext3 it is also possible to delete the above directory
+in a couple of seconds. Only XFS seems problematic in this regard on
+this system.
+-- 
+Thomas Kähn                   WESTEND GmbH  |  Internet-Business-Provider
+Technik                       CISCO Systems Partner - Authorized Reseller
+                              Im Süsterfeld 6          Tel 0241/701333-18
+tk@westend.com                D-52072 Aachen              Fax 0241/911879
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Die Gesellschaft ist eingetragen im Handelsregister Aachen unter HRB 7608
+Geschäftsführer:           Thomas Neugebauer, Thomas Heller, Michael Kolb
