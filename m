@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Apr 2007 06:58:03 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Apr 2007 07:12:57 -0700 (PDT)
 Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l34DvufB030663
-	for <xfs@oss.sgi.com>; Wed, 4 Apr 2007 06:57:57 -0700
-Date: Wed, 4 Apr 2007 09:57:56 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l34ECmfB002491
+	for <xfs@oss.sgi.com>; Wed, 4 Apr 2007 07:12:50 -0700
+Date: Wed, 4 Apr 2007 10:12:48 -0400 (EDT)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Strange delete performance using XFS
-In-Reply-To: <Pine.LNX.4.64.0704040951010.7309@p34.internal.lan>
-Message-ID: <Pine.LNX.4.64.0704040957440.7309@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0704040957120.7309@p34.internal.lan>
+Message-ID: <Pine.LNX.4.64.0704041012330.7309@p34.internal.lan>
 References: <20070404130535.GE18320@mail3b.westend.com>
  <Pine.LNX.4.64.0704040928110.7309@p34.internal.lan> <20070404134724.GF18320@mail3b.westend.com>
- <Pine.LNX.4.64.0704040951010.7309@p34.internal.lan>
+ <Pine.LNX.4.64.0704040957120.7309@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1613578982-1175695076=:7309"
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1228164866-1175695968=:7309"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -22,7 +22,7 @@ Cc: xfs@oss.sgi.com
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
----1463747160-1613578982-1175695076=:7309
+---1463747160-1228164866-1175695968=:7309
 Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 
@@ -91,9 +91,47 @@ der
 >>=20
 >>=20
 >
-> I am running some benchmarks with SW raid and will prevent my findings=20
-> shortly.
+> The benchmark:
+> $ time for i in `seq 1 100000`; do dd if=3D/dev/zero of=3D$i bs=3D1k coun=
+t=3D20=20
+>> /dev/null 2>&1; done
+>
+> 1. Six 400GB SATA drives using SW RAID5:
+> real    6m24.411s
+> user    0m43.097s
+> sys     2m17.350s
+>
+> 2. Four Raptor 150 ADFD drives using SW RAID5:
+> real    3m16.962s
+> user    0m42.899s
+> sys     2m15.420s
+>
+> 3. Two Raptor 74GB *GD drives using SW RAID1:
+> real    3m19.241s
+> user    0m41.731s
+> sys     2m15.873s
+>
+>
 
-Removal tests coming shortly, benchmarking is always interesting.=
+The removals:
 
----1463747160-1613578982-1175695076=:7309--
+The benchmark:
+$ time rm -rf test
+
+1. Six 400GB SATA drives using SW RAID5:
+real    0m33.996s
+user    0m0.057s
+sys     0m8.101s
+
+2. Four Raptor 150 ADFD drives using SW RAID5:
+real    0m43.967s
+user    0m0.071s
+sys     0m8.340s
+
+3. Two Raptor 74GB *GD drives using SW RAID1:
+real    0m32.965s
+user    0m0.049s
+sys     0m6.307s
+
+
+---1463747160-1228164866-1175695968=:7309--
