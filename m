@@ -1,58 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 05 Apr 2007 09:06:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l35G6WfB013207
-	for <xfs@oss.sgi.com>; Thu, 5 Apr 2007 09:06:33 -0700
-Message-ID: <46151E86.2080704@sandeen.net>
-Date: Thu, 05 Apr 2007 11:06:30 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 05 Apr 2007 09:23:28 -0700 (PDT)
+Received: from mail.linbit.com (nudl.linbit.com [212.69.162.21])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l35GNJfB017294
+	for <xfs@oss.sgi.com>; Thu, 5 Apr 2007 09:23:21 -0700
+Date: Thu, 5 Apr 2007 18:22:35 +0200
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: xfs_repair leaves empty but undeletable dirs in lost+found
+Message-ID: <20070405162235.GA816@barkeeper1.linbit>
+References: <20070404203601.GA11771@barkeeper1.linbit>
 MIME-Version: 1.0
-Subject: Re: XFS Resiliency to the disk errors.
-References: <A63C579E7F04E74588517328EF5A385E02076A9A@ILEX5.IL.NDS.COM>
-In-Reply-To: <A63C579E7F04E74588517328EF5A385E02076A9A@ILEX5.IL.NDS.COM>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070404203601.GA11771@barkeeper1.linbit>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Zak, Semion" <SZak@nds.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Zak, Semion wrote:
-> Hi,
->  
-> We are studying possibility to use XFS with cheap (not too reliable)
-> discs, so we have some questions:
->  
-> What in XFS is done to survive the disk errors (bad sectors)?
-> I know about superblock duplication in every AG. What else?
->  
-> What is XFS behavior in case of the disk errors  (panic/no mount/partial
-> data access)?
+On Wed, Apr 04, 2007 at 10:36:01PM +0200, Lars Ellenberg wrote:
+> NOTE that I used the default sarge xfsprogs version 2.6.20, not
+>      the upstream 2.8.20. yet. I'll start an xfs_repair run with
+>      2.8.20 right after this post, though...
 
-generally metadata IO errors or bad magic found in metadata will shut 
-down the filesystem gracefully if it can.
+done.
+now, this used seriously more memory, and cpu,
+and the box went thrashing.
+after some experimenting,
 
-IO errors on data will just be IO errors.
+xfs_repair -o bhash=512 
 
-> What could be done to restore?
+got it going without using excessive amounts of swap,
+so it finally finished after about 12 hours
+(2.6.20 needed 8:30, repeatable).
 
-xfsdump/xfsrestore I suppose
+it did not change the situation, however.
 
-> If  zero bad sector/dump to other device/format/restore will help? 
+I know I could clean these using xfs_db and an additional run of
+xfs_repair, but I'm going to keep these around for some more time, in
+case you want me to have a look at some internals still.
 
-Well, you can't make data out of nothing.
+file system itself has gone life again, I hope it does not hurt having
+those strange directories around.
 
-you could dd off the junk drive, zeroing out unreadable sectors, point 
-xfs_repair at it and hope for the best.  Which, depending on the 
-problem, could wind up not being very good.
+maybe it is even "just" a problem on the kernel side,
+not being able to convert so the expected "form" of directory?
+sorry, I'm not too deep in the xfs internals, so I need some input from
+the developers here...
 
-If you want to know how to recover from disaster, it sounds like perhaps 
-your data is important enough that you should not plan for failure, but 
-rather find a way to avoid it?
+Thanks,
 
-Seems to me the only way I'd want to put drives which are expected to 
-fail regularly into a product is if the recovery method of "replace the 
-disk and re-image the appliance" was  acceptable, but that's just me.  :)
-
--Eric
+-- 
+: Lars Ellenberg                            Tel +43-1-8178292-0  :
+: LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+: Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
+__
+please use the "List-Reply" function of your email client.
