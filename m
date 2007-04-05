@@ -1,57 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 05 Apr 2007 09:23:28 -0700 (PDT)
-Received: from mail.linbit.com (nudl.linbit.com [212.69.162.21])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l35GNJfB017294
-	for <xfs@oss.sgi.com>; Thu, 5 Apr 2007 09:23:21 -0700
-Date: Thu, 5 Apr 2007 18:22:35 +0200
-From: Lars Ellenberg <lars.ellenberg@linbit.com>
-Subject: Re: xfs_repair leaves empty but undeletable dirs in lost+found
-Message-ID: <20070405162235.GA816@barkeeper1.linbit>
-References: <20070404203601.GA11771@barkeeper1.linbit>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070404203601.GA11771@barkeeper1.linbit>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 05 Apr 2007 10:27:29 -0700 (PDT)
+Received: from rgminet02.oracle.com (rgminet02.oracle.com [148.87.113.119])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l35HRKfB000743
+	for <xfs@oss.sgi.com>; Thu, 5 Apr 2007 10:27:22 -0700
+Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
+	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l35FoFgj014786
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 5 Apr 2007 09:50:16 -0600
+Date: Thu, 5 Apr 2007 08:50:16 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: Interface for the new fallocate() system call
+Message-Id: <20070405085016.a513526b.randy.dunlap@oracle.com>
+In-Reply-To: <20070405112619.GA19982@amitarora.in.ibm.com>
+References: <20070117094658.GA17390@amitarora.in.ibm.com>
+	<20070225022326.137b4875.akpm@linux-foundation.org>
+	<20070301183445.GA7911@amitarora.in.ibm.com>
+	<20070316143101.GA10152@amitarora.in.ibm.com>
+	<20070316161704.GE8525@osiris.boeblingen.de.ibm.com>
+	<20070317111036.GC29931@parisc-linux.org>
+	<20070321120425.GA27273@amitarora.in.ibm.com>
+	<20070329115126.GB7374@amitarora.in.ibm.com>
+	<20070329101010.7a2b8783.akpm@linux-foundation.org>
+	<20070330071417.GI355@devserv.devel.redhat.com>
+	<20070405112619.GA19982@amitarora.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: Jakub Jelinek <jakub@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-On Wed, Apr 04, 2007 at 10:36:01PM +0200, Lars Ellenberg wrote:
-> NOTE that I used the default sarge xfsprogs version 2.6.20, not
->      the upstream 2.8.20. yet. I'll start an xfs_repair run with
->      2.8.20 right after this post, though...
+On Thu, 5 Apr 2007 16:56:19 +0530 Amit K. Arora wrote:
 
-done.
-now, this used seriously more memory, and cpu,
-and the box went thrashing.
-after some experimenting,
+> On Fri, Mar 30, 2007 at 02:14:17AM -0500, Jakub Jelinek wrote:
+> > Wouldn't
+> > int fallocate(loff_t offset, loff_t len, int fd, int mode)
+> > work on both s390 and ppc/arm?  glibc will certainly wrap it and
+> > reorder the arguments as needed, so there is no need to keep fd first.
+>  
+> This should work on all the platforms. The only concern I can think of
+> here is the convention being followed till now, where all the entities on
+> which the action has to be performed by the kernel (say fd, file/device
+> name, pid etc.) is the first argument of the system call. If we can live
+> with the small exception here, fine.
+> 
+> Or else, we may have to implement the 
+> 
+>   int fd, int mode, loff_t offset, loff_t len
+> 
+> as the layout of arguments here. I think only s390 will have a problem
+> with this, and we can think of a workaround for it (may be similar to
+> what ARM did to implement sync_file_range() system call)   :
+> 
+> asmlinkage long sys_s390_fallocate(int fd, loff_t offset, loff_t len, int mode)
+> {
+>         return sys_fallocate(fd, offset, len, mode);
+> }
+> 
+> 
+> To me both the approaches look slightly unconventional. But, we need to
+> compromise somewhere to make things work on all the platforms.
+> 
+> Any thoughts on which one of the above should we finalize on ?
+> 
+> Thanks!
 
-xfs_repair -o bhash=512 
+If s390 can work around the calling order that easily, I certainly
+prefer the more conventional ordering of:
 
-got it going without using excessive amounts of swap,
-so it finally finished after about 12 hours
-(2.6.20 needed 8:30, repeatable).
+>   int fd, int mode, loff_t offset, loff_t len
 
-it did not change the situation, however.
-
-I know I could clean these using xfs_db and an additional run of
-xfs_repair, but I'm going to keep these around for some more time, in
-case you want me to have a look at some internals still.
-
-file system itself has gone life again, I hope it does not hurt having
-those strange directories around.
-
-maybe it is even "just" a problem on the kernel side,
-not being able to convert so the expected "form" of directory?
-sorry, I'm not too deep in the xfs internals, so I need some input from
-the developers here...
-
-Thanks,
-
--- 
-: Lars Ellenberg                            Tel +43-1-8178292-0  :
-: LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
-: Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
-__
-please use the "List-Reply" function of your email client.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
