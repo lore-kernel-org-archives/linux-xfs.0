@@ -1,43 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 07 Apr 2007 13:47:45 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l37KlefB023317
-	for <linux-xfs@oss.sgi.com>; Sat, 7 Apr 2007 13:47:42 -0700
-Received: from localhost (dslb-084-056-094-087.pools.arcor-ip.net [84.56.94.87])
-	by mail.lichtvoll.de (Postfix) with ESMTP id 58DE55ADBB
-	for <linux-xfs@oss.sgi.com>; Sat,  7 Apr 2007 22:47:39 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: XFS Resiliency to the disk errors.
-Date: Sat, 7 Apr 2007 22:47:37 +0200
-References: <A63C579E7F04E74588517328EF5A385E02076A9A@ILEX5.IL.NDS.COM> (sfid-20070405_112347_743716_6E82B98E) (sfid-20070405_112347_743716_6E82B98E) (sfid-20070405_112347_743716_6E82B98E)
-In-Reply-To: <A63C579E7F04E74588517328EF5A385E02076A9A@ILEX5.IL.NDS.COM>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Apr 2007 08:36:35 -0700 (PDT)
+Received: from ozlabs.org (ozlabs.org [203.10.76.45])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l39FaQfB032204
+	for <xfs@oss.sgi.com>; Mon, 9 Apr 2007 08:36:28 -0700
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200704072247.38143.Martin@lichtvoll.de>
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <17946.14646.808334.441833@cargo.ozlabs.ibm.com>
+Date: Mon, 9 Apr 2007 23:01:42 +1000
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: Interface for the new fallocate() system call
+In-Reply-To: <20070330104449.GA9371@lazybastard.org>
+References: <20070225022326.137b4875.akpm@linux-foundation.org>
+	<20070301183445.GA7911@amitarora.in.ibm.com>
+	<20070316143101.GA10152@amitarora.in.ibm.com>
+	<20070316161704.GE8525@osiris.boeblingen.de.ibm.com>
+	<20070317111036.GC29931@parisc-linux.org>
+	<20070321120425.GA27273@amitarora.in.ibm.com>
+	<20070329115126.GB7374@amitarora.in.ibm.com>
+	<20070329101010.7a2b8783.akpm@linux-foundation.org>
+	<20070330071929.GC8365@osiris.boeblingen.de.ibm.com>
+	<17932.54606.323431.491736@cargo.ozlabs.ibm.com>
+	<20070330104449.GA9371@lazybastard.org>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: =?utf-8?B?SsO2cm4=?= Engel <joern@lazybastard.org>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-Am Donnerstag 05 April 2007 schrieb Zak, Semion:
-> Hi,
->
-> We are studying possibility to use XFS with cheap (not too reliable)
-> discs, so we have some questions:
+Jörn Engel writes:
 
-Hi Semion!
+> Wouldn't that work be confined to fallocate()?  If I understand Heiko
+> correctly, the alternative would slow s390 down for every syscall,
+> including more performance-critical ones.
 
-I recommend at least monitoring the health status of the drives using 
-smartmontools - with regular short and long selft test - or a similar 
-mechanism. So you *may* at least be warned *before* a disk fails.
+The alternative that Jakub suggested wouldn't slow s390 down.
 
-Otherwise I would go for a redundant RAID array at least so that at least 
-one drive in a bunch of drives can fail without data loss.
-
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Paul.
