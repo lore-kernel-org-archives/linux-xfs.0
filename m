@@ -1,39 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Apr 2007 09:39:08 -0700 (PDT)
-Received: from longford.lazybastard.org (lazybastard.de [212.112.238.170])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l39Gd0fB011359
-	for <xfs@oss.sgi.com>; Mon, 9 Apr 2007 09:39:00 -0700
-Date: Mon, 9 Apr 2007 18:34:37 +0200
-From: =?utf-8?B?SsO2cm4=?= Engel <joern@lazybastard.org>
-Subject: Re: Interface for the new fallocate() system call
-Message-ID: <20070409163436.GA24012@lazybastard.org>
-References: <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071929.GC8365@osiris.boeblingen.de.ibm.com> <17932.54606.323431.491736@cargo.ozlabs.ibm.com> <20070330104449.GA9371@lazybastard.org> <17946.14646.808334.441833@cargo.ozlabs.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <17946.14646.808334.441833@cargo.ozlabs.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Apr 2007 18:51:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3A1pBfB026573
+	for <xfs@oss.sgi.com>; Mon, 9 Apr 2007 18:51:13 -0700
+Message-Id: <200704100151.LAA27963@larry.melbourne.sgi.com>
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Subject: RE: xfs_repair leaves empty but undeletable dirs in lost+found
+Date: Tue, 10 Apr 2007 11:55:14 +1000
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20070405162235.GA816@barkeeper1.linbit>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Paul Mackerras <paulus@samba.org>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: 'Lars Ellenberg' <lars.ellenberg@linbit.com>, xfs@oss.sgi.com
 
-On Mon, 9 April 2007 23:01:42 +1000, Paul Mackerras wrote:
-> Jörn Engel writes:
+Hi Lars,
+
+Would it be possible for you apply the patch I posted to xfs@oss
+in Feb http://oss.sgi.com/archives/xfs/2007-02/msg00072.html
+to the latest xfsprogs source, make and install it and run:
+
+# xfs_metadump /dev/md1 - | bzip2 > /tmp/bad_xfs.bz2
+
+And make the image available for me to download and analyse?
+
+Regards,
+Barry. 
+
+> -----Original Message-----
+> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
+> On Behalf Of Lars Ellenberg
+> Sent: Friday, 6 April 2007 2:23 AM
+> To: xfs@oss.sgi.com
+> Subject: Re: xfs_repair leaves empty but undeletable dirs in 
+> lost+found
 > 
-> > Wouldn't that work be confined to fallocate()?  If I understand Heiko
-> > correctly, the alternative would slow s390 down for every syscall,
-> > including more performance-critical ones.
+> On Wed, Apr 04, 2007 at 10:36:01PM +0200, Lars Ellenberg wrote:
+> > NOTE that I used the default sarge xfsprogs version 2.6.20, not
+> >      the upstream 2.8.20. yet. I'll start an xfs_repair run with
+> >      2.8.20 right after this post, though...
 > 
-> The alternative that Jakub suggested wouldn't slow s390 down.
-
-True.  And it appears to be one of the least offensive options we have.
-
-Jörn
-
--- 
-My second remark is that our intellectual powers are rather geared to
-master static relations and that our powers to visualize processes
-evolving in time are relatively poorly developed.
--- Edsger W. Dijkstra
+> done.
+> now, this used seriously more memory, and cpu,
+> and the box went thrashing.
+> after some experimenting,
+> 
+> xfs_repair -o bhash=512 
+> 
+> got it going without using excessive amounts of swap,
+> so it finally finished after about 12 hours
+> (2.6.20 needed 8:30, repeatable).
+> 
+> it did not change the situation, however.
+> 
+> I know I could clean these using xfs_db and an additional run of
+> xfs_repair, but I'm going to keep these around for some more time, in
+> case you want me to have a look at some internals still.
+> 
+> file system itself has gone life again, I hope it does not hurt having
+> those strange directories around.
+> 
+> maybe it is even "just" a problem on the kernel side,
+> not being able to convert so the expected "form" of directory?
+> sorry, I'm not too deep in the xfs internals, so I need some 
+> input from
+> the developers here...
+> 
+> Thanks,
+> 
+> -- 
+> : Lars Ellenberg                            Tel +43-1-8178292-0  :
+> : LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
+> : Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
+> __
+> please use the "List-Reply" function of your email client.
+> 
+> 
