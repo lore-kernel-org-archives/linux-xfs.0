@@ -1,81 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Apr 2007 18:51:18 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3A1pBfB026573
-	for <xfs@oss.sgi.com>; Mon, 9 Apr 2007 18:51:13 -0700
-Message-Id: <200704100151.LAA27963@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: xfs_repair leaves empty but undeletable dirs in lost+found
-Date: Tue, 10 Apr 2007 11:55:14 +1000
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Apr 2007 23:49:17 -0700 (PDT)
+Received: from ilsmtp.nds.com ([192.118.32.12])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3A6n8fB016419
+	for <xfs@oss.sgi.com>; Mon, 9 Apr 2007 23:49:14 -0700
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <20070405162235.GA816@barkeeper1.linbit>
+	charset="us-ascii"
+Subject: RE: XFS Resiliency to the disk errors.
+Date: Tue, 10 Apr 2007 09:49:06 +0300
+Message-ID: <A63C579E7F04E74588517328EF5A385E02076C7B@ILEX5.IL.NDS.COM>
+In-Reply-To: <46151E86.2080704@sandeen.net>
+From: "Zak, Semion" <SZak@nds.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Lars Ellenberg' <lars.ellenberg@linbit.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Hi Lars,
+Thank you very much.
 
-Would it be possible for you apply the patch I posted to xfs@oss
-in Feb http://oss.sgi.com/archives/xfs/2007-02/msg00072.html
-to the latest xfsprogs source, make and install it and run:
+I have other question, about data lose on crash/power cut.
+Is it possible to make it not more then in other file systems, if open
+the important file with O_SYNC flag, or use fsync and sync functions?
 
-# xfs_metadump /dev/md1 - | bzip2 > /tmp/bad_xfs.bz2
+Thanks,
 
-And make the image available for me to download and analyse?
+Semion. 
 
-Regards,
-Barry. 
+-----Original Message-----
+From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+Sent: Thursday, April 05, 2007 7:07 PM
+To: Zak, Semion
+Cc: xfs@oss.sgi.com
+Subject: Re: XFS Resiliency to the disk errors.
 
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Lars Ellenberg
-> Sent: Friday, 6 April 2007 2:23 AM
-> To: xfs@oss.sgi.com
-> Subject: Re: xfs_repair leaves empty but undeletable dirs in 
-> lost+found
-> 
-> On Wed, Apr 04, 2007 at 10:36:01PM +0200, Lars Ellenberg wrote:
-> > NOTE that I used the default sarge xfsprogs version 2.6.20, not
-> >      the upstream 2.8.20. yet. I'll start an xfs_repair run with
-> >      2.8.20 right after this post, though...
-> 
-> done.
-> now, this used seriously more memory, and cpu,
-> and the box went thrashing.
-> after some experimenting,
-> 
-> xfs_repair -o bhash=512 
-> 
-> got it going without using excessive amounts of swap,
-> so it finally finished after about 12 hours
-> (2.6.20 needed 8:30, repeatable).
-> 
-> it did not change the situation, however.
-> 
-> I know I could clean these using xfs_db and an additional run of
-> xfs_repair, but I'm going to keep these around for some more time, in
-> case you want me to have a look at some internals still.
-> 
-> file system itself has gone life again, I hope it does not hurt having
-> those strange directories around.
-> 
-> maybe it is even "just" a problem on the kernel side,
-> not being able to convert so the expected "form" of directory?
-> sorry, I'm not too deep in the xfs internals, so I need some 
-> input from
-> the developers here...
-> 
-> Thanks,
-> 
-> -- 
-> : Lars Ellenberg                            Tel +43-1-8178292-0  :
-> : LINBIT Information Technologies GmbH      Fax +43-1-8178292-82 :
-> : Vivenotgasse 48, A-1120 Vienna/Europe    http://www.linbit.com :
-> __
-> please use the "List-Reply" function of your email client.
-> 
-> 
+Zak, Semion wrote:
+> Hi,
+>  
+> We are studying possibility to use XFS with cheap (not too reliable) 
+> discs, so we have some questions:
+>  
+> What in XFS is done to survive the disk errors (bad sectors)?
+> I know about superblock duplication in every AG. What else?
+>  
+> What is XFS behavior in case of the disk errors  (panic/no 
+> mount/partial data access)?
+
+generally metadata IO errors or bad magic found in metadata will shut
+down the filesystem gracefully if it can.
+
+IO errors on data will just be IO errors.
+
+> What could be done to restore?
+
+xfsdump/xfsrestore I suppose
+
+> If  zero bad sector/dump to other device/format/restore will help? 
+
+Well, you can't make data out of nothing.
+
+you could dd off the junk drive, zeroing out unreadable sectors, point
+xfs_repair at it and hope for the best.  Which, depending on the
+problem, could wind up not being very good.
+
+If you want to know how to recover from disaster, it sounds like perhaps
+your data is important enough that you should not plan for failure, but
+rather find a way to avoid it?
+
+Seems to me the only way I'd want to put drives which are expected to
+fail regularly into a product is if the recovery method of "replace the
+disk and re-image the appliance" was  acceptable, but that's just me.
+:)
+
+-Eric
+***********************************************************************************
+This email message and any attachments thereto are intended only for use by the addressee(s) named above, and may contain legally privileged and/or confidential information. If the reader of this message is not the intended recipient, or the employee or agent responsible to deliver it to the intended recipient, you are hereby notified that any dissemination, distribution or copying of this communication is strictly prohibited. If you have received this communication in error, please immediately notify the postmaster@nds.com and destroy the original message.
+***********************************************************************************
