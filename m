@@ -1,68 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Apr 2007 18:43:35 -0700 (PDT)
-Received: from alnrmhc14.comcast.net (alnrmhc14.comcast.net [206.18.177.54])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3D1hDfB028328
-	for <xfs@oss.sgi.com>; Thu, 12 Apr 2007 18:43:14 -0700
-Subject: Re: [RFC] add FIEMAP ioctl to efficiently map file allocation
-From: Nicholas Miell <nmiell@comcast.net>
-In-Reply-To: <20070412110550.GM5967@schatzie.adilger.int>
-References: <20070412110550.GM5967@schatzie.adilger.int>
-Content-Type: text/plain
-Date: Thu, 12 Apr 2007 18:33:00 -0700
-Message-Id: <1176427980.3125.9.camel@entropy>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Apr 2007 19:26:49 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3D2QZfB006786
+	for <xfs@oss.sgi.com>; Thu, 12 Apr 2007 19:26:36 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3D0c044010281
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2007 09:38:01 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.161])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3D0bgSc024600
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2007 09:37:42 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l3D0bgH18718 for xfs@oss.sgi.com; Fri, 13 Apr 2007 09:37:42 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv4.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l3D0bgg19679 for <xfs@oss.sgi.com>; Fri, 13 Apr 2007 09:37:42 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070413.093821.29702412 for <xfs@oss.sgi.com>
+	; Fri, 13 Apr 2007 09:38:21 +0900
+Message-Id: <200704130037.AA05196@TNESG9305.tnes.nec.co.jp>
+Date: Fri, 13 Apr 2007 09:37:35 +0900
+Subject: [PATCH] remove the unnecessary word in the log message.
+From: Utako Kusaka <utako@tnes.nec.co.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andreas Dilger <adilger@clusterfs.com>
-Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org
+To: xfs@oss.sgi.com
 
-On Thu, 2007-04-12 at 05:05 -0600, Andreas Dilger wrote:
-> I'm interested in getting input for implementing an ioctl to efficiently
-> map file extents & holes (FIEMAP) instead of looping over FIBMAP a billion
-> times.  We already have customers with single files in the 10TB range and
-> we additionally need to get the mapping over the network so it needs to
-> be efficient in terms of how data is passed, and how easily it can be
-> extracted from the filesystem.
-> 
-> I had come up with a plan independently and was also steered toward
-> XFS_IOC_GETBMAP* ioctls which are in fact very similar to my original
-> plan, though I think the XFS structs used there are a bit bloated.
-> 
-> There was also recent discussion about SEEK_HOLE and SEEK_DATA as
-> implemented by Sun, but even if we could skip the holes we still might
-> need to do millions of FIBMAPs to see how large files are allocated
-> on disk.  Conversely, having filesystems implement an efficient FIBMAP
-> ioctl (or ->fiemap() method) could in turn be leveraged for SEEK_HOLE
-> and SEEK_DATA instead of doing looping over ->bmap() inside the kernel
-> as I saw one patch.
-> 
+Hi,
 
-I certainly hope not. SEEK_HOLE/SEEK_DATA is a poor interface and
-doesn't deserve to spread.
+This is the trivial fix to remove the unnecessary word in the log message.
+"required" is set in both xlog_recover() and xfs_dev_is_read_only().
 
-OTOH, this is nicely done.
+Example:
+fsfile is the filesystem which needs log recovery.
+# losetup -r /dev/loop1 fsfile
+# mount -t xfs /dev/loop1 mpnt
+mount: block device /dev/loop1 is write-protected, mounting read-only
+mount: cannot mount block device /dev/loop1 read-only
 
-> 
-> struct fibmap_extent {
-> 	__u64 fe_start;			/* starting offset in bytes */
-> 	__u64 fe_len;			/* length in bytes */
-> }
-> 
-> struct fibmap {
-> 	struct fibmap_extent fm_start;	/* offset, length of desired mapping */
-> 	__u32 fm_extent_count;		/* number of extents in array */
-> 	__u32 fm_flags;			/* flags (similar to XFS_IOC_GETBMAP) */
-> 	__u64 unused;
-> 	struct fibmap_extent fm_extents[0];
-> }
-> 
-> #define FIEMAP_LEN_MASK		0xff000000000000
-> #define FIEMAP_LEN_HOLE     	0x01000000000000
-> #define FIEMAP_LEN_UNWRITTEN	0x02000000000000
-> 
+/var/log/messages:
+Jan 23 15:05:22 g9517 kernel: XFS: recovery required required on read-only device.
 
 
--- 
-Nicholas Miell <nmiell@comcast.net>
+Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+---
+
+--- linux-2.6.20-orig/fs/xfs/xfs_log_recover.c  2007-02-05 03:44:54.000000000 +0900
++++ linux-2.6.20/fs/xfs/xfs_log_recover.c       2007-04-11 13:23:04.000000000 +0900
+@@ -3937,8 +3937,7 @@ xlog_recover(
+ 		 * under the vfs layer, so we can get away with it unless
+ 		 * the device itself is read-only, in which case we fail.
+ 		 */
+-		if ((error = xfs_dev_is_read_only(log->l_mp,
+-						"recovery required"))) {
++		if ((error = xfs_dev_is_read_only(log->l_mp, "recovery"))) {
+ 			return error;
+ 		}
