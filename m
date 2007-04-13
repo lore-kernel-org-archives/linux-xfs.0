@@ -1,34 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Apr 2007 01:04:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Apr 2007 01:04:32 -0700 (PDT)
 Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3D84PfB010564
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2007 01:04:26 -0700
-Date: Fri, 13 Apr 2007 08:26:15 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3D84RfB010574
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2007 01:04:29 -0700
+Date: Fri, 13 Apr 2007 08:26:47 +0100
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] remove the unnecessary word in the log message.
-Message-ID: <20070413072615.GB20326@infradead.org>
-References: <200704130037.AA05196@TNESG9305.tnes.nec.co.jp>
+Subject: Re: [PATCH] xfs_repair - move realtime extent processing to a separate function
+Message-ID: <20070413072647.GC20326@infradead.org>
+References: <200704130415.OAA16550@larry.melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <200704130037.AA05196@TNESG9305.tnes.nec.co.jp>
+In-Reply-To: <200704130415.OAA16550@larry.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Utako Kusaka <utako@tnes.nec.co.jp>
-Cc: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
+Cc: xfs@oss.sgi.com, 'xfs-dev' <xfs-dev@sgi.com>
 
-On Fri, Apr 13, 2007 at 09:37:35AM +0900, Utako Kusaka wrote:
-> --- linux-2.6.20-orig/fs/xfs/xfs_log_recover.c  2007-02-05 03:44:54.000000000 +0900
-> +++ linux-2.6.20/fs/xfs/xfs_log_recover.c       2007-04-11 13:23:04.000000000 +0900
-> @@ -3937,8 +3937,7 @@ xlog_recover(
->  		 * under the vfs layer, so we can get away with it unless
->  		 * the device itself is read-only, in which case we fail.
->  		 */
-> -		if ((error = xfs_dev_is_read_only(log->l_mp,
-> -						"recovery required"))) {
-> +		if ((error = xfs_dev_is_read_only(log->l_mp, "recovery"))) {
->  			return error;
->  		}
+On Fri, Apr 13, 2007 at 02:22:10PM +1000, Barry Naujok wrote:
+> While changing the process_bmbt_reclist_int() function, I observed a 
+> realtime check inside the block map get/set state loop which is quite
+> CPU intensive. Upon further investigation, this loop is not used at
+> all for realtime extents and that the two types of extents are pretty
+> much processed exclusively.
+> 
+> So, I simplified the functionality by moving the realtime extent
+> processing into it's own function and fixing a bug at the same time
+> when it comes to realtime inodes with attributes (it was comparing
+> attr extents to the realtime volume bmap instead of the normal bmap).
 
-Looks good.  (And gets rid of an ugly line-break, nice)
+Nice cleanup, looks good.
