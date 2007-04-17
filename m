@@ -1,50 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Apr 2007 05:55:50 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3HCthfB002992
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 05:55:45 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3HCtgDX010326
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 08:55:42 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3HCtg8k444038
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 08:55:42 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3HCtPR3011241
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 08:55:26 -0400
-Date: Tue, 17 Apr 2007 18:25:14 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Re: Interface for the new fallocate() system call
-Message-ID: <20070417125514.GA7574@amitarora.in.ibm.com>
-References: <20070117094658.GA17390@amitarora.in.ibm.com> <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070330071417.GI355@devserv.devel.redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Apr 2007 13:57:43 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3HKvdfB029040
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 13:57:40 -0700
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx2.redhat.com (8.13.1/8.13.1) with ESMTP id l3HKUfeT009781
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 16:30:42 -0400
+Received: from pobox-2.corp.redhat.com (pobox-2.corp.redhat.com [10.11.255.15])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l3HKUesm004074
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 16:30:40 -0400
+Received: from [10.15.80.10] (neon.msp.redhat.com [10.15.80.10])
+	by pobox-2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l3HKUcAx017901
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 16:30:40 -0400
+Message-ID: <46252D94.2050106@sandeen.net>
+Date: Tue, 17 Apr 2007 15:27:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: when is a dmapi tarball not a dmapi tarball?
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, Jakub Jelinek <jakub@redhat.com>, torvalds@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, suparna@in.ibm.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-On Fri, Mar 30, 2007 at 02:14:17AM -0500, Jakub Jelinek wrote:
-> Wouldn't
-> int fallocate(loff_t offset, loff_t len, int fd, int mode)
-> work on both s390 and ppc/arm?  glibc will certainly wrap it and
-> reorder the arguments as needed, so there is no need to keep fd first.
->
+when you find it on oss, it seems :)
 
-I think more people are comfirtable with this approach. Since glibc
-will wrap the system call and export the "conventional" interface
-(with fd first) to applications, we may not worry about keeping fd first
-in kernel code. I am personally fine with this approach.
+[esandeen@neon tmp]$ wget
+ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi_2.2.8-1.tar.gz
+--15:11:31--  ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi_2.2.8-1.tar.gz
+           => `dmapi_2.2.8-1.tar.gz'
+Resolving oss.sgi.com... 192.48.170.157
+Connecting to oss.sgi.com|192.48.170.157|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD /projects/xfs/cmd_tars ... done.
+==> SIZE dmapi_2.2.8-1.tar.gz ... 84649
+==> PASV ... done.    ==> RETR dmapi_2.2.8-1.tar.gz ... done.
+Length: 84649 (83K)
 
-Still, if people have major concerns, we can think of getting rid of the
-"mode" argument itself. Anyhow we may, in future, need to have a policy
-based system call (say, for providing the goal block by applications for
-performance reasons). "mode" can then be made part of it.
+100%[=======================================>] 84,649       133K/s   in
+0.6s
 
-Comments ?
---
-Regards,
-Amit Arora
+15:11:33 (133 KB/s) - `dmapi_2.2.8-1.tar.gz' saved [84649]
+
+[esandeen@neon tmp]$ tar xvzf dmapi_2.2.8-1.tar.gz
+
+gzip: stdin: not in gzip format
+tar: Child returned status 1
+tar: Error exit delayed from previous errors
+
+[esandeen@neon tmp]$ file dmapi_2.2.8-1.tar.gz
+dmapi_2.2.8-1.tar.gz: RPM v3 src IA64 dmapi-2.2.8-1
+
+[esandeen@neon tmp]$ rpm -qpl dmapi_2.2.8-1.tar.gz
+dmapi-2.2.8.src.tar.gz
+dmapi.spec
+
+Might want to fix that...
+
+-Eric
