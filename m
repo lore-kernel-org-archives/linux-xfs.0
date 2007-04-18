@@ -1,68 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Apr 2007 18:03:14 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3I138fB018969
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2007 18:03:10 -0700
-Message-Id: <200704180103.LAA09246@larry.melbourne.sgi.com>
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Subject: RE: when is a dmapi tarball not a dmapi tarball?
-Date: Wed, 18 Apr 2007 11:08:45 +1000
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <46252D94.2050106@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Apr 2007 06:06:12 -0700 (PDT)
+Received: from mail.clusterfs.com (mail.clusterfs.com [206.168.112.78])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3ID63fB007264
+	for <xfs@oss.sgi.com>; Wed, 18 Apr 2007 06:06:05 -0700
+Date: Wed, 18 Apr 2007 07:06:00 -0600
+From: Andreas Dilger <adilger@clusterfs.com>
+Subject: Re: Interface for the new fallocate() system call
+Message-ID: <20070418130600.GW5967@schatzie.adilger.int>
+References: <20070225022326.137b4875.akpm@linux-foundation.org> <20070301183445.GA7911@amitarora.in.ibm.com> <20070316143101.GA10152@amitarora.in.ibm.com> <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070417125514.GA7574@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Eric Sandeen' <sandeen@sandeen.net>, 'xfs mailing list' <xfs@oss.sgi.com>
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jakub Jelinek <jakub@redhat.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, suparna@in.ibm.com
 
-Fixed! 
+On Apr 17, 2007  18:25 +0530, Amit K. Arora wrote:
+> On Fri, Mar 30, 2007 at 02:14:17AM -0500, Jakub Jelinek wrote:
+> > Wouldn't
+> > int fallocate(loff_t offset, loff_t len, int fd, int mode)
+> > work on both s390 and ppc/arm?  glibc will certainly wrap it and
+> > reorder the arguments as needed, so there is no need to keep fd first.
+> 
+> I think more people are comfirtable with this approach.
 
-> -----Original Message-----
-> From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] 
-> On Behalf Of Eric Sandeen
-> Sent: Wednesday, 18 April 2007 6:27 AM
-> To: xfs mailing list
-> Subject: when is a dmapi tarball not a dmapi tarball?
-> 
-> when you find it on oss, it seems :)
-> 
-> [esandeen@neon tmp]$ wget
-> ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi_2.2.8-1.tar.gz
-> --15:11:31--  
-> ftp://oss.sgi.com/projects/xfs/cmd_tars/dmapi_2.2.8-1.tar.gz
->            => `dmapi_2.2.8-1.tar.gz'
-> Resolving oss.sgi.com... 192.48.170.157
-> Connecting to oss.sgi.com|192.48.170.157|:21... connected.
-> Logging in as anonymous ... Logged in!
-> ==> SYST ... done.    ==> PWD ... done.
-> ==> TYPE I ... done.  ==> CWD /projects/xfs/cmd_tars ... done.
-> ==> SIZE dmapi_2.2.8-1.tar.gz ... 84649
-> ==> PASV ... done.    ==> RETR dmapi_2.2.8-1.tar.gz ... done.
-> Length: 84649 (83K)
-> 
-> 100%[=======================================>] 84,649       
-> 133K/s   in
-> 0.6s
-> 
-> 15:11:33 (133 KB/s) - `dmapi_2.2.8-1.tar.gz' saved [84649]
-> 
-> [esandeen@neon tmp]$ tar xvzf dmapi_2.2.8-1.tar.gz
-> 
-> gzip: stdin: not in gzip format
-> tar: Child returned status 1
-> tar: Error exit delayed from previous errors
-> 
-> [esandeen@neon tmp]$ file dmapi_2.2.8-1.tar.gz
-> dmapi_2.2.8-1.tar.gz: RPM v3 src IA64 dmapi-2.2.8-1
-> 
-> [esandeen@neon tmp]$ rpm -qpl dmapi_2.2.8-1.tar.gz
-> dmapi-2.2.8.src.tar.gz
-> dmapi.spec
-> 
-> Might want to fix that...
-> 
-> -Eric
-> 
-> 
+Really?  I thought from the last postings that "fd first, wrap on s390"
+was better.
+
+> Since glibc
+> will wrap the system call and export the "conventional" interface
+> (with fd first) to applications, we may not worry about keeping fd first
+> in kernel code. I am personally fine with this approach.
+
+It would seem to make more sense to wrap the syscall on those architectures
+that can't handle the "conventional" interface (fd first).
+
+> Still, if people have major concerns, we can think of getting rid of the
+> "mode" argument itself. Anyhow we may, in future, need to have a policy
+> based system call (say, for providing the goal block by applications for
+> performance reasons). "mode" can then be made part of it.
+
+We need at least mode="unallocate" or a separate funallocate() call to
+allow allocated-but-unwritten blocks to be unallocated without actually
+punching out written data.
+
+Cheers, Andreas
+--
+Andreas Dilger
+Principal Software Engineer
+Cluster File Systems, Inc.
