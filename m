@@ -1,83 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Apr 2007 20:04:48 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3J34efB001974
-	for <xfs@oss.sgi.com>; Wed, 18 Apr 2007 20:04:42 -0700
-Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id NAA16453 for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 13:04:39 +1000
-Date: Thu, 19 Apr 2007 13:10:08 +1000
-Subject: [PATCH] Fix xfs_fsr so the temp dir is not world readable/writable
-From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
-Content-Type: multipart/mixed; boundary=----------Z2DvzjHEAFgw2CcUZZOzh8
-MIME-Version: 1.0
-Message-ID: <op.tq0ge6wtf8dyj1@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Apr 2007 20:41:31 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3J3fPfB013491
+	for <xfs@oss.sgi.com>; Wed, 18 Apr 2007 20:41:27 -0700
+Subject: Re: [PATCH] Fix xfs_fsr so the temp dir is not world
+	readable/writable
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <op.tq0ge6wtf8dyj1@pc-bnaujok.melbourne.sgi.com>
+References: <op.tq0ge6wtf8dyj1@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain
+Date: Thu, 19 Apr 2007 13:42:35 +1000
+Message-Id: <1176954155.6273.143.camel@edge>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@melbourne.sgi.com>
+Cc: xfs@oss.sgi.com
 
-------------Z2DvzjHEAFgw2CcUZZOzh8
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+On Thu, 2007-04-19 at 13:10 +1000, Barry Naujok wrote:
+> 
 
-Just changed the ".fsr" directory to 0700.
-I also improved the usage text to give more information.
+Looks good.
 
-Barry.
-------------Z2DvzjHEAFgw2CcUZZOzh8
-Content-Disposition: attachment; filename=xfs_fsr.patch
-Content-Type: application/octet-stream; name=xfs_fsr.patch
-Content-Transfer-Encoding: Base64
+> -static time_t endtime;
+> +static time_t endtime = 0; 
 
-LS0tIGEveGZzZHVtcC9mc3IveGZzX2Zzci5jCTIwMDctMDQtMTkgMTM6MDI6
-MDMuMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc2R1bXAvZnNyL3hmc19mc3Iu
-YwkyMDA3LTA0LTE5IDEyOjM4OjMyLjkzNTMyMjcxMCArMTAwMApAQCAtMTks
-NyArMTksNyBAQAogLyoKICAqIGZzciAtIGZpbGUgc3lzdGVtIHJlb3JnYW5p
-emVyCiAgKgotICogZnNyIFstZF0gWy12XSBbLW5dIFstc10gWy1nXSBbLXQg
-bWluc10gWy1mIGxlZnRmXSBbLW0gbXRhYl0KKyAqIGZzciBbLWRdIFstdl0g
-Wy1uXSBbLXNdIFstZ10gWy10IHNlY3NdIFstZiBsZWZ0Zl0gWy1tIG10YWJd
-CiAgKiBmc3IgWy1kXSBbLXZdIFstbl0gWy1zXSBbLWddIHhmc2RldiB8IGRp
-ciB8IGZpbGUgLi4uCiAgKgogICogSWYgaW52b2tlZCBpbiB0aGUgZmlyc3Qg
-Zm9ybSBmc3IgZG9lcyB0aGUgZm9sbG93aW5nOiBzdGFydGluZyB3aXRoIHRo
-ZQpAQCAtMTAwLDcgKzEwMCw3IEBAIHN0YXRpYyBfX2ludDY0X3QJbWluaW11
-bWZyZWUgPSAyMDQ4Owogc3RhdGljIHRpbWVfdCBob3dsb25nID0gNzIwMDsJ
-CS8qIGRlZmF1bHQgc2Vjb25kcyBvZiByZW9yZ2FuaXppbmcgKi8KIHN0YXRp
-YyBjaGFyICpsZWZ0b2ZmZmlsZSA9ICIvdmFyL3RtcC8uZnNybGFzdF94ZnMi
-Oy8qIHdoZXJlIHdlIGxlZnQgb2ZmIGxhc3QgKi8KIHN0YXRpYyBjaGFyICpt
-dGFiID0gTU9VTlRFRDsKLXN0YXRpYyB0aW1lX3QgZW5kdGltZTsKK3N0YXRp
-YyB0aW1lX3QgZW5kdGltZSA9IDA7CiBzdGF0aWMgdGltZV90IHN0YXJ0dGlt
-ZTsKIHN0YXRpYyB4ZnNfaW5vX3QJbGVmdG9mZmlubyA9IDA7CiBzdGF0aWMg
-aW50CXBhZ2VzaXplOwpAQCAtMzU4LDcgKzM1OCwyMSBAQCBtYWluKGludCBh
-cmdjLCBjaGFyICoqYXJndikKIHZvaWQKIHVzYWdlKGludCByZXQpCiB7Ci0J
-ZnByaW50ZihzdGRlcnIsIF8oIlVzYWdlOiAlcyBbeGZzZmlsZV0gLi4uXG4i
-KSwgcHJvZ25hbWUpOworCWZwcmludGYoc3RkZXJyLCBfKAorIlVzYWdlOiAl
-cyBbLWRdIFstdl0gWy1uXSBbLXNdIFstZ10gWy10IHRpbWVdIFstcCBwYXNz
-ZXNdIFstZiBsZWZ0Zl0gWy1tIG10YWJdXG4iCisiICAgICAgICVzIFstZF0g
-Wy12XSBbLW5dIFstc10gWy1nXSB4ZnNkZXYgfCBkaXIgfCBmaWxlIC4uLlxu
-XG4iCisiT3B0aW9uczpcbiIKKyIgICAgICAgLW4gICAgICAgICAgICAgIERv
-IG5vdGhpbmcsIG9ubHkgaW50ZXJlc3Rpbmcgd2l0aCAtdi4gTm90XG4iCisi
-ICAgICAgICAgICAgICAgICAgICAgICBlZmZlY3RpdmUgd2l0aCBpbiBtdGFi
-IG1vZGUuXG4iCisiICAgICAgIC1zCQlQcmludCBzdGF0aXN0aWNzIG9ubHku
-XG4iCisiICAgICAgIC1nICAgICAgICAgICAgICBQcmludCB0byBzeXNsb2cg
-KGRlZmF1bHQgaWYgc3Rkb3V0IG5vdCBhIHR0eSkuXG4iCisiICAgICAgIC10
-IHRpbWUgICAgICAgICBIb3cgbG9uZyB0byBydW4gaW4gc2Vjb25kcy5cbiIK
-KyIgICAgICAgLXAgcGFzc2VzCU51bWJlciBvZiBwYXNzZXMgYmVmb3JlIHRl
-cm1pbmF0aW5nIGdsb2JhbCByZS1vcmcuXG4iCisiICAgICAgIC1mIGxlZnRv
-ZmYgICAgICBVc2UgdGhpcyBpbnN0ZWFkIG9mIC9ldGMvZnNybGFzdC5cbiIK
-KyIgICAgICAgLW0gbXRhYiAgICAgICAgIFVzZSBzb21ldGhpbmcgb3RoZXIg
-dGhhbiAvZXRjL210YWIuXG4iCisiICAgICAgIC1kICAgICAgICAgICAgICBE
-ZWJ1ZywgcHJpbnQgZXZlbiBtb3JlLlxuIgorIiAgICAgICAtdgkJVmVyYm9z
-ZSwgbW9yZSAtdidzIG1vcmUgdmVyYm9zZS5cbiIKKwkJKSwgcHJvZ25hbWUs
-IHByb2duYW1lKTsKIAlleGl0KHJldCk7CiB9CiAKQEAgLTkxNSw3ICs5Mjks
-NyBAQCBmc3JmaWxlX2NvbW1vbigKIAl9CiAJaWYgKGZzeC5mc3hfeGZsYWdz
-ICYgWEZTX1hGTEFHX05PREVGUkFHKSB7CiAJCWlmICh2ZmxhZykKLQkJCWZz
-cnByaW50ZihfKCIlczogbWFya2VkIGFzIGRvbid0IGRlZnJhZywgaWdub3Jp
-bmdcbiIpLCAKKwkJCWZzcnByaW50ZihfKCIlczogbWFya2VkIGFzIGRvbid0
-IGRlZnJhZywgaWdub3JpbmdcbiIpLAogCQkJICAgIGZuYW1lKTsKIAkJcmV0
-dXJuKDApOwogCX0KQEAgLTE1MzMsNyArMTU0Nyw3IEBAIHRtcF9pbml0KGNo
-YXIgKm1udCkKIAlzcHJpbnRmKGJ1ZiwgIiVzLy5mc3IiLCBtbnQpOwogCiAJ
-bWFzayA9IHVtYXNrKDApOwotCWlmIChta2RpcihidWYsIDA3NzcpIDwgMCkg
-eworCWlmIChta2RpcihidWYsIDA3MDApIDwgMCkgewogCQlpZiAoZXJybm8g
-PT0gRUVYSVNUKSB7CiAJCQlpZiAoZGZsYWcpCiAJCQkJZnNycHJpbnRmKF8o
-InRtcGRpciBhbHJlYWR5IGV4aXN0czogJXNcbiIpLAo=
+This line of the change is unnecessary though.
 
-------------Z2DvzjHEAFgw2CcUZZOzh8--
+cheers.
+
+-- 
+Nathan
