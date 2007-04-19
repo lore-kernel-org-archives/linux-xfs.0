@@ -1,77 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Apr 2007 01:23:42 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3J8NafB019495
-	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 01:23:38 -0700
-Date: Thu, 19 Apr 2007 18:23:31 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: review: allocate bmapi args
-Message-ID: <20070419082331.GW48531920@melbourne.sgi.com>
-References: <20070419072505.GS48531920@melbourne.sgi.com> <1176969062.6273.169.camel@edge>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Apr 2007 01:38:06 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3J8c2fB023026
+	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 01:38:04 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3J8c0nB006255
+	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 17:38:00 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.193])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3J8bK1d011041
+	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 17:37:20 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l3J8bKn00848 for xfs@oss.sgi.com; Thu, 19 Apr 2007 17:37:20 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l3J8bJL27926 for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 17:37:19 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070419.173719.50002280 for <xfs@oss.sgi.com>
+	; Thu, 19 Apr 2007 17:37:19 +0900
+Message-Id: <200704190837.AA05238@TNESG9305.tnes.nec.co.jp>
+Date: Thu, 19 Apr 2007 17:37:11 +0900
+Subject: [PATCH] Fix "quota -n" command in xfs_quota.
+From: Utako Kusaka <utako@tnes.nec.co.jp>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1176969062.6273.169.camel@edge>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nscott@aconex.com>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Apr 19, 2007 at 05:51:02PM +1000, Nathan Scott wrote:
-> On Thu, 2007-04-19 at 17:25 +1000, David Chinner wrote:
-> > 
-> > +       bma = kmem_zalloc(sizeof(xfs_bmalloca_t), KM_SLEEP);
-> > +       if (!bma)
-> > +               return XFS_ERROR(ENOMEM); 
-> 
-> I guess you meant KM_NOSLEEP? 
+Hi,
 
-No, I meant a sleeping allocation. I guess that mea I don't
-need the error handling....
+"quota -n" command in xfs_quota don't work when specifying the project id.
+This patch fixes it.
 
-> Are you sure this is legit though?
+Example:
+# ./xfs_quota -x -c 'quota -p -n 42' ~utako/mpnt
+Disk quotas for Project logfiles (42)
+Filesystem              Blocks      Quota      Limit  Warn/Time      Mounted on
+/dev/sda6                   52          0          0   00 [--------] /home/utako/mpnt
 
-It *must* be. We already rely on being able to do substantial
-amounts of allocation in this path....
 
-> (are all callers going to be able to handle this?)  I'm thinking
-> of the writeout paths where we're doing space allocation (unwritten
-> extent conversion comes through here too) in order to free up some
-> page cache so other memory allocs elsewhere can proceed.  I don't
-> see any other memory allocations in this area of the code, so I
-> guess I'd be treading really carefully here..
+Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+---
 
-We modify the incore extent list as it grows and shrinks in this
-path. It is critical that we are able to allocate at least small
-amounts of memory in these writeback paths, and we currently do that
-with kmem_alloc(KM_SLEEP). A quick search of the xfs_iext_*
-functions shows lots of allocations are done in manipulating
-the incore extents....
-
-Then there's needing new pages in the page cache and xfs_buf_t's
-if we trigger a btree split duringthe allocation, and so on.
-
-IOWS, there's plenty of far larger allocations down through this
-path already, and if any one of them doesn't succeed we are
-pretty much fscked. given that we haven't had any reports of
-writeback deadlocks since the new incore extent handling went
-in, I think small allocations like this are not a problem.
-
-FWIW, I have done low memory testing and I wasn't about to trigger
-any problems.....
-
-> (Oh, and why the _zalloc?  Could just do an _alloc, since previous
-> code was using non-zeroed memory - so, should have been filling in
-> all fields).
-
-Habit. And it doesn't hurt performance at all - we've got to take
-that cache miss somewhere along the line....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--- xfsprogs-2.8.20/quota/quota.orig	2007-04-18 10:36:38.000000000 +0900
++++ xfsprogs-2.8.20/quota/quota.c	2007-04-18 11:09:10.000000000 +0900
+@@ -312,7 +312,7 @@ getprojectname(
+ 	static char	buffer[32];
+ 	fs_project_t	*p;
+ 
+-	if ((p = getprprid(prid)))
++	if (!numeric && (p = getprprid(prid)))
+ 		return p->pr_name;
+ 	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
+ 	return &buffer[0];
