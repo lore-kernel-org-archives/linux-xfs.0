@@ -1,43 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Apr 2007 00:49:53 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3J7nnfB011915
-	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 00:49:50 -0700
-Subject: Re: review: allocate bmapi args
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20070419072505.GS48531920@melbourne.sgi.com>
-References: <20070419072505.GS48531920@melbourne.sgi.com>
-Content-Type: text/plain
-Date: Thu, 19 Apr 2007 17:51:02 +1000
-Message-Id: <1176969062.6273.169.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Apr 2007 00:53:49 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3J7rifB013002
+	for <xfs@oss.sgi.com>; Thu, 19 Apr 2007 00:53:46 -0700
+Date: Thu, 19 Apr 2007 17:53:38 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: review: fix use after free of log buffers on shutdown.
+Message-ID: <20070419075338.GV48531920@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, 2007-04-19 at 17:25 +1000, David Chinner wrote:
-> 
-> +       bma = kmem_zalloc(sizeof(xfs_bmalloca_t), KM_SLEEP);
-> +       if (!bma)
-> +               return XFS_ERROR(ENOMEM); 
 
-I guess you meant KM_NOSLEEP?  Are you sure this is legit though?
-(are all callers going to be able to handle this?)  I'm thinking
-of the writeout paths where we're doing space allocation (unwritten
-extent conversion comes through here too) in order to free up some
-page cache so other memory allocs elsewhere can proceed.  I don't
-see any other memory allocations in this area of the code, so I
-guess I'd be treading really carefully here..
+When unmounting the filesystem we write an unmount record into the
+log just before we start freeing up in memory structures.
 
-(Oh, and why the _zalloc?  Could just do an _alloc, since previous
-code was using non-zeroed memory - so, should have been filling in
-all fields).
+When we wait for the unmount record to hit the disk, we don't
+wait for the log buffers to be finished with, we only wait for part of
+the iodone callback to be run - the bit that processes the
+unmount record completion.
 
-cheers.
+Hence when the unmount wakes up, it races with the remainder of the
+log io completion and pretty much the first thing it does is free
+the log buffers.
 
+As a result, when iodone processing completes and we check the
+buffer's async status, the buffer can already have been freed.
+
+Luckily, all log I/O is issued asynchronously, so we don't really
+need the async check and so we can avoid this use after free
+easily.
+
+Cheers,
+
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+
+---
+ fs/xfs/xfs_log.c |   16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2007-04-19 17:18:14.097380099 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2007-04-19 17:51:03.017078512 +1000
+@@ -988,14 +988,16 @@ xlog_iodone(xfs_buf_t *bp)
+ 	} else if (iclog->ic_state & XLOG_STATE_IOERROR) {
+ 		aborted = XFS_LI_ABORTED;
+ 	}
++
++	/* log I/O is always issued ASYNC */
++	ASSERT(XFS_BUF_ISASYNC(bp));
+ 	xlog_state_done_syncing(iclog, aborted);
+-	if (!(XFS_BUF_ISASYNC(bp))) {
+-		/*
+-		 * Corresponding psema() will be done in bwrite().  If we don't
+-		 * vsema() here, panic.
+-		 */
+-		XFS_BUF_V_IODONESEMA(bp);
+-	}
++	/*
++	 * do not reference the buffer (bp) here as we could race
++	 * with it being freed after writing the unmount record to the
++	 * log.
++	 */
++
+ }	/* xlog_iodone */
+ 
+ /*
