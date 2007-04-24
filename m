@@ -1,68 +1,120 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Apr 2007 20:08:38 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3O38XfB029221
-	for <xfs@oss.sgi.com>; Mon, 23 Apr 2007 20:08:35 -0700
-Date: Tue, 24 Apr 2007 13:08:26 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: review: don't hold ilock when calling vn_iowait
-Message-ID: <20070424030826.GG48531920@melbourne.sgi.com>
-References: <20070422230303.GX32602149@melbourne.sgi.com> <20070423214338.GA17561@infradead.org> <20070423231706.GO32602149@melbourne.sgi.com> <1A5D0CA3BA5C7CF8B7241F39@timothy-shimmins-power-mac-g5.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1A5D0CA3BA5C7CF8B7241F39@timothy-shimmins-power-mac-g5.local>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Apr 2007 23:18:09 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3O6I4fB025882
+	for <xfs@oss.sgi.com>; Mon, 23 Apr 2007 23:18:06 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3O6I0nL029873
+	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:18:02 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3O6AGlG002306
+	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:10:16 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l3O6AGM11436 for xfs@oss.sgi.com; Tue, 24 Apr 2007 15:10:16 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv.nec.co.jp (8.11.7/3.7W-MAILSV-NEC) with ESMTP
+	id l3O6AFO04731 for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:10:15 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070424.151015.85902548 for <xfs@oss.sgi.com>
+	; Tue, 24 Apr 2007 15:10:15 +0900
+Message-Id: <200704240610.AA05249@TNESG9305.tnes.nec.co.jp>
+From: Utako Kusaka <utako@tnes.nec.co.jp>
+Date: Tue, 24 Apr 2007 15:10:21 +0900
+Subject: Re: [PATCH] Fix "quota -n" command in xfs_quota.
+In-Reply-To: <20070423212606.GE13572@infradead.org>
+References: <20070423212606.GE13572@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-2022-jp
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 24, 2007 at 12:00:38PM +1000, Timothy Shimmin wrote:
-> 
-> 
-> --On 24 April 2007 9:17:06 AM +1000 David Chinner <dgc@sgi.com> wrote:
-> 
-> >On Mon, Apr 23, 2007 at 10:43:38PM +0100, Christoph Hellwig wrote:
-> >>On Mon, Apr 23, 2007 at 09:03:03AM +1000, David Chinner wrote:
-> >>>
-> >>> Regression introduced by recent freezing fixes - we should
-> >>> not hold the ilock while waiting for I/O completion.
-> >>
-> >>Looks good, and actually simplies the twisted maze the xfs_sync_inodes is
-> >>a little bit.  And the missing IPOINTER_INSERT in the SYNC_CLOSE case
-> >>looks like an actual bugfix.
-> >
-> >I had to look closely at that IPOINTER_INSERT case with SYNC_CLOSE;
-> >it was actaully working properly because you'd always end up in
-> >the SYNC_CLOSE case having inserted a pointer earlier on in the flow
-> >of the function. It certainly wasn't obvious that it was doing the
-> >right thing, though.
-> >
-> I find this existing code and the use of marker pointer macros a bit hard 
-> to follow.
+Hi,
 
-Doesn't everyone?
+Thanks for your comment.
+I have updated my patch as below.
 
-> Can you explain where "earlier on in the flow of the function" we've 
-> inserted
-> the marker pointer (and unlocked the inode-list lock).
+Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+---
 
-I confused that with the removal of the vp == NULL checks I removed.
-Too many things, so little time.
+--- quota.orig	2007-04-18 10:36:38.000000000 +0900
++++ quota.c	2007-04-24 11:42:18.000000000 +0900
+@@ -202,10 +202,12 @@ getusername(
+ 	int		numeric)
+ {
+ 	static char	buffer[32];
+-	struct passwd	*u;
+ 
+-	if (!numeric && (u = getpwuid(uid)))
+-		return u->pw_name;
++	if (!numeric) {
++		struct passwd *u = getpwuid(uid);
++		if (u)
++			return u->pw_name;
++	}
+ 	snprintf(buffer, sizeof(buffer), "#%u", uid);
+ 	return &buffer[0];
+ }
+@@ -247,10 +249,12 @@ getgroupname(
+ 	int		numeric)
+ {
+ 	static char	buffer[32];
+-	struct group	*g;
+ 
+-	if (!numeric && (g = getgrgid(gid)))
+-		return g->gr_name;
++	if (!numeric) {
++		struct group *g = getgrgid(gid);
++		if (g)
++			return g->gr_name;
++	}
+ 	snprintf(buffer, sizeof(buffer), "#%u", gid);
+ 	return &buffer[0];
+ }
+@@ -310,10 +314,12 @@ getprojectname(
+ 	int		numeric)
+ {
+ 	static char	buffer[32];
+-	fs_project_t	*p;
+ 
+-	if ((p = getprprid(prid)))
+-		return p->pr_name;
++	if (!numeric) {
++		fs_project_t *p = getprprid(prid);
++		if (p)
++			return p->pr_name;
++	}
+ 	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
+ 	return &buffer[0];
+ }
 
-So yes, this probably does fix a bug.
 
-> It would be nice if this could be clearer somehow.
 
-Yes, we should be looking to rip all this cruft out because most of
-it is redundant - the generic inode writeback does most of this
-for us anyway.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Mon, 23 Apr 2007 22:26:06 +0100 Christoph Hellwig wrote：
+>
+>Looks good to me, but the even the original code could be a little bit cleaner:
+>
+>> --- xfsprogs-2.8.20/quota/quota.orig	2007-04-18 10:36:38.000000000 +0900
+>> +++ xfsprogs-2.8.20/quota/quota.c	2007-04-18 11:09:10.000000000 +0900
+>> @@ -312,7 +312,7 @@ getprojectname(
+>>  	static char	buffer[32];
+>>  	fs_project_t	*p;
+>>  
+>> -	if ((p = getprprid(prid)))
+>> +	if (!numeric && (p = getprprid(prid)))
+>>  		return p->pr_name;
+>>  	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
+>>  	return &buffer[0];
+>
+>	if (!numeric) {
+>		fs_project_t *p = getprprid(prid);
+>		if (p)
+>			return p->pr_name;
+>	}
+>
+>	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
+>	return &buffer[0];
+>
+>		
