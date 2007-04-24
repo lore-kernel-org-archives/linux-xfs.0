@@ -1,50 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 07:55:31 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3OEtQfB008321
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 07:55:27 -0700
-Date: Tue, 24 Apr 2007 15:55:25 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: review: don't block non-blocking writes when frozen
-Message-ID: <20070424145525.GA18918@infradead.org>
-References: <20070423002616.GY32602149@melbourne.sgi.com> <20070423212715.GF13572@infradead.org> <20070423231337.GN32602149@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 10:03:31 -0700 (PDT)
+Received: from fall-lakeland.atl.sa.earthlink.net (fall-lakeland.atl.sa.earthlink.net [207.69.195.103])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3OH3QfB028594
+	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 10:03:28 -0700
+Received: from pop-satin.atl.sa.earthlink.net ([207.69.195.63])
+	by fall-lakeland.atl.sa.earthlink.net with esmtp (Exim 4.34)
+	id 1HgOEH-0005Y0-5U
+	for xfs@oss.sgi.com; Tue, 24 Apr 2007 12:51:01 -0400
+Received: from user-11fb6mm.dsl.mindspring.com ([66.245.154.214] helo=[192.168.0.10])
+	by pop-satin.atl.sa.earthlink.net with esmtp (Exim 3.36 #1)
+	id 1HgOEF-0006ft-00
+	for xfs@oss.sgi.com; Tue, 24 Apr 2007 12:50:59 -0400
+Subject: system freeze with xfs
+From: Jurgen Schulz <jmschulz@earthlink.net>
+Content-Type: text/plain
+Date: Tue, 24 Apr 2007 09:50:57 -0700
+Message-Id: <1177433458.3360.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070423231337.GN32602149@melbourne.sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, gnb@sgi.com, xfs-oss <xfs@oss.sgi.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Tue, Apr 24, 2007 at 09:13:37AM +1000, David Chinner wrote:
-> So, given the catch-22 you've just presented us can we revisit the
-> nfsd non-blocking I/O issue again?  This affects anyone using DM
-> snapshots on their NFS servers and has nothing to do with HSMs
-> or DMAPI...
-> 
-> FWIW, you can still do non-blocking userspace I/O to a file, so this
-> XFS patch is still valid for mainline (that's how I tested it).
+When I create an xfs filesystem and run
+'stress' (http://weather.ou.edu/~apw/projects/stress/stress.html) I can
+induce a system freeze (hang, no panic). There are no issues if I create
+a jfs filesystem (on the same disk) or run 'stress' on a different disk
+(ext3)
 
-I've been investigating the situation a little bit more, and here's
-what's going on:
+I'd like to know how I could go about debugging this, otherwise I will
+have to switch filesystem types.
 
- - SuS allows for O_NONBLOCK on regular files as per
-   http://www.opengroup.org/onlinepubs/007908799/xsh/write.html
- - actually implementing O_NONBLOCK semantics for regular fixes
-   breaks userspace when poll/select claims files are ready to
-   read/write but they aren't, see http://lkml.org/lkml/2004/10/17/17
 
-So we can't really expose O_NONBLOCK on regular files to userspace,
-and we need to make sure in common code this does not happen.
+Details:
+% stress -d 2 --hdd-noclean --hdd-bytes 3G --verbose
 
-EJUKEBOX on snaphots does make sense, though.  Can you please send
-a full patchseries for nfsd, the common code and the xfs writepath
-so that this actually gets used and behaviour is consistant for all
-(or at least most) filesystems?
+Fedora Core 5 
+2.6.20-1.2312.fc5 #1 Tue Apr 10 15:09:44 EDT 2007 i686 athlon i386
+GNU/Linux
 
-Also now that the patch goes to mainline please kill ugly FILP_DELAY_FLAG
-and just check the flags directly.  And it should probably only check
-O_NONBLOCK.  The only architecture having O_NDELAY different from
-O_NONBLOCK is sparc, and it already translates the value for us.
+# /sbin/mkfs.xfs -f  /dev/VolTest/test 
+meta-data=/dev/VolTest/test      isize=256    agcount=16, agsize=198656
+blks
+         =                       sectsz=512  
+data     =                       bsize=4096   blocks=3178496, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal log           bsize=4096   blocks=2560, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+# /sbin/hdparm /dev/hdk 
+
+/dev/hdk:
+ multcount    = 16 (on)
+ IO_support   =  0 (default 16-bit)
+ unmaskirq    =  0 (off)
+ using_dma    =  1 (on)
+ keepsettings =  0 (off)
+ readonly     =  0 (off)
+ readahead    = 256 (on)
+ geometry     = 25228/16/63, sectors = 25429824, start = 0
