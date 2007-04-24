@@ -1,57 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 05:16:43 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3OCGZfB029237
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 05:16:36 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3OCGTUN015289
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 08:16:29 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3OCGTkK373858
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 08:16:29 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3OCGSju010126
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 08:16:28 -0400
-Date: Tue, 24 Apr 2007 17:46:33 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Re: Interface for the new fallocate() system call
-Message-ID: <20070424121632.GA10136@amitarora.in.ibm.com>
-References: <20070316161704.GE8525@osiris.boeblingen.de.ibm.com> <20070317111036.GC29931@parisc-linux.org> <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 07:16:39 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3OEGXfB029223
+	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 07:16:35 -0700
+Date: Wed, 25 Apr 2007 00:16:24 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: review [1 of 3]: lazy superblock counters - core kernel
+Message-ID: <20070424141624.GU32602149@melbourne.sgi.com>
+References: <20070419231459.GX48531920@melbourne.sgi.com> <20070423220010.GA18325@infradead.org> <20070424012808.GD48531920@melbourne.sgi.com> <20070424085147.GA28820@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070420145918.GY355@devserv.devel.redhat.com>
+In-Reply-To: <20070424085147.GA28820@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jakub Jelinek <jakub@redhat.com>
-Cc: Andreas Dilger <adilger@clusterfs.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, suparna@in.ibm.com, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Apr 20, 2007 at 10:59:18AM -0400, Jakub Jelinek wrote:
-> On Fri, Apr 20, 2007 at 07:21:46PM +0530, Amit K. Arora wrote:
-> > Ok.
-> > In this case we may have to consider following things:
+On Tue, Apr 24, 2007 at 09:51:47AM +0100, Christoph Hellwig wrote:
+> On Tue, Apr 24, 2007 at 11:28:08AM +1000, David Chinner wrote:
+> > > This is really quite nasty.  Should we at least force a cache flush here?
 > > 
-> > 1) Obviously, for this glibc will have to call fallocate() syscall with
-> > different arguments on s390, than other archs. I think this should be
-> > doable and should not be an issue with glibc folks (right?).
+> > Ok, so the patch I sent out was an older version that had a very similar
+> > name to the current patch in my series (xfs-lazy-sb vs xfs_lazy_sb).
+> > This code doesn't exist in the version I should have sent out.
+> > 
+> > The latest version, plus the changes suggested here and with the
+> > second patch folded back into it is attached.
 > 
-> glibc can cope with this easily, will just add
-> sysdeps/unix/sysv/linux/s390/fallocate.c or something similar to override
-> the generic Linux implementation.
-> 
-> > 2) we also need to see how strace behaves in this case. With little
-> > knowledge that I have of strace, I don't think it should depend on
-> > argument ordering of a system call on different archs (since it uses
-> > ptrace internally and that should take care of it). But, it will be
-> > nice if someone can confirm this.
-> 
-> strace would solve this with #ifdef mess, it already does that in many
-> places so guess another few lines don't make it significantly worse.
+> Looks like in the new code we simply ignore log reservation
+> failures in xfs_log_sbcount?
 
-I will work on the revised fallocate patchset and will post it soon.
+AFAICT, the only way we can get that error is a fileystem shutdown,
+which means we've got an unclean shutdown and so there's no not much
+point in syncing the superblock counters because we'll have to
+recover them anyway....
 
-Thanks!
---
-Regards,
-Amit Arora
+> Otherwise this looks good to me.
+
+Thanks for the reviews, Christoph.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
