@@ -1,43 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 10:32:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 10:35:21 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3OHWEfB008448
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 10:32:15 -0700
-Message-ID: <462E3DEA.1070907@sandeen.net>
-Date: Tue, 24 Apr 2007 12:27:06 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3OHZCfB010141
+	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 10:35:15 -0700
+Message-ID: <462E3E93.8090400@sandeen.net>
+Date: Tue, 24 Apr 2007 12:29:55 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: review: allocate alloc args
-References: <20070419073216.GT48531920@melbourne.sgi.com> <20070423212201.GB13572@infradead.org> <20070423223257.GM32602149@melbourne.sgi.com>
-In-Reply-To: <20070423223257.GM32602149@melbourne.sgi.com>
+Subject: Re: system freeze with xfs
+References: <1177433458.3360.12.camel@localhost.localdomain>
+In-Reply-To: <1177433458.3360.12.camel@localhost.localdomain>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Jurgen Schulz <jmschulz@earthlink.net>
+Cc: xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Mon, Apr 23, 2007 at 10:22:01PM +0100, Christoph Hellwig wrote:
-
->> I don't like doing even more dynamic allocations that deep
->> down in the stack.
+Jurgen Schulz wrote:
+> When I create an xfs filesystem and run
+> 'stress' (http://weather.ou.edu/~apw/projects/stress/stress.html) I can
+> induce a system freeze (hang, no panic). There are no issues if I create
+> a jfs filesystem (on the same disk) or run 'stress' on a different disk
+> (ext3)
 > 
-> I'm not a big fan of it either, but I don't really see any other
-> option here. We need a bunch of temporary space for structures
-> *somewhere*, and if there isn't enough stack space then it's
-> got to come frm somewhere else.
+> I'd like to know how I could go about debugging this, otherwise I will
+> have to switch filesystem types.
 
-How about a global array of such structures which can be accessed as
-needed.  :)
+is that a threat?  ;-)
 
-/me runs
+Try enabling sysrq, and do sysrq-t when it freezes, as a first pass, to
+see where all the threads are (stuck) at.
 
-I think Christoph is on the right track here; find ways to make the
-functions use less stack down the chain, either by breaking them up,
-breaking up the large structures into what's actually needed, or
-something along those types of refactoring lines... I'm so burned out on
-this stuff though.  :)
+You might also try this on a stock upstream kernel, and see if you have
+the same problem with 8k stacks vs. 4k (as is in FC6)
+
+You could also set up kdump and/or netdump (whatever FC5 supports...)
+and get a system dump at the time it freezes up, via sysrq-c.
+
+Thanks,
 
 -Eric
