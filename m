@@ -1,120 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Apr 2007 23:18:09 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3O6I4fB025882
-	for <xfs@oss.sgi.com>; Mon, 23 Apr 2007 23:18:06 -0700
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3O6I0nL029873
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:18:02 +0900 (JST)
-Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3O6AGlG002306
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:10:16 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l3O6AGM11436 for xfs@oss.sgi.com; Tue, 24 Apr 2007 15:10:16 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv.nec.co.jp (8.11.7/3.7W-MAILSV-NEC) with ESMTP
-	id l3O6AFO04731 for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:10:15 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070424.151015.85902548 for <xfs@oss.sgi.com>
-	; Tue, 24 Apr 2007 15:10:15 +0900
-Message-Id: <200704240610.AA05249@TNESG9305.tnes.nec.co.jp>
-From: Utako Kusaka <utako@tnes.nec.co.jp>
-Date: Tue, 24 Apr 2007 15:10:21 +0900
-Subject: Re: [PATCH] Fix "quota -n" command in xfs_quota.
-In-Reply-To: <20070423212606.GE13572@infradead.org>
-References: <20070423212606.GE13572@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Apr 2007 23:46:40 -0700 (PDT)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3O6kZfB032255
+	for <xfs@oss.sgi.com>; Mon, 23 Apr 2007 23:46:37 -0700
+Message-ID: <21485.194.246.123.250.1177397184.squirrel@derchris.gotdns.org:8080>
+In-Reply-To: <20070423211952.GA13572@infradead.org>
+References: <Pine.LNX.4.64.0704021914060.3963@sheep.housecafe.de>
+    <20603.194.246.123.250.1177344480.squirrel@derchris.gotdns.org:8080>
+    <462D0D23.7010803@sandeen.net> <20070423211952.GA13572@infradead.org>
+Date: Tue, 24 Apr 2007 07:46:24 +0100 (BST)
+Subject: Re: possible recursive locking detected
+From: "Christian Kujau" <lists@nerdbynature.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Content-Type: text/plain;charset=iso-8859-15
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Hi,
+On Mon, April 23, 2007 22:19, Christoph Hellwig wrote:
+> It's not really cosmetic.  It means i_lock and i_iolock are beeing
+> acquired without an order that is detectable by lockdep.  At the very first
+> it means annotations for lockdep are missing, because acquiring two
+> per-inode locks at the same time is a basic fact in unix filesystems.
 
-Thanks for your comment.
-I have updated my patch as below.
+Thank you both for your comments, now I can sleep better again ;)
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
+Christian.
+-- 
+BOFH excuse #442:
 
---- quota.orig	2007-04-18 10:36:38.000000000 +0900
-+++ quota.c	2007-04-24 11:42:18.000000000 +0900
-@@ -202,10 +202,12 @@ getusername(
- 	int		numeric)
- {
- 	static char	buffer[32];
--	struct passwd	*u;
- 
--	if (!numeric && (u = getpwuid(uid)))
--		return u->pw_name;
-+	if (!numeric) {
-+		struct passwd *u = getpwuid(uid);
-+		if (u)
-+			return u->pw_name;
-+	}
- 	snprintf(buffer, sizeof(buffer), "#%u", uid);
- 	return &buffer[0];
- }
-@@ -247,10 +249,12 @@ getgroupname(
- 	int		numeric)
- {
- 	static char	buffer[32];
--	struct group	*g;
- 
--	if (!numeric && (g = getgrgid(gid)))
--		return g->gr_name;
-+	if (!numeric) {
-+		struct group *g = getgrgid(gid);
-+		if (g)
-+			return g->gr_name;
-+	}
- 	snprintf(buffer, sizeof(buffer), "#%u", gid);
- 	return &buffer[0];
- }
-@@ -310,10 +314,12 @@ getprojectname(
- 	int		numeric)
- {
- 	static char	buffer[32];
--	fs_project_t	*p;
- 
--	if ((p = getprprid(prid)))
--		return p->pr_name;
-+	if (!numeric) {
-+		fs_project_t *p = getprprid(prid);
-+		if (p)
-+			return p->pr_name;
-+	}
- 	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
- 	return &buffer[0];
- }
-
-
-
-Mon, 23 Apr 2007 22:26:06 +0100 Christoph Hellwig wrote：
->
->Looks good to me, but the even the original code could be a little bit cleaner:
->
->> --- xfsprogs-2.8.20/quota/quota.orig	2007-04-18 10:36:38.000000000 +0900
->> +++ xfsprogs-2.8.20/quota/quota.c	2007-04-18 11:09:10.000000000 +0900
->> @@ -312,7 +312,7 @@ getprojectname(
->>  	static char	buffer[32];
->>  	fs_project_t	*p;
->>  
->> -	if ((p = getprprid(prid)))
->> +	if (!numeric && (p = getprprid(prid)))
->>  		return p->pr_name;
->>  	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
->>  	return &buffer[0];
->
->	if (!numeric) {
->		fs_project_t *p = getprprid(prid);
->		if (p)
->			return p->pr_name;
->	}
->
->	snprintf(buffer, sizeof(buffer), "#%u", (unsigned int)prid);
->	return &buffer[0];
->
->		
+Trojan horse ran out of hay
