@@ -1,26 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Apr 2007 15:55:58 -0700 (PDT)
-Received: from smtp104.sbc.mail.mud.yahoo.com (smtp104.sbc.mail.mud.yahoo.com [68.142.198.203])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3OMtsfB023573
-	for <xfs@oss.sgi.com>; Tue, 24 Apr 2007 15:55:55 -0700
-Date: Tue, 24 Apr 2007 15:55:51 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: system freeze with xfs
-Message-ID: <20070424225551.GA17832@tuatara.stupidest.org>
-References: <1177433458.3360.12.camel@localhost.localdomain>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Apr 2007 00:09:35 -0700 (PDT)
+Received: from m01.elite.ru (m01.elite.ru [89.108.83.249])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3P79RfB004823
+	for <xfs@oss.sgi.com>; Wed, 25 Apr 2007 00:09:30 -0700
+Received: from [10.0.0.6] (195.225.129.41 [195.225.129.41])
+	by m01.elite.ru (ISMS) with ESMTP id 1F2D3116A9
+	for <xfs@oss.sgi.com>; Wed, 25 Apr 2007 10:52:02 +0400 (MSD)
+Date: Wed, 25 Apr 2007 10:52:07 +0400
+From: Arkadiy Kulev <eth@ethaniel.com>
+Reply-To: Arkadiy Kulev <eth@ethaniel.com>
+Message-ID: <981086804.20070425105207@ethaniel.com>
+Subject: switching back from 2.6.20 to 2.6.18
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1177433458.3360.12.camel@localhost.localdomain>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jurgen Schulz <jmschulz@earthlink.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 24, 2007 at 09:50:57AM -0700, Jurgen Schulz wrote:
+Hello everyone,
 
-> Fedora Core 5 2.6.20-1.2312.fc5 #1 Tue Apr 10 15:09:44 EDT 2007 i686 athlon i386 GNU/Linux
+I have a strange error that is crashing my system (not involving XFS)
+so I want to switch back from 2.6.20 to 2.6.18.
 
-Smells like 4k stack on i386 blowing up; try w/o the 4k stacks option
-and see how that hold up
+I have been using 2.6.20 for about 2 weeks now and I can't find the
+version of XFS, that comes with it.
+
+Is it safe to switch back from 2.6.20 to 2.6.18? I want to test and
+see if this fixes my crash bug. Will this break my data?
+
+Best regards,
+ Arkadiy                          mailto:eth@ethaniel.com
