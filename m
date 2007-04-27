@@ -1,58 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Apr 2007 19:48:05 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R2m2fB024454
-	for <xfs@oss.sgi.com>; Thu, 26 Apr 2007 19:48:03 -0700
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R2m1ic023792
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:48:01 +0900 (JST)
-Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R2f3XZ015422
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:41:03 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l3R2f2e09027 for xfs@oss.sgi.com; Fri, 27 Apr 2007 11:41:02 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l3R2f2L10152 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:41:02 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070427.114102.87502660 for <xfs@oss.sgi.com>
-	; Fri, 27 Apr 2007 11:41:03 +0900
-Message-Id: <200704270240.AA05279@TNESG9305.tnes.nec.co.jp>
-Date: Fri, 27 Apr 2007 11:40:51 +0900
-Subject: [PATCH] Fix segmentation fault when using xfs_quota state command.
-From: Utako Kusaka <utako@tnes.nec.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Apr 2007 20:56:15 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R3u8fB005288
+	for <xfs@oss.sgi.com>; Thu, 26 Apr 2007 20:56:11 -0700
+Subject: Re: [PATCH] Fix segmentation fault when using xfs_quota state
+	command.
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <200704270240.AA05279@TNESG9305.tnes.nec.co.jp>
+References: <200704270240.AA05279@TNESG9305.tnes.nec.co.jp>
+Content-Type: text/plain
+Date: Fri, 27 Apr 2007 13:58:22 +1000
+Message-Id: <1177646302.6273.386.camel@edge>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Utako Kusaka <utako@tnes.nec.co.jp>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Fri, 2007-04-27 at 11:40 +0900, Utako Kusaka wrote:
+> +	if (!fs_count)
+> +		return 0;
+> +
 
-state command in xfs_quota causes segmentation fault when the path list is empty.
-This patch fixes it.
+Is the segfault due to this line in state.c?
+237             else if (fs_path->fs_flags & FS_MOUNT_POINT)
 
-Example:
-# ./xfs_quota -x
-xfs_quota_orig> path
-xfs_quota_orig> state
-Segmentation fault
+If so, a fix that is more clear to the reader might be:
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
+- else if (fs_path->fs_flags & FS_MOUNT_POINT)
++ else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
 
---- xfsprogs-2.8.20/quota/state.orig	2007-04-19 13:07:38.000000000 +0900
-+++ xfsprogs-2.8.20/quota/state.c	2007-04-27 11:23:30.000000000 +0900
-@@ -226,6 +226,9 @@ state_f(
- 	if (argc != optind)
- 		return command_usage(&state_cmd);
- 
-+	if (!fs_count)
-+		return 0;
-+
- 	if ((fp = fopen_write_secure(fname)) == NULL)
- 		return 0;
+This keeps the fix alongside the problematic access to fs_path.
 
- 
- 
+cheers.
+
+-- 
+Nathan
