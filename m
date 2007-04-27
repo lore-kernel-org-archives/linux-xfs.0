@@ -1,43 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Apr 2007 19:24:10 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R2O7fB021749
-	for <xfs@oss.sgi.com>; Thu, 26 Apr 2007 19:24:09 -0700
-Message-ID: <46315EC0.9080401@sandeen.net>
-Date: Thu, 26 Apr 2007 21:24:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Apr 2007 19:48:05 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R2m2fB024454
+	for <xfs@oss.sgi.com>; Thu, 26 Apr 2007 19:48:03 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R2m1ic023792
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:48:01 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R2f3XZ015422
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:41:03 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l3R2f2e09027 for xfs@oss.sgi.com; Fri, 27 Apr 2007 11:41:02 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l3R2f2L10152 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 11:41:02 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070427.114102.87502660 for <xfs@oss.sgi.com>
+	; Fri, 27 Apr 2007 11:41:03 +0900
+Message-Id: <200704270240.AA05279@TNESG9305.tnes.nec.co.jp>
+Date: Fri, 27 Apr 2007 11:40:51 +0900
+Subject: [PATCH] Fix segmentation fault when using xfs_quota state command.
+From: Utako Kusaka <utako@tnes.nec.co.jp>
 MIME-Version: 1.0
-Subject: Re: [PATCH] make growfs check device size limits too
-References: <1177569014.6273.367.camel@edge>	 <20070426071055.GA24411@infradead.org> <1177631120.6273.380.camel@edge>
-In-Reply-To: <1177631120.6273.380.camel@edge>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Thu, 2007-04-26 at 08:10 +0100, Christoph Hellwig wrote:
->> On Thu, Apr 26, 2007 at 04:30:14PM +1000, Nathan Scott wrote:
->>> On the mount path we check for a superblock that describes a filesystem
->>> to large for the running kernel to handle.  This catches the case of an
->>> attempt to mount a >16TB filesystem on i386 (where we are limited by the
->>> page->index size, for XFS metadata buffers in xfs_buf.c).
->>>
->>> This patch makes similar checks on the growfs code paths for regular and
->>> realtime growth, else we can end up with filesystem corruption, it would
->>> seem (from #xfs chatter).  Untested patch follows; probably better to do
->>> this as a macro, in a header, and call that in each place...?
->> Yeah, the check should probably we in one place only.  Given that's it's
->> only used in slow pathes a function would probably do it.
-> 
-> Here's a revised version...
-> 
-> cheers.
-> 
+Hi,
 
-Looks good to me
+state command in xfs_quota causes segmentation fault when the path list is empty.
+This patch fixes it.
 
--Eric
+Example:
+# ./xfs_quota -x
+xfs_quota_orig> path
+xfs_quota_orig> state
+Segmentation fault
+
+Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
+---
+
+--- xfsprogs-2.8.20/quota/state.orig	2007-04-19 13:07:38.000000000 +0900
++++ xfsprogs-2.8.20/quota/state.c	2007-04-27 11:23:30.000000000 +0900
+@@ -226,6 +226,9 @@ state_f(
+ 	if (argc != optind)
+ 		return command_usage(&state_cmd);
+ 
++	if (!fs_count)
++		return 0;
++
+ 	if ((fp = fopen_write_secure(fname)) == NULL)
+ 		return 0;
+
+ 
+ 
