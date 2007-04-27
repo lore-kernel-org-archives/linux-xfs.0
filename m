@@ -1,41 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Apr 2007 02:15:15 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3R9F9fB023007
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 02:15:11 -0700
-Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA28429 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 18:50:46 +1000
-Subject: TAKE 963965 - Add lockdep support for XFS
-Message-Id: <20070427085045.D7C6E5910FF9@chook.melbourne.sgi.com>
-Date: Fri, 27 Apr 2007 18:50:45 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Apr 2007 05:10:52 -0700 (PDT)
+Received: from mtagate8.uk.ibm.com (mtagate8.uk.ibm.com [195.212.29.141])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3RCAhfB012803
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 05:10:44 -0700
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate8.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l3RCAf3w135080
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 12:10:41 GMT
+Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3RCAfVW2519164
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 13:10:41 +0100
+Received: from d06av04.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av04.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3RCAeHQ009263
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 13:10:41 +0100
+Date: Fri, 27 Apr 2007 14:10:03 +0200
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [PATCH 0/5] fallocate system call
+Message-ID: <20070427121003.GA7808@osiris.boeblingen.de.ibm.com>
+References: <20070321120425.GA27273@amitarora.in.ibm.com> <20070329115126.GB7374@amitarora.in.ibm.com> <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070426175056.GA25321@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-Add lockdep support for XFS
+On Thu, Apr 26, 2007 at 11:20:56PM +0530, Amit K. Arora wrote:
+> Based on the discussion, this new patchset uses following as the
+> interface for fallocate() system call:
+> 
+>  asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
+> 
+> It seems that only s390 architecture has a problem with such a layout of
+> arguments in fallocate(). Thus for s390, we plan to have a wrapper
+> (say, sys_s390_fallocate()) for the sys_fallocate(), which will get
+> called by glibc when an application issues a fallocate() system call
+> on s390. The s390 arch specific changes will be part of a separate
+> patch (PATCH 2/5). It will be great if some s390 expert can verify the
+> patch, since I have not been able to test it on s390 so far.
 
+After long discussions where at least two possible implementations
+were suggested that would work on _all_ architectures you chose one
+which doesn't and causes extra effort.
 
-Date:  Fri Apr 27 18:47:16 AEST 2007
-Workarea:  vpn-emea-sw-emea-160-20.emea.sgi.com:/home/lachlan/isms/2.6.x-lockdep
-Inspected by:  
-tes
-dgc
-Author:  lachlan
+> It was also noted that minor changes might be required to strace code
+> to take care of "different arguments on s390" issue.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+This is not limited to strace...
 
-
-Modid:  xfs-linux-melb:xfs-kern:28485a
-fs/xfs/xfs_vnodeops.c - 1.695 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.695&r2=text&tr2=1.694&f=h
-fs/xfs/xfs_vfsops.c - 1.518 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.518&r2=text&tr2=1.517&f=h
-fs/xfs/xfs_iget.c - 1.225 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.225&r2=text&tr2=1.224&f=h
-fs/xfs/xfs_inode.h - 1.220 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.220&r2=text&tr2=1.219&f=h
-fs/xfs/linux-2.6/mrlock.h - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/mrlock.h.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-	- Add lockdep support for XFS
+Besides that the s390 backend looks ok.
