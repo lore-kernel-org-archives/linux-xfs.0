@@ -1,47 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Apr 2007 23:16:48 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3R6GdfB001234
-	for <xfs@oss.sgi.com>; Thu, 26 Apr 2007 23:16:44 -0700
-Date: Fri, 27 Apr 2007 16:16:23 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] make growfs check device size limits too
-Message-ID: <20070427061623.GB77450368@melbourne.sgi.com>
-References: <1177569014.6273.367.camel@edge> <20070426071055.GA24411@infradead.org> <1177631120.6273.380.camel@edge>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1177631120.6273.380.camel@edge>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Apr 2007 00:42:46 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R7gbfB031035
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 00:42:39 -0700
+Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.197])
+	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R7gZSt002420
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l3R7gZf29503 for xfs@oss.sgi.com; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
+Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l3R7gZL16455 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
+Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
+	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
+	id 20070427.164234.75002200 for <xfs@oss.sgi.com>
+	; Fri, 27 Apr 2007 16:42:35 +0900
+Message-Id: <200704270742.AA05287@TNESG9305.tnes.nec.co.jp>
+From: Utako Kusaka <utako@tnes.nec.co.jp>
+Date: Fri, 27 Apr 2007 16:42:27 +0900
+Subject: Re: [PATCH] Fix segmentation fault when using xfs_quota state
+	command.
+In-Reply-To: <1177646302.6273.386.camel@edge>
+References: <1177646302.6273.386.camel@edge>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-2022-jp
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nscott@aconex.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: nscott@aconex.com
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 27, 2007 at 09:45:20AM +1000, Nathan Scott wrote:
-> On Thu, 2007-04-26 at 08:10 +0100, Christoph Hellwig wrote:
-> > On Thu, Apr 26, 2007 at 04:30:14PM +1000, Nathan Scott wrote:
-> > > On the mount path we check for a superblock that describes a filesystem
-> > > to large for the running kernel to handle.  This catches the case of an
-> > > attempt to mount a >16TB filesystem on i386 (where we are limited by the
-> > > page->index size, for XFS metadata buffers in xfs_buf.c).
-> > > 
-> > > This patch makes similar checks on the growfs code paths for regular and
-> > > realtime growth, else we can end up with filesystem corruption, it would
-> > > seem (from #xfs chatter).  Untested patch follows; probably better to do
-> > > this as a macro, in a header, and call that in each place...?
-> > 
-> > Yeah, the check should probably we in one place only.  Given that's it's
-> > only used in slow pathes a function would probably do it.
-> 
-> Here's a revised version...
+Thanks for your comment.
+I thought processes after fopen_write_secure() is not necessary
+when the path list is empty.
+But is creating an empty file necessary when specifying -f option?
+This option isn't written in man page:)
 
-Added to my qa tree.
+--
+Utako
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Fri, 27 Apr 2007 13:58:22 +1000 Nathan Scott wrote：
+>On Fri, 2007-04-27 at 11:40 +0900, Utako Kusaka wrote:
+>> +	if (!fs_count)
+>> +		return 0;
+>> +
+>
+>Is the segfault due to this line in state.c?
+>237             else if (fs_path->fs_flags & FS_MOUNT_POINT)
+>
+>If so, a fix that is more clear to the reader might be:
+>
+>- else if (fs_path->fs_flags & FS_MOUNT_POINT)
+>+ else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
+>
+>This keeps the fix alongside the problematic access to fs_path.
+>
+>cheers.
+>
+>-- 
+>Nathan
