@@ -1,60 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Apr 2007 00:42:46 -0700 (PDT)
-Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3R7gbfB031035
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 00:42:39 -0700
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.197])
-	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l3R7gZSt002420
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l3R7gZf29503 for xfs@oss.sgi.com; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l3R7gZL16455 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 16:42:35 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070427.164234.75002200 for <xfs@oss.sgi.com>
-	; Fri, 27 Apr 2007 16:42:35 +0900
-Message-Id: <200704270742.AA05287@TNESG9305.tnes.nec.co.jp>
-From: Utako Kusaka <utako@tnes.nec.co.jp>
-Date: Fri, 27 Apr 2007 16:42:27 +0900
-Subject: Re: [PATCH] Fix segmentation fault when using xfs_quota state
-	command.
-In-Reply-To: <1177646302.6273.386.camel@edge>
-References: <1177646302.6273.386.camel@edge>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Apr 2007 02:15:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3R9F9fB023007
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 02:15:11 -0700
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA28429 for <xfs@oss.sgi.com>; Fri, 27 Apr 2007 18:50:46 +1000
+Subject: TAKE 963965 - Add lockdep support for XFS
+Message-Id: <20070427085045.D7C6E5910FF9@chook.melbourne.sgi.com>
+Date: Fri, 27 Apr 2007 18:50:45 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Thanks for your comment.
-I thought processes after fopen_write_secure() is not necessary
-when the path list is empty.
-But is creating an empty file necessary when specifying -f option?
-This option isn't written in man page:)
+Add lockdep support for XFS
 
---
-Utako
 
-Fri, 27 Apr 2007 13:58:22 +1000 Nathan Scott wrote：
->On Fri, 2007-04-27 at 11:40 +0900, Utako Kusaka wrote:
->> +	if (!fs_count)
->> +		return 0;
->> +
->
->Is the segfault due to this line in state.c?
->237             else if (fs_path->fs_flags & FS_MOUNT_POINT)
->
->If so, a fix that is more clear to the reader might be:
->
->- else if (fs_path->fs_flags & FS_MOUNT_POINT)
->+ else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
->
->This keeps the fix alongside the problematic access to fs_path.
->
->cheers.
->
->-- 
->Nathan
+Date:  Fri Apr 27 18:47:16 AEST 2007
+Workarea:  vpn-emea-sw-emea-160-20.emea.sgi.com:/home/lachlan/isms/2.6.x-lockdep
+Inspected by:  
+tes
+dgc
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:28485a
+fs/xfs/xfs_vnodeops.c - 1.695 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.695&r2=text&tr2=1.694&f=h
+fs/xfs/xfs_vfsops.c - 1.518 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.518&r2=text&tr2=1.517&f=h
+fs/xfs/xfs_iget.c - 1.225 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.225&r2=text&tr2=1.224&f=h
+fs/xfs/xfs_inode.h - 1.220 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.220&r2=text&tr2=1.219&f=h
+fs/xfs/linux-2.6/mrlock.h - 1.22 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/mrlock.h.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
+	- Add lockdep support for XFS
