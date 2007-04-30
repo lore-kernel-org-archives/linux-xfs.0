@@ -1,43 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Apr 2007 23:01:35 -0700 (PDT)
-Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l3U61UfB028760
-	for <xfs@oss.sgi.com>; Sun, 29 Apr 2007 23:01:32 -0700
-Date: Sun, 29 Apr 2007 23:01:26 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: [PATCH 0/5] fallocate system call
-Message-ID: <20070430060126.GA15038@tuatara.stupidest.org>
-References: <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070430004702.GM32602149@melbourne.sgi.com> <20070430052559.GA13145@tuatara.stupidest.org> <20070430055632.GR32602149@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070430055632.GR32602149@melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Apr 2007 05:31:13 -0700 (PDT)
+Received: from mailsecure1.itc.griffith.edu.au (mailsecure1-out.itc.griffith.edu.au [132.234.242.61])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l3UCV9fB027347
+	for <xfs@oss.sgi.com>; Mon, 30 Apr 2007 05:31:10 -0700
+Received: from mailsecure1.itc.griffith.edu.au (unknown [127.0.0.1])
+	by mailsecure1.itc.griffith.edu.au (Symantec Mail Security) with ESMTP id C7D4218F
+	for <xfs@oss.sgi.com>; Mon, 30 Apr 2007 22:01:43 +1000 (EST)
+Received: from nox-1.itc.griffith.edu.au (sc2bigip02-242.nms.griffith.edu.au [132.234.242.254])
+	by mailsecure1.itc.griffith.edu.au (Symantec Mail Security) with ESMTP id 9269F3018B
+	for <xfs@oss.sgi.com>; Mon, 30 Apr 2007 22:01:43 +1000 (EST)
+Received: from [132.234.242.254] (helo=studentemail.griffith.edu.au)
+	by nox-1.itc.griffith.edu.au with esmtp (Exim 4.63)
+	(envelope-from <s.so@griffith.edu.au>)
+	id 1HiUZb-000053-Hs
+	for xfs@oss.sgi.com; Mon, 30 Apr 2007 22:01:43 +1000
+Received: from [132.234.200.137] by studentemail.griffith.edu.au
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0JHB00G9182VYL70@studentemail.griffith.edu.au> for
+ xfs@oss.sgi.com; Mon, 30 Apr 2007 22:01:43 +1000 (EST)
+Date: Mon, 30 Apr 2007 22:01:40 +1000
+From: Stephen So <s.so@griffith.edu.au>
+Subject: Slow performance when extracting tarballs
+Message-id: <4635DAA4.4070402@griffith.edu.au>
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
+Content-transfer-encoding: 7BIT
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: xfs@oss.sgi.com
 
-On Mon, Apr 30, 2007 at 03:56:32PM +1000, David Chinner wrote:
-> On Sun, Apr 29, 2007 at 10:25:59PM -0700, Chris Wedgwood wrote:
+Hi everyone,
 
-> IIRC, the argument for FA_ALLOCATE changing file size is that
-> posix_fallocate() is supposed to change the file size.
+Just a question about XFS when extracting bzipped tarballs containing
+lots of little files (e.g. the linux kernel source).  I've noticed on my
+new laptop (Intel Core 2 Duo @ 2.16 GHz), which has FC6 i386, which has
+XFS partitions that when I extract these types of tarballs, my system
+becomes rather non responsive, my mp3 player starts skipping etc.  After
+looking at top during the extraction process, bzip2 uses about 80-90% of
+CPU initially and extraction seems quite fast but after a few seconds,
+it drops to 30-40%, the system becomes non responsive, and extraction is
+much slower. 
 
-But it's not posix_fallocate; it's something more generic. glibc can
-do posix_fallocate using truncate + fallocate.
+I created a new partition of ext3 and reiserfs, did the same tarball
+extraction, and on both filesystems, bzip2 uses at least 90%, extraction
+is fast the whole way through, and the system is quite responsive.
 
-> Note that the way XFS implements growing the file size after the
-> allocation is via a truncate....
+I created my XFS partition using the following command (I made a larger
+log file size since I heard that improve delete performance a bit):
 
-What's wrong with that?  That seems very reasonable.
+mkfs.xfs  -l size=64m /dev/sda10
 
-> That's would what I did because otherwise you'd use ftruncate64().
-> Without documented behaviour or an ext4 implementation, I have to
-> ask what it's supposed to do, though ;)
+Then to mount this partition, I have these switches in my /etc/fstab file
 
-How many *real* users are there for ext4?  Why does 'what ext4 does'
-define 'the semantics'?
+noatime, nodiratime, logbufs=8
 
-Surely semantics should be decided either by precedent (if there is an
-existing relevant userbase) or sensible thought and some debate?
+I'm using kernel 2.6.20 that came from the FC6 updates repositories.  So
+is there something wrong with my XFS setup?  Is my log file too small? 
+Or is this "normal" behaviour of XFS (i.e. that it excels best when
+working with very large files but not lots of little files)?
+
+Many thanks and best regards,
+
+Steve.
+
+-- 
+______________________________________________________
+Dr Stephen So, PhD, MIEEE
+Griffith School of Engineering & 
+  Institute for Integrated and Intelligent Systems
+Science, Environment, Engineering and Technology Group
+Griffith University, Gold Coast Campus
+PMB 50, Gold Coast Mail Centre
+Gold Coast, QLD, 9726, Australia
+
+E-mail:       s.so@griffith.edu.au
+Phone (Fax):  +61 7 5552 8663 (8065)
+Homepage:     http://maxwell.me.gu.edu.au/sso
+______________________________________________________
