@@ -1,65 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 May 2007 07:21:13 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l41EL5fB015382
-	for <xfs@oss.sgi.com>; Tue, 1 May 2007 07:21:08 -0700
-Date: Wed, 2 May 2007 00:20:49 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 May 2007 11:38:27 -0700 (PDT)
+Received: from ppsw-9.csi.cam.ac.uk (ppsw-9.csi.cam.ac.uk [131.111.8.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l41IcLfB004929
+	for <xfs@oss.sgi.com>; Tue, 1 May 2007 11:38:23 -0700
+In-Reply-To: <20070501042254.GD77450368@melbourne.sgi.com>
+References: <20070412110550.GM5967@schatzie.adilger.int> <20070416112252.GJ48531920@melbourne.sgi.com> <20070419002139.GK5967@schatzie.adilger.int> <20070419015426.GM48531920@melbourne.sgi.com> <20070430224401.GX5967@schatzie.adilger.int> <20070501042254.GD77450368@melbourne.sgi.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <1FA8E92B-954D-4624-A089-80D4AA7399FD@cam.ac.uk>
+Content-Transfer-Encoding: 7bit
+From: Anton Altaparmakov <aia21@cam.ac.uk>
 Subject: Re: [RFC] add FIEMAP ioctl to efficiently map file allocation
-Message-ID: <20070501142049.GG77450368@melbourne.sgi.com>
-References: <20070412110550.GM5967@schatzie.adilger.int> <20070416112252.GJ48531920@melbourne.sgi.com> <20070419002139.GK5967@schatzie.adilger.int> <20070419015426.GM48531920@melbourne.sgi.com> <20070430224401.GX5967@schatzie.adilger.int> <20070501042254.GD77450368@melbourne.sgi.com> <1177994346.3362.5.camel@entropy>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1177994346.3362.5.camel@entropy>
+Date: Tue, 1 May 2007 19:37:20 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nicholas Miell <nmiell@comcast.net>
-Cc: David Chinner <dgc@sgi.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org
+To: David Chinner <dgc@sgi.com>
+Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org
 
-On Mon, Apr 30, 2007 at 09:39:06PM -0700, Nicholas Miell wrote:
-> On Tue, 2007-05-01 at 14:22 +1000, David Chinner wrote:
-> > On Mon, Apr 30, 2007 at 04:44:01PM -0600, Andreas Dilger wrote:
-> > > This is actually for future use.  Any flags that are added into this
-> > > range must be understood by both sides or it should be considered an
-> > > error.  Flags outside the FIEMAP_FLAG_INCOMPAT do not necessarily need
-> > > to be supported.  If it turns out that 8 bits is too small a range for
-> > > INCOMPAT flags, then we can make 0x01000000 an incompat flag that means
-> > > e.g. 0x00ff0000 are also incompat flags also.
-> > 
-> > Ah, ok. So it's not really a set of "compatibility" flags, it's more a
-> > "compulsory" set. Under those terms, i don't really see why this is
-> > necessary - either the filesystem will understand the flags or it will
-> > return EINVAL or ignore them...
-> > 
-> > > I'm assuming that all flags that will be in the original FIEMAP proposal
-> > > will be understood by the implementations.  Most filesystems can safely
-> > > ignore FLAG_HSM_READ, for example, since they don't support HSM, and for
-> > > that matter FLAG_SYNC is probably moot for most filesystems also because
-> > > they do block allocation at preprw time.
-> > 
-> > Exactly my point - so why do we really need to encode a compulsory set of
-> > 
-> 
-> Because flags have meaning, independent of whether or not the filesystem
-> understands them. And if the filesystem chooses to ignore critically
-> important flags (instead of returning EINVAL), bad things may happen.
-> 
-> So, either the filesystem will understand the flag or iff the unknown flag
-> is in the incompat set, it will return EINVAL or else the unknown flag will
-> be safely ignored.
+On 1 May 2007, at 05:22, David Chinner wrote:
+> On Mon, Apr 30, 2007 at 04:44:01PM -0600, Andreas Dilger wrote:
+>>   The FIBMAP ioctl is for privileged users
+>>   only, and I wonder if FIEMAP should be the same, or at least  
+>> disallow
+>>   mapping files that the user can't access especially with  
+>> FLAG_SYNC and/or
+>>   FLAG_HSM_READ.
+>
+> I see little reason for restricting FI[BE]MAP to privileged users -
+> anyone should be able to determine if files they have permission to
+> access are fragmented.
 
-My point was that there is a difference between specification and
-implementation - if the specification says something is compulsory,
-then they must be implemented in the filesystem. This is easy
-enough to ensure by code review - we don't need additional interface
-complexity for this....
+Allowing anyone to run FI[BE]MAP creates potential for DOS-ing the  
+machine.  Perhaps for non-privileged users FIEMAP has to be read- 
+only?  As soon as any of the FLAG_* flags come into play you make it  
+privileged.  For example fancy any user being able to fill up your  
+file system by calling FIEMAP with FLAG_HSM_READ on all files  
+recursively?  This should certainly not be simply dismissed as a non- 
+issue without thinking about it first...
 
-Cheers,
+Best regards,
 
-Dave.
+	Anton
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
+Linux NTFS maintainer, http://www.linux-ntfs.org/
