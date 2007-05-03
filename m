@@ -1,118 +1,149 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 May 2007 06:12:04 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 May 2007 23:45:20 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l42DBvfB029629
-	for <xfs@oss.sgi.com>; Wed, 2 May 2007 06:12:00 -0700
-Date: Wed, 2 May 2007 23:11:44 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l436jDfB003835
+	for <xfs@oss.sgi.com>; Wed, 2 May 2007 23:45:15 -0700
+Date: Thu, 3 May 2007 16:44:59 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Missing TAKE 958522 (was Re: [Bug 756]  New: File data corruption.....)
-Message-ID: <20070502131144.GZ77450368@melbourne.sgi.com>
-References: <200705012104.l41L4CI3029767@oss.sgi.com> <20070502105241.GA15399@lst.de>
+Subject: Re: TAKE 963965 - Add lockdep support for XFS
+Message-ID: <20070503064459.GJ77450368@melbourne.sgi.com>
+References: <20070427085045.D7C6E5910FF9@chook.melbourne.sgi.com> <20070502115105.GA21031@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070502105241.GA15399@lst.de>
+In-Reply-To: <20070502115105.GA21031@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk
 
-On Wed, May 02, 2007 at 12:52:41PM +0200, Christoph Hellwig wrote:
-> > Note that a similar issue existed in the 2.6 SGI kernel up until it was resolved
-> > by this recent change:
-> > http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c.diff?r1=1.258;r2=1.259;f=h
+On Wed, May 02, 2007 at 12:51:05PM +0100, Christoph Hellwig wrote:
+> On Fri, Apr 27, 2007 at 06:50:45PM +1000, Lachlan McIlroy wrote:
+> > Add lockdep support for XFS
 > 
-> Seems like someone forgot to send TAKEs to the xfs list once again..
+> I don't think this is entirely correct, and it misses some of the
+> most interesting cases.
 
-Hmmm - that was a bad one to miss considering the importance of the
-problem it fixes......
+Yeah, we decided it was better to get something out there
+that fixes the obvious and frequently reported false positives
+than hold it up on the hard stuff....
 
------
+> I've Cc'ed -fsdevel and Al to get some comments on the more tricky
+> issues in the rename section at the end of the mail.
 
-TAKE 958522 - XFS has conflicting strategies between metadata and file data flushing
+There's several other tricky cases that we're not sure to handle
+as well - they are mainly due to *valid* lock inversions. i.e.
+we do "lock A, lock B" in most places, but in others we do "lock
+B, *trylock* A" to avoid deadlocks. I think the MOUNT_ILOCK/inode ilock
+is one of these pairs.
 
-Fix to prevent the notorious 'NULL files' problem after a crash.
+> 
+> 
+> > Modid:  xfs-linux-melb:xfs-kern:28485a
+> > fs/xfs/xfs_vnodeops.c - 1.695 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> > xfs_vnodeops.c.diff?r1=text&tr1=1.695&r2=text&tr2=1.694&f=h
+> > http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.695&r2=text&tr2=1.694&f=h
+> 
+> The XFS_ILOCK_PARENT uses in xfs_create, xfs_mkdir and xfs_symlink look good.
+> 
+> xfs_lock_dir_and_entry should go away and just become and opencoded
+> 
+> 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+> 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> 
+> in the two callers, once we made sure to have a sufficient locking
+> protocol where we always lock the parent before the child.
+> 
+> xfs_lock_dir_and_entry can be totally removed and replaced with just
+> the two ilock calls if we sort out the locking as proposed in this
+> mail.
 
-The problem that has been addressed is that of synchronising updates of
-the file size with writes that extend a file.  Without the fix the update
-of a file's size, as a result of a write beyond eof, is independent of
-when the cached data is flushed to disk.  Often the file size update would
-be written to the filesystem log before the data is flushed to disk.  When
-a system crashes between these two events and the filesystem log is
-replayed on mount the file's size will be set but since the contents never
-made it to disk the file is full of holes.  If some of the cached data was
-flushed to disk then it may just be a section of the file at the end that
-has holes.
+I'm not sure it is that simple - we currently always group locking of
+multiple inodes in increasing inode number order. i don't know what
+deadlock that is protecting against.
 
-There are existing fixes to help alleviate this problem, particularly in
-the case where a file has been truncated, that force cached data to be
-flushed to disk when the file is closed.  If the system crashes while the
-file(s) are still open then this flushing will never occur.
+There's also the case that we can't sleep on the ilock if the inode
+in the AIL while we hold the directory lock. Once again I'm not sure
+what the deadlock is, but given we are now in a transaction it's
+probably a tail-pushing deadlock that it is avoiding.
 
-The fix that we have implemented is to introduce a second file size, called
-the in-memory file size, that represents the current file size as viewed by
-the user.  The existing file size, called the on-disk file size, is the one
-that get's written to the filesystem log and we only update it when it is
-safe to do so.  When we write to a file beyond eof we only update the in-
-memory file size in the write operation.  Later when the I/O operation, that
-flushes the cached data to disk completes, an I/O completion routine will
-update the on-disk file size.  The on-disk file size will be updated to the
-maximum offset of the I/O or to the value of the in-memory file size if the
-I/O includes eof.
+Without knowing for certain what these are avoiding, I don't think
+we should be removing the code blindly....
 
-Date:  Fri Mar 30 02:24:06 AEST 2007
-Workarea:  vpn-emea-sw-emea-160-18.emea.sgi.com:/home/lachlan/isms/2.6.x-null
-Inspected by:  dgc,tes
+> > fs/xfs/xfs_vfsops.c - 1.518 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> > xfs_vfsops.c.diff?r1=text&tr1=1.518&r2=text&tr2=1.517&f=h
+> > http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.518&r2=text&tr2=1.517&f=h
+> 
+> This looks a bit odd to me - the rt inodes are not connected to the
+> filesystem namespace so the root inode can't really be it's parent.
+> 
+> Why are we locking the root inode so early.  Is there a good reason we
+> don't delay the locking until we're done with the rt inodes?
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+No idea - it's like that on irix too, and I don't have time
+right now to discover why....
 
-Modid:  xfs-linux-melb:xfs-kern:28322a
-fs/xfs/xfsidbg.c - 1.312 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.312&r2=text&tr2=1.311&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+> If not the parent annotation is probably safe beause we never lock
+> the rt inode at the same time as any other inode, but it at least needs
+> a big comment describing what's going on. 
+> 
+> 
+> 
+> Now what seems to be completely lacking is any kind of annotation in
+> xfs_rename.c, which is the most difficult thing to get right for
+> inode locking because we may have to lock up to four inodes.  I suggest
+> to implement the same locking protocol the the VFS uses for locking
+> i_mutex, as document in Documentation/filesystems/directory-locking:
+> 
+> Also xfs_lock_inodes lacks any kind of annotation.
 
-fs/xfs/xfs_vnodeops.c - 1.693 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.693&r2=text&tr2=1.692&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+It calls xfs_lock_inumorder() to set up the annotation. The inode number in
+the set of inodes to be locked drives the lock subclass for nesting.
 
-fs/xfs/xfs_iocore.c - 1.52 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iocore.c.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+Also xfs_rename locking ends up calling xfs_lock_inodes() and so it
+does get annotated.
 
-fs/xfs/xfs_inode.c - 1.463 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.463&r2=text&tr2=1.462&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+> Let's start with the xfs_lock_inodes that don't fall into rename or
+> xfs_lock_dir_and_entry handled above:
+> 
+> 
+>  - xfs_swap_extents locks two inodes of the same type, but these
+>    could be directories, so there is a chance we can get into
+>    conflicts with the parent->child type locking
 
-fs/xfs/xfs_inode.h - 1.219 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.219&r2=text&tr2=1.218&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+Uses xfs_lock_inodes() so subclass nesting is used instead of
+parent/child.
 
-fs/xfs/xfs_bmap.c - 1.367 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.367&r2=text&tr2=1.366&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+>  - xfs_link locks the source inode and the target directory
+>    inode.  vfs locking rule is lock parent, lock source and
+>    we should follow this as it's in line with the directory
+>    before child rule except that the source doesn't always
+>    have to be a child, in which case we don't have a problem
+>    anyway
 
-fs/xfs/xfs_iomap.h - 1.10 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.h.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+It locks in inode number order as per xfs_lock_dir_and_entry()
+and uses xfs_lock_inodes() for annotation.
 
-fs/xfs/xfs_iomap.c - 1.52 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.c.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+> And now rename gets ugly, we should follow the VFS rules with
+> the following required adjustments:
+> 
+>  - XFS needs both source and target inode (if existing) locked.
+>    Because both must be non-directories sorting by inode number
+>    should be okay
+>  - Doing a lock_rename equivalent for locking the parent directories
+>    requires dentries, but only inodes are passed down from the VFS.
+>    On the other hand they are obviously guranteed to be directories
+>    so i_dentry has exactly one dentry on which we can do the upwards
+>    walk.
 
-fs/xfs/linux-2.6/xfs_lrw.c - 1.259 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.259&r2=text&tr2=1.258&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+This is a lot of churn that I don't really see as necessary - why should
+we risk deadlocks and difficult to diagnose problems when the current
+code works and is now annotated?
 
-fs/xfs/linux-2.6/xfs_aops.c - 1.142 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.142&r2=text&tr2=1.141&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
+Cheers,
 
-fs/xfs/dmapi/xfs_dm.c - 1.34 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
-        - Fix to prevent the notorious 'NULL files' problem after a crash.
-
+Dave.
 -- 
 Dave Chinner
 Principal Engineer
