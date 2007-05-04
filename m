@@ -1,96 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 May 2007 00:28:25 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l447SHfB017704
-	for <xfs@oss.sgi.com>; Fri, 4 May 2007 00:28:19 -0700
-Date: Fri, 4 May 2007 17:27:42 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070504072742.GK32602149@melbourne.sgi.com>
-References: <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426180332.GA7209@amitarora.in.ibm.com> <20070503212955.b1b6443c.akpm@linux-foundation.org> <20070504060731.GJ32602149@melbourne.sgi.com> <20070503232815.2f62a75e.akpm@linux-foundation.org>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 May 2007 00:29:41 -0700 (PDT)
+Received: from postfix2-g20.free.fr (postfix2-g20.free.fr [212.27.60.43])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l447TbfB018149
+	for <xfs@oss.sgi.com>; Fri, 4 May 2007 00:29:38 -0700
+Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
+	by postfix2-g20.free.fr (Postfix) with ESMTP id CD3ADFA8658
+	for <xfs@oss.sgi.com>; Fri,  4 May 2007 08:06:38 +0200 (CEST)
+Date: Fri, 4 May 2007 09:06:13 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: XFS crash on linux raid
+Message-ID: <20070504090613.7c0f97d3@galadriel.home>
+In-Reply-To: <20070504005922.GC32602149@melbourne.sgi.com>
+References: <20070503164521.16efe075@harpe.intellique.com>
+	<20070504005922.GC32602149@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070503232815.2f62a75e.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: David Chinner <dgc@sgi.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Thu, May 03, 2007 at 11:28:15PM -0700, Andrew Morton wrote:
-> On Fri, 4 May 2007 16:07:31 +1000 David Chinner <dgc@sgi.com> wrote:
-> > On Thu, May 03, 2007 at 09:29:55PM -0700, Andrew Morton wrote:
-> > > On Thu, 26 Apr 2007 23:33:32 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
-> > > 
-> > > > This patch implements the fallocate() system call and adds support for
-> > > > i386, x86_64 and powerpc.
-> > > > 
-> > > > ...
-> > > > +{
-> > > > +	struct file *file;
-> > > > +	struct inode *inode;
-> > > > +	long ret = -EINVAL;
-> > > > +
-> > > > +	if (len == 0 || offset < 0)
-> > > > +		goto out;
-> > > 
-> > > The posix spec implies that negative `len' is permitted - presumably "allocate
-> > > ahead of `offset'".  How peculiar.
-> > 
-> > I just checked the man page for posix_fallocate() and it says:
-> > 
-> >       EINVAL  offset or len was less than zero.
-> > 
-> > We should probably follow this lead.
+Le Fri, 4 May 2007 10:59:22 +1000 vous écriviez:
+
+> Where there any I/o errors reported before the shutdown?
 > 
-> Yes, I think so.  I'm suspecting that
-> http://www.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html
-> is just buggy.  Or I can't read.
+
+Nope. To make it clear : the problem can be reproduce on several
+different systems, different motherboards, different drives, different
+RAID controllers... This isn't a hardware problem.
+
+> > On a similar hardware with 2 3Ware-9550 16x750GB striped together,
+> > but running 2.6.17.13, I had a similar fs crash last week.
+> > Unfortunately I don't have the logs at hand, but we where able to
+> > reproduce several times the crash at home :  
 > 
-> I mean, if we're going to support negative `len' then is the byte at
-> `offset' inside or outside the segment?  Head spins.
+> Hmm - 750GB drives are brand new. i wouldn't rule out media issues
+> at this point...
 
-I don't think we should care. If we provide a syscall with the
-semantics of "allocate from offset to offset+len" then glibc's
-implementation can turn negative length into two separate
-fallocate syscalls....
+The problem is quite easily reproduced with 500GB drives too.
+ 
+> > Filesystem "md0": XFS internal error xfs_btree_check_sblock at line
+> > 336 of file fs/xfs/xfs_btree.c.  Caller 0xc01fb282 <c0214568>  
+> 
+> Memory corruption?
 
-> > > > +	ret = -ENODEV;
-> > > > +	if (!S_ISREG(inode->i_mode))
-> > > > +		goto out_fput;
-> > > 
-> > > So we return ENODEV against an S_ISBLK fd, as per the posix spec.  That
-> > > seems a bit silly of them.
+Tried with different RAMs, and the problem occurs on ECC RAM too.
+
 > > 
-> > Hmmmm - I thought that the intention of sys_fallocate() was to
-> > be generic enough to eventually allow preallocation on directories.
-> > If that is the case, then this check will prevent that....
+> > Out of curiosity, I've tried to use reiserfs (just to see how it
+> > compares regarding this). Reiserfs crashed before even writing
+> > 100MB!  
 > 
-> The above opengroup page only permits S_ISREG.  Preallocating directories
-> sounds quite useful to me, although it's something which would be pretty
-> hard to emulate if the FS doesn't support it.  And there's a decent case to
-> be made for emulating it - run-anywhere reasons.  Does glibc emulation support
-> directories?  Quite unlikely.
-> 
-> But yes, sounds like a desirable thing.  Would XFS support it easily if the above
-> check was relaxed?
+> That indicates there's something wrong other than the filesystem.
+> I'd suggest making sure your raid arrays, memory, etc are all
+> functioning correctly first.
 
-No - right now empty blocks are pruned from the directory immediately so I
-don't think we really have a concept of empty blocks in the btree structure.
-dir2 is bloody complex, so adding preallocation is probably not going to
-be simple to do.
+They are. I've tested 5 different machines so far (Supermicro or Tyan
+mobos, kingston RAM, Intel or AMD cpus, hitachi and seagate drives...)
+ 
+> What platform are you running on? Are you running ia32 with 4k stacks?
 
-It's not high on my list to add, either, because we can typically avoid the
-worst case directory fragmentation by using larger directory block sizes
-(e.g. 16k instead of the default 4k on a 4k block size fs).
+Yes. I'll try this week 2.6.18.8 thoroughly and 2.6.20.11 too. Then
+jfs, just to be sure.
 
-IIRC directory preallocation has been talked about more for ext3/4....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   
+--------------------------------------------------
