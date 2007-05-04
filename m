@@ -1,55 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 May 2007 08:30:51 -0700 (PDT)
-Received: from smtp-ft1.fr.colt.net (smtp-ft1.fr.colt.net [213.41.78.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l44FUlfB030646
-	for <xfs@oss.sgi.com>; Fri, 4 May 2007 08:30:49 -0700
-Date: Fri, 4 May 2007 17:30:49 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 May 2007 08:58:29 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l44FwOfB005594
+	for <linux-xfs@oss.sgi.com>; Fri, 4 May 2007 08:58:25 -0700
+Received: from localhost (dslb-084-057-112-255.pools.arcor-ip.net [84.57.112.255])
+	by mail.lichtvoll.de (Postfix) with ESMTP id AF67E5AD3F
+	for <linux-xfs@oss.sgi.com>; Fri,  4 May 2007 17:58:22 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: XFS crash on linux raid
-Message-ID: <20070504173049.14606033@harpe.intellique.com>
-In-Reply-To: <463B4962.70904@sandeen.net>
-References: <20070503164521.16efe075@harpe.intellique.com>
-	<20070504005922.GC32602149@melbourne.sgi.com>
-	<20070504090613.7c0f97d3@galadriel.home>
-	<20070504073344.GL32602149@melbourne.sgi.com>
-	<20070504152546.614374ac@harpe.intellique.com>
-	<463B4962.70904@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Date: Fri, 4 May 2007 17:58:21 +0200
+References: <20070503164521.16efe075@harpe.intellique.com> <20070504073344.GL32602149@melbourne.sgi.com> <20070504152546.614374ac@harpe.intellique.com> (sfid-20070504_161005_263297_AD8C4AAD)
+In-Reply-To: <20070504152546.614374ac@harpe.intellique.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200705041758.21320.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Le Fri, 04 May 2007 09:55:30 -0500
-Eric Sandeen <sandeen@sandeen.net> écrivait:
+Am Freitag 04 Mai 2007 schrieb Emmanuel Florac:
 
-> Emmanuel Florac wrote:
-> > Le Fri, 4 May 2007 17:33:44 +1000
-> > David Chinner <dgc@sgi.com> écrivait:
-> > 
-> >> Well, there's your problem. Stack overflows.  IMO, if you use a
-> >> filesystem, you shouldn't use 4k stacks. ;)
-> >>
-> >> If you remake you kernel with 8k stacks then your problems will
-> >> most likely go away.
-> > 
-> > Well, I've double-checked the asm-i386/module.h, and it actually
-> > looks like 4K stacks is NOT the default, so I must be using 8K,
-> > isn't it?
-> 
-> Depends on how you config'd it, just look at the .config you built
-> with, and search for CONFIG_4KSTACKS
+> I've ran the same test on the same machine but WITHOUT software raid-0
+> (so write barriers are in use), and all went well, more than 3TB
+> written without a glitch. I still think there's something related to
+> the write barriers here. I'll try with another RAID controller, Adaptec
+> for instance, to get sure the 3ware driver isn't involved. I'll also
+> try again with an amd64 kernel.
 
-config-2.6.17.13:
+Hello Emmanuel!
 
-# CONFIG_4KSTACKS is not set
+When you can't use write barriers as XFS tell you in the logs, you better 
+switch of write caching for the harddisks / raid controller, unless you 
+happen to have NVRAM or safe power supply.
 
-So the problem lies elsewhere...
+But then using write cache without barrier should not make any difference 
+unless you actually have a crash or power failure during write operation.
 
+Did you test with ext3 as well? You wrote it crashes with ReiserFS 
+(version 3) even faster. When it crashes with several filesystems its 
+unlikely to be a filesystem issue.
+
+Regards,
 -- 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
