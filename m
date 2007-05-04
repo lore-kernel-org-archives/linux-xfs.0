@@ -1,106 +1,298 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 May 2007 17:59:40 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l440xXfB009201
-	for <xfs@oss.sgi.com>; Thu, 3 May 2007 17:59:35 -0700
-Date: Fri, 4 May 2007 10:59:22 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS crash on linux raid
-Message-ID: <20070504005922.GC32602149@melbourne.sgi.com>
-References: <20070503164521.16efe075@harpe.intellique.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070503164521.16efe075@harpe.intellique.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 May 2007 19:46:05 -0700 (PDT)
+Received: from mailsecure1.itc.griffith.edu.au (mailsecure1-out.itc.griffith.edu.au [132.234.242.61])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l442jwfB031706
+	for <xfs@oss.sgi.com>; Thu, 3 May 2007 19:46:01 -0700
+Received: from mailsecure1.itc.griffith.edu.au (unknown [127.0.0.1])
+	by mailsecure1.itc.griffith.edu.au (Symantec Mail Security) with ESMTP id 04449286
+	for <xfs@oss.sgi.com>; Fri,  4 May 2007 12:45:57 +1000 (EST)
+Received: from nox-1.itc.griffith.edu.au (sc2bigip02-242.nms.griffith.edu.au [132.234.242.254])
+	by mailsecure1.itc.griffith.edu.au (Symantec Mail Security) with ESMTP id 4AF7730187
+	for <xfs@oss.sgi.com>; Fri,  4 May 2007 12:45:56 +1000 (EST)
+Received: from [132.234.242.254] (helo=studentemail.griffith.edu.au)
+	by nox-1.itc.griffith.edu.au with esmtp (Exim 4.63)
+	(envelope-from <S.So@griffith.edu.au>)
+	id 1Hjnnw-0006gz-52
+	for xfs@oss.sgi.com; Fri, 04 May 2007 12:45:56 +1000
+Received: from ss64.me.griffith.edu.au ([132.234.103.168])
+ by studentemail.griffith.edu.au
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0JHH002HWX0KTM40@studentemail.griffith.edu.au> for
+ xfs@oss.sgi.com; Fri, 04 May 2007 12:45:56 +1000 (EST)
+Date: Fri, 04 May 2007 12:45:55 +1000
+From: Stephen So <S.So@griffith.edu.au>
+Subject: Re: Slow performance when extracting tarballs
+In-reply-to: <20070430213538.GA30809@tuatara.stupidest.org>
+Message-id: <463A9E63.7010007@griffith.edu.au>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Content-transfer-encoding: 7BIT
+References: <4635DAA4.4070402@griffith.edu.au>
+ <20070430213538.GA30809@tuatara.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 03, 2007 at 04:45:21PM +0200, Emmanuel Florac wrote:
-> 
-> Hello, 
-> Apparently quite a lot of people do encounter the same problem from
-> time to time, but I couldn't find any solution. 
-> 
-> When writing quite a lot to the filesystem (heavy load on the
-> fileserver), the filesystem crashes when filled at 2.5~3TB (varies from
-> time to time). The filesystems tested where always running on a software
-> raid 0, with disabled barriers. I tend to think that disabled write
-> barriers are causing the crash but I'll do some more tests to get sure.
-> 
-> I've met this problem for the first time on 12/23 (yup... merry
-> christmas :) when a 13 TB filesystem went belly up :
-> 
-> Dec 23 01:38:10 storiq1 -- MARK --
-> Dec 23 01:58:10 storiq1 -- MARK --
-> Dec 23 02:10:29 storiq1 kernel: xfs_iunlink_remove: xfs_itobp()
-> returned an error 990 on md0. Returning error.
-> Dec 23 02:10:29 storiq1 kernel: xfs_inactive:^Ixfs_ifree() returned an
-> error = 990 on md0
-> Dec 23 02:10:29 storiq1 kernel: xfs_force_shutdown(md0,0x1) called from
-> line 1763 of file fs/xfs/xfs_vnodeops.c. Return address = 0xc027f78b
-> Dec 23 02:38:11 storiq1 -- MARK --
-> Dec 23 02:58:11 storiq1 -- MARK -- 
+Hi, thanks for the reply
 
-So, trying to remove an inode there was a corruption found on disk
-and it shut the filesystem down.
+xfs-bounce@oss.sgi.com wrote:
+> what does "vmstat 1" look like during this?
+>   
 
-Where there any I/o errors reported before the shutdown?
+I did a vmstat 1 and this is the output:
 
-> When mounting, it did that :
-> 
-> Filesystem "md0": Disabling barriers, not supported by the underlying
-> device XFS mounting filesystem md0
-> Starting XFS recovery on filesystem: md0 (logdev: internal)
-> Filesystem "md0": xfs_inode_recover: Bad inode magic number, dino ptr =
-> 0xf7196600, dino bp = 0xf718e980, ino = 119318 Filesystem "md0": XFS
+% vmstat 1
+procs -----------memory---------- ---swap-- -----io---- --system--
+-----cpu------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
+id wa st
+ 0  0      0 1002716   3540 745316    0    0    59    15  559  560  1  2
+96  1  0
+ 0  0      0 1002700   3540 745316    0    0     0    12 1091 1543  2  2
+97  0  0
+ 1  0      0 995464   3540 750300    0    0  2060   401 1134 2569 18  3
+76  4  0
+ 2  0      0 980884   3540 762652    0    0  3712  1376 1238 4850 43  7
+43  8  0
+ 1  0      0 968368   3540 776152    0    0  3968  1568 1224 5155 43  7
+44  7  0
+ 2  0      0 954660   3540 787264    0    0  3584  1344 1244 4542 38  6
+45 11  0
+ 1  0      0 942668   3540 797556    0    0  2944  1431 1224 4376 36  6
+48 11  0
+ 1  0      0 932852   3540 807304    0    0  3072  1312 1229 4164 33  6
+46 15  0
+ 3  0      0 922724   3540 817912    0    0  3072  1440 1215 4378 37  7
+44 12  0
+ 0  1      0 911612   3540 828552    0    0  3328  1568 1242 4558 37  5
+46 12  0
+ 1  0      0 900804   3540 839140    0    0  3072  1568 1222 4279 36  5
+45 13  0
+ 0  0      0 887824   3540 848788    0    0  3072  1427 1250 3862 35  5
+46 14  0
+ 1  0      0 880036   3540 857700    0    0  2560  1529 1229 3775 31  7
+47 16  0
+ 1  0      0 867552   3540 867548    0    0  3072  1632 1250 4035 36  5
+46 14  0
+ 0  1      0 859156   3540 877576    0    0  2944  1696 1239 4291 33  6
+45 16  0
+ 1  0      0 852904   3540 883628    0    0  1664  5403 1229 3111 23  4
+48 25  0
+ 0  1      0 846328   3540 888188    0    0  1536  5300 1188 2622 21  6
+61 12  0
+ 0  1      0 842076   3540 892752    0    0  1280  5383 1232 2478 21  5
+62 12  0
+ 1  1      0 837312   3540 897396    0    0  1408  5330 1211 2476 20  5
+53 24  0
+ 6  1      0 828876   3540 903572    0    0  1920  5771 1245 2904 24  5
+46 25  0
+ 1  0      0 822016   3540 912304    0    0  2304  1203 1216 3897 30  7
+55  7  0
+ 0  1      0 818404   3540 915628    0    0  1024  9446 1181 2028 14  5
+63 17  0
+ 0  1      0 809552   3540 923336    0    0  2432  1109 1228 3344 28  5
+46 22  0
+ 1  0      0 801124   3540 928892    0    0  1664  9195 1201 2821 22  6
+59 13  0
+ 0  0      0 794364   3540 935364    0    0  1792  5296 1218 3052 24  6
+52 18  0
+ 2  1      0 789784   3540 941564    0    0  2048  4992 1194 3116 23  4
+51 23  0
+procs -----------memory---------- ---swap-- -----io---- --system--
+-----cpu------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
+id wa st
+ 1  0      0 781540   3540 947180    0    0  1536  6434 1226 2942 23  6
+50 22  0
+ 4  0      0 777300   3540 953628    0    0  1920  1088 1200 2970 25  5
+56 14  0
+ 0  1      0 772892   3540 957032    0    0  1152  9440 1201 2141 17  4
+59 21  0
+ 1  0      0 764432   3540 964572    0    0  2304  1253 1216 3198 29  4
+46 22  0
+ 2  0      0 756516   3540 970284    0    0  1664  9720 1222 2832 22  5
+57 17  0
+ 1  1      0 750880   3540 977204    0    0  2176  1100 1207 2973 25  5
+49 20  0
+ 0  0      0 745424   3540 980768    0    0  1024  9140 1200 2205 16  4
+66 14  0
+ 0  1      0 741928   3540 986200    0    0  1664  1376 1193 2746 20  5
+61 15  0
+ 0  1      0 734536   3540 992480    0    0  1920  5516 1226 2874 24  5
+57 14  0
+ 0  1      0 729072   3540 997168    0    0  1408  5328 1199 2473 21  5
+62 13  0
+ 0  1      0 723228   3540 1003288    0    0  1792  5509 1243 2959 24  6
+54 15  0
+ 2  0      0 717948   3540 1007752    0    0  1408  5308 1196 2418 20  4
+59 18  0
+ 4  0      0 709940   3540 1013564    0    0  1536  5568 1217 3145 25  4
+55 16  0
+ 0  0      0 701132   3540 1021948    0    0  2816  5612 1224 3562 32  6
+47 16  0
+ 0  1      0 702448   3540 1023140    0    0   256  5108 1203 1538  6  5
+73 15  0
+ 0  1      0 691688   3540 1032264    0    0  2688  1852 1239 3630 32  5
+45 18  0
+ 0  1      0 688292   3540 1034228    0    0   768  9348 1198 1671 10  3
+60 27  0
+ 1  0      0 682636   3540 1039248    0    0  1408  1069 1198 2729 20  5
+47 29  0
+ 1  0      0 676848   3540 1044456    0    0  1408  5704 1234 2897 20  5
+59 16  0
+ 1  0      0 672460   3540 1049428    0    0  1536  5484 1215 2813 19  5
+55 22  0
+ 1  0      0 663820   3540 1056108    0    0  2176  5258 1241 3245 27  5
+49 20  0
+ 1  0      0 660064   3540 1061708    0    0  1664  1688 1222 3100 22  6
+60 11  0
+ 0  0      0 653400   3540 1065924    0    0  1152  5496 1221 2495 17  4
+51 28  0
+ 0  1      0 651468   3540 1069324    0    0  1152  5278 1187 2157 16  3
+67 14  0
+ 2  0      0 645132   3540 1073620    0    0  1152  5466 1221 2714 19  5
+61 17  0
+ 3  0      0 640544   3540 1078720    0    0  1664  5587 1219 2830 21  6
+51 21  0
+ procs -----------memory---------- ---swap-- -----io---- --system--
+-----cpu------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
+id wa st
+ 1  0      0 634040   3540 1083872    0    0  1536  5223 1208 2996 20  3
+64 14  0
+ 0  1      0 629024   3540 1090772    0    0  2048  5342 1199 3141 26  5
+49 20  0
+ 0  0      0 621116   3540 1095840    0    0  1664  4410 1211 2631 22  4
+52 22  0
+ 0  0      0 615760   3540 1100840    0    0  1408  6032 1186 2601 20  6
+61 14  0
+ 0  0      0 608852   3540 1107448    0    0  1920  1192 1215 3228 24  6
+50 21  0
+ 0  1      0 605872   3540 1112248    0    0  1536  5424 1220 2779 22  4
+63 12  0
+ 0  0      0 598016   3540 1117476    0    0  1536  5603 1227 3016 23  4
+53 21  0
+ 2  0      0 592416   3540 1122576    0    0  1536  5407 1217 2671 22  7
+56 16  0
+ 0  0      0 587504   3540 1127404    0    0  1408  4624 1230 2599 19  5
+55 21  0
+ 2  1      0 585800   3540 1130704    0    0  1152  1880 1175 2431 15  2
+53 30  0
+ 0  1      0 582732   3540 1133696    0    0   896  5293 1210 2357 16  4
+74  6  0
+ 2  0      0 575528   3540 1138696    0    0  1536  5424 1214 2585 22  5
+48 26  0
+ 1  0      0 569992   3540 1145872    0    0  2176  1519 1245 3267 27  5
+50 17  0
+ 0  0      0 563568   3540 1149772    0    0  1152  8164 1189 2364 15  4
+74  6  0
+ 0  0      0 559936   3540 1153020    0    0   896  2483 1198 2145 16  6
+64 15  0
+ 1  0      0 556504   3540 1156720    0    0  1408  5248 1206 2152 17  6
+62 14  0
+ 0  1      0 553568   3540 1161280    0    0  1280  5716 1231 2620 19  4
+59 18  0
+ 1  0      0 544820   3540 1167580    0    0  2048  1545 1234 2947 26  5
+51 18  0
+ 1  0      0 541096   3540 1170748    0    0  1024  5272 1205 2107 17  3
+73  8  0
+ 0  1      0 535092   3540 1176848    0    0  1792  6132 1225 2861 25  6
+49 19  0
+ 0  1      0 531696   3540 1181220    0    0  1280   969 1215 2758 18  3
+66 14  0
+ 0  1      0 528920   3540 1184220    0    0   896  5268 1192 2248 16  4
+71 10  0
+ 0  0      0 520532   3540 1189884    0    0  1664  5425 1252 3008 21  4
+64 10  0
+ 0  0      0 514012   3540 1196084    0    0  1920  1920 1214 3110 25  6
+60 10  0
+ 1  0      0 511804   3540 1199608    0    0  1152  5336 1240 2224 20  6
+60 15  0
+ 0  0      0 503212   3540 1206108    0    0  2048  6516 1227 2963 26  4
+58 12  0
+procs -----------memory---------- ---swap-- -----io---- --system--
+-----cpu------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
+id wa st
+ 2  0      0 500968   3540 1208380    0    0   512  4684 1214 2066 13  5
+79  3  0
+ 2  0      0 496216   3540 1212580    0    0  1408  5727 1214 2399 21  7
+65  8  0
+ 4  0      0 491268   3540 1217184    0    0  1408  4304 1243 2593 21  5
+64 11  0
+ 2  0      0 488856   3540 1219784    0    0   896  2058 1189 1849 15  4
+70 11  0
+ 0  1      0 483660   3540 1224340    0    0  1408  5824 1240 2571 23  4
+52 22  0
+ 0  0      0 477704   3540 1229940    0    0  1536  5170 1173 2855 21  6
+52 21  0
+ 0  1      0 474500   3540 1234952    0    0  1536  5163 1212 2629 20  3
+55 23  0
+ 1  0      0 465196   3540 1242552    0    0  2304   940 1204 3265 28  4
+47 22  0
+ 0  0      0 458280   3540 1247892    0    0  1664  9382 1211 2719 19  6
+70  4  0
+ 1  0      0 453276   3540 1252592    0    0  1408  5040 1176 2827 19  5
+58 18  0
+ 0  0      0 446840   3540 1258496    0    0  1792  5676 1221 3025 24  5
+56 14  0
+ 1  0      0 443180   3540 1264096    0    0  1664   932 1193 2680 21  5
+56 19  0
+ 1  0      0 435748   3540 1269060    0    0  1664  5182 1209 2635 21  4
+49 27  0
+ 0  1      0 432060   3540 1274860    0    0  1536  5376 1183 2860 21  7
+51 20  0
+ 0  1      0 426376   3540 1279492    0    0  1408  5177 1214 2480 19  3
+51 27  0
+ 0  1      0 422356   3540 1283992    0    0  1280  5256 1196 2516 18  4
+55 23  0
+ 0  0      0 410112   3540 1292848    0    0  2560  1916 1254 3839 32  5
+49 14  0
+ 1  0      0 407296   3540 1295448    0    0   896  8244 1203 1816 15  6
+74  6  0
+ 1  0      0 405256   3540 1297456    0    0   384  2276 1192 1729 10  5
+78  7  0
+ 1  0      0 401044   3540 1303756    0    0  1920  2004 1260 2779 29  5
+56 11  0
+ 1  0      0 397668   3540 1306976    0    0  1024  5432 1229 2264 18  4
+68  9  0
+ 1  0      0 393720   3540 1310076    0    0  1024  5520 1219 1983 17  6
+66 11  0
+ 1  0      0 384148   3540 1316896    0    0  2048  2224 1279 3279 33  5
+54  9  0
+ 1  0      0 384716   3540 1318996    0    0   336  5291 1194 2084 12  3
+74 13  0
+ 0  0      0 384716   3540 1319252    0    0     0   149 1115 1467  1  1
+98  0  0
+ 0  0      0 384716   3540 1319252    0    0     0    92 1065 1075  2  3
+95  0  0
 
-Which was found again during log recovery.
 
-> The system was running vanilla 2.6.17.9, and md0 was made of 3 striped
-> RAID-5 on 3 3Ware-9550 cards, each hardware RAID-5 made of 8 750 GB
-> drives.
-> 
-> On a similar hardware with 2 3Ware-9550 16x750GB striped together, but
-> running 2.6.17.13, I had a similar fs crash last week. Unfortunately I
-> don't have the logs at hand, but we where able to reproduce several
-> times the crash at home :
 
-Hmm - 750GB drives are brand new. i wouldn't rule out media issues
-at this point...
+> have you also tried setting (increasing) logbsize?  (i think you need
+>   
+> v2 logs to make that work)
+>   
 
-> Filesystem "md0": XFS internal error xfs_btree_check_sblock at line 336
-> of file fs/xfs/xfs_btree.c.  Caller 0xc01fb282 <c0214568>
+I read in the man page for mount that the max logbsize is 32K and the
+default value for machines with more than 32 MB of memory is 32768, so I
+assumed it was already set to maximum.
 
-Memory corruption?
+Best regards,
 
-> line 1151 of file fs/xfs/xfs_trans.c.  Return address = 0xc025f7b9
-> Filesystem "md0": Corruption of in-memory data detected.  Shutting down
-> filesystem: md0 Please umount the filesystem, and rectify the
-> problem(s) xfs_force_shutdown(md0,0x1) called from line 338 of file
-> fs/xfs/xfs_rw.c.  Return address = 0xc025f7b9
-> xfs_force_shutdown(md0,0x1) called from line 338 of file
-> fs/xfs/xfs_rw.c.  Return address = 0xc025f7b9
-> 
-> After xfs_repair, the fs is fine. However, it crashes again when
-> writing again a couple of GBs of data. It crashes again under 2.6.17.13,
-> 2.6.17.13 SMP, 2.6.18.8, 2.6.16.36... 
-> 
-> Out of curiosity, I've tried to use reiserfs (just to see how it
-> compares regarding this). Reiserfs crashed before even writing 100MB!
+Steve.
 
-That indicates there's something wrong other than the filesystem.
-I'd suggest making sure your raid arrays, memory, etc are all
-functioning correctly first.
-
-What platform are you running on? Are you running ia32 with 4k stacks?
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+__________________________________________________
+Dr Stephen So, PhD, MIEEE
+Griffith School of Engineering & 
+  Institute for Integrated and Intelligent Systems
+Griffith University, Gold Coast Campus
+PMB 50 Gold Coast Mail Centre
+Gold Coast, QLD, 9726, Australia.
+
+E-mail: s.so@griffith.edu.au
+Phone: +61 7 5552 8663
+Fax:   +61 7 5552 8065
+__________________________________________________
