@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 05 May 2007 13:57:31 -0700 (PDT)
-Received: from postfix2-g20.free.fr (postfix2-g20.free.fr [212.27.60.43])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l45KvQfB016809
-	for <xfs@oss.sgi.com>; Sat, 5 May 2007 13:57:28 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 05 May 2007 14:00:25 -0700 (PDT)
+Received: from postfix1-g20.free.fr (postfix1-g20.free.fr [212.27.60.42])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l45L0LfB018275
+	for <xfs@oss.sgi.com>; Sat, 5 May 2007 14:00:22 -0700
 Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
-	by postfix2-g20.free.fr (Postfix) with ESMTP id 26B7EFBB29D
-	for <xfs@oss.sgi.com>; Sat,  5 May 2007 21:57:49 +0200 (CEST)
-Date: Sat, 5 May 2007 22:57:23 +0200
+	by postfix1-g20.free.fr (Postfix) with ESMTP id 8F802F10C62
+	for <xfs@oss.sgi.com>; Sat,  5 May 2007 22:58:21 +0200 (CEST)
+Date: Sat, 5 May 2007 22:58:19 +0200
 From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: XFS crash on linux raid
-Message-ID: <20070505225723.012cc38b@galadriel.home>
-In-Reply-To: <463CB5C4.7040803@sandeen.net>
+Message-ID: <20070505225819.0dd3c0fa@galadriel.home>
+In-Reply-To: <20070505203525.GA16477@tuatara.stupidest.org>
 References: <20070503164521.16efe075@harpe.intellique.com>
 	<20070504005922.GC32602149@melbourne.sgi.com>
 	<20070504090613.7c0f97d3@galadriel.home>
@@ -21,23 +21,23 @@ References: <20070503164521.16efe075@harpe.intellique.com>
 	<20070504232028.GA19744@tuatara.stupidest.org>
 	<20070505171931.6fe9b6f5@galadriel.home>
 	<463CB5C4.7040803@sandeen.net>
+	<20070505203525.GA16477@tuatara.stupidest.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Chris Wedgwood <cw@f00f.org>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Le Sat, 05 May 2007 11:50:12 -0500 vous écriviez:
+Le Sat, 5 May 2007 13:35:25 -0700 vous écriviez:
 
-> There are also stack debugging config options; one that will warn if
-> you are about to overflow (CONFIG_DEBUG_STACKOVERFLOW) and one that
-> will print max stack depth in sysrq-t output
-> (CONFIG_DEBUG_STACK_USAGE).
+> Is there some preferred kernel version people would like?
+> 
 
-Fine, I'll try that.
+Well I prefer staying away from the very latest bleeding edge, so I
+stick to 2.6.20.11 for now.
 
 -- 
 --------------------------------------------------
