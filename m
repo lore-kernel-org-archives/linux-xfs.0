@@ -1,26 +1,186 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 05 May 2007 14:23:05 -0700 (PDT)
-Received: from smtp107.sbc.mail.mud.yahoo.com (smtp107.sbc.mail.mud.yahoo.com [68.142.198.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l45LN2fB026375
-	for <linux-xfs@oss.sgi.com>; Sat, 5 May 2007 14:23:03 -0700
-Date: Sat, 5 May 2007 13:56:17 -0700
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: XFS crash on linux raid
-Message-ID: <20070505205617.GB17112@tuatara.stupidest.org>
-References: <20070503164521.16efe075@harpe.intellique.com> <20070504073344.GL32602149@melbourne.sgi.com> <20070504152546.614374ac@harpe.intellique.com> <200705041758.21320.Martin@lichtvoll.de> <20070504234357.24d22883@galadriel.home>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 05 May 2007 14:32:53 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l45LWmfB030926
+	for <xfs@oss.sgi.com>; Sat, 5 May 2007 14:32:49 -0700
+Date: Sat, 5 May 2007 17:32:47 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Linux SW RAID: HW Raid Controller/JBOD vs. Multiple PCI-e Cards?
+In-Reply-To: <20070505231845.7b1cbdc5@galadriel.home>
+Message-ID: <Pine.LNX.4.64.0705051732340.18820@p34.internal.lan>
+References: <Pine.LNX.4.64.0705051228300.12744@p34.internal.lan>
+ <20070505231845.7b1cbdc5@galadriel.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070504234357.24d22883@galadriel.home>
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-1478584756-1178400767=:18820"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Martin Steigerwald <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 04, 2007 at 11:43:57PM +0200, Emmanuel Florac wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> Unfortunately ext3 doesn't support volumes bigger than 8TB, so
-> that's useless to me. I plan to test jfs, however.
+---1463747160-1478584756-1178400767=:18820
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Is jfs supported by anyone right now?
+
+
+On Sat, 5 May 2007, Emmanuel Florac wrote:
+
+> Le Sat, 5 May 2007 12:33:49 -0400 (EDT) vous =E9criviez:
+>
+>> However, if I want to upgrade to more than 12 disks, I am out of
+>> PCI-e slots, so I was wondering, does anyone on this list run a 16
+>> port Areca or 3ware card and use it for JBOD?
+>
+> I don't use this setup in production, but I tried it with 8 ports 3Ware
+> cards.
+> I didn't try the latest 9650 though.
+>
+>>  What kind of
+>> performance do you see when using mdadm with such a card?
+>
+> 3Ghz Supermicro P4D 1 GB RAM, 3Ware 9550SX with 8x250GB 8MB cache 7200
+> RPM Seagate drives, raid 0
+>
+> Tested XFS and reiserfs, with 64 and 256K stripes.
+>
+> tested under Linux 2.6.15.1, with bonnie++ in "fast mode" (-f option).
+> use bon_csv2html to translate, or see bonnie++ documentation, roughly :
+> 2G is the file size tested, then numbers on the first line are : write
+> speed (KB/s), CPU usage (%), rewrite speed (overwrite), cpu usage, read
+> speed, cpu usage. Then follow sequential and random seeks, reads,
+> writes and delete with their cpu usage. "+++++" means "no significant
+> value".
+>
+> # XFS, stripe 256k
+> storiq,2G,,,353088,69,76437,17,,,197376,16,410.8,0,16,11517,57,+++++,+++,=
+10699,51,11502,59,+++++,+++,12158,61
+> storiq,2G,,,349166,71,75397,17,,,196057,16,433.3,0,16,12744,64,+++++,+++,=
+12700,58,13008,67,+++++,+++,9890,51
+> storiq,2G,,,336683,68,72581,16,,,191254,18,419.9,0,16,12377,62,+++++,+++,=
+10991,52,12947,67,+++++,+++,10580,52
+> storiq,2G,,,335646,65,77938,17,,,195350,17,397.4,0,16,14578,74,+++++,+++,=
+11085,53,14377,74,+++++,+++,10852,54
+> storiq,2G,,,330022,67,73004,17,,,197846,18,412.3,0,16,12534,65,+++++,+++,=
+10983,52,12161,63,+++++,+++,11752,61
+> storiq,2G,,,279454,55,75256,17,,,196065,18,412.7,0,16,13022,67,+++++,+++,=
+10802,52,13759,72,+++++,+++,9800,47
+> storiq,2G,,,314606,61,74883,16,,,194131,16,401.2,0,16,11665,58,+++++,+++,=
+10723,52,11880,61,+++++,+++,6659,33
+> storiq,2G,,,264382,53,72011,15,,,196690,18,411.5,0,16,10194,52,+++++,+++,=
+12202,57,10367,52,+++++,+++,9175,45
+> storiq,2G,,,360252,72,75845,17,,,199721,18,432.7,0,16,12067,61,+++++,+++,=
+11047,54,12156,62,+++++,+++,12372,60
+> storiq,2G,,,280746,57,74541,17,,,193562,19,414.0,0,16,12418,61,+++++,+++,=
+11090,52,11135,57,+++++,+++,11309,55
+> storiq,2G,,,309464,61,79153,18,,,191533,17,419.5,0,16,12705,62,+++++,+++,=
+11889,57,12027,61,+++++,+++,10960,54
+> storiq,2G,,,342122,67,68113,15,,,195572,16,413.5,0,16,13667,69,+++++,+++,=
+10596,55,12731,66,+++++,+++,10766,54
+> storiq,2G,,,329945,63,72183,15,,,193082,18,421.8,0,16,12627,62,+++++,+++,=
+9270,43,12455,63,+++++,+++,8878,44
+> storiq,2G,,,309570,63,69628,16,,,192415,19,413.1,0,16,13568,69,+++++,+++,=
+10104,48,13512,70,+++++,+++,9261,45
+> storiq,2G,,,298528,58,70029,15,,,193531,17,399.5,0,16,13028,64,+++++,+++,=
+9990,47,10098,52,+++++,+++,7544,38
+> storiq,2G,,,260341,52,66979,15,,,197199,18,393.1,0,16,10633,53,+++++,+++,=
+9189,43,11159,56,+++++,+++,11696,58
+> # XFS, stripe 64k
+> storiq,2G,,,351241,70,90868,22,,,305222,29,408.7,0,16,8593,43,+++++,+++,6=
+639,31,7555,39,+++++,+++,6639,33
+> storiq,2G,,,340145,67,83790,19,,,297148,28,401.4,0,16,9132,46,+++++,+++,6=
+790,34,8881,45,+++++,+++,6305,31
+> storiq,2G,,,325791,65,81314,19,,,282439,26,395.5,0,16,9095,44,+++++,+++,6=
+255,29,8173,42,+++++,+++,6194,31
+> storiq,2G,,,266009,53,83362,20,,,308438,26,407.7,0,16,8362,43,+++++,+++,6=
+443,30,9264,47,+++++,+++,6339,33
+> storiq,2G,,,322776,65,76466,17,,,288001,26,399.7,0,16,8038,41,+++++,+++,5=
+387,26,6389,34,+++++,+++,6545,31
+> storiq,2G,,,309007,60,77846,18,,,290613,29,392.8,0,16,7183,37,+++++,+++,6=
+492,30,8270,41,+++++,+++,6813,35
+> storiq,2G,,,287662,58,72920,17,,,287911,26,398.4,0,16,8893,44,+++++,+++,7=
+777,36,8150,41,+++++,+++,7717,39
+> storiq,2G,,,288149,56,75743,17,,,300949,29,386.2,0,16,9545,47,+++++,+++,7=
+572,35,9115,46,+++++,+++,7211,36
+> # reiser, stripe 256k
+> storiq,2G,,,289179,98,102775,26,,,188307,22,444.0,0,16,27326,100,+++++,++=
++,21887,99,26726,99,+++++,+++,20633,98
+> storiq,2G,,,275847,93,101970,25,,,190551,21,450.2,0,16,27397,100,+++++,++=
++,21926,100,26609,100,+++++,+++,20895,99
+> storiq,2G,,,289414,99,105080,26,,,189022,22,423.9,0,16,27212,100,+++++,++=
++,21757,100,26651,99,+++++,+++,20863,100
+> storiq,2G,,,292746,99,103681,25,,,186303,21,431.5,0,16,27375,100,+++++,++=
++,21989,99,26251,99,+++++,+++,20924,99
+> storiq,2G,,,290222,99,104135,26,,,189656,22,449.7,0,16,27453,99,+++++,+++=
+,21849,100,26757,99,+++++,+++,20845,99
+> storiq,2G,,,291716,99,103872,26,,,187410,23,437.0,0,16,27419,99,+++++,+++=
+,22119,99,26516,100,+++++,+++,20934,100
+> storiq,2G,,,285545,99,101637,25,,,189788,21,422.1,0,16,27224,99,+++++,+++=
+,21742,99,26500,99,+++++,+++,20922,100
+> storiq,2G,,,293042,98,100272,24,,,185631,22,453.8,0,16,27268,99,+++++,+++=
+,21944,100,26777,100,+++++,+++,21042,99
+> # reiser stripe 64k
+> storiq,2G,,,295569,99,112563,29,,,282178,32,434.5,0,16,27631,99,+++++,+++=
+,22015,99,27021,100,+++++,+++,21028,99
+> storiq,2G,,,287830,98,112449,29,,,271047,33,425.1,0,16,27447,99,+++++,+++=
+,21973,99,26810,99,+++++,+++,21008,100
+> storiq,2G,,,271668,95,114410,30,,,282419,33,438.7,0,16,27495,100,+++++,++=
++,22158,100,26707,100,+++++,+++,21106,100
+> storiq,2G,,,282535,99,118620,30,,,272089,33,425.0,0,16,27569,100,+++++,++=
++,22021,100,26778,100,+++++,+++,20629,98
+> storiq,2G,,,294392,98,119654,32,,,273269,32,429.7,0,16,27591,100,+++++,++=
++,21984,99,26786,100,+++++,+++,20994,99
+> storiq,2G,,,296652,99,118420,31,,,279586,33,425.5,0,16,15007,78,+++++,+++=
+,21889,99,26998,99,+++++,+++,20952,100
+> storiq,2G,,,290551,98,124374,32,,,273852,32,424.0,0,16,27534,99,+++++,+++=
+,21974,99,26746,100,+++++,+++,20786,99
+> storiq,2G,,,287033,99,100559,26,,,204845,24,390.9,0,16,27620,99,+++++,+++=
+,21996,99,26811,100,+++++,+++,21009,100
+>
+> Here are the tests I did with a similar system, but with 500GB drives,
+> XFS only, 64KB stripe (3ware default).I tested RAID 5 software RAID
+> compared to RAID-5 hardware (3Ware 9550).
+>
+> # software raid 5
+> storiq-5U,2G,,,155913,22,23390,4,,,84327,9,531.5,0,16,1323,3,+++++,+++,63=
+4,1,657,2,+++++,+++,903,3
+> storiq-5U,2G,,,168104,24,23964,4,,,81666,8,534.2,0,16,605,2,+++++,+++,608=
+,2,770,2,+++++,+++,706,1
+> storiq-5U,2G,,,149516,21,22612,4,,,82111,9,571.3,0,16,606,2,+++++,+++,590=
+,2,729,2,+++++,+++,450,1
+> storiq-5U,2G,,,141883,20,22966,4,,,78116,8,568.5,0,16,615,2,+++++,+++,553=
+,2,684,2,+++++,+++,508,2
+> # hardware raid 5
+> storiq-1,2G,,,148500,29,43043,9,,,148808,14,442.3,0,16,5953,27,+++++,+++,=
+4408,20,4994,24,+++++,+++,2399,11
+> storiq-1,2G,,,191440,37,38092,8,,,155494,15,420.9,0,16,3074,15,+++++,+++,=
+3356,17,4246,21,+++++,+++,2513,12
+> storiq-1,2G,,,150460,29,40018,9,,,144936,14,386.9,0,16,4206,20,+++++,+++,=
+2497,11,5182,26,+++++,+++,2440,11
+> storiq-1,2G,,,163132,34,34525,8,,,132131,13,369.7,0,16,6796,33,+++++,+++,=
+10002,47,5475,28,+++++,+++,3652,17
+>
+> As you can see, hardware RAID-5 doesn't perform significantly faster
+> at writing, but read thruput and rewrite performance is way better, and
+> seeks are an order of magnitude faster. That's why I use striped 3Ware
+> hardware RAID-5 to build high capacity systems instead of software RAID
+> 5.
+>
+> --=20
+> --------------------------------------------------
+> Emmanuel Florac               www.intellique.com
+> --------------------------------------------------
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+Wow, very impressive benchmarks, thank you very much for this.
+
+Justin.=
+
+---1463747160-1478584756-1178400767=:18820--
