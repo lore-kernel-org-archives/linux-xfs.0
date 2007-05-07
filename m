@@ -1,181 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 May 2007 18:38:15 -0700 (PDT)
-Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l471c5fB018505
-	for <xfs@oss.sgi.com>; Sun, 6 May 2007 18:38:08 -0700
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.197])
-	by tyo201.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l471c2sH008659
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 10:38:02 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l471c2s11594 for xfs@oss.sgi.com; Mon, 7 May 2007 10:38:02 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv.nec.co.jp (8.11.7/3.7W-MAILSV-NEC) with ESMTP
-	id l471c2O04063 for <xfs@oss.sgi.com>; Mon, 7 May 2007 10:38:02 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070507.092351.98402312 for <xfs@oss.sgi.com>
-	; Mon, 7 May 2007 09:23:52 +0900
-Message-Id: <200705070137.AA05294@TNESG9305.tnes.nec.co.jp>
-Date: Mon, 07 May 2007 10:37:56 +0900
-Subject: [PATCH] Fix disable, enable, off and remove commands in xfs_quota.
-From: Utako Kusaka <utako@tnes.nec.co.jp>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="--------------------0751065352324900"
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 May 2007 19:11:38 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l472BXfB024497
+	for <xfs@oss.sgi.com>; Sun, 6 May 2007 19:11:34 -0700
+Date: Mon, 7 May 2007 12:11:22 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS crash on linux raid
+Message-ID: <20070507021122.GQ32602149@melbourne.sgi.com>
+References: <20070503164521.16efe075@harpe.intellique.com> <20070504005922.GC32602149@melbourne.sgi.com> <20070504090613.7c0f97d3@galadriel.home> <20070504073344.GL32602149@melbourne.sgi.com> <20070504152546.614374ac@harpe.intellique.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20070504152546.614374ac@harpe.intellique.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: tes@sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-This is multipart message.
+On Fri, May 04, 2007 at 03:25:46PM +0200, Emmanuel Florac wrote:
+> Le Fri, 4 May 2007 17:33:44 +1000
+> David Chinner <dgc@sgi.com> écrivait:
+> 
+> > Well, there's your problem. Stack overflows.  IMO, if you use a
+> > filesystem, you shouldn't use 4k stacks. ;)
+> > 
+> > If you remake you kernel with 8k stacks then your problems will
+> > most likely go away.
+> 
+> Well, I've double-checked the asm-i386/module.h, and it actually looks
+> like 4K stacks is NOT the default, so I must be using 8K, isn't it?
 
-----------------------0751065352324900
-Content-Type: text/plain; charset=iso-2022-jp
+Yes.
 
-Hi,
+> I've ran the same test on the same machine but WITHOUT software raid-0
+> (so write barriers are in use), and all went well, more than 3TB
+> written without a glitch. I still think there's something related to
+> the write barriers here. I'll try with another RAID controller, Adaptec
+> for instance, to get sure the 3ware driver isn't involved. I'll also try
+> again with an amd64 kernel.
 
-I send this mail 10 days ago but it got lost...$B!!(B
+So you use software raid and you get corruptions, right? I doubt this has
+anything to do with write barriers - if it does thats an indication
+of broken drivers or hardware.....
 
-disable, enable, off and remove commands in xfs_quota don't work.
-Because:
-1) The argument type to quotactl() is wrong.
-   "addr" is fs_quota_stat_t structure in the original code but
-   it should be an unsigned int as shown in man page.
-   (disable, enable, off and remove)
-2) The wrong flag is used for -ugp option check.
-   (disable, enable, off and remove)
-3) The accounting flag (XFS_QUOTA_*DQ_ACCT) is used for disabling quota
-   enforcement incorrectly. 
-   (disable)
-4) The accounting and enforcement flag is used for removing space incorrectly.
-   (remove)
-5) The quota types must be specified to quotactl() one by one.
-   But multiple quota types are passed to quotactl() when specifying -ug|-up option.
-   (remove)
+Can you run with "-o nobarrier" and no software raid and see if you
+still have a problem?
 
-Attached patch fixes these problems.
+Cheers,
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
-
-----------------------0751065352324900
-Content-Type: application/octet-stream;
-	name="state.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="state.diff"
-
-LS0tIHhmc3Byb2dzLTIuOC4yMC9xdW90YS9zdGF0ZS5vcmlnCTIwMDctMDQt
-MTkgMTM6MDc6MzguMDAwMDAwMDAwICswOTAwCisrKyB4ZnNwcm9ncy0yLjgu
-MjAvcXVvdGEvc3RhdGUuYwkyMDA3LTA0LTI2IDExOjQ2OjQ2LjAwMDAwMDAw
-MCArMDkwMApAQCAtMjUwLDEwICsyNTAsNiBAQCBlbmFibGVfZW5mb3JjZW1l
-bnQoCiAJdWludAkJZmxhZ3MpCiB7CiAJZnNfcGF0aF90CSptb3VudDsKLQlm
-c19xdW90YV9zdGF0X3QJcXN0YXQgPSB7IDAgfTsKLQotCXFzdGF0LnFzX3Zl
-cnNpb24gPSBGU19RU1RBVF9WRVJTSU9OOwotCXFzdGF0LnFzX2ZsYWdzID0g
-cWZsYWdzOwogCiAJbW91bnQgPSBmc190YWJsZV9sb29rdXAoZGlyLCBGU19N
-T1VOVF9QT0lOVCk7CiAJaWYgKCFtb3VudCkgewpAQCAtMjYxLDcgKzI1Nyw3
-IEBAIGVuYWJsZV9lbmZvcmNlbWVudCgKIAkJcmV0dXJuOwogCX0KIAlkaXIg
-PSBtb3VudC0+ZnNfbmFtZTsKLQlpZiAoeGZzcXVvdGFjdGwoWEZTX1FVT1RB
-T04sIGRpciwgdHlwZSwgMCwgKHZvaWQgKikmcXN0YXQpIDwgMCkKKwlpZiAo
-eGZzcXVvdGFjdGwoWEZTX1FVT1RBT04sIGRpciwgdHlwZSwgMCwgKHZvaWQg
-KikmcWZsYWdzKSA8IDApCiAJCXBlcnJvcigiWEZTX1FVT1RBT04iKTsKIAll
-bHNlIGlmIChmbGFncyAmIFZFUkJPU0VfRkxBRykKIAkJc3RhdGVfcXVvdGFm
-aWxlX21vdW50KHN0ZG91dCwgdHlwZSwgbW91bnQsIGZsYWdzKTsKQEAgLTI3
-NSwxMCArMjcxLDYgQEAgZGlzYWJsZV9lbmZvcmNlbWVudCgKIAl1aW50CQlm
-bGFncykKIHsKIAlmc19wYXRoX3QJKm1vdW50OwotCWZzX3F1b3RhX3N0YXRf
-dAlxc3RhdCA9IHsgMCB9OwotCi0JcXN0YXQucXNfdmVyc2lvbiA9IEZTX1FT
-VEFUX1ZFUlNJT047Ci0JcXN0YXQucXNfZmxhZ3MgPSBxZmxhZ3M7CiAKIAlt
-b3VudCA9IGZzX3RhYmxlX2xvb2t1cChkaXIsIEZTX01PVU5UX1BPSU5UKTsK
-IAlpZiAoIW1vdW50KSB7CkBAIC0yODYsNyArMjc4LDcgQEAgZGlzYWJsZV9l
-bmZvcmNlbWVudCgKIAkJcmV0dXJuOwogCX0KIAlkaXIgPSBtb3VudC0+ZnNf
-bmFtZTsKLQlpZiAoeGZzcXVvdGFjdGwoWEZTX1FVT1RBT0ZGLCBkaXIsIHR5
-cGUsIDAsICh2b2lkICopJnFzdGF0KSA8IDApCisJaWYgKHhmc3F1b3RhY3Rs
-KFhGU19RVU9UQU9GRiwgZGlyLCB0eXBlLCAwLCAodm9pZCAqKSZxZmxhZ3Mp
-IDwgMCkKIAkJcGVycm9yKCJYRlNfUVVPVEFPRkYiKTsKIAllbHNlIGlmIChm
-bGFncyAmIFZFUkJPU0VfRkxBRykKIAkJc3RhdGVfcXVvdGFmaWxlX21vdW50
-KHN0ZG91dCwgdHlwZSwgbW91bnQsIGZsYWdzKTsKQEAgLTMwMCwxMCArMjky
-LDYgQEAgcXVvdGFvZmYoCiAJdWludAkJZmxhZ3MpCiB7CiAJZnNfcGF0aF90
-CSptb3VudDsKLQlmc19xdW90YV9zdGF0X3QJcXN0YXQgPSB7IDAgfTsKLQot
-CXFzdGF0LnFzX3ZlcnNpb24gPSBGU19RU1RBVF9WRVJTSU9OOwotCXFzdGF0
-LnFzX2ZsYWdzID0gcWZsYWdzOwogCiAJbW91bnQgPSBmc190YWJsZV9sb29r
-dXAoZGlyLCBGU19NT1VOVF9QT0lOVCk7CiAJaWYgKCFtb3VudCkgewpAQCAt
-MzExLDI0ICsyOTksMzEgQEAgcXVvdGFvZmYoCiAJCXJldHVybjsKIAl9CiAJ
-ZGlyID0gbW91bnQtPmZzX25hbWU7Ci0JaWYgKHhmc3F1b3RhY3RsKFhGU19R
-VU9UQU9GRiwgZGlyLCB0eXBlLCAwLCAodm9pZCAqKSZxc3RhdCkgPCAwKQor
-CWlmICh4ZnNxdW90YWN0bChYRlNfUVVPVEFPRkYsIGRpciwgdHlwZSwgMCwg
-KHZvaWQgKikmcWZsYWdzKSA8IDApCiAJCXBlcnJvcigiWEZTX1FVT1RBT0ZG
-Iik7CiAJZWxzZSBpZiAoZmxhZ3MgJiBWRVJCT1NFX0ZMQUcpCiAJCXN0YXRl
-X3F1b3RhZmlsZV9tb3VudChzdGRvdXQsIHR5cGUsIG1vdW50LCBmbGFncyk7
-CiB9CiAKK3N0YXRpYyBpbnQKK3JlbW92ZV9xdHlwZV9leHRlbnRzKAorCWNo
-YXIJCSpkaXIsCisJdWludAkJdHlwZSkKK3sKKwlpbnQJZXJyb3IgPSAwOwor
-CisJaWYgKChlcnJvciA9IHhmc3F1b3RhY3RsKFhGU19RVU9UQVJNLCBkaXIs
-IHR5cGUsIDAsICh2b2lkICopJnR5cGUpKSA8IDApCisJCXBlcnJvcigiWEZT
-X1FVT1RBUk0iKTsKKwlyZXR1cm4gZXJyb3I7Cit9CisKIHN0YXRpYyB2b2lk
-CiByZW1vdmVfZXh0ZW50cygKIAljaGFyCQkqZGlyLAogCXVpbnQJCXR5cGUs
-Ci0JdWludAkJcWZsYWdzLAogCXVpbnQJCWZsYWdzKQogewogCWZzX3BhdGhf
-dAkqbW91bnQ7Ci0JZnNfcXVvdGFfc3RhdF90CXFzdGF0ID0geyAwIH07Ci0K
-LQlxc3RhdC5xc192ZXJzaW9uID0gRlNfUVNUQVRfVkVSU0lPTjsKLQlxc3Rh
-dC5xc19mbGFncyA9IHFmbGFnczsKIAogCW1vdW50ID0gZnNfdGFibGVfbG9v
-a3VwKGRpciwgRlNfTU9VTlRfUE9JTlQpOwogCWlmICghbW91bnQpIHsKQEAg
-LTMzNiw5ICszMzEsMTggQEAgcmVtb3ZlX2V4dGVudHMoCiAJCXJldHVybjsK
-IAl9CiAJZGlyID0gbW91bnQtPmZzX25hbWU7Ci0JaWYgKHhmc3F1b3RhY3Rs
-KFhGU19RVU9UQVJNLCBkaXIsIHR5cGUsIDAsICh2b2lkICopJnFzdGF0KSA8
-IDApCi0JCXBlcnJvcigiWEZTX1FVT1RBUk0iKTsKLQllbHNlIGlmIChmbGFn
-cyAmIFZFUkJPU0VfRkxBRykKKwlpZiAodHlwZSAmIFhGU19VU0VSX1FVT1RB
-KSB7CisJCWlmIChyZW1vdmVfcXR5cGVfZXh0ZW50cyhkaXIsIFhGU19VU0VS
-X1FVT1RBKSA8IDApIAorCQkJcmV0dXJuOworCX0KKwlpZiAodHlwZSAmIFhG
-U19HUk9VUF9RVU9UQSkgeworCQlpZiAocmVtb3ZlX3F0eXBlX2V4dGVudHMo
-ZGlyLCBYRlNfR1JPVVBfUVVPVEEpIDwgMCkgCisJCQlyZXR1cm47CisJfSBl
-bHNlIGlmICh0eXBlICYgWEZTX1BST0pfUVVPVEEpIHsKKwkJaWYgKHJlbW92
-ZV9xdHlwZV9leHRlbnRzKGRpciwgWEZTX1BST0pfUVVPVEEpIDwgMCkgCisJ
-CQlyZXR1cm47CisJfQorCWlmIChmbGFncyAmIFZFUkJPU0VfRkxBRykKIAkJ
-c3RhdGVfcXVvdGFmaWxlX21vdW50KHN0ZG91dCwgdHlwZSwgbW91bnQsIGZs
-YWdzKTsKIH0KIApAQCAtMzc0LDcgKzM3OCw3IEBAIGVuYWJsZV9mKAogCWlm
-IChhcmdjICE9IG9wdGluZCkKIAkJcmV0dXJuIGNvbW1hbmRfdXNhZ2UoJmVu
-YWJsZV9jbWQpOwogCi0JaWYgKCFmbGFncykgeworCWlmICghdHlwZSkgewog
-CQl0eXBlIHw9IFhGU19VU0VSX1FVT1RBOwogCQlxZmxhZ3MgfD0gWEZTX1FV
-T1RBX1VEUV9BQ0NUIHwgWEZTX1FVT1RBX1VEUV9FTkZEOwogCX0KQEAgLTM5
-NSwxNSArMzk5LDE1IEBAIGRpc2FibGVfZigKIAkJc3dpdGNoIChjKSB7CiAJ
-CWNhc2UgJ2cnOgogCQkJdHlwZSB8PSBYRlNfR1JPVVBfUVVPVEE7Ci0JCQlx
-ZmxhZ3MgfD0gWEZTX1FVT1RBX0dEUV9BQ0NUOworCQkJcWZsYWdzIHw9IFhG
-U19RVU9UQV9HRFFfRU5GRDsKIAkJCWJyZWFrOwogCQljYXNlICdwJzoKIAkJ
-CXR5cGUgfD0gWEZTX1BST0pfUVVPVEE7Ci0JCQlxZmxhZ3MgfD0gWEZTX1FV
-T1RBX1BEUV9BQ0NUOworCQkJcWZsYWdzIHw9IFhGU19RVU9UQV9QRFFfRU5G
-RDsKIAkJCWJyZWFrOwogCQljYXNlICd1JzoKIAkJCXR5cGUgfD0gWEZTX1VT
-RVJfUVVPVEE7Ci0JCQlxZmxhZ3MgfD0gWEZTX1FVT1RBX1VEUV9BQ0NUOwor
-CQkJcWZsYWdzIHw9IFhGU19RVU9UQV9VRFFfRU5GRDsKIAkJCWJyZWFrOwog
-CQljYXNlICd2JzoKIAkJCWZsYWdzIHw9IFZFUkJPU0VfRkxBRzsKQEAgLTQx
-Niw5ICs0MjAsOSBAQCBkaXNhYmxlX2YoCiAJaWYgKGFyZ2MgIT0gb3B0aW5k
-KQogCQlyZXR1cm4gY29tbWFuZF91c2FnZSgmZGlzYWJsZV9jbWQpOwogCi0J
-aWYgKCFmbGFncykgeworCWlmICghdHlwZSkgewogCQl0eXBlIHw9IFhGU19V
-U0VSX1FVT1RBOwotCQlxZmxhZ3MgfD0gWEZTX1FVT1RBX1VEUV9BQ0NUOwor
-CQlxZmxhZ3MgfD0gWEZTX1FVT1RBX1VEUV9FTkZEOwogCX0KIAogCWlmIChm
-c19wYXRoLT5mc19mbGFncyAmIEZTX01PVU5UX1BPSU5UKQpAQCAtNDU4LDcg
-KzQ2Miw3IEBAIG9mZl9mKAogCWlmIChhcmdjICE9IG9wdGluZCkKIAkJcmV0
-dXJuIGNvbW1hbmRfdXNhZ2UoJm9mZl9jbWQpOwogCi0JaWYgKCFmbGFncykg
-eworCWlmICghdHlwZSkgewogCQl0eXBlIHw9IFhGU19VU0VSX1FVT1RBOwog
-CQlxZmxhZ3MgfD0gWEZTX1FVT1RBX1VEUV9BQ0NUIHwgWEZTX1FVT1RBX1VE
-UV9FTkZEOwogCX0KQEAgLTQ3MywyMSArNDc3LDE4IEBAIHJlbW92ZV9mKAog
-CWludAkJYXJnYywKIAljaGFyCQkqKmFyZ3YpCiB7Ci0JaW50CQljLCBmbGFn
-cyA9IDAsIHFmbGFncyA9IDAsIHR5cGUgPSAwOworCWludAkJYywgZmxhZ3Mg
-PSAwLCB0eXBlID0gMDsKIAogCXdoaWxlICgoYyA9IGdldG9wdChhcmdjLCBh
-cmd2LCAiZ3B1diIpKSAhPSBFT0YpIHsKIAkJc3dpdGNoIChjKSB7CiAJCWNh
-c2UgJ2cnOgogCQkJdHlwZSB8PSBYRlNfR1JPVVBfUVVPVEE7Ci0JCQlxZmxh
-Z3MgfD0gWEZTX1FVT1RBX0dEUV9BQ0NUIHwgWEZTX1FVT1RBX0dEUV9FTkZE
-OwogCQkJYnJlYWs7CiAJCWNhc2UgJ3AnOgogCQkJdHlwZSB8PSBYRlNfUFJP
-Sl9RVU9UQTsKLQkJCXFmbGFncyB8PSBYRlNfUVVPVEFfUERRX0FDQ1QgfCBY
-RlNfUVVPVEFfUERRX0VORkQ7CiAJCQlicmVhazsKIAkJY2FzZSAndSc6CiAJ
-CQl0eXBlIHw9IFhGU19VU0VSX1FVT1RBOwotCQkJcWZsYWdzIHw9IFhGU19R
-VU9UQV9VRFFfQUNDVCB8IFhGU19RVU9UQV9VRFFfRU5GRDsKIAkJCWJyZWFr
-OwogCQljYXNlICd2JzoKIAkJCWZsYWdzIHw9IFZFUkJPU0VfRkxBRzsKQEAg
-LTUwMCwxMyArNTAxLDEyIEBAIHJlbW92ZV9mKAogCWlmIChhcmdjICE9IG9w
-dGluZCkKIAkJcmV0dXJuIGNvbW1hbmRfdXNhZ2UoJnJlbW92ZV9jbWQpOwog
-Ci0JaWYgKCFmbGFncykgeworCWlmICghdHlwZSkgewogCQl0eXBlIHw9IFhG
-U19VU0VSX1FVT1RBOwotCQlxZmxhZ3MgfD0gWEZTX1FVT1RBX1VEUV9BQ0NU
-IHwgWEZTX1FVT1RBX1VEUV9FTkZEOwogCX0KIAogCWlmIChmc19wYXRoLT5m
-c19mbGFncyAmIEZTX01PVU5UX1BPSU5UKQotCQlyZW1vdmVfZXh0ZW50cyhm
-c19wYXRoLT5mc19kaXIsIHR5cGUsIHFmbGFncywgZmxhZ3MpOworCQlyZW1v
-dmVfZXh0ZW50cyhmc19wYXRoLT5mc19kaXIsIHR5cGUsIGZsYWdzKTsKIAly
-ZXR1cm4gMDsKIH0KIAo=
-
-----------------------0751065352324900--
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
