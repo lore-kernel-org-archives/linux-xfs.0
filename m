@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 17:20:05 -0700 (PDT)
-Received: from over.ny.us.ibm.com (over.ny.us.ibm.com [32.97.182.150])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l480K1fB022916
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 17:20:02 -0700
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-	by pokfb.esmtp.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id l4800TK3031704
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 20:00:30 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4800Rgk009304
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 20:00:27 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 17:30:43 -0700 (PDT)
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l480UbfB024196
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 17:30:38 -0700
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l480UWm5018735
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 20:30:32 -0400
 Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4800RNf186946
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:00:27 -0600
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l480UWTX162186
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:30:32 -0600
 Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4800QhU006734
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:00:27 -0600
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l480UVng005071
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:30:32 -0600
 Subject: Re: [PATCH 4/5] ext4: fallocate support in ext4
 From: Mingming Cao <cmm@us.ibm.com>
 Reply-To: cmm@us.ibm.com
-In-Reply-To: <20070507135825.f8545a65.akpm@linux-foundation.org>
-References: <20070329101010.7a2b8783.akpm@linux-foundation.org>
-	 <20070330071417.GI355@devserv.devel.redhat.com>
-	 <20070417125514.GA7574@amitarora.in.ibm.com>
-	 <20070418130600.GW5967@schatzie.adilger.int>
-	 <20070420135146.GA21352@amitarora.in.ibm.com>
+In-Reply-To: <20070507163135.cf455103.akpm@linux-foundation.org>
+References: <20070420135146.GA21352@amitarora.in.ibm.com>
 	 <20070420145918.GY355@devserv.devel.redhat.com>
 	 <20070424121632.GA10136@amitarora.in.ibm.com>
 	 <20070426175056.GA25321@amitarora.in.ibm.com>
@@ -32,139 +24,88 @@ References: <20070329101010.7a2b8783.akpm@linux-foundation.org>
 	 <20070503213133.d1559f52.akpm@linux-foundation.org>
 	 <20070507113753.GA5439@schatzie.adilger.int>
 	 <20070507135825.f8545a65.akpm@linux-foundation.org>
+	 <20070507222103.GJ8181@schatzie.adilger.int>
+	 <20070507153856.d56a5133.akpm@linux-foundation.org>
+	 <20070507231442.GA29907@thunk.org>
+	 <20070507163135.cf455103.akpm@linux-foundation.org>
 Content-Type: text/plain
-Date: Mon, 07 May 2007 17:00:24 -0700
-Message-Id: <1178582424.3933.39.camel@dyn9047017103.beaverton.ibm.com>
+Date: Mon, 07 May 2007 17:30:29 -0700
+Message-Id: <1178584229.3933.60.camel@dyn9047017103.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andreas Dilger <adilger@clusterfs.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
+Cc: Theodore Tso <tytso@mit.edu>, Andreas Dilger <adilger@clusterfs.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
 
-On Mon, 2007-05-07 at 13:58 -0700, Andrew Morton wrote:
-> On Mon, 7 May 2007 05:37:54 -0600
-> Andreas Dilger <adilger@clusterfs.com> wrote:
+On Mon, 2007-05-07 at 16:31 -0700, Andrew Morton wrote:
+> On Mon, 7 May 2007 19:14:42 -0400
+> Theodore Tso <tytso@mit.edu> wrote:
 > 
-> > > > +	block = offset >> blkbits;
-> > > > +	max_blocks = (EXT4_BLOCK_ALIGN(len + offset, blkbits) >> blkbits)
-> > > > +			 - block;
-> > > > +	mutex_lock(&EXT4_I(inode)->truncate_mutex);
-> > > > +	credits = ext4_ext_calc_credits_for_insert(inode, NULL);
-> > > > +	mutex_unlock(&EXT4_I(inode)->truncate_mutex);
+> > On Mon, May 07, 2007 at 03:38:56PM -0700, Andrew Morton wrote:
+> > > > Actually, this is a non-issue.  The reason that it is handled for extent-only
+> > > > is that this is the only way to allocate space in the filesystem without
+> > > > doing the explicit zeroing.  For other filesystems (including ext3 and
+> > > > ext4 with block-mapped files) the filesystem should return an error (e.g.
+> > > > -EOPNOTSUPP) and glibc will do manual zero-filling of the file in userspace.
 > > > 
-> > > Now I'm mystified.  Given that we're allocating an arbitrary amount of disk
-> > > space, and that this disk space will require an arbitrary amount of
-> > > metadata, how can we work out how much journal space we'll be needing
-> > > without at least looking at `len'?
+> > > It can be a bit suboptimal from the layout POV.  The reservations code will
+> > > largely save us here, but kernel support might make it a bit better.
 > > 
-> > Good question.
+> > Actually, the reservations code won't matter, since glibc will fall
+> > back to its current behavior, which is it will do the preallocation by
+> > explicitly writing zeros to the file.
+> 
+> No!  Reservations code is *critical* here.  Without reservations, we get
+> disastrously-bad layout if two processes were running a large fallocate()
+> at the same time.  (This is an SMP-only problem, btw: on UP the timeslice
+> lengths save us).
+> 
+> My point is that even though reservations save us, we could do even-better
+> in-kernel.
+> 
+
+In this case, since the number of blocks to preallocate (eg. N=10GB) is
+clear, we could improve the current reservation code, to allow callers
+explicitly ask for a new window that have the minimum N free blocks for
+the blocks-to-preallocated(rather than just have at least 1 free
+blocks).
+
+Before the ext4_fallocate() is called, the right reservation window size
+is set with the flag to indicating "please spend time if needed to find
+a window covers at least N free blocks".
+
+So for ex4 block mapped files, later when glibc is doing allocation and
+zeroing, the ext4 block-mapped allocator will knows to reserve the right
+amount of free blocks before allocating and zeroing 10GB space.
+
+I am not sure whether this worth the effort though.
+
+> But then, a smart application would bypass the glibc() fallocate()
+> implementation and would tune the reservation window size and would use
+> direct-IO or sync_file_range()+fadvise(FADV_DONTNEED).
+> 
+> > This wlil result in the same
+> > layout as if we had done the persistent preallocation, but of course
+> > it will mean the posix_fallocate() could potentially take a long time
+> > if you're a PVR and you're reserving a gig or two for a two hour movie
+> > at high quality.  That seems suboptimal, granted, and ideally the
+> > application should be warned about this before it calls
+> > posix_fallocate().  On the other hand, it's what happens today, all
+> > the time, so applications won't be too badly surprised.
+> 
+> A PVR implementor would take all this over and would do it themselves, for
+> sure.
+> 
+> > If we think applications programmers badly need to know in advance if
+> > posix_fallocate() will be fast or slow, probably the right thing is to
+> > define a new fpathconf() configuration option so they can query to see
+> > whether a particular file will support a fast posix_fallocate().  I'm
+> > not 100% convinced such complexity is really needed, but I'm willing
+> > to be convinced....  what do folks think?
 > > 
-> > The uninitialized extent can cover up to 128MB with a single entry.
-> > If @path isn't specified, then ext4_ext_calc_credits_for_insert()
-> > function returns the maximum number of extents needed to insert a leaf,
-> > including splitting all of the index blocks.  That would allow up to 43GB
-> > (340 extents/block * 128MB) to be preallocated, but it still needs to take
-> > the size of the preallocation into account (adding 3 blocks per 43GB - a
-> > leaf block, a bitmap block and a group descriptor).
 > 
-> I think the use of ext4_journal_extend() (as Amit has proposed) will help
-> here, but it is not sufficient.
+> An application could do sys_fallocate(one-byte) to work out whether it's
+> supported in-kernel, I guess.
 > 
-> Because under some circumstances, a journal_extend() failure could mean
-> that we fail to allocate all the required disk space.  If it is infrequent
-> enough, that is acceptable when the caller is using fallocate() for
-> performance reasons.
-> 
-> But it is very much not acceptable if the caller is using fallocate() for
-> space-reservation reasons.  If you used fallocate to reserve 1GB of disk
-> and fallocate() "succeeded" and you later get ENOSPC then you'd have a
-> right to get a bit upset.
-> 
-> So I think the ext3/4 fallocate() implementation will need to be
-> implemented as a loop: 
-> 
-> 	while (len) {
-> 		journal_start();
-> 		len -= do_fallocate(len, ...);
-> 		journal_stop();
-> 	}
-> 
-> 
-
-I agree.  There is already a loop in Amit's current's patch to call
-ext4_ext_get_blocks() thoug. Question is how much credit should ext4 to
-ask for in each journal_start()?
-> +/*
-> + * ext4_fallocate:
-> + * preallocate space for a file
-> + * mode is for future use, e.g. for unallocating preallocated blocks etc.
-> + */
-> +int ext4_fallocate(struct inode *inode, int mode, loff_t offset, loff_t len)
-> +{
-....
-
-> +       mutex_lock(&EXT4_I(inode)->truncate_mutex);
-> +       credits = ext4_ext_calc_credits_for_insert(inode, NULL);
-> +       mutex_unlock(&EXT4_I(inode)->truncate_mutex);
-
-I think the calculation is based on the assumption that there is only a
-single extent to be inserted, which is the ideal case. But in some cases
-we may end up allocating several chunk of blocks(extents) for this
-single preallocation request when fs is fragmented (or part of
-preallocation request is already fulfilled)
-
-I think we should move this calculation inside the loop as well,and we
-really do not need to grab the lock to calculate the credit if the @path
-is always NULL, all the function does is mathmatics.
-
-I can't think of any good way to estimate the total credits needed for
-this whole preallocation request. Looked at ext4_get_block(), which is
-used for DIO code to deal with large amount of block allocation. The
-credit reservation is quite weak there too. The DIO_CREDIT is only
-(EXT4_RESERVE_TRANS_BLOCKS + 32)
-
-> +       handle=ext4_journal_start(inode, credits +
-> +                                       EXT4_DATA_TRANS_BLOCKS(inode->i_sb)+1);
-> +       if (IS_ERR(handle))
-> +               return PTR_ERR(handle);
-> +retry:
-> +       ret = 0;
-> +       while (ret >= 0 && ret < max_blocks) {
-> +               block = block + ret;
-> +               max_blocks = max_blocks - ret;
-> +               ret = ext4_ext_get_blocks(handle, inode, block,
-> +                                         max_blocks, &map_bh,
-> +                                         EXT4_CREATE_UNINITIALIZED_EXT, 0);
-> +               BUG_ON(!ret);
-> +               if (ret > 0 && test_bit(BH_New, &map_bh.b_state)
-> +                       && ((block + ret) > (i_size_read(inode) << blkbits)))
-> +                       nblocks = nblocks + ret;
-> +       }
-> +
-> +       if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
-> +               goto retry;
-> +
-> Now the interesting question is: what do we do if we get halfway through
-> this loop and then run out of space?  We could leave the disk all filled up
-> and then return failure to the caller, but that's pretty poor behaviour,
-> IMO.
-> 
-The current code handles earlier ENOSPC by three times retries. After
-that if we still run out of space, then it's propably right to notify
-the caller there isn't much space left.
-
-We could extend the block reservation window size before the while loop
-so we could get a lower chance to get more fragmented.
-
-> 
-> Does the proposed implementation handle quotas correctly, btw?  Has that
-> been tested?
-> 
-I think so. The ext4_ext_get_blocks() will end up calling
-ext4_new_blocks() to do the real block allocation, quota is being
-handled there, therefor is tested already.
-
-
-Mingming
