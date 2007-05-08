@@ -1,108 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 17:42:01 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l480ftfB025394
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 17:41:56 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l480cMBk002369
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 20:38:22 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l480fgcB102890
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:41:42 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l480ffZE025439
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:41:42 -0600
-Subject: Re: [PATCH 4/5] ext4: fallocate support in ext4
-From: Mingming Cao <cmm@us.ibm.com>
-Reply-To: cmm@us.ibm.com
-In-Reply-To: <20070507171541.5370a36a.akpm@linux-foundation.org>
-References: <20070329101010.7a2b8783.akpm@linux-foundation.org>
-	 <20070330071417.GI355@devserv.devel.redhat.com>
-	 <20070417125514.GA7574@amitarora.in.ibm.com>
-	 <20070507171541.5370a36a.akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Mon, 07 May 2007 17:41:39 -0700
-Message-Id: <1178584899.3933.73.camel@dyn9047017103.beaverton.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 17:59:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l480xYfB027310
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 17:59:36 -0700
+Date: Tue, 8 May 2007 10:59:23 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: RESVSP problems
+Message-ID: <20070508005923.GS77450368@melbourne.sgi.com>
+References: <200705072004.22848.lucke@o2.pl> <463F7368.8090101@sandeen.net> <200705072058.32679.lucke@o2.pl>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <200705072058.32679.lucke@o2.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andreas Dilger <adilger@clusterfs.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
+To: =?iso-8859-1?Q?=C5=81ukasz?= Fibinger <lucke@o2.pl>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Mon, 2007-05-07 at 17:15 -0700, Andrew Morton wrote:
-> On Mon, 07 May 2007 17:00:24 -0700
-> Mingming Cao <cmm@us.ibm.com> wrote:
+On Mon, May 07, 2007 at 08:58:32PM +0200, Å?ukasz Fibinger wrote:
+> On Monday 07 of May 2007, you wrote:
+> > You've probably hit:
+> > http://oss.sgi.com/bugzilla/show_bug.cgi?id=418
+> > unwritten extents remain unwritten after mmap() modifies them
+> >
+> > Bug dchinner about it... ;-)
 > 
-> > > +       while (ret >= 0 && ret < max_blocks) {
-> > > +               block = block + ret;
-> > > +               max_blocks = max_blocks - ret;
-> > > +               ret = ext4_ext_get_blocks(handle, inode, block,
-> > > +                                         max_blocks, &map_bh,
-> > > +                                         EXT4_CREATE_UNINITIALIZED_EXT, 0);
-> > > +               BUG_ON(!ret);
-> > > +               if (ret > 0 && test_bit(BH_New, &map_bh.b_state)
-> > > +                       && ((block + ret) > (i_size_read(inode) << blkbits)))
-> > > +                       nblocks = nblocks + ret;
-> > > +       }
-> > > +
-> > > +       if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
-> > > +               goto retry;
-> > > +
-> > > Now the interesting question is: what do we do if we get halfway through
-> > > this loop and then run out of space?  We could leave the disk all filled up
-> > > and then return failure to the caller, but that's pretty poor behaviour,
-> > > IMO.
-> > > 
-> > The current code handles earlier ENOSPC by three times retries. After
-> > that if we still run out of space, then it's propably right to notify
-> > the caller there isn't much space left.
-> > 
-> > We could extend the block reservation window size before the while loop
-> > so we could get a lower chance to get more fragmented.
+> Dave, consider it a bugging from my humble self :-)
+
+Yeah, yeah ;)
+
+I'm waiting to see what happens with Nick's patches in .22 before
+going any further. If they are not merged into .22, then I think we
+should push the XFS specific fix in....
+
+> > yeah... ISTR that the arguments are funky.  I can't remember if it's a
+> > bug or not.  :)  FWIW, allocsp just writes zeros to the file, so you
+> > could do it just as well from userspace w/ no fancy ioctls...  ALLOCSP
+> > is a bit pointless if you ask me... though maybe someone knows why it's
+> > there :)
 > 
-> yes, but my point is that the proposed behaviour is really quite bad.
-> 
-I agree your point, that's why I mention it only helped the
-fragmentation issue but not the ENOSPC case.
+> Let me say that I have noticed that using ALLOCSP seems to create less extents 
+> than posix_fallocate/manual zeroing.
 
+Yes, that's likely ;)
 
-> We will attempt to allocate the disk space and then we will return failure,
-> having consumed all the disk space and having partially and uselessly
-> populated an unknown amount of the file.
-> 
+There's work currently active to make posix_fallocate() do the same thing
+as ALLOCSP (i.e. call into the filesystem and let it do smart stuff), but
+that's a ways off yet...
 
-Not totally useless I think. If only half of the space is preallocated
-because run out of space, the application can decide whether it's good
-enough to start to use this preallocated space or wait for the fs to
-have more free space.
+Cheers,
 
-> Userspace could presumably repair the mess in most situations by truncating
-> the file back again.  The kernel cannot do that because there might be live
-> data in amongst there.
-> 
-> So we'd need to either keep track of which blocks were newly-allocated and
-> then free them all again on the error path (doesn't work right across
-> commit+crash+recovery) or we could later use the space-reservation scheme which
-> delayed allocation will need to introduce.
-> 
-> Or we could decide to live with the above IMO-crappy behaviour.
-
-In fact Amit and I had raised this issue before, whether it's okay to do
-allow partial preallocation. At that moment the feedback is it's no much
-different than the current zero-out-preallocation behavior: people might
-preallocating half-way then later deal with ENOSPC.
-
-We could check the total number of fs free blocks account before
-preallocation happens, if there isn't enough space left, there is no
-need to bother preallocating.
-
-If there is enough free space, we could make a reservation window that
-have at least N free blocks and mark it not stealable by other files. So
-later we will not run into the ENOSPC error.
-
-The fs free blocks account is just a estimate though.
-
-
-Mingming
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
