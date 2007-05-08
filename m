@@ -1,59 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 17:59:41 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l480xYfB027310
-	for <xfs@oss.sgi.com>; Mon, 7 May 2007 17:59:36 -0700
-Date: Tue, 8 May 2007 10:59:23 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: RESVSP problems
-Message-ID: <20070508005923.GS77450368@melbourne.sgi.com>
-References: <200705072004.22848.lucke@o2.pl> <463F7368.8090101@sandeen.net> <200705072058.32679.lucke@o2.pl>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 May 2007 18:07:45 -0700 (PDT)
+Received: from mail.clusterfs.com (mail.clusterfs.com [206.168.112.78])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4817efB028619
+	for <xfs@oss.sgi.com>; Mon, 7 May 2007 18:07:42 -0700
+Date: Mon, 7 May 2007 18:07:36 -0700
+From: Andreas Dilger <adilger@clusterfs.com>
+Subject: Re: [PATCH 4/5] ext4: fallocate support in ext4
+Message-ID: <20070508010736.GO8181@schatzie.adilger.int>
+References: <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426181332.GD7209@amitarora.in.ibm.com> <20070503213133.d1559f52.akpm@linux-foundation.org> <20070507113753.GA5439@schatzie.adilger.int> <20070507135825.f8545a65.akpm@linux-foundation.org> <20070507222103.GJ8181@schatzie.adilger.int> <463FB008.3080706@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <200705072058.32679.lucke@o2.pl>
+In-Reply-To: <463FB008.3080706@garzik.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-1?Q?=C5=81ukasz?= Fibinger <lucke@o2.pl>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-On Mon, May 07, 2007 at 08:58:32PM +0200, Å?ukasz Fibinger wrote:
-> On Monday 07 of May 2007, you wrote:
-> > You've probably hit:
-> > http://oss.sgi.com/bugzilla/show_bug.cgi?id=418
-> > unwritten extents remain unwritten after mmap() modifies them
-> >
-> > Bug dchinner about it... ;-)
+On May 07, 2007  19:02 -0400, Jeff Garzik wrote:
+> Andreas Dilger wrote:
+> >Actually, this is a non-issue.  The reason that it is handled for 
+> >extent-only is that this is the only way to allocate space in the
+> >filesystem without doing the explicit zeroing.
 > 
-> Dave, consider it a bugging from my humble self :-)
-
-Yeah, yeah ;)
-
-I'm waiting to see what happens with Nick's patches in .22 before
-going any further. If they are not merged into .22, then I think we
-should push the XFS specific fix in....
-
-> > yeah... ISTR that the arguments are funky.  I can't remember if it's a
-> > bug or not.  :)  FWIW, allocsp just writes zeros to the file, so you
-> > could do it just as well from userspace w/ no fancy ioctls...  ALLOCSP
-> > is a bit pointless if you ask me... though maybe someone knows why it's
-> > there :)
+> Precisely /how/ do you avoid the zeroing issue, for extents?
 > 
-> Let me say that I have noticed that using ALLOCSP seems to create less extents 
-> than posix_fallocate/manual zeroing.
+> If I posix_fallocate() 20GB on ext4, it damn well better be zeroed, 
+> otherwise the implementation is broken.
 
-Yes, that's likely ;)
+In ext4 (as in XFS) there is a flag stored in the extent that tells if
+the extent is initialized or not.  Reads from uninitialized extents will
+return zero-filled data, and writes that don't span the whole extent
+will cause the uninitialized extent to be split into a regular extent
+and one or two uninitialized extents (depending where the write is).
 
-There's work currently active to make posix_fallocate() do the same thing
-as ALLOCSP (i.e. call into the filesystem and let it do smart stuff), but
-that's a ways off yet...
+My comment was just that the extent doesn't have to be explicitly zero
+filled on the disk, by virtue of the fact that the uninitialized flag
+will cause reads to return zero.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Cheers, Andreas
+--
+Andreas Dilger
+Principal Software Engineer
+Cluster File Systems, Inc.
