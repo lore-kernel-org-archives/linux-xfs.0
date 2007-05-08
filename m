@@ -1,89 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 May 2007 07:48:02 -0700 (PDT)
-Received: from e1.ny.us.ibm.com (e1.ny.us.ibm.com [32.97.182.141])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l48ElvfB024039
-	for <xfs@oss.sgi.com>; Tue, 8 May 2007 07:47:58 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l48EluvR013297
-	for <xfs@oss.sgi.com>; Tue, 8 May 2007 10:47:56 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l48EluWL551990
-	for <xfs@oss.sgi.com>; Tue, 8 May 2007 10:47:56 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l48ElujD011654
-	for <xfs@oss.sgi.com>; Tue, 8 May 2007 10:47:56 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 May 2007 09:53:09 -0700 (PDT)
+Received: from mail.clusterfs.com (mail.clusterfs.com [206.168.112.78])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l48Gr2fB021897
+	for <xfs@oss.sgi.com>; Tue, 8 May 2007 09:53:04 -0700
+Date: Tue, 8 May 2007 09:52:59 -0700
+From: Andreas Dilger <adilger@clusterfs.com>
 Subject: Re: [PATCH 4/5] ext4: fallocate support in ext4
-From: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
-In-Reply-To: <20070508105247.GA1950@amitarora.in.ibm.com>
-References: <20070417125514.GA7574@amitarora.in.ibm.com>
-	 <20070418130600.GW5967@schatzie.adilger.int>
-	 <20070420135146.GA21352@amitarora.in.ibm.com>
-	 <20070420145918.GY355@devserv.devel.redhat.com>
-	 <20070424121632.GA10136@amitarora.in.ibm.com>
-	 <20070426175056.GA25321@amitarora.in.ibm.com>
-	 <20070426181332.GD7209@amitarora.in.ibm.com>
-	 <20070503213133.d1559f52.akpm@linux-foundation.org>
-	 <20070507120719.GD7012@amitarora.in.ibm.com>
-	 <1178551477.12900.6.camel@kleikamp.austin.ibm.com>
-	 <20070508105247.GA1950@amitarora.in.ibm.com>
-Content-Type: text/plain
-Date: Tue, 08 May 2007 09:47:54 -0500
-Message-Id: <1178635675.11344.10.camel@kleikamp.austin.ibm.com>
+Message-ID: <20070508165259.GD6375@schatzie.adilger.int>
+References: <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070507171541.5370a36a.akpm@linux-foundation.org> <1178584899.3933.73.camel@dyn9047017103.beaverton.ibm.com> <20070508014337.GA14072@thunk.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070508014337.GA14072@thunk.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: Theodore Tso <tytso@mit.edu>, Mingming Cao <cmm@us.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
 
-On Tue, 2007-05-08 at 16:22 +0530, Amit K. Arora wrote:
-> On Mon, May 07, 2007 at 10:24:37AM -0500, Dave Kleikamp wrote:
-> > On Mon, 2007-05-07 at 17:37 +0530, Amit K. Arora wrote:
-> > > On Thu, May 03, 2007 at 09:31:33PM -0700, Andrew Morton wrote:
+On May 07, 2007  21:43 -0400, Theodore Tso wrote:
+> On Mon, May 07, 2007 at 05:15:41PM -0700, Andrew Morton wrote:
+> > Userspace could presumably repair the mess in most situations by truncating
+> > the file back again.  The kernel cannot do that because there might be live
+> > data in amongst there.
+> 
+> Actually, the kernel could do it, in that could simply release all
+> unitialized extents back to the system.  The problem is distinguishing
+> between the unitialized extents that had just been newly added, versus
+> the ones that had there from before.  (On the other hand, if the
+> filesystem was completely full, releasing unitialized blocks wouldn't
+> be the worse thing in the world to do, although releasing previously
+> fallocated blocks probably does violate the princple of least
+> surprise, even if it's what the user would have wanted.)
 
-> > > > So we don't implement fallocate on bitmap-based files!  Well that's huge
-> > > > news.  The changelog would be an appropriate place to communicate this,
-> > > > along with reasons why, or a description of the plan to fix it.
-> > > 
-> > > Ok. Will add this in the function description as well.
-> > > 
-> > > > Also, posix says nothing about fallocate() returning ENOTTY.
-> > > 
-> > > Right. I don't seem to find any suitable error from posix description.
-> > > Can you please suggest an error code which might make more sense here ?
-> > > Will -ENOTSUPP be ok ? Since we want to say here that we don't support
-> > > non-extent files.
-> > 
-> > Isn't the idea that libc will interpret -ENOTTY, or whatever is returned
-> > here, and fall back to the current library code to do preallocation?
-> > This way, the caller of fallocate() will never see this return code, so
-> > it won't violate posix.
-> 
-> You are right.
-> 
-> But, we still need to "standardize" (and limit) the error codes
-> which we should return from kernel when we want to fall back on the
-> library implementation. The posix_fallocate() library function will have
-> to look for a set of errors from fallocate() system call, upon receiving
-> which it will do preallocation from user level; or else, it will return
-> success/error-code returned by the system call to the user.
-> 
-> I think we can make it fall back to library implementation of fallocate,
-> whenever posix_fallocate() receives any of the following errors from
-> fallocate() system call:
-> 
-> 1. ENOSYS
-> 2. EOPNOTSUPP
-> 3. ENOTTY        (?)
-> 
-> Now the question is - should we limit the set of errors for this purpose
-> to just 1 & 2 above ? In that case I will need to change the error being
-> returned here to -EOPNOTSUPP (from current -ENOTTY).
+I tend to agree with this.  Having fallocate() fill up the filesystem
+is exactly what the caller asked.  Doing a write() hit ENOSPC doesn't
+trucate off the whole write either, nor does "dd" delete the whole file
+when the filesystem is full.
 
-If you want my opinion, -EOPNOTSUPP is better than -ENOTTY.
+Even checking the statfs() space before doing the fallocate() may be
+counter intuitive, since it will return ENOSPC but the filesystem will
+not actually be full.  Some applications (e.g. database) may WANT to
+fill the filesystem and then get the actual file size back to avoid
+trusting statfs() because of metadata overhead (e.g. indirect blocks).
 
-Shaggy
--- 
-David Kleikamp
-IBM Linux Technology Center
+One of the design goals for sys_fallocate() was to allow FA_DELALLOC
+to deallocate unwritten extents in a safe manner.
+
+Cheers, Andreas
+--
+Andreas Dilger
+Principal Software Engineer
+Cluster File Systems, Inc.
