@@ -1,68 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 May 2007 10:07:34 -0700 (PDT)
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l49H7TfB023872
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 10:07:31 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l49H7TOQ015642
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 13:07:29 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l49H7SWv169794
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 11:07:28 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l49H7RwY000330
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 11:07:28 -0600
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and
-	powerpc
-From: Mingming Cao <cmm@us.ibm.com>
-Reply-To: cmm@us.ibm.com
-In-Reply-To: <20070509160102.GA30745@amitarora.in.ibm.com>
-References: <20070329115126.GB7374@amitarora.in.ibm.com>
-	 <20070329101010.7a2b8783.akpm@linux-foundation.org>
-	 <20070330071417.GI355@devserv.devel.redhat.com>
-	 <20070417125514.GA7574@amitarora.in.ibm.com>
-	 <20070418130600.GW5967@schatzie.adilger.int>
-	 <20070420135146.GA21352@amitarora.in.ibm.com>
-	 <20070420145918.GY355@devserv.devel.redhat.com>
-	 <20070424121632.GA10136@amitarora.in.ibm.com>
-	 <20070426175056.GA25321@amitarora.in.ibm.com>
-	 <20070426180332.GA7209@amitarora.in.ibm.com>
-	 <20070509160102.GA30745@amitarora.in.ibm.com>
-Content-Type: text/plain
-Date: Wed, 09 May 2007 10:07:25 -0700
-Message-Id: <1178730446.3815.8.camel@dyn9047017103.beaverton.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 May 2007 16:16:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l49NGqfB008827
+	for <xfs@oss.sgi.com>; Wed, 9 May 2007 16:16:54 -0700
+Date: Thu, 10 May 2007 09:16:43 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.21-git10/11: files getting truncated on xfs? or maybe an nlink problem?
+Message-ID: <20070509231643.GM85884050@sgi.com>
+References: <4642389E.4080804@goop.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4642389E.4080804@goop.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
+To: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: David Chinner <dgc@sgi.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matt Mackall <mpm@selenic.com>, xfs@oss.sgi.com
 
-On Wed, 2007-05-09 at 21:31 +0530, Amit K. Arora wrote:
-> I have the updated patches ready which take care of Andrew's comments.
-> Will run some tests and post them soon.
+On Wed, May 09, 2007 at 02:09:50PM -0700, Jeremy Fitzhardinge wrote:
+> I've had a couple of instances of a linux-2.6 mercurial repo getting
+> corrupted in some odd way this morning.  It looks like files are being
+> truncated; not to size 0, but losing something off the end.
 > 
-> But, before submitting these patches, I think it will be better to finalize
-> on certain things which might be worth some discussion here:
+> This is on an xfs filesystem.  I haven't had any crashes/oops, and I
+> don't think its the normal files getting filled with 0 problem.  I saw
+> this before the most recent set of xfs updates, but it happened again
+> afterwards too.
+
+It looks like the latest XFS changes haven't been pulled yet, so
+it's not new code that is triggering this....
+
+> Mercurial uses a strictly append-only model for updating its repo files,
+> but it looks like maybe an append operation didn't stick.
 > 
-> 1) Should the file size change when preallocation is done beyond EOF ?
->    - Andreas and Chris Wedgwood are in favor of not changing the
->      file size in this case. I also tend to agree with them. Does anyone
->      has an argument in favor of changing the filesize ?
->      If not, I will remove the code which changes the filesize, before I
->      resubmit the concerned ext4 patch.
+> I'm repulling a fresh copy of the repo; I'll be able to compare
+> before/after.  Update: yep, definitely truncated:
 > 
+> $ ls -l .hg-new/store/data/_documentation/pi-futex.txt.i .hg-broken/store/data/_documentation/pi-futex.txt.i
+> 4 -rw-rw-r-- 1 jeremy jeremy 3309 May  9 09:43 .hg-broken/store/data/_documentation/pi-futex.txt.i
+> 4 -rw-rw-r-- 1 jeremy jeremy 3797 May  9 13:38 .hg-new/store/data/_documentation/pi-futex.txt.i
+> 
+> also
+>   3476 -rw-rw-r--  1 jeremy jeremy   3558208 May  9 13:55 00manifest.i
+>   3476 -rw-rw-r--  1 jeremy jeremy   3555200 May  9 09:41 00manifest.i~
+> 
+> 
+> where 00manifest.i~ is the broken one. The files are identical up to the
+> truncation point.
 
-If we chose not to update the file size beyong EOF, then for filesystem
-without fallocate() support (ext2,3 currently), posix_fallocate() will
-follow the hard way(zero-out) to do preallocation. Then we will get
-different behavior on filesystems w/o fallocate() support. It make sense
-to be consistent, IMO.
+Hmmm - that is bizarre. What is the output of xfs_bmap -vvp <filename>
+on each of those files?
 
-My point of view, preallocation is just a efficient way to allocating
-blocks for files without zero-out, other than this, the new behavior
-should be consistent with the old way: file size update,mtime/ctime,
-ENOSPC etc.
+what happens to these files after then are downloaded? Does it only
+happen to append-only files or are other files affected as well?
 
-Mingming
+BTW, what's the 'xfs_info <mntpt>' output for this filesystem?
+
+> The repo passed "hg verify" just after I pulled it, so this corruption
+> came about after a while.
+> 
+> Hm, the other possibility is that nlinks is being misreported.  When
+> cloning a repo, mercurial will generally hard-link files where possible,
+> and then break the link if it sees nlink > 1.  If xfs is mis-reporting
+> the link count, then this will cause havok.  Is that possible?  Seems
+> unlikely, but it would also explain the symptoms.  I just did a linking
+> clone with an older kernel, and the link count is as expected.
+
+I'd be surprised if it was a link count problem - that would cause
+all sorts of other problems as well....
+
+> xfs_check passes without any output, which I presume is good.
+
+Yes, it means everythign is ok. You only have to worry when xfs_check
+says something - it only brings bad news ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
