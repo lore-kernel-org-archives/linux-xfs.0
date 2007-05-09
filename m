@@ -1,55 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 May 2007 22:59:29 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l495xOfB008438
-	for <xfs@oss.sgi.com>; Tue, 8 May 2007 22:59:26 -0700
-Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.195])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l495xLcV009966
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 14:59:21 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l495xL321403 for xfs@oss.sgi.com; Wed, 9 May 2007 14:59:21 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv.nec.co.jp (8.11.7/3.7W-MAILSV-NEC) with ESMTP
-	id l495xLO26246 for <xfs@oss.sgi.com>; Wed, 9 May 2007 14:59:21 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070509.145924.21802300 for <xfs@oss.sgi.com>
-	; Wed, 9 May 2007 14:59:24 +0900
-Message-Id: <200705090559.AA05331@TNESG9305.tnes.nec.co.jp>
-Date: Wed, 09 May 2007 14:59:11 +0900
-Subject: [PATCH] Fix xfs_quota path command.
-From: Utako Kusaka <utako@tnes.nec.co.jp>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 May 2007 03:51:46 -0700 (PDT)
+Received: from ozlabs.org (ozlabs.org [203.10.76.45])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l49ApefB028095
+	for <xfs@oss.sgi.com>; Wed, 9 May 2007 03:51:42 -0700
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <17985.42884.971318.859402@cargo.ozlabs.ibm.com>
+Date: Wed, 9 May 2007 20:50:44 +1000
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
+In-Reply-To: <20070509101507.GA26056@in.ibm.com>
+References: <20070330071417.GI355@devserv.devel.redhat.com>
+	<20070417125514.GA7574@amitarora.in.ibm.com>
+	<20070418130600.GW5967@schatzie.adilger.int>
+	<20070420135146.GA21352@amitarora.in.ibm.com>
+	<20070420145918.GY355@devserv.devel.redhat.com>
+	<20070424121632.GA10136@amitarora.in.ibm.com>
+	<20070426175056.GA25321@amitarora.in.ibm.com>
+	<20070426180332.GA7209@amitarora.in.ibm.com>
+	<20070503212955.b1b6443c.akpm@linux-foundation.org>
+	<17978.47502.786970.196554@cargo.ozlabs.ibm.com>
+	<20070509101507.GA26056@in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: suparna@in.ibm.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
 
-Hi,
+Suparna Bhattacharya writes:
 
-In path command in xfs_quota, the range value in the message becomes
-from 0 to -1 incorrectly when the list number is specified though the path list
-is empty. I think that the message is unnecessary the same as not specifying
-the list number in this case.
+> > This looks like it will have the same problem on s390 as
+> > sys_sync_file_range.  Maybe the prototype should be:
+> > 
+> > asmlinkage long sys_fallocate(loff_t offset, loff_t len, int fd, int mode)
+> 
+> Yes, but the trouble is that there was a contrary viewpoint preferring that fd
+> first be maintained as a convention like other syscalls (see the following
+> posts)
 
-Example:
-# ./xfs_quota -x
-xfs_quota> path
-xfs_quota> path 0
-value 0 is out of range (0--1)
+Of course the interface used by an application program would have the
+fd first.  Glibc can do the translation.
 
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
- 
---- xfsprogs-2.8.20/quota/path.orig	2007-04-26 14:14:00.000000000 +0900
-+++ xfsprogs-2.8.20/quota/path.c	2007-04-27 11:27:56.000000000 +0900
-@@ -102,6 +102,9 @@ path_f(
- 	if (argc <= 1)
- 		return pathlist_f();
- 
-+	if (!fs_count)
-+		return 0;
-+
- 	i = atoi(argv[1]);
- 	if (i < 0 || i >= fs_count) {
- 		printf(_("value %d is out of range (0-%d)\n"),
+Paul.
