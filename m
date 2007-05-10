@@ -1,179 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 May 2007 23:07:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 May 2007 23:52:02 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4A67afB002726
-	for <xfs@oss.sgi.com>; Wed, 9 May 2007 23:07:37 -0700
-Date: Thu, 10 May 2007 16:11:01 +1000
-From: Timothy Shimmin <tes@sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4A6pufB013695
+	for <xfs@oss.sgi.com>; Wed, 9 May 2007 23:51:57 -0700
+Date: Thu, 10 May 2007 16:51:53 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: Review: unwritten extent conversion vs synchronous direct I/O
-Message-ID: <AA27F76178127851854604F7@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <20070508065126.GK32602149@melbourne.sgi.com>
-References: <20070508065126.GK32602149@melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20070510065153.GY85884050@sgi.com>
+References: <20070508065126.GK32602149@melbourne.sgi.com> <AA27F76178127851854604F7@timothy-shimmins-power-mac-g5.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <AA27F76178127851854604F7@timothy-shimmins-power-mac-g5.local>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Hi Dave,
+On Thu, May 10, 2007 at 04:11:01PM +1000, Timothy Shimmin wrote:
+> Hi Dave,
+> 
+> --On 8 May 2007 4:51:26 PM +1000 David Chinner <dgc@sgi.com> wrote:
+> 
+> >
+> >Back in 2.6.13, unwritten extent conversion was changed to be done
+> >via a workqueue because we can't do conversion in interrupt context
+> >(AIO issue). The problem was that the changes extent conversion to
+> >run asynchronously w.r.t I/o completion.
+> 
+> Oh ok, and at the same time they used the workqueue also (apart
+> from AIO) for synchronous direct writes even though they didn't have to.
+> i.e the existing comment:
+>     * This is not necessary for synchronous direct I/O, but we do
+>     * it anyway to keep the code uniform and simpler.
 
---On 8 May 2007 4:51:26 PM +1000 David Chinner <dgc@sgi.com> wrote:
+Yes, exactly.
 
->
-> Back in 2.6.13, unwritten extent conversion was changed to be done
-> via a workqueue because we can't do conversion in interrupt context
-> (AIO issue). The problem was that the changes extent conversion to
-> run asynchronously w.r.t I/o completion.
+> So you were tossing up whether to flush the queue as in the patch given
+> or to effectively call the code of xfs_end_bio_unwritten to
+> do the unwritten extent conversion straight away.
+> Hmmm....I dunno :)
+>  Does it matter? What are the pros and cons? :)
 
-Oh ok, and at the same time they used the workqueue also (apart
-from AIO) for synchronous direct writes even though they didn't have to.
-i.e the existing comment:
-     * This is not necessary for synchronous direct I/O, but we do
-     * it anyway to keep the code uniform and simpler.
+I think with async buffered writes we are doing I/O completion in
+IRQ context as well so it seems to me that we have to push the
+unwritten extent conversion off to a workqueue in that case.
 
-So you were tossing up whether to flush the queue as in the patch given
-or to effectively call the code of xfs_end_bio_unwritten to
-do the unwritten extent conversion straight away.
-Hmmm....I dunno :)
-  Does it matter? What are the pros and cons? :)
-  Does it matter if we flush the whole queue now or later?
-  Is it nicer/simpler for this to always happen in the queue?
-  Is it a bit silly to queue and immediately flush?
+I don't think there's any great overhead from flushing only when
+we are doing sync dio writes - all that calling
+xfs_end_bio_unwritten() directly saves us is a couple of context
+switches. However, that could promote I/o completion ahead of
+other I/Os waiting in the workqueue....
 
-* Possible typo in comment:
-  s/passed to use to determine/passed to us to determine/
-
-* Don't really need the "? 1 : 0"
-   is_sync_kiocb(iocb) ? 1 : 0
-=>
-   is_sync_kiocb(iocb)
+I think I'm convincing myself that the workqueue flush is the
+correct thing to do here ;)
 
 
---Tim
+>  Does it matter if we flush the whole queue now or later?
 
->
-> Under heavy load (e.g. 100 fsstress processes), a direct write into
-> an unwritten extent can complete and return to userspace before
-> the unwritten extent is converted. If that range of the file is
-> then read immediately, it will return zeros - unwritten - instead
-> of the data that was written and is present on disk.
->
-> A simpl etest case to show this is to run 100 fsstress processes,
-> the loop doing:
->
-> 	prealloc
-> 	direct write
-> 	bmap
->
-> and at some point during this time, the bmap will return an
-> unwritten extent spanning a range that has already been written.
->
-> The following patch fixes the synchronous direct I/O by triggering
-> a workqueue flush on detection of a sync direct I/O into an
-> unwritten extent after queuing the conversion work. The other
-> approach that could be taken is to simply do the conversion
-> without passing it off to a work queue. Anyone have a preference
-> on which would be the better method to choose?
->
-> The patch below passes the QA test I wrote to exercise this
-> bug.
->
-> Comments?
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
->
->
-> ---
->  fs/xfs/linux-2.6/xfs_aops.c |   28 ++++++++++++++++++++--------
->  1 file changed, 20 insertions(+), 8 deletions(-)
->
-> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-04-26 09:25:26.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c	2007-05-08 14:28:20.854616591 +1000
-> @@ -108,14 +108,19 @@ xfs_page_trace(
->
->  /*
->   * Schedule IO completion handling on a xfsdatad if this was
-> - * the final hold on this ioend.
-> + * the final hold on this ioend. If we are asked to wait,
-> + * flush the workqueue.
->   */
->  STATIC void
->  xfs_finish_ioend(
-> -	xfs_ioend_t		*ioend)
-> +	xfs_ioend_t	*ioend,
-> +	int		wait)
->  {
-> -	if (atomic_dec_and_test(&ioend->io_remaining))
-> +	if (atomic_dec_and_test(&ioend->io_remaining)) {
->  		queue_work(xfsdatad_workqueue, &ioend->io_work);
-> +		if (wait)
-> +			flush_workqueue(xfsdatad_workqueue);
-> +	}
->  }
->
->  /*
-> @@ -334,7 +339,7 @@ xfs_end_bio(
->  	bio->bi_end_io = NULL;
->  	bio_put(bio);
->
-> -	xfs_finish_ioend(ioend);
-> +	xfs_finish_ioend(ioend, 0);
->  	return 0;
->  }
->
-> @@ -470,7 +475,7 @@ xfs_submit_ioend(
->  		}
->  		if (bio)
->  			xfs_submit_ioend_bio(ioend, bio);
-> -		xfs_finish_ioend(ioend);
-> +		xfs_finish_ioend(ioend, 0);
->  	} while ((ioend = next) != NULL);
->  }
->
-> @@ -1408,6 +1413,13 @@ xfs_end_io_direct(
->  	 * This is not necessary for synchronous direct I/O, but we do
->  	 * it anyway to keep the code uniform and simpler.
->  	 *
-> +	 * Well, if only it were that simple. Because synchronous direct I/O
-> +	 * requires extent conversion to occur *before* we return to userspace,
-> +	 * we have to wait for extent conversion to complete. Look at the
-> +	 * iocb that has been passed to use to determine if this is AIO or
-> +	 * not. If it is synchronous, tell xfs_finish_ioend() to kick the
-> +	 * workqueue and wait for it to complete.
-> +	 *
->  	 * The core direct I/O code might be changed to always call the
->  	 * completion handler in the future, in which case all this can
->  	 * go away.
-> @@ -1415,9 +1427,9 @@ xfs_end_io_direct(
->  	ioend->io_offset = offset;
->  	ioend->io_size = size;
->  	if (ioend->io_type == IOMAP_READ) {
-> -		xfs_finish_ioend(ioend);
-> +		xfs_finish_ioend(ioend, 0);
->  	} else if (private && size > 0) {
-> -		xfs_finish_ioend(ioend);
-> +		xfs_finish_ioend(ioend, is_sync_kiocb(iocb) ? 1 : 0);
->  	} else {
->  		/*
->  		 * A direct I/O write ioend starts it's life in unwritten
-> @@ -1426,7 +1438,7 @@ xfs_end_io_direct(
->  		 * handler.
->  		 */
->  		INIT_WORK(&ioend->io_work, xfs_end_bio_written);
-> -		xfs_finish_ioend(ioend);
-> +		xfs_finish_ioend(ioend, 0);
->  	}
->
->  	/*
+We have to wait for it to complete, and that's what the flush does;
+it waits for the queued work up to the flush entrance sequence
+to complete. It's really the only way we can wait for a specific
+item in a workqueue to be run. So yes, it needs to be run now,
+not later.
+
+>  Is it nicer/simpler for this to always happen in the queue?
+
+I think so.
+
+>  Is it a bit silly to queue and immediately flush?
+
+I think that's the way you're supposed to do things ;)
+
+> * Possible typo in comment:
+>  s/passed to use to determine/passed to us to determine/
+> 
+> * Don't really need the "? 1 : 0"
+>   is_sync_kiocb(iocb) ? 1 : 0
+> =>
+>   is_sync_kiocb(iocb)
+
+Right - I'll fix that.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
