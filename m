@@ -1,48 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 May 2007 20:39:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 May 2007 21:01:41 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4B3dDfB032370
-	for <xfs@oss.sgi.com>; Thu, 10 May 2007 20:39:15 -0700
-Subject: TAKE 964546 - Only use refcounted pages for I/O
-Message-Id: <20070511033907.423A158CA530@chook.melbourne.sgi.com>
-Date: Fri, 11 May 2007 13:39:06 +1000 (EST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4B41ZfB003462
+	for <xfs@oss.sgi.com>; Thu, 10 May 2007 21:01:37 -0700
+Subject: PARTIAL TAKE 957886 - xfs_growfs should refuse to grow fs past 16Tb on a 32 bit system
+Message-Id: <20070511040131.C7E7A58CA530@chook.melbourne.sgi.com>
+Date: Fri, 11 May 2007 14:01:31 +1000 (EST)
 From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Only use refcounted pages for I/O
+Don't grow filesystems past the size they can index.
 
-Many block drivers (aoe, iscsi) really want refcountable pages in
-bios, which is what almost everyone send down.  XFS unfortunately
-has a few places where it sends down buffers that may come from
-kmalloc, which breaks them.
+When growing a filesystem we don't check to see if the new size
+overflows the page cache index range, so we can do silly things
+like grow a filesystem page 16TB on a 32bit. Check new filesystem
+sizes against the limits the kernel can support.
 
-Fix the places that use kmalloc()d buffers.
+Signed-Off-By: Nathan Scott <nscott@aconex.com>
 
-Signed-Off-By: Christoph Hellwig <hch@infradead.org>
-
-Date:  Fri May 11 13:37:22 AEST 2007
+Date:  Fri May 11 14:00:21 AEST 2007
 Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  dgc,tes
+Inspected by:  dgc
 
 The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:28562a
-fs/xfs/xfs_log.c - 1.328 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.328&r2=text&tr2=1.327&f=h
-	- Convert log buffers to use xfs_buf_get_noaddr rather
-	  than using kmem_alloc()d buffers.
+Modid:  xfs-linux-melb:xfs-kern:28563a
+fs/xfs/xfs_rtalloc.c - 1.107 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rtalloc.c.diff?r1=text&tr1=1.107&r2=text&tr2=1.106&f=h
+	- Check new rt volume size against the maximum the system can support.
 
-fs/xfs/linux-2.6/xfs_buf.h - 1.120 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.120&r2=text&tr2=1.119&f=h
-	- Use alloc_page() rather than kmem_alloc() for buffers that do not
-	  use page cache backed pages.
+fs/xfs/xfs_mount.h - 1.235 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.235&r2=text&tr2=1.234&f=h
+	- Factor maximum supported filesystem size checks to allow other
+	  callers to use it.
 
-fs/xfs/linux-2.6/xfs_buf.c - 1.236 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
-	- Use alloc_page() rather than kmem_alloc() for buffers that do not
-	  use page cache backed pages.
+fs/xfs/xfs_mount.c - 1.394 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.394&r2=text&tr2=1.393&f=h
+	- Factor maximum supported filesystem size checks to allow other
+	  callers to use it.
+
+fs/xfs/xfs_fsops.c - 1.123 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fsops.c.diff?r1=text&tr1=1.123&r2=text&tr2=1.122&f=h
+	- Check new volume size against the maximum the system can support.
