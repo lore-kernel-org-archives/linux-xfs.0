@@ -1,122 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 May 2007 18:11:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 May 2007 20:39:18 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4B1BpfB008635
-	for <xfs@oss.sgi.com>; Thu, 10 May 2007 18:11:53 -0700
-Date: Fri, 11 May 2007 11:11:45 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Review: fix b0rked test 030 behaviour.
-Message-ID: <20070511011145.GN86004887@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4B3dDfB032370
+	for <xfs@oss.sgi.com>; Thu, 10 May 2007 20:39:15 -0700
+Subject: TAKE 964546 - Only use refcounted pages for I/O
+Message-Id: <20070511033907.423A158CA530@chook.melbourne.sgi.com>
+Date: Fri, 11 May 2007 13:39:06 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Test 030 is not testing things as it should.
+Only use refcounted pages for I/O
 
-Specifically, corrupting the AGFL with "-1" is a no-op on
-a freshly repaired filesystem, because xfs_repair rebuilds
-the AGF btrees and AGFL from scratch and does not populate
-the AGFL.
+Many block drivers (aoe, iscsi) really want refcountable pages in
+bios, which is what almost everyone send down.  XFS unfortunately
+has a few places where it sends down buffers that may come from
+kmalloc, which breaks them.
 
-The current test does:
+Fix the places that use kmalloc()d buffers.
 
-	repair
-	mount
-	create file
-	remove file
-	umount
+Signed-Off-By: Christoph Hellwig <hch@infradead.org>
 
-And it does the filesystem twiddling to check that the filesystem
-is uﬂable after repair. The problem is that this doesn't dirty the
-filesystem - the create is followed by a remove, so nothing is
-actually allocated and so the AGFL lists do not get modified.
+Date:  Fri May 11 13:37:22 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  dgc,tes
 
-hence after a repair/check/corruption cycle, writing "-1" to
-the AGFL is a no-op because it is already full of "-1" fields
-(NULL blocks).
-
-With filestreams, the create/remove pair *does* modify the filesystem
-and so when we write "-1" to the AGFL, we get different output
-because the filesystem detects new corruptions and the test "fails".
-
-So, to make behaviour consistent, dirty the filesystem before
-corrupting it on each cycle. Hence it doesn't matter if we are
-using filestreams or not, we'll really test out corrupting the
-AGFL with NULL blocks (-1) now.
-
-Comments?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
----
- xfstests/030.out.irix  |    4 ++++
- xfstests/030.out.linux |    4 ++++
- xfstests/common.repair |   10 ++++++++++
- 3 files changed, 18 insertions(+)
+Modid:  xfs-linux-melb:xfs-kern:28562a
+fs/xfs/xfs_log.c - 1.328 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.328&r2=text&tr2=1.327&f=h
+	- Convert log buffers to use xfs_buf_get_noaddr rather
+	  than using kmem_alloc()d buffers.
 
-Index: xfs-cmds/xfstests/030.out.irix
-===================================================================
---- xfs-cmds.orig/xfstests/030.out.irix	2007-05-03 17:10:29.554803451 +1000
-+++ xfs-cmds/xfstests/030.out.irix	2007-05-03 17:10:54.227585189 +1000
-@@ -262,6 +262,10 @@ Wrote X.XXKb (value 0xffffffff)
- Phase 1 - find and verify superblock...
- Phase 2 - zero log...
-         - scan filesystem freespace and inode maps...
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-         - found root inode chunk
- Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-Index: xfs-cmds/xfstests/030.out.linux
-===================================================================
---- xfs-cmds.orig/xfstests/030.out.linux	2007-05-03 17:10:29.554803451 +1000
-+++ xfs-cmds/xfstests/030.out.linux	2007-05-03 17:10:54.231584667 +1000
-@@ -270,6 +270,10 @@ Phase 1 - find and verify superblock...
- Phase 2 - using <TYPEOF> log
-         - zero log...
-         - scan filesystem freespace and inode maps...
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-+bad agbno AGBNO in agfl, agno 0
-         - found root inode chunk
- Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-Index: xfs-cmds/xfstests/common.repair
-===================================================================
---- xfs-cmds.orig/xfstests/common.repair	2007-05-03 17:10:29.554803451 +1000
-+++ xfs-cmds/xfstests/common.repair	2007-05-03 17:10:54.231584667 +1000
-@@ -72,8 +72,18 @@ _check_repair()
- {
- 	value=$1
- 	structure="$2"
-+
-+	#ensure the filesystem has been dirtied since last repair
-+	_scratch_mount
-+	POSIXLY_CORRECT=yes \
-+	dd if=/bin/sh of=$SCRATCH_MNT/sh 2>&1 |_filter_dd
-+	sync
-+	rm -f $SCRATCH_MNT/sh
-+	umount $SCRATCH_MNT
-+
- 	_zero_position $value "$structure"
- 	_scratch_xfs_repair 2>&1 | _filter_repair
-+
- 	# some basic sanity checks...
- 	_check_scratch_fs
- 	_scratch_mount                                      #mount
+fs/xfs/linux-2.6/xfs_buf.h - 1.120 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.120&r2=text&tr2=1.119&f=h
+	- Use alloc_page() rather than kmem_alloc() for buffers that do not
+	  use page cache backed pages.
+
+fs/xfs/linux-2.6/xfs_buf.c - 1.236 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
+	- Use alloc_page() rather than kmem_alloc() for buffers that do not
+	  use page cache backed pages.
