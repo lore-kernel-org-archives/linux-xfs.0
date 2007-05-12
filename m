@@ -1,50 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 07:56:27 -0700 (PDT)
-Received: from mail.goop.org (gw.goop.org [64.81.55.164])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4CEuJfB029390
-	for <xfs@oss.sgi.com>; Sat, 12 May 2007 07:56:20 -0700
-Message-ID: <4645D594.4070801@goop.org>
-Date: Sat, 12 May 2007 07:56:20 -0700
-From: Jeremy Fitzhardinge <jeremy@goop.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 10:49:24 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4CHn2fB010718
+	for <xfs@oss.sgi.com>; Sat, 12 May 2007 10:49:04 -0700
+Subject: Re: Review: Concurrent Multi-File Data Streams
+References: <20070511003606.GB85884050@sgi.com>
+From: Andi Kleen <andi@firstfloor.org>
+Date: 12 May 2007 20:46:19 +0200
+In-Reply-To: <20070511003606.GB85884050@sgi.com>
+Message-ID: <p73sla1ev7o.fsf@bingen.suse.de>
 MIME-Version: 1.0
-Subject: Re: 2.6.21-git10/11: files getting truncated on xfs? or maybe an
- nlink problem?
-References: <4642389E.4080804@goop.org> <20070509231643.GM85884050@sgi.com> <4642598E.3000607@goop.org> <20070510000119.GO85884050@sgi.com> <46426194.3040403@goop.org> <46439185.5060207@redhat.com> <464392B4.3070009@goop.org> <464393E1.3050705@redhat.com> <46439491.9010604@goop.org> <Pine.LNX.4.61.0705121323030.9570@yvahk01.tjqt.qr> <20070512135143.GG85884050@sgi.com>
-In-Reply-To: <20070512135143.GG85884050@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Chuck Ebbert <cebbert@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matt Mackall <mpm@selenic.com>, xfs@oss.sgi.com
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
-> What I don't understand is that on unmount dirty xfs inodes get
-> written out. Clearly this is not happening - either there's a hole
-> in the writeback logic (unlikely - it was unchanged) or we've missed
-> some case where we need to update the filesize and mark the inode
-> dirty.
->
-> Hmmmm - if the write was just a short append to the file, then the
-> block that was written to should already be mapped. Then we'll just
-> look up the extent by doing a BMAPI_READ lookup, set the type to
-> IOMAP_READ and add the block to ioend we are building.
->   
+David Chinner <dgc@sgi.com> writes:
+> 
+> The following patch survives XFSQA with timeouts set to minimum,
+> default, 500s and maximum. The patch has not had a great
+> deal of low memory testing, and the object cache may need a shrinker
+> interface to work in low memory conditions.
+> 
+> Comments?
 
-Well, that result I mailed you showed that the difference was just over
-16k, and that there was a 32 block difference in the final extent
-length.  Does that fit with this theory?
+It seems to be an optimization for a relatively small number of streams. When you
+do a large number on average you should get similar readahead benefits
+from round robing the streams over some AGs vs keeping it in a single AG,
+right? 
 
-> The type IOMAP_READ determines the I/O completion behaviour - in this case
-> it is xfs_end_bio_read(), which fails to update the file size....
->
-> Bingo.
->
-> A patch for you to try, Jeremy. I've just started a test run on it...
->   
+The fallback to AG 0 if nstreams>AGs seems pretty lousy. Wouldn't it be better 
+to do the normal XFS allocation algorithm then?  I think right now it will
+go into low space mode in this case, which might give worse results.
 
-Thanks, I'll give it a spin.  Have you reproduced the bug yourself?
+Also centisecs is a really ugly unit whose use should be probably not propagated.
 
-
-    J
+-Andi
