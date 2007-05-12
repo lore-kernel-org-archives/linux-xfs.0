@@ -1,55 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 01:02:32 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4C82NfB014463
-	for <xfs@oss.sgi.com>; Sat, 12 May 2007 01:02:24 -0700
-Date: Sat, 12 May 2007 18:01:57 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070512080157.GF85884050@sgi.com>
-References: <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426180332.GA7209@amitarora.in.ibm.com> <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 05:47:04 -0700 (PDT)
+Received: from waste.org (waste.org [66.93.16.53])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4CCksfB023990
+	for <xfs@oss.sgi.com>; Sat, 12 May 2007 05:46:56 -0700
+Date: Sat, 12 May 2007 07:46:41 -0500
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: 2.6.21-git10/11: files getting truncated on xfs? or maybe an nlink problem?
+Message-ID: <20070512124641.GZ11115@waste.org>
+References: <20070509231643.GM85884050@sgi.com> <4642598E.3000607@goop.org> <20070510000119.GO85884050@sgi.com> <46426194.3040403@goop.org> <20070510004918.GS85884050@sgi.com> <46426D31.8070000@goop.org> <20070510012609.GU85884050@sgi.com> <46433049.4020003@goop.org> <20070510153832.GQ11115@waste.org> <Pine.LNX.4.61.0705121320240.9570@yvahk01.tjqt.qr>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070511110301.GB28425@in.ibm.com>
+In-Reply-To: <Pine.LNX.4.61.0705121320240.9570@yvahk01.tjqt.qr>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Suparna Bhattacharya <suparna@in.ibm.com>
-Cc: David Chinner <dgc@sgi.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>, David Chinner <dgc@sgi.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, michal.k.k.piotrowski@gmail.com
 
-On Fri, May 11, 2007 at 04:33:01PM +0530, Suparna Bhattacharya wrote:
-> On Fri, May 11, 2007 at 08:39:50AM +1000, David Chinner wrote:
-> > All I'm really interested in right now is that the fallocate
-> > _interface_ can be used as a *complete replacement* for the
-> > pre-existing XFS-specific ioctls that are already used by
-> > applications.  What ext4 can or can't do right now is irrelevant to
-> > this discussion - the interface definition needs to take priority
-> > over implementation....
+On Sat, May 12, 2007 at 01:21:41PM +0200, Jan Engelhardt wrote:
 > 
-> Would you like to write up an interface definition description (likely
-> man page) and post it for review, possibly with a mention of apps using
-> it today ?
+> On May 10 2007 10:38, Matt Mackall wrote:
+> >> 
+> >>     for i in `seq 20`; do
+> >>     	hg clone -U --pull a b-$i
+> >>     	hg verify b-$i		# always OK
+> >>     	umount /home
+> >>     	sleep 5
+> >>     	mount /home
+> >>     	hg verify b-$i		# often found truncated files
+> >>     done
+> >>       
+> [...]
+> >
+> >This test looks like it should consist solely of open-for-append and
+> >write on about 20k files in the target directory. Because of the
+> >--pull, no hardlinks are involved. It shouldn't be all that different
+> >from doing tar cf - a | tar xf - b.
+> >
+> >The files get visited in alphabetical order, so the start of the
+> >corruption may be telling.
+> 
+> You should not assume alphabetical order. Filesystems may be free to
+> reorder things and return them (1) randomly like in a hash (2) by
+> creation time during readdir().
 
-Yeah, I started doing that yesterday as i figured it was the only way
-to cut the discussion short....
+There is no assumption. Mercurial explicitly visits files in
+alphabetical order for the above commands.
 
-> One reason for introducing the mode parameter was to allow the interface to
-> evolve incrementally as more options / semantic questions are proposed, so
-> that we don't have to make all the decisions right now. 
-> So it would be good to start with a *minimal* definition, even just one mode.
-> The rest could follow as subsequent patches, each being reviewed and debated
-> separately. Otherwise this discussion can drag on for a long time.
-
-Minimal definition to replace what applicaitons use on XFS and to
-support poasix_fallocate are the thre that have been mentioned so
-far (FA_ALLOCATE, FA_PREALLOCATE, FA_DEALLOCATE). I'll document them
-all in a man page...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Mathematics is the supreme nostalgia of our time.
