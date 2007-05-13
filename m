@@ -1,40 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 10:49:24 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4CHn2fB010718
-	for <xfs@oss.sgi.com>; Sat, 12 May 2007 10:49:04 -0700
-Subject: Re: Review: Concurrent Multi-File Data Streams
-References: <20070511003606.GB85884050@sgi.com>
-From: Andi Kleen <andi@firstfloor.org>
-Date: 12 May 2007 20:46:19 +0200
-In-Reply-To: <20070511003606.GB85884050@sgi.com>
-Message-ID: <p73sla1ev7o.fsf@bingen.suse.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 20:02:21 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4D32GfB025910
+	for <xfs@oss.sgi.com>; Sat, 12 May 2007 20:02:17 -0700
+Message-ID: <46467FB5.8080301@sandeen.net>
+Date: Sat, 12 May 2007 22:02:13 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: updatedb triggers XFS internal error
+References: <46449B2C.30208@dneg.com>
+In-Reply-To: <46449B2C.30208@dneg.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Evan Fraser <evan@dneg.com>
+Cc: xfs@oss.sgi.com
 
-David Chinner <dgc@sgi.com> writes:
+Evan Fraser wrote:
+> Hello,
+> I'm having a problem with one of my linux servers. whenever updatedb is 
+> run, the following errors occur in the system log.
 > 
-> The following patch survives XFSQA with timeouts set to minimum,
-> default, 500s and maximum. The patch has not had a great
-> deal of low memory testing, and the object cache may need a shrinker
-> interface to work in low memory conditions.
-> 
-> Comments?
+> 0x0: c9 00 5a f1 3a 7f 66 be a3 c1 d4 7f e8 1d 6b c9
+> Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2271 of 
+> file fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8817957f
 
-It seems to be an optimization for a relatively small number of streams. When you
-do a large number on average you should get similar readahead benefits
-from round robing the streams over some AGs vs keeping it in a single AG,
-right? 
+This indicates bad metadata magic read from disk.  You'll probably want 
+to run xfs_repair; you can run it with -n to see what it *would* do 
+first, to get an idea of how drastic the repair might be.  Repairing 
+1.4T won't probably be lots of fun, but you've got corruption in there 
+somewhere...
 
-The fallback to AG 0 if nstreams>AGs seems pretty lousy. Wouldn't it be better 
-to do the normal XFS allocation algorithm then?  I think right now it will
-go into low space mode in this case, which might give worse results.
-
-Also centisecs is a really ugly unit whose use should be probably not propagated.
-
--Andi
+-Eric
