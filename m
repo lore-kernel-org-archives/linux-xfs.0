@@ -1,36 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 20:02:21 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 May 2007 20:09:07 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4D32GfB025910
-	for <xfs@oss.sgi.com>; Sat, 12 May 2007 20:02:17 -0700
-Message-ID: <46467FB5.8080301@sandeen.net>
-Date: Sat, 12 May 2007 22:02:13 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4D38vfB027310
+	for <xfs@oss.sgi.com>; Sat, 12 May 2007 20:08:58 -0700
+Message-ID: <46468148.7000708@sandeen.net>
+Date: Sat, 12 May 2007 22:08:56 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: updatedb triggers XFS internal error
-References: <46449B2C.30208@dneg.com>
-In-Reply-To: <46449B2C.30208@dneg.com>
+Subject: Re: Review: Concurrent Multi-File Data Streams
+References: <20070511003606.GB85884050@sgi.com> <p73sla1ev7o.fsf@bingen.suse.de>
+In-Reply-To: <p73sla1ev7o.fsf@bingen.suse.de>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Evan Fraser <evan@dneg.com>
-Cc: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Evan Fraser wrote:
-> Hello,
-> I'm having a problem with one of my linux servers. whenever updatedb is 
-> run, the following errors occur in the system log.
+Andi Kleen wrote:
+
+> Also centisecs is a really ugly unit whose use should be probably not propagated.
 > 
-> 0x0: c9 00 5a f1 3a 7f 66 be a3 c1 d4 7f e8 1d 6b c9
-> Filesystem "md0": XFS internal error xfs_da_do_buf(2) at line 2271 of 
-> file fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8817957f
+> -Andi
 
-This indicates bad metadata magic read from disk.  You'll probably want 
-to run xfs_repair; you can run it with -n to see what it *would* do 
-first, to get an idea of how drastic the repair might be.  Repairing 
-1.4T won't probably be lots of fun, but you've got corruption in there 
-somewhere...
+Hmm at one point I thought the preferred unit for this sort of tuneable 
+*was* centisecs.  What's the unit du jour?
+
+[root@neon ~]# sysctl -a  |grep cent
+vm.dirty_expire_centisecs = 2999
+vm.dirty_writeback_centisecs = 499
+fs.xfs.age_buffer_centisecs = 1500
+fs.xfs.xfsbufd_centisecs = 100
+fs.xfs.xfssyncd_centisecs = 3000
+
+I think xfs was following the vm lead at one point.
 
 -Eric
