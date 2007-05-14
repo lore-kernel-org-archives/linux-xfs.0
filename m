@@ -1,366 +1,151 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 May 2007 07:54:08 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4EEs2fB013001
-	for <xfs@oss.sgi.com>; Mon, 14 May 2007 07:54:04 -0700
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4EEs1i4020276
-	for <xfs@oss.sgi.com>; Mon, 14 May 2007 10:54:01 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 May 2007 08:33:32 -0700 (PDT)
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4EFXSfB023882
+	for <xfs@oss.sgi.com>; Mon, 14 May 2007 08:33:29 -0700
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4EFXSGR025359
+	for <xfs@oss.sgi.com>; Mon, 14 May 2007 11:33:28 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4EEs1Fk200374
-	for <xfs@oss.sgi.com>; Mon, 14 May 2007 08:54:01 -0600
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4EFXR0K219552
+	for <xfs@oss.sgi.com>; Mon, 14 May 2007 09:33:27 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4EEs08G028241
-	for <xfs@oss.sgi.com>; Mon, 14 May 2007 08:54:01 -0600
-Date: Mon, 14 May 2007 20:24:09 +0530
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4EFXQqb012695
+	for <xfs@oss.sgi.com>; Mon, 14 May 2007 09:33:27 -0600
+Date: Mon, 14 May 2007 21:03:30 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 5/5][TAKE2] ext4: write support for preallocated blocks
-Message-ID: <20070514145408.GE31748@amitarora.in.ibm.com>
-References: <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070514132926.GA30768@amitarora.in.ibm.com> <20070514142820.GA31468@amitarora.in.ibm.com>
+Subject: Re: [PATCH 2/5][TAKE2] fallocate() on s390 - glibc wrapper
+Message-ID: <20070514153330.GA25249@amitarora.in.ibm.com>
+References: <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070514132926.GA30768@amitarora.in.ibm.com> <20070514142820.GA31468@amitarora.in.ibm.com> <20070514144833.GB31748@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070514142820.GA31468@amitarora.in.ibm.com>
+In-Reply-To: <20070514144833.GB31748@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: torvalds@osdl.org, akpm@linux-foundation.org
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-This patch adds write support to the uninitialized extents that get
-created when a preallocation is done using fallocate(). It takes care of
-splitting the extents into multiple (upto three) extents and merging the
-new split extents with neighbouring ones, if possible.
+On Mon, May 14, 2007 at 08:18:34PM +0530, Amit K. Arora wrote:
+> This is the patch suggested by Martin Schwidefsky. Here are the comments
+> and patch from him.
 
-Changelog:
----------
- 1) Replaced BUG_ON with WARN_ON & ext4_error.
- 2) Added variable names to the function declaration of
-    ext4_ext_try_to_merge().
- 3) Updated variable declarations to use multiple-definitions-per-line.
- 4) "if((a=foo())).." was broken into "a=foo(); if(a).."
- 5) Removed extra spaces.
+Martin also suggested a wrapper in glibc to handle this system call on
+s390. Posting it here so that we get feedback for this too.
+Here it is:
 
-Here is the updated patch:
+.globl __fallocate
+ENTRY(__fallocate)
+	stm	%r6,%r7,28(%r15)	/* save %r6/%r7 on stack */
+	cfi_offset (%r7, -68)
+	cfi_offset (%r6, -72)
+	lm	%r6,%r7,96(%r15)	/* load loff_t len from stack */
+	svc	SYS_ify(fallocate)
+	lm	%r6,%r7,28(%r15)	/* restore %r6/%r7 from stack */
+	br	%r14
+PSEUDO_END(__fallocate)
 
-Signed-off-by: Amit Arora <aarora@in.ibm.com>
----
- fs/ext4/extents.c               |  234 +++++++++++++++++++++++++++++++++++-----
- include/linux/ext4_fs_extents.h |    3 
- 2 files changed, 210 insertions(+), 27 deletions(-)
-
-Index: linux-2.6.21/fs/ext4/extents.c
-===================================================================
---- linux-2.6.21.orig/fs/ext4/extents.c
-+++ linux-2.6.21/fs/ext4/extents.c
-@@ -1141,6 +1141,54 @@ ext4_can_extents_be_merged(struct inode 
- }
+--
+Regards,
+Amit Arora
  
- /*
-+ * This function tries to merge the "ex" extent to the next extent in the tree.
-+ * It always tries to merge towards right. If you want to merge towards
-+ * left, pass "ex - 1" as argument instead of "ex".
-+ * Returns 0 if the extents (ex and ex+1) were _not_ merged and returns
-+ * 1 if they got merged.
-+ */
-+int ext4_ext_try_to_merge(struct inode *inode,
-+			  struct ext4_ext_path *path,
-+			  struct ext4_extent *ex)
-+{
-+	struct ext4_extent_header *eh;
-+	unsigned int depth, len;
-+	int merge_done = 0;
-+	int uninitialized = 0;
-+
-+	depth = ext_depth(inode);
-+	BUG_ON(path[depth].p_hdr == NULL);
-+	eh = path[depth].p_hdr;
-+
-+	while (ex < EXT_LAST_EXTENT(eh))
-+	{
-+		if (!ext4_can_extents_be_merged(inode, ex, ex + 1))
-+			break;
-+		/* merge with next extent! */
-+		if (ext4_ext_is_uninitialized(ex))
-+			uninitialized = 1;
-+		ex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(ex)
-+				+ ext4_ext_get_actual_len(ex + 1));
-+		if (uninitialized)
-+			ext4_ext_mark_uninitialized(ex);
-+
-+		if (ex + 1 < EXT_LAST_EXTENT(eh)) {
-+			len = (EXT_LAST_EXTENT(eh) - ex - 1)
-+				* sizeof(struct ext4_extent);
-+			memmove(ex + 1, ex + 2, len);
-+		}
-+		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries) - 1);
-+		merge_done = 1;
-+		WARN_ON(eh->eh_entries == 0);
-+		if (!eh->eh_entries)
-+			ext4_error(inode->i_sb, "ext4_ext_try_to_merge",
-+			   "inode#%lu, eh->eh_entries = 0!", inode->i_ino);
-+	}
-+
-+	return merge_done;
-+}
-+
-+/*
-  * check if a portion of the "newext" extent overlaps with an
-  * existing extent.
-  *
-@@ -1328,25 +1376,7 @@ has_space:
- 
- merge:
- 	/* try to merge extents to the right */
--	while (nearex < EXT_LAST_EXTENT(eh)) {
--		if (!ext4_can_extents_be_merged(inode, nearex, nearex + 1))
--			break;
--		/* merge with next extent! */
--		if (ext4_ext_is_uninitialized(nearex))
--			uninitialized = 1;
--		nearex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(nearex)
--					+ ext4_ext_get_actual_len(nearex + 1));
--		if (uninitialized)
--			ext4_ext_mark_uninitialized(nearex);
--
--		if (nearex + 1 < EXT_LAST_EXTENT(eh)) {
--			len = (EXT_LAST_EXTENT(eh) - nearex - 1)
--					* sizeof(struct ext4_extent);
--			memmove(nearex + 1, nearex + 2, len);
--		}
--		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries)-1);
--		BUG_ON(eh->eh_entries == 0);
--	}
-+	ext4_ext_try_to_merge(inode, path, nearex);
- 
- 	/* try to merge extents to the left */
- 
-@@ -2012,15 +2042,152 @@ void ext4_ext_release(struct super_block
- #endif
- }
- 
-+/*
-+ * This function is called by ext4_ext_get_blocks() if someone tries to write
-+ * to an uninitialized extent. It may result in splitting the uninitialized
-+ * extent into multiple extents (upto three - one initialized and two
-+ * uninitialized).
-+ * There are three possibilities:
-+ *   a> There is no split required: Entire extent should be initialized
-+ *   b> Splits in two extents: Write is happening at either end of the extent
-+ *   c> Splits in three extents: Somone is writing in middle of the extent
-+ */
-+int ext4_ext_convert_to_initialized(handle_t *handle, struct inode *inode,
-+					struct ext4_ext_path *path,
-+					ext4_fsblk_t iblock,
-+					unsigned long max_blocks)
-+{
-+	struct ext4_extent *ex, newex;
-+	struct ext4_extent *ex1 = NULL;
-+	struct ext4_extent *ex2 = NULL;
-+	struct ext4_extent *ex3 = NULL;
-+	struct ext4_extent_header *eh;
-+	unsigned int allocated, ee_block, ee_len, depth;
-+	ext4_fsblk_t newblock;
-+	int err = 0;
-+	int ret = 0;
-+
-+	depth = ext_depth(inode);
-+	eh = path[depth].p_hdr;
-+	ex = path[depth].p_ext;
-+	ee_block = le32_to_cpu(ex->ee_block);
-+	ee_len = ext4_ext_get_actual_len(ex);
-+	allocated = ee_len - (iblock - ee_block);
-+	newblock = iblock - ee_block + ext_pblock(ex);
-+	ex2 = ex;
-+
-+	/* ex1: ee_block to iblock - 1 : uninitialized */
-+	if (iblock > ee_block) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/* for sanity, update the length of the ex2 extent before
-+	 * we insert ex3, if ex1 is NULL. This is to avoid temporary
-+	 * overlap of blocks.
-+	 */
-+	if (!ex1 && allocated > max_blocks)
-+		ex2->ee_len = cpu_to_le16(max_blocks);
-+	/* ex3: to ee_block + ee_len : uninitialised */
-+	if (allocated > max_blocks) {
-+		unsigned int newdepth;
-+		ex3 = &newex;
-+		ex3->ee_block = cpu_to_le32(iblock + max_blocks);
-+		ext4_ext_store_pblock(ex3, newblock + max_blocks);
-+		ex3->ee_len = cpu_to_le16(allocated - max_blocks);
-+		ext4_ext_mark_uninitialized(ex3);
-+		err = ext4_ext_insert_extent(handle, inode, path, ex3);
-+		if (err)
-+			goto out;
-+		/* The depth, and hence eh & ex might change
-+		 * as part of the insert above.
-+		 */
-+		newdepth = ext_depth(inode);
-+		if (newdepth != depth) {
-+			depth = newdepth;
-+			path = ext4_ext_find_extent(inode, iblock, NULL);
-+			if (IS_ERR(path)) {
-+				err = PTR_ERR(path);
-+				path = NULL;
-+				goto out;
-+			}
-+			eh = path[depth].p_hdr;
-+			ex = path[depth].p_ext;
-+			if (ex2 != &newex)
-+				ex2 = ex;
-+		}
-+		allocated = max_blocks;
-+	}
-+	/* If there was a change of depth as part of the
-+	 * insertion of ex3 above, we need to update the length
-+	 * of the ex1 extent again here
-+	 */
-+	if (ex1 && ex1 != ex) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/* ex2: iblock to iblock + maxblocks-1 : initialised */
-+	ex2->ee_block = cpu_to_le32(iblock);
-+	ex2->ee_start = cpu_to_le32(newblock);
-+	ext4_ext_store_pblock(ex2, newblock);
-+	ex2->ee_len = cpu_to_le16(allocated);
-+	if (ex2 != ex)
-+		goto insert;
-+	err = ext4_ext_get_access(handle, inode, path + depth);
-+	if (err)
-+		goto out;
-+	/* New (initialized) extent starts from the first block
-+	 * in the current extent. i.e., ex2 == ex
-+	 * We have to see if it can be merged with the extent
-+	 * on the left.
-+	 */
-+	if (ex2 > EXT_FIRST_EXTENT(eh)) {
-+		/* To merge left, pass "ex2 - 1" to try_to_merge(),
-+		 * since it merges towards right _only_.
-+		 */
-+		ret = ext4_ext_try_to_merge(inode, path, ex2 - 1);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+			depth = ext_depth(inode);
-+			ex2--;
-+		}
-+	}
-+	/* Try to Merge towards right. This might be required
-+	 * only when the whole extent is being written to.
-+	 * i.e. ex2 == ex and ex3 == NULL.
-+	 */
-+	if (!ex3) {
-+		ret = ext4_ext_try_to_merge(inode, path, ex2);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+		}
-+	}
-+	/* Mark modified extent as dirty */
-+	err = ext4_ext_dirty(handle, inode, path + depth);
-+	goto out;
-+insert:
-+	err = ext4_ext_insert_extent(handle, inode, path, &newex);
-+out:
-+	return err ? err : allocated;
-+}
-+
- int ext4_ext_get_blocks(handle_t *handle, struct inode *inode,
- 			ext4_fsblk_t iblock,
- 			unsigned long max_blocks, struct buffer_head *bh_result,
- 			int create, int extend_disksize)
- {
- 	struct ext4_ext_path *path = NULL;
-+	struct ext4_extent_header *eh;
- 	struct ext4_extent newex, *ex;
- 	ext4_fsblk_t goal, newblock;
--	int err = 0, depth;
-+	int err = 0, depth, ret;
- 	unsigned long allocated = 0;
- 
- 	__clear_bit(BH_New, &bh_result->b_state);
-@@ -2068,6 +2235,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 	 * this is why assert can't be put in ext4_ext_find_extent()
- 	 */
- 	BUG_ON(path[depth].p_ext == NULL && depth != 0);
-+	eh = path[depth].p_hdr;
- 
- 	ex = path[depth].p_ext;
- 	if (ex) {
-@@ -2076,13 +2244,9 @@ int ext4_ext_get_blocks(handle_t *handle
- 		unsigned short ee_len;
- 
- 		/*
--		 * Allow future support for preallocated extents to be added
--		 * as an RO_COMPAT feature:
- 		 * Uninitialized extents are treated as holes, except that
--		 * we avoid (fail) allocating new blocks during a write.
-+		 * we split out initialized portions during a write.
- 		 */
--		if (le16_to_cpu(ex->ee_len) > EXT_MAX_LEN)
--			goto out2;
- 		ee_len = ext4_ext_get_actual_len(ex);
- 		/* if found extent covers block, simply return it */
- 	        if (iblock >= ee_block && iblock < ee_block + ee_len) {
-@@ -2091,12 +2255,27 @@ int ext4_ext_get_blocks(handle_t *handle
- 			allocated = ee_len - (iblock - ee_block);
- 			ext_debug("%d fit into %lu:%d -> %llu\n", (int) iblock,
- 					ee_block, ee_len, newblock);
-+
- 			/* Do not put uninitialized extent in the cache */
--			if (!ext4_ext_is_uninitialized(ex))
-+			if (!ext4_ext_is_uninitialized(ex)) {
- 				ext4_ext_put_in_cache(inode, ee_block,
- 							ee_len, ee_start,
- 							EXT4_EXT_CACHE_EXTENT);
--			goto out;
-+				goto out;
-+			}
-+			if (create == EXT4_CREATE_UNINITIALIZED_EXT)
-+				goto out;
-+			if (!create)
-+				goto out2;
-+
-+			ret = ext4_ext_convert_to_initialized(handle, inode,
-+								path, iblock,
-+								max_blocks);
-+			if (ret <= 0)
-+				goto out2;
-+			else
-+				allocated = ret;
-+			goto outnew;
- 		}
- 	}
- 
-@@ -2148,6 +2327,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 
- 	/* previous routine could use block we allocated */
- 	newblock = ext_pblock(&newex);
-+outnew:
- 	__set_bit(BH_New, &bh_result->b_state);
- 
- 	/* Cache only when it is _not_ an uninitialized extent */
-Index: linux-2.6.21/include/linux/ext4_fs_extents.h
-===================================================================
---- linux-2.6.21.orig/include/linux/ext4_fs_extents.h
-+++ linux-2.6.21/include/linux/ext4_fs_extents.h
-@@ -202,6 +202,9 @@ static inline int ext4_ext_get_actual_le
- 
- extern int ext4_extent_tree_init(handle_t *, struct inode *);
- extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
-+extern int ext4_ext_try_to_merge(struct inode *inode,
-+				 struct ext4_ext_path *path,
-+				 struct ext4_extent *);
- extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
- extern int ext4_ext_insert_extent(handle_t *, struct inode *, struct ext4_ext_path *, struct ext4_extent *);
- extern int ext4_ext_walk_space(struct inode *, unsigned long, unsigned long, ext_prepare_callback, void *);
+> -------------
+> From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> 
+> This patch implements support of fallocate system call on s390(x)
+> platform. A wrapper is added to address the issue which s390 ABI has
+> with the arguments of this system call.
+> 
+> Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> ---
+> 
+>  arch/s390/kernel/compat_wrapper.S |   10 ++++++++++
+>  arch/s390/kernel/sys_s390.c       |   29 +++++++++++++++++++++++++++++
+>  arch/s390/kernel/syscalls.S       |    1 +
+>  include/asm-s390/unistd.h         |    3 ++-
+>  4 files changed, 42 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6.21/arch/s390/kernel/compat_wrapper.S
+> ===================================================================
+> --- linux-2.6.21.orig/arch/s390/kernel/compat_wrapper.S
+> +++ linux-2.6.21/arch/s390/kernel/compat_wrapper.S
+> @@ -1682,3 +1682,13 @@ compat_sys_utimes_wrapper:
+>  	llgtr	%r2,%r2			# char *
+>  	llgtr	%r3,%r3			# struct compat_timeval *
+>  	jg	compat_sys_utimes
+> +
+> +	.globl  sys_fallocate_wrapper
+> +sys_fallocate_wrapper:
+> +	lgfr	%r2,%r2			# int
+> +	lgfr	%r3,%r3			# int
+> +	sllg    %r4,%r4,32		# get high word of 64bit loff_t
+> +	lr      %r4,%r5			# get low word of 64bit loff_t
+> +	sllg    %r5,%r6,32		# get high word of 64bit loff_t
+> +	l	%r5,164(%r15)		# get low word of 64bit loff_t
+> +	jg	sys_fallocate
+> Index: linux-2.6.21/arch/s390/kernel/syscalls.S
+> ===================================================================
+> --- linux-2.6.21.orig/arch/s390/kernel/syscalls.S
+> +++ linux-2.6.21/arch/s390/kernel/syscalls.S
+> @@ -322,3 +322,4 @@ NI_SYSCALL							/* 310 sys_move_pages *
+>  SYSCALL(sys_getcpu,sys_getcpu,sys_getcpu_wrapper)
+>  SYSCALL(sys_epoll_pwait,sys_epoll_pwait,compat_sys_epoll_pwait_wrapper)
+>  SYSCALL(sys_utimes,sys_utimes,compat_sys_utimes_wrapper)
+> +SYSCALL(s390_fallocate,sys_fallocate,sys_fallocate_wrapper)
+> Index: linux-2.6.21/arch/s390/kernel/sys_s390.c
+> ===================================================================
+> --- linux-2.6.21.orig/arch/s390/kernel/sys_s390.c
+> +++ linux-2.6.21/arch/s390/kernel/sys_s390.c
+> @@ -286,3 +286,32 @@ int kernel_execve(const char *filename, 
+>  		  "d" (__arg3) : "memory");
+>  	return __svcres;
+>  }
+> +
+> +#ifndef CONFIG_64BIT
+> +/*
+> + * This is a wrapper to call sys_fallocate(). For 31 bit s390 the last
+> + * 64 bit argument "len" is split into the upper and lower 32 bits. The
+> + * system call wrapper in the user space loads the value to %r6/%r7.
+> + * The code in entry.S keeps the values in %r2 - %r6 where they are and
+> + * stores %r7 to 96(%r15). But the standard C linkage requires that
+> + * the whole 64 bit value for len is stored on the stack and doesn't
+> + * use %r6 at all. So s390_fallocate has to convert the arguments from
+> + *   %r2: fd, %r3: mode, %r4/%r5: offset, %r6/96(%r15)-99(%r15): len
+> + * to
+> + *   %r2: fd, %r3: mode, %r4/%r5: offset, 96(%r15)-103(%r15): len
+> + */
+> +asmlinkage long s390_fallocate(int fd, int mode, loff_t offset,
+> +			       u32 len_high, u32 len_low)
+> +{
+> +	union {
+> +		u64 len;
+> +		struct {
+> +			u32 high;
+> +			u32 low;
+> +		};
+> +	} cv;
+> +	cv.high = len_high;
+> +	cv.low = len_low;
+> +	return sys_fallocate(fd, mode, offset, cv.len);
+> +}
+> +#endif
+> Index: linux-2.6.21/include/asm-s390/unistd.h
+> ===================================================================
+> --- linux-2.6.21.orig/include/asm-s390/unistd.h
+> +++ linux-2.6.21/include/asm-s390/unistd.h
+> @@ -251,8 +251,9 @@
+>  #define __NR_getcpu		311
+>  #define __NR_epoll_pwait	312
+>  #define __NR_utimes		313
+> +#define __NR_fallocate		314
+> 
+> -#define NR_syscalls 314
+> +#define NR_syscalls 315
+> 
+>  /* 
+>   * There are some system calls that are not present on 64 bit, some
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
