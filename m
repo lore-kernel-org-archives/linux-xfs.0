@@ -1,291 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 May 2007 14:19:40 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4DLJafB015043
-	for <xfs@oss.sgi.com>; Sun, 13 May 2007 14:19:37 -0700
-Date: Sun, 13 May 2007 21:59:53 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: Concurrent Multi-File Data Streams
-Message-ID: <20070513205953.GA14030@infradead.org>
-References: <20070511003606.GB85884050@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 May 2007 22:32:08 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4E5W1fB012122
+	for <xfs@oss.sgi.com>; Sun, 13 May 2007 22:32:03 -0700
+Date: Mon, 14 May 2007 15:35:31 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: Review: Concurrent Multi-File Data Streams - centisecs
+Message-ID: <DB1970150957C36FEE7BB4E1@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <46468148.7000708@sandeen.net>
+References: <20070511003606.GB85884050@sgi.com> <p73sla1ev7o.fsf@bingen.suse.de>
+ <46468148.7000708@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20070511003606.GB85884050@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, Andi Kleen <andi@firstfloor.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-I already had some comments on this when discussing it with Sam in person,
-but it seems like they didn't make it to you.
+Yeah, I thought we were told off in the past for not using centisecs
+and so Nathan changed stuff so it was in centisecs.
 
-First the mru cache while beeing quite nice code is heavily overengineered
-for this case.  Unless there are a many hundred filestreams per filesystem
-it will be a lot faster to just have a simple wrap-around array of
-linked lists.  We don't want to feed the argument that xfs has lots of
-useless bloated code, do we? :)
+Looking in logs and bug db....
 
-All the pip != NULL checks are superflous in Linux.  A regular
-file can never have a non-null parent inode, and a directory can only
-have a non-NULL parent inode in very odd corner cases involving NFS
-exports, but it has to be connect again once you start doing
-namespace modifying operations on it.
+----------------
+xfs_sysctl.c
+revision 1.28
+date: 2004/05/14 03:13:52;  author: nathans;  state: Exp;  lines: +7 -7
+modid: xfs-linux:xfs-kern:171825a
+Export/import tunable time intervals as centisecs not jiffies.
 
-There some naming confusion: xfs_mount.h forward-declares struct
-xfs_filestream but everything else uses struct fstrm_mnt_data.
-The former is very non-descriptive and the latter but ugly, I'd
-suggestjust putting the mru-cache replacement directly in there
-as xfs_filestream_cache instead of the wrapping.
+Description:
 
-The xfs_zeroino changes looks good but should be a separate commit.
+Not sure what we were smoking when we made these interfaces
+converse with userspace in terms of jiffies, I guess it was
+just more expedient at the time.  Time to clean this up so
+regular humans know what time intervals they're asking for,
+and so that the interface works consistently for different
+HZ values.
 
-Some comments on the actual code in xfs_filestream.c
+The kernel pdflush daemon in 2.6 uses centisecs, so we may
+as well make our units consistent with that (since that guy
+plays a big role in flushing our data & it is likely to be
+tuned along with any XFS-specific parameter changes).
 
-> +#ifdef DEBUG_FILESTREAMS
-> +#define dprint(fmt, args...) do {                    \
-> +        printk(KERN_DEBUG "%4d %s: " fmt "\n",       \
-> +               current_pid(), __FUNCTION__, ##args); \
-> +} while(0)
-> +#else
-> +#define dprint(args...) do {} while (0)
-> +#endif
+cheers.
 
-This should probably be killed entirely.
+On Tue, May 11, 2004 at 03:40:57PM -0700, Andrew Morton wrote:
+> bart@samwel.tk wrote:
+> >
+> > The laptop mode control script incorrectly guesses XFS_HZ=1000.
+>
+> aargh.  XFS is broken.  It shouldn't be exposing jiffy-based tunables into
+> /proc, or `mount -o remount' or whatever.
+>
+> It would be much better to rework XFS so that these user-visible tunables
+> are in units of milliseconds, centiseconds or whatever.
+>
+> Is this possible, please?
+>
+> If so, please make the /proc filename reflect the tunable's units:
+>
+>       /proc/sys/fs/xfs/lm_sync_centisecs
+>       /proc/sys/fs/xfs/age_buffer_centisecs
+>       etc.
+>
+> thanks.
+----------------------------
 
-> +#define GET_AG_REF(mp, ag) atomic_read(&(mp)->m_perag[ag].pagf_fstrms)
-> +#define INC_AG_REF(mp, ag) atomic_inc_return(&(mp)->m_perag[ag].pagf_fstrms)
-> +#define DEC_AG_REF(mp, ag) atomic_dec_return(&(mp)->m_perag[ag].pagf_fstrms)
-
-These should be inlines with more descriptive lower case names.
-
-> +#define XFS_PICK_USERDATA 1
-> +#define XFS_PICK_LOWSPACE 2
-
-enum.
-
-> +
-> +/*
-> + * Scan the AGs starting at startag looking for an AG that isn't in use and has
-> + * at least minlen blocks free.
-> + */
-> +static int
-> +_xfs_filestream_pick_ag(
-> +	xfs_mount_t	*mp,
-> +	xfs_agnumber_t	startag,
-> +	xfs_agnumber_t	*agp,
-> +	int		flags,
-> +	xfs_extlen_t	minlen)
-> +{
-> +	int		err, trylock, nscan;
-> +	xfs_extlen_t	delta, longest, need, free, minfree, maxfree = 0;
-> +	xfs_agnumber_t	ag, max_ag = NULLAGNUMBER;
-> +	struct xfs_perag *pag;
-> +
-> +	/* 2% of an AG's blocks must be free for it to be chosen. */
-> +	minfree = mp->m_sb.sb_agblocks / 50;
-> +
-> +	ag = startag;
-> +	*agp = NULLAGNUMBER;
-> +
-> +	/* For the first pass, don't sleep trying to init the per-AG. */
-> +	trylock = XFS_ALLOC_FLAG_TRYLOCK;
-> +
-> +	for (nscan = 0; 1; nscan++) {
-> +
-> +		//dprint("scanning AG %d[%d]", ag, GET_AG_REF(mp, ag));
-
-please don't leave commented out debug code in.
-
-> +		pag = mp->m_perag + ag;
-> +
-> +		if (!pag->pagf_init &&
-> +		    (err = xfs_alloc_pagf_init(mp, NULL, ag, trylock)) &&
-> +		    !trylock) {
-> +			dprint("xfs_alloc_pagf_init returned %d", err);
-> +			return err;
-> +		}
-
-		if (!pag->pagf_init) {
-			err = xfs_alloc_pagf_init(mp, NULL, ag, trylock);
-			if (err && !trylock)
-				return err;
-		}
-
-> +static int
-> +_xfs_filestream_set_ag(
-> +	xfs_inode_t	*ip,
-> +	xfs_inode_t	*pip,
-> +	xfs_agnumber_t	ag)
-> +{
-> +	int		err = 0;
-> +	xfs_mount_t	*mp;
-> +	xfs_mru_cache_t	*cache;
-> +	fstrm_item_t	*item;
-> +	xfs_agnumber_t	old_ag;
-> +	xfs_inode_t	*old_pip;
-> +
-> +	/*
-> +	 * Either ip is a regular file and pip is a directory, or ip is a
-> +	 * directory and pip is NULL.
-> +	 */
-
-We have parent information for parents aswell so this should probably
-be made more regular.
-
-> +	ASSERT(ip && (((ip->i_d.di_mode & S_IFREG) && pip &&
-> +	               (pip->i_d.di_mode & S_IFDIR)) ||
-> +	              ((ip->i_d.di_mode & S_IFDIR) && !pip)));
+--Tim
 
 
-> +	mp = ip->i_mount;
-> +	cache = mp->m_filestream->fstrm_items;
-> +
-> +	if ((item = (fstrm_item_t*)xfs_mru_cache_lookup(cache, ip->i_ino))) {
-
-assignment and conditional on separate lines please (also alsewhere in the
-code), and no needless casts from void * either (also various places
-
-> +void
-> +xfs_filestream_init(void)
-> +{
-> +	item_zone = kmem_zone_init(sizeof(fstrm_item_t), "fstrm_item");
-> +	ASSERT(item_zone);
-
-Please check for errors instead and propagate them.
-
-> +/*
-> + * xfs_filestream_uninit() is called at xfs termination time to destroy the
-> + * memory zone that was used for filestream data structure allocation.
-> + */
-> +void
-> +xfs_filestream_uninit(void)
-> +{
-> +	if (item_zone) {
-> +		kmem_zone_destroy(item_zone);
-> +		item_zone = NULL;
-> +	}
-> +}
-
-no need for the NULL check or setting it to NULL.
-
-> +	if (!(md = (fstrm_mnt_data_t*)kmem_zalloc(sizeof(*md), KM_SLEEP)))
-
-Please use KM_MAYFAIL for all new code otside of transactions.
-
-> +	ASSERT(ip->i_d.di_mode & (S_IFREG | S_IFDIR));
-> +	if (!(ip->i_d.di_mode & (S_IFREG | S_IFDIR)))
-> +		return NULLAGNUMBER;
-
-either the assert or the if clause checking gor it, please.
-
-Now comes the worst part the new allocator function
-i
-IF we look at a diff between xfs_bmap_filestreams and xfs_bmap_btalloc
-we see that it's a pretty bad cut & paste job:
 
 
---- btalloc	2007-05-12 12:43:03.000000000 +0200
-+++ fsalloc	2007-05-12 12:42:28.000000000 +0200
-@@ -1,44 +1,54 @@
- 
-> +	rt = (ap->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) && ap->userdata;
 
-xfs_bmap_alloc() never calls xfs_bmap_filestreams if this is
-true so all code guarded by if (rt) is dead.
+--On 12 May 2007 10:08:56 PM -0500 Eric Sandeen <sandeen@sandeen.net> wrote:
 
-> -	if (unlikely(align)) {
-> +	if (align) {
-
-Âlign should have the same likelyhood for oth
-
-> -	if (nullfb)
-> -		ap->rval = XFS_INO_TO_FSB(mp, ap->ip->i_ino);
-> -	else
-> +	if (nullfb) {
-> +		ag = xfs_filestream_get_ag(ap->ip);
-> +		ag = (ag != NULLAGNUMBER) ? ag : 0;
-> +		ap->rval = (ap->userdata) ? XFS_AGB_TO_FSB(mp, ag, 0) :
-> +		                            XFS_INO_TO_FSB(mp, ap->ip->i_ino);
-> +	} else {
-> 		ap->rval = ap->firstblock;
-> +	}
-
-Some rreal changes :)  But this could be just a third if case
-for the filesystream case.
- 
-> -	args.firstblock = ap->firstblock;
-
-	Backout of parts of rev1.349
-
-
- 	blen = 0;
- 	if (nullfb) {
--		args.type = XFS_ALLOCTYPE_START_BNO;
-+		/* _vextent doesn't pick an AG */
-+		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-
- 		/*
-> @@ -117,18 +167,19 @@
-> 		 */
-> 		else
->  			args.minlen = ap->alen;
-> +		ap->rval = args.fsbno = XFS_AGB_TO_FSB(mp, ag, 0);
->  	} else if (ap->low) {
-> -		args.type = XFS_ALLOCTYPE_START_BNO;
-> +		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> 		args.total = args.minlen = ap->minlen;
-
-Why is this different?
-
- 	}
-> -	if (unlikely(ap->userdata && ap->ip->i_d.di_extsize &&
-> -		    (ap->ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE))) {
-> +	if (ap->userdata && ap->ip->i_d.di_extsize &&
-> +	    (ap->ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)) {
- 		args.prod = ap->ip->i_d.di_extsize;
-> -		if ((args.mod = (xfs_extlen_t)do_mod(ap->off, args.prod)))
-> +		if ((args.mod = (xfs_extlen_t)(do_mod(ap->off, args.prod))))
-
-Gratious difference.
-
- 	 * is >= the stripe unit and the allocation offset is
- 	 * at the end of file.
- 	 */
-> +	atype = args.type;
-
-I don't quite undersatnd why we'd nee this in one, but not the other.
-
- 	if (!ap->low && ap->aeof) {
- 		if (!ap->off) {
- 			args.alignment = mp->m_dalign;
-
-> -			 * First try an exact bno allocation.
-> +		 	 * First try an exact bno allocation.
-> 			 * If it fails then do a near or start bno
-> 			 * allocation with alignment turned on.
-> -			 */
-> +		 	 */
-
-	Backout of whitespace adjustments.
-
-> -		XFS_TRANS_MOD_DQUOT_BYINO(mp, ap->tp, ap->ip,
-> -			ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT :
-> +		if (XFS_IS_QUOTA_ON(mp) &&
-> +		    ap->ip->i_ino != mp->m_sb.sb_uquotino &&
-> +		    ap->ip->i_ino != mp->m_sb.sb_gquotino) {
-> +		    XFS_TRANS_MOD_DQUOT_BYINO(mp, ap->tp, ap->ip,
-> +				ap->wasdel ?
-> +					XFS_TRANS_DQ_DELBCOUNT :
-> 					XFS_TRANS_DQ_BCOUNT,
-> -			(long) args.len);
-> +				(long)args.len);
-> +		}
-
-	Gratious differenes but okay because there won't be
-	file streams for quota inodes.
-
-Based onthat my conclusion is that xfs_bmap_filestreams and xfs_bmap_btalloc
-should be merged to avoid further maintaince overhead.
+> Andi Kleen wrote:
+>
+>> Also centisecs is a really ugly unit whose use should be probably not propagated.
+>>
+>> -Andi
+>
+> Hmm at one point I thought the preferred unit for this sort of tuneable *was* centisecs.  What's
+> the unit du jour?
+>
+> [root@neon ~]# sysctl -a  |grep cent
+> vm.dirty_expire_centisecs = 2999
+> vm.dirty_writeback_centisecs = 499
+> fs.xfs.age_buffer_centisecs = 1500
+> fs.xfs.xfsbufd_centisecs = 100
+> fs.xfs.xfssyncd_centisecs = 3000
+>
+> I think xfs was following the vm lead at one point.
+>
+> -Eric
