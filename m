@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 13:10:42 -0700 (PDT)
-Received: from e1.ny.us.ibm.com (e1.ny.us.ibm.com [32.97.182.141])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4FKAbfB024550
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 13:10:38 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4FKAaUa023072
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 16:10:36 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4FKAaP7557306
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 16:10:36 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4FKAaG5010348
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 16:10:36 -0400
-Date: Wed, 16 May 2007 01:40:40 +0530
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 13:13:37 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4FKDUfB025378
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 13:13:31 -0700
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l4FK9pSH002775
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 16:09:51 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4FKDQ8U269646
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 14:13:26 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4FKDPw6006804
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 14:13:26 -0600
+Date: Wed, 16 May 2007 01:43:30 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 2/5][TAKE3] fallocate() on s390
-Message-ID: <20070515201040.GB5834@amitarora.in.ibm.com>
+Subject: [PATCH 3/5][TAKE3] ext4: Extent overlap bugfix
+Message-ID: <20070515201330.GC5834@amitarora.in.ibm.com>
 References: <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070515193722.GA3487@amitarora.in.ibm.com> <20070515195421.GA2948@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -27,117 +27,119 @@ List-Id: xfs
 To: torvalds@osdl.org, akpm@linux-foundation.org
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-This is the patch suggested by Martin Schwidefsky to support
-sys_fallocate() on s390(x) platform.
+This patch adds a check for overlap of extents and cuts short the
+new extent to be inserted, if there is a chance of overlap.
 
-He also suggested a wrapper in glibc to handle this system call on
-s390. Posting it here so that we get feedback for this too.
+Changelog:
+---------
+Note: The changes below are from the initial post (dated 26th April,
+2007) and _not_ from TAKE2. The only difference from TAKE2 is the kernel
+version on which this patch is based. TAKE2 was based on 2.6.21 and this
+is based on 2.6.22-rc1.
+As suggested by Andrew, a check for wrap though zero has been added.
 
-.globl __fallocate
-ENTRY(__fallocate)
-	stm	%r6,%r7,28(%r15)	/* save %r6/%r7 on stack */
-	cfi_offset (%r7, -68)
-	cfi_offset (%r6, -72)
-	lm	%r6,%r7,96(%r15)	/* load loff_t len from stack */
-	svc	SYS_ify(fallocate)
-	lm	%r6,%r7,28(%r15)	/* restore %r6/%r7 from stack */
-	br	%r14
-PSEUDO_END(__fallocate)
+Here is the new patch:
 
-
-Here are the comments and the patch to linux kernel from him.
-
--------------
-From: Martin Schwidefsky <schwidefsky@de.ibm.com>
-
-This patch implements support of fallocate system call on s390(x)
-platform. A wrapper is added to address the issue which s390 ABI has
-with the arguments of this system call.
-
-Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Signed-off-by: Amit Arora <aarora@in.ibm.com>
 ---
- arch/s390/kernel/compat_wrapper.S |   10 ++++++++++
- arch/s390/kernel/sys_s390.c       |   29 +++++++++++++++++++++++++++++
- arch/s390/kernel/syscalls.S       |    1 +
- include/asm-s390/unistd.h         |    3 ++-
- 4 files changed, 42 insertions(+), 1 deletion(-)
+ fs/ext4/extents.c               |   60 ++++++++++++++++++++++++++++++++++++++--
+ include/linux/ext4_fs_extents.h |    1 
+ 2 files changed, 59 insertions(+), 2 deletions(-)
 
-Index: linux-2.6.22-rc1/arch/s390/kernel/compat_wrapper.S
+Index: linux-2.6.22-rc1/fs/ext4/extents.c
 ===================================================================
---- linux-2.6.22-rc1.orig/arch/s390/kernel/compat_wrapper.S
-+++ linux-2.6.22-rc1/arch/s390/kernel/compat_wrapper.S
-@@ -1682,3 +1682,13 @@ compat_sys_utimes_wrapper:
- 	llgtr	%r2,%r2			# char *
- 	llgtr	%r3,%r3			# struct compat_timeval *
- 	jg	compat_sys_utimes
-+
-+	.globl  sys_fallocate_wrapper
-+sys_fallocate_wrapper:
-+	lgfr	%r2,%r2			# int
-+	lgfr	%r3,%r3			# int
-+	sllg    %r4,%r4,32		# get high word of 64bit loff_t
-+	lr      %r4,%r5			# get low word of 64bit loff_t
-+	sllg    %r5,%r6,32		# get high word of 64bit loff_t
-+	l	%r5,164(%r15)		# get low word of 64bit loff_t
-+	jg	sys_fallocate
-Index: linux-2.6.22-rc1/arch/s390/kernel/sys_s390.c
-===================================================================
---- linux-2.6.22-rc1.orig/arch/s390/kernel/sys_s390.c
-+++ linux-2.6.22-rc1/arch/s390/kernel/sys_s390.c
-@@ -265,3 +265,32 @@ s390_fadvise64_64(struct fadvise64_64_ar
- 		return -EFAULT;
- 	return sys_fadvise64_64(a.fd, a.offset, a.len, a.advice);
+--- linux-2.6.22-rc1.orig/fs/ext4/extents.c
++++ linux-2.6.22-rc1/fs/ext4/extents.c
+@@ -1128,6 +1128,55 @@ ext4_can_extents_be_merged(struct inode 
  }
-+
-+#ifndef CONFIG_64BIT
-+/*
-+ * This is a wrapper to call sys_fallocate(). For 31 bit s390 the last
-+ * 64 bit argument "len" is split into the upper and lower 32 bits. The
-+ * system call wrapper in the user space loads the value to %r6/%r7.
-+ * The code in entry.S keeps the values in %r2 - %r6 where they are and
-+ * stores %r7 to 96(%r15). But the standard C linkage requires that
-+ * the whole 64 bit value for len is stored on the stack and doesn't
-+ * use %r6 at all. So s390_fallocate has to convert the arguments from
-+ *   %r2: fd, %r3: mode, %r4/%r5: offset, %r6/96(%r15)-99(%r15): len
-+ * to
-+ *   %r2: fd, %r3: mode, %r4/%r5: offset, 96(%r15)-103(%r15): len
+ 
+ /*
++ * check if a portion of the "newext" extent overlaps with an
++ * existing extent.
++ *
++ * If there is an overlap discovered, it updates the length of the newext
++ * such that there will be no overlap, and then returns 1.
++ * If there is no overlap found, it returns 0.
 + */
-+asmlinkage long s390_fallocate(int fd, int mode, loff_t offset,
-+			       u32 len_high, u32 len_low)
++unsigned int ext4_ext_check_overlap(struct inode *inode,
++				    struct ext4_extent *newext,
++				    struct ext4_ext_path *path)
 +{
-+	union {
-+		u64 len;
-+		struct {
-+			u32 high;
-+			u32 low;
-+		};
-+	} cv;
-+	cv.high = len_high;
-+	cv.low = len_low;
-+	return sys_fallocate(fd, mode, offset, cv.len);
++	unsigned long b1, b2;
++	unsigned int depth, len1;
++	unsigned int ret = 0;
++
++	b1 = le32_to_cpu(newext->ee_block);
++	len1 = le16_to_cpu(newext->ee_len);
++	depth = ext_depth(inode);
++	if (!path[depth].p_ext)
++		goto out;
++	b2 = le32_to_cpu(path[depth].p_ext->ee_block);
++
++	/*
++	 * get the next allocated block if the extent in the path
++	 * is before the requested block(s) 
++	 */
++	if (b2 < b1) {
++		b2 = ext4_ext_next_allocated_block(path);
++		if (b2 == EXT_MAX_BLOCK)
++			goto out;
++	}
++
++	/* check for wrap through zero */
++	if (b1 + len1 < b1) {
++		len1 = EXT_MAX_BLOCK - b1;
++		newext->ee_len = cpu_to_le16(len1);
++		ret = 1;
++	}
++
++	/* check for overlap */
++	if (b1 + len1 > b2) {
++		newext->ee_len = cpu_to_le16(b2 - b1);
++		ret = 1;
++	}
++out:
++	return ret;
 +}
-+#endif
-Index: linux-2.6.22-rc1/arch/s390/kernel/syscalls.S
-===================================================================
---- linux-2.6.22-rc1.orig/arch/s390/kernel/syscalls.S
-+++ linux-2.6.22-rc1/arch/s390/kernel/syscalls.S
-@@ -322,3 +322,4 @@ NI_SYSCALL							/* 310 sys_move_pages *
- SYSCALL(sys_getcpu,sys_getcpu,sys_getcpu_wrapper)
- SYSCALL(sys_epoll_pwait,sys_epoll_pwait,compat_sys_epoll_pwait_wrapper)
- SYSCALL(sys_utimes,sys_utimes,compat_sys_utimes_wrapper)
-+SYSCALL(s390_fallocate,sys_fallocate,sys_fallocate_wrapper)
-Index: linux-2.6.22-rc1/include/asm-s390/unistd.h
-===================================================================
---- linux-2.6.22-rc1.orig/include/asm-s390/unistd.h
-+++ linux-2.6.22-rc1/include/asm-s390/unistd.h
-@@ -251,8 +251,9 @@
- #define __NR_getcpu		311
- #define __NR_epoll_pwait	312
- #define __NR_utimes		313
-+#define __NR_fallocate		314
++
++/*
+  * ext4_ext_insert_extent:
+  * tries to merge requsted extent into the existing extent or
+  * inserts requested extent as new one into the tree,
+@@ -2031,7 +2080,15 @@ int ext4_ext_get_blocks(handle_t *handle
  
--#define NR_syscalls 314
-+#define NR_syscalls 315
+ 	/* allocate new block */
+ 	goal = ext4_ext_find_goal(inode, path, iblock);
+-	allocated = max_blocks;
++
++	/* Check if we can really insert (iblock)::(iblock+max_blocks) extent */
++	newex.ee_block = cpu_to_le32(iblock);
++	newex.ee_len = cpu_to_le16(max_blocks);
++	err = ext4_ext_check_overlap(inode, &newex, path);
++	if (err)
++		allocated = le16_to_cpu(newex.ee_len);
++	else
++		allocated = max_blocks;
+ 	newblock = ext4_new_blocks(handle, inode, goal, &allocated, &err);
+ 	if (!newblock)
+ 		goto out2;
+@@ -2039,7 +2096,6 @@ int ext4_ext_get_blocks(handle_t *handle
+ 			goal, newblock, allocated);
  
- /* 
-  * There are some system calls that are not present on 64 bit, some
+ 	/* try to insert new extent into found leaf and return */
+-	newex.ee_block = cpu_to_le32(iblock);
+ 	ext4_ext_store_pblock(&newex, newblock);
+ 	newex.ee_len = cpu_to_le16(allocated);
+ 	err = ext4_ext_insert_extent(handle, inode, path, &newex);
+Index: linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
+===================================================================
+--- linux-2.6.22-rc1.orig/include/linux/ext4_fs_extents.h
++++ linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
+@@ -190,6 +190,7 @@ ext4_ext_invalidate_cache(struct inode *
+ 
+ extern int ext4_extent_tree_init(handle_t *, struct inode *);
+ extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
++extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
+ extern int ext4_ext_insert_extent(handle_t *, struct inode *, struct ext4_ext_path *, struct ext4_extent *);
+ extern int ext4_ext_walk_space(struct inode *, unsigned long, unsigned long, ext_prepare_callback, void *);
+ extern struct ext4_ext_path * ext4_ext_find_extent(struct inode *, int, struct ext4_ext_path *);
