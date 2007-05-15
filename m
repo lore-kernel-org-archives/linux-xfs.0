@@ -1,63 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 May 2007 17:12:39 -0700 (PDT)
-Received: from smtps.tip.net.au (chilli.pcug.org.au [203.10.76.44])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4F0CYfB022809
-	for <xfs@oss.sgi.com>; Mon, 14 May 2007 17:12:35 -0700
-Date: Tue, 15 May 2007 09:44:36 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 1/5][TAKE2] fallocate() implementation on i86, x86_64
- and powerpc
-Message-Id: <20070515094436.d441098f.sfr@canb.auug.org.au>
-In-Reply-To: <20070514144524.GA31748@amitarora.in.ibm.com>
-References: <20070329101010.7a2b8783.akpm@linux-foundation.org>
-	<20070330071417.GI355@devserv.devel.redhat.com>
-	<20070417125514.GA7574@amitarora.in.ibm.com>
-	<20070418130600.GW5967@schatzie.adilger.int>
-	<20070420135146.GA21352@amitarora.in.ibm.com>
-	<20070420145918.GY355@devserv.devel.redhat.com>
-	<20070424121632.GA10136@amitarora.in.ibm.com>
-	<20070426175056.GA25321@amitarora.in.ibm.com>
-	<20070514132926.GA30768@amitarora.in.ibm.com>
-	<20070514142820.GA31468@amitarora.in.ibm.com>
-	<20070514144524.GA31748@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 May 2007 17:15:08 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4F0F3fB023732
+	for <xfs@oss.sgi.com>; Mon, 14 May 2007 17:15:05 -0700
+Date: Tue, 15 May 2007 10:14:50 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.21-git10/11: files getting truncated on xfs? or maybe an nlink problem?
+Message-ID: <20070515001450.GS86004887@sgi.com>
+References: <4642598E.3000607@goop.org> <20070510000119.GO85884050@sgi.com> <46426194.3040403@goop.org> <46439185.5060207@redhat.com> <464392B4.3070009@goop.org> <464393E1.3050705@redhat.com> <46439491.9010604@goop.org> <Pine.LNX.4.61.0705121323030.9570@yvahk01.tjqt.qr> <20070512135143.GG85884050@sgi.com> <4645D594.4070801@goop.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__15_May_2007_09_44_36_+1000_FmQQEkgMAA8ZAwtk"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4645D594.4070801@goop.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: David Chinner <dgc@sgi.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, Chuck Ebbert <cebbert@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Matt Mackall <mpm@selenic.com>, xfs@oss.sgi.com
 
---Signature=_Tue__15_May_2007_09_44_36_+1000_FmQQEkgMAA8ZAwtk
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+On Sat, May 12, 2007 at 07:56:20AM -0700, Jeremy Fitzhardinge wrote:
+> David Chinner wrote:
+> > What I don't understand is that on unmount dirty xfs inodes get
+> > written out. Clearly this is not happening - either there's a hole
+> > in the writeback logic (unlikely - it was unchanged) or we've missed
+> > some case where we need to update the filesize and mark the inode
+> > dirty.
+> >
+> > Hmmmm - if the write was just a short append to the file, then the
+> > block that was written to should already be mapped. Then we'll just
+> > look up the extent by doing a BMAPI_READ lookup, set the type to
+> > IOMAP_READ and add the block to ioend we are building.
+> >   
+> 
+> Well, that result I mailed you showed that the difference was just over
+> 16k, and that there was a 32 block difference in the final extent
+> length.  Does that fit with this theory?
 
-On Mon, 14 May 2007 20:15:24 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
->
-> This patch implements sys_fallocate() and adds support on i386, x86_64
-> and powerpc platforms.
+Yes - because when we do specualtive allocation of 64k beyond EOF
+by default on appends....
 
-This patch no longer applies to Linus' tree - for a start there is no file
-arch/x86_64/kernel/functionlist any more.
+> > The type IOMAP_READ determines the I/O completion behaviour - in this case
+> > it is xfs_end_bio_read(), which fails to update the file size....
+> >
+> > Bingo.
+> >
+> > A patch for you to try, Jeremy. I've just started a test run on it...
+> >   
+> 
+> Thanks, I'll give it a spin.  Have you reproduced the bug yourself?
 
-Can you rebase it, please?
+No, not yet. I haven't had chance because I'm travelling at the moment....
 
---
 Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
 
---Signature=_Tue__15_May_2007_09_44_36_+1000_FmQQEkgMAA8ZAwtk
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFGSPRpFdBgD/zoJvwRAuHCAJsEB8TyYfKxqEtWnHM7smTPNqRiPwCfYj2B
-kUd5qmBLOd+TYg003bKAuVw=
-=ap96
------END PGP SIGNATURE-----
-
---Signature=_Tue__15_May_2007_09_44_36_+1000_FmQQEkgMAA8ZAwtk--
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
