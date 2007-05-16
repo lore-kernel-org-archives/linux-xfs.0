@@ -1,58 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 20:16:59 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 20:29:10 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4G3GsfB013432
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 20:16:55 -0700
-Date: Wed, 16 May 2007 13:16:26 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/5][TAKE3] fallocate() implementation on i86, x86_64 and powerpc
-Message-ID: <20070516031626.GM85884050@sgi.com>
-References: <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070515193722.GA3487@amitarora.in.ibm.com> <20070515195421.GA2948@amitarora.in.ibm.com> <20070515200359.GA5834@amitarora.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070515200359.GA5834@amitarora.in.ibm.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4G3T4fB019177
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 20:29:06 -0700
+Date: Wed, 16 May 2007 13:32:28 +1000
+Subject: Re: xfs_repair: buf calloc failed (4132 bytes): Cannot allocate memory
+From: "Barry Naujok" <bnaujok@melbourne.sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+MIME-Version: 1.0
+References: <slrnf4j7ge.aje.robert.sander@snell.epigenomics.epi>
+Message-ID: <op.tsehgekef8dyj1@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <slrnf4j7ge.aje.robert.sander@snell.epigenomics.epi>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: linux-xfs@ml.epigenomics.com, xfs@oss.sgi.com
 
-On Wed, May 16, 2007 at 01:33:59AM +0530, Amit K. Arora wrote:
-> This patch implements sys_fallocate() and adds support on i386, x86_64
-> and powerpc platforms.
+On Tue, 15 May 2007 21:48:30 +1000, <linux-xfs@ml.epigenomics.com> wrote:
 
-Can you please pick up the ia64 support patch I posted as well?
+> Hi!
+>
+> We have a RAID0 set of 3 400GB disks.
+>
+> After a crash we needed to run xfs_repair, but it bails out with the
+> error message:
+>
+>         - ensuring existence of lost+found directory
+>         - traversing filesystem starting at / ...
+> xfs_repair: buf calloc failed (4132 bytes): Cannot allocate memory
+>
+> The filesystem contains many hardlinked files as it is a dirvish
+> repository (www.dirvish.org) with the hardlinks created by rsync.
+>
+> This is the xfs_db info:
+>
+> # xfs_db -r -c "sb 0" -c "p" /dev/md0
+> magicnum = 0x58465342
+> blocksize = 4096
+> dblocks = 293031424
+> rblocks = 0
+> rextents = 0
+> uuid = e8d3a22c-716f-4f3e-9e95-e06afb3559d0
+> logstart = 268435472
+> rootino = 256
+> rbmino = 257
+> rsumino = 258
+> rextsize = 48
+> agblocks = 9157232
+> agcount = 32
+> rbmblocks = 0
+> logblocks = 32768
+> versionnum = 0x3184
+> sectsize = 512
+> inodesize = 256
+> inopblock = 16
+> fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+> blocklog = 12
+> sectlog = 9
+> inodelog = 8
+> inopblog = 4
+> agblklog = 24
+> rextslog = 0
+> inprogress = 0
+> imax_pct = 25
+> icount = 18882496
+> ifree = 373596
+> fdblocks = 27494887
+> frextents = 0
+> uquotino = 0
+> gquotino = 0
+> qflags = 0
+> flags = 0
+> shared_vn = 0
+> inoalignmt = 2
+> unit = 16
+> width = 48
+> dirblklog = 0
+> logsectlog = 0
+> logsectsize = 0
+> logsunit = 0
+> features2 = 0
+>
+> Kernel is 2.6.20.6 on a dual PIII machine with 1GB RAM and 10GB swap.
+>
+> Mounting the filesystem is possible, but what about its current state?
+>
+> Greetings
 
-> Changelog:
-> ---------
-> Note: The changes below are from the initial post (dated 26th April,
-> 2007) and _not_ from TAKE2. The only difference from TAKE2 is the kernel
-> version on which this patch is based. TAKE2 was based on 2.6.21 and this
-> is based on 2.6.22-rc1.
-> 
-> Following changes were made to the previous version:
->  1) Added description before sys_fallocate() definition.
->  2) Return EINVAL for len<=0 (With new draft that Ulrich pointed to,
->     posix_fallocate should return EINVAL for len <= 0.
->  3) Return EOPNOTSUPP if mode is not one of FA_ALLOCATE or FA_DEALLOCATE
->  4) Do not return ENODEV for dirs (let individual file systems decide if
->     they want to support preallocation to directories or not.
->  5) Check for wrap through zero.
->  6) Update c/mtime if fallocate() succeeds.
+With 18 million inodes, 1.2TB of space, it will use a lot of memory.
+Assuming you are using a recent xfsprogs (2.8.11 or later), you can
+reduce memory usage by adding "-o bhash=512" which will limit the
+number of buffers cached in xfs_repair. In this scenario, the cache
+will overflow RAM rather easily with the number of inodes to be
+scanned.
 
-Please don't make this always happen. c/mtime updates should be dependent
-on the mode being used and whether there is visible change to the file. If no
-userspace visible changes to the file occurred, then timestamps should not
-be changed.
-
-e.g. FA_ALLOCATE that changes file size requires same semantics of ftruncate()
-extending the file, otherwise no change in timestamps should occur.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Regards,
+Barry.
