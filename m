@@ -1,155 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 20:03:19 -0700 (PDT)
-Received: from h1079484.serverkompetenz.net (ghostdub.de [81.169.157.63])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4G33EfB010782
-	for <xfs@oss.sgi.com>; Tue, 15 May 2007 20:03:15 -0700
-Received: from hsi-kbw-091-089-007-028.hsi2.kabelbw.de ([91.89.7.28] helo=[192.168.1.129])
-	by h1079484.serverkompetenz.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA:32)
-	(Exim 4.50)
-	id 1Ho992-0007Wg-TS
-	for xfs@oss.sgi.com; Wed, 16 May 2007 04:21:41 +0200
-Message-ID: <464A6AAD.1020408@rakka.de>
-Date: Wed, 16 May 2007 04:21:33 +0200
-From: outgoing@rakka.de
-Reply-To: xfs@rakka.de
-MIME-Version: 1.0
-Subject: OOPS on 2.6.21-rc6
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 May 2007 20:16:59 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4G3GsfB013432
+	for <xfs@oss.sgi.com>; Tue, 15 May 2007 20:16:55 -0700
+Date: Wed, 16 May 2007 13:16:26 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/5][TAKE3] fallocate() implementation on i86, x86_64 and powerpc
+Message-ID: <20070516031626.GM85884050@sgi.com>
+References: <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070515193722.GA3487@amitarora.in.ibm.com> <20070515195421.GA2948@amitarora.in.ibm.com> <20070515200359.GA5834@amitarora.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070515200359.GA5834@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-I got an oops while copying from an ro ntfs to a fresh xfs filesystem.
-The cp process froze and was unkillable, some other processes also froze
-(even though / was ext3).
+On Wed, May 16, 2007 at 01:33:59AM +0530, Amit K. Arora wrote:
+> This patch implements sys_fallocate() and adds support on i386, x86_64
+> and powerpc platforms.
 
-After rebooting, recreating the xfs and starting the same copy process
-again, another oops occured about 2G earlier than in the previous
-copying. This time, nothing froze.
+Can you please pick up the ia64 support patch I posted as well?
 
-Kernel version: 2.6.21-rc6 #2 SMP PREEMPT i686 (self-compiled with
-debian-lenny .config)
-a "zgrep 4KSTACKS /proc/config.gz" shows nothing.
+> Changelog:
+> ---------
+> Note: The changes below are from the initial post (dated 26th April,
+> 2007) and _not_ from TAKE2. The only difference from TAKE2 is the kernel
+> version on which this patch is based. TAKE2 was based on 2.6.21 and this
+> is based on 2.6.22-rc1.
+> 
+> Following changes were made to the previous version:
+>  1) Added description before sys_fallocate() definition.
+>  2) Return EINVAL for len<=0 (With new draft that Ulrich pointed to,
+>     posix_fallocate should return EINVAL for len <= 0.
+>  3) Return EOPNOTSUPP if mode is not one of FA_ALLOCATE or FA_DEALLOCATE
+>  4) Do not return ENODEV for dirs (let individual file systems decide if
+>     they want to support preallocation to directories or not.
+>  5) Check for wrap through zero.
+>  6) Update c/mtime if fallocate() succeeds.
 
+Please don't make this always happen. c/mtime updates should be dependent
+on the mode being used and whether there is visible change to the file. If no
+userspace visible changes to the file occurred, then timestamps should not
+be changed.
 
+e.g. FA_ALLOCATE that changes file size requires same semantics of ftruncate()
+extending the file, otherwise no change in timestamps should occur.
 
-First oops:
-BUG: unable to handle kernel paging request at virtual address 0000a702
- printing eip:
-c018559f
-*pde = 00000000
-Oops: 0002 [#1]
-PREEMPT SMP
-Modules linked in: usb_storage fuse nls_iso8859_1 isofs udf snd_rtctimer
-xfs binfmt_misc radeon drm nfs nfsd exportfs lockd nfs_acl sunrpc ppdev
-lp button ac battery ipv6 nls_utf8 ntfs sha256 aes cbc blkcipher
-dm_crypt dm_snapshot dm_mirror sbp2 loop dm_mod snd_via82xx
-snd_mpu401_uart snd_emu10k1_synth snd_emux_synth snd_seq_virmidi
-snd_seq_midi_emul snd_emu10k1 firmware_class snd_ac97_codec ac97_bus
-snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_util_mem snd_hwdep
-snd_seq_dummy snd_seq_midi snd_seq_oss snd_rawmidi snd_seq_midi_event
-via_ircc parport_pc parport analog snd_seq snd_timer snd_seq_device irda
-rtc pcspkr crc_ccitt i2c_viapro i2c_core snd emu10k1_gp gameport
-soundcore shpchp pci_hotplug via_agp agpgart eth1394 tsdev evdev ext3
-jbd mbcache raid10 raid456 xor raid1 raid0 multipath linear md_mod
-ide_cd cdrom ide_disk ata_generic pata_via usbhid hid via82cxxx sd_mod
-floppy via_rhine mii generic ide_core ehci_hcd r8169 uhci_hcd usbcore
-ohci1394 ieee1394 sata_promise libata scsi_mod thermal processor fan
-CPU:    0
-EIP:    0060:[<c018559f>]    Not tainted VLI
-EFLAGS: 00010002   (2.6.21-rc6 #2)
-EIP is at end_buffer_async_write+0xbf/0x165
-eax: f5722000   ebx: ca81af98   ecx: ca81af98   edx: 00000001
-esi: 0000a702   edi: 00000202   ebp: c10cdbe8   esp: f5723f20
-ds: 007b   es: 007b   fs: 00d8  gs: 0000  ss: 0068
-Process xfsdatad/0 (pid: 4618, ti=f5722000 task=f57c0540 task.ti=f5722000)
-Stack: c0353fc8 c02a5d99 f5723f8c c02a5dc5 00000003 f5788be8 00000000
-00000001
-       f5723f64 c011c55f c3645c18 d114e2b0 00000202 d114e2d8 f94ec45d
-f57c064c
-       d114e2dc f5788bc0 c0130b6b 00000000 1bd31201 0000007b 00000202
-f94ec4ea
-Call Trace:
- [<c02a5d99>] __sched_text_start+0x689/0x738
- [<c02a5dc5>] __sched_text_start+0x6b5/0x738
- [<c011c55f>] __wake_up+0x32/0x43
- [<f94ec45d>] xfs_destroy_ioend+0x1d/0x56 [xfs]
- [<c0130b6b>] run_workqueue+0x85/0x125
- [<f94ec4ea>] xfs_end_bio_delalloc+0x0/0x8 [xfs]
- [<c0131492>] worker_thread+0xf9/0x124
- [<c011e5e2>] default_wake_function+0x0/0xc
- [<c0131399>] worker_thread+0x0/0x124
- [<c0133c01>] kthread+0xb2/0xdd
- [<c0133b4f>] kthread+0x0/0xdd
- [<c0104abf>] kernel_thread_helper+0x7/0x10
- =======================
-Code: eb 28 89 e0 25 00 e0 ff ff ff 48 14 8b 40 08 a8 08 74 05 e8 6b 09
-12 00 f3 90 89 e0 25 00 e0 ff ff ff 40 14 8b 06 a8 10 75 d8 90 <0f> ba
-2e 04 19 c0 85 c0 75 ef 90 0f ba 33 08 89 d8 e8 ea ec ff
-EIP: [<c018559f>] end_buffer_async_write+0xbf/0x165 SS:ESP 0068:f5723f20
-note: xfsdatad/0[4618] exited with preempt_count 1
+Cheers,
 
-
-
-Second oops:
-BUG: unable to handle kernel paging request at virtual address 287d423e
- printing eip:
-f8f22e9f
-*pde = 00000000
-Oops: 0000 [#1]
-PREEMPT SMP
-Modules linked in: binfmt_misc radeon drm nfs nfsd exportfs lockd
-nfs_acl sunrpc ppdev lp button ac battery ipv6 xfs nls_utf8 ntfs fuse
-sha256 aes cbc blkcipher dm_crypt dm_snapshot dm_mirror sbp2 loop dm_mod
-snd_via82xx snd_mpu401_uart snd_emu10k1_synth snd_emux_synth
-snd_seq_virmidi snd_seq_midi_emul snd_emu10k1 firmware_class
-snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc
-snd_util_mem snd_hwdep snd_seq_dummy snd_seq_oss snd_seq_midi
-snd_seq_midi_event via_ircc snd_seq irda analog crc_ccitt parport_pc
-parport i2c_viapro snd_timer snd_rawmidi snd_seq_device pcspkr i2c_core
-snd via_agp agpgart rtc emu10k1_gp gameport soundcore shpchp pci_hotplug
-tsdev evdev eth1394 ext3 jbd mbcache raid10 raid456 xor raid1 raid0
-multipath linear md_mod ide_cd cdrom ide_disk ata_generic pata_via
-usbhid hid via82cxxx sd_mod floppy via_rhine mii ehci_hcd generic
-ide_core uhci_hcd usbcore r8169 ohci1394 ieee1394 sata_promise libata
-scsi_mod thermal processor fan
-CPU:    0
-EIP:    0060:[<f8f22e9f>]    Not tainted VLI
-EFLAGS: 00010203   (2.6.21-rc6 #2)
-EIP is at xfs_count_page_state+0x27/0x62 [xfs]
-eax: 2133c724   ebx: ec1bc128   ecx: c1b5de08   edx: 287d423e
-esi: c1b5de04   edi: c1b5de0c   ebp: eec39400   esp: c1b5ddc4
-ds: 007b   es: 007b   fs: 00d8  gs: 0000  ss: 0068
-Process kswapd0 (pid: 131, ti=c1b5c000 task=c1af0580 task.ti=c1b5c000)
-Stack: c11677a0 000000d0 c1b5de04 f8f23d06 c1b5de04 ef946c50 00000000
-00000001
-       00000000 00000001 00000000 00000000 00000000 00000000 00000000
-00000000
-       00000001 00000000 00000000 f8f23cbb 000000d0 00000001 c032cac0
-c014f9cc
-Call Trace:
- [<f8f23d06>] xfs_vm_releasepage+0x4b/0xa5 [xfs]
- [<f8f23cbb>] xfs_vm_releasepage+0x0/0xa5 [xfs]
- [<c014f9cc>] try_to_release_page+0x30/0x42
- [<c0155064>] shrink_inactive_list+0x459/0x747
- [<c011e5d8>] try_to_wake_up+0x3a1/0x3ab
- [<c02a5d99>] __sched_text_start+0x689/0x738
- [<c02a5dc5>] __sched_text_start+0x6b5/0x738
- [<f9123127>] nfs_access_cache_shrinker+0x137/0x182 [nfs]
- [<c015541f>] shrink_zone+0xcd/0xf2
- [<c01558f1>] kswapd+0x2be/0x3ef
- [<c0133cd4>] autoremove_wake_function+0x0/0x35
- [<c0155633>] kswapd+0x0/0x3ef
- [<c0133c01>] kthread+0xb2/0xdd
- [<c0133b4f>] kthread+0x0/0xdd
- [<c0104abf>] kernel_thread_helper+0x7/0x10
- =======================
-Code: 5f 89 d0 c3 57 89 d7 56 53 8b 74 24 10 89 c3 31 c0 c7 06 00 00 00
-00 89 01 89 02 8b 03 f6 c4 08 75 04 0f 0b eb fe 8b 5b 0c 89 da <8b> 02
-a8 01 74 0e 8b 02 a8 20 75 08 c7 01 01 00 00 00 eb 1c 8b
-EIP: [<f8f22e9f>] xfs_count_page_state+0x27/0x62 [xfs] SS:ESP 0068:c1b5ddc4
-
-
-    - Paul Goeser
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
