@@ -1,96 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 May 2007 19:45:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4H2jIfB026826
-	for <xfs@oss.sgi.com>; Wed, 16 May 2007 19:45:21 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA03426; Thu, 17 May 2007 12:24:14 +1000
-Message-ID: <464BBCCE.8080500@sgi.com>
-Date: Thu, 17 May 2007 12:24:14 +1000
-From: Donald Douwsma <donaldd@sgi.com>
-MIME-Version: 1.0
-Subject: Re: Review: XFSQA: unwritten extent conversion vs synchronous direct
- I/O
-References: <20070508065327.GL32602149@melbourne.sgi.com>
-In-Reply-To: <20070508065327.GL32602149@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 00:40:14 -0700 (PDT)
+Received: from molten.melbourne.sgi.com (molten.melbourne.sgi.com [134.14.54.33])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4H7e8fB006124
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 00:40:11 -0700
+Subject: TAKE 957794 - xfs_quota: project commands handle symlinks and special files badly.
+Message-Id: <20070517072556.4B4A228377B2@molten.melbourne.sgi.com>
+Date: Thu, 17 May 2007 17:25:56 +1000 (EST)
+From: donaldd@molten.melbourne.sgi.com
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-David Chinner wrote:
-> Test to exercise synchronous direct I/O into unwritten extents.
-> 
-> Cheers,
-> 
-> Dave.
+Stop the project quota commands in xfs_quota from operating on special files
+symlinks, device nodes, sockets and fifos.
 
-Would we ever want to adjust the IO_SIZE used in unwritten_sync
-from the qa script?
+Date:  Thu May 17 17:12:57 AEST 2007
+Workarea:  molten.melbourne.sgi.com:/home/donaldd/isms/xfs-cmds
+Inspected by:  tes
 
-A couple of small changes to fix compiler warnings and provide
-info on dio size errors.
-
-Otherwise looks good,
-Don
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-  Index: xfs-cmds/xfstests/src/unwritten_sync.c
-  ===================================================================
-  --- /dev/null  1970-01-01 00:00:00.000000000 +0000
--+++ xfs-cmds/xfstests/src/unwritten_sync.c     2007-05-07 11:44:38.668980258 +1000
--@@ -0,0 +1,167 @@
-++++ xfs-cmds/xfstests/src/unwritten_sync.c     2007-05-17 12:08:21.242781793 +1000
-+@@ -0,0 +1,153 @@
-  +#include <sys/types.h>
-  +#include <fcntl.h>
-  +#include <errno.h>
-@@ -139,7 +139,9 @@
-  +              }
-  +
-  +              if ((dio.d_miniosz > IO_SIZE) || (dio.d_maxiosz < IO_SIZE)) {
--+                      fprintf(stderr,"Test won't work. Sorry\n");
-++                      fprintf(stderr,"Test won't work, iosize out of range \
-++                              (dio.d_miniosz=%d, dio.d_maxiosz=%d)\n",
-++                              dio.d_miniosz, dio.d_maxiosz);
-  +                      exit(1);
-  +              }
-  +              buf = (char *)memalign(dio.d_mem , IO_SIZE);
-@@ -174,23 +176,7 @@
-  +              print_getbmapx(file, fd, 0, 0);
-  +              close(fd);
-  +      }
--+}
--+
--+
--+
--+int
--+get_getbmapx(
--+      const char      *pathname,
--+      int             fd,
--+      struct getbmapx *bmapx)
--+{
--+      int     rc;
--+
--+      rc = ioctl(fd, XFS_IOC_GETBMAPX, bmapx);
--+      if (rc < 0) {
--+              perror("xfs_ioc_getbmapx");
--+              exit(1);
--+      }
-++      return 0;
-  +}
-  +
-  +void
-@@ -223,8 +209,8 @@
-  +                      if (x != array_size) {
-  +                              break;  /* end of file */
-  +                      }
--+                      if (get_getbmapx(pathname, fd, bmapx) < 0) {
--+                              fprintf(stderr, "getbmapx failed\n");
-++                      if (xfsctl(pathname, fd, XFS_IOC_GETBMAPX, bmapx) < 0) {
-++                              fprintf(stderr, "XFS_IOC_GETBMAPX failed\n");
-  +                              exit(1);
-  +                      }
-  +                      if (bmapx[0].bmv_entries == 0) {
+Modid:  master-melb:xfs-cmds:28597a
+xfsprogs/doc/CHANGES - 1.238 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.238&r2=text&tr2=1.237&f=h
+xfsprogs/quota/project.c - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/quota/project.c.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
