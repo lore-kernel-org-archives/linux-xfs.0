@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 07:25:58 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4HEPqfB001349
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 07:25:53 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4HEPqaF024808
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 10:25:52 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4HEPpPf248948
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:25:51 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4HEPpP1017972
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:25:51 -0600
-Date: Thu, 17 May 2007 19:55:55 +0530
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 07:26:47 -0700 (PDT)
+Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4HEQhfB001772
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 07:26:44 -0700
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4HERe0Z024580
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 10:27:40 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4HEQfSq529698
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 10:26:41 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4HEQeSk011920
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 10:26:40 -0400
+Date: Thu, 17 May 2007 19:56:49 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 3/6][TAKE4] fallocate() on ia64
-Message-ID: <20070517142555.GC28726@amitarora.in.ibm.com>
+Subject: [PATCH 4/6][TAKE4] ext4: Extent overlap bugfix
+Message-ID: <20070517142649.GD28726@amitarora.in.ibm.com>
 References: <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070517141115.GA24260@amitarora.in.ibm.com> <20070517141458.GA26641@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -27,42 +27,120 @@ List-Id: xfs
 To: torvalds@osdl.org, akpm@linux-foundation.org
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-Here is the 2.6.22-rc1 version of David's patch: add fallocate() on ia64
+This patch adds a check for overlap of extents and cuts short the
+new extent to be inserted, if there is a chance of overlap.
 
-From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] ia64 fallocate syscall
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, 
-        akpm@linux-foundation.org, linux-ext4@vger.kernel.org,
-        suparna@in.ibm.com, cmm@us.ibm.com
+Changelog:
+---------
+Changes from Take3 to Take4:
+ - no change -
+Changes from Take2 to Take3:
+ 1) Patch rebased to 2.6.22-rc1 kernel.
+Changes from Take1 to Take2:
+ 1) As suggested by Andrew, a check for wrap though zero has been added.
 
-ia64 fallocate syscall support.
+Here is the new patch:
 
-Signed-Off-By: Dave Chinner <dgc@sgi.com>
-
+Signed-off-by: Amit Arora <aarora@in.ibm.com>
 ---
- arch/ia64/kernel/entry.S  |    1 +
- include/asm-ia64/unistd.h |    3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ fs/ext4/extents.c               |   60 ++++++++++++++++++++++++++++++++++++++--
+ include/linux/ext4_fs_extents.h |    1 
+ 2 files changed, 59 insertions(+), 2 deletions(-)
 
-Index: linux-2.6.22-rc1/arch/ia64/kernel/entry.S
+Index: linux-2.6.22-rc1/fs/ext4/extents.c
 ===================================================================
---- linux-2.6.22-rc1.orig/arch/ia64/kernel/entry.S	2007-05-12 18:45:56.000000000 -0700
-+++ linux-2.6.22-rc1/arch/ia64/kernel/entry.S	2007-05-15 15:36:48.000000000 -0700
-@@ -1585,5 +1585,6 @@
- 	data8 sys_getcpu
- 	data8 sys_epoll_pwait			// 1305
- 	data8 sys_utimensat
-+	data8 sys_fallocate
-
- 	.org sys_call_table + 8*NR_syscalls	// guard against failures to increase NR_syscalls
-Index: linux-2.6.22-rc1/include/asm-ia64/unistd.h
+--- linux-2.6.22-rc1.orig/fs/ext4/extents.c
++++ linux-2.6.22-rc1/fs/ext4/extents.c
+@@ -1128,6 +1128,55 @@ ext4_can_extents_be_merged(struct inode 
+ }
+ 
+ /*
++ * check if a portion of the "newext" extent overlaps with an
++ * existing extent.
++ *
++ * If there is an overlap discovered, it updates the length of the newext
++ * such that there will be no overlap, and then returns 1.
++ * If there is no overlap found, it returns 0.
++ */
++unsigned int ext4_ext_check_overlap(struct inode *inode,
++				    struct ext4_extent *newext,
++				    struct ext4_ext_path *path)
++{
++	unsigned long b1, b2;
++	unsigned int depth, len1;
++	unsigned int ret = 0;
++
++	b1 = le32_to_cpu(newext->ee_block);
++	len1 = le16_to_cpu(newext->ee_len);
++	depth = ext_depth(inode);
++	if (!path[depth].p_ext)
++		goto out;
++	b2 = le32_to_cpu(path[depth].p_ext->ee_block);
++
++	/*
++	 * get the next allocated block if the extent in the path
++	 * is before the requested block(s) 
++	 */
++	if (b2 < b1) {
++		b2 = ext4_ext_next_allocated_block(path);
++		if (b2 == EXT_MAX_BLOCK)
++			goto out;
++	}
++
++	/* check for wrap through zero */
++	if (b1 + len1 < b1) {
++		len1 = EXT_MAX_BLOCK - b1;
++		newext->ee_len = cpu_to_le16(len1);
++		ret = 1;
++	}
++
++	/* check for overlap */
++	if (b1 + len1 > b2) {
++		newext->ee_len = cpu_to_le16(b2 - b1);
++		ret = 1;
++	}
++out:
++	return ret;
++}
++
++/*
+  * ext4_ext_insert_extent:
+  * tries to merge requsted extent into the existing extent or
+  * inserts requested extent as new one into the tree,
+@@ -2031,7 +2080,15 @@ int ext4_ext_get_blocks(handle_t *handle
+ 
+ 	/* allocate new block */
+ 	goal = ext4_ext_find_goal(inode, path, iblock);
+-	allocated = max_blocks;
++
++	/* Check if we can really insert (iblock)::(iblock+max_blocks) extent */
++	newex.ee_block = cpu_to_le32(iblock);
++	newex.ee_len = cpu_to_le16(max_blocks);
++	err = ext4_ext_check_overlap(inode, &newex, path);
++	if (err)
++		allocated = le16_to_cpu(newex.ee_len);
++	else
++		allocated = max_blocks;
+ 	newblock = ext4_new_blocks(handle, inode, goal, &allocated, &err);
+ 	if (!newblock)
+ 		goto out2;
+@@ -2039,7 +2096,6 @@ int ext4_ext_get_blocks(handle_t *handle
+ 			goal, newblock, allocated);
+ 
+ 	/* try to insert new extent into found leaf and return */
+-	newex.ee_block = cpu_to_le32(iblock);
+ 	ext4_ext_store_pblock(&newex, newblock);
+ 	newex.ee_len = cpu_to_le16(allocated);
+ 	err = ext4_ext_insert_extent(handle, inode, path, &newex);
+Index: linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
 ===================================================================
---- linux-2.6.22-rc1.orig/include/asm-ia64/unistd.h	2007-05-12 18:45:56.000000000 -0700
-+++ linux-2.6.22-rc1/include/asm-ia64/unistd.h	2007-05-15 15:37:51.000000000 -0700
-@@ -296,6 +296,7 @@
- #define __NR_getcpu			1304
- #define __NR_epoll_pwait		1305
- #define __NR_utimensat			1306
-+#define __NR_fallocate			1307
-
- #ifdef __KERNEL__
+--- linux-2.6.22-rc1.orig/include/linux/ext4_fs_extents.h
++++ linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
+@@ -190,6 +190,7 @@ ext4_ext_invalidate_cache(struct inode *
+ 
+ extern int ext4_extent_tree_init(handle_t *, struct inode *);
+ extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
++extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
+ extern int ext4_ext_insert_extent(handle_t *, struct inode *, struct ext4_ext_path *, struct ext4_extent *);
+ extern int ext4_ext_walk_space(struct inode *, unsigned long, unsigned long, ext_prepare_callback, void *);
+ extern struct ext4_ext_path * ext4_ext_find_extent(struct inode *, int, struct ext4_ext_path *);
