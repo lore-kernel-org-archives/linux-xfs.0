@@ -1,85 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 01:27:22 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4H8RIfB022703
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 01:27:19 -0700
-Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.192])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l4H8RCBY007181
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 17:27:12 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l4H8RCi14717 for xfs@oss.sgi.com; Thu, 17 May 2007 17:27:12 +0900 (JST)
-Received: from secsv3.tnes.nec.co.jp (tnesvc2.tnes.nec.co.jp [10.1.101.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l4H8RBL22867 for <xfs@oss.sgi.com>; Thu, 17 May 2007 17:27:11 +0900 (JST)
-Received: from tnesvc2.tnes.nec.co.jp ([10.1.101.15])
-	by secsv3.tnes.nec.co.jp (ExpressMail 5.10) with SMTP
-	id 20070517.172726.40600716 for <xfs@oss.sgi.com>
-	; Thu, 17 May 2007 17:27:26 +0900
-Message-Id: <200705170827.AA05393@TNESG9305.tnes.nec.co.jp>
-Date: Thu, 17 May 2007 17:27:05 +0900
-Subject: [PATCH] Fix free command in xfs_quota.
-From: Utako Kusaka <utako@tnes.nec.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 05:10:54 -0700 (PDT)
+Received: from e1.ny.us.ibm.com (e1.ny.us.ibm.com [32.97.182.141])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4HCAlfB009638
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 05:10:49 -0700
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4HCAkPI023807
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:10:46 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4HCAkf9558516
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:10:46 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4HCAj9B018272
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:10:46 -0400
+Subject: Re: [PATCH 1/5][TAKE3] fallocate() implementation on i86, x86_64
+	and powerpc
+From: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
+In-Reply-To: <20070516234036.GQ85884050@sgi.com>
+References: <20070418130600.GW5967@schatzie.adilger.int>
+	 <20070420135146.GA21352@amitarora.in.ibm.com>
+	 <20070420145918.GY355@devserv.devel.redhat.com>
+	 <20070424121632.GA10136@amitarora.in.ibm.com>
+	 <20070426175056.GA25321@amitarora.in.ibm.com>
+	 <20070515193722.GA3487@amitarora.in.ibm.com>
+	 <20070515195421.GA2948@amitarora.in.ibm.com>
+	 <20070515200359.GA5834@amitarora.in.ibm.com>
+	 <20070516031626.GM85884050@sgi.com>
+	 <1179318076.10313.6.camel@kleikamp.austin.ibm.com>
+	 <20070516234036.GQ85884050@sgi.com>
+Content-Type: text/plain
+Date: Thu, 17 May 2007 07:10:44 -0500
+Message-Id: <1179403844.13965.2.camel@kleikamp.austin.ibm.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
 
-Hi,
+On Thu, 2007-05-17 at 09:40 +1000, David Chinner wrote:
+> On Wed, May 16, 2007 at 07:21:16AM -0500, Dave Kleikamp wrote:
+> > On Wed, 2007-05-16 at 13:16 +1000, David Chinner wrote:
 
-I have got the following error when doing free command in xfs_quota. 
-The free command tries to get the quota status though the project quota is off.
+> > > Please don't make this always happen. c/mtime updates should be dependent
+> > > on the mode being used and whether there is visible change to the file. If no
+> > > userspace visible changes to the file occurred, then timestamps should not
+> > > be changed.
+> > 
+> > i_blocks will be updated, so it seems reasonable to update ctime.  mtime
+> > shouldn't be changed, though, since the contents of the file will be
+> > unchanged.
+> 
+> That's assuming blocks were actually allocated - if the prealloc range already
+> has underlying blocks there is no change and so we should not be changing
+> mtime either. Only the filesystem will know if it has changed the file, so I
+> think that timestamp updates need to be driven down to that level, not done
+> blindy at the highest layer....
 
-The man page for free command says:
-if project quota are in use, it will also report utilisation for those projects.
+Yes, I agree.
 
-So this patch checks if the file system is mounted with the quota option and
-if the project quota is on. 
-
-Example:
-# mount -t xfs -o prjquota /dev/sda6 mpnt/
-# xfs_quota -c "free" /dev/sda6
-Filesystem           1K-blocks       Used  Available  Use% Pathname
-/dev/sda6             10480128    4196084    6284044   41% /home/utako/mpnt
-/dev/sda6             10480128        104    6284044    1% /home/utako/mpnt/pjq
-/dev/sda6             10480128          0    6284044    0% /home/utako/mpnt/pjq2
-# umount mpnt/
-# mount -t xfs -o usrquota /dev/sda6 mpnt/
-# xfs_quota -c "free" /dev/sda6
-Filesystem           1K-blocks       Used  Available  Use% Pathname
-/dev/sda6             10480128    4196084    6284044   41% /home/utako/mpnt
-XFS_GETQUOTA: No such process
-XFS_GETQUOTA: No such process
-# umount mpnt/
-# mount -t xfs /dev/sda6 mpnt/
-# xfs_quota -c "free" /dev/sda6
-Filesystem           1K-blocks       Used  Available  Use% Pathname
-/dev/sda6             10480128    4196084    6284044   41% /home/utako/mpnt
-XFS_GETQUOTA: Function not implemented
-XFS_GETQUOTA: Function not implemented
-
-
-Signed-off-by: Utako Kusaka <utako@tnes.nec.co.jp>
----
-
---- xfsprogs-2.8.20/quota/free.orig	2007-05-09 10:36:01.000000000 +0900
-+++ xfsprogs-2.8.20/quota/free.c	2007-05-10 17:18:16.000000000 +0900
-@@ -116,12 +116,18 @@ projects_free_space_data(
- 	__uint64_t		*rused,
- 	__uint64_t		*rfree)
- {
-+	fs_quota_stat_t		qfs;
- 	fs_disk_quota_t		d;
- 	struct fsxattr		fsx;
- 	uint			type = XFS_PROJ_QUOTA;
- 	char			*dev = path->fs_name;
- 	int			fd;
- 
-+	if ((xfsquotactl(XFS_GETQSTAT, dev, type, 0, &qfs) < 0) ||
-+	    !(qfs.qs_flags & XFS_QUOTA_PDQ_ACCT)) {
-+		return 0;
-+	}
-+
- 	if ((fd = open(path->fs_dir, O_RDONLY)) < 0) {
- 		fprintf(stderr, "%s: cannot open %s: %s\n",
- 			progname, path->fs_dir, strerror(errno));
+Shaggy
+-- 
+David Kleikamp
+IBM Linux Technology Center
