@@ -1,371 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 07:31:02 -0700 (PDT)
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4HEUvfB003542
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 07:30:58 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4HEUvQq013895
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 10:30:57 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4HEUv1D237672
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:30:57 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4HEUuO7011896
-	for <xfs@oss.sgi.com>; Thu, 17 May 2007 08:30:56 -0600
-Date: Thu, 17 May 2007 20:00:59 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 6/6][TAKE4] ext4: write support for preallocated blocks
-Message-ID: <20070517143059.GF28726@amitarora.in.ibm.com>
-References: <20070329101010.7a2b8783.akpm@linux-foundation.org> <20070330071417.GI355@devserv.devel.redhat.com> <20070417125514.GA7574@amitarora.in.ibm.com> <20070418130600.GW5967@schatzie.adilger.int> <20070420135146.GA21352@amitarora.in.ibm.com> <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070517141115.GA24260@amitarora.in.ibm.com> <20070517141458.GA26641@amitarora.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070517141458.GA26641@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 May 2007 07:41:45 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4HEfgfB006500
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 07:41:43 -0700
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 1F46C1807A959
+	for <xfs@oss.sgi.com>; Thu, 17 May 2007 09:41:41 -0500 (CDT)
+Message-ID: <464C69A4.6050605@sandeen.net>
+Date: Thu, 17 May 2007 09:41:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] (and bad attr2 bug) - pack xfs_sb_t for 64-bit arches
+References: <455CB54F.8080901@sandeen.net>
+In-Reply-To: <455CB54F.8080901@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@osdl.org, akpm@linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com, cmm@us.ibm.com
+To: xfs@oss.sgi.com
 
-This patch adds write support to the uninitialized extents that get
-created when a preallocation is done using fallocate(). It takes care of
-splitting the extents into multiple (upto three) extents and merging the
-new split extents with neighbouring ones, if possible.
+Eric Sandeen wrote:
+> see also https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=212201
+> 
+> Bugzilla Bug 212201: Cannot build sysem with XFS file system.
+> 
+> I turned on attr2 in FC6 at nathan's suggestion, for selinux goodness 
+> with more efficient xattr space usage.
+> 
+> But, many reports that this was totally broken in fc6, on x86_64.
 
-Changelog:
----------
-Changes from Take3 to Take4:
- - no change -
-Changes from Take2 to Take3:
- 1) Patch now rebased to 2.6.22-rc1 kernel.
-Changes from Take1 to Take2:
- 1) Replaced BUG_ON with WARN_ON & ext4_error.
- 2) Added variable names to the function declaration of
-    ext4_ext_try_to_merge().
- 3) Updated variable declarations to use multiple-definitions-per-line.
- 4) "if((a=foo())).." was broken into "a=foo(); if(a).."
- 5) Removed extra spaces.
+Although it turned out to be a different issue, not the packing issue, 
+is the packing/alignment (below) still something that needs to be fixed...?
 
-Here is the updated patch:
+-Eric
 
-Signed-off-by: Amit Arora <aarora@in.ibm.com>
----
- fs/ext4/extents.c               |  234 +++++++++++++++++++++++++++++++++++-----
- include/linux/ext4_fs_extents.h |    3 
- 2 files changed, 210 insertions(+), 27 deletions(-)
-
-Index: linux-2.6.22-rc1/fs/ext4/extents.c
-===================================================================
---- linux-2.6.22-rc1.orig/fs/ext4/extents.c
-+++ linux-2.6.22-rc1/fs/ext4/extents.c
-@@ -1140,6 +1140,54 @@ ext4_can_extents_be_merged(struct inode 
- }
- 
- /*
-+ * This function tries to merge the "ex" extent to the next extent in the tree.
-+ * It always tries to merge towards right. If you want to merge towards
-+ * left, pass "ex - 1" as argument instead of "ex".
-+ * Returns 0 if the extents (ex and ex+1) were _not_ merged and returns
-+ * 1 if they got merged.
-+ */
-+int ext4_ext_try_to_merge(struct inode *inode,
-+			  struct ext4_ext_path *path,
-+			  struct ext4_extent *ex)
-+{
-+	struct ext4_extent_header *eh;
-+	unsigned int depth, len;
-+	int merge_done = 0;
-+	int uninitialized = 0;
-+
-+	depth = ext_depth(inode);
-+	BUG_ON(path[depth].p_hdr == NULL);
-+	eh = path[depth].p_hdr;
-+
-+	while (ex < EXT_LAST_EXTENT(eh))
-+	{
-+		if (!ext4_can_extents_be_merged(inode, ex, ex + 1))
-+			break;
-+		/* merge with next extent! */
-+		if (ext4_ext_is_uninitialized(ex))
-+			uninitialized = 1;
-+		ex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(ex)
-+				+ ext4_ext_get_actual_len(ex + 1));
-+		if (uninitialized)
-+			ext4_ext_mark_uninitialized(ex);
-+
-+		if (ex + 1 < EXT_LAST_EXTENT(eh)) {
-+			len = (EXT_LAST_EXTENT(eh) - ex - 1)
-+				* sizeof(struct ext4_extent);
-+			memmove(ex + 1, ex + 2, len);
-+		}
-+		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries) - 1);
-+		merge_done = 1;
-+		WARN_ON(eh->eh_entries == 0);
-+		if (!eh->eh_entries)
-+			ext4_error(inode->i_sb, "ext4_ext_try_to_merge",
-+			   "inode#%lu, eh->eh_entries = 0!", inode->i_ino);
-+	}
-+
-+	return merge_done;
-+}
-+
-+/*
-  * check if a portion of the "newext" extent overlaps with an
-  * existing extent.
-  *
-@@ -1327,25 +1375,7 @@ has_space:
- 
- merge:
- 	/* try to merge extents to the right */
--	while (nearex < EXT_LAST_EXTENT(eh)) {
--		if (!ext4_can_extents_be_merged(inode, nearex, nearex + 1))
--			break;
--		/* merge with next extent! */
--		if (ext4_ext_is_uninitialized(nearex))
--			uninitialized = 1;
--		nearex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(nearex)
--					+ ext4_ext_get_actual_len(nearex + 1));
--		if (uninitialized)
--			ext4_ext_mark_uninitialized(nearex);
--
--		if (nearex + 1 < EXT_LAST_EXTENT(eh)) {
--			len = (EXT_LAST_EXTENT(eh) - nearex - 1)
--					* sizeof(struct ext4_extent);
--			memmove(nearex + 1, nearex + 2, len);
--		}
--		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries)-1);
--		BUG_ON(eh->eh_entries == 0);
--	}
-+	ext4_ext_try_to_merge(inode, path, nearex);
- 
- 	/* try to merge extents to the left */
- 
-@@ -2011,15 +2041,152 @@ void ext4_ext_release(struct super_block
- #endif
- }
- 
-+/*
-+ * This function is called by ext4_ext_get_blocks() if someone tries to write
-+ * to an uninitialized extent. It may result in splitting the uninitialized
-+ * extent into multiple extents (upto three - one initialized and two
-+ * uninitialized).
-+ * There are three possibilities:
-+ *   a> There is no split required: Entire extent should be initialized
-+ *   b> Splits in two extents: Write is happening at either end of the extent
-+ *   c> Splits in three extents: Somone is writing in middle of the extent
-+ */
-+int ext4_ext_convert_to_initialized(handle_t *handle, struct inode *inode,
-+					struct ext4_ext_path *path,
-+					ext4_fsblk_t iblock,
-+					unsigned long max_blocks)
-+{
-+	struct ext4_extent *ex, newex;
-+	struct ext4_extent *ex1 = NULL;
-+	struct ext4_extent *ex2 = NULL;
-+	struct ext4_extent *ex3 = NULL;
-+	struct ext4_extent_header *eh;
-+	unsigned int allocated, ee_block, ee_len, depth;
-+	ext4_fsblk_t newblock;
-+	int err = 0;
-+	int ret = 0;
-+
-+	depth = ext_depth(inode);
-+	eh = path[depth].p_hdr;
-+	ex = path[depth].p_ext;
-+	ee_block = le32_to_cpu(ex->ee_block);
-+	ee_len = ext4_ext_get_actual_len(ex);
-+	allocated = ee_len - (iblock - ee_block);
-+	newblock = iblock - ee_block + ext_pblock(ex);
-+	ex2 = ex;
-+
-+	/* ex1: ee_block to iblock - 1 : uninitialized */
-+	if (iblock > ee_block) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/* for sanity, update the length of the ex2 extent before
-+	 * we insert ex3, if ex1 is NULL. This is to avoid temporary
-+	 * overlap of blocks.
-+	 */
-+	if (!ex1 && allocated > max_blocks)
-+		ex2->ee_len = cpu_to_le16(max_blocks);
-+	/* ex3: to ee_block + ee_len : uninitialised */
-+	if (allocated > max_blocks) {
-+		unsigned int newdepth;
-+		ex3 = &newex;
-+		ex3->ee_block = cpu_to_le32(iblock + max_blocks);
-+		ext4_ext_store_pblock(ex3, newblock + max_blocks);
-+		ex3->ee_len = cpu_to_le16(allocated - max_blocks);
-+		ext4_ext_mark_uninitialized(ex3);
-+		err = ext4_ext_insert_extent(handle, inode, path, ex3);
-+		if (err)
-+			goto out;
-+		/* The depth, and hence eh & ex might change
-+		 * as part of the insert above.
-+		 */
-+		newdepth = ext_depth(inode);
-+		if (newdepth != depth) {
-+			depth = newdepth;
-+			path = ext4_ext_find_extent(inode, iblock, NULL);
-+			if (IS_ERR(path)) {
-+				err = PTR_ERR(path);
-+				path = NULL;
-+				goto out;
-+			}
-+			eh = path[depth].p_hdr;
-+			ex = path[depth].p_ext;
-+			if (ex2 != &newex)
-+				ex2 = ex;
-+		}
-+		allocated = max_blocks;
-+	}
-+	/* If there was a change of depth as part of the
-+	 * insertion of ex3 above, we need to update the length
-+	 * of the ex1 extent again here
-+	 */
-+	if (ex1 && ex1 != ex) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/* ex2: iblock to iblock + maxblocks-1 : initialised */
-+	ex2->ee_block = cpu_to_le32(iblock);
-+	ex2->ee_start = cpu_to_le32(newblock);
-+	ext4_ext_store_pblock(ex2, newblock);
-+	ex2->ee_len = cpu_to_le16(allocated);
-+	if (ex2 != ex)
-+		goto insert;
-+	err = ext4_ext_get_access(handle, inode, path + depth);
-+	if (err)
-+		goto out;
-+	/* New (initialized) extent starts from the first block
-+	 * in the current extent. i.e., ex2 == ex
-+	 * We have to see if it can be merged with the extent
-+	 * on the left.
-+	 */
-+	if (ex2 > EXT_FIRST_EXTENT(eh)) {
-+		/* To merge left, pass "ex2 - 1" to try_to_merge(),
-+		 * since it merges towards right _only_.
-+		 */
-+		ret = ext4_ext_try_to_merge(inode, path, ex2 - 1);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+			depth = ext_depth(inode);
-+			ex2--;
-+		}
-+	}
-+	/* Try to Merge towards right. This might be required
-+	 * only when the whole extent is being written to.
-+	 * i.e. ex2 == ex and ex3 == NULL.
-+	 */
-+	if (!ex3) {
-+		ret = ext4_ext_try_to_merge(inode, path, ex2);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+		}
-+	}
-+	/* Mark modified extent as dirty */
-+	err = ext4_ext_dirty(handle, inode, path + depth);
-+	goto out;
-+insert:
-+	err = ext4_ext_insert_extent(handle, inode, path, &newex);
-+out:
-+	return err ? err : allocated;
-+}
-+
- int ext4_ext_get_blocks(handle_t *handle, struct inode *inode,
- 			ext4_fsblk_t iblock,
- 			unsigned long max_blocks, struct buffer_head *bh_result,
- 			int create, int extend_disksize)
- {
- 	struct ext4_ext_path *path = NULL;
-+	struct ext4_extent_header *eh;
- 	struct ext4_extent newex, *ex;
- 	ext4_fsblk_t goal, newblock;
--	int err = 0, depth;
-+	int err = 0, depth, ret;
- 	unsigned long allocated = 0;
- 
- 	__clear_bit(BH_New, &bh_result->b_state);
-@@ -2067,6 +2234,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 	 * this is why assert can't be put in ext4_ext_find_extent()
- 	 */
- 	BUG_ON(path[depth].p_ext == NULL && depth != 0);
-+	eh = path[depth].p_hdr;
- 
- 	ex = path[depth].p_ext;
- 	if (ex) {
-@@ -2075,13 +2243,9 @@ int ext4_ext_get_blocks(handle_t *handle
- 		unsigned short ee_len;
- 
- 		/*
--		 * Allow future support for preallocated extents to be added
--		 * as an RO_COMPAT feature:
- 		 * Uninitialized extents are treated as holes, except that
--		 * we avoid (fail) allocating new blocks during a write.
-+		 * we split out initialized portions during a write.
- 		 */
--		if (le16_to_cpu(ex->ee_len) > EXT_MAX_LEN)
--			goto out2;
- 		ee_len = ext4_ext_get_actual_len(ex);
- 		/* if found extent covers block, simply return it */
- 	        if (iblock >= ee_block && iblock < ee_block + ee_len) {
-@@ -2090,12 +2254,27 @@ int ext4_ext_get_blocks(handle_t *handle
- 			allocated = ee_len - (iblock - ee_block);
- 			ext_debug("%d fit into %lu:%d -> %llu\n", (int) iblock,
- 					ee_block, ee_len, newblock);
-+
- 			/* Do not put uninitialized extent in the cache */
--			if (!ext4_ext_is_uninitialized(ex))
-+			if (!ext4_ext_is_uninitialized(ex)) {
- 				ext4_ext_put_in_cache(inode, ee_block,
- 							ee_len, ee_start,
- 							EXT4_EXT_CACHE_EXTENT);
--			goto out;
-+				goto out;
-+			}
-+			if (create == EXT4_CREATE_UNINITIALIZED_EXT)
-+				goto out;
-+			if (!create)
-+				goto out2;
-+
-+			ret = ext4_ext_convert_to_initialized(handle, inode,
-+								path, iblock,
-+								max_blocks);
-+			if (ret <= 0)
-+				goto out2;
-+			else
-+				allocated = ret;
-+			goto outnew;
- 		}
- 	}
- 
-@@ -2147,6 +2326,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 
- 	/* previous routine could use block we allocated */
- 	newblock = ext_pblock(&newex);
-+outnew:
- 	__set_bit(BH_New, &bh_result->b_state);
- 
- 	/* Cache only when it is _not_ an uninitialized extent */
-Index: linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
-===================================================================
---- linux-2.6.22-rc1.orig/include/linux/ext4_fs_extents.h
-+++ linux-2.6.22-rc1/include/linux/ext4_fs_extents.h
-@@ -202,6 +202,9 @@ static inline int ext4_ext_get_actual_le
- 
- extern int ext4_extent_tree_init(handle_t *, struct inode *);
- extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
-+extern int ext4_ext_try_to_merge(struct inode *inode,
-+				 struct ext4_ext_path *path,
-+				 struct ext4_extent *);
- extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
- extern int ext4_ext_insert_extent(handle_t *, struct inode *, struct ext4_ext_path *, struct ext4_extent *);
- extern int ext4_ext_walk_space(struct inode *, unsigned long, unsigned long, ext_prepare_callback, void *);
+> Install went ok, but on reboot the filesystem was found to be corrupt.
+> 
+> The filesystem was also found to be marked w/ attr1, not attr2....
+> 
+> If you do a fresh mkfs.xfs on x86_64, with -i attr=2, and dump out the
+> superblock (or look at it with xfs_db) you will find that although the
+> versionnum says that there is a morebits bit, the features2 flag is 0.
+> 
+> if you dd/hexdump the superblock, you will find the attr2 flag, but at
+> the wrong offset.
+> 
+> This is because the xfs_sb_t struct is padded out to 64 bits on 64-bit
+> arches, and the xfs_xlatesb() routine and xfs_sb_info[] array take this
+> padding to mean that the last item is 4 bytes bigger than it is, and
+> treats sb_features2 as 8 bytes not four.  This then gets endian-flipped out...
+> 
+> I can't quite figure out how this winds up causing problems if you stay
+> on the x86_64 arch, as I'd expect that if the offset is wrong, it should
+> at least be consistently wrong.  And in fact if you do mkfs,mount,xfs_info,
+> it will tell you that you do have attr2. But somewhere along the line thing
+> go wrong, and post-install, post-reboot, the filesystem thinks it is attr1,
+> and is therefore corrupt.
+> 
+> I think that maybe some accesses are post-xfs_xlatesb, while others
+> may access the un-flipped sb directly?  Or maybe this is sb logging
+> code that has messed things up?  Not sure... needs more investigation.
+> 
+> In any case, dd does not lie, and this patch for the kernel, and a 
+> corresponding one for userspace, at least make "mkfs.xfs -i attr=2" 
+> puts the features2 flag in the right place, as shown by inspection via dd.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> 
+> Index: linux-2.6.18/fs/xfs/xfs_sb.h
+> ===================================================================
+> --- linux-2.6.18.orig/fs/xfs/xfs_sb.h
+> +++ linux-2.6.18/fs/xfs/xfs_sb.h
+> @@ -149,7 +149,7 @@ typedef struct xfs_sb
+>  	__uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
+>  	__uint32_t	sb_logsunit;	/* stripe unit size for the log */
+>  	__uint32_t	sb_features2;	/* additional feature bits */
+> -} xfs_sb_t;
+> +} __attribute__ ((packed)) xfs_sb_t;
+>  
+>  /*
+>   * Sequence number values for the fields.
+> 
+> 
+> 
