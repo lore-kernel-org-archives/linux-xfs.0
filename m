@@ -1,34 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 16:40:54 -0700 (PDT)
-Received: from smtp111.sbc.mail.mud.yahoo.com (smtp111.sbc.mail.mud.yahoo.com [68.142.198.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4KNepfB028856
-	for <xfs@oss.sgi.com>; Sun, 20 May 2007 16:40:52 -0700
-Date: Sun, 20 May 2007 16:40:48 -0700
-From: Chris Wedgwood <cw@f00f.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 16:44:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4KNiafB029998
+	for <xfs@oss.sgi.com>; Sun, 20 May 2007 16:44:38 -0700
+Date: Mon, 21 May 2007 09:44:32 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: Review: ensure EOF writes into existing extents update filesize
-Message-ID: <20070520234048.GA7423@tuatara.stupidest.org>
-References: <20070520233417.GA85884050@sgi.com>
-MIME-Version: 1.0
+Message-ID: <20070520234432.GB85884050@sgi.com>
+References: <20070520233417.GA85884050@sgi.com> <20070520234048.GA7423@tuatara.stupidest.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070520233417.GA85884050@sgi.com>
+In-Reply-To: <20070520234048.GA7423@tuatara.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, May 21, 2007 at 09:34:17AM +1000, David Chinner wrote:
+On Sun, May 20, 2007 at 04:40:48PM -0700, Chris Wedgwood wrote:
+> 
+> Once people are happy with this it should be checked to see if it
+> needs to go into -stable.
 
-> In that case, we use a read mapping of the extent, and this also
-> happens to use the read I/O completion handler instead of the
-> write I/O completion handle. Hence the file size was not updated
-> on I/O completion.
->
-> Comments?
+It's new code so -stable is irrelevant....
 
-I've had this (well, the first version you sent to Jeremy) for a few
-days on a testing machine without any obvious ill effects.
+Cheers,
 
-Once people are happy with this it should be checked to see if it
-needs to go into -stable.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
