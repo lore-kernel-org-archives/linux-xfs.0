@@ -1,156 +1,151 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 22:24:57 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4L5OrfB020521
-	for <xfs@oss.sgi.com>; Sun, 20 May 2007 22:24:54 -0700
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l4L5L4Yx006226
-	for <xfs@oss.sgi.com>; Mon, 21 May 2007 01:21:04 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4L5OnIv160264
-	for <xfs@oss.sgi.com>; Sun, 20 May 2007 23:24:49 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4L5OnjC028311
-	for <xfs@oss.sgi.com>; Sun, 20 May 2007 23:24:49 -0600
-Subject: Re: [PATCH 0/6][TAKE4] fallocate system call
-From: Mingming Cao <cmm@us.ibm.com>
-Reply-To: cmm@us.ibm.com
-In-Reply-To: <20070518234444.f53a4230.akpm@linux-foundation.org>
-References: <20070321120425.GA27273@amitarora.in.ibm.com>
-	 <20070329115126.GB7374@amitarora.in.ibm.com>
-	 <20070329101010.7a2b8783.akpm@linux-foundation.org>
-	 <20070330071417.GI355@devserv.devel.redhat.com>
-	 <20070417125514.GA7574@amitarora.in.ibm.com>
-	 <20070418130600.GW5967@schatzie.adilger.int>
-	 <20070420135146.GA21352@amitarora.in.ibm.com>
-	 <20070420145918.GY355@devserv.devel.redhat.com>
-	 <20070424121632.GA10136@amitarora.in.ibm.com>
-	 <20070426175056.GA25321@amitarora.in.ibm.com>
-	 <20070517141115.GA24260@amitarora.in.ibm.com>
-	 <20070518234444.f53a4230.akpm@linux-foundation.org>
-Content-Type: text/plain
-Date: Sun, 20 May 2007 22:24:42 -0700
-Message-Id: <1179725082.3936.40.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 23:30:23 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4L6UHfB004904
+	for <xfs@oss.sgi.com>; Sun, 20 May 2007 23:30:18 -0700
+Date: Mon, 21 May 2007 16:34:26 +1000
+From: Timothy Shimmin <tes@sgi.com>
+Subject: Re: Review: ensure EOF writes into existing extents update filesize
+Message-ID: <738172E9F9634F7FC01B5B3C@timothy-shimmins-power-mac-g5.local>
+In-Reply-To: <20070520233417.GA85884050@sgi.com>
+References: <20070520233417.GA85884050@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, suparna@in.ibm.com
+To: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, 2007-05-18 at 23:44 -0700, Andrew Morton wrote:
-> On Thu, 17 May 2007 19:41:15 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
-> 
-> > fallocate() is a new system call being proposed here which will allow
-> > applications to preallocate space to any file(s) in a file system.
-> 
-> I merged the first three patches into -mm, thanks.
-> 
-> All the system call numbers got changed due to recent additions.  They
-> may change in the future, too - nothing is stable until the code lands
-> in mainline.
-> 
-In case you haven't realize it, the ia64 fallocate() patch comes with
-Amit's takes 4 fallocate patch series (3/6) missing one line change,
-thus fail to compile on ia64.
+Hi,
 
-Here is the updated one. Patch tested on ia64. (compile and fsx)
+Trying to understand how the initialisers prior to the loop
+are used during the loop.
+It looks like the initial "type" isn't used now with this change
+as we always assign to it near to where we access it.
+Previously, we did access it in the already mapped case (type != IOMAP_READ).
+So why do we initialise "type" prior to the loop then?
 
-fallocate() on ia64
+The inited "flags" var is 1st accessed in the unmapped/allocated
+codepath to set iomap_valid to zero on BMAPI_READ
+or now also in the other path where it is already mapped.
+Previously, flags was init to -1 (not one of the BMAPI macros) and
+now it is set to BMAPI_READ.
+So, previously if we came straight to an unwritten/delayed/unmapped buffer
+we would not set iomap_valid to 0, as flags==-1, whereas now
+we will reset it. But what is this doing anyway - is it really needed
+to reset iomap_valid.
 
-ia64 fallocate syscall support.
+Nor sure if there are any ramifications of this but just trying to see differences.
 
-Signed-Off-By: Dave Chinner <dgc@sgi.com>
+So, xfs_add_to_ioend() sets up the io completion handlers.
+Previously, we would have set up xfs_end_bio_read (for IOMAP_READ)
+and now we set up xfs_end_bio_written (for IOMAP_NEW).
+xfs_end_bio_written does an xfs_setfilesize(ioend)
+which an xfs_end_bio_read does not.
+Which I guess is the crux of this change and
+that is apparent.
 
----
- arch/ia64/kernel/entry.S  |    1 +
- include/asm-ia64/unistd.h |    3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+I'm having trouble following the existing code to understand what it is currently doing.
+So you are better off with a reviewer that knows this code (but thought I'd
+have a look:)
+We seem to be continually testing for iomap_valid which I believe checks whether
+the offset is within the mapped range.
+If the offset is not within the mapping then we try mapping the <offset, size>
+and then retest for validity.
+So what happens when it is not valid even after mapping and why wouldn't it be valid.
+I need a better understanding of the background code I guess.
 
-Index: linux-2.6.22-rc1/arch/ia64/kernel/entry.S
-===================================================================
---- linux-2.6.22-rc1.orig/arch/ia64/kernel/entry.S	2007-05-18 16:30:16.000000000 -0700
-+++ linux-2.6.22-rc1/arch/ia64/kernel/entry.S	2007-05-18 16:32:45.000000000 -0700
-@@ -1585,5 +1585,6 @@
- 	data8 sys_getcpu
- 	data8 sys_epoll_pwait			// 1305
- 	data8 sys_utimensat
-+	data8 sys_fallocate
- 
- 	.org sys_call_table + 8*NR_syscalls	// guard against failures to increase NR_syscalls
-Index: linux-2.6.22-rc1/include/asm-ia64/unistd.h
-===================================================================
---- linux-2.6.22-rc1.orig/include/asm-ia64/unistd.h	2007-05-18 16:30:16.000000000 -0700
-+++ linux-2.6.22-rc1/include/asm-ia64/unistd.h	2007-05-18 17:34:58.000000000 -0700
-@@ -296,11 +296,12 @@
- #define __NR_getcpu			1304
- #define __NR_epoll_pwait		1305
- #define __NR_utimensat			1306
-+#define __NR_fallocate			1307
- 
- #ifdef __KERNEL__
- 
- 
--#define NR_syscalls			283 /* length of syscall table */
-+#define NR_syscalls			285 /* length of syscall table */
- 
- #define __ARCH_WANT_SYS_RT_SIGACTION
- #define __ARCH_WANT_SYS_RT_SIGSUSPEND
+Sorry,
+Tim.
 
 
-> I didn't merge any of the ext4 changes as they appear to be in Ted's
-> devel tree.  Although I didn't check that they are 100% the same in 
-> that tree.
-> 
-Since both Amit and Ted are traveling, I will jump in...
+--On 21 May 2007 9:34:17 AM +1000 David Chinner <dgc@sgi.com> wrote:
 
-Most likely it's not the same one. What in Ted's devel tree is "takes 2"
-patches.
-
-I have incorporated takes 4 patches in the backing ext4 patch git tree
-here:
-
-I have tested these patch series on ia64,ppc64,x86 and x86_64. I am not
-sure if Ted got a chance to update his ext4 git tree from this patch
-queue git tree yet. 
-
-> What's the plan to get some ext4 updates into mainline, btw?  Things
-> seem to be rather gradual.
-
-
-Last time Ted and I discussed we all agree fallocate patches should go
-into mainline. Actually most patches marked before the "unstable
-patches" can get into mainline, especially the following patches
-(contains a few bug fixes patches)
-
-# New patch to fix whitespace before applying new patches
-whitespace.patch
- 
-#New patch to remove unnecessary exported symbols
-ext4_remove_exported_symbles.patch
- 
-# New patch to add mount option to turn off extents
-ext4_noextent_mount_opt.patch
-# Now Turn on extents feature by default
-ext4_extents_on_by_default.patch
- 
-#New patch to propagate inode flags
-ext4-propagate_flags.patch
- 
-#New patch to add extent sanity checks
-ext4-extent-sanity-checks.patch
- 
-#New patch to free blocks when failed to insert an extent
-ext4-free-blocks-on-insert-extent-failure.patch
-
-We already missed rc-1 window, but if possible, I would like to see ext4
-fallocate patches and above patches in mainline 2.6.22. The nanosecond
-timestamp patch is probably good to go also.
-
-Regards,
-Mingming
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> As reported a coupl eof times on lkml since the 2.6.22 window opened,
+> XFS is not updating the file size corectly in all cases. This is a
+> result of the null files fix not updating the file size when the
+> write extending the file does not need to allocate a block.
+>
+> In that case, we use a read mapping of the extent, and this also
+> happens to use the read I/O completion handler instead of the
+> write I/O completion handle. Hence the file size was not updated
+> on I/O completion.
+>
+> Comments?
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+>
+> ---
+>  fs/xfs/linux-2.6/xfs_aops.c |   23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
+>
+> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-05-11 16:03:59.000000000 +1000
+> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c	2007-05-12 23:46:54.379994052 +1000
+> @@ -973,8 +973,9 @@ xfs_page_state_convert(
+>
+>  	bh = head = page_buffers(page);
+>  	offset = page_offset(page);
+> -	flags = -1;
+> -	type = IOMAP_READ;
+> +	iomap_valid = 0;
+> +	flags = BMAPI_READ;
+> +	type = IOMAP_NEW;
+>
+>  	/* TODO: cleanup count and page_dirty */
+>
+> @@ -1004,14 +1005,14 @@ xfs_page_state_convert(
+>  		 *
+>  		 * Third case, an unmapped buffer was found, and we are
+>  		 * in a path where we need to write the whole page out.
+> - 		 */
+> +		 */
+>  		if (buffer_unwritten(bh) || buffer_delay(bh) ||
+>  		    ((buffer_uptodate(bh) || PageUptodate(page)) &&
+>  		     !buffer_mapped(bh) && (unmapped || startio))) {
+> -		     	/*
+> +			/*
+>  			 * Make sure we don't use a read-only iomap
+>  			 */
+> -		     	if (flags == BMAPI_READ)
+> +			if (flags == BMAPI_READ)
+>  				iomap_valid = 0;
+>
+>  			if (buffer_unwritten(bh)) {
+> @@ -1060,7 +1061,7 @@ xfs_page_state_convert(
+>  			 * That means it must already have extents allocated
+>  			 * underneath it. Map the extent by reading it.
+>  			 */
+> -			if (!iomap_valid || type != IOMAP_READ) {
+> +			if (!iomap_valid || flags != BMAPI_READ) {
+>  				flags = BMAPI_READ;
+>  				size = xfs_probe_cluster(inode, page, bh,
+>  								head, 1);
+> @@ -1071,7 +1072,15 @@ xfs_page_state_convert(
+>  				iomap_valid = xfs_iomap_valid(&iomap, offset);
+>  			}
+>
+> -			type = IOMAP_READ;
+> +			/*
+> +			 * We set the type to IOMAP_NEW in case we are doing a
+> +			 * small write at EOF that is extending the file but
+> +			 * without needing an allocation. We need to update the
+> +			 * file size on I/O completion in this case so it is
+> +			 * the same case as having just allocated a new extent
+> +			 * that we are writing into for the first time.
+> +			 */
+> +			type = IOMAP_NEW;
+>  			if (!test_and_set_bit(BH_Lock, &bh->b_state)) {
+>  				ASSERT(buffer_mapped(bh));
+>  				if (iomap_valid)
