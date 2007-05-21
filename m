@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 May 2007 16:32:44 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 May 2007 16:39:16 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4LNWYfB013251
-	for <xfs@oss.sgi.com>; Mon, 21 May 2007 16:32:36 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4LNd5fB014946
+	for <xfs@oss.sgi.com>; Mon, 21 May 2007 16:39:07 -0700
 Subject: PARTIAL TAKE 964983 - vmalloc leak on mount/unmount
-Message-Id: <20070521233229.B2A2758CA531@chook.melbourne.sgi.com>
-Date: Tue, 22 May 2007 09:32:29 +1000 (EST)
+Message-Id: <20070521233902.4571058CA531@chook.melbourne.sgi.com>
+Date: Tue, 22 May 2007 09:39:02 +1000 (EST)
 From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Fix double free in xfs_buf_get_noaddr error handling path
+Fix vmalloc leak on mount/unmount.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+When setting the length of the iclogbuf to write out we should just
+be changing the desired byte count rather completely reassociating
+the buffer memory with the buffer. Reassociating the buffer memory
+changes the apparent length of the buffer and hence when we free the
+buffer, we don't free all the vmap()d space we originally allocated.
 
-Date:  Tue May 22 09:31:46 AEST 2007
+Date:  Tue May 22 09:38:29 AEST 2007
 Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
 Inspected by:  hch@lst.de
 
@@ -24,7 +28,8 @@ The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:28639a
-fs/xfs/linux-2.6/xfs_buf.c - 1.238 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.238&r2=text&tr2=1.237&f=h
-	- Fix double free in xfs_buf_get_noaddr error handling path.
+Modid:  xfs-linux-melb:xfs-kern:28640a
+fs/xfs/xfs_log.c - 1.331 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.331&r2=text&tr2=1.330&f=h
+	- Set the iclogbuf I/O size correctly rather than reassociating the
+	  memory which can lead to vmalloc leaks.
