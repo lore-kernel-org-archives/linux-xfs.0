@@ -1,34 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 16:44:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 May 2007 19:15:27 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4KNiafB029998
-	for <xfs@oss.sgi.com>; Sun, 20 May 2007 16:44:38 -0700
-Date: Mon, 21 May 2007 09:44:32 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Review: ensure EOF writes into existing extents update filesize
-Message-ID: <20070520234432.GB85884050@sgi.com>
-References: <20070520233417.GA85884050@sgi.com> <20070520234048.GA7423@tuatara.stupidest.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070520234048.GA7423@tuatara.stupidest.org>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4L2FIfB000774
+	for <xfs@oss.sgi.com>; Sun, 20 May 2007 19:15:21 -0700
+Message-ID: <4650FD38.4080408@sgi.com>
+Date: Mon, 21 May 2007 12:00:24 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: Re: review: make xfs_dm_punch_hole() atomic when punching EOF
+References: <20070419071856.GR48531920@melbourne.sgi.com>
+In-Reply-To: <20070419071856.GR48531920@melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Sun, May 20, 2007 at 04:40:48PM -0700, Chris Wedgwood wrote:
-> 
-> Once people are happy with this it should be checked to see if it
-> needs to go into -stable.
+It is looking good Dave.
 
-It's new code so -stable is irrelevant....
+Regards,
+Vlad
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+David Chinner wrote:
+> Currently punching a hole to EOF via xfs_dm_punch_hole()
+> truncates the file and then extends it. This leaves a small
+> window where applications can see an incorrect file size
+> while the punch is in progress. This can cause problems
+> with DMF leading to premature completion of recalls and
+> hence data corruption.
+>
+> Use the UNRESVSP ioctl rather than FREESP+setattr to punch the
+> hole at EOF. This can leave specualtive allocations past EOF,
+> so truncate them off so we don't leave blocks that can't be
+> migrated away around in the filesystem.
+>
+> Cheers,
+>
+> Dave.
+>   
