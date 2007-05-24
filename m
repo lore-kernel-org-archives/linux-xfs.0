@@ -1,36 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 May 2007 18:08:56 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4O18nWt012711
-	for <xfs@oss.sgi.com>; Wed, 23 May 2007 18:08:51 -0700
-Subject: TAKE 965149 - xfs_fsr - Temp working directory has full access for everyone
-Message-Id: <20070524010845.62E0E58CA531@chook.melbourne.sgi.com>
-Date: Thu, 24 May 2007 11:08:45 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 May 2007 04:20:43 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4OBKZWt020464
+	for <xfs@oss.sgi.com>; Thu, 24 May 2007 04:20:37 -0700
+Date: Thu, 24 May 2007 07:20:35 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
+In-Reply-To: <200705241318.30711.dap@mail.index.hu>
+Message-ID: <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan>
+References: <200705241318.30711.dap@mail.index.hu>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Pallai Roland <dap@mail.index.hu>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 
-Restrict access to temp working directory
+Including XFS mailing list on this one.
 
+On Thu, 24 May 2007, Pallai Roland wrote:
 
-Date:  Thu May 24 11:07:57 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  Nathan Scott [nscott@aconex.com]
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:28670a
-xfsdump/VERSION - 1.86 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/VERSION.diff?r1=text&tr1=1.86&r2=text&tr2=1.85&f=h
-xfsdump/doc/CHANGES - 1.100 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/doc/CHANGES.diff?r1=text&tr1=1.100&r2=text&tr2=1.99&f=h
-	- Update to version 2.2.45
-
-xfsdump/fsr/xfs_fsr.c - 1.28 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/fsr/xfs_fsr.c.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
-	- Restrict access to temp working directory
+>
+> Hi,
+>
+> I wondering why the md raid5 does accept writes after 2 disks failed. I've an
+> array built from 7 drives, filesystem is XFS. Yesterday, an IDE cable failed
+> (my friend kicked it off from the box on the floor:) and 2 disks have been
+> kicked but my download (yafc) not stopped, it tried and could write the file
+> system for whole night!
+> Now I changed the cable, tried to reassembly the array (mdadm -f --run),
+> event counter increased from 4908158 up to 4929612 on the failed disks, but I
+> cannot mount the file system and the 'xfs_repair -n' shows lot of errors
+> there. This is expainable by the partially successed writes. Ext3 and JFS
+> has "error=" mount option to switch filesystem read-only on any error, but
+> XFS hasn't: why? It's a good question too, but I think the md layer could
+> save dumb filesystems like XFS if denies writes after 2 disks are failed, and
+> I cannot see a good reason why it's not behave this way.
+>
+> Do you have better idea how can I avoid such filesystem corruptions in the
+> future? No, I don't want to use ext3 on this box. :)
+>
+>
+> my mount error:
+> XFS: Log inconsistent (didn't find previous header)
+> XFS: failed to find log head
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
+>
+>
+> --
+> d
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
