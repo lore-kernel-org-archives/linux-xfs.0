@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 May 2007 07:01:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 May 2007 07:35:44 -0700 (PDT)
 Received: from dh.localdomain (3e44a16d.adsl.index.hu [217.20.130.176])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4PE1XWt014547
-	for <xfs@oss.sgi.com>; Fri, 25 May 2007 07:01:35 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4PEZdWt019898
+	for <xfs@oss.sgi.com>; Fri, 25 May 2007 07:35:41 -0700
 From: Pallai Roland <dap@mail.index.hu>
 Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Date: Fri, 25 May 2007 16:01:27 +0200
-References: <200705241318.30711.dap@mail.index.hu> <20070525000547.GH85884050@sgi.com> <1180056948.6183.10.camel@daptopfc.localdomain>
-In-Reply-To: <1180056948.6183.10.camel@daptopfc.localdomain>
+Date: Fri, 25 May 2007 16:35:36 +0200
+References: <200705241318.30711.dap@mail.index.hu> <1180056948.6183.10.camel@daptopfc.localdomain> <20070525045500.GF86004887@sgi.com>
+In-Reply-To: <20070525045500.GF86004887@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200705251601.27577.dap@mail.index.hu>
+Message-Id: <200705251635.36533.dap@mail.index.hu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -21,44 +21,35 @@ To: David Chinner <dgc@sgi.com>
 Cc: Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 
 
-On Friday 25 May 2007 03:35:48 Pallai Roland wrote:
-> On Fri, 2007-05-25 at 10:05 +1000, David Chinner wrote:
-> > On Thu, May 24, 2007 at 07:20:35AM -0400, Justin Piszcz wrote:
-> > > On Thu, 24 May 2007, Pallai Roland wrote:
-> > > >It's a good question too, but I think the md layer could
-> > > >save dumb filesystems like XFS if denies writes after 2 disks are
-> > > > failed, and
-> > > >I cannot see a good reason why it's not behave this way.
-> >
-> > How is *any* filesystem supposed to know that the underlying block
-> > device has gone bad if it is not returning errors?
->
->  It is returning errors, I think so. If I try to write raid5 with 2
-> failed disks with dd, I've got errors on the missing chunks.
->  The difference between ext3 and XFS is that ext3 will remount to
-> read-only on the first write error but the XFS won't, XFS only fails
-> only the current operation, IMHO. The method of ext3 isn't perfect, but
-> in practice, it's working well.
- Sorry, I was wrong: md really isn't returning error! It's madness, IMHO.
+On Friday 25 May 2007 06:55:00 David Chinner wrote:
+> Oh, did you look at your logs and find that XFS had spammed them
+> about writes that were failing?
 
- The reason why ext3 safer on raid5 in practice is that ext3 remounts to 
-read-only on read errors too and when a raid5 array got 2 failed drives and 
-there's some read, the error= behavior of ext3 will be activated and stops 
-further writes. You're right, it's not a good solution and there should be 
-read operations to prevent data loss in this case on ext3 too. Raid5 *must 
-deny all writes* when 2 disks failed: I still can't see a good reason why 
-not, and the current method is braindead!
+The first message after the incident:
 
-> > I did mention this exact scenario in the filesystems workshop back
-> > in february - we'd *really* like to know if a RAID block device has gone
-> > into degraded mode (i.e. lost a disk) so we can throttle new writes
-> > until the rebuil dhas been completed. Stopping writes completely on a
-> > fatal error (like 2 lost disks in RAID5, and 3 lost disks in RAID6)
-> > would also be possible if only we could get the information out
-> > of the block layer.
- Yes, it's sounds good, but I think we need a quick fix now, it's a real 
-problem and easily can lead to mass data loss.
+May 24 01:53:50 hq kernel: Filesystem "loop1": XFS internal error xfs_btree_check_sblock at line 336 of file fs/xfs/xfs_btree.c.  Caller 0xf8ac14f8
+May 24 01:53:50 hq kernel: <f8adae69> xfs_btree_check_sblock+0x4f/0xc2 [xfs]  <f8ac14f8> xfs_alloc_lookup+0x34e/0x47b [xfs]
+May 24 01:53:50 HF kernel: <f8ac14f8> xfs_alloc_lookup+0x34e/0x47b [xfs]  <f8b1a9c7> kmem_zone_zalloc+0x1b/0x43 [xfs]
+May 24 01:53:50 hq kernel: <f8abe645> xfs_alloc_ag_vextent+0x24d/0x1110 [xfs]  <f8ac0647> xfs_alloc_vextent+0x3bd/0x53b [xfs]
+May 24 01:53:50 hq kernel: <f8ad2f7e> xfs_bmapi+0x1ac4/0x23cd [xfs]  <f8acab97> xfs_bmap_search_multi_extents+0x8e/0xd8 [xfs]
+May 24 01:53:50 hq kernel: <f8b00001> xlog_dealloc_log+0x49/0xea [xfs]  <f8afdaee> xfs_iomap_write_allocate+0x2d9/0x58b [xfs]
+May 24 01:53:50 hq kernel: <f8afc3ae> xfs_iomap+0x60e/0x82d [xfs]  <c0113bc8> __wake_up_common+0x39/0x59
+May 24 01:53:50 hq kernel: <f8b1ae11> xfs_map_blocks+0x39/0x6c [xfs]  <f8b1bd7b> xfs_page_state_convert+0x644/0xf9c [xfs]
+May 24 01:53:50 hq kernel: <c036f384> schedule+0x5d1/0xf4d  <f8b1c780> xfs_vm_writepage+0x0/0xe0 [xfs]
+May 24 01:53:50 hq kernel: <f8b1c7d7> xfs_vm_writepage+0x57/0xe0 [xfs]  <c01830e8> mpage_writepages+0x1fb/0x3bb
+May 24 01:53:50 hq kernel: <c0183020> mpage_writepages+0x133/0x3bb  <f8b1c780> xfs_vm_writepage+0x0/0xe0 [xfs]
+May 24 01:53:50 hq kernel: <c0147bb3> do_writepages+0x35/0x3b  <c018135c> __writeback_single_inode+0x88/0x387
+May 24 01:53:50 hq kernel: <c01819b7> sync_sb_inodes+0x1b4/0x2a8  <c0181c63> writeback_inodes+0x63/0xdc
+May 24 01:53:50 hq kernel: <c0147943> background_writeout+0x66/0x9f  <c01482b3> pdflush+0x0/0x1ad
+May 24 01:53:50 hq kernel: <c01483a2> pdflush+0xef/0x1ad  <c01478dd> background_writeout+0x0/0x9f
+May 24 01:53:50 hq kernel: <c012d10b> kthread+0xc2/0xc6  <c012d049> kthread+0x0/0xc6
+May 24 01:53:50 hq kernel: <c0100dd5> kernel_thread_helper+0x5/0xb
 
+..and I've spammed such messages. This "internal error" isn't a good reason to shut down
+the file system? I think if there's a sign of corrupted file system, the first thing we should do
+is to stop writes (or the entire FS) and let the admin to examine the situation.
+ I'm not talking about my case where the md raid5 was a braindead, I'm talking about
+general situations.
 
 
 --
