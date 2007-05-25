@@ -1,76 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 May 2007 01:37:07 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4P8b1Wt005561
-	for <xfs@oss.sgi.com>; Fri, 25 May 2007 01:37:02 -0700
-Date: Fri, 25 May 2007 18:36:50 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Message-ID: <20070525083650.GO85884050@sgi.com>
-References: <200705241318.30711.dap@mail.index.hu> <Pine.LNX.4.64.0705240720040.16751@p34.internal.lan> <20070525000547.GH85884050@sgi.com> <1180056948.6183.10.camel@daptopfc.localdomain> <20070525045500.GF86004887@sgi.com> <1180071831.21028.125.camel@w100>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 May 2007 03:24:31 -0700 (PDT)
+Received: from poczta.o2.pl (mx10.go2.pl [193.17.41.74])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4PAOQWt028976
+	for <xfs@oss.sgi.com>; Fri, 25 May 2007 03:24:27 -0700
+From: =?utf-8?q?=C5=81ukasz_Fibinger?= <lucke@o2.pl>
+Reply-To: lucke@o2.pl
+Subject: Re: RESVSP problems
+Date: Fri, 25 May 2007 12:24:23 +0200
+References: <200705241324.53283.lucke@o2.pl> <20070525050632.GG86004887@sgi.com>
+In-Reply-To: <20070525050632.GG86004887@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Disposition: inline
-In-Reply-To: <1180071831.21028.125.camel@w100>
+Message-Id: <200705251224.23624.lucke@o2.pl>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alberto Alonso <alberto@ggsys.net>
-Cc: David Chinner <dgc@sgi.com>, Pallai Roland <dap@mail.index.hu>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, May 25, 2007 at 12:43:51AM -0500, Alberto Alonso wrote:
-> > >  The difference between ext3 and XFS is that ext3 will remount to
-> > > read-only on the first write error but the XFS won't, XFS only fails
-> > > only the current operation, IMHO. The method of ext3 isn't perfect, but
-> > > in practice, it's working well.
-> > 
-> > XFS will shutdown the filesystem if metadata corruption will occur
-> > due to a failed write. We don't immediately fail the filesystem on
-> > data write errors because on large systems you can get *transient*
-> > I/O errors (e.g. FC path failover) and so retrying failed data
-> > writes is useful for preventing unnecessary shutdowns of the
-> > filesystem.
-> > 
-> > Different design criteria, different solutions...
-> 
-> I think his point was that going into a read only mode causes a
-> less catastrophic situation (ie. a web server can still serve
-> pages).
+On Friday 25 of May 2007, you wrote:
+> On Thu, May 24, 2007 at 01:24:52PM +0200, Å?ukasz Fibinger wrote:
+> > >>> You've probably hit:
+> > >>> http://oss.sgi.com/bugzilla/show_bug.cgi?id=418
+> > >>> unwritten extents remain unwritten after mmap() modifies them
+> > >>>
+> > >>> Bug dchinner about it... ;-)
+> > >>
+> > >> Dave, consider it a bugging from my humble self :-)
+> > >
+> > > Yeah, yeah ;)
+> > >
+> > > I'm waiting to see what happens with Nick's patches in .22 before
+> > > going any further. If they are not merged into .22, then I think we
+> > > should push the XFS specific fix in....
+> >
+> > I wonder, what's the status of it, Dave?
+>
+> A couple of days ago:
+>
+> http://marc.info/?l=linux-mm&m=117988295814519&w=2
+>
 
-Sure - but once you've detected one corruption or had metadata
-I/O errors, can you trust the rest of the filesystem?
-
-> I think that is a valid point, rather than shutting down
-> the file system completely, an automatic switch to where the least
-> disruption of service can occur is always desired.
-
-I consider the possibility of serving out bad data (i.e after
-a remount to readonly) to be the worst possible disruption of
-service that can happen ;)
-
-> Maybe the automatic failure mode could be something that is 
-> configurable via the mount options.
-
-If only it were that simple. Have you looked to see how many
-hooks there are in XFS to shutdown without causing further
-damage?
-
-% grep FORCED_SHUTDOWN fs/xfs/*.[ch] fs/xfs/*/*.[ch] | wc -l
-116
-
-Changing the way we handle shutdowns would take a lot of time,
-effort and testing. When can I expect a patch? ;)
-
-> I personally have found the XFS file system to be great for
-> my needs (except issues with NFS interaction, where the bug report
-> never got answered), but that doesn't mean it can not be improved.
-
-Got a pointer?
+I see. If that's the case, would sharing your 2.6.21 XFS specific fixes (you 
+have them, right?) with me be any problem for you?
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Luke
