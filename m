@@ -1,69 +1,191 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 May 2007 19:17:30 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 May 2007 22:19:40 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4S2HNWt016282
-	for <xfs@oss.sgi.com>; Sun, 27 May 2007 19:17:26 -0700
-Date: Mon, 28 May 2007 12:17:18 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: raid5: I lost a XFS file system due to a minor IDE cable problem
-Message-ID: <20070528021718.GZ85884050@sgi.com>
-References: <200705241318.30711.dap@mail.index.hu> <200705251635.36533.dap@mail.index.hu> <20070528003010.GS85884050@sgi.com> <200705280350.18384.dap@mail.index.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <200705280350.18384.dap@mail.index.hu>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4S5JVWt025287
+	for <xfs@oss.sgi.com>; Sun, 27 May 2007 22:19:33 -0700
+Date: Mon, 28 May 2007 15:22:58 +1000
+Subject: [PATCH 3/3] XFS metadump utility
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------kI0MHNesDwnWBMiH0h2rG0
+MIME-Version: 1.0
+Message-ID: <op.ts0ukkxu3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Pallai Roland <dap@mail.index.hu>
-Cc: David Chinner <dgc@sgi.com>, Linux-Raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Mon, May 28, 2007 at 03:50:17AM +0200, Pallai Roland wrote:
-> On Monday 28 May 2007 02:30:11 David Chinner wrote:
-> > On Fri, May 25, 2007 at 04:35:36PM +0200, Pallai Roland wrote:
-> > > .and I've spammed such messages. This "internal error" isn't a good
-> > > reason to shut down the file system?
-> >
-> > Actaully, that error does shut the filesystem down in most cases. When you
-> > see that output, the function is returning -EFSCORRUPTED. You've got a
-> > corrupted freespace btree.
-> >
-> > The reason why you get spammed is that this is happening during background
-> > writeback, and there is no one to return the -EFSCORRUPTED error to. The
-> > background writeback path doesn't specifically detect shut down filesystems
-> > or trigger shutdowns on errors because that happens in different layers so
-> > you just end up with failed data writes. These errors will occur on the
-> > next foreground data or metadata allocation and that will shut the
-> > filesystem down at that point.
-> >
-> > I'm not sure that we should be ignoring EFSCORRUPTED errors here; maybe in
-> > this case we should be shutting down the filesystem.  That would certainly
-> > cut down on the spamming and would not appear to change anything other
-> > behaviour....
->  If I remember correctly, my file system wasn't shutted down at all, it 
-> was "writeable" for whole night, the yafc slowly "written" files to it. Maybe 
-> all write operations had failed, but yafc doesn't warn.
+------------kI0MHNesDwnWBMiH0h2rG0
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
-So you never created new files or directories, unlinked files or
-directories, did synchronous writes, etc? Just had slowly growing files?
+xfs_metadump and xfs_mdrestore man pages.
+------------kI0MHNesDwnWBMiH0h2rG0
+Content-Disposition: attachment; filename=xfs_md_man.patch
+Content-Type: application/octet-stream; name=xfs_md_man.patch
+Content-Transfer-Encoding: Base64
 
->  Spamming is just annoying when we need to find out what went wrong (My 
-> kernel.log is 300Mb), but for data security it's important to react to 
-> EFSCORRUPTED error in any case, I think so. Please consider this.
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9tYW4v
+bWFuOC94ZnNfZGIuOAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+Ci0tLSBhL3hmc3Byb2dzL21hbi9tYW44L3hmc19kYi44CTIwMDctMDUtMjgg
+MTU6MDk6MzguMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL21hbi9t
+YW44L3hmc19kYi44CTIwMDctMDUtMjggMTI6NDY6MDAuODIzMTIxMzE5ICsx
+MDAwCkBAIC0zNjcsNiArMzY3LDEwIEBAIElmIG5vIFxmMmxhYmVsXGYxIGlz
+IGdpdmVuLCB0aGUgY3VycmVudCAKIFN0YXJ0IGxvZ2dpbmcgb3V0cHV0IHRv
+IFxmMmZpbGVuYW1lXGYxLCBzdG9wIGxvZ2dpbmcsCiBvciBwcmludCB0aGUg
+Y3VycmVudCBsb2dnaW5nIHN0YXR1cy4KIC5UUAorXGYzbWV0YWR1bXBcZjEg
+WyBcZjMtZWdvd1xmMSBdIFxmMmZpbGVuYW1lXGYxCitEdW1wcyBtZXRhZGF0
+YSB0byBhIGZpbGUuIFNlZQorLkJSIHhmc19tZXRhZHVtcCAiKDgpIGZvciBt
+b3JlIGluZm9ybWF0aW9uLiIKKy5UUAogXGYzbmNoZWNrXGYxIFsgXGYzXC1z
+XGYxIF0gWyBcZjNcLWlcZjEgXGYyaW5vXGYxIF0gLi4uCiBQcmludCBuYW1l
+LWlub2RlIHBhaXJzLgogQSBcZjNibG9ja2dldCBcLW5cZjEgY29tbWFuZCBt
+dXN0IGJlIHJ1biBmaXJzdCB0byBnYXRoZXIgdGhlIGluZm9ybWF0aW9uLgpA
+QCAtMTIzOSw2ICsxMjQzLDcgQEAgeGZzX2FkbWluKDgpLAogeGZzX2NoZWNr
+KDgpLAogeGZzX2NvcHkoOCksCiB4ZnNfbG9ncHJpbnQoOCksCit4ZnNfbWV0
+YWR1bXAoOCksCiB4ZnNfbmNoZWNrKDgpLAogeGZzX3JlcGFpcig4KSwKIG1v
+dW50KDgpLAoKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cnhmc3By
+b2dzL21hbi9tYW44L3hmc19tZHJlc3RvcmUuOAo9PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT0KCi0tLSBhL3hmc3Byb2dzL21hbi9tYW44L3hmc19t
+ZHJlc3RvcmUuOAkyMDA2LTA2LTE3IDAwOjU4OjI0LjAwMDAwMDAwMCArMTAw
+MAorKysgYi94ZnNwcm9ncy9tYW4vbWFuOC94ZnNfbWRyZXN0b3JlLjgJMjAw
+Ny0wNS0yOCAxMzowMDowMS45MTk0MTg1MzEgKzEwMDAKQEAgLTAsMCArMSw0
+OCBAQAorLlRIIHhmc19tZHJlc3RvcmUgOAorLlNIIE5BTUUKK3hmc19tZHJl
+c3RvcmUgXC0gcmVzdG9yZXMgYW4gWEZTIG1ldGFkdW1wIGltYWdlIHRvIGEg
+ZmlsZXN5c3RlbSBpbWFnZQorLlNIIFNZTk9QU0lTCisuQiB4ZnNfbWRyZXN0
+b3JlCisuUkIgWyBcLWcgXQorLkkgc291cmNlCisuSSB0YXJnZXQKKy5TSCBE
+RVNDUklQVElPTgorLkIgeGZzX21kcmVzdG9yZQoraXMgYSBkZWJ1Z2dpbmcg
+dG9vbCB0aGF0IHJlc3RvcmVzIGEgbWV0YWRhdGEgaW1hZ2UgZ2VuZXJhdGVk
+IGJ5CisuQlIgeGZzX21ldGFkdW1wICg4KQordG8gYSBmaWxlc3lzdGVtLiBU
+aGUKKy5JIHNvdXJjZQorYXJndW1lbnQgc3BlY2lmaWVzIHRoZSBsb2NhdGlv
+biBvZiB0aGUgbWV0YWR1bXAgaW1hZ2UgYW5kIHRoZQorLkkgdGFyZ2V0Cith
+cmd1bWVudCBzcGVjaWZpZXMgdGhlIGRlc3RpbmF0aW9uIGZvciB0aGUgZmls
+c3lzdGVtIGltYWdlLgorSWYgdGhlCisuSSBzb3VyY2UKK2lzIFwtLCB0aGVu
+IHRoZSBtZXRhZGF0YSBpbWFnZSBpcyByZWFkIGZyb20gc3RkaW4uIFRoaXMg
+YWxsb3dzIHRoZSBvdXRwdXQgb2YKK2JlIGFub3RoZXIgcHJvZ3JhbSBzdWNo
+IGFzIGEgY29tcHJlc3Npb24gYXBwbGljYXRpb24gdG8gYmUgcmVkaXJlY3Rl
+ZCB0bworLkJSIHhmc19tZHJlc3RvcmUgLgorVGhlCisuSSB0YXJnZXQKK2Nh
+biBiZSBlaXRoZXIgYSBmaWxlIG9yIGEgZGV2aWNlLgorLlBQCisuQiB4ZnNf
+bWRyZXN0b3JlCitzaG91bGQgbm90IGJlIHVzZWQgdG8gcmVzdG9yZSBtZXRh
+ZGF0YSBvbnRvIGFuIGV4aXN0aW5nIGZpbGVzeXN0ZW0gdW5sZXNzCit5b3Ug
+YXJlIGNvbXBsZXRlbHkgY2VydGFpbiB0aGUKKy5JIHRhcmdldAorY2FuIGJl
+IGRlc3Ryb3llZC4KKy5QUAorLlNIIE9QVElPTlMKKy5UUAorLkIgXC1nCitT
+aG93cyByZXN0b3JlIHByb2dyZXNzIG9uIHN0ZG91dC4KKy5TSCBESUFHTk9T
+VElDUworLkIgeGZzX21kcmVzdG9yZQorcmV0dXJucyBhbiBleGl0IGNvZGUg
+b2YgMCBpZiBhbGwgdGhlIG1ldGFkYXRhIGlzIHN1Y2Nlc2Z1bGx5IHJlc3Rv
+cmVkIG9yCisxIGlmIGFuIGVycm9yIG9jY3Vycy4KKy5TSCBTRUUgQUxTTwor
+LkJSIHhmc19tZXRhZHVtcCAoOCksCisuQlIgeGZzX3JlcGFpciAoOCksCisu
+QlIgeGZzX2NoZWNrICg4KSwKKy5CUiB4ZnMgKDUpCisuU0ggQlVHUworRW1h
+aWwgYnVnIHJlcG9ydHMgdG8KKy5CUiB4ZnNAb3NzLnNnaS5jb20gLgpcIE5v
+IG5ld2xpbmUgYXQgZW5kIG9mIGZpbGUKCj09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PQp4ZnNwcm9ncy9tYW4vbWFuOC94ZnNfbWV0YWR1bXAuOAo9
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KCi0tLSBhL3hmc3Byb2dz
+L21hbi9tYW44L3hmc19tZXRhZHVtcC44CTIwMDYtMDYtMTcgMDA6NTg6MjQu
+MDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL21hbi9tYW44L3hmc19t
+ZXRhZHVtcC44CTIwMDctMDUtMjggMTU6MDc6NTguMzUwMTQ3NTUxICsxMDAw
+CkBAIC0wLDAgKzEsMTI3IEBACisuVEggeGZzX21ldGFkdW1wIDgKKy5TSCBO
+QU1FCit4ZnNfbWV0YWR1bXAgXC0gY29weSBYRlMgZmlsZXN5c3RlbSBtZXRh
+ZGF0YSB0byBhIGZpbGUKKy5TSCBTWU5PUFNJUworLkIgeGZzX21ldGFkdW1w
+CisuUkIgWyBcLWVmZ293IF0KKy5SQiBbIFwtbAorLklSIGxvZ2RldiBdCisu
+SSBzb3VyY2UKKy5JIHRhcmdldAorLlNIIERFU0NSSVBUSU9OCisuQiB4ZnNf
+bWV0YWR1bXAKK2lzIGEgZGVidWdnaW5nIHRvb2wgdGhhdCBjb3BpZXMgdGhl
+IG1ldGFkYXRhIGZyb20gYW4gWEZTIGZpbGVzeXN0ZW0gdG8gYSBmaWxlLgor
+VGhlCisuSSBzb3VyY2UKK2FyZ3VtZW50IG11c3QgYmUgdGhlIHBhdGhuYW1l
+IG9mIHRoZSBkZXZpY2Ugb3IgZmlsZQorY29udGFpbmluZyB0aGUgWEZTIGZp
+bGVzeXN0ZW0gYW5kIHRoZQorLkkgdGFyZ2V0Cithcmd1bWVudCBzcGVjaWZp
+ZXMgdGhlIGRlc3RpbmF0aW9uIGZpbGUgbmFtZS4KK0lmCisuSSB0YXJnZXQK
+K2lzIFwtLCB0aGVuIHRoZSBvdXRwdXQgaXMgc2VudCB0byBzdGRvdXQuIFRo
+aXMgYWxsb3dzIHRoZSBvdXRwdXQgdG8gYmUKK3JlZGlyZWN0ZWQgdG8gYW5v
+dGhlciBwcm9ncmFtIHN1Y2ggYXMgYSBjb21wcmVzc2lvbiBhcHBsaWNhdGlv
+bi4KKy5QUAorLkIgeGZzX21ldGFkdW1wCitzaG91bGQgb25seSBiZSB1c2Vk
+IHRvIGNvcHkgdW5tb3VudGVkIGZpbGVzeXN0ZW1zLCByZWFkLW9ubHkgbW91
+bnRlZAorZmlsZXN5c3RlbXMsIG9yIGZyb3plbiBmaWxlc3lzdGVtcyAoc2Vl
+CisuQlIgeGZzX2ZyZWV6ZSAoOCkpLgorT3RoZXJ3aXNlLCB0aGUgZ2VuZXJh
+dGVkIGR1bXAgY291bGQgYmUgaW5jb25zaXN0ZW50IG9yIGNvcnJ1cHQuCisu
+UFAKKy5CIHhmc19tZXRhZHVtcAorZG9lcyBub3QgYWx0ZXIgdGhlIHNvdXJj
+ZSBmaWxlc3lzdGVtIGluIGFueSB3YXkuIFRoZQorLkkgdGFyZ2V0CitpbWFn
+ZSBpcyBhIGNvbnRpZ3VvdXMgKG5vbi1zcGFyc2UpIGZpbGUgY29udGFpbmlu
+ZyBhbGwgdGhlCitmaWxlc3lzdGVtJ3MgbWV0YWRhdGEgYW5kIGluZGV4ZXMg
+dG8gd2hlcmUgdGhlIGJsb2NrcyB3ZXJlIGNvcGllZCBmcm9tLgorLlBQCitC
+eSBkZWZhdWx0LAorLkIgeGZzX21ldGFkdW1wCitvYmZ1c2NhdGVzIG1vc3Qg
+ZGlyZWN0b3J5IG5hbWVzIGFuZCBleHRlbmRlZCBhdHRyaWJ1dGUgbmFtZXMg
+dG8gYWxsb3cgdGhlIGR1bXBzCit0byBiZSBzZW50IHdpdGhvdXQgcmV2ZWFs
+aW5nIGNvbmZpZGVudGlhbCBpbmZvcm1hdGlvbi4gRXh0ZW5kZWQgYXR0cmli
+dXRlCit2YWx1ZXMgYXJlIHplcm9lZCBhbmQgbm8gZGF0YSBpcyBjb3BpZWQu
+IFRoZSBvbmx5IGV4Y2VwdGlvbnMgYXJlIGRpcmVjdG9yeQorb3IgYXR0cmli
+dXRlIG5hbWVzIHRoYXQgYXJlIDQgb3IgbGVzcyBjaGFyYWN0ZXJzIGluIGxl
+bmd0aC4gQWxzbyBkaXJlY3RvcnkKK25hbWVzIHRoYXQgc3BhbiBleHRlbnRz
+ICh0aGlzIGNhbiBvbmx5IG9jY3VyIHdpdGggdGhlCisuQlIgbWtmcy54ZnMg
+KDgpCitvcHRpb25zIHdoZXJlCisuQiBcLW4KKy5JIHNpemUKKz4KKy5CIFwt
+YgorLklSIHNpemUgKQorYXJlIG5vdCBvYmZ1c2NhdGVkLgorLlBQCisuQiB4
+ZnNfbWV0YWR1bXAKK3Nob3VsZCBub3QgYmUgdXNlZCBmb3IgYW55IHB1cnBv
+c2VzIG90aGVyIHRoYW4gZm9yIGRlYnVnZ2luZyBhbmQgcmVwb3J0aW5nCitm
+aWxlc3lzdGVtIHByb2JsZW1zLiBUaGUgbW9zdCBjb21tb24gdXNhZ2Ugc2Nl
+bmFyaW8gZm9yIHRoaXMgdG9vbCBpcyB3aGVuCisuQlIgeGZzX3JlcGFpciAo
+OCkKK2ZhaWxzIHRvIHJlcGFpciBhIGZpbGVzeXN0ZW0gYW5kIGEgbWV0YWR1
+bXAgaW1hZ2UgY2FuIGJlIHNlbnQgZm9yCithbmFseXNpcy4KKy5QUAorVGhl
+IGZpbGUgZ2VuZXJhdGVkIGJ5CisuQiB4ZnNfbWV0YWR1bXAKK2NhbiBiZSBy
+ZXN0b3JlZCB0byBmaWxlc3lzdGVtIGltYWdlIChtaW51cyB0aGUgZGF0YSkg
+dXNpbmcgdGhlCisuQlIgeGZzX21kcmVzdG9yZSAoOCkKK3Rvb2wuCisuUFAK
+Ky5TSCBPUFRJT05TCisuVFAKKy5CIFwtZQorU3RvcHMgdGhlIGR1bXAgb24g
+YSByZWFkIGVycm9yLiBOb21hbGx5LCBpdCB3aWxsIGlnbm9yZSByZWFkIGVy
+cm9ycyBhbmQgY29weQorYXMgbXVjaCBtZXRhZHVtcCBkYXRhIGFzIGlzIGFj
+Y2Vzc2libGUuCisuVFAKKy5CIFwtZgorU3BlY2lmaWVzIHRoYXQgdGhlIGZp
+bGVzeXN0ZW0gaW1hZ2UgdG8gYmUgcHJvY2Vzc2VkIGlzIHN0b3JlZCBpbiBh
+IHJlZ3VsYXIgZmlsZQorKHNlZSB0aGUKKy5CIG1rZnMueGZzIC1kCitmaWxl
+IG9wdGlvbikuIFRoaXMgY2FuIGFsc28gaGFwcGVuIGlmIGFuIGltYWdlIGNv
+cHkgb2YgYSBmaWxlc3lzdGVtIGhhcworYmVlbiBtYWRlIGludG8gYW4gb3Jk
+aW5hcnkgZmlsZSB3aXRoCisuQlIgeGZzX2NvcHkgKDgpLgorLlRQCisuQiBc
+LWcKK1Nob3dzIGR1bXAgcHJvZ3Jlc3MuIFRoaXMgaXMgc2VudCB0byBzdGRv
+dXQgaWYgdGhlCisuSSB0YXJnZXQKK2lzIGEgZmlsZSBvciB0byBzdGRlcnIg
+aWYgdGhlCisuSSB0YXJnZXQKK2lzIHN0ZG91dC4KKy5UUAorLkJJIFwtbCAi
+IGxvZ2RldiIKK0ZvciBmaWxlc3lzdGVtcyB3aGljaCB1c2UgYW4gZXh0ZXJu
+YWwgbG9nLCB0aGlzIHNwZWNpZmllcyB0aGUgZGV2aWNlIHdoZXJlIHRoZQor
+ZXh0ZXJuYWwgbG9nIHJlc2lkZXMuIFRoZSBleHRlcm5hbCBsb2cgaXMgbm90
+IGNvcGllZCwgb25seSBpbnRlcm5hbCBsb2dzIGFyZQorY29waWVkLgorLlRQ
+CisuQiBcLW8KK0Rpc2FibGVzIG9iZnVzY2F0aW9uIG9mIGZpbGUgbmFtZXMg
+YW5kIGV4dGVuZGVkIGF0dHJpYnV0ZXMuCisuVFAKKy5CIFwtdworUHJpbnRz
+IHdhcm5pbmdzIG9mIGluY29uc2lzdGFudCBtZXRhZGF0YSBlbmNvdW50ZXJl
+ZCB0byBzdGRlcnIuIEJhZCBtZXRhZGF0YQoraXMgc3RpbGwgY29waWVkLgor
+LlNIIERJQUdOT1NUSUNTCisuQiB4ZnNfbWV0YWR1bXAKK3JldHVybnMgYW4g
+ZXhpdCBjb2RlIG9mIDAgaWYgYWxsIHJlYWRhYmxlIG1ldGFkYXRhIGlzIHN1
+Y2Nlc2Z1bGx5IGNvcGllZCBvcgorMSBpZiBhIHdyaXRlIGVycm9yIG9jY3Vy
+cyBvciBhIHJlYWQgZXJyb3Igb2NjdXJzIGFuZCB0aGUKKy5CIFwtZQorb3B0
+aW9uIHVzZWQuCisuU0ggTk9URVMKK0FzCisuQiB4ZnNfbWV0YWR1bXAKK2Nv
+cGllcyBtZXRhZGF0YSBvbmx5LCBpdCBkb2VzIG5vdCBtYXR0ZXIgaWYgdGhl
+CisuSSBzb3VyY2UKK2ZpbGVzeXN0ZW0gaGFzIGEgcmVhbHRpbWUgc2VjdGlv
+biBvciBub3QuIElmIHRoZSBmaWxlc3lzdGVtIGhhcyBhbiBleHRlcm5hbAor
+bG9nLCBpdCBpcyBub3QgY29waWVkLiBJbnRlcm5hbCBsb2dzIGFyZSBjb3Bp
+ZWQgYW5kIGFueSBvdXRzdGFuZGluZyBsb2cKK3RyYW5zYWN0aW9ucyBhcmUg
+bm90IG9iZnVzY2F0ZWQgaWYgdGhleSBjb250YWluIG5hbWVzLgorLlBQCisu
+QiB4ZnNfbWV0YWR1bXAKK2lzIGEgc2hlbGwgd3JhcHBlciBhcm91bmQgdGhl
+CisuQlIgeGZzX2RiICg4KQorLkIgbWV0YWR1bXAKK2NvbW1hbmQuCisuU0gg
+U0VFIEFMU08KKy5CUiB4ZnNfcmVwYWlyICg4KSwKKy5CUiB4ZnNfbWRyZXN0
+b3JlICg4KSwKKy5CUiB4ZnNfZnJlZXplICg4KSwKKy5CUiB4ZnNfZGIgKDgp
+LAorLkJSIHhmc19jb3B5ICg4KSwKKy5CUiB4ZnMgKDUpCisuU0ggQlVHUwor
+RW1haWwgYnVnIHJlcG9ydHMgdG8KKy5CUiB4ZnNAb3NzLnNnaS5jb20gLgpc
+IE5vIG5ld2xpbmUgYXQgZW5kIG9mIGZpbGUKCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PQp4ZnNwcm9ncy9tYW4vbWFuOC94ZnNfcmVwYWlyLjgK
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgotLS0gYS94ZnNwcm9n
+cy9tYW4vbWFuOC94ZnNfcmVwYWlyLjgJMjAwNy0wNS0yOCAxNTowOTozOC4w
+MDAwMDAwMDAgKzEwMDAKKysrIGIveGZzcHJvZ3MvbWFuL21hbjgveGZzX3Jl
+cGFpci44CTIwMDctMDUtMjggMTI6NDc6NDQuODg5ODAwNTUyICsxMDAwCkBA
+IC00MzQsOSArNDM0LDE3IEBAIG1hcHMsIHBhcnRpY3VsYXJseSBsb3N0IGJs
+b2NrcyBvciBzdWJ0bHkKIFRoZSBuby1tb2RpZnkgbW9kZSBjYW4gZ2VuZXJh
+dGUgcmVwZWF0ZWQgd2FybmluZ3MgYWJvdXQKIHRoZSBzYW1lIHByb2JsZW1z
+IGJlY2F1c2UgaXQgY2Fubm90IGZpeCB0aGUgcHJvYmxlbXMgYXMgdGhleQog
+YXJlIGVuY291bnRlcmVkLgorLlBQCitJZiBhIGZpbGVzeXN0ZW0gZmFpbHMg
+dG8gYmUgcmVwYWlyZWQsIGEgbWV0YWR1bXAgaW1hZ2UgY2FuIGJlIGdlbmVy
+YXRlZAord2l0aAorLkJSIHhmc19tZXRhZHVtcCAoOCkKK2FuZCBiZSBzZW50
+IHRvIGFuIFhGUyBtYWludGFpbmVyIHRvIGJlIGFuYWx5c2VkIGFuZAorLkIg
+eGZzX3JlcGFpcgorZml4ZWQgYW5kL29yIGltcHJvdmVkLgogLlNIIFNFRSBB
+TFNPCiBkZCgxKSwKIG1rZnMueGZzKDgpLAogdW1vdW50KDgpLAogeGZzX2No
+ZWNrKDgpLAoreGZzX21ldGFkdW1wKDgpLAogeGZzKDUpLgo=
 
-The filesystem has responded correctly to the corruption in terms of
-data security (i.e. failed the data write and warned noisily about
-it), but it probably hasn't done everything it should....
-
-Hmmmm. A quick look at the linux code makes me thikn that background
-writeback on linux has never been able to cause a shutdown in this
-case. However, the same error on Irix will definitely cause a
-shutdown, though....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+------------kI0MHNesDwnWBMiH0h2rG0--
