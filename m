@@ -1,47 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 May 2007 15:02:41 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.186])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4UM2aWt008237
-	for <xfs@oss.sgi.com>; Wed, 30 May 2007 15:02:37 -0700
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [patch 1/3] Fix XFS_IOC_FSGEOMETRY_V1 in compat mode
-Date: Wed, 30 May 2007 23:48:53 +0200
-References: <20070530125954.706423971@suse.cz> <20070530143043.216024061@suse.cz> <20070530170530.GA4197@tuatara.stupidest.org>
-In-Reply-To: <20070530170530.GA4197@tuatara.stupidest.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 May 2007 15:55:30 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l4UMtOWt020004
+	for <xfs@oss.sgi.com>; Wed, 30 May 2007 15:55:26 -0700
+Date: Thu, 31 May 2007 08:55:16 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Reducing memory requirements for high extent xfs files
+Message-ID: <20070530225516.GB85884050@sgi.com>
+References: <200705301649.l4UGnckA027406@oss.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Message-Id: <200705302348.54259.arnd@arndb.de>
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <200705301649.l4UGnckA027406@oss.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Michal Marek <mmarek@suse.cz>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Michael Nishimoto <miken@stanfordalumni.org>
+Cc: xfs@oss.sgi.com
 
-On Wednesday 30 May 2007, Chris Wedgwood wrote:
+On Wed, May 30, 2007 at 09:49:38AM -0700, Michael Nishimoto wrote:
+> Hello,
 > 
-> On Wed, May 30, 2007 at 02:59:55PM +0200, Michal Marek wrote:
-> 
-> > +typedef struct xfs_fsop_geom_v132 {
-> 
-> wouldn't xfs_fsop_geom_v1_32
->                          ^
-> 
-> > +     __u32           blocksize;      /* filesystem (data) block size */
-> 
-> [...]
-> 
-> > +     __u32           dirblocksize;   /* directory block size, bytes  */
-> > +} __attribute__((packed)) xfs_fsop_geom_v132_t;
-> 
-> and xfs_fsop_geom_v1_32_t
->                     ^
-> 
-> read better there?
+> Has anyone done any work or had thoughts on changes required
+> to reduce the total memory footprint of high extent xfs files?
 
-Actually, the current convention would be struct compat_xfs_fsop_geom_v1
-and compat_xfs_fsop_geom_v1_t.
+We changed the way we do memory allocation to avoid needing
+large contiguous chunks of memory a bit over a year ago;
+that solved the main OOM problem we were getting reported
+with highly fragmented files.
 
-	Arnd <><
+> Obviously, it is important to reduce fragmentation as files
+> are generated and to regularly defrag files, but both of these 
+> alternatives are not complete solutions.
+>
+> To reduce memory consumption, xfs could bring in extents
+> from disk as needed (or just before needed) and could free 
+> up mappings when certain extent ranges have not been recently
+> accessed.  A solution should become more aggressive about 
+> reclaiming extent mapping memory as free memory becomes limited.
+
+Yes, it could, but that's a pretty major overhaul of the extent
+interface which currently assumes everywhere that the entire
+extent tree is in core.
+
+Can you describe the problem you are seeing that leads you to
+ask this question? What's the problem you need to solve?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
