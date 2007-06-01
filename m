@@ -1,37 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 May 2007 06:37:38 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l4VDbWWt032643
-	for <xfs@oss.sgi.com>; Thu, 31 May 2007 06:37:33 -0700
-Message-ID: <465ECF9B.2000500@sandeen.net>
-Date: Thu, 31 May 2007 08:37:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: ways to restore data from crashed disk
-References: <465EA882.3030403@deserver.nl>
-In-Reply-To: <465EA882.3030403@deserver.nl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 May 2007 20:32:46 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l513WdWt014920
+	for <xfs@oss.sgi.com>; Thu, 31 May 2007 20:32:41 -0700
+Subject: PARTIAL TAKE 965537 - xfsprogs AC_TYPE_U32 broken by defining HAVE___U32_T instead of HAVE___U32
+Message-Id: <20070601033233.85DEB591CE8E@chook.melbourne.sgi.com>
+Date: Fri,  1 Jun 2007 13:32:33 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jaap Struyk <japie@deserver.nl>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Jaap Struyk wrote:
-> Hello,
-> 
-> Recently my server drive has crashed and I'am trying to get some data of it.
-> The only problematic part is my xfs partition, the drive has some
-> "holes" in it, unfortunatly on the place where the superblock would be.
-> I did:
-> dd_rhelp /dev/hdb4 hdb4.img
-> xfs_repair -f hdb4.img
-> Phase 1 - find and verify superblock...
-> superblock read failed, offset 9397895168, size 2048, ag 1, rval 0
+s/HAVE___U32_T/HAVE___U32/g
+Thanks to Eric Sandeen for finding this.
 
-For starters, is the file really that big?  (9397895168 bytes?)
+Date:  Fri Jun  1 13:31:17 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  sandeen@sandeen.net
 
--eric
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-> Is there an alternative available on xfs or a way to recreate it?
+
+Modid:  master-melb:xfs-cmds:28754a
+xfsprogs/doc/CHANGES - 1.240 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.240&r2=text&tr2=1.239&f=h
+xfsprogs/aclocal.m4 - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/aclocal.m4.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+xfsprogs/m4/package_types.m4 - 1.4 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/m4/package_types.m4.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
+	- s/HAVE___U32_T/HAVE___U32/g
+	  Thanks to Eric Sandeen for finding this.
