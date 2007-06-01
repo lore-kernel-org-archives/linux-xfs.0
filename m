@@ -1,47 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 31 May 2007 21:39:38 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l514dVWt004088
-	for <xfs@oss.sgi.com>; Thu, 31 May 2007 21:39:33 -0700
-Date: Fri, 01 Jun 2007 14:39:48 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: [patch 1/3] Fix XFS_IOC_FSGEOMETRY_V1 in compat mode
-Message-ID: <0C1BF59AD81186689933280E@timothy-shimmins-power-mac-g5.local>
-In-Reply-To: <20070531132615.GO85884050@sgi.com>
-References: <20070530125954.706423971@suse.cz> <20070530143043.216024061@suse.cz>
- <20070531023031.GH85884050@sgi.com> <649C7FF68B1450E03D544BD9@timothy-shimmins-power-mac-g5.local>
- <20070531132615.GO85884050@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Jun 2007 10:06:32 -0700 (PDT)
+Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.227])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l51H6QWt007883
+	for <xfs@oss.sgi.com>; Fri, 1 Jun 2007 10:06:27 -0700
+Received: by wr-out-0506.google.com with SMTP id i22so545183wra
+        for <xfs@oss.sgi.com>; Fri, 01 Jun 2007 10:06:26 -0700 (PDT)
+Subject: XFS shrink functionality
+From: Ruben Porras <nahoo82@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-cNVvu74QiAC041q1y3BN"
+Date: Fri, 01 Jun 2007 18:39:34 +0200
+Message-Id: <1180715974.10796.46.camel@localhost>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Michal Marek <mmarek@suse.cz>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: iusty@k1024.org, cw@f00f.org
 
+--=-cNVvu74QiAC041q1y3BN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Hello,=20
 
---On 31 May 2007 11:26:15 PM +1000 David Chinner <dgc@sgi.com> wrote:
->> Who would want to use XFS_IOC_FSGEOMETRY_V1?
->>
->> Okay it turns out a whole bunch of our xfs-cmds :-)
->> (Such as xfsdump as Michal mentioned)
->> On Sep/2002, Nathan changed a bunch of them to use v1.
->>  xfsprogs-2.3.0 (03 September 2002)
->>        - Several changes to geometry ioctl callers which will make
->>          the tools useable on older kernel versions too.
->> So he did this so that new tools would work on the older kernels which
->> didn't support the new geom version.
->> So I guess we are stuck with v1 now.
->
-> Not necessarily - we could change the tools to use v4, and if that
-> didn't exist, then try v1. That way we don't need to support v1 in
-> linux, and the tools still run on old kernels.....
->
-The problem with that is the old tools won't run on new kernels.
-If you get a new kernel and use an old xfsdump then you are out of luck.
-Not sure if we want to require people to bump up to new userspace for this.
+I'm investigating the possibility to write myself the necessary code to
+shrink an xfs filesystem (I'd be able to dedicate a day/week). Trying to
+know if something is already done I came across the mails of a previous
+intent [0], [1] (I'm cc'ing the people involved).=20
 
---Tim
+At a first glance the patch is a little outdated and will no more apply
+(as of linux 2.16.18, which is the last customised kernel that I was
+able to run under a XEN environment), because at least the function
+xfs_fs_geometry is changed.=20
+
+I'm really curious about what happened to this patches and why they were
+discontinued. The second part never was made public, and there was also
+no answer. Was there any flaw in any of the posted code or anything in
+XFS that makes it especially hard to shrink [3] that discouraged the
+development?
+
+After that, the first questions that arouse are,
+would there be some assistance/groove in from the developers?=20
+How doable is it?
+What are the programmers requirements from your point of view?
+
+Thank you.
+
+[1] http://oss.sgi.com/archives/xfs/2005-08/msg00142.html
+[2] http://oss.sgi.com/archives/xfs/2005-09/msg00038.html
+[3] the only limitation that I might think of is not being able to
+shrink past the internal journal.
+
+--=-cNVvu74QiAC041q1y3BN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Dies ist ein digital signierter Nachrichtenteil
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGYEvGYubrKblAx+oRAhjZAJ4terI47D96a4JX8wsyge5iA/f6nQCgkTeN
+3qlB2vKeB7015poCrDexuWQ=
+=7rZq
+-----END PGP SIGNATURE-----
+
+--=-cNVvu74QiAC041q1y3BN--
