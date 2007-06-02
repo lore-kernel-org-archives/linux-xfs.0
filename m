@@ -1,49 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Jun 2007 15:27:09 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l52MR5Wt016783
-	for <xfs@oss.sgi.com>; Sat, 2 Jun 2007 15:27:06 -0700
-Date: Sat, 2 Jun 2007 18:27:05 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.22-rc3 safe to migrate to?
-In-Reply-To: <alpine.DEB.0.99.0706022253130.16496@sheep.housecafe.de>
-Message-ID: <Pine.LNX.4.64.0706021826470.4161@p34.internal.lan>
-References: <Pine.LNX.4.64.0706021723480.22318@p34.internal.lan>
- <alpine.DEB.0.99.0706022253130.16496@sheep.housecafe.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Jun 2007 15:53:02 -0700 (PDT)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l52MqwWt032611
+	for <linux-xfs@oss.sgi.com>; Sat, 2 Jun 2007 15:52:59 -0700
+Date: Sat, 2 Jun 2007 23:04:03 +0100 (BST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: corruption bug in 2.6.17
+In-Reply-To: <5d96567b0706021407q4455b60asd9d23ef82cb90b55@mail.gmail.com>
+Message-ID: <alpine.DEB.0.99.0706022300140.16496@sheep.housecafe.de>
+References: <5d96567b0706021407q4455b60asd9d23ef82cb90b55@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=us-ascii; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: linux-xfs@oss.sgi.com, alkirkco@sgi.com
 
-Jun  2 18:23:23 p34 upsd[2225]: Can't connect to UPS [belkin] 
-(newhidups-auto): No such file or directory
-Jun  2 18:24:23 p34 upsmon[2228]: Poll UPS [belkin@localhost] failed - 
-Driver not connected
+On Sun, 3 Jun 2007, Raz Ben-Jehuda(caro) wrote:
+> when I tried to create a new file I got the bellow oops.
+> could it be that your fix for 2.6.17.7 solves this problem ?
 
-Hmm, something changes with USB in 2.6.22-rc3 form 2.6.21..
+If you're running a 2.6.17 kernel (< 2.6.17.7) when you're getting these 
+errors, I guess it's most likely this particular 2.6.17-bug. Please read 
+http://oss.sgi.com/projects/xfs/faq.html#dir2 very carefully and upgrade 
+xfsprogs and your kernel.
 
-On Sat, 2 Jun 2007, Christian Kujau wrote:
+C.
+-- 
+BOFH excuse #55:
 
-> On Sat, 2 Jun 2007, Justin Piszcz wrote:
->> Wondering as their were a lot of XFS related issues early on in 
->> development..?  The 2.6.22-rc3 kernel has the core 2 duo coretemp patch by 
->> ruik which I want be running as long as 2.6.22-rc3 does not have any severe 
->> XFS issues?
->
-> Tracking -rc and running 2.6.22-rc3 for a couple of days now, no problems 
-> with xfs since this infamous 2.6.17 thingy[0]. But that's pretty useless 
-> information I guess, since your setup will be different from mine. Did you 
-> have anything "special" in mind when asking this?
->
-> C.
->
-> [0] http://oss.sgi.com/projects/xfs/faq.html#dir2
-> -- 
-> BOFH excuse #339:
->
-> manager in the cable duct
->
->
+Plumber mistook routing panel for decorative wall fixture
