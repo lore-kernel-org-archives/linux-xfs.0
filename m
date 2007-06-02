@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Jun 2007 15:09:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Jun 2007 15:27:09 -0700 (PDT)
 Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l52M9UWt009389
-	for <xfs@oss.sgi.com>; Sat, 2 Jun 2007 15:09:32 -0700
-Date: Sat, 2 Jun 2007 18:09:30 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l52MR5Wt016783
+	for <xfs@oss.sgi.com>; Sat, 2 Jun 2007 15:27:06 -0700
+Date: Sat, 2 Jun 2007 18:27:05 -0400 (EDT)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Kernel 2.6.22-rc3 safe to migrate to?
 In-Reply-To: <alpine.DEB.0.99.0706022253130.16496@sheep.housecafe.de>
-Message-ID: <Pine.LNX.4.64.0706021808400.22878@p34.internal.lan>
+Message-ID: <Pine.LNX.4.64.0706021826470.4161@p34.internal.lan>
 References: <Pine.LNX.4.64.0706021723480.22318@p34.internal.lan>
  <alpine.DEB.0.99.0706022253130.16496@sheep.housecafe.de>
 MIME-Version: 1.0
@@ -18,7 +18,12 @@ List-Id: xfs
 To: Christian Kujau <lists@nerdbynature.de>
 Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+Jun  2 18:23:23 p34 upsd[2225]: Can't connect to UPS [belkin] 
+(newhidups-auto): No such file or directory
+Jun  2 18:24:23 p34 upsmon[2228]: Poll UPS [belkin@localhost] failed - 
+Driver not connected
 
+Hmm, something changes with USB in 2.6.22-rc3 form 2.6.21..
 
 On Sat, 2 Jun 2007, Christian Kujau wrote:
 
@@ -41,5 +46,4 @@ On Sat, 2 Jun 2007, Christian Kujau wrote:
 >
 > manager in the cable duct
 >
-
-Thanks, I'll give it a go then--!
+>
