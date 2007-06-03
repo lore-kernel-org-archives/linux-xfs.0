@@ -1,38 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Jun 2007 01:41:42 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l538fcWt026312
-	for <xfs@oss.sgi.com>; Sun, 3 Jun 2007 01:41:39 -0700
-Date: Sun, 3 Jun 2007 04:41:38 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Kernel 2.6.22-rc3 safe to migrate to?
-In-Reply-To: <46627579.3040507@goop.org>
-Message-ID: <Pine.LNX.4.64.0706030441280.30622@p34.internal.lan>
-References: <Pine.LNX.4.64.0706021723480.22318@p34.internal.lan>
- <4661F511.4070207@goop.org> <6bffcb0e0706030059o3e53e647uf3ae1aa3f16609d8@mail.gmail.com>
- <46627579.3040507@goop.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Jun 2007 08:03:56 -0700 (PDT)
+Message-ID: <4662D852.4000005@dgreaves.com>
+Date: Sun, 03 Jun 2007 16:03:46 +0100
+From: David Greaves <david@dgreaves.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression
+References: <46608E3F.4060201@dgreaves.com> <200706012342.45657.rjw@sisk.pl> <46609FAD.7010203@dgreaves.com> <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, netdev@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
+
+Linus Torvalds wrote:
+> It would be interesting to see what triggered it, since it apparently 
+> worked before. So yes, a bisection would be great.
+
+Tejun, all the problematic patches are yours - so adding you.
+Neil, since the problem only occurs whilst an xfs filesystem is mounted on a
+raid6 array, I've cc'ed you too...
+
+OK
+Got as far as I could...
+I've run 9 or 10 kernels/bisects and got to a point with 8 of Tejun's changesets
+where it wouldn't compile:
+
+  CC      drivers/ata/sata_via.o
+drivers/ata/sata_via.c:120: error: `ata_scsi_device_suspend' undeclared here
+(not in a function)
+drivers/ata/sata_via.c:120: error: initializer element is not constant
+drivers/ata/sata_via.c:120: error: (near initialization for `svia_sht.suspend')
+drivers/ata/sata_via.c:121: error: `ata_scsi_device_resume' undeclared here (not
+in a function)
+drivers/ata/sata_via.c:121: error: initializer element is not constant
+drivers/ata/sata_via.c:121: error: (near initialization for `svia_sht.resume')
+make[2]: *** [drivers/ata/sata_via.o] Error 1
+
+git bisect visualise gave:
+
+bad: 48aaae7a2fa46e1ed0d0b7677fde79ccfcb8c963
+bisect: 54936f8b099325992f0f212a5e366fd5257c6c9c
+good: 0a3fd051c7036ef71b58863f8e5da7c3dabd9d3f
+
+I used:
+git reset --hard 8575b814097af648dad284bd3087875a11b13d18
+git reset --hard e92351bb53c0849fabfa80be53cbf3b0aa166e54
+git reset --hard 3a32a8e96694a243ec7e7feb6d76dfc4b1fe90c1
+git reset --hard 9666f4009c22f6520ac3fb8a19c9e32ab973e828
+to step through - non compiled
+git reset --hard 1d30c33d8d07868199560b24f10ed6280e78a89c
+compiled and hung on resume.
+
+given the first patch identified is
+9666f4009c22f6520ac3fb8a19c9e32ab973e828: "libata: reimplement suspend/resume
+support using sdev->manage_start_stop"
+That seems a good candidate...
+
+Incidentally, when I compile 1d30c33d8d07868199560b24f10ed6280e78a89c (far side
+of the implicated changesets) if I umount my xfs over raid6 filesystem (no lvm
+as I said in the OP) the resume succeeds.
 
 
-
-On Sun, 3 Jun 2007, Jeremy Fitzhardinge wrote:
-
-> Michal Piotrowski wrote:
->> It's already merged into mainline
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=df3c7244264f1d12562413aa32d56be802486516
->>
->
-> Oh, good.  I hadn't read through the last couple of days of commits.
->
->    J
->
->
-
-Nice, any word on the USB bug?
+David
+PS I hope I've interpreted bisect correctly - first use and all that...
