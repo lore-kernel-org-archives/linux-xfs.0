@@ -1,30 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Jun 2007 01:28:27 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Jun 2007 01:46:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l548SHWt021598
-	for <xfs@oss.sgi.com>; Mon, 4 Jun 2007 01:28:18 -0700
-Subject: TAKE 965636 - xfs_setfilesize panics on null xfs_inode
-Message-Id: <20070604082812.49AF658C38C1@chook.melbourne.sgi.com>
-Date: Mon,  4 Jun 2007 18:28:12 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l548kJWt029446
+	for <xfs@oss.sgi.com>; Mon, 4 Jun 2007 01:46:20 -0700
+Date: Mon, 4 Jun 2007 18:46:08 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: TAKE 965636 - xfs_setfilesize panics on null xfs_inode
+Message-ID: <20070604084608.GW85884050@sgi.com>
+References: <20070604082812.49AF658C38C1@chook.melbourne.sgi.com> <20070604083222.GA16922@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070604083222.GA16922@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-Handle null returned from xfs_vtoi() in xfs_setfilesize().
+On Mon, Jun 04, 2007 at 09:32:22AM +0100, Christoph Hellwig wrote:
+> On Mon, Jun 04, 2007 at 06:28:12PM +1000, David Chinner wrote:
+> > Handle null returned from xfs_vtoi() in xfs_setfilesize().
+> 
+> This doesn't make any sense at all.  xfs_inodes always live longer than
+> vnodes.  What's the backtrace of the problem you're seeing?
 
+The I/O completion handlers are used by CXFS clients as well.
+Hence we can't assume that the vnode is backed by a xfs_inode....
 
-Date:  Mon Jun  4 18:27:21 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  tes@sgi.com, olaf@sgi.com
+Cheers,
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:28777a
-fs/xfs/linux-2.6/xfs_aops.c - 1.145 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.145&r2=text&tr2=1.144&f=h
-	- If we get a null xfs_inode in xfs_setfilesize(), we can't update
-	  the file size. Don't even bother trying.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
