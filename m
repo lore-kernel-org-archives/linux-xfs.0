@@ -1,122 +1,168 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Jun 2007 21:53:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Jun 2007 22:14:47 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l544rNWt021743
-	for <xfs@oss.sgi.com>; Sun, 3 Jun 2007 21:53:26 -0700
-Date: Mon, 4 Jun 2007 14:53:17 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l545EdWt002262
+	for <xfs@oss.sgi.com>; Sun, 3 Jun 2007 22:14:42 -0700
+Date: Mon, 4 Jun 2007 15:14:33 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Review - writing to multiple non-contiguous unwritten extents within a page is broken.
-Message-ID: <20070604045317.GH86004887@sgi.com>
-References: <20070523092103.GT85884050@sgi.com>
+Subject: Review: remount read-only path is as broken as freezing was....
+Message-ID: <20070604051433.GP85884050@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070523092103.GT85884050@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Ping?
 
-On Wed, May 23, 2007 at 07:21:03PM +1000, David Chinner wrote:
-> [Nathan - probably another one for you]
-> 
-> This test run on ia64 (16k page size) on a 4k block size filesystem:
-> 
-> #!/bin/bash
-> 
-> file=$1
-> rm -f $file
-> 
-> xfs_io -f \
-> -c "truncate 1048576" \
-> -c "resvsp 1032192 16384" \
-> -c "pwrite 1033216 2560" \
-> -c "pwrite 1040384 8192" \
-> -c "bmap -vvp" \
-> -c "fsync" \
-> -c "bmap -vvp" \
-> -c "close" \
-> $file
-> 
-> Which writes 3 unwritten blocks in a page (first block and last 2)
-> results in a corrupted write.
-> 
-> The problem is that the second block on teh page is uninitialised
-> and so is skipped by xfs_page_state_convert. The problem is that the
-> xfs_ioend structures are not getting created correctly.
-> 
-> When we skip the uninitialised block, we add the second unwritten block
-> we are writing to into the original ioend. While this results in
-> the correct I/O being sent to disk, it results in a ioend with a
-> start offset of 0 and a length of 3 blocks. When we do unwritten
-> extent conversion based on this range, we convert the wrong blocks.
-> 
-> What we need to be doing is creating two xfs_ioend structures, one
-> for the first block and one for the second set of blocks in the page.
-> That way we get two separate I/O completion events and convert the
-> ranges separately and correctly.
-> 
-> I've checked xfs_convert_page(), and I don't think it needs any
-> fix here - it already appears to force multiple ioends to be used in this
-> case...
-> 
-> Thoughts?
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
-> 
-> ---
->  fs/xfs/linux-2.6/xfs_aops.c |   13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-05-23 16:33:04.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_aops.c	2007-05-23 17:52:15.540456674 +1000
-> @@ -1008,6 +1008,8 @@ xfs_page_state_convert(
->  		if (buffer_unwritten(bh) || buffer_delay(bh) ||
->  		    ((buffer_uptodate(bh) || PageUptodate(page)) &&
->  		     !buffer_mapped(bh) && (unmapped || startio))) {
-> +			int new_ioend = 0;
-> +
->  			/*
->  			 * Make sure we don't use a read-only iomap
->  			 */
-> @@ -1026,6 +1028,15 @@ xfs_page_state_convert(
->  			}
->  
->  			if (!iomap_valid) {
-> +				/*
-> +				 * if we didn't have a valid mapping then we
-> +				 * need to ensure that we put the new mapping
-> +				 * in a new ioend structure. This needs to be
-> +				 * done to ensure that the ioends correctly
-> +				 * reflect the block mappings at io completion
-> +				 * for unwritten extent conversion.
-> +				 */
-> +				new_ioend = 1;
->  				if (type == IOMAP_NEW) {
->  					size = xfs_probe_cluster(inode,
->  							page, bh, head, 0);
-> @@ -1045,7 +1056,7 @@ xfs_page_state_convert(
->  				if (startio) {
->  					xfs_add_to_ioend(inode, bh, offset,
->  							type, &ioend,
-> -							!iomap_valid);
-> +							new_ioend);
->  				} else {
->  					set_buffer_dirty(bh);
->  					unlock_buffer(bh);
+I recently had a remount,ro test fail in a way I had previously
+only seen freezing fail. That is, it failed because we still
+had active transactions after calling xfs_quiesce_fs(). Further
+investigation shows that this path is broken in the same ways
+that the xfs freeze path was broken (and recently fixed).
 
+Make the remount,ro path properly flush the filesystem down
+to a clean state before returning.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
+
+---
+ fs/xfs/linux-2.6/xfs_super.c |    2 -
+ fs/xfs/linux-2.6/xfs_vfs.h   |   10 +++++++
+ fs/xfs/xfs_vfsops.c          |   54 ++++++++++++++++++++++++-------------------
+ 3 files changed, 42 insertions(+), 24 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.c	2007-05-10 16:56:09.594774832 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c	2007-05-10 17:39:02.374544197 +1000
+@@ -726,7 +726,7 @@ xfs_fs_sync_super(
+ 		 * occur here so don't bother flushing the buftarg (i.e
+ 		 * SYNC_QUIESCE) because it'll just get dirty again.
+ 		 */
+-		flags = SYNC_FSDATA | SYNC_DELWRI | SYNC_WAIT | SYNC_IOWAIT;
++		flags = SYNC_DATA_QUIESCE;
+ 	} else
+ 		flags = SYNC_FSDATA | (wait ? SYNC_WAIT : 0);
+ 
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_vfs.h	2007-05-10 16:56:09.590775350 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h	2007-05-10 17:39:02.386542627 +1000
+@@ -94,6 +94,16 @@ typedef enum {
+ #define SYNC_IOWAIT		0x0100  /* wait for all I/O to complete */
+ #define SYNC_SUPER		0x0200  /* flush superblock to disk */
+ 
++/*
++ * When remounting a filesystem read-only or freezing the filesystem,
++ * we have two phases to execute. This first phase is syncing the data
++ * before we quiesce the filesystem, and the second is flushing all the
++ * inodes out after we've waited for all the transactions created by
++ * the first phase to complete.
++ */
++#define SYNC_DATA_QUIESCE	(SYNC_DELWRI|SYNC_FSDATA|SYNC_WAIT|SYNC_IOWAIT)
++#define SYNC_INODE_QUIESCE	(SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT)
++
+ #define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
+ #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+ #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vfsops.c	2007-05-10 17:38:58.351070788 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c	2007-05-10 17:58:09.958425162 +1000
+@@ -665,7 +665,7 @@ xfs_quiesce_fs(
+ 	 * we can write the unmount record.
+ 	 */
+ 	do {
+-		xfs_syncsub(mp, SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT, NULL);
++		xfs_syncsub(mp, SYNC_INODE_QUIESCE, NULL);
+ 		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
+ 		if (!pincount) {
+ 			count++;
+@@ -682,6 +682,30 @@ xfs_quiesce_fs(
+ 	return 0;
+ }
+ 
++/*
++ * Second stage of a quiesce. The data is already synced, now we have to take
++ * care of the metadata. New transactions are already blocked, so we need to
++ * wait for any remaining transactions to drain out before proceding.
++ */
++STATIC void
++xfs_attr_quiesce(
++	xfs_mount_t	*mp)
++{
++	/* wait for all modifications to complete */
++	while (atomic_read(&mp->m_active_trans) > 0)
++		delay(100);
++
++	/* flush inodes and push all remaining buffers out to disk */
++	xfs_quiesce_fs(mp);
++
++	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
++
++	/* Push the superblock and write an unmount record */
++	xfs_log_sbcount(mp, 1);
++	xfs_log_unmount_write(mp);
++	xfs_unmountfs_writesb(mp);
++}
++
+ STATIC int
+ xfs_mntupdate(
+ 	bhv_desc_t			*bdp,
+@@ -701,11 +725,7 @@ xfs_mntupdate(
+ 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+ 		}
+ 	} else if (!(vfsp->vfs_flag & VFS_RDONLY)) {	/* rw -> ro */
+-		bhv_vfs_sync(vfsp, SYNC_FSDATA|SYNC_BDFLUSH|SYNC_ATTR, NULL);
+-		xfs_quiesce_fs(mp);
+-		xfs_log_sbcount(mp, 1);
+-		xfs_log_unmount_write(mp);
+-		xfs_unmountfs_writesb(mp);
++		bhv_vfs_sync(vfsp, SYNC_DATA_QUIESCE, NULL);
++		xfs_attr_quiesce(mp);
+ 		vfsp->vfs_flag |= VFS_RDONLY;
+ 	}
+ 	return 0;
+@@ -1998,9 +2018,9 @@ xfs_showargs(
+ }
+ 
+ /*
+- * Second stage of a freeze. The data is already frozen, now we have to take
+- * care of the metadata. New transactions are already blocked, so we need to
+- * wait for any remaining transactions to drain out before proceding.
++ * Second stage of a freeze. The data is already frozen so we only
++ * need to take care of the metadata. Once that's done write a dummy
++ * record to dirty the log in case of a crash while frozen.
+  */
+ STATIC void
+ xfs_freeze(
+@@ -2008,19 +2028,7 @@ xfs_freeze(
+ {
+ 	xfs_mount_t	*mp = XFS_BHVTOM(bdp);
+ 
+-	/* wait for all modifications to complete */
+-	while (atomic_read(&mp->m_active_trans) > 0)
+-		delay(100);
+-
+-	/* flush inodes and push all remaining buffers out to disk */
+-	xfs_quiesce_fs(mp);
+-
+-	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
+-
+-	/* Push the superblock and write an unmount record */
+-	xfs_log_sbcount(mp, 1);
+-	xfs_log_unmount_write(mp);
+-	xfs_unmountfs_writesb(mp);
++	xfs_attr_quiesce(mp);
+ 	xfs_fs_log_dummy(mp);
+ }
+ 
