@@ -1,61 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Jun 2007 08:07:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l55F75Wt021248
-	for <linux-xfs@oss.sgi.com>; Tue, 5 Jun 2007 08:07:06 -0700
-Message-ID: <46657C17.1090105@sandeen.net>
-Date: Tue, 05 Jun 2007 10:07:03 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Jun 2007 13:24:38 -0700 (PDT)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l55KOWWt021662
+	for <xfs@oss.sgi.com>; Tue, 5 Jun 2007 13:24:33 -0700
+Date: Tue, 5 Jun 2007 22:24:32 +0200 (CEST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: corruption bug in 2.6.17
+In-Reply-To: <5d96567b0706050127y7f5eap7b92cddb5cdae02d@mail.gmail.com>
+Message-ID: <alpine.DEB.0.99.0706052217320.21004@foobar-g4>
+References: <5d96567b0706021407q4455b60asd9d23ef82cb90b55@mail.gmail.com>
+ <alpine.DEB.0.99.0706022300140.16496@sheep.housecafe.de>
+ <5d96567b0706050127y7f5eap7b92cddb5cdae02d@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: building xfstests
-References: <5d96567b0706050749o74bc7701g154e836c43a511be@mail.gmail.com>
-In-Reply-To: <5d96567b0706050749o74bc7701g154e836c43a511be@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Raz Ben-Jehuda(caro) wrote:
-> Hello
-> I have downloaded from the web the cvs repository of the
-> module xfs-cmds.
-> 
-> I failing to build it.  the bellow is the "make" output.
-...
 
-> Wrote: 
-> /d1/rt/raz/downloads/xfs-cmds/xfsdump/build/xfsdump-2.2.45.src.tar.gz
-> Wrote: 
-> /d1/rt/raz/downloads/xfs-cmds/xfsdump/build/tar/xfsdump-2.2.45.tar.gz
+[please reply on-list, so that everbody can help. and top-posting is
+  evil;) ]
 
-So, everything built - but it just did not build rpms - which is maybe 
-fine with you?
+On Tue, 5 Jun 2007, Raz Ben-Jehuda(caro) wrote:
+> It is unclear from the web page how can reproduce this bug. Can you
+> think of a several steps that produces it so I will be able to know
+> whether 2.7.17.7 fix had fixed it ?
 
-> for d in attr acl xfsprogs dmapi xfsdump; do \
->        ( cd /d1/rt/raz/downloads/xfs-cmds && /bin/cp
-> $d/build/rpm/*.src.rpm /d1/rt/raz/downloads/xfs-cmds/SRPMS ) \
-> done
-> /bin/cp: cannot stat `attr/build/rpm/*.src.rpm': No such file or directory
-> /bin/cp: cannot stat `acl/build/rpm/*.src.rpm': No such file or directory
-> /bin/cp: cannot stat `xfsprogs/build/rpm/*.src.rpm': No such file or 
-> directory
-> /bin/cp: cannot stat `dmapi/build/rpm/*.src.rpm': No such file or directory
-> /bin/cp: cannot stat `xfsdump/build/rpm/*.src.rpm': No such file or 
-> directory
+I have been bitten by this one too and to "reproduce" it I only had to
 
-It's just trying to copy rpms to a central location, and they didn't 
-build for you (maybe you're on debian or similar?)
+  1) boot 2.6.17.x (x<17)
+  2) generate some IO on the xfs-mounted partition...and wait until the
+     fs shut down.
 
-So kind of a dumb top-level makefile (hmm who wrote that stuff... ;-) 
-but it looks like all of your packages built as tarballs.
+The fix is really to use a 2.7.17.7 or later kernel and check your
+xfs with xfsprogs (version 2.8.10 or later) - if no corruptions are 
+found, you should be fine.
 
--Eric
-
-> make: *** [cmds] Error 1
-> 
-> anyone ?
-> 
-> 
+C.
+-- 
+make bzImage, not war
