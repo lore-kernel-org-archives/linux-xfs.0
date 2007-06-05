@@ -1,28 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Jun 2007 10:21:44 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l54HLdWt025752
-	for <xfs@oss.sgi.com>; Mon, 4 Jun 2007 10:21:41 -0700
-Date: Mon, 4 Jun 2007 19:21:38 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: state of the testsuite
-Message-ID: <20070604172138.GA16879@lst.de>
-References: <20070604144441.GA9672@lst.de> <20070604150222.GL86004887@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070604150222.GL86004887@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Jun 2007 17:43:35 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l550hTWt016204
+	for <xfs@oss.sgi.com>; Mon, 4 Jun 2007 17:43:30 -0700
+Date: Tue, 05 Jun 2007 10:47:24 +1000
+Subject: Re: [PATCH 1/3] XFS metadump utility
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+MIME-Version: 1.0
+References: <op.ts0ukea43jf8g2@pc-bnaujok.melbourne.sgi.com> <20070604145258.GB28033@infradead.org>
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.ttfa5az43jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20070604145258.GB28033@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Tue, Jun 05, 2007 at 01:02:22AM +1000, David Chinner wrote:
-> With 2.6.22-rc2, all the loopback based tests are failing
-> because someone broke the loopback device so lots of tests
-> fail because of that. The other tests I haven't seen fail
-> for some time...
+On Tue, 05 Jun 2007 00:52:58 +1000, Christoph Hellwig <hch@infradead.org>  
+wrote:
 
-Backing out the dynamic loop device allocations gets me 049 back
-to pass.
+> On Mon, May 28, 2007 at 03:22:52PM +1000, Barry Naujok wrote:
+>> Back in February, I posted a patch to xfs_db to capture metadata from a
+>> filesystem into a file
+>> http://oss.sgi.com/archives/xfs/2007-02/msg00072.html .
+>>
+>> I have now updated it with the following changes:
+>>  - obfuscates directory names and attribute names
+>>  - zeros attribute values
+>>  - better support of stdin/stdout for redirection.
+>
+> Is this the dpprintf to fprintf changes?  These changes look like they
+> really want to be in a separate patch with at least a sentence of an
+> explanation.
+
+Nah, the fprintf instead of dbprintf was required so errors don't go to
+stdout when using stdout as a target.
+
+The better support is using fread/fwrite instead of read/write to a
+handle.
+
+> The newly added files look good to me from a quick glance.
+>
