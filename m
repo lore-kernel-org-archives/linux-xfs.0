@@ -1,80 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Jun 2007 19:44:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Jun 2007 00:40:38 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l552i4Wt013922
-	for <xfs@oss.sgi.com>; Mon, 4 Jun 2007 19:44:06 -0700
-Subject: TAKE 957724 - need an xfsdump/xfscopy style tools that collects metadata only
-Message-Id: <20070605024359.18DCB58C38C1@chook.melbourne.sgi.com>
-Date: Tue,  5 Jun 2007 12:43:59 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l557eVWt008006
+	for <xfs@oss.sgi.com>; Tue, 5 Jun 2007 00:40:34 -0700
+Subject: TAKE 964465 - Transaction delta counts are not applied atomically
+Message-Id: <20070605074026.B7F6358C38C1@chook.melbourne.sgi.com>
+Date: Tue,  5 Jun 2007 17:40:26 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-XFS metadata dump tool
+Apply transaction delta counts atomically to incore counters
 
+With the per-cpu superblock counters, batch updates are no longer
+atomic across the entire batch of changes. This is not an issue
+if each individual change in teh batch is applied atomically.
+Unfortunately, free block count changes are not applied atomically,
+and they are applied in a manner guaranteed to cause problems.
 
-Date:  Tue Jun  5 12:43:11 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/metadump
-Inspected by:  Christoph Hellwig <hch@infradead.org>
+Essentially, the free block count reservation that the transaction
+took initially is returned to the in core counters before a second
+delta takes away what is used. because these two operations are
+not atomic, we can race with another thread that can use the
+returned transaction reservation before the transaction takes
+the space away again and we can then get ENOSPC being reported
+in a spot where we don't have an ENOSPC condition, nor should
+we ever see one there.
+
+Fix it up by rolling the two deltas into the one so it can be
+applied safely (i.e. atomically) to the incore counters.
+
+Date:  Tue Jun  5 17:39:41 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  master-melb:xfs-cmds:28782a
-xfsprogs/mdrestore/xfs_mdrestore.c - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mdrestore/xfs_mdrestore.c
-xfsprogs/mdrestore/Makefile - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mdrestore/Makefile
-	- Metadump restore tool
-
-xfsprogs/db/metadump.c - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/metadump.c
-	- Add metadump to xfs_db
-
-xfsprogs/man/man8/xfs_mdrestore.8 - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_mdrestore.8
-	- Update man page for xfs_metadump
-
-xfsprogs/db/xfs_metadump.sh - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/xfs_metadump.sh
-	- Scripto wrapper for xfs_db metadump command
-
-xfsprogs/include/xfs_metadump.h - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/xfs_metadump.h
-	- Header for xfs_metadump structures
-
-xfsprogs/db/metadump.h - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/metadump.h
-	- Add metadump to xfs_db
-
-xfsprogs/man/man8/xfs_metadump.8 - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_metadump.8
-	- Update man page for xfs_metadump
-
-xfsprogs/db/init.c - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/init.c.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-xfsprogs/db/Makefile - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/Makefile.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-xfsprogs/db/command.c - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/command.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-	- Add metadump to xfs_db
-
-xfsprogs/Makefile - 1.28 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/Makefile.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
-	- Add xfs_mdrestore directory to makefile
-
-xfsprogs/VERSION - 1.172 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.172&r2=text&tr2=1.171&f=h
-xfsprogs/doc/CHANGES - 1.241 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.241&r2=text&tr2=1.240&f=h
-	- Update to version 2.9.0
-
-xfsprogs/man/man8/xfs_db.8 - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_db.8.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-xfsprogs/man/man8/xfs_repair.8 - 1.8 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_repair.8.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
-	- Update man page for xfs_metadump
+Modid:  xfs-linux-melb:xfs-kern:28796a
+fs/xfs/xfs_trans.c - 1.181 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.c.diff?r1=text&tr1=1.181&r2=text&tr2=1.180&f=h
+	- Apply transaction deltas atomically by ensuring we only ever update
+	  each counter once per transaction.
