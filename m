@@ -1,80 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Jun 2007 22:47:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l565lAWt019909
-	for <xfs@oss.sgi.com>; Tue, 5 Jun 2007 22:47:12 -0700
-Message-ID: <46664AE7.7070600@sgi.com>
-Date: Wed, 06 Jun 2007 15:49:27 +1000
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Jun 2007 22:55:08 -0700 (PDT)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l565t1Wt021651
+	for <xfs@oss.sgi.com>; Tue, 5 Jun 2007 22:55:03 -0700
+Date: Wed, 6 Jun 2007 07:54:58 +0200 (CEST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: corruption bug in 2.6.17
+In-Reply-To: <1181084327.3176.4.camel@edge.yarra.acx>
+Message-ID: <alpine.DEB.0.99.0706060750100.21004@foobar-g4>
+References: <5d96567b0706021407q4455b60asd9d23ef82cb90b55@mail.gmail.com>
+ <alpine.DEB.0.99.0706022300140.16496@sheep.housecafe.de>
+ <5d96567b0706050127y7f5eap7b92cddb5cdae02d@mail.gmail.com>
+ <alpine.DEB.0.99.0706052217320.21004@foobar-g4>
+ <1181084327.3176.4.camel@edge.yarra.acx>
 MIME-Version: 1.0
-Subject: [REVIEW 2/2] - setting realtime and extent size hint flags via fcntl(XFS_IOC_FSSETXATTR)
-Content-Type: multipart/mixed;
- boundary="------------050606040702010003040602"
+Content-Type: TEXT/PLAIN; format=flowed; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Nathan Scott <nscott@aconex.com>
+Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------050606040702010003040602
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 6 Jun 2007, Nathan Scott wrote:
+> The problem was actually related to a particular form of btree
+> dir2 transition - so, certain combinations of file names in a
+> relatively large directory with size changes would trigger it.
 
-This patch updates the xfsctl(XFS_IOC_FSSETXATTR) and 
-xfsctl(XFS_IOC_RESVSP64)
-man page.
+Sorry, I did not intend to confuse. But all I noticed when the fs was 
+shut down, was that a backup script was running and triggering the bug 
+every morning. I was not aware of any large directories....
 
-Regards,
-Vlad
-
---------------050606040702010003040602
-Content-Type: text/plain;
- name*0="update_XFS_IOC_FSSETXATTR_and_XFS_IOC_RESVSP64_xfsctl_man_page"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="update_XFS_IOC_FSSETXATTR_and_XFS_IOC_RESVSP64_xfsctl_man_pa";
- filename*1="ge"
-
-Index: xfs-cmds/xfsprogs/man/man3/xfsctl.3
-===================================================================
---- xfs-cmds.orig/xfsprogs/man/man3/xfsctl.3
-+++ xfs-cmds/xfsprogs/man/man3/xfsctl.3
-@@ -251,11 +251,17 @@ and
- .BR fsx_extsize .
- The
- .B fsx_xflags
--realtime file bit and the file's extent size may be changed only
-+realtime file bit
-+.B XFS_XFLAG_REALTIME,
-+extent hint bit
-+.B XFS_XFLAG_EXTSIZE
-+and the file's extent size may be changed only
- when the file is empty, except in the case of a directory where
- the extent size can be set at any time (this value is only used
- for regular file allocations, so should only be set on a directory
- in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
-+The extent size has to be aligned to the filesystem block size or
-+when the XFS_XFLAG_REALTIME flag is set to the realtime extent size.
- 
- .TP
- .B XFS_IOC_GETBMAP
-@@ -325,7 +331,15 @@ The blocks are allocated, but not zeroed
- If the XFS filesystem is configured to flag unwritten file extents,
- performance will be negatively affected when writing to preallocated space,
- since extra filesystem transactions are required to convert extent flags on
--the range of the file written.
-+the range of the file written. The
-+.B l_len
-+field is rounded to the filesystem block size.
-+For realtime files the
-+.B l_len
-+field is rounded to the realtime extent size. If the extent hint is set, the
-+.B l_len
-+is rounded to the extent hint size.
-+
- If
- .IR xfs_info (8)
- reports unwritten=1, then the filesystem was made to flag unwritten extents.
-
---------------050606040702010003040602--
+thanks,
+Christian.
+-- 
+make bzImage, not war
