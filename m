@@ -1,79 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Jun 2007 06:05:20 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l57D5CWt009284
-	for <xfs@oss.sgi.com>; Thu, 7 Jun 2007 06:05:13 -0700
-Date: Thu, 7 Jun 2007 23:05:05 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
-Message-ID: <20070607130505.GE85884050@sgi.com>
-References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl> <20070316195951.GB5743@melbourne.sgi.com> <BAY103-DAV1484A3797D5368C28969CBB2700@phx.gbl> <BAY103-DAV9C465F21C87A900314523B2760@phx.gbl> <20070320064632.GO32602149@melbourne.sgi.com> <BAY103-DAV7076D9B4230E07680B724B2260@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BAY103-DAV7076D9B4230E07680B724B2260@phx.gbl>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Jun 2007 07:00:20 -0700 (PDT)
+Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l57E0CWt025620
+	for <xfs@oss.sgi.com>; Thu, 7 Jun 2007 07:00:15 -0700
+Message-ID: <46680F69.60105@dgreaves.com>
+Date: Thu, 07 Jun 2007 15:00:09 +0100
+From: David Greaves <david@dgreaves.com>
+MIME-Version: 1.0
+Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
+References: <46608E3F.4060201@dgreaves.com> <46609FAD.7010203@dgreaves.com>	 <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com>	 <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org>	 <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com>	 <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com>	 <4667DE2D.6050903@dgreaves.com> <e9e943910706070645p29519138i7e76b3a9649d387@mail.gmail.com>
+In-Reply-To: <e9e943910706070645p29519138i7e76b3a9649d387@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Marco Berizzi <pupilla@hotmail.com>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Duane Griffin <duaneg@dghda.com>
+Cc: Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
 
-On Thu, Jun 07, 2007 at 09:44:51AM +0200, Marco Berizzi wrote:
-> Hi David.
-> Three months ago I wrote the message below.
-> I had built various 2.6.20.x and 2.6.21.x
-> vanilla kernel with all the debug options
-> enabled and linux had never crashed.
-> On june 4, I have builded linux 2.6.21.3 without
-> any debugging options and after 2 days linux
-> has starting print these errors:
+Duane Griffin wrote:
+> On 07/06/07, David Greaves <david@dgreaves.com> wrote:
+>> > How hard does the machine freeze?  Can you use sysrq?  If so, please
+>> > dump sysrq-t.
+>> I suspect there is a problem writing to the consoles...
+>>
+>> I recompiled (rc4+patch) with sysrq support, suspended, resumed and tried
+>> sysrq-t but got no output.
+>>
+>> I *can* change VTs and see the various login prompts, bitmap messages 
+>> and the
+>> console messages. Caps/Num lock lights work.
+>>
+>> Fearing incompetence I tried sysrq-s sysrq-u sysrq-b and got a reboot 
+>> so sysrq
+>> is OK.
 > 
-> Jun  6 09:47:09 Pleiadi kernel:  =======================
-> Jun  6 09:47:09 Pleiadi kernel: 0x0: 28 f1 45 d4 22 53 35 11 09 80 37 5a
-> 47 8a 22 ee
-> Jun  6 09:47:09 Pleiadi kernel: Filesystem "sda8": XFS internal error
-> xfs_da_do_buf(2) at line 2086 of file fs/xfs/xfs_da_btree.c.  Caller
-> 0xc01b2301
-> Jun  6 09:47:09 Pleiadi kernel:  [<c01b21f7>] xfs_da_do_buf+0x70c/0x7b1
-> Jun  6 09:47:09 Pleiadi kernel:  [<c01b2301>] xfs_da_read_buf+0x30/0x35
-> Jun  6 09:47:09 Pleiadi kernel:  [<c01b2301>] xfs_da_read_buf+0x30/0x35
+> Try sysrq-9 before the sysrq-t. Probably the messages are not being
+> printed to console with your default output level.
 
-These above stack trace is the sign of a corrupted directory.
+Good idea :)
+Didn't work :(
 
-Chopping out the rest of the top posting (please don't do that)
-we get down to 3 months ago:
+Cheers
 
-> > On Mon, Mar 19, 2007 at 11:32:27AM +0100, Marco Berizzi wrote:
-> > > Marco Berizzi wrote:
-> > > Here is the relevant results:
-> > >
-> > > Phase 2 - found root inode chunk
-> > > Phase 3 - ...
-> > >             agno = 0
-> > >             ...
-> > >             agno = 12
-> > > LEAFN node level is 1 inode 1610612918 bno = 8388608
-> >
-> > Hmmm - single bit error in the bno - that reminds of this:
-> >
-> > http://oss.sgi.com/projects/xfs/faq.html#dir2
-> >
-> > So I'd definitely make sure that is repaired....
-
-Where we saw signs of on disk directory corruption. Have you run
-xfs_repair successfully on the filesystem since you reported
-this?
-
-If you did clean up the error, does xfs_repair report the same sort
-of error again?
-
-Have you run a 2.6.16-rcX or 2.6.17.[0-6] kernel since you last
-reported this problem?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+David
