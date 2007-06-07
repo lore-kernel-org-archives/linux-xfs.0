@@ -1,101 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Jun 2007 01:18:47 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l578IfWt026810
-	for <xfs@oss.sgi.com>; Thu, 7 Jun 2007 01:18:43 -0700
-Date: Thu, 7 Jun 2007 18:18:30 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS shrink functionality
-Message-ID: <20070607081830.GR86004887@sgi.com>
-References: <1180715974.10796.46.camel@localhost> <20070604001632.GA86004887@sgi.com> <20070604084154.GA8273@teal.hq.k1024.org> <20070604092115.GX85884050@sgi.com> <20070605080012.GA10677@teal.hq.k1024.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070605080012.GA10677@teal.hq.k1024.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Jun 2007 03:30:15 -0700 (PDT)
+Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l57AU8Wt028993
+	for <xfs@oss.sgi.com>; Thu, 7 Jun 2007 03:30:09 -0700
+Message-ID: <4667DE2D.6050903@dgreaves.com>
+Date: Thu, 07 Jun 2007 11:30:05 +0100
+From: David Greaves <david@dgreaves.com>
+MIME-Version: 1.0
+Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
+References: <46608E3F.4060201@dgreaves.com> <200706012342.45657.rjw@sisk.pl> <46609FAD.7010203@dgreaves.com> <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org> <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com> <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com>
+In-Reply-To: <46679D56.7040001@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, Ruben Porras <nahoo82@gmail.com>, xfs@oss.sgi.com, cw@f00f.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
 
-On Tue, Jun 05, 2007 at 10:00:12AM +0200, Iustin Pop wrote:
-> On Mon, Jun 04, 2007 at 07:21:15PM +1000, David Chinner wrote:
-> > > allocated on an available AG and when you remove the originals, the
-> > > to-be-shrinked AGs become free. Yes, utterly non-optimal, but it was the
-> > > simplest way to do it based on what I knew at the time.
-> > 
-> > Not quite that simple, unfortunately. You can't leave the
-> > AGs locked in the same way we do for a grow because we need
-> > to be able to use the AGs to move stuff about and that
-> > requires locking them. Hence we need a separate mechanism
-> > to prevent allocation in a given AG outside of locking them.
-> > 
-> > Hence we need:
-> > 
-> > 	- a transaction to mark AGs "no-allocate"
-> > 	- a transaction to mark AGs "allocatable"
-> > 	- a flag in each AGF/AGI to say the AG is available for
-> > 	  allocations (persistent over crashes)
-> > 	- a flag in the per-ag structure to indicate allocation
-> > 	  status of the AG.
-> > 	- everywhere we select an AG for allocation, we need to
-> > 	  check this flag and skip the AG if it's not available.
-> > 
-> > FWIW, the transactions can probably just be an extension of
-> > xfs_alloc_log_agf() and xfs_alloc_log_agi()....
+Tejun Heo wrote:
+> Hello,
 > 
-> A question: do you think that the cost of having this in the code
-> (especially the last part, check that flag in every allocation function)
-> is acceptable? I mean, let's say one would write the patch to implement
-> all this. Does it have a chance to be accepted? Or will people say it's
-> only bloat? ...
-
-Lots of ppl ask for shrink capability on XFS, so if it's implemented
-and reviewed and passes QA tests, then I see no reason why it wouldn't
-be accepted...
-
-> > Yeah, 1) and 4) are separable parts of the problem and can be done
-> > in any order. 2) can be implemented relatively easily as stated
-> > above.
-> > 
-> > 3) is the hard one - we need to find the owner of each block
-> > (metadata and data) remaining in the AGs to be removed. This may be
-> > a directory btree block, a inode extent btree block, a data block,
-> > and extended attr block, etc. Moving the data blocks is easy to
-> > do (swap extents), but moving the metadata blocks is a major PITA
-> > as it will need to be done transactionally and that will require
-> > a bunch of new (complex) code to be written, I think. It will be
-> > of equivalent complexity to defragmenting metadata....
-> > 
-> > If we ignore the metadata block problem then finding and moving the
-> > data blocks should not be a problem - swap extents can be used for
-> > that as well - but it will be extremely time consuming and won't
-> > scale to large filesystem sizes....
+> David Greaves wrote:
+>> Just to be clear. This problem is where my system won't resume after s2d
+>> unless I umount my xfs over raid6 filesystem.
 > 
-> So given these caveats, is there a chance that a) this will be actually
-> useful and b) will this be accepted?
+> This is really weird.  I don't see how xfs mount can affect this at all.
+Indeed.
+It does :)
 
-Look at it this way - if we get to the point where 3 is a problem, then
-we've got most of a useful shrinker. That's way ahead of what we
-have now and in a lot of cases it will just work.
+> How hard does the machine freeze?  Can you use sysrq?  If so, please
+> dump sysrq-t.
+I suspect there is a problem writing to the consoles...
 
-The corner cases are the hard bit, but we can work on them incrementally
-once the rest is done, and in doing so we'll also be introducing the
-means by which to defragment metadata. IOWs, we kill two birds with
-one stone at that point in time.
+I recompiled (rc4+patch) with sysrq support, suspended, resumed and tried 
+sysrq-t but got no output.
 
-Likewise for the shrink case that needs to move the log - we've got hooks for
-userspace tools to move the log, just no implementation. Implementing log moving
-for shrink will also enable us to do online log resize and internal/external
-log switching. Once again, two birds with one stone.
+I *can* change VTs and see the various login prompts, bitmap messages and the 
+console messages. Caps/Num lock lights work.
 
-Hence I don't see these issues as showstoppers at all - getting to
-the point of a full shrink implementation will give us other features
-that we need to have anyway....
+Fearing incompetence I tried sysrq-s sysrq-u sysrq-b and got a reboot so sysrq 
+is OK.
 
-Cheers,
+Any suggestions on how to see more? Or what to try next?
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Any other kernel debug options to set?
+
+David
+PS Back in a couple of hours...
