@@ -1,47 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Jun 2007 23:44:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Jun 2007 00:03:57 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l576hxWt020613
-	for <xfs@oss.sgi.com>; Wed, 6 Jun 2007 23:44:02 -0700
-Date: Thu, 7 Jun 2007 16:43:52 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: review: fix i386 build
-Message-ID: <20070607064352.GN86004887@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5773oWt032118
+	for <xfs@oss.sgi.com>; Thu, 7 Jun 2007 00:03:52 -0700
+Message-ID: <4667ADAF.7000904@sgi.com>
+Date: Thu, 07 Jun 2007 17:03:11 +1000
+From: Tim Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: review: xfs_growfs_data_private() not logging agf length change
+Content-Type: multipart/mixed;
+ boundary="------------000807030904070307000007"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-dev@sgi.com
+Cc: xfs@oss.sgi.com
 
+This is a multi-part message in MIME format.
+--------------000807030904070307000007
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Don't use type-unsafe macros.
+Looks like we forgot to log the agf_length change here.
 
-Cheers,
+(cut 'n' pasted patch)
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--Tim
 
+===========================================================================
+Index: fs/xfs/xfs_fsops.c
+===========================================================================
 
----
- fs/xfs/dmapi/xfs_dm.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- a/fs/xfs/xfs_fsops.c    2007-04-17 18:02:46.000000000 +1000
++++ b/fs/xfs/xfs_fsops.c    2007-04-17 17:59:44.467987572 +1000
+@@ -328,6 +328,7 @@ xfs_growfs_data_private(
+         be32_add(&agf->agf_length, new);
+         ASSERT(be32_to_cpu(agf->agf_length) ==
+                be32_to_cpu(agi->agi_length));
++        xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+         /*
+          * Free the new space.
+          */
 
-Index: 2.6.x-xfs-new/fs/xfs/dmapi/xfs_dm.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/dmapi/xfs_dm.c	2007-06-06 15:55:00.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/dmapi/xfs_dm.c	2007-06-06 15:56:00.613530262 +1000
-@@ -2654,7 +2654,7 @@ xfs_dm_punch_hole(
- 	 * make sure we punch the block and not just zero it.
- 	 */
- 	if (punch_to_eof)
--		len = roundup((realsize - off), bsize);
-+		len = roundup_64((realsize - off), bsize);
- 
- 	xfs_iunlock(xip, XFS_ILOCK_EXCL);
- 
+--------------000807030904070307000007
+Content-Type: text/plain;
+ name="agf_length.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="agf_length.patch"
+
+--- .pc/agf_length.patch/fs/xfs/xfs_fsops.c	2007-06-07 16:19:27.000000000 +1000
++++ fs/xfs/xfs_fsops.c	2007-06-07 16:23:41.302363734 +1000
+@@ -332,6 +332,7 @@ xfs_growfs_data_private(
+ 		be32_add(&agf->agf_length, new);
+ 		ASSERT(be32_to_cpu(agf->agf_length) ==
+ 		       be32_to_cpu(agi->agi_length));
++		xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+ 		/*
+ 		 * Free the new space.
+ 		 */
+
+--------------000807030904070307000007--
