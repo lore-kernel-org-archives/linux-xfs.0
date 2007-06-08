@@ -1,73 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 01:52:12 -0700 (PDT)
-Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.168])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l588q6Wt022501
-	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 01:52:08 -0700
-Received: by ug-out-1314.google.com with SMTP id 74so1052176ugb
-        for <xfs@oss.sgi.com>; Fri, 08 Jun 2007 01:52:06 -0700 (PDT)
-Subject: Re: XFS shrink functionality
-From: Ruben Porras <nahoo82@gmail.com>
-In-Reply-To: <20070604084154.GA8273@teal.hq.k1024.org>
-References: <1180715974.10796.46.camel@localhost>
-	 <20070604001632.GA86004887@sgi.com>
-	 <20070604084154.GA8273@teal.hq.k1024.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LdQDPymmi+rBggGPnr8T"
-Date: Fri, 08 Jun 2007 10:23:53 +0200
-Message-Id: <1181291033.7510.40.camel@localhost>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 02:01:06 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5890xWt024214
+	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 02:01:00 -0700
+Subject: TAKE 966004 - cleanup obtaining extent size hints from the inode
+Message-Id: <20070608090055.7309658C38F3@chook.melbourne.sgi.com>
+Date: Fri,  8 Jun 2007 19:00:55 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Iustin Pop <iusty@k1024.org>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, cw@f00f.org
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
---=-LdQDPymmi+rBggGPnr8T
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cleanup inode extent size hint extraction
 
-Am Montag, den 04.06.2007, 10:41 +0200 schrieb Iustin Pop:
-> Good to know. If there is at least more documentation about the
-> internals, I could try to find some time to work on this again.
+Date:  Fri Jun  8 19:00:21 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
 
-there is now a document explaining the XFS on disk format [0] and some
-presentations for training courses, I think none of this were available
-at the time you made the first try. Although they are not enough for our
-purpose.=20
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-> My suggestion would be to start implementing these steps in reverse. 4)
-> is the most important as it touches the entire FS. If 4) is working
-> correctly, then 1) would be simpler (I think)
 
-Why do you think that 1) would be simpler after 4)? For what I
-understand, they are independent.
+Modid:  xfs-linux-melb:xfs-kern:28866a
+fs/xfs/xfs_rw.h - 1.82 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rw.h.diff?r1=text&tr1=1.82&r2=text&tr2=1.81&f=h
+	- Define a common function for extracting the valid extent size
+	  hint from a given inode.
 
-3) worries me, if walking the entire filesystem is needed, it want
-scale...
-=20=20
-Since I don't know yet the xfs code I would like to begin with 1), I see
-it independent from the other parts, and I can then learn more about the
-transactions, allocators, and walking through the xfs structures. As you
-did 4) one time, maybe you could try with this part of the problem if
-you find the needed time, taking David's suggestions into account.
+fs/xfs/xfs_vnodeops.c - 1.698 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.698&r2=text&tr2=1.697&f=h
+	- Use xfs_get_extsz_hint rather than open coded statements.
 
-[0] http://oss.sgi.com/projects/xfs/papers/xfs_filesystem_structure.pdf
+fs/xfs/xfs_bmap.c - 1.369 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.369&r2=text&tr2=1.368&f=h
+	- Use xfs_get_extsz_hint rather than open coded statements.
 
-Cheers
-
---
-Ruben Porras
-LinWorks GmbH
-
---=-LdQDPymmi+rBggGPnr8T
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Dies ist ein digital signierter Nachrichtenteil
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBGaRIZYubrKblAx+oRAgScAJ908dJzI9U9BLjh5ePQZkp6AfjSSgCgh6gL
-5ON+D15BpF2nkNqM/LCiM8w=
-=b01I
------END PGP SIGNATURE-----
-
---=-LdQDPymmi+rBggGPnr8T--
+fs/xfs/xfs_iomap.c - 1.54 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.c.diff?r1=text&tr1=1.54&r2=text&tr2=1.53&f=h
+	- Use xfs_get_extsz_hint rather than open coded statements.
