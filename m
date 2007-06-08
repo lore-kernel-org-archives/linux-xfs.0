@@ -1,42 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 08:26:57 -0700 (PDT)
-Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l58FQkWt028881
-	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 08:26:50 -0700
-Date: Thu, 7 Jun 2007 20:12:58 +0000
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
-Message-ID: <20070607201258.GB10323@ucw.cz>
-References: <200706012342.45657.rjw@sisk.pl> <46609FAD.7010203@dgreaves.com> <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org> <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com> <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com> <4667DE2D.6050903@dgreaves.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4667DE2D.6050903@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 08:58:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l58FwDWt001714
+	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 08:58:14 -0700
+Message-ID: <46697C94.40401@sandeen.net>
+Date: Fri, 08 Jun 2007 10:58:12 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: ways to restore data from crashed disk
+References: <465EA882.3030403@deserver.nl> <465ECF9B.2000500@sandeen.net> <46684A9B.90908@deserver.nl> <46685C5F.5090804@sandeen.net> <4668D51F.8010804@deserver.nl>
+In-Reply-To: <4668D51F.8010804@deserver.nl>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Greaves <david@dgreaves.com>
-Cc: Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
+To: Jaap Struyk <japie@deserver.nl>
+Cc: xfs@oss.sgi.com
 
-Hi!
-
-> >How hard does the machine freeze?  Can you use sysrq?  
-> >If so, please
-> >dump sysrq-t.
-> I suspect there is a problem writing to the consoles...
+Jaap Struyk wrote:
+> Eric Sandeen schreef:
 > 
-> I recompiled (rc4+patch) with sysrq support, suspended, 
-> resumed and tried sysrq-t but got no output.
+>> when you are talking about sizes, do you mean space used (du) or max
+>> offset (ls -l?)  max offset should be the same for your image file as
+>> for your original device... 120G.
 > 
-> I *can* change VTs and see the various login prompts, 
-> bitmap messages and the console messages. Caps/Num lock 
-> lights work.
-> 
-> Fearing incompetence I tried sysrq-s sysrq-u sysrq-b and 
-> got a reboot so sysrq is OK.
+> ls -l
+> But I don't know what tot trust anymore, if I look with gparted at my
+> partitions the old disk gaves me a partition of 140G with 106G used space.
+> My new disk has a partition of 200G with 166G used space.
+> If I create a new xfs partition it has about 10% used space (according
+> to gparted, I suspect thats the size of the logfiles?) so from the 166G
+> on the new disk 146G is the "real" used space so that should be the size
+> of the image file. (nomather what ls -l tells me)
+> Is this correct?
 
-Increase console loglevel by killing klogd/sysrq-9?
+Ok.  repair is trying to read a superblock at:
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+superblock read failed, offset 103376846848, size 2048, ag 11, rval 0
+
+103376846848 bytes... or about 96 MB (base 2) (or 103 base 10)
+
+if ls -l on your image file is not at least that big, of course it can't
+read it.  And if that's smaller than your filesystem, then the image
+isn't right...
+
+from your db output:
+
+xfs_db> sb 0
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 36710528
+
+it looks like the original filesystem was bigger than your image:
+
+4096*36710528
+150366322688 <-- 140 MB
+
+so it looks like your image file is not correct... I'm not familiar with
+the tool you're using, is it somehow compressing a sparse file or
+something like that?
+
+-Eric
