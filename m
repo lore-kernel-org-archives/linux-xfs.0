@@ -1,137 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 06:59:43 -0700 (PDT)
-Received: from bay0-omc1-s13.bay0.hotmail.com (bay0-omc1-s13.bay0.hotmail.com [65.54.246.85])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l58DxcWt010121
-	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 06:59:40 -0700
-Message-ID: <BAY103-DAV141D991980E54836534A00B2250@phx.gbl>
-From: "Marco Berizzi" <pupilla@hotmail.com>
-References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl> <20070316195951.GB5743@melbourne.sgi.com> <BAY103-DAV1484A3797D5368C28969CBB2700@phx.gbl> <BAY103-DAV9C465F21C87A900314523B2760@phx.gbl> <20070320064632.GO32602149@melbourne.sgi.com> <BAY103-DAV7076D9B4230E07680B724B2260@phx.gbl> <20070607130505.GE85884050@sgi.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
-Date: Fri, 8 Jun 2007 15:59:39 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 07:45:19 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l58EjEWt017931
+	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 07:45:15 -0700
+Date: Sat, 9 Jun 2007 00:44:55 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS shrink functionality
+Message-ID: <20070608144455.GE86004887@sgi.com>
+References: <1180715974.10796.46.camel@localhost> <20070604001632.GA86004887@sgi.com> <20070604084154.GA8273@teal.hq.k1024.org> <1181291033.7510.40.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1181291033.7510.40.camel@localhost>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Marco Berizzi <pupilla@hotmail.com>
+To: Ruben Porras <nahoo82@gmail.com>
+Cc: Iustin Pop <iusty@k1024.org>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, cw@f00f.org
 
-David Chinner wrote:
+On Fri, Jun 08, 2007 at 10:23:53AM +0200, Ruben Porras wrote:
+> Am Montag, den 04.06.2007, 10:41 +0200 schrieb Iustin Pop:
+> > Good to know. If there is at least more documentation about the
+> > internals, I could try to find some time to work on this again.
+> 
+> there is now a document explaining the XFS on disk format [0] and some
+> presentations for training courses, I think none of this were available
+> at the time you made the first try. Although they are not enough for our
+> purpose. 
 
-> > Jun  6 09:47:09 Pleiadi kernel:  =======================
-> > Jun  6 09:47:09 Pleiadi kernel: 0x0: 28 f1 45 d4 22 53 35 11 09 80
-37 5a
-> > 47 8a 22 ee
-> > Jun  6 09:47:09 Pleiadi kernel: Filesystem "sda8": XFS internal
-error
-> > xfs_da_do_buf(2) at line 2086 of file fs/xfs/xfs_da_btree.c.  Caller
-> > 0xc01b2301
-> > Jun  6 09:47:09 Pleiadi kernel:  [<c01b21f7>]
-xfs_da_do_buf+0x70c/0x7b1
-> > Jun  6 09:47:09 Pleiadi kernel:  [<c01b2301>]
-xfs_da_read_buf+0x30/0x35
-> > Jun  6 09:47:09 Pleiadi kernel:  [<c01b2301>]
-xfs_da_read_buf+0x30/0x35
->
-> These above stack trace is the sign of a corrupted directory.
->
-> Chopping out the rest of the top posting (please don't do that)
+There's thousands of lines of code documenting that format as well ;)
 
-apologies
+> > My suggestion would be to start implementing these steps in reverse. 4)
+> > is the most important as it touches the entire FS. If 4) is working
+> > correctly, then 1) would be simpler (I think)
+> 
+> Why do you think that 1) would be simpler after 4)? For what I
+> understand, they are independent.
+> 
+> 3) worries me, if walking the entire filesystem is needed, it want
+> scale...
 
-> we get down to 3 months ago:
->
-> > > On Mon, Mar 19, 2007 at 11:32:27AM +0100, Marco Berizzi wrote:
-> > > > Marco Berizzi wrote:
-> > > > Here is the relevant results:
-> > > >
-> > > > Phase 2 - found root inode chunk
-> > > > Phase 3 - ...
-> > > >             agno = 0
-> > > >             ...
-> > > >             agno = 12
-> > > > LEAFN node level is 1 inode 1610612918 bno = 8388608
-> > >
-> > > Hmmm - single bit error in the bno - that reminds of this:
-> > >
-> > > http://oss.sgi.com/projects/xfs/faq.html#dir2
-> > >
-> > > So I'd definitely make sure that is repaired....
->
-> Where we saw signs of on disk directory corruption. Have you run
-> xfs_repair successfully on the filesystem since you reported
-> this?
+I think walking the filesystem can be avoided effectively by
+introducing an reverse map that points to the owner of the block.
+(i.e. another btree). Reverse mapping provides other benefits as
+well e.g. somewhere to put block checksums and more information
+for repair and scrubbing.
 
-yes.
+The hard part is the moving of metadata.  I haven't really though
+deeply on the best method for this; there's lots of options and I
+don't know what is the best way to proceed there yet. That's not
+something I need to think about right now, though ;)
 
-> If you did clean up the error, does xfs_repair report the same sort
-> of error again?
+Cheers,
 
-I have run xfs_repair this morning.
-Here is the report:
-
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - clear lost+found (if it exists) ...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - ensuring existence of lost+found directory
-        - traversing filesystem starting at / ...
-        - traversal finished ...
-        - traversing all unattached subtrees ...
-        - traversals finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-done
-
-> Have you run a 2.6.16-rcX or 2.6.17.[0-6] kernel since you last
-> reported this problem?
-
-No. I have run only 2.6.19.x and 2.6.21.x
-
-After the xfs_repair I have remounted the file system.
-After few hours linux has crashed with this message:
-BUG: at arch/i386/kernel/smp.c:546 smp_call_function()
-I have also the monitor bitmap.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
