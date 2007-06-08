@@ -1,99 +1,166 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 09:04:03 -0700 (PDT)
-Received: from astra.simleu.ro (astra.simleu.ro [80.97.18.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l58G3wWt002739
-	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 09:03:59 -0700
-Date: Fri, 8 Jun 2007 18:03:18 +0200
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: XFS shrink functionality
-Message-ID: <20070608160318.GA25579@teal.hq.k1024.org>
-References: <1180715974.10796.46.camel@localhost> <20070604001632.GA86004887@sgi.com> <20070604084154.GA8273@teal.hq.k1024.org> <1181291033.7510.40.camel@localhost> <20070608101532.GA18788@teal.hq.k1024.org> <20070608151223.GF86004887@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 12:09:34 -0700 (PDT)
+Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l58J9TWt001590
+	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 12:09:30 -0700
+Message-ID: <4669A965.20403@dgreaves.com>
+Date: Fri, 08 Jun 2007 20:09:25 +0100
+From: David Greaves <david@dgreaves.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070608151223.GF86004887@sgi.com>
+Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
+References: <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org> <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com> <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com> <4667DE2D.6050903@dgreaves.com> <20070607110708.GS86004887@sgi.com> <46680F5E.6070806@dgreaves.com> <20070607222813.GG85884050@sgi.com>
+In-Reply-To: <20070607222813.GG85884050@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Ruben Porras <nahoo82@gmail.com>, xfs@oss.sgi.com, cw@f00f.org
+Cc: Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
 
-On Sat, Jun 09, 2007 at 01:12:23AM +1000, David Chinner wrote:
-> > I took a look at both items since this discussion started. And honestly,
-> > I think 1) is harder that 4), so you're welcome to work on it :) The
-> > points that make it harder is that, per David's suggestion, there needs
-> > to be:
-> >  - define two new transaction types
-> 
-> one new transaction type:
-> 
-> XFS_TRANS_AGF_FLAGS
-> 
-> and and extension to xfs_alloc_log_agf(). Is about all that is
-> needed there.
-> 
-> See the patch here:
-> 
-> http://oss.sgi.com/archives/xfs/2007-04/msg00103.html
+I had this as a PS, then I thought, we could all be wasting our time...
 
-Ah, I see now. I was wondering how one can enable the new bits (CVS
-xfs_db shows the btreeblks but 'version' cmd doesn't allow to change
-them), it seems that manual xfs_db work + xfs_repair allows them.
+I don't like these "Section mismatch" warnings but that's because I'm paranoid 
+rather than because I know what they mean. I'll be happier when someone says 
+"That's OK, I know about them, they're not the problem"
 
-> For an example of a very simlar transaction to what is needed
-> (look at xfs_log_sbcount()) and very similar addition to
-> the AGF (xfs_btreeblks).
-Just a question: why do you think this per-ag-bit to be persistent? I'm
-just curious. When I first thought about this, I was thinking more like
-this should be an in-core flag only, like the freeze flag is for the
-filesystem. The idea being that you don't need to recover this state
-after a crash - there is no actual state, just restart the shrink
-operation if you want. And no actual filesystem state (e.g. space
-allocation or such) is happenning when you toggle the AGs not
-allocatable. This would allow a much simpler implementation of the
-'no-alloc' part.
+WARNING: arch/i386/kernel/built-in.o(.text+0x968f): Section mismatch: reference 
+to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
+WARNING: arch/i386/kernel/built-in.o(.text+0x9781): Section mismatch: reference 
+to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
+WARNING: arch/i386/kernel/built-in.o(.text+0x9786): Section mismatch: reference 
+to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
+WARNING: arch/i386/kernel/built-in.o(.text+0xa25c): Section mismatch: reference 
+to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
+WARNING: arch/i386/kernel/built-in.o(.text+0xa303): Section mismatch: reference 
+to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
+WARNING: arch/i386/kernel/built-in.o(.text+0xa31b): Section mismatch: reference 
+to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
+WARNING: arch/i386/kernel/built-in.o(.text+0xa344): Section mismatch: reference 
+to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
+WARNING: arch/i386/kernel/built-in.o(.exit.text+0x19): Section mismatch: 
+reference to .init.text: (between 'cache_remove_dev' and 'powernow_k6_exit')
+WARNING: arch/i386/kernel/built-in.o(.data+0x2160): Section mismatch: reference 
+to .init.text: (between 'thermal_throttle_cpu_notifier' and 'mce_work')
+WARNING: kernel/built-in.o(.text+0x14502): Section mismatch: reference to 
+.init.text: (between 'kthreadd' and 'init_waitqueue_head')
 
-> >  - update the ondisk-format (!), if we want persistence of these flags;
-> >    luckily, there are two spare fields in the AGF structure.
+
+Andrew Morton said a couple of weeks ago:
+ > Could the people who write these bugs, please, like, fix them?
+ > It's not trivial noise.  These things lead to kernel crashes.
+
+Anyhow...
+
+David Chinner wrote:
+> sync just guarantees that metadata changes are logged and data is
+> on disk - it doesn't stop the filesystem from doing anything after
+> the sync...
+No, but there are no apps accessing the filesystem. It's just available for NFS 
+serving. Seems safer before potentially hanging the machine?
+
+
+Also I made these changes to the kernel:
+cu:/boot# diff config-2.6.22-rc4-TejuTst-dbg3-dirty 
+config-2.6.22-rc4-TejuTst-dbg1-dirty
+3,4c3,4
+< # Linux kernel version: 2.6.22-rc4-TejuTst-dbg3
+< # Thu Jun  7 20:00:34 2007
+---
+ > # Linux kernel version: 2.6.22-rc4-TejuTst3
+ > # Thu Jun  7 10:59:21 2007
+242,244c242
+< CONFIG_PM_DEBUG=y
+< CONFIG_DISABLE_CONSOLE_SUSPEND=y
+< # CONFIG_PM_TRACE is not set
+---
+ > # CONFIG_PM_DEBUG is not set
+
+positive: I can now get sysrq-t :)
+negative: if I build skge into the kernel the behaviour changes so I can't run 
+netconsole
+
+Just to be sure I tested and this kernel suspends/restores with /huge unmounted.
+It also hangs without an umount so the behaviour is the same.
+
+> Ok, so a clean inode is sufficient to prevent hibernate from working.
 > 
-> Better to expand, I think. The AGF is a sector in length - we can
-> expand the structure as we need to this size without fear, esp. as
-> the part of the sector outside the structure is guaranteed to be
-> zero.  i.e. we can add a fields flag to the end of the AGF
-> structure - old filesystems simple read as "no flags set" and
-> old kernels never look at those bits....
-Yes, makes sense. Just to make sure: the xfs_agf_t, xfs_agi_t and
-xfs_sb_t structures as defined in xfs_sb.h and xfs_ag.h are what
-actually is on-disk, right? Adding to them, defining the new bits i.e.
-XFS_AGF_FLAGS and bumping up XFS_AGF_ALL_BITS should take care of the
-on-disk part?
-
-> > Open questions (re. point 4):
-> >  - the filesystem document says the agf->agf_btreeblks is held only in
-> >    case we have an extended flag active for the filesystem
-> >    (XFS_SB_VERSION2_LAZYSBCOUNTBIT); is this true? without this, I'm not
-> >    sure how to calculate this number of blocks nicely
+> So, what's different between a sync and a remount?
 > 
-> Yes, that is true. There's a pre-req for shrinking for the moment :/
+> do_remount_sb() does:
 > 
-> >  - or can I assume that an empty AG will *always* have agf_levels = 1
-> >    for both Btrees, so there are no extra blocks actually used for the
-> >    btrees (except for the two reserved ones at the beggining of the AG
+>     599         shrink_dcache_sb(sb);
+>     600         fsync_super(sb);
 > 
-> Yes, that is a valid assumption.
-Ok, perfect. This then eliminates the need for LAZYSBCOUNTBIT. Just one
-more question: can I *read* from the mp->m_perag structure or do I need
-a lock (even for read), i.e. down_read, read the fields, up_read? (As
-you can see, I don't have much experience w.r.t. kernel programming).
-
-> >  - can I assume that an AG with agi->icount == agi->ifree == 0 will have
-> >    no blocks used for the inode btrees (logically yes, but I'm not sure)
+> of which a sync does neither. sync does what fsync_super() does in
+> different sort of way, but does not call sync_blockdev() on each
+> block device. It looks like that is the two main differences between
+> sync and remount - remount trims the dentry cache and syncs the blockdev,
+> sync doesn't.
 > 
-> yes.
+>>> What about freezing the filesystem?
+>> cu:~# xfs_freeze -f /huge
+>> cu:~# /usr/net/bin/hibernate
+>> [but this doesn't even hibernate - same as the 'touch']
+> 
+> I suspect that the frozen filesystem might cause other problems
+> in the hibernate process. However, while a freeze calls sync_blockdev()
+> it does not trim the dentry cache.....
+> 
+> So, rather than a remount before hibernate, lets see if we can 
+> remove the dentries some other way to determine if removing excess
+> dentries/inodes from the caches makes a difference. Can you do:
+> 
+> # touch /huge/foo
+> # sync
+> # echo 1 > /proc/sys/vm/drop_caches
+> # hibernate
+success
+> 
+> # touch /huge/bar
+> # sync
+> # echo 2 > /proc/sys/vm/drop_caches
+> # hibernate
+success
+> 
+> # touch /huge/baz
+> # sync
+> # echo 3 > /proc/sys/vm/drop_caches
+> # hibernate
+success
 
-Good.
+So I added
+# touch /huge/bork
+# sync
+# hibernate
 
-Thanks for your explanations. Patch for shrink if the AGs are empty will
-be simpler and nicer then as opposed to what I have now.
+And it still succeeded - sigh.
 
-iustin
+So I thought a bit and did:
+rm /huge/b* /huge/foo
+
+ > Clean boot
+ > # touch /huge/bar
+ > # sync
+ > # echo 2 > /proc/sys/vm/drop_caches
+ > # hibernate
+hangs on suspend (sysrq-b doesn't work)
+
+ > Clean boot
+ > # touch /huge/baz
+ > # sync
+ > # echo 3 > /proc/sys/vm/drop_caches
+ > # hibernate
+hangs on suspend (sysrq-b doesn't work)
+
+So I rebooted and hibernated to make sure I'm not having random behaviour - yep, 
+hang on resume (as per usual).
+
+Now I wonder if any other mounts have an effect...
+reboot and umount /dev/hdb2 xfs fs, - hang on hibernate
+
+
+I'm confused. I'm going to order chinese takeaway and then find a serial cable...
+
+David
+PS 2.6.21.1 works fine.
