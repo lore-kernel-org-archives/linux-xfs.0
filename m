@@ -1,65 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 01:44:48 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l588ihWt020811
-	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 01:44:44 -0700
-Subject: TAKE 964468 - XFS can ENOSPC in bad places
-Message-Id: <20070608084439.1558C58C38F3@chook.melbourne.sgi.com>
-Date: Fri,  8 Jun 2007 18:44:38 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Jun 2007 01:52:12 -0700 (PDT)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.168])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l588q6Wt022501
+	for <xfs@oss.sgi.com>; Fri, 8 Jun 2007 01:52:08 -0700
+Received: by ug-out-1314.google.com with SMTP id 74so1052176ugb
+        for <xfs@oss.sgi.com>; Fri, 08 Jun 2007 01:52:06 -0700 (PDT)
+Subject: Re: XFS shrink functionality
+From: Ruben Porras <nahoo82@gmail.com>
+In-Reply-To: <20070604084154.GA8273@teal.hq.k1024.org>
+References: <1180715974.10796.46.camel@localhost>
+	 <20070604001632.GA86004887@sgi.com>
+	 <20070604084154.GA8273@teal.hq.k1024.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LdQDPymmi+rBggGPnr8T"
+Date: Fri, 08 Jun 2007 10:23:53 +0200
+Message-Id: <1181291033.7510.40.camel@localhost>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Iustin Pop <iusty@k1024.org>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, cw@f00f.org
 
-Prevent ENOSPC from aborting transactions that need to succeed
+--=-LdQDPymmi+rBggGPnr8T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-During delayed allocation extent conversion or unwritten extent
-conversion, we need to reserve some blocks for transactions
-reservations. We need to reserve these blocks in case a btree
-split occurs and we need to allocate some blocks.
+Am Montag, den 04.06.2007, 10:41 +0200 schrieb Iustin Pop:
+> Good to know. If there is at least more documentation about the
+> internals, I could try to find some time to work on this again.
 
-Unfortunately, we've only ever reserved the number of data blocks we
-are allocating, so in both the unwritten and delalloc case we can
-get ENOSPC to the transaction reservation. This is bad because in
-both cases we cannot report the failure to the writing application.
+there is now a document explaining the XFS on disk format [0] and some
+presentations for training courses, I think none of this were available
+at the time you made the first try. Although they are not enough for our
+purpose.=20
 
-The fix is two-fold:
+> My suggestion would be to start implementing these steps in reverse. 4)
+> is the most important as it touches the entire FS. If 4) is working
+> correctly, then 1) would be simpler (I think)
 
-        1 - leverage the reserved block infrastructure XFS already
-        has to reserve a small pool of blocks by default to allow
-        specially marked transactions to dip into when we are at
-        ENOSPC.
+Why do you think that 1) would be simpler after 4)? For what I
+understand, they are independent.
 
-            Default setting is min(5%, 1024 blocks).
+3) worries me, if walking the entire filesystem is needed, it want
+scale...
+=20=20
+Since I don't know yet the xfs code I would like to begin with 1), I see
+it independent from the other parts, and I can then learn more about the
+transactions, allocators, and walking through the xfs structures. As you
+did 4) one time, maybe you could try with this part of the problem if
+you find the needed time, taking David's suggestions into account.
 
-        2 - convert critical transaction reservations to be allowed
-        to dip into this pool. Spots changed are delalloc
-        conversion, unwritten extent conversion and growing a
-        filesystem at ENOSPC.
+[0] http://oss.sgi.com/projects/xfs/papers/xfs_filesystem_structure.pdf
 
-This also allows growing the filesytsem to succeed at ENOSPC.
+Cheers
 
-Date:  Fri Jun  8 18:44:10 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  tes@sgi.com
+--
+Ruben Porras
+LinWorks GmbH
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+--=-LdQDPymmi+rBggGPnr8T
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Dies ist ein digital signierter Nachrichtenteil
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-Modid:  xfs-linux-melb:xfs-kern:28865a
-fs/xfs/xfs_mount.c - 1.397 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.397&r2=text&tr2=1.396&f=h
-	- reserve a small amount of disk blocks by default to use in
-	  emergency ENOSPC situations.
+iD8DBQBGaRIZYubrKblAx+oRAgScAJ908dJzI9U9BLjh5ePQZkp6AfjSSgCgh6gL
+5ON+D15BpF2nkNqM/LCiM8w=
+=b01I
+-----END PGP SIGNATURE-----
 
-fs/xfs/xfs_fsops.c - 1.126 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fsops.c.diff?r1=text&tr1=1.126&r2=text&tr2=1.125&f=h
-	- Allow growfs transaction to use reserved space.
-
-fs/xfs/xfs_iomap.c - 1.53 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.c.diff?r1=text&tr1=1.53&r2=text&tr2=1.52&f=h
-	- Allow unwritten extent conversion and delayed allocation tranactions
-	  to use reserved space instead of silently failing at ENOSPC.
+--=-LdQDPymmi+rBggGPnr8T--
