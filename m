@@ -1,57 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 09 Jun 2007 00:50:58 -0700 (PDT)
-Received: from psmtp08.wxs.nl (psmtp08.wxs.nl [195.121.247.22])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l597osWt001879
-	for <xfs@oss.sgi.com>; Sat, 9 Jun 2007 00:50:56 -0700
-Received: from mail.deserver.nl (ip565e92ac.direct-adsl.nl [86.94.146.172])
- by psmtp08.wxs.nl
- (iPlanet Messaging Server 5.2 HotFix 2.15 (built Nov 14 2006))
- with ESMTP id <0JJC00LE9Z4U9Z@psmtp08.wxs.nl> for xfs@oss.sgi.com; Sat,
- 09 Jun 2007 09:50:54 +0200 (MEST)
-Received: from localhost (localhost [127.0.0.1])	by mail.deserver.nl (Postfix)
- with ESMTP id 1E8B6236CE	for <xfs@oss.sgi.com>; Sat,
- 09 Jun 2007 09:50:54 +0200 (CEST)
-Received: from [192.168.0.14] (unknown [192.168.0.14])
-	by mail.deserver.nl (Postfix) with ESMTP id 484D2236C4	for <xfs@oss.sgi.com>;
- Sat, 09 Jun 2007 09:50:51 +0200 (CEST)
-Date: Sat, 09 Jun 2007 09:50:49 +0200
-From: Jaap Struyk <japie@deserver.nl>
-Subject: Re: ways to restore data from crashed disk
-In-reply-to: <46697C94.40401@sandeen.net>
-Message-id: <466A5BD9.7010604@deserver.nl>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
-Content-transfer-encoding: 7BIT
-References: <465EA882.3030403@deserver.nl> <465ECF9B.2000500@sandeen.net>
- <46684A9B.90908@deserver.nl> <46685C5F.5090804@sandeen.net>
- <4668D51F.8010804@deserver.nl> <46697C94.40401@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 09 Jun 2007 03:26:43 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l59AQbWt029229
+	for <xfs@oss.sgi.com>; Sat, 9 Jun 2007 03:26:39 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l59AQbo6023340
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 9 Jun 2007 12:26:37 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l59AQboW023338
+	for xfs@oss.sgi.com; Sat, 9 Jun 2007 12:26:37 +0200
+Date: Sat, 9 Jun 2007 12:26:37 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix 32bit build
+Message-ID: <20070609102637.GA23294@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Eric Sandeen schreef:
 
-> it looks like the original filesystem was bigger than your image:
-> 
-> 4096*36710528
-> 150366322688 <-- 140 MB
-> 
-> so it looks like your image file is not correct... I'm not familiar with
-> the tool you're using, is it somehow compressing a sparse file or
-> something like that?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-You are completely right!
-
-I used dd_rhelp instead of dd_rescue since everytime a bad block is hit
-my disk isn't acceseble anymore and I have to reboot.
-So I tryed another aproach and used a knoppix cd to boot and used
-dd_rescue right away and with knoppix the disk keeps readable. (so it
-seems the kernel knoppix is using isn't killed by bad blocks, mine is)
-In concreto: I dumped my disk on another, used xfs_repair without
-problems and got almost all my data back (except for the last 2G that
-was written)
-Thanks for pointing me the right track, or else I was still wrestling to
-recover an incomplete image file!
--- 
-Groetjes Japie
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2007-06-09 11:20:51.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2007-06-09 11:21:43.000000000 +0200
+@@ -1154,7 +1154,9 @@ xfs_mountfs(
+ 	 * This may drive us straight to ENOSPC on mount, but that implies
+ 	 * we were already there on the last unmount.
+ 	 */
+-	resblks = min_t(__uint64_t, mp->m_sb.sb_dblocks / 20, 1024);
++	resblks = mp->m_sb.sb_dblocks;
++	do_div(resblks, 20);
++	resblks = min_t(__uint64_t, resblks, 1024);
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+ 
+ 	return 0;
