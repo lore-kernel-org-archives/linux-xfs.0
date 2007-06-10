@@ -1,90 +1,110 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 06:12:47 -0700 (PDT)
-Received: from mail37.messagelabs.com (mail37.messagelabs.com [216.82.241.51])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5CDChWt031463
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 06:12:44 -0700
-Message-ID: <902286657-1181653953-cardhu_decombobulator_blackberry.rim.net-1527539029-@bxe120.bisx.prod.on.blackberry>
-References: <1181606134.7873.72.camel@holwrs01><1181608444.3758.73.camel@edge.yarra.acx>
-In-Reply-To: <1181608444.3758.73.camel@edge.yarra.acx>
-Subject: Re: sunit not working
-From: salmr0@bp.com
-Date: Tue, 12 Jun 2007 13:12:15 +0000
-Content-Type: text/plain
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 07:41:37 -0700 (PDT)
+Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5CEf1Wt016965
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 07:41:09 -0700
+Date: Sun, 10 Jun 2007 18:43:48 +0000
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
+Message-ID: <20070610184348.GA4417@ucw.cz>
+References: <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org> <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com> <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com> <4667DE2D.6050903@dgreaves.com> <20070607110708.GS86004887@sgi.com> <46680F5E.6070806@dgreaves.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46680F5E.6070806@dgreaves.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com, "Salmon, Rene" <Rene.Salmon@bp.com>
-Cc: xfs@oss.sgi.com
+To: David Greaves <david@dgreaves.com>
+Cc: David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
 
+Hi!
 
-Thanks that helps.  Now that I know I have the right sunit and swidth I have a performace related question.
-
-If I do a dd on the raw device or to the lun directy I get speeds of around 190-200 MBytes/sec.
-
-As soon as I add xfs on top of the lun my speeds go to around 150 MBytes/sec. This is for a single stream write using various block sizes on a 2 Gbit/sec fiber channel card.
-
-Is this overhead more or less what you would expect from xfs? Or is there some tunning I need to do?
-
-Thanks
-Rene
-
-
-
-
-Rene
-
------Original Message-----
-From: Nathan Scott <nscott@aconex.com>
-
-Date: Tue, 12 Jun 2007 10:34:04 
-To:"Salmon, Rene" <Rene.Salmon@bp.com>
-Cc:xfs@oss.sgi.com
-Subject: Re: sunit not working
-
-
-On Mon, 2007-06-11 at 18:55 -0500, Salmon, Rene wrote:
-> As you can see the sunit gets set to 64 upon creation and not 512 like I
-> asked.  Also if it try to give it some mount options it does the same
-> thing.
+> >On Thu, Jun 07, 2007 at 11:30:05AM +0100, David Greaves 
+> >wrote:
+> >>Tejun Heo wrote:
+> >>>Hello,
+> >>>
+> >>>David Greaves wrote:
+> >>>>Just to be clear. This problem is where my system 
+> >>>>won't resume after s2d
+> >>>>unless I umount my xfs over raid6 filesystem.
+> >>>This is really weird.  I don't see how xfs mount can 
+> >>>affect this at all.
+> >>Indeed.
+> >>It does :)
+> >
+> >Ok, so lets determine if it really is XFS.
+> Seems like a good next step...
 > 
-> sgi210a:~ # mount -o sunit=512,swidth=5120 /dev/mapper/mpath9 /mnt/
+> >Does the lockup happen with a
+> >different filesystem on the md device? Or if you can't 
+> >test that, does
+> >any other XFS filesystem you have show the same problem?
+> It's a rather full 1.2Tb raid6 array - can't reformat it 
+> - sorry :)
+> I only noticed the problem when I umounted the fs during 
+> tests to prevent corruption - and it worked. I'm doing a 
+> sync each time it hibernates (see below) and a couple of 
+> paranoia xfs_repairs haven't shown any problems.
+> 
+> I do have another xfs filesystem on /dev/hdb2 (mentioned 
+> when I noticed the md/XFS correlation). It doesn't seem 
+> to have/cause any problems.
+> 
+> >If it is xfs that is causing the problem, what happens 
+> >if you
+> >remount read-only instead of unmounting before shutting 
+> >down?
+> Yes, I'm happy to try these tests.
+> nb, the hibernate script is:
+> ethtool -s eth0 wol g
+> sync
+> echo platform > /sys/power/disk
+> echo disk > /sys/power/state
+> 
+> So there has always been a sync before any hibernate.
+> 
+> 
+> cu:~# mount -oremount,ro /huge
+> cu:~# mount
+> /dev/hda2 on / type xfs (rw)
+> proc on /proc type proc (rw)
+> sysfs on /sys type sysfs (rw)
+> usbfs on /proc/bus/usb type usbfs (rw)
+> tmpfs on /dev/shm type tmpfs (rw)
+> devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+> nfsd on /proc/fs/nfsd type nfsd (rw)
+> /dev/hda1 on /boot type ext3 (rw)
+> /dev/md0 on /huge type xfs (ro)
+> /dev/hdb2 on /scratch type xfs (rw)
+> tmpfs on /dev type tmpfs (rw,size=10M,mode=0755)
+> rpc_pipefs on /var/lib/nfs/rpc_pipefs type rpc_pipefs 
+> (rw)
+> cu:(pid2862,port1022) on /net type nfs 
+> (intr,rw,port=1022,toplvl,map=/usr/share/am-utils/amd.net,noac)
+> elm:/space on /amd/elm/root/space type nfs 
+> (rw,vers=3,proto=tcp)
+> elm:/space-backup on /amd/elm/root/space-backup type nfs 
+> (rw,vers=3,proto=tcp)
+> elm:/usr/src on /amd/elm/root/usr/src type nfs 
+> (rw,vers=3,proto=tcp)
+> cu:~# /usr/net/bin/hibernate
+> [this works and resumes]
+> 
+> cu:~# mount -oremount,rw /huge
+> cu:~# /usr/net/bin/hibernate
+> [this works and resumes too !]
+> 
+> cu:~# touch /huge/tst
+> cu:~# /usr/net/bin/hibernate
+> [but this doesn't even hibernate]
 
-Its being reported in units of filesystem blocks, and its specified
-in 512 byte units.  Pretty dopey, but thats why its different.
+This is very probably separate problem... and you should have enough
+data in dmesg to do something with it.
 
-> sgi210a:~ # xfs_info /mnt/
-> meta-data=/dev/mapper/mpath9     isize=256    agcount=32,
-> agsize=56652352 blks
->          =                       sectsz=512   attr=0
-> data     =                       bsize=4096   blocks=1812874752,
-> imaxpct=25
->          =                       sunit=64     swidth=640 blks,
-> unwritten=1
-> naming   =version 2              bsize=4096  
-> log      =internal               bsize=4096   blocks=32768, version=1
->          =                       sectsz=512   sunit=0 blks
-> realtime =none                   extsz=65536  blocks=0, rtextents=0
-> sgi210a:~ # 
-
-$ gdb -q
-(gdb) p 512 * 512
-$1 = 262144
-(gdb) p 64 * 4096
-$2 = 262144
-(gdb)
-
-(thats 262144 bytes, of course)
-
-> Last I tried to subscribe to the list by sending email to
-> ecartis@oss.sgi.com a couple of times but was unsuccessful should I send
-> email elsewhere to subscribe?
-
-Its a frikkin' lottery. :)  Keep trying and keep whining is how I ended
-up getting back on (whining on IRC on #xfs helps too).
-
-cheers.
+							Pavel
 
 -- 
-Nathan
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
