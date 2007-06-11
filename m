@@ -1,39 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 02:16:40 -0700 (PDT)
-Received: from stitch.e-626.net (60.153.216.81.static.spa.siw.siwnet.net [81.216.153.60])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5B9GZWt027817
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 02:16:37 -0700
-Subject: Re: xfs_fsr allocation group optimization
-From: Johan Andersson <johan@e-626.net>
-In-Reply-To: <20070611090138.GA28907@tuatara.stupidest.org>
-References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
-	 <20070611073559.GA26257@tuatara.stupidest.org>
-	 <1181551409.19145.57.camel@gentoo-johan.transmode.se>
-	 <20070611090138.GA28907@tuatara.stupidest.org>
-Content-Type: text/plain
-Date: Mon, 11 Jun 2007 11:15:56 +0200
-Message-Id: <1181553356.19145.65.camel@gentoo-johan.transmode.se>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 02:30:44 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5B9UaWt032039
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 02:30:40 -0700
+Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id TAA25823; Mon, 11 Jun 2007 19:30:29 +1000
+Message-ID: <466D1635.3040005@sgi.com>
+Date: Mon, 11 Jun 2007 19:30:29 +1000
+From: Donald Douwsma <donaldd@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] Fix xfs_quota command handling.
+References: <200705310422.AA05481@TNESG9305.tnes.nec.co.jp>
+In-Reply-To: <200705310422.AA05481@TNESG9305.tnes.nec.co.jp>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: xfs@oss.sgi.com
+To: Utako Kusaka <utako@tnes.nec.co.jp>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 2007-06-11 at 02:01 -0700, Chris Wedgwood wrote:
-> using "find .... xfs_fsr" you get temporary files in the same AG as
-> the file your are defragmenting, avoiding the spreading out effect,
-> but this might not be the least-defragmented file you can get
+Utako Kusaka wrote:
+> Hi,
 > 
-> what's really needed is an attempt to find space near the original
-> file if possible and if not then an option to try harder looking in
-> other AGs
-This is exactly what the simple but ugly patch I attached achieves by
-looking up the filename of the inode it defrags when doing a full file
-system defrag. And it works well, except that it spends a lot of time
-finding that file name. As I said, a better option would be if you could
-tell XFS in what AG you want extents for a newly created file to place
-it's extents in. 
+> This is my last patch for xfs_quota, maybe.
+Thanks all your work on quotas, the xfs quota code is in much better
+shape thanks to your efforts.
 
-/Johan Andersson
+> When path argument is not specified, xfs_quota executes commands repeatedly
+> to the number of mounted XFS file systems.
+> As a result, I get the same command report many times. 
+> This patch implements the similar command loop operation to xfs_db.
+
+This bug has been around for some time. I've applied your patch and
+confirmed it fixes the problem.
+
+When verifying it with the xfs qa tools I found that the quota test (xfstest/050)
+fails with expected output problems. The code in test 050 always
+passes the mount point in so your change should have no effect on it.
+I suspect this is a failure in the qa script itself.
+
+Sorry for the delay in picking up your last five patches.
+I'll get them checked in as soon as I resolve our qa problem.
+
+Donald
