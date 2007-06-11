@@ -1,45 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 02:30:44 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5B9UaWt032039
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 02:30:40 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id TAA25823; Mon, 11 Jun 2007 19:30:29 +1000
-Message-ID: <466D1635.3040005@sgi.com>
-Date: Mon, 11 Jun 2007 19:30:29 +1000
-From: Donald Douwsma <donaldd@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 03:08:22 -0700 (PDT)
+Received: from smtp120.sbc.mail.re3.yahoo.com (smtp120.sbc.mail.re3.yahoo.com [66.196.96.93])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5BA8HWt008547
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 03:08:19 -0700
+Date: Mon, 11 Jun 2007 02:41:33 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: xfs_fsr allocation group optimization
+Message-ID: <20070611094133.GA31108@tuatara.stupidest.org>
+References: <1181544692.19145.44.camel@gentoo-johan.transmode.se> <20070611073559.GA26257@tuatara.stupidest.org> <1181551409.19145.57.camel@gentoo-johan.transmode.se> <20070611090138.GA28907@tuatara.stupidest.org> <1181553356.19145.65.camel@gentoo-johan.transmode.se>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix xfs_quota command handling.
-References: <200705310422.AA05481@TNESG9305.tnes.nec.co.jp>
-In-Reply-To: <200705310422.AA05481@TNESG9305.tnes.nec.co.jp>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1181553356.19145.65.camel@gentoo-johan.transmode.se>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Utako Kusaka <utako@tnes.nec.co.jp>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Johan Andersson <johan@e-626.net>
+Cc: xfs@oss.sgi.com
 
-Utako Kusaka wrote:
-> Hi,
-> 
-> This is my last patch for xfs_quota, maybe.
-Thanks all your work on quotas, the xfs quota code is in much better
-shape thanks to your efforts.
+On Mon, Jun 11, 2007 at 11:15:56AM +0200, Johan Andersson wrote:
 
-> When path argument is not specified, xfs_quota executes commands repeatedly
-> to the number of mounted XFS file systems.
-> As a result, I get the same command report many times. 
-> This patch implements the similar command loop operation to xfs_db.
+> This is exactly what the simple but ugly patch I attached achieves
+> by looking up the filename of the inode it defrags when doing a full
+> file system defrag. And it works well, except that it spends a lot
+> of time finding that file name. As I said, a better option would be
+> if you could tell XFS in what AG you want extents for a newly
+> created file to place it's extents in.
 
-This bug has been around for some time. I've applied your patch and
-confirmed it fixes the problem.
-
-When verifying it with the xfs qa tools I found that the quota test (xfstest/050)
-fails with expected output problems. The code in test 050 always
-passes the mount point in so your change should have no effect on it.
-I suspect this is a failure in the qa script itself.
-
-Sorry for the delay in picking up your last five patches.
-I'll get them checked in as soon as I resolve our qa problem.
-
-Donald
+AGs can be large, you really want to say 'allocate near ...'
