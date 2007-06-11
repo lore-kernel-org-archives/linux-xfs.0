@@ -1,52 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 16:08:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 16:15:02 -0700 (PDT)
 Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5BN8XWt004298
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 16:08:36 -0700
-Subject: Re: xfs_fsr allocation group optimization
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5BNEuWt005344
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 16:14:59 -0700
+Subject: Re: Review: Be smarter about handling ENOSPC during writeback
 From: Nathan Scott <nscott@aconex.com>
 Reply-To: nscott@aconex.com
-In-Reply-To: <20070611155824.GA12668@tuatara.stupidest.org>
-References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
-	 <20070611073559.GA26257@tuatara.stupidest.org>
-	 <1181551409.19145.57.camel@gentoo-johan.transmode.se>
-	 <20070611090138.GA28907@tuatara.stupidest.org>
-	 <1181553356.19145.65.camel@gentoo-johan.transmode.se>
-	 <20070611094133.GA31108@tuatara.stupidest.org>
-	 <1181558353.19145.76.camel@gentoo-johan.transmode.se>
-	 <20070611155824.GA12668@tuatara.stupidest.org>
+In-Reply-To: <20070608073342.GW85884050@sgi.com>
+References: <20070604045219.GG86004887@sgi.com>
+	 <E436D9833B42EFAE6C2CE987@timothy-shimmins-power-mac-g5.local>
+	 <F80A059A828DE0E57A655471@boing.melbourne.sgi.com>
+	 <20070608073342.GW85884050@sgi.com>
 Content-Type: text/plain
-Date: Tue, 12 Jun 2007 09:07:36 +1000
-Message-Id: <1181603256.3758.46.camel@edge.yarra.acx>
+Date: Tue, 12 Jun 2007 09:13:45 +1000
+Message-Id: <1181603625.3758.53.camel@edge.yarra.acx>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Johan Andersson <johan@e-626.net>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 2007-06-11 at 08:58 -0700, Chris Wedgwood wrote:
-> 
-> 
-> > In the way xfs_fsr operates now, in almost all user space, I don't
-> > see any good way to tell XFS where to place the extents, other than
-> > creating the temporary file in the same directory as the original
-> > file.
-> 
-> Exactly.
-> 
-> > My question is really, is there a better way than "find -xdev -inum"
-> > to find what file points to a given inode?
-> 
-> You can build then entire tree in-core using bulkstat and readdir,
-> doing the bulkstat first means you can try to optimize the order you
-> do the readdirs in somewhat.
-> 
+On Fri, 2007-06-08 at 17:33 +1000, David Chinner wrote:
+> On Fri, Jun 08, 2007 at 03:28:14PM +1000, Timothy Shimmin wrote:
 
-Probably better to change the kernel extent-swap code to not do
-alloc-near-tempinode allocations, and instead find a way to pass
-XFS_ALLOCTYPE_THIS_AG/XFS_ALLOCTYPE_NEAR_BNO/or some saner alloc
-flag down to the allocator for all extent swapping allocations.
+> > Will we get questions from people about reduced space from df? :)
+> 
+> If we do, I think you just volunteered to write the FAQ entry ;)
+
+It would be more correct of XFS to start doing the right thing by
+reporting different values for b_free and b_avail in statfs(2) -
+this code in xfs_mount.c::xfs_statvfs() ...
+
+    statp->f_bfree = statp->f_bavail =
+                            sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
+
+I know this wasn't done for the original per-mount space reserving
+ioctls (that was for one user though - dmapi, so I can see why there
+may have been a shortcut done there) ... but if it affects everyone
+now, there will be questions asked, and there is a standard interface
+for reporting this space discrepency that tools like df(1) already
+use.
 
 cheers.
