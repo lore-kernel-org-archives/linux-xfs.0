@@ -1,127 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 00:09:28 -0700 (PDT)
-Received: from stitch.e-626.net (60.153.216.81.static.spa.siw.siwnet.net [81.216.153.60])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5B79LWt027819
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 00:09:23 -0700
-Received: from [130.100.71.110] (hidden-user@146.175.241.83.in-addr.dgcsystems.net [83.241.175.146])
-	(authenticated bits=0)
-	by stitch.e-626.net (8.14.0/8.13.7) with ESMTP id l5B6pXVU022993
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 08:51:54 +0200
-Subject: xfs_fsr allocation group optimization
-From: Johan Andersson <johan@e-626.net>
-Content-Type: multipart/mixed; boundary="=-wsRKX+nWyxHC7f7kq87l"
-Date: Mon, 11 Jun 2007 08:51:32 +0200
-Message-Id: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 00:36:10 -0700 (PDT)
+Received: from smtp113.sbc.mail.re2.yahoo.com (smtp113.sbc.mail.re2.yahoo.com [68.142.229.92])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5B7a5Wt003963
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 00:36:06 -0700
+Date: Mon, 11 Jun 2007 00:35:59 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: xfs_fsr allocation group optimization
+Message-ID: <20070611073559.GA26257@tuatara.stupidest.org>
+References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Johan Andersson <johan@e-626.net>
+Cc: xfs@oss.sgi.com
 
---=-wsRKX+nWyxHC7f7kq87l
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+On Mon, Jun 11, 2007 at 08:51:32AM +0200, Johan Andersson wrote:
 
-Hi!
+> So I run some tests. And as Chris pointed out, when running xfs_fsr
+> on a badly fragmented filesystem, it completely destroys the
+> locality of files.
 
-Last week I discovered that one of our volumes had 87%(!) file
-fragmentation. Number of extents per file was in the range of thousands!
-Nothing you are used to when it comes to XFS...
-The filesystem is 68% full, but was up to 99% full for a short period a
-couple of weeks earlier.
+You can always do something like:
 
-The xfs_fsr utility is made for this kind of problem, but after reading
-more about xfs_fsr, in particular this:
-http://oss.sgi.com/archives/xfs/2003-02/msg00141.html
-I was more sceptical.
+   find path/to/defrag/ -type f -print0 | xargs -r0 xfs_fsr -v
 
-So I run some tests. And as Chris pointed out, when running xfs_fsr on a
-badly fragmented filesystem, it completely destroys the locality of
-files.
+and check /var/log/daemon.log (or whatever) for a progress report.
 
-Then I decided to try to fix this, so I wrote a dirty little proof of
-concept hack to xfs_fsr.c (diff against cvs attached) that finds one
-name for the inode it defrags, and places the temporary file it's parent
-directory. This way, it will restore the broken locality.
+This will of course only make one pass, so you might want to wrap it.
+But unless you're really low on space it's probably not useful to make
+many passes anyhow.
 
-This works fine, after running it on the badly fragmented filesystem,
-both fragmentation and locality was better than ever!
-
-However, this fix is as I said "dirty". It uses find -inum to find a
-filename for an inode. This makes it quite slow. Not much of a problem
-for a one-time problem like this, but it's not very nice to put this
-into a cron-job. There must be a better way to find the filename. But
-I'm not familiar with the internals of XFS, so I thought I ask on this
-list:
-Does anyone know of a good way to find one filename that points o a
-certain inode? I can't use xfs_db ncheck, as the filesystem is mounted.
-Or is there a way to tell XFS to place extents in a newly created file
-in a certain AG?
-
-/Johan Andersson
-
-
---=-wsRKX+nWyxHC7f7kq87l
-Content-Disposition: attachment; filename=xfs_fsr-agfix.diff
-Content-Type: text/x-patch; name=xfs_fsr-agfix.diff; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Index: xfs_fsr.c
-===================================================================
-RCS file: /cvs/xfs-cmds/xfsdump/fsr/xfs_fsr.c,v
-retrieving revision 1.28
-diff -u -r1.28 xfs_fsr.c
---- xfs_fsr.c	24 May 2007 03:59:42 -0000	1.28
-+++ xfs_fsr.c	11 Jun 2007 06:42:29 -0000
-@@ -655,10 +655,12 @@
- 	int	ret;
- 	__s32	buflenout;
- 	xfs_bstat_t buf[GRABSZ];
--	char	fname[64];
-+	char	fname[PATH_MAX+1];
- 	char	*tname;
-+	char    cmd[64];
- 	jdm_fshandle_t	*fshandlep;
- 	xfs_ino_t	lastino = startino;
-+	FILE    *pfname;
- 
- 	fsrprintf(_("%s start inode=%llu\n"), mntdir,
- 		(unsigned long long)startino);
-@@ -714,11 +716,20 @@
- 				continue;
- 			}
- 
--			/* Don't know the pathname, so make up something */
--			sprintf(fname, "ino=%lld", (long long)p->bs_ino);
--
--			/* Get a tmp file name */
--			tname = tmp_next(mntdir);
-+			/* Find (one) filename that this inode belongs to. */
-+			snprintf(cmd, sizeof(cmd), "find %s -xdev -inum %lld -print0", mntdir, (long long)p->bs_ino);
-+			pfname = popen(cmd, "r");
-+			fgets(fname, sizeof(fname), pfname);
-+			pclose(pfname);
-+			
-+			if (strlen(fname)) {
-+			  tname = gettmpname(fname);
-+			} else {
-+			  /* Don't know the pathname, so make up something */
-+			  snprintf(fname, sizeof(fname), "ino=%lld", (long long)p->bs_ino);
-+			  /* Get a tmp file name */
-+			  tname = tmp_next(mntdir);
-+			} 
- 
- 			ret = fsrfile_common(fname, tname, mntdir, fd, p);
- 
-@@ -1297,6 +1308,8 @@
- 
- 	strcat(buf, sbuf);
- 
-+	fsrprintf(_("gettmpname: fname=%s, buf=%s\n"), fname, buf);
-+
- 	return(buf);
- }
- 
-
---=-wsRKX+nWyxHC7f7kq87l--
+You might always want the -d argument (not sure if the man page has
+this).
