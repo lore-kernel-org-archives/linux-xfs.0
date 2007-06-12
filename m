@@ -1,63 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 00:14:43 -0700 (PDT)
-Received: from bay0-omc1-s19.bay0.hotmail.com (bay0-omc1-s19.bay0.hotmail.com [65.54.246.91])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5C7EdWt024452
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 00:14:40 -0700
-Message-ID: <BAY103-DAV164930BAD25A9841FEF442B2190@phx.gbl>
-From: "Marco Berizzi" <pupilla@hotmail.com>
-References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl> <20070316195951.GB5743@melbourne.sgi.com> <BAY103-DAV1484A3797D5368C28969CBB2700@phx.gbl> <BAY103-DAV9C465F21C87A900314523B2760@phx.gbl> <20070320064632.GO32602149@melbourne.sgi.com> <BAY103-DAV7076D9B4230E07680B724B2260@phx.gbl> <20070607130505.GE85884050@sgi.com> <BAY103-DAV141D991980E54836534A00B2250@phx.gbl> <20070612061440.GQ86004887@sgi.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
-Date: Tue, 12 Jun 2007 09:14:27 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 01:12:06 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5C8BxWt005443
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 01:12:01 -0700
+Date: Tue, 12 Jun 2007 18:11:28 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
+Message-ID: <20070612081128.GS86004887@sgi.com>
+References: <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426180332.GA7209@amitarora.in.ibm.com> <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070612061652.GA6320@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Marco Berizzi <pupilla@hotmail.com>
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: David Chinner <dgc@sgi.com>, Suparna Bhattacharya <suparna@in.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
 
-David Chinner wrote:
+On Tue, Jun 12, 2007 at 11:46:52AM +0530, Amit K. Arora wrote:
+> On Sat, May 12, 2007 at 06:01:57PM +1000, David Chinner wrote:
+> > Minimal definition to replace what applicaitons use on XFS and to
+> > support poasix_fallocate are the thre that have been mentioned so
+> > far (FA_ALLOCATE, FA_PREALLOCATE, FA_DEALLOCATE). I'll document them
+> > all in a man page...
+> 
+> Hi Dave,
+> 
+> Did you get time to write the above man page ? It will help to push
+> further patches in time (eg. for FA_PREALLOCATE mode).
 
-> On Fri, Jun 08, 2007 at 03:59:39PM +0200, Marco Berizzi wrote:
-> > David Chinner wrote:
-> > > Where we saw signs of on disk directory corruption. Have you run
-> > > xfs_repair successfully on the filesystem since you reported
-> > > this?
-> >
-> > yes.
-> >
-> > > If you did clean up the error, does xfs_repair report the same
-sort
-> > > of error again?
-> >
-> > I have run xfs_repair this morning.
-> > Here is the report:
->
-> <reports no on disk errors>
->
-> > > Have you run a 2.6.16-rcX or 2.6.17.[0-6] kernel since you last
-> > > reported this problem?
-> >
-> > No. I have run only 2.6.19.x and 2.6.21.x
-> >
-> > After the xfs_repair I have remounted the file system.
-> > After few hours linux has crashed with this message:
-> > BUG: at arch/i386/kernel/smp.c:546 smp_call_function()
-> > I have also the monitor bitmap.
->
-> This is sounding like memory corruption is no corruption is being
-> found on disk by xfs_repair.  Have you run memtest86 on that box to
-> see if it's got bad memory?
+No, I didn't. Instead of working on new preallocation stuff, I've
+been spending all my time fixing bugs found by new and interesting
+(ab)uses of preallocation and hole punching.
 
-Yes. I have run memtest for one week:
-no errors.
-I have also changed the mother board,
-scsi controller and ram. Only the cpu
-and the 2 hot swap scsi disks were
-not replaced. IMHO this isn't an
-hardware problem, because the kernel
-with debugging options enabled didn't
-crash for a long time (>1 month). Just
-for record, at this moment this box is
-running 2.6.22-rc4 with no debug
-options enabled. I will keep you
-informed.
-Thanks everybody for the support.
+> The idea I had was to push the patch with bare minimum functionality
+> (FA_ALLOCATE and FA_DEALLOCATE modes) and parallely finalize on other
+> new mode(s) based on the man page you planned to provide.
+
+Push them. I'll just make XFS work with whatever is provided.
+Is there a test harness for the syscall yet?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
