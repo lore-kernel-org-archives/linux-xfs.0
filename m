@@ -1,168 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 05:31:46 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5CCVfWt024677
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 05:31:42 -0700
-Message-ID: <466E9220.5050507@dgreaves.com>
-Date: Tue, 12 Jun 2007 13:31:28 +0100
-From: David Greaves <david@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 06:12:47 -0700 (PDT)
+Received: from mail37.messagelabs.com (mail37.messagelabs.com [216.82.241.51])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5CDChWt031463
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 06:12:44 -0700
+Message-ID: <902286657-1181653953-cardhu_decombobulator_blackberry.rim.net-1527539029-@bxe120.bisx.prod.on.blackberry>
+References: <1181606134.7873.72.camel@holwrs01><1181608444.3758.73.camel@edge.yarra.acx>
+In-Reply-To: <1181608444.3758.73.camel@edge.yarra.acx>
+Subject: Re: sunit not working
+From: salmr0@bp.com
+Date: Tue, 12 Jun 2007 13:12:15 +0000
+Content-Type: text/plain
 MIME-Version: 1.0
-Subject: Re: 2.6.22-rc3 hibernate(?) fails totally - regression (xfs on raid6)
-References: <200706020122.49989.rjw@sisk.pl> <4661EFBB.5010406@dgreaves.com> <alpine.LFD.0.98.0706021538360.23741@woody.linux-foundation.org> <4662D852.4000005@dgreaves.com> <46667160.80905@gmail.com> <46668EE0.2030509@dgreaves.com> <46679D56.7040001@gmail.com> <4667DE2D.6050903@dgreaves.com> <20070607110708.GS86004887@sgi.com> <46680F5E.6070806@dgreaves.com> <20070607222813.GG85884050@sgi.com>
-In-Reply-To: <20070607222813.GG85884050@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
-
-[RESEND since I sent this late last friday and it's probably been buried by now.]
-
-I had this as a PS, then I thought, we could all be wasting our time...
-
-I don't like these "Section mismatch" warnings but that's because I'm paranoid
-rather than because I know what they mean. I'll be happier when someone says
-"That's OK, I know about them, they're not the problem"
-
-WARNING: arch/i386/kernel/built-in.o(.text+0x968f): Section mismatch: reference
-to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
-WARNING: arch/i386/kernel/built-in.o(.text+0x9781): Section mismatch: reference
-to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
-WARNING: arch/i386/kernel/built-in.o(.text+0x9786): Section mismatch: reference
-to .init.text: (between 'mtrr_bp_init' and 'mtrr_ap_init')
-WARNING: arch/i386/kernel/built-in.o(.text+0xa25c): Section mismatch: reference
-to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
-WARNING: arch/i386/kernel/built-in.o(.text+0xa303): Section mismatch: reference
-to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
-WARNING: arch/i386/kernel/built-in.o(.text+0xa31b): Section mismatch: reference
-to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
-WARNING: arch/i386/kernel/built-in.o(.text+0xa344): Section mismatch: reference
-to .init.text: (between 'get_mtrr_state' and 'mtrr_wrmsr')
-WARNING: arch/i386/kernel/built-in.o(.exit.text+0x19): Section mismatch:
-reference to .init.text: (between 'cache_remove_dev' and 'powernow_k6_exit')
-WARNING: arch/i386/kernel/built-in.o(.data+0x2160): Section mismatch: reference
-to .init.text: (between 'thermal_throttle_cpu_notifier' and 'mce_work')
-WARNING: kernel/built-in.o(.text+0x14502): Section mismatch: reference to
-.init.text: (between 'kthreadd' and 'init_waitqueue_head')
-
-I'm paranoid because Andrew Morton said a couple of weeks ago:
-> Could the people who write these bugs, please, like, fix them?
-> It's not trivial noise.  These things lead to kernel crashes.
-
-Anyhow...
-
-David Chinner wrote:
-> sync just guarantees that metadata changes are logged and data is
-> on disk - it doesn't stop the filesystem from doing anything after
-> the sync...
-No, but there are no apps accessing the filesystem. It's just available for NFS
-serving. Seems safer before potentially hanging the machine?
+To: nscott@aconex.com, "Salmon, Rene" <Rene.Salmon@bp.com>
+Cc: xfs@oss.sgi.com
 
 
-Also I made these changes to the kernel:
-cu:/boot# diff config-2.6.22-rc4-TejuTst-dbg3-dirty
-config-2.6.22-rc4-TejuTst-dbg1-dirty
-3,4c3,4
-< # Linux kernel version: 2.6.22-rc4-TejuTst-dbg3
-< # Thu Jun  7 20:00:34 2007
----
-> # Linux kernel version: 2.6.22-rc4-TejuTst3
-> # Thu Jun  7 10:59:21 2007
-242,244c242
-< CONFIG_PM_DEBUG=y
-< CONFIG_DISABLE_CONSOLE_SUSPEND=y
-< # CONFIG_PM_TRACE is not set
----
-> # CONFIG_PM_DEBUG is not set
+Thanks that helps.  Now that I know I have the right sunit and swidth I have a performace related question.
 
-positive: I can now get sysrq-t :)
-negative: if I build skge into the kernel the behaviour changes so I can't run
-netconsole
+If I do a dd on the raw device or to the lun directy I get speeds of around 190-200 MBytes/sec.
 
-Just to be sure I tested and this kernel suspends/restores with /huge unmounted.
-It also hangs without an umount so the behaviour is the same.
+As soon as I add xfs on top of the lun my speeds go to around 150 MBytes/sec. This is for a single stream write using various block sizes on a 2 Gbit/sec fiber channel card.
 
-> Ok, so a clean inode is sufficient to prevent hibernate from working.
+Is this overhead more or less what you would expect from xfs? Or is there some tunning I need to do?
+
+Thanks
+Rene
+
+
+
+
+Rene
+
+-----Original Message-----
+From: Nathan Scott <nscott@aconex.com>
+
+Date: Tue, 12 Jun 2007 10:34:04 
+To:"Salmon, Rene" <Rene.Salmon@bp.com>
+Cc:xfs@oss.sgi.com
+Subject: Re: sunit not working
+
+
+On Mon, 2007-06-11 at 18:55 -0500, Salmon, Rene wrote:
+> As you can see the sunit gets set to 64 upon creation and not 512 like I
+> asked.  Also if it try to give it some mount options it does the same
+> thing.
 > 
-> So, what's different between a sync and a remount?
-> 
-> do_remount_sb() does:
-> 
->     599         shrink_dcache_sb(sb);
->     600         fsync_super(sb);
-> 
-> of which a sync does neither. sync does what fsync_super() does in
-> different sort of way, but does not call sync_blockdev() on each
-> block device. It looks like that is the two main differences between
-> sync and remount - remount trims the dentry cache and syncs the blockdev,
-> sync doesn't.
-> 
->>> What about freezing the filesystem?
->> cu:~# xfs_freeze -f /huge
->> cu:~# /usr/net/bin/hibernate
->> [but this doesn't even hibernate - same as the 'touch']
-> 
-> I suspect that the frozen filesystem might cause other problems
-> in the hibernate process. However, while a freeze calls sync_blockdev()
-> it does not trim the dentry cache.....
-> 
-> So, rather than a remount before hibernate, lets see if we can 
-> remove the dentries some other way to determine if removing excess
-> dentries/inodes from the caches makes a difference. Can you do:
-> 
-> # touch /huge/foo
-> # sync
-> # echo 1 > /proc/sys/vm/drop_caches
-> # hibernate
-success
-> 
-> # touch /huge/bar
-> # sync
-> # echo 2 > /proc/sys/vm/drop_caches
-> # hibernate
-success
-> 
-> # touch /huge/baz
-> # sync
-> # echo 3 > /proc/sys/vm/drop_caches
-> # hibernate
-success
+> sgi210a:~ # mount -o sunit=512,swidth=5120 /dev/mapper/mpath9 /mnt/
 
-So I added
-# touch /huge/bork
-# sync
-# hibernate
+Its being reported in units of filesystem blocks, and its specified
+in 512 byte units.  Pretty dopey, but thats why its different.
 
-And it still succeeded - sigh.
+> sgi210a:~ # xfs_info /mnt/
+> meta-data=/dev/mapper/mpath9     isize=256    agcount=32,
+> agsize=56652352 blks
+>          =                       sectsz=512   attr=0
+> data     =                       bsize=4096   blocks=1812874752,
+> imaxpct=25
+>          =                       sunit=64     swidth=640 blks,
+> unwritten=1
+> naming   =version 2              bsize=4096  
+> log      =internal               bsize=4096   blocks=32768, version=1
+>          =                       sectsz=512   sunit=0 blks
+> realtime =none                   extsz=65536  blocks=0, rtextents=0
+> sgi210a:~ # 
 
-So I thought a bit and did:
-rm /huge/b* /huge/foo
+$ gdb -q
+(gdb) p 512 * 512
+$1 = 262144
+(gdb) p 64 * 4096
+$2 = 262144
+(gdb)
 
-> Clean boot
-> # touch /huge/bar
-> # sync
-> # echo 2 > /proc/sys/vm/drop_caches
-> # hibernate
-hangs on suspend (sysrq-b doesn't work)
+(thats 262144 bytes, of course)
 
-> Clean boot
-> # touch /huge/baz
-> # sync
-> # echo 3 > /proc/sys/vm/drop_caches
-> # hibernate
-hangs on suspend (sysrq-b doesn't work)
+> Last I tried to subscribe to the list by sending email to
+> ecartis@oss.sgi.com a couple of times but was unsuccessful should I send
+> email elsewhere to subscribe?
 
-So I rebooted and hibernated to make sure I'm not having random behaviour - yep,
-hang on resume (as per usual).
+Its a frikkin' lottery. :)  Keep trying and keep whining is how I ended
+up getting back on (whining on IRC on #xfs helps too).
 
-Now I wonder if any other mounts have an effect...
-reboot and umount /dev/hdb2 xfs fs, - hang on hibernate
+cheers.
 
-
-I'm confused. I'm going to order chinese takeaway and then find a serial cable...
-
-David
-PS 2.6.21.1 works fine.
-PPS the takeaway was nice.
+-- 
+Nathan
