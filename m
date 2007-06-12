@@ -1,50 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 01:12:06 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 01:52:20 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5C8BxWt005443
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 01:12:01 -0700
-Date: Tue, 12 Jun 2007 18:11:28 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070612081128.GS86004887@sgi.com>
-References: <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426180332.GA7209@amitarora.in.ibm.com> <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070612061652.GA6320@amitarora.in.ibm.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5C8qEWt013580
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 01:52:16 -0700
+Subject: TAKE 966145 - fix i386 build
+Message-Id: <20070612085210.B425458C38C1@chook.melbourne.sgi.com>
+Date: Tue, 12 Jun 2007 18:52:10 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: David Chinner <dgc@sgi.com>, Suparna Bhattacharya <suparna@in.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 12, 2007 at 11:46:52AM +0530, Amit K. Arora wrote:
-> On Sat, May 12, 2007 at 06:01:57PM +1000, David Chinner wrote:
-> > Minimal definition to replace what applicaitons use on XFS and to
-> > support poasix_fallocate are the thre that have been mentioned so
-> > far (FA_ALLOCATE, FA_PREALLOCATE, FA_DEALLOCATE). I'll document them
-> > all in a man page...
-> 
-> Hi Dave,
-> 
-> Did you get time to write the above man page ? It will help to push
-> further patches in time (eg. for FA_PREALLOCATE mode).
+Use do_div() on 64 bit types.
 
-No, I didn't. Instead of working on new preallocation stuff, I've
-been spending all my time fixing bugs found by new and interesting
-(ab)uses of preallocation and hole punching.
+Signed-Off-By: Christoph Hellwig <hch@lst.de>
 
-> The idea I had was to push the patch with bare minimum functionality
-> (FA_ALLOCATE and FA_DEALLOCATE modes) and parallely finalize on other
-> new mode(s) based on the man page you planned to provide.
 
-Push them. I'll just make XFS work with whatever is provided.
-Is there a test harness for the syscall yet?
+Date:  Tue Jun 12 18:51:47 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
 
-Cheers,
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+Modid:  xfs-linux-melb:xfs-kern:28889a
+fs/xfs/xfs_mount.c - 1.398 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.398&r2=text&tr2=1.397&f=h
+	- Use do_div() on 64 bit types.
