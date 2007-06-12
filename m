@@ -1,65 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 17:35:03 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5C0YxWt020703
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 17:35:00 -0700
-Subject: Re: sunit not working
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <1181606134.7873.72.camel@holwrs01>
-References: <1181606134.7873.72.camel@holwrs01>
-Content-Type: text/plain
-Date: Tue, 12 Jun 2007 10:34:04 +1000
-Message-Id: <1181608444.3758.73.camel@edge.yarra.acx>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Jun 2007 18:38:25 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5C1cIWt029334
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2007 18:38:21 -0700
+Date: Tue, 12 Jun 2007 11:38:03 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfs_fsr allocation group optimization
+Message-ID: <20070612013803.GI86004887@sgi.com>
+References: <1181544692.19145.44.camel@gentoo-johan.transmode.se> <20070611073559.GA26257@tuatara.stupidest.org> <1181551409.19145.57.camel@gentoo-johan.transmode.se> <20070611090138.GA28907@tuatara.stupidest.org> <1181553356.19145.65.camel@gentoo-johan.transmode.se> <20070611094133.GA31108@tuatara.stupidest.org> <1181558353.19145.76.camel@gentoo-johan.transmode.se> <20070611155824.GA12668@tuatara.stupidest.org> <1181603256.3758.46.camel@edge.yarra.acx>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1181603256.3758.46.camel@edge.yarra.acx>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Salmon, Rene" <Rene.Salmon@bp.com>
-Cc: xfs@oss.sgi.com
+To: Nathan Scott <nscott@aconex.com>
+Cc: Chris Wedgwood <cw@f00f.org>, Johan Andersson <johan@e-626.net>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, 2007-06-11 at 18:55 -0500, Salmon, Rene wrote:
-> As you can see the sunit gets set to 64 upon creation and not 512 like I
-> asked.  Also if it try to give it some mount options it does the same
-> thing.
+On Tue, Jun 12, 2007 at 09:07:36AM +1000, Nathan Scott wrote:
+> On Mon, 2007-06-11 at 08:58 -0700, Chris Wedgwood wrote:
+> > > In the way xfs_fsr operates now, in almost all user space, I don't
+> > > see any good way to tell XFS where to place the extents, other than
+> > > creating the temporary file in the same directory as the original
+> > > file.
+> > 
+> > Exactly.
+> > 
+> > > My question is really, is there a better way than "find -xdev -inum"
+> > > to find what file points to a given inode?
+> > 
+> > You can build then entire tree in-core using bulkstat and readdir,
+> > doing the bulkstat first means you can try to optimize the order you
+> > do the readdirs in somewhat.
 > 
-> sgi210a:~ # mount -o sunit=512,swidth=5120 /dev/mapper/mpath9 /mnt/
+> Probably better to change the kernel extent-swap code to not do
+> alloc-near-tempinode allocations, and instead find a way to pass
+> XFS_ALLOCTYPE_THIS_AG/XFS_ALLOCTYPE_NEAR_BNO/or some saner alloc
+> flag down to the allocator for all extent swapping allocations.
 
-Its being reported in units of filesystem blocks, and its specified
-in 512 byte units.  Pretty dopey, but thats why its different.
+/me sighs and points to the generic allocation interface I wanted
+for exactly these reasons:
 
-> sgi210a:~ # xfs_info /mnt/
-> meta-data=/dev/mapper/mpath9     isize=256    agcount=32,
-> agsize=56652352 blks
->          =                       sectsz=512   attr=0
-> data     =                       bsize=4096   blocks=1812874752,
-> imaxpct=25
->          =                       sunit=64     swidth=640 blks,
-> unwritten=1
-> naming   =version 2              bsize=4096  
-> log      =internal               bsize=4096   blocks=32768, version=1
->          =                       sectsz=512   sunit=0 blks
-> realtime =none                   extsz=65536  blocks=0, rtextents=0
-> sgi210a:~ # 
+http://marc.info/?l=linux-fsdevel&m=116278169519095&w=2
 
-$ gdb -q
-(gdb) p 512 * 512
-$1 = 262144
-(gdb) p 64 * 4096
-$2 = 262144
-(gdb)
+Instead, we're getting a mostly useless XFS_IOC_RESVSP replacement
+called sys_fallocate() that provides us with pretty much nothing.
+Given that sys_fallocate() can't be extended to do this sort of
+thing, we're going to be stuck with doing our own thing again....
 
-(thats 262144 bytes, of course)
+Cheers,
 
-> Last I tried to subscribe to the list by sending email to
-> ecartis@oss.sgi.com a couple of times but was unsuccessful should I send
-> email elsewhere to subscribe?
-
-Its a frikkin' lottery. :)  Keep trying and keep whining is how I ended
-up getting back on (whining on IRC on #xfs helps too).
-
-cheers.
-
+Dave.
 -- 
-Nathan
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
