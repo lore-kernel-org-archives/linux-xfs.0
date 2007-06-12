@@ -1,80 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 00:11:11 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5C7B5Wt023491
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 00:11:06 -0700
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5C7B5Wt027819
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 03:11:05 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5C7B5WG031148
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 01:11:05 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5C78ud2015801
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 01:11:05 -0600
-Date: Tue, 12 Jun 2007 11:46:52 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070612061652.GA6320@amitarora.in.ibm.com>
-References: <20070420145918.GY355@devserv.devel.redhat.com> <20070424121632.GA10136@amitarora.in.ibm.com> <20070426175056.GA25321@amitarora.in.ibm.com> <20070426180332.GA7209@amitarora.in.ibm.com> <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070512080157.GF85884050@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 00:14:43 -0700 (PDT)
+Received: from bay0-omc1-s19.bay0.hotmail.com (bay0-omc1-s19.bay0.hotmail.com [65.54.246.91])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5C7EdWt024452
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 00:14:40 -0700
+Message-ID: <BAY103-DAV164930BAD25A9841FEF442B2190@phx.gbl>
+From: "Marco Berizzi" <pupilla@hotmail.com>
+References: <BAY103-DAV1066400DF0615AD677EA1B2730@phx.gbl> <20070316012520.GN5743@melbourne.sgi.com> <BAY103-DAV13EC09E9BCB3E8C9D5EEA2B2710@phx.gbl> <20070316195951.GB5743@melbourne.sgi.com> <BAY103-DAV1484A3797D5368C28969CBB2700@phx.gbl> <BAY103-DAV9C465F21C87A900314523B2760@phx.gbl> <20070320064632.GO32602149@melbourne.sgi.com> <BAY103-DAV7076D9B4230E07680B724B2260@phx.gbl> <20070607130505.GE85884050@sgi.com> <BAY103-DAV141D991980E54836534A00B2250@phx.gbl> <20070612061440.GQ86004887@sgi.com>
+Subject: Re: XFS internal error xfs_da_do_buf(2) at line 2087 of file fs/xfs/xfs_da_btree.c.  Caller 0xc01b00bd
+Date: Tue, 12 Jun 2007 09:14:27 +0200
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Suparna Bhattacharya <suparna@in.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Marco Berizzi <pupilla@hotmail.com>
 
-On Sat, May 12, 2007 at 06:01:57PM +1000, David Chinner wrote:
-> On Fri, May 11, 2007 at 04:33:01PM +0530, Suparna Bhattacharya wrote:
-> > On Fri, May 11, 2007 at 08:39:50AM +1000, David Chinner wrote:
-> > > All I'm really interested in right now is that the fallocate
-> > > _interface_ can be used as a *complete replacement* for the
-> > > pre-existing XFS-specific ioctls that are already used by
-> > > applications.  What ext4 can or can't do right now is irrelevant to
-> > > this discussion - the interface definition needs to take priority
-> > > over implementation....
-> > 
-> > Would you like to write up an interface definition description (likely
-> > man page) and post it for review, possibly with a mention of apps using
-> > it today ?
-> 
-> Yeah, I started doing that yesterday as i figured it was the only way
-> to cut the discussion short....
-> 
-> > One reason for introducing the mode parameter was to allow the interface to
-> > evolve incrementally as more options / semantic questions are proposed, so
-> > that we don't have to make all the decisions right now. 
-> > So it would be good to start with a *minimal* definition, even just one mode.
-> > The rest could follow as subsequent patches, each being reviewed and debated
-> > separately. Otherwise this discussion can drag on for a long time.
-> 
-> Minimal definition to replace what applicaitons use on XFS and to
-> support poasix_fallocate are the thre that have been mentioned so
-> far (FA_ALLOCATE, FA_PREALLOCATE, FA_DEALLOCATE). I'll document them
-> all in a man page...
+David Chinner wrote:
 
-Hi Dave,
+> On Fri, Jun 08, 2007 at 03:59:39PM +0200, Marco Berizzi wrote:
+> > David Chinner wrote:
+> > > Where we saw signs of on disk directory corruption. Have you run
+> > > xfs_repair successfully on the filesystem since you reported
+> > > this?
+> >
+> > yes.
+> >
+> > > If you did clean up the error, does xfs_repair report the same
+sort
+> > > of error again?
+> >
+> > I have run xfs_repair this morning.
+> > Here is the report:
+>
+> <reports no on disk errors>
+>
+> > > Have you run a 2.6.16-rcX or 2.6.17.[0-6] kernel since you last
+> > > reported this problem?
+> >
+> > No. I have run only 2.6.19.x and 2.6.21.x
+> >
+> > After the xfs_repair I have remounted the file system.
+> > After few hours linux has crashed with this message:
+> > BUG: at arch/i386/kernel/smp.c:546 smp_call_function()
+> > I have also the monitor bitmap.
+>
+> This is sounding like memory corruption is no corruption is being
+> found on disk by xfs_repair.  Have you run memtest86 on that box to
+> see if it's got bad memory?
 
-Did you get time to write the above man page ? It will help to push
-further patches in time (eg. for FA_PREALLOCATE mode).
-
-The idea I had was to push the patch with bare minimum functionality
-(FA_ALLOCATE and FA_DEALLOCATE modes) and parallely finalize on other
-new mode(s) based on the man page you planned to provide.
-
-Thanks!
---
-Regards,
-Amit Arora
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
+Yes. I have run memtest for one week:
+no errors.
+I have also changed the mother board,
+scsi controller and ram. Only the cpu
+and the 2 hot swap scsi disks were
+not replaced. IMHO this isn't an
+hardware problem, because the kernel
+with debugging options enabled didn't
+crash for a long time (>1 month). Just
+for record, at this moment this box is
+running 2.6.22-rc4 with no debug
+options enabled. I will keep you
+informed.
+Thanks everybody for the support.
