@@ -1,35 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Jun 2007 23:16:23 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5D6GJWt005108
-	for <xfs@oss.sgi.com>; Tue, 12 Jun 2007 23:16:20 -0700
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1HyM9U-00087s-5n
-	for xfs@oss.sgi.com; Tue, 12 Jun 2007 23:16:20 -0700
-Message-ID: <11093354.post@talk.nabble.com>
-Date: Tue, 12 Jun 2007 23:16:20 -0700 (PDT)
-From: Raghu Prasad <graghu.p@gmail.com>
-Subject: Installation of XFS File system on Fedora3
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 13 Jun 2007 01:07:07 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5D871Wt005710
+	for <xfs@oss.sgi.com>; Wed, 13 Jun 2007 01:07:03 -0700
+Subject: TAKE 966238 - libattr Makefile replacing LTLDFLAGS instead of appending
+Message-Id: <20070613080657.2E9F758C38C1@chook.melbourne.sgi.com>
+Date: Wed, 13 Jun 2007 18:06:57 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
+
+LTLDFLAGS set in environment are overwritten, but they shouldn't be.
 
 
-Friends,
+Date:  Wed Jun 13 18:06:11 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  Arfrever.FTA@GMail.Com
 
-I'm trying to install XFS on Fedora Core3. I could not get the complete
-installation guide or steps.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Could some one pass me the information?
 
-Regards,
-Raghu
--- 
-View this message in context: http://www.nabble.com/Installation-of-XFS-File-system-on-Fedora3-tf3912757.html#a11093354
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Modid:  master-melb:xfs-cmds:28906a
+attr/libattr/Makefile - 1.16 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/Makefile.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+	- LTLDFLAGS set in environment are overwritten, but they shouldn't be.
