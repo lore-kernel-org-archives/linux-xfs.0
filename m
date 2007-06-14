@@ -1,40 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 13 Jun 2007 18:32:58 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5E1WrWt027569
-	for <xfs@oss.sgi.com>; Wed, 13 Jun 2007 18:32:55 -0700
-Date: Thu, 14 Jun 2007 11:32:48 +1000
-From: Timothy Shimmin <tes@sgi.com>
-Subject: Re: REVIEW: Filestreams support for xfs_io chattr command
-Message-ID: <643D90500ABD7F8FF6B185F8@boing.melbourne.sgi.com>
-In-Reply-To: <op.ttuhisz03jf8g2@pc-bnaujok.melbourne.sgi.com>
-References: <op.ttuhisz03jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 13 Jun 2007 20:33:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5E3XGWt018924
+	for <xfs@oss.sgi.com>; Wed, 13 Jun 2007 20:33:17 -0700
+Message-ID: <4670B6FF.3030005@sandeen.net>
+Date: Wed, 13 Jun 2007 22:33:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Subject: Re: Installation of XFS File system on Fedora3
+References: <11093354.post@talk.nabble.com>
+In-Reply-To: <11093354.post@talk.nabble.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
+To: Raghu Prasad <graghu.p@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Barry,
+Raghu Prasad wrote:
+> Friends,
+> 
+> I'm trying to install XFS on Fedora Core3. I could not get the complete
+> installation guide or steps.
+> 
+> Could some one pass me the information?
+> 
+> Regards,
+> Raghu
 
-Looks reasonable to me.
+http://www.google.com/search?hl=en&q=xfs+fc3+install&btnG=Google+Search
 
-Just looking at checkin (master-melb:xfs-cmds:24368a)
-in a similar area and what it modified,
-it also changed, db/inode.c, man3/xfsctl.3, repair/dinode.c
-so there might be some other
-files to change in the same mod?
+leads quickly to:
 
-OOI, do you run xfstests/040?
+http://fcp.surfsite.org/modules/smartfaq/faq.php?faqid=112
 
---Tim
+which is labeled:
+Can I install on ReiserFS, JFS, or XFS?
 
---On 13 June 2007 3:29:06 PM +1000 Barry Naujok <bnaujok@sgi.com> wrote:
+which says:
+Yes!
 
->
-> The attached patch lets you enable the filestreams allocator on a
-> per-directory basis which can be used instead of enabling it via
-> the mount option with the xfs_io chattr command.
+then says to type:
+linux xfs
+
+at the loader prompt.
+
+but really, why would you want to use something as ancient as FC3? :)
+
+-eric
