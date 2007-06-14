@@ -1,154 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 12:33:56 -0700 (PDT)
-Received: from mail.clusterfs.com (mail.clusterfs.com [206.168.112.78])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5EJXnWt005423
-	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 12:33:50 -0700
-Date: Thu, 14 Jun 2007 13:33:47 -0600
-From: Andreas Dilger <adilger@clusterfs.com>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070614193347.GN5181@schatzie.adilger.int>
-References: <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 13:55:27 -0700 (PDT)
+Received: from astra.simleu.ro (astra.simleu.ro [80.97.18.177])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5EKtMWt019655
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 13:55:24 -0700
+Date: Thu, 14 Jun 2007 22:55:18 +0200
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: [PATCH] Implement shrink of empty AGs
+Message-ID: <20070614205518.GA4327@teal.hq.k1024.org>
+References: <20070610164014.GA10936@teal.hq.k1024.org> <20070612024025.GM86004887@sgi.com> <20070614060158.GA12951@teal.hq.k1024.org> <20070614090052.GA86004887@sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070614120413.GD86004887@sgi.com>
+In-Reply-To: <20070614090052.GA86004887@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, Suparna Bhattacharya <suparna@in.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
+Cc: xfs@oss.sgi.com
 
-On Jun 14, 2007  22:04 +1000, David Chinner wrote:
-> On Thu, Jun 14, 2007 at 03:14:58AM -0600, Andreas Dilger wrote:
-> > > B FA_DEALLOCATE
-> > > removes the underlying disk space with the given range. The disk space
-> > > shall be removed regardless of it's contents so both allocated space
-> > > from
-> > > B FA_ALLOCATE
-> > > and
-> > > B FA_PREALLOCATE
-> > > as well as from
-> > > B write(3)
-> > > will be removed.
-> > > B FA_DEALLOCATE
-> > > shall never remove disk blocks outside the range specified.
-> > 
-> > So this is essentially the same as "punch".
+On Thu, Jun 14, 2007 at 07:00:52PM +1000, David Chinner wrote:
+> > > What's the dbdelta part of the reservation for? That's reserving dbdelta
+> > > blocks for *allocations*, so I don't think this is right....
+> >
+> > Well, we'll shrink the filesystem by dbdelta, so the filesystem needs to
+> > have enough free space to do it.
 > 
-> Depends on your definition of "punch".
+> True, but when you look at how much free space we need to make that
+> modification, it turns out ot be zero. i.e. we don't need to do any
+> allocations *anywhere* to remove an empty AG from the end of the
+> filesystem - just log a change to the superblock(s).
 > 
-> > There doesn't seem to be
-> > a mechanism to only unallocate unused FA_{PRE,}ALLOCATE space at the
-> > end.
+> > Whether this space is in the correct
+> > place (the AGs we want to shrink) or not is a question answered by the
+> > per-AG checking, but since we will reduce the freespace by this amount,
+> > I thought that it's safer to mark this space in use. Did I misread the
+> > intent of xfs_trans_reserve?
 > 
-> ftruncate()
+> The transactions reservation takes into account blocks that may need
+> to be allocated during a transaction. Normally when we are freeing
+> an extent, we may still have to allocate some blocks because a
+> btree block might need to be split (and split all the way up the tree
+> to the root). The XFS_GROWFS_SPACE_RES(mp) macro reserves the space
+> needed for the freeing of a new extent which occurs during growing a
+> partial AG to a full AG. We aren't doing such an operation here;
+> we don't modify any free space or inode or extent btrees here at
+> all.
+Ah, finally I understand what the reservation is for. I probably
+misunderstood the actual meaning of the transaction also...
 
-No, that will delete written data also.  What I'm thinking is in cases
-where an application does fallocate() to reserve a lot of space, and
-when the application is finished it wants to unreserve any unused space.
+Thanks for the clear explanation, will remove this.
 
-> > > B FA_DEALLOCATE
-> > > shall never change the file size. If changing the file size
-> > > is required when deallocating blocks from an offset to end
-> > > of file (or beyond end of file) is required,
-> > > B ftuncate64(3)
-> > > should be used.
-> > 
-> > This also seems to be a bit of a wart, since it isn't a natural converse
-> > of either of the above functions.  How about having two modes,
-> > similar to FA_ALLOCATE and FA_PREALLOCATE?
+> [...]
+> Note that I'm just using this as an example piece of existing code that would
+> break badly if we simply realloc the perag array. I could point you to the
+> filestreams code where there is a perag stream refcount that we'll need to
+> ensure is zero.
 > 
-> <shrug>
+> What I'm trying to say is that the perag lock may not give us sufficient
+> exclusion to be able to shrink the perag array safely.
+Interesting conclusion. I'm fail right now to come up with an idea,
+except auditing the whole codebase and make sure any down_read is
+followed by a check on the perag size. Or something like adding a flag
+to the perag structure like 'gone' that is checked (since we won't
+k_realloc anymore), after the read lock.
+
+> > > ok, so we have empty ag's here. You might want to check that the
+> > > inode btree is empty and that the AGI unlinked list is empty.
+> > I thought that inode btree is empty by virtue of pag->pagi_count == 0.
+> > Is this not always so?
 > 
-> whatever.
+> It should be. Call me paranoid, but with an operation like this I want
+> to make sure we check and double check that it is safe to proceed.
 > 
-> > Say, FA_PUNCH (which
-> > would be as you describe here - deletes all data in the specified
-> > range changing the file size if it overlaps EOF,
+> > Furthermore, also since agi_count == agi_free +
+> > actual used inodes + number of unlinked inodes, I think we don't need to
+> > check the unlinked list.
 > 
-> Punch means different things to different people. To me (and probably
-> most XFS aware ppl) punch implies no change to the file size.
-
-If "punch" does not change the file size, how is it possible to determine
-the end of the actual written data?  Say you have a file with records
-in it, and these records are cancelled as they are processed (e.g. a
-journal of sorts).  One usage model for punch() that we had in the past
-is to punch out each record after it finishes processing, so that it will
-not be re-processed after a crash.  If the file size doesn't change with
-punch then there is no way to know when the last record is hit and the
-rest of the file needs to be scanned.
-
-> i.e. anyone curently using XFS_IOC_UNRESVSP will expect punching
-> holes to leave the file size unchanged. This is the behaviour I
-> described for FA_DEALLOCATE.
+> Call me paranoid, but....
 > 
-> > and FA_DEALLOCATE,
-> > which only deallocates unused FA_{PRE,}ALLOCATE space?
+> I think at minimum there should be debug code that caters to my paranoia ;)
+Ok, I'll look into this then. I understand the paranoia, I just assumed
+that logically it's provable that this situation doesn't/can't happen.
+
+> > > Ok, so why not just
+> > > 
+> > > 	fdbdelta += mp->m_sb.sb_agblocks - XFS_PREALLOC_BLOCKS(mp);
+> > Because the last AG can be smaller than the sb_agblocks. It's true
+> > that this holds only for the last one, but having two cases is uglier
+> > than just always reading this size from the AG.
 > 
-> That's an "unwritten-to-hole" extent conversion. Is that really
-> useful for anything? That's easily implemented with FIEMAP
-> and FA_DEALLOCATE.
+> But you -EINVAL'd earlier when the shrink size would not leave entire
+> AGs behind. So the partial last AG is something that won't happen
+> here.....
+No, what I meant when I said 'last AG' is the "original" last, not the
+"new" last. Consider this fs: AGs 1-8 = 4096 blocks, AG 9 = 3000 blocks.
+We can't, in the for loop, make fbdelta += mp->m_sb.sb_agblocks ...
+since that is 4096, whereas the for 'last' AG (AG 9) has only 3000
+blocks.
 
-But why force the application to do this instead of making the
-fallocate API sensible and allowing it to be done directly?
+What I mean is that for a normal filesystem (non-shrink situation), the
+size of the last AG is readable only from the AGF structure on-disk,
+but for all the others AG the size is the one from the superblock. So if
+you touch the last AG, you have to read the AGF.
 
-> Anyway, because we can't agree on a single pair of flags:
+> > > This is not really safe - how do we know if all the users of the
+> > > higher AGs have gone away? I think we should simply just zero out
+> > > the unused AGs and don't worry about a realloc().
+> > The problem that I saw is that if you do shrink+grow+shrink+grow+... you
+> > will leak a small amount of memory (or corrupt kernel mem allocation?)
+> > since the growfs code does a realloc from what it thinks is the size of
+> > m_perag, which it computes solely from the current number of AGs. Should
+> > we have a size in the mp struct for this and not assume it's the
+> > agcount?
 > 
-> 	FA_ALLOCATE        == posix_fallocate()
-> 	FA_DEALLOCATE      == unwritten-to-hole ???
+> Yup, another size variable in the mount structure is probably the only
+> way to fix this.
+Ok, noted. Also I get the impression that this ties in with the perag
+locking above somehow...
 
-I'd think this makes sense, being natural opposites of each other.
-FA_ALLOCATE doesn't overwrite existing data with zeros, so FA_DEALLOCATE
-shouldn't erase existing data.  If FA_ALLOCATE extends the file size,
-then FA_DEALLOCATE should shrink it if there is no data at the end.
-
-> 	FA_RESV_SPACE      == XFS_IOC_RESVSP64
-> 	FA_UNRESV_SPACE    == XFS_IOC_UNRESVSP64
-
-> > We might also consider making @mode be a mask instead of an enumeration:
-> > 
-> > FA_FL_DEALLOC	0x01 (default allocate)
-> > FA_FL_KEEP_SIZE	0x02 (default extend/shrink size)
-> > FA_FL_DEL_DATA	0x04 (default keep written data on DEALLOC)
+> > updated patch (without the separation of the IOCTL and without the
+> > rework of the perag lock) is attached.
 > 
-> #define FA_ALLOCATE	0
-> #define FA_DEALLOCATE	FA_FL_DEALLOC
-> #define FA_RESV_SPACE	FA_FL_KEEP_SIZE
-> #define FA_UNRESV_SPACE	FA_FL_DEALLOC | FA_FL_KEEP_SIZE | FA_FL_DEL_DATA
+> I haven't looked at it yet - i'll try to get to it tomorrow...
+No hurry, just small changes.
 
-OK, this makes the semantics of XFS_IOC_RESVSP64 and XFS_IOC_UNRESVSP64
-clear at least.  The benefit is that it would also be possible (I'm
-not necessarily advocating this as a flag, just an example) to have
-semantics that are like XFS_IOC_ALLOCSP64 (zeroing written data while
-preallocating) with:
+I'll think about the issues you raised.
 
-#define FA_ZERO_SPACE    FA_DEL_DATA
-
-or whatever semantics the caller actually wants, instead of restricting
-them to the subset of combinations given by FA_ALLOCATE and FA_DEALLOCATE
-(whatever it is we decide on in the end).
-
-> > > B ENOSPC
-> > > There is not enough space left on the device containing the file
-> > > referred to by
-> > > IR fd.
-> > 
-> > Should probably say whether space is removed on failure or not.  In
-> 
-> Right. I'd say on error you need to FA_DEALLOCATE to ensure any space
-> allocated was freed back up. That way the error handling in the allocate
-> functions is much simpler (i.e. no need to undo there).
-
-Hmm, another flag?  FA_FL_FREE_ENOSPC?  I can imagine applications like
-PVRs to want to preallocate, say, an estimated 30 min of space for a show
-but if they only get 25 min of space returned they know some cleanup is
-in order (which can be done asynchronously while the show is filling the
-first 25 min of preallocated space).  Otherwise, they have to loop in
-userspace trying decreasing preallocations until they fit, or starting
-small and incrementally preallocating space until they get an error.
-
-Cheers, Andreas
---
-Andreas Dilger
-Principal Software Engineer
-Cluster File Systems, Inc.
+thanks,
+iustin
