@@ -1,93 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 13 Jun 2007 23:34:17 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5E6YCWt011983
-	for <xfs@oss.sgi.com>; Wed, 13 Jun 2007 23:34:14 -0700
-Date: Thu, 14 Jun 2007 16:34:04 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: [PATCH, RFC] fix null files exposure growing via ftruncate
-Message-ID: <20070614063404.GW86004887@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 01:42:48 -0700 (PDT)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.173])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5E8geWt018540
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 01:42:42 -0700
+Received: by ug-out-1314.google.com with SMTP id 74so712660ugb
+        for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 01:42:40 -0700 (PDT)
+Subject: Re: XFS shrink functionality
+From: Ruben Porras <nahoo82@gmail.com>
+In-Reply-To: <20070608151223.GF86004887@sgi.com>
+References: <1180715974.10796.46.camel@localhost>
+	 <20070604001632.GA86004887@sgi.com>
+	 <20070604084154.GA8273@teal.hq.k1024.org>
+	 <1181291033.7510.40.camel@localhost>
+	 <20070608101532.GA18788@teal.hq.k1024.org>
+	 <20070608151223.GF86004887@sgi.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oxU5dVOBePDayLCCRZvz"
+Date: Thu, 14 Jun 2007 10:35:27 +0200
+Message-Id: <1181810127.6539.13.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, hch@infradead.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, cw@f00f.org, iusty@k1024.org
 
-Christoph,
+--=-oxU5dVOBePDayLCCRZvz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Looking into the test 140 failure you reported, I realised that none
-of the specific null files tests were being run automatically, which
-is why I hadn't seen any of those failures (nor had the QA team).
-That's being fixed.
+> > I took a look at both items since this discussion started. And honestly,
+> > I think 1) is harder that 4), so you're welcome to work on it :) The
+> > points that make it harder is that, per David's suggestion, there needs
+> > to be:
+> >  - define two new transaction types
+>=20
+> one new transaction type:
+>=20
+> XFS_TRANS_AGF_FLAGS
 
-I suspect that the test passes on Irix because of a coincidence
-(the test sleeps for 10s and that is the default writeback
-timeout for file data) which means when the filesystem is shut down
-all the data is already on disk so it's not really testing
-the NULL files fix.
+done
 
-The failure is due to the ftruncate() logging the new file size
-before any data that had previously been written had hit the
-disk. IOWs, it violates the data write/inode size update rule
-that fixes the null files problem.
+> and and extension to xfs_alloc_log_agf(). Is about all that is
+> needed there.
 
-The fix here checks when growing the file as to whether it the disk
-inode size is different to the in memory size. If they are
-different, we have data that needs to be written to disk beyond the
-existing on disk EOF. Hence to maintain ordering we need to flush
-this data out before we log the changed file size.
+still to do. Will come after the ioctls.
 
-I suspect the flush could be done more optimally - I've just done a
-brute-force flush the entire file mod. Should we only flush from the
-old di_size to the current i_size?
+> See the patch here:
+>=20
+> http://oss.sgi.com/archives/xfs/2007-04/msg00103.html
+>=20
+> For an example of a very simlar transaction to what is needed
+> (look at xfs_log_sbcount()) and very similar addition to
+> the AGF (xfs_btreeblks).
+>=20
+> >  - define two new ioctls
+>=20
+> XFS_IOC_ALLOC_ALLOW_AG, parameter xfsagnumber_t.
+> XFS_IOC_ALLOC_DENY_AG, parameter xfsagnumber_t.
 
-There may also be better ways to fix this. Any thoughts on
-that?
+almost done. How I'm should I obtain a pointer to an xfs_agf_t from
+inside the ioctls?
 
-Cheers,
+I guess that the first step is to get a *bp with xfs_getsb and then an *sbp,
+but, which function/macro gives me the xfs_agf_t pointer? Sorry, I can't
+find the way greeping through the code.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> >  - update the ondisk-format (!), if we want persistence of these flags;
+> >    luckily, there are two spare fields in the AGF structure.
+>=20
+> Better to expand, I think. The AGF is a sector in length - we can
+> expand the structure as we need to this size without fear, esp. as
+> the part of the sector outside the structure is guaranteed to be
+> zero.  i.e. we can add a fields flag to the end of the AGF
+> structure - old filesystems simple read as "no flags set" and
+> old kernels never look at those bits....
 
----
- fs/xfs/xfs_vnodeops.c |   21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+done.
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_vnodeops.c	2007-06-13 14:12:09.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c	2007-06-14 16:01:48.562882473 +1000
-@@ -593,9 +593,24 @@ xfs_setattr(
- 		if ((vap->va_size > ip->i_size) &&
- 		    (flags & ATTR_NOSIZETOK) == 0) {
- 			code = xfs_igrow_start(ip, vap->va_size, credp);
--		}
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		vn_iowait(vp); /* wait for the completion of any pending DIOs */
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+			/*
-+			 * We are going to log the inode size change in
-+			 * this tranaction so any previous writes that are
-+			 * beyond the on disk EOF that have not been written
-+			 * out need to be written here. If we do not write the
-+			 * data out, we expose ourselves to the null files
-+			 * problem on grow.
-+			 */
-+			if (!code && ip->i_size != ip->i_d.di_size)
-+				code = bhv_vop_flush_pages(XFS_ITOV(ip), 0, -1,
-+							XFS_B_ASYNC, FI_NONE);
-+		} else
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+		/* wait for I/O to complete */
-+		vn_iowait(vp);
-+
- 		if (!code)
- 			code = xfs_itruncate_data(ip, vap->va_size);
- 		if (code) {
+> >  - check the list of allocation functions that allocate space from the
+> >    AG
+
+still to be done.
+
+Thaks again for the help.
+
+--=-oxU5dVOBePDayLCCRZvz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Dies ist ein digital signierter Nachrichtenteil
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGcP3PYubrKblAx+oRAtXUAJ9HRydd5yl/7dPiqNTVMDTlRw+8lwCeO05B
+JJC+DMs0+wkQ0PfReV7ysoQ=
+=9qWU
+-----END PGP SIGNATURE-----
+
+--=-oxU5dVOBePDayLCCRZvz--
