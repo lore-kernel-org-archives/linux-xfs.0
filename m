@@ -1,271 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 02:01:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 02:14:55 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5E90wWt023159
-	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 02:01:01 -0700
-Date: Thu, 14 Jun 2007 19:00:52 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5E9ElWt027411
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 02:14:49 -0700
+Date: Thu, 14 Jun 2007 19:14:26 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] Implement shrink of empty AGs
-Message-ID: <20070614090052.GA86004887@sgi.com>
-References: <20070610164014.GA10936@teal.hq.k1024.org> <20070612024025.GM86004887@sgi.com> <20070614060158.GA12951@teal.hq.k1024.org>
+Subject: Re: XFS shrink functionality
+Message-ID: <20070614091426.GB86004887@sgi.com>
+References: <1180715974.10796.46.camel@localhost> <20070604001632.GA86004887@sgi.com> <20070604084154.GA8273@teal.hq.k1024.org> <1181291033.7510.40.camel@localhost> <20070608101532.GA18788@teal.hq.k1024.org> <20070608151223.GF86004887@sgi.com> <1181810127.6539.13.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070614060158.GA12951@teal.hq.k1024.org>
+In-Reply-To: <1181810127.6539.13.camel@localhost>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Iustin Pop <iusty@k1024.org>
+To: Ruben Porras <nahoo82@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, cw@f00f.org, iusty@k1024.org
 
-On Thu, Jun 14, 2007 at 08:01:58AM +0200, Iustin Pop wrote:
-> On Tue, Jun 12, 2007 at 12:40:25PM +1000, David Chinner wrote:
-> > > diff -X ignore -urN linux-2.6-xfs.cvs-orig/fs/xfs/xfs_fsops.c linux-2.6-xfs.shrink/fs/xfs/xfs_fsops.c
-> > > --- linux-2.6-xfs.cvs-orig/fs/xfs/xfs_fsops.c	2007-06-09 18:56:21.509308225 +0200
-> > > +++ linux-2.6-xfs.shrink/fs/xfs/xfs_fsops.c	2007-06-10 18:32:36.074856477 +0200
-> > > @@ -112,6 +112,53 @@
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static void xfs_update_sb(
+On Thu, Jun 14, 2007 at 10:35:27AM +0200, Ruben Porras wrote:
+> > > I took a look at both items since this discussion started. And honestly,
+> > > I think 1) is harder that 4), so you're welcome to work on it :) The
+> > > points that make it harder is that, per David's suggestion, there needs
+> > > to be:
+> > >  - define two new transaction types
 > > 
-> > STATIC void
-> > xfs_growfs_update_sb(
-> this was because xfs_growfs_private is also static and not STATIC.
-> Should I change the def for it also?
-
-Yes, probably should.
-
-> > > +	xfs_mount_t		*mp,		/* mount point for filesystem */
-> > > +	xfs_agnumber_t		nagimax,
-> > > +	xfs_agnumber_t		nagcount)       /* new number of a.g. */
+> > one new transaction type:
 > > 
-> > tabs, not spaces (and tabs are 8 spaces).
-> sorry, I though I got all of these. There are some more in the def of
-> xfs_reserve_blocks, btw.
-
-Ok, I'll clean them up in the current fix-reserve-blocks-yet-again
-patch I have.
-
-> > > +xfs_shrinkfs_data_private(
-> > > +			  xfs_mount_t		*mp,		/* mount point for filesystem */
-> > > +			  xfs_growfs_data_t	*in)		/* growfs data input struct */
+> > XFS_TRANS_AGF_FLAGS
+> 
+> done
+> 
+> > and and extension to xfs_alloc_log_agf(). Is about all that is
+> > needed there.
+> 
+> still to do. Will come after the ioctls.
+> 
+> > See the patch here:
 > > 
-> > whitespace issues
-> fixed (I think you were referring to the alignement of the two argument
-> lines).
-
-Yes.
-
-> > > +	/* dbdelta starts at the diff and must become zero */
-> > > +	dbdelta = mp->m_sb.sb_dblocks - nb;
-> > > +	tp = xfs_trans_alloc(mp, XFS_TRANS_GROWFS);
-> > > +	printk("reserving %d\n", XFS_GROWFS_SPACE_RES(mp) + dbdelta);
-> > > +	if ((error = xfs_trans_reserve(tp, XFS_GROWFS_SPACE_RES(mp) + dbdelta,
-> > > +				       XFS_GROWDATA_LOG_RES(mp), 0, 0, 0))) {
-> > > +		xfs_trans_cancel(tp, 0);
-> > > +		return error;
-> > > +	}
+> > http://oss.sgi.com/archives/xfs/2007-04/msg00103.html
 > > 
-> > What's the dbdelta part of the reservation for? That's reserving dbdelta
-> > blocks for *allocations*, so I don't think this is right....
->
-> Well, we'll shrink the filesystem by dbdelta, so the filesystem needs to
-> have enough free space to do it.
-
-True, but when you look at how much free space we need to make that
-modification, it turns out ot be zero. i.e. we don't need to do any
-allocations *anywhere* to remove an empty AG from the end of the
-filesystem - just log a change to the superblock(s).
-
-> Whether this space is in the correct
-> place (the AGs we want to shrink) or not is a question answered by the
-> per-AG checking, but since we will reduce the freespace by this amount,
-> I thought that it's safer to mark this space in use. Did I misread the
-> intent of xfs_trans_reserve?
-
-The transactions reservation takes into account blocks that may need
-to be allocated during a transaction. Normally when we are freeing
-an extent, we may still have to allocate some blocks because a
-btree block might need to be split (and split all the way up the tree
-to the root). The XFS_GROWFS_SPACE_RES(mp) macro reserves the space
-needed for the freeing of a new extent which occurs during growing a
-partial AG to a full AG. We aren't doing such an operation here;
-we don't modify any free space or inode or extent btrees here at
-all.
-
-> Also, unless I'm mistaken and don't remember correctly, you have to
-> reserve the amount of space one will pass to xfs_trans_mod_sb(tp,
-> XFS_TRANS_SB_FDBLOCKS, ...) otherwise the transaction code complains
-> about exceeding your reservation.
-
-xfs_trans_mod_sb:
-
-    459         case XFS_TRANS_SB_FDBLOCKS:
-    460                 /*
-    461                  * Track the number of blocks allocated in the
-    462                  * transaction.  Make sure it does not exceed the
-    463                  * number reserved.
-    464                  */
-    465                 if (delta < 0) {
-    466                         tp->t_blk_res_used += (uint)-delta;
-    467                         ASSERT(tp->t_blk_res_used <= tp->t_blk_res);
-    468                 }
-    469                 tp->t_fdblocks_delta += delta;
-    470                 if (xfs_sb_version_haslazysbcount(&mp->m_sb))
-    471                         flags &= ~XFS_TRANS_SB_DIRTY;
-    472                 break;
-
-So, delta < 0 (i.e. allocating blocks) requires a transaction reservation,
-but freeing blocks (delta > 0) does not.
-
-
-> > > +	/* I think that since we do read and write to the m_perag
-> > > +	 * stuff, we should be holding the lock for the entire walk &
-> > > +	 * modify of the fs
-> > > +	 */
+> > For an example of a very simlar transaction to what is needed
+> > (look at xfs_log_sbcount()) and very similar addition to
+> > the AGF (xfs_btreeblks).
 > > 
-> > Deadlock warning! holding the m_peraglock in write mode will cause
-> > allocation deadlocks if you are not careful as all allocation/free
-> > operations take the m_peraglock in read mode. (And yes, growing
-> > an active, loaded filesystem can deadlock because of this.)
->
-> How can we ensure then that no one modifies the AGs while we walk them?
-
-It's not even modify - how do you prevent any *reference* to the perag
-while we are doing this.
-
-> I hoped that we can do it without the per-AG not-avail flag, by just
-> holding the perag lock.
-
-The per-AG not-available flag will prevent new allocations, but it doesn't prevent
-access to the AGs as we still need access to the AGs to copy the data and
-metadata out. The m_peraglock in write mode will prevent *simultaneous*
-access to the per-ag, but the code waiting on a read lock may still try
-to access the bit of the perag structure we're about to remove.
-
-See, for example, xfs_bmap_btalloc(). It gets and AG it is supposed to
-use from somewhere external, and then before it goes to use the perag
-structure for that AG, it waits on the peraglock in read mode. If that
-blocks waiting on a shrink and after the shrink ag > sb_agcount, we're
-in a world of pain.....
-
-Note that I'm just using this as an example piece of existing code that would
-break badly if we simply realloc the perag array. I could point you to the
-filestreams code where there is a perag stream refcount that we'll need to
-ensure is zero.
-
-What I'm trying to say is that the perag lock may not give us sufficient
-exclusion to be able to shrink the perag array safely.
-
-> > ok, so we have empty ag's here. You might want to check that the
-> > inode btree is empty and that the AGI unlinked list is empty.
-> I thought that inode btree is empty by virtue of pag->pagi_count == 0.
-> Is this not always so?
-
-It should be. Call me paranoid, but with an operation like this I want
-to make sure we check and double check that it is safe to proceed.
-
-> Furthermore, also since agi_count == agi_free +
-> actual used inodes + number of unlinked inodes, I think we don't need to
-> check the unlinked list.
-
-Call me paranoid, but....
-
-I think at minimum there should be debug code that caters to my paranoia ;)
-
-> > > +
-> > > +		freeblks = pag->pagf_freeblks;
-> > > +		printk("Usage: %d prealloc, %d flcount\n",
-> > > +		       XFS_PREALLOC_BLOCKS(mp), pag->pagf_flcount);
-> > > +
-> > > +		/* Done gathering data, check sizes */
-> > > +		usedblks = XFS_PREALLOC_BLOCKS(mp) + pag->pagf_flcount;
-> > > +		printk("agno=%d agf_length=%d computed used=%d"
-> > > +		       " known free=%d\n", agno, aglen, usedblks, freeblks);
-> > > +
-> > > +		if(usedblks + freeblks != aglen) {
-> > > +			printk("agno %d is not free (%d blocks allocated)\n",
-> > > +			       agno, aglen-usedblks-freeblks);
-> > > +			error = XFS_ERROR(ENOSPC);
-> > > +			goto error0;
-> > > +		}
-> > > +		dbdelta -= aglen;
-> > > +		printk("will lower with %d\n",
-> > > +		       aglen - XFS_PREALLOC_BLOCKS(mp));
-> > > +		fdbdelta += aglen - XFS_PREALLOC_BLOCKS(mp);
+> > >  - define two new ioctls
 > > 
-> > Ok, so why not just
-> > 
-> > 	fdbdelta += mp->m_sb.sb_agblocks - XFS_PREALLOC_BLOCKS(mp);
-> Because the last AG can be smaller than the sb_agblocks. It's true
-> that this holds only for the last one, but having two cases is uglier
-> than just always reading this size from the AG.
+> > XFS_IOC_ALLOC_ALLOW_AG, parameter xfsagnumber_t.
+> > XFS_IOC_ALLOC_DENY_AG, parameter xfsagnumber_t.
+> 
+> almost done.
 
-But you -EINVAL'd earlier when the shrink size would not leave entire
-AGs behind. So the partial last AG is something that won't happen
-here.....
+FWIW, I've had second thoughts on this ioctl interface. It's
+horribly specific, considering all we are doing are setting
+or clearing a flag in an AG.
 
-> > > +	}
-> > > +	/*
-> > > +	 * Check that we removed all blocks
-> > > +	 */
-> > > +	ASSERT(!dbdelta);
-> > > +	ASSERT(nagcount < oagcount);
-> > 
-> > Error out, not assert, because at this point we have not changed anything.
-> Actually here, !dbdelta or nacount < oagacount are programming errors
-> and not possible correct conditions.  They could be removed, sine the
-> checks before the per-AG for loop ensure these conditions are not met.
-> But I used them just to be sure.
+Perhaps a better interface is:
 
-Ok - I misinterpreted what they were catching.
+XFS_IOC_GET_AGF_FLAGS
+XFS_IOC_SET_AGF_FLAGS
+
+with:
+
+struct xfs_ioc_agflags {
+	xfs_agnumber_t	ag;
+	__u32		flags;
+}
+
+As the parameter structure and:
+
+#define XFS_AGF_FLAGS_ALLOC_DENY	(1<<0)
 
 
-> > > +	/* Free memory as the number of AG has changed */
-> > > +	for (agno = nagcount; agno < oagcount; agno++)
-> > > +		if (mp->m_perag[agno].pagb_list)
-> > > +			kmem_free(mp->m_perag[agno].pagb_list,
-> > > +				  sizeof(xfs_perag_busy_t) *
-> > > +				  XFS_PAGB_NUM_SLOTS);
-> > > +
-> > > +	mp->m_perag = kmem_realloc(mp->m_perag,
-> > > +				   sizeof(xfs_perag_t) * nagcount,
-> > > +				   sizeof(xfs_perag_t) * oagcount,
-> > > +				   KM_SLEEP);
-> > 
-> > This is not really safe - how do we know if all the users of the
-> > higher AGs have gone away? I think we should simply just zero out
-> > the unused AGs and don't worry about a realloc().
-> The problem that I saw is that if you do shrink+grow+shrink+grow+... you
-> will leak a small amount of memory (or corrupt kernel mem allocation?)
-> since the growfs code does a realloc from what it thinks is the size of
-> m_perag, which it computes solely from the current number of AGs. Should
-> we have a size in the mp struct for this and not assume it's the
-> agcount?
+> How I'm should I obtain a pointer to an xfs_agf_t from
+> inside the ioctls?
+> 
+> I guess that the first step is to get a *bp with xfs_getsb and then an *sbp,
+> but, which function/macro gives me the xfs_agf_t pointer? Sorry, I can't
+> find the way greeping through the code.
 
-Yup, another size variable in the mount structure is probably the only
-way to fix this.
-
-> > > +	if(in->newblocks < mp->m_sb.sb_dblocks)
-> > > +		error = xfs_shrinkfs_data_private(mp, in);
-> > > +	else
-> > > +		error = xfs_growfs_data_private(mp, in);
-> > 
-> > Hmmm - that's using the one ioctl to do both grow and shrink. I'd
-> > prefer a new shrink ioctl rather than changing the behaviour of an
-> > existing ioctl.
-> Well, I chose this way because I see it as the ioctl that changes the
-> data size of the filesystem. It may be lower or higher than the current
-> size, but that is not so important :), and if another ioctl there would
-> be the need for another tool.
-
-True, put that way i think you're right.
-
-> updated patch (without the separation of the IOCTL and without the
-> rework of the perag lock) is attached.
-
-I haven't looked at it yet - i'll try to get to it tomorrow...
+I've attached the quick hack I did when thinking this through
+initially. It'll give you an idea of how to do this and a bit more.
+FWIW, it was this hack that made me think the above interface
+is a better way to go....
 
 Cheers,
 
@@ -274,3 +91,239 @@ Dave.
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
+
+---
+ fs/xfs/linux-2.6/xfs_ioctl.c |   27 +++++++++++
+ fs/xfs/xfs_ag.h              |    7 ++
+ fs/xfs/xfs_alloc.c           |  103 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fs.h              |    2 
+ fs/xfs/xfs_trans.h           |    3 -
+ 5 files changed, 140 insertions(+), 2 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2007-06-08 21:34:37.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl.c	2007-06-08 22:22:59.305412098 +1000
+@@ -899,6 +899,33 @@ xfs_ioctl(
+ 		return -error;
+ 	}
+ 
++	case XFS_IOC_ALLOC_DENY_AG: {
++		xfs_agnumber_t in;
++
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++
++		if (copy_from_user(&in, arg, sizeof(in)))
++			return -XFS_ERROR(EFAULT);
++
++		error = xfs_alloc_deny_ag(mp, &in);
++		return -error;
++
++	}
++	case XFS_IOC_ALLOC_ALLOW_AG: {
++		xfs_agnumber_t in;
++
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++
++		if (copy_from_user(&in, arg, sizeof(in)))
++			return -XFS_ERROR(EFAULT);
++
++		error = xfs_alloc_allow_ag(mp, &in);
++		return -error;
++
++	}
++
+ 	case XFS_IOC_FREEZE:
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			return -EPERM;
+Index: 2.6.x-xfs-new/fs/xfs/xfs_ag.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_ag.h	2007-06-08 21:46:28.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_ag.h	2007-06-08 22:09:18.323606142 +1000
+@@ -69,6 +69,7 @@ typedef struct xfs_agf {
+ 	__be32		agf_freeblks;	/* total free blocks */
+ 	__be32		agf_longest;	/* longest free space */
+ 	__be32		agf_btreeblks;	/* # of blocks held in AGF btrees */
++	__be32		agf_flags;	/* status flags */
+ } xfs_agf_t;
+ 
+ #define	XFS_AGF_MAGICNUM	0x00000001
+@@ -83,9 +84,12 @@ typedef struct xfs_agf {
+ #define	XFS_AGF_FREEBLKS	0x00000200
+ #define	XFS_AGF_LONGEST		0x00000400
+ #define	XFS_AGF_BTREEBLKS	0x00000800
+-#define	XFS_AGF_NUM_BITS	12
++#define	XFS_AGF_FLAGS		0x00001000
++#define	XFS_AGF_NUM_BITS	13
+ #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
+ 
++
++
+ /* disk block (xfs_daddr_t) in the AG */
+ #define XFS_AGF_DADDR(mp)	((xfs_daddr_t)(1 << (mp)->m_sectbb_log))
+ #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
+@@ -189,6 +193,7 @@ typedef struct xfs_perag
+ 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+ 	xfs_extlen_t	pagf_longest;	/* longest free space */
+ 	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
++	__uint32_t	pagf_flags;	/* status flags for AG */
+ 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
+ 	xfs_agino_t	pagi_count;	/* number of allocated inodes */
+ 	int		pagb_count;	/* pagb slots in use */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_alloc.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_alloc.c	2007-06-05 22:12:50.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_alloc.c	2007-06-08 23:12:51.256348632 +1000
+@@ -2085,6 +2085,7 @@ xfs_alloc_log_agf(
+ 		offsetof(xfs_agf_t, agf_freeblks),
+ 		offsetof(xfs_agf_t, agf_longest),
+ 		offsetof(xfs_agf_t, agf_btreeblks),
++		offsetof(xfs_agf_t, agf_flags),
+ 		sizeof(xfs_agf_t)
+ 	};
+ 
+@@ -2112,6 +2113,107 @@ xfs_alloc_pagf_init(
+ 	return 0;
+ }
+ 
++#define XFS_AGFLAG_ALLOC_DENY	1
++STATIC void
++xfs_alloc_set_flag_ag(
++	xfs_trans_t	*tp,
++	xfs_buf_t	*agbp,	/* buffer for a.g. freelist header */
++	xfs_perag_t	*pag,
++	int		flag)
++{
++	xfs_agf_t		*agf;	/* a.g. freespace structure */
++
++	agf = XFS_BUF_TO_AGF(agbp);
++	pag->pagf_flags |= flag;
++	agf->agf_flags = cpu_to_be32(pag->pagf_flags);
++
++	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLAGS);
++}
++
++STATIC void
++xfs_alloc_clear_flag_ag(
++	xfs_trans_t	*tp,
++	xfs_buf_t	*agbp,	/* buffer for a.g. freelist header */
++	xfs_perag_t	*pag,
++	int		flag)
++{
++	xfs_agf_t		*agf;	/* a.g. freespace structure */
++
++	agf = XFS_BUF_TO_AGF(agbp);
++	pag->pagf_flags &= ~flag;
++	agf->agf_flags = cpu_to_be32(pag->pagf_flags);
++
++	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLAGS);
++}
++
++int
++xfs_alloc_allow_ag(
++	xfs_mount_t	*mp,
++	xfs_agnumber_t	agno)
++{
++	xfs_perag_t	*pag;
++	xfs_buf_t	*bp;
++	int		error;
++	xfs_trans_t	*tp;
++
++	if (agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_ALLOC_FLAGS);
++	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
++					XFS_DEFAULT_LOG_COUNT);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &bp);
++	if (error)
++		return error;
++
++	pag = &mp->m_perag[agno];
++	xfs_alloc_clear_flag_ag(tp, bp, pag, XFS_AGFLAG_ALLOC_DENY);
++
++	xfs_trans_set_sync(tp);
++	xfs_trans_commit(tp, 0);
++
++	return 0;
++
++}
++
++int
++xfs_alloc_deny_ag(
++	xfs_mount_t	*mp,
++	xfs_agnumber_t	agno)
++{
++	xfs_perag_t	*pag;
++	xfs_buf_t	*bp;
++	int		error;
++	xfs_trans_t	*tp;
++
++	if (agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_ALLOC_FLAGS);
++	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
++					XFS_DEFAULT_LOG_COUNT);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &bp);
++	if (error)
++		return error;
++
++	pag = &mp->m_perag[agno];
++	xfs_alloc_set_flag_ag(tp, bp, pag, XFS_AGFLAG_ALLOC_DENY);
++
++	xfs_trans_set_sync(tp);
++	xfs_trans_commit(tp, 0);
++
++	return 0;
++
++}
++
+ /*
+  * Put the block on the freelist for the allocation group.
+  */
+@@ -2226,6 +2328,7 @@ xfs_alloc_read_agf(
+ 		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
+ 		pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
+ 		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
++		pag->pagf_flags = be32_to_cpu(agf->agf_flags);
+ 		pag->pagf_levels[XFS_BTNUM_BNOi] =
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
+ 		pag->pagf_levels[XFS_BTNUM_CNTi] =
+Index: 2.6.x-xfs-new/fs/xfs/xfs_trans.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_trans.h	2007-06-08 21:41:32.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_trans.h	2007-06-08 22:50:46.449405162 +1000
+@@ -95,7 +95,8 @@ typedef struct xfs_trans_header {
+ #define	XFS_TRANS_GROWFSRT_FREE		39
+ #define	XFS_TRANS_SWAPEXT		40
+ #define	XFS_TRANS_SB_COUNT		41
+-#define	XFS_TRANS_TYPE_MAX		41
++#define	XFS_TRANS_ALLOC_FLAGS		42
++#define	XFS_TRANS_TYPE_MAX		42
+ /* new transaction types need to be reflected in xfs_logprint(8) */
+ 
+ 
+Index: 2.6.x-xfs-new/fs/xfs/xfs_fs.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_fs.h	2007-06-08 21:46:29.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_fs.h	2007-06-08 23:15:31.755284394 +1000
+@@ -493,6 +493,8 @@ typedef struct xfs_handle {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_ALLOC_DENY_AG	     _IOR ('X', 126, __uint32_t)
++#define XFS_IOC_ALLOC_ALLOW_AG	     _IOR ('X', 127, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
