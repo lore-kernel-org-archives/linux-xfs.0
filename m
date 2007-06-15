@@ -1,69 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 08:57:24 -0700 (PDT)
-Received: from mail.dvmed.net (srv5.dvmed.net [207.36.208.214])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5FFvIWt031102
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 08:57:20 -0700
-Message-ID: <4672AB7F.7030702@garzik.org>
-Date: Fri, 15 Jun 2007 11:08:47 -0400
-From: Jeff Garzik <jeff@garzik.org>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 09:04:49 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5FG4jWt001110
+	for <linux-xfs@oss.sgi.com>; Fri, 15 Jun 2007 09:04:46 -0700
+Received: from localhost (dslb-084-056-065-071.pools.arcor-ip.net [84.56.65.71])
+	by mail.lichtvoll.de (Postfix) with ESMTP id 5A2015AD57
+	for <linux-xfs@oss.sgi.com>; Fri, 15 Jun 2007 18:04:45 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: xfs_fsr - problem with open files possible?
+Date: Fri, 15 Jun 2007 18:04:42 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH] block: always requeue !fs requests at the front
-References: <200706020122.49989.rjw@sisk.pl> <46706968.7000703@dgreaves.com> <alpine.LFD.0.98.0706131507360.14121@woody.linux-foundation.org> <200706140115.58733.rjw@sisk.pl> <46714ECF.8080203@gmail.com> <46715A66.8030806@suse.de> <20070615094246.GN29122@htj.dyndns.org> <20070615110544.GR6149@kernel.dk> <20070615111728.GO29122@htj.dyndns.org>
-In-Reply-To: <20070615111728.GO29122@htj.dyndns.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200706151804.43067.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, David Greaves <david@dgreaves.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>
+To: linux-xfs@oss.sgi.com
 
-Tejun Heo wrote:
-> SCSI marks internal commands with REQ_PREEMPT and push it at the front
-> of the request queue using blk_execute_rq().  When entering suspended
-> or frozen state, SCSI devices are quiesced using
-> scsi_device_quiesce().  In quiesced state, only REQ_PREEMPT requests
-> are processed.  This is how SCSI blocks other requests out while
-> suspending and resuming.  As all internal commands are pushed at the
-> front of the queue, this usually works.
-> 
-> Unfortunately, this interacts badly with ordered requeueing.  To
-> preserve request order on requeueing (due to busy device, active EH or
-> other failures), requests are sorted according to ordered sequence on
-> requeue if IO barrier is in progress.
-> 
-> The following sequence deadlocks.
-> 
-> 1. IO barrier sequence issues.
-> 
-> 2. Suspend requested.  Queue is quiesced with part or all of IO
->    barrier sequence at the front.
-> 
-> 3. During suspending or resuming, SCSI issues internal command which
->    gets deferred and requeued for some reason.  As the command is
->    issued after the IO barrier in #1, ordered requeueing code puts the
->    request after IO barrier sequence.
-> 
-> 4. The device is ready to process requests again but still is in
->    quiesced state and the first request of the queue isn't
->    REQ_PREEMPT, so command processing is deadlocked -
->    suspending/resuming waits for the issued request to complete while
->    the request can't be processed till device is put back into
->    running state by resuming.
-> 
-> This can be fixed by always putting !fs requests at the front when
-> requeueing.
-> 
-> The following thread reports this deadlock.
-> 
->   http://thread.gmane.org/gmane.linux.kernel/537473
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Jenn Axboe <jens.axboe@oracle.com>
-> Cc: David Greaves <david@dgreaves.com>
 
-Acked-by: Jeff Garzik <jeff@garzik.org>
+Hi!
 
-Thanks Tejun, you kick ass as usual.
+I ran xfs_fsr on my laptops some time ago, for example on my partition 
+which holds /home. This seemed to work quite well:
 
-	Jeff
+---------------------------------------------------------------------
+shambala:~> xfs_db -c frag -f /dev/sda2
+actual 777855, ideal 737681, fragmentation factor 5.16%
+shambala:~> xfs_fsr /dev/sda2
+/home start inode=0
+shambala:~> xfs_db -c frag -f /dev/sda2
+actual 744809, ideal 737681, fragmentation factor 0.96%
+shambala:~> xfs_fsr /dev/sda2
+/home start inode=0
+shambala:~> xfs_db -c frag -f /dev/sda2
+actual 744809, ideal 737681, fragmentation factor 0.96%
+---------------------------------------------------------------------
+
+As discussed before here there is a limit in what xfs_fsr can do and it 
+didn't come below 0.96% fragmentation even though the partition has 
+several GB of free space.
+
+As I restarted KMail after fragmenting it however told me about some 
+broken indexes. KMail stores index for folders in files. It was able to 
+restore the indexes.
+
+I can not pinpoint this problem to the defragmentation with xfs_fsr, but 
+it seemed more than a coincidence to me that it happened directly after I 
+restarted KMail after the defragmentation.
+
+KMail was running while the fragmentation was taking place and well it 
+likely had some index files opened. At least it does now that I am 
+writing that mail:
+
+---------------------------------------------------------------------
+shambala:~> lsof +D /home/martin/Mail
+COMMAND  PID   USER   FD   TYPE DEVICE   SIZE      NODE NAME
+kontact 2787 martin  mem    REG    8,2 280837 
+223046853 /home/martin/Mail/.Lichtvoll.directory/.KDE.index
+kontact 2787 martin  mem    REG    8,2     33 
+119177542 /home/martin/Mail/.templates.index
+kontact 2787 martin  mem    REG    8,2     33 
+120665290 /home/martin/Mail/.drafts.index
+kontact 2787 martin   18u   REG    8,2 280837 
+223046853 /home/martin/Mail/.Lichtvoll.directory/.KDE.index
+kontact 2787 martin   19u   REG    8,2     33 
+120665290 /home/martin/Mail/.drafts.index
+kontact 2787 martin   20u   REG    8,2     33 
+119177542 /home/martin/Mail/.templates.index
+---------------------------------------------------------------------
+
+Could data loss happen when running xfs_fsr on files that are opened by an 
+application?
+
+I did not came across any other corrupted files except a Mercurial 
+repository. I can not pinpoint this problem to XFS at all and have no 
+idea how and when it got corrupted. At least in my backup from some weeks 
+ago the repository has been okay. Unfortunately I do not know anymore 
+whether I made a commit to that repository while xfs_fsr was running or 
+not. But I think I didn't.
+
+The filesystem itself was okay after fragmentation, I checked it via 
+xfs_check!
+
+I can try to reproduce the problem. Would be handy tough to have an 
+xfs_fsr that can be limited only to operate on a certain directory and 
+its files and sub directories. This way I could create a new mailfolder, 
+copy some mails in there, have it opened so that KMail accesses the index 
+file and let xfs_fsr only run on this mailfolder.
+
+I can also open a bug report, but I first wanted to ask here.
+
+Regards,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
