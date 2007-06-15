@@ -1,61 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 00:41:06 -0700 (PDT)
-Received: from stitch.e-626.net (60.153.216.81.static.spa.siw.siwnet.net [81.216.153.60])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5F7f1Wt001176
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 00:41:02 -0700
-Subject: Re: xfs_fsr allocation group optimization
-From: Johan Andersson <johan@e-626.net>
-In-Reply-To: <46723DC4.1080107@sgi.com>
-References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
-	 <20070612014452.GK86004887@sgi.com>  <46723DC4.1080107@sgi.com>
-Content-Type: text/plain
-Date: Fri, 15 Jun 2007 09:40:27 +0200
-Message-Id: <1181893227.30958.24.camel@gentoo-johan.transmode.se>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 02:42:58 -0700 (PDT)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.238])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5F9gpWt028122
+	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 02:42:53 -0700
+Received: by nz-out-0506.google.com with SMTP id 4so751971nzn
+        for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 02:42:51 -0700 (PDT)
+Date: Fri, 15 Jun 2007 18:42:46 +0900
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] block: always requeue !fs requests at the front
+Message-ID: <20070615094246.GN29122@htj.dyndns.org>
+References: <200706020122.49989.rjw@sisk.pl> <46706968.7000703@dgreaves.com> <alpine.LFD.0.98.0706131507360.14121@woody.linux-foundation.org> <200706140115.58733.rjw@sisk.pl> <46714ECF.8080203@gmail.com> <46715A66.8030806@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46715A66.8030806@suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Nathan Scott <nscott@aconex.com>
+To: David Greaves <david@dgreaves.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, linux-pm <linux-pm@lists.osdl.org>, Neil Brown <neilb@suse.de>, Jeff Garzik <jgarzik@pobox.com>, jens.axboe@oracle.com
 
-On Fri, 2007-06-15 at 17:20 +1000, Timothy Shimmin wrote:
-> David Chinner wrote:
-> > On Mon, Jun 11, 2007 at 08:51:32AM +0200, Johan Andersson wrote:
-> >> Does anyone know of a good way to find one filename that points o a
-> >> certain inode?
-> > 
-> > We need an rmap....
-> > 
-> > We have some prototype linux code that does parent pointers (i.e.
-> > each inode has a back pointer to it's parent inode), but that, IIUC,
-> > is a long way from prime-time. Tim?
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> I don't know about a "long way" (longer to fully supported, yes)
-> Firstly, I need to move its hooks out of linux-2.6/xfs_iops.c which were 
-> referring to xfs inodes (instead of vnodes) probably back where they were in
-> xfs_vnodeops.c.
-> 
-> Nathan, did you have some other suggestion than this - unfortunately,
-> I haven't looked at this code (until recently) for a while.
-> 
-> Cheers,
-> Tim.
-> 
+SCSI marks internal commands with REQ_PREEMPT and push it at the front
+of the request queue using blk_execute_rq().  When entering suspended
+or frozen state, SCSI devices are quiesced using
+scsi_device_quiesce().  In quiesced state, only REQ_PREEMPT requests
+are processed.  This is how SCSI blocks other requests out while
+suspending and resuming.  As all internal commands are pushed at the
+front of the queue, this usually works.
 
-I have another idea that i plan to try. The idea was to add an ioctl to
-"clone" an inode. By using the original inode (the one to be
-defragmented) as parent "directory" in the call to xfs_dir_ialloc(), the
-new inode should be allocated near the original inode. The fsr can then
-open the new inode with jdm_open and proceed as normal.
-This would also solve another problem that I see with fsr, the mtime of
-every directory in the fs is updated when fsr is run. 
+Unfortunately, this interacts badly with ordered requeueing.  To
+preserve request order on requeueing (due to busy device, active EH or
+other failures), requests are sorted according to ordered sequence on
+requeue if IO barrier is in progress.
 
-I do see one problem with this: If the defrag is aborted for some
-reason, we can get orphaned inodes. Will fsck handle this?
+The following sequence deadlocks.
 
-/Johan Andersson
+1. IO barrier sequence issues.
+
+2. Suspend requested.  Queue is quiesced with part of all of IO
+   barrier sequence at the front.
+
+3. During suspending or resuming, SCSI issues internal command which
+   gets deferred and requeued for some reason.  As the command is
+   issued after the IO barrier in #1, ordered requeueing code puts the
+   request after IO barrier sequence.
+
+4. The device is ready to process requests again but still is in
+   quiesced state and the first request of the queue isn't
+   REQ_PREEMPT, so command processing is deadlocked -
+   suspending/resuming waits for the issued request to complete while
+   the request can't be processed till device is put back into
+   running state by resuming.
+
+This can be fixed by always putting !fs requests at the front when
+requeueing.
+
+The following thread reports this deadlock.
+
+  http://thread.gmane.org/gmane.linux.kernel/537473
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jenn Axboe <jens.axboe@oracle.com>
+Cc: David Greaves <david@dgreaves.com>
+---
+Okay, it took a lot of hours of debugging but boiled down to two liner
+fix.  I feel so empty. :-) RAID6 triggers this reliably because it
+uses BIO_BARRIER heavily to update its superblock.  The recent ATA
+suspend/resume rewrite is hit by this because it uses SCSI internal
+commands to spin down and up the drives for suspending and resuming.
+
+David, please test this.  Jens, does it look okay?
+
+Thanks.
+
+ block/ll_rw_blk.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 6b5173a..a2fe2e5 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -340,6 +340,14 @@ unsigned blk_ordered_req_seq(struct request *rq)
+ 	if (rq == &q->post_flush_rq)
+ 		return QUEUE_ORDSEQ_POSTFLUSH;
+ 
++	/* !fs requests don't need to follow barrier ordering.  Always
++	 * put them at the front.  This fixes the following deadlock.
++	 *
++	 * http://thread.gmane.org/gmane.linux.kernel/537473
++	 */
++	if (!blk_fs_request(rq))
++		return QUEUE_ORDSEQ_DRAIN;
++
+ 	if ((rq->cmd_flags & REQ_ORDERED_COLOR) ==
+ 	    (q->orig_bar_rq->cmd_flags & REQ_ORDERED_COLOR))
+ 		return QUEUE_ORDSEQ_DRAIN;
