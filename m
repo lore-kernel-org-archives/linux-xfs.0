@@ -1,45 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 00:20:51 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5F7KiWt028384
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 00:20:46 -0700
-Message-ID: <46723DC4.1080107@sgi.com>
-Date: Fri, 15 Jun 2007 17:20:36 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 00:25:31 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5F7PQWt029597
+	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 00:25:28 -0700
 Subject: Re: xfs_fsr allocation group optimization
-References: <1181544692.19145.44.camel@gentoo-johan.transmode.se> <20070612014452.GK86004887@sgi.com>
-In-Reply-To: <20070612014452.GK86004887@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <46723DC4.1080107@sgi.com>
+References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
+	 <20070612014452.GK86004887@sgi.com>  <46723DC4.1080107@sgi.com>
+Content-Type: text/plain
+Date: Fri, 15 Jun 2007 17:24:39 +1000
+Message-Id: <1181892279.30716.1.camel@edge.yarra.acx>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Johan Andersson <johan@e-626.net>, xfs@oss.sgi.com, Nathan Scott <nscott@aconex.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, Johan Andersson <johan@e-626.net>, xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Mon, Jun 11, 2007 at 08:51:32AM +0200, Johan Andersson wrote:
->> Does anyone know of a good way to find one filename that points o a
->> certain inode?
+On Fri, 2007-06-15 at 17:20 +1000, Timothy Shimmin wrote:
 > 
-> We need an rmap....
+> I don't know about a "long way" (longer to fully supported, yes)
+> Firstly, I need to move its hooks out of linux-2.6/xfs_iops.c which
+> were 
+> referring to xfs inodes (instead of vnodes) probably back where they
+> were in
+> xfs_vnodeops.c.
 > 
-> We have some prototype linux code that does parent pointers (i.e.
-> each inode has a back pointer to it's parent inode), but that, IIUC,
-> is a long way from prime-time. Tim?
-> 
-> Cheers,
-> 
-> Dave.
+> Nathan, did you have some other suggestion than this - unfortunately,
+> I haven't looked at this code (until recently) for a while. 
 
-I don't know about a "long way" (longer to fully supported, yes)
-Firstly, I need to move its hooks out of linux-2.6/xfs_iops.c which were 
-referring to xfs inodes (instead of vnodes) probably back where they were in
-xfs_vnodeops.c.
+Geez, that takes me back - hummm, I seem to remember a possibly-iget-
+related performance issue?  Not much else, sorry (it _is_ beer o'clock
+on a Friday arvo after all...).
 
-Nathan, did you have some other suggestion than this - unfortunately,
-I haven't looked at this code (until recently) for a while.
+cheers.
 
-Cheers,
-Tim.
+--
+Nathan
