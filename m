@@ -1,99 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 00:33:34 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5F7XSWt031313
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 00:33:31 -0700
-Message-ID: <467240C4.1090700@sgi.com>
-Date: Fri, 15 Jun 2007 17:33:24 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: Review: fix test 004 to account for reserved space
-References: <20070604063328.GT85884050@sgi.com> <20070615062335.GO86004887@sgi.com>
-In-Reply-To: <20070615062335.GO86004887@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 00:41:06 -0700 (PDT)
+Received: from stitch.e-626.net (60.153.216.81.static.spa.siw.siwnet.net [81.216.153.60])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5F7f1Wt001176
+	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 00:41:02 -0700
+Subject: Re: xfs_fsr allocation group optimization
+From: Johan Andersson <johan@e-626.net>
+In-Reply-To: <46723DC4.1080107@sgi.com>
+References: <1181544692.19145.44.camel@gentoo-johan.transmode.se>
+	 <20070612014452.GK86004887@sgi.com>  <46723DC4.1080107@sgi.com>
+Content-Type: text/plain
+Date: Fri, 15 Jun 2007 09:40:27 +0200
+Message-Id: <1181893227.30958.24.camel@gentoo-johan.transmode.se>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>, asg-qa <asg-qa@melbourne.sgi.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Nathan Scott <nscott@aconex.com>
 
-I have to go home now, but I'll look at this one soon.
-
---Tim
-
-
-David Chinner wrote:
-> Ping?
+On Fri, 2007-06-15 at 17:20 +1000, Timothy Shimmin wrote:
+> David Chinner wrote:
+> > On Mon, Jun 11, 2007 at 08:51:32AM +0200, Johan Andersson wrote:
+> >> Does anyone know of a good way to find one filename that points o a
+> >> certain inode?
+> > 
+> > We need an rmap....
+> > 
+> > We have some prototype linux code that does parent pointers (i.e.
+> > each inode has a back pointer to it's parent inode), but that, IIUC,
+> > is a long way from prime-time. Tim?
+> > 
+> > Cheers,
+> > 
+> > Dave.
 > 
-> On Mon, Jun 04, 2007 at 04:33:28PM +1000, David Chinner wrote:
->> With the changes to use some space by default in only in memory
->> as a reserved pool, df and statfs will now output a fre block
->> count that is slightly different to  what is held in the superblock.
->>
->> Update the qa test to account for this change.
->>
->> Cheers,
->>
->> Dave.
->> -- 
->> Dave Chinner
->> Principal Engineer
->> SGI Australian Software Group
->>
->> ---
->>  xfstests/004 |   35 +++++++++++++++++++++++++----------
->>  1 file changed, 25 insertions(+), 10 deletions(-)
->>
->> Index: xfs-cmds/xfstests/004
->> ===================================================================
->> --- xfs-cmds.orig/xfstests/004	2006-11-14 19:57:39.000000000 +1100
->> +++ xfs-cmds/xfstests/004	2007-05-04 16:38:03.957537306 +1000
->> @@ -67,21 +67,36 @@ xfs_db -r -c "freesp -s" $SCRATCH_DEV >$
->>  echo "xfs_db for $SCRATCH_DEV" >>$seq.full
->>  cat $tmp.xfs_db >>$seq.full
->>  
->> +eval `$XFS_IO_PROG -x -c resblks $SCRATCH_MNT 2>&1 \
->> +	| $AWK_PROG '/available/ { printf "resblks=%u\n", $5 }'`
->> +echo "resblks gave: resblks=$resblks" >>$seq.full
->> +
->>  # check the 'blocks' field from freesp command is OK
->>  # since 2.6.18, df does not report the 4 blocks per AG that cannot
->>  # be allocated, hence we check for that exact mismatch.
->> +# since ~2.6.22, reserved blocks are used by default and df does
->> +# not report them, hence check for an exact mismatch.
->>  perl -ne '
->> -	    BEGIN	{ $avail ='$avail' * 512;
->> -			  $answer="(no xfs_db free blocks line?)" }
->> -	    /free blocks (\d+)$/	|| next;
->> -	    $freesp = $1 * '$dbsize';
->> -	    if ($freesp == $avail)	{ $answer = "yes"; }
->> -	    else {
->> +	BEGIN	{ $avail ='$avail' * 512;
->> +		  $answer="(no xfs_db free blocks line?)" }
->> +	/free blocks (\d+)$/	|| next;
->> +	$freesp = $1 * '$dbsize';
->> +	if ($freesp == $avail) {
->> +		$answer = "yes";
->> +	} else {
->>  		$avail = $avail + (('$agcount' + 1) * '$dbsize' * 4);
->> -		if ($freesp == $avail)	{ $answer = "yes"; }
->> -		else			{ $answer = "no ($freesp != $avail)"; }
->> -	    }
->> -	    END	{ print "$answer\n" }
->> +		if ($freesp == $avail) {
->> +			$answer = "yes";
->> +		} else {
->> +			$avail = $avail + ('$resblks' * '$dbsize');
->> +			if ($freesp == $avail) {
->> +				$answer = "yes";
->> +			} else {
->> +				$answer = "no ($freesp != $avail)";
->> +			}
->> +		}
->> +	}
->> +	END	{ print "$answer\n" }
->>  	' <$tmp.xfs_db >$tmp.ans
->>  ans="`cat $tmp.ans`"
->>  echo "Checking blocks column same as df: $ans"
+> I don't know about a "long way" (longer to fully supported, yes)
+> Firstly, I need to move its hooks out of linux-2.6/xfs_iops.c which were 
+> referring to xfs inodes (instead of vnodes) probably back where they were in
+> xfs_vnodeops.c.
 > 
+> Nathan, did you have some other suggestion than this - unfortunately,
+> I haven't looked at this code (until recently) for a while.
+> 
+> Cheers,
+> Tim.
+> 
+
+I have another idea that i plan to try. The idea was to add an ioctl to
+"clone" an inode. By using the original inode (the one to be
+defragmented) as parent "directory" in the call to xfs_dir_ialloc(), the
+new inode should be allocated near the original inode. The fsr can then
+open the new inode with jdm_open and proceed as normal.
+This would also solve another problem that I see with fsr, the mtime of
+every directory in the fs is updated when fsr is run. 
+
+I do see one problem with this: If the defrag is aborted for some
+reason, we can get orphaned inodes. Will fsck handle this?
+
+/Johan Andersson
