@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 04:21:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 04:23:58 -0700 (PDT)
 Received: from kernel.dk (brick.kernel.dk [80.160.20.94])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5FBLPWt022667
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 04:21:27 -0700
-Date: Fri, 15 Jun 2007 13:21:37 +0200
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5FBNrWt023530
+	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 04:23:54 -0700
+Date: Fri, 15 Jun 2007 13:05:44 +0200
 From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH] block: always requeue !fs requests at the front
-Message-ID: <20070615112137.GT6149@kernel.dk>
-References: <200706020122.49989.rjw@sisk.pl> <46706968.7000703@dgreaves.com> <alpine.LFD.0.98.0706131507360.14121@woody.linux-foundation.org> <200706140115.58733.rjw@sisk.pl> <46714ECF.8080203@gmail.com> <46715A66.8030806@suse.de> <20070615094246.GN29122@htj.dyndns.org> <20070615110544.GR6149@kernel.dk> <20070615111728.GO29122@htj.dyndns.org>
+Message-ID: <20070615110544.GR6149@kernel.dk>
+References: <200706020122.49989.rjw@sisk.pl> <46706968.7000703@dgreaves.com> <alpine.LFD.0.98.0706131507360.14121@woody.linux-foundation.org> <200706140115.58733.rjw@sisk.pl> <46714ECF.8080203@gmail.com> <46715A66.8030806@suse.de> <20070615094246.GN29122@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070615111728.GO29122@htj.dyndns.org>
+In-Reply-To: <20070615094246.GN29122@htj.dyndns.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -36,7 +36,7 @@ On Fri, Jun 15 2007, Tejun Heo wrote:
 > 
 > 1. IO barrier sequence issues.
 > 
-> 2. Suspend requested.  Queue is quiesced with part or all of IO
+> 2. Suspend requested.  Queue is quiesced with part of all of IO
 >    barrier sequence at the front.
 > 
 > 3. During suspending or resuming, SCSI issues internal command which
@@ -62,14 +62,18 @@ On Fri, Jun 15 2007, Tejun Heo wrote:
 > Cc: Jenn Axboe <jens.axboe@oracle.com>
 > Cc: David Greaves <david@dgreaves.com>
 > ---
-> > Yep looks good, except for the bad multi-line comment style, but that's
-> > minor stuff ;-)
+> Okay, it took a lot of hours of debugging but boiled down to two liner
+> fix.  I feel so empty. :-) RAID6 triggers this reliably because it
+> uses BIO_BARRIER heavily to update its superblock.  The recent ATA
+> suspend/resume rewrite is hit by this because it uses SCSI internal
+> commands to spin down and up the drives for suspending and resuming.
 > 
-> That's how Jeff likes it in libata and my fingers are hardcoded to it,
-> but I do appreciate the paramount importance of each maintainer's
-> right to his/her own comment style, so here's the respinned patch.  :-)
+> David, please test this.  Jens, does it look okay?
 
-Thanks a lot! I'll pass it right on for 2.6.22.
+Yep looks good, except for the bad multi-line comment style, but that's
+minor stuff ;-)
+
+Acked-by: Jens Axboe <jens.axboe@oracle.com>
 
 -- 
 Jens Axboe
