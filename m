@@ -1,45 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 17:56:03 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Jun 2007 17:58:20 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5F0ttWt006391
-	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 17:55:56 -0700
-Subject: Re: Review: dmapi-devel RPM should required xfsprogs-devel RPM
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-MIME-Version: 1.0
-References: <op.ttwa4bv73jf8g2@pc-bnaujok.melbourne.sgi.com> <467150D3.7090109@sandeen.net>
-Date: Fri, 15 Jun 2007 10:59:38 +1000
-Message-ID: <op.ttxudohb3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <467150D3.7090109@sandeen.net>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5F0wGWt006912
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2007 17:58:18 -0700
+Date: Fri, 15 Jun 2007 10:58:11 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH, RFC] fix null files exposure growing via ftruncate
+Message-ID: <20070615005811.GJ86004887@sgi.com>
+References: <20070614063404.GW86004887@sgi.com> <20070614181446.GA16955@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070614181446.GA16955@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, 15 Jun 2007 00:29:39 +1000, Eric Sandeen <sandeen@sandeen.net>  
-wrote:
+On Thu, Jun 14, 2007 at 07:14:46PM +0100, Christoph Hellwig wrote:
+> On Thu, Jun 14, 2007 at 04:34:04PM +1000, David Chinner wrote:
+> > Christoph,
+> > 
+> > Looking into the test 140 failure you reported, I realised that none
+> > of the specific null files tests were being run automatically, which
+> > is why I hadn't seen any of those failures (nor had the QA team).
+> > That's being fixed.
+> > 
+> > I suspect that the test passes on Irix because of a coincidence
+> > (the test sleeps for 10s and that is the default writeback
+> > timeout for file data) which means when the filesystem is shut down
+> > all the data is already on disk so it's not really testing
+> > the NULL files fix.
+> > 
+> > The failure is due to the ftruncate() logging the new file size
+> > before any data that had previously been written had hit the
+> > disk. IOWs, it violates the data write/inode size update rule
+> > that fixes the null files problem.
+> > 
+> > The fix here checks when growing the file as to whether it the disk
+> > inode size is different to the in memory size. If they are
+> > different, we have data that needs to be written to disk beyond the
+> > existing on disk EOF. Hence to maintain ordering we need to flush
+> > this data out before we log the changed file size.
+> > 
+> > I suspect the flush could be done more optimally - I've just done a
+> > brute-force flush the entire file mod. Should we only flush from the
+> > old di_size to the current i_size?
+> > 
+> > There may also be better ways to fix this. Any thoughts on
+> > that?
+> 
+> Looks good enough for now, but I suspect just flushing from the old
+> to the new size would be a quite nice performance improvement that's
+> worth it.
 
-> Barry Naujok wrote:
->> As per the subject (and also mentioned in the description):
->>
->> --- a/dmapi/build/rpm/dmapi.spec.in     2007-06-14 15:02:13.000000000  
->> +1000
->> +++ b/dmapi/build/rpm/dmapi.spec.in     2007-06-14 14:47:31.290063558  
->> +1000
->> @@ -23,7 +23,7 @@
->>   %package devel
->>   Summary: Data Management API static libraries and headers.
->>   Group: Development/Libraries
->> -Requires: @pkg_name@ >= 2.0.4
->> +Requires: @pkg_name@ >= 2.0.4 xfsprogs-devel
->>
->>   %description devel
->>   dmapi-devel contains the libraries and header files needed to
->>
->>
->
-> seems sane to me.  Just a header issue I guess?
+Yeah, that's the way I was leaning. I'll mod the patch to do that and
+repost. Thanks.
 
-Yep, dmapi.h requires xfs headers.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
