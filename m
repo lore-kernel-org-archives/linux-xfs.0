@@ -1,67 +1,163 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 13:38:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5FKchWt027338
-	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 13:38:44 -0700
-Message-ID: <4672F7A7.9040904@sandeen.net>
-Date: Fri, 15 Jun 2007 15:33:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Jun 2007 21:11:16 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5G4B9Wt015264
+	for <xfs@oss.sgi.com>; Fri, 15 Jun 2007 21:11:11 -0700
+Message-ID: <467362CD.4020007@sgi.com>
+Date: Sat, 16 Jun 2007 14:10:53 +1000
+From: Tim Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: XFS Tunables for High Speed Linux SW RAID5 Systems?
-References: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
-In-Reply-To: <Pine.LNX.4.64.0706151634130.26033@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Review: fix test 004 to account for reserved space
+References: <20070604063328.GT85884050@sgi.com> <20070615062335.GO86004887@sgi.com>
+In-Reply-To: <20070615062335.GO86004887@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>, asg-qa <asg-qa@melbourne.sgi.com>
 
-Justin Piszcz wrote:
-> Hi,
-> 
-> I was wondering if the XFS folks can recommend any optimizations for high 
-> speed disk arrays using RAID5?
-> 
-> As well as if there is anything else I can do on the MD side?
-> 
-> fs.xfs.restrict_chown = 1
-> fs.xfs.irix_sgid_inherit = 0
-> fs.xfs.irix_symlink_mode = 0
+Hi Dave,
 
-OT but...
+Yes that looks not bad.
 
-/me wonders if some of these could go away by now... :)
+However, your last proposal, prompted from Nathan, was to adjust 
+f_bavail differently
+than bfree to account for how much was available in the reserved block 
+space.
 
--Eric
+struct statfs {
+  long    f_type;     /* type of filesystem (see below) */
+  long    f_bsize;    /* optimal transfer block size */
+  long    f_blocks;   /* total data blocks in file system */
+  long    f_bfree;    /* free blocks in fs */                    <------ 
+includes reserved
+  long    f_bavail;   /* free blocks avail to non-superuser */   <------ 
+doesn't include reserved
+  long    f_files;    /* total file nodes in file system */
+  long    f_ffree;    /* free file nodes in fs */
+  fsid_t  f_fsid;     /* file system id */
+  long    f_namelen;  /* maximum length of filenames */
+  long    f_spare[6]; /* spare for later */
+};
 
-> fs.xfs.panic_mask = 0
-> fs.xfs.error_level = 3
-> fs.xfs.xfssyncd_centisecs = 3000
-> fs.xfs.inherit_sync = 1
-> fs.xfs.inherit_nodump = 1
-> fs.xfs.inherit_noatime = 1
-> fs.xfs.xfsbufd_centisecs = 100
-> fs.xfs.age_buffer_centisecs = 1500
-> fs.xfs.inherit_nosymlinks = 0
-> fs.xfs.rotorstep = 1
-> fs.xfs.inherit_nodefrag = 1
-> fs.xfs.stats_clear = 0
-> 
-> There is also vm/dirty tunable in /proc.
-> 
-> I was wondering what are some things to tune for speed?  I've already 
-> tuned the MD layer but is there anything with XFS I can also tune?
-> 
-> echo "Setting read-ahead to 64MB for /dev/md3"
-> blockdev --setra 65536 /dev/md3
-> 
-> echo "Setting stripe_cache_size to 16MB for /dev/md3"
-> echo 16384 > /sys/block/md3/md/stripe_cache_size
-> 
-> (also set max_sectors_kb) to 128K (chunk size) and disable NCQ
-> 
-> Justin.
-> 
-> 
+And looking at df code it uses bfree in calculation of space used...
+the 3rd field of df output.
+
+df code:
+---------------------------------------------------------------
+     total = fsu.fsu_blocks;
+     available = fsu.fsu_bavail;
+     negate_available = (fsu.fsu_bavail_top_bit_set
+              & (available != UINTMAX_MAX));
+     available_to_root = fsu.fsu_bfree;
+   }
+
+ used = UINTMAX_MAX;
+ negate_used = false;
+ if (total != UINTMAX_MAX && available_to_root != UINTMAX_MAX)
+   {
+     used = total - available_to_root;
+     negate_used = (total < available_to_root);
+   }
+
+printf (" %*s %*s %*s ",
+      width + col1_adjustment,
+      df_readable (false, total,
+               buf[0], input_units, output_units),
+      width, df_readable (negate_used, used,
+                  buf[1], input_units, output_units),
+      width, df_readable (negate_available, available,
+                  buf[2], input_units, output_units));
+-----------------------------------------------------------------
+example df output:
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sda3             18864128   7476720  11387408  40% /
+-------------------------------------------------------------------
+
+And indeed we set "used" as a shell variable in test 004 from df but 
+don't seem
+to do anything with it.
+I think we should check it to verify that we have set bfree correctly.
+
+Cheers,
+Tim.
+
+David Chinner wrote:
+> Ping?
+>
+> On Mon, Jun 04, 2007 at 04:33:28PM +1000, David Chinner wrote:
+>   
+>> With the changes to use some space by default in only in memory
+>> as a reserved pool, df and statfs will now output a fre block
+>> count that is slightly different to  what is held in the superblock.
+>>
+>> Update the qa test to account for this change.
+>>
+>> Cheers,
+>>
+>> Dave.
+>> -- 
+>> Dave Chinner
+>> Principal Engineer
+>> SGI Australian Software Group
+>>
+>> ---
+>>  xfstests/004 |   35 +++++++++++++++++++++++++----------
+>>  1 file changed, 25 insertions(+), 10 deletions(-)
+>>
+>> Index: xfs-cmds/xfstests/004
+>> ===================================================================
+>> --- xfs-cmds.orig/xfstests/004	2006-11-14 19:57:39.000000000 +1100
+>> +++ xfs-cmds/xfstests/004	2007-05-04 16:38:03.957537306 +1000
+>> @@ -67,21 +67,36 @@ xfs_db -r -c "freesp -s" $SCRATCH_DEV >$
+>>  echo "xfs_db for $SCRATCH_DEV" >>$seq.full
+>>  cat $tmp.xfs_db >>$seq.full
+>>  
+>> +eval `$XFS_IO_PROG -x -c resblks $SCRATCH_MNT 2>&1 \
+>> +	| $AWK_PROG '/available/ { printf "resblks=%u\n", $5 }'`
+>> +echo "resblks gave: resblks=$resblks" >>$seq.full
+>> +
+>>  # check the 'blocks' field from freesp command is OK
+>>  # since 2.6.18, df does not report the 4 blocks per AG that cannot
+>>  # be allocated, hence we check for that exact mismatch.
+>> +# since ~2.6.22, reserved blocks are used by default and df does
+>> +# not report them, hence check for an exact mismatch.
+>>  perl -ne '
+>> -	    BEGIN	{ $avail ='$avail' * 512;
+>> -			  $answer="(no xfs_db free blocks line?)" }
+>> -	    /free blocks (\d+)$/	|| next;
+>> -	    $freesp = $1 * '$dbsize';
+>> -	    if ($freesp == $avail)	{ $answer = "yes"; }
+>> -	    else {
+>> +	BEGIN	{ $avail ='$avail' * 512;
+>> +		  $answer="(no xfs_db free blocks line?)" }
+>> +	/free blocks (\d+)$/	|| next;
+>> +	$freesp = $1 * '$dbsize';
+>> +	if ($freesp == $avail) {
+>> +		$answer = "yes";
+>> +	} else {
+>>  		$avail = $avail + (('$agcount' + 1) * '$dbsize' * 4);
+>> -		if ($freesp == $avail)	{ $answer = "yes"; }
+>> -		else			{ $answer = "no ($freesp != $avail)"; }
+>> -	    }
+>> -	    END	{ print "$answer\n" }
+>> +		if ($freesp == $avail) {
+>> +			$answer = "yes";
+>> +		} else {
+>> +			$avail = $avail + ('$resblks' * '$dbsize');
+>> +			if ($freesp == $avail) {
+>> +				$answer = "yes";
+>> +			} else {
+>> +				$answer = "no ($freesp != $avail)";
+>> +			}
+>> +		}
+>> +	}
+>> +	END	{ print "$answer\n" }
+>>  	' <$tmp.xfs_db >$tmp.ans
+>>  ans="`cat $tmp.ans`"
+>>  echo "Checking blocks column same as df: $ans"
+>>     
+>
+>   
