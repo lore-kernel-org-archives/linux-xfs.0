@@ -1,77 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 13:59:23 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5IKxGdo030859
-	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 13:59:18 -0700
-Message-ID: <4676390E.6010202@dgreaves.com>
-Date: Mon, 18 Jun 2007 08:49:34 +0100
-From: David Greaves <david@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 15:02:57 -0700 (PDT)
+Received: from av8-1-sn3.vrr.skanova.net (av8-1-sn3.vrr.skanova.net [81.228.9.183])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5IM2qdo020190
+	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 15:02:54 -0700
+Received: from smtp3-2-sn3.vrr.skanova.net (smtp3-2-sn3.vrr.skanova.net [81.228.9.102])
+	by av8-1-sn3.vrr.skanova.net (Postfix) with ESMTP id 8DFCB38197
+	for <xfs@oss.sgi.com>; Sun, 17 Jun 2007 14:22:09 +0200 (CEST)
+Received: from cobra.e-626.net (h48n2fls32o1110.telia.com [217.209.79.48])
+	by smtp3-2-sn3.vrr.skanova.net (Postfix) with ESMTP id 7CDA637E4A
+	for <xfs@oss.sgi.com>; Sun, 17 Jun 2007 14:22:07 +0200 (CEST)
+Received: from [192.168.1.201] (h48n2fls32o1110.telia.com [217.209.79.48])
+	(authenticated bits=0)
+	by cobra.e-626.net (8.14.0/8.14.0) with ESMTP id l5HCLxBO023538
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Sun, 17 Jun 2007 14:22:04 +0200
+Message-ID: <46752756.9070307@e-626.net>
+Date: Sun, 17 Jun 2007 14:21:42 +0200
+From: Johan Andersson <johan@e-626.net>
 MIME-Version: 1.0
-Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com>
-In-Reply-To: <46751D37.5020608@dgreaves.com>
+Subject: CVS server out of space for lock files
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Robinson <zxvdr.au@gmail.com>
-Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-David Greaves wrote:
-> David Robinson wrote:
->> David Greaves wrote:
->>> This isn't a regression.
->>>
->>> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
->>> to try it).
->>> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - 
->>> no.
->>>
->>> Note this is a different (desktop) machine to that involved my recent 
->>> bugs.
->>>
->>> The machine will work for days (continually powered up) without a 
->>> problem and then exhibits a filesystem failure within minutes of a 
->>> resume.
+Hi!
 
-<snip>
-
-> OK, that gave me an idea.
-> 
-> Freeze the filesystem
-> md5sum the lvm
-> hibernate
-> resume
-> md5sum the lvm
-<snip>
-> So the lvm and below looks OK...
-> 
-> I'll see how it behaves now the filesystem has been frozen/thawed over 
-> the hibernate...
+Just noticed that the cvs server at oss.sgi.com seems to be out of disk 
+space.
+A "cvs -d :pserver:cvs@oss.sgi.com:/cvs co xfs-cmds" gives:
+...
+cvs checkout: failed to create lock directory for `/cvs/xfs-cmds/attr2' 
+(/var/lock/cvs/xfs-cmds/attr2/#cvs.lock): No space left on device
+cvs checkout: failed to obtain dir lock in repository `/cvs/xfs-cmds/attr2'
+cvs [checkout aborted]: read lock failed - giving up
 
 
-And it appears to behave well. (A few hours compile/clean cycling kernel builds 
-on that filesystem were OK).
-
-
-Historically I've done:
-sync
-echo platform > /sys/power/disk
-echo disk > /sys/power/state
-# resume
-
-and had filesystem corruption (only on this machine, my other hibernating xfs 
-machines don't have this problem)
-
-So doing:
-xfs_freeze -f /scratch
-sync
-echo platform > /sys/power/disk
-echo disk > /sys/power/state
-# resume
-xfs_freeze -u /scratch
-
-Works (for now - more usage testing tonight)
-
-David
+/Johan Andersson
