@@ -1,104 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 12:52:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 13:09:05 -0700 (PDT)
 Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5IJqado006872
-	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 12:52:38 -0700
-Message-ID: <46751D37.5020608@dgreaves.com>
-Date: Sun, 17 Jun 2007 12:38:31 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5IK90do014094
+	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 13:09:01 -0700
+Message-ID: <4676D97E.4000403@dgreaves.com>
+Date: Mon, 18 Jun 2007 20:14:06 +0100
 From: David Greaves <david@dgreaves.com>
 MIME-Version: 1.0
 Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com>
-In-Reply-To: <4674645F.5000906@gmail.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com>
+In-Reply-To: <20070618145007.GE85884050@sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Robinson <zxvdr.au@gmail.com>
-Cc: LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: David Chinner <dgc@sgi.com>
+Cc: David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 
-David Robinson wrote:
-> David Greaves wrote:
->> This isn't a regression.
+OK, just an quick ack
+
+When I resumed tonight (having done a freeze/thaw over the suspend) some libata 
+errors threw up during the resume and there was an eventual hard hang. Maybe I 
+spoke to soon?
+
+I'm going to have to do some more testing...
+
+David Chinner wrote:
+> On Mon, Jun 18, 2007 at 08:49:34AM +0100, David Greaves wrote:
+>> David Greaves wrote:
+>> So doing:
+>> xfs_freeze -f /scratch
+>> sync
+>> echo platform > /sys/power/disk
+>> echo disk > /sys/power/state
+>> # resume
+>> xfs_freeze -u /scratch
 >>
->> I was seeing these problems on 2.6.21 (but 22 was in -rc so I waited 
->> to try it).
->> I tried 2.6.22-rc4 (with Tejun's patches) to see if it had improved - no.
->>
->> Note this is a different (desktop) machine to that involved my recent 
->> bugs.
->>
->> The machine will work for days (continually powered up) without a 
->> problem and then exhibits a filesystem failure within minutes of a 
->> resume.
->>
->> I know xfs/raid are OK with hibernate. Is lvm?
+>> Works (for now - more usage testing tonight)
 > 
-> I have LVM working with hibernate w/o any problems (w/ ext3). If there 
-> were a problem it wouldn't be with LVM but with device-mapper, and I 
-> doubt there's a problem with either. The stack trace shows that you're 
-> within XFS code (but it's likely its hibernate).
+> Verrry interesting.
+Good :)
 
-Thanks - that's good to know.
-The suspicion arises because I have xfs on raid1 as root and have *never* had a 
-problem with that filesystem. It's *always* xfs on lvm on raid5. I also have 
-another system (previously discussed) that reliably hibernated xfs on raid6.
 
-(Clearly raid5 is in my suspect list)
+> What you were seeing was an XFS shutdown occurring because the free space
+> btree was corrupted. IOWs, the process of suspend/resume has resulted
+> in either bad data being written to disk, the correct data not being
+> written to disk or the cached block being corrupted in memory.
+That's the kind of thing I was suspecting, yes.
 
-> You can easily check whether its LVM/device-mapper:
+> If you run xfs_check on the filesystem after it has shut down after a resume,
+> can you tell us if it reports on-disk corruption? Note: do not run xfs_repair
+> to check this - it does not check the free space btrees; instead it simply
+> rebuilds them from scratch. If xfs_check reports an error, then run xfs_repair
+> to fix it up.
+OK, I can try this tonight...
+
+> FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> filesystem for a suspend/resume to work safely and have argued that the only
+> safe thing to do is freeze the filesystem before suspend and thaw it after
+> resume. This is why I originally asked you to test that with the other problem
+> that you reported. Up until this point in time, there's been no evidence to
+> prove either side of the argument......
 > 
-> 1) check "dmsetup table" - it should be the same before hibernating and 
-> after resuming.
+> Cheers,
 > 
-> 2) read directly from the LV - ie, "dd if=/dev/mapper/video_vg-video_lv 
-> of=/dev/null bs=10M count=200".
-> 
-> If dmsetup shows the same info and you can read directly from the LV I 
-> doubt it would be a LVM/device-mapper problem.
-
-OK, that gave me an idea.
-
-Freeze the filesystem
-md5sum the lvm
-hibernate
-resume
-md5sum the lvm
-
-so:
-
-
-haze:~# xfs_freeze -f /scratch/
-
-Without this sync, the next two md5sums differed..
-haze:~# sync
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 41.2495 seconds, 50.8 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 41.8111 seconds, 50.2 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-
-
-haze:~# echo platform > /sys/power/disk
-haze:~# echo disk > /sys/power/state
-
-
-haze:~# dd if=/dev/video_vg/video_lv bs=10M count=200 | md5sum
-200+0 records in
-200+0 records out
-2097152000 bytes (2.1 GB) copied, 42.0478 seconds, 49.9 MB/s
-f42539366bb4269623fa4db14e8e8be2  -
-haze:~# xfs_freeze -u /scratch/
-
-So the lvm and below looks OK...
-
-I'll see how it behaves now the filesystem has been frozen/thawed over the 
-hibernate...
-
-David
+> Dave.
