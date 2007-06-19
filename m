@@ -1,149 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 07:13:58 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5JEDpdo028017
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 07:13:53 -0700
-Message-ID: <4677E496.3080506@dgreaves.com>
-Date: Tue, 19 Jun 2007 15:13:42 +0100
-From: David Greaves <david@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 07:34:43 -0700 (PDT)
+Received: from mailout1.imos.net (mailout1.imos.net [212.87.132.33])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5JEYcdo001248
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 07:34:39 -0700
+Received: from homer.imos.net (homer.imos.net [212.87.132.35])
+	by mailout1.imos.net (8.14.1/8.14.1) with ESMTP id l5JEYc6m019273
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 16:34:38 +0200
+Received: from lstyd.imos.net (lstyd.imos.net [212.87.130.122])
+	by homer.imos.net (8.14.1/8.14.1) with ESMTP id l5JEYcdr006782
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 16:34:38 +0200
+Received: from [5.15.153.128] ([5.15.153.128])
+	by lstyd.imos.net (8.14.0/8.13.7) with ESMTP id l5JEciET003851
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 16:38:44 +0200
+Message-ID: <4677E97E.5070802@theendofthetunnel.de>
+Date: Tue, 19 Jun 2007 16:34:38 +0200
+From: Hannes Dorbath <light@theendofthetunnel.de>
 MIME-Version: 1.0
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com> <4677A596.7090404@gmail.com>
-In-Reply-To: <4677A596.7090404@gmail.com>
+Subject: BUG: soft lockup detected on CPU#0!
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Tejun Heo <htejun@gmail.com>
-Cc: David Chinner <dgc@sgi.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: xfs@oss.sgi.com
 
-Tejun Heo wrote:
-> Hello,
-again...
+I got this on a server box today. Kernel 2.6.21, x86_64, LVM2:
 
-> David Greaves wrote:
->>> Good :)
->> Now, not so good :)
-> 
-> Oh, crap.  :-)
-<grin>
+Jun 19 10:58:16 phoenix Ending XFS recovery on filesystem: dm-5 (logdev: 
+internal)
+Jun 19 10:58:16 phoenix BUG: soft lockup detected on CPU#0!
+Jun 19 10:58:16 phoenix
+Jun 19 10:58:16 phoenix Call Trace:
+Jun 19 10:58:16 phoenix <IRQ>  [<ffffffff80277a60>] 
+wake_up_process+0x10/0x20
+Jun 19 10:58:16 phoenix [<ffffffff80297829>] softlockup_tick+0xe9/0x110
+Jun 19 10:58:16 phoenix [<ffffffff8024dc93>] run_local_timers+0x13/0x20
+Jun 19 10:58:16 phoenix [<ffffffff802815e7>] update_process_times+0x57/0x90
+Jun 19 10:58:16 phoenix [<ffffffff8026eea4>] 
+smp_local_timer_interrupt+0x34/0x60
+Jun 19 10:58:16 phoenix [<ffffffff8026f49e>] 
+smp_apic_timer_interrupt+0x4e/0x70
+Jun 19 10:58:16 phoenix [<ffffffff8025ed56>] apic_timer_interrupt+0x66/0x70
+Jun 19 10:58:16 phoenix <EOI>  [<ffffffff8026368c>] 
+_spin_unlock_irqrestore+0xc/0x10
+Jun 19 10:58:16 phoenix [<ffffffff80221acb>] __up_read+0x9b/0xb0
+Jun 19 10:58:16 phoenix [<ffffffff8028d6e9>] up_read+0x9/0x10
+Jun 19 10:58:16 phoenix [<ffffffff8034699d>] xfs_iunlock+0x3d/0xa0
+Jun 19 10:58:16 phoenix [<ffffffff80362b1a>] xfs_rwunlock+0x3a/0x50
+Jun 19 10:58:16 phoenix [<ffffffff80369c46>] xfs_vm_bmap+0x66/0x90
+Jun 19 10:58:16 phoenix [<ffffffff8025cecc>] bmap+0x1c/0x20
+Jun 19 10:58:16 phoenix [<ffffffff802a684e>] sys_swapon+0x6ae/0xae0
+Jun 19 10:58:16 phoenix [<ffffffff8025e11e>] system_call+0x7e/0x83
 
->> So I hibernated last night and resumed this morning.
->> Before hibernating I froze and sync'ed. After resume I thawed it. (Sorry
->> Dave)
->>
->> Here are some photos of the screen during resume. This is not 100%
->> reproducable - it seems to occur only if the system is shutdown for
->> 30mins or so.
->>
->> Tejun, I wonder if error handling during resume is problematic? I got
->> the same errors in 2.6.21. I have never seen these (or any other libata)
->> errors other than during resume.
->>
->> http://www.dgreaves.com/pub/2.6.22-rc5-resume-failure.jpg
->> (hard to read, here's one from 2.6.21
->> http://www.dgreaves.com/pub/2.6.21-resume-failure.jpg
-> 
-> Your controller is repeatedly reporting PHY readiness changed exception.
->  Are you reading the system image from the device attached to the first
-> SATA port?
+What does it tell me?
 
-Yes if you mean 1st as in the one after the zero-th ...
-
-resume=/dev/sdb4
-haze:~# swapon -s
-Filename                                Type            Size    Used    Priority
-/dev/sdb4                               partition       1004020 0       -1
-
-dmesg snippet below...
-
-sda is part of the /scratch xfs array though. SMART doesn't show any problems 
-and of course all is well other than during a resume.
-
-sda/b are on sata_sil (a cheap plugin pci card)
-
-> 
->> I _think_ I've only seen the xfs problem when a resume shows these errors.
-> 
-> The error handling itself tries very hard to ensure that there is no
-> data corruption in case of errors.  All commands which experience
-> exceptions are retried but if the drive itself is doing something
-> stupid, there's only so much the driver can do.
-> 
-> How reproducible is the problem?  Does the problem go away or occur more
-> often if you change the drive you write the memory image to?
-
-I don't think there should be activity on the sda drive during resume itself.
-
-[I broke my / md mirror and am using some of that for swap/resume for now]
-
-I did change the swap/resume device to sdd2 (different controller, onboard 
-sata_via) and there was no EH during resume. The system seemed OK, wrote a few 
-Gb of video and did a kernel compile.
-I repeated this test, no EH during resume, no problems.
-I even ran xfs_fsr, the defragment utility, to stress the fs.
-
-I retain this configuration and try again tonight but it looks like there _may_ 
-be a link between EH during resume and my problems...
-
-Of course, I don't understand why it *should* EH during resume, it doesn't 
-during boot or normal operation...
-
-Any more tests you'd like me to try?
-
-David
-
-
-dmesg snippet...
-
-sata_sil 0000:00:0a.0: version 2.2
-ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 16 (level, low) -> IRQ 18
-scsi0 : sata_sil
-PM: Adding info for No Bus:host0
-scsi1 : sata_sil
-PM: Adding info for No Bus:host1
-ata1: SATA max UDMA/100 cmd 0xf881e080 ctl 0xf881e08a bmdma 0xf881e000 irq 0
-ata2: SATA max UDMA/100 cmd 0xf881e0c0 ctl 0xf881e0ca bmdma 0xf881e008 irq 0
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata1.00: ATA-7: Maxtor 6B200M0, BANC1980, max UDMA/100
-ata1.00: 390721968 sectors, multi 0: LBA48
-ata1.00: configured for UDMA/100
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-ata2.00: ATA-6: ST3160023AS, 3.18, max UDMA/133
-ata2.00: 312581808 sectors, multi 0: LBA48
-ata2.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-ata2.00: configured for UDMA/100
-PM: Adding info for No Bus:target0:0:0
-scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6B200M0   BANC PQ: 0 ANSI: 5
-PM: Adding info for scsi:0:0:0:0
-sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-  sda: sda1
-sd 0:0:0:0: [sda] Attached SCSI disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-PM: Adding info for No Bus:target1:0:0
-scsi 1:0:0:0: Direct-Access     ATA      ST3160023AS      3.18 PQ: 0 ANSI: 5
-PM: Adding info for scsi:1:0:0:0
-sd 1:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-sd 1:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-  sdb: sdb1 sdb2 sdb3 sdb4
-sd 1:0:0:0: [sdb] Attached SCSI disk
-sd 1:0:0:0: Attached scsi generic sg1 type 0
+-- 
+Regards,
+Hannes Dorbath
