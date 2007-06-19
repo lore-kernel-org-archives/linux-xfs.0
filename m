@@ -1,54 +1,86 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 23:01:08 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Jun 2007 23:37:25 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5J612do018447
-	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 23:01:04 -0700
-Message-ID: <4677711A.4000109@sgi.com>
-Date: Tue, 19 Jun 2007 16:00:58 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: [GIT PULL] XFS cleanup fix and maintainers file update
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5J6bIdo025784
+	for <xfs@oss.sgi.com>; Mon, 18 Jun 2007 23:37:22 -0700
+Date: Tue, 19 Jun 2007 16:37:14 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Review: fix null files exposure growing via truncate V2
+Message-ID: <20070619063714.GP86004887@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: xfs@oss.sgi.com, Andrew Morton <akpm@linux-foundation.org>
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hi Linus,
+Test 140 fails due to the ftruncate() logging the new file size
+before any data that had previously been written had hit the
+disk. IOWs, it violates the data write/inode size update rule
+that fixes the null files problem.
 
-Please pull from the for-linus branch:
-     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+The fix here checks when growing the file as to whether it the disk
+inode size is different to the in memory size. If they are
+different, we have data that needs to be written to disk beyond the
+existing on disk EOF. Hence to maintain ordering we need to flush
+this data out before we log the changed file size.
 
-Will stop the annoying warning for memclear_highpage_flush in xfs.
+Version 2:
 
-This will update the following files:
+o Only flush the range between the old on disk size and the current
+  in memory size.
 
-  MAINTAINERS                |    2 +-
-  fs/xfs/linux-2.6/xfs_lrw.c |    2 +-
-  2 files changed, 2 insertions(+), 2 deletions(-)
+Cheers,
 
-through these commits:
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
-commit e99f056b2777f3fc6871ff6347c98c0321ad2f8f
-Author: Tim Shimmin <tes@chook.melbourne.sgi.com>
-Date:   Tue Jun 19 15:26:35 2007 +1000
 
-     [XFS] Update the MAINTAINERS file entry for XFS - change git repo name.
+---
+ fs/xfs/xfs_vnodeops.c |   28 +++++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
 
-     Make the git repository bare and so give it the conventional .git suffix.
-
-     Signed-off-by: Tim Shimmin <tes@sgi.com>
-
-commit 700716c8468d95ec6d03566a4e4fb576c3223cbc
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Thu May 24 15:27:17 2007 +1000
-
-     [XFS] s/memclear_highpage_flush/zero_user_page/
-
-     SGI-PV: 957103
-     SGI-Modid: xfs-linux-melb:xfs-kern:28678a
-
-     Signed-off-by: Christoph Hellwig <hch@infradead.org>
-     Signed-off-by: Tim Shimmin <tes@sgi.com>
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vnodeops.c	2007-06-18 11:44:53.986543106 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c	2007-06-18 15:11:43.258810667 +1000
+@@ -593,9 +593,31 @@ xfs_setattr(
+ 		if ((vap->va_size > ip->i_size) &&
+ 		    (flags & ATTR_NOSIZETOK) == 0) {
+ 			code = xfs_igrow_start(ip, vap->va_size, credp);
+-		}
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		vn_iowait(vp); /* wait for the completion of any pending DIOs */
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			/*
++			 * We are going to log the inode size change in
++			 * this transaction so any previous writes that are
++			 * beyond the on disk EOF that have not been written
++			 * out need to be written here. If we do not write the
++			 * data out, we expose ourselves to the null files
++			 * problem on grow.
++			 *
++			 * Only flush from the on disk size to the in memory
++			 * file size as that's the range we really care about
++			 * here and prevents waiting for other data not within
++			 * the range we care about here.
++			 */
++			if (!code && ip->i_size != ip->i_d.di_size) {
++				code = bhv_vop_flush_pages(XFS_ITOV(ip),
++						ip->i_d.di_size, ip->i_size,
++						XFS_B_ASYNC, FI_NONE);
++			}
++		} else
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++		/* wait for I/O to complete */
++		vn_iowait(vp);
++
+ 		if (!code)
+ 			code = xfs_itruncate_data(ip, vap->va_size);
+ 		if (code) {
