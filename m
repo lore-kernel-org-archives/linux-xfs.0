@@ -1,34 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 08:31:52 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5JFVkdo017894
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 08:31:48 -0700
-Message-ID: <4677F6E1.50108@dgreaves.com>
-Date: Tue, 19 Jun 2007 16:31:45 +0100
-From: David Greaves <david@dgreaves.com>
-MIME-Version: 1.0
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
-References: <46744065.6060605@dgreaves.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com> <200706191321.07278.rjw@sisk.pl>
-In-Reply-To: <200706191321.07278.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 15:49:38 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.229])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5JMnXdo029764
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 15:49:35 -0700
+Received: by wx-out-0506.google.com with SMTP id s17so2190816wxc
+        for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 15:49:34 -0700 (PDT)
+Subject: Re: XFS shrink (step 0)
+From: Ruben Porras <nahoo82@gmail.com>
+In-Reply-To: <20070604001632.GA86004887@sgi.com>
+References: <1180715974.10796.46.camel@localhost>
+	 <20070604001632.GA86004887@sgi.com>
+Content-Type: text/plain
+Date: Wed, 20 Jun 2007 00:22:31 +0200
+Message-Id: <1182291751.5289.9.camel@localhost>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, iusty@k1024.org
 
-Rafael J. Wysocki wrote:
->> This is on 2.6.22-rc5
+Am Montag, den 04.06.2007, 10:16 +1000 schrieb David Chinner:
+
+> Here's the "simple" bits that will allow you to shrink
+> the filesystem down to the end of the internal log:
 > 
-> Is the Tejun's patch
-> 
-> http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.22-rc5/patches/30-block-always-requeue-nonfs-requests-at-the-front.patch
-> 
-> applied on top of that?
+> 	0. Check space is available for shrink
 
-2.6.22-rc5 includes it.
+Now that I'm almost* finish with the point 1), is there any place in the
+xfs_code where a similar task is done? This way I would have a basis to
+start off.
 
-(but, when I was testing rc4, I did apply this patch)
+Cheers.
 
-David
+* I need only to fix the indentation, and change the ioctl interface as
+David suggested in another mail in this thread, so that the
+implementation is not so specific.
