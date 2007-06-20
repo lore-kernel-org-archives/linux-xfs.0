@@ -1,63 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 17:19:20 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 20:30:10 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5K0JDdo024680
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 17:19:15 -0700
-Date: Wed, 20 Jun 2007 10:18:50 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5K3U4do024086
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 20:30:05 -0700
+Date: Wed, 20 Jun 2007 13:29:54 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
-Message-ID: <20070620001850.GV86004887@sgi.com>
-References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com>
+Subject: Re: BUG: soft lockup detected on CPU#0!
+Message-ID: <20070620032954.GW86004887@sgi.com>
+References: <4677E97E.5070802@theendofthetunnel.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4677A0C7.4000306@dgreaves.com>
+In-Reply-To: <4677E97E.5070802@theendofthetunnel.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Greaves <david@dgreaves.com>
-Cc: David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Hannes Dorbath <light@theendofthetunnel.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 19, 2007 at 10:24:23AM +0100, David Greaves wrote:
-> David Greaves wrote:
-> so I cd'ed out of /scratch and umounted.
+On Tue, Jun 19, 2007 at 04:34:38PM +0200, Hannes Dorbath wrote:
+> I got this on a server box today. Kernel 2.6.21, x86_64, LVM2:
 > 
-> I then tried the xfs_check.
+> Jun 19 10:58:16 phoenix Ending XFS recovery on filesystem: dm-5 (logdev: 
+> internal)
+> Jun 19 10:58:16 phoenix BUG: soft lockup detected on CPU#0!
+> Jun 19 10:58:16 phoenix
+> Jun 19 10:58:16 phoenix Call Trace:
+> Jun 19 10:58:16 phoenix <IRQ>  [<ffffffff80277a60>] 
+> wake_up_process+0x10/0x20
+> Jun 19 10:58:16 phoenix [<ffffffff80297829>] softlockup_tick+0xe9/0x110
+> Jun 19 10:58:16 phoenix [<ffffffff8024dc93>] run_local_timers+0x13/0x20
+> Jun 19 10:58:16 phoenix [<ffffffff802815e7>] update_process_times+0x57/0x90
+> Jun 19 10:58:16 phoenix [<ffffffff8026eea4>] 
+> smp_local_timer_interrupt+0x34/0x60
+> Jun 19 10:58:16 phoenix [<ffffffff8026f49e>] 
+> smp_apic_timer_interrupt+0x4e/0x70
+> Jun 19 10:58:16 phoenix [<ffffffff8025ed56>] apic_timer_interrupt+0x66/0x70
+> Jun 19 10:58:16 phoenix <EOI>  [<ffffffff8026368c>] 
+> _spin_unlock_irqrestore+0xc/0x10
+> Jun 19 10:58:16 phoenix [<ffffffff80221acb>] __up_read+0x9b/0xb0
+> Jun 19 10:58:16 phoenix [<ffffffff8028d6e9>] up_read+0x9/0x10
+> Jun 19 10:58:16 phoenix [<ffffffff8034699d>] xfs_iunlock+0x3d/0xa0
+> Jun 19 10:58:16 phoenix [<ffffffff80362b1a>] xfs_rwunlock+0x3a/0x50
+> Jun 19 10:58:16 phoenix [<ffffffff80369c46>] xfs_vm_bmap+0x66/0x90
+> Jun 19 10:58:16 phoenix [<ffffffff8025cecc>] bmap+0x1c/0x20
+> Jun 19 10:58:16 phoenix [<ffffffff802a684e>] sys_swapon+0x6ae/0xae0
+> Jun 19 10:58:16 phoenix [<ffffffff8025e11e>] system_call+0x7e/0x83
 > 
-> haze:~# xfs_check /dev/video_vg/video_lv
-> ERROR: The filesystem has valuable metadata changes in a log which needs to
-> be replayed.  Mount the filesystem to replay the log, and unmount it before
-> re-running xfs_check.  If you are unable to mount the filesystem, then use
-> the xfs_repair -L option to destroy the log and attempt a repair.
-> Note that destroying the log may cause corruption -- please attempt a mount
-> of the filesystem before doing this.
-> haze:~# mount /scratch/
-> haze:~# umount /scratch/
-> haze:~# xfs_check /dev/video_vg/video_lv
-> 
-> Message from syslogd@haze at Tue Jun 19 08:47:30 2007 ...
-> haze kernel: Bad page state in process 'xfs_db'
+> What does it tell me?
 
-I think we can safely say that your system is hosed at this point ;)
+That you've got a fragemented swap file and that sys_swapon()
+does not yield the CPU in it's main loop that maps the extents
+in the swap file.
 
-> ugh. Try again
-> haze:~# xfs_check /dev/video_vg/video_lv
-> haze:~#
-
-zero output means no on-disk corruption was found. Everything is
-consistent on disk, so that seems to indicate something in memory has been
-crispy fried by the suspend/resume....
-
-> Dave, I ran xfs_check -v... but I got bored when it reached 122M of bz2 
-> compressed output with no sign of stopping... still got it if it's any 
-> use...
-
-No, not useful. It's a log of every operation it does and so is really
-only useful for debugging xfs-check problems ;)
-
-> I then rebooted and ran a repair which didn't show any damage.
-
-Not surprising as your first check showed no damage.
+Harmless, AFAICT.
 
 Cheers,
 
