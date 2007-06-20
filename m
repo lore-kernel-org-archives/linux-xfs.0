@@ -1,70 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 17:01:26 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Jun 2007 17:19:20 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5K01Ldo020260
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 17:01:23 -0700
-Date: Wed, 20 Jun 2007 10:01:09 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5K0JDdo024680
+	for <xfs@oss.sgi.com>; Tue, 19 Jun 2007 17:19:15 -0700
+Date: Wed, 20 Jun 2007 10:18:50 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs freeze/umount problem
-Message-ID: <20070620000109.GU86004887@sgi.com>
-References: <46778F60.5090107@dgreaves.com>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
+Message-ID: <20070620001850.GV86004887@sgi.com>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46778F60.5090107@dgreaves.com>
+In-Reply-To: <4677A0C7.4000306@dgreaves.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Greaves <david@dgreaves.com>
-Cc: xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, David Chinner <dgc@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Tue, Jun 19, 2007 at 09:10:08AM +0100, David Greaves wrote:
-> David Chinner wrote:
-> > FWIW, I'm on record stating that "sync" is not sufficient to quiesce an 
-> XFS
-> > filesystem for a suspend/resume to work safely and have argued that the 
-> only
-> > safe thing to do is freeze the filesystem before suspend and thaw it after
-> > resume.
+On Tue, Jun 19, 2007 at 10:24:23AM +0100, David Greaves wrote:
+> David Greaves wrote:
+> so I cd'ed out of /scratch and umounted.
 > 
-> Whilst testing a potential bug in another thread I accidentally found that 
-> unmounting a filesystem that I'd just frozen would hang.
+> I then tried the xfs_check.
 > 
-> As the saying goes: "Well, duh!!"
+> haze:~# xfs_check /dev/video_vg/video_lv
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_check.  If you are unable to mount the filesystem, then use
+> the xfs_repair -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
+> haze:~# mount /scratch/
+> haze:~# umount /scratch/
+> haze:~# xfs_check /dev/video_vg/video_lv
+> 
+> Message from syslogd@haze at Tue Jun 19 08:47:30 2007 ...
+> haze kernel: Bad page state in process 'xfs_db'
 
-<grin>
+I think we can safely say that your system is hosed at this point ;)
 
-It's the s_umount semaphore that is the problem here - freeze_bdev()
-does a get_super() call which does a down_read(&sb->s_umount) and
-the corresponding up_read() call does not occur until the filesystem
-is thawed.
+> ugh. Try again
+> haze:~# xfs_check /dev/video_vg/video_lv
+> haze:~#
 
-So yes, your umount will hang until you thaw the fileystem.
+zero output means no on-disk corruption was found. Everything is
+consistent on disk, so that seems to indicate something in memory has been
+crispy fried by the suspend/resume....
 
-As i just tried this, I can't unfreeze the filesystem because it's
-been removed from /proc/mounts already and so xfs_freeze -u aborts:
+> Dave, I ran xfs_check -v... but I got bored when it reached 122M of bz2 
+> compressed output with no sign of stopping... still got it if it's any 
+> use...
 
-budgie:~ # xfs_freeze -u /dev/sdb8
-xfs_freeze: specified file ["/dev/sdb8"] is not on an XFS filesystem
-budgie:~ #
+No, not useful. It's a log of every operation it does and so is really
+only useful for debugging xfs-check problems ;)
 
-> I could eventually run an unfreeze but the mount was still hung. This lead 
-> to an unclean shutdown.
+> I then rebooted and ran a repair which didn't show any damage.
 
-So I couldn't reproduce the unclean shutdown.
-
-> OK, it may not be bright but it seems like this shouldn't happen; umount 
-> should either unfreeze and work or fail ("Attempt to umount a frozen 
-> filesystem.") if the fs is frozen.
-
-IMO, an unmount of a frozen fileystem should simply return EBUSY.
-
-> Is this a kernel bug/misfeature or a (u)mount one?
-
-Kernel bug. umount should know nothing about frozen filesystems...
-
-Maybe something like th patch below needs to be done to prvent
-the hang....
+Not surprising as your first check showed no damage.
 
 Cheers,
 
@@ -73,32 +66,3 @@ Dave.
 Dave Chinner
 Principal Engineer
 SGI Australian Software Group
-
-Don't try to unmount a frozen filesystem as the unmount will hang
-waiting on the s_umount semaphore held by the freeze and you may not
-be able to unfreeze the filesystem to allow the umount to proceed.
-
-Signed-Off-By: Dave Chinner <dgc@sgi.com>
-
----
- fs/namespace.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-Index: 2.6.x-xfs-new/fs/namespace.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/namespace.c	2007-05-29 16:17:59.000000000 +1000
-+++ 2.6.x-xfs-new/fs/namespace.c	2007-06-20 09:57:21.310048007 +1000
-@@ -545,6 +545,13 @@ static int do_umount(struct vfsmount *mn
- 	int retval;
- 	LIST_HEAD(umount_list);
- 
-+	/*
-+	 * don't try to unmount frozen filesystems as we'll
-+	 * hang on the s_umount held by the freeze a bit later.
-+	 */
-+	if (sb->s_frozen != SB_UNFROZEN)
-+		return -EBUSY;
-+
- 	retval = security_sb_umount(mnt, flags);
- 	if (retval)
- 		return retval;
