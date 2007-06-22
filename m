@@ -1,92 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Jun 2007 23:02:49 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5P62ido026053
-	for <xfs@oss.sgi.com>; Sun, 24 Jun 2007 23:02:45 -0700
-Subject: Re: XFS_IOC_RESVSP64 for swap files
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20070621061449.GB11200@cordes.ca>
-References: <20070617100822.GA4586@cordes.ca>
-	 <20070619043333.GJ86004887@sgi.com>  <20070621061449.GB11200@cordes.ca>
-Content-Type: text/plain
-Date: Mon, 25 Jun 2007 10:07:51 +1000
-Message-Id: <1182730071.15488.36.camel@edge.yarra.acx>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Jun 2007 23:18:09 -0700 (PDT)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5P6I5do031238
+	for <xfs@oss.sgi.com>; Sun, 24 Jun 2007 23:18:06 -0700
+Received: from agami.com (mail [192.168.168.5])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id l5MNvLYL008345
+	for <xfs@oss.sgi.com>; Fri, 22 Jun 2007 16:57:21 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id l5MNvh5N029526
+	for <xfs@oss.sgi.com>; Fri, 22 Jun 2007 16:57:43 -0700
+Message-ID: <467C620E.4050005@agami.com>
+Date: Fri, 22 Jun 2007 16:58:06 -0700
+From: Michael Nishimoto <miken@agami.com>
+MIME-Version: 1.0
+Subject: Re: Reducing memory requirements for high extent xfs files
+References: <200705301649.l4UGnckA027406@oss.sgi.com> <20070530225516.GB85884050@sgi.com> <4665E276.9020406@agami.com> <20070606013601.GR86004887@sgi.com> <4666EC56.9000606@agami.com> <20070606234723.GC86004887@sgi.com>
+In-Reply-To: <20070606234723.GC86004887@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Cordes <peter@cordes.ca>
+To: David Chinner <dgc@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2007-06-21 at 03:14 -0300, Peter Cordes wrote:
+
 > 
-> > >  Could swapon(2) in the kernel be made to work on XFS files with
-> reserved
-> > > space?
-> > 
-> > Basically, the swapon syscall calls bmap() for the block mapping of
-> the
-> > file and XFS returns "holes" [...]
+>  > Also, should we consider a file with 1MB extents as
+>  > fragmented?  A 100GB file with 1MB extents has 100k extents.
 > 
->  Yeah, bad idea to put special case stuff in the kernel.
-> 
-> > > i.e. call something that would give XFS a chance to mark all the
-> > > extents as written, even though they're not.
-> > 
-> > You mean like XFS_IOC_EXPOSE_MY_STALE_DATA_TO_EVERYONE? ;)
-> > 
-> > That's not going to happen.
+> Yes, that's fragmented - it has 4 orders of magnitude more extents
+> than optimal - and the extents are too small to allow reads or
+> writes to acheive full bandwidth on high end raid configs....
 
-I wouldn't dismiss it out of hand.
+Fair enough, so multiply those numbers by 100 -- a 10TB file with 100MB
+extents.  It seems to me that we can look at the negative effects of
+fragmentation in two ways here.  First, (regardless of size) if a file
+has a large number of extents, then it is too fragmented.  Second, if
+a file's extents are so small that we can't get full bandwidth, then it
+is too fragmented.
 
-Maybe if it was approached as follows:
-- forget about "preallocation", as that's clouding the discussion
-  with talk of unwritten extents, etc.  This is a real allocation,
-  and filesize would need to reflect that (its XFS_IOC_ALLOCSP, just
-  without the zeroing).
-- instead, if you added a flag to the shiny new fallocate syscall,
-  F_MKSWAP or some such, and then implemented it as an allocate
-  with no zeroing.
-- change mkswap to be able to optionally use this, and those dynamic
-  methods for adding swap that you mentioned.
-- produce objective data demonstrating the improvements this makes,
-  as this will be needed when arguing the case for the flag in the
-  kernel (the fallocate flag, I mean).
+If the second case were of primary concern, then it would be reasonable
+to have 1000s of extents as long as each of the extents were big enough
+to amortize disk latencies across a large amount of data.
 
-I can't see any reason this shouldn't be acceptable - there really
-is no security issue here, provided the F_MKSWAP syscall has tight
-restrictions (the arbitrary contents of memory that will get swapped
-have potentially more sensitive info, like decrypted passwords, than
-would usually be stored in a filesystem).  And there is very little
-added complexity/code introduced, almost everything is already in
-place, so if its demonstrably useful... *shrug*.
+We've been assuming that a good write is one which can send
+2MB of data to a single drive; so with an 8+1 raid device, we need
+16MB of write data to achieve high disk utilization.  In particular,
+there are flexibility advantages if high extent count files can
+still achieve good performance.
 
-> > In fact, I plan to make unwritten extents non-optional soon (i.e.
-> I've already
-
-Unwritten extents aren't really relevent here - you would definately
-not want to have these extents marked unwritten, as that would cause
-additional transactions, memory allocations, writes, etc during swap.
-
->  Ok.  I didn't really want to recreate my /var/tmp filesystem with
-> unwritten=0, but I really wish I had
-> XFS_IOC_EXPOSE_MY_STALE_DATA_TO_EVERYONE on my desktop machine.  I
-> think
-> dynamic swap file creation is a cool idea, and that ioctl would make
-> it work
-> perfectly.
-
-I think if the data was compelling enough, there's no obvious reason
-this couldn't be merged, IMO (you may want to make an XFS ioctl also,
-just to test it - use xfs_io on the frontend & write some xfstests -
-and you'll need to tweak the call down into xfs_alloc_file_space - the
-4th "alloc_type" argument will need to become a flags parameter instead
-of effectively the boolean it is now, and theres a few code changes to
-be done related to that).
-
-cheers.
-
---
-Nathan
+   Michael
