@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Jun 2007 06:49:28 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5PDnNdo009687
-	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 06:49:24 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Jun 2007 06:50:47 -0700 (PDT)
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5PDogdo010636
+	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 06:50:43 -0700
 Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l5PDiRDm008740
-	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 09:44:27 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5PDnKS9231086
-	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 07:49:21 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5PDnKS9011347
-	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 07:49:20 -0600
-Date: Mon, 25 Jun 2007 19:19:29 +0530
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5PDohsb001898
+	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 09:50:43 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5PDohm4255808
+	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 07:50:43 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5PDogcw019100
+	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 07:50:43 -0600
+Date: Mon, 25 Jun 2007 19:20:51 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 6/7][TAKE5] ext4: write support for preallocated blocks
-Message-ID: <20070625134929.GG1951@amitarora.in.ibm.com>
+Subject: [PATCH 7/7][TAKE5] ext4: support new modes
+Message-ID: <20070625135051.GH1951@amitarora.in.ibm.com>
 References: <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -27,25 +27,12 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
 Cc: David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
-This patch adds write support to the uninitialized extents that get
-created when a preallocation is done using fallocate(). It takes care of
-splitting the extents into multiple (upto three) extents and merging the
-new split extents with neighbouring ones, if possible.
+Support new values of mode in ext4.
 
-Changelog:
----------
-Changes from Take3 to Take4:
- - no change -
-Changes from Take2 to Take3:
- 1) Patch now rebased to 2.6.22-rc1 kernel.
-Changes from Take1 to Take2:
- 1) Replaced BUG_ON with WARN_ON & ext4_error.
- 2) Added variable names to the function declaration of
-    ext4_ext_try_to_merge().
- 3) Updated variable declarations to use multiple-definitions-per-line.
- 4) "if((a=foo())).." was broken into "a=foo(); if(a).."
- 5) Removed extra spaces.
-
+This patch supports new mode values/flags in ext4. With this patch ext4
+will be able to support FA_ALLOCATE and FA_RESV_SPACE modes. Supporting
+FA_DEALLOCATE and FA_UNRESV_SPACE fallocate modes in ext4 is a work for
+future.
 
 Signed-off-by: Amit Arora <aarora@in.ibm.com>
 
@@ -53,355 +40,36 @@ Index: linux-2.6.22-rc4/fs/ext4/extents.c
 ===================================================================
 --- linux-2.6.22-rc4.orig/fs/ext4/extents.c
 +++ linux-2.6.22-rc4/fs/ext4/extents.c
-@@ -1167,6 +1167,53 @@ ext4_can_extents_be_merged(struct inode 
- }
- 
+@@ -2477,7 +2477,8 @@ int ext4_ext_writepage_trans_blocks(stru
  /*
-+ * This function tries to merge the "ex" extent to the next extent in the tree.
-+ * It always tries to merge towards right. If you want to merge towards
-+ * left, pass "ex - 1" as argument instead of "ex".
-+ * Returns 0 if the extents (ex and ex+1) were _not_ merged and returns
-+ * 1 if they got merged.
-+ */
-+int ext4_ext_try_to_merge(struct inode *inode,
-+			  struct ext4_ext_path *path,
-+			  struct ext4_extent *ex)
-+{
-+	struct ext4_extent_header *eh;
-+	unsigned int depth, len;
-+	int merge_done = 0;
-+	int uninitialized = 0;
-+
-+	depth = ext_depth(inode);
-+	BUG_ON(path[depth].p_hdr == NULL);
-+	eh = path[depth].p_hdr;
-+
-+	while (ex < EXT_LAST_EXTENT(eh)) {
-+		if (!ext4_can_extents_be_merged(inode, ex, ex + 1))
-+			break;
-+		/* merge with next extent! */
-+		if (ext4_ext_is_uninitialized(ex))
-+			uninitialized = 1;
-+		ex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(ex)
-+				+ ext4_ext_get_actual_len(ex + 1));
-+		if (uninitialized)
-+			ext4_ext_mark_uninitialized(ex);
-+
-+		if (ex + 1 < EXT_LAST_EXTENT(eh)) {
-+			len = (EXT_LAST_EXTENT(eh) - ex - 1)
-+				* sizeof(struct ext4_extent);
-+			memmove(ex + 1, ex + 2, len);
-+		}
-+		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries) - 1);
-+		merge_done = 1;
-+		WARN_ON(eh->eh_entries == 0);
-+		if (!eh->eh_entries)
-+			ext4_error(inode->i_sb, "ext4_ext_try_to_merge",
-+			   "inode#%lu, eh->eh_entries = 0!", inode->i_ino);
-+	}
-+
-+	return merge_done;
-+}
-+
-+/*
-  * check if a portion of the "newext" extent overlaps with an
-  * existing extent.
-  *
-@@ -1354,25 +1401,7 @@ has_space:
- 
- merge:
- 	/* try to merge extents to the right */
--	while (nearex < EXT_LAST_EXTENT(eh)) {
--		if (!ext4_can_extents_be_merged(inode, nearex, nearex + 1))
--			break;
--		/* merge with next extent! */
--		if (ext4_ext_is_uninitialized(nearex))
--			uninitialized = 1;
--		nearex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(nearex)
--					+ ext4_ext_get_actual_len(nearex + 1));
--		if (uninitialized)
--			ext4_ext_mark_uninitialized(nearex);
--
--		if (nearex + 1 < EXT_LAST_EXTENT(eh)) {
--			len = (EXT_LAST_EXTENT(eh) - nearex - 1)
--					* sizeof(struct ext4_extent);
--			memmove(nearex + 1, nearex + 2, len);
--		}
--		eh->eh_entries = cpu_to_le16(le16_to_cpu(eh->eh_entries)-1);
--		BUG_ON(eh->eh_entries == 0);
--	}
-+	ext4_ext_try_to_merge(inode, path, nearex);
- 
- 	/* try to merge extents to the left */
- 
-@@ -2035,15 +2064,158 @@ void ext4_ext_release(struct super_block
- #endif
- }
- 
-+/*
-+ * This function is called by ext4_ext_get_blocks() if someone tries to write
-+ * to an uninitialized extent. It may result in splitting the uninitialized
-+ * extent into multiple extents (upto three - one initialized and two
-+ * uninitialized).
-+ * There are three possibilities:
-+ *   a> There is no split required: Entire extent should be initialized
-+ *   b> Splits in two extents: Write is happening at either end of the extent
-+ *   c> Splits in three extents: Somone is writing in middle of the extent
-+ */
-+int ext4_ext_convert_to_initialized(handle_t *handle, struct inode *inode,
-+					struct ext4_ext_path *path,
-+					ext4_fsblk_t iblock,
-+					unsigned long max_blocks)
-+{
-+	struct ext4_extent *ex, newex;
-+	struct ext4_extent *ex1 = NULL;
-+	struct ext4_extent *ex2 = NULL;
-+	struct ext4_extent *ex3 = NULL;
-+	struct ext4_extent_header *eh;
-+	unsigned int allocated, ee_block, ee_len, depth;
-+	ext4_fsblk_t newblock;
-+	int err = 0;
-+	int ret = 0;
-+
-+	depth = ext_depth(inode);
-+	eh = path[depth].p_hdr;
-+	ex = path[depth].p_ext;
-+	ee_block = le32_to_cpu(ex->ee_block);
-+	ee_len = ext4_ext_get_actual_len(ex);
-+	allocated = ee_len - (iblock - ee_block);
-+	newblock = iblock - ee_block + ext_pblock(ex);
-+	ex2 = ex;
-+
-+	/* ex1: ee_block to iblock - 1 : uninitialized */
-+	if (iblock > ee_block) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/*
-+	 * for sanity, update the length of the ex2 extent before
-+	 * we insert ex3, if ex1 is NULL. This is to avoid temporary
-+	 * overlap of blocks.
-+	 */
-+	if (!ex1 && allocated > max_blocks)
-+		ex2->ee_len = cpu_to_le16(max_blocks);
-+	/* ex3: to ee_block + ee_len : uninitialised */
-+	if (allocated > max_blocks) {
-+		unsigned int newdepth;
-+		ex3 = &newex;
-+		ex3->ee_block = cpu_to_le32(iblock + max_blocks);
-+		ext4_ext_store_pblock(ex3, newblock + max_blocks);
-+		ex3->ee_len = cpu_to_le16(allocated - max_blocks);
-+		ext4_ext_mark_uninitialized(ex3);
-+		err = ext4_ext_insert_extent(handle, inode, path, ex3);
-+		if (err)
-+			goto out;
-+		/*
-+		 * The depth, and hence eh & ex might change
-+		 * as part of the insert above.
-+		 */
-+		newdepth = ext_depth(inode);
-+		if (newdepth != depth) {
-+			depth = newdepth;
-+			path = ext4_ext_find_extent(inode, iblock, NULL);
-+			if (IS_ERR(path)) {
-+				err = PTR_ERR(path);
-+				path = NULL;
-+				goto out;
-+			}
-+			eh = path[depth].p_hdr;
-+			ex = path[depth].p_ext;
-+			if (ex2 != &newex)
-+				ex2 = ex;
-+		}
-+		allocated = max_blocks;
-+	}
-+	/*
-+	 * If there was a change of depth as part of the
-+	 * insertion of ex3 above, we need to update the length
-+	 * of the ex1 extent again here
-+	 */
-+	if (ex1 && ex1 != ex) {
-+		ex1 = ex;
-+		ex1->ee_len = cpu_to_le16(iblock - ee_block);
-+		ext4_ext_mark_uninitialized(ex1);
-+		ex2 = &newex;
-+	}
-+	/* ex2: iblock to iblock + maxblocks-1 : initialised */
-+	ex2->ee_block = cpu_to_le32(iblock);
-+	ex2->ee_start = cpu_to_le32(newblock);
-+	ext4_ext_store_pblock(ex2, newblock);
-+	ex2->ee_len = cpu_to_le16(allocated);
-+	if (ex2 != ex)
-+		goto insert;
-+	err = ext4_ext_get_access(handle, inode, path + depth);
-+	if (err)
-+		goto out;
-+	/*
-+	 * New (initialized) extent starts from the first block
-+	 * in the current extent. i.e., ex2 == ex
-+	 * We have to see if it can be merged with the extent
-+	 * on the left.
-+	 */
-+	if (ex2 > EXT_FIRST_EXTENT(eh)) {
-+		/*
-+		 * To merge left, pass "ex2 - 1" to try_to_merge(),
-+		 * since it merges towards right _only_.
-+		 */
-+		ret = ext4_ext_try_to_merge(inode, path, ex2 - 1);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+			depth = ext_depth(inode);
-+			ex2--;
-+		}
-+	}
-+	/*
-+	 * Try to Merge towards right. This might be required
-+	 * only when the whole extent is being written to.
-+	 * i.e. ex2 == ex and ex3 == NULL.
-+	 */
-+	if (!ex3) {
-+		ret = ext4_ext_try_to_merge(inode, path, ex2);
-+		if (ret) {
-+			err = ext4_ext_correct_indexes(handle, inode, path);
-+			if (err)
-+				goto out;
-+		}
-+	}
-+	/* Mark modified extent as dirty */
-+	err = ext4_ext_dirty(handle, inode, path + depth);
-+	goto out;
-+insert:
-+	err = ext4_ext_insert_extent(handle, inode, path, &newex);
-+out:
-+	return err ? err : allocated;
-+}
-+
- int ext4_ext_get_blocks(handle_t *handle, struct inode *inode,
- 			ext4_fsblk_t iblock,
- 			unsigned long max_blocks, struct buffer_head *bh_result,
- 			int create, int extend_disksize)
- {
- 	struct ext4_ext_path *path = NULL;
-+	struct ext4_extent_header *eh;
- 	struct ext4_extent newex, *ex;
- 	ext4_fsblk_t goal, newblock;
--	int err = 0, depth;
-+	int err = 0, depth, ret;
- 	unsigned long allocated = 0;
- 
- 	__clear_bit(BH_New, &bh_result->b_state);
-@@ -2056,8 +2228,10 @@ int ext4_ext_get_blocks(handle_t *handle
- 	if (goal) {
- 		if (goal == EXT4_EXT_CACHE_GAP) {
- 			if (!create) {
--				/* block isn't allocated yet and
--				 * user doesn't want to allocate it */
-+				/*
-+				 * block isn't allocated yet and
-+				 * user doesn't want to allocate it
-+				 */
- 				goto out2;
- 			}
- 			/* we should allocate requested block */
-@@ -2091,6 +2265,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 	 * this is why assert can't be put in ext4_ext_find_extent()
+  * preallocate space for a file. This implements ext4's fallocate inode
+  * operation, which gets called from sys_fallocate system call.
+- * Currently only FA_ALLOCATE mode is supported on extent based files.
++ * Currently only FA_ALLOCATE  and FA_RESV_SPACE modes are supported on
++ * extent based files.
+  * We may have more modes supported in future - like FA_DEALLOCATE, which
+  * tells fallocate to unallocate previously (pre)allocated blocks.
+  * For block-mapped files, posix_fallocate should fall back to the method
+@@ -2499,7 +2500,8 @@ long ext4_fallocate(struct inode *inode,
+ 	 * currently supporting (pre)allocate mode for extent-based
+ 	 * files _only_
  	 */
- 	BUG_ON(path[depth].p_ext == NULL && depth != 0);
-+	eh = path[depth].p_hdr;
+-	if (mode != FA_ALLOCATE || !(EXT4_I(inode)->i_flags & EXT4_EXTENTS_FL))
++	if (!(EXT4_I(inode)->i_flags & EXT4_EXTENTS_FL) ||
++		!(mode == FA_ALLOCATE || mode == FA_RESV_SPACE))
+ 		return -EOPNOTSUPP;
  
- 	ex = path[depth].p_ext;
- 	if (ex) {
-@@ -2099,13 +2274,9 @@ int ext4_ext_get_blocks(handle_t *handle
- 		unsigned short ee_len;
+ 	/* preallocation to directories is currently not supported */
+@@ -2572,9 +2574,10 @@ retry:
  
- 		/*
--		 * Allow future support for preallocated extents to be added
--		 * as an RO_COMPAT feature:
- 		 * Uninitialized extents are treated as holes, except that
--		 * we avoid (fail) allocating new blocks during a write.
-+		 * we split out initialized portions during a write.
- 		 */
--		if (le16_to_cpu(ex->ee_len) > EXT_MAX_LEN)
--			goto out2;
- 		ee_len = ext4_ext_get_actual_len(ex);
- 		/* if found extent covers block, simply return it */
- 		if (iblock >= ee_block && iblock < ee_block + ee_len) {
-@@ -2114,12 +2285,27 @@ int ext4_ext_get_blocks(handle_t *handle
- 			allocated = ee_len - (iblock - ee_block);
- 			ext_debug("%d fit into %lu:%d -> %llu\n", (int) iblock,
- 					ee_block, ee_len, newblock);
-+
- 			/* Do not put uninitialized extent in the cache */
--			if (!ext4_ext_is_uninitialized(ex))
-+			if (!ext4_ext_is_uninitialized(ex)) {
- 				ext4_ext_put_in_cache(inode, ee_block,
- 							ee_len, ee_start,
- 							EXT4_EXT_CACHE_EXTENT);
--			goto out;
-+				goto out;
-+			}
-+			if (create == EXT4_CREATE_UNINITIALIZED_EXT)
-+				goto out;
-+			if (!create)
-+				goto out2;
-+
-+			ret = ext4_ext_convert_to_initialized(handle, inode,
-+								path, iblock,
-+								max_blocks);
-+			if (ret <= 0)
-+				goto out2;
-+			else
-+				allocated = ret;
-+			goto outnew;
- 		}
- 	}
- 
-@@ -2128,8 +2314,10 @@ int ext4_ext_get_blocks(handle_t *handle
- 	 * we couldn't try to create block if create flag is zero
+ 	/*
+ 	 * Time to update the file size.
+-	 * Update only when preallocation was requested beyond the file size.
++	 * Update only when preallocation was requested beyond the file size
++	 * and when FA_FL_KEEP_SIZE mode is not specified!
  	 */
- 	if (!create) {
--		/* put just found gap into cache to speed up
--		 * subsequent requests */
-+		/*
-+		 * put just found gap into cache to speed up
-+		 * subsequent requests
-+		 */
- 		ext4_ext_put_gap_in_cache(inode, path, iblock);
- 		goto out2;
- 	}
-@@ -2175,6 +2363,7 @@ int ext4_ext_get_blocks(handle_t *handle
- 
- 	/* previous routine could use block we allocated */
- 	newblock = ext_pblock(&newex);
-+outnew:
- 	__set_bit(BH_New, &bh_result->b_state);
- 
- 	/* Cache only when it is _not_ an uninitialized extent */
-@@ -2244,7 +2433,8 @@ void ext4_ext_truncate(struct inode * in
- 	err = ext4_ext_remove_space(inode, last_block);
- 
- 	/* In a multi-transaction truncate, we only make the final
--	 * transaction synchronous. */
-+	 * transaction synchronous.
-+	 */
- 	if (IS_SYNC(inode))
- 		handle->h_sync = 1;
- 
-Index: linux-2.6.22-rc4/include/linux/ext4_fs_extents.h
-===================================================================
---- linux-2.6.22-rc4.orig/include/linux/ext4_fs_extents.h
-+++ linux-2.6.22-rc4/include/linux/ext4_fs_extents.h
-@@ -205,6 +205,9 @@ static inline int ext4_ext_get_actual_le
- 
- extern int ext4_extent_tree_init(handle_t *, struct inode *);
- extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
-+extern int ext4_ext_try_to_merge(struct inode *inode,
-+				 struct ext4_ext_path *path,
-+				 struct ext4_extent *);
- extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
- extern int ext4_ext_insert_extent(handle_t *, struct inode *, struct ext4_ext_path *, struct ext4_extent *);
- extern int ext4_ext_walk_space(struct inode *, unsigned long, unsigned long, ext_prepare_callback, void *);
+-	if ((offset + len) > i_size_read(inode)) {
++	if (!(mode & FA_FL_KEEP_SIZE) && (offset + len) > i_size_read(inode)) {
+ 		if (ret > 0) {
+ 			/*
+ 			 * if no error, we assume preallocation succeeded
