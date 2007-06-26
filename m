@@ -1,51 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Jun 2007 16:54:55 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5PNsmtL015330
-	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 16:54:50 -0700
-Date: Tue, 26 Jun 2007 09:54:36 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] simplify vnode tracing calls
-Message-ID: <20070625235436.GD31489@sgi.com>
-References: <467F5053.4040108@sandeen.net> <20070625062047.GB1307@infradead.org> <467FCA62.8080800@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Jun 2007 18:27:33 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5Q1RNtL007540
+	for <xfs@oss.sgi.com>; Mon, 25 Jun 2007 18:27:25 -0700
+Subject: Re: Reducing memory requirements for high extent xfs files
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <467C620E.4050005@agami.com>
+References: <200705301649.l4UGnckA027406@oss.sgi.com>
+	 <20070530225516.GB85884050@sgi.com> <4665E276.9020406@agami.com>
+	 <20070606013601.GR86004887@sgi.com> <4666EC56.9000606@agami.com>
+	 <20070606234723.GC86004887@sgi.com>  <467C620E.4050005@agami.com>
+Content-Type: text/plain
+Date: Tue, 26 Jun 2007 11:26:15 +1000
+Message-Id: <1182821175.15488.64.camel@edge.yarra.acx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <467FCA62.8080800@sandeen.net>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Michael Nishimoto <miken@agami.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Mon, Jun 25, 2007 at 09:00:02AM -0500, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > On Mon, Jun 25, 2007 at 12:19:15AM -0500, Eric Sandeen wrote:
-> >> Don't think I've sent this one yet... :)
+Hi Mike,
+
+On Fri, 2007-06-22 at 16:58 -0700, Michael Nishimoto wrote:
+> >  > Also, should we consider a file with 1MB extents as
+> >  > fragmented?  A 100GB file with 1MB extents has 100k extents.
 > > 
-> > Any chance we can keep the name lower-cases despite the simplified
-> > prototype?
+> > Yes, that's fragmented - it has 4 orders of magnitude more extents
+> > than optimal - and the extents are too small to allow reads or
+> > writes to acheive full bandwidth on high end raid configs....
 > 
-> Yeah, it is a bit of a mishmash this way isn't it.  SGI guys, do you
-> have a preference?  Christoph, how would you do it, vn_trace_enter(vp)
-> macro calling __vn_trace_enter() function?
+> Fair enough, so multiply those numbers by 100 -- a 10TB file ...
 
-Yeah, keep the lower case names if possible. I can't think of a simpler
-way of doing it, and it's not terribly ugly. I'm open to better
-solutions, though.....
+This seems a flawed way to look at this to me - in practice, almost
+noone would have files that large.  While filesystem sizes increase
+and can be expected to continue to increase, I'd expect individual
+file sizes do not tend to increase anywhere near as much - file sizes
+tend to be an application property, and apps want to work for all
+filesystems.  So, people want to store _more_ files in their larger
+filesystems, not _larger_ files, AFAICT.
 
-> > Also it might make sense to merge the previous patch into
-> > this one.
-> 
-> *shrug* either way.
+So, IMO, this isn't a good place to invest effort - there are alot
+of bigger bang-for-buck places that XFS could do with change to make
+it generally much better.  The biggest probably being the amount of
+log traffic that XFS generates ... that really needs to be tackled.
 
-Keep 'em separate - that way I don't have to go and review this
-first one again ;)
+cheers.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--
+Nathan
