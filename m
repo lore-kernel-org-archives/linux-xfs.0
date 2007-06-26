@@ -1,82 +1,107 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Jun 2007 05:16:35 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5QCGTtL007849
-	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 05:16:31 -0700
-Message-ID: <46810398.7040004@sgi.com>
-Date: Tue, 26 Jun 2007 22:16:24 +1000
-From: Tim Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Jun 2007 07:10:19 -0700 (PDT)
+Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5QEADtL032028
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Jun 2007 07:10:15 -0700
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>)
+	id 1I3BkE-0008Lt-VW
+	for linux-xfs@oss.sgi.com; Tue, 26 Jun 2007 07:10:14 -0700
+Message-ID: <11306454.post@talk.nabble.com>
+Date: Tue, 26 Jun 2007 07:10:14 -0700 (PDT)
+From: Sandy1 <sundeep.saini@rediffmail.com>
+Subject: Re: Wrong Data Pointer-XFS File system
+In-Reply-To: <20070625232817.GC31489@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Review: Multi-File Data Streams V2
-References: <20070613041629.GI86004887@sgi.com> <467B8BFA.2050107@sgi.com> <20070625035315.GL86004887@sgi.com>
-In-Reply-To: <20070625035315.GL86004887@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+References: <11246839.post@talk.nabble.com> <20070625232817.GC31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
+
+
+Hi David,
+
+I am already using FSB format, i am using this format for sparsing the
+absolute block number,
+as we know extent is 128 bit in size and uses the following packed layout:
+
+LSB... bit 0-20              gives # blocks
+        bits 21 to 72 (52)  gives absolute number
+        bits 72 to 126 (54) gives logical file block offset
+MSB..flag(last bit)
+
+the value i am getting in absolute no. is in FSB and after multiplying with
+no. of sectors in FS block i am trying to jump that value (pointer
+location). But only in 0th AG i am able to get the data.Afterwards i am not
+able to reach the data in next AGs.
+
+I also read in document that "sb_agblklog"--> This value is used to generate
+inode numbers and absolute block numbers defined in extent maps.
+
+How i can use this value in interprating the absolute block number?
+
+Is the above sparsing method is right or there is any other calculation?
+Please guide me.
+
+Regards
+Sandy
+
+
+
+
 
 David Chinner wrote:
- > On Fri, Jun 22, 2007 at 06:44:42PM +1000, Timothy Shimmin wrote:
+> 
+> On Thu, Jun 21, 2007 at 11:23:35PM -0700, Sandy1 wrote:
+>> 
+>> Hi,
+>> I am Using SuSe 10.0 with Xfs file system. I am working on a File system
+>> based project. During the initial research in On disk layout of File
+>> system
+>> , i found data pointer problem. I was not able to get the data location
+>> as
+>> per pointed by "absolute block no." in "xfs_bmbt_rec" extent pointers.
+> 
+> The xfs_bmbt_rec holds the address in FSB format, not DADDR format.
+> 
+>> When i create any file in 0th (zero`th) AG in that case i am able to
+>> reach
+>> on proper location by using "absolute block no." pointer.
+>> 
+>> But when i create any file in 1st or in 2nd AG and so on. I never got the
+>> file data at the location pointed by "absolute block no.". I always found
+>> the file data before the the pointed address.
+> 
+> FSB notation is sparse representation.
+> 
+>> I am not getting any value in Superblock that tells me about difference
+>> in
+>> pointer location with actual data.
+>> 
+>> This value always becomes multiple of the AG number.
+>> 
+>> Please help to get out from this problem.
+>> 
+>> Is there any other calculation for finding the data locations.
+> 
+> man xfs_db. Search for "convert".
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+> 
+> 
+> 
+> 
 
- >> *
- >> As we talked about before, this code seems to come up in a few places:
- >>
- >> 	need = XFS_MIN_FREELIST_PAG(pag, mp);
- >> 	delta = need > pag->pagf_flcount ?
- >> 		need - pag->pagf_flcount : 0;
- >> 	longest = (pag->pagf_longest > delta) ?
- >> 		(pag->pagf_longest - delta) :
- >> 		(pag->pagf_flcount > 0 ||
- >> 		pag->pagf_longest > 0);
- >>
- >> Perhaps we could macroize/inline-function it?
- >
- > Sure. I'll do that as a separate patch, though.
-
-Cool.
-
- >
- >> It confused me in _xfs_filestream_pick_ag() when I was trying
- >> to understand it and so could do with a comment for it too.
- >> As I said then, I don't like the way it uses a boolean as
- >> the number of blocks, in the case when the longest extent is
- >> is smaller than the excess over the freelist which
- >> the fresspace-btree-splits-overhead needs.
- >
- > Actually, the logic statement is correct. If we have a delta greater
- > than the longest extent, we cannot find out what the next longest
- > extent is without searching the btree.  Hence we assume that the
- > longest extent is a single block, which means if the have free
- > extents in the tree (pag->pagf_longest > 0) or we have blocks in the
- > freelist (pag->pagf_flcount > 0) we are guaranteed to be able to
- > alocate a single block if there is space available. So the logic is:
- >
- > 	longest = 0;
- > 	if pag->pagf_longest > delta
- > 		longest = pag->pagf_longest - delta;
- > 	else if pag->pagf_flcount > 0
- > 		longest = 1;
- > 	else if pag->pagf_longest > 0
- > 		longest = 1;
- >
- > And the above is simply more compact.
- >
-I didn't say it didn't give a reasonable answer - it's just
-I don't like it using a boolean result for the number of blocks
-being 1. It's a style thing. I think it is hacky.
-i.e. prefer (pagf->pagf_flcount > 0 || pag->pagf_longest > 0) ? 1 : 0
-but then that gets too long winded with the existing ternary,
-and your above code is clearer
-or grouping the last 2 conditions into one "or".
-The existing code "hides" how we want 1 block in that case IMHO.
-
-Hmmm....
-though if all we have is freelist (pagf_flcount) space, then
-I didn't know we could dip into it here. And I'm not really sure on
-what happens if delta is too big for our longest and it actually needs
-this space for splits - what happens then - we die further on?
-
---Tim
+-- 
+View this message in context: http://www.nabble.com/Wrong-Data-Pointer-XFS-File-system-tf3963002.html#a11306454
+Sent from the linux-xfs mailing list archive at Nabble.com.
