@@ -1,50 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Jun 2007 10:38:29 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5QHcLtL013607
-	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 10:38:24 -0700
-Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
-	id 1I3EfR-0004HN-00
-	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 19:17:29 +0200
-Date: Tue, 26 Jun 2007 19:17:19 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
-Subject: reasonable xfs fs size for 30-100 TB?
-Message-ID: <20070626171719.GD32546@p15145560.pureserver.info>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Jun 2007 12:09:41 -0700 (PDT)
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5QJ9atL003504
+	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 12:09:37 -0700
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5QJ9bDo032428
+	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 15:09:37 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5QJ9bPH064428
+	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 13:09:37 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5QJ9bBN003734
+	for <xfs@oss.sgi.com>; Tue, 26 Jun 2007 13:09:37 -0600
+Date: Wed, 27 Jun 2007 00:39:44 +0530
+From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
+Message-ID: <20070626190944.GA13324@amitarora.in.ibm.com>
+References: <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625134500.GE1951@amitarora.in.ibm.com> <20070625150320.GA8686@amitarora.in.ibm.com> <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com> <20070626153413.GC6652@schatzie.adilger.int>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20070626153413.GC6652@schatzie.adilger.int>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
-Hi,
+On Tue, Jun 26, 2007 at 11:34:13AM -0400, Andreas Dilger wrote:
+> On Jun 26, 2007  16:02 +0530, Amit K. Arora wrote:
+> > On Mon, Jun 25, 2007 at 03:46:26PM -0600, Andreas Dilger wrote:
+> > > Can you clarify - what is the current behaviour when ENOSPC (or some other
+> > > error) is hit?  Does it keep the current fallocate() or does it free it?
+> > 
+> > Currently it is left on the file system implementation. In ext4, we do
+> > not undo preallocation if some error (say, ENOSPC) is hit. Hence it may
+> > end up with partial (pre)allocation. This is inline with dd and
+> > posix_fallocate, which also do not free the partially allocated space.
+> 
+> Since I believe the XFS allocation ioctls do it the opposite way (free
+> preallocated space on error) this should be encoded into the flags.
+> Having it "filesystem dependent" just means that nobody will be happy.
 
-we are about to buy some large (at least for us) RAID arrays
-(Overland/Xyratex 48x S-SATA). We'll start with ~30 TB and end with
-~100 TB. The data will mainly be video data, each file with a size of
-2 GB + some meta data. The RAID will be attached by Fibre Channel to
-an Debian Etch server with kernel 2.6.18-amd64 and 6 GB RAM (xfsprogs
-2.8.11-1).
+Ok, got your point. Maybe we can have a flag for this, as you suggested.
+But, default behavior IMHO should be _not_ to undo partial allocation
+(thus the file system will have the option of supporting this flag or
+not and it will be inline with posix_fallocate; XFS will obviously
+like to support this flag, inline with its existing behavior).
 
-My main concern is the amount of RAM I need for a fsck of the xfs fs.
-Last time I search for the xfs requirements, I found the rule of
-thumb: 2 GB RAM for 1 TB of disk storage + some RAM per x inodes.
+> > > For FA_ZERO_SPACE - I'd think this would (IMHO) be the default - we
+> > > don't want to expose uninitialized disk blocks to userspace.  I'm not
+> > > sure if this makes sense at all.
+> > 
+> > I don't think we need to make it default - atleast for filesystems which
+> > have a mechanism to distinguish preallocated blocks from "regular" ones.
+> 
+> What I mean is that any data read from the file should have the "appearance"
+> of being zeroed (whether zeroes are actually written to disk or not).  What
+> I _think_ David is proposing is to allow fallocate() to return without
+> marking the blocks even "uninitialized" and subsequent reads would return
+> the old data from the disk.
 
-Last year I deployed one server with a 4 TB xfs fs which is running
-absolutely stable since then.
+I can't think of a good reason for this (i.e. returning stale data from
+preallocated blocks). It is infact a security issue to me.
+Anyhow, this may though be beneficial for file systems which have
+noticable overhead in marking the blocks "uninitialized/preallocated".
+Can you or David please throw some light on how this option might really
+be helpful ? Thanks!
 
-I don't want to creat _one_ big xfs fs, but I also don't want to end
-up with 20-30 fs each with 4 TB of size. The question is, what is a
-reasonable fs size with 4-6 GB of RAM? Will it be sufficient to add 15
-GB of swap for a 10 TB fs? This will slow things certainly down, but
-will it work?
-
-Only few clients will access the data on this server. There will be 3
-streams of data with ~17MB/s which the server should be able to
-provide over GbE. Performance is not the primary goal. There will also
-be a backup to tape (ok, _many_ tapes...).
-
-Any thoughts or hints?
-
-Ralf
+--
+Regards,
+Amit Arora
