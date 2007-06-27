@@ -1,86 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 07:22:27 -0700 (PDT)
-Received: from isls-mx10.wmin.ac.uk (isls-mx10.wmin.ac.uk [161.74.14.112])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SEMHtL014467
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 07:22:19 -0700
-Date: Thu, 28 Jun 2007 15:22:17 +0100
-Subject: Re: After reboot fs with barrier faster deletes then fs with nobarrier
-From: "Szabolcs Illes" <S.Illes@westminster.ac.uk>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=us-ascii
-MIME-Version: 1.0
-References: <op.tuldjrzef7nho5@sunset.cpc.wmin.ac.uk> <20070627222040.GR989688@sgi.com> <4683407E.9080707@sgi.com>
-Message-ID: <op.tumx7fj2f7nho5@project1.cpc.wmin.ac.uk>
-In-Reply-To: <4683407E.9080707@sgi.com>
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 07:48:46 -0700 (PDT)
+Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SEmXtL026428
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 07:48:37 -0700
+Date: Wed, 27 Jun 2007 20:49:24 +0000
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+Message-ID: <20070627204924.GA4777@ucw.cz>
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070618145007.GE85884050@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>, David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: David Greaves <david@dgreaves.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 
-On Thu, 28 Jun 2007 06:00:46 +0100, Timothy Shimmin <tes@sgi.com> wrote:
+Hi!
 
-> David Chinner wrote:
->> On Wed, Jun 27, 2007 at 06:58:29PM +0100, Szabolcs Illes wrote:
->>> Hi,
->>>
->>> I am using XFS on my laptop, I have realized that nobarrier mount  
->>> options  sometimes slows down deleting large number of small files,  
->>> like the kernel  source tree. I made four tests, deleting the kernel  
->>> source right after  unpack and after reboot, with both barrier and  
->>> nobarrier options:
->>>
->  >> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2
->  >> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 &&  
-> sync && reboot
->  >> After reboot:
->  >> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
->  >> real    0m28.127s
->  >> user    0m0.044s
->  >> sys     0m2.924s
->  >> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2,nobarrier
->  >> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 &&  
-> sync && reboot
->  >> After reboot:
->  >> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
->  >> real    1m12.738s
->  >> user    0m0.032s
->  >> sys     0m2.548s
->  >> It looks like with barrier it's faster deleting files after reboot.
->  >> ( 28 sec vs 72 sec !!! ).
->>  Of course the second run will be faster here - the inodes are already  
->> in
->> cache and so there's no reading from disk needed to find the files
->> to delete....
->>  That's because run time after reboot is determined by how fast you
->> can traverse the directory structure (i.e. how many seeks are
->> involved). Barriers will have little impact on the uncached rm -rf
->> results,
->
-> But it looks like barriers _are_ having impact on the uncached rm -rf
-> results.
-and the same happens on my desktop pc which is much more faster, 64 bit  
-dual core P4, sata drive, etc.
+> FWIW, I'm on record stating that "sync" is not sufficient to quiesce an XFS
+> filesystem for a suspend/resume to work safely and have argued that the only
 
-nobarrier:
+Hmm, so XFS writes to disk even when its threads are frozen?
 
-+ echo 3 > /proc/sys/vm/drop_caches
-+ rm -rf /root/fs/linux-2.6.21.5 /root/fs/x.tar
+> safe thing to do is freeze the filesystem before suspend and thaw it after
+> resume. This is why I originally asked you to test that with the other problem
 
-real    0m12.526s
-user    0m0.016s
-sys     0m1.244s
+Could you add that to the XFS threads if it is really required? They
+do know that they are being frozen for suspend.
 
-barrier:
-
-+ echo 3 > /proc/sys/vm/drop_caches
-+ rm -rf /root/fs/linux-2.6.21.5 /root/fs/x.tar
-
-real    0m6.784s
-user    0m0.032s
-sys     0m1.244s
-
-Szabolcs
-
->
-> --Tim
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
