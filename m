@@ -1,59 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 10:58:01 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SHvotL013859
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 10:57:52 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5SHvp3r014116
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5SHvp0g551106
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5SHvoXx026453
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
-Date: Thu, 28 Jun 2007 23:27:57 +0530
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 11:07:54 -0700 (PDT)
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SI7jtL017595
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 11:07:46 -0700
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5SI7kVk013065
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 14:07:46 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5SI7kLZ252624
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:07:46 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5SI7j94006699
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:07:46 -0600
+Date: Thu, 28 Jun 2007 23:37:50 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Re: [PATCH 0/6][TAKE5] fallocate system call
-Message-ID: <20070628175757.GA1674@amitarora.in.ibm.com>
-References: <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070628025543.9467216f.akpm@linux-foundation.org>
+Subject: Re: [PATCH 7/7][TAKE5] ext4: support new modes
+Message-ID: <20070628180750.GB1674@amitarora.in.ibm.com>
+References: <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625135051.GH1951@amitarora.in.ibm.com> <20070625215625.GL5181@schatzie.adilger.int> <20070626120751.GC19870@amitarora.in.ibm.com> <20070626161400.GE6652@schatzie.adilger.int> <20070626192908.GC13324@amitarora.in.ibm.com> <20070627000456.GT31489@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070628025543.9467216f.akpm@linux-foundation.org>
+In-Reply-To: <20070627000456.GT31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
-On Thu, Jun 28, 2007 at 02:55:43AM -0700, Andrew Morton wrote:
-> On Mon, 25 Jun 2007 18:58:10 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
+On Wed, Jun 27, 2007 at 10:04:56AM +1000, David Chinner wrote:
+> On Wed, Jun 27, 2007 at 12:59:08AM +0530, Amit K. Arora wrote:
+> > On Tue, Jun 26, 2007 at 12:14:00PM -0400, Andreas Dilger wrote:
+> > > On Jun 26, 2007  17:37 +0530, Amit K. Arora wrote:
+> > > > I think, modifying ctime/mtime should be dependent on the other flags.
+> > > > E.g., if we do not zero out data blocks on allocation/deallocation,
+> > > > update only ctime. Otherwise, update ctime and mtime both.
+> > > 
+> > > I'm only being the advocate for requirements David Chinner has put
+> > > forward due to existing behaviour in XFS.  This is one of the reasons
+> > > why I think the "flags" mechanism we now have - we can encode the
+> > > various different behaviours in any way we want and leave it to the
+> > > caller.
+> > 
+> > I understand. May be we can confirm once more with David Chinner if this
+> > is really required. Will it really be a compatibility issue if new XFS
+> > preallocations (ie. via fallocate) update mtime/ctime?
 > 
-> > N O T E: 
-> > -------
-> > 1) Only Patches 4/7 and 7/7 are NEW. Rest of them are _already_ part
-> >    of ext4 patch queue git tree hosted by Ted.
-> 
-> Why the heck are replacements for these things being sent out again when
-> they're already in -mm and they're already in Ted's queue (from which I
-> need to diligently drop them each time I remerge)?
-> 
-> Are we all supposed to re-review the entire patchset (or at least #4 and
-> #7) again?
+> It should be left up to the filesystem to decide. Only the
+> filesystem knows whether something changed and the timestamp should
+> or should not be updated.
 
-As I mentioned in the note above, only patches #4 and #7 were new and
-thus these needed to be reviewed. Other patches are _not_ replacements
-of any of the patches which are already part of -mm and/or in Ted's
-patch queue. They were posted again as just "placeholders" so that the
-two new patches (#4 & #7) could be reviewed. Sorry for any confusion.
- 
-> Please drop the non-ext4 patches from the ext4 tree and send incremental
-> patches against the (non-ext4) fallocate patches in -mm.
+Since Andreas had suggested FA_FL_NO_MTIME flag thinking it as a
+requirement from XFS (whereas XFS does not need this flag), I don't think
+we need to add this new flag.
 
-Please let us know what you think of Mingming's suggestion of posting
-all the fallocate patches including the ext4 ones as incremental ones
-against the -mm.
+Please let know if someone still feels FA_FL_NO_MTIME flag can be
+useful.
 
 --
 Regards,
