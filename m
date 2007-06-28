@@ -1,61 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 11:07:54 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SI7jtL017595
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 11:07:46 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5SI7kVk013065
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 14:07:46 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5SI7kLZ252624
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:07:46 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5SI7j94006699
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:07:46 -0600
-Date: Thu, 28 Jun 2007 23:37:50 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: Re: [PATCH 7/7][TAKE5] ext4: support new modes
-Message-ID: <20070628180750.GB1674@amitarora.in.ibm.com>
-References: <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625135051.GH1951@amitarora.in.ibm.com> <20070625215625.GL5181@schatzie.adilger.int> <20070626120751.GC19870@amitarora.in.ibm.com> <20070626161400.GE6652@schatzie.adilger.int> <20070626192908.GC13324@amitarora.in.ibm.com> <20070627000456.GT31489@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 11:15:41 -0700 (PDT)
+Received: from smtp2.linux-foundation.org (smtp2.linux-foundation.org [207.189.120.14])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SIFatL020623
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 11:15:36 -0700
+Date: Thu, 28 Jun 2007 11:15:30 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 3/3] Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and
+ XFS_IOC_FSINUMBERS in compat mode
+Message-Id: <20070628111530.829e7a06.akpm@linux-foundation.org>
+In-Reply-To: <20070619132726.893544847@suse.cz>
+References: <20070619132549.266927601@suse.cz>
+	<20070619132726.893544847@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070627000456.GT31489@sgi.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
+To: mmarek@suse.cz
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Wed, Jun 27, 2007 at 10:04:56AM +1000, David Chinner wrote:
-> On Wed, Jun 27, 2007 at 12:59:08AM +0530, Amit K. Arora wrote:
-> > On Tue, Jun 26, 2007 at 12:14:00PM -0400, Andreas Dilger wrote:
-> > > On Jun 26, 2007  17:37 +0530, Amit K. Arora wrote:
-> > > > I think, modifying ctime/mtime should be dependent on the other flags.
-> > > > E.g., if we do not zero out data blocks on allocation/deallocation,
-> > > > update only ctime. Otherwise, update ctime and mtime both.
-> > > 
-> > > I'm only being the advocate for requirements David Chinner has put
-> > > forward due to existing behaviour in XFS.  This is one of the reasons
-> > > why I think the "flags" mechanism we now have - we can encode the
-> > > various different behaviours in any way we want and leave it to the
-> > > caller.
-> > 
-> > I understand. May be we can confirm once more with David Chinner if this
-> > is really required. Will it really be a compatibility issue if new XFS
-> > preallocations (ie. via fallocate) update mtime/ctime?
-> 
-> It should be left up to the filesystem to decide. Only the
-> filesystem knows whether something changed and the timestamp should
-> or should not be updated.
+On Tue, 19 Jun 2007 15:25:52 +0200 mmarek@suse.cz wrote:
 
-Since Andreas had suggested FA_FL_NO_MTIME flag thinking it as a
-requirement from XFS (whereas XFS does not need this flag), I don't think
-we need to add this new flag.
+> * 32bit struct xfs_fsop_bulkreq has different size and layout of
+>   members, no matter the alignment. Move the code out of the #else
+>   branch (why was it there in the first place?). Define _32 variants of
+>   the ioctl constants.
+> * 32bit struct xfs_bstat is different because of time_t and on
+>   i386 becaus of different padding. Create a new formatter
+>   xfs_bulkstat_one_compat() that takes care of this. To do this, we need
+>   to make xfs_bulkstat_one_iget() and xfs_bulkstat_one_dinode()
+>   non-static.
+> * i386 struct xfs_inogrp has different padding. Introduce a similar
+>   "formatter" mechanism for xfs_inumbers: the native formatter is just a
+>   copy_to_user, the compat formatter takes care of the different layout
 
-Please let know if someone still feels FA_FL_NO_MTIME flag can be
-useful.
+test.kernel.org build failed:
 
---
-Regards,
-Amit Arora
+  CC      fs/xfs/linux-2.6/xfs_ioctl32.o
+fs/xfs/linux-2.6/xfs_ioctl32.c: In function ‘xfs_ioc_bulkstat_compat’:
+fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: ‘xfs_inumbers_fmt_compat’ undeclared (first use in this function)
+fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: (Each undeclared identifier is reported only once
+fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: for each function it appears in.)
+
+
+http://test.kernel.org/abat/96972/debug/test.log.0
+http://test.kernel.org/abat/96972/build/dotconfig
