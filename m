@@ -1,30 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 01:00:02 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5S7xstL015990
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 00:59:56 -0700
-Subject: TAKE 961297 - dmapi-devel RPM should Require: xfsprogs-devel
-Message-Id: <20070628075951.8BE6358C38F1@chook.melbourne.sgi.com>
-Date: Thu, 28 Jun 2007 17:59:51 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 01:07:43 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5S87ZtL020709
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 01:07:36 -0700
+Date: Thu, 28 Jun 2007 04:07:36 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
+In-Reply-To: <46832E60.9000006@rabbit.us>
+Message-ID: <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
+References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
+ <46832E60.9000006@rabbit.us>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Peter Rabbitson <rabbit@rabbit.us>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 
-Update dmapi specfile for dmapi-devel requiring xfsprogs-devel
+mdadm --create \
+       --verbose /dev/md3 \
+       --level=5 \
+       --raid-devices=10 \
+       --chunk=1024 \
+       --force \
+       --run
+       /dev/sd[cdefghijkl]1
+
+Justin.
 
 
-Date:  Thu Jun 28 17:59:03 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  sandeen@sandeen.net
+On Thu, 28 Jun 2007, Peter Rabbitson wrote:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:29012a
-dmapi/build/rpm/dmapi.spec.in - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/build/rpm/dmapi.spec.in.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-	- dmapi-devel RPM should Require: xfsprogs-devel
+> Justin Piszcz wrote:
+>> The results speak for themselves:
+>> 
+>> http://home.comcast.net/~jpiszcz/chunk/index.html
+>> 
+>
+>
+> What is the array layout (-l ? -n ? -p ?)
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
