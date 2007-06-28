@@ -1,36 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 22:11:25 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T5BHtL010587
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 22:11:19 -0700
-Subject: TAKE 967035 - lockdep inumorder annotations are busted
-Message-Id: <20070629051105.9BA0758C38F1@chook.melbourne.sgi.com>
-Date: Fri, 29 Jun 2007 15:11:05 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 22:38:01 -0700 (PDT)
+Received: from outbound4.mail.tds.net (outbound4.mail.tds.net [216.170.230.94])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T5bttL015778
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 22:37:56 -0700
+Date: Thu, 28 Jun 2007 08:27:54 -0500 (CDT)
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
+In-Reply-To: <20070628090551.GG4504@mea-ext.zmailer.org>
+Message-ID: <Pine.LNX.4.64.0706280827170.5806@gheavc.wnzcbav.cig>
+References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan>
+ <46832E60.9000006@rabbit.us> <Pine.LNX.4.64.0706280406520.1406@p34.internal.lan>
+ <46837056.4050306@rabbit.us> <20070628090551.GG4504@mea-ext.zmailer.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Matti Aarnio <matti.aarnio@zmailer.org>
+Cc: Peter Rabbitson <rabbit@rabbit.us>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 
-Fix lockdep annotations for xfs_lock_inodes
+On Thu, 28 Jun 2007, Matti Aarnio wrote:
 
+> I do have LVM in between the MD-RAID5 and XFS, so I did also align
+> the LVM to that  3 * 256k.
 
-Date:  Fri Jun 29 15:10:33 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  tes@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+How did you align the LVM ?
 
 
-Modid:  xfs-linux-melb:xfs-kern:29026a
-fs/xfs/xfs_vnodeops.c - 1.701 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.701&r2=text&tr2=1.700&f=h
-	- Don't double shift the inumorder subclass out of the lock_mode
-	  variable.
-
-fs/xfs/xfs_inode.h - 1.221 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.221&r2=text&tr2=1.220&f=h
-	- Don't double shift the inumorder subclass out of the lock_mode
-	  variable.
+--
+Jon Nelson <jnelson-linux-raid@jamponi.net>
