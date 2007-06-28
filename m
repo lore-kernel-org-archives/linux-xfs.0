@@ -1,35 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Jun 2007 22:08:58 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 00:43:53 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5S58otL004645
-	for <xfs@oss.sgi.com>; Wed, 27 Jun 2007 22:08:52 -0700
-Date: Thu, 28 Jun 2007 15:08:37 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Fastest Chunk Size w/XFS For MD Software RAID = 1024k
-Message-ID: <20070628050837.GG989688@sgi.com>
-References: <Pine.LNX.4.64.0706271918010.29111@p34.internal.lan> <Pine.LNX.4.64.0706271920350.29111@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0706271920350.29111@p34.internal.lan>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5S7hitL008494
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 00:43:47 -0700
+Subject: PARTIAL TAKE 964469 - filestreams qa tests
+Message-Id: <20070628074339.A6EEA58C38F1@chook.melbourne.sgi.com>
+Date: Thu, 28 Jun 2007 17:43:39 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 27, 2007 at 07:20:42PM -0400, Justin Piszcz wrote:
-> For drives with 16MB of cache (in this case, raptors).
+QA tests for filestreams
 
-That's four (4) drives, right?
+Date:  Thu Jun 28 17:42:52 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/xfs-cmds
+Inspected by:  tes@sgi.com
 
-If so, how do you get a block read rate of 578MB/s from
-4 drives? That's 145MB/s per drive....
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Modid:  master-melb:xfs-cmds:29011a
+xfstests/170 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/170
+xfstests/170.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/170.out
+xfstests/171 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/171
+xfstests/171.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/171.out
+xfstests/172 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/172
+xfstests/172.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/172.out
+xfstests/173 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/173
+xfstests/173.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/173.out
+xfstests/174 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/174
+xfstests/174.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/174.out
+xfstests/common.filestreams - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/common.filestreams
+xfstests/group - 1.108 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.108&r2=text&tr2=1.107&f=h
+	- QA tests for filestreams
