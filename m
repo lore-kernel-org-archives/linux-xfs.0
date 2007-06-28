@@ -1,25 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 09:31:27 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SGVLtL007083
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 09:31:22 -0700
-Date: Thu, 28 Jun 2007 12:31:22 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: XFS mount option performance on Linux Software RAID 5
-Message-ID: <Pine.LNX.4.64.0706281230091.2402@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 10:58:01 -0700 (PDT)
+Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SHvotL013859
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 10:57:52 -0700
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5SHvp3r014116
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5SHvp0g551106
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5SHvoXx026453
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 13:57:51 -0400
+Date: Thu, 28 Jun 2007 23:27:57 +0530
+From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/6][TAKE5] fallocate system call
+Message-ID: <20070628175757.GA1674@amitarora.in.ibm.com>
+References: <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070628025543.9467216f.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070628025543.9467216f.akpm@linux-foundation.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
+On Thu, Jun 28, 2007 at 02:55:43AM -0700, Andrew Morton wrote:
+> On Mon, 25 Jun 2007 18:58:10 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
+> 
+> > N O T E: 
+> > -------
+> > 1) Only Patches 4/7 and 7/7 are NEW. Rest of them are _already_ part
+> >    of ext4 patch queue git tree hosted by Ted.
+> 
+> Why the heck are replacements for these things being sent out again when
+> they're already in -mm and they're already in Ted's queue (from which I
+> need to diligently drop them each time I remerge)?
+> 
+> Are we all supposed to re-review the entire patchset (or at least #4 and
+> #7) again?
 
-Still reviewing but it appears 8 + 256k looks good.
+As I mentioned in the note above, only patches #4 and #7 were new and
+thus these needed to be reviewed. Other patches are _not_ replacements
+of any of the patches which are already part of -mm and/or in Ted's
+patch queue. They were posted again as just "placeholders" so that the
+two new patches (#4 & #7) could be reviewed. Sorry for any confusion.
+ 
+> Please drop the non-ext4 patches from the ext4 tree and send incremental
+> patches against the (non-ext4) fallocate patches in -mm.
 
-p34-noatime-logbufs=2-lbsize=256k,15696M,78172.3,99,450320,86.6667,178683,29,79808,99,565741,42.3333,610.067,0,16:100000:16/64,2362,19.6667,15751.7,46,3993.33,22,2545.67,24.3333,13976,41,3781.33,28.6667
-p34-noatime-logbufs=8-lbsize=256k,15696M,78238,99,455532,86.6667,182382,30,79741.7,99,571631,43,597.633,0,16:100000:16/64,3421,29,12130,38.3333,5943.33,33,3671.33,35.6667,13521.3,41.3333,5162.33,38.3333
-p34-noatime-logbufs=8-lbsize=default,15696M,77872,98.6667,438661,86.6667,179848,29.3333,79368,99,555999,42,632.733,0.333333,16:100000:16/64,2090,17.6667,11183,33,3922.67,23,2271.33,22.3333,11709,35,3391.33,26.3333
-p34-noatime-only,15696M,77473,99,449689,86.6667,176960,29.3333,80186.3,99,568503,42.6667,592.633,0,16:100000:16/64,2102,18,15935.3,44.6667,3825.67,22.3333,2353,23.6667,9727.33,29.3333,3265,25.6667
+Please let us know what you think of Mingming's suggestion of posting
+all the fallocate patches including the ext4 ones as incremental ones
+against the -mm.
 
-http://home.comcast.net/~jpiszcz/chunk/logbufs.html
+--
+Regards,
+Amit Arora
