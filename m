@@ -1,69 +1,86 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 06:25:37 -0700 (PDT)
-Received: from zebday.corky.net (corky.net [212.150.53.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SDPStL022169
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 06:25:29 -0700
-Received: from [127.0.0.1] (zebday [127.0.0.1])
-	by zebday.corky.net (Postfix) with ESMTP id 26C1FEE2C1
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 15:54:57 +0300 (IDT)
-Message-ID: <4683ADEB.3010106@corky.net>
-Date: Thu, 28 Jun 2007 13:47:39 +0100
-From: Just Marc <marc@corky.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 07:22:27 -0700 (PDT)
+Received: from isls-mx10.wmin.ac.uk (isls-mx10.wmin.ac.uk [161.74.14.112])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SEMHtL014467
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 07:22:19 -0700
+Date: Thu, 28 Jun 2007 15:22:17 +0100
+Subject: Re: After reboot fs with barrier faster deletes then fs with nobarrier
+From: "Szabolcs Illes" <S.Illes@westminster.ac.uk>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=us-ascii
 MIME-Version: 1.0
-Subject: xfs_fsr, performance related tweaks
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <op.tuldjrzef7nho5@sunset.cpc.wmin.ac.uk> <20070627222040.GR989688@sgi.com> <4683407E.9080707@sgi.com>
+Message-ID: <op.tumx7fj2f7nho5@project1.cpc.wmin.ac.uk>
+In-Reply-To: <4683407E.9080707@sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>, David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Thu, 28 Jun 2007 06:00:46 +0100, Timothy Shimmin <tes@sgi.com> wrote:
 
-I'm using fsr extensively.
+> David Chinner wrote:
+>> On Wed, Jun 27, 2007 at 06:58:29PM +0100, Szabolcs Illes wrote:
+>>> Hi,
+>>>
+>>> I am using XFS on my laptop, I have realized that nobarrier mount  
+>>> options  sometimes slows down deleting large number of small files,  
+>>> like the kernel  source tree. I made four tests, deleting the kernel  
+>>> source right after  unpack and after reboot, with both barrier and  
+>>> nobarrier options:
+>>>
+>  >> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2
+>  >> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 &&  
+> sync && reboot
+>  >> After reboot:
+>  >> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
+>  >> real    0m28.127s
+>  >> user    0m0.044s
+>  >> sys     0m2.924s
+>  >> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2,nobarrier
+>  >> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 &&  
+> sync && reboot
+>  >> After reboot:
+>  >> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
+>  >> real    1m12.738s
+>  >> user    0m0.032s
+>  >> sys     0m2.548s
+>  >> It looks like with barrier it's faster deleting files after reboot.
+>  >> ( 28 sec vs 72 sec !!! ).
+>>  Of course the second run will be faster here - the inodes are already  
+>> in
+>> cache and so there's no reading from disk needed to find the files
+>> to delete....
+>>  That's because run time after reboot is determined by how fast you
+>> can traverse the directory structure (i.e. how many seeks are
+>> involved). Barriers will have little impact on the uncached rm -rf
+>> results,
+>
+> But it looks like barriers _are_ having impact on the uncached rm -rf
+> results.
+and the same happens on my desktop pc which is much more faster, 64 bit  
+dual core P4, sata drive, etc.
 
-I noticed two things:
+nobarrier:
 
-1. in xfs_fsr.c:
-   if (fsx.fsx_xflags & XFS_XFLAG_NODEFRAG) {
-       if (vflag)
-           fsrprintf(_("%s: marked as don't defrag, ignoring\n"),
-               fname);
-       return(0);
-   }
++ echo 3 > /proc/sys/vm/drop_caches
++ rm -rf /root/fs/linux-2.6.21.5 /root/fs/x.tar
 
-This check should be moved above the code that performs a stat on the 
-file, to become the first check, this will help reduce redundant stat 
-calls for heavily defragged fileystems.   A simple patch is attached for 
-that.
+real    0m12.526s
+user    0m0.016s
+sys     0m1.244s
 
-2. Files for which 'No improvement will be made' should also be marked 
-as no-defrag, this will avoid a ton of extra work in the future.   In my 
-particular use case I have many hundreds of thousands of files on each 
-volume (xfs_fsr runs in a never ending-loop as new files are constantly 
-being added) and once the file is written to disk it is never changed 
-again until deletion.   Optionally do this only when a special parameter 
-is passed to fsr at command line? (that is, if you think this is not 
-appropriate for all scenarios).  
+barrier:
 
-I tried to accomplish this but it proved more difficult than I thought.  
-While digging around in the fsr code, I didn't find out how fsr marks 
-the file as no-defrag, I'm guessing this is done in kernel code via the 
-ioctl that swaps the extents (xfs_swapext) ... Is that correct?
++ echo 3 > /proc/sys/vm/drop_caches
++ rm -rf /root/fs/linux-2.6.21.5 /root/fs/x.tar
 
-I looked at how the 'io' utility marks files as no-defrag; it calls 
-xfsctl(path, fd, XFS_IOC_FSSETXATTR, &attr); -- this requires a path, 
-which is not available to me when fsr is run in its default mode which 
-traverses all xfs filesystems rather than gets to run on a single file.
+real    0m6.784s
+user    0m0.032s
+sys     0m1.244s
 
-Is there a way to extract the path in this case? Or possibly use another 
-way to mark the inode as no-defrag without having to need the path -- 
-just fd?  Of course this can be done by an external script which parses 
-the output of xfs_fsr for these inodes, looks them up and marks them as 
-such, but that's pretty messy and very inefficient.  I'd really like to 
-do this as cleanly and efficiently as possible.
+Szabolcs
 
-I would appreciate any feedback you have on this.    Please CC me as I'm 
-not on this list.
-
-Thanks!
+>
+> --Tim
