@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 06:24:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 06:25:37 -0700 (PDT)
 Received: from zebday.corky.net (corky.net [212.150.53.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SDNutL021549
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 06:23:59 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SDPStL022169
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 06:25:29 -0700
 Received: from [127.0.0.1] (zebday [127.0.0.1])
-	by zebday.corky.net (Postfix) with ESMTP id F116992268
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 15:55:08 +0300 (IDT)
-Message-ID: <4683ADF5.9050901@corky.net>
-Date: Thu, 28 Jun 2007 13:47:49 +0100
+	by zebday.corky.net (Postfix) with ESMTP id 26C1FEE2C1
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 15:54:57 +0300 (IDT)
+Message-ID: <4683ADEB.3010106@corky.net>
+Date: Thu, 28 Jun 2007 13:47:39 +0100
 From: Just Marc <marc@corky.net>
 MIME-Version: 1.0
 Subject: xfs_fsr, performance related tweaks
-Content-Type: multipart/mixed;
- boundary="------------010502060302030207090406"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
-
-This is a multi-part message in MIME format.
---------------010502060302030207090406
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
 
 Hi,
 
@@ -72,57 +67,3 @@ I would appreciate any feedback you have on this.    Please CC me as I'm
 not on this list.
 
 Thanks!
-
---------------010502060302030207090406
-Content-Type: text/plain;
- name="xfs_fsr.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="xfs_fsr.diff"
-
---- xfs_fsr.c	2007-06-28 13:23:58.745778214 +0100
-+++ xfs_fsr.c.orig	2007-06-28 07:40:42.572069164 +0100
-@@ -904,6 +904,20 @@
- 		}
- 	}
- 
-+	/* Check if there is room to copy the file */
-+	if ( statvfs64( (fsname == NULL ? fname : fsname), &vfss) < 0) {
-+		fsrprintf(_("unable to get fs stat on %s: %s\n"),
-+			fname, strerror(errno));
-+		return (-1);
-+	}
-+	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
-+
-+	if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
-+		fsrprintf(_("insufficient freespace for: %s: "
-+			"size=%lld: ignoring\n"), fname, statp->bs_size);
-+		return 1;
-+	}
-+
- 	if ((ioctl(fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
- 		fsrprintf(_("failed to get inode attrs: %s\n"), fname);
- 		return(-1);
-@@ -937,20 +951,6 @@
- 		return -1;
- 	}
- 
--	/* Check if there is room to copy the file */
--	if ( statvfs64( (fsname == NULL ? fname : fsname), &vfss) < 0) {
--		fsrprintf(_("unable to get fs stat on %s: %s\n"),
--			fname, strerror(errno));
--		return (-1);
--	}
--	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
--
--	if (statp->bs_size > ((vfss.f_bfree * bsize) - minimumfree)) {
--		fsrprintf(_("insufficient freespace for: %s: "
--			"size=%lld: ignoring\n"), fname, statp->bs_size);
--		return 1;
--	}
--
- 	/*
- 	 * Previously the code forked here, & the child changed it's uid to
- 	 * that of the file's owner and then called packfile(), to keep
-
---------------010502060302030207090406--
