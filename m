@@ -1,48 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 11:15:41 -0700 (PDT)
-Received: from smtp2.linux-foundation.org (smtp2.linux-foundation.org [207.189.120.14])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SIFatL020623
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 11:15:36 -0700
-Date: Thu, 28 Jun 2007 11:15:30 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 3/3] Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and
- XFS_IOC_FSINUMBERS in compat mode
-Message-Id: <20070628111530.829e7a06.akpm@linux-foundation.org>
-In-Reply-To: <20070619132726.893544847@suse.cz>
-References: <20070619132549.266927601@suse.cz>
-	<20070619132726.893544847@suse.cz>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 11:19:20 -0700 (PDT)
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SIJEtL022006
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 11:19:15 -0700
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5SIJDwl006604
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 14:19:13 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5SIJ5bI262748
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:19:11 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5SIJ4LM004125
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 12:19:04 -0600
+Date: Thu, 28 Jun 2007 23:49:13 +0530
+From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
+Message-ID: <20070628181913.GC1674@amitarora.in.ibm.com>
+References: <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625134500.GE1951@amitarora.in.ibm.com> <20070625150320.GA8686@amitarora.in.ibm.com> <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com> <20070626153413.GC6652@schatzie.adilger.int> <20070626231803.GQ31489@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070626231803.GQ31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: mmarek@suse.cz
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
-On Tue, 19 Jun 2007 15:25:52 +0200 mmarek@suse.cz wrote:
+On Wed, Jun 27, 2007 at 09:18:04AM +1000, David Chinner wrote:
+> On Tue, Jun 26, 2007 at 11:34:13AM -0400, Andreas Dilger wrote:
+> > On Jun 26, 2007  16:02 +0530, Amit K. Arora wrote:
+> > > On Mon, Jun 25, 2007 at 03:46:26PM -0600, Andreas Dilger wrote:
+> > > > Can you clarify - what is the current behaviour when ENOSPC (or some other
+> > > > error) is hit?  Does it keep the current fallocate() or does it free it?
+> > > 
+> > > Currently it is left on the file system implementation. In ext4, we do
+> > > not undo preallocation if some error (say, ENOSPC) is hit. Hence it may
+> > > end up with partial (pre)allocation. This is inline with dd and
+> > > posix_fallocate, which also do not free the partially allocated space.
+> > 
+> > Since I believe the XFS allocation ioctls do it the opposite way (free
+> > preallocated space on error) this should be encoded into the flags.
+> > Having it "filesystem dependent" just means that nobody will be happy.
+> 
+> No, XFs does not free preallocated space on error. it is up to the
+> application to clean up.
 
-> * 32bit struct xfs_fsop_bulkreq has different size and layout of
->   members, no matter the alignment. Move the code out of the #else
->   branch (why was it there in the first place?). Define _32 variants of
->   the ioctl constants.
-> * 32bit struct xfs_bstat is different because of time_t and on
->   i386 becaus of different padding. Create a new formatter
->   xfs_bulkstat_one_compat() that takes care of this. To do this, we need
->   to make xfs_bulkstat_one_iget() and xfs_bulkstat_one_dinode()
->   non-static.
-> * i386 struct xfs_inogrp has different padding. Introduce a similar
->   "formatter" mechanism for xfs_inumbers: the native formatter is just a
->   copy_to_user, the compat formatter takes care of the different layout
+Since XFS also does not free preallocated space on error and this
+behavior is inline with dd, posix_fallocate() and the current ext4
+implementation, do we still need FA_FL_FREE_ENOSPC flag ?
+ 
+> > What I mean is that any data read from the file should have the "appearance"
+> > of being zeroed (whether zeroes are actually written to disk or not).  What
+> > I _think_ David is proposing is to allow fallocate() to return without
+> > marking the blocks even "uninitialized" and subsequent reads would return
+> > the old data from the disk.
+> 
+> Correct, but for swap files that's not an issue - no user should be able
+> too read them, and FA_MKSWAP would really need root privileges to execute.
 
-test.kernel.org build failed:
+Will the FA_MKSWAP mode still be required with your suggested change of
+teaching do_mpage_readpage() about unwritten extents being in place ?
+Or, will you still like to have FA_MKSWAP mode ?
 
-  CC      fs/xfs/linux-2.6/xfs_ioctl32.o
-fs/xfs/linux-2.6/xfs_ioctl32.c: In function ‘xfs_ioc_bulkstat_compat’:
-fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: ‘xfs_inumbers_fmt_compat’ undeclared (first use in this function)
-fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: (Each undeclared identifier is reported only once
-fs/xfs/linux-2.6/xfs_ioctl32.c:334: error: for each function it appears in.)
-
-
-http://test.kernel.org/abat/96972/debug/test.log.0
-http://test.kernel.org/abat/96972/build/dotconfig
+--
+Regards,
+Amit Arora
