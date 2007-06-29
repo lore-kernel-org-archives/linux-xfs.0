@@ -1,34 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:50:00 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T7nqtL022757
-	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:49:54 -0700
-Date: Fri, 29 Jun 2007 08:20:17 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/6][TAKE5] fallocate system call
-Message-ID: <20070629072017.GA13192@infradead.org>
-References: <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070628025543.9467216f.akpm@linux-foundation.org> <20070628175757.GA1674@amitarora.in.ibm.com> <20070628113342.c9c0f49c.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070628113342.c9c0f49c.akpm@linux-foundation.org>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:54:20 -0700 (PDT)
+Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T7sDtL023962
+	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:54:15 -0700
+Message-ID: <4684BAA4.4010905@dgreaves.com>
+Date: Fri, 29 Jun 2007 08:54:12 +0100
+From: David Greaves <david@dgreaves.com>
+MIME-Version: 1.0
+Subject: Re: [linux-pm] Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
+References: <46744065.6060605@dgreaves.com> <200706281727.35430.rjw@sisk.pl> <20070628220045.GA4521@elf.ucw.cz> <200706290016.45719.rjw@sisk.pl> <20070629050024.GO31489@sgi.com> <4684B750.5030001@dgreaves.com> <20070629074322.GT31489@sgi.com>
+In-Reply-To: <20070629074322.GT31489@sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, Andreas Dilger <adilger@clusterfs.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>, Oleg Nesterov <oleg@tv-sign.ru>
 
-On Thu, Jun 28, 2007 at 11:33:42AM -0700, Andrew Morton wrote:
-> I think Mingming was asking that Ted move the current quilt tree into git,
-> presumably because she's working off git.
+David Chinner wrote:
+> On Fri, Jun 29, 2007 at 08:40:00AM +0100, David Greaves wrote:
+>> What happens if a filesystem is frozen and I hibernate?
+>> Will it be thawed when I resume?
 > 
-> I'm not sure what to do, really.  The core kernel patches need to be in
-> Ted's tree for testing but that'll create a mess for me.
+> If you froze it yourself, then you'll have to thaw it yourself.
 
-Could we please stop this stupid ext4-centrism?  XFS is ready so we can
-put in the syscalls backed by XFS.  We have already done this with the xattr
-syscalls in 2.4, btw.
+So hibernate will not attempt to re-freeze a frozen fs and, during resume, it 
+will only thaw filesystems that were frozen by the suspend?
 
-Then again I don't think we should put it in quite yet, because this thread
-has degraded into creeping featurism, please give me some more time to
-preparate a semi-coheret rants about this..
+David
