@@ -1,89 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:03:36 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T73QtL008166
-	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:03:29 -0700
-Message-ID: <4684AEAE.4050008@sgi.com>
-Date: Fri, 29 Jun 2007 17:03:10 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:48:38 -0700 (PDT)
+Received: from zebday.corky.net (corky.net [212.150.53.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T6mWtL000920
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:48:33 -0700
+Message-ID: <4684A98B.1030000@corky.net>
+Date: Fri, 29 Jun 2007 07:41:15 +0100
+From: Just Marc <marc@corky.net>
 MIME-Version: 1.0
-Subject: Re: After reboot fs with barrier faster deletes then fs with nobarrier
-References: <op.tuldjrzef7nho5@sunset.cpc.wmin.ac.uk> <20070627222040.GR989688@sgi.com> <4683407E.9080707@sgi.com> <20070628220225.GB31489@sgi.com>
-In-Reply-To: <20070628220225.GB31489@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: xfs_fsr, performance related tweaks
+References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net> <4684A506.4030705@corky.net> <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Szabolcs Illes <S.Illes@westminster.ac.uk>, xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Dave,
+Barry Naujok wrote:
+> On Fri, 29 Jun 2007 16:21:58 +1000, Just Marc <marc@corky.net> wrote:
+>
+>> Hi Eric,
+>>
+>> In my particular case, and I'm sure for many other people, files that 
+>> are stored never change again until they deleted.  I hinted that 
+>> there could be a command line switch to turn this functionality on, 
+>> as it may not be perfect for everyone's use cases.
+>>
+>> If nobody likes this still, I would appreciate some hints on how to 
+>> mark files as no-defrag from within fsr itself given that I only have 
+>> the file descriptor ... A hack like looking up the descriptor in 
+>> /proc/self/fd should work, but is linux specific and is too hackish 
+>> in my opinion.   I'd like to at least have a nice simple patch for my 
+>> own uses.
+>
+> Eric,
+>
+> You can use the xfs_io chattr command to mark known files as
+> nodefrag. Using the chattr -R option can be used to recurse
+> directories.
+>
+>
 
-David Chinner wrote:
-> On Thu, Jun 28, 2007 at 03:00:46PM +1000, Timothy Shimmin wrote:
->> David Chinner wrote:
->>> On Wed, Jun 27, 2007 at 06:58:29PM +0100, Szabolcs Illes wrote:
->>>> Hi,
->>>>
->>>> I am using XFS on my laptop, I have realized that nobarrier mount options 
->>>> sometimes slows down deleting large number of small files, like the 
->>>> kernel  source tree. I made four tests, deleting the kernel source right 
->>>> after  unpack and after reboot, with both barrier and nobarrier options:
->>>>
->>>> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2
->>>> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 && sync && 
->> reboot
->>>> After reboot:
->>>> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
->>>> real    0m28.127s
->>>> user    0m0.044s
->>>> sys     0m2.924s
->>>> mount opts: rw,noatime,nodiratime,logbsize=256k,logbufs=2,nobarrier
->>>> illes@sunset:~/tmp> tar xjf ~/Download/linux-2.6.21.5.tar.bz2 && sync && 
->> reboot
->>>> After reboot:
->>>> illes@sunset:~/tmp> time rm -rf linux-2.6.21.5/
->>>> real    1m12.738s
->>>> user    0m0.032s
->>>> sys     0m2.548s
->>>> It looks like with barrier it's faster deleting files after reboot.
->>>> ( 28 sec vs 72 sec !!! ).
->>> Of course the second run will be faster here - the inodes are already in
->>> cache and so there's no reading from disk needed to find the files
->>> to delete....
->>>
->>> That's because run time after reboot is determined by how fast you
->>> can traverse the directory structure (i.e. how many seeks are
->>> involved). 
->>> Barriers will have little impact on the uncached rm -rf
->>> results, 
->> But it looks like barriers _are_ having impact on the uncached rm -rf
->> results.
-> 
-> Tim, please be care with what you quote - you've quoted a different
-> set of results wot what I did and commented on and that takes my
-> comments way out of context.
+Barry,
 
-Sorry for rearranging the quote (haven't touched it this time ;-).
-My aim was just to highlight the uncached results which I thought were a
-bit surprising. (The other results not being surprising)
-I was wondering what your take on that was.
+That's right but I can't do this on a filesystem that's just been 
+defragged say a minute ago, and in the mean time 20 new files got added 
+(I don't know what these files are... ).
 
-> 
-> In hindsight, I should have phrased it as "barriers _should_ have
-> little impact on uncached rm -rf results."
-> 
-> We've seen little impact in the past, and it's always been a
-> decrease in performance, so what we need to find out is how they are
-> having an impact. I suspect that it's to do with drive cache control
-> algorithms and barriers substantially reducing the amount of dirty
-> data being cached and hence read caching is working efficiently as a
-> side effect.
-> 
-> I guess the only way to confirm this is blktrace output to see what
-> I/Os are taking longer to execute when barriers are disabled.
-> 
-Yep.
+The whole filesystem has to be scanned again and here comes the issue: 
+fsr wants to try and reduce the extents of many files for which it can't 
+do it thus incurring lots of work and load until it can even reach the 
+new files do defrag them...
 
---Tim
+Marc
