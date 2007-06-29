@@ -1,73 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:55:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6tftL003785
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:55:43 -0700
-Date: Fri, 29 Jun 2007 16:55:25 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS shrink (step 0)
-Message-ID: <20070629065525.GQ31489@sgi.com>
-References: <1180715974.10796.46.camel@localhost> <20070604001632.GA86004887@sgi.com> <1182291751.5289.9.camel@localhost> <20070619234248.GT86004887@sgi.com> <46838FB4.1040906@linworks.de>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:34:58 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T7YrtL018262
+	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:34:54 -0700
+Subject: Re: xfs_fsr, performance related tweaks
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <4684B1CC.60004@corky.net>
+References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net>
+	 <4684A506.4030705@corky.net>
+	 <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+	 <4684A98B.1030000@corky.net> <20070629070814.GR31489@sgi.com>
+	 <4684B1CC.60004@corky.net>
+Content-Type: text/plain
+Date: Fri, 29 Jun 2007 17:33:55 +1000
+Message-Id: <1183102435.15488.170.camel@edge.yarra.acx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <46838FB4.1040906@linworks.de>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ruben Porras <ruben.porras@linworks.de>
-Cc: xfs@oss.sgi.com, iusty@k1024.org
+To: Just Marc <marc@corky.net>
+Cc: David Chinner <dgc@sgi.com>, Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Jun 28, 2007 at 12:38:44PM +0200, Ruben Porras wrote:
-> David Chinner wrote:
-> >No, there isn't anything currently in existence to do this.
-> >
-> >It's not difficult, though. What you need to do is count the number of
-> >used blocks in the AGs that will be truncated off, and check whether
-> >there is enough free space in the remaining AGs to hold all the
-> >blocks that we are going to move.
-> >
-> >I think this could be done we a single loop across the perag
-> >array or with a simple xfs_db wrapper and some shell/awk/perl
-> >magic.
-> >  
-> Do you mind that is it ok to depend on shell/awk/perl?
+On Fri, 2007-06-29 at 08:16 +0100, Just Marc wrote:
+> 
+> 
+> In my first post I already said something like that can be done but
+> it's 
+> just an ugly hack.   Don't you think it would best be handled cleanly 
+> and correctly by fsr itself?
+> 
 
-Sure. We have a few programs that are just shell wrappers
-of other xfs programs
+As I said earlier, fsr already issues the ioctl you're
+concerned about using - I'm not sure what the issue is
+there - if you need to do a setxattr, Just Do It.
 
-e.g:
-	xfs_bmap: shell script that calls xfs_io
-	xfs_check: shell script that calls xfs_db
-	xfs_info: shell script that calls xfs_growfs
+cheers.
 
-> I'll do it in C looping through the perag array.
-
-For something like this it's probably easier to do with shell/perl/awk.
-
-e.g. in shell, the number of ags in the filesystem:
-
-iterate all ags:
-
-numags=`xfs_db -r -c "sb 0" -c "p agcount" /dev/sdb8 | sed -e 's/.* = //'`
-lastag=`expr $numags - 1`
-for ags in `seq 0 1 $lastag`; do
-	....
-done
-
-Free space in an AG 0:
-
-xfs_db -r -c "freesp -s -a 0" /dev/sdb8 | awk '/total free blocks/ {print $4}'
-
-And so on. You can peek into pretty much any structure on disk with xfs_db
-and you can do it online so it's pretty much perfect for this sort of
-checking. I'd start with something like this, and if it gets too complex
-then we need to look at integrating it into xfs_db (i.e. writing it in C)....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--
+Nathan
