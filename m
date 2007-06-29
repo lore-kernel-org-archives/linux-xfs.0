@@ -1,52 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:29:19 -0700 (PDT)
-Received: from zebday.corky.net (corky.net [212.150.53.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T6TEtL027521
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:29:16 -0700
-Message-ID: <4684A506.4030705@corky.net>
-Date: Fri, 29 Jun 2007 07:21:58 +0100
-From: Just Marc <marc@corky.net>
-MIME-Version: 1.0
-Subject: Re: xfs_fsr, performance related tweaks
-References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net>
-In-Reply-To: <46841C60.5030207@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:34:07 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6XvtL029136
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:34:01 -0700
+Subject: TAKE 958214 - xfs_bmap '-v' flag has no effect on a realtime file system
+Message-Id: <20070629063353.1B88E58C38F1@chook.melbourne.sgi.com>
+Date: Fri, 29 Jun 2007 16:33:53 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-Hi Eric,
 
-In my particular case, and I'm sure for many other people, files that 
-are stored never change again until they deleted.  I hinted that there 
-could be a command line switch to turn this functionality on, as it may 
-not be perfect for everyone's use cases.
+Date:  Fri Jun 29 16:33:35 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  dgc@sgi.com
 
-If nobody likes this still, I would appreciate some hints on how to mark 
-files as no-defrag from within fsr itself given that I only have the 
-file descriptor ... A hack like looking up the descriptor in 
-/proc/self/fd should work, but is linux specific and is too hackish in 
-my opinion.   I'd like to at least have a nice simple patch for my own uses.
-
-Marc
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Eric Sandeen wrote:
-> Just Marc wrote:
->
->   
->> 2. Files for which 'No improvement will be made' should also be marked 
->> as no-defrag, this will avoid a ton of extra work in the future.   
->>     
->
-> But... that file could drastically change in the future, no?  Just
-> because it can't be improved now doesn't necessarily mean that it should
-> never be revisited on subsequent runs, does it?
->
-> -Eric
->
->
->   
+Modid:  master-melb:xfs-cmds:29029a
+xfsprogs/io/bmap.c - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/io/bmap.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- xfs_bmap '-v' flag has no effect on a realtime file system
