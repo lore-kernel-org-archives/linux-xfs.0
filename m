@@ -1,43 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 16:57:35 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5SNvStL022705
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 16:57:29 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 17:13:13 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T0D7tL028948
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 17:13:08 -0700
 Subject: Re: xfs_fsr, performance related tweaks
-References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net>
-From: Andi Kleen <andi@firstfloor.org>
-Date: 29 Jun 2007 02:52:57 +0200
-In-Reply-To: <46841C60.5030207@sandeen.net>
-Message-ID: <p73ved74m52.fsf@bingen.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <4683ADF5.9050901@corky.net>
+References: <4683ADF5.9050901@corky.net>
+Content-Type: text/plain
+Date: Fri, 29 Jun 2007 10:12:09 +1000
+Message-Id: <1183075929.15488.148.camel@edge.yarra.acx>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Just Marc <marc@corky.net>, xfs@oss.sgi.com
+To: Just Marc <marc@corky.net>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen <sandeen@sandeen.net> writes:
+On Thu, 2007-06-28 at 13:47 +0100, Just Marc wrote:
+> ...
+> I looked at how the 'io' utility marks files as no-defrag; it calls 
+> xfsctl(path, fd, XFS_IOC_FSSETXATTR, &attr); -- this requires a path, 
+> which is not available to me when fsr is run in its default mode
+> which 
+> traverses all xfs filesystems rather than gets to run on a single
+> file. 
 
-> Just Marc wrote:
-> 
-> > 2. Files for which 'No improvement will be made' should also be marked 
-> > as no-defrag, this will avoid a ton of extra work in the future.   
-> 
-> But... that file could drastically change in the future, no?  Just
-> because it can't be improved now doesn't necessarily mean that it should
-> never be revisited on subsequent runs, does it?
+Just call the ioctl directly - fsr is already doing this in a bunch
+of places (even has a call to XFS_IOC_FSSETXATTR already, elsewhere).
+The xfsctl wrapper is just to give some tools platform independence -
+on IRIX (shares xfs_io code) some of the syscalls take paths, but on
+Linux only file descriptors are used.
 
-I guess one could define an additional dont-defrag (or perhaps
-rather already-defrag) flag that is always
-cleared when the file changes. That could be safely set here.
+cheers.
 
-But then I'm not sure it would be worth the effort. Why would you
-run fsr that often that it matters?
-
-Also I would expect that one can easily detect in many cases an defragmented
-file by looking at the number of extents in the inode only and that would 
-make it equivalent to the flag. The cases where this is not the case
-are probably rare too.
-
--Andi
+--
+Nathan
