@@ -1,28 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:34:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:38:32 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6XvtL029136
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:34:01 -0700
-Subject: TAKE 958214 - xfs_bmap '-v' flag has no effect on a realtime file system
-Message-Id: <20070629063353.1B88E58C38F1@chook.melbourne.sgi.com>
-Date: Fri, 29 Jun 2007 16:33:53 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6cPtL030460
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:38:26 -0700
+Date: Fri, 29 Jun 2007 16:41:22 +1000
+Subject: Re: xfs_fsr, performance related tweaks
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+MIME-Version: 1.0
+References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net> <4684A506.4030705@corky.net>
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <4684A506.4030705@corky.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
+To: Just Marc <marc@corky.net>
 Cc: xfs@oss.sgi.com
 
+On Fri, 29 Jun 2007 16:21:58 +1000, Just Marc <marc@corky.net> wrote:
 
-Date:  Fri Jun 29 16:33:35 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  dgc@sgi.com
+> Hi Eric,
+>
+> In my particular case, and I'm sure for many other people, files that  
+> are stored never change again until they deleted.  I hinted that there  
+> could be a command line switch to turn this functionality on, as it may  
+> not be perfect for everyone's use cases.
+>
+> If nobody likes this still, I would appreciate some hints on how to mark  
+> files as no-defrag from within fsr itself given that I only have the  
+> file descriptor ... A hack like looking up the descriptor in  
+> /proc/self/fd should work, but is linux specific and is too hackish in  
+> my opinion.   I'd like to at least have a nice simple patch for my own  
+> uses.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+Eric,
 
+You can use the xfs_io chattr command to mark known files as
+nodefrag. Using the chattr -R option can be used to recurse
+directories.
 
-Modid:  master-melb:xfs-cmds:29029a
-xfsprogs/io/bmap.c - 1.14 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/io/bmap.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-	- xfs_bmap '-v' flag has no effect on a realtime file system
+Regards,
+Barry.
