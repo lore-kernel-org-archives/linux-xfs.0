@@ -1,46 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:40:10 -0700 (PDT)
-Received: from mail.ukfsn.org (s2.ukfsn.org [217.158.120.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T7e1tL019463
-	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:40:03 -0700
-Message-ID: <4684B750.5030001@dgreaves.com>
-Date: Fri, 29 Jun 2007 08:40:00 +0100
-From: David Greaves <david@dgreaves.com>
-MIME-Version: 1.0
-Subject: Re: [linux-pm] Re: [linux-lvm] 2.6.22-rc4 XFS fails after hibernate/resume
-References: <46744065.6060605@dgreaves.com> <200706281727.35430.rjw@sisk.pl> <20070628220045.GA4521@elf.ucw.cz> <200706290016.45719.rjw@sisk.pl> <20070629050024.GO31489@sgi.com>
-In-Reply-To: <20070629050024.GO31489@sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Jun 2007 00:41:26 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T7fItL019805
+	for <xfs@oss.sgi.com>; Fri, 29 Jun 2007 00:41:21 -0700
+Date: Fri, 29 Jun 2007 17:41:14 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfs_fsr, performance related tweaks
+Message-ID: <20070629074114.GS31489@sgi.com>
+References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net> <4684A506.4030705@corky.net> <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com> <4684A98B.1030000@corky.net> <20070629070814.GR31489@sgi.com> <4684B1CC.60004@corky.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4684B1CC.60004@corky.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, linux-pm <linux-pm@lists.osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, LinuxRaid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>, David Robinson <zxvdr.au@gmail.com>, Oleg Nesterov <oleg@tv-sign.ru>
+To: Just Marc <marc@corky.net>
+Cc: David Chinner <dgc@sgi.com>, Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Fri, Jun 29, 2007 at 12:16:44AM +0200, Rafael J. Wysocki wrote:
->> There are two solutions possible, IMO.  One would be to make these workqueues
->> freezable, which is possible, but hacky and Oleg didn't like that very much.
->> The second would be to freeze XFS from within the hibernation code path,
->> using freeze_bdev().
+On Fri, Jun 29, 2007 at 08:16:28AM +0100, Just Marc wrote:
+> David,
 > 
-> The second is much more likely to work reliably. If freezing the
-> filesystem leaves something in an inconsistent state, then it's
-> something I can reproduce and debug without needing to
-> suspend/resume.
-> 
-> FWIW, don't forget you need to thaw the filesystem on resume.
+> In my first post I already said something like that can be done but it's 
+> just an ugly hack.   Don't you think it would best be handled cleanly 
+> and correctly by fsr itself?
 
-I've been a little distracted recently - sorry. I'll re-read the thread and see 
-if there are any test actions I need to complete.
+No, I don't - if you want files not to be defragmented, then you
+have to set the flags yourself in some way. You have a specific need
+that can be solved by some scripting to describe your defrag/no
+defrag policy. xfs_fsr has no place is setting defrag policy; it's
+function is simply to find and defrag files.
 
-I do know that the corruption problems I've been having:
-a) only happen after hibernate/resume
-b) only ever happen on one of 2 XFS filesystems
-c) happen even when the script does xfs_freeze;sync;hibernate;xfs_thaw
+Cheers,
 
-What happens if a filesystem is frozen and I hibernate?
-Will it be thawed when I resume?
-
-David
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
