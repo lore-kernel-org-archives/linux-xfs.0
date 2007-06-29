@@ -1,57 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:48:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:39:31 -0700 (PDT)
 Received: from zebday.corky.net (corky.net [212.150.53.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T6mWtL000920
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:48:33 -0700
-Message-ID: <4684A98B.1030000@corky.net>
-Date: Fri, 29 Jun 2007 07:41:15 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5T6dPtL030878
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:39:26 -0700
+Message-ID: <4684A728.1050405@corky.net>
+Date: Fri, 29 Jun 2007 07:31:04 +0100
 From: Just Marc <marc@corky.net>
 MIME-Version: 1.0
 Subject: Re: xfs_fsr, performance related tweaks
-References: <4683ADEB.3010106@corky.net> <46841C60.5030207@sandeen.net> <4684A506.4030705@corky.net> <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.tun7i8wd3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+References: <4683ADF5.9050901@corky.net> <1183075929.15488.148.camel@edge.yarra.acx>
+In-Reply-To: <1183075929.15488.148.camel@edge.yarra.acx>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs@oss.sgi.com
+To: nscott@aconex.com
+Cc: xfs@oss.sgi.com, andi@firstfloor.org
 
-Barry Naujok wrote:
-> On Fri, 29 Jun 2007 16:21:58 +1000, Just Marc <marc@corky.net> wrote:
->
->> Hi Eric,
->>
->> In my particular case, and I'm sure for many other people, files that 
->> are stored never change again until they deleted.  I hinted that 
->> there could be a command line switch to turn this functionality on, 
->> as it may not be perfect for everyone's use cases.
->>
->> If nobody likes this still, I would appreciate some hints on how to 
->> mark files as no-defrag from within fsr itself given that I only have 
->> the file descriptor ... A hack like looking up the descriptor in 
->> /proc/self/fd should work, but is linux specific and is too hackish 
->> in my opinion.   I'd like to at least have a nice simple patch for my 
->> own uses.
->
-> Eric,
->
-> You can use the xfs_io chattr command to mark known files as
-> nodefrag. Using the chattr -R option can be used to recurse
-> directories.
->
->
+Hi Nathan, Andy,
 
-Barry,
+I tried calling the ioctl of course, it does accept a path (also in the 
+example in which it is used) but it returned EINVAL, I'll try again.
 
-That's right but I can't do this on a filesystem that's just been 
-defragged say a minute ago, and in the mean time 20 new files got added 
-(I don't know what these files are... ).
+ > I guess one could define an additional dont-defrag (or perhaps
+ > rather already-defrag) flag that is always
+ > cleared when the file changes. That could be safely set here.
 
-The whole filesystem has to be scanned again and here comes the issue: 
-fsr wants to try and reduce the extents of many files for which it can't 
-do it thus incurring lots of work and load until it can even reach the 
-new files do defrag them...
+I had this in mind but thought not to bring it up as it's too low 
+level.  Although I prefer this solution myself as it caters for all 
+cases automatically.
+
+ > But then I'm not sure it would be worth the effort. Why would you run 
+fsr that often that it matters?
+
+I run fsr all the time because in my case there is hundreds of gigs of 
+new data added to each file system every day, some of it does badly need 
+to be defragged as the files added are actively being served, not just 
+stored.
+
+ >Also I would expect that one can easily detect in many cases an 
+defragmented file by looking at the number of extents in the inode only 
+and that would
+ > make it equivalent to the flag. The cases where this is not the case 
+are probably rare too.
+
+Well, this case would change from file to file (depending on its size) 
+and a high number of extents may be acceptable for very large files so 
+either come up with a formula that says "I can accept X extents per gig 
+and not continue defragging" or do clear the no-defrag bit on file 
+modification which is a cleaner solution.
 
 Marc
+
+
+Nathan Scott wrote:
+> Just call the ioctl directly - fsr is already doing this in a bunch
+> of places (even has a call to XFS_IOC_FSSETXATTR already, elsewhere).
+> The xfsctl wrapper is just to give some tools platform independence -
+> on IRIX (shares xfs_io code) some of the syscalls take paths, but on
+> Linux only file descriptors are used.
+>
+> cheers.
+>
+> --
+> Nathan
+>
+>
+>   
