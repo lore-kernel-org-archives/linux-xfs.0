@@ -1,121 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:13:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Jun 2007 23:16:27 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6D5tL023401
-	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:13:07 -0700
-Date: Fri, 29 Jun 2007 16:16:53 +1000
-Subject: REVIEW: xfs_bmap '-v' flag has no effect on a realtime file system
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------OzfYWMDWik0amWcHwYPaQK
-MIME-Version: 1.0
-Message-ID: <op.tun6efyd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l5T6GItL024418
+	for <xfs@oss.sgi.com>; Thu, 28 Jun 2007 23:16:21 -0700
+Date: Fri, 29 Jun 2007 16:16:11 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: REVIEW: xfs_bmap '-v' flag has no effect on a realtime file system
+Message-ID: <20070629061611.GP31489@sgi.com>
+References: <op.tun6efyd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <op.tun6efyd3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-------------OzfYWMDWik0amWcHwYPaQK
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+On Fri, Jun 29, 2007 at 04:16:53PM +1000, Barry Naujok wrote:
+> It's rather confusing when you run xfs_bmap -v on a realtime file and
+> it doesn't show any verbose information at all.
+> 
+> The attached patch presents verbose information but without the AG
+> information for realtime files.
 
-It's rather confusing when you run xfs_bmap -v on a realtime file and
-it doesn't show any verbose information at all.
+Looks ok to me.
 
-The attached patch presents verbose information but without the AG
-information for realtime files.
+Cheers,
 
-Eg:
-
-# xfs_bmap -v foo_rt
-foo_rt:
-  EXT: FILE-OFFSET      RT-BLOCK-RANGE     TOTAL
-    0: [0..2047]:       0..2047             2048
-
-------------OzfYWMDWik0amWcHwYPaQK
-Content-Disposition: attachment; filename=xfs_bmap_verbose_rt.patch
-Content-Type: application/octet-stream; name=xfs_bmap_verbose_rt.patch
-Content-Transfer-Encoding: Base64
-
-LS0tIGEveGZzcHJvZ3MvaW8vYm1hcC5jCTIwMDctMDYtMjkgMTY6MTI6MjMu
-MDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL2lvL2JtYXAuYwkyMDA3
-LTA2LTI5IDE2OjA5OjI1LjExNzU3Mjk1MCArMTAwMApAQCAtNzUsNiArNzUs
-NyBAQCBibWFwX2YoCiAJaW50CQkJbGZsYWcgPSAwOwogCWludAkJCW5mbGFn
-ID0gMDsKIAlpbnQJCQl2ZmxhZyA9IDA7CisJaW50CQkJaXNfcnQgPSAwOwog
-CWludAkJCWJtdl9pZmxhZ3MgPSAwOwkvKiBmbGFncyBmb3IgWEZTX0lPQ19H
-RVRCTUFQWCAqLwogCWludAkJCWkgPSAwOwogCWludAkJCWM7CkBAIC0xMzMs
-NyArMTM0LDcgQEAgYm1hcF9mKAogCQkJICogYWcgaW5mbyBub3QgYXBwbGlj
-YWJsZSB0byBydCwgY29udGludWUKIAkJCSAqIHdpdGhvdXQgYWcgb3V0cHV0
-LgogCQkJICovCi0JCQl2ZmxhZyA9IDA7CisJCQlpc19ydCA9IDE7CiAJCX0K
-IAl9CiAKQEAgLTI4MCwxMCArMjgxLDE0IEBAIGJtYXBfZigKIAogCQlmb2Zm
-X3cgPSBib2ZmX3cgPSBhb2ZmX3cgPSBNSU5SQU5HRV9XSURUSDsKIAkJdG90
-X3cgPSBNSU5UT1RfV0lEVEg7Ci0JCWJicGVyYWcgPSAob2ZmNjRfdClmc2dl
-by5hZ2Jsb2NrcyAqCi0JCQkgIChvZmY2NF90KWZzZ2VvLmJsb2Nrc2l6ZSAv
-IEJCU0laRTsKLQkJc3VuaXQgPSAoZnNnZW8uc3VuaXQgKiBmc2dlby5ibG9j
-a3NpemUpIC8gQkJTSVpFOwotCQlzd2lkdGggPSAoZnNnZW8uc3dpZHRoICog
-ZnNnZW8uYmxvY2tzaXplKSAvIEJCU0laRTsKKwkJaWYgKGlzX3J0KQorCQkJ
-c3VuaXQgPSBzd2lkdGggPSBiYnBlcmFnID0gMDsKKwkJZWxzZSB7CisJCQli
-YnBlcmFnID0gKG9mZjY0X3QpZnNnZW8uYWdibG9ja3MgKgorCQkJCSAgKG9m
-ZjY0X3QpZnNnZW8uYmxvY2tzaXplIC8gQkJTSVpFOworCQkJc3VuaXQgPSAo
-ZnNnZW8uc3VuaXQgKiBmc2dlby5ibG9ja3NpemUpIC8gQkJTSVpFOworCQkJ
-c3dpZHRoID0gKGZzZ2VvLnN3aWR0aCAqIGZzZ2VvLmJsb2Nrc2l6ZSkgLyBC
-QlNJWkU7CisJCX0KIAkJZmxnID0gc3VuaXQ7CiAKIAkJLyoKQEAgLTMwNiwy
-NSArMzExLDMxIEBAIGJtYXBfZigKIAkJCQkJKGxvbmcgbG9uZykgbWFwW2kg
-KyAxXS5ibXZfYmxvY2ssCiAJCQkJCShsb25nIGxvbmcpKG1hcFtpICsgMV0u
-Ym12X2Jsb2NrICsKIAkJCQkJCW1hcFtpICsgMV0uYm12X2xlbmd0aCAtIDFM
-TCkpOwotCQkJCWFnbm8gPSBtYXBbaSArIDFdLmJtdl9ibG9jayAvIGJicGVy
-YWc7Ci0JCQkJYWdvZmYgPSBtYXBbaSArIDFdLmJtdl9ibG9jayAtIChhZ25v
-ICogYmJwZXJhZyk7Ci0JCQkJc25wcmludGYoYWJ1Ziwgc2l6ZW9mKGFidWYp
-LCAiKCVsbGQuLiVsbGQpIiwKLQkJCQkJKGxvbmcgbG9uZylhZ29mZiwgIChs
-b25nIGxvbmcpCi0JCQkJCShhZ29mZiArIG1hcFtpICsgMV0uYm12X2xlbmd0
-aCAtIDFMTCkpOwotCQkJCWZvZmZfdyA9IG1heChmb2ZmX3csIHN0cmxlbihy
-YnVmKSk7CiAJCQkJYm9mZl93ID0gbWF4KGJvZmZfdywgc3RybGVuKGJidWYp
-KTsKLQkJCQlhb2ZmX3cgPSBtYXgoYW9mZl93LCBzdHJsZW4oYWJ1ZikpOwor
-CQkJCWlmICghaXNfcnQpIHsKKwkJCQkJYWdubyA9IG1hcFtpICsgMV0uYm12
-X2Jsb2NrIC8gYmJwZXJhZzsKKwkJCQkJYWdvZmYgPSBtYXBbaSArIDFdLmJt
-dl9ibG9jayAtCisJCQkJCQkJKGFnbm8gKiBiYnBlcmFnKTsKKwkJCQkJc25w
-cmludGYoYWJ1Ziwgc2l6ZW9mKGFidWYpLAorCQkJCQkJIiglbGxkLi4lbGxk
-KSIsCisJCQkJCQkobG9uZyBsb25nKWFnb2ZmLAorCQkJCQkJKGxvbmcgbG9u
-ZykoYWdvZmYgKworCQkJCQkJIG1hcFtpICsgMV0uYm12X2xlbmd0aCAtIDFM
-TCkpOworCQkJCQlhb2ZmX3cgPSBtYXgoYW9mZl93LCBzdHJsZW4oYWJ1Zikp
-OworCQkJCX0gZWxzZQorCQkJCQlhb2ZmX3cgPSAwOworCQkJCWZvZmZfdyA9
-IG1heChmb2ZmX3csIHN0cmxlbihyYnVmKSk7CiAJCQkJdG90X3cgPSBtYXgo
-dG90X3csCiAJCQkJCW51bWxlbihtYXBbaSsxXS5ibXZfbGVuZ3RoKSk7CiAJ
-CQl9CiAJCX0KLQkJYWdub193ID0gbWF4KE1JTkFHX1dJRFRILCBudW1sZW4o
-ZnNnZW8uYWdjb3VudCkpOworCQlhZ25vX3cgPSBpc19ydCA/IDAgOiBtYXgo
-TUlOQUdfV0lEVEgsIG51bWxlbihmc2dlby5hZ2NvdW50KSk7CiAJCXByaW50
-ZigiJTRzOiAlLSpzICUtKnMgJSpzICUtKnMgJSpzJXNcbiIsCiAJCQlfKCJF
-WFQiKSwKIAkJCWZvZmZfdywgXygiRklMRS1PRkZTRVQiKSwKLQkJCWJvZmZf
-dywgXygiQkxPQ0stUkFOR0UiKSwKLQkJCWFnbm9fdywgXygiQUciKSwKLQkJ
-CWFvZmZfdywgXygiQUctT0ZGU0VUIiksCisJCQlib2ZmX3csIGlzX3J0ID8g
-XygiUlQtQkxPQ0stUkFOR0UiKSA6IF8oIkJMT0NLLVJBTkdFIiksCisJCQlh
-Z25vX3csIGlzX3J0ID8gIiIgOiBfKCJBRyIpLAorCQkJYW9mZl93LCBpc19y
-dCA/ICIiIDogXygiQUctT0ZGU0VUIiksCiAJCQl0b3RfdywgXygiVE9UQUwi
-KSwKIAkJCWZsZyA/IF8oIiBGTEFHUyIpIDogIiIpOwogCQlmb3IgKGkgPSAw
-OyBpIDwgZWdjbnQ7IGkrKykgewpAQCAtMzY5LDE4ICszODAsMjMgQEAgYm1h
-cF9mKAogCQkJCQkobG9uZyBsb25nKSBtYXBbaSArIDFdLmJtdl9ibG9jaywK
-IAkJCQkJKGxvbmcgbG9uZykobWFwW2kgKyAxXS5ibXZfYmxvY2sgKwogCQkJ
-CQkJbWFwW2kgKyAxXS5ibXZfbGVuZ3RoIC0gMUxMKSk7Ci0JCQkJYWdubyA9
-IG1hcFtpICsgMV0uYm12X2Jsb2NrIC8gYmJwZXJhZzsKLQkJCQlhZ29mZiA9
-IG1hcFtpICsgMV0uYm12X2Jsb2NrIC0gKGFnbm8gKiBiYnBlcmFnKTsKLQkJ
-CQlzbnByaW50ZihhYnVmLCBzaXplb2YoYWJ1ZiksICIoJWxsZC4uJWxsZCki
-LAotCQkJCQkobG9uZyBsb25nKWFnb2ZmLCAgKGxvbmcgbG9uZykKLQkJCQkJ
-KGFnb2ZmICsgbWFwW2kgKyAxXS5ibXZfbGVuZ3RoIC0gMUxMKSk7Ci0JCQkJ
-cHJpbnRmKCIlNGQ6ICUtKnMgJS0qcyAlKmQgJS0qcyAlKmxsZCIsCi0JCQkJ
-CWksCi0JCQkJCWZvZmZfdywgcmJ1ZiwKLQkJCQkJYm9mZl93LCBiYnVmLAot
-CQkJCQlhZ25vX3csIGFnbm8sCi0JCQkJCWFvZmZfdywgYWJ1ZiwKLQkJCQkJ
-dG90X3csIChsb25nIGxvbmcpbWFwW2krMV0uYm12X2xlbmd0aCk7CisJCQkJ
-cHJpbnRmKCIlNGQ6ICUtKnMgJS0qcyIsIGksIGZvZmZfdywgcmJ1ZiwKKwkJ
-CQkJYm9mZl93LCBiYnVmKTsKKwkJCQlpZiAoIWlzX3J0KSB7CisJCQkJCWFn
-bm8gPSBtYXBbaSArIDFdLmJtdl9ibG9jayAvIGJicGVyYWc7CisJCQkJCWFn
-b2ZmID0gbWFwW2kgKyAxXS5ibXZfYmxvY2sgLQorCQkJCQkJCShhZ25vICog
-YmJwZXJhZyk7CisJCQkJCXNucHJpbnRmKGFidWYsIHNpemVvZihhYnVmKSwK
-KwkJCQkJCSIoJWxsZC4uJWxsZCkiLAorCQkJCQkJKGxvbmcgbG9uZylhZ29m
-ZiwKKwkJCQkJCShsb25nIGxvbmcpKGFnb2ZmICsKKwkJCQkJCSBtYXBbaSAr
-IDFdLmJtdl9sZW5ndGggLSAxTEwpKTsKKwkJCQkJcHJpbnRmKCIgJSpkICUt
-KnMiLCBhZ25vX3csIGFnbm8sCisJCQkJCQlhb2ZmX3csIGFidWYpOworCQkJ
-CX0gZWxzZQorCQkJCQlwcmludGYoIiAgIik7CisJCQkJcHJpbnRmKCIgJSps
-bGQiLCB0b3RfdywKKwkJCQkJKGxvbmcgbG9uZyltYXBbaSsxXS5ibXZfbGVu
-Z3RoKTsKIAkJCQlpZiAoZmxnID09IEZMR19OVUxMKSB7CiAJCQkJCXByaW50
-ZigiXG4iKTsKIAkJCQl9IGVsc2Ugewo=
-
-------------OzfYWMDWik0amWcHwYPaQK--
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
