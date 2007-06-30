@@ -1,38 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 30 Jun 2007 03:15:02 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 30 Jun 2007 03:21:22 -0700 (PDT)
 Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5UAEutL030831
-	for <xfs@oss.sgi.com>; Sat, 30 Jun 2007 03:14:57 -0700
-Date: Sat, 30 Jun 2007 11:14:42 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l5UALGtL032514
+	for <xfs@oss.sgi.com>; Sat, 30 Jun 2007 03:21:18 -0700
+Date: Sat, 30 Jun 2007 11:21:11 +0100
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] fallocate() implementation in i86, x86_64 and powerpc
-Message-ID: <20070630101442.GA23568@infradead.org>
-References: <20070426180332.GA7209@amitarora.in.ibm.com> <20070509160102.GA30745@amitarora.in.ibm.com> <20070510005926.GT85884050@sgi.com> <20070510115620.GB21400@amitarora.in.ibm.com> <20070510223950.GD86004887@sgi.com> <20070511110301.GB28425@in.ibm.com> <20070512080157.GF85884050@sgi.com> <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int>
+Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
+Message-ID: <20070630102111.GB23568@infradead.org>
+References: <20070612061652.GA6320@amitarora.in.ibm.com> <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625134500.GE1951@amitarora.in.ibm.com> <20070625150320.GA8686@amitarora.in.ibm.com> <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070614091458.GH5181@schatzie.adilger.int>
+In-Reply-To: <20070626103247.GA19870@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, Suparna Bhattacharya <suparna@in.ibm.com>, torvalds@osdl.org, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: Andreas Dilger <adilger@clusterfs.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
 
-On Thu, Jun 14, 2007 at 03:14:58AM -0600, Andreas Dilger wrote:
-> I suppose it might be a bit late in the game to add a "goal"
-> parameter and e.g. FA_FL_REQUIRE_GOAL, FA_FL_NEAR_GOAL, etc to make
-> the API more suitable for XFS?  The goal could be a single __u64, or
-> a struct with e.g. __u64 byte offset (possibly also __u32 lun like
-> in FIEMAP).  I guess the one potential limitation here is the
-> number of function parameters on some architectures.
+On Tue, Jun 26, 2007 at 04:02:47PM +0530, Amit K. Arora wrote:
+> > Can you clarify - what is the current behaviour when ENOSPC (or some other
+> > error) is hit?  Does it keep the current fallocate() or does it free it?
+> 
+> Currently it is left on the file system implementation. In ext4, we do
+> not undo preallocation if some error (say, ENOSPC) is hit. Hence it may
+> end up with partial (pre)allocation. This is inline with dd and
+> posix_fallocate, which also do not free the partially allocated space.
 
-This isn't really about "more suitable for XFS" but more about more
-suitable for sophisticated layout decisions.
+I can't find anything in the specification of posix_fallocate
+(http://www.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html)
+that tells what should happen to allocate blocks on error.
 
-But I'm still not confident this should be shohorned into this
-syscall.  In fact I'm already rather unhappy about the feature churn in
-the current patch series.
+But common sense would be to not leak disk space on failure of this
+syscall, and this definitively should not be left up to the filesystem,
+either we always leak it or always free it, and I'd strongly favour
+the latter variant.
 
-The more I think about it the more I'd prefer we would just put a simple
-syscall in that implements nothing but the posix_fallocate(3) semantics
-as defined in SuS, and then go on to brainstorm about advanced
-preallocation / layout hint semantics.
+> > For FA_ZERO_SPACE - I'd think this would (IMHO) be the default - we
+> > don't want to expose uninitialized disk blocks to userspace.  I'm not
+> > sure if this makes sense at all.
+> 
+> I don't think we need to make it default - atleast for filesystems which
+> have a mechanism to distinguish preallocated blocks from "regular" ones.
+> In ext4, for example, we will have a way to mark uninitialized extents.
+> All the preallocated blocks will be part of these uninitialized extents.
+> And any read on these extents will treat them as a hole, returning
+> zeroes to user land. Thus any existing data on uninitialized blocks will
+> not be exposed to the userspace.
+
+This is the xfs unwritten extent behaviour.  But anyway, the important bit
+is uninitialized blocks should never ever leak to userspace, so there is
+not need for the flag.
