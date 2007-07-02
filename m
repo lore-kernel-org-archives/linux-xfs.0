@@ -1,58 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 01 Jul 2007 15:56:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l61MuHtL027953
-	for <xfs@oss.sgi.com>; Sun, 1 Jul 2007 15:56:19 -0700
-Date: Mon, 2 Jul 2007 08:55:43 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
-Message-ID: <20070701225543.GW31489@sgi.com>
-References: <20070613235217.GS86004887@sgi.com> <20070614091458.GH5181@schatzie.adilger.int> <20070614120413.GD86004887@sgi.com> <20070614193347.GN5181@schatzie.adilger.int> <20070625132810.GA1951@amitarora.in.ibm.com> <20070625134500.GE1951@amitarora.in.ibm.com> <20070625150320.GA8686@amitarora.in.ibm.com> <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com> <20070630102111.GB23568@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070630102111.GB23568@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 02:40:39 -0700 (PDT)
+Received: from mail.suse.cz (styx.suse.cz [82.119.242.94])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l629eYtL014130
+	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 02:40:36 -0700
+Message-ID: <4688C812.9020200@suse.cz>
+Date: Mon, 02 Jul 2007 11:40:34 +0200
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
+Subject: Re: [patch 3/3] Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS
+ in compat mode
+References: <20070619132549.266927601@suse.cz> <20070619132726.893544847@suse.cz> <20070628034957.GE989688@sgi.com>
+In-Reply-To: <20070628034957.GE989688@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, "Amit K. Arora" <aarora@linux.vnet.ibm.com>, Andreas Dilger <adilger@clusterfs.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Sat, Jun 30, 2007 at 11:21:11AM +0100, Christoph Hellwig wrote:
-> On Tue, Jun 26, 2007 at 04:02:47PM +0530, Amit K. Arora wrote:
-> > > Can you clarify - what is the current behaviour when ENOSPC (or some other
-> > > error) is hit?  Does it keep the current fallocate() or does it free it?
-> > 
-> > Currently it is left on the file system implementation. In ext4, we do
-> > not undo preallocation if some error (say, ENOSPC) is hit. Hence it may
-> > end up with partial (pre)allocation. This is inline with dd and
-> > posix_fallocate, which also do not free the partially allocated space.
+David Chinner wrote:
+> On Tue, Jun 19, 2007 at 03:25:52PM +0200, mmarek@suse.cz wrote:
+>> +static int xfs_bulkstat_one_compat(
+>> +	xfs_mount_t	*mp,		/* mount point for filesystem */
+>> +	xfs_ino_t	ino,		/* inode number to get data for */
+>> +	void		__user *buffer,	/* buffer to place output in */
+>> +	int		ubsize,		/* size of buffer */
+>> +	void		*private_data,	/* my private data */
+>> +	xfs_daddr_t	bno,		/* starting bno of inode cluster */
+>> +	int		*ubused,	/* bytes used by me */
+>> +	void		*dibuff,	/* on-disk inode buffer */
+>> +	int		*stat)		/* BULKSTAT_RV_... */
 > 
-> I can't find anything in the specification of posix_fallocate
-> (http://www.opengroup.org/onlinepubs/009695399/functions/posix_fallocate.html)
-> that tells what should happen to allocate blocks on error.
+> Hmmm - this is almost all duplicated code. It's pretty much what I
+> described, but maybe not /quite/ what I had in mind here. It's a
+> *big* improvement on the first version, but it seems now that the
+> only real difference xfs_bulkstat_one() and
+> xfs_bulkstat_one_compat() is copy_to_user() vs the discrete put_user
+> calls.
+> 
+> I think we can remove xfs_bulkstat_one_compat() completely by using
+> the same method you used with the xfs_inumber_fmt functions.
 
-Yeah, and AFAICT glibc leaves them behind ATM.
+You mean xfs_ioc_bulkstat_compat() -> native xfs_bulkstat() -> native
+xfs_bulkstat_one() -> a compat output formatter, so a
+pointer-to-function passed to pointer-to-function? ;) I could (ab)use
+the void *private_data arg which xfs_bulkstat passes unmodified to the
+formatter; xfs_bulkstat_one() doesn't make use of it atm. I'll try it
+and post the result in a while.
 
-> But common sense would be to not leak disk space on failure of this
-> syscall, and this definitively should not be left up to the filesystem,
-> either we always leak it or always free it, and I'd strongly favour
-> the latter variant.
-
-We can't simply walk the range an remove unwritten extents, as some
-of them may have been present before the fallocate() call. That
-makes it extremely difficult to undo a failed call and not remove
-more pre-existing pre-allocations.
-
-Given the current behaviour for posix_fallocate() in glibc, I think
-that retaining the same error semantic and punting the cleanup to
-userspace (where the app will fail with ENOSPC anyway) is the only
-sane thing we can do here. Trying to undo this in the kernel leads
-to lots of extra rarely used code in error handling paths...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Michal
