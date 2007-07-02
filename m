@@ -1,55 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 06:02:04 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l62D1xtL024696
-	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 06:02:01 -0700
-Date: Mon, 2 Jul 2007 23:01:50 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: After reboot fs with barrier faster deletes then fs with nobarrier
-Message-ID: <20070702130150.GK989688@sgi.com>
-References: <op.tuldjrzef7nho5@sunset.cpc.wmin.ac.uk> <20070629001648.GD31489@sgi.com> <op.tuomcyagf7nho5@project1.cpc.wmin.ac.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 07:01:57 -0700 (PDT)
+Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l62E1mtL008879
+	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 07:01:51 -0700
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
+Date: Mon, 2 Jul 2007 16:08:55 +0200
+References: <46744065.6060605@dgreaves.com> <4684C0DD.4080702@dgreaves.com> <4688D9F2.6020000@gmail.com>
+In-Reply-To: <4688D9F2.6020000@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <op.tuomcyagf7nho5@project1.cpc.wmin.ac.uk>
+Message-Id: <200707021608.56616.rjw@sisk.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Szabolcs Illes <S.Illes@westminster.ac.uk>
-Cc: xfs@oss.sgi.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: David Greaves <david@dgreaves.com>, David Chinner <dgc@sgi.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>
 
-On Fri, Jun 29, 2007 at 01:01:36PM +0100, Szabolcs Illes wrote:
-> on my desktop pc:
+On Monday, 2 July 2007 12:56, Tejun Heo wrote:
+> David Greaves wrote:
+> >> Tejun Heo wrote:
+> >>> It's really weird tho.  The PHY RDY status changed events are coming
+> >>> from the device which is NOT used while resuming
+> > 
+> > There is an obvious problem there though Tejun (the errors even when sda
+> > isn't involved in the OS boot) - can I start another thread about that
+> > issue/bug later? I need to reshuffle partitions so I'd rather get the
+> > hibernate working first and then go back to it if that's OK?
 > 
-> WCE=1
+> Yeah, sure.  The problem is that we don't know whether or how those two
+> are related.  It would be great if there's a way to verify memory image
+> read from hibernation is intact.  Rafael, any ideas?
 
-hot-cache/cold cache nobarrier is faster. same results as I got.
-After reboot, nobarrier is way slow.
+Well, s2disk has an option to compute an MD5 checksum of the image during
+the hibernation and verify it while reading the image.  Still, s2disk/resume
+aren't very easy to install  and configure ...
 
-> WCE=0
+Greetings,
+Rafael
 
-hot-cache/cold-cache is pretty much identical. Same results I got.
-After reboot, nobarrier is way slow.
 
-> for cold cache I used: echo 3 > /proc/sys/vm/drop_caches
-
-Same here.
-
-> it looks like this machine is only affected after reboot, maybe the hdd  
-> has more cache, then the hdd in my 3 years old laptop.
-> on my laptop it was enought to clear the kernel cache.
-> 
-> How did you do your "cold" tests? reboot or drop_caches?
-
-drop_caches.
-
-So there definitely appears to be something about a reboot that is
-causing an issue here. I'll see if I can reproduce it here.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+"Premature optimization is the root of all evil." - Donald Knuth
