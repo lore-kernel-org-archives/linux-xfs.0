@@ -1,52 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 02:40:39 -0700 (PDT)
-Received: from mail.suse.cz (styx.suse.cz [82.119.242.94])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l629eYtL014130
-	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 02:40:36 -0700
-Message-ID: <4688C812.9020200@suse.cz>
-Date: Mon, 02 Jul 2007 11:40:34 +0200
-From: Michal Marek <mmarek@suse.cz>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 03:58:12 -0700 (PDT)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.182])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l62Aw6tL011017
+	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 03:58:08 -0700
+Received: by wa-out-1112.google.com with SMTP id k22so2278439waf
+        for <xfs@oss.sgi.com>; Mon, 02 Jul 2007 03:58:08 -0700 (PDT)
+Message-ID: <4688D9F2.6020000@gmail.com>
+Date: Mon, 02 Jul 2007 19:56:50 +0900
+From: Tejun Heo <htejun@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [patch 3/3] Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS
- in compat mode
-References: <20070619132549.266927601@suse.cz> <20070619132726.893544847@suse.cz> <20070628034957.GE989688@sgi.com>
-In-Reply-To: <20070628034957.GE989688@sgi.com>
+Subject: Re: [linux-lvm] 2.6.22-rc5 XFS fails after hibernate/resume
+References: <46744065.6060605@dgreaves.com> <4674645F.5000906@gmail.com> <46751D37.5020608@dgreaves.com> <4676390E.6010202@dgreaves.com> <20070618145007.GE85884050@sgi.com> <4676D97E.4000403@dgreaves.com> <4677A0C7.4000306@dgreaves.com> <4677A596.7090404@gmail.com> <4677E496.3080506@dgreaves.com> <4678DF56.1020903@gmail.com> <467ABE25.7060303@dgreaves.com> <4684C0DD.4080702@dgreaves.com>
+In-Reply-To: <4684C0DD.4080702@dgreaves.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: David Chinner <dgc@sgi.com>, David Robinson <zxvdr.au@gmail.com>, LVM general discussion and development <linux-lvm@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-pm <linux-pm@lists.osdl.org>, LinuxRaid <linux-raid@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-David Chinner wrote:
-> On Tue, Jun 19, 2007 at 03:25:52PM +0200, mmarek@suse.cz wrote:
->> +static int xfs_bulkstat_one_compat(
->> +	xfs_mount_t	*mp,		/* mount point for filesystem */
->> +	xfs_ino_t	ino,		/* inode number to get data for */
->> +	void		__user *buffer,	/* buffer to place output in */
->> +	int		ubsize,		/* size of buffer */
->> +	void		*private_data,	/* my private data */
->> +	xfs_daddr_t	bno,		/* starting bno of inode cluster */
->> +	int		*ubused,	/* bytes used by me */
->> +	void		*dibuff,	/* on-disk inode buffer */
->> +	int		*stat)		/* BULKSTAT_RV_... */
+David Greaves wrote:
+>> Tejun Heo wrote:
+>>> It's really weird tho.  The PHY RDY status changed events are coming
+>>> from the device which is NOT used while resuming
 > 
-> Hmmm - this is almost all duplicated code. It's pretty much what I
-> described, but maybe not /quite/ what I had in mind here. It's a
-> *big* improvement on the first version, but it seems now that the
-> only real difference xfs_bulkstat_one() and
-> xfs_bulkstat_one_compat() is copy_to_user() vs the discrete put_user
-> calls.
-> 
-> I think we can remove xfs_bulkstat_one_compat() completely by using
-> the same method you used with the xfs_inumber_fmt functions.
+> There is an obvious problem there though Tejun (the errors even when sda
+> isn't involved in the OS boot) - can I start another thread about that
+> issue/bug later? I need to reshuffle partitions so I'd rather get the
+> hibernate working first and then go back to it if that's OK?
 
-You mean xfs_ioc_bulkstat_compat() -> native xfs_bulkstat() -> native
-xfs_bulkstat_one() -> a compat output formatter, so a
-pointer-to-function passed to pointer-to-function? ;) I could (ab)use
-the void *private_data arg which xfs_bulkstat passes unmodified to the
-formatter; xfs_bulkstat_one() doesn't make use of it atm. I'll try it
-and post the result in a while.
+Yeah, sure.  The problem is that we don't know whether or how those two
+are related.  It would be great if there's a way to verify memory image
+read from hibernation is intact.  Rafael, any ideas?
 
-Michal
+Thanks.
+
+-- 
+tejun
