@@ -1,48 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 17:01:48 -0700 (PDT)
-Received: from rgminet02.oracle.com (rgminet02.oracle.com [148.87.113.119])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6301itL013266
-	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 17:01:45 -0700
-Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
-	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l62NIZoJ026335
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 17:18:35 -0600
-Date: Mon, 2 Jul 2007 16:18:12 -0700
-From: Mark Fasheh <mark.fasheh@oracle.com>
-Subject: Re: [-mm PATCH] ocfs2: ->fallocate() support
-Message-ID: <20070702231812.GA15463@ca-server1.us.oracle.com>
-Reply-To: Mark Fasheh <mark.fasheh@oracle.com>
-References: <20070621190143.GC17713@ca-server1.us.oracle.com> <20070630093413.GE22354@infradead.org>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 02 Jul 2007 18:04:05 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l63140tL028956
+	for <xfs@oss.sgi.com>; Mon, 2 Jul 2007 18:04:01 -0700
+Date: Tue, 3 Jul 2007 11:03:50 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [patch 3/3] Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode (try3)
+Message-ID: <20070703010349.GP989688@sgi.com>
+References: <20070619132549.266927601@suse.cz> <20070619132726.893544847@suse.cz> <20070628034957.GE989688@sgi.com> <4688C812.9020200@suse.cz> <20070702150509.GA32192@discovery.suse.cz>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070630093413.GE22354@infradead.org>
+In-Reply-To: <20070702150509.GA32192@discovery.suse.cz>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Amit Arora <aarora@in.ibm.com>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: Michal Marek <mmarek@suse.cz>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Sat, Jun 30, 2007 at 10:34:13AM +0100, Christoph Hellwig wrote:
-> Btw, it seems like ocfs implements the xfs preallocation ioctls.  What
-> would people thing about moving those up to work over ->fallocate so they
-> can be used on all filesystems that support preallocation?
+On Mon, Jul 02, 2007 at 05:05:09PM +0200, Michal Marek wrote:
+> On Mon, Jul 02, 2007 at 11:40:34AM +0200, Michal Marek wrote:
+> > David Chinner wrote:
+> > > I think we can remove xfs_bulkstat_one_compat() completely by using
+> > > the same method you used with the xfs_inumber_fmt functions.
+> > 
+> > You mean xfs_ioc_bulkstat_compat() -> native xfs_bulkstat() -> native
+> > xfs_bulkstat_one() -> a compat output formatter, so a
+> > pointer-to-function passed to pointer-to-function? ;) I could (ab)use
+> > the void *private_data arg which xfs_bulkstat passes unmodified to the
+> > formatter; xfs_bulkstat_one() doesn't make use of it atm. I'll try it
+> > and post the result in a while.
+> 
+> Hi David, what about this one? It about 30 lines shorter now :)
 
-That sounds like a good idea. We've already got a very good match on
-RESVP/UNRESVP with the various ->fallocate flags.
+Great. Added to my tree. I'll run some tests and then get it
+pushed out to the git trees.
 
-I'm not sure whether we want to do this for ALLOCSP/FREESP - as far as I've
-heard those are hardly used.
+FWIW, I reordered the includes to match the order in most other XFS
+files so that it didn't break when I added other patches to
+the tree....
 
+Cheers,
 
-> While the ABI is quite ugly it has a huge userbase because it's the only
-> existing preallocation mechanism on Linux.
-
-Yeah, that was the primary reason I chose to implement the ioctl (along with
-the ->fallocate patch)
-	--Mark
-
---
-Mark Fasheh
-Senior Software Developer, Oracle
-mark.fasheh@oracle.com
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
