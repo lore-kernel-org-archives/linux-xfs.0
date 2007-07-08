@@ -1,34 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 05 Jul 2007 17:02:56 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6602itL012755
-	for <linux-xfs@oss.sgi.com>; Thu, 5 Jul 2007 17:02:46 -0700
-Message-ID: <468D82BA.3020901@sgi.com>
-Date: Fri, 06 Jul 2007 09:46:02 +1000
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: TAKE 960527 - DMAPI dm_punch_hole and dm_probe hole have several
- problems
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 08 Jul 2007 12:11:30 -0700 (PDT)
+Received: from ciao.gmane.org (main.gmane.org [80.91.229.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l68JBPtL002898
+	for <linux-xfs@oss.sgi.com>; Sun, 8 Jul 2007 12:11:27 -0700
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1I7bRO-0007OL-P4
+	for linux-xfs@oss.sgi.com; Sun, 08 Jul 2007 20:25:02 +0200
+Received: from cm169-230.liwest.at ([81.10.169.230])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Sun, 08 Jul 2007 20:25:02 +0200
+Received: from jp by cm169-230.liwest.at with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-xfs@oss.sgi.com>; Sun, 08 Jul 2007 20:25:02 +0200
+From: Jakob Praher <jp@hapra.at>
+Subject: usage pattern: xfsrestore to mirror disks
+Date: Sun, 08 Jul 2007 20:18:18 +0200
+Message-ID: <f6r9pb$qv0$1@sea.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Date:  Fri Jul  6 09:39:04 AEST 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
-Inspected by:  dgc
+hi all,
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+first of all: I am a very happy user of xfs for a long time now.
+I use xfs in tandem with lvm2 and I have to say I am very pleased.
 
+Now a question:
 
-Modid:  xfs-linux-melb:xfs-kern:29084a
-fs/xfs/dmapi/xfs_dm.c - 1.38 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
-    - pv 960527, rv dgc - Implement variable size DMAPI probe/punch 
-hole. We don't
-      strictly follow the DMAPI spec, see the comments in the code for 
-more details.
+There are two modes of using xfs(dump,restore): non-cumulative and 
+cumulative. Is this cumulative mode also good to work with full dumps 
+(level0). E.g. the data I have to mirror is not large, and I don't want 
+to rely on inventory data. So I want for instance if between two full 
+dumps a file F was deleted, it should get deleted when I do xfsrestore 
+for the second time.
+
+I don't keep the xfsdump output files but i just apply them via ssh. So 
+something like that would be great!
+
+Maybe someone can shed some light on that.
+
+thanks
+
+--Jakob
