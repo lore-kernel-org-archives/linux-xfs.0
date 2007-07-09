@@ -1,55 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 08 Jul 2007 23:05:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 09 Jul 2007 00:38:34 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6965ctL030975
-	for <xfs@oss.sgi.com>; Sun, 8 Jul 2007 23:05:40 -0700
-Subject: TAKE 967354 - new compat ioctl handlers
-Message-Id: <20070709060536.EAC6358C38F1@chook.melbourne.sgi.com>
-Date: Mon,  9 Jul 2007 16:05:36 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l697cUtL029196
+	for <xfs@oss.sgi.com>; Mon, 9 Jul 2007 00:38:32 -0700
+Date: Mon, 9 Jul 2007 17:38:26 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Review: fix truncate vs null files issues
+Message-ID: <20070709073826.GO31489@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
-
-Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode
-
-* 32bit struct xfs_fsop_bulkreq has different size and layout of
-  members, no matter the alignment. Move the code out of the #else
-  branch (why was it there in the first place?). Define _32 variants of
-  the ioctl constants.
-* 32bit struct xfs_bstat is different because of time_t and on
-  i386 because of different padding. Make xfs_bulkstat_one() accept a
-  custom "output formatter" in the private_data argument which takes care
-  of the xfs_bulkstat_one_compat() that takes care of the different
-  layout in the compat case.
-* i386 struct xfs_inogrp has different padding. Add a similar "output
-  formatter" mecanism to xfs_inumbers().
-
-Signed-Off-By: Michal Marek <mmarek@suse.cz>
-
-Date:  Mon Jul  9 16:05:13 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  mmarek@suse.cz
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
 
-Modid:  xfs-linux-melb:xfs-kern:29102a
-fs/xfs/xfs_itable.c - 1.152 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.152&r2=text&tr2=1.151&f=h
-	- Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode
+When we change the file size via xfs_setattr(), we log the
+new, in-memory file size in the transaction. We do this without
+having flushed any dirty data so if we have previously extended
+the file we change the on disk file size without having written
+the data first.
 
-fs/xfs/xfs_itable.h - 1.51 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.h.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
-	- Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode
+This is a problem for both growing the file and truncating the
+file. The truncate case is partially hidden by the VTRUNCATE
+code, but if the file has not been closed before a crash has
+occurred we can still get NULLs appearing in files. 
 
-fs/xfs/linux-2.6/xfs_ioctl.c - 1.145 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.145&r2=text&tr2=1.144&f=h
-	- Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode
+The following patch fixes this problem by flushing the range
+between the on-disk filesize and the new file size as long
+as the new file size is larger than the on disk file size.
 
-fs/xfs/linux-2.6/xfs_ioctl32.c - 1.18 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl32.c.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
-	- Fix XFS_IOC_FSBULKSTAT{,_SINGLE} and XFS_IOC_FSINUMBERS in compat mode
+Comments?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+---
+ fs/xfs/xfs_vnodeops.c |   25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vnodeops.c	2007-06-20 17:59:35.050768978 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c	2007-06-21 15:18:17.187347809 +1000
+@@ -595,7 +595,30 @@ xfs_setattr(
+ 			code = xfs_igrow_start(ip, vap->va_size, credp);
+ 		}
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		vn_iowait(vp); /* wait for the completion of any pending DIOs */
++
++		/*
++		 * We are going to log the inode size change in this
++		 * transaction so any previous writes that are beyond the on
++		 * disk EOF and the new EOF that have not been written out need
++		 * to be written here. If we do not write the data out, we
++		 * expose ourselves to the null files problem.
++		 *
++		 * Only flush from the on disk size to the smaller of the in
++		 * memory file size or the new size as that's the range we
++		 * really care about here and prevents waiting for other data
++		 * not within the range we care about here.
++		 */
++		if (!code &&
++		    (ip->i_size != ip->i_d.di_size) &&
++		    (vap->va_size > ip->i_d.di_size)) {
++			code = bhv_vop_flush_pages(XFS_ITOV(ip),
++					ip->i_d.di_size, vap->va_size,
++					XFS_B_ASYNC, FI_NONE);
++		}
++
++		/* wait for all I/O to complete */
++		vn_iowait(vp);
++
+ 		if (!code)
+ 			code = xfs_itruncate_data(ip, vap->va_size);
+ 		if (code) {
