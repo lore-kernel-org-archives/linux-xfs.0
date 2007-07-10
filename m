@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 13:24:36 -0700 (PDT)
-Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6AKOWbm003544
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 13:24:33 -0700
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6AJKiCi005902
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 15:20:44 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6AKORc3311456
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 16:24:27 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6AKORbq006488
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 16:24:27 -0400
-Date: Wed, 11 Jul 2007 01:54:41 +0530
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 13:26:03 -0700 (PDT)
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6AKPubm004434
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 13:25:57 -0700
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6AKPwSQ004145
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 16:25:58 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6AKPpvH200770
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 14:25:52 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6AKPotE031258
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 14:25:50 -0600
+Date: Wed, 11 Jul 2007 01:56:03 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 6/7] ext4: support new modes in ext4
-Message-ID: <20070710202441.GF8797@amitarora.in.ibm.com>
+Subject: [PATCH 7/7] ext4: change for better extent-to-group alignment
+Message-ID: <20070710202603.GG8797@amitarora.in.ibm.com>
 References: <20070710201200.GA10255@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -28,12 +28,18 @@ To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger
 Cc: xfs@oss.sgi.com
 
 From: Amit Arora <aarora@in.ibm.com>
-Support new values of mode in ext4.
+Change on-disk format for extent to represent uninitialized/initialized extents
 
-This patch supports new mode values/flags in ext4. With this patch ext4
-will be able to support FALLOC_ALLOCATE and FALLOC_RESV_SPACE modes. Supporting
-FALLOC_DEALLOCATE and FALLOC_UNRESV_SPACE fallocate modes in ext4 is a work for
-future.
+This change was suggested by Andreas Dilger as part of the following
+post:
+http://www.mail-archive.com/linux-ext4@vger.kernel.org/msg02445.html
+
+This patch changes the EXT_MAX_LEN value and extent code which marks/checks
+uninitialized extents. With this change it will be possible to have
+initialized extents with 2^15 blocks (earlier the max blocks we could have
+was 2^15 - 1). This way we can have better extent-to-block alignment.
+Now, maximum number of blocks we can have in an initialized extent is 2^15
+and in an uninitialized extent is 2^15 - 1.
 
 Signed-off-by: Amit Arora <aarora@in.ibm.com>
 
@@ -41,39 +47,120 @@ Index: linux-2.6.22/fs/ext4/extents.c
 ===================================================================
 --- linux-2.6.22.orig/fs/ext4/extents.c
 +++ linux-2.6.22/fs/ext4/extents.c
-@@ -2453,8 +2453,9 @@ int ext4_ext_writepage_trans_blocks(stru
- /*
-  * preallocate space for a file. This implements ext4's fallocate inode
-  * operation, which gets called from sys_fallocate system call.
-- * Currently only FA_ALLOCATE mode is supported on extent based files.
-- * We may have more modes supported in future - like FA_DEALLOCATE, which
-+ * Currently only FALLOC_ALLOCATE  and FALLOC_RESV_SPACE modes are supported on
-+ * extent based files.
-+ * We may have more modes supported in future - like FALLOC_DEALLOCATE, which
-  * tells fallocate to unallocate previously (pre)allocated blocks.
-  * For block-mapped files, posix_fallocate should fall back to the method
-  * of writing zeroes to the required new blocks (the same behavior which is
-@@ -2475,7 +2476,8 @@ long ext4_fallocate(struct inode *inode,
- 	 * currently supporting (pre)allocate mode for extent-based
- 	 * files _only_
- 	 */
--	if (mode != FA_ALLOCATE || !(EXT4_I(inode)->i_flags & EXT4_EXTENTS_FL))
-+	if (!(EXT4_I(inode)->i_flags & EXT4_EXTENTS_FL) ||
-+		!(mode == FALLOC_ALLOCATE || mode == FALLOC_RESV_SPACE))
- 		return -EOPNOTSUPP;
- 
- 	/* preallocation to directories is currently not supported */
-@@ -2548,9 +2550,11 @@ retry:
+@@ -1106,7 +1106,7 @@ static int
+ ext4_can_extents_be_merged(struct inode *inode, struct ext4_extent *ex1,
+ 				struct ext4_extent *ex2)
+ {
+-	unsigned short ext1_ee_len, ext2_ee_len;
++	unsigned short ext1_ee_len, ext2_ee_len, max_len;
  
  	/*
- 	 * Time to update the file size.
--	 * Update only when preallocation was requested beyond the file size.
-+	 * Update only when preallocation was requested beyond the file size
-+	 * and when FALLOC_FL_KEEP_SIZE mode is not specified!
+ 	 * Make sure that either both extents are uninitialized, or
+@@ -1115,6 +1115,11 @@ ext4_can_extents_be_merged(struct inode 
+ 	if (ext4_ext_is_uninitialized(ex1) ^ ext4_ext_is_uninitialized(ex2))
+ 		return 0;
+ 
++	if (ext4_ext_is_uninitialized(ex1))
++		max_len = EXT_UNINIT_MAX_LEN;
++	else
++		max_len = EXT_INIT_MAX_LEN;
++
+ 	ext1_ee_len = ext4_ext_get_actual_len(ex1);
+ 	ext2_ee_len = ext4_ext_get_actual_len(ex2);
+ 
+@@ -1127,7 +1132,7 @@ ext4_can_extents_be_merged(struct inode 
+ 	 * as an RO_COMPAT feature, refuse to merge to extents if
+ 	 * this can result in the top bit of ee_len being set.
  	 */
--	if ((offset + len) > i_size_read(inode)) {
-+	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
-+	    (offset + len) > i_size_read(inode)) {
- 		if (ret > 0) {
- 			/*
- 			 * if no error, we assume preallocation succeeded
+-	if (ext1_ee_len + ext2_ee_len > EXT_MAX_LEN)
++	if (ext1_ee_len + ext2_ee_len > max_len)
+ 		return 0;
+ #ifdef AGGRESSIVE_TEST
+ 	if (le16_to_cpu(ex1->ee_len) >= 4)
+@@ -1814,7 +1819,11 @@ ext4_ext_rm_leaf(handle_t *handle, struc
+ 
+ 		ex->ee_block = cpu_to_le32(block);
+ 		ex->ee_len = cpu_to_le16(num);
+-		if (uninitialized)
++		/*
++		 * Do not mark uninitialized if all the blocks in the
++		 * extent have been removed.
++		 */
++		if (uninitialized && num)
+ 			ext4_ext_mark_uninitialized(ex);
+ 
+ 		err = ext4_ext_dirty(handle, inode, path + depth);
+@@ -2307,6 +2316,18 @@ int ext4_ext_get_blocks(handle_t *handle
+ 	/* allocate new block */
+ 	goal = ext4_ext_find_goal(inode, path, iblock);
+ 
++	/*
++	 * See if request is beyond maximum number of blocks we can have in
++	 * a single extent. For an initialized extent this limit is
++	 * EXT_INIT_MAX_LEN and for an uninitialized extent this limit is
++	 * EXT_UNINIT_MAX_LEN.
++	 */
++	if (max_blocks > EXT_INIT_MAX_LEN && create != EXT4_CREATE_UNINITIALIZED_EXT)
++		max_blocks = EXT_INIT_MAX_LEN;
++	else if (max_blocks > EXT_UNINIT_MAX_LEN &&
++		 create == EXT4_CREATE_UNINITIALIZED_EXT)
++		max_blocks = EXT_UNINIT_MAX_LEN;
++
+ 	/* Check if we can really insert (iblock)::(iblock+max_blocks) extent */
+ 	newex.ee_block = cpu_to_le32(iblock);
+ 	newex.ee_len = cpu_to_le16(max_blocks);
+Index: linux-2.6.22/include/linux/ext4_fs_extents.h
+===================================================================
+--- linux-2.6.22.orig/include/linux/ext4_fs_extents.h
++++ linux-2.6.22/include/linux/ext4_fs_extents.h
+@@ -141,7 +141,25 @@ typedef int (*ext_prepare_callback)(stru
+ 
+ #define EXT_MAX_BLOCK	0xffffffff
+ 
+-#define EXT_MAX_LEN	((1UL << 15) - 1)
++/*
++ * EXT_INIT_MAX_LEN is the maximum number of blocks we can have in an
++ * initialized extent. This is 2^15 and not (2^16 - 1), since we use the
++ * MSB of ee_len field in the extent datastructure to signify if this
++ * particular extent is an initialized extent or an uninitialized (i.e.
++ * preallocated).
++ * EXT_UNINIT_MAX_LEN is the maximum number of blocks we can have in an
++ * uninitialized extent.
++ * If ee_len is <= 0x8000, it is an initialized extent. Otherwise, it is an
++ * uninitialized one. In other words, if MSB of ee_len is set, it is an
++ * uninitialized extent with only one special scenario when ee_len = 0x8000.
++ * In this case we can not have an uninitialized extent of zero length and
++ * thus we make it as a special case of initialized extent with 0x8000 length.
++ * This way we get better extent-to-group alignment for initialized extents.
++ * Hence, the maximum number of blocks we can have in an *initialized*
++ * extent is 2^15 (32768) and in an *uninitialized* extent is 2^15-1 (32767).
++ */
++#define EXT_INIT_MAX_LEN	(1UL << 15)
++#define EXT_UNINIT_MAX_LEN	(EXT_INIT_MAX_LEN - 1)
+ 
+ 
+ #define EXT_FIRST_EXTENT(__hdr__) \
+@@ -190,17 +208,21 @@ ext4_ext_invalidate_cache(struct inode *
+ 
+ static inline void ext4_ext_mark_uninitialized(struct ext4_extent *ext)
+ {
++	/* We can not have an uninitialized extent of zero length! */
++	BUG_ON((le16_to_cpu(ext->ee_len) & ~0x8000) == 0);
+ 	ext->ee_len |= cpu_to_le16(0x8000);
+ }
+ 
+ static inline int ext4_ext_is_uninitialized(struct ext4_extent *ext)
+ {
+-	return (int)(le16_to_cpu((ext)->ee_len) & 0x8000);
++	/* Extent with ee_len of 0x8000 is treated as an initialized extent */
++	return (le16_to_cpu(ext->ee_len) > 0x8000);
+ }
+ 
+ static inline int ext4_ext_get_actual_len(struct ext4_extent *ext)
+ {
+-	return (int)(le16_to_cpu((ext)->ee_len) & 0x7FFF);
++	return (le16_to_cpu(ext->ee_len) <= 0x8000 ? le16_to_cpu(ext->ee_len) :
++		(le16_to_cpu(ext->ee_len) - 0x8000));
+ }
+ 
+ extern int ext4_extent_tree_init(handle_t *, struct inode *);
