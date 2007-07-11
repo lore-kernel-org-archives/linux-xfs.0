@@ -1,103 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 18:34:48 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B1Yfbm011542
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 18:34:43 -0700
-Subject: Re: [PATCH 1/7] manpage for fallocate
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------WTbI0GSzrQq8swZHzkUhcQ
-MIME-Version: 1.0
-References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710201820.GA8797@amitarora.in.ibm.com>
-Date: Wed, 11 Jul 2007 11:37:45 +1000
-Message-ID: <op.tu91g7bh3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20070710201820.GA8797@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 19:35:47 -0700 (PDT)
+Received: from smtps.tip.net.au (chilli.pcug.org.au [203.10.76.44])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B2Zfbm026915
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 19:35:43 -0700
+Date: Wed, 11 Jul 2007 12:10:34 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 2/7] fallocate() implementation in i386, x86_64 and
+ powerpc
+Message-Id: <20070711121034.a3b925b9.sfr@canb.auug.org.au>
+In-Reply-To: <20070710202000.GB8797@amitarora.in.ibm.com>
+References: <20070710201200.GA10255@amitarora.in.ibm.com>
+	<20070710202000.GB8797@amitarora.in.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__11_Jul_2007_12_10_34_+1000_5U2tHjshZm6024bl"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-------------WTbI0GSzrQq8swZHzkUhcQ
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+--Signature=_Wed__11_Jul_2007_12_10_34_+1000_5U2tHjshZm6024bl
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Jul 2007 06:18:20 +1000, Amit K. Arora  
-<aarora@linux.vnet.ibm.com> wrote:
+On Wed, 11 Jul 2007 01:50:00 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.c=
+om> wrote:
+>
+> --- linux-2.6.22.orig/arch/x86_64/ia32/sys_ia32.c
+> +++ linux-2.6.22/arch/x86_64/ia32/sys_ia32.c
+> @@ -879,3 +879,11 @@ asmlinkage long sys32_fadvise64(int fd,=20
+>  	return sys_fadvise64_64(fd, ((u64)offset_hi << 32) | offset_lo,
+>  				len, advice);
+>  }
+> +
+> +asmlinkage long sys32_fallocate(int fd, int mode, unsigned offset_lo,
+> +				unsigned offset_hi, unsigned len_lo,
+> +				unsigned len_hi)
 
-> Following is the modified version of the manpage originally submitted by
-> David Chinner. Please use `nroff -man fallocate.2 | less` to view.
+Please call this compat_sys_fallocate in line with the powerpc version -
+it gives us a hint that maybe we should think about how to consolidate
+them.  I know other stuff in that file is called sys32_ ... but it is time
+for a change :-)
 
-A few more touch-ups attached.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-Regards,
-Barry.
-------------WTbI0GSzrQq8swZHzkUhcQ
-Content-Disposition: attachment; filename=fallocate.2
-Content-Type: application/octet-stream; name=fallocate.2
-Content-Transfer-Encoding: Base64
+--Signature=_Wed__11_Jul_2007_12_10_34_+1000_5U2tHjshZm6024bl
+Content-Type: application/pgp-signature
 
-LlRIIGZhbGxvY2F0ZSAyCi5TSCBOQU1FCmZhbGxvY2F0ZSBcLSBhbGxvY2F0
-ZSBvciByZW1vdmUgZmlsZSBzcGFjZQouU0ggU1lOT1BTSVMKLkIgI2luY2x1
-ZGUgPHN5cy9zeXNjYWxsLmg+Ci5QUAouQkkgImludCBzeXNjYWxsKGludCwg
-aW50ICIgZmQgIiwgaW50ICIgbW9kZSAiLCBsb2ZmX3QgIiBvZmZzZXQgIiwg
-bG9mZl90ICIgbGVuICk7Ci5TSCBERVNDUklQVElPTgpUaGUKLkIgZmFsbG9j
-YXRlCnN5c2NhbGwgYWxsb3dzIGEgdXNlciB0byBkaXJlY3RseSBtYW5pcHVs
-YXRlIHRoZSBhbGxvY2F0ZWQgZGlzayBzcGFjZQpmb3IgdGhlIGZpbGUgcmVm
-ZXJyZWQgdG8gYnkKLkkgZmQKZm9yIHRoZSBieXRlIHJhbmdlIHN0YXJ0aW5n
-IGF0Ci5JIG9mZnNldAphbmQgY29udGludWluZyBmb3IKLkkgbGVuCmJ5dGVz
-LgpUaGUKLkkgbW9kZQpwYXJhbWV0ZXIgZGV0ZXJtaW5lcyB0aGUgb3BlcmF0
-aW9uIHRvIGJlIHBlcmZvcm1lZCBvbiB0aGUgZ2l2ZW4gcmFuZ2UuCkN1cnJl
-bnRseSB0aGVyZSBhcmUgZm91ciBtb2RlczoKLlRQCi5CIEZBTExPQ19BTExP
-Q0FURQphbGxvY2F0ZXMgYW5kIGluaXRpYWxpc2VzIHRvIHplcm8gdGhlIGRp
-c2sgc3BhY2Ugd2l0aGluIHRoZSBnaXZlbiByYW5nZS4KQWZ0ZXIgYSBzdWNj
-ZXNzZnVsIGNhbGwsIHN1YnNlcXVlbnQgd3JpdGVzIGFyZSBndWFyYW50ZWVk
-IG5vdCB0byBmYWlsIGJlY2F1c2UKb2YgbGFjayBvZiBkaXNrIHNwYWNlLiAg
-SWYgdGhlIHNpemUgb2YgdGhlIGZpbGUgaXMgbGVzcyB0aGFuCi5JUiBvZmZz
-ZXQgKyBsZW4gLAp0aGVuIHRoZSBmaWxlIGlzIGluY3JlYXNlZCB0byB0aGlz
-IHNpemU7IG90aGVyd2lzZSB0aGUgZmlsZSBzaXplIGlzIGxlZnQKdW5jaGFu
-Z2VkLgouQiBGQUxMT0NfQUxMT0NBVEUKY2xvc2VseSByZXNlbWJsZXMKLkJS
-IHBvc2l4X2ZhbGxvY2F0ZSAoMykKYW5kIGlzIGludGVuZGVkIGFzIGEgbWV0
-aG9kIG9mIG9wdGltYWxseSBpbXBsZW1lbnRpbmcgdGhpcyBmdW5jdGlvbi4K
-LkIgRkFMTE9DX0FMTE9DQVRFCm1heSBhbGxvY2F0ZSBhIGxhcmdlciByYW5n
-ZSB0aGF0IHdhcyBzcGVjaWZpZWQuCi5UUAouQiBGQUxMT0NfUkVTVl9TUEFD
-RQpwcm92aWRlcyB0aGUgc2FtZSBmdW5jdGlvbmFsaXR5IGFzCi5CIEZBTExP
-Q19BTExPQ0FURQpleGNlcHQgaXQgZG9lcyBub3QgZXZlciBjaGFuZ2UgdGhl
-IGZpbGUgc2l6ZS4gVGhpcyBhbGxvd3MgYWxsb2NhdGlvbgpvZiB6ZXJvIGJs
-b2NrcyBiZXlvbmQgdGhlIGVuZCBvZiBmaWxlIGFuZCBpcyB1c2VmdWwgZm9y
-IG9wdGltaXNpbmcKYXBwZW5kIHdvcmtsb2Fkcy4KLlRQCi5CIEZBTExPQ19E
-RUFMTE9DQVRFCnJlbW92ZXMgYW55IHByZWFsbG9jYXRlZCBzcGFjZSB3aXRo
-aW4gdGhlIGdpdmVuIHJhbmdlLiBUaGUgZmlsZSBzaXplCm1heSBjaGFuZ2Ug
-aWYgZGVhbGxvY2F0aW9uIGlzIHRvd2FyZHMgdGhlIGVuZCBvZiB0aGUgZmls
-ZS4KLlRQCi5CIEZBTExPQ19VTlJFU1ZfU1BBQ0UKcmVtb3ZlcyB0aGUgdW5k
-ZXJseWluZyBkaXNrIHNwYWNlIHdpdGhpbiB0aGUgZ2l2ZW4gcmFuZ2UuIFRo
-ZSBkaXNrIHNwYWNlCnNoYWxsIGJlIHJlbW92ZWQgcmVnYXJkbGVzcyBvZiBp
-dCdzIGNvbnRlbnRzIHNvIGJvdGggYWxsb2NhdGVkIHNwYWNlCmZyb20KLkIg
-RkFMTE9DX0FMTE9DQVRFCmFuZAouQiBGQUxMT0NfUkVTVl9TUEFDRQphcyB3
-ZWxsIGFzIGZyb20KLkJSIHdyaXRlICgzKQp3aWxsIGJlIHJlbW92ZWQuCi5C
-IEZBTExPQ19VTlJFU1ZfU1BBQ0UKc2hhbGwgbmV2ZXIgcmVtb3ZlIGRpc2sg
-YmxvY2tzIG91dHNpZGUgdGhlIHJhbmdlIHNwZWNpZmllZC4KLkIgRkFMTE9D
-X1VOUkVTVl9TUEFDRQpzaGFsbCBuZXZlciBjaGFuZ2UgdGhlIGZpbGUgc2l6
-ZS4gSWYgY2hhbmdpbmcgdGhlIGZpbGUgc2l6ZQppcyByZXF1aXJlZCB3aGVu
-IGRlYWxsb2NhdGluZyBibG9ja3MgZnJvbSBhbiBvZmZzZXQgdG8gZW5kCm9m
-IGZpbGUgKG9yIGJleW9uZCBlbmQgb2YgZmlsZSkgaXMgcmVxdWlyZWQsCi5C
-UiBmdHVuY2F0ZTY0ICgzKQpvcgouQiBGQUxMT0NfREVBTExPQ0FURQpzaG91
-bGQgYmUgdXNlZC4KCi5TSCBSRVRVUk4gVkFMVUUKLkIgZmFsbG9jYXRlCnJl
-dHVybnMgemVybyBvbiBzdWNjZXNzLCBvciBhbiBlcnJvciBudW1iZXIgb24g
-ZmFpbHVyZS4KTm90ZSB0aGF0Ci5JIGVycm5vCmlzIG5vdCBzZXQuCi5TSCBF
-UlJPUlMKLlRQCi5CIEVCQURGCi5JIGZkCmlzIG5vdCBhIHZhbGlkIGZpbGUg
-ZGVzY3JpcHRvciwgb3IgaXMgbm90IG9wZW5lZCBmb3Igd3JpdGluZy4KLlRQ
-Ci5CIEVGQklHCi5JUiBvZmZzZXQgKyBsZW4KZXhjZWVkcyB0aGUgbWF4aW11
-bSBmaWxlIHNpemUuCi5UUAouQiBFSU5WQUwKLkkgb2Zmc2V0Cm9yCi5JIGxl
-bgp3YXMgbGVzcyB0aGFuIDAuCi5UUAouQiBFTk9ERVYKLkkgZmQKZG9lcyBu
-b3QgcmVmZXIgdG8gYSByZWd1bGFyIGZpbGUgb3IgYSBkaXJlY3RvcnkuCi5U
-UAouQiBFTk9TUEMKVGhlcmUgaXMgbm90IGVub3VnaCBzcGFjZSBsZWZ0IG9u
-IHRoZSBkZXZpY2UgY29udGFpbmluZyB0aGUgZmlsZQpyZWZlcnJlZCB0byBi
-eQouSVIgZmQgLgouVFAKLkIgRVNQSVBFCi5JIGZkCnJlZmVycyB0byBhIHBp
-cGUgb2YgZmlsZSBkZXNjcmlwdG9yLgouVFAKLkIgRU5PU1lTClRoZSBmaWxl
-c3lzdGVtIHVuZGVybHlpbmcgdGhlIGZpbGUgZGVzY3JpcHRvciBkb2VzIG5v
-dCBzdXBwb3J0IHRoaXMKb3BlcmF0aW9uLgouU0ggQVZBSUxBQklMSVRZClRo
-ZQouQiBmYWxsb2NhdGUKc3lzdGVtIGNhbGwgaXMgYXZhaWxhYmxlIHNpbmNl
-IDIuNi5YWAouU0ggU0VFIEFMU08KLkJSIHN5c2NhbGwgKDIpLAouQlIgcG9z
-aXhfZmFkdmlzZSAoMyksCi5CUiBmdHJ1bmNhdGUgKDMpLgo=
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-------------WTbI0GSzrQq8swZHzkUhcQ--
+iD8DBQFGlDweTgG2atn1QN8RAsMWAJ0QGe/B34/KjrV593lYeDo/VsOYdQCfdMkc
+mHS8nJDyRZd1RWYTVZ+6888=
+=C6vS
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__11_Jul_2007_12_10_34_+1000_5U2tHjshZm6024bl--
