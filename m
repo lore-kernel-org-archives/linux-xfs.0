@@ -1,61 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 20:14:35 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B3EUbm004601
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 20:14:32 -0700
-Date: Wed, 11 Jul 2007 13:18:20 +1000
-Subject: REVIEW: fix xfs_bmap -vp confusion
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------5g2s3VDJlM5DkZKD2Ny1cP
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 22:00:15 -0700 (PDT)
+Received: from mtagate7.de.ibm.com (mtagate7.de.ibm.com [195.212.29.156])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B503bm007374
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 22:00:04 -0700
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate7.de.ibm.com (8.13.8/8.13.8) with ESMTP id l6B502FY098876
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 05:00:02 GMT
+Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6B502fs1986646
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 07:00:02 +0200
+Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6B501At000602
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 07:00:02 +0200
+Date: Wed, 11 Jul 2007 06:59:58 +0200
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [PATCH 2/7] fallocate() implementation in i386, x86_64 and powerpc
+Message-ID: <20070711045958.GA12843@osiris.ibm.com>
+References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710202000.GB8797@amitarora.in.ibm.com> <20070711121034.a3b925b9.sfr@canb.auug.org.au>
 MIME-Version: 1.0
-Message-ID: <op.tu954us03jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070711121034.a3b925b9.sfr@canb.auug.org.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-------------5g2s3VDJlM5DkZKD2Ny1cP
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+On Wed, Jul 11, 2007 at 12:10:34PM +1000, Stephen Rothwell wrote:
+> On Wed, 11 Jul 2007 01:50:00 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
+> >
+> > --- linux-2.6.22.orig/arch/x86_64/ia32/sys_ia32.c
+> > +++ linux-2.6.22/arch/x86_64/ia32/sys_ia32.c
+> > @@ -879,3 +879,11 @@ asmlinkage long sys32_fadvise64(int fd, 
+> >  	return sys_fadvise64_64(fd, ((u64)offset_hi << 32) | offset_lo,
+> >  				len, advice);
+> >  }
+> > +
+> > +asmlinkage long sys32_fallocate(int fd, int mode, unsigned offset_lo,
+> > +				unsigned offset_hi, unsigned len_lo,
+> > +				unsigned len_hi)
+> 
+> Please call this compat_sys_fallocate in line with the powerpc version -
+> it gives us a hint that maybe we should think about how to consolidate
+> them.  I know other stuff in that file is called sys32_ ... but it is time
+> for a change :-)
 
-If xfs_bmap -vp is run on a file without unwritten extents
-and the filesystem does not use sunit/swidth, the FLAGS
-column is not shown. This leads to some confusion.
+Maybe it would be worth to finally consider this:
 
-So, when -vp option is used, it will always print the
-FLAGS column.
-------------5g2s3VDJlM5DkZKD2Ny1cP
-Content-Disposition: attachment; filename=xfs_bmap_pflag.patch
-Content-Type: application/octet-stream; name=xfs_bmap_pflag.patch
-Content-Transfer-Encoding: Base64
+http://marc.info/?l=linux-kernel&m=118411511620432&w=2
 
-LS0tIGEveGZzcHJvZ3MvaW8vYm1hcC5jCTIwMDctMDctMTEgMTM6MTE6NDIu
-MDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL2lvL2JtYXAuYwkyMDA3
-LTA3LTExIDEyOjM0OjMzLjUxOTU3MjcwOSArMTAwMApAQCAtNzQsNiArNzQs
-NyBAQCBibWFwX2YoCiAJaW50CQkJYWZsYWcgPSAwOwogCWludAkJCWxmbGFn
-ID0gMDsKIAlpbnQJCQluZmxhZyA9IDA7CisJaW50CQkJcGZsYWcgPSAwOwog
-CWludAkJCXZmbGFnID0gMDsKIAlpbnQJCQlpc19ydCA9IDA7CiAJaW50CQkJ
-Ym12X2lmbGFncyA9IDA7CS8qIGZsYWdzIGZvciBYRlNfSU9DX0dFVEJNQVBY
-ICovCkBAIC05OSw2ICsxMDAsNyBAQCBibWFwX2YoCiAJCQlicmVhazsKIAkJ
-Y2FzZSAncCc6CiAJCS8qIHJlcG9ydCB1bndyaXR0ZW4gcHJlYWxsb2NhdGVk
-IGJsb2NrcyAqLworCQkJcGZsYWcgPSAxOwogCQkJYm12X2lmbGFncyB8PSBC
-TVZfSUZfUFJFQUxMT0M7CiAJCQlicmVhazsKIAkJY2FzZSAndic6CS8qIFZl
-cmJvc2Ugb3V0cHV0ICovCkBAIC0yODksNyArMjkxLDcgQEAgYm1hcF9mKAog
-CQkJc3VuaXQgPSAoZnNnZW8uc3VuaXQgKiBmc2dlby5ibG9ja3NpemUpIC8g
-QkJTSVpFOwogCQkJc3dpZHRoID0gKGZzZ2VvLnN3aWR0aCAqIGZzZ2VvLmJs
-b2Nrc2l6ZSkgLyBCQlNJWkU7CiAJCX0KLQkJZmxnID0gc3VuaXQ7CisJCWZs
-ZyA9IHN1bml0IHwgcGZsYWc7CiAKIAkJLyoKIAkJICogR28gdGhyb3VnaCB0
-aGUgZXh0ZW50cyBhbmQgZmlndXJlIG91dCB0aGUgd2lkdGgKQEAgLTM5Nywx
-NCArMzk5LDE0IEBAIGJtYXBfZigKIAkJCQkJcHJpbnRmKCIgICIpOwogCQkJ
-CXByaW50ZigiICUqbGxkIiwgdG90X3csCiAJCQkJCShsb25nIGxvbmcpbWFw
-W2krMV0uYm12X2xlbmd0aCk7Ci0JCQkJaWYgKGZsZyA9PSBGTEdfTlVMTCkg
-eworCQkJCWlmIChmbGcgPT0gRkxHX05VTEwgJiYgIXBmbGFnKSB7CiAJCQkJ
-CXByaW50ZigiXG4iKTsKIAkJCQl9IGVsc2UgewogCQkJCQlwcmludGYoIiAl
-LSouKm9cbiIsIE5GTEcsIE5GTEcsIGZsZyk7CiAJCQkJfQogCQkJfQogCQl9
-Ci0JCWlmIChmbGcgJiYgdmZsYWcgPiAxKSB7CisJCWlmICgoZmxnIHx8IHBm
-bGFnKSAmJiB2ZmxhZyA+IDEpIHsKIAkJCXByaW50ZihfKCIgRkxBRyBWYWx1
-ZXM6XG4iKSk7CiAJCQlwcmludGYoXygiICAgICUqLipvIFVud3JpdHRlbiBw
-cmVhbGxvY2F0ZWQgZXh0ZW50XG4iKSwKIAkJCQlORkxHKzEsIE5GTEcrMSwg
-RkxHX1BSRSk7Cg==
-
-------------5g2s3VDJlM5DkZKD2Ny1cP--
+?
