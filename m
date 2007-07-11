@@ -1,35 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 02:49:25 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B9nKbm016632
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 02:49:23 -0700
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l6B8c086013875
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 17:39:38 +0900 (JST)
-Message-Id: <200707110834.AA05713@TNESG9305.wm.jp.nec.com>
-From: Utako Kusaka <u-kusaka@wm.jp.nec.com>
-Date: Wed, 11 Jul 2007 17:34:14 +0900
-Subject: Re: REVIEW: Updated all xfsprogs man pages
-In-Reply-To: <op.tu8nfl2b3jf8g2@pc-bnaujok.melbourne.sgi.com>
-References: <op.tu8nfl2b3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 11:10:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6BIA9bm029547
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 11:10:11 -0700
+Message-ID: <46951C0A.4080505@sandeen.net>
+Date: Wed, 11 Jul 2007 13:06:02 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
+Subject: Re: REVIEW: zero existing secondary superblocks with mkfs.xfs -f
+References: <op.tvamambx3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.tvamambx3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Hi, 
-I sent a patch more than one month ago but it is not included in your patch.
-Should I update my patch based on your patch and resend?
-http://marc.info/?l=linux-xfs&m=118050289805766&w=4
+Barry Naujok wrote:
+> The attached patch zeros all the secondary superblocks if
+> overwriting an existing XFS filesystem.
+> 
+> This allows xfs_repair to detect the correct secondary block
+> if the primary is destroyed (like XFS QA test 030).
 
---
-Utako Kusaka
+Seems good to me (after filtering out all of the quilt-induced
+whitespace changes ;-) )
 
-Tue, 10 Jul 2007 17:36:47 +1000 Barry Naujok wrote：
-REVIEW: Updated all xfsprogs man pages
->- Updated out of date information.
->- Updated formatting to linux standards.
->- Improved readability of some complex sections.
++	/*
++	 * perform same basic superblock validation to make sure we
++	 * actually zero secondary blocks
++	 */
++	if (sb.sb_magicnum != XFS_SB_MAGIC || sb.sb_blocksize == 0)
++		goto done;
+
+Is there any chance we'd be here if the first test weren't already true?
+ *shrug* harmless though I guess.
+
+If something goes wrong and the old found SB is full of junk, this is
+non-fatal, right.
+
+Out of curiosity, why not just call verify_sb for the sanity checks
+instead of recreating a subset of them in zero_old_xfs_structures?
+
+Thanks,
+
+-Eric
