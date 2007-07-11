@@ -1,63 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 14:56:28 -0700 (PDT)
-Received: from zakalwe.fi (zakalwe.fi [80.83.5.154])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6ALuNbm025362
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 14:56:24 -0700
-Date: Wed, 11 Jul 2007 00:37:01 +0300
-From: Heikki Orsila <shdl@zakalwe.fi>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 18:34:48 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B1Yfbm011542
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 18:34:43 -0700
 Subject: Re: [PATCH 1/7] manpage for fallocate
-Message-ID: <20070710213701.GG3400@zakalwe.fi>
-References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710201820.GA8797@amitarora.in.ibm.com>
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------WTbI0GSzrQq8swZHzkUhcQ
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710201820.GA8797@amitarora.in.ibm.com>
+Date: Wed, 11 Jul 2007 11:37:45 +1000
+Message-ID: <op.tu91g7bh3jf8g2@pc-bnaujok.melbourne.sgi.com>
 In-Reply-To: <20070710201820.GA8797@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 11, 2007 at 01:48:20AM +0530, Amit K. Arora wrote:
-> .BI "int syscall(int, int fd, int mode, loff_t offset, loff_t len);
+------------WTbI0GSzrQq8swZHzkUhcQ
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
-Correction: "int syscall(int fd, int mode, ...)",
+On Wed, 11 Jul 2007 06:18:20 +1000, Amit K. Arora  
+<aarora@linux.vnet.ibm.com> wrote:
 
-> .SH "ERRORS"
-> .TP
-> .B EBADF
-> .I fd
-> is not a valid file descriptor, or is not opened for writing.
-> .TP
-> .B EFBIG
-> .I offset+len
-> exceeds the maximum file size.
-> .TP
-> .B EINVAL
-> .I offset
-> or
-> .I len
-> was less than 0.
-> .TP
-> .B ENODEV
-> .I fd
-> does not refer to a regular file or a directory.
-> .TP
-> .B ENOSPC
-> There is not enough space left on the device containing the file
-> referred to by
-> .IR fd.
-> .TP
-> .B ESPIPE
-> .I fd
-> refers to a pipe of file descriptor.
-> .B ENOSYS
-> The filesystem underlying the file descriptor does not support this
-> operation.
+> Following is the modified version of the manpage originally submitted by
+> David Chinner. Please use `nroff -man fallocate.2 | less` to view.
 
-EINTR?
+A few more touch-ups attached.
 
--- 
-Heikki Orsila			Barbie's law:
-heikki.orsila@iki.fi		"Math is hard, let's go shopping!"
-http://www.iki.fi/shd
+Regards,
+Barry.
+------------WTbI0GSzrQq8swZHzkUhcQ
+Content-Disposition: attachment; filename=fallocate.2
+Content-Type: application/octet-stream; name=fallocate.2
+Content-Transfer-Encoding: Base64
+
+LlRIIGZhbGxvY2F0ZSAyCi5TSCBOQU1FCmZhbGxvY2F0ZSBcLSBhbGxvY2F0
+ZSBvciByZW1vdmUgZmlsZSBzcGFjZQouU0ggU1lOT1BTSVMKLkIgI2luY2x1
+ZGUgPHN5cy9zeXNjYWxsLmg+Ci5QUAouQkkgImludCBzeXNjYWxsKGludCwg
+aW50ICIgZmQgIiwgaW50ICIgbW9kZSAiLCBsb2ZmX3QgIiBvZmZzZXQgIiwg
+bG9mZl90ICIgbGVuICk7Ci5TSCBERVNDUklQVElPTgpUaGUKLkIgZmFsbG9j
+YXRlCnN5c2NhbGwgYWxsb3dzIGEgdXNlciB0byBkaXJlY3RseSBtYW5pcHVs
+YXRlIHRoZSBhbGxvY2F0ZWQgZGlzayBzcGFjZQpmb3IgdGhlIGZpbGUgcmVm
+ZXJyZWQgdG8gYnkKLkkgZmQKZm9yIHRoZSBieXRlIHJhbmdlIHN0YXJ0aW5n
+IGF0Ci5JIG9mZnNldAphbmQgY29udGludWluZyBmb3IKLkkgbGVuCmJ5dGVz
+LgpUaGUKLkkgbW9kZQpwYXJhbWV0ZXIgZGV0ZXJtaW5lcyB0aGUgb3BlcmF0
+aW9uIHRvIGJlIHBlcmZvcm1lZCBvbiB0aGUgZ2l2ZW4gcmFuZ2UuCkN1cnJl
+bnRseSB0aGVyZSBhcmUgZm91ciBtb2RlczoKLlRQCi5CIEZBTExPQ19BTExP
+Q0FURQphbGxvY2F0ZXMgYW5kIGluaXRpYWxpc2VzIHRvIHplcm8gdGhlIGRp
+c2sgc3BhY2Ugd2l0aGluIHRoZSBnaXZlbiByYW5nZS4KQWZ0ZXIgYSBzdWNj
+ZXNzZnVsIGNhbGwsIHN1YnNlcXVlbnQgd3JpdGVzIGFyZSBndWFyYW50ZWVk
+IG5vdCB0byBmYWlsIGJlY2F1c2UKb2YgbGFjayBvZiBkaXNrIHNwYWNlLiAg
+SWYgdGhlIHNpemUgb2YgdGhlIGZpbGUgaXMgbGVzcyB0aGFuCi5JUiBvZmZz
+ZXQgKyBsZW4gLAp0aGVuIHRoZSBmaWxlIGlzIGluY3JlYXNlZCB0byB0aGlz
+IHNpemU7IG90aGVyd2lzZSB0aGUgZmlsZSBzaXplIGlzIGxlZnQKdW5jaGFu
+Z2VkLgouQiBGQUxMT0NfQUxMT0NBVEUKY2xvc2VseSByZXNlbWJsZXMKLkJS
+IHBvc2l4X2ZhbGxvY2F0ZSAoMykKYW5kIGlzIGludGVuZGVkIGFzIGEgbWV0
+aG9kIG9mIG9wdGltYWxseSBpbXBsZW1lbnRpbmcgdGhpcyBmdW5jdGlvbi4K
+LkIgRkFMTE9DX0FMTE9DQVRFCm1heSBhbGxvY2F0ZSBhIGxhcmdlciByYW5n
+ZSB0aGF0IHdhcyBzcGVjaWZpZWQuCi5UUAouQiBGQUxMT0NfUkVTVl9TUEFD
+RQpwcm92aWRlcyB0aGUgc2FtZSBmdW5jdGlvbmFsaXR5IGFzCi5CIEZBTExP
+Q19BTExPQ0FURQpleGNlcHQgaXQgZG9lcyBub3QgZXZlciBjaGFuZ2UgdGhl
+IGZpbGUgc2l6ZS4gVGhpcyBhbGxvd3MgYWxsb2NhdGlvbgpvZiB6ZXJvIGJs
+b2NrcyBiZXlvbmQgdGhlIGVuZCBvZiBmaWxlIGFuZCBpcyB1c2VmdWwgZm9y
+IG9wdGltaXNpbmcKYXBwZW5kIHdvcmtsb2Fkcy4KLlRQCi5CIEZBTExPQ19E
+RUFMTE9DQVRFCnJlbW92ZXMgYW55IHByZWFsbG9jYXRlZCBzcGFjZSB3aXRo
+aW4gdGhlIGdpdmVuIHJhbmdlLiBUaGUgZmlsZSBzaXplCm1heSBjaGFuZ2Ug
+aWYgZGVhbGxvY2F0aW9uIGlzIHRvd2FyZHMgdGhlIGVuZCBvZiB0aGUgZmls
+ZS4KLlRQCi5CIEZBTExPQ19VTlJFU1ZfU1BBQ0UKcmVtb3ZlcyB0aGUgdW5k
+ZXJseWluZyBkaXNrIHNwYWNlIHdpdGhpbiB0aGUgZ2l2ZW4gcmFuZ2UuIFRo
+ZSBkaXNrIHNwYWNlCnNoYWxsIGJlIHJlbW92ZWQgcmVnYXJkbGVzcyBvZiBp
+dCdzIGNvbnRlbnRzIHNvIGJvdGggYWxsb2NhdGVkIHNwYWNlCmZyb20KLkIg
+RkFMTE9DX0FMTE9DQVRFCmFuZAouQiBGQUxMT0NfUkVTVl9TUEFDRQphcyB3
+ZWxsIGFzIGZyb20KLkJSIHdyaXRlICgzKQp3aWxsIGJlIHJlbW92ZWQuCi5C
+IEZBTExPQ19VTlJFU1ZfU1BBQ0UKc2hhbGwgbmV2ZXIgcmVtb3ZlIGRpc2sg
+YmxvY2tzIG91dHNpZGUgdGhlIHJhbmdlIHNwZWNpZmllZC4KLkIgRkFMTE9D
+X1VOUkVTVl9TUEFDRQpzaGFsbCBuZXZlciBjaGFuZ2UgdGhlIGZpbGUgc2l6
+ZS4gSWYgY2hhbmdpbmcgdGhlIGZpbGUgc2l6ZQppcyByZXF1aXJlZCB3aGVu
+IGRlYWxsb2NhdGluZyBibG9ja3MgZnJvbSBhbiBvZmZzZXQgdG8gZW5kCm9m
+IGZpbGUgKG9yIGJleW9uZCBlbmQgb2YgZmlsZSkgaXMgcmVxdWlyZWQsCi5C
+UiBmdHVuY2F0ZTY0ICgzKQpvcgouQiBGQUxMT0NfREVBTExPQ0FURQpzaG91
+bGQgYmUgdXNlZC4KCi5TSCBSRVRVUk4gVkFMVUUKLkIgZmFsbG9jYXRlCnJl
+dHVybnMgemVybyBvbiBzdWNjZXNzLCBvciBhbiBlcnJvciBudW1iZXIgb24g
+ZmFpbHVyZS4KTm90ZSB0aGF0Ci5JIGVycm5vCmlzIG5vdCBzZXQuCi5TSCBF
+UlJPUlMKLlRQCi5CIEVCQURGCi5JIGZkCmlzIG5vdCBhIHZhbGlkIGZpbGUg
+ZGVzY3JpcHRvciwgb3IgaXMgbm90IG9wZW5lZCBmb3Igd3JpdGluZy4KLlRQ
+Ci5CIEVGQklHCi5JUiBvZmZzZXQgKyBsZW4KZXhjZWVkcyB0aGUgbWF4aW11
+bSBmaWxlIHNpemUuCi5UUAouQiBFSU5WQUwKLkkgb2Zmc2V0Cm9yCi5JIGxl
+bgp3YXMgbGVzcyB0aGFuIDAuCi5UUAouQiBFTk9ERVYKLkkgZmQKZG9lcyBu
+b3QgcmVmZXIgdG8gYSByZWd1bGFyIGZpbGUgb3IgYSBkaXJlY3RvcnkuCi5U
+UAouQiBFTk9TUEMKVGhlcmUgaXMgbm90IGVub3VnaCBzcGFjZSBsZWZ0IG9u
+IHRoZSBkZXZpY2UgY29udGFpbmluZyB0aGUgZmlsZQpyZWZlcnJlZCB0byBi
+eQouSVIgZmQgLgouVFAKLkIgRVNQSVBFCi5JIGZkCnJlZmVycyB0byBhIHBp
+cGUgb2YgZmlsZSBkZXNjcmlwdG9yLgouVFAKLkIgRU5PU1lTClRoZSBmaWxl
+c3lzdGVtIHVuZGVybHlpbmcgdGhlIGZpbGUgZGVzY3JpcHRvciBkb2VzIG5v
+dCBzdXBwb3J0IHRoaXMKb3BlcmF0aW9uLgouU0ggQVZBSUxBQklMSVRZClRo
+ZQouQiBmYWxsb2NhdGUKc3lzdGVtIGNhbGwgaXMgYXZhaWxhYmxlIHNpbmNl
+IDIuNi5YWAouU0ggU0VFIEFMU08KLkJSIHN5c2NhbGwgKDIpLAouQlIgcG9z
+aXhfZmFkdmlzZSAoMyksCi5CUiBmdHJ1bmNhdGUgKDMpLgo=
+
+------------WTbI0GSzrQq8swZHzkUhcQ--
