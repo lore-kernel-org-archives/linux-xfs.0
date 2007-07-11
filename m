@@ -1,53 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 22:00:15 -0700 (PDT)
-Received: from mtagate7.de.ibm.com (mtagate7.de.ibm.com [195.212.29.156])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B503bm007374
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 22:00:04 -0700
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate7.de.ibm.com (8.13.8/8.13.8) with ESMTP id l6B502FY098876
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 05:00:02 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6B502fs1986646
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 07:00:02 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6B501At000602
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 07:00:02 +0200
-Date: Wed, 11 Jul 2007 06:59:58 +0200
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [PATCH 2/7] fallocate() implementation in i386, x86_64 and powerpc
-Message-ID: <20070711045958.GA12843@osiris.ibm.com>
-References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710202000.GB8797@amitarora.in.ibm.com> <20070711121034.a3b925b9.sfr@canb.auug.org.au>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 22:53:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B5rqbm025977
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 22:53:54 -0700
+Date: Wed, 11 Jul 2007 15:53:47 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: REVIEW: fix xfs_bmap -vp confusion
+Message-ID: <20070711055347.GP12413810@sgi.com>
+References: <op.tu954us03jf8g2@pc-bnaujok.melbourne.sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070711121034.a3b925b9.sfr@canb.auug.org.au>
+In-Reply-To: <op.tu954us03jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Wed, Jul 11, 2007 at 12:10:34PM +1000, Stephen Rothwell wrote:
-> On Wed, 11 Jul 2007 01:50:00 +0530 "Amit K. Arora" <aarora@linux.vnet.ibm.com> wrote:
-> >
-> > --- linux-2.6.22.orig/arch/x86_64/ia32/sys_ia32.c
-> > +++ linux-2.6.22/arch/x86_64/ia32/sys_ia32.c
-> > @@ -879,3 +879,11 @@ asmlinkage long sys32_fadvise64(int fd, 
-> >  	return sys_fadvise64_64(fd, ((u64)offset_hi << 32) | offset_lo,
-> >  				len, advice);
-> >  }
-> > +
-> > +asmlinkage long sys32_fallocate(int fd, int mode, unsigned offset_lo,
-> > +				unsigned offset_hi, unsigned len_lo,
-> > +				unsigned len_hi)
+On Wed, Jul 11, 2007 at 01:18:20PM +1000, Barry Naujok wrote:
+> If xfs_bmap -vp is run on a file without unwritten extents
+> and the filesystem does not use sunit/swidth, the FLAGS
+> column is not shown. This leads to some confusion.
 > 
-> Please call this compat_sys_fallocate in line with the powerpc version -
-> it gives us a hint that maybe we should think about how to consolidate
-> them.  I know other stuff in that file is called sys32_ ... but it is time
-> for a change :-)
+> So, when -vp option is used, it will always print the
+> FLAGS column.
 
-Maybe it would be worth to finally consider this:
+I note that it only prints the legend if a flag is set. I guess
+this is ok, but maybe it would be more consistent to always
+print the legend? Or even to make the legend optional (which
+would make dumping more than one file more compact)?
 
-http://marc.info/?l=linux-kernel&m=118411511620432&w=2
+Cheers,
 
-?
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
