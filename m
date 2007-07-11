@@ -1,58 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 02:13:57 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B9Dqbm000829
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 02:13:53 -0700
-Date: Wed, 11 Jul 2007 10:03:12 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
-Message-ID: <20070711090312.GA18301@infradead.org>
-References: <20070625132810.GA1951@amitarora.in.ibm.com> <20070625134500.GE1951@amitarora.in.ibm.com> <20070625150320.GA8686@amitarora.in.ibm.com> <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com> <20070630102111.GB23568@infradead.org> <20070630165246.GA5159@schatzie.adilger.int> <20070703100848.GA14936@amitarora.in.ibm.com> <20070703103107.GA29763@infradead.org> <20070703114650.GB14936@amitarora.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070703114650.GB14936@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 02:49:25 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B9nKbm016632
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 02:49:23 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l6B8c086013875
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 17:39:38 +0900 (JST)
+Message-Id: <200707110834.AA05713@TNESG9305.wm.jp.nec.com>
+From: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+Date: Wed, 11 Jul 2007 17:34:14 +0900
+Subject: Re: REVIEW: Updated all xfsprogs man pages
+In-Reply-To: <op.tu8nfl2b3jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <op.tu8nfl2b3jf8g2@pc-bnaujok.melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-2022-jp
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, adilger@clusterfs.com, David Chinner <dgc@sgi.com>, suparna@in.ibm.com, cmm@us.ibm.com, xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jul 03, 2007 at 05:16:50PM +0530, Amit K. Arora wrote:
-> Well, if you see the modes proposed using above flags :
-> 
-> #define FA_ALLOCATE	0
-> #define FA_DEALLOCATE	FA_FL_DEALLOC
-> #define FA_RESV_SPACE	FA_FL_KEEP_SIZE
-> #define FA_UNRESV_SPACE	(FA_FL_DEALLOC | FA_FL_KEEP_SIZE | FA_FL_DEL_DATA)
-> 
-> FA_FL_DEL_DATA is _not_ being used for preallocation. We have two modes
-> for preallocation FA_ALLOCATE and FA_RESV_SPACE, which do not use this
-> flag. Hence prealloction will never delete data.
-> This mode is required only for FA_UNRESV_SPACE, which is a deallocation
-> mode, to support any existing XFS aware applications/usage-scenarios.
+Hi, 
+I sent a patch more than one month ago but it is not included in your patch.
+Should I update my patch based on your patch and resend?
+http://marc.info/?l=linux-xfs&m=118050289805766&w=4
 
-Sorry, but this doesn't make any sense.  There is no need to put every
-feature in the XFS ioctls in the syscalls.  The XFS ioctls will need to
-be supported forever anyway - as I suggested before they really should
-be moved to generic code.
+--
+Utako Kusaka
 
-What needs to be supported is what makes sense as an interface.
-A punch a hole interface does make sense, but trying to hack this into
-a preallocation system call is just madness.  We're not IRIX or windows
-that fit things into random subcall just because there was some space
-left to squeeze them in.
-
-> > > > FA_FL_NO_MTIME	0x10 /* keep same mtime (default change on size, data change) */
-> > > > FA_FL_NO_CTIME	0x20 /* keep same ctime (default change on size, data change) */
-> > 
-> > NACK to these aswell.  If i_size changes c/mtime need updates, if the size
-> > doesn't chamge they don't.  No need to add more flags for this.
-> 
-> This requirement was from the point of view of HSM applications. Hope
-> you saw Andreas previous post and are keeping that in mind.
-
-HSMs needs this basically for every system call, which screams for an
-open flag like O_INVISIBLE anyway.  Adding this in a generic way is
-a good idea, but hacking bits and pieces that won't fit into the global
-design is completely wrong.
+Tue, 10 Jul 2007 17:36:47 +1000 Barry Naujok wrote：
+REVIEW: Updated all xfsprogs man pages
+>- Updated out of date information.
+>- Updated formatting to linux standards.
+>- Improved readability of some complex sections.
