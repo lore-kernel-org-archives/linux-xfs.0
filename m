@@ -1,232 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 02:03:43 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B93abm029038
-	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 02:03:38 -0700
-Date: Wed, 11 Jul 2007 19:07:24 +1000
-Subject: REVIEW: zero existing secondary superblocks with mkfs.xfs -f
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------1bmT4AjRtp81ALP1nN5vGp
-MIME-Version: 1.0
-Message-ID: <op.tvamambx3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 11 Jul 2007 02:12:14 -0700 (PDT)
+Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6B9CAbm032394
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 02:12:11 -0700
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6B88Quu017476
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 04:08:26 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6B9CBhb559512
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 05:12:11 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6B9CAPj000817
+	for <xfs@oss.sgi.com>; Wed, 11 Jul 2007 05:12:10 -0400
+Date: Wed, 11 Jul 2007 14:42:24 +0530
+From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/7] manpage for fallocate
+Message-ID: <20070711091224.GA30545@amitarora.in.ibm.com>
+References: <20070710201200.GA10255@amitarora.in.ibm.com> <20070710201820.GA8797@amitarora.in.ibm.com> <20070710213701.GG3400@zakalwe.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070710213701.GG3400@zakalwe.fi>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Heikki Orsila <shdl@zakalwe.fi>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-------------1bmT4AjRtp81ALP1nN5vGp
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: Quoted-Printable
+On Wed, Jul 11, 2007 at 12:37:01AM +0300, Heikki Orsila wrote:
+> On Wed, Jul 11, 2007 at 01:48:20AM +0530, Amit K. Arora wrote:
+> > .BI "int syscall(int, int fd, int mode, loff_t offset, loff_t len);
+> 
+> Correction: "int syscall(int fd, int mode, ...)",
 
-The attached patch zeros all the secondary superblocks if
-overwriting an existing XFS filesystem.
+Here, we have syscall() with first argument being the system call number
+- so what you suggested is not correct.
 
-This allows xfs_repair to detect the correct secondary block
-if the primary is destroyed (like XFS QA test 030).
+But, yes, the synopsis should change at some time. Maybe to something
+like:
 
-To demonstrate the bad behaviour, try the following:
+	#include <fcntl.h>
 
-# mkfs.xfs -f /dev/xxx
-... [note agcount reported]
-# dd if=3D/dev/zero of=3D/dev/xxx oflag=3Ddirect bs=3D512 count=3D1
-# xfs_repair /dev/xxx
-...
-(it should recover and a second repair will succeed.)
-# mkfs.xfs -f -d agcount=3D<smaller than above> /dev/xxx
-...
-# dd if=3D/dev/zero of=3D/dev/xxx oflag=3Ddirect bs=3D512 count=3D1
-# xfs_repair /dev/xxx
+	long fallocate(int fd, int mode, loff_t offset, loff_t len);
 
-It will either die or succeed (in my test, xfs_repair
-actually crashed because it doesn't handle bad extents yet!).
+> > .TP
+> > .B ENOSPC
+> > There is not enough space left on the device containing the file
+> > referred to by
+> > .IR fd.
+> > .TP
+> > .B ESPIPE
+> > .I fd
+> > refers to a pipe of file descriptor.
+> > .B ENOSYS
+> > The filesystem underlying the file descriptor does not support this
+> > operation.
+> 
+> EINTR?
 
-If success, try and mount it and run:
-# xfs_info /dev/xxx
-(It should be the geometry of the first mkfs run.)
+Will add following errors:
 
-Try the patch and repeat - success.=
+  EINTR		A signal was caught during execution
+  EIO		An I/O error occurred while reading from or writing to
+		a file system.
+  EOPNOTSUPP	The mode is not supported on the file descriptor.
 
-------------1bmT4AjRtp81ALP1nN5vGp
-Content-Disposition: attachment; filename=mkfs_zero_old_ags.patch
-Content-Type: application/octet-stream; name=mkfs_zero_old_ags.patch
-Content-Transfer-Encoding: Base64
+and will update following :
 
-LS0tIGEveGZzcHJvZ3MvbWtmcy94ZnNfbWtmcy5jCTIwMDctMDctMTEgMTg6
-NTI6NTUuMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL21rZnMveGZz
-X21rZnMuYwkyMDA3LTA3LTExIDE4OjUxOjQxLjQ4NDY2ODgwMiArMTAwMApA
-QCAtNDEyLDcgKzQxMiw3IEBAIGNhbGNfZGVmYXVsdF9hZ19nZW9tZXRyeSgK
-IAkgKiBiYXNlZCBvbiB0aGUgcHJlZmVyZWQgQUcgc2l6ZSwgbm90IHZpY2Ut
-dmVyc2EgLSB0aGUKIAkgKiBjb3VudCBjYW4gYmUgaW5jcmVhc2VkIGJ5IGdy
-b3dmcywgc28gcHJlZmVyIHRvIHVzZQogCSAqIHNtYWxsZXIgY291bnRzIGF0
-IG1rZnMgdGltZS4KLQkgKiAKKwkgKgogCSAqIFRoaXMgc2NhbGVzIHVzIHVw
-IHNtb290aGx5IGJldHdlZW4gbWluL21heCBBRyBzaXplcy4KIAkgKi8KIAlp
-ZiAoZGJsb2NrcyA+IEdJR0FCWVRFUyg1MTIsIGJsb2NrbG9nKSkKQEAgLTQ3
-Nyw3ICs0NzcsNyBAQCB2YWxpZGF0ZV9hZ19nZW9tZXRyeSgKIAlfKCJ0b28g
-ZmV3IGFsbG9jYXRpb24gZ3JvdXBzIGZvciBzaXplID0gJWxsZFxuIiksIChs
-b25nIGxvbmcpYWdzaXplKTsKIAkJZnByaW50ZihzdGRlcnIsCiAJXygibmVl
-ZCBhdCBsZWFzdCAlbGxkIGFsbG9jYXRpb24gZ3JvdXBzXG4iKSwKLQkJKGxv
-bmcgbG9uZykoZGJsb2NrcyAvIFhGU19BR19NQVhfQkxPQ0tTKGJsb2NrbG9n
-KSArIAorCQkobG9uZyBsb25nKShkYmxvY2tzIC8gWEZTX0FHX01BWF9CTE9D
-S1MoYmxvY2tsb2cpICsKIAkJCShkYmxvY2tzICUgWEZTX0FHX01BWF9CTE9D
-S1MoYmxvY2tsb2cpICE9IDApKSk7CiAJCXVzYWdlKCk7CiAJfQpAQCAtNTA2
-LDYgKzUwNiw3MCBAQCB2YWxpZGF0ZV9hZ19nZW9tZXRyeSgKIAl9CiB9CiAK
-K3N0YXRpYyB2b2lkCit6ZXJvX29sZF94ZnNfc3RydWN0dXJlcygKKwlsaWJ4
-ZnNfaW5pdF90CQkqeGksCisJaW50CQkJc2VjdHNpemUpCit7CisJdm9pZCAJ
-CQkqYnVmOworCXhmc19zYl90IAkJc2I7CisJX191aW50MzJfdAkJYnNpemU7
-CisJaW50CQkJaTsKKwl4ZnNfb2ZmX3QJCW9mZjsKKworCS8qCisJICogcmVh
-ZCBpbiBleGlzdGluZyBmaWxlc3lzdGVtIHN1cGVyYmxvY2ssIHVzZSBpdCdz
-IGdlb21ldHJ5CisJICogc2V0dGluZ3MgYW5kIHplcm8gdGhlIGV4aXN0aW5n
-IHNlY29uZGFyeSBzdXBlcmJsb2Nrcy4KKwkgKi8KKwlidWYgPSBtZW1hbGln
-bihsaWJ4ZnNfZGV2aWNlX2FsaWdubWVudCgpLCBzZWN0c2l6ZSk7CisJaWYg
-KCFidWYpIHsKKwkJZnByaW50ZihzdGRlcnIsCisJXygiZXJyb3IgcmVhZGlu
-ZyBleGlzdGluZyBzdXBlcmJsb2NrIC0tIGZhaWxlZCB0byBtZW1hbGlnbiBi
-dWZmZXJcbiIpKTsKKwkJcmV0dXJuOworCX0KKwliemVybyhidWYsIHNlY3Rz
-aXplKTsKKworCWlmIChwcmVhZCh4aS0+ZGZkLCBidWYsIHNlY3RzaXplLCAw
-KSAhPSBzZWN0c2l6ZSkgeworCQlmcHJpbnRmKHN0ZGVyciwgXygiZXhpc3Rp
-bmcgc3VwZXJibG9jayByZWFkIGZhaWxlZDogJXNcbiIpLAorCQkJc3RyZXJy
-b3IoZXJybm8pKTsKKwkJZnJlZShidWYpOworCQlyZXR1cm47CisJfQorCWxp
-Ynhmc194bGF0ZV9zYihidWYsICZzYiwgMSwgWEZTX1NCX0FMTF9CSVRTKTsK
-KworCS8qCisJICogcGVyZm9ybSBzYW1lIGJhc2ljIHN1cGVyYmxvY2sgdmFs
-aWRhdGlvbiB0byBtYWtlIHN1cmUgd2UKKwkgKiBhY3R1YWxseSB6ZXJvIHNl
-Y29uZGFyeSBibG9ja3MKKwkgKi8KKwlpZiAoc2Iuc2JfbWFnaWNudW0gIT0g
-WEZTX1NCX01BR0lDIHx8IHNiLnNiX2Jsb2Nrc2l6ZSA9PSAwKQorCQlnb3Rv
-IGRvbmU7CisKKwlmb3IgKGJzaXplID0gMSwgaSA9IDA7IGJzaXplIDwgc2Iu
-c2JfYmxvY2tzaXplICYmCisJCQlpIDwgc2l6ZW9mKHNiLnNiX2Jsb2Nrc2l6
-ZSkgKiBOQkJZOyBpKyspCisJCWJzaXplIDw8PSAxOworCisJaWYgKGkgPCBY
-RlNfTUlOX0JMT0NLU0laRV9MT0cgfHwgaSA+IFhGU19NQVhfQkxPQ0tTSVpF
-X0xPRyB8fAorCQkJaSAhPSBzYi5zYl9ibG9ja2xvZykKKwkJZ290byBkb25l
-OworCisJaWYgKHNiLnNiX2RibG9ja3MgPiAoKF9fdWludDY0X3Qpc2Iuc2Jf
-YWdjb3VudCAqIHNiLnNiX2FnYmxvY2tzKSB8fAorCQkJc2Iuc2JfZGJsb2Nr
-cyA8ICgoX191aW50NjRfdCkoc2Iuc2JfYWdjb3VudCAtIDEpICoKKwkJCQkJ
-IHNiLnNiX2FnYmxvY2tzICsgWEZTX01JTl9BR19CTE9DS1MpKQorCQlnb3Rv
-IGRvbmU7CisKKwkvKgorCSAqIGJsb2NrIHNpemUgYW5kIGJhc2ljIGdlb21l
-dHJ5IHNlZW1zIGFscmlnaHQsIHplcm8gdGhlIHNlY29uZGFyaWVzLgorCSAq
-LworCWJ6ZXJvKGJ1Ziwgc2VjdHNpemUpOworCWZvciAoaSA9IDE7IGkgPCBz
-Yi5zYl9hZ2NvdW50OyBpKyspICB7CisJCW9mZiA9ICh4ZnNfb2ZmX3QpaSAq
-IHNiLnNiX2FnYmxvY2tzIDw8IHNiLnNiX2Jsb2NrbG9nOworCQlpZiAocHdy
-aXRlKHhpLT5kZmQsIGJ1Ziwgc2VjdHNpemUsIG9mZikgPT0gLTEpCisJCQli
-cmVhazsKKwl9Citkb25lOgorCWZyZWUoYnVmKTsKK30KKwogaW50CiBtYWlu
-KAogCWludAkJCWFyZ2MsCkBAIC0xNDc5LDcgKzE1NDMsNyBAQCBtYWluKAog
-CQkJaWYgKFhGU19NSU5fUlRFWFRTSVpFIDw9IHJ0ZXh0Ynl0ZXMgJiYKIAkJ
-CSAgICAocnRleHRieXRlcyA8PSBYRlNfTUFYX1JURVhUU0laRSkpIHsKIAkJ
-CQlydGV4dGJsb2NrcyA9IHJzd2lkdGg7Ci0JCQl9IAorCQkJfQogCQl9CiAJ
-CWlmICghcnRleHRibG9ja3MpIHsKIAkJCXJ0ZXh0YmxvY2tzID0gKGJsb2Nr
-c2l6ZSA8IFhGU19NSU5fUlRFWFRTSVpFKSA/CkBAIC0xNTg3LDcgKzE2NTEs
-NyBAQCBtYWluKAogCWVsc2UgaWYgKCFkc2l6ZSkgewogCQlmcHJpbnRmKHN0
-ZGVyciwgXygiY2FuJ3QgZ2V0IHNpemUgb2YgZGF0YSBzdWJ2b2x1bWVcbiIp
-KTsKIAkJdXNhZ2UoKTsKLQl9IAorCX0KIAlpZiAoZGJsb2NrcyA8IFhGU19N
-SU5fREFUQV9CTE9DS1MpIHsKIAkJZnByaW50ZihzdGRlcnIsCiAJXygic2l6
-ZSAlbGxkIG9mIGRhdGEgc3Vidm9sdW1lIGlzIHRvbyBzbWFsbCwgbWluaW11
-bSAlZCBibG9ja3NcbiIpLApAQCAtMTY2MSw3ICsxNzI1LDcgQEAgXygic2l6
-ZSAlcyBzcGVjaWZpZWQgZm9yIGxvZyBzdWJ2b2x1bWUgaQogCQlsb2dibG9j
-a3MgPSBNQVgobG9nYmxvY2tzLAogCQkJCU1BWChYRlNfREZMX0xPR19TSVpF
-LAogCQkJCQltYXhfdHJfcmVzICogWEZTX0RGTF9MT0dfRkFDVE9SKSk7Ci0J
-CWxvZ2Jsb2NrcyA9IE1JTihsb2dibG9ja3MsIFhGU19NQVhfTE9HX0JMT0NL
-Uyk7IAorCQlsb2dibG9ja3MgPSBNSU4obG9nYmxvY2tzLCBYRlNfTUFYX0xP
-R19CTE9DS1MpOwogCQlpZiAoKGxvZ2Jsb2NrcyA8PCBibG9ja2xvZykgPiBY
-RlNfTUFYX0xPR19CWVRFUykgewogCQkJbG9nYmxvY2tzID0gWEZTX01BWF9M
-T0dfQllURVMgPj4gYmxvY2tsb2c7CiAJCX0KQEAgLTE3NDMsMjAgKzE4MDcs
-MjAgQEAgXygic2l6ZSAlcyBzcGVjaWZpZWQgZm9yIGxvZyBzdWJ2b2x1bWUg
-aQogCSAqIElmIGRzdW5pdCBpcyBhIG11bHRpcGxlIG9mIGZzIGJsb2Nrc2l6
-ZSwgdGhlbiBjaGVjayB0aGF0IGlzIGEKIAkgKiBtdWx0aXBsZSBvZiB0aGUg
-YWdzaXplIHRvbwogCSAqLwotCWlmIChkc3VuaXQgJiYgIShCQlRPQihkc3Vu
-aXQpICUgYmxvY2tzaXplKSAmJiAKKwlpZiAoZHN1bml0ICYmICEoQkJUT0Io
-ZHN1bml0KSAlIGJsb2Nrc2l6ZSkgJiYKIAkgICAgZHN3aWR0aCAmJiAhKEJC
-VE9CKGRzd2lkdGgpICUgYmxvY2tzaXplKSkgewogCiAJCS8qIGNvbnZlcnQg
-ZnJvbSA1MTIgYnl0ZSBibG9ja3MgdG8gZnMgYmxvY2tzaXplICovCiAJCWRz
-dW5pdCA9IERUT0JUKGRzdW5pdCk7CiAJCWRzd2lkdGggPSBEVE9CVChkc3dp
-ZHRoKTsKIAotCQkvKiAKKwkJLyoKIAkJICogYWdzaXplIGlzIG5vdCBhIG11
-bHRpcGxlIG9mIGRzdW5pdAogCQkgKi8KIAkJaWYgKChhZ3NpemUgJSBkc3Vu
-aXQpICE9IDApIHsKIAkJCS8qCi0JCQkgKiBSb3VuZCB1cCB0byBzdHJpcGUg
-dW5pdCBib3VuZGFyeS4gQWxzbyBtYWtlIHN1cmUgCi0JCQkgKiB0aGF0IGFn
-c2l6ZSBpcyBzdGlsbCBsYXJnZXIgdGhhbiAKKwkJCSAqIFJvdW5kIHVwIHRv
-IHN0cmlwZSB1bml0IGJvdW5kYXJ5LiBBbHNvIG1ha2Ugc3VyZQorCQkJICog
-dGhhdCBhZ3NpemUgaXMgc3RpbGwgbGFyZ2VyIHRoYW4KIAkJCSAqIFhGU19B
-R19NSU5fQkxPQ0tTKGJsb2NrbG9nKQogCQkgCSAqLwogCQkJdG1wX2Fnc2l6
-ZSA9ICgoYWdzaXplICsgKGRzdW5pdCAtIDEpKS8gZHN1bml0KSAqIGRzdW5p
-dDsKQEAgLTE3NzAsNyArMTgzNCw3IEBAIF8oInNpemUgJXMgc3BlY2lmaWVk
-IGZvciBsb2cgc3Vidm9sdW1lIGkKIAkJCSAgICAodG1wX2Fnc2l6ZSA8PSBY
-RlNfQUdfTUFYX0JMT0NLUyhibG9ja2xvZykpICYmCiAJCQkgICAgIWRhZmxh
-ZykgewogCQkJCWFnc2l6ZSA9IHRtcF9hZ3NpemU7Ci0JCQkJYWdjb3VudCA9
-IGRibG9ja3MvYWdzaXplICsgCisJCQkJYWdjb3VudCA9IGRibG9ja3MvYWdz
-aXplICsKIAkJCQkJCShkYmxvY2tzICUgYWdzaXplICE9IDApOwogCQkJCWlm
-IChkYXNpemUgfHwgZGFmbGFnKQogCQkJCQlmcHJpbnRmKHN0ZGVyciwKQEAg
-LTE3NzksNyArMTg0Myw3IEBAIF8oInNpemUgJXMgc3BlY2lmaWVkIGZvciBs
-b2cgc3Vidm9sdW1lIGkKIAkJCX0gZWxzZSB7CiAJCQkJaWYgKG5vZHNmbGFn
-KSB7CiAJCQkJCWRzdW5pdCA9IGRzd2lkdGggPSAwOwotCQkJCX0gZWxzZSB7
-IAorCQkJCX0gZWxzZSB7CiAJCQkJCWZwcmludGYoc3RkZXJyLAogXygiQWxs
-b2NhdGlvbiBncm91cCBzaXplICglbGxkKSBpcyBub3QgYSBtdWx0aXBsZSBv
-ZiB0aGUgc3RyaXBlIHVuaXQgKCVkKVxuIiksCiAJCQkJCQkobG9uZyBsb25n
-KWFnc2l6ZSwgZHN1bml0KTsKQEAgLTE3ODksNyArMTg1Myw3IEBAIF8oIkFs
-bG9jYXRpb24gZ3JvdXAgc2l6ZSAoJWxsZCkgaXMgbm90IGEKIAkJfQogCQlp
-ZiAoZHN3aWR0aCAmJiAoKGFnc2l6ZSAlIGRzd2lkdGgpID09IDApICYmIChh
-Z2NvdW50ID4gMSkpIHsKIAkJCS8qIFRoaXMgaXMgYSBub24tb3B0aW1hbCBj
-b25maWd1cmF0aW9uIGJlY2F1c2UgYWxsIEFHcwotCQkJICogc3RhcnQgb24g
-dGhlIHNhbWUgZGlzayBpbiB0aGUgc3RyaXBlLiAgQ2hhbmdpbmcgCisJCQkg
-KiBzdGFydCBvbiB0aGUgc2FtZSBkaXNrIGluIHRoZSBzdHJpcGUuICBDaGFu
-Z2luZwogCQkJICogdGhlIEFHIHNpemUgYnkgb25lIHN1bml0IHdpbGwgZ3Vh
-cmFudGVlIHRoYXQgdGhpcwogCQkJICogZG9lcyBub3QgaGFwcGVuLgogCQkJ
-ICovCkBAIC0xODI2LDEyICsxODkwLDEyIEBAIGFuIEFHIHNpemUgdGhhdCBp
-cyBvbmUgc3RyaXBlIHVuaXQgc21hbGwKIAl9IGVsc2UgewogCQlpZiAobm9k
-c2ZsYWcpCiAJCQlkc3VuaXQgPSBkc3dpZHRoID0gMDsKLQkJZWxzZSB7IAor
-CQllbHNlIHsKIAkJCWZwcmludGYoc3RkZXJyLAogCQkJCV8oIiVzOiBTdHJp
-cGUgdW5pdCglZCkgb3Igc3RyaXBlIHdpZHRoKCVkKSBpcyAiCiAJCQkJIm5v
-dCBhIG11bHRpcGxlIG9mIHRoZSBibG9jayBzaXplKCVkKVxuIiksCi0JCQkJ
-cHJvZ25hbWUsIEJCVE9CKGRzdW5pdCksIEJCVE9CKGRzd2lkdGgpLCAKLQkJ
-CQlibG9ja3NpemUpOyAJCisJCQkJcHJvZ25hbWUsIEJCVE9CKGRzdW5pdCks
-IEJCVE9CKGRzd2lkdGgpLAorCQkJCWJsb2Nrc2l6ZSk7CiAJCQlleGl0KDEp
-OwogCQl9CiAJfQpAQCAtMjAwNSw2ICsyMDY5LDkgQEAgYW4gQUcgc2l6ZSB0
-aGF0IGlzIG9uZSBzdHJpcGUgdW5pdCBzbWFsbAogCQkJKHNlY3RvcnNpemUg
-IT0gQkJTSVpFIHx8IGxzZWN0b3JzaXplICE9IEJCU0laRSksCiAJCQlzYnAt
-PnNiX2ZlYXR1cmVzMiAhPSAwKTsKIAorCWlmIChmb3JjZV9vdmVyd3JpdGUp
-CisJCXplcm9fb2xkX3hmc19zdHJ1Y3R1cmVzKCZ4aSwgc2VjdG9yc2l6ZSk7
-CisKIAkvKgogCSAqIFplcm8gb3V0IHRoZSBiZWdpbm5pbmcgb2YgdGhlIGRl
-dmljZSwgdG8gb2JsaXRlcmF0ZSBhbnkgb2xkCiAJICogZmlsZXN5c3RlbSBz
-aWduYXR1cmVzIG91dCB0aGVyZS4gIFRoaXMgc2hvdWxkIHRha2UgY2FyZSBv
-ZgpAQCAtMjAzOSw3ICsyMTA2LDcgQEAgYW4gQUcgc2l6ZSB0aGF0IGlzIG9u
-ZSBzdHJpcGUgdW5pdCBzbWFsbAogIAkgKiAoTUQgc2IgaXMgfjY0ayBmcm9t
-IHRoZSBlbmQsIHRha2Ugb3V0IGEgd2lkZXIgc3dhdGggdG8gYmUgc3VyZSkK
-IAkgKi8KIAlpZiAoIXhpLmRpc2ZpbGUpIHsKLQkJYnVmID0gbGlieGZzX2dl
-dGJ1Zih4aS5kZGV2LCAoeGkuZHNpemUgLSBCVE9CQihXSEFDS19TSVpFKSks
-IAorCQlidWYgPSBsaWJ4ZnNfZ2V0YnVmKHhpLmRkZXYsICh4aS5kc2l6ZSAt
-IEJUT0JCKFdIQUNLX1NJWkUpKSwKIAkJCQkgICAgQlRPQkIoV0hBQ0tfU0la
-RSkpOwogCQliemVybyhYRlNfQlVGX1BUUihidWYpLCBXSEFDS19TSVpFKTsK
-IAkJbGlieGZzX3dyaXRlYnVmKGJ1ZiwgTElCWEZTX0VYSVRfT05fRkFJTFVS
-RSk7CkBAIC0yMTAxLDcgKzIxNjgsNyBAQCBhbiBBRyBzaXplIHRoYXQgaXMg
-b25lIHN0cmlwZSB1bml0IHNtYWxsCiAJCUlOVF9TRVQoYWdmLT5hZ2ZfbG9u
-Z2VzdCwgQVJDSF9DT05WRVJULCBuYm1ibG9ja3MpOwogCQlpZiAobG9naW50
-ZXJuYWwgJiYgYWdubyA9PSBsb2dhZ25vKSB7CiAJCQlJTlRfTU9EKGFnZi0+
-YWdmX2ZyZWVibGtzLCBBUkNIX0NPTlZFUlQsIC1sb2dibG9ja3MpOwotCQkJ
-SU5UX1NFVChhZ2YtPmFnZl9sb25nZXN0LCBBUkNIX0NPTlZFUlQsIGFnc2l6
-ZSAtIAorCQkJSU5UX1NFVChhZ2YtPmFnZl9sb25nZXN0LCBBUkNIX0NPTlZF
-UlQsIGFnc2l6ZSAtCiAJCQkJWEZTX0ZTQl9UT19BR0JOTyhtcCwgbG9nc3Rh
-cnQpIC0gbG9nYmxvY2tzKTsKIAkJfQogCQlpZiAoWEZTX01JTl9GUkVFTElT
-VChhZ2YsIG1wKSA+IHdvcnN0X2ZyZWVsaXN0KQpAQCAtMjE1Myw3ICsyMjIw
-LDcgQEAgYW4gQUcgc2l6ZSB0aGF0IGlzIG9uZSBzdHJpcGUgdW5pdCBzbWFs
-bAogCQkJCSAqIEhhdmUgdG8gaW5zZXJ0IHR3byByZWNvcmRzCiAJCQkJICog
-SW5zZXJ0IHBhZCByZWNvcmQgZm9yIHN0cmlwZSBhbGlnbiBvZiBsb2cKIAkJ
-CQkgKi8KLQkJCQlJTlRfU0VUKGFyZWMtPmFyX2Jsb2NrY291bnQsIEFSQ0hf
-Q09OVkVSVCwgCisJCQkJSU5UX1NFVChhcmVjLT5hcl9ibG9ja2NvdW50LCBB
-UkNIX0NPTlZFUlQsCiAJCQkJCSh4ZnNfZXh0bGVuX3QpKFhGU19GU0JfVE9f
-QUdCTk8oCiAJCQkJCQltcCwgbG9nc3RhcnQpCiAJCQkJICAJLSAoSU5UX0dF
-VChhcmVjLT5hcl9zdGFydGJsb2NrLApAQCAtMjE2OSwxMiArMjIzNiwxMiBA
-QCBhbiBBRyBzaXplIHRoYXQgaXMgb25lIHN0cmlwZSB1bml0IHNtYWxsCiAJ
-CQkJCQlBUkNIX0NPTlZFUlQpKTsKIAkJCQlhcmVjID0gbnJlYzsKIAkJCQlJ
-TlRfTU9EKGJsb2NrLT5iYl9udW1yZWNzLCBBUkNIX0NPTlZFUlQsIDEpOwot
-CQkJfSAKKwkJCX0KIAkJCS8qCiAJCQkgKiBDaGFuZ2UgcmVjb3JkIHN0YXJ0
-IHRvIGFmdGVyIHRoZSBpbnRlcm5hbCBsb2cKIAkJCSAqLwogCQkJSU5UX01P
-RChhcmVjLT5hcl9zdGFydGJsb2NrLCBBUkNIX0NPTlZFUlQsIGxvZ2Jsb2Nr
-cyk7Ci0JCX0gCisJCX0KIAkJSU5UX1NFVChhcmVjLT5hcl9ibG9ja2NvdW50
-LCBBUkNIX0NPTlZFUlQsCiAJCQkoeGZzX2V4dGxlbl90KShhZ3NpemUgLQog
-CQkJCUlOVF9HRVQoYXJlYy0+YXJfc3RhcnRibG9jaywgQVJDSF9DT05WRVJU
-KSkpOwpAQCAtMjIxMiw3ICsyMjc5LDcgQEAgYW4gQUcgc2l6ZSB0aGF0IGlz
-IG9uZSBzdHJpcGUgdW5pdCBzbWFsbAogCQkJCUlOVF9NT0QoYmxvY2stPmJi
-X251bXJlY3MsIEFSQ0hfQ09OVkVSVCwgMSk7CiAJCQl9CiAJCQlJTlRfTU9E
-KGFyZWMtPmFyX3N0YXJ0YmxvY2ssIEFSQ0hfQ09OVkVSVCwgbG9nYmxvY2tz
-KTsKLQkJfQkKKwkJfQogCQlJTlRfU0VUKGFyZWMtPmFyX2Jsb2NrY291bnQs
-IEFSQ0hfQ09OVkVSVCwgKHhmc19leHRsZW5fdCkKIAkJCShhZ3NpemUgLSBJ
-TlRfR0VUKGFyZWMtPmFyX3N0YXJ0YmxvY2ssIEFSQ0hfQ09OVkVSVCkpKTsK
-IAkJbGlieGZzX3dyaXRlYnVmKGJ1ZiwgTElCWEZTX0VYSVRfT05fRkFJTFVS
-RSk7Cg==
+  EINVAL	offset was less than 0, or len was less than or equal to 0.
 
-------------1bmT4AjRtp81ALP1nN5vGp--
+--
+Regards,
+Amit Arora
