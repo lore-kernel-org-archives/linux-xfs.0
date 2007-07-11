@@ -1,162 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 22:56:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jul 2007 23:00:32 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B5uSbm027050
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 22:56:30 -0700
-Date: Wed, 11 Jul 2007 16:00:13 +1000
-Subject: REVIEW: Improve xfs_io and xfs_quota -c handling
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6B60Mbm028975
+	for <xfs@oss.sgi.com>; Tue, 10 Jul 2007 23:00:24 -0700
+Date: Wed, 11 Jul 2007 16:04:05 +1000
+Subject: Re: REVIEW: fix xfs_bmap -vp confusion
 From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------wbndoKBep6ZtqAMfwrEJYW
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 MIME-Version: 1.0
-Message-ID: <op.tvadmnqf3jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <op.tu954us03jf8g2@pc-bnaujok.melbourne.sgi.com> <20070711055347.GP12413810@sgi.com>
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.tvads3bs3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20070711055347.GP12413810@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-------------wbndoKBep6ZtqAMfwrEJYW
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+On Wed, 11 Jul 2007 15:53:47 +1000, David Chinner <dgc@sgi.com> wrote:
 
-xfs_io and xfs_quota's -c option handling is not very good
-for "global" commands which don't rely on the file/filesystem
-list it uses. Command such as "help" and "print" are such
-candidates.
+> On Wed, Jul 11, 2007 at 01:18:20PM +1000, Barry Naujok wrote:
+>> If xfs_bmap -vp is run on a file without unwritten extents
+>> and the filesystem does not use sunit/swidth, the FLAGS
+>> column is not shown. This leads to some confusion.
+>>
+>> So, when -vp option is used, it will always print the
+>> FLAGS column.
+>
+> I note that it only prints the legend if a flag is set. I guess
+> this is ok, but maybe it would be more consistent to always
+> print the legend? Or even to make the legend optional (which
+> would make dumping more than one file more compact)?
+>
+> Cheers,
+>
+> Dave.
 
-The attached patch addresses this issue, and also allows
-"-c help [xxx]" in xfs_io without a file. xfs_quota will
-not print help once for each XFS filesystem either.
-------------wbndoKBep6ZtqAMfwrEJYW
-Content-Disposition: attachment; filename=fix_c_option.patch
-Content-Type: application/octet-stream; name=fix_c_option.patch
-Content-Transfer-Encoding: Base64
+The legend* is only shown with an extra -v option and the FLAGS
+column displayed. The updated man pages posted out yesterday
+documents this.
 
-Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9pbmNs
-dWRlL2NvbW1hbmQuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
-Ci0tLSBhL3hmc3Byb2dzL2luY2x1ZGUvY29tbWFuZC5oCTIwMDctMDctMTEg
-MTU6NTI6MzUuMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL2luY2x1
-ZGUvY29tbWFuZC5oCTIwMDctMDctMTEgMTU6NTI6MjYuODYxNjQ2NTUyICsx
-MDAwCkBAIC0xOCw2ICsxOCw4IEBACiAjaWZuZGVmIF9fQ09NTUFORF9IX18K
-ICNkZWZpbmUgX19DT01NQU5EX0hfXwogCisjZGVmaW5lIENNRF9GTEFHX0dM
-T0JBTAkoKGludCkweDgwMDAwMDAwKQkvKiBkb24ndCBpdGVyYXRlICJhcmdz
-IiAqLworCiB0eXBlZGVmIGludCAoKmNmdW5jX3QpKGludCBhcmdjLCBjaGFy
-ICoqYXJndik7CiB0eXBlZGVmIHZvaWQgKCpoZWxwZnVuY190KSh2b2lkKTsK
-IApAQCAtNTIsNiArNTQsNiBAQCBleHRlcm4gY29uc3QgY21kaW5mb190CSpm
-aW5kX2NvbW1hbmQoY29uCiAKIGV4dGVybiB2b2lkCQljb21tYW5kX2xvb3Ao
-dm9pZCk7CiBleHRlcm4gaW50CQljb21tYW5kX3VzYWdlKGNvbnN0IGNtZGlu
-Zm9fdCAqY2kpOwotZXh0ZXJuIGludAkJY29tbWFuZChpbnQgYXJnYywgY2hh
-ciAqKmFyZ3YpOworZXh0ZXJuIGludAkJY29tbWFuZChjb25zdCBjbWRpbmZv
-X3QgKmNpLCBpbnQgYXJnYywgY2hhciAqKmFyZ3YpOwogCiAjZW5kaWYJLyog
-X19DT01NQU5EX0hfXyAqLwoKPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09Cnhmc3Byb2dzL2lvL2ZpbGUuYwo9PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0KCi0tLSBhL3hmc3Byb2dzL2lvL2ZpbGUuYwkyMDA3LTA3LTEx
-IDE1OjUyOjM1LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9pby9m
-aWxlLmMJMjAwNy0wNy0xMSAxNTozNzo1Mi41NDgyODg4MDkgKzEwMDAKQEAg
-LTEwMyw3ICsxMDMsOCBAQCBmaWxlX2luaXQodm9pZCkKIAlwcmludF9jbWQu
-Y2Z1bmMgPSBwcmludF9mOwogCXByaW50X2NtZC5hcmdtaW4gPSAwOwogCXBy
-aW50X2NtZC5hcmdtYXggPSAwOwotCXByaW50X2NtZC5mbGFncyA9IENNRF9O
-T01BUF9PSyB8IENNRF9OT0ZJTEVfT0sgfCBDTURfRk9SRUlHTl9PSzsKKwlw
-cmludF9jbWQuZmxhZ3MgPSBDTURfTk9NQVBfT0sgfCBDTURfTk9GSUxFX09L
-IHwgQ01EX0ZPUkVJR05fT0sgfAorCQkJCUNNRF9GTEFHX0dMT0JBTDsKIAlw
-cmludF9jbWQub25lbGluZSA9IF8oImxpc3QgY3VycmVudCBvcGVuIGZpbGVz
-IGFuZCBtZW1vcnkgbWFwcGluZ3MiKTsKIAogCWFkZF9jb21tYW5kKCZmaWxl
-X2NtZCk7Cgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KeGZzcHJv
-Z3MvbGlieGNtZC9jb21tYW5kLmMKPT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09CgotLS0gYS94ZnNwcm9ncy9saWJ4Y21kL2NvbW1hbmQuYwkyMDA3
-LTA3LTExIDE1OjUyOjM1LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9n
-cy9saWJ4Y21kL2NvbW1hbmQuYwkyMDA3LTA3LTExIDE1OjM4OjUwLjg0ODYz
-NTk3OSArMTAwMApAQCAtNzAsMjAgKzcwLDE1IEBAIGNvbW1hbmRfdXNhZ2Uo
-CiAKIGludAogY29tbWFuZCgKKwljb25zdCBjbWRpbmZvX3QJKmN0LAogCWlu
-dAkJYXJnYywKIAljaGFyCQkqKmFyZ3YpCiB7Ci0JY2hhcgkJKmNtZDsKLQlj
-b25zdCBjbWRpbmZvX3QJKmN0OworCWNoYXIJCSpjbWQgPSBhcmd2WzBdOwog
-Ci0JY21kID0gYXJndlswXTsKLQljdCA9IGZpbmRfY29tbWFuZChjbWQpOwot
-CWlmICghY3QpIHsKLQkJZnByaW50ZihzdGRlcnIsIF8oImNvbW1hbmQgXCIl
-c1wiIG5vdCBmb3VuZFxuIiksIGNtZCk7Ci0JCXJldHVybiAwOwotCX0KIAlp
-ZiAoIWNoZWNrX2NvbW1hbmQoY3QpKQogCQlyZXR1cm4gMDsKKwogCWlmIChh
-cmdjLTEgPCBjdC0+YXJnbWluIHx8IChjdC0+YXJnbWF4ICE9IC0xICYmIGFy
-Z2MtMSA+IGN0LT5hcmdtYXgpKSB7CiAJCWlmIChjdC0+YXJnbWF4ID09IC0x
-KQogCQkJZnByaW50ZihzdGRlcnIsCkBAIC0xNDgsMjYgKzE0MywzNSBAQCBh
-ZGRfYXJnc19jb21tYW5kKAogdm9pZAogY29tbWFuZF9sb29wKHZvaWQpCiB7
-Ci0JaW50CWMsIGksIGogPSAwLCBkb25lID0gMDsKLQljaGFyCSppbnB1dDsK
-LQljaGFyCSoqdjsKKwlpbnQJCWMsIGksIGogPSAwLCBkb25lID0gMDsKKwlj
-aGFyCQkqaW5wdXQ7CisJY2hhcgkJKip2OworCWNvbnN0IGNtZGluZm9fdAkq
-Y3Q7CiAKIAlmb3IgKGkgPSAwOyAhZG9uZSAmJiBpIDwgbmNtZGxpbmU7IGkr
-KykgewotCQl3aGlsZSAoIWRvbmUgJiYgKGogPSBhcmdzX2NvbW1hbmQoaikp
-KSB7Ci0JCQlpbnB1dCA9IHN0cmR1cChjbWRsaW5lW2ldKTsKLQkJCWlmICgh
-aW5wdXQpIHsKLQkJCQlmcHJpbnRmKHN0ZGVyciwKLQkJCQkJXygiY2Fubm90
-IHN0cmR1cCBjb21tYW5kICclcyc6ICVzXG4iKSwKLQkJCQkJY21kbGluZVtp
-XSwgc3RyZXJyb3IoZXJybm8pKTsKLQkJCQlleGl0KDEpOwotCQkJfQotCQkJ
-diA9IGJyZWFrbGluZShpbnB1dCwgJmMpOwotCQkJaWYgKGMpCi0JCQkJZG9u
-ZSA9IGNvbW1hbmQoYywgdik7Ci0JCQlmcmVlKHYpOwotCQkJZnJlZShpbnB1
-dCk7CisJCWlucHV0ID0gc3RyZHVwKGNtZGxpbmVbaV0pOworCQlpZiAoIWlu
-cHV0KSB7CisJCQlmcHJpbnRmKHN0ZGVyciwKKwkJCQlfKCJjYW5ub3Qgc3Ry
-ZHVwIGNvbW1hbmQgJyVzJzogJXNcbiIpLAorCQkJCWNtZGxpbmVbaV0sIHN0
-cmVycm9yKGVycm5vKSk7CisJCQlleGl0KDEpOworCQl9CisJCXYgPSBicmVh
-a2xpbmUoaW5wdXQsICZjKTsKKwkJaWYgKGMpIHsKKwkJCWN0ID0gZmluZF9j
-b21tYW5kKHZbMF0pOworCQkJaWYgKGN0KSB7CisJCQkJaWYgKGN0LT5mbGFn
-cyAmIENNRF9GTEFHX0dMT0JBTCkKKwkJCQkJZG9uZSA9IGNvbW1hbmQoY3Qs
-IGMsIHYpOworCQkJCWVsc2UgeworCQkJCQlqID0gMDsKKwkJCQkJd2hpbGUg
-KCFkb25lICYmIChqID0gYXJnc19jb21tYW5kKGopKSkKKwkJCQkJCWRvbmUg
-PSBjb21tYW5kKGN0LCBjLCB2KTsKKwkJCQl9CisJCQl9IGVsc2UKKwkJCQlm
-cHJpbnRmKHN0ZGVyciwgXygiY29tbWFuZCBcIiVzXCIgbm90IGZvdW5kXG4i
-KSwKKwkJCQkJdlswXSk7CiAJCX0KLQkJaiA9IDA7CS8qIHJlc2V0ICovCisJ
-CWRvbmVsaW5lKGlucHV0LCB2KTsKIAl9CiAJaWYgKGNtZGxpbmUpIHsKIAkJ
-ZnJlZShjbWRsaW5lKTsKQEAgLTE3Nyw4ICsxODEsMTQgQEAgY29tbWFuZF9s
-b29wKHZvaWQpCiAJCWlmICgoaW5wdXQgPSBmZXRjaGxpbmUoKSkgPT0gTlVM
-TCkKIAkJCWJyZWFrOwogCQl2ID0gYnJlYWtsaW5lKGlucHV0LCAmYyk7Ci0J
-CWlmIChjKQotCQkJZG9uZSA9IGNvbW1hbmQoYywgdik7CisJCWlmIChjKSB7
-CisJCQljdCA9IGZpbmRfY29tbWFuZCh2WzBdKTsKKwkJCWlmIChjdCkKKwkJ
-CQlkb25lID0gY29tbWFuZChjdCwgYywgdik7CisJCQllbHNlCisJCQkJZnBy
-aW50ZihzdGRlcnIsIF8oImNvbW1hbmQgXCIlc1wiIG5vdCBmb3VuZFxuIiks
-CisJCQkJCXZbMF0pOworCQl9CiAJCWRvbmVsaW5lKGlucHV0LCB2KTsKIAl9
-CiB9Cgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KeGZzcHJvZ3Mv
-bGlieGNtZC9oZWxwLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-CgotLS0gYS94ZnNwcm9ncy9saWJ4Y21kL2hlbHAuYwkyMDA3LTA3LTExIDE1
-OjUyOjM1LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9saWJ4Y21k
-L2hlbHAuYwkyMDA3LTA3LTExIDE1OjM4OjIwLjQzMjYyODQ1OSArMTAwMApA
-QCAtODgsNyArODgsNyBAQCBoZWxwX2luaXQodm9pZCkKIAloZWxwX2NtZC5j
-ZnVuYyA9IGhlbHBfZjsKIAloZWxwX2NtZC5hcmdtaW4gPSAwOwogCWhlbHBf
-Y21kLmFyZ21heCA9IDE7Ci0JaGVscF9jbWQuZmxhZ3MgPSAtMTsKKwloZWxw
-X2NtZC5mbGFncyA9IENNRF9GTEFHX0dMT0JBTDsKIAloZWxwX2NtZC5hcmdz
-ID0gXygiW2NvbW1hbmRdIik7CiAJaGVscF9jbWQub25lbGluZSA9IF8oImhl
-bHAgZm9yIG9uZSBvciBhbGwgY29tbWFuZHMiKTsKIAoKPT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09Cnhmc3Byb2dzL2xpYnhjbWQvcXVpdC5jCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKLS0tIGEveGZzcHJvZ3Mv
-bGlieGNtZC9xdWl0LmMJMjAwNy0wNy0xMSAxNTo1MjozNS4wMDAwMDAwMDAg
-KzEwMDAKKysrIGIveGZzcHJvZ3MvbGlieGNtZC9xdWl0LmMJMjAwNy0wNy0x
-MSAxNTo0MjoxNC40MDU5MjE3NzggKzEwMDAKQEAgLTM4LDcgKzM4LDcgQEAg
-cXVpdF9pbml0KHZvaWQpCiAJcXVpdF9jbWQuY2Z1bmMgPSBxdWl0X2Y7CiAJ
-cXVpdF9jbWQuYXJnbWluID0gLTE7CiAJcXVpdF9jbWQuYXJnbWF4ID0gLTE7
-Ci0JcXVpdF9jbWQuZmxhZ3MgPSAtMTsKKwlxdWl0X2NtZC5mbGFncyA9IENN
-RF9GTEFHX0dMT0JBTDsKIAlxdWl0X2NtZC5vbmVsaW5lID0gXygiZXhpdCB0
-aGUgcHJvZ3JhbSIpOwogCiAJYWRkX2NvbW1hbmQoJnF1aXRfY21kKTsKCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9xdW90YS9w
-YXRoLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgotLS0gYS94
-ZnNwcm9ncy9xdW90YS9wYXRoLmMJMjAwNy0wNy0xMSAxNTo1MjozNS4wMDAw
-MDAwMDAgKzEwMDAKKysrIGIveGZzcHJvZ3MvcXVvdGEvcGF0aC5jCTIwMDct
-MDctMTEgMTU6NDE6NTAuNTQ5MDUyMjE0ICsxMDAwCkBAIC0xMjIsNiArMTIy
-LDcgQEAgcGF0aF9pbml0KHZvaWQpCiAJcGF0aF9jbWQuY2Z1bmMgPSBwYXRo
-X2Y7CiAJcGF0aF9jbWQuYXJnbWluID0gMDsKIAlwYXRoX2NtZC5hcmdtYXgg
-PSAxOworCXBhdGhfY21kLmZsYWdzID0gQ01EX0ZMQUdfR0xPQkFMOwogCXBh
-dGhfY21kLm9uZWxpbmUgPSBfKCJzZXQgY3VycmVudCBwYXRoLCBvciBzaG93
-IHRoZSBsaXN0IG9mIHBhdGhzIik7CiAKIAlwcmludF9jbWQubmFtZSA9IF8o
-InByaW50Iik7CkBAIC0xMjksNiArMTMwLDcgQEAgcGF0aF9pbml0KHZvaWQp
-CiAJcHJpbnRfY21kLmNmdW5jID0gcHJpbnRfZjsKIAlwcmludF9jbWQuYXJn
-bWluID0gMDsKIAlwcmludF9jbWQuYXJnbWF4ID0gMDsKKwlwcmludF9jbWQu
-ZmxhZ3MgPSBDTURfRkxBR19HTE9CQUw7CiAJcHJpbnRfY21kLm9uZWxpbmUg
-PSBfKCJsaXN0IGtub3duIG1vdW50IHBvaW50cyBhbmQgcHJvamVjdHMiKTsK
-IAogCWlmIChleHBlcnQpCg==
-
-------------wbndoKBep6ZtqAMfwrEJYW--
+* I assume the legend you refer to is:
+  FLAG Values:
+     010000 Unwritten preallocated extent
+     001000 Doesn't begin on stripe unit
+     000100 Doesn't end   on stripe unit
+     000010 Doesn't begin on stripe width
+     000001 Doesn't end   on stripe width
