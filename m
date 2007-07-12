@@ -1,40 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jul 2007 07:41:17 -0700 (PDT)
-Received: from mail.clusterfs.com (74-0-229-162.T1.lbdsl.net [74.0.229.162])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6CEeubm032429
-	for <xfs@oss.sgi.com>; Thu, 12 Jul 2007 07:40:59 -0700
-Date: Thu, 12 Jul 2007 08:40:55 -0600
-From: Andreas Dilger <adilger@clusterfs.com>
-Subject: Re: [PATCH 4/7][TAKE5] support new modes in fallocate
-Message-ID: <20070712144055.GH5586@schatzie.adilger.int>
-References: <20070625214626.GJ5181@schatzie.adilger.int> <20070626103247.GA19870@amitarora.in.ibm.com> <20070630102111.GB23568@infradead.org> <20070630165246.GA5159@schatzie.adilger.int> <20070703100848.GA14936@amitarora.in.ibm.com> <20070703103107.GA29763@infradead.org> <20070703114650.GB14936@amitarora.in.ibm.com> <20070711090312.GA18301@infradead.org> <20070712072813.GA31260@in.ibm.com> <20070712082650.GB12817@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jul 2007 08:28:56 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6CFSibm025540
+	for <xfs@oss.sgi.com>; Thu, 12 Jul 2007 08:28:46 -0700
+Received: from hch by pentafluge.infradead.org with local (Exim 4.63 #1 (Red Hat Linux))
+	id 1I90DX-00013I-Pz
+	for xfs@oss.sgi.com; Thu, 12 Jul 2007 16:04:31 +0100
+Date: Thu, 12 Jul 2007 16:04:31 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: xfsqa 144 is failing now
+Message-ID: <20070712150431.GA3763@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070712082650.GB12817@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: Suparna Bhattacharya <suparna@in.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, David Chinner <dgc@sgi.com>, cmm@us.ibm.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Jul 12, 2007  13:56 +0530, Amit K. Arora wrote:
-> As you suggest, let us just have two modes for the time being:
-> 
-> #define FALLOC_ALLOCATE			0x1
-> #define FALLOC_ALLOCATE_KEEP_SIZE	0x2
-> 
-> As the name suggests, when FALLOC_ALLOCATE_KEEP_SIZE mode is passed it
-> will result in file size not being changed even if the preallocation is
-> beyond EOF.
+I'm trying to fix up dmapi for the patch that uses filldir internally,
+and 144 is the xfsqa test for this functionality.  It worked fine a
+few weeks ago when I started that work but fails with plain TOT linux-xfs
+now with errors like:
 
-What does FALLOC_ALLOCATE mean vs. not passing this flag?  I have no
-objection to this as long as the code remains with these as "flags"
-instead of "modes"...  Essentially just dropping the FALLOC_FL_DEALLOCATE
-and FALLOC_FL_DEL_DATA from the interface.
 
-Cheers, Andreas
---
-Andreas Dilger
-Principal Software Engineer
-Cluster File Systems, Inc.
+< report: get #0 had no errors.
+< report: get #1 had no errors.
+---
+> ERROR: get #0, expected mode 35034, but found 33188
+> ERROR: get #0, expected uid -756063452, but found 0
+> ERROR: get #0, expected gid 323693819, but found 0
+> ERROR: get #0, expected mtime -424339458, but found 1184248449
+> ERROR: get #0, expected ctime -862739105, but found 1184248449
+> ERROR: get #0, expected dtime -862739105, but found 1184248449
+> ERROR: get #0, expected size 1125898004553757, but found 29696
+> report: 1 tests correct for get #0.
+> ERROR: get #1, expected mode 34544, but found 33188
+> ERROR: get #1, expected uid -1407127963, but found 0
+> ERROR: get #1, expected gid 1043573623, but found 0
+> ERROR: get #1, expected mtime -1589334486, but found
+
+does anyone have an idea what might be causing this?
+
+The only recent changes to xfs_dm.c are the hole punching fixes which
+seem rather unrelated.
