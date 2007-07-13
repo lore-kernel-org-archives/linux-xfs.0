@@ -1,40 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jul 2007 17:52:04 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 00:17:44 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6D0pubm021834
-	for <xfs@oss.sgi.com>; Thu, 12 Jul 2007 17:51:58 -0700
-Date: Fri, 13 Jul 2007 10:51:23 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6D7Hcbm002594
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 00:17:40 -0700
+Date: Fri, 13 Jul 2007 17:17:28 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: REVIEW: Make sure xfs_repair uses sector aligned I/O
-Message-ID: <20070713005123.GH31489@sgi.com>
-References: <op.tvdn7xhl3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Subject: Re: xfsqa 144 is failing now
+Message-ID: <20070713071728.GM31489@sgi.com>
+References: <20070712150431.GA3763@infradead.org> <20070712222304.GA31489@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <op.tvdn7xhl3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20070712222304.GA31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Jul 13, 2007 at 10:41:47AM +1000, Barry Naujok wrote:
-> Two places it didn't:
->  - reading the initial primary superblock
->  - checking the log
+On Fri, Jul 13, 2007 at 08:23:05AM +1000, David Chinner wrote:
+> On Thu, Jul 12, 2007 at 04:04:31PM +0100, Christoph Hellwig wrote:
+> > I'm trying to fix up dmapi for the patch that uses filldir internally,
+> > and 144 is the xfsqa test for this functionality.  It worked fine a
+> > few weeks ago when I started that work but fails with plain TOT linux-xfs
+> > now with errors like:
+.....
+> > 
+> > does anyone have an idea what might be causing this?
 > 
-> The log checking fix was basically porting the kernel
-> xlog_bread/xlog_get_bp/xlog_align from the kernel and
-> setting up the log_t structure properly in Phase 2.
+> Not yet - AFAIK we're only seeing it on i386 ATM, and we only noticed it in
+> the past couple of days. Nobody has had a chance to look at it yet. I don't
+> think dmapi has been tested regularly on i386 so I'm not sure when the problem
+> first appeared yet.
 > 
-> The initial primary superblock read is now done
-> using the maximum supported sector size as once the
-> block is read and translated to another location,
-> it's discarded.
+> > The only recent changes to xfs_dm.c are the hole punching fixes which
+> > seem rather unrelated.
+> 
+> *nod*
+> 
+> Given the expected output, I wouldn't be surprised if we've got
+> some kind of 32/64 bit problem here....
 
-Seems OK from a quick look of the code. Were you able to
-confirm that these are the only places we do non-sector sized
-I/O?
+Just to confirm - test 144 is passing reliably on ia64 with a TOT
+kernel and xfstests, so it's likely to be something specific to i386.
 
 Cheers,
 
