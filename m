@@ -1,35 +1,196 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 07:46:24 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DEkGbm017582
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 07:46:19 -0700
-Date: Fri, 13 Jul 2007 15:46:12 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/6][TAKE7] fallocate() implementation in i386, x86_64 and powerpc
-Message-ID: <20070713144612.GA26879@infradead.org>
-References: <20070713123816.GA18000@amitarora.in.ibm.com> <20070713124755.GB22961@amitarora.in.ibm.com> <20070713132118.GA23256@infradead.org> <20070713141858.GB27291@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 08:26:14 -0700 (PDT)
+Received: from gepard.f-net.pl ([212.244.116.162])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DFQ8bm001412
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 08:26:10 -0700
+Received: from qba by gepard.f-net.pl with local (Exim 4.20)
+	id 1I9MnK-0005Ea-SN
+	for xfs@oss.sgi.com; Fri, 13 Jul 2007 17:10:58 +0200
+Date: Fri, 13 Jul 2007 17:10:58 +0200
+From: "Dawid 'Kuba' Chrzan" <qba@f-net.pl>
+Subject: XFS + RAID1 strange message
+Message-ID: <20070713151058.GA24153@gepard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
 Content-Disposition: inline
-In-Reply-To: <20070713141858.GB27291@amitarora.in.ibm.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, adilger@clusterfs.com, dgc@sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jul 13, 2007 at 07:48:58PM +0530, Amit K. Arora wrote:
-> Ok. Since we have only one flag (FALLOC_FL_KEEP_SIZE) and we do not want
-> to declare the default mode (FALLOC_ALLOCATE), we can _just_ have this
-> flag and remove the other mode too (FALLOC_RESV_SPACE).
-> Is this what you are suggesting ?
+Hi
 
-Yes.
+I got linux box
+Linux gepard 2.6.17-pp3 #6 SMP Tue Feb 13 12:50:39 CET 2007 i686 unknown
 
-> Should we need a header file just to declare one flag - i.e.
-> FALLOC_FL_KEEP_SIZE (since now there is no point of declaring the two
-> modes) ? If "linux/fs.h" is not a good place, will "asm-generic/fcntl.h"
-> be a sane place for this flag ?
+2 brand new sata WDC RAPTOR disks
 
-It might sound a litte silly but is the cleanest thing we could do by
-far.  And I suspect there will be more more flags soon..
+SCSI device sda: 72303840 512-byte hdwr sectors (37020 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 72303840 512-byte hdwr sectors (37020 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 >
+ sd 0:0:0:0: Attached scsi disk sda
+ SCSI device sdb: 72303840 512-byte hdwr sectors (37020 MB)
+ sdb: Write Protect is off
+ sdb: Mode Sense: 00 3a 00 00
+ SCSI device sdb: drive cache: write back
+ SCSI device sdb: 72303840 512-byte hdwr sectors (37020 MB)
+ sdb: Write Protect is off
+ sdb: Mode Sense: 00 3a 00 00
+ SCSI device sdb: drive cache: write back
+  sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 sdb8 >
+  sd 1:0:0:0: Attached scsi disk sdb
+
+with raid1 on them done by mdadm
+
+
+Jul 12 18:25:14 gepard kernel: raid1: raid set md0 active with 2 out of
+2 mirrors
+Jul 12 18:25:14 gepard kernel: md: ... autorun DONE.
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem md1
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+md1
+Jul 12 18:25:14 gepard kernel: VFS: Mounted root (xfs filesystem)
+readonly.
+
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem md2
+Jul 12 18:25:14 gepard kernel: Starting XFS recovery on filesystem: md2
+(logdev: internal)
+Jul 12 18:25:14 gepard kernel: Ending XFS recovery on filesystem: md2
+(logdev: internal)
+Jul 12 18:25:14 gepard kernel: Filesystem "md0": Disabling barriers, not
+supported by the underlying device
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem md0
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+md0
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem sdc1
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+sdc1
+Jul 12 18:25:14 gepard kernel: Filesystem "md3": Disabling barriers, not
+supported by the underlying device
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem md3
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+md3
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem sdc2
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+sdc2
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem sdc5
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+sdc5
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem sdc6
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+sdc6
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem hda1
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+hda1
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem sdc7
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+sdc7
+Jul 12 18:25:14 gepard kernel: Filesystem "md4": Disabling barriers, not
+supported by the underlying device
+Jul 12 18:25:14 gepard kernel: XFS mounting filesystem md4
+Jul 12 18:25:14 gepard kernel: Ending clean XFS mount for filesystem:
+md4
+Jul 12 18:25:14 gepard kernel: Filesystem "md5": Disabling barriers, not
+supported by the underlying device
+Jul 12 18:25:15 gepard kernel: XFS mounting filesystem md5
+Jul 12 18:25:15 gepard kernel: Ending clean XFS mount for filesystem:
+md5
+
+When i reboot , halt the server i always get 
+Jul 12 18:25:14 gepard kernel: Starting XFS recovery on filesystem: md2
+(logdev: internal)
+Jul 12 18:25:14 gepard kernel: Ending XFS recovery on filesystem: md2
+(logdev: internal)
+
+such errors. Only on md2.
+qba@gepard:~$ mount  | grep md2
+/dev/md2 on /usr type xfs (rw)
+
+
+I tried to disable Write Cache but without success.
+
+[root@gepard log]#hdparm -W0 /dev/sda
+
+/dev/sda:
+ operation not supported on SCSI disks
+
+ [root@gepard log]#sginfo -c /dev/sda
+ Caching mode page (0x8)
+ -----------------------
+ Initiator Control                  0
+ ABPF                               0
+ CAP                                0
+ DISC                               0
+ SIZE                               0
+ Write Cache Enabled                1
+ MF                                 0
+ Read Cache Disabled                0
+ Demand Read Retention Priority     0
+ Demand Write Retention Priority    0
+ Disable Pre-fetch Transfer Length  0
+ Minimum Pre-fetch                  0
+ Maximum Pre-fetch                  0
+ Maximum Pre-fetch Ceiling          0
+ FSW                                0
+ LBCSS                              0
+ DRA                                0
+ Number of Cache Segments           0
+ Cache Segment size                 0
+ Non-Cache Segment size             0
+
+ [root@gepard log]# sginfo -cXR /dev/sda 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0
+ >>> Unable to store Caching mode page 0x8 [msel_10]
+
+ [root@gepard log]#sginfo -c /dev/sda | grep -i write
+ Write Cache Enabled                1
+
+
+I checked the log
+[root@gepard log]#xfs_logprint /dev/md2
+xfs_logprint:
+xfs_logprint: /dev/md2 contains a mounted and writable filesystem
+    data device: 0x902
+        log device: 0x902 daddr: 2931744 length: 20480
+
+        Header 0x3 wanted 0xfeedbabe
+        **********************************************************************
+        * ERROR: header cycle=3           block=13539
+        * *
+        **********************************************************************
+        Bad log record header
+
+The disks seems to be OK
+
+[root@gepard log]#badblocks -s -v -c 512 /dev/sda5
+Checking for bad blocks in read-only mode
+>From block 0 to 2931831
+Checking for bad blocks (read-only test): done
+Pass completed, 0 bad blocks found.
+[root@gepard log]#badblocks -s -v -c 512 /dev/sdb5
+Checking for bad blocks in read-only mode
+>From block 0 to 2931831
+Checking for bad blocks (read-only test): done
+Pass completed, 0 bad blocks found.
+
+
+
+Is it normal message , and i should not worry about it?
+
+Thank You for any info and suggestions.
+
+-- 
+Pozdrawiam, Dawid 'Kuba' Chrzan
+http://f-net.pl  qba_nospam_@f-net.pl
+RLU#212729   net/sys administrator
+
+"Computer games don't affect kids; I mean if Pac-Man affected us as
+kids, we'd all be running around in darkened rooms, munching magic pills
+and listening to repetitive electronic music." - Kristian Wilson,
+Nintendo Inc., 1989.
