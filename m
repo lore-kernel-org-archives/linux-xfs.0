@@ -1,65 +1,188 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jul 2007 15:23:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jul 2007 17:38:59 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6CMNBbm013055
-	for <xfs@oss.sgi.com>; Thu, 12 Jul 2007 15:23:17 -0700
-Date: Fri, 13 Jul 2007 08:23:05 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfsqa 144 is failing now
-Message-ID: <20070712222304.GA31489@sgi.com>
-References: <20070712150431.GA3763@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070712150431.GA3763@infradead.org>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6D0cibm010322
+	for <xfs@oss.sgi.com>; Thu, 12 Jul 2007 17:38:47 -0700
+Date: Fri, 13 Jul 2007 10:41:47 +1000
+Subject: REVIEW: Make sure xfs_repair uses sector aligned I/O
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------uxUULPiKOb4497tspFf8oZ
+MIME-Version: 1.0
+Message-ID: <op.tvdn7xhl3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Thu, Jul 12, 2007 at 04:04:31PM +0100, Christoph Hellwig wrote:
-> I'm trying to fix up dmapi for the patch that uses filldir internally,
-> and 144 is the xfsqa test for this functionality.  It worked fine a
-> few weeks ago when I started that work but fails with plain TOT linux-xfs
-> now with errors like:
-> 
-> 
-> < report: get #0 had no errors.
-> < report: get #1 had no errors.
-> ---
-> > ERROR: get #0, expected mode 35034, but found 33188
-> > ERROR: get #0, expected uid -756063452, but found 0
-> > ERROR: get #0, expected gid 323693819, but found 0
-> > ERROR: get #0, expected mtime -424339458, but found 1184248449
-> > ERROR: get #0, expected ctime -862739105, but found 1184248449
-> > ERROR: get #0, expected dtime -862739105, but found 1184248449
-> > ERROR: get #0, expected size 1125898004553757, but found 29696
-> > report: 1 tests correct for get #0.
-> > ERROR: get #1, expected mode 34544, but found 33188
-> > ERROR: get #1, expected uid -1407127963, but found 0
-> > ERROR: get #1, expected gid 1043573623, but found 0
-> > ERROR: get #1, expected mtime -1589334486, but found
-> 
-> does anyone have an idea what might be causing this?
+------------uxUULPiKOb4497tspFf8oZ
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
-Not yet - AFAIK we're only seeing it on i386 ATM, and we only noticed it in
-the past couple of days. Nobody has had a chance to look at it yet. I don't
-think dmapi has been tested regularly on i386 so I'm not sure when the problem
-first appeared yet.
+Two places it didn't:
+  - reading the initial primary superblock
+  - checking the log
 
-> The only recent changes to xfs_dm.c are the hole punching fixes which
-> seem rather unrelated.
+The log checking fix was basically porting the kernel
+xlog_bread/xlog_get_bp/xlog_align from the kernel and
+setting up the log_t structure properly in Phase 2.
 
-*nod*
+The initial primary superblock read is now done
+using the maximum supported sector size as once the
+block is read and translated to another location,
+it's discarded.
+------------uxUULPiKOb4497tspFf8oZ
+Content-Disposition: attachment; filename=sector_aligned_repair.patch
+Content-Type: application/octet-stream; name=sector_aligned_repair.patch
+Content-Transfer-Encoding: Base64
 
-Given the expected output, I wouldn't be surprised if we've got
-some kind of 32/64 bit problem here....
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9pbmNs
+dWRlL2xpYnhmcy5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoK
+LS0tIGEveGZzcHJvZ3MvaW5jbHVkZS9saWJ4ZnMuaAkyMDA3LTA3LTEzIDEw
+OjM1OjM4LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9pbmNsdWRl
+L2xpYnhmcy5oCTIwMDctMDctMTIgMTg6NDQ6MTQuNDc0Njc0OTg3ICsxMDAw
+CkBAIC0yMzYsOSArMjM2LDkgQEAgZW51bSB4ZnNfYnVmX2ZsYWdzX3Qgewkv
+KiBiX2ZsYWdzIGJpdHMgKgogI2RlZmluZSBYRlNfQlVGX0NPVU5UKGJwKQkJ
+KChicCktPmJfYmNvdW50KQogI2RlZmluZSBYRlNfQlVGX1RBUkdFVChicCkJ
+CSgoYnApLT5iX2RldikKICNkZWZpbmUgWEZTX0JVRl9TRVRfUFRSKGJwLHAs
+Y250KQkoKGJwKS0+Yl9hZGRyID0gKGNoYXIgKikocCkpOyBcCi0JCQkJCQlY
+RlNfQlVGX1NFVENPVU5UKGJwLGNudCkKKwkJCQkJCVhGU19CVUZfU0VUX0NP
+VU5UKGJwLGNudCkKICNkZWZpbmUgWEZTX0JVRl9TRVRfQUREUihicCxibGsp
+CSgoYnApLT5iX2Jsa25vID0gKGJsaykpCi0jZGVmaW5lIFhGU19CVUZfU0VU
+Q09VTlQoYnAsY250KQkoKGJwKS0+Yl9iY291bnQgPSAoY250KSkKKyNkZWZp
+bmUgWEZTX0JVRl9TRVRfQ09VTlQoYnAsY250KQkoKGJwKS0+Yl9iY291bnQg
+PSAoY250KSkKIAogI2RlZmluZSBYRlNfQlVGX0ZTUFJJVkFURShicCx0eXBl
+KQkoKHR5cGUpKGJwKS0+Yl9mc3ByaXZhdGUpCiAjZGVmaW5lIFhGU19CVUZf
+U0VUX0ZTUFJJVkFURShicCx2YWwpCShicCktPmJfZnNwcml2YXRlID0gKHZv
+aWQgKikodmFsKQoKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cnhm
+c3Byb2dzL2luY2x1ZGUvbGlieGxvZy5oCj09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PQoKLS0tIGEveGZzcHJvZ3MvaW5jbHVkZS9saWJ4bG9nLmgJ
+MjAwNy0wNy0xMyAxMDozNTozOC4wMDAwMDAwMDAgKzEwMDAKKysrIGIveGZz
+cHJvZ3MvaW5jbHVkZS9saWJ4bG9nLmgJMjAwNy0wNy0xMiAxODoyOTowOC43
+NDQ1NjI5NDcgKzEwMDAKQEAgLTQ0LDYgKzQ0LDggQEAgdHlwZWRlZiBzdHJ1
+Y3QgbG9nIHsKIAlpbnQJCWxfZ3JhbnRfd3JpdGVfY3ljbGU7CS8qICovCiAJ
+aW50CQlsX2dyYW50X3dyaXRlX2J5dGVzOwkvKiAqLwogCXVpbnQJCWxfc2Vj
+dGJiX2xvZzsgICAvKiBsb2cyIG9mIHNlY3RvciBzaXplIGluIGJicyAqLwor
+CXVpbnQJCWxfc2VjdGJiX21hc2s7ICAvKiBzZWN0b3Igc2l6ZSAoaW4gQkJz
+KQorCQkJCQkgKiBhbGlnbm1lbnQgbWFzayAqLwogfSB4bG9nX3Q7CiAKICNp
+bmNsdWRlIDx4ZnMveGZzX2xvZ19yZWNvdmVyLmg+CkBAIC03OSwxMyArODEs
+NiBAQCBleHRlcm4gdm9pZCB4bG9nX3dhcm4oY2hhciAqZm10LC4uLik7CiBl
+eHRlcm4gdm9pZCB4bG9nX2V4aXQoY2hhciAqZm10LC4uLik7CiBleHRlcm4g
+dm9pZCB4bG9nX3BhbmljKGNoYXIgKmZtdCwuLi4pOwogCi0jZGVmaW5lIHhs
+b2dfZ2V0X2JwKGxvZyxiYnMpCWxpYnhmc19nZXRidWZyKHgubG9nZGV2LCAo
+eGZzX2RhZGRyX3QpLTEsIChiYnMpKQotI2RlZmluZSB4bG9nX3B1dF9icChi
+cCkJCWxpYnhmc19wdXRidWZyKGJwKQotI2RlZmluZSB4bG9nX2JyZWFkKGxv
+ZyxibGtubyxiYnMsYnApCVwKLQkobGlieGZzX3JlYWRidWZyKHgubG9nZGV2
+LAlcCi0JCQkobG9nKS0+bF9sb2dCQnN0YXJ0KyhibGtubyksIGJwLCAoYmJz
+KSwgMSksIDApCi0jZGVmaW5lIHhsb2dfYWxpZ24obG9nLGJsa25vLG5iYmxr
+cyxicCkJWEZTX0JVRl9QVFIoYnApCi0KICNkZWZpbmUga21lbV96YWxsb2Mo
+c2l6ZSwgZm9vKQkJCWNhbGxvYyhzaXplLDEpCiAjZGVmaW5lIGttZW1fYWxs
+b2Moc2l6ZSwgZm9vKQkJCWNhbGxvYyhzaXplLDEpCiAjZGVmaW5lIGttZW1f
+ZnJlZShwdHIsIGZvbykJCQlmcmVlKHB0cikKQEAgLTk5LDYgKzk0LDEwIEBA
+IGV4dGVybiBpbnQJcHJpbnRfcmVjb3JkX2hlYWRlcjsKIC8qIGxpYnhmcyBw
+YXJhbWV0ZXJzICovCiBleHRlcm4gbGlieGZzX2luaXRfdAl4OwogCitleHRl
+cm4gc3RydWN0IHhmc19idWYgKnhsb2dfZ2V0X2JwKHhsb2dfdCAqLCBpbnQp
+OworZXh0ZXJuIHZvaWQJIHhsb2dfcHV0X2JwKHN0cnVjdCB4ZnNfYnVmICop
+OworZXh0ZXJuIGludAkgeGxvZ19icmVhZCh4bG9nX3QgKiwgeGZzX2RhZGRy
+X3QsIGludCwgc3RydWN0IHhmc19idWYgKik7CisKIGV4dGVybiBpbnQgIHhs
+b2dfZmluZF96ZXJvZWQoeGxvZ190ICpsb2csIHhmc19kYWRkcl90ICpibGtf
+bm8pOwogZXh0ZXJuIGludCAgeGxvZ19maW5kX2N5Y2xlX3N0YXJ0KHhsb2df
+dCAqbG9nLCB4ZnNfYnVmX3QgKmJwLAogCQl4ZnNfZGFkZHJfdCBmaXJzdF9i
+bGssIHhmc19kYWRkcl90ICpsYXN0X2JsaywgdWludCBjeWNsZSk7Cgo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT0KeGZzcHJvZ3MvbGlieGxvZy94
+ZnNfbG9nX3JlY292ZXIuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KCi0tLSBhL3hmc3Byb2dzL2xpYnhsb2cveGZzX2xvZ19yZWNvdmVyLmMJ
+MjAwNy0wNy0xMyAxMDozNTozOC4wMDAwMDAwMDAgKzEwMDAKKysrIGIveGZz
+cHJvZ3MvbGlieGxvZy94ZnNfbG9nX3JlY292ZXIuYwkyMDA3LTA3LTEyIDE4
+OjQzOjE3Ljk1ODA0Mzc1MiArMTAwMApAQCAtMjIsNiArMjIsODQgQEAKICNk
+ZWZpbmUgeGxvZ19jbGVhcl9zdGFsZV9ibG9ja3MobG9nLCB0YWlsX2xzbikJ
+CSgwKQogI2RlZmluZSB4ZnNfcmVhZG9ubHlfYnVmdGFyZyhidWZ0YXJnKQkJ
+CSgwKQogCisKKy8qCisgKiBTZWN0b3IgYWxpZ25lZCBidWZmZXIgcm91dGlu
+ZXMgZm9yIGJ1ZmZlciBjcmVhdGUvcmVhZC93cml0ZS9hY2Nlc3MKKyAqLwor
+CisjZGVmaW5lIFhMT0dfU0VDVE9SX1JPVU5EVVBfQkJDT1VOVChsb2csIGJi
+cykJXAorCSggKChsb2cpLT5sX3NlY3RiYl9tYXNrICYmIChiYnMgJiAobG9n
+KS0+bF9zZWN0YmJfbWFzaykpID8gXAorCSgoYmJzICsgKGxvZyktPmxfc2Vj
+dGJiX21hc2sgKyAxKSAmIH4obG9nKS0+bF9zZWN0YmJfbWFzaykgOiAoYmJz
+KSApCisjZGVmaW5lIFhMT0dfU0VDVE9SX1JPVU5ERE9XTl9CTEtOTyhsb2cs
+IGJubykJKChibm8pICYgfihsb2cpLT5sX3NlY3RiYl9tYXNrKQorCit4ZnNf
+YnVmX3QgKgoreGxvZ19nZXRfYnAoCisJeGxvZ190CQkqbG9nLAorCWludAkJ
+bnVtX2JibGtzKQoreworCUFTU0VSVChudW1fYmJsa3MgPiAwKTsKKworCWlm
+IChsb2ctPmxfc2VjdGJiX2xvZykgeworCQlpZiAobnVtX2JibGtzID4gMSkK
+KwkJCW51bV9iYmxrcyArPSBYTE9HX1NFQ1RPUl9ST1VORFVQX0JCQ09VTlQo
+bG9nLCAxKTsKKwkJbnVtX2JibGtzID0gWExPR19TRUNUT1JfUk9VTkRVUF9C
+QkNPVU5UKGxvZywgbnVtX2JibGtzKTsKKwl9CisJcmV0dXJuIGxpYnhmc19n
+ZXRidWZyKGxvZy0+bF9kZXYsICh4ZnNfZGFkZHJfdCktMSwgbnVtX2JibGtz
+KTsKK30KKwordm9pZAoreGxvZ19wdXRfYnAoCisJeGZzX2J1Zl90CSpicCkK
+K3sKKwlsaWJ4ZnNfcHV0YnVmcihicCk7Cit9CisKKworLyoKKyAqIG5iYmxr
+cyBzaG91bGQgYmUgdWludCwgYnV0IG9oIHdlbGwuICBKdXN0IHdhbnQgdG8g
+Y2F0Y2ggdGhhdCAzMi1iaXQgbGVuZ3RoLgorICovCitpbnQKK3hsb2dfYnJl
+YWQoCisJeGxvZ190CQkqbG9nLAorCXhmc19kYWRkcl90CWJsa19ubywKKwlp
+bnQJCW5iYmxrcywKKwl4ZnNfYnVmX3QJKmJwKQoreworCWlmIChsb2ctPmxf
+c2VjdGJiX2xvZykgeworCQlibGtfbm8gPSBYTE9HX1NFQ1RPUl9ST1VORERP
+V05fQkxLTk8obG9nLCBibGtfbm8pOworCQluYmJsa3MgPSBYTE9HX1NFQ1RP
+Ul9ST1VORFVQX0JCQ09VTlQobG9nLCBuYmJsa3MpOworCX0KKworCUFTU0VS
+VChuYmJsa3MgPiAwKTsKKwlBU1NFUlQoQkJUT0IobmJibGtzKSA8PSBYRlNf
+QlVGX1NJWkUoYnApKTsKKwlBU1NFUlQoYnApOworCisJWEZTX0JVRl9TRVRf
+QUREUihicCwgbG9nLT5sX2xvZ0JCc3RhcnQgKyBibGtfbm8pOworCVhGU19C
+VUZfU0VUX0NPVU5UKGJwLCBCQlRPQihuYmJsa3MpKTsKKworCXJldHVybiBs
+aWJ4ZnNfcmVhZGJ1ZnIobG9nLT5sX2RldiwgYmxrX25vLCBicCwgbmJibGtz
+LCAwKTsKK30KKworCitzdGF0aWMgeGZzX2NhZGRyX3QKK3hsb2dfYWxpZ24o
+CisJeGxvZ190CQkqbG9nLAorCXhmc19kYWRkcl90CWJsa19ubywKKwlpbnQJ
+CW5iYmxrcywKKwl4ZnNfYnVmX3QJKmJwKQoreworCXhmc19jYWRkcl90CXB0
+cjsKKworCWlmICghbG9nLT5sX3NlY3RiYl9sb2cpCisJCXJldHVybiBYRlNf
+QlVGX1BUUihicCk7CisKKwlwdHIgPSBYRlNfQlVGX1BUUihicCkgKyBCQlRP
+QigoaW50KWJsa19ubyAmIGxvZy0+bF9zZWN0YmJfbWFzayk7CisJQVNTRVJU
+KFhGU19CVUZfU0laRShicCkgPj0KKwkJQkJUT0IobmJibGtzICsgKGJsa19u
+byAmIGxvZy0+bF9zZWN0YmJfbWFzaykpKTsKKwlyZXR1cm4gcHRyOworfQor
+CisKIC8qCiAgKiBUaGlzIHJvdXRpbmUgZmluZHMgKHRvIGFuIGFwcHJveGlt
+YXRpb24pIHRoZSBmaXJzdCBibG9jayBpbiB0aGUgcGh5c2ljYWwKICAqIGxv
+ZyB3aGljaCBjb250YWlucyB0aGUgZ2l2ZW4gY3ljbGUuICBJdCB1c2VzIGEg
+YmluYXJ5IHNlYXJjaCBhbGdvcml0aG0uCgo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KeGZzcHJvZ3MvcmVwYWlyL3BoYXNlMi5jCj09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQoKLS0tIGEveGZzcHJvZ3MvcmVwYWly
+L3BoYXNlMi5jCTIwMDctMDctMTMgMTA6MzU6MzguMDAwMDAwMDAwICsxMDAw
+CisrKyBiL3hmc3Byb2dzL3JlcGFpci9waGFzZTIuYwkyMDA3LTA3LTEyIDE4
+OjQ1OjU1LjMwNTUyODU5MCArMTAwMApAQCAtNTAsNiArNTAsMTYgQEAgemVy
+b19sb2coeGZzX21vdW50X3QgKm1wKQogCWxvZy5sX2xvZ0JCc2l6ZSA9IHgu
+bG9nQkJzaXplOwogCWxvZy5sX2xvZ0JCc3RhcnQgPSB4LmxvZ0JCc3RhcnQ7
+CiAJbG9nLmxfbXAgPSBtcDsKKwlpZiAoWEZTX1NCX1ZFUlNJT05fSEFTU0VD
+VE9SKCZtcC0+bV9zYikpIHsKKwkJbG9nLmxfc2VjdGJiX2xvZyA9IG1wLT5t
+X3NiLnNiX2xvZ3NlY3Rsb2cgLSBCQlNISUZUOworCQlBU1NFUlQobG9nLmxf
+c2VjdGJiX2xvZyA8PSBtcC0+bV9zZWN0YmJfbG9nKTsKKwkJLyogZm9yIGxh
+cmdlciBzZWN0b3Igc2l6ZXMsIG11c3QgaGF2ZSB2MiBvciBleHRlcm5hbCBs
+b2cgKi8KKwkJQVNTRVJUKGxvZy5sX3NlY3RiYl9sb2cgPT0gMCB8fAorCQkJ
+bG9nLmxfbG9nQkJzdGFydCA9PSAwIHx8CisJCQlYRlNfU0JfVkVSU0lPTl9I
+QVNMT0dWMigmbXAtPm1fc2IpKTsKKwkJQVNTRVJUKG1wLT5tX3NiLnNiX2xv
+Z3NlY3Rsb2cgPj0gQkJTSElGVCk7CisJfQorCWxvZy5sX3NlY3RiYl9tYXNr
+ID0gKDEgPDwgbG9nLmxfc2VjdGJiX2xvZykgLSAxOwogCiAJaWYgKChlcnJv
+ciA9IHhsb2dfZmluZF90YWlsKCZsb2csICZoZWFkX2JsaywgJnRhaWxfYmxr
+LCAwKSkpIHsKIAkJZG9fd2FybihfKCJ6ZXJvX2xvZzogY2Fubm90IGZpbmQg
+bG9nIGhlYWQvdGFpbCAiCgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KeGZzcHJvZ3MvcmVwYWlyL3hmc19yZXBhaXIuYwo9PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KCi0tLSBhL3hmc3Byb2dzL3JlcGFpci94ZnNf
+cmVwYWlyLmMJMjAwNy0wNy0xMyAxMDozNTozOC4wMDAwMDAwMDAgKzEwMDAK
+KysrIGIveGZzcHJvZ3MvcmVwYWlyL3hmc19yZXBhaXIuYwkyMDA3LTA3LTEy
+IDE2OjE0OjEzLjM0NzAzODQ2MyArMTAwMApAQCAtNTAxLDcgKzUwMSw4IEBA
+IG1haW4oaW50IGFyZ2MsIGNoYXIgKiphcmd2KQogCX0KIAogCS8qIHByZXBh
+cmUgdGhlIG1vdW50IHN0cnVjdHVyZSAqLwotCXNicCA9IGxpYnhmc19yZWFk
+YnVmKHguZGRldiwgWEZTX1NCX0RBRERSLCAxLCAwKTsKKwlzYnAgPSBsaWJ4
+ZnNfcmVhZGJ1Zih4LmRkZXYsIFhGU19TQl9EQUREUiwKKwkJCQkxIDw8IChY
+RlNfTUFYX1NFQ1RPUlNJWkVfTE9HIC0gQkJTSElGVCksIDApOwogCW1lbXNl
+dCgmeGZzX20sIDAsIHNpemVvZih4ZnNfbW91bnRfdCkpOwogCXNiID0gJnhm
+c19tLm1fc2I7CiAJbGlieGZzX3hsYXRlX3NiKFhGU19CVUZfUFRSKHNicCks
+IHNiLCAxLCBYRlNfU0JfQUxMX0JJVFMpOwpAQCAtNTE1LDYgKzUxNiw3IEBA
+IG1haW4oaW50IGFyZ2MsIGNoYXIgKiphcmd2KQogCQlleGl0KDEpOwogCX0K
+IAlsaWJ4ZnNfcHV0YnVmKHNicCk7CisJbGlieGZzX3B1cmdlYnVmKHNicCk7
+CiAKIAkvKgogCSAqIHNldCBYRlMtaW5kZXBlbmRlbnQgc3RhdHVzIHZhcnMg
+ZnJvbSB0aGUgbW91bnQvc2Igc3RydWN0dXJlCg==
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+------------uxUULPiKOb4497tspFf8oZ--
