@@ -1,176 +1,101 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 11:52:08 -0700 (PDT)
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DIq4bm007710
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 11:52:05 -0700
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6DIq6RT003774
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:52:06 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6DIq4fC264860
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 12:52:04 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6DIq3Ne025180
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 12:52:03 -0600
-Date: Sat, 14 Jul 2007 00:22:16 +0530
-From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 5/5][TAKE8] ext4: change for better extent-to-group alignment
-Message-ID: <20070713185216.GF12156@amitarora.in.ibm.com>
-References: <20070713184125.GA12156@amitarora.in.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070713184125.GA12156@amitarora.in.ibm.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 12:36:50 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DJaibm007441
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 12:36:45 -0700
+Date: Fri, 13 Jul 2007 15:36:46 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3ware 9650 tips
+In-Reply-To: <4697CA4D.6020304@etelos.com>
+Message-ID: <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu>
+ <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, adilger@clusterfs.com, dgc@sgi.com
-
-From: Amit Arora <aarora@in.ibm.com>
-
-Change on-disk format for extent to represent uninitialized/initialized extents
-
-This change was suggested by Andreas Dilger. 
-This patch changes the EXT_MAX_LEN value and extent code which marks/checks
-uninitialized extents. With this change it will be possible to have
-initialized extents with 2^15 blocks (earlier the max blocks we could have
-was 2^15 - 1). This way we can have better extent-to-block alignment.
-Now, maximum number of blocks we can have in an initialized extent is 2^15
-and in an uninitialized extent is 2^15 - 1.
+To: Jon Collette <jon@etelos.com>
+Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
 
-CHANGELOG:
----------
-This patch did not change from TAKE7 (besides offsets ;).
 
-Following changed from TAKE6 to TAKE7:
-1. Taken care of Andreas's suggestion of using EXT_INIT_MAX_LEN instead of
-   0x8000 at some places.
+On Fri, 13 Jul 2007, Jon Collette wrote:
 
-Signed-off-by: Amit Arora <aarora@in.ibm.com>
+> Wouldn't Raid 6 be slower than Raid 5 because of the extra fault tolerance?
+>   http://www.enterprisenetworksandservers.com/monthly/art.php?1754 - 20% 
+> drop according to this article
+>
+> His 500GB WD drives are 7200RPM compared to the Raptors 10K.  So his numbers 
+> will be slower. 
+> Justin what file system do you have running on the Raptors?  I think thats an 
+> interesting point made by Joshua.
 
-Index: linux-2.6.22/fs/ext4/extents.c
-===================================================================
---- linux-2.6.22.orig/fs/ext4/extents.c
-+++ linux-2.6.22/fs/ext4/extents.c
-@@ -1107,7 +1107,7 @@ static int
- ext4_can_extents_be_merged(struct inode *inode, struct ext4_extent *ex1,
- 				struct ext4_extent *ex2)
- {
--	unsigned short ext1_ee_len, ext2_ee_len;
-+	unsigned short ext1_ee_len, ext2_ee_len, max_len;
- 
- 	/*
- 	 * Make sure that either both extents are uninitialized, or
-@@ -1116,6 +1116,11 @@ ext4_can_extents_be_merged(struct inode 
- 	if (ext4_ext_is_uninitialized(ex1) ^ ext4_ext_is_uninitialized(ex2))
- 		return 0;
- 
-+	if (ext4_ext_is_uninitialized(ex1))
-+		max_len = EXT_UNINIT_MAX_LEN;
-+	else
-+		max_len = EXT_INIT_MAX_LEN;
-+
- 	ext1_ee_len = ext4_ext_get_actual_len(ex1);
- 	ext2_ee_len = ext4_ext_get_actual_len(ex2);
- 
-@@ -1128,7 +1133,7 @@ ext4_can_extents_be_merged(struct inode 
- 	 * as an RO_COMPAT feature, refuse to merge to extents if
- 	 * this can result in the top bit of ee_len being set.
- 	 */
--	if (ext1_ee_len + ext2_ee_len > EXT_MAX_LEN)
-+	if (ext1_ee_len + ext2_ee_len > max_len)
- 		return 0;
- #ifdef AGGRESSIVE_TEST
- 	if (le16_to_cpu(ex1->ee_len) >= 4)
-@@ -1815,7 +1820,11 @@ ext4_ext_rm_leaf(handle_t *handle, struc
- 
- 		ex->ee_block = cpu_to_le32(block);
- 		ex->ee_len = cpu_to_le16(num);
--		if (uninitialized)
-+		/*
-+		 * Do not mark uninitialized if all the blocks in the
-+		 * extent have been removed.
-+		 */
-+		if (uninitialized && num)
- 			ext4_ext_mark_uninitialized(ex);
- 
- 		err = ext4_ext_dirty(handle, inode, path + depth);
-@@ -2308,6 +2317,19 @@ int ext4_ext_get_blocks(handle_t *handle
- 	/* allocate new block */
- 	goal = ext4_ext_find_goal(inode, path, iblock);
- 
-+	/*
-+	 * See if request is beyond maximum number of blocks we can have in
-+	 * a single extent. For an initialized extent this limit is
-+	 * EXT_INIT_MAX_LEN and for an uninitialized extent this limit is
-+	 * EXT_UNINIT_MAX_LEN.
-+	 */
-+	if (max_blocks > EXT_INIT_MAX_LEN &&
-+	    create != EXT4_CREATE_UNINITIALIZED_EXT)
-+		max_blocks = EXT_INIT_MAX_LEN;
-+	else if (max_blocks > EXT_UNINIT_MAX_LEN &&
-+		 create == EXT4_CREATE_UNINITIALIZED_EXT)
-+		max_blocks = EXT_UNINIT_MAX_LEN;
-+
- 	/* Check if we can really insert (iblock)::(iblock+max_blocks) extent */
- 	newex.ee_block = cpu_to_le32(iblock);
- 	newex.ee_len = cpu_to_le16(max_blocks);
-Index: linux-2.6.22/include/linux/ext4_fs_extents.h
-===================================================================
---- linux-2.6.22.orig/include/linux/ext4_fs_extents.h
-+++ linux-2.6.22/include/linux/ext4_fs_extents.h
-@@ -141,7 +141,25 @@ typedef int (*ext_prepare_callback)(stru
- 
- #define EXT_MAX_BLOCK	0xffffffff
- 
--#define EXT_MAX_LEN	((1UL << 15) - 1)
-+/*
-+ * EXT_INIT_MAX_LEN is the maximum number of blocks we can have in an
-+ * initialized extent. This is 2^15 and not (2^16 - 1), since we use the
-+ * MSB of ee_len field in the extent datastructure to signify if this
-+ * particular extent is an initialized extent or an uninitialized (i.e.
-+ * preallocated).
-+ * EXT_UNINIT_MAX_LEN is the maximum number of blocks we can have in an
-+ * uninitialized extent.
-+ * If ee_len is <= 0x8000, it is an initialized extent. Otherwise, it is an
-+ * uninitialized one. In other words, if MSB of ee_len is set, it is an
-+ * uninitialized extent with only one special scenario when ee_len = 0x8000.
-+ * In this case we can not have an uninitialized extent of zero length and
-+ * thus we make it as a special case of initialized extent with 0x8000 length.
-+ * This way we get better extent-to-group alignment for initialized extents.
-+ * Hence, the maximum number of blocks we can have in an *initialized*
-+ * extent is 2^15 (32768) and in an *uninitialized* extent is 2^15-1 (32767).
-+ */
-+#define EXT_INIT_MAX_LEN	(1UL << 15)
-+#define EXT_UNINIT_MAX_LEN	(EXT_INIT_MAX_LEN - 1)
- 
- 
- #define EXT_FIRST_EXTENT(__hdr__) \
-@@ -190,17 +208,22 @@ ext4_ext_invalidate_cache(struct inode *
- 
- static inline void ext4_ext_mark_uninitialized(struct ext4_extent *ext)
- {
--	ext->ee_len |= cpu_to_le16(0x8000);
-+	/* We can not have an uninitialized extent of zero length! */
-+	BUG_ON((le16_to_cpu(ext->ee_len) & ~EXT_INIT_MAX_LEN) == 0);
-+	ext->ee_len |= cpu_to_le16(EXT_INIT_MAX_LEN);
- }
- 
- static inline int ext4_ext_is_uninitialized(struct ext4_extent *ext)
- {
--	return (int)(le16_to_cpu((ext)->ee_len) & 0x8000);
-+	/* Extent with ee_len of 0x8000 is treated as an initialized extent */
-+	return (le16_to_cpu(ext->ee_len) > EXT_INIT_MAX_LEN);
- }
- 
- static inline int ext4_ext_get_actual_len(struct ext4_extent *ext)
- {
--	return (int)(le16_to_cpu((ext)->ee_len) & 0x7FFF);
-+	return (le16_to_cpu(ext->ee_len) <= EXT_INIT_MAX_LEN ?
-+		le16_to_cpu(ext->ee_len) :
-+		(le16_to_cpu(ext->ee_len) - EXT_INIT_MAX_LEN));
- }
- 
- extern int ext4_extent_tree_init(handle_t *, struct inode *);
+I use XFS:
+
+Justin what file system do you have running on the Raptors?  I think thats 
+an interesting point made by Joshua.
+
+But I also run several 'optimations' for SW RAID and my overall 
+configuration--  However, for the mkfs.xfs options, they auto-optimize for 
+whatever (SW) raid I have them configured for.  Whereas if XFS cannot tell 
+the disks/etc underneath the HW raid, I do not think the optimizations 
+will be present(?)-- which menas you'd have to set the sunit and swidth 
+appropriately.
+
+>
+>
+> Justin Piszcz wrote:
+>> 
+>> 
+>> On Fri, 13 Jul 2007, Joshua Baker-LePain wrote:
+>> 
+>>> My new system has a 3ware 9650SE-24M8 controller hooked to 24 500GB WD 
+>>> drives.  The controller is set up as a RAID6 w/ a hot spare.  OS is CentOS 
+>>> 5 x86_64.  It's all running on a couple of Xeon 5130s on a Supermicro 
+>>> X7DBE motherboard w/ 4GB of RAM.
+>>> 
+>>> Trying to stick with a supported config as much as possible, I need to run 
+>>> ext3.  As per usual, though, initial ext3 numbers are less than 
+>>> impressive. Using bonnie++ to get a baseline, I get (after doing 'blockdev 
+>>> --setra 65536' on the device):
+>>> Write: 136MB/s
+>>> Read:  384MB/s
+>>> 
+>>> Proving it's not the hardware, with XFS the numbers look like:
+>>> Write: 333MB/s
+>>> Read:  465MB/s
+>>> 
+>>> How many folks are using these?  Any tuning tips?
+>>> 
+>>> Thanks.
+>>> 
+>>> -- 
+>>> Joshua Baker-LePain
+>>> Department of Biomedical Engineering
+>>> Duke University
+>>> 
+>> 
+>> Let's try that again with the right address :)
+>> 
+>> 
+>> You are using HW RAID then?  Those numbers seem pretty awful for that
+>> setup, including linux-raid@ even it though it appears you're running HW 
+>> raid,
+>> this is rather peculiar.
+>> 
+>> To give you an example I get 464MB/s write and 627MB/s with a 10 disk
+>> raptor software raid5.
+>> 
+>> Justin.
+>> 
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
