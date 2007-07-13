@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 11:49:02 -0700 (PDT)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DImubm004835
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 11:48:58 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 11:49:56 -0700 (PDT)
+Received: from e1.ny.us.ibm.com (e1.ny.us.ibm.com [32.97.182.141])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DInpbm005514
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 11:49:52 -0700
 Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6DIoC4u012356
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:50:12 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6DImx56469438
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:48:59 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6DImwm6012722
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:48:59 -0400
-Date: Sat, 14 Jul 2007 00:19:09 +0530
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6DInrvq009542
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:49:53 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6DInrdO456954
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:49:53 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6DInq2Q013426
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 14:49:53 -0400
+Date: Sat, 14 Jul 2007 00:20:05 +0530
 From: "Amit K. Arora" <aarora@linux.vnet.ibm.com>
-Subject: [PATCH 2/5][TAKE8] fallocate() implementation in i386, x86_64 and powerpc
-Message-ID: <20070713184909.GC12156@amitarora.in.ibm.com>
+Subject: [PATCH 3/5][TAKE8] ext4: fallocate support in ext4
+Message-ID: <20070713185005.GD12156@amitarora.in.ibm.com>
 References: <20070713184125.GA12156@amitarora.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -29,270 +29,588 @@ Cc: xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, adilger@
 
 From: Amit Arora <aarora@in.ibm.com>
 
-sys_fallocate() implementation on i386, x86_64 and powerpc
+fallocate support in ext4
 
-fallocate() is a new system call being proposed here which will allow
-applications to preallocate space to any file(s) in a file system.
-Each file system implementation that wants to use this feature will need
-to support an inode operation called ->fallocate().
-Applications can use this feature to avoid fragmentation to certain
-level and thus get faster access speed. With preallocation, applications
-also get a guarantee of space for particular file(s) - even if later the
-the system becomes full.
-
-Currently, glibc provides an interface called posix_fallocate() which
-can be used for similar cause. Though this has the advantage of working
-on all file systems, but it is quite slow (since it writes zeroes to
-each block that has to be preallocated). Without a doubt, file systems
-can do this more efficiently within the kernel, by implementing
-the proposed fallocate() system call. It is expected that
-posix_fallocate() will be modified to call this new system call first
-and incase the kernel/filesystem does not implement it, it should fall
-back to the current implementation of writing zeroes to the new blocks.
-ToDos:
-1. Implementation on other architectures (other than i386, x86_64,
-   and ppc). Patches for s390(x) and ia64 are already available from
-   previous posts, but it was decided that they should be added later
-   once fallocate is in the mainline. Hence not including those patches
-   in this take.
-2. Changes to glibc,
-   a) to support fallocate() system call
-   b) to make posix_fallocate() and posix_fallocate64() call fallocate()
+This patch implements ->fallocate() inode operation in ext4. With this
+patch users of ext4 file systems will be able to use fallocate() system
+call for persistent preallocation. Current implementation only supports
+preallocation for regular files (directories not supported as of date)
+with extent maps. This patch does not support block-mapped files currently.
+Only FALLOC_ALLOCATE and FALLOC_RESV_SPACE modes are being supported as of
+now.
 
 CHANGELOG:
 ---------
 Following changed from TAKE7:
-1. Added linux/falloc.h and moved FALLOC_FL_KEEP_SIZE flag to it.
-2. Removed the two modes (FALLOC_ALLOCATE and FALLOC_RESV_SPACE).
-3. Merged "revalidate write permissions" patch from David P. Quigley
-   to this patch.
-4. Deleted comment above sys_fallocate definition, as suggested by Christoph.
+1. Removed usage of FALLOC_ALLOCATE and FALLOC_RESV_SPACE modes and
+   used FALLOC_FL_KEEP_SIZE mode flag instead.
+2. Included  <linux/falloc.h> new header file, which defines above flag.
 
 
 Signed-off-by: Amit Arora <aarora@in.ibm.com>
 
-Index: linux-2.6.22/arch/i386/kernel/syscall_table.S
+Index: linux-2.6.22/fs/ext4/extents.c
 ===================================================================
---- linux-2.6.22.orig/arch/i386/kernel/syscall_table.S
-+++ linux-2.6.22/arch/i386/kernel/syscall_table.S
-@@ -323,3 +323,4 @@ ENTRY(sys_call_table)
- 	.long sys_signalfd
- 	.long sys_timerfd
- 	.long sys_eventfd
-+	.long sys_fallocate
-Index: linux-2.6.22/arch/powerpc/kernel/sys_ppc32.c
-===================================================================
---- linux-2.6.22.orig/arch/powerpc/kernel/sys_ppc32.c
-+++ linux-2.6.22/arch/powerpc/kernel/sys_ppc32.c
-@@ -773,6 +773,13 @@ asmlinkage int compat_sys_truncate64(con
- 	return sys_truncate(path, (high << 32) | low);
- }
- 
-+asmlinkage long compat_sys_fallocate(int fd, int mode, u32 offhi, u32 offlo,
-+				     u32 lenhi, u32 lenlo)
-+{
-+	return sys_fallocate(fd, mode, ((loff_t)offhi << 32) | offlo,
-+			     ((loff_t)lenhi << 32) | lenlo);
-+}
-+
- asmlinkage int compat_sys_ftruncate64(unsigned int fd, u32 reg4, unsigned long high,
- 				 unsigned long low)
- {
-Index: linux-2.6.22/arch/x86_64/ia32/ia32entry.S
-===================================================================
---- linux-2.6.22.orig/arch/x86_64/ia32/ia32entry.S
-+++ linux-2.6.22/arch/x86_64/ia32/ia32entry.S
-@@ -719,4 +719,5 @@ ia32_sys_call_table:
- 	.quad compat_sys_signalfd
- 	.quad compat_sys_timerfd
- 	.quad sys_eventfd
-+	.quad sys32_fallocate
- ia32_syscall_end:
-Index: linux-2.6.22/fs/open.c
-===================================================================
---- linux-2.6.22.orig/fs/open.c
-+++ linux-2.6.22/fs/open.c
-@@ -26,6 +26,7 @@
- #include <linux/syscalls.h>
- #include <linux/rcupdate.h>
- #include <linux/audit.h>
+--- linux-2.6.22.orig/fs/ext4/extents.c
++++ linux-2.6.22/fs/ext4/extents.c
+@@ -39,6 +39,7 @@
+ #include <linux/quotaops.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
 +#include <linux/falloc.h>
+ #include <linux/ext4_fs_extents.h>
+ #include <asm/uaccess.h>
  
- int vfs_statfs(struct dentry *dentry, struct kstatfs *buf)
- {
-@@ -352,6 +353,64 @@ asmlinkage long sys_ftruncate64(unsigned
+@@ -282,7 +283,7 @@ static void ext4_ext_show_path(struct in
+ 		} else if (path->p_ext) {
+ 			ext_debug("  %d:%d:%llu ",
+ 				  le32_to_cpu(path->p_ext->ee_block),
+-				  le16_to_cpu(path->p_ext->ee_len),
++				  ext4_ext_get_actual_len(path->p_ext),
+ 				  ext_pblock(path->p_ext));
+ 		} else
+ 			ext_debug("  []");
+@@ -305,7 +306,7 @@ static void ext4_ext_show_leaf(struct in
+ 
+ 	for (i = 0; i < le16_to_cpu(eh->eh_entries); i++, ex++) {
+ 		ext_debug("%d:%d:%llu ", le32_to_cpu(ex->ee_block),
+-			  le16_to_cpu(ex->ee_len), ext_pblock(ex));
++			  ext4_ext_get_actual_len(ex), ext_pblock(ex));
+ 	}
+ 	ext_debug("\n");
  }
+@@ -425,7 +426,7 @@ ext4_ext_binsearch(struct inode *inode, 
+ 	ext_debug("  -> %d:%llu:%d ",
+ 			le32_to_cpu(path->p_ext->ee_block),
+ 			ext_pblock(path->p_ext),
+-			le16_to_cpu(path->p_ext->ee_len));
++			ext4_ext_get_actual_len(path->p_ext));
+ 
+ #ifdef CHECK_BINSEARCH
+ 	{
+@@ -686,7 +687,7 @@ static int ext4_ext_split(handle_t *hand
+ 		ext_debug("move %d:%llu:%d in new leaf %llu\n",
+ 				le32_to_cpu(path[depth].p_ext->ee_block),
+ 				ext_pblock(path[depth].p_ext),
+-				le16_to_cpu(path[depth].p_ext->ee_len),
++				ext4_ext_get_actual_len(path[depth].p_ext),
+ 				newblock);
+ 		/*memmove(ex++, path[depth].p_ext++,
+ 				sizeof(struct ext4_extent));
+@@ -1106,7 +1107,19 @@ static int
+ ext4_can_extents_be_merged(struct inode *inode, struct ext4_extent *ex1,
+ 				struct ext4_extent *ex2)
+ {
+-	if (le32_to_cpu(ex1->ee_block) + le16_to_cpu(ex1->ee_len) !=
++	unsigned short ext1_ee_len, ext2_ee_len;
++
++	/*
++	 * Make sure that either both extents are uninitialized, or
++	 * both are _not_.
++	 */
++	if (ext4_ext_is_uninitialized(ex1) ^ ext4_ext_is_uninitialized(ex2))
++		return 0;
++
++	ext1_ee_len = ext4_ext_get_actual_len(ex1);
++	ext2_ee_len = ext4_ext_get_actual_len(ex2);
++
++	if (le32_to_cpu(ex1->ee_block) + ext1_ee_len !=
+ 			le32_to_cpu(ex2->ee_block))
+ 		return 0;
+ 
+@@ -1115,14 +1128,14 @@ ext4_can_extents_be_merged(struct inode 
+ 	 * as an RO_COMPAT feature, refuse to merge to extents if
+ 	 * this can result in the top bit of ee_len being set.
+ 	 */
+-	if (le16_to_cpu(ex1->ee_len) + le16_to_cpu(ex2->ee_len) > EXT_MAX_LEN)
++	if (ext1_ee_len + ext2_ee_len > EXT_MAX_LEN)
+ 		return 0;
+ #ifdef AGGRESSIVE_TEST
+ 	if (le16_to_cpu(ex1->ee_len) >= 4)
+ 		return 0;
  #endif
  
-+asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
-+{
-+	struct file *file;
-+	struct inode *inode;
-+	long ret = -EINVAL;
-+
-+	if (offset < 0 || len <= 0)
-+		goto out;
-+
-+	/* Return error if mode is not supported */
-+	ret = -EOPNOTSUPP;
-+	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
-+		goto out;
-+
-+	ret = -EBADF;
-+	file = fget(fd);
-+	if (!file)
-+		goto out;
-+	if (!(file->f_mode & FMODE_WRITE))
-+		goto out_fput;
-+	/*
-+	 * Revalidate the write permissions, in case security policy has
-+	 * changed since the files were opened.
-+	 */
-+	ret = security_file_permission(file, MAY_WRITE);
-+	if (ret)
-+		goto out_fput;
-+
-+	inode = file->f_path.dentry->d_inode;
-+
-+	ret = -ESPIPE;
-+	if (S_ISFIFO(inode->i_mode))
-+		goto out_fput;
-+
-+	ret = -ENODEV;
-+	/*
-+	 * Let individual file system decide if it supports preallocation
-+	 * for directories or not.
-+	 */
-+	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
-+		goto out_fput;
-+
-+	ret = -EFBIG;
-+	/* Check for wrap through zero too */
-+	if (((offset + len) > inode->i_sb->s_maxbytes) || ((offset + len) < 0))
-+		goto out_fput;
-+
-+	if (inode->i_op && inode->i_op->fallocate)
-+		ret = inode->i_op->fallocate(inode, mode, offset, len);
-+	else
-+		ret = -ENOSYS;
-+
-+out_fput:
-+	fput(file);
-+out:
-+	return ret;
-+}
-+
- /*
-  * access() needs to use the real uid/gid, not the effective uid/gid.
-  * We do this by temporarily clearing all FS-related capabilities and
-Index: linux-2.6.22/include/asm-i386/unistd.h
-===================================================================
---- linux-2.6.22.orig/include/asm-i386/unistd.h
-+++ linux-2.6.22/include/asm-i386/unistd.h
-@@ -329,10 +329,11 @@
- #define __NR_signalfd		321
- #define __NR_timerfd		322
- #define __NR_eventfd		323
-+#define __NR_fallocate		324
+-	if (ext_pblock(ex1) + le16_to_cpu(ex1->ee_len) == ext_pblock(ex2))
++	if (ext_pblock(ex1) + ext1_ee_len == ext_pblock(ex2))
+ 		return 1;
+ 	return 0;
+ }
+@@ -1144,7 +1157,7 @@ unsigned int ext4_ext_check_overlap(stru
+ 	unsigned int ret = 0;
  
- #ifdef __KERNEL__
+ 	b1 = le32_to_cpu(newext->ee_block);
+-	len1 = le16_to_cpu(newext->ee_len);
++	len1 = ext4_ext_get_actual_len(newext);
+ 	depth = ext_depth(inode);
+ 	if (!path[depth].p_ext)
+ 		goto out;
+@@ -1191,8 +1204,9 @@ int ext4_ext_insert_extent(handle_t *han
+ 	struct ext4_extent *nearex; /* nearest extent */
+ 	struct ext4_ext_path *npath = NULL;
+ 	int depth, len, err, next;
++	unsigned uninitialized = 0;
  
--#define NR_syscalls 324
-+#define NR_syscalls 325
+-	BUG_ON(newext->ee_len == 0);
++	BUG_ON(ext4_ext_get_actual_len(newext) == 0);
+ 	depth = ext_depth(inode);
+ 	ex = path[depth].p_ext;
+ 	BUG_ON(path[depth].p_hdr == NULL);
+@@ -1200,14 +1214,24 @@ int ext4_ext_insert_extent(handle_t *han
+ 	/* try to insert block into found extent and return */
+ 	if (ex && ext4_can_extents_be_merged(inode, ex, newext)) {
+ 		ext_debug("append %d block to %d:%d (from %llu)\n",
+-				le16_to_cpu(newext->ee_len),
++				ext4_ext_get_actual_len(newext),
+ 				le32_to_cpu(ex->ee_block),
+-				le16_to_cpu(ex->ee_len), ext_pblock(ex));
++				ext4_ext_get_actual_len(ex), ext_pblock(ex));
+ 		err = ext4_ext_get_access(handle, inode, path + depth);
+ 		if (err)
+ 			return err;
+-		ex->ee_len = cpu_to_le16(le16_to_cpu(ex->ee_len)
+-					 + le16_to_cpu(newext->ee_len));
++
++		/*
++		 * ext4_can_extents_be_merged should have checked that either
++		 * both extents are uninitialized, or both aren't. Thus we
++		 * need to check only one of them here.
++		 */
++		if (ext4_ext_is_uninitialized(ex))
++			uninitialized = 1;
++		ex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(ex)
++					+ ext4_ext_get_actual_len(newext));
++		if (uninitialized)
++			ext4_ext_mark_uninitialized(ex);
+ 		eh = path[depth].p_hdr;
+ 		nearex = ex;
+ 		goto merge;
+@@ -1263,7 +1287,7 @@ has_space:
+ 		ext_debug("first extent in the leaf: %d:%llu:%d\n",
+ 				le32_to_cpu(newext->ee_block),
+ 				ext_pblock(newext),
+-				le16_to_cpu(newext->ee_len));
++				ext4_ext_get_actual_len(newext));
+ 		path[depth].p_ext = EXT_FIRST_EXTENT(eh);
+ 	} else if (le32_to_cpu(newext->ee_block)
+ 			   > le32_to_cpu(nearex->ee_block)) {
+@@ -1276,7 +1300,7 @@ has_space:
+ 					"move %d from 0x%p to 0x%p\n",
+ 					le32_to_cpu(newext->ee_block),
+ 					ext_pblock(newext),
+-					le16_to_cpu(newext->ee_len),
++					ext4_ext_get_actual_len(newext),
+ 					nearex, len, nearex + 1, nearex + 2);
+ 			memmove(nearex + 2, nearex + 1, len);
+ 		}
+@@ -1289,7 +1313,7 @@ has_space:
+ 				"move %d from 0x%p to 0x%p\n",
+ 				le32_to_cpu(newext->ee_block),
+ 				ext_pblock(newext),
+-				le16_to_cpu(newext->ee_len),
++				ext4_ext_get_actual_len(newext),
+ 				nearex, len, nearex + 1, nearex + 2);
+ 		memmove(nearex + 1, nearex, len);
+ 		path[depth].p_ext = nearex;
+@@ -1308,8 +1332,13 @@ merge:
+ 		if (!ext4_can_extents_be_merged(inode, nearex, nearex + 1))
+ 			break;
+ 		/* merge with next extent! */
+-		nearex->ee_len = cpu_to_le16(le16_to_cpu(nearex->ee_len)
+-					     + le16_to_cpu(nearex[1].ee_len));
++		if (ext4_ext_is_uninitialized(nearex))
++			uninitialized = 1;
++		nearex->ee_len = cpu_to_le16(ext4_ext_get_actual_len(nearex)
++					+ ext4_ext_get_actual_len(nearex + 1));
++		if (uninitialized)
++			ext4_ext_mark_uninitialized(nearex);
++
+ 		if (nearex + 1 < EXT_LAST_EXTENT(eh)) {
+ 			len = (EXT_LAST_EXTENT(eh) - nearex - 1)
+ 					* sizeof(struct ext4_extent);
+@@ -1379,8 +1408,8 @@ int ext4_ext_walk_space(struct inode *in
+ 			end = le32_to_cpu(ex->ee_block);
+ 			if (block + num < end)
+ 				end = block + num;
+-		} else if (block >=
+-			     le32_to_cpu(ex->ee_block) + le16_to_cpu(ex->ee_len)) {
++		} else if (block >= le32_to_cpu(ex->ee_block)
++					+ ext4_ext_get_actual_len(ex)) {
+ 			/* need to allocate space after found extent */
+ 			start = block;
+ 			end = block + num;
+@@ -1392,7 +1421,8 @@ int ext4_ext_walk_space(struct inode *in
+ 			 * by found extent
+ 			 */
+ 			start = block;
+-			end = le32_to_cpu(ex->ee_block) + le16_to_cpu(ex->ee_len);
++			end = le32_to_cpu(ex->ee_block)
++				+ ext4_ext_get_actual_len(ex);
+ 			if (block + num < end)
+ 				end = block + num;
+ 			exists = 1;
+@@ -1408,7 +1438,7 @@ int ext4_ext_walk_space(struct inode *in
+ 			cbex.ec_type = EXT4_EXT_CACHE_GAP;
+ 		} else {
+ 			cbex.ec_block = le32_to_cpu(ex->ee_block);
+-			cbex.ec_len = le16_to_cpu(ex->ee_len);
++			cbex.ec_len = ext4_ext_get_actual_len(ex);
+ 			cbex.ec_start = ext_pblock(ex);
+ 			cbex.ec_type = EXT4_EXT_CACHE_EXTENT;
+ 		}
+@@ -1481,15 +1511,15 @@ ext4_ext_put_gap_in_cache(struct inode *
+ 		ext_debug("cache gap(before): %lu [%lu:%lu]",
+ 				(unsigned long) block,
+ 				(unsigned long) le32_to_cpu(ex->ee_block),
+-				(unsigned long) le16_to_cpu(ex->ee_len));
++				(unsigned long) ext4_ext_get_actual_len(ex));
+ 	} else if (block >= le32_to_cpu(ex->ee_block)
+-			    + le16_to_cpu(ex->ee_len)) {
++			+ ext4_ext_get_actual_len(ex)) {
+ 		lblock = le32_to_cpu(ex->ee_block)
+-			 + le16_to_cpu(ex->ee_len);
++			+ ext4_ext_get_actual_len(ex);
+ 		len = ext4_ext_next_allocated_block(path);
+ 		ext_debug("cache gap(after): [%lu:%lu] %lu",
+ 				(unsigned long) le32_to_cpu(ex->ee_block),
+-				(unsigned long) le16_to_cpu(ex->ee_len),
++				(unsigned long) ext4_ext_get_actual_len(ex),
+ 				(unsigned long) block);
+ 		BUG_ON(len == lblock);
+ 		len = len - lblock;
+@@ -1619,12 +1649,12 @@ static int ext4_remove_blocks(handle_t *
+ 				unsigned long from, unsigned long to)
+ {
+ 	struct buffer_head *bh;
++	unsigned short ee_len =  ext4_ext_get_actual_len(ex);
+ 	int i;
  
- #define __ARCH_WANT_IPC_PARSE_VERSION
- #define __ARCH_WANT_OLD_READDIR
-Index: linux-2.6.22/include/asm-powerpc/systbl.h
-===================================================================
---- linux-2.6.22.orig/include/asm-powerpc/systbl.h
-+++ linux-2.6.22/include/asm-powerpc/systbl.h
-@@ -308,6 +308,7 @@ COMPAT_SYS_SPU(move_pages)
- SYSCALL_SPU(getcpu)
- COMPAT_SYS(epoll_pwait)
- COMPAT_SYS_SPU(utimensat)
-+COMPAT_SYS(fallocate)
- COMPAT_SYS_SPU(signalfd)
- COMPAT_SYS_SPU(timerfd)
- SYSCALL_SPU(eventfd)
-Index: linux-2.6.22/include/asm-powerpc/unistd.h
-===================================================================
---- linux-2.6.22.orig/include/asm-powerpc/unistd.h
-+++ linux-2.6.22/include/asm-powerpc/unistd.h
-@@ -331,10 +331,11 @@
- #define __NR_timerfd		306
- #define __NR_eventfd		307
- #define __NR_sync_file_range2	308
-+#define __NR_fallocate		309
+ #ifdef EXTENTS_STATS
+ 	{
+ 		struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
+-		unsigned short ee_len =  le16_to_cpu(ex->ee_len);
+ 		spin_lock(&sbi->s_ext_stats_lock);
+ 		sbi->s_ext_blocks += ee_len;
+ 		sbi->s_ext_extents++;
+@@ -1638,12 +1668,12 @@ static int ext4_remove_blocks(handle_t *
+ 	}
+ #endif
+ 	if (from >= le32_to_cpu(ex->ee_block)
+-	    && to == le32_to_cpu(ex->ee_block) + le16_to_cpu(ex->ee_len) - 1) {
++	    && to == le32_to_cpu(ex->ee_block) + ee_len - 1) {
+ 		/* tail removal */
+ 		unsigned long num;
+ 		ext4_fsblk_t start;
+-		num = le32_to_cpu(ex->ee_block) + le16_to_cpu(ex->ee_len) - from;
+-		start = ext_pblock(ex) + le16_to_cpu(ex->ee_len) - num;
++		num = le32_to_cpu(ex->ee_block) + ee_len - from;
++		start = ext_pblock(ex) + ee_len - num;
+ 		ext_debug("free last %lu blocks starting %llu\n", num, start);
+ 		for (i = 0; i < num; i++) {
+ 			bh = sb_find_get_block(inode->i_sb, start + i);
+@@ -1651,12 +1681,12 @@ static int ext4_remove_blocks(handle_t *
+ 		}
+ 		ext4_free_blocks(handle, inode, start, num);
+ 	} else if (from == le32_to_cpu(ex->ee_block)
+-		   && to <= le32_to_cpu(ex->ee_block) + le16_to_cpu(ex->ee_len) - 1) {
++		   && to <= le32_to_cpu(ex->ee_block) + ee_len - 1) {
+ 		printk("strange request: removal %lu-%lu from %u:%u\n",
+-		       from, to, le32_to_cpu(ex->ee_block), le16_to_cpu(ex->ee_len));
++			from, to, le32_to_cpu(ex->ee_block), ee_len);
+ 	} else {
+ 		printk("strange request: removal(2) %lu-%lu from %u:%u\n",
+-		       from, to, le32_to_cpu(ex->ee_block), le16_to_cpu(ex->ee_len));
++			from, to, le32_to_cpu(ex->ee_block), ee_len);
+ 	}
+ 	return 0;
+ }
+@@ -1671,6 +1701,7 @@ ext4_ext_rm_leaf(handle_t *handle, struc
+ 	unsigned a, b, block, num;
+ 	unsigned long ex_ee_block;
+ 	unsigned short ex_ee_len;
++	unsigned uninitialized = 0;
+ 	struct ext4_extent *ex;
  
- #ifdef __KERNEL__
+ 	ext_debug("truncate since %lu in leaf\n", start);
+@@ -1685,7 +1716,9 @@ ext4_ext_rm_leaf(handle_t *handle, struc
+ 	ex = EXT_LAST_EXTENT(eh);
  
--#define __NR_syscalls		309
-+#define __NR_syscalls		310
+ 	ex_ee_block = le32_to_cpu(ex->ee_block);
+-	ex_ee_len = le16_to_cpu(ex->ee_len);
++	if (ext4_ext_is_uninitialized(ex))
++		uninitialized = 1;
++	ex_ee_len = ext4_ext_get_actual_len(ex);
  
- #define __NR__exit __NR_exit
- #define NR_syscalls	__NR_syscalls
-Index: linux-2.6.22/include/asm-x86_64/unistd.h
-===================================================================
---- linux-2.6.22.orig/include/asm-x86_64/unistd.h
-+++ linux-2.6.22/include/asm-x86_64/unistd.h
-@@ -630,6 +630,8 @@ __SYSCALL(__NR_signalfd, sys_signalfd)
- __SYSCALL(__NR_timerfd, sys_timerfd)
- #define __NR_eventfd		284
- __SYSCALL(__NR_eventfd, sys_eventfd)
-+#define __NR_fallocate		285
-+__SYSCALL(__NR_fallocate, sys_fallocate)
+ 	while (ex >= EXT_FIRST_EXTENT(eh) &&
+ 			ex_ee_block + ex_ee_len > start) {
+@@ -1753,6 +1786,8 @@ ext4_ext_rm_leaf(handle_t *handle, struc
  
- #ifndef __NO_STUBS
- #define __ARCH_WANT_OLD_READDIR
-Index: linux-2.6.22/include/linux/fs.h
-===================================================================
---- linux-2.6.22.orig/include/linux/fs.h
-+++ linux-2.6.22/include/linux/fs.h
-@@ -1138,6 +1138,8 @@ struct inode_operations {
- 	ssize_t (*listxattr) (struct dentry *, char *, size_t);
- 	int (*removexattr) (struct dentry *, const char *);
- 	void (*truncate_range)(struct inode *, loff_t, loff_t);
-+	long (*fallocate)(struct inode *inode, int mode, loff_t offset,
-+			  loff_t len);
- };
+ 		ex->ee_block = cpu_to_le32(block);
+ 		ex->ee_len = cpu_to_le16(num);
++		if (uninitialized)
++			ext4_ext_mark_uninitialized(ex);
  
- struct seq_file;
-Index: linux-2.6.22/include/linux/syscalls.h
-===================================================================
---- linux-2.6.22.orig/include/linux/syscalls.h
-+++ linux-2.6.22/include/linux/syscalls.h
-@@ -610,6 +610,7 @@ asmlinkage long sys_signalfd(int ufd, si
- asmlinkage long sys_timerfd(int ufd, int clockid, int flags,
- 			    const struct itimerspec __user *utmr);
- asmlinkage long sys_eventfd(unsigned int count);
-+asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
+ 		err = ext4_ext_dirty(handle, inode, path + depth);
+ 		if (err)
+@@ -1762,7 +1797,7 @@ ext4_ext_rm_leaf(handle_t *handle, struc
+ 				ext_pblock(ex));
+ 		ex--;
+ 		ex_ee_block = le32_to_cpu(ex->ee_block);
+-		ex_ee_len = le16_to_cpu(ex->ee_len);
++		ex_ee_len = ext4_ext_get_actual_len(ex);
+ 	}
  
- int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
+ 	if (correct_index && eh->eh_entries)
+@@ -2038,7 +2073,7 @@ int ext4_ext_get_blocks(handle_t *handle
+ 	if (ex) {
+ 		unsigned long ee_block = le32_to_cpu(ex->ee_block);
+ 		ext4_fsblk_t ee_start = ext_pblock(ex);
+-		unsigned short ee_len  = le16_to_cpu(ex->ee_len);
++		unsigned short ee_len;
  
-Index: linux-2.6.22/arch/x86_64/ia32/sys_ia32.c
-===================================================================
---- linux-2.6.22.orig/arch/x86_64/ia32/sys_ia32.c
-+++ linux-2.6.22/arch/x86_64/ia32/sys_ia32.c
-@@ -879,3 +879,11 @@ asmlinkage long sys32_fadvise64(int fd, 
- 	return sys_fadvise64_64(fd, ((u64)offset_hi << 32) | offset_lo,
- 				len, advice);
+ 		/*
+ 		 * Allow future support for preallocated extents to be added
+@@ -2046,8 +2081,9 @@ int ext4_ext_get_blocks(handle_t *handle
+ 		 * Uninitialized extents are treated as holes, except that
+ 		 * we avoid (fail) allocating new blocks during a write.
+ 		 */
+-		if (ee_len > EXT_MAX_LEN)
++		if (le16_to_cpu(ex->ee_len) > EXT_MAX_LEN)
+ 			goto out2;
++		ee_len = ext4_ext_get_actual_len(ex);
+ 		/* if found extent covers block, simply return it */
+ 		if (iblock >= ee_block && iblock < ee_block + ee_len) {
+ 			newblock = iblock - ee_block + ee_start;
+@@ -2055,8 +2091,11 @@ int ext4_ext_get_blocks(handle_t *handle
+ 			allocated = ee_len - (iblock - ee_block);
+ 			ext_debug("%d fit into %lu:%d -> %llu\n", (int) iblock,
+ 					ee_block, ee_len, newblock);
+-			ext4_ext_put_in_cache(inode, ee_block, ee_len,
+-						ee_start, EXT4_EXT_CACHE_EXTENT);
++			/* Do not put uninitialized extent in the cache */
++			if (!ext4_ext_is_uninitialized(ex))
++				ext4_ext_put_in_cache(inode, ee_block,
++							ee_len, ee_start,
++							EXT4_EXT_CACHE_EXTENT);
+ 			goto out;
+ 		}
+ 	}
+@@ -2098,6 +2137,8 @@ int ext4_ext_get_blocks(handle_t *handle
+ 	/* try to insert new extent into found leaf and return */
+ 	ext4_ext_store_pblock(&newex, newblock);
+ 	newex.ee_len = cpu_to_le16(allocated);
++	if (create == EXT4_CREATE_UNINITIALIZED_EXT)  /* Mark uninitialized */
++		ext4_ext_mark_uninitialized(&newex);
+ 	err = ext4_ext_insert_extent(handle, inode, path, &newex);
+ 	if (err) {
+ 		/* free data blocks we just allocated */
+@@ -2113,8 +2154,10 @@ int ext4_ext_get_blocks(handle_t *handle
+ 	newblock = ext_pblock(&newex);
+ 	__set_bit(BH_New, &bh_result->b_state);
+ 
+-	ext4_ext_put_in_cache(inode, iblock, allocated, newblock,
+-				EXT4_EXT_CACHE_EXTENT);
++	/* Cache only when it is _not_ an uninitialized extent */
++	if (create != EXT4_CREATE_UNINITIALIZED_EXT)
++		ext4_ext_put_in_cache(inode, iblock, allocated, newblock,
++						EXT4_EXT_CACHE_EXTENT);
+ out:
+ 	if (allocated > max_blocks)
+ 		allocated = max_blocks;
+@@ -2217,3 +2260,127 @@ int ext4_ext_writepage_trans_blocks(stru
+ 
+ 	return needed;
  }
 +
-+asmlinkage long sys32_fallocate(int fd, int mode, unsigned offset_lo,
-+				unsigned offset_hi, unsigned len_lo,
-+				unsigned len_hi)
++/*
++ * preallocate space for a file. This implements ext4's fallocate inode
++ * operation, which gets called from sys_fallocate system call.
++ * For block-mapped files, posix_fallocate should fall back to the method
++ * of writing zeroes to the required new blocks (the same behavior which is
++ * expected for file systems which do not support fallocate() system call).
++ */
++long ext4_fallocate(struct inode *inode, int mode, loff_t offset, loff_t len)
 +{
-+	return sys_fallocate(fd, mode, ((u64)offset_hi << 32) | offset_lo,
-+			     ((u64)len_hi << 32) | len_lo);
++	handle_t *handle;
++	ext4_fsblk_t block, max_blocks;
++	ext4_fsblk_t nblocks = 0;
++	int ret = 0;
++	int ret2 = 0;
++	int retries = 0;
++	struct buffer_head map_bh;
++	unsigned int credits, blkbits = inode->i_blkbits;
++
++	/*
++	 * currently supporting (pre)allocate mode for extent-based
++	 * files _only_
++	 */
++	if (!(EXT4_I(inode)->i_flags & EXT4_EXTENTS_FL))
++		return -EOPNOTSUPP;
++
++	/* preallocation to directories is currently not supported */
++	if (S_ISDIR(inode->i_mode))
++		return -ENODEV;
++
++	block = offset >> blkbits;
++	max_blocks = (EXT4_BLOCK_ALIGN(len + offset, blkbits) >> blkbits)
++			- block;
++
++	/*
++	 * credits to insert 1 extent into extent tree + buffers to be able to
++	 * modify 1 super block, 1 block bitmap and 1 group descriptor.
++	 */
++	credits = EXT4_DATA_TRANS_BLOCKS(inode->i_sb) + 3;
++retry:
++	while (ret >= 0 && ret < max_blocks) {
++		block = block + ret;
++		max_blocks = max_blocks - ret;
++		handle = ext4_journal_start(inode, credits);
++		if (IS_ERR(handle)) {
++			ret = PTR_ERR(handle);
++			break;
++		}
++
++		ret = ext4_ext_get_blocks(handle, inode, block,
++					  max_blocks, &map_bh,
++					  EXT4_CREATE_UNINITIALIZED_EXT, 0);
++		WARN_ON(!ret);
++		if (!ret) {
++			ext4_error(inode->i_sb, "ext4_fallocate",
++				   "ext4_ext_get_blocks returned 0! inode#%lu"
++				   ", block=%llu, max_blocks=%llu",
++				   inode->i_ino, block, max_blocks);
++			ret = -EIO;
++			ext4_mark_inode_dirty(handle, inode);
++			ret2 = ext4_journal_stop(handle);
++			break;
++		}
++		if (ret > 0) {
++			/* check wrap through sign-bit/zero here */
++			if ((block + ret) < 0 || (block + ret) < block) {
++				ret = -EIO;
++				ext4_mark_inode_dirty(handle, inode);
++				ret2 = ext4_journal_stop(handle);
++				break;
++			}
++			if (buffer_new(&map_bh) && ((block + ret) >
++			    (EXT4_BLOCK_ALIGN(i_size_read(inode), blkbits)
++			    >> blkbits)))
++					nblocks = nblocks + ret;
++		}
++
++		/* Update ctime if new blocks get allocated */
++		if (nblocks) {
++			struct timespec now;
++
++			now = current_fs_time(inode->i_sb);
++			if (!timespec_equal(&inode->i_ctime, &now))
++				inode->i_ctime = now;
++		}
++
++		ext4_mark_inode_dirty(handle, inode);
++		ret2 = ext4_journal_stop(handle);
++		if (ret2)
++			break;
++	}
++
++	if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
++		goto retry;
++
++	/*
++	 * Time to update the file size.
++	 * Update only when preallocation was requested beyond the file size.
++	 */
++	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
++	    (offset + len) > i_size_read(inode)) {
++		if (ret > 0) {
++			/*
++			 * if no error, we assume preallocation succeeded
++			 * completely
++			 */
++			mutex_lock(&inode->i_mutex);
++			i_size_write(inode, offset + len);
++			EXT4_I(inode)->i_disksize = i_size_read(inode);
++			mutex_unlock(&inode->i_mutex);
++		} else if (ret < 0 && nblocks) {
++			/* Handle partial allocation scenario */
++			loff_t newsize;
++
++			mutex_lock(&inode->i_mutex);
++			newsize  = (nblocks << blkbits) + i_size_read(inode);
++			i_size_write(inode, EXT4_BLOCK_ALIGN(newsize, blkbits));
++			EXT4_I(inode)->i_disksize = i_size_read(inode);
++			mutex_unlock(&inode->i_mutex);
++		}
++	}
++
++	return ret > 0 ? ret2 : ret;
 +}
-Index: linux-2.6.22/include/linux/falloc.h
+Index: linux-2.6.22/fs/ext4/file.c
 ===================================================================
---- /dev/null
-+++ linux-2.6.22/include/linux/falloc.h
-@@ -0,0 +1,6 @@
-+#ifndef _FALLOC_H_
-+#define _FALLOC_H_
+--- linux-2.6.22.orig/fs/ext4/file.c
++++ linux-2.6.22/fs/ext4/file.c
+@@ -135,5 +135,6 @@ const struct inode_operations ext4_file_
+ 	.removexattr	= generic_removexattr,
+ #endif
+ 	.permission	= ext4_permission,
++	.fallocate	= ext4_fallocate,
+ };
+ 
+Index: linux-2.6.22/include/linux/ext4_fs.h
+===================================================================
+--- linux-2.6.22.orig/include/linux/ext4_fs.h
++++ linux-2.6.22/include/linux/ext4_fs.h
+@@ -102,6 +102,7 @@
+ 				 EXT4_GOOD_OLD_FIRST_INO : \
+ 				 (s)->s_first_ino)
+ #endif
++#define EXT4_BLOCK_ALIGN(size, blkbits)		ALIGN((size), (1 << (blkbits)))
+ 
+ /*
+  * Macro-instructions used to manage fragments
+@@ -225,6 +226,11 @@ struct ext4_new_group_data {
+ 	__u32 free_blocks_count;
+ };
+ 
++/*
++ * Following is used by preallocation code to tell get_blocks() that we
++ * want uninitialzed extents.
++ */
++#define EXT4_CREATE_UNINITIALIZED_EXT		2
+ 
+ /*
+  * ioctl commands
+@@ -983,6 +989,8 @@ extern int ext4_ext_get_blocks(handle_t 
+ extern void ext4_ext_truncate(struct inode *, struct page *);
+ extern void ext4_ext_init(struct super_block *);
+ extern void ext4_ext_release(struct super_block *);
++extern long ext4_fallocate(struct inode *inode, int mode, loff_t offset,
++			  loff_t len);
+ static inline int
+ ext4_get_blocks_wrap(handle_t *handle, struct inode *inode, sector_t block,
+ 			unsigned long max_blocks, struct buffer_head *bh,
+Index: linux-2.6.22/include/linux/ext4_fs_extents.h
+===================================================================
+--- linux-2.6.22.orig/include/linux/ext4_fs_extents.h
++++ linux-2.6.22/include/linux/ext4_fs_extents.h
+@@ -188,6 +188,21 @@ ext4_ext_invalidate_cache(struct inode *
+ 	EXT4_I(inode)->i_cached_extent.ec_type = EXT4_EXT_CACHE_NO;
+ }
+ 
++static inline void ext4_ext_mark_uninitialized(struct ext4_extent *ext)
++{
++	ext->ee_len |= cpu_to_le16(0x8000);
++}
 +
-+#define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
++static inline int ext4_ext_is_uninitialized(struct ext4_extent *ext)
++{
++	return (int)(le16_to_cpu((ext)->ee_len) & 0x8000);
++}
 +
-+#endif /* _FALLOC_H_ */
++static inline int ext4_ext_get_actual_len(struct ext4_extent *ext)
++{
++	return (int)(le16_to_cpu((ext)->ee_len) & 0x7FFF);
++}
++
+ extern int ext4_extent_tree_init(handle_t *, struct inode *);
+ extern int ext4_ext_calc_credits_for_insert(struct inode *, struct ext4_ext_path *);
+ extern unsigned int ext4_ext_check_overlap(struct inode *, struct ext4_extent *, struct ext4_ext_path *);
