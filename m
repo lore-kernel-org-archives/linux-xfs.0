@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:44:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:45:02 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EGi8bm000327
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:44:09 -0700
-Message-ID: <4698FD5C.60900@sandeen.net>
-Date: Sat, 14 Jul 2007 11:44:12 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EGj0bm000759
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:45:01 -0700
+Message-ID: <4698FD90.10003@sandeen.net>
+Date: Sat, 14 Jul 2007 11:45:04 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix sparse shadowed variable warnings
-References: <20070714160825.GD7768@lst.de>
-In-Reply-To: <20070714160825.GD7768@lst.de>
+Subject: Re: [PATCH] fix constness warning in dmapi
+References: <20070714160910.GE7768@lst.de>
+In-Reply-To: <20070714160910.GE7768@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -19,63 +19,39 @@ To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
->  - in xfs_probe_cluster rename the inner len to pg_len.  There's no harm
->    here because the utter len isn't used after the inner len comes into
->    existance but it keeps the code clean.
->  - in xfs_da_do_buf remove the inner i because both useage don't overlap
->    and they are the same type.
+> File operations are const now so make sure the dmapi code propagates
+> this properly.
+
+ACK.  Surprised that was still there :)
+
 > 
-
-Looks fine
-
--Eric
-
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+> Index: linux-2.6-xfs/fs/dmapi/dmapi_kern.h
 > ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-07-14 16:02:19.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2007-07-14 16:03:09.000000000 +0200
-> @@ -652,7 +652,7 @@ xfs_probe_cluster(
->  
->  		for (i = 0; i < pagevec_count(&pvec); i++) {
->  			struct page *page = pvec.pages[i];
-> -			size_t pg_offset, len = 0;
-> +			size_t pg_offset, pg_len = 0;
->  
->  			if (tindex == tlast) {
->  				pg_offset =
-> @@ -665,16 +665,16 @@ xfs_probe_cluster(
->  				pg_offset = PAGE_CACHE_SIZE;
->  
->  			if (page->index == tindex && !TestSetPageLocked(page)) {
-> -				len = xfs_probe_page(page, pg_offset, mapped);
-> +				pg_len = xfs_probe_page(page, pg_offset, mapped);
->  				unlock_page(page);
->  			}
->  
-> -			if (!len) {
-> +			if (!pg_len) {
->  				done = 1;
->  				break;
->  			}
->  
-> -			total += len;
-> +			total += pg_len;
->  			tindex++;
->  		}
->  
-> Index: linux-2.6-xfs/fs/xfs/xfs_da_btree.c
+> --- linux-2.6-xfs.orig/fs/dmapi/dmapi_kern.h	2007-07-14 16:08:31.000000000 +0200
+> +++ linux-2.6-xfs/fs/dmapi/dmapi_kern.h	2007-07-14 16:08:41.000000000 +0200
+> @@ -79,7 +79,7 @@ struct filesystem_dmapi_operations {
+>  	int (*get_fsys_vector)(struct super_block *sb, void *addr);
+>  	int (*fh_to_inode)(struct super_block *sb, struct inode **ip,
+>  			   dm_fid_t *fid);
+> -	struct file_operations * (*get_invis_ops)(struct inode *ip);
+> +	const struct file_operations * (*get_invis_ops)(struct inode *ip);
+>  	int (*inode_to_fh)(struct inode *ip, dm_fid_t *fid,
+>  			   dm_fsid_t *fsid );
+>  	void (*get_fsid)(struct super_block *sb, dm_fsid_t *fsid);
+> Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm_fsops.c
 > ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_da_btree.c	2007-07-14 16:01:43.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_da_btree.c	2007-07-14 16:02:01.000000000 +0200
-> @@ -1975,7 +1975,6 @@ xfs_da_do_buf(
->  		error = mappedbno == -2 ? 0 : XFS_ERROR(EFSCORRUPTED);
->  		if (unlikely(error == EFSCORRUPTED)) {
->  			if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
-> -				int	i;
->  				cmn_err(CE_ALERT, "xfs_da_do_buf: bno %lld\n",
->  					(long long)bno);
->  				cmn_err(CE_ALERT, "dir: inode %lld\n",
+> --- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm_fsops.c	2007-07-14 16:07:47.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm_fsops.c	2007-07-14 16:07:55.000000000 +0200
+> @@ -49,7 +49,7 @@
+>  #include "xfs_dm.h"
+>  
+>  
+> -STATIC struct file_operations *
+> +STATIC const struct file_operations *
+>  xfs_dm_get_invis_ops(
+>  	struct inode *ip)
+>  {
 > 
 > 
