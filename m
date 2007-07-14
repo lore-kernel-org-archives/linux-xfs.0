@@ -1,57 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:45:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EGj0bm000759
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:45:01 -0700
-Message-ID: <4698FD90.10003@sandeen.net>
-Date: Sat, 14 Jul 2007 11:45:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 16:33:42 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6ENXdbm018264
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 16:33:40 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by lucidpixels.com (Postfix) with ESMTP id A2A0A40195B9
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 19:33:41 -0400 (EDT)
+Date: Sat, 14 Jul 2007 19:33:41 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: xfs_fsr speed?
+Message-ID: <Pine.LNX.4.64.0707141923530.20845@p34.internal.lan>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix constness warning in dmapi
-References: <20070714160910.GE7768@lst.de>
-In-Reply-To: <20070714160910.GE7768@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> File operations are const now so make sure the dmapi code propagates
-> this properly.
+Is there some sort of cap on the speed during the defragmentation process 
+of xfs_fsr?
 
-ACK.  Surprised that was still there :)
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+  3  0    128  48344     12 6954488    0    0 131072 129620 4536 8160  0 13 68 18
+  0  1    128  48152     12 6954744    0    0 131072 116080 4687 8561  0 13 68 19
+  2  0    128  47744     12 6955112    0    0 131072 145816 5308 8192  0 15 68 17
+  1  0    128  47444     12 6955368    0    0 131072 116264 4761 7095  0 13 68 19
+  0  1    128  47176     12 6955624    0    0 131072 147420 4855 8174  0 15 68 17
+  2  1    128  46996     12 6955880    0    0 131072 131040 4425 9094  0 14 68 18
+  0  1    128  48680     12 6954232    0    0 131072 131040 4399 7874  0 13 69 18
+  1  0    128  48224     12 6954488    0    0 131072 114660 4558 5614  0 13 68 19
+  1  1    128  48072     12 6954744    0    0 131072 147420 4872 9617  0 15 67 18
+  0  1    128  47648     12 6955080    0    0 131072 114660 4348 7113  0 13 68 19
+  0  1    128  47516     12 6955368    0    0 131072 131040 4586 8688  0 14 68 18
+  1  0    128  47208     12 6955624    0    0 131072 131040 4524 6861  0 14 68 18
+  1  0    128  47072     12 6955880    0    0 131072 145764 4631 10596 0 14 68 18
+  1  1    128  46652     12 6956136    0    0 131072 116316 4293 5592  0 14 69 19
+  1  0    128  48272     12 6954568    0    0 131072 131040 4772 8290  0 14 68 18
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/dmapi/dmapi_kern.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/dmapi/dmapi_kern.h	2007-07-14 16:08:31.000000000 +0200
-> +++ linux-2.6-xfs/fs/dmapi/dmapi_kern.h	2007-07-14 16:08:41.000000000 +0200
-> @@ -79,7 +79,7 @@ struct filesystem_dmapi_operations {
->  	int (*get_fsys_vector)(struct super_block *sb, void *addr);
->  	int (*fh_to_inode)(struct super_block *sb, struct inode **ip,
->  			   dm_fid_t *fid);
-> -	struct file_operations * (*get_invis_ops)(struct inode *ip);
-> +	const struct file_operations * (*get_invis_ops)(struct inode *ip);
->  	int (*inode_to_fh)(struct inode *ip, dm_fid_t *fid,
->  			   dm_fsid_t *fsid );
->  	void (*get_fsid)(struct super_block *sb, dm_fsid_t *fsid);
-> Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm_fsops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm_fsops.c	2007-07-14 16:07:47.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm_fsops.c	2007-07-14 16:07:55.000000000 +0200
-> @@ -49,7 +49,7 @@
->  #include "xfs_dm.h"
->  
->  
-> -STATIC struct file_operations *
-> +STATIC const struct file_operations *
->  xfs_dm_get_invis_ops(
->  	struct inode *ip)
->  {
-> 
-> 
+Justin.
