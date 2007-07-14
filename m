@@ -1,52 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:10:08 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EGA3bm018428
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:10:05 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l6EGA4NK008740
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 18:10:04 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l6EGA4Xx008737
-	for xfs@oss.sgi.com; Sat, 14 Jul 2007 18:10:04 +0200
-Date: Sat, 14 Jul 2007 18:10:04 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix dmapi warning in 32bit builds
-Message-ID: <20070714161003.GF7768@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:38:19 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EGcEbm030257
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:38:15 -0700
+Message-ID: <4698FBF9.4090507@sandeen.net>
+Date: Sat, 14 Jul 2007 11:38:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix ASSERT and ASSERT_ALWAYS
+References: <20070714160418.GA7768@lst.de>
+In-Reply-To: <20070714160418.GA7768@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-dm_size_t is 64bit even in 32bit builds so we need to use max_t when
-when comparing to PAGE_CACHE_SIZE.
+Christoph Hellwig wrote:
+>  - remove the != 0 inside the unlikely in ASSERT_ALWAYS because sparse now
+>    complains about comparisms between pointers and 0
+>  - add a standalone ASSERT implementation because defining it to
+>    ASSERT_ALWAYS means the string is expanded before the #token passing
+>    stringification.  This way we get the actual content of the
+>    assertatio in the assfail message and don't overflow sparse's
+>    strinification buffer leading to sparse error messages.
 
+Looks fine to me.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+-Eric
 
-Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2007-07-14 16:10:40.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2007-07-14 16:11:34.000000000 +0200
-@@ -2636,7 +2636,7 @@ xfs_dm_probe_hole(
- 	if (align == 0)
- 		align = 1;
- 	align <<= mp->m_sb.sb_blocklog;
--	align = MAX(align, PAGE_CACHE_SIZE);
-+	align = max_t(dm_size_t, align, PAGE_CACHE_SIZE);
- 
- 	error = xfs_dm_round_hole(off, len, align, realsize, &roff, &rlen);
- 	if (error)
-@@ -2699,7 +2699,7 @@ xfs_dm_punch_hole(
- 		align = 1;
- 
- 	align <<= mp->m_sb.sb_blocklog;
--	align = MAX(align, PAGE_CACHE_SIZE);
-+	align = max_t(dm_size_t, align, PAGE_CACHE_SIZE);
- 
- 	if ((off + len) > realsize) {
- 		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/support/debug.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/support/debug.h	2007-07-14 15:55:12.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/support/debug.h	2007-07-14 15:55:46.000000000 +0200
+> @@ -34,10 +34,10 @@ extern void cmn_err(int, char *, ...)
+>  extern void assfail(char *expr, char *f, int l);
+>  
+>  #define ASSERT_ALWAYS(expr)	\
+> -	(unlikely((expr) != 0) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+> +	(unlikely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+>  
+>  #ifndef DEBUG
+> -# define ASSERT(expr)	((void)0)
+> +#define ASSERT(expr)	((void)0)
+>  
+>  #ifndef STATIC
+>  # define STATIC static noinline
+> @@ -49,8 +49,10 @@ extern void assfail(char *expr, char *f,
+>  
+>  #else /* DEBUG */
+>  
+> -# define ASSERT(expr)	ASSERT_ALWAYS(expr)
+> -# include <linux/random.h>
+> +#include <linux/random.h>
+> +
+> +#define ASSERT(expr)	\
+> +	(unlikely(expr) ? (void)0 : assfail(#expr, __FILE__, __LINE__))
+>  
+>  #ifndef STATIC
+>  # define STATIC noinline
+> 
+> 
