@@ -1,144 +1,136 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 01:50:26 -0700 (PDT)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6E8oJbm015599
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 01:50:21 -0700
-Content-Type: text/plain; charset="us-ascii"
-Date: Sat, 14 Jul 2007 10:23:42 +0200
-From: "Michael Kerrisk" <michael.kerrisk@gmx.net>
-In-Reply-To: <20070713124601.GA22961@amitarora.in.ibm.com>
-Message-ID: <20070714082342.174830@gmx.net>
-MIME-Version: 1.0
-References: <20070713123816.GA18000@amitarora.in.ibm.com>
- <20070713124601.GA22961@amitarora.in.ibm.com>
-Subject: Re: [PATCH 1/6][TAKE7] manpage for fallocate
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 09:07:09 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6EG73bm016258
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 09:07:05 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l6EG71NK008486
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 18:07:02 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l6EG71JB008484
+	for xfs@oss.sgi.com; Sat, 14 Jul 2007 18:07:01 +0200
+Date: Sat, 14 Jul 2007 18:07:01 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix sparse pointer vs 0 warnings
+Message-ID: <20070714160701.GC7768@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: mtk-manpages@gmx.net, dgc@sgi.com, adilger@clusterfs.com, suparna@in.ibm.com, cmm@us.ibm.com, tytso@mit.edu, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-[CC += mtk-manpages@gmx.net]
+Sparse now warns about comparing pointers to 0, so change all instance
+where that happens to NULL instead.
 
-Amit,
 
-Thanks for this page.  I will endeavour to review it in 
-the coming days.  In the meantime, the better address to CC
-me on fot man pages stuff is mtk-manpages@gmx.net.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
-
-Michael
-
-> Following is the modified version of the manpage originally submitted by
-> David Chinner. Please use `nroff -man fallocate.2 | less` to view.
-> 
-> This includes changes suggested by Heikki Orsila and Barry Naujok.
-> 
-> 
-> .TH fallocate 2
-> .SH NAME
-> fallocate \- allocate or remove file space
-> .SH SYNOPSIS
-> .nf
-> .B #include <fcntl.h>
-> .PP
-> .BI "long fallocate(int " fd ", int " mode ", loff_t " offset ", loff_t "
-> len);
-> .SH DESCRIPTION
-> The
-> .B fallocate
-> syscall allows a user to directly manipulate the allocated disk space
-> for the file referred to by
-> .I fd
-> for the byte range starting at
-> .I offset
-> and continuing for
-> .I len
-> bytes.
-> The
-> .I mode
-> parameter determines the operation to be performed on the given range.
-> Currently there are two modes:
-> .TP
-> .B FALLOC_ALLOCATE
-> allocates and initialises to zero the disk space within the given range.
-> After a successful call, subsequent writes are guaranteed not to fail
-> because
-> of lack of disk space.  If the size of the file is less than
-> .IR offset + len ,
-> then the file is increased to this size; otherwise the file size is left
-> unchanged.
-> .B FALLOC_ALLOCATE
-> closely resembles
-> .BR posix_fallocate (3)
-> and is intended as a method of optimally implementing this function.
-> .B FALLOC_ALLOCATE
-> may allocate a larger range than that was specified.
-> .TP
-> .B FALLOC_RESV_SPACE
-> provides the same functionality as
-> .B FALLOC_ALLOCATE
-> except it does not ever change the file size. This allows allocation
-> of zero blocks beyond the end of file and is useful for optimising
-> append workloads.
-> .SH RETURN VALUE
-> .B fallocate
-> returns zero on success, or an error number on failure.
-> Note that
-> .I errno
-> is not set.
-> .SH ERRORS
-> .TP
-> .B EBADF
-> .I fd
-> is not a valid file descriptor, or is not opened for writing.
-> .TP
-> .B EFBIG
-> .IR offset + len
-> exceeds the maximum file size.
-> .TP
-> .B EINVAL
-> .I offset
-> was less than 0, or
-> .I len
-> was less than or equal to 0.
-> .TP
-> .B ENODEV
-> .I fd
-> does not refer to a regular file or a directory.
-> .TP
-> .B ENOSPC
-> There is not enough space left on the device containing the file
-> referred to by
-> .IR fd .
-> .TP
-> .B ESPIPE
-> .I fd
-> refers to a pipe of file descriptor.
-> .TP
-> .B ENOSYS
-> The filesystem underlying the file descriptor does not support this
-> operation.
-> .TP
-> .B EINTR
-> A signal was caught during execution
-> .TP
-> .B EIO
-> An I/O error occurred while reading from or writing to a file system.
-> .TP
-> .B EOPNOTSUPP
-> The mode is not supported on the file descriptor.
-> .SH AVAILABILITY
-> The
-> .B fallocate
-> system call is available since 2.6.XX
-> .SH SEE ALSO
-> .BR syscall (2),
-> .BR posix_fadvise (3),
-> .BR ftruncate (3).
-
--- 
-Ist Ihr Browser Vista-kompatibel? Jetzt die neuesten 
-Browser-Versionen downloaden: http://www.gmx.net/de/go/browser
+Index: linux-2.6-xfs/fs/xfs/xfs_log.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2007-07-14 15:56:39.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log.c	2007-07-14 15:58:16.000000000 +0200
+@@ -2198,13 +2198,13 @@ xlog_state_do_callback(
+ 			}
+ 			cb = iclog->ic_callback;
+ 
+-			while (cb != 0) {
++			while (cb) {
+ 				iclog->ic_callback_tail = &(iclog->ic_callback);
+ 				iclog->ic_callback = NULL;
+ 				LOG_UNLOCK(log, s);
+ 
+ 				/* perform callbacks in the order given */
+-				for (; cb != 0; cb = cb_next) {
++				for (; cb; cb = cb_next) {
+ 					cb_next = cb->cb_next;
+ 					cb->cb_func(cb->cb_arg, aborted);
+ 				}
+@@ -2215,7 +2215,7 @@ xlog_state_do_callback(
+ 			loopdidcallbacks++;
+ 			funcdidcallbacks++;
+ 
+-			ASSERT(iclog->ic_callback == 0);
++			ASSERT(iclog->ic_callback == NULL);
+ 			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
+ 				iclog->ic_state = XLOG_STATE_DIRTY;
+ 
+@@ -3255,10 +3255,10 @@ xlog_ticket_put(xlog_t		*log,
+ #else
+ 	/* When we debug, it is easier if tickets are cycled */
+ 	ticket->t_next     = NULL;
+-	if (log->l_tail != 0) {
++	if (log->l_tail) {
+ 		log->l_tail->t_next = ticket;
+ 	} else {
+-		ASSERT(log->l_freelist == 0);
++		ASSERT(log->l_freelist == NULL);
+ 		log->l_freelist = ticket;
+ 	}
+ 	log->l_tail	    = ticket;
+@@ -3476,7 +3476,7 @@ xlog_verify_iclog(xlog_t	 *log,
+ 	s = LOG_LOCK(log);
+ 	icptr = log->l_iclog;
+ 	for (i=0; i < log->l_iclog_bufs; i++) {
+-		if (icptr == 0)
++		if (icptr == NULL)
+ 			xlog_panic("xlog_verify_iclog: invalid ptr");
+ 		icptr = icptr->ic_next;
+ 	}
+Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2007-07-14 15:58:18.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2007-07-14 15:59:35.000000000 +0200
+@@ -1366,7 +1366,7 @@ xlog_recover_add_to_cont_trans(
+ 	int			old_len;
+ 
+ 	item = trans->r_itemq;
+-	if (item == 0) {
++	if (item == NULL) {
+ 		/* finish copying rest of trans header */
+ 		xlog_recover_add_item(&trans->r_itemq);
+ 		ptr = (xfs_caddr_t) &trans->r_theader +
+@@ -1412,7 +1412,7 @@ xlog_recover_add_to_trans(
+ 	if (!len)
+ 		return 0;
+ 	item = trans->r_itemq;
+-	if (item == 0) {
++	if (item == NULL) {
+ 		ASSERT(*(uint *)dp == XFS_TRANS_HEADER_MAGIC);
+ 		if (len == sizeof(xfs_trans_header_t))
+ 			xlog_recover_add_item(&trans->r_itemq);
+@@ -1467,12 +1467,12 @@ xlog_recover_unlink_tid(
+ 	xlog_recover_t		*tp;
+ 	int			found = 0;
+ 
+-	ASSERT(trans != 0);
++	ASSERT(trans != NULL);
+ 	if (trans == *q) {
+ 		*q = (*q)->r_next;
+ 	} else {
+ 		tp = *q;
+-		while (tp != 0) {
++		while (tp) {
+ 			if (tp->r_next == trans) {
+ 				found = 1;
+ 				break;
+@@ -1495,7 +1495,7 @@ xlog_recover_insert_item_backq(
+ 	xlog_recover_item_t	**q,
+ 	xlog_recover_item_t	*item)
+ {
+-	if (*q == 0) {
++	if (*q == NULL) {
+ 		item->ri_prev = item->ri_next = item;
+ 		*q = item;
+ 	} else {
+@@ -1899,7 +1899,7 @@ xlog_recover_do_reg_buffer(
+ 			break;
+ 		nbits = xfs_contig_bits(data_map, map_size, bit);
+ 		ASSERT(nbits > 0);
+-		ASSERT(item->ri_buf[i].i_addr != 0);
++		ASSERT(item->ri_buf[i].i_addr != NULL);
+ 		ASSERT(item->ri_buf[i].i_len % XFS_BLI_CHUNK == 0);
+ 		ASSERT(XFS_BUF_COUNT(bp) >=
+ 		       ((uint)bit << XFS_BLI_SHIFT)+(nbits<<XFS_BLI_SHIFT));
