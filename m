@@ -1,101 +1,144 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jul 2007 12:36:50 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6DJaibm007441
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2007 12:36:45 -0700
-Date: Fri, 13 Jul 2007 15:36:46 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3ware 9650 tips
-In-Reply-To: <4697CA4D.6020304@etelos.com>
-Message-ID: <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan>
-References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu>
- <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 01:50:26 -0700 (PDT)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6E8oJbm015599
+	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 01:50:21 -0700
+Content-Type: text/plain; charset="us-ascii"
+Date: Sat, 14 Jul 2007 10:23:42 +0200
+From: "Michael Kerrisk" <michael.kerrisk@gmx.net>
+In-Reply-To: <20070713124601.GA22961@amitarora.in.ibm.com>
+Message-ID: <20070714082342.174830@gmx.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+References: <20070713123816.GA18000@amitarora.in.ibm.com>
+ <20070713124601.GA22961@amitarora.in.ibm.com>
+Subject: Re: [PATCH 1/6][TAKE7] manpage for fallocate
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jon Collette <jon@etelos.com>
-Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: mtk-manpages@gmx.net, dgc@sgi.com, adilger@clusterfs.com, suparna@in.ibm.com, cmm@us.ibm.com, tytso@mit.edu, xfs@oss.sgi.com
 
+[CC += mtk-manpages@gmx.net]
 
+Amit,
 
-On Fri, 13 Jul 2007, Jon Collette wrote:
+Thanks for this page.  I will endeavour to review it in 
+the coming days.  In the meantime, the better address to CC
+me on fot man pages stuff is mtk-manpages@gmx.net.
 
-> Wouldn't Raid 6 be slower than Raid 5 because of the extra fault tolerance?
->   http://www.enterprisenetworksandservers.com/monthly/art.php?1754 - 20% 
-> drop according to this article
->
-> His 500GB WD drives are 7200RPM compared to the Raptors 10K.  So his numbers 
-> will be slower. 
-> Justin what file system do you have running on the Raptors?  I think thats an 
-> interesting point made by Joshua.
+Cheers,
 
-I use XFS:
+Michael
 
-Justin what file system do you have running on the Raptors?  I think thats 
-an interesting point made by Joshua.
+> Following is the modified version of the manpage originally submitted by
+> David Chinner. Please use `nroff -man fallocate.2 | less` to view.
+> 
+> This includes changes suggested by Heikki Orsila and Barry Naujok.
+> 
+> 
+> .TH fallocate 2
+> .SH NAME
+> fallocate \- allocate or remove file space
+> .SH SYNOPSIS
+> .nf
+> .B #include <fcntl.h>
+> .PP
+> .BI "long fallocate(int " fd ", int " mode ", loff_t " offset ", loff_t "
+> len);
+> .SH DESCRIPTION
+> The
+> .B fallocate
+> syscall allows a user to directly manipulate the allocated disk space
+> for the file referred to by
+> .I fd
+> for the byte range starting at
+> .I offset
+> and continuing for
+> .I len
+> bytes.
+> The
+> .I mode
+> parameter determines the operation to be performed on the given range.
+> Currently there are two modes:
+> .TP
+> .B FALLOC_ALLOCATE
+> allocates and initialises to zero the disk space within the given range.
+> After a successful call, subsequent writes are guaranteed not to fail
+> because
+> of lack of disk space.  If the size of the file is less than
+> .IR offset + len ,
+> then the file is increased to this size; otherwise the file size is left
+> unchanged.
+> .B FALLOC_ALLOCATE
+> closely resembles
+> .BR posix_fallocate (3)
+> and is intended as a method of optimally implementing this function.
+> .B FALLOC_ALLOCATE
+> may allocate a larger range than that was specified.
+> .TP
+> .B FALLOC_RESV_SPACE
+> provides the same functionality as
+> .B FALLOC_ALLOCATE
+> except it does not ever change the file size. This allows allocation
+> of zero blocks beyond the end of file and is useful for optimising
+> append workloads.
+> .SH RETURN VALUE
+> .B fallocate
+> returns zero on success, or an error number on failure.
+> Note that
+> .I errno
+> is not set.
+> .SH ERRORS
+> .TP
+> .B EBADF
+> .I fd
+> is not a valid file descriptor, or is not opened for writing.
+> .TP
+> .B EFBIG
+> .IR offset + len
+> exceeds the maximum file size.
+> .TP
+> .B EINVAL
+> .I offset
+> was less than 0, or
+> .I len
+> was less than or equal to 0.
+> .TP
+> .B ENODEV
+> .I fd
+> does not refer to a regular file or a directory.
+> .TP
+> .B ENOSPC
+> There is not enough space left on the device containing the file
+> referred to by
+> .IR fd .
+> .TP
+> .B ESPIPE
+> .I fd
+> refers to a pipe of file descriptor.
+> .TP
+> .B ENOSYS
+> The filesystem underlying the file descriptor does not support this
+> operation.
+> .TP
+> .B EINTR
+> A signal was caught during execution
+> .TP
+> .B EIO
+> An I/O error occurred while reading from or writing to a file system.
+> .TP
+> .B EOPNOTSUPP
+> The mode is not supported on the file descriptor.
+> .SH AVAILABILITY
+> The
+> .B fallocate
+> system call is available since 2.6.XX
+> .SH SEE ALSO
+> .BR syscall (2),
+> .BR posix_fadvise (3),
+> .BR ftruncate (3).
 
-But I also run several 'optimations' for SW RAID and my overall 
-configuration--  However, for the mkfs.xfs options, they auto-optimize for 
-whatever (SW) raid I have them configured for.  Whereas if XFS cannot tell 
-the disks/etc underneath the HW raid, I do not think the optimizations 
-will be present(?)-- which menas you'd have to set the sunit and swidth 
-appropriately.
-
->
->
-> Justin Piszcz wrote:
->> 
->> 
->> On Fri, 13 Jul 2007, Joshua Baker-LePain wrote:
->> 
->>> My new system has a 3ware 9650SE-24M8 controller hooked to 24 500GB WD 
->>> drives.  The controller is set up as a RAID6 w/ a hot spare.  OS is CentOS 
->>> 5 x86_64.  It's all running on a couple of Xeon 5130s on a Supermicro 
->>> X7DBE motherboard w/ 4GB of RAM.
->>> 
->>> Trying to stick with a supported config as much as possible, I need to run 
->>> ext3.  As per usual, though, initial ext3 numbers are less than 
->>> impressive. Using bonnie++ to get a baseline, I get (after doing 'blockdev 
->>> --setra 65536' on the device):
->>> Write: 136MB/s
->>> Read:  384MB/s
->>> 
->>> Proving it's not the hardware, with XFS the numbers look like:
->>> Write: 333MB/s
->>> Read:  465MB/s
->>> 
->>> How many folks are using these?  Any tuning tips?
->>> 
->>> Thanks.
->>> 
->>> -- 
->>> Joshua Baker-LePain
->>> Department of Biomedical Engineering
->>> Duke University
->>> 
->> 
->> Let's try that again with the right address :)
->> 
->> 
->> You are using HW RAID then?  Those numbers seem pretty awful for that
->> setup, including linux-raid@ even it though it appears you're running HW 
->> raid,
->> this is rather peculiar.
->> 
->> To give you an example I get 464MB/s write and 627MB/s with a 10 disk
->> raptor software raid5.
->> 
->> Justin.
->> 
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+Ist Ihr Browser Vista-kompatibel? Jetzt die neuesten 
+Browser-Versionen downloaden: http://www.gmx.net/de/go/browser
