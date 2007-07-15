@@ -1,41 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jul 2007 16:33:42 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6ENXdbm018264
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 16:33:40 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by lucidpixels.com (Postfix) with ESMTP id A2A0A40195B9
-	for <xfs@oss.sgi.com>; Sat, 14 Jul 2007 19:33:41 -0400 (EDT)
-Date: Sat, 14 Jul 2007 19:33:41 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: xfs_fsr speed?
-Message-ID: <Pine.LNX.4.64.0707141923530.20845@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jul 2007 10:19:52 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6FHJkbm032495
+	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 10:19:49 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l6FHJmNK006948
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 19:19:48 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l6FHJm7V006946
+	for xfs@oss.sgi.com; Sun, 15 Jul 2007 19:19:48 +0200
+Date: Sun, 15 Jul 2007 19:19:48 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix format string warnings in xfsidbg
+Message-ID: <20070715171948.GA6894@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Is there some sort of cap on the speed during the defragmentation process 
-of xfs_fsr?
 
-procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
-  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
-  3  0    128  48344     12 6954488    0    0 131072 129620 4536 8160  0 13 68 18
-  0  1    128  48152     12 6954744    0    0 131072 116080 4687 8561  0 13 68 19
-  2  0    128  47744     12 6955112    0    0 131072 145816 5308 8192  0 15 68 17
-  1  0    128  47444     12 6955368    0    0 131072 116264 4761 7095  0 13 68 19
-  0  1    128  47176     12 6955624    0    0 131072 147420 4855 8174  0 15 68 17
-  2  1    128  46996     12 6955880    0    0 131072 131040 4425 9094  0 14 68 18
-  0  1    128  48680     12 6954232    0    0 131072 131040 4399 7874  0 13 69 18
-  1  0    128  48224     12 6954488    0    0 131072 114660 4558 5614  0 13 68 19
-  1  1    128  48072     12 6954744    0    0 131072 147420 4872 9617  0 15 67 18
-  0  1    128  47648     12 6955080    0    0 131072 114660 4348 7113  0 13 68 19
-  0  1    128  47516     12 6955368    0    0 131072 131040 4586 8688  0 14 68 18
-  1  0    128  47208     12 6955624    0    0 131072 131040 4524 6861  0 14 68 18
-  1  0    128  47072     12 6955880    0    0 131072 145764 4631 10596 0 14 68 18
-  1  1    128  46652     12 6956136    0    0 131072 116316 4293 5592  0 14 69 19
-  1  0    128  48272     12 6954568    0    0 131072 131040 4772 8290  0 14 68 18
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Justin.
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2007-07-15 17:20:00.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2007-07-15 18:17:50.000000000 +0200
+@@ -5488,8 +5488,8 @@ xfs_filestreams_trace_entry(ktrace_entry
+ 
+ 	case XFS_FSTRM_KTRACE_ORPHAN:
+ 		ip = ktep->val[4];
+-		kdb_printf("gave ag %lld to orphan ip %p ino %llu",
+-				(__psint_t)ktep->val[5],
++		kdb_printf("gave ag %ld to orphan ip %p ino %llu",
++				(unsigned long)ktep->val[5],
+ 				ip, (unsigned long long)ip->i_ino);
+ 		break;
+ 	default:
+@@ -6686,7 +6686,7 @@ xfsidbg_xmount(xfs_mount_t *mp)
+ 		mp->m_rtdev_targp ? mp->m_rtdev_targp->bt_dev : 0);
+ 	kdb_printf("bsize %d agfrotor %d xfs_rotorstep %d agirotor %d\n",
+ 		mp->m_bsize, mp->m_agfrotor, xfs_rotorstep, mp->m_agirotor);
+-	kdb_printf("ihash 0x%p ihsize %ld\n",
++	kdb_printf("ihash 0x%p ihsize %zu\n",
+ 		mp->m_ihash, mp->m_ihsize);
+ 	kdb_printf("inodes 0x%p ilock 0x%p ireclaims 0x%x\n",
+ 		mp->m_inodes, &mp->m_ilock, mp->m_ireclaims);
+@@ -6818,7 +6818,7 @@ xfsidbg_xihash(xfs_mount_t *mp)
+ 
+ 	kdb_printf("\n");
+ 
+-	kdb_printf("total inodes = %d, average length = %ld, adjusted average = %ld \n",
++	kdb_printf("total inodes = %zu, average length = %zu, adjusted average = %zu\n",
+ 		total, total / mp->m_ihsize,
+ 		total / (mp->m_ihsize - numzeros));
+ 
+@@ -7411,24 +7411,32 @@ xfsidbg_xtp(xfs_trans_t *tp)
+ 		xfs_fmtlsn(&tp->t_commit_lsn));
+ 	kdb_printf("callback 0x%p callarg 0x%p\n",
+ 		tp->t_callback, tp->t_callarg);
+-	kdb_printf("icount delta %ld ifree delta %ld\n",
+-		tp->t_icount_delta, tp->t_ifree_delta);
+-	kdb_printf("blocks delta %ld res blocks delta %ld\n",
+-		tp->t_fdblocks_delta, tp->t_res_fdblocks_delta);
+-	kdb_printf("rt delta %ld res rt delta %ld\n",
+-		tp->t_frextents_delta, tp->t_res_frextents_delta);
++	kdb_printf("icount delta %lld ifree delta %lld\n",
++		(long long)tp->t_icount_delta,
++		(long long)tp->t_ifree_delta);
++	kdb_printf("blocks delta %lld res blocks delta %lld\n",
++		(long long)tp->t_fdblocks_delta,
++		(long long)tp->t_res_fdblocks_delta);
++	kdb_printf("rt delta %lld res rt delta %lld\n",
++		(long long)(long long)tp->t_frextents_delta,
++		(long long)tp->t_res_frextents_delta);
+ #ifdef DEBUG
+-	kdb_printf("ag freeblks delta %ld ag flist delta %ld ag btree delta %ld\n",
+-		tp->t_ag_freeblks_delta, tp->t_ag_flist_delta,
+-		tp->t_ag_btree_delta);
++	kdb_printf("ag freeblks delta %lld ag flist delta %lld ag btree delta %lld\n",
++		(long long)tp->t_ag_freeblks_delta,
++		(long long)tp->t_ag_flist_delta,
++		(long long)tp->t_ag_btree_delta);
+ #endif
+-	kdb_printf("dblocks delta %ld agcount delta %ld imaxpct delta %ld\n",
+-		tp->t_dblocks_delta, tp->t_agcount_delta, tp->t_imaxpct_delta);
+-	kdb_printf("rextsize delta %ld rbmblocks delta %ld\n",
+-		tp->t_rextsize_delta, tp->t_rbmblocks_delta);
+-	kdb_printf("rblocks delta %ld rextents delta %ld rextslog delta %ld\n",
+-		tp->t_rblocks_delta, tp->t_rextents_delta,
+-		tp->t_rextslog_delta);
++	kdb_printf("dblocks delta %lld agcount delta %lld imaxpct delta %lld\n",
++		(long long)tp->t_dblocks_delta,
++		(long long)tp->t_agcount_delta,
++		(long long)tp->t_imaxpct_delta);
++	kdb_printf("rextsize delta %lld rbmblocks delta %lld\n",
++		(long long)tp->t_rextsize_delta,
++		(long long)tp->t_rbmblocks_delta);
++	kdb_printf("rblocks delta %lld rextents delta %lld rextslog delta %lld\n",
++		(long long)tp->t_rblocks_delta,
++		(long long)tp->t_rextents_delta,
++		(long long)tp->t_rextslog_delta);
+ 	kdb_printf("dqinfo 0x%p\n", tp->t_dqinfo);
+ 	kdb_printf("log items:\n");
+ 	licp = &tp->t_items;
