@@ -1,48 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 00:47:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 05:22:42 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6G7lNbm021496
-	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 00:47:25 -0700
-Subject: TAKE 962219 - xfs-repair - Improve libxfs xfs_buf_t caching
-Message-Id: <20070716074722.34BCC58C38F1@chook.melbourne.sgi.com>
-Date: Mon, 16 Jul 2007 17:47:22 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6GCMabm016195
+	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 05:22:38 -0700
+Date: Mon, 16 Jul 2007 22:22:25 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 3ware 9650 tips
+Message-ID: <20070716122225.GB31489@sgi.com>
+References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com> <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan> <20070716024115.GJ12413810@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070716024115.GJ12413810@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jon Collette <jon@etelos.com>, Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-Add priority tagging and buffer reuse for libxfs cache
+On Mon, Jul 16, 2007 at 12:41:15PM +1000, David Chinner wrote:
+> On Fri, Jul 13, 2007 at 03:36:46PM -0400, Justin Piszcz wrote:
+> > On Fri, 13 Jul 2007, Jon Collette wrote:
+> > 
+> > >Wouldn't Raid 6 be slower than Raid 5 because of the extra fault tolerance?
+> > >  http://www.enterprisenetworksandservers.com/monthly/art.php?1754 - 20% 
+> > >drop according to this article
+> > >
+> > >His 500GB WD drives are 7200RPM compared to the Raptors 10K.  So his 
+> > >numbers will be slower. 
+> > >Justin what file system do you have running on the Raptors?  I think thats 
+> > >an interesting point made by Joshua.
+> > 
+> > I use XFS:
+> 
+> When it comes to bandwidth, there is good reason for that.
+> 
+> > >>>Trying to stick with a supported config as much as possible, I need to 
+> > >>>run ext3.  As per usual, though, initial ext3 numbers are less than 
+> > >>>impressive. Using bonnie++ to get a baseline, I get (after doing 
+> > >>>'blockdev --setra 65536' on the device):
+> > >>>Write: 136MB/s
+> > >>>Read:  384MB/s
+> > >>>
+> > >>>Proving it's not the hardware, with XFS the numbers look like:
+> > >>>Write: 333MB/s
+> > >>>Read:  465MB/s
+> > >>>
+> 
+> Those are pretty typical numbers. In my experience, ext3 is limited to about
+> 250MB/s buffered write speed. It's not disk limited, it's design limited. e.g.
+> on a disk subsystem where XFS was getting 4-5GB/s buffered write, ext3 was doing
+> 250MB/s.
+> 
+> http://oss.sgi.com/projects/xfs/papers/ols2006/ols-2006-paper.pdf
+> 
+> If you've got any sort of serious disk array, ext3 is not the filesystem
+> to use....
 
+To show what the difference is, I used blktrace and Chris Mason's
+seekwatcher script on a simple, single threaded dd command on
+a 12 disk dm RAID0 stripe:
 
-Date:  Mon Jul 16 17:46:48 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xcmds-patch
-Inspected by:  markgw@sgi.com
+# dd if=/dev/zero of=/mnt/scratch/fred bs=1024k count=10k; sync
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+http://oss.sgi.com/~dgc/writes/ext3_write.png
+http://oss.sgi.com/~dgc/writes/xfs_write.png
 
+You can see from the ext3 graph that it comes to a screeching halt
+every 5s (probably when pdflush runs) and at all other times the
+seek rate is >10,000 seeks/s. That's pretty bad for a brand new,
+empty filesystem and the only way it is sustained is the fact that
+the disks have their write caches turned on. ext4 will probably show
+better results, but I haven't got any of the tools installed to be
+able to test it....
 
-Modid:  master-melb:xfs-cmds:29150a
-xfsprogs/VERSION - 1.174 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/VERSION.diff?r1=text&tr1=1.174&r2=text&tr2=1.173&f=h
-xfsprogs/doc/CHANGES - 1.243 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.243&r2=text&tr2=1.242&f=h
-	- Update to 2.9.2
+The XFS pattern shows consistently an order of magnitude less seeks
+and consistent throughput above 600MB/s. To put the number of seeks
+in context, XFS is doing 512k I/Os at about 1200-1300 per second. The
+number of seeks? A bit above 10^3 per second or roughly 1 seek per
+I/O which is pretty much optimal.
 
-xfsprogs/include/libxfs.h - 1.62 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/libxfs.h.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
-xfsprogs/repair/phase6.c - 1.40 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase6.c.diff?r1=text&tr1=1.40&r2=text&tr2=1.39&f=h
-xfsprogs/libxfs/rdwr.c - 1.36 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/rdwr.c.diff?r1=text&tr1=1.36&r2=text&tr2=1.35&f=h
-xfsprogs/include/list.h - 1.5 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/list.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
-xfsprogs/include/cache.h - 1.7 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/cache.h.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-xfsprogs/libxfs/cache.c - 1.11 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/cache.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
-xfsprogs/repair/prefetch.c - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/prefetch.c.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-	- Add priority tagging and buffer reuse for libxfs cache
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
