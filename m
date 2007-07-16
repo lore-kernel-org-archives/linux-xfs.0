@@ -1,45 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jul 2007 20:32:00 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jul 2007 22:25:28 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6G3Vsbm004440
-	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 20:31:56 -0700
-Date: Mon, 16 Jul 2007 13:31:48 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] fix format string warnings in xfsidbg
-Message-ID: <20070716033148.GL12413810@sgi.com>
-References: <20070715171948.GA6894@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20070715171948.GA6894@lst.de>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6G5PMbm017074
+	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 22:25:25 -0700
+Subject: TAKE 962222 - xfs-repair - Significantly improve nlink / phase 7 performance
+Message-Id: <20070716052518.8AE6058C38F1@chook.melbourne.sgi.com>
+Date: Mon, 16 Jul 2007 15:25:18 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-On Sun, Jul 15, 2007 at 07:19:48PM +0200, Christoph Hellwig wrote:
-> @@ -6818,7 +6818,7 @@ xfsidbg_xihash(xfs_mount_t *mp)
->  
->  	kdb_printf("\n");
->  
-> -	kdb_printf("total inodes = %d, average length = %ld, adjusted average = %ld \n",
-> +	kdb_printf("total inodes = %zu, average length = %zu, adjusted average = %zu\n",
->  		total, total / mp->m_ihsize,
->  		total / (mp->m_ihsize - numzeros));
+Cache disk nlink values in Phase 3 for Phase 7
 
-ia64 build gives:
 
-fs/xfs/xfsidbg.c:6826: warning: format â%zuâ expects type âsize_tâ, but
-argument 2 has type âintâ
+Date:  Mon Jul 16 15:24:18 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  hch@lst.de
 
-total is declared as an int - I'll change it back to %d....
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Modid:  master-melb:xfs-cmds:29142a
+xfsprogs/repair/phase6.c - 1.37 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase6.c.diff?r1=text&tr1=1.37&r2=text&tr2=1.36&f=h
+	- Rename full_backptrs to full_ino_ex_data
+
+xfsprogs/repair/phase7.c - 1.16 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase7.c.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+	- Compare disk and counted nlink counts in memory and update
+	  on-disk inode if required
+
+xfsprogs/repair/globals.h - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/globals.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- Rename full_backptrs to full_ino_ex_data
+
+xfsprogs/repair/Makefile - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/Makefile.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- Minore cleanup
+
+xfsprogs/repair/xfs_repair.c - 1.28 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/xfs_repair.c.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
+	- Flush dirty data instead of purging all data
+
+xfsprogs/repair/dino_chunks.c - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dino_chunks.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- Store nlink count from disk in inode scan
+
+xfsprogs/repair/incore.h - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/incore.h.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Add disk nlink field and nlink ops for memory optimised counts
+
+xfsprogs/repair/incore_ino.c - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/incore_ino.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+	- Implementation of nlink ops for memory optimised counts
