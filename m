@@ -1,39 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jul 2007 23:44:18 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6G6iDbm017407
-	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 23:44:15 -0700
-Date: Mon, 16 Jul 2007 08:44:15 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fix format string warnings in xfsidbg
-Message-ID: <20070716064415.GA8848@lst.de>
-References: <20070715171948.GA6894@lst.de> <20070716033148.GL12413810@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070716033148.GL12413810@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jul 2007 23:50:00 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6G6nsbm020582
+	for <xfs@oss.sgi.com>; Sun, 15 Jul 2007 23:49:56 -0700
+Subject: TAKE 877955 - xfs_repair: don't handle existing lost+found in a way that seems to cause errors
+Message-Id: <20070716064953.3219A58C38F1@chook.melbourne.sgi.com>
+Date: Mon, 16 Jul 2007 16:49:53 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 16, 2007 at 01:31:48PM +1000, David Chinner wrote:
-> On Sun, Jul 15, 2007 at 07:19:48PM +0200, Christoph Hellwig wrote:
-> > @@ -6818,7 +6818,7 @@ xfsidbg_xihash(xfs_mount_t *mp)
-> >  
-> >  	kdb_printf("\n");
-> >  
-> > -	kdb_printf("total inodes = %d, average length = %ld, adjusted average = %ld \n",
-> > +	kdb_printf("total inodes = %zu, average length = %zu, adjusted average = %zu\n",
-> >  		total, total / mp->m_ihsize,
-> >  		total / (mp->m_ihsize - numzeros));
-> 
-> ia64 build gives:
-> 
-> fs/xfs/xfsidbg.c:6826: warning: format ?%zu? expects type ?size_t?, but
-> argument 2 has type ?int?
-> 
-> total is declared as an int - I'll change it back to %d....
+Don't trash lost+found in phase 4
 
-Hmm, I wonder why I got the warnings here and %zu fixed them.  
+
+Date:  Mon Jul 16 16:49:03 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xcmds-patch
+Inspected by:  tes@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:29144a
+xfsprogs/repair/phase6.c - 1.38 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase6.c.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
+	- Detect existing valid lost+found or create as required
+
+xfsprogs/repair/phase7.c - 1.17 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase7.c.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+xfsprogs/repair/dir2.c - 1.22 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dir2.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
+xfsprogs/repair/dir.c - 1.20 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dir.c.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+	- No need to handle trashed lost+found dir
+
+xfsprogs/repair/phase4.c - 1.22 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase4.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
+	- Don't trash lost+found
+
+xfsprogs/repair/globals.h - 1.20 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/globals.h.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+xfsprogs/repair/phase1.c - 1.11 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase1.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/repair/dino_chunks.c - 1.15 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dino_chunks.c.diff?r1=text&tr1=1.15&r2=text&tr2=1.14&f=h
+	- No need to handle trashed lost+found dir
+
+xfsprogs/libxfs/util.c - 1.21 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/util.c.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
+	- Update critical error message
