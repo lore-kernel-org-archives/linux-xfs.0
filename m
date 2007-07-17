@@ -1,53 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 15:21:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 17:12:13 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6GMLjbm015641
-	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 15:21:47 -0700
-Date: Tue, 17 Jul 2007 08:21:24 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6H0C8bm009028
+	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 17:12:10 -0700
+Date: Tue, 17 Jul 2007 10:12:05 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: 3ware 9650 tips
-Message-ID: <20070716222124.GF31489@sgi.com>
-References: <alpine.LRH.0.999.0707131356520.25773@chaos.egr.duke.edu> <Pine.LNX.4.64.0707131434470.31742@p34.internal.lan> <4697CA4D.6020304@etelos.com> <Pine.LNX.4.64.0707131535270.2064@p34.internal.lan> <20070716024115.GJ12413810@sgi.com> <20070716122225.GB31489@sgi.com> <469B93CA.30801@sandeen.net>
+Subject: Re: raid50 and 9TB volumes
+Message-ID: <20070717001205.GI31489@sgi.com>
+References: <5d96567b0707160542t2144c382mbfe3da92f0990694@mail.gmail.com> <20070716130140.GC31489@sgi.com> <5d96567b0707160653m5951fac9v5a56bb4c92174d63@mail.gmail.com> <20070716221831.GE31489@sgi.com> <18076.1449.138328.66699@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <469B93CA.30801@sandeen.net>
+In-Reply-To: <18076.1449.138328.66699@notabene.brown>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Jon Collette <jon@etelos.com>, Joshua Baker-LePain <jlb17@duke.edu>, linux-ide-arrays@lists.math.uh.edu, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: David Chinner <dgc@sgi.com>, Raz <raziebe@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jul 16, 2007 at 10:50:34AM -0500, Eric Sandeen wrote:
-> David Chinner wrote:
-> > On Mon, Jul 16, 2007 at 12:41:15PM +1000, David Chinner wrote:
-> >> On Fri, Jul 13, 2007 at 03:36:46PM -0400, Justin Piszcz wrote:
-> ...
-> >> If you've got any sort of serious disk array, ext3 is not the filesystem
-> >> to use....
+On Tue, Jul 17, 2007 at 09:56:25AM +1000, Neil Brown wrote:
+> On Tuesday July 17, dgc@sgi.com wrote:
+> > On Mon, Jul 16, 2007 at 04:53:22PM +0300, Raz wrote:
+> > > 
+> > > Well you are right.  /proc/partitions  says:
+> > > ....
+> > >   8   241  488384001 sdp1
+> > >   9     1 3404964864 md1
+> > >   9     2 3418684416 md2
+> > >   9     3 6823647232 md3
+> > > 
+> > > while xfs formats md3 as 9 TB.
+> > > If i am using LBD , what is the biggest size I can use on i386 ?
 > > 
-> > To show what the difference is, I used blktrace and Chris Mason's
-> > seekwatcher script on a simple, single threaded dd command on
-> > a 12 disk dm RAID0 stripe:
+> > Supposedly 16TB. 32bit x 4k page size = 16TB. Given that the size is
+> > not being reported correctly, I'd say that this is probably not an
+> > XFS issue. The next thing to check is how large an MD device you
+> > can create correctly.
 > > 
-> > # dd if=/dev/zero of=/mnt/scratch/fred bs=1024k count=10k; sync
-> > 
-> > http://oss.sgi.com/~dgc/writes/ext3_write.png
-> > http://oss.sgi.com/~dgc/writes/xfs_write.png
+> > Neil, do you know of any problems with > 8TB md devices on i386?
 > 
-> Were those all with default mkfs & mount options?  ext3 in writeback
-> mode might be an interesting comparison too.
+> Should work, but the amount of testing has been limited, and bugs
+> have existed.
+> 
+> Each component of a raid5 is limited to 2^32 K by the metadata, so
+> that is 4TB.  At 490GB, you are well under that.
+> There should be no problem with a 3TB raid5, providing LBD has been
+> selected.
+> 
+> raid0 over 3TB devices should also be fine.  There was a bug fixed in
+> May this year that caused problem with md/raid0 was used over
+> components larger than 4TB on a 32bit host, but that shouldn't affect
+> you and it does suggest that someone had success with a very large
+> raid0 once this bug was fixed.
+> 
+> If XFS is given a 6.8TB devices and formats it as 9TB, then I would be
+> looking at mkfs.xfs(??).
 
-Defaults. i.e.
+mkfs.xfs tries to read the last block of the device that it is given
+and proceeds only if that read is successful. IOWs, mkfs.xfs has been
+told the size of the device is 9TB, it's successfully read from offset
+9TB, so the device must be at least 9TB.
 
-# mkfs.ext3 /dev/mapper/dm0
+However, internal to the kernel there appears to be some kind of
+wrapping bug and typically that shows up with /proc/partition
+showing an incosistent size of the partition compared to other
+utilities.
 
-# mkfs.xfs /dev/mapper/dm0
+We've come across this problem repeatedly over the past few years
+with exactly these symptoms (the end of the FS overwriting the front
+of the FS), which was why it was the first question I asked. It
+has always been a block layer or partition problem and they always
+show up on i386 with filesystems larger than 2TB.
 
-The mkfs.xfs picked up sunit/swidth correctly from the dm volume.
-
-Last time I checked, writeback made little difference to ext3 throughput;
-maybe 5-10% at most. I'll run it again later today...
+FWIW, what a partitioning tool (if any) is being used here and
+what does it think the size of the partitions are?.
 
 Cheers,
 
