@@ -1,73 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 17:54:31 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6H0sRbm001420
-	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 17:54:28 -0700
-From: Neil Brown <neilb@suse.de>
-Date: Tue, 17 Jul 2007 10:54:36 +1000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <18076.4940.845633.149160@notabene.brown>
-Subject: Re: raid50 and 9TB volumes
-In-Reply-To: message from David Chinner on Tuesday July 17
-References: <5d96567b0707160542t2144c382mbfe3da92f0990694@mail.gmail.com>
-	<20070716130140.GC31489@sgi.com>
-	<5d96567b0707160653m5951fac9v5a56bb4c92174d63@mail.gmail.com>
-	<20070716221831.GE31489@sgi.com>
-	<18076.1449.138328.66699@notabene.brown>
-	<20070717001205.GI31489@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 17:56:12 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6H0u4bm002781
+	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 17:56:08 -0700
+Subject: TAKE 958215 - xfs_bmap '-v' option isn't documented in the man page
+Message-Id: <20070717005601.ACB2858C52B2@chook.melbourne.sgi.com>
+Date: Tue, 17 Jul 2007 10:56:01 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Raz <raziebe@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tuesday July 17, dgc@sgi.com wrote:
-> On Tue, Jul 17, 2007 at 09:56:25AM +1000, Neil Brown wrote:
-> > On Tuesday July 17, dgc@sgi.com wrote:
-> > > On Mon, Jul 16, 2007 at 04:53:22PM +0300, Raz wrote:
-> > > > 
-> > > > Well you are right.  /proc/partitions  says:
-> > > > ....
-> > > >   8   241  488384001 sdp1
-> > > >   9     1 3404964864 md1
-> > > >   9     2 3418684416 md2
-> > > >   9     3 6823647232 md3
-> > > > 
-> > > > while xfs formats md3 as 9 TB.
-..
-> > 
-> > If XFS is given a 6.8TB devices and formats it as 9TB, then I would be
-> > looking at mkfs.xfs(??).
-> 
-> mkfs.xfs tries to read the last block of the device that it is given
-> and proceeds only if that read is successful. IOWs, mkfs.xfs has been
-> told the size of the device is 9TB, it's successfully read from offset
-> 9TB, so the device must be at least 9TB.
+Document xfs_bmap -v and -p options
 
-Odd.
-Given that the drives are 490GB, and there are 8 in a raid5 array,
-the raid5 arrays are really under 3.5GB.  And two of them is less than
-7GB.  So there definitely are not 9TB worth of bytes..
 
-mkfs.xfs uses the BLKGETSIZE64 ioctl which returns
-bdev->bi_inode->i_size, where as /proc/partitions uses get_capacity
-which uses disk->capacity, so there is some room for them to return
-different values... Except that on open, it calls
-   bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
-which makes sure the two have the same value.
+Date:  Tue Jul 17 10:55:33 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  markgw@sgi.com
 
-I cannot see where the size difference comes from.
-What does
-   /sbin/blockdev --getsize64
-report for each of the different devices, as compared to what
-/proc/partitions reports?
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-NeilBrown
 
-> 
-> However, internal to the kernel there appears to be some kind of
-> wrapping bug and typically that shows up with /proc/partition
-> showing an incosistent size of the partition compared to other
-> utilities.
+Modid:  master-melb:xfs-cmds:29154a
+xfsprogs/man/man8/xfs_bmap.8 - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_bmap.8.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+	- Document xfs_bmap -v and -p options
