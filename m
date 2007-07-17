@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 17:12:33 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6H0CTbm009270
-	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 17:12:30 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 16 Jul 2007 17:54:31 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6H0sRbm001420
+	for <xfs@oss.sgi.com>; Mon, 16 Jul 2007 17:54:28 -0700
 From: Neil Brown <neilb@suse.de>
-Date: Tue, 17 Jul 2007 09:56:25 +1000
+Date: Tue, 17 Jul 2007 10:54:36 +1000
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Message-ID: <18076.1449.138328.66699@notabene.brown>
+Message-ID: <18076.4940.845633.149160@notabene.brown>
 Subject: Re: raid50 and 9TB volumes
 In-Reply-To: message from David Chinner on Tuesday July 17
 References: <5d96567b0707160542t2144c382mbfe3da92f0990694@mail.gmail.com>
 	<20070716130140.GC31489@sgi.com>
 	<5d96567b0707160653m5951fac9v5a56bb4c92174d63@mail.gmail.com>
 	<20070716221831.GE31489@sgi.com>
+	<18076.1449.138328.66699@notabene.brown>
+	<20070717001205.GI31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -22,40 +24,50 @@ To: David Chinner <dgc@sgi.com>
 Cc: Raz <raziebe@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
 On Tuesday July 17, dgc@sgi.com wrote:
-> On Mon, Jul 16, 2007 at 04:53:22PM +0300, Raz wrote:
+> On Tue, Jul 17, 2007 at 09:56:25AM +1000, Neil Brown wrote:
+> > On Tuesday July 17, dgc@sgi.com wrote:
+> > > On Mon, Jul 16, 2007 at 04:53:22PM +0300, Raz wrote:
+> > > > 
+> > > > Well you are right.  /proc/partitions  says:
+> > > > ....
+> > > >   8   241  488384001 sdp1
+> > > >   9     1 3404964864 md1
+> > > >   9     2 3418684416 md2
+> > > >   9     3 6823647232 md3
+> > > > 
+> > > > while xfs formats md3 as 9 TB.
+..
 > > 
-> > Well you are right.  /proc/partitions  says:
-> > ....
-> >   8   241  488384001 sdp1
-> >   9     1 3404964864 md1
-> >   9     2 3418684416 md2
-> >   9     3 6823647232 md3
-> > 
-> > while xfs formats md3 as 9 TB.
-> > If i am using LBD , what is the biggest size I can use on i386 ?
+> > If XFS is given a 6.8TB devices and formats it as 9TB, then I would be
+> > looking at mkfs.xfs(??).
 > 
-> Supposedly 16TB. 32bit x 4k page size = 16TB. Given that the size is
-> not being reported correctly, I'd say that this is probably not an
-> XFS issue. The next thing to check is how large an MD device you
-> can create correctly.
-> 
-> Neil, do you know of any problems with > 8TB md devices on i386?
+> mkfs.xfs tries to read the last block of the device that it is given
+> and proceeds only if that read is successful. IOWs, mkfs.xfs has been
+> told the size of the device is 9TB, it's successfully read from offset
+> 9TB, so the device must be at least 9TB.
 
-Should work, but the amount of testing has been limited, and bugs
-have existed.
+Odd.
+Given that the drives are 490GB, and there are 8 in a raid5 array,
+the raid5 arrays are really under 3.5GB.  And two of them is less than
+7GB.  So there definitely are not 9TB worth of bytes..
 
-Each component of a raid5 is limited to 2^32 K by the metadata, so
-that is 4TB.  At 490GB, you are well under that.
-There should be no problem with a 3TB raid5, providing LBD has been
-selected.
+mkfs.xfs uses the BLKGETSIZE64 ioctl which returns
+bdev->bi_inode->i_size, where as /proc/partitions uses get_capacity
+which uses disk->capacity, so there is some room for them to return
+different values... Except that on open, it calls
+   bd_set_size(bdev, (loff_t)get_capacity(disk)<<9);
+which makes sure the two have the same value.
 
-raid0 over 3TB devices should also be fine.  There was a bug fixed in
-May this year that caused problem with md/raid0 was used over
-components larger than 4TB on a 32bit host, but that shouldn't affect
-you and it does suggest that someone had success with a very large
-raid0 once this bug was fixed.
-
-If XFS is given a 6.8TB devices and formats it as 9TB, then I would be
-looking at mkfs.xfs(??).
+I cannot see where the size difference comes from.
+What does
+   /sbin/blockdev --getsize64
+report for each of the different devices, as compared to what
+/proc/partitions reports?
 
 NeilBrown
+
+> 
+> However, internal to the kernel there appears to be some kind of
+> wrapping bug and typically that shows up with /proc/partition
+> showing an incosistent size of the partition compared to other
+> utilities.
