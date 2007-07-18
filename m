@@ -1,40 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 09:53:03 -0700 (PDT)
-Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IGqqbm025571
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 09:52:54 -0700
-Date: Wed, 18 Jul 2007 12:42:01 -0400
-From: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
-Subject: Re: XFS -git changes and Linux-VServer patch porting
-Message-ID: <20070718164201.GA2668@filer.fsl.cs.sunysb.edu>
-References: <f44c5fdf0707180649h778f017dlb532c3ba224944b2@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 10:18:00 -0700 (PDT)
+Received: from smtp101.plus.mail.re1.yahoo.com (smtp101.plus.mail.re1.yahoo.com [69.147.102.64])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6IHHobm002405
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 10:17:52 -0700
+Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
+From: "Bryan J. Smith" <b.j.smith@ieee.org>
+In-Reply-To: <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
+References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
+	 <469DF039.4040906@theendofthetunnel.de>
+	 <Pine.LNX.4.64.0707181225560.26004@p34.internal.lan>
+Content-Type: text/plain
+Date: Wed, 18 Jul 2007 13:18:54 -0400
+Message-Id: <1184779134.3641.17.camel@portatux64.mobile.smithconcepts.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f44c5fdf0707180649h778f017dlb532c3ba224944b2@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Radoslaw Szkodzinski <astralstorm@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Hannes Dorbath <light@theendofthetunnel.de>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
 
-On Wed, Jul 18, 2007 at 03:49:07PM +0200, Radoslaw Szkodzinski wrote:
-> Linux-VServer patch adds 2 new flags: barrier and iunlink.
-> With recent changes in -git (filestreams), XFS now lacks di_flags bits
-> to add these.
-> iunlink flag adds Copy-on-Write semantics to hard links, while barrier
-> flag signifies a filesystem barrier no virtual context can pass.
-> 
-> I'd like to know how to possibly resolve this problem w/o negatively
-> impacting performance (especially of iunlink) or changing on-disc
-> format in an incompatible way, as well as being more future-proof.
+On Wed, 2007-07-18 at 12:26 -0400, Justin Piszcz wrote:
+> I will try these options during future testing and re-visit the speeds of 
+> regular HW RAID5, thanks!  I know they are part of the 3ware doc and I 
+> need to re-bench with these.
 
-A while back, I mentioned that it would be nice to have a whiteout inode
-flag (I've since changed my mind) but the answer I got from Dave Chinner,
-et. al., was to use xattrs.
+3Ware cards should be "tuned" for optimal performance, especially if you
+have the battery backup unit (BBU) on the 9500 and later cards** , and
+some of the settings can be made more "lax."  It's hard to gage hardware
+RAID v. software RAID, especially since the latter can cache commits --
+at least from the standpoint of various benchmark utilities (like
+Bonnie).  There are various arguments that go back'n forth on this.
 
-Josef 'Jeff' Sipek.
+But if you're using 3Ware in JBOD with software RAID because you've been
+fed the standard and quite _incorrect_ statement that you can do
+hot-swap, understand that you can't get fully supported hot-swap without
+using the 3Ware's hardware RAID volume management (with the segmentation
+of its on-board microcontroller intelligence).  3Ware gets a bad rep
+because too many MD advocates out there proliferate the 3Ware supports
+hot-swap in JBOD -- you need to leverage kernel hot-plug and other
+kernel facilities for hot-swap if you use MD software RAID.
+
+You don't need to use the various kernel facilities if you let the 3Ware
+intelligence management the volumes.  That's a major, major, missing
+piece of information that I've seen far too many MD advocates omit.
+
+-- Bryan
+
+**NOTE:  Earlier cards (6000-9000, pre-9500) only use SRAM logic, no
+DRAM cell, so they don't need a BBU.  Long story, SRAM combinational
+circuits don't need to be "refreshed" and the board's capacitors can
+store enough charge to keep values in SRAM circuits (at least long
+enough to flush to disk or once the disks are powered again).  Of
+course, on those earlier cards, the SRAM is small, too small to buffer
+most sustained RAID-5 writes so I'd only use RAID-10 on them.
 
 -- 
-If I have trouble installing Linux, something is wrong. Very wrong.
-		- Linus Torvalds
+Bryan J. Smith         Professional, Technical Annoyance
+mailto:b.j.smith@ieee.org   http://thebs413.blogspot.com
+--------------------------------------------------------
+        Fission Power:  An Inconvenient Solution
