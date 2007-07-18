@@ -1,48 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 05:01:17 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IC1Dbm029001
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 05:01:15 -0700
-Date: Wed, 18 Jul 2007 08:01:15 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-In-Reply-To: <200707181359.21710.a1426z@gawab.com>
-Message-ID: <Pine.LNX.4.64.0707180800280.7659@p34.internal.lan>
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
- <200707181359.21710.a1426z@gawab.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 05:03:41 -0700 (PDT)
+Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IC3bbm030248
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Jul 2007 05:03:38 -0700
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>)
+	id 1IB8Fo-0000Vu-TG
+	for linux-xfs@oss.sgi.com; Wed, 18 Jul 2007 05:03:40 -0700
+Message-ID: <11667329.post@talk.nabble.com>
+Date: Wed, 18 Jul 2007 05:03:40 -0700 (PDT)
+From: amilrego <victor.amil@gmail.com>
+Subject: XFS log warning "Writing back config space on device"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
 
+Hello.
+I have formated one 300 GB partition in Linux OS, and then i worked whitout
+problems.
+But, If I do a "dmesg" there is a warning error (i don´t know if is really a
+problem or maybe could cause problems in future):
 
-On Wed, 18 Jul 2007, Al Boldi wrote:
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+ ---
 
-> Justin Piszcz wrote:
->> UltraDense-AS-3ware-R5-9-disks,16G,50676,89,96019,34,46379,9,60267,99,5010
->> 98,56,248.5,0,16:100000:16/64,240,3,21959,84,1109,10,286,4,22923,91,544,6
->> UltraDense-AS-3ware-R5-9-disks,16G,49983,88,96902,37,47951,10,59002,99,529
->> 121,60,210.3,0,16:100000:16/64,250,3,25506,98,1163,10,268,3,18003,71,772,8
->> UltraDense-AS-3ware-R5-9-disks,16G,49811,87,95759,35,48214,10,60153,99,538
->> 559,61,276.8,0,16:100000:16/64,233,3,25514,97,1100,9,279,3,21398,84,839,9
->
-> Is there any easy way to decipher these numbers?
->
->
-> Thanks!
->
-> --
-> Al
->
->
+XFS mounting filesystem sdb1
+Ending clean XFS mount for filesystem: sdb1
+PM: Writing back config space on device 0000:05:02.0 at offset b (was
+165314e4, writing 12bc103c)
+PM: Writing back config space on device 0000:05:02.0 at offset 3 (was 0,
+writing 4010)
+PM: Writing back config space on device 0000:05:02.0 at offset 2 (was
+2000000, writing 2000003)
+PM: Writing back config space on device 0000:05:02.0 at offset 1 (was
+2b00000, writing 2b00106)
+PM: Writing back config space on device 0000:05:02.0 at offset 0 (was
+165314e4, writing 169614e4)
 
-Yeah, I put them in that format so people crawling the mailing list later 
-could re-produce the HTML version:
+This partition allways was dismounted correctly, and there is low
+fragmentation.
+I really don´t know if in the future I could have problems. Maybe there are
+any way to solve this warnings.
 
-cat that_file_containing_that_output | /usr/bin/bon_csv2html > out.html
+Thanks!!
+Víctor Amil 
 
-Justin.
+-- 
+View this message in context: http://www.nabble.com/XFS-log-warning-%22Writing-back-config-space-on-device%22-tf4102828.html#a11667329
+Sent from the linux-xfs mailing list archive at Nabble.com.
