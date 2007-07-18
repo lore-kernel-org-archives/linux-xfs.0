@@ -1,50 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 06:32:44 -0700 (PDT)
-Received: from cumulus.humilis.net (ookhoi.xs4all.nl [213.84.114.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IDWZbm002718
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 06:32:36 -0700
-Date: Wed, 18 Jul 2007 15:32:38 +0200
-From: Sander <sander@humilis.net>
-Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-Message-ID: <20070718133238.GE8029@cumulus>
-Reply-To: sander@humilis.net
-References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan> <20070718112612.GA8029@cumulus> <Pine.LNX.4.64.0707180734340.7659@p34.internal.lan> <20070718120922.GC8029@cumulus> <Pine.LNX.4.64.0707180818520.7659@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 07:17:18 -0700 (PDT)
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.249])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IEHCbm021265
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 07:17:14 -0700
+Received: by an-out-0708.google.com with SMTP id c38so48539ana
+        for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 07:17:15 -0700 (PDT)
+Message-ID: <f44c5fdf0707180649h778f017dlb532c3ba224944b2@mail.gmail.com>
+Date: Wed, 18 Jul 2007 15:49:07 +0200
+From: "Radoslaw Szkodzinski" <astralstorm@gmail.com>
+Subject: XFS -git changes and Linux-VServer patch porting
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0707180818520.7659@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Sander <sander@humilis.net>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Justin Piszcz wrote (ao):
-> On Wed, 18 Jul 2007, Sander wrote:
->> I guess they are cheap enough to try (I haven't yet):
->>
->> PCIe:
->> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3080xr/index.html
->>
->> PCI-X
->> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
->>
->> All SaS hardware (controllers, chassis, etc) support SATA disks AFAIK.
->>
->> I have good experience with the Supermicro 8-Port SATA Card
->> http://www.supermicro.nl/products/accessories/addon/AoC-SAT2-MV8.cfm
->>
->> But that is PCI-X while you requested PCIe.
+Linux-VServer patch adds 2 new flags: barrier and iunlink.
+With recent changes in -git (filestreams), XFS now lacks di_flags bits
+to add these.
+iunlink flag adds Copy-on-Write semantics to hard links, while barrier
+flag signifies a filesystem barrier no virtual context can pass.
 
-> Those links are reversed, but thanks, checking them out now!
-
-Just to see if you are paying attention .. ;-)
-
-If you will try them with Linux, please keep us posted if not too much
-trouble.
-
-	With kind regards, Sander
-
--- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+I'd like to know how to possibly resolve this problem w/o negatively
+impacting performance (especially of iunlink) or changing on-disc
+format in an incompatible way, as well as being more future-proof.
