@@ -1,62 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Jul 2007 19:01:47 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6I21ebm006679
-	for <xfs@oss.sgi.com>; Tue, 17 Jul 2007 19:01:42 -0700
-Subject: Re: Allocating inodes from a single block
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <469D7035.2020507@sandeen.net>
-References: <469D0666.6040908@agami.com>
-	 <20070717201921.GA26309@tuatara.stupidest.org>
-	 <469D7035.2020507@sandeen.net>
-Content-Type: text/plain
-Date: Wed, 18 Jul 2007 12:01:30 +1000
-Message-Id: <1184724090.15488.553.camel@edge.yarra.acx>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Jul 2007 20:06:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6I36Ubm001162
+	for <xfs@oss.sgi.com>; Tue, 17 Jul 2007 20:06:32 -0700
+Subject: TAKE 967788 - Allow punching holes to free space when at ENOSPC
+Message-Id: <20070718030628.8872358C52B5@chook.melbourne.sgi.com>
+Date: Wed, 18 Jul 2007 13:06:28 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Chris Wedgwood <cw@f00f.org>, Michael Nishimoto <miken@agami.com>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, 2007-07-17 at 20:43 -0500, Eric Sandeen wrote:
-> Chris Wedgwood wrote:
-> > On Tue, Jul 17, 2007 at 11:11:50AM -0700, Michael Nishimoto wrote:
-> > 
-> >> Filesystem free space becomes fragmented over time.  It's possible
-> >> for total free space to be a decent size and still not have a chunk
-> >> large enough to allocate new inodes.
-> > 
-> > by default there is a restriction that indoes shouldn't consume more
-> > that 25% of the total space
-> > 
-> > see the mkfs.xfs man-page for details, search for 'maxpct'
-> > 
-> > for existing filesystems you can use xfs_db to rewrite this value
+Allow punching holes to free space when at ENOSPC
 
-FWIW, xfs_growfs can be used to change this online.
+Make the free file space transaction able to dip into the
+reserved blocks to ensure that we can successfully free blocks
+when the filesystem is at ENOSPC.
 
-> The problem is that inodes are allocated in "clusters" of blocks.
-> 
-> If your free blocks aren't such that they can form a cluster, I think
-> you're out of luck when trying to allocate new inodes if your existing
-> clusters are full.
 
-Have you looked into this much Mike?  I've not recently, but from a
-quick peek it looks like the cluster size is set in xfs_mount.c as
-mp->m_inode_cluster_size and a different value is used depending on
-the machines memory size ... so, perhaps this can be made a mount
-option?  (XFS_INODE_SMALL_CLUSTER_SIZE is 1FSB AFAICT).  But, maybe
-I'm missing something or not remembering some details here that'd
-make that infeasible.
+Date:  Wed Jul 18 13:05:37 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  vapo@sgi.com
 
-Even better than a mount option would be to degrade to smaller size
-dynamically... not sure how hard that'd be either ... probably lots
-of corner cases lurking there.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-cheers.
 
---
-Nathan
+Modid:  xfs-linux-melb:xfs-kern:29167a
+fs/xfs/xfs_vnodeops.c - 1.703 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.703&r2=text&tr2=1.702&f=h
+	- Add XFS_TRANS_RESERVED flag to the xfs_free_file_space
+	  transaction reservation.
