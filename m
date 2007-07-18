@@ -1,28 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Jul 2007 20:19:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 17 Jul 2007 20:33:57 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6I3JRbm010378
-	for <xfs@oss.sgi.com>; Tue, 17 Jul 2007 20:19:29 -0700
-Subject: TAKE 967742 - Remove deleted header file in xfs_repair
-Message-Id: <20070718031926.34ADC58C52B5@chook.melbourne.sgi.com>
-Date: Wed, 18 Jul 2007 13:19:26 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6I3Xibm016369
+	for <linux-xfs@oss.sgi.com>; Tue, 17 Jul 2007 20:33:46 -0700
+Message-ID: <469D8A99.8030705@sgi.com>
+Date: Wed, 18 Jul 2007 13:35:53 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: TAKE 967622 - DMAPI ioctl() returning positive errors
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+Cc: linux-xfs@oss.sgi.com
+
+pv 967622, rv dgc - return negative DMAPI ioctl() errors.
 
 
-Date:  Wed Jul 18 13:19:01 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  tes@sgi.com
+Date:  Wed Jul 18 13:30:25 AEST 2007
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
+Inspected by:  dgc
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  master-melb:xfs-cmds:29168a
-xfsprogs/repair/prefetch.c - 1.4 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/prefetch.c.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
-	- Remove deleted header file
+Modid:  xfs-linux-melb:xfs-kern:29169a
+fs/xfs/dmapi/xfs_dm.c - 1.39 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
+        - pv 967622, rv dgc - Return negative DMAPI errors.
