@@ -1,29 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 07:17:18 -0700 (PDT)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.249])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IEHCbm021265
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 07:17:14 -0700
-Received: by an-out-0708.google.com with SMTP id c38so48539ana
-        for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 07:17:15 -0700 (PDT)
-Message-ID: <f44c5fdf0707180649h778f017dlb532c3ba224944b2@mail.gmail.com>
-Date: Wed, 18 Jul 2007 15:49:07 +0200
-From: "Radoslaw Szkodzinski" <astralstorm@gmail.com>
-Subject: XFS -git changes and Linux-VServer patch porting
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 08:29:11 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IFT7bm022184
+	for <linux-xfs@oss.sgi.com>; Wed, 18 Jul 2007 08:29:08 -0700
+Message-ID: <469E31C5.6010606@sandeen.net>
+Date: Wed, 18 Jul 2007 10:29:09 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Subject: Re: XFS log warning "Writing back config space on device"
+References: <11667329.post@talk.nabble.com>
+In-Reply-To: <11667329.post@talk.nabble.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: amilrego <victor.amil@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-Linux-VServer patch adds 2 new flags: barrier and iunlink.
-With recent changes in -git (filestreams), XFS now lacks di_flags bits
-to add these.
-iunlink flag adds Copy-on-Write semantics to hard links, while barrier
-flag signifies a filesystem barrier no virtual context can pass.
+amilrego wrote:
+> Hello.
+> I have formated one 300 GB partition in Linux OS, and then i worked whitout
+> problems.
+> But, If I do a "dmesg" there is a warning error (i don´t know if is really a
+> problem or maybe could cause problems in future):
+> 
+> SCSI device sdb: drive cache: write back
+>  sdb: sdb1
+>  ---
+> 
+> XFS mounting filesystem sdb1
+> Ending clean XFS mount for filesystem: sdb1
+> PM: Writing back config space on device 0000:05:02.0 at offset b (was
+> 165314e4, writing 12bc103c)
 
-I'd like to know how to possibly resolve this problem w/o negatively
-impacting performance (especially of iunlink) or changing on-disc
-format in an incompatible way, as well as being more future-proof.
+That's not an xfs message; it's from the PCI subsystem.  It shouldn't be
+related to anything xfs is doing...  It's also only a debug-level
+message (at least in 2.6.18).
+
+-eric
