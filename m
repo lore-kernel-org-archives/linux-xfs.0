@@ -1,52 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 04:32:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 04:35:17 -0700 (PDT)
 Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IBWUbm017040
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 04:32:31 -0700
-Date: Wed, 18 Jul 2007 07:32:33 -0400 (EDT)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IBZCbm018475
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 04:35:14 -0700
+Date: Wed, 18 Jul 2007 07:35:15 -0400 (EDT)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Software RAID5 Horrible Write Speed On 3ware Controller!!
-In-Reply-To: <469DF8D3.8020908@theendofthetunnel.de>
-Message-ID: <Pine.LNX.4.64.0707180732140.7659@p34.internal.lan>
+In-Reply-To: <20070718112612.GA8029@cumulus>
+Message-ID: <Pine.LNX.4.64.0707180734340.7659@p34.internal.lan>
 References: <Pine.LNX.4.64.0707180614480.7659@p34.internal.lan>
- <20070718110525.GF13772@boogie.lpds.sztaki.hu> <Pine.LNX.4.64.0707180718000.7659@p34.internal.lan>
- <469DF8D3.8020908@theendofthetunnel.de>
+ <20070718112612.GA8029@cumulus>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Hannes Dorbath <light@theendofthetunnel.de>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
+To: Sander <sander@humilis.net>
+Cc: linux-ide-arrays@lists.math.uh.edu, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux@vger.kernel.org
 
 
 
-On Wed, 18 Jul 2007, Hannes Dorbath wrote:
+On Wed, 18 Jul 2007, Sander wrote:
 
-> On 18.07.2007 13:19, Justin Piszcz wrote:
->> For the HW RAID tests (2) at the bottom of the e-mail, no, I did not set 
->> nr_requests or use the deadline scheduler.
->> 
->> For the SW RAID tests, I applied similar optimizations, I am probably not 
->> at the latest firmware.  The main thing I wanted to use though was SW RAID 
->> because the card itself offers so many ports, however, with write speed 
->> being that slow I am not sure its a good idea.
+> Justin Piszcz wrote (ao):
+>> Its too bad that there are no regular > 4 port SATA PCI-e controllers
+>> out there.
 >
-> I think what you might be experiencing is that XFS can read su,sw values from 
-> the MD device and will automatically optimize itself, while it can't do that 
-> for the HW RAID device. It is absolutely essential to align your file system, 
-> to prevent implicit reads, needed for parity calculations.
+> Is there a disadvantage to using a SaS controller from for example
+> lsi.com ?
 >
-> Set su to the stripe size you have configured in your controller (like 128K) 
-> and sw to 9 (for a 10 disk RAID 5 array).
+> http://lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/index.html
 >
+> I haven't tried them yet, but on paper it looks like an option, no?
+>
+> 	With kind regards, Sander
 >
 > -- 
-> Regards,
-> Hannes Dorbath
+> Humilis IT Services and Solutions
+> http://www.humilis.net
 >
 
-Yes I agree here, but I guess my question is why is SW RAID5 so slow on 
-the 3ware card?
+Hmm that is also a good idea- but I am afraid there could be a similiar 
+issue where it tries to do weird caching stuff, even when the drives are 
+in JBOD.  Unless they offer a !raid SAS controller that supports SATA 
+drives.
 
 Justin.
