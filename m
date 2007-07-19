@@ -1,52 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 16:05:18 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JN5Dbm022799
-	for <linux-xfs@oss.sgi.com>; Thu, 19 Jul 2007 16:05:15 -0700
-Subject: Re: tuning XFS for tiny files
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <469E7D70.9030606@sandeen.net>
-References: <m23azlbpl1.fsf@tstotts.net>  <469E7D70.9030606@sandeen.net>
-Content-Type: text/plain
-Date: Fri, 20 Jul 2007 09:05:08 +1000
-Message-Id: <1184886308.16678.44.camel@edge.yarra.acx>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 16:58:30 -0700 (PDT)
+Received: from mail.clusterfs.com (mail.clusterfs.com [74.0.229.162])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JNwObm004601
+	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 16:58:25 -0700
+Date: Thu, 19 Jul 2007 17:58:25 -0600
+From: Andreas Dilger <adilger@clusterfs.com>
+Subject: Re: [PATCH 1/5][TAKE8] manpage for fallocate
+Message-ID: <20070719235825.GY5992@schatzie.adilger.int>
+References: <20070713184125.GA12156@amitarora.in.ibm.com> <20070713184625.GB12156@amitarora.in.ibm.com> <20070719034155.GE32734@ca-server1.us.oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070719034155.GE32734@ca-server1.us.oracle.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, timotheus <timotheus@tstotts.net>
-Cc: linux-xfs@oss.sgi.com
+To: Mark Fasheh <mark.fasheh@oracle.com>
+Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, dgc@sgi.com, michael.kerrisk@gmx.net
 
-On Wed, 2007-07-18 at 15:52 -0500, Eric Sandeen wrote:
+On Jul 18, 2007  20:41 -0700, Mark Fasheh wrote:
+> On Sat, Jul 14, 2007 at 12:16:25AM +0530, Amit K. Arora wrote:
+> > After a successful call, subsequent writes are guaranteed not to fail
+> > because of lack of disk space.
+>   
+> If a write to an unwritten region requires a node split, that could result
+> in the allocation of new meta data which obviously could fail if the disk is
+> truly full.
 > 
-> > Hi. Is there a way to tune XFS filesystem parameters to better
-> address
-> > the usage pattern of 10000s of tiny files in directories such as:
-> >     maildir directory
-> >     mh mail directory
-> >     ccache directory
-> > 
-> > My understanding is that XFS will always be much slower than
-> reiserfs
-> > with respect to deleting 10000s files; but that XFS might be
-> possible to
-> > tune toward more rapid read access of 10000s of tiny files.
-> > 
-> > Regards,
-> > -timotheus
+> Granted that's unlikely to happen but maybe we should be conservative and
+> say something like:
 > 
-> Do you have a way to benchmark your load?
-> 
-> logv2 at mkfs time, and throwing in larger logbufs & logbsize as mount
-> options might help.
+> "After a successful call, subsequent writes are guaranteed to never require
+> allocation of file data." ?
+>         --Mark
 
-For these kinds of workloads, you may have some joy using a mkfs run
-with smaller blocksize (down to 512 bytes) and also larger directory
-blocksize (up to 64k).  (e.g. mkfs.xfs -bsize=512 -nsize=16k ...)
+In the worst case, the unwritten extent could be zero-filled before the write
+is done, so no exent split is needed.  We discussed this recently for the
+ext4 fallocate, but didn't consider it important enough to hold the code.
 
-cheers.
-
+Cheers, Andreas
 --
-Nathan
+Andreas Dilger
+Principal Software Engineer
+Cluster File Systems, Inc.
