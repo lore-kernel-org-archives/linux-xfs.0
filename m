@@ -1,71 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 07:29:28 -0700 (PDT)
-Received: from mail.rupa.com (hosted.rupa.com [207.210.101.15])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JETPbm029142
-	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 07:29:26 -0700
-Message-ID: <469F906A.6030509@rupa.com>
-Date: Thu, 19 Jul 2007 09:25:14 -0700
-From: Rupa Schomaker <rupa@rupa.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 07:37:13 -0700 (PDT)
+Received: from waldorf.loreland.org (ip186.digipost.co.nz [203.110.30.186] (may be forged))
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JEb8bm031938
+	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 07:37:10 -0700
+Message-ID: <48478.193.203.83.22.1184855825.squirrel@colo.loreland.org>
+In-Reply-To: <4560AB84.9060200@sandeen.net>
+References: <4560AB84.9060200@sandeen.net>
+Date: Fri, 20 Jul 2007 02:37:05 +1200 (NZST)
+Subject: Re: New CentOS4/RHEL4-compatible xfs module rpms
+From: "James Braid" <jamesb@loreland.org>
+Reply-To: jamesb@loreland.org
 MIME-Version: 1.0
-Subject: Re: XFS repair on / in a hosted environment
-References: <469E690B.5070600@rupa.com> <20070719023419.GC12413810@sgi.com> <469F6296.9090902@rupa.com>
-In-Reply-To: <469F6296.9090902@rupa.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On 7/19/2007 6:09 AM, Rupa Schomaker wrote:
-> 
-> On 7/18/2007 7:34 PM, David Chinner wrote:
->> On Wed, Jul 18, 2007 at 12:24:59PM -0700, Rupa Schomaker wrote:
->>> I have a virtual server hosted in a XEN environment.  Kernel is
->>> 2.6.16.13-XenU and I can't change it. :( Host provider is not responsive
->>> to getting us a newer kernel.
->>>
->>> Anyway, during my nightly rsync backup, I started seeing the following:
->> .....
->>
->> what does /proc/mounts tell you (rather than /etc/mtab)?
->>
->> If /proc/mounts says ro, then try upgrading your xfsprogs package.
->> and then retrying the repair....
-> 
-> /proc/mounts shows ro.
+> http://sandeen.net/rhel4_xfs/kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm
+>
 
-I built the latest xfsprogs from cvs.  Still no go.  This is perhaps
-something strange with the Xen environment?
-
-hosted:/# mount
-/dev/sda1 on / type xfs (rw)
-tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=0755)
-proc on /proc type proc (rw,noexec,nosuid,nodev)
-sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
-tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
-devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=5,mode=620)
-none on /dev/shm type tmpfs (rw)
-
-hosted:/# cat /proc/mounts
-rootfs / rootfs rw 0 0
-/dev/root / xfs ro 0 0
-tmpfs /lib/init/rw tmpfs rw,nosuid 0 0
-proc /proc proc rw,nosuid,nodev,noexec 0 0
-sysfs /sys sysfs rw,nosuid,nodev,noexec 0 0
-tmpfs /dev/shm tmpfs rw,nosuid,nodev 0 0
-devpts /dev/pts devpts rw,nosuid,noexec 0 0
-none /dev/shm tmpfs rw 0 0
-
-
-mount and /proc/mounts don't agree.  Thre is no /dev/root.  I tried the
-mount -o remount,ro on both / and /dev/sda1.  No good, only /dev/root is
-being changed to ro.
-
-<boggle>
-
-Ok, created a /dev/root.  xfs_repair works as expected.  Now to figure
-out what got dumped into lost+found.
-
--Rupa
+Has anyone had any luck with getting NFS exports to work with these
+updated modules? I'm not having any luck, and just getting "Permission
+denied" errors when trying to mount an NFS exported filesystem using these
+modules. Works fine with the stock modules from a rebuilt RHEL4 kernel.
