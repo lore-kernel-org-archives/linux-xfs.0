@@ -1,40 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 13:57:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6IKvKbm024174
-	for <linux-xfs@oss.sgi.com>; Wed, 18 Jul 2007 13:57:22 -0700
-Message-ID: <469E7D70.9030606@sandeen.net>
-Date: Wed, 18 Jul 2007 15:52:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: tuning XFS for tiny files
-References: <m23azlbpl1.fsf@tstotts.net>
-In-Reply-To: <m23azlbpl1.fsf@tstotts.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 19:30:28 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6J2UBbm022723
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 19:30:24 -0700
+Date: Thu, 19 Jul 2007 12:30:05 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Allocating inodes from a single block
+Message-ID: <20070719023005.GB12413810@sgi.com>
+References: <469D0666.6040908@agami.com> <20070717201921.GA26309@tuatara.stupidest.org> <469D7035.2020507@sandeen.net> <1184724090.15488.553.camel@edge.yarra.acx> <20070718035012.GA12413810@sgi.com> <469E65AF.4080003@bycast.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <469E65AF.4080003@bycast.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: timotheus <timotheus@tstotts.net>
-Cc: linux-xfs@oss.sgi.com
+To: Mike Montour <mmontour@bycast.com>
+Cc: xfs@oss.sgi.com
 
-timotheus wrote:
-> Hi. Is there a way to tune XFS filesystem parameters to better address
-> the usage pattern of 10000s of tiny files in directories such as:
->     maildir directory
->     mh mail directory
->     ccache directory
+On Wed, Jul 18, 2007 at 12:10:39PM -0700, Mike Montour wrote:
+> David Chinner wrote:
+> > The issue here is not the cluster size - that is purely an in-memory
+> > arrangement for reading/writing muliple inodes at once. The issue
+> > here is inode *chunks* (as Eric pointed out).
+> >
+> > [...]
+> > The best you can do to try to avoid these sorts of problems is
+> > use the "ikeep" option to keep empty inode chunks around. That way
+> > if you remove a bunch of files then fragement free space you'll
+> > still be able to create new files until you run out of pre-allocated
+> > inodes....
+> >   
 > 
-> My understanding is that XFS will always be much slower than reiserfs
-> with respect to deleting 10000s files; but that XFS might be possible to
-> tune toward more rapid read access of 10000s of tiny files.
-> 
-> Regards,
-> -timotheus
+> What would it take to add an option to mkfs.xfs (or to create a
+> dedicated tool) that would efficiently[1] pre-allocate a specified
+> number of inode chunks when a filesystem is created?
 
-Do you have a way to benchmark your load?
+Like an extension to mkfs.xfs's prototype file?
 
-logv2 at mkfs time, and throwing in larger logbufs & logbsize as mount
-options might help.
+> This filesystem was created with "-i maxpct=0,size=2048", so a new chunk
+> of 64 inodes would require an extent of 128 KiB (32 * 4KiB blocks).
 
--Eric
+i.e. worst case.
+
+> 1. "efficiently" = significantly faster than a userspace script to
+> 'touch' a few million files and then 'rm' them.
+
+A "bulk create" option has long been considered to optimise filesystem
+restore - precreating lots of inodes in an efficient manner is pretty
+much a prereq for this.
+
+The other option (and one that I prefer) is extending xfs_fsr to b
+able to defragment free space. i.e. to compact space in each AG. To
+do this efficiently, however, we really need a reverse map to determine
+the owners of the blocks we want to move...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
