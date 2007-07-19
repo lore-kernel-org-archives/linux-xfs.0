@@ -1,48 +1,117 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 07:18:32 -0700 (PDT)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JEINbm022840
-	for <linux-xfs@oss.sgi.com>; Thu, 19 Jul 2007 07:18:26 -0700
-Date: Thu, 19 Jul 2007 15:54:59 +0200
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: tuning XFS for tiny files
-Message-ID: <20070719135459.GA16552@one.firstfloor.org>
-References: <m23azlbpl1.fsf@tstotts.net> <p73wswwwm1o.fsf@bingen.suse.de> <20070719131401.GW31489@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070719131401.GW31489@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 07:20:47 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6JEKdbm023710
+	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 07:20:41 -0700
+Message-ID: <469F7329.9080603@sgi.com>
+Date: Fri, 20 Jul 2007 00:20:25 +1000
+From: Tim Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: [GIT PULL] XFS update
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Andi Kleen <andi@firstfloor.org>, timotheus <timotheus@tstotts.net>, linux-xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Thu, Jul 19, 2007 at 11:14:01PM +1000, David Chinner wrote:
-> On Thu, Jul 19, 2007 at 03:38:43PM +0200, Andi Kleen wrote:
-> > timotheus <timotheus@tstotts.net> writes:
-> > 
-> > > Hi. Is there a way to tune XFS filesystem parameters to better address
-> > > the usage pattern of 10000s of tiny files in directories such as:
-> > >     maildir directory
-> > >     mh mail directory
-> > >     ccache directory
-> > > 
-> > > My understanding is that XFS will always be much slower than reiserfs
-> > > with respect to deleting 10000s files; but that XFS might be possible to
-> > > tune toward more rapid read access of 10000s of tiny files.
-> > 
-> > -d agcount=1 at mkfs time might help (unless you have a lot of CPUs) 
-> 
-> Yeah, might help, but it's not good for being able to repair the
-> filesystem - repair will be unable to find a secondary superblock
-> to compare the primary against and abort.....
+Hi Linus,
 
-Any reason why it aborts? It could just continue with a warning, couldn't it?
+Please pull from the for-linus branch:
+     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
-> -d agcount is only good for science experiments, not production
-> systems ;)
+This will update the following files:
 
-XFS small file performance needs a lot of science.
+  fs/buffer.c                 |   47 +++++++++++++++++++++++++++++++++++++++++++
+  fs/xfs/linux-2.6/xfs_file.c |   16 ++++++++++++++
+  fs/xfs/xfs_vnodeops.c       |   30 +++++++++++++++++++++++++-
+  include/linux/buffer_head.h |    2 +
+  4 files changed, 93 insertions(+), 2 deletions(-)
 
--Andi
+through these commits:
+
+commit c32676eea19ce29cb74dba0f97b085e83f6b8915
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Jul 19 16:28:58 2007 +1000
+
+     [XFS] Fix inode size update before data write in xfs_setattr
+
+     When changing the file size by a truncate() call, we log the change in the
+     inode size. However, we do not flush any outstanding data that might not
+     have been written to disk, thereby violating the data/inode size update
+     order. This can leave files full of NULLs on crash.
+
+     Hence if we are truncating the file, flush any unwritten data that may lie
+     between the curret on disk inode size and the new inode size that is being
+     logged to ensure that ordering is preserved.
+
+     SGI-PV: 966308
+     SGI-Modid: xfs-linux-melb:xfs-kern:29174a
+
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 91ebecc74eeeeea0a2aa50bf1964ec2214a229c9
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Jul 19 16:28:30 2007 +1000
+
+     [XFS] Allow punching holes to free space when at ENOSPC
+
+     Make the free file space transaction able to dip into the reserved blocks
+     to ensure that we can successfully free blocks when the filesystem is at
+     ENOSPC.
+
+     SGI-PV: 967788
+     SGI-Modid: xfs-linux-melb:xfs-kern:29167a
+
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Vlad Apostolov <vapo@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 4f57dbc6b5bae5a3978d429f45ac597ca7a3b8c6
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Jul 19 16:28:17 2007 +1000
+
+     [XFS] Implement ->page_mkwrite in XFS.
+
+     Hook XFS up to ->page_mkwrite to ensure that we know about mmap pages
+     being written to. This allows use to do correct delayed allocation and
+     ENOSPC checking as well as remap unwritten extents so that they get
+     converted correctly during writeback. This is done via the generic
+     block_page_mkwrite code.
+
+     SGI-PV: 940392
+     SGI-Modid: xfs-linux-melb:xfs-kern:29149a
+
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 5417169026c3df151adf5a65eb061278b0a72e69
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Jul 19 17:39:55 2007 +1000
+
+     [FS] Implement block_page_mkwrite.
+
+     Many filesystems need a ->page-mkwrite callout to correctly
+     set up pages that have been written to by mmap. This is especially
+     important when mmap is writing into holes as it allows filesystems
+     to correctly account for and allocate space before the mmap
+     write is allowed to proceed.
+
+     Protection against truncate races is provided by locking the page
+     and checking to see whether the page mapping is correct and whether
+     it is beyond EOF so we don't end up allowing allocations beyond
+     the current EOF or changing EOF as a result of a mmap write.
+
+     SGI-PV: 940392
+     SGI-Modid: 2.6.x-xfs-melb:linux:29146a
+
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+Thanks,
+Tim.
