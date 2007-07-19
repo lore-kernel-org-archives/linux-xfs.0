@@ -1,47 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 22:37:45 -0700 (PDT)
-Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6J5bcbm024293
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 22:37:39 -0700
-Date: Wed, 18 Jul 2007 22:31:56 -0700
-From: Mark Fasheh <mark.fasheh@oracle.com>
-Subject: Re: [PATCH 1/5][TAKE8] manpage for fallocate
-Message-ID: <20070719053156.GF32734@ca-server1.us.oracle.com>
-Reply-To: Mark Fasheh <mark.fasheh@oracle.com>
-References: <20070713184125.GA12156@amitarora.in.ibm.com> <20070713184625.GB12156@amitarora.in.ibm.com> <20070719034155.GE32734@ca-server1.us.oracle.com> <20070719051052.GE12413810@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070719051052.GE12413810@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jul 2007 23:41:11 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6J6f4bm011548
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2007 23:41:06 -0700
+Subject: TAKE 967580 - xfs_repair - fails on > 512 byte sector hardware
+Message-Id: <20070719064101.7430958C52B2@chook.melbourne.sgi.com>
+Date: Thu, 19 Jul 2007 16:41:01 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, adilger@clusterfs.com, michael.kerrisk@gmx.net
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 19, 2007 at 03:10:52PM +1000, David Chinner wrote:
-> % git-log 84e1e99f112dead8f9ba036c02d24a9f5ce7f544 |head -10
-> commit 84e1e99f112dead8f9ba036c02d24a9f5ce7f544
-> Author: David Chinner <dgc@sgi.com>
-> Date:   Mon Jun 18 16:50:27 2007 +1000
-> 
->     [XFS] Prevent ENOSPC from aborting transactions that need to succeed
-> 
->     During delayed allocation extent conversion or unwritten extent
->     conversion, we need to reserve some blocks for transactions reservations.
->     We need to reserve these blocks in case a btree split occurs and we need
->     to allocate some blocks.
-> 
-> ------
-> 
-> IOWs, XFS didn't provide this guarantee until about a month ago....
+Make xfs_repair support > 512 byte sector sizes properly
 
-Ok, once again XFS is ahead of the curve ;)
 
-Comment rescinded then...
-	--Mark
+Date:  Thu Jul 19 16:40:32 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  dgc@sgi.com
 
---
-Mark Fasheh
-Senior Software Developer, Oracle
-mark.fasheh@oracle.com
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:29181a
+xfsprogs/libxlog/xfs_log_recover.c - 1.32 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxlog/xfs_log_recover.c.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+	- Fix up xlog_bread and associated functions
+
+xfsprogs/include/libxfs.h - 1.63 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/libxfs.h.diff?r1=text&tr1=1.63&r2=text&tr2=1.62&f=h
+	- Fix up SET_COUNT macro
+
+xfsprogs/include/libxlog.h - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/libxlog.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- Fix up xlog_bread and associated functions
+
+xfsprogs/repair/phase2.c - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase2.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+	- Setup sector stuff for xlog
+
+xfsprogs/repair/xfs_repair.c - 1.31 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/xfs_repair.c.diff?r1=text&tr1=1.31&r2=text&tr2=1.30&f=h
+	- Read initial superblock using largest supported sector size
