@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 18:26:53 -0700 (PDT)
-Received: from bycast.com (bycast.com [209.139.229.1])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6K1Qlbm023695
-	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 18:26:49 -0700
-Received: from [192.168.110.101] (account mmontour HELO [192.168.110.101])
-  by bycast.com (CommuniGate Pro SMTP 4.3.9)
-  with ESMTPA id 2074447 for xfs@oss.sgi.com; Thu, 19 Jul 2007 18:26:49 -0700
-Message-ID: <46A00F58.60808@bycast.com>
-Date: Thu, 19 Jul 2007 18:26:48 -0700
-From: Mike Montour <mmontour@bycast.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 20:21:26 -0700 (PDT)
+Received: from mta14.adelphia.net (mta14.mail.adelphia.net [68.168.78.137])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6K3LKbm016351
+	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 20:21:23 -0700
+Received: from [192.168.1.5] (really [75.81.191.152]) by mta10.adelphia.net
+          (InterMail vM.6.01.05.02 201-2131-123-102-20050715) with ESMTP
+          id <20070720030000.BXMF22229.mta10.adelphia.net@[192.168.1.5]>
+          for <xfs@oss.sgi.com>; Fri, 20 Jul 2007 03:00:00 +0000
+Message-ID: <46A02551.8040409@adelphia.net>
+Date: Thu, 19 Jul 2007 20:00:33 -0700
+From: Michael Morrison <mliam@adelphia.net>
 MIME-Version: 1.0
-Subject: Re: Allocating inodes from a single block
-References: <469D0666.6040908@agami.com> <20070717201921.GA26309@tuatara.stupidest.org> <469D7035.2020507@sandeen.net> <1184724090.15488.553.camel@edge.yarra.acx> <20070718035012.GA12413810@sgi.com> <469E65AF.4080003@bycast.com> <20070719023005.GB12413810@sgi.com>
-In-Reply-To: <20070719023005.GB12413810@sgi.com>
+Subject: XFS internal error when making hard link on full fs.
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -20,35 +19,49 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-David Chinner wrote:
->> What would it take to add an option to mkfs.xfs (or to create a
->> dedicated tool) that would efficiently[1] pre-allocate a specified
->> number of inode chunks when a filesystem is created?
->>     
->
-> Like an extension to mkfs.xfs's prototype file?
->   
-I guess it could go there, e.g. the "number of inodes" parameter on line
-2 of the prototype file (which is currently "merely for backward
-compatibility"). Another possibility would be a "-i minpct=N" parameter
-to mkfs.xfs, i.e. reserve N percent of the space on the disk for inodes,
-and after that's full then allocate more chunks dynamically until the
-"maxpct" limit is reached.
+Got the following when I tried to make a hard link on a full filesystem:
+I'm running Linux kernel 2.6.18.  I'm  unable to try a newer kernel at
+the present time.
+The application was properly given ENOSPC in errno when the link call
+failed.
 
-Ideally this pre-allocation would be able to reserve space for the inode
-chunks without actually having to write to all of those disk blocks
-(e.g. to be able to dedicate 25% of a 2 TB device to 1024-byte inodes
-without having to write 500 GB of data to the device). I am not familiar
-enough with the XFS data structures to know whether this would be an
-easy or a hard thing to do.
+The filesystem is built on a linux software raid0 with 8 drives using
+the following command lines:
 
->> This filesystem was created with "-i maxpct=0,size=2048", so a new chunk
->> of 64 inodes would require an extent of 128 KiB (32 * 4KiB blocks).
->>     
->
-> i.e. worst case.
->   
-Yes, although in this case the "maxpct" didn't matter because less than
-25% of the disk was being used for inodes when the problem was
-encountered. It is likely to occur with smaller inodes, but it can still
-happen.
+/sbin/mdadm --create /dev/md0 --level=0 \
+    --chunk=64   \
+    --raid-devices=8  \
+    /dev/sda /dev/sde \
+    /dev/sdb /dev/sdf \
+    /dev/sdc /dev/sdg \
+    /dev/sdd /dev/sdh
+
+/sbin/mkfs -t xfs -f -d unwritten=0 -l version=2,sunit=128,internal 
+/dev/md0
+/bin/mount -t xfs /dev/md0 /mnt/dmag -o noatime,nodiratime,logbufs=4
+
+Filesystem "md0": XFS internal error xfs_trans_cancel at line 1138 of
+file fs/xfs/xfs_trans.c.  Caller 0xc02d53a5
+ [<c02cb987>] xfs_trans_cancel+0x108/0x14f
+ [<c02d53a5>] xfs_link+0x40f/0x585
+ [<c02d53a5>] xfs_link+0x40f/0x585
+ [<c04937ab>] _spin_unlock+0xd/0x21
+ [<c02e19d5>] xfs_vn_link+0x64/0xd3
+ [<c0181b66>] mntput_no_expire+0x1c/0x75
+ [<c017de95>] __d_lookup+0x8f/0x13b
+ [<c016e2b2>] vfs_stat+0x1f/0x23
+ [<c0172788>] cached_lookup+0x23/0x85
+ [<c01725de>] permission+0x85/0xaa
+ [<c0175e24>] vfs_link+0xc7/0x183
+ [<c0176008>] sys_linkat+0x128/0x14a
+ [<c0176059>] sys_link+0x2f/0x33
+ [<c0102ecd>] sysenter_past_esp+0x56/0x79
+xfs_force_shutdown(md0,0x8) called from line 1139 of file
+fs/xfs/xfs_trans.c.  Return address = 0xc02cb9ad
+Filesystem "md0": Corruption of in-memory data detected.  Shutting down
+filesystem: md0
+Please umount the filesystem, and rectify the problem(s)
+
+
+Unmounting the fs and running xfs_check did not produce any output.  The
+filesystem seems happy after mounting it again.
