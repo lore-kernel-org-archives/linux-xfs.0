@@ -1,45 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 16:58:30 -0700 (PDT)
-Received: from mail.clusterfs.com (mail.clusterfs.com [74.0.229.162])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6JNwObm004601
-	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 16:58:25 -0700
-Date: Thu, 19 Jul 2007 17:58:25 -0600
-From: Andreas Dilger <adilger@clusterfs.com>
-Subject: Re: [PATCH 1/5][TAKE8] manpage for fallocate
-Message-ID: <20070719235825.GY5992@schatzie.adilger.int>
-References: <20070713184125.GA12156@amitarora.in.ibm.com> <20070713184625.GB12156@amitarora.in.ibm.com> <20070719034155.GE32734@ca-server1.us.oracle.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jul 2007 17:37:14 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6K0b8bm012284
+	for <xfs@oss.sgi.com>; Thu, 19 Jul 2007 17:37:11 -0700
+Date: Fri, 20 Jul 2007 10:36:58 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS repair on / in a hosted environment
+Message-ID: <20070720003658.GZ31489@sgi.com>
+References: <469E690B.5070600@rupa.com> <20070719023419.GC12413810@sgi.com> <469F6296.9090902@rupa.com> <469F906A.6030509@rupa.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070719034155.GE32734@ca-server1.us.oracle.com>
+In-Reply-To: <469F906A.6030509@rupa.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Fasheh <mark.fasheh@oracle.com>
-Cc: "Amit K. Arora" <aarora@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, tytso@mit.edu, cmm@us.ibm.com, suparna@in.ibm.com, dgc@sgi.com, michael.kerrisk@gmx.net
+To: Rupa Schomaker <rupa@rupa.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Jul 18, 2007  20:41 -0700, Mark Fasheh wrote:
-> On Sat, Jul 14, 2007 at 12:16:25AM +0530, Amit K. Arora wrote:
-> > After a successful call, subsequent writes are guaranteed not to fail
-> > because of lack of disk space.
->   
-> If a write to an unwritten region requires a node split, that could result
-> in the allocation of new meta data which obviously could fail if the disk is
-> truly full.
+On Thu, Jul 19, 2007 at 09:25:14AM -0700, Rupa Schomaker wrote:
+> On 7/19/2007 6:09 AM, Rupa Schomaker wrote:
+> > 
+> > On 7/18/2007 7:34 PM, David Chinner wrote:
+> >> On Wed, Jul 18, 2007 at 12:24:59PM -0700, Rupa Schomaker wrote:
+> >>> I have a virtual server hosted in a XEN environment.  Kernel is
+> >>> 2.6.16.13-XenU and I can't change it. :( Host provider is not responsive
+> >>> to getting us a newer kernel.
+> >>>
+> >>> Anyway, during my nightly rsync backup, I started seeing the following:
+> >> .....
+> >>
+> >> what does /proc/mounts tell you (rather than /etc/mtab)?
+> >>
+> >> If /proc/mounts says ro, then try upgrading your xfsprogs package.
+> >> and then retrying the repair....
+> > 
+> > /proc/mounts shows ro.
 > 
-> Granted that's unlikely to happen but maybe we should be conservative and
-> say something like:
+> I built the latest xfsprogs from cvs.  Still no go.  This is perhaps
+> something strange with the Xen environment?
+
+The above /etc/mtab vs /proc/mounts problem was the reason I mentioned
+you should get a recent xfsprogs - we changed it to look at /proc/mounts
+rather than /etc/mtab for this reason....
+
+> mount and /proc/mounts don't agree.  Thre is no /dev/root.  I tried the
+> mount -o remount,ro on both / and /dev/sda1.  No good, only /dev/root is
+> being changed to ro.
 > 
-> "After a successful call, subsequent writes are guaranteed to never require
-> allocation of file data." ?
->         --Mark
+> <boggle>
+> 
+> Ok, created a /dev/root.
 
-In the worst case, the unwritten extent could be zero-filled before the write
-is done, so no exent split is needed.  We discussed this recently for the
-ext4 fallocate, but didn't consider it important enough to hold the code.
+That sounds like an init script or initrd setup problem....
 
-Cheers, Andreas
---
-Andreas Dilger
-Principal Software Engineer
-Cluster File Systems, Inc.
+> xfs_repair works as expected.  Now to figure
+> out what got dumped into lost+found.
+
+Oh, good to know you made it past the first (high) hurdle.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
