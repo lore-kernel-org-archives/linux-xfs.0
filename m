@@ -1,29 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 21 Jul 2007 08:36:37 -0700 (PDT)
-Received: from waldorf.loreland.org (ip186.digipost.co.nz [203.110.30.186] (may be forged))
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6LFaVbm028967
-	for <xfs@oss.sgi.com>; Sat, 21 Jul 2007 08:36:34 -0700
-In-Reply-To: <46A21F16.5080601@sandeen.net>
-References: <4560AB84.9060200@sandeen.net> <48478.193.203.83.22.1184855825.squirrel@colo.loreland.org> <469F8005.3080104@sandeen.net> <73EF8A3A-4768-4717-88B4-57A2E00D4E02@loreland.org> <46A21F16.5080601@sandeen.net>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <4EE30551-C767-4912-A758-7FB0E4F5882A@loreland.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 21 Jul 2007 12:41:11 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6LJf7bm005808
+	for <linux-xfs@oss.sgi.com>; Sat, 21 Jul 2007 12:41:09 -0700
+Received: from localhost (dslb-084-056-076-236.pools.arcor-ip.net [84.56.76.236])
+	by mail.lichtvoll.de (Postfix) with ESMTP id C4FB15ADFF
+	for <linux-xfs@oss.sgi.com>; Sat, 21 Jul 2007 21:47:48 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: xfs-cmds doesn't build... (cvs & 2.9.2...)
+Date: Sat, 21 Jul 2007 21:41:09 +0200
+References: <46A2209F.2030108@sandeen.net> (sfid-20070721_185105_539562_E01EA719)
+In-Reply-To: <46A2209F.2030108@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-From: James Braid <jamesb@loreland.org>
-Subject: Re: New CentOS4/RHEL4-compatible xfs module rpms
-Date: Sat, 21 Jul 2007 16:36:03 +0100
+Content-Disposition: inline
+Message-Id: <200707212141.10101.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On 21 Jul 2007, at 15:58, Eric Sandeen wrote:
-> Interesting - what are the exact versions of "updated" and "older"  
-> that
-> you are using?  I'll look at the diff...
+Am Samstag 21 Juli 2007 schrieb Eric Sandeen:
+> cvs:
+>
+> [sandeen@sandeen xfs-cmds]$ make
+> ....
+> == Building xfsprogs
+> == clean, log is Logs/clean
+> make: *** [cmds] Error 1
+> [sandeen@sandeen xfs-cmds]$ cat xfsprogs/Logs/clean
+> make[1]: Entering directory `/src/cvs/xfs-cmds/xfsprogs'
+> === include ===
+> gmake[2]: *** No rule to make target `mdrestore'.  Stop.
+> make[1]: *** [mdrestore] Error 2
+> make[1]: Leaving directory `/src/cvs/xfs-cmds/xfsprogs'
+> [sandeen@sandeen xfs-cmds]$ grep -B1 mdrestore xfsprogs/Makefile
+> SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
+>         copy db fsck growfs io logprint mkfs quota mdrestore repair
+> rtcp \ [sandeen@sandeen xfs-cmds]$ ls xfsprogs/mdrestore
+> ls: xfsprogs/mdrestore: No such file or directory
 
-The updated one is the one from here http://sandeen.net/rhel4_xfs/ 
-kernel-module-xfs-2.6.9-42.0.2.EL-0.2-1.src.rpm
+Hi Eric,
 
-The older one is the stock RHEL4U4 code (2.6.9-42.0.3 from memory)
+did work here a bit before Sa 21. Jul 21:40:50 CEST 2007.
+
+Regards,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
