@@ -1,47 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jul 2007 16:37:37 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jul 2007 16:39:56 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6MNbWbm001880
-	for <xfs@oss.sgi.com>; Sun, 22 Jul 2007 16:37:34 -0700
-Date: Mon, 23 Jul 2007 09:37:23 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6MNdobm003160
+	for <xfs@oss.sgi.com>; Sun, 22 Jul 2007 16:39:52 -0700
+Date: Mon, 23 Jul 2007 09:39:43 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 7/7] - remove unused variable from locking macros
-Message-ID: <20070722233723.GI31489@sgi.com>
-References: <46A03631.7060604@sandeen.net> <20070720073023.GE29295@infradead.org>
+Subject: Re: [PATCH 1/7] - remove m_nreadaheads
+Message-ID: <20070722233943.GJ31489@sgi.com>
+References: <46A03612.6030806@sandeen.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070720073023.GE29295@infradead.org>
+In-Reply-To: <46A03612.6030806@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jul 20, 2007 at 08:30:23AM +0100, Christoph Hellwig wrote:
-> On Thu, Jul 19, 2007 at 11:12:33PM -0500, Eric Sandeen wrote:
-> > The "s" in these locking macros used to be used like flags
-> > in spin_lock_irqsave; but in the xfs codebase today it's 
-> > never used.
-> > 
-> > gcc optimizes it away, but still, why keep it around?
+On Thu, Jul 19, 2007 at 11:12:02PM -0500, Eric Sandeen wrote:
+> Dave pointed this out...
 > 
-> If we change away from the IRIX compatible signatures we could just
-> kill the lock wrappers aswell..
+> m_nreadaheads in the mount struct is never used;
+> remove it and the various macros assigned to it.
+> 
+> Also remove a couple other unused macros in the same areas.
+> 
+> Removes one user of xfs_physmem.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Hmmm - decisions, decisions... ;)
-
-I think killing the wrappers entirely is probably the correct thing
-to do. stuff like AIL_LOCK and GRANT_LOCK have long just been a
-wrapper around a spinlock with no other purpose except to shout at
-you.
-
-If we are going to kill the spl return from the spinlocks, then
-lets just churn this once. I'll sit on this one for a bit....
-
-FWIW, Eric, if you do decide to modify the patch to kill all the
-wrappers, can you send them as a patch-per-wrapper, just to make
-it easy to review?
+The patch series looks good, Eric. I've grabbed all of them for
+testing, but I'll hold off applying the lock wrapper changes 
+until we decide exactly what to do there...
 
 Cheers,
 
