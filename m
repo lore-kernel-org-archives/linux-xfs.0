@@ -1,30 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jul 2007 02:43:52 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6N9hmbm004751
-	for <xfs@oss.sgi.com>; Mon, 23 Jul 2007 02:43:49 -0700
-Date: Mon, 23 Jul 2007 10:17:33 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: increase default filestreams timeout
-Message-ID: <20070723091733.GA30655@infradead.org>
-References: <20070723020630.GU12413810@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070723020630.GU12413810@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jul 2007 06:52:51 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6NDqgbm018284
+	for <xfs@oss.sgi.com>; Mon, 23 Jul 2007 06:52:45 -0700
+Message-ID: <46A4B2AA.7030304@sandeen.net>
+Date: Mon, 23 Jul 2007 08:52:42 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfs-cmds doesn't build... (cvs & 2.9.2...)
+References: <46A2209F.2030108@sandeen.net> <1185160946.10702.12.camel@edge.yarra.acx>
+In-Reply-To: <1185160946.10702.12.camel@edge.yarra.acx>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: nscott@aconex.com
+Cc: xfs-oss <xfs@oss.sgi.com>, Barry Naujok <bnaujok@sgi.com>
 
-On Mon, Jul 23, 2007 at 12:06:30PM +1000, David Chinner wrote:
-> The default is too low resulting in far too frequent workqueue
-> flushing and it's unlikely that it will work properly with buffered
-> I/O on such a low timeout. i.e. test 172 expects the timeout of 50
-> (default) expects buffered I/O to fail to lay the streams out
-> without interleaving.
+Nathan Scott wrote:
+> On Sat, 2007-07-21 at 10:05 -0500, Eric Sandeen wrote:
+>>
+>> [sandeen@sandeen xfs-cmds]$ make
+>> ....
+>> == Building xfsprogs
+>> == clean, log is Logs/clean
+>> make: *** [cmds] Error 1
+>> [sandeen@sandeen xfs-cmds]$ cat xfsprogs/Logs/clean
+>> make[1]: Entering directory `/src/cvs/xfs-cmds/xfsprogs'
+>> === include ===
+>> gmake[2]: *** No rule to make target `mdrestore'.  Stop.
 > 
-> Set the default timeout to 30s instead of 500ms.
+> Did you use -d on your cvs update line?  My cvs update found it ok.
 
-The patch is obviously correct and I trust you on chosing the right timeout.
+Ugh... that's probably it.  *grumble*
+
+>> make[1]: *** [mdrestore] Error 2
+>> make[1]: Leaving directory `/src/cvs/xfs-cmds/xfsprogs'
+>> [sandeen@sandeen xfs-cmds]$ grep -B1 mdrestore xfsprogs/Makefile
+>> SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
+>>         copy db fsck growfs io logprint mkfs quota mdrestore repair
+>> rtcp \
+>> [sandeen@sandeen xfs-cmds]$ ls xfsprogs/mdrestore
+>> ls: xfsprogs/mdrestore: No such file or directory
+>>
+> 
+> On Sat, 2007-07-21 at 10:05 -0500, Eric Sandeen wrote:
+>>
+>> 2.9.2 tarball:
+>> [sandeen@sandeen xfsprogs-2.9.2]$ make
+>> ....
+>> metadump.c:28:26: xfs_metadump.h: No such file or directory 
+>>
+> 
+> This should be fixed now (with Barrys last change).
+
+Ok, cool.
+
+Thanks!
+-Eric
+
+> cheers.
+> 
+> --
+> Nathan
+> 
