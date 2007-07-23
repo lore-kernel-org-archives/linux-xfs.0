@@ -1,28 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jul 2007 19:03:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jul 2007 19:06:39 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6N23Cbm002626
-	for <xfs@oss.sgi.com>; Sun, 22 Jul 2007 19:03:14 -0700
-From: donaldd@sgi.com
-Subject: TAKE 967936 - Fix null pointer dereference in xfs_quota.
-Message-Id: <20070723013859.5CAB12F34DEA@linuxbuild.melbourne.sgi.com>
-Date: Mon, 23 Jul 2007 11:38:59 +1000 (EST)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6N26Xbm004274
+	for <xfs@oss.sgi.com>; Sun, 22 Jul 2007 19:06:35 -0700
+Date: Mon, 23 Jul 2007 12:06:30 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Review: increase default filestreams timeout
+Message-ID: <20070723020630.GU12413810@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Fix null pointer dereference in state_f.
+The default is too low resulting in far too frequent workqueue
+flushing and it's unlikely that it will work properly with buffered
+I/O on such a low timeout. i.e. test 172 expects the timeout of 50
+(default) expects buffered I/O to fail to lay the streams out
+without interleaving.
 
-Date:  Mon Jul 23 11:36:22 AEST 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/xfs-cmds
-Inspected by:  bnaujok, utako, nathans.
+Set the default timeout to 30s instead of 500ms.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
-Modid:  master-melb:xfs-cmds:29194a
-xfsprogs/quota/state.c - 1.5 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/quota/state.c.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+---
+ fs/xfs/linux-2.6/xfs_globals.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_globals.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_globals.c	2007-07-09 16:06:23.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_globals.c	2007-07-17 09:06:46.595999067 +1000
+@@ -49,7 +49,7 @@ xfs_param_t xfs_params = {
+ 	.inherit_nosym	= {	0,		0,		1	},
+ 	.rotorstep	= {	1,		1,		255	},
+ 	.inherit_nodfrg	= {	0,		1,		1	},
+-	.fstrm_timer	= {	1,		50,		3600*100},
++	.fstrm_timer	= {	1,		30*100,		3600*100},
+ };
+ 
+ /*
