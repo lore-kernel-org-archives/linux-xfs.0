@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 06 Aug 2007 06:55:23 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 06 Aug 2007 07:54:23 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l76DtFbm028954
-	for <xfs@oss.sgi.com>; Mon, 6 Aug 2007 06:55:17 -0700
-Date: Mon, 6 Aug 2007 09:55:15 -0400
-Message-Id: <200708061355.l76DtFVO002381@dantu.rdu.redhat.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l76EsIbm014916
+	for <xfs@oss.sgi.com>; Mon, 6 Aug 2007 07:54:19 -0700
+Message-Id: <200708061318.l76DIVoF001787@dantu.rdu.redhat.com>
 From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 24 Jul 2007 13:22:34 -0400
 Subject: [PATCH 23/25] XFS: call attr_kill_to_mode from xfs_vn_setattr
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
