@@ -1,41 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 13:30:11 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6QKU5bm016841
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Jul 2007 13:30:07 -0700
-Received: from localhost (dslb-084-056-125-167.pools.arcor-ip.net [84.56.125.167])
-	by mail.lichtvoll.de (Postfix) with ESMTP id C8B185ADEE
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Jul 2007 22:30:59 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: xfstest 42 does not like to use my $SCRATCH_DEV setting
-Date: Thu, 26 Jul 2007 22:30:03 +0200
-References: <200707262211.40995.Martin@lichtvoll.de> (sfid-20070726_221933_390593_7B834927)
-In-Reply-To: <200707262211.40995.Martin@lichtvoll.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 15:06:31 -0700 (PDT)
+Received: from mx1.suse.de (mx1.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6QM6Qbm010704
+	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 15:06:27 -0700
+Subject: Re: RFC: log record CRC validation
+References: <20070725092445.GT12413810@sgi.com> <46A7226D.8080906@sgi.com>
+	<20070726055501.GF12413810@sgi.com>
+From: Andi Kleen <andi@firstfloor.org>
+Date: 27 Jul 2007 01:01:15 +0200
+In-Reply-To: <20070726055501.GF12413810@sgi.com>
+Message-ID: <p731weusrb8.fsf@bingen.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200707262230.04176.Martin@lichtvoll.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Mark Goodwin <markgw@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Am Donnerstag 26 Juli 2007 schrieb Martin Steigerwald:
-> Hi!
->
-> I tried patching xfstests so that test 42 can be used without
-> scratchdev with the patch I got from Timothy.
+David Chinner <dgc@sgi.com> writes:
+> 
+> Nope. To do that, we'd need to implement some type of Reed-Solomon
+> coding and would need to use more bits on disk to store the ECC
+> data. That would have a much bigger impact on log throughput than a
+> table based CRC on a chunk of data that is hot in the CPU cache. 
 
-Hi!
+Processing or rewriting cache hot data shouldn't be significantly
+different in cost (assuming the basic CPU usage of the algorithms
+is not too different); just the cache lines need to be already exclusive
+which is likely the case with logs.
 
-Just forget what I wrote... It helps to run make in xfstests before trying 
-to run one of those tests. ;)
+> And we'd have to write the code as well. ;)
 
-Test is now running.
+Modern kernels have R-S functions in lib/reed_solomon. They
+are used in some of the flash file systems. I haven't checked
+how their performance compares to standard CRC though.
 
-Regards,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+> 
+> However, I'm not convinced that this sort of error correction is the
+> best thing to do at a high level as all the low level storage
+> already does Reed-Solomon based bit error correction.  I'd much
+> prefer to use a different method of redundancy in the filesystem so
+> the error detection and correction schemes at different levels don't
+> have the same weaknesses.
+
+Agreed. On the file system level the best way to handle this is 
+likely data duplicated on different blocks.
+
+> That means the filesystem needs strong enough CRCs to detect bit
+> errors and sufficient structure validity checking to detect gross
+> errors.  XFS already does pretty good structure checking; we don't
+
+The trouble is that it tends to go to too drastic measures (shutdown) if it
+detects any inconsistency.
+
+-Andi
