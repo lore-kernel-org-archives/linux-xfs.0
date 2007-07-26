@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 14:44:21 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 14:09:26 -0700 (PDT)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6QLiGbm005287
-	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 14:44:18 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6QL9Mbm028849
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Jul 2007 14:09:23 -0700
 Received: from localhost (dslb-084-056-125-167.pools.arcor-ip.net [84.56.125.167])
-	by mail.lichtvoll.de (Postfix) with ESMTP id 07D2A5ADEE
-	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 23:45:12 +0200 (CEST)
+	by mail.lichtvoll.de (Postfix) with ESMTP id 648665ADEE
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Jul 2007 23:10:17 +0200 (CEST)
 From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: xfs_fsr and null byte areas in files
+Date: Thu, 26 Jul 2007 23:09:23 +0200
 References: <200707092313.48876.Martin@lichtvoll.de> <20070710005030.GQ31489@sgi.com> (sfid-20070710_091332_436725_890FB700)
 In-Reply-To: <20070710005030.GQ31489@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-Date: Thu, 26 Jul 2007 23:44:19 +0200
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Message-Id: <200707262344.19217.Martin@lichtvoll.de>
+Content-Disposition: inline
+Message-Id: <200707262309.24012.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
 Am Dienstag 10 Juli 2007 schrieb David Chinner:
 
