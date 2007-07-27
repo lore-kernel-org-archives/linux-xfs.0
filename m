@@ -1,90 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 18:25:03 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6R1Otbm027224
-	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 18:24:57 -0700
-Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id l6R1OX1J003921
-	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 18:24:35 -0700
-Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id l6R1OS3T005155
-	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 18:24:28 -0700
-Message-ID: <46A94963.7000103@agami.com>
-Date: Thu, 26 Jul 2007 18:24:51 -0700
-From: Michael Nishimoto <miken@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jul 2007 22:04:58 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6R54pbm008529
+	for <xfs@oss.sgi.com>; Thu, 26 Jul 2007 22:04:53 -0700
+Date: Fri, 27 Jul 2007 15:08:36 +1000
+Subject: REVIEW: xfs_repair doesn't handle fsblock != dirblock sizes properly
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------X0QgzFliGOLJHS7ILe9P6L
 MIME-Version: 1.0
-Subject: Re: RFC: log record CRC validation
-References: <20070725092445.GT12413810@sgi.com> <46A7226D.8080906@sgi.com> <46A8DF7E.4090006@agami.com> <20070726233129.GM12413810@sgi.com>
-In-Reply-To: <20070726233129.GM12413810@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <op.tv3xwmv03jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: markgw@sgi.com, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-The log checksum code has not been used since the
-development phase of xfs.  It did work at one point because I
-remember using it and then decided to disable it and use just
-the current cycle stamping technique.  The checksum code was
-just advisory, so I could see if it ever occurred during
-development.
+------------X0QgzFliGOLJHS7ILe9P6L
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
-When a CRC error is found, your suggestion is correct.  Recovery
-should backup and process only completely good log records.  The code
-backs up in this same fashion when it encounters a region of
-missing sector updates because of the async nature of log
-writes and disk caches.
+Part of the improved xfs_repair performance speedups, the
+prefetch/dir block handling code made sure the I/Os are the
+same size between phases. Unfortunately, the blocks are
+too small - directories were broken up into fsblock sizes
+instead of dirblock sizes.
 
-At this point, I'm not convinced that xfs needs to do CRCs on
-the xfs log because the size of an xfs log is relatively small.
+The attached patch fixes this regression up.
+------------X0QgzFliGOLJHS7ILe9P6L
+Content-Disposition: attachment; filename=fix_big_dirblocks.patch
+Content-Type: application/octet-stream; name=fix_big_dirblocks.patch
+Content-Transfer-Encoding: Base64
 
-    Michael
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9yZXBh
+aXIvZGlyMi5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKLS0t
+IGEveGZzcHJvZ3MvcmVwYWlyL2RpcjIuYwkyMDA3LTA3LTI3IDE1OjAxOjQw
+LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9yZXBhaXIvZGlyMi5j
+CTIwMDctMDctMjcgMTM6MjU6MTIuOTc4MzAwNjI3ICsxMDAwCkBAIC04OCwx
+OSArODgsMTAgQEAgZGFfcmVhZF9idWYoCiAJeGZzX2J1Zl90CSpicGFycmF5
+WzRdOwogCXhmc19idWZfdAkqKmJwbGlzdDsKIAl4ZnNfZGFidWZfdAkqZGFi
+dWY7Ci0JaW50CQlpLCBqOworCWludAkJaTsKIAlpbnQJCW9mZjsKLQlpbnQJ
+CW5ibG9ja3M7Ci0KLQkvKgotCSAqIGR1ZSB0byBsaW1pdGF0aW9ucyBpbiBs
+aWJ4ZnNfY2FjaGUsIHdlIG5lZWQgdG8gcmVhZCB0aGUKLQkgKiBibG9ja3Mg
+aW4gZnNibG9jayBzaXplIGNodW5rcwotCSAqLwogCi0JZm9yIChpID0gMCwg
+bmJsb2NrcyA9IDA7IGkgPCBuZXg7IGkrKykKLQkJbmJsb2NrcyArPSBibXBb
+aV0uYmxvY2tjb3VudDsKLQotCWlmIChuYmxvY2tzID4gKHNpemVvZihicGFy
+cmF5KS9zaXplb2YoeGZzX2J1Zl90ICopKSkgeworCWlmIChuZXggPiAoc2l6
+ZW9mKGJwYXJyYXkpL3NpemVvZih4ZnNfYnVmX3QgKikpKSB7CiAJCWJwbGlz
+dCA9IGNhbGxvYyhuZXgsIHNpemVvZigqYnBsaXN0KSk7CiAJCWlmIChicGxp
+c3QgPT0gTlVMTCkgewogCQkJZG9fZXJyb3IoXygiY291bGRuJ3QgbWFsbG9j
+IGRpcjIgYnVmZmVyIGxpc3RcbiIpKTsKQEAgLTExMSwzOSArMTAyLDMxIEBA
+IGRhX3JlYWRfYnVmKAogCQkvKiBjb21tb24gY2FzZSBhdm9pZHMgY2FsbG9j
+L2ZyZWUgKi8KIAkJYnBsaXN0ID0gYnBhcnJheTsKIAl9Ci0JZm9yIChpID0g
+MCwgaiA9IDA7IGogPCBuZXg7IGorKykgewotCQl4ZnNfZGZzYm5vX3QJYm5v
+OwotCQlpbnQJCWM7Ci0KLQkJYm5vID0gYm1wW2pdLnN0YXJ0YmxvY2s7Ci0J
+CWZvciAoYyA9IDA7IGMgPCBibXBbal0uYmxvY2tjb3VudDsgYysrLCBibm8r
+KykgeworCWZvciAoaSA9IDA7IGkgPCBuZXg7IGkrKykgewogI2lmZGVmIFhS
+X1BGX1RSQUNFCi0JCQlwZnRyYWNlKCJhYm91dCB0byByZWFkIG9mZiAlbGx1
+IiwKLQkJCQkobG9uZyBsb25nKVhGU19GU0JfVE9fREFERFIobXAsIGJubykp
+OworCQlwZnRyYWNlKCJhYm91dCB0byByZWFkIG9mZiAlbGx1IChsZW4gPSAl
+ZCkiLAorCQkJKGxvbmcgbG9uZylYRlNfRlNCX1RPX0RBRERSKG1wLCBibXBb
+aV0uc3RhcnRibG9jayksCisJCQlYRlNfRlNCX1RPX0JCKG1wLCBibXBbaV0u
+YmxvY2tjb3VudCkpOwogI2VuZGlmCi0JCQlicGxpc3RbaV0gPSBsaWJ4ZnNf
+cmVhZGJ1ZihtcC0+bV9kZXYsCi0JCQkJCVhGU19GU0JfVE9fREFERFIobXAs
+IGJubyksCi0JCQkJCVhGU19GU0JfVE9fQkIobXAsIDEpLCAwKTsKLQkJCWlm
+ICghYnBsaXN0W2ldKQotCQkJCWdvdG8gZmFpbGVkOworCQlicGxpc3RbaV0g
+PSBsaWJ4ZnNfcmVhZGJ1ZihtcC0+bV9kZXYsCisJCQkJWEZTX0ZTQl9UT19E
+QUREUihtcCwgYm1wW2ldLnN0YXJ0YmxvY2spLAorCQkJCVhGU19GU0JfVE9f
+QkIobXAsIGJtcFtpXS5ibG9ja2NvdW50KSwgMCk7CisJCWlmICghYnBsaXN0
+W2ldKQorCQkJZ290byBmYWlsZWQ7CiAjaWZkZWYgWFJfUEZfVFJBQ0UKLQkJ
+CXBmdHJhY2UoInJlYWRidWYgJXAgKCVsbHUsICVkKSIsIGJwbGlzdFtpXSwK
+LQkJCQkobG9uZyBsb25nKVhGU19CVUZfQUREUihicGxpc3RbaV0pLAotCQkJ
+CVhGU19CVUZfQ09VTlQoYnBsaXN0W2ldKSk7CisJCXBmdHJhY2UoInJlYWRi
+dWYgJXAgKCVsbHUsICVkKSIsIGJwbGlzdFtpXSwKKwkJCShsb25nIGxvbmcp
+WEZTX0JVRl9BRERSKGJwbGlzdFtpXSksCisJCQlYRlNfQlVGX0NPVU5UKGJw
+bGlzdFtpXSkpOwogI2VuZGlmCi0JCQlpKys7Ci0JCX0KIAl9Ci0JQVNTRVJU
+KGkgPT0gbmJsb2Nrcyk7Ci0KLQlkYWJ1ZiA9IG1hbGxvYyhYRlNfREFfQlVG
+X1NJWkUobmJsb2NrcykpOworCWRhYnVmID0gbWFsbG9jKFhGU19EQV9CVUZf
+U0laRShuZXgpKTsKIAlpZiAoZGFidWYgPT0gTlVMTCkgewogCQlkb19lcnJv
+cihfKCJjb3VsZG4ndCBtYWxsb2MgZGlyMiBidWZmZXIgaGVhZGVyXG4iKSk7
+CiAJCWV4aXQoMSk7CiAJfQogCWRhYnVmLT5kaXJ0eSA9IDA7CiAJZGFidWYt
+Pm5idWYgPSBuZXg7Ci0JaWYgKG5ibG9ja3MgPT0gMSkgeworCWlmIChuZXgg
+PT0gMSkgewogCQlicCA9IGJwbGlzdFswXTsKIAkJZGFidWYtPmJiY291bnQg
+PSAoc2hvcnQpQlRPQkIoWEZTX0JVRl9DT1VOVChicCkpOwogCQlkYWJ1Zi0+
+ZGF0YSA9IFhGU19CVUZfUFRSKGJwKTsKQEAgLTE1OCw3ICsxNDEsNyBAQCBk
+YV9yZWFkX2J1ZigKIAkJCWRvX2Vycm9yKF8oImNvdWxkbid0IG1hbGxvYyBk
+aXIyIGJ1ZmZlciBkYXRhXG4iKSk7CiAJCQlleGl0KDEpOwogCQl9Ci0JCWZv
+ciAoaSA9IG9mZiA9IDA7IGkgPCBuYmxvY2tzOyBpKyssIG9mZiArPSBYRlNf
+QlVGX0NPVU5UKGJwKSkgeworCQlmb3IgKGkgPSBvZmYgPSAwOyBpIDwgbmV4
+OyBpKyssIG9mZiArPSBYRlNfQlVGX0NPVU5UKGJwKSkgewogCQkJYnAgPSBi
+cGxpc3RbaV07CiAJCQliY29weShYRlNfQlVGX1BUUihicCksIChjaGFyICop
+ZGFidWYtPmRhdGEgKyBvZmYsCiAJCQkJWEZTX0JVRl9DT1VOVChicCkpOwpA
+QCAtMTY4LDcgKzE1MSw3IEBAIGRhX3JlYWRfYnVmKAogCQlmcmVlKGJwbGlz
+dCk7CiAJcmV0dXJuIGRhYnVmOwogZmFpbGVkOgotCWZvciAoaSA9IDA7IGkg
+PCBuYmxvY2tzOyBpKyspCisJZm9yIChpID0gMDsgaSA8IG5leDsgaSsrKQog
+CQlsaWJ4ZnNfcHV0YnVmKGJwbGlzdFtpXSk7CiAJaWYgKGJwbGlzdCAhPSBi
+cGFycmF5KQogCQlmcmVlKGJwbGlzdCk7Cgo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KeGZzcHJvZ3MvcmVwYWlyL3ByZWZldGNoLmMKPT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09CgotLS0gYS94ZnNwcm9ncy9yZXBh
+aXIvcHJlZmV0Y2guYwkyMDA3LTA3LTI3IDE1OjAxOjQwLjAwMDAwMDAwMCAr
+MTAwMAorKysgYi94ZnNwcm9ncy9yZXBhaXIvcHJlZmV0Y2guYwkyMDA3LTA3
+LTI3IDEzOjQ2OjQ3LjUzNTI5NjQ2OCArMTAwMApAQCAtMTc2LDEyICsxNzYs
+MTQgQEAgcGZfcmVhZF9ibWJ0X3JlY2xpc3QoCiAJCWNwID0gYzsKIAogCQl3
+aGlsZSAoYykgeworCQkJdW5zaWduZWQgaW50CWxlbjsKICNpZmRlZiBYUl9Q
+Rl9UUkFDRQogCQkJcGZ0cmFjZSgicXVldWluZyBkaXIgZXh0ZW50IGluIEFH
+ICVkIiwgYXJncy0+YWdubyk7CiAjZW5kaWYKLQkJCXBmX3F1ZXVlX2lvKGFy
+Z3MsIHMsIDEsIEJfRElSX01FVEEpOwotCQkJYy0tOwotCQkJcysrOworCQkJ
+bGVuID0gKGMgPiBtcC0+bV9kaXJibGtmc2JzKSA/IG1wLT5tX2RpcmJsa2Zz
+YnMgOiBjOworCQkJcGZfcXVldWVfaW8oYXJncywgcywgbGVuLCBCX0RJUl9N
+RVRBKTsKKwkJCWMgLT0gbGVuOworCQkJcyArPSBsZW47CiAJCX0KIAl9CiAJ
+cmV0dXJuIDE7Cg==
 
-> Date: Wed, 25 Jul 2007 19:24:45 +1000
-> From: David Chinner <dgc@sgi.com>
-> To: xfs-dev <xfs-dev@sgi.com>
-> Cc: xfs-oss <xfs@oss.sgi.com>
-> Subject: RFC: log record CRC validation
-> 
-> Folks,
-> 
-> I've just fixed up the never-used-debug log record checksumming
-> code with an eye to permanently enabling it for production
-> filesystems.
-> 
-> Firstly, I updated the simple 32 bit wide XOR checksum to use the
-> crc32c module. This places an new dependency on XFS - it will now
-> depends on CONFIG_LIBCRC32C. I'm also not sure what the best
-> method to use is - the little endian or big endian CRC algorithm
-> so I just went for the default (crc32c()).
-> 
-> This then resulted in recovery failing to verify the checksums,
-> and it turns out that is because xfs_pack_data() gets passed a
-> padded buffer and size to checksum (padded to 512 bytes), whereas
-> the unpacking (recovery) only checksummed the unpadded record
-> length. Hence this code probably never worked reliably if anyone
-> ever enabled it.
-> 
-> This does bring up a question - probably for Tim - do we only get
-> rounded to BBs or do we get rounded to the log stripe unit when
-> packing the log records before writeout? It seems froma quick test
-> that it is only BBs, but confirmation would be good....
-> 
-> The next question is the hard one. What do we do when we detect
-> a log record CRC error? Right now it just warns and sets a flag
-> in the log. I think it should probably prevent log replay from
-> replaying past this point (i.e. trim the head back to the last
-> good log record) but I'm not sure what the best thing to do here.
-> 
-> Comments?
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
-> 
+------------X0QgzFliGOLJHS7ILe9P6L--
