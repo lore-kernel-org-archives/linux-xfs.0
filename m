@@ -1,47 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 28 Jul 2007 06:09:08 -0700 (PDT)
-Received: from mx1.suse.de (ns1.suse.de [195.135.220.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6SD93bm016913
-	for <xfs@oss.sgi.com>; Sat, 28 Jul 2007 06:09:05 -0700
-Subject: Re: RFC: log record CRC validation
-References: <20070725092445.GT12413810@sgi.com> <46A7226D.8080906@sgi.com>
-	<46A8DF7E.4090006@agami.com> <20070726233129.GM12413810@sgi.com>
-	<46AAA340.60208@agami.com>
-From: Andi Kleen <andi@firstfloor.org>
-Date: 28 Jul 2007 16:03:48 +0200
-In-Reply-To: <46AAA340.60208@agami.com>
-Message-ID: <p73odhwr5ff.fsf@bingen.suse.de>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 28 Jul 2007 10:54:23 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6SHsIbm019611
+	for <xfs@oss.sgi.com>; Sat, 28 Jul 2007 10:54:19 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l6SHsLA5006437
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 28 Jul 2007 19:54:21 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l6SHsL9P006435
+	for xfs@oss.sgi.com; Sat, 28 Jul 2007 19:54:21 +0200
+Date: Sat, 28 Jul 2007 19:54:21 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] add missing xfs_filestreams_trace_buf export
+Message-ID: <20070728175421.GA6365@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "William J. Earl" <earl@agami.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, David Chinner <dgc@sgi.com>, Michael Nishimoto <miken@agami.com>, markgw@sgi.com
+To: xfs@oss.sgi.com
 
-"William J. Earl" <earl@agami.com> writes:
+add an export of xfs_filestreams_trace_buf for debug builds because
+xfsidbg wants to access it.
 
-> It is usually
-> cost-effective, however, to simply select a reliable disk subsystem.
+This prevent sucessfully building an xfs module when debug was enabled
+because modpost has gotten quite picky.
 
-In practice people don't run fully reliable disk subsystems
-unfortunately. And also a previously reliable disk subsystem
-might degrade over time. It's better to handle this case.
 
-Also CPUs have gotten a lot faster recently with more cache
-misses dominating than actual operations; CRCs on relatively small data
-items that are already manipulated by the CPU (like file system
-metadata) should be essentially free.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> With SATA, SAS, and FC, which have link-level integrity checks, silent
-> data corruption on the link is unlikely.   
-
-For TCP/IP networking that is in theory true too -- with L2 networks
-usually having CRCs. In practice the TCP/UDP checksum finds a lot of
-corruptions wherever they come from and there are even some that are
-only detected by stronger checksums (like in SSL) or go undetected.
-
-While disk subsystems are probably doing a bit better than IP networks
-in terms of error rates they are far from perfect either.
-
--Andi
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-07-28 18:45:16.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2007-07-28 18:48:50.000000000 +0200
+@@ -63,6 +63,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_utils.h"
+ #include "xfs_iomap.h"
++#include "xfs_filestream.h"
+ #include "support/ktrace.h"
+ 
+ 
+@@ -106,6 +107,9 @@ EXPORT_SYMBOL(xfs_attr_trace_buf);
+ #ifdef XFS_DIR2_TRACE
+ EXPORT_SYMBOL(xfs_dir2_trace_buf);
+ #endif
++#ifdef XFS_FILESTREAMS_TRACE
++EXPORT_SYMBOL(xfs_filestreams_trace_buf);
++#endif
+ 
+ #ifdef XFS_BUF_TRACE
+ extern ktrace_t *xfs_buf_trace_buf;
