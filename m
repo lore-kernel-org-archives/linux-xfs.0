@@ -1,121 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jul 2007 10:30:31 -0700 (PDT)
-Received: from mailrelay.pawisda.de (mail.pawisda.de [213.157.4.156])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6UHUNbm024470
-	for <xfs@oss.sgi.com>; Mon, 30 Jul 2007 10:30:25 -0700
-Subject: Re: XFS shrink (step 0)
-From: Ruben Porras <ruben.porras@linworks.de>
-In-Reply-To: <20070629065525.GQ31489@sgi.com>
-References: <1180715974.10796.46.camel@localhost>
-	 <20070604001632.GA86004887@sgi.com> <1182291751.5289.9.camel@localhost>
-	 <20070619234248.GT86004887@sgi.com> <46838FB4.1040906@linworks.de>
-	 <20070629065525.GQ31489@sgi.com>
-Content-Type: multipart/mixed; boundary="=-qMsU+OcdBmZRkLJQNSW7"
-Date: Mon, 30 Jul 2007 19:30:25 +0200
-Message-Id: <1185816625.3941.59.camel@localhost>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jul 2007 12:07:03 -0700 (PDT)
+Received: from raad.intranet ([212.12.190.32])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6UJ6tbm029499
+	for <xfs@oss.sgi.com>; Mon, 30 Jul 2007 12:06:58 -0700
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: bonnie++ benchmarks for ext2,ext3,ext4,jfs,reiserfs,xfs,zfs on software raid 5
+Date: Mon, 30 Jul 2007 22:07:02 +0300
+References: <Pine.LNX.4.64.0707301021090.12456@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0707301021090.12456@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200707302207.02672.a1426z@gawab.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, iusty@k1024.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-raid@vger.kernel.org
 
---=-qMsU+OcdBmZRkLJQNSW7
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Justin Piszcz wrote:
+> CONFIG:
+>
+> Software RAID 5 (400GB x 6): Default mkfs parameters for all filesystems.
+> Kernel was 2.6.21 or 2.6.22, did these awhile ago.
+> Hardware was SATA with PCI-e only, nothing on the PCI bus.
+>
+> ZFS was userspace+fuse of course.
 
-Am Freitag, den 29.06.2007, 16:55 +1000 schrieb David Chinner:
-> On Thu, Jun 28, 2007 at 12:38:44PM +0200, Ruben Porras wrote:
+Wow! Userspace and still that efficient.
 
-> For something like this it's probably easier to do with shell/perl/awk.
-> 
-> e.g. in shell, the number of ags in the filesystem:
-> 
-> iterate all ags:
-> 
-> numags=`xfs_db -r -c "sb 0" -c "p agcount" /dev/sdb8 | sed -e 's/.* = //'`
-> lastag=`expr $numags - 1`
-> for ags in `seq 0 1 $lastag`; do
-> 	....
-> done
-> 
-> Free space in an AG 0:
-> 
-> xfs_db -r -c "freesp -s -a 0" /dev/sdb8 | awk '/total free blocks/ {print $4}'
+> Reiser was V3.
+> EXT4 was created using the recommended options on its project page.
+>
+> RAW:
+>
+> ext2,7760M,56728,96.3333,180505,51,85484,17.3333,50946.7,80.3333,235541,21
+>.3333,373.667,0,16:100000:16/64,2354,27,0,0,8455.67,14.6667,2211.67,26.3333
+>,0,0,9724,22.3333
+> ext3,7760M,52702.7,94.3333,165005,60,82294.7,20.6667,52664,83.6667,258788,
+>33.3333,335.8,0,16:100000:16/64,858.333,10.6667,10250.3,28.6667,4084,15,897
+>,12.6667,4024.33,12.3333,2754,11.3333
+> ext4,7760M,53129.7,95,164515,59.3333,101678,31.6667,62194.3,98.6667,266716
+>,22.3333,405.767,0,16:100000:16/64,1963.67,23.6667,0,0,20859,73.6667,1731,2
+>1.3333,9022,23.6667,16410,65.6667
+> jfs,7760M,54606,92,191997,52,112764,33.6667,63585.3,99,274921,22.3333,383.
+>8,0,16:100000:16/64,344,1,0,0,539.667,0,297.667,1,0,0,340,0
+> reiserfs,7760M,51056.7,96,180607,67,106907,38.3333,61231.3,97.6667,275339,
+>29.3333,441.167,0,16:100000:16/64,2516,60.6667,19174.3,60.6667,8194.33,54.3
+>333,2011,42.6667,6963.67,19.6667,9168.33,68.6667
+> xfs,7760M,52985.7,93,158342,45,79682,14,60547.3,98,239101,20.3333,359.667,
+>0,16:100000:16/64,415,4,0,0,1774.67,10.6667,454,4.66667,14526.3,40,1572,12.
+>6667
 
-I decided to calcule the free space in a AG directly as the space in
-"freeblks" - "btreeblks".
+> zfs,7760M,
 
-Attached is a perl script that calculates the free space of a hole
-filesystem. It's easy to modify it to get the free space from a range of
-AGs, so unless there are errors, I lay it on the mailing list as an
-example, and I'll adapt it later as needed. I would like to start with
-the step number 2.
+Dissecting some of these numbers:
 
-How is the state of the program xfs_reno.c? Can it be released in the
-near future as GPL, or should I go better for now with point number 3
-(that is, move data out of offline AGs)?
+  speed	%cpu  
+> 25601,43.3333,
+> 32198.7,4,
+> 13266.3, 2,
+> 44145.3,68.6667,
+> 129278,9,
+> 245.167,0,
 
---=-qMsU+OcdBmZRkLJQNSW7
-Content-Disposition: attachment; filename=freecount.pl
-Content-Type: application/x-perl; name=freecount.pl
-Content-Transfer-Encoding: 7bit
+> 16:100000:16/64,
 
-#!/usr/bin/perl -T
+  speed	%cpu  
+> 218.333,2,
+> 2698.33,11.6667,
+> 7434.67,14.3333,
+> 244,2,
+> 2191.33,11.6667,
+> 5613.33,13.3333
 
-use strict;
-use warnings;
+Extrapolating these %cpu number makes ZFS the fastest.
 
-my $fd;
+Are you sure these numbers are correct?
 
-$ENV{PATH} = "/usr/sbin";
-$ENV{LC_ALL} = "C";
 
-my $XFSDB  = "xfs_db";
+Thanks!
 
-sub help { print "Usage: freecount.pl device\n"; }
-
-sub read_param {
-  my $param = shift or die;
-
-  my ($key, $val) = split(/ = /, <$fd>);
-
-  my $regex = quotemeta($param);
-
-  die "desired $param not received" unless $key =~ /$regex/;
-
-  return $val;
-}
-
-unless (@ARGV == 1) { help && exit }
-
-my $dev = pop @ARGV;
-
-# untaint
-if ($dev =~ m!^(\/dev\/\w+\d+)$!) { $dev = $1 } else { help && exit }
-
-open($fd, "$XFSDB -r -c 'sb' -c 'p agcount' -c 'p blocksize' $dev |")
-  or die "Can't open xfs_db: $!\n";
-
-my ($agcount, $blksize) = map { read_param $_ } qw/agcount blocksize/;
-
-close($fd);
-
-my $free = 0;
-
-for (my $i = 0; $i < $agcount; $i++) {
-
-  open($fd, "$XFSDB -r -c 'agf $i' -c 'p freeblks' -c 'p btreeblks' $dev |")
-    or die "Can't open xfs_db: $!\n";
-
-  # discount the space used in btreeblks from the free space
-  $free += read_param("freeblks") - read_param("btreeblks");
-
-  close($fd);
-}
-
-$free *= $blksize / (1024 ** 2);
-
-print "$free M";
-
---=-qMsU+OcdBmZRkLJQNSW7--
+--
+Al
