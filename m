@@ -1,184 +1,201 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Jul 2007 14:14:40 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l6TLEWbm005001
-	for <xfs@oss.sgi.com>; Sun, 29 Jul 2007 14:14:34 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l6TLEaA5013003
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 29 Jul 2007 23:14:36 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l6TLEZ0t013001
-	for xfs@oss.sgi.com; Sun, 29 Jul 2007 23:14:35 +0200
-Date: Sun, 29 Jul 2007 23:14:35 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill move.[ch]
-Message-ID: <20070729211435.GC12824@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 29 Jul 2007 21:15:17 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l6U4F8bm001178
+	for <xfs@oss.sgi.com>; Sun, 29 Jul 2007 21:15:11 -0700
+Date: Mon, 30 Jul 2007 14:18:49 +1000
+Subject: REVIEW: Make xfs_metadump more robust against bad extents
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------0mbFd874GbelKsWn2GnSQS
+MIME-Version: 1.0
+Message-ID: <op.tv9flnkx3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Kill uio related functions and defines now that they're unused.
+------------0mbFd874GbelKsWn2GnSQS
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+Content-Transfer-Encoding: 7bit
 
+xfs_metadump didn't check for valid extent values in
+process_bmbt_reclist().
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The attached patch does some basic checks to see if a
+metadata extent should be copied or not.
+------------0mbFd874GbelKsWn2GnSQS
+Content-Disposition: attachment; filename=improve_metadump.patch
+Content-Type: application/octet-stream; name=improve_metadump.patch
+Content-Transfer-Encoding: Base64
 
-Index: linux-2.6-xfs/fs/xfs/Makefile-linux-2.6
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/Makefile-linux-2.6	2007-06-12 21:31:16.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/Makefile-linux-2.6	2007-06-12 21:31:20.000000000 +0200
-@@ -103,7 +103,6 @@ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
- # Objects in support/
- xfs-y				+= $(addprefix support/, \
- 				   debug.o \
--				   move.o \
- 				   uuid.o)
- 
- xfs-$(CONFIG_XFS_TRACE)		+= support/ktrace.o
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2007-06-12 21:31:06.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2007-06-12 21:31:09.000000000 +0200
-@@ -51,7 +51,6 @@
- 
- #include <support/ktrace.h>
- #include <support/debug.h>
--#include <support/move.h>
- #include <support/uuid.h>
- 
- #include <linux/mm.h>
-Index: linux-2.6-xfs/fs/xfs/support/move.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/support/move.c	2007-06-12 21:31:30.000000000 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,51 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include <xfs.h>
--
--/* Read from kernel buffer at src to user/kernel buffer defined
-- * by the uio structure. Advance the pointer in the uio struct
-- * as we go.
-- */
--int
--xfs_uio_read(caddr_t src, size_t len, struct uio *uio)
--{
--	size_t	count;
--
--	if (!len || !uio->uio_resid)
--		return 0;
--
--	count = uio->uio_iov->iov_len;
--	if (!count)
--		return 0;
--	if (count > len)
--		count = len;
--
--	if (uio->uio_segflg == UIO_USERSPACE) {
--		if (copy_to_user(uio->uio_iov->iov_base, src, count))
--			return EFAULT;
--	} else {
--		ASSERT(uio->uio_segflg == UIO_SYSSPACE);
--		memcpy(uio->uio_iov->iov_base, src, count);
--	}
--
--	uio->uio_iov->iov_base = (void*)((char*)uio->uio_iov->iov_base + count);
--	uio->uio_iov->iov_len -= count;
--	uio->uio_offset += count;
--	uio->uio_resid -= count;
--	return 0;
--}
-Index: linux-2.6-xfs/fs/xfs/support/move.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/support/move.h	2007-06-12 21:31:30.000000000 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,70 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- *
-- * Portions Copyright (c) 1982, 1986, 1993, 1994
-- *	The Regents of the University of California.  All rights reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that the following conditions
-- * are met:
-- * 1. Redistributions of source code must retain the above copyright
-- *    notice, this list of conditions and the following disclaimer.
-- * 2. Redistributions in binary form must reproduce the above copyright
-- *    notice, this list of conditions and the following disclaimer in the
-- *    documentation and/or other materials provided with the distribution.
-- * 3. Neither the name of the University nor the names of its contributors
-- *    may be used to endorse or promote products derived from this software
-- *    without specific prior written permission.
-- *
-- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-- * SUCH DAMAGE.
-- */
--#ifndef __XFS_SUPPORT_MOVE_H__
--#define __XFS_SUPPORT_MOVE_H__
--
--#include <linux/uio.h>
--#include <asm/uaccess.h>
--
--/* Segment flag values. */
--enum uio_seg {
--	UIO_USERSPACE,          /* from user data space */
--	UIO_SYSSPACE,           /* from system space */
--};
--
--struct uio {
--	struct kvec	*uio_iov;   /* pointer to array of iovecs */
--	int		uio_iovcnt; /* number of iovecs in array */
--	xfs_off_t	uio_offset; /* offset in file this uio corresponds to */
--	int		uio_resid;  /* residual i/o count */
--	enum uio_seg	uio_segflg; /* see above */
--};
--
--typedef struct uio uio_t;
--typedef struct kvec iovec_t;
--
--extern int	xfs_uio_read (caddr_t, size_t, uio_t *);
--
--#endif  /* __XFS_SUPPORT_MOVE_H__ */
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9kYi9t
+ZXRhZHVtcC5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKLS0t
+IGEveGZzcHJvZ3MvZGIvbWV0YWR1bXAuYwkyMDA3LTA3LTMwIDE0OjEwOjQ0
+LjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9kYi9tZXRhZHVtcC5j
+CTIwMDctMDctMzAgMTQ6MDg6NTEuOTcxODA4NDU3ICsxMDAwCkBAIC00Miw3
+ICs0Miw3IEBAIHN0YXRpYyB2b2lkCW1ldGFkdW1wX2hlbHAodm9pZCk7CiAK
+IHN0YXRpYyBjb25zdCBjbWRpbmZvX3QJbWV0YWR1bXBfY21kID0KIAl7ICJt
+ZXRhZHVtcCIsIE5VTEwsIG1ldGFkdW1wX2YsIDAsIC0xLCAwLAotCQkiWy1l
+XSBbLWddIFstd10gWy1vXSBmaWxlbmFtZSIsCisJCSJbLWVdIFstZ10gWy1t
+IG1heF9leHRlbnRdIFstd10gWy1vXSBmaWxlbmFtZSIsCiAJCSJkdW1wIG1l
+dGFkYXRhIHRvIGEgZmlsZSIsIG1ldGFkdW1wX2hlbHAgfTsKIAogc3RhdGlj
+IEZJTEUJCSpvdXRmOwkJLyogbWV0YWR1bXAgZmlsZSAqLwpAQCAtNTgsNiAr
+NTgsNyBAQCBzdGF0aWMgeGZzX2lub190CWN1cl9pbm87CiAKIHN0YXRpYyBp
+bnQJCXNob3dfcHJvZ3Jlc3MgPSAwOwogc3RhdGljIGludAkJc3RvcF9vbl9y
+ZWFkX2Vycm9yID0gMDsKK3N0YXRpYyBpbnQJCW1heF9leHRlbnRfc2l6ZSA9
+IDEwMDsKIHN0YXRpYyBpbnQJCWRvbnRfb2JmdXNjYXRlID0gMDsKIHN0YXRp
+YyBpbnQJCXNob3dfd2FybmluZ3MgPSAwOwogc3RhdGljIGludAkJcHJvZ3Jl
+c3Nfc2luY2Vfd2FybmluZyA9IDA7CkBAIC03Niw5ICs3NywxMCBAQCBtZXRh
+ZHVtcF9oZWxwKHZvaWQpCiAiIFRoZSAnbWV0YWR1bXAnIGNvbW1hbmQgZHVt
+cHMgdGhlIGtub3duIG1ldGFkYXRhIHRvIGEgY29tcGFjdCBmaWxlIHN1aXRh
+YmxlXG4iCiAiIGZvciBjb21wcmVzc2luZyBhbmQgc2VuZGluZyB0byBhbiBY
+RlMgbWFpbnRhaW5lciBmb3IgY29ycnVwdGlvbiBhbmFseXNpcyBcbiIKICIg
+b3IgeGZzX3JlcGFpciBmYWlsdXJlcy5cblxuIgotIiBUaGVyZSBhcmUgMyBv
+cHRpb25zOlxuIgorIiBPcHRpb25zOlxuIgogIiAgIC1lIC0tIElnbm9yZSBy
+ZWFkIGVycm9ycyBhbmQga2VlcCBnb2luZ1xuIgogIiAgIC1nIC0tIERpc3Bs
+YXkgZHVtcCBwcm9ncmVzc1xuIgorIiAgIC1tIC0tIFNwZWNpZnkgbWF4IGV4
+dGVudCBzaXplIGxpbWl0IHRvIGNvcHkgZm9yIG1ldGFkYXRhIChkZWZhdWx0
+ID0gMTAwKVxuIgogIiAgIC1vIC0tIERvbid0IG9iZnVzY2F0ZSBuYW1lcyBh
+bmQgZXh0ZW5kZWQgYXR0cmlidXRlc1xuIgogIiAgIC13IC0tIFNob3cgd2Fy
+bmluZ3Mgb2YgYmFkIG1ldGFkYXRhIGluZm9ybWF0aW9uXG4iCiAiXG4iKTsK
+QEAgLTIwNiwyMCArMjA4LDIxIEBAIHNjYW5fYnRyZWUoCiAKIHN0YXRpYyBp
+bnQKIHZhbGlkX2JubygKLQl4ZnNfYWdibG9ja190CQlibm8sCiAJeGZzX2Fn
+bnVtYmVyX3QJCWFnbm8sCi0JeGZzX2FnYmxvY2tfdAkJYWdibm8sCi0JdHlw
+bm1fdAkJCWJ0eXBlKQorCXhmc19hZ2Jsb2NrX3QJCWFnYm5vKQogewotCWlm
+IChibm8gPiAwICYmIGJubyA8PSBtcC0+bV9zYi5zYl9hZ2Jsb2NrcykKKwlp
+ZiAoYWdubyA8IChtcC0+bV9zYi5zYl9hZ2NvdW50IC0gMSkgJiYgYWdibm8g
+PiAwICYmCisJCQlhZ2JubyA8PSBtcC0+bV9zYi5zYl9hZ2Jsb2NrcykKKwkJ
+cmV0dXJuIDE7CisJaWYgKGFnbm8gPT0gKG1wLT5tX3NiLnNiX2FnY291bnQg
+LSAxKSAmJiBhZ2JubyA+IDAgJiYKKwkJCWFnYm5vIDw9IChtcC0+bV9zYi5z
+Yl9kYmxvY2tzIC0KKwkJCSAobXAtPm1fc2Iuc2JfYWdjb3VudCAtIDEpICog
+bXAtPm1fc2Iuc2JfYWdibG9ja3MpKQogCQlyZXR1cm4gMTsKIAotCWlmIChz
+aG93X3dhcm5pbmdzKQotCQlwcmludF93YXJuaW5nKCJpbnZhbGlkIGJsb2Nr
+IG51bWJlciAoJXUpIGluICVzIGJsb2NrICV1LyV1IiwKLQkJCQlibm8sIHR5
+cHRhYltidHlwZV0ubmFtZSwgYWdubywgYWdibm8pOwogCXJldHVybiAwOwog
+fQogCisKIHN0YXRpYyBpbnQKIHNjYW5mdW5jX2ZyZWVzcCgKIAl4ZnNfYnRy
+ZWVfaGRyX3QJCSpidGhkciwKQEAgLTI0Nyw4ICsyNTAsMTQgQEAgc2NhbmZ1
+bmNfZnJlZXNwKAogCXBwID0gWEZTX0JUUkVFX1BUUl9BRERSKG1wLT5tX3Ni
+LnNiX2Jsb2Nrc2l6ZSwgeGZzX2FsbG9jLCBidGhkciwgMSwKIAkJCW1wLT5t
+X2FsbG9jX214clsxXSk7CiAJZm9yIChpID0gMDsgaSA8IG5yZWNzOyBpKysp
+IHsKLQkJaWYgKCF2YWxpZF9ibm8oYmUzMl90b19jcHUocHBbaV0pLCBhZ25v
+LCBhZ2JubywgYnR5cGUpKQorCQlpZiAoIXZhbGlkX2JubyhhZ25vLCBiZTMy
+X3RvX2NwdShwcFtpXSkpKSB7CisJCQlpZiAoc2hvd193YXJuaW5ncykKKwkJ
+CQlwcmludF93YXJuaW5nKCJpbnZhbGlkIGJsb2NrIG51bWJlciAoJXUvJXUp
+ICIKKwkJCQkJImluICVzIGJsb2NrICV1LyV1IiwKKwkJCQkJYWdubywgYmUz
+Ml90b19jcHUocHBbaV0pLAorCQkJCQl0eXB0YWJbYnR5cGVdLm5hbWUsIGFn
+bm8sIGFnYm5vKTsKIAkJCWNvbnRpbnVlOworCQl9CiAJCWlmICghc2Nhbl9i
+dHJlZShhZ25vLCBiZTMyX3RvX2NwdShwcFtpXSksIGxldmVsLCBidHlwZSwg
+YXJnLAogCQkJCXNjYW5mdW5jX2ZyZWVzcCkpCiAJCQlyZXR1cm4gMDsKQEAg
+LTg1OCwxMSArODY3LDEzIEBAIHByb2Nlc3NfYm1idF9yZWNsaXN0KAogCXR5
+cG5tX3QJCQlidHlwZSkKIHsKIAlpbnQJCQlpOwotCXhmc19kZmlsb2ZmX3QJ
+CW87CisJeGZzX2RmaWxvZmZfdAkJbywgb3A7CiAJeGZzX2Rmc2Jub190CQlz
+OwotCXhmc19kZmlsYmxrc190CQljOworCXhmc19kZmlsYmxrc190CQljLCBj
+cDsKIAlpbnQJCQlmOwogCXhmc19kZmlsb2ZmX3QJCWxhc3Q7CisJeGZzX2Fn
+bnVtYmVyX3QJCWFnbm87CisJeGZzX2FnYmxvY2tfdAkJYWdibm87CiAKIAlp
+ZiAoYnR5cGUgPT0gVFlQX0RBVEEpCiAJCXJldHVybiAxOwpAQCAtODczLDE0
+ICs4ODQsNjMgQEAgcHJvY2Vzc19ibWJ0X3JlY2xpc3QoCiAJZm9yIChpID0g
+MDsgaSA8IG51bXJlY3M7IGkrKywgcnArKykgewogCQljb252ZXJ0X2V4dGVu
+dChycCwgJm8sICZzLCAmYywgJmYpOwogCisJCS8qCisJCSAqIGlnbm9yZSBl
+eHRlbnRzIHRoYXQgYXJlIGNsZWFybHkgYm9ndXMsIGFuZCBpZiBhIGJvZ3Vz
+CisJCSAqIG9uZSBpcyBmb3VuZCwgc3RvcCBwcm9jZXNzaW5nIHJlbWFpbmlu
+ZyBleHRlbnRzCisJCSAqLworCQlpZiAoaSA+IDAgJiYgb3AgKyBjcCA+IG8p
+IHsKKwkJCWlmIChzaG93X3dhcm5pbmdzKQorCQkJCXByaW50X3dhcm5pbmco
+ImJtYXAgZXh0ZW50ICVkIGluICVzIGlubyAlbGx1ICIKKwkJCQkJInN0YXJ0
+cyBhdCAlbGx1LCBwcmV2aW91cyBleHRlbnQgIgorCQkJCQkiZW5kZWQgYXQg
+JWxsdVxuIiwgaSwKKwkJCQkJdHlwdGFiW2J0eXBlXS5uYW1lLCAobG9uZyBs
+b25nKWN1cl9pbm8sCisJCQkJCW8sIG9wICsgY3AgLSAxKTsKKwkJCWJyZWFr
+OworCQl9CisKKwkJaWYgKGMgPiBtYXhfZXh0ZW50X3NpemUpIHsKKwkJCS8q
+CisJCQkgKiBzaW5jZSB3ZSBhcmUgb25seSBwcm9jZXNzaW5nIG5vbi1kYXRh
+IGV4dGVudHMsCisJCQkgKiBsYXJnZSBudW1iZXJzIG9mIGJsb2NrcyBpbiBh
+IG1ldGFkYXRhIGV4dGVudCBpcworCQkJICogZXh0cmVtZWx5IHJhcmUgYW5k
+IG1vcmUgdGhhbiBsaWtlbHkgdG8gYmUgY29ycnVwdC4KKwkJCSAqLworCQkJ
+aWYgKHNob3dfd2FybmluZ3MpCisJCQkJcHJpbnRfd2FybmluZygic3VzcGlj
+aW91cyBjb3VudCAldSBpbiBibWFwICIKKwkJCQkJImV4dGVudCAlZCBpbiAl
+cyBpbm8gJWxsdVxuIiwgYywgaSwKKwkJCQkJdHlwdGFiW2J0eXBlXS5uYW1l
+LCAobG9uZyBsb25nKWN1cl9pbm8pOworCQkJYnJlYWs7CisJCX0KKworCQlv
+cCA9IG87CisJCWNwID0gYzsKKworCQlhZ25vID0gWEZTX0ZTQl9UT19BR05P
+KG1wLCBzKTsKKwkJYWdibm8gPSBYRlNfRlNCX1RPX0FHQk5PKG1wLCBzKTsK
+KworCQlpZiAoIXZhbGlkX2JubyhhZ25vLCBhZ2JubykpIHsKKwkJCWlmIChz
+aG93X3dhcm5pbmdzKQorCQkJCXByaW50X3dhcm5pbmcoImludmFsaWQgYmxv
+Y2sgbnVtYmVyICV1LyV1ICIKKwkJCQkJIiglbGx1KSBpbiBibWFwIGV4dGVu
+dCAlZCBpbiAlcyBpbm8gIgorCQkJCQkiJWxsdVxuIiwgYWdubywgYWdibm8s
+IHMsIGksCisJCQkJCXR5cHRhYltidHlwZV0ubmFtZSwgKGxvbmcgbG9uZylj
+dXJfaW5vKTsKKwkJCWJyZWFrOworCQl9CisKKwkJaWYgKCF2YWxpZF9ibm8o
+YWdubywgYWdibm8gKyBjIC0gMSkpIHsKKwkJCWlmIChzaG93X3dhcm5pbmdz
+KQorCQkJCXByaW50X3dhcm5pbmcoImJtYXAgZXh0ZW50ICVpIGluICVzIGlu
+b2RlICVsbHUgIgorCQkJCQkib3ZlcmZsb3dzIEFHIChlbmQgaXMgJXUvJXUp
+XG4iLCBpLAorCQkJCQl0eXB0YWJbYnR5cGVdLm5hbWUsIChsb25nIGxvbmcp
+Y3VyX2lubywKKwkJCQkJYWdubywgYWdibm8gKyBjIC0gMSk7CisJCQlicmVh
+azsKKwkJfQorCiAJCXB1c2hfY3VyKCk7CiAJCXNldF9jdXIoJnR5cHRhYlti
+dHlwZV0sIFhGU19GU0JfVE9fREFERFIobXAsIHMpLCBjICogYmxrYmIsCiAJ
+CQkJREJfUklOR19JR04sIE5VTEwpOwogCQlpZiAoaW9jdXJfdG9wLT5kYXRh
+ID09IE5VTEwpIHsKLQkJCXByaW50X3dhcm5pbmcoImNhbm5vdCByZWFkICVz
+IGJsb2NrICV1LyV1IiwKLQkJCQkJdHlwdGFiW2J0eXBlXS5uYW1lLAotCQkJ
+CQlYRlNfRlNCX1RPX0FHTk8obXAsIHMpLAotCQkJCQlYRlNfRlNCX1RPX0FH
+Qk5PKG1wLCBzKSk7CisJCQlwcmludF93YXJuaW5nKCJjYW5ub3QgcmVhZCAl
+cyBibG9jayAldS8ldSAoJWxsdSkiLAorCQkJCQl0eXB0YWJbYnR5cGVdLm5h
+bWUsIGFnbm8sIGFnYm5vLCBzKTsKIAkJCWlmIChzdG9wX29uX3JlYWRfZXJy
+b3IpCiAJCQkJcmV0dXJuIDA7CiAJCX0gZWxzZSB7CkBAIC0xMTc4LDcgKzEy
+MzgsNiBAQCBjb3B5X2lub2RlX2NodW5rKAogCSAqIHNjYW4gdGhyb3VnaCBp
+bm9kZXMgYW5kIGNvcHkgYW55IGJ0cmVlIGV4dGVudCBsaXN0cywgZGlyZWN0
+b3J5CiAJICogY29udGVudHMgYW5kIGV4dGVuZGVkIGF0dHJpYnV0ZXMuCiAJ
+ICovCi0KIAlmb3IgKGkgPSAwOyBpIDwgWEZTX0lOT0RFU19QRVJfQ0hVTks7
+IGkrKykgewogCQl4ZnNfZGlub2RlX3QgICAgICAgICAgICAqZGlwOwogCkBA
+IC0xMjI3LDE2ICsxMjg2LDIzIEBAIHNjYW5mdW5jX2lubygKIAkJCWlmICgh
+Y29weV9pbm9kZV9jaHVuayhhZ25vLCBycCkpCiAJCQkJcmV0dXJuIDA7CiAJ
+CX0KLQl9IGVsc2UgewotCQlwcCA9IFhGU19CVFJFRV9QVFJfQUREUihtcC0+
+bV9zYi5zYl9ibG9ja3NpemUsIHhmc19pbm9idCwKLQkJCQlidGhkciwgMSwg
+bXAtPm1faW5vYnRfbXhyWzFdKTsKLQkJZm9yIChpID0gMDsgaSA8IGJlMTZf
+dG9fY3B1KGJ0aGRyLT5iYl9udW1yZWNzKTsgaSsrKSB7Ci0JCQlpZiAoIXZh
+bGlkX2JubyhiZTMyX3RvX2NwdShwcFtpXSksIGFnbm8sIGFnYm5vLCBidHlw
+ZSkpCi0JCQkJY29udGludWU7Ci0JCQlpZiAoIXNjYW5fYnRyZWUoYWdubywg
+YmUzMl90b19jcHUocHBbaV0pLCBsZXZlbCwKLQkJCQkJYnR5cGUsIGFyZywg
+c2NhbmZ1bmNfaW5vKSkKLQkJCQlyZXR1cm4gMDsKKwkJcmV0dXJuIDE7CisJ
+fQorCisJcHAgPSBYRlNfQlRSRUVfUFRSX0FERFIobXAtPm1fc2Iuc2JfYmxv
+Y2tzaXplLCB4ZnNfaW5vYnQsCisJCQlidGhkciwgMSwgbXAtPm1faW5vYnRf
+bXhyWzFdKTsKKwlmb3IgKGkgPSAwOyBpIDwgYmUxNl90b19jcHUoYnRoZHIt
+PmJiX251bXJlY3MpOyBpKyspIHsKKwkJaWYgKCF2YWxpZF9ibm8oYWdubywg
+YmUzMl90b19jcHUocHBbaV0pKSkgeworCQkJaWYgKHNob3dfd2FybmluZ3Mp
+CisJCQkJcHJpbnRfd2FybmluZygiaW52YWxpZCBibG9jayBudW1iZXIgKCV1
+LyV1KSAiCisJCQkJCSJpbiAlcyBibG9jayAldS8ldSIsCisJCQkJCWFnbm8s
+IGJlMzJfdG9fY3B1KHBwW2ldKSwKKwkJCQkJdHlwdGFiW2J0eXBlXS5uYW1l
+LCBhZ25vLCBhZ2Jubyk7CisJCQljb250aW51ZTsKIAkJfQorCQlpZiAoIXNj
+YW5fYnRyZWUoYWdubywgYmUzMl90b19jcHUocHBbaV0pLCBsZXZlbCwKKwkJ
+CQlidHlwZSwgYXJnLCBzY2FuZnVuY19pbm8pKQorCQkJcmV0dXJuIDA7CiAJ
+fQogCXJldHVybiAxOwogfQpAQCAtMTQ0MSw2ICsxNTA3LDcgQEAgbWV0YWR1
+bXBfZigKIAl4ZnNfYWdudW1iZXJfdAlhZ25vOwogCWludAkJYzsKIAlpbnQJ
+CXN0YXJ0X2lvY3VyX3NwOworCWNoYXIJCSpwOwogCiAJZXhpdGNvZGUgPSAx
+OwogCXNob3dfcHJvZ3Jlc3MgPSAwOwpAQCAtMTQ1Myw3ICsxNTIwLDcgQEAg
+bWV0YWR1bXBfZigKIAkJcmV0dXJuIDA7CiAJfQogCi0Jd2hpbGUgKChjID0g
+Z2V0b3B0KGFyZ2MsIGFyZ3YsICJlZ293IikpICE9IEVPRikgeworCXdoaWxl
+ICgoYyA9IGdldG9wdChhcmdjLCBhcmd2LCAiZWdtOm93IikpICE9IEVPRikg
+ewogCQlzd2l0Y2ggKGMpIHsKIAkJCWNhc2UgJ2UnOgogCQkJCXN0b3Bfb25f
+cmVhZF9lcnJvciA9IDE7CkBAIC0xNDYxLDYgKzE1MjgsMTQgQEAgbWV0YWR1
+bXBfZigKIAkJCWNhc2UgJ2cnOgogCQkJCXNob3dfcHJvZ3Jlc3MgPSAxOwog
+CQkJCWJyZWFrOworCQkJY2FzZSAnbSc6CisJCQkJbWF4X2V4dGVudF9zaXpl
+ID0gKGludClzdHJ0b2wob3B0YXJnLCAmcCwgMCk7CisJCQkJaWYgKCpwICE9
+ICdcMCcgfHwgbWF4X2V4dGVudF9zaXplIDw9IDApIHsKKwkJCQkJcHJpbnRf
+d2FybmluZygiYmFkIG1heCBleHRlbnQgc2l6ZSAlc1xuIiwKKwkJCQkJCQlv
+cHRhcmcpOworCQkJCQlyZXR1cm4gMDsKKwkJCQl9CisJCQkJYnJlYWs7CiAJ
+CQljYXNlICdvJzoKIAkJCQlkb250X29iZnVzY2F0ZSA9IDE7CiAJCQkJYnJl
+YWs7Cgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KeGZzcHJvZ3Mv
+ZGIveGZzX21ldGFkdW1wLnNoCj09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PQoKLS0tIGEveGZzcHJvZ3MvZGIveGZzX21ldGFkdW1wLnNoCTIwMDct
+MDctMzAgMTQ6MTA6NDQuMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dz
+L2RiL3hmc19tZXRhZHVtcC5zaAkyMDA3LTA3LTMwIDE0OjA3OjExLjIyMDg1
+NzA4OSArMTAwMApAQCAtNSwxMyArNSwxNCBAQAogCiBPUFRTPSIgIgogREJP
+UFRTPSIgIgotVVNBR0U9IlVzYWdlOiB4ZnNfbWV0YWR1bXAgWy1lZm9nd1Zd
+IFstbCBsb2dkZXZdIHNvdXJjZSB0YXJnZXQiCitVU0FHRT0iVXNhZ2U6IHhm
+c19tZXRhZHVtcCBbLWVmb2d3Vl0gWy1tIG1heF9leHRlbnRzXSBbLWwgbG9n
+ZGV2XSBzb3VyY2UgdGFyZ2V0IgogCi13aGlsZSBnZXRvcHRzICJlZmdsOm93
+ViIgYword2hpbGUgZ2V0b3B0cyAiZWZnbDptOm93ViIgYwogZG8KIAljYXNl
+ICRjIGluCiAJZSkJT1BUUz0kT1BUUyItZSAiOzsKIAlnKQlPUFRTPSRPUFRT
+Ii1nICI7OworCW0pCU9QVFM9JE9QVFMiLW0gIiRPUFRBUkciICI7OwogCW8p
+CU9QVFM9JE9QVFMiLW8gIjs7CiAJdykJT1BUUz0kT1BUUyItdyAiOzsKIAlm
+KQlEQk9QVFM9JERCT1BUUyIgLWYiOzsK
+
+------------0mbFd874GbelKsWn2GnSQS--
