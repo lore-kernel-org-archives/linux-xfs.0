@@ -1,39 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 05:23:34 -0700 (PDT)
-Received: from isp.becroft.co.nz (isp.becroft.co.nz [202.89.33.33])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l71CNTbm028796
-	for <linux-xfs@oss.sgi.com>; Wed, 1 Aug 2007 05:23:30 -0700
-Subject: Re: Proper method of snapshotting XFS with external log using LVM2
-From: Mario Becroft <mb@gem.win.co.nz>
-In-Reply-To: <20070801121713.GY31489@sgi.com>
-References: <1185737538.12064.44.camel@server.ak.quickcircuit.co.nz>
-	 <20070801121713.GY31489@sgi.com>
-Content-Type: text/plain
-Date: Thu, 02 Aug 2007 00:23:29 +1200
-Message-Id: <1185971009.13401.146.camel@server.ak.quickcircuit.co.nz>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 05:56:03 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l71Ctpbm018177
+	for <xfs@oss.sgi.com>; Wed, 1 Aug 2007 05:55:55 -0700
+Date: Wed, 1 Aug 2007 14:55:54 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] stop using uio in the readlink code
+Message-ID: <20070801125554.GA27199@lst.de>
+References: <20070729211354.GB12824@lst.de> <20070801054142.GT31489@sgi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070801054142.GT31489@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: linux-xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Hi David,
+On Wed, Aug 01, 2007 at 03:41:42PM +1000, David Chinner wrote:
+> Do we really need to copy this code? I guess it doesn't really
+> matter that much but it would be nice not to have to copy an
+> exported vfs function just because we don't have a dentry...
 
-Thanks very much for your clear explanation of how to snapshot XFS
-filesystems with external log. It is good to know that I am doing it
-right.
-
-I found that in the latest Linux kernel version 2.6.22.1, you cannot use
-the method I have been using, and which you confirmed is ok. The problem
-is that if you xfs_freeze the filesystem, then the LVM snapshot command
-hangs forever. (Back in kernel version 2.6.16 this did not happen.) I
-guess the snapshot command is also attempting to freeze the filesystem,
-or something, which doesn't work when it is already frozen. I suppose
-how to fix this is a question for the linux-lvm mailing list.
-
-Thanks again for your detailed answer.
-
--- 
-Mario Becroft <mb@gem.win.co.nz>
+I was wondering whether to send a patch to fix and export the VFS
+function afterwards, but I really don't want a an xfs patch like
+this to have a VFS change depency to start with.  Especially as I
+want to change the name of the helper in namei.c aswell - the vfs_
+prefix is completely wrong.
