@@ -1,61 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 05:17:28 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l71CHLbm024611
-	for <linux-xfs@oss.sgi.com>; Wed, 1 Aug 2007 05:17:23 -0700
-Date: Wed, 1 Aug 2007 22:17:13 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 05:23:34 -0700 (PDT)
+Received: from isp.becroft.co.nz (isp.becroft.co.nz [202.89.33.33])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l71CNTbm028796
+	for <linux-xfs@oss.sgi.com>; Wed, 1 Aug 2007 05:23:30 -0700
 Subject: Re: Proper method of snapshotting XFS with external log using LVM2
-Message-ID: <20070801121713.GY31489@sgi.com>
+From: Mario Becroft <mb@gem.win.co.nz>
+In-Reply-To: <20070801121713.GY31489@sgi.com>
 References: <1185737538.12064.44.camel@server.ak.quickcircuit.co.nz>
+	 <20070801121713.GY31489@sgi.com>
+Content-Type: text/plain
+Date: Thu, 02 Aug 2007 00:23:29 +1200
+Message-Id: <1185971009.13401.146.camel@server.ak.quickcircuit.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1185737538.12064.44.camel@server.ak.quickcircuit.co.nz>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mario Becroft <mb@gem.win.co.nz>
+To: David Chinner <dgc@sgi.com>
 Cc: linux-xfs@oss.sgi.com
 
-On Mon, Jul 30, 2007 at 07:32:18AM +1200, Mario Becroft wrote:
-> I am using XFS and LVM2 under Linux. My XFS filesystems have an external
-> log.
-> 
-> What is the correct method of creating an LVM2 snapshot of volumes
-> containing an XFS filesystem with external log?
+Hi David,
 
-Not sure. I've never tried it.
+Thanks very much for your clear explanation of how to snapshot XFS
+filesystems with external log. It is good to know that I am doing it
+right.
 
-> Do I need to snapshot the main filesystem volume and the log volume?
+I found that in the latest Linux kernel version 2.6.22.1, you cannot use
+the method I have been using, and which you confirmed is ok. The problem
+is that if you xfs_freeze the filesystem, then the LVM snapshot command
+hangs forever. (Back in kernel version 2.6.16 this did not happen.) I
+guess the snapshot command is also attempting to freeze the filesystem,
+or something, which doesn't work when it is already frozen. I suppose
+how to fix this is a question for the linux-lvm mailing list.
 
-Yes.
+Thanks again for your detailed answer.
 
-> Should I be using xfs_freeze to ensure that the filesystem is not
-> modified between when I create the filesystem snapshot and the log
-> snapshot?
-
-Yes.
-
-> Or is there a special procedure for atomically creating both snapshots?
->
-> Or should I not be using an external log? If not, won't this decrease
-> performance?
-
-If it doesn't work, then don't use an external log and yes, it will
-decrease performance.
-
-> In the past I have successfully used xfs_freeze and created separate
-> snapshots of the filesystem and log volumes. However, I am not sure
-> whether this is the recommended approach.
-
-As long as both snapshots were taken with the one xfs_freeze command,
-then it shouldbe ok.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Mario Becroft <mb@gem.win.co.nz>
