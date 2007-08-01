@@ -1,60 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 07:10:02 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l71E9qbm000998
-	for <linux-xfs@oss.sgi.com>; Wed, 1 Aug 2007 07:09:57 -0700
-Date: Thu, 2 Aug 2007 00:09:44 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Aug 2007 08:02:59 -0700 (PDT)
+Received: from isp.becroft.co.nz (isp.becroft.co.nz [202.89.33.33])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l71F2sbm006128
+	for <linux-xfs@oss.sgi.com>; Wed, 1 Aug 2007 08:02:56 -0700
 Subject: Re: Proper method of snapshotting XFS with external log using LVM2
-Message-ID: <20070801140944.GA31489@sgi.com>
-References: <1185737538.12064.44.camel@server.ak.quickcircuit.co.nz> <20070801121713.GY31489@sgi.com> <1185971009.13401.146.camel@server.ak.quickcircuit.co.nz>
+From: Mario Becroft <mb@gem.win.co.nz>
+In-Reply-To: <20070801140944.GA31489@sgi.com>
+References: <1185737538.12064.44.camel@server.ak.quickcircuit.co.nz>
+	 <20070801121713.GY31489@sgi.com>
+	 <1185971009.13401.146.camel@server.ak.quickcircuit.co.nz>
+	 <20070801140944.GA31489@sgi.com>
+Content-Type: text/plain
+Date: Thu, 02 Aug 2007 03:02:54 +1200
+Message-Id: <1185980574.2694.35.camel@server.ak.quickcircuit.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1185971009.13401.146.camel@server.ak.quickcircuit.co.nz>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mario Becroft <mb@gem.win.co.nz>
-Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: linux-xfs@oss.sgi.com, linux-lvm@redhat.com
 
-On Thu, Aug 02, 2007 at 12:23:29AM +1200, Mario Becroft wrote:
-> Hi David,
+On Thu, 2007-08-02 at 00:09 +1000, David Chinner wrote:
+> [lvm snapshot] hangs on a lock that is held across the xfs_freeze -f ;
+> xfs_freeze -u sequence.
+
+Right.
+
+> > I suppose
+> > how to fix this is a question for the linux-lvm mailing list.
 > 
-> Thanks very much for your clear explanation of how to snapshot XFS
-> filesystems with external log. It is good to know that I am doing it
-> right.
-> 
-> I found that in the latest Linux kernel version 2.6.22.1, you cannot use
-> the method I have been using, and which you confirmed is ok. The problem
-> is that if you xfs_freeze the filesystem, then the LVM snapshot command
-> hangs forever.
+> IIRC from the last time this came, they'll tell you not to use
+> xfs_freeze.
 
-Ah, yes, I wondered if that still happened. The dm snapshot code is
-a little naive - it just assumes that it is the only thing that can
-freeze a device.
+Well, two problems with that:
 
-> (Back in kernel version 2.6.16 this did not happen.) I
-> guess the snapshot command is also attempting to freeze the filesystem,
-> or something, which doesn't work when it is already frozen.
+1. There is no way to atomically create snapshots of two different
+volumes (the main filesystem and the log) without using xfs_freeze.
 
-It hangs on a lock that is held across the xfs_freeze -f ;
-xfs_freeze -u sequence.
+2. I tried without xfs_freeze anyway just to see what would happen, and
+actually in kernel 2.6.22.1 if you simply create a snapshot of the main
+filesystem volume and destroy it several times in a row (not even
+touching the log volume yet) lvcreate hangs.
 
-> I suppose
-> how to fix this is a question for the linux-lvm mailing list.
+So it sounds like there is a fundamental problem with the approach, plus
+a bug somewhere... I will copy this to linux-lvm.
 
-IIRC from the last time this came, they'll tell you not to use
-xfs_freeze.
+For the benefit of those reading on linux-lvm, the issue is that I am
+trying to snapshot an XFS filesystem with an external log. To do this it
+is necessary to snapshot two volumes--the main filesystem volume and the
+log volume--while the filesystem is frozen. It is not sufficient to
+freeze the filesystem separately for each snapshot creation since its
+state might change between the two snapshots. The correct approach is to
+use xfs_freeze to freeze the filesystem, then create both snapshots,
+then unfreeze it. This used to work 100% reliably with kernel 2.6.16,
+device-mapper 1.02.03 and LVM2 2.02.02. With device-mapper 1.02.21 and
+LVM2 2.02.27, lvcreate hangs while creating a snapshot of a filesystem
+that has been frozen with xfs_freeze. Furthermore, when using kernel
+2.6.22.1 (and latest device-mapper and LVM2), even if I do not use
+xfs_freeze, lvcreate hangs about 10% of the time when creating a
+snapshot. Once in the hung state (whether because xfs_freeze was used or
+because of the random hang) it seems impossible to get it unstuck
+without rebooting the system.
 
-As it is, the freeze_bdev() interface that both xfs_freeze and
-dm-snapshot use is a complete pile of crud that we need to fix.
-One of these days I'll get some time to fix it....
+I guess this is not an XFS-specific problem--it would happen with any
+filesystem employing a separate log volume.
 
-Cheers,
+I am happy to test any patches that might address this issue... or maybe
+even hack one up myself if someone gives me some pointers, but I guess
+someone who knows something about LVM should really do it.
 
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Mario Becroft <mb@gem.win.co.nz>
