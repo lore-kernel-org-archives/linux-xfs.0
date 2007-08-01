@@ -1,103 +1,94 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 31 Jul 2007 18:33:06 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l711X1bm010037
-	for <xfs@oss.sgi.com>; Tue, 31 Jul 2007 18:33:03 -0700
-Message-ID: <46AFE2CB.6080102@agami.com>
-Date: Tue, 31 Jul 2007 18:32:59 -0700
-From: "William J. Earl" <earl@agami.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 31 Jul 2007 19:24:28 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l712OKbm026662
+	for <xfs@oss.sgi.com>; Tue, 31 Jul 2007 19:24:23 -0700
+Date: Wed, 1 Aug 2007 12:24:18 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: RFC: log record CRC validation
-References: <20070725092445.GT12413810@sgi.com> <46A7226D.8080906@sgi.com> <46A8DF7E.4090006@agami.com> <20070726233129.GM12413810@sgi.com> <46AAA340.60208@agami.com> <20070731053048.GP31489@sgi.com>
-In-Reply-To: <20070731053048.GP31489@sgi.com>
-Content-Type: text/plain
+Message-ID: <20070801022418.GR31489@sgi.com>
+References: <20070725092445.GT12413810@sgi.com> <46A7226D.8080906@sgi.com> <46A8DF7E.4090006@agami.com> <20070726233129.GM12413810@sgi.com> <46A94963.7000103@agami.com> <20070727065930.GT12413810@sgi.com> <46AFD88E.9070403@agami.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <46AFD88E.9070403@agami.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, Michael Nishimoto <miken@agami.com>, markgw@sgi.com
+To: Michael Nishimoto <miken@agami.com>
+Cc: David Chinner <dgc@sgi.com>, markgw@sgi.com, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
-> On Fri, Jul 27, 2007 at 07:00:32PM -0700, William J. Earl wrote:
->   
->> David Chinner wrote:
->>     
->>> ...
->>> The size of high-end filesystems are now at the same order of
->>> magnitude as the bit error rate of the storage hardware. e.g. 1PB =
->>> 10^16 bits. The bit error rate of high end FC drives? 1 in 10^16
->>> bits.  For "enterprise" SATA drives? 1 in 10^15 bits. For desktop
->>> SATA drives it's 1 in 10^14 bits (i.e. 1 in 10TB).
->>>       
->>       First, note that the claimed bit error rates are rates of 
->> reported bad blocks, not rates of silent data corruption.   The latter, 
->> while not quoted, are far lower.
->>     
->
-> Ok, fair enough, but in the absense of numbers and the fact that
-> real world MTBF numbers are lower than what mfg's quote I'm
-> always going to assume that this is the ballpark.
->
->   
-        The real world MTBF numbers are worse for people who use drives 
-outside their specified parameters (as at Google) and better, at least 
-in the first few years, for drives which are used inside their 
-parameters, as far as I have seen at Agami and my previous company.   
-Drive MTBF does not relate, however to data corruption, except in the 
-case of a failed RAID reconstruction, and even then the error is 
-reported.  
-> ...
->
-> IMO, continuing down this same "the block device is perfect" path is
-> a "head in the sand" approach.  By ignoring the fact that errors can
-> and do occur, we're screwing ourselves when something does actually
-> go wrong because we haven't put in place the mechanisms to detect
-> errors because we've assumed they will never happen.
->
-> We've spent 15 years so far trying to work out what has gone wrong
-> in XFS by adding more and more reactive debug into the code without
-> an eye to a robust solution. We add a chunk of code here to detect
-> that problem, a chunk of code there to detect this problem, and so
-> on. It's just not good enough anymore.
->
-> Like good security, filesystem integrity is not provided by a single
-> mechanism. "Defense in depth" is what we are aiming to provide here
-> and to do that you have to assume that errors can propagate through
-> every interface into the filesystem.
->
->
->   
-          I understand your argument, but why not simply strengthen the 
-block layer, even you do it with an optional XFS-based checksum scheme 
-on all blocks?   That way, you would not wind up detecting metadata 
-corruption and silently ignoring file data corruption   For example, 
-suppose you stole one block in N (where you might choose N according to 
-the RAID data stripe size, when running over MD), and used it as a 
-checksum block (storing (N-1)*K subblock checksums)?    This in effect 
-would require either RAID full-stripe read-modify-write or at least an 
-extra block read-modify-write for a real block write, but it would give 
-you complete metadata and data integrity checking.   This could be an 
-XFS feature or a new MD feature ("checksum" layer).  
+On Tue, Jul 31, 2007 at 05:49:18PM -0700, Michael Nishimoto wrote:
+> David Chinner wrote:
+> >On Thu, Jul 26, 2007 at 06:24:51PM -0700, Michael Nishimoto wrote:
+> > > When a CRC error is found, your suggestion is correct.  Recovery
+> > > should backup and process only completely good log records.  The code
+> > > backs up in this same fashion when it encounters a region of
+> > > missing sector updates because of the async nature of log
+> > > writes and disk caches.
+......
+> >IOWs, I think that if we come across a bad CRC in a log record we
+> >can replay up to that point but we've still got to abort the mount
+> >and ask the user to run repair....
+.....
+> You are correct.  I didn't need the example -- just a reminder that
+> CRC errors can occur anywhere, not just in the last 8 log-buffers
+> worth of data. ;-)
+> 
+> And yes, repair is necessary now because we are no longer replaying
+> a transaction which we thought was committed.
 
-         This would clearly be somewhat expensive for random writes, 
-much like RAID 6, and also expensive for random reads, unless the N were 
-equal to the RAID block size, but, as with the NetApp and Tandem 
-software checksums, it would assure that a high level of data integrity.   
+Ok, I'll make the mount replay up to previous good record and then
+abort with -EUCLEAN.
 
-      If the RAID block size were moderately large, say 64 KB, then you 
-could take one 4 KB block in 16 and pay only about 6% of the total 
-space.   With modern disks, the extra sequential transfers (even if you 
-have to read 64 KB to get 4 KB) would not be that significant, since 
-rotational latency is the largest cost, not the actual data transfer.   
-You would also use more main memory, since you would prefer to buffer at 
-least the 4 KB checksum block associated with any 4 KB data blocks from 
-the RAID block.  The extra memory would be between 6% and 100%, 
-depending on how much locality there is in block accesses.   This in 
-turn would cause more disk accesses, due to the cache holding fewer real 
-data blocks.
+> I have a request.  Can this be made a mkfs.xfs option, so it can be
+> disabled?
 
+It's a definite possibility, because....
 
+> What are your plans for adding CRCs to other metadata objects?
 
-[[HTML alternate version deleted]]
+Other objects will require some on-disk format change, and that will
+require a feature bit to be set.
+
+Basically, we can add CRCs to individual inodes without a version bump
+as we have some empty space in the v2 inode core. That will make v2 inodes
+the default, but we already have a superblock bit for that and all versions
+of linux support v2 inodes so there is no issue there. This will require
+userspace tool changes, though, because tools like repair will revert v2
+inodes back to v1 format if the are not using project id's or the link count
+fits into 16 bits.....
+
+I haven't looked at great depth into other structures in terms of
+implementation details. I know that if we use a 16 bit CRC on
+directories we can get away without a on-disk format change as the
+xfs_da_blkinfo structure has 16 bits of padding. However, given that
+directory block size can reach 64k, a CRC16 check is really only
+capable of single bit error detection. Hence I think we really need
+CRC32 here which means an on-disk format change.
+
+For the other types of btree blocks we will also need on-disk
+changes as there is no padding we can use to hold a CRC in the
+headers. Adding CRCs to the SB, AGF, AGI and AFGL is trivial but
+really needs a feature bit to say they are there.
+
+So, yes, this sort of change will require a feature bit and that
+means it would be a mkfs option. I'd prefer to have all the changes
+ready to go before releasing them into the wild so that we only
+need a single feature bit, though there is the possibility of
+separating the directory changes out into "version 3" directories.
+
+Conversion of existing filesystems is harder because of the
+repacking of structures required. if we are going to convert
+filesystems, I would expect it to be done offline by xfs_repair
+(Hi Barry!). Given that it will already need tobe modified to
+validate CRCs, I think this is probably the best approach to this
+problem right now.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
