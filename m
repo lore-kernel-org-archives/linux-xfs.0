@@ -1,41 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 13:19:43 -0700 (PDT)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.251])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l77KJabm023283
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 13:19:39 -0700
-Received: by an-out-0708.google.com with SMTP id c38so404798ana
-        for <xfs@oss.sgi.com>; Tue, 07 Aug 2007 13:19:41 -0700 (PDT)
-Message-ID: <9a8748490708071251l72d1e564u3f0d3bd5b6e4110d@mail.gmail.com>
-Date: Tue, 7 Aug 2007 21:51:40 +0200
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: [PATCH][RESEND] fix a potential NULL pointer deref in XFS on failed mount.
-In-Reply-To: <20070806005214.GK31489@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 14:14:49 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l77LEfbm006443
+	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 14:14:43 -0700
+Date: Tue, 7 Aug 2007 21:49:09 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/25] move handling of setuid/gid bits from VFS into individual setattr functions (RESEND)
+Message-ID: <20070807204909.GA30159@infradead.org>
+References: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <200708042030.21375.jesper.juhl@gmail.com>
-	 <20070806005214.GK31489@sgi.com>
+In-Reply-To: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, zippel@linux-m68k.org, dhowells@redhat.com, linux-cifs-client@lists.samba.org, codalist@TELEMANN.coda.cs.cmu.edu, joel.becker@oracle.com, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, user-mode-linux-user@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, wli@holomorphy.com, jffs-dev@axis.com, jfs-discussion@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, bfennema@falcon.csc.calpoly.edu, xfs@oss.sgi.com
 
-On 06/08/07, David Chinner <dgc@sgi.com> wrote:
-> On Sat, Aug 04, 2007 at 08:30:21PM +0200, Jesper Juhl wrote:
-> > Back in 2006 (2006-10-31 to be specific, reposted on 2006-11-16), I
-> > submitted a patch to fix a potential NULL pointer deref in XFS on
-> > failed mount.
->
-> Already checked into xfs-dev tree. Will go to next mainline merge.
->
-> http://oss.sgi.com/archives/xfs/2007-08/msg00030.html
->
+First thanks a lot for doing this work, it's been long needed.
 
-Ok. Thanks a lot for the feedback David.
-
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+Second please don't send out that many patches.  We encourage people
+to split things into small patches when the changes are logially
+separated.  Which these are not - it's a flag day change (which btw
+is fine despite the rants soe people spewed in reply to this), so it
+should be one single patch. (Or one for all mainline filesystems +
+one per fs only in -mm to make Andrew's life a little easier if you
+really care.)
