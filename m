@@ -1,33 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:08:33 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7848Nbm017415
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:08:27 -0700
-Date: Wed, 8 Aug 2007 14:08:04 +1000
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:11:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l784Axbm018436
+	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:11:01 -0700
+Message-ID: <46B94259.6060309@sandeen.net>
+Date: Tue, 07 Aug 2007 23:11:05 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
 Subject: Re: qa 166 failure on f8 kernel
-Message-ID: <20070808040804.GJ52011508@sgi.com>
-References: <46B91EBA.10407@sandeen.net> <20070808025615.GH52011508@sgi.com> <46B9316A.40508@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <46B9316A.40508@sandeen.net>
+References: <46B91EBA.10407@sandeen.net> <20070808025615.GH52011508@sgi.com> <46B9316A.40508@sandeen.net> <20070808040804.GJ52011508@sgi.com>
+In-Reply-To: <20070808040804.GJ52011508@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Aug 07, 2007 at 09:58:50PM -0500, Eric Sandeen wrote:
-> yeah, figured it had something to do w/ the ia64 weenies when I saw the
-> 32 vs. 8, factor of 4 ... fine, fine, my bad.  :)
+David Chinner wrote:
 
-No, not your bad. Mine if anyones because I wrote the test.
+> On Tue, Aug 07, 2007 at 09:58:50PM -0500, Eric Sandeen wrote:
+>   
+>> yeah, figured it had something to do w/ the ia64 weenies when I saw the
+>> 32 vs. 8, factor of 4 ... fine, fine, my bad.  :)
+>>     
+>
+> No, not your bad. Mine if anyones because I wrote the test.
+>
+> Cheers,
+>
+> Dave.
+>   
+Well, I was going to look at it more closely before I sent it off :)
 
-Cheers,
+What do you think of a patch like this, to munmap 16k chunks regardless
+of page size:
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+--- src/unwritten_mmap.c.orig	2007-08-07 22:53:08.962031839 -0500
++++ src/unwritten_mmap.c	2007-08-07 23:02:05.939112618 -0500
+@@ -12,6 +12,7 @@
+  */
+ int main(int argc, char **argv) {
+ 	unsigned long long o;
++	int minsize;
+ 	int fd, i;
+ 	struct xfs_flock64 space;
+ 	unsigned char *buf;
+@@ -23,6 +24,13 @@
+ 
+ 	errno = 0;
+ 	o = strtoull(argv[1], NULL, 0);
++
++	minsize = 3*16384; /* 3 ia64 pages */
++	if (o < minsize) {
++		fprintf(stderr, "count must be at least %d\n", minsize);
++		exit(1);
++	}
++
+ 	if (errno) {
+ 		perror("strtoull");
+ 		exit(errno);
+@@ -55,9 +63,9 @@
+ 			perror("mmap()");
+ 			exit(5);
+ 		} else {
++			memset(buf, 0, 16384);
++			memset(buf+o/2, 0, 16384);
++			memset(buf+o-16384, 0, 16384);
+ 			munmap(buf, o);
+ 		}
+
+-Eric
+ 
