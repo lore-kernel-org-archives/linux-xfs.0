@@ -1,50 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 22:47:18 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l785lBbm009371
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 22:47:12 -0700
-Message-ID: <37268.192.168.3.1.1186552049.squirrel@mail.aconex.com>
-In-Reply-To: 
-     <D59801BCA402F5418C040937230AF7E00B9A8E@mtv-amer002e--3.americas.sgi.c
-     om>
-References: 
-    <D59801BCA402F5418C040937230AF7E00B9A8E@mtv-amer002e--3.americas.sgi.com>
-Date: Wed, 8 Aug 2007 15:47:29 +1000 (EST)
-Subject: RE: qa 166 failure on f8 kernel
-From: nscott@aconex.com
-MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 01:14:26 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l788EFbm011124
+	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 01:14:19 -0700
+Subject: TAKE 968837 - fix nasty quota hashtable allocation bug
+Message-Id: <20070808081414.4BF9458C1762@chook.melbourne.sgi.com>
+Date: Wed,  8 Aug 2007 18:14:14 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alex Elder <aelder@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
->> From: xfs-bounce@oss.sgi.com
->> [mailto:xfs-bounce@oss.sgi.com]On Behalf Of
->> David Chinner
->> Sent: Tuesday, August 07, 2007 9:56 PM
->> To: Eric Sandeen
->> Cc: xfs-oss
->> Subject: Re: qa 166 failure on f8 kernel
-> ...
->> mmap dirties entire pages. page size differs between platforms -
->> ia64 = 16k, x86 = 4k - so the size of the extent allocated is
->> different. Guess what platform I wrote the test on and use as my
->> primary platform?
->>
->> The output needs better filtering, methinks.
->
-> Could the test be changed so the output is pagesize independent
-> rather than filtering the output?  Or maybe the test should
-> use a buffer size that's the LCM of all supported page sizes.
->
+fix nasty quota hashtable allocation bug
 
-FWIW, xfs-cmds/xfstests/src/feature.c will tell you the page size (-s);
-with that you can accurately filter the output and not lose any info.
+This git mod: 77e4635ae191774526ed695482a151ac986f3806
 
-cheers.
+converted to a "greedy" allocation interface, but for the quota hashtables
+it switched from allocating XFS_QM_HASHSIZE (nr of elements) xfs_dqhash_t's 
+to  allocating only XFS_QM_HASHSIZE *bytes* - quite a lot smaller!  Then when 
+we  converted hsize "back" to nr of elements (the division line) hsize went 
+to 0. This was  leading to oopses when running any quota tests on the Fedora 8
+test  kernel, but the problem has been there for almost a year.
 
---
-Nathan
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Wed Aug  8 18:13:50 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  sandeen@sandeen.net
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29354a
+fs/xfs/quota/xfs_qm.c - 1.52 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
+	- correct the quota hash allocation size so we allocate a hash the
+	  size we mean and not something a lot smaller.
