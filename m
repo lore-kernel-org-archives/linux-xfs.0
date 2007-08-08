@@ -1,52 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:18:11 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l784I5bm021705
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:18:07 -0700
-Message-ID: <46B94402.5090801@sandeen.net>
-Date: Tue, 07 Aug 2007 23:18:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:19:37 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l784JSbm022425
+	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:19:31 -0700
+Date: Wed, 8 Aug 2007 14:19:20 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: qa 166 failure on f8 kernel
-References: <46B91EBA.10407@sandeen.net> <op.twp3lyi83jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.twp3lyi83jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Message-ID: <20070808041920.GK52011508@sgi.com>
+References: <46B91EBA.10407@sandeen.net> <20070808025615.GH52011508@sgi.com> <46B9316A.40508@sandeen.net> <20070808040804.GJ52011508@sgi.com> <46B94259.6060309@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46B94259.6060309@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Barry Naujok wrote:
-> On Wed, 08 Aug 2007 11:39:06 +1000, Eric Sandeen <sandeen@sandeen.net>  
-> wrote:
+On Tue, Aug 07, 2007 at 11:11:05PM -0500, Eric Sandeen wrote:
+> David Chinner wrote:
 > 
->> Posting this just in case it rings any bells, though I plan to
->> investigate...
->>
->> [root@inode xfstests]# ./check  166
->> FSTYP         -- xfs (non-debug)
->> PLATFORM      -- Linux/x86_64 inode 2.6.23-0.71.rc2.fc8
->> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdb6
->> MOUNT_OPTIONS -- /dev/sdb6 /mnt/sdb6
->>
->> 166      - output mismatch (see 166.out.bad)
->> 2,6c2,7
->> < 0: [0..31]: XX..YY AG (AA..BB) 32
->> < 1: [32..127]: XX..YY AG (AA..BB) 96 10000
->> < 2: [128..159]: XX..YY AG (AA..BB) 32
->> < 3: [160..223]: XX..YY AG (AA..BB) 64 10000
->> < 4: [224..255]: XX..YY AG (AA..BB) 32
->> ---
->>> /mnt/sdb6/test_file:  XX..YY AG (AA..BB)
->     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > On Tue, Aug 07, 2007 at 09:58:50PM -0500, Eric Sandeen wrote:
+> >   
+> >> yeah, figured it had something to do w/ the ia64 weenies when I saw the
+> >> 32 vs. 8, factor of 4 ... fine, fine, my bad.  :)
+> >>     
+> >
+> > No, not your bad. Mine if anyones because I wrote the test.
+> >
+> > Cheers,
+> >
+> > Dave.
+> >   
+> Well, I was going to look at it more closely before I sent it off :)
 > 
-> I suspect this line is appearing in the output due to a number
-> in the mountpoint. I think the _filter_blocks() is only
-> extracting lines with numbers in it.
+> What do you think of a patch like this, to munmap 16k chunks regardless
+> of page size:
 
-Bingo.  Yep, changing it to /mnt/foo, plus my change to the test,
-passes.  thanks!
+That could be done, but will break on 64k page size machines ;)
 
--Eric
+Perhaps the filter needs to use `getconf PAGE_SIZE` to filter the
+output down:
+
+ia64:
+
+% getconf PAGE_SIZE
+16384
+
+x86_64:
+
+% getconf PAGE_SIZE
+4096
+
+So the written extent sizes are output as a multiple of
+page size rather than basic blocks....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
