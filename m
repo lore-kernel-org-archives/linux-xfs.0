@@ -1,36 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 03:40:26 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l78AeKbm022883
-	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 03:40:22 -0700
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 0A36D122A9
-	for <xfs@oss.sgi.com>; Wed,  8 Aug 2007 12:40:25 +0200 (CEST)
-From: Andi Kleen <ak@suse.de>
-Subject: XFS thread inflation in 2.6.23rc
-Date: Wed, 8 Aug 2007 12:40:21 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 05:14:14 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l78CE3bm021823
+	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 05:14:07 -0700
+Date: Wed, 8 Aug 2007 22:13:59 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS thread inflation in 2.6.23rc
+Message-ID: <20070808121359.GP52011508@sgi.com>
+References: <200708081240.21548.ak@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Message-Id: <200708081240.21548.ak@suse.de>
+In-Reply-To: <200708081240.21548.ak@suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Andi Kleen <ak@suse.de>
+Cc: xfs@oss.sgi.com
 
+On Wed, Aug 08, 2007 at 12:40:21PM +0200, Andi Kleen wrote:
+> 
+> In 2.6.23rc I have a new kernel thread running from XFS:
+> 
+> 30137 ?        S<     0:00 [xfs_mru_cache]
+> 
+> Is that one really needed? Can it be started only on demand when that MRU
+> feature is used? 
 
-In 2.6.23rc I have a new kernel thread running from XFS:
+It uses a single threaded workqueue for reaping objects and the thread comes
+along with that. Creating the workqueue on demand would require creating a
+kernel thread inside a transaction and that's not some thing we want to do.
+It can't really be put into an existing thread/workqueue because of
+deadlock problems which is why it has it's own workqueue....
 
-30137 ?        S<     0:00 [xfs_mru_cache]
+Besides, what's the point of having nice constructs like dedicated
+workqueues if people complain when they get used to solve problems?
 
+Cheers,
 
-Is that one really needed? Can it be started only on demand when that MRU
-feature is used? 
-
-Thanks,
-
--Andi
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
