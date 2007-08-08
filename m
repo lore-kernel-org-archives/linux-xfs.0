@@ -1,42 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 01:14:26 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l788EFbm011124
-	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 01:14:19 -0700
-Subject: TAKE 968837 - fix nasty quota hashtable allocation bug
-Message-Id: <20070808081414.4BF9458C1762@chook.melbourne.sgi.com>
-Date: Wed,  8 Aug 2007 18:14:14 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 03:40:26 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l78AeKbm022883
+	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 03:40:22 -0700
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 0A36D122A9
+	for <xfs@oss.sgi.com>; Wed,  8 Aug 2007 12:40:25 +0200 (CEST)
+From: Andi Kleen <ak@suse.de>
+Subject: XFS thread inflation in 2.6.23rc
+Date: Wed, 8 Aug 2007 12:40:21 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200708081240.21548.ak@suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
-
-fix nasty quota hashtable allocation bug
-
-This git mod: 77e4635ae191774526ed695482a151ac986f3806
-
-converted to a "greedy" allocation interface, but for the quota hashtables
-it switched from allocating XFS_QM_HASHSIZE (nr of elements) xfs_dqhash_t's 
-to  allocating only XFS_QM_HASHSIZE *bytes* - quite a lot smaller!  Then when 
-we  converted hsize "back" to nr of elements (the division line) hsize went 
-to 0. This was  leading to oopses when running any quota tests on the Fedora 8
-test  kernel, but the problem has been there for almost a year.
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+To: xfs@oss.sgi.com
 
 
-Date:  Wed Aug  8 18:13:50 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  sandeen@sandeen.net
+In 2.6.23rc I have a new kernel thread running from XFS:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+30137 ?        S<     0:00 [xfs_mru_cache]
 
 
-Modid:  xfs-linux-melb:xfs-kern:29354a
-fs/xfs/quota/xfs_qm.c - 1.52 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
-	- correct the quota hash allocation size so we allocate a hash the
-	  size we mean and not something a lot smaller.
+Is that one really needed? Can it be started only on demand when that MRU
+feature is used? 
+
+Thanks,
+
+-Andi
