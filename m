@@ -1,41 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 22:15:32 -0700 (PDT)
-Received: from mail-gw2.sa.eol.hu (mail-gw2.sa.eol.hu [212.108.200.109])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l785FJbm002960
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 22:15:22 -0700
-In-reply-to: <20070807171501.e31c4a97.akpm@linux-foundation.org> (message from
-	Andrew Morton on Tue, 7 Aug 2007 17:15:01 -0700)
-Subject: Re: [fuse-devel] [PATCH 00/25] move handling of setuid/gid bits
- from VFS into individual setattr functions (RESEND)
-References: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com> <20070807171501.e31c4a97.akpm@linux-foundation.org>
-Message-Id: <E1IIdsT-0001dn-00@dorka.pomaz.szeredi.hu>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Wed, 08 Aug 2007 07:14:37 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 22:17:02 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l785Gvbm003434
+	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 22:16:58 -0700
+Received: from mtv-amer002e--3.americas.sgi.com (unknown [192.26.64.114])
+	by netops-testserver-3.corp.sgi.com (Postfix) with ESMTP id 14F6190898
+	for <xfs@oss.sgi.com>; Tue,  7 Aug 2007 22:01:33 -0700 (PDT)
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Subject: RE: qa 166 failure on f8 kernel
+Date: Tue, 7 Aug 2007 21:13:15 -0700
+Message-ID: <D59801BCA402F5418C040937230AF7E00B9A8E@mtv-amer002e--3.americas.sgi.com>
+In-Reply-To: <20070808025615.GH52011508@sgi.com>
+From: "Alex Elder" <aelder@sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: jlayton@redhat.com, codalist@telemann.coda.cs.cmu.edu, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, reiserfs-devel@vger.kernel.org, zippel@linux-m68k.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, wli@holomorphy.com, joel.becker@oracle.com, dhowells@redhat.com, fuse-devel@lists.sourceforge.net, jffs-dev@axis.com, user-mode-linux-user@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, linux-ext4@vger.kernel.org, linux-cifs-client@lists.samba.org, ocfs2-devel@oss.oracle.com, bfennema@falcon.csc.calpoly.edu
+To: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-> >From a purely practical standpoint: it's a concern that all filesytems need
-> patching to continue to correctly function after this change.  There might
-> be filesystems which you missed, and there are out-of-tree filesystems
-> which won't be updated.
+> From: xfs-bounce@oss.sgi.com 
+> [mailto:xfs-bounce@oss.sgi.com]On Behalf Of
+> David Chinner
+> Sent: Tuesday, August 07, 2007 9:56 PM
+> To: Eric Sandeen
+> Cc: xfs-oss
+> Subject: Re: qa 166 failure on f8 kernel
+...
+> mmap dirties entire pages. page size differs between platforms -
+> ia64 = 16k, x86 = 4k - so the size of the extent allocated is
+> different. Guess what platform I wrote the test on and use as my
+> primary platform?
 > 
-> And I think the impact upon the out-of-tree filesystems would be fairly
-> severe: they quietly and subtly get their secutiry guarantees broken (I
-> think?)
-> 
-> Is there any way in which we can prevent these problems?  Say
-> 
-> - rename something so that unconverted filesystems will reliably fail to
->   compile?
+> The output needs better filtering, methinks.
 
-Maybe renaming ATTR_MODE to ATTR_MODE_SET (changing it's value as
-well, so that binary stuff breaks visibly as well)?
+Could the test be changed so the output is pagesize independent
+rather than filtering the output?  Or maybe the test should
+use a buffer size that's the LCM of all supported page sizes.
 
-This would make sense, because we are changing what this attribute
-acually means.  In the new code attr->ia_mode only contains the
-originally set mode, not the ones we've added to change the suid bits.
+I'm not actually familiar with the test, so forgive me if I'm
+way off...
 
-Miklos
+					-Alex
