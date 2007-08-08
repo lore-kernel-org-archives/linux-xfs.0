@@ -1,76 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:11:04 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l784Axbm018436
-	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:11:01 -0700
-Message-ID: <46B94259.6060309@sandeen.net>
-Date: Tue, 07 Aug 2007 23:11:05 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Aug 2007 21:15:51 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l784Fgbm020179
+	for <xfs@oss.sgi.com>; Tue, 7 Aug 2007 21:15:44 -0700
+Date: Wed, 08 Aug 2007 14:19:00 +1000
 Subject: Re: qa 166 failure on f8 kernel
-References: <46B91EBA.10407@sandeen.net> <20070808025615.GH52011508@sgi.com> <46B9316A.40508@sandeen.net> <20070808040804.GJ52011508@sgi.com>
-In-Reply-To: <20070808040804.GJ52011508@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+MIME-Version: 1.0
+References: <46B91EBA.10407@sandeen.net>
+Message-ID: <op.twp3lyi83jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <46B91EBA.10407@sandeen.net>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
+On Wed, 08 Aug 2007 11:39:06 +1000, Eric Sandeen <sandeen@sandeen.net>  
+wrote:
 
-> On Tue, Aug 07, 2007 at 09:58:50PM -0500, Eric Sandeen wrote:
->   
->> yeah, figured it had something to do w/ the ia64 weenies when I saw the
->> 32 vs. 8, factor of 4 ... fine, fine, my bad.  :)
->>     
+> Posting this just in case it rings any bells, though I plan to
+> investigate...
 >
-> No, not your bad. Mine if anyones because I wrote the test.
+> [root@inode xfstests]# ./check  166
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 inode 2.6.23-0.71.rc2.fc8
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdb6
+> MOUNT_OPTIONS -- /dev/sdb6 /mnt/sdb6
 >
-> Cheers,
+> 166      - output mismatch (see 166.out.bad)
+> 2,6c2,7
+> < 0: [0..31]: XX..YY AG (AA..BB) 32
+> < 1: [32..127]: XX..YY AG (AA..BB) 96 10000
+> < 2: [128..159]: XX..YY AG (AA..BB) 32
+> < 3: [160..223]: XX..YY AG (AA..BB) 64 10000
+> < 4: [224..255]: XX..YY AG (AA..BB) 32
+> ---
+>> /mnt/sdb6/test_file:  XX..YY AG (AA..BB)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I suspect this line is appearing in the output due to a number
+in the mountpoint. I think the _filter_blocks() is only
+extracting lines with numbers in it.
+
+>> 0: [0..7]: XX..YY AG (AA..BB) 8
+>> 1: [8..127]: XX..YY AG (AA..BB) 120 10000
+>> 2: [128..135]: XX..YY AG (AA..BB) 8
+>> 3: [136..247]: XX..YY AG (AA..BB) 112 10000
+>> 4: [248..255]: XX..YY AG (AA..BB) 8
+> Failures: 166
+> Failed 1 of 1 tests
+> [root@inode xfstests]# uname -a
+> Linux inode.lab.msp.redhat.com 2.6.23-0.71.rc2.fc8 #1 SMP Sat Aug 4
+> 01:21:06 EDT 2007 x86_64 x86_64 x86_64 GNU/Linux
 >
-> Dave.
->   
-Well, I was going to look at it more closely before I sent it off :)
-
-What do you think of a patch like this, to munmap 16k chunks regardless
-of page size:
-
-
---- src/unwritten_mmap.c.orig	2007-08-07 22:53:08.962031839 -0500
-+++ src/unwritten_mmap.c	2007-08-07 23:02:05.939112618 -0500
-@@ -12,6 +12,7 @@
-  */
- int main(int argc, char **argv) {
- 	unsigned long long o;
-+	int minsize;
- 	int fd, i;
- 	struct xfs_flock64 space;
- 	unsigned char *buf;
-@@ -23,6 +24,13 @@
- 
- 	errno = 0;
- 	o = strtoull(argv[1], NULL, 0);
-+
-+	minsize = 3*16384; /* 3 ia64 pages */
-+	if (o < minsize) {
-+		fprintf(stderr, "count must be at least %d\n", minsize);
-+		exit(1);
-+	}
-+
- 	if (errno) {
- 		perror("strtoull");
- 		exit(errno);
-@@ -55,9 +63,9 @@
- 			perror("mmap()");
- 			exit(5);
- 		} else {
-+			memset(buf, 0, 16384);
-+			memset(buf+o/2, 0, 16384);
-+			memset(buf+o-16384, 0, 16384);
- 			munmap(buf, o);
- 		}
-
--Eric
- 
+> -Eric
+>
+>
