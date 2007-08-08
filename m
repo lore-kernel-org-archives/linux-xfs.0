@@ -1,41 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 06:17:27 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l78DHHbm010303
-	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 06:17:21 -0700
-Date: Wed, 8 Aug 2007 23:17:13 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: qa 166 failure on f8 kernel
-Message-ID: <20070808131713.GR52011508@sgi.com>
-References: <46B91EBA.10407@sandeen.net> <20070808025615.GH52011508@sgi.com> <46B9316A.40508@sandeen.net> <20070808040804.GJ52011508@sgi.com> <20070808131319.GA11451@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 08 Aug 2007 06:26:17 -0700 (PDT)
+Received: from mx1.suse.de (ns.suse.de [195.135.220.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l78DQ5bm013309
+	for <xfs@oss.sgi.com>; Wed, 8 Aug 2007 06:26:08 -0700
+From: Andi Kleen <ak@suse.de>
+Subject: Re: XFS thread inflation in 2.6.23rc
+Date: Wed, 8 Aug 2007 15:26:06 +0200
+References: <200708081240.21548.ak@suse.de> <200708081422.10373.ak@suse.de> <20070808131404.GQ52011508@sgi.com>
+In-Reply-To: <20070808131404.GQ52011508@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20070808131319.GA11451@infradead.org>
+Message-Id: <200708081526.06860.ak@suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 08, 2007 at 02:13:19PM +0100, Christoph Hellwig wrote:
-> On Wed, Aug 08, 2007 at 02:08:04PM +1000, David Chinner wrote:
-> > On Tue, Aug 07, 2007 at 09:58:50PM -0500, Eric Sandeen wrote:
-> > > yeah, figured it had something to do w/ the ia64 weenies when I saw the
-> > > 32 vs. 8, factor of 4 ... fine, fine, my bad.  :)
+On Wednesday 08 August 2007 15:14:04 David Chinner wrote:
+
+> Memory allocation failure + dirty transaction == filesystem shutdown.
+
+You mean if the workqueue creation would fail? 
+
+Surely not having the MRU cache is not a catastrophe and would
+allow the transaction to commit anyways? 
+
+The other alternative would be to start it when a directory with 
+the flag is first seen. That should be before any transactions.
+
+The other thing is that it would be nasty to switch do_fork
+to use GFP_NOFS, but I doubt that's really needed.
+ 
+> > > Besides, what's the point of having nice constructs like dedicated
+> > > workqueues
 > > 
-> > No, not your bad. Mine if anyones because I wrote the test.
+> > It's a resource that shouldn't be overused.
 > 
-> Ia64 supports 4k, 8k, 16k and 64k base pagesize.  Time to add a little
-> script to make the pagesize random for your kernel builds?
+> A workqueue + thread uses, what, 10-15k of memory? That's the cost of about
+> 10 cached inodes. It is insignificant...
 
-Interesting idea. Definitely worth considering for the randomised
-mkfs/mount option config QA runs we already do....
+A little bloat here and a little bloat there and soon we're talking
+about serious memory. 
 
-Cheers,
+e.g. on a dual core box in a standard configuration we're going towards
+~50 kernel threads out of the box now and that's just too much IMNSHO.
+Given there are other really bad wastes of memory (don't get me
+started on some of the hash tables), but it's not totally insignificant.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Threads also have some CPU costs even when sleeping, e.g. there is still code
+which walks all threads to do various things.
+
+> Hmmm. I guess you are really not going to like the patch I
+> have that moves the AIL pushing to a new thread to solve
+> some of scalability issues in the transaction subsystem......
+
+Per CPU or single? If the later definitely the workqueues would need to be 
+fixed first.
+
+-Andi
+ 
