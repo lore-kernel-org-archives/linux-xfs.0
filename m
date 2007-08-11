@@ -1,65 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Aug 2007 16:49:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7ANnhbm017980
-	for <xfs@oss.sgi.com>; Fri, 10 Aug 2007 16:49:46 -0700
-Date: Sat, 11 Aug 2007 09:49:41 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS thread inflation in 2.6.23rc
-Message-ID: <20070810234940.GO12413810@sgi.com>
-References: <200708081240.21548.ak@suse.de> <200708081422.10373.ak@suse.de> <20070808131404.GQ52011508@sgi.com> <200708081526.06860.ak@suse.de> <20070809110322.GA12413810@sgi.com> <46BCBDB2.6070703@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Aug 2007 20:29:09 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7B3Swbm005468
+	for <xfs@oss.sgi.com>; Fri, 10 Aug 2007 20:29:00 -0700
+Date: Sat, 11 Aug 2007 03:57:39 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/25] move handling of setuid/gid bits from VFS into individual setattr functions (RESEND)
+Message-ID: <20070811025739.GA21244@infradead.org>
+References: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com> <20070807171501.e31c4a97.akpm@linux-foundation.org> <1186533934.6625.91.camel@heimdal.trondhjem.org> <20070810164752.23117e0e.jlayton@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46BCBDB2.6070703@sandeen.net>
+In-Reply-To: <20070810164752.23117e0e.jlayton@redhat.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, Andi Kleen <ak@suse.de>, xfs@oss.sgi.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Trond Myklebust <trond.myklebust@fys.uio.no>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, zippel@linux-m68k.org, dhowells@redhat.com, linux-cifs-client@lists.samba.org, codalist@TELEMANN.coda.cs.cmu.edu, joel.becker@oracle.com, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, user-mode-linux-user@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, wli@holomorphy.com, jffs-dev@axis.com, jfs-discussion@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, bfennema@falcon.csc.calpoly.edu, xfs@oss.sgi.com
 
-On Fri, Aug 10, 2007 at 02:34:10PM -0500, Eric Sandeen wrote:
-> David Chinner wrote:
+On Fri, Aug 10, 2007 at 04:47:52PM -0400, Jeff Layton wrote:
+> attr->ia_valid after the setattr operation returns. If either ATTR_KILL_*
+> bit is set then BUG(). The helper function already clears those bits
+> so anything using it should automatically be ok. We'd have to fix
+> up NFS and a few others that don't implement suid/sgid.
 > 
-> > Andi, you are complaining to the wrong person about thread counts. I
-> > live in the world of excessive parallelism and multithreaded I/O. I
-> > regularly see 4-8p boxes running hundreds to thousands of I/O
-> > threads on a single filesystem. These are the workloads XFS is
-> > designed for and we optimise for. A single extra thread is noise....
-> 
-> 
-> The other thing this is doing, though, is having an impact on power
-> usage, I think.  Fedora is trying to identify things which wake the CPU
-> in an effort to reduce power usage if possible.
+> This is not as certain as changing the name of the inode operation. It
+> would only pop when someone is attempting to change a setuid/setgid
+> file on these filesystems. Still, it should conceivably catch most if
+> not all offenders. Would that be sufficient to take care of everyone's
+> concerns?
 
-Sure, but an idle thread doesn't use any power, and the workqueue
-is now only used when there are streams active.
-
-> and here are the results w/ xfs mounted:
-> 
-> < Detailed C-state information is only available on Mobile CPUs (laptops) >
-> P-states (frequencies)
->   2.21 Ghz     0.0%
->   2.00 Ghz     0.0%
->   1.80 Ghz   100.0%
-> Wakeups-from-idle per second : 31.7
-> no ACPI power usage estimate available
-> Top causes for wakeups:
->   37.0% ( 20.0)             mount : xfs_mru_cache_create
-
-http://oss.sgi.com/archives/xfs/2007-08/msg00009.html
-
-"On-demand reaping of the MRU cache
-
-Instead of running the mru cache reaper all the time based on a
-timeout, we should only run it when the cache has active objects.
-This allows CPUs to sleep when there is no activity rather than
-be woken repeatedly just to check if there is anything to do."
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+I like the idea of checking ia_valid after return a lot.  But instead of
+going BUG() it should just do the default action, that we can avoid
+touching all the filesystem and only need to change those that need
+special care.  I also have plans to add some new AT_ flags for implementing
+some filesystem ioctl in generic code that would benefit greatly from
+the ia_valid checkin after return to return ENOTTY fr filesystems not
+implementing those ioctls.
