@@ -1,39 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Aug 2007 20:29:09 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7B3Swbm005468
-	for <xfs@oss.sgi.com>; Fri, 10 Aug 2007 20:29:00 -0700
-Date: Sat, 11 Aug 2007 03:57:39 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/25] move handling of setuid/gid bits from VFS into individual setattr functions (RESEND)
-Message-ID: <20070811025739.GA21244@infradead.org>
-References: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com> <20070807171501.e31c4a97.akpm@linux-foundation.org> <1186533934.6625.91.camel@heimdal.trondhjem.org> <20070810164752.23117e0e.jlayton@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Aug 2007 13:29:42 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7CKTabm001462
+	for <linux-xfs@oss.sgi.com>; Sun, 12 Aug 2007 13:29:39 -0700
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: xfs_fsr and null byte areas in files
+Date: Sun, 12 Aug 2007 22:29:40 +0200
+References: <200707092313.48876.Martin@lichtvoll.de> <20070710005030.GQ31489@sgi.com> <200707262309.24012.Martin@lichtvoll.de> (sfid-20070726_234346_745054_05940549)
+In-Reply-To: <200707262309.24012.Martin@lichtvoll.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20070810164752.23117e0e.jlayton@redhat.com>
+Message-Id: <200708122229.40400.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Trond Myklebust <trond.myklebust@fys.uio.no>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, zippel@linux-m68k.org, dhowells@redhat.com, linux-cifs-client@lists.samba.org, codalist@TELEMANN.coda.cs.cmu.edu, joel.becker@oracle.com, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, user-mode-linux-user@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, wli@holomorphy.com, jffs-dev@axis.com, jfs-discussion@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, bfennema@falcon.csc.calpoly.edu, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
+Cc: David Chinner <dgc@sgi.com>, Timothy Shimmin <tes@sgi.com>, ck@vds.kolivas.org
 
-On Fri, Aug 10, 2007 at 04:47:52PM -0400, Jeff Layton wrote:
-> attr->ia_valid after the setattr operation returns. If either ATTR_KILL_*
-> bit is set then BUG(). The helper function already clears those bits
-> so anything using it should automatically be ok. We'd have to fix
-> up NFS and a few others that don't implement suid/sgid.
-> 
-> This is not as certain as changing the name of the inode operation. It
-> would only pop when someone is attempting to change a setuid/setgid
-> file on these filesystems. Still, it should conceivably catch most if
-> not all offenders. Would that be sufficient to take care of everyone's
-> concerns?
+Am Donnerstag 26 Juli 2007 schrieb Martin Steigerwald:
+> Am Dienstag 10 Juli 2007 schrieb David Chinner:
+> > > 1) Is there an XFS qa test available for xfs_fsr? If so I could use
+> > > that one. Are there some hints on how to get started on XFS qa?
+> >
+> > Yes, test 042. Download it from CVS, build it (installing all the
+> > bits it asks for ;), edit common.config to add your test and scratch
+> > partitions (both volatile) and the 'check -l 042' to run test 042.
+>
+> Hi!
+>
+> I ran test 42 and it completes successfully.
 
-I like the idea of checking ia_valid after return a lot.  But instead of
-going BUG() it should just do the default action, that we can avoid
-touching all the filesystem and only need to change those that need
-special care.  I also have plans to add some new AT_ flags for implementing
-some filesystem ioctl in generic code that would benefit greatly from
-the ia_valid checkin after return to return ENOTTY fr filesystems not
-implementing those ioctls.
+Hello,
+
+I now read a post from someone who faced null byte areas in files after 
+xfs_fsr as well[1]. And he writes that this problem is related to the ck 
+patchset:
+
+http://bhhdoa.org.au/pipermail/ck/2007-August/008433.html
+
+It may well be that it is related to the ck patchset in my case as well. I 
+did not know the exact kernel version anymore when I was using xfs_fsr, 
+since it took me 2 weeks to actually find about this corruption. Well and 
+when I ran xfsqa test I had a slighly newer kernel was using the CFS 
+scheduler instead of the ck patchset. Actually I thought the other was 
+using the CFS scheduler as well  I didn't think of it as having any 
+relevance so I didn't look into that direction.
+
+But now it seems that the problem actually is related ck patchset and that 
+I was using a kernel with ck patchset as well. I try to find the time to 
+run xfsqa test 42 for my latest ck patchset kernel to know for sure.
+
+I just wanted you to know. It seems to me that this may well not been a 
+problem with XFS at all.
+
+[1] http://oss.sgi.com/archives/xfs/2007-07/msg00038.html
+
+Regards,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
