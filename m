@@ -1,54 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Aug 2007 05:02:45 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Aug 2007 05:37:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7DC2Ubm026311
-	for <xfs@oss.sgi.com>; Mon, 13 Aug 2007 05:02:34 -0700
-Date: Mon, 13 Aug 2007 08:01:34 -0400
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7DCb6bm001844
+	for <xfs@oss.sgi.com>; Mon, 13 Aug 2007 05:37:06 -0700
+Date: Mon, 13 Aug 2007 08:36:16 -0400
 From: Jeff Layton <jlayton@redhat.com>
 Subject: Re: [PATCH 00/25] move handling of setuid/gid bits from VFS into
  individual setattr functions (RESEND)
-Message-Id: <20070813080134.f770814b.jlayton@redhat.com>
-In-Reply-To: <20070811025739.GA21244@infradead.org>
+Message-Id: <20070813083616.642c7f27.jlayton@redhat.com>
+In-Reply-To: <20070813080134.f770814b.jlayton@redhat.com>
 References: <200708061354.l76Ds3mU002255@dantu.rdu.redhat.com>
 	<20070807171501.e31c4a97.akpm@linux-foundation.org>
 	<1186533934.6625.91.camel@heimdal.trondhjem.org>
 	<20070810164752.23117e0e.jlayton@redhat.com>
 	<20070811025739.GA21244@infradead.org>
+	<20070813080134.f770814b.jlayton@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Trond Myklebust <trond.myklebust@fys.uio.no>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, zippel@linux-m68k.org, dhowells@redhat.com, linux-cifs-client@lists.samba.org, codalist@TELEMANN.coda.cs.cmu.edu, joel.becker@oracle.com, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, user-mode-linux-user@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, wli@holomorphy.com, jffs-dev@axis.com, jfs-discussion@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, bfennema@falcon.csc.calpoly.edu, xfs@oss.sgi.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Trond Myklebust <trond.myklebust@fys.uio.no>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, zippel@linux-m68k.org, dhowells@redhat.com, linux-cifs-client@lists.samba.org, codalist@TELEMANN.coda.cs.cmu.edu, joel.becker@oracle.com, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, user-mode-linux-user@lists.sourceforge.net, mikulas@artax.karlin.mff.cuni.cz, wli@holomorphy.com, jffs-dev@axis.com, jfs-discussion@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, bfennema@falcon.csc.calpoly.edu, xfs@oss.sgi.com
 
-On Sat, 11 Aug 2007 03:57:39 +0100
-Christoph Hellwig <hch@infradead.org> wrote:
+On Mon, 13 Aug 2007 08:01:34 -0400
+Jeff Layton <jlayton@redhat.com> wrote:
+
+> On Sat, 11 Aug 2007 03:57:39 +0100
+> Christoph Hellwig <hch@infradead.org> wrote:
+> > 
+> > I like the idea of checking ia_valid after return a lot.  But instead of
+> > going BUG() it should just do the default action, that we can avoid
+> > touching all the filesystem and only need to change those that need
+> > special care.  I also have plans to add some new AT_ flags for implementing
+> > some filesystem ioctl in generic code that would benefit greatly from
+> > the ia_valid checkin after return to return ENOTTY fr filesystems not
+> > implementing those ioctls.
 > 
-> I like the idea of checking ia_valid after return a lot.  But instead of
-> going BUG() it should just do the default action, that we can avoid
-> touching all the filesystem and only need to change those that need
-> special care.  I also have plans to add some new AT_ flags for implementing
-> some filesystem ioctl in generic code that would benefit greatly from
-> the ia_valid checkin after return to return ENOTTY fr filesystems not
-> implementing those ioctls.
+> That sounds good (if I follow your meaning correctly). How about
+> something like the patch below? If either ATTR_KILL bit is set after
+> the setattr, try to handle them in the "standard" way with a second
+> setattr call. It also does a printk in this situation to alert
+> filesystem developers that they should convert to the "new" scheme,
+> so they can avoid this second setattr call.
+> 
+> If this idea seems sound then I'll start the grunt work to fix up the
+> in-tree filesystems so that they don't need the second setattr call.
+> 
 
-That sounds good (if I follow your meaning correctly). How about
-something like the patch below? If either ATTR_KILL bit is set after
-the setattr, try to handle them in the "standard" way with a second
-setattr call. It also does a printk in this situation to alert
-filesystem developers that they should convert to the "new" scheme,
-so they can avoid this second setattr call.
-
-If this idea seems sound then I'll start the grunt work to fix up the
-in-tree filesystems so that they don't need the second setattr call.
+The earlier patch has a misplaced comma and won't build. This one
+builds. This should be considered an RFC, as I've not yet done any
+real testing of this patch:
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-commit 521ada37ab165d9d0a12dfb59a631a2ec58a8f84
+commit ad00450c4532da32718efe39e27d99060f04e396
 Author: Jeff Layton <jlayton@redhat.com>
-Date:   Mon Aug 13 07:43:56 2007 -0400
+Date:   Mon Aug 13 08:33:10 2007 -0400
 
     VFS: move ATTR_KILL handling from notify_change into helper function
     
@@ -66,7 +75,7 @@ Date:   Mon Aug 13 07:43:56 2007 -0400
     don't handle these bits correctly without breaking them outright.
 
 diff --git a/fs/attr.c b/fs/attr.c
-index f8dfc22..7cbb883 100644
+index f8dfc22..9585e45 100644
 --- a/fs/attr.c
 +++ b/fs/attr.c
 @@ -100,15 +100,53 @@ int inode_setattr(struct inode * inode, struct iattr * attr)
@@ -183,8 +192,8 @@ index f8dfc22..7cbb883 100644
 +			if (printk_ratelimit())
 +				printk(KERN_ERR "%s: %s doesn't seem to "
 +					"handle setuid/setgid bit clearing "
-+					"correctly.\n"
-+					__func__, inode->i_sb->s_type->name);
++					"correctly.\n", __func__,
++					inode->i_sb->s_type->name);
 +			goto try_again;
 +		}
  	} else {
