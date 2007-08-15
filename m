@@ -1,38 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Aug 2007 22:06:53 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7F56nbm027580
-	for <xfs@oss.sgi.com>; Tue, 14 Aug 2007 22:06:51 -0700
-Received: from Liberator.local (unknown [10.0.0.69])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id D24481806FDAE
-	for <xfs@oss.sgi.com>; Wed, 15 Aug 2007 00:06:54 -0500 (CDT)
-Message-ID: <46C289F4.1070502@sandeen.net>
-Date: Wed, 15 Aug 2007 00:07:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH V2] remove unused BULKSTAT_FG_INLINE
-References: <46C27EF8.2020004@sandeen.net> <46C28571.2060206@sandeen.net>
-In-Reply-To: <46C28571.2060206@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 15 Aug 2007 00:25:12 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7F7Oxbm004071
+	for <xfs@oss.sgi.com>; Wed, 15 Aug 2007 00:25:05 -0700
+From: donaldd@sgi.com
+Subject: TAKE 969187 - Fix xfs_quota disable, enable, off and remove commands
+Message-Id: <20070815072459.061C52759E21@linuxbuild.melbourne.sgi.com>
+Date: Wed, 15 Aug 2007 17:24:58 +1000 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Eric Sandeen wrote:
-> Eric Sandeen wrote:
-> 
->> I was looking at xfs_bulkstat with an eye towards stack reduction,
->> and came across this... doesn't help stack, but it doesn't appear
->> that the BULKSTAT_FG_INLINE bulkstat is ever used... 
->>
->> Is it there for a reason?  If not here's a patch.
+Fix xfs_quota disable, enable, off and remove commands.
+Fix provided by Utako Kusaka.
 
-Ah hell.  dmapi uses it in cvs... drat, foiled again.  (there's also
-some stack savings to be had by removing the private_data bulkstat
-field... but dmapi uses that too)
+Date:  Wed Aug 15 17:23:44 AEST 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/xfs-cmds
+Inspected by:  utako@tnes.nec.co.jp
 
--Eric
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:29395a
+xfsprogs/doc/CHANGES - 1.245 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/doc/CHANGES.diff?r1=text&tr1=1.245&r2=text&tr2=1.244&f=h
+xfsprogs/quota/state.c - 1.7 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/quota/state.c.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
