@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Aug 2007 21:20:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Aug 2007 21:47:54 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7F4K0bm016532
-	for <xfs@oss.sgi.com>; Tue, 14 Aug 2007 21:20:03 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7F4labm023136
+	for <xfs@oss.sgi.com>; Tue, 14 Aug 2007 21:47:51 -0700
 Received: from Liberator.local (unknown [10.0.0.69])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 4EE1B1806FDB9
-	for <xfs@oss.sgi.com>; Tue, 14 Aug 2007 23:20:03 -0500 (CDT)
-Message-ID: <46C27EF8.2020004@sandeen.net>
-Date: Tue, 14 Aug 2007 23:20:08 -0500
+	by sandeen.net (Postfix) with ESMTP id 2DDB61806FDB9
+	for <xfs@oss.sgi.com>; Tue, 14 Aug 2007 23:47:41 -0500 (CDT)
+Message-ID: <46C28571.2060206@sandeen.net>
+Date: Tue, 14 Aug 2007 23:47:45 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] remove unused BULKSTAT_FG_INLINE
+Subject: [PATCH V2] remove unused BULKSTAT_FG_INLINE
+References: <46C27EF8.2020004@sandeen.net>
+In-Reply-To: <46C27EF8.2020004@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -20,39 +22,46 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
 
-I was looking at xfs_bulkstat with an eye towards stack reduction,
-and came across this... doesn't help stack, but it doesn't appear
-that the BULKSTAT_FG_INLINE bulkstat is ever used... 
+Eric Sandeen wrote:
 
-Is it there for a reason?  If not here's a patch.
+> I was looking at xfs_bulkstat with an eye towards stack reduction,
+> and came across this... doesn't help stack, but it doesn't appear
+> that the BULKSTAT_FG_INLINE bulkstat is ever used... 
+>
+> Is it there for a reason?  If not here's a patch.
+>
+> Thanks,
+> -Eric
+>
+>  xfs_itable.c |   31 ++++++-------------------------
+>  xfs_itable.h |    1 -
+>  2 files changed, 6 insertions(+), 26 deletions(-)
+>   
 
-Thanks,
--Eric
+Oops, missed a now-unused var.
 
- xfs_itable.c |   31 ++++++-------------------------
- xfs_itable.h |    1 -
- 2 files changed, 6 insertions(+), 26 deletions(-)
+---
 
-----
 
 Remove unused BULKSTAT_FG_INLINE flag & associated code.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
 Index: linux-2.6.22-rc4/fs/xfs/xfs_itable.c
 ===================================================================
 --- linux-2.6.22-rc4.orig/fs/xfs/xfs_itable.c
 +++ linux-2.6.22-rc4/fs/xfs/xfs_itable.c
-@@ -273,6 +273,8 @@ xfs_bulkstat_use_dinode(
+@@ -271,7 +271,8 @@ xfs_bulkstat_use_dinode(
+ 	xfs_dinode_t	**dipp)
+ {
  	xfs_dinode_t	*dip;
- 	unsigned int	aformat;
- 
-+	ASSERT(flags & (BULKSTAT_FG_QUICK|BULKSTAT_FG_IGET));
+-	unsigned int	aformat;
 +
++	ASSERT(flags & (BULKSTAT_FG_QUICK|BULKSTAT_FG_IGET));
+ 
  	*dipp = NULL;
  	if (!bp || (flags & BULKSTAT_FG_IGET))
- 		return 1;
-@@ -282,18 +284,9 @@ xfs_bulkstat_use_dinode(
+@@ -282,18 +283,9 @@ xfs_bulkstat_use_dinode(
  	    !XFS_DINODE_GOOD_VERSION(
  			INT_GET(dip->di_core.di_version, ARCH_CONVERT)))
  		return 0;
@@ -74,7 +83,7 @@ Index: linux-2.6.22-rc4/fs/xfs/xfs_itable.c
  	return 1;
  }
  
-@@ -566,8 +559,7 @@ xfs_bulkstat(
+@@ -566,8 +558,7 @@ xfs_bulkstat(
  						((chunkidx & nimask) >>
  						 mp->m_sb.sb_inopblog);
  
@@ -84,7 +93,7 @@ Index: linux-2.6.22-rc4/fs/xfs/xfs_itable.c
  						ino = XFS_AGINO_TO_INO(mp, agno,
  								       agino);
  						bno = XFS_AGB_TO_DADDR(mp, agno,
-@@ -615,22 +607,11 @@ xfs_bulkstat(
+@@ -615,22 +606,11 @@ xfs_bulkstat(
  				if (!xfs_bulkstat_use_dinode(mp, flags, bp,
  							     clustidx, &dip))
  					continue;
