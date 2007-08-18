@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 18 Aug 2007 13:04:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 18 Aug 2007 14:19:47 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7IK4Ebm027875
-	for <xfs@oss.sgi.com>; Sat, 18 Aug 2007 13:04:15 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7ILJebm009572
+	for <xfs@oss.sgi.com>; Sat, 18 Aug 2007 14:19:42 -0700
 Received: from Liberator.local (unknown [10.0.0.69])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 18D1618DF93B1
-	for <xfs@oss.sgi.com>; Sat, 18 Aug 2007 15:04:19 -0500 (CDT)
-Message-ID: <46C750C9.8040604@sandeen.net>
-Date: Sat, 18 Aug 2007 15:04:25 -0500
+	by sandeen.net (Postfix) with ESMTP id 184BE18DF93BA
+	for <xfs@oss.sgi.com>; Sat, 18 Aug 2007 16:19:46 -0500 (CDT)
+Message-ID: <46C7627A.60503@sandeen.net>
+Date: Sat, 18 Aug 2007 16:19:54 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] make xfs stats Kconfigurable
+Subject: [PATCH] optimize XFS_IS_REALTIME_INODE w/o realtime config
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -20,140 +20,203 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
 
-Hey guys, what do you think, is it worth doing this for when
-space is tight:
+Use XFS_IS_REALTIME_INODE in more places, and #define it to
+0 if CONFIG_XFS_RT is off.  This should be safe because mount
+checks in xfs_rtmount_init:
 
-xfs stats are already optional based on CONFIG_PROC_FS, and there
-is already a (never-set) macro XFS_STATS_OFF which can turn them
-off.  Making it a configurable option, if I turn them off I can
-get a little stack savings on x86, gcc 4.1:
+# define xfs_rtmount_init(m)    (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
 
-xfs_attr_list		-8
+so if we get mounted w/o CONFIG_XFS_RT, no realtime inodes should
+be encountered after that.
+
+Defining XFS_IS_REALTIME_INODE to 0 saves a bit of stack space,
+presumeably gcc can optimize around the various "if (0)" type
+checks:
+
+xfs_alloc_file_space	-8
+xfs_bmap_adjacent	-16
+xfs_bmapi		-8
 xfs_bmap_rtalloc	-16
-xfs_bmap_search_extents	-8
-xfs_buf_find		+8 (not sure why)
-xfs_iflush		-4
-xfs_imap		-12
-xfs_log_reserve		-4
-xfs_log_sync		-8
+xfs_bunmapi		-28
+xfs_free_file_space	-64
+xfs_imap		+8  <-- ?  hmm.
+xfs_iomap_write_direct	-12
+xfs_qm_dqusage_adjust	-4
+xfs_qm_vop_chown_reserve -4
 
-It'd reduce the size of the binary a bit too.
+Compile tested only at this point.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Index: linux-2.6.22.i386/fs/xfs/Kconfig
+Index: linux-2.6.22.i386/fs/xfs/xfs_rtalloc.h
 ===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/Kconfig
-+++ linux-2.6.22.i386/fs/xfs/Kconfig
-@@ -59,6 +59,17 @@ config XFS_POSIX_ACL
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_rtalloc.h
++++ linux-2.6.22.i386/fs/xfs/xfs_rtalloc.h
+@@ -21,8 +21,6 @@
+ struct xfs_mount;
+ struct xfs_trans;
  
- 	  If you don't know what Access Control Lists are, say N.
- 
-+	config XFS_STATS
-+	bool "XFS statistics"
-+	depends on XFS_FS && PROC_FS
-+	help
-+	  If you say Y here xfs will gather detailed statistics during
-+	  its operation, and present them in /proc/fs/xfs/stat and
-+	  (CONFIG_XFS_QUOTA is enabled) /proc/fs/xfs/xqmstat.  Disabling
-+	  this will make the compiled code and stack usage slightly smaller.
-+
-+	  If unsure, say Y.
-+
- config XFS_RT
- 	bool "XFS Realtime subvolume support"
- 	depends on XFS_FS
-Index: linux-2.6.22.i386/fs/xfs/Makefile-linux-2.6
-===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/Makefile-linux-2.6
-+++ linux-2.6.22.i386/fs/xfs/Makefile-linux-2.6
-@@ -35,12 +35,12 @@ xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix 
- 				   xfs_qm.o)
- 
- ifeq ($(CONFIG_XFS_QUOTA),y)
--xfs-$(CONFIG_PROC_FS)		+= quota/xfs_qm_stats.o
-+xfs-$(CONFIG_XFS_STAT)		+= quota/xfs_qm_stats.o
- endif
- 
- xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
- xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
--xfs-$(CONFIG_PROC_FS)		+= $(XFS_LINUX)/xfs_stats.o
-+xfs-$(CONFIG_XFS_STATS)		+= $(XFS_LINUX)/xfs_stats.o
- xfs-$(CONFIG_SYSCTL)		+= $(XFS_LINUX)/xfs_sysctl.o
- xfs-$(CONFIG_COMPAT)		+= $(XFS_LINUX)/xfs_ioctl32.o
- 
-Index: linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_stats.h
-===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/linux-2.6/xfs_stats.h
-+++ linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_stats.h
-@@ -19,7 +19,7 @@
- #define __XFS_STATS_H__
- 
- 
--#if defined(CONFIG_PROC_FS) && !defined(XFS_STATS_OFF)
-+#if defined(CONFIG_XFS_STATS)
- 
- #include <linux/percpu.h>
- 
-@@ -137,8 +137,7 @@ DECLARE_PER_CPU(struct xfsstats, xfsstat
- extern void xfs_init_procfs(void);
- extern void xfs_cleanup_procfs(void);
- 
+-#define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
 -
--#else	/* !CONFIG_PROC_FS */
-+#else	/* !CONFIG_XFS_STATS */
- 
- # define XFS_STATS_INC(count)
- # define XFS_STATS_DEC(count)
-@@ -147,6 +146,6 @@ extern void xfs_cleanup_procfs(void);
- static __inline void xfs_init_procfs(void) { };
- static __inline void xfs_cleanup_procfs(void) { };
- 
--#endif	/* !CONFIG_PROC_FS */
-+#endif /* !CONFIG_XFS_STATS */
- 
- #endif /* __XFS_STATS_H__ */
-Index: linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_sysctl.c
+ /* Min and max rt extent sizes, specified in bytes */
+ #define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
+ #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64KB */
+Index: linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_ioctl.c
 ===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/linux-2.6/xfs_sysctl.c
-+++ linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_sysctl.c
-@@ -21,7 +21,7 @@
+--- linux-2.6.22.i386.orig/fs/xfs/linux-2.6/xfs_ioctl.c
++++ linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -736,7 +736,7 @@ xfs_ioctl(
+ 	case XFS_IOC_DIOINFO: {
+ 		struct dioattr	da;
+ 		xfs_buftarg_t	*target =
+-			(ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(ip) ?
+ 			mp->m_rtdev_targp : mp->m_ddev_targp;
  
- static struct ctl_table_header *xfs_table_header;
+ 		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
+Index: linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_lrw.c
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/linux-2.6/xfs_lrw.c
++++ linux-2.6.22.i386/fs/xfs/linux-2.6/xfs_lrw.c
+@@ -220,7 +220,7 @@ xfs_read(
  
--#ifdef CONFIG_PROC_FS
-+#ifdef CONFIG_XFS_STATS
- STATIC int
- xfs_stats_clear_proc_handler(
- 	ctl_table	*ctl,
-@@ -52,7 +52,7 @@ xfs_stats_clear_proc_handler(
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		xfs_buftarg_t	*target =
+-			(ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(ip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp;
+ 		if ((*offset & target->bt_smask) ||
+ 		    (size & target->bt_smask)) {
+@@ -694,7 +694,7 @@ start:
  
- 	return ret;
+ 	if (ioflags & IO_ISDIRECT) {
+ 		xfs_buftarg_t	*target =
+-			(xip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(xip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp;
+ 
+ 		if ((pos & target->bt_smask) || (count & target->bt_smask)) {
+Index: linux-2.6.22.i386/fs/xfs/xfs_dfrag.c
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_dfrag.c
++++ linux-2.6.22.i386/fs/xfs/xfs_dfrag.c
+@@ -184,8 +184,7 @@ xfs_swap_extents(
+ 	}
+ 
+ 	/* Verify both files are either real-time or non-realtime */
+-	if ((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) !=
+-	    (tip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
+ 		error = XFS_ERROR(EINVAL);
+ 		goto error0;
+ 	}
+Index: linux-2.6.22.i386/fs/xfs/xfs_iocore.c
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_iocore.c
++++ linux-2.6.22.i386/fs/xfs/xfs_iocore.c
+@@ -94,7 +94,7 @@ xfs_iocore_inode_reinit(
+ 	xfs_iocore_t	*io = &ip->i_iocore;
+ 
+ 	io->io_flags = 0;
+-	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++	if (XFS_IS_REALTIME_INODE(ip))
+ 		io->io_flags |= XFS_IOCORE_RT;
+ 	io->io_dmevmask = ip->i_d.di_dmevmask;
+ 	io->io_dmstate = ip->i_d.di_dmstate;
+Index: linux-2.6.22.i386/fs/xfs/xfs_rw.h
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_rw.h
++++ linux-2.6.22.i386/fs/xfs/xfs_rw.h
+@@ -58,7 +58,7 @@ struct xfs_mount;
+ static inline xfs_daddr_t
+ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+ {
+-	return (((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) ? \
++	return (XFS_IS_REALTIME_INODE(ip) ? \
+ 		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+ 		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
  }
--#endif /* CONFIG_PROC_FS */
-+#endif /* CONFIG_XFS_STATS */
+@@ -87,7 +87,7 @@ xfs_get_extsz_hint(
+ {
+ 	xfs_extlen_t	extsz;
  
- static ctl_table xfs_table[] = {
- 	{
-@@ -222,7 +222,7 @@ static ctl_table xfs_table[] = {
- 		.extra2		= &xfs_params.fstrm_timer.max,
- 	},
- 	/* please keep this the last entry */
--#ifdef CONFIG_PROC_FS
-+#ifdef CONFIG_XFS_STATS
- 	{
- 		.ctl_name	= XFS_STATS_CLEAR,
- 		.procname	= "stats_clear",
-Index: linux-2.6.22.i386/fs/xfs/quota/xfs_qm_stats.h
+-	if (unlikely(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
+ 		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
+ 				? ip->i_d.di_extsize
+ 				: ip->i_mount->m_sb.sb_rextsize;
+Index: linux-2.6.22.i386/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/quota/xfs_qm_stats.h
-+++ linux-2.6.22.i386/fs/xfs/quota/xfs_qm_stats.h
-@@ -18,7 +18,7 @@
- #ifndef __XFS_QM_STATS_H__
- #define __XFS_QM_STATS_H__
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_vnodeops.c
++++ linux-2.6.22.i386/fs/xfs/xfs_vnodeops.c
+@@ -144,7 +144,7 @@ xfs_getattr(
+ 	default:
+ 		vap->va_rdev = 0;
  
--#if defined(CONFIG_PROC_FS) && !defined(XFS_STATS_OFF)
-+#ifdef CONFIG_XFS_STATS
+-		if (!(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++		if (!(XFS_IS_REALTIME_INODE(ip))) {
+ 			vap->va_blocksize = xfs_preferred_iosize(mp);
+ 		} else {
  
- /*
-  * XQM global statistics
+@@ -521,7 +521,7 @@ xfs_setattr(
+ 		 */
+ 		if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+ 		    (mask & XFS_AT_XFLAGS) &&
+-		    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) !=
++		    (XFS_IS_REALTIME_INODE(ip)) !=
+ 		    (vap->va_xflags & XFS_XFLAG_REALTIME)) {
+ 			code = XFS_ERROR(EINVAL);	/* EFBIG? */
+ 			goto error_return;
+@@ -533,7 +533,7 @@ xfs_setattr(
+ 		if ((mask & XFS_AT_EXTSIZE) && vap->va_extsize != 0) {
+ 			xfs_extlen_t	size;
+ 
+-			if ((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ||
++			if (XFS_IS_REALTIME_INODE(ip) ||
+ 			    ((mask & XFS_AT_XFLAGS) &&
+ 			    (vap->va_xflags & XFS_XFLAG_REALTIME))) {
+ 				size = mp->m_sb.sb_rextsize <<
+@@ -1188,7 +1188,7 @@ xfs_fsync(
+ 		 * If this inode is on the RT dev we need to flush that
+ 		 * cache as well.
+ 		 */
+-		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++		if (XFS_IS_REALTIME_INODE(ip))
+ 			xfs_blkdev_issue_flush(ip->i_mount->m_rtdev_targp);
+ 	}
+ 
+@@ -4263,7 +4263,7 @@ xfs_zero_remaining_bytes(
+ 	int			error = 0;
+ 
+ 	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
+-				ip->i_d.di_flags & XFS_DIFLAG_REALTIME ?
++				XFS_IS_REALTIME_INODE(ip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp);
+ 
+ 	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
+@@ -4360,7 +4360,7 @@ xfs_free_file_space(
+ 	error = 0;
+ 	if (len <= 0)	/* if nothing being freed */
+ 		return error;
+-	rt = (ip->i_d.di_flags & XFS_DIFLAG_REALTIME);
++	rt = XFS_IS_REALTIME_INODE(ip);
+ 	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
+ 	end_dmi_offset = offset + len;
+ 	endoffset_fsb = XFS_B_TO_FSBT(mp, end_dmi_offset);
+Index: linux-2.6.22.i386/fs/xfs/xfs_dinode.h
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_dinode.h
++++ linux-2.6.22.i386/fs/xfs/xfs_dinode.h
+@@ -274,6 +274,12 @@ typedef enum xfs_dinode_fmt
+ #define XFS_DIFLAG_NODEFRAG      (1 << XFS_DIFLAG_NODEFRAG_BIT)
+ #define XFS_DIFLAG_FILESTREAM    (1 << XFS_DIFLAG_FILESTREAM_BIT)
+ 
++#ifdef CONFIG_XFS_RT
++#define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME)
++#else
++#define XFS_IS_REALTIME_INODE(ip) (0)
++#endif
++
+ #define XFS_DIFLAG_ANY \
+ 	(XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC | XFS_DIFLAG_NEWRTBM | \
+ 	 XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND | XFS_DIFLAG_SYNC | \
