@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Aug 2007 12:10:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Aug 2007 12:13:41 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7JJAbbm007860
-	for <xfs@oss.sgi.com>; Sun, 19 Aug 2007 12:10:39 -0700
-Message-ID: <46C895BB.2000004@sandeen.net>
-Date: Sun, 19 Aug 2007 14:10:51 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7JJDbbm008518
+	for <xfs@oss.sgi.com>; Sun, 19 Aug 2007 12:13:38 -0700
+Message-ID: <46C89670.6050101@sandeen.net>
+Date: Sun, 19 Aug 2007 14:13:52 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] optimize XFS_IS_REALTIME_INODE w/o realtime config
-References: <46C7627A.60503@sandeen.net> <20070819190847.GB2929@infradead.org>
-In-Reply-To: <20070819190847.GB2929@infradead.org>
+Subject: Re: [PATCH V2] make xfs stats Kconfigurable
+References: <46C750C9.8040604@sandeen.net> <46C87C05.5040905@sandeen.net> <20070819191010.GC2929@infradead.org>
+In-Reply-To: <20070819191010.GC2929@infradead.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -19,26 +19,34 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
 Christoph Hellwig wrote:
-> On Sat, Aug 18, 2007 at 04:19:54PM -0500, Eric Sandeen wrote:
->> Use XFS_IS_REALTIME_INODE in more places, and #define it to
->> 0 if CONFIG_XFS_RT is off.  This should be safe because mount
->> checks in xfs_rtmount_init:
+> On Sun, Aug 19, 2007 at 12:21:09PM -0500, Eric Sandeen wrote:
+>> Oops, typo in Makefile (CONFIG_XFS_STAT vs _STATS).
 >>
->> # define xfs_rtmount_init(m)    (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+>> ----
 >>
->> so if we get mounted w/o CONFIG_XFS_RT, no realtime inodes should
->> be encountered after that.
 >>
->> Defining XFS_IS_REALTIME_INODE to 0 saves a bit of stack space,
->> presumeably gcc can optimize around the various "if (0)" type
->> checks:
+>> xfs stats are already optional based on CONFIG_PROC_FS, and there
+>> is already a (never-set) macro XFS_STATS_OFF which can turn them
+>> off.  Making it a configurable option, if I turn them off I can
+>> get a little stack savings on x86, gcc 4.1:
 > 
-> Looks good to me.
-> 
-> Not sure if anyone disables the rt volume, but as long as it's a config
-> option we should try to avoid as much as possible away if it's not enabled.
-> 
+> Why would we want to disable the statistics?
 
-Fedora does :)
+To save a little stack space.  :)  *shrug*
+
+This one's not so critical.  FWIW, JFS has configurable stats, and I
+think an upcoming jbd patch adds (config-optional) stats.
+
+OTOH when are stats really used outside of sgi?  Though I suppose
+occasionally they'd be useful in field debugging.
+
+*shrug* this one may not be worth it; I won't be heartbroken if it
+doesn't go in... it helps a tiny bit on the stack side.
 
 -Eric
+
+>> +	config XFS_STATS
+> 
+> Everywhere else the config statement is not indented, so it probably
+> shouldn't be here either.
+> 
