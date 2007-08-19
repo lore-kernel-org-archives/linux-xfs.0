@@ -1,38 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Aug 2007 12:29:09 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7JJT4bm014235
-	for <xfs@oss.sgi.com>; Sun, 19 Aug 2007 12:29:06 -0700
-Date: Sun, 19 Aug 2007 20:08:47 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] optimize XFS_IS_REALTIME_INODE w/o realtime config
-Message-ID: <20070819190847.GB2929@infradead.org>
-References: <46C7627A.60503@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Aug 2007 12:39:46 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7JJdcbm016630
+	for <xfs@oss.sgi.com>; Sun, 19 Aug 2007 12:39:42 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l7JJdhA5002236
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 19 Aug 2007 21:39:43 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l7JJdhTR002234
+	for xfs@oss.sgi.com; Sun, 19 Aug 2007 21:39:43 +0200
+Date: Sun, 19 Aug 2007 21:39:43 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] m_growlock should be a mutex
+Message-ID: <20070819193943.GA2185@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46C7627A.60503@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Sat, Aug 18, 2007 at 04:19:54PM -0500, Eric Sandeen wrote:
-> Use XFS_IS_REALTIME_INODE in more places, and #define it to
-> 0 if CONFIG_XFS_RT is off.  This should be safe because mount
-> checks in xfs_rtmount_init:
-> 
-> # define xfs_rtmount_init(m)    (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
-> 
-> so if we get mounted w/o CONFIG_XFS_RT, no realtime inodes should
-> be encountered after that.
-> 
-> Defining XFS_IS_REALTIME_INODE to 0 saves a bit of stack space,
-> presumeably gcc can optimize around the various "if (0)" type
-> checks:
+m_growlock only needs plain binary mutex semantics, so use a struct
+mutex instead of a semaphore for it.
 
-Looks good to me.
 
-Not sure if anyone disables the rt volume, but as long as it's a config
-option we should try to avoid as much as possible away if it's not enabled.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6-xfs/fs/xfs/xfs_fsops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_fsops.c	2007-08-13 18:04:18.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_fsops.c	2007-08-13 18:04:26.000000000 +0200
+@@ -433,10 +433,10 @@ xfs_growfs_data(
+ 	xfs_growfs_data_t	*in)
+ {
+ 	int error;
+-	if (!cpsema(&mp->m_growlock))
++	if (!mutex_trylock(&mp->m_growlock))
+ 		return XFS_ERROR(EWOULDBLOCK);
+ 	error = xfs_growfs_data_private(mp, in);
+-	vsema(&mp->m_growlock);
++	mutex_unlock(&mp->m_growlock);
+ 	return error;
+ }
+ 
+@@ -446,10 +446,10 @@ xfs_growfs_log(
+ 	xfs_growfs_log_t	*in)
+ {
+ 	int error;
+-	if (!cpsema(&mp->m_growlock))
++	if (!mutex_trylock(&mp->m_growlock))
+ 		return XFS_ERROR(EWOULDBLOCK);
+ 	error = xfs_growfs_log_private(mp, in);
+-	vsema(&mp->m_growlock);
++	mutex_unlock(&mp->m_growlock);
+ 	return error;
+ }
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2007-08-13 18:04:18.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2007-08-13 18:04:26.000000000 +0200
+@@ -139,7 +139,7 @@ xfs_mount_init(void)
+ 	AIL_LOCKINIT(&mp->m_ail_lock, "xfs_ail");
+ 	spinlock_init(&mp->m_sb_lock, "xfs_sb");
+ 	mutex_init(&mp->m_ilock);
+-	initnsema(&mp->m_growlock, 1, "xfs_grow");
++	mutex_init(&mp->m_growlock);
+ 	/*
+ 	 * Initialize the AIL.
+ 	 */
+@@ -180,7 +180,7 @@ xfs_mount_free(
+ 	AIL_LOCK_DESTROY(&mp->m_ail_lock);
+ 	spinlock_destroy(&mp->m_sb_lock);
+ 	mutex_destroy(&mp->m_ilock);
+-	freesema(&mp->m_growlock);
++	mutex_destroy(&mp->m_growlock);
+ 	if (mp->m_quotainfo)
+ 		XFS_QM_DONE(mp);
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2007-08-13 18:04:18.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2007-08-13 18:04:26.000000000 +0200
+@@ -377,7 +377,7 @@ typedef struct xfs_mount {
+ 	uint			m_in_maxlevels;	/* XFS_IN_MAXLEVELS */
+ 	struct xfs_perag	*m_perag;	/* per-ag accounting info */
+ 	struct rw_semaphore	m_peraglock;	/* lock for m_perag (pointer) */
+-	sema_t			m_growlock;	/* growfs mutex */
++	struct mutex		m_growlock;	/* growfs mutex */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+ 	__uint64_t		m_flags;	/* global mount flags */
