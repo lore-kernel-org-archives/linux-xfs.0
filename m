@@ -1,85 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 19:03:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7O23l4p007020
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 19:03:49 -0700
-Message-ID: <46CE3C8B.5090609@sandeen.net>
-Date: Thu, 23 Aug 2007 21:03:55 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 20:59:46 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O3xb4p025116
+	for <linux-xfs@oss.sgi.com>; Thu, 23 Aug 2007 20:59:41 -0700
+Message-ID: <46CE581A.2000405@sgi.com>
+Date: Fri, 24 Aug 2007 14:01:30 +1000
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix filestreams on 32-bit boxes
-References: <46CE2A07.7080305@sandeen.net> <20070824014820.GF72985246@sgi.com>
-In-Reply-To: <20070824014820.GF72985246@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: TAKE 969192: Default mount option "noikeep" makes the inode generation
+ number non-persistent
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: linux-xfs@oss.sgi.com
 
-David Chinner wrote:
+XFS inodes are dynamically allocated on demand, rather than being allocated
+at mkfs time. Chunks of 64 inodes are allocated at once, but they are
+never freed. Over time, this can lead to filesystem fragmentation, clusters
+of inodes and the btrees which point at them can be scattered around the
+system.
 
->
-> hmmm - probably should make xfs_fstrm_free_func follow the correct prototype
-> and convert the item into an opaque void * as well. Then we can remove the
-> cast that hid this problem in xfs_filestream_mount()....
->
-> Nice catch, though, Eric.
->
-> Cheers,
->
-> Dave.
+By freeing clusters as they are emptied, we reduce fragmentation of the
+free space after removing files. This in turn allows us to make better
+placement decisions when repopulating a filesystem. The XFSMNT_IDELETE
+mount option enables freeing clusters when they get empty.
 
-Yep, I thought of removing the cast on the way home, as did Christoph, wherever he is :)
+Unfortunately a side effect of freeing inode clusters is that the inode
+generation numbers of such inodes would be reset to zero when the cluster
+is reclaimed. This is a problem in particular for a DMAPI enabled filesystem
+as the the DMAPI handles need to be unique and persistent in time. An unique
+DMAPI handle is built with the help of the inode generation number. When the
+last one is prematurely reset by an inode cluster reclaim, there is
+a high probability of different generation inodes to end up having identical
+DMAPI handles.
 
----------------------
+To avoid the problem with identical DMAPI handles, the XFSMNT_IDELETE mount
+option should be set as default, only if the filesystem is not mounted with
+XFSMNT_DMAPI.
 
-xfs_filestream_mount() sets up an mru cache with:
+Date:  Fri Aug 24 13:54:57 AEST 2007
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
+Inspected by:  dgc, markgw
+Author:  vapo
 
-        err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
-                             (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-but that cast is causing problems...
 
-typedef void (*xfs_mru_cache_free_func_t)(unsigned long, void*);
-
-but:
-
-void xfs_fstrm_free_func( 
-        xfs_ino_t       ino,
-        fstrm_item_t    *item)
-
-so on a 32-bit box, it's casting (32, 32) args into (64, 32) and I assume 
-it's getting garbage for *item, which subsequently causes an explosion.
-
-With this change the filestreams xfsqa tests don't oops on my 32-bit box.
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Index: linux-2.6.22.i386/fs/xfs/xfs_filestream.c
-===================================================================
---- linux-2.6.22.i386.orig/fs/xfs/xfs_filestream.c
-+++ linux-2.6.22.i386/fs/xfs/xfs_filestream.c
-@@ -350,9 +350,10 @@ _xfs_filestream_update_ag(
- /* xfs_fstrm_free_func(): callback for freeing cached stream items. */
- void
- xfs_fstrm_free_func(
--	xfs_ino_t	ino,
--	fstrm_item_t	*item)
-+	unsigned long	ino,
-+	void		*data)
- {
-+	fstrm_item_t	*item  = (fstrm_item_t *)data;
- 	xfs_inode_t	*ip = item->ip;
- 	int ref;
- 
-@@ -438,7 +439,7 @@ xfs_filestream_mount(
- 	grp_count = 10;
- 
- 	err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
--	                     (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
-+	                     xfs_fstrm_free_func);
- 
- 	return err;
- }
+Modid:  xfs-linux-melb:xfs-kern:29486a
+fs/xfs/xfs_vfsops.c - 1.527 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.527&r2=text&tr2=1.526&f=h
+        - pv 969192, rv dgc, markgw - Imply "ikeep" default mount option 
+for DMAPI enabled filestems.
