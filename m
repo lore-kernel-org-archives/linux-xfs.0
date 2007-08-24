@@ -1,36 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 04:01:47 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7OB1f4p028227
-	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 04:01:44 -0700
-Subject: PARTIAL TAKE 969608 - Create xfs_iflags_test_and_clear helper function
-Message-Id: <20070824110137.1F4E858C38F1@chook.melbourne.sgi.com>
-Date: Fri, 24 Aug 2007 21:01:37 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 04:05:07 -0700 (PDT)
+Received: from bowl.fysh.org (fysh.org [83.170.75.51])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7OB4w4p029138
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 04:05:05 -0700
+Received: from mike by bowl.fysh.org with local (Exim 4.50 #1 (Debian))
+	id 1IOWYx-0001aE-1l
+	for xfs@oss.sgi.com; Fri, 24 Aug 2007 11:38:47 +0100
+Date: Fri, 24 Aug 2007 11:38:47 +0100
+Subject: XFS and 4k stacks/newer kernels.
+Message-ID: <20070824103846.GC13240@fysh.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+From: Mike Ashton <mike@fysh.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Create xfs_iflags_test_and_clear helper function
+Hi folks,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Firstly, I must apologise for the tremendously vague nature of this
+"report".  I do hope it's of some use, and it's the best I can do at
+the moment.
 
+I've been using XFS for several years now on a raid6 partition on a
+15-disk array on linux 2.6.19 without 4k stacks, and without incident.
+And a very nice filesystem it is too.
 
-Date:  Fri Aug 24 21:01:07 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  hch@lst.de
+I've just set up a new one based on exactly the same hardware but with
+a 2.6.22.3 kernel (and thus with compulsory 4k stacks, as I understand
+it?).  During a large rsync to populate the filesystem, the write to
+local disk blocked in a fast device wait, but without any errors in
+dmesg.  After giving it half an hour to wake up again, I hard rebooted
+and the XFS superblock was unreadable; bye bye filesystem.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+So I've rolled back to 2.6.19, unsurprisingly, but I wanted to let you
+know that some issues with 4k stacks or other features of newer
+kernels may not have been resolved yet.  Since there were no errors,
+I've nothing specific to give you, which I appreciate gives you little
+to go on.  It wouldn't be right to leave this anecdote unreported,
+however.
 
-
-Modid:  xfs-linux-melb:xfs-kern:29496a
-fs/xfs/xfs_vnodeops.c - 1.713 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.713&r2=text&tr2=1.712&f=h
-	- use a xfs_iflags_test_and_clear helper instead of open coding.
-
-fs/xfs/xfs_inode.h - 1.228 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.228&r2=text&tr2=1.227&f=h
-	- use a xfs_iflags_test_and_clear helper instead of open coding.
+Best of luck and thanks,
+Mike.
