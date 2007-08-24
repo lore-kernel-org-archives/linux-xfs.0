@@ -1,98 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 17:26:27 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O0QN4p024212
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 17:26:24 -0700
-Date: Fri, 24 Aug 2007 10:26:12 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 11/17] remove dependency of the quota module on behaviors.
-Message-ID: <20070824002612.GC72985246@sgi.com>
-References: <20070823193935.GL8050@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070823193935.GL8050@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 17:45:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7O0ix4p026806
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 17:45:02 -0700
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l7O0iwDO005193
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 20:44:58 -0400
+Received: from lacrosse.corp.redhat.com (lacrosse.corp.redhat.com [172.16.52.154])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l7O0iwpv011279
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 20:44:58 -0400
+Received: from [10.15.80.10] (neon.msp.redhat.com [10.15.80.10])
+	by lacrosse.corp.redhat.com (8.12.11.20060308/8.11.6) with ESMTP id l7O0itAu018425
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 20:44:57 -0400
+Message-ID: <46CE2A07.7080305@sandeen.net>
+Date: Thu, 23 Aug 2007 19:44:55 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] fix filestreams on 32-bit boxes
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 23, 2007 at 09:39:35PM +0200, Christoph Hellwig wrote:
-> Mount options are now parsed by the main XFS module and rejected if quota
-> support is not available, and there are some new quota operation for the
-> quotactl syscall and calls to quote in the mount, unmount and sync
-> callchains.
-....
->  
-> -STATIC int
-> -xfs_qm_syncall(
-> -	struct bhv_desc		*bhv,
-> -	int			flags,
-> -	cred_t			*credp)
-.....
-> -	/*
-> -	 * Get the Quota Manager to flush the dquots.
-> -	 */
-> -	if (XFS_IS_QUOTA_ON(mp)) {
-> -		if ((error = xfs_qm_sync(mp, flags))) {
-> -			/*
-> -			 * If we got an IO error, we will be shutting down.
-> -			 * So, there's nothing more for us to do here.
-> -			 */
-> -			ASSERT(error != EIO || XFS_FORCED_SHUTDOWN(mp));
-> -			if (XFS_FORCED_SHUTDOWN(mp)) {
-> -				return XFS_ERROR(error);
-> -			}
-> -		}
+xfs_filestream_mount() sets up an mru cache with:
 
-So we check for quota being enabled here before syncing.
+        err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
+                             (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
 
-> @@ -941,6 +962,21 @@ xfs_sync(
->  	cred_t		*credp)
->  {
->  	xfs_mount_t	*mp = XFS_BHVTOM(bdp);
-> +	int		error;
-> +
-> +	/*
-> +	 * Get the Quota Manager to flush the dquots.
-> +	 */
-> +	error = XFS_QM_DQSYNC(mp, flags);
-> +	if (error) {
-> +		/*
-> +		 * If we got an IO error, we will be shutting down.
-> +		 * So, there's nothing more for us to do here.
-> +		 */
-> +		ASSERT(error != EIO || XFS_FORCED_SHUTDOWN(mp));
-> +		if (XFS_FORCED_SHUTDOWN(mp))
-> +			return XFS_ERROR(error);
-> +	}
+but that cast is causing problems...
 
-but we don't for the new code. I assume that this is because
-of the stub:
+typedef void (*xfs_mru_cache_free_func_t)(unsigned long, void*);
 
-> +static struct xfs_qmops xfs_qmcore_stub = {
->  	.xfs_qminit		= (xfs_qminit_t) xfs_noquota_init,
->  	.xfs_qmdone		= (xfs_qmdone_t) fs_noerr,
->  	.xfs_qmmount		= (xfs_qmmount_t) fs_noerr,
-> @@ -124,4 +126,38 @@ xfs_qmops_t	xfs_qmcore_stub = {
->  	.xfs_dqvoprename	= (xfs_dqvoprename_t) fs_noerr,
->  	.xfs_dqvopchown		= xfs_dqvopchown_default,
->  	.xfs_dqvopchownresv	= (xfs_dqvopchownresv_t) fs_noerr,
-> +	.xfs_dqstatvfs		= (xfs_dqstatvfs_t) fs_noval,
-> +	.xfs_dqsync		= (xfs_dqsync_t) fs_noerr,
+but:
 
-That returns no error.
+void xfs_fstrm_free_func( 
+        xfs_ino_t       ino,
+        fstrm_item_t    *item)
 
-This is slightly non-obvious that if quotas are not enabled or loaded
-that this quota sync does not actually return an error. Perhaps a small
-addition to the comment above XFS_QM_DQSYNC() to explain this would
-help prevent future misunderstandings.
+so on a 32-bit box, it's casting (32, 32) args into (64, 32) and I assume 
+it's getting garbage for *item, which subsequently causes an explosion.
 
-Cheers,
+With this change the filestreams xfsqa tests don't oops on my 32-bit box.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Index: linux-2.6.22.i386/fs/xfs/xfs_filestream.c
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_filestream.c
++++ linux-2.6.22.i386/fs/xfs/xfs_filestream.c
+@@ -350,7 +350,7 @@ _xfs_filestream_update_ag(
+ /* xfs_fstrm_free_func(): callback for freeing cached stream items. */
+ void
+ xfs_fstrm_free_func(
+-	xfs_ino_t	ino,
++	unsigned long	ino,
+ 	fstrm_item_t	*item)
+ {
+ 	xfs_inode_t	*ip = item->ip;
