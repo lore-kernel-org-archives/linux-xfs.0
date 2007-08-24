@@ -1,44 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 05:14:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 05:49:50 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7OCDt4p016875
-	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 05:13:57 -0700
-Subject: PARTIAL TAKE 969608 - move syncing related members from struct bhv_vfs to struct xfs_mount
-Message-Id: <20070824121350.6E88A58C38F1@chook.melbourne.sgi.com>
-Date: Fri, 24 Aug 2007 22:13:50 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7OCnj4p023883
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Aug 2007 05:49:47 -0700
+Date: Fri, 24 Aug 2007 22:49:33 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: TAKE 969192: Default mount option "noikeep" makes the inode generation number non-persistent
+Message-ID: <20070824124933.GS61154114@sgi.com>
+References: <46CE581A.2000405@sgi.com> <20070824113631.GA26868@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070824113631.GA26868@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Vlad Apostolov <vapo@sgi.com>, linux-xfs@oss.sgi.com
 
-move syncing related members from struct bhv_vfs to struct xfs_mount
+On Fri, Aug 24, 2007 at 12:36:31PM +0100, Christoph Hellwig wrote:
+> On Fri, Aug 24, 2007 at 02:01:30PM +1000, Vlad Apostolov wrote:
+> > To avoid the problem with identical DMAPI handles, the XFSMNT_IDELETE mount
+> > option should be set as default, only if the filesystem is not mounted with
+> > XFSMNT_DMAPI.
+> 
+> Note that we have the same problem with nfs exports aswell.  Dateo maybe we
+> need a real fix insteead and keep a block of generation numbers around even
+> if and inode cluster is freed or something similar.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Yes. NFS is less critical than dmapi, though - with NFS filehandles just a
+change in generation number is usually good enough to catch most stale
+filehandle issues. With DMAPI, there's applications that record inode
+number/generation pairs and expect them never to repeat ever again.
 
+We haven't had any reports of probelms with NFS servers due to this,
+but as soon as our HSm was exposed to this code we started getting
+strange coherency and corruption problems that have taken some time
+to track down to this issue. Hence this change seems like the
+best tradeoff while we work out a real solution.
 
-Date:  Fri Aug 24 22:13:23 AEST 2007
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  hch@lst.de
+At this point I suspect a deleted inode cluster btree in the AGI
+is the best solution because it can share most of the btree
+code with the current AGI btree and keeps the granularity of
+shared generation numbers quite fine.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Cheers,
 
-
-Modid:  xfs-linux-melb:xfs-kern:29508a
-fs/xfs/xfs_mount.h - 1.248 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.248&r2=text&tr2=1.247&f=h
-	- move sync-related members of bhv_vfs to xfs_mount.
-
-fs/xfs/linux-2.6/xfs_vfs.h - 1.79 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vfs.h.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
-	- move sync-related members of bhv_vfs to xfs_mount.
-
-fs/xfs/linux-2.6/xfs_vfs.c - 1.82 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vfs.c.diff?r1=text&tr1=1.82&r2=text&tr2=1.81&f=h
-	- move sync-related members of bhv_vfs to xfs_mount.
-
-fs/xfs/linux-2.6/xfs_super.c - 1.394 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.394&r2=text&tr2=1.393&f=h
-	- move sync-related members of bhv_vfs to xfs_mount.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
