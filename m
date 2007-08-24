@@ -1,46 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 13:21:58 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-4.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7OKLu4p013750
-	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 13:21:56 -0700
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by netops-testserver-4.corp.sgi.com (Postfix) with ESMTP id 23DFB61B0C
-	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 13:01:56 -0700 (PDT)
-Subject: TAKE 969625 - always specify a mode when using O_CREAT on open(2)
-Message-Id: <20070824193730.EA609B5F59@augusta>
-Date: Fri, 24 Aug 2007 14:37:30 -0500 (CDT)
-From: wkendall@sgi.com (Bill Kendall)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 16:26:23 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7ONQJ4p013427
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 16:26:20 -0700
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l7ONQID1029989
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 19:26:18 -0400
+Received: from lacrosse.corp.redhat.com (lacrosse.corp.redhat.com [172.16.52.154])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l7ONQInP023901
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 19:26:18 -0400
+Received: from [10.15.80.10] (neon.msp.redhat.com [10.15.80.10])
+	by lacrosse.corp.redhat.com (8.12.11.20060308/8.11.6) with ESMTP id l7ONQH4I001691
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 19:26:17 -0400
+Message-ID: <46CF6919.2050404@sandeen.net>
+Date: Fri, 24 Aug 2007 18:26:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] fix xfsqa test 052 filtering with long device names
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@fido.engr.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Fedora Core 8 refuses to compile code that uses O_CREAT on an open(2) call without
-specifying a mode. Fix up the few cases where xfsdump was doing this.
+Long devicenames cause this quota output to split onto 2 lines:
 
+# xfs_quota -c "quota -gpu -birnN 99" /mnt/scratch
+/dev/mapper/testvol-test2
+                           880       1004       1004   00 [--------]           1         10         10   00 [--------]           0          0          0   00 [--------] /mnt/scratch
 
-Date:  Fri Aug 24 12:36:15 PDT 2007
-Workarea:  augusta.americas.sgi.com:/data/lwork/attica1/wkendall/xfs-cmds
-Inspected by:  sandeen@sandeen.net
+(why, I'm not sure, because that last line is plenty long too)
 
-The following file(s) were checked into:
-  bonnie.engr.sgi.com:/isms/xfs-cmds/master
+but if we make that "\n" go away, the test still passes.
 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Modid:  master:xfs-cmds:232533a
-xfsdump/VERSION - 1.87 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/VERSION.diff?r1=text&tr1=1.87&r2=text&tr2=1.86&f=h
-xfsdump/doc/CHANGES - 1.101 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/doc/CHANGES.diff?r1=text&tr1=1.101&r2=text&tr2=1.100&f=h
-xfsdump/inventory/inv_oref.c - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/inventory/inv_oref.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-xfsdump/inventory/inv_stobj.c - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/inventory/inv_stobj.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-xfsdump/inventory/inv_mgr.c - 1.11 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/inventory/inv_mgr.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
-xfsdump/inventory/inv_fstab.c - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/inventory/inv_fstab.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-xfsdump/inventory/inv_idx.c - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/inventory/inv_idx.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-xfsdump/invutil/invidx.c - 1.8 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/invutil/invidx.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+Index: xfs-cmds/xfstests/052
+===================================================================
+--- xfs-cmds.orig/xfstests/052
++++ xfs-cmds/xfstests/052
+@@ -82,8 +82,8 @@ xfs_quota -x \
+ 
+ # cross check blks, softblks, hardblks <-> quota, xfs_db
+ xfs_quota -c "quota -$type -birnN $id" $SCRATCH_DEV |
+-			tr -s '[:space:]' | tee -a $seq.full | perl -ne '
+-	if (m[^\s*'$SCRATCH_DEV'\s+(\d+)\s+(\d+)\s+(\d+)]) {
++			tr -d '\n' | tr -s '[:space:]' | tee -a $seq.full |
++	perl -ne 'if (m[^\s*'$SCRATCH_DEV'\s+(\d+)\s+(\d+)\s+(\d+)]) {
+ 		print "used_blocks=", $1, "\n";
+ 		print "soft_blocks=", $2, "\n";
+ 		print "hard_blocks=", $3, "\n";
