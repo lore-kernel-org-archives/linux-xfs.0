@@ -1,52 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 17:05:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 17:10:58 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O05a4p020884
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 17:05:39 -0700
-Date: Fri, 24 Aug 2007 10:05:23 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O0Ap4p021782
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 17:10:54 -0700
+Date: Fri, 24 Aug 2007 10:10:40 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 6/17] move v_trace from bhv_vnode to xfs_inode
-Message-ID: <20070824000523.GA72985246@sgi.com>
-References: <20070823193834.GG8050@lst.de>
+Subject: Re: [PATCH 8/17] kill struct bhv_vnode
+Message-ID: <20070824001040.GB72985246@sgi.com>
+References: <20070823193905.GI8050@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070823193834.GG8050@lst.de>
+In-Reply-To: <20070823193905.GI8050@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 23, 2007 at 09:38:34PM +0200, Christoph Hellwig wrote:
-> struct bhv_vnode is on it's way out, so move the trace buffer to the
-> XFS inode.  Note that this makes the tracing macros rather misnamed,
-> but this kind of fallout will be fixed up incrementally later on.
-....
+On Thu, Aug 23, 2007 at 09:39:05PM +0200, Christoph Hellwig wrote:
+> Now that struct bhv_vnode is empty we can just kill it.  Retain bhv_vattr_t
+> as a typedef for struct inode for the time beeing until all the fallout is
+> cleaned up.
 
-> @@ -197,11 +192,11 @@ vn_hold(
->  #ifdef	XFS_VNODE_TRACE
+I think you mean "retain the bhv_vnode_t as a typedef for struct inode":
+
+> +typedef struct inode	bhv_vnode_t;
 >  
->  #define KTRACE_ENTER(vp, vk, s, line, ra)			\
-> -	ktrace_enter(	(vp)->v_trace,				\
-> +	ktrace_enter(	(ip)->i_trace,				\
->  /*  0 */		(void *)(__psint_t)(vk),		\
->  /*  1 */		(void *)(s),				\
->  /*  2 */		(void *)(__psint_t) line,		\
-> -/*  3 */		(void *)(__psint_t)(vn_count(vp)),	\
-> +/*  3 */		NULL,					\
-
-given that vn_count() returns the linux inode i_count, shouldn't
-we put that here as well rather than killing it? It is sometimes
-useful to see what is happening with the reference count in the
-traces....
-
-> +#ifdef	XFS_VNODE_TRACE
-> +	ip->i_trace = ktrace_alloc(VNODE_TRACE_SIZE, KM_SLEEP);
-> +#endif
-
-At some point we need to change that define as well. More
-cosmetic stuff, though.
+> -typedef struct bhv_vnode {
+> -	struct inode	v_inode;		/* Linux inode */
+> -	/* inode MUST be last */
+> -} bhv_vnode_t;
 
 Cheers,
 
