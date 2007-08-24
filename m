@@ -1,53 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 05:49:50 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 06:24:03 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7OCnj4p023883
-	for <linux-xfs@oss.sgi.com>; Fri, 24 Aug 2007 05:49:47 -0700
-Date: Fri, 24 Aug 2007 22:49:33 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: TAKE 969192: Default mount option "noikeep" makes the inode generation number non-persistent
-Message-ID: <20070824124933.GS61154114@sgi.com>
-References: <46CE581A.2000405@sgi.com> <20070824113631.GA26868@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070824113631.GA26868@infradead.org>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7ODNv4p029837
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 06:24:00 -0700
+Subject: TAKE 967795 - fix filestreams on 32-bit boxes
+Message-Id: <20070824132351.B1AA158C38F1@chook.melbourne.sgi.com>
+Date: Fri, 24 Aug 2007 23:23:51 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Vlad Apostolov <vapo@sgi.com>, linux-xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 24, 2007 at 12:36:31PM +0100, Christoph Hellwig wrote:
-> On Fri, Aug 24, 2007 at 02:01:30PM +1000, Vlad Apostolov wrote:
-> > To avoid the problem with identical DMAPI handles, the XFSMNT_IDELETE mount
-> > option should be set as default, only if the filesystem is not mounted with
-> > XFSMNT_DMAPI.
-> 
-> Note that we have the same problem with nfs exports aswell.  Dateo maybe we
-> need a real fix insteead and keep a block of generation numbers around even
-> if and inode cluster is freed or something similar.
+fix filestreams on 32-bit boxes
 
-Yes. NFS is less critical than dmapi, though - with NFS filehandles just a
-change in generation number is usually good enough to catch most stale
-filehandle issues. With DMAPI, there's applications that record inode
-number/generation pairs and expect them never to repeat ever again.
+xfs_filestream_mount() sets up an mru cache with:
 
-We haven't had any reports of probelms with NFS servers due to this,
-but as soon as our HSm was exposed to this code we started getting
-strange coherency and corruption problems that have taken some time
-to track down to this issue. Hence this change seems like the
-best tradeoff while we work out a real solution.
+        err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
+                             (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
 
-At this point I suspect a deleted inode cluster btree in the AGI
-is the best solution because it can share most of the btree
-code with the current AGI btree and keeps the granularity of
-shared generation numbers quite fine.
+but that cast is causing problems...
 
-Cheers,
+typedef void (*xfs_mru_cache_free_func_t)(unsigned long, void*);
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+but:
+
+void xfs_fstrm_free_func( 
+        xfs_ino_t       ino,
+        fstrm_item_t    *item)
+
+so on a 32-bit box, it's casting (32, 32) args into (64, 32) and I assume 
+it's getting garbage for *item, which subsequently causes an explosion.
+
+With this change the filestreams xfsqa tests don't oops on my 32-bit box.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Fri Aug 24 23:23:27 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  sandeen@sandeen.net
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29510a
+fs/xfs/xfs_filestream.c - 1.3 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_filestream.c.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+	- clean up item freeing callback to use correct interface. prevents
+	  panics on 32 bit platforms.
