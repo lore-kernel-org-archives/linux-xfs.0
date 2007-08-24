@@ -1,46 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 04:05:07 -0700 (PDT)
-Received: from bowl.fysh.org (fysh.org [83.170.75.51])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7OB4w4p029138
-	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 04:05:05 -0700
-Received: from mike by bowl.fysh.org with local (Exim 4.50 #1 (Debian))
-	id 1IOWYx-0001aE-1l
-	for xfs@oss.sgi.com; Fri, 24 Aug 2007 11:38:47 +0100
-Date: Fri, 24 Aug 2007 11:38:47 +0100
-Subject: XFS and 4k stacks/newer kernels.
-Message-ID: <20070824103846.GC13240@fysh.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-From: Mike Ashton <mike@fysh.org>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 04:05:27 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7OB5M4p029298
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 04:05:24 -0700
+Subject: PARTIAL TAKE 969608 - move v_iocount from bhv_vnode to xfs_inode
+Message-Id: <20070824110518.316B158C38F1@chook.melbourne.sgi.com>
+Date: Fri, 24 Aug 2007 21:05:18 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Hi folks,
+move v_iocount from bhv_vnode to xfs_inode
 
-Firstly, I must apologise for the tremendously vague nature of this
-"report".  I do hope it's of some use, and it's the best I can do at
-the moment.
+struct bhv_vnode is on it's way out, so move the I/O count to the XFS inode.
 
-I've been using XFS for several years now on a raid6 partition on a
-15-disk array on linux 2.6.19 without 4k stacks, and without incident.
-And a very nice filesystem it is too.
 
-I've just set up a new one based on exactly the same hardware but with
-a 2.6.22.3 kernel (and thus with compulsory 4k stacks, as I understand
-it?).  During a large rsync to populate the filesystem, the write to
-local disk blocked in a fast device wait, but without any errors in
-dmesg.  After giving it half an hour to wake up again, I hard rebooted
-and the XFS superblock was unreadable; bye bye filesystem.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-So I've rolled back to 2.6.19, unsurprisingly, but I wanted to let you
-know that some issues with 4k stacks or other features of newer
-kernels may not have been resolved yet.  Since there were no errors,
-I've nothing specific to give you, which I appreciate gives you little
-to go on.  It wouldn't be right to leave this anecdote unreported,
-however.
 
-Best of luck and thanks,
-Mike.
+Date:  Fri Aug 24 21:04:54 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29497a
+fs/xfs/xfs_vnodeops.c - 1.714 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.714&r2=text&tr2=1.713&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/xfs_vfsops.c - 1.529 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.529&r2=text&tr2=1.528&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/xfs_inode.c - 1.475 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.475&r2=text&tr2=1.474&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/xfs_inode.h - 1.229 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.229&r2=text&tr2=1.228&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/linux-2.6/xfs_vnode.c - 1.147 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.c.diff?r1=text&tr1=1.147&r2=text&tr2=1.146&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/linux-2.6/xfs_vnode.h - 1.134 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.134&r2=text&tr2=1.133&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/linux-2.6/xfs_aops.c - 1.150 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.150&r2=text&tr2=1.149&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
+
+fs/xfs/linux-2.6/xfs_aops.h - 1.11 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.h.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+	- move v_iocount from bhv_vnode to xfs_inode
