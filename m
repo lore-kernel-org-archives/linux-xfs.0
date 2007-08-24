@@ -1,40 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 18:27:09 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7O1R44p000783
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 18:27:05 -0700
-Date: Fri, 24 Aug 2007 03:27:02 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 11/17] remove dependency of the quota module on behaviors.
-Message-ID: <20070824012702.GC25534@lst.de>
-References: <20070823193935.GL8050@lst.de> <20070824002612.GC72985246@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 18:43:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O1hN4p003091
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 18:43:24 -0700
+Date: Fri, 24 Aug 2007 11:43:13 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS internal error XFS_WANT_CORRUPTED_RETURN
+Message-ID: <20070824014313.GE72985246@sgi.com>
+References: <200708232109.50780.lists@gammarayburst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20070824002612.GC72985246@sgi.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <200708232109.50780.lists@gammarayburst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Markus Schoder <lists@gammarayburst.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 24, 2007 at 10:26:12AM +1000, David Chinner wrote:
-> > +static struct xfs_qmops xfs_qmcore_stub = {
-> >  	.xfs_qminit		= (xfs_qminit_t) xfs_noquota_init,
-> >  	.xfs_qmdone		= (xfs_qmdone_t) fs_noerr,
-> >  	.xfs_qmmount		= (xfs_qmmount_t) fs_noerr,
-> > @@ -124,4 +126,38 @@ xfs_qmops_t	xfs_qmcore_stub = {
-> >  	.xfs_dqvoprename	= (xfs_dqvoprename_t) fs_noerr,
-> >  	.xfs_dqvopchown		= xfs_dqvopchown_default,
-> >  	.xfs_dqvopchownresv	= (xfs_dqvopchownresv_t) fs_noerr,
-> > +	.xfs_dqstatvfs		= (xfs_dqstatvfs_t) fs_noval,
-> > +	.xfs_dqsync		= (xfs_dqsync_t) fs_noerr,
-> 
-> That returns no error.
-> 
-> This is slightly non-obvious that if quotas are not enabled or loaded
-> that this quota sync does not actually return an error. Perhaps a small
-> addition to the comment above XFS_QM_DQSYNC() to explain this would
-> help prevent future misunderstandings.
+On Thu, Aug 23, 2007 at 09:09:50PM +0100, Markus Schoder wrote:
+> Got a bunch of the below errors in the log. It occured during a Debian
+> upgrade with aptitude. xfs_repair found a lost inode.
 
-Sure, I'll add a comment.
+Can you post the output of xfs_repair if you still have it? It
+would be handy to correlæte the shutdown to an actual error on
+disk....
+
+> Kernel is stock 2.6.22.4 plus CFS patch. This is a 64bit kernel on an
+> amd64 processor.
+
+Hmmmm - so not exactly a stock kernel then. Which of the 19 versions
+the CFS patch was applied? Is it reproducable or only a one-off?
+if it's not a one-off problem, have you seen the problem without the
+CFS patch?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
