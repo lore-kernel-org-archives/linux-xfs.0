@@ -1,72 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 19:03:00 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O22q4p006716
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 19:02:56 -0700
-Message-ID: <46CE3C45.1080907@sgi.com>
-Date: Fri, 24 Aug 2007 12:02:45 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 19:03:51 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7O23l4p007020
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 19:03:49 -0700
+Message-ID: <46CE3C8B.5090609@sandeen.net>
+Date: Thu, 23 Aug 2007 21:03:55 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS internal error XFS_WANT_CORRUPTED_RETURN
-References: <200708232109.50780.lists@gammarayburst.de>
-In-Reply-To: <200708232109.50780.lists@gammarayburst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH] fix filestreams on 32-bit boxes
+References: <46CE2A07.7080305@sandeen.net> <20070824014820.GF72985246@sgi.com>
+In-Reply-To: <20070824014820.GF72985246@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Markus Schoder <lists@gammarayburst.de>
+To: David Chinner <dgc@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Markus Schoder wrote:
-> Got a bunch of the below errors in the log. It occured during a Debian
-> upgrade with aptitude. xfs_repair found a lost inode.
-> 
-> Kernel is stock 2.6.22.4 plus CFS patch. This is a 64bit kernel on an
-> amd64 processor.
-> 
-> I am glad to provide more information if required.
-> 
-> Would be nice to keep me CC'ed if this is not against policy.
-> 
-> --
-> Markus
-> 
-> Aug 23 00:15:09 gondolin kernel: [17152.830267] XFS internal error XFS_WANT_CORRUPTED_RETURN at line 281 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffff802eb061
-> Aug 23 00:15:09 gondolin kernel: [17152.830274]
-> Aug 23 00:15:09 gondolin kernel: [17152.830275] Call Trace:
-> Aug 23 00:15:09 gondolin kernel: [17152.830295]  [<ffffffff802e9bf7>] xfs_alloc_fixup_trees+0x307/0x3a0
-> Aug 23 00:15:09 gondolin kernel: [17152.830301]  [<ffffffff80303ddd>] xfs_btree_setbuf+0x2d/0xb0
-> Aug 23 00:15:09 gondolin kernel: [17152.830306]  [<ffffffff802eb061>] xfs_alloc_ag_vextent_near+0x581/0x9b0
-> Aug 23 00:15:09 gondolin kernel: [17152.830313]  [<ffffffff802ebc95>] xfs_alloc_ag_vextent+0xd5/0x130
-> Aug 23 00:15:09 gondolin kernel: [17152.830316]  [<ffffffff802ec4f5>] xfs_alloc_vextent+0x275/0x460
-> Aug 23 00:15:09 gondolin kernel: [17152.830322]  [<ffffffff802f9630>] xfs_bmap_btalloc+0x410/0x7c0
-> Aug 23 00:15:09 gondolin kernel: [17152.830327]  [<ffffffff8032d6fa>] xfs_mod_incore_sb_batch+0xea/0x130
-> Aug 23 00:15:09 gondolin kernel: [17152.830335]  [<ffffffff802f6d1e>] xfs_bmap_isaeof+0x7e/0xd0
-> Aug 23 00:15:09 gondolin kernel: [17152.830344]  [<ffffffff802fd8c9>] xfs_bmapi+0xc89/0x1340
-> Aug 23 00:15:09 gondolin kernel: [17152.830359]  [<ffffffff80330298>] xfs_trans_reserve+0xa8/0x210
-> Aug 23 00:15:09 gondolin kernel: [17152.830364]  [<ffffffff80320e58>] xfs_iomap_write_direct+0x2e8/0x500
-> Aug 23 00:15:09 gondolin kernel: [17152.830374]  [<ffffffff8032028c>] xfs_iomap+0x31c/0x390
-> Aug 23 00:15:09 gondolin kernel: [17152.830383]  [<ffffffff8033dafa>] xfs_map_blocks+0x3a/0x80
-> Aug 23 00:15:09 gondolin kernel: [17152.830387]  [<ffffffff8033ec3e>] xfs_page_state_convert+0x2be/0x630
-> Aug 23 00:15:09 gondolin kernel: [17152.830394]  [<ffffffff802a23cc>] alloc_buffer_head+0x4c/0x80
-> Aug 23 00:15:09 gondolin kernel: [17152.830398]  [<ffffffff802a2be0>] alloc_page_buffers+0x60/0xe0
-> Aug 23 00:15:09 gondolin kernel: [17152.830403]  [<ffffffff8033f10f>] xfs_vm_writepage+0x6f/0x120
-> Aug 23 00:15:09 gondolin kernel: [17152.830408]  [<ffffffff8025dfba>] __writepage+0xa/0x30
-> Aug 23 00:15:09 gondolin kernel: [17152.830411]  [<ffffffff8025e5fe>] write_cache_pages+0x23e/0x330
-> Aug 23 00:15:09 gondolin kernel: [17152.830415]  [<ffffffff8025dfb0>] __writepage+0x0/0x30
-> Aug 23 00:15:09 gondolin kernel: [17152.830424]  [<ffffffff8025e740>] do_writepages+0x20/0x40
-> Aug 23 00:15:09 gondolin kernel: [17152.830427]  [<ffffffff80259715>] __filemap_fdatawrite_range+0x75/0xb0
-> Aug 23 00:15:09 gondolin kernel: [17152.830434]  [<ffffffff802a1975>] do_fsync+0x45/0xe0
-> Aug 23 00:15:09 gondolin kernel: [17152.830438]  [<ffffffff8026e2b6>] sys_msync+0x166/0x1d0
-> Aug 23 00:15:09 gondolin kernel: [17152.830444]  [<ffffffff8021e302>] ia32_sysret+0x0/0xa
-> 
+David Chinner wrote:
 
-It looks a lot like a reported bug:
-   Suse#198124 and sgi-pv#956334
+>
+> hmmm - probably should make xfs_fstrm_free_func follow the correct prototype
+> and convert the item into an opaque void * as well. Then we can remove the
+> cast that hid this problem in xfs_filestream_mount()....
+>
+> Nice catch, though, Eric.
+>
+> Cheers,
+>
+> Dave.
 
-Where we had corruption in freespace btrees.
+Yep, I thought of removing the cast on the way home, as did Christoph, wherever he is :)
 
-Can you also run xfs_check before running xfs_repair.
+---------------------
 
---Tim
+xfs_filestream_mount() sets up an mru cache with:
+
+        err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
+                             (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
+
+but that cast is causing problems...
+
+typedef void (*xfs_mru_cache_free_func_t)(unsigned long, void*);
+
+but:
+
+void xfs_fstrm_free_func( 
+        xfs_ino_t       ino,
+        fstrm_item_t    *item)
+
+so on a 32-bit box, it's casting (32, 32) args into (64, 32) and I assume 
+it's getting garbage for *item, which subsequently causes an explosion.
+
+With this change the filestreams xfsqa tests don't oops on my 32-bit box.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Index: linux-2.6.22.i386/fs/xfs/xfs_filestream.c
+===================================================================
+--- linux-2.6.22.i386.orig/fs/xfs/xfs_filestream.c
++++ linux-2.6.22.i386/fs/xfs/xfs_filestream.c
+@@ -350,9 +350,10 @@ _xfs_filestream_update_ag(
+ /* xfs_fstrm_free_func(): callback for freeing cached stream items. */
+ void
+ xfs_fstrm_free_func(
+-	xfs_ino_t	ino,
+-	fstrm_item_t	*item)
++	unsigned long	ino,
++	void		*data)
+ {
++	fstrm_item_t	*item  = (fstrm_item_t *)data;
+ 	xfs_inode_t	*ip = item->ip;
+ 	int ref;
+ 
+@@ -438,7 +439,7 @@ xfs_filestream_mount(
+ 	grp_count = 10;
+ 
+ 	err = xfs_mru_cache_create(&mp->m_filestream, lifetime, grp_count,
+-	                     (xfs_mru_cache_free_func_t)xfs_fstrm_free_func);
++	                     xfs_fstrm_free_func);
+ 
+ 	return err;
+ }
