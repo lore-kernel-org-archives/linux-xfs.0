@@ -1,57 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 20:59:46 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 24 Aug 2007 00:32:39 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O3xb4p025116
-	for <linux-xfs@oss.sgi.com>; Thu, 23 Aug 2007 20:59:41 -0700
-Message-ID: <46CE581A.2000405@sgi.com>
-Date: Fri, 24 Aug 2007 14:01:30 +1000
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: TAKE 969192: Default mount option "noikeep" makes the inode generation
- number non-persistent
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O7WX4p027894
+	for <xfs@oss.sgi.com>; Fri, 24 Aug 2007 00:32:35 -0700
+Date: Fri, 24 Aug 2007 17:32:22 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 11/17] remove dependency of the quota module on behaviors.
+Message-ID: <20070824073222.GN72985246@sgi.com>
+References: <20070823193935.GL8050@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20070823193935.GL8050@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-XFS inodes are dynamically allocated on demand, rather than being allocated
-at mkfs time. Chunks of 64 inodes are allocated at once, but they are
-never freed. Over time, this can lead to filesystem fragmentation, clusters
-of inodes and the btrees which point at them can be scattered around the
-system.
+On Thu, Aug 23, 2007 at 09:39:35PM +0200, Christoph Hellwig wrote:
+> Mount options are now parsed by the main XFS module and rejected if quota
+> support is not available, and there are some new quota operation for the
+> quotactl syscall and calls to quote in the mount, unmount and sync
+> callchains.
+....
+> @@ -110,7 +112,7 @@ xfs_noquota_init(
+>  	return error;
+>  }
+>  
+> -xfs_qmops_t	xfs_qmcore_stub = {
+> +static struct xfs_qmops xfs_qmcore_stub = {
+>  	.xfs_qminit		= (xfs_qminit_t) xfs_noquota_init,
+>  	.xfs_qmdone		= (xfs_qmdone_t) fs_noerr,
+>  	.xfs_qmmount		= (xfs_qmmount_t) fs_noerr,
+> @@ -124,4 +126,38 @@ xfs_qmops_t	xfs_qmcore_stub = {
+>  	.xfs_dqvoprename	= (xfs_dqvoprename_t) fs_noerr,
+>  	.xfs_dqvopchown		= xfs_dqvopchown_default,
+>  	.xfs_dqvopchownresv	= (xfs_dqvopchownresv_t) fs_noerr,
+> +	.xfs_dqstatvfs		= (xfs_dqstatvfs_t) fs_noval,
+> +	.xfs_dqsync		= (xfs_dqsync_t) fs_noerr,
+> +	.xfs_quotactl		= (xfs_quotactl_t) fs_noerr,
 
-By freeing clusters as they are emptied, we reduce fragmentation of the
-free space after removing files. This in turn allows us to make better
-placement decisions when repopulating a filesystem. The XFSMNT_IDELETE
-mount option enables freeing clusters when they get empty.
+quotactl needs to return ENOSYS when quota is not enabled on
+the filesystem, otherwise the quota tools think quota is
+enabled, no error occurred and they interpret unitialised data
+as quota data.
 
-Unfortunately a side effect of freeing inode clusters is that the inode
-generation numbers of such inodes would be reset to zero when the cluster
-is reclaimed. This is a problem in particular for a DMAPI enabled filesystem
-as the the DMAPI handles need to be unique and persistent in time. An unique
-DMAPI handle is built with the help of the inode generation number. When the
-last one is prematurely reset by an inode cluster reclaim, there is
-a high probability of different generation inodes to end up having identical
-DMAPI handles.
-
-To avoid the problem with identical DMAPI handles, the XFSMNT_IDELETE mount
-option should be set as default, only if the filesystem is not mounted with
-XFSMNT_DMAPI.
-
-Date:  Fri Aug 24 13:54:57 AEST 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
-Inspected by:  dgc, markgw
-Author:  vapo
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+This causes all the xfsdump/restore tests to fail in xfsqa because
+they erroneously detect that quota is enabled and dump/restore
+garbage for the quota. This:
 
 
-Modid:  xfs-linux-melb:xfs-kern:29486a
-fs/xfs/xfs_vfsops.c - 1.527 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.527&r2=text&tr2=1.526&f=h
-        - pv 969192, rv dgc, markgw - Imply "ikeep" default mount option 
-for DMAPI enabled filestems.
+---
+ fs/xfs/xfs_qmops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: 2.6.x-xfs-experimental/fs/xfs/xfs_qmops.c
+===================================================================
+--- 2.6.x-xfs-experimental.orig/fs/xfs/xfs_qmops.c	2007-08-24 12:47:50.000000000 +1000
++++ 2.6.x-xfs-experimental/fs/xfs/xfs_qmops.c	2007-08-24 17:05:44.765805482 +1000
+@@ -128,7 +128,7 @@ static struct xfs_qmops xfs_qmcore_stub 
+ 	.xfs_dqvopchownresv	= (xfs_dqvopchownresv_t) fs_noerr,
+ 	.xfs_dqstatvfs		= (xfs_dqstatvfs_t) fs_noval,
+ 	.xfs_dqsync		= (xfs_dqsync_t) fs_noerr,
+-	.xfs_quotactl		= (xfs_quotactl_t) fs_noerr,
++	.xfs_quotactl		= (xfs_quotactl_t) fs_nosys,
+ };
+ 
+ int
+
+makes qa tests 026 028 046 047 063 065 066 (all in the dump group) pass.
+
+Otherwise, the patch set passes xfsqa without introducing any new
+regressions.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
