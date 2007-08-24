@@ -1,52 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 16:57:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Aug 2007 17:05:42 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7NNv44p019425
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 16:57:06 -0700
-Date: Fri, 24 Aug 2007 09:56:52 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7O05a4p020884
+	for <xfs@oss.sgi.com>; Thu, 23 Aug 2007 17:05:39 -0700
+Date: Fri, 24 Aug 2007 10:05:23 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 5/17] move v_iocount from bhv_vnode to xfs_inode
-Message-ID: <20070823235652.GZ72985246@sgi.com>
-References: <20070823193818.GF8050@lst.de> <20070823194749.GB8431@filer.fsl.cs.sunysb.edu>
+Subject: Re: [PATCH 6/17] move v_trace from bhv_vnode to xfs_inode
+Message-ID: <20070824000523.GA72985246@sgi.com>
+References: <20070823193834.GG8050@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070823194749.GB8431@filer.fsl.cs.sunysb.edu>
+In-Reply-To: <20070823193834.GG8050@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 23, 2007 at 03:47:49PM -0400, Josef Sipek wrote:
-> On Thu, Aug 23, 2007 at 09:38:18PM +0200, Christoph Hellwig wrote:
-> > struct bhv_vnode is on it's way out, so move the I/O count to the XFS inode.
-> > 
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
-> > ===================================================================
-> > --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-08-23 14:46:18.000000000 +0200
-> > +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2007-08-23 14:51:38.000000000 +0200
-> > @@ -140,9 +140,11 @@ xfs_destroy_ioend(
-> >  		next = bh->b_private;
-> >  		bh->b_end_io(bh, !ioend->io_error);
-> >  	}
-> > -	if (unlikely(ioend->io_error))
-> > -		vn_ioerror(ioend->io_vnode, ioend->io_error, __FILE__,__LINE__);
-> > -	vn_iowake(ioend->io_vnode);
-> > +	if (unlikely(ioend->io_error)) {
-> > +		vn_ioerror(XFS_I(ioend->io_inode), ioend->io_error,
-> > +				__FILE__,__LINE__);
-> 
-> Should it still be called vn_* if it takes an xfs inode? (And yes, I realize
-> this is a patch in the middle of the series.)
+On Thu, Aug 23, 2007 at 09:38:34PM +0200, Christoph Hellwig wrote:
+> struct bhv_vnode is on it's way out, so move the trace buffer to the
+> XFS inode.  Note that this makes the tracing macros rather misnamed,
+> but this kind of fallout will be fixed up incrementally later on.
+....
 
-Eventually, yes, but that's really only cosmetic at this point. I'm
-more concerned with the functional and structural changes at this point
-and not so much the cosmetics. There are much bigger cosmetic changes
-in the pipeline as a result of this patchset, I think...
+> @@ -197,11 +192,11 @@ vn_hold(
+>  #ifdef	XFS_VNODE_TRACE
+>  
+>  #define KTRACE_ENTER(vp, vk, s, line, ra)			\
+> -	ktrace_enter(	(vp)->v_trace,				\
+> +	ktrace_enter(	(ip)->i_trace,				\
+>  /*  0 */		(void *)(__psint_t)(vk),		\
+>  /*  1 */		(void *)(s),				\
+>  /*  2 */		(void *)(__psint_t) line,		\
+> -/*  3 */		(void *)(__psint_t)(vn_count(vp)),	\
+> +/*  3 */		NULL,					\
+
+given that vn_count() returns the linux inode i_count, shouldn't
+we put that here as well rather than killing it? It is sometimes
+useful to see what is happening with the reference count in the
+traces....
+
+> +#ifdef	XFS_VNODE_TRACE
+> +	ip->i_trace = ktrace_alloc(VNODE_TRACE_SIZE, KM_SLEEP);
+> +#endif
+
+At some point we need to change that define as well. More
+cosmetic stuff, though.
 
 Cheers,
 
