@@ -1,62 +1,91 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Aug 2007 23:46:52 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7R6kj4p024714
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Aug 2007 23:46:48 -0700
-Message-ID: <46D26D96.7050209@sgi.com>
-Date: Mon, 27 Aug 2007 16:22:14 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Aug 2007 02:05:59 -0700 (PDT)
+Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7R95q4p020809
+	for <xfs@oss.sgi.com>; Mon, 27 Aug 2007 02:05:56 -0700
+Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
+	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l7R7m08v010427
+	for <xfs@oss.sgi.com>; Mon, 27 Aug 2007 16:48:00 +0900 (JST)
+Received: from mailgate3.nec.co.jp (mailgate54.nec.co.jp [10.7.69.195])
+	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l7R7gbP6020420
+	for <xfs@oss.sgi.com>; Mon, 27 Aug 2007 16:42:38 +0900 (JST)
+Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
+	id l7R7gbH28089 for xfs@oss.sgi.com; Mon, 27 Aug 2007 16:42:37 +0900 (JST)
+Received: from kuichi.jp.nec.com (kuichi.jp.nec.com [10.26.220.17]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
+	id l7R7gbv27128 for <xfs@oss.sgi.com>; Mon, 27 Aug 2007 16:42:37 +0900 (JST)
+Message-Id: <200708270742.AA05908@TNESG9305.wm.jp.nec.com>
+Date: Mon, 27 Aug 2007 16:42:42 +0900
+Subject: [PATCH] Fix handling of symbolic links in getfattr.
+From: Utako Kusaka <utako@tnes.nec.co.jp>
 MIME-Version: 1.0
-Subject: Re: TAKE 969192: Default mount option "noikeep" makes the inode generation
- number non-persistent
-References: <46CE581A.2000405@sgi.com> <20070824113631.GA26868@infradead.org> <20070824124933.GS61154114@sgi.com>
-In-Reply-To: <20070824124933.GS61154114@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Vlad Apostolov <vapo@sgi.com>, linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+Hi,
 
+getfattr -R and -RL give the same result.
+This patch implements the similar handling of symbolic links in getfattr 
+to getfacl and setfacl.
 
-David Chinner wrote:
-> On Fri, Aug 24, 2007 at 12:36:31PM +0100, Christoph Hellwig wrote:
->> On Fri, Aug 24, 2007 at 02:01:30PM +1000, Vlad Apostolov wrote:
->>> To avoid the problem with identical DMAPI handles, the XFSMNT_IDELETE mount
->>> option should be set as default, only if the filesystem is not mounted with
->>> XFSMNT_DMAPI.
->> Note that we have the same problem with nfs exports aswell.  Dateo maybe we
->> need a real fix insteead and keep a block of generation numbers around even
->> if and inode cluster is freed or something similar.
-> 
-> Yes. NFS is less critical than dmapi, though - with NFS filehandles just a
-> change in generation number is usually good enough to catch most stale
-> filehandle issues. With DMAPI, there's applications that record inode
-> number/generation pairs and expect them never to repeat ever again.
-> 
-> We haven't had any reports of probelms with NFS servers due to this,
-> but as soon as our HSm was exposed to this code we started getting
-> strange coherency and corruption problems that have taken some time
-> to track down to this issue. Hence this change seems like the
-> best tradeoff while we work out a real solution.
-> 
-> At this point I suspect a deleted inode cluster btree in the AGI
-> is the best solution because it can share most of the btree
-> code with the current AGI btree and keeps the granularity of
-> shared generation numbers quite fine.
+Utako
 
-Having a persistent highest/shared generation number per inode cluster
-only solves part of the problem - with only 32 bits of precision, eventually
-it will wrap. Generation numbers need more precision to solve this
-completely. With more precision, the starting value could simply be
-based on a timestamp ...
-
--- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+Signed-off-by: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+---
+--- attr-2.4.38/getfattr/getfattr.c.orig	2007-07-31 15:27:27.000000000 +0900
++++ attr-2.4.38/getfattr/getfattr.c	2007-08-22 15:59:28.000000000 +0900
+@@ -410,6 +410,38 @@ void help(void)
+ "      --help              this help text\n"));
+ }
+ 
++char *resolve_symlinks(const char *file)
++{
++	static char buffer[4096];
++	struct stat stat;
++	char *path = NULL;
++
++	if (lstat(file, &stat) == -1)
++		return path;
++
++	if (S_ISLNK(stat.st_mode) && !opt_walk_physical)
++		path = realpath(file, buffer);
++	else
++		path = (char *)file;    /* not a symlink, use given path */
++
++	return path;
++}
++
++int walk_tree(const char *file)
++{
++	const char *p;
++
++	if ((p = resolve_symlinks(file)) == NULL) {
++		fprintf(stderr, "%s: %s: %s\n", progname,
++			xquote(file), strerror(errno));
++		return 1;
++	} else if (nftw(p, do_print, 0, opt_walk_logical? 0 : FTW_PHYS) < 0) {
++		fprintf(stderr, "%s: %s: %s\n", progname, xquote(file),
++			strerror(errno));
++		return 1;
++	}
++	return 0;
++}
+ 
+ int main(int argc, char *argv[])
+ {
+@@ -499,12 +531,7 @@ int main(int argc, char *argv[])
+ 	}
+ 
+ 	while (optind < argc) {
+-		if (nftw(argv[optind], do_print, 0,
+-			 opt_walk_physical * FTW_PHYS) < 0) {
+-			fprintf(stderr, "%s: %s: %s\n", progname, argv[optind],
+-			        strerror_ea(errno));
+-			had_errors++;
+-		}
++		had_errors += walk_tree(argv[optind]);
+ 		optind++;
+ 	}
+ 
