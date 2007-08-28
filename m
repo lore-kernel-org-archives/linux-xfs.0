@@ -1,881 +1,433 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Aug 2007 13:36:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Aug 2007 13:56:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7SKZx4p022864
-	for <xfs@oss.sgi.com>; Tue, 28 Aug 2007 13:36:01 -0700
-Message-ID: <46D4872D.2000900@sandeen.net>
-Date: Tue, 28 Aug 2007 15:35:57 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7SKu34p027013
+	for <xfs@oss.sgi.com>; Tue, 28 Aug 2007 13:56:05 -0700
+Message-ID: <46D48BDE.5000903@sandeen.net>
+Date: Tue, 28 Aug 2007 15:55:58 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] clean up vnode^winode tracing
-References: <46D11F1B.5020409@sandeen.net> <20070828200416.GG61154114@sgi.com>
-In-Reply-To: <20070828200416.GG61154114@sgi.com>
+Subject: [PATCH V2] refactor xfs_mountfs for clarity & stack savings
+References: <46D37A82.2080608@sandeen.net> <20070828195221.GA7237@infradead.org>
+In-Reply-To: <20070828195221.GA7237@infradead.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Try this on for size...
+Refactoring xfs_mountfs() to call sub-functions for logical
+chunks can help save a bit of stack, and can make it easier to
+read this long function.
 
------------------
+The mount path is one of the longest common callchains, easily
+getting to within a few bytes of the end of a 4k stack when
+over lvm, quotas are enabled, and quotacheck must be done.
 
-Simplify vnode tracing calls by embedding function name & return addr
-in the calling macro.
-
-Also do a lot of vnode->inode renaming for consistency, while
-we're at it.
+With this change on top of the other stack-related changes
+I've sent, I can get xfs to survive a normal xfsqa run on
+4k stacks over lvm.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1525,8 +1525,7 @@ xfs_vm_bmap(
- 	struct inode		*inode = (struct inode *)mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 
--	vn_trace_entry(XFS_I(inode), __FUNCTION__,
--			(inst_t *)__return_address);
-+	xfs_itrace_entry(XFS_I(inode));
- 	xfs_rwlock(ip, VRWLOCK_READ);
- 	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
- 	xfs_rwunlock(ip, VRWLOCK_READ);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -733,8 +733,7 @@ xfs_ioctl(
- 	xfs_mount_t		*mp = ip->i_mount;
- 	int			error;
- 
--	vn_trace_entry(XFS_I(inode), "xfs_ioctl", (inst_t *)__return_address);
--
-+	xfs_itrace_entry(XFS_I(inode));
- 	switch (cmd) {
- 
- 	case XFS_IOC_ALLOCSP:
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-@@ -83,12 +83,12 @@ EXPORT_SYMBOL(ktrace_first);
- EXPORT_SYMBOL(ktrace_next);
- #endif
- 
--#ifdef XFS_VNODE_TRACE
--EXPORT_SYMBOL(vn_trace_ref);
--EXPORT_SYMBOL(vn_trace_entry);
--EXPORT_SYMBOL(vn_trace_exit);
--EXPORT_SYMBOL(vn_trace_hold);
--EXPORT_SYMBOL(vn_trace_rele);
-+#ifdef XFS_INODE_TRACE
-+EXPORT_SYMBOL(_xfs_itrace_ref);
-+EXPORT_SYMBOL(_xfs_itrace_entry);
-+EXPORT_SYMBOL(_xfs_itrace_exit);
-+EXPORT_SYMBOL(xfs_itrace_hold);
-+EXPORT_SYMBOL(xfs_itrace_rele);
- #endif
- 
- #ifdef XFS_ILOCK_TRACE
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-@@ -403,8 +403,7 @@ xfs_fs_write_inode(
- {
- 	int			error = 0, flags = FLUSH_INODE;
- 
--	vn_trace_entry(XFS_I(inode), __FUNCTION__,
--			(inst_t *)__return_address);
-+	xfs_itrace_entry(XFS_I(inode));
- 	if (sync)
- 		flags |= FLUSH_SYNC;
- 	error = xfs_inode_flush(XFS_I(inode), flags);
-@@ -430,8 +429,7 @@ xfs_fs_clear_inode(
- 	 * find an inode with di_mode == 0 but without IGET_CREATE set.
- 	 */
- 	if (ip) {
--		vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
--
-+		xfs_itrace_entry(ip);
- 		XFS_STATS_INC(vn_rele);
- 		XFS_STATS_INC(vn_remove);
- 		XFS_STATS_INC(vn_reclaim);
-@@ -820,8 +818,7 @@ xfs_fs_fill_super(
- 		goto fail_vnrele;
- 	}
- 
--	vn_trace_exit(XFS_I(sb->s_root->d_inode), __FUNCTION__,
--			(inst_t *)__return_address);
-+	xfs_itrace_exit(XFS_I(sb->s_root->d_inode));
- 
- 	kmem_free(args, sizeof(*args));
- 	return 0;
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
-@@ -143,7 +143,7 @@ __vn_revalidate(
- {
- 	int		error;
- 
--	vn_trace_entry(xfs_vtoi(vp), __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(xfs_vtoi(vp));
- 	vattr->va_mask = XFS_AT_STAT | XFS_AT_XFLAGS;
- 	error = xfs_getattr(xfs_vtoi(vp), vattr, 0);
- 	if (likely(!error)) {
-@@ -179,7 +179,7 @@ vn_hold(
- 	return vp;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c
+@@ -734,49 +734,13 @@ xfs_initialize_perag_data(xfs_mount_t *m
  }
- 
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
  
  /*
-  * Reference count of Linux inode if present, -1 if the xfs_inode
-@@ -211,32 +211,32 @@ static inline int xfs_icount(struct xfs_
-  * Vnode tracing code.
+- * xfs_mountfs
+- *
+- * This function does the following on an initial mount of a file system:
+- *	- reads the superblock from disk and init the mount struct
+- *	- if we're a 32-bit kernel, do a size check on the superblock
+- *		so we don't mount terabyte filesystems
+- *	- init mount struct realtime fields
+- *	- allocate inode hash table for fs
+- *	- init directory manager
+- *	- perform recovery and init the log manager
++ * Update alignment values based on mount options and sb values
   */
- void
--vn_trace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
-+_xfs_itrace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
+-int
+-xfs_mountfs(
+-	xfs_mount_t	*mp,
+-	int		mfsi_flags)
++STATIC int
++xfs_update_alignment(xfs_mount_t *mp, int mfsi_flags, __uint64_t *update_flags)
  {
--	KTRACE_ENTER(ip, VNODE_KTRACE_ENTRY, func, 0, ra);
-+	KTRACE_ENTER(ip, INODE_KTRACE_ENTRY, func, 0, ra);
- }
+-	xfs_buf_t	*bp;
+ 	xfs_sb_t	*sbp = &(mp->m_sb);
+-	xfs_inode_t	*rip;
+-	bhv_vnode_t	*rvp = NULL;
+-	int		readio_log, writeio_log;
+-	xfs_daddr_t	d;
+-	__uint64_t	resblks;
+-	__int64_t	update_flags;
+-	uint		quotamount, quotaflags;
+-	int		agno;
+-	int		uuid_mounted = 0;
+-	int		error = 0;
  
- void
--vn_trace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
-+_xfs_itrace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
- {
--	KTRACE_ENTER(ip, VNODE_KTRACE_EXIT, func, 0, ra);
-+	KTRACE_ENTER(ip, INODE_KTRACE_EXIT, func, 0, ra);
- }
- 
- void
--vn_trace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+xfs_itrace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
- {
--	KTRACE_ENTER(ip, VNODE_KTRACE_HOLD, file, line, ra);
-+	KTRACE_ENTER(ip, INODE_KTRACE_HOLD, file, line, ra);
- }
- 
- void
--vn_trace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+_xfs_itrace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
- {
--	KTRACE_ENTER(ip, VNODE_KTRACE_REF, file, line, ra);
-+	KTRACE_ENTER(ip, INODE_KTRACE_REF, file, line, ra);
- }
- 
- void
--vn_trace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+xfs_itrace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
- {
--	KTRACE_ENTER(ip, VNODE_KTRACE_RELE, file, line, ra);
-+	KTRACE_ENTER(ip, INODE_KTRACE_RELE, file, line, ra);
- }
--#endif	/* XFS_VNODE_TRACE */
-+#endif	/* XFS_INODE_TRACE */
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
-@@ -210,12 +210,12 @@ static inline int vn_count(bhv_vnode_t *
-  */
- extern bhv_vnode_t	*vn_hold(bhv_vnode_t *);
- 
--#if defined(XFS_VNODE_TRACE)
-+#if defined(XFS_INODE_TRACE)
- #define VN_HOLD(vp)		\
- 	((void)vn_hold(vp),	\
--	  vn_trace_hold(xfs_vtoi(vp), __FILE__, __LINE__, (inst_t *)__return_address))
-+	  xfs_itrace_hold(xfs_vtoi(vp), __FILE__, __LINE__, (inst_t *)__return_address))
- #define VN_RELE(vp)		\
--	  (vn_trace_rele(xfs_vtoi(vp), __FILE__, __LINE__, (inst_t *)__return_address), \
-+	  (xfs_itrace_rele(xfs_vtoi(vp), __FILE__, __LINE__, (inst_t *)__return_address), \
- 	   iput(vn_to_inode(vp)))
- #else
- #define VN_HOLD(vp)		((void)vn_hold(vp))
-@@ -296,26 +296,33 @@ static inline void vn_atime_to_time_t(bh
- /*
-  * Tracking vnode activity.
-  */
--#if defined(XFS_VNODE_TRACE)
-+#if defined(XFS_INODE_TRACE)
-+
-+#define	INODE_TRACE_SIZE	16		/* number of trace entries */
-+#define	INODE_KTRACE_ENTRY	1
-+#define	INODE_KTRACE_EXIT	2
-+#define	INODE_KTRACE_HOLD	3
-+#define	INODE_KTRACE_REF	4
-+#define	INODE_KTRACE_RELE	5
-+
-+extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
-+extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
-+extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
-+extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
-+extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
-+#define xfs_itrace_entry(ip)	\
-+	_xfs_itrace_entry(ip, __FUNCTION__, (inst_t *)__return_address)
-+#define xfs_itrace_exit(ip)	\
-+	_xfs_itrace_exit(ip, __FUNCTION__, (inst_t *)__return_address)
-+#define xfs_itrace_ref(ip)	\
-+	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
- 
--#define	VNODE_TRACE_SIZE	16		/* number of trace entries */
--#define	VNODE_KTRACE_ENTRY	1
--#define	VNODE_KTRACE_EXIT	2
--#define	VNODE_KTRACE_HOLD	3
--#define	VNODE_KTRACE_REF	4
--#define	VNODE_KTRACE_RELE	5
+-	if (mp->m_sb_bp == NULL) {
+-		if ((error = xfs_readsb(mp, mfsi_flags))) {
+-			return error;
+-		}
+-	}
+-	xfs_mount_common(mp, sbp);
 -
--extern void vn_trace_entry(struct xfs_inode *, const char *, inst_t *);
--extern void vn_trace_exit(struct xfs_inode *, const char *, inst_t *);
--extern void vn_trace_hold(struct xfs_inode *, char *, int, inst_t *);
--extern void vn_trace_ref(struct xfs_inode *, char *, int, inst_t *);
--extern void vn_trace_rele(struct xfs_inode *, char *, int, inst_t *);
- #else
--#define	vn_trace_entry(a,b,c)
--#define	vn_trace_exit(a,b,c)
--#define	vn_trace_hold(a,b,c,d)
--#define	vn_trace_ref(a,b,c,d)
--#define	vn_trace_rele(a,b,c,d)
-+#define	xfs_itrace_entry(a)
-+#define	xfs_itrace_exit(a)
-+#define	xfs_itrace_hold(a, b, c, d)
-+#define	xfs_itrace_ref(a)
-+#define	xfs_itrace_rele(a, b, c, d)
- #endif
- 
- #endif	/* __XFS_VNODE_H__ */
-Index: linux-2.6-xfs/fs/xfs/xfs_dir2.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_dir2.c
-+++ linux-2.6-xfs/fs/xfs/xfs_dir2.c
-@@ -301,7 +301,7 @@ xfs_readdir(
- 	int		rval;		/* return value */
- 	int		v;		/* type-checking value */
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return XFS_ERROR(EIO);
-Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c
-+++ linux-2.6-xfs/fs/xfs/xfs_iget.c
-@@ -157,7 +157,7 @@ again:
- 				goto again;
+-	/*
+-	 * Check if sb_agblocks is aligned at stripe boundary
+-	 * If sb_agblocks is NOT aligned turn off m_dalign since
+-	 * allocator alignment is within an ag, therefore ag has
+-	 * to be aligned at stripe boundary.
+-	 */
+-	update_flags = 0LL;
+ 	if (mp->m_dalign && !(mfsi_flags & XFS_MFSI_SECOND)) {
+ 		/*
+ 		 * If stripe unit and stripe width are not multiples
+@@ -787,8 +751,7 @@ xfs_mountfs(
+ 			if (mp->m_flags & XFS_MOUNT_RETERR) {
+ 				cmn_err(CE_WARN,
+ 					"XFS: alignment check 1 failed");
+-				error = XFS_ERROR(EINVAL);
+-				goto error1;
++				return XFS_ERROR(EINVAL);
  			}
- 
--			vn_trace_exit(ip, "xfs_iget.alloc",
-+			_xfs_itrace_exit(ip, "xfs_iget.alloc",
- 				(inst_t *)__return_address);
- 
- 			XFS_STATS_INC(xs_ig_found);
-@@ -212,7 +212,7 @@ finish_inode:
- 			xfs_ilock(ip, lock_flags);
- 
- 		xfs_iflags_clear(ip, XFS_ISTALE);
--		vn_trace_exit(ip, "xfs_iget.found",
-+		_xfs_itrace_exit(ip, "xfs_iget.found",
- 					(inst_t *)__return_address);
- 		goto return_ip;
+ 			mp->m_dalign = mp->m_swidth = 0;
+ 		} else {
+@@ -798,8 +761,7 @@ xfs_mountfs(
+ 			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
+ 			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
+ 				if (mp->m_flags & XFS_MOUNT_RETERR) {
+-					error = XFS_ERROR(EINVAL);
+-					goto error1;
++					return XFS_ERROR(EINVAL);
+ 				}
+ 				xfs_fs_cmn_err(CE_WARN, mp,
+ "stripe alignment turned off: sunit(%d)/swidth(%d) incompatible with agsize(%d)",
+@@ -816,8 +778,7 @@ xfs_mountfs(
+ "stripe alignment turned off: sunit(%d) less than bsize(%d)",
+                                         	mp->m_dalign,
+ 						mp->m_blockmask +1);
+-					error = XFS_ERROR(EINVAL);
+-					goto error1;
++					return XFS_ERROR(EINVAL);
+ 				}
+ 				mp->m_swidth = 0;
+ 			}
+@@ -830,11 +791,11 @@ xfs_mountfs(
+ 		if (XFS_SB_VERSION_HASDALIGN(sbp)) {
+ 			if (sbp->sb_unit != mp->m_dalign) {
+ 				sbp->sb_unit = mp->m_dalign;
+-				update_flags |= XFS_SB_UNIT;
++				*update_flags |= XFS_SB_UNIT;
+ 			}
+ 			if (sbp->sb_width != mp->m_swidth) {
+ 				sbp->sb_width = mp->m_swidth;
+-				update_flags |= XFS_SB_WIDTH;
++				*update_flags |= XFS_SB_WIDTH;
+ 			}
+ 		}
+ 	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
+@@ -843,49 +804,45 @@ xfs_mountfs(
+ 			mp->m_swidth = sbp->sb_width;
  	}
-@@ -234,7 +234,7 @@ finish_inode:
- 		return error;
+ 
+-	xfs_alloc_compute_maxlevels(mp);
+-	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+-	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+-	xfs_ialloc_compute_maxlevels(mp);
++	return 0;
++}
+ 
+-	if (sbp->sb_imax_pct) {
+-		__uint64_t	icount;
++/*
++ * Set the maximum inode count for this filesystem
++ */
++STATIC void
++xfs_set_maxicount(xfs_mount_t *mp)
++{
++	xfs_sb_t	*sbp = &(mp->m_sb);
++	__uint64_t	icount;
+ 
+-		/* Make sure the maximum inode count is a multiple of the
+-		 * units we allocate inodes in.
++	if (sbp->sb_imax_pct) {
++		/*
++		 * Make sure the maximum inode count is a multiple
++		 * of the units we allocate inodes in.
+ 		 */
+-
+ 		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
+ 		do_div(icount, 100);
+ 		do_div(icount, mp->m_ialloc_blks);
+ 		mp->m_maxicount = (icount * mp->m_ialloc_blks)  <<
+ 				   sbp->sb_inopblog;
+-	} else
++	} else {
+ 		mp->m_maxicount = 0;
+-
+-	mp->m_maxioffset = xfs_max_file_offset(sbp->sb_blocklog);
+-
+-	/*
+-	 * XFS uses the uuid from the superblock as the unique
+-	 * identifier for fsid.  We can not use the uuid from the volume
+-	 * since a single partition filesystem is identical to a single
+-	 * partition volume/filesystem.
+-	 */
+-	if ((mfsi_flags & XFS_MFSI_SECOND) == 0 &&
+-	    (mp->m_flags & XFS_MOUNT_NOUUID) == 0) {
+-		if (xfs_uuid_mount(mp)) {
+-			error = XFS_ERROR(EINVAL);
+-			goto error1;
+-		}
+-		uuid_mounted=1;
  	}
++}
++
++/*
++ * Set the default minimum read and write sizes unless
++ * already specified in a mount option.
++ * We use smaller I/O sizes when the file system
++ * is being used for NFS service (wsync mount option).
++ */
++STATIC void
++xfs_set_rw_sizes(xfs_mount_t *mp)
++{
++	xfs_sb_t	*sbp = &(mp->m_sb);
++	int		readio_log, writeio_log;
  
--	vn_trace_exit(ip, "xfs_iget.alloc", (inst_t *)__return_address);
-+	_xfs_itrace_exit(ip, "xfs_iget.alloc", (inst_t *)__return_address);
+-	/*
+-	 * Set the default minimum read and write sizes unless
+-	 * already specified in a mount option.
+-	 * We use smaller I/O sizes when the file system
+-	 * is being used for NFS service (wsync mount option).
+-	 */
+ 	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)) {
+ 		if (mp->m_flags & XFS_MOUNT_WSYNC) {
+ 			readio_log = XFS_WSYNC_READIO_LOG;
+@@ -911,17 +868,14 @@ xfs_mountfs(
+ 		mp->m_writeio_log = writeio_log;
+ 	}
+ 	mp->m_writeio_blocks = 1 << (mp->m_writeio_log - sbp->sb_blocklog);
++}
  
- 	xfs_inode_lock_init(ip, vp);
- 	xfs_iocore_inode_init(ip);
-@@ -467,7 +467,7 @@ xfs_iput(xfs_inode_t	*ip,
- {
- 	bhv_vnode_t	*vp = XFS_ITOV(ip);
- 
--	vn_trace_entry(ip, "xfs_iput", (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 	xfs_iunlock(ip, lock_flags);
- 	VN_RELE(vp);
- }
-@@ -482,7 +482,7 @@ xfs_iput_new(xfs_inode_t	*ip,
- 	bhv_vnode_t	*vp = XFS_ITOV(ip);
- 	struct inode	*inode = vn_to_inode(vp);
- 
--	vn_trace_entry(ip, "xfs_iput_new", (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if ((ip->i_d.di_mode == 0)) {
- 		ASSERT(!xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c
-@@ -884,8 +884,8 @@ xfs_iread(
- 	 * Initialize inode's trace buffers.
- 	 * Do this before xfs_iformat in case it adds entries.
- 	 */
--#ifdef	XFS_VNODE_TRACE
--	ip->i_trace = ktrace_alloc(VNODE_TRACE_SIZE, KM_SLEEP);
-+#ifdef	XFS_INODE_TRACE
-+	ip->i_trace = ktrace_alloc(INODE_TRACE_SIZE, KM_SLEEP);
- #endif
- #ifdef XFS_BMAP_TRACE
- 	ip->i_xtrace = ktrace_alloc(XFS_BMAP_KTRACE_SIZE, KM_SLEEP);
-@@ -2733,7 +2733,7 @@ xfs_idestroy(
- 	mrfree(&ip->i_iolock);
- 	freesema(&ip->i_flock);
- 
--#ifdef XFS_VNODE_TRACE
-+#ifdef XFS_INODE_TRACE
- 	ktrace_free(ip->i_trace);
- #endif
- #ifdef XFS_BMAP_TRACE
-Index: linux-2.6-xfs/fs/xfs/xfs_rename.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_rename.c
-+++ linux-2.6-xfs/fs/xfs/xfs_rename.c
-@@ -118,7 +118,7 @@ xfs_lock_for_rename(
- 	inum1 = ip1->i_ino;
- 
- 	ASSERT(ip1);
--	ITRACE(ip1);
-+	xfs_itrace_ref(ip1);
- 
- 	/*
- 	 * Unlock dp1 and lock dp2 if they are different.
-@@ -141,7 +141,7 @@ xfs_lock_for_rename(
- 		IRELE (ip1);
- 		return error;
+-	/*
+-	 * Set the inode cluster size.
+-	 * This may still be overridden by the file system
+-	 * block size if it is larger than the chosen cluster size.
+-	 */
+-	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+-
+-	/*
+-	 * Set whether we're using inode alignment.
+-	 */
++/*
++ * Set whether we're using inode alignment.
++ */
++STATIC void
++xfs_set_inoalignment(xfs_mount_t *mp)
++{
+ 	if (XFS_SB_VERSION_HASALIGN(&mp->m_sb) &&
+ 	    mp->m_sb.sb_inoalignmt >=
+ 	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
+@@ -937,14 +891,22 @@ xfs_mountfs(
+ 		mp->m_sinoalign = mp->m_dalign;
+ 	else
+ 		mp->m_sinoalign = 0;
+-	/*
+-	 * Check that the data (and log if separate) are an ok size.
+-	 */
++}
++
++/*
++ * Check that the data (and log if separate) are an ok size.
++ */
++STATIC int
++xfs_check_sizes(xfs_mount_t *mp, int mfsi_flags)
++{
++	xfs_buf_t	*bp;
++	xfs_daddr_t	d;
++	int		error;
++
+ 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+ 		cmn_err(CE_WARN, "XFS: size check 1 failed");
+-		error = XFS_ERROR(E2BIG);
+-		goto error1;
++		return XFS_ERROR(E2BIG);
+ 	}
+ 	error = xfs_read_buf(mp, mp->m_ddev_targp,
+ 			     d - XFS_FSS_TO_BB(mp, 1),
+@@ -953,10 +915,9 @@ xfs_mountfs(
+ 		xfs_buf_relse(bp);
  	} else {
--		ITRACE(ip2);
-+		xfs_itrace_ref(ip2);
+ 		cmn_err(CE_WARN, "XFS: size check 2 failed");
+-		if (error == ENOSPC) {
++		if (error == ENOSPC)
+ 			error = XFS_ERROR(E2BIG);
+-		}
+-		goto error1;
++		return error;
+ 	}
+ 
+ 	if (((mfsi_flags & XFS_MFSI_CLIENT) == 0) &&
+@@ -964,8 +925,7 @@ xfs_mountfs(
+ 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+ 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+ 			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			error = XFS_ERROR(E2BIG);
+-			goto error1;
++			return XFS_ERROR(E2BIG);
+ 		}
+ 		error = xfs_read_buf(mp, mp->m_logdev_targp,
+ 				     d - XFS_FSB_TO_BB(mp, 1),
+@@ -974,17 +934,110 @@ xfs_mountfs(
+ 			xfs_buf_relse(bp);
+ 		} else {
+ 			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			if (error == ENOSPC) {
++			if (error == ENOSPC)
+ 				error = XFS_ERROR(E2BIG);
+-			}
++			return error;
++		}
++	}
++	return 0;
++}
++
++/*
++ * xfs_mountfs
++ *
++ * This function does the following on an initial mount of a file system:
++ *	- reads the superblock from disk and init the mount struct
++ *	- if we're a 32-bit kernel, do a size check on the superblock
++ *		so we don't mount terabyte filesystems
++ *	- init mount struct realtime fields
++ *	- allocate inode hash table for fs
++ *	- init directory manager
++ *	- perform recovery and init the log manager
++ */
++int
++xfs_mountfs(
++	xfs_mount_t	*mp,
++	int		mfsi_flags)
++{
++	xfs_sb_t	*sbp = &(mp->m_sb);
++	xfs_inode_t	*rip;
++	bhv_vnode_t	*rvp = NULL;
++	__uint64_t	resblks;
++	__int64_t	update_flags = 0LL;
++	uint		quotamount, quotaflags;
++	int		agno;
++	int		uuid_mounted = 0;
++	int		error = 0;
++
++	if (mp->m_sb_bp == NULL) {
++		error = xfs_readsb(mp, mfsi_flags);
++		if (error)
++			return error;
++	}
++	xfs_mount_common(mp, sbp);
++
++	/*
++	 * Check if sb_agblocks is aligned at stripe boundary
++	 * If sb_agblocks is NOT aligned turn off m_dalign since
++	 * allocator alignment is within an ag, therefore ag has
++	 * to be aligned at stripe boundary.
++	 */
++	error = xfs_update_alignment(mp, mfsi_flags, &update_flags);
++	if (error)
++		goto error1;
++
++	xfs_alloc_compute_maxlevels(mp);
++	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
++	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
++	xfs_ialloc_compute_maxlevels(mp);
++
++	xfs_set_maxicount(mp);
++
++	mp->m_maxioffset = xfs_max_file_offset(sbp->sb_blocklog);
++
++	/*
++	 * XFS uses the uuid from the superblock as the unique
++	 * identifier for fsid.  We can not use the uuid from the volume
++	 * since a single partition filesystem is identical to a single
++	 * partition volume/filesystem.
++	 */
++	if ((mfsi_flags & XFS_MFSI_SECOND) == 0 &&
++	    (mp->m_flags & XFS_MOUNT_NOUUID) == 0) {
++		if (xfs_uuid_mount(mp)) {
++			error = XFS_ERROR(EINVAL);
+ 			goto error1;
+ 		}
  	}
  
  	/*
-@@ -247,8 +247,8 @@ xfs_rename(
- 	int		src_namelen = VNAMELEN(src_vname);
- 	int		target_namelen = VNAMELEN(target_vname);
- 
--	vn_trace_entry(src_dp, "xfs_rename", (inst_t *)__return_address);
--	vn_trace_entry(xfs_vtoi(target_dir_vp), "xfs_rename", (inst_t *)__return_address);
-+	xfs_itrace_entry(src_dp);
-+	xfs_itrace_entry(xfs_vtoi(target_dir_vp));
- 
- 	/*
- 	 * Find the XFS behavior descriptor for the target directory
-Index: linux-2.6-xfs/fs/xfs/xfs_utils.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_utils.c
-+++ linux-2.6-xfs/fs/xfs/xfs_utils.c
-@@ -73,7 +73,7 @@ xfs_dir_lookup_int(
- {
- 	int		error;
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	error = xfs_dir_lookup(NULL, dp, VNAME(dentry), VNAMELEN(dentry), inum);
- 	if (!error) {
-Index: linux-2.6-xfs/fs/xfs/xfs_utils.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_utils.h
-+++ linux-2.6-xfs/fs/xfs/xfs_utils.h
-@@ -20,8 +20,6 @@
- 
- #define IRELE(ip)	VN_RELE(XFS_ITOV(ip))
- #define IHOLD(ip)	VN_HOLD(XFS_ITOV(ip))
--#define	ITRACE(ip)	vn_trace_ref(ip, __FILE__, __LINE__, \
--				(inst_t *)__return_address)
- 
- extern int xfs_get_dir_entry (bhv_vname_t *, xfs_inode_t **);
- extern int xfs_dir_lookup_int (xfs_inode_t *, uint, bhv_vname_t *, xfs_ino_t *,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-@@ -88,7 +88,7 @@ xfs_getattr(
- 	bhv_vnode_t	*vp = XFS_ITOV(ip);
- 	xfs_mount_t	*mp = ip->i_mount;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -228,7 +228,7 @@ xfs_setattr(
- 	int			file_owner;
- 	int			need_iolock = 1;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if (mp->m_flags & XFS_MOUNT_RDONLY)
- 		return XFS_ERROR(EROFS);
-@@ -915,8 +915,7 @@ xfs_access(
- {
- 	int		error;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
--
-+	xfs_itrace_entry(ip);
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	error = xfs_iaccess(ip, mode, credp);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-@@ -987,7 +986,7 @@ xfs_readlink(
- 	int		pathlen;
- 	int		error = 0;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -1033,7 +1032,7 @@ xfs_fsync(
- 	int		error;
- 	int		log_flushed = 0, changed = 1;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	ASSERT(start >= 0 && stop >= -1);
- 
-@@ -1589,7 +1588,7 @@ xfs_inactive(
- 	int		error;
- 	int		truncate;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	/*
- 	 * If the inode is already free, then there can be nothing
-@@ -1802,7 +1801,7 @@ xfs_lookup(
- 	int			error;
- 	uint			lock_mode;
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return XFS_ERROR(EIO);
-@@ -1811,7 +1810,7 @@ xfs_lookup(
- 	error = xfs_dir_lookup_int(dp, lock_mode, dentry, &e_inum, &ip);
- 	if (!error) {
- 		*vpp = XFS_ITOV(ip);
--		ITRACE(ip);
-+		xfs_itrace_ref(ip);
- 	}
- 	xfs_iunlock_map_shared(dp, lock_mode);
- 	return error;
-@@ -1846,7 +1845,7 @@ xfs_create(
- 	int			namelen;
- 
- 	ASSERT(!*vpp);
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	dm_di_mode = vap->va_mode;
- 	namelen = VNAMELEN(dentry);
-@@ -1932,7 +1931,7 @@ xfs_create(
- 			goto error_return;
- 		goto abort_return;
- 	}
--	ITRACE(ip);
-+	xfs_itrace_ref(ip);
- 
- 	/*
- 	 * At this point, we've gotten a newly allocated inode.
-@@ -2100,7 +2099,7 @@ again:
- 
- 	e_inum = ip->i_ino;
- 
--	ITRACE(ip);
-+	xfs_itrace_ref(ip);
- 
- 	/*
- 	 * We want to lock in increasing inum. Since we've already
-@@ -2323,7 +2322,7 @@ xfs_remove(
- 	uint			resblks;
- 	int			namelen;
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -2366,9 +2365,8 @@ xfs_remove(
- 
- 	dm_di_mode = ip->i_d.di_mode;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
--
--	ITRACE(ip);
-+	xfs_itrace_entry(ip);
-+	xfs_itrace_ref(ip);
- 
- 	error = XFS_QM_DQATTACH(mp, dp, 0);
- 	if (!error && dp != ip)
-@@ -2500,8 +2498,7 @@ xfs_remove(
- 	if (link_zero && xfs_inode_is_filestream(ip))
- 		xfs_filestream_deassociate(ip);
- 
--	vn_trace_exit(ip, __FUNCTION__, (inst_t *)__return_address);
--
-+	xfs_itrace_exit(ip);
- 	IRELE(ip);
- 
- /*	Fall through to std_return with error = 0 */
-@@ -2564,8 +2561,8 @@ xfs_link(
- 	char			*target_name = VNAME(dentry);
- 	int			target_namelen;
- 
--	vn_trace_entry(tdp, __FUNCTION__, (inst_t *)__return_address);
--	vn_trace_entry(xfs_vtoi(src_vp), __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(tdp);
-+	xfs_itrace_entry(xfs_vtoi(src_vp));
- 
- 	target_namelen = VNAMELEN(dentry);
- 	ASSERT(!VN_ISDIR(src_vp));
-@@ -2748,7 +2745,7 @@ xfs_mkdir(
- 
- 	/* Return through std_return after this point. */
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	mp = dp->i_mount;
- 	udqp = gdqp = NULL;
-@@ -2816,7 +2813,7 @@ xfs_mkdir(
- 			goto error_return;
- 		goto abort_return;
- 	}
--	ITRACE(cdp);
-+	xfs_itrace_ref(cdp);
- 
- 	/*
- 	 * Now we add the directory inode to the transaction.
-@@ -2942,7 +2939,7 @@ xfs_rmdir(
- 	int			last_cdp_link;
- 	uint			resblks;
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(dp);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -3047,7 +3044,7 @@ xfs_rmdir(
- 		VN_HOLD(dir_vp);
- 	}
- 
--	ITRACE(cdp);
-+	xfs_itrace_ref(cdp);
- 	xfs_trans_ijoin(tp, cdp, XFS_ILOCK_EXCL);
- 
- 	ASSERT(cdp->i_d.di_nlink >= 2);
-@@ -3195,8 +3192,7 @@ xfs_symlink(
- 	ip = NULL;
- 	tp = NULL;
- 
--	vn_trace_entry(dp, __FUNCTION__, (inst_t *)__return_address);
--
-+	xfs_itrace_entry(dp);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -3325,7 +3321,7 @@ xfs_symlink(
- 			goto error_return;
++	 * Set the minimum read and write sizes
++	 */
++	xfs_set_rw_sizes(mp);
++
++	/*
++	 * Set the inode cluster size.
++	 * This may still be overridden by the file system
++	 * block size if it is larger than the chosen cluster size.
++	 */
++	mp->m_inode_cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
++
++	/*
++	 * Set inode alignment fields
++	 */
++	xfs_set_inoalignment(mp);
++
++	/*
++	 * Check that the data (and log if separate) are an ok size.
++	 */
++	error = xfs_check_sizes(mp, mfsi_flags);
++	if (error)
++		goto error1;
++
++	/*
+ 	 * Initialize realtime fields in the mount structure
+ 	 */
+-	if ((error = xfs_rtmount_init(mp))) {
++	error = xfs_rtmount_init(mp);
++	if (error) {
+ 		cmn_err(CE_WARN, "XFS: RT mount failed");
  		goto error1;
  	}
--	ITRACE(ip);
-+	xfs_itrace_ref(ip);
+@@ -1102,7 +1155,8 @@ xfs_mountfs(
+ 	/*
+ 	 * Initialize realtime inode pointers in the mount structure
+ 	 */
+-	if ((error = xfs_rtmount_inodes(mp))) {
++	error = xfs_rtmount_inodes(mp);
++	if (error) {
+ 		/*
+ 		 * Free up the root inode.
+ 		 */
+@@ -1120,7 +1174,8 @@ xfs_mountfs(
+ 	/*
+ 	 * Initialise the XFS quota management subsystem for this mount
+ 	 */
+-	if ((error = XFS_QM_INIT(mp, &quotamount, &quotaflags)))
++	error = XFS_QM_INIT(mp, &quotamount, &quotaflags);
++	if (error)
+ 		goto error4;
  
  	/*
- 	 * An error after we've joined dp to the transaction will result in the
-@@ -3487,7 +3483,7 @@ xfs_fid2(
- {
- 	xfs_fid2_t	*xfid = (xfs_fid2_t *)fidp;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 	ASSERT(sizeof(fid_t) >= sizeof(xfs_fid2_t));
- 
- 	xfid->fid_len = sizeof(xfs_fid2_t) - sizeof(xfid->fid_len);
-@@ -3669,7 +3665,7 @@ xfs_reclaim(
- {
- 	bhv_vnode_t	*vp = XFS_ITOV(ip);
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	ASSERT(!VN_MAPPED(vp));
- 
-@@ -3887,7 +3883,7 @@ xfs_alloc_file_space(
- 	int			committed;
- 	int			error;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
-@@ -4157,7 +4153,7 @@ xfs_free_file_space(
- 	vp = XFS_ITOV(ip);
- 	mp = ip->i_mount;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
- 
- 	if ((error = XFS_QM_DQATTACH(mp, ip, 0)))
- 		return error;
-@@ -4363,7 +4359,7 @@ xfs_change_file_space(
- 	xfs_trans_t	*tp;
- 	bhv_vattr_t	va;
- 
--	vn_trace_entry(ip, __FUNCTION__, (inst_t *)__return_address);
-+	xfs_itrace_entry(ip);
+@@ -1137,7 +1192,8 @@ xfs_mountfs(
+ 	/*
+ 	 * Complete the quota initialisation, post-log-replay component.
+ 	 */
+-	if ((error = XFS_QM_MOUNT(mp, quotamount, quotaflags, mfsi_flags)))
++	error = XFS_QM_MOUNT(mp, quotamount, quotaflags, mfsi_flags);
++	if (error)
+ 		goto error4;
  
  	/*
- 	 * must be a regular file and have write permission
-Index: linux-2.6-xfs/fs/xfs/xfs.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs.h
-+++ linux-2.6-xfs/fs/xfs/xfs.h
-@@ -37,7 +37,7 @@
- #define XFS_LOG_TRACE 1
- #define XFS_RW_TRACE 1
- #define XFS_BUF_TRACE 1
--#define XFS_VNODE_TRACE 1
-+#define XFS_INODE_TRACE 1
- #define XFS_FILESTREAMS_TRACE 1
- #endif
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h
-@@ -300,7 +300,7 @@ typedef struct xfs_inode {
- 	xfs_fsize_t		i_size;		/* in-memory size */
- 	atomic_t		i_iocount;	/* outstanding I/O count */
- 	/* Trace buffers per inode. */
--#ifdef XFS_VNODE_TRACE
-+#ifdef XFS_INODE_TRACE
- 	struct ktrace		*i_trace;	/* general inode trace */
- #endif
- #ifdef XFS_BMAP_TRACE
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c
-@@ -113,11 +113,11 @@ static void	xfsidbg_xqm_dqtrace(xfs_dquo
- #ifdef XFS_FILESTREAMS_TRACE
- static void	xfsidbg_filestreams_trace(int);
- #endif
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
- /*
-- * Print a vnode trace entry.
-+ * Print a inode trace entry.
-  */
--static int	vn_trace_pr_entry(ktrace_entry_t *ktep);
-+static int	xfs_itrace_pr_entry(ktrace_entry_t *ktep);
- #endif
- 
- 
-@@ -1443,7 +1443,7 @@ static int	kdbm_xfs_xnode(
- 	int nextarg = 1;
- 	long offset = 0;
- 	int diag;
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
- 	ktrace_entry_t	*ktep;
- 	ktrace_snap_t	kts;
- #endif
-@@ -1457,18 +1457,18 @@ static int	kdbm_xfs_xnode(
- 
- 	xfsidbg_xnode(ip);
- 
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
- 	kdb_printf("--> itrace @ 0x%lx/0x%p\n", addr, ip->i_trace);
- 	if (ip->i_trace == NULL)
- 		return 0;
- 	ktep = ktrace_first(ip->i_trace, &kts);
- 	while (ktep != NULL) {
--		if (vn_trace_pr_entry(ktep))
-+		if (xfs_itrace_pr_entry(ktep))
- 			kdb_printf("\n");
- 
- 		ktep = ktrace_next(ip->i_trace, &kts);
- 	}
--#endif	/* XFS_VNODE_TRACE */
-+#endif	/* XFS_INODE_TRACE */
- 	return 0;
- }
- 
-@@ -1784,12 +1784,12 @@ static int	kdbm_vnode(
- 	return 0;
- }
- 
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
- /*
-- * Print a vnode trace entry.
-+ * Print a inode trace entry.
-  */
- static int
--vn_trace_pr_entry(ktrace_entry_t *ktep)
-+xfs_itrace_pr_entry(ktrace_entry_t *ktep)
- {
- 	char		funcname[128];
- 	kdb_symtab_t	symtab;
-@@ -1812,19 +1812,19 @@ vn_trace_pr_entry(ktrace_entry_t *ktep)
- 
- 
- 	switch ((__psint_t)ktep->val[0]) {
--	case VNODE_KTRACE_ENTRY:
-+	case INODE_KTRACE_ENTRY:
- 		kdb_printf("entry to %s i_count = %ld",
- 						(char *)ktep->val[1],
- 						(long)ktep->val[3]);
- 		break;
- 
--	case VNODE_KTRACE_EXIT:
-+	case INODE_KTRACE_EXIT:
- 		kdb_printf("exit from %s i_count = %lu",
- 						(char *)ktep->val[1],
- 						(long)ktep->val[3]);
- 		break;
- 
--	case VNODE_KTRACE_HOLD:
-+	case INODE_KTRACE_HOLD:
- 		if ((__psint_t)ktep->val[3] != 1)
- 			kdb_printf("hold @%s:%ld(%s) i_count %ld => %ld ",
- 						(char *)ktep->val[1],
-@@ -1840,7 +1840,7 @@ vn_trace_pr_entry(ktrace_entry_t *ktep)
- 						(long)ktep->val[3]);
- 		break;
- 
--	case VNODE_KTRACE_REF:
-+	case INODE_KTRACE_REF:
- 		kdb_printf("ref @%s:%ld(%s) i_count = %ld",
- 						(char *)ktep->val[1],
- 						(long)ktep->val[2],
-@@ -1848,7 +1848,7 @@ vn_trace_pr_entry(ktrace_entry_t *ktep)
- 						(long)ktep->val[3]);
- 		break;
- 
--	case VNODE_KTRACE_RELE:
-+	case INODE_KTRACE_RELE:
- 		if ((__psint_t)ktep->val[3] != 1)
- 			kdb_printf("rele @%s:%ld(%s) i_count %ld => %ld ",
- 						(char *)ktep->val[1],
-@@ -1865,7 +1865,7 @@ vn_trace_pr_entry(ktrace_entry_t *ktep)
- 		break;
- 
- 	default:
--		kdb_printf("unknown vntrace record\n");
-+		kdb_printf("unknown intrace record\n");
- 		return 1;
- 	}
- 
-@@ -1891,9 +1891,9 @@ vn_trace_pr_entry(ktrace_entry_t *ktep)
- 
- 
- /*
-- * Print out the trace buffer attached to the given vnode.
-+ * Print out the trace buffer attached to the given inode.
-  */
--static int	kdbm_vntrace(
-+static int	kdbm_iptrace(
- 	int	argc,
- 	const char **argv)
- {
-@@ -1917,17 +1917,17 @@ static int	kdbm_vntrace(
- 	ip = (xfs_inode_t *)addr;
- 
- 	if (ip->i_trace == NULL) {
--		kdb_printf("The vnode trace buffer is not initialized\n");
-+		kdb_printf("The inode trace buffer is not initialized\n");
- 
- 		return 0;
- 	}
- 
--	kdb_printf("vntrace ip 0x%p\n", ip);
-+	kdb_printf("iptrace ip 0x%p\n", ip);
- 
- 	ktep = ktrace_first(ip->i_trace, &kts);
- 
- 	while (ktep != NULL) {
--		if (vn_trace_pr_entry(ktep))
-+		if (xfs_itrace_pr_entry(ktep))
- 			kdb_printf("\n");
- 
- 		ktep = ktrace_next(ip->i_trace, &kts);
-@@ -1936,9 +1936,9 @@ static int	kdbm_vntrace(
- 	return 0;
- }
- /*
-- * Print out the trace buffer attached to the given vnode.
-+ * Print out the trace buffer attached to the given inode.
-  */
--static int	kdbm_vntraceaddr(
-+static int	kdbm_iptraceaddr(
- 	int	argc,
- 	const char **argv)
- {
-@@ -1961,12 +1961,12 @@ static int	kdbm_vntraceaddr(
- 
- 	kt = (struct ktrace *)addr;
- 
--	kdb_printf("vntraceaddr kt 0x%p\n", kt);
-+	kdb_printf("iptraceaddr kt 0x%p\n", kt);
- 
- 	ktep = ktrace_first(kt, &kts);
- 
- 	while (ktep != NULL) {
--		if (vn_trace_pr_entry(ktep))
-+		if (xfs_itrace_pr_entry(ktep))
- 			kdb_printf("\n");
- 
- 		ktep = ktrace_next(kt, &kts);
-@@ -1974,7 +1974,7 @@ static int	kdbm_vntraceaddr(
- 
- 	return 0;
- }
--#endif	/* XFS_VNODE_TRACE */
-+#endif	/* XFS_INODE_TRACE */
- 
- 
- static void	printinode(struct inode *ip)
-@@ -2393,10 +2393,10 @@ struct xif {
- static struct xif xfsidbg_funcs[] = {
-   {  "vn",	kdbm_vn,	"<vnode>", "Dump inode/vnode/trace"},
-   {  "vnode",	kdbm_vnode,	"<vnode>", "Dump vnode"},
--#ifdef XFS_VNODE_TRACE
--  {  "vntrace",	kdbm_vntrace,	"<vntrace>", "Dump vnode Trace"},
--  {  "vntraceaddr",	kdbm_vntraceaddr, "<vntrace>",
--				"Dump vnode Trace by Address"},
-+#ifdef XFS_INODE_TRACE
-+  {  "iptrace",	kdbm_iptrace,	"<iptrace>", "Dump inode Trace"},
-+  {  "iptraceaddr",	kdbm_iptraceaddr, "<iptrace>",
-+				"Dump inode Trace by Address"},
- #endif
-   {  "xagf",	kdbm_xfs_xagf,	"<agf>",
- 				"Dump XFS allocation group freespace" },
-@@ -6603,7 +6603,7 @@ xfsidbg_xnode(xfs_inode_t *ip)
- 	kdb_printf("size %lld\n",
- 		ip->i_size);
- 
--#ifdef	XFS_VNODE_TRACE
-+#ifdef	XFS_INODE_TRACE
- 	qprintf(" trace 0x%p\n", ip->i_trace);
- #endif
- #ifdef XFS_BMAP_TRACE
