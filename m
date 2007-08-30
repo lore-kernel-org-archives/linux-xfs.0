@@ -1,78 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 13:03:21 -0700 (PDT)
-Received: from brmea-mail-2.sun.com ([192.18.98.43])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UK3H4p028756
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 13:03:18 -0700
-In-Reply-To: <1188454611.23311.13.camel@toonses.gghcwest.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 15:41:24 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UMfI4p021888
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 15:41:21 -0700
+Subject: Re: ZFS, XFS, and EXT4 compared
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <20070830132002.GA4086@infradead.org>
 References: <1188454611.23311.13.camel@toonses.gghcwest.com>
-Mime-Version: 1.0 (Apple Message framework v752.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <B6314154-AAB2-4955-9CAE-EAF54BB84922@sun.com>
+	 <1188457666.24970.94.camel@edge.yarra.acx>
+	 <20070830132002.GA4086@infradead.org>
+Content-Type: text/plain
+Date: Fri, 31 Aug 2007 08:42:31 +1000
+Message-Id: <1188513751.24970.109.camel@edge.yarra.acx>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-From: eric kustarz <eric.kustarz@sun.com>
-Subject: Re: [zfs-discuss] ZFS, XFS, and EXT4 compared
-Date: Thu, 30 Aug 2007 12:07:59 -0700
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Jeffrey W. Baker" <jwbaker@acm.org>
-Cc: zfs-discuss@opensolaris.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Jeffrey W. Baker" <jwbaker@acm.org>, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
+[culled zfs-discuss from CC, since its subscriber-only]
 
-On Aug 29, 2007, at 11:16 PM, Jeffrey W. Baker wrote:
+On Thu, 2007-08-30 at 14:20 +0100, Christoph Hellwig wrote:
+> 
+> On Thu, Aug 30, 2007 at 05:07:46PM +1000, Nathan Scott wrote:
+> > To improve metadata performance, you have many options with XFS
+> (which
+> > ones are useful depends on the type of metadata workload) - you can
+> try
+> > a v2 format log, and mount with "-o logbsize=256k", try increasing
+> the
+> > directory block size (e.g. mkfs.xfs -nsize=16k, etc), and also the
+> log
+> > size (mkfs.xfs -lsize=XXXXXXb).
+> 
+> Okay, these suggestions are one too often now.  v2 log and large
+> logs/log
+> buffers are the almost universal suggestions, and we really need to
+> make
+> these defaults.
 
-> I have a lot of people whispering "zfs" in my virtual ear these days,
-> and at the same time I have an irrational attachment to xfs based
-> entirely on its lack of the 32000 subdirectory limit.  I'm not  
-> afraid of
-> ext4's newness, since really a lot of that stuff has been in Lustre  
-> for
-> years.  So a-benchmarking I went.  Results at the bottom:
->
-> http://tastic.brillig.org/~jwb/zfs-xfs-ext4.html
->
-> Short version: ext4 is awesome.  zfs has absurdly fast metadata
-> operations but falls apart on sequential transfer.  xfs has great
-> sequential transfer but really bad metadata ops, like 3 minutes to tar
-> up the kernel.
->
-> It would be nice if mke2fs would copy xfs's code for optimal layout  
-> on a
-> software raid.  The mkfs defaults and the mdadm defaults interact  
-> badly.
->
-> Postmark is somewhat bogus benchmark with some obvious quantization
-> problems.
->
-> Regards,
-> jwb
->
+Possibly.  Far more importantly for XFS, there really needs to be some
+way for RAID drivers to say "even though I support write barriers, its
+not a good idea for filesystems to enable write barriers by default on
+me".  Enabling write barriers everywhere, by default, seems to have a
+far worse impact than any mkfs/mount option tweaking.
 
-Hey jwb,
+>   XFS is already the laughing stock of the Linux community
+> due to it's absurdely bad default settings.
 
-Thanks for taking up the task, its benchmarking so i've got some  
-questions...
+Oh, _thats_ what everyone's laughing at?
 
-What does it mean to have an external vs. internal journal for ZFS?
+cheers.
 
-Can you show the output of 'zpool status' when using software RAID  
-vs. hardware RAID for ZFS?
-
-The hardware RAID has a cache on the controller.  ZFS will flush the  
-"cache" when pushing out a txg (essentially before writing out the  
-uberblock and after writing out the uberblock).  When you have a non- 
-volatile cache with battery backing (such as your setup), its safe to  
-disable that via putting 'set zfs:zfs_nocacheflush = 1' in /etc/ 
-system and rebooting.  Its ugly but we're going through the final  
-code review of a fix for this (its partly we aren't sending down the  
-right command and partly even if we did, no storage devices actually  
-support it quite yet).
-
-What parameters did you give bonnie++?  compiled 64bit, right?
-
-For the randomio test, it looks like you used an io_size of 4KB.  Are  
-those aligned?  random?  How big is the '/dev/sdb' file?
-
-Do you have the parameters given to FFSB?
-
-eric
+--
+Nathan
