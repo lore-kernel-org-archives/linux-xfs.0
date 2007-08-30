@@ -1,76 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 11:57:34 -0700 (PDT)
-Received: from brmea-mail-2.sun.com ([192.18.98.43])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UIvT4p012114
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 11:57:31 -0700
-Received: from fe-amer-09.sun.com ([192.18.108.183])
-	by brmea-mail-2.sun.com (8.13.6+Sun/8.12.9) with ESMTP id l7UIXsnI008979
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 18:33:55 GMT
-Received: from conversion-daemon.mail-amer.sun.com by mail-amer.sun.com
- (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
- id <0JNL00201NHEQZ00@mail-amer.sun.com>
- (original mail from James.Mauro@Sun.COM) for xfs@oss.sgi.com; Thu,
- 30 Aug 2007 12:33:54 -0600 (MDT)
-Date: Thu, 30 Aug 2007 14:33:48 -0400
-From: Jim Mauro <James.Mauro@Sun.COM>
-Subject: Re: [zfs-discuss] ZFS, XFS, and EXT4 compared
-In-reply-to: <1188454611.23311.13.camel@toonses.gghcwest.com>
-Message-id: <46D70D8C.8010203@sun.com>
-MIME-version: 1.0
-Content-type: text/plain; format=flowed; charset=ISO-8859-1
-Content-transfer-encoding: 7BIT
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 12:09:05 -0700 (PDT)
+Received: from h001.gghcwest.com (adsl-71-128-90-173.dsl.pltn13.pacbell.net [71.128.90.173])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UJ914p013999
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 12:09:03 -0700
+Subject: Re: ZFS, XFS, and EXT4 compared
+From: "Jeffrey W. Baker" <jwbaker@acm.org>
+In-Reply-To: <46D71318.2050604@sandeen.net>
 References: <1188454611.23311.13.camel@toonses.gghcwest.com>
+	 <1188457666.24970.94.camel@edge.yarra.acx>
+	 <20070830132002.GA4086@infradead.org>  <46D71318.2050604@sandeen.net>
+Content-Type: text/plain
+Date: Thu, 30 Aug 2007 12:09:01 -0700
+Message-Id: <1188500941.8980.20.camel@toonses.gghcwest.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Jeffrey W. Baker" <jwbaker@acm.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: zfs-discuss@opensolaris.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
+On Thu, 2007-08-30 at 13:57 -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > On Thu, Aug 30, 2007 at 05:07:46PM +1000, Nathan Scott wrote:
+> >> To improve metadata performance, you have many options with XFS (which
+> >> ones are useful depends on the type of metadata workload) - you can try
+> >> a v2 format log, and mount with "-o logbsize=256k", try increasing the
+> >> directory block size (e.g. mkfs.xfs -nsize=16k, etc), and also the log
+> >> size (mkfs.xfs -lsize=XXXXXXb).
+> > 
+> > Okay, these suggestions are one too often now.  v2 log and large logs/log
+> > buffers are the almost universal suggestions, and we really need to make
+> > these defaults.  XFS is already the laughing stock of the Linux community
+> > due to it's absurdely bad default settings.
+> 
+> Agreed on reevaluating the defaults, Christoph!
+> 
+> barrier seems to hurt badly on xfs, too.  Note: barrier is off by
+> default on ext[34], so if you want apples to apples there, you need to
+> change one or the other filesystem's mount options.  If your write cache
+> is safe (battery backed?) you may as well turn barriers off.  I'm not
+> sure offhand who will react more poorly to an evaporating write cache
+> (with no barriers), ext4 or xfs...
 
-I'll take a look at this. ZFS provides outstanding sequential IO performance
-(both read and write). In my testing, I can essentially sustain 
-"hardware speeds"
-with ZFS on sequential loads. That is, assuming 30-60MB/sec per disk 
-sequential
-IO capability (depending on hitting inner or out cylinders), I get 
-linear scale-up
-on sequential loads as I add disks to a zpool, e.g. I can sustain 
-250-300MB/sec
-on a 6 disk zpool, and it's pretty consistent for raidz and raidz2.
+I didn't compare the safety of the three filesystems, but I did have
+disk caches disabled and only battery-backed caches enabled.  Do you
+need barriers without volatile caches?
 
-Your numbers are in the 50-90MB/second range, or roughly 1/2 to 1/4 what was
-measured on the other 2 file systems for the same test. Very odd.
+Most people benchmark ext3 with data=writeback which is unsafe.  I used
+ordered (the default).
 
-Still looking...
+I think if you look at all the features, zfs is theoretically the most
+safe filesystem.  But in practice, who knows?
 
-Thanks,
-/jim
-
-Jeffrey W. Baker wrote:
-> I have a lot of people whispering "zfs" in my virtual ear these days,
-> and at the same time I have an irrational attachment to xfs based
-> entirely on its lack of the 32000 subdirectory limit.  I'm not afraid of
-> ext4's newness, since really a lot of that stuff has been in Lustre for
-> years.  So a-benchmarking I went.  Results at the bottom:
->
-> http://tastic.brillig.org/~jwb/zfs-xfs-ext4.html
->
-> Short version: ext4 is awesome.  zfs has absurdly fast metadata
-> operations but falls apart on sequential transfer.  xfs has great
-> sequential transfer but really bad metadata ops, like 3 minutes to tar
-> up the kernel.
->
-> It would be nice if mke2fs would copy xfs's code for optimal layout on a
-> software raid.  The mkfs defaults and the mdadm defaults interact badly.
->
-> Postmark is somewhat bogus benchmark with some obvious quantization
-> problems.
->
-> Regards,
-> jwb
->
-> _______________________________________________
-> zfs-discuss mailing list
-> zfs-discuss@opensolaris.org
-> http://mail.opensolaris.org/mailman/listinfo/zfs-discuss
->   
+-jwb
