@@ -1,65 +1,127 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 07:03:01 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7UE2u4p028503
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 07:02:58 -0700
-Date: Fri, 31 Aug 2007 00:02:53 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] log replay should not overwrite newer ondisk inodes
-Message-ID: <20070830140253.GR61154114@sgi.com>
-References: <46D6279F.40601@sgi.com> <46D6480F.4040307@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 07:58:46 -0700 (PDT)
+Received: from over.ny.us.ibm.com (over.ny.us.ibm.com [32.97.182.150])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UEwf4p005268
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 07:58:43 -0700
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+	by pokfb.esmtp.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id l7UDbpBc011887
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 09:37:52 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l7UDbhZi012809
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 09:37:43 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l7UDbgHF470318
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 07:37:43 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l7UDbg8h004253
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 07:37:42 -0600
+Date: Thu, 30 Aug 2007 08:37:47 -0500
+From: "Jose R. Santos" <jrs@us.ibm.com>
+Subject: Re: ZFS, XFS, and EXT4 compared
+Message-ID: <20070830083747.018cfe8a@gara>
+In-Reply-To: <1188454611.23311.13.camel@toonses.gghcwest.com>
+References: <1188454611.23311.13.camel@toonses.gghcwest.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <46D6480F.4040307@sgi.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: "Jeffrey W. Baker" <jwbaker@acm.org>
+Cc: zfs-discuss@opensolaris.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
-On Thu, Aug 30, 2007 at 02:31:11PM +1000, Timothy Shimmin wrote:
-> Lachlan McIlroy wrote:
-> >Log replay of clustered inodes currently ignores the flushiter
-> >field in the inode that is used to determine if the on-disk inode
-> >is more up to date than the copy in the log.  As a result during
-> >log replay the newer inode is being overwritten with an older
-> >version and file size updates are being lost.
-> >
-> >I haven't handled the case of the flushiter counter overflowing
-> >but that shouldn't be a problem in this case.  The log buffer
-> >contains newly created inodes so their flushiter values will be 0
-> >and the on-disk inodes should not be much greater.
-> >
-> >Lachlan
-> >
+On Wed, 29 Aug 2007 23:16:51 -0700
+"Jeffrey W. Baker" <jwbaker@acm.org> wrote:
+
+Nice comparisons.
+
+> I have a lot of people whispering "zfs" in my virtual ear these days,
+> and at the same time I have an irrational attachment to xfs based
+> entirely on its lack of the 32000 subdirectory limit.  I'm not afraid of
+
+The 32000 subdir limit should be fixed on the latest rc kernels.
+
+> ext4's newness, since really a lot of that stuff has been in Lustre for
+> years.  So a-benchmarking I went.  Results at the bottom:
 > 
-> Still would want to understand why blf_flags doesn't have
-> XFS_BLI_INODE_ALLOC_BUF set and so we could test that
-> - I didn't understand Dave's (dgc) response about that earlier.
+> http://tastic.brillig.org/~jwb/zfs-xfs-ext4.html
 
-I never commented on why or why not that flag isn't set in the log
-item. FWICT, it's not set because it is purely an in-memory flag.
-State that gets logged gets put in bli_format.blf_flags (e.g.
-XFS_BLI_FORMAT) whereas XFS_BLI_INODE_ALLOC_BUF is only ever
-placed in bli_flags....
+FFSB:
+Could you send the patch to fix FFSB Solaris build?  I should probably
+update the Sourceforge version so that it built out of the box.
 
-The function of that flag is to prevent the logged inode buffer from being
-moved forward in the AIL so that it is always replayed at the time of
-allocation so that subsequent transactions that modify the inodes and inode
-buffers have a correctly allocated inode buffer to apply changes to during
-recovery. And if the tail of the log moves past the allocation transaction,
-it is guaranteed that the inodes can be read from disk so that recovery
-has a correctly allocated inode buffer to apply changes to....
+I'm also curious about your choices in the FFSB profiles you created.
+Specifically, the very short run time and doing fsync after every file
+close.  When using FFSB, I usually run with a large run time (usually
+600 seconds) to make sure that we do enough IO to get a stable
+result.  Running longer means that we also use more of the disk
+storage and our results are not base on doing IO to just the beginning
+of the disk.  When running for that long period of time, the fsync flag
+is not required since we do enough reads and writes to cause memory
+pressure and guarantee IO going to disk.  Nothing wrong in what you
+did, but I wonder how it would affect the results of these runs.
 
-That being said, the flag could probably be propagated into the blf_flags
-for (only) the allocation transaction if it makes discovery of this type
-of buffer during recovery more reliable....
+The agefs options you use are also interesting since you only utilize a
+very small percentage of your filesystem.  Also note that since create
+and append weight are very heavy compare to deletes, the desired
+utilization would be reach very quickly and without that much
+fragmentation.  Again, nothing wrong here, just very interested in your
+perspective in selecting these setting for your profile.
 
-Cheers,
+Postmark:
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+I've been looking at the postmark results and I'm becoming more convince
+that the meta-data results in ZFS may be artificially high due to the
+nature of the workload.  For one thing,  I find it very interesting
+(e.i. odd) that 9050KB/s reads and 28360KB/s writes shows up multiple
+times even across filesystems.  The data set on postmark is also very
+limited in size and the run times are small enough that it is difficult
+to get an idea of sustained meta-data performance on any of the
+filesystems.  Base on the ZFS numbers, it seems that there is hardly
+any IO being done on the ZFS case given the random nature of the
+workload and the high numbers it's achieving.
+
+In short, I don't think postmark is a very good workload to sustain ZFS
+claim as the meta-data king.  It may very well be the case, but I would
+like to see that proven with another workload.  One that actually show
+sustained meta-data performance across a fairly large fileset would be
+preferred.  FFSB could be use simulate a meta-data intensive workload
+as well and it has better control over the fileset size and run time to
+make the results more interesting. 
+
+Don't mean to invalidate the Postmark results, just merely pointing out
+a possible error in the assessment of the meta-data performance of ZFS.
+I say possible since it's still unknown if another workload will be
+able to validate these results.
+
+General:
+Did you gathered CPU statistics when running these benchmarks?  For
+some environments, having the ratio filesystem performance vs CPU
+utilization would be good information to have since some workloads are
+CPU sensitive and being 20% faster while consuming 50% more CPU may not
+necessarily be a good thing.  While this may be less of an issue in the
+future since CPU performance seems to be increasing at a much faster
+pace than IO and disk performance, it would still be another
+interesting data point.
+
+> 
+> Short version: ext4 is awesome.  zfs has absurdly fast metadata
+> operations but falls apart on sequential transfer.  xfs has great
+> sequential transfer but really bad metadata ops, like 3 minutes to tar
+> up the kernel.
+> 
+> It would be nice if mke2fs would copy xfs's code for optimal layout on a
+> software raid.  The mkfs defaults and the mdadm defaults interact badly.
+>
+> Postmark is somewhat bogus benchmark with some obvious quantization
+> problems.
+
+Ah...  Guess you agree with me about the postmark results validity. ;)
+
+> Regards,
+> jwb
+> 
+
+
+-JRS
