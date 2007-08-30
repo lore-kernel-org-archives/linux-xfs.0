@@ -1,43 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 01:51:37 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7U8pW4p014338
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 01:51:34 -0700
-Message-ID: <46D68510.1020404@sgi.com>
-Date: Thu, 30 Aug 2007 18:51:28 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] log replay should not overwrite newer ondisk inodes
-References: <46D6279F.40601@sgi.com> <46D6480F.4040307@sgi.com> <46D64CAD.6050705@sgi.com> <46D67FE6.20205@sgi.com>
-In-Reply-To: <46D67FE6.20205@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 06:41:55 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7UDfn4p025257
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 06:41:51 -0700
+Date: Thu, 30 Aug 2007 14:20:02 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ZFS, XFS, and EXT4 compared
+Message-ID: <20070830132002.GA4086@infradead.org>
+References: <1188454611.23311.13.camel@toonses.gghcwest.com> <1188457666.24970.94.camel@edge.yarra.acx>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1188457666.24970.94.camel@edge.yarra.acx>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Nathan Scott <nscott@aconex.com>
+Cc: "Jeffrey W. Baker" <jwbaker@acm.org>, zfs-discuss@opensolaris.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
-Timothy Shimmin wrote:
->>>   But I'm not sure this is an error...
->>>   Hmmmm...I'm a bit confused.
->>>   So you are _almost_ combining an error check with a flushiter check?
->>>   If one buffer is an inode magic# and the other isn't then we
->>>   have an error right - and could report it - but we are not doing 
->>> that here.
->> Not exactly.  If what's on disk is not an inode but the log item is
->> then that could be because we haven't written the inode to disk yet
->> and we need to perform recovery.
-> Yeah, I was thinking about that afterward.
-> The item's format which gives the blk# for the buf to read could
-> be a block which hasn't been used for an inode yet.
-> 
-Well, if what's on disk is not an inode but some other data
-and it happens to have the inode magic# which is remotely possible,
-then we are making a bad assumption.
-i.e. if we're not sure what the block/buffer should be, then testing the
-MAGIC# isn't a guarantee it's an inode then.
-Well not for the freeing of inode clusters case I would assume.
-Or am I missing something?
+On Thu, Aug 30, 2007 at 05:07:46PM +1000, Nathan Scott wrote:
+> To improve metadata performance, you have many options with XFS (which
+> ones are useful depends on the type of metadata workload) - you can try
+> a v2 format log, and mount with "-o logbsize=256k", try increasing the
+> directory block size (e.g. mkfs.xfs -nsize=16k, etc), and also the log
+> size (mkfs.xfs -lsize=XXXXXXb).
 
---Tim
+Okay, these suggestions are one too often now.  v2 log and large logs/log
+buffers are the almost universal suggestions, and we really need to make
+these defaults.  XFS is already the laughing stock of the Linux community
+due to it's absurdely bad default settings.
