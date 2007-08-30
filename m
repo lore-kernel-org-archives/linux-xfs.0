@@ -1,44 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 00:06:41 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7U76Y4p030402
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 00:06:37 -0700
-Subject: Re: ZFS, XFS, and EXT4 compared
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 00:23:20 -0700 (PDT)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.235])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7U7ND4p003883
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 00:23:16 -0700
+Received: by nz-out-0506.google.com with SMTP id x3so306234nzd
+        for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 00:23:14 -0700 (PDT)
+Message-ID: <bd9320b30708292327u26f30c75j8e34b9fa1584371f@mail.gmail.com>
+Date: Wed, 29 Aug 2007 23:27:58 -0700
+From: mike <mike503@gmail.com>
+Subject: Re: [zfs-discuss] ZFS, XFS, and EXT4 compared
 In-Reply-To: <1188454611.23311.13.camel@toonses.gghcwest.com>
-References: <1188454611.23311.13.camel@toonses.gghcwest.com>
-Content-Type: text/plain
-Date: Thu, 30 Aug 2007 17:07:46 +1000
-Message-Id: <1188457666.24970.94.camel@edge.yarra.acx>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <1188454611.23311.13.camel@toonses.gghcwest.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: "Jeffrey W. Baker" <jwbaker@acm.org>
 Cc: zfs-discuss@opensolaris.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
-On Wed, 2007-08-29 at 23:16 -0700, Jeffrey W. Baker wrote:
-> ...  xfs has great
+On 8/29/07, Jeffrey W. Baker <jwbaker@acm.org> wrote:
+> I have a lot of people whispering "zfs" in my virtual ear these days,
+> and at the same time I have an irrational attachment to xfs based
+> entirely on its lack of the 32000 subdirectory limit.  I'm not afraid of
+> ext4's newness, since really a lot of that stuff has been in Lustre for
+> years.  So a-benchmarking I went.  Results at the bottom:
+>
+> http://tastic.brillig.org/~jwb/zfs-xfs-ext4.html
+>
+> Short version: ext4 is awesome.  zfs has absurdly fast metadata
+> operations but falls apart on sequential transfer.  xfs has great
 > sequential transfer but really bad metadata ops, like 3 minutes to tar
-> up the kernel. 
+> up the kernel.
+>
+> It would be nice if mke2fs would copy xfs's code for optimal layout on a
+> software raid.  The mkfs defaults and the mdadm defaults interact badly.
 
-Perhaps this is due to the write barrier support - would be interesting
-to try a run with the "-o nobarrier" mount option to XFS.  With external
-logs, write barriers are automatically disabled, which may explain:
- "Oddly XFS has better sequential reads when using an external journal,
- which makes little sense."
+this is cool to see. however, performance wouldn't be my reason for
+moving to zfs. the inline checksumming and all that is what i want. if
+someone could get nearly incorruptable filesystems (or just a linux
+version of zfs... btrfs looks promising) this would be even better.
 
-To improve metadata performance, you have many options with XFS (which
-ones are useful depends on the type of metadata workload) - you can try
-a v2 format log, and mount with "-o logbsize=256k", try increasing the
-directory block size (e.g. mkfs.xfs -nsize=16k, etc), and also the log
-size (mkfs.xfs -lsize=XXXXXXb).
-
-Have fun!
-
-cheers.
-
---
-Nathan
+sadly ext4+swraid isn't as good, i might have tried that since waiting
+the right hardware support for zfs for me seems to be unknown at this
+point.
