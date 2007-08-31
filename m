@@ -1,56 +1,56 @@
-Return-Path: <bounce+sandeen-linuxfs=sandeen.net@bounce.pbwiki.com>
-Received: from sf5.coceve.com (sf5.coceve.com [208.96.6.144])
-	by sandeen.net (Postfix) with ESMTP id 2BD351807DF04
-	for <sandeen-linuxfs@sandeen.net>; Mon, 13 Aug 2007 09:24:17 -0500 (CDT)
-Subject: [PBwiki] linuxfs: EasyFsProjects edited
-Date: Mon, 13 Aug 2007 14:24:17 +0000
-From: "J. Bruce Fields" <notification@pbwiki.com>
-Reply-to: bfields@fieldses.org
-Message-ID: <bd950d98e44c59e25fcaa2d7de9ac1b6@dev.pbwiki.com>
-MIME-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="b1_bd950d98e44c59e25fcaa2d7de9ac1b6"
-To: sandeen-linuxfs@sandeen.net
+Return-Path: <dgc@sgi.com>
+Date: Sat, 1 Sep 2007 01:19:04 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] Increase lockdep MAX_LOCK_DEPTH
+Message-ID: <20070831151904.GC734179@sgi.com>
+References: <46D79C62.1010304@sandeen.net> <1188542389.6112.44.camel@twins> <20070831135042.GD422459@sgi.com> <1188570831.6112.64.camel@twins> <20070831150511.GA734179@sgi.com> <1188572961.6112.72.camel@twins>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1188572961.6112.72.camel@twins>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Ingo Molnar <mingo@elte.hu>
 List-ID: <xfs>
 
+On Fri, Aug 31, 2007 at 05:09:21PM +0200, Peter Zijlstra wrote:
+> On Sat, 2007-09-01 at 01:05 +1000, David Chinner wrote:
+> 
+> > > Trouble is, we'd like to have a sane upper bound on the amount of held
+> > > locks at any one time, obviously this is just wanting, because a lot of
+> > > lock chains also depend on the number of online cpus...
+> > 
+> > Sure - this is an obvious case where it is valid to take >30 locks at
+> > once in a single thread. In fact, worst case here we are taking twice this
+> > number of locks - we actually take 2 per inode (ilock and flock) so a
+> > full 32 inode cluster free would take >60 locks in the middle of this
+> > function and we should be busting this depth couter limit all the
+> > time. 
+> 
+> I think this started because jeffpc couldn't boot without XFS busting
+> lockdep :-)
 
---b1_bd950d98e44c59e25fcaa2d7de9ac1b6
-Content-Type: text/plain; charset = "utf-8"
-Content-Transfer-Encoding: 8bit
+Ok....
 
-Linuxfs.pbwiki.com was just edited. Here's what was changed:
-J. Bruce Fields (bfields@fieldses.org) changed the page 'EasyFsProjects'.
+> > Do semaphores (the flush locks) contribute to the lock depth
+> > counters? 
+> 
+> No, alas, we cannot handle semaphores in lockdep. Semaphores don't have
+> a strict owner, hence we cannot track them. This is one of the reasons
+> to rid ourselves of semaphores - that and there are very few cases where
+> the actual semantics of semaphores are needed. Most of the times code
+> using semaphores can be expressed with either a mutex or a completion.
 
+Yeah, and the flush lock is something we can't really use either of those
+for as we require both the multi-process lock/unlock behaviour and the
+mutual exclusion that a semaphore provides.
 
-View the current version of EasyFsProjects at http://linuxfs.pbwiki.com/EasyFsProjects
-See a full list of changes at http://linuxfs.pbwiki.com/changes.php
-------
-Start your own PBwiki at http://pbwiki.com/ 
-Change notification preferences at http://linuxfs.pbwiki.com/notification.php, unsubscribe completely with http://linuxfs.pbwiki.com/notification.php?verify=197c0&unsub=sandeen-linuxfs%40sandeen.net
+So I guess that means it's only the ilock nesting that is of issue here,
+so that means right now a max lock depth of 40 would probably be ok....
 
-New! -- Get better control over your notifications and wiki experience.
-Sign up for a PBwiki identity. It's easy and free! Start at http://linuxfs.pbwiki.com/notification.php
+Cheers,
 
-
---b1_bd950d98e44c59e25fcaa2d7de9ac1b6
-Content-Type: text/html; charset = "utf-8"
-Content-Transfer-Encoding: 8bit
-
-<table><tr><td>
-<h3>Linuxfs.pbwiki.com/EasyFsProjects was just edited</h3>
-J. Bruce Fields (<a href=mailto:bfields@fieldses.org>bfields@fieldses.org</a>) changed <a href="http://Linuxfs.pbwiki.com/">EasyFsProjects</a>, which you're watching.<br></td><td></td>
-</tr></table>
-<br>
-The changed portions of the page follow, with <span style="color:#900;background-color:#fcc;text-decoration:line-through;">red</span> indicating removed text and <span style="color:#090;background-color:#cfc;font-weight:bold;">green</span> indicating added text.
-<div style="margin:8px;background-color:#eee;color:#999;padding:8px">
-Looking for a simple file systems project to work on?  Try one of the following.  The contact is the IRC nick of someone on #linuxfs you can talk to to find out more about the project.  If you can also be a contact for a project, please add yourself as one.<br><span style="color:#900;background-color:#fcc;text-decoration:line-through;">Lazy atime - Keep atime in memory, only update it on-disk when the inode will be written out for some other reason (basically, don't dirty the inode on an atime update).  This is as opposed to plain old noatime - see touch_atime() in fs/inode.c.  Contact: valh   Update I wrote both a lazy atime and a relative atime, see: http://infohost.nmt.edu/~val/patches.html#relatime</span><br>Stat with flags - Implement flags to the stat() system call that allow you to say which fields of the stat structure you care about, and which the system can ignore.  This can speed up stat() in many common cases.  This was proposed to be a feature of the fstatat() system call, passing flags AT_GET_{SIZE,INO,UID,GID,...} to request only the specified fields, and ignoring others if any of those flags are given.  Contact: valh, zab   Update This project has been worked on by multiple people. Need to demonstrate benefit for this feature, other than on Lustre.<br>SEEK_HOLE, SEEK_DATA - New parameters to seek() asking for the next part of the file with data in it.  As it currently stands, even if a file is sparse on disk, the file system still has to shovel zeroes out through the read() system call.  Some applications, such as archivers or backup programs, can make good use of an interface that says, e.g., the next 8MB of the file are all zeroes, instead of having to read 8MB of zeroes.  See the following:   http://blogs.sun.com/roller/page/bonwick?entry=seek_hole_and_seek_data   http://www.google.com/search?hl=en&amp;lr=&amp;q=+site:lkml.org+seek_hole+seek_data   Contact: cw, valh   Update Eric Lorimer has written an initial implementation for ext3.<br>A generically useful library for finding and managing contiguous areas of disk space.  Getting the interface right is non-trivial, but there are a lot of concepts which are independent of on-disk file system layout which could be reused.  Good starting points are the ext3 reservation code and/or the XFS extent allocation code (the ext2 preallocation code is NOT a good place to start).  Short of that, finish and test the port of the ext3 reservation code to ext2, started here:   http://infohost.nmt.edu/~val/patches/resv_only_patch   Contact: valh<br>Some kind of hook into the disk EIO reporting which allows file systems to register a handler which does things like set the &quot;fsck me now&quot; bit.  Contact: valh<br><span style="color:#090;background-color:#cfc;font-weight:bold;">Lazy atime - Keep atime in memory, only update it on-disk when the inode will be written out for some other reason (basically, don't dirty the inode on an atime update).  This is as opposed to plain old noatime - see touch_atime() in fs/inode.c.  Contact: valh   Update I wrote both a lazy atime and a relative atime, see: http://infohost.nmt.edu/~val/patches.html#relatime</span><br>
-</div>
-View <a href="http://linuxfs.pbwiki.com/EasyFsProjects">EasyFsProjects</a><br>
-Change your <a href="http://linuxfs.pbwiki.com/notification.php">notification preferences</a>. You can also <a href="http://linuxfs.pbwiki.com/notification.php?verify=197c0&unsub=sandeen-linuxfs%40sandeen.net">turn off emails<a/> completely.<br><br>
-<br>
-<b>New!</b> -- Get better control over your notifications and wiki experience.<br>
-Sign up for a PBwiki identity. It's easy and free! Start at <a href="http://linuxfs.pbwiki.com/notification.php">my.pbwiki.com</a><br>(There was one <a href="http://linuxfs.pbwiki.com/changes.php">change</a> since your last notification 3 days, 11 hours ago)
-
-
-
---b1_bd950d98e44c59e25fcaa2d7de9ac1b6--
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
