@@ -1,55 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 21:31:58 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l7V4Vp4p014341
-	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 21:31:53 -0700
-Message-ID: <46D792A1.7030308@sgi.com>
-Date: Fri, 31 Aug 2007 14:01:37 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Aug 2007 21:43:05 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7V4h14p015575
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2007 21:43:03 -0700
+Message-ID: <46D79C62.1010304@sandeen.net>
+Date: Thu, 30 Aug 2007 23:43:14 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] log replay should not overwrite newer ondisk inodes
-References: <46D6279F.40601@sgi.com> <46D6480F.4040307@sgi.com> <46D64CAD.6050705@sgi.com> <46D67FE6.20205@sgi.com> <46D68510.1020404@sgi.com> <46D77B79.3040104@sgi.com>
-In-Reply-To: <46D77B79.3040104@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH] Increase lockdep MAX_LOCK_DEPTH
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: linux-kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+The xfs filesystem can exceed the current lockdep 
+MAX_LOCK_DEPTH, because when deleting an entire cluster of inodes,
+they all get locked in xfs_ifree_cluster().  The normal cluster
+size is 8192 bytes, and with the default (and minimum) inode size 
+of 256 bytes, that's up to 32 inodes that get locked.  Throw in a 
+few other locks along the way, and 40 seems enough to get me through
+all the tests in the xfsqa suite on 4k blocks.  (block sizes
+above 8K will still exceed this though, I think)
 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Lachlan McIlroy wrote:
-> Timothy Shimmin wrote:
->> Timothy Shimmin wrote:
->>>>>   But I'm not sure this is an error...
->>>>>   Hmmmm...I'm a bit confused.
->>>>>   So you are _almost_ combining an error check with a flushiter check?
->>>>>   If one buffer is an inode magic# and the other isn't then we
->>>>>   have an error right - and could report it - but we are not doing 
->>>>> that here.
->>>> Not exactly.  If what's on disk is not an inode but the log item is
->>>> then that could be because we haven't written the inode to disk yet
->>>> and we need to perform recovery.
->>> Yeah, I was thinking about that afterward.
->>> The item's format which gives the blk# for the buf to read could
->>> be a block which hasn't been used for an inode yet.
->>>
->> Well, if what's on disk is not an inode but some other data
->> and it happens to have the inode magic# which is remotely possible,
->> then we are making a bad assumption.
->> i.e. if we're not sure what the block/buffer should be, then testing the
->> MAGIC# isn't a guarantee it's an inode then.
->> Well not for the freeing of inode clusters case I would assume.
->> Or am I missing something?
-> I don't think you're missing anything!
-> 
-> You're right though - a magic number check is no guarantee.  On the same
-> vein, adding a generation number check isn't much better.
-
-unlink will have to invalidate the on-disk inode magic number? Or only
-when the whole cluster is free'd?
-
--- Mark
+Index: linux-2.6.23-rc3/include/linux/sched.h
+===================================================================
+--- linux-2.6.23-rc3.orig/include/linux/sched.h
++++ linux-2.6.23-rc3/include/linux/sched.h
+@@ -1125,7 +1125,7 @@ struct task_struct {
+ 	int softirq_context;
+ #endif
+ #ifdef CONFIG_LOCKDEP
+-# define MAX_LOCK_DEPTH 30UL
++# define MAX_LOCK_DEPTH 40UL
+ 	u64 curr_chain_key;
+ 	int lockdep_depth;
+ 	struct held_lock held_locks[MAX_LOCK_DEPTH];
