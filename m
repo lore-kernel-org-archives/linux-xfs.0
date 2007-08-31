@@ -1,36 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Aug 2007 07:37:12 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7VEb84p031075
-	for <xfs@oss.sgi.com>; Fri, 31 Aug 2007 07:37:10 -0700
-Subject: Re: [PATCH] Increase lockdep MAX_LOCK_DEPTH
-From: Peter Zijlstra <peterz@infradead.org>
-In-Reply-To: <46D826BA.1060705@sandeen.net>
-References: <46D79C62.1010304@sandeen.net> <1188542389.6112.44.camel@twins>
-	 <20070831135042.GD422459@sgi.com>  <46D826BA.1060705@sandeen.net>
-Content-Type: text/plain
-Date: Fri, 31 Aug 2007 16:36:52 +0200
-Message-Id: <1188571012.6112.67.camel@twins>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Aug 2007 07:59:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l7VExi4p001946
+	for <linux-xfs@oss.sgi.com>; Fri, 31 Aug 2007 07:59:47 -0700
+Message-ID: <46D8277E.3000402@sandeen.net>
+Date: Fri, 31 Aug 2007 09:36:46 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: XFS Fails Quality Assurance Tests on ARM
+References: <fb8s9c$t02$1@sea.gmane.org>
+In-Reply-To: <fb8s9c$t02$1@sea.gmane.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel Mailing List <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Ingo Molnar <mingo@elte.hu>
+To: Byron Bradley <byron.bbradley@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Fri, 2007-08-31 at 09:33 -0500, Eric Sandeen wrote:
+Byron Bradley wrote:
 
-> Peter, unless there is some other reason to do so, changing xfs
-> performance behavior simply to satisfy lockdep limitations* doesn't seem
-> like the best plan.
+> esandeen in #xfs pointed me towards this bug,
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=414932 , and suggested
+> that I compare the size and offset of stucts between x86 and ARM. After
+> modifying over 40 structs to give them the same offsets as x86 the problem
+> is still present. I have already tried the patch by Greg Ungerer from 2004
+> but again this didn't change anything. I also tried compiling the kernel
+> and userspace tools with an 8-bit structure size boundary but it made no
+> difference.
 > 
-> I suppose one slightly flakey option would be for xfs to see whether
-> lockdep is enabled and adjust cluster size based on MAX_LOCK_DEPTH... on
-> the argument that lockdep is likely used in debugging kernels where
-> sheer performance is less important... but, that sounds pretty flakey to me.
+> Further details of my attempts are at
+> http://www.linkstationwiki.net/index.php/Buffalo_ARM9_Kernel_Port#XFS_Arm_Issues
+> . I will keep this up to date until we find a solution.
 
-Agreed, that sucks too :-/
+Can you put information up there about the structure alignment problems
+you found, and the patch you tried?
 
-I was hoping there would be a 'nice' solution, a well, again, reality
-ruins it.
+-Eric
+
+> Anybody got any ideas of how we fix this?
+> 
+> Thanks,
+> 
