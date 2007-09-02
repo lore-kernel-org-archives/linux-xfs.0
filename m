@@ -1,77 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Sep 2007 07:44:48 -0700 (PDT)
-Received: from amanpulo.fs3.ph (amanpulo.fs3.ph [72.51.42.241])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l82Eih4p012910
-	for <xfs@oss.sgi.com>; Sun, 2 Sep 2007 07:44:45 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by amanpulo.fs3.ph (Postfix) with ESMTP id 8E7E61E0D5953
-	for <xfs@oss.sgi.com>; Sun,  2 Sep 2007 21:46:50 +0800 (PHT)
-Received: from amanpulo.fs3.ph ([127.0.0.1])
-	by localhost (amanpulo.fs3.ph [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id dCbeMq+GSUE3 for <xfs@oss.sgi.com>;
-	Sun,  2 Sep 2007 21:46:41 +0800 (PHT)
-Received: from auctoritas.local (unknown [222.127.47.132])
-	(using SSLv3 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by amanpulo.fs3.ph (Postfix) with ESMTP id D832D1E0E08B5
-	for <xfs@oss.sgi.com>; Sun,  2 Sep 2007 21:46:40 +0800 (PHT)
-Subject: Re: ZFS, XFS, and EXT4 compared
-From: Federico Sevilla III <jijo@fs3.ph>
-In-Reply-To: <1188513751.24970.109.camel@edge.yarra.acx>
-References: <1188454611.23311.13.camel@toonses.gghcwest.com>
-	 <1188457666.24970.94.camel@edge.yarra.acx>
-	 <20070830132002.GA4086@infradead.org>
-	 <1188513751.24970.109.camel@edge.yarra.acx>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WuH1W4y6xpJyStAd+cd0"
-Date: Sat, 01 Sep 2007 23:07:23 +0800
-Message-Id: <1188659243.4430.8.camel@auctoritas.fs3.ph>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Sep 2007 13:17:32 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l82KHS4p029282
+	for <xfs@oss.sgi.com>; Sun, 2 Sep 2007 13:17:29 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l82KHRA5029867
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 2 Sep 2007 22:17:27 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l82KHRqV029864
+	for xfs@oss.sgi.com; Sun, 2 Sep 2007 22:17:27 +0200
+Date: Sun, 2 Sep 2007 22:17:27 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] kill probe_* sysctl leftovers
+Message-ID: <20070902201727.GA29823@lst.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
---=-WuH1W4y6xpJyStAd+cd0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+After my recent changes the probe_* sysctls are unused because we do
+a proper request_module now if we actually know that we need the quota
+or dmapi module.  Kill the leftovers that have no function anymore.
 
-On Fri, 2007-08-31 at 08:42 +1000, Nathan Scott wrote:
-> Possibly.  Far more importantly for XFS, there really needs to be some
-> way for RAID drivers to say "even though I support write barriers, its
-> not a good idea for filesystems to enable write barriers by default on
-> me".  Enabling write barriers everywhere, by default, seems to have a
-> far worse impact than any mkfs/mount option tweaking.
 
-On all my systems with software RAID or dm-crypt (or both), mounting XFS
-gives me a message about barriers being disabled because the underlying
-device doesn't support it. For good measure I disable write caching on
-all my systems with either software RAID or dm-crypt (or both).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Am I reading the thread correctly that even with this message showing
-up, I still need to mount with nobarrier explicitly to improve
-performance?
-
-I also think it would be nice to add something like a modern-day tuning
-FAQ for XFS. I know there's a bit on the FAQ already but perhaps it
-needs an update?
-
-Thanks.
-
---=20
-Federico Sevilla III
-F S 3 Consulting Inc.
-http://www.fs3.ph
-
---=-WuH1W4y6xpJyStAd+cd0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBG2YAr5rCBSJO3Rr4RAkH6AJ9sUGdQkS8qnaoY/Cb6i51vRtVTvgCZATVY
-l9LKoNVPbMi16yxXZ7Nx8uI=
-=Ymg2
------END PGP SIGNATURE-----
-
---=-WuH1W4y6xpJyStAd+cd0--
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_globals.c	2007-09-02 21:48:26.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c	2007-09-02 22:02:29.000000000 +0200
+@@ -32,9 +32,6 @@ xfs_param_t xfs_params = {
+ 	.panic_mask	= {	0,		0,		255	},
+ 	.error_level	= {	0,		3,		11	},
+ 	.syncd_timer	= {	1*100,		30*100,		7200*100},
+-	.probe_dmapi	= {	0,		0,		1	},
+-	.probe_ioops	= {	0,		0,		1	},
+-	.probe_quota	= {	0,		1,		1	},
+ 	.stats_clear	= {	0,		0,		1	},
+ 	.inherit_sync	= {	0,		1,		1	},
+ 	.inherit_nodump	= {	0,		1,		1	},
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2007-09-02 21:48:26.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2007-09-02 22:02:29.000000000 +0200
+@@ -119,9 +119,6 @@
+ #define xfs_panic_mask		xfs_params.panic_mask.val
+ #define xfs_error_level		xfs_params.error_level.val
+ #define xfs_syncd_centisecs	xfs_params.syncd_timer.val
+-#define xfs_probe_dmapi		xfs_params.probe_dmapi.val
+-#define xfs_probe_ioops		xfs_params.probe_ioops.val
+-#define xfs_probe_quota		xfs_params.probe_quota.val
+ #define xfs_stats_clear		xfs_params.stats_clear.val
+ #define xfs_inherit_sync	xfs_params.inherit_sync.val
+ #define xfs_inherit_nodump	xfs_params.inherit_nodump.val
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.c	2007-09-02 21:48:26.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c	2007-09-02 22:02:29.000000000 +0200
+@@ -123,39 +123,6 @@ static ctl_table xfs_table[] = {
+ 		.extra2		= &xfs_params.syncd_timer.max
+ 	},
+ 	{
+-		.ctl_name	= XFS_PROBE_DMAPI,
+-		.procname	= "probe_dmapi",
+-		.data		= &xfs_params.probe_dmapi.val,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler	= &proc_dointvec_minmax,
+-		.strategy	= &sysctl_intvec,
+-		.extra1		= &xfs_params.probe_dmapi.min,
+-		.extra2		= &xfs_params.probe_dmapi.max
+-	},
+-	{
+-		.ctl_name	= XFS_PROBE_IOOPS,
+-		.procname	= "probe_ioops",
+-		.data		= &xfs_params.probe_ioops.val,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler	= &proc_dointvec_minmax,
+-		.strategy	= &sysctl_intvec,
+-		.extra1		= &xfs_params.probe_ioops.min,
+-		.extra2		= &xfs_params.probe_ioops.max
+-	},
+-	{
+-		.ctl_name	= XFS_PROBE_QUOTA,
+-		.procname	= "probe_quota",
+-		.data		= &xfs_params.probe_quota.val,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler	= &proc_dointvec_minmax,
+-		.strategy	= &sysctl_intvec,
+-		.extra1		= &xfs_params.probe_quota.min,
+-		.extra2		= &xfs_params.probe_quota.max
+-	},
+-	{
+ 		.ctl_name	= XFS_INHERIT_SYNC,
+ 		.procname	= "inherit_sync",
+ 		.data		= &xfs_params.inherit_sync.val,
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.h	2007-09-02 21:48:26.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h	2007-09-02 22:02:29.000000000 +0200
+@@ -39,9 +39,6 @@ typedef struct xfs_param {
+ 	xfs_sysctl_val_t error_level;	/* Degree of reporting for problems  */
+ 	xfs_sysctl_val_t syncd_timer;	/* Interval between xfssyncd wakeups */
+ 	xfs_sysctl_val_t stats_clear;	/* Reset all XFS statistics to zero. */
+-	xfs_sysctl_val_t probe_dmapi;	/* probe for DMAPI module on mount. */
+-	xfs_sysctl_val_t probe_ioops;	/* probe for an IO module on mount. */
+-	xfs_sysctl_val_t probe_quota;	/* probe for quota module on mount. */
+ 	xfs_sysctl_val_t inherit_sync;	/* Inherit the "sync" inode flag. */
+ 	xfs_sysctl_val_t inherit_nodump;/* Inherit the "nodump" inode flag. */
+ 	xfs_sysctl_val_t inherit_noatim;/* Inherit the "noatime" inode flag. */
+@@ -77,9 +74,9 @@ enum {
+ 	XFS_PANIC_MASK = 6,
+ 	XFS_ERRLEVEL = 7,
+ 	XFS_SYNCD_TIMER = 8,
+-	XFS_PROBE_DMAPI = 9,
+-	XFS_PROBE_IOOPS = 10,
+-	XFS_PROBE_QUOTA = 11,
++	/* XFS_PROBE_DMAPI = 9, */
++	/* XFS_PROBE_IOOPS = 10, */
++	/* XFS_PROBE_QUOTA = 11, */
+ 	XFS_STATS_CLEAR = 12,
+ 	XFS_INHERIT_SYNC = 13,
+ 	XFS_INHERIT_NODUMP = 14,
