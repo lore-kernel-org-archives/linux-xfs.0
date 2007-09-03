@@ -1,39 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Sep 2007 15:59:20 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l82MxG4p019923
-	for <xfs@oss.sgi.com>; Sun, 2 Sep 2007 15:59:18 -0700
-Subject: Re: ZFS, XFS, and EXT4 compared
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <1188659243.4430.8.camel@auctoritas.fs3.ph>
-References: <1188454611.23311.13.camel@toonses.gghcwest.com>
-	 <1188457666.24970.94.camel@edge.yarra.acx>
-	 <20070830132002.GA4086@infradead.org>
-	 <1188513751.24970.109.camel@edge.yarra.acx>
-	 <1188659243.4430.8.camel@auctoritas.fs3.ph>
-Content-Type: text/plain
-Date: Mon, 03 Sep 2007 09:00:33 +1000
-Message-Id: <1188774034.24970.123.camel@edge.yarra.acx>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Sep 2007 19:44:19 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l832iA4p030748
+	for <xfs@oss.sgi.com>; Sun, 2 Sep 2007 19:44:15 -0700
+Message-ID: <46DB7586.7040309@sgi.com>
+Date: Mon, 03 Sep 2007 12:46:30 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+MIME-Version: 1.0
+Subject: Re: lockdep annotations?
+References: <alpine.DEB.0.999.0709012300030.6640@sheep.housecafe.de>
+In-Reply-To: <alpine.DEB.0.999.0709012300030.6640@sheep.housecafe.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Federico Sevilla III <jijo@fs3.ph>
+To: Christian Kujau <lists@nerdbynature.de>
 Cc: xfs@oss.sgi.com
 
-On Sat, 2007-09-01 at 23:07 +0800, Federico Sevilla III wrote:
-> 
-> 
-> Am I reading the thread correctly that even with this message showing
-> up, I still need to mount with nobarrier explicitly to improve
-> performance?
-> 
+This is a locking inversion between the iolock and iprune_mutex.  I
+hadn't seen this one before.  Was your system running low on memory
+at the time?
 
-No, thats not needed if XFS explicitly says its not using barriers.
+We can't drop the iolock in the write path so we'll have to avoid
+acquiring the iolock in xfs_ireclaim() which means we'll need another
+way to synchronise with xfs_sync_inodes().
 
-cheers.
+Thanks for pointing this one out.
 
---
-Nathan
+Lachlan
+
+Christian Kujau wrote:
+> Hi,
+> 
+> I try to follow -rc kernels and just upgraded to 2.6.23-rc5 and I still 
+> see: "INFO: possible circular locking dependency detected". Out of 
+> curiosity: (when) will these warnings be addressed? I mean, suits me for 
+> enabling CONFIG_LOCKDEP in the first place, but the only warnings I get 
+> is still xfs :)
+> 
+> FWIW, full log is here: 
+> http://nerdbynature.de/bits/2.6.23-rc5/messages_2.6.23-rc5
+> 
+> Thanks,
+> Christian.
