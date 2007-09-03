@@ -1,38 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Sep 2007 01:49:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Sep 2007 02:01:17 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l838nJ4p004199
-	for <xfs@oss.sgi.com>; Mon, 3 Sep 2007 01:49:22 -0700
-Date: Mon, 3 Sep 2007 18:49:16 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8391C4p007258
+	for <xfs@oss.sgi.com>; Mon, 3 Sep 2007 02:01:14 -0700
+Date: Mon, 3 Sep 2007 19:01:03 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] log replay should not overwrite newer ondisk inodes
-Message-ID: <20070903084916.GG995458@sgi.com>
-References: <46D6279F.40601@sgi.com> <46D6480F.4040307@sgi.com> <46D64CAD.6050705@sgi.com> <46D67FE6.20205@sgi.com> <46D68510.1020404@sgi.com> <46D77B79.3040104@sgi.com> <46D792A1.7030308@sgi.com> <20070831154822.GD734179@sgi.com> <46DB3E4B.3030106@sgi.com>
+Subject: Re: lockdep annotations?
+Message-ID: <20070903090103.GG734179@sgi.com>
+References: <alpine.DEB.0.999.0709012300030.6640@sheep.housecafe.de> <46DB7586.7040309@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46DB3E4B.3030106@sgi.com>
+In-Reply-To: <46DB7586.7040309@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Vlad Apostolov <vapo@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, Mark Goodwin <markgw@sgi.com>, Lachlan McIlroy <lachlan@sgi.com>, Timothy Shimmin <tes@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christian Kujau <lists@nerdbynature.de>, xfs@oss.sgi.com
 
-On Mon, Sep 03, 2007 at 08:50:51AM +1000, Vlad Apostolov wrote:
-> David Chinner wrote:
-> >An unlinked inode is only detectable by the mode parameter being zero.
-> >The rest of the inode will look valid.
-> What about the nlink count? Can't we detect unlinked inode by nlink == 0?
+On Mon, Sep 03, 2007 at 12:46:30PM +1000, Lachlan McIlroy wrote:
+> This is a locking inversion between the iolock and iprune_mutex.  I
+> hadn't seen this one before.  Was your system running low on memory
+> at the time?
+> 
+> We can't drop the iolock in the write path so we'll have to avoid
+> acquiring the iolock in xfs_ireclaim() which means we'll need another
+> way to synchronise with xfs_sync_inodes().
 
-A file that is open but unlinked must still remain valid on disk
-until the last reference goes away. This inode will have a link
-count of zero, but it is still a valid, referenced inode. Hence
-detection of an inode with a link count of zero does not mean it
-has been fully removed yet - a zero link count and a non-zero
-mode indicates the inode should be onthe unlinked inode list.
+I don't think a deadlock exists here - we have to be going through
+memory reclaim to hit this inversion, so the only place that we
+can deadlock is if we are holding the iprune_mutex across a memory
+allocation. I don't think we do that....
 
-See xfs_ifree() - the mode is zeroed only after the inode has been
-pulled from the AGI unlinked list and marked free in the AGI btree.
+Not to mention that the inode we hold the iolock on won't be on the
+inode free list so we won't ever try to lock it during reclaim, either.
 
 Cheers,
 
