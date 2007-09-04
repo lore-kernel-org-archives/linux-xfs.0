@@ -1,43 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Sep 2007 12:28:22 -0700 (PDT)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l83JSI4p009335
-	for <linux-xfs@oss.sgi.com>; Mon, 3 Sep 2007 12:28:20 -0700
-Received: from [89.54.161.50] (helo=[192.168.178.25])
-	by mail.g-house.de with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.63)
-	(envelope-from <lists@nerdbynature.de>)
-	id 1ISH52-0003S2-DN
-	for linux-xfs@oss.sgi.com; Mon, 03 Sep 2007 20:55:25 +0200
-Date: Mon, 3 Sep 2007 20:55:19 +0200 (CEST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: raid50 and 9TB volumes
-In-Reply-To: <5d96567b0709030724w3098395bnbd511fa3819e5b22@mail.gmail.com>
-Message-ID: <alpine.DEB.0.999.0709032053290.7103@sheep.housecafe.de>
-References: <5d96567b0707160542t2144c382mbfe3da92f0990694@mail.gmail.com>
- <5d96567b0707160653m5951fac9v5a56bb4c92174d63@mail.gmail.com>
- <20070716221831.GE31489@sgi.com>  <18076.1449.138328.66699@notabene.brown>
-  <20070717001205.GI31489@sgi.com>  <18076.4940.845633.149160@notabene.brown>
-  <20070717005854.GL31489@sgi.com>  <5d96567b0707222309y61480271xa8220a0b179764e0@mail.gmail.com>
-  <20070724010105.GN31489@sgi.com>  <5d96567b0708070220u23c895ffk54849fca947b5100@mail.gmail.com>
- <5d96567b0709030724w3098395bnbd511fa3819e5b22@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Sep 2007 17:49:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l840nO4p024507
+	for <xfs@oss.sgi.com>; Mon, 3 Sep 2007 17:49:26 -0700
+Message-ID: <46DCAC20.9080002@sgi.com>
+Date: Tue, 04 Sep 2007 10:51:44 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=us-ascii
+Subject: Re: lockdep annotations?
+References: <alpine.DEB.0.999.0709012300030.6640@sheep.housecafe.de> <46DB7586.7040309@sgi.com> <20070903090103.GG734179@sgi.com>
+In-Reply-To: <20070903090103.GG734179@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Christian Kujau <lists@nerdbynature.de>, xfs@oss.sgi.com
 
-On Mon, 3 Sep 2007, Raz wrote:
-> What is the curret status of this problem ? If you recall , xfs in 32bit
-> over 10 TB md device ( raid50 in this case) sees only 8TB ( and no more).
-> The disks I am using are 750GB hitachi.
-> kernel is 2.6.17.
-
-dunno about this particular issue, but you meant "kernel 2.6.17.7 or 
-higher", right? If not: http://oss.sgi.com/projects/xfs/faq.html#dir2
-
--- 
-BOFH excuse #374:
-
-It's the InterNIC's fault.
+David Chinner wrote:
+> On Mon, Sep 03, 2007 at 12:46:30PM +1000, Lachlan McIlroy wrote:
+>> This is a locking inversion between the iolock and iprune_mutex.  I
+>> hadn't seen this one before.  Was your system running low on memory
+>> at the time?
+>>
+>> We can't drop the iolock in the write path so we'll have to avoid
+>> acquiring the iolock in xfs_ireclaim() which means we'll need another
+>> way to synchronise with xfs_sync_inodes().
+> 
+> I don't think a deadlock exists here - we have to be going through
+> memory reclaim to hit this inversion, so the only place that we
+> can deadlock is if we are holding the iprune_mutex across a memory
+> allocation. I don't think we do that....
+> 
+> Not to mention that the inode we hold the iolock on won't be on the
+> inode free list so we won't ever try to lock it during reclaim, either.
+> 
+Yep.  This is just another case where we've confused lockdep.
