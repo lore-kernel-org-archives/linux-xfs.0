@@ -1,57 +1,162 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Sep 2007 01:14:33 -0700 (PDT)
-Received: from bay0-omc1-s17.bay0.hotmail.com (bay0-omc1-s17.bay0.hotmail.com [65.54.246.89])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l858EQ4p015973
-	for <xfs@oss.sgi.com>; Wed, 5 Sep 2007 01:14:29 -0700
-Message-ID: <BAY103-DAV12D93B7C4F6214C867EE70B2CB0@phx.gbl>
-From: "Marco Berizzi" <pupilla@hotmail.com>
-References: <BAY103-DAV11CCE8C757E221217A0176B2EA0@phx.gbl> <Pine.LNX.4.64.0708030937280.17307@schroedinger.engr.sgi.com> <BAY103-DAV602D6B6D39BC875BBCB69B2CA0@phx.gbl> <Pine.LNX.4.64.0709040952570.5768@schroedinger.engr.sgi.com>
-Subject: Re: kernel BUG at mm/slab.c:2980 (was Re: [<c019c63f>] xfs_bmap_search_multi_extents+0x6f/0xe0)
-Date: Wed, 5 Sep 2007 10:12:56 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Sep 2007 02:15:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l859FU4p024958
+	for <xfs@oss.sgi.com>; Wed, 5 Sep 2007 02:15:32 -0700
+Message-ID: <46DE73AA.1090706@sgi.com>
+Date: Wed, 05 Sep 2007 19:15:22 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: some XFS fixes for 2.6.23
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Lameter <clameter@sgi.com>
-Cc: linux-kernel@vger.kernel.org, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, mel@skynet.ie, Marco Berizzi <pupilla@hotmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, xfs-oss <xfs@oss.sgi.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-"Christoph Lameter" wrote:
+Hi Linus,
+
+We have a few XFS fixes for 2.6.23 (meant to do this earlier).
+They have been in sgi dev tree and mm tree for a while.
+
+Please pull from the for-linus branch:
+     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
 
-> On Tue, 4 Sep 2007, Marco Berizzi wrote:
->
-> > After a week uptime I got this error. I hope it
-> > will be useful for you.
->
-> Yes indeed but this is a different type of failure. Looks like a
-higher
-> allocation failure in the networking code. Someone created objects
-that
-> required an order 2 allocations that failed.
->
-> > SLUB: Genslabs=22, HWalign=32, Order=0-1, MinObjects=4, CPUs=1,
-Nodes=1
->
-> Slub is restricted to order 0 and 1 allocs.
->
-> >   PREFETCH window: e5c00000-e7cfffff
-> > NET: Registered protocol family 2
-> > IP route cache hash table entries: 2048 (order: 1, 8192 bytes)
-> > TCP established hash table entries: 8192 (order: 4, 65536 bytes)
-> > TCP bind hash table entries: 8192 (order: 3, 32768 bytes)
->
-> Hmmmm.
->
-> > eth2:  setting full-duplex.
-> > swapper: page allocation failure. order:2, mode:0x4020
-> >  [<c013b21d>] __alloc_pages+0x1ed/0x2e0
-> >  [<c014ee3b>] allocate_slab+0x4b/0x90
-> >  [<c014eef2>] new_slab+0x32/0x150
-> >  [<c014f47b>] __slab_alloc+0xcb/0x120
-> >  [<c014f429>] __slab_alloc+0x79/0x120
-> >  [<c02b0183>] tcp_collapse+0x113/0x3b0
->
-> tcp_collapse? This is due to a network configuration that required an
-> order 2 kmalloc block. Jumbo frames?
+With shortlog:
+-------------------------
+Christoph Hellwig (4):
+       [XFS] Fix sparse NULL vs 0 warnings
+       [XFS] Fix sparse warning in kmem_shake_allow
+       [XFS] fix ASSERT and ASSERT_ALWAYS
+       [XFS] fix sparse shadowed variable warnings
 
-I don't use jumbo frames. Hardware is
-very old (celeron with 3com 3c905).
+David Chinner (1):
+       [XFS] Set filestreams object timeout to something sane.
+
+Eric Sandeen (1):
+       [XFS] fix nasty quota hashtable allocation bug
+-------------------------
+
+This will update the following files:
+
+  fs/xfs/linux-2.6/kmem.h        |    2 +-
+  fs/xfs/linux-2.6/xfs_aops.c    |    8 ++++----
+  fs/xfs/linux-2.6/xfs_globals.c |    2 +-
+  fs/xfs/quota/xfs_qm.c          |    3 ++-
+  fs/xfs/support/debug.h         |   10 ++++++----
+  fs/xfs/xfs_da_btree.c          |    1 -
+  fs/xfs/xfs_log.c               |   12 ++++++------
+  fs/xfs/xfs_log_recover.c       |   12 ++++++------
+  8 files changed, 26 insertions(+), 24 deletions(-)
+
+through these commits:
+
+commit 5995cb7d805496362e5af73235145667096fbc6f
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Thu Aug 16 16:49:11 2007 +1000
+
+     [XFS] fix nasty quota hashtable allocation bug
+
+     This git mod: 77e4635ae191774526ed695482a151ac986f3806
+     converted to a "greedy" allocation interface, but for the quota hashtables
+     it switched from allocating XFS_QM_HASHSIZE (nr of elements)
+     xfs_dqhash_t's to allocating only XFS_QM_HASHSIZE *bytes* - quite a lot
+     smaller! Then when we converted hsize "back" to nr of elements (the
+     division line) hsize went to 0. This was leading to oopses when running
+     any quota tests on the Fedora 8 test kernel, but the problem has been
+     there for almost a year.
+
+     SGI-PV: 968837
+     SGI-Modid: xfs-linux-melb:xfs-kern:29354a
+
+     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 265c1fac38e37e828df09965406e9cc20bfa3588
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Aug 16 15:38:19 2007 +1000
+
+     [XFS] fix sparse shadowed variable warnings
+
+     - in xfs_probe_cluster rename the inner len to pg_len. There's no harm
+       here because the outer len isn't used after the inner len comes into
+       existence but it keeps the code clean.
+     - in xfs_da_do_buf remove the inner i because they don't overlap
+       and they are both the same type.
+
+     SGI-PV: 968555
+     SGI-Modid: xfs-linux-melb:xfs-kern:29311a
+
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit ee5c80239d5f152d99f69165afbd115518353563
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Aug 16 15:38:08 2007 +1000
+
+     [XFS] fix ASSERT and ASSERT_ALWAYS
+
+     - remove the != 0 inside the unlikely in ASSERT_ALWAYS because sparse now
+       complains about comparisons between pointers and 0
+     - add a standalone ASSERT implementation because defining it to
+       ASSERT_ALWAYS means the string is expanded before the token passing
+       stringification. This way we get the actual content of the
+       assertion in the assfail message and don't overflow sparse's
+       stringification buffer leading to sparse error messages.
+
+     SGI-PV: 968555
+     SGI-Modid: xfs-linux-melb:xfs-kern:29310a
+
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 34521c5e4971d01f6ef650fdee59e07be6c2c5e3
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Aug 16 15:37:57 2007 +1000
+
+     [XFS] Fix sparse warning in kmem_shake_allow
+
+     We can't return a masked result of a __bitwise type. Compare it to 0 first
+     to keep the behaviour without the warning.
+
+     SGI-PV: 968555
+     SGI-Modid: xfs-linux-melb:xfs-kern:29309a
+
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 4b80916b29170744632356dd2e801f7c374676eb
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Aug 16 15:37:36 2007 +1000
+
+     [XFS] Fix sparse NULL vs 0 warnings
+
+     Sparse now warns about comparing pointers to 0, so change all instance
+     where that happens to NULL instead.
+
+     SGI-PV: 968555
+     SGI-Modid: xfs-linux-melb:xfs-kern:29308a
+
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
+
+commit 8da22d7a3690818f6d340baa0ea585e71f0c506f
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Aug 16 15:20:56 2007 +1000
+
+     [XFS] Set filestreams object timeout to something sane.
+
+     SGI-PV: 968554
+     SGI-Modid: xfs-linux-melb:xfs-kern:29303a
+
+     Signed-off-by: David Chinner <dgc@sgi.com>
+     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+     Signed-off-by: Tim Shimmin <tes@sgi.com>
