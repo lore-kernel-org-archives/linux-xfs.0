@@ -1,41 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 06 Sep 2007 09:10:16 -0700 (PDT)
-Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l86GA94p026102
-	for <xfs@oss.sgi.com>; Thu, 6 Sep 2007 09:10:12 -0700
-Date: Thu, 6 Sep 2007 12:10:06 -0400
-From: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
-Subject: Re: [xfs-masters] [Bug 768]  New: Move restrict_chown to
-	mount-time option
-Message-ID: <20070906161006.GA25035@filer.fsl.cs.sunysb.edu>
-References: <200709051831.l85IVsTR016106@oss.sgi.com> <20070906153529.GA3062@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 06 Sep 2007 11:03:43 -0700 (PDT)
+Received: from el-out-1112.google.com (el-out-1112.google.com [209.85.162.180])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l86I3d4p010763
+	for <xfs@oss.sgi.com>; Thu, 6 Sep 2007 11:03:41 -0700
+Received: by el-out-1112.google.com with SMTP id y26so53772ele
+        for <xfs@oss.sgi.com>; Thu, 06 Sep 2007 11:03:39 -0700 (PDT)
+Message-ID: <170b1bd40709061005t787494b6lca283320cace6c31@mail.gmail.com>
+Date: Thu, 6 Sep 2007 18:05:29 +0100
+From: "Mark Goodall" <mark.goodall@gmail.com>
+Subject: Bug Report
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20070906153529.GA3062@lst.de>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: nick.couchman@seakr.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Sep 06, 2007 at 05:35:29PM +0200, Christoph Hellwig wrote:
-> On Wed, Sep 05, 2007 at 11:31:54AM -0700, bugzilla-daemon@oss.sgi.com wrote:
-> > We've run into a situation where it would be extremely advantageous to be able
-> > to restrict_chown on certain volumes on a server but not on others.  I'm not
-> > real familiar with kernel internals, programming, etc., but I'd like to suggest
-> > that restrict_chown be made a mount option for an XFS filesystem instead of a
-> > system-wide, sysctl/proc option.  This would allow finer control over which
-> > filesystems restrict giving away files and which don't.
-> 
-> It's quite easily doable.  I don't have time for that right now, but if
-> anyone wants to do it's just adding the option to the mount option
-> parser and adding a flag to the mount structure.
- 
-Wouldn't making this a generic mount-option make sense? Or is it far too
-low-level of a concept?
+Not sure what caused this bug, how much more information do you need?
 
-Josef 'Jeff' Sipek.
+        - 18:01:15: check for inodes claiming duplicate blocks - 198528 of
+198528 inodes done
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem starting at / ...
+corrupt dinode 25809974, extent total = 16, nblocks = 0.  This is a bug.
+Please report it to xfs@oss.sgi.com.
+cache_node_purge: refcount was 1, not zero (node=0x8d65fd0)
+couldn't map inode 25809974, err = 117
+entry "gobo_3.3-6_i386.deb" in shortform directory inode 1770978822 points
+to free inode 1770978825
+would junk entry "gobo_3.3-6_i386.deb"
+        - 18:01:48: traversing filesystem - 32 of 32 allocation groups done
+        - traversal finished ...
+        - traversing all unattached subtrees ...
+Segmentation fault (core dumped)
 
--- 
-I already backed up the [server] once, I can do it again.
+OS: Ubuntu Linux mserve 2.6.20-16-386 #2 Fri Aug 31 00:51:58 UTC 2007 i686
+GNU/Linux
+fully patched from official repositories
+
+
+[[HTML alternate version deleted]]
