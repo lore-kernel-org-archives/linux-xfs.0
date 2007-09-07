@@ -1,68 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Sep 2007 02:09:31 -0700 (PDT)
-Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.228])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8799P4p022823
-	for <xfs@oss.sgi.com>; Fri, 7 Sep 2007 02:09:28 -0700
-Received: by wx-out-0506.google.com with SMTP id s9so395472wxc
-        for <xfs@oss.sgi.com>; Fri, 07 Sep 2007 02:09:27 -0700 (PDT)
-Message-ID: <9ee2fe770709070209k5bf34fdahbc103de95b1b3aa9@mail.gmail.com>
-Date: Fri, 7 Sep 2007 14:54:26 +0545
-From: "kanishk rastogi" <kanishk.85@gmail.com>
-Subject: Re: Not able to register.
-In-Reply-To: <Pine.LNX.4.64.0709070447260.4010@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Sep 2007 05:15:20 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l87CFF4p023224
+	for <xfs@oss.sgi.com>; Fri, 7 Sep 2007 05:15:16 -0700
+Date: Fri, 7 Sep 2007 22:15:05 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Need of inode->i_mutex in xfs_write()
+Message-ID: <20070907121505.GX734179@sgi.com>
+References: <9ee2fe770708210826n5952e727od0df16a5a7b267f0@mail.gmail.com> <20070823225111.GW72985246@sgi.com> <9ee2fe770709062243u67956d26o7222435956213f0@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <9ee2fe770709062329i47e6b813s3f051d726d0ae755@mail.gmail.com>
-	 <Pine.LNX.4.64.0709070439170.4010@p34.internal.lan>
-	 <9ee2fe770709070146p17b669b8v7bab29bc5d25acdc@mail.gmail.com>
-	 <Pine.LNX.4.64.0709070447260.4010@p34.internal.lan>
+In-Reply-To: <9ee2fe770709062243u67956d26o7222435956213f0@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: kanishk rastogi <kanishk.85@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On 9/7/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->
-> On Fri, 7 Sep 2007, kanishk rastogi wrote:
->
-> > On 9/7/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >>
-> >>
-> >> On Fri, 7 Sep 2007, kanishk rastogi wrote:
-> >>
-> >>> I am not able to register to xfs mailing list through ecartis.
-> >>> I am doing what is said on the webpage
-> >>>
-> >>> http://oss.sgi.com/projects/xfs/mail.html
-> >>>
-> >>> is there a problem with the xfs-mailing list ?
-> >>>
-> >>> regards
-> >>> kanishk
-> >>>
-> >>>
-> >>
-> >> Sometimes it takes 6-12 hours I have noticed in the past.  But I have not
-> >> checked recently.
-> >>
-> > I had tried to register some weeks back....
-> > But till now there is no response.
+On Fri, Sep 07, 2007 at 11:28:27AM +0545, kanishk rastogi wrote:
+> On 8/24/07, David Chinner <dgc@sgi.com> wrote:
+> > On Tue, Aug 21, 2007 at 09:11:56PM +0545, kanishk rastogi wrote:
+> > > I was looking at the xfs_write code path in kernel 2.6.20 .......
+> > > I saw it acquiring inode->i_mutex .
+> > > Whats the need ?
+> > > What are we safegaurding inode for.
 > >
-> > It seems ecartis detects some lousy chaps like me .... :)
+> > See Documentation/filesystems/Locking and other files in that
+> > directory for what i_mutex is supposed to protect.
 > >
-> > regards
-> > kanishk
+> > XFS is different as it has it's own inodes and inode locks, but
+> > it still mostly uses i_mutex inteh accepted way.
 > >
->
-> Try again (now) maybe there were some issues a few weeks back.
+> 
+> xfs_write comes in file_operations->aio_write()
+> and the documentation doesnt say anything for it to acquire i_mutex in
+> that path.
 
-Thankx will let u know the result
+The i_mutex is supposed to be held across various calls into
+generic code. See generic_file_aio_write() for the common
+implementation of ->aio_write(). The entire write path is
+supposed to be protected by the i_mutex.
 
+Cheers,
 
->
-> Justin.
->
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
