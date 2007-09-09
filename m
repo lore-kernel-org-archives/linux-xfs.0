@@ -1,53 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 08 Sep 2007 06:18:48 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l88DIg4p025772
-	for <xfs@oss.sgi.com>; Sat, 8 Sep 2007 06:18:45 -0700
-Date: Sat, 8 Sep 2007 15:18:40 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [xfs-masters] [Bug 768]  New: Move restrict_chown to mount-time option
-Message-ID: <20070908131840.GA18653@lst.de>
-References: <200709051831.l85IVsTR016106@oss.sgi.com> <20070906153529.GA3062@lst.de> <20070906161006.GA25035@filer.fsl.cs.sunysb.edu> <20070907190427.GA8062@lst.de> <20070907191531.GA22883@filer.fsl.cs.sunysb.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070907191531.GA22883@filer.fsl.cs.sunysb.edu>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 08 Sep 2007 18:06:40 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8916Y4p028348
+	for <xfs@oss.sgi.com>; Sat, 8 Sep 2007 18:06:37 -0700
+Message-ID: <46E3471D.7020408@sandeen.net>
+Date: Sat, 08 Sep 2007 20:06:37 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Not able to register
+References: <cc7060690709072303x74e54d3fk3260c93990707477@mail.gmail.com>
+In-Reply-To: <cc7060690709072303x74e54d3fk3260c93990707477@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
-Cc: Christoph Hellwig <hch@lst.de>, nick.couchman@seakr.com, xfs@oss.sgi.com
+To: Bhagi rathi <jahnu77@gmail.com>
+Cc: xfs@oss.sgi.com, trev@sgi.com, 'Russell Cattelan' <cattelan@thebarn.com>, ralf@linux-mips.org
 
-On Fri, Sep 07, 2007 at 03:15:31PM -0400, Josef Sipek wrote:
-> On Fri, Sep 07, 2007 at 09:04:27PM +0200, Christoph Hellwig wrote:
-> > On Thu, Sep 06, 2007 at 12:10:06PM -0400, Josef Sipek wrote:
-> > > > It's quite easily doable.  I don't have time for that right now, but if
-> > > > anyone wants to do it's just adding the option to the mount option
-> > > > parser and adding a flag to the mount structure.
-> > >  
-> > > Wouldn't making this a generic mount-option make sense? Or is it far too
-> > > low-level of a concept?
-> > 
-> > Basically it's a simple boolean flag that's checked in the inode
-> > allocator when we decide about the permission of the newly created
-> > inode.  Because of that the implementation will be inherently
-> > filesystem-specific.
+Bhagi rathi wrote:
+> I am not able to register to xfs mailing list through ecartis.
+> I am doing what is said on the webpage
 > 
-> Couldn't that be done just before the call to ->create as a mask on the
-> mode?
-
-Sorry, my post above was talking about the bsd group semantics for which
-we had a similar discussion before.  For restricted_chown the method
-handling it is ->setattr and given how it's defined to be filesystem
-specific I can't see how to do it generically.
-
-> > We could still add a binary mount flag for it in common code, but my
-> > stance is to only add these when we actually need to check the flag in
-> > general code.
+> http://oss.sgi.com/projects/xfs/mail.html
 > 
-> Or if the feature is so useful that all fs should support it. Is it useful?
-> If not, then I agree, not cluttering the VFS is a Good Thing.
+> is there a problem with the xfs-mailing list ?
+> Can someone look into this?
 
-It's not really a feature, more a workaround for legacy behaviour in
-other Unix variants.  It basically disallows chown in some cases where
-it's normally allowed.
+Trev, Russell, Ralf... this is about the 3rd complaint about ecartis,
+any of you know what might be up?
+
+-Eric
