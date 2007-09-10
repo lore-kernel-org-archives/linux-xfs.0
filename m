@@ -1,29 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 05:02:15 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AC274p007110
-	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 05:02:08 -0700
-Date: Mon, 10 Sep 2007 14:02:07 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill BMAPI_UNWRITTEN
-Message-ID: <20070910120206.GB3666@lst.de>
-References: <20070909154103.GB19986@lst.de> <cc7060690709091234r115e793p9cc491104862a5cd@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cc7060690709091234r115e793p9cc491104862a5cd@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 05:02:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AC2q4p007341
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 05:02:53 -0700
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l8ABolHU015454
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 07:50:47 -0400
+Received: from pobox.stuttgart.redhat.com (pobox.stuttgart.redhat.com [172.16.2.10])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l8ABok0k012917
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 07:50:46 -0400
+Received: from dhcp-lab-203.englab.brq.redhat.com (dhcp-lab-203.englab.brq.redhat.com [10.34.33.203])
+	by pobox.stuttgart.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id l8ABojZB026014
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 13:50:46 +0200
+Message-ID: <46E52F95.3070307@redhat.com>
+Date: Mon, 10 Sep 2007 13:50:45 +0200
+From: Zdenek Prikryl <zprikryl@redhat.com>
+MIME-Version: 1.0
+Subject: getfattr and symlinks
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Bhagi rathi <jahnu77@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Sep 10, 2007 at 01:04:55AM +0530, Bhagi rathi wrote:
-> The reason for eliminating BMAPI_UNWRITTEN is not clear. It is ideal to keep
-> all the block map
-> interfaces and information to go through xfs_iomap, xfs_bmapi functionality.
+Hello,
+I have one question, what is right behavior of getfattr in a recursive 
+mode? Should getfattr follow symlinks in this mode (without [PLh] 
+parameters)?
 
-Despit it's name xfs_iomap_write_unwritten is not a block map interface.
-Just take a look at the code, it does not use the block allocator data
-structures at all, and it does not do the central xfs_bmapi call
-(it uses xfs_bmapi later on but in very different ways).
+Example:
+
+$HOME/file.txt
+$HOME/symlink -> /
+...
+
+getfattr -Rd $HOME
+
+So what is the right result? Follow "$HOME/symlink" or not?
+
+Thank you
+
+Zdenek Prikryl
