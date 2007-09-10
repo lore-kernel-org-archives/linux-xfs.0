@@ -1,50 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 08:45:50 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AFjg4p012971
-	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 08:45:44 -0700
-Date: Mon, 10 Sep 2007 11:45:44 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 08:55:53 -0700 (PDT)
+Received: from amanpulo.fs3.ph (amanpulo.fs3.ph [72.51.42.241])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AFst4p014594
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 08:54:57 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by amanpulo.fs3.ph (Postfix) with ESMTP id CB8C91E0D5976
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Sep 2007 23:54:57 +0800 (PHT)
 Subject: Re: Attempt to Access Beyond End of Device
-In-Reply-To: <1189436396.4385.49.camel@auctoritas.fs3.ph>
-Message-ID: <Pine.LNX.4.64.0709101145260.897@p34.internal.lan>
+From: Federico Sevilla III <jijo@fs3.ph>
+In-Reply-To: <46E5670E.9000703@sandeen.net>
 References: <1189432747.4385.27.camel@auctoritas.fs3.ph>
- <Pine.LNX.4.64.0709101041390.897@p34.internal.lan> <1189436396.4385.49.camel@auctoritas.fs3.ph>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	 <46E5670E.9000703@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8wE5xQWAx1sfYkeJWp2V"
+Date: Mon, 10 Sep 2007 23:54:49 +0800
+Message-Id: <1189439689.18040.17.camel@auctoritas.fs3.ph>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Federico Sevilla III <jijo@fs3.ph>
-Cc: linux-xfs@oss.sgi.com, Alec Joseph Rivera <agi@fs3.ph>
+To: linux-xfs@oss.sgi.com
+Cc: Alec Joseph Rivera <agi@fs3.ph>
 
+--=-8wE5xQWAx1sfYkeJWp2V
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2007-09-10 at 10:47 -0500, Eric Sandeen wrote:
+> can you send along the results of:
+>=20
+> 	# xfs_db -r -c "sb 0" -c "print" /dev/sda8?
 
-On Mon, 10 Sep 2007, Federico Sevilla III wrote:
+Will do first thing tomorrow when I get back access to the machine, and
+will revert to the list.
 
-> On Mon, 2007-09-10 at 10:44 -0400, Justin Piszcz wrote:
->> I believe the logbsize should be in bytes, so 262144, it may also take
->> 256k though I have not tried it.
->
-> It accepts 256k. The initial mount succeeded, and the problem did not
-> surface until after some reboot (ie: not the first reboot, either, that
-> went fine).
->
->> That looks mighty strange, what kind of raid card?
->
-> This is the built-in Adaptec AACRAID of the IBM x3400, doing a pretty
-> simplistic RAID 1.
->
-> -- 
-> Federico Sevilla III
-> F S 3 Consulting Inc.
-> http://www.fs3.ph
->
+> and
+> 	# cat /proc/partitions
+>=20
+> ... and does the hardware raid have a funky sector size?
 
-Have you checked the following page?
+Please advise as to how best to usually find this out. For whatever it's
+worth, it doesn't allow us to pick a stripe width for RAID 1 (as we
+probably shouldn't be able to specify one, anyway). So whatever we're
+using is our only choice as far as the hardware RAID 1 goes. (We could
+probably use software RAID 1, though, if push comes to shove.)
 
-http://linuxmafia.com/faq/Hardware/sata.html
+Thank you very much for your time.
 
-Does the error occur if you use a different filesystem?
+--=20
+Federico Sevilla III
+F S 3 Consulting Inc.
+http://www.fs3.ph
 
-Justin.
+--=-8wE5xQWAx1sfYkeJWp2V
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBG5WjJ5rCBSJO3Rr4RAiFRAJ4+Dxw+Y7Eu0c+Sfgw/PVbSu3RiqgCeNgZk
+0CQhWIv9UX0UXwKmbvQyQY0=
+=O5Y1
+-----END PGP SIGNATURE-----
+
+--=-8wE5xQWAx1sfYkeJWp2V--
