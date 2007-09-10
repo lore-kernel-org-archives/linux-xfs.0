@@ -1,60 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 05:41:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8ACfX4p013644
-	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 05:41:33 -0700
-Message-ID: <46E53B7D.8070301@sandeen.net>
-Date: Mon, 10 Sep 2007 07:41:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 06:20:14 -0700 (PDT)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.179])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8ADK64p019600
+	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 06:20:07 -0700
+Received: by wa-out-1112.google.com with SMTP id k22so1702051waf
+        for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 06:20:08 -0700 (PDT)
+Message-ID: <cc7060690709100620q66a533f8gda58cd0cbb19208a@mail.gmail.com>
+Date: Mon, 10 Sep 2007 18:50:07 +0530
+From: "Bhagi rathi" <jahnu77@gmail.com>
+Subject: Re: [PATCH] kill BMAPI_DEVICE
+In-Reply-To: <20070910120103.GA3666@lst.de>
 MIME-Version: 1.0
-Subject: Re: Not able to register
-References: <cc7060690709072303x74e54d3fk3260c93990707477@mail.gmail.com>	 <46E3471D.7020408@sandeen.net> <46E35C28.4060301@sandeen.net>	 <20070909065143.GA6787@filer.fsl.cs.sunysb.edu>	 <46E409F1.4090001@agami.com> <68c491a60709090910t3bd37e7bxfec773f58a55224d@mail.gmail.com> <46E4A916.1010602@sandeen.net> <46E508E6.7010908@ventoso.org>
-In-Reply-To: <46E508E6.7010908@ventoso.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+References: <20070909153947.GA19986@lst.de>
+	 <cc7060690709091232w4185e788yf8a085e0e67e71e8@mail.gmail.com>
+	 <20070910120103.GA3666@lst.de>
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Luca Olivetti <luca@ventoso.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-Luca Olivetti wrote:
-> En/na Eric Sandeen ha escrit:
->> Martin Schröder wrote:
->>> 2007/9/9, Michael Nishimoto <miken@agami.com>:
->>>> In the past when I spoke with Russell, gmail subscribes
->>>> look like spam to the ecartis server.
->>> Then ecartis is broken. Since it seems very stale (last released
->>> version is from 2000, since then only snapshots), maybe you should
->>> switch to something more vital? Mailman comes to mind...
->>>
->>> Best
->>>    Martin
->>>
->>>
->> Ok, in Luca's case at least, it was spamassassin intercepting it...
->> thought his subscribe request looked like spam.  :(  Looks like
->> something to sort out, eh.
-> 
-> Well, using bogus black lists (aren't they all bogus?) leads to that 
-> (hint: my ip address isn't dynamic, though I strongly disagree to use 
-> that as a criterion to decide what I'm allowed to do or not with my 
-> connection).
+On 9/10/07, Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Mon, Sep 10, 2007 at 01:02:07AM +0530, Bhagi rathi wrote:
+> > XFS_IOCORE_RT |  XFS_DIFLAG_REALTIME can be set from an ioctl
+> (xfs_setattr).
+> > A directIO without holding ILOCK
+> > in shared in mode can read a wrong value of di_flag for real time
+> decision.
+> > As a result, we may pass in-correct device
+> > during directIO as the proposed xfs_find_bdev_for_inode doesn't hold any
+> > lock in reading the flags. It is not based
+> > on iocore flags as well.
+> >
+> > On a secondary note, XFS_IOCORE_RT was set without holding iolock which
+> > seems to an issue. I tend to leave
+> > xfs_bmapi to decide BMAPI_DEVICE to xfs_iomap.
+>
+> The previous locking doesn't help anything - if the value changes during
+> the direct I/O process we are in trouble anyway.  Fortunately we always
+> hold the iolock in shared mode over any direct I/O, so taking this lock
+> in ->setattr will fix this pre-existing issue.
 
-it wasn't a blacklist, it was about 4 other tests that tripped.
 
-> Though I find it funny that in a misguided attempt to block spam I 
-> cannot subscribe to the list, still I can post to it :-D
-> 
->> Hm, Luca and about 130 others, from grepping the logs.
-> 
-> qed
+Yes.  I believe the proposed change can succeed after the fix you mentioned.
 
-no argument.
+> What is the reason why this has to be seperated?
+>
+> Because it does not belong into xfs_iomap.  While there is at least some
+> common code between BMAPI_READ, BMAPI_WRITE and BMAPI_ALLOCATE calls so
+> sharing that makes some sense it does not at all for the other two which
+> this patch separates out in preparation of bigger changes in this area.
 
-I'm sure this is fixable... sorry about the problems.
 
--Eric
+What is the goal of the bigger changes planned?
 
-> Bye
-> 
+-Saradhi.
+
+
+[[HTML alternate version deleted]]
