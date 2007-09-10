@@ -1,29 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 08:07:54 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 08:09:42 -0700 (PDT)
 Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AF7h4p003296
-	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 08:07:48 -0700
-Date: Mon, 10 Sep 2007 16:07:45 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8AF9X4p003888
+	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 08:09:34 -0700
+Date: Mon, 10 Sep 2007 16:09:35 +0100
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ensure file size is logged on synchronous writes
-Message-ID: <20070910150745.GA16595@infradead.org>
-References: <46DB7A60.4050203@sgi.com>
+Subject: Re: [PATCH] cleanup fid types mess
+Message-ID: <20070910150935.GB16595@infradead.org>
+References: <20070829134612.GA504@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46DB7A60.4050203@sgi.com>
+In-Reply-To: <20070829134612.GA504@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 03, 2007 at 01:07:12PM +1000, Lachlan McIlroy wrote:
-> Synchronous writes currently log inode changes before syncing
-> pages to disk.  Since the file size is updated on I/O completion
-> we wont be writing out the updated file size and if we crash the
-> file will have the wrong size.  This change moves the logging
-> after the syncing of the pages to ensure we log the correct file
-> size.
+On Wed, Aug 29, 2007 at 03:46:12PM +0200, Christoph Hellwig wrote:
+> Currently XFs has three different fid types: struct fid, struct xfs_fid
+> and struct xfs_fid2 with hte latter two beeing identicaly and the first
+> one beeing the same size but an unstructured array with the same size.
+> 
+> This patch consolidates all this to alway uuse struct xfs_fid.
+> 
+> This patch is required for an upcoming patch series from me that revamps
+> the nfs exporting code and introduces a Linux-wide struct fid.
+> 
+> 
+> Note: the patch is ontop of Eric's inode/vnode tracing cleanup.
 
-Looks good to me.
+Any chance review of this one (and Eric's patch) could be sped up a little
+as I have things in the queue relying on this one?
