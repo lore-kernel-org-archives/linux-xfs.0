@@ -1,79 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 21:45:41 -0700 (PDT)
-Received: from redback.melbourne.sgi.com (redback.melbourne.sgi.com [134.14.55.78])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8B4jZ4p016838
-	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 21:45:37 -0700
-Date: Tue, 11 Sep 2007 14:48:19 +1000
-From: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
-Message-Id: <200709110448.l8B4mJ5o013478@redback.melbourne.sgi.com>
-Subject: TAKE 970336 - cleanup fid types mess
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Sep 2007 22:05:38 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8B55X4p018807
+	for <xfs@oss.sgi.com>; Mon, 10 Sep 2007 22:05:34 -0700
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 4570C187B8C1D
+	for <xfs@oss.sgi.com>; Tue, 11 Sep 2007 00:05:36 -0500 (CDT)
+Message-ID: <46E6221E.803@sandeen.net>
+Date: Tue, 11 Sep 2007 00:05:34 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH SERIES] untangle spinlock macros
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-cleanup fid types mess
+I have a series of patches at
+http://sandeen.net/xfs-patches/patches-spinlock-unobfuscate.tar.bz2
 
-Currently XFs has three different fid types: struct fid, struct xfs_fid
-and struct xfs_fid2 with hte latter two beeing identicaly and the first
-one beeing the same size but an unstructured array with the same size.
+to get rid of the macros upon macros hiding xfs' use of spinlocks, via
+for example AIL_LOCK->mutex_spinlock->spin_lock.  This also gets rid of
+the unused "cookie" variables declared via SPLDECL(s) and other
+open-coded unsigned long s; declarations.
 
-This patch consolidates all this to alway uuse struct xfs_fid.
+patches in the tarball, broken out by lock as requested a while
+ago by dgc:
 
-This patch is required for an upcoming patch series from me that revamps
-the nfs exporting code and introduces a Linux-wide struct fid.
+unwrap_AIL_LOCK
+unwrap_LOG_LOCK
+unwrap_GRANT_LOCK
+unwrap_XFS_DQ_PINUNLOCK
+unwrap_pagb_lock
+unwrap_xfs_dabuf_global_lock
+unwrap_mru_lock
+unwrap_XFS_SB_LOCK
+no_kt_lock
+cleanup_lock_goop
 
+Patches have comments/descriptions/signed-off lines in them.
 
-Note: the patch is ontop of Eric's inode/vnode tracing cleanup.
+By the end of the series, spin.h is almost empty, only spin_lock_init /
+spinlock_destroy are left, and could maybe even be pulled out.... wasn't
+sure how far to go.  Since the kernel has a mutex_destroy, I wonder if
+spinlocks will ever get similar treatment... anyway....
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I can post them to the list individually if preferred... though it's
+fairly mechanical and not terribly interesting...
 
-
-Date:  Tue Sep 11 14:45:10 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-fixes
-Inspected by:  Christoph Hellwig <hch@lst.de>
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29651a
-fs/xfs/xfs_vnodeops.c - 1.718 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.718&r2=text&tr2=1.717&f=h
-	- cleanup fid types mess
-
-fs/xfs/xfs_fs.h - 1.35 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fs.h.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
-	- cleanup fid types mess
-
-fs/xfs/xfs_vfsops.c - 1.538 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.538&r2=text&tr2=1.537&f=h
-	- cleanup fid types mess
-
-fs/xfs/linux-2.6/xfs_ioctl.c - 1.153 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.153&r2=text&tr2=1.152&f=h
-	- cleanup fid types mess
-
-fs/xfs/linux-2.6/xfs_export.c - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.c.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-	- cleanup fid types mess
-
-fs/xfs/linux-2.6/xfs_export.h - 1.4 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.h.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
-	- cleanup fid types mess
-
-fs/xfs/dmapi/xfs_dm_fsops.c - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm_fsops.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-	- cleanup fid types mess
-
-fs/xfs/dmapi/xfs_dm.c - 1.53 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.53&r2=text&tr2=1.52&f=h
-	- cleanup fid types mess
-
-fs/xfs/xfs_vnodeops.h - 1.2 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
-	- cleanup fid types mess
-
-fs/xfs/xfs_vfsops.h - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-	- cleanup fid types mess
+Thanks,
+-Eric
