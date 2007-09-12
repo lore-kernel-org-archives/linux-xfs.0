@@ -1,37 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 07:32:52 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8CEWi4p024402
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 07:32:47 -0700
-Message-ID: <46E7F88B.4020805@sandeen.net>
-Date: Wed, 12 Sep 2007 09:32:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 10:42:23 -0700 (PDT)
+Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8CHgG4p024914
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 10:42:19 -0700
+Date: Wed, 12 Sep 2007 13:42:16 -0400
+From: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
+Subject: Re: compression
+Message-ID: <20070912174216.GA5521@filer.fsl.cs.sunysb.edu>
+References: <654e62180709111643k4700c2bdibec2a16eb5446e76@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH SERIES] untangle spinlock macros
-References: <46E6221E.803@sandeen.net> <46E73BAD.4000906@sgi.com> <46E7424F.6030104@sandeen.net> <46E77E30.4000302@sgi.com>
-In-Reply-To: <46E77E30.4000302@sgi.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <654e62180709111643k4700c2bdibec2a16eb5446e76@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jordan Mendler <jmendler@ucla.edu>
+Cc: xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
-> Just these ones... not a problem.
+On Tue, Sep 11, 2007 at 04:43:20PM -0700, Jordan Mendler wrote:
+> Hi all,
 > 
-> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_cpu_notify’:
-> fs/xfs/xfs_mount.c:1920: warning: unused variable ‘s’
-> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_sync_counters_flags’:
-> fs/xfs/xfs_mount.c:2191: warning: unused variable ‘s’
-> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_balance_counter’:
-> fs/xfs/xfs_mount.c:2249: warning: unused variable ‘s’
-> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_modify_counters’:
-> fs/xfs/xfs_mount.c:2299: warning: unused variable ‘s’
+> I searched the mailing list archive and could not find an answer. We are
+> currently using XFS on Linux for a 17TB Volume used for backups. We are
+> running out of space, so rather than order another array, I would like to
+> try to implement filesystem-level compression. Does XFS support any type of
+> compression? If not, are there any other ways to optimize for more space
+> storage? We are doing extensive rsyncs as our method of backups, so gzipping
+> on top of the filesystem is not really an option.
+ 
+Implementation-wise, one major thing to keep in mind is that offsets into
+the uncompressed copies of files in memory need to be mapped to the
+compressed ones. This is rather painful if you want to do things right
+(supporting writing as well as reading from files).
 
-Ah, I didn't build with CONFIG_HOTPLUG_CPU, whoops!
+As Eric mentioned, you may want to try to eliminate copies of identical
+files with symlinks or even hardlinks (just make sure your backup sw is
+smart enough to break links when necessary).
 
-Ok, I'll let you tidy that up ;-) and add it to my default config I guess!
+Josef 'Jeff' Sipek.
 
--Eric
+-- 
+The reasonable man adapts himself to the world; the unreasonable one
+persists in trying to adapt the world to himself. Therefore all progress
+depends on the unreasonable man.
+		- George Bernard Shaw
