@@ -1,34 +1,27 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 01:57:01 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8C8uq4p003409
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 01:56:55 -0700
-Date: Wed, 12 Sep 2007 09:29:41 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH SERIES] untangle spinlock macros
-Message-ID: <20070912082940.GA25373@infradead.org>
-References: <46E6221E.803@sandeen.net> <46E7460D.3000502@sgi.com> <46E749DD.8010200@sandeen.net> <46E78185.5040201@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 05:56:22 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8CCtw4p006566
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 05:56:02 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8CCJdA5016929
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 14:19:39 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8CCJdRZ016927
+	for xfs@oss.sgi.com; Wed, 12 Sep 2007 14:19:39 +0200
+Date: Wed, 12 Sep 2007 14:19:39 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: state of the cvs tree
+Message-ID: <20070912121938.GA16870@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46E78185.5040201@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Sep 12, 2007 at 04:04:53PM +1000, Lachlan McIlroy wrote:
-> These changes look good Eric.
-> 
-> I'm in two minds about losing the spinlock_destroy() macros though.  If 
-> Linux
-> ever implements a spinlock teardown routine it would be nice to still have 
-> all
-> the placeholders still there.  Although I can't imagine it would do any more
-> than assert that the lock is not currently held.  If someone else wants to 
-> lose
-> the macros then I'm not going to argue.
-
-I'd say keep them for now.  We don't need the spin.h header for them anyway,
-as single macro can simply move to xfs_linux.h
+looks like the cvs tree is broken currently - fs/xfs/ is merged up to
+2.6.23-rc, but everything else is still at 2.6.22-rc state leading to
+various compile failures.
