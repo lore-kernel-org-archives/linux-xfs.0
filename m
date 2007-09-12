@@ -1,27 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 05:56:22 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8CCtw4p006566
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 05:56:02 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8CCJdA5016929
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 14:19:39 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8CCJdRZ016927
-	for xfs@oss.sgi.com; Wed, 12 Sep 2007 14:19:39 +0200
-Date: Wed, 12 Sep 2007 14:19:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: state of the cvs tree
-Message-ID: <20070912121938.GA16870@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 07:32:52 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8CEWi4p024402
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 07:32:47 -0700
+Message-ID: <46E7F88B.4020805@sandeen.net>
+Date: Wed, 12 Sep 2007 09:32:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH SERIES] untangle spinlock macros
+References: <46E6221E.803@sandeen.net> <46E73BAD.4000906@sgi.com> <46E7424F.6030104@sandeen.net> <46E77E30.4000302@sgi.com>
+In-Reply-To: <46E77E30.4000302@sgi.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-looks like the cvs tree is broken currently - fs/xfs/ is merged up to
-2.6.23-rc, but everything else is still at 2.6.22-rc state leading to
-various compile failures.
+Lachlan McIlroy wrote:
+> Just these ones... not a problem.
+> 
+> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_cpu_notify’:
+> fs/xfs/xfs_mount.c:1920: warning: unused variable ‘s’
+> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_sync_counters_flags’:
+> fs/xfs/xfs_mount.c:2191: warning: unused variable ‘s’
+> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_balance_counter’:
+> fs/xfs/xfs_mount.c:2249: warning: unused variable ‘s’
+> fs/xfs/xfs_mount.c: In function ‘xfs_icsb_modify_counters’:
+> fs/xfs/xfs_mount.c:2299: warning: unused variable ‘s’
+
+Ah, I didn't build with CONFIG_HOTPLUG_CPU, whoops!
+
+Ok, I'll let you tidy that up ;-) and add it to my default config I guess!
+
+-Eric
