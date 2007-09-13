@@ -1,49 +1,239 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 19:02:40 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8D22Y4p000964
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 19:02:36 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA27880; Thu, 13 Sep 2007 12:02:32 +1000
-Message-ID: <46E89A38.4000300@sgi.com>
-Date: Thu, 13 Sep 2007 12:02:32 +1000
-From: Donald Douwsma <donaldd@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 20:02:39 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8D32W4p012700
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 20:02:33 -0700
+Message-ID: <46E8A848.8010601@sandeen.net>
+Date: Wed, 12 Sep 2007 22:02:32 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: compile fails
-References: <64de4d610709121638s6a8a92c4qec2c4b70de9d955e@mail.gmail.com>
-In-Reply-To: <64de4d610709121638s6a8a92c4qec2c4b70de9d955e@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH SERIES] untangle spinlock macros
+References: <46E6221E.803@sandeen.net> <46E7460D.3000502@sgi.com> <46E749DD.8010200@sandeen.net> <46E78185.5040201@sgi.com> <20070912082940.GA25373@infradead.org>
+In-Reply-To: <20070912082940.GA25373@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Kevin Mullican <kevin@mullican.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lachlan McIlroy <lachlan@sgi.com>, Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Kevin Mullican wrote:
-> Greetings,
-> 
-> I am attempting to build the XFS kernel, but the compile is failing. I
-> downloaded the source from the CVS repository today, and I generated a
-> relatively generic .config. I am using gcc-3.2.3-52, libgcc-3.2.3-52,
-> and glibc-2.3.2-95.33. During the kernel compile, I am getting the
-> following errors:
-> 
-> make -C xfs
-> make[2]: Entering directory `/usr/src/linux-2.4-xfs/fs/xfs'
+Christoph Hellwig wrote:
+> On Wed, Sep 12, 2007 at 04:04:53PM +1000, Lachlan McIlroy wrote:
+>   
+>> These changes look good Eric.
+>>
+>> I'm in two minds about losing the spinlock_destroy() macros though.  If 
+>> Linux
+>> ever implements a spinlock teardown routine it would be nice to still have 
+>> all
+>> the placeholders still there.  Although I can't imagine it would do any more
+>> than assert that the lock is not currently held.  If someone else wants to 
+>> lose
+>> the macros then I'm not going to argue.
+>>     
+>
+> I'd say keep them for now.  We don't need the spin.h header for them anyway,
+> as single macro can simply move to xfs_linux.h
+>
+>
+>   
+Try this on for size.....
 
-Hi Kevin,
+======================
 
-The linux-2.4 build hasn't been actively maintained in a while.
-We have been talking about removing it from cvs because of this.
+remove spinlock init abstraction macro in spin.h, remove the callers, 
+and  remove the file.  Move no-op spinlock_destroy to xfs_linux.h
 
-> xfs_vfs.h:46: syntax error before "bhv_head_t"
- > xfs_vfs.h:46: warning: no semicolon at end of struct or union
- > xfs_vfs.h:55: syntax error before '}' token
- > xfs_vfs.h:55: warning: type defaults to `int' in declaration of `bhv_vfs_t'
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-These are due to changes made fairly recently.
-You may have more luck updating a tree from around the 2007/08/20.
-
-But even without the recent chagnes I'd be suprised if it was building.
-
-Don
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/spin.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/spin.h
++++ /dev/null
+@@ -1,27 +0,0 @@
+-/*
+- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_SPIN_H__
+-#define __XFS_SUPPORT_SPIN_H__
+-
+-#include <linux/sched.h>	/* preempt needs this */
+-#include <linux/spinlock.h>
+-
+-#define spinlock_init(lock, name)	spin_lock_init(lock)
+-#define	spinlock_destroy(lock)
+-
+-#endif /* __XFS_SUPPORT_SPIN_H__ */
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1568,7 +1568,7 @@ xfs_alloc_delwrite_queue(
+ 
+ 	INIT_LIST_HEAD(&btp->bt_list);
+ 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
+-	spinlock_init(&btp->bt_delwrite_lock, "delwri_lock");
++	spin_lock_init(&btp->bt_delwrite_lock);
+ 	btp->bt_flags = 0;
+ 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd");
+ 	if (IS_ERR(btp->bt_task)) {
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
+@@ -43,7 +43,6 @@
+ 
+ #include <kmem.h>
+ #include <mrlock.h>
+-#include <spin.h>
+ #include <sv.h>
+ #include <mutex.h>
+ #include <sema.h>
+@@ -75,6 +74,7 @@
+ #include <linux/notifier.h>
+ #include <linux/delay.h>
+ #include <linux/log2.h>
++#include <linux/spinlock.h>
+ 
+ #include <asm/page.h>
+ #include <asm/div64.h>
+@@ -145,6 +145,8 @@
+ #define current_restore_flags_nested(sp, f)	\
+ 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+ 
++#define spinlock_destroy(lock)
++
+ #define NBPP		PAGE_SIZE
+ #define NDPP		(1 << (PAGE_SHIFT - 9))
+ 
+Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm.c
++++ linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
+@@ -1131,7 +1131,7 @@ xfs_qm_init_quotainfo(
+ 		return error;
+ 	}
+ 
+-	spinlock_init(&qinf->qi_pinlock, "xfs_qinf_pin");
++	spin_lock_init(&qinf->qi_pinlock);
+ 	xfs_qm_list_init(&qinf->qi_dqlist, "mpdqlist", 0);
+ 	qinf->qi_dqreclaims = 0;
+ 
+Index: linux-2.6-xfs/fs/xfs/support/debug.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/support/debug.c
++++ linux-2.6-xfs/fs/xfs/support/debug.c
+@@ -17,7 +17,6 @@
+  */
+ #include <xfs.h>
+ #include "debug.h"
+-#include "spin.h"
+ 
+ static char		message[1024];	/* keep it off the stack */
+ static DEFINE_SPINLOCK(xfs_err_lock);
+Index: linux-2.6-xfs/fs/xfs/support/ktrace.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/support/ktrace.h
++++ linux-2.6-xfs/fs/xfs/support/ktrace.h
+@@ -18,8 +18,6 @@
+ #ifndef __XFS_SUPPORT_KTRACE_H__
+ #define __XFS_SUPPORT_KTRACE_H__
+ 
+-#include <spin.h>
+-
+ /*
+  * Trace buffer entry structure.
+  */
+Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c
++++ linux-2.6-xfs/fs/xfs/xfs_alloc.c
+@@ -2206,7 +2206,7 @@ xfs_alloc_read_agf(
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
+ 		pag->pagf_levels[XFS_BTNUM_CNTi] =
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+-		spinlock_init(&pag->pagb_lock, "xfspagb");
++		spin_lock_init(&pag->pagb_lock);
+ 		pag->pagb_list = kmem_zalloc(XFS_PAGB_NUM_SLOTS *
+ 					sizeof(xfs_perag_busy_t), KM_SLEEP);
+ 		pag->pagf_init = 1;
+Index: linux-2.6-xfs/fs/xfs/xfs_log.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log.c
++++ linux-2.6-xfs/fs/xfs/xfs_log.c
+@@ -1189,8 +1189,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 	log->l_xbuf = bp;
+ 
+-	spinlock_init(&log->l_icloglock, "iclog");
+-	spinlock_init(&log->l_grant_lock, "grhead_iclog");
++	spin_lock_init(&log->l_icloglock);
++	spin_lock_init(&log->l_grant_lock);
+ 	initnsema(&log->l_flushsema, 0, "ic-flush");
+ 	xlog_state_ticket_alloc(log);  /* wait until after icloglock inited */
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c
+@@ -136,8 +136,8 @@ xfs_mount_init(void)
+ 		mp->m_flags |= XFS_MOUNT_NO_PERCPU_SB;
+ 	}
+ 
+-	spinlock_init(&mp->m_ail_lock, "xfs_ail");
+-	spinlock_init(&mp->m_sb_lock, "xfs_sb");
++	spin_lock_init(&mp->m_ail_lock);
++	spin_lock_init(&mp->m_sb_lock);
+ 	mutex_init(&mp->m_ilock);
+ 	mutex_init(&mp->m_growlock);
+ 	/*
+@@ -616,7 +616,7 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
+ 	int	i;
+ 
+ 	mp->m_agfrotor = mp->m_agirotor = 0;
+-	spinlock_init(&mp->m_agirotor_lock, "m_agirotor_lock");
++	spin_lock_init(&mp->m_agirotor_lock);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+ 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+ 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+Index: linux-2.6-xfs/fs/xfs/xfs_mru_cache.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mru_cache.c
++++ linux-2.6-xfs/fs/xfs/xfs_mru_cache.c
+@@ -368,7 +368,7 @@ xfs_mru_cache_create(
+ 	 */
+ 	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
+ 	INIT_LIST_HEAD(&mru->reap_list);
+-	spinlock_init(&mru->lock, "xfs_mru_cache");
++	spin_lock_init(&mru->lock);
+ 	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
+ 
+ 	mru->grp_time  = grp_time;
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+@@ -68,7 +68,7 @@ xfs_init(void)
+ 	extern kmem_zone_t	*xfs_dabuf_zone;
+ #ifdef XFS_DABUF_DEBUG
+ 	extern spinlock_t        xfs_dabuf_global_lock;
+-	spinlock_init(&xfs_dabuf_global_lock, "xfsda");
++	spin_lock_init(&xfs_dabuf_global_lock);
+ #endif
+ 
+ 	/*
