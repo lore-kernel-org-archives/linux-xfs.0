@@ -1,63 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 19:01:14 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 19:02:40 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8D2164p000523
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 19:01:08 -0700
-Received: from timothy-shimmins-power-mac-g5.local (boing.melbourne.sgi.com [134.14.55.141]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA27844 for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 12:01:07 +1000
-Message-ID: <46E899E3.2010808@sgi.com>
-Date: Thu, 13 Sep 2007 12:01:07 +1000
-From: Timothy Shimmin <tes@sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8D22Y4p000964
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 19:02:36 -0700
+Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA27880; Thu, 13 Sep 2007 12:02:32 +1000
+Message-ID: <46E89A38.4000300@sgi.com>
+Date: Thu, 13 Sep 2007 12:02:32 +1000
+From: Donald Douwsma <donaldd@sgi.com>
 MIME-Version: 1.0
-Subject: Re: state of the cvs tree
-References: <20070912121938.GA16870@lst.de> <46E89542.5040202@sgi.com>
-In-Reply-To: <46E89542.5040202@sgi.com>
+Subject: Re: compile fails
+References: <64de4d610709121638s6a8a92c4qec2c4b70de9d955e@mail.gmail.com>
+In-Reply-To: <64de4d610709121638s6a8a92c4qec2c4b70de9d955e@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Kevin Mullican <kevin@mullican.com>
+Cc: xfs@oss.sgi.com
 
-Timothy Shimmin wrote:
-> Hi Christoph,
+Kevin Mullican wrote:
+> Greetings,
 > 
-> Christoph Hellwig wrote:
->> looks like the cvs tree is broken currently - fs/xfs/ is merged up to
->> 2.6.23-rc, but everything else is still at 2.6.22-rc state leading to
->> various compile failures.
->>
-> Looking at cvs web it looks like the 2.6.x-xfs was updated 8 hours
-> ago. So I am guessing that you saw a state of the tree whilst it
-> was doing its sync up.
-> Let me know if things are not fine for you still?
+> I am attempting to build the XFS kernel, but the compile is failing. I
+> downloaded the source from the CVS repository today, and I generated a
+> relatively generic .config. I am using gcc-3.2.3-52, libgcc-3.2.3-52,
+> and glibc-2.3.2-95.33. During the kernel compile, I am getting the
+> following errors:
 > 
-> --Tim
-> 
+> make -C xfs
+> make[2]: Entering directory `/usr/src/linux-2.4-xfs/fs/xfs'
 
-Looking at the oss scripts briefly it reminded me of all the trees
-involved:
-   $s[0]->{"fromdir"} = "$pushroot/p_src/slinx_2.4.x-xfs";
-   $s[0]->{"todir"} =   "$pushroot/CVSROOT/slinx_2.4.x-xfs";
+Hi Kevin,
 
-   $s[1]->{"fromdir"} = "$pushroot/p_src/slinx_2.6.x-xfs";
-   $s[1]->{"todir"} =   "$pushroot/CVSROOT/slinx_2.6.x-xfs";
+The linux-2.4 build hasn't been actively maintained in a while.
+We have been talking about removing it from cvs because of this.
 
-   $s[2]->{"fromdir"} = "$pushroot/p_src/xfs-cmds";
-   $s[2]->{"todir"} =   "$pushroot/tmp/CVSROOT/xfs-cmds";
+> xfs_vfs.h:46: syntax error before "bhv_head_t"
+ > xfs_vfs.h:46: warning: no semicolon at end of struct or union
+ > xfs_vfs.h:55: syntax error before '}' token
+ > xfs_vfs.h:55: warning: type defaults to `int' in declaration of `bhv_vfs_t'
 
-   $s[3]->{"fromdir"} = "$pushroot/p_src/xfs-linux";
-   $s[3]->{"todir"} =   "$pushroot/tmp/CVSROOT/xfs-linux";
+These are due to changes made fairly recently.
+You may have more luck updating a tree from around the 2007/08/20.
 
-   $s[4]->{"fromdir"} = "$pushroot/p_src/dmapi-linux";
-   $s[4]->{"todir"} =   "$pushroot/CVSROOT/dmapi";
+But even without the recent chagnes I'd be suprised if it was building.
 
-   $s[5]->{"fromdir"} = "$pushroot/p_src/xfs-website";
-   $s[5]->{"todir"} =   "$pushroot/CVSROOT/xfs-website";
-
-The xfs-linux and xfs-dmapi trees are needed for 2.6.x-xfs and 2.4.x-xfs.
-I modified xfs-linux, xfs-dmapi, and 2.6.x-xfs as part of the update.
-
-BTW, Donald, we'll have to do something about the 2.4 ptools tree
-and cvs sync up if/when 2.4 support is dropped.
-
---Tim
+Don
