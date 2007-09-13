@@ -1,47 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 13:31:03 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8DKUt4p011302
-	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 13:30:56 -0700
-Date: Thu, 13 Sep 2007 21:30:55 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: TAKE 970240 - kill BMAPI_DEVICE
-Message-ID: <20070913203055.GA14895@infradead.org>
-References: <20070913043416.CCFAC2F9EBDB@linuxbuild.melbourne.sgi.com> <cc7060690709131223o7bb4f75sd6a42e30a6a078c3@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 16:48:52 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8DNmi4p015396
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 16:48:45 -0700
+Date: Fri, 14 Sep 2007 09:48:29 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: state of the cvs tree
+Message-ID: <20070913234829.GW734179@sgi.com>
+References: <20070912121938.GA16870@lst.de> <46E870AB.30906@sgi.com> <20070913104000.GB3351@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cc7060690709131223o7bb4f75sd6a42e30a6a078c3@mail.gmail.com>
+In-Reply-To: <20070913104000.GB3351@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Bhagi rathi <jahnu77@gmail.com>
-Cc: "donaldd@sgi.com" <donaldd@sgi.com>, xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Mark Goodwin <markgw@sgi.com>, xfs@oss.sgi.com
 
-On Fri, Sep 14, 2007 at 12:53:20AM +0530, Bhagi rathi wrote:
-> Can one of you let me know the process of submitting changes?
-
-Just send a unified diff (using diff -u) to the list.
-
+On Thu, Sep 13, 2007 at 12:40:00PM +0200, Christoph Hellwig wrote:
+> On Thu, Sep 13, 2007 at 09:05:15AM +1000, Mark Goodwin wrote:
+> > 
+> > 
+> > Christoph Hellwig wrote:
+> > >looks like the cvs tree is broken currently - fs/xfs/ is merged up to
+> > >2.6.23-rc, but everything else is still at 2.6.22-rc state leading to
+> > >various compile failures.
+> > 
+> > I think Tim is in the middle of the .23 update and still has some more
+> > to push in. Tim?
+> > 
+> > What else do you (or anyone for that matter) have in the pipeline for XFS?
+> > Whilst we're taking huge patches and cleanups, let's get them all in asap.
 > 
-> Problem: Real time flag set on a regular file can race with directio which
-> can lead to
->               incorrect real time device for iomap in xfs_vm_direct_IO. This
-> can happen
->               only on the first I/O to the file as we don't set real time
-> flag if any of
->               the extents or delayed blocks present.
+> I have a long pipeline waiting, but as Dave said most of that really
+> shouldn't go into 2.6.24.
 > 
-> Fix:
+> There's one patch from me that I sent a long time ago that's a trivial
+> cleanup and should probably go into 2.6.24 still, that's
 > 
->   xfs_setattr() {
->           ...
->           if (!(mask & XFS_AT_SIZE)) {
->                  if (need_io_lock && vap->va_xflags & XFS_XFLAG_REALTIME)
->                         lock_flags |= XFS_IOLOCK_EXCL;
->                  .....
->           }
+> 	"[PATCH] kill unused IOMAP_EOF flag"
 
-I have a patch queued up aswell, although it's after a reorganization of
-the code to not clutter xfs_setattr even more.  If you want to send out
-the fix now please go ahead.
+Ah, that's still sitting in my tree from a past life. It fell through
+the cracks, I think. It should go in to .24
+
+> One thing that is in my alreayd submitted queue that should go into CVS
+> ASAP after a small review is:
+> 
+> 	"[PATCH] kill probe_* sysctl leftovers"
+
+*nod*. yeah, that's pretty trivial so should go as well. 
+
+> this is stuff that never was in mainline, so putting it in seems fine.
+> 
+> Then I have a patch from Eric sitting in the front of my queue,
+> 
+> 	"[PATCH V2] refactor xfs_mountfs for clarity & stack savings"
+> 
+> which might be a little too big for 2.6.24, but should at least go into
+> CVS ASAP.  I think Eric would be really happy to see it in 2.6.24 aswell
+> because that means FC8 could actually mount xfs out of the box without
+> running out of stack or something.
+
+Yeah, that's been floating about for a bit and has been tested in
+FC8 so seems like a no-brainer for .24.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
