@@ -1,39 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 04:41:59 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8DBfq4p006238
-	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 04:41:56 -0700
-Date: Thu, 13 Sep 2007 12:20:46 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: TAKE 968767 - Ensure file size updates have been completed before writing inode to disk.
-Message-ID: <20070913112046.GA25515@infradead.org>
-References: <200709130330.l8D3UGu9004196@redback.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <200709130330.l8D3UGu9004196@redback.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 07:49:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8DEnT4p010652
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 07:49:34 -0700
+Message-ID: <46E94DEC.3090404@sandeen.net>
+Date: Thu, 13 Sep 2007 09:49:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Configuring XFS on Redhat Linux
+References: <53F49A183F99D94D9C84E062566A97E3037C6E1E@SGPPCMEU302VEUA.INTRANET.BARCAPINT.COM>
+In-Reply-To: <53F49A183F99D94D9C84E062566A97E3037C6E1E@SGPPCMEU302VEUA.INTRANET.BARCAPINT.COM>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
-Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Kumaraswamy.Namburu@barclayscapital.com
+Cc: xfs@oss.sgi.com
 
-This has never been out for review, has it?
+Kumaraswamy.Namburu@barclayscapital.com wrote:
+> Hello All,
+> 
+>   Following is the configuration of the server
+>   Linux version 2.6.9-22.ELsmp (root@yort.fnal.gov) (gcc version 3.4.3 20050227 (Red Hat 3.4.3-22.1)) #1 SMP Thu Oct 6 10:29:1
+>   Linux engpsrcn01.intranetdev.barcapdev.com 2.6.9-22.ELsmp #1 SMP Thu Oct 6 10:29:17 CDT 2005 x86_64 x86_64 x86_64 GNU/Linux
+>   From Inside our compant, I am unable to connect to cvs server at port 2041. Could you please let me know the alternative ways to get the source code.
 
-On Thu, Sep 13, 2007 at 01:30:16PM +1000, Lachlan McIlroy wrote:
-> fs/xfs/xfs_vnodeops.c - 1.720 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.4-xfs/> xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
-> 	- Ensure file size updates have been completed before writing inode to disk.
+unless you really need cvs, how about http via kernel.org?  or the git
+tree? http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git
 
-I think you want to at least add a comment above the filemap_fdatawait
-call why we have it that early compared to where the generic code calls
-it (again).  But hopefully I'll push changes to the core code soon
-to move the filemap_datawrite/wait into fs domain completely.
+If you want xfs for your 2.6.9-22.ELsmp kernel, you might just grab the
+xfs kernel module packages & xfs userspace from the Centos distribution.
 
-I also don't like idioms like vn_to_inode(XFS_ITOV(ip)) at all.  Just
-doing a direct ip->i_vnode deference sounds perfectly fine.
+Or, since it looks like you're using scientific linux and not actually
+RHEL, maybe just ask them.
 
-
-Why is removing the ipincount check in xfs_inode_flush okay?  Trying
-to flush pinned inodes doesn't seem that much of a good idea.
+-Eric
