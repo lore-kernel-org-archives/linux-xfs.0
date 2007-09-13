@@ -1,33 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 20:04:35 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8D34T4p013103
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 20:04:31 -0700
-Message-ID: <46E8A8BD.5050600@sandeen.net>
-Date: Wed, 12 Sep 2007 22:04:29 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH SERIES] untangle spinlock macros
-References: <46E6221E.803@sandeen.net> <46E7460D.3000502@sgi.com>
-In-Reply-To: <46E7460D.3000502@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Sep 2007 20:27:36 -0700 (PDT)
+Received: from redback.melbourne.sgi.com (redback.melbourne.sgi.com [134.14.55.78])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8D3RS4p020270
+	for <xfs@oss.sgi.com>; Wed, 12 Sep 2007 20:27:30 -0700
+Date: Thu, 13 Sep 2007 13:30:16 +1000
+From: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
+Message-Id: <200709130330.l8D3UGu9004196@redback.melbourne.sgi.com>
+Subject: TAKE 968767 - Ensure file size updates have been completed before writing inode to disk.
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Donald Douwsma wrote:
+Ensure file size updates have been completed before writing inode to disk.
 
-> But here you use the name of the lock variable.
-> 
->          /*
-> -        * We actually don't have to acquire the SB_LOCK at all.
-> +        * We actually don't have to acquire the m_sb_lock at all.
->           * This can only be called from mount, and that's single threaded. XXX
->           */
 
-I was going to change this, but "sb lock" sounds way too generic to me...
 
--Eric
+Date:  Thu Sep 13 13:27:00 AEST 2007
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-xfs
+Inspected by:  dgc
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29675a
+fs/xfs/xfs_vnodeops.c - 1.720 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
+	- Ensure file size updates have been completed before writing inode to disk.
+
+fs/xfs/linux-2.6/xfs_super.c - 1.398 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.398&r2=text&tr2=1.397&f=h
+	- Ensure file size updates have been completed before writing inode to disk.
+
+fs/xfs/linux-2.6/xfs_aops.c - 1.153 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.153&r2=text&tr2=1.152&f=h
+	- Ensure file size updates have been completed before writing inode to disk.
