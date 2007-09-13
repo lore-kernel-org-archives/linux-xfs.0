@@ -1,38 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 07:49:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 07:50:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8DEnT4p010652
-	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 07:49:34 -0700
-Message-ID: <46E94DEC.3090404@sandeen.net>
-Date: Thu, 13 Sep 2007 09:49:16 -0500
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8DEoW4p011058
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 07:50:33 -0700
+Message-ID: <46E94E37.4030505@sandeen.net>
+Date: Thu, 13 Sep 2007 09:50:31 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Configuring XFS on Redhat Linux
-References: <53F49A183F99D94D9C84E062566A97E3037C6E1E@SGPPCMEU302VEUA.INTRANET.BARCAPINT.COM>
-In-Reply-To: <53F49A183F99D94D9C84E062566A97E3037C6E1E@SGPPCMEU302VEUA.INTRANET.BARCAPINT.COM>
+Subject: Re: state of the cvs tree
+References: <20070912121938.GA16870@lst.de> <46E870AB.30906@sgi.com> <20070913104000.GB3351@lst.de>
+In-Reply-To: <20070913104000.GB3351@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Kumaraswamy.Namburu@barclayscapital.com
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Mark Goodwin <markgw@sgi.com>, xfs@oss.sgi.com
 
-Kumaraswamy.Namburu@barclayscapital.com wrote:
-> Hello All,
+Christoph Hellwig wrote:
+
+> Then I have a patch from Eric sitting in the front of my queue,
 > 
->   Following is the configuration of the server
->   Linux version 2.6.9-22.ELsmp (root@yort.fnal.gov) (gcc version 3.4.3 20050227 (Red Hat 3.4.3-22.1)) #1 SMP Thu Oct 6 10:29:1
->   Linux engpsrcn01.intranetdev.barcapdev.com 2.6.9-22.ELsmp #1 SMP Thu Oct 6 10:29:17 CDT 2005 x86_64 x86_64 x86_64 GNU/Linux
->   From Inside our compant, I am unable to connect to cvs server at port 2041. Could you please let me know the alternative ways to get the source code.
+> 	"[PATCH V2] refactor xfs_mountfs for clarity & stack savings"
+> 
+> which might be a little too big for 2.6.24, but should at least go into
+> CVS ASAP.  I think Eric would be really happy to see it in 2.6.24 aswell
+> because that means FC8 could actually mount xfs out of the box without
+> running out of stack or something.
 
-unless you really need cvs, how about http via kernel.org?  or the git
-tree? http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git
-
-If you want xfs for your 2.6.9-22.ELsmp kernel, you might just grab the
-xfs kernel module packages & xfs userspace from the Centos distribution.
-
-Or, since it looks like you're using scientific linux and not actually
-RHEL, maybe just ask them.
+Yes ;-)  I've got that patch in Fedora now, but it'd be great to have it
+come via upstream.
 
 -Eric
