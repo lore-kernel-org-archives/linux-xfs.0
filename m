@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 09:27:58 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 09:28:03 -0700 (PDT)
 Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EGRp4p028477
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 09:27:53 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EGRu4p028505
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 09:27:59 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8EGRqA5007365
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8EGRvA5007381
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 18:27:52 +0200
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 18:27:57 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8EGRqba007363
-	for xfs@oss.sgi.com; Fri, 14 Sep 2007 18:27:52 +0200
-Date: Fri, 14 Sep 2007 18:27:52 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8EGRvG2007379
+	for xfs@oss.sgi.com; Fri, 14 Sep 2007 18:27:57 +0200
+Date: Fri, 14 Sep 2007 18:27:57 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/4] simplify vn_revalidate
-Message-ID: <20070914162752.GC7110@lst.de>
+Subject: [PATCH 3/4] simplify xfs_vn_getattr
+Message-ID: <20070914162757.GD7110@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -22,182 +22,100 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-No need to allocate a bhv_vattr_t on stack and call xfs_getattr to
-update a few fields in the Linux inode from the XFS inode, just
-do it directly.
-
-And yes, this function is in dire need of a better name and prototype,
-I'll do in a separate patch, though.
+Just fill in struct kstat directly from the xfs_inode instead of doing
+a detour through a bhv_vattr_t and xfs_getattr.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2007-09-06 10:18:02.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2007-09-06 10:26:33.000000000 +0200
-@@ -1217,7 +1217,7 @@ xfs_ioc_xattr(
- 
- 		error = xfs_setattr(ip, vattr, attr_flags, NULL);
- 		if (likely(!error))
--			__vn_revalidate(vp, vattr);	/* update flags */
-+			vn_revalidate(vp);	/* update flags */
- 		error = -error;
- 		break;
- 	}
-@@ -1273,7 +1273,7 @@ xfs_ioc_xattr(
- 
- 		error = xfs_setattr(ip, vattr, attr_flags, NULL);
- 		if (likely(!error))
--			__vn_revalidate(vp, vattr);	/* update flags */
-+			vn_revalidate(vp);	/* update flags */
- 		error = -error;
- 		break;
- 	}
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:25:54.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:26:33.000000000 +0200
-@@ -645,7 +645,7 @@ xfs_vn_setattr(
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:42:40.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:44:33.000000000 +0200
+@@ -564,33 +564,61 @@ xfs_vn_permission(
  
- 	error = xfs_setattr(XFS_I(inode), &vattr, flags, NULL);
- 	if (likely(!error))
--		__vn_revalidate(vn_from_inode(inode), &vattr);
-+		vn_revalidate(vn_from_inode(inode));
- 	return -error;
- }
- 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-06 10:18:00.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-06 10:26:33.000000000 +0200
-@@ -183,7 +183,6 @@ EXPORT_SYMBOL(uuid_table_remove);
- EXPORT_SYMBOL(vn_hold);
- EXPORT_SYMBOL(vn_initialize);
- EXPORT_SYMBOL(vn_revalidate);
--EXPORT_SYMBOL(vn_revalidate_core);
- 
- #if defined(CONFIG_XFS_POSIX_ACL)
- EXPORT_SYMBOL(xfs_acl_vtoacl);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2007-09-06 10:18:00.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c	2007-09-06 10:38:40.000000000 +0200
-@@ -97,69 +97,57 @@ vn_initialize(
- }
- 
- /*
-- * Revalidate the Linux inode from the vattr.
-+ * Revalidate the Linux inode from the XFS inode.
-  * Note: i_size _not_ updated; we must hold the inode
-  * semaphore when doing that - callers responsibility.
-  */
--void
--vn_revalidate_core(
--	bhv_vnode_t	*vp,
--	bhv_vattr_t	*vap)
--{
--	struct inode	*inode = vn_to_inode(vp);
+ STATIC int
+ xfs_vn_getattr(
+-	struct vfsmount	*mnt,
+-	struct dentry	*dentry,
+-	struct kstat	*stat)
++	struct vfsmount		*mnt,
++	struct dentry		*dentry,
++	struct kstat		*stat)
+ {
+-	struct inode	*inode = dentry->d_inode;
+-	bhv_vattr_t	vattr = { .va_mask = XFS_AT_STAT };
+-	int		error;
 -
--	inode->i_mode	    = vap->va_mode;
--	inode->i_nlink	    = vap->va_nlink;
--	inode->i_uid	    = vap->va_uid;
--	inode->i_gid	    = vap->va_gid;
--	inode->i_blocks	    = vap->va_nblocks;
--	inode->i_mtime	    = vap->va_mtime;
--	inode->i_ctime	    = vap->va_ctime;
--	if (vap->va_xflags & XFS_XFLAG_IMMUTABLE)
-+int
-+vn_revalidate(
-+	bhv_vnode_t		*vp)
-+{
-+	struct inode		*inode = vn_to_inode(vp);
+-	error = xfs_getattr(XFS_I(inode), &vattr, ATTR_LAZY);
+-	if (likely(!error)) {
+-		stat->size = i_size_read(inode);
+-		stat->dev = inode->i_sb->s_dev;
+-		stat->rdev = (vattr.va_rdev == 0) ? 0 :
+-				MKDEV(sysv_major(vattr.va_rdev) & 0x1ff,
+-				      sysv_minor(vattr.va_rdev));
+-		stat->mode = vattr.va_mode;
+-		stat->nlink = vattr.va_nlink;
+-		stat->uid = vattr.va_uid;
+-		stat->gid = vattr.va_gid;
+-		stat->ino = vattr.va_nodeid;
+-		stat->atime = vattr.va_atime;
+-		stat->mtime = vattr.va_mtime;
+-		stat->ctime = vattr.va_ctime;
+-		stat->blocks = vattr.va_nblocks;
+-		stat->blksize = vattr.va_blocksize;
++	struct inode		*inode = dentry->d_inode;
 +	struct xfs_inode	*ip = XFS_I(inode);
 +	struct xfs_mount	*mp = ip->i_mount;
-+	unsigned long		xflags;
 +
 +	xfs_itrace_entry(ip);
 +
 +	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
++		return XFS_ERROR(EIO);
 +
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	inode->i_mode	    = ip->i_d.di_mode;
-+	inode->i_nlink	    = ip->i_d.di_nlink;
-+	inode->i_uid	    = ip->i_d.di_uid;
-+	inode->i_gid	    = ip->i_d.di_gid;
-+	inode->i_blocks	    =
++	stat->size = XFS_ISIZE(ip);
++	stat->dev = inode->i_sb->s_dev;
++	stat->mode = ip->i_d.di_mode;
++	stat->nlink = ip->i_d.di_nlink;
++	stat->uid = ip->i_d.di_uid;
++	stat->gid = ip->i_d.di_gid;
++	stat->ino = ip->i_ino;
++#if XFS_BIG_INUMS
++	stat->ino += mp->m_inoadd;
++#endif
++	stat->atime = inode->i_atime;
++	stat->mtime.tv_sec = ip->i_d.di_mtime.t_sec;
++	stat->mtime.tv_nsec = ip->i_d.di_mtime.t_nsec;
++	stat->ctime.tv_sec = ip->i_d.di_ctime.t_sec;
++	stat->ctime.tv_nsec = ip->i_d.di_ctime.t_nsec;
++	stat->blocks =
 +		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
-+	inode->i_mtime.tv_sec = ip->i_d.di_mtime.t_sec;
-+	inode->i_mtime.tv_nsec = ip->i_d.di_mtime.t_nsec;
-+	inode->i_ctime.tv_sec = ip->i_d.di_ctime.t_sec;
-+	inode->i_ctime.tv_nsec = ip->i_d.di_ctime.t_nsec;
 +
-+	xflags = xfs_ip2xflags(ip);
-+	if (xflags & XFS_XFLAG_IMMUTABLE)
- 		inode->i_flags |= S_IMMUTABLE;
- 	else
- 		inode->i_flags &= ~S_IMMUTABLE;
--	if (vap->va_xflags & XFS_XFLAG_APPEND)
-+	if (xflags & XFS_XFLAG_APPEND)
- 		inode->i_flags |= S_APPEND;
- 	else
- 		inode->i_flags &= ~S_APPEND;
--	if (vap->va_xflags & XFS_XFLAG_SYNC)
-+	if (xflags & XFS_XFLAG_SYNC)
- 		inode->i_flags |= S_SYNC;
- 	else
- 		inode->i_flags &= ~S_SYNC;
--	if (vap->va_xflags & XFS_XFLAG_NOATIME)
-+	if (xflags & XFS_XFLAG_NOATIME)
- 		inode->i_flags |= S_NOATIME;
- 	else
- 		inode->i_flags &= ~S_NOATIME;
--}
--
--/*
-- * Revalidate the Linux inode from the vnode.
-- */
--int
--__vn_revalidate(
--	bhv_vnode_t	*vp,
--	bhv_vattr_t	*vattr)
--{
--	int		error;
--
--	xfs_itrace_entry(xfs_vtoi(vp));
--	vattr->va_mask = XFS_AT_STAT | XFS_AT_XFLAGS;
--	error = xfs_getattr(xfs_vtoi(vp), vattr, 0);
--	if (likely(!error)) {
--		vn_revalidate_core(vp, vattr);
--		xfs_iflags_clear(xfs_vtoi(vp), XFS_IMODIFIED);
--	}
++
++	switch (inode->i_mode & S_IFMT) {
++	case S_IFBLK:
++	case S_IFCHR:
++		stat->blksize = BLKDEV_IOSIZE;
++		stat->rdev = MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
++				   sysv_minor(ip->i_df.if_u2.if_rdev));
++		break;
++	default:
++		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
++			/*
++			 * If the file blocks are being allocated from a
++			 * realtime volume, then return the inode's realtime
++			 * extent size or the realtime volume's extent size.
++			 */
++			stat->blksize =
++				xfs_get_extsz_hint(ip) << mp->m_sb.sb_blocklog;
++		} else
++			stat->blksize = xfs_preferred_iosize(mp);
++		stat->rdev = 0;
++		break;
+ 	}
 -	return -error;
--}
--
--int
--vn_revalidate(
--	bhv_vnode_t	*vp)
--{
--	bhv_vattr_t	vattr;
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
--	return __vn_revalidate(vp, &vattr);
-+	xfs_iflags_clear(ip, XFS_IMODIFIED);
++
 +	return 0;
  }
  
- /*
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2007-09-06 10:18:50.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2007-09-06 10:26:33.000000000 +0200
-@@ -189,8 +189,6 @@ typedef struct bhv_vattr {
- extern void	vn_init(void);
- extern bhv_vnode_t	*vn_initialize(struct inode *);
- extern int	vn_revalidate(bhv_vnode_t *);
--extern int	__vn_revalidate(bhv_vnode_t *, bhv_vattr_t *);
--extern void	vn_revalidate_core(bhv_vnode_t *, bhv_vattr_t *);
- 
- /*
-  * Yeah, these don't take vnode anymore at all, all this should be
+ STATIC int
