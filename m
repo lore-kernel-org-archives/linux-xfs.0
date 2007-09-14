@@ -1,33 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 07:27:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 07:46:09 -0700 (PDT)
 Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EERD4p002702
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 07:27:15 -0700
-Date: Fri, 14 Sep 2007 15:07:21 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EEk34p006850
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 07:46:04 -0700
+Date: Fri, 14 Sep 2007 15:46:04 +0100
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] XFS: Delete duplicate macro definitions.
-Message-ID: <20070914140721.GA23878@infradead.org>
-References: <Pine.LNX.4.64.0709140851130.20022@localhost.localdomain>
+Subject: Re: TAKE 968767 - Ensure file size updates have been completed before writing inode to disk.
+Message-ID: <20070914144604.GA25941@infradead.org>
+References: <200709130330.l8D3UGu9004196@redback.melbourne.sgi.com> <20070913112046.GA25515@infradead.org> <20070914000556.GX734179@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0709140851130.20022@localhost.localdomain>
+In-Reply-To: <20070914000556.GX734179@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Robert P. J. Day" <rpjday@mindspring.com>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Fri, Sep 14, 2007 at 08:53:20AM -0400, Robert P. J. Day wrote:
+On Fri, Sep 14, 2007 at 10:05:56AM +1000, David Chinner wrote:
+> > But hopefully I'll push changes to the core code soon
+> > to move the filemap_datawrite/wait into fs domain completely.
 > 
-> Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
-> 
-> ---
-> 
->   something that popped out of a script i have that scans for
-> redundant macro definitions.  apply or not as you see fit.  not
-> compile-tested as it was just done visually.
+> What timeframe are we looking at there?
 
-Yes, this is correct.  But I've already done this and a little more
-in this area - these changes are in XFS CVS already and will go into
-2.6.24.
+I'll aim for 2.6.25, but there is some mess to sort out with the fsync
+prototype first.
