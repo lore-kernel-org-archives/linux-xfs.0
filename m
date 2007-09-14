@@ -1,34 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 21:50:53 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8E4ol4p013811
-	for <linux-xfs@oss.sgi.com>; Thu, 13 Sep 2007 21:50:49 -0700
-Message-ID: <46EA1392.3040505@sgi.com>
-Date: Fri, 14 Sep 2007 14:52:34 +1000
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 01:33:26 -0700 (PDT)
+Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8E8XL4p026589
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 01:33:22 -0700
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by sargon.lncsa.com (Postfix) with ESMTP id 4FFC53131B0E
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 10:09:47 +0200 (CEST)
+Received: from sargon.lncsa.com ([127.0.0.1])
+	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 5JVIJaqNc0NG for <linux-xfs@oss.sgi.com>;
+	Fri, 14 Sep 2007 10:09:47 +0200 (CEST)
+Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
+	by sargon.lncsa.com (Postfix) with ESMTP id 26B903131B0D
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 10:09:47 +0200 (CEST)
+Received: from trajan.apartia.fr (trajan.apartia.fr [10.0.3.121])
+	by zenon.apartia.fr (Postfix) with ESMTP id 3EECFF09FE51F
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 10:09:23 +0200 (CEST)
+Date: Fri, 14 Sep 2007 10:09:26 +0200
+From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
+Subject: can't remove dir
+Message-ID: <20070914080926.GA30150@apartia.fr>
 MIME-Version: 1.0
-Subject: TAKE 970514: [PATCH] xfs_dmapi: add MODULE_ tags
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hello,
 
-Date:  Fri Sep 14 14:48:04 AEST 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs
-Inspected by:  vapo
-Author:  vapo
+While cleaning up /lost+found a directory resisted removal:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+	sylla:/lost+found# rm 1879629858 -rf
+	rm: cannot remove directory `1879629858': Directory not empty
 
+The directory _is_ empty and "-rf" should remove it anyway, so this 
+looks like a fs error.
 
-Modid:  xfs-linux-melb:xfs-kern:29687a
-fs/xfs/dmapi/xfs_dm.c - 1.54 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.54&r2=text&tr2=1.53&f=h
-        - pv 970514, author hch@lst.de, rv vapo - xfs_dmapi: add MODULE_ 
-tags
+This is on debian unstable with 2.6.23-rc6.
