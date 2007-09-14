@@ -1,48 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 07:18:25 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EEIL4p000514
-	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 07:18:22 -0700
-Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 2479918003EF4
-	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 09:18:24 -0500 (CDT)
-Message-ID: <46EA982F.5090109@sandeen.net>
-Date: Fri, 14 Sep 2007 09:18:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: can't remove dir
-References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net>
-In-Reply-To: <46EA9741.6060303@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 07:27:19 -0700 (PDT)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EERD4p002702
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 07:27:15 -0700
+Date: Fri, 14 Sep 2007 15:07:21 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] XFS: Delete duplicate macro definitions.
+Message-ID: <20070914140721.GA23878@infradead.org>
+References: <Pine.LNX.4.64.0709140851130.20022@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0709140851130.20022@localhost.localdomain>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: "Robert P. J. Day" <rpjday@mindspring.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Louis-David Mitterrand wrote:
->> Hello,
->>
->> While cleaning up /lost+found a directory resisted removal:
->>
->> 	sylla:/lost+found# rm 1879629858 -rf
->> 	rm: cannot remove directory `1879629858': Directory not empty
->>
->> The directory _is_ empty and "-rf" should remove it anyway, so this 
->> looks like a fs error.
->>
->> This is on debian unstable with 2.6.23-rc6.
->>
->>
+On Fri, Sep 14, 2007 at 08:53:20AM -0400, Robert P. J. Day wrote:
 > 
-> Any errors in the system logs?  I'd try most recent xfs_repair next.  If
-> that doesn't fix it, make an xfs_metadump for Barry to look at.  :)
-> Make a backup first if you're paranoid.
+> Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+> 
+> ---
+> 
+>   something that popped out of a script i have that scans for
+> redundant macro definitions.  apply or not as you see fit.  not
+> compile-tested as it was just done visually.
 
-Some day I'll learn to read all of a thread before replying... ignore
-me.  Looks like dgc has things well under control.  :)
-
--Eric
+Yes, this is correct.  But I've already done this and a little more
+in this area - these changes are in XFS CVS already and will go into
+2.6.24.
