@@ -1,39 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 19:54:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8E2sj4p017616
-	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 19:54:47 -0700
-Message-ID: <46E9F7F3.6090405@sandeen.net>
-Date: Thu, 13 Sep 2007 21:54:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 20:36:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8E3a14p028454
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 20:36:03 -0700
+Message-ID: <46EA020A.2060106@sgi.com>
+Date: Fri, 14 Sep 2007 13:37:46 +1000
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Subject: Re: state of the cvs tree
-References: <20070912121938.GA16870@lst.de> <46E870AB.30906@sgi.com> <20070913104000.GB3351@lst.de> <20070913234829.GW734179@sgi.com>
-In-Reply-To: <20070913234829.GW734179@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] xfs_dmapi: add MODULE_ tags
+References: <20070828202102.GB17289@lst.de>
+In-Reply-To: <20070828202102.GB17289@lst.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mark Goodwin <markgw@sgi.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-David Chinner wrote:
+Sorry for the late reply Christoph.
 
->> Then I have a patch from Eric sitting in the front of my queue,
->>
->> 	"[PATCH V2] refactor xfs_mountfs for clarity & stack savings"
->>
->> which might be a little too big for 2.6.24, but should at least go into
->> CVS ASAP.  I think Eric would be really happy to see it in 2.6.24 aswell
->> because that means FC8 could actually mount xfs out of the box without
->> running out of stack or something.
-> 
-> Yeah, that's been floating about for a bit and has been tested in
-> FC8 so seems like a no-brainer for .24.
+It is looking good. I will push the patch in the XFS development tree.
 
-you're assuming anyone besides me tested xfs in F8TestX... *grin*
+Regards,
+Vlad
 
-(F8Test2 was released today... hint hint...)
-
--Eric
+Christoph Hellwig wrote:
+> Without these I get a warning about an unspecified license everytime
+> I try to load xfs_dmapi.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2007-08-25 00:05:33.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2007-08-25 00:05:53.000000000 +0200
+> @@ -3372,5 +3372,9 @@ xfs_dm_exit(void)
+>  	dmapi_unregister(&xfs_fs_type);
+>  }
+>  
+> +MODULE_AUTHOR("Silicon Graphics, Inc.");
+> +MODULE_DESCRIPTION("SGI XFS dmapi subsystem");
+> +MODULE_LICENSE("GPL");
+> +
+>  module_init(xfs_dm_init);
+>  module_exit(xfs_dm_exit);
+>
+>   
