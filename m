@@ -1,69 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 16:48:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Sep 2007 17:06:09 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8DNmi4p015396
-	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 16:48:45 -0700
-Date: Fri, 14 Sep 2007 09:48:29 +1000
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8E0624p018008
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2007 17:06:03 -0700
+Date: Fri, 14 Sep 2007 10:05:56 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: state of the cvs tree
-Message-ID: <20070913234829.GW734179@sgi.com>
-References: <20070912121938.GA16870@lst.de> <46E870AB.30906@sgi.com> <20070913104000.GB3351@lst.de>
+Subject: Re: TAKE 968767 - Ensure file size updates have been completed before writing inode to disk.
+Message-ID: <20070914000556.GX734179@sgi.com>
+References: <200709130330.l8D3UGu9004196@redback.melbourne.sgi.com> <20070913112046.GA25515@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20070913104000.GB3351@lst.de>
+In-Reply-To: <20070913112046.GA25515@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Mark Goodwin <markgw@sgi.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Thu, Sep 13, 2007 at 12:40:00PM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 13, 2007 at 09:05:15AM +1000, Mark Goodwin wrote:
-> > 
-> > 
-> > Christoph Hellwig wrote:
-> > >looks like the cvs tree is broken currently - fs/xfs/ is merged up to
-> > >2.6.23-rc, but everything else is still at 2.6.22-rc state leading to
-> > >various compile failures.
-> > 
-> > I think Tim is in the middle of the .23 update and still has some more
-> > to push in. Tim?
-> > 
-> > What else do you (or anyone for that matter) have in the pipeline for XFS?
-> > Whilst we're taking huge patches and cleanups, let's get them all in asap.
+On Thu, Sep 13, 2007 at 12:20:46PM +0100, Christoph Hellwig wrote:
+> This has never been out for review, has it?
 > 
-> I have a long pipeline waiting, but as Dave said most of that really
-> shouldn't go into 2.6.24.
+> On Thu, Sep 13, 2007 at 01:30:16PM +1000, Lachlan McIlroy wrote:
+> > fs/xfs/xfs_vnodeops.c - 1.720 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.4-xfs/> > xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
+> http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.4-xfs/> xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
+> > http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.720&r2=text&tr2=1.719&f=h
+> > 	- Ensure file size updates have been completed before writing inode to disk.
 > 
-> There's one patch from me that I sent a long time ago that's a trivial
-> cleanup and should probably go into 2.6.24 still, that's
-> 
-> 	"[PATCH] kill unused IOMAP_EOF flag"
+> I think you want to at least add a comment above the filemap_fdatawait
+> call why we have it that early compared to where the generic code calls
+> it (again).
 
-Ah, that's still sitting in my tree from a past life. It fell through
-the cracks, I think. It should go in to .24
+true - obvious to lachlan and myself, maybe not others. :/
 
-> One thing that is in my alreayd submitted queue that should go into CVS
-> ASAP after a small review is:
-> 
-> 	"[PATCH] kill probe_* sysctl leftovers"
+> But hopefully I'll push changes to the core code soon
+> to move the filemap_datawrite/wait into fs domain completely.
 
-*nod*. yeah, that's pretty trivial so should go as well. 
+What timeframe are we looking at there?
 
-> this is stuff that never was in mainline, so putting it in seems fine.
-> 
-> Then I have a patch from Eric sitting in the front of my queue,
-> 
-> 	"[PATCH V2] refactor xfs_mountfs for clarity & stack savings"
-> 
-> which might be a little too big for 2.6.24, but should at least go into
-> CVS ASAP.  I think Eric would be really happy to see it in 2.6.24 aswell
-> because that means FC8 could actually mount xfs out of the box without
-> running out of stack or something.
+> I also don't like idioms like vn_to_inode(XFS_ITOV(ip)) at all.  Just
+> doing a direct ip->i_vnode deference sounds perfectly fine.
 
-Yeah, that's been floating about for a bit and has been tested in
-FC8 so seems like a no-brainer for .24.
+Sounds like another cleanup patch for Eric ;)
+
+> Why is removing the ipincount check in xfs_inode_flush okay?  Trying
+> to flush pinned inodes doesn't seem that much of a good idea.
+
+The code is .... convoluted. In the case where we are doing an async
+flush, we check the pin count once we've got the locks so the pin
+count check is not really needed here. In the case of a sync flush,
+we'd return EAGAIN, which would then call use again with the FLUSH_LOG
+flag and so we'd do a log force to unpin the inode.
+
+If we then race with something to else, the inode could end up pinned
+again before we go to flush the inode and hence we'd end up not
+flushing the inode because the pin count was set again.
+
+Anyway, if we are doing a sync flush, it's a blocking operation
+and we want to push the log, which is exactly what will happen
+in xfs_iflush() when it calls xfs_iunpin_wait() if the inode is
+pinned. hence the check for xfs_ipincount() in the higher level
+is pretty much redundant as the correct log force will occur
+just by allowing the inode flush to continue.
 
 Cheers,
 
