@@ -1,76 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 06:05:26 -0700 (PDT)
-Received: from rubicon.netdirect.ca (nic.NetDirect.CA [216.16.235.2])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8ED5L4p016133
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 06:05:23 -0700
-Received: from [192.168.1.100] (CPE0018396a01fc-CM001225dbafb6.cpe.net.cable.rogers.com [72.143.66.27])
-	(authenticated bits=0)
-	by rubicon.netdirect.ca (8.13.1/8.13.1) with ESMTP id l8ECsr61011936
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2007 08:55:04 -0400
-Date: Fri, 14 Sep 2007 08:53:20 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@mindspring.com>
-Subject: [PATCH] XFS: Delete duplicate macro definitions.
-Message-ID: <Pine.LNX.4.64.0709140851130.20022@localhost.localdomain>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Sep 2007 07:14:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8EEEO4p031669
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 07:14:25 -0700
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 1AE2D18003EF4
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Sep 2007 09:14:26 -0500 (CDT)
+Message-ID: <46EA9741.6060303@sandeen.net>
+Date: Fri, 14 Sep 2007 09:14:25 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: can't remove dir
+References: <20070914080926.GA30150@apartia.fr>
+In-Reply-To: <20070914080926.GA30150@apartia.fr>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
+Louis-David Mitterrand wrote:
+> Hello,
+> 
+> While cleaning up /lost+found a directory resisted removal:
+> 
+> 	sylla:/lost+found# rm 1879629858 -rf
+> 	rm: cannot remove directory `1879629858': Directory not empty
+> 
+> The directory _is_ empty and "-rf" should remove it anyway, so this 
+> looks like a fs error.
+> 
+> This is on debian unstable with 2.6.23-rc6.
+> 
+> 
 
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Any errors in the system logs?  I'd try most recent xfs_repair next.  If
+that doesn't fix it, make an xfs_metadump for Barry to look at.  :)
+Make a backup first if you're paranoid.
 
----
-
-  something that popped out of a script i have that scans for
-redundant macro definitions.  apply or not as you see fit.  not
-compile-tested as it was just done visually.
-
-diff --git a/fs/xfs/xfs_bmap_btree.h b/fs/xfs/xfs_bmap_btree.h
-index a77b1b7..0173575 100644
---- a/fs/xfs/xfs_bmap_btree.h
-+++ b/fs/xfs/xfs_bmap_btree.h
-@@ -47,28 +47,25 @@ typedef struct xfs_bmdr_block {
-  *  l1:0-20 are blockcount.
-  */
-
-+#define BMBT_TOTAL_BITLEN	128	/* 128 bits, 16 bytes */
-+#define BMBT_EXNTFLAG_BITLEN	1
-+#define BMBT_STARTOFF_BITLEN	54
-+#define BMBT_STARTBLOCK_BITLEN	52
-+
- #ifndef XFS_NATIVE_HOST
-
--#define BMBT_TOTAL_BITLEN	128	/* 128 bits, 16 bytes */
- #define BMBT_EXNTFLAG_BITOFF	0
--#define BMBT_EXNTFLAG_BITLEN	1
- #define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF + BMBT_EXNTFLAG_BITLEN)
--#define BMBT_STARTOFF_BITLEN	54
- #define BMBT_STARTBLOCK_BITOFF	(BMBT_STARTOFF_BITOFF + BMBT_STARTOFF_BITLEN)
--#define BMBT_STARTBLOCK_BITLEN	52
- #define BMBT_BLOCKCOUNT_BITOFF	\
- 	(BMBT_STARTBLOCK_BITOFF + BMBT_STARTBLOCK_BITLEN)
- #define BMBT_BLOCKCOUNT_BITLEN	(BMBT_TOTAL_BITLEN - BMBT_BLOCKCOUNT_BITOFF)
-
- #else
-
--#define BMBT_TOTAL_BITLEN	128	/* 128 bits, 16 bytes */
- #define BMBT_EXNTFLAG_BITOFF	63
--#define BMBT_EXNTFLAG_BITLEN	1
- #define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF - BMBT_STARTOFF_BITLEN)
--#define BMBT_STARTOFF_BITLEN	54
- #define BMBT_STARTBLOCK_BITOFF	85 /* 128 - 43 (other 9 is in first word) */
--#define BMBT_STARTBLOCK_BITLEN	52
- #define BMBT_BLOCKCOUNT_BITOFF	64 /* Start of second 64 bit container */
- #define BMBT_BLOCKCOUNT_BITLEN	21
-
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+-Eric
