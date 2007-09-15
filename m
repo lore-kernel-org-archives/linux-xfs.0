@@ -1,37 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 15 Sep 2007 03:23:16 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8FAN94p028358
-	for <xfs@oss.sgi.com>; Sat, 15 Sep 2007 03:23:11 -0700
-Date: Sat, 15 Sep 2007 12:05:11 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 15 Sep 2007 11:58:09 -0700 (PDT)
+Received: from rv-out-0910.google.com (rv-out-0910.google.com [209.85.198.189])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8FIw24p001275
+	for <xfs@oss.sgi.com>; Sat, 15 Sep 2007 11:58:05 -0700
+Received: by rv-out-0910.google.com with SMTP id k20so835730rvb
+        for <xfs@oss.sgi.com>; Sat, 15 Sep 2007 11:58:04 -0700 (PDT)
+Message-ID: <654e62180709151158v454d33b8k864d5bcb8a37f003@mail.gmail.com>
+Date: Sat, 15 Sep 2007 11:58:04 -0700
+From: "Jordan Mendler" <jmendler@ucla.edu>
 Subject: Re: compression
-Message-ID: <20070915100511.GA8183@p15145560.pureserver.info>
+In-Reply-To: <20070915100511.GA8183@p15145560.pureserver.info>
+MIME-Version: 1.0
 References: <654e62180709111643k4700c2bdibec2a16eb5446e76@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	 <20070915100511.GA8183@p15145560.pureserver.info>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <654e62180709111643k4700c2bdibec2a16eb5446e76@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jordan Mendler <jmendler@ucla.edu>
+To: Ralf Gross <Ralf-Lists@ralfgross.de>
 Cc: xfs@oss.sgi.com
 
-Jordan Mendler schrieb:
-> 
-> I searched the mailing list archive and could not find an answer. We are
-> currently using XFS on Linux for a 17TB Volume used for backups. We are
-> running out of space, so rather than order another array, I would like to
-> try to implement filesystem-level compression. Does XFS support any type of
-> compression? If not, are there any other ways to optimize for more space
-> storage? We are doing extensive rsyncs as our method of backups, so gzipping
-> on top of the filesystem is not really an option.
+Cool. I will give that a shot. Right now I am just using rsync and
+rdiff-backup scripts, but it would be nice to have a frontend in addition to
+command line.
 
-A very nice tool for backups is backuppc which stores all backed up
-files in a pool and uses hardlinks to map these files to the real
-backup. There is only one copy of each file in the pool regardless of
-on how may clients this file exist (De-duplication). You can use
-backuppc with tar/rsync/smb and with compression.
+Thanks so much,
+Jordan
 
-Ralf
+On 9/15/07, Ralf Gross <Ralf-Lists@ralfgross.de> wrote:
+>
+> Jordan Mendler schrieb:
+> >
+> > I searched the mailing list archive and could not find an answer. We are
+> > currently using XFS on Linux for a 17TB Volume used for backups. We are
+> > running out of space, so rather than order another array, I would like
+> to
+> > try to implement filesystem-level compression. Does XFS support any type
+> of
+> > compression? If not, are there any other ways to optimize for more space
+> > storage? We are doing extensive rsyncs as our method of backups, so
+> gzipping
+> > on top of the filesystem is not really an option.
+>
+> A very nice tool for backups is backuppc which stores all backed up
+> files in a pool and uses hardlinks to map these files to the real
+> backup. There is only one copy of each file in the pool regardless of
+> on how may clients this file exist (De-duplication). You can use
+> backuppc with tar/rsync/smb and with compression.
+>
+> Ralf
+>
+
+
+[[HTML alternate version deleted]]
