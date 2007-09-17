@@ -1,54 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Sep 2007 19:47:28 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8H2lLuw027715
-	for <linux-xfs@oss.sgi.com>; Sun, 16 Sep 2007 19:47:24 -0700
-Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id IAA09364 for <linux-xfs@oss.sgi.com>; Mon, 17 Sep 2007 08:32:59 +1000
-Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id l8GMWwdD22573961
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Sep 2007 08:32:59 +1000 (AEST)
-Received: (from dgc@localhost)
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id l8GMWvKR22618307
-	for linux-xfs@oss.sgi.com; Mon, 17 Sep 2007 08:32:57 +1000 (AEST)
-Date: Mon, 17 Sep 2007 08:32:57 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: can't remove dir
-Message-ID: <20070916223257.GI734179@sgi.com>
-References: <20070914080926.GA30150@apartia.fr> <Pine.LNX.4.64.0709140438130.752@p34.internal.lan> <20070914084125.GA31074@apartia.fr> <20070914091032.GE734179@sgi.com> <20070914092712.GA31997@apartia.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20070914092712.GA31997@apartia.fr>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Sep 2007 19:50:01 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8H2nsuw028355
+	for <xfs@oss.sgi.com>; Sun, 16 Sep 2007 19:49:57 -0700
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 8667A18003EF4
+	for <xfs@oss.sgi.com>; Sun, 16 Sep 2007 20:47:22 -0500 (CDT)
+Message-ID: <46EDDCA7.5030601@sandeen.net>
+Date: Sun, 16 Sep 2007 20:47:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] fix 32-bit compat ioctls for GETXFLAGS, SETXFLAGS, GETVERSION
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Sep 14, 2007 at 11:27:21AM +0200, Louis-David Mitterrand wrote:
-> On Fri, Sep 14, 2007 at 07:10:32PM +1000, David Chinner wrote:
-> > BTW, what problem led you to running xfs_repair in the first
-> > place (i.e.  what led to lost+found getting populated)?
-> 
-> The infamous 2.6.17.1 corruption.
+XFS_IOC_GETVERSION, XFS_IOC_GETXFLAGS and XFS_IOC_SETXFLAGS all
+take a "long" which changes size between 32 and 64 bit platforms.
 
-Well, that explains it ;)
+So, the ioctl cmds that come in from a 32-bit app aren't as expected, 
+for example on GETXFLAGS,
 
-http://oss.sgi.com/projects/xfs/faq.html#dir2
+	unknown cmd fd(3) cmd(80046601){t:'f';sz:4}
 
-"To add insult to injury, xfs_repair(8) is currently not correcting
-these directories on detection of this corrupt state either. This
-xfs_repair issue is actively being worked on, and a fixed version
-will be available shortly.
+due to the size mismatch.
 
-Update: a fixed xfs_repair is now available; version 2.8.10 or later
-of the xfsprogs package contains the fixed version."
+So, use instead the 32-bit version of the commands for compat ioctls,
+and other than that it doesn't take any more manipulation.
 
-What version of xfs_repair are you using? (xfs_repair -V)
+Also, for both native and compat versions, just define them to
+the values as defined in fs.h
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Index: linux-2.6.22/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- linux-2.6.22.orig/fs/xfs/linux-2.6/xfs_ioctl32.c
++++ linux-2.6.22/fs/xfs/linux-2.6/xfs_ioctl32.c
+@@ -376,9 +376,6 @@ xfs_compat_ioctl(
+ 	switch (cmd) {
+ 	case XFS_IOC_DIOINFO:
+ 	case XFS_IOC_FSGEOMETRY:
+-	case XFS_IOC_GETVERSION:
+-	case XFS_IOC_GETXFLAGS:
+-	case XFS_IOC_SETXFLAGS:
+ 	case XFS_IOC_FSGETXATTR:
+ 	case XFS_IOC_FSSETXATTR:
+ 	case XFS_IOC_FSGETXATTRA:
+@@ -404,6 +401,11 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_ERROR_CLEARALL:
+ 		break;
+ 
++	case XFS_IOC32_GETXFLAGS:
++	case XFS_IOC32_SETXFLAGS:
++	case XFS_IOC32_GETVERSION:
++		cmd = _NATIVE_IOC(cmd, long);
++		break;
+ #ifdef BROKEN_X86_ALIGNMENT
+ 	/* xfs_flock_t has wrong u32 vs u64 alignment */
+ 	case XFS_IOC_ALLOCSP_32:
+Index: linux-2.6.22/fs/xfs/xfs_fs.h
+===================================================================
+--- linux-2.6.22.orig/fs/xfs/xfs_fs.h
++++ linux-2.6.22/fs/xfs/xfs_fs.h
+@@ -436,9 +436,13 @@ typedef struct xfs_handle {
+ /*
+  * ioctl commands that are used by Linux filesystems
+  */
+-#define XFS_IOC_GETXFLAGS	_IOR('f', 1, long)
+-#define XFS_IOC_SETXFLAGS	_IOW('f', 2, long)
+-#define XFS_IOC_GETVERSION	_IOR('v', 1, long)
++#define XFS_IOC_GETXFLAGS	FS_IOC_GETFLAGS
++#define XFS_IOC_SETXFLAGS	FS_IOC_SETFLAGS
++#define XFS_IOC_GETVERSION	FS_IOC_GETVERSION
++/* 32-bit compat counterparts */
++#define XFS_IOC32_GETXFLAGS	FS_IOC32_GETFLAGS
++#define XFS_IOC32_SETXFLAGS	FS_IOC32_SETFLAGS
++#define XFS_IOC32_GETVERSION	FS_IOC32_GETVERSION
+ 
+ /*
+
+  * ioctl commands that replace IRIX fcntl()'s
