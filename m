@@ -1,61 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 19:02:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 19:24:34 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I22Muw014065
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Sep 2007 19:02:25 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA21052; Tue, 18 Sep 2007 10:50:01 +1000
-Message-ID: <46EF20B9.2060304@sgi.com>
-Date: Tue, 18 Sep 2007 10:50:01 +1000
-From: Donald Douwsma <donaldd@sgi.com>
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I2OLuw017322
+	for <xfs@oss.sgi.com>; Mon, 17 Sep 2007 19:24:27 -0700
+Date: Tue, 18 Sep 2007 12:27:57 +1000
+Subject: Re: Bug Report
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 MIME-Version: 1.0
-Subject: Re: Newbie question about mkfs.xfs command
-References: <12745380.post@talk.nabble.com>
-In-Reply-To: <12745380.post@talk.nabble.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <170b1bd40709061005t787494b6lca283320cace6c31@mail.gmail.com>
+Message-ID: <op.tytvsvcm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <170b1bd40709061005t787494b6lca283320cace6c31@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Hxsrmeng <hxsrmeng@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Mark Goodall <mark.goodall@gmail.com>, xfs@oss.sgi.com
 
-Hxsrmeng wrote:
-> What does the second "loop" means in "mkfs.xfs -d file=loop loop"? Thanks.
+On Fri, 07 Sep 2007 03:05:29 +1000, Mark Goodall <mark.goodall@gmail.com>  
+wrote:
 
-The final parameter to mkfs.xfs needs to be a block device or a file.
+> Not sure what caused this bug, how much more information do you need?
+>
+>         - 18:01:15: check for inodes claiming duplicate blocks - 198528  
+> of
+> 198528 inodes done
+> No modify flag set, skipping phase 5
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem starting at / ...
+> corrupt dinode 25809974, extent total = 16, nblocks = 0.  This is a bug.
+> Please report it to xfs@oss.sgi.com.
+> cache_node_purge: refcount was 1, not zero (node=0x8d65fd0)
+> couldn't map inode 25809974, err = 117
+> entry "gobo_3.3-6_i386.deb" in shortform directory inode 1770978822  
+> points
+> to free inode 1770978825
+> would junk entry "gobo_3.3-6_i386.deb"
+>         - 18:01:48: traversing filesystem - 32 of 32 allocation groups  
+> done
+>         - traversal finished ...
+>         - traversing all unattached subtrees ...
+> Segmentation fault (core dumped)
+>
+> OS: Ubuntu Linux mserve 2.6.20-16-386 #2 Fri Aug 31 00:51:58 UTC 2007  
+> i686
+> GNU/Linux
+> fully patched from official repositories
 
-In your case it looks like you intend to create a filesystem on a file
-called loop (so you can mount it later as a loopback device?).
+Latest xfsprogs 2.9.4 doesn't segfault anymore in Phase 6.
 
-You dont need the '-d file=loop' (which is invalid, file= takes 1 or 0),
-mkfs.xfs usually figures this out.
+The "corrupt dinode..." error is a symptom of running
+xfs_repair in -n mode where Phase 3 would have fixed the
+offending inode up:
 
+-n mode:
+   bad attribute format 0 in inode 25809974, would reset value
+   bad anextents 16 for inode 25809974, would reset to 0
 
-So assuming you created a test file with something like
+repair mode:
+   bad attribute format 0 in inode 25809974, resetting value
+   correcting anextents for inode 25809974, was 16 - counted 0
 
-# dd if=/dev/zero of=testfile bs=1k count=100000
-100000+0 records in
-100000+0 records out
-102400000 bytes (102 MB) copied, 0.770193 seconds, 133 MB/s
-
-You make an xfs filesystem with just
-
-# mkfs.xfs testfile
-meta-data=bar                    isize=256    agcount=6, agsize=4096 blks
-          =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=24576, imaxpct=25
-          =                       sunit=0      swidth=0 blks, unwritten=1
-naming   =version 2              bsize=4096
-log      =internal log           bsize=4096   blocks=1200, version=1
-          =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-And after making a mount point, mount it with
-
-# mount -o loop testfile testmount
-
-The -o loop tells mount to use a loopback device to turn your testfile into
-a block device for the mount. This is the only step you need root permissions
-for.
-
-Don
+Regards,
+Barry.
