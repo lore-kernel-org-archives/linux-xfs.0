@@ -1,953 +1,865 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 08:51:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 08:51:51 -0700 (PDT)
 Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JFpiv0003681
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 08:51:48 -0700
-Date: Tue, 18 Sep 2007 21:23:27 +0200
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JFpiuw003681
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 08:51:46 -0700
+Date: Tue, 18 Sep 2007 21:27:53 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] kill unnessecary ioops indirection
-Message-ID: <20070918192327.GA24369@lst.de>
-References: <20070914162802.GE7110@lst.de> <46EF661C.4030500@sgi.com>
+Subject: Re: [PATCH 2/2] kill xfs_iocore_t
+Message-ID: <20070918192753.GA24632@lst.de>
+References: <20070914162808.GF7110@lst.de> <46EF4C88.3070504@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46EF661C.4030500@sgi.com>
+In-Reply-To: <46EF4C88.3070504@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-> > STATIC int				/* error (positive) */
-> > xfs_zero_last_block(
-> >-	struct inode	*ip,
-> >-	xfs_iocore_t	*io,
-> >+	struct inode	*inode,
-> >+	xfs_inode_t	*ip,
-> We don't really need to pass both the inode and xfs_inode
-> since it's easy to get one from the other.  It was a trivial
-> exercise to get the iocore from the inode too so it's not a
-> problem with this change but should be cleaned up.
+On Tue, Sep 18, 2007 at 01:56:56PM +1000, Lachlan McIlroy wrote:
+> This all looks good to me.  A lot cleaner, nice one.
 
-Yeah, and when doing this change a lot more similar cleanups to
-get rid of xfs_inode and vnode fall out automatically.  I've
-incorporated those bits into the next version.
+It needs a little update to still apply after the ioops removal has
+been reworked per your suggestions.
 
-> >@@ -474,7 +474,8 @@ xfs_zero_eof(
-> > 	xfs_off_t	offset,		/* starting I/O offset */
-> > 	xfs_fsize_t	isize)		/* current inode size */
-> > {
-> >-	struct inode	*ip = vn_to_inode(vp);
-> >+	struct inode	*inode = vn_to_inode(vp);
-> >+	xfs_inode_t	*ip = XFS_I(inode);
-> Can we change the prototype for xfs_zero_eof() to take an inode
-> instead of the vp?  They are the same object and vn_to_inode()/
-> vn_from_inode() are just a waste of cycles.  Also kills another
-> stack variable.
-
-I've changed to to an xfs_inode because that's what we want.
-inode is only needed all the way up in xfs_iozero once.
-
-vn_to_inode()/vn_from_inode() are no-ops nowdays, btw.
-
-> >-	error = XFS_SWAP_EXTENTS(mp, &ip->i_iocore, &tip->i_iocore, sxp);
-> >+	error = xfs_swap_extents(ip, ip, sxp);
-> 
-> xfs_swap_extents(ip, tip, sxp);
-
-Oops, fixed.  No idea why xfsqa didn't catch this.
+Here's the new version:
 
 
-And here's the updated patch:
-
-
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
+Index: linux-2.6-xfs/fs/xfs/Makefile-linux-2.6
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2007-09-18 16:44:27.000000000 +0200
-@@ -131,7 +131,7 @@ xfs_inval_cached_trace(
-  */
- STATIC int
- xfs_iozero(
--	struct inode		*ip,	/* inode			*/
-+	struct xfs_inode	*ip,	/* inode			*/
- 	loff_t			pos,	/* offset in file		*/
- 	size_t			count)	/* size of data to zero		*/
- {
-@@ -140,7 +140,7 @@ xfs_iozero(
- 	struct address_space	*mapping;
- 	int			status;
+--- linux-2.6-xfs.orig/fs/xfs/Makefile-linux-2.6	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/Makefile-linux-2.6	2007-09-18 16:47:33.000000000 +0200
+@@ -60,7 +60,6 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_iget.o \
+ 				   xfs_inode.o \
+ 				   xfs_inode_item.o \
+-				   xfs_iocore.o \
+ 				   xfs_iomap.o \
+ 				   xfs_itable.o \
+ 				   xfs_dfrag.o \
+Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2007-09-18 16:47:33.000000000 +0200
+@@ -188,7 +188,7 @@ xfs_dm_send_data_event(
  
--	mapping = ip->i_mapping;
-+	mapping = ip->i_vnode->i_mapping;
+ 	ip = xfs_vtoi(vp);
  	do {
- 		unsigned long index, offset;
+-		dmstate = ip->i_iocore.io_dmstate;
++		dmstate = ip->i_d.di_dmstate;
+ 		if (locktype)
+ 			xfs_rwunlock(ip, *locktype);
  
-@@ -400,20 +400,19 @@ xfs_splice_write(
-  */
- STATIC int				/* error (positive) */
- xfs_zero_last_block(
--	struct inode	*ip,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_fsize_t	offset,
- 	xfs_fsize_t	isize)
- {
- 	xfs_fileoff_t	last_fsb;
--	xfs_mount_t	*mp = io->io_mount;
-+	xfs_mount_t	*mp = ip->i_mount;
- 	int		nimaps;
- 	int		zero_offset;
- 	int		zero_len;
- 	int		error = 0;
- 	xfs_bmbt_irec_t	imap;
+@@ -202,7 +202,7 @@ xfs_dm_send_data_event(
  
--	ASSERT(ismrlocked(io->io_lock, MR_UPDATE) != 0);
-+	ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE) != 0);
+ 		if (locktype)
+ 			xfs_rwlock(ip, *locktype);
+-	} while (!error && (ip->i_iocore.io_dmstate != dmstate));
++	} while (!error && (ip->i_d.di_dmstate != dmstate));
  
- 	zero_offset = XFS_B_FSB_OFFSET(mp, isize);
- 	if (zero_offset == 0) {
-@@ -426,7 +425,7 @@ xfs_zero_last_block(
- 
- 	last_fsb = XFS_B_TO_FSBT(mp, isize);
- 	nimaps = 1;
--	error = XFS_BMAPI(mp, NULL, io, last_fsb, 1, 0, NULL, 0, &imap,
-+	error = xfs_bmapi(NULL, ip, last_fsb, 1, 0, NULL, 0, &imap,
- 			  &nimaps, NULL, NULL);
- 	if (error) {
- 		return error;
-@@ -444,14 +443,14 @@ xfs_zero_last_block(
- 	 * out sync.  We need to drop the ilock while we do this so we
- 	 * don't deadlock when the buffer cache calls back to us.
- 	 */
--	XFS_IUNLOCK(mp, io, XFS_ILOCK_EXCL| XFS_EXTSIZE_RD);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL| XFS_EXTSIZE_RD);
- 
- 	zero_len = mp->m_sb.sb_blocksize - zero_offset;
- 	if (isize + zero_len > offset)
- 		zero_len = offset - isize;
- 	error = xfs_iozero(ip, isize, zero_len);
- 
--	XFS_ILOCK(mp, io, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
- 	ASSERT(error >= 0);
  	return error;
  }
-@@ -469,12 +468,11 @@ xfs_zero_last_block(
+@@ -1018,7 +1018,6 @@ xfs_dm_f_set_eventlist(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
  
- int					/* error (positive) */
- xfs_zero_eof(
--	bhv_vnode_t	*vp,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_off_t	offset,		/* starting I/O offset */
- 	xfs_fsize_t	isize)		/* current inode size */
- {
--	struct inode	*ip = vn_to_inode(vp);
-+	xfs_iocore_t	*io = &ip->i_iocore;
- 	xfs_fileoff_t	start_zero_fsb;
- 	xfs_fileoff_t	end_zero_fsb;
- 	xfs_fileoff_t	zero_count_fsb;
-@@ -494,7 +492,7 @@ xfs_zero_eof(
- 	 * First handle zeroing the block on which isize resides.
- 	 * We only zero a part of that block so it is handled specially.
- 	 */
--	error = xfs_zero_last_block(ip, io, offset, isize);
-+	error = xfs_zero_last_block(ip, offset, isize);
- 	if (error) {
- 		ASSERT(ismrlocked(io->io_lock, MR_UPDATE));
- 		ASSERT(ismrlocked(io->io_iolock, MR_UPDATE));
-@@ -525,7 +523,7 @@ xfs_zero_eof(
- 	while (start_zero_fsb <= end_zero_fsb) {
- 		nimaps = 1;
- 		zero_count_fsb = end_zero_fsb - start_zero_fsb + 1;
--		error = XFS_BMAPI(mp, NULL, io, start_zero_fsb, zero_count_fsb,
-+		error = xfs_bmapi(NULL, ip, start_zero_fsb, zero_count_fsb,
- 				  0, NULL, 0, &imap, &nimaps, NULL, NULL);
- 		if (error) {
- 			ASSERT(ismrlocked(io->io_lock, MR_UPDATE));
-@@ -553,7 +551,7 @@ xfs_zero_eof(
- 		 * Drop the inode lock while we're doing the I/O.
- 		 * We'll still have the iolock to protect us.
+ 	ip->i_d.di_dmevmask = (eventset & max_mask) | (ip->i_d.di_dmevmask & ~max_mask);
+-	ip->i_iocore.io_dmevmask = ip->i_d.di_dmevmask;
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	VN_HOLD(vp);
+@@ -2598,7 +2597,7 @@ xfs_dm_punch_hole(
+ 		error = -error;
+ 
+ 	/* Let threads in send_data_event know we punched the file. */
+-	ip->i_iocore.io_dmstate++;
++	ip->i_d.di_dmstate++;
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	xfs_iflags_set(ip, XFS_IMODIFIED);
+ 
+@@ -2926,7 +2925,7 @@ xfs_dm_set_region(
+ 		 * bit, then that's always okay.  Otherwise, it's busy.
  		 */
--		XFS_IUNLOCK(mp, io, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
+ 		dm_eventset_t m1;
+-		m1 = ip->i_iocore.io_dmevmask & ((1 << DM_EVENT_WRITE) | (1 << DM_EVENT_TRUNCATE));
++		m1 = ip->i_d.di_dmevmask & ((1 << DM_EVENT_WRITE) | (1 << DM_EVENT_TRUNCATE));
+ 		if (m1 != new_mask) {
+ 			return -EBUSY;
+ 		}
+@@ -2943,7 +2942,6 @@ xfs_dm_set_region(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
  
- 		zero_off = XFS_FSB_TO_B(mp, start_zero_fsb);
- 		zero_len = XFS_FSB_TO_B(mp, imap.br_blockcount);
-@@ -569,14 +567,13 @@ xfs_zero_eof(
- 		start_zero_fsb = imap.br_startoff + imap.br_blockcount;
- 		ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
+ 	ip->i_d.di_dmevmask = (ip->i_d.di_dmevmask & ~mr_mask) | new_mask;
+-	ip->i_iocore.io_dmevmask = ip->i_d.di_dmevmask;
  
--		XFS_ILOCK(mp, io, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
-+		xfs_ilock(ip, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	VN_HOLD(vp);
+@@ -3223,7 +3221,7 @@ xfs_dm_send_mmap_event(
+ 	offset = 0; /* beginning of file, for now */
+ 	length = 0; /* whole file, for now */
+ 
+-	filesize = ip->i_iocore.io_new_size;
++	filesize = ip->i_new_size;
+ 	if (filesize < ip->i_size) {
+ 		filesize = ip->i_size;
  	}
- 
- 	return 0;
- 
- out_lock:
--
--	XFS_ILOCK(mp, io, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL|XFS_EXTSIZE_RD);
- 	ASSERT(error >= 0);
- 	return error;
- }
-@@ -717,7 +714,7 @@ start:
- 	 */
- 
- 	if (pos > xip->i_size) {
--		error = xfs_zero_eof(vp, io, pos, xip->i_size);
-+		error = xfs_zero_eof(xip, pos, xip->i_size);
- 		if (error) {
- 			xfs_iunlock(xip, XFS_ILOCK_EXCL);
- 			goto out_unlock_internal;
-@@ -762,7 +759,7 @@ retry:
- 
- 		if (need_i_mutex) {
- 			/* demote the lock now the cached pages are gone */
--			XFS_ILOCK_DEMOTE(mp, io, XFS_IOLOCK_EXCL);
-+			xfs_ilock_demote(xip, XFS_IOLOCK_EXCL);
- 			mutex_unlock(&inode->i_mutex);
- 
- 			iolock = XFS_IOLOCK_SHARED;
-@@ -905,25 +902,6 @@ xfs_bdstrat_cb(struct xfs_buf *bp)
- 	}
- }
- 
--
--int
--xfs_bmap(
--	xfs_inode_t	*ip,
--	xfs_off_t	offset,
--	ssize_t		count,
--	int		flags,
--	xfs_iomap_t	*iomapp,
--	int		*niomaps)
--{
--	xfs_iocore_t	*io = &ip->i_iocore;
--
--	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
--	ASSERT(((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) != 0) ==
--	       ((ip->i_iocore.io_flags & XFS_IOCORE_RT) != 0));
--
--	return xfs_iomap(io, offset, count, flags, iomapp, niomaps);
--}
--
- /*
-  * Wrapper around bdstrat so that we can stop data
-  * from going to disk in case we are shutting down the filesystem.
-Index: linux-2.6-xfs/fs/xfs/xfs_iomap.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iomap.c	2007-09-18 16:34:31.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_iomap.c	2007-09-18 16:37:22.000000000 +0200
-@@ -53,11 +53,11 @@
- void
- xfs_iomap_enter_trace(
- 	int		tag,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
- 	ssize_t		count)
- {
--	xfs_inode_t	*ip = XFS_IO_INODE(io);
-+	xfs_iocore_t	*io = &ip->i_iocore;
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2007-09-18 16:47:33.000000000 +0200
+@@ -163,7 +163,7 @@ xfs_destroy_ioend(
+ /*
+  * Update on-disk file size now that data has been written to disk.
+  * The current in-memory file size is i_size.  If a write is beyond
+- * eof io_new_size will be the intended file size until i_size is
++ * eof i_new_size will be the intended file size until i_size is
+  * updated.  If this write does not extend all the way to the valid
+  * file size then restrict this update to the end of the write.
+  */
+@@ -185,7 +185,7 @@ xfs_setfilesize(
  
- 	if (!ip->i_rwtrace)
- 		return;
-@@ -84,15 +84,13 @@ xfs_iomap_enter_trace(
- void
- xfs_iomap_map_trace(
- 	int		tag,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
- 	ssize_t		count,
- 	xfs_iomap_t	*iomapp,
- 	xfs_bmbt_irec_t	*imapp,
- 	int		flags)
- {
--	xfs_inode_t	*ip = XFS_IO_INODE(io);
--
- 	if (!ip->i_rwtrace)
- 		return;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
  
-@@ -126,7 +124,7 @@ xfs_iomap_map_trace(
+-	isize = MAX(ip->i_size, ip->i_iocore.io_new_size);
++	isize = MAX(ip->i_size, ip->i_new_size);
+ 	isize = MIN(isize, bsize);
  
- STATIC int
- xfs_imap_to_bmap(
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
- 	xfs_bmbt_irec_t *imap,
- 	xfs_iomap_t	*iomapp,
-@@ -134,11 +132,10 @@ xfs_imap_to_bmap(
- 	int		iomaps,			/* Number of iomap entries */
- 	int		flags)
- {
--	xfs_mount_t	*mp;
-+	xfs_mount_t	*mp = ip->i_mount;
- 	int		pbm;
- 	xfs_fsblock_t	start_block;
- 
--	mp = io->io_mount;
- 
- 	for (pbm = 0; imaps && pbm < iomaps; imaps--, iomapp++, imap++, pbm++) {
- 		iomapp->iomap_offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-@@ -146,7 +143,7 @@ xfs_imap_to_bmap(
- 		iomapp->iomap_bsize = XFS_FSB_TO_B(mp, imap->br_blockcount);
- 		iomapp->iomap_flags = flags;
- 
--		if (io->io_flags & XFS_IOCORE_RT) {
-+		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
- 			iomapp->iomap_flags |= IOMAP_REALTIME;
- 			iomapp->iomap_target = mp->m_rtdev_targp;
- 		} else {
-@@ -160,7 +157,7 @@ xfs_imap_to_bmap(
- 			iomapp->iomap_bn = IOMAP_DADDR_NULL;
- 			iomapp->iomap_flags |= IOMAP_DELAY;
- 		} else {
--			iomapp->iomap_bn = XFS_FSB_TO_DB_IO(io, start_block);
-+			iomapp->iomap_bn = XFS_FSB_TO_DB(ip, start_block);
- 			if (ISUNWRITTEN(imap))
- 				iomapp->iomap_flags |= IOMAP_UNWRITTEN;
- 		}
-@@ -172,14 +169,14 @@ xfs_imap_to_bmap(
- 
- int
- xfs_iomap(
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_off_t	offset,
- 	ssize_t		count,
- 	int		flags,
- 	xfs_iomap_t	*iomapp,
- 	int		*niomaps)
- {
--	xfs_mount_t	*mp = io->io_mount;
-+	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb, end_fsb;
- 	int		error = 0;
- 	int		lockmode = 0;
-@@ -188,32 +185,37 @@ xfs_iomap(
- 	int		bmapi_flags = 0;
- 	int		iomap_flags = 0;
- 
-+	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
-+	ASSERT(((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) != 0) ==
-+	       ((ip->i_iocore.io_flags & XFS_IOCORE_RT) != 0));
-+
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
- 
- 	switch (flags & (BMAPI_READ | BMAPI_WRITE | BMAPI_ALLOCATE)) {
- 	case BMAPI_READ:
--		xfs_iomap_enter_trace(XFS_IOMAP_READ_ENTER, io, offset, count);
--		lockmode = XFS_LCK_MAP_SHARED(mp, io);
-+		xfs_iomap_enter_trace(XFS_IOMAP_READ_ENTER, ip, offset, count);
-+		lockmode = xfs_ilock_map_shared(ip);
- 		bmapi_flags = XFS_BMAPI_ENTIRE;
- 		break;
- 	case BMAPI_WRITE:
--		xfs_iomap_enter_trace(XFS_IOMAP_WRITE_ENTER, io, offset, count);
-+		xfs_iomap_enter_trace(XFS_IOMAP_WRITE_ENTER, ip, offset, count);
- 		lockmode = XFS_ILOCK_EXCL|XFS_EXTSIZE_WR;
- 		if (flags & BMAPI_IGNSTATE)
- 			bmapi_flags |= XFS_BMAPI_IGSTATE|XFS_BMAPI_ENTIRE;
--		XFS_ILOCK(mp, io, lockmode);
-+		xfs_ilock(ip, lockmode);
- 		break;
- 	case BMAPI_ALLOCATE:
--		xfs_iomap_enter_trace(XFS_IOMAP_ALLOC_ENTER, io, offset, count);
-+		xfs_iomap_enter_trace(XFS_IOMAP_ALLOC_ENTER, ip, offset, count);
- 		lockmode = XFS_ILOCK_SHARED|XFS_EXTSIZE_RD;
- 		bmapi_flags = XFS_BMAPI_ENTIRE;
-+
- 		/* Attempt non-blocking lock */
- 		if (flags & BMAPI_TRYLOCK) {
--			if (!XFS_ILOCK_NOWAIT(mp, io, lockmode))
-+			if (!xfs_ilock_nowait(ip, lockmode))
- 				return XFS_ERROR(EAGAIN);
- 		} else {
--			XFS_ILOCK(mp, io, lockmode);
-+			xfs_ilock(ip, lockmode);
- 		}
- 		break;
- 	default:
-@@ -226,7 +228,7 @@ xfs_iomap(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
--	error = XFS_BMAPI(mp, NULL, io, offset_fsb,
-+	error = xfs_bmapi(NULL, ip, offset_fsb,
- 			(xfs_filblks_t)(end_fsb - offset_fsb),
- 			bmapi_flags,  NULL, 0, &imap,
- 			&nimaps, NULL, NULL);
-@@ -240,42 +242,42 @@ xfs_iomap(
- 		if (nimaps &&
- 		    (imap.br_startblock != HOLESTARTBLOCK) &&
- 		    (imap.br_startblock != DELAYSTARTBLOCK)) {
--			xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
-+			xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, ip,
- 					offset, count, iomapp, &imap, flags);
- 			break;
- 		}
- 
- 		if (flags & (BMAPI_DIRECT|BMAPI_MMAP)) {
--			error = XFS_IOMAP_WRITE_DIRECT(mp, io, offset,
--					count, flags, &imap, &nimaps, nimaps);
-+			error = xfs_iomap_write_direct(ip, offset, count, flags,
-+						       &imap, &nimaps, nimaps);
- 		} else {
--			error = XFS_IOMAP_WRITE_DELAY(mp, io, offset, count,
--					flags, &imap, &nimaps);
-+			error = xfs_iomap_write_delay(ip, offset, count, flags,
-+						      &imap, &nimaps);
- 		}
- 		if (!error) {
--			xfs_iomap_map_trace(XFS_IOMAP_ALLOC_MAP, io,
-+			xfs_iomap_map_trace(XFS_IOMAP_ALLOC_MAP, ip,
- 					offset, count, iomapp, &imap, flags);
- 		}
- 		iomap_flags = IOMAP_NEW;
- 		break;
- 	case BMAPI_ALLOCATE:
- 		/* If we found an extent, return it */
--		XFS_IUNLOCK(mp, io, lockmode);
-+		xfs_iunlock(ip, lockmode);
- 		lockmode = 0;
- 
- 		if (nimaps && !ISNULLSTARTBLOCK(imap.br_startblock)) {
--			xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, io,
-+			xfs_iomap_map_trace(XFS_IOMAP_WRITE_MAP, ip,
- 					offset, count, iomapp, &imap, flags);
- 			break;
- 		}
- 
--		error = XFS_IOMAP_WRITE_ALLOCATE(mp, io, offset, count,
-+		error = xfs_iomap_write_allocate(ip, offset, count,
- 						 &imap, &nimaps);
- 		break;
- 	}
- 
- 	if (nimaps) {
--		*niomaps = xfs_imap_to_bmap(io, offset, &imap,
-+		*niomaps = xfs_imap_to_bmap(ip, offset, &imap,
- 					    iomapp, nimaps, *niomaps, iomap_flags);
- 	} else if (niomaps) {
- 		*niomaps = 0;
-@@ -283,14 +285,15 @@ xfs_iomap(
- 
- out:
- 	if (lockmode)
--		XFS_IUNLOCK(mp, io, lockmode);
-+		xfs_iunlock(ip, lockmode);
- 	return XFS_ERROR(error);
- }
- 
-+
- STATIC int
- xfs_iomap_eof_align_last_fsb(
- 	xfs_mount_t	*mp,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_fsize_t	isize,
- 	xfs_extlen_t	extsize,
- 	xfs_fileoff_t	*last_fsb)
-@@ -299,7 +302,7 @@ xfs_iomap_eof_align_last_fsb(
- 	xfs_extlen_t	align;
- 	int		eof, error;
- 
--	if (io->io_flags & XFS_IOCORE_RT)
-+	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
- 		;
- 	/*
- 	 * If mounted with the "-o swalloc" option, roundup the allocation
-@@ -330,7 +333,7 @@ xfs_iomap_eof_align_last_fsb(
- 	}
- 
- 	if (new_last_fsb) {
--		error = XFS_BMAP_EOF(mp, io, new_last_fsb, XFS_DATA_FORK, &eof);
-+		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
- 		if (error)
- 			return error;
- 		if (eof)
-@@ -435,7 +438,7 @@ xfs_iomap_write_direct(
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
- 	if ((offset + count) > isize) {
--		error = xfs_iomap_eof_align_last_fsb(mp, io, isize, extsz,
-+		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
- 							&last_fsb);
- 		if (error)
- 			goto error_out;
-@@ -502,7 +505,7 @@ xfs_iomap_write_direct(
- 	 */
- 	XFS_BMAP_INIT(&free_list, &firstfsb);
- 	nimaps = 1;
--	error = XFS_BMAPI(mp, tp, io, offset_fsb, count_fsb, bmapi_flag,
-+	error = xfs_bmapi(tp, ip, offset_fsb, count_fsb, bmapi_flag,
- 		&firstfsb, 0, &imap, &nimaps, &free_list, NULL);
- 	if (error)
- 		goto error0;
-@@ -560,7 +563,7 @@ error_out:
- STATIC int
- xfs_iomap_eof_want_preallocate(
- 	xfs_mount_t	*mp,
--	xfs_iocore_t	*io,
-+	xfs_inode_t	*ip,
- 	xfs_fsize_t	isize,
- 	xfs_off_t	offset,
- 	size_t		count,
-@@ -587,7 +590,7 @@ xfs_iomap_eof_want_preallocate(
- 	while (count_fsb > 0) {
- 		imaps = nimaps;
- 		firstblock = NULLFSBLOCK;
--		error = XFS_BMAPI(mp, NULL, io, start_fsb, count_fsb, 0,
-+		error = xfs_bmapi(NULL, ip, start_fsb, count_fsb, 0,
- 				  &firstblock, 0, imap, &imaps, NULL, NULL);
- 		if (error)
- 			return error;
-@@ -644,7 +647,7 @@ retry:
- 	if (io->io_new_size > isize)
- 		isize = io->io_new_size;
- 
--	error = xfs_iomap_eof_want_preallocate(mp, io, isize, offset, count,
-+	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
- 				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
- 	if (error)
- 		return error;
-@@ -658,7 +661,7 @@ retry:
- 	}
- 
- 	if (prealloc || extsz) {
--		error = xfs_iomap_eof_align_last_fsb(mp, io, isize, extsz,
-+		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
- 							&last_fsb);
- 		if (error)
- 			return error;
-@@ -666,7 +669,7 @@ retry:
- 
- 	nimaps = XFS_WRITE_IMAPS;
- 	firstblock = NULLFSBLOCK;
--	error = XFS_BMAPI(mp, NULL, io, offset_fsb,
-+	error = xfs_bmapi(NULL, ip, offset_fsb,
- 			  (xfs_filblks_t)(last_fsb - offset_fsb),
- 			  XFS_BMAPI_DELAY | XFS_BMAPI_WRITE |
- 			  XFS_BMAPI_ENTIRE, &firstblock, 1, imap,
-@@ -680,7 +683,7 @@ retry:
- 	 */
- 	if (nimaps == 0) {
- 		xfs_iomap_enter_trace(XFS_IOMAP_WRITE_NOSPACE,
--					io, offset, count);
-+					ip, offset, count);
- 		if (xfs_flush_space(ip, &fsynced, &ioflag))
- 			return XFS_ERROR(ENOSPC);
- 
-@@ -788,7 +791,7 @@ xfs_iomap_write_allocate(
- 			}
- 
- 			/* Go get the actual blocks */
--			error = XFS_BMAPI(mp, tp, io, map_start_fsb, count_fsb,
-+			error = xfs_bmapi(tp, ip, map_start_fsb, count_fsb,
- 					XFS_BMAPI_WRITE, &first_block, 1,
- 					imap, &nimaps, &free_list, NULL);
- 			if (error)
-@@ -860,8 +863,7 @@ xfs_iomap_write_unwritten(
- 	int		committed;
- 	int		error;
- 
--	xfs_iomap_enter_trace(XFS_IOMAP_UNWRITTEN,
--				&ip->i_iocore, offset, count);
-+	xfs_iomap_enter_trace(XFS_IOMAP_UNWRITTEN, ip, offset, count);
- 
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-@@ -895,7 +897,7 @@ xfs_iomap_write_unwritten(
- 		 */
- 		XFS_BMAP_INIT(&free_list, &firstfsb);
- 		nimaps = 1;
--		error = XFS_BMAPI(mp, tp, io, offset_fsb, count_fsb,
-+		error = xfs_bmapi(tp, ip, offset_fsb, count_fsb,
- 				  XFS_BMAPI_WRITE|XFS_BMAPI_CONVERT, &firstfsb,
- 				  1, &imap, &nimaps, &free_list, NULL);
- 		if (error)
+ 	if (ip->i_d.di_size < isize) {
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-18 16:37:22.000000000 +0200
-@@ -248,8 +248,6 @@ EXPORT_SYMBOL(xfs_ilock_nowait);
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2007-09-18 16:47:33.000000000 +0200
+@@ -247,7 +247,6 @@ EXPORT_SYMBOL(xfs_ilock_map_shared);
+ EXPORT_SYMBOL(xfs_ilock_nowait);
  EXPORT_SYMBOL(xfs_inode_lock_init);
  EXPORT_SYMBOL(xfs_internal_inum);
- EXPORT_SYMBOL(xfs_iocore_inode_init);
--EXPORT_SYMBOL(xfs_iocore_xfs);
--EXPORT_SYMBOL(xfs_iomap);
+-EXPORT_SYMBOL(xfs_iocore_inode_init);
  EXPORT_SYMBOL(xfs_iput);
  EXPORT_SYMBOL(xfs_iput_new);
  EXPORT_SYMBOL(xfs_iread);
-Index: linux-2.6-xfs/fs/xfs/xfs_dfrag.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_dfrag.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_dfrag.c	2007-09-18 16:37:38.000000000 +0200
-@@ -111,7 +111,7 @@ xfs_swapext(
- 		goto error0;
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2007-09-18 16:44:27.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2007-09-18 16:56:30.000000000 +0200
+@@ -58,14 +58,12 @@
+ void
+ xfs_rw_enter_trace(
+ 	int			tag,
+-	xfs_iocore_t		*io,
++	xfs_inode_t		*ip,
+ 	void			*data,
+ 	size_t			segs,
+ 	loff_t			offset,
+ 	int			ioflags)
+ {
+-	xfs_inode_t	*ip = XFS_IO_INODE(io);
+-
+ 	if (ip->i_rwtrace == NULL)
+ 		return;
+ 	ktrace_enter(ip->i_rwtrace,
+@@ -78,8 +76,8 @@ xfs_rw_enter_trace(
+ 		(void *)((unsigned long)((offset >> 32) & 0xffffffff)),
+ 		(void *)((unsigned long)(offset & 0xffffffff)),
+ 		(void *)((unsigned long)ioflags),
+-		(void *)((unsigned long)((io->io_new_size >> 32) & 0xffffffff)),
+-		(void *)((unsigned long)(io->io_new_size & 0xffffffff)),
++		(void *)((unsigned long)((ip->i_new_size >> 32) & 0xffffffff)),
++		(void *)((unsigned long)(ip->i_new_size & 0xffffffff)),
+ 		(void *)((unsigned long)current_pid()),
+ 		(void *)NULL,
+ 		(void *)NULL,
+@@ -89,13 +87,12 @@ xfs_rw_enter_trace(
+ 
+ void
+ xfs_inval_cached_trace(
+-	xfs_iocore_t	*io,
++	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+ 	xfs_off_t	len,
+ 	xfs_off_t	first,
+ 	xfs_off_t	last)
+ {
+-	xfs_inode_t	*ip = XFS_IO_INODE(io);
+ 
+ 	if (ip->i_rwtrace == NULL)
+ 		return;
+@@ -267,7 +264,7 @@ xfs_read(
+ 		}
  	}
  
--	error = XFS_SWAP_EXTENTS(mp, &ip->i_iocore, &tip->i_iocore, sxp);
-+	error = xfs_swap_extents(ip, tip, sxp);
+-	xfs_rw_enter_trace(XFS_READ_ENTER, &ip->i_iocore,
++	xfs_rw_enter_trace(XFS_READ_ENTER, ip,
+ 				(void *)iovp, segs, *offset, ioflags);
  
-  error0:
- 	if (fp != NULL)
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2007-09-18 16:43:12.000000000 +0200
-@@ -1709,7 +1709,7 @@ xfs_itruncate_finish(
- 		 * runs.
- 		 */
- 		XFS_BMAP_INIT(&free_list, &first_block);
--		error = XFS_BUNMAPI(mp, ntp, &ip->i_iocore,
-+		error = xfs_bunmapi(ntp, ip,
- 				    first_unmap_block, unmap_len,
- 				    XFS_BMAPI_AFLAG(fork) |
- 				      (sync ? 0 : XFS_BMAPI_ASYNC),
-@@ -1842,8 +1842,6 @@ xfs_igrow_start(
- 	xfs_fsize_t	new_size,
- 	cred_t		*credp)
- {
--	int		error;
--
- 	ASSERT(ismrlocked(&(ip->i_lock), MR_UPDATE) != 0);
- 	ASSERT(ismrlocked(&(ip->i_iolock), MR_UPDATE) != 0);
- 	ASSERT(new_size > ip->i_size);
-@@ -1853,9 +1851,7 @@ xfs_igrow_start(
- 	 * xfs_write_file() beyond the end of the file
- 	 * and any blocks between the old and new file sizes.
- 	 */
--	error = xfs_zero_eof(XFS_ITOV(ip), &ip->i_iocore, new_size,
--			     ip->i_size);
--	return error;
-+	return xfs_zero_eof(ip, new_size, ip->i_size);
- }
- 
- /*
-Index: linux-2.6-xfs/fs/xfs/xfs_iocore.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iocore.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_iocore.c	2007-09-18 16:37:22.000000000 +0200
-@@ -47,46 +47,6 @@
- #include "xfs_trans_space.h"
- #include "xfs_iomap.h"
- 
--
--STATIC xfs_fsize_t
--xfs_size_fn(
--	xfs_inode_t		*ip)
--{
--	return XFS_ISIZE(ip);
--}
--
--STATIC int
--xfs_ioinit(
--	struct xfs_mount	*mp,
--	struct xfs_mount_args	*mntargs,
--	int			flags)
--{
--	return xfs_mountfs(mp, flags);
--}
--
--xfs_ioops_t	xfs_iocore_xfs = {
--	.xfs_ioinit		= (xfs_ioinit_t) xfs_ioinit,
--	.xfs_bmapi_func		= (xfs_bmapi_t) xfs_bmapi,
--	.xfs_bunmapi_func	= (xfs_bunmapi_t) xfs_bunmapi,
--	.xfs_bmap_eof_func	= (xfs_bmap_eof_t) xfs_bmap_eof,
--	.xfs_iomap_write_direct =
--			(xfs_iomap_write_direct_t) xfs_iomap_write_direct,
--	.xfs_iomap_write_delay =
--			(xfs_iomap_write_delay_t) xfs_iomap_write_delay,
--	.xfs_iomap_write_allocate =
--			(xfs_iomap_write_allocate_t) xfs_iomap_write_allocate,
--	.xfs_iomap_write_unwritten =
--			(xfs_iomap_write_unwritten_t) xfs_iomap_write_unwritten,
--	.xfs_ilock		= (xfs_lock_t) xfs_ilock,
--	.xfs_lck_map_shared	= (xfs_lck_map_shared_t) xfs_ilock_map_shared,
--	.xfs_ilock_demote	= (xfs_lock_demote_t) xfs_ilock_demote,
--	.xfs_ilock_nowait	= (xfs_lock_nowait_t) xfs_ilock_nowait,
--	.xfs_unlock		= (xfs_unlk_t) xfs_iunlock,
--	.xfs_size_func		= (xfs_size_t) xfs_size_fn,
--	.xfs_iodone		= (xfs_iodone_t) fs_noerr,
--	.xfs_swap_extents_func	= (xfs_swap_extents_t) xfs_swap_extents,
--};
--
- void
- xfs_iocore_inode_reinit(
- 	xfs_inode_t	*ip)
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2007-09-18 16:34:38.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2007-09-18 16:36:30.000000000 +0200
-@@ -1307,7 +1307,6 @@ xfs_unmountfs(xfs_mount_t *mp, struct cr
- #if defined(DEBUG) || defined(INDUCE_IO_ERROR)
- 	xfs_errortag_clearall(mp, 0);
- #endif
--	XFS_IODONE(mp);
- 	xfs_mount_free(mp);
- 	return 0;
- }
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2007-09-18 16:37:22.000000000 +0200
-@@ -196,105 +196,6 @@ typedef struct xfs_qmops {
- #define XFS_QM_QUOTACTL(mp, cmd, id, addr) \
- 	(*(mp)->m_qm_ops->xfs_quotactl)(mp, cmd, id, addr)
- 
--
--/*
-- * Prototypes and functions for I/O core modularization.
-- */
--
--typedef int		(*xfs_ioinit_t)(struct xfs_mount *,
--				struct xfs_mount_args *, int);
--typedef int		(*xfs_bmapi_t)(struct xfs_trans *, void *,
--				xfs_fileoff_t, xfs_filblks_t, int,
--				xfs_fsblock_t *, xfs_extlen_t,
--				struct xfs_bmbt_irec *, int *,
--				struct xfs_bmap_free *, struct xfs_extdelta *);
--typedef int		(*xfs_bunmapi_t)(struct xfs_trans *,
--				void *, xfs_fileoff_t,
--				xfs_filblks_t, int, xfs_extnum_t,
--				xfs_fsblock_t *, struct xfs_bmap_free *,
--				struct xfs_extdelta *, int *);
--typedef int		(*xfs_bmap_eof_t)(void *, xfs_fileoff_t, int, int *);
--typedef int		(*xfs_iomap_write_direct_t)(
--				void *, xfs_off_t, size_t, int,
--				struct xfs_bmbt_irec *, int *, int);
--typedef int		(*xfs_iomap_write_delay_t)(
--				void *, xfs_off_t, size_t, int,
--				struct xfs_bmbt_irec *, int *);
--typedef int		(*xfs_iomap_write_allocate_t)(
--				void *, xfs_off_t, size_t,
--				struct xfs_bmbt_irec *, int *);
--typedef int		(*xfs_iomap_write_unwritten_t)(
--				void *, xfs_off_t, size_t);
--typedef uint		(*xfs_lck_map_shared_t)(void *);
--typedef void		(*xfs_lock_t)(void *, uint);
--typedef void		(*xfs_lock_demote_t)(void *, uint);
--typedef int		(*xfs_lock_nowait_t)(void *, uint);
--typedef void		(*xfs_unlk_t)(void *, unsigned int);
--typedef xfs_fsize_t	(*xfs_size_t)(void *);
--typedef xfs_fsize_t	(*xfs_iodone_t)(struct xfs_mount *);
--typedef int		(*xfs_swap_extents_t)(void *, void *,
--				struct xfs_swapext*);
--
--typedef struct xfs_ioops {
--	xfs_ioinit_t			xfs_ioinit;
--	xfs_bmapi_t			xfs_bmapi_func;
--	xfs_bunmapi_t			xfs_bunmapi_func;
--	xfs_bmap_eof_t			xfs_bmap_eof_func;
--	xfs_iomap_write_direct_t	xfs_iomap_write_direct;
--	xfs_iomap_write_delay_t		xfs_iomap_write_delay;
--	xfs_iomap_write_allocate_t	xfs_iomap_write_allocate;
--	xfs_iomap_write_unwritten_t	xfs_iomap_write_unwritten;
--	xfs_lock_t			xfs_ilock;
--	xfs_lck_map_shared_t		xfs_lck_map_shared;
--	xfs_lock_demote_t		xfs_ilock_demote;
--	xfs_lock_nowait_t		xfs_ilock_nowait;
--	xfs_unlk_t			xfs_unlock;
--	xfs_size_t			xfs_size_func;
--	xfs_iodone_t			xfs_iodone;
--	xfs_swap_extents_t		xfs_swap_extents_func;
--} xfs_ioops_t;
--
--#define XFS_IOINIT(mp, args, flags) \
--	(*(mp)->m_io_ops.xfs_ioinit)(mp, args, flags)
--#define XFS_BMAPI(mp, trans,io,bno,len,f,first,tot,mval,nmap,flist,delta) \
--	(*(mp)->m_io_ops.xfs_bmapi_func) \
--		(trans,(io)->io_obj,bno,len,f,first,tot,mval,nmap,flist,delta)
--#define XFS_BUNMAPI(mp, trans,io,bno,len,f,nexts,first,flist,delta,done) \
--	(*(mp)->m_io_ops.xfs_bunmapi_func) \
--		(trans,(io)->io_obj,bno,len,f,nexts,first,flist,delta,done)
--#define XFS_BMAP_EOF(mp, io, endoff, whichfork, eof) \
--	(*(mp)->m_io_ops.xfs_bmap_eof_func) \
--		((io)->io_obj, endoff, whichfork, eof)
--#define XFS_IOMAP_WRITE_DIRECT(mp, io, offset, count, flags, mval, nmap, found)\
--	(*(mp)->m_io_ops.xfs_iomap_write_direct) \
--		((io)->io_obj, offset, count, flags, mval, nmap, found)
--#define XFS_IOMAP_WRITE_DELAY(mp, io, offset, count, flags, mval, nmap) \
--	(*(mp)->m_io_ops.xfs_iomap_write_delay) \
--		((io)->io_obj, offset, count, flags, mval, nmap)
--#define XFS_IOMAP_WRITE_ALLOCATE(mp, io, offset, count, mval, nmap) \
--	(*(mp)->m_io_ops.xfs_iomap_write_allocate) \
--		((io)->io_obj, offset, count, mval, nmap)
--#define XFS_IOMAP_WRITE_UNWRITTEN(mp, io, offset, count) \
--	(*(mp)->m_io_ops.xfs_iomap_write_unwritten) \
--		((io)->io_obj, offset, count)
--#define XFS_LCK_MAP_SHARED(mp, io) \
--	(*(mp)->m_io_ops.xfs_lck_map_shared)((io)->io_obj)
--#define XFS_ILOCK(mp, io, mode) \
--	(*(mp)->m_io_ops.xfs_ilock)((io)->io_obj, mode)
--#define XFS_ILOCK_NOWAIT(mp, io, mode) \
--	(*(mp)->m_io_ops.xfs_ilock_nowait)((io)->io_obj, mode)
--#define XFS_IUNLOCK(mp, io, mode) \
--	(*(mp)->m_io_ops.xfs_unlock)((io)->io_obj, mode)
--#define XFS_ILOCK_DEMOTE(mp, io, mode) \
--	(*(mp)->m_io_ops.xfs_ilock_demote)((io)->io_obj, mode)
--#define XFS_SIZE(mp, io) \
--	(*(mp)->m_io_ops.xfs_size_func)((io)->io_obj)
--#define XFS_IODONE(mp) \
--	(*(mp)->m_io_ops.xfs_iodone)(mp)
--#define XFS_SWAP_EXTENTS(mp, io, tio, sxp) \
--	(*(mp)->m_io_ops.xfs_swap_extents_func) \
--		((io)->io_obj, (tio)->io_obj, sxp)
--
- #ifdef HAVE_PERCPU_SB
- 
- /*
-@@ -423,7 +324,6 @@ typedef struct xfs_mount {
- 						 * hash table */
- 	struct xfs_dmops	*m_dm_ops;	/* vector of DMI ops */
- 	struct xfs_qmops	*m_qm_ops;	/* vector of XQM ops */
--	struct xfs_ioops	m_io_ops;	/* vector of I/O ops */
- 	atomic_t		m_active_trans;	/* number trans frozen */
- #ifdef HAVE_PERCPU_SB
- 	xfs_icsb_cnts_t		*m_sb_cnts;	/* per-cpu superblock counters */
-@@ -646,7 +546,6 @@ extern int	xfs_qmops_get(struct xfs_moun
- extern void	xfs_qmops_put(struct xfs_mount *);
- 
- extern struct xfs_dmops xfs_dmcore_xfs;
--extern struct xfs_ioops xfs_iocore_xfs;
- 
- extern int	xfs_init(void);
- extern void	xfs_cleanup(void);
-Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2007-09-18 16:36:30.000000000 +0200
-@@ -449,8 +449,6 @@ xfs_mount(
- 	if (error)
- 		return error;
- 
--	mp->m_io_ops = xfs_iocore_xfs;
--
- 	if (args->flags & XFSMNT_QUIET)
- 		flags |= XFS_MFSI_QUIET;
- 
-@@ -544,7 +542,7 @@ xfs_mount(
- 	if ((error = xfs_filestream_mount(mp)))
- 		goto error2;
- 
--	error = XFS_IOINIT(mp, args, flags);
-+	error = xfs_mountfs(mp, flags);
- 	if (error)
- 		goto error2;
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-09-18 16:37:22.000000000 +0200
-@@ -1187,7 +1187,7 @@ xfs_free_eofblocks(
- 
- 	nimaps = 1;
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	error = XFS_BMAPI(mp, NULL, &ip->i_iocore, end_fsb, map_len, 0,
-+	error = xfs_bmapi(NULL, ip, end_fsb, map_len, 0,
- 			  NULL, 0, &imap, &nimaps, NULL, NULL);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
-@@ -3983,7 +3983,7 @@ retry:
- 		 * Issue the xfs_bmapi() call to allocate the blocks
- 		 */
- 		XFS_BMAP_INIT(&free_list, &firstfsb);
--		error = XFS_BMAPI(mp, tp, &ip->i_iocore, startoffset_fsb,
-+		error = xfs_bmapi(tp, ip, startoffset_fsb,
- 				  allocatesize_fsb, bmapi_flag,
- 				  &firstfsb, 0, imapp, &nimaps,
- 				  &free_list, NULL);
-@@ -4065,7 +4065,7 @@ xfs_zero_remaining_bytes(
- 	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
- 		offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 		nimap = 1;
--		error = XFS_BMAPI(mp, NULL, &ip->i_iocore, offset_fsb, 1, 0,
-+		error = xfs_bmapi(NULL, ip, offset_fsb, 1, 0,
- 			NULL, 0, &imap, &nimap, NULL, NULL);
- 		if (error || nimap < 1)
- 			break;
-@@ -4200,7 +4200,7 @@ xfs_free_file_space(
- 	 */
- 	if (rt && !XFS_SB_VERSION_HASEXTFLGBIT(&mp->m_sb)) {
- 		nimap = 1;
--		error = XFS_BMAPI(mp, NULL, &ip->i_iocore, startoffset_fsb,
-+		error = xfs_bmapi(NULL, ip, startoffset_fsb,
- 			1, 0, NULL, 0, &imap, &nimap, NULL, NULL);
- 		if (error)
- 			goto out_unlock_iolock;
-@@ -4215,7 +4215,7 @@ xfs_free_file_space(
- 				startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+ 	iocb->ki_pos = *offset;
+@@ -312,7 +309,7 @@ xfs_splice_read(
+ 			return -error;
  		}
- 		nimap = 1;
--		error = XFS_BMAPI(mp, NULL, &ip->i_iocore, endoffset_fsb - 1,
-+		error = xfs_bmapi(NULL, ip, endoffset_fsb - 1,
- 			1, 0, NULL, 0, &imap, &nimap, NULL, NULL);
- 		if (error)
- 			goto out_unlock_iolock;
-@@ -4291,7 +4291,7 @@ xfs_free_file_space(
- 		 * issue the bunmapi() call to free the blocks
- 		 */
- 		XFS_BMAP_INIT(&free_list, &firstfsb);
--		error = XFS_BUNMAPI(mp, tp, &ip->i_iocore, startoffset_fsb,
-+		error = xfs_bunmapi(tp, ip, startoffset_fsb,
- 				  endoffset_fsb - startoffset_fsb,
- 				  0, 2, &firstfsb, &free_list, NULL, &done);
+ 	}
+-	xfs_rw_enter_trace(XFS_SPLICE_READ_ENTER, &ip->i_iocore,
++	xfs_rw_enter_trace(XFS_SPLICE_READ_ENTER, ip,
+ 			   pipe, count, *ppos, ioflags);
+ 	ret = generic_file_splice_read(infilp, ppos, pipe, count, flags);
+ 	if (ret > 0)
+@@ -334,7 +331,6 @@ xfs_splice_write(
+ {
+ 	bhv_vnode_t		*vp = XFS_ITOV(ip);
+ 	xfs_mount_t		*mp = ip->i_mount;
+-	xfs_iocore_t		*io = &ip->i_iocore;
+ 	ssize_t			ret;
+ 	struct inode		*inode = outfilp->f_mapping->host;
+ 	xfs_fsize_t		isize, new_size;
+@@ -361,10 +357,10 @@ xfs_splice_write(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (new_size > ip->i_size)
+-		io->io_new_size = new_size;
++		ip->i_new_size = new_size;
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+-	xfs_rw_enter_trace(XFS_SPLICE_WRITE_ENTER, &ip->i_iocore,
++	xfs_rw_enter_trace(XFS_SPLICE_WRITE_ENTER, ip,
+ 			   pipe, count, *ppos, ioflags);
+ 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
+ 	if (ret > 0)
+@@ -381,9 +377,9 @@ xfs_splice_write(
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	}
+ 
+-	if (io->io_new_size) {
++	if (ip->i_new_size) {
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		io->io_new_size = 0;
++		ip->i_new_size = 0;
+ 		if (ip->i_d.di_size > ip->i_size)
+ 			ip->i_d.di_size = ip->i_size;
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+@@ -472,20 +468,19 @@ xfs_zero_eof(
+ 	xfs_off_t	offset,		/* starting I/O offset */
+ 	xfs_fsize_t	isize)		/* current inode size */
+ {
+-	xfs_iocore_t	*io = &ip->i_iocore;
++	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	start_zero_fsb;
+ 	xfs_fileoff_t	end_zero_fsb;
+ 	xfs_fileoff_t	zero_count_fsb;
+ 	xfs_fileoff_t	last_fsb;
+ 	xfs_fileoff_t	zero_off;
+ 	xfs_fsize_t	zero_len;
+-	xfs_mount_t	*mp = io->io_mount;
+ 	int		nimaps;
+ 	int		error = 0;
+ 	xfs_bmbt_irec_t	imap;
+ 
+-	ASSERT(ismrlocked(io->io_lock, MR_UPDATE));
+-	ASSERT(ismrlocked(io->io_iolock, MR_UPDATE));
++	ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
++	ASSERT(ismrlocked(&ip->i_iolock, MR_UPDATE));
+ 	ASSERT(offset > isize);
+ 
+ 	/*
+@@ -494,8 +489,8 @@ xfs_zero_eof(
+ 	 */
+ 	error = xfs_zero_last_block(ip, offset, isize);
+ 	if (error) {
+-		ASSERT(ismrlocked(io->io_lock, MR_UPDATE));
+-		ASSERT(ismrlocked(io->io_iolock, MR_UPDATE));
++		ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
++		ASSERT(ismrlocked(&ip->i_iolock, MR_UPDATE));
+ 		return error;
+ 	}
+ 
+@@ -526,8 +521,8 @@ xfs_zero_eof(
+ 		error = xfs_bmapi(NULL, ip, start_zero_fsb, zero_count_fsb,
+ 				  0, NULL, 0, &imap, &nimaps, NULL, NULL);
  		if (error) {
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-09-16 13:51:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2007-09-18 16:37:22.000000000 +0200
-@@ -317,7 +317,7 @@ xfs_map_blocks(
- 	xfs_inode_t		*ip = XFS_I(inode);
- 	int			error, nmaps = 1;
+-			ASSERT(ismrlocked(io->io_lock, MR_UPDATE));
+-			ASSERT(ismrlocked(io->io_iolock, MR_UPDATE));
++			ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
++			ASSERT(ismrlocked(&ip->i_iolock, MR_UPDATE));
+ 			return error;
+ 		}
+ 		ASSERT(nimaps > 0);
+@@ -595,7 +590,6 @@ xfs_write(
+ 	xfs_mount_t		*mp;
+ 	ssize_t			ret = 0, error = 0;
+ 	xfs_fsize_t		isize, new_size;
+-	xfs_iocore_t		*io;
+ 	int			iolock;
+ 	int			eventsent = 0;
+ 	bhv_vrwlock_t		locktype;
+@@ -615,8 +609,7 @@ xfs_write(
+ 	if (count == 0)
+ 		return 0;
  
--	error = xfs_bmap(ip, offset, count,
-+	error = xfs_iomap(ip, offset, count,
- 				flags, mapp, &nmaps);
- 	if (!error && (flags & (BMAPI_WRITE|BMAPI_ALLOCATE)))
- 		xfs_iflags_set(ip, XFS_IMODIFIED);
-@@ -1342,7 +1342,7 @@ __xfs_get_blocks(
- 	offset = (xfs_off_t)iblock << inode->i_blkbits;
- 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
- 	size = bh_result->b_size;
--	error = xfs_bmap(XFS_I(inode), offset, size,
-+	error = xfs_iomap(XFS_I(inode), offset, size,
- 			     create ? flags : BMAPI_READ, &iomap, &niomap);
- 	if (error)
- 		return -error;
-Index: linux-2.6-xfs/fs/xfs/xfs_iomap.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iomap.h	2007-09-18 16:34:31.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_iomap.h	2007-09-18 16:36:30.000000000 +0200
-@@ -71,11 +71,10 @@ typedef struct xfs_iomap {
- 	iomap_flags_t		iomap_flags;
- } xfs_iomap_t;
+-	io = &xip->i_iocore;
+-	mp = io->io_mount;
++	mp = xip->i_mount;
  
+ 	xfs_wait_for_freeze(mp, SB_FREEZE_WRITE);
+ 
+@@ -696,7 +689,7 @@ start:
+ 
+ 	new_size = pos + count;
+ 	if (new_size > xip->i_size)
+-		io->io_new_size = new_size;
++		xip->i_new_size = new_size;
+ 
+ 	if (likely(!(ioflags & IO_INVIS))) {
+ 		file_update_time(file);
+@@ -748,7 +741,7 @@ retry:
+ 	if ((ioflags & IO_ISDIRECT)) {
+ 		if (VN_CACHED(vp)) {
+ 			WARN_ON(need_i_mutex == 0);
+-			xfs_inval_cached_trace(io, pos, -1,
++			xfs_inval_cached_trace(xip, pos, -1,
+ 					ctooff(offtoct(pos)), -1);
+ 			error = xfs_flushinval_pages(xip,
+ 					ctooff(offtoct(pos)),
+@@ -767,7 +760,7 @@ retry:
+ 			need_i_mutex = 0;
+ 		}
+ 
+- 		xfs_rw_enter_trace(XFS_DIOWR_ENTER, io, (void *)iovp, segs,
++ 		xfs_rw_enter_trace(XFS_DIOWR_ENTER, xip, (void *)iovp, segs,
+ 				*offset, ioflags);
+ 		ret = generic_file_direct_write(iocb, iovp,
+ 				&segs, pos, offset, count, ocount);
+@@ -787,7 +780,7 @@ retry:
+ 			goto relock;
+ 		}
+ 	} else {
+-		xfs_rw_enter_trace(XFS_WRITE_ENTER, io, (void *)iovp, segs,
++		xfs_rw_enter_trace(XFS_WRITE_ENTER, xip, (void *)iovp, segs,
+ 				*offset, ioflags);
+ 		ret = generic_file_buffered_write(iocb, iovp, segs,
+ 				pos, offset, count, ret);
+@@ -851,9 +844,9 @@ retry:
+ 	}
+ 
+  out_unlock_internal:
+-	if (io->io_new_size) {
++	if (xip->i_new_size) {
+ 		xfs_ilock(xip, XFS_ILOCK_EXCL);
+-		io->io_new_size = 0;
++		xip->i_new_size = 0;
+ 		/*
+ 		 * If this was a direct or synchronous I/O that failed (such
+ 		 * as ENOSPC) then part of the I/O may have been written to
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.h	2007-09-18 16:44:06.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.h	2007-09-18 16:54:45.000000000 +0200
+@@ -19,7 +19,6 @@
+ #define __XFS_LRW_H__
+ 
+ struct xfs_mount;
 -struct xfs_iocore;
  struct xfs_inode;
  struct xfs_bmbt_irec;
+ struct xfs_buf;
+@@ -59,13 +58,13 @@ struct xfs_iomap;
+ #define	XFS_IOMAP_UNWRITTEN	27
+ #define XFS_SPLICE_READ_ENTER	28
+ #define XFS_SPLICE_WRITE_ENTER	29
+-extern void xfs_rw_enter_trace(int, struct xfs_iocore *,
+-				void *, size_t, loff_t, int);
+-extern void xfs_inval_cached_trace(struct xfs_iocore *,
+-				xfs_off_t, xfs_off_t, xfs_off_t, xfs_off_t);
++extern void xfs_rw_enter_trace(int, struct xfs_inode *,
++		void *, size_t, loff_t, int);
++extern void xfs_inval_cached_trace(struct xfs_inode *,
++		xfs_off_t, xfs_off_t, xfs_off_t, xfs_off_t);
+ #else
+-#define xfs_rw_enter_trace(tag, io, data, size, offset, ioflags)
+-#define xfs_inval_cached_trace(io, offset, len, first, last)
++#define xfs_rw_enter_trace(tag, ip, data, size, offset, ioflags)
++#define xfs_inval_cached_trace(ip, offset, len, first, last)
+ #endif
  
--extern int xfs_iomap(struct xfs_iocore *, xfs_off_t, ssize_t, int,
-+extern int xfs_iomap(struct xfs_inode *, xfs_off_t, ssize_t, int,
- 		     struct xfs_iomap *, int *);
- extern int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- 				  int, struct xfs_bmbt_irec *, int *, int);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.h
+ extern int xfsbdstrat(struct xfs_mount *, struct xfs_buf *);
+Index: linux-2.6-xfs/fs/xfs/xfs_dfrag.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.h	2007-09-18 16:43:56.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.h	2007-09-18 16:44:06.000000000 +0200
-@@ -72,7 +72,6 @@ extern int xfsbdstrat(struct xfs_mount *
- extern int xfs_bdstrat_cb(struct xfs_buf *);
- extern int xfs_dev_is_read_only(struct xfs_mount *, char *);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_dfrag.c	2007-09-18 16:37:38.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_dfrag.c	2007-09-18 16:47:33.000000000 +0200
+@@ -199,7 +199,7 @@ xfs_swap_extents(
+ 	}
  
--extern int xfs_zero_eof(struct inode *, struct xfs_iocore *, xfs_off_t,
--				xfs_fsize_t);
-+extern int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+ 	if (VN_CACHED(tvp) != 0) {
+-		xfs_inval_cached_trace(&tip->i_iocore, 0, -1, 0, -1);
++		xfs_inval_cached_trace(tip, 0, -1, 0, -1);
+ 		error = xfs_flushinval_pages(tip, 0, -1,
+ 				FI_REMAPF_LOCKED);
+ 		if (error)
+Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2007-09-18 16:47:33.000000000 +0200
+@@ -199,12 +199,9 @@ again:
+ 		XFS_STATS_INC(xs_ig_found);
  
- #endif	/* __XFS_LRW_H__ */
+ finish_inode:
+-		if (ip->i_d.di_mode == 0) {
+-			if (!(flags & XFS_IGET_CREATE)) {
+-				xfs_put_perag(mp, pag);
+-				return ENOENT;
+-			}
+-			xfs_iocore_inode_reinit(ip);
++		if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
++			xfs_put_perag(mp, pag);
++			return ENOENT;
+ 		}
+ 
+ 		if (lock_flags != 0)
+@@ -235,7 +232,6 @@ finish_inode:
+ 	xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
+ 
+ 	xfs_inode_lock_init(ip, vp);
+-	xfs_iocore_inode_init(ip);
+ 	if (lock_flags)
+ 		xfs_ilock(ip, lock_flags);
+ 
+@@ -331,9 +327,6 @@ finish_inode:
+ 	ASSERT(ip->i_df.if_ext_max ==
+ 	       XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t));
+ 
+-	ASSERT(((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) != 0) ==
+-	       ((ip->i_iocore.io_flags & XFS_IOCORE_RT) != 0));
+-
+ 	xfs_iflags_set(ip, XFS_IMODIFIED);
+ 	*ipp = ip;
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2007-09-18 16:43:12.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2007-09-18 16:47:33.000000000 +0200
+@@ -1220,10 +1220,8 @@ xfs_ialloc(
+ 					ip->i_d.di_extsize = pip->i_d.di_extsize;
+ 				}
+ 			} else if ((mode & S_IFMT) == S_IFREG) {
+-				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT) {
++				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+ 					di_flags |= XFS_DIFLAG_REALTIME;
+-					ip->i_iocore.io_flags |= XFS_IOCORE_RT;
+-				}
+ 				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+ 					di_flags |= XFS_DIFLAG_EXTSIZE;
+ 					ip->i_d.di_extsize = pip->i_d.di_extsize;
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2007-09-18 16:47:33.000000000 +0200
+@@ -132,45 +132,6 @@ typedef struct dm_attrs_s {
+ 	__uint16_t	da_pad;		/* DMIG extra padding */
+ } dm_attrs_t;
+ 
+-typedef struct xfs_iocore {
+-	void			*io_obj;	/* pointer to container
+-						 * inode or dcxvn structure */
+-	struct xfs_mount	*io_mount;	/* fs mount struct ptr */
+-#ifdef DEBUG
+-	mrlock_t		*io_lock;	/* inode IO lock */
+-	mrlock_t		*io_iolock;	/* inode IO lock */
+-#endif
+-
+-	/* I/O state */
+-	xfs_fsize_t		io_new_size;	/* sz when write completes */
+-
+-	/* Miscellaneous state. */
+-	unsigned int		io_flags;	/* IO related flags */
+-
+-	/* DMAPI state */
+-	dm_attrs_t		io_dmattrs;
+-
+-} xfs_iocore_t;
+-
+-#define        io_dmevmask     io_dmattrs.da_dmevmask
+-#define        io_dmstate      io_dmattrs.da_dmstate
+-
+-#define XFS_IO_INODE(io)	((xfs_inode_t *) ((io)->io_obj))
+-#define XFS_IO_DCXVN(io)	((dcxvn_t *) ((io)->io_obj))
+-
+-/*
+- * Flags in the flags field
+- */
+-
+-#define XFS_IOCORE_RT		0x1
+-
+-/*
+- * xfs_iocore prototypes
+- */
+-
+-extern void xfs_iocore_inode_init(struct xfs_inode *);
+-extern void xfs_iocore_inode_reinit(struct xfs_inode *);
+-
+ /*
+  * This is the xfs inode cluster structure.  This structure is used by
+  * xfs_iflush to find inodes that share a cluster and can be flushed to disk at
+@@ -283,9 +244,6 @@ typedef struct xfs_inode {
+ 	struct xfs_inode	**i_refcache;	/* ptr to entry in ref cache */
+ 	struct xfs_inode	*i_release;	/* inode to unref */
+ #endif
+-	/* I/O state */
+-	xfs_iocore_t		i_iocore;	/* I/O core */
+-
+ 	/* Miscellaneous state. */
+ 	unsigned short		i_flags;	/* see defined flags below */
+ 	unsigned char		i_update_core;	/* timestamps/size is dirty */
+@@ -298,6 +256,7 @@ typedef struct xfs_inode {
+ 	struct hlist_node	i_cnode;	/* cluster link node */
+ 
+ 	xfs_fsize_t		i_size;		/* in-memory size */
++	xfs_fsize_t		i_new_size;	/* size when write completes */
+ 	atomic_t		i_iocount;	/* outstanding I/O count */
+ 	/* Trace buffers per inode. */
+ #ifdef XFS_INODE_TRACE
+Index: linux-2.6-xfs/fs/xfs/xfs_iocore.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iocore.c	2007-09-18 16:37:22.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,79 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_types.h"
+-#include "xfs_bit.h"
+-#include "xfs_log.h"
+-#include "xfs_inum.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_dir2.h"
+-#include "xfs_dfrag.h"
+-#include "xfs_dmapi.h"
+-#include "xfs_mount.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_alloc_btree.h"
+-#include "xfs_ialloc_btree.h"
+-#include "xfs_dir2_sf.h"
+-#include "xfs_attr_sf.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_itable.h"
+-#include "xfs_btree.h"
+-#include "xfs_alloc.h"
+-#include "xfs_ialloc.h"
+-#include "xfs_bmap.h"
+-#include "xfs_error.h"
+-#include "xfs_rw.h"
+-#include "xfs_quota.h"
+-#include "xfs_trans_space.h"
+-#include "xfs_iomap.h"
+-
+-void
+-xfs_iocore_inode_reinit(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_iocore_t	*io = &ip->i_iocore;
+-
+-	io->io_flags = 0;
+-	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
+-		io->io_flags |= XFS_IOCORE_RT;
+-	io->io_dmevmask = ip->i_d.di_dmevmask;
+-	io->io_dmstate = ip->i_d.di_dmstate;
+-}
+-
+-void
+-xfs_iocore_inode_init(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_iocore_t	*io = &ip->i_iocore;
+-	xfs_mount_t	*mp = ip->i_mount;
+-
+-	io->io_mount = mp;
+-#ifdef DEBUG
+-	io->io_lock = &ip->i_lock;
+-	io->io_iolock = &ip->i_iolock;
+-#endif
+-
+-	io->io_obj = (void *)ip;
+-
+-	xfs_iocore_inode_reinit(ip);
+-}
+Index: linux-2.6-xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iomap.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_iomap.c	2007-09-18 16:47:33.000000000 +0200
+@@ -57,8 +57,6 @@ xfs_iomap_enter_trace(
+ 	xfs_off_t	offset,
+ 	ssize_t		count)
+ {
+-	xfs_iocore_t	*io = &ip->i_iocore;
+-
+ 	if (!ip->i_rwtrace)
+ 		return;
+ 
+@@ -70,8 +68,8 @@ xfs_iomap_enter_trace(
+ 		(void *)((unsigned long)((offset >> 32) & 0xffffffff)),
+ 		(void *)((unsigned long)(offset & 0xffffffff)),
+ 		(void *)((unsigned long)count),
+-		(void *)((unsigned long)((io->io_new_size >> 32) & 0xffffffff)),
+-		(void *)((unsigned long)(io->io_new_size & 0xffffffff)),
++		(void *)((unsigned long)((ip->i_new_size >> 32) & 0xffffffff)),
++		(void *)((unsigned long)(ip->i_new_size & 0xffffffff)),
+ 		(void *)((unsigned long)current_pid()),
+ 		(void *)NULL,
+ 		(void *)NULL,
+@@ -186,8 +184,6 @@ xfs_iomap(
+ 	int		iomap_flags = 0;
+ 
+ 	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
+-	ASSERT(((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) != 0) ==
+-	       ((ip->i_iocore.io_flags & XFS_IOCORE_RT) != 0));
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+@@ -402,7 +398,6 @@ xfs_iomap_write_direct(
+ 	int		found)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_iocore_t	*io = &ip->i_iocore;
+ 	xfs_fileoff_t	offset_fsb;
+ 	xfs_fileoff_t	last_fsb;
+ 	xfs_filblks_t	count_fsb, resaligned;
+@@ -432,8 +427,8 @@ xfs_iomap_write_direct(
+ 	extsz = xfs_get_extsz_hint(ip);
+ 
+ 	isize = ip->i_size;
+-	if (io->io_new_size > isize)
+-		isize = io->io_new_size;
++	if (ip->i_new_size > isize)
++		isize = ip->i_new_size;
+ 
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
+@@ -528,7 +523,8 @@ xfs_iomap_write_direct(
+ 		goto error_out;
+ 	}
+ 
+-	if (unlikely(!imap.br_startblock && !(io->io_flags & XFS_IOCORE_RT))) {
++	if (unlikely(!imap.br_startblock &&
++		     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
+ 		error = xfs_cmn_err_fsblock_zero(ip, &imap);
+ 		goto error_out;
+ 	}
+@@ -616,7 +612,6 @@ xfs_iomap_write_delay(
+ 	int		*nmaps)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_iocore_t	*io = &ip->i_iocore;
+ 	xfs_fileoff_t	offset_fsb;
+ 	xfs_fileoff_t	last_fsb;
+ 	xfs_off_t	aligned_offset;
+@@ -644,8 +639,8 @@ xfs_iomap_write_delay(
+ 
+ retry:
+ 	isize = ip->i_size;
+-	if (io->io_new_size > isize)
+-		isize = io->io_new_size;
++	if (ip->i_new_size > isize)
++		isize = ip->i_new_size;
+ 
+ 	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
+ 				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
+@@ -691,7 +686,8 @@ retry:
+ 		goto retry;
+ 	}
+ 
+-	if (unlikely(!imap[0].br_startblock && !(io->io_flags & XFS_IOCORE_RT)))
++	if (unlikely(!imap[0].br_startblock &&
++		     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
+ 		return xfs_cmn_err_fsblock_zero(ip, &imap[0]);
+ 
+ 	*ret_imap = imap[0];
+@@ -716,7 +712,6 @@ xfs_iomap_write_allocate(
+ 	int		*retmap)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_iocore_t    *io = &ip->i_iocore;
+ 	xfs_fileoff_t	offset_fsb, last_block;
+ 	xfs_fileoff_t	end_fsb, map_start_fsb;
+ 	xfs_fsblock_t	first_block;
+@@ -814,7 +809,7 @@ xfs_iomap_write_allocate(
+ 		 */
+ 		for (i = 0; i < nimaps; i++) {
+ 			if (unlikely(!imap[i].br_startblock &&
+-				     !(io->io_flags & XFS_IOCORE_RT)))
++				     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
+ 				return xfs_cmn_err_fsblock_zero(ip, &imap[i]);
+ 			if ((offset_fsb >= imap[i].br_startoff) &&
+ 			    (offset_fsb < (imap[i].br_startoff +
+@@ -850,7 +845,6 @@ xfs_iomap_write_unwritten(
+ 	size_t		count)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_iocore_t    *io = &ip->i_iocore;
+ 	xfs_fileoff_t	offset_fsb;
+ 	xfs_filblks_t	count_fsb;
+ 	xfs_filblks_t	numblks_fsb;
+@@ -913,7 +907,7 @@ xfs_iomap_write_unwritten(
+ 			return XFS_ERROR(error);
+ 
+ 		if (unlikely(!imap.br_startblock &&
+-			     !(io->io_flags & XFS_IOCORE_RT)))
++			     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
+ 			return xfs_cmn_err_fsblock_zero(ip, &imap);
+ 
+ 		if ((numblks_fsb = imap.br_blockcount) == 0) {
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2007-09-18 16:47:33.000000000 +0200
+@@ -56,7 +56,6 @@ struct cred;
+ struct log;
+ struct xfs_mount_args;
+ struct xfs_inode;
+-struct xfs_iocore;
+ struct xfs_bmbt_irec;
+ struct xfs_bmap_free;
+ struct xfs_extdelta;
+Index: linux-2.6-xfs/fs/xfs/xfs_rw.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_rw.h	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_rw.h	2007-09-18 16:47:33.000000000 +0200
+@@ -36,14 +36,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_
+ 		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+ 		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+ }
+-#define XFS_FSB_TO_DB_IO(io,fsb) xfs_fsb_to_db_io(io,fsb)
+-static inline xfs_daddr_t
+-xfs_fsb_to_db_io(struct xfs_iocore *io, xfs_fsblock_t fsb)
+-{
+-	return (((io)->io_flags & XFS_IOCORE_RT) ? \
+-		 XFS_FSB_TO_BB((io)->io_mount, (fsb)) : \
+-		 XFS_FSB_TO_DADDR((io)->io_mount, (fsb)));
+-}
+ 
+ /*
+  * Flags for xfs_free_eofblocks
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-09-18 16:47:33.000000000 +0200
+@@ -804,12 +804,8 @@ xfs_setattr(
+ 				if (vap->va_xflags & XFS_XFLAG_EXTSZINHERIT)
+ 					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+ 			} else if ((ip->i_d.di_mode & S_IFMT) == S_IFREG) {
+-				if (vap->va_xflags & XFS_XFLAG_REALTIME) {
++				if (vap->va_xflags & XFS_XFLAG_REALTIME)
+ 					di_flags |= XFS_DIFLAG_REALTIME;
+-					ip->i_iocore.io_flags |= XFS_IOCORE_RT;
+-				} else {
+-					ip->i_iocore.io_flags &= ~XFS_IOCORE_RT;
+-				}
+ 				if (vap->va_xflags & XFS_XFLAG_EXTSIZE)
+ 					di_flags |= XFS_DIFLAG_EXTSIZE;
+ 			}
+@@ -3644,8 +3640,8 @@ xfs_set_dmattrs(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 
+-	ip->i_iocore.io_dmevmask = ip->i_d.di_dmevmask = evmask;
+-	ip->i_iocore.io_dmstate  = ip->i_d.di_dmstate  = state;
++	ip->i_d.di_dmevmask = evmask;
++	ip->i_d.di_dmstate  = state;
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	IHOLD(ip);
+@@ -4183,7 +4179,7 @@ xfs_free_file_space(
+ 	ioffset = offset & ~(rounding - 1);
+ 
+ 	if (VN_CACHED(vp) != 0) {
+-		xfs_inval_cached_trace(&ip->i_iocore, ioffset, -1,
++		xfs_inval_cached_trace(ip, ioffset, -1,
+ 				ctooff(offtoct(ioffset)), -1);
+ 		error = xfs_flushinval_pages(ip,
+ 				ctooff(offtoct(ioffset)),
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2007-09-18 16:37:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2007-09-18 16:47:33.000000000 +0200
+@@ -164,7 +164,6 @@ static void	xfsidbg_xlog_tic(xlog_ticket
+ static void	xfsidbg_xlogitem(xfs_log_item_t *);
+ static void	xfsidbg_xmount(xfs_mount_t *);
+ static void	xfsidbg_xnode(xfs_inode_t *ip);
+-static void	xfsidbg_xcore(xfs_iocore_t *io);
+ static void	xfsidbg_xperag(xfs_mount_t *);
+ static void	xfsidbg_xqm_diskdq(xfs_disk_dquot_t *);
+ static void	xfsidbg_xqm_dqattached_inos(xfs_mount_t *);
+@@ -1472,25 +1471,6 @@ static int	kdbm_xfs_xnode(
+ 	return 0;
+ }
+ 
+-static int	kdbm_xfs_xcore(
+-	int	argc,
+-	const char **argv)
+-{
+-	unsigned long addr;
+-	int nextarg = 1;
+-	long offset = 0;
+-	int diag;
+-
+-	if (argc != 1)
+-		return KDB_ARGCOUNT;
+-	diag = kdbgetaddrarg(argc, argv, &nextarg, &addr, &offset, NULL);
+-	if (diag)
+-		return diag;
+-
+-	xfsidbg_xcore((xfs_iocore_t *) addr);
+-	return 0;
+-}
+-
+ static int	kdbm_xfs_xperag(
+ 	int	argc,
+ 	const char **argv)
+@@ -2552,8 +2532,6 @@ static struct xif xfsidbg_funcs[] = {
+ 				"Dump XFS mount structure"},
+   {  "xnode",	kdbm_xfs_xnode,		"<xfs_inode_t>",
+ 				"Dump XFS inode"},
+-  {  "xiocore",	kdbm_xfs_xcore,		"<xfs_iocore_t>",
+-				"Dump XFS iocore"},
+   {  "xperag",	kdbm_xfs_xperag,	"<xfs_mount_t>",
+ 				"Dump XFS per-allocation group data"},
+   {  "xqinfo",  kdbm_xfs_xqm_qinfo,	"<xfs_mount_t>",
+@@ -6588,7 +6566,7 @@ xfsidbg_xnode(xfs_inode_t *ip)
+ 		xfs_ipincount(ip));
+ 	kdb_printf("udquotp 0x%p gdquotp 0x%p\n",
+ 		ip->i_udquot, ip->i_gdquot);
+-	kdb_printf("new_size %Ld\n", ip->i_iocore.io_new_size);
++	kdb_printf("new_size %Ld\n", ip->i_new_size);
+ 	printflags((int)ip->i_flags, tab_flags, "flags");
+ 	kdb_printf("\n");
+ 	kdb_printf("update_core %d update size %d\n",
+@@ -6628,14 +6606,6 @@ xfsidbg_xnode(xfs_inode_t *ip)
+ 	xfs_prdinode_incore(&ip->i_d);
+ }
+ 
+-static void
+-xfsidbg_xcore(xfs_iocore_t *io)
+-{
+-	kdb_printf("io_obj 0x%p io_flags 0x%x io_mount 0x%p\n",
+-			io->io_obj, io->io_flags, io->io_mount);
+-	kdb_printf("new_size %Lx\n", io->io_new_size);
+-}
+-
+ /*
+  * Print xfs per-ag data structures for filesystem.
+  */
