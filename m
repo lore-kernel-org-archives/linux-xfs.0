@@ -1,81 +1,170 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 20:02:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 20:52:57 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I32Muw023089
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Sep 2007 20:02:27 -0700
-Date: Tue, 18 Sep 2007 12:43:05 +1000
-Subject: Re: can't remove dir
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I3qnuw000478
+	for <xfs@oss.sgi.com>; Mon, 17 Sep 2007 20:52:51 -0700
+Message-ID: <46EF4C51.5060503@sgi.com>
+Date: Tue, 18 Sep 2007 13:56:01 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-References: <20070914080926.GA30150@apartia.fr> <Pine.LNX.4.64.0709140438130.752@p34.internal.lan> <20070914084125.GA31074@apartia.fr> <20070914091032.GE734179@sgi.com> <20070914092712.GA31997@apartia.fr>
-Message-ID: <op.tytwh3tl3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20070914092712.GA31997@apartia.fr>
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 1/4] simplify validata_fields
+References: <20070914162746.GB7110@lst.de>
+In-Reply-To: <20070914162746.GB7110@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>, linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, 14 Sep 2007 19:27:21 +1000, Louis-David Mitterrand  
-<vindex+lists-xfs@apartia.org> wrote:
+This looks good, just one comment...
 
-> On Fri, Sep 14, 2007 at 07:10:32PM +1000, David Chinner wrote:
->>
->> Also, get the inode number of the bad directory (ls -i) and then
->> run:
->>
->> # xfs_db -r -c "inode <inode_num>" -c "p" <device of fs>
->
-> sylla:/lost+found# xfs_db -r -c "inode 1879629858" -c "p" /dev/md1
-> core.magic = 0x494e
-> core.mode = 040755
-> core.version = 1
-> core.format = 2 (extents)
-> core.nlinkv1 = 2
-> core.uid = 0
-> core.gid = 0
-> core.flushiter = 9
-> core.atime.sec = Tue Aug  1 20:49:16 2006
-> core.atime.nsec = 000000000
-> core.mtime.sec = Fri Sep 14 09:25:29 2007
-> core.mtime.nsec = 589593557
-> core.ctime.sec = Fri Sep 14 09:25:29 2007
-> core.ctime.nsec = 589593557
-> core.size = 8192
-> core.nblocks = 3
-> core.extsize = 0
-> core.nextents = 2
-> core.naextents = 0
-> core.forkoff = 0
-> core.aformat = 2 (extents)
-> core.dmevmask = 0
-> core.dmstate = 0
-> core.newrtbm = 0
-> core.prealloc = 0
-> core.realtime = 0
-> core.immutable = 0
-> core.append = 0
-> core.sync = 0
-> core.noatime = 0
-> core.nodump = 0
-> core.rtinherit = 0
-> core.projinherit = 0
-> core.nosymlinks = 0
-> core.extsz = 0
-> core.extszinherit = 0
-> core.nodefrag = 0
-> core.gen = 0
-> next_unlinked = null
-> u.bmx[0-1] = [startoff,startblock,blockcount,extentflag]  
-> 0:[0,117476868,2,0] 1:[8388608,125865476,1,0]
->
+Christoph Hellwig wrote:
+> Stop using xfs_getattr and a onstack bhv_vattr_t just to get three
+> fields from the underlying inode and opencode copying from the inode
+> fields instead.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:13:41.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-09-06 10:18:06.000000000 +0200
+> @@ -179,18 +179,19 @@ xfs_ichgtime_fast(
+>   */
+>  STATIC void
+>  xfs_validate_fields(
+> -	struct inode	*ip,
+> -	bhv_vattr_t	*vattr)
+> +	struct inode		*inode)
+>  {
+> -	vattr->va_mask = XFS_AT_NLINK|XFS_AT_SIZE|XFS_AT_NBLOCKS;
+> -	if (!xfs_getattr(XFS_I(ip), vattr, ATTR_LAZY)) {
+> -		ip->i_nlink = vattr->va_nlink;
+> -		ip->i_blocks = vattr->va_nblocks;
+> -
+> -		/* we're under i_sem so i_size can't change under us */
+> -		if (i_size_read(ip) != vattr->va_size)
+> -			i_size_write(ip, vattr->va_size);
+> -	}
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	loff_t size;
+> +
+> +	inode->i_nlink = ip->i_d.di_nlink;
+> +	inode->i_blocks =
+> +		XFS_FSB_TO_BB(ip->i_mount, ip->i_d.di_nblocks +
+> +					   ip->i_delayed_blks);
+> +	/* we're under i_sem so i_size can't change under us */
+> +	size = XFS_ISIZE(ip);
+> +	if (i_size_read(inode) != size)
+> +		i_size_write(inode, size);
+Can we drop the i_size_read() check and just call i_size_write()?
+The work we may not do by not calling i_size_write() we have to do
+in i_size_read() anyway, sometimes doing the work twice.  And we
+get to lose another stack variable.
 
-If you still have the bad directory, can you run these as well?
-
-# xfs_db -r -c "inode 1879629858" -c "dblock 0" -c "p" /dev/md1
-# xfs_db -r -c "inode 1879629858" -c "dblock 1" -c "p" /dev/md1
-# xfs_db -r -c "inode 1879629858" -c "dblock 8388608" -c "p" /dev/md1
-
-Thanks,
-Barry.
+>  }
+>  
+>  /*
+> @@ -340,9 +341,9 @@ xfs_vn_mknod(
+>  		if (S_ISCHR(mode) || S_ISBLK(mode))
+>  			ip->i_rdev = rdev;
+>  		else if (S_ISDIR(mode))
+> -			xfs_validate_fields(ip, &vattr);
+> +			xfs_validate_fields(ip);
+>  		d_instantiate(dentry, ip);
+> -		xfs_validate_fields(dir, &vattr);
+> +		xfs_validate_fields(dir);
+>  	}
+>  	return -error;
+>  }
+> @@ -397,7 +398,6 @@ xfs_vn_link(
+>  {
+>  	struct inode	*ip;	/* inode of guy being linked to */
+>  	bhv_vnode_t	*vp;	/* vp of name being linked */
+> -	bhv_vattr_t	vattr;
+>  	int		error;
+>  
+>  	ip = old_dentry->d_inode;	/* inode being linked to */
+> @@ -409,7 +409,7 @@ xfs_vn_link(
+>  		VN_RELE(vp);
+>  	} else {
+>  		xfs_iflags_set(XFS_I(dir), XFS_IMODIFIED);
+> -		xfs_validate_fields(ip, &vattr);
+> +		xfs_validate_fields(ip);
+>  		d_instantiate(dentry, ip);
+>  	}
+>  	return -error;
+> @@ -421,15 +421,14 @@ xfs_vn_unlink(
+>  	struct dentry	*dentry)
+>  {
+>  	struct inode	*inode;
+> -	bhv_vattr_t	vattr;
+>  	int		error;
+>  
+>  	inode = dentry->d_inode;
+>  
+>  	error = xfs_remove(XFS_I(dir), dentry);
+>  	if (likely(!error)) {
+> -		xfs_validate_fields(dir, &vattr);	/* size needs update */
+> -		xfs_validate_fields(inode, &vattr);
+> +		xfs_validate_fields(dir);	/* size needs update */
+> +		xfs_validate_fields(inode);
+>  	}
+>  	return -error;
+>  }
+> @@ -458,8 +457,8 @@ xfs_vn_symlink(
+>  		if (likely(!error)) {
+>  			ip = vn_to_inode(cvp);
+>  			d_instantiate(dentry, ip);
+> -			xfs_validate_fields(dir, &va);
+> -			xfs_validate_fields(ip, &va);
+> +			xfs_validate_fields(dir);
+> +			xfs_validate_fields(ip);
+>  		} else {
+>  			xfs_cleanup_inode(dir, cvp, dentry, 0);
+>  		}
+> @@ -473,13 +472,12 @@ xfs_vn_rmdir(
+>  	struct dentry	*dentry)
+>  {
+>  	struct inode	*inode = dentry->d_inode;
+> -	bhv_vattr_t	vattr;
+>  	int		error;
+>  
+>  	error = xfs_rmdir(XFS_I(dir), dentry);
+>  	if (likely(!error)) {
+> -		xfs_validate_fields(inode, &vattr);
+> -		xfs_validate_fields(dir, &vattr);
+> +		xfs_validate_fields(inode);
+> +		xfs_validate_fields(dir);
+>  	}
+>  	return -error;
+>  }
+> @@ -493,7 +491,6 @@ xfs_vn_rename(
+>  {
+>  	struct inode	*new_inode = ndentry->d_inode;
+>  	bhv_vnode_t	*tvp;	/* target directory */
+> -	bhv_vattr_t	vattr;
+>  	int		error;
+>  
+>  	tvp = vn_from_inode(ndir);
+> @@ -501,10 +498,10 @@ xfs_vn_rename(
+>  	error = xfs_rename(XFS_I(odir), odentry, tvp, ndentry);
+>  	if (likely(!error)) {
+>  		if (new_inode)
+> -			xfs_validate_fields(new_inode, &vattr);
+> -		xfs_validate_fields(odir, &vattr);
+> +			xfs_validate_fields(new_inode);
+> +		xfs_validate_fields(odir);
+>  		if (ndir != odir)
+> -			xfs_validate_fields(ndir, &vattr);
+> +			xfs_validate_fields(ndir);
+>  	}
+>  	return -error;
+>  }
+> 
+> 
+> 
