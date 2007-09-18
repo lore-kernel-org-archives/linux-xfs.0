@@ -1,114 +1,101 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 11:18:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JIIfuw003441
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:18:43 -0700
-Message-ID: <46F16752.1090702@sandeen.net>
-Date: Wed, 19 Sep 2007 13:15:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] kill XFS_INOBT_IS_FREE_DISK
-References: <20070919161202.GA18130@lst.de>
-In-Reply-To: <20070919161202.GA18130@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 11:31:24 -0700 (PDT)
+Received: from mx.sidi.istruzione.it (mx8.sidi.istruzione.it [193.206.15.69])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JIVGuw006120
+	for <linux-xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:31:20 -0700
+Received: from localhost (unknown [127.0.0.1])
+	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 5C898501ED
+	for <linux-xfs@oss.sgi.com>; Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+Content-Type: multipart/report; report-type=delivery-status;
+ boundary="----------=_1190126018-29406-0"
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Subject: VIRUS (Worm.Mydoom.M): IN UNA E-MAIL DA LEI INVIATA
+In-Reply-To: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
+Message-ID: <VS29406-02-4@mx8.sidi.istruzione.it>
+From: "Content-filter at mx8.sidi.istruzione.it" <postmaster@mx8.sidi.istruzione.it>
+Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> This macro is unused an all other acros in this family operate on native
-> types, so we most likely won't grow a user either.
+This is a multi-part message in MIME format...
 
-Looks good to me... FWIW, here are the currently-unused macros in xfs
-cvs, if I'm massaging it right:
+------------=_1190126018-29406-0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
-_ACL_ACCESS_EXISTS
-_ACL_GET_ACCESS
-ATTR_DONTFOLLOW
-ATTR_TRUST
-BMBT_USE_64
-CE_CONT
-current_clear_flags_nested
-FSYNC_INVAL
-FSYNC_NOWAIT
-HAVE_DM_EVENTTYPE_T
-HAVE_DM_RIGHT_T
-HAVE_SPLICE
-MODEMASK
-NDPP
-nested_spinlock
-nested_spinunlock
-SGI_ACL_DEFAULT_SIZE
-SV_KEYED
-SV_LIFO
-SV_PRIO
-sv_timedwait
-sv_timedwait_sig
-sv_wait_sig
-TRACE0
-TRACE1
-TRACE3
-VN_ISBLK
-VN_ISCHR
-VN_ISLNK
-VREAD
-VSUID
-VSVTX
-VWRITE
-XB_GET_OWNER
-XFS_AT_ALL
-XFS_AT_SIZE_NOPERM
-XFS_AT_TIMES
-xfs_buf_ctob
-XFS_BUF_ISORDERED
-XFS_BUF_ISWRITE
-XFS_BUF_OFFSET
-XFS_BUF_SET_OFFSET
-XFS_BUF_SET_SIZE
-XFS_BUF_UNBUSY
-XFS_BUF_VSEMA
-XFS_DA_MAXHASH
-XFS_DFORK_ASIZE_HOST
-XFS_DFORK_DSIZE_HOST
-XFS_ERRLEVEL_OFF
-XFS_ERRTAG_DIOWRITE_IOERR
-XFS_ERRTAG_MAX
-XFS_ERRTAG_NOERROR
-XFS_ERRTAG_STRATCMPL_IOERR
-XFS_ERRTAG_STRATREAD_IOERR
-XFS_EXTENT_TOKEN_WR
-XFS_IO_DCXVN
-XFS_IOMAP_WRITE_UNWRITTEN
-XFS_IS_PQUOTA_RUNNING
-XFS_LID_PINNED
-XFS_MAX_LOG_BLOCKS
-XFS_MAX_LOG_BYTES
-xfs_probe_dmapi
-xfs_probe_ioops
-xfs_probe_quota
-XFS_QMOPT_DOLOG
-XFS_RANDOM_DIOWRITE_IOERR
-XFS_RANDOM_STRATCMPL_IOERR
-XFS_RANDOM_STRATREAD_IOERR
-XFS_SBF_NOFLAGS
-XFS_SB_VERSION2_REALFBITS
-XFS_SB_VERSION2_RESERVED1BIT
-XFS_SB_VERSION2_RESERVED4BIT
-XFS_SB_VERSION_ADDDALIGN
-XFS_SB_VERSION_ADDEXTFLGBIT
-XFS_SB_VERSION_ADDSHARED
-XFS_SB_VERSION_SUBEXTFLGBIT
-XFS_SB_VERSION_SUBSHARED
-XFS_SIZE_TOKEN_WR
-XFS_SX_VERSION
-xlog_exit
-XLOG_FMT_IRIX_BE
-XLOG_MIN_RECORD_BSHIFT
-XLOG_RHASH_BITS
-XLOG_SET
-XLOG_STATE_NOTUSED
+VIRUS ALERT
 
--Eric
+Il sistema di scansione ha rilevato un problema
+in una email presumibilmente inviata da Lei
+-> (<linux-xfs@oss.sgi.com>),
+per il seguente destinatario:
+-> direzione-abruzzo@istruzione.it
+
+La consegna del messaggio non e' potuta avvenire
+
+Di seguito i riferimenti della e-Mail inviata:
+------------------------- BEGIN HEADERS -----------------------------
+Return-Path: <linux-xfs@oss.sgi.com>
+Received: from oss.sgi.com (unknown [85.45.242.114])
+	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 88153501E9
+	for <direzione-abruzzo@istruzione.it>; Tue, 18 Sep 2007 16:33:35 +0200 (CEST)
+From: linux-xfs@oss.sgi.com
+To: direzione-abruzzo@istruzione.it
+Subject: Mail System Error - Returned Mail
+Date: Tue, 18 Sep 2007 16:33:24 +0200
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0014_37B15B68.0961D63E"
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+Message-Id: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
+-------------------------- END HEADERS ------------------------------
+
+------------=_1190126018-29406-0
+Content-Type: message/delivery-status; name="dsn_status"
+Content-Disposition: inline; filename="dsn_status"
+Content-Transfer-Encoding: 7bit
+Content-Description: Delivery error report
+
+Reporting-MTA: dns; mx8.sidi.istruzione.it
+Received-From-MTA: smtp; mx.sidi.istruzione.it ([127.0.0.1])
+Arrival-Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+
+Original-Recipient: rfc822;direzione-abruzzo@istruzione.it
+Final-Recipient: rfc822;direzione-abruzzo@istruzione.it
+Action: failed
+Status: 5.7.1
+Diagnostic-Code: smtp; 550-5.7.1 Rejected, id=29406-02-4 - VIRUS:
+ 550 5.7.1 Worm.Mydoom.M
+Last-Attempt-Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+
+------------=_1190126018-29406-0
+Content-Type: text/rfc822-headers; name="header"
+Content-Disposition: inline; filename="header"
+Content-Transfer-Encoding: 7bit
+Content-Description: Message headers
+
+Return-Path: <linux-xfs@oss.sgi.com>
+Received: from oss.sgi.com (unknown [85.45.242.114])
+	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 88153501E9
+	for <direzione-abruzzo@istruzione.it>; Tue, 18 Sep 2007 16:33:35 +0200 (CEST)
+From: linux-xfs@oss.sgi.com
+To: direzione-abruzzo@istruzione.it
+Subject: Mail System Error - Returned Mail
+Date: Tue, 18 Sep 2007 16:33:24 +0200
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0014_37B15B68.0961D63E"
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+Message-Id: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
+
+------------=_1190126018-29406-0--
