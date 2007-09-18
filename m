@@ -1,65 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 19:24:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Sep 2007 20:02:33 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I2OLuw017322
-	for <xfs@oss.sgi.com>; Mon, 17 Sep 2007 19:24:27 -0700
-Date: Tue, 18 Sep 2007 12:27:57 +1000
-Subject: Re: Bug Report
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8I32Muw023089
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Sep 2007 20:02:27 -0700
+Date: Tue, 18 Sep 2007 12:43:05 +1000
+Subject: Re: can't remove dir
 From: "Barry Naujok" <bnaujok@sgi.com>
 Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 MIME-Version: 1.0
-References: <170b1bd40709061005t787494b6lca283320cace6c31@mail.gmail.com>
-Message-ID: <op.tytvsvcm3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <170b1bd40709061005t787494b6lca283320cace6c31@mail.gmail.com>
+References: <20070914080926.GA30150@apartia.fr> <Pine.LNX.4.64.0709140438130.752@p34.internal.lan> <20070914084125.GA31074@apartia.fr> <20070914091032.GE734179@sgi.com> <20070914092712.GA31997@apartia.fr>
+Message-ID: <op.tytwh3tl3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20070914092712.GA31997@apartia.fr>
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Goodall <mark.goodall@gmail.com>, xfs@oss.sgi.com
+To: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>, linux-xfs@oss.sgi.com
 
-On Fri, 07 Sep 2007 03:05:29 +1000, Mark Goodall <mark.goodall@gmail.com>  
-wrote:
+On Fri, 14 Sep 2007 19:27:21 +1000, Louis-David Mitterrand  
+<vindex+lists-xfs@apartia.org> wrote:
 
-> Not sure what caused this bug, how much more information do you need?
+> On Fri, Sep 14, 2007 at 07:10:32PM +1000, David Chinner wrote:
+>>
+>> Also, get the inode number of the bad directory (ls -i) and then
+>> run:
+>>
+>> # xfs_db -r -c "inode <inode_num>" -c "p" <device of fs>
 >
->         - 18:01:15: check for inodes claiming duplicate blocks - 198528  
-> of
-> 198528 inodes done
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem starting at / ...
-> corrupt dinode 25809974, extent total = 16, nblocks = 0.  This is a bug.
-> Please report it to xfs@oss.sgi.com.
-> cache_node_purge: refcount was 1, not zero (node=0x8d65fd0)
-> couldn't map inode 25809974, err = 117
-> entry "gobo_3.3-6_i386.deb" in shortform directory inode 1770978822  
-> points
-> to free inode 1770978825
-> would junk entry "gobo_3.3-6_i386.deb"
->         - 18:01:48: traversing filesystem - 32 of 32 allocation groups  
-> done
->         - traversal finished ...
->         - traversing all unattached subtrees ...
-> Segmentation fault (core dumped)
+> sylla:/lost+found# xfs_db -r -c "inode 1879629858" -c "p" /dev/md1
+> core.magic = 0x494e
+> core.mode = 040755
+> core.version = 1
+> core.format = 2 (extents)
+> core.nlinkv1 = 2
+> core.uid = 0
+> core.gid = 0
+> core.flushiter = 9
+> core.atime.sec = Tue Aug  1 20:49:16 2006
+> core.atime.nsec = 000000000
+> core.mtime.sec = Fri Sep 14 09:25:29 2007
+> core.mtime.nsec = 589593557
+> core.ctime.sec = Fri Sep 14 09:25:29 2007
+> core.ctime.nsec = 589593557
+> core.size = 8192
+> core.nblocks = 3
+> core.extsize = 0
+> core.nextents = 2
+> core.naextents = 0
+> core.forkoff = 0
+> core.aformat = 2 (extents)
+> core.dmevmask = 0
+> core.dmstate = 0
+> core.newrtbm = 0
+> core.prealloc = 0
+> core.realtime = 0
+> core.immutable = 0
+> core.append = 0
+> core.sync = 0
+> core.noatime = 0
+> core.nodump = 0
+> core.rtinherit = 0
+> core.projinherit = 0
+> core.nosymlinks = 0
+> core.extsz = 0
+> core.extszinherit = 0
+> core.nodefrag = 0
+> core.gen = 0
+> next_unlinked = null
+> u.bmx[0-1] = [startoff,startblock,blockcount,extentflag]  
+> 0:[0,117476868,2,0] 1:[8388608,125865476,1,0]
 >
-> OS: Ubuntu Linux mserve 2.6.20-16-386 #2 Fri Aug 31 00:51:58 UTC 2007  
-> i686
-> GNU/Linux
-> fully patched from official repositories
 
-Latest xfsprogs 2.9.4 doesn't segfault anymore in Phase 6.
+If you still have the bad directory, can you run these as well?
 
-The "corrupt dinode..." error is a symptom of running
-xfs_repair in -n mode where Phase 3 would have fixed the
-offending inode up:
+# xfs_db -r -c "inode 1879629858" -c "dblock 0" -c "p" /dev/md1
+# xfs_db -r -c "inode 1879629858" -c "dblock 1" -c "p" /dev/md1
+# xfs_db -r -c "inode 1879629858" -c "dblock 8388608" -c "p" /dev/md1
 
--n mode:
-   bad attribute format 0 in inode 25809974, would reset value
-   bad anextents 16 for inode 25809974, would reset to 0
-
-repair mode:
-   bad attribute format 0 in inode 25809974, resetting value
-   correcting anextents for inode 25809974, was 16 - counted 0
-
-Regards,
+Thanks,
 Barry.
