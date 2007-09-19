@@ -1,83 +1,114 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 10:59:05 -0700 (PDT)
-Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JHwruw032089
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:58:55 -0700
-Received: from localhost (localhost [127.0.0.1])
-	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 34B7114B1BD
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:49:29 +0200 (IST)
-Received: from mail.edu.haifa.ac.il ([127.0.0.1])
-	by localhost (mail.edu.haifa.ac.il [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id Czbk+eY6tdDt for <xfs@oss.sgi.com>;
-	Wed, 19 Sep 2007 10:49:29 +0200 (IST)
-Received: from kozanostra (leon.edu.haifa.ac.il [132.74.41.33])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 0146ADE43
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:49:29 +0200 (IST)
-From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
-Subject: Tips on xfs creation on MIPS R5000 machine running Linux?
-Date: Wed, 19 Sep 2007 10:48:30 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 11:18:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JIIfuw003441
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:18:43 -0700
+Message-ID: <46F16752.1090702@sandeen.net>
+Date: Wed, 19 Sep 2007 13:15:46 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1255"
-Message-Id: <20070919084929.0146ADE43@mail.edu.haifa.ac.il>
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] kill XFS_INOBT_IS_FREE_DISK
+References: <20070919161202.GA18130@lst.de>
+In-Reply-To: <20070919161202.GA18130@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Hello All,
+Christoph Hellwig wrote:
+> This macro is unused an all other acros in this family operate on native
+> types, so we most likely won't grow a user either.
 
+Looks good to me... FWIW, here are the currently-unused macros in xfs
+cvs, if I'm massaging it right:
 
-Finally I've got my hands on some nice R5000 Model O2 machine with IRIX 6.5
-on it.
+_ACL_ACCESS_EXISTS
+_ACL_GET_ACCESS
+ATTR_DONTFOLLOW
+ATTR_TRUST
+BMBT_USE_64
+CE_CONT
+current_clear_flags_nested
+FSYNC_INVAL
+FSYNC_NOWAIT
+HAVE_DM_EVENTTYPE_T
+HAVE_DM_RIGHT_T
+HAVE_SPLICE
+MODEMASK
+NDPP
+nested_spinlock
+nested_spinunlock
+SGI_ACL_DEFAULT_SIZE
+SV_KEYED
+SV_LIFO
+SV_PRIO
+sv_timedwait
+sv_timedwait_sig
+sv_wait_sig
+TRACE0
+TRACE1
+TRACE3
+VN_ISBLK
+VN_ISCHR
+VN_ISLNK
+VREAD
+VSUID
+VSVTX
+VWRITE
+XB_GET_OWNER
+XFS_AT_ALL
+XFS_AT_SIZE_NOPERM
+XFS_AT_TIMES
+xfs_buf_ctob
+XFS_BUF_ISORDERED
+XFS_BUF_ISWRITE
+XFS_BUF_OFFSET
+XFS_BUF_SET_OFFSET
+XFS_BUF_SET_SIZE
+XFS_BUF_UNBUSY
+XFS_BUF_VSEMA
+XFS_DA_MAXHASH
+XFS_DFORK_ASIZE_HOST
+XFS_DFORK_DSIZE_HOST
+XFS_ERRLEVEL_OFF
+XFS_ERRTAG_DIOWRITE_IOERR
+XFS_ERRTAG_MAX
+XFS_ERRTAG_NOERROR
+XFS_ERRTAG_STRATCMPL_IOERR
+XFS_ERRTAG_STRATREAD_IOERR
+XFS_EXTENT_TOKEN_WR
+XFS_IO_DCXVN
+XFS_IOMAP_WRITE_UNWRITTEN
+XFS_IS_PQUOTA_RUNNING
+XFS_LID_PINNED
+XFS_MAX_LOG_BLOCKS
+XFS_MAX_LOG_BYTES
+xfs_probe_dmapi
+xfs_probe_ioops
+xfs_probe_quota
+XFS_QMOPT_DOLOG
+XFS_RANDOM_DIOWRITE_IOERR
+XFS_RANDOM_STRATCMPL_IOERR
+XFS_RANDOM_STRATREAD_IOERR
+XFS_SBF_NOFLAGS
+XFS_SB_VERSION2_REALFBITS
+XFS_SB_VERSION2_RESERVED1BIT
+XFS_SB_VERSION2_RESERVED4BIT
+XFS_SB_VERSION_ADDDALIGN
+XFS_SB_VERSION_ADDEXTFLGBIT
+XFS_SB_VERSION_ADDSHARED
+XFS_SB_VERSION_SUBEXTFLGBIT
+XFS_SB_VERSION_SUBSHARED
+XFS_SIZE_TOKEN_WR
+XFS_SX_VERSION
+xlog_exit
+XLOG_FMT_IRIX_BE
+XLOG_MIN_RECORD_BSHIFT
+XLOG_RHASH_BITS
+XLOG_SET
+XLOG_STATE_NOTUSED
 
-# hinv
-CPU: MIPS R5000 Processor Chip Revision: 2.1
-FPU: MIPS R5000 Floating Point Coprocessor Revision: 1.0
-1 180 MHZ IP32 Processor
-Main memory size: 256 Mbytes
-Secondary unified instruction/data cache size: 512 Kbytes on Processor 0
-Instruction cache size: 32 Kbytes
-Data cache size: 32 Kbytes
-FLASH PROM version 4.13
-Integral SCSI controller 0: Version ADAPTEC 7880
-  Disk drive: unit 1 on SCSI controller 0
-  Disk drive: unit 2 on SCSI controller 0
-  CDROM: unit 4 on SCSI controller 0
-Integral SCSI controller 1: Version ADAPTEC 7880
-On-board serial ports: tty1
-On-board serial ports: tty2
-On-board EPP/ECP parallel port
-CRM graphics installed
-Integral Ethernet: ec0, version 1
-Iris Audio Processor: version A3 revision 0
-Video: MVP unit 0 version 1.4
-AV: AV1 Card version 1, O2Cam type 1 version 0 connected.
-Vice: TRE
-
-I'm intending to install Gentoo on this machine and I need some advice.
-
-Following are the commands I've used to create and mount my partitions on
-some old x86 PC.
-a) Should I use the same values for all partitions on R5000 ?
-
-1) Creating FS:
-mkfs.xfs -l internal,size=128m -d agcount=2 –d unwritten=0 /dev/hda1
-
-2) Mount options:
-mount -o noatime,nodiratime,logbufs=8
-
-Any suggestion for best performance configuration for XFS on this machine?
-
-b) If I'd like to replace the old 2GB disk to some new 80GB disk. Would PROM
-recognize it? Is there any special procedure?
-
-c) Anyone has any experience with Gentoo on MIPS as a desktop system
-(performance, device recognition (i.e. webcam) etc.)?
-
-
-Best Regards,
-Leon Kolchinsky
+-Eric
