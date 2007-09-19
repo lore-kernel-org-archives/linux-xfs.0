@@ -1,101 +1,154 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 11:31:24 -0700 (PDT)
-Received: from mx.sidi.istruzione.it (mx8.sidi.istruzione.it [193.206.15.69])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JIVGuw006120
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:31:20 -0700
-Received: from localhost (unknown [127.0.0.1])
-	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 5C898501ED
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
-Content-Type: multipart/report; report-type=delivery-status;
- boundary="----------=_1190126018-29406-0"
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 11:54:38 -0700 (PDT)
+Received: from rv-out-0910.google.com (rv-out-0910.google.com [209.85.198.186])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JIsUuw009824
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:54:32 -0700
+Received: by rv-out-0910.google.com with SMTP id k20so225946rvb
+        for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 11:54:33 -0700 (PDT)
+Message-ID: <728b8e3b0709191129j27b7c319h2efd51ffc9cb64f3@mail.gmail.com>
+Date: Wed, 19 Sep 2007 20:29:35 +0200
+From: "Jochen K." <jochen.f.k@googlemail.com>
+Subject: Cant find sunit and swidth on luks encrypted raid6 device
 MIME-Version: 1.0
-Subject: VIRUS (Worm.Mydoom.M): IN UNA E-MAIL DA LEI INVIATA
-In-Reply-To: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
-Message-ID: <VS29406-02-4@mx8.sidi.istruzione.it>
-From: "Content-filter at mx8.sidi.istruzione.it" <postmaster@mx8.sidi.istruzione.it>
-Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format...
+Hi,
 
-------------=_1190126018-29406-0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+I tried to create a xfs filesystem on a big encrypted mapped device but it
+isnt working at all.
+Also got latest kernel and kernel.org drivers for the raid controller.
+I hope you guys have any idea what might have happened here :)
+With ext3 its workin but i have no clue how to fix this problem.
 
-VIRUS ALERT
 
-Il sistema di scansione ha rilevato un problema
-in una email presumibilmente inviata da Lei
--> (<linux-xfs@oss.sgi.com>),
-per il seguente destinatario:
--> direzione-abruzzo@istruzione.it
+Kernel: 2.6.22.5-76.fc7 #1 SMP Thu Aug 30 13:47:21 EDT 2007 i686 i686 i386
+GNU/Linux
+mdadm - v2.6.3 - 20th August 2007
+cryptsetup 1.0.5
+mkfs.xfs version 2.9.4
 
-La consegna del messaggio non e' potuta avvenire
+--added encryption--
+/sbin/cryptsetup -c aes-cbc-essiv:sha256 -y -s 256 luksFormat /dev/md0
+/sbin/cryptsetup luksOpen /dev/md0 raid6
 
-Di seguito i riferimenti della e-Mail inviata:
-------------------------- BEGIN HEADERS -----------------------------
-Return-Path: <linux-xfs@oss.sgi.com>
-Received: from oss.sgi.com (unknown [85.45.242.114])
-	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 88153501E9
-	for <direzione-abruzzo@istruzione.it>; Tue, 18 Sep 2007 16:33:35 +0200 (CEST)
-From: linux-xfs@oss.sgi.com
-To: direzione-abruzzo@istruzione.it
-Subject: Mail System Error - Returned Mail
-Date: Tue, 18 Sep 2007 16:33:24 +0200
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0014_37B15B68.0961D63E"
-X-Priority: 3
-X-MSMail-Priority: Normal
-X-Mailer: Microsoft Outlook Express 6.00.2600.0000
-X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
-Message-Id: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
--------------------------- END HEADERS ------------------------------
+[output without encryption]
 
-------------=_1190126018-29406-0
-Content-Type: message/delivery-status; name="dsn_status"
-Content-Disposition: inline; filename="dsn_status"
-Content-Transfer-Encoding: 7bit
-Content-Description: Delivery error report
+mkfs.xfs /dev/md0
 
-Reporting-MTA: dns; mx8.sidi.istruzione.it
-Received-From-MTA: smtp; mx.sidi.istruzione.it ([127.0.0.1])
-Arrival-Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+meta-data=/dev/md0               isize=256    agcount=32, agsize=53412608
+blks
+         =                       sectsz=4096  attr=0
+data     =                       bsize=4096   blocks=1709202880, imaxpct=25
+         =                       sunit=32     swidth=448 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=0
+realtime =none                   extsz=1835008 blocks=0, rtextents=0
 
-Original-Recipient: rfc822;direzione-abruzzo@istruzione.it
-Final-Recipient: rfc822;direzione-abruzzo@istruzione.it
-Action: failed
-Status: 5.7.1
-Diagnostic-Code: smtp; 550-5.7.1 Rejected, id=29406-02-4 - VIRUS:
- 550 5.7.1 Worm.Mydoom.M
-Last-Attempt-Date: Tue, 18 Sep 2007 16:33:38 +0200 (CEST)
+:Workin fine here! swidth/sunit = 14 used hdds which is useable space on the
+raid6
 
-------------=_1190126018-29406-0
-Content-Type: text/rfc822-headers; name="header"
-Content-Disposition: inline; filename="header"
-Content-Transfer-Encoding: 7bit
-Content-Description: Message headers
+[output with encryption]
 
-Return-Path: <linux-xfs@oss.sgi.com>
-Received: from oss.sgi.com (unknown [85.45.242.114])
-	by mx8.sidi.istruzione.it (Mail Service) with ESMTP id 88153501E9
-	for <direzione-abruzzo@istruzione.it>; Tue, 18 Sep 2007 16:33:35 +0200 (CEST)
-From: linux-xfs@oss.sgi.com
-To: direzione-abruzzo@istruzione.it
-Subject: Mail System Error - Returned Mail
-Date: Tue, 18 Sep 2007 16:33:24 +0200
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0014_37B15B68.0961D63E"
-X-Priority: 3
-X-MSMail-Priority: Normal
-X-Mailer: Microsoft Outlook Express 6.00.2600.0000
-X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
-Message-Id: <20070918143335.88153501E9@mx8.sidi.istruzione.it>
+mkfs.xfs -f /dev/mapper/raid6
 
-------------=_1190126018-29406-0--
+meta-data=/dev/mapper/raid6      isize=256    agcount=32, agsize=53412581
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=1709202592, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+b7f57ad0: Badness in key lookup (length)
+bp=(bno 13673620728, len 131072 bytes) key=(bno 13673620728, len 4096 bytes)
+
+: not workin at all :/
+
+[output with usin dev/md0 values]
+
+mkfs.xfs -s size=4096 -d sunit=32,swidth=448 -r extsize=1835008
+/dev/mapper/raid6
+
+meta-data=/dev/mapper/raid6      isize=256    agcount=32, agsize=53412584
+blks
+         =                       sectsz=4096  attr=0
+data     =                       bsize=4096   blocks=1709202592, imaxpct=25
+         =                       sunit=4      swidth=56 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=0
+realtime =none                   extsz=1835008 blocks=0, rtextents=0
+b7f66ad0: Badness in key lookup (length)
+bp=(bno 13673620728, len 131072 bytes) key=(bno 13673620728, len 4096 bytes)
+
+
+:its still using wrong values here :/
+
+[System Details]
+
+mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Tue Sep 18 09:51:12 2007
+     Raid Level : raid6
+     Array Size : 6836811520 ( 6520.09 GiB 7000.89 GB)
+  Used Dev Size : 488343680 (465.72 GiB 500.06 GB)
+   Raid Devices : 16
+  Total Devices : 16
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Sep 19 19:53:29 2007
+          State : clean
+ Active Devices : 16
+Working Devices : 16
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 128K
+
+           UUID : ae1231f4:1b4dc7a0:370b3052:b437b3a1
+         Events : 0.18
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       3       8       65        3      active sync   /dev/sde1
+       4       8       81        4      active sync   /dev/sdf1
+       5       8       97        5      active sync   /dev/sdg1
+       6       8      113        6      active sync   /dev/sdh1
+       7       8      129        7      active sync   /dev/sdi1
+       8       8      145        8      active sync   /dev/sdj1
+       9       8      161        9      active sync   /dev/sdk1
+      10       8      177       10      active sync   /dev/sdl1
+      11       8      193       11      active sync   /dev/sdm1
+      12       8      209       12      active sync   /dev/sdn1
+      13       8      225       13      active sync   /dev/sdo1
+      14       8      241       14      active sync   /dev/sdp1
+      15      65        1       15      active sync   /dev/sdq1
+
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdb1[0] sdq1[15] sdp1[14] sdo1[13] sdn1[12] sdm1[11]
+sdl1[10] sdk1[9] sdj1[8] sdi1[7] sdh1[6] sdg1[5] sdf1[4] sde1[3] sdd1[2]
+sdc1[1]
+      6836811520 blocks level 6, 128k chunk, algorithm 2 [16/16]
+[UUUUUUUUUUUUUUUU]
+
+------------------------------------------------
+
+
+Best regards,
+Jochen.
+
+
+[[HTML alternate version deleted]]
