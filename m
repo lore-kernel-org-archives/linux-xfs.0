@@ -1,36 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 08:58:31 -0700 (PDT)
-Received: from redback.melbourne.sgi.com (redback.melbourne.sgi.com [134.14.55.78])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JFwNuw006297
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 08:58:25 -0700
-Date: Tue, 18 Sep 2007 17:56:52 +1000
-From: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
-Message-Id: <200709180756.l8I7uq6L029870@redback.melbourne.sgi.com>
-Subject: TAKE 970662 - simplify validata_fields
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 09:12:09 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JGC3uw009019
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 09:12:05 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8JGC4A5018188
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 18:12:04 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8JGC3Cn018184
+	for xfs@oss.sgi.com; Wed, 19 Sep 2007 18:12:03 +0200
+Date: Wed, 19 Sep 2007 18:12:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] kill XFS_INOBT_IS_FREE_DISK
+Message-ID: <20070919161202.GA18130@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-simplify validata_fields
-
-Stop using xfs_getattr and a onstack bhv_vattr_t just to get three
-fields from the underlying inode and opencode copying from the inode
-fields instead.
+This macro is unused an all other acros in this family operate on native
+types, so we most likely won't grow a user either.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-Date:  Tue Sep 18 17:53:18 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
-Inspected by:  Christoph Hellwig <hch@lst.de>
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29711a
-fs/xfs/linux-2.6/xfs_iops.c - 1.263 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.263&r2=text&tr2=1.262&f=h
-	- simplify validata_fields
+Index: linux-2.6.23-rc6/fs/xfs/xfs_ialloc_btree.h
+===================================================================
+--- linux-2.6.23-rc6.orig/fs/xfs/xfs_ialloc_btree.h	2007-09-18 16:27:08.000000000 +0200
++++ linux-2.6.23-rc6/fs/xfs/xfs_ialloc_btree.h	2007-09-18 16:27:18.000000000 +0200
+@@ -81,8 +81,6 @@ typedef	struct xfs_btree_sblock xfs_inob
+ #define	XFS_INOBT_MASK(i)		((xfs_inofree_t)1 << (i))
+ #define	XFS_INOBT_IS_FREE(rp,i)		\
+ 		(((rp)->ir_free & XFS_INOBT_MASK(i)) != 0)
+-#define	XFS_INOBT_IS_FREE_DISK(rp,i)	\
+-		((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
+ #define	XFS_INOBT_SET_FREE(rp,i)	((rp)->ir_free |= XFS_INOBT_MASK(i))
+ #define	XFS_INOBT_CLR_FREE(rp,i)	((rp)->ir_free &= ~XFS_INOBT_MASK(i))
+ 
