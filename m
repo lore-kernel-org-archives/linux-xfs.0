@@ -1,45 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 13:29:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JKTquw007823
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 13:29:54 -0700
-Message-ID: <46F186A7.7050301@sandeen.net>
-Date: Wed, 19 Sep 2007 15:29:27 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] kill XFS_INOBT_IS_FREE_DISK
-References: <20070919161202.GA18130@lst.de> <46F16752.1090702@sandeen.net> <20070919202239.GA32475@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 13:44:01 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JKhuuw010171
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 13:43:58 -0700
+Message-ID: <54685.192.168.3.1.1190234658.squirrel@mail.aconex.com>
 In-Reply-To: <20070919202239.GA32475@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+References: <20070919161202.GA18130@lst.de> <46F16752.1090702@sandeen.net>
+    <20070919202239.GA32475@lst.de>
+Date: Thu, 20 Sep 2007 06:44:18 +1000 (EST)
+Subject: Re: [PATCH] kill XFS_INOBT_IS_FREE_DISK
+From: nscott@aconex.com
+MIME-Version: 1.0
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
+> On Wed, Sep 19, 2007 at 01:15:46PM -0500, Eric Sandeen wrote:
+>> Christoph Hellwig wrote:
+>> ...
+>> XFS_SBF_NOFLAGS
+>> XFS_SB_VERSION2_REALFBITS
+>> XFS_SB_VERSION2_RESERVED1BIT
+>> XFS_SB_VERSION2_RESERVED4BIT
+>> XFS_SB_VERSION_ADDDALIGN
+>> XFS_SB_VERSION_ADDEXTFLGBIT
+>> XFS_SB_VERSION_ADDSHARED
+>> XFS_SB_VERSION_SUBEXTFLGBIT
+>> XFS_SB_VERSION_SUBSHARED
+>
+> I suspect there are kind expected to be unused.
+>
 
-> 
->> HAVE_SPLICE
-> 
-> 
-> Backward compat?
+They're used in userspace IIRC.  (Well, some - probably not the RESERVED
+ones)
 
-ah, yeah, it's for 2.4:
+cheers.
 
-0 xfs/linux-2.6/xfs_linux.h <global>  104 #define HAVE_SPLICE
-1 fs/xfs/xfs_vnodeops.c     <global> 4718 #ifdef HAVE_SPLICE
-
-can probably go soon eh.  HAVE_PERCPU_SB can too (not sure why it's not
-in my list)  There may be others that are just for 2.4.
-
-> 
->> nested_spinlock
->> nested_spinunlock
-> 
-> don't your patches kill these?
-
-yeah, I just checked pristine cvs.
-
--Eric
+--
+Nathan
