@@ -1,47 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 10:50:07 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JHo0uw029991
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:50:03 -0700
-Message-ID: <46F16149.8080503@sandeen.net>
-Date: Wed, 19 Sep 2007 12:50:01 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 10:59:05 -0700 (PDT)
+Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JHwruw032089
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:58:55 -0700
+Received: from localhost (localhost [127.0.0.1])
+	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 34B7114B1BD
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:49:29 +0200 (IST)
+Received: from mail.edu.haifa.ac.il ([127.0.0.1])
+	by localhost (mail.edu.haifa.ac.il [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id Czbk+eY6tdDt for <xfs@oss.sgi.com>;
+	Wed, 19 Sep 2007 10:49:29 +0200 (IST)
+Received: from kozanostra (leon.edu.haifa.ac.il [132.74.41.33])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mail.edu.haifa.ac.il (Postfix) with ESMTP id 0146ADE43
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 10:49:29 +0200 (IST)
+From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
+Subject: Tips on xfs creation on MIPS R5000 machine running Linux?
+Date: Wed, 19 Sep 2007 10:48:30 +0200
 MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.23
-References: <20070918112447.4315C58C4C09@chook.melbourne.sgi.com>
-In-Reply-To: <20070918112447.4315C58C4C09@chook.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1255"
+Message-Id: <20070919084929.0146ADE43@mail.edu.haifa.ac.il>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Tim Shimmin <tes@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Tim Shimmin wrote:
-> Hi Linus,
-> 
-> A couple of fixes for potential fs corruption.
-> And one fix to ensure that xfs_mru_cache is not
-> doing anything unless the cache has active objects.
+Hello All,
 
-cc: trimmed...
 
-Seems like you should push the filestreams fix too?
+Finally I've got my hands on some nice R5000 Model O2 machine with IRIX 6.5
+on it.
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git;a=commitdiff;h=f4b26d9d73e38ff915720440b1c373fb239a4254
+# hinv
+CPU: MIPS R5000 Processor Chip Revision: 2.1
+FPU: MIPS R5000 Floating Point Coprocessor Revision: 1.0
+1 180 MHZ IP32 Processor
+Main memory size: 256 Mbytes
+Secondary unified instruction/data cache size: 512 Kbytes on Processor 0
+Instruction cache size: 32 Kbytes
+Data cache size: 32 Kbytes
+FLASH PROM version 4.13
+Integral SCSI controller 0: Version ADAPTEC 7880
+  Disk drive: unit 1 on SCSI controller 0
+  Disk drive: unit 2 on SCSI controller 0
+  CDROM: unit 4 on SCSI controller 0
+Integral SCSI controller 1: Version ADAPTEC 7880
+On-board serial ports: tty1
+On-board serial ports: tty2
+On-board EPP/ECP parallel port
+CRM graphics installed
+Integral Ethernet: ec0, version 1
+Iris Audio Processor: version A3 revision 0
+Video: MVP unit 0 version 1.4
+AV: AV1 Card version 1, O2Cam type 1 version 0 connected.
+Vice: TRE
 
-Thanks,
+I'm intending to install Gentoo on this machine and I need some advice.
 
--Eric
+Following are the commands I've used to create and mount my partitions on
+some old x86 PC.
+a) Should I use the same values for all partitions on R5000 ?
 
-p.s. just FWIW, here are the patches I'm currently carrying in F8:
+1) Creating FS:
+mkfs.xfs -l internal,size=128m -d agcount=2 –d unwritten=0 /dev/hda1
 
-linux-2.6-xfs-avoid-replaying-inode-buffer-init.patch	In for-linus
-linux-2.6-xfs-filesize-updates.patch			In for-linus
-linux-2.6-xfs-filestreams-on-demand-MRU-reaping.patch	In for-linus
-linux-2.6-xfs-fix-filestreams-free-func-cast.patch
-linux-2.6-xfs-optimize-away-dmapi-tests.patch
-linux-2.6-xfs-optimize-away-realtime-tests.patch
-linux-2.6-xfs-refactor-xfs_mountfs.patch
-linux-2.6-xfs-setfattr-32bit-compat.patch
+2) Mount options:
+mount -o noatime,nodiratime,logbufs=8
+
+Any suggestion for best performance configuration for XFS on this machine?
+
+b) If I'd like to replace the old 2GB disk to some new 80GB disk. Would PROM
+recognize it? Is there any special procedure?
+
+c) Anyone has any experience with Gentoo on MIPS as a desktop system
+(performance, device recognition (i.e. webcam) etc.)?
+
+
+Best Regards,
+Leon Kolchinsky
