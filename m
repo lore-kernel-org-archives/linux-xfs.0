@@ -1,44 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 13:44:01 -0700 (PDT)
-Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JKhuuw010171
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 13:43:58 -0700
-Message-ID: <54685.192.168.3.1.1190234658.squirrel@mail.aconex.com>
-In-Reply-To: <20070919202239.GA32475@lst.de>
-References: <20070919161202.GA18130@lst.de> <46F16752.1090702@sandeen.net>
-    <20070919202239.GA32475@lst.de>
-Date: Thu, 20 Sep 2007 06:44:18 +1000 (EST)
-Subject: Re: [PATCH] kill XFS_INOBT_IS_FREE_DISK
-From: nscott@aconex.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 15:34:06 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8JMXxuw027365
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 15:34:02 -0700
+Message-ID: <46F1A3D7.5090805@sandeen.net>
+Date: Wed, 19 Sep 2007 17:33:59 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Subject: Re: Cant find sunit and swidth on luks encrypted raid6 device
+References: <728b8e3b0709191129j27b7c319h2efd51ffc9cb64f3@mail.gmail.com> <46F17BBE.7060304@sandeen.net>
+In-Reply-To: <46F17BBE.7060304@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Jochen K." <jochen.f.k@googlemail.com>, xfs@oss.sgi.com
 
-> On Wed, Sep 19, 2007 at 01:15:46PM -0500, Eric Sandeen wrote:
->> Christoph Hellwig wrote:
->> ...
->> XFS_SBF_NOFLAGS
->> XFS_SB_VERSION2_REALFBITS
->> XFS_SB_VERSION2_RESERVED1BIT
->> XFS_SB_VERSION2_RESERVED4BIT
->> XFS_SB_VERSION_ADDDALIGN
->> XFS_SB_VERSION_ADDEXTFLGBIT
->> XFS_SB_VERSION_ADDSHARED
->> XFS_SB_VERSION_SUBEXTFLGBIT
->> XFS_SB_VERSION_SUBSHARED
->
-> I suspect there are kind expected to be unused.
->
+Eric Sandeen wrote:
 
-They're used in userspace IIRC.  (Well, some - probably not the RESERVED
-ones)
+> What does "blockdev --getsize64" and "blockdev --getsize" and/or
+> /proc/partitions say about how big /dev/mapper/raid6 is?
+> 
+> Can you use dd to write to the last 128k of the device, as reported by
+> blockdev --getsize64?
 
-cheers.
+Not a cryptsetup problem, FWIW:
 
---
-Nathan
+[root@inode obj]# /tmp/truncate fsfile 7000893943808
+Truncating fsfile to 7000893943808
+[root@inode obj]# ls -l fsfile
+-rw-r--r-- 1 root root 7000893943808 Sep 19 17:23 fsfile
+[root@inode obj]# mkfs.xfs -f fsfile
+meta-data=fsfile                 isize=256    agcount=32,
+agsize=53412581 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=1709202592, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+2b2d4c133680: Badness in key lookup (length)
+bp=(bno 13673620728, len 131072 bytes) key=(bno 13673620728, len 4096 bytes)
+
+If we take out the pwrite that does the end-of-device zeroing, we don't
+get the error... but that's been there since forever, so again, I'm a
+bit confused here.
+
+-Eric
