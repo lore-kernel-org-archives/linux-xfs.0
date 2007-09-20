@@ -1,295 +1,272 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 00:55:20 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8K7sguw017757
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 00:55:13 -0700
-Date: Thu, 20 Sep 2007 17:59:05 +1000
-Subject: REVIEW: Improve "." and ".." problem detection and handling in xfs_repair
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------Q8903L1J3W44XpzcIOQMJY
-MIME-Version: 1.0
-Message-ID: <op.tyx0grm93jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 07:23:08 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8KEMvuw003647
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 07:23:00 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by mail.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8KEMvA5014043
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 16:22:57 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8KEMuwl014041
+	for xfs@oss.sgi.com; Thu, 20 Sep 2007 16:22:56 +0200
+Date: Thu, 20 Sep 2007 16:22:56 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] cleanup XFS_IFORK_*/XFS_DFORK* macros
+Message-ID: <20070920142256.GA13755@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: xfs@oss.sgi.com
 
-------------Q8903L1J3W44XpzcIOQMJY
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+Currently XFS_IFORK_* and XFS_DFORK* are implemented by means of
+XFS_CFORK* macros.  But given that XFS_IFORK_* operates on an
+xfs_inode that embedds and xfs_icdinode_core and XFS_DFORK_* operates
+on an xfs_dinode that embedds a xfs_dinode_core one will have to do
+endian swapping while the other doesn't.  Instead of having the current
+mess with the CFORK macros that have byteswapping and non-byteswapping
+version (which are inconsistantly named while we're at it) just define
+each family of the macros to stand by itself and simplify the whole
+matter.
 
-In a non-shortform directory (ie. the directory contents is
-stored within the inode on-disk), if "." or ".." are placed
-in different blocks, the directory cannot be made shortform
-when everything else in the directory is deleted as two
-blocks still remain. This prevents the kernel from deleting
-this directory saying it's "not empty" (see
-http://oss.sgi.com/archives/xfs/2007-09/msg00142.html ).
-
-The attached patch detects "." or ".." not being in the
-first block and rebuilds it in repair so it may be
-deleted when required.
-
-Also, testing this patch, I found if ".." didn't exist in
-a directory, yet another directory had an entry for it,
-it was put in lost+found. The patch now puts ".." back in
-for the directory referencing it.
-
-I also improved the lookup of the parent when rebuilding
-a directory (it did a hash lookup of ".." instead of the
-already existing get_inode_parent() call).
+A few direct references to the CFORK variants were cleaned up to
+use IFORK or DFORK to make this possible.
 
 
-------------Q8903L1J3W44XpzcIOQMJY
-Content-Disposition: attachment; filename=improve_dot_and_dotdot_handling.patch
-Content-Type: application/octet-stream; name=improve_dot_and_dotdot_handling.patch
-Content-Transfer-Encoding: Base64
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQp4ZnNwcm9ncy9yZXBh
-aXIvaW5jb3JlX2luby5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQoKLS0tIGEveGZzcHJvZ3MvcmVwYWlyL2luY29yZV9pbm8uYwkyMDA3LTA5
-LTIwIDE3OjQ1OjMyLjAwMDAwMDAwMCArMTAwMAorKysgYi94ZnNwcm9ncy9y
-ZXBhaXIvaW5jb3JlX2luby5jCTIwMDctMDktMTkgMTU6NDg6MDYuODQ1OTcz
-NDE4ICsxMDAwCkBAIC02MjEsNDkgKzYyMSw2MSBAQCBwcmludF91bmNlcnRh
-aW5faW5vZGVfbGlzdCh4ZnNfYWdudW1iZXJfCiAgKiBpcyB0aGUgTnRoIGJp
-dCBzZXQgaW4gdGhlIG1hc2sgaXMgc3RvcmVkIGluIHRoZSBOdGggbG9jYXRp
-b24gaW4KICAqIHRoZSBhcnJheSB3aGVyZSBOIHN0YXJ0cyBhdCAwLgogICov
-CisKIHZvaWQKLXNldF9pbm9kZV9wYXJlbnQoaW5vX3RyZWVfbm9kZV90ICpp
-cmVjLCBpbnQgb2Zmc2V0LCB4ZnNfaW5vX3QgcGFyZW50KQotewotCWludAkJ
-aTsKLQlpbnQJCWNudDsKLQlpbnQJCXRhcmdldDsKLQlfX3VpbnQ2NF90CWJp
-dG1hc2s7Ci0JcGFyZW50X2VudHJ5X3QJKnRtcDsKK3NldF9pbm9kZV9wYXJl
-bnQoCisJaW5vX3RyZWVfbm9kZV90CQkqaXJlYywKKwlpbnQJCQlvZmZzZXQs
-CisJeGZzX2lub190CQlwYXJlbnQpCit7CisJcGFyZW50X2xpc3RfdAkJKnB0
-Ymw7CisJaW50CQkJaTsKKwlpbnQJCQljbnQ7CisJaW50CQkJdGFyZ2V0Owor
-CV9fdWludDY0X3QJCWJpdG1hc2s7CisJcGFyZW50X2VudHJ5X3QJCSp0bXA7
-CiAKLQlBU1NFUlQoZnVsbF9pbm9fZXhfZGF0YSA9PSAwKTsKKwlpZiAoZnVs
-bF9pbm9fZXhfZGF0YSkKKwkJcHRibCA9IGlyZWMtPmlub191bi5leF9kYXRh
-LT5wYXJlbnRzOworCWVsc2UKKwkJcHRibCA9IGlyZWMtPmlub191bi5wbGlz
-dDsKIAotCWlmIChpcmVjLT5pbm9fdW4ucGxpc3QgPT0gTlVMTCkgIHsKLQkJ
-aXJlYy0+aW5vX3VuLnBsaXN0ID0KLQkJCShwYXJlbnRfbGlzdF90KiltYWxs
-b2Moc2l6ZW9mKHBhcmVudF9saXN0X3QpKTsKLQkJaWYgKCFpcmVjLT5pbm9f
-dW4ucGxpc3QpCisJaWYgKHB0YmwgPT0gTlVMTCkgIHsKKwkJcHRibCA9IChw
-YXJlbnRfbGlzdF90ICopbWFsbG9jKHNpemVvZihwYXJlbnRfbGlzdF90KSk7
-CisJCWlmICghcHRibCkKIAkJCWRvX2Vycm9yKF8oImNvdWxkbid0IG1hbGxv
-YyBwYXJlbnQgbGlzdCB0YWJsZVxuIikpOwogCi0JCWlyZWMtPmlub191bi5w
-bGlzdC0+cG1hc2sgPSAxTEwgPDwgb2Zmc2V0OwotCQlpcmVjLT5pbm9fdW4u
-cGxpc3QtPnBlbnRyaWVzID0KLQkJCSh4ZnNfaW5vX3QqKW1lbWFsaWduKHNp
-emVvZih4ZnNfaW5vX3QpLCBzaXplb2YoeGZzX2lub190KSk7Ci0JCWlmICgh
-aXJlYy0+aW5vX3VuLnBsaXN0LT5wZW50cmllcykKKwkJaWYgKGZ1bGxfaW5v
-X2V4X2RhdGEpCisJCQlpcmVjLT5pbm9fdW4uZXhfZGF0YS0+cGFyZW50cyA9
-IHB0Ymw7CisJCWVsc2UKKwkJCWlyZWMtPmlub191bi5wbGlzdCA9IHB0Ymw7
-CisKKwkJcHRibC0+cG1hc2sgPSAxTEwgPDwgb2Zmc2V0OworCQlwdGJsLT5w
-ZW50cmllcyA9ICh4ZnNfaW5vX3QqKW1lbWFsaWduKHNpemVvZih4ZnNfaW5v
-X3QpLAorCQkJCQkJCXNpemVvZih4ZnNfaW5vX3QpKTsKKwkJaWYgKCFwdGJs
-LT5wZW50cmllcykKIAkJCWRvX2Vycm9yKF8oImNvdWxkbid0IG1lbWFsaWdu
-IHBlbnRyaWVzIHRhYmxlXG4iKSk7CiAjaWZkZWYgREVCVUcKLQkJaXJlYy0+
-aW5vX3VuLnBsaXN0LT5jbnQgPSAxOworCQlwdGJsLT5jbnQgPSAxOwogI2Vu
-ZGlmCi0JCWlyZWMtPmlub191bi5wbGlzdC0+cGVudHJpZXNbMF0gPSBwYXJl
-bnQ7CisJCXB0YmwtPnBlbnRyaWVzWzBdID0gcGFyZW50OwogCiAJCXJldHVy
-bjsKIAl9CiAKLQlpZiAoaXJlYy0+aW5vX3VuLnBsaXN0LT5wbWFzayAmICgx
-TEwgPDwgb2Zmc2V0KSkgIHsKKwlpZiAocHRibC0+cG1hc2sgJiAoMUxMIDw8
-IG9mZnNldCkpICB7CiAJCWJpdG1hc2sgPSAxTEw7CiAJCXRhcmdldCA9IDA7
-CiAKIAkJZm9yIChpID0gMDsgaSA8IG9mZnNldDsgaSsrKSAgewotCQkJaWYg
-KGlyZWMtPmlub191bi5wbGlzdC0+cG1hc2sgJiBiaXRtYXNrKQorCQkJaWYg
-KHB0YmwtPnBtYXNrICYgYml0bWFzaykKIAkJCQl0YXJnZXQrKzsKIAkJCWJp
-dG1hc2sgPDw9IDE7CiAJCX0KICNpZmRlZiBERUJVRwotCQlBU1NFUlQodGFy
-Z2V0IDwgaXJlYy0+aW5vX3VuLnBsaXN0LT5jbnQpOworCQlBU1NFUlQodGFy
-Z2V0IDwgcHRibC0+Y250KTsKICNlbmRpZgotCQlpcmVjLT5pbm9fdW4ucGxp
-c3QtPnBlbnRyaWVzW3RhcmdldF0gPSBwYXJlbnQ7CisJCXB0YmwtPnBlbnRy
-aWVzW3RhcmdldF0gPSBwYXJlbnQ7CiAKIAkJcmV0dXJuOwogCX0KQEAgLTY3
-Miw3ICs2ODQsNyBAQCBzZXRfaW5vZGVfcGFyZW50KGlub190cmVlX25vZGVf
-dCAqaXJlYywgCiAJY250ID0gdGFyZ2V0ID0gMDsKIAogCWZvciAoaSA9IDA7
-IGkgPCBYRlNfSU5PREVTX1BFUl9DSFVOSzsgaSsrKSAgewotCQlpZiAoaXJl
-Yy0+aW5vX3VuLnBsaXN0LT5wbWFzayAmIGJpdG1hc2spICB7CisJCWlmIChw
-dGJsLT5wbWFzayAmIGJpdG1hc2spICB7CiAJCQljbnQrKzsKIAkJCWlmIChp
-IDwgb2Zmc2V0KQogCQkJCXRhcmdldCsrOwpAQCAtNjgyLDcgKzY5NCw3IEBA
-IHNldF9pbm9kZV9wYXJlbnQoaW5vX3RyZWVfbm9kZV90ICppcmVjLCAKIAl9
-CiAKICNpZmRlZiBERUJVRwotCUFTU0VSVChjbnQgPT0gaXJlYy0+aW5vX3Vu
-LnBsaXN0LT5jbnQpOworCUFTU0VSVChjbnQgPT0gcHRibC0+Y250KTsKICNl
-bmRpZgogCUFTU0VSVChjbnQgPj0gdGFyZ2V0KTsKIApAQCAtNjkwLDIzICs3
-MDIsMjMgQEAgc2V0X2lub2RlX3BhcmVudChpbm9fdHJlZV9ub2RlX3QgKmly
-ZWMsIAogCWlmICghdG1wKQogCQlkb19lcnJvcihfKCJjb3VsZG4ndCBtZW1h
-bGlnbiBwZW50cmllcyB0YWJsZVxuIikpOwogCi0JKHZvaWQpIGJjb3B5KGly
-ZWMtPmlub191bi5wbGlzdC0+cGVudHJpZXMsIHRtcCwKKwkodm9pZCkgYmNv
-cHkocHRibC0+cGVudHJpZXMsIHRtcCwKIAkJCXRhcmdldCAqIHNpemVvZihw
-YXJlbnRfZW50cnlfdCkpOwogCiAJaWYgKGNudCA+IHRhcmdldCkKLQkJKHZv
-aWQpIGJjb3B5KGlyZWMtPmlub191bi5wbGlzdC0+cGVudHJpZXMgKyB0YXJn
-ZXQsCisJCSh2b2lkKSBiY29weShwdGJsLT5wZW50cmllcyArIHRhcmdldCwK
-IAkJCQl0bXAgKyB0YXJnZXQgKyAxLAogCQkJCShjbnQgLSB0YXJnZXQpICog
-c2l6ZW9mKHBhcmVudF9lbnRyeV90KSk7CiAKLQlmcmVlKGlyZWMtPmlub191
-bi5wbGlzdC0+cGVudHJpZXMpOworCWZyZWUocHRibC0+cGVudHJpZXMpOwog
-Ci0JaXJlYy0+aW5vX3VuLnBsaXN0LT5wZW50cmllcyA9IHRtcDsKKwlwdGJs
-LT5wZW50cmllcyA9IHRtcDsKIAogI2lmZGVmIERFQlVHCi0JaXJlYy0+aW5v
-X3VuLnBsaXN0LT5jbnQrKzsKKwlwdGJsLT5jbnQrKzsKICNlbmRpZgotCWly
-ZWMtPmlub191bi5wbGlzdC0+cGVudHJpZXNbdGFyZ2V0XSA9IHBhcmVudDsK
-LQlpcmVjLT5pbm9fdW4ucGxpc3QtPnBtYXNrIHw9ICgxTEwgPDwgb2Zmc2V0
-KTsKKwlwdGJsLT5wZW50cmllc1t0YXJnZXRdID0gcGFyZW50OworCXB0Ymwt
-PnBtYXNrIHw9ICgxTEwgPDwgb2Zmc2V0KTsKIH0KIAogeGZzX2lub190Cgo9
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KeGZzcHJvZ3MvcmVwYWly
-L3BoYXNlNi5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKLS0t
-IGEveGZzcHJvZ3MvcmVwYWlyL3BoYXNlNi5jCTIwMDctMDktMjAgMTc6NDU6
-MzMuMDAwMDAwMDAwICsxMDAwCisrKyBiL3hmc3Byb2dzL3JlcGFpci9waGFz
-ZTYuYwkyMDA3LTA5LTE5IDE4OjE1OjA2LjEwNTkwOTQ4NSArMTAwMApAQCAt
-MTYyNCwxNiArMTYyNCwyNSBAQCBsZl9ibG9ja19kaXJfZW50cnlfY2hlY2so
-eGZzX21vdW50X3QJCSptCiAJCSAqLwogCQlpZiAoaXNfaW5vZGVfcmVhY2hl
-ZChpcmVjLCBpbm9fb2Zmc2V0KSkgIHsKIAkJCWp1bmtpdCA9IDE7Ci0JCQlk
-b193YXJuKAotXygiZW50cnkgXCIlc1wiIGluIGRpciAlbGx1IHBvaW50cyB0
-byBhbiBhbHJlYWR5IGNvbm5lY3RlZCBkaXIgaW5vZGUgJWxsdSxcbiIpLAor
-CQkJZG9fd2FybihfKCJlbnRyeSBcIiVzXCIgaW4gZGlyICVsbHUgcG9pbnRz
-IHRvIGFuICIKKwkJCQkiYWxyZWFkeSBjb25uZWN0ZWQgZGlyIGlub2RlICVs
-bHUsXG4iKSwKIAkJCQlmbmFtZSwgaW5vLCBsaW5vKTsKIAkJfSBlbHNlIGlm
-IChwYXJlbnQgPT0gaW5vKSAgewogCQkJYWRkX2lub2RlX3JlYWNoZWQoaXJl
-YywgaW5vX29mZnNldCk7CiAJCQlhZGRfaW5vZGVfcmVmKGN1cnJlbnRfaXJl
-YywgY3VycmVudF9pbm9fb2Zmc2V0KTsKLQkJfSBlbHNlICB7CisJCX0gZWxz
-ZSBpZiAocGFyZW50ID09IE5VTExGU0lOTykgeworCQkJLyogIi4uIiB3YXMg
-bWlzc2luZywgYnV0IHRoaXMgZW50cnkgcmVmZXJzIHRvIGl0LAorCQkJICAg
-c28sIHNldCBpdCBhcyB0aGUgcGFyZW50IGFuZCBtYXJrIGZvciByZWJ1aWxk
-ICovCisJCQlkb193YXJuKF8oImVudHJ5IFwiJXNcIiBpbiBkaXIgaW5vICVs
-bHUgZG9lc24ndCBoYXZlIGEiCisJCQkJIiAuLiBlbnRyeSwgd2lsbCBzZXQg
-aXQgaW4gaW5vICVsbHUuXG4iKSwKKwkJCQlmbmFtZSwgaW5vLCBsaW5vKTsK
-KwkJCXNldF9pbm9kZV9wYXJlbnQoaXJlYywgaW5vX29mZnNldCwgaW5vKTsK
-KwkJCWFkZF9pbm9kZV9yZWFjaGVkKGlyZWMsIGlub19vZmZzZXQpOworCQkJ
-YWRkX2lub2RlX3JlZihjdXJyZW50X2lyZWMsIGN1cnJlbnRfaW5vX29mZnNl
-dCk7CisJCX0gZWxzZSB7CiAJCQlqdW5raXQgPSAxOwotCQkJZG9fd2FybigK
-LV8oImVudHJ5IFwiJXNcIiBpbiBkaXIgaW5vICVsbHUgbm90IGNvbnNpc3Rl
-bnQgd2l0aCAuLiB2YWx1ZSAoJWxsdSkgaW4gaW5vICVsbHUsXG4iKSwKKwkJ
-CWRvX3dhcm4oXygiZW50cnkgXCIlc1wiIGluIGRpciBpbm8gJWxsdSBub3Qg
-Y29uc2lzdGVudCIKKwkJCQkiIHdpdGggLi4gdmFsdWUgKCVsbHUpIGluIGlu
-byAlbGx1LFxuIiksCiAJCQkJZm5hbWUsIGlubywgcGFyZW50LCBsaW5vKTsK
-IAkJfQogCkBAIC0xNzg4LDEwICsxNzk3LDEyIEBAIF8oImNhbid0IG1hcCBs
-ZWFmIGJsb2NrICVkIGluIGRpciAlbGx1LCAKIAogc3RhdGljIHZvaWQKIGxv
-bmdmb3JtX2RpcjJfcmVidWlsZCgKLQl4ZnNfbW91bnRfdAkqbXAsCi0JeGZz
-X2lub190CWlubywKLQl4ZnNfaW5vZGVfdAkqaXAsCi0JZGlyX2hhc2hfdGFi
-X3QJKmhhc2h0YWIpCisJeGZzX21vdW50X3QJCSptcCwKKwl4ZnNfaW5vX3QJ
-CWlubywKKwl4ZnNfaW5vZGVfdAkJKmlwLAorCWlub190cmVlX25vZGVfdAkJ
-KmlyZWMsCisJaW50CQkJaW5vX29mZnNldCwKKwlkaXJfaGFzaF90YWJfdAkJ
-Kmhhc2h0YWIpCiB7CiAJaW50CQkJZXJyb3I7CiAJaW50CQkJbnJlczsKQEAg
-LTE4MDAsNyArMTgxMSw2IEBAIGxvbmdmb3JtX2RpcjJfcmVidWlsZCgKIAl4
-ZnNfZnNibG9ja190CQlmaXJzdGJsb2NrOwogCXhmc19ibWFwX2ZyZWVfdAkJ
-Zmxpc3Q7CiAJeGZzX2lub2RlX3QJCXBpcDsKLQlpbnQJCQlieWhhc2g7CiAJ
-ZGlyX2hhc2hfZW50X3QJCSpwOwogCWludAkJCWNvbW1pdHRlZDsKIAlpbnQJ
-CQlkb25lOwpAQCAtMTgxMywxOSArMTgyMywxNCBAQCBsb25nZm9ybV9kaXIy
-X3JlYnVpbGQoCiAJZG9fd2FybihfKCJyZWJ1aWxkaW5nIGRpcmVjdG9yeSBp
-bm9kZSAlbGx1XG4iKSwgaW5vKTsKIAogCS8qCi0JICogZmlyc3QgYXR0ZW1w
-dCB0byBsb2NhdGUgdGhlIHBhcmVudCBpbm9kZSwgaWYgaXQgY2FuJ3QgYmUg
-Zm91bmQsCi0JICogc2V0IGl0IHRvIHRoZSByb290IGlub2RlIGFuZCBpdCds
-bCBiZSBhZGp1c3RlZCBvciBmaXhlZCBsYXRlcgotCSAqIGlmIGluY29ycmVj
-dCAodGhlIGlub2RlIG51bWJlciBoZXJlIG5lZWRzIHRvIGJlIHZhbGlkIGZv
-ciB0aGUKLQkgKiBsaWJ4ZnNfZGlyMl9pbml0KCkgY2FsbCkuCi0JICovCi0J
-YnloYXNoID0gRElSX0hBU0hfRlVOQyhoYXNodGFiLCBsaWJ4ZnNfZGFfaGFz
-aG5hbWUoKHVjaGFyX3QqKSIuLiIsIDIpKTsKLQlwaXAuaV9pbm8gPSBtcC0+
-bV9zYi5zYl9yb290aW5vOwotCWZvciAocCA9IGhhc2h0YWItPmJ5aGFzaFti
-eWhhc2hdOyBwOyBwID0gcC0+bmV4dGJ5aGFzaCkgewotCQlpZiAocC0+bmFt
-ZWxlbiA9PSAyICYmIHAtPm5hbWVbMF0gPT0gJy4nICYmIHAtPm5hbWVbMV0g
-PT0gJy4nKSB7Ci0JCQlwaXAuaV9pbm8gPSBwLT5pbnVtOwotCQkJYnJlYWs7
-Ci0JCX0KLQl9CisJICogZmlyc3QgYXR0ZW1wdCB0byBsb2NhdGUgdGhlIHBh
-cmVudCBpbm9kZSwgaWYgaXQgY2FuJ3QgYmUKKwkgKiBmb3VuZCwgc2V0IGl0
-IHRvIHRoZSByb290IGlub2RlIGFuZCBpdCdsbCBiZSBtb3ZlZCB0byB0aGUK
-KwkgKiBvcnBoYW5hZ2UgbGF0ZXIgKHRoZSBpbm9kZSBudW1iZXIgaGVyZSBu
-ZWVkcyB0byBiZSB2YWxpZAorCSAqIGZvciB0aGUgbGlieGZzX2RpcjJfaW5p
-dCgpIGNhbGwpLgorCSAqLworCXBpcC5pX2lubyA9IGdldF9pbm9kZV9wYXJl
-bnQoaXJlYywgaW5vX29mZnNldCk7CisJaWYgKHBpcC5pX2lubyA9PSBOVUxM
-RlNJTk8pCisJCXBpcC5pX2lubyA9IG1wLT5tX3NiLnNiX3Jvb3Rpbm87CiAK
-IAlYRlNfQk1BUF9JTklUKCZmbGlzdCwgJmZpcnN0YmxvY2spOwogCkBAIC0y
-MjczLDExICsyMjc4LDI1IEBAIGxvbmdmb3JtX2RpcjJfZW50cnlfY2hlY2tf
-ZGF0YSgKIAkJICogc2tpcCB0aGUgJy4uJyBlbnRyeSBzaW5jZSBpdCdzIGNo
-ZWNrZWQgd2hlbiB0aGUKIAkJICogZGlyZWN0b3J5IGlzIHJlYWNoZWQgYnkg
-c29tZXRoaW5nIGVsc2UuICBpZiBpdCBuZXZlcgogCQkgKiBnZXRzIHJlYWNo
-ZWQsIGl0J2xsIGJlIG1vdmVkIHRvIHRoZSBvcnBoYW5hZ2UgYW5kIHdlJ2xs
-Ci0JCSAqIHRha2UgY2FyZSBvZiBpdCB0aGVuLgorCQkgKiB0YWtlIGNhcmUg
-b2YgaXQgdGhlbi4gSWYgaXQgZG9lc24ndCBleGlzdCBhdCBhbGwsIHRoZQor
-CQkgKiBkaXJlY3RvcnkgbmVlZHMgdG8gYmUgcmVidWlsdCBmaXJzdCBiZWZv
-cmUgYmVpbmcgYWRkZWQKKwkJICogdG8gdGhlIG9ycGhhbmFnZS4KIAkJICov
-CiAJCWlmIChkZXAtPm5hbWVsZW4gPT0gMiAmJiBkZXAtPm5hbWVbMF0gPT0g
-Jy4nICYmCi0JCSAgICBkZXAtPm5hbWVbMV0gPT0gJy4nKQorCQkJCWRlcC0+
-bmFtZVsxXSA9PSAnLicpIHsKKwkJCWlmIChkYV9ibm8gIT0gMCkgeworCQkJ
-CS8qICIuLiIgc2hvdWxkIGJlIGluIHRoZSBmaXJzdCBibG9jayAqLworCQkJ
-CW5iYWQrKzsKKwkJCQlpZiAoZW50cnlfanVua2VkKF8oImVudHJ5IFwiJXNc
-IiAoaW5vICVsbHUpICIKKwkJCQkJCSJpbiBkaXIgJWxsdSBpcyBub3QgaW4g
-dGhlICIKKwkJCQkJCSJ0aGUgZmlyc3QgYmxvY2siKSwgZm5hbWUsCisJCQkJ
-CQlpbnVtLCBpcC0+aV9pbm8pKSB7CisJCQkJCWRlcC0+bmFtZVswXSA9ICcv
-JzsKKwkJCQkJbGlieGZzX2RpcjJfZGF0YV9sb2dfZW50cnkodHAsIGJwLCBk
-ZXApOworCQkJCX0KKwkJCX0KIAkJCWNvbnRpbnVlOworCQl9CiAJCUFTU0VS
-VChub19tb2RpZnkgfHwgIXZlcmlmeV9pbnVtKG1wLCBpbnVtKSk7CiAJCS8q
-CiAJCSAqIHNwZWNpYWwgY2FzZSB0aGUgLiBlbnRyeS4gIHdlIGtub3cgdGhl
-cmUncyBvbmx5IG9uZQpAQCAtMjI5MSw2ICsyMzEwLDE2IEBAIGxvbmdmb3Jt
-X2RpcjJfZW50cnlfY2hlY2tfZGF0YSgKIAkJaWYgKGlwLT5pX2lubyA9PSBp
-bnVtKSAgewogCQkJQVNTRVJUKGRlcC0+bmFtZVswXSA9PSAnLicgJiYgZGVw
-LT5uYW1lbGVuID09IDEpOwogCQkJYWRkX2lub2RlX3JlZihjdXJyZW50X2ly
-ZWMsIGN1cnJlbnRfaW5vX29mZnNldCk7CisJCQlpZiAoZGFfYm5vICE9IDAg
-fHwgZGVwICE9ICh4ZnNfZGlyMl9kYXRhX2VudHJ5X3QgKilkLT51KSB7CisJ
-CQkJLyogIi4iIHNob3VsZCBiZSB0aGUgZmlyc3QgZW50cnkgKi8KKwkJCQlu
-YmFkKys7CisJCQkJaWYgKGVudHJ5X2p1bmtlZChfKCJlbnRyeSBcIiVzXCIg
-aW4gZGlyICVsbHUgaXMgIgorCQkJCQkJIm5vdCB0aGUgZmlyc3QgZW50cnki
-KSwKKwkJCQkJCWZuYW1lLCBpbnVtLCBpcC0+aV9pbm8pKSB7CisJCQkJCWRl
-cC0+bmFtZVswXSA9ICcvJzsKKwkJCQkJbGlieGZzX2RpcjJfZGF0YV9sb2df
-ZW50cnkodHAsIGJwLCBkZXApOworCQkJCX0KKwkJCX0KIAkJCSpuZWVkX2Rv
-dCA9IDA7CiAJCQljb250aW51ZTsKIAkJfQpAQCAtMjMyNSw2ICsyMzU0LDE1
-IEBAIF8oImVudHJ5IFwiJXNcIiBpbiBkaXIgJWxsdSBwb2ludHMgdG8gYW4K
-IAkJfSBlbHNlIGlmIChwYXJlbnQgPT0gaXAtPmlfaW5vKSAgewogCQkJYWRk
-X2lub2RlX3JlYWNoZWQoaXJlYywgaW5vX29mZnNldCk7CiAJCQlhZGRfaW5v
-ZGVfcmVmKGN1cnJlbnRfaXJlYywgY3VycmVudF9pbm9fb2Zmc2V0KTsKKwkJ
-fSBlbHNlIGlmIChwYXJlbnQgPT0gTlVMTEZTSU5PKSB7CisJCQkvKiAiLi4i
-IHdhcyBtaXNzaW5nLCBidXQgdGhpcyBlbnRyeSByZWZlcnMgdG8gaXQsCisJ
-CQkgICBzbywgc2V0IGl0IGFzIHRoZSBwYXJlbnQgYW5kIG1hcmsgZm9yIHJl
-YnVpbGQgKi8KKwkJCWRvX3dhcm4oXygiZW50cnkgXCIlc1wiIGluIGRpciBp
-bm8gJWxsdSBkb2Vzbid0IGhhdmUgYSIKKwkJCQkiIC4uIGVudHJ5LCB3aWxs
-IHNldCBpdCBpbiBpbm8gJWxsdS5cbiIpLAorCQkJCWZuYW1lLCBpcC0+aV9p
-bm8sIGludW0pOworCQkJc2V0X2lub2RlX3BhcmVudChpcmVjLCBpbm9fb2Zm
-c2V0LCBpcC0+aV9pbm8pOworCQkJYWRkX2lub2RlX3JlYWNoZWQoaXJlYywg
-aW5vX29mZnNldCk7CisJCQlhZGRfaW5vZGVfcmVmKGN1cnJlbnRfaXJlYywg
-Y3VycmVudF9pbm9fb2Zmc2V0KTsKIAkJfSBlbHNlICB7CiAJCQlqdW5raXQg
-PSAxOwogCQkJZG9fd2FybigKQEAgLTI2MzcsNyArMjY3NSw3IEBAIGxvbmdm
-b3JtX2RpcjJfZW50cnlfY2hlY2soeGZzX21vdW50X3QJKm0KIAkJCQlpcmVj
-LCBpbm9fb2Zmc2V0LCAmYnBsaXN0W2RiXSwgaGFzaHRhYiwKIAkJCQkmZnJl
-ZXRhYiwgZGFfYm5vLCBpc2Jsb2NrKTsKIAl9Ci0JZml4aXQgPSAoKm51bV9p
-bGxlZ2FsICE9IDApIHx8IGRpcjJfaXNfYmFkaW5vKGlubyk7CisJZml4aXQg
-PSAoKm51bV9pbGxlZ2FsICE9IDApIHx8IGRpcjJfaXNfYmFkaW5vKGlubykg
-fHwgKm5lZWRfZG90OwogCiAJLyogY2hlY2sgYnRyZWUgYW5kIGZyZWVzcGFj
-ZSAqLwogCWlmIChpc2Jsb2NrKSB7CkBAIC0yNjU5LDggKzI2OTcsOSBAQCBs
-b25nZm9ybV9kaXIyX2VudHJ5X2NoZWNrKHhmc19tb3VudF90CSptCiAJCWZv
-ciAoaSA9IDA7IGkgPCBmcmVldGFiLT5uYWVudHM7IGkrKykKIAkJCWlmIChi
-cGxpc3RbaV0pCiAJCQkJbGlieGZzX2RhX2JyZWxzZShOVUxMLCBicGxpc3Rb
-aV0pOwotCQlsb25nZm9ybV9kaXIyX3JlYnVpbGQobXAsIGlubywgaXAsIGhh
-c2h0YWIpOworCQlsb25nZm9ybV9kaXIyX3JlYnVpbGQobXAsIGlubywgaXAs
-IGlyZWMsIGlub19vZmZzZXQsIGhhc2h0YWIpOwogCQkqbnVtX2lsbGVnYWwg
-PSAwOworCQkqbmVlZF9kb3QgPSAwOwogCX0gZWxzZSB7CiAJCWZvciAoaSA9
-IDA7IGkgPCBmcmVldGFiLT5uYWVudHM7IGkrKykKIAkJCWlmIChicGxpc3Rb
-aV0pCkBAIC0yODY1LDYgKzI5MDQsMTUgQEAgc2hvcnRmb3JtX2Rpcl9lbnRy
-eV9jaGVjayh4ZnNfbW91bnRfdAkqbQogCQkJfSBlbHNlIGlmIChwYXJlbnQg
-PT0gaW5vKSAgewogCQkJCWFkZF9pbm9kZV9yZWFjaGVkKGlyZWMsIGlub19v
-ZmZzZXQpOwogCQkJCWFkZF9pbm9kZV9yZWYoY3VycmVudF9pcmVjLCBjdXJy
-ZW50X2lub19vZmZzZXQpOworCQkJfSBlbHNlIGlmIChwYXJlbnQgPT0gTlVM
-TEZTSU5PKSB7CisJCQkJLyogIi4uIiB3YXMgbWlzc2luZywgYnV0IHRoaXMg
-ZW50cnkgcmVmZXJzIHRvIGl0LAorCQkJCXNvLCBzZXQgaXQgYXMgdGhlIHBh
-cmVudCBhbmQgbWFyayBmb3IgcmVidWlsZCAqLworCQkJCWRvX3dhcm4oXygi
-ZW50cnkgXCIlc1wiIGluIGRpciBpbm8gJWxsdSBkb2Vzbid0IGhhdmUgYSIK
-KwkJCQkJIiAuLiBlbnRyeSwgd2lsbCBzZXQgaXQgaW4gaW5vICVsbHUuXG4i
-KSwKKwkJCQkJZm5hbWUsIGlubywgbGlubyk7CisJCQkJc2V0X2lub2RlX3Bh
-cmVudChpcmVjLCBpbm9fb2Zmc2V0LCBpbm8pOworCQkJCWFkZF9pbm9kZV9y
-ZWFjaGVkKGlyZWMsIGlub19vZmZzZXQpOworCQkJCWFkZF9pbm9kZV9yZWYo
-Y3VycmVudF9pcmVjLCBjdXJyZW50X2lub19vZmZzZXQpOwogCQkJfSBlbHNl
-ICB7CiAJCQkJanVua2l0ID0gMTsKIAkJCQlkb193YXJuKF8oImVudHJ5IFwi
-JXNcIiBpbiBkaXIgJWxsdSBub3QgIgpAQCAtMzI1Nyw2ICszMzA1LDE1IEBA
-IHNob3J0Zm9ybV9kaXIyX2VudHJ5X2NoZWNrKHhmc19tb3VudF90CSoKIAkJ
-CX0gZWxzZSBpZiAocGFyZW50ID09IGlubykgIHsKIAkJCQlhZGRfaW5vZGVf
-cmVhY2hlZChpcmVjLCBpbm9fb2Zmc2V0KTsKIAkJCQlhZGRfaW5vZGVfcmVm
-KGN1cnJlbnRfaXJlYywgY3VycmVudF9pbm9fb2Zmc2V0KTsKKwkJCX0gZWxz
-ZSBpZiAocGFyZW50ID09IE5VTExGU0lOTykgeworCQkJCS8qICIuLiIgd2Fz
-IG1pc3NpbmcsIGJ1dCB0aGlzIGVudHJ5IHJlZmVycyB0byBpdCwKKwkJCQlz
-bywgc2V0IGl0IGFzIHRoZSBwYXJlbnQgYW5kIG1hcmsgZm9yIHJlYnVpbGQg
-Ki8KKwkJCQlkb193YXJuKF8oImVudHJ5IFwiJXNcIiBpbiBkaXIgaW5vICVs
-bHUgZG9lc24ndCBoYXZlIGEiCisJCQkJCSIgLi4gZW50cnksIHdpbGwgc2V0
-IGl0IGluIGlubyAlbGx1LlxuIiksCisJCQkJCWZuYW1lLCBpbm8sIGxpbm8p
-OworCQkJCXNldF9pbm9kZV9wYXJlbnQoaXJlYywgaW5vX29mZnNldCwgaW5v
-KTsKKwkJCQlhZGRfaW5vZGVfcmVhY2hlZChpcmVjLCBpbm9fb2Zmc2V0KTsK
-KwkJCQlhZGRfaW5vZGVfcmVmKGN1cnJlbnRfaXJlYywgY3VycmVudF9pbm9f
-b2Zmc2V0KTsKIAkJCX0gZWxzZSAgewogCQkJCWp1bmtpdCA9IDE7CiAJCQkJ
-ZG9fd2FybihfKCJlbnRyeSBcIiVzXCIgaW4gZGlyZWN0b3J5IGlub2RlICVs
-bHUiCg==
-
-------------Q8903L1J3W44XpzcIOQMJY--
+Index: linux-2.6-xfs/fs/xfs/xfs_dinode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_dinode.h	2007-08-23 18:52:49.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_dinode.h	2007-09-19 15:16:30.000000000 +0200
+@@ -171,69 +171,35 @@ typedef enum xfs_dinode_fmt
+ /*
+  * Inode data & attribute fork sizes, per inode.
+  */
+-#define XFS_CFORK_Q(dcp)                    ((dcp)->di_forkoff != 0)
+-#define	XFS_CFORK_Q_DISK(dcp)		    ((dcp)->di_forkoff != 0)
+-
+-#define XFS_CFORK_BOFF(dcp)                 ((int)((dcp)->di_forkoff << 3))
+-#define	XFS_CFORK_BOFF_DISK(dcp)	    ((int)((dcp)->di_forkoff << 3))
+-
+-#define	XFS_CFORK_DSIZE_DISK(dcp,mp) \
+-	(XFS_CFORK_Q_DISK(dcp) ? XFS_CFORK_BOFF_DISK(dcp) : XFS_LITINO(mp))
+-#define XFS_CFORK_DSIZE(dcp,mp) \
+-	(XFS_CFORK_Q(dcp) ? XFS_CFORK_BOFF(dcp) : XFS_LITINO(mp))
+-
+-#define	XFS_CFORK_ASIZE_DISK(dcp,mp) \
+-	(XFS_CFORK_Q_DISK(dcp) ? XFS_LITINO(mp) - XFS_CFORK_BOFF_DISK(dcp) : 0)
+-#define XFS_CFORK_ASIZE(dcp,mp) \
+-	(XFS_CFORK_Q(dcp) ? XFS_LITINO(mp) - XFS_CFORK_BOFF(dcp) : 0)
+-
+-#define	XFS_CFORK_SIZE_DISK(dcp,mp,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		XFS_CFORK_DSIZE_DISK(dcp, mp) : \
+-	 	XFS_CFORK_ASIZE_DISK(dcp, mp))
+-#define XFS_CFORK_SIZE(dcp,mp,w) \
+-	((w) == XFS_DATA_FORK ? \
+-		XFS_CFORK_DSIZE(dcp, mp) : XFS_CFORK_ASIZE(dcp, mp))
++#define XFS_DFORK_Q(dip)		((dip)->di_core.di_forkoff != 0)
++#define XFS_DFORK_BOFF(dip)		((int)((dip)->di_core.di_forkoff << 3))
+ 
+ #define XFS_DFORK_DSIZE(dip,mp) \
+-	XFS_CFORK_DSIZE_DISK(&(dip)->di_core, mp)
+-#define XFS_DFORK_DSIZE_HOST(dip,mp) \
+-	XFS_CFORK_DSIZE(&(dip)->di_core, mp)
++	(XFS_DFORK_Q(dip) ? \
++		XFS_DFORK_BOFF(dip) : \
++		XFS_LITINO(mp))
+ #define XFS_DFORK_ASIZE(dip,mp) \
+-	XFS_CFORK_ASIZE_DISK(&(dip)->di_core, mp)
+-#define XFS_DFORK_ASIZE_HOST(dip,mp) \
+-	XFS_CFORK_ASIZE(&(dip)->di_core, mp)
+-#define	XFS_DFORK_SIZE(dip,mp,w) \
+-	XFS_CFORK_SIZE_DISK(&(dip)->di_core, mp, w)
+-#define	XFS_DFORK_SIZE_HOST(dip,mp,w) \
+-	XFS_CFORK_SIZE(&(dip)->di_core, mp, w)
+-
+-#define	XFS_DFORK_Q(dip)                    XFS_CFORK_Q_DISK(&(dip)->di_core)
+-#define	XFS_DFORK_BOFF(dip)		    XFS_CFORK_BOFF_DISK(&(dip)->di_core)
+-#define	XFS_DFORK_DPTR(dip)		    ((dip)->di_u.di_c)
+-#define	XFS_DFORK_APTR(dip)	\
+-	((dip)->di_u.di_c + XFS_DFORK_BOFF(dip))
+-#define	XFS_DFORK_PTR(dip,w)	\
+-	((w) == XFS_DATA_FORK ? XFS_DFORK_DPTR(dip) : XFS_DFORK_APTR(dip))
+-#define	XFS_CFORK_FORMAT(dcp,w)	\
+-	((w) == XFS_DATA_FORK ? (dcp)->di_format : (dcp)->di_aformat)
+-#define	XFS_CFORK_FMT_SET(dcp,w,n) \
++	(XFS_DFORK_Q(dip) ? \
++		XFS_LITINO(mp) - XFS_DFORK_BOFF(dip) : \
++		0)
++#define XFS_DFORK_SIZE(dip,mp,w) \
+ 	((w) == XFS_DATA_FORK ? \
+-		((dcp)->di_format = (n)) : ((dcp)->di_aformat = (n)))
+-#define	XFS_DFORK_FORMAT(dip,w) XFS_CFORK_FORMAT(&(dip)->di_core, w)
++		XFS_DFORK_DSIZE(dip, mp) : \
++		XFS_DFORK_ASIZE(dip, mp))
+ 
+-#define	XFS_CFORK_NEXTENTS_DISK(dcp,w) \
++#define XFS_DFORK_DPTR(dip)		    ((dip)->di_u.di_c)
++#define XFS_DFORK_APTR(dip)	\
++	((dip)->di_u.di_c + XFS_DFORK_BOFF(dip))
++#define XFS_DFORK_PTR(dip,w)	\
++	((w) == XFS_DATA_FORK ? XFS_DFORK_DPTR(dip) : XFS_DFORK_APTR(dip))
++#define XFS_DFORK_FORMAT(dip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+-	 	be32_to_cpu((dcp)->di_nextents) : \
+-	 	be16_to_cpu((dcp)->di_anextents))
+-#define XFS_CFORK_NEXTENTS(dcp,w) \
+-	((w) == XFS_DATA_FORK ? (dcp)->di_nextents : (dcp)->di_anextents)
+-#define	XFS_DFORK_NEXTENTS(dip,w) XFS_CFORK_NEXTENTS_DISK(&(dip)->di_core, w)
+-#define	XFS_DFORK_NEXTENTS_HOST(dip,w) XFS_CFORK_NEXTENTS(&(dip)->di_core, w)
+-
+-#define	XFS_CFORK_NEXT_SET(dcp,w,n) \
++		(dip)->di_core.di_format : \
++		(dip)->di_core.di_aformat)
++#define XFS_DFORK_NEXTENTS(dip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+-		((dcp)->di_nextents = (n)) : ((dcp)->di_anextents = (n)))
++	 	be32_to_cpu((dip)->di_core.di_nextents) : \
++	 	be16_to_cpu((dip)->di_core.di_anextents))
+ 
+ #define	XFS_BUF_TO_DINODE(bp)	((xfs_dinode_t *)XFS_BUF_PTR(bp))
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2007-09-19 15:09:31.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2007-09-19 15:16:30.000000000 +0200
+@@ -341,17 +341,42 @@ xfs_iflags_test_and_clear(xfs_inode_t *i
+ /*
+  * Fork handling.
+  */
+-#define	XFS_IFORK_PTR(ip,w)		\
+-	((w) == XFS_DATA_FORK ? &(ip)->i_df : (ip)->i_afp)
+-#define	XFS_IFORK_Q(ip)			XFS_CFORK_Q(&(ip)->i_d)
+-#define	XFS_IFORK_DSIZE(ip)		XFS_CFORK_DSIZE(&ip->i_d, ip->i_mount)
+-#define	XFS_IFORK_ASIZE(ip)		XFS_CFORK_ASIZE(&ip->i_d, ip->i_mount)
+-#define	XFS_IFORK_SIZE(ip,w)		XFS_CFORK_SIZE(&ip->i_d, ip->i_mount, w)
+-#define	XFS_IFORK_FORMAT(ip,w)		XFS_CFORK_FORMAT(&ip->i_d, w)
+-#define	XFS_IFORK_FMT_SET(ip,w,n)	XFS_CFORK_FMT_SET(&ip->i_d, w, n)
+-#define	XFS_IFORK_NEXTENTS(ip,w)	XFS_CFORK_NEXTENTS(&ip->i_d, w)
+-#define	XFS_IFORK_NEXT_SET(ip,w,n)	XFS_CFORK_NEXT_SET(&ip->i_d, w, n)
+ 
++#define XFS_IFORK_Q(ip)			((ip)->i_d.di_forkoff != 0)
++#define XFS_IFORK_BOFF(ip)		((int)((ip)->i_d.di_forkoff << 3))
++
++#define XFS_IFORK_PTR(ip,w)		\
++	((w) == XFS_DATA_FORK ? \
++		&(ip)->i_df : \
++		(ip)->i_afp)
++#define XFS_IFORK_DSIZE(ip) \
++	(XFS_IFORK_Q(ip) ? \
++		XFS_IFORK_BOFF(ip) : \
++		XFS_LITINO((ip)->i_mount))
++#define XFS_IFORK_ASIZE(ip) \
++	(XFS_IFORK_Q(ip) ? \
++		XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : \
++		0)
++#define XFS_IFORK_SIZE(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		XFS_IFORK_DSIZE(ip) : \
++		XFS_IFORK_ASIZE(ip))
++#define XFS_IFORK_FORMAT(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		(ip)->i_d.di_format : \
++		(ip)->i_d.di_aformat)
++#define XFS_IFORK_FMT_SET(ip,w,n) \
++	((w) == XFS_DATA_FORK ? \
++		((ip)->i_d.di_format = (n)) : \
++		((ip)->i_d.di_aformat = (n)))
++#define XFS_IFORK_NEXTENTS(ip,w) \
++	((w) == XFS_DATA_FORK ? \
++		(ip)->i_d.di_nextents : \
++		(ip)->i_d.di_anextents)
++#define XFS_IFORK_NEXT_SET(ip,w,n) \
++	((w) == XFS_DATA_FORK ? \
++		((ip)->i_d.di_nextents = (n)) : \
++		((ip)->i_d.di_anextents = (n)))
+ 
+ #ifdef __KERNEL__
+ 
+@@ -504,7 +529,7 @@ void		xfs_dinode_to_disk(struct xfs_dino
+ 				   struct xfs_icdinode *);
+ 
+ uint		xfs_ip2xflags(struct xfs_inode *);
+-uint		xfs_dic2xflags(struct xfs_dinode_core *);
++uint		xfs_dic2xflags(struct xfs_dinode *);
+ int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+ 			   struct xfs_bmap_free *);
+ int		xfs_itruncate_start(xfs_inode_t *, uint, xfs_fsize_t);
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2007-09-19 15:09:31.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2007-09-19 15:16:30.000000000 +0200
+@@ -826,15 +826,17 @@ xfs_ip2xflags(
+ 	xfs_icdinode_t		*dic = &ip->i_d;
+ 
+ 	return _xfs_dic2xflags(dic->di_flags) |
+-				(XFS_CFORK_Q(dic) ? XFS_XFLAG_HASATTR : 0);
++				(XFS_IFORK_Q(ip) ? XFS_XFLAG_HASATTR : 0);
+ }
+ 
+ uint
+ xfs_dic2xflags(
+-	xfs_dinode_core_t	*dic)
++	xfs_dinode_t		*dip)
+ {
++	xfs_dinode_core_t	*dic = &dip->di_core;
++
+ 	return _xfs_dic2xflags(be16_to_cpu(dic->di_flags)) |
+-				(XFS_CFORK_Q_DISK(dic) ? XFS_XFLAG_HASATTR : 0);
++				(XFS_DFORK_Q(dip) ? XFS_XFLAG_HASATTR : 0);
+ }
+ 
+ /*
+Index: linux-2.6-xfs/fs/xfs/xfs_itable.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_itable.c	2007-09-12 13:56:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_itable.c	2007-09-19 15:16:30.000000000 +0200
+@@ -170,7 +170,7 @@ xfs_bulkstat_one_dinode(
+ 	buf->bs_mtime.tv_nsec = be32_to_cpu(dic->di_mtime.t_nsec);
+ 	buf->bs_ctime.tv_sec = be32_to_cpu(dic->di_ctime.t_sec);
+ 	buf->bs_ctime.tv_nsec = be32_to_cpu(dic->di_ctime.t_nsec);
+-	buf->bs_xflags = xfs_dic2xflags(dic);
++	buf->bs_xflags = xfs_dic2xflags(dip);
+ 	buf->bs_extsize = be32_to_cpu(dic->di_extsize) << mp->m_sb.sb_blocklog;
+ 	buf->bs_extents = be32_to_cpu(dic->di_nextents);
+ 	buf->bs_gen = be32_to_cpu(dic->di_gen);
+@@ -299,7 +299,7 @@ xfs_bulkstat_use_dinode(
+ 	}
+ 	/* BULKSTAT_FG_INLINE: if attr fork is local, or not there, use it */
+ 	aformat = dip->di_core.di_aformat;
+-	if ((XFS_CFORK_Q(&dip->di_core) == 0) ||
++	if ((XFS_DFORK_Q(dip) == 0) ||
+ 	    (aformat == XFS_DINODE_FMT_LOCAL) ||
+ 	    (aformat == XFS_DINODE_FMT_EXTENTS && !dip->di_core.di_anextents)) {
+ 		*dipp = dip;
+Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2007-09-19 18:50:35.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2007-09-19 18:51:01.000000000 +0200
+@@ -355,7 +355,7 @@ xfs_ip2dmflags(
+ 	xfs_inode_t	*ip)
+ {
+ 	return _xfs_dic2dmflags(ip->i_d.di_flags) |
+-			(XFS_CFORK_Q(&ip->i_d) ? DM_XFLAG_HASATTR : 0);
++			(XFS_IFORK_Q(ip) ? DM_XFLAG_HASATTR : 0);
+ }
+ 
+ STATIC uint
+@@ -363,8 +363,7 @@ xfs_dic2dmflags(
+ 	xfs_dinode_t	*dip)
+ {
+ 	return _xfs_dic2dmflags(be16_to_cpu(dip->di_core.di_flags)) |
+-			(XFS_CFORK_Q_DISK(&dip->di_core) ?
+-			 DM_XFLAG_HASATTR : 0);
++			(XFS_DFORK_Q(dip) ? DM_XFLAG_HASATTR : 0);
+ }
+ 
+ /*
