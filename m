@@ -1,41 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 09:10:01 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8KG9qgf020738
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 09:09:55 -0700
-Message-ID: <46F26E9F.8060803@sandeen.net>
-Date: Thu, 20 Sep 2007 07:59:11 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 12:44:39 -0700 (PDT)
+Received: from web35711.mail.mud.yahoo.com (web35711.mail.mud.yahoo.com [66.163.179.165])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8KJiUgf000776
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 12:44:31 -0700
+Date: Thu, 20 Sep 2007 12:17:53 -0700 (PDT)
+From: Mariella Petrini <mariellapetrini@yahoo.com>
+Subject: xfs and Linux Linux 2.6.22 and Memory
 MIME-Version: 1.0
-Subject: Re: The problem in installing the linux-2.6-xfs kernel
-References: <1190260918.24375.4.camel@OpenSUSE-desktop.Home>	 <46F1FB7C.9080901@sandeen.net> <1190264675.19442.12.camel@OpenSUSE-desktop.Home>
-In-Reply-To: <1190264675.19442.12.camel@OpenSUSE-desktop.Home>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <435577.15025.qm@web35711.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: hxsrmeng@gmail.com
-Cc: XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-hxsrmeng wrote:
-> Thanks.
-> 
-> I downloaded this distribution from the cvs@oss.sgi.com, and it is a
-> XFS-relative kernel, so I think it should be OK for me to post this
-> question here.
+Hi All,
 
-I am talking about the gnu/linux OS distribution that already exists on
-your computer (debian, red hat, mandrake, suse, ubuntu whatever).  How
-you install a new kernel, particularly how you make an initrd, is
-somewhat specific to that distribution, not to the kernel itself.  In
-other words, mkinitrd failures are not xfs related.
+I have compiled xfs that is available with Linux
+2.6.22 on a Debian 4.0
+The system is a 2 cpus (Intel Xeon 3 GHz) with 4 cores
+each
+The system has 8 GB of RAM + 2GB of swap
 
-> Also, as I mentioned, I am especially interested in playing with the XFS
-> features and I am worrying whether this problem would stop me in doing
-> that. I think the gurus who could answer this question should be
-> here. .... Anyway, I am sorry if you think i post it to a wrong list.
+I have 4 Hard Drives on the system and each is
+formatted using xfs
+Each filesystem is mounted with noatime option
+I am including the output generated during one of the
+format:
 
-If you can't boot and can't load xfs, it won't work.  If you can, it will.
+mkfs.xfs -f /dev/sdb1
 
--Eric
+meta-data=/dev/sdb1              isize=256   
+agcount=16, agsize=4881374 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096  
+blocks=78101984, imaxpct=25
+         =                       sunit=0      swidth=0
+blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096  
+blocks=32768, version=1
+         =                       sectsz=512   sunit=0
+blks
+realtime =none                   extsz=65536 
+blocks=0, rtextents=0
+
+
+I have been using an sql server to populate the 4 xfs
+filesystems.
+So all the files represents part of a relational
+database.
+
+In each filesystem I have 5 top directory and each
+directory contains 100,000 files, so in total each
+filesystem has 500,000 regular files + 5 regular
+directories.
+The sql server is the only program that writes the
+regular files into the xfs filesystems.
+
+During the time taken to populate the 4 filesystems
+(2,000,000 files)
+I have noticed that approximately 5 GB of RAM were
+taken.
+
+Once all the filesystems were populated I have
+shutdown the sql server (the only process that
+accesses/reads/writes the filesystems) and the 5 GB of
+RAM would not be released.
+
+At that point I have unmounted the 4 xfs filesystems
+and the 5 GB of RAM would be released (be available
+again).
+
+
+QUESTION:
+
+Is there any way to release that amount of memory
+without unmounting the file systems ?
+Is that caused to some caching mechanism ?
+Or could that be caused by something else ?
+
+Could you please help ?
+Thanks a lot in advance for your help,
+
+Mariella
+
+
+
+
+
+       
+____________________________________________________________________________________
+Moody friends. Drama queens. Your life? Nope! - their life, your story. Play Sims Stories at Yahoo! Games.
+http://sims.yahoo.com/  
