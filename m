@@ -1,70 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Sep 2007 22:33:05 -0700 (PDT)
-Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.224])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8K5Wtuw026569
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 22:33:00 -0700
-Received: by wx-out-0506.google.com with SMTP id s9so383227wxc
-        for <xfs@oss.sgi.com>; Wed, 19 Sep 2007 22:32:58 -0700 (PDT)
-Subject: Re: The problem in installing the linux-2.6-xfs kernel
-From: hxsrmeng <hxsrmeng@gmail.com>
-Reply-To: hxsrmeng@gmail.com
-In-Reply-To: <46F1FB7C.9080901@sandeen.net>
-References: <1190260918.24375.4.camel@OpenSUSE-desktop.Home>
-	 <46F1FB7C.9080901@sandeen.net>
-Content-Type: text/plain
-Date: Thu, 20 Sep 2007 01:04:35 -0400
-Message-Id: <1190264675.19442.12.camel@OpenSUSE-desktop.Home>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 00:35:38 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8K7ZUuw014863
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 00:35:33 -0700
+Message-ID: <46F222BD.5000001@sgi.com>
+Date: Thu, 20 Sep 2007 17:35:25 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [GIT PULL] XFS update for 2.6.23
+References: <20070918112447.4315C58C4C09@chook.melbourne.sgi.com> <46F16149.8080503@sandeen.net>
+In-Reply-To: <46F16149.8080503@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: XFS <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
+
+Hi Eric,
 
 Thanks.
+I'll add that commit along with the sparse one...
+    commit f5076f1243d6007145c0a658fbe05ace6b90a33f
+    Author: Christoph Hellwig <hch@infradead.org>
+    Date:   Wed Sep 19 15:27:30 2007 +1000
 
-I downloaded this distribution from the cvs@oss.sgi.com, and it is a
-XFS-relative kernel, so I think it should be OK for me to post this
-question here.
+     [XFS] fix valid but harmless sparse warning
 
-Also, as I mentioned, I am especially interested in playing with the XFS
-features and I am worrying whether this problem would stop me in doing
-that. I think the gurus who could answer this question should be
-here. .... Anyway, I am sorry if you think i post it to a wrong list.
+--Tim
 
-
-On Wed, 2007-09-19 at 23:47 -0500, Eric Sandeen wrote:
-> hxsrmeng wrote:
-> > Hi, 
-> > 
-> > When I do:
-> > $/sbin/mkinitrd -k vmlinuz-2.6-xfs -i initrd-2.6-xfs
+Eric Sandeen wrote:
+> Tim Shimmin wrote:
+>> Hi Linus,
+>>
+>> A couple of fixes for potential fs corruption.
+>> And one fix to ensure that xfs_mru_cache is not
+>> doing anything unless the cache has active objects.
 > 
-> mkinitrd varies from distribution to distribution.  I don't know what
-> the -k and -i options do in your case.
+> cc: trimmed...
 > 
-> But, this really isn't particularly on-topic for the xfs list... if
-> you're having trouble installing a custom kernel, I'd suggest asking on
-> a list more relevant to your distribution.
+> Seems like you should push the filestreams fix too?
+> 
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git;a=commitdiff;h=f4b26d9d73e38ff915720440b1c373fb239a4254
+> 
+> Thanks,
 > 
 > -Eric
 > 
-> > I got:
-> > "
-> > Filesystem modules:
-> > WARNING: Couldn't open
-> > directory /var/tmp/mkinitramfs.C23294/mnt/lib/modules/2.6.23-rc4: No
-> > such file or directory
-> > FATAL: Could not
-> > open /var/tmp/mkinitramfs.C23294/mnt/lib/modules/2.6.23-rc4/modules.dep.temp for writing: No such file or directory
-> > "
-> > So, does this mean it failed?
-> > 
-> > If I can still boot this kernel, are the file system features OK?
-> > Especially, I want to try XFS and "Concurrent Multi-File Data Streams".
-> > 
-> > Thanks in advance!
-> > 
-> > 
+> p.s. just FWIW, here are the patches I'm currently carrying in F8:
 > 
+> linux-2.6-xfs-avoid-replaying-inode-buffer-init.patch	In for-linus
+> linux-2.6-xfs-filesize-updates.patch			In for-linus
+> linux-2.6-xfs-filestreams-on-demand-MRU-reaping.patch	In for-linus
+> linux-2.6-xfs-fix-filestreams-free-func-cast.patch
+> linux-2.6-xfs-optimize-away-dmapi-tests.patch
+> linux-2.6-xfs-optimize-away-realtime-tests.patch
+> linux-2.6-xfs-refactor-xfs_mountfs.patch
+> linux-2.6-xfs-setfattr-32bit-compat.patch
