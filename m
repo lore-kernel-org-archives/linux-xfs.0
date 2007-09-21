@@ -1,274 +1,183 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Sep 2007 15:31:57 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8LMVoQ3032486
-	for <xfs@oss.sgi.com>; Fri, 21 Sep 2007 15:31:51 -0700
-Message-ID: <46F431C8.5010309@thebarn.com>
-Date: Fri, 21 Sep 2007 16:04:08 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH SERIES] untangle spinlock macros
-References: <46E6221E.803@sandeen.net> <46E7460D.3000502@sgi.com> <46E749DD.8010200@sandeen.net> <46E78185.5040201@sgi.com> <20070912082940.GA25373@infradead.org> <46E8A848.8010601@sandeen.net>
-In-Reply-To: <46E8A848.8010601@sandeen.net>
-Content-Type: multipart/mixed;
- boundary="------------050308060602040202040303"
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Sep 2007 17:48:20 -0700 (PDT)
+Received: from fk-out-0910.google.com (fk-out-0910.google.com [209.85.128.189])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8M0mDQ3028820
+	for <xfs@oss.sgi.com>; Fri, 21 Sep 2007 17:48:15 -0700
+Received: by fk-out-0910.google.com with SMTP id 18so859105fks
+        for <xfs@oss.sgi.com>; Fri, 21 Sep 2007 17:48:16 -0700 (PDT)
+Subject: Re: Questions about testing the Filestream feature
+From: hxsrmeng <hxsrmeng@gmail.com>
+Reply-To: hxsrmeng@gmail.com
+In-Reply-To: <20070921075459.GJ995458@sgi.com>
+References: <12809900.post@talk.nabble.com>
+	 <20070921075459.GJ995458@sgi.com>
+Content-Type: text/plain
+Date: Fri, 21 Sep 2007 16:45:55 -0400
+Message-Id: <1190407555.5765.8.camel@OpenSUSE-desktop.Home>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: XFS <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
---------------050308060602040202040303
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Thank you so much. You really helped me a lot.
 
-Eric Sandeen wrote:
-> Christoph Hellwig wrote:
->   
->> On Wed, Sep 12, 2007 at 04:04:53PM +1000, Lachlan McIlroy wrote:
->>   
->>     
->>> These changes look good Eric.
->>>
->>> I'm in two minds about losing the spinlock_destroy() macros though.  If 
->>> Linux
->>> ever implements a spinlock teardown routine it would be nice to still have 
->>> all
->>> the placeholders still there.  Although I can't imagine it would do any more
->>> than assert that the lock is not currently held.  If someone else wants to 
->>> lose
->>> the macros then I'm not going to argue.
->>>     
->>>       
->> I'd say keep them for now.  We don't need the spin.h header for them anyway,
->> as single macro can simply move to xfs_linux.h
->>
->>
->>   
->>     
-> Try this on for size.....
->
->   
-So this is a bit late now but please please leave the names they are 
-useful for tracking locks.
-especially in the freebsd witness code.
-> ======================
->
-> remove spinlock init abstraction macro in spin.h, remove the callers, 
-> and  remove the file.  Move no-op spinlock_destroy to xfs_linux.h
->
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/spin.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/spin.h
-> +++ /dev/null
-> @@ -1,27 +0,0 @@
-> -/*
-> - * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-> - * All Rights Reserved.
-> - *
-> - * This program is free software; you can redistribute it and/or
-> - * modify it under the terms of the GNU General Public License as
-> - * published by the Free Software Foundation.
-> - *
-> - * This program is distributed in the hope that it would be useful,
-> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> - * GNU General Public License for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write the Free Software Foundation,
-> - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> - */
-> -#ifndef __XFS_SUPPORT_SPIN_H__
-> -#define __XFS_SUPPORT_SPIN_H__
-> -
-> -#include <linux/sched.h>	/* preempt needs this */
-> -#include <linux/spinlock.h>
-> -
-> -#define spinlock_init(lock, name)	spin_lock_init(lock)
-> -#define	spinlock_destroy(lock)
-> -
-> -#endif /* __XFS_SUPPORT_SPIN_H__ */
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -1568,7 +1568,7 @@ xfs_alloc_delwrite_queue(
->  
->  	INIT_LIST_HEAD(&btp->bt_list);
->  	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
-> -	spinlock_init(&btp->bt_delwrite_lock, "delwri_lock");
-> +	spin_lock_init(&btp->bt_delwrite_lock);
->  	btp->bt_flags = 0;
->  	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd");
->  	if (IS_ERR(btp->bt_task)) {
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
-> @@ -43,7 +43,6 @@
->  
->  #include <kmem.h>
->  #include <mrlock.h>
-> -#include <spin.h>
->  #include <sv.h>
->  #include <mutex.h>
->  #include <sema.h>
-> @@ -75,6 +74,7 @@
->  #include <linux/notifier.h>
->  #include <linux/delay.h>
->  #include <linux/log2.h>
-> +#include <linux/spinlock.h>
->  
->  #include <asm/page.h>
->  #include <asm/div64.h>
-> @@ -145,6 +145,8 @@
->  #define current_restore_flags_nested(sp, f)	\
->  		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
->  
-> +#define spinlock_destroy(lock)
-> +
->  #define NBPP		PAGE_SIZE
->  #define NDPP		(1 << (PAGE_SHIFT - 9))
->  
-> Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm.c
-> +++ linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
-> @@ -1131,7 +1131,7 @@ xfs_qm_init_quotainfo(
->  		return error;
->  	}
->  
-> -	spinlock_init(&qinf->qi_pinlock, "xfs_qinf_pin");
-> +	spin_lock_init(&qinf->qi_pinlock);
->  	xfs_qm_list_init(&qinf->qi_dqlist, "mpdqlist", 0);
->  	qinf->qi_dqreclaims = 0;
->  
-> Index: linux-2.6-xfs/fs/xfs/support/debug.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/support/debug.c
-> +++ linux-2.6-xfs/fs/xfs/support/debug.c
-> @@ -17,7 +17,6 @@
->   */
->  #include <xfs.h>
->  #include "debug.h"
-> -#include "spin.h"
->  
->  static char		message[1024];	/* keep it off the stack */
->  static DEFINE_SPINLOCK(xfs_err_lock);
-> Index: linux-2.6-xfs/fs/xfs/support/ktrace.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/support/ktrace.h
-> +++ linux-2.6-xfs/fs/xfs/support/ktrace.h
-> @@ -18,8 +18,6 @@
->  #ifndef __XFS_SUPPORT_KTRACE_H__
->  #define __XFS_SUPPORT_KTRACE_H__
->  
-> -#include <spin.h>
-> -
->  /*
->   * Trace buffer entry structure.
->   */
-> Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_alloc.c
-> @@ -2206,7 +2206,7 @@ xfs_alloc_read_agf(
->  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
->  		pag->pagf_levels[XFS_BTNUM_CNTi] =
->  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
-> -		spinlock_init(&pag->pagb_lock, "xfspagb");
-> +		spin_lock_init(&pag->pagb_lock);
->  		pag->pagb_list = kmem_zalloc(XFS_PAGB_NUM_SLOTS *
->  					sizeof(xfs_perag_busy_t), KM_SLEEP);
->  		pag->pagf_init = 1;
-> Index: linux-2.6-xfs/fs/xfs/xfs_log.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_log.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_log.c
-> @@ -1189,8 +1189,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
->  	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
->  	log->l_xbuf = bp;
->  
-> -	spinlock_init(&log->l_icloglock, "iclog");
-> -	spinlock_init(&log->l_grant_lock, "grhead_iclog");
-> +	spin_lock_init(&log->l_icloglock);
-> +	spin_lock_init(&log->l_grant_lock);
->  	initnsema(&log->l_flushsema, 0, "ic-flush");
->  	xlog_state_ticket_alloc(log);  /* wait until after icloglock inited */
->  
-> Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_mount.c
-> @@ -136,8 +136,8 @@ xfs_mount_init(void)
->  		mp->m_flags |= XFS_MOUNT_NO_PERCPU_SB;
->  	}
->  
-> -	spinlock_init(&mp->m_ail_lock, "xfs_ail");
-> -	spinlock_init(&mp->m_sb_lock, "xfs_sb");
-> +	spin_lock_init(&mp->m_ail_lock);
-> +	spin_lock_init(&mp->m_sb_lock);
->  	mutex_init(&mp->m_ilock);
->  	mutex_init(&mp->m_growlock);
->  	/*
-> @@ -616,7 +616,7 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
->  	int	i;
->  
->  	mp->m_agfrotor = mp->m_agirotor = 0;
-> -	spinlock_init(&mp->m_agirotor_lock, "m_agirotor_lock");
-> +	spin_lock_init(&mp->m_agirotor_lock);
->  	mp->m_maxagi = mp->m_sb.sb_agcount;
->  	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
->  	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
-> Index: linux-2.6-xfs/fs/xfs/xfs_mru_cache.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mru_cache.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_mru_cache.c
-> @@ -368,7 +368,7 @@ xfs_mru_cache_create(
->  	 */
->  	INIT_RADIX_TREE(&mru->store, GFP_ATOMIC);
->  	INIT_LIST_HEAD(&mru->reap_list);
-> -	spinlock_init(&mru->lock, "xfs_mru_cache");
-> +	spin_lock_init(&mru->lock);
->  	INIT_DELAYED_WORK(&mru->work, _xfs_mru_cache_reap);
->  
->  	mru->grp_time  = grp_time;
-> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c
-> @@ -68,7 +68,7 @@ xfs_init(void)
->  	extern kmem_zone_t	*xfs_dabuf_zone;
->  #ifdef XFS_DABUF_DEBUG
->  	extern spinlock_t        xfs_dabuf_global_lock;
-> -	spinlock_init(&xfs_dabuf_global_lock, "xfsda");
-> +	spin_lock_init(&xfs_dabuf_global_lock);
->  #endif
->  
->  	/*
->
->
->   
+Sorry that I had to learn something form the net and manuals first to
+understand what you said.:)
+My RAM is only 512M and the stream timeout is 3s.......That might be the
+problem.I will try this on a test box with bigger RAM and set the stream
+timeout to 30s.
+
+> It's up to the
+> user/application to prevent intra-stream allocation/fragmentation
+> problems (e.g. preallocation, extent size hints, large direct I/O, etc)
+> and that is what your test application is lacking. filestreams only
+> prevents inter-stream interleaving.
+
+I'll try to get more information about how to modify my script according
+to your suggestion.Thank you again!
+
+Have a nice weekend!
+Hxsrmeng
 
 
---------------050308060602040202040303
-Content-Type: text/x-vcard; charset=utf-8;
- name="cattelan.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="cattelan.vcf"
-
-begin:vcard
-fn:Russell Cattelan
-n:Cattelan;Russell
-email;internet:cattelan@thebarn.com
-x-mozilla-html:FALSE
-version:2.1
-end:vcard
-
-
---------------050308060602040202040303--
+On Fri, 2007-09-21 at 17:54 +1000, David Chinner wrote:
+> On Thu, Sep 20, 2007 at 08:10:31PM -0700, Hxsrmeng wrote:
+> > 
+> > Hi all,
+> > 
+> > I need to use the "Filestreams" feature. I wrote a script to write files to
+> > two directories concurrently.  When I check the file bitmap, I found
+> > sometimes the files written in the different directories still interleave
+> > extents on disk. I don't know whether there is something wrong with my
+> > script, or, I misunderstand something.
+> > 
+> > I am using Opensuse10.2, the kernel is linux-2.6.23-rc4 (source code was
+> > check out from cvs of oss.sgi.com). The filestreams feature is enabled with
+> > a "-o filestreams" mount option.
+> > Here is my script: 
+> 
+> <snip>
+> 
+> Very similar to xfsqa tests 170-174.
+> 
+> > Then I got the information of my xfs device first :  
+> > meta-data=/dev/hda5   isize=256      agcount=8, agsize=159895 blks
+> >          =            sectsz=512   attr=0
+> > data     =            bsize=4096   blocks=1279160,imaxpct=25
+> 
+> Ok, so an AG ~600MB in size, and your filesystem is about 5GB.
+> 
+> > First run, I wrote 3 "big" files, which are 768M, to each directories. The
+> > files in directory dira share AG 0,2,5,7 and files in directory dirb share
+> > AG 1, 3, 4, 6,  which I assume should be correct.
+> 
+> Yes, and 3*3*768 = 4GB ~= 80% full.
+> 
+> > But the files extents
+> > doesn't use contiguous blocks,
+> 
+> filestreams doesn't guarantee contiguous extents - it guarantees sets of files
+> separated by directories don't intertwine. Within the each set you can see
+> non-contiguous allocation, but the sets should not interleave in the same
+> AGs...
+> 
+> > and all files in the same directory put some
+> > of their extents in AG 0.
+> 
+> AG 0 is the "filestreams failure" allocation group. What you are seeing is
+> that at some point you've filled your AG's up and a stream write couldn't find
+> an unused AG that matched the stream association criteria and it gave up.
+> 
+> > I am not sure whether this is correct.  Here is
+> > part of file bitmap:
+> > "
+> > dira/0:
+> >  EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET          TOTAL
+> >    0: [0..7615]:          96..7711          0 (96..7711)          7616
+> >    1: [7616..7679]:       33312..33375      0 (33312..33375)        64
+> >    2: [7680..24063]:      33448..49831      0 (33448..49831)     16384
+> >    3: [24064..52999]:     60608..89543      0 (60608..89543)     28936
+> >    4: [53000..61191]:     95496..103687     0 (95496..103687)     8192
+> >    5: [61192..90791]:     119088..148687    0 (119088..148687)   29600
+> >    6: [90792..131751]:    170264..211223    0 (170264..211223)   40960
+> >    7: [131752..144223]:   219480..231951    0 (219480..231951)   12472
+> >    8: [144224..168799]:   240144..264719    0 (240144..264719)   24576
+> 
+> Ummm - that's a file stat started in AG 0....
+> 
+> >    ...
+> > dira/1:
+> >  EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET           TOTAL
+> >    0: [0..12791]:         7712..20503       0 (7712..20503)       12792
+> >    1: [12792..12863]:     33376..33447      0 (33376..33447)         72
+> >    2: [12864..13391]:     49832..50359      0 (49832..50359)        528
+> >    3: [13392..19575]:     112904..119087    0 (112904..119087)     6184
+> >    4: [19576..27767]:     148688..156879    0 (148688..156879)     8192
+> >    5: [27768..35959]:     211224..219415    0 (211224..219415)     8192
+> >    6: [35960..44151]:     231952..240143    0 (231952..240143)     8192
+> >    7: [44152..68727]:     264784..289359    0 (264784..289359)    24576
+> >    8: [68728..79047]:     309400..319719    0 (309400..319719)    10320
+> 
+> And so is that. Given that they are in the same directory, this is correct
+> behaviour.
+> 
+> How much memory in your test box? I suspect that you're getting writeback
+> from kswapd, not pdflush as you are doing buffered I/O and you're getting
+> LRU order writeback rather than nice sequential writeback. It's up to the
+> user/application to prevent intra-stream allocation/fragmentation
+> problems (e.g. preallocation, extent size hints, large direct I/O, etc)
+> and that is what your test application is lacking. filestreams only
+> prevents inter-stream interleaving.
+> 
+> Also, you are running close to filesystem full state. That is known to be
+> a no-no for deterministic performance from the filesystem, will cause
+> filesystem fragmentation, and is not the case that filestreams is
+> designed to optimise for.
+> 
+> however, I agree that the code is not working optimally. In test 171,
+> there is this comment:
+> 
+> # test large numbers of files, single I/O per file, 120s timeout
+> # Get close to filesystem full.
+> # 128 = ENOSPC
+> # 120 = 93.75% full, gets repeatable failures
+> # 112 = 87.5% full, should reliably succeed but doesn't *FIXME*
+> # 100 = 78.1% full, should reliably succeed
+> 
+> The test uses a 1GB filesystem to intentionally stress the allocator,
+> and at 78.1% full, we are getting intermittent failures. On
+> some machines (like my test boxes) it passes >95% of the time.
+> On other machines, it passes maybe 5% of the time. So the low
+> space behaviour is known to be less than optimal, but at production
+> sites it is known that they can't use the last 10-15% of the filesystem
+> because of fragmentation issues associated with stripe alignment.
+> Hence low space behaviour of the allocator is not considered something
+> critical because there are other, worse problems at low space
+> that filestreams can't do anything to prevent.
+> 
+> > Second run, I wrote 1024 "small" files, which are 1M, to each directories. 
+> > Files in directory dira use AG 0,1,3 and files in directory b use AG
+> > 2,1,5,6,7,4. So files written in directory dirb use the allocation group 1,
+> > which should be reserved for directory dira . And, sometimes even one file
+> > is written to two AGs. The following is part of file bitmap:
+> 
+> That's true only as long as a stream does not time out. An AG is
+> reserved only as long a the timeout since the last file in a
+> stream was created or allocated to.
+> 
+> IOWs, if you use buffered I/O, the 30s writeback delay could time
+> your stream out between file creation and write() syscall and
+> when pdflush writes it back. Then you have no stream association
+> and you will get interleaving. Test 172 tests this behaviour,
+> and we get intermittent failures on that test because the buffered
+> I/O case occasionally succeeds rather than fails like it is supposed
+> to....
+> 
+> What's your stream timeout (/proc/sys/fs/xfs/filestream_centisecs) set to?
+> 
+> Cheers,
+> 
+> Dave.
