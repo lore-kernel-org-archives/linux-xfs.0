@@ -1,28 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 20:14:08 -0700 (PDT)
-Received: from ipmail02.adl2.internode.on.net (ipmail02.adl2.internode.on.net [203.16.214.141])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8L3E0gf011288
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 20:14:02 -0700
-Date: Fri, 21 Sep 2007 13:13:30 +1000
-From: Jason White <jason@jasonjgw.net>
-Subject: Re: xfs and Linux Linux 2.6.22 and Memory
-Message-ID: <20070921031330.GA15134@jdc.jasonjgw.net>
-References: <46F2E001.4040107@sandeen.net> <773373.46803.qm@web35703.mail.mud.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <773373.46803.qm@web35703.mail.mud.yahoo.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 21:28:11 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8L4S1gf026016
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 21:28:04 -0700
+From: donaldd@sgi.com
+Subject: PARTIAL TAKE 970382 - untangle spinlock macros
+Message-Id: <20070921042758.B7C183079FFE@linuxbuild.melbourne.sgi.com>
+Date: Fri, 21 Sep 2007 14:27:58 +1000 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Sep 20, 2007 at 07:14:23PM -0700, Mariella Petrini wrote:
-> I was mostly curious, especially because In some cases
-> after having created all the files I may not need to
-> have all of them cached and I may need to availability
-> of the RAM for other purposes.
+Unwrap pagb_lock.
 
-I may be wrong, but as I understand it, if the RAM is needed for other
-purposes, cache pages are made available automatically and the size of the
-cache is reduced as the RAM is allocated by processes.
+Un-obfuscate pagb_lock, remove mutex_lock->spin_lock
+macros, call spin_lock directly, remove extraneous cookie
+holdover from old xfs code, and change lock type to spinlock_t.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Fri Sep 21 14:27:12 AEST 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  sandeen@sandeen.net
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29743a
+fs/xfs/xfs_ag.h - 1.62 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ag.h.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
+	- Unwrap pagb_lock
+
+fs/xfs/xfs_alloc.c - 1.188 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc.c.diff?r1=text&tr1=1.188&r2=text&tr2=1.187&f=h
+	- Unwrap pagb_lock
