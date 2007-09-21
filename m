@@ -1,42 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 19:00:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8L20Agf032713
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 19:00:14 -0700
-From: donaldd@sgi.com
-Subject: PARTIAL TAKE 970382 - untangle spinlock macros 
-Message-Id: <20070921020008.78CF53079F83@linuxbuild.melbourne.sgi.com>
-Date: Fri, 21 Sep 2007 12:00:08 +1000 (EST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Sep 2007 19:14:30 -0700 (PDT)
+Received: from web35703.mail.mud.yahoo.com (web35703.mail.mud.yahoo.com [66.163.179.157])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8L2ELgf002908
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2007 19:14:24 -0700
+Date: Thu, 20 Sep 2007 19:14:23 -0700 (PDT)
+From: Mariella Petrini <mariellapetrini@yahoo.com>
+Subject: Re: xfs and Linux Linux 2.6.22 and Memory
+In-Reply-To: <46F2E001.4040107@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <773373.46803.qm@web35703.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
-
-Unwrap GRANT_LOCK.
-
-Un-obfuscate GRANT_LOCK, remove GRANT_LOCK->mutex_lock->spin_lock
-macros, call spin_lock directly, remove extraneous cookie
-holdover from old xfs code, and change lock type to spinlock_t.
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Date:  Fri Sep 21 11:59:22 AEST 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  sandeen@sandeen.net
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com, dgc@sgi.com
 
 
-Modid:  xfs-linux-melb:xfs-kern:29741a
-fs/xfs/xfs_log.c - 1.338 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.338&r2=text&tr2=1.337&f=h
-	- Unwrap GRANT_LOCK.
+> 
+> Are you actually seeing a problem with this (caching
+> is generally good)
+> or just curious?
+>
+I was mostly curious, especially because In some cases
+after having created all the files I may not need to
+have all of them cached and I may need to availability
+of the RAM for other purposes.
 
-fs/xfs/xfs_log_priv.h - 1.122 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.122&r2=text&tr2=1.121&f=h
-	- Unwrap GRANT_LOCK.
 
-fs/xfs/xfs_vnodeops.c - 1.722 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.722&r2=text&tr2=1.721&f=h
-	- Unwrap GRANT_LOCK.
+Thank you all for all the info,
+
+Mariella
+
+
+--- Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> Mariella Petrini wrote:
+> 
+> > QUESTION:
+> > 
+> > Is there any way to release that amount of memory
+> > without unmounting the file systems ?
+> > Is that caused to some caching mechanism ?
+> > Or could that be caused by something else ?
+> 
+> It's most likely the linux VFS caching the dentries
+> & inodes, and
+> therefore caching the xfs inodes as well.
+> 
+> cat /proc/sys/fs/dentry-state and
+> /proc/sys/fs/inode-state to see how
+> many are in memory, how many are active, and the age
+> limit.
+> 
+> slabtop would fairly easily show you how much is in
+> the dentry_cache &
+> the inode_cache too.
+> 
+> Are you actually seeing a problem with this (caching
+> is generally good)
+> or just curious?
+> 
+> -Eric
+> 
+> 
+> 
+
+
+
+       
+____________________________________________________________________________________
+Be a better Globetrotter. Get better travel answers from someone who knows. Yahoo! Answers - Check it out.
+http://answers.yahoo.com/dir/?link=list&sid=396545469
