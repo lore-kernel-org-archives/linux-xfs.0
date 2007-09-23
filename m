@@ -1,69 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Sep 2007 09:14:38 -0700 (PDT)
-Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.231])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8NGEWQ3007146
-	for <xfs@oss.sgi.com>; Sun, 23 Sep 2007 09:14:35 -0700
-Received: by wx-out-0506.google.com with SMTP id s9so1165823wxc
-        for <xfs@oss.sgi.com>; Sun, 23 Sep 2007 09:14:35 -0700 (PDT)
-Subject: Re: Review: Concurrent Multi-File Data Streams
-From: Ming Zhang <blackmagic02881@gmail.com>
-Reply-To: blackmagic02881@gmail.com
-In-Reply-To: <20070923074500.GO995458@sgi.com>
-References: <12789210.post@talk.nabble.com>
-	 <20070921091441.3ABB88E0B@mail.edu.haifa.ac.il>
-	 <20070921125531.GM995458@sgi.com>
-	 <1190399077.3795.86.camel@localhost.localdomain>
-	 <20070923074500.GO995458@sgi.com>
-Content-Type: text/plain
-Date: Sun, 23 Sep 2007 11:47:05 -0400
-Message-Id: <1190562425.3795.97.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Sep 2007 15:06:21 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8NM6FQ3002329
+	for <xfs@oss.sgi.com>; Sun, 23 Sep 2007 15:06:17 -0700
+Message-ID: <46F6E344.20907@sgi.com>
+Date: Mon, 24 Sep 2007 08:05:56 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH 4 of 4] Restore ihashsize mount option as deprecated
+References: <20070809114548.GG12413810@sgi.com> <46F4390A.5070407@sandeen.net> <20070923075756.GP995458@sgi.com> <20070923100039.GA5370@infradead.org> <46F67BD3.8050706@sandeen.net>
+In-Reply-To: <46F67BD3.8050706@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Leon Kolchinsky <leonk@construct.haifa.ac.il>, 'Hxsrmeng' <hxsrmeng@gmail.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>, trev <trev@sgi.com>, "Kevin G. Snow" <kgsnow@sgi.com>
 
-On Sun, 2007-09-23 at 17:45 +1000, David Chinner wrote:
-> On Fri, Sep 21, 2007 at 02:24:37PM -0400, Ming Zhang wrote:
-> > On Fri, 2007-09-21 at 22:55 +1000, David Chinner wrote:
-> > > On Fri, Sep 21, 2007 at 11:13:33AM +0200, Leon Kolchinsky wrote:
-> > > > I'm running DSS (Darwin Streaming Server) on one of my servers and that
-> > > > "Concurrent Multi-File Data Streams" thing seems very interesting :)
-> > > 
-> > > Filestreams is needed to optimise concurrent *ingest* of data,
-> > > not playout.
-> > > 
-> > > i.e. if you are ingesting multiple real-time streams of data at the
-> > > same time as you are playing out real-time streams and you area
-> > > missing playout deadlines (i.e. dropping frames) due to sub-optimal
-> > > data layout, then it might help you.....
-> > > 
-> > > > I have a separate partition there I store all movies.
-> > > > Is 2.6.22 kernel already has this patch incorporated already(actually
-> > > > gentoo-sources-2.6.22-r5)?
-> > > 
-> > > It went into .22 so you should have it.
-> > 
-> > i did not see xfs_filestream.c in 2.6.22.6 yet. did i miss something
-> > here?
+
+
+Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+>> Did anyone but Dave get Eric's original message?  It seems to not have
+>> made it to the list.
+>>
 > 
-> No, my mistake - it seems so long since I checked it in. it went
-> into 2.6.23-rc1....
-
-thanks.
-
-
+> No, it was yet another lost email on oss.  I guess the xfs-dev list got it.
 > 
-> Cheers,
-> 
-> Dave.
+>>From a fairly quick look at logs I have no idea what happened... but
+> this is clearly a problem that must be solved one way or another.
+
+Have we (or can we) agree on a new list handler? The current mechanism
+has trouble allowing new subscribers and now we see it's loosing mail
+too. Let's get this fixed and move on. Who owns this on oss? If nobody,
+then I'll organize it, but first we need consensus on a replacement.
+
+Thanks
+
 -- 
-Ming Zhang
 
-
-@#$%^ purging memory... (*!%
-http://blackmagic02881.wordpress.com/
-http://www.linkedin.com/in/blackmagic02881
---------------------------------------------
+  Mark Goodwin                                  markgw@sgi.com
+  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
+  SGI Australian Software Group           Cell: +61-4-18969583
+-------------------------------------------------------------
