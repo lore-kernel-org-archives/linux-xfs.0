@@ -1,32 +1,24 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 11:27:04 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 11:27:10 -0700 (PDT)
 Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8OIQtQ3008262
-	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 11:27:00 -0700
-Date: Mon, 24 Sep 2007 19:03:15 +0100
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8OIR3Q3008341
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 11:27:08 -0700
+Date: Mon, 24 Sep 2007 19:03:38 +0100
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: fix mount flags as printed by xfsidbg
-Message-ID: <20070924180315.GB2865@infradead.org>
-References: <46F78159.5080907@sgi.com> <20070924161433.GA4098@puku.stupidest.org>
+Subject: Re: Review: Fix xfsidbg.c compiler warnings on x86_64
+Message-ID: <20070924180338.GC2865@infradead.org>
+References: <46F7809D.1040900@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20070924161433.GA4098@puku.stupidest.org>
+In-Reply-To: <46F7809D.1040900@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Sep 24, 2007 at 09:14:33AM -0700, Chris Wedgwood wrote:
-> On Mon, Sep 24, 2007 at 07:20:25PM +1000, Donald Douwsma wrote:
-> 
-> > -		"32BITINOOPT",	/* 0x8000 */
-> > +		"SMALL_INUMS",	/* 0x8000 */
-> 
-> why rename that?
+On Mon, Sep 24, 2007 at 07:17:17PM +1000, Donald Douwsma wrote:
+> Fix compile warnings for xfsidbg.c as seen on x86_64.
 
-It's just renamed to what's æctually in the mount flags.  We didn't
-actually have a 32BITINOOPT flag before so it's a bit of a mistery
-how the original one got there.
+Looks good.
