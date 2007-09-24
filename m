@@ -1,62 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Sep 2007 21:18:03 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Sep 2007 22:47:23 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8O4HtQ3004118
-	for <xfs@oss.sgi.com>; Sun, 23 Sep 2007 21:17:57 -0700
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8O5lGQ3020726
+	for <xfs@oss.sgi.com>; Sun, 23 Sep 2007 22:47:19 -0700
+Date: Mon, 24 Sep 2007 15:50:57 +1000
 Subject: Re: something very strange w/ filestreams...
 From: "Barry Naujok" <bnaujok@sgi.com>
 Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 MIME-Version: 1.0
-References: <46F49C80.60007@sandeen.net>
-Content-Transfer-Encoding: 7bit
-Date: Mon, 24 Sep 2007 14:22:17 +1000
-Message-ID: <op.ty443fx13jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <46F49C80.60007@sandeen.net>
+References: <46F49C80.60007@sandeen.net> <20070923092444.GQ995458@sgi.com>
+Message-ID: <op.ty4867zj3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20070923092444.GQ995458@sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sat, 22 Sep 2007 14:39:28 +1000, Eric Sandeen <sandeen@sandeen.net>  
-wrote:
+On Sun, 23 Sep 2007 19:24:44 +1000, David Chinner <dgc@sgi.com> wrote:
 
-> if I do:
+> Barry - I think xfs_repair might be finding the incorrect superblock
+> for the repair. Tests 172, 173 and 174 use less than the whole disk,
+> so there are going to be stale superblocks all over the place....
 >
-> for I in 173 174 178; do ./check $I; done
+>> hm, no zone name, length of 0x22222274?
+>>
+>> I already provided a metadump image to Barry, but I wonder why the
+>> timing(?) seems to make a difference here... first sign of things going
+>> awry in repair is:
+>>
+>> Phase 2 - using internal log
+>>         - zero log...
+>>         - scan filesystem freespace and inode maps...
+>> bad length 131072 for agf 0, should be 4096
+>> bad length # 131072 for agi 0, should be 4096
 >
-> it's not terribly interesting, things seem to go ok, just normal
-> filestreams failures ;-)
+> Yes - test 173 uses 1GB filesystem with 64x16MB AGs - 4096 * 4k block
+> size = 16MB AG. definitely looks like a stale superblock being
+> found.
 >
-> if I do:
+> Barry, I think that the secondary superblock needs better verification
+> (e.g. that there really are AG headers where the sb says there
+> are supposed to be and all the lengths match up).
 >
-> ./check 173 174 178
->
-> things go very badly; the very first repair in 178 finds a horribly
-> corrupted filesystem, and repair tips over (memory appears corrupted, as
-> witnessed by):
->
->> xfs_repair: zone calloc failed (, 572662388 bytes): Cannot allocate  
->> memory
->
-> hm, no zone name, length of 0x22222274?
->
-> I already provided a metadump image to Barry, but I wonder why the
-> timing(?) seems to make a difference here... first sign of things going
-> awry in repair is:
->
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> bad length 131072 for agf 0, should be 4096
-> bad length # 131072 for agi 0, should be 4096
-> would reset bad agf for ag 0
-> would reset bad agi for ag 0
-> ....
->
-> not sure what's going on here, but it only seems to happen if I do those
-> 2 filestreams test immediately before 178...
->
-> oh, and this is over LVM, just for fun.
+> Eric - you can relax. Filestreams is not hosing your filesystem;  
+> xfs_reapir
+> is....
 
-Eric, you have this patch installed don't you?
-http://oss.sgi.com/archives/xfs/2007-07/msg00139.html
+Test 178 is designed to test mkfs.xfs in
+http://oss.sgi.com/archives/xfs/2007-07/msg00139.html and
+will still make xfs_repair go bananas if there is other
+old AG headers.
+
+So, before running this test, you should make sure your test
+partitions are completely zeroed from mkfs's that occurred
+before that recent version of mkfs.xfs was installed.
+
+I tried on my test box and sure enough, xfs_repair barfed.
+After zeroing the devices, 172, 174 & 178 sequence succeeded.
+
+If you have failures after the zeroing and ONLY using the
+latest mkfs.xfs then something else is wrong. Also,
+xfs_copy/xfs_mdrestore of different images could still
+trigger the problem.
+
+There is a TODO to improve xfs_repair's handling of this
+scenario.
+
+Barry.
