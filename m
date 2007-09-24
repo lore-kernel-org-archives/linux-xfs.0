@@ -1,42 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 06:52:16 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8ODq5Q3021687
-	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 06:52:11 -0700
-Message-ID: <46F7B8B9.4040707@redhat.com>
-Date: Mon, 24 Sep 2007 08:16:41 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 08:31:58 -0700 (PDT)
+Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8OFVpQ3027710
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 08:31:54 -0700
+From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
+Subject: RE: Tips on xfs creation on MIPS R5000 machine running Linux?
+Date: Mon, 24 Sep 2007 17:30:49 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH] obsolete libcom-err for SuSE e2fsprogs
-References: <20070919061404.GA1628@schatzie.adilger.int> <46F1CFC0.3070801@redhat.com> <20070920050923.GX32520@schatzie.adilger.int> <46F2D678.4060203@redhat.com> <20070920215427.GL30221@thunk.org> <20070924092539.GC2819@petra.dvoda.cz> <20070924124035.GA4209@thunk.org>
-In-Reply-To: <20070924124035.GA4209@thunk.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1255"
+In-Reply-To: <46F67C7B.6040405@sandeen.net>
+Message-Id: <20070924153211.A73AC14EC2F@mail.edu.haifa.ac.il>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Theodore Tso <tytso@mit.edu>
-Cc: Karel Zak <kzak@redhat.com>, Andreas Dilger <adilger@clusterfs.com>, linux-ext4@vger.kernel.org, List util-linux-ng <util-linux-ng@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: 'Eric Sandeen' <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Theodore Tso wrote:
-> On Mon, Sep 24, 2007 at 11:25:39AM +0200, Karel Zak wrote:
->>> Nope, there isn't much rationale unless we also split out fsck, so
->>  util-linux-ng is open for fsck :-)
+> Leon Kolchinsky wrote:
 > 
-> It's something I'm considering, but at the moment I've got some higher
-> priority (ext4) work that I'm focusing on.  
+> >> 1) Creating FS:
+> >> mkfs.xfs -l internal,size=128m -d agcount=2 –d unwritten=0 /dev/hda1
+> >>
+> >> 2) Mount options:
+> >> mount -o noatime,nodiratime,logbufs=8
 > 
-> What would you think about moving libblkid and the libdisk from
-> xfsprogs into util-linux-ng?  That's things that I've been batting
-> around doing, although that means we end up moving more libraries that
-> distros would probably want separated into different packages into
-> util-linux-ng....
+> Unless you have a reason not to, I always say start with the defaults
+> until proven otherwise.
+> 
+> Why would you want to turn off unwritten extents, or limit the agcount?
+> 
 
-Heh, sounds a little like a prisoner exchange... "we'll give up libblkid
-& libcom_err if you give up libdisk" :)
+Hello Eric,
 
-Seriously, though, that all sounds like a pretty good idea to me,
-especially since e2fsprogs has been making noise about utilizing some of
-the functionality in xfsprogs (stripe discovery etc).
+Thanks for your response.
+Actually these options largely taken from "XFS on steroids" topic from
+gentoo forums
+http://forums.gentoo.org/viewtopic-t-488215-highlight-.html?sid=cfa1762e9e57
+9e184be80bd66a620abe
 
--Eric
+I want to optimize FS for maximum performance (it's not a production box).
+What are your suggestions?
+
+
+Regards,
+Leon
