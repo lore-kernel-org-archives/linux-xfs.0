@@ -1,48 +1,26 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 08:31:58 -0700 (PDT)
-Received: from mail.edu.haifa.ac.il (mail.edu.haifa.ac.il [132.74.40.10])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8OFVpQ3027710
-	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 08:31:54 -0700
-From: "Leon Kolchinsky" <leonk@construct.haifa.ac.il>
-Subject: RE: Tips on xfs creation on MIPS R5000 machine running Linux?
-Date: Mon, 24 Sep 2007 17:30:49 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 09:14:38 -0700 (PDT)
+Received: from smtp120.sbc.mail.sp1.yahoo.com (smtp120.sbc.mail.sp1.yahoo.com [69.147.64.93])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8OGEVQ3004528
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 09:14:34 -0700
+Date: Mon, 24 Sep 2007 09:14:33 -0700
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: Review: fix mount flags as printed by xfsidbg
+Message-ID: <20070924161433.GA4098@puku.stupidest.org>
+References: <46F78159.5080907@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1255"
-In-Reply-To: <46F67C7B.6040405@sandeen.net>
-Message-Id: <20070924153211.A73AC14EC2F@mail.edu.haifa.ac.il>
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46F78159.5080907@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Eric Sandeen' <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-> Leon Kolchinsky wrote:
-> 
-> >> 1) Creating FS:
-> >> mkfs.xfs -l internal,size=128m -d agcount=2 –d unwritten=0 /dev/hda1
-> >>
-> >> 2) Mount options:
-> >> mount -o noatime,nodiratime,logbufs=8
-> 
-> Unless you have a reason not to, I always say start with the defaults
-> until proven otherwise.
-> 
-> Why would you want to turn off unwritten extents, or limit the agcount?
-> 
+On Mon, Sep 24, 2007 at 07:20:25PM +1000, Donald Douwsma wrote:
 
-Hello Eric,
+> -		"32BITINOOPT",	/* 0x8000 */
+> +		"SMALL_INUMS",	/* 0x8000 */
 
-Thanks for your response.
-Actually these options largely taken from "XFS on steroids" topic from
-gentoo forums
-http://forums.gentoo.org/viewtopic-t-488215-highlight-.html?sid=cfa1762e9e57
-9e184be80bd66a620abe
-
-I want to optimize FS for maximum performance (it's not a production box).
-What are your suggestions?
-
-
-Regards,
-Leon
+why rename that?
