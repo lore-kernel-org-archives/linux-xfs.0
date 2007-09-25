@@ -1,63 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 14:52:48 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8OLqeQ3027191
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Sep 2007 14:52:43 -0700
-Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
-	id 1IZvqz-0004Yy-00
-	for <linux-xfs@oss.sgi.com>; Mon, 24 Sep 2007 23:52:33 +0200
-Date: Mon, 24 Sep 2007 23:52:23 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
-Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-Message-ID: <20070924215223.GC4082@p15145560.pureserver.info>
-References: <20070923093841.GH19983@p15145560.pureserver.info> <20070924173155.GI19983@p15145560.pureserver.info> <Pine.LNX.4.64.0709241400370.12025@p34.internal.lan> <20070924203958.GA4082@p15145560.pureserver.info> <Pine.LNX.4.64.0709241642110.19847@p34.internal.lan> <20070924213358.GB4082@p15145560.pureserver.info> <Pine.LNX.4.64.0709241736370.19847@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <Pine.LNX.4.64.0709241736370.19847@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Sep 2007 17:11:47 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8P0BfQ3000813
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 17:11:43 -0700
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id B119B18011E8F
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2007 19:11:44 -0500 (CDT)
+Message-ID: <46F85240.1060206@sandeen.net>
+Date: Mon, 24 Sep 2007 19:11:44 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] lose xfs_hex_dump in favor of print_hex_dump
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Justin Piszcz schrieb:
-> >>I find that to be the case with SW RAID (defaults are best)
-> >>
-> >>Although with 16 drives(?) that is awfully slow.
-> >>
-> >>I have 6 SATA's I get 160-180 MiB/s raid5 and 250-280 MiB/s raid 0 (sw
-> >>raid).
-> >>
-> >>With 10 raptors I get ~450 MiB/s write and ~550-600 MiB/s read, again
-> >>XFS+SW raid.
-> >
-> >Hm, with the different HW-RAIDs I've used so far (easyRAID,
-> >Infortrend, internal Areca controller), I always got 160-200 MiB/s
-> >read/write with 7-15 disks. That's one reason why I asked if there are
-> >some xfs options I could use for better performance. But I guess fs
-> >options won't boost performance that much.
-> 
-> What do you get when (reading) from the raw device?
-> 
-> dd if=/dev/sda bs=1M count=10240
+No need for xfs to have its own hex dumping routine now that the
+kernel has one.
 
-The server has 16 GB RAM, so I tried it with 20 GB of data.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-dd if=/dev/sdd of=/dev/null bs=1M count=20480
-20480+0 Datensätze ein
-20480+0 Datensätze aus
-21474836480 Bytes (21 GB) kopiert, 95,3738 Sekunden, 225 MB/s
-
-and a second try:
-
-dd if=/dev/sdd of=/dev/null bs=1M count=20480
-20480+0 Datensätze ein
-20480+0 Datensätze aus
-21474836480 Bytes (21 GB) kopiert, 123,78 Sekunden, 173 MB/s
-
-I'm taoo tired to interprete these numbers at the moment, I'll do some
-more testing tomorrow.
-
-Good night,
-Ralf
+Index: linux-2.6-xfs/fs/xfs/xfs_error.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_error.c
++++ linux-2.6-xfs/fs/xfs/xfs_error.c
+@@ -230,37 +230,6 @@ xfs_error_report(
+ 	}
+ }
+ 
+-STATIC void
+-xfs_hex_dump(void *p, int length)
+-{
+-	__uint8_t *uip = (__uint8_t*)p;
+-	int	i;
+-	char	sbuf[128], *s;
+-
+-	s = sbuf;
+-	*s = '\0';
+-	for (i=0; i<length; i++, uip++) {
+-		if ((i % 16) == 0) {
+-			if (*s != '\0')
+-				cmn_err(CE_ALERT, "%s\n", sbuf);
+-			s = sbuf;
+-			sprintf(s, "0x%x: ", i);
+-			while( *s != '\0')
+-				s++;
+-		}
+-		sprintf(s, "%02x ", *uip);
+-
+-		/*
+-		 * the kernel sprintf is a void; user sprintf returns
+-		 * the sprintf'ed string's length.  Find the new end-
+-		 * of-string
+-		 */
+-		while( *s != '\0')
+-			s++;
+-	}
+-	cmn_err(CE_ALERT, "%s\n", sbuf);
+-}
+-
+ void
+ xfs_corruption_error(
+ 	char		*tag,
+Index: linux-2.6-xfs/fs/xfs/xfs_error.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_error.h
++++ linux-2.6-xfs/fs/xfs/xfs_error.h
+@@ -174,6 +174,8 @@ extern void xfs_cmn_err(int panic_tag, i
+ /* PRINTFLIKE3 */
+ extern void xfs_fs_cmn_err(int level, struct xfs_mount *mp, char *fmt, ...);
+ 
++extern void xfs_hex_dump(void *p, int length);
++
+ #define xfs_fs_repair_cmn_err(level, mp, fmt, args...) \
+ 	xfs_fs_cmn_err(level, mp, fmt "  Unmount and run xfs_repair.", ## args)
+ 
+Index: linux-2.6-xfs/fs/xfs/support/debug.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/support/debug.c
++++ linux-2.6-xfs/fs/xfs/support/debug.c
+@@ -81,3 +81,9 @@ assfail(char *expr, char *file, int line
+ 	printk("Assertion failed: %s, file: %s, line: %d\n", expr, file, line);
+ 	BUG();
+ }
++
++void
++xfs_hex_dump(void *p, int length)
++{
++	print_hex_dump(KERN_ALERT, "", DUMP_PREFIX_OFFSET, 16, 1, p, length, 1);
++}
