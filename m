@@ -1,108 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 13:21:38 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8PKLSQ3015189
-	for <linux-xfs@OSS.SGI.com>; Tue, 25 Sep 2007 13:21:33 -0700
-Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.66 #1)
-	id 1IZR19-0007Pt-SN
-	for <linux-xfs@OSS.SGI.com>; Sun, 23 Sep 2007 13:56:59 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <18166.25242.174049.175729@base.ty.sabi.co.UK>
-Date: Sun, 23 Sep 2007 13:56:58 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 13:23:55 -0700 (PDT)
+Received: from web32906.mail.mud.yahoo.com (web32906.mail.mud.yahoo.com [209.191.69.83])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8PKNiQ3015805
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 13:23:50 -0700
+Date: Tue, 25 Sep 2007 13:23:47 -0700 (PDT)
+From: "Bryan J. Smith" <thebs413@yahoo.com>
+Reply-To: b.j.smith@ieee.org
 Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <20070923093841.GH19983@p15145560.pureserver.info>
-References: <20070923093841.GH19983@p15145560.pureserver.info>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+In-Reply-To: <20070925191358.GF20499@p15145560.pureserver.info>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <656917.81056.qm@web32906.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <linux-xfs@oss.sgi.com>
+To: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
 
->>> On Sun, 23 Sep 2007 11:38:41 +0200, Ralf Gross
->>> <Ralf-Lists@ralfgross.de> said:
+Ralf Gross <Ralf-Lists@ralfgross.de> wrote:
+> The server should be able to provide five 17MB/s streams (5 win
+> clients). Each file is ~2GB large. The clients will access the
+> data with smb/cifs, I think the main bottleneck will be samba.
 
-Ralf> Hi, we have a new large raid array, the shelf has 48 disks,
-Ralf> the max. amount of disks in a single raid 5 set is 16.
+So it's largely read-only SMB access?
 
-Too bad about that petty limitation ;-).
+So we're talking ...
+- Largely read-only disk access
+- Largely server TX-only TCP/IP serving
 
-Ralf> There will be one global spare disk, thus we have two raid 5
-Ralf> with 15 data disks and one with 14 data disk.
+Read-only is cheap, and software RAID-5 is essentially RAID-0 (sans
+one disc).  So software RAID-5 is just fine there (assuming there are
+no volume addressing limitations).
 
-Ahhh a positive-thinking, can-do, brave design ;-).
+Server TX is also cheap, most commodity server NICs (i.e., even those
+built into mainboards, or typical dual-MAC 96-128KiB SRAM unified
+buffer) have a TX TCP Off-load Engine (TOE), some even with Linux
+driver support.
 
-[ ... ]
+You don't need any hardware accelerated RAID or RX TOE (which is far,
+far more expensive than TX TOE, largely for receive buffer and
+processing).
 
-Ralf> Often the data will be transfernd from the windows clients
-Ralf> to the server in some parallel copy jobs at night (eg. 5-10,
-Ralf> for each new data directory). The clients will access the
-Ralf> data later (mostly) read only, the data will not be changed
-Ralf> after it was stored on the file server.
+> Furthermore, the win clients read the data from external USB/PCIe
+> SATA drives.
 
-This is good, and perhaps in some cases one of the few cases in
-which even RAID5 naysayers might now object too much.
+Ouch.  But I won't go there.  ;)
 
-Ralf> Each client then needs a data stream of about 17 MB/s
-Ralf> (max. 5 clients are expected to acces the data in parallel).
+> Sometimes the clients transfers the data from a external
+> enclosure with 5 drives (no raid) to the server. The will also be a
+> limiting factor.
 
-Do the requirements include as features some (possibly several)
-hours of ''challenging'' read performance if any disk fails or
-total loss of data if another disks fails during that time? ;-)
+Ouch.  But I won't go there.  ;)
 
-IIRC Google have reported 5% per year disk failure rates across a
-very wide mostly uncorrelated population, you have 48 disks,
-perhaps 2-3 disks per year will fail. Perhaps more and more often,
-because they will likely be all from the same manufacturer, model,
-batch and spinning in the same environment.
+> I've seen benchmark results from 3ware, areca and other hw raid 5
+> vendors (bonnie++, tiobench).
 
-Ralf> [ ... ] I expect the fs, each will have a size of 10-11 TB,
-Ralf> to be filled > 90%. I know this is not ideal, but we need
-Ralf> every GB we can get.
+Bonnie++ is really only good for NFS mounts from multiple clients to
+a server, and then it will vary.  Aggregate, median, etc... studies
+are required.
 
-That "every GB we can get" is often the key in ''wide RAID5''
-stories. Cheap as well as fast and safe, you can have it all with
-wide RAID5 setups, so the salesmen would say ;-).
+> Maybe I'm just confused by the benchmarks I found in the
+> net and my 200MB/s sql. read/write with tiobench are
+> perfectly ok.
 
-Ralf> [ ... ] Stripe Size : 960 KB (15 x 64 KM)
-Ralf> [ ... ] Stripe Size : 896 KB (14 x 64 KB)
+I've striped RAID-0 over two, RAID-10 volumes on old 3Ware Escalade
+8500-8LP series products over two PCI-X (66MHz) busses and reached
+close to 400MBps reads, and over 200MBps writes.  And that was old
+ASIC+SRAM (only 4MB) technology in the Escalade 8500 series, not even
+native SATA (PATA with SATA PHY).
 
-Pretty long stripes, I wonder what happens when a whole stripe
-cannot be written at once or it can but is not naturally aligned
-;-).
+But I wouldn't get even close to that over the network, especially
+not for SMB, unless I used a 4xGbE with a RX TOE and a layer-3
+switch.
 
-Ralf> [ ... ] about 150 MB/s in seq. writing
 
-Surprise surprise ;-).
-
-Ralf> (tiobench) and 160 MB/s in seq.  reading.
-
-This is sort of low. If there something that RAID5 can do sort of
-OK is reads (if there are no faults). I'd look at the underlying
-storage system and the maximum performance that you can get out of
-a single disk.
-
-I have seen a 45-drive 500GB storage subsystem where each drive
-can deliver at most 7-10MB/s (even if the same disk standalone in
-an ordinary PC can do 60-70MB/s), and the supplier actually claims
-so in their published literature (that RAID product is meant to
-compete *only* with tape backup subsystems). Your later comment
-that "The raid array is connect to the server by fibre channel"
-makes me suspect that it may be the same brand.
-
-Ralf> This is ok,
-
-As the total aggregate requirement is 5x17MB/s this is probably
-the case [as long as there are no drive failures ;-)].
-
-Ralf> but I'm curious what I could get with tuned xfs parameters.
-
-Looking at the archives of this mailing list the topic ''good mkfs
-parameters'' reappears frequently, even if usually for smaller
-arrays, as many have yet to discover the benefits of 15-wide RAID5
-setups ;-). Threads like these may help:
-
-  http://OSS.SGI.com/archives/xfs/2007-01/msg00079.html
-  http://OSS.SGI.com/archives/xfs/2007-05/msg00051.html
+-- 
+Bryan J. Smith   Professional, Technical Annoyance
+b.j.smith@ieee.org    http://thebs413.blogspot.com
+--------------------------------------------------
+     Fission Power:  An Inconvenient Solution
