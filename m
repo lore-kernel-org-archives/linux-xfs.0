@@ -1,81 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 13:23:55 -0700 (PDT)
-Received: from web32906.mail.mud.yahoo.com (web32906.mail.mud.yahoo.com [209.191.69.83])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8PKNiQ3015805
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 13:23:50 -0700
-Date: Tue, 25 Sep 2007 13:23:47 -0700 (PDT)
-From: "Bryan J. Smith" <thebs413@yahoo.com>
-Reply-To: b.j.smith@ieee.org
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 16:38:59 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8PNcqQ3014606
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 16:38:54 -0700
+Date: Tue, 25 Sep 2007 19:38:55 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <20070925191358.GF20499@p15145560.pureserver.info>
+In-Reply-To: <498689.78850.qm@web32907.mail.mud.yahoo.com>
+Message-ID: <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
+References: <498689.78850.qm@web32907.mail.mud.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Message-ID: <656917.81056.qm@web32906.mail.mud.yahoo.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
-
-Ralf Gross <Ralf-Lists@ralfgross.de> wrote:
-> The server should be able to provide five 17MB/s streams (5 win
-> clients). Each file is ~2GB large. The clients will access the
-> data with smb/cifs, I think the main bottleneck will be samba.
-
-So it's largely read-only SMB access?
-
-So we're talking ...
-- Largely read-only disk access
-- Largely server TX-only TCP/IP serving
-
-Read-only is cheap, and software RAID-5 is essentially RAID-0 (sans
-one disc).  So software RAID-5 is just fine there (assuming there are
-no volume addressing limitations).
-
-Server TX is also cheap, most commodity server NICs (i.e., even those
-built into mainboards, or typical dual-MAC 96-128KiB SRAM unified
-buffer) have a TX TCP Off-load Engine (TOE), some even with Linux
-driver support.
-
-You don't need any hardware accelerated RAID or RX TOE (which is far,
-far more expensive than TX TOE, largely for receive buffer and
-processing).
-
-> Furthermore, the win clients read the data from external USB/PCIe
-> SATA drives.
-
-Ouch.  But I won't go there.  ;)
-
-> Sometimes the clients transfers the data from a external
-> enclosure with 5 drives (no raid) to the server. The will also be a
-> limiting factor.
-
-Ouch.  But I won't go there.  ;)
-
-> I've seen benchmark results from 3ware, areca and other hw raid 5
-> vendors (bonnie++, tiobench).
-
-Bonnie++ is really only good for NFS mounts from multiple clients to
-a server, and then it will vary.  Aggregate, median, etc... studies
-are required.
-
-> Maybe I'm just confused by the benchmarks I found in the
-> net and my 200MB/s sql. read/write with tiobench are
-> perfectly ok.
-
-I've striped RAID-0 over two, RAID-10 volumes on old 3Ware Escalade
-8500-8LP series products over two PCI-X (66MHz) busses and reached
-close to 400MBps reads, and over 200MBps writes.  And that was old
-ASIC+SRAM (only 4MB) technology in the Escalade 8500 series, not even
-native SATA (PATA with SATA PHY).
-
-But I wouldn't get even close to that over the network, especially
-not for SMB, unless I used a 4xGbE with a RX TOE and a layer-3
-switch.
+To: b.j.smith@ieee.org
+Cc: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
 
 
--- 
-Bryan J. Smith   Professional, Technical Annoyance
-b.j.smith@ieee.org    http://thebs413.blogspot.com
---------------------------------------------------
-     Fission Power:  An Inconvenient Solution
+
+On Tue, 25 Sep 2007, Bryan J. Smith wrote:
+
+> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> Just out of curisosity have you tried SW RAID5 on this array?
+>> Also what do you get if you use RAID0 (hw or sw)?
+>
+> According to him, if I read it correclty, it is an external FC RAID-5
+> chassis.  I.e., all of the logic is in the chassis.  So your question
+> is N/A.
+>
+> Although I'm more than ready to be proven incorrect.
+>
+> Furthermore, what benchmark do you use?  If dd on the volume itself,
+> software RAID wins, hands down.  Doesn't matter what size you give
+> it, it literally copies (and doesn't recalculate) the parity.  It's
+> the rawest form of non-blocking I/O, and uses virtually no system
+> interconnect to the CPU (just pushes disk-mem-disk).
+>
+> -- 
+> Bryan J. Smith   Professional, Technical Annoyance
+> b.j.smith@ieee.org    http://thebs413.blogspot.com
+> --------------------------------------------------
+>     Fission Power:  An Inconvenient Solution
+>
+
+bonnie++, iozone, etc..
+
+all show ~430-460 MiB/s write and ~550 MiB/s read
+
+Justin.
