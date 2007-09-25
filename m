@@ -1,50 +1,87 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 10:26:00 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8PHPqQ3012106
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 10:25:56 -0700
-Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
-	id 1IaEAL-00071Z-00
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 19:25:45 +0200
-Date: Tue, 25 Sep 2007 19:25:35 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 10:41:59 -0700 (PDT)
+Received: from web32913.mail.mud.yahoo.com (web32913.mail.mud.yahoo.com [209.191.69.113])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8PHfrQ3015945
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 10:41:55 -0700
+Date: Tue, 25 Sep 2007 10:41:56 -0700 (PDT)
+From: "Bryan J. Smith" <thebs413@yahoo.com>
+Reply-To: b.j.smith@ieee.org
 Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-Message-ID: <20070925172535.GD20499@p15145560.pureserver.info>
-References: <20070925160737.GC20499@p15145560.pureserver.info> <152219.84729.qm@web32906.mail.mud.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152219.84729.qm@web32906.mail.mud.yahoo.com>
+In-Reply-To: <20070925172535.GD20499@p15145560.pureserver.info>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <625784.15537.qm@web32913.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Ralf Gross <Ralf-Lists@ralfgross.de>
+Cc: linux-xfs@oss.sgi.com
 
-Bryan J. Smith schrieb:
-> Ralf Gross <Ralf-Lists@ralfgross.de> wrote:
-> ... 
-> I'm completely biased though, I assemble file and database servers,
-> not web or other CPU-bound systems.  Turning my system interconnect
-> (not the CPU, a PC CPU crunches XOR very fast) into a bottlenecked
-> PIO operation is not ideal for NFS writes or large record SQL commits
-> in my experience.  Heck, one look at NetApp's volume w/NVRAM and
-> SPE-accelerated RAID-4 designs will quickly change your opinion as
-> well (and make you wonder if they aren't worth the cost at times as
-> well ;).
+Ralf Gross <Ralf-Lists@ralfgross.de> wrote:
+> Thanks for all the details. Before I leave the office (it's getting
+> dark here): I think the Overland RAID we have (48x Disk) is from
+> the same manufacturer (Xyratex) that builds some devices for
+NetApp.
 
-Thanks for all the details. Before I leave the office (it's getting
-dark here): I think the Overland RAID we have (48x Disk) is from the
-same manufacturer (Xyratex) that builds some devices for NetApp.
+There's a lot of cross-fabbing these days.  I was referring more to
+NetApp's combined hardware-OS-volume approach, although that was
+clearly a poor tangent by myself.
 
-Our profile is not that performance driven, thus the ~200MB/s
-read/write performace is ok. We just need cheap storage ;)
+> Our profile is not that performance driven, thus the ~200MB/s
+> read/write performace is ok. We just need cheap storage ;)
 
-Still I'm wondering how other people saturate a 4 Gb FC controller
-with one single RAID 5. At least that's what I've seen in some
-benchmarks and here on the list.
+For what application?  That is the question.  I mean, sustained
+software RAID-5 writes can be a PITA.  E.g., the dd example prior
+doesn't even do XOR recalculation, it merely copies the existing
+parity block with data.  Doing sustained software RAID-5 writes can
+easily drop under 50MBps, as the PC interconnect was not designed to
+stream data (programmed I/O), only direct it (Direct Memory Access).
 
-If dd doesn't give me more than 200MB/s, the problem could only be the
-array, the controller or the FC connection. Given that other setup are
-similar and not using different controllers and stripes.
+> Still I'm wondering how other people saturate a 4 Gb FC controller
+> with one single RAID 5. At least that's what I've seen in some
+> benchmarks and here on the list.
 
-Ralf
+Depends on the solution, the benchmark, etc...
+
+> If dd doesn't give me more than 200MB/s, the problem could only be
+> the array, the controller or the FC connection.
+
+I think you're getting confused.
+
+There are many factors in how dd performs.  Using an OS-managed
+volume will result in non-blocking I/O, of which dd will scream. 
+Especially when the OS knows it's merely just copying one block to
+another, unlike the FC array, and doesn't need to recalculate the
+parity block.  I know software RAID proponents like to show those
+numbers, but they are beyond removed from "real world," they
+literally leverage the fact that parity doesn't need to be
+recalculated for the blocks moved.
+
+You need to benchmark from your application -- e.g., clients.  If you
+want "raw" disk access benchmarks, then build a software RAID volume
+with a massive number of SATA channels using "dumb" SATA ASICs. 
+Don't even use an intelligent hardware RAID card in JBOD mode, that
+will only slow the DTR.
+
+> Given that other setup are similar and not using different
+> controllers and stripes.
+
+Again, benchmark from your application -- e.g., clients.  Everything
+else means squat.
+
+I cannot stress this enough.  The only way I can show otherwise, is
+with hardware taps (e.g., PCI-X, PCIe).  I literally couldn't explain
+"well enough" to one client was only getting 60MBps and seeing only
+10% CPU utilization why their software RAID was the bottleneck until
+I put in a PCI-X card and showed the amount of traffic on the bus. 
+And even that wasn't the system interconnect (although it should be
+possible with a HTX card on an AMD solution, although the card would
+probably cost 5 figures and have some limits).
+
+
+-- 
+Bryan J. Smith   Professional, Technical Annoyance
+b.j.smith@ieee.org    http://thebs413.blogspot.com
+--------------------------------------------------
+     Fission Power:  An Inconvenient Solution
