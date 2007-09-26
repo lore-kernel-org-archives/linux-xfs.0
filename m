@@ -1,78 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:49:40 -0700 (PDT)
-Received: from web32905.mail.mud.yahoo.com (web32905.mail.mud.yahoo.com [209.191.69.82])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8QHnWZP004200
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:49:36 -0700
-Date: Wed, 26 Sep 2007 10:49:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:55:29 -0700 (PDT)
+Received: from web32904.mail.mud.yahoo.com (web32904.mail.mud.yahoo.com [209.191.69.81])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8QHtKKd005615
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:55:23 -0700
+Date: Wed, 26 Sep 2007 10:55:19 -0700 (PDT)
 From: "Bryan J. Smith" <b.j.smith@ieee.org>
 Reply-To: b.j.smith@ieee.org
-Subject: Re: [UNSURE] Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <Pine.LNX.4.64.0709261336080.24646@p34.internal.lan>
+Subject: Re: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+In-Reply-To: <Pine.LNX.4.64.0709261339310.24646@p34.internal.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Message-ID: <730488.2449.qm@web32905.mail.mud.yahoo.com>
+Message-ID: <347332.44288.qm@web32904.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, "Bryan J. Smith" <b.j.smith@ieee.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, b.j.smith@ieee.org
 Cc: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
 
 Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Do you have any type of benchmarks to similate the load you are 
-> mentioning?
+> I agree and this makes sense but in real-world loads it makes me
+> wonder, at least with the 2.4 kernel.
 
-Yes, write different, non-zero, 100GB data files from 30 NFSv3 sync
-clients at the same time.  You can easily script firing that off and
-get the number of seconds it takes to commit.
+It took 3Ware (actually AMCC) a good 18 months to get the firmware
+and driver tuned well.  I purposely avoided any new 3Ware solution
+until a good 12-18 months after release because of such.
 
-Use NFS with UDP to avoid the overhead of TCP.
+The 9550SX series was the first microcontroller approach (PowerPC 400
+series) done by 3Ware.  All of their prior designs were an older
+64-bit ASIC design with SRAM (and only DRAM slapped on, poorly, in
+the 9500S), which only worked well for RAID-0/1/10, not 5.
 
-> What did HW RAID drop to when the same test was run with SW 
-> RAID / 50 MBps under load?
+That was well into the 2.6 era.  I'd say you're well out of date with
+what 3Ware, let alone the Intel X-Scale-based Areca, are actually
+capable of with RAID-5/6 now.
 
-I saw an aggregate commit average of around 150MBps using a pair of
-8-channel 3Ware Escalade 9550SX cards (each on their own PCI-X bus),
-with a LVM stripe between them.  Understand the test literally took 5
-hours to run!
+-- Bryan
 
-The software RAID-50, two "dumb" SATA 8-channel Marvell cards (each
-on their own PCI-X bus), with a LVM stripe between them, was not
-completed after 15 hours (overnight).  So I finally terminated it.
+P.S.  Both AMD and Intel are currently putting serious R&D into the
+first embedded x86 designs with added ASICs for Network, Storage,
+etc...  I.e., this is going to be mainstream shortly, as AMD got out
+of 29000 long ago, and Intel is putting less and less focus on
+IOP33x/34x X-Scale.  NPE, SPE and other units can literally handle
+DTRs that are 10x of what a general CPU/interconnect LOAD-op-STOR can
+do.
 
-Each system had a 4x GbE trunk to a layer-3 switch.  I would have run
-the same test with SMB TCP/IP, possibly with a LeWiz 4x GbE RX TOE
-HBA, except I honestly didn't have the time to wait on it.
-
-> Did it achieve better performance due to an on-board /
-> raid-card controller cache, or?
-
-Has nothing to do with cache.  The OS is far better at scheduling and
-buffering in the system RAM, in addition to the fact that it does an
-async buffer, whereas many HW RAID drivers are sync to the NVRAM of
-the HW RAID card (that's part of the problem with comparisons).
-
-It has to do with the fact in software RAID-5 you are streaming 100%
-of the data through the general system interconnect for the
-LOAD-XOR-STO operation.  XORs are extrmely fast.  LOAD/STO through a
-general purpose CPU is not.
-
-It's the same reason why we don't use general purpose CPUs for
-layer-3 switches either, but a "core" CPU with NPE (network processor
-engine) ASICs.  Same deal with most HW RAID cards, a "core" CPU with
-SPE ASICs -- for off-load from the general CPU system interconnect.
-
-XORs are done "in-line" with the transfer, instead of hogging up the
-system interconnect.  It's the direct difference between PIO and DMA.
- An in-line NPE/SPE ASIC basically acts like a DMA transfer,
-real-time.  A general purpose CPU and its interconnect cannot do
-that, so it has all the issues of PIO.
-
-PIO in a general purpose CPU is to be avoided at all costs when you
-have other needs for the system interconnect, like I/O.  If you don't
-have much else bothering the I/O, like in a web server or read-only
-system (where you're not doing the writes), then it doesn't matter,
-and software RAID-5 is great.
+I.e., Don't be surprised when your 2009+ server mainboard ICH is
+actually an embedded x86 processor with NPE and SPE units.  That will
+finally remove the whole "separate card" in general.
 
 
 -- 
