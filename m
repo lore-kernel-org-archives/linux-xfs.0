@@ -1,36 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:35:23 -0700 (PDT)
-Received: from web32915.mail.mud.yahoo.com (web32915.mail.mud.yahoo.com [209.191.69.115])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8QHZEpC031623
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:35:18 -0700
-Date: Wed, 26 Sep 2007 10:35:13 -0700 (PDT)
-From: "Bryan J. Smith" <b.j.smith@ieee.org>
-Reply-To: b.j.smith@ieee.org
-Subject: Re: [UNSURE] Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <Pine.LNX.4.64.0709261327060.24646@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:37:25 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8QHbGOk032490
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:37:18 -0700
+Date: Wed, 26 Sep 2007 13:37:16 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: [UNSURE] Re: mkfs options for a 16x hw raid5 and xfs (mostly
+ large files)
+In-Reply-To: <957634.8098.qm@web32915.mail.mud.yahoo.com>
+Message-ID: <Pine.LNX.4.64.0709261336080.24646@p34.internal.lan>
+References: <957634.8098.qm@web32915.mail.mud.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Message-ID: <957634.8098.qm@web32915.mail.mud.yahoo.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, b.j.smith@ieee.org
+To: "Bryan J. Smith" <b.j.smith@ieee.org>
 Cc: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
 
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> So what tunables do the 9550/9650SE users utilize to achieve > 500
-> MiB/s write on HW RAID5/6?
-
-Don't know.  But I've never claimed it was capable of it either.
-
-At the same time, I've seen software RAID do over 500MBps, only to
-drop to under 50MBps aggregate client DTR under load.
 
 
+On Wed, 26 Sep 2007, Bryan J. Smith wrote:
 
--- 
-Bryan J. Smith   Professional, Technical Annoyance
-b.j.smith@ieee.org    http://thebs413.blogspot.com
---------------------------------------------------
-     Fission Power:  An Inconvenient Solution
+> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> So what tunables do the 9550/9650SE users utilize to achieve > 500
+>> MiB/s write on HW RAID5/6?
+>
+> Don't know.  But I've never claimed it was capable of it either.
+>
+> At the same time, I've seen software RAID do over 500MBps, only to
+> drop to under 50MBps aggregate client DTR under load.
+
+Do you have any type of benchmarks to similate the load you are 
+mentioning?  What did HW RAID drop to when the same test was run with SW 
+RAID / 50 MBps under load?  Did it achieve better performance due to an 
+on-board / raid-card controller cache, or?
+
+Justin.
