@@ -1,51 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 16:38:59 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id l8PNcqQ3014606
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Sep 2007 16:38:54 -0700
-Date: Tue, 25 Sep 2007 19:38:55 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <498689.78850.qm@web32907.mail.mud.yahoo.com>
-Message-ID: <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
-References: <498689.78850.qm@web32907.mail.mud.yahoo.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Sep 2007 17:11:04 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with SMTP id l8Q0AvQ3018759
+	for <xfs@oss.sgi.com>; Tue, 25 Sep 2007 17:10:59 -0700
+Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id KAA12460; Wed, 26 Sep 2007 10:10:54 +1000
+Message-ID: <46F9A38E.6000200@sgi.com>
+Date: Wed, 26 Sep 2007 10:10:54 +1000
+From: Donald Douwsma <donaldd@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: [PATCH 1/2] kill xfs_freeze
+References: <20070925194528.GA1818@lst.de>
+In-Reply-To: <20070925194528.GA1818@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: b.j.smith@ieee.org
-Cc: Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
+Christoph Hellwig wrote:
+> No need to have a wrapper just two call two more functions.
+...
+> 
+> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2007-09-23 13:54:35.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2007-09-23 13:56:12.000000000 +0200
+> @@ -692,7 +692,7 @@ xfs_quiesce_fs(
+>   * care of the metadata. New transactions are already blocked, so we need to
+>   * wait for any remaining transactions to drain out before proceding.
+>   */
+> -STATIC void
+> +void
+>  xfs_attr_quiesce(
+>  	xfs_mount_t	*mp)
+>  {
+> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2007-09-23 13:56:16.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.h	2007-09-23 13:56:34.000000000 +0200
 
+This has removed all use of xfs_freeze, but I cant see a diff
+hunk that removes the xfs_freeze implementation from xfs_vfsops.c
 
-On Tue, 25 Sep 2007, Bryan J. Smith wrote:
-
-> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->> Just out of curisosity have you tried SW RAID5 on this array?
->> Also what do you get if you use RAID0 (hw or sw)?
->
-> According to him, if I read it correclty, it is an external FC RAID-5
-> chassis.  I.e., all of the logic is in the chassis.  So your question
-> is N/A.
->
-> Although I'm more than ready to be proven incorrect.
->
-> Furthermore, what benchmark do you use?  If dd on the volume itself,
-> software RAID wins, hands down.  Doesn't matter what size you give
-> it, it literally copies (and doesn't recalculate) the parity.  It's
-> the rawest form of non-blocking I/O, and uses virtually no system
-> interconnect to the CPU (just pushes disk-mem-disk).
->
-> -- 
-> Bryan J. Smith   Professional, Technical Annoyance
-> b.j.smith@ieee.org    http://thebs413.blogspot.com
-> --------------------------------------------------
->     Fission Power:  An Inconvenient Solution
->
-
-bonnie++, iozone, etc..
-
-all show ~430-460 MiB/s write and ~550 MiB/s read
-
-Justin.
+Don
