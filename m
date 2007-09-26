@@ -1,89 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:23:51 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8Q8NhxE030877
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:23:46 -0700
-Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
-	id 1IaSBA-0004oo-00
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:23:32 +0200
-Date: Wed, 26 Sep 2007 10:23:22 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
-Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-Message-ID: <20070926082322.GA30287@p15145560.pureserver.info>
-References: <498689.78850.qm@web32907.mail.mud.yahoo.com> <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:26:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8Q8QKSU032022
+	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:26:23 -0700
+From: donaldd@sgi.com
+Subject: PARTIAL TAKE 971050 - Remove linux-2.4 build support
+Message-Id: <20070926082614.D92CE300F406@linuxbuild.melbourne.sgi.com>
+Date: Wed, 26 Sep 2007 18:26:14 +1000 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Justin Piszcz schrieb:
-> 
-> 
-> On Tue, 25 Sep 2007, Bryan J. Smith wrote:
-> 
-> >Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >>Just out of curisosity have you tried SW RAID5 on this array?
-> >>Also what do you get if you use RAID0 (hw or sw)?
-> >
-> >According to him, if I read it correclty, it is an external FC RAID-5
-> >chassis.  I.e., all of the logic is in the chassis.  So your question
-> >is N/A.
-> >
-> >Although I'm more than ready to be proven incorrect.
-> >
-> >Furthermore, what benchmark do you use?  If dd on the volume itself,
-> >software RAID wins, hands down.  Doesn't matter what size you give
-> >it, it literally copies (and doesn't recalculate) the parity.  It's
-> >the rawest form of non-blocking I/O, and uses virtually no system
-> >interconnect to the CPU (just pushes disk-mem-disk).
-> 
-> bonnie++, iozone, etc..
-> 
-> all show ~430-460 MiB/s write and ~550 MiB/s read
+Remove fs/xfs/linux-2.4 as building for 2.4 kernels is no longer supported from this tree
 
-I'm happy :) I was able to boost the read performance by setting 
+Date:  Wed Sep 26 18:24:41 AEST 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  tes
 
-blockdev --setra 16384 /dev/sdc
-
-I knew this parameter is neccessary for 3ware controllers, but I
-haven't noticed any difference with areca controllers or ext. raids yet.
-
-The write performance may not be ideal, but these read numbers makes much
-more sense now because the FC controller is the limiting factor.
-
-Sequential Reads
-File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
-Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
-20000  4096    1  391.20 50.24%     0.019       43.01   0.00000  0.00000   779
-20000  4096    2  387.79 92.22%     0.040      278.71   0.00000  0.00000   420
-
-Random Reads
-File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
-Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
-20000  4096    1    2.87 0.698%     2.720       27.47   0.00000  0.00000   411
-20000  4096    2    4.37 2.013%     3.473       47.35   0.00000  0.00000   217
-
-Sequential Writes
-File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
-Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
-20000  4096    1  189.23 42.73%     0.029     5670.66   0.00014  0.00000   443
-20000  4096    2  173.92 84.93%     0.064     4590.56   0.00029  0.00000   205
-
-Random Writes
-File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
-Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
-20000  4096    1    1.85 0.662%     0.011        0.05   0.00000  0.00000   279
-20000  4096    2    1.68 0.772%     0.012        0.05   0.00000  0.00000   217
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-
-
-Ralf
+Modid:  xfs-linux-melb:xfs-kern:29785a
+fs/xfs/linux-2.4/xfs_lrw.h - 1.51 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_lrw.h.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
+fs/xfs/linux-2.4/xfs_lrw.c - 1.240 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_lrw.c.diff?r1=text&tr1=1.240&r2=text&tr2=1.239&f=h
+fs/xfs/linux-2.4/xfs_version.h - 1.173 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_version.h.diff?r1=text&tr1=1.173&r2=text&tr2=1.172&f=h
+fs/xfs/linux-2.4/xfs_ioctl.c - 1.136 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl.c.diff?r1=text&tr1=1.136&r2=text&tr2=1.135&f=h
+fs/xfs/linux-2.4/xfs_vfs.h - 1.67 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vfs.h.diff?r1=text&tr1=1.67&r2=text&tr2=1.66&f=h
+fs/xfs/linux-2.4/xfs_vfs.c - 1.68 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vfs.c.diff?r1=text&tr1=1.68&r2=text&tr2=1.67&f=h
+fs/xfs/linux-2.4/xfs_globals.h - 1.25 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_globals.h.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
+fs/xfs/linux-2.4/xfs_globals.c - 1.79 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_globals.c.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
+fs/xfs/linux-2.4/xfs_linux.h - 1.164 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_linux.h.diff?r1=text&tr1=1.164&r2=text&tr2=1.163&f=h
+fs/xfs/linux-2.4/Makefile - 1.211 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/Makefile.diff?r1=text&tr1=1.211&r2=text&tr2=1.210&f=h
+fs/xfs/linux-2.4/xfs_file.c - 1.131 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_file.c.diff?r1=text&tr1=1.131&r2=text&tr2=1.130&f=h
+fs/xfs/linux-2.4/xfs_cred.h - 1.28 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_cred.h.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
+fs/xfs/linux-2.4/xfs_vnode.c - 1.140 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.c.diff?r1=text&tr1=1.140&r2=text&tr2=1.139&f=h
+fs/xfs/linux-2.4/xfs_vnode.h - 1.116 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.h.diff?r1=text&tr1=1.116&r2=text&tr2=1.115&f=h
+fs/xfs/linux-2.4/xfs_stats.c - 1.23 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_stats.c.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
+fs/xfs/linux-2.4/xfs_stats.h - 1.16 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_stats.h.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+fs/xfs/linux-2.4/xfs_fs_subr.c - 1.50 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
+fs/xfs/linux-2.4/xfs_fs_subr.h - 1.19 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+fs/xfs/linux-2.4/xfs_super.h - 1.74 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_super.h.diff?r1=text&tr1=1.74&r2=text&tr2=1.73&f=h
+fs/xfs/linux-2.4/xfs_super.c - 1.338 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_super.c.diff?r1=text&tr1=1.338&r2=text&tr2=1.337&f=h
+fs/xfs/linux-2.4/xfs_iops.c - 1.230 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_iops.c.diff?r1=text&tr1=1.230&r2=text&tr2=1.229&f=h
+fs/xfs/linux-2.4/xfs_iops.h - 1.33 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_iops.h.diff?r1=text&tr1=1.33&r2=text&tr2=1.32&f=h
+fs/xfs/linux-2.4/xfs_aops.c - 1.106 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_aops.c.diff?r1=text&tr1=1.106&r2=text&tr2=1.105&f=h
+fs/xfs/linux-2.4/xfs_sysctl.c - 1.42 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_sysctl.c.diff?r1=text&tr1=1.42&r2=text&tr2=1.41&f=h
+fs/xfs/linux-2.4/xfs_sysctl.h - 1.32 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_sysctl.h.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+fs/xfs/linux-2.4/xfs_buf.h - 1.119 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.h.diff?r1=text&tr1=1.119&r2=text&tr2=1.118&f=h
+fs/xfs/linux-2.4/xfs_buf.c - 1.220 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.c.diff?r1=text&tr1=1.220&r2=text&tr2=1.219&f=h
+fs/xfs/linux-2.4/kmem.h - 1.35 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.h.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
+fs/xfs/linux-2.4/kmem.c - 1.39 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.c.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
+fs/xfs/linux-2.4/xfs_ksyms.c - 1.50 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ksyms.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
+fs/xfs/linux-2.4/sema.h - 1.17 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/sema.h.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+fs/xfs/linux-2.4/mrlock.c - 1.24 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock.c.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
+fs/xfs/linux-2.4/mrlock.h - 1.17 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock.h.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+fs/xfs/linux-2.4/time.h - 1.19 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/time.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+fs/xfs/linux-2.4/sv.h - 1.20 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/sv.h.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
+fs/xfs/linux-2.4/spin.h - 1.24 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/spin.h.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
+fs/xfs/linux-2.4/mutex.h - 1.19 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mutex.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+fs/xfs/linux-2.4/mrlock_rwsem.h - 1.5 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock_rwsem.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+fs/xfs/linux-2.4/xfs_export.h - 1.3 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_export.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+fs/xfs/linux-2.4/xfs_ioctl32.h - 1.3 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl32.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+fs/xfs/linux-2.4/xfs_ioctl32.c - 1.3 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl32.c.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+fs/xfs/linux-2.4/xfs_dmapi_priv.h - 1.2 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_dmapi_priv.h.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
