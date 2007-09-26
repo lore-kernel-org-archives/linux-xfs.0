@@ -1,45 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:38:51 -0700 (PDT)
-Received: from web32906.mail.mud.yahoo.com (web32906.mail.mud.yahoo.com [209.191.69.83])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8QHccK8000641
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:38:44 -0700
-Date: Wed, 26 Sep 2007 10:11:56 -0700 (PDT)
-From: "Bryan J. Smith" <b.j.smith@ieee.org>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 10:38:43 -0700 (PDT)
+Received: from web32910.mail.mud.yahoo.com (web32910.mail.mud.yahoo.com [209.191.69.110])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8QHcXbn000586
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:38:34 -0700
+Date: Wed, 26 Sep 2007 10:38:33 -0700 (PDT)
+From: "Bryan J. Smith" <thebs413@yahoo.com>
 Reply-To: b.j.smith@ieee.org
-Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-In-Reply-To: <Pine.LNX.4.64.0709261223290.15219@p34.internal.lan>
+Subject: Re: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+In-Reply-To: <Pine.LNX.4.64.0709261258180.24646@p34.internal.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Message-ID: <673292.62672.qm@web32906.mail.mud.yahoo.com>
+Message-ID: <216020.40502.qm@web32910.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>, Bryan J Smith <b.j.smith@ieee.org>
-Cc: xfs-bounce@oss.sgi.com, Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, Ralf Gross <Ralf-Lists@ralfgross.de>
+Cc: linux-xfs@oss.sgi.com
 
 Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> I have a question, when I use multiple writer threads (2 or 3) I
-> see 550-600 MiB/s write speed (vmstat) but when using only 1
-thread,
-> ~420-430 MiB/s...
+> I wonder where the bottleneck lies.
 
-It's called scheduling buffer flushes, as well as the buffering
-itself.
+The microcontroller.
 
-> Also without tweaking, SW RAID is very slow (180-200
-> MiB/s) using the same disks.
+Listen, for the last time, hardware RAID is _not_ for non-blocking
+I/O.  Hardware RAID is for in-line XOR streaming off-load, so it
+doesn't tie up a system interconnect (which isn't an ideal use for
+it).
 
-But how much of that tweaking is actually just buffering?
-That's a continued theme (and issue).
+A hardware RAID card is when you have other things going on in your
+interconnect that you don't want the parity LOAD-XOR-STOR to take
+away from what it could be using for the service.
 
-Unless you can force completely synchronous writes, you honestly
-don't know.  Using a larger size than memory is not anywhere near the
-same.
+It will _never_ have the "raw performance" of OS optimized software
+RAID.  At the same time, OS optimized software RAID's impact on the
+system interconnect is one of those "unmeasurable" details _unless_
+you actually benchmark your application.
 
-Plus it makes software RAID utterly n/a in comparison to hardware
-RAID, where the driver is waiting until the commit to actual NVRAM or
-disc is complete.
+I have repeatedly had issues with elementary UDP/IP NFS performance
+when the PIO of software RAID is hogging the system interconnect. 
+Same deal for large numbers of large database record commits.
 
 
 -- 
