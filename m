@@ -1,104 +1,89 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:24:00 -0700 (PDT)
-Received: from mail.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8Q8NsKd030954
-	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:23:56 -0700
-Date: Wed, 26 Sep 2007 10:23:52 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] kill xfs_freeze
-Message-ID: <20070926082351.GA32719@lst.de>
-References: <20070925194528.GA1818@lst.de> <46F9A38E.6000200@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:23:51 -0700 (PDT)
+Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8Q8NhxE030877
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:23:46 -0700
+Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
+	id 1IaSBA-0004oo-00
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 10:23:32 +0200
+Date: Wed, 26 Sep 2007 10:23:22 +0200
+From: Ralf Gross <Ralf-Lists@ralfgross.de>
+Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+Message-ID: <20070926082322.GA30287@p15145560.pureserver.info>
+References: <498689.78850.qm@web32907.mail.mud.yahoo.com> <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <46F9A38E.6000200@sgi.com>
+In-Reply-To: <Pine.LNX.4.64.0709251938400.7763@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-> This has removed all use of xfs_freeze, but I cant see a diff
-> hunk that removes the xfs_freeze implementation from xfs_vfsops.c
+Justin Piszcz schrieb:
+> 
+> 
+> On Tue, 25 Sep 2007, Bryan J. Smith wrote:
+> 
+> >Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> >>Just out of curisosity have you tried SW RAID5 on this array?
+> >>Also what do you get if you use RAID0 (hw or sw)?
+> >
+> >According to him, if I read it correclty, it is an external FC RAID-5
+> >chassis.  I.e., all of the logic is in the chassis.  So your question
+> >is N/A.
+> >
+> >Although I'm more than ready to be proven incorrect.
+> >
+> >Furthermore, what benchmark do you use?  If dd on the volume itself,
+> >software RAID wins, hands down.  Doesn't matter what size you give
+> >it, it literally copies (and doesn't recalculate) the parity.  It's
+> >the rawest form of non-blocking I/O, and uses virtually no system
+> >interconnect to the CPU (just pushes disk-mem-disk).
+> 
+> bonnie++, iozone, etc..
+> 
+> all show ~430-460 MiB/s write and ~550 MiB/s read
 
-Looks like that hunk got lost in a merge.  Here's an updated version
-of the patch that actually removes xfs_freeze:
+I'm happy :) I was able to boost the read performance by setting 
+
+blockdev --setra 16384 /dev/sdc
+
+I knew this parameter is neccessary for 3ware controllers, but I
+haven't noticed any difference with areca controllers or ext. raids yet.
+
+The write performance may not be ideal, but these read numbers makes much
+more sense now because the FC controller is the limiting factor.
+
+Sequential Reads
+File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+----- ----- ---  ------ ------ --------- -----------  -------- -------- -----
+20000  4096    1  391.20 50.24%     0.019       43.01   0.00000  0.00000   779
+20000  4096    2  387.79 92.22%     0.040      278.71   0.00000  0.00000   420
+
+Random Reads
+File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+----- ----- ---  ------ ------ --------- -----------  -------- -------- -----
+20000  4096    1    2.87 0.698%     2.720       27.47   0.00000  0.00000   411
+20000  4096    2    4.37 2.013%     3.473       47.35   0.00000  0.00000   217
+
+Sequential Writes
+File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+----- ----- ---  ------ ------ --------- -----------  -------- -------- -----
+20000  4096    1  189.23 42.73%     0.029     5670.66   0.00014  0.00000   443
+20000  4096    2  173.92 84.93%     0.064     4590.56   0.00029  0.00000   205
+
+Random Writes
+File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+----- ----- ---  ------ ------ --------- -----------  -------- -------- -----
+20000  4096    1    1.85 0.662%     0.011        0.05   0.00000  0.00000   279
+20000  4096    2    1.68 0.772%     0.012        0.05   0.00000  0.00000   217
 
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2007-09-25 15:04:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2007-09-26 10:13:54.000000000 +0200
-@@ -41,6 +41,7 @@
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
- #include "xfs_itable.h"
-+#include "xfs_fsops.h"
- #include "xfs_rw.h"
- #include "xfs_acl.h"
- #include "xfs_attr.h"
-@@ -684,11 +685,19 @@ xfs_fs_remount(
- 	return -error;
- }
- 
-+/*
-+ * Second stage of a freeze. The data is already frozen so we only
-+ * need to take care of themetadata. Once that's done write a dummy
-+ * record to dirty the log in case of a crash while frozen.
-+ */
- STATIC void
- xfs_fs_lockfs(
- 	struct super_block	*sb)
- {
--	xfs_freeze(XFS_M(sb));
-+	struct xfs_mount	*mp = XFS_M(sb);
-+
-+	xfs_attr_quiesce(mp);
-+	xfs_fs_log_dummy(mp);
- }
- 
- STATIC int
-Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2007-09-25 15:04:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2007-09-26 10:14:07.000000000 +0200
-@@ -692,7 +692,7 @@ xfs_quiesce_fs(
-  * care of the metadata. New transactions are already blocked, so we need to
-  * wait for any remaining transactions to drain out before proceding.
-  */
--STATIC void
-+void
- xfs_attr_quiesce(
- 	xfs_mount_t	*mp)
- {
-@@ -1955,16 +1955,3 @@ xfs_showargs(
- 		seq_puts(m, "," MNTOPT_DMAPI);
- 	return 0;
- }
--
--/*
-- * Second stage of a freeze. The data is already frozen so we only
-- * need to take care of themetadata. Once that's done write a dummy
-- * record to dirty the log in case of a crash while frozen.
-- */
--void
--xfs_freeze(
--	xfs_mount_t	*mp)
--{
--	xfs_attr_quiesce(mp);
--	xfs_fs_log_dummy(mp);
--}
-Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2007-09-25 15:04:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vfsops.h	2007-09-26 10:13:54.000000000 +0200
-@@ -21,8 +21,8 @@ int xfs_vget(struct xfs_mount *mp, bhv_v
- int xfs_parseargs(struct xfs_mount *mp, char *options,
- 		struct xfs_mount_args *args, int update);
- int xfs_showargs(struct xfs_mount *mp, struct seq_file *m);
--void xfs_freeze(struct xfs_mount *mp);
- void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- 		int lnnum);
-+void xfs_attr_quiesce(struct xfs_mount *mp);
- 
- #endif /* _XFS_VFSOPS_H */
+
+
+Ralf
