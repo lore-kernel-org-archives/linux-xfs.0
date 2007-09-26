@@ -1,109 +1,200 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:26:29 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8Q8QKSU032022
-	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:26:23 -0700
-From: donaldd@sgi.com
-Subject: PARTIAL TAKE 971050 - Remove linux-2.4 build support
-Message-Id: <20070926082614.D92CE300F406@linuxbuild.melbourne.sgi.com>
-Date: Wed, 26 Sep 2007 18:26:14 +1000 (EST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:26:34 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8Q8QRbo032044
+	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:26:31 -0700
+Date: Wed, 26 Sep 2007 10:26:25 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] kill xfs_statvfs
+Message-ID: <20070926082625.GB32719@lst.de>
+References: <20070925194741.GB1818@lst.de> <46F9C09B.1060503@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46F9C09B.1060503@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Remove fs/xfs/linux-2.4 as building for 2.4 kernels is no longer supported from this tree
+On Wed, Sep 26, 2007 at 12:14:51PM +1000, Timothy Shimmin wrote:
+> I think I'd prefer:
+>   > +	XFS_QM_DQSTATVFS(XFS_I(dentry->d_inode), statp);
+> instead of:
+>   > +	XFS_QM_DQSTATVFS(xfs_vtoi(dentry->d_inode), statp);
+> 
+> which I found confusing.
 
-Date:  Wed Sep 26 18:24:41 AEST 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  tes
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+I agree, here's an updated version:
 
 
-Modid:  xfs-linux-melb:xfs-kern:29785a
-fs/xfs/linux-2.4/xfs_lrw.h - 1.51 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_lrw.h.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
-fs/xfs/linux-2.4/xfs_lrw.c - 1.240 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_lrw.c.diff?r1=text&tr1=1.240&r2=text&tr2=1.239&f=h
-fs/xfs/linux-2.4/xfs_version.h - 1.173 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_version.h.diff?r1=text&tr1=1.173&r2=text&tr2=1.172&f=h
-fs/xfs/linux-2.4/xfs_ioctl.c - 1.136 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl.c.diff?r1=text&tr1=1.136&r2=text&tr2=1.135&f=h
-fs/xfs/linux-2.4/xfs_vfs.h - 1.67 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vfs.h.diff?r1=text&tr1=1.67&r2=text&tr2=1.66&f=h
-fs/xfs/linux-2.4/xfs_vfs.c - 1.68 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vfs.c.diff?r1=text&tr1=1.68&r2=text&tr2=1.67&f=h
-fs/xfs/linux-2.4/xfs_globals.h - 1.25 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_globals.h.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
-fs/xfs/linux-2.4/xfs_globals.c - 1.79 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_globals.c.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
-fs/xfs/linux-2.4/xfs_linux.h - 1.164 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_linux.h.diff?r1=text&tr1=1.164&r2=text&tr2=1.163&f=h
-fs/xfs/linux-2.4/Makefile - 1.211 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/Makefile.diff?r1=text&tr1=1.211&r2=text&tr2=1.210&f=h
-fs/xfs/linux-2.4/xfs_file.c - 1.131 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_file.c.diff?r1=text&tr1=1.131&r2=text&tr2=1.130&f=h
-fs/xfs/linux-2.4/xfs_cred.h - 1.28 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_cred.h.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
-fs/xfs/linux-2.4/xfs_vnode.c - 1.140 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.c.diff?r1=text&tr1=1.140&r2=text&tr2=1.139&f=h
-fs/xfs/linux-2.4/xfs_vnode.h - 1.116 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_vnode.h.diff?r1=text&tr1=1.116&r2=text&tr2=1.115&f=h
-fs/xfs/linux-2.4/xfs_stats.c - 1.23 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_stats.c.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
-fs/xfs/linux-2.4/xfs_stats.h - 1.16 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_stats.h.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-fs/xfs/linux-2.4/xfs_fs_subr.c - 1.50 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
-fs/xfs/linux-2.4/xfs_fs_subr.h - 1.19 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_fs_subr.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-fs/xfs/linux-2.4/xfs_super.h - 1.74 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_super.h.diff?r1=text&tr1=1.74&r2=text&tr2=1.73&f=h
-fs/xfs/linux-2.4/xfs_super.c - 1.338 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_super.c.diff?r1=text&tr1=1.338&r2=text&tr2=1.337&f=h
-fs/xfs/linux-2.4/xfs_iops.c - 1.230 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_iops.c.diff?r1=text&tr1=1.230&r2=text&tr2=1.229&f=h
-fs/xfs/linux-2.4/xfs_iops.h - 1.33 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_iops.h.diff?r1=text&tr1=1.33&r2=text&tr2=1.32&f=h
-fs/xfs/linux-2.4/xfs_aops.c - 1.106 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_aops.c.diff?r1=text&tr1=1.106&r2=text&tr2=1.105&f=h
-fs/xfs/linux-2.4/xfs_sysctl.c - 1.42 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_sysctl.c.diff?r1=text&tr1=1.42&r2=text&tr2=1.41&f=h
-fs/xfs/linux-2.4/xfs_sysctl.h - 1.32 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_sysctl.h.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
-fs/xfs/linux-2.4/xfs_buf.h - 1.119 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.h.diff?r1=text&tr1=1.119&r2=text&tr2=1.118&f=h
-fs/xfs/linux-2.4/xfs_buf.c - 1.220 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_buf.c.diff?r1=text&tr1=1.220&r2=text&tr2=1.219&f=h
-fs/xfs/linux-2.4/kmem.h - 1.35 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.h.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
-fs/xfs/linux-2.4/kmem.c - 1.39 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/kmem.c.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
-fs/xfs/linux-2.4/xfs_ksyms.c - 1.50 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ksyms.c.diff?r1=text&tr1=1.50&r2=text&tr2=1.49&f=h
-fs/xfs/linux-2.4/sema.h - 1.17 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/sema.h.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-fs/xfs/linux-2.4/mrlock.c - 1.24 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock.c.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
-fs/xfs/linux-2.4/mrlock.h - 1.17 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock.h.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-fs/xfs/linux-2.4/time.h - 1.19 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/time.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-fs/xfs/linux-2.4/sv.h - 1.20 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/sv.h.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
-fs/xfs/linux-2.4/spin.h - 1.24 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/spin.h.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
-fs/xfs/linux-2.4/mutex.h - 1.19 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mutex.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-fs/xfs/linux-2.4/mrlock_rwsem.h - 1.5 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/mrlock_rwsem.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
-fs/xfs/linux-2.4/xfs_export.h - 1.3 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_export.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-fs/xfs/linux-2.4/xfs_ioctl32.h - 1.3 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl32.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-fs/xfs/linux-2.4/xfs_ioctl32.c - 1.3 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_ioctl32.c.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-fs/xfs/linux-2.4/xfs_dmapi_priv.h - 1.2 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.4/xfs_dmapi_priv.h.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2007-09-26 10:13:54.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2007-09-26 10:23:38.000000000 +0200
+@@ -664,8 +664,44 @@ xfs_fs_statfs(
+ 	struct dentry		*dentry,
+ 	struct kstatfs		*statp)
+ {
+-	return -xfs_statvfs(XFS_M(dentry->d_sb), statp,
+-				vn_from_inode(dentry->d_inode));
++	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
++	xfs_sb_t		*sbp = &mp->m_sb;
++	__uint64_t		fakeinos, id;
++	xfs_extlen_t		lsize;
++
++	statp->f_type = XFS_SB_MAGIC;
++	statp->f_namelen = MAXNAMELEN - 1;
++
++	id = huge_encode_dev(mp->m_ddev_targp->bt_dev);
++	statp->f_fsid.val[0] = (u32)id;
++	statp->f_fsid.val[1] = (u32)(id >> 32);
++
++	xfs_icsb_sync_counters_flags(mp, XFS_ICSB_LAZY_COUNT);
++
++	spin_lock(&mp->m_sb_lock);
++	statp->f_bsize = sbp->sb_blocksize;
++	lsize = sbp->sb_logstart ? sbp->sb_logblocks : 0;
++	statp->f_blocks = sbp->sb_dblocks - lsize;
++	statp->f_bfree = statp->f_bavail =
++				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
++	fakeinos = statp->f_bfree << sbp->sb_inopblog;
++#if XFS_BIG_INUMS
++	fakeinos += mp->m_inoadd;
++#endif
++	statp->f_files =
++	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
++	if (mp->m_maxicount)
++#if XFS_BIG_INUMS
++		if (!mp->m_inoadd)
++#endif
++			statp->f_files = min_t(typeof(statp->f_files),
++						statp->f_files,
++						mp->m_maxicount);
++	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
++	spin_unlock(&mp->m_sb_lock);
++
++	XFS_QM_DQSTATVFS(XFS_I(dentry->d_inode), statp);
++	return 0;
+ }
+ 
+ STATIC int
+@@ -768,7 +804,6 @@ xfs_fs_fill_super(
+ 	struct inode		*rootvp;
+ 	struct xfs_mount	*mp = NULL;
+ 	struct xfs_mount_args	*args = xfs_args_allocate(sb, silent);
+-	struct kstatfs		statvfs;
+ 	int			error;
+ 
+ 	mp = xfs_mount_init();
+@@ -796,14 +831,10 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto fail_vfsop;
+ 
+-	error = xfs_statvfs(mp, &statvfs, NULL);
+-	if (error)
+-		goto fail_unmount;
+-
+ 	sb->s_dirt = 1;
+-	sb->s_magic = statvfs.f_type;
+-	sb->s_blocksize = statvfs.f_bsize;
+-	sb->s_blocksize_bits = ffs(statvfs.f_bsize) - 1;
++	sb->s_magic = XFS_SB_MAGIC;
++	sb->s_blocksize = mp->m_sb.sb_blocksize;
++	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
+ 	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
+ 	sb->s_time_gran = 1;
+ 	set_posix_acl_flag(sb);
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2007-09-26 10:14:07.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2007-09-26 10:22:32.000000000 +0200
+@@ -839,59 +839,6 @@ xfs_root(
+ }
+ 
+ /*
+- * xfs_statvfs
+- *
+- * Fill in the statvfs structure for the given file system.  We use
+- * the superblock lock in the mount structure to ensure a consistent
+- * snapshot of the counters returned.
+- */
+-int
+-xfs_statvfs(
+-	xfs_mount_t	*mp,
+-	bhv_statvfs_t	*statp,
+-	bhv_vnode_t	*vp)
+-{
+-	__uint64_t	fakeinos;
+-	xfs_extlen_t	lsize;
+-	xfs_sb_t	*sbp;
+-
+-	sbp = &(mp->m_sb);
+-
+-	statp->f_type = XFS_SB_MAGIC;
+-
+-	xfs_icsb_sync_counters_flags(mp, XFS_ICSB_LAZY_COUNT);
+-	spin_lock(&mp->m_sb_lock);
+-	statp->f_bsize = sbp->sb_blocksize;
+-	lsize = sbp->sb_logstart ? sbp->sb_logblocks : 0;
+-	statp->f_blocks = sbp->sb_dblocks - lsize;
+-	statp->f_bfree = statp->f_bavail =
+-				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
+-	fakeinos = statp->f_bfree << sbp->sb_inopblog;
+-#if XFS_BIG_INUMS
+-	fakeinos += mp->m_inoadd;
+-#endif
+-	statp->f_files =
+-	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
+-	if (mp->m_maxicount)
+-#if XFS_BIG_INUMS
+-		if (!mp->m_inoadd)
+-#endif
+-			statp->f_files = min_t(typeof(statp->f_files),
+-						statp->f_files,
+-						mp->m_maxicount);
+-	statp->f_ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
+-	spin_unlock(&mp->m_sb_lock);
+-
+-	xfs_statvfs_fsid(statp, mp);
+-	statp->f_namelen = MAXNAMELEN - 1;
+-
+-	if (vp)
+-		XFS_QM_DQSTATVFS(xfs_vtoi(vp), statp);
+-	return 0;
+-}
+-
+-
+-/*
+  * xfs_sync flushes any pending I/O to file system vfsp.
+  *
+  * This routine is called by vfs_sync() to make sure that things make it
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2007-09-26 10:13:54.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.h	2007-09-26 10:22:32.000000000 +0200
+@@ -14,8 +14,6 @@ int xfs_unmount(struct xfs_mount *mp, in
+ int xfs_mntupdate(struct xfs_mount *mp, int *flags,
+ 		struct xfs_mount_args *args);
+ int xfs_root(struct xfs_mount *mp, bhv_vnode_t **vpp);
+-int xfs_statvfs(struct xfs_mount *mp, struct kstatfs *statp,
+-		bhv_vnode_t *vp);
+ int xfs_sync(struct xfs_mount *mp, int flags);
+ int xfs_vget(struct xfs_mount *mp, bhv_vnode_t **vpp, struct xfs_fid *xfid);
+ int xfs_parseargs(struct xfs_mount *mp, char *options,
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2007-09-26 10:13:54.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2007-09-26 10:22:32.000000000 +0200
+@@ -212,10 +212,6 @@
+ #define xfs_stack_trace()	dump_stack()
+ #define xfs_itruncate_data(ip, off)	\
+ 	(-vmtruncate(vn_to_inode(XFS_ITOV(ip)), (off)))
+-#define xfs_statvfs_fsid(statp, mp)	\
+-	({ u64 id = huge_encode_dev((mp)->m_ddev_targp->bt_dev); \
+-	   __kernel_fsid_t *fsid = &(statp)->f_fsid;	\
+-	(fsid->val[0] = (u32)id, fsid->val[1] = (u32)(id >> 32)); })
+ 
+ 
+ /* Move the kernel do_div definition off to one side */
