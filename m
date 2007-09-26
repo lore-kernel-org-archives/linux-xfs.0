@@ -1,88 +1,113 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 08:33:53 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8QFXlTe008430
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 08:33:48 -0700
-Message-ID: <46FA7BC2.5050903@thebarn.com>
-Date: Wed, 26 Sep 2007 10:33:22 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 09:24:28 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8QGOLaR015266
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 09:24:22 -0700
+Date: Wed, 26 Sep 2007 12:24:20 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+In-Reply-To: <1254510454-1190819012-cardhu_decombobulator_blackberry.rim.net-1744849406-@bxe108.bisx.prod.on.blackberry>
+Message-ID: <Pine.LNX.4.64.0709261223290.15219@p34.internal.lan>
+References: <498689.78850.qm@web32907.mail.mud.yahoo.com><Pine.LNX.4.64.0709251938400.7763@p34.internal.lan><20070926082322.GA30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260442070.31289@p34.internal.lan><20070926084924.GB30287@p15145560.pureserver.info><Pine.LNX.4.64.0709260549250.4769@p34.internal.lan>
+ <1254510454-1190819012-cardhu_decombobulator_blackberry.rim.net-1744849406-@bxe108.bisx.prod.on.blackberry>
 MIME-Version: 1.0
-Subject: Re: XFS DMAPI support for RHEL4
-References: <cce360c30709260650o728bc046ic90fc0e0c726bd78@mail.gmail.com> <cce360c30709260651k17c80518k555f174af3fafb54@mail.gmail.com> <46FA7579.9090403@sandeen.net>
-In-Reply-To: <46FA7579.9090403@sandeen.net>
-Content-Type: multipart/mixed;
- boundary="------------040907080408040109000409"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Manoj Kumar Pradhan <manojkp80@gmail.com>, linux-xfs@oss.sgi.com
+To: =?utf-8?B?QnJ5YW4gSiBTbWl0aA==?= <b.j.smith@ieee.org>
+Cc: xfs-bounce@oss.sgi.com, Ralf Gross <Ralf-Lists@ralfgross.de>, linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040907080408040109000409
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+I have a question, when I use multiple writer threads (2 or 3) I see 
+550-600 MiB/s write speed (vmstat) but when using only 1 thread, ~420-430 
+MiB/s... Also without tweaking, SW RAID is very slow (180-200 MiB/s) using 
+the same disks.
 
-Eric Sandeen wrote:
-> Manoj Kumar Pradhan wrote:
->   
->> Hi,
->>
->> I am running RHEL with kernel 2.6.9-42ELsmp x86_64. I got the xfs module
->> from http://sandeen.net/rhel4_xfs/ and did a rpmbuild as instructed there, I
->> got the xfs.ko and the module-xfs rpm for the running kernel too but modinfo
->> shows me that the xfs module hence created is not dmapi enabled.
->>     
+Justin.
+
+On Wed, 26 Sep 2007, Bryan J Smith wrote:
+
+> Everyone can play local benchmarking games all they want,
+> and software RAID will almost always be faster, significantly at times.
 >
-> Right, the dmapi module isn't included in that.  As far as I can recall,
-> the necessary bits to support DMAPI are not present in the RHEL4 kernel,
-> so this is probably not going to work.  Perhaps the sgi guys can chime
-> in if I'm off base.
+> What matters is actual, multiple client performance under full load.
+> Anything less is a completely irrelevant.
+> --
+> Bryan J Smith - mailto:b.j.smith@ieee.org
+> http://thebs413.blogspot.com
+> Sent via BlackBerry from T-Mobile
 >
-> -Eric
 >
->   
-Isn't there a rhel4 patch floating around someplace? :-)
-
->> [root@asher RPMS]# modinfo xfs
->> filename:       /lib/modules/2.6.9-42.ELsmp/kernel/fs/xfs/xfs.ko
->> license:        GPL
->> description:    SGI XFS with ACLs, security attributes, realtime, large
->> block/inode numbers, no debug enabled
->> author:         Silicon Graphics, Inc.
->> depends:
->> vermagic:       2.6.9-42.ELsmp SMP gcc-3.4
->>
->> When I run a simple app which tries to init dmapi for XFS it fails with
->> ENOSYS.
->> Did I miss anything here? How do I enable DMAPI on this XFS module?
->>
->> Thanks,
->> Manoj
->>
->>
->> [[HTML alternate version deleted]]
->>
->>
->>     
+> -----Original Message-----
+> From: Justin Piszcz <jpiszcz@lucidpixels.com>
 >
->   
-
-
---------------040907080408040109000409
-Content-Type: text/x-vcard; charset=utf-8;
- name="cattelan.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="cattelan.vcf"
-
-begin:vcard
-fn:Russell Cattelan
-n:Cattelan;Russell
-email;internet:cattelan@thebarn.com
-x-mozilla-html:FALSE
-version:2.1
-end:vcard
-
-
---------------040907080408040109000409--
+> Date: Wed, 26 Sep 2007 05:52:39
+> To:Ralf Gross <Ralf-Lists@ralfgross.de>
+> Cc:linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org
+> Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
+>
+>
+>
+>
+> On Wed, 26 Sep 2007, Ralf Gross wrote:
+>
+>> Justin Piszcz schrieb:
+>>> What was the command line you used for that output?
+>>> tiobench.. ?
+>>
+>> tiobench --numruns 3 --threads 1 --threads 2 --block 4096 --size 20000
+>>
+>> --size 20000 because the server has 16 GB RAM.
+>>
+>> Ralf
+>>
+>>
+>
+> Here is my output on my SW RAID5 keep in mind it is currently being used so the numbers are a little slower than they probably should be:
+>
+> My machine only has 8 GiB of memory but I used the same command you did:
+>
+> This is with the 2.6.22.6 kernel, the 2.6.23-rcX/final when released is supposed to have the SW RAID5 accelerator code, correct?
+>
+> Unit information
+> ================
+> File size = megabytes
+> Blk Size  = bytes
+> Rate      = megabytes per second
+> CPU%      = percentage of CPU used during the test
+> Latency   = milliseconds
+> Lat%      = percent of requests that took longer than X seconds
+> CPU Eff   = Rate divided by CPU% - throughput per cpu load
+>
+> Sequential Reads
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1  523.01 45.79%     0.022      510.77   0.00000  0.00000  1142
+> 2.6.22.6                     20000  4096    2  501.29 85.84%     0.046      855.59   0.00000  0.00000   584
+>
+> Random Reads
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1    0.90 0.276%    13.003       74.41   0.00000  0.00000   326
+> 2.6.22.6                     20000  4096    2    1.61 1.167%    14.443      126.43   0.00000  0.00000   137
+>
+> Sequential Writes
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1  363.46 75.72%     0.030     2757.45   0.00000  0.00000   480
+> 2.6.22.6                     20000  4096    2  394.45 287.9%     0.056     2798.92   0.00000  0.00000   137
+>
+> Random Writes
+>                               File  Blk   Num                   Avg      Maximum      Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency    Latency      >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ --------- -----------  -------- -------- -----
+> 2.6.22.6                     20000  4096    1    3.16 1.752%     0.011        1.02   0.00000  0.00000   180
+> 2.6.22.6                     20000  4096    2    3.07 3.769%     0.013        0.10   0.00000  0.00000    82
+>
+>
+>
+>
+>
