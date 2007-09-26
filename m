@@ -1,144 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 07:54:45 -0700 (PDT)
-Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8QEsc1K029831
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 07:54:39 -0700
-Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
-	id 1IaYHT-00085c-00
-	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 16:54:27 +0200
-Date: Wed, 26 Sep 2007 16:54:17 +0200
-From: Ralf Gross <Ralf-Lists@ralfgross.de>
-Subject: Re: mkfs options for a 16x hw raid5 and xfs (mostly large files)
-Message-ID: <20070926145417.GC30287@p15145560.pureserver.info>
-References: <20070923093841.GH19983@p15145560.pureserver.info> <18166.25242.174049.175729@base.ty.sabi.co.UK>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 08:00:28 -0700 (PDT)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.224])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8QF0CHZ031003
+	for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 08:00:17 -0700
+Received: by nz-out-0506.google.com with SMTP id x3so1312551nzd
+        for <linux-xfs@oss.sgi.com>; Wed, 26 Sep 2007 08:00:12 -0700 (PDT)
+Message-ID: <cce360c30709260651k17c80518k555f174af3fafb54@mail.gmail.com>
+Date: Wed, 26 Sep 2007 19:21:15 +0530
+From: "Manoj Kumar Pradhan" <manojkp80@gmail.com>
+Subject: XFS DMAPI support for RHEL4
+In-Reply-To: <cce360c30709260650o728bc046ic90fc0e0c726bd78@mail.gmail.com>
+MIME-Version: 1.0
+References: <cce360c30709260650o728bc046ic90fc0e0c726bd78@mail.gmail.com>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <18166.25242.174049.175729@base.ty.sabi.co.UK>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: linux-xfs@oss.sgi.com
 
-Peter Grandi schrieb:
-> Ralf> Hi, we have a new large raid array, the shelf has 48 disks,
-> Ralf> the max. amount of disks in a single raid 5 set is 16.
-> 
-> Too bad about that petty limitation ;-).
+Hi,
 
-Yeah, I prefer 24x RAID 5 without spare. Why waste so much space ;)
+I am running RHEL with kernel 2.6.9-42ELsmp x86_64. I got the xfs module
+from http://sandeen.net/rhel4_xfs/ and did a rpmbuild as instructed there, I
+got the xfs.ko and the module-xfs rpm for the running kernel too but modinfo
+shows me that the xfs module hence created is not dmapi enabled.
 
-After talking to the people that own the data and wanted to use as
-much as possible space of the device, we'll start with four 12/11
-disk RAID 6 volumes (47 disk + 1 spare). That's ~12% less space than
-before with five RAID 5 volumes. I think this is a good compromise
-between safety and max.  usable disk space.
+[root@asher RPMS]# modinfo xfs
+filename:       /lib/modules/2.6.9-42.ELsmp/kernel/fs/xfs/xfs.ko
+license:        GPL
+description:    SGI XFS with ACLs, security attributes, realtime, large
+block/inode numbers, no debug enabled
+author:         Silicon Graphics, Inc.
+depends:
+vermagic:       2.6.9-42.ELsmp SMP gcc-3.4
 
-There's only one point left: will the RAID 6 during a rebuild be able
-to deliver 2-3 streams of 17MB/s. Write performance is not the point
-then, but the clients will be running simulations for up to 5 days and
-need this (more or less) constant data rate. Now that I'm getting
-~400 MB/s (which is limited by the FC controller) this should be
-possible.
- 
-> Ralf> There will be one global spare disk, thus we have two raid 5
-> Ralf> with 15 data disks and one with 14 data disk.
-> 
-> Ahhh a positive-thinking, can-do, brave design ;-).
+When I run a simple app which tries to init dmapi for XFS it fails with
+ENOSYS.
+Did I miss anything here? How do I enable DMAPI on this XFS module?
 
-We have a 60 slot tape lib too (well, we'll have next week...I hope).
-I know that raid != backup.
- 
-> [ ... ]
-> Ralf> Each client then needs a data stream of about 17 MB/s
-> Ralf> (max. 5 clients are expected to acces the data in parallel).
-> 
-> Do the requirements include as features some (possibly several)
-> hours of ''challenging'' read performance if any disk fails or
-> total loss of data if another disks fails during that time? ;-)
+Thanks,
+Manoj
 
-The data then is still on USB disks and on tape. Maybe I'll pull out
-a disk of one of the new RAID 6 volumes and see how much the read
-performance drops. At the moment only one test bed is active, thus 17
-MB/s would be ok. Later with 5 test beds 5 x 17 MB/s are needed (if
-they are online at the same time).
- 
-> IIRC Google have reported 5% per year disk failure rates across a
-> very wide mostly uncorrelated population, you have 48 disks,
-> perhaps 2-3 disks per year will fail. Perhaps more and more often,
-> because they will likely be all from the same manufacturer, model,
-> batch and spinning in the same environment.
 
-Hey, these are ENTERPRISE disks ;) As far as I know, we couldn't even
-use other disks than the ones that the manufacturer provides (modified
-firmware?).
- 
-> Ralf> [ ... ] I expect the fs, each will have a size of 10-11 TB,
-> Ralf> to be filled > 90%. I know this is not ideal, but we need
-> Ralf> every GB we can get.
-> 
-> That "every GB we can get" is often the key in ''wide RAID5''
-> stories. Cheap as well as fast and safe, you can have it all with
-> wide RAID5 setups, so the salesmen would say ;-).
-
-I think we now have found a reasonable solution.
- 
-> Ralf> [ ... ] Stripe Size : 960 KB (15 x 64 KM)
-> Ralf> [ ... ] Stripe Size : 896 KB (14 x 64 KB)
-> 
-> Pretty long stripes, I wonder what happens when a whole stripe
-> cannot be written at once or it can but is not naturally aligned
-> ;-).
-
-I'm still confused bye the chunk/stripe and block size values. The
-block size of the HW-RAID is fixed to 512 bytes, I think that a bit
-small.
-
-Also, I first thought about wasting disk space with larger
-chunk/stripe sizes (HW RAID), but as the OS/FS doesn't necessarily
-know about the values, it can't be true - unlike the FS block size
-which defines the smallest possible file size.
- 
-> Ralf> [ ... ] about 150 MB/s in seq. writing
-> 
-> Surprise surprise ;-).
-> 
-> Ralf> (tiobench) and 160 MB/s in seq.  reading.
-> 
-> This is sort of low. If there something that RAID5 can do sort of
-> OK is reads (if there are no faults). I'd look at the underlying
-> storage system and the maximum performance that you can get out of
-> a single disk.
-
- /sbin/blockdev --setra 16384  /dev/sdc 
-
-was the key to ~400 MB/s read performance.
- 
-> I have seen a 45-drive 500GB storage subsystem where each drive
-> can deliver at most 7-10MB/s (even if the same disk standalone in
-> an ordinary PC can do 60-70MB/s), and the supplier actually claims
-> so in their published literature (that RAID product is meant to
-> compete *only* with tape backup subsystems). Your later comment
-> that "The raid array is connect to the server by fibre channel"
-> makes me suspect that it may be the same brand.
-> 
-> Ralf> This is ok,
-> 
-> As the total aggregate requirement is 5x17MB/s this is probably
-> the case [as long as there are no drive failures ;-)].
-> 
-> Ralf> but I'm curious what I could get with tuned xfs parameters.
-> 
-> Looking at the archives of this mailing list the topic ''good mkfs
-> parameters'' reappears frequently, even if usually for smaller
-> arrays, as many have yet to discover the benefits of 15-wide RAID5
-> setups ;-). Threads like these may help:
-> 
->   http://OSS.SGI.com/archives/xfs/2007-01/msg00079.html
->   http://OSS.SGI.com/archives/xfs/2007-05/msg00051.html
-
-I've seen some of JP's postings before. I couldn't get much more
-performace with the sw/su options, I got the best results with the
-default values. But I haven't tried external logs yet.
-
-Ralf
+[[HTML alternate version deleted]]
