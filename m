@@ -1,64 +1,104 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:21:34 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8Q8LQgv030237
-	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:21:29 -0700
-From: donaldd@sgi.com
-Subject: PARTIAL TAKE 971050 - Remove linux-2.4 build support
-Message-Id: <20070926082120.86D772FB966D@linuxbuild.melbourne.sgi.com>
-Date: Wed, 26 Sep 2007 18:21:20 +1000 (EST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Sep 2007 01:24:00 -0700 (PDT)
+Received: from mail.lst.de (verein.lst.de [213.95.11.210])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8Q8NsKd030954
+	for <xfs@oss.sgi.com>; Wed, 26 Sep 2007 01:23:56 -0700
+Date: Wed, 26 Sep 2007 10:23:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] kill xfs_freeze
+Message-ID: <20070926082351.GA32719@lst.de>
+References: <20070925194528.GA1818@lst.de> <46F9A38E.6000200@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46F9A38E.6000200@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Remove linux-2.4 Makefile wrappers from fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
+> This has removed all use of xfs_freeze, but I cant see a diff
+> hunk that removes the xfs_freeze implementation from xfs_vfsops.c
 
-Date:  Wed Sep 26 18:20:13 AEST 2007
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  tes,vapo
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Looks like that hunk got lost in a merge.  Here's an updated version
+of the patch that actually removes xfs_freeze:
 
 
-Modid:  xfs-linux-melb:xfs-kern:29784a
-fs/xfs/quota/Makefile - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/Makefile.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/xfs/dmapi/Makefile - 1.27 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/Makefile.diff?r1=text&tr1=1.27&r2=text&tr2=1.26&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/xfs/dmapi/Makefile-linux-2.4 - 1.6 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/Makefile-linux-2.4.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/xfs/quota/Makefile-linux-2.4 - 1.7 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/Makefile-linux-2.4.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/xfs/quota/Makefile-linux-2.6 - 1.6 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/Makefile-linux-2.6.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/xfs/dmapi/Makefile-linux-2.6 - 1.7 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/Makefile-linux-2.6.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-
-
-
-Modid:  linux-melb:dmapi:29784b
-fs/dmapi/Makefile-linux-2.4 - 1.4 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/fs/dmapi/Makefile-linux-2.4.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/dmapi/Makefile-linux-2.6 - 1.4 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/fs/dmapi/Makefile-linux-2.6.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
-
-fs/dmapi/Makefile - 1.26 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/fs/dmapi/Makefile.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
-	- Remove linux-2.4 Makefile wrappers fs/xfs/quota, fs/xfs/dmapi and fs/dmapi.
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2007-09-25 15:04:01.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2007-09-26 10:13:54.000000000 +0200
+@@ -41,6 +41,7 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_error.h"
+ #include "xfs_itable.h"
++#include "xfs_fsops.h"
+ #include "xfs_rw.h"
+ #include "xfs_acl.h"
+ #include "xfs_attr.h"
+@@ -684,11 +685,19 @@ xfs_fs_remount(
+ 	return -error;
+ }
+ 
++/*
++ * Second stage of a freeze. The data is already frozen so we only
++ * need to take care of themetadata. Once that's done write a dummy
++ * record to dirty the log in case of a crash while frozen.
++ */
+ STATIC void
+ xfs_fs_lockfs(
+ 	struct super_block	*sb)
+ {
+-	xfs_freeze(XFS_M(sb));
++	struct xfs_mount	*mp = XFS_M(sb);
++
++	xfs_attr_quiesce(mp);
++	xfs_fs_log_dummy(mp);
+ }
+ 
+ STATIC int
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2007-09-25 15:04:01.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2007-09-26 10:14:07.000000000 +0200
+@@ -692,7 +692,7 @@ xfs_quiesce_fs(
+  * care of the metadata. New transactions are already blocked, so we need to
+  * wait for any remaining transactions to drain out before proceding.
+  */
+-STATIC void
++void
+ xfs_attr_quiesce(
+ 	xfs_mount_t	*mp)
+ {
+@@ -1955,16 +1955,3 @@ xfs_showargs(
+ 		seq_puts(m, "," MNTOPT_DMAPI);
+ 	return 0;
+ }
+-
+-/*
+- * Second stage of a freeze. The data is already frozen so we only
+- * need to take care of themetadata. Once that's done write a dummy
+- * record to dirty the log in case of a crash while frozen.
+- */
+-void
+-xfs_freeze(
+-	xfs_mount_t	*mp)
+-{
+-	xfs_attr_quiesce(mp);
+-	xfs_fs_log_dummy(mp);
+-}
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2007-09-25 15:04:01.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.h	2007-09-26 10:13:54.000000000 +0200
+@@ -21,8 +21,8 @@ int xfs_vget(struct xfs_mount *mp, bhv_v
+ int xfs_parseargs(struct xfs_mount *mp, char *options,
+ 		struct xfs_mount_args *args, int update);
+ int xfs_showargs(struct xfs_mount *mp, struct seq_file *m);
+-void xfs_freeze(struct xfs_mount *mp);
+ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+ 		int lnnum);
++void xfs_attr_quiesce(struct xfs_mount *mp);
+ 
+ #endif /* _XFS_VFSOPS_H */
