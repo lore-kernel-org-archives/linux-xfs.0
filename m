@@ -1,50 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Sep 2007 17:53:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l8S0rGRi009166
-	for <xfs@oss.sgi.com>; Thu, 27 Sep 2007 17:53:18 -0700
-Message-ID: <46FC50DF.2050907@sgi.com>
-Date: Fri, 28 Sep 2007 10:54:55 +1000
-From: Vlad Apostolov <vapo@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 28 Sep 2007 00:37:21 -0700 (PDT)
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.250])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8S7bDOd015631
+	for <xfs@oss.sgi.com>; Fri, 28 Sep 2007 00:37:15 -0700
+Received: by an-out-0708.google.com with SMTP id c38so482471ana
+        for <xfs@oss.sgi.com>; Fri, 28 Sep 2007 00:37:13 -0700 (PDT)
+Message-ID: <cce360c30709272255h411c368foa07c831a68ce537a@mail.gmail.com>
+Date: Fri, 28 Sep 2007 11:25:45 +0530
+From: "Manoj Kumar Pradhan" <manojkp80@gmail.com>
+Subject: kernel 2.6.9-42ELsmp
 MIME-Version: 1.0
-Subject: TAKE 971182 - [PATCH] kill xfs_dm_fsops.c
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-kill xfs_dm_fsops.c
+Hi,
 
-No point having a separate file for these few methods, especially if
-we want to merge the crufty ops vector into the dmapiops one day.
+I am trying to build my RH kernel for XFS dmapi support. I learnt from your
+site that the correct kernel can be cvs checkout from oss.sgi.com. I tried
+the procedure indicated there to do so, but i cant login to ':
+psrever:cvs@oss.sgi.com:/cvs' with password "cvs". It says connection timed
+out.
+Is there any other way to get the kernel?
+Also I learnt that XFS dmapi is not supported on RHEL4, is it?
+Is there any list of RHEL kernel releases which can support XFS with DMAPI
+on x86_64 platforms?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thanks,
+Manoj
 
 
-Date:  Fri Sep 28 10:51:03 AEST 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs-patch-reviews
-Inspected by:  vapo
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29798a
-fs/xfs/dmapi/Makefile - 1.28 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/Makefile.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
-    - pv 971182, author hch@lst.de, rv vapo - kill xfs_dm_fsops.c
-
-fs/xfs/dmapi/xfs_dm_fsops.c - 1.14 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm_fsops.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
-    - pv 971182, author hch@lst.de, rv vapo - kill xfs_dm_fsops.c
-
-fs/xfs/dmapi/xfs_dm.h - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-    - pv 971182, author hch@lst.de, rv vapo - kill xfs_dm_fsops.c
-
-fs/xfs/dmapi/xfs_dm.c - 1.58 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.58&r2=text&tr2=1.57&f=h
-    - pv 971182, author hch@lst.de, rv vapo - kill xfs_dm_fsops.c
+[[HTML alternate version deleted]]
