@@ -1,26 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Sep 2007 04:09:27 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8TB9M0W021762
-	for <xfs@oss.sgi.com>; Sat, 29 Sep 2007 04:09:24 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id l8TB9LF3002516
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 29 Sep 2007 13:09:21 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id l8TB9L1J002514
-	for xfs@oss.sgi.com; Sat, 29 Sep 2007 13:09:21 +0200
-Date: Sat, 29 Sep 2007 13:09:21 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: sync_blockdev in xfs_flush_device_work
-Message-ID: <20070929110921.GA2466@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 29 Sep 2007 09:29:23 -0700 (PDT)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l8TGTCuC020913
+	for <xfs@oss.sgi.com>; Sat, 29 Sep 2007 09:29:15 -0700
+Message-ID: <46FE7CF2.9070806@thebarn.com>
+Date: Sat, 29 Sep 2007 11:27:30 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: PARTIAL TAKE 971050 - Remove linux-2.4 build support
+References: <20070926083416.C441A30A90AD@linuxbuild.melbourne.sgi.com> <20070929094032.GA29241@infradead.org>
+In-Reply-To: <20070929094032.GA29241@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: donaldd@sgi.com, xfs@oss.sgi.com
 
-How is the sync_blockdev in the ENOSP path going to help it?  It only
-syncs the block device mapping which XFS doesn't use it at all.
+Christoph Hellwig wrote:
+> On Wed, Sep 26, 2007 at 06:34:16PM +1000, donaldd@sgi.com wrote:
+>   
+>> Remove Makefile wrappers in XFS
+>>
+>> Makefile (and Kbuild) would include Makefile-linux-26
+>> I doubt XFS will really still compile on 2.4; so drop that. This
+>> moves Makefile-linux-26 into Makefile and drops Kbuild.
+>> Also having wrappers as both Kbuild and Makefile seemed redundant
+>> anyways.
+>>     
+>
+> After pulling this patch I can't build XFS anymore, because
+> in the CVS export there's a zero-size fs/xfs/Kbuild file left and the
+> kernel build thus doesn't actually look at fs/xfs/Makefile.
+>
+> Can someone from SGI check if the file really isn't deleted in ptools
+> or whether is is a fuckup in the cvs export script?
+>
+>   
+I might be a combination of both, the Attic processing is a bit tricky.
+I'll try and figure out what is going wrong and get the SGI guys to
+adjust things if need be.
