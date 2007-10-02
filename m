@@ -1,43 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 20:12:02 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 20:23:37 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l923BqhT031559
-	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 20:11:56 -0700
-Subject: PARTIAL TAKE 971186 - cleanup vnode useage in xfs_iget.c
-Message-Id: <20071002031148.A310158C38F1@chook.melbourne.sgi.com>
-Date: Tue,  2 Oct 2007 13:11:48 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l923NS9e005662
+	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 20:23:32 -0700
+From: donaldd@sgi.com
+Subject: PARTIAL TAKE 971186 - kill xfs_freeze
+Message-Id: <20071002032323.D90EC30B55CE@linuxbuild.melbourne.sgi.com>
+Date: Tue,  2 Oct 2007 13:23:23 +1000 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-cleanup vnode useage in xfs_iget.c
+kill xfs_freeze.
 
-Get rid of vnode useage in xfs_iget.c and pass Linux inode / xfs_inode
-where apropinquate.  And kill some useless helpers while we're at it.
-
+No need to have a wrapper just two call two more functions.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Date:  Mon Oct  1 16:47:33 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-log
-Inspected by:  Christoph Hellwig <hch@lst.de>
-Author:  lachlan
+
+Date:  Tue Oct  2 13:22:40 AEST 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
 
 The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:29808a
-fs/xfs/xfs_iget.c - 1.236 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
-fs/xfs/xfs_inode.h - 1.236 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.236&r2=text&tr2=1.235&f=h
-fs/xfs/linux-2.6/xfs_vnode.c - 1.153 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.c.diff?r1=text&tr1=1.153&r2=text&tr2=1.152&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.143 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.143&r2=text&tr2=1.142&f=h
-fs/xfs/linux-2.6/xfs_ksyms.c - 1.75 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.75&r2=text&tr2=1.74&f=h
-	- cleanup vnode useage in xfs_iget.c
+Modid:  xfs-linux-melb:xfs-kern:29816a
+fs/xfs/xfs_vfsops.c - 1.545 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.545&r2=text&tr2=1.544&f=h
+	- kill xfs_freeze.
+
+fs/xfs/linux-2.6/xfs_super.c - 1.400 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.400&r2=text&tr2=1.399&f=h
+	- kill xfs_freeze.
+
+fs/xfs/xfs_vfsops.h - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+	- kill xfs_freeze.
