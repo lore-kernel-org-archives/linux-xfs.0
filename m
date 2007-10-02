@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 21:50:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 21:51:26 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l924oVCo020930
-	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 21:50:34 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l924pG8Z021053
+	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 21:51:19 -0700
 Subject: TAKE 971186 - clean up some xfs_log_priv.h macros
-Message-Id: <20071002045026.A77AF58C38F1@chook.melbourne.sgi.com>
-Date: Tue,  2 Oct 2007 14:50:26 +1000 (EST)
+Message-Id: <20071002045112.494EE58C38F1@chook.melbourne.sgi.com>
+Date: Tue,  2 Oct 2007 14:51:12 +1000 (EST)
 From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
@@ -32,7 +32,7 @@ clean up some xfs_log_priv.h macros
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Date:  Tue Oct  2 14:34:49 AEST 2007
+Date:  Tue Oct  2 14:47:44 AEST 2007
 Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-oss
 Inspected by:  Christoph Hellwig <hch@lst.de>
 Author:  lachlan
@@ -41,11 +41,11 @@ The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:29819a
-fs/xfs/xfs_log.c - 1.340 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.340&r2=text&tr2=1.339&f=h
-fs/xfs/xfs_log_priv.h - 1.123 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.123&r2=text&tr2=1.122&f=h
-fs/xfs/xfs_log_recover.c - 1.327 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.327&r2=text&tr2=1.326&f=h
+Modid:  xfs-linux-melb:xfs-kern:29820a
+fs/xfs/xfs_log.c - 1.341 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.341&r2=text&tr2=1.340&f=h
+fs/xfs/xfs_log_priv.h - 1.124 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.124&r2=text&tr2=1.123&f=h
+fs/xfs/xfs_log_recover.c - 1.328 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.328&r2=text&tr2=1.327&f=h
 	- clean up some xfs_log_priv.h macros
