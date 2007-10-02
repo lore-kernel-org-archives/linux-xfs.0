@@ -1,44 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 17:14:04 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 18:41:49 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l920DtFV029313
-	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 17:14:00 -0700
-Message-ID: <47018D3C.9070409@sgi.com>
-Date: Tue, 02 Oct 2007 10:13:48 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l921fghu012306
+	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 18:41:44 -0700
+Message-ID: <4701A1D0.5010709@sgi.com>
+Date: Tue, 02 Oct 2007 11:41:36 +1000
 From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [GIT PULL] XFS update for 2.6.23 - revert a commit
-References: <20071001072350.DF61C58C4C0A@chook.melbourne.sgi.com> <alpine.LFD.0.999.0710010753500.3579@woody.linux-foundation.org>
-In-Reply-To: <alpine.LFD.0.999.0710010753500.3579@woody.linux-foundation.org>
+References: <20071001072350.DF61C58C4C0A@chook.melbourne.sgi.com> <4700EE2A.1020304@sandeen.net>
+In-Reply-To: <4700EE2A.1020304@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Linus Torvalds wrote:
+Eric Sandeen wrote:
+> Tim Shimmin wrote:
+>> Hi Linus,
+>>
+>> A problem has been found for the XFS commit b394e43e995d08821588a22561c6a71a63b4ff27
+>> and it needs to be reverted.
+>> It has the potential for worse corruption than what it is meant to fix.
 > 
-> On Mon, 1 Oct 2007, Tim Shimmin wrote:
->> Lachlan's description:
->>     This fix is for a problem that has been in XFS since day one.
->>     [XFS] Avoid replaying inode buffer initialisation log items if on-disk version is newer.
-> 	...
 > 
-> Why wasn't this in the commit logs? Now it just says it was reverted, with 
-> no actual reasoning *why*. And it apparently wasn't so obvious that no 
-> such reasoning is needed.
+> Whoops... that's what I get for picking it up too soon for fedora I guess!
 > 
-> Gah. I ended up amending the commit and updating it with the comment.
+> Any background on the newly-found problem, for those of us in the peanut
+> gallery?
 > 
-> 		Linus
+> Thanks,
+> 
+> -Eric
 
-Yeah, sorry about that.
-It occurred to me later on.
-I initially converted the sgi-mod (undo mod) to a git commit and
-then discovered git-revert and thought, hey I'll use that
-instead but then forgot to add all the text into it.
-D'oh. Thanks for the fixup.
+Hi Eric,
+
+Lachlan worked this problem so he can probably provide more details.
+My understanding is that we were having a problem with the log replay
+replaying newly allocated inodes (inodes from buffer items) over the top
+of buffers which were actually more up-to-date than what was logged.
+The code used a heuristic to determine if the buffer had been written
+to for the inode (by checking on magic#, mode and gen# - not going to
+comment on this).
+Anyway, it comes down to either copying over the inode buf data or not
+copying it over (doing or not doing the log replay).
+The change could cause the buffer to be not overwritten in replay
+where previously it would be.
+We want this to not happen as part of the fix and doing the right thing
+and not by mistake and failing to replay when we need it to be replayed.
+I presume the latter is what is happening.
+The symptoms of this is what Lachlan has discovered in QA on a debug
+kernel and he can provide the details.
+
+I believe this started from not logging the inode size changes
+(as is consistent with the logging model) for performance reasons,
+and so we can't rely on inode log items coming up on log replay
+to fix things up.
+
+BTW, we currently have 3 ways of logging an inode:
+1. in an item buffer and marked as an inode
+2. in an item buffer and not marked as an inode
+3. in an inode item
+
+and 3 places where they get replayed:
+1. xlog_recover_do_inode_buffer - for di_next_unlinked pointer recovery
+2. xlog_recover_do_reg_buffer - for newly allocated inode recovery
+3. xlog_recover_do_inode_trans - for general inode recovery
+
+The fix was in #2.
+
+
+Ughh.
 
 --Tim
