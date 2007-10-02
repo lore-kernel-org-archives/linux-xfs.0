@@ -1,42 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 14:32:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 16:23:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l92LW4xX012421
-	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 14:32:07 -0700
-Date: Wed, 3 Oct 2007 07:31:53 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l92NNH9d031791
+	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 16:23:19 -0700
+Date: Wed, 3 Oct 2007 09:23:05 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Creation time in XFS
-Message-ID: <20071002213153.GI995458@sgi.com>
-References: <200709302124.38164.Martin@lichtvoll.de> <470042DC.2040009@sgi.com> <p73ve9r6v3a.fsf@bingen.suse.de> <20071002092509.GF995458@sgi.com> <20071002093822.GA24907@infradead.org>
+Subject: Re: sync_blockdev in xfs_flush_device_work
+Message-ID: <20071002232304.GG23367404@sgi.com>
+References: <20070929110921.GA2466@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20071002093822.GA24907@infradead.org>
+In-Reply-To: <20070929110921.GA2466@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: David Chinner <dgc@sgi.com>, Andi Kleen <andi@firstfloor.org>, Timothy Shimmin <tes@sgi.com>, Martin Steigerwald <Martin@lichtvoll.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, Oct 02, 2007 at 10:38:22AM +0100, Christoph Hellwig wrote:
-> On Tue, Oct 02, 2007 at 07:25:10PM +1000, David Chinner wrote:
-> > > I don't think it is at all currently:
-> > 
-> > So what is the point? Forensic analysis?
-> 
-> Windows wants it, so I guess they added when they had to bump the inode
-> version anyway in preparation of a user interface for samba.
+On Sat, Sep 29, 2007 at 01:09:21PM +0200, Christoph Hellwig wrote:
+> How is the sync_blockdev in the ENOSP path going to help it?  It only
+> syncs the block device mapping which XFS doesn't use it at all.
 
-<groan>
+Not really sure - it's probably a left over from when XFs was
+using it, but still that makes no difference to ENOSPC flushing..
 
-Can you point me to whatever list this was discussed on? This
-is exactly the sort of stuff that needs to be discussed on -fsdevel.
-
-> We probably
-> should do the same for XFS when bumping the inode version for the crcs.
-
-Perhaps. I don't really like the idea of adding unused fields to
-the on disk structure just in case it is needed in the future....
+I think we can kill it...
 
 Cheers,
 
