@@ -1,47 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 02:20:09 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 02:25:28 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l929K1om026148
-	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 02:20:06 -0700
-Date: Tue, 2 Oct 2007 19:19:51 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l929PHYa027363
+	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 02:25:24 -0700
+Date: Tue, 2 Oct 2007 19:25:10 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: REVIEW: xfs_reno
-Message-ID: <20071002091951.GE995458@sgi.com>
-References: <op.tzj549h63jf8g2@pc-bnaujok.melbourne.sgi.com> <20071002090216.GA22721@infradead.org>
+Subject: Re: Creation time in XFS
+Message-ID: <20071002092509.GF995458@sgi.com>
+References: <200709302124.38164.Martin@lichtvoll.de> <470042DC.2040009@sgi.com> <p73ve9r6v3a.fsf@bingen.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20071002090216.GA22721@infradead.org>
+In-Reply-To: <p73ve9r6v3a.fsf@bingen.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Timothy Shimmin <tes@sgi.com>, Martin Steigerwald <Martin@lichtvoll.de>, xfs@oss.sgi.com
 
-On Tue, Oct 02, 2007 at 10:02:16AM +0100, Christoph Hellwig wrote:
-> On Tue, Oct 02, 2007 at 05:08:59PM +1000, Barry Naujok wrote:
-> > 
-> > The attached tool allows an inode64 filesystem to be converted to inode32.
-> > For this to work, the filesystem has to be mounted inode32 before it's run.
-> > 
-> > I'm not sure if there is any packaging changes required.
+On Mon, Oct 01, 2007 at 11:30:01AM +0200, Andi Kleen wrote:
+> Timothy Shimmin <tes@sgi.com> writes:
 > 
-> Together with the stop allocating from specific AGs patch this should be
-> 90% towards an xfs_shrinkfs, right?
+> > No XFS does not support creation time. It just has the regular
+> > atime,mtime and ctime.
+> > There are no plans that I've heard to support it.
+> > Not much involved to support it AFAICT but it would either involve
+> > changing the ondisk format of the inode or storing it in an EA.
+> 
+> If you ever change the on disk format adding a file type similar to ext3
+> to directories could also greatly speed up find in many cases.
 
-Well, this just moves the inodes - it's one piece of the puzzle.  We
-still need to collide xfs_fsr with xfs_reno to move the data.
+Sure, but that's the directory structure, not inode structure.
+They have different versioning methods, and so can be modified
+independently.
 
-After that, we need to work out how to move the orphan metadata
-blocks out of the AGs that are to be truncated off. That's not
-simple....
+FWIW, I haven't forgotten abou thtis request, Andi ;) I'll be
+modifying the directory structure for CRCs relatively soon, and I
+plan to do that modification at the same time so I only need a
+single version bump for both....
 
-After that, we need the transaction to shrink the fs.
+> > I wonder how this creation time is being exported currently?
+> 
+> I don't think it is at all currently:
 
-At that point, we'll got a "working" shrink that will allow
-shrinking to only 50% of the original size because the log will
-get in the way. To fix that, we'll need to implement transactions
-to move the log...
+So what is the point? Forensic analysis?
 
 Cheers,
 
