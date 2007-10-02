@@ -1,35 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 22:27:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 22:55:26 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l925RYkh025863
-	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 22:27:37 -0700
-Subject: TAKE 970980 - simplify xfs_vn_getattr
-Message-Id: <20071002052729.E0DD358C38F1@chook.melbourne.sgi.com>
-Date: Tue,  2 Oct 2007 15:27:29 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l925tIxJ028639
+	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 22:55:20 -0700
+Message-ID: <4701DD3F.1000104@sgi.com>
+Date: Tue, 02 Oct 2007 15:55:11 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Creation time in XFS
+References: <200709302124.38164.Martin@lichtvoll.de>	<470042DC.2040009@sgi.com> <p73ve9r6v3a.fsf@bingen.suse.de>
+In-Reply-To: <p73ve9r6v3a.fsf@bingen.suse.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Martin Steigerwald <Martin@lichtvoll.de>, xfs@oss.sgi.com
 
-simplify xfs_vn_getattr
+Andi Kleen wrote:
+> Timothy Shimmin <tes@sgi.com> writes:
+> 
+>> No XFS does not support creation time. It just has the regular
+>> atime,mtime and ctime.
+>> There are no plans that I've heard to support it.
+>> Not much involved to support it AFAICT but it would either involve
+>> changing the ondisk format of the inode or storing it in an EA.
+> 
+> If you ever change the on disk format adding a file type similar to ext3
+> to directories could also greatly speed up find in many cases.
+> 
+Sounds a good idea.
+In that case a new ondisk directory format (at v2 at the moment).
+I think Dave (dgc) might have been mentioning something about that
+recently.
 
-Just fill in struct kstat directly from the xfs_inode instead of doing
-a detour through a bhv_vattr_t and xfs_getattr.
-
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Date:  Tue Sep 25 14:51:00 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
-Inspected by:  Christoph Hellwig <hch@lst.de>
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29770a
-fs/xfs/linux-2.6/xfs_iops.c - 1.265 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.265&r2=text&tr2=1.264&f=h
-	- simplify xfs_vn_getattr
+--Tim
