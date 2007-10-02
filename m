@@ -1,78 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 18:41:49 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 01 Oct 2007 20:10:25 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l921fghu012306
-	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 18:41:44 -0700
-Message-ID: <4701A1D0.5010709@sgi.com>
-Date: Tue, 02 Oct 2007 11:41:36 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.23 - revert a commit
-References: <20071001072350.DF61C58C4C0A@chook.melbourne.sgi.com> <4700EE2A.1020304@sandeen.net>
-In-Reply-To: <4700EE2A.1020304@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l923AETH031126
+	for <xfs@oss.sgi.com>; Mon, 1 Oct 2007 20:10:18 -0700
+Subject: PARTIAL TAKE 971186 - cleanup vnode useage in xfs_ioctl.c
+Message-Id: <20071002031009.5372F58C38F1@chook.melbourne.sgi.com>
+Date: Tue,  2 Oct 2007 13:10:09 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Tim Shimmin wrote:
->> Hi Linus,
->>
->> A problem has been found for the XFS commit b394e43e995d08821588a22561c6a71a63b4ff27
->> and it needs to be reverted.
->> It has the potential for worse corruption than what it is meant to fix.
-> 
-> 
-> Whoops... that's what I get for picking it up too soon for fedora I guess!
-> 
-> Any background on the newly-found problem, for those of us in the peanut
-> gallery?
-> 
-> Thanks,
-> 
-> -Eric
+cleanup vnode useage in xfs_ioctl.c
 
-Hi Eric,
-
-Lachlan worked this problem so he can probably provide more details.
-My understanding is that we were having a problem with the log replay
-replaying newly allocated inodes (inodes from buffer items) over the top
-of buffers which were actually more up-to-date than what was logged.
-The code used a heuristic to determine if the buffer had been written
-to for the inode (by checking on magic#, mode and gen# - not going to
-comment on this).
-Anyway, it comes down to either copying over the inode buf data or not
-copying it over (doing or not doing the log replay).
-The change could cause the buffer to be not overwritten in replay
-where previously it would be.
-We want this to not happen as part of the fix and doing the right thing
-and not by mistake and failing to replay when we need it to be replayed.
-I presume the latter is what is happening.
-The symptoms of this is what Lachlan has discovered in QA on a debug
-kernel and he can provide the details.
-
-I believe this started from not logging the inode size changes
-(as is consistent with the logging model) for performance reasons,
-and so we can't rely on inode log items coming up on log replay
-to fix things up.
-
-BTW, we currently have 3 ways of logging an inode:
-1. in an item buffer and marked as an inode
-2. in an item buffer and not marked as an inode
-3. in an inode item
-
-and 3 places where they get replayed:
-1. xlog_recover_do_inode_buffer - for di_next_unlinked pointer recovery
-2. xlog_recover_do_reg_buffer - for newly allocated inode recovery
-3. xlog_recover_do_inode_trans - for general inode recovery
-
-The fix was in #2.
+xfs_ioctl.c passes around vnode pointers quite a lot, but all places
+already have the Linux inode which is identical to the vnode these
+days.  Clean the code up to always use the Linux inode.
 
 
-Ughh.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---Tim
+Date:  Sun Sep 30 23:26:24 PDT 2007
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-log
+Inspected by:  Christoph Hellwig <hch@lst.de>
+Author:  lachlan.longdrop.melbourne.sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29807a
+fs/xfs/linux-2.6/xfs_ioctl.c - 1.156 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.156&r2=text&tr2=1.155&f=h
+	- cleanup vnode useage in xfs_ioctl.c
