@@ -1,48 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 18:31:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Oct 2007 18:49:29 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l931V4i0014599
-	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 18:31:11 -0700
-Message-ID: <4702F0CD.1070300@sgi.com>
-Date: Wed, 03 Oct 2007 11:30:53 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l931nLTg016868
+	for <xfs@oss.sgi.com>; Tue, 2 Oct 2007 18:49:24 -0700
+Message-ID: <4702F517.3040502@sgi.com>
+Date: Wed, 03 Oct 2007 11:49:11 +1000
 From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: REVIEW: xfs_reno
-References: <op.tzj549h63jf8g2@pc-bnaujok.melbourne.sgi.com> <20071002090216.GA22721@infradead.org> <20071002091951.GE995458@sgi.com>
-In-Reply-To: <20071002091951.GE995458@sgi.com>
+Subject: Re: [GIT PULL] XFS update for 2.6.23 - revert a commit
+References: <20071001072350.DF61C58C4C0A@chook.melbourne.sgi.com> <4700EE2A.1020304@sandeen.net> <4701A1D0.5010709@sgi.com> <4701ED51.8050706@sgi.com> <Pine.LNX.4.64.0710020442540.24427@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0710020442540.24427@p34.internal.lan>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Lachlan McIlroy <lachlan@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-David Chinner wrote:
-> At that point, we'll got a "working" shrink that will allow
-> shrinking to only 50% of the original size because the log will
-> get in the way. To fix that, we'll need to implement transactions
-> to move the log...
+Hi Justin,
+
+Justin Piszcz wrote:
 > 
-Moving the log sounds pretty tricky.
-
-Either we'd need to clean out the log (a la freeze) or
-copy the active part (tail->head) to the new location and zero out the rest of
-the new log space (or may even need to write sectors with
-previous cycle#s at the start of each sector for the rest).
-So how would one do that with the copying approach because
-we'd need to be writing in to the new log and we'd need the log
-pointer in the superblock to be logged somewhere ughhhh.
-I think a type of freezing may be the way to go.
-The trouble is we need to point the sb to the new log and the
-only place to log that is in the old log.
-So I guess before unfreezing you write the sb logptr change
-using the old log and then after the unfreeze, everything uses the new log.
-If you die before the sb change to disk then on mount you replay the sb change
-using the old log and then start writing to the new log. If you die before writing the
-sb change in the old log then you are stuck.
-You need this log change and freespace change (for making room for the log)
-in a transaction together and probably with other stuff.
-Okay, I'm getting lost :)
+> 
+> On Tue, 2 Oct 2007, Lachlan McIlroy wrote:
+> 
+>> Yeah that about sums it up.  In an attempt to prevent log replay of 
+>> inodes
+>> in cases when we shouldn't replay we also prevented log replay of 
+>> inodes in
+>> cases when we should replay.  We end up with directories that refer to 
+>> inodes
+>> that were not replayed and we read existing data off disk.  That existing
+>> data is usually previous instances of inodes.  We had cases of regular 
+>> files
+>> turning into directories and inode version mismatches.
+>>
+>> Lachlan
+>>
+> In 2.6.23-rc8?
+> 
+The bad change went into rc7 and was still there in rc8.
+It was backed out for rc9.
 
 --Tim
