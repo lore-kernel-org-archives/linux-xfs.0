@@ -1,53 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Oct 2007 14:10:55 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l94LAoJa008193
-	for <xfs@oss.sgi.com>; Thu, 4 Oct 2007 14:10:51 -0700
-Message-ID: <470556D6.3090703@sandeen.net>
-Date: Thu, 04 Oct 2007 16:10:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Oct 2007 15:38:39 -0700 (PDT)
+Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.231])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l94McWQW022309
+	for <xfs@oss.sgi.com>; Thu, 4 Oct 2007 15:38:36 -0700
+Received: by wr-out-0506.google.com with SMTP id c48so277022wra
+        for <xfs@oss.sgi.com>; Thu, 04 Oct 2007 15:38:33 -0700 (PDT)
+Message-ID: <d55656c10710041510y79cac2abv1c4d30d3afe1949f@mail.gmail.com>
+Date: Fri, 5 Oct 2007 00:10:49 +0200
+From: "Peter Gervai" <grinapo@gmail.com>
+Subject: xfs_repair phase6 repeatedly dies : name create failed in lost+found (117), filesystem may be out of space
 MIME-Version: 1.0
-Subject: Re: [PATCH] XFS bitops to Linux again
-References: <200710040027.16926.ak@suse.de>    <60338.192.168.3.1.1191452291.squirrel@mail.aconex.com>    <200710041014.22936.ak@suse.de> <34787.192.168.3.1.1191530551.squirrel@mail.aconex.com>
-In-Reply-To: <34787.192.168.3.1.1191530551.squirrel@mail.aconex.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Andi Kleen <ak@suse.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-nscott@aconex.com wrote:
+Hello,
 
-> Great.  You're light years ahead of the rest of the cleanup brigade. :)
+xfs_repair in Debian sid (v2.9.0) repeatedly dies on a poor filesystem
+with that message:
 
-Hey, I resemble that remark!  :)
+fatal error -- name create failed in lost+found (117), filesystem may
+be out of space
 
-(FWIW, I too first ran through xfsqa with both calculations in place,
-and caused it to complain loudly if there was a mismatch.  Not 100%
-coverage, but I'm not trying to do this half-assed either...)
+The filesystem is not out of space:
 
->> I did also some simple tests using the QA suite -- i believe a few logs
->> were recovered -- but not the full tests.
-> 
-> From a quick look, tests 085, 086 and 087 are the ones I was thinking of
-> yesterday.
-> 
->>> To be honest, this sounds like just code churn and risk
->>> introduction.
->> Ok I got the message. I retract the patch. Sorry for bothering you
->> with lowly cleanups.
-> 
-> Hey, I like cleanup as much as the next guy (as long as the next guy isn't
-> Eric,
-> he just lives to clean ;)
+Filesystem                          1K-blocks     Used      Available
+Use% Mounted on
+/dev/mapper/vg0-backup    419379200 144029144 275350056  35% /var/lib/backuppc
 
-If I do any real work I might lose my job ;-) </joke>
+I tried to find error 117 but it seems to be well hidden. :-) I try
+newer xfs_repair but I doubt it'll help. Any idea?
 
-> - also always ignores userspace despite knowing
-> better)
-
-Nah, I just forget.
-
--Eric
+Thanks,
+Peter
