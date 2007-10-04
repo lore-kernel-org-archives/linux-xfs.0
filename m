@@ -1,47 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 03 Oct 2007 23:22:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 03 Oct 2007 23:27:05 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l946M8tl021452
-	for <xfs@oss.sgi.com>; Wed, 3 Oct 2007 23:22:11 -0700
-Date: Thu, 4 Oct 2007 16:21:59 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: review: fix infinite loop in bulkstat
-Message-ID: <20071004062159.GN995458@sgi.com>
-References: <4704780C.2020100@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4704780C.2020100@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l946QvWJ022238
+	for <xfs@oss.sgi.com>; Wed, 3 Oct 2007 23:27:00 -0700
+From: donaldd@sgi.com
+Subject: PARTIAL TAKE 971186 - Refactor xfs_mountfs
+Message-Id: <20071004062652.557B2307DB15@linuxbuild.melbourne.sgi.com>
+Date: Thu,  4 Oct 2007 16:26:52 +1000 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Oct 04, 2007 at 03:20:12PM +1000, Lachlan McIlroy wrote:
-> This fix prevents bulkstat from spinning in an infinite loop.
-> 
-> Here 'agino' increments through the inodes in an allocation group.
-> At the end of the innermost 'for' loop it will hold the value of the
-> next inode to look at (ie the first inode in the next cluster/chunk).
-> Assigning 'lastino' to 'agino' resets it to the last inode in the
-> last inode cluster we just looked at.  This causes us to look up
-> the very same cluster and examine all the inodes all over again,
-> and again, and again...
-> 
-> We also want to set 'lastino' for the cases when we're not interested
-> in the inode so that the next call to bulkstat wont re-examine the
-> same uninteresting inodes.
+Refactor xfs_mountfs
 
-Looks OK. I think you shoul dalso add a comment to the effect that
-lastino needs to be set before continuing to process the next inode
-in the loop so it doesn't get forgotten next time someone modifies
-the code inside the loop..
+Refactoring xfs_mountfs() to call sub-functions for logical
+chunks can help save a bit of stack, and can make it easier to
+read this long function.
 
-Cheers,
+The mount path is one of the longest common callchains, easily
+getting to within a few bytes of the end of a 4k stack when
+over lvm, quotas are enabled, and quotacheck must be done.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+With this change on top of the other stack-related changes
+I've sent, I can get xfs to survive a normal xfsqa run on
+4k stacks over lvm.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Thu Oct  4 16:26:05 AEST 2007
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  sandeen@sandeen.net
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29834a
+fs/xfs/xfs_mount.c - 1.415 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.415&r2=text&tr2=1.414&f=h
+	- Refactor xfs_mountfs
