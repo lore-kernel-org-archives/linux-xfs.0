@@ -1,112 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Oct 2007 16:27:00 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Oct 2007 17:37:17 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l94NQrVM000910
-	for <xfs@oss.sgi.com>; Thu, 4 Oct 2007 16:26:55 -0700
-Date: Fri, 5 Oct 2007 09:26:44 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Reading directory entries from BMAP
-Message-ID: <20071004232644.GK23367404@sgi.com>
-References: <13040897.post@talk.nabble.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <13040897.post@talk.nabble.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l950bCr9012289
+	for <xfs@oss.sgi.com>; Thu, 4 Oct 2007 17:37:14 -0700
+Date: Fri, 05 Oct 2007 10:41:08 +1000
+Subject: Re: xfs_repair phase6 repeatedly dies : name create failed in lost+found (117), filesystem may be out of space
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+MIME-Version: 1.0
+References: <d55656c10710041510y79cac2abv1c4d30d3afe1949f@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.tzo76uks3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <d55656c10710041510y79cac2abv1c4d30d3afe1949f@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: cyjoyp <cyjoyp@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Peter Gervai <grinapo@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Oct 04, 2007 at 07:27:19AM -0700, cyjoyp wrote:
-> 
-> Hi there,
->           I am a beginner in learning XFS file system.. I have a doubt, dont
-> know whether is silly..If you could help me with this...Thank you..
-> 
->    An extent is 128 bit in size and uses the following struct,
->   
->         typedef struct xfs_bmbt_irec {
->                       xfs_fileoff_t              br_startoff;
->                       xfs_fsblock_t            br_startblock;
->                       xfs_filblks_t              br_blockcount;
->                       xfs_exntst_t             br_state;
->                      }
+On Fri, 05 Oct 2007 08:10:49 +1000, Peter Gervai <grinapo@gmail.com> wrote:
 
-That's the unpacked, in-memory format. The on disk format for
-extents is converted by xfs_bmbt_set_allf/xfs_bmbt_disk_set_allf().
+> Hello,
+>
+> xfs_repair in Debian sid (v2.9.0) repeatedly dies on a poor filesystem
+> with that message:
+>
+> fatal error -- name create failed in lost+found (117), filesystem may
+> be out of space
+>
+> The filesystem is not out of space:
+>
+> Filesystem                          1K-blocks     Used      Available
+> Use% Mounted on
+> /dev/mapper/vg0-backup    419379200 144029144 275350056  35%  
+> /var/lib/backuppc
+>
+> I tried to find error 117 but it seems to be well hidden. :-) I try
+> newer xfs_repair but I doubt it'll help. Any idea?
 
->      
->      I have got in to the BMAP position after traversing the BTREE..
->      The BMAP has a leaf and no other siblings..
->      I have the extents for directory entries stored in the BMAP..
->      This is where is struck badly..
->    
->     Now I have a 16 byte value from which I can calculate the block count
-> ,AG number ,etc...
->              00 00 00 01 00 00 02 00 00 00 00 00 02 A0 00 02
+Can you do a "df -i" as well?
 
-If that is the start of the block, theres a block header first, right?
-i.e.:
+The other option is to run xfs_metadump from xfsprogs 2.9.4 so I can
+perform some analysis as to why it's failing.
 
-/*
- *  * Bmap root header, on-disk form only.
- *   */
-typedef struct xfs_bmdr_block {
-        __be16          bb_level;       /* 0 is a leaf */
-	__be16          bb_numrecs;     /* current # of data records */
-} xfs_bmdr_block_t;
-
-So the above woul dbe telling me that this is a level zero block
-(a leaf), with one record. Then there's the first record in packed
-format....
-
->    In this case I lan up some where else instead going to the block of
-> directory entries..
->    This br_startoff (logical offset) is causing a difference...I am going
-> wrong somwhere in this case..
-
-unpack the extent record first before decoding it. Perhaps you should
-be using xfs_db to look at your disk structures rather than trying
-to manually decode it from hex dumps. i.e.:
-
-# xfs_db -r -c "inode 128" -c "p core.size core.nblocks core.format u.bmx"  -c "dblock 0" -c "type dir2" -c p /dev/sdb8
-core.size = 4096
-core.nblocks = 1
-core.format = 2 (extents)
-u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,132,1,0]
-bhdr.magic = 0x58443242
-bhdr.bestfree[0].offset = 0x618
-bhdr.bestfree[0].length = 0x770
-bhdr.bestfree[1].offset = 0x370
-bhdr.bestfree[1].length = 0x128
-bhdr.bestfree[2].offset = 0x88
-bhdr.bestfree[2].length = 0x58
-bu[0].inumber = 128
-bu[0].namelen = 1
-bu[0].name = "."
-bu[0].tag = 0x10
-bu[1].inumber = 128
-bu[1].namelen = 2
-bu[1].name = ".."
-bu[1].tag = 0x20
-bu[2].inumber = 131
-bu[2].namelen = 3
-bu[2].name = "tmp"
-bu[2].tag = 0x30
-bu[3].inumber = 132
-bu[3].namelen = 11
-bu[3].name = "syscalltest"
-bu[3].tag = 0x40
-......
-
-Note that this will print the entire block, including unused space with
-it's stale contents.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Regards,
+Barry.
