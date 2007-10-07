@@ -1,55 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 08:48:23 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97FmD7D028733
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 08:48:15 -0700
-Date: Sun, 7 Oct 2007 11:48:14 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 10:42:22 -0700 (PDT)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.176])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97HgHhZ015538
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 10:42:19 -0700
+Received: by wa-out-1112.google.com with SMTP id k22so1453023waf
+        for <linux-xfs@oss.sgi.com>; Sun, 07 Oct 2007 10:42:17 -0700 (PDT)
+Message-ID: <5d96567b0710071042paa1f804o5914250b1e18aa13@mail.gmail.com>
+Date: Sun, 7 Oct 2007 19:42:17 +0200
+From: Raz <raziebe@gmail.com>
 Subject: Re: mounting raid5 with different unit values
-In-Reply-To: <20071007145213.GA4504@puku.stupidest.org>
-Message-ID: <Pine.LNX.4.64.0710071147390.22702@p34.internal.lan>
-References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
- <20071007145213.GA4504@puku.stupidest.org>
+In-Reply-To: <Pine.LNX.4.64.0710070416160.741@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
+	 <Pine.LNX.4.64.0710070416160.741@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Raz <raziebe@gmail.com>, linux-xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-xfs@oss.sgi.com
 
-
-
-On Sun, 7 Oct 2007, Chris Wedgwood wrote:
-
-> On Sun, Oct 07, 2007 at 09:15:23AM +0200, Raz wrote:
->
->> mount -osunit=6144,swidth=18432 /dev/md1 /d1/
->
-> those values are set when you make the filesystem, not mount it
->
-> see the mkfs.xfs man page
+On 10/7/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 >
 >
+> On Sun, 7 Oct 2007, Raz wrote:
+>
+> > Hello
+> > I am trying to mount xfs over raid5. I am trying to mount it with
+> > different values than
+> > the true ones. the mount fails with a general error of :
+> > mount -osunit=6144,swidth=18432 /dev/md1 /d1/
+> > mount: wrong fs type, bad option, bad superblock on /dev/md1,
+> >        or too many mounted file systems
+> >
+> > the true values are:
+> > xfs_info /d1/
+> > meta-data=/dev/md1               isize=256    agcount=32, agsize=5687296 blks
+> >          =                       sectsz=4096  attr=0
+> > data     =                       bsize=4096   blocks=181989888, imaxpct=25
+> >          =                       sunit=256    swidth=768 blks, unwritten=1
+> > naming   =version 2              bsize=4096
+> > log      =internal               bsize=4096   blocks=32768, version=2
+> >          =                       sectsz=4096  sunit=1 blks
+> > realtime =none                   extsz=3145728 blocks=0, rtextents=0
+> >
+> >
+> > this same command did work on 2.6.15  while it failing on 2.6.17 .
+> > why ?
+> > --
+> > Raz
+> >
+> >
+>
+> Good question but also be alert that 2.6.17-2.6.17.6 will/may corrupt your
+> XFS filesystem due to a nasty bug.
+>
+> Justin.
+>
+I am using patched xfs ( the patch of 2.6.17.7)
 
-?
-
-man mount :)
-
-        sunit=value and swidth=value
-               Used to specify the stripe unit and width for a RAID device or a
-               stripe volume.  value must be specified in 512-byte block units.
-               If this option is not specified and the filesystem was made on a
-               stripe volume or the stripe width or unit were specified for the
-               RAID device at mkfs  time,  then  the  mount  system  call  will
-               restore the value from the superblock.  For filesystems that are
-               made directly on RAID devices, these  options  can  be  used  to
-               override  the  information  in  the superblock if the underlying
-               disk layout changes after the filesystem has been created.   The
-               swidth  option  is  required if the sunit option has been speci-
-               fied, and must be a multiple of the sunit value.
-
-He should be able to specify those option from the command line using 
-mount.
-
-Justin.
+-- 
+Raz
