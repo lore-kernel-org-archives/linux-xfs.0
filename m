@@ -1,65 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 10:42:22 -0700 (PDT)
-Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.176])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97HgHhZ015538
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 10:42:19 -0700
-Received: by wa-out-1112.google.com with SMTP id k22so1453023waf
-        for <linux-xfs@oss.sgi.com>; Sun, 07 Oct 2007 10:42:17 -0700 (PDT)
-Message-ID: <5d96567b0710071042paa1f804o5914250b1e18aa13@mail.gmail.com>
-Date: Sun, 7 Oct 2007 19:42:17 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 11:13:37 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.185])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97IDVvB020114
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 11:13:34 -0700
+Received: by nf-out-0910.google.com with SMTP id e27so958698nfd
+        for <linux-xfs@oss.sgi.com>; Sun, 07 Oct 2007 11:13:32 -0700 (PDT)
+Message-ID: <5d96567b0710071045q1472a3c7p39d2f707f54d496c@mail.gmail.com>
+Date: Sun, 7 Oct 2007 19:45:41 +0200
 From: Raz <raziebe@gmail.com>
 Subject: Re: mounting raid5 with different unit values
-In-Reply-To: <Pine.LNX.4.64.0710070416160.741@p34.internal.lan>
+In-Reply-To: <20071007145213.GA4504@puku.stupidest.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
-	 <Pine.LNX.4.64.0710070416160.741@p34.internal.lan>
+	 <20071007145213.GA4504@puku.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Chris Wedgwood <cw@f00f.org>
 Cc: linux-xfs@oss.sgi.com
 
-On 10/7/07, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+On 10/7/07, Chris Wedgwood <cw@f00f.org> wrote:
+> On Sun, Oct 07, 2007 at 09:15:23AM +0200, Raz wrote:
 >
->
-> On Sun, 7 Oct 2007, Raz wrote:
->
-> > Hello
-> > I am trying to mount xfs over raid5. I am trying to mount it with
-> > different values than
-> > the true ones. the mount fails with a general error of :
 > > mount -osunit=6144,swidth=18432 /dev/md1 /d1/
-> > mount: wrong fs type, bad option, bad superblock on /dev/md1,
-> >        or too many mounted file systems
-> >
-> > the true values are:
-> > xfs_info /d1/
-> > meta-data=/dev/md1               isize=256    agcount=32, agsize=5687296 blks
-> >          =                       sectsz=4096  attr=0
-> > data     =                       bsize=4096   blocks=181989888, imaxpct=25
-> >          =                       sunit=256    swidth=768 blks, unwritten=1
-> > naming   =version 2              bsize=4096
-> > log      =internal               bsize=4096   blocks=32768, version=2
-> >          =                       sectsz=4096  sunit=1 blks
-> > realtime =none                   extsz=3145728 blocks=0, rtextents=0
-> >
-> >
-> > this same command did work on 2.6.15  while it failing on 2.6.17 .
-> > why ?
-> > --
-> > Raz
-> >
-> >
 >
-> Good question but also be alert that 2.6.17-2.6.17.6 will/may corrupt your
-> XFS filesystem due to a nasty bug.
+> those values are set when you make the filesystem, not mount it
 >
-> Justin.
+> see the mkfs.xfs man page
 >
-I am using patched xfs ( the patch of 2.6.17.7)
+it was possible to mkfs the file system in different units in 2.6.15,
+but it is is not possible to mkfs it with differrent unit sizes in
+2.6.17.
 
 -- 
 Raz
