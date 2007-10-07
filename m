@@ -1,39 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 11:13:37 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.185])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97IDVvB020114
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 11:13:34 -0700
-Received: by nf-out-0910.google.com with SMTP id e27so958698nfd
-        for <linux-xfs@oss.sgi.com>; Sun, 07 Oct 2007 11:13:32 -0700 (PDT)
-Message-ID: <5d96567b0710071045q1472a3c7p39d2f707f54d496c@mail.gmail.com>
-Date: Sun, 7 Oct 2007 19:45:41 +0200
-From: Raz <raziebe@gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 15:19:19 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l97MJARQ024298
+	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 15:19:15 -0700
+Date: Mon, 8 Oct 2007 08:19:03 +1000
+From: David Chinner <dgc@sgi.com>
 Subject: Re: mounting raid5 with different unit values
-In-Reply-To: <20071007145213.GA4504@puku.stupidest.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Message-ID: <20071007221902.GO23367404@sgi.com>
 References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
-	 <20071007145213.GA4504@puku.stupidest.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
+To: Raz <raziebe@gmail.com>
 Cc: linux-xfs@oss.sgi.com
 
-On 10/7/07, Chris Wedgwood <cw@f00f.org> wrote:
-> On Sun, Oct 07, 2007 at 09:15:23AM +0200, Raz wrote:
->
-> > mount -osunit=6144,swidth=18432 /dev/md1 /d1/
->
-> those values are set when you make the filesystem, not mount it
->
-> see the mkfs.xfs man page
->
-it was possible to mkfs the file system in different units in 2.6.15,
-but it is is not possible to mkfs it with differrent unit sizes in
-2.6.17.
+On Sun, Oct 07, 2007 at 09:15:23AM +0200, Raz wrote:
+> Hello
+> I am trying to mount xfs over raid5. I am trying to mount it with
+> different values than
+> the true ones. the mount fails with a general error of :
+> mount -osunit=6144,swidth=18432 /dev/md1 /d1/
+> mount: wrong fs type, bad option, bad superblock on /dev/md1,
+>        or too many mounted file systems
 
+Try looking in your syslog or dmesg for the error that occurred
+during mount. THere's the possibility that it won't give you
+an error because of a bug that was fixed more recently than
+2.6.17 that suppressd errors incorrectly. You shoul dreally
+try a more recent kernel ;)
+
+Most likely, the new sunit/swidth are being rejected because
+of alignent reasons (e.g. the AG size is not a multiple of
+the new sunit you are setting).
+
+Cheers,
+
+Dave.
 -- 
-Raz
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
