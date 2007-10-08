@@ -1,38 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 16:00:42 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l97N0aNv031566
-	for <linux-xfs@oss.sgi.com>; Sun, 7 Oct 2007 16:00:38 -0700
-Message-ID: <4709650F.7060101@sandeen.net>
-Date: Sun, 07 Oct 2007 18:00:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: mounting raid5 with different unit values
-References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com> <20071007221902.GO23367404@sgi.com>
-In-Reply-To: <20071007221902.GO23367404@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 17:15:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l980F1oi015789
+	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 17:15:03 -0700
+Date: Mon, 8 Oct 2007 10:14:52 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS internal error
+Message-ID: <20071008001452.GX995458@sgi.com>
+References: <470831E6.4030704@fastmail.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <470831E6.4030704@fastmail.co.uk>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Raz <raziebe@gmail.com>, linux-xfs@oss.sgi.com
+To: Max Waterman <davidmaxwaterman+kernel@fastmail.co.uk>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Sun, Oct 07, 2007 at 09:15:23AM +0200, Raz wrote:
->> Hello
->> I am trying to mount xfs over raid5. I am trying to mount it with
->> different values than
->> the true ones. the mount fails with a general error of :
->> mount -osunit=6144,swidth=18432 /dev/md1 /d1/
->> mount: wrong fs type, bad option, bad superblock on /dev/md1,
->>        or too many mounted file systems
+[please cc xfs@oss.sgi.com on XFS bug reports. thx.]
+
+On Sun, Oct 07, 2007 at 09:09:58AM +0800, Max Waterman wrote:
+> Hi,
 > 
-> Try looking in your syslog or dmesg for the error that occurred
-> during mount. 
+> I have just had an XFS error occur while deleting some directory
+> hierarchy. I hope this is the correct place to report it.
 
-Just a general plea to everyone.  If you get that above generic mount
-error ("... or planets out of alignment") you *really* need to look at
-dmesg to get any idea what's actually gone wrong.
+.....
+> This is in syslog :
+> 
+> > Oct  6 23:40:33 jeeves kernel: xfs_da_do_buf: bno 16777216
+                                                  ^^^^^^^^^^^^^
+> > Oct  6 23:40:33 jeeves kernel: dir: inode 2095141277
+> > Oct  6 23:40:33 jeeves kernel: Filesystem "md2": XFS internal error xfs_da_do_buf(1) at line 1994 of file fs/xfs/xfs_da_btree.c.  Caller 0xffffffff889b2de4
 
--Eric
+Did you ever run 2.6.17-2.6.17.6? If so, this implies:
+
+http://oss.sgi.com/projects/xfs/faq.html#dir2
+
+> I am fairly sure there is nothing I can do about this, but I thought it
+> prudent to mention it. Searching turned up some similar issues, but they
+> seem related to a previous kernel version and claimed to be fixed in
+> subsequent versions.
+
+Yes, but those previous corruptions get left on disk as a landmine
+for you to trip over some time later, even on a kernel that has the
+bug fixed.
+
+I suggest that you run xfs_check on the filesystem and if that
+shows up errors, run xfs_repair onteh filesystem to correct them.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
