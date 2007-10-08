@@ -1,43 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 23:16:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 23:17:11 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l986FwMK019066
-	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 23:16:00 -0700
-Subject: PARTIAL TAKE 971186 - kill superflous buffer locking
-Message-Id: <20071008061554.4CC4A58C38F1@chook.melbourne.sgi.com>
-Date: Mon,  8 Oct 2007 16:15:54 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l986H2mJ019374
+	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 23:17:06 -0700
+Date: Mon, 08 Oct 2007 16:17:53 +1000
+Subject: Re: RFC: Case-insensitive support for XFS
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <op.ty6361ut3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.tzpbqspl3jf8g2@pc-bnaujok.melbourne.sgi.com> <20071005154442.GA6432@infradead.org> <1191610338.2695.8.camel@entropy> <op.tzu4jagf3jf8g2@pc-bnaujok.melbourne.sgi.com> <1191822288.2694.10.camel@entropy>
+Content-Transfer-Encoding: 8bit
+Message-ID: <op.tzu7r3x43jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <1191822288.2694.10.camel@entropy>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Nicholas Miell <nmiell@comcast.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, linux-fsdevel@vger.kernel.org, urban@svenskatest.se
 
-kill superflous buffer locking
+On Mon, 08 Oct 2007 15:44:48 +1000, Nicholas Miell <nmiell@comcast.net>  
+wrote:
 
-There is no need to lock any page in xfs_buf.c because we operate
-on our own address_space and all locking is covered by the buffer
-semaphore.  If we ever switch back to main blockdeive address_space
-as suggested e.g. for fsblock with a similar scheme the locking will
-have to be totally revised anyway because the current scheme is
-neither correct nor coherent with itself.
+> On Mon, 2007-10-08 at 15:07 +1000, Barry Naujok wrote:
+>> On Sat, 06 Oct 2007 04:52:18 +1000, Nicholas Miell <nmiell@comcast.net>
+>> wrote:
+>>
+>> > On Fri, 2007-10-05 at 16:44 +0100, Christoph Hellwig wrote:
+>> >> [Adding -fsdevel because some of the things touched here might be of
+>> >>  broader interest and Urban because his name is on nls_utf8.c]
+>> >>
+>> >> On Fri, Oct 05, 2007 at 11:57:54AM +1000, Barry Naujok wrote:
+>> >> >
+>> >> > On it's own, linux only provides case conversion for old-style
+>> >> > character sets - 8 bit sequences only. A lot of distos are
+>> >> > now defaulting to UTF-8 and Linux NLS stuff does not support
+>> >> > case conversion for any unicode sets.
+>> >>
+>> >> The lack of case tables in nls_utf8.c defintively seems odd to me.
+>> >> Urban, is there a reason for that?  The only thing that comes to
+>> >> mind is that these tables might be quite large.
+>> >>
+>> >
+>> > Case conversion in Unicode is locale dependent. The legacy 8-bit
+>> > character encodings don't code for enough characters to run into the
+>> > ambiguities, so they can get away with fixed case conversion tables.
+>> > Unicode can't.
+>>
+>> Based on http://www.unicode.org/reports/tr21/tr21-5.html and
+>> http://www.unicode.org/Public/UNIDATA/CaseFolding.txt
+>>
+>> Doing case comparison using that table should cater for most
+>> circumstances except a few exeptions. It should be enough
+>> to satisfy a locale independant case-insensitive filesystem
+>> (ie. the C + F case folding option).
+>>
+>> Is normalization required after case-folding? What I read
+>> implies it is not necessary for this purpose (and would
+>> slow things down and bloat the code more).
+>>
+>> Now I suppose, it's just a question of a fixed table in the
+>> kernel driver (HFS+ style), or data stored in a special
+>> inode on-disk (NTFS style, shared refcounted in memory
+>> when the same). With the on-disk, the table can be generated
+>>  from mkfs.xfs.
+>
+> You also have to decide whether to screw over people who speak Turkic
+> languages and expect an 'I' to 'ı' mapping or everybody else who expect
+> an 'I' to 'i' mapping.
 
+Is there some way in the kernel, that I'm unaware of, in knowing what
+the user's current language and/or codepage locale is set to?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The only thing I've found is the isocharset option that the other
+filesystems use or the default_nls_table() if one isn't specified.
+The default one seems to be a CONFIG option.
 
-Date:  Mon Oct  8 16:14:29 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-oss
-Inspected by:  Christoph Hellwig <hch@lst.de>
-Author:  lachlan
+> Although, if you're content in ignoring the kernel's native NLS case
+> mapping tables (which expect a locale-independent 1-to-1 mapping), you
+> could just uppercase everything and map both 'i' and 'ı' to 'I'.
+>
+> Then you have to decide whether things like 'ê' map to 'E' or 'Ê', which
+> is also locale dependent.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Looking at case-folding, it would be generating lower case equivalent
+characters, nls->charset2lower.
 
-
-Modid:  xfs-linux-melb:xfs-kern:29845a
-fs/xfs/xfsidbg.c - 1.339 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.339&r2=text&tr2=1.338&f=h
-fs/xfs/linux-2.6/xfs_buf.h - 1.121 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.121&r2=text&tr2=1.120&f=h
-fs/xfs/linux-2.6/xfs_buf.c - 1.245 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.245&r2=text&tr2=1.244&f=h
-	- kill superflous buffer locking
+Barry.
