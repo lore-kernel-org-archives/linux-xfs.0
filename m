@@ -1,49 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 07 Oct 2007 23:43:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Oct 2007 00:00:45 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l986hB48025626
-	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 23:43:13 -0700
-Subject: PARTIAL TAKE 971186 - fix 32-bit compat ioctls for GETXFLAGS, SETXFLAGS, GETVERSION
-Message-Id: <20071008064308.B7D9958C38F1@chook.melbourne.sgi.com>
-Date: Mon,  8 Oct 2007 16:43:08 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l986xtPx029058
+	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 23:59:59 -0700
+Date: Mon, 08 Oct 2007 17:00:58 +1000
+Subject: Re: RFC: Case-insensitive support for XFS
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <op.ty6361ut3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.tzpbqspl3jf8g2@pc-bnaujok.melbourne.sgi.com> <20071005154442.GA6432@infradead.org> <1191610338.2695.8.camel@entropy> <op.tzu4jagf3jf8g2@pc-bnaujok.melbourne.sgi.com> <1191822288.2694.10.camel@entropy>
+Content-Transfer-Encoding: 8bit
+Message-ID: <op.tzu9rwld3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <1191822288.2694.10.camel@entropy>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Nicholas Miell <nmiell@comcast.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, linux-fsdevel@vger.kernel.org, urban@svenskatest.se
 
-fix 32-bit compat ioctls for GETXFLAGS, SETXFLAGS, GETVERSION
+On Mon, 08 Oct 2007 15:44:48 +1000, Nicholas Miell <nmiell@comcast.net>  
+wrote:
 
-XFS_IOC_GETVERSION, XFS_IOC_GETXFLAGS and XFS_IOC_SETXFLAGS all
-take a "long" which changes size between 32 and 64 bit platforms.
+> You also have to decide whether to screw over people who speak Turkic
+> languages and expect an 'I' to 'ı' mapping or everybody else who expect
+> an 'I' to 'i' mapping.
 
-So, the ioctl cmds that come in from a 32-bit app aren't as expected, 
-for example on GETXFLAGS,
+I suspect they would be used to the false case-insensitive match. I
+tested it on Windows XP with NTFS: İ (U+0130) did not match I or i
+or ı (U+0131). I also tested it with the Turkish language/keyboard set.
 
-        unknown cmd fd(3) cmd(80046601){t:'f';sz:4}
+Once it's set in a filesystem, the handling of it can't really be
+swapped back and forth either, otherwise, you may lose access to
+that file.
 
-due to the size mismatch.
+There is no practical way that I can see of supporting this
+fully, even with using the NLS tables. The on-disk hashes have
+to remain consistent regardless of what language is specified.
 
-So, use instead the 32-bit version of the commands for compat ioctls,
-and other than that it doesn't take any more manipulation.
-
-Also, for both native and compat versions, just define them to
-the values as defined in fs.h
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-Date:  Mon Oct  8 16:42:26 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-oss
-Inspected by:  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29849a
-fs/xfs/xfs_fs.h - 1.36 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fs.h.diff?r1=text&tr1=1.36&r2=text&tr2=1.35&f=h
-fs/xfs/linux-2.6/xfs_ioctl32.c - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl32.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-	- fix 32-bit compat ioctls for GETXFLAGS, SETXFLAGS, GETVERSION
+Barry.
