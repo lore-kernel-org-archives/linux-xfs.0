@@ -1,40 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Oct 2007 00:00:45 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 08 Oct 2007 17:31:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l986xtPx029058
-	for <xfs@oss.sgi.com>; Sun, 7 Oct 2007 23:59:59 -0700
-Date: Mon, 08 Oct 2007 17:00:58 +1000
-Subject: Re: RFC: Case-insensitive support for XFS
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <op.ty6361ut3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.tzpbqspl3jf8g2@pc-bnaujok.melbourne.sgi.com> <20071005154442.GA6432@infradead.org> <1191610338.2695.8.camel@entropy> <op.tzu4jagf3jf8g2@pc-bnaujok.melbourne.sgi.com> <1191822288.2694.10.camel@entropy>
-Content-Transfer-Encoding: 8bit
-Message-ID: <op.tzu9rwld3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <1191822288.2694.10.camel@entropy>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l990VImo000355
+	for <xfs@oss.sgi.com>; Mon, 8 Oct 2007 17:31:19 -0700
+Subject: TAKE 971597 - fsck.xfs doesn't verify that the device exists
+Message-Id: <20071009003114.2DEEB58C38F1@chook.melbourne.sgi.com>
+Date: Tue,  9 Oct 2007 10:31:14 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nicholas Miell <nmiell@comcast.net>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, linux-fsdevel@vger.kernel.org, urban@svenskatest.se
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, 08 Oct 2007 15:44:48 +1000, Nicholas Miell <nmiell@comcast.net>  
-wrote:
+Make fsck.xfs verify the device exists
 
-> You also have to decide whether to screw over people who speak Turkic
-> languages and expect an 'I' to 'ı' mapping or everybody else who expect
-> an 'I' to 'i' mapping.
 
-I suspect they would be used to the false case-insensitive match. I
-tested it on Windows XP with NTFS: İ (U+0130) did not match I or i
-or ı (U+0131). I also tested it with the Turkish language/keyboard set.
+Date:  Tue Oct  9 10:30:48 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  wtucker@donobi.com,nathans@debian.org
 
-Once it's set in a filesystem, the handling of it can't really be
-swapped back and forth either, otherwise, you may lose access to
-that file.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-There is no practical way that I can see of supporting this
-fully, even with using the NLS tables. The on-disk hashes have
-to remain consistent regardless of what language is specified.
 
-Barry.
+Modid:  master-melb:xfs-cmds:29851a
+xfsprogs/fsck/xfs_fsck.sh - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/fsck/xfs_fsck.sh.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+	- Make fsck.xfs verify the device exists
