@@ -1,73 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Oct 2007 03:01:49 -0700 (PDT)
-Received: from mail.albertix.com ([213.152.197.2])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l99A1iQP011979
-	for <xfs@oss.sgi.com>; Tue, 9 Oct 2007 03:01:46 -0700
-Received: from [192.168.1.3] (ip-184-86.sn2.eutelia.it [83.211.184.86])
-	by mail.albertix.com (Postfix) with ESMTP id 49DACB9BA9
-	for <xfs@oss.sgi.com>; Tue,  9 Oct 2007 11:38:56 +0200 (CEST)
-Message-ID: <470B4D3A.3060105@albertix.com>
-Date: Tue, 09 Oct 2007 11:43:22 +0200
-From: "Alberto (albertix.com)" <alberto@albertix.com>
-MIME-Version: 1.0
-Subject: Recover fs
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Oct 2007 18:24:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9A1OJ8q014082
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2007 18:24:21 -0700
+Subject: TAKE 971670 - Ensure sync flushes all dirty data to disk
+Message-Id: <20071010012416.524D258C38F1@chook.melbourne.sgi.com>
+Date: Wed, 10 Oct 2007 11:24:16 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Hi,
+avoid race in sync_inodes() that can fail to write out all dirty data
 
-This is my first question, sorry for my english.
-I have a very serious problem. I've demage (suppose) data on XFS  RAID 0 
-disk, I'll try explain steps:
+In xfs_fs_sync_super() treat a sync the same as a filesystem freeze.
+This is needed to force the log to disk for inodes which are not marked
+dirty in the Linux inode (the inodes are marked dirty on completion of
+the log I/O) and so sync_inodes() will not flush them.
 
-before:
-n.2 sata hard disk monted on raid0 with xfs fs
+In xfs_fs_write_inode() a synchronous flush will not get an EAGAIN
+from xfs_inode_flush() and if an asynchronous flush returns EAGAIN
+we should pass it on to the caller.  If we get an error while flushing
+the inode then re-dirty it so we can try again later.
 
-after:
-n.2 sata hard disk monted on raid0 with reiser fs
+Date:  Wed Oct 10 11:22:49 AEST 2007
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-preempt
+Inspected by:  dgc
+Author:  lachlan
 
-Story:
-Server is gentoo based OS with TYAN MB with n.4 SATA onboard can be 
-configured in Raid0, raid1, raid0+1.
-On another controller (PCI) was mounted another sata hd with OS. This hd 
-was faulted, than I decide to mount 2 hd with raid1 configuration for 
-better security.
-I've decided to move all same size disk to unique controller (on MB). 
-When i moved this hard disks I've confused old disks with new and I've 
-created new raid array on them.
-Old array was xfs fs and new one i've decided to make reiserfs. After 
-creation of RAID, i've make "mkreiserfs /dev/md1", but not on each single hd
-Now I have new array (reiserfs) on disks witch before has very important 
-data. When I saw my error, I've unmount array. With fdisk I see my sdc1 
-free space.
-In this exact moment i've lounched command: "xfs_repair -n /dev/sdc1".
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-I'm desperade (aprox. crying) , on this disks was 3 years of work data 
-(web, db, materials).
-It's possibility to recover this data (nothing else was writing after on 
-disk disks) ??? . Pls help me
-If is possibilty, I promise to make 10 copies (for penitency).
 
-Alberto.
-
-ALBERTIX.COM di Starosta Wojciech
-Via Falcone e Borsellino, 11
-47827 Villa Verucchio (RN)
-
-tel: +39 0541 1796799
-fax: +39 0541 1791899
-mob: +39 3388908888
-
-PIVA: 03583890409
-CIAA: RN-299344
-CF: STRWCC67S06Z127F
-
-Banca: BANCA POPOLARE DELL'EMILIA ROMAGNA
-Filiale: VILLA VERUCCHIO
-ABI: 05387 CAB:68100
-CC: 000001472060
-CIN: B
+Modid:  xfs-linux-melb:xfs-kern:29860a
+fs/xfs/linux-2.6/xfs_super.c - 1.401 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.401&r2=text&tr2=1.400&f=h
+	- avoid race in sync_inodes() that can fail to write out all dirty data
