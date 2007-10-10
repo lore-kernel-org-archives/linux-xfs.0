@@ -1,39 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Oct 2007 18:24:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 09 Oct 2007 19:27:56 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9A1OJ8q014082
-	for <xfs@oss.sgi.com>; Tue, 9 Oct 2007 18:24:21 -0700
-Subject: TAKE 971670 - Ensure sync flushes all dirty data to disk
-Message-Id: <20071010012416.524D258C38F1@chook.melbourne.sgi.com>
-Date: Wed, 10 Oct 2007 11:24:16 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9A2RmKN024806
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2007 19:27:51 -0700
+Date: Wed, 10 Oct 2007 12:27:57 +1000
+Subject: Re: RFC: Case-insensitive support for XFS
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <op.ty6361ut3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.tzpbqspl3jf8g2@pc-bnaujok.melbourne.sgi.com> <20071005154442.GA6432@infradead.org> <1191610338.2695.8.camel@entropy> <op.tzu4jagf3jf8g2@pc-bnaujok.melbourne.sgi.com> <1191822288.2694.10.camel@entropy>
+Content-Transfer-Encoding: 8bit
+Message-ID: <op.tzymgvj03jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <1191822288.2694.10.camel@entropy>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Nicholas Miell <nmiell@comcast.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, linux-fsdevel@vger.kernel.org, urban@svenskatest.se
 
-avoid race in sync_inodes() that can fail to write out all dirty data
+On Mon, 08 Oct 2007 15:44:48 +1000, Nicholas Miell <nmiell@comcast.net>  
+wrote:
 
-In xfs_fs_sync_super() treat a sync the same as a filesystem freeze.
-This is needed to force the log to disk for inodes which are not marked
-dirty in the Linux inode (the inodes are marked dirty on completion of
-the log I/O) and so sync_inodes() will not flush them.
+> On Mon, 2007-10-08 at 15:07 +1000, Barry Naujok wrote:
+>> On Sat, 06 Oct 2007 04:52:18 +1000, Nicholas Miell <nmiell@comcast.net>
+>> wrote:
+>>
+>> > On Fri, 2007-10-05 at 16:44 +0100, Christoph Hellwig wrote:
+>> >> [Adding -fsdevel because some of the things touched here might be of
+>> >>  broader interest and Urban because his name is on nls_utf8.c]
+>> >>
+>> >> On Fri, Oct 05, 2007 at 11:57:54AM +1000, Barry Naujok wrote:
+>> >> >
+>> >> > On it's own, linux only provides case conversion for old-style
+>> >> > character sets - 8 bit sequences only. A lot of distos are
+>> >> > now defaulting to UTF-8 and Linux NLS stuff does not support
+>> >> > case conversion for any unicode sets.
+>> >>
+>> >> The lack of case tables in nls_utf8.c defintively seems odd to me.
+>> >> Urban, is there a reason for that?  The only thing that comes to
+>> >> mind is that these tables might be quite large.
+>> >>
+>> >
+>> > Case conversion in Unicode is locale dependent. The legacy 8-bit
+>> > character encodings don't code for enough characters to run into the
+>> > ambiguities, so they can get away with fixed case conversion tables.
+>> > Unicode can't.
+>>
+>> Based on http://www.unicode.org/reports/tr21/tr21-5.html and
+>> http://www.unicode.org/Public/UNIDATA/CaseFolding.txt
+>>
+>> Doing case comparison using that table should cater for most
+>> circumstances except a few exeptions. It should be enough
+>> to satisfy a locale independant case-insensitive filesystem
+>> (ie. the C + F case folding option).
+>>
+>> Is normalization required after case-folding? What I read
+>> implies it is not necessary for this purpose (and would
+>> slow things down and bloat the code more).
+>>
+>> Now I suppose, it's just a question of a fixed table in the
+>> kernel driver (HFS+ style), or data stored in a special
+>> inode on-disk (NTFS style, shared refcounted in memory
+>> when the same). With the on-disk, the table can be generated
+>>  from mkfs.xfs.
+>
+> You also have to decide whether to screw over people who speak Turkic
+> languages and expect an 'I' to 'ı' mapping or everybody else who expect
+> an 'I' to 'i' mapping.
 
-In xfs_fs_write_inode() a synchronous flush will not get an EAGAIN
-from xfs_inode_flush() and if an asynchronous flush returns EAGAIN
-we should pass it on to the caller.  If we get an error while flushing
-the inode then re-dirty it so we can try again later.
+I have had a thought about this. If the case table is stored on-disk like
+NTFS, then mkfs.xfs can specify whether to use Turkic I's or not.
 
-Date:  Wed Oct 10 11:22:49 AEST 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-preempt
-Inspected by:  dgc
-Author:  lachlan
+That guarantees consistent case folding for the filesystem. mkfs.xfs can
+default to a Turkic case table if the user's locale is tr/az and the
+"default case table" if not. mkfs.xfs will have to highlight this setting
+if the user specifies the generic case-insensitive option. mkfs.xfs
+should also allow the user to specify which of the case tables to use.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29860a
-fs/xfs/linux-2.6/xfs_super.c - 1.401 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.401&r2=text&tr2=1.400&f=h
-	- avoid race in sync_inodes() that can fail to write out all dirty data
+Barry.
