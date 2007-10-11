@@ -1,58 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Oct 2007 00:36:34 -0700 (PDT)
-Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9B7aL8X029213
-	for <xfs@oss.sgi.com>; Thu, 11 Oct 2007 00:36:24 -0700
-Message-ID: <470DD275.9090602@lncsa.com>
-Date: Thu, 11 Oct 2007 09:36:21 +0200
-From: Laurent CARON <lcaron@lncsa.com>
-MIME-Version: 1.0
-Subject: Re: Crash on 2.6.21.7 Vanilla + DRBD 0.7
-References: <20071004133302.GA5058@apartia.fr> <4704FA19.2080101@theendofthetunnel.de> <20071010151537.GA31573@apartia.fr> <20071010224644.GP995458@sgi.com>
-In-Reply-To: <20071010224644.GP995458@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Oct 2007 14:54:07 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9BLs03X013755
+	for <xfs@oss.sgi.com>; Thu, 11 Oct 2007 14:54:03 -0700
+Date: Fri, 12 Oct 2007 07:53:53 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: XFS regression?
+Message-ID: <20071011215352.GX995458@sgi.com>
+References: <20071010152742.1b2a7bce@zeus.pccl.info> <20071011010139.GT995458@sgi.com> <20071011151512.69f19419@zeus.pccl.info>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071011151512.69f19419@zeus.pccl.info>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: David Chinner <dgc@sgi.com>
+To: Andrew Clayton <andrew@digital-domain.net>
+Cc: David Chinner <dgc@sgi.com>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-David Chinner wrote:
-> Yes, please turn on slab debugging so we can try to find the cause
-> of this memory corruption. I expect the problem to be in DRBD as
-> nobody else running XFS is reporting this problem. However, without
-> running with the right debug options enabled we'll never get to
-> the bottom of the problem.
+On Thu, Oct 11, 2007 at 03:15:12PM +0100, Andrew Clayton wrote:
+> On Thu, 11 Oct 2007 11:01:39 +1000, David Chinner wrote:
+> 
+> > So it's almost certainly pointing at an elevator or driver change, not an
+> > XFS change.
+> 
+> heh, git bisect begs to differ :)
+> 
+> 4c60658e0f4e253cf275f12b7c76bf128515a774 is first bad commit commit
+> 4c60658e0f4e253cf275f12b7c76bf128515a774 Author: David Chinner <dgc@sgi.com>
+> Date:   Sat Nov 11 18:05:00 2006 +1100
+> 
+>     [XFS] Prevent a deadlock when xfslogd unpins inodes.
 
+Oh, of course - I failed to notice the significance of
+this loop in your test:
 
-Hi,
+	while [foo]; do
+		touch fred
+		rm fred
+	done
 
-Before installing a new kernel i've got a (little?) clue.
+The inode allocator keeps reusing the same inode.  If the
+transaction that did the unlink has not hit the disk before we
+allocate the inode again, we have to force the log to get the unlink
+transaction to disk to get the xfs inode unpinned (i.e. able to be
+modified in memory again).
 
-The setup is as follows:
+It's the log force I/O that's introducing the latency.
 
-The drbd partition is mounted to a generic mountpoint
-/dev/drbd1 on /data/web type xfs (rw)
+If we don't force the log, then we have a possible use-after free
+of the linux inode because of a fundamental mismatch between
+the XFS inode life cycle and the linux inode life cycle. The
+use-after free only occurs on large machines under heavy, heavy
+metadata load to many disks and filesystems (requires enough
+traffic to overload an xfslogd) and is very difficult to
+reproduce (large machine, lots of disks and 20-30 hours MTTF).
 
-The subdirectories of /data/web are mounted (mount --bind) to another
-directory
-/data/web/var/www on /var/www type xfs (rw,bind)
-/data/web/var/lib/postgresql on /var/lib/postgresql type xfs (rw,bind)
-/data/web/var/lib/mysql on /var/lib/mysql type xfs (rw,bind)
+I'll have a look at other ways to solve this problem, but it
+took 6 months to find a solution to the race in the first place
+so don't hold your breath.
 
+Cheers,
 
-It seems I made a mistake here.
-
-mount -t xfs --bind /data/web/var/www /var/www
-
-instead of
-
-mount --bind /data/web/var/www /var/www
-
-Could this be 'THE' root of the problem (if the system then sees
-/var/www as a 'real' XFS filesystem and not a directory mounted over) ?
-
-Thanks
-
-Laurent
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
