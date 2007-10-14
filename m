@@ -1,42 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Oct 2007 17:23:32 -0700 (PDT)
-Received: from smtp.aaisp.net.uk (smtp.aaisp.net.uk [81.187.81.51])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9E0NNQ3030253
-	for <xfs@oss.sgi.com>; Sat, 13 Oct 2007 17:23:24 -0700
-Date: Sun, 14 Oct 2007 01:23:23 +0100
-From: Andrew Clayton <andrew@digital-domain.net>
-Subject: Re: Latencies in XFS.
-Message-ID: <20071014012323.1d6c9e8e@alpha.digital-domain.net>
-In-Reply-To: <20071013201015.4a8008bb@galadriel.home>
-References: <20071009163635.413dec0c@zeus.pccl.info>
-	<20071013201015.4a8008bb@galadriel.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 14 Oct 2007 05:21:49 -0700 (PDT)
+Received: from frodo.openenterprise.co.uk (ns1.openenterprise.co.uk [81.21.68.157])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9ECLa9M029237
+	for <xfs@oss.sgi.com>; Sun, 14 Oct 2007 05:21:41 -0700
+Message-ID: <471209D0.9090305@openenterprise.co.uk>
+Date: Sun, 14 Oct 2007 13:21:36 +0100
+From: Nick Gregory <nick@openenterprise.co.uk>
+MIME-Version: 1.0
+Subject: Re: Repeated XFS Crash on x86_64 fiesty
+References: <470F2A1E.9070503@openenterprise.co.uk> <Pine.LNX.4.64.0710121551470.16962@p34.internal.lan>
+In-Reply-To: <Pine.LNX.4.64.0710121551470.16962@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, 13 Oct 2007 20:10:15 +0200, Emmanuel Florac wrote:
-
-> Le Tue, 9 Oct 2007 16:36:35 +0100 vous écriviez:
+Justin Piszcz wrote:
+> Have you run memtest86?  Have you checked the CPU?  Is it an AMD64 CPU 
+> where the memory controller is onboard (and .. if damaged/overheating) 
+> could cause problems with the memory?
 > 
-> > I think I have narrowed it down to XFS.
-> 
-> I notice you use a bleeding-edge unstable kernel, with a whole new
-> scheduler. I tried your benchmark on a machine running a known stable
-> kernel (2.6.20.17) and the slowdown is similar in xfs and other fs.
 
-I don't see the slowdown in ext3.
- 
-> As a side note, I personnally wouldn't choose xfs for desktop users
-> home directories (email,web, etc) because it's much better at pure
-> throughput and quite slower at IOPS than other FSes. Reiserfs is the
-> best of the common FSes for this.
-> 
-> I'm quite surprised that apparently your production system is running
-> a prerelease kernel. Why? 
+Thanks for the suggestions. Shortly after my posting I had a drive fail 
+shortly followed by another three taking out 6TB of data :-( , luckily 
+part of a replicated pair.
 
-Actually it's now running 2.6.23
+So its certainly a hardware thing either a bad raid card or a bad batch 
+of drives rather than anything to do with XFS.
