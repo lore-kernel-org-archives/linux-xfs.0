@@ -1,45 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Oct 2007 02:37:03 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9F9aoPv006857
-	for <xfs@oss.sgi.com>; Mon, 15 Oct 2007 02:36:52 -0700
-Subject: Re: Interaction between Xen and XFS: stray RW mappings
-From: Andi Kleen <andi@firstfloor.org>
-References: <470FA7C3.90404@goop.org> <20071014225618.GN23367404@sgi.com>
-Date: Mon, 15 Oct 2007 11:36:50 +0200
-In-Reply-To: <20071014225618.GN23367404@sgi.com> (David Chinner's message of "Mon\, 15 Oct 2007 08\:56\:18 +1000")
-Message-ID: <p731wbw4t3h.fsf@bingen.suse.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Oct 2007 03:05:00 -0700 (PDT)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.225])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9FA4nhO010573
+	for <xfs@oss.sgi.com>; Mon, 15 Oct 2007 03:04:51 -0700
+Received: by nz-out-0506.google.com with SMTP id x3so788036nzd
+        for <xfs@oss.sgi.com>; Mon, 15 Oct 2007 03:04:51 -0700 (PDT)
+Message-ID: <cc7060690710150258v327637c3i3c0df4a821d2d056@mail.gmail.com>
+Date: Mon, 15 Oct 2007 15:28:34 +0530
+From: "Bhagi rathi" <jahnu77@gmail.com>
+Subject: Re: XFS regression?
+In-Reply-To: <20071014230949.GO23367404@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <20071010152742.1b2a7bce@zeus.pccl.info>
+	 <20071011010139.GT995458@sgi.com>
+	 <20071011151512.69f19419@zeus.pccl.info>
+	 <20071011215352.GX995458@sgi.com> <20071012002613.GL23367404@sgi.com>
+	 <20071012123601.291fee8a@zeus.pccl.info>
+	 <cc7060690710130635u2a85bc28we36b344c0987b691@mail.gmail.com>
+	 <20071014230949.GO23367404@sgi.com>
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>, xfs@oss.sgi.com, Xen-devel <xen-devel@lists.xensource.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Williamson <mark.williamson@cl.cam.ac.uk>, Morten =?iso-8859-1?Q?B=C3=B8geskov?= <xen-users@morten.bogeskov.dk>, xfs-masters@oss.sgi.com, nickpiggin@yahoo.com.au
+Cc: Andrew Clayton <andrew@digital-domain.net>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-David Chinner <dgc@sgi.com> writes:
+Thanks Dave for the response.   Thinking futher, why is that xfs_iunpin has
+to mark the inode dirty?
+All transactions generally modify one time or other, xfs_ichgtime takes care
+of marking inode as
+dirty. I am thinking on why we need to mark the inode dirty at all, either
+in the context of  unpin or
+in the context for formatting the inode.
+
+-Bhagi.
+
+On 10/15/07, David Chinner <dgc@sgi.com> wrote:
 >
-> And yes, we delay unmapping pages until we have a batch of them
-> to unmap. vmap and vunmap do not scale, so this is batching helps
-> alleviate some of the worst of the problems.
+> On Sat, Oct 13, 2007 at 07:05:17PM +0530, Bhagi rathi wrote:
+> > David, Can you let me know the use after free problem? I want to
+> understand
+> > how the life cycle of linux inode
+> > and xfs inode are related to log flush.
+>
+> Log I/O completion:
+>
+>   -> xfs_trans_commited
+>        -> xfs_iunpin(xfs inode)
+>          get linux inode from xfs inode
+>           -> mark_inode_dirty_sync(linux inode)
+>
+> Freeing the linux inode:
+>
+> clear_inode(linux_inode)
+> -> xfs_inactive()
+>     -> xfs_trans_commit() (e.g. freeing data associated with unlinked
+> inode)
+>        -> xfs_ipin()
+>     (link between xfs and linux inode broken)
+>   linux inode freed
+>
+> So, in log I/O completion, we can be completing a previous
+> transaction at the same time clear_inode() is running, and
+> hence in xfs_iunpin() we can race with the freeing of the
+> linux inode as xfs_iunpin does not hold any locks.
+>
+> > Any pointer is also of great help.
+>
+> /me points at the code.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+>
 
-You're keeping vmaps around for already freed pages?
 
-That will be a big problem for proper PAT support, which needs
-to track all mappings to memory. It's not just a problem for Xen.
-
-In fact I suspect it is already broken with DRM or AGP for example which
-can use UC and WC mappings -- if you keep the mapping around and
-DRM or AGP turns the page in another mapping uncacheable you're
-creating an illegal cache attribute alias. These are known to occasionally
-create cache corruptions on several x86s; giving ___VERY___ hard to debug
-bugs once a blue moon.
-
-Probably it'll require some generic VM batching mechanism where
-Xen or PAT code can hook into the list or force unmap the mappings
-as needed.
-
-Definitely needs to be fixed if true. You're lucky that Xen caught it
-in time.
-
--Andi
+[[HTML alternate version deleted]]
