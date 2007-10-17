@@ -1,58 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 09:19:01 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9HGIuht030520
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 09:18:58 -0700
-Date: Wed, 17 Oct 2007 12:18:58 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 09:30:47 -0700 (PDT)
+Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9HGUfWc000945
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 09:30:43 -0700
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by sargon.lncsa.com (Postfix) with ESMTP id 2A038300E870
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:30:44 +0200 (CEST)
+Received: from sargon.lncsa.com ([127.0.0.1])
+	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id wTL-qjneF5ad for <linux-xfs@oss.sgi.com>;
+	Wed, 17 Oct 2007 18:30:44 +0200 (CEST)
+Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
+	by sargon.lncsa.com (Postfix) with ESMTP id 0AD7F300EB25
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:30:44 +0200 (CEST)
+Received: from trajan.apartia.fr (trajan.apartia.fr [10.0.3.121])
+	by zenon.apartia.fr (Postfix) with ESMTP id 723D7F0AF2F09
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:30:43 +0200 (CEST)
+Date: Wed, 17 Oct 2007 18:30:43 +0200
+From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
 Subject: Re: can't remove dir
-In-Reply-To: <20071017161504.GA13077@apartia.fr>
-Message-ID: <Pine.LNX.4.64.0710171218510.3750@p34.internal.lan>
-References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net>
- <20071017161504.GA13077@apartia.fr>
+Message-ID: <20071017163043.GA13676@apartia.fr>
+References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net> <20071017161504.GA13077@apartia.fr> <Pine.LNX.4.64.0710171218510.3750@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0710171218510.3750@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-
-
-On Wed, 17 Oct 2007, Louis-David Mitterrand wrote:
-
-> On Fri, Sep 14, 2007 at 09:14:25AM -0500, Eric Sandeen wrote:
->> Louis-David Mitterrand wrote:
->>> Hello,
->>>
->>> While cleaning up /lost+found a directory resisted removal:
->>>
->>> 	sylla:/lost+found# rm 1879629858 -rf
->>> 	rm: cannot remove directory `1879629858': Directory not empty
->>>
->>> The directory _is_ empty and "-rf" should remove it anyway, so this
->>> looks like a fs error.
->>>
->>> This is on debian unstable with 2.6.23-rc6.
+On Wed, Oct 17, 2007 at 12:18:58PM -0400, Justin Piszcz wrote:
 >>
->> Any errors in the system logs?  I'd try most recent xfs_repair next.  If
->> that doesn't fix it, make an xfs_metadump for Barry to look at.  :)
->> Make a backup first if you're paranoid.
+>> Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't
+>> remove that file:
+>>
+>> sylla:/# rm /lost+found/3912672557
+>> rm: cannot remove `/lost+found/3912672557': Operation not permitted
+>>
+>> sylla:/# ls -li /lost+found/3912672557
+>> 3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10 
+>> /lost+found/3912672557 -> unix.7.gz
+>>
 >
-> Hi again,
+> lsattr -l /lost+found/3912672557
 >
-> Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't
-> remove that file:
->
-> sylla:/# rm /lost+found/3912672557
-> rm: cannot remove `/lost+found/3912672557': Operation not permitted
->
-> sylla:/# ls -li /lost+found/3912672557
-> 3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10 /lost+found/3912672557 -> unix.7.gz
->
->
+> Shows?
 
-lsattr -l /lost+found/3912672557
+sylla:~# lsattr -l /lost+found/3912672557
+lsattr: No such file or directory While reading flags on /lost+found/3912672557
 
-Shows?
+The file is a dangling link.
