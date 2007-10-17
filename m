@@ -1,62 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 09:15:12 -0700 (PDT)
-Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9HGF667028929
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 09:15:08 -0700
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by sargon.lncsa.com (Postfix) with ESMTP id 5FE0D301C603
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:15:08 +0200 (CEST)
-Received: from sargon.lncsa.com ([127.0.0.1])
-	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id a8b8pMjF+2qW for <linux-xfs@oss.sgi.com>;
-	Wed, 17 Oct 2007 18:15:08 +0200 (CEST)
-Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
-	by sargon.lncsa.com (Postfix) with ESMTP id 3CCCE300EB21
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:15:08 +0200 (CEST)
-Received: from trajan.apartia.fr (trajan.apartia.fr [10.0.3.121])
-	by zenon.apartia.fr (Postfix) with ESMTP id AD82EF08D9018
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:15:04 +0200 (CEST)
-Date: Wed, 17 Oct 2007 18:15:04 +0200
-From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
-Subject: Re: can't remove dir
-Message-ID: <20071017161504.GA13077@apartia.fr>
-References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 09:15:51 -0700 (PDT)
+Received: from mail.pawisda.de (mail.pawisda.de [213.157.4.156])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9HGFeIw029237
+	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 09:15:43 -0700
+Received: from localhost (localhost.intra.frontsite.de [127.0.0.1])
+	by mail.pawisda.de (Postfix) with ESMTP id B1EF6F161
+	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 17:48:43 +0200 (CEST)
+Received: from mail.pawisda.de ([127.0.0.1])
+ by localhost (ndb [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 19122-03 for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 17:48:37 +0200 (CEST)
+Received: from [192.168.51.2] (lw-pc002.intra.frontsite.de [192.168.51.2])
+	by mail.pawisda.de (Postfix) with ESMTP id B86E8E822
+	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 17:48:37 +0200 (CEST)
+Message-ID: <47162ED4.6000108@linworks.de>
+Date: Wed, 17 Oct 2007 17:48:36 +0200
+From: Ruben Porras <ruben.porras@linworks.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <46EA9741.6060303@sandeen.net>
+Subject: Re: REVIEW: xfs_reno #2
+References: <op.tznnweh23jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.tznnweh23jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Sep 14, 2007 at 09:14:25AM -0500, Eric Sandeen wrote:
-> Louis-David Mitterrand wrote:
-> > Hello,
-> > 
-> > While cleaning up /lost+found a directory resisted removal:
-> > 
-> > 	sylla:/lost+found# rm 1879629858 -rf
-> > 	rm: cannot remove directory `1879629858': Directory not empty
-> > 
-> > The directory _is_ empty and "-rf" should remove it anyway, so this 
-> > looks like a fs error.
-> > 
-> > This is on debian unstable with 2.6.23-rc6.
-> 
-> Any errors in the system logs?  I'd try most recent xfs_repair next.  If
-> that doesn't fix it, make an xfs_metadump for Barry to look at.  :)
-> Make a backup first if you're paranoid.
+Barry Naujok wrote:
+> A couple changes from the first xfs_reno:
+>
+>  - Major one is that symlinks are now supported, but only
+>    owner, group and extended attributes are copied for them
+>    (not times or inode attributes).
+>
+>  - Man page!
+>
+>
+> To make this better, ideally we need some form of
+> "swap inodes" function in the kernel, where the entire
+> contents of the inode themselves are swapped. This form
+> can handle any inode and without any of the dir/file/attr/etc
+> copy/swap mechanisms we have in xfs_reno.
+>
 
-Hi again,
+If everything goes as planned I will have time next month to look at 
+xfs_reno.
 
-Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't 
-remove that file:
-
-sylla:/# rm /lost+found/3912672557
-rm: cannot remove `/lost+found/3912672557': Operation not permitted
-
-sylla:/# ls -li /lost+found/3912672557                                 
-3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10 /lost+found/3912672557 -> unix.7.gz
+-- 
+Rubén Porras
+LinWorks GmbH
