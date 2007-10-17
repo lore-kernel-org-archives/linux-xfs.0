@@ -1,88 +1,150 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 16 Oct 2007 21:58:07 -0700 (PDT)
-Received: from tyo200.gate.nec.co.jp (TYO200.gate.nec.co.jp [210.143.35.50])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9H4vxwx009492
-	for <xfs@oss.sgi.com>; Tue, 16 Oct 2007 21:58:03 -0700
-Received: from tyo202.gate.nec.co.jp ([10.7.69.202])
-	by tyo200.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l9H4w0vt011468
-	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 13:58:00 +0900 (JST)
-Received: from mailgate3.nec.co.jp (mailgate53.nec.co.jp [10.7.69.162])
-	by tyo202.gate.nec.co.jp (8.13.8/8.13.4) with ESMTP id l9H4u2SA023962
-	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 13:56:02 +0900 (JST)
-Received: (from root@localhost) by mailgate3.nec.co.jp (8.11.7/3.7W-MAILGATE-NEC)
-	id l9H4u2f07733 for xfs@oss.sgi.com; Wed, 17 Oct 2007 13:56:02 +0900 (JST)
-Received: from yonosuke.jp.nec.com (yonosuke.jp.nec.com [10.26.220.15]) by mailsv3.nec.co.jp (8.11.7/3.7W-MAILSV4-NEC) with ESMTP
-	id l9H4u2B26717 for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 13:56:02 +0900 (JST)
-Message-Id: <200710170456.AA06101@TNESG9305.wm.jp.nec.com>
-Date: Wed, 17 Oct 2007 13:56:00 +0900
-Subject: [PATCH] flush inode when changing atime.
-From: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 16 Oct 2007 22:47:03 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9H5krRI019832
+	for <xfs@oss.sgi.com>; Tue, 16 Oct 2007 22:46:55 -0700
+Message-ID: <4715A22D.1070409@sgi.com>
+Date: Wed, 17 Oct 2007 15:48:29 +1000
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Review: Make xfs_bulkstat() to report unlinked but referenced inodes
+Content-Type: multipart/mixed;
+ boundary="------------080804040807060908060006"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------080804040807060908060006
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The atime is changed for reading but it returns to a previous value
-after unmount. i_update_core is still off after reading a file using
-read(), readdir() and readlink(). So an inode isn't flushed to disk.
+We need xfs_bulkstat() to report inode stat for inodes with
+link count zero but reference count non zero.
 
-I referred to following fix when I made a patch:
-TAKE 946679 - fix, speedup and simplify atime handling
-http://marc.info/?l=linux-xfs&m=113398234310217&w=4
+The fix here:
 
-Example:
-# ls -lu mpnt/log3
--rw-r--r--  1 root root 63494 2007-04-05 16:35 mpnt/log3
-# less mpnt/log3
-# ls -lu mpnt/log3
--rw-r--r--  1 root root 63494 2007-10-05 15:27 mpnt/log3
-# umount mpnt/
-# mount -t xfs /dev/sda6 mpnt
-# ls -lu mpnt/log3
--rw-r--r--  1 root root 63494 2007-04-05 16:35 mpnt/log3
+http://oss.sgi.com/archives/xfs/2007-09/msg00266.html
 
---
-Utako
+changed this behavior and made xfs_bulkstat() to filter all
+unlinked inodes including those that are not destroyed yet but
+held by reference.
 
-Signed-off-by: Utako Kusaka <u-kusaka@wm.jp.nec.com>
-----------
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-10-15 15:50:10.000000000 +0900
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-10-15 16:49:35.000000000 +0900
-@@ -1003,6 +1003,8 @@ xfs_readlink(
- 		error = xfs_readlink_bmap(ip, link);
+The attached patch returns back to the original behavior by
+marking the on-disk inode buffer "dirty" when di_mode is cleared
+(at that time both inode link and reference counter are zero).
+
+Regards,
+Vlad
+
+--------------080804040807060908060006
+Content-Type: text/x-patch;
+ name="Make-xfs_bulkstat-report-inodes-with-link-count-zero-and-reference-count-non-zero.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="Make-xfs_bulkstat-report-inodes-with-link-count-zero-and-ref";
+ filename*1="erence-count-non-zero.patch"
+
+Index: linux-xfs1/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-xfs1.orig/fs/xfs/xfs_inode.c
++++ linux-xfs1/fs/xfs/xfs_inode.c
+@@ -1951,24 +1951,6 @@ xfs_iunlink(
+ 	ASSERT(agi->agi_unlinked[bucket_index]);
+ 	ASSERT(be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino);
+ 
+-	error = xfs_itobp(mp, tp, ip, &dip, &ibp, 0, 0);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * Clear the on-disk di_nlink. This is to prevent xfs_bulkstat
+-	 * from picking up this inode when it is reclaimed (its incore state
+-	 * initialzed but not flushed to disk yet). The in-core di_nlink is
+-	 * already cleared in xfs_droplink() and a corresponding transaction
+-	 * logged. The hack here just synchronizes the in-core to on-disk
+-	 * di_nlink value in advance before the actual inode sync to disk.
+-	 * This is OK because the inode is already unlinked and would never
+-	 * change its di_nlink again for this inode generation.
+-	 * This is a temporary hack that would require a proper fix
+-	 * in the future.
+-	 */
+-	dip->di_core.di_nlink = 0;
+-
+ 	if (be32_to_cpu(agi->agi_unlinked[bucket_index]) != NULLAGINO) {
+ 		/*
+ 		 * There is already another inode in the bucket we need
+@@ -1976,6 +1958,10 @@ xfs_iunlink(
+ 		 * Here we put the head pointer into our next pointer,
+ 		 * and then we fall through to point the head at us.
+ 		 */
++		error = xfs_itobp(mp, tp, ip, &dip, &ibp, 0, 0);
++		if (error)
++			return error;
++
+ 		ASSERT(be32_to_cpu(dip->di_next_unlinked) == NULLAGINO);
+ 		/* both on-disk, don't endian flip twice */
+ 		dip->di_next_unlinked = agi->agi_unlinked[bucket_index];
+@@ -2365,6 +2351,8 @@ xfs_ifree(
+ 	int			error;
+ 	int			delete;
+ 	xfs_ino_t		first_ino;
++	xfs_dinode_t    	*dip;
++	xfs_buf_t       	*ibp;
+ 
+ 	ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
+ 	ASSERT(ip->i_transp == tp);
+@@ -2400,8 +2388,27 @@ xfs_ifree(
+ 	 * by reincarnations of this inode.
+ 	 */
+ 	ip->i_d.di_gen++;
++
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
++	error = xfs_itobp(ip->i_mount, tp, ip, &dip, &ibp, 0, 0);
++	if (error)
++		return error;
++
++        /*
++	* Clear the on-disk di_mode. This is to prevent xfs_bulkstat
++	* from picking up this inode when it is reclaimed (its incore state
++	* initialzed but not flushed to disk yet). The in-core di_mode is
++	* already cleared  and a corresponding transaction logged.
++	* The hack here just synchronizes the in-core to on-disk
++	* di_mode value in advance before the actual inode sync to disk.
++	* This is OK because the inode is already unlinked and would never
++	* change its di_mode again for this inode generation.
++	* This is a temporary hack that would require a proper fix
++	* in the future.
++	*/
++	dip->di_core.di_mode = 0;
++
+ 	if (delete) {
+ 		xfs_ifree_cluster(ip, tp, first_ino);
  	}
- 
-+	ip->i_update_core = 1;
-+
-  out:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 	return error;
---- linux-2.6-xfs.orig/fs/xfs/xfs_dir2.c	2007-10-15 15:50:09.000000000 +0900
-+++ linux-2.6-xfs/fs/xfs/xfs_dir2.c	2007-10-15 16:48:47.000000000 +0900
-@@ -318,6 +318,9 @@ xfs_readdir(
- 	else
- 		rval = xfs_dir2_leaf_getdents(dp, dirent, bufsize, offset,
- 					      filldir);
-+
-+	dp->i_update_core = 1;
-+
- 	return rval;
- }
- 
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2007-10-15 15:50:10.000000000 +0900
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2007-10-15 16:50:50.000000000 +0900
-@@ -275,6 +275,9 @@ xfs_read(
- 		XFS_STATS_ADD(xs_read_bytes, ret);
- 
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-+
-+	if (likely(!(ioflags & IO_INVIS)))
-+		ip->i_update_core = 1;
- 	return ret;
- }
- 
-----------
+Index: linux-xfs1/fs/xfs/xfs_itable.c
+===================================================================
+--- linux-xfs1.orig/fs/xfs/xfs_itable.c
++++ linux-xfs1/fs/xfs/xfs_itable.c
+@@ -291,7 +291,7 @@ xfs_bulkstat_use_dinode(
+ 	dip = (xfs_dinode_t *)
+ 			xfs_buf_offset(bp, clustidx << mp->m_sb.sb_inodelog);
+ 	/*
+-	 * Check the buffer containing the on-disk inode for di_nlink == 0.
++	 * Check the buffer containing the on-disk inode for di_mode == 0.
+ 	 * This is to prevent xfs_bulkstat from picking up just reclaimed
+ 	 * inodes that have their in-core state initialized but not flushed
+ 	 * to disk yet. This is a temporary hack that would require a proper
+@@ -299,7 +299,7 @@ xfs_bulkstat_use_dinode(
+ 	 */
+ 	if (be16_to_cpu(dip->di_core.di_magic) != XFS_DINODE_MAGIC ||
+ 	    !XFS_DINODE_GOOD_VERSION(dip->di_core.di_version) ||
+-	    !dip->di_core.di_nlink)
++	    !dip->di_core.di_mode)
+ 		return 0;
+ 	if (flags & BULKSTAT_FG_QUICK) {
+ 		*dipp = dip;
+
+--------------080804040807060908060006--
