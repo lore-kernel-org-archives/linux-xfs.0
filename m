@@ -1,37 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 09:16:12 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9IGFxxT008734
-	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 09:16:01 -0700
-Date: Thu, 18 Oct 2007 17:16:01 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Review: Fix dbflush panic in xfs_qm_sync
-Message-ID: <20071018161601.GA21492@infradead.org>
-References: <4713F7D3.2090201@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 12:11:36 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9IJBT7s004911
+	for <xfs@OSS.SGI.com>; Thu, 18 Oct 2007 12:11:32 -0700
+Received: from from [127.0.0.1] (helo=base.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.66 #1)
+	id 1Iia01-0006hB-MZ
+	for <xfs@OSS.SGI.com>; Thu, 18 Oct 2007 19:21:37 +0100
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4713F7D3.2090201@sgi.com>
+Content-Transfer-Encoding: 7bit
+Message-ID: <18199.42033.260371.275119@base.ty.sabi.co.UK>
+Date: Thu, 18 Oct 2007 19:21:37 +0100
+Subject: Re: {WHAT?} Slow seek in kernels >= 2.6.18
+In-Reply-To: <4717156C.3030308@firma.seznam.cz>
+References: <4717156C.3030308@firma.seznam.cz>
+From: pg_xfs@xfs.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Linux XFS <xfs@oss.sgi.com>
 
-On Tue, Oct 16, 2007 at 09:29:23AM +1000, Donald Douwsma wrote:
-> The recent behaviour layer removal dropped the check for quotas that have 
-> been
-> requested at mount time but have subsequently been turned off. This results
-> in a panic when accessing m_quotainfo which has been freed.
-> 
-> This patch adds the check originally made by xfs_qm_syncall() to 
-> xfs_qm_sync()
+>>> On Thu, 18 Oct 2007 10:12:28 +0200, Anton A Vorobev
+>>> <anton.vorobev@firma.seznam.cz> said:
 
-Hmm.  We do the same check just a few lines below, but inbetween
-we access ->m_quotainfo to take the lock.  I was under the impression
-that's the only safe way to check anyway, but ->m_quotainfo might not
-actually be present.  It might me better to move the lock into xfs_mount
-directly, but it's embedded into a xfs_dqhash and there's some complex
-mess with gazillions of macros around it.
+anton.vorobev> Hi!  A question. We've got an application that
+anton.vorobev> runs about 30-40 minutes. After kernel upgrade
+anton.vorobev> from 2.6.17 branch, it runs about 3 hours. [
+anton.vorobev> ... ]
 
-So I suspect restoring it to the original state might be good enough.
+I'd check the elevator and its parameters more than XFS.
