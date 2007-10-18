@@ -1,57 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 18:37:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Oct 2007 20:48:07 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9I1bWhJ006524
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Oct 2007 18:37:34 -0700
-Date: Thu, 18 Oct 2007 11:37:45 +1000
-Subject: Re: can't remove dir
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9I3lvlZ030868
+	for <xfs@oss.sgi.com>; Wed, 17 Oct 2007 20:48:00 -0700
+Message-ID: <4716D891.1060108@sgi.com>
+Date: Thu, 18 Oct 2007 13:52:49 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net> <20071017161504.GA13077@apartia.fr>
+Subject: Re: [PATCH] flush inode when changing atime.
+References: <200710170456.AA06101@TNESG9305.wm.jp.nec.com> <20071017090844.GZ995458@sgi.com>
+In-Reply-To: <20071017090844.GZ995458@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <op.t0ddg7j93jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20071017161504.GA13077@apartia.fr>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>, linux-xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Utako Kusaka <u-kusaka@wm.jp.nec.com>, xfs@oss.sgi.com
 
-On Thu, 18 Oct 2007 02:15:04 +1000, Louis-David Mitterrand  
-<vindex+lists-xfs@apartia.org> wrote:
-
-> On Fri, Sep 14, 2007 at 09:14:25AM -0500, Eric Sandeen wrote:
->> Louis-David Mitterrand wrote:
->> > Hello,
->> >
->> > While cleaning up /lost+found a directory resisted removal:
->> >
->> > 	sylla:/lost+found# rm 1879629858 -rf
->> > 	rm: cannot remove directory `1879629858': Directory not empty
->> >
->> > The directory _is_ empty and "-rf" should remove it anyway, so this
->> > looks like a fs error.
->> >
->> > This is on debian unstable with 2.6.23-rc6.
+David Chinner wrote:
+> On Wed, Oct 17, 2007 at 01:56:00PM +0900, Utako Kusaka wrote:
+>> Hi,
 >>
->> Any errors in the system logs?  I'd try most recent xfs_repair next.  If
->> that doesn't fix it, make an xfs_metadump for Barry to look at.  :)
->> Make a backup first if you're paranoid.
->
-> Hi again,
->
-> Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't
-> remove that file:
->
-> sylla:/# rm /lost+found/3912672557
-> rm: cannot remove `/lost+found/3912672557': Operation not permitted
->
-> sylla:/# ls -li /lost+found/3912672557
-> 3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10  
-> /lost+found/3912672557 -> unix.7.gz
+>> The atime is changed for reading but it returns to a previous value
+>> after unmount. i_update_core is still off after reading a file using
+>> read(), readdir() and readlink(). So an inode isn't flushed to disk.
+> 
+> I think this was done by design - Christoph? I can't remember exactly
+> as it was more than two years ago this change was made. It is effectively
+> equivalent to using the relatime mount option.
+> 
+> The question is whether we want to change the default behaviour or
+> whether we need to supply an "atimeisatime" mount option for those
+> that really need atime to be updated on every access.
+> 
+If we change it back then will anything that scans the filesystem cause
+inodes to be dirtied and create a lot of inode flush traffic that we
+don't currently have?
 
-Can you apply the patch in
-http://oss.sgi.com/archives/xfs/2007-09/msg00222.html
-and run the patched repair on your filesytem?
+>> I referred to following fix when I made a patch:
+>> TAKE 946679 - fix, speedup and simplify atime handling
+>> http://marc.info/?l=linux-xfs&m=113398234310217&w=4
+> 
+> Yes, that was the patch that removed the explicit atime updates
+> in the XFS code. Your fix is reverting part of that change.
+> 
+>> --- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-10-15 15:50:10.000000000 +0900
+>> +++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-10-15 16:49:35.000000000 +0900
+>> @@ -1003,6 +1003,8 @@ xfs_readlink(
+>>  		error = xfs_readlink_bmap(ip, link);
+>>  	}
+>>  
+>> +	ip->i_update_core = 1;
+>> +
+> 
+> If we are going to put these back in, then they should be
+> calls to xfs_ichgtime_fast() so that we know what the reason
+> for marking the core dirty is.
+> 
 
-Barry.
+xfs_ichgtime_fast() will also dirty the linux inode so that sync
+will push out the change.
