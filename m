@@ -1,73 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 04:03:08 -0700 (PDT)
-Received: from cernmxlb.cern.ch (cernmx07.cern.ch [137.138.166.171])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9IB2pHl003284
-	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 04:03:00 -0700
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Transfer-Encoding: 7bit
-Message-Id: <B4D42128-E5B2-48B1-AEF1-586FD90AF605@cern.ch>
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-From: Mario Kadastik <mario.kadastik@cern.ch>
-Subject: raw vs XFS sequential write and system load
-Date: Thu, 18 Oct 2007 12:50:44 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 06:26:30 -0700 (PDT)
+Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9IDQJ0K026867
+	for <linux-xfs@oss.sgi.com>; Thu, 18 Oct 2007 06:26:21 -0700
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by sargon.lncsa.com (Postfix) with ESMTP id 7B9493015E28
+	for <linux-xfs@oss.sgi.com>; Thu, 18 Oct 2007 15:11:17 +0200 (CEST)
+Received: from sargon.lncsa.com ([127.0.0.1])
+	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id WY49l3QlOpxk for <linux-xfs@oss.sgi.com>;
+	Thu, 18 Oct 2007 15:11:17 +0200 (CEST)
+Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
+	by sargon.lncsa.com (Postfix) with ESMTP id 585E53013BA2
+	for <linux-xfs@oss.sgi.com>; Thu, 18 Oct 2007 15:11:17 +0200 (CEST)
+Received: from styx.apartia.fr (styx.apartia.fr [10.0.3.109])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "styx.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
+	by zenon.apartia.fr (Postfix) with ESMTP id CABDBF08AA01E
+	for <linux-xfs@oss.sgi.com>; Thu, 18 Oct 2007 15:11:16 +0200 (CEST)
+Date: Thu, 18 Oct 2007 15:11:16 +0200
+From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
+Subject: Re: can't remove dir
+Message-ID: <20071018131116.GA11957@apartia.fr>
+References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net> <20071017161504.GA13077@apartia.fr> <20071017212434.GB995458@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071017212434.GB995458@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hello,
+On Thu, Oct 18, 2007 at 07:24:39AM +1000, David Chinner wrote:
+> On Wed, Oct 17, 2007 at 06:15:04PM +0200, Louis-David Mitterrand wrote:
+> > Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't 
+> > remove that file:
+> > 
+> > sylla:/# rm /lost+found/3912672557
+> > rm: cannot remove `/lost+found/3912672557': Operation not permitted
+> > 
+> > sylla:/# ls -li /lost+found/3912672557                                 
+> > 3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10 /lost+found/3912672557 -> unix.7.gz
+> 
+> Can you post the output of:
+> 
+> # xfs_db -r -c "inode 3912672557" -c "p" <device>
 
-I have a slight problem. Namely we have 4 systems with each having 2x  
-3ware 9550SX cards in them each with hardware RAID5. Everything is  
-running the latest FW etc. The systems have at least 3GB of memory  
-and at least 2 CPU-s (one has 4GB and 4 cpu-s).
+Here:
 
-Now my problem is that as this is a Grid storage node and we transfer  
-constantly files 2+ GB back and forth with tens of them in parallel,  
-then the system seems to be having serious problems.
+core.magic = 0x494e
+core.mode = 0120777
+core.version = 1
+core.format = 1 (local)
+core.nlinkv1 = 1
+core.uid = 0
+core.gid = 0
+core.flushiter = 1
+core.atime.sec = Sun Apr  9 19:10:38 2006
+core.atime.nsec = 316368304
+core.mtime.sec = Sun Apr  9 19:10:38 2006
+core.mtime.nsec = 316368304
+core.ctime.sec = Sun Apr  9 19:10:38 2006
+core.ctime.nsec = 317368152
+core.size = 9
+core.nblocks = 0
+core.extsize = 0
+core.nextents = 0
+core.naextents = 0
+core.forkoff = 0
+core.aformat = 2 (extents)
+core.dmevmask = 0x4d291522
+core.dmstate = 21036
+core.newrtbm = 0
+core.prealloc = 0
+core.realtime = 0
+core.immutable = 1
+core.append = 1
+core.sync = 0
+core.noatime = 1
+core.nodump = 0
+core.rtinherit = 1
+core.projinherit = 0
+core.nosymlinks = 0
+core.extsz = 0
+core.extszinherit = 0
+core.nodefrag = 1
+core.gen = 0
+next_unlinked = null
+u.symlink = "unix.7.gz"
 
-We can do read speeds basically with only limit being the network  
-without the system picking up any load (we do use the blockdev -- 
-setra 16384) and can keep running combined 200MB/s to the network  
-over a long period of time. However if we get writes to the systems  
-then even at low speeds they hog the systems and send the load of the  
-systems to 20+ (largest I have recovered from is 150, usually they  
-are between 20-60). As this makes the system basically unusable I did  
-a lot of digging to try to understand what causes such a high load.
 
-The basic thing is that with vmstat I can see a number of blocked  
-processes during the writes and high io wait for the system. All of  
-the RAID5-s have XFS on top of them. Finally after weeks of not  
-getting any adequate response from 3ware etc I freed up one of the  
-systems to do some extra tests. Just yesterday I measured the basic  
-difference of doing a direct dd to the actual raw device versus doing  
-the dd to a local file in XFS. The results are in detail here:
-
-http://hep.kbfi.ee/dbg/jupiter_test.txt
-
-As you can see the system is quite responsive during the read and  
-write sequentially to the raw device. There are no blocked processes  
-and the io wait is < 5%. However going to XFS we immediately see  
-blocked processes which over time leads to very high load on the system.
-
-Is there something I'm missing? I did create the XFS with the correct  
-RAID 5 su,sw settings, but is there a way to tune the XFS or general  
-kernel parameters in a way that this blocking doesn't occur that much  
-with XFS. I don't really care if I don't get 400MB/s read/write  
-performance, I'd be satisfied with 10% of that during production load  
-as long as the system is able to not fall over because of it.
-
-Just as a clarification, the io done is sequential write or read of  
-2.5GB files, there will be a number of files accessed in parallel  
-(I'd say up to 20 in parallel, but I can limit the number).
-
-I have googled around a lot, but to be honest have not enough inside  
-info on the kernel tunables to make an educated guess on where to  
-begin. I'd assume the io patterns of XFS differ from raw sequential  
-read/write, but probably it could be tuned to some extent to better  
-match the hardware and probably there are ways to make sure that  
-instead of load going up the speed goes down.
-
-Thanks in advance,
-
-Mario Kadastik
+Thanks,
