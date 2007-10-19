@@ -1,44 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 15:24:14 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 17:50:01 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9IMO4Hw005618
-	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 15:24:08 -0700
-Date: Fri, 19 Oct 2007 08:23:57 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: raw vs XFS sequential write and system load
-Message-ID: <20071018222357.GN995458@sgi.com>
-References: <B4D42128-E5B2-48B1-AEF1-586FD90AF605@cern.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <B4D42128-E5B2-48B1-AEF1-586FD90AF605@cern.ch>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9J0nsxO030023
+	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 17:49:56 -0700
+Message-ID: <4717FF91.5010902@sgi.com>
+Date: Fri, 19 Oct 2007 10:51:29 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Review: Make xfs_bulkstat() to report unlinked but referenced
+ inodes
+References: <4715A22D.1070409@sgi.com>
+In-Reply-To: <4715A22D.1070409@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mario Kadastik <mario.kadastik@cern.ch>
-Cc: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Thu, Oct 18, 2007 at 12:50:44PM +0200, Mario Kadastik wrote:
-> Hello,
-> 
-> I have a slight problem. Namely we have 4 systems with each having 2x  
-> 3ware 9550SX cards in them each with hardware RAID5. Everything is  
-> running the latest FW etc. The systems have at least 3GB of memory  
-> and at least 2 CPU-s (one has 4GB and 4 cpu-s).
+ping!
 
-Before going any further, what kernel are you using and what's
-the output of xfs_info </mntpt> of the filesytsem you are testing?
+I ran XFS QA with this patch and didn't see any regressions and
+I (and Judith in US) have verified the expected behavior - xfs_bulkstat()
+now reports referenced inodes with link count of zero.
 
-FWIW, high iowait = high load average. High iowait is generally an
-indicator of an overloaded disk subsystem.  You tests to the raw
-device only used a single stream, so it's unlikely to show any of
-the issues you're complaining about when running tens of parallel
-streams....
+Regards,
+Vlad
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Vlad Apostolov wrote:
+> We need xfs_bulkstat() to report inode stat for inodes with
+> link count zero but reference count non zero.
+>
+> The fix here:
+>
+> http://oss.sgi.com/archives/xfs/2007-09/msg00266.html
+>
+> changed this behavior and made xfs_bulkstat() to filter all
+> unlinked inodes including those that are not destroyed yet but
+> held by reference.
+>
+> The attached patch returns back to the original behavior by
+> marking the on-disk inode buffer "dirty" when di_mode is cleared
+> (at that time both inode link and reference counter are zero).
+>
+> Regards,
+> Vlad
