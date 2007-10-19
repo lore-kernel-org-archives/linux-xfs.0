@@ -1,54 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 18:23:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 18:27:39 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9J1NLnq003701
-	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 18:23:23 -0700
-Message-ID: <47180769.6070200@sgi.com>
-Date: Fri, 19 Oct 2007 11:24:57 +1000
-From: Vlad Apostolov <vapo@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9J1RRgn004695
+	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 18:27:29 -0700
+Message-ID: <47180922.4040709@sgi.com>
+Date: Fri, 19 Oct 2007 11:32:18 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: TAKE 972004 - Make xfs_bulkstat() to report unlinked but referenced
- inodes
+Subject: Re: review: use correct buffer flags when reading superblock
+References: <470C8F5B.90705@sgi.com> <20071010093451.GA7655@infradead.org> <20071010112505.GH23367404@sgi.com> <20071018154649.GA16837@infradead.org>
+In-Reply-To: <20071018154649.GA16837@infradead.org>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Make xfs_bulkstat() to report unlinked but referenced inodes
+Christoph Hellwig wrote:
+> On Wed, Oct 10, 2007 at 09:25:06PM +1000, David Chinner wrote:
+>>> Where are these set up in the first time?  AFAICS the buffer only written
+>>> out by xfs_unmountfs_writesb, xfs_syncsub and xfs_trans_log_buf, and all
+>>> these should only ever happen after log recovery has finished.
+>> It can also be written by xfsbufd when it has been bdwrite()
+>> or as a result of log tail pushing.
+> 
+> Hmm, true.
+> 
+>> Because the superblock buffer is XBF_FS_MANAGED, it does not get
+>> torn down when it is clean and has no references, so the XBF_ASYNC
+>> flag never gets cleared unless the fs specifically clears it. If the
+>> superblock is then not recovered out of any further transactions
+>> during recovery after xfsbufd flushed it, the XBF_ASYNC flag remains
+>> set for the re-read that is issued in xlog_do_recover() and we
+>> hang.....
+> 
+> Makes sense as an explanation.  I still don't really like patch, maybe
+> we should always clear the ASYNC flag in the b_iodone callback?
+> 
 
-We need xfs_bulkstat() to report inode stat for inodes with
-link count zero but reference count non zero.
-
-The fix here:
-
-
-changed this behavior and made xfs_bulkstat() to filter all
-unlinked inodes including those that are not destroyed yet but
-held by reference.
-
-The attached patch returns back to the original behavior by
-marking the on-disk inode buffer "dirty" when di_mode is cleared
-(at that time both inode link and reference counter are zero).
-
-
-Date:  Fri Oct 19 11:21:26 AEST 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs1
-Inspected by:  dgc
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:29914a
-fs/xfs/xfs_itable.c - 1.157 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.157&r2=text&tr2=1.156&f=h
-    - pv 972004, rv dgc - Make xfs_bulkstat() to report unlinked but 
-referenced inodes
-
-fs/xfs/xfs_inode.c - 1.484 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.484&r2=text&tr2=1.483&f=h
-    - pv 972004, rv dgc - Make xfs_bulkstat() to report unlinked but 
-referenced inodes
+That sounds like a good idea.  Or get rid of the XBF_FS_MANAGED special
+case and get a new fresh buffer each time.
