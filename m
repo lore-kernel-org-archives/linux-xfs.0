@@ -1,36 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 17:57:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Oct 2007 18:23:31 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9J0vQ8T031657
-	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 17:57:29 -0700
-Date: Fri, 19 Oct 2007 10:57:22 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Review: Make xfs_bulkstat() to report unlinked but referenced inodes
-Message-ID: <20071019005722.GO995458@sgi.com>
-References: <4715A22D.1070409@sgi.com> <4717FF91.5010902@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4717FF91.5010902@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9J1NLnq003701
+	for <xfs@oss.sgi.com>; Thu, 18 Oct 2007 18:23:23 -0700
+Message-ID: <47180769.6070200@sgi.com>
+Date: Fri, 19 Oct 2007 11:24:57 +1000
+From: Vlad Apostolov <vapo@sgi.com>
+MIME-Version: 1.0
+Subject: TAKE 972004 - Make xfs_bulkstat() to report unlinked but referenced
+ inodes
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Vlad Apostolov <vapo@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs mailing list <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-On Fri, Oct 19, 2007 at 10:51:29AM +1000, Vlad Apostolov wrote:
-> ping!
-> 
-> I ran XFS QA with this patch and didn't see any regressions and
-> I (and Judith in US) have verified the expected behavior - xfs_bulkstat()
-> now reports referenced inodes with link count of zero.
+Make xfs_bulkstat() to report unlinked but referenced inodes
 
-Looks fine, Vlad - all I was waiting for was the test results.
+We need xfs_bulkstat() to report inode stat for inodes with
+link count zero but reference count non zero.
 
-Cheers,
+The fix here:
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+changed this behavior and made xfs_bulkstat() to filter all
+unlinked inodes including those that are not destroyed yet but
+held by reference.
+
+The attached patch returns back to the original behavior by
+marking the on-disk inode buffer "dirty" when di_mode is cleared
+(at that time both inode link and reference counter are zero).
+
+
+Date:  Fri Oct 19 11:21:26 AEST 2007
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs1
+Inspected by:  dgc
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:29914a
+fs/xfs/xfs_itable.c - 1.157 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.157&r2=text&tr2=1.156&f=h
+    - pv 972004, rv dgc - Make xfs_bulkstat() to report unlinked but 
+referenced inodes
+
+fs/xfs/xfs_inode.c - 1.484 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.484&r2=text&tr2=1.483&f=h
+    - pv 972004, rv dgc - Make xfs_bulkstat() to report unlinked but 
+referenced inodes
