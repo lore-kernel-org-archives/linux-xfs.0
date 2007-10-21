@@ -1,43 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Oct 2007 16:08:31 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9JN8O3X023057
-	for <xfs@oss.sgi.com>; Fri, 19 Oct 2007 16:08:25 -0700
-Date: Sat, 20 Oct 2007 09:08:15 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] xfs: implement fallocate V2
-Message-ID: <20071019230815.GK66820511@sgi.com>
-References: <20070713184125.GA12156@amitarora.in.ibm.com> <20070716053751.GN12413810@sgi.com> <4718F2EF.9050808@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 20 Oct 2007 18:12:44 -0700 (PDT)
+Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.183])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9L1CfAt027356
+	for <xfs@oss.sgi.com>; Sat, 20 Oct 2007 18:12:42 -0700
+Received: by py-out-1112.google.com with SMTP id u77so1814198pyb
+        for <xfs@oss.sgi.com>; Sat, 20 Oct 2007 18:12:44 -0700 (PDT)
+Message-ID: <6e0c99d0710201805k7ac77df0secce68307a76ca15@mail.gmail.com>
+Date: Sat, 20 Oct 2007 21:05:27 -0400
+From: "Greg Martyn" <greg.martyn@gmail.com>
+Subject: Fwd: Ecartis command results: appsub xfs greg.martyn@gmail.com 471AA1B0:62C8.1:ksf
+In-Reply-To: <ecartis-10202007180248.26524.2@oss>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <4718F2EF.9050808@sandeen.net>
+References: <ecartis-10202007180248.26524.2@oss>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Fri, Oct 19, 2007 at 01:09:51PM -0500, Eric Sandeen wrote:
-> David Chinner wrote:
-> > Initial implementation of ->fallocate for XFS.
-> > 
-> > Version 2:
-> > 
-> > o Make allocation and setting the file size atomic.
-> > o Drop deallocate/punch functionality
-> > o use mode field appropriately to determine if size needs changing.
-> > 
-> 
-> Dave, I don't see this in CVS or in git.  Did it get lost and/or abandoned?
+is this a serious message? :-p
 
-lost. I don't think I got a review of it, and I got swamped in other stuff
-at about the same time.... I'll look at it monday.
+---------- Forwarded message ----------
+From: Ecartis <ecartis@oss.sgi.com>
+Date: Oct 20, 2007 9:02 PM
+Subject: Ecartis command results: appsub xfs greg.martyn@gmail.com
+471AA1B0:62C8.1:ksf
+To: greg.martyn@gmail.com
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+List context changed to 'xfs' by following command.
+>> appsub xfs greg.martyn@gmail.com 471AA1B0:62C8.1:ksf
+Unable to process request due to filesystem error.
+
+---
+Ecartis v1.0.0 - job execution complete.
