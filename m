@@ -1,91 +1,237 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Oct 2007 00:06:34 -0700 (PDT)
-Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9M74ONI009116
-	for <linux-xfs@oss.sgi.com>; Mon, 22 Oct 2007 00:06:27 -0700
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by sargon.lncsa.com (Postfix) with ESMTP id 65735302312F
-	for <linux-xfs@oss.sgi.com>; Mon, 22 Oct 2007 09:04:26 +0200 (CEST)
-Received: from sargon.lncsa.com ([127.0.0.1])
-	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id PtH1ZbM-quuj for <linux-xfs@oss.sgi.com>;
-	Mon, 22 Oct 2007 09:04:26 +0200 (CEST)
-Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
-	by sargon.lncsa.com (Postfix) with ESMTP id 14C343000407
-	for <linux-xfs@oss.sgi.com>; Mon, 22 Oct 2007 09:04:26 +0200 (CEST)
-Received: from trajan.apartia.fr (trajan.apartia.fr [10.0.3.121])
-	by zenon.apartia.fr (Postfix) with ESMTP id 4E28DF0AF2F09
-	for <linux-xfs@oss.sgi.com>; Mon, 22 Oct 2007 09:04:25 +0200 (CEST)
-Date: Mon, 22 Oct 2007 09:04:25 +0200
-From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
-Subject: Re: can't remove dir
-Message-ID: <20071022070425.GA15091@apartia.fr>
-References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net> <20071017161504.GA13077@apartia.fr> <20071017212434.GB995458@sgi.com> <20071018131116.GA11957@apartia.fr> <20071018220714.GM995458@sgi.com> <20071019101008.GA28175@apartia.fr> <20071021235052.GV995458@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Oct 2007 02:59:29 -0700 (PDT)
+Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.227])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9M9xLbp005643
+	for <xfs@oss.sgi.com>; Mon, 22 Oct 2007 02:59:24 -0700
+Received: by wr-out-0506.google.com with SMTP id c48so785209wra
+        for <xfs@oss.sgi.com>; Mon, 22 Oct 2007 02:59:24 -0700 (PDT)
+Message-ID: <495eb0390710220232n419353bagfc8b0f879fa5e4a2@mail.gmail.com>
+Date: Mon, 22 Oct 2007 11:32:01 +0200
+From: "Gideon Stupp" <gideon.stupp@gmail.com>
+Subject: [PATCH] support static linking for xfsprogs.
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20071021235052.GV995458@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Oct 22, 2007 at 09:50:52AM +1000, David Chinner wrote:
-> On Fri, Oct 19, 2007 at 12:10:08PM +0200, Louis-David Mitterrand wrote:
-> > On Fri, Oct 19, 2007 at 08:07:14AM +1000, David Chinner wrote:
-> > > On Thu, Oct 18, 2007 at 03:11:16PM +0200, Louis-David Mitterrand wrote:
-> > > > On Thu, Oct 18, 2007 at 07:24:39AM +1000, David Chinner wrote:
-> > > > > On Wed, Oct 17, 2007 at 06:15:04PM +0200, Louis-David Mitterrand wrote:
-> > > > > > Using a 2.6.23 kernel and after a clean xfs_repair-2.9.4 run I can't 
-> > > > > > remove that file:
-> > > > > > 
-> > > > > > sylla:/# rm /lost+found/3912672557
-> > > > > > rm: cannot remove `/lost+found/3912672557': Operation not permitted
-> > > > > > 
-> > > > > > sylla:/# ls -li /lost+found/3912672557                                 
-> > > > > > 3912672557 lrwxrwxrwx 1 root root 9 2006-04-09 19:10 /lost+found/3912672557 -> unix.7.gz
-> > > > > 
-> > > > > Can you post the output of:
-> > > > > 
-> > > > > # xfs_db -r -c "inode 3912672557" -c "p" <device>
-> > > > 
-> > > > Here:
-> > > > 
-> > > > core.magic = 0x494e
-> > > > core.mode = 0120777
-> > > > core.version = 1
-> > > > core.format = 1 (local)
-> > > > core.nlinkv1 = 1
-> > > .....
-> > > > core.immutable = 1
-> > >   ^^^^^^^^^^^^^^^^^^
-> > > 
-> > > You can't remove this link until you remove the immutable flag.
-> > > 
-> > > # xfs_io -r -c "chattr -i" /lost+found/3912672557
-> > 
-> > sylla:~# xfs_io -r -c "chattr -i" /lost+found/3912672557 
-> > /lost+found/3912672557: No such file or directory
-> 
-> Strange. This implies that lookup can't find inode # 3912672557.
-> We know it is there...
-> 
-> How many other files in the directory? Can you get the inode number
-> for the lost+found directory and dump that with xfs_db (as per above)?
-> 
-> Also, what happens if you "touch /lost+found/unix.7.gz" and try again?
+Fix the make files to test --enable-shared and link accordingly.
 
-sylla:/lost+found# touch /lost+found/unix.7.gz   
+You get some annoying warnings when linked statically, but they all
+seem to come from known issues related to how glibc handles
+nsswitch.conf.
 
-sylla:/lost+found# l
-total 0
-lrwxrwxrwx 1 root root 9 2006-04-09 19:10 3912672557 -> unix.7.gz
--rw-r--r-- 1 root root 0 2007-10-22 09:02 unix.7.gz
+Signed-off-by: Gideon Stupp <gideon.stupp@gmail.com>
 
-sylla:/lost+found# xfs_io -r -c "chattr -i" /lost+found/3912672557
+Index: xfsprogs/copy/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/copy/Makefile,v
+retrieving revision 1.4
+diff -u -r1.4 Makefile
+--- xfsprogs/copy/Makefile	30 Jun 2006 14:38:12 -0000	1.4
++++ xfsprogs/copy/Makefile	22 Oct 2007 08:46:25 -0000
+@@ -11,7 +11,13 @@
 
-sylla:/lost+found# rm 3912672557
-rm: remove symbolic link `3912672557'? y
-rm: cannot remove `3912672557': Operation not permitted
+ LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
+ LTDEPENDENCIES = $(LIBXFS)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ default: $(LTCOMMAND)
+
+Index: xfsprogs/db/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/db/Makefile,v
+retrieving revision 1.18
+diff -u -r1.18 Makefile
+--- xfsprogs/db/Makefile	7 Sep 2007 06:12:37 -0000	1.18
++++ xfsprogs/db/Makefile	22 Oct 2007 08:46:25 -0000
+@@ -18,7 +18,13 @@
+ LSRCFILES = xfs_admin.sh xfs_check.sh xfs_ncheck.sh xfs_metadump.sh
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
+-LLDFLAGS += -static
++
++ifeq ($(ENABLE_SHARED),yes)
++LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ ifeq ($(ENABLE_READLINE),yes)
+ LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
+Index: xfsprogs/growfs/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/growfs/Makefile,v
+retrieving revision 1.15
+diff -u -r1.15 Makefile
+--- xfsprogs/growfs/Makefile	7 Sep 2007 06:12:37 -0000	1.15
++++ xfsprogs/growfs/Makefile	22 Oct 2007 08:46:25 -0000
+@@ -11,7 +11,13 @@
+
+ LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+ LSRCFILES = xfs_info.sh
+
+ default: $(LTCOMMAND)
+Index: xfsprogs/io/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/io/Makefile,v
+retrieving revision 1.19
+diff -u -r1.19 Makefile
+--- xfsprogs/io/Makefile	17 Jun 2006 06:12:23 -0000	1.19
++++ xfsprogs/io/Makefile	22 Oct 2007 08:46:25 -0000
+@@ -14,7 +14,13 @@
+
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ ifeq ($(HAVE_FADVISE),yes)
+ CFILES += fadvise.c
+Index: xfsprogs/logprint/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/logprint/Makefile,v
+retrieving revision 1.14
+diff -u -r1.14 Makefile
+--- xfsprogs/logprint/Makefile	7 Sep 2007 06:12:37 -0000	1.14
++++ xfsprogs/logprint/Makefile	22 Oct 2007 08:46:25 -0000
+@@ -14,7 +14,13 @@
+
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ default: $(LTCOMMAND)
+
+Index: xfsprogs/mdrestore/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/mdrestore/Makefile,v
+retrieving revision 1.2
+diff -u -r1.2 Makefile
+--- xfsprogs/mdrestore/Makefile	7 Sep 2007 06:12:37 -0000	1.2
++++ xfsprogs/mdrestore/Makefile	22 Oct 2007 08:46:26 -0000
+@@ -10,7 +10,13 @@
+
+ LLDLIBS = $(LIBXFS) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ default: $(LTCOMMAND)
+
+Index: xfsprogs/mkfs/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/mkfs/Makefile,v
+retrieving revision 1.18
+diff -u -r1.18 Makefile
+--- xfsprogs/mkfs/Makefile	7 Sep 2007 06:12:37 -0000	1.18
++++ xfsprogs/mkfs/Makefile	22 Oct 2007 08:46:26 -0000
+@@ -13,7 +13,12 @@
+
+ LLDLIBS = $(LIBXFS) $(LIBUUID) $(LIBDISK) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBDISK)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
+
+ LSRCFILES = $(FSTYP).c
+ LDIRT = $(FSTYP)
+Index: xfsprogs/quota/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/quota/Makefile,v
+retrieving revision 1.2
+diff -u -r1.2 Makefile
+--- xfsprogs/quota/Makefile	11 Nov 2005 14:27:22 -0000	1.2
++++ xfsprogs/quota/Makefile	22 Oct 2007 08:46:26 -0000
+@@ -16,7 +16,13 @@
+
+ LLDLIBS = $(LIBXCMD)
+ LTDEPENDENCIES = $(LIBXCMD)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ ifeq ($(ENABLE_READLINE),yes)
+ LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
+Index: xfsprogs/repair/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/repair/Makefile,v
+retrieving revision 1.20
+diff -u -r1.20 Makefile
+--- xfsprogs/repair/Makefile	7 Sep 2007 06:12:37 -0000	1.20
++++ xfsprogs/repair/Makefile	22 Oct 2007 08:46:26 -0000
+@@ -20,7 +20,13 @@
+
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG)
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ default: $(LTCOMMAND)
+
+Index: xfsprogs/rtcp/Makefile
+===================================================================
+RCS file: /cvs/xfs-cmds/xfsprogs/rtcp/Makefile,v
+retrieving revision 1.8
+diff -u -r1.8 Makefile
+--- xfsprogs/rtcp/Makefile	11 Nov 2005 14:27:22 -0000	1.8
++++ xfsprogs/rtcp/Makefile	22 Oct 2007 08:46:26 -0000
+@@ -7,7 +7,13 @@
+
+ LTCOMMAND = xfs_rtcp
+ CFILES = xfs_rtcp.c
++
++ifeq ($(ENABLE_SHARED),yes)
+ LLDFLAGS = -static
++else
++LLDFLAGS = -all-static
++endif
++
+
+ default: $(LTCOMMAND)
