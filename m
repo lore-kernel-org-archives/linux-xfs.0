@@ -1,45 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Oct 2007 17:53:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Oct 2007 18:17:42 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9M0r6xl021392
-	for <xfs@oss.sgi.com>; Sun, 21 Oct 2007 17:53:09 -0700
-Date: Mon, 22 Oct 2007 10:52:58 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9M1HZ8e024212
+	for <linux-xfs@oss.sgi.com>; Sun, 21 Oct 2007 18:17:38 -0700
+Date: Mon, 22 Oct 2007 11:17:29 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: mount: /dev/md0: can't read superblock
-Message-ID: <20071022005258.GX995458@sgi.com>
-References: <6e0c99d0710201802v2f41577dv38281b936a2389bf@mail.gmail.com> <471BEDCD.3040104@sandeen.net>
+Subject: Re: can't remove dir
+Message-ID: <20071022011729.GY995458@sgi.com>
+References: <20070914080926.GA30150@apartia.fr> <46EA9741.6060303@sandeen.net> <20071017161504.GA13077@apartia.fr> <20071017212434.GB995458@sgi.com> <20071018131116.GA11957@apartia.fr> <20071018220714.GM995458@sgi.com> <20071019101008.GA28175@apartia.fr> <20071021235052.GV995458@sgi.com> <op.t0kpkzft3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <471BEDCD.3040104@sandeen.net>
+In-Reply-To: <op.t0kpkzft3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Greg Martyn <greg.martyn@gmail.com>, xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, linux-xfs@oss.sgi.com, Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
 
-On Sun, Oct 21, 2007 at 07:24:45PM -0500, Eric Sandeen wrote:
-> Greg Martyn wrote:
-> > Hi all,
-> > After running "xfs_fsr -v /home", I got a bunch of error messages
-> > saying that certain files (/home/.[three letters that i forgot])
-> > couldn't be removed. After that, my system stopped working properly,
-> > so I restarted. Now:
-> > 
-> > [root@localhost ~]# mount /dev/md0 /home/
-> > mount: /dev/md0: can't read superblock
-> > 
-> > uh oh.
+On Mon, Oct 22, 2007 at 10:42:25AM +1000, Barry Naujok wrote:
+> On Mon, 22 Oct 2007 09:50:52 +1000, David Chinner <dgc@sgi.com> wrote:
+> >On Fri, Oct 19, 2007 at 12:10:08PM +0200, Louis-David Mitterrand wrote:
+> >>sylla:~# xfs_io -r -c "chattr -i" /lost+found/3912672557
+> >>/lost+found/3912672557: No such file or directory
+> >
+> >Strange. This implies that lookup can't find inode # 3912672557.
+> >We know it is there...
+> >
+> >How many other files in the directory? Can you get the inode number
+> >for the lost+found directory and dump that with xfs_db (as per above)?
+> >
+> >Also, what happens if you "touch /lost+found/unix.7.gz" and try again?
 > 
-> dmesg says it's corrupted.
-> 
-> You should probably run repair on it.  But being raid, if something went
-> wrong w/ the raid, that could make it worse... run xfs_repair -n and see
-> what it *would* fix.
+> Being a symbolic link, xfs_io follows them rather than operates on
+> them directory.
 
-xfs_repair does not check everything in the filesystem - some things it
-simply rebuilds - like the free space btrees. you want to run xfs_check
-to determine if the free space btrees are corrupt on disk or not.... ;)
+Actually, I tested that before posting. If the symlink is dangling,
+then the symlink gets the attributes attached to it:
+
+# ls -l /mnt/scratch/
+total 0
+lrwxrwxrwx 1 root root 22 Oct 22 11:09 foo -> /mnt/scratch/unix.7.gz
+# ls -l /mnt/scratch/unix.7.gz
+/bin/ls: /mnt/scratch/unix.7.gz: No such file or directory
+# xfs_io -f -r -c "lsattr" /mnt/scratch/foo
+-------------- /mnt/scratch/foo
+# xfs_io -f -c "chattr +i" /mnt/scratch/foo
+# xfs_io -f -r -c "lsattr" /mnt/scratch/foo
+--i----------- /mnt/scratch/foo
+# umount /mnt/scratch
+# mount !$
+mount /mnt/scratch
+# xfs_io -f -r -c "lsattr" /mnt/scratch/foo
+--i----------- /mnt/scratch/foo
+# xfs_io -f -c "chattr -i" /mnt/scratch/foo -r
+# xfs_io -f -r -c "lsattr" /mnt/scratch/foo
+-------------- /mnt/scratch/foo
+#
 
 Cheers,
 
