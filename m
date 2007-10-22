@@ -1,65 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Oct 2007 20:47:38 -0700 (PDT)
-Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.179])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9M3lXpv004396
-	for <xfs@oss.sgi.com>; Sun, 21 Oct 2007 20:47:34 -0700
-Received: by py-out-1112.google.com with SMTP id u77so2301826pyb
-        for <xfs@oss.sgi.com>; Sun, 21 Oct 2007 20:47:35 -0700 (PDT)
-Message-ID: <6e0c99d0710212047r684d90d5wc6c0a009e0568edd@mail.gmail.com>
-Date: Sun, 21 Oct 2007 23:47:35 -0400
-From: "Greg Martyn" <greg.martyn@gmail.com>
-Subject: Re: mount: /dev/md0: can't read superblock
-In-Reply-To: <20071022005258.GX995458@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <6e0c99d0710201802v2f41577dv38281b936a2389bf@mail.gmail.com>
-	 <471BEDCD.3040104@sandeen.net> <20071022005258.GX995458@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Oct 2007 22:53:45 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9M5rbTY023391
+	for <xfs@oss.sgi.com>; Sun, 21 Oct 2007 22:53:39 -0700
+Subject: TAKE 907752 - Fix build for FreeBSD
+Message-Id: <20071022055334.D3D3558C38F1@chook.melbourne.sgi.com>
+Date: Mon, 22 Oct 2007 15:53:34 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Thank you Eric and David. xfs_repair repaired the filesystem. I forgot
-to save the output of xfs_fsr (in case you were curious about what
-went wrong), but everything seems to be working fine again.
 
-I just won't be defragging again any time soon ;-)
+Date:  Mon Oct 22 15:53:10 AEST 2007
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  rodrigc@crodrigues.org
 
-Thanks,
-greg
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-On 10/21/07, David Chinner <dgc@sgi.com> wrote:
-> On Sun, Oct 21, 2007 at 07:24:45PM -0500, Eric Sandeen wrote:
-> > Greg Martyn wrote:
-> > > Hi all,
-> > > After running "xfs_fsr -v /home", I got a bunch of error messages
-> > > saying that certain files (/home/.[three letters that i forgot])
-> > > couldn't be removed. After that, my system stopped working properly,
-> > > so I restarted. Now:
-> > >
-> > > [root@localhost ~]# mount /dev/md0 /home/
-> > > mount: /dev/md0: can't read superblock
-> > >
-> > > uh oh.
-> >
-> > dmesg says it's corrupted.
-> >
-> > You should probably run repair on it.  But being raid, if something went
-> > wrong w/ the raid, that could make it worse... run xfs_repair -n and see
-> > what it *would* fix.
->
-> xfs_repair does not check everything in the filesystem - some things it
-> simply rebuilds - like the free space btrees. you want to run xfs_check
-> to determine if the free space btrees are corrupt on disk or not.... ;)
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
->
+
+Modid:  master-melb:xfs-cmds:29935a
+xfsprogs/libxfs/freebsd.c - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/freebsd.c.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- Fix build for FreeBSD
