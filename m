@@ -1,35 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Oct 2007 01:03:42 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9O83bMU031552
-	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 01:03:38 -0700
-Date: Wed, 24 Oct 2007 08:36:39 +0100
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC 1/2] Case-insensitive XFS - kernel patch
-Message-ID: <20071024073639.GA32469@infradead.org>
-References: <op.t0m36wxm3jf8g2@pc-bnaujok.melbourne.sgi.com> <20071023201912.GA23558@infradead.org> <op.t0oef0pk3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Oct 2007 01:19:34 -0700 (PDT)
+Received: from fk-out-0910.google.com (fk-out-0910.google.com [209.85.128.186])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9O8JQoj001899
+	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 01:19:29 -0700
+Received: by fk-out-0910.google.com with SMTP id 18so105580fks
+        for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 01:19:29 -0700 (PDT)
+Date: Wed, 24 Oct 2007 09:53:20 +0200
+From: Nicolas KOWALSKI <nicolas.kowalski@gmail.com>
+Subject: Re: problems subscribing to this list.
+Message-ID: <20071024075320.GX31811@petole.dyndns.org>
+References: <3D77EBFA-5164-454E-A4D3-C32BC1830800@counterpop.net> <471D7E55.9020103@sgi.com> <471E7B0C.7020804@thebarn.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <op.t0oef0pk3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <471E7B0C.7020804@thebarn.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, Oct 24, 2007 at 10:32:14AM +1000, Barry Naujok wrote:
-> On Wed, 24 Oct 2007 06:19:12 +1000, Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > This patch is quite badly mangled by your mailer.  Could you just
-> > attach it?  (Or even better use a mailer that handles inlined text
+On Tue, Oct 23, 2007 at 05:51:56PM -0500, Russell Cattelan wrote:
+> Ok so posting this to the list is a bit silly for new subscribers. As 
+> a reminder to existing list subscribers interesting in modifying their 
+> list status, the web interface is more reliable than the the email 
+> interface.
+>
+> http://oss.sgi.com/cgi-bin/lsg2.cgi
 
-It's still mangled, e.g.
+Thanks for the link. 
 
+Maybe it should be mentionned in the mailing-list page for easier access?
 
->   #include "xfs_vnodeops.h"
-> +#include "xfs_da_btree.h"
-> +#include "xfs_unicode.h"
+http://oss.sgi.com/projects/xfs/mail.html 
 
-The # should be lined up, with only one character (' ', '+' or '-') before
-them.  No idea what the mailer does here.
+Thanks,
+-- 
+Nicolas
