@@ -1,123 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Oct 2007 08:06:45 -0700 (PDT)
-Received: from ppsw-2.csi.cam.ac.uk (ppsw-2.csi.cam.ac.uk [131.111.8.132])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9OF6ZSV024255
-	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 08:06:39 -0700
-From: Anton Altaparmakov <aia21@cam.ac.uk>
-In-Reply-To: <op.t0ox8tfb3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Subject: Re: [RFC 0/2] Case-insensitive filename lookup for XFS
-References: <op.t0m36sn43jf8g2@pc-bnaujok.melbourne.sgi.com> <30F0B02B-9857-43E8-89C0-E9C85EF081A2@cam.ac.uk> <7858EE76-E860-41C3-8AFC-CE67DF210081@cam.ac.uk> <op.t0ox8tfb3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Message-Id: <1CEB9B80-1826-4495-9156-88BD43BC0186@cam.ac.uk>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Mime-Version: 1.0 (Apple Message framework v912)
-Date: Wed, 24 Oct 2007 16:05:54 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Oct 2007 15:27:48 -0700 (PDT)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9OMRdLi016445
+	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 15:27:40 -0700
+Received: from [IPv6:::1] (slurp.thebarn.com [208.42.117.201])
+	(authenticated bits=0)
+	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id l9OMRfo0023565
+	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 17:27:42 -0500 (CDT)
+	(envelope-from cattelan@thebarn.com)
+Message-ID: <471FC6DD.8070009@thebarn.com>
+Date: Wed, 24 Oct 2007 17:27:41 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: problems subscribing to this list.
+References: <3D77EBFA-5164-454E-A4D3-C32BC1830800@counterpop.net> <471D7E55.9020103@sgi.com> <471E7B0C.7020804@thebarn.com> <20071024075320.GX31811@petole.dyndns.org>
+In-Reply-To: <20071024075320.GX31811@petole.dyndns.org>
+Content-Type: multipart/mixed;
+ boundary="------------000500020000090006030408"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Hi Barry,
+This is a multi-part message in MIME format.
+--------------000500020000090006030408
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 24 Oct 2007, at 08:39, Barry Naujok wrote:
-> On Tue, 23 Oct 2007 20:07:47 +1000, Anton Altaparmakov <aia21@cam.ac.uk 
-> > wrote:
->> I forgot to say:  If you do what I did for NTFS you can also throw
->> away your custom dentry operations that your patch adds as the dcache
->> then only holds correctly cased names so you are fine to do case
->> sensitive dcache lookups at all times.  Access via wrongly cased name
->> will always go to ->lookup inode operation and that is fine because
->> such lookups almost never happen because majority of users will  
->> either
->> use a GUI in which case all names are always correctly cased as the
->> names displayed in the GUI are obtained from a ->readdir and thus  
->> show
->> the correct case or they will use the command line in which case they
->> will be savvy enough to use tab-completion in which case the names  
->> are
->> correct case, too.  Tab-completion does not work on wrongly cased
->> names so you are very unlikely to ever get a wrongly cased name at  
->> all.
+Nicolas KOWALSKI wrote:
+> On Tue, Oct 23, 2007 at 05:51:56PM -0500, Russell Cattelan wrote:
+>   
+>> Ok so posting this to the list is a bit silly for new subscribers. As 
+>> a reminder to existing list subscribers interesting in modifying their 
+>> list status, the web interface is more reliable than the the email 
+>> interface.
 >>
->> And yes of course you can on purpose construct a test / benchmark
->> where having to do the ->lookup each time will be really slow because
->> you keep creating files and then accessing them by wrongly cased name
->> on purpose (or whatever) but I would hope that you do not care about
->> such artificial benchmarks that do not reflect any real-world  
->> loads...
+>> http://oss.sgi.com/cgi-bin/lsg2.cgi
+>>     
 >
-> I have been looking at ntfs_lookup() and seeing how it does its stuff.
-> It seems that is the best way to go.
+> Thanks for the link. 
 >
-> One thing I have noticed is with two or more attempted case- 
-> insensitive
-> lookups that don't exist yet case match the same
-> (ie. ntfs_lookup_inode_by_name() fails with -ENOENT), d_add(dent,  
-> NULL)
-> is called, populating the dentry with effective duplicates.
+> Maybe it should be mentionned in the mailing-list page for easier access?
 >
-> Eg:
->  # cat /mnt/foo/fileNOTexist
->  # cat /mnt/foo/FILEnotEXIST
+> http://oss.sgi.com/projects/xfs/mail.html 
 >
-> Will have two negative dentries, am I correct?
+> Thanks,
+>   
+Yes I agree, I did make that request a few weeks back.
+I will re-ping the SGI folks that can make that change.
+
+-Russell
 
 
-Yes, that is correct.  Well spotted!  That means NTFS needs to start  
-killing all negative dentries belonging to a directory each time a  
-directory entry is created in that directory.  That is what I do for  
-NTFS on Mac OS X already but I had forgotten about needing to do it on  
-Linux, too.  )-:
+--------------000500020000090006030408
+Content-Type: text/x-vcard; charset=utf-8;
+ name="cattelan.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="cattelan.vcf"
 
-In OSX there the VFS provides a function to do this "xnu/bsd/vfs/ 
-vfs_cache.c::cache_purge_negatives()", we will need to implement an  
-equivalent on Linux:
+begin:vcard
+fn:Russell Cattelan
+n:Cattelan;Russell
+email;internet:cattelan@thebarn.com
+x-mozilla-html:FALSE
+version:2.1
+end:vcard
 
-<quote from xnu/bsd/vfs/vfs_cache.c>
-/*
-  * Purge all negative cache entries that are children of the
-  * given vnode.  A case-insensitive file system (or any file
-  * system that has multiple equivalent names for the same
-  * directory entry) can use this when creating or renaming
-  * to remove negative entries that may no longer apply.
-  */
-void
-cache_purge_negatives(vnode_t vp)
-{
-         struct namecache *ncp;
 
-         NAME_CACHE_LOCK();
-
-         LIST_FOREACH(ncp, &vp->v_ncchildren, nc_child)
-                 if (ncp->nc_vp == NULL)
-                         cache_delete(ncp, 1);
-
-         NAME_CACHE_UNLOCK();
-}
-</quote>
-
-The Linux version should be analogous AFAICS, i.e. take the dentry of  
-the directory in which an entry is being created and iterate over its  
-d_subdirs list and for each dentry on that list if it is a negative  
-dentry, i.e. d_inode is NULL, throw the dentry away.  Basically very  
-similar to the OSX function but I can't quite see which dcache  
-function we need to call to do the "throw the dentry away" bit.  None  
-of the functions in fs/dcache.c look quite right.  I imagine we want  
-to take the dcache_lock, traverse d_subdirs list of the directory  
-dentry and for each negative dentry on the list, do a __dget_locked(),  
-__d_drop(), spin_unlock(&dentry->d_lock), then move it from d_subdirs  
-of its parent to a private list and when when we are done, drop the  
-dcache_lock and go over the private list and do a dput() for each  
-dentry on the private list which will result in them all being  
-d_kill()ed.  This can probably be made more efficient by someone who  
-understands the dcache better than me but it seems what I suggest  
-would at least do the right thing...
-
-Best regards,
-
-	Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer, http://www.linux-ntfs.org/
+--------------000500020000090006030408--
