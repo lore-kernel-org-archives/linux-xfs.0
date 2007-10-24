@@ -1,43 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Oct 2007 17:34:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9O0YAEZ001938
-	for <xfs@oss.sgi.com>; Tue, 23 Oct 2007 17:34:12 -0700
-Date: Wed, 24 Oct 2007 10:34:15 +1000
-Subject: Re: [RFC 0/2] Case-insensitive filename lookup for XFS
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Oct 2007 18:01:53 -0700 (PDT)
+Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9O11lXv005381
+	for <xfs@oss.sgi.com>; Tue, 23 Oct 2007 18:01:49 -0700
+Date: Tue, 23 Oct 2007 20:37:06 -0400
+From: Josef Sipek <jsipek@fsl.cs.sunysb.edu>
+Subject: Re: Slow seek in kernels >= 2.6.18
+Message-ID: <20071024003706.GA27516@filer.fsl.cs.sunysb.edu>
+References: <4717156C.3030308@firma.seznam.cz>
 MIME-Version: 1.0
-References: <op.t0m36sn43jf8g2@pc-bnaujok.melbourne.sgi.com> <200710231422.21637.ms@teamix.de>
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.t0oejdbf3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <200710231422.21637.ms@teamix.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4717156C.3030308@firma.seznam.cz>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <ms@teamix.de>, xfs@oss.sgi.com
+To: Anton A Vorobev <anton.vorobev@firma.seznam.cz>
+Cc: xfs@oss.sgi.com
 
-On Tue, 23 Oct 2007 22:22:21 +1000, Martin Steigerwald <ms@teamix.de> wrote:
+On Thu, Oct 18, 2007 at 10:12:28AM +0200, Anton A Vorobev wrote:
+> Hi!
+>
+> A question. We've got an application that runs about 30-40 minutes. After 
+> kernel upgrade from 2.6.17 branch, it runs about 3 hours.
+> I've made tests with the help of bonnie++, it shows that random seek 
+> operations are about 3 times slower in kernels newer than 2.6.18 in 
+> comparison with 2.6.17. This difference may be seen only during high load 
+> of a server. When it is in normal state, parameters are rather the same.
 
-> Am Dienstag, 23. Oktober 2007 schrieb Barry Naujok:
->
-> Hi Barry,
->
->> To allow case-insensitivity to be a mount option rather than
->> a mkfs option, the hashes stored on disk are always case-folded.
->> This is indicated by the new "unicode" bit in the superblock.
->> This bit also associated with the presence of the case-folding
->> table on disk.
->
-> What would happen in the following scenario?
->
-> mount -t xfs /dev/somedevice /mnt/tmp
-> touch /mnt/tmp/testfile
-> touch /mnt/tmp/Testfile
-> touch /mnt/tmp/TESTFILE
->
-> mount -t xfs -o remount,ci /dev/somedevice /mnt/tmp
-> rm /mnt/tmp/testfile
+I think that's about when the defaults for few /proc/sys/vm/ vars changed.
+One from 10 to 5, and another from 40 to 10. I forget the exact filenames.
 
-testfile would be deleted, Testfile and TESTFILE will remain.
-Subsequent rm's should remove the rest.
+Josef 'Jeff' Sipek.
+
+-- 
+Once you have their hardware. Never give it back.
+(The First Rule of Hardware Acquisition)
