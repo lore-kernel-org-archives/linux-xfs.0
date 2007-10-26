@@ -1,71 +1,358 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Oct 2007 15:27:48 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9OMRdLi016445
-	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 15:27:40 -0700
-Received: from [IPv6:::1] (slurp.thebarn.com [208.42.117.201])
-	(authenticated bits=0)
-	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id l9OMRfo0023565
-	for <xfs@oss.sgi.com>; Wed, 24 Oct 2007 17:27:42 -0500 (CDT)
-	(envelope-from cattelan@thebarn.com)
-Message-ID: <471FC6DD.8070009@thebarn.com>
-Date: Wed, 24 Oct 2007 17:27:41 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Oct 2007 17:57:34 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9Q0vSPX022059
+	for <xfs@oss.sgi.com>; Thu, 25 Oct 2007 17:57:30 -0700
+Message-ID: <47213B7A.10501@sandeen.net>
+Date: Thu, 25 Oct 2007 19:57:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: problems subscribing to this list.
-References: <3D77EBFA-5164-454E-A4D3-C32BC1830800@counterpop.net> <471D7E55.9020103@sgi.com> <471E7B0C.7020804@thebarn.com> <20071024075320.GX31811@petole.dyndns.org>
-In-Reply-To: <20071024075320.GX31811@petole.dyndns.org>
-Content-Type: multipart/mixed;
- boundary="------------000500020000090006030408"
+Subject: [PATCH V3] optimize XFS_IS_REALTIME_INODE w/o realtime config
+References: <46C7627A.60503@sandeen.net> <20070824140822.GP72985246@sgi.com> <46CF1B22.7090007@sandeen.net>
+In-Reply-To: <46CF1B22.7090007@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
---------------000500020000090006030408
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Try again.. :)
 
-Nicolas KOWALSKI wrote:
-> On Tue, Oct 23, 2007 at 05:51:56PM -0500, Russell Cattelan wrote:
->   
->> Ok so posting this to the list is a bit silly for new subscribers. As 
->> a reminder to existing list subscribers interesting in modifying their 
->> list status, the web interface is more reliable than the the email 
->> interface.
->>
->> http://oss.sgi.com/cgi-bin/lsg2.cgi
->>     
->
-> Thanks for the link. 
->
-> Maybe it should be mentionned in the mailing-list page for easier access?
->
-> http://oss.sgi.com/projects/xfs/mail.html 
->
-> Thanks,
->   
-Yes I agree, I did make that request a few weeks back.
-I will re-ping the SGI folks that can make that change.
+-------------
 
--Russell
+Use XFS_IS_REALTIME_INODE in more places, and #define it to
+0 if CONFIG_XFS_RT is off.  This should be safe because mount
+checks in xfs_rtmount_init:
 
+# define xfs_rtmount_init(m)    (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
 
---------------000500020000090006030408
-Content-Type: text/x-vcard; charset=utf-8;
- name="cattelan.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="cattelan.vcf"
+so if we get mounted w/o CONFIG_XFS_RT, no realtime inodes should
+be encountered after that.
 
-begin:vcard
-fn:Russell Cattelan
-n:Cattelan;Russell
-email;internet:cattelan@thebarn.com
-x-mozilla-html:FALSE
-version:2.1
-end:vcard
+Defining XFS_IS_REALTIME_INODE to 0 saves a bit of stack space,
+presumeably gcc can optimize around the various "if (0)" type
+checks:
 
+xfs_alloc_file_space	-8
+xfs_bmap_adjacent	-16
+xfs_bmapi		-8
+xfs_bmap_rtalloc	-16
+xfs_bunmapi		-28
+xfs_free_file_space	-64
+xfs_imap		+8  <-- ?  hmm.
+xfs_iomap_write_direct	-12
+xfs_qm_dqusage_adjust	-4
+xfs_qm_vop_chown_reserve -4
 
---------------000500020000090006030408--
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+Index: linux-2.6-xfs/fs/xfs/xfs_rtalloc.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_rtalloc.h
++++ linux-2.6-xfs/fs/xfs/xfs_rtalloc.h
+@@ -21,8 +21,6 @@
+ struct xfs_mount;
+ struct xfs_trans;
+
+-#define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags &
+XFS_DIFLAG_REALTIME)
+-
+ /* Min and max rt extent sizes, specified in bytes */
+ #define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
+ #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64KB */
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -741,7 +741,7 @@ xfs_ioctl(
+ 	case XFS_IOC_DIOINFO: {
+ 		struct dioattr	da;
+ 		xfs_buftarg_t	*target =
+-			(ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(ip) ?
+ 			mp->m_rtdev_targp : mp->m_ddev_targp;
+
+ 		da.d_mem = da.d_miniosz = 1 << target->bt_sshift;
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
+@@ -213,7 +213,7 @@ xfs_read(
+
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		xfs_buftarg_t	*target =
+-			(ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(ip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp;
+ 		if ((*offset & target->bt_smask) ||
+ 		    (size & target->bt_smask)) {
+@@ -668,7 +668,7 @@ start:
+
+ 	if (ioflags & IO_ISDIRECT) {
+ 		xfs_buftarg_t	*target =
+-			(xip->i_d.di_flags & XFS_DIFLAG_REALTIME) ?
++			XFS_IS_REALTIME_INODE(xip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp;
+
+ 		if ((pos & target->bt_smask) || (count & target->bt_smask)) {
+Index: linux-2.6-xfs/fs/xfs/xfs_dfrag.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_dfrag.c
++++ linux-2.6-xfs/fs/xfs/xfs_dfrag.c
+@@ -185,8 +185,7 @@ xfs_swap_extents(
+ 	}
+
+ 	/* Verify both files are either real-time or non-realtime */
+-	if ((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) !=
+-	    (tip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
+ 		error = XFS_ERROR(EINVAL);
+ 		goto error0;
+ 	}
+Index: linux-2.6-xfs/fs/xfs/xfs_rw.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_rw.h
++++ linux-2.6-xfs/fs/xfs/xfs_rw.h
+@@ -32,7 +32,7 @@ struct xfs_mount;
+ static inline xfs_daddr_t
+ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+ {
+-	return (((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) ? \
++	return (XFS_IS_REALTIME_INODE(ip) ? \
+ 		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+ 		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+ }
+@@ -53,7 +53,7 @@ xfs_get_extsz_hint(
+ {
+ 	xfs_extlen_t	extsz;
+
+-	if (unlikely(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++	if (unlikely(XFS_IS_REALTIME_INODE(ip))) {
+ 		extsz = (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
+ 				? ip->i_d.di_extsize
+ 				: ip->i_mount->m_sb.sb_rextsize;
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+@@ -136,7 +136,7 @@ xfs_getattr(
+ 	default:
+ 		vap->va_rdev = 0;
+
+-		if (!(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++		if (!(XFS_IS_REALTIME_INODE(ip))) {
+ 			vap->va_blocksize = xfs_preferred_iosize(mp);
+ 		} else {
+
+@@ -508,7 +508,7 @@ xfs_setattr(
+ 		 */
+ 		if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+ 		    (mask & XFS_AT_XFLAGS) &&
+-		    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) !=
++		    (XFS_IS_REALTIME_INODE(ip)) !=
+ 		    (vap->va_xflags & XFS_XFLAG_REALTIME)) {
+ 			code = XFS_ERROR(EINVAL);	/* EFBIG? */
+ 			goto error_return;
+@@ -520,7 +520,7 @@ xfs_setattr(
+ 		if ((mask & XFS_AT_EXTSIZE) && vap->va_extsize != 0) {
+ 			xfs_extlen_t	size;
+
+-			if ((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) ||
++			if (XFS_IS_REALTIME_INODE(ip) ||
+ 			    ((mask & XFS_AT_XFLAGS) &&
+ 			    (vap->va_xflags & XFS_XFLAG_REALTIME))) {
+ 				size = mp->m_sb.sb_rextsize <<
+@@ -1144,7 +1144,7 @@ xfs_fsync(
+ 		 * If this inode is on the RT dev we need to flush that
+ 		 * cache as well.
+ 		 */
+-		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++		if (XFS_IS_REALTIME_INODE(ip))
+ 			xfs_blkdev_issue_flush(ip->i_mount->m_rtdev_targp);
+ 	}
+
+@@ -4044,7 +4044,7 @@ xfs_zero_remaining_bytes(
+ 	int			error = 0;
+
+ 	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
+-				ip->i_d.di_flags & XFS_DIFLAG_REALTIME ?
++				XFS_IS_REALTIME_INODE(ip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp);
+
+ 	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
+@@ -4141,7 +4141,7 @@ xfs_free_file_space(
+ 	error = 0;
+ 	if (len <= 0)	/* if nothing being freed */
+ 		return error;
+-	rt = (ip->i_d.di_flags & XFS_DIFLAG_REALTIME);
++	rt = XFS_IS_REALTIME_INODE(ip);
+ 	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
+ 	end_dmi_offset = offset + len;
+ 	endoffset_fsb = XFS_B_TO_FSBT(mp, end_dmi_offset);
+Index: linux-2.6-xfs/fs/xfs/xfs_dinode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_dinode.h
++++ linux-2.6-xfs/fs/xfs/xfs_dinode.h
+@@ -273,6 +273,12 @@ typedef enum xfs_dinode_fmt
+ #define XFS_DIFLAG_NODEFRAG      (1 << XFS_DIFLAG_NODEFRAG_BIT)
+ #define XFS_DIFLAG_FILESTREAM    (1 << XFS_DIFLAG_FILESTREAM_BIT)
+
++#ifdef CONFIG_XFS_RT
++#define XFS_IS_REALTIME_INODE(ip) ((ip)->i_d.di_flags &
+XFS_DIFLAG_REALTIME)
++#else
++#define XFS_IS_REALTIME_INODE(ip) (0)
++#endif
++
+ #define XFS_DIFLAG_ANY \
+ 	(XFS_DIFLAG_REALTIME | XFS_DIFLAG_PREALLOC | XFS_DIFLAG_NEWRTBM | \
+ 	 XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND | XFS_DIFLAG_SYNC | \
+Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+@@ -1045,7 +1045,7 @@ xfs_dm_direct_ok(
+
+ 	/* Realtime files can ONLY do direct I/O. */
+
+-	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++	if (XFS_IS_REALTIME_INODE(ip))
+ 		return(1);
+
+ 	/* If direct I/O is disabled, or if the request is too small, use
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.c
++++ linux-2.6-xfs/fs/xfs/xfs_bmap.c
+@@ -2969,7 +2969,7 @@ STATIC int
+ xfs_bmap_alloc(
+ 	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
+ {
+-	if ((ap->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) && ap->userdata)
++	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
+ 		return xfs_bmap_rtalloc(ap);
+ 	return xfs_bmap_btalloc(ap);
+ }
+@@ -3096,8 +3096,7 @@ xfs_bmap_del_extent(
+ 		/*
+ 		 * Realtime allocation.  Free it and record di_nblocks update.
+ 		 */
+-		if (whichfork == XFS_DATA_FORK &&
+-		    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)) {
++		if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+ 			xfs_fsblock_t	bno;
+ 			xfs_filblks_t	len;
+
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c
++++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
+@@ -2062,8 +2062,7 @@ xfs_bmbt_insert(
+ 				pcur->bc_private.b.allocated;
+ 			pcur->bc_private.b.allocated = 0;
+ 			ASSERT((cur->bc_private.b.firstblock != NULLFSBLOCK) ||
+-			       (cur->bc_private.b.ip->i_d.di_flags &
+-				XFS_DIFLAG_REALTIME));
++			       XFS_IS_REALTIME_INODE(cur->bc_private.b.ip));
+ 			cur->bc_private.b.firstblock =
+ 				pcur->bc_private.b.firstblock;
+ 			ASSERT(cur->bc_private.b.flist ==
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c
++++ linux-2.6-xfs/fs/xfs/xfs_inode.c
+@@ -1296,7 +1296,7 @@ xfs_isize_check(
+ 	if ((ip->i_d.di_mode & S_IFMT) != S_IFREG)
+ 		return;
+
+-	if (ip->i_d.di_flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_EXTSIZE))
++	if (XFS_IS_REALTIME_INODE(ip) || (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE))
+ 		return;
+
+ 	nimaps = 2;
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+@@ -113,7 +113,7 @@ xfs_find_bdev_for_inode(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+
+-	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++	if (XFS_IS_REALTIME_INODE(ip))
+ 		return mp->m_rtdev_targp->bt_bdev;
+ 	else
+ 		return mp->m_ddev_targp->bt_bdev;
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+@@ -597,7 +597,7 @@ xfs_vn_getattr(
+ 				   sysv_minor(ip->i_df.if_u2.if_rdev));
+ 		break;
+ 	default:
+-		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
++		if (XFS_IS_REALTIME_INODE(ip)) {
+ 			/*
+ 			 * If the file blocks are being allocated from a
+ 			 * realtime volume, then return the inode's realtime
+Index: linux-2.6-xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iomap.c
++++ linux-2.6-xfs/fs/xfs/xfs_iomap.c
+@@ -141,7 +141,7 @@ xfs_imap_to_bmap(
+ 		iomapp->iomap_bsize = XFS_FSB_TO_B(mp, imap->br_blockcount);
+ 		iomapp->iomap_flags = flags;
+
+-		if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
++		if (XFS_IS_REALTIME_INODE(ip)) {
+ 			iomapp->iomap_flags |= IOMAP_REALTIME;
+ 			iomapp->iomap_target = mp->m_rtdev_targp;
+ 		} else {
+@@ -298,7 +298,7 @@ xfs_iomap_eof_align_last_fsb(
+ 	xfs_extlen_t	align;
+ 	int		eof, error;
+
+-	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME)
++	if (XFS_IS_REALTIME_INODE(ip))
+ 		;
+ 	/*
+ 	 * If mounted with the "-o swalloc" option, roundup the allocation
+@@ -524,7 +524,7 @@ xfs_iomap_write_direct(
+ 	}
+
+ 	if (unlikely(!imap.br_startblock &&
+-		     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
++		     !(XFS_IS_REALTIME_INODE(ip)))) {
+ 		error = xfs_cmn_err_fsblock_zero(ip, &imap);
+ 		goto error_out;
+ 	}
+@@ -687,7 +687,7 @@ retry:
+ 	}
+
+ 	if (unlikely(!imap[0].br_startblock &&
+-		     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
++		     !(XFS_IS_REALTIME_INODE(ip))))
+ 		return xfs_cmn_err_fsblock_zero(ip, &imap[0]);
+
+ 	*ret_imap = imap[0];
+@@ -809,7 +809,7 @@ xfs_iomap_write_allocate(
+ 		 */
+ 		for (i = 0; i < nimaps; i++) {
+ 			if (unlikely(!imap[i].br_startblock &&
+-				     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
++				     !(XFS_IS_REALTIME_INODE(ip))))
+ 				return xfs_cmn_err_fsblock_zero(ip, &imap[i]);
+ 			if ((offset_fsb >= imap[i].br_startoff) &&
+ 			    (offset_fsb < (imap[i].br_startoff +
+@@ -907,7 +907,7 @@ xfs_iomap_write_unwritten(
+ 			return XFS_ERROR(error);
+
+ 		if (unlikely(!imap.br_startblock &&
+-			     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
++			     !(XFS_IS_REALTIME_INODE(ip))))
+ 			return xfs_cmn_err_fsblock_zero(ip, &imap);
+
+ 		if ((numblks_fsb = imap.br_blockcount) == 0) {
