@@ -1,65 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 14:26:58 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TLQnBV012360
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 14:26:52 -0700
-Date: Tue, 30 Oct 2007 08:26:49 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Default mount options (that suck less).
-Message-ID: <20071029212649.GL995458@sgi.com>
-References: <20071029075657.GA84369978@melbourne.sgi.com> <20071029085502.GI995458@sgi.com> <4725E7D0.8090400@sandeen.net>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 15:13:07 -0700 (PDT)
+Received: from mail.clusterfs.com (mail.clusterfs.com [74.0.229.162])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9TMD0QY018048
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 15:13:01 -0700
+Date: Mon, 29 Oct 2007 16:13:02 -0600
+From: Andreas Dilger <adilger@sun.com>
+Subject: Re: [RFC] add FIEMAP ioctl to efficiently map file allocation
+Message-ID: <20071029221302.GD3042@webber.adilger.int>
+References: <20070416112252.GJ48531920@melbourne.sgi.com> <20070419002139.GK5967@schatzie.adilger.int> <20070419015426.GM48531920@melbourne.sgi.com> <20070430224401.GX5967@schatzie.adilger.int> <20070501042254.GD77450368@melbourne.sgi.com> <1FA8E92B-954D-4624-A089-80D4AA7399FD@cam.ac.uk> <20070502000654.GK77450368@melbourne.sgi.com> <8464EA47-03AC-4162-A2D0-683517568640@cam.ac.uk> <20071029194507.GA8578@webber.adilger.int> <20071029205744.GB28607@ca-server1.us.oracle.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4725E7D0.8090400@sandeen.net>
+In-Reply-To: <20071029205744.GB28607@ca-server1.us.oracle.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: David Chinner <dgc@sgi.com>, Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
+To: Mark Fasheh <mark.fasheh@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, Anton Altaparmakov <aia21@cam.ac.uk>, Mike Waychison <mikew@google.com>, ocfs2-devel@oss.oracle.com
 
-On Mon, Oct 29, 2007 at 09:01:52AM -0500, Eric Sandeen wrote:
-> David Chinner wrote:
-> > On Mon, Oct 29, 2007 at 06:56:57PM +1100, Niv Sardi wrote:
-> >> Hello,
-> >>
-> >> XFS's default mount options are in most cases sub-optimal, we should try
+On Oct 29, 2007  13:57 -0700, Mark Fasheh wrote:
+> 	Thanks for posting this. I believe that an interface such as FIEMAP
+> would be very useful to Ocfs2 as well. (I added ocfs2-devel to the e-mail)
+
+I tried to make it as Lustre-agnostic as possible...
+
+> On Mon, Oct 29, 2007 at 01:45:07PM -0600, Andreas Dilger wrote:
+> > The FIEMAP ioctl (FIle Extent MAP) is similar to the existing FIBMAP
+> > ioctl block device ioctl used for mapping an individual logical block
+> > address in a file to a physical block address in the block device. The
+> > FIEMAP ioctl will return the logical to physical mapping for the extent
+> > that contains the specified logical byte address.
 > > 
-> > Mkfs options ;)
-> > 
-> >> to have more sensible defaults, so far I'm following some quick dave-powered
-> >> recomendations:
-> >>
-> >> - version 2 logs
-> >> - attr2
-> >> - lazy superblock counters
-> >> - less allocation groups for single disk configs
-> >>
-> >> - imaxpct default can be reduced
-> >>
-> >> it is currently 25, what would be reasonable ?
-> > 
-> > Given that 25% on a 4GB filesystem will allow about 5million inodes,
-> > I think it's probably reasonable to bring it down to 5% by the time we
-> > pass 1TB and 1% by 50TB.....
+> > struct fiemap_extent {
+> >     __u64 fe_offset;/* offset in bytes for the start of the extent */
 > 
-> But what does this affect?  It's a cap, but it doesn't affect allocation
-> policy or anything does it?  What's the downside to 25%?
+> I'm a little bit confused by fe_offset. Is it a physical offset, or a
+> logical offset? The reason I ask is that your description above says "FIEMAP
+> ioctl will return the logical to physical mapping for the extent that
+> contains the specified logical byte address." Which seems to imply physical,
+> but your math to get to the next logical start in a very fragmented file,
+> implies that fe_offset is a logical offset:
+> 
+>        fm_start = fm_extents[fm_extent_count - 1].fe_offset +
+>                          fm_extents[fm_extent_count - 1].fe_length + 1; 
 
-It reserves allocation groups as "metadata only" for inode32 filesystems
-so data doesn't get placed in them untill all other space is full. So at
-1TB, we don't use 25% of the filesystem until the other 75% is full, yet
-to hold 4 million inodes we only need about 1GB of space. so 5GB out of
-1TB gives us space in the filesystem for ~20m million inodes by default.
-AFAICT, this is the only place it is used.
+Note the distinction between "fe_offset" (which is a physical offset for
+a single extent) and "fm_offset" (which is a logical offset for that file).
 
-Likewise, at 50TB, we're only going to be able to use 2% of the filesystem
-for inodes with inode32. At 100TB, it's meaningless.....
+> > We do this until we find an extent with FIEMAP_EXTENT_LAST flag set. We
+> > will also need to re-initialise the fiemap flags, fm_extent_count, fm_end.
+> 
+> I think you meant 'fm_length' instead of 'fm_end' there.
 
-Cheers,
+You're right, thanks.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> > #define FIEMAP_EXTENT_LAST      0x00000020 /* last extent in the file */
+> > #define FIEMAP_EXTENT_EOF       0x00000100 /* fm_start + fm_len beyond EOF*/
+> 
+> Is "EOF" here considering "beyond i_size" or "beyond allocation"?
+
+_EOF == beyond i_size.
+_LAST == last extent in the file.
+
+In most cases FIEMAP_EXTENT_EOF will be set at the same time as
+FIEMAP_EXTENT_LAST, but in case of e.g. prealloc beyond i_size the 
+EOF flag may be set on one or more earlier extents.
+
+> > FIEMAP_EXTENT_NO_DIRECT means data cannot be directly accessed (maybe
+> > encrypted, compressed, etc.)
+> 
+> Would it be valid to use FIEMAP_EXTENT_NO_DIRECT for marking in-inode data?
+> Btrfs, Ocfs2, and Gfs2 pack small amounts of user data directly in inode
+> blocks.
+
+Hmm, but part of the issue would be how to request the extra data, and
+what offset it would be given?  One could, for example, use negative
+offsets to represent metadata or something, or add a FIEMAP_EXTENT_META
+or similar, I hadn't given that much thought.  The other issue is that
+I'd like to get the basics of the API in place before it gets too complex.
+We can always add functionality with more FIEMAP_FLAG_* (whether in the
+INCOMPAT range or not, depending on what is being done).
+
+Cheers, Andreas
+--
+Andreas Dilger
+Sr. Software Engineer, Lustre Group
+Sun Microsystems of Canada, Inc.
