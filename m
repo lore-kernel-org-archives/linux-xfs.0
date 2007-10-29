@@ -1,157 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:40:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TNe8TJ001535
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:40:11 -0700
-Date: Tue, 30 Oct 2007 10:40:10 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] fix transaction overrun during writeback
-Message-ID: <20071029234010.GU995458@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:42:06 -0700 (PDT)
+Received: from rgminet02.oracle.com (rgminet02.oracle.com [148.87.113.119])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9TNg0eM002037
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:42:00 -0700
+Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
+	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l9TMeSiD015342
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:40:32 -0600
+Date: Mon, 29 Oct 2007 15:40:11 -0700
+From: Mark Fasheh <mark.fasheh@oracle.com>
+Subject: Re: [RFC] add FIEMAP ioctl to efficiently map file allocation
+Message-ID: <20071029224011.GC28607@ca-server1.us.oracle.com>
+Reply-To: Mark Fasheh <mark.fasheh@oracle.com>
+References: <20070419015426.GM48531920@melbourne.sgi.com> <20070430224401.GX5967@schatzie.adilger.int> <20070501042254.GD77450368@melbourne.sgi.com> <1FA8E92B-954D-4624-A089-80D4AA7399FD@cam.ac.uk> <20070502000654.GK77450368@melbourne.sgi.com> <8464EA47-03AC-4162-A2D0-683517568640@cam.ac.uk> <20071029194507.GA8578@webber.adilger.int> <20071029205744.GB28607@ca-server1.us.oracle.com> <20071029221302.GD3042@webber.adilger.int> <20071029222907.GF3042@webber.adilger.int>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20071029222907.GF3042@webber.adilger.int>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: xfs-dev@sgi.com
+To: linux-fsdevel@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, Anton Altaparmakov <aia21@cam.ac.uk>, Mike Waychison <mikew@google.com>, ocfs2-devel@oss.oracle.com
 
-Prevent transaction overrun in xfs_iomap_write_allocate() if we
-rce with a truncate that overlaps the delalloc range we were
-planning to allocate.
+On Mon, Oct 29, 2007 at 04:29:07PM -0600, Andreas Dilger wrote:
+> On Oct 29, 2007  16:13 -0600, Andreas Dilger wrote:
+> > On Oct 29, 2007  13:57 -0700, Mark Fasheh wrote:
+> > > I'm a little bit confused by fe_offset. Is it a physical offset, or a
+> > > logical offset? The reason I ask is that your description above says "FIEMAP
+> > > ioctl will return the logical to physical mapping for the extent that
+> > > contains the specified logical byte address." Which seems to imply physical,
+> > > but your math to get to the next logical start in a very fragmented file,
+> > > implies that fe_offset is a logical offset:
+> > > 
+> > >        fm_start = fm_extents[fm_extent_count - 1].fe_offset +
+> > >                          fm_extents[fm_extent_count - 1].fe_length + 1; 
+> > 
+> > Note the distinction between "fe_offset" (which is a physical offset for
+> > a single extent) and "fm_offset" (which is a logical offset for that file).
+> 
+> Actually, that is completely bunk.  What it should say is something like:
+> "filefrag can easily call the FIEMAP ioctls repeatedly using the returned
+> fm_start and fm_length as the start offset for the next ioctl:
+> 
+>         fiemap.fm_start = fiemap.fm_start + fiemap.fm_length + 1;
 
-If we race, we may allocate into a hole and that requires block
-allocation. At this point in time we don't have a reservation for
-block allocation (apart from metadata blocks) and so allocating
-into a hole rather than a delalloc region results in overflowing
-the transaction block reservation.
+Yeah - that's where I was going with my question. This is much more clear
+now, thanks.
+	--Mark
 
-Fix it by only allowing a single extent to be allocated at a
-time.
-
-Signed-Off-By: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfs_iomap.c |   75 +++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 50 insertions(+), 25 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/xfs_iomap.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_iomap.c	2007-10-30 10:18:58.777772241 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_iomap.c	2007-10-30 10:19:30.365685668 +1100
-@@ -702,6 +702,9 @@ retry:
-  * the originating callers request.
-  *
-  * Called without a lock on the inode.
-+ *
-+ * We no longer bother to look at the incoming map - all we have to
-+ * guarantee is that whatever we allocate fills the required range.
-  */
- int
- xfs_iomap_write_allocate(
-@@ -717,9 +720,9 @@ xfs_iomap_write_allocate(
- 	xfs_fsblock_t	first_block;
- 	xfs_bmap_free_t	free_list;
- 	xfs_filblks_t	count_fsb;
--	xfs_bmbt_irec_t	imap[XFS_STRAT_WRITE_IMAPS];
-+	xfs_bmbt_irec_t	imap;
- 	xfs_trans_t	*tp;
--	int		i, nimaps, committed;
-+	int		nimaps, committed;
- 	int		error = 0;
- 	int		nres;
- 
-@@ -766,13 +769,38 @@ xfs_iomap_write_allocate(
- 
- 			XFS_BMAP_INIT(&free_list, &first_block);
- 
--			nimaps = XFS_STRAT_WRITE_IMAPS;
- 			/*
--			 * Ensure we don't go beyond eof - it is possible
--			 * the extents changed since we did the read call,
--			 * we dropped the ilock in the interim.
-+			 * it is possible that the extents have changed since
-+			 * we did the read call as we dropped the ilock for a
-+			 * while. We have to be careful about truncates or hole
-+			 * punchs here - we are not allowed to allocate
-+			 * non-delalloc blocks here.
-+			 *
-+			 * The only protection against truncation is the pages
-+			 * for the range we are being asked to convert are
-+			 * locked and hence a truncate will block on them
-+			 * first.
-+			 *
-+			 * As a result, if we go beyond the range we really
-+			 * need and hit an delalloc extent boundary followed by
-+			 * a hole while we have excess blocks in the map, we
-+			 * will fill the hole incorrectly and overrun the
-+			 * transaction reservation.
-+			 *
-+			 * Using a single map prevents this as we are forced to
-+			 * check each map we look for overlap with the desired
-+			 * range and abort as soon as we find it. Also, given
-+			 * that we only return a single map, having one beyond
-+			 * what we can return is probably a bit silly.
-+			 *
-+			 * We also need to check that we don't go beyond EOF;
-+			 * this is a truncate optimisation as a truncate sets
-+			 * the new file size before block on the pages we
-+			 * currently have locked under writeback. Because they
-+			 * are about to be tossed, we don't need to write them
-+			 * back....
- 			 */
--
-+			nimaps = 1;
- 			end_fsb = XFS_B_TO_FSB(mp, ip->i_size);
- 			xfs_bmap_last_offset(NULL, ip, &last_block,
- 				XFS_DATA_FORK);
-@@ -788,7 +816,7 @@ xfs_iomap_write_allocate(
- 			/* Go get the actual blocks */
- 			error = xfs_bmapi(tp, ip, map_start_fsb, count_fsb,
- 					XFS_BMAPI_WRITE, &first_block, 1,
--					imap, &nimaps, &free_list, NULL);
-+					&imap, &nimaps, &free_list, NULL);
- 			if (error)
- 				goto trans_cancel;
- 
-@@ -807,27 +835,24 @@ xfs_iomap_write_allocate(
- 		 * See if we were able to allocate an extent that
- 		 * covers at least part of the callers request
- 		 */
--		for (i = 0; i < nimaps; i++) {
--			if (unlikely(!imap[i].br_startblock &&
--				     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
--				return xfs_cmn_err_fsblock_zero(ip, &imap[i]);
--			if ((offset_fsb >= imap[i].br_startoff) &&
--			    (offset_fsb < (imap[i].br_startoff +
--					   imap[i].br_blockcount))) {
--				*map = imap[i];
--				*retmap = 1;
--				XFS_STATS_INC(xs_xstrat_quick);
--				return 0;
--			}
--			count_fsb -= imap[i].br_blockcount;
-+		if (unlikely(!imap.br_startblock &&
-+			     XFS_IS_REALTIME_INODE(ip)))
-+			return xfs_cmn_err_fsblock_zero(ip, &imap);
-+		if ((offset_fsb >= imap.br_startoff) &&
-+		    (offset_fsb < (imap.br_startoff +
-+				   imap.br_blockcount))) {
-+			*map = imap;
-+			*retmap = 1;
-+			XFS_STATS_INC(xs_xstrat_quick);
-+			return 0;
- 		}
- 
--		/* So far we have not mapped the requested part of the
-+		/*
-+		 * So far we have not mapped the requested part of the
- 		 * file, just surrounding data, try again.
- 		 */
--		nimaps--;
--		map_start_fsb = imap[nimaps].br_startoff +
--				imap[nimaps].br_blockcount;
-+		count_fsb -= imap.br_blockcount;
-+		map_start_fsb = imap.br_startoff + imap.br_blockcount;
- 	}
- 
- trans_cancel:
+--
+Mark Fasheh
+Senior Software Developer, Oracle
+mark.fasheh@oracle.com
