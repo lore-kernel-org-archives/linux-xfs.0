@@ -1,49 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 07:04:01 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9TE3rI6021876
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 07:03:56 -0700
-Message-ID: <4725E84D.3030609@sandeen.net>
-Date: Mon, 29 Oct 2007 09:03:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 08:05:38 -0700 (PDT)
+Received: from mailout3.imos.net (mailout3.imos.net [212.87.132.34])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9TF5V80032493
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 08:05:33 -0700
+Message-ID: <4725F6C0.3020303@theendofthetunnel.de>
+Date: Mon, 29 Oct 2007 16:05:36 +0100
+From: Hannes Dorbath <light@theendofthetunnel.de>
 MIME-Version: 1.0
 Subject: Re: Default mount options (that suck less).
-References: <20071029075657.GA84369978@melbourne.sgi.com>
-In-Reply-To: <20071029075657.GA84369978@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20071029075657.GA84369978@melbourne.sgi.com> <4725E84D.3030609@sandeen.net>
+In-Reply-To: <4725E84D.3030609@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
 
-Niv Sardi wrote:
-> Hello,
-> 
-> XFS's default mount options are in most cases sub-optimal, we should try
-> to have more sensible defaults, so far I'm following some quick dave-powered
-> recomendations:
-> 
-> - version 2 logs
-> - attr2
+On 29.10.2007 15:03, Eric Sandeen wrote:
+> Niv Sardi wrote:
+>> XFS's default mount options are in most cases sub-optimal, we should try
+>> to have more sensible defaults, so far I'm following some quick dave-powered
+>> recomendations:
 
-FWIW any anaconda-installed xfs filesystems have been using attr2 since
-FC6, and after the initial pain, I haven't heard any reports of problems.
+Is there any reason to not set the default inode size to 512 bytes? ..as 
+suggested in:
+
+http://www.suse.de/~agruen/acl/linux-acls/online/
 
 
-> - lazy superblock counters
-> - less allocation groups for single disk configs
-> 
-> - imaxpct default can be reduced
-> 
-> it is currently 25, what would be reasonable ?
-> 
-> - dropping the ability to turn unwritten extents off completely
-> 
-> please submit your pet-idea for better defaults here.
-
-larger logbuf count/size seems to be the other tuning that's thrown
-around a lot.
-
--Eric
+-- 
+Regards,
+Hannes Dorbath
