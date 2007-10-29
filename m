@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:38:46 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:40:16 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TNcdoo000900
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:38:42 -0700
-Date: Tue, 30 Oct 2007 10:38:41 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TNe8TJ001535
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:40:11 -0700
+Date: Tue, 30 Oct 2007 10:40:10 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] Implement fallocate
-Message-ID: <20071029233841.GT995458@sgi.com>
+Subject: [PATCH] fix transaction overrun during writeback
+Message-ID: <20071029234010.GU995458@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -16,83 +16,142 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: xfs-dev@sgi.com
 
-XFS fallocate() callout.
+Prevent transaction overrun in xfs_iomap_write_allocate() if we
+rce with a truncate that overlaps the delalloc range we were
+planning to allocate.
 
-Allocate the range requested as unwritten extents. Atomically
-change the file size if requested.
+If we race, we may allocate into a hole and that requires block
+allocation. At this point in time we don't have a reservation for
+block allocation (apart from metadata blocks) and so allocating
+into a hole rather than a delalloc region results in overflowing
+the transaction block reservation.
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
+Fix it by only allowing a single extent to be allocated at a
+time.
+
+Signed-Off-By: Dave Chinner <dgc@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_iops.c |   45 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+ fs/xfs/xfs_iomap.c |   75 +++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 50 insertions(+), 25 deletions(-)
 
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c
+Index: 2.6.x-xfs-new/fs/xfs/xfs_iomap.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-10-30 10:18:59.061735503 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c	2007-10-30 10:19:26.498185998 +1100
-@@ -52,6 +52,7 @@
- #include <linux/xattr.h>
- #include <linux/namei.h>
- #include <linux/security.h>
-+#include <linux/falloc.h>
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_iomap.c	2007-10-30 10:18:58.777772241 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_iomap.c	2007-10-30 10:19:30.365685668 +1100
+@@ -702,6 +702,9 @@ retry:
+  * the originating callers request.
+  *
+  * Called without a lock on the inode.
++ *
++ * We no longer bother to look at the incoming map - all we have to
++ * guarantee is that whatever we allocate fills the required range.
+  */
+ int
+ xfs_iomap_write_allocate(
+@@ -717,9 +720,9 @@ xfs_iomap_write_allocate(
+ 	xfs_fsblock_t	first_block;
+ 	xfs_bmap_free_t	free_list;
+ 	xfs_filblks_t	count_fsb;
+-	xfs_bmbt_irec_t	imap[XFS_STRAT_WRITE_IMAPS];
++	xfs_bmbt_irec_t	imap;
+ 	xfs_trans_t	*tp;
+-	int		i, nimaps, committed;
++	int		nimaps, committed;
+ 	int		error = 0;
+ 	int		nres;
  
- /*
-  * Bring the atime in the XFS inode uptodate.
-@@ -796,6 +797,49 @@ xfs_vn_removexattr(
- 	return namesp->attr_remove(vp, attr, xflags);
- }
+@@ -766,13 +769,38 @@ xfs_iomap_write_allocate(
  
-+/*
-+ * generic space allocation vector.
-+ */
-+STATIC long
-+xfs_vn_fallocate(
-+	struct inode	*inode,
-+	int		mode,
-+	loff_t		offset,
-+	loff_t		len)
-+{
-+	long		error;
-+	loff_t		new_size = 0;
-+	xfs_flock64_t	bf;
-+
-+	/* preallocation on directories not yet supported */
-+	error = -ENODEV;
-+	if (S_ISDIR(inode->i_mode))
-+		goto out_error;
-+
-+	bf.l_whence = 0;
-+	bf.l_start = offset;
-+	bf.l_len = len;
-+
-+	xfs_ilock(XFS_I(inode), XFS_IOLOCK_EXCL);
-+	error = xfs_change_file_space(XFS_I(inode), XFS_IOC_RESVSP, &bf,
-+						0, NULL, ATTR_NOLOCK);
-+	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
-+	    offset + len > i_size_read(inode))
-+		new_size = offset + len;
-+
-+	/* Change file size if needed */
-+	if (new_size) {
-+		bhv_vattr_t	va;
-+
-+		va.va_mask = XFS_AT_SIZE;
-+		va.va_size = new_size;
-+		error = xfs_setattr(XFS_I(inode), &va, ATTR_NOLOCK, NULL);
-+	}
-+
-+	xfs_iunlock(XFS_I(inode), XFS_IOLOCK_EXCL);
-+out_error:
-+	return error;
-+}
+ 			XFS_BMAP_INIT(&free_list, &first_block);
  
- const struct inode_operations xfs_inode_operations = {
- 	.permission		= xfs_vn_permission,
-@@ -806,6 +850,7 @@ const struct inode_operations xfs_inode_
- 	.getxattr		= xfs_vn_getxattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.removexattr		= xfs_vn_removexattr,
-+	.fallocate		= xfs_vn_fallocate,
- };
+-			nimaps = XFS_STRAT_WRITE_IMAPS;
+ 			/*
+-			 * Ensure we don't go beyond eof - it is possible
+-			 * the extents changed since we did the read call,
+-			 * we dropped the ilock in the interim.
++			 * it is possible that the extents have changed since
++			 * we did the read call as we dropped the ilock for a
++			 * while. We have to be careful about truncates or hole
++			 * punchs here - we are not allowed to allocate
++			 * non-delalloc blocks here.
++			 *
++			 * The only protection against truncation is the pages
++			 * for the range we are being asked to convert are
++			 * locked and hence a truncate will block on them
++			 * first.
++			 *
++			 * As a result, if we go beyond the range we really
++			 * need and hit an delalloc extent boundary followed by
++			 * a hole while we have excess blocks in the map, we
++			 * will fill the hole incorrectly and overrun the
++			 * transaction reservation.
++			 *
++			 * Using a single map prevents this as we are forced to
++			 * check each map we look for overlap with the desired
++			 * range and abort as soon as we find it. Also, given
++			 * that we only return a single map, having one beyond
++			 * what we can return is probably a bit silly.
++			 *
++			 * We also need to check that we don't go beyond EOF;
++			 * this is a truncate optimisation as a truncate sets
++			 * the new file size before block on the pages we
++			 * currently have locked under writeback. Because they
++			 * are about to be tossed, we don't need to write them
++			 * back....
+ 			 */
+-
++			nimaps = 1;
+ 			end_fsb = XFS_B_TO_FSB(mp, ip->i_size);
+ 			xfs_bmap_last_offset(NULL, ip, &last_block,
+ 				XFS_DATA_FORK);
+@@ -788,7 +816,7 @@ xfs_iomap_write_allocate(
+ 			/* Go get the actual blocks */
+ 			error = xfs_bmapi(tp, ip, map_start_fsb, count_fsb,
+ 					XFS_BMAPI_WRITE, &first_block, 1,
+-					imap, &nimaps, &free_list, NULL);
++					&imap, &nimaps, &free_list, NULL);
+ 			if (error)
+ 				goto trans_cancel;
  
- const struct inode_operations xfs_dir_inode_operations = {
+@@ -807,27 +835,24 @@ xfs_iomap_write_allocate(
+ 		 * See if we were able to allocate an extent that
+ 		 * covers at least part of the callers request
+ 		 */
+-		for (i = 0; i < nimaps; i++) {
+-			if (unlikely(!imap[i].br_startblock &&
+-				     !(ip->i_d.di_flags & XFS_DIFLAG_REALTIME)))
+-				return xfs_cmn_err_fsblock_zero(ip, &imap[i]);
+-			if ((offset_fsb >= imap[i].br_startoff) &&
+-			    (offset_fsb < (imap[i].br_startoff +
+-					   imap[i].br_blockcount))) {
+-				*map = imap[i];
+-				*retmap = 1;
+-				XFS_STATS_INC(xs_xstrat_quick);
+-				return 0;
+-			}
+-			count_fsb -= imap[i].br_blockcount;
++		if (unlikely(!imap.br_startblock &&
++			     XFS_IS_REALTIME_INODE(ip)))
++			return xfs_cmn_err_fsblock_zero(ip, &imap);
++		if ((offset_fsb >= imap.br_startoff) &&
++		    (offset_fsb < (imap.br_startoff +
++				   imap.br_blockcount))) {
++			*map = imap;
++			*retmap = 1;
++			XFS_STATS_INC(xs_xstrat_quick);
++			return 0;
+ 		}
+ 
+-		/* So far we have not mapped the requested part of the
++		/*
++		 * So far we have not mapped the requested part of the
+ 		 * file, just surrounding data, try again.
+ 		 */
+-		nimaps--;
+-		map_start_fsb = imap[nimaps].br_startoff +
+-				imap[nimaps].br_blockcount;
++		count_fsb -= imap.br_blockcount;
++		map_start_fsb = imap.br_startoff + imap.br_blockcount;
+ 	}
+ 
+ trans_cancel:
