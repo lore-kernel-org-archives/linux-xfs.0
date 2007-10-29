@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:36:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 16:37:51 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TNaXPh032247
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:36:36 -0700
-Date: Tue, 30 Oct 2007 10:36:35 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9TNbeSB000367
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 16:37:44 -0700
+Date: Tue, 30 Oct 2007 10:37:42 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] Clean up bitops
-Message-ID: <20071029233635.GR995458@sgi.com>
+Subject: [PATCH] fix inode allocation latency
+Message-ID: <20071029233742.GS995458@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -16,225 +16,159 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: xfs-dev@sgi.com
 
-Use the generic bitops rather than implementing them ourselves.
-Patch inspired by Andi Kleen.
+The log force added in xfs_iget_core() has been a performance
+issue since it was introduced for tight loops that allocate
+then unlink a single file. under heavy writeback, this can
+introduce unnecessary latency due tothe log I/o getting
+stuck behind bulk data writes.
+
+Fix this latency problem by avoinding the need for the log
+force by moving the place we mark linux inode dirty to the
+transaction commit rather than on transaction completion.
+
+This also closes a potential hole in the sync code where a
+linux inode is not dirty betwen the time it is modified and
+the time the log buffer has been written to disk.
 
 Signed-off-by: Dave Chinner <dgc@sgi.com>
 ---
- fs/xfs/xfs_bit.c     |  103 ---------------------------------------------------
- fs/xfs/xfs_bit.h     |   27 ++++++++++---
- fs/xfs/xfs_rtalloc.c |   19 +++------
- 3 files changed, 29 insertions(+), 120 deletions(-)
+ fs/xfs/linux-2.6/xfs_iops.c |   16 ++++++++++++++++
+ fs/xfs/xfs_iget.c           |   18 ------------------
+ fs/xfs/xfs_inode.c          |   34 +---------------------------------
+ fs/xfs/xfs_inode.h          |    1 +
+ fs/xfs/xfs_inode_item.c     |    5 +++++
+ 5 files changed, 23 insertions(+), 51 deletions(-)
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_bit.c
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_bit.c	2007-06-20 15:54:59.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_bit.c	2007-10-05 08:48:48.107390247 +1000
-@@ -25,109 +25,6 @@
-  * XFS bit manipulation routines, used in non-realtime code.
-  */
- 
--#ifndef HAVE_ARCH_HIGHBIT
--/*
-- * Index of high bit number in byte, -1 for none set, 0..7 otherwise.
-- */
--static const char xfs_highbit[256] = {
--       -1, 0, 1, 1, 2, 2, 2, 2,			/* 00 .. 07 */
--	3, 3, 3, 3, 3, 3, 3, 3,			/* 08 .. 0f */
--	4, 4, 4, 4, 4, 4, 4, 4,			/* 10 .. 17 */
--	4, 4, 4, 4, 4, 4, 4, 4,			/* 18 .. 1f */
--	5, 5, 5, 5, 5, 5, 5, 5,			/* 20 .. 27 */
--	5, 5, 5, 5, 5, 5, 5, 5,			/* 28 .. 2f */
--	5, 5, 5, 5, 5, 5, 5, 5,			/* 30 .. 37 */
--	5, 5, 5, 5, 5, 5, 5, 5,			/* 38 .. 3f */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 40 .. 47 */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 48 .. 4f */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 50 .. 57 */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 58 .. 5f */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 60 .. 67 */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 68 .. 6f */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 70 .. 77 */
--	6, 6, 6, 6, 6, 6, 6, 6,			/* 78 .. 7f */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* 80 .. 87 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* 88 .. 8f */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* 90 .. 97 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* 98 .. 9f */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* a0 .. a7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* a8 .. af */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* b0 .. b7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* b8 .. bf */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* c0 .. c7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* c8 .. cf */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* d0 .. d7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* d8 .. df */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* e0 .. e7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* e8 .. ef */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* f0 .. f7 */
--	7, 7, 7, 7, 7, 7, 7, 7,			/* f8 .. ff */
--};
--#endif
--
--/*
-- * xfs_highbit32: get high bit set out of 32-bit argument, -1 if none set.
-- */
--inline int
--xfs_highbit32(
--	__uint32_t	v)
--{
--#ifdef HAVE_ARCH_HIGHBIT
--	return highbit32(v);
--#else
--	int		i;
--
--	if (v & 0xffff0000)
--		if (v & 0xff000000)
--			i = 24;
--		else
--			i = 16;
--	else if (v & 0x0000ffff)
--		if (v & 0x0000ff00)
--			i = 8;
--		else
--			i = 0;
--	else
--		return -1;
--	return i + xfs_highbit[(v >> i) & 0xff];
--#endif
--}
--
--/*
-- * xfs_lowbit64: get low bit set out of 64-bit argument, -1 if none set.
-- */
--int
--xfs_lowbit64(
--	__uint64_t	v)
--{
--	__uint32_t	w = (__uint32_t)v;
--	int		n = 0;
--
--	if (w) {	/* lower bits */
--		n = ffs(w);
--	} else {	/* upper bits */
--		w = (__uint32_t)(v >> 32);
--		if (w && (n = ffs(w)))
--			n += 32;
--	}
--	return n - 1;
--}
--
--/*
-- * xfs_highbit64: get high bit set out of 64-bit argument, -1 if none set.
-- */
--int
--xfs_highbit64(
--	__uint64_t	v)
--{
--	__uint32_t	h = (__uint32_t)(v >> 32);
--
--	if (h)
--		return xfs_highbit32(h) + 32;
--	return xfs_highbit32((__uint32_t)v);
--}
--
--
- /*
-  * Return whether bitmap is empty.
-  * Size is number of words in the bitmap, which is padded to word boundary
-Index: 2.6.x-xfs-new/fs/xfs/xfs_bit.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_bit.h	2007-06-20 15:54:59.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_bit.h	2007-10-05 09:07:20.574761334 +1000
-@@ -47,13 +47,30 @@ static inline __uint64_t xfs_mask64lo(in
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-10-02 16:01:47.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c	2007-10-12 09:54:12.466194814 +1000
+@@ -71,6 +71,22 @@ xfs_synchronize_atime(
  }
  
- /* Get high bit set out of 32-bit argument, -1 if none set */
--extern int xfs_highbit32(__uint32_t v);
--
--/* Get low bit set out of 64-bit argument, -1 if none set */
--extern int xfs_lowbit64(__uint64_t v);
-+static inline int xfs_highbit32(__uint32_t v)
+ /*
++ * If the linux inode exists, mark it dirty.
++ * Used when commiting a dirty inode into a transaction so that
++ * the inode will get written back by the linux code
++ */
++void
++xfs_mark_inode_dirty_sync(
++	xfs_inode_t	*ip)
 +{
-+	return fls(v) - 1;
-+}
- 
- /* Get high bit set out of 64-bit argument, -1 if none set */
--extern int xfs_highbit64(__uint64_t);
-+static inline int xfs_highbit64(__uint64_t v)
-+{
-+	return fls64(v) - 1;
++	bhv_vnode_t	*vp;
++
++	vp = XFS_ITOV_NULL(ip);
++	if (vp)
++		mark_inode_dirty_sync(vn_to_inode(vp));
 +}
 +
-+/* Get low bit set out of 32-bit argument, -1 if none set */
-+static inline int xfs_lowbit32(__uint32_t v)
-+{
-+	unsigned long	t = v;
-+	return (v) ? find_first_bit(&t, 32) : -1;
-+}
-+
-+/* Get low bit set out of 64-bit argument, -1 if none set */
-+static inline int xfs_lowbit64(__uint64_t v)
-+{
-+	unsigned long	t = v;
-+	return (v) ? find_first_bit(&t, 64) : -1;
-+}
- 
- /* Return whether bitmap is empty (1 == empty) */
- extern int xfs_bitmap_empty(uint *map, uint size);
-Index: 2.6.x-xfs-new/fs/xfs/xfs_rtalloc.c
++/*
+  * Change the requested timestamp in the given inode.
+  * We don't lock across timestamp updates, and we don't log them but
+  * we do record the fact that there is dirty information in core.
+Index: 2.6.x-xfs-new/fs/xfs/xfs_iget.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_rtalloc.c	2007-08-24 22:24:45.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_rtalloc.c	2007-10-05 09:08:04.365058330 +1000
-@@ -73,18 +73,6 @@ STATIC int xfs_rtmodify_summary(xfs_moun
-  */
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_iget.c	2007-10-02 16:01:48.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_iget.c	2007-10-12 09:58:38.263910771 +1000
+@@ -140,27 +140,9 @@ again:
+ 				return ENOENT;
+ 			}
+ 
+-			/*
+-			 * There may be transactions sitting in the
+-			 * incore log buffers or being flushed to disk
+-			 * at this time.  We can't clear the
+-			 * XFS_IRECLAIMABLE flag until these
+-			 * transactions have hit the disk, otherwise we
+-			 * will void the guarantee the flag provides
+-			 * xfs_iunpin()
+-			 */
+-			if (xfs_ipincount(ip)) {
+-				read_unlock(&pag->pag_ici_lock);
+-				xfs_log_force(mp, 0,
+-					XFS_LOG_FORCE|XFS_LOG_SYNC);
+-				XFS_STATS_INC(xs_ig_frecycle);
+-				goto again;
+-			}
+-
+ 			xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
+ 
+ 			XFS_STATS_INC(xs_ig_found);
+-
+ 			xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
+ 			read_unlock(&pag->pag_ici_lock);
+ 
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2007-10-11 09:53:53.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2007-10-12 09:56:49.721912637 +1000
+@@ -2807,40 +2807,8 @@ xfs_iunpin(
+ {
+ 	ASSERT(atomic_read(&ip->i_pincount) > 0);
+ 
+-	if (atomic_dec_and_lock(&ip->i_pincount, &ip->i_flags_lock)) {
+-
+-		/*
+-		 * If the inode is currently being reclaimed, the link between
+-		 * the bhv_vnode and the xfs_inode will be broken after the
+-		 * XFS_IRECLAIM* flag is set. Hence, if these flags are not
+-		 * set, then we can move forward and mark the linux inode dirty
+-		 * knowing that it is still valid as it won't freed until after
+-		 * the bhv_vnode<->xfs_inode link is broken in xfs_reclaim. The
+-		 * i_flags_lock is used to synchronise the setting of the
+-		 * XFS_IRECLAIM* flags and the breaking of the link, and so we
+-		 * can execute atomically w.r.t to reclaim by holding this lock
+-		 * here.
+-		 *
+-		 * However, we still need to issue the unpin wakeup call as the
+-		 * inode reclaim may be blocked waiting for the inode to become
+-		 * unpinned.
+-		 */
+-
+-		if (!__xfs_iflags_test(ip, XFS_IRECLAIM|XFS_IRECLAIMABLE)) {
+-			bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
+-			struct inode *inode = NULL;
+-
+-			BUG_ON(vp == NULL);
+-			inode = vn_to_inode(vp);
+-			BUG_ON(inode->i_state & I_CLEAR);
+-
+-			/* make sync come back and flush this inode */
+-			if (!(inode->i_state & (I_NEW|I_FREEING)))
+-				mark_inode_dirty_sync(inode);
+-		}
+-		spin_unlock(&ip->i_flags_lock);
++	if (atomic_dec_and_test(&ip->i_pincount))
+ 		wake_up(&ip->i_ipin_wait);
+-	}
+ }
  
  /*
-- * xfs_lowbit32: get low bit set out of 32-bit argument, -1 if none set.
-- */
--STATIC int
--xfs_lowbit32(
--	__uint32_t	v)
--{
--	if (v)
--		return ffs(v) - 1;
--	return -1;
--}
--
--/*
-  * Allocate space to the bitmap or summary file, and zero it, for growfs.
-  */
- STATIC int				/* error */
-@@ -444,6 +432,7 @@ xfs_rtallocate_extent_near(
- 	}
- 	bbno = XFS_BITTOBLOCK(mp, bno);
- 	i = 0;
-+	ASSERT(minlen != 0);
- 	log2len = xfs_highbit32(minlen);
- 	/*
- 	 * Loop over all bitmap blocks (bbno + i is current block).
-@@ -612,6 +601,8 @@ xfs_rtallocate_extent_size(
- 	xfs_suminfo_t	sum;		/* summary information for extents */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.h	2007-10-02 16:01:48.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.h	2007-10-12 10:00:10.979948827 +1000
+@@ -532,6 +532,7 @@ xfs_fsize_t	xfs_file_last_byte(xfs_inode
+ void		xfs_lock_inodes(xfs_inode_t **, int, int, uint);
  
- 	ASSERT(minlen % prod == 0 && maxlen % prod == 0);
-+	ASSERT(maxlen != 0);
+ void		xfs_synchronize_atime(xfs_inode_t *);
++void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
+ 
+ xfs_bmbt_rec_host_t *xfs_iext_get_ext(xfs_ifork_t *, xfs_extnum_t);
+ void		xfs_iext_insert(xfs_ifork_t *, xfs_extnum_t, xfs_extnum_t,
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode_item.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode_item.c	2007-10-02 16:01:48.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode_item.c	2007-10-12 09:54:18.053474268 +1000
+@@ -274,6 +274,11 @@ xfs_inode_item_format(
+ 	 */
+ 	xfs_synchronize_atime(ip);
+ 
++	/*
++	 * make sure the linux inode is dirty
++	 */
++	xfs_mark_inode_dirty_sync(ip);
 +
- 	/*
- 	 * Loop over all the levels starting with maxlen.
- 	 * At each level, look at all the bitmap blocks, to see if there
-@@ -669,6 +660,9 @@ xfs_rtallocate_extent_size(
- 		*rtblock = NULLRTBLOCK;
- 		return 0;
- 	}
-+	ASSERT(minlen != 0);
-+	ASSERT(maxlen != 0);
-+
- 	/*
- 	 * Loop over sizes, from maxlen down to minlen.
- 	 * This time, when we do the allocations, allow smaller ones
-@@ -1954,6 +1948,7 @@ xfs_growfs_rt(
- 				  nsbp->sb_blocksize * nsbp->sb_rextsize);
- 		nsbp->sb_rextents = nsbp->sb_rblocks;
- 		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
-+		ASSERT(nsbp->sb_rextents != 0);
- 		nsbp->sb_rextslog = xfs_highbit32(nsbp->sb_rextents);
- 		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
- 		nrsumsize =
+ 	vecp->i_addr = (xfs_caddr_t)&ip->i_d;
+ 	vecp->i_len  = sizeof(xfs_dinode_core_t);
+ 	XLOG_VEC_SET_TYPE(vecp, XLOG_REG_TYPE_ICORE);
