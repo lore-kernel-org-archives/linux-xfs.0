@@ -1,249 +1,82 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 10:28:05 -0700 (PDT)
-Received: from b.mx.filmlight.ltd.uk (bongo.filmlight.ltd.uk [217.40.27.26])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9UHRvsw025200
-	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 10:28:00 -0700
-Message-ID: <472769A1.5090605@filmlight.ltd.uk>
-Date: Tue, 30 Oct 2007 17:28:01 +0000
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-MIME-Version: 1.0
-Subject: Re: bug: truncate to zero + setuid
-References: <47249E7A.7060709@filmlight.ltd.uk> <47252F62.6030503@sgi.com> <47262CD0.5010708@filmlight.ltd.uk> <4726ADAE.9070206@sgi.com>
-In-Reply-To: <4726ADAE.9070206@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 16:03:29 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9UN3Ou4032416
+	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 16:03:25 -0700
+Date: Wed, 31 Oct 2007 10:03:20 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] Clean up sparse warnings
+Message-ID: <20071030230320.GS66820511@sgi.com>
+References: <20071029233442.GP995458@sgi.com> <20071030100523.GA23489@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071030100523.GA23489@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
 
-Timothy Shimmin wrote:
-> Roger Willcocks wrote:
->> Tim Shimmin wrote:
->>> Hi Roger,
->>>
->>> Roger Willcocks wrote:
->>>> The nfsv3 setattr call permits a simultaneous truncate + setuid/gid 
->>>> operation. Normally XFS handles this fine, but if the file's being 
->>>> truncated to zero, and the file's already empty, XFS simply ignores 
->>>> the setuid/gid part, returning 'success'.
->>>>
->>>> The error's in xfs_vnodeops.c/xfs_setattr below the comment 'Short 
->>>> circuit the truncate case for zero length files', which bypasses 
->>>> all other changes.
->>>>
->>>> The simplest fix is to test whether this is the only change that's 
->>>> happening, otherwise you get tangled in transactions.
->>>>
->>>>        if (mask & XFS_AT_SIZE) {
->>>>                /* Short circuit the truncate case for zero length 
->>>> files */
->>>> -               if ((vap->va_size == 0) &&
->>>> +               if (((mask & ~XFS_AT_SIZE) == 0) && (vap->va_size 
->>>> == 0) &&
->>>>                   (ip->i_d.di_size == 0) && (ip->i_d.di_nextents == 
->>>> 0)) {
->>>>
->>>>
->>>> -- 
->>>> Roger
->>>>
->>>
->>> Yeah, I see your problem.
->>> It is interesting to know how much of multiple actions (different
->>> bits of mask) are supported.
->>> XFS_AT_UPDTIMES doesn't support anything else and will return quickly.
->>> As far as code which goes via error_return, it looks like the
->>> only non-error case is the short-circuit one mentioned above -
->>> truncating to zero an already zeroed file.
->>>
->>> I see your fix will get what we want although, it will mean that we
->>> will go thru the truncating path when we don't need to.
->>> It would be nice if we could act like the XFS_AT_SIZE was never set
->>> on the call in the case that other bits are set.
->>> Though when we first test the AT_SIZE, we don't have the inode locked.
->>> And I presume in that case we don't necessarily need to send a
->>> DMAPI truncate event?
->>> So I wonder if before the 1st AT_SIZE test that we have now,
->>> in the AT_SIZE case and with other bits set,
->>> we could lock the inode and test
->>> for the zero truncate of zero-len file and if so then remove the 
->>> AT_SIZE bit
->>> and then go on to the other testing as if AT_SIZE was never set.
->>> Hmmm, may be that just complicates things too much.
->>>
->> Yes I looked at simply unsetting the XFS_AT_SIZE bit (you'd also need 
->> to set
->> timeflags appropriately) but the problem is the bit's used to check 
->> when to create
->> a transaction - either up front as  XFS_TRANS_SETATTR_NOT_SIZE, or
->> later on, after the inode's been locked and unlocked again, as
->> XFS_TRANS_SETATTR_SIZE. So if you unset the bit (and there's still more
->> to do) you need to build a not_size transaction, at which point you 
->> might as well
->> rewrite the whole routine...
->>
->> -- 
->> Roger
->
-> So this was done by Steve L. for AIM performance...
->
-> ----------------------------
-> revision 1.446
-> date: 2000/06/09 02:59:45;  author: lord;  state: Exp;  lines: +11 -0
-> modid: 2.4.0-test1-xfs:slinx:55891a
-> Merge of 2.3.99pre2-xfs:slinx:55891a by ananth.
->
->   Short circuit the case where we truncate a zero length
->   file down to zero length so that we do not do a transaction.
->   This close to doubles create/close AIM run performance.
-> ----------------------------
->
-> > p_rdiff -r1.445,1.446 xfs_vnodeops.c
-> 746a747,757
-> >               /* Short circuit the truncate case for zero length 
-> files */
-> >               if ((vap->va_size == 0) &&
-> >                  (ip->i_d.di_size == 0) && (ip->i_d.di_nextents == 
-> 0)) {
-> >                       xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >                       lock_flags &= ~XFS_ILOCK_EXCL;
-> >                       if (mask & AT_CTIME)
-> >                               xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-> >                       code = 0;
-> >                       goto error_return;
-> >               }
-> >
->
->
-> ----------------------------
-> revision 1.506
-> date: 2001/06/26 22:07:29;  author: lord;  state: Exp;  lines: +1 -1
-> modid: 2.4.x-xfs:slinx:97694a
-> Set the mtime on a zero length file when a create is being done on
-> top of it.
-> ----------------------------
->
-> > p_rdiff -r1.505,1.506 xfs_vnodeops.c
-> 526c526
-> <                               xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-> ---
-> >                               xfs_ichgtime(ip, XFS_ICHGTIME_MOD | 
-> XFS_ICHGTIME_CHG);
->
->
->
->
-> I presume it was done where it was done so that the inode was locked 
-> and we
-> were under the XFS_AT_SIZE predicate.
->
-> I was just thinking of something like...
-> but I'm probably missing something.
->
-> Index: 2.6.x-xfs/fs/xfs/xfs_vnodeops.c
-> ===================================================================
-> --- 2.6.x-xfs.orig/fs/xfs/xfs_vnodeops.c        2007-10-12 
-> 16:06:15.000000000 +1000
-> +++ 2.6.x-xfs/fs/xfs/xfs_vnodeops.c     2007-10-30 14:59:46.418837757 
-> +1100
-> @@ -304,6 +304,24 @@
->         }
->
->         /*
-> +        * Short circuit the truncate case for zero length files.
-> +        * If more mask bits are set, then just remove the SIZE one
-> +        * and keep going.
-> +        */
-> +       if (mask & XFS_AT_SIZE) {
-> +               xfs_ilock(ip, XFS_ILOCK_SHARED);
-> +               if ((vap->va_size == 0) && (ip->i_size == 0) && 
-> (ip->i_d.di_nextents == 0)) {
-> +                       if (mask & ~XFS_AT_SIZE) {
-> +                               mask &= ~XFS_AT_SIZE;
-> +                       } else {
-> +                               xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +                               return 0;
-> +                       }
-> +               }
-> +               xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> +       }
-> +
-> +       /*
->          * For the other attributes, we acquire the inode lock and
->          * first do an error checking pass.
->          */
-> @@ -451,17 +469,6 @@
->          * Truncate file.  Must have write permission and not be a 
-> directory.
->          */
->         if (mask & XFS_AT_SIZE) {
-> -               /* Short circuit the truncate case for zero length 
-> files */
-> -               if ((vap->va_size == 0) &&
-> -                  (ip->i_size == 0) && (ip->i_d.di_nextents == 0)) {
-> -                       xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -                       lock_flags &= ~XFS_ILOCK_EXCL;
-> -                       if (mask & XFS_AT_CTIME)
-> -                               xfs_ichgtime(ip, XFS_ICHGTIME_MOD | 
-> XFS_ICHGTIME_CHG);
-> -                       code = 0;
-> -                       goto error_return;
-> -               }
-> -
->                 if (VN_ISDIR(vp)) {
->                         code = XFS_ERROR(EISDIR);
->                         goto error_return;
-This misses setting the access and changed times which still need to be 
-touched even if the file's already zero bytes. How about this:
-(noting that open.c/do_truncate uses XFS_AT_SIZE | XFS_AT_CTIME)
+On Tue, Oct 30, 2007 at 10:05:23AM +0000, Christoph Hellwig wrote:
+> On Tue, Oct 30, 2007 at 10:34:42AM +1100, David Chinner wrote:
+> > 
+> > Clean up most outstanding sparse warnings.
+> > 
+> > These are mostly locking annotations, marking things static,
+> > casts where needed and declaring stuff in header files.
+> 
+> Nice.  Note that once we start on making things static there's also a lot
+> of things not really used non-static but exported which we should cleanup
+> aswell.  I'll look at that when I get some time.
+> 
+> Note that we'll also always get tons of sparse warnings for debug builds
+> because STATIC is defined away..
 
---- xfs_vnodeops.c      2007-09-04 15:57:40.000000000 +0100
-+++ /tmp/xfs_vnodeops.c 2007-10-30 17:11:32.000000000 +0000
-@@ -378,6 +378,24 @@
-                        return (code);
-        }
+Yeah, I noticed that - but given that we've done that on purpose to
+aid debugging, I don't think it will change ;)
 
-+
-+       if ((mask & XFS_AT_SIZE) && (vap->va_size == 0)) {
-+
-+               /* Short circuit the truncate case for zero length files */
-+
-+               xfs_ilock(ip, XFS_ILOCK_EXCL);
-+               if ((ip->i_d.di_size == 0) && (ip->i_d.di_nextents == 0)) {
-+                       xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+                       if (mask & XFS_AT_CTIME)
-+                               xfs_ichgtime(ip, 
-XFS_ICHGTIME_MOD|XFS_ICHGTIME_CHG);
-+                       mask &= ~(XFS_AT_SIZE|XFS_AT_CTIME);
-+                       if (mask == 0) {
-+                               code = 0;
-+                               goto error_return;
-+                       }
-+               }
-+       }
-+
-        /*
-         * For the other attributes, we acquire the inode lock and
-         * first do an error checking pass.
-@@ -528,17 +546,6 @@
-         * Truncate file.  Must have write permission and not be a 
-directory.
-         */
-        if (mask & XFS_AT_SIZE) {
--               /* Short circuit the truncate case for zero length files */
--               if ((vap->va_size == 0) &&
--                  (ip->i_d.di_size == 0) && (ip->i_d.di_nextents == 0)) {
--                       xfs_iunlock(ip, XFS_ILOCK_EXCL);
--                       lock_flags &= ~XFS_ILOCK_EXCL;
--                       if (mask & XFS_AT_CTIME)
--                               xfs_ichgtime(ip, XFS_ICHGTIME_MOD | 
-XFS_ICHGTIME_CHG);
--                       code = 0;
--                       goto error_return;
--               }
--
-                if (vp->v_type == VDIR) {
-                        code = XFS_ERROR(EISDIR);
-                        goto error_return;
+> > @@ -2733,21 +2733,13 @@ xlog_recover_do_efd_trans(
+> >  				 * AIL lock.
+> >  				 */
+> >  				xfs_trans_delete_ail(mp, lip);
+> > -				break;
+> > +				xfs_efi_item_free(efip);
+> > +				return;
+> >  			}
+> >  		}
+> >  		lip = xfs_trans_next_ail(mp, lip, &gen, NULL);
+> >  	}
+> > -
+> > -	/*
+> > -	 * If we found it, then free it up.  If it wasn't there, it
+> > -	 * must have been overwritten in the log.  Oh well.
+> > -	 */
+> > -	if (lip != NULL) {
+> > -		xfs_efi_item_free(efip);
+> > -	} else {
+> > -		spin_unlock(&mp->m_ail_lock);
+> > -	}
+> > +	spin_unlock(&mp->m_ail_lock);
+> 
+> Imho non-trivial changes like this hunk always deserve beeing a patch of
+> it's own where they're described in details.
+
+Ok, I'll split that one out.
+
+> Note that I also get warnings from the lock annotations prover in sparse
+> about some conditional locking in xfs_mount.c.  I have patches I still need
+> to run through testing for those which clean the code up quite nicely aswell.
+
+Oh, yeah, I left a couple in the icsb code alone as they'd require more than
+trivial annotation to fix. I just wanted to remove the majority of the
+noise so I could see new problems easily. Patches to fix them would be great
+;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
