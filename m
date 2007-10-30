@@ -1,54 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 17:26:06 -0700 (PDT)
-Received: from mail.clusterfs.com (mail.clusterfs.com [74.0.229.162])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9U0PvBN006687
-	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 17:26:00 -0700
-Date: Mon, 29 Oct 2007 18:25:59 -0600
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: [RFC] add FIEMAP ioctl to efficiently map file allocation
-Message-ID: <20071030002559.GH3042@webber.adilger.int>
-References: <20070419015426.GM48531920@melbourne.sgi.com> <20070430224401.GX5967@schatzie.adilger.int> <20070501042254.GD77450368@melbourne.sgi.com> <1FA8E92B-954D-4624-A089-80D4AA7399FD@cam.ac.uk> <20070502000654.GK77450368@melbourne.sgi.com> <8464EA47-03AC-4162-A2D0-683517568640@cam.ac.uk> <20071029194507.GA8578@webber.adilger.int> <20071029205744.GB28607@ca-server1.us.oracle.com> <20071029221302.GD3042@webber.adilger.int> <20071030001126.GD28607@ca-server1.us.oracle.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Oct 2007 17:46:10 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id l9U0k41w008782
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2007 17:46:06 -0700
+Message-ID: <47267EC7.8000906@sgi.com>
+Date: Tue, 30 Oct 2007 11:45:59 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071030001126.GD28607@ca-server1.us.oracle.com>
+Subject: Re: Default mount options (that suck less).
+References: <20071029075657.GA84369978@melbourne.sgi.com> <4725FBB4.1010400@sandeen.net>
+In-Reply-To: <4725FBB4.1010400@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Fasheh <mark.fasheh@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, Anton Altaparmakov <aia21@cam.ac.uk>, Mike Waychison <mikew@google.com>, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
 
-On Oct 29, 2007  17:11 -0700, Mark Fasheh wrote:
-> On Mon, Oct 29, 2007 at 04:13:02PM -0600, Andreas Dilger wrote:
-> > > Btrfs, Ocfs2, and Gfs2 pack small amounts of user data directly in inode
-> > > blocks.
-> > 
-> > Hmm, but part of the issue would be how to request the extra data, and
-> > what offset it would be given?  One could, for example, use negative
-> > offsets to represent metadata or something, or add a FIEMAP_EXTENT_META
-> > or similar, I hadn't given that much thought.
+Eric Sandeen wrote:
+> Niv Sardi wrote:
+>> Hello,
+>>
+>> XFS's default mount options are in most cases sub-optimal, we should try
+>> to have more sensible defaults, so far I'm following some quick dave-powered
+>> recomendations:
+>>
+>> - version 2 logs
+>> - attr2
+>> - lazy superblock counters
+>> - less allocation groups for single disk configs
+>>
+>> - imaxpct default can be reduced
+>>
+>> it is currently 25, what would be reasonable ?
+>>
+>> - dropping the ability to turn unwritten extents off completely
+>>
+>> please submit your pet-idea for better defaults here.
 > 
-> Well, fe_offset and fe_length are already expressed in bytes, so we could
-> just put the byte offset to where the inline data starts in there. fe_length
-> is just used as the length allocated for inline-data.
+> Sorry for all the replies ;-)
 > 
-> If fe_offset is required to be block aligned, then we could add a field to
-> express an offset within the block where data would be found - say
-> 'fe_data_start_offset'. In the non-inline case, we could guarantee that
-> fe_data_start_offset is zero. That way software which doesn't want to care
-> whether something is inline-data (for example, a backup program) or not
-> could just blidly add it to fe_offset before looking at the data.
+> What would you think of a mkfs conf file like e2fsprogs has, which
+> defines filesystem classes, and defaults for each?  (small, news,
+> largefile, etc...)
+> 
+> -Eric
+> 
 
-Oh, I was confused as to what you are asking.  Mapping in-inode data is
-just fine using the existing interface.  The byte offset of the data is
-given, and the "FIEMAP_EXTENT_NO_DIRECT" flag is set to indicate that it
-isn't necessarily safe to do IO directly to that byte offset in the file
-(e.g. tail packed, compressed data, etc).
+It might be interesting if people let us know what non-default
+mkfs and mount options that they are using for their various
+configurations/classes.
+Didn't Russell C. have some survey years ago - can't remember if
+that was for h/ware or what now.
 
-I was thinking you were asking how to map metadata (e.g. indirect blocks).
+Maybe Dave C. or others have some suggestions from performance runs
+for various types of workloads. Do we have this compiled somewhere?
 
-Cheers, Andreas
---
-Andreas Dilger
-Sr. Software Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
+--Tim
