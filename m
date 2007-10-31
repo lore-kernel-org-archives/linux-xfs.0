@@ -1,39 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 21:13:20 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9V4CvJK015907
-	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 21:13:00 -0700
-Message-ID: <472800CC.8000904@sandeen.net>
-Date: Tue, 30 Oct 2007 23:13:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Default mount options (that suck less).
-References: <20071029075657.GA84369978@melbourne.sgi.com>	 <4725E84D.3030609@sandeen.net> <4725F6C0.3020303@theendofthetunnel.de>	 <4725F732.2060509@sandeen.net>	 <1193733605.9551.18.camel@localhost.localdomain> <1193803905.3862.108.camel@edge.yarra.acx>
-In-Reply-To: <1193803905.3862.108.camel@edge.yarra.acx>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 31 Oct 2007 04:21:25 -0700 (PDT)
+Received: from waldorf.loreland.org (uk.loreland.org [89.16.172.112])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9VBLADg030587
+	for <xfs@oss.sgi.com>; Wed, 31 Oct 2007 04:21:15 -0700
+In-Reply-To: <47267EC7.8000906@sgi.com>
+References: <20071029075657.GA84369978@melbourne.sgi.com> <4725FBB4.1010400@sandeen.net> <47267EC7.8000906@sgi.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <177CA06B-41D3-4E4A-9EA6-5688C952CD63@loreland.org>
 Content-Transfer-Encoding: 7bit
+From: James Braid <jamesb@loreland.org>
+Subject: Re: Default mount options (that suck less).
+Date: Wed, 31 Oct 2007 11:05:09 +0000
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Stewart Smith <stewart@flamingspork.com>, Hannes Dorbath <light@theendofthetunnel.de>, Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Nathan Scott wrote:
-> On Tue, 2007-10-30 at 19:40 +1100, Stewart Smith wrote:
->> Probably SELinux+Beagle attributes?
->>
->> Attribute "Beagle.Fingerprint" has a 25 byte value
->> Attribute "Beagle.Uid" has a 22 byte value
->> Attribute "Beagle.MTime" has a 14 byte value
->> Attribute "Beagle.Filter" has a 36 byte value
->> Attribute "Beagle.AttrTime" has a 14 byte value
->>
->> That's 111bytes just for values... 
-> 
-> and another ~70 bytes for the names.
+On 30 Oct 2007, at 00:45, Timothy Shimmin wrote:
+> It might be interesting if people let us know what non-default
+> mkfs and mount options that they are using for their various
+> configurations/classes.
+> Didn't Russell C. have some survey years ago - can't remember if
+> that was for h/ware or what now.
 
-bleah!
-
-Ok, so we can have a "beagle" filesystem type in mkfs.xfs.conf ;-)
-
--Eric
+We have a ~100TB filesystem that was made with the default mkfs.xfs  
+options from memory. The only mount option we use is inode64.
