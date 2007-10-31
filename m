@@ -1,63 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 21:08:03 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9V47pPY014657
-	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 21:07:54 -0700
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1In4rz-0000WK-HW
-	for xfs@oss.sgi.com; Tue, 30 Oct 2007 21:07:55 -0700
-Message-ID: <13502504.post@talk.nabble.com>
-Date: Tue, 30 Oct 2007 21:07:55 -0700 (PDT)
-From: "paul.lkw" <paul.lkw@mfun.org>
-Subject: Re: 2.6TB Storage Size Problem
-In-Reply-To: <alpine.LRH.0.9999.0710302328250.29151@hogwarts.egr.duke.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 21:12:15 -0700 (PDT)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9V4Bjb8015647
+	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 21:11:48 -0700
+Subject: Re: Default mount options (that suck less).
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <1193733605.9551.18.camel@localhost.localdomain>
+References: <20071029075657.GA84369978@melbourne.sgi.com>
+	 <4725E84D.3030609@sandeen.net> <4725F6C0.3020303@theendofthetunnel.de>
+	 <4725F732.2060509@sandeen.net>
+	 <1193733605.9551.18.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 31 Oct 2007 15:11:45 +1100
+Message-Id: <1193803905.3862.108.camel@edge.yarra.acx>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-References: <13501909.post@talk.nabble.com> <alpine.LRH.0.9999.0710302328250.29151@hogwarts.egr.duke.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Stewart Smith <stewart@flamingspork.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Hannes Dorbath <light@theendofthetunnel.de>, Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
 
+On Tue, 2007-10-30 at 19:40 +1100, Stewart Smith wrote:
+> 
+> Probably SELinux+Beagle attributes?
+> 
+> Attribute "Beagle.Fingerprint" has a 25 byte value
+> Attribute "Beagle.Uid" has a 22 byte value
+> Attribute "Beagle.MTime" has a 14 byte value
+> Attribute "Beagle.Filter" has a 36 byte value
+> Attribute "Beagle.AttrTime" has a 14 byte value
+> 
+> That's 111bytes just for values... 
 
-Does it means I have to use one harddisk for just boot process ?
-
-
-Joshua Baker-LePain wrote:
-> 
-> On Tue, 30 Oct 2007 at 7:35pm, paul.lkw wrote
-> 
->> I have a DELL server with a hardware raid controller card and 6 x 750GB
->> Harddisk, and I configured it as a Raid-5 (5 x 750GB) and 1 of HotSpare.
->> I
->> partitioned 50GB of the main base CentOS system and the remain
->> unpartitioned
->> size should be 2.5xxxTB, but however I just have 2.0T as EXT-3 limitation
->> (I
->> think), How can I use the full size of this with LVM?
-> 
-> This has been answered many times on the CentOS list:
-> 
-> 1) On a device larger than 2.0TB, you must use a gpt disklabel rather than
->     the default msdos.
-> 
-> 2) You must use parted when partitioning such a device.
-> 
-> 3) You can't boot from such a device (as neither grub nor lilo support gpt
->     disklabels).
-> 
-> -- 
-> Joshua Baker-LePain
-> QB3 Shared Cluster Sysadmin
-> UCSF
-> 
-> 
-> 
-> 
+and another ~70 bytes for the names.
 
 -- 
-View this message in context: http://www.nabble.com/2.6TB-Storage-Size-Problem-tf4722532.html#a13502504
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Nathan
