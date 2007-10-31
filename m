@@ -1,29 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 21:13:00 -0700 (PDT)
-Received: from hogwarts.egr.duke.edu (hogwarts.egr.duke.edu [152.3.195.84])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9V4CmSr015875
-	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 21:12:51 -0700
-Date: Wed, 31 Oct 2007 00:12:49 -0400 (EDT)
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 2.6TB Storage Size Problem
-In-Reply-To: <13502504.post@talk.nabble.com>
-Message-ID: <alpine.LRH.0.9999.0710310012180.29151@hogwarts.egr.duke.edu>
-References: <13501909.post@talk.nabble.com> <alpine.LRH.0.9999.0710302328250.29151@hogwarts.egr.duke.edu> <13502504.post@talk.nabble.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Oct 2007 21:13:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id l9V4CvJK015907
+	for <xfs@oss.sgi.com>; Tue, 30 Oct 2007 21:13:00 -0700
+Message-ID: <472800CC.8000904@sandeen.net>
+Date: Tue, 30 Oct 2007 23:13:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: Default mount options (that suck less).
+References: <20071029075657.GA84369978@melbourne.sgi.com>	 <4725E84D.3030609@sandeen.net> <4725F6C0.3020303@theendofthetunnel.de>	 <4725F732.2060509@sandeen.net>	 <1193733605.9551.18.camel@localhost.localdomain> <1193803905.3862.108.camel@edge.yarra.acx>
+In-Reply-To: <1193803905.3862.108.camel@edge.yarra.acx>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "paul.lkw" <paul.lkw@mfun.org>
-Cc: xfs@oss.sgi.com
+To: nscott@aconex.com
+Cc: Stewart Smith <stewart@flamingspork.com>, Hannes Dorbath <light@theendofthetunnel.de>, Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
 
-On Tue, 30 Oct 2007 at 9:07pm, paul.lkw wrote
+Nathan Scott wrote:
+> On Tue, 2007-10-30 at 19:40 +1100, Stewart Smith wrote:
+>> Probably SELinux+Beagle attributes?
+>>
+>> Attribute "Beagle.Fingerprint" has a 25 byte value
+>> Attribute "Beagle.Uid" has a 22 byte value
+>> Attribute "Beagle.MTime" has a 14 byte value
+>> Attribute "Beagle.Filter" has a 36 byte value
+>> Attribute "Beagle.AttrTime" has a 14 byte value
+>>
+>> That's 111bytes just for values... 
+> 
+> and another ~70 bytes for the names.
 
-> Does it means I have to use one harddisk for just boot process ?
+bleah!
 
-Yes, or use auto-carving if your RAID adapter supports it.
+Ok, so we can have a "beagle" filesystem type in mkfs.xfs.conf ;-)
 
--- 
-Joshua Baker-LePain
-QB3 Shared Cluster Sysadmin
-UCSF
+-Eric
