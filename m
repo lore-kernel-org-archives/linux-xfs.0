@@ -1,30 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 03:16:10 -0700 (PDT)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA1AG6bR006267
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 03:16:07 -0700
-Date: Thu, 1 Nov 2007 10:00:12 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Turn off XBF_READ_AHEAD in io completion
-Message-ID: <20071101100012.GA20065@infradead.org>
-References: <47296FF7.8080607@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 11:58:32 -0700 (PDT)
+Received: from postfix2-g20.free.fr (postfix2-g20.free.fr [212.27.60.43])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA1IwO21023920
+	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 11:58:25 -0700
+Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
+	by postfix2-g20.free.fr (Postfix) with ESMTP id E92D11D7F582
+	for <xfs@oss.sgi.com>; Thu,  1 Nov 2007 17:57:30 +0100 (CET)
+Date: Thu, 1 Nov 2007 19:58:12 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: 2.6TB Storage Size Problem
+Message-ID: <20071101195812.7355aa92@galadriel.home>
+In-Reply-To: <alpine.LRH.0.9999.0710302328250.29151@hogwarts.egr.duke.edu>
+References: <13501909.post@talk.nabble.com>
+	<alpine.LRH.0.9999.0710302328250.29151@hogwarts.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <47296FF7.8080607@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Joshua Baker-LePain <jlb17@duke.edu>
+Cc: "paul.lkw" <paul.lkw@mfun.org>, xfs@oss.sgi.com
 
-On Thu, Nov 01, 2007 at 05:19:35PM +1100, Lachlan McIlroy wrote:
-> Read-ahead of an inode cluster will set XBF_READ_AHEAD in the buffer.
-> If we don't remove the flag it will still be set when we flush the
-> buffer back to disk.  Not sure if leaving this flag set causes any
-> serious problems but it does trigger an assert.
+Le Tue, 30 Oct 2007 23:30:04 -0400 (EDT) vous écriviez:
 
-It might be better if such temporary flags never actually make it to
-bp->b_flags.  Just pass down a flags variable all the way to
-_xfs_buf_ioapply and keep the flags just for this I/O separate from
-those that are permanent and in bp->b_flags.
+> 3) You can't boot from such a device (as neither grub nor lilo
+> support gpt disklabels).
+
+lilo does support booting from gpt on Debian since Sarge at least. I'd
+be surprised if the CentOS build doesn't.
+
+-- 
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   
+--------------------------------------------------
