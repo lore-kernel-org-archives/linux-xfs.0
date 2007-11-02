@@ -1,37 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Nov 2007 09:10:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA2GAWvv021419
-	for <xfs@oss.sgi.com>; Fri, 2 Nov 2007 09:10:36 -0700
-Message-ID: <472B4BF8.2040500@sandeen.net>
-Date: Fri, 02 Nov 2007 11:10:32 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
-References: <06CCEA2EB1B80A4A937ED59005FA855101AED1BE@svits26.main.ad.rit.edu> <472A87FA.7000804@sandeen.net> <9489F071-7966-4230-9DAC-D783B6B9600A@rit.edu> <472A8BB9.7040100@sandeen.net> <20071102090740.GB23263@p15145560.pureserver.info>
-In-Reply-To: <20071102090740.GB23263@p15145560.pureserver.info>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Nov 2007 13:43:45 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA2KhaWd014963
+	for <xfs@oss.sgi.com>; Fri, 2 Nov 2007 13:43:39 -0700
+Date: Sat, 3 Nov 2007 07:43:06 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: writeout stalls in current -git
+Message-ID: <20071102204258.GR995458@sgi.com>
+References: <200710221505.35397.maximlevitsky@gmail.com> <20071022131045.GA5357@mail.ustc.edu.cn> <393060478.03650@ustc.edu.cn> <64bb37e0710310822r5ca6b793p8fd97db2f72a8655@mail.gmail.com> <393903856.06449@ustc.edu.cn> <64bb37e0711011120i63cdfe3ci18995d57b6649a8@mail.gmail.com> <64bb37e0711011200n228e708eg255640388f83da22@mail.gmail.com> <E1InmAI-0003ME-2i@localhost> <1193998532.27652.343.camel@twins> <64bb37e0711021222q7d12c825mc62d433c4fe19e8@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <64bb37e0711021222q7d12c825mc62d433c4fe19e8@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ralf Gross <Ralf-Lists@ralfgross.de>
-Cc: xfs@oss.sgi.com
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Fengguang Wu <wfg@mail.ustc.edu.cn>, Maxim Levitsky <maximlevitsky@gmail.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Chinner <dgc@sgi.com>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Ralf Gross wrote:
-> Eric Sandeen schrieb:
->> ...
->> What controller are you using?  If you say "areca" I might be on to
->> something with some other bugs I've seen...
-> 
-> I use areca controllers with xfs, but had no problems yet. Can you
-> explain what bugs might hit me?
+On Fri, Nov 02, 2007 at 08:22:10PM +0100, Torsten Kaiser wrote:
+> [  630.000000] SysRq : Emergency Sync
+> [  630.120000] Emergency Sync complete
+> [  632.850000] SysRq : Show Blocked State
+> [  632.850000]   task                        PC stack   pid father
+> [  632.850000] pdflush       D ffff81000f091788     0   285      2
+> [  632.850000]  ffff810005d4da80 0000000000000046 0000000000000800
+> 0000007000000001
+> [  632.850000]  ffff81000fd52400 ffffffff8022d61c ffffffff80819b00
+> ffffffff80819b00
+> [  632.850000]  ffffffff80815f40 ffffffff80819b00 ffff810100316f98
+> 0000000000000000
+> [  632.850000] Call Trace:
+> [  632.850000]  [<ffffffff8022d61c>] task_rq_lock+0x4c/0x90
+> [  632.850000]  [<ffffffff8022c8ea>] __wake_up_common+0x5a/0x90
+> [  632.850000]  [<ffffffff805b16e7>] __down+0xa7/0x11e
+> [  632.850000]  [<ffffffff8022da70>] default_wake_function+0x0/0x10
+> [  632.850000]  [<ffffffff805b1365>] __down_failed+0x35/0x3a
+> [  632.850000]  [<ffffffff803752ce>] xfs_buf_lock+0x3e/0x40
+> [  632.850000]  [<ffffffff8037740e>] _xfs_buf_find+0x13e/0x240
+> [  632.850000]  [<ffffffff8037757f>] xfs_buf_get_flags+0x6f/0x190
+> [  632.850000]  [<ffffffff803776b2>] xfs_buf_read_flags+0x12/0xa0
+> [  632.850000]  [<ffffffff80368824>] xfs_trans_read_buf+0x64/0x340
+> [  632.850000]  [<ffffffff80352361>] xfs_itobp+0x81/0x1e0
+> [  632.850000]  [<ffffffff8026b293>] write_cache_pages+0x123/0x330
+> [  632.850000]  [<ffffffff80354d0e>] xfs_iflush+0xfe/0x520
 
-maybe none, it was just a wild guess.  :)  I've seen a bug on ext3,
-volumes > 2T corrupted, on an areca controller.  Due to the 2T
-threshold, it seems more like a lower layer IO issue (2^32 x 512) than a
-filesystem issue... googling a bit I found others with problems on
-areca, but then that's what I googled for, so I might have
-self-selected.  So, maybe nothing, I was just looking for a 3rd data point.
+That's stalled waiting on the inode cluster buffer lock. That implies
+that the inode lcuser is already being written out and the inode has
+been redirtied during writeout.
 
--Eric
+Does the kernel you are testing have the "flush inodes in ascending
+inode number order" patches applied? If so, can you remove that
+patch and see if the problem goes away?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
