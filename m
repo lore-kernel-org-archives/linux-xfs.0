@@ -1,47 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 15:55:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 17:30:26 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA1MssbB018151
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 15:54:57 -0700
-Date: Fri, 2 Nov 2007 09:54:53 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] fix transaction overrun during writeback
-Message-ID: <20071101225453.GF995458@sgi.com>
-References: <20071029234010.GU995458@sgi.com> <4729304A.2010202@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4729304A.2010202@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA20UI7e001094
+	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 17:30:21 -0700
+Subject: PARTIAL TAKE 971186 - Clean up bitops
+Message-Id: <20071102003017.6D3EE58C38F7@chook.melbourne.sgi.com>
+Date: Fri,  2 Nov 2007 11:30:17 +1100 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 01, 2007 at 12:47:54PM +1100, Lachlan McIlroy wrote:
-> Looks good Dave.  Since this is a writeback path is there some way
-> we can tell xfs_bmapi() that it should not convert anything but
-> delayed allocs and have it assert/error out if it tries to - not
-> that it will now with this change but just as defensive measure?
+Use the generic bitops rather than implementing them ourselves.
+Patch inspired by Andi Kleen.
 
-I looked at that, but it's not straight forward. In this case we
-are simply asking for an allocation, assuming the range we ask
-for is already delalloc. however, the same call could be used
-to allocate the space if the transaction reservation took into
-account the space needing to be allocated.
 
-So there's not really any simple way to deal with this, esp.
-as it is valid to allocate both delalloc and unreserved
-space in the one xfs_bmapi() call as long as you do the right
-thing with the transaction reservation...
+Date:  Fri Nov  2 11:29:35 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
 
-We really need to fix the way xfs_iomap works so we don't have the
-race condition in the first place....
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Modid:  xfs-linux-melb:xfs-kern:30000a
+fs/xfs/xfs_bit.h - 1.21 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bit.h.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
+	- wrap xfs bitop functions around generic implementations.
+
+fs/xfs/xfs_bit.c - 1.32 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bit.c.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+	- Remove implementation of generic bitops.
+
+fs/xfs/xfs_rtalloc.c - 1.108 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rtalloc.c.diff?r1=text&tr1=1.108&r2=text&tr2=1.107&f=h
+	- remove implementation of generic bitops.
