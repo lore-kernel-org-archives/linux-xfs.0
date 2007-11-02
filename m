@@ -1,44 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 21:37:45 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 22:18:50 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA24bcr0004066
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 21:37:39 -0700
-Message-ID: <472AA999.6090900@sgi.com>
-Date: Fri, 02 Nov 2007 15:37:45 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA25IdK9012755
+	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 22:18:41 -0700
+Date: Fri, 2 Nov 2007 16:18:34 +1100
+From: David Chinner <dgc@sgi.com>
 Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
-References: <06CCEA2EB1B80A4A937ED59005FA855101AED1BE@svits26.main.ad.rit.edu> <472A87FA.7000804@sandeen.net>
-In-Reply-To: <472A87FA.7000804@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20071102051834.GM995458@sgi.com>
+References: <3A2120EF-3EB0-4CF1-8C4E-920B9688D51F@rit.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3A2120EF-3EB0-4CF1-8C4E-920B9688D51F@rit.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jay Sullivan <jpspgd@rit.edu>, xfs@oss.sgi.com
+To: Jay Sullivan <jpspgd@rit.edu>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Jay Sullivan wrote:
+On Thu, Nov 01, 2007 at 10:08:09PM -0400, Jay Sullivan wrote:
+> (Sorry if this is a dupe to the list; it has been a long day.)
 > 
->> I ran xfs_repair -L on the FS and it could be mounted again, 
-> 
-> Was it not even mountable before this, or why did you use the -L flag? 
-> If the log is corrupted that points to more problems... perhaps you've 
-> had some power loss & your write caches evaporated, and lvm doesn't do 
-> barriers?
-> 
-> -eric
-> 
+> I have an XFS filesystem that has had the following happen twice in 3  
+> months, both times an impossibly large block number was requested.   
+....
 
-BTW, I occasionally wonder about the reason for log corruptions.
-If we have an "evaporated" write cache that would stop a write from
-going but it wouldn't do a partial sector (< 512 byte) write, would it?
-I have presumed that sector writes complete or not and that is what
-the log code is based on.
+Sure sign of a corrupted btree.
 
-OOI, Jay, how did it fail to mount - what was the log msg?
-I presume you couldn't mount such that even the log couldn't be
-replayed? Did it fail during replay?
+> I ran xfs_repair –L on the FS and it could be mounted again, but how  
+> long until it happens a third time?
 
---Tim
+<shrug>
+
+What was the problem that xfs_repair fixed?
+
+BTW, why did you run xfs_repair -L?
+
+Also, when it happens next, what does xfs_check tell you is broken?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
