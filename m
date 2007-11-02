@@ -1,48 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 Nov 2007 22:18:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA25IdK9012755
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2007 22:18:41 -0700
-Date: Fri, 2 Nov 2007 16:18:34 +1100
-From: David Chinner <dgc@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Nov 2007 02:23:29 -0700 (PDT)
+Received: from stlx01.stz-softwaretechnik.com (stz-softwaretechnik.de [217.160.223.211])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA29NFqC025821
+	for <xfs@oss.sgi.com>; Fri, 2 Nov 2007 02:23:19 -0700
+Received: from rg by stlx01.stz-softwaretechnik.com with local (Exim 3.36 #1 (Debian))
+	id 1InsVK-0005Cb-00
+	for <xfs@oss.sgi.com>; Fri, 02 Nov 2007 10:07:50 +0100
+Date: Fri, 2 Nov 2007 10:07:40 +0100
+From: Ralf Gross <Ralf-Lists@ralfgross.de>
 Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
-Message-ID: <20071102051834.GM995458@sgi.com>
-References: <3A2120EF-3EB0-4CF1-8C4E-920B9688D51F@rit.edu>
+Message-ID: <20071102090740.GB23263@p15145560.pureserver.info>
+References: <06CCEA2EB1B80A4A937ED59005FA855101AED1BE@svits26.main.ad.rit.edu> <472A87FA.7000804@sandeen.net> <9489F071-7966-4230-9DAC-D783B6B9600A@rit.edu> <472A8BB9.7040100@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3A2120EF-3EB0-4CF1-8C4E-920B9688D51F@rit.edu>
+In-Reply-To: <472A8BB9.7040100@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jay Sullivan <jpspgd@rit.edu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Nov 01, 2007 at 10:08:09PM -0400, Jay Sullivan wrote:
-> (Sorry if this is a dupe to the list; it has been a long day.)
-> 
-> I have an XFS filesystem that has had the following happen twice in 3  
-> months, both times an impossibly large block number was requested.   
-....
+Eric Sandeen schrieb:
+> ...
+> What controller are you using?  If you say "areca" I might be on to
+> something with some other bugs I've seen...
 
-Sure sign of a corrupted btree.
+I use areca controllers with xfs, but had no problems yet. Can you
+explain what bugs might hit me?
 
-> I ran xfs_repair –L on the FS and it could be mounted again, but how  
-> long until it happens a third time?
-
-<shrug>
-
-What was the problem that xfs_repair fixed?
-
-BTW, why did you run xfs_repair -L?
-
-Also, when it happens next, what does xfs_check tell you is broken?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Ralf
