@@ -1,22 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Nov 2007 07:00:08 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 Nov 2007 07:49:01 -0700 (PDT)
 Received: from SVITS26.main.ad.rit.edu (svits26.main.ad.rit.edu [129.21.18.136])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA2E01B5002655
-	for <xfs@oss.sgi.com>; Fri, 2 Nov 2007 07:00:04 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA2Emso4008131
+	for <xfs@oss.sgi.com>; Fri, 2 Nov 2007 07:48:57 -0700
 Content-class: urn:content-classes:message
 MIME-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Subject: RE: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
-Date: Fri, 2 Nov 2007 10:00:23 -0400
-Message-ID: <06CCEA2EB1B80A4A937ED59005FA855101AED204@svits26.main.ad.rit.edu>
-In-Reply-To: <472A8BB9.7040100@sandeen.net>
+Date: Fri, 2 Nov 2007 10:49:16 -0400
+Message-ID: <06CCEA2EB1B80A4A937ED59005FA855101AED213@svits26.main.ad.rit.edu>
+In-Reply-To: <06CCEA2EB1B80A4A937ED59005FA855101AED204@svits26.main.ad.rit.edu>
 From: "Jay Sullivan" <jpspgd@rit.edu>
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+
+What can I say about Murphy and his silly laws?  I just had a drive fail
+on my array.  I wonder if this is the root of my problems...  Yay
+parity.  
+
+~Jay
+
+-----Original Message-----
+From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] On Behalf
+Of Jay Sullivan
+Sent: Friday, November 02, 2007 10:00 AM
+To: xfs@oss.sgi.com
+Subject: RE: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
 
 I lost the xfs_repair output on an xterm with only four lines of
 scrollback...  I'll definitely be more careful to preserve more
