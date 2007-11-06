@@ -1,51 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 12:41:14 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 12:56:09 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA6Kf6iY013333
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 12:41:10 -0800
-Date: Wed, 7 Nov 2007 07:41:00 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA6Ku13c015102
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 12:56:04 -0800
+Date: Wed, 7 Nov 2007 07:55:56 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: TAKE 972756 - Implement fallocate.
-Message-ID: <20071106204100.GW995458@sgi.com>
-References: <20071102024314.9BF3458C38F7@chook.melbourne.sgi.com> <cc7060690711051042h5c39c540mf60f95e2f67c7bd7@mail.gmail.com> <20071106001223.GY66820511@sgi.com> <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+Subject: Re: xfs crash
+Message-ID: <20071106205556.GZ995458@sgi.com>
+References: <20071105215135.GA12238@e-m.fr> <20071106082632.GU995458@sgi.com> <20071106092157.GB16694@e-m.fr> <20071106160721.GB25295@e-m.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+In-Reply-To: <20071106160721.GB25295@e-m.fr>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Bhagi rathi <jahnu77@gmail.com>
+To: Cedric - Equinoxe Media <cedric@e-m.fr>
 Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Nov 06, 2007 at 10:57:03PM +0530, Bhagi rathi wrote:
-> File is of size 1k.  A 4k block is allocated as file-system block size is
-> 4k.
->  Preallocation happened from 1k to 256k. Now, it looks to me that we have
-> un-written extents from 4k to 256k. There is no guarantee that data from 1k
-> to 4k is all zero'es. Fallocate is updating size.  Hence on subsequent read,
-> we can get garbage from 1k to 4k and all zero'es from 4k to 256k
+On Tue, Nov 06, 2007 at 05:07:21PM +0100, Cedric - Equinoxe Media wrote:
+> I just had exactly the same crash again today :
+> /dev/sda4 on /filer type xfs (rw,noexec,nosuid,nodev,noatime)
 
-# rm /mnt/test/fred
-# xfs_io -f -c "pwrite 0 1024" -c "fsync" -c "falloc_allocsp 0 262144" -c "bmap -vp" /mnt/test/fred
-wrote 1024/1024 bytes at offset 0
-1 KiB, 1 ops; 0.0000 sec (42.459 MiB/sec and 43478.2609 ops/sec)
-/mnt/test/fred:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          14520..14527      0 (14520..14527)       8 00000
-   1: [8..511]:        345688..346191    0 (345688..346191)   504 10000
-# dd if=/mnt/test/fred bs=4k count=1 |od -Ax
-1+0 records in
-1+0 records out
-4096 bytes (4.1 kB) copied, 0.004566 seconds, 897 kB/s
-000000 146715 146715 146715 146715 146715 146715 146715 146715
-*
-000400 000000 000000 000000 000000 000000 000000 000000 000000
-*
-001000
+What did xfs_check tell you about the corruption?
 
-Only 1k of modified data, then 3k of zeros, then a bunch of unwritten extents
-out to EOF.
+> Seems to be again on a setattr() ?
+
+Doing a truncation freeing some blocks.
+
+What is the client doing (i.e. io patterns, application, etc) to
+cause this? can you reproduce it without NFS being used? To track
+this down I'm going to need a reproducable test case....
+
+Seeing this is a brand new server, have you run and soak or stress
+test on the raw storage to confirm it is error free?
 
 Cheers,
 
