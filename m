@@ -1,57 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 12:26:18 -0800 (PST)
-Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.180])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA6KQ1jx011466
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 12:26:10 -0800
-Received: by py-out-1112.google.com with SMTP id u77so4148314pyb
-        for <xfs@oss.sgi.com>; Tue, 06 Nov 2007 12:26:06 -0800 (PST)
-Message-ID: <64bb37e0711061226l48dce395ub2f9539efc66ecc0@mail.gmail.com>
-Date: Tue, 6 Nov 2007 21:26:05 +0100
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: writeout stalls in current -git
-In-Reply-To: <1194375682.6289.88.camel@twins>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 12:41:14 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA6Kf6iY013333
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 12:41:10 -0800
+Date: Wed, 7 Nov 2007 07:41:00 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: TAKE 972756 - Implement fallocate.
+Message-ID: <20071106204100.GW995458@sgi.com>
+References: <20071102024314.9BF3458C38F7@chook.melbourne.sgi.com> <cc7060690711051042h5c39c540mf60f95e2f67c7bd7@mail.gmail.com> <20071106001223.GY66820511@sgi.com> <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <393903856.06449@ustc.edu.cn> <E1InmAI-0003ME-2i@localhost>
-	 <1193998532.27652.343.camel@twins>
-	 <64bb37e0711021222q7d12c825mc62d433c4fe19e8@mail.gmail.com>
-	 <20071102204258.GR995458@sgi.com>
-	 <64bb37e0711040319l5de285c3xea64474540a51b6e@mail.gmail.com>
-	 <20071105014510.GU66820511@sgi.com>
-	 <64bb37e0711051027v49869699s9593ea54713b15ff@mail.gmail.com>
-	 <20071106042527.GT995458@sgi.com> <1194375682.6289.88.camel@twins>
+In-Reply-To: <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: David Chinner <dgc@sgi.com>, Fengguang Wu <wfg@mail.ustc.edu.cn>, Maxim Levitsky <maximlevitsky@gmail.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Bhagi rathi <jahnu77@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On 11/6/07, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Tue, 2007-11-06 at 15:25 +1100, David Chinner wrote:
->
-> > I'm struggling to understand what possible changed in XFS or writeback that
-> > would lead to stalls like this, esp. as you appear to be removing files when
-> > the stalls occur.
->
-> Just a crazy idea,..
->
-> Could there be a set_page_dirty() that doesn't have
-> balance_dirty_pages() call near? For example modifying meta data in
-> unlink?
->
-> Such a situation could lead to an excess of dirty pages and the next
-> call to balance_dirty_pages() would appear to stall, as it would
-> desperately try to get below the limit again.
+On Tue, Nov 06, 2007 at 10:57:03PM +0530, Bhagi rathi wrote:
+> File is of size 1k.  A 4k block is allocated as file-system block size is
+> 4k.
+>  Preallocation happened from 1k to 256k. Now, it looks to me that we have
+> un-written extents from 4k to 256k. There is no guarantee that data from 1k
+> to 4k is all zero'es. Fallocate is updating size.  Hence on subsequent read,
+> we can get garbage from 1k to 4k and all zero'es from 4k to 256k
 
-Only if accounting of the dirty pages is also broken.
-In the unmerge testcase I see most of the time only <200kb of dirty
-data in /proc/meminfo.
+# rm /mnt/test/fred
+# xfs_io -f -c "pwrite 0 1024" -c "fsync" -c "falloc_allocsp 0 262144" -c "bmap -vp" /mnt/test/fred
+wrote 1024/1024 bytes at offset 0
+1 KiB, 1 ops; 0.0000 sec (42.459 MiB/sec and 43478.2609 ops/sec)
+/mnt/test/fred:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          14520..14527      0 (14520..14527)       8 00000
+   1: [8..511]:        345688..346191    0 (345688..346191)   504 10000
+# dd if=/mnt/test/fred bs=4k count=1 |od -Ax
+1+0 records in
+1+0 records out
+4096 bytes (4.1 kB) copied, 0.004566 seconds, 897 kB/s
+000000 146715 146715 146715 146715 146715 146715 146715 146715
+*
+000400 000000 000000 000000 000000 000000 000000 000000 000000
+*
+001000
 
-The system has 4Gb of RAM so I'm not sure if it should ever be valid
-to stall even the emerge/install testcase.
+Only 1k of modified data, then 3k of zeros, then a bunch of unwritten extents
+out to EOF.
 
-Torsten
+Cheers,
 
-Now building a kernel with the skipped-pages-accounting-patch reverted...
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
