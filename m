@@ -1,44 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 12:56:09 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA6Ku13c015102
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 12:56:04 -0800
-Date: Wed, 7 Nov 2007 07:55:56 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs crash
-Message-ID: <20071106205556.GZ995458@sgi.com>
-References: <20071105215135.GA12238@e-m.fr> <20071106082632.GU995458@sgi.com> <20071106092157.GB16694@e-m.fr> <20071106160721.GB25295@e-m.fr>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 14:38:48 -0800 (PST)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA6McbiH026277
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 14:38:41 -0800
+Subject: Re: TAKE 972756 - Implement fallocate.
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <20071106204100.GW995458@sgi.com>
+References: <20071102024314.9BF3458C38F7@chook.melbourne.sgi.com>
+	 <cc7060690711051042h5c39c540mf60f95e2f67c7bd7@mail.gmail.com>
+	 <20071106001223.GY66820511@sgi.com>
+	 <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+	 <20071106204100.GW995458@sgi.com>
+Content-Type: text/plain
+Date: Wed, 07 Nov 2007 09:38:53 +1100
+Message-Id: <1194388733.3862.206.camel@edge.yarra.acx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071106160721.GB25295@e-m.fr>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Cedric - Equinoxe Media <cedric@e-m.fr>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: Bhagi rathi <jahnu77@gmail.com>, David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 06, 2007 at 05:07:21PM +0100, Cedric - Equinoxe Media wrote:
-> I just had exactly the same crash again today :
-> /dev/sda4 on /filer type xfs (rw,noexec,nosuid,nodev,noatime)
+On Wed, 2007-11-07 at 07:41 +1100, David Chinner wrote:
+> >  Preallocation happened from 1k to 256k. Now, it looks to me that we
+> have
+> > un-written extents from 4k to 256k. There is no guarantee that data
+> from 1k
+> > to 4k is all zero'es. 
 
-What did xfs_check tell you about the corruption?
+That guarantee does exist - when the initial 1K block write is done, the
+end of the block is zeroed (by the kernel write path).  This is always
+done (guaranteed) and is required independently to unwritten extents.
 
-> Seems to be again on a setattr() ?
+cheers.
 
-Doing a truncation freeing some blocks.
-
-What is the client doing (i.e. io patterns, application, etc) to
-cause this? can you reproduce it without NFS being used? To track
-this down I'm going to need a reproducable test case....
-
-Seeing this is a brand new server, have you run and soak or stress
-test on the raw storage to confirm it is error free?
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Nathan
