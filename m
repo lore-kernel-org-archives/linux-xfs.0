@@ -1,37 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 08:46:16 -0800 (PST)
-Received: from hogwarts.egr.duke.edu (hogwarts.egr.duke.edu [152.3.195.84])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA6GkAKd008127
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 08:46:13 -0800
-Date: Tue, 6 Nov 2007 11:46:09 -0500 (EST)
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 7Tb XFS partition lost on reboot
-In-Reply-To: <473072FD.4070104@jamendo.com>
-Message-ID: <alpine.LRH.0.9999.0711061144540.17301@hogwarts.egr.duke.edu>
-References: <473072FD.4070104@jamendo.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 09:08:23 -0800 (PST)
+Received: from spike.grumly.eu.org (spike.grumly.eu.org [195.5.253.226])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA6H8CYu011051
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 09:08:16 -0800
+Date: Tue, 6 Nov 2007 18:08:37 +0100
+From: Cedric - Equinoxe Media <cedric@e-m.fr>
+Subject: Re: xfs crash
+Message-ID: <20071106170837.GC25295@e-m.fr>
+References: <20071105215135.GA12238@e-m.fr> <20071106082632.GU995458@sgi.com> <20071106092157.GB16694@e-m.fr> <20071106160721.GB25295@e-m.fr> <Pine.LNX.4.64.0711061144100.17411@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Pine.LNX.4.64.0711061144100.17411@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Amandine AUPETIT <amandine@jamendo.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 6 Nov 2007 at 2:58pm, Amandine AUPETIT wrote
+On 06/11/2007 11:44, Justin Piszcz wrote:
+> Have you run a memory test on your server? memtest86
 
-> So I created the partition with parted, because fdisk can't do more that 2tb 
-> partitions.
-> It's ok, I can do what I want but...
->
-> on reboot, there is a Superblock problem, something like that. When I check 
-> with xfs_check :
+But I doubt it is hardware memory corruption because it is a brand new dell server
+with ECC memory and the backtrace is always the same.
 
-First guess -- did you use a gpt disklabel on that device?  Standard 
-(msdos) disklabels don't work on devices >2TB.  The usual symptom of a big 
-device with an msdos disklabel is that the partition table goes away on 
-reboot.
+Anyway I will do the memtest tomorrow...
 
--- 
-Joshua Baker-LePain
-QB3 Shared Cluster Sysadmin
-UCSF
+I also have a spare server, If I find nothing I will move everything to
+the spare and wait for the possible bug to appear again.
+
+Regards
+Cédric
