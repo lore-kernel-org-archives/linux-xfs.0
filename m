@@ -1,50 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 01:21:44 -0800 (PST)
-Received: from spike.grumly.eu.org (spike.grumly.eu.org [195.5.253.226])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA69LXZZ003355
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 01:21:37 -0800
-Date: Tue, 6 Nov 2007 10:21:57 +0100
-From: Cedric - Equinoxe Media <cedric@e-m.fr>
-Subject: Re: xfs crash
-Message-ID: <20071106092157.GB16694@e-m.fr>
-References: <20071105215135.GA12238@e-m.fr> <20071106082632.GU995458@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20071106082632.GU995458@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 06:41:35 -0800 (PST)
+Received: from r2d2.neofacto.lu (mail.neofacto.lu [158.64.60.195])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA6EfULA018283
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 06:41:32 -0800
+Received: from localhost (localhost [127.0.0.1])
+	by r2d2.neofacto.lu (Postfix) with ESMTP id 323CCC2F3E
+	for <xfs@oss.sgi.com>; Tue,  6 Nov 2007 15:09:14 +0100 (CET)
+Received: from r2d2.neofacto.lu ([127.0.0.1])
+	by localhost (r2d2.neofacto.lu [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id cYvlIgzHPDPY for <xfs@oss.sgi.com>;
+	Tue,  6 Nov 2007 15:09:00 +0100 (CET)
+Received: from [192.168.1.166] (SU105.tudor.lu [158.64.4.205])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by r2d2.neofacto.lu (Postfix) with ESMTP id 80341C2F49
+	for <xfs@oss.sgi.com>; Tue,  6 Nov 2007 14:58:15 +0100 (CET)
+Message-ID: <473072FD.4070104@jamendo.com>
+Date: Tue, 06 Nov 2007 14:58:21 +0100
+From: Amandine AUPETIT <amandine@jamendo.com>
+MIME-Version: 1.0
+Subject: 7Tb XFS partition lost on reboot
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 06/11/2007 19:26, David Chinner wrote:
-> On Mon, Nov 05, 2007 at 10:51:35PM +0100, Cedric - Equinoxe Media wrote:
-> > XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1563 of file
-> > fs/xfs/xfs_alloc.c.  Caller 0xffffffff88113b35
-> > 
-> > Call Trace:
-> >  [<ffffffff88111fcb>] :xfs:xfs_free_ag_extent+0x1a6/0x6b5
-> >  [<ffffffff88113b35>] :xfs:xfs_free_extent+0xa9/0xc9
-> >  [<ffffffff8811cf77>] :xfs:xfs_bmap_finish+0xee/0x167
-> >  [<ffffffff8813c843>] :xfs:xfs_itruncate_finish+0x19b/0x2e0
-> >  [<ffffffff881543c1>] :xfs:xfs_setattr+0x841/0xe57
-> 
-> Corrupted free space btree, by the look of it. Can you run
-> xfs_check on the filesystem and report the output. You can recover
-> from this by running xfs_repair.
+Hi !
+(I'm on Ubuntu 7.10 64 bits)
+I have array of 12 750gb disks in hardware Raid 6 that gives me a 7Tb 
+partition. I tried to format it in ext3, but it took too much time, so I 
+tried in Reiserfs, but the partition were lost on reboot, and now i'm 
+trying XFS.
 
-xfs_check /dev/sda4 :
-bad format 2 for inode 2961770479 type 0
-bad format 2 for inode 3229517262 type 0
-block 20/621714 type unknown not expected
-link count mismatch for inode 2961770479 (name ?), nlink 0, counted 1
-link count mismatch for inode 3229517262 (name ?), nlink 0, counted 1
+So I created the partition with parted, because fdisk can't do more that 
+2tb partitions.
+It's ok, I can do what I want but...
 
-the xfs_repair worked perfectly.
+on reboot, there is a Superblock problem, something like that. When I 
+check with xfs_check :
 
-Do you have an idea why this corruption happened ?
+xfs_check: unexpected XFS SB magic number 0x00000000
+xfs_check: read failed: Invalid argument
+xfs_check: data size check failed
+cache_node_purge: refcount was 1, not zero (node=0x681420)
+xfs_check: cannot read root inode (22)
+bad superblock magic number 0, giving up
 
-Thanks.
-Cédric
+So, I tried to delete the partition with parted, to recreate a new one. 
+No problem. But when I mount the new partition, all the data that were 
+on my deleted partition are there !!! That's of course not a problem, 
+but I'm wondering if there's a way to have this partition work directly 
+without having to delete and recreate it ?
+
+I checked the /proc/partition before and after doing parted :
+
+BEFORE
+major minor  #blocks  name
+ 104     0   35532720 cciss/c0d0
+ 104     1   34025638 cciss/c0d0p1
+ 104     2          1 cciss/c0d0p2
+ 104     5    1502046 cciss/c0d0p5
+ 105     0 7325417080 cciss/c1d0
+ 105     1  [B]882966102[/B] cciss/c1d0p1
+
+AFTER
+major minor  #blocks  name
+ 104     0   35532720 cciss/c0d0
+ 104     1   34025638 cciss/c0d0p1
+ 104     2          1 cciss/c0d0p2
+ 104     5    1502046 cciss/c0d0p5
+ 105     0 7325417080 cciss/c1d0
+ 105     1 [B]7325417046[/B] cciss/c1d0p1
+
+
+So, any idea what I could do ?
+
+Thanks a lot
+Amandine
