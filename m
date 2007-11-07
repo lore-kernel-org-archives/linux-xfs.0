@@ -1,114 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 23:36:32 -0800 (PST)
-Received: from astoria.ccjclearline.com (astoria.ccjclearline.com [64.235.106.9])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA77aMvs007362
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 23:36:26 -0800
-Date: Wed, 7 Nov 2007 02:34:36 -0500 (EST)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: [PATCH] XFS: Use kernel-supplied "roundup_pow_of_two" for simplicity.
-Message-ID: <Pine.LNX.4.64.0711070232250.2891@localhost.localdomain>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 07 Nov 2007 01:34:56 -0800 (PST)
+Received: from postoffice.aconex.com (mail.app.aconex.com [203.89.192.138])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA79YoO4025749
+	for <xfs@oss.sgi.com>; Wed, 7 Nov 2007 01:34:52 -0800
+Message-ID: <56697.192.168.3.1.1194428121.squirrel@mail.aconex.com>
+In-Reply-To: <cc7060690711062142h3668e831o8fc49bdb5a1615bf@mail.gmail.com>
+References: <20071102024314.9BF3458C38F7@chook.melbourne.sgi.com>
+    <cc7060690711051042h5c39c540mf60f95e2f67c7bd7@mail.gmail.com>
+    <20071106001223.GY66820511@sgi.com>
+    <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+    <20071106204100.GW995458@sgi.com>
+    <1194388733.3862.206.camel@edge.yarra.acx>
+    <cc7060690711062142h3668e831o8fc49bdb5a1615bf@mail.gmail.com>
+Date: Wed, 7 Nov 2007 20:35:21 +1100 (EST)
+Subject: Re: TAKE 972756 - Implement fallocate.
+From: nscott@aconex.com
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: dgc@sgi.com
+To: Bhagi rathi <jahnu77@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
+> Since size log change and data I/O are not binded, it is always possible
+> that size can reach to the
+> disk before I/O reaching to the disk.
 
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+Not clear what that has to do with whether partial blocks are zeroed or not?
+Can you give a specific series of steps that would demonstrate a problem?
+(preferably with a test case)
 
----
+> Also, the other problem is because
+> of
+> speculative allocation.
+> A write-back allocation can leady to allocation of delayed extents into
+> real
+> and gets pruned only
+> close of the file.
+> Before that, we get fallocate, it allocates the exents,
+> but the extents residing
+> because of delayed allocation write-back will not have zero'ed content.
 
-  compile-tested on i386.
+Again, I think a test case demonstrating the problem would go a long way
+to helping explain the issue.
 
+The preallocation code and ioctl interface have been in XFS forever on
+Linux - are you reporting problems you've actually observed here, or
+are these rather "potential issues" that you foresee from code analysis?
 
- fs/xfs/xfs_inode.c |   32 ++++----------------------------
- fs/xfs/xfs_inode.h |    1 -
- 2 files changed, 4 insertions(+), 29 deletions(-)
+cheers.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index abf509a..bcc3d27 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -15,6 +15,8 @@
-  * along with this program; if not, write the Free Software Foundation,
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
-+#include <linux/log2.h>
-+
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_types.h"
-@@ -3672,32 +3674,6 @@ xfs_iaccess(
- 	return XFS_ERROR(EACCES);
- }
-
--/*
-- * xfs_iroundup: round up argument to next power of two
-- */
--uint
--xfs_iroundup(
--	uint	v)
--{
--	int i;
--	uint m;
--
--	if ((v & (v - 1)) == 0)
--		return v;
--	ASSERT((v & 0x80000000) == 0);
--	if ((v & (v + 1)) == 0)
--		return v + 1;
--	for (i = 0, m = 1; i < 31; i++, m <<= 1) {
--		if (v & m)
--			continue;
--		v |= m;
--		if ((v & (v + 1)) == 0)
--			return v + 1;
--	}
--	ASSERT(0);
--	return( 0 );
--}
--
- #ifdef XFS_ILOCK_TRACE
- ktrace_t	*xfs_ilock_trace_buf;
-
-@@ -4204,7 +4180,7 @@ xfs_iext_realloc_direct(
- 			return;
- 		}
- 		if (!is_power_of_2(new_size)){
--			rnew_size = xfs_iroundup(new_size);
-+			rnew_size = roundup_pow_of_two(new_size);
- 		}
- 		if (rnew_size != ifp->if_real_bytes) {
- 			ifp->if_u1.if_extents =
-@@ -4227,7 +4203,7 @@ xfs_iext_realloc_direct(
- 	else {
- 		new_size += ifp->if_bytes;
- 		if (!is_power_of_2(new_size)) {
--			rnew_size = xfs_iroundup(new_size);
-+			rnew_size = roundup_pow_of_two(new_size);
- 		}
- 		xfs_iext_inline_to_direct(ifp, rnew_size);
- 	}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index e5aff92..e3a552e 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -568,7 +568,6 @@ int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_t *, int);
- int		xfs_iflush(xfs_inode_t *, uint);
- void		xfs_iflush_all(struct xfs_mount *);
- int		xfs_iaccess(xfs_inode_t *, mode_t, cred_t *);
--uint		xfs_iroundup(uint);
- void		xfs_ichgtime(xfs_inode_t *, int);
- xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
- void		xfs_lock_inodes(xfs_inode_t **, int, int, uint);
-
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+--
+Nathan
