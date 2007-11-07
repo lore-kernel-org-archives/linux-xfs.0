@@ -1,73 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 21:19:05 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lA75Isf5024386
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 21:18:57 -0800
-Date: Wed, 7 Nov 2007 16:18:48 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: use is_power_of_2() macro?
-Message-ID: <20071107051848.GI995458@sgi.com>
-References: <Pine.LNX.4.64.0711061026210.9329@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 Nov 2007 21:42:36 -0800 (PST)
+Received: from nz-out-0506.google.com (nz-out-0506.google.com [64.233.162.224])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lA75gOGb026653
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2007 21:42:25 -0800
+Received: by nz-out-0506.google.com with SMTP id x3so1391256nzd
+        for <xfs@oss.sgi.com>; Tue, 06 Nov 2007 21:42:29 -0800 (PST)
+Message-ID: <cc7060690711062142h3668e831o8fc49bdb5a1615bf@mail.gmail.com>
+Date: Wed, 7 Nov 2007 11:12:28 +0530
+From: "Bhagi rathi" <jahnu77@gmail.com>
+Subject: Re: TAKE 972756 - Implement fallocate.
+In-Reply-To: <1194388733.3862.206.camel@edge.yarra.acx>
+MIME-Version: 1.0
+References: <20071102024314.9BF3458C38F7@chook.melbourne.sgi.com>
+	 <cc7060690711051042h5c39c540mf60f95e2f67c7bd7@mail.gmail.com>
+	 <20071106001223.GY66820511@sgi.com>
+	 <cc7060690711060927n1ea8a489n9f02029a11b73b00@mail.gmail.com>
+	 <20071106204100.GW995458@sgi.com>
+	 <1194388733.3862.206.camel@edge.yarra.acx>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0711061026210.9329@localhost.localdomain>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Cc: xfs@oss.sgi.com
+To: nscott@aconex.com
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Nov 06, 2007 at 10:28:44AM -0500, Robert P. J. Day wrote:
-> 
->   given this in fs/xfs/xfs_inode.c:
-> 
-> /*
->  * xfs_iroundup: round up argument to next power of two
->  */
-> uint
-> xfs_iroundup(
->         uint    v)
-> {
->         int i;
->         uint m;
-> 
->         if ((v & (v - 1)) == 0)
->                 return v;
->         ASSERT((v & 0x80000000) == 0);
->         if ((v & (v + 1)) == 0)
->                 return v + 1;
->         for (i = 0, m = 1; i < 31; i++, m <<= 1) {
->                 if (v & m)
->                         continue;
->                 v |= m;
->                 if ((v & (v + 1)) == 0)
->                         return v + 1;
->         }
->         ASSERT(0);
->         return( 0 );
-> }
-> 
->   is there any reason that can't be rewritten with simply
-> roundup_pow_of_two() as defined in include/linux/log2.h?
-> 
-> #define roundup_pow_of_two(n)                   \
-> (                                               \
->         __builtin_constant_p(n) ? (             \
->                 (n == 1) ? 1 :                  \
->                 (1UL << (ilog2((n) - 1) + 1))   \
->                                    ) :          \
->         __roundup_pow_of_two(n)                 \
->  )
-> 
->   just curious.
+Since size log change and data I/O are not binded, it is always possible
+that size can reach to the
+disk before I/O reaching to the disk. Also, the other problem is because of
+speculative allocation.
+A write-back allocation can leady to allocation of delayed extents into real
+and gets pruned only
+close of the file. Before that, we get fallocate, it allocates the exents,
+but the extents residing
+because of delayed allocation write-back will not have zero'ed content.
 
-No - patch please.
+Conceptually, fallocate if it intends to change size, it is no way different
+from size extending write.
+ We do xfs_zero_eof for write and not  in this case. Probably, I am missing
+the context of usage of
+ fallocate if it has some semantics over-loaded.
 
-Cheers,
+-Thanks,
+  Bhagi.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+On 11/7/07, Nathan Scott <nscott@aconex.com> wrote:
+>
+> On Wed, 2007-11-07 at 07:41 +1100, David Chinner wrote:
+> > >  Preallocation happened from 1k to 256k. Now, it looks to me that we
+> > have
+> > > un-written extents from 4k to 256k. There is no guarantee that data
+> > from 1k
+> > > to 4k is all zero'es.
+>
+> That guarantee does exist - when the initial 1K block write is done, the
+> end of the block is zeroed (by the kernel write path).  This is always
+> done (guaranteed) and is required independently to unwritten extents.
+>
+> cheers.
+>
+> --
+> Nathan
+>
+>
+
+
+[[HTML alternate version deleted]]
