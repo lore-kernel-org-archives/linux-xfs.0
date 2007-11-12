@@ -1,70 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Nov 2007 16:08:37 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Nov 2007 17:58:23 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAC08Ro0029596
-	for <xfs@oss.sgi.com>; Sun, 11 Nov 2007 16:08:31 -0800
-Message-ID: <473799A9.9000200@sgi.com>
-Date: Mon, 12 Nov 2007 11:09:13 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [xfs-masters] [PATCH] fs/xfs: remove duplicated defines
-References: <20071111134351.106efb98@lucky.kitzblitz> <473796EF.6050104@sandeen.net>
-In-Reply-To: <473796EF.6050104@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAC1wFBK012219
+	for <xfs@oss.sgi.com>; Sun, 11 Nov 2007 17:58:18 -0800
+Date: Mon, 12 Nov 2007 12:58:10 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: files getting truncated on xfs
+Message-ID: <20071112015810.GX995458@sgi.com>
+References: <4736987E.4000208@danbala.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4736987E.4000208@danbala.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, kernel-janitors@vger.kernel.org
+To: Dirck Blaskey <listtarget2@danbala.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Nicolas Kaiser wrote:
->> Remove duplicated defines.
->>
->> Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
->> ---
-> 
-> Heh, each defined twice, but used 0 times in the kernel.  Could probably
-> just remove them altogether (though I guess btoc is used in
-> xfstests/ltp/doio.c in userspace/xfstests, but that's the *only* place)
-> 
-Yes, that's what I was just noticing - how they are not used anyway.
+On Sat, Nov 10, 2007 at 09:51:58PM -0800, Dirck Blaskey wrote:
+> Although there was a truncation bug listed as introduced in 2.6.21 and 
+> fixed before 2.6.22,
 
- > grep -Ir btoc . | egrep -v 'tag|anot'
-./linux-2.6/xfs_linux.h:#define btoc(x)         (((__psunsigned_t)(x)+(NBPC-1))>>BPCSHIFT)
-./linux-2.6/xfs_linux.h:#define btoct(x)        ((__psunsigned_t)(x)>>BPCSHIFT)
-./linux-2.6/xfs_linux.h:#define btoc64(x)       (((__uint64_t)(x)+(NBPC-1))>>BPCSHIFT)
-./linux-2.6/xfs_linux.h:#define btoct64(x)      ((__uint64_t)(x)>>BPCSHIFT)
-./linux-2.6/xfs_linux.h:#define btoct(x)        ((__psunsigned_t)(x)>>BPCSHIFT)
-./linux-2.6/xfs_linux.h:#define btoc(x)         (((__psunsigned_t)(x)+(NBPC-1))>>BPCSHIFT)
-./linux-2.6/xfs_buf.c:  page_count = xfs_buf_btoc(end) - xfs_buf_btoct(bp->b_file_offset);
-./linux-2.6/xfs_buf.c:          page = bp->b_pages[xfs_buf_btoct(boff + bp->b_offset)];
-./linux-2.6/xfs_buf.h:#define xfs_buf_btoc(dd)  (((dd) + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT)
-./linux-2.6/xfs_buf.h:#define xfs_buf_btoct(dd) ((dd) >> PAGE_CACHE_SHIFT)
+can you be more specific? i.e. a link to the bug report?
 
---Tim
+> I had a number of truncations occur with Ubuntu Gutsy Gibbon (kernel 
+> 2.6.22) AMD64 build
+> using XFS on RAID 1 partition, so apparently it's not fixed.  This 
+> looked very much like
+> the bug described previously - a number of files truncated to block 
+> boundaries on restart.
 
-> -Eric
-> 
->>  fs/xfs/linux-2.6/xfs_linux.h |    4 ----
->>  1 file changed, 4 deletions(-)
->>
->> --- a/fs/xfs/linux-2.6/xfs_linux.h	2007-11-07 11:26:20.000000000 +0100
->> +++ b/fs/xfs/linux-2.6/xfs_linux.h	2007-11-11 13:07:11.000000000 +0100
->> @@ -167,12 +167,8 @@
->>  
->>  /* clicks to bytes */
->>  #define	ctob(x)		((__psunsigned_t)(x)<<BPCSHIFT)
->> -#define btoct(x)        ((__psunsigned_t)(x)>>BPCSHIFT)
->>  #define	ctob64(x)	((__uint64_t)(x)<<BPCSHIFT)
->>  
->> -/* bytes to clicks */
->> -#define btoc(x)         (((__psunsigned_t)(x)+(NBPC-1))>>BPCSHIFT)
->> -
->>  #define ENOATTR		ENODATA		/* Attribute not found */
->>  #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
->>  #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
->>
->>
-> 
+What is the test case you have that shows this bug?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
