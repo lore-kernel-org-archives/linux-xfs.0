@@ -1,108 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Nov 2007 05:25:40 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lACDNps9028219
-	for <xfs@oss.sgi.com>; Mon, 12 Nov 2007 05:23:53 -0800
-Date: Mon, 12 Nov 2007 20:01:47 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [[PATCH, RESEND]] less AGs for single disks configs.
-Message-ID: <20071112090147.GD66820511@sgi.com>
-References: <20071031233516.GB88034736@melbourne.sgi.com> <1194839329-22003-1-git-send-email-xaiki@sgi.com> <1194839329-22003-2-git-send-email-xaiki@sgi.com> <1194839329-22003-3-git-send-email-xaiki@sgi.com> <1194839329-22003-4-git-send-email-xaiki@sgi.com> <1194839329-22003-5-git-send-email-xaiki@sgi.com> <1194839329-22003-6-git-send-email-xaiki@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1194839329-22003-6-git-send-email-xaiki@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Nov 2007 06:19:26 -0800 (PST)
+Received: from r2d2.neofacto.lu (mail.neofacto.lu [158.64.60.195])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lACEICKR008576
+	for <xfs@oss.sgi.com>; Mon, 12 Nov 2007 06:18:16 -0800
+Received: from localhost (localhost [127.0.0.1])
+	by r2d2.neofacto.lu (Postfix) with ESMTP id E39C6C3045
+	for <xfs@oss.sgi.com>; Mon, 12 Nov 2007 13:20:24 +0100 (CET)
+Received: from r2d2.neofacto.lu ([127.0.0.1])
+	by localhost (r2d2.neofacto.lu [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ec4w8O+pedUu for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2007 13:20:11 +0100 (CET)
+Received: from [192.168.1.166] (SU105.tudor.lu [158.64.4.205])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by r2d2.neofacto.lu (Postfix) with ESMTP id 84217C3045
+	for <xfs@oss.sgi.com>; Mon, 12 Nov 2007 13:20:02 +0100 (CET)
+Message-ID: <473844ED.7080605@jamendo.com>
+Date: Mon, 12 Nov 2007 13:19:57 +0100
+From: Amandine AUPETIT <amandine@jamendo.com>
+MIME-Version: 1.0
+Subject: xfs options
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xaiki@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2007 at 02:48:49PM +1100, xaiki@sgi.com wrote:
-> From: Niv Sardi <xaiki@sgi.com>
-> 
-> get the underlying structure with get_subvol_stripe_wrapper(),
-> and pass sunit | swidth as an argument to calc_default_ag_geometry().
-> 
-> if it is set, get the AG sizes bigger.
-> 
-> this also cleans up a typo:
-> -       } else if (daflag)      /* User-specified AG size */
-> +       } else if (daflag)      /* User-specified AG count */
+Hi :)
 
-No need to mention that you are cleaning up a typo in the description ;)
+I have a 7tb XFS filesystem. The partition is supposed to stock big 
+files between 2mo and 50mo. Quite no small files.
 
-> ---
->  xfsprogs/mkfs/xfs_mkfs.c |   18 ++++++++++++------
->  1 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/xfsprogs/mkfs/xfs_mkfs.c b/xfsprogs/mkfs/xfs_mkfs.c
-> index 78c2c77..4cf9975 100644
-> --- a/xfsprogs/mkfs/xfs_mkfs.c
-> +++ b/xfsprogs/mkfs/xfs_mkfs.c
-> @@ -393,6 +393,7 @@ void
->  calc_default_ag_geometry(
->  	int		blocklog,
->  	__uint64_t	dblocks,
-> +	int		multidisk,
->  	__uint64_t	*agsize,
->  	__uint64_t	*agcount)
->  {
-> @@ -428,12 +429,13 @@ calc_default_ag_geometry(
->  	 *
->  	 * This scales us up smoothly between min/max AG sizes.
->  	 */
-> +
->  	if (dblocks > GIGABYTES(512, blocklog))
-> -		shift = 5;
-> +		shift = 5 - (multidisk == 0);
->  	else if (dblocks > GIGABYTES(8, blocklog))
-> -		shift = 4;
-> +		shift = 4 - (multidisk == 0);
->  	else if (dblocks >= MEGABYTES(128, blocklog))
-> -		shift = 3;
-> +		shift = 3 - (multidisk == 0);
->  	else
->  		ASSERT(0);
+So i'm trying to adapt the mount option to what I need, and what I need 
+is security. I want to be sure that NONE of the files will be lost, even 
+if there's a power failure.
+For now, I just tried the noatime mount option, I know there is a lot of 
+options, but I don't really understand what they stand for.
 
-Ok, so now we end up with half the number of allocation groups
-at these different sizes. That's not exactly what I had in mind.
-basically, what you've done works out as:
+Do you have any suggestion to make my filesystem safer ?
 
-	> 512GB  old = 32 AGs, new = 16AGs
-	> 8 GB   old = 16 AGs, new = 8AGs
-	> 128MB  old = 8 AGs, new = 4AGs
+Thanks
 
-on an 8Gb filesystem we still get 8 AGs, which is far too many.
-on a 750GB disk, we still get 16AGs, which to far too many.
-
-A single spindle, regardless of it's size, will have similar
-seek characteristics so scaling the number of AGs with size
-is the wrong thing to do - you don't get better parallelism
-out of a single spindle, just more seeks and lower performance.
-hence keeping the number of AGs fixed up to the point where
-the AG size tops out (i.e. 4TB) seems like a better scaling
-factor to me. i.e. something like:
-
-
-	if (!multidisk) {
-		if (dblocks >= TERABYTES(4, blocklog)) {
-			blocks = XFS_AG_MAX_BLOCKS(blocklog);
-			goto done;
-		}
-		agcount = 4;
-		/* work out ag size here */
-		goto done;
-	}
-
-I'd also like to see some test results showing the mkfs output
-for the different configurations to confirm it works correctly
-(i.e. that the corner cases work correctly).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Amandine
