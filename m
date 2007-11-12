@@ -1,145 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Nov 2007 18:56:49 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 11 Nov 2007 19:11:00 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAC2udRs019827
-	for <xfs@oss.sgi.com>; Sun, 11 Nov 2007 18:56:43 -0800
-Message-ID: <4737C11D.8030007@sgi.com>
-Date: Mon, 12 Nov 2007 13:57:33 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH] bulkstat fixups
-References: <4733EEF2.9010504@sgi.com> <20071111214759.GS995458@sgi.com>
-In-Reply-To: <20071111214759.GS995458@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAC3ApTg021497
+	for <xfs@oss.sgi.com>; Sun, 11 Nov 2007 19:10:55 -0800
+Date: Mon, 12 Nov 2007 14:10:49 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Default mount options (that suck less).
+Message-ID: <20071112031049.GS66820511@sgi.com>
+References: <20071029075657.GA84369978@melbourne.sgi.com> <20071031233516.GB88034736@melbourne.sgi.com> <20071112022806.GB102580300@melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071112022806.GB102580300@melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Niv Sardi <xaiki@sgi.com>
+Cc: xfs@oss.sgi.com
 
-David Chinner wrote:
-> [Lachlan, can you wrap your email text at 72 columns for ease of quoting?]
+On Mon, Nov 12, 2007 at 01:28:06PM +1100, Niv Sardi wrote:
+> No gnus is bad news ?
 > 
-> On Fri, Nov 09, 2007 at 04:24:02PM +1100, Lachlan McIlroy wrote:
->> Here's a collection of fixups for bulkstat for all the remaining issues.
->>
->> - sanity check for NULL user buffer in xfs_ioc_bulkstat[_compat]()
-> 
-> OK.
-> 
->> - remove the special case for XFS_IOC_FSBULKSTAT with count == 1.  This 
->> special
->>   case causes bulkstat to fail because the special case uses 
->>   xfs_bulkstat_single()
->>   instead of xfs_bulkstat() and the two functions have different semantics.
->>   xfs_bulkstat() will return the next inode after the one supplied while 
->>   skipping
->>   internal inodes (ie quota inodes).  xfs_bulkstate_single() will only 
->>   lookup the
->>   inode supplied and return an error if it is an internal inode.
-> 
-> Userspace visile change. What applications do we have that rely on this
-> behaviour that will be broken by this change?
+> Shall I interpret the lack of comments as "everything is fine, just commit the damn thing ?"
 
-Any apps that rely on the existing behaviour are probably broken.  If an app
-wants to call xfs_bulkstat_single() it should use XFS_IOC_FSBULKSTAT_SINGLE.
+Lack of comments to what?
 
-Alex Elder reported he has a test program that exploited this bug to compare
-the results of xfs_bulkstat_one (does an iget) with the results of an
-xfs_bulkstat (copying the inode from the cluster).  That should be easy to fix.
+I haven't seen whatever patches you've sent which means wither you
+didn't tag the email as "[PATCH N/M]..." or "[REVIEW]..." and I
+didn't notice the attachments (nope, I see no patches in my archives
+of this thread) or, more likely, a spam filter along the way ate
+them.  If you get no answer you resend the patches with [PATCH,
+RESEND] in the title....
 
-Other than that it doesn't make sense for an app to use bulkstat to get one
-inode at a time but if they do it will now work correctly.
+Can you please resend all the patches you want reviewed as a patch
+per email?
 
-> 
->> - in xfs_bulkstat(), need to initialise 'lastino' to the inode supplied so 
->> in cases
->>   were we return without examining any inodes the scan wont restart back at 
->>   zero.
-> 
-> Ok.
-> 
->> - sanity check for valid *ubcountp values.  Cannot sanity check for valid 
->> ubuffer
->>   here because some users of xfs_bulkstat() don't supply a buffer.
-> 
-> Ok - the cases that supply a buffer are caught by the first checks you
-> added, right?
-> 
->> - checks against 'ubleft' (the space left in the user's buffer) should be 
->> against
->>   'statstruct_size' which is the supplied minimum object size.  The mixture 
->>   of
->>   checks against statstruct_size and 0 was one of the reasons we were 
->>   skipping
->>   inodes.
-> 
-> Can you wrap these checks in a static inline function so that it is obvious
-> what the correct way to check is and we don't reintroduce this porblem? i.e.
-> 
-> static inline int
-> xfs_bulkstat_ubuffer_large_enough(ssize_t space)
-> {
-> 	return (space > sizeof(struct blah));
-> }
-> 
-> That will also remove a stack variable....
+Cheers,
 
-That won't work - statstruct_size is passed into xfs_bulkstat() so we don't
-know what 'blah' is.  Maybe a macro would be easier.
-
-#define XFS_BULKSTAT_UBLEFT	(ubleft >= statstruct_size)
-
-> 
->> - if the formatter function returns BULKSTAT_RV_NOTHING and an error and 
->> the error
->>   is not ENOENT or EINVAL then we need to abort the scan.  ENOENT is for 
->>   inodes that
->>   are no longer valid and we just skip them.  EINVAL is returned if we try 
->>   to lookup
->>   an internal inode so we skip them too.  For a DMF scan if the inode and 
->>   DMF
->>   attribute cannot fit into the space left in the user's buffer it would 
->>   return
->>   ERANGE.  We didn't handle this error and skipped the inode.  We would 
->>   continue to
->>   skip inodes until one fitted into the user's buffer or we completed the 
->>   scan.
-> 
-> ok.
-> 
->> - put back the recalculation of agino (that got removed with the last fix) 
->> at the
->>   end of the while loop.  This is because the code at the start of the loop 
->>   expects
->>   agino to be the last inode examined if it is non-zero.
-> 
-> ok.
-> 
->> - if we found some inodes but then encountered an error, return success 
->> this time
->>   and the error next time.  If the formatter aborted with ENOMEM we will 
->>   now return
->>   this error but only if we couldn't read any inodes.  Previously if we 
->>   encountered
->>   ENOMEM without reading any inodes we returned a zero count and no error 
->>   which
->>   falsely indicated the scan was complete.
-> 
-> ok.
-> 
-> FWIW - missing from this set of patches - cpu_relax() in the loops. In the case
-> where no I/O is required to do the scan, we can hold the cpu for a long time
-> and that will hold off I/O completion, etc for the cpu bulkstat is running on.
-> Hence after every cluster we scan we should cpu_relax() to allow other
-> processes cpu time on that cpu.
-> 
-
-I don't get how cpu_relax() works.  I see that it is called at times with a
-spinlock held so it wont trigger a context switch.  Does it give interrupts a
-chance to run?
-
-It appears to be used where a minor delay is needed - I don't think we have any
-cases in xfs_bulkstat() where we need to wait for an event that isn't I/O.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
