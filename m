@@ -1,39 +1,26 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 Nov 2007 20:47:44 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAD4lR51022635
-	for <xfs@oss.sgi.com>; Mon, 12 Nov 2007 20:47:31 -0800
-Date: Tue, 13 Nov 2007 15:47:27 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: RESEND(2)
-Message-ID: <20071113044727.GK995458@sgi.com>
-References: <20071029075657.GA84369978@melbourne.sgi.com> <1194927057-26415-1-git-send-email-xaiki@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 Nov 2007 07:59:03 -0800 (PST)
+Received: from rn-out-0102.google.com (rn-out-0910.google.com [64.233.170.190])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lADFwtCx024225
+	for <xfs@oss.sgi.com>; Tue, 13 Nov 2007 07:58:56 -0800
+Received: by rn-out-0102.google.com with SMTP id a43so968368rne
+        for <xfs@oss.sgi.com>; Tue, 13 Nov 2007 07:59:02 -0800 (PST)
+Message-ID: <b960da9c0711130657t275936fcj747e8ce041c56110@mail.gmail.com>
+Date: Tue, 13 Nov 2007 22:57:08 +0800
+From: fatcat <wayne1017@gmail.com>
+Subject: Latest version of XFS
+MIME-Version: 1.0
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <1194927057-26415-1-git-send-email-xaiki@sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xaiki@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Nov 13, 2007 at 03:10:51PM +1100, xaiki@sgi.com wrote:
-> 
-> Added descriptions to first patches,
-> Added extended description for unwritten extents, updated manpages.
-> Refactored XFS_DFL_SB_VERSION_BITS as suggested by dave.
-> Added in-code description for reduced imaxpct for big filesystems.
->       made calc_default_imaxpct stati, as suggested by dave.
-> Removed mention to cleaning typos ;)
->       implemented new logics as suggested by dave.
+Hello,
+I'm new to XFS, and I want to know the latest version of XFS.
+xfs1.2 ? or  xfs1.4 ?
 
-All looks ok now, Niv. Good work.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+[[HTML alternate version deleted]]
