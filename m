@@ -1,140 +1,309 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 Nov 2007 07:00:03 -0800 (PST)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.244])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAEExpa7029544
-	for <xfs@oss.sgi.com>; Wed, 14 Nov 2007 06:59:54 -0800
-Received: by an-out-0708.google.com with SMTP id d11so74181and
-        for <xfs@oss.sgi.com>; Wed, 14 Nov 2007 06:59:57 -0800 (PST)
-Message-ID: <e4eb41060711140635l4c96795cq18841150d2f7287f@mail.gmail.com>
-Date: Wed, 14 Nov 2007 15:35:53 +0100
-From: "=?ISO-8859-2?Q?Rafa=B3_Rzepecki?=" <divided.mind@gmail.com>
-Subject: Possible bug in XFS causing scheduling while atomic BUG in Linux 2.6.23
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 Nov 2007 07:05:21 -0800 (PST)
+Received: from SVITS26.main.ad.rit.edu (svits26.main.ad.rit.edu [129.21.18.136])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAEF5AVN030737
+	for <xfs@oss.sgi.com>; Wed, 14 Nov 2007 07:05:11 -0800
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Disposition: inline
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+Date: Wed, 14 Nov 2007 10:05:52 -0500
+Message-ID: <06CCEA2EB1B80A4A937ED59005FA855101AED622@svits26.main.ad.rit.edu>
+In-Reply-To: <06CCEA2EB1B80A4A937ED59005FA855101AED213@svits26.main.ad.rit.edu>
+From: "Jay Sullivan" <jpspgd@rit.edu>
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: Jay Sullivan <jpspgd@rit.edu>
 
-Hi!
+Of course this had to happen one more time before my scheduled
+maintenance window...  Anyways, here's all of the good stuff I
+collected.  Can anyone make sense of it?  Oh, and I upgraded to xfsprogs
+2.9.4 last week, so all output you see is with that version.  
 
-Please forgive me if it's not the right place to report that (and do
-point me to the right place in that case); I also apologize if this
-report is missing any important information: this is my first time
-reporting a kernel bug.
+Thanks!
 
-Anyway, I've run into a kernel bug, and from the trace I assume it's
-xfs's fault.
-Relevant messages:
-Nov 14 14:47:18 [kernel] BUG: scheduling while atomic: mlnet/0x00000002/11031
-Nov 14 14:47:18 [kernel]  [<c04841ce>] __sched_text_start+0x2be/0x397
-Nov 14 14:47:18 [kernel]  [<c04859d4>] __down+0x7e/0x112
-Nov 14 14:47:18 [kernel]  [<c0118a69>] default_wake_function+0x0/0xc
-Nov 14 14:47:18 [kernel]  [<c0485903>] __down_failed+0x7/0xc
-Nov 14 14:47:18 [kernel]  [<c0283cb5>] xfs_buf_lock+0x2d/0x35
-Nov 14 14:47:18 [kernel]  [<c0270d40>] xfs_getsb+0x25/0x32
-Nov 14 14:47:18 [kernel]  [<c027556f>] xfs_trans_getsb+0x2d/0x8f
-Nov 14 14:47:18 [kernel]  [<c0273cb8>] xfs_trans_apply_sb_deltas+0x15/0x5cd
-Nov 14 14:47:18 [kernel]  [<c022a6e1>] xfs_alloc_mark_busy+0xa3/0xb1
-Nov 14 14:47:18 [kernel]  [<c02745f0>] _xfs_trans_commit+0x90/0x32c
-Nov 14 14:47:18 [kernel]  [<c022a628>] xfs_free_extent+0xcd/0xe3
-Nov 14 14:47:18 [kernel]  [<c028111a>] kmem_zone_alloc+0x45/0xbc
-Nov 14 14:47:18 [kernel]  [<c023bd69>] xfs_bmap_finish+0x11e/0x169
-Nov 14 14:47:18 [kernel]  [<c02811b7>] kmem_zone_zalloc+0x26/0x4f
-Nov 14 14:47:18 [kernel]  [<c025d799>] xfs_itruncate_finish+0x168/0x3f8
-Nov 14 14:47:18 [kernel]  [<c0275ff2>] xfs_trans_ijoin+0x2b/0x86
-Nov 14 14:47:18 [kernel]  [<c027b3ba>] xfs_free_eofblocks+0x2a4/0x2db
-Nov 14 14:47:18 [kernel]  [<c027bb15>] xfs_release+0x1b1/0x21b
-Nov 14 14:47:18 [kernel]  [<c0172403>] d_kill+0x40/0x52
-Nov 14 14:47:18 [kernel]  [<c0285411>] xfs_file_release+0x13/0x1a
-Nov 14 14:47:18 [kernel]  [<c0162f72>] __fput+0x14d/0x17d
-Nov 14 14:47:18 [kernel]  [<c01616eb>] filp_close+0x3c/0x7b
-Nov 14 14:47:18 [kernel]  [<c011e0bd>] close_files+0x71/0x93
-Nov 14 14:47:18 [kernel]  [<c011e13e>] put_files_struct+0x27/0x6b
-Nov 14 14:47:18 [kernel]  [<c011eb4e>] do_exit+0x14d/0x43f
-Nov 14 14:47:18 [kernel]  [<c0103cb9>] do_trap+0x0/0x10c
-Nov 14 14:47:18 [kernel]  [<c0113329>] do_page_fault+0x2c5/0x62c
-Nov 14 14:47:18 [kernel]  [<c0113064>] do_page_fault+0x0/0x62c
-Nov 14 14:47:18 [kernel]  [<c0485cda>] error_code+0x6a/0x70
-Nov 14 14:47:18 [kernel]  [<c0118a88>] __wake_up_common+0x13/0x56
-Nov 14 14:47:18 [kernel]  [<c01028b2>] need_resched+0x1f/0x21
-Nov 14 14:47:18 [kernel]  [<c0118afc>] __wake_up+0x31/0x63
-Nov 14 14:47:18 [kernel]  [<c0283d1d>] xfs_buf_unpin+0x29/0x2d
-Nov 14 14:47:18 [kernel]  [<c0245a2f>] xfs_buf_item_unpin+0x34/0xc2
-Nov 14 14:47:18 [kernel]  [<c0274d38>] xfs_trans_chunk_committed+0x11a/0x156
-Nov 14 14:47:18 [kernel]  [<c0274c0f>] xfs_trans_committed+0xdb/0xea
-Nov 14 14:47:18 [kernel]  [<c0267d78>] xlog_state_do_callback+0x148/0x2e3
-Nov 14 14:47:18 [kernel]  [<c0283e0e>] xfs_buf_iodone_work+0x24/0x2f
-Nov 14 14:47:18 [kernel]  [<c028431c>] xfs_buf_iorequest+0x63/0x65
-Nov 14 14:47:18 [kernel]  [<c0266865>] xlog_bdstrat_cb+0x16/0x3d
-Nov 14 14:47:18 [kernel]  [<c0267155>] xlog_sync+0x206/0x483
-Nov 14 14:47:18 [kernel]  [<c0274d8a>] xfs_trans_tail_ail+0x16/0x44
-Nov 14 14:47:18 [kernel]  [<c0268c70>] xlog_state_sync_all+0x1b0/0x269
-Nov 14 14:47:18 [kernel]  [<c027569c>] xfs_trans_read_buf+0xcb/0x34e
-Nov 14 14:47:18 [kernel]  [<c0265cd3>] _xfs_log_force+0x58/0x5e
-Nov 14 14:47:18 [kernel]  [<c025a9f7>] xfs_iget_core+0x4ca/0x74f
-Nov 14 14:47:18 [kernel]  [<c028a39c>] xfs_fs_alloc_inode+0xf/0x1c
-Nov 14 14:47:18 [kernel]  [<c025ad3c>] xfs_iget+0xc0/0x11e
-Nov 14 14:47:18 [kernel]  [<c0275f1e>] xfs_trans_iget+0xc2/0x16b
-Nov 14 14:47:18 [kernel]  [<c025cf1e>] xfs_ialloc+0xcf/0x5d7
-Nov 14 14:47:18 [kernel]  [<c0276919>] xfs_dir_ialloc+0x85/0x2aa
-Nov 14 14:47:18 [kernel]  [<c0273961>] xfs_trans_reserve+0x80/0x1e6
-Nov 14 14:47:18 [kernel]  [<c027c38d>] xfs_create+0x248/0x684
-Nov 14 14:47:18 [kernel]  [<c02263ca>] xfs_acl_vhasacl_default+0x3a/0x4b
-Nov 14 14:47:18 [kernel]  [<c0287b08>] xfs_vn_mknod+0x246/0x370
-Nov 14 14:47:18 [kernel]  [<c028811f>] xfs_vn_permission+0xf/0x13
-Nov 14 14:47:18 [kernel]  [<c0288110>] xfs_vn_permission+0x0/0x13
-Nov 14 14:47:18 [kernel]  [<c0168cfa>] permission+0xd6/0xe9
-Nov 14 14:47:18 [kernel]  [<c016aad1>] vfs_create+0x8a/0xd8
-Nov 14 14:47:18 [kernel]  [<c016ad57>] open_namei_create+0x53/0xae
-Nov 14 14:47:18 [kernel]  [<c016b328>] open_namei+0x576/0x589
-Nov 14 14:47:18 [kernel]  [<c016129e>] do_filp_open+0x2e/0x5b
-Nov 14 14:47:18 [kernel]  [<c0161424>] get_unused_fd_flags+0x31/0xde
-Nov 14 14:47:18 [kernel]  [<c01615be>] do_sys_open+0x50/0xdd
-Nov 14 14:47:18 [kernel]  [<c0161667>] sys_open+0x1c/0x20
-Nov 14 14:47:18 [kernel]  [<c010291a>] sysenter_past_esp+0x5f/0x85
-Nov 14 14:47:18 [kernel]  =======================
+###################
 
-I haven't been doing anything in particular when that showed up, so I
-can't say what could have caused it. Anything more I can tell is that
-the system has been spinning with that bug for at least an hour: I
-have relatively short logs, so the earliest saved message is from
-13:50 and it's exactly the same trace.
+dmesg output
 
-Output from ver_linux:
-Linux divide 2.6.23-gentoo #5 PREEMPT Thu Nov 1 03:29:13 CET 2007 i686
-Intel(R) Celeron(R) CPU 2.26GHz GenuineIntel GNU/Linux
+###################
 
-Gnu C                  3.4.3-20050110
-Gnu make               3.81
-binutils               2.17
-util-linux             2.13
-mount                  2.13
-module-init-tools      3.1
-e2fsprogs              1.36
-reiserfsprogs          3.6.12
-xfsprogs               2.6.25
-PPP                    2.4.1
-Linux C Library        2.6
-Dynamic linker (ldd)   2.6
-Procps                 3.1.11
-Net-tools              1.60
-Kbd                    1.08
-oprofile               0.9.3
-Sh-utils               6.9
-udev                   103
-wireless-tools         29
-Modules Loaded         lp irtty_sir sir_dev ns558 gameport rtc_cmos
-nvidia r8180 ieee80211_rtl ieee80211_crypt_rtl
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 4533 of file
+fs/xfs/xfs_bmap.c.  Caller 0xc028c5a2
+ [<c026bc58>] xfs_bmap_read_extents+0x3bd/0x498
+ [<c028c5a2>] xfs_iread_extents+0x74/0xe1
+ [<c028fb02>] xfs_iext_realloc_direct+0xa4/0xe7
+ [<c028f3ef>] xfs_iext_add+0x138/0x272
+ [<c028c5a2>] xfs_iread_extents+0x74/0xe1
+ [<c026befd>] xfs_bmapi+0x1ca/0x173f
+ [<c02e2d7e>] elv_rb_add+0x6f/0x88
+ [<c02eb843>] as_update_rq+0x32/0x72
+ [<c02ec08b>] as_add_request+0x76/0xa4
+ [<c02e330c>] elv_insert+0xd5/0x142
+ [<c02e70ad>] __make_request+0xc8/0x305
+ [<c02e7480>] generic_make_request+0x122/0x1d9
+ [<c03ee0e3>] __map_bio+0x33/0xa9
+ [<c03ee36c>] __clone_and_map+0xda/0x34c
+ [<c0148fce>] mempool_alloc+0x2a/0xdb
+ [<c028aa3c>] xfs_ilock+0x58/0xa0
+ [<c029168b>] xfs_iomap+0x216/0x4b7
+ [<c02b2000>] __xfs_get_blocks+0x6b/0x226
+ [<c02f2792>] radix_tree_node_alloc+0x16/0x57
+ [<c02f2997>] radix_tree_insert+0xb0/0x126
+ [<c02b21e3>] xfs_get_blocks+0x28/0x2d
+ [<c0183a32>] block_read_full_page+0x192/0x346
+ [<c02b21bb>] xfs_get_blocks+0x0/0x2d
+ [<c028a667>] xfs_iget+0x145/0x150
+ [<c018982d>] do_mpage_readpage+0x530/0x621
+ [<c028aba1>] xfs_iunlock+0x43/0x84
+ [<c02a8096>] xfs_vget+0xe1/0xf2
+ [<c020a578>] find_exported_dentry+0x71/0x4b6
+ [<c014c4a4>] __do_page_cache_readahead+0x88/0x153
+ [<c0189aa4>] mpage_readpage+0x4b/0x5e
+ [<c02b21bb>] xfs_get_blocks+0x0/0x2d
+ [<c014c69d>] blockable_page_cache_readahead+0x4d/0xb9
+ [<c014c942>] page_cache_readahead+0x174/0x1a3
+ [<c014630f>] find_get_page+0x18/0x3a
+ [<c014684e>] do_generic_mapping_read+0x1b5/0x535
+ [<c012621a>] __capable+0x8/0x1b
+ [<c0146f6c>] generic_file_sendfile+0x68/0x83
+ [<c020eff2>] nfsd_read_actor+0x0/0x10f
+ [<c02b822f>] xfs_sendfile+0x94/0x164
+ [<c020eff2>] nfsd_read_actor+0x0/0x10f
+ [<c0211325>] nfsd_permission+0x6e/0x103
+ [<c02b4868>] xfs_file_sendfile+0x4c/0x5c
+ [<c020eff2>] nfsd_read_actor+0x0/0x10f
+ [<c020f445>] nfsd_vfs_read+0x344/0x361
+ [<c020eff2>] nfsd_read_actor+0x0/0x10f
+ [<c020f862>] nfsd_read+0xd8/0xf9
+ [<c021548e>] nfsd3_proc_read+0xb0/0x174
+ [<c02170b4>] nfs3svc_decode_readargs+0x0/0xf7
+ [<c020b535>] nfsd_dispatch+0x8a/0x1f5
+ [<c048c43e>] svcauth_unix_set_client+0x11d/0x175
+ [<c0488d73>] svc_process+0x4fd/0x681
+ [<c020b39b>] nfsd+0x163/0x273
+ [<c020b238>] nfsd+0x0/0x273
+ [<c01037fb>] kernel_thread_helper+0x7/0x10
+ =======================
+attempt to access beyond end of device
+dm-1: rw=0, want=6763361770196172808, limit=7759462400
+I/O error in filesystem ("dm-1") meta-data dev dm-1 block
+0x5ddc49b238000000       ("xfs_trans_read_buf") error 5 buf count 4096
+xfs_force_shutdown(dm-1,0x1) called from line 415 of file
+fs/xfs/xfs_trans_buf.c.  Return address = 0xc02baa25
+Filesystem "dm-1": I/O Error Detected.  Shutting down filesystem: dm-1
+Please umount the filesystem, and rectify the problem(s)
 
-If I can provide any more information, please don't hesitate to ask.
-Note that I'm using the gentoo flavour of kernel, so if I should
-report this first to Gentoo, do tell me that.
 
-ps. I'm not subscribed to the list, so I'd appreciate if any
-follow-ups were CCed to me.
--- 
-Kind regards
-- Rafa³ Rzepecki
+#######################
+
+At this point I umount'ed and mount'ed the FS several times, but
+xfs_repair still told me to use -L...  Any ideas?
+
+#######################
+
+server-files ~ # umount /mnt/san/
+server-files ~ # mount /mnt/san/
+server-files ~ # umount /mnt/san/
+server-files ~ # xfs_repair
+/dev/server-files-sanvg01/server-files-sanlv01 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+ERROR: The filesystem has valuable metadata changes in a log which needs
+to
+be replayed.  Mount the filesystem to replay the log, and unmount it
+before
+re-running xfs_repair.  If you are unable to mount the filesystem, then
+use
+the -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a
+mount
+of the filesystem before doing this.
+server-files ~ # xfs_repair -L
+/dev/server-files-sanvg01/server-files-sanlv01 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+ALERT: The filesystem has valuable metadata changes in a log which is
+being
+destroyed because the -L option was used.
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+4002: Badness in key lookup (length)
+bp=(bno 2561904, len 16384 bytes) key=(bno 2561904, len 8192 bytes)
+8003: Badness in key lookup (length)
+bp=(bno 0, len 512 bytes) key=(bno 0, len 4096 bytes)
+bad bmap btree ptr 0x5f808b0400000000 in ino 5123809
+bad data fork in inode 5123809
+cleared inode 5123809
+bad magic # 0x58465342 in inode 7480148 (data fork) bmbt block 0
+bad data fork in inode 7480148
+cleared inode 7480148
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+entry "Fuller_RotoscopeCorrected.mov" at block 0 offset 184 in directory
+inode 8992373 references free inode 7480148
+        clearing inode number in entry at offset 184...
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+4000: Badness in key lookup (length)
+bp=(bno 0, len 4096 bytes) key=(bno 0, len 512 bytes)
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+bad hash table for directory inode 8992373 (no data entry): rebuilding
+rebuilding directory inode 8992373
+4000: Badness in key lookup (length)
+bp=(bno 0, len 4096 bytes) key=(bno 0, len 512 bytes)
+4000: Badness in key lookup (length)
+bp=(bno 0, len 4096 bytes) key=(bno 0, len 512 bytes)
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+4000: Badness in key lookup (length)
+bp=(bno 0, len 4096 bytes) key=(bno 0, len 512 bytes)
+done
+server-files ~ # mount /mnt/san
+server-files ~ # umount /mnt/san
+server-files ~ # xfs_repair -L
+/dev/server-files-sanvg01/server-files-sanlv01 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+
+server-files ~ # xfs_repair
+/dev/server-files-sanvg01/server-files-sanlv01 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+XFS: totally zeroed log
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+
+################
+
+So that's it for now.  Next week I'll be rsyncing all of the data off of
+this volume to another array.  I still want to know what's happening,
+though...  *pout*
+
+Anyways, thanks a lot for everyone's help.
+
+~Jay
+
+
+-----Original Message-----
+From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] On Behalf
+Of Jay Sullivan
+Sent: Friday, November 02, 2007 10:49 AM
+To: xfs@oss.sgi.com
+Subject: RE: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+
+What can I say about Murphy and his silly laws?  I just had a drive fail
+on my array.  I wonder if this is the root of my problems...  Yay
+parity.  
+
+~Jay
+
+-----Original Message-----
+From: xfs-bounce@oss.sgi.com [mailto:xfs-bounce@oss.sgi.com] On Behalf
+Of Jay Sullivan
+Sent: Friday, November 02, 2007 10:00 AM
+To: xfs@oss.sgi.com
+Subject: RE: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+
+I lost the xfs_repair output on an xterm with only four lines of
+scrollback...  I'll definitely be more careful to preserve more
+'evidence' next time.  =(  "Pics or it didn't happen", right?
+
+I just upgraded xfsprogs and will scan the disk during my next scheduled
+downtime (probably in about 2 weeks).  I'm tempted to just wipe the
+volume and start over:  I have enough 'spare' space lying around to copy
+everything out to a fresh XFS volume.
+
+Regarding "areca":  I'm using hardware RAID built into Apple XServe
+RAIDs o'er LSI FC929X cards.
+
+Someone else offered the likely explanation that the btree is corrupted.
+Isn't this something xfs_repair should be able to fix?  Would it be
+easier, safer, and faster to move the data to a new volume (and restore
+corrupted files if/as I find them from backup)?  We're talking about
+just less than 4TB of data which used to take about 6 hours to fsck (one
+pass) with ext3.  Restoring the whole shebang from backups would
+probably take the better part of 12 years (waiting for compression,
+resetting ACLs, etc.)...
+
+FWIW, another (way less important,) much busier and significantly larger
+logical volume on the same array has been totally fine.  Murphy--go
+figure.
+
+Thanks!
+
+-----Original Message-----
+From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+Sent: Thursday, November 01, 2007 10:30 PM
+To: Jay Sullivan
+Cc: xfs@oss.sgi.com
+Subject: Re: xfs_force_shutdown called from file fs/xfs/xfs_trans_buf.c
+
+Jay Sullivan wrote:
+> Good eye:  it wasn't mountable, thus the -L flag.  No recent  
+> (unplanned) power outages.  The machine and the array that holds the  
+> disks are both on serious batteries/UPS and the array's cache  
+> batteries are in good health.
+
+Did you have the xfs_repair output to see what it found?  You might also
+grab the very latest xfsprogs (2.9.4) in case it's catching more cases.
+
+I hate it when people suggest running memtest86, but I might do that
+anyway.  :)
+
+What controller are you using?  If you say "areca" I might be on to
+something with some other bugs I've seen...
+
+-Eric
