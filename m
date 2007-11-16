@@ -1,47 +1,123 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Nov 2007 16:34:12 -0800 (PST)
-Received: from smtp124.sbc.mail.sp1.yahoo.com (smtp124.sbc.mail.sp1.yahoo.com [69.147.64.97])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAG0Y6gF006221
-	for <linux-xfs@oss.sgi.com>; Thu, 15 Nov 2007 16:34:07 -0800
-Date: Thu, 15 Nov 2007 16:34:10 -0800
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: 2.6.24-rc2 XFS nfsd hang / smbd too
-Message-ID: <20071116003410.GA16797@puku.stupidest.org>
-References: <20071114070400.GA25708@puku.stupidest.org> <473AA72C.6020308@panasas.com> <20071114125907.GB4010@fieldses.org> <alpine.DEB.0.99999.0711142317010.12443@sheep.housecafe.de> <alpine.DEB.0.99999.0711150840340.12443@sheep.housecafe.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Nov 2007 16:43:23 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAG0hCqf007513
+	for <xfs@oss.sgi.com>; Thu, 15 Nov 2007 16:43:15 -0800
+Date: Fri, 16 Nov 2007 11:43:10 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH, RFC] Move AIL pushing into a separate thread
+Message-ID: <20071116004310.GL66820511@sgi.com>
+References: <20071105050706.GW66820511@sgi.com> <473BBDC1.2020107@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.0.99999.0711150840340.12443@sheep.housecafe.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <473BBDC1.2020107@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Benny Halevy <bhalevy@panasas.com>, linux-xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Thu, Nov 15, 2007 at 08:51:36AM +0100, Christian Kujau wrote:
+On Thu, Nov 15, 2007 at 02:32:17PM +1100, Lachlan McIlroy wrote:
+> Overall it looks good Dave, just a few comments below.
+.....
+> >+int
+> >+xfsaild(
+> >+	void	*data)
+> >+{
+> >+	xfs_mount_t	*mp = (xfs_mount_t *)data;
+> >+	xfs_lsn_t	last_pushed_lsn = 0;
+> >+	long		tout = 0;
+> >+
+> >+	while (!kthread_should_stop()) {
+> >+		if (tout)
+> >+		 schedule_timeout_interruptible(msecs_to_jiffies(tout));
+> >+
+> >+		/* swsusp */
+> >+		try_to_freeze();
+> >+
+> >+		/* we're either starting or stopping if there is no log */
+> >+		if (!mp->m_log)
+> >+			continue;
+> It's looks like the log should never be NULL while the xfsaild
+> thread is running.  Could we ASSERT(mp->m_log)?
 
-> [<c040914c>] mutex_lock_nested+0xcc/0x2c0
-> [<c016dc64>] do_lookup+0xa4/0x190
-> [<c016f6f9>] __link_path_walk+0x749/0xd10
-> [<c016fd04>] link_path_walk+0x44/0xc0
-> [<c016fd98>] path_walk+0x18/0x20
-> [<c016ff98>] do_path_lookup+0x78/0x1c0
-> [<c0170998>] __user_walk_fd+0x38/0x60
-> [<c0169bd1>] vfs_stat_fd+0x21/0x50
-> [<c0169ca1>] vfs_stat+0x11/0x20
-> [<c0169cc4>] sys_stat64+0x14/0x30
-> [<c01028d6>] sysenter_past_esp+0x5f/0xa5
+Already done.
 
-nfsd already wedged up and holds a lock, this is expected.
+> >@@ -100,57 +97,105 @@ xfs_trans_push_ail(
+> > 		spin_unlock(&mp->m_ail_lock);
+> > 		return (xfs_lsn_t)0;
+> > 	}
+> >+	if (XFS_LSN_CMP(threshold_lsn, mp->m_ail.xa_target) > 0)
+> Is this conditional necessary?  Can we just call xfsaild_wakeup()
+> and let it do the same thing?
 
+Already done.
 
-I'm not sure what you're doing here, but a viable work-around for now
-might be to use nfsv2 mounts, something like
+> >+long
+> >+xfsaild_push(
+> >+	xfs_mount_t	*mp,
+> >+	xfs_lsn_t	*last_lsn)
+> >+{
+> >+	long		tout = 100; /* milliseconds */
+> >+	xfs_lsn_t	last_pushed_lsn = *last_lsn;
+> >+	xfs_lsn_t	target =  mp->m_ail.xa_target;
+> >+	xfs_lsn_t	lsn;
+> >+	xfs_log_item_t	*lip;
+> >+	int		lock_result;
+> >+	int		gen;
+> >+	int		restarts;
+> restarts needs to be initialised
 
-  mount -o vers=2 ...
+Already done.
 
-or to keep v3 and disable readdirplus doing something like:
+> >+		spin_lock(&mp->m_ail_lock);
+> >+		count++;
+> >+		/* Too many items we can't do anything with? */
+> >+		if (stuck > 100)
+> 100?  Arbitrary magic number or was there reason for this?
 
-  mount -o vers=3,nordirplus ...
+Arbitrary magic number based on observation. basically, if
+we are skipping too many items because we can't flush them or
+they are already being flushed we back off and given them time
+to complete whatever operation is being done. i.e. remove pressure
+from the AIL while we can't make progress so traversals don't
+slow down further inserts and removæls to/from the AIL.
 
-The later I didn't test but was suggested on #linuxfs.
+> >+			break;
+> >+		/* we're either starting or stopping if there is no log */
+> >+		if (!mp->m_log)
+> Again, can we ASSERT(mp->m_log)?
+
+Already done.
+
+> >+	if ((XFS_LSN_CMP(lsn, target) >= 0)) {
+> >+		tout += 20;
+> >+		last_pushed_lsn = 0;
+> >+	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
+> >+		   (count && (count < (stuck + 10)))) {
+> If 0 < count < 10 and stuck == 0 then we'll think we couldn't flush 
+> something
+> - not sure if that is what you intended here.
+
+If we've got to this situation it generally means we've
+got an empty AIL. Hence backing off a bit more won't hurt at
+all because the log is pretty much clean and we are not likely
+to be in a tail-pushing situation in the next few milliseconds.
+
+> Maybe ((count - stuck) < stuck) ?  ie the number of items we successfully 
+> flushed
+> is less than the number of items we couldn't flush then back off.
+
+Sort of, but that's a 50% rule - what I'm checking is more like a
+90% stuck threshold when we break out of the loop at stuck == 100.
+If you can think of a better way of expressing that....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
