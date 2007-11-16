@@ -1,33 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Nov 2007 23:49:03 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAG7mtJt027772
-	for <xfs@oss.sgi.com>; Thu, 15 Nov 2007 23:49:00 -0800
-Date: Fri, 16 Nov 2007 07:23:13 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, RFC] Move AIL pushing into a separate thread
-Message-ID: <20071116072313.GA17009@infradead.org>
-References: <20071105050706.GW66820511@sgi.com> <473BBDC1.2020107@sgi.com> <20071116004310.GL66820511@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071116004310.GL66820511@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 Nov 2007 01:17:38 -0800 (PST)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAG9HVrG016988
+	for <linux-xfs@oss.sgi.com>; Fri, 16 Nov 2007 01:17:33 -0800
+Message-ID: <59468.62.180.231.196.1195204637.squirrel@housecafe.dyndns.org>
+In-Reply-To: <20071116003410.GA16797@puku.stupidest.org>
+References: <20071114070400.GA25708@puku.stupidest.org>
+    <473AA72C.6020308@panasas.com> <20071114125907.GB4010@fieldses.org>
+    <alpine.DEB.0.99999.0711142317010.12443@sheep.housecafe.de>
+    <alpine.DEB.0.99999.0711150840340.12443@sheep.housecafe.de>
+    <20071116003410.GA16797@puku.stupidest.org>
+Date: Fri, 16 Nov 2007 10:17:17 +0100 (CET)
+Subject: Re: 2.6.24-rc2 XFS nfsd hang
+From: "Christian Kujau" <lists@nerdbynature.de>
+MIME-Version: 1.0
+Content-Type: text/plain;charset=ISO-8859-15
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Benny Halevy <bhalevy@panasas.com>, linux-xfs@oss.sgi.com
 
-On Fri, Nov 16, 2007 at 11:43:10AM +1100, David Chinner wrote:
-> > >+		/* Too many items we can't do anything with? */
-> > >+		if (stuck > 100)
-> > 100?  Arbitrary magic number or was there reason for this?
-> 
-> Arbitrary magic number based on observation. basically, if
-> we are skipping too many items because we can't flush them or
-> they are already being flushed we back off and given them time
-> to complete whatever operation is being done. i.e. remove pressure
-> from the AIL while we can't make progress so traversals don't
-> slow down further inserts and remov?ls to/from the AIL.
+On Fri, November 16, 2007 01:34, Chris Wedgwood wrote:
+> I'm not sure what you're doing here, but a viable work-around for now
+> might be to use nfsv2 mounts, something like
+>
+> mount -o vers=2 ...
+> or to keep v3 and disable readdirplus doing something like:
+> mount -o vers=3,nordirplus ...
 
-Might be worth adding something like this as a comment.
+OK, I'll try this. I hope this can be fixed somehow before 2.6.24...
+
+Thank you for your time,
+Christian.
+-- 
+BOFH excuse #442:
+
+Trojan horse ran out of hay
