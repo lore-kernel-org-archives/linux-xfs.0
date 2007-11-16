@@ -1,41 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Nov 2007 21:39:21 -0800 (PST)
-Received: from ipmail02.adl2.internode.on.net (ipmail02.adl2.internode.on.net [203.16.214.141])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAG5dFJS011510
-	for <Linux-xfs@oss.sgi.com>; Thu, 15 Nov 2007 21:39:17 -0800
-Date: Fri, 16 Nov 2007 16:21:29 +1100
-From: Jason White <jason@jasonjgw.net>
-Subject: SeLinux "fixfiles relabel" shuts down XFS
-Message-ID: <20071116052129.GA4401@jdc.jasonjgw.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 Nov 2007 22:04:03 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAG63uhI014653
+	for <xfs@oss.sgi.com>; Thu, 15 Nov 2007 22:03:59 -0800
+Message-ID: <473D32D9.2020500@sgi.com>
+Date: Fri, 16 Nov 2007 17:04:09 +1100
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Subject: Re: REVIEW: xfs_reno #2
+References: <op.tznnweh23jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.tznnweh23jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux-xfs <Linux-xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-This isn't intended as a bug report, more an FYI, as I don't have time just
-now to reproduce the problem, and unfortuantely I wasn't able to obtain any
-error log.
+Barry Naujok wrote:
+> A couple changes from the first xfs_reno:
+>
+>  - Major one is that symlinks are now supported, but only
+>    owner, group and extended attributes are copied for them
+>    (not times or inode attributes).
+>
+>  - Man page!
+>
+>
+> To make this better, ideally we need some form of
+> "swap inodes" function in the kernel, where the entire
+> contents of the inode themselves are swapped. This form
+> can handle any inode and without any of the dir/file/attr/etc
+> copy/swap mechanisms we have in xfs_reno.
+>
+> Barry.
+Hi Barry,
 
-I ran fixfiles relabel on an XFS partition, kernel 2.6.22 (Debian). The
-fixfiles script terminated with an i/o error and I couldn't access the file
-system thereafter - I assume there was an XFS shutdown.
+The code is looking good. Some questions and minor remarks bellow.
 
-After the inevitable reboot, xfs_check showed no file system errors, and there
-have been no subsequent i/o errors indicating possible hardware problems.
+- init_nodehash() return value is not used
 
-This is on a 146gb SAS volume in my home workstation, comprising two 73gb
-drives connected to an LSI SAS controller. Everything has been otherwise
-stable and the hardware is almost new.
+- Why poll_output is volatile?
 
-This was the beginning of an attempt to set up SELinux on the machine, which I
-won't have time to try again for a while.
+- I think you meant "exit()" instead of "goto quit" below as
+"recover_fd" is not opened yet:
 
-This isn't good enough as a bug report, so I'll leave it for now, with the
-promise that at some point (not soon, regrettably) I'll try the operation
-again and take more care to capture any console messages.
+		if (n_opt)
+			goto quit;
+...			
+quit:
+	free_nodehash();
 
-If anyone else happens to reproduce this before I get around to trying it,
-I'll be interested in following the progress of the bug.
+	close(recover_fd);
+
+
+- Is dirname(xxx) used as intended? I think it should be xxx = dirname(xxx).
+
+- Some log_message() strings don't have _("text") convention.
+
+I see that you take care to copy the DMAPI fields as well.
+Unfortunately changing the inode number in a DMAPI filesystem
+would make the DMAPI handle different, which means any application
+using DMAPI would not be able to access the new file anymore.
+
+When the XFS parent pointers feature is released we would need to find
+out to update the EA to point to the new inode parent directory. This may
+not be that easy though.
+
+Regards,
+Vlad
