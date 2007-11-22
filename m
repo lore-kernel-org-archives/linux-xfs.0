@@ -1,127 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 Nov 2007 16:50:06 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 Nov 2007 17:12:31 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAM0nwGX016746
-	for <xfs@oss.sgi.com>; Wed, 21 Nov 2007 16:50:01 -0800
-Date: Thu, 22 Nov 2007 11:50:03 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAM1CI51019360
+	for <xfs@oss.sgi.com>; Wed, 21 Nov 2007 17:12:25 -0800
+Date: Thu, 22 Nov 2007 12:12:14 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: [PATCH 2/2] Debug - don't exhaustively check the AIL on every operation
-Message-ID: <20071122005003.GQ114266761@sgi.com>
+Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
+Message-ID: <20071122011214.GR114266761@sgi.com>
+References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <p73oddnhzoq.fsf@bingen.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
 
+On Thu, Nov 22, 2007 at 01:49:25AM +0100, Andi Kleen wrote:
+> David Chinner <dgc@sgi.com> writes:
+> 
+> > To ensure that log I/O is issued as the highest priority I/O, set
+> > the I/O priority of the log I/O to the highest possible. This will
+> > ensure that log I/O is not held up behind bulk data or other
+> > metadata I/O as delaying log I/O can pause the entire transaction
+> > subsystem. Introduce a new buffer flag to allow us to tag the log
+> > buffers so we can discrimiate when issuing the I/O.
+> 
+> Won't that possible disturb other RT priority users that do not need 
+> log IO (e.g. working on preallocated files)? Seems a little
+> dangerous.
 
-Checking the entire AIL on every insert and remove is
-prohibitively expensive - the sustained sequntial create rate
-on a single disk drops from about 1800/s to 60/s because of
-this checking resulting in the xfslogd becoming cpu bound.
+In all the cases that I know of where ppl are using what could
+be considered real-time I/O (e.g. media environments where they
+do real-time ingest and playout from the same filesystem) the
+real-time ingest processes create the files and do pre-allocation
+before doing their I/O. This I/O can get held up behind another
+process that is not real time that has issued log I/O. 
 
-By default on debug builds, only check the next and previous
-entries in the list to ensure they are ordered correctly.
-If you really want, define XFS_TRANS_DEBUG to use the old
-behaviour.
+Given there is no I/O priority inheritence and having log I/O stall
+will stall the entire filesystem, we cannot allow log I/O to
+stall in real-time environments. Hence it must have the highest
+possible priority to prevent this.
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfs_trans_ail.c |   37 ++++++++++++++++++++++++++++---------
- 1 file changed, 28 insertions(+), 9 deletions(-)
+Cheers,
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_trans_ail.c	2007-11-22 10:34:01.564358689 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c	2007-11-22 10:34:03.320134239 +1100
-@@ -34,9 +34,9 @@ STATIC xfs_log_item_t * xfs_ail_min(xfs_
- STATIC xfs_log_item_t * xfs_ail_next(xfs_ail_entry_t *, xfs_log_item_t *);
- 
- #ifdef DEBUG
--STATIC void xfs_ail_check(xfs_ail_entry_t *);
-+STATIC void xfs_ail_check(xfs_ail_entry_t *, xfs_log_item_t *);
- #else
--#define	xfs_ail_check(a)
-+#define	xfs_ail_check(a,l)
- #endif /* DEBUG */
- 
- 
-@@ -563,7 +563,7 @@ xfs_ail_insert(
- 	next_lip->li_ail.ail_forw = lip;
- 	lip->li_ail.ail_forw->li_ail.ail_back = lip;
- 
--	xfs_ail_check(base);
-+	xfs_ail_check(base, lip);
- 	return;
- }
- 
-@@ -577,12 +577,12 @@ xfs_ail_delete(
- 	xfs_log_item_t	*lip)
- /* ARGSUSED */
- {
-+	xfs_ail_check(base, lip);
- 	lip->li_ail.ail_forw->li_ail.ail_back = lip->li_ail.ail_back;
- 	lip->li_ail.ail_back->li_ail.ail_forw = lip->li_ail.ail_forw;
- 	lip->li_ail.ail_forw = NULL;
- 	lip->li_ail.ail_back = NULL;
- 
--	xfs_ail_check(base);
- 	return lip;
- }
- 
-@@ -626,13 +626,13 @@ xfs_ail_next(
-  */
- STATIC void
- xfs_ail_check(
--	xfs_ail_entry_t *base)
-+	xfs_ail_entry_t *base,
-+	xfs_log_item_t	*lip)
- {
--	xfs_log_item_t	*lip;
- 	xfs_log_item_t	*prev_lip;
- 
--	lip = base->ail_forw;
--	if (lip == (xfs_log_item_t*)base) {
-+	prev_lip = base->ail_forw;
-+	if (prev_lip == (xfs_log_item_t*)base) {
- 		/*
- 		 * Make sure the pointers are correct when the list
- 		 * is empty.
-@@ -642,9 +642,27 @@ xfs_ail_check(
- 	}
- 
- 	/*
-+	 * Check the next and previous entries are valid.
-+	 */
-+	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
-+	prev_lip = lip->li_ail.ail_back;
-+	if (prev_lip != (xfs_log_item_t*)base) {
-+		ASSERT(prev_lip->li_ail.ail_forw == lip);
-+		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-+	}
-+	prev_lip = lip->li_ail.ail_forw;
-+	if (prev_lip != (xfs_log_item_t*)base) {
-+		ASSERT(prev_lip->li_ail.ail_back == lip);
-+		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
-+	}
-+
-+
-+#ifdef XFS_TRANS_DEBUG
-+	/*
- 	 * Walk the list checking forward and backward pointers,
- 	 * lsn ordering, and that every entry has the XFS_LI_IN_AIL
--	 * flag set.
-+	 * flag set. This is really expensive, so only do it when
-+	 * specifically debugging the transaction subsystem.
- 	 */
- 	prev_lip = (xfs_log_item_t*)base;
- 	while (lip != (xfs_log_item_t*)base) {
-@@ -659,5 +677,6 @@ xfs_ail_check(
- 	}
- 	ASSERT(lip == (xfs_log_item_t*)base);
- 	ASSERT(base->ail_back == prev_lip);
-+#endif /* XFS_TRANS_DEBUG */
- }
- #endif /* DEBUG */
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
