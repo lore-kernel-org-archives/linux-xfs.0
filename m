@@ -1,63 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Nov 2007 05:15:59 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAMDFm3f009971
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2007 05:15:52 -0800
-Date: Fri, 23 Nov 2007 00:15:39 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
-Message-ID: <20071122131539.GX114266761@sgi.com>
-References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de> <20071122011214.GR114266761@sgi.com> <1195702123.8369.78.camel@localhost.localdomain> <20071122120611.GA3573@one.firstfloor.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071122120611.GA3573@one.firstfloor.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Nov 2007 07:02:23 -0800 (PST)
+Received: from c2beaimr04.btconnect.com (c2beaimr04.btconnect.com [213.123.26.158])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAMF2HYe022182
+	for <linux-xfs@oss.sgi.com>; Thu, 22 Nov 2007 07:02:18 -0800
+Date: Thu, 22 Nov 2007 14:51:11 GMT
+From: Mail Delivery Subsystem <MAILER-DAEMON@c2beaimr04.btconnect.com>
+Message-Id: <200711221451.ALT91853@c2beaimr04.btconnect.com>
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="ALT91853.1195743071/c2beaimr04.btconnect.com"
+Subject: Warning: could not send message for past 4 hours
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Stewart Smith <stewart@mysql.com>, David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
+To: linux-xfs@oss.sgi.com
 
-On Thu, Nov 22, 2007 at 01:06:11PM +0100, Andi Kleen wrote:
-> > FWIW from a "real time" database POV this seems to make sense to me...
-> > in fact, we probably rely on filesystem metadata way too much
-> > (historically it's just "worked".... although we do seem to get issues
-> > on ext3).
-> 
-> For that case you really would need priority inheritance: any metadata
-> IO on behalf or blocking a process needs to use the process' block IO 
-> priority.
+This is a MIME-encapsulated message
 
-How do you do that when the processes are blocking on semaphores,
-mutexes or rw-semaphores in the fileysystem three layers removed from
-the I/O in progress?
+--ALT91853.1195743071/c2beaimr04.btconnect.com
 
-e.g. a low priority process transaction is holding the AGF buffer
-locked but the transaction is blocked waiting for some other
-metadata I/O it has issued needed in the transaction.  That metadata
-I/O is being held out by a higher priority process doing lots of
-I/O.
+    **********************************************
+    **      THIS IS A WARNING MESSAGE ONLY      **
+    **  YOU DO NOT NEED TO RESEND YOUR MESSAGE  **
+    **********************************************
 
-Another process at the same priority creates a file, requiring
-inodes to be allocated so it locks the directory into the
-transaction and later blocks on the AGF buffer semaphore trying to
-allocate space for the new inode.
+The original message was received at Thu, 22 Nov 2007 10:42:41 GMT
+from ip-77-242-30-138.net.abissnet.al [77.242.30.138] (may be forged)
 
-A very high priority process now comes along and tries to read the
-directory locked in the create transaction, and blocks on the
-directory inode ilock because it's already held in write mode.
+   ----- The following addresses had transient delivery errors -----
 
-That's three processes all blocked on locks unrelated to the I/O
-that is being held out, and there is no direct connection that can
-be used to pass the priority down to the blocked I/O that is causing
-all the problems.....
 
-It's a Bad Idea.
+   ----- Transcript of session is unavailable -----
 
-Cheers,
+--ALT91853.1195743071/c2beaimr04.btconnect.com
+Content-Type: message/delivery-status
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Reporting-MTA: dns; c2beaimr04.btconnect.com
+Arrival-Date: Thu, 22 Nov 2007 10:42:41 GMT
+
+Final-Recipient: RFC822; richard@officeequipmentuk.co.uk
+Action: delayed
+Status: 4.4.1
+Remote-MTA: DNS; officeequipmentuk.co.uk
+Last-Attempt-Date: Thu, 22 Nov 2007 14:51:11 GMT
+Will-Retry-Until: Fri, 23 Nov 2007 10:42:41 GMT
+
+--ALT91853.1195743071/c2beaimr04.btconnect.com
+Content-Type: message/rfc822
+
+Received: from oss.sgi.com (ip-77-242-30-138.net.abissnet.al [77.242.30.138] (may be forged))
+	by c2beaimr04.btconnect.com
+	with ESMTP id ALS42610;
+	Thu, 22 Nov 2007 10:42:32 GMT
+Message-Id: <200711221042.ALS42610@c2beaimr04.btconnect.com>
+From: linux-xfs@oss.sgi.com
+To: richard@officeequipmentuk.co.uk
+Subject: Delivery reports about your e-mail
+Date: Wed, 21 Nov 2040 11:59:42 +0100
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+X-Mirapoint-Virus: VIRUSDELETED;
+	host=c2beaimr04.btconnect.com;
+	attachment=[2.2];
+	virus=W32/MyDoom-O
+X-Junkmail-Status: score=10/50, host=c2beaimr04.btconnect.com
+X-Junkmail-SD-Raw: score=unknown,
+	refid=str=0001.0A0B0201.47455B26.024B,ss=1,fgs=0,
+	ip=77.242.30.138,
+	so=2006-12-09 10:45:40,
+	dmn=5.4.3/2007-10-18
+
+
+
+--ALT91853.1195743071/c2beaimr04.btconnect.com--
