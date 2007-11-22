@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 Nov 2007 16:39:55 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 Nov 2007 16:41:36 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAM0dlYs013291
-	for <xfs@oss.sgi.com>; Wed, 21 Nov 2007 16:39:49 -0800
-Date: Thu, 22 Nov 2007 11:39:52 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAM0fSxN013840
+	for <xfs@oss.sgi.com>; Wed, 21 Nov 2007 16:41:29 -0800
+Date: Thu, 22 Nov 2007 11:41:32 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: [PATCH 6/9] Remove xfs_icluster
-Message-ID: <20071122003952.GL114266761@sgi.com>
+Subject: [PATCH 7/9] Use radix_tree_gang_lookup_range for cluster lookups
+Message-ID: <20071122004132.GM114266761@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -16,552 +16,200 @@ List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
 Cc: lkml <linux-kernel@vger.kernel.org>
 
-Remove the xfs_icluster structure and replace with a radix tree lookup.
+Use radix_tree_gang_lookup_range() for inode cluster lookups
 
-We don't need to keep a list of inodes in each cluster around anymore
-as we can look them up quickly when we need to. The only time we need
-to do this now is during inode writeback.
+Now that we have an efficent lookup method for the radix tree,
+convert cluster lookups to use it. Factor out the common
+lookup, add some debug checking to it and call it where needed.
 
-Factor the inode cluster writeback code out of xfs_iflush and convert
-it to use radix_tree_gang_lookup() instead of walking a list of
-inodes built when we first read in the inodes.
-
-This remove 3 pointers from each xfs_inode structure and the xfs_icluster
-structure per inode cluster. Hence we reduce the cache footprint of the
-xfs_inodes by between 5-10% depending on cluster sparseness.
-
-To be truly efficient we need a radix_tree_gang_lookup_range() call
-to stop searching once we are past the end of the cluster instead
-of trying to find a full cluster's worth of inodes.
-
-Before (ia64):
-
-$ cat /sys/slab/xfs_inode/object_size
-536
-
-After:
-
-$ cat /sys/slab/xfs_inode/object_size
-512
+For sanity, we need to hold the radix tree lock in read
+mode across the entire set of locking operations done to
+ensure we can operate on the inodes. This does increase
+the length of time we hold the lock in read mode, but we'll
+correct that with another patch.
 
 Signed-off-by: Dave Chinner <dgc@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_ksyms.c |    1 
- fs/xfs/xfs_iget.c            |   49 -------
- fs/xfs/xfs_inode.c           |  266 ++++++++++++++++++++++++-------------------
- fs/xfs/xfs_inode.h           |   16 --
- fs/xfs/xfs_vfsops.c          |    5 
- fs/xfs/xfsidbg.c             |    4 
- 6 files changed, 154 insertions(+), 187 deletions(-)
+ fs/xfs/xfs_inode.c |   83 +++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 56 insertions(+), 27 deletions(-)
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_iget.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_iget.c	2007-11-22 10:25:24.178458638 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_iget.c	2007-11-22 10:33:53.993326524 +1100
-@@ -78,7 +78,6 @@ xfs_iget_core(
- 	xfs_inode_t	*ip;
- 	xfs_inode_t	*iq;
- 	int		error;
--	xfs_icluster_t	*icl, *new_icl = NULL;
- 	unsigned long	first_index, mask;
- 	xfs_perag_t	*pag;
- 	xfs_agino_t	agino;
-@@ -229,11 +228,9 @@ finish_inode:
- 	}
- 
- 	/*
--	 * This is a bit messy - we preallocate everything we _might_
--	 * need before we pick up the ici lock. That way we don't have to
--	 * juggle locks and go all the way back to the start.
-+	 * Preload the radix tree so we can insert safely under the
-+	 * write spinlock.
- 	 */
--	new_icl = kmem_zone_alloc(xfs_icluster_zone, KM_SLEEP);
- 	if (radix_tree_preload(GFP_KERNEL)) {
- 		delay(1);
- 		goto again;
-@@ -241,17 +238,6 @@ finish_inode:
- 	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
- 	first_index = agino & mask;
- 	write_lock(&pag->pag_ici_lock);
--
--	/*
--	 * Find the cluster if it exists
--	 */
--	icl = NULL;
--	if (radix_tree_gang_lookup(&pag->pag_ici_root, (void**)&iq,
--							first_index, 1)) {
--		if ((XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) == first_index)
--			icl = iq->i_cluster;
--	}
--
- 	/*
- 	 * insert the new inode
- 	 */
-@@ -266,30 +252,13 @@ finish_inode:
- 	}
- 
- 	/*
--	 * These values _must_ be set before releasing ihlock!
-+	 * These values _must_ be set before releasing the radix tree lock!
- 	 */
- 	ip->i_udquot = ip->i_gdquot = NULL;
- 	xfs_iflags_set(ip, XFS_INEW);
- 
--	ASSERT(ip->i_cluster == NULL);
--
--	if (!icl) {
--		spin_lock_init(&new_icl->icl_lock);
--		INIT_HLIST_HEAD(&new_icl->icl_inodes);
--		icl = new_icl;
--		new_icl = NULL;
--	} else {
--		ASSERT(!hlist_empty(&icl->icl_inodes));
--	}
--	spin_lock(&icl->icl_lock);
--	hlist_add_head(&ip->i_cnode, &icl->icl_inodes);
--	ip->i_cluster = icl;
--	spin_unlock(&icl->icl_lock);
--
- 	write_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
--	if (new_icl)
--		kmem_zone_free(xfs_icluster_zone, new_icl);
- 
- 	/*
- 	 * Link ip to its mount and thread it on the mount's inode list.
-@@ -528,18 +497,6 @@ xfs_iextract(
- 	xfs_put_perag(mp, pag);
- 
- 	/*
--	 * Remove from cluster list
--	 */
--	mp = ip->i_mount;
--	spin_lock(&ip->i_cluster->icl_lock);
--	hlist_del(&ip->i_cnode);
--	spin_unlock(&ip->i_cluster->icl_lock);
--
--	/* was last inode in cluster? */
--	if (hlist_empty(&ip->i_cluster->icl_inodes))
--		kmem_zone_free(xfs_icluster_zone, ip->i_cluster);
--
--	/*
- 	 * Remove from mount's inode list.
- 	 */
- 	XFS_MOUNT_ILOCK(mp);
 Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
 ===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2007-11-22 10:33:51.037704348 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2007-11-22 10:33:53.993326524 +1100
-@@ -53,7 +53,6 @@
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2007-11-22 10:33:53.993326524 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2007-11-22 10:33:55.877085717 +1100
+@@ -2165,6 +2165,37 @@ STATIC_INLINE int xfs_inode_clean(xfs_in
+ 		(ip->i_update_core == 0));
+ }
  
- kmem_zone_t *xfs_ifork_zone;
- kmem_zone_t *xfs_inode_zone;
--kmem_zone_t *xfs_icluster_zone;
++/* lookup all the inodes in the cluster */
++STATIC int
++xfs_icluster_lookup(
++	xfs_mount_t	*mp,
++	xfs_perag_t	*pag,
++	xfs_ino_t	ino,
++	xfs_inode_t	**ilist,
++	int		clsize)
++{
++	unsigned long		first_index, last_index, mask;
++	int			nr_found;
++
++	mask = ~(clsize - 1);
++	first_index = XFS_INO_TO_AGINO(mp, ino) & mask;
++	last_index = (XFS_INO_TO_AGINO(mp, ino + clsize) & mask) - 1;
++	nr_found = radix_tree_gang_lookup_range(&pag->pag_ici_root,
++				(void**)ilist, first_index, last_index,
++				clsize);
++	ASSERT(nr_found <= clsize);
++#ifdef DEBUG
++{	int		i;
++	xfs_inode_t	*iq;
++	for (i = 0; i < nr_found; i++) {
++		iq = ilist[i];
++		ASSERT((XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) == first_index);
++	}
++}
++#endif
++	return nr_found;
++}
++
+ STATIC void
+ xfs_ifree_cluster(
+ 	xfs_inode_t	*free_ip,
+@@ -2178,7 +2209,7 @@ xfs_ifree_cluster(
+ 	int			i, j, found, pre_flushed;
+ 	xfs_daddr_t		blkno;
+ 	xfs_buf_t		*bp;
+-	xfs_inode_t		*ip, **ip_found;
++	xfs_inode_t		*ip, **ip_found, **ilist;
+ 	xfs_inode_log_item_t	*iip;
+ 	xfs_log_item_t		*lip;
+ 	xfs_perag_t		*pag = xfs_get_perag(mp, inum);
+@@ -2195,8 +2226,10 @@ xfs_ifree_cluster(
+ 	}
  
- /*
-  * Used in xfs_itruncate().  This is the maximum number of extents
-@@ -3014,6 +3013,151 @@ xfs_iflush_fork(
+ 	ip_found = kmem_alloc(ninodes * sizeof(xfs_inode_t *), KM_NOFS);
++	ilist = kmem_alloc(ninodes * sizeof(xfs_inode_t *), KM_NOFS);
+ 
+ 	for (j = 0; j < nbufs; j++, inum += ninodes) {
++		int nr_found;
+ 		blkno = XFS_AGB_TO_DADDR(mp, XFS_INO_TO_AGNO(mp, inum),
+ 					 XFS_INO_TO_AGBNO(mp, inum));
+ 
+@@ -2213,24 +2246,23 @@ xfs_ifree_cluster(
+ 		 * and fail, we need some other form of interlock
+ 		 * here.
+ 		 */
++		read_lock(&pag->pag_ici_lock);
++		nr_found = xfs_icluster_lookup(mp, pag, inum, ilist, ninodes);
++		if (nr_found == 0) {
++			read_unlock(&pag->pag_ici_lock);
++			continue;
++		}
+ 		found = 0;
+-		for (i = 0; i < ninodes; i++) {
+-			read_lock(&pag->pag_ici_lock);
+-			ip = radix_tree_lookup(&pag->pag_ici_root,
+-					XFS_INO_TO_AGINO(mp, (inum + i)));
++		for (i = 0; i < nr_found; i++) {
++			ip = ilist[i];
+ 
+ 			/* Inode not in memory or we found it already,
+ 			 * nothing to do
+ 			 */
+-			if (!ip || xfs_iflags_test(ip, XFS_ISTALE)) {
+-				read_unlock(&pag->pag_ici_lock);
++			if (!ip || xfs_iflags_test(ip, XFS_ISTALE))
+ 				continue;
+-			}
+-
+-			if (xfs_inode_clean(ip)) {
+-				read_unlock(&pag->pag_ici_lock);
++			if (xfs_inode_clean(ip))
+ 				continue;
+-			}
+ 
+ 			/* If we can get the locks then add it to the
+ 			 * list, otherwise by the time we get the bp lock
+@@ -2251,7 +2283,6 @@ xfs_ifree_cluster(
+ 						ip_found[found++] = ip;
+ 					}
+ 				}
+-				read_unlock(&pag->pag_ici_lock);
+ 				continue;
+ 			}
+ 
+@@ -2269,8 +2300,8 @@ xfs_ifree_cluster(
+ 					xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 				}
+ 			}
+-			read_unlock(&pag->pag_ici_lock);
+ 		}
++		read_unlock(&pag->pag_ici_lock);
+ 
+ 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno, 
+ 					mp->m_bsize * blks_per_cluster,
+@@ -2324,6 +2355,7 @@ xfs_ifree_cluster(
+ 	}
+ 
+ 	kmem_free(ip_found, ninodes * sizeof(xfs_inode_t *));
++	kmem_free(ilist, ninodes * sizeof(xfs_inode_t *));
+ 	xfs_put_perag(mp, pag);
+ }
+ 
+@@ -3013,6 +3045,7 @@ xfs_iflush_fork(
  	return 0;
  }
  
-+STATIC int
-+xfs_iflush_cluster(
-+	xfs_inode_t	*ip,
-+	xfs_buf_t	*bp)
-+{
-+	xfs_mount_t		*mp = ip->i_mount;
-+	xfs_perag_t		*pag = xfs_get_perag(mp, ip->i_ino);
-+	unsigned long		first_index, mask;
-+	int			ilist_size;
-+	xfs_inode_t		*ilist;
-+	xfs_inode_t		*iq;
-+	xfs_inode_log_item_t	*iip;
-+	int			nr_found;
-+	int			clcount = 0;
-+	int			bufwasdelwri;
 +
-+	ASSERT(pag->pagi_inodeok);
-+	ASSERT(pag->pag_ici_init);
-+
-+	ilist_size = XFS_INODE_CLUSTER_SIZE(mp) * sizeof(xfs_inode_t *);
-+	ilist = kmem_alloc(ilist_size, KM_MAYFAIL);
-+	if (!ilist)
-+		return 0;
-+
-+	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
-+	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
-+	read_lock(&pag->pag_ici_lock);
-+	/* really need a gang lookup range call here */
-+	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)&ilist,
-+					first_index,
-+					XFS_INODE_CLUSTER_SIZE(mp));
-+	if (nr_found == 0)
-+		goto out_free;
-+
-+	for (iq = &ilist[0]; iq < &ilist[nr_found]; iq++) {
-+		if (iq == ip)
-+			continue;
-+		/* if the inode lies outside this cluster, we're done. */
-+		if ((XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index)
-+			break;
-+		/*
-+		 * Do an un-protected check to see if the inode is dirty and
-+		 * is a candidate for flushing.  These checks will be repeated
-+		 * later after the appropriate locks are acquired.
-+		 */
-+		iip = iq->i_itemp;
-+		if ((iq->i_update_core == 0) &&
-+		    ((iip == NULL) ||
-+		     !(iip->ili_format.ilf_fields & XFS_ILOG_ALL)) &&
-+		      xfs_ipincount(iq) == 0) {
-+			continue;
-+		}
-+
-+		/*
-+		 * Try to get locks.  If any are unavailable or it is pinned,
-+		 * then this inode cannot be flushed and is skipped.
-+		 */
-+
-+		if (!xfs_ilock_nowait(iq, XFS_ILOCK_SHARED))
-+			continue;
-+		if (!xfs_iflock_nowait(iq)) {
-+			xfs_iunlock(iq, XFS_ILOCK_SHARED);
-+			continue;
-+		}
-+		if (xfs_ipincount(iq)) {
-+			xfs_ifunlock(iq);
-+			xfs_iunlock(iq, XFS_ILOCK_SHARED);
-+			continue;
-+		}
-+
-+		/*
-+		 * arriving here means that this inode can be flushed.  First
-+		 * re-check that it's dirty before flushing.
-+		 */
-+		iip = iq->i_itemp;
-+		if ((iq->i_update_core != 0) || ((iip != NULL) &&
-+		     (iip->ili_format.ilf_fields & XFS_ILOG_ALL))) {
-+			int error;
-+			error = xfs_iflush_int(iq, bp);
-+			if (error) {
-+				xfs_iunlock(iq, XFS_ILOCK_SHARED);
-+				goto cluster_corrupt_out;
-+			}
-+			clcount++;
-+		} else {
-+			xfs_ifunlock(iq);
-+		}
-+		xfs_iunlock(iq, XFS_ILOCK_SHARED);
-+	}
-+
-+	if (clcount) {
-+		XFS_STATS_INC(xs_icluster_flushcnt);
-+		XFS_STATS_ADD(xs_icluster_flushinode, clcount);
-+	}
-+
-+out_free:
-+	read_unlock(&pag->pag_ici_lock);
-+	kmem_free(ilist, ilist_size);
-+	return 0;
-+
-+
-+cluster_corrupt_out:
-+	/*
-+	 * Corruption detected in the clustering loop.  Invalidate the
-+	 * inode buffer and shut down the filesystem.
-+	 */
-+	read_unlock(&pag->pag_ici_lock);
-+	/*
-+	 * Clean up the buffer.  If it was B_DELWRI, just release it --
-+	 * brelse can handle it with no problems.  If not, shut down the
-+	 * filesystem before releasing the buffer.
-+	 */
-+	bufwasdelwri = XFS_BUF_ISDELAYWRITE(bp);
-+	if (bufwasdelwri)
-+		xfs_buf_relse(bp);
-+
-+	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+
-+	if (!bufwasdelwri) {
-+		/*
-+		 * Just like incore_relse: if we have b_iodone functions,
-+		 * mark the buffer as an error and call them.  Otherwise
-+		 * mark it as stale and brelse.
-+		 */
-+		if (XFS_BUF_IODONE_FUNC(bp)) {
-+			XFS_BUF_CLR_BDSTRAT_FUNC(bp);
-+			XFS_BUF_UNDONE(bp);
-+			XFS_BUF_STALE(bp);
-+			XFS_BUF_SHUT(bp);
-+			XFS_BUF_ERROR(bp,EIO);
-+			xfs_biodone(bp);
-+		} else {
-+			XFS_BUF_STALE(bp);
-+			xfs_buf_relse(bp);
-+		}
-+	}
-+
-+	/*
-+	 * Unlocks the flush lock
-+	 */
-+	xfs_iflush_abort(iq);
-+	kmem_free(ilist, ilist_size);
-+	return XFS_ERROR(EFSCORRUPTED);
-+}
-+
- /*
-  * xfs_iflush() will write a modified inode's changes out to the
-  * inode's on disk home.  The caller must have the inode lock held
-@@ -3033,13 +3177,8 @@ xfs_iflush(
- 	xfs_dinode_t		*dip;
- 	xfs_mount_t		*mp;
- 	int			error;
--	/* REFERENCED */
--	xfs_inode_t		*iq;
--	int			clcount;	/* count of inodes clustered */
--	int			bufwasdelwri;
--	struct hlist_node	*entry;
--	enum { INT_DELWRI = (1 << 0), INT_ASYNC = (1 << 1) };
- 	int			noblock = (flags == XFS_IFLUSH_ASYNC_NOBLOCK);
-+	enum { INT_DELWRI = (1 << 0), INT_ASYNC = (1 << 1) };
+ STATIC int
+ xfs_iflush_cluster(
+ 	xfs_inode_t	*ip,
+@@ -3020,39 +3053,35 @@ xfs_iflush_cluster(
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_perag_t		*pag = xfs_get_perag(mp, ip->i_ino);
+-	unsigned long		first_index, mask;
++	unsigned long		inodes_per_cluster;
+ 	int			ilist_size;
+-	xfs_inode_t		*ilist;
++	xfs_inode_t		**ilist;
+ 	xfs_inode_t		*iq;
+ 	xfs_inode_log_item_t	*iip;
+ 	int			nr_found;
+ 	int			clcount = 0;
+ 	int			bufwasdelwri;
++	int			i;
  
- 	XFS_STATS_INC(xs_iflush_count);
+ 	ASSERT(pag->pagi_inodeok);
+ 	ASSERT(pag->pag_ici_init);
  
-@@ -3159,9 +3298,8 @@ xfs_iflush(
- 	 * First flush out the inode that xfs_iflush was called with.
- 	 */
- 	error = xfs_iflush_int(ip, bp);
--	if (error) {
-+	if (error)
- 		goto corrupt_out;
--	}
+-	ilist_size = XFS_INODE_CLUSTER_SIZE(mp) * sizeof(xfs_inode_t *);
++	inodes_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog;
++	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+ 	ilist = kmem_alloc(ilist_size, KM_MAYFAIL);
+ 	if (!ilist)
+ 		return 0;
  
- 	/*
- 	 * If the buffer is pinned then push on the log now so we won't
-@@ -3174,70 +3312,9 @@ xfs_iflush(
- 	 * inode clustering:
- 	 * see if other inodes can be gathered into this write
- 	 */
--	spin_lock(&ip->i_cluster->icl_lock);
--	ip->i_cluster->icl_buf = bp;
--
--	clcount = 0;
--	hlist_for_each_entry(iq, entry, &ip->i_cluster->icl_inodes, i_cnode) {
--		if (iq == ip)
--			continue;
--
--		/*
--		 * Do an un-protected check to see if the inode is dirty and
--		 * is a candidate for flushing.  These checks will be repeated
--		 * later after the appropriate locks are acquired.
--		 */
--		iip = iq->i_itemp;
--		if ((iq->i_update_core == 0) &&
--		    ((iip == NULL) ||
--		     !(iip->ili_format.ilf_fields & XFS_ILOG_ALL)) &&
--		      xfs_ipincount(iq) == 0) {
--			continue;
--		}
--
--		/*
--		 * Try to get locks.  If any are unavailable,
--		 * then this inode cannot be flushed and is skipped.
--		 */
--
--		/* get inode locks (just i_lock) */
--		if (xfs_ilock_nowait(iq, XFS_ILOCK_SHARED)) {
--			/* get inode flush lock */
--			if (xfs_iflock_nowait(iq)) {
--				/* check if pinned */
--				if (xfs_ipincount(iq) == 0) {
--					/* arriving here means that
--					 * this inode can be flushed.
--					 * first re-check that it's
--					 * dirty
--					 */
--					iip = iq->i_itemp;
--					if ((iq->i_update_core != 0)||
--					    ((iip != NULL) &&
--					     (iip->ili_format.ilf_fields & XFS_ILOG_ALL))) {
--						clcount++;
--						error = xfs_iflush_int(iq, bp);
--						if (error) {
--							xfs_iunlock(iq,
--								    XFS_ILOCK_SHARED);
--							goto cluster_corrupt_out;
--						}
--					} else {
--						xfs_ifunlock(iq);
--					}
--				} else {
--					xfs_ifunlock(iq);
--				}
--			}
--			xfs_iunlock(iq, XFS_ILOCK_SHARED);
--		}
--	}
--	spin_unlock(&ip->i_cluster->icl_lock);
--
--	if (clcount) {
--		XFS_STATS_INC(xs_icluster_flushcnt);
--		XFS_STATS_ADD(xs_icluster_flushinode, clcount);
--	}
-+	error = xfs_iflush_cluster(ip, bp);
-+	if (error)
-+		goto cluster_corrupt_out;
+-	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
+-	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+ 	read_lock(&pag->pag_ici_lock);
+-	/* really need a gang lookup range call here */
+-	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)&ilist,
+-					first_index,
+-					XFS_INODE_CLUSTER_SIZE(mp));
++	nr_found = xfs_icluster_lookup(mp, pag, ip->i_ino, ilist,
++							inodes_per_cluster);
+ 	if (nr_found == 0)
+ 		goto out_free;
  
- 	if (flags & INT_DELWRI) {
- 		xfs_bdwrite(mp, bp);
-@@ -3251,52 +3328,11 @@ xfs_iflush(
- corrupt_out:
- 	xfs_buf_relse(bp);
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--	xfs_iflush_abort(ip);
--	/*
--	 * Unlocks the flush lock
--	 */
--	return XFS_ERROR(EFSCORRUPTED);
--
- cluster_corrupt_out:
--	/* Corruption detected in the clustering loop.  Invalidate the
--	 * inode buffer and shut down the filesystem.
--	 */
--	spin_unlock(&ip->i_cluster->icl_lock);
--
--	/*
--	 * Clean up the buffer.  If it was B_DELWRI, just release it --
--	 * brelse can handle it with no problems.  If not, shut down the
--	 * filesystem before releasing the buffer.
--	 */
--	if ((bufwasdelwri= XFS_BUF_ISDELAYWRITE(bp))) {
--		xfs_buf_relse(bp);
--	}
--
--	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--
--	if(!bufwasdelwri)  {
--		/*
--		 * Just like incore_relse: if we have b_iodone functions,
--		 * mark the buffer as an error and call them.  Otherwise
--		 * mark it as stale and brelse.
--		 */
--		if (XFS_BUF_IODONE_FUNC(bp)) {
--			XFS_BUF_CLR_BDSTRAT_FUNC(bp);
--			XFS_BUF_UNDONE(bp);
--			XFS_BUF_STALE(bp);
--			XFS_BUF_SHUT(bp);
--			XFS_BUF_ERROR(bp,EIO);
--			xfs_biodone(bp);
--		} else {
--			XFS_BUF_STALE(bp);
--			xfs_buf_relse(bp);
--		}
--	}
--
--	xfs_iflush_abort(iq);
- 	/*
- 	 * Unlocks the flush lock
- 	 */
-+	xfs_iflush_abort(ip);
- 	return XFS_ERROR(EFSCORRUPTED);
- }
- 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.h	2007-11-22 10:33:51.041703837 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_inode.h	2007-11-22 10:33:53.997326012 +1100
-@@ -133,19 +133,6 @@ typedef struct dm_attrs_s {
- } dm_attrs_t;
- 
- /*
-- * This is the xfs inode cluster structure.  This structure is used by
-- * xfs_iflush to find inodes that share a cluster and can be flushed to disk at
-- * the same time.
-- */
--typedef struct xfs_icluster {
--	struct hlist_head	icl_inodes;	/* list of inodes on cluster */
--	xfs_daddr_t		icl_blkno;	/* starting block number of
--						 * the cluster */
--	struct xfs_buf		*icl_buf;	/* the inode buffer */
--	spinlock_t		icl_lock;	/* inode list lock */
--} xfs_icluster_t;
--
--/*
-  * This is the xfs in-core inode structure.
-  * Most of the on-disk inode is embedded in the i_d field.
-  *
-@@ -252,8 +239,6 @@ typedef struct xfs_inode {
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
- 
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
--	xfs_icluster_t		*i_cluster;	/* cluster list header */
--	struct hlist_node	i_cnode;	/* cluster link node */
- 
- 	xfs_fsize_t		i_size;		/* in-memory size */
- 	xfs_fsize_t		i_new_size;	/* size when write completes */
-@@ -578,7 +563,6 @@ void		xfs_inobp_check(struct xfs_mount *
- #define	xfs_inobp_check(mp, bp)
- #endif /* DEBUG */
- 
--extern struct kmem_zone	*xfs_icluster_zone;
- extern struct kmem_zone	*xfs_ifork_zone;
- extern struct kmem_zone	*xfs_inode_zone;
- extern struct kmem_zone	*xfs_ili_zone;
-Index: 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_vfsops.c	2007-11-22 10:31:27.872002517 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c	2007-11-22 10:33:53.997326012 +1100
-@@ -113,9 +113,6 @@ xfs_init(void)
- 	xfs_ili_zone =
- 		kmem_zone_init_flags(sizeof(xfs_inode_log_item_t), "xfs_ili",
- 					KM_ZONE_SPREAD, NULL);
--	xfs_icluster_zone =
--		kmem_zone_init_flags(sizeof(xfs_icluster_t), "xfs_icluster",
--					KM_ZONE_SPREAD, NULL);
- 
- 	/*
- 	 * Allocate global trace buffers.
-@@ -153,7 +150,6 @@ xfs_cleanup(void)
- 	extern kmem_zone_t	*xfs_inode_zone;
- 	extern kmem_zone_t	*xfs_efd_zone;
- 	extern kmem_zone_t	*xfs_efi_zone;
--	extern kmem_zone_t	*xfs_icluster_zone;
- 
- 	xfs_cleanup_procfs();
- 	xfs_sysctl_unregister();
-@@ -189,7 +185,6 @@ xfs_cleanup(void)
- 	kmem_zone_destroy(xfs_efi_zone);
- 	kmem_zone_destroy(xfs_ifork_zone);
- 	kmem_zone_destroy(xfs_ili_zone);
--	kmem_zone_destroy(xfs_icluster_zone);
- }
- 
- /*
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ksyms.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-11-22 10:25:24.226452510 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ksyms.c	2007-11-22 10:33:53.997326012 +1100
-@@ -211,7 +211,6 @@ EXPORT_SYMBOL(xfs_bulkstat);
- EXPORT_SYMBOL(xfs_bunmapi);
- EXPORT_SYMBOL(xfs_bwrite);
- EXPORT_SYMBOL(xfs_change_file_space);
--EXPORT_SYMBOL(xfs_icluster_zone);
- EXPORT_SYMBOL(xfs_dev_is_read_only);
- EXPORT_SYMBOL(xfs_dir_ialloc);
- EXPORT_SYMBOL(xfs_error_report);
-Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2007-11-22 10:25:25.994226806 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2007-11-22 10:33:54.001325501 +1100
-@@ -6465,10 +6465,6 @@ xfsidbg_xnode(xfs_inode_t *ip)
- 	qprintf(" dir trace 0x%p\n", ip->i_dir_trace);
- #endif  
- 	kdb_printf("\n");
--	kdb_printf("icluster 0x%p cnext 0x%p cprev 0x%p\n",
--		ip->i_cluster,
--		ip->i_cnode.next,
--		ip->i_cnode.pprev);
- 	xfs_xnode_fork("data", &ip->i_df);
- 	xfs_xnode_fork("attr", ip->i_afp);
- 	kdb_printf("\n");
+-	for (iq = &ilist[0]; iq < &ilist[nr_found]; iq++) {
++	for (i = 0; i < nr_found; i++) {
++		iq = ilist[i];
+ 		if (iq == ip)
+ 			continue;
+-		/* if the inode lies outside this cluster, we're done. */
+-		if ((XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index)
+-			break;
+ 		/*
+ 		 * Do an un-protected check to see if the inode is dirty and
+ 		 * is a candidate for flushing.  These checks will be repeated
