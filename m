@@ -1,45 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Nov 2007 18:53:15 -0800 (PST)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAN2r9tT008773
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2007 18:53:11 -0800
-Date: Fri, 23 Nov 2007 03:53:17 +0100
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
-Message-ID: <20071123025317.GA12257@one.firstfloor.org>
-References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de> <20071122011214.GR114266761@sgi.com> <1195702123.8369.78.camel@localhost.localdomain> <20071122120611.GA3573@one.firstfloor.org> <20071122131539.GX114266761@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071122131539.GX114266761@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Nov 2007 19:13:08 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAN3Cv5O011727
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2007 19:13:03 -0800
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id OAA17835 for <xfs@oss.sgi.com>; Fri, 23 Nov 2007 14:13:05 +1100
+Subject: TAKE 972554 - Clear XBF_READ_AHEAD flag on I/O completion.
+Message-Id: <20071123031305.4E3D758C4C0A@chook.melbourne.sgi.com>
+Date: Fri, 23 Nov 2007 14:13:05 +1100 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Stewart Smith <stewart@mysql.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Fri, Nov 23, 2007 at 12:15:39AM +1100, David Chinner wrote:
-> On Thu, Nov 22, 2007 at 01:06:11PM +0100, Andi Kleen wrote:
-> > > FWIW from a "real time" database POV this seems to make sense to me...
-> > > in fact, we probably rely on filesystem metadata way too much
-> > > (historically it's just "worked".... although we do seem to get issues
-> > > on ext3).
-> > 
-> > For that case you really would need priority inheritance: any metadata
-> > IO on behalf or blocking a process needs to use the process' block IO 
-> > priority.
-> 
-> How do you do that when the processes are blocking on semaphores,
-> mutexes or rw-semaphores in the fileysystem three layers removed from
-> the I/O in progress?
+Clear XBF_READ_AHEAD flag on I/O completion.
 
-[...] I didn't say it was easy (or rather explicitely said it would be tricky).
-Probably it would be possible to fold it somehow into rt mutexes PI,
-but it's not easy and semaphores would need to be handled too.
+Date:  Fri Nov 23 14:08:40 AEDT 2007
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-bufflag
+Inspected by:  hch
+Author:  lachlan
 
-Just my point was to solve the metadata RT problem unconditionally increasing
-the priority is a bad idea and not really a replacement to a "full"
-solution. Short term a user can just increase the priority of all the XFS 
-threads anyways.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
--Andi
+
+Modid:  xfs-linux-melb:xfs-kern:30128a
+fs/xfs/linux-2.6/xfs_buf.c - 1.248 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.248&r2=text&tr2=1.247&f=h
+	- Clear XBF_READ_AHEAD flag on I/O completion.
