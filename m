@@ -1,188 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 Nov 2007 23:05:59 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAN75mdj018862
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2007 23:05:52 -0800
-Message-ID: <47467B87.2000000@sgi.com>
-Date: Fri, 23 Nov 2007 18:04:39 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: [PATCH, RFC] Delayed logging of file sizes
-Content-Type: multipart/mixed;
- boundary="------------070405030101040701060405"
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Nov 2007 04:01:14 -0800 (PST)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lANC17Uf006507
+	for <xfs@oss.sgi.com>; Fri, 23 Nov 2007 04:01:09 -0800
+Date: Fri, 23 Nov 2007 13:01:15 +0100
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
+Message-ID: <20071123120115.GA18532@one.firstfloor.org>
+References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de> <20071122011214.GR114266761@sgi.com> <1195702123.8369.78.camel@localhost.localdomain> <20071122120611.GA3573@one.firstfloor.org> <20071122131539.GX114266761@sgi.com> <20071123025317.GA12257@one.firstfloor.org> <20071123040329.GB114266761@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071123040329.GB114266761@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Andi Kleen <andi@firstfloor.org>, Stewart Smith <stewart@mysql.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070405030101040701060405
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Fri, Nov 23, 2007 at 03:03:29PM +1100, David Chinner wrote:
+> On Fri, Nov 23, 2007 at 03:53:17AM +0100, Andi Kleen wrote:
+> > On Fri, Nov 23, 2007 at 12:15:39AM +1100, David Chinner wrote:
+> > > On Thu, Nov 22, 2007 at 01:06:11PM +0100, Andi Kleen wrote:
+> > > > > FWIW from a "real time" database POV this seems to make sense to me...
+> > > > > in fact, we probably rely on filesystem metadata way too much
+> > > > > (historically it's just "worked".... although we do seem to get issues
+> > > > > on ext3).
+> > > > 
+> > > > For that case you really would need priority inheritance: any metadata
+> > > > IO on behalf or blocking a process needs to use the process' block IO 
+> > > > priority.
+> > > 
+> > > How do you do that when the processes are blocking on semaphores,
+> > > mutexes or rw-semaphores in the fileysystem three layers removed from
+> > > the I/O in progress?
+> > 
+> > [...] I didn't say it was easy (or rather explicitely said it would be tricky).
+> > Probably it would be possible to fold it somehow into rt mutexes PI,
+> > but it's not easy and semaphores would need to be handled too.
+> > 
+> > Just my point was to solve the metadata RT problem unconditionally increasing
+> > the priority is a bad idea and not really a replacement to a "full"
+> > solution. Short term a user can just increase the priority of all the XFS 
+> > threads anyways.
+> 
+> The point is that it's not actually a thread-based problem - the priority
+> can't be inherited via the traditional mutex-like manner. There is no
+> connection between a thread and an I/o it has already issued and so you
+> can't transfer a priority from a blocked thread to an issued-but-blocked
+> i/o....
 
-Here's a patch for an idea to address an issue we have with log
-replay.  The problem stems from the fact that not all changes to
-inodes result in transactions.  Some changes (such as file size
-updates, timestamp updates) would generate too much log traffic
-if we logged a transaction for every event.  So we update the inode
-and flag it as dirty (ie set i_update_core/i_update_size).  If the
-inode gets logged in a later transaction then the update gets
-rolled into that transaction and the flag is cleared.  If the inode
-gets flushed to disk before another transaction then the on-disk
-version of the inode is newer than what is in the log.
+It could be handled in theory similar to standard CPU priority inheritance -- \
+keep track of IO priority of all threads you block and boost your IO priority
+always to that level. But it would be probably not very easy to do.
 
-On log replay we risk overwriting a newer inode on disk with an
-older version of the inode from the log.  We try to prevent this with
-the i_flushiter counter in the inode (the on-disk inode will have a
-greater flushiter than the inode in the log) but this does not work
-for newly created inode cluster buffers.  When log replay encounters
-a newly allocated inode cluster buffer in the log it cannot determine
-if the on-disk version of the cluster is older, newer or even valid.
-Since we cannot determine if the on-disk inode cluster has been
-initialised since it was logged we cannot read it to check the
-i_flushiter values.  If we write out the log record anyway we risk
-overwriting newer inode data, if we don't write out the log record
-we risk exposing an uninitialised inode cluster.
 
-The easy solution is to log everything so that log replay doesn't need
-to check if the on-disk version is newer - it can just replay the log.
-But logging everything would cause too much log traffic so this patch
-is a compromise and it logs a transaction before we flush an inode to
-disk only if it has changes that have not yet been logged.  With this
-scheme we don't clear the i_update_core flag when flushing an inode -
-we only do that when logging a transaction.  The flag is used to
-determine if a transaction needs to be done.  It needs to be this way
-because the log pushing code may need to flush an inode and we cannot
-create a transaction at that point.
-
-Anyway it's an idea and needs a little polishing so comments are welcome.
-
-Lachlan
-
---------------070405030101040701060405
-Content-Type: text/x-patch;
- name="logsize.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="logsize.diff"
-
---- fs/xfs/xfs_inode.c_1.487	2007-11-23 14:18:58.000000000 +1100
-+++ fs/xfs/xfs_inode.c	2007-11-23 14:20:55.000000000 +1100
-@@ -3331,21 +3331,6 @@ xfs_iflush_int(
- 	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_boffset);
- 
- 	/*
--	 * Clear i_update_core before copying out the data.
--	 * This is for coordination with our timestamp updates
--	 * that don't hold the inode lock. They will always
--	 * update the timestamps BEFORE setting i_update_core,
--	 * so if we clear i_update_core after they set it we
--	 * are guaranteed to see their updates to the timestamps.
--	 * I believe that this depends on strongly ordered memory
--	 * semantics, but we have that.  We use the SYNCHRONIZE
--	 * macro to make sure that the compiler does not reorder
--	 * the i_update_core access below the data copy below.
--	 */
--	ip->i_update_core = 0;
--	SYNCHRONIZE();
--
--	/*
- 	 * Make sure to get the latest atime from the Linux inode.
- 	 */
- 	xfs_synchronize_atime(ip);
---- fs/xfs/xfs_vfsops.c_1.548	2007-11-23 14:26:52.000000000 +1100
-+++ fs/xfs/xfs_vfsops.c	2007-11-23 14:18:03.000000000 +1100
-@@ -1162,6 +1162,12 @@ xfs_sync_inodes(
- 			if (mount_locked)
- 				IPOINTER_INSERT(ip, mp);
- 
-+			if (ip->i_update_core) {
-+				xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+				error = xfs_log_inode(ip, flags & SYNC_WAIT);
-+				xfs_ilock(ip, XFS_ILOCK_SHARED);
-+			}
-+
- 			if (flags & SYNC_WAIT) {
- 				xfs_iflock(ip);
- 				error = xfs_iflush(ip, XFS_IFLUSH_SYNC);
---- fs/xfs/xfs_vnodeops.c_1.726	2007-11-23 14:26:53.000000000 +1100
-+++ fs/xfs/xfs_vnodeops.c	2007-11-23 14:18:03.000000000 +1100
-@@ -3527,6 +3527,39 @@ xfs_rwunlock(
- 
- 
- int
-+xfs_log_inode(
-+	xfs_inode_t	*ip,
-+	int		sync)
-+{
-+	xfs_trans_t	*tp;
-+	int		error;
-+
-+	xfs_itrace_entry(ip);
-+
-+	if (ip->i_update_core == 0)
-+		return 0;
-+
-+	tp = xfs_trans_alloc(ip->i_mount, XFS_TRANS_FSYNC_TS);
-+	if ((error = xfs_trans_reserve(tp, 0,
-+			XFS_FSYNC_TS_LOG_RES(ip->i_mount), 0, 0, 0))) {
-+		xfs_trans_cancel(tp, 0);
-+		return error;
-+	}
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_synchronize_atime(ip);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ihold(tp, ip);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	if (sync)
-+		xfs_trans_set_sync(tp);
-+	error = xfs_trans_commit(tp, 0);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
-+
-+int
- xfs_inode_flush(
- 	xfs_inode_t	*ip,
- 	int		flags)
-@@ -3579,6 +3612,10 @@ xfs_inode_flush(
- 	if (flags & FLUSH_INODE) {
- 		int	flush_flags;
- 
-+		error = xfs_log_inode(ip, flags & FLUSH_SYNC);
-+		if (error)
-+			return error;
-+
- 		if (flags & FLUSH_SYNC) {
- 			xfs_ilock(ip, XFS_ILOCK_SHARED);
- 			xfs_iflock(ip);
-@@ -3751,6 +3788,15 @@ xfs_finish_reclaim(
- 		if (ip->i_update_core ||
- 		    ((ip->i_itemp != NULL) &&
- 		     (ip->i_itemp->ili_format.ilf_fields != 0))) {
-+
-+			if (ip->i_update_core) {
-+				xfs_ifunlock(ip);
-+				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+				error = xfs_log_inode(ip, sync_mode & XFS_IFLUSH_SYNC);
-+				xfs_ilock(ip, XFS_ILOCK_EXCL);
-+				xfs_iflock(ip);
-+			}
-+
- 			error = xfs_iflush(ip, sync_mode);
- 			/*
- 			 * If we hit an error, typically because of filesystem
---- fs/xfs/xfs_vnodeops.h_1.4	2007-10-04 14:53:13.000000000 +1000
-+++ fs/xfs/xfs_vnodeops.h	2007-10-04 18:11:51.000000000 +1000
-@@ -80,4 +80,6 @@ int xfs_flushinval_pages(struct xfs_inod
- int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
- 		xfs_off_t last, uint64_t flags, int fiopt);
- 
-+int xfs_log_inode(struct xfs_inode *ip, int sync);
-+
- #endif /* _XFS_VNODEOPS_H */
-
---------------070405030101040701060405--
+-Andi
