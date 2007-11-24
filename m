@@ -1,44 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 Nov 2007 12:51:34 -0800 (PST)
-Received: from perches.com (DSL022.labridge.com [206.117.136.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lANKpSSe028464
-	for <xfs@oss.sgi.com>; Fri, 23 Nov 2007 12:51:30 -0800
-Subject: Re: [PATCH 9/9] Clean up open coded inode dirty checks
-From: Joe Perches <joe@perches.com>
-In-Reply-To: <Pine.LNX.4.64.0711231914300.12552@fbirervta.pbzchgretzou.qr>
-References: <20071122004422.GO114266761@sgi.com>
-	 <20071123180239.GA13229@infradead.org>
-	 <Pine.LNX.4.64.0711231914300.12552@fbirervta.pbzchgretzou.qr>
-Content-Type: text/plain
-Date: Fri, 23 Nov 2007 11:47:31 -0800
-Message-Id: <1195847251.4930.21.camel@localhost>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Nov 2007 10:44:02 -0800 (PST)
+Received: from waste.org (waste.org [66.93.16.53])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAOIhpQZ011727
+	for <xfs@oss.sgi.com>; Sat, 24 Nov 2007 10:43:54 -0800
+Date: Sat, 24 Nov 2007 12:43:33 -0600
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
+Message-ID: <20071124184333.GK17536@waste.org>
+References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de> <20071122011214.GR114266761@sgi.com> <1195702123.8369.78.camel@localhost.localdomain> <20071122120611.GA3573@one.firstfloor.org> <20071122131539.GX114266761@sgi.com> <20071123025317.GA12257@one.firstfloor.org> <20071123040329.GB114266761@sgi.com> <20071123120115.GA18532@one.firstfloor.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071123120115.GA18532@one.firstfloor.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Engelhardt <jengelh@computergmbh.de>
-Cc: Christoph Hellwig <hch@infradead.org>, David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: David Chinner <dgc@sgi.com>, Stewart Smith <stewart@mysql.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
 
-On Fri, 2007-11-23 at 19:16 +0100, Jan Engelhardt wrote:
-> static inline bool xfs_inode_clean(const struct xfs_inode *ip)
-> {
-> 	if (ip->i_itemp == NULL)
-> 		return true;
-> 	if (!(ip->i_itemp->ili_format.ilf_fields & XFS_ILOG_ALL) &&
-> 	    ip->i_update_core == NULL)
-> 		return true;
-> 	return false;
-> }
+On Fri, Nov 23, 2007 at 01:01:15PM +0100, Andi Kleen wrote:
+> On Fri, Nov 23, 2007 at 03:03:29PM +1100, David Chinner wrote:
+> > On Fri, Nov 23, 2007 at 03:53:17AM +0100, Andi Kleen wrote:
+> > > On Fri, Nov 23, 2007 at 12:15:39AM +1100, David Chinner wrote:
+> > > > On Thu, Nov 22, 2007 at 01:06:11PM +0100, Andi Kleen wrote:
+> > > > > > FWIW from a "real time" database POV this seems to make sense to me...
+> > > > > > in fact, we probably rely on filesystem metadata way too much
+> > > > > > (historically it's just "worked".... although we do seem to get issues
+> > > > > > on ext3).
+> > > > > 
+> > > > > For that case you really would need priority inheritance: any metadata
+> > > > > IO on behalf or blocking a process needs to use the process' block IO 
+> > > > > priority.
+> > > > 
+> > > > How do you do that when the processes are blocking on semaphores,
+> > > > mutexes or rw-semaphores in the fileysystem three layers removed from
+> > > > the I/O in progress?
+> > > 
+> > > [...] I didn't say it was easy (or rather explicitely said it would be tricky).
+> > > Probably it would be possible to fold it somehow into rt mutexes PI,
+> > > but it's not easy and semaphores would need to be handled too.
+> > > 
+> > > Just my point was to solve the metadata RT problem unconditionally increasing
+> > > the priority is a bad idea and not really a replacement to a "full"
+> > > solution. Short term a user can just increase the priority of all the XFS 
+> > > threads anyways.
+> > 
+> > The point is that it's not actually a thread-based problem - the priority
+> > can't be inherited via the traditional mutex-like manner. There is no
+> > connection between a thread and an I/o it has already issued and so you
+> > can't transfer a priority from a blocked thread to an issued-but-blocked
+> > i/o....
+> 
+> It could be handled in theory similar to standard CPU priority inheritance -- \
+> keep track of IO priority of all threads you block and boost your IO priority
+> always to that level. But it would be probably not very easy to do.
 
-Your code changed the test.
-xfs_inode.i_update_core is an unsigned char.
+Well I think what Dave is saying is that we can't find the related
+process. The submitter process may have even exited before the flush
+happens.. You'd instead have to keep track of (the max of) all the
+submitted I/O segment priorities related to the transaction instead.
+But I'm sure there are complications.
 
-I believe reordering the tests to avoid a possibly
-unnecessary dereference is better.
-
-	if (ip->i_update_core)
-		return false;
-	if (!ip->i_itemp)
-		return true;
-	return ip->i_itemp->ili_format.ilf_fields & XFS_ILOG_ALL;
+-- 
+Mathematics is the supreme nostalgia of our time.
