@@ -1,65 +1,176 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 Nov 2007 10:44:02 -0800 (PST)
-Received: from waste.org (waste.org [66.93.16.53])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAOIhpQZ011727
-	for <xfs@oss.sgi.com>; Sat, 24 Nov 2007 10:43:54 -0800
-Date: Sat, 24 Nov 2007 12:43:33 -0600
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCH 2/9]: Reduce Log I/O latency
-Message-ID: <20071124184333.GK17536@waste.org>
-References: <20071122003339.GH114266761__34694.2978365861$1195691722$gmane$org@sgi.com> <p73oddnhzoq.fsf@bingen.suse.de> <20071122011214.GR114266761@sgi.com> <1195702123.8369.78.camel@localhost.localdomain> <20071122120611.GA3573@one.firstfloor.org> <20071122131539.GX114266761@sgi.com> <20071123025317.GA12257@one.firstfloor.org> <20071123040329.GB114266761@sgi.com> <20071123120115.GA18532@one.firstfloor.org>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 Nov 2007 08:47:52 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAPGlhXF032142
+	for <linux-xfs@oss.sgi.com>; Sun, 25 Nov 2007 08:47:44 -0800
+Date: Sun, 25 Nov 2007 16:30:14 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: revert to double-buffering readdir
+Message-ID: <20071125163014.GA17922@infradead.org>
+References: <20071114070400.GA25708@puku.stupidest.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20071123120115.GA18532@one.firstfloor.org>
+In-Reply-To: <20071114070400.GA25708@puku.stupidest.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>
-Cc: David Chinner <dgc@sgi.com>, Stewart Smith <stewart@mysql.com>, xfs-oss <xfs@oss.sgi.com>, lkml <linux-kernel@vger.kernel.org>
+To: Chris Wedgwood <cw@f00f.org>
+Cc: linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Nov 23, 2007 at 01:01:15PM +0100, Andi Kleen wrote:
-> On Fri, Nov 23, 2007 at 03:03:29PM +1100, David Chinner wrote:
-> > On Fri, Nov 23, 2007 at 03:53:17AM +0100, Andi Kleen wrote:
-> > > On Fri, Nov 23, 2007 at 12:15:39AM +1100, David Chinner wrote:
-> > > > On Thu, Nov 22, 2007 at 01:06:11PM +0100, Andi Kleen wrote:
-> > > > > > FWIW from a "real time" database POV this seems to make sense to me...
-> > > > > > in fact, we probably rely on filesystem metadata way too much
-> > > > > > (historically it's just "worked".... although we do seem to get issues
-> > > > > > on ext3).
-> > > > > 
-> > > > > For that case you really would need priority inheritance: any metadata
-> > > > > IO on behalf or blocking a process needs to use the process' block IO 
-> > > > > priority.
-> > > > 
-> > > > How do you do that when the processes are blocking on semaphores,
-> > > > mutexes or rw-semaphores in the fileysystem three layers removed from
-> > > > the I/O in progress?
-> > > 
-> > > [...] I didn't say it was easy (or rather explicitely said it would be tricky).
-> > > Probably it would be possible to fold it somehow into rt mutexes PI,
-> > > but it's not easy and semaphores would need to be handled too.
-> > > 
-> > > Just my point was to solve the metadata RT problem unconditionally increasing
-> > > the priority is a bad idea and not really a replacement to a "full"
-> > > solution. Short term a user can just increase the priority of all the XFS 
-> > > threads anyways.
-> > 
-> > The point is that it's not actually a thread-based problem - the priority
-> > can't be inherited via the traditional mutex-like manner. There is no
-> > connection between a thread and an I/o it has already issued and so you
-> > can't transfer a priority from a blocked thread to an issued-but-blocked
-> > i/o....
-> 
-> It could be handled in theory similar to standard CPU priority inheritance -- \
-> keep track of IO priority of all threads you block and boost your IO priority
-> always to that level. But it would be probably not very easy to do.
+The current readdir implementation deadlocks on a btree buffers locks
+because nfsd calls back into ->lookup from the filldir callback.  The
+only short-term fix for this is to revert to the old inefficient
+double-buffering scheme.
 
-Well I think what Dave is saying is that we can't find the related
-process. The submitter process may have even exited before the flush
-happens.. You'd instead have to keep track of (the max of) all the
-submitted I/O segment priorities related to the transaction instead.
-But I'm sure there are complications.
+This patch does exactly that and reverts xfs_file_readdir to what's
+basically the 2.6.23 version minus the uio and vnops junk.
 
--- 
-Mathematics is the supreme nostalgia of our time.
+I'll try to find something more optimal for 2.6.25 or at least find a
+way to use the proper version for local access.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2007-11-25 11:41:20.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2007-11-25 17:14:27.000000000 +0100
+@@ -218,6 +218,15 @@
+ }
+ #endif /* CONFIG_XFS_DMAPI */
+ 
++/*
++ * Unfortunately we can't just use the clean and simple readdir implementation
++ * below, because nfs might call back into ->lookup from the filldir callback
++ * and that will deadlock the low-level btree code.
++ *
++ * Hopefully we'll find a better workaround that allows to use the optimal
++ * version at least for local readdirs for 2.6.25.
++ */
++#if 0
+ STATIC int
+ xfs_file_readdir(
+ 	struct file	*filp,
+@@ -249,6 +258,121 @@
+ 		return -error;
+ 	return 0;
+ }
++#else
++
++struct hack_dirent {
++	int		namlen;
++	loff_t		offset;
++	u64		ino;
++	unsigned int	d_type;
++	char		name[];
++};
++
++struct hack_callback {
++	char		*dirent;
++	size_t		len;
++	size_t		used;
++};
++
++STATIC int
++xfs_hack_filldir(
++	void		*__buf,
++	const char	*name,
++	int		namlen,
++	loff_t		offset,
++	u64		ino,
++	unsigned int	d_type)
++{
++	struct hack_callback *buf = __buf;
++	struct hack_dirent *de = (struct hack_dirent *)(buf->dirent + buf->used);
++
++	if (buf->used + sizeof(struct hack_dirent) + namlen > buf->len)
++		return -EINVAL;
++
++	de->namlen = namlen;
++	de->offset = offset;
++	de->ino = ino;
++	de->d_type = d_type;
++	memcpy(de->name, name, namlen);
++	buf->used += sizeof(struct hack_dirent) + namlen;
++	return 0;
++}
++
++STATIC int
++xfs_file_readdir(
++	struct file	*filp,
++	void		*dirent,
++	filldir_t	filldir)
++{
++	struct inode	*inode = filp->f_path.dentry->d_inode;
++	xfs_inode_t	*ip = XFS_I(inode);
++	struct hack_callback buf;
++	struct hack_dirent *de;
++	int		error;
++	loff_t		size;
++	int		eof = 0;
++	xfs_off_t       start_offset, curr_offset, offset;
++
++	/*
++	 * Try fairly hard to get memory
++	 */
++	buf.len = PAGE_CACHE_SIZE;
++	do {
++		buf.dirent = kmalloc(buf.len, GFP_KERNEL);
++		if (buf.dirent)
++			break;
++		buf.len >>= 1;
++	} while (buf.len >= 1024);
++
++	if (!buf.dirent)
++		return -ENOMEM;
++
++	curr_offset = filp->f_pos;
++	if (curr_offset == 0x7fffffff)
++		offset = 0xffffffff;
++	else
++		offset = filp->f_pos;
++
++	while (!eof) {
++		int reclen;
++		start_offset = offset;
++
++		buf.used = 0;
++		error = -xfs_readdir(ip, &buf, buf.len, &offset,
++				     xfs_hack_filldir);
++		if (error || offset == start_offset) {
++			size = 0;
++			break;
++		}
++
++		size = buf.used;
++		de = (struct hack_dirent *)buf.dirent;
++		while (size > 0) {
++			if (filldir(dirent, de->name, de->namlen,
++					curr_offset & 0x7fffffff,
++					de->ino, de->d_type)) {
++				goto done;
++			}
++
++			reclen = sizeof(struct hack_dirent) + de->namlen;
++			size -= reclen;
++			curr_offset = de->offset /* & 0x7fffffff */;
++			de = (struct hack_dirent *)((char *)de + reclen);
++		}
++	}
++
++ done:
++ 	if (!error) {
++		if (size == 0)
++			filp->f_pos = offset & 0x7fffffff;
++		else if (de)
++			filp->f_pos = curr_offset;
++	}
++
++	kfree(buf.dirent);
++	return error;
++}
++#endif
+ 
+ STATIC int
+ xfs_file_mmap(
