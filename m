@@ -1,55 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 Nov 2007 17:10:46 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 Nov 2007 17:17:58 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAQ1Ab8I025111
-	for <xfs@oss.sgi.com>; Sun, 25 Nov 2007 17:10:41 -0800
-Date: Mon, 26 Nov 2007 12:10:44 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH, RFC] Delayed logging of file sizes
-Message-ID: <20071126011044.GG114266761@sgi.com>
-References: <47467B87.2000000@sgi.com> <20071125225928.GE114266761@sgi.com> <474A112D.2040006@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <474A112D.2040006@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAQ1Hoxk026741
+	for <xfs@oss.sgi.com>; Sun, 25 Nov 2007 17:17:53 -0800
+Message-ID: <474A1F24.9070303@sgi.com>
+Date: Mon, 26 Nov 2007 12:19:32 +1100
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] cleanup XFS_IFORK_*/XFS_DFORK* macros
+References: <20070922102238.GA15732@lst.de> <20071125163102.GB17922@infradead.org>
+In-Reply-To: <20071125163102.GB17922@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Mon, Nov 26, 2007 at 11:19:57AM +1100, Lachlan McIlroy wrote:
-> David Chinner wrote:
-> >On Fri, Nov 23, 2007 at 06:04:39PM +1100, Lachlan McIlroy wrote:
-> >>The easy solution is to log everything so that log replay doesn't need
-> >>to check if the on-disk version is newer - it can just replay the log.
-> >>But logging everything would cause too much log traffic so this patch
-> >>is a compromise and it logs a transaction before we flush an inode to
-> >>disk only if it has changes that have not yet been logged.
-> >
-> >The problem with this is that the inode will be marked dirty during the
-> >transaction, so we'll never be able to clean an inode if we issue a
-> >transaction during inode writeback.
+Christoph Hellwig wrote:
+> On Sat, Sep 22, 2007 at 12:22:38PM +0200, Christoph Hellwig wrote:
+>> (try number three, maybe it manages to get through the list this time)
+>>
+>> Currently XFS_IFORK_* and XFS_DFORK* are implemented by means of
+>> XFS_CFORK* macros.  But given that XFS_IFORK_* operates on an
+>> xfs_inode that embedds and xfs_icdinode_core and XFS_DFORK_* operates
+>> on an xfs_dinode that embedds a xfs_dinode_core one will have to do
+>> endian swapping while the other doesn't.  Instead of having the current
+>> mess with the CFORK macros that have byteswapping and non-byteswapping
+>> version (which are inconsistantly named while we're at it) just define
+>> each family of the macros to stand by itself and simplify the whole
+>> matter.
+>>
+>> A few direct references to the CFORK variants were cleaned up to
+>> use IFORK or DFORK to make this possible.
 > 
-> Ah, yeah, good point.  I wrote this patch back before that "dirty inode
-> on transaction" patch went in.
+> ping?  this is almost two month old now..
+> 
 
-Wouldn't have made aany difference - the inode woul dbe marked dirty
-at transaction completion...
+I'll have a look...
 
-> For this transaction though the changes
-> to the inode have already been made (ie when we set i_update_core and
-> called mark_inode_dirty_sync()) so there is no need to dirty it in this
-> transaction.  I'll keep digging.  Thanks.
-
-I wouldn't worry too much about this problem right now - I'm working
-on moving the dirty state into the inode radix trees so i_update_core
-might even go away completely soon....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--Tim
