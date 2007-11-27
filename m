@@ -1,92 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Nov 2007 13:34:57 -0800 (PST)
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lARLYqev011980
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 13:34:54 -0800
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: XFS related Oops (suspend/resume related)
-Date: Tue, 27 Nov 2007 22:53:00 +0100
-References: <20071112064706.GA23595@dose.home.local> <200711271651.39180.rjw@sisk.pl> <20071127211155.GK119954183@sgi.com>
-In-Reply-To: <20071127211155.GK119954183@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Nov 2007 13:43:16 -0800 (PST)
+Received: from av9-2-sn2.hy.skanova.net (av9-2-sn2.hy.skanova.net [81.228.8.180])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lARLhAxj013431
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 13:43:12 -0800
+Received: from smtp4-2-sn2.hy.skanova.net (smtp4-2-sn2.hy.skanova.net [81.228.8.93])
+	by av9-2-sn2.hy.skanova.net (Postfix) with ESMTP id 8DA1938E6D
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 22:20:50 +0100 (CET)
+Received: from cobra.e-626.net (h193n1fls32o1110.telia.com [213.67.141.193])
+	by smtp4-2-sn2.hy.skanova.net (Postfix) with ESMTP id 7657137E4A
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 22:20:50 +0100 (CET)
+Received: from [192.168.1.9] (h193n1fls32o1110.telia.com [213.67.141.193])
+	(authenticated bits=0)
+	by cobra.e-626.net (8.14.0/8.14.0) with ESMTP id lARLKfTr022579
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 22:20:46 +0100
+Message-ID: <474C8A05.3020604@e-626.net>
+Date: Tue, 27 Nov 2007 22:20:05 +0100
+From: Johan Andersson <johan@e-626.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Subject: XFS performance problems on Linux x86_64 
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200711272253.01136.rjw@sisk.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Tino Keitel <tino.keitel@gmx.de>
+To: xfs@oss.sgi.com
 
-On Tuesday, 27 of November 2007, David Chinner wrote:
-> On Tue, Nov 27, 2007 at 04:51:38PM +0100, Rafael J. Wysocki wrote:
-> > On Monday, 26 of November 2007, Rafael J. Wysocki wrote:
-> > > On Monday, 26 of November 2007, David Chinner wrote:
-> > > > Now there's a message that I haven't seen in about 3 years.
-> > > > 
-> > > > It indicates that the linux inode connected to the xfs_inode is not
-> > > > the correct one. i.e. that the linux inode cache is out of step with
-> > > > the XFS inode cache.
-> > > > 
-> > > > Basically, that is not supposed to happen. I suspect that the way
-> > > > threads are frozen is resulting in an inode lookup racing with
-> > > > a reclaim. The reclaim thread gets stopped after any use threads,
-> > > > and so we could have the situation that a process blocked in lookup
-> > > > has the XFS inode reclaimed and reused before it gets unblocked.
-> > > > 
-> > > > The question is why is it happening now when none of that code in
-> > > > XFS has changed?
-> > > > 
-> > > > Rafael, when are threads frozen? Only when they schedule or call
-> > > > try_to_freeze()?
-> > > 
-> > > Kernel threads freeze only when they call try_to_freeze().  User space tasks
-> > > freeze while executing the signals handling code.
-> > > 
-> > > > Did the freezer mechanism change in 2.6.23 (this is on 2.6.23.1)?
-> > > 
-> > > Yes.  Kernel threads are not sent fake signals by the freezer any more.
-> > 
-> > Ah, sorry, this change has been merged after 2.6.23.  However, before 2.6.23
-> > we had another important change that caused all kernel threads to have
-> > PF_NOFREEZE set by default, unless they call set_freezable() explicitly.
-> 
-> So try_to_freeze() will never freeze a thread if it has not been
-> set_freezable()? And xfsbufd will never be frozen?
+Hi!
 
-No, it won't.
+I am using Gentoo Linux on XFS root filesystem on a number of machines, 
+where some are P4 based i686, and some new are Intel Core 2 Duo based 
+x86_64 based.
+When the new x86_64 based machines were put into service, we noticed 
+that they are extremely slow on file io. I have now created two test 
+partitions, each 5G in size, on the same disk. One is xfs and one is 
+ext3, both filesystems created with default options. My simple test is 
+to rsync our local portage tree to the 5G partition:
+=====================================================================
+tmpc-masv2 xfs # time rsync -r --delete rsync://devsrv/portage portage
 
-I must have overlooked it, probably because it calls refrigerator() directly
-and not try_to_freeze() ...
+real    5m55.037s
+user    0m1.291s
+sys     0m10.352s
 
-I think something like the appended patch will help, then.
+======================================================================
+tmpc-masv2 ext3 # time rsync -r --delete rsync://devsrv/portage portage
 
-Greetings,
-Rafael
+real    0m28.943s
+user    0m1.095s
+sys     0m5.384s
 
+I have repeated this a number of times to make sure caching on the 
+server does not interfere, with about the same results every time.
 
----
-Fix breakage caused by commit 831441862956fffa17b9801db37e6ea1650b0f69
-that did not introduce the necessary call to set_freezable() in
-xfs/linux-2.6/xfs_buf.c .
+Any idea why XFS appears to be 12 times slower than ext3 on the 64-bit 
+machine?
 
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- fs/xfs/linux-2.6/xfs_buf.c |    2 ++
- 1 file changed, 2 insertions(+)
+I have also some statistics from bonnie++:
+XFS:
+> Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
+> Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> tmpc-masv2       4G   929  99 48914   8 23036   3  1872  96 50322   4 162.0   1
+> Latency              8913us    1675ms     492ms   54567us     161ms     503ms
+> Version 1.93c       ------Sequential Create------ --------Random Create--------
+> tmpc-masv2          -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+>               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+>                  16  3241  13 +++++ +++  3541  13  3729  14 +++++ +++  1001   4
+> Latency             60600us      80us   34066us   82412us      22us     269ms
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1750,6 +1750,8 @@ xfsbufd(
- 
- 	current->flags |= PF_MEMALLOC;
- 
-+	set_freezable();
-+
- 	do {
- 		if (unlikely(freezing(current))) {
- 			set_bit(XBT_FORCE_SLEEP, &target->bt_flags);
+EXT3:
+> Version 1.93c       ------Sequential Output------ --Sequential Input- --Random-
+> Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> tmpc-masv2       4G   581  98 43340   9 22933   4  2435  96 50829   4 153.5   1
+> Latency             56412us    2111ms    1885ms   41179us     101ms     690ms
+> Version 1.93c       ------Sequential Create------ --------Random Create--------
+> tmpc-masv2          -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+>               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+>                  16 31286  38 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
+> Latency             11233us     145us     165us    7555us       8us      40us
+
+As it looks here, xfs performs ok (but not as good as expected) on large 
+files, but creating and deleting files is extremely slow.
+
+The machine these test run on uses Gentoo kernel sources 
+2.6.23-gentoo-r1 (also tested with 2.6.22-gentoo-r8). xfsprogs is 2.9.4.
+
+/Johan Andersson
