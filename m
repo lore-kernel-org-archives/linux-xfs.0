@@ -1,459 +1,201 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Nov 2007 18:31:22 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 Nov 2007 20:19:58 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAS2VDSQ031238
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 18:31:15 -0800
-Message-ID: <474CD2BA.8070204@sgi.com>
-Date: Wed, 28 Nov 2007 13:30:18 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAS4Jo7k014382
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2007 20:19:51 -0800
+Message-ID: <474CEC2E.8000206@sgi.com>
+Date: Wed, 28 Nov 2007 15:18:54 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: [PATCH] kill superflous buffer locking
-References: <20070924184926.GA20661@lst.de> <4716DD79.6040309@sgi.com>
-In-Reply-To: <4716DD79.6040309@sgi.com>
-Content-Type: multipart/mixed;
- boundary="------------030702060208020708020404"
+Subject: Re: [PATCH, RFC] Delayed logging of file sizes
+References: <20071125225928.GE114266761@sgi.com> <474A112D.2040006@sgi.com> <20071126011044.GG114266761@sgi.com> <474A2180.7000605@sgi.com> <20071126021515.GH114266761@sgi.com> <474A3A92.2040200@sgi.com> <20071126050300.GI114266761@sgi.com> <474B8F51.5030102@sgi.com> <20071127105358.GG119954183@sgi.com> <474CB9AE.9020604@sgi.com> <20071128020135.GM119954183@sgi.com>
+In-Reply-To: <20071128020135.GM119954183@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
---------------030702060208020708020404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Christoph,
-
-We've fixed the source of the assertion (that was the bugs in
-xfs_buf_associate_memory()) so I'm pushing your buffer lock
-removal patch back in again.
-
-While looking through it I found a couple of issues:
-
-- It called unlock_page() before calls to PagePrivate() and
-   PageUptodate().  I think the page needs to be locked during
-   these calls so I moved the unlock_page() further down.
-
-- Unlocking the pages as we go can cause a double unlock in the
-   error handling for a NULL page in the XBF_READ_AHEAD case so I
-   removed the unlocking code for that case.
-
-Would you mind checking these changes?
-
-Lachlan
-
-Lachlan McIlroy wrote:
-> Christoph,
+David Chinner wrote:
+> On Wed, Nov 28, 2007 at 11:43:26AM +1100, Lachlan McIlroy wrote:
+>> David Chinner wrote:
+>>> On Tue, Nov 27, 2007 at 02:30:25PM +1100, Lachlan McIlroy wrote:
+>>>> David Chinner wrote:
+>>>>> Sorry, i wasn't particularly clear. What I mean was that i_update_core
+>>>>> might disappear completely with the changes I'm making.
+>>>>>
+>>>>> Basically, we have three different methods of marking the inode dirty
+>>>>> at the moment - on  the linux inode (mark_inode_dirty[_sync]()), the
+>>>>> i_update_core = 1 for unlogged changes and logged changes are tracked 
+>>>>> via the
+>>>>> inode log item in the AIL.
+>>>>>
+>>>>> One top of that, we have three different methods of flushing them - one
+>>>> >from the generic code for inodes dirtied by mark_inode_dirty(), one from
+>>>>> xfssyncd for inodes that are only dirtied by setting i_update_core = 1
+>>>>> and the other from the xfsaild when log tail pushing.
+>>>>>
+>>>>> Ideally we should only have a single method for pushing out inodes. The 
+>>>>> first
+>>>>> step to that is tracking the dirty state in a single tree (the inode 
+>>>>> radix
+>>>>> trees). That means we have to hook ->dirty_inode() to catch all dirtying 
+>>>>> via
+>>>>> mark_inode_dirty[_sync]() and mark the inodes dirty in the radix tree. 
+>>>>> Then we
+>>>>> need to use xfs_mark_inode_dirty_sync() everywhere that we dirty the 
+>>>>> inode.
+>>>> Don't we already call mark_inode_dirty[_sync]() everywhere we dirty the 
+>>>> inode?
+>>> Maybe. Maybe not. Tell me - does xfs_ichgtime() do the right thing?
+>>>
+>>> [ I do know the answer to this question and there's a day of kdb tracing
+>>> behind the answer. I wrote a 15 line comment to explain what was going
+>>> on in one of my patches. ]
+>> Are you referring to the !(inode->i_state & I_LOCK) check?
 > 
-> We've had to reverse this change because it's caused a regression.
-> We haven't been able to identify why we see the following assertion
-> trigger with these changes but the assertion goes away without the
-> changes.  Until we figure out why we'll have to leave the buffer
-> locking in.
-> 
-> <5>XFS mounting filesystem hdb2
-> <5>Starting XFS recovery on filesystem: hdb2 (logdev: internal)
-> <4>XFS: xlog_recover_process_data: bad clientid
-> <4>Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 2912
-> <0>------------[ cut here ]------------
-> <2>kernel BUG at fs/xfs/support/debug.c:81!
-> <0>invalid opcode: 0000 [#1]
-> <0>SMP
-> <4>Modules linked in:
-> <0>CPU:    2
-> <0>EIP:    0060:[<c028a125>]    Not tainted VLI
-> <0>EFLAGS: 00010286   (2.6.23-kali-26_xfs-debug #1)
-> <0>EIP is at assfail+0x1e/0x22
-> <0>eax: 00000043   ebx: f3002a50   ecx: 00000001   edx: 00000086
-> <0>esi: f56e2300   edi: f8fa5c28   ebp: efa67ae4   esp: efa67ad4
-> <0>ds: 007b   es: 007b   fs: 00d8  gs: 0033  ss: 0068
-> <0>Process mount (pid: 15191, ti=efa66000 task=f7b43570 task.ti=efa66000)
-> <0>Stack: c05c8bda c05c6762 c05c4750 00000b60 efa67b1c c0269a35 00000004 
-> c05c5903
-> <0>       f3a14000 efa67ba8 f7e458c0 f8fa5c34 efa67bb8 f8fa6a38 0000000d 
-> 00001e00
-> <0>       f8fa4000 00000000 efa67bf4 c026a566 f8fa4000 00000001 00000651 
-> 00000000
-> <0>Call Trace:
-> <0> [<c0105eb6>] show_trace_log_lvl+0x1a/0x2f
-> <0> [<c0105f66>] show_stack_log_lvl+0x9b/0xa3
-> <0> [<c0106127>] show_registers+0x1b9/0x28b
-> <0> [<c0106312>] die+0x119/0x27b
-> <0> [<c04d5748>] do_trap+0x8a/0xa3
-> <0> [<c0106733>] do_invalid_op+0x88/0x92
-> <0> [<c04d551a>] error_code+0x72/0x78
-> <0> [<c0269a35>] xlog_recover_process_data+0x6a/0x1ff
-> <0> [<c026a566>] xlog_do_recovery_pass+0x810/0x9f3
-> <0> [<c026a7ab>] xlog_do_log_recovery+0x62/0xe2
-> <0> [<c026a848>] xlog_do_recover+0x1d/0x187
-> <0> [<c026bd17>] xlog_recover+0x88/0x95
-> <0> [<c0264d9d>] xfs_log_mount+0x100/0x144
-> <0> [<c026ea6f>] xfs_mountfs+0x278/0x639
-> <0> [<c0277917>] xfs_mount+0x25c/0x2f7
-> <0> [<c0289952>] xfs_fs_fill_super+0xab/0x1fd
-> <0> [<c0164677>] get_sb_bdev+0xd6/0x114
-> <0> [<c0288c38>] xfs_fs_get_sb+0x21/0x27
-> <0> [<c0164181>] vfs_kern_mount+0x41/0x7a
-> <0> [<c0164209>] do_kern_mount+0x37/0xbd
-> <0> [<c0175abe>] do_mount+0x566/0x5c0
-> <0> [<c0175b87>] sys_mount+0x6f/0xa9
-> <0> [<c0104e7e>] sysenter_past_esp+0x5f/0x85
-> <0> =======================
-> <0>Code: 04 24 10 00 00 00 e8 2a e7 03 00 c9 c3 55 89 e5 83 ec 10 89 4c 
-> 24 0c 89 54 24 08 89 44 24 04 c7 04 24 da 8b 5c c0 e8 07 bf e9 ff <0f> 
-> 0b eb fe 55 83 e0 07 89 e5 57 bf 07 00 00 00 56 89 d6 53 89
-> <0>EIP: [<c028a125>] assfail+0x1e/0x22 SS:ESP 0068:efa67ad4
-> 
-> Lachlan
-> 
-> Christoph Hellwig wrote:
->> There is no need to lock any page in xfs_buf.c because we operate
->> on our own address_space and all locking is covered by the buffer
->> semaphore.  If we ever switch back to main blockdeive address_space
->> as suggested e.g. for fsblock with a similar scheme the locking will
->> have to be totally revised anyway because the current scheme is
->> neither correct nor coherent with itself.
->>
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c    2007-09-23 
->> 13:28:00.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c    2007-09-23 
->> 14:13:43.000000000 +0200
->> @@ -396,6 +396,7 @@ _xfs_buf_lookup_pages(
->>              congestion_wait(WRITE, HZ/50);
->>              goto retry;
->>          }
->> +        unlock_page(page);
->>  
->>          XFS_STATS_INC(xb_page_found);
->>  
->> @@ -405,10 +406,7 @@ _xfs_buf_lookup_pages(
->>          ASSERT(!PagePrivate(page));
->>          if (!PageUptodate(page)) {
->>              page_count--;
->> -            if (blocksize >= PAGE_CACHE_SIZE) {
->> -                if (flags & XBF_READ)
->> -                    bp->b_locked = 1;
->> -            } else if (!PagePrivate(page)) {
->> +            if (blocksize < PAGE_CACHE_SIZE && !PagePrivate(page)) {
->>                  if (test_page_region(page, offset, nbytes))
->>                      page_count++;
->>              }
->> @@ -418,11 +416,6 @@ _xfs_buf_lookup_pages(
->>          offset = 0;
->>      }
->>  
->> -    if (!bp->b_locked) {
->> -        for (i = 0; i < bp->b_page_count; i++)
->> -            unlock_page(bp->b_pages[i]);
->> -    }
->> -
->>      if (page_count == bp->b_page_count)
->>          bp->b_flags |= XBF_DONE;
->>  
->> @@ -747,7 +740,6 @@ xfs_buf_associate_memory(
->>          bp->b_page_count = ++i;
->>          ptr += PAGE_CACHE_SIZE;
->>      }
->> -    bp->b_locked = 0;
->>  
->>      bp->b_count_desired = bp->b_buffer_length = len;
->>      bp->b_flags |= XBF_MAPPED;
->> @@ -1093,25 +1085,13 @@ xfs_buf_iostart(
->>      return status;
->>  }
->>  
->> -STATIC_INLINE int
->> -_xfs_buf_iolocked(
->> -    xfs_buf_t        *bp)
->> -{
->> -    ASSERT(bp->b_flags & (XBF_READ | XBF_WRITE));
->> -    if (bp->b_flags & XBF_READ)
->> -        return bp->b_locked;
->> -    return 0;
->> -}
->> -
->>  STATIC_INLINE void
->>  _xfs_buf_ioend(
->>      xfs_buf_t        *bp,
->>      int            schedule)
->>  {
->> -    if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
->> -        bp->b_locked = 0;
->> +    if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
->>          xfs_buf_ioend(bp, schedule);
->> -    }
->>  }
->>  
->>  STATIC int
->> @@ -1146,10 +1126,6 @@ xfs_buf_bio_end_io(
->>  
->>          if (--bvec >= bio->bi_io_vec)
->>              prefetchw(&bvec->bv_page->flags);
->> -
->> -        if (_xfs_buf_iolocked(bp)) {
->> -            unlock_page(page);
->> -        }
->>      } while (bvec >= bio->bi_io_vec);
->>  
->>      _xfs_buf_ioend(bp, 1);
->> @@ -1161,13 +1137,12 @@ STATIC void
->>  _xfs_buf_ioapply(
->>      xfs_buf_t        *bp)
->>  {
->> -    int            i, rw, map_i, total_nr_pages, nr_pages;
->> +    int            rw, map_i, total_nr_pages, nr_pages;
->>      struct bio        *bio;
->>      int            offset = bp->b_offset;
->>      int            size = bp->b_count_desired;
->>      sector_t        sector = bp->b_bn;
->>      unsigned int        blocksize = bp->b_target->bt_bsize;
->> -    int            locking = _xfs_buf_iolocked(bp);
->>  
->>      total_nr_pages = bp->b_page_count;
->>      map_i = 0;
->> @@ -1190,7 +1165,7 @@ _xfs_buf_ioapply(
->>       * filesystem block size is not smaller than the page size.
->>       */
->>      if ((bp->b_buffer_length < PAGE_CACHE_SIZE) &&
->> -        (bp->b_flags & XBF_READ) && locking &&
->> +        (bp->b_flags & XBF_READ) &&
->>          (blocksize >= PAGE_CACHE_SIZE)) {
->>          bio = bio_alloc(GFP_NOIO, 1);
->>  
->> @@ -1207,24 +1182,6 @@ _xfs_buf_ioapply(
->>          goto submit_io;
->>      }
->>  
->> -    /* Lock down the pages which we need to for the request */
->> -    if (locking && (bp->b_flags & XBF_WRITE) && (bp->b_locked == 0)) {
->> -        for (i = 0; size; i++) {
->> -            int        nbytes = PAGE_CACHE_SIZE - offset;
->> -            struct page    *page = bp->b_pages[i];
->> -
->> -            if (nbytes > size)
->> -                nbytes = size;
->> -
->> -            lock_page(page);
->> -
->> -            size -= nbytes;
->> -            offset = 0;
->> -        }
->> -        offset = bp->b_offset;
->> -        size = bp->b_count_desired;
->> -    }
->> -
->>  next_chunk:
->>      atomic_inc(&bp->b_io_remaining);
->>      nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
->> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.h    2007-09-05 
->> 11:17:42.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h    2007-09-23 
->> 14:04:36.000000000 +0200
->> @@ -143,7 +143,6 @@ typedef struct xfs_buf {
->>      void            *b_fspriv2;
->>      void            *b_fspriv3;
->>      unsigned short        b_error;    /* error code on I/O */
->> -    unsigned short        b_locked;    /* page array is locked */
->>      unsigned int        b_page_count;    /* size of page array */
->>      unsigned int        b_offset;    /* page offset in first page */
->>      struct page        **b_pages;    /* array of page pointers */
->> Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c    2007-09-23 
->> 13:33:07.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/xfsidbg.c    2007-09-23 14:04:36.000000000 +0200
->> @@ -2110,9 +2110,9 @@ print_xfs_buf(
->>             (unsigned long long) bp->b_file_offset,
->>             (unsigned long long) bp->b_buffer_length,
->>             bp->b_addr);
->> -    kdb_printf("  b_bn 0x%llx b_count_desired 0x%lx b_locked %d\n",
->> +    kdb_printf("  b_bn 0x%llx b_count_desired 0x%lxn",
->>             (unsigned long long)bp->b_bn,
->> -           (unsigned long) bp->b_count_desired, (int)bp->b_locked);
->> +           (unsigned long) bp->b_count_desired);
->>      kdb_printf("  b_queuetime %ld (now=%ld/age=%ld) b_io_remaining 
->> %d\n",
->>             bp->b_queuetime, jiffies, bp->b_queuetime + age,
->>             bp->b_io_remaining.counter);
->>
->>
->>
-> 
-> 
-> 
+> Yup.
+I've never liked that check, can we just get rid of it?
 
---------------030702060208020708020404
-Content-Type: text/x-patch;
- name="buflock.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="buflock.diff"
+> 
+>> Anyway, since you know the answer why don't you enlighten me?
+> 
+> When allocating a new inode, we mark the inode dirty when first
+> setting the timestamps in xfs_dir_ialloc(). At the time this happens
+> the inode is I_LOCK|I_NEW and hence mark_inode_dirty_sync() would just
+> mark the inode dirty and *not* move it to the dirty list.
+> 
+> Because unlock_new_inode() does not check the dirty state when
+> removing the I_LOCK state, the inode is never moved to the dirty list
+> if it is already dirty (unlike __sync_single_inode()).
+> 
+> Further calls to mark_inode_dirty_sync() see the inode as dirty and
+> don't move it to the dirty list, either. Hence the inode would never
+> get flushed out by the generic code if we called
+> mark_inode_dirty_sync() in that location.
+> 
+> Why is it wrong? It should be checking I_NEW, not I_LOCK because all
+> other cases where I_LOCK might be set are covered by the code that
+> unlocks the inode.
+> 
+>>>>> Once we have all the dirty state in the radix trees we can now get rid of
+>>>>> i_update_core and i_update_size - all they do is mark the inode dirty and
+>>>>> we don't really care about the difference between them(*) - and just use
+>>>>> the dirty bit in the radix tree when necessary.
+>>>> If we want to check if an inode is dirty do we have to look up the dirty
+>>>> bit in the tree or is there some easy way to get it from the inode?
+>>> xfs_inode_clean(ip) is my preferred interface. How that is finally
+>>> implemented will be determined by how this all cleans up and what
+>>> performs the best. If lockless tree lookups don't cause performance
+>>> problems, then there is little reason to keep redundant information
+>>> around.
+>> I can't imagine that a tree lookup (lockless or not) would be faster
+>> than dereferencing fields from the inode.  If keeping the inode's dirty
+>> flags and the ones in the radix tree in sync is an issue then maybe
+>> tree lookups are a performance hit we can live with.
+> 
+> I'm hoping to avoid this problem altogether by removing as many
+> "is the inode dirty" checks as possible. If inode writeback is
+> driven exclusively by the radix tree dirty bit via a traversal
+> and we only write back logged changes, then I don't think we need
+> to be checking if the inode is clean very often.
+> 
+> That is, if we see the inode in xfs_flush_inode() then it is
+> dirty at the linux level, so we log the inode. That makes the
+> inode clean at the linux layer and dirty at the XFS level, and
+> we know that as long as the inode remains in the AIL it is dirty. 
+> 
+> We only ever flush inodes based on a AIL push (which doesn't
+> require dirty bits) or via the syncd, which looks up dirty
+> inodes via the radix tree tag, and hence most of the dirty
+> checks on the inode can go away because we don't need to
+> check it during writeback now.
+> 
+>>>> By consolidating the different ways of dirtying an inode we lose the 
+>>>> ability
+>>>> to know why it is dirty and what action needs to be done to undirty it.
+>>> The only way to undirty an inode is to write it to disk.
+>> True.  I was thinking about what may need to be done before we write it
+>> to disk such as flushing the log but that would just be dependent on
+>> whether the inode is pinned?
+> 
+> Right, flushing the log is only needed if it is pinned.
+> 
+>>>> For example if the inode log item has bits set then we know we have to 
+>>>> flush
+>>>> the log otherwise there is no need.  With a general purpose dirty bit we 
+>>> No, if the log item is present and dirty (i.e. inode is in the AIL),
+>>> all it means is that we need to attach a callback to the buffer
+>>> (xfs_iflush_done) when dispatching the I/O to do processing of the
+>>> log item on I/O completion. Whether i_update_core is set or not
+>>> in this case is irrelevant - the log item state overrides that.
+>>>
+>>>> will
+>>>> have to flush regardless.  And my recent attempt to fix the log replay 
+>>>> issue
+>>>> relies on i_update_core to indicate there are unlogged changes - I don't 
+>>>> see
+>>>> how that will work with these changes.
+>>> But your changes could not be implemented, either. You can't log the inode
+>>> to clean it - it merely transfers the writeback from one list to
+>>> another.
+>> Could not be implemented?  What was that patch I sent around then? 
+> 
+> Sorry, I missed an important work there - could not be implemented
+> _efficiently_.
+> 
+> Basically, you are logging the inode, then call xfs_iflush, which
+> immediately sees it pinned and forces the log. That's an extra
+> transaction *and* log I/O for every inode we write. That defeats all
+> inode clustering and and will seriously harm performance.
+I didn't see another way around it.  We only need to force the log for
+pinned inodes if it is a sync writeback, otherwise we can just try again
+later.
 
---- fs/xfs/linux-2.6/xfs_buf.c_1.249	2007-11-27 15:28:34.000000000 +1100
-+++ fs/xfs/linux-2.6/xfs_buf.c	2007-11-28 13:02:38.000000000 +1100
-@@ -387,8 +387,6 @@ _xfs_buf_lookup_pages(
- 		if (unlikely(page == NULL)) {
- 			if (flags & XBF_READ_AHEAD) {
- 				bp->b_page_count = i;
--				for (i = 0; i < bp->b_page_count; i++)
--					unlock_page(bp->b_pages[i]);
- 				return -ENOMEM;
- 			}
- 
-@@ -418,24 +416,17 @@ _xfs_buf_lookup_pages(
- 		ASSERT(!PagePrivate(page));
- 		if (!PageUptodate(page)) {
- 			page_count--;
--			if (blocksize >= PAGE_CACHE_SIZE) {
--				if (flags & XBF_READ)
--					bp->b_locked = 1;
--			} else if (!PagePrivate(page)) {
-+			if (blocksize < PAGE_CACHE_SIZE && !PagePrivate(page)) {
- 				if (test_page_region(page, offset, nbytes))
- 					page_count++;
- 			}
- 		}
- 
-+		unlock_page(page);
- 		bp->b_pages[i] = page;
- 		offset = 0;
- 	}
- 
--	if (!bp->b_locked) {
--		for (i = 0; i < bp->b_page_count; i++)
--			unlock_page(bp->b_pages[i]);
--	}
--
- 	if (page_count == bp->b_page_count)
- 		bp->b_flags |= XBF_DONE;
- 
-@@ -752,7 +743,6 @@ xfs_buf_associate_memory(
- 		bp->b_pages[i] = mem_to_page((void *)pageaddr);
- 		pageaddr += PAGE_CACHE_SIZE;
- 	}
--	bp->b_locked = 0;
- 
- 	bp->b_count_desired = len;
- 	bp->b_buffer_length = buflen;
-@@ -1099,25 +1089,13 @@ xfs_buf_iostart(
- 	return status;
- }
- 
--STATIC_INLINE int
--_xfs_buf_iolocked(
--	xfs_buf_t		*bp)
--{
--	ASSERT(bp->b_flags & (XBF_READ | XBF_WRITE));
--	if (bp->b_flags & XBF_READ)
--		return bp->b_locked;
--	return 0;
--}
--
- STATIC_INLINE void
- _xfs_buf_ioend(
- 	xfs_buf_t		*bp,
- 	int			schedule)
- {
--	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
--		bp->b_locked = 0;
-+	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
- 		xfs_buf_ioend(bp, schedule);
--	}
- }
- 
- STATIC int
-@@ -1152,10 +1130,6 @@ xfs_buf_bio_end_io(
- 
- 		if (--bvec >= bio->bi_io_vec)
- 			prefetchw(&bvec->bv_page->flags);
--
--		if (_xfs_buf_iolocked(bp)) {
--			unlock_page(page);
--		}
- 	} while (bvec >= bio->bi_io_vec);
- 
- 	_xfs_buf_ioend(bp, 1);
-@@ -1167,13 +1141,12 @@ STATIC void
- _xfs_buf_ioapply(
- 	xfs_buf_t		*bp)
- {
--	int			i, rw, map_i, total_nr_pages, nr_pages;
-+	int			rw, map_i, total_nr_pages, nr_pages;
- 	struct bio		*bio;
- 	int			offset = bp->b_offset;
- 	int			size = bp->b_count_desired;
- 	sector_t		sector = bp->b_bn;
- 	unsigned int		blocksize = bp->b_target->bt_bsize;
--	int			locking = _xfs_buf_iolocked(bp);
- 
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
-@@ -1196,7 +1169,7 @@ _xfs_buf_ioapply(
- 	 * filesystem block size is not smaller than the page size.
- 	 */
- 	if ((bp->b_buffer_length < PAGE_CACHE_SIZE) &&
--	    (bp->b_flags & XBF_READ) && locking &&
-+	    (bp->b_flags & XBF_READ) &&
- 	    (blocksize >= PAGE_CACHE_SIZE)) {
- 		bio = bio_alloc(GFP_NOIO, 1);
- 
-@@ -1213,24 +1186,6 @@ _xfs_buf_ioapply(
- 		goto submit_io;
- 	}
- 
--	/* Lock down the pages which we need to for the request */
--	if (locking && (bp->b_flags & XBF_WRITE) && (bp->b_locked == 0)) {
--		for (i = 0; size; i++) {
--			int		nbytes = PAGE_CACHE_SIZE - offset;
--			struct page	*page = bp->b_pages[i];
--
--			if (nbytes > size)
--				nbytes = size;
--
--			lock_page(page);
--
--			size -= nbytes;
--			offset = 0;
--		}
--		offset = bp->b_offset;
--		size = bp->b_count_desired;
--	}
--
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
- 	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
---- fs/xfs/linux-2.6/xfs_buf.h_1.122	2007-11-27 15:28:36.000000000 +1100
-+++ fs/xfs/linux-2.6/xfs_buf.h	2007-11-27 15:21:51.000000000 +1100
-@@ -143,7 +143,6 @@ typedef struct xfs_buf {
- 	void			*b_fspriv2;
- 	void			*b_fspriv3;
- 	unsigned short		b_error;	/* error code on I/O */
--	unsigned short		b_locked;	/* page array is locked */
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	struct page		**b_pages;	/* array of page pointers */
---- fs/xfs/xfsidbg.c_1.340	2007-11-27 15:28:37.000000000 +1100
-+++ fs/xfs/xfsidbg.c	2007-11-27 15:28:33.000000000 +1100
-@@ -2007,9 +2007,9 @@ print_xfs_buf(
- 		   (unsigned long long) bp->b_file_offset,
- 		   (unsigned long long) bp->b_buffer_length,
- 		   bp->b_addr);
--	kdb_printf("  b_bn 0x%llx b_count_desired 0x%lx b_locked %d\n",
-+	kdb_printf("  b_bn 0x%llx b_count_desired 0x%lx\n",
- 		   (unsigned long long)bp->b_bn,
--		   (unsigned long) bp->b_count_desired, (int)bp->b_locked);
-+		   (unsigned long) bp->b_count_desired);
- 	kdb_printf("  b_queuetime %ld (now=%ld/age=%ld) b_io_remaining %d\n",
- 		   bp->b_queuetime, jiffies, bp->b_queuetime + age,
- 		   bp->b_io_remaining.counter);
+> 
+> Also, the change fails to log changes to inodes in the same
+> cluster that get written out because they are dirty.
+That's where it all sort of falls apart.  I didn't want to log the inode
+in xfs_iflush_int() because we have the flush lock held and I was pretty
+sure logging a transaction with the flush lock held would be a bad idea.
+That's why I specifically removed the code that resets i_update_core in
+xfs_iflush_int() - so that other inodes in the same cluster will still be
+flagged as having unlogged changes even after the inodes have been synced
+to disk.  But as I said it was an idea that needed some polishing.
 
---------------030702060208020708020404--
+> 
+>>> So, the cleaner fix is to do this - change the xfs_inode_flush()
+>>> just to unconditionally log the inode and don't do inode writeback *at
+>>> all* from there. That will catch all cases of unlogged changes and leave
+>>> inode writeback to tail-pushing or xfssyncd which can be driven by
+>>> the radix tree.
+>> Huh?  Aren't we trying to minimize the number of transactions we do?  My
+>> changes introduce new transactions but only when we have to.  You're saying
+>> here that we log the inode unconditionally - how is that better?  I'm not
+>> trying to defend my changes here (I don't care how the problem gets fixed)
+>> - I'm just trying to understand why your suggestions are a good idea.
+> 
+> Because we can log entire inode cluster's worth of changes in a single
+> transaction. One transaction vs one I/O - it's a decent tradeoff to
+> avoid this problem, esp. as we'll get improved inode writeback clustering
+> if we flush from the radix tree (i.e. clusters get flushed in ascending
+> inode number order).....
+That should help a lot but it will use even more space in the log - quite a
+lot more if just one inode in the cluster needs to be logged.  Do you plan
+to do this in the write_inode path?  If so we'll have inodes that have been
+logged (with a previous cluster) that still have I_DIRTY set.  When these
+inodes go through the write_inode path we'll need to skip the transaction.
+
+> 
+>> I do like the way it simplifies inode writeback though - a sync would
+>> optionally log all the inodes and then just flush the log and that's it
+>> (I think).
+> 
+> Yup, pretty much.
+> 
+> Cheers,
+> 
+> Dave.
