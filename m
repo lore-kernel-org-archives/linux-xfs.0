@@ -1,43 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 Nov 2007 16:44:33 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAT0iOgG008037
-	for <xfs@oss.sgi.com>; Wed, 28 Nov 2007 16:44:26 -0800
-Subject: PARTIAL TAKE 971186 - kill superflous buffer locking (2nd attempt)
-Message-Id: <20071129004429.34EA658C4C0F@chook.melbourne.sgi.com>
-Date: Thu, 29 Nov 2007 11:44:29 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 Nov 2007 20:03:40 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAT43WpX003195
+	for <xfs@oss.sgi.com>; Wed, 28 Nov 2007 20:03:34 -0800
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id C8EF41800449D
+	for <xfs@oss.sgi.com>; Wed, 28 Nov 2007 22:03:39 -0600 (CST)
+Message-ID: <474E3A1C.4050302@sandeen.net>
+Date: Wed, 28 Nov 2007 22:03:40 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH] make xfs_info work on mountpoints with spaces
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-kill superflous buffer locking (2nd attempt)
+I don't know why one would make mountpoints with spaces, but
+apparently people do:
 
-There is no need to lock any page in xfs_buf.c because we operate
-on our own address_space and all locking is covered by the buffer
-semaphore.  If we ever switch back to main blockdeive address_space
-as suggested e.g. for fsblock with a similar scheme the locking will
-have to be totally revised anyway because the current scheme is
-neither correct nor coherent with itself.
+[Bug 402621] New: xfs_info doesn't handle mountpoint with spaces
+https://bugzilla.redhat.com/show_bug.cgi?id=402621
 
+I'm no bash expert but I think this solves it:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Date:  Thu Nov 29 11:43:17 AEDT 2007
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-buflock
-Inspected by:  hch
-Author:  lachlan
+---
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30156a
-fs/xfs/xfsidbg.c - 1.341 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.341&r2=text&tr2=1.340&f=h
-fs/xfs/linux-2.6/xfs_buf.h - 1.123 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.h.diff?r1=text&tr1=1.123&r2=text&tr2=1.122&f=h
-fs/xfs/linux-2.6/xfs_buf.c - 1.250 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_buf.c.diff?r1=text&tr1=1.250&r2=text&tr2=1.249&f=h
-	- kill superflous buffer locking (2nd attempt)
+--- xfs-cmds.orig/xfsprogs/growfs/xfs_info.sh	2007-11-28 09:14:02.000000000 -0600
++++ xfs-cmds/xfsprogs/growfs/xfs_info.sh	2007-11-28 09:21:49.000000000 -0600
+@@ -16,10 +16,10 @@
+ 		;;
+ 	esac
+ done
+-set -- extra $@
++set -- extra "$@"
+ shift $OPTIND
+ case $# in
+-	1)	xfs_growfs -p xfs_info -n $OPTS $1
++	1)	xfs_growfs -p xfs_info -n $OPTS "$1"
+ 		status=$?
+ 		;;
+ 	*)	echo $USAGE 1>&2
