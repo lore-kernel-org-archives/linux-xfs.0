@@ -1,210 +1,187 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Nov 2007 23:20:21 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAU7KC4J028179
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Nov 2007 23:20:17 -0800
-Message-ID: <474FBA21.4070201@sgi.com>
-Date: Fri, 30 Nov 2007 18:22:09 +1100
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Nov 2007 23:33:10 -0800 (PST)
+Received: from mars.puhasoft.hu (mars.puhasoft.hu [212.108.197.33])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lAU7X3Gj029677
+	for <linux-xfs@oss.sgi.com>; Thu, 29 Nov 2007 23:33:06 -0800
+Message-ID: <474FB90C.4060905@tsabi.hu>
+Date: Fri, 30 Nov 2007 08:17:32 +0100
+From: =?UTF-8?B?VMOzdGggQ3NhYmE=?= <tsabi@tsabi.hu>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: revert to double-buffering readdir
-References: <20071114070400.GA25708@puku.stupidest.org> <20071125163014.GA17922@infradead.org>
-In-Reply-To: <20071125163014.GA17922@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: XFS performance problems on Linux x86_64
+References: <474C8A05.3020604@e-626.net> <20071127220536.GL119954183@sgi.com> <fii8bm$6h5$1@ger.gmane.org> <20071130045808.GK119954183@sgi.com>
+In-Reply-To: <20071130045808.GK119954183@sgi.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chris Wedgwood <cw@f00f.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: David Chinner <dgc@sgi.com>
+Cc: Bernd Schubert <bernd-schubert@gmx.de>, linux-xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> The current readdir implementation deadlocks on a btree buffers locks
-> because nfsd calls back into ->lookup from the filldir callback.  The
-> only short-term fix for this is to revert to the old inefficient
-> double-buffering scheme.
+Hello list,
+
+I tried this parameters, and got this results with bonnie++. As i think
+there isnt any speedup with this parameteres, or i am doing something wrong?
+
+tsabi
+
+
+
+oldbck ~ # uname -a
+Linux oldbck 2.6.23-gentoo-r2-uk-01 #1 SMP Tue Nov 20 03:43:04 CET 2007
+x86_64 Intel(R) Xeon(TM) CPU 2.80GHz GenuineIntel GNU/Linux
+
+
+test 1:
+
+oldbck mnt # mkfs.xfs -i size=512 -f /dev/md5
+meta-data=/dev/md5               isize=512    agcount=32, agsize=4513008
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=144416192, imaxpct=25
+         =                       sunit=16     swidth=64 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=262144 blocks=0, rtextents=0
+
+oldbck mnt # mount /dev/md5 /mnt/data
+
+oldbck mnt # bonnie++ -u root -d /mnt/data
+Version 1.93c       ------Sequential Output------ --Sequential Input-
+--Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+/sec %CP
+oldbck           4G   522  99 235160  50 86692  17  1040  96 241681  22
+457.9   9
+Latency             15620us     205ms     119ms     100ms   50727us
+79657us
+Version 1.93c       ------Sequential Create------ --------Random
+Create--------
+oldbck              -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+/sec %CP
+                 16 11000  77 +++++ +++ 13765  82 11977  83 +++++ +++
+11049  77
+Latency             66657us      49us   76936us   68300us      18us
+72243us
+1.93c,1.93c,oldbck,1,1196392150,4G,,522,99,235160,50,86692,17,1040,96,241681,22,457.9,9,16,,,,,11000,77,+++++,+++,13765,82,11977,83,+++++,+++,11049,77,15620us,205ms,119ms,100ms,50727us,79657us,66657us,49us,76936us,68300us,18us,72243us
+
+
+
+test 2:
+
+oldbck mnt # mkfs.xfs -f -l lazy-count=1,version=2,size=128m -i
+attr=2,size=512 -d agcount=4 /dev/md5
+meta-data=/dev/md5               isize=512    agcount=4, agsize=36104048
+blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=144416192, imaxpct=25
+         =                       sunit=16     swidth=64 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=262144 blocks=0, rtextents=0
+
+oldbck mnt # mount -o logbsize=256k,nobarrier /dev/md5 /mnt/data
+
+oldbck mnt # bonnie++ -u root -d /mnt/data
+Version 1.93c       ------Sequential Output------ --Sequential Input-
+--Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+/sec %CP
+oldbck           4G   523  99 237016  44 87202  17  1040  96 245389  22
+446.5   7
+Latency             15531us     184ms     133ms     105ms   11835us
+85541us
+Version 1.93c       ------Sequential Create------ --------Random
+Create--------
+oldbck              -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+/sec %CP
+                 16 12772  77 +++++ +++ 14759  74 13499  81 +++++ +++
+11617  70
+Latency             86835us      56us   79869us   79967us      24us
+95818us
+1.93c,1.93c,oldbck,1,1196391889,4G,,523,99,237016,44,87202,17,1040,96,245389,22,446.5,7,16,,,,,12772,77,+++++,+++,14759,74,13499,81,+++++,+++,11617,70,15531us,184ms,133ms,105ms,11835us,85541us,86835us,56us,79869us,79967us,24us,95818us
+
+
+
+test 3:
+
+oldbck mnt # mkfs.ext3 /dev/md5
+mke2fs 1.40.2 (12-Jul-2007)
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+72220672 inodes, 144416192 blocks
+7220809 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=4294967296
+4408 block groups
+32768 blocks per group, 32768 fragments per group
+16384 inodes per group
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632,
+2654208,
+        4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
+        102400000
+
+Writing inode tables: done
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 32 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+oldbck mnt # mount /dev/md5 /mnt/data
+oldbck mnt #
+
+oldbck mnt # bonnie++ -u root -d /mnt/data
+Version 1.93c       ------Sequential Output------ --Sequential Input-
+--Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+/sec %CP
+oldbck           4G   326  99 211619  80 91680  23  1341  96 237493  21
+495.5   9
+Latency             32953us     220ms    1599ms   62374us   59342us
+472ms
+Version 1.93c       ------Sequential Create------ --------Random
+Create--------
+oldbck              -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+/sec %CP
+                 16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
++++++ +++
+Latency              7677us     165us     252us   17010us      13us
+243us
+1.93c,1.93c,oldbck,1,1196389368,4G,,326,99,211619,80,91680,23,1341,96,237493,21,495.5,9,16,,,,,+++++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++,32953us,220ms,1599ms,62374us,59342us,472ms,7677us,165us,252us,17010us,13us,243us
+
+
+
+
+David Chinner írta:
+> On Wed, Nov 28, 2007 at 12:13:57AM +0100, Bernd Schubert wrote:
+>> Hello David,
+>>
+>> David Chinner wrote:
+>>> # mkfs.xfs -f -l lazy-count=1,version=2,size=128m -i attr=2 -d agcount=4
+>>> # <dev> mount -o logbsize=256k <dev> <mtpt>
+>> thanks, I was also going to ask which are optimal parameters. Just didn't
+>> have the time yet :)
+>> Any idea when these options will be default? 
 > 
-
-Probably why Steve did this: :)
-
-xfs_file.c
-----------------------------
-revision 1.40
-date: 2001/03/15 23:33:20;  author: lord;  state: Exp;  lines: +54 -17
-modid: 2.4.x-xfs:slinx:90125a
-Change linvfs_readdir to allocate a buffer, call xfs to fill it, and
-then call the filldir function on each entry. This is instead of doing the
-filldir deep in the bowels of xfs which causes locking problems.
-----------------------------
-
-
-Yes it looks like it is done equivalently to before (minus the uio stuff etc).
-I don't know what the 7fff* masking is about but we did that previously.
-I hadn't come across the name[] struct field before,
-was used to name[0] (or name[1] in times gone by) but found that is
-a kosher way of doing things too for the variable len string at the end.
-
-Hmmm, don't see the point of "eof" local var now.
-Previously bhv_vop_readdir() returned eof.
-I presume if we don't move the offset (offset == startoffset) then
-we're done and break out?
-So we lost eof when going to the filldir in the getdents code etc...
-
---Tim
-
-> This patch does exactly that and reverts xfs_file_readdir to what's
-> basically the 2.6.23 version minus the uio and vnops junk.
+> They should already be the defaults in the current CVS tree. ;)
 > 
-> I'll try to find something more optimal for 2.6.25 or at least find a
-> way to use the proper version for local access.
+> Cheers,
 > 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2007-11-25 11:41:20.000000000 +0100
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2007-11-25 17:14:27.000000000 +0100
-> @@ -218,6 +218,15 @@
->  }
->  #endif /* CONFIG_XFS_DMAPI */
->  
-> +/*
-> + * Unfortunately we can't just use the clean and simple readdir implementation
-> + * below, because nfs might call back into ->lookup from the filldir callback
-> + * and that will deadlock the low-level btree code.
-> + *
-> + * Hopefully we'll find a better workaround that allows to use the optimal
-> + * version at least for local readdirs for 2.6.25.
-> + */
-> +#if 0
->  STATIC int
->  xfs_file_readdir(
->  	struct file	*filp,
-> @@ -249,6 +258,121 @@
->  		return -error;
->  	return 0;
->  }
-> +#else
-> +
-> +struct hack_dirent {
-> +	int		namlen;
-> +	loff_t		offset;
-> +	u64		ino;
-> +	unsigned int	d_type;
-> +	char		name[];
-> +};
-> +
-> +struct hack_callback {
-> +	char		*dirent;
-> +	size_t		len;
-> +	size_t		used;
-> +};
-> +
-> +STATIC int
-> +xfs_hack_filldir(
-> +	void		*__buf,
-> +	const char	*name,
-> +	int		namlen,
-> +	loff_t		offset,
-> +	u64		ino,
-> +	unsigned int	d_type)
-> +{
-> +	struct hack_callback *buf = __buf;
-> +	struct hack_dirent *de = (struct hack_dirent *)(buf->dirent + buf->used);
-> +
-> +	if (buf->used + sizeof(struct hack_dirent) + namlen > buf->len)
-> +		return -EINVAL;
-> +
-> +	de->namlen = namlen;
-> +	de->offset = offset;
-> +	de->ino = ino;
-> +	de->d_type = d_type;
-> +	memcpy(de->name, name, namlen);
-> +	buf->used += sizeof(struct hack_dirent) + namlen;
-> +	return 0;
-> +}
-> +
-> +STATIC int
-> +xfs_file_readdir(
-> +	struct file	*filp,
-> +	void		*dirent,
-> +	filldir_t	filldir)
-> +{
-> +	struct inode	*inode = filp->f_path.dentry->d_inode;
-> +	xfs_inode_t	*ip = XFS_I(inode);
-> +	struct hack_callback buf;
-> +	struct hack_dirent *de;
-> +	int		error;
-> +	loff_t		size;
-> +	int		eof = 0;
-> +	xfs_off_t       start_offset, curr_offset, offset;
-> +
-> +	/*
-> +	 * Try fairly hard to get memory
-> +	 */
-> +	buf.len = PAGE_CACHE_SIZE;
-> +	do {
-> +		buf.dirent = kmalloc(buf.len, GFP_KERNEL);
-> +		if (buf.dirent)
-> +			break;
-> +		buf.len >>= 1;
-> +	} while (buf.len >= 1024);
-> +
-> +	if (!buf.dirent)
-> +		return -ENOMEM;
-> +
-> +	curr_offset = filp->f_pos;
-> +	if (curr_offset == 0x7fffffff)
-> +		offset = 0xffffffff;
-> +	else
-> +		offset = filp->f_pos;
-> +
-> +	while (!eof) {
-> +		int reclen;
-> +		start_offset = offset;
-> +
-> +		buf.used = 0;
-> +		error = -xfs_readdir(ip, &buf, buf.len, &offset,
-> +				     xfs_hack_filldir);
-> +		if (error || offset == start_offset) {
-> +			size = 0;
-> +			break;
-> +		}
-> +
-> +		size = buf.used;
-> +		de = (struct hack_dirent *)buf.dirent;
-> +		while (size > 0) {
-> +			if (filldir(dirent, de->name, de->namlen,
-> +					curr_offset & 0x7fffffff,
-> +					de->ino, de->d_type)) {
-> +				goto done;
-> +			}
-> +
-> +			reclen = sizeof(struct hack_dirent) + de->namlen;
-> +			size -= reclen;
-> +			curr_offset = de->offset /* & 0x7fffffff */;
-> +			de = (struct hack_dirent *)((char *)de + reclen);
-> +		}
-> +	}
-> +
-> + done:
-> + 	if (!error) {
-> +		if (size == 0)
-> +			filp->f_pos = offset & 0x7fffffff;
-> +		else if (de)
-> +			filp->f_pos = curr_offset;
-> +	}
-> +
-> +	kfree(buf.dirent);
-> +	return error;
-> +}
-> +#endif
->  
->  STATIC int
->  xfs_file_mmap(
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Dave.
