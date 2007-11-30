@@ -1,35 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Nov 2007 15:45:08 -0800 (PST)
-Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lATNj1wC000844
-	for <linux-xfs@oss.sgi.com>; Thu, 29 Nov 2007 15:45:04 -0800
-Date: Fri, 30 Nov 2007 00:45:05 +0100 (CET)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: [PATCH] xfs: revert to double-buffering readdir
-In-Reply-To: <20071125163014.GA17922@infradead.org>
-Message-ID: <alpine.DEB.0.99999.0711300037520.9287@sheep.housecafe.de>
-References: <20071114070400.GA25708@puku.stupidest.org> <20071125163014.GA17922@infradead.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 Nov 2007 19:30:42 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lAU3UVgh030367
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2007 19:30:35 -0800
+Subject: PARTIAL TAKE 971186 - remove CFORK macros
+Message-Id: <20071130033035.AFC5C58C4C0F@chook.melbourne.sgi.com>
+Date: Fri, 30 Nov 2007 14:30:35 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Sun, 25 Nov 2007, Christoph Hellwig wrote:
-> This patch does exactly that and reverts xfs_file_readdir to what's
-> basically the 2.6.23 version minus the uio and vnops junk.
+Remove CFORK macros and use code directly in IFORK and DFORK macros.
 
-Thanks, works here too (without nordirplus as a mountoption).
-Am I supposed to close the bug[0] or do you guys want to leave this
-open to track the Real Fix (TM) for 2.6.25?
+Currently XFS_IFORK_* and XFS_DFORK* are implemented by means of
+XFS_CFORK* macros.  But given that XFS_IFORK_* operates on an
+xfs_inode that embedds and xfs_icdinode_core and XFS_DFORK_* operates
+on an xfs_dinode that embedds a xfs_dinode_core one will have to do
+endian swapping while the other doesn't.  Instead of having the current
+mess with the CFORK macros that have byteswapping and non-byteswapping
+version (which are inconsistantly named while we're at it) just define
+each family of the macros to stand by itself and simplify the whole
+matter.
 
-Again, thank you for the fix!
-Christian.
+A few direct references to the CFORK variants were cleaned up to
+use IFORK or DFORK to make this possible.
 
-[0] http://bugzilla.kernel.org/show_bug.cgi?id=9400
--- 
-BOFH excuse #112:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The monitor is plugged into the serial port
+Date:  Fri Nov 30 14:28:54 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  hch@lst.de
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+Modid:  xfs-linux-melb:xfs-kern:30163a
+fs/xfs/xfs_itable.c - 1.160 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.160&r2=text&tr2=1.159&f=h
+fs/xfs/xfs_inode.c - 1.488 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.488&r2=text&tr2=1.487&f=h
+fs/xfs/xfs_inode.h - 1.239 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.239&r2=text&tr2=1.238&f=h
+fs/xfs/xfs_dinode.h - 1.84 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dinode.h.diff?r1=text&tr1=1.84&r2=text&tr2=1.83&f=h
+fs/xfs/dmapi/xfs_dm.c - 1.60 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.60&r2=text&tr2=1.59&f=h
+	- Remove CFORK macros and use code directly in IFORK and DFORK macros.
