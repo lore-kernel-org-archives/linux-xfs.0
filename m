@@ -1,28 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Dec 2007 07:48:14 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lB3Fm9f9018429
-	for <linux-xfs@oss.sgi.com>; Mon, 3 Dec 2007 07:48:10 -0800
-Date: Mon, 3 Dec 2007 15:09:05 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: revert to double-buffering readdir
-Message-ID: <20071203150905.GA18082@infradead.org>
-References: <20071114070400.GA25708@puku.stupidest.org> <20071125163014.GA17922@infradead.org> <474FBA21.4070201@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Dec 2007 13:16:21 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB3LGEfE013330
+	for <xfs@oss.sgi.com>; Mon, 3 Dec 2007 13:16:16 -0800
+Date: Tue, 4 Dec 2007 08:16:20 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: [Patch] xfs_lowbit64 broken on ia32
+Message-ID: <20071203211620.GN115527101@sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <474FBA21.4070201@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>
 
-On Fri, Nov 30, 2007 at 06:22:09PM +1100, Timothy Shimmin wrote:
-> Hmmm, don't see the point of "eof" local var now.
-> Previously bhv_vop_readdir() returned eof.
-> I presume if we don't move the offset (offset == startoffset) then
-> we're done and break out?
-> So we lost eof when going to the filldir in the getdents code etc...
 
-Yes, it's just copy & paste.  We can trivially kill the variable.
+The recent change to the internals of xfs_lowbit64 broke it on
+ia32 - the code treats the 64bit value as an unsigned long
+which is only 32 bits on ia32 and hence throws away the high 32
+bits. 64 bit platforms are not affected.
+
+Tested with a userspace implementation comparing the original
+code with the new code.
+
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_bit.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_bit.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_bit.h	2007-11-02 13:44:45.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_bit.h	2007-12-03 14:43:33.169851481 +1100
+@@ -68,8 +68,8 @@ static inline int xfs_lowbit32(__uint32_
+ /* Get low bit set out of 64-bit argument, -1 if none set */
+ static inline int xfs_lowbit64(__uint64_t v)
+ {
+-	unsigned long	t = v;
+-	return (v) ? find_first_bit(&t, 64) : -1;
++	unsigned long long	t = v;
++	return (v) ? find_first_bit((unsigned long *)&t, 64) : -1;
+ }
+ 
+ /* Return whether bitmap is empty (1 == empty) */
