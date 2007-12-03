@@ -1,66 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Dec 2007 23:43:50 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB37hi1R017708
-	for <xfs@oss.sgi.com>; Sun, 2 Dec 2007 23:43:46 -0800
-Date: Mon, 3 Dec 2007 18:43:45 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Fix xfs_ichgtime mainline breakage.
-Message-ID: <20071203074345.GW119954183@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Dec 2007 07:47:17 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lB3Fl98x018190
+	for <linux-xfs@oss.sgi.com>; Mon, 3 Dec 2007 07:47:12 -0800
+Date: Mon, 3 Dec 2007 15:11:41 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: revert to double-buffering readdir
+Message-ID: <20071203151141.GB18082@infradead.org>
+References: <20071114070400.GA25708@puku.stupidest.org> <20071125163014.GA17922@infradead.org> <474FBA21.4070201@sgi.com> <165B249C-FE97-4B27-927B-B39DE316CB23@xfs.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <165B249C-FE97-4B27-927B-B39DE316CB23@xfs.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Stephen Lord <lord@xfs.org>
+Cc: Timothy Shimmin <tes@sgi.com>, Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
 
-Folks,
+On Fri, Nov 30, 2007 at 04:36:25PM -0600, Stephen Lord wrote:
+> Wow, was it really that long ago!
+>
+> Looks like the readdir is in the bowels of the btree code when filldir gets 
+> called
+> here, there are probably locks on several buffers in the btree at this 
+> point. This
+> will only show up for large directories I bet.
 
-Just noticed with the mainline merge (2.6.24-rc3) to xfs-dev that
-xfs_ichgtime + xfs_ichgtime_fast are broken.
+Chris saw it with block-form directories.  I've verified it works fine
+with short-form directories, and the leaf code looks like it could
+happen aswell.  I also remember gfs2 running into a similar problem.
 
-        if (!(inode->i_state & I_SYNC))
-		mark_inode_dirty_sync(inode);
+> The xfs readdir code has the complete xfs inode number in its hands at this 
+> point
+> (filldir is not necessarily getting all the bits of it). All we are doing 
+> the lookup
+> for really is to get the inode number back again so we can get the inode
+> and get the attributes. Rather dumb really. There has got to be a way of
+> doing a callout structure here so that the inode number can be pushed
+> through filldir and back into an fs specific call. The fs then can do a 
+> lookup
+> by id - which is what it does most of the time for resolving nfs handles
+> anyway. Should be more efficient than the current scheme.
 
-that check used to be against I_LOCK, which was arguably broken,
-but this one will mean newly created files are not put on the dirty
-list and hence not written back by pdflush.
-
-Patch to fix this attached.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
-
----
- fs/xfs/linux-2.6/xfs_iops.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-12-03 18:39:52.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_iops.c	2007-12-03 18:40:54.408998073 +1100
-@@ -134,7 +134,7 @@ xfs_ichgtime(
- 	 */
- 	SYNCHRONIZE();
- 	ip->i_update_core = 1;
--	if (!(inode->i_state & I_SYNC))
-+	if (!(inode->i_state & I_NEW))
- 		mark_inode_dirty_sync(inode);
- }
- 
-@@ -186,7 +186,7 @@ xfs_ichgtime_fast(
- 	 */
- 	SYNCHRONIZE();
- 	ip->i_update_core = 1;
--	if (!(inode->i_state & I_SYNC))
-+	if (!(inode->i_state & I_NEW))
- 		mark_inode_dirty_sync(inode);
- }
- 
+Yes, a lot more efficient.  But it means adding a new operation for use
+by the nfs server.
