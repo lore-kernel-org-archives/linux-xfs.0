@@ -1,84 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Dec 2007 16:08:54 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 03 Dec 2007 19:21:28 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB408ka2002388
-	for <xfs@oss.sgi.com>; Mon, 3 Dec 2007 16:08:48 -0800
-Received: from timothy-shimmins-power-mac-g5.local (boing.melbourne.sgi.com [134.14.55.141]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA11891 for <xfs@oss.sgi.com>; Tue, 4 Dec 2007 11:08:55 +1100
-Message-ID: <47549B1A.4070508@sgi.com>
-Date: Tue, 04 Dec 2007 11:11:06 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: 2.6.24-rc3 oopses while mounting fs
-References: <20071128134523.GF7793@luba> <474E003A.7020000@sgi.com> <20071130223154.GB13589@luba> <47537709.9040406@sgi.com> <20071203220200.GC13667@luba>
-In-Reply-To: <20071203220200.GC13667@luba>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB43LKGr030936
+	for <xfs@oss.sgi.com>; Mon, 3 Dec 2007 19:21:23 -0800
+Subject: PARTIAL TAKE 973591 - attr update for tree walking
+Message-Id: <20071204032125.352D358C4C0F@chook.melbourne.sgi.com>
+Date: Tue,  4 Dec 2007 14:21:25 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Hi Peter,
+Add some code to the tree walking to better handle file descriptors.
 
-FYI
+Date:  Tue Dec  4 14:19:53 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  agruen@suse.de
 
-Just a couple of things in case you weren't aware.
-Often it is simplest to save the log using the -C option to a file.
-        -C filename
-               Copy the log from the filesystem to the file filename.
-               The log itself is not printed.
-The log can then be analysed in various ways later.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-Running logprint in operation mode (the default mode without options)
-(non-transaction mode without -t)
-is really pretty useless without the -s option.
-If you use the -s option then one needs to know where to seek to
-(you can use -t to find the head/tail or -d to see where log records start).
-The problem here is that if you do logprint
-like this (no options) then it will start at offset zero and will invariably have
-trouble decoding if the log has wrapped around (the general case) as
-you'll start in the middle of a record.
-So the -t option is often a more interesting starting point as it
-will operate more like the file system recovery does, finding the head and tail,
-and processing from the tail to the head of the log.
 
-If you want to save the filesystem away for possible metadata debugging later,
-then xfs_metadump is your friend.
-
-Cheers,
-Tim.
-
-KELEMEN Peter wrote:
-> * Lachlan Mcilroy (lachlan@sgi.com) [20071203 14:24]:
-> 
-> Lachlan,
-> 
->> Okay, sounds like it might be a corrupt log.
-> 
-> Yep.
-> 
->> Can you run xfs_logprint on the device or saved log?
-> 
-> Sure.
-> 
-> http://cern.ch/fuji/lxfsre1103/xfs_logprint1.txt.bz2
-> It aborted though, with the following message:
-> 
-> 	xfs_logprint: unknown log operation type (343b)
-> 	Bad data in log
-> 
->> Also give xfs_logprint -t -i a go.
-> 
-> http://cern.ch/fuji/lxfsre1103/xfs_logprint2.txt.bz2
-> 
->> You've saved the log into a file?  You can get the filesystem
->> mounted again by deleting the log with xfs_repair -L <dev>.
->> You'll probably need to run xfs_repair over the filesystem to be
->> safe.
-> 
-> I conserved this filesystem away for further analysis, I'm not
-> sure how helpful it can be.
-> 
-> Thanks,
-> Peter
-> 
+Modid:  master-melb:xfs-cmds:30192a
+attr/VERSION - 1.71 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/VERSION.diff?r1=text&tr1=1.71&r2=text&tr2=1.70&f=h
+attr/doc/CHANGES - 1.86 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/doc/CHANGES.diff?r1=text&tr1=1.86&r2=text&tr2=1.85&f=h
+xfstests/062.out - 1.13 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/062.out.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
+attr/getfattr/getfattr.c - 1.28 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/getfattr/getfattr.c.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
+attr/test/getfattr.test - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/test/getfattr.test.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+attr/libmisc/walk_tree.c - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libmisc/walk_tree.c.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+attr/include/walk_tree.h - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/include/walk_tree.h.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
