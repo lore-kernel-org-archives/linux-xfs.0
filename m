@@ -1,95 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Dec 2007 21:47:16 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Dec 2007 22:35:51 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB55kqRF015590
-	for <xfs@oss.sgi.com>; Tue, 4 Dec 2007 21:46:55 -0800
-Message-ID: <47563B73.2030403@sgi.com>
-Date: Wed, 05 Dec 2007 16:47:31 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB56ZDcw022473
+	for <xfs@oss.sgi.com>; Tue, 4 Dec 2007 22:35:18 -0800
+Message-ID: <475646C8.6070700@sgi.com>
+Date: Wed, 05 Dec 2007 17:35:52 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: 2.6.24-rc3 oopses while mounting fs
-References: <20071128134523.GF7793@luba> <474E003A.7020000@sgi.com> <20071130223154.GB13589@luba> <47537709.9040406@sgi.com> <20071203220200.GC13667@luba> <47549B1A.4070508@sgi.com> <4754FCEC.30906@sgi.com>
-In-Reply-To: <4754FCEC.30906@sgi.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [Patch] xfs_lowbit64 broken on ia32
+References: <20071203211620.GN115527101@sgi.com> <475608D8.4070402@sgi.com> <20071205032128.GB115527101@sgi.com> <475638FD.9090208@sgi.com> <20071205054421.GD115527101@sgi.com>
+In-Reply-To: <20071205054421.GD115527101@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
-Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-> ============================================================================ 
+David Chinner wrote:
+> On Wed, Dec 05, 2007 at 04:37:01PM +1100, Lachlan McIlroy wrote:
+>> David Chinner wrote:
+>>> On Wed, Dec 05, 2007 at 01:11:36PM +1100, Lachlan McIlroy wrote:
+>>>> David Chinner wrote:
+>>>>> The recent change to the internals of xfs_lowbit64 broke it on
+>>>>> ia32 - the code treats the 64bit value as an unsigned long
+>>>>> which is only 32 bits on ia32 and hence throws away the high 32
+>>>>> bits. 64 bit platforms are not affected.
+>>>>>
+>>>>> Tested with a userspace implementation comparing the original
+>>>>> code with the new code.
+>>>>>
+>>>>> Signed-off-by: Dave Chinner <dgc@sgi.com>
+>>>>> ---
+>>>>> fs/xfs/xfs_bit.h |    4 ++--
+>>>>> 1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>>
+>>>>> Index: 2.6.x-xfs-new/fs/xfs/xfs_bit.h
+>>>>> ===================================================================
+>>>>> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_bit.h	2007-11-02 
+>>>>> 13:44:45.000000000 +1100
+>>>>> +++ 2.6.x-xfs-new/fs/xfs/xfs_bit.h	2007-12-03 14:43:33.169851481 +1100
+>>>>> @@ -68,8 +68,8 @@ static inline int xfs_lowbit32(__uint32_
+>>>>> /* Get low bit set out of 64-bit argument, -1 if none set */
+>>>>> static inline int xfs_lowbit64(__uint64_t v)
+>>>>> {
+>>>>> -	unsigned long	t = v;
+>>>>> -	return (v) ? find_first_bit(&t, 64) : -1;
+>>>>> +	unsigned long long	t = v;
+>>>> Why create a local copy?  Why not just pass v into find_first_bit()?
+>>> Because I thought that taking the address of a function parameter
+>>> was a big no-no because the result is undefined (i.e. platform and
+>>> compiler dependent)?
+>>>
+>> Really?  Didn't occur to me but then I can't say for sure I've ever
+>> used the address of an argument.  If we need a local copy then why
+>> not use __unit64_t instead of unsigned long long?
 > 
-> cycle: 154    version: 2        lsn: 154,5248    tail_lsn: 153,253056
-> length of Log Record: 61440    prev offset: 5120        num ops: 303
-> uuid: b02fc6bd-662f-40a5-8f0c-e260a881a3e7   format: little endian linux
-> h_size: 262144
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+> Whatever. They are both the same.
 > 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+> xfs/xfs_types.h    <global> 41 typedef unsigned long long int __uint64_t;
 > 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-> 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-> 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-> 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-> 
-> extended-header: cycle: 154
-> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-> 
-> extended-header: cycle: 154
-> ---------------------------------------------------------------------------- 
-> 
-> Oper (0): tid: 5769cd60  len: 0  clientid: TRANS  flags: START
-> ---------------------------------------------------------------------------- 
-> 
-> Oper (1): tid: 5769cd60  len: 16  clientid: TRANS  flags: none
-> TRAN:    type: STRAT_WRITE       tid: 0       num_items: 5
-> ---------------------------------------------------------------------------- 
-> 
-> Oper (2): tid: 5769cd60  len: 56  clientid: TRANS  flags: none
-> INODE: #regs: 3   ino: 0x1400005c  flags: 0x5   dsize: 16
->         blkno: 610338736  len: 16  boff: 4096
-> Oper (3): tid: 5769cd60  len: 96  clientid: TRANS  flags: none
-> INODE CORE
-> magic 0x494e mode 0100600 version 1 format 2
-> nlink 1 uid 14029 gid 1474
-> atime 0x4716b870 mtime 0x4716bade ctime 0x4716bade
-> size 0x1ce00000 nblocks 0x1c840 extsize 0x0 nextents 0x1
-> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
-> flags 0x0 gen 0x4
-> Oper (4): tid: 5769cd60  len: 16  clientid: TRANS  flags: none
-> EXTENTS inode data
-> ---------------------------------------------------------------------------- 
 
-Another interesting point is that the transaction id has changed between
-these operations from 5769cd60 to 5769cf18.  It should stay the same.
-We may be reading old log data.
-
-> 
-> Oper (5): tid: 5769cf18  len: 24  clientid: TRANS  flags: none
-> BUF:  #regs: 2   start blkno: 610338561 (0x24610701)  len: 1  bmap size: 
-> 1  flags: 0x0
-> Oper (6): tid: 5769cf18  len: 128  clientid: TRANS  flags: none
-> AGF Buffer: XAGF
-> ver: 1  seq#: 5  len: 15258464
-> root BNO: 1  CNT: 2
-> level BNO: 1  CNT: 1
-> 1st: 0  last: 3  cnt: 4  freeblks: 2491090  longest: 581471
-> ---------------------------------------------------------------------------- 
-> 
-> Oper (7): tid: 5769cf18  len: 28  clientid: TRANS  flags: none
-> BUF:  #regs: 2   start blkno: 610338568 (0x24610708)  len: 8  bmap size: 
-> 2  flags: 0x0
-> Oper (8): tid: 5769cf18  len: 128  clientid: TRANS  flags: none
-> BUF DATA
-> ---------------------------------------------------------------------------- 
-> 
+Figured they would be.  Using the same type probably would have avoided
+the bug in the first place.  Otherwise the change is good.
