@@ -1,47 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Dec 2007 01:57:14 -0800 (PST)
-Received: from ninsei.hu (ninsei.hu [212.92.23.158])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lB49v6ps007078
-	for <xfs@oss.sgi.com>; Tue, 4 Dec 2007 01:57:09 -0800
-Received: from luba (pb-d-128-141-57-222.cern.ch [128.141.57.222])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by chatsubo.ninsei.hu (Postfix) with ESMTP id C0E9C7A97
-	for <xfs@oss.sgi.com>; Tue,  4 Dec 2007 10:56:38 +0100 (CET)
-Date: Tue, 4 Dec 2007 10:57:10 +0100
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: 2.6.24-rc3 oopses while mounting fs
-Message-ID: <20071204095710.GD2074@luba>
-References: <20071128134523.GF7793@luba> <474E003A.7020000@sgi.com> <20071130223154.GB13589@luba> <47537709.9040406@sgi.com> <20071203220200.GC13667@luba> <47549B1A.4070508@sgi.com> <4754FCEC.30906@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Dec 2007 18:11:06 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with SMTP id lB52AvuZ015172
+	for <xfs@oss.sgi.com>; Tue, 4 Dec 2007 18:11:00 -0800
+Message-ID: <475608D8.4070402@sgi.com>
+Date: Wed, 05 Dec 2007 13:11:36 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4754FCEC.30906@sgi.com>
+Subject: Re: [Patch] xfs_lowbit64 broken on ia32
+References: <20071203211620.GN115527101@sgi.com>
+In-Reply-To: <20071203211620.GN115527101@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-* Lachlan Mcilroy (lachlan@sgi.com) [20071204 18:08]:
+David Chinner wrote:
+> The recent change to the internals of xfs_lowbit64 broke it on
+> ia32 - the code treats the 64bit value as an unsigned long
+> which is only 32 bits on ia32 and hence throws away the high 32
+> bits. 64 bit platforms are not affected.
+> 
+> Tested with a userspace implementation comparing the original
+> code with the new code.
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/xfs_bit.h |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_bit.h
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_bit.h	2007-11-02 13:44:45.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_bit.h	2007-12-03 14:43:33.169851481 +1100
+> @@ -68,8 +68,8 @@ static inline int xfs_lowbit32(__uint32_
+>  /* Get low bit set out of 64-bit argument, -1 if none set */
+>  static inline int xfs_lowbit64(__uint64_t v)
+>  {
+> -	unsigned long	t = v;
+> -	return (v) ? find_first_bit(&t, 64) : -1;
+> +	unsigned long long	t = v;
+Why create a local copy?  Why not just pass v into find_first_bit()?
 
-Lachlan,
-
-> The transactional view appears to be truncated. [...]
-> Peter, can you try xfs_logprint -c ...?
-
-xfs_logprint -c -t -i produces an identical transactional dump
-than what you have seen.
-http://cern.ch/fuji/lxfsre1103/xfs_logprint_c_t_i.txt
-
-You can grab the whole saved log from here (128M uncompressed):
-http://cern.ch/fuji/lxfsre1103/sdc.xlg.bz2
-88a6906567ab44994a0b5c4255c5c619428405dc  sdc.xlg
-
-HTH,
-Peter
-
--- 
-    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+''
- Kelemen Péter     /       \       /       \     Peter.Kelemen@cern.ch
-.+'         `+...+'         `+...+'         `+...+'         `+...+'
+> +	return (v) ? find_first_bit((unsigned long *)&t, 64) : -1;
+>  }
+>  
+>  /* Return whether bitmap is empty (1 == empty) */
+> 
+> 
+> 
