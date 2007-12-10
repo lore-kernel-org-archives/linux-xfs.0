@@ -1,54 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Dec 2007 14:10:11 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Dec 2007 14:20:27 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lBAMA6cH016919
-	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 14:10:07 -0800
-Received: from wa-out-1112.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D997FB24AE1
-	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 13:59:02 -0800 (PST)
-Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.176]) by cuda.sgi.com with ESMTP id NkbCM7XRFwH2IHg1 for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 13:59:02 -0800 (PST)
-Received: by wa-out-1112.google.com with SMTP id k22so3863136waf
-        for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 13:59:01 -0800 (PST)
-Message-ID: <5d96567b0712081142r4ebb4f2dk25c8b00c30afe0b5@mail.gmail.com>
-Date: Sat, 8 Dec 2007 21:42:34 +0200
-From: Raz <raziebe@gmail.com>
-Subject: Re: mounting raid5 with different unit values
-In-Reply-To: <20071008004513.GA13543@puku.stupidest.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.10/SuSE Linux 0.7) with ESMTP id lBAMK5U2018101
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2007 14:20:08 -0800
+Received: from pentafluge.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64E5EB24B48
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2007 14:02:17 -0800 (PST)
+Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40]) by cuda.sgi.com with ESMTP id LwaN1nTpRez42lo4 for <xfs@oss.sgi.com>; Mon, 10 Dec 2007 14:02:17 -0800 (PST)
+Date: Mon, 10 Dec 2007 20:48:20 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: DMAPI problem with the new filldir implementation
+Message-ID: <20071210204820.GA27456@infradead.org>
+References: <475879DB.40705@sgi.com> <20071207002922.GQ115527101@sgi.com> <20071207014940.GS115527101@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <5d96567b0710070015j723810aag20dc3e2866868684@mail.gmail.com>
-	 <20071007145213.GA4504@puku.stupidest.org>
-	 <Pine.LNX.4.64.0710071147390.22702@p34.internal.lan>
-	 <20071008004513.GA13543@puku.stupidest.org>
+In-Reply-To: <20071207014940.GS115527101@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: linux-xfs@oss.sgi.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>
-
-Well... this thing actually works just fine with a newer kernel (
-2.6.18-8-el5 centos5 ). I managed to mount / mkfs.xfs over raid5 with
-a pseudo raid5 unit size, and with the appropriate raid 5 patches and
-user space access-pattern, I elimintaed in 99% cases the read penalty
-.
-I sincerly hope I won't be getting any crashes with this file system tunnings.
-so ... first, chris and all you xfs guys, many many thanks.
-Chris,  How "dangerous" these tunnings are ? Am I to expect "weird"
-behaviour of the file system ?
-
-On 10/8/07, Chris Wedgwood <cw@f00f.org> wrote:
-> On Sun, Oct 07, 2007 at 11:48:14AM -0400, Justin Piszcz wrote:
->
-> > man mount :)
->
-> Ah of course.
->
-> But those will be more restrictive that what you can specify when you
-> make the file-system (because mkfs.xfs can aligned the AGs to suit).
->
+To: David Chinner <dgc@sgi.com>
+Cc: Vlad Apostolov <vapo@sgi.com>, Christoph Hellwig <hch@infradead.org>, Mark Goodwin <markgw@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
 
--- 
-Raz
+Looks good to me.  Might be worth to add a test that does a readdir
+with a small buffer where only "." fits so we don't regress that special
+case.
