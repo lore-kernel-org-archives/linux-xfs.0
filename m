@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Dec 2007 17:26:59 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Dec 2007 18:13:26 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBB1QrD9005610
-	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 17:26:55 -0800
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBB2DJuF008176
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 18:13:22 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AB45468342
-	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 17:27:03 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id BRg3RdE14tDwlKJT for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 17:27:03 -0800 (PST)
-Message-ID: <475DE745.9040907@sandeen.net>
-Date: Mon, 10 Dec 2007 19:26:29 -0600
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 331204687CD
+	for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 18:13:29 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id TPazJcRCm8a9fV3E for <linux-xfs@oss.sgi.com>; Mon, 10 Dec 2007 18:13:29 -0800 (PST)
+Message-ID: <475DF228.80306@sandeen.net>
+Date: Mon, 10 Dec 2007 20:12:56 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: AW: Unexpected XFS SB number 0x00000000
-References: <002a01c83b74$52060330$f6120990$@de> <475DC056.3000502@sandeen.net> <003401c83b8e$84c1d730$8e458590$@de>
-In-Reply-To: <003401c83b8e$84c1d730$8e458590$@de>
+Subject: Re: Unexpected XFS SB number 0x00000000
+References: <002a01c83b74$52060330$f6120990$@de> <475DC056.3000502@sandeen.net> <000301c83b92$191f6110$4b5e2330$@de>
+In-Reply-To: <000301c83b92$191f6110$4b5e2330$@de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -23,24 +23,27 @@ To: Chris <hsvchris@gmx.de>
 Cc: linux-xfs@oss.sgi.com
 
 Chris wrote:
->> Did your new partition table start in exactly the same place?
->>
-> 
-> I assumed it would be in the same place...
-> I guess there is no way to find out what the old one looked like?
-> 
->> Can you find the string "XFSB" anywhere near where your old partition
->> started?
->>
-> 
-> I can try to do so...how? :)
-> When I look into the partition with cfdisk, I can see what
-> cylinders/heads/sectors it uses. But I'm sure there are other tools?
-> 
-> Interestingly, after a reboot cfdisk shows me a 801575.31 MB partition and
-> 2199023.26 MB free space, although I wrote a single partition of 3000598.57
-> MB into the table before rebooting.
 
-fat partitions can't be > 2T
+> I just tested some more and using parted found out the following:
+> 
+> (parted) print
+> Warning: /dev/sdb contains GPT signatures, indicating that is has a GPT
+> table. However, it does not have a valid fake msdos partition table, as it
+> should. Perhaps it was corrupted --  possibly by a program that doesn't
+> understand GPT  partition tables. Or perhaps you deleted the GPT table, and
+> are now using an msdos partition table. Is this a GPT partition table?
+> Yes/No? y
+> 
+> Disk /dev/sdb: 3001GB
+> Sector size (logical/physical): 512B/512B
+> Partition Table: gpt
+> 
+> Number	Start		End		Size		File system	Name
+> Flags
+> 1		17.4kB 	22250GB 	22250GB 	xfs
+> 
+> 
+> So it seems that parted can still "see" the old table. But it doesn't have
+> support for resizing xfs partitions...
 
--Eric
+So, did you originally have a gpt or an msdos partition table?
