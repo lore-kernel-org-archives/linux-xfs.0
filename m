@@ -1,62 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 17:53:23 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 19:36:41 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC1rGYd025876
-	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:18 -0800
-Received: from puma.mxtelecom.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E523710FB12D
-	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:27 -0800 (PST)
-Received: from puma.mxtelecom.com (mx1.mxtelecom.com [87.86.212.101]) by cuda.sgi.com with ESMTP id bzeFzLUCTkpiLmXU for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:27 -0800 (PST)
-Date: Wed, 12 Dec 2007 01:52:48 +0000 (GMT)
-From: Matthew Hodgson <matthew@mxtelecom.com>
-Subject: Re: Zero-copy Block IO with XFS
-In-Reply-To: <cc7060690712110839j46e0928bv4dae1d33bfe5d0dd@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.0712120113270.5069@puma.mxtelecom.com>
-References: <475E76AB.705@mxtelecom.com> <cc7060690712110839j46e0928bv4dae1d33bfe5d0dd@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC3aYA3004415
+	for <linux-xfs@oss.sgi.com>; Tue, 11 Dec 2007 19:36:38 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CA0E9B39CC9
+	for <linux-xfs@oss.sgi.com>; Tue, 11 Dec 2007 19:36:41 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 3Gaevk9r1X3CyR8A for <linux-xfs@oss.sgi.com>; Tue, 11 Dec 2007 19:36:41 -0800 (PST)
+Message-ID: <475F5746.8080405@sandeen.net>
+Date: Tue, 11 Dec 2007 21:36:38 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: write barrier over device mapper supported or not?
+References: <200712112342.24094.Martin@lichtvoll.de>
+In-Reply-To: <200712112342.24094.Martin@lichtvoll.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Bhagi rathi <jahnu77@gmail.com>
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com
 
-On Tue, 11 Dec 2007, Bhagi rathi wrote:
+Martin Steigerwald wrote:
+> Hello!
+> 
+> Are write barriers over device mapper supported or not?
 
-> On Dec 11, 2007 5:08 PM, Matthew Hodgson <matthew@mxtelecom.com> wrote:
->
->> Hi all,
->>
->> I'm experimenting with using XFS with a network block device (DST), and
->> have come up against the problem that when writing data to the network,
->> it uses kernel_sendpage to hand the page presented at the BIO layer to
->> the network stack.  It then completes the block IO request.
->
-> Actually, you can pass a sendpage read actor which takes a reference on 
-> the page which ensures valid page exists with you.
+Nope.
 
-Hmm, i'm a little confused as to how one would do that - I can see that 
-sendfile can be passed a read actor for use in the underlying read, but I 
-can't see anywhere where sendpage can be used with a read actor.  I see 
-that nfsd/vfs.c:nfsd_read_actor() adjusts the page refcounting to stop 
-them being freed before they are sent - but that only seems to be usable 
-when sending with sendfile.
+see dm_request():
 
-> As long as you have 
-> ref on the page and no truncate to the same file, you can safely access 
-> the file.  Once NIC sends the data over wire, you can do put_page. This 
-> should work.
+        /*
+         * There is no use in forwarding any barrier request since we can't
+         * guarantee it is (or can be) handled by the targets correctly.
+         */
+        if (unlikely(bio_barrier(bio))) {
+                bio_endio(bio, -EOPNOTSUPP);
+                return 0;
+        }
 
-I'm not sure that it will help, though.  The problem seems to be that XFS 
-itself overwrites the page with new data (rather than the page being freed 
-and reused) whilst the page is waiting to be sent in the TCP stack.  Is 
-there any way to prevent XFS from doing this - or have I misunderstood the 
-problem?
 
-Along similar lines, is there any way to stop XFS from passing slab pages 
-to the block IO layer?  Attempts to pass slab pages over to the TCP stack 
-fail too.
+> On LVM2 xfs tells me:
+> 
+> Dec 11 23:00:09 shambala kernel: Filesystem "dm-0": Disabling barriers, 
+> not supported by the underlying device
+> Dec 11 23:00:09 shambala kernel: XFS mounting filesystem dm-0
+> Dec 11 23:00:09 shambala kernel: Ending clean XFS mount for filesystem: 
+> dm-0
+> 
+> But when I mount ext3 on LVM2 I get:
+> 
+> Dec 11 23:05:34 shambala kernel: kjournald starting.  Commit interval 5 
+> seconds
+> Dec 11 23:05:34 shambala kernel: EXT3 FS on dm-1, internal journal
+> Dec 11 23:05:34 shambala kernel: EXT3-fs: mounted filesystem with ordered 
+> data mode.
+> 
+> even when I explicetely specify "-o barrier=1" which should enable 
+> barriers on ext3.
+> 
+> As far as I understood from the changelogs as I wrote my Linux-Magazin I 
+> thought there should be device mapper support in the kernel, but I can 
+> not reproduce that finding anymore at the moment.
+> 
+> But back then I also looked at the ext3 / jbd sources and found that jbd 
+> issues a warning when barrier support is not available. However I do not 
+> find that one either.
 
-thanks,
+in journal_write_commit_record() there is such a warning, but not in the
+mount path:
 
-Matthew.
+                printk(KERN_WARNING
+                        "JBD: barrier-based sync failed on %s - "
+                        "disabling barriers\n",
+                        bdevname(journal->j_dev, b));
+
+and if I set barrier=1 on an lvm-root test box, I do get:
+
+JBD: barrier-based sync failed on dm-0 - disabling barriers
+
+-Eric
