@@ -1,190 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 23:19:47 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBC7JV6S031342
-	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 23:19:36 -0800
-Message-ID: <475F8BC3.8020804@sgi.com>
-Date: Wed, 12 Dec 2007 18:20:35 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Dec 2007 03:19:38 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBCBInT1025470
+	for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 03:18:52 -0800
+Message-ID: <475FC40C.3030102@mxtelecom.com>
+Date: Wed, 12 Dec 2007 11:20:44 +0000
+From: Matthew Hodgson <matthew@mxtelecom.com>
 MIME-Version: 1.0
-Subject: [PATCH] make xfs_idestroy() wait for log I/O to complete
-Content-Type: multipart/mixed;
- boundary="------------030001020001050703050701"
+Subject: Re: Zero-copy Block IO with XFS
+References: <475E76AB.705@mxtelecom.com> <20071212110735.GH4612@sgi.com>
+In-Reply-To: <20071212110735.GH4612@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------030001020001050703050701
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi Dave,
 
-An xfs inode can be destroyed before log I/O involving that inode
-is complete.  We need to wait for the inode to be unpinned before
-tearing it down.  The patch looks big but the only real change is
-adding a call to xfs_iunpin_wait() to the start of xfs_idestroy().
-The rest of the patch is moving xfs_idestroy() after the pinning
-routines.
+Thanks for the response :)
 
-Lachlan
+David Chinner wrote:
+> On Tue, Dec 11, 2007 at 11:38:19AM +0000, Matthew Hodgson wrote:
+>> I'm experimenting with using XFS with a network block device (DST), and 
+>> have come up against the problem that when writing data to the network, 
+>> it uses kernel_sendpage to hand the page presented at the BIO layer to 
+>> the network stack.  It then completes the block IO request.
+>>
+>> The problem arises when XFS proceeds to then reuse that page before the 
+>> NIC actually sends it.
+> 
+> Where does XFS overwrite a page while I/O is still in progress?
+> Stack trace please.
 
---------------030001020001050703050701
-Content-Type: text/x-patch;
- name="xfs_idestroy.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="xfs_idestroy.diff"
+It doesn't.  The problem is that after the block device has completed 
+the IO request with bio_endio(), there's a risk that it may still need 
+access to the page in order to retransmit it, perform offloaded 
+checksumming, etc.
 
---- fs/xfs/xfs_inode.c_1.489	2007-12-12 17:14:54.000000000 +1100
-+++ fs/xfs/xfs_inode.c	2007-12-12 17:15:42.000000000 +1100
-@@ -2733,71 +2733,6 @@ xfs_idestroy_fork(
- }
- 
- /*
-- * This is called free all the memory associated with an inode.
-- * It must free the inode itself and any buffers allocated for
-- * if_extents/if_data and if_broot.  It must also free the lock
-- * associated with the inode.
-- */
--void
--xfs_idestroy(
--	xfs_inode_t	*ip)
--{
--	switch (ip->i_d.di_mode & S_IFMT) {
--	case S_IFREG:
--	case S_IFDIR:
--	case S_IFLNK:
--		xfs_idestroy_fork(ip, XFS_DATA_FORK);
--		break;
--	}
--	if (ip->i_afp)
--		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
--	mrfree(&ip->i_lock);
--	mrfree(&ip->i_iolock);
--	freesema(&ip->i_flock);
--
--#ifdef XFS_INODE_TRACE
--	ktrace_free(ip->i_trace);
--#endif
--#ifdef XFS_BMAP_TRACE
--	ktrace_free(ip->i_xtrace);
--#endif
--#ifdef XFS_BMBT_TRACE
--	ktrace_free(ip->i_btrace);
--#endif
--#ifdef XFS_RW_TRACE
--	ktrace_free(ip->i_rwtrace);
--#endif
--#ifdef XFS_ILOCK_TRACE
--	ktrace_free(ip->i_lock_trace);
--#endif
--#ifdef XFS_DIR2_TRACE
--	ktrace_free(ip->i_dir_trace);
--#endif
--	if (ip->i_itemp) {
--		/*
--		 * Only if we are shutting down the fs will we see an
--		 * inode still in the AIL. If it is there, we should remove
--		 * it to prevent a use-after-free from occurring.
--		 */
--		xfs_mount_t	*mp = ip->i_mount;
--		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
--
--		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
--				       XFS_FORCED_SHUTDOWN(ip->i_mount));
--		if (lip->li_flags & XFS_LI_IN_AIL) {
--			spin_lock(&mp->m_ail_lock);
--			if (lip->li_flags & XFS_LI_IN_AIL)
--				xfs_trans_delete_ail(mp, lip);
--			else
--				spin_unlock(&mp->m_ail_lock);
--		}
--		xfs_inode_item_destroy(ip);
--	}
--	kmem_zone_free(xfs_inode_zone, ip);
--}
--
--
--/*
-  * Increment the pin count of the given buffer.
-  * This value is protected by ipinlock spinlock in the mount structure.
-  */
-@@ -2860,6 +2795,74 @@ xfs_iunpin_wait(
- 	wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 0));
- }
- 
-+/*
-+ * This is called free all the memory associated with an inode.
-+ * It must free the inode itself and any buffers allocated for
-+ * if_extents/if_data and if_broot.  It must also free the lock
-+ * associated with the inode.
-+ */
-+void
-+xfs_idestroy(
-+	xfs_inode_t	*ip)
-+{
-+	/*
-+	 * Wait for any log writes referencing this inode to complete.
-+	 */
-+	xfs_iunpin_wait(ip);
-+
-+	switch (ip->i_d.di_mode & S_IFMT) {
-+	case S_IFREG:
-+	case S_IFDIR:
-+	case S_IFLNK:
-+		xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+		break;
-+	}
-+	if (ip->i_afp)
-+		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-+	mrfree(&ip->i_lock);
-+	mrfree(&ip->i_iolock);
-+	freesema(&ip->i_flock);
-+
-+#ifdef XFS_INODE_TRACE
-+	ktrace_free(ip->i_trace);
-+#endif
-+#ifdef XFS_BMAP_TRACE
-+	ktrace_free(ip->i_xtrace);
-+#endif
-+#ifdef XFS_BMBT_TRACE
-+	ktrace_free(ip->i_btrace);
-+#endif
-+#ifdef XFS_RW_TRACE
-+	ktrace_free(ip->i_rwtrace);
-+#endif
-+#ifdef XFS_ILOCK_TRACE
-+	ktrace_free(ip->i_lock_trace);
-+#endif
-+#ifdef XFS_DIR2_TRACE
-+	ktrace_free(ip->i_dir_trace);
-+#endif
-+	if (ip->i_itemp) {
-+		/*
-+		 * Only if we are shutting down the fs will we see an
-+		 * inode still in the AIL. If it is there, we should remove
-+		 * it to prevent a use-after-free from occurring.
-+		 */
-+		xfs_mount_t	*mp = ip->i_mount;
-+		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
-+
-+		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
-+				       XFS_FORCED_SHUTDOWN(ip->i_mount));
-+		if (lip->li_flags & XFS_LI_IN_AIL) {
-+			spin_lock(&mp->m_ail_lock);
-+			if (lip->li_flags & XFS_LI_IN_AIL)
-+				xfs_trans_delete_ail(mp, lip);
-+			else
-+				spin_unlock(&mp->m_ail_lock);
-+		}
-+		xfs_inode_item_destroy(ip);
-+	}
-+	kmem_zone_free(xfs_inode_zone, ip);
-+}
- 
- /*
-  * xfs_iextents_copy()
+>> Particularly if TX checksumming or TCP 
+>> segmentation is being offloaded to the NIC, it seems that the NIC will 
+>> try to access to page after the BIO request has returned, and so operate 
+>> on stale data. 
+> 
+> That sounds like you are completing the bio before the I/O has
+> really been completed. Basically, the bio can't be completed until
+> the data has been sent and that will prevent any use after free or
+> overwrite of the data while it is being sent...
 
---------------030001020001050703050701--
+Agreed.  In general that will cause a fairly major performance hit, 
+however (you'd have to at least wait for the ACK from the TCP peer 
+before completing the BIO).  Or make a copy of the page.  Is there no 
+scope (however theoretical - I guess this is starting to become an 
+academic question) for providing XFS with hints that particular pages 
+are in use elsewhere and should not be overwritten?  Could XFS mandate 
+only overwriting pages in its cache with a ->count of 1?
+
+In other news, does XFS still provide the block layer with 
+slab-allocated pages for metadata operations?
+
+thanks,
+
+Matthew.
+
+-- 
+Matthew Hodgson <matthew@mxtelecom.com>
+Media & Systems Project Manager
+Tel: +44 (0) 845 666 7778
+http://www.mxtelecom.com
