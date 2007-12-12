@@ -1,66 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Dec 2007 01:21:04 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC9JXjI015357
-	for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 01:19:35 -0800
-Received: from astra.telenet-ops.be (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1907470D7A
-	for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 01:19:44 -0800 (PST)
-Received: from astra.telenet-ops.be (astra.telenet-ops.be [195.130.132.58]) by cuda.sgi.com with ESMTP id ysjyJYdtdqZrBFAL for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 01:19:44 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by astra.telenet-ops.be (Postfix) with SMTP id 222F83810F
-	for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 10:19:42 +0100 (CET)
-Received: from [84.195.46.72] (d54C32E48.access.telenet.be [84.195.46.72])
-	by astra.telenet-ops.be (Postfix) with ESMTP id 0E2AC3810B
-	for <xfs@oss.sgi.com>; Wed, 12 Dec 2007 10:19:41 +0100 (CET)
-Message-ID: <475FA7B1.6070706@pandora.be>
-Date: Wed, 12 Dec 2007 10:19:45 +0100
-From: Denis Wegge <denis_wegge@pandora.be>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Dec 2007 00:27:50 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC8Qo8K010994
+	for <linux-xfs@oss.sgi.com>; Wed, 12 Dec 2007 00:26:52 -0800
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F57AB3A547
+	for <linux-xfs@oss.sgi.com>; Wed, 12 Dec 2007 00:26:57 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id Icn909HDWTib4r6v for <linux-xfs@oss.sgi.com>; Wed, 12 Dec 2007 00:26:57 -0800 (PST)
+Received: from shambala.of.teamix.net (blackhole.teamix.net [194.150.191.251])
+	by mail.lichtvoll.de (Postfix) with ESMTP id 501585ADDC
+	for <linux-xfs@oss.sgi.com>; Wed, 12 Dec 2007 09:25:09 +0100 (CET)
+From: Martin Steigerwald <Martin@Lichtvoll.de>
+Subject: Re: write barrier over device mapper supported or not?
+Date: Wed, 12 Dec 2007 09:26:52 +0100
+References: <200712112342.24094.Martin@lichtvoll.de> <475F5746.8080405@sandeen.net> (sfid-20071212_092001_588630_42C71ACD)
+In-Reply-To: <475F5746.8080405@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS unable to mount, recover data
-References: <475696D3.60007@pandora.be> <Pine.LNX.4.64.0712050745480.13960@p34.internal.lan>
-In-Reply-To: <Pine.LNX.4.64.0712050745480.13960@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200712120926.53348.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-I tried putting it in the freezer, but that didn't help. Tests on
-another computer also show that the hard drive cannot be accessed.
+Am Mittwoch 12 Dezember 2007 schrieb Eric Sandeen:
+> Martin Steigerwald wrote:
+> > Hello!
+> >
+> > Are write barriers over device mapper supported or not?
+>
+> Nope.
+>
+> see dm_request():
+>
+>         /*
+>          * There is no use in forwarding any barrier request since we
+> can't * guarantee it is (or can be) handled by the targets correctly.
+> */
+>         if (unlikely(bio_barrier(bio))) {
+>                 bio_endio(bio, -EOPNOTSUPP);
+>                 return 0;
+>         }
 
-It seems like the data on the disk is definitely lost. The disk,
-however, has a 3 year warranty, so I'm going to return it.
+Thanks for your definitive answer.
 
-Thanks for your help.
+What does that mean? What is the target in that case? If it is the libata 
+PATA internal notebook drive it actually should support barriers and then 
+I actually would like device mapper to support them too. Or is LVM2 the 
+target and device mapper can't tell that LVM2 supports it?
 
-Denis
+I ask myself the question why write barrier if half the kernel does not 
+handle it correctly and I am limited to plain partitions if I want to use 
+it? Well I think I will just file a bug report at kernel.bugzilla.org 
+about it.
 
-Justin Piszcz wrote:
-> 
-> 
-> On Wed, 5 Dec 2007, Denis Wegge wrote:
-> 
->> Hello
->>
->> I am having trouble with the XFS filesystem on a 320GB Western Digital
->> SATA harddisk. For no obvious reason the partition can no longer be
->> mounted. The following error occurs:
->>
->> knoppix@Knoppix:~$ sudo mount /dev/sda1 /mnt/sda1
->> mount: /dev/sda1: can't read superblock
-> 
-> Looks like your disk is dying or dead from your logs.  You can try 
-> putting it
-> in a plastic airtight bag then put it in the freezer and try again but
-> otherwise if that does not work, its time for the trash bin (after you try)
-> a dd and overwrite the disk but with that many bad sectors it looks like
-> it has really gone south.
-> 
-> Insert new disk, restore from backup.
-> 
-> Justin.
-> 
-> 
-> 
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
