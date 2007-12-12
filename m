@@ -1,39 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 21:14:21 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC5DuYQ019860
-	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 21:14:00 -0800
-Date: Wed, 12 Dec 2007 05:13:51 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: TAKE 964002 - Don't wait for pending I/Os when purging blocks
-	beyond eof.
-Message-ID: <20071212051351.GA7291@infradead.org>
-References: <20071210055955.0F96358C4C34@chook.melbourne.sgi.com> <20071211081117.GB19213@infradead.org> <20071211232517.GE4612@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 23:02:03 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBC71X9t029332
+	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 23:01:39 -0800
+Message-ID: <475F878D.6090407@sgi.com>
+Date: Wed, 12 Dec 2007 18:02:37 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071211232517.GE4612@sgi.com>
+Subject: [PATCH] make inode reclaim synchronise with xfs_iflush_done()
+Content-Type: multipart/mixed;
+ boundary="------------090009090006020202070505"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Dec 12, 2007 at 10:25:17AM +1100, David Chinner wrote:
-> > which is wrong given that we don't wait for all pending direct I/O
-> > requests..  (and vn_iowait doesn't wait for direct I/O anyway)
-> 
-> vn_iowait() does wait for direct I/O. That was it's entire purpose - to be
-> able to prevent truncate vs direct I/O write races by tracking direct I/Os.
-> We increment ip->i_iocount in xfs_alloc_ioend() which is called from both the
-> buffered write and direct I/O write path, so vn_iowait() does wait for both
-> buffered and direct writes to complete.
+This is a multi-part message in MIME format.
+--------------090009090006020202070505
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Sorry, forgot a little important word above - it should read
-'and vn_iowait doesn't wait _just_ for direct I/O anyway), because it
-waits for completion of regular I/O aswell.  Not that it should actually
-matter in that caller.forgot a little important word above - it should
-read
-'and vn_iowait doesn't wait _just_ for direct I/O anyway), because it
-waits for completion of regular I/O aswell.  Not that it should actually
-matter in that caller.
+On a forced shutdown, xfs_finish_reclaim() will skip flushing the inode.
+If the inode flush lock is not already held and there is an outstanding
+xfs_iflush_done() then we might free the inode prematurely.  By acquiring
+and releasing the flush lock we will synchronise with xfs_iflush_done().
+
+Alternatively we could take a hold on the inode when when issuing I/Os
+with xfs_iflush_done() and release it in xfs_iflush_done().  Would this
+be a better approach?
+
+Lachlan
+
+--------------090009090006020202070505
+Content-Type: text/x-patch;
+ name="xfs_finish_reclaim.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="xfs_finish_reclaim.diff"
+
+--- fs/xfs/xfs_vnodeops.c_1.726	2007-12-12 17:14:59.000000000 +1100
++++ fs/xfs/xfs_vnodeops.c	2007-12-12 17:15:42.000000000 +1100
+@@ -3762,20 +3762,29 @@ xfs_finish_reclaim(
+ 				goto reclaim;
+ 			}
+ 			xfs_iflock(ip); /* synchronize with xfs_iflush_done */
++			xfs_ifunlock(ip);
+ 		}
+ 
+ 		ASSERT(ip->i_update_core == 0);
+ 		ASSERT(ip->i_itemp == NULL ||
+ 		       ip->i_itemp->ili_format.ilf_fields == 0);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	} else if (locked) {
++	} else {
+ 		/*
+ 		 * We are not interested in doing an iflush if we're
+ 		 * in the process of shutting down the filesystem forcibly.
+ 		 * So, just reclaim the inode.
+-		 */
+-		xfs_ifunlock(ip);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		 * 
++		 * If the flush lock is not already held then temporarily
++		 * acquire it to synchronize with xfs_iflush_done.
++		 */
++		if (locked) {
++			xfs_ifunlock(ip);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		} else {
++			xfs_iflock(ip);
++			xfs_ifunlock(ip);
++		}
+ 	}
+ 
+  reclaim:
+
+--------------090009090006020202070505--
