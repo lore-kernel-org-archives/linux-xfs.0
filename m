@@ -1,47 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 16:35:00 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBC0YrKh021527
-	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 16:34:56 -0800
-Message-ID: <475F2D54.3090609@sgi.com>
-Date: Wed, 12 Dec 2007 11:37:40 +1100
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Dec 2007 17:53:23 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBC1rGYd025876
+	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:18 -0800
+Received: from puma.mxtelecom.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E523710FB12D
+	for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:27 -0800 (PST)
+Received: from puma.mxtelecom.com (mx1.mxtelecom.com [87.86.212.101]) by cuda.sgi.com with ESMTP id bzeFzLUCTkpiLmXU for <xfs@oss.sgi.com>; Tue, 11 Dec 2007 17:53:27 -0800 (PST)
+Date: Wed, 12 Dec 2007 01:52:48 +0000 (GMT)
+From: Matthew Hodgson <matthew@mxtelecom.com>
+Subject: Re: Zero-copy Block IO with XFS
+In-Reply-To: <cc7060690712110839j46e0928bv4dae1d33bfe5d0dd@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.0712120113270.5069@puma.mxtelecom.com>
+References: <475E76AB.705@mxtelecom.com> <cc7060690712110839j46e0928bv4dae1d33bfe5d0dd@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: mkfs.xfs ... lazy-count=1 ... not mountable by older kernels?
-References: <475EE83A.3060607@ca.sophos.com> <20071211221554.GC4612@sgi.com>
-In-Reply-To: <20071211221554.GC4612@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Sparks <dave@ca.sophos.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Bhagi rathi <jahnu77@gmail.com>
 
-David Chinner wrote:
-> On Tue, Dec 11, 2007 at 11:42:50AM -0800, David Sparks wrote:
+On Tue, 11 Dec 2007, Bhagi rathi wrote:
+
+> On Dec 11, 2007 5:08 PM, Matthew Hodgson <matthew@mxtelecom.com> wrote:
+>
 >> Hi all,
 >>
->> Is it expected that filesystems made with lazy-count=1 are not mountable by
->> older kernels?
-> 
-> That is expected. lazy-count is a mkfs option because it changes the on-disk
-> format slightly, and older kernels do not understand that format. Hence
-> mkfs sets a superblock feature bit to prevent the filesystem from being
-> mounted on kernels that don't understand the slightly different disk format.
-> 
-> Cheers,
-> 
-> Dave.
+>> I'm experimenting with using XFS with a network block device (DST), and
+>> have come up against the problem that when writing data to the network,
+>> it uses kernel_sendpage to hand the page presented at the BIO layer to
+>> the network stack.  It then completes the block IO request.
+>
+> Actually, you can pass a sendpage read actor which takes a reference on 
+> the page which ensures valid page exists with you.
 
-And there will be a message in the logs but it probably isn't
-overly obvious what it is talking about.
+Hmm, i'm a little confused as to how one would do that - I can see that 
+sendfile can be passed a read actor for use in the underlying read, but I 
+can't see anywhere where sendpage can be used with a read actor.  I see 
+that nfsd/vfs.c:nfsd_read_actor() adjusts the page refcounting to stop 
+them being freed before they are sent - but that only seems to be usable 
+when sending with sendfile.
 
-Looking at code, I presume it will come from:
-         if (!XFS_SB_GOOD_VERSION(sbp)) {
-                 xfs_fs_mount_cmn_err(flags, "bad version");
-                 return XFS_ERROR(EWRONGFS);
-         }
-so there will be a msg about a "bad version".
+> As long as you have 
+> ref on the page and no truncate to the same file, you can safely access 
+> the file.  Once NIC sends the data over wire, you can do put_page. This 
+> should work.
 
---Tim
+I'm not sure that it will help, though.  The problem seems to be that XFS 
+itself overwrites the page with new data (rather than the page being freed 
+and reused) whilst the page is waiting to be sent in the TCP stack.  Is 
+there any way to prevent XFS from doing this - or have I misunderstood the 
+problem?
+
+Along similar lines, is there any way to stop XFS from passing slab pages 
+to the block IO layer?  Attempts to pass slab pages over to the TCP stack 
+fail too.
+
+thanks,
+
+Matthew.
