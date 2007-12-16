@@ -1,91 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 01:07:30 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBG97Ppe012341
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 01:07:27 -0800
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AA6C48A24E
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 01:07:35 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id ZvV3khJOGUkupChM for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 01:07:35 -0800 (PST)
-Date: Sun, 16 Dec 2007 04:07:03 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Fedora 8.0.1 XFS Tune on HW RAID for Max Write Throughput?
-In-Reply-To: <4764AB08.7040608@sandeen.net>
-Message-ID: <Pine.LNX.4.64.0712160406290.7893@p34.internal.lan>
-References: <1197653927.3841.1226620089@webmail.messagingengine.com>
- <4764AB08.7040608@sandeen.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 08:34:01 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBGGXli1025633
+	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 08:33:48 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 16D56116635C
+	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 08:33:56 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id G5hPHLoEZL1m4sf1 for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 08:33:56 -0800 (PST)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id lBGGXnF3002356
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 17:33:49 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id lBGGXndK002354
+	for xfs@oss.sgi.com; Sun, 16 Dec 2007 17:33:49 +0100
+Date: Sun, 16 Dec 2007 17:33:49 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] keep i_nlink updated and use proper accessors
+Message-ID: <20071216163349.GA2107@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Alex Madarasz <List.XFS@madalexlists.nospammail.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+
+To get the read-only bind mounts in -mm to work correctly with XFS we
+need to call the drop_nlink and inc_nlink helpers to monitor the link
+count.  Add calls to these to xfs_bumplink and xfs_droplink and stop
+copying over di_nlink to i_nlink in xfs_validate_fields and vn_revalidate.
 
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-On Sat, 15 Dec 2007, Eric Sandeen wrote:
-
-> Alex Madarasz wrote:
->> We're building a new Fedora 8.0.1 Linux system to stream data from a
->> 250Msps ADC to disk, and want to start tuning the system configuration
->> for maximum XFS write performance.  To date, without any significant
->> effort at tuning our Fedora 7 dev system, we're seeing 250MBps write
->> with 8-bit samples and ~ 300MBps write with 16-bit samples. We want to
->> push the tuning as far as we can go with this architecture before we
->> start looking at other hardware options.  Looking at various other
->> tuning pages on the Web finds few that are interested in maxing out
->> sequential writes to very large arrays while using SAS HW RAID with big
->> fast SAS drives too.
->
-> ...
->
->> XFS Tuning Options?
->>
->> - HW RAID0:
->>   - Array/logical disk HW RAID stripe size?
->
-> At any rate you'll want to match xfs's geometry with the raid geometry.
->
->>   - Cache enabled (some reports that cache s/b turned off?)?
->
-> If it's battery-backed cache, leave it on, and disable barriers in xfs
-> (it's a mount option)
->
->>   - xfs mkfs / mount options?
->
-> David mentioned these before as a generic place to start:
->
-> # mkfs.xfs -f -l lazy-count=1,version=2,size=128m -i attr=2 -d agcount=4
-> <dev>
-> # mount -o logbsize=256k <dev> <mtpt>
->
-> and that those would be upcoming new defaults for mkfs.
->
-> 4 ags may not be what you want for a ~2T filesystem.
->
->> - External Log?
->>   - How big a partition on the E200i?
->>   - mkfs / mount options?
->
-> not sure if an external log would be beneficial or not.
->
-> I'm sure others will have more concrete suggestions.  It might be
-> interesting to post any performance you're getting which does not meet
-> your expectations...
->
-> -Eric
->
->>
->> ...?
->>
->> Thanks for any tips,
->>
->
->
-
-I have a question, if he exported all of the HDD as JBOD and then made a 
-software raid, took those software raid creation parameters and then 
-re-made the HW raid, would they still apply to the HW raid?
-
-Justin.
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-09-30 20:09:32.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-09-30 20:16:43.000000000 +0200
+@@ -184,7 +184,6 @@ xfs_validate_fields(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	loff_t size;
+ 
+-	inode->i_nlink = ip->i_d.di_nlink;
+ 	/* we're under i_sem so i_size can't change under us */
+ 	size = XFS_ISIZE(ip);
+ 	if (i_size_read(inode) != size)
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2007-09-30 20:09:32.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c	2007-09-30 20:16:31.000000000 +0200
+@@ -117,7 +117,6 @@ vn_revalidate(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	inode->i_mode	    = ip->i_d.di_mode;
+-	inode->i_nlink	    = ip->i_d.di_nlink;
+ 	inode->i_uid	    = ip->i_d.di_uid;
+ 	inode->i_gid	    = ip->i_d.di_gid;
+ 	inode->i_mtime.tv_sec = ip->i_d.di_mtime.t_sec;
+Index: linux-2.6-xfs/fs/xfs/xfs_utils.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_utils.c	2007-09-30 20:09:32.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_utils.c	2007-09-30 20:16:06.000000000 +0200
+@@ -302,6 +302,7 @@ xfs_droplink(
+ 
+ 	ASSERT (ip->i_d.di_nlink > 0);
+ 	ip->i_d.di_nlink--;
++	drop_nlink(ip->i_vnode);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	error = 0;
+@@ -365,6 +366,7 @@ xfs_bumplink(
+ 
+ 	ASSERT(ip->i_d.di_nlink > 0);
+ 	ip->i_d.di_nlink++;
++	inc_nlink(ip->i_vnode);
+ 	if ((ip->i_d.di_version == XFS_DINODE_VERSION_1) &&
+ 	    (ip->i_d.di_nlink > XFS_MAXLINK_1)) {
+ 		/*
