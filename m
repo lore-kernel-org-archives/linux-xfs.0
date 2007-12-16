@@ -1,87 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 15:47:20 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBGNlIY4028310
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 15:47:18 -0800
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F52F48CAD4
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 15:47:27 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id LMZvgdMbhIc0fDYG for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 15:47:27 -0800 (PST)
-Date: Sun, 16 Dec 2007 18:47:26 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Fedora 8.0.1 XFS Tune on HW RAID for Max Write Throughput?
-In-Reply-To: <20071216233127.GY4612@sgi.com>
-Message-ID: <Pine.LNX.4.64.0712161847110.5540@p34.internal.lan>
-References: <1197653927.3841.1226620089@webmail.messagingengine.com>
- <4764AB08.7040608@sandeen.net> <20071216233127.GY4612@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 15:57:05 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBGNuvjN029167
+	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 15:57:00 -0800
+Message-ID: <4765BB55.5040906@sgi.com>
+Date: Mon, 17 Dec 2007 10:57:09 +1100
+From: Vlad Apostolov <vapo@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: TAKE 974747 - PATCH: Cleanup various fid related bits
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Alex Madarasz <List.XFS@madalexlists.nospammail.net>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
+
+Cleanup various fid related bits:
+
+ - merge xfs_fid2 into it's only caller xfs_dm_inode_to_fh.
+ - remove xfs_vget and opencode it in the two callers, simplifying
+   both of them by avoiding the awkward calling convetion.
+ - assign directly to the dm_fid_t members in various places in the
+   dmapi code instead of casting them to xfs_fid_t first (which
+   is identical to dm_fid_t)
 
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-On Mon, 17 Dec 2007, David Chinner wrote:
 
-> On Sat, Dec 15, 2007 at 10:35:20PM -0600, Eric Sandeen wrote:
->> Alex Madarasz wrote:
->>> We're building a new Fedora 8.0.1 Linux system to stream data from a
->>> 250Msps ADC to disk, and want to start tuning the system configuration
->>> for maximum XFS write performance.  To date, without any significant
->>> effort at tuning our Fedora 7 dev system, we're seeing 250MBps write
->>> with 8-bit samples and ~ 300MBps write with 16-bit samples. We want to
->>> push the tuning as far as we can go with this architecture before we
->>> start looking at other hardware options.  Looking at various other
->>> tuning pages on the Web finds few that are interested in maxing out
->>> sequential writes to very large arrays while using SAS HW RAID with big
->>> fast SAS drives too.
->>
->> ...
->>
->>> XFS Tuning Options?
->>>
->>> - HW RAID0:
->>>   - Array/logical disk HW RAID stripe size?
->>
->> At any rate you'll want to match xfs's geometry with the raid geometry.
->>
->>>   - Cache enabled (some reports that cache s/b turned off?)?
->>
->> If it's battery-backed cache, leave it on, and disable barriers in xfs
->> (it's a mount option)
->>
->>>   - xfs mkfs / mount options?
->>
->> David mentioned these before as a generic place to start:
->>
->> # mkfs.xfs -f -l lazy-count=1,version=2,size=128m -i attr=2 -d agcount=4
->> <dev>
->> # mount -o logbsize=256k <dev> <mtpt>
->>
->> and that those would be upcoming new defaults for mkfs.
->>
->> 4 ags may not be what you want for a ~2T filesystem.
->
-> Right - the 4 AG tuning is effectively for single disk configurations to
-> limit parallelism and therefore keep seeks between AGs down. When you
-> have multiple disks, the [new] mkfs defaults should be just fine (i.e.
-> just drop the agcount suggestion).
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
->
->
+Date:  Mon Dec 17 10:54:18 AEDT 2007
+Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs-patch-reviews
+Inspected by:  vapo
 
-Dave,
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-The mkfs.xfs defaults will be just fine for a HW raid device?
 
-Justin.
+Modid:  xfs-linux-melb:xfs-kern:30258a
+fs/xfs/xfs_vnodeops.c - 1.727 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.727&r2=text&tr2=1.726&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/xfs_vfsops.c - 1.549 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.549&r2=text&tr2=1.548&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/linux-2.6/xfs_ksyms.c - 1.76 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.76&r2=text&tr2=1.75&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/linux-2.6/xfs_export.c - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/dmapi/xfs_dm.c - 1.62 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/xfs_vnodeops.h - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
+
+fs/xfs/xfs_vfsops.h - 1.7 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
+        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
+Cleanup various fid related bits
