@@ -1,47 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 23:25:17 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBH7P7F3005266
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 23:25:12 -0800
-Date: Mon, 17 Dec 2007 18:39:17 +1100
-From: Greg Banks <gnb@sgi.com>
-Subject: Re: [review] Remove the xfs refcache
-Message-ID: <20071217073917.GA19445@sgi.com>
-References: <4765EC66.5020202@sgi.com> <4765F444.8010705@sgi.com> <20071217071426.GA11462@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Dec 2007 05:28:55 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBHDSjrx007357
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 05:28:47 -0800
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E089C116EDAD
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 05:28:55 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id MpGGme7IF4CtuVP0 for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 05:28:55 -0800 (PST)
+Received: from nb27steigerwald.qs.de (unknown [212.204.70.254])
+	by mail.lichtvoll.de (Postfix) with ESMTP id 1C3E95AE80
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 14:29:00 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Installing grub onto a system with XFS root fs
+Date: Mon, 17 Dec 2007 14:28:51 +0100
+References: <20071217004945.GA13335@jdc.jasonjgw.net> (sfid-20071217_102458_420553_1ADB1FF4)
+In-Reply-To: <20071217004945.GA13335@jdc.jasonjgw.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20071217071426.GA11462@infradead.org>
+Message-Id: <200712171428.51831.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Dec 17, 2007 at 07:14:27AM +0000, Christoph Hellwig wrote:
-> On Mon, Dec 17, 2007 at 03:00:04PM +1100, Lachlan McIlroy wrote:
-> > Hey hold on there buddy!  We may need to reactivate this code to fix some
-> > performance issues.  I've acttually got this code working and proven that
-> > it is one way to fix some of the NAS/NFS issues we have.
-> >
-> > The little comment that reads "reference cache not needed for NFS in 2.6"
-> > is wrong - we do need it or something like it.
-> 
-> Not in XFS, though.  This thing needs to be done genericly in NFSD.
-> Greg has been working on an open files cache in nfsd which should be
-> helping this.
 
-BTW, status on that: The current implementation has mutated into
-a filehandle-to-dentry mapping cache, because that helps some
-metadata-heavy workloads too.  I've been testing it these last few
-weeks at a customer site, and it's been useful, but there are still
-some issues to be worked out before I can post it.
+Hello Jason,
 
-> Adding a cache like this back into XFS will get my veto (at least for
-> mainline where I have a bit of a say :))
+Am Montag 17 Dezember 2007 schrieb Jason White:
+> I am trying to install Grub onto a system with a single XFS partition
+> serving as both / and /boot.
+>
+> Distribution: Debian Unstable (Sid).
+> Architecture: x86_64
+>
+> When I run grub-install I get:
+> Searching for GRUB installation directory ... found: /boot/grub
+> Due to a bug in xfs_freeze, the following command might produce a
+> segmentation fault when /boot/grub is not in an XFS filesystem. This
+> error is harmless and can be ignored.
+>
+> At this point the install script hangs and the only way to recover is
+> to reboot the machine (with a hard reset). Needless to say, Grub isn't
+> installed.
+>
+> Any suggestions?
 
-Greg.
+Using grub shell manually always worked for me:
+
+- grub
+- find /boot/grub/menu.lst
+- root <result from above command>
+- setup <place to install too> for example (hd0,0) for first harddisks MBR
+
+Remember to copy over the contents of /usr/lib/grub/i386-pc to /boot 
+before you do a manual installation.
+
+Ciao,
 -- 
-Greg Banks, R&D Software Engineer, SGI Australian Software Group.
-Apparently, I'm Bedevere.  Which MPHG character are you?
-I don't speak for SGI.
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
