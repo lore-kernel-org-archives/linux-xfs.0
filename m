@@ -1,74 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 15:57:05 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 16 Dec 2007 16:37:22 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBGNuvjN029167
-	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 15:57:00 -0800
-Message-ID: <4765BB55.5040906@sgi.com>
-Date: Mon, 17 Dec 2007 10:57:09 +1100
-From: Vlad Apostolov <vapo@sgi.com>
-MIME-Version: 1.0
-Subject: TAKE 974747 - PATCH: Cleanup various fid related bits
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBH0bAtg003941
+	for <xfs@oss.sgi.com>; Sun, 16 Dec 2007 16:37:13 -0800
+Date: Mon, 17 Dec 2007 11:37:14 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Fedora 8.0.1 XFS Tune on HW RAID for Max Write Throughput?
+Message-ID: <20071217003714.GN4396912@sgi.com>
+References: <1197653927.3841.1226620089@webmail.messagingengine.com> <4764AB08.7040608@sandeen.net> <20071216233127.GY4612@sgi.com> <Pine.LNX.4.64.0712161847110.5540@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0712161847110.5540@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: David Chinner <dgc@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Alex Madarasz <List.XFS@madalexlists.nospammail.net>, xfs@oss.sgi.com
 
-Cleanup various fid related bits:
+On Sun, Dec 16, 2007 at 06:47:26PM -0500, Justin Piszcz wrote:
+> 
+> The mkfs.xfs defaults will be just fine for a HW raid device?
 
- - merge xfs_fid2 into it's only caller xfs_dm_inode_to_fh.
- - remove xfs_vget and opencode it in the two callers, simplifying
-   both of them by avoiding the awkward calling convetion.
- - assign directly to the dm_fid_t members in various places in the
-   dmapi code instead of casting them to xfs_fid_t first (which
-   is identical to dm_fid_t)
+If you get a mkfs.xfs from CVS. When barry releases an updated xfsprogs
+tarball the defaults from there will be as we've been talking about.
 
+You may still need to tweak sunit/swidth for hardware raid (depending
+on you config) but that is no different to now....
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cheers,
 
-
-Date:  Mon Dec 17 10:54:18 AEDT 2007
-Workarea:  soarer.melbourne.sgi.com:/home/vapo/isms/linux-xfs-patch-reviews
-Inspected by:  vapo
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30258a
-fs/xfs/xfs_vnodeops.c - 1.727 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.727&r2=text&tr2=1.726&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/xfs_vfsops.c - 1.549 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.549&r2=text&tr2=1.548&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/linux-2.6/xfs_ksyms.c - 1.76 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.76&r2=text&tr2=1.75&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/linux-2.6/xfs_export.c - 1.19 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/dmapi/xfs_dm.c - 1.62 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/xfs_vnodeops.h - 1.5 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
-
-fs/xfs/xfs_vfsops.h - 1.7 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-        - pv 974747, author Christoph Hellwig <hch@lst.de>, rv vapo - 
-Cleanup various fid related bits
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
