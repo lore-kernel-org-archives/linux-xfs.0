@@ -1,67 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Dec 2007 16:35:40 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBI0ZQDZ003651
-	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 16:35:29 -0800
-Received: from snort.melbourne.sgi.com (snort.melbourne.sgi.com [134.14.54.149]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA04295 for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 11:35:38 +1100
-Received: from snort.melbourne.sgi.com (localhost [127.0.0.1])
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id lBI0ZbIN12136908
-	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 11:35:38 +1100 (AEDT)
-Received: (from dgc@localhost)
-	by snort.melbourne.sgi.com (SGI-8.12.5/8.12.5/Submit) id lBI0Zawp12137607
-	for xfs@oss.sgi.com; Tue, 18 Dec 2007 11:35:36 +1100 (AEDT)
-Date: Tue, 18 Dec 2007 11:35:36 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Installing grub onto a system with XFS root fs
-Message-ID: <20071218003536.GD4396912@sgi.com>
-References: <20071217004945.GA13335@jdc.jasonjgw.net> <200712171428.51831.Martin@lichtvoll.de> <20071217230437.GA7169@jdc.jasonjgw.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Dec 2007 17:51:17 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBI1pCov009561
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 17:51:13 -0800
+Received: from wa-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A0154941AC
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 17:51:23 -0800 (PST)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.182]) by cuda.sgi.com with ESMTP id oLF7u1tTo9fmp8d4 for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 17:51:23 -0800 (PST)
+Received: by wa-out-1112.google.com with SMTP id k22so4017158waf.18
+        for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 17:51:21 -0800 (PST)
+Message-ID: <a727368a0712171751i3eb2633epaf31a6a48129c777@mail.gmail.com>
+Date: Tue, 18 Dec 2007 07:21:21 +0530
+From: sudheer <ssudheer@gmail.com>
+Subject: xfs problem ?
+MIME-Version: 1.0
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20071217230437.GA7169@jdc.jasonjgw.net>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-On Tue, Dec 18, 2007 at 10:04:37AM +1100, Jason White wrote:
-> On Mon, Dec 17, 2007 at 02:28:51PM +0100, Martin Steigerwald wrote:
->  
-> > Using grub shell manually always worked for me:
-> > 
-> > - grub
-> > - find /boot/grub/menu.lst
-> > - root <result from above command>
-> > - setup <place to install too> for example (hd0,0) for first harddisks MBR
-> > 
-> > Remember to copy over the contents of /usr/lib/grub/i386-pc to /boot 
-> > before you do a manual installation.
-> 
-> Thanks.
-> 
-> Apparently there is XFS support in Grub 2 as well, which is where all
-> development is now taking place. I hope it receives adequate testing and
-> attention before distributions start using Grub 2.
+Sir ,
 
-I just looked at the XFS code in ithe grub 2 CVS repository and had a
-read of the wiki (http://grub.enbug.org/).
+When i run  tail -f /var/log/messages
+--------------------------------------------------------------
+Dec 17 20:50:42 u15200848 kernel:  [<c014bb20>] pdflush+0x0/0x50
+Dec 17 20:50:42 u15200848 kernel:  [<c014ba2c>] __pdflush+0xbc/0x1b0
+Dec 17 20:50:42 u15200848 kernel:  [<c014bb5d>] pdflush+0x3d/0x50
+Dec 17 20:50:42 u15200848 kernel:  [<c014afb0>] wb_kupdate+0x0/0x140
+Dec 17 20:50:42 u15200848 kernel:  [<c0134fba>] kthread+0xba/0xc0
+Dec 17 20:50:42 u15200848 kernel:  [<c0134f00>] kthread+0x0/0xc0
+Dec 17 20:50:42 u15200848 kernel:  [<c0101255>]
+kernel_thread_helper+0x5/0x10
+Dec 17 20:50:42 u15200848 kernel: 0x0: 58 41 47 46 00 00 00 01 00 00 00 0a
+00 18 c5 15
+Dec 17 20:50:42 u15200848 kernel: Filesystem "hda7": XFS internal error
+xfs_alloc_read_agf at line 2173 of file fs/xfs/xfs_alloc.c.  Caller
+0xc01dc223
+Dec 17 20:50:42 u15200848 kernel:  [<c01dc43d>]
+xfs_alloc_read_agf+0xed/0x1b0
+Dec 17 20:50:42 u15200848 kernel:  [<c01dc223>]
+xfs_alloc_pagf_init+0x33/0x60
+Dec 17 20:50:42 u15200848 last message repeated 2 times
+Dec 17 20:50:42 u15200848 kernel:  [<c01ec744>] xfs_bmap_alloc+0x8e4/0xed0
+Dec 17 20:50:42 u15200848 kernel:  [<c01ee970>]
+xfs_bmap_search_extents+0x80/0x130
+Dec 17 20:50:42 u15200848 kernel:  [<c01d0d10>] xfs_dqunlock+0x40/0x50
+Dec 17 20:50:42 u15200848 kernel:  [<c01f0fe0>] xfs_bmapi+0x1270/0x1730
+Dec 17 20:50:42 u15200848 kernel:  [<c01f76cf>] xfs_bmbt_get_state+0x2f/0x40
+Dec 17 20:50:42 u15200848 kernel:  [<c01ee5a8>]
+xfs_bmap_do_search_extents+0xf8/0x440
+Dec 17 20:50:42 u15200848 kernel:  [<c0221184>]
+xlog_grant_push_ail+0x44/0x130
+Dec 17 20:50:42 u15200848 kernel:  [<c0220176>] xfs_log_reserve+0xc6/0xd0
+Dec 17 20:50:42 u15200848 kernel:  [<c021d32e>]
+xfs_iomap_write_allocate+0x2ee/0x5d0
+Dec 17 20:50:42 u15200848 kernel:  [<c021be66>] xfs_iomap+0x406/0x540
+Dec 17 20:50:42 u15200848 kernel:  [<c023d0d8>] xfs_map_blocks+0x58/0x90
+Dec 17 20:50:42 u15200848 kernel:  [<c023e26c>]
+xfs_page_state_convert+0x48c/0x7c0
+Dec 17 20:50:42 u15200848 kernel:  [<c0256b92>] submit_bio+0x62/0x100
+Dec 17 20:50:42 u15200848 kernel:  [<c01449c1>] find_get_pages_tag+0x41/0x90
+-------------------------------------------------------------------------------------------------------------------------
 
->From the code and the wiki, I note that there is no indication of grub 2
-fixing the worst design mistakes in grub and is persisting with stuffing
-around with filesystem internals to find files and get block mappings for
-file data. Hence grub 2 will break just like grub if we ever change things on disk
-like the inode, directory or extent format. Lucky it doesn't support btree
-formats yet, so that won't break if we change them....
+Is this a problem with the xfs file system ? in the  hda7   partition ? .How
+can i correct this on live server ?
 
-And there's plans on doing *journal replay* for filesystems!
-(#1 item on the todo list here: http://grub.enbug.org/TodoList). That's
-an insane layering violation and completely unsupportable by anyone. I
-certainly hope this part of the plan for grub 2 never gets implemented.
+Filesystem "hda7":
 
-Cheers,
+LABEL=/         /       ext3    defaults        1       1
+none            /dev/pts        devpts  gid=5,mode=620  0       0
+none            /dev/shm        tmpfs   defaults        0       0
+none            /proc   proc    defaults        0       0
+none            /sys    sysfs   defaults        0       0
+/dev/hda2       swap    swap    defaults        0       0
+LABEL=usr       /usr    xfs     defaults        1       2
+LABEL=var       /var    xfs     defaults,usrquota       1       2
+LABEL=home      /home   xfs     defaults,usrquota       1       2
+---------------------------------------------------------------------------------------------------------------------------------------
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda1             989M  513M  426M  55% /
+none                 1010M     0 1010M   0% /dev/shm
+/dev/hda5             4.9G  1.9G  3.0G  39% /usr
+/dev/hda7             100G   50G   50G  50% /var
+/dev/hda6             4.9G  148K  4.9G   1% /home
+-------------------------------------------------------------------------------------------------------
+Thanks for all the help
+Sudheer
+
+
+[[HTML alternate version deleted]]
