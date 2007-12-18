@@ -1,70 +1,124 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Dec 2007 22:59:16 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Dec 2007 23:44:14 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBI6x6Hs020325
-	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 22:59:10 -0800
-Date: Tue, 18 Dec 2007 17:59:11 +1100
-Subject: [GIT PULL] XFS update for 2.6.24-rc6
-MIME-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBI7i3Zt024379
+	for <xfs@oss.sgi.com>; Mon, 17 Dec 2007 23:44:08 -0800
+Date: Tue, 18 Dec 2007 18:44:05 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [review] Remove the xfs refcache
+Message-ID: <20071218074405.GI4396912@sgi.com>
+References: <4765EC66.5020202@sgi.com> <4765F444.8010705@sgi.com> <20071217071426.GA11462@infradead.org> <47674892.9070506@sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-Id: <20071218065911.EDC8158C4C0F@chook.melbourne.sgi.com>
-From: lachlan@sgi.com (Lachlan McIlroy)
+Content-Disposition: inline
+In-Reply-To: <47674892.9070506@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Donald Douwsma <donaldd@sgi.com>, xfs-oss <xfs@oss.sgi.com>, gnb@sgi.com
 
-Please pull from the for-linus branch:
-    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+On Tue, Dec 18, 2007 at 03:12:02PM +1100, Lachlan McIlroy wrote:
+> Since I have been able to reproduce some of our NAS/NFS performance problems
+> without NFS (that is demonstrate that the problems are in XFS) it makes some
+> sense to fix these in XFS.  I have observed that for some non-NFS workloads
+> we see a significant reduction in log traffic with the OFC in XFS so for
+> reasons beyond NFS there may be a need to reactivate the refcache code.  For
+> the moment we are still analysing the pros/cons.
 
-This will update the following files:
+Reactivating the ref cache is fundamentally the wrong thing to do.
+Most of these problems come from the mismatch of inode life cycles
+between Linux and XFS and this is the basic problem we need to solve.
 
- fs/xfs/linux-2.6/xfs_file.c |    4 ++--
- fs/xfs/xfs_dir2_block.c     |    6 ++----
- fs/xfs/xfs_dir2_leaf.c      |    2 +-
- fs/xfs/xfs_dir2_sf.c        |    9 +++------
- fs/xfs/xfs_inode.c          |    6 ++++--
- 5 files changed, 12 insertions(+), 15 deletions(-)
+For example - do the open-write-close related performance issues go
+away if you remove the xfs_free_eofblocks() call in xfs_release()?
+i.e. are we just being stupid about the way we deal with closing
+of file descriptors?
 
-through these commits:
+This should work because the linux inode will remain around with a
+ref-count of 1 on the unused list due to the dentry pinning it
+in place. Only when the dentry gets reclaimed (e.g. memory pressure,
+unlink, unmount, etc) will the truncate occur, and hence repeated
+single file open-write-close based workloads (like the nfsd) don't
+issue a truncate transaction and trash the EOF preallocation on
+every close....
 
-commit 041388b54ed95cd169546bd83bacd08ee32bd7ea
-Author: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
-Date:   Tue Dec 18 16:19:34 2007 +1100
+And look at the code - the *only thing* the refcache does is avoid
+the truncate in xfs_release(). So, the patch below is the equivalent
+of re-introducing the refcache into XFS but uses the linux inode
+life cycle to keep references around.
 
-    [XFS] Put the correct offset in dirent d_off
-    
-    The recent filldir regression fix was not putting the correct d_off in
-    each dirent. This was resulting in incorrect cookies being passed to dmapi
-    ioctls and the wrong offset appearing in the dirents. readdir was
-    unaffected as the filp->f_pos was being updated with the correct offset
-    and this was being written into the last dirent in each buffer. Fix the
-    XFS code to do the right thing.
-    
-    SGI-PV: 973746
-    SGI-Modid: xfs-linux-melb:xfs-kern:30240a
-    
-    Signed-off-by: David Chinner <dgc@sgi.com>
-    Signed-off-by: Christoph Hellwig <hch@infradead.org>
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+FWIW, this means that EOF pre-allocations will not get trimmed
+immediately which may have disk usage implications for users with
+small quotas, those that create lots of small files, or there are
+lots of written inodes with prealocated space cached in memory
+when a crash occurs.
 
-commit c734c79bc397eace039bea406997efa89f879c14
-Author: Lachlan McIlroy <lachlan@sgi.com>
-Date:   Tue Dec 18 16:17:41 2007 +1100
+Cheers,
 
-    [XFS] Don't wait for pending I/Os when purging blocks beyond eof.
-    
-    On last close of a file we purge blocks beyond eof. The same code is used
-    when we truncate the file size down. In this case we need to wait for any
-    pending I/Os for dirty pages beyond the new eof. For the last close case
-    we are not changing the file size and therefore do not need to wait for
-    any I/Os to complete. This fixes a performance bottleneck where writes
-    into the page cache and cache flushes can become mutually exclusive.
-    
-    SGI-PV: 964002
-    SGI-Modid: xfs-linux-melb:xfs-kern:30220a
-    
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
-    Signed-off-by: Peter Leckie <pleckie@sgi.com>
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+
+Don't truncate EOF blocks on ->release
+
+Avoid truncating EOF blocks on final close of an filp and
+delay it till the inode is reclaimed. While this puts more
+pressure on xfs_inactive() during reclaim, it means that
+we avoid lots of needless transactions on open-write-close
+type workloads (eg as done by the nfsd code).
+
+Note that this means that while inodes are cached in memory
+they may be consuming more blocks than their size may indicate
+and this space will not be reclaimed if the machine crashes.
+
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_vnodeops.c |   24 ------------------------
+ 1 file changed, 24 deletions(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_vnodeops.c	2007-12-10 12:04:17.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_vnodeops.c	2007-12-18 18:17:57.188146022 +1100
+@@ -1504,7 +1504,6 @@ xfs_release(
+ {
+ 	bhv_vnode_t	*vp = XFS_ITOV(ip);
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	int		error;
+ 
+ 	if (!VN_ISREG(vp) || (ip->i_d.di_mode == 0))
+ 		return 0;
+@@ -1540,29 +1539,6 @@ xfs_release(
+ 		if (truncated && VN_DIRTY(vp) && ip->i_delayed_blks > 0)
+ 			xfs_flush_pages(ip, 0, -1, XFS_B_ASYNC, FI_NONE);
+ 	}
+-
+-#ifdef HAVE_REFCACHE
+-	/* If we are in the NFS reference cache then don't do this now */
+-	if (ip->i_refcache)
+-		return 0;
+-#endif
+-
+-	if (ip->i_d.di_nlink != 0) {
+-		if ((((ip->i_d.di_mode & S_IFMT) == S_IFREG) &&
+-		     ((ip->i_size > 0) || (VN_CACHED(vp) > 0 ||
+-		       ip->i_delayed_blks > 0)) &&
+-		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
+-		    (!(ip->i_d.di_flags &
+-				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
+-			error = xfs_free_eofblocks(mp, ip, XFS_FREE_EOF_LOCK);
+-			if (error)
+-				return error;
+-			/* Update linux inode block count after free above */
+-			vn_to_inode(vp)->i_blocks = XFS_FSB_TO_BB(mp,
+-				ip->i_d.di_nblocks + ip->i_delayed_blks);
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
