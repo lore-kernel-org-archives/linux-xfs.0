@@ -1,85 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 06:30:34 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBIEUQeD006596
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Dec 2007 06:30:27 -0800
-Received: from mallaury.nerim.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C9B44971C1
-	for <linux-xfs@oss.sgi.com>; Tue, 18 Dec 2007 06:30:34 -0800 (PST)
-Received: from mallaury.nerim.net (smtp-102-tuesday.noc.nerim.net [62.4.17.102]) by cuda.sgi.com with ESMTP id KwHMKe13OoEWEblC for <linux-xfs@oss.sgi.com>; Tue, 18 Dec 2007 06:30:34 -0800 (PST)
-From: Damien Wyart <damien.wyart@free.fr>
-Subject: Re: Important regression with XFS update for 2.6.24-rc6
-References: <20071218112804.GA3069@localhost.localdomain>
-	<20071218122445.GJ4396912@sgi.com>
-Date: Tue, 18 Dec 2007 15:30:31 +0100
-In-Reply-To: <20071218122445.GJ4396912@sgi.com> (David Chinner's message of
-	"Tue, 18 Dec 2007 23:24:45 +1100")
-Message-ID: <877ijckrco.fsf@free.fr>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 06:38:58 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBIEcmQD007390
+	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 06:38:53 -0800
+Date: Wed, 19 Dec 2007 01:38:49 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Do not reset xfsquota flags on quotaless ro mount
+Message-ID: <20071218143849.GP4396912@sgi.com>
+References: <Pine.LNX.4.64.0712181459210.32270@fbirervta.pbzchgretzou.qr>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0712181459210.32270@fbirervta.pbzchgretzou.qr>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-* David Chinner <dgc@sgi.com> [071218 13:24]:
-> Ok. I haven't noticed anything wrong with directories up to about
-> 250,000 files in the last few days. The ls -l I just did on
-> a directory with 15000 entries (btree format) used about 5MB of RAM.
-> extent format directories appear to work fine as well (tested 500
-> entries).
+On Tue, Dec 18, 2007 at 03:04:03PM +0100, Jan Engelhardt wrote:
+> Hi,
+> 
+> 
+> In https://bugzilla.novell.com/show_bug.cgi?id=345338 it is claimed that
+> resetting the quota flags in the mounting sequence rw,ro,rw is a bug, but I
 
-Ok, nice to know the problem is not so frequent.
+You mounted without quotas in the middle step, thereby invalidating
+them.
 
-> Can you:
+> would say this is not the case, as quota is metadata, and the log is replayed
+> in ro mode even for other filesystems. Yet, it is still not nice, and I have
+> been trying with this patch, which does not do the right thing yet. (It does a
+> recovery when mounting for the 3rd time, which probably just says that I did
+> not know too much of xfs internals to cook up a nicely working patch.)
+> Opinions?
 
-> 	a) isolate the problem to one patch or the other. My guess
-> 	   would be the directory mod, but.....
+Log recovery occurs on read only mounts. Log recovery on filesystems without
+quota enabled ignores quota changes in the log (as quotas are not enabled
+and hence we can't assume that there's dquots still on disk). Hence a
+mount read only without quota enabled will leave quota inconsistent on disk.
 
-Yes, it is indeed the directory patch. But even if I still sometimes get
-huge memory usage with ls (using the patched kernel), this is quite
-rare, and the problem is now mainly getting entries in the listing
-repeated, and the ls process taking longer than without the patch. But
-this is mainly after booting. I guess the cache plays a role and even
-using drop_caches, I can't reproduce the problem. Only on fresh reboot
-do I get it systematically, but much less often the memory problem. And
-as said earlier, after fresh boot on rc5-git5 without the directory
-patch, the ls -l goes normal (no repeated entries).
+i.e
 
-> 	b) show your working ;)
+> 	mount -o usrquota,grpquota /dev/mapper/myxfs /mnt
+> 	umount /mnt
+> 	mount -o ro /dev/mapper/myxfs /mnt
 
-Sorry, I forgot this part in my initial report.
+Quota is now potentially inconsistent, and hence:
 
-> 		- what platform (i386, x86_64, etc)
+> 	umount /mnt
+> 	mount -o usrquota,grpquota /dev/mapper/myxfs /mnt
 
-i386.
+This mount *must* recalculate it. So, behaviour is as expected
+given the above command sequence.
 
-> 		- what debug options
+You should use this as the middle step:
 
-Nothing special, the kernel has 4K stacks, and xfs partitions are
-mounted with noatime,nodiratime.
+	mount -o ro,usrquota,grpquota /dev/mapper/myxfs /mnt
 
-> 		- commands and output that shows the problem
+So that log replay replays all the journalled quota changes so
+that the quota remains consistent with the rest of the filesystem.
+Then you wont see a recalc when you remount rw.
 
-It is mainly "ls -l" in a quite crowded directory.
+Cheers,
 
-> 		- strace of ls -l going bad
-> 		- xfs_info from filesystem in question
-
-I have put the files at http://damien.wyart.free.fr/xfs/
-
-strace_xfs_problem.1.gz and strace_xfs_problem.2.gz have been created
-with the problematic kernel, and are quite bigger than
-strace_xfs_problem.normal.gz, which has been created with the vanilla
-rc5-git5. There is also xfs_info.
-
-
-I can provide further details if needed (maybe kernel config, but
-nothing special on the xfs side), but I confirm the behavior is
-different with and without the directory patch
-(041388b54ed95cd169546bd83bacd08ee32bd7ea on oss.sgi), and doesn't look
-normal with the patch.
-
+Dave.
 -- 
-Damien Wyart
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
