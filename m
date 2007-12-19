@@ -1,44 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 19:12:30 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 19:18:30 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJ3CLOF017544
-	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 19:12:25 -0800
-Date: Wed, 19 Dec 2007 14:12:25 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [GIT PULL] XFS update for 2.6.24-rc6
-Message-ID: <20071219031225.GB4612@sgi.com>
-References: <20071218065911.EDC8158C4C0F@chook.melbourne.sgi.com> <20071219004126.GS4396912@sgi.com> <alpine.LFD.0.9999.0712181718430.21557@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.0.9999.0712181718430.21557@woody.linux-foundation.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJ3IKtB018437
+	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 19:18:24 -0800
+Subject: PARTIAL TAKE 974873 - Fix mknod regression
+Message-Id: <20071219031828.40C2358C4C0F@chook.melbourne.sgi.com>
+Date: Wed, 19 Dec 2007 14:18:28 +1100 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Chinner <dgc@sgi.com>, Lachlan McIlroy <lachlan@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 18, 2007 at 05:19:04PM -0800, Linus Torvalds wrote:
-> 
-> 
-> On Wed, 19 Dec 2007, David Chinner wrote:
-> >
-> > On Tue, Dec 18, 2007 at 05:59:11PM +1100, Lachlan McIlroy wrote:
-> > > Please pull from the for-linus branch:
-> > >     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
-> > 
-> > Linus, please don't pull this yet. A problem has been found in
-> > the dirent fix, and we've just fixed another mknod related regression
-> > so we've got another couple of fixes still to go in XFS for 2.6.24.
-> 
-> Too late, it's already long since pulled.
+Fix mknod regression
 
-Ok, we'll just have to get the fixes to you ASAP.
+This was broken by my '[XFS] simplify xfs_create/mknod/symlink prototype',
+which assigned the re-shuffled ondisk dev_t back to the rdev variable in
+xfs_vn_mknod.  Because of that i_rdev is set to the ondisk dev_t instead
+of the linux dev_t later down the function.
 
-Cheers,
+Fortunately the fix for it is trivial:  we can just remove the
+assignment because xfs_revalidate_inode has done the proper job before
+unlocking the inode.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+
+Date:  Wed Dec 19 14:17:51 AEDT 2007
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30273a
+fs/xfs/linux-2.6/xfs_iops.c - 1.272 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.272&r2=text&tr2=1.271&f=h
+	- fix xfs_vn_mknod regression due to writing the wrong format dev_t to
+	  i_rdev.
