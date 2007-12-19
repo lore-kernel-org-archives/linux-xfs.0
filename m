@@ -1,98 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 02:27:45 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBJARdWW024813
-	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 02:27:42 -0800
-Received: from smtp-tls.univ-nantes.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24B2249D4EE
-	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 02:27:51 -0800 (PST)
-Received: from smtp-tls.univ-nantes.fr (Smtp-Tls1.univ-nantes.fr [193.52.101.145]) by cuda.sgi.com with ESMTP id AOWnb5qDBw51Lxjz for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 02:27:51 -0800 (PST)
-Message-ID: <4768F204.8060506@univ-nantes.fr>
-Date: Wed, 19 Dec 2007 11:27:16 +0100
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-MIME-Version: 1.0
-Subject: Re: kernel oops on debian , 2.6.18-5
-References: <476790D5.6040205@univ-nantes.fr> <20071218123259.GL4396912@sgi.com> <4767DC20.1080406@univ-nantes.fr> <op.t3j3221z3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t3j3221z3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 02:46:25 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJAjq13026160
+	for <linux-xfs@oss.sgi.com>; Wed, 19 Dec 2007 02:45:55 -0800
+Date: Wed, 19 Dec 2007 21:45:44 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Important regression with XFS update for 2.6.24-rc6
+Message-ID: <20071219104544.GC4612@sgi.com>
+References: <20071218112804.GA3069@localhost.localdomain> <20071218122445.GJ4396912@sgi.com> <877ijckrco.fsf@free.fr> <20071218151946.GQ4396912@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071218151946.GQ4396912@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Jacky Carimalo <jacky.carimalo@univ-nantes.fr>
+To: David Chinner <dgc@sgi.com>
+Cc: Damien Wyart <damien.wyart@free.fr>, Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
 
-Barry Naujok wrote:
->
->>
->> Can I stop the process and start another version without risking 
->> problems ?
->
-> Yes, you can stop and restart. In your scenario, run xfs_repair -P to
-> disable prefetch which is getting stuck.
->
-> Barry.
->
->
->
-Thanks for the tip, xfs_repair -P did the job.
+On Wed, Dec 19, 2007 at 02:19:47AM +1100, David Chinner wrote:
+> On Tue, Dec 18, 2007 at 03:30:31PM +0100, Damien Wyart wrote:
+> > * David Chinner <dgc@sgi.com> [071218 13:24]:
+> > > Ok. I haven't noticed anything wrong with directories up to about
+> > > 250,000 files in the last few days. The ls -l I just did on
+> > > a directory with 15000 entries (btree format) used about 5MB of RAM.
+> > > extent format directories appear to work fine as well (tested 500
+> > > entries).
+> > 
+> > Ok, nice to know the problem is not so frequent.
+> 
+> .....
+> 
+> > I have put the files at http://damien.wyart.free.fr/xfs/
+> > 
+> > strace_xfs_problem.1.gz and strace_xfs_problem.2.gz have been created
+> > with the problematic kernel, and are quite bigger than
+> > strace_xfs_problem.normal.gz, which has been created with the vanilla
+> > rc5-git5. There is also xfs_info.
+> 
+> Looks like several getdents() through the directory the getdents()
+> call starts outputting the first files again. It gets to a certain
+> point and always goes back to the beginning. However, it appears to
+> get to the end eventually (without ever getting past the bad offset).
 
-Only minimal problems found :
-(9856 K in lost+found for a 1 TB volume)
+UML and a bunch of printk's to the rescue.
 
-inchgower:/var/lib/vservers/VS_Archive/Archive/lost+found# ls -al
-total 9860
-drwxr-xr-x  2 root root        4096 2007-12-19 10:28 .
-drwxr-xr-x 32 root root        4096 2007-12-04 16:26 ..
--rw-r-----  1 root root           0 2007-12-16 19:33 1311409765
--rwx------  1 root www-data    4992 2007-11-13 11:47 1388664851
--rwx------  1 root root        4643 2007-09-27 15:51 1388664852
--rw-------  1 ntp       104     369 2007-12-16 22:36 1624155084
--rw-r-----  1 root root           0 2007-12-16 22:03 17043457
--rw-r--r--  1 root root        8358 2005-05-10 21:54 1810860709
--rw-r--r--  1 root root        7644 2005-05-10 21:54 1818650492
--rw-r--r--  1 root root       45620 2005-05-10 21:54 1818650493
--rw-r--r--  1 root root        5304 2005-05-10 21:54 1818840419
--rw-r--r--  1 root root        5034 2005-05-10 21:54 1818841748
--rw-r--r--  1 root root        1300 2005-05-10 21:54 1818842113
--rw-r--r--  1 root root        6040 2005-05-10 21:54 1818842115
--rw-r--r--  1 root root        4008 2005-05-10 21:54 1818842134
--rw-r--r--  1 root root        4019 2005-05-10 21:54 1818873357
--rwx------  1 root www-data     732 2007-12-14 15:24 1900698499
--rw-r--r--  1 root root        1060 2007-02-21 18:48 2041002887
--rw-r--r--  1 root root         152 2005-11-10 17:09 2041002903
--rwx------  1 root www-data       0 2007-12-15 23:33 2153644053
--rwx------  1 root www-data       0 2007-12-15 23:33 2158002845
--rw-r--r--  1 root root       20480 2007-12-16 22:03 2572244357
-drwxr-xr-x  2 root root          75 2007-12-16 23:27 268556858
-drwxr-xr-x  2 root root           6 2007-12-16 23:27 268556859
--rw-r--r--  1 root root       20480 2007-12-16 19:33 273918729
--rw-r--r--  1 root root     1193201 2007-12-16 16:06 3223675010
--rw-r-----  1 root root           0 2007-12-16 19:33 3226075506
--rw-r--r--  1 root root       22451 2007-12-16 16:07 3226075507
--rwx------  1 root www-data   19211 2007-12-14 11:22 3361035798
--rwx------  1 root www-data    1265 2007-12-14 17:58 3628814835
--rwx------  1 root www-data       0 2007-12-15 22:00 3910289706
--rwx------  1 root www-data   19211 2007-12-14 13:57 4055379312
--rwx------  1 root www-data   14360 2007-12-14 17:58 4055415347
--rwx------  1 root www-data   14346 2007-12-10 18:01 4055415352
--rwx------  1 root www-data   19225 2007-12-14 17:58 4055415353
-drwxr-xr-x  2 root root          19 2007-12-16 23:27 4160831758
-drwxr-xr-x  2 root root          20 2007-12-16 23:27 4160831759
-drwxr-xr-x  2 root root           6 2005-09-15 11:44 4160831760
--rw-r--r--  1 root root     1387921 2007-11-05 02:02 620696741
--rw-r--r--  1 root root     4715935 2007-11-06 02:02 620696742
--rw-r--r--  1 root root     1389488 2007-11-07 02:02 620696743
--rw-r--r--  1 root root     1193251 2007-12-16 20:49 633648296
+So we went back to double buffering, which then screwed up the d_off
+of the dirents. I changed the temporary dirents to point to the current
+offset so that filldir got what it expected when filling the user buffer.
 
+Except it appears that it I didn't to initialise the current
+offset for the first dirent read from the temporary buffer so filldir
+occasionally got an uninitialised offset. Can someone pass me a
+brown paper bag, please?
 
-as you can see, some entries on lost+found are from 2005-05-10
-(we had some bad power fault at that time), so maybe the corruption was 
-there since a very long time.
+In my local testing, more often than not, that uninitialised offset
+reads as zero which is where the looping comes from. Sometimes it
+points off into wacko-land, which is probably how we eventually get
+the looping terminating before you run out of memory.
+
+That also explains why we haven't seen it - it requires the user buffer
+to fill on the first entry of a backing buffer and so it is largely
+dependent on the pattern of name lengths, page size and filesystem
+block size aligning just right to trigger the problem.
+
+Can you test this patch, Damien?
 
 Cheers,
 
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
 
---
-Yann Dupont, Cri de l'université de Nantes
-Tel: 02.51.12.53.91 - Fax: 02.51.12.58.60 - Yann.Dupont@univ-nantes.fr
+---
+ fs/xfs/linux-2.6/xfs_file.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_file.c	2007-12-19 00:26:40.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c	2007-12-19 21:26:38.701143555 +1100
+@@ -348,6 +348,7 @@ xfs_file_readdir(
+ 
+ 		size = buf.used;
+ 		de = (struct hack_dirent *)buf.dirent;
++		curr_offset = de->offset /* & 0x7fffffff */;
+ 		while (size > 0) {
+ 			if (filldir(dirent, de->name, de->namlen,
+ 					curr_offset & 0x7fffffff,
