@@ -1,52 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 03:31:29 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJBVJt1030333
-	for <linux-xfs@oss.sgi.com>; Wed, 19 Dec 2007 03:31:25 -0800
-Date: Wed, 19 Dec 2007 22:31:12 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Important regression with XFS update for 2.6.24-rc6
-Message-ID: <20071219113112.GD4612@sgi.com>
-References: <20071218112804.GA3069@localhost.localdomain> <20071218122445.GJ4396912@sgi.com> <877ijckrco.fsf@free.fr> <20071218151946.GQ4396912@sgi.com> <20071219104544.GC4612@sgi.com> <87r6hjaq7p.fsf@free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87r6hjaq7p.fsf@free.fr>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 08:23:36 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBJGNQQA029551
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 08:23:30 -0800
+Received: from chef.nerp.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A333B70314
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 08:23:37 -0800 (PST)
+Received: from chef.nerp.net (chef.nerp.net [199.199.210.160]) by cuda.sgi.com with ESMTP id hPsMrTSgDB4lKHUo for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 08:23:37 -0800 (PST)
+Received: from chef.nerp.net (localhost [127.0.0.1])
+	by chef.nerp.net (Postfix) with ESMTP id 1BD1B14023C3
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 10:23:52 -0600 (CST)
+Received: from webmail.nerp.net (localhost [127.0.0.1])
+	by chef.nerp.net (Postfix) with ESMTP id 055C21402673
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 10:23:52 -0600 (CST)
+Message-ID: <3136.132.250.11.79.1198081432.squirrel@webmail.nerp.net>
+Date: Wed, 19 Dec 2007 08:23:52 -0800 (PST)
+Subject: Real time volume free space
+From: "Dan" <dan@nerp.net>
+MIME-Version: 1.0
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Damien Wyart <damien.wyart@free.fr>
-Cc: David Chinner <dgc@sgi.com>, Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs@oss.sgi.com, LKML <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, Dec 19, 2007 at 12:17:30PM +0100, Damien Wyart wrote:
-> * David Chinner <dgc@sgi.com> [071219 11:45]:
-> > Can someone pass me a brown paper bag, please?
-> 
-> My first impression on this bug was not so wrong, after all ;-)
-> 
-> > That also explains why we haven't seen it - it requires the user buffer to
-> > fill on the first entry of a backing buffer and so it is largely dependent
-> > on the pattern of name lengths, page size and filesystem block size
-> > aligning just right to trigger the problem.
-> 
-> I guess I was lucky to trigger it quite easily...
-> 
-> > Can you test this patch, Damien?
-> 
-> Works fine, all the bad symptoms have disappeared and strace output is
-> normal.
-> 
-> So you can add:
-> 
-> Tested-by: Damien Wyart <damien.wyart@free.fr>
 
-Thanks for reporting the bug and testing the fix so quickly, Damien.
-I'll give it some more QA before I push it, though.
+I've been trying to figure out how to determine the free space of a real
+time volume.  It seems xfs_db might hold the key but no luck so far... 
+Simply running df -h tells me the free space of the meta-data drive only
+which basically doesn't change even after Terabyte data collections.
 
-Cheers,
+I created the filesystem like this:
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+mkfs.xfs -r rtdev=/dev/md0 /dev/sda
+
+How would I tell how much space is left on /dev/md0?
+
+Thank you,
+
+Dan
