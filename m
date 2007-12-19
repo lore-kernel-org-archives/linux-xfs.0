@@ -1,45 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 18:46:31 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBJ2kOO6015690
-	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 18:46:26 -0800
-Received: from hs-out-2122.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 021ED49BDD4
-	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 18:46:32 -0800 (PST)
-Received: from hs-out-2122.google.com (hs-out-0708.google.com [64.233.178.247]) by cuda.sgi.com with ESMTP id Z6ziMsoRBd2K8o3E for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 18:46:32 -0800 (PST)
-Received: by hs-out-2122.google.com with SMTP id m63so630914hsc.4
-        for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 18:46:30 -0800 (PST)
-Message-ID: <dda83e780712181846w5549fe0bs7589d67b9d86c666@mail.gmail.com>
-Date: Tue, 18 Dec 2007 18:46:30 -0800
-From: "Bret Towe" <magnade@gmail.com>
-Subject: Re: xfs mknod regression
-In-Reply-To: <20071218173642.GA7338@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 19:12:30 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJ3CLOF017544
+	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 19:12:25 -0800
+Date: Wed, 19 Dec 2007 14:12:25 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [GIT PULL] XFS update for 2.6.24-rc6
+Message-ID: <20071219031225.GB4612@sgi.com>
+References: <20071218065911.EDC8158C4C0F@chook.melbourne.sgi.com> <20071219004126.GS4396912@sgi.com> <alpine.LFD.0.9999.0712181718430.21557@woody.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <dda83e780712172048n4d40cfcbw4a4d3106fc99f02e@mail.gmail.com>
-	 <20071218173642.GA7338@infradead.org>
+In-Reply-To: <alpine.LFD.0.9999.0712181718430.21557@woody.linux-foundation.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Chinner <dgc@sgi.com>, Lachlan McIlroy <lachlan@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-On Dec 18, 2007 9:36 AM, Christoph Hellwig <hch@infradead.org> wrote:
->
-> This was broken by my '[XFS] simplify xfs_create/mknod/symlink prototype',
-> which assigned the re-shuffled ondisk dev_t back to the rdev variable in
-> xfs_vn_mknod.  Because of that i_rdev is set to the ondisk dev_t instead
-> of the linux dev_t later down the function.
->
-> Fortunately the fix for it is trivial:  we can just remove the
-> assignment because xfs_revalidate_inode has done the proper job before
-> unlocking the inode.
->
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, Dec 18, 2007 at 05:19:04PM -0800, Linus Torvalds wrote:
+> 
+> 
+> On Wed, 19 Dec 2007, David Chinner wrote:
+> >
+> > On Tue, Dec 18, 2007 at 05:59:11PM +1100, Lachlan McIlroy wrote:
+> > > Please pull from the for-linus branch:
+> > >     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+> > 
+> > Linus, please don't pull this yet. A problem has been found in
+> > the dirent fix, and we've just fixed another mknod related regression
+> > so we've got another couple of fixes still to go in XFS for 2.6.24.
+> 
+> Too late, it's already long since pulled.
 
-tested the patch on 2 machines and works fine for me
+Ok, we'll just have to get the fixes to you ASAP.
 
-Thanks
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
