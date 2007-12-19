@@ -1,96 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 16:38:19 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Dec 2007 16:38:13 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJ0c9Rd005507
-	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 16:38:14 -0800
-Date: Wed, 19 Dec 2007 11:38:52 +1100
-Subject: Re: kernel oops on debian , 2.6.18-5
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <476790D5.6040205@univ-nantes.fr> <20071218123259.GL4396912@sgi.com> <4767DC20.1080406@univ-nantes.fr>
-Message-ID: <op.t3j3221z3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <4767DC20.1080406@univ-nantes.fr>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBJ0bumH005493
+	for <xfs@oss.sgi.com>; Tue, 18 Dec 2007 16:37:59 -0800
+Date: Wed, 19 Dec 2007 11:37:45 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfs mknod regression
+Message-ID: <20071219003745.GR4396912@sgi.com>
+References: <dda83e780712172048n4d40cfcbw4a4d3106fc99f02e@mail.gmail.com> <20071218173642.GA7338@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071218173642.GA7338@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>, David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, Jacky Carimalo <jacky.carimalo@univ-nantes.fr>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bret Towe <magnade@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, rjw@sisk.pl
 
-On Wed, 19 Dec 2007 01:41:36 +1100, Yann Dupont  
-<Yann.Dupont@univ-nantes.fr> wrote:
+On Tue, Dec 18, 2007 at 05:36:42PM +0000, Christoph Hellwig wrote:
+> 
+> This was broken by my '[XFS] simplify xfs_create/mknod/symlink prototype',
+> which assigned the re-shuffled ondisk dev_t back to the rdev variable in
+> xfs_vn_mknod.  Because of that i_rdev is set to the ondisk dev_t instead
+> of the linux dev_t later down the function.
+> 
+> Fortunately the fix for it is trivial:  we can just remove the
+> assignment because xfs_revalidate_inode has done the proper job before
+> unlocking the inode.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-12-18 18:23:32.000000000 +0100
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-12-18 18:23:43.000000000 +0100
+> @@ -345,9 +345,7 @@ xfs_vn_mknod(
+>  		ASSERT(vp);
+>  		ip = vn_to_inode(vp);
+>  
+> -		if (S_ISCHR(mode) || S_ISBLK(mode))
+> -			ip->i_rdev = rdev;
+> -		else if (S_ISDIR(mode))
+> +		if (S_ISDIR(mode))
+>  			xfs_validate_fields(ip);
+>  		d_instantiate(dentry, ip);
+>  		xfs_validate_fields(dir);
 
-> David Chinner wrote:
->> On Tue, Dec 18, 2007 at 10:20:21AM +0100, Yann Dupont wrote:
->>
->>> Hello, we got a kernel oops, probably in xfs on a debian kernel.
->>>
->>> This volume is on SAN + device mapper.
->>> this is a 1 TB  volume. It was in service for more than 2 ou 3 years.
->>> There is a high humber of files on it, as this volume serves for a
->>> rsyncd, where 200+ servers sync their root filesystem on it every day.
->>>
->>> here is the oops :
->>>
->>> Dec 16 23:27:32 inchgower kernel: XFS internal error
->>> XFS_WANT_CORRUPTED_GOTO at line 1561 of file fs/xfs/xfs_alloc.c.   
->>> Caller
->>> 0xffffffff881857b7
->>> Dec 16 23:27:32 inchgower kernel:
->>> Dec 16 23:27:32 inchgower kernel: Call Trace:
->>> Dec 16 23:27:32 inchgower kernel:  [<ffffffff88183ec0>]
->>> :xfs:xfs_free_ag_extent+0x19f/0x67f
->>>
->>
->> corrupted freespace btree. what does xfs_check tell you about the
->> filesystem on dm-3?
->>
->>
-> xfs_check tells me to run xfs_repair -L, the attempts to mount the FS
-> to clear the logs ending in kernel oops.
+Thanks for this, Christoph - I'll run some tests on it and check it in.
 
-[snip]
+Rafael - this is a regression introduced in 2.6.24-rc1 if you want to
+track it.
 
-> Phase 4 - check for duplicate blocks...
->          - setting up duplicate extent list...
->          - check for inodes claiming duplicate blocks...
->          - agno = 0
->
-> )
->
-> And now the process seems stuck.
-> There is no activity on the san disk ;
->
-> a ps show this :
->
-> root      7885  6466  7885  0    6 1447133 5660020 6 09:55 pts/0   
-> 00:00:19 xfs_repair -L /dev/evms/DATAXFS2
-> root      7885  6466 17190  0    6 1447133 5660020 6 10:16 pts/0   
-> 00:00:00 xfs_repair -L /dev/evms/DATAXFS2
-> root      7885  6466 17191  0    6 1447133 5660020 6 10:16 pts/0   
-> 00:00:00 xfs_repair -L /dev/evms/DATAXFS2
-> root      7885  6466 17192  0    6 1447133 5660020 6 10:16 pts/0   
-> 00:00:00 xfs_repair -L /dev/evms/DATAXFS2
-> root      7885  6466 17193  0    6 1447133 5660020 6 10:16 pts/0   
-> 00:00:00 xfs_repair -L /dev/evms/DATAXFS2
-> root      7885  6466 17194  0    6 1447133 5660020 6 10:16 pts/0   
-> 00:00:00 xfs_repair -L /dev/evms/DATAXFS2
->
->
-> and a strace this :
-> inchgower:~# strace -fp 7885
-> Process 17194 attached with 6 threads - interrupt to quit
-> [pid 17191] futex(0x2aab3c8fa884, FUTEX_WAIT, 44, NULL <unfinished ...>
-> [pid 17192] futex(0x2aab3c8fa884, FUTEX_WAIT, 44, NULL <unfinished ...>
-> [pid 17193] futex(0x2aab3c8fa884, FUTEX_WAIT, 44, NULL <unfinished ...>
-> [pid 17194] futex(0x2aab3c8fa884, FUTEX_WAIT, 44, NULL <unfinished ...>
-> [pid 17190] futex(0x67e4f8, FUTEX_WAIT, 2, NULL
->
-> Can I stop the process and start another version without risking  
-> problems ?
+Cheers,
 
-Yes, you can stop and restart. In your scenario, run xfs_repair -P to
-disable prefetch which is getting stuck.
-
-Barry.
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
