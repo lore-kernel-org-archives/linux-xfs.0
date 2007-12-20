@@ -1,55 +1,1019 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 16:50:27 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBK0oJGh008520
-	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 16:50:22 -0800
-Message-ID: <4769BD13.5040303@sgi.com>
-Date: Thu, 20 Dec 2007 11:53:39 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 17:16:41 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBK1GTdC010448
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 17:16:32 -0800
+Received: from email.msoe.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD6FDB7996D
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 17:16:35 -0800 (PST)
+Received: from email.msoe.edu (email.msoe.edu [155.92.194.61]) by cuda.sgi.com with ESMTP id I0ZKTARZ63i1HnGw for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 17:16:35 -0800 (PST)
+Date: Wed, 19 Dec 2007 19:16:01 -0600
+From: "Jonathan C. Detert" <Jonathan.Detert@msoe.edu>
 Subject: Re: mount prob: "log inconsistent or not a log"
-References: <20071220000144.GQ19770@msoe.edu>
-In-Reply-To: <20071220000144.GQ19770@msoe.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20071220011601.GU19770@msoe.edu>
+References: <20071220000144.GQ19770@msoe.edu> <4769BD13.5040303@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4769BD13.5040303@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jonathan.Detert@msoe.edu
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Jonathan,
-
-I'm not giving a high level view but
-in regards to the log message about the xfs log :)
-
-Jonathan.Detert@msoe.edu wrote:
-> This is what /var/log/messages has to say about the mount attempt:
-> -=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS mounting filesystem sdb
-> Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: Log inconsistent or not a log (last==0, first!=1)
-> Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: empty log check failed
-> Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: log mount/recovery failed: error 22
-> Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: log mount failed
-> -=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+* Timothy Shimmin <tes@sgi.com> [071219 18:53]:
+> Hi Jonathan,
 > 
-Every 512 bytes of the log is stamped with the cycle#.
-The cycle# is effectively the number of times the log has wrapped
-around. The cycle# is at the start of each sector or near the
-start for a log record. The cycle# is used to find where the log
-was last written to (the head of the log).
-What the message is saying is that the first sector of the log has a
-cycle# which is not 1 and the last sector has a cycle# of zero.
-Looking at the code (xlog_find_zeroed), the first sector cycle#
-is not zero either.
-=> first sector cycle# >1
-=> last  sectir cycle# == 0
-Now this can't really happen.
-If the last cycle# is zero then the first cycle# should be 1
-(or possibly 0 on irix).
+> I'm not giving a high level view but
+> in regards to the log message about the xfs log :)
+> 
+> Jonathan.Detert@msoe.edu wrote:
+> >This is what /var/log/messages has to say about the mount attempt:
+> >-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> >Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS mounting filesystem sdb
+> >Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: Log inconsistent or not 
+> >a log (last==0, first!=1)
+> >Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: empty log check failed
+> >Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: log mount/recovery 
+> >failed: error 22
+> >Dec 19 17:42:30 quartz kernel: [ 9701.960000] XFS: log mount failed
+> >-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> >
+> Every 512 bytes of the log is stamped with the cycle#.
+> The cycle# is effectively the number of times the log has wrapped
 
-An "xfs_logprint -d /dev/sdb" will show what the cycle#s are
-and where the log records are. It might give an idea of the
-extent of the corruption.
+-- snip --
 
---Tim
+> An "xfs_logprint -d /dev/sdb" will show what the cycle#s are
+> and where the log records are. It might give an idea of the
+> extent of the corruption.
+
+Ok.  It doesn't enlighten me, but hopefully you or others can take time
+to see it, and maybe it will enlighten you.  Here it is:
+-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+root@quartz:~ # xfs_logprint -d /dev/sdb > xfs_logprint.out
+xfs_logprint:
+    data device: 0x810
+    log device: 0x810 daddr: 39859232 length: 38920
+
+[00000 - 00000] Cycle 0xffffffff New Cycle 0x00000256
+    12 HEADER Cycle 598 tail 598:000010 len    224 ops 5
+    14 HEADER Cycle 598 tail 598:000044 len  32256 ops 142
+    78 HEADER Cycle 598 tail 598:000044 len  32256 ops 116
+   142 HEADER Cycle 598 tail 598:000044 len  32256 ops 82
+   206 HEADER Cycle 598 tail 598:000044 len  32256 ops 139
+   270 HEADER Cycle 598 tail 598:000044 len  32256 ops 69
+   334 HEADER Cycle 598 tail 598:000044 len  32256 ops 102
+   398 HEADER Cycle 598 tail 598:000044 len  32256 ops 96
+   462 HEADER Cycle 598 tail 598:000044 len  32256 ops 67
+   526 HEADER Cycle 598 tail 598:000046 len  32256 ops 86
+   590 HEADER Cycle 598 tail 598:000046 len  32256 ops 101
+   654 HEADER Cycle 598 tail 598:000046 len  32256 ops 100
+   718 HEADER Cycle 598 tail 598:000046 len  32256 ops 98
+   782 HEADER Cycle 598 tail 598:000046 len  32252 ops 82
+   846 HEADER Cycle 598 tail 598:000046 len  32256 ops 63
+   910 HEADER Cycle 598 tail 598:000046 len  32256 ops 150
+   974 HEADER Cycle 598 tail 598:000046 len  32256 ops 85
+  1038 HEADER Cycle 598 tail 598:000046 len  32256 ops 113
+  1102 HEADER Cycle 598 tail 598:000046 len  32256 ops 129
+  1166 HEADER Cycle 598 tail 598:000046 len  32256 ops 164
+  1230 HEADER Cycle 598 tail 598:000046 len  32256 ops 93
+  1294 HEADER Cycle 598 tail 598:000046 len   1052 ops 4
+  1298 HEADER Cycle 598 tail 598:001326 len  32256 ops 128
+  1362 HEADER Cycle 598 tail 598:001326 len  32256 ops 85
+  1426 HEADER Cycle 598 tail 598:001330 len  32256 ops 138
+  1490 HEADER Cycle 598 tail 598:001330 len  32256 ops 140
+  1554 HEADER Cycle 598 tail 598:001330 len  32256 ops 184
+  1618 HEADER Cycle 598 tail 598:001330 len  32256 ops 119
+  1682 HEADER Cycle 598 tail 598:001330 len  32252 ops 149
+  1746 HEADER Cycle 598 tail 598:001330 len  32256 ops 89
+  1810 HEADER Cycle 598 tail 598:001330 len  32256 ops 135
+  1874 HEADER Cycle 598 tail 598:001330 len  30168 ops 88
+  1934 HEADER Cycle 598 tail 598:001906 len  32256 ops 143
+  1998 HEADER Cycle 598 tail 598:001906 len  32256 ops 106
+  2062 HEADER Cycle 598 tail 598:001906 len  32256 ops 116
+  2126 HEADER Cycle 598 tail 598:001906 len  32256 ops 112
+  2190 HEADER Cycle 598 tail 598:001906 len  32256 ops 138
+  2254 HEADER Cycle 598 tail 598:001906 len  32256 ops 96
+  2318 HEADER Cycle 598 tail 598:001906 len  32256 ops 92
+  2382 HEADER Cycle 598 tail 598:001906 len  32236 ops 98
+  2446 HEADER Cycle 598 tail 598:001966 len  32256 ops 118
+  2510 HEADER Cycle 598 tail 598:001966 len  32252 ops 147
+  2574 HEADER Cycle 598 tail 598:001966 len  32256 ops 137
+  2638 HEADER Cycle 598 tail 598:001966 len  32256 ops 126
+  2702 HEADER Cycle 598 tail 598:001966 len  32256 ops 139
+  2766 HEADER Cycle 598 tail 598:001966 len  32256 ops 80
+  2830 HEADER Cycle 598 tail 598:001966 len  32256 ops 133
+  2894 HEADER Cycle 598 tail 598:001966 len  32256 ops 112
+  2958 HEADER Cycle 598 tail 598:001966 len   6708 ops 22
+  2973 HEADER Cycle 598 tail 598:002990 len    224 ops 5
+  2975 HEADER Cycle 598 tail 598:003005 len  32256 ops 133
+  3039 HEADER Cycle 598 tail 598:003005 len  32256 ops 108
+  3103 HEADER Cycle 598 tail 598:003005 len  32256 ops 95
+  3167 HEADER Cycle 598 tail 598:003005 len  32256 ops 90
+  3231 HEADER Cycle 598 tail 598:003005 len  32256 ops 155
+  3295 HEADER Cycle 598 tail 598:003005 len  32256 ops 163
+  3359 HEADER Cycle 598 tail 598:003005 len  32256 ops 102
+  3423 HEADER Cycle 598 tail 598:003005 len  32256 ops 81
+  3487 HEADER Cycle 598 tail 598:003007 len  32256 ops 93
+  3551 HEADER Cycle 598 tail 598:003007 len  32256 ops 150
+  3615 HEADER Cycle 598 tail 598:003007 len  32256 ops 144
+  3679 HEADER Cycle 598 tail 598:003007 len  32256 ops 106
+  3743 HEADER Cycle 598 tail 598:003007 len  13128 ops 26
+  3770 HEADER Cycle 598 tail 598:003007 len  32256 ops 180
+  3834 HEADER Cycle 598 tail 598:003007 len  32256 ops 109
+  3898 HEADER Cycle 598 tail 598:003007 len  32256 ops 95
+  3962 HEADER Cycle 598 tail 598:003007 len  32256 ops 135
+  4026 HEADER Cycle 598 tail 598:003007 len  32256 ops 91
+  4090 HEADER Cycle 598 tail 598:003007 len  32256 ops 116
+  4154 HEADER Cycle 598 tail 598:003007 len  32256 ops 104
+  4218 HEADER Cycle 598 tail 598:003007 len  32256 ops 113
+  4282 HEADER Cycle 598 tail 598:003007 len  32256 ops 131
+  4346 HEADER Cycle 598 tail 598:003007 len  32256 ops 195
+  4410 HEADER Cycle 598 tail 598:003007 len  32256 ops 63
+  4474 HEADER Cycle 598 tail 598:003007 len  32256 ops 89
+  4538 HEADER Cycle 598 tail 598:003007 len  32256 ops 83
+  4602 HEADER Cycle 598 tail 598:003007 len  32256 ops 124
+  4666 HEADER Cycle 598 tail 598:003007 len  32256 ops 122
+  4730 HEADER Cycle 598 tail 598:003007 len  32256 ops 111
+  4794 HEADER Cycle 598 tail 598:003007 len  32256 ops 134
+  4858 HEADER Cycle 598 tail 598:003007 len  32256 ops 94
+  4922 HEADER Cycle 598 tail 598:003007 len  32256 ops 112
+  4986 HEADER Cycle 598 tail 598:003007 len  32256 ops 109
+  5050 HEADER Cycle 598 tail 598:003007 len  13784 ops 44
+  5078 HEADER Cycle 598 tail 598:005082 len  32256 ops 157
+  5142 HEADER Cycle 598 tail 598:005082 len  32256 ops 171
+  5206 HEADER Cycle 598 tail 598:005082 len  32256 ops 127
+  5270 HEADER Cycle 598 tail 598:005082 len  32244 ops 188
+  5334 HEADER Cycle 598 tail 598:005082 len  32256 ops 133
+  5398 HEADER Cycle 598 tail 598:005082 len  32256 ops 118
+  5462 HEADER Cycle 598 tail 598:005082 len  32256 ops 145
+  5526 HEADER Cycle 598 tail 598:005082 len  32256 ops 153
+  5590 HEADER Cycle 598 tail 598:005110 len  32256 ops 163
+  5654 HEADER Cycle 598 tail 598:005110 len  32256 ops 198
+  5718 HEADER Cycle 598 tail 598:005110 len  32256 ops 148
+  5782 HEADER Cycle 598 tail 598:005110 len  32256 ops 129
+  5846 HEADER Cycle 598 tail 598:005110 len  32256 ops 108
+  5910 HEADER Cycle 598 tail 598:005110 len  32256 ops 103
+  5974 HEADER Cycle 598 tail 598:005110 len  32256 ops 60
+  6038 HEADER Cycle 598 tail 598:005110 len  32256 ops 86
+  6102 HEADER Cycle 598 tail 598:005110 len  32256 ops 59
+  6166 HEADER Cycle 598 tail 598:005110 len  32256 ops 46
+  6230 HEADER Cycle 598 tail 598:005110 len  32256 ops 90
+  6294 HEADER Cycle 598 tail 598:005110 len  32256 ops 162
+  6358 HEADER Cycle 598 tail 598:005110 len  32256 ops 135
+  6422 HEADER Cycle 598 tail 598:005110 len  32256 ops 79
+  6486 HEADER Cycle 598 tail 598:005110 len  32252 ops 75
+  6550 HEADER Cycle 598 tail 598:005110 len  32256 ops 68
+  6614 HEADER Cycle 598 tail 598:005110 len  32256 ops 81
+  6678 HEADER Cycle 598 tail 598:005110 len  32256 ops 98
+  6742 HEADER Cycle 598 tail 598:005110 len  32256 ops 128
+  6806 HEADER Cycle 598 tail 598:005110 len  32256 ops 97
+  6870 HEADER Cycle 598 tail 598:005110 len  32256 ops 122
+  6934 HEADER Cycle 598 tail 598:005110 len   6068 ops 6
+  6947 HEADER Cycle 598 tail 598:006902 len  32256 ops 112
+  7011 HEADER Cycle 598 tail 598:006902 len  32256 ops 125
+  7075 HEADER Cycle 598 tail 598:006902 len  32256 ops 118
+  7139 HEADER Cycle 598 tail 598:006902 len  32256 ops 107
+  7203 HEADER Cycle 598 tail 598:006902 len  32256 ops 89
+  7267 HEADER Cycle 598 tail 598:006902 len  32256 ops 69
+  7331 HEADER Cycle 598 tail 598:006966 len  32256 ops 135
+  7395 HEADER Cycle 598 tail 598:006966 len  32256 ops 125
+  7459 HEADER Cycle 598 tail 598:006979 len  32256 ops 94
+  7523 HEADER Cycle 598 tail 598:006979 len  32256 ops 108
+  7587 HEADER Cycle 598 tail 598:006979 len  32256 ops 197
+  7651 HEADER Cycle 598 tail 598:006979 len  24684 ops 74
+  7701 HEADER Cycle 598 tail 598:007683 len  32256 ops 137
+  7765 HEADER Cycle 598 tail 598:007683 len  32256 ops 119
+  7829 HEADER Cycle 598 tail 598:007683 len  32256 ops 116
+  7893 HEADER Cycle 598 tail 598:007683 len  32256 ops 102
+  7957 HEADER Cycle 598 tail 598:007683 len  32256 ops 122
+  8021 HEADER Cycle 598 tail 598:007683 len  32256 ops 95
+  8085 HEADER Cycle 598 tail 598:007683 len  32256 ops 98
+  8149 HEADER Cycle 598 tail 598:007683 len  32256 ops 98
+  8213 HEADER Cycle 598 tail 598:007733 len  15556 ops 83
+  8245 HEADER Cycle 598 tail 598:007733 len  32256 ops 95
+  8309 HEADER Cycle 598 tail 598:007733 len  32256 ops 81
+  8373 HEADER Cycle 598 tail 598:007733 len  32256 ops 95
+  8437 HEADER Cycle 598 tail 598:007733 len  15084 ops 52
+  8468 HEADER Cycle 598 tail 598:008469 len  32256 ops 100
+  8532 HEADER Cycle 598 tail 598:008469 len  32256 ops 83
+  8596 HEADER Cycle 598 tail 598:008469 len  32256 ops 108
+  8660 HEADER Cycle 598 tail 598:008469 len  32256 ops 99
+  8724 HEADER Cycle 598 tail 598:008469 len  32256 ops 100
+  8788 HEADER Cycle 598 tail 598:008469 len  32256 ops 99
+  8852 HEADER Cycle 598 tail 598:008500 len   6696 ops 29
+  8867 HEADER Cycle 598 tail 598:008500 len  32256 ops 108
+  8931 HEADER Cycle 598 tail 598:008500 len  32256 ops 60
+  8995 HEADER Cycle 598 tail 598:008500 len  32256 ops 75
+  9059 HEADER Cycle 598 tail 598:008500 len  32256 ops 102
+  9123 HEADER Cycle 598 tail 598:008500 len  32256 ops 109
+  9187 HEADER Cycle 598 tail 598:008500 len  32256 ops 98
+  9251 HEADER Cycle 598 tail 598:008500 len  32256 ops 85
+  9315 HEADER Cycle 598 tail 598:008500 len  32256 ops 99
+  9379 HEADER Cycle 598 tail 598:008500 len  32256 ops 63
+  9443 HEADER Cycle 598 tail 598:008500 len  32256 ops 79
+  9507 HEADER Cycle 598 tail 598:008500 len  32256 ops 147
+  9571 HEADER Cycle 598 tail 598:008500 len  32256 ops 121
+  9635 HEADER Cycle 598 tail 598:008500 len  32256 ops 140
+  9699 HEADER Cycle 598 tail 598:008500 len  32252 ops 124
+  9763 HEADER Cycle 598 tail 598:008500 len  32256 ops 163
+  9827 HEADER Cycle 598 tail 598:008500 len  31064 ops 132
+  9889 HEADER Cycle 598 tail 598:008899 len  32256 ops 100
+  9953 HEADER Cycle 598 tail 598:008899 len  32256 ops 87
+ 10017 HEADER Cycle 598 tail 598:008899 len  14464 ops 45
+ 10047 HEADER Cycle 598 tail 598:010049 len  32256 ops 129
+ 10111 HEADER Cycle 598 tail 598:010049 len  32256 ops 124
+ 10175 HEADER Cycle 598 tail 598:010049 len  32256 ops 60
+ 10239 HEADER Cycle 598 tail 598:010049 len  32256 ops 84
+ 10303 HEADER Cycle 598 tail 598:010049 len  32256 ops 88
+ 10367 HEADER Cycle 598 tail 598:010079 len  32256 ops 84
+ 10431 HEADER Cycle 598 tail 598:010079 len  32256 ops 81
+ 10495 HEADER Cycle 598 tail 598:010079 len  32256 ops 121
+ 10559 HEADER Cycle 598 tail 598:010079 len  32256 ops 161
+ 10623 HEADER Cycle 598 tail 598:010079 len  32256 ops 130
+ 10687 HEADER Cycle 598 tail 598:010079 len  32256 ops 106
+ 10751 HEADER Cycle 598 tail 598:010079 len  32256 ops 104
+ 10815 HEADER Cycle 598 tail 598:010079 len  32256 ops 118
+ 10879 HEADER Cycle 598 tail 598:010079 len   1784 ops 4
+ 10884 HEADER Cycle 598 tail 598:010847 len  32256 ops 114
+ 10948 HEADER Cycle 598 tail 598:010847 len  32256 ops 168
+ 11012 HEADER Cycle 598 tail 598:010847 len  32256 ops 121
+ 11076 HEADER Cycle 598 tail 598:010847 len  32256 ops 88
+ 11140 HEADER Cycle 598 tail 598:010847 len  32256 ops 75
+ 11204 HEADER Cycle 598 tail 598:010916 len  32256 ops 106
+ 11268 HEADER Cycle 598 tail 598:010916 len  32256 ops 69
+ 11332 HEADER Cycle 598 tail 598:010916 len  32256 ops 131
+ 11396 HEADER Cycle 598 tail 598:010916 len  32256 ops 109
+ 11460 HEADER Cycle 598 tail 598:010980 len  32256 ops 119
+ 11524 HEADER Cycle 598 tail 598:010980 len  32256 ops 121
+ 11588 HEADER Cycle 598 tail 598:010980 len  32256 ops 158
+ 11652 HEADER Cycle 598 tail 598:010980 len  32256 ops 150
+ 11716 HEADER Cycle 598 tail 598:010980 len  32256 ops 133
+ 11780 HEADER Cycle 598 tail 598:010980 len  32256 ops 155
+ 11844 HEADER Cycle 598 tail 598:010980 len   8760 ops 19
+ 11863 HEADER Cycle 598 tail 598:011876 len  32256 ops 161
+ 11927 HEADER Cycle 598 tail 598:011876 len  32256 ops 170
+ 11991 HEADER Cycle 598 tail 598:011895 len  32256 ops 98
+ 12055 HEADER Cycle 598 tail 598:011895 len  32256 ops 76
+ 12119 HEADER Cycle 598 tail 598:011895 len  32256 ops 84
+ 12183 HEADER Cycle 598 tail 598:011895 len  32256 ops 80
+ 12247 HEADER Cycle 598 tail 598:011895 len   5220 ops 20
+ 12259 HEADER Cycle 598 tail 598:012279 len  32256 ops 109
+ 12323 HEADER Cycle 598 tail 598:012279 len  32256 ops 145
+ 12387 HEADER Cycle 598 tail 598:012279 len  32256 ops 117
+ 12451 HEADER Cycle 598 tail 598:012291 len  32256 ops 120
+ 12515 HEADER Cycle 598 tail 598:012291 len  32256 ops 116
+ 12579 HEADER Cycle 598 tail 598:012291 len  32256 ops 180
+ 12643 HEADER Cycle 598 tail 598:012291 len  32256 ops 81
+ 12707 HEADER Cycle 598 tail 598:012291 len  32256 ops 87
+ 12771 HEADER Cycle 598 tail 598:012291 len  32252 ops 124
+ 12835 HEADER Cycle 598 tail 598:012291 len  32256 ops 168
+ 12899 HEADER Cycle 598 tail 598:012291 len  32256 ops 91
+ 12963 HEADER Cycle 598 tail 598:012291 len  26220 ops 44
+ 13016 HEADER Cycle 598 tail 598:012291 len  32256 ops 122
+ 13080 HEADER Cycle 598 tail 598:012291 len  32256 ops 118
+ 13144 HEADER Cycle 598 tail 598:012291 len  32256 ops 105
+ 13208 HEADER Cycle 598 tail 598:012291 len  32256 ops 83
+ 13272 HEADER Cycle 598 tail 598:012291 len  32256 ops 85
+ 13336 HEADER Cycle 598 tail 598:012291 len  32256 ops 66
+ 13400 HEADER Cycle 598 tail 598:012291 len  27456 ops 119
+ 13455 HEADER Cycle 598 tail 598:013432 len  32256 ops 167
+ 13519 HEADER Cycle 598 tail 598:013432 len  32256 ops 103
+ 13583 HEADER Cycle 598 tail 598:013432 len  32256 ops 101
+ 13647 HEADER Cycle 598 tail 598:013432 len  32256 ops 126
+ 13711 HEADER Cycle 598 tail 598:013432 len  32256 ops 136
+ 13775 HEADER Cycle 598 tail 598:013432 len  32256 ops 86
+ 13839 HEADER Cycle 598 tail 598:013432 len  32256 ops 79
+ 13903 HEADER Cycle 598 tail 598:013432 len  32256 ops 80
+ 13967 HEADER Cycle 598 tail 598:013487 len  32256 ops 74
+ 14031 HEADER Cycle 598 tail 598:013487 len  32256 ops 82
+ 14095 HEADER Cycle 598 tail 598:013487 len  32256 ops 153
+ 14159 HEADER Cycle 598 tail 598:013487 len  32256 ops 104
+ 14223 HEADER Cycle 598 tail 598:013487 len  32256 ops 190
+ 14287 HEADER Cycle 598 tail 598:013487 len  32256 ops 97
+ 14351 HEADER Cycle 598 tail 598:013487 len  32256 ops 99
+ 14415 HEADER Cycle 598 tail 598:013487 len  32256 ops 123
+ 14479 HEADER Cycle 598 tail 598:013487 len  32256 ops 125
+ 14543 HEADER Cycle 598 tail 598:013487 len  32256 ops 112
+ 14607 HEADER Cycle 598 tail 598:013487 len   3968 ops 5
+ 14616 HEADER Cycle 598 tail 598:013487 len  32256 ops 114
+ 14680 HEADER Cycle 598 tail 598:013487 len  32256 ops 122
+ 14744 HEADER Cycle 598 tail 598:013487 len  32256 ops 80
+ 14808 HEADER Cycle 598 tail 598:013487 len  32256 ops 104
+ 14872 HEADER Cycle 598 tail 598:013487 len  32256 ops 79
+ 14936 HEADER Cycle 598 tail 598:013487 len  32256 ops 62
+ 15000 HEADER Cycle 598 tail 598:013487 len  32256 ops 98
+ 15064 HEADER Cycle 598 tail 598:013487 len  32256 ops 115
+ 15128 HEADER Cycle 598 tail 598:013487 len  32256 ops 70
+ 15192 HEADER Cycle 598 tail 598:013487 len  32256 ops 80
+ 15256 HEADER Cycle 598 tail 598:013487 len  32256 ops 118
+ 15320 HEADER Cycle 598 tail 598:013487 len  32256 ops 69
+ 15384 HEADER Cycle 598 tail 598:013487 len  32256 ops 154
+ 15448 HEADER Cycle 598 tail 598:013487 len  10088 ops 34
+ 15469 HEADER Cycle 598 tail 598:015480 len  32256 ops 149
+ 15533 HEADER Cycle 598 tail 598:015480 len  32256 ops 85
+ 15597 HEADER Cycle 598 tail 598:015480 len  32256 ops 78
+ 15661 HEADER Cycle 598 tail 598:015480 len  32256 ops 104
+ 15725 HEADER Cycle 598 tail 598:015480 len  32256 ops 149
+ 15789 HEADER Cycle 598 tail 598:015480 len  32256 ops 57
+ 15853 HEADER Cycle 598 tail 598:015480 len  32256 ops 56
+ 15917 HEADER Cycle 598 tail 598:015480 len  32256 ops 41
+ 15981 HEADER Cycle 598 tail 598:015501 len  32256 ops 56
+ 16045 HEADER Cycle 598 tail 598:015501 len  32256 ops 80
+ 16109 HEADER Cycle 598 tail 598:015501 len  32256 ops 134
+ 16173 HEADER Cycle 598 tail 598:015501 len  32248 ops 144
+ 16237 HEADER Cycle 598 tail 598:015501 len  32256 ops 96
+ 16301 HEADER Cycle 598 tail 598:015501 len  32256 ops 76
+ 16365 HEADER Cycle 598 tail 598:015501 len  32256 ops 111
+ 16429 HEADER Cycle 598 tail 598:015501 len  32256 ops 127
+ 16493 HEADER Cycle 598 tail 598:015501 len  32256 ops 119
+ 16557 HEADER Cycle 598 tail 598:015501 len  32256 ops 104
+ 16621 HEADER Cycle 598 tail 598:015501 len  32256 ops 101
+ 16685 HEADER Cycle 598 tail 598:015501 len  32256 ops 106
+ 16749 HEADER Cycle 598 tail 598:015501 len  32256 ops 190
+ 16813 HEADER Cycle 598 tail 598:015501 len  32252 ops 162
+ 16877 HEADER Cycle 598 tail 598:015501 len  32256 ops 141
+ 16941 HEADER Cycle 598 tail 598:015501 len  32256 ops 99
+ 17005 HEADER Cycle 598 tail 598:015501 len  32256 ops 101
+ 17069 HEADER Cycle 598 tail 598:015501 len  18592 ops 46
+ 17107 HEADER Cycle 598 tail 598:017101 len  32256 ops 148
+ 17171 HEADER Cycle 598 tail 598:017101 len  32256 ops 95
+ 17235 HEADER Cycle 598 tail 598:017139 len  32252 ops 147
+ 17299 HEADER Cycle 598 tail 598:017139 len  32256 ops 130
+ 17363 HEADER Cycle 598 tail 598:017139 len  32256 ops 106
+ 17427 HEADER Cycle 598 tail 598:017139 len  32256 ops 109
+ 17491 HEADER Cycle 598 tail 598:017139 len  32256 ops 121
+ 17555 HEADER Cycle 598 tail 598:017139 len  32256 ops 119
+ 17619 HEADER Cycle 598 tail 598:017139 len  32256 ops 86
+ 17683 HEADER Cycle 598 tail 598:017139 len  32256 ops 106
+ 17747 HEADER Cycle 598 tail 598:017139 len  11080 ops 40
+ 17770 HEADER Cycle 598 tail 598:017779 len  32256 ops 112
+ 17834 HEADER Cycle 598 tail 598:017779 len  32256 ops 118
+ 17898 HEADER Cycle 598 tail 598:017779 len  32256 ops 137
+ 17962 HEADER Cycle 598 tail 598:017779 len  32256 ops 159
+ 18026 HEADER Cycle 598 tail 598:017779 len  32256 ops 145
+ 18090 HEADER Cycle 598 tail 598:017779 len  32256 ops 133
+ 18154 HEADER Cycle 598 tail 598:017779 len  32244 ops 106
+ 18218 HEADER Cycle 598 tail 598:017802 len  32256 ops 106
+ 18282 HEADER Cycle 598 tail 598:017802 len  32256 ops 159
+ 18346 HEADER Cycle 598 tail 598:017802 len  15884 ops 25
+ 18379 HEADER Cycle 598 tail 598:017802 len  32256 ops 117
+ 18443 HEADER Cycle 598 tail 598:017802 len  32256 ops 137
+ 18507 HEADER Cycle 598 tail 598:017802 len  32256 ops 138
+ 18571 HEADER Cycle 598 tail 598:017802 len  32256 ops 152
+ 18635 HEADER Cycle 598 tail 598:017866 len  10988 ops 29
+ 18658 HEADER Cycle 598 tail 598:018667 len  32256 ops 110
+ 18722 HEADER Cycle 598 tail 598:018690 len    900 ops 7
+ 18725 HEADER Cycle 598 tail 598:018690 len  32256 ops 139
+ 18789 HEADER Cycle 598 tail 598:018690 len  32256 ops 111
+ 18853 HEADER Cycle 598 tail 598:018690 len  32256 ops 81
+ 18917 HEADER Cycle 598 tail 598:018690 len  32256 ops 81
+ 18981 HEADER Cycle 598 tail 598:018690 len  32256 ops 78
+ 19045 HEADER Cycle 598 tail 598:018690 len  32256 ops 91
+ 19109 HEADER Cycle 598 tail 598:018690 len  32256 ops 97
+ 19173 HEADER Cycle 598 tail 598:018690 len  32256 ops 62
+ 19237 HEADER Cycle 598 tail 598:018757 len  32256 ops 97
+ 19301 HEADER Cycle 598 tail 598:018757 len  32256 ops 75
+ 19365 HEADER Cycle 598 tail 598:018757 len  32256 ops 60
+ 19429 HEADER Cycle 598 tail 598:018757 len  32256 ops 98
+ 19493 HEADER Cycle 598 tail 598:018757 len  32256 ops 83
+ 19557 HEADER Cycle 598 tail 598:018757 len  32256 ops 70
+ 19621 HEADER Cycle 598 tail 598:018757 len  32248 ops 110
+ 19685 HEADER Cycle 598 tail 598:018757 len  32256 ops 95
+ 19749 HEADER Cycle 598 tail 598:018757 len  32256 ops 88
+ 19813 HEADER Cycle 598 tail 598:018757 len  32256 ops 93
+ 19877 HEADER Cycle 598 tail 598:018757 len  32256 ops 104
+ 19941 HEADER Cycle 598 tail 598:018757 len  32256 ops 101
+ 20005 HEADER Cycle 598 tail 598:018757 len  29988 ops 84
+ 20065 HEADER Cycle 598 tail 598:020037 len  32256 ops 138
+ 20129 HEADER Cycle 598 tail 598:020037 len  32256 ops 105
+ 20193 HEADER Cycle 598 tail 598:020037 len  32256 ops 168
+ 20257 HEADER Cycle 598 tail 598:020037 len  32244 ops 112
+ 20321 HEADER Cycle 598 tail 598:020037 len  32256 ops 131
+ 20385 HEADER Cycle 598 tail 598:020037 len  32256 ops 84
+ 20449 HEADER Cycle 598 tail 598:020037 len  32256 ops 81
+ 20513 HEADER Cycle 598 tail 598:020037 len  32256 ops 112
+ 20577 HEADER Cycle 598 tail 598:020097 len   3512 ops 6
+ 20585 HEADER Cycle 598 tail 598:020609 len    224 ops 5
+ 20587 HEADER Cycle 598 tail 598:020617 len  32256 ops 191
+ 20651 HEADER Cycle 598 tail 598:020617 len   2772 ops 6
+ 20658 HEADER Cycle 598 tail 598:020619 len  32256 ops 124
+ 20722 HEADER Cycle 598 tail 598:020619 len  32256 ops 153
+ 20786 HEADER Cycle 598 tail 598:020619 len  32256 ops 105
+ 20850 HEADER Cycle 598 tail 598:020619 len  32256 ops 115
+ 20914 HEADER Cycle 598 tail 598:020619 len  32256 ops 112
+ 20978 HEADER Cycle 598 tail 598:020619 len  32256 ops 119
+ 21042 HEADER Cycle 598 tail 598:020619 len  32256 ops 114
+ 21106 HEADER Cycle 598 tail 598:020619 len  32256 ops 98
+ 21170 HEADER Cycle 598 tail 598:020619 len  32256 ops 80
+ 21234 HEADER Cycle 598 tail 598:020619 len  32256 ops 64
+ 21298 HEADER Cycle 598 tail 598:020619 len  32256 ops 64
+ 21362 HEADER Cycle 598 tail 598:020619 len  12728 ops 58
+ 21388 HEADER Cycle 598 tail 598:021394 len    224 ops 5
+ 21390 HEADER Cycle 598 tail 598:021420 len  32256 ops 133
+ 21454 HEADER Cycle 598 tail 598:021420 len  32256 ops 77
+ 21518 HEADER Cycle 598 tail 598:021420 len  32256 ops 131
+ 21582 HEADER Cycle 598 tail 598:021420 len  32256 ops 101
+ 21646 HEADER Cycle 598 tail 598:021420 len  32256 ops 101
+ 21710 HEADER Cycle 598 tail 598:021420 len  32256 ops 87
+ 21774 HEADER Cycle 598 tail 598:021420 len  32256 ops 102
+ 21838 HEADER Cycle 598 tail 598:021420 len  32256 ops 85
+ 21902 HEADER Cycle 598 tail 598:021422 len  32256 ops 110
+ 21966 HEADER Cycle 598 tail 598:021422 len  18988 ops 58
+ 22005 HEADER Cycle 598 tail 598:021998 len  32256 ops 120
+ 22069 HEADER Cycle 598 tail 598:022037 len   4972 ops 19
+ 22080 HEADER Cycle 598 tail 598:022101 len  32256 ops 117
+ 22144 HEADER Cycle 598 tail 598:022112 len  26100 ops 78
+ 22196 HEADER Cycle 598 tail 598:022176 len  32256 ops 84
+ 22260 HEADER Cycle 598 tail 598:022176 len  32256 ops 106
+ 22324 HEADER Cycle 598 tail 598:022176 len  32256 ops 117
+ 22388 HEADER Cycle 598 tail 598:022228 len  13768 ops 31
+ 22416 HEADER Cycle 598 tail 598:022420 len  32256 ops 97
+ 22480 HEADER Cycle 598 tail 598:022420 len  32256 ops 113
+ 22544 HEADER Cycle 598 tail 598:022512 len   5256 ops 36
+ 22556 HEADER Cycle 598 tail 598:022512 len  13112 ops 48
+ 22583 HEADER Cycle 598 tail 598:022588 len  32256 ops 145
+ 22647 HEADER Cycle 598 tail 598:022615 len  20896 ops 79
+ 22689 HEADER Cycle 598 tail 598:022615 len  32256 ops 111
+ 22753 HEADER Cycle 598 tail 598:022615 len   6508 ops 52
+ 22767 HEADER Cycle 598 tail 598:022785 len  32256 ops 109
+ 22831 HEADER Cycle 598 tail 598:022799 len  10684 ops 44
+ 22853 HEADER Cycle 598 tail 598:022863 len  32248 ops 98
+ 22917 HEADER Cycle 598 tail 598:022863 len  32256 ops 99
+ 22981 HEADER Cycle 598 tail 598:022863 len  32256 ops 95
+ 23045 HEADER Cycle 598 tail 598:022949 len  23184 ops 54
+ 23092 HEADER Cycle 598 tail 598:023013 len  12820 ops 45
+ 23119 HEADER Cycle 598 tail 598:023124 len  32256 ops 111
+ 23183 HEADER Cycle 598 tail 598:023151 len  23660 ops 82
+ 23231 HEADER Cycle 598 tail 598:023215 len  32256 ops 157
+ 23295 HEADER Cycle 598 tail 598:023215 len  32256 ops 103
+ 23359 HEADER Cycle 598 tail 598:023215 len  32256 ops 77
+ 23423 HEADER Cycle 598 tail 598:023263 len  20804 ops 62
+ 23465 HEADER Cycle 598 tail 598:023455 len  32256 ops 113
+ 23529 HEADER Cycle 598 tail 598:023455 len  32256 ops 60
+ 23593 HEADER Cycle 598 tail 598:023497 len  27896 ops 61
+ 23649 HEADER Cycle 598 tail 598:023625 len  32256 ops 97
+ 23713 HEADER Cycle 598 tail 598:023625 len  32256 ops 116
+ 23777 HEADER Cycle 598 tail 598:023625 len  32256 ops 99
+ 23841 HEADER Cycle 598 tail 598:023681 len  12828 ops 27
+ 23868 HEADER Cycle 598 tail 598:023873 len    224 ops 5
+ 23870 HEADER Cycle 598 tail 598:023900 len  21208 ops 112
+ 23913 HEADER Cycle 598 tail 598:023902 len    224 ops 5
+ 23915 HEADER Cycle 598 tail 598:023945 len  32256 ops 168
+ 23979 HEADER Cycle 598 tail 598:023947 len   8564 ops 27
+ 23997 HEADER Cycle 598 tail 598:024011 len    224 ops 5
+ 23999 HEADER Cycle 598 tail 598:024029 len  32256 ops 129
+ 24063 HEADER Cycle 598 tail 598:024029 len  32256 ops 116
+ 24127 HEADER Cycle 598 tail 598:024031 len   6024 ops 19
+ 24140 HEADER Cycle 598 tail 598:024159 len   3304 ops 16
+ 24148 HEADER Cycle 598 tail 598:024172 len    224 ops 5
+ 24150 HEADER Cycle 598 tail 598:024180 len    224 ops 5
+ 24152 HEADER Cycle 598 tail 598:024182 len   1896 ops 16
+ 24157 HEADER Cycle 598 tail 598:024184 len    224 ops 5
+ 24159 HEADER Cycle 598 tail 598:024189 len    224 ops 5
+ 24161 HEADER Cycle 598 tail 598:024191 len  32256 ops 140
+ 24225 HEADER Cycle 598 tail 598:024193 len  27864 ops 120
+ 24281 HEADER Cycle 598 tail 598:024257 len    224 ops 5
+ 24283 HEADER Cycle 598 tail 598:024313 len   1896 ops 16
+ 24288 HEADER Cycle 598 tail 598:024315 len   4304 ops 20
+ 24298 HEADER Cycle 598 tail 598:024320 len  22476 ops 93
+ 24343 HEADER Cycle 598 tail 598:024330 len    224 ops 5
+ 24345 HEADER Cycle 598 tail 598:024375 len    224 ops 5
+ 24347 HEADER Cycle 598 tail 598:024377 len   1768 ops 16
+ 24352 HEADER Cycle 598 tail 598:024379 len    224 ops 5
+ 24354 HEADER Cycle 598 tail 598:024384 len   1640 ops 16
+ 24359 HEADER Cycle 598 tail 598:024386 len    224 ops 5
+ 24361 HEADER Cycle 598 tail 598:024391 len  17356 ops 75
+ 24396 HEADER Cycle 598 tail 598:024393 len    224 ops 5
+ 24398 HEADER Cycle 598 tail 598:024428 len    224 ops 5
+ 24400 HEADER Cycle 598 tail 598:024430 len   1512 ops 16
+ 24404 HEADER Cycle 598 tail 598:024432 len    224 ops 5
+ 24406 HEADER Cycle 598 tail 598:024436 len    224 ops 5
+ 24408 HEADER Cycle 598 tail 598:024438 len   5712 ops 20
+ 24421 HEADER Cycle 598 tail 598:024440 len    224 ops 5
+ 24423 HEADER Cycle 598 tail 598:024453 len    224 ops 5
+ 24425 HEADER Cycle 598 tail 598:024455 len   6352 ops 20
+ 24439 HEADER Cycle 598 tail 598:024457 len    224 ops 5
+ 24441 HEADER Cycle 598 tail 598:024471 len    224 ops 5
+ 24443 HEADER Cycle 598 tail 598:024473 len   5072 ops 20
+ 24454 HEADER Cycle 598 tail 598:024475 len    224 ops 5
+ 24456 HEADER Cycle 598 tail 598:024486 len    224 ops 5
+ 24458 HEADER Cycle 598 tail 598:024488 len   4072 ops 16
+ 24467 HEADER Cycle 598 tail 598:024490 len    224 ops 5
+ 24469 HEADER Cycle 598 tail 598:024499 len    224 ops 5
+ 24471 HEADER Cycle 598 tail 598:024501 len   1896 ops 16
+ 24476 HEADER Cycle 598 tail 598:024503 len    224 ops 5
+ 24478 HEADER Cycle 598 tail 598:024508 len    224 ops 5
+ 24480 HEADER Cycle 598 tail 598:024510 len   5584 ops 20
+ 24492 HEADER Cycle 598 tail 598:024512 len    224 ops 5
+ 24494 HEADER Cycle 598 tail 598:024524 len    224 ops 5
+ 24496 HEADER Cycle 598 tail 598:024526 len   2280 ops 16
+ 24502 HEADER Cycle 598 tail 598:024528 len    224 ops 5
+ 24504 HEADER Cycle 598 tail 598:024534 len    224 ops 5
+ 24506 HEADER Cycle 598 tail 598:024536 len   2408 ops 16
+ 24512 HEADER Cycle 598 tail 598:024538 len    224 ops 5
+ 24514 HEADER Cycle 598 tail 598:024544 len   2280 ops 16
+ 24520 HEADER Cycle 598 tail 598:024546 len    224 ops 5
+ 24522 HEADER Cycle 598 tail 598:024552 len    224 ops 5
+ 24524 HEADER Cycle 598 tail 598:024554 len   2280 ops 16
+ 24530 HEADER Cycle 598 tail 598:024556 len    224 ops 5
+ 24532 HEADER Cycle 598 tail 598:024562 len    224 ops 5
+ 24534 HEADER Cycle 598 tail 598:024564 len   2408 ops 16
+ 24540 HEADER Cycle 598 tail 598:024566 len    224 ops 5
+ 24542 HEADER Cycle 598 tail 598:024572 len    224 ops 5
+ 24544 HEADER Cycle 598 tail 598:024574 len   2280 ops 16
+ 24550 HEADER Cycle 598 tail 598:024576 len    224 ops 5
+ 24552 HEADER Cycle 598 tail 598:024582 len    224 ops 5
+ 24554 HEADER Cycle 598 tail 598:024584 len   2280 ops 16
+ 24560 HEADER Cycle 598 tail 598:024586 len    224 ops 5
+ 24562 HEADER Cycle 598 tail 598:024592 len    224 ops 5
+ 24564 HEADER Cycle 598 tail 598:024594 len   2280 ops 16
+ 24570 HEADER Cycle 598 tail 598:024596 len    224 ops 5
+ 24572 HEADER Cycle 598 tail 598:024602 len    224 ops 5
+ 24574 HEADER Cycle 598 tail 598:024604 len   2280 ops 16
+ 24580 HEADER Cycle 598 tail 598:024606 len    224 ops 5
+ 24582 HEADER Cycle 598 tail 598:024612 len    224 ops 5
+ 24584 HEADER Cycle 598 tail 598:024614 len   2408 ops 16
+ 24590 HEADER Cycle 598 tail 598:024616 len    224 ops 5
+ 24592 HEADER Cycle 598 tail 598:024622 len   2408 ops 16
+ 24598 HEADER Cycle 598 tail 598:024624 len    224 ops 5
+ 24600 HEADER Cycle 598 tail 598:024630 len    224 ops 5
+ 24602 HEADER Cycle 598 tail 598:024632 len   2408 ops 16
+ 24608 HEADER Cycle 598 tail 598:024634 len    224 ops 5
+ 24610 HEADER Cycle 598 tail 598:024640 len   2408 ops 16
+ 24616 HEADER Cycle 598 tail 598:024642 len    224 ops 5
+ 24618 HEADER Cycle 598 tail 598:024648 len    224 ops 5
+ 24620 HEADER Cycle 598 tail 598:024650 len   2408 ops 16
+ 24626 HEADER Cycle 598 tail 598:024652 len    224 ops 5
+ 24628 HEADER Cycle 598 tail 598:024658 len    224 ops 5
+ 24630 HEADER Cycle 598 tail 598:024660 len   2408 ops 16
+ 24636 HEADER Cycle 598 tail 598:024662 len    224 ops 5
+ 24638 HEADER Cycle 598 tail 598:024668 len    224 ops 5
+ 24640 HEADER Cycle 598 tail 598:024670 len   2408 ops 16
+ 24646 HEADER Cycle 598 tail 598:024672 len    224 ops 5
+ 24648 HEADER Cycle 598 tail 598:024678 len   2408 ops 16
+ 24654 HEADER Cycle 598 tail 598:024680 len    224 ops 5
+ 24656 HEADER Cycle 598 tail 598:024686 len    224 ops 5
+ 24658 HEADER Cycle 598 tail 598:024688 len   2408 ops 16
+ 24664 HEADER Cycle 598 tail 598:024690 len    224 ops 5
+ 24666 HEADER Cycle 598 tail 598:024696 len   2408 ops 16
+ 24672 HEADER Cycle 598 tail 598:024698 len    224 ops 5
+ 24674 HEADER Cycle 598 tail 598:024704 len    224 ops 5
+ 24676 HEADER Cycle 598 tail 598:024706 len   2536 ops 16
+ 24682 HEADER Cycle 598 tail 598:024708 len    224 ops 5
+ 24684 HEADER Cycle 598 tail 598:024714 len    224 ops 5
+ 24686 HEADER Cycle 598 tail 598:024716 len   5072 ops 32
+ 24697 HEADER Cycle 598 tail 598:024718 len    224 ops 5
+ 24699 HEADER Cycle 598 tail 598:024729 len    224 ops 5
+ 24701 HEADER Cycle 598 tail 598:024731 len  10784 ops 64
+ 24724 HEADER Cycle 598 tail 598:024733 len    224 ops 5
+ 24726 HEADER Cycle 598 tail 598:024756 len    224 ops 5
+ 24728 HEADER Cycle 598 tail 598:024758 len   7608 ops 48
+ 24744 HEADER Cycle 598 tail 598:024760 len    224 ops 5
+ 24746 HEADER Cycle 598 tail 598:024776 len    224 ops 5
+ 24748 HEADER Cycle 598 tail 598:024778 len  10144 ops 64
+ 24769 HEADER Cycle 598 tail 598:024780 len    224 ops 5
+ 24771 HEADER Cycle 598 tail 598:024801 len    224 ops 5
+ 24773 HEADER Cycle 598 tail 598:024803 len   5584 ops 32
+ 24785 HEADER Cycle 598 tail 598:024805 len    224 ops 5
+ 24787 HEADER Cycle 598 tail 598:024817 len    224 ops 5
+ 24789 HEADER Cycle 598 tail 598:024819 len  10656 ops 64
+ 24811 HEADER Cycle 598 tail 598:024821 len    224 ops 5
+ 24813 HEADER Cycle 598 tail 598:024843 len    224 ops 5
+ 24815 HEADER Cycle 598 tail 598:024845 len  17264 ops 96
+ 24850 HEADER Cycle 598 tail 598:024847 len    224 ops 5
+ 24852 HEADER Cycle 598 tail 598:024882 len    224 ops 5
+ 24854 HEADER Cycle 598 tail 598:024884 len   2408 ops 16
+ 24860 HEADER Cycle 598 tail 598:024886 len    224 ops 5
+ 24862 HEADER Cycle 598 tail 598:024892 len    224 ops 5
+ 24864 HEADER Cycle 598 tail 598:024894 len   2920 ops 16
+ 24871 HEADER Cycle 598 tail 598:024896 len    224 ops 5
+ 24873 HEADER Cycle 598 tail 598:024903 len    224 ops 5
+ 24875 HEADER Cycle 598 tail 598:024905 len   2280 ops 16
+ 24881 HEADER Cycle 598 tail 598:024907 len    224 ops 5
+ 24883 HEADER Cycle 598 tail 598:024913 len    224 ops 5
+ 24885 HEADER Cycle 598 tail 598:024915 len   2920 ops 16
+ 24892 HEADER Cycle 598 tail 598:024917 len    224 ops 5
+ 24894 HEADER Cycle 598 tail 598:024924 len    224 ops 5
+ 24896 HEADER Cycle 598 tail 598:024926 len   2536 ops 16
+ 24902 HEADER Cycle 598 tail 598:024928 len    224 ops 5
+ 24904 HEADER Cycle 598 tail 598:024934 len    224 ops 5
+ 24906 HEADER Cycle 598 tail 598:024936 len   2792 ops 16
+ 24913 HEADER Cycle 598 tail 598:024938 len    224 ops 5
+ 24915 HEADER Cycle 598 tail 598:024945 len    224 ops 5
+ 24917 HEADER Cycle 598 tail 598:024947 len   2536 ops 16
+ 24923 HEADER Cycle 598 tail 598:024949 len    224 ops 5
+ 24925 HEADER Cycle 598 tail 598:024955 len    224 ops 5
+ 24927 HEADER Cycle 598 tail 598:024957 len   2408 ops 16
+ 24933 HEADER Cycle 598 tail 598:024959 len    224 ops 5
+ 24935 HEADER Cycle 598 tail 598:024965 len    224 ops 5
+ 24937 HEADER Cycle 598 tail 598:024967 len   3048 ops 16
+ 24944 HEADER Cycle 598 tail 598:024969 len    224 ops 5
+ 24946 HEADER Cycle 598 tail 598:024976 len    224 ops 5
+ 24948 HEADER Cycle 598 tail 598:024978 len   2664 ops 16
+ 24955 HEADER Cycle 598 tail 598:024980 len    224 ops 5
+ 24957 HEADER Cycle 598 tail 598:024987 len    224 ops 5
+ 24959 HEADER Cycle 598 tail 598:024989 len   2280 ops 16
+ 24965 HEADER Cycle 598 tail 598:024991 len    224 ops 5
+ 24967 HEADER Cycle 598 tail 598:024997 len    224 ops 5
+ 24969 HEADER Cycle 598 tail 598:024999 len   2792 ops 16
+ 24976 HEADER Cycle 598 tail 598:025001 len    224 ops 5
+ 24978 HEADER Cycle 598 tail 598:025008 len    224 ops 5
+ 24980 HEADER Cycle 598 tail 598:025010 len   2408 ops 16
+ 24986 HEADER Cycle 598 tail 598:025012 len    224 ops 5
+ 24988 HEADER Cycle 598 tail 598:025018 len    224 ops 5
+ 24990 HEADER Cycle 598 tail 598:025020 len   3176 ops 16
+ 24998 HEADER Cycle 598 tail 598:025022 len    224 ops 5
+ 25000 HEADER Cycle 598 tail 598:025030 len    224 ops 5
+ 25002 HEADER Cycle 598 tail 598:025032 len   2920 ops 16
+ 25009 HEADER Cycle 598 tail 598:025034 len    224 ops 5
+ 25011 HEADER Cycle 598 tail 598:025041 len    224 ops 5
+ 25013 HEADER Cycle 598 tail 598:025043 len   3048 ops 16
+ 25020 HEADER Cycle 598 tail 598:025045 len    224 ops 5
+ 25022 HEADER Cycle 598 tail 598:025052 len    224 ops 5
+ 25024 HEADER Cycle 598 tail 598:025054 len   5840 ops 32
+ 25037 HEADER Cycle 598 tail 598:025056 len    224 ops 5
+ 25039 HEADER Cycle 598 tail 598:025069 len    224 ops 5
+ 25041 HEADER Cycle 598 tail 598:025071 len   8132 ops 19
+ 25058 HEADER Cycle 598 tail 598:025073 len    224 ops 5
+ 25060 HEADER Cycle 598 tail 598:025090 len    224 ops 5
+ 25062 HEADER Cycle 598 tail 598:025092 len    996 ops 14
+ 25065 HEADER Cycle 598 tail 598:025094 len    224 ops 5
+ 25067 HEADER Cycle 598 tail 598:025097 len    224 ops 5
+ 25069 HEADER Cycle 598 tail 598:025099 len    996 ops 14
+ 25072 HEADER Cycle 598 tail 598:025101 len    224 ops 5
+ 25074 HEADER Cycle 598 tail 598:025104 len    224 ops 5
+ 25076 HEADER Cycle 598 tail 598:025106 len    996 ops 14
+ 25079 HEADER Cycle 598 tail 598:025108 len    224 ops 5
+ 25081 HEADER Cycle 598 tail 598:025111 len    224 ops 5
+ 25083 HEADER Cycle 598 tail 598:025113 len    996 ops 14
+ 25086 HEADER Cycle 598 tail 598:025115 len    224 ops 5
+ 25088 HEADER Cycle 598 tail 598:025118 len    224 ops 5
+ 25090 HEADER Cycle 598 tail 598:025120 len    996 ops 14
+ 25093 HEADER Cycle 598 tail 598:025122 len    224 ops 5
+ 25095 HEADER Cycle 598 tail 598:025125 len    224 ops 5
+ 25097 HEADER Cycle 598 tail 598:025127 len    996 ops 14
+ 25100 HEADER Cycle 598 tail 598:025129 len    224 ops 5
+ 25102 HEADER Cycle 598 tail 598:025132 len    224 ops 5
+ 25104 HEADER Cycle 598 tail 598:025134 len    996 ops 14
+ 25107 HEADER Cycle 598 tail 598:025136 len    224 ops 5
+ 25109 HEADER Cycle 598 tail 598:025139 len    224 ops 5
+ 25111 HEADER Cycle 598 tail 598:025141 len    996 ops 14
+ 25114 HEADER Cycle 598 tail 598:025143 len    224 ops 5
+ 25116 HEADER Cycle 598 tail 598:025146 len    224 ops 5
+ 25118 HEADER Cycle 598 tail 598:025148 len    996 ops 14
+ 25121 HEADER Cycle 598 tail 598:025150 len    224 ops 5
+ 25123 HEADER Cycle 598 tail 598:025153 len    224 ops 5
+ 25125 HEADER Cycle 598 tail 598:025155 len    996 ops 14
+ 25128 HEADER Cycle 598 tail 598:025157 len    224 ops 5
+ 25130 HEADER Cycle 598 tail 598:025160 len    224 ops 5
+ 25132 HEADER Cycle 598 tail 598:025162 len    996 ops 14
+ 25135 HEADER Cycle 598 tail 598:025164 len    224 ops 5
+ 25137 HEADER Cycle 598 tail 598:025167 len    224 ops 5
+ 25139 HEADER Cycle 598 tail 598:025169 len    996 ops 14
+ 25142 HEADER Cycle 598 tail 598:025171 len    224 ops 5
+ 25144 HEADER Cycle 598 tail 598:025174 len    224 ops 5
+ 25146 HEADER Cycle 598 tail 598:025176 len    996 ops 14
+ 25149 HEADER Cycle 598 tail 598:025178 len    224 ops 5
+ 25151 HEADER Cycle 598 tail 598:025181 len    224 ops 5
+ 25153 HEADER Cycle 598 tail 598:025183 len    996 ops 14
+ 25156 HEADER Cycle 598 tail 598:025185 len    224 ops 5
+ 25158 HEADER Cycle 598 tail 598:025188 len    224 ops 5
+ 25160 HEADER Cycle 598 tail 598:025190 len    996 ops 14
+ 25163 HEADER Cycle 598 tail 598:025192 len    224 ops 5
+ 25165 HEADER Cycle 598 tail 598:025195 len    224 ops 5
+ 25167 HEADER Cycle 598 tail 598:025197 len    996 ops 14
+ 25170 HEADER Cycle 598 tail 598:025199 len    224 ops 5
+ 25172 HEADER Cycle 598 tail 598:025202 len    224 ops 5
+ 25174 HEADER Cycle 598 tail 598:025204 len    996 ops 14
+ 25177 HEADER Cycle 598 tail 598:025206 len    224 ops 5
+ 25179 HEADER Cycle 598 tail 598:025209 len    224 ops 5
+ 25181 HEADER Cycle 598 tail 598:025211 len    996 ops 14
+ 25184 HEADER Cycle 598 tail 598:025213 len    224 ops 5
+ 25186 HEADER Cycle 598 tail 598:025216 len    224 ops 5
+ 25188 HEADER Cycle 598 tail 598:025218 len    996 ops 14
+ 25191 HEADER Cycle 598 tail 598:025220 len    224 ops 5
+ 25193 HEADER Cycle 598 tail 598:025223 len    224 ops 5
+ 25195 HEADER Cycle 598 tail 598:025225 len    996 ops 14
+ 25198 HEADER Cycle 598 tail 598:025227 len    224 ops 5
+ 25200 HEADER Cycle 598 tail 598:025230 len    224 ops 5
+ 25202 HEADER Cycle 598 tail 598:025232 len    996 ops 14
+ 25205 HEADER Cycle 598 tail 598:025234 len    224 ops 5
+ 25207 HEADER Cycle 598 tail 598:025237 len    224 ops 5
+ 25209 HEADER Cycle 598 tail 598:025239 len    996 ops 14
+ 25212 HEADER Cycle 598 tail 598:025241 len    224 ops 5
+ 25214 HEADER Cycle 598 tail 598:025244 len    224 ops 5
+ 25216 HEADER Cycle 598 tail 598:025246 len    996 ops 14
+ 25219 HEADER Cycle 598 tail 598:025248 len    224 ops 5
+ 25221 HEADER Cycle 598 tail 598:025251 len    224 ops 5
+ 25223 HEADER Cycle 598 tail 598:025253 len    996 ops 14
+ 25226 HEADER Cycle 598 tail 598:025255 len    224 ops 5
+ 25228 HEADER Cycle 598 tail 598:025258 len    224 ops 5
+ 25230 HEADER Cycle 598 tail 598:025260 len    996 ops 14
+ 25233 HEADER Cycle 598 tail 598:025262 len    224 ops 5
+ 25235 HEADER Cycle 598 tail 598:025265 len    224 ops 5
+ 25237 HEADER Cycle 598 tail 598:025267 len    996 ops 14
+ 25240 HEADER Cycle 598 tail 598:025269 len    224 ops 5
+ 25242 HEADER Cycle 598 tail 598:025272 len    224 ops 5
+ 25244 HEADER Cycle 598 tail 598:025274 len    996 ops 14
+ 25247 HEADER Cycle 598 tail 598:025276 len    224 ops 5
+ 25249 HEADER Cycle 598 tail 598:025279 len    224 ops 5
+ 25251 HEADER Cycle 598 tail 598:025281 len    996 ops 14
+ 25254 HEADER Cycle 598 tail 598:025283 len    224 ops 5
+ 25256 HEADER Cycle 598 tail 598:025286 len    224 ops 5
+ 25258 HEADER Cycle 598 tail 598:025288 len    996 ops 14
+ 25261 HEADER Cycle 598 tail 598:025290 len    224 ops 5
+ 25263 HEADER Cycle 598 tail 598:025293 len    224 ops 5
+ 25265 HEADER Cycle 598 tail 598:025295 len    996 ops 14
+ 25268 HEADER Cycle 598 tail 598:025297 len    224 ops 5
+ 25270 HEADER Cycle 598 tail 598:025300 len    224 ops 5
+ 25272 HEADER Cycle 598 tail 598:025302 len    996 ops 14
+ 25275 HEADER Cycle 598 tail 598:025304 len    224 ops 5
+ 25277 HEADER Cycle 598 tail 598:025307 len    224 ops 5
+ 25279 HEADER Cycle 598 tail 598:025309 len    996 ops 14
+ 25282 HEADER Cycle 598 tail 598:025311 len    224 ops 5
+ 25284 HEADER Cycle 598 tail 598:025314 len    224 ops 5
+ 25286 HEADER Cycle 598 tail 598:025316 len    996 ops 14
+ 25289 HEADER Cycle 598 tail 598:025318 len    224 ops 5
+ 25291 HEADER Cycle 598 tail 598:025321 len    224 ops 5
+ 25293 HEADER Cycle 598 tail 598:025323 len    996 ops 14
+ 25296 HEADER Cycle 598 tail 598:025325 len    224 ops 5
+ 25298 HEADER Cycle 598 tail 598:025328 len    224 ops 5
+ 25300 HEADER Cycle 598 tail 598:025330 len    996 ops 14
+ 25303 HEADER Cycle 598 tail 598:025332 len    224 ops 5
+ 25305 HEADER Cycle 598 tail 598:025335 len    224 ops 5
+ 25307 HEADER Cycle 598 tail 598:025337 len    996 ops 14
+ 25310 HEADER Cycle 598 tail 598:025339 len    224 ops 5
+ 25312 HEADER Cycle 598 tail 598:025342 len    224 ops 5
+ 25314 HEADER Cycle 598 tail 598:025344 len    996 ops 14
+ 25317 HEADER Cycle 598 tail 598:025346 len    224 ops 5
+ 25319 HEADER Cycle 598 tail 598:025349 len    224 ops 5
+ 25321 HEADER Cycle 598 tail 598:025351 len    996 ops 14
+ 25324 HEADER Cycle 598 tail 598:025353 len    224 ops 5
+ 25326 HEADER Cycle 598 tail 598:025356 len    224 ops 5
+ 25328 HEADER Cycle 598 tail 598:025358 len    996 ops 14
+ 25331 HEADER Cycle 598 tail 598:025360 len    224 ops 5
+ 25333 HEADER Cycle 598 tail 598:025363 len    224 ops 5
+ 25335 HEADER Cycle 598 tail 598:025365 len    996 ops 14
+ 25338 HEADER Cycle 598 tail 598:025367 len    224 ops 5
+ 25340 HEADER Cycle 598 tail 598:025370 len    224 ops 5
+ 25342 HEADER Cycle 598 tail 598:025372 len    996 ops 14
+ 25345 HEADER Cycle 598 tail 598:025374 len    224 ops 5
+ 25347 HEADER Cycle 598 tail 598:025377 len    224 ops 5
+ 25349 HEADER Cycle 598 tail 598:025379 len    996 ops 14
+ 25352 HEADER Cycle 598 tail 598:025381 len    224 ops 5
+ 25354 HEADER Cycle 598 tail 598:025384 len    224 ops 5
+ 25356 HEADER Cycle 598 tail 598:025386 len    996 ops 14
+ 25359 HEADER Cycle 598 tail 598:025388 len    224 ops 5
+ 25361 HEADER Cycle 598 tail 598:025391 len    224 ops 5
+ 25363 HEADER Cycle 598 tail 598:025393 len    996 ops 14
+ 25366 HEADER Cycle 598 tail 598:025395 len    224 ops 5
+ 25368 HEADER Cycle 598 tail 598:025398 len    224 ops 5
+ 25370 HEADER Cycle 598 tail 598:025400 len    996 ops 14
+ 25373 HEADER Cycle 598 tail 598:025402 len    224 ops 5
+ 25375 HEADER Cycle 598 tail 598:025405 len    224 ops 5
+ 25377 HEADER Cycle 598 tail 598:025407 len    996 ops 14
+ 25380 HEADER Cycle 598 tail 598:025409 len    224 ops 5
+ 25382 HEADER Cycle 598 tail 598:025412 len    224 ops 5
+ 25384 HEADER Cycle 598 tail 598:025414 len    996 ops 14
+ 25387 HEADER Cycle 598 tail 598:025416 len    224 ops 5
+ 25389 HEADER Cycle 598 tail 598:025419 len    224 ops 5
+ 25391 HEADER Cycle 598 tail 598:025421 len    996 ops 14
+ 25394 HEADER Cycle 598 tail 598:025423 len    224 ops 5
+ 25396 HEADER Cycle 598 tail 598:025426 len    224 ops 5
+ 25398 HEADER Cycle 598 tail 598:025428 len    996 ops 14
+ 25401 HEADER Cycle 598 tail 598:025430 len    224 ops 5
+ 25403 HEADER Cycle 598 tail 598:025433 len    224 ops 5
+[00000 - 25405] Cycle 0x00000256 New Cycle 0x00000255
+ 25420 HEADER Cycle 597 tail 597:025329 len  32256 ops 133
+ 25484 HEADER Cycle 597 tail 597:025329 len  32256 ops 112
+ 25548 HEADER Cycle 597 tail 597:025329 len  32256 ops 101
+ 25612 HEADER Cycle 597 tail 597:025329 len  32256 ops 97
+ 25676 HEADER Cycle 597 tail 597:025329 len  32256 ops 78
+ 25740 HEADER Cycle 597 tail 597:025329 len  32256 ops 122
+ 25804 HEADER Cycle 597 tail 597:025329 len  32256 ops 123
+ 25868 HEADER Cycle 597 tail 597:025388 len  32256 ops 64
+ 25932 HEADER Cycle 597 tail 597:025388 len  32256 ops 74
+ 25996 HEADER Cycle 597 tail 597:025388 len  32256 ops 157
+ 26060 HEADER Cycle 597 tail 597:025388 len  32252 ops 138
+ 26124 HEADER Cycle 597 tail 597:025388 len  32256 ops 103
+ 26188 HEADER Cycle 597 tail 597:025388 len  32236 ops 195
+ 26252 HEADER Cycle 597 tail 597:025388 len  32256 ops 122
+ 26316 HEADER Cycle 597 tail 597:025388 len  32256 ops 83
+ 26380 HEADER Cycle 597 tail 597:025388 len  32256 ops 121
+ 26444 HEADER Cycle 597 tail 597:025388 len  17784 ops 52
+ 26480 HEADER Cycle 597 tail 597:025388 len  32256 ops 186
+ 26544 HEADER Cycle 597 tail 597:025388 len  32256 ops 143
+ 26608 HEADER Cycle 597 tail 597:025388 len  32256 ops 107
+ 26672 HEADER Cycle 597 tail 597:025388 len  32256 ops 101
+ 26736 HEADER Cycle 597 tail 597:025388 len  32256 ops 110
+ 26800 HEADER Cycle 597 tail 597:025388 len  32256 ops 107
+ 26864 HEADER Cycle 597 tail 597:025388 len  32256 ops 110
+ 26928 HEADER Cycle 597 tail 597:025388 len  32256 ops 115
+ 26992 HEADER Cycle 597 tail 597:025388 len  32256 ops 138
+ 27056 HEADER Cycle 597 tail 597:025388 len  32256 ops 92
+ 27120 HEADER Cycle 597 tail 597:025388 len    300 ops 4
+ 27122 HEADER Cycle 597 tail 597:027088 len  32256 ops 160
+ 27186 HEADER Cycle 597 tail 597:027088 len  32256 ops 166
+ 27250 HEADER Cycle 597 tail 597:027088 len  32256 ops 158
+ 27314 HEADER Cycle 597 tail 597:027088 len  32256 ops 98
+ 27378 HEADER Cycle 597 tail 597:027154 len  32256 ops 123
+ 27442 HEADER Cycle 597 tail 597:027154 len  32256 ops 171
+ 27506 HEADER Cycle 597 tail 597:027154 len  32256 ops 106
+ 27570 HEADER Cycle 597 tail 597:027154 len  32256 ops 105
+ 27634 HEADER Cycle 597 tail 597:027154 len  11628 ops 27
+ 27658 HEADER Cycle 597 tail 597:027666 len  32256 ops 112
+ 27722 HEADER Cycle 597 tail 597:027666 len  32256 ops 145
+ 27786 HEADER Cycle 597 tail 597:027666 len  32256 ops 93
+ 27850 HEADER Cycle 597 tail 597:027666 len  32256 ops 81
+ 27914 HEADER Cycle 597 tail 597:027666 len  32256 ops 88
+ 27978 HEADER Cycle 597 tail 597:027666 len  32256 ops 96
+ 28042 HEADER Cycle 597 tail 597:027666 len  32256 ops 128
+ 28106 HEADER Cycle 597 tail 597:027666 len  32256 ops 106
+ 28170 HEADER Cycle 597 tail 597:027690 len  32256 ops 81
+ 28234 HEADER Cycle 597 tail 597:027690 len  32256 ops 95
+ 28298 HEADER Cycle 597 tail 597:027690 len  32248 ops 108
+ 28362 HEADER Cycle 597 tail 597:027690 len  32256 ops 158
+ 28426 HEADER Cycle 597 tail 597:027690 len  32256 ops 128
+ 28490 HEADER Cycle 597 tail 597:027690 len  32244 ops 151
+ 28554 HEADER Cycle 597 tail 597:027690 len  32256 ops 142
+ 28618 HEADER Cycle 597 tail 597:027690 len  32256 ops 131
+ 28682 HEADER Cycle 597 tail 597:027690 len  32256 ops 87
+ 28746 HEADER Cycle 597 tail 597:027690 len  32256 ops 77
+ 28810 HEADER Cycle 597 tail 597:027690 len  32256 ops 83
+ 28874 HEADER Cycle 597 tail 597:027690 len  32256 ops 96
+ 28938 HEADER Cycle 597 tail 597:027690 len  32256 ops 61
+ 29002 HEADER Cycle 597 tail 597:027690 len  32256 ops 81
+ 29066 HEADER Cycle 597 tail 597:027690 len  32256 ops 82
+ 29130 HEADER Cycle 597 tail 597:027690 len  32256 ops 67
+ 29194 HEADER Cycle 597 tail 597:027690 len  30676 ops 99
+ 29255 HEADER Cycle 597 tail 597:029226 len  32256 ops 118
+ 29319 HEADER Cycle 597 tail 597:029226 len  32256 ops 127
+ 29383 HEADER Cycle 597 tail 597:029226 len  32256 ops 151
+ 29447 HEADER Cycle 597 tail 597:029287 len  32244 ops 115
+ 29511 HEADER Cycle 597 tail 597:029287 len  32256 ops 86
+ 29575 HEADER Cycle 597 tail 597:029287 len  32256 ops 98
+ 29639 HEADER Cycle 597 tail 597:029287 len  32256 ops 110
+ 29703 HEADER Cycle 597 tail 597:029287 len  32256 ops 159
+ 29767 HEADER Cycle 597 tail 597:029287 len  32256 ops 138
+ 29831 HEADER Cycle 597 tail 597:029287 len  32256 ops 149
+ 29895 HEADER Cycle 597 tail 597:029287 len  32256 ops 99
+ 29959 HEADER Cycle 597 tail 597:029287 len  32256 ops 98
+ 30023 HEADER Cycle 597 tail 597:029287 len  32256 ops 85
+ 30087 HEADER Cycle 597 tail 597:029287 len  32256 ops 73
+ 30151 HEADER Cycle 597 tail 597:029287 len  32256 ops 83
+ 30215 HEADER Cycle 597 tail 597:029287 len  32256 ops 129
+ 30279 HEADER Cycle 597 tail 597:029287 len  32256 ops 98
+ 30343 HEADER Cycle 597 tail 597:029287 len  32256 ops 209
+ 30407 HEADER Cycle 597 tail 597:029287 len  17304 ops 100
+ 30442 HEADER Cycle 597 tail 597:029287 len  32256 ops 129
+ 30506 HEADER Cycle 597 tail 597:029287 len  32256 ops 139
+ 30570 HEADER Cycle 597 tail 597:029287 len  14436 ops 53
+ 30600 HEADER Cycle 597 tail 597:030474 len  32256 ops 110
+ 30664 HEADER Cycle 597 tail 597:030474 len  32256 ops 113
+ 30728 HEADER Cycle 597 tail 597:030474 len  32256 ops 135
+ 30792 HEADER Cycle 597 tail 597:030474 len  32256 ops 129
+ 30856 HEADER Cycle 597 tail 597:030474 len  32256 ops 123
+ 30920 HEADER Cycle 597 tail 597:030474 len  32256 ops 83
+ 30984 HEADER Cycle 597 tail 597:030474 len  32256 ops 105
+ 31048 HEADER Cycle 597 tail 597:030474 len  32256 ops 90
+ 31112 HEADER Cycle 597 tail 597:030474 len  32256 ops 87
+ 31176 HEADER Cycle 597 tail 597:030696 len  22356 ops 48
+ 31221 HEADER Cycle 597 tail 597:031208 len  32256 ops 99
+ 31285 HEADER Cycle 597 tail 597:031208 len  32256 ops 97
+ 31349 HEADER Cycle 597 tail 597:031208 len  32256 ops 105
+ 31413 HEADER Cycle 597 tail 597:031208 len  32256 ops 116
+ 31477 HEADER Cycle 597 tail 597:031208 len  32256 ops 118
+ 31541 HEADER Cycle 597 tail 597:031208 len  32256 ops 111
+ 31605 HEADER Cycle 597 tail 597:031253 len  32256 ops 144
+ 31669 HEADER Cycle 597 tail 597:031253 len  32256 ops 115
+ 31733 HEADER Cycle 597 tail 597:031253 len  32256 ops 121
+ 31797 HEADER Cycle 597 tail 597:031253 len  32256 ops 105
+ 31861 HEADER Cycle 597 tail 597:031253 len  32256 ops 85
+ 31925 HEADER Cycle 597 tail 597:031253 len  32256 ops 106
+ 31989 HEADER Cycle 597 tail 597:031253 len  32256 ops 151
+ 32053 HEADER Cycle 597 tail 597:031253 len  32256 ops 106
+ 32117 HEADER Cycle 597 tail 597:031253 len  32256 ops 124
+ 32181 HEADER Cycle 597 tail 597:031253 len  32256 ops 91
+ 32245 HEADER Cycle 597 tail 597:031253 len  32256 ops 120
+ 32309 HEADER Cycle 597 tail 597:031253 len  32256 ops 179
+ 32373 HEADER Cycle 597 tail 597:031253 len  32256 ops 103
+ 32437 HEADER Cycle 597 tail 597:031253 len  32256 ops 63
+ 32501 HEADER Cycle 597 tail 597:031253 len  32256 ops 63
+ 32565 HEADER Cycle 597 tail 597:031253 len  32256 ops 77
+ 32629 HEADER Cycle 597 tail 597:031253 len  32256 ops 73
+ 32693 HEADER Cycle 597 tail 597:031253 len  32256 ops 100
+ 32757 HEADER Cycle 597 tail 597:031253 len  32256 ops 70
+ 32821 HEADER Cycle 597 tail 597:031253 len  32256 ops 81
+ 32885 HEADER Cycle 597 tail 597:031253 len  32256 ops 87
+ 32949 HEADER Cycle 597 tail 597:031253 len  32256 ops 104
+ 33013 HEADER Cycle 597 tail 597:031253 len   1384 ops 4
+ 33017 HEADER Cycle 597 tail 597:032981 len  32256 ops 89
+ 33081 HEADER Cycle 597 tail 597:032981 len  32256 ops 120
+ 33145 HEADER Cycle 597 tail 597:032981 len  32256 ops 103
+ 33209 HEADER Cycle 597 tail 597:032981 len  32256 ops 125
+ 33273 HEADER Cycle 597 tail 597:033049 len  32256 ops 131
+ 33337 HEADER Cycle 597 tail 597:033049 len  32256 ops 136
+ 33401 HEADER Cycle 597 tail 597:033049 len  32256 ops 138
+ 33465 HEADER Cycle 597 tail 597:033049 len  32256 ops 150
+ 33529 HEADER Cycle 597 tail 597:033049 len  32256 ops 98
+ 33593 HEADER Cycle 597 tail 597:033049 len  23320 ops 94
+ 33640 HEADER Cycle 597 tail 597:033625 len  32256 ops 100
+ 33704 HEADER Cycle 597 tail 597:033625 len  32256 ops 98
+ 33768 HEADER Cycle 597 tail 597:033625 len  32256 ops 131
+ 33832 HEADER Cycle 597 tail 597:033625 len  32256 ops 137
+ 33896 HEADER Cycle 597 tail 597:033625 len  32256 ops 145
+ 33960 HEADER Cycle 597 tail 597:033625 len  32256 ops 114
+ 34024 HEADER Cycle 597 tail 597:033625 len  32256 ops 132
+ 34088 HEADER Cycle 597 tail 597:033625 len  32256 ops 119
+ 34152 HEADER Cycle 597 tail 597:033672 len  21060 ops 119
+ 34195 HEADER Cycle 597 tail 597:034184 len  32256 ops 125
+ 34259 HEADER Cycle 597 tail 597:034184 len  32256 ops 127
+ 34323 HEADER Cycle 597 tail 597:034184 len  32256 ops 68
+ 34387 HEADER Cycle 597 tail 597:034184 len  32256 ops 79
+ 34451 HEADER Cycle 597 tail 597:034184 len  32256 ops 101
+ 34515 HEADER Cycle 597 tail 597:034184 len  32256 ops 100
+ 34579 HEADER Cycle 597 tail 597:034184 len  32256 ops 115
+ 34643 HEADER Cycle 597 tail 597:034184 len  32256 ops 148
+ 34707 HEADER Cycle 597 tail 597:034227 len  32256 ops 147
+ 34771 HEADER Cycle 597 tail 597:034227 len  32256 ops 139
+ 34835 HEADER Cycle 597 tail 597:034227 len  32256 ops 125
+ 34899 HEADER Cycle 597 tail 597:034227 len  32256 ops 138
+ 34963 HEADER Cycle 597 tail 597:034227 len  32256 ops 82
+ 35027 HEADER Cycle 597 tail 597:034227 len  32256 ops 68
+ 35091 HEADER Cycle 597 tail 597:034227 len  32256 ops 73
+ 35155 HEADER Cycle 597 tail 597:034227 len  32256 ops 96
+ 35219 HEADER Cycle 597 tail 597:034227 len   1848 ops 4
+ 35224 HEADER Cycle 597 tail 597:035251 len  32256 ops 114
+ 35288 HEADER Cycle 597 tail 597:035251 len  32256 ops 122
+ 35352 HEADER Cycle 597 tail 597:035251 len  32256 ops 86
+ 35416 HEADER Cycle 597 tail 597:035251 len  32256 ops 85
+ 35480 HEADER Cycle 597 tail 597:035251 len  32256 ops 71
+ 35544 HEADER Cycle 597 tail 597:035251 len  32256 ops 84
+ 35608 HEADER Cycle 597 tail 597:035251 len  32256 ops 152
+ 35672 HEADER Cycle 597 tail 597:035256 len  24944 ops 91
+ 35722 HEADER Cycle 597 tail 597:035704 len  32256 ops 195
+ 35786 HEADER Cycle 597 tail 597:035704 len  32256 ops 91
+ 35850 HEADER Cycle 597 tail 597:035704 len  32256 ops 79
+ 35914 HEADER Cycle 597 tail 597:035704 len  32256 ops 112
+ 35978 HEADER Cycle 597 tail 597:035704 len  32256 ops 133
+ 36042 HEADER Cycle 597 tail 597:035754 len  32256 ops 83
+ 36106 HEADER Cycle 597 tail 597:035754 len  32256 ops 68
+ 36170 HEADER Cycle 597 tail 597:035754 len  32256 ops 85
+ 36234 HEADER Cycle 597 tail 597:035754 len  32256 ops 120
+ 36298 HEADER Cycle 597 tail 597:035754 len  32256 ops 81
+ 36362 HEADER Cycle 597 tail 597:035754 len  32244 ops 106
+ 36426 HEADER Cycle 597 tail 597:035754 len  32256 ops 89
+ 36490 HEADER Cycle 597 tail 597:035754 len  32256 ops 77
+ 36554 HEADER Cycle 597 tail 597:035754 len  32256 ops 95
+ 36618 HEADER Cycle 597 tail 597:035754 len  32256 ops 107
+ 36682 HEADER Cycle 597 tail 597:035754 len  32256 ops 107
+ 36746 HEADER Cycle 597 tail 597:035754 len  32248 ops 100
+ 36810 HEADER Cycle 597 tail 597:035754 len  17772 ops 66
+ 36846 HEADER Cycle 597 tail 597:036842 len    224 ops 5
+ 36848 HEADER Cycle 597 tail 597:036878 len    224 ops 5
+ 36850 HEADER Cycle 597 tail 597:036880 len  32256 ops 73
+ 36914 HEADER Cycle 597 tail 597:036880 len  32256 ops 134
+ 36978 HEADER Cycle 597 tail 597:036880 len  32256 ops 131
+ 37042 HEADER Cycle 597 tail 597:036880 len  32256 ops 91
+ 37106 HEADER Cycle 597 tail 597:036880 len  32256 ops 139
+ 37170 HEADER Cycle 597 tail 597:036880 len  32256 ops 124
+ 37234 HEADER Cycle 597 tail 597:036880 len  32256 ops 174
+ 37298 HEADER Cycle 597 tail 597:036880 len  32256 ops 92
+ 37362 HEADER Cycle 597 tail 597:036882 len  32256 ops 117
+ 37426 HEADER Cycle 597 tail 597:036946 len  32256 ops 104
+ 37490 HEADER Cycle 597 tail 597:036946 len  32244 ops 84
+ 37554 HEADER Cycle 597 tail 597:036946 len  32256 ops 71
+ 37618 HEADER Cycle 597 tail 597:036946 len  32256 ops 173
+ 37682 HEADER Cycle 597 tail 597:036946 len  32244 ops 87
+ 37746 HEADER Cycle 597 tail 597:036946 len  32256 ops 83
+ 37810 HEADER Cycle 597 tail 597:036946 len  32256 ops 93
+ 37874 HEADER Cycle 597 tail 597:036946 len  32256 ops 134
+ 37938 HEADER Cycle 597 tail 597:036946 len  32252 ops 110
+ 38002 HEADER Cycle 597 tail 597:036946 len  32248 ops 155
+ 38066 HEADER Cycle 597 tail 597:036946 len  32252 ops 123
+ 38130 HEADER Cycle 597 tail 597:036946 len  32256 ops 78
+ 38194 HEADER Cycle 597 tail 597:036946 len  32256 ops 60
+ 38258 HEADER Cycle 597 tail 597:036946 len  32256 ops 78
+ 38322 HEADER Cycle 597 tail 597:036946 len  32256 ops 75
+ 38386 HEADER Cycle 597 tail 597:036946 len  32256 ops 60
+ 38450 HEADER Cycle 597 tail 597:036946 len  32256 ops 122
+ 38514 HEADER Cycle 597 tail 597:036946 len  32256 ops 123
+ 38578 HEADER Cycle 597 tail 597:036946 len  32256 ops 112
+ 38642 HEADER Cycle 597 tail 597:036946 len  32256 ops 133
+ 38706 HEADER Cycle 597 tail 597:036946 len  32256 ops 156
+ 38770 HEADER Cycle 597 tail 597:036946 len  32256 ops 101
+ 38834 HEADER Cycle 597 tail 597:036946 len  32256 ops 145
+[25405 - 38888] Cycle 0x00000255 New Cycle 0x00000000
+root@quartz:~ #
+-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-- 
+Jon Detert
+IT Systems Administrator, Milwaukee School of Engineering
+1025 N. Broadway, Milwaukee, Wisconsin 53202, U.S.A.
+--
+“We still do not know one thousandth of one percent of what nature
+ has revealed to us.”
+~ Albert Einstein
