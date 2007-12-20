@@ -1,103 +1,105 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 20:58:09 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBK4vuhW029367
-	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 20:58:03 -0800
-Message-ID: <4769F71C.3090802@sgi.com>
-Date: Thu, 20 Dec 2007 16:01:16 +1100
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Dec 2007 21:04:42 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBK54cfU029931
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 21:04:39 -0800
+Received: from email.msoe.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CF7EB4A3182
+	for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 21:04:48 -0800 (PST)
+Received: from email.msoe.edu (email.msoe.edu [155.92.194.61]) by cuda.sgi.com with ESMTP id FnMKjXEew4HLglGF for <xfs@oss.sgi.com>; Wed, 19 Dec 2007 21:04:48 -0800 (PST)
+Date: Wed, 19 Dec 2007 23:04:45 -0600
+From: "Jonathan C. Detert" <Jonathan.Detert@msoe.edu>
+Subject: Re: mount prob: "log inconsistent or not a log"
+Message-ID: <20071220050445.GA3212@msoe.edu>
+References: <20071220000144.GQ19770@msoe.edu> <4769BD13.5040303@sgi.com> <20071220011601.GU19770@msoe.edu> <4769F343.9040405@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [review please] Re: Important regression with XFS update for
- 2.6.24-rc6
-References: <20071218112804.GA3069@localhost.localdomain> <20071218122445.GJ4396912@sgi.com> <877ijckrco.fsf@free.fr> <20071218151946.GQ4396912@sgi.com> <20071219104544.GC4612@sgi.com> <20071220015641.GM4612@sgi.com>
-In-Reply-To: <20071220015641.GM4612@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4769F343.9040405@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Looks good.
+* Timothy Shimmin <tes@sgi.com> [071219 22:43]:
+> Jonathan C. Detert wrote:
+> >* Timothy Shimmin <tes@sgi.com> [071219 18:53]:
+> >>Hi Jonathan,
 
---Tim
+-- snip --
 
-David Chinner wrote:
-> This has run through several iterations of xfsqa now, and it
-> fixes the reported problem, so can I get a review?
+> >-- snip --
+> >
+> >>An "xfs_logprint -d /dev/sdb" will show what the cycle#s are
+> >>and where the log records are. It might give an idea of the
+> >>extent of the corruption.
+> >
+> >Ok.  It doesn't enlighten me, but hopefully you or others can take time
+> >to see it, and maybe it will enlighten you.  Here it is:
+> >-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> >root@quartz:~ # xfs_logprint -d /dev/sdb > xfs_logprint.out
+> >xfs_logprint:
+> >    data device: 0x810
+> >    log device: 0x810 daddr: 39859232 length: 38920
+> >
+> >[00000 - 00000] Cycle 0xffffffff New Cycle 0x00000256
+> >    12 HEADER Cycle 598 tail 598:000010 len    224 ops 5
+
+-- snip --
+
+> > 38770 HEADER Cycle 597 tail 597:036946 len  32256 ops 101
+> > 38834 HEADER Cycle 597 tail 597:036946 len  32256 ops 145
+> >[25405 - 38888] Cycle 0x00000255 New Cycle 0x00000000
+> >root@quartz:~ #
+> >-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 > 
-> Cheers,
+> Well, that confirms why it won't replay.
+> There shouldn't be a cycle# change from 597 to zero.
+> This actually shows the cycle#s at the log record headers
+> (not all the sector cycle#s).
 > 
-> Dave.
+> At the end we are writing out full iclog buffers of 32k each.
+> Hence the length of 32256 and 64 BBs (32k) between the headers.
 > 
-> On Wed, Dec 19, 2007 at 09:45:44PM +1100, David Chinner wrote:
->> On Wed, Dec 19, 2007 at 02:19:47AM +1100, David Chinner wrote:
->>> On Tue, Dec 18, 2007 at 03:30:31PM +0100, Damien Wyart wrote:
->>>> * David Chinner <dgc@sgi.com> [071218 13:24]:
->>>>> Ok. I haven't noticed anything wrong with directories up to about
->>>>> 250,000 files in the last few days. The ls -l I just did on
->>>>> a directory with 15000 entries (btree format) used about 5MB of RAM.
->>>>> extent format directories appear to work fine as well (tested 500
->>>>> entries).
->>>> Ok, nice to know the problem is not so frequent.
->>> .....
->>>
->>>> I have put the files at http://damien.wyart.free.fr/xfs/
->>>>
->>>> strace_xfs_problem.1.gz and strace_xfs_problem.2.gz have been created
->>>> with the problematic kernel, and are quite bigger than
->>>> strace_xfs_problem.normal.gz, which has been created with the vanilla
->>>> rc5-git5. There is also xfs_info.
->>> Looks like several getdents() through the directory the getdents()
->>> call starts outputting the first files again. It gets to a certain
->>> point and always goes back to the beginning. However, it appears to
->>> get to the end eventually (without ever getting past the bad offset).
->> UML and a bunch of printk's to the rescue.
->>
->> So we went back to double buffering, which then screwed up the d_off
->> of the dirents. I changed the temporary dirents to point to the current
->> offset so that filldir got what it expected when filling the user buffer.
->>
->> Except it appears that it I didn't to initialise the current
->> offset for the first dirent read from the temporary buffer so filldir
->> occasionally got an uninitialised offset. Can someone pass me a
->> brown paper bag, please?
->>
->> In my local testing, more often than not, that uninitialised offset
->> reads as zero which is where the looping comes from. Sometimes it
->> points off into wacko-land, which is probably how we eventually get
->> the looping terminating before you run out of memory.
->>
->> That also explains why we haven't seen it - it requires the user buffer
->> to fill on the first entry of a backing buffer and so it is largely
->> dependent on the pattern of name lengths, page size and filesystem
->> block size aligning just right to trigger the problem.
->>
->> Can you test this patch, Damien?
->>
->> Cheers,
->>
->> Dave.
->> -- 
->> Dave Chinner
->> Principal Engineer
->> SGI Australian Software Group
->>
->> ---
->>  fs/xfs/linux-2.6/xfs_file.c |    1 +
->>  1 file changed, 1 insertion(+)
->>
->> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c
->> ===================================================================
->> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_file.c	2007-12-19 00:26:40.000000000 +1100
->> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c	2007-12-19 21:26:38.701143555 +1100
->> @@ -348,6 +348,7 @@ xfs_file_readdir(
->>  
->>  		size = buf.used;
->>  		de = (struct hack_dirent *)buf.dirent;
->> +		curr_offset = de->offset /* & 0x7fffffff */;
->>  		while (size > 0) {
->>  			if (filldir(dirent, de->name, de->namlen,
->>  					curr_offset & 0x7fffffff,
+> Now at the end, we would expect...
+> 38834 .. 38834+64=38898 of cycle#s of 597 for that log record.
+> But at 38889 it goes to zero cycle#.
+> So that log record is corrupted at around 54 BBs (27K into the 32K).
 > 
+> And then for the last (38920-38888 = 32) BBs (16K) of the
+> log we don't find a log record header.
+> 
+> I would expect the log head to be at the cycle# change from 598->597.
+> 
+> >  25398 HEADER Cycle 598 tail 598:025428 len    996 ops 14
+> >  25401 HEADER Cycle 598 tail 598:025430 len    224 ops 5
+> >  25403 HEADER Cycle 598 tail 598:025433 len    224 ops 5 <--- head
+> > [00000 - 25405] Cycle 0x00000256 New Cycle 0x00000255
+> >  25420 HEADER Cycle 597 tail 597:025329 len  32256 ops 133
+> >  25484 HEADER Cycle 597 tail 597:025329 len  32256 ops 112
+> >  25548 HEADER Cycle 597 tail 597:025329 len  32256 ops 101
+> 
+> ie. the last LR written at 598:25403.
+> I was surprised to see the tail at the time at 598:25433,
+> as that makes the tail into the future.
+> That looks weird to me. Or perhaps I'm missing something.
+
+I appreciate your analysis.  I'm barely able to track with you, though,
+so I can't say as to whether you're missing anything.
+
+> If there's corruption that was not between the tail to the head,
+> then it could be a goer I guess but one would wonder about corruption
+
+what do you mean by 'goer' - hardware failure?
+
+> beyond the end of the log too. But the tail looks weird.
+> 
+> OOI, can you save the log, compress it and send it to me.
+
+yes; will send it off-list, as it's still 2 MB after compression.
+-- 
+Jon Detert
+IT Systems Administrator, Milwaukee School of Engineering
+1025 N. Broadway, Milwaukee, Wisconsin 53202, U.S.A.
+--
+Never do anything against conscience, even if the state demands it.
