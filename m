@@ -1,114 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Dec 2007 22:37:04 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBL6aucJ012515
-	for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 22:36:58 -0800
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BE404B917C4
-	for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 22:37:09 -0800 (PST)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id ja1wGnxrZOxlf5po for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 22:37:09 -0800 (PST)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id lBL6b3F3023790
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 21 Dec 2007 07:37:03 +0100
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id lBL6b3RS023788
-	for xfs@oss.sgi.com; Fri, 21 Dec 2007 07:37:03 +0100
-Date: Fri, 21 Dec 2007 07:37:03 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] dmapi: kill last 2.4 compat leftovers
-Message-ID: <20071221063703.GA23706@lst.de>
-References: <20071130093909.GB2949@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071130093909.GB2949@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Dec 2007 22:37:17 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBL6bBYj012560
+	for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 22:37:12 -0800
+Message-ID: <476B5FE4.9030405@sgi.com>
+Date: Fri, 21 Dec 2007 17:40:36 +1100
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: mount prob: "log inconsistent or not a log"
+References: <20071220000144.GQ19770@msoe.edu> <4769BD13.5040303@sgi.com> <20071220011848.GV19770@msoe.edu> <20071220015425.GL4612@sgi.com> <20071220024453.GX19770@msoe.edu> <20071220175512.GA6023@msoe.edu> <476B0D29.4050504@sgi.com> <20071221015533.GH6476@msoe.edu>
+In-Reply-To: <20071221015533.GH6476@msoe.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "Jonathan C. Detert" <Jonathan.Detert@msoe.edu>
+Cc: xfs@oss.sgi.com
 
-Any reason this didn't get in yet?
-
-On Fri, Nov 30, 2007 at 10:39:09AM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Jonathan C. Detert wrote:
+> * Timothy Shimmin <tes@sgi.com> [071220 18:49]:
+>> Jonathan C. Detert wrote:
+>>> I just want to clarify - I mean to ask:
+>>>
+>>> 	Is it possible that an xfs filesystem which is in use by an o.s.,
+>>> 	last mounted by the o.s. months ago, could have a corrupted log, and
+>>> 	yet keep functioning until such time as a remount of it is attempted?
+>>>
+>> Yes.
+>> The log is read on every mount. I don't believe we read it otherwise.
+>> On a mount we look for the log head and an unmount record etc. to decide
+>> whether to do a replay or not.
+>> So it could be corrupted and we would not know and we don't really care
+>> until the next mount.
+>> However, if we are modifying metadata in the filesystem (with some 
+>> exceptions)
+>> then we will be continuing to write to the log and we will continue to
+>> wrap the log. And hence if someone corrupted the log at a point in the past,
+>> we may very well be able to overwrite the log and effectively lose that
+>> corruption.
+>>
+>> Do you understand the basic idea?
 > 
-> Index: linux-2.6-xfs/fs/dmapi/dmapi_register.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/dmapi/dmapi_register.c	2007-09-29 11:49:22.000000000 +0200
-> +++ linux-2.6-xfs/fs/dmapi/dmapi_register.c	2007-09-29 11:49:39.000000000 +0200
-> @@ -34,10 +34,8 @@
->  #include <linux/mm.h>
->  #include <linux/proc_fs.h>
->  #include <linux/module.h>
-> -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
->  #include <linux/mount.h>
->  #include <linux/namei.h>
-> -#endif
->  #include <asm/uaccess.h>
->  #include <linux/fs.h>
->  #include <linux/file.h>
-> @@ -1520,33 +1518,6 @@ dm_getall_disp(
->  	return(error);
->  }
->  
-> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-> -#define d_alloc_anon	dmapi_alloc_anon
-> -static struct dentry *
-> -d_alloc_anon(struct inode *inode)
-> -{
-> -	struct dentry *dentry;
-> -
-> -	spin_lock(&dcache_lock);
-> -	list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-> -		if (!(dentry->d_flags & DCACHE_NFSD_DISCONNECTED))
-> -			goto found;
-> -	}
-> -	spin_unlock(&dcache_lock);
-> -
-> -	dentry = d_alloc_root(inode);
-> -	if (likely(dentry != NULL))
-> -		dentry->d_flags |= DCACHE_NFSD_DISCONNECTED;
-> -	return dentry;
-> - found:
-> -	dget_locked(dentry);
-> -	dentry->d_vfs_flags |= DCACHE_REFERENCED;
-> -	spin_unlock(&dcache_lock);
-> -	iput(inode);
-> -	return dentry;
-> -}
-> -#endif
-> -
->  int
->  dm_open_by_handle_rvp(
->  	unsigned int	fd,
-> Index: linux-2.6-xfs/fs/dmapi/dmapi_sysent.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/dmapi/dmapi_sysent.c	2007-09-29 11:49:42.000000000 +0200
-> +++ linux-2.6-xfs/fs/dmapi/dmapi_sysent.c	2007-09-29 11:49:57.000000000 +0200
-> @@ -706,14 +706,6 @@ dmapi_init_procfs(int dmapi_minor)
->  	entry = create_proc_read_entry( DMAPI_DBG_PROCFS "/summary",
->  			0, NULL, dmapi_summary, NULL);
->  	entry->owner = THIS_MODULE;
-> -
-> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-> -	entry = proc_mknod( DMAPI_PROCFS, S_IFCHR | S_IRUSR | S_IWUSR,
-> -			   NULL, mk_kdev(MISC_MAJOR,dmapi_minor));
-> -	if( entry == NULL )
-> -		return;
-> -	entry->owner = THIS_MODULE;
-> -#endif
->  #endif
->  }
->  
-> @@ -722,9 +714,6 @@ static void __exit
->  dmapi_cleanup_procfs(void)
->  {
->  #ifdef CONFIG_PROC_FS
-> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-> -	remove_proc_entry( DMAPI_PROCFS, NULL);
-> -#endif
->  	remove_proc_entry( DMAPI_DBG_PROCFS "/summary", NULL);
->  	remove_proc_entry( DMAPI_DBG_PROCFS "/fsreg", NULL);
->  	remove_proc_entry( DMAPI_DBG_PROCFS "/sessions", NULL);
----end quoted text---
+> I think so.
+> 
+>> We just write to the log while the file-system is mounted and we are writing
+>> to the filesystem (particularly changing metadata); and
+>> we read from the log during (just prior) mounting of the filesystem.
+>>
+>>> 	I.e. if a log gets corrupted while the f.s. is in use, will anyone
+>>> 	notice, until such time as an attempt to remount the f.s. is made?
+>> No I don't think anyone will notice.
+>> No-one has cause to read it, so noone cares.
+>>
+>> If you unmount it cleanly. Run repair on it before mounting it again.
+>> Then repair may find corruption when it tries to find the log head etc...
+>> to work out if the log is clean or not.
+>> i.e. in this case repair will try to read the log before you've tried
+>> to do a mount.
+> 
+> So, how do you recover from a situation like i have, namely:
+> 
+> 1) the xfs file system is not currently mounted
+> 2) an attempt to mount the xfs fs fails, complaining about log being
+>    inconsistent or not a log
+> 
+> You say noone cares if the log is corrupt, but it seems to be a
+> fatal problem if you want to mount the fs.
+> 
+Noone cares until you need to read it and it is still corrupt
+and then you care when you want to mount it.
+So yes, you care ;-)
+
+> Bottom line: how do you recover when trying to remount an xfs fs whose
+> log happens to be corrupt?
+
+Without doing anything fancy, you are stuffed.
+You need to clear the log and repair it using "xfs_repair -L"
+(the -L will zero the log and for linux write a log record in there).
+
+I was wondering that if only the end of the log was corrupted and that
+was not between the tail and the head, then one could write
+0x00000255 (597 dec) at the start of each sector (which is the previous
+cycle#) where the corruption is.
+Then the recovery code would likely think that this was old
+data as it has the old cycle# (and hence ignore it).
+However, it is xmas breakup day and I'm too tired to try it out
+at the moment. :)
+Was thinking of something like:
+xfs_io -c 'pwrite -b 512 -S 0x00000255 38889s 31s' sdb-xfs-log.fixup
+But that's not right. Sorry.
+And then I'm still not convinced about the tail numbers in many
+of the log records (particularly the head) anyway.
+
+--Tim
