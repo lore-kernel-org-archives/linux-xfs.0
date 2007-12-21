@@ -1,69 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Dec 2007 16:43:34 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Dec 2007 16:44:25 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBL0gtIl023228
-	for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 16:42:59 -0800
-Date: Fri, 21 Dec 2007 11:42:59 +1100
-Subject: [GIT PULL] XFS update for 2.6.24-rc6
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id lBL0iHPZ023336
+	for <xfs@oss.sgi.com>; Thu, 20 Dec 2007 16:44:21 -0800
+Message-ID: <476B0D29.4050504@sgi.com>
+Date: Fri, 21 Dec 2007 11:47:37 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: mount prob: "log inconsistent or not a log"
+References: <20071220000144.GQ19770@msoe.edu> <4769BD13.5040303@sgi.com> <20071220011848.GV19770@msoe.edu> <20071220015425.GL4612@sgi.com> <20071220024453.GX19770@msoe.edu> <20071220175512.GA6023@msoe.edu>
+In-Reply-To: <20071220175512.GA6023@msoe.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20071221004259.8C12858C4C0F@chook.melbourne.sgi.com>
-From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: "Jonathan C. Detert" <Jonathan.Detert@msoe.edu>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-Please pull from the for-linus branch:
-    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+Jonathan C. Detert wrote:
+> 
+> I just want to clarify - I mean to ask:
+> 
+> 	Is it possible that an xfs filesystem which is in use by an o.s.,
+> 	last mounted by the o.s. months ago, could have a corrupted log, and
+> 	yet keep functioning until such time as a remount of it is attempted?
+> 
+Yes.
+The log is read on every mount. I don't believe we read it otherwise.
+On a mount we look for the log head and an unmount record etc. to decide
+whether to do a replay or not.
+So it could be corrupted and we would not know and we don't really care
+until the next mount.
+However, if we are modifying metadata in the filesystem (with some exceptions)
+then we will be continuing to write to the log and we will continue to
+wrap the log. And hence if someone corrupted the log at a point in the past,
+we may very well be able to overwrite the log and effectively lose that
+corruption.
 
-This will update the following files:
+Do you understand the basic idea?
+We just write to the log while the file-system is mounted and we are writing
+to the filesystem (particularly changing metadata); and
+we read from the log during (just prior) mounting of the filesystem.
 
- fs/xfs/linux-2.6/xfs_file.c |    1 +
- fs/xfs/linux-2.6/xfs_iops.c |    4 +---
- 2 files changed, 2 insertions(+), 3 deletions(-)
+> 	I.e. if a log gets corrupted while the f.s. is in use, will anyone
+> 	notice, until such time as an attempt to remount the f.s. is made?
+No I don't think anyone will notice.
+No-one has cause to read it, so noone cares.
 
-through these commits:
+If you unmount it cleanly. Run repair on it before mounting it again.
+Then repair may find corruption when it tries to find the log head etc...
+to work out if the log is clean or not.
+i.e. in this case repair will try to read the log before you've tried
+to do a mount.
 
-commit 4743e0ec1217fd00f57461ebdd7979d31af18700
-Author: Lachlan McIlroy <lachlan@redback.melbourne.sgi.com>
-Date:   Fri Dec 21 11:00:23 2007 +1100
-
-    [XFS] Initialise current offset in xfs_file_readdir correctly
-    
-    After reading the directory contents into the temporary buffer, we grab
-    each dirent and pass it to filldir witht eh current offset of the dirent.
-    The current offset was not being set for the first dirent in the temporary
-    buffer, which coul dresult in bad offsets being set in the f_pos field
-    result in looping and duplicate entries being returned from readdir.
-    
-    SGI-PV: 974905
-    SGI-Modid: xfs-linux-melb:xfs-kern:30282a
-    
-    Signed-off-by: David Chinner <dgc@sgi.com>
-    Signed-off-by: Tim Shimmin <tes@sgi.com>
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
-
-commit bad60fdd14df32459e31cc75ab681e4458bf25cf
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Dec 21 10:58:56 2007 +1100
-
-    [XFS] Fix mknod regression
-    
-    This was broken by my '[XFS] simplify xfs_create/mknod/symlink prototype',
-    which assigned the re-shuffled ondisk dev_t back to the rdev variable in
-    xfs_vn_mknod. Because of that i_rdev is set to the ondisk dev_t instead of
-    the linux dev_t later down the function.
-    
-    Fortunately the fix for it is trivial: we can just remove the assignment
-    because xfs_revalidate_inode has done the proper job before unlocking the
-    inode.
-    
-    SGI-PV: 974873
-    SGI-Modid: xfs-linux-melb:xfs-kern:30273a
-    
-    Signed-off-by: Christoph Hellwig <hch@infradead.org>
-    Signed-off-by: David Chinner <dgc@sgi.com>
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+--Tim
