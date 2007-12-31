@@ -1,97 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Dec 2007 11:43:25 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Dec 2007 12:23:36 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBVJhH42024164
-	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 11:43:21 -0800
-Received: from mail.mnsu.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 28427BD4E4B
-	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 11:43:31 -0800 (PST)
-Received: from mail.mnsu.edu (Mail.MNSU.EDU [134.29.1.12]) by cuda.sgi.com with ESMTP id sG7HvO1OP40ZnWdW for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 11:43:31 -0800 (PST)
-Received: from [134.29.32.1] (j3gum-3.ITS.MNSU.EDU [134.29.32.1])
-	by mail.mnsu.edu (8.13.7/8.13.7) with ESMTP id lBVJhU3r011864
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 13:43:30 -0600
-Message-ID: <4779466E.40104@mnsu.edu>
-Date: Mon, 31 Dec 2007 13:43:42 -0600
-From: "Jeffrey E. Hundstad" <jeffrey.hundstad@mnsu.edu>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id lBVKNSKn031513
+	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 12:23:32 -0800
+Received: from fg-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 418AFBD5220
+	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 12:23:42 -0800 (PST)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.154]) by cuda.sgi.com with ESMTP id QQ6xyGA2QuTdTWJn for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 12:23:42 -0800 (PST)
+Received: by fg-out-1718.google.com with SMTP id e12so2884370fga.8
+        for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 12:23:41 -0800 (PST)
+Date: Mon, 31 Dec 2007 21:17:12 +0100
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: raid 10 su, sw settings
+Message-ID: <20071231201712.GA3679@teal.hq.k1024.org>
+References: <1199059239.13944.65.camel@up> <Pine.LNX.4.64.0712311203220.23402@p34.internal.lan> <1199126586.3437.10.camel@up> <Pine.LNX.4.64.0712311406190.1239@p34.internal.lan>
 MIME-Version: 1.0
-Subject: [Fwd: linux-image-2.6.18-5-amd64 with 32bit userspace: xfs_fsr fails
- because ioctl32(xfs_fsr:15013): Unknown cmd]
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0712311406190.1239@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Brad Langhorst <brad@langhorst.com>, xfs@oss.sgi.com
 
-I just wanted to let you folks at sgi.com know I've recently sent this 
-bug report to the Debian folks about their kernel.
+On Mon, Dec 31, 2007 at 02:07:27PM -0500, Justin Piszcz wrote:
+>
+>
+> On Mon, 31 Dec 2007, Brad Langhorst wrote:
+>
+>>
+>> On Mon, 2007-12-31 at 12:04 -0500, Justin Piszcz wrote:
+>>
+>>>>
+>>>> Typical blocks/sec from iostat during large file movements is about
+>>>> 100M/s read and 80M/s write.
+>>>>
+>>>
+>>> #1 What type of performance do you expect with a 4-disk raid10?
+>>
+>> Are you saying that i should not expect more?
+>> I expect about 70% better performance, since I think a single disk
+>> should be able to do 100M/s. Maybe this is unreasonable?
+> A single disk may do 90MiB/s burst but not sustained for read or write, at 
+> least not cheap SATA disks and when you get toward the middle part of the 
+> disk the speed wil drop off significantly.  100MiB/s read and 80MiB/s write 
+> for RAID10 sounds about right to me.  Maybe someone else on the list with a 
+> similar configuration can chime in with their benchmarks.
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=458467
+I agree about the disk speed - 100MiB/s for SATA drives is a little bit
+too much to expect. And certainly, *only* in purely single-reader or
+single-writer sequential workloads.
 
-Sincerely,
+I have the same config - 4 drive hw raid10 on 9650. A recent zcav log
+shows read speeds start at around 140MiB/s and decrease toward 75MiB/s.
+Since this is zcav from the bonie++ package, it doesn't take into
+account any filesystem or partitioning overhead.
 
-Jeffrey Hundstad
-
--------- Original Message --------
-Subject: 	linux-image-2.6.18-5-amd64 with 32bit userspace: xfs_fsr fails 
-because ioctl32(xfs_fsr:15013): Unknown cmd
-Date: 	Mon, 31 Dec 2007 12:02:31 -0600
-From: 	Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
-To: 	Debian Bug Tracking System <submit@bugs.debian.org>
-
-
-
-Package: linux-image-2.6.18-5-amd64
-Version: 2.6.18.dfsg.1-17
-Severity: normal
-
-The command xfs_fsr from package (xfsdump) which is used to defragment
-xfs filesystems fails to defragment the filesystem.  Instead it errors
-with the following message indicating:
-ioctl32(xfs_fsr:15013): Unknown cmd fd(3) cmd(c01c5868){00} arg(ffa48c0c) on /
-
-The userspace is 32 bit.
-
-
--- System Information:
-Debian Release: 4.0
-  APT prefers stable
-  APT policy: (500, 'stable')
-Architecture: i386 (x86_64)
-Shell:  /bin/sh linked to /bin/bash
-Kernel: Linux 2.6.18-5-amd64
-Locale: LANG=C, LC_CTYPE=C (charmap=ANSI_X3.4-1968)
-
-Versions of packages linux-image-2.6.18-5-amd64 depends on:
-ii  cor 5.97-5.3                             The GNU core utilities
-ii  deb 1.5.11etch1                          Debian configuration management sy
-ii  e2f 1.39+1.40-WIP-2006.11.14+dfsg-2etch1 ext2 file system utilities and lib
-ii  ini 0.85h                                tools for generating an initramfs
-ii  mod 3.3-pre4-2                           tools for managing Linux kernel mo
-
-linux-image-2.6.18-5-amd64 recommends no packages.
-
--- debconf information:
-* linux-image-2.6.18-5-amd64/postinst/create-kimage-link-2.6.18-5-amd64: false
-  shared/kernel-image/really-run-bootloader: true
-  linux-image-2.6.18-5-amd64/postinst/old-system-map-link-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/preinst/initrd-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/preinst/elilo-initrd-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/postinst/depmod-error-2.6.18-5-amd64: false
-  linux-image-2.6.18-5-amd64/preinst/bootloader-initrd-2.6.18-5-amd64: true
-* linux-image-2.6.18-5-amd64/preinst/already-running-this-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/prerm/removing-running-kernel-2.6.18-5-amd64: true
-* linux-image-2.6.18-5-amd64/preinst/lilo-initrd-2.6.18-5-amd64: false
-  linux-image-2.6.18-5-amd64/preinst/abort-overwrite-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/preinst/failed-to-move-modules-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/prerm/would-invalidate-boot-loader-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/postinst/bootloader-error-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/postinst/old-initrd-link-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/preinst/overwriting-modules-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/postinst/old-dir-initrd-link-2.6.18-5-amd64: true
-  linux-image-2.6.18-5-amd64/preinst/lilo-has-ramdisk:
-  linux-image-2.6.18-5-amd64/postinst/depmod-error-initrd-2.6.18-5-amd64: false
-  linux-image-2.6.18-5-amd64/postinst/bootloader-test-error-2.6.18-5-amd64:
-  linux-image-2.6.18-5-amd64/postinst/kimage-is-a-directory:
-  linux-image-2.6.18-5-amd64/preinst/abort-install-2.6.18-5-amd64:
+regards,
+iustin
