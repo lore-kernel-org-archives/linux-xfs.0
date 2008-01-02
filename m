@@ -1,53 +1,156 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jan 2008 09:47:57 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m02HlnEc030673
-	for <xfs@oss.sgi.com>; Wed, 2 Jan 2008 09:47:52 -0800
-Received: from smtp117.sbc.mail.sp1.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 93B0B1226F2E
-	for <xfs@oss.sgi.com>; Wed,  2 Jan 2008 09:48:05 -0800 (PST)
-Received: from smtp117.sbc.mail.sp1.yahoo.com (smtp117.sbc.mail.sp1.yahoo.com [69.147.64.90]) by cuda.sgi.com with SMTP id XU2xxIODbJ2xMKEC for <xfs@oss.sgi.com>; Wed, 02 Jan 2008 09:48:05 -0800 (PST)
-Date: Wed, 2 Jan 2008 09:48:05 -0800
-From: Chris Wedgwood <cw@f00f.org>
-Subject: Re: How to damage a XFS-Filesystem?
-Message-ID: <20080102174805.GA32592@puku.stupidest.org>
-References: <477B8EAB.8000703@welcomes-you.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jan 2008 13:39:35 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m02LdQW9020247
+	for <xfs@oss.sgi.com>; Wed, 2 Jan 2008 13:39:29 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 82E904DA139
+	for <xfs@oss.sgi.com>; Wed,  2 Jan 2008 13:39:34 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id MZJ42rTGcc7wrkSF for <xfs@oss.sgi.com>; Wed, 02 Jan 2008 13:39:34 -0800 (PST)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m02LVeF3005341
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 2 Jan 2008 22:31:40 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m02LVe9i005339
+	for xfs@oss.sgi.com; Wed, 2 Jan 2008 22:31:40 +0100
+Date: Wed, 2 Jan 2008 22:31:40 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] cleanup xfs_vn_mknod
+Message-ID: <20080102213140.GA5204@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <477B8EAB.8000703@welcomes-you.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Carsten Aulbert <carsten@welcomes-you.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jan 02, 2008 at 02:16:27PM +0100, Carsten Aulbert wrote:
+ - use proper goto based unwinding instead of the current mess of
+   multiple conditionals
+ - rename ip to inode because that's the normal convention for Linux
+   inodes while ip is the convention for xfs_inodes
+ - remove unlikely checks for the default_acl - branches marked unlikely
+   might lead to extreme branch bredictor slowdons if taken and for some
+   workloads a default acl is quite common
+ - properly indent the switch statements
+ - remove xfs_has_fs_struct as nfsd has a fs_struct in any semi-recent
+   kernel
 
-> A file server with a 10 TB large xfs file system running on a RAID6
-> SATA array, the server has 16 GB of memory. I want to test how long
-> it would take to run xfs_repair on it and if the amount of memory is
-> enough for that.
 
-It depends on how fast the IO is and also how many files there are.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-If you have a small number of really large files it's fairly fast, if
-you have a large number of really small files (ie. email maildir) then
-it tends to be much slower.
-
-> (2) Damage the file sytem
-> (3) Run xfs_repair
-
-xfs_repair will run without having to damage the filesystem (though
-if/when damaged it will probably be a little slower).
-
-> Otherwise: How can a damage a xfs file system to make the job harder
-> for xfs_repair.
-
-Google for fsfuzzer.
-
-> I guess a simple dd if=/dev/random of=/dev/sdb1 with some offsets
-> will not be very effective, right?
-
-If it misses the metadata, xfs_repair won't even notice.  If you whack
-large chunks of metadata you might see considerable data loss.
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2007-12-21 07:25:06.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2007-12-21 07:33:25.000000000 +0100
+@@ -241,18 +241,6 @@ xfs_init_security(
+ 	return error;
+ }
+ 
+-/*
+- * Determine whether a process has a valid fs_struct (kernel daemons
+- * like knfsd don't have an fs_struct).
+- *
+- * XXX(hch):  nfsd is broken, better fix it instead.
+- */
+-STATIC_INLINE int
+-xfs_has_fs_struct(struct task_struct *task)
+-{
+-	return (task->fs != init_task.fs);
+-}
+-
+ STATIC void
+ xfs_cleanup_inode(
+ 	struct inode	*dir,
+@@ -284,7 +272,7 @@ xfs_vn_mknod(
+ 	int		mode,
+ 	dev_t		rdev)
+ {
+-	struct inode	*ip;
++	struct inode	*inode;
+ 	bhv_vnode_t	*vp = NULL, *dvp = vn_from_inode(dir);
+ 	xfs_acl_t	*default_acl = NULL;
+ 	attrexists_t	test_default_acl = _ACL_DEFAULT_EXISTS;
+@@ -297,7 +285,7 @@ xfs_vn_mknod(
+ 	if (unlikely(!sysv_valid_dev(rdev) || MAJOR(rdev) & ~0x1ff))
+ 		return -EINVAL;
+ 
+-	if (unlikely(test_default_acl && test_default_acl(dvp))) {
++	if (test_default_acl && test_default_acl(dvp)) {
+ 		if (!_ACL_ALLOC(default_acl)) {
+ 			return -ENOMEM;
+ 		}
+@@ -307,11 +295,14 @@ xfs_vn_mknod(
+ 		}
+ 	}
+ 
+-	if (IS_POSIXACL(dir) && !default_acl && xfs_has_fs_struct(current))
++	if (IS_POSIXACL(dir) && !default_acl)
+ 		mode &= ~current->fs->umask;
+ 
+ 	switch (mode & S_IFMT) {
+-	case S_IFCHR: case S_IFBLK: case S_IFIFO: case S_IFSOCK:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFIFO:
++	case S_IFSOCK:
+ 		rdev = sysv_encode_dev(rdev);
+ 	case S_IFREG:
+ 		error = xfs_create(XFS_I(dir), dentry, mode, rdev, &vp, NULL);
+@@ -324,32 +315,34 @@ xfs_vn_mknod(
+ 		break;
+ 	}
+ 
+-	if (unlikely(!error)) {
+-		error = xfs_init_security(vp, dir);
+-		if (error)
+-			xfs_cleanup_inode(dir, vp, dentry, mode);
+-	}
++	if (unlikely(error))
++		goto out_free_acl;
+ 
+-	if (unlikely(default_acl)) {
+-		if (!error) {
+-			error = _ACL_INHERIT(vp, mode, default_acl);
+-			if (!error)
+-				xfs_iflags_set(XFS_I(vp), XFS_IMODIFIED);
+-			else
+-				xfs_cleanup_inode(dir, vp, dentry, mode);
+-		}
++	error = xfs_init_security(vp, dir);
++	if (unlikely(error))
++		goto out_cleanup_inode;
++
++	if (default_acl) {
++		error = _ACL_INHERIT(vp, mode, default_acl);
++		if (unlikely(error))
++			goto out_cleanup_inode;
++		xfs_iflags_set(XFS_I(vp), XFS_IMODIFIED);
+ 		_ACL_FREE(default_acl);
+ 	}
+ 
+-	if (likely(!error)) {
+-		ASSERT(vp);
+-		ip = vn_to_inode(vp);
++	inode = vn_to_inode(vp);
+ 
+-		if (S_ISDIR(mode))
+-			xfs_validate_fields(ip);
+-		d_instantiate(dentry, ip);
+-		xfs_validate_fields(dir);
+-	}
++	if (S_ISDIR(mode))
++		xfs_validate_fields(inode);
++	d_instantiate(dentry, inode);
++	xfs_validate_fields(dir);
++	return -error;
++
++ out_cleanup_inode:
++	xfs_cleanup_inode(dir, vp, dentry, mode);
++ out_free_acl:
++	if (default_acl)
++		_ACL_FREE(default_acl);
+ 	return -error;
+ }
+ 
