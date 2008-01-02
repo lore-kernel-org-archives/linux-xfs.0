@@ -1,49 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Dec 2007 17:16:51 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m011Gevs024341
-	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 17:16:46 -0800
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36DD34D1FA9
-	for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 17:16:53 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.158]) by cuda.sgi.com with ESMTP id GVEBcxRyMAyjcZnw for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 17:16:53 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id e12so2937048fga.8
-        for <xfs@oss.sgi.com>; Mon, 31 Dec 2007 17:16:52 -0800 (PST)
-Date: Tue, 1 Jan 2008 01:15:04 +0100
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: raid 10 su, sw settings
-Message-ID: <20080101001504.GA12559@teal.hq.k1024.org>
-References: <1199059239.13944.65.camel@up> <Pine.LNX.4.64.0712311203220.23402@p34.internal.lan> <1199126586.3437.10.camel@up> <Pine.LNX.4.64.0712311406190.1239@p34.internal.lan> <20071231201712.GA3679@teal.hq.k1024.org> <1199134501.3437.21.camel@up> <20071231214223.GB3679@teal.hq.k1024.org> <1199141644.3437.24.camel@up>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jan 2008 05:16:28 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m02DGLIV005036
+	for <xfs@oss.sgi.com>; Wed, 2 Jan 2008 05:16:24 -0800
+Received: from welcomes-you.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2849A12250B1
+	for <xfs@oss.sgi.com>; Wed,  2 Jan 2008 05:16:34 -0800 (PST)
+Received: from welcomes-you.com (welcomes-you.com [85.214.50.128]) by cuda.sgi.com with ESMTP id Gt2BSU2YCeKFdkDy for <xfs@oss.sgi.com>; Wed, 02 Jan 2008 05:16:34 -0800 (PST)
+Message-ID: <477B8EAB.8000703@welcomes-you.com>
+Date: Wed, 02 Jan 2008 14:16:27 +0100
+From: Carsten Aulbert <carsten@welcomes-you.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1199141644.3437.24.camel@up>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Subject: How to damage a XFS-Filesystem?
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Brad Langhorst <brad@langhorst.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Dec 31, 2007 at 05:54:04PM -0500, Brad Langhorst wrote:
-> 
-> On Mon, 2007-12-31 at 22:42 +0100, Iustin Pop wrote:
-> > On Mon, Dec 31, 2007 at 03:55:01PM -0500, Brad Langhorst wrote:
-> > > Any opinions on the partition layout? Did you go to special effort to
-> > > layout your partitions on the stripe boundaries (actually i don't really
-> > > understand this fully yet).
-> > 
-> > So instead of the usual 255 heads, 63 cylinders fake geometry that is
-> > not a multiple of anything, I setup 16h/16c geometry that gives a nice
-> > power-of-two multiplier so all partitions *should* be aligned at a nice
-> > multiple of any size you choose; fdisk -l on the drive reports units of
-> > 128k.
-> Sorry to be thick... i don't understand this.
-> Do you configure the raid controller with these settings? or is this an
-> fdisk option?
+Hi,
 
-Note: I'm not even sure it matters, or if I did it right :)
+I have the following scenario:
 
-It's an fdisk option. For example, "fdisk -H 16 -S 16 /dev/sdX".
+A file server with a 10 TB large xfs file system running on a RAID6 SATA
+array, the server has 16 GB of memory. I want to test how long it would
+take to run xfs_repair on it and if the amount of memory is enough for that.
 
-Also, happy new year!
-iustin
+Thus I think I would need to:
+
+(1) Fill the disk with files
+(2) Damage the file sytem
+(3) Run xfs_repair
+
+My questions:
+
+(1) Is there a nice tool which fills up a disk? I.e. I want to write
+files with varying size and want to be able to check the validity
+(md5,sha1...) of the files before and after the damage. I don't know if
+it matters, but the number of entries per directory should also vary
+greatly ;)
+
+(2) I don't know if xfs_repair cares if the file system was damaged or
+not. If it uses the same amount of time and memory on a fully intact
+file system, I guess I don't have a question anymore. Otherwise: How can
+a damage a xfs file system to make the job harder for xfs_repair. I
+guess a simple dd if=/dev/random of=/dev/sdb1 with some offsets will not
+be very effective, right?
+
+(3) Anything else I need to be aware of?
+
+Thanks for your patience (and yes, I have tried the archives for answers)
+
+Cheers
+
+Carsten
