@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jan 2008 04:56:43 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jan 2008 04:59:25 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m03CubX9017257
-	for <xfs@oss.sgi.com>; Thu, 3 Jan 2008 04:56:39 -0800
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m03CxHT2017715
+	for <xfs@oss.sgi.com>; Thu, 3 Jan 2008 04:59:21 -0800
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 498DB11868E5
-	for <xfs@oss.sgi.com>; Thu,  3 Jan 2008 04:56:47 -0800 (PST)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id WzKwZz168Xb1JLdt for <xfs@oss.sgi.com>; Thu, 03 Jan 2008 04:56:47 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9067E1221A17
+	for <xfs@oss.sgi.com>; Thu,  3 Jan 2008 04:59:31 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id hZV0AEKknJxoc9Gq for <xfs@oss.sgi.com>; Thu, 03 Jan 2008 04:59:31 -0800 (PST)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m03CufF3005737
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m03CqRF3005494
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 3 Jan 2008 13:56:41 +0100
+	for <xfs@oss.sgi.com>; Thu, 3 Jan 2008 13:52:27 +0100
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m03CufED005735
-	for xfs@oss.sgi.com; Thu, 3 Jan 2008 13:56:41 +0100
-Date: Thu, 3 Jan 2008 13:56:41 +0100
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m03CqRKf005492
+	for xfs@oss.sgi.com; Thu, 3 Jan 2008 13:52:27 +0100
+Date: Thu, 3 Jan 2008 13:52:27 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill xfs_rwlock/xfs_rwunlock
-Message-ID: <20080103125641.GC5331@lst.de>
+Subject: [PATCH] kill xfs_get_dir_entry
+Message-ID: <20080103125227.GB5331@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,360 +26,242 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-We can just use xfs_ilock/xfs_iunlock instead and get rid of the ugly
-bhv_vrwlock_t.
+Instead of of xfs_get_dir_entry use a macro to get the xfs_inode from
+the dentry in the callers and grab the reference manually.
 
+Only grab the reference once as it's fine to keep it over the dmapi
+calls.  (And even that reference is actually superflous in Linux but
+I'll leave that for another patch)
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+Index: linux-2.6-xfs/fs/xfs/xfs_rename.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2007-12-26 16:57:48.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2007-12-26 17:02:32.000000000 +0100
-@@ -138,7 +138,7 @@ xfs_dm_send_data_event(
- 	xfs_off_t	offset,
- 	size_t		length,
- 	int		flags,
--	bhv_vrwlock_t	*locktype)
-+	int		*lock_flags)
+--- linux-2.6-xfs.orig/fs/xfs/xfs_rename.c	2007-11-30 10:15:48.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_rename.c	2007-12-26 16:35:10.000000000 +0100
+@@ -94,7 +94,8 @@ xfs_lock_for_rename(
+ 	xfs_inode_t	**i_tab,/* array of inode returned, sorted */
+ 	int		*num_inodes)  /* number of inodes in array */
  {
- 	int		error;
- 	xfs_inode_t	*ip;
-@@ -150,8 +150,8 @@ xfs_dm_send_data_event(
- 	ip = xfs_vtoi(vp);
- 	do {
- 		dmstate = ip->i_d.di_dmstate;
--		if (locktype)
--			xfs_rwunlock(ip, *locktype);
-+		if (lock_flags)
-+			xfs_iunlock(ip, *lock_flags);
- 
- 		up_rw_sems(inode, flags);
- 
-@@ -161,8 +161,8 @@ xfs_dm_send_data_event(
- 
- 		down_rw_sems(inode, flags);
- 
--		if (locktype)
--			xfs_rwlock(ip, *locktype);
-+		if (lock_flags)
-+			xfs_ilock(ip, *lock_flags);
- 	} while (!error && (ip->i_d.di_dmstate != dmstate));
- 
- 	return error;
-@@ -3085,7 +3085,6 @@ xfs_dm_send_mmap_event(
- 	xfs_inode_t	*ip;
- 	int		error = 0;
- 	dm_eventtype_t	max_event = DM_EVENT_READ;
--	bhv_vrwlock_t	locktype;
- 	xfs_fsize_t	filesize;
- 	xfs_off_t	length, end_of_area, evsize, offset;
- 	int		iolock;
-@@ -3140,20 +3139,16 @@ xfs_dm_send_mmap_event(
- 	if (evsize < 0)
- 		evsize = 0;
- 
--	if (max_event == DM_EVENT_READ) {
--		locktype = VRWLOCK_READ;
-+	if (max_event == DM_EVENT_READ)
- 		iolock = XFS_IOLOCK_SHARED;
--	}
--	else {
--		locktype = VRWLOCK_WRITE;
-+	else
- 		iolock = XFS_IOLOCK_EXCL;
--	}
- 
- 	xfs_ilock(ip, iolock);
- 	/* If write possible, try a DMAPI write event */
- 	if (max_event == DM_EVENT_WRITE && DM_EVENT_ENABLED(ip, max_event)) {
- 		error = xfs_dm_send_data_event(max_event, vp, offset,
--					       evsize, 0, &locktype);
-+					       evsize, 0, &iolock);
- 		goto out_unlock;
- 	}
- 
-@@ -3162,7 +3157,7 @@ xfs_dm_send_mmap_event(
+-	xfs_inode_t		*ip1, *ip2, *temp;
++	xfs_inode_t		*ip1 = VNAME_TO_INODE(vname1);
++	xfs_inode_t		*ip2, *temp;
+ 	xfs_ino_t		inum1, inum2;
+ 	int			error;
+ 	int			i, j;
+@@ -110,16 +111,11 @@ xfs_lock_for_rename(
+ 	 * to see if we still have the right inodes, directories, etc.
  	 */
- 	if (DM_EVENT_ENABLED(ip, DM_EVENT_READ)) {
- 		error = xfs_dm_send_data_event(DM_EVENT_READ, vp, offset,
--					       evsize, 0, &locktype);
-+					       evsize, 0, &iolock);
- 	}
- out_unlock:
- 	xfs_iunlock(ip, iolock);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2007-12-13 18:56:04.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2007-12-26 17:08:46.000000000 +0100
-@@ -1532,9 +1532,9 @@ xfs_vm_bmap(
- 	struct xfs_inode	*ip = XFS_I(inode);
+ 	lock_mode = xfs_ilock_map_shared(dp1);
+-	error = xfs_get_dir_entry(vname1, &ip1);
+-	if (error) {
+-		xfs_iunlock_map_shared(dp1, lock_mode);
+-		return error;
+-	}
++	IHOLD(ip1);
++	xfs_itrace_ref(ip1);
  
- 	xfs_itrace_entry(XFS_I(inode));
--	xfs_rwlock(ip, VRWLOCK_READ);
-+	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
--	xfs_rwunlock(ip, VRWLOCK_READ);
-+	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 	return generic_block_bmap(mapping, block, xfs_get_blocks);
- }
+ 	inum1 = ip1->i_ino;
  
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2007-12-26 16:57:52.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2007-12-26 17:01:28.000000000 +0100
-@@ -263,8 +263,6 @@ EXPORT_SYMBOL(xfs_mountfs);
- EXPORT_SYMBOL(xfs_qm_dqcheck);
- EXPORT_SYMBOL(xfs_readsb);
- EXPORT_SYMBOL(xfs_read_buf);
--EXPORT_SYMBOL(xfs_rwlock);
--EXPORT_SYMBOL(xfs_rwunlock);
- EXPORT_SYMBOL(xfs_setattr);
- EXPORT_SYMBOL(xfs_attr_get);
- EXPORT_SYMBOL(xfs_attr_set);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2007-12-26 16:36:09.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2007-12-26 17:05:08.000000000 +0100
-@@ -228,11 +228,11 @@ xfs_read(
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	ASSERT(ip1);
+-	xfs_itrace_ref(ip1);
  
- 	if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) && !(ioflags & IO_INVIS)) {
--		bhv_vrwlock_t locktype = VRWLOCK_READ;
- 		int dmflags = FILP_DELAY_FLAG(file) | DM_SEM_FLAG_RD(ioflags);
-+		int iolock = XFS_IOLOCK_SHARED;
- 
- 		ret = -XFS_SEND_DATA(mp, DM_EVENT_READ, vp, *offset, size,
--					dmflags, &locktype);
-+					dmflags, &iolock);
- 		if (ret) {
- 			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 			if (unlikely(ioflags & IO_ISDIRECT))
-@@ -287,11 +287,11 @@ xfs_splice_read(
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 
- 	if (DM_EVENT_ENABLED(ip, DM_EVENT_READ) && !(ioflags & IO_INVIS)) {
--		bhv_vrwlock_t locktype = VRWLOCK_READ;
-+		int iolock = XFS_IOLOCK_SHARED;
- 		int error;
- 
- 		error = XFS_SEND_DATA(mp, DM_EVENT_READ, vp, *ppos, count,
--					FILP_DELAY_FLAG(infilp), &locktype);
-+					FILP_DELAY_FLAG(infilp), &iolock);
- 		if (error) {
- 			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 			return -error;
-@@ -330,11 +330,11 @@ xfs_splice_write(
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
- 	if (DM_EVENT_ENABLED(ip, DM_EVENT_WRITE) && !(ioflags & IO_INVIS)) {
--		bhv_vrwlock_t locktype = VRWLOCK_WRITE;
-+		int iolock = XFS_IOLOCK_EXCL;
- 		int error;
- 
- 		error = XFS_SEND_DATA(mp, DM_EVENT_WRITE, vp, *ppos, count,
--					FILP_DELAY_FLAG(outfilp), &locktype);
-+					FILP_DELAY_FLAG(outfilp), &iolock);
- 		if (error) {
- 			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 			return -error;
-@@ -580,7 +580,6 @@ xfs_write(
- 	xfs_fsize_t		isize, new_size;
- 	int			iolock;
- 	int			eventsent = 0;
--	bhv_vrwlock_t		locktype;
- 	size_t			ocount = 0, count;
- 	loff_t			pos;
- 	int			need_i_mutex;
-@@ -607,11 +606,9 @@ xfs_write(
- relock:
- 	if (ioflags & IO_ISDIRECT) {
- 		iolock = XFS_IOLOCK_SHARED;
--		locktype = VRWLOCK_WRITE_DIRECT;
- 		need_i_mutex = 0;
- 	} else {
- 		iolock = XFS_IOLOCK_EXCL;
--		locktype = VRWLOCK_WRITE;
- 		need_i_mutex = 1;
- 		mutex_lock(&inode->i_mutex);
- 	}
-@@ -635,8 +632,7 @@ start:
- 
- 		xfs_iunlock(xip, XFS_ILOCK_EXCL);
- 		error = XFS_SEND_DATA(xip->i_mount, DM_EVENT_WRITE, vp,
--				      pos, count,
--				      dmflags, &locktype);
-+				      pos, count, dmflags, &iolock);
- 		if (error) {
- 			goto out_unlock_internal;
- 		}
-@@ -667,7 +663,6 @@ start:
- 		if (!need_i_mutex && (VN_CACHED(vp) || pos > xip->i_size)) {
- 			xfs_iunlock(xip, XFS_ILOCK_EXCL|iolock);
- 			iolock = XFS_IOLOCK_EXCL;
--			locktype = VRWLOCK_WRITE;
- 			need_i_mutex = 1;
- 			mutex_lock(&inode->i_mutex);
- 			xfs_ilock(xip, XFS_ILOCK_EXCL|iolock);
-@@ -744,7 +739,6 @@ retry:
- 			mutex_unlock(&inode->i_mutex);
- 
- 			iolock = XFS_IOLOCK_SHARED;
--			locktype = VRWLOCK_WRITE_DIRECT;
- 			need_i_mutex = 0;
- 		}
- 
-@@ -781,7 +775,7 @@ retry:
- 
- 	if (ret == -ENOSPC &&
- 	    DM_EVENT_ENABLED(xip, DM_EVENT_NOSPACE) && !(ioflags & IO_INVIS)) {
--		xfs_rwunlock(xip, locktype);
-+		xfs_iunlock(xip, iolock);
- 		if (need_i_mutex)
- 			mutex_unlock(&inode->i_mutex);
- 		error = XFS_SEND_NAMESP(xip->i_mount, DM_EVENT_NOSPACE, vp,
-@@ -789,7 +783,7 @@ retry:
- 				0, 0, 0); /* Delay flag intentionally  unused */
- 		if (need_i_mutex)
- 			mutex_lock(&inode->i_mutex);
--		xfs_rwlock(xip, locktype);
-+		xfs_ilock(xip, iolock);
- 		if (error)
- 			goto out_unlock_internal;
- 		pos = xip->i_size;
-@@ -817,7 +811,8 @@ retry:
- 	/* Handle various SYNC-type writes */
- 	if ((file->f_flags & O_SYNC) || IS_SYNC(inode)) {
- 		int error2;
--		xfs_rwunlock(xip, locktype);
-+
-+		xfs_iunlock(xip, iolock);
- 		if (need_i_mutex)
- 			mutex_unlock(&inode->i_mutex);
- 		error2 = sync_page_range(inode, mapping, pos, ret);
-@@ -825,7 +820,7 @@ retry:
- 			error = error2;
- 		if (need_i_mutex)
- 			mutex_lock(&inode->i_mutex);
--		xfs_rwlock(xip, locktype);
-+		xfs_ilock(xip, iolock);
- 		error2 = xfs_write_sync_logforce(mp, xip);
- 		if (!error)
- 			error = error2;
-@@ -846,7 +841,7 @@ retry:
- 			xip->i_d.di_size = xip->i_size;
- 		xfs_iunlock(xip, XFS_ILOCK_EXCL);
- 	}
--	xfs_rwunlock(xip, locktype);
-+	xfs_iunlock(xip, iolock);
-  out_unlock_mutex:
- 	if (need_i_mutex)
- 		mutex_unlock(&inode->i_mutex);
+ 	/*
+ 	 * Unlock dp1 and lock dp2 if they are different.
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2007-12-26 17:00:49.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2007-12-26 17:01:28.000000000 +0100
-@@ -46,18 +46,6 @@ static inline struct inode *vn_to_inode(
- }
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2007-12-17 14:49:28.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2007-12-26 16:35:10.000000000 +0100
+@@ -230,7 +230,7 @@ static inline bhv_vnode_t *vn_grab(bhv_v
+  */
+ #define VNAME(dentry)		((char *) (dentry)->d_name.name)
+ #define VNAMELEN(dentry)	((dentry)->d_name.len)
+-#define VNAME_TO_VNODE(dentry)	(vn_from_inode((dentry)->d_inode))
++#define VNAME_TO_INODE(dentry)	(XFS_I((dentry)->d_inode))
  
  /*
-- * Values for the vop_rwlock/rwunlock flags parameter.
-- */
--typedef enum bhv_vrwlock {
--	VRWLOCK_NONE,
--	VRWLOCK_READ,
--	VRWLOCK_WRITE,
--	VRWLOCK_WRITE_DIRECT,
--	VRWLOCK_TRY_READ,
--	VRWLOCK_TRY_WRITE
--} bhv_vrwlock_t;
--
--/*
-  * Return values for xfs_inactive.  A return value of
-  * VN_INACTIVE_NOCACHE implies that the file system behavior
-  * has disassociated its state and bhv_desc_t from the vnode.
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
+  * Dealing with bad inodes
+Index: linux-2.6-xfs/fs/xfs/xfs_utils.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2007-12-26 17:00:55.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2007-12-26 17:01:28.000000000 +0100
-@@ -67,7 +67,7 @@ struct xfs_mru_cache;
-  */
+--- linux-2.6-xfs.orig/fs/xfs/xfs_utils.c	2007-12-21 07:22:56.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_utils.c	2007-12-26 16:35:10.000000000 +0100
+@@ -40,28 +40,6 @@
+ #include "xfs_itable.h"
+ #include "xfs_utils.h"
  
- typedef int	(*xfs_send_data_t)(int, bhv_vnode_t *,
--			xfs_off_t, size_t, int, bhv_vrwlock_t *);
-+			xfs_off_t, size_t, int, int *);
- typedef int	(*xfs_send_mmap_t)(struct vm_area_struct *, uint);
- typedef int	(*xfs_send_destroy_t)(bhv_vnode_t *, dm_right_t);
- typedef int	(*xfs_send_namesp_t)(dm_eventtype_t, struct xfs_mount *,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-12-26 17:00:49.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-12-26 17:03:55.000000000 +0100
-@@ -3398,54 +3398,6 @@ std_return:
- }
+-/*
+- * xfs_get_dir_entry is used to get a reference to an inode given
+- * its parent directory inode and the name of the file.	 It does
+- * not lock the child inode, and it unlocks the directory before
+- * returning.  The directory's generation number is returned for
+- * use by a later call to xfs_lock_dir_and_entry.
+- */
+-int
+-xfs_get_dir_entry(
+-	bhv_vname_t	*dentry,
+-	xfs_inode_t	**ipp)
+-{
+-	bhv_vnode_t	*vp;
+-
+-	vp = VNAME_TO_VNODE(dentry);
+-
+-	*ipp = xfs_vtoi(vp);
+-	if (!*ipp)
+-		return XFS_ERROR(ENOENT);
+-	VN_HOLD(vp);
+-	return 0;
+-}
  
  int
--xfs_rwlock(
--	xfs_inode_t	*ip,
--	bhv_vrwlock_t	locktype)
--{
--	if (S_ISDIR(ip->i_d.di_mode))
--		return 1;
--	if (locktype == VRWLOCK_WRITE) {
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--	} else if (locktype == VRWLOCK_TRY_READ) {
--		return xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED);
--	} else if (locktype == VRWLOCK_TRY_WRITE) {
--		return xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL);
--	} else {
--		ASSERT((locktype == VRWLOCK_READ) ||
--		       (locktype == VRWLOCK_WRITE_DIRECT));
--		xfs_ilock(ip, XFS_IOLOCK_SHARED);
--	}
--
--	return 1;
--}
--
--
--void
--xfs_rwunlock(
--	xfs_inode_t     *ip,
--	bhv_vrwlock_t	locktype)
--{
-- 	if (S_ISDIR(ip->i_d.di_mode))
--  		return;
--	if (locktype == VRWLOCK_WRITE) {
--		/*
--		 * In the write case, we may have added a new entry to
--		 * the reference cache.  This might store a pointer to
--		 * an inode to be released in this inode.  If it is there,
--		 * clear the pointer and release the inode after unlocking
--		 * this one.
--		 */
--		xfs_refcache_iunlock(ip, XFS_IOLOCK_EXCL);
--	} else {
--		ASSERT((locktype == VRWLOCK_READ) ||
--		       (locktype == VRWLOCK_WRITE_DIRECT));
--		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
--	}
--	return;
--}
--
--
--int
- xfs_inode_flush(
- 	xfs_inode_t	*ip,
- 	int		flags)
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.h
+ xfs_dir_lookup_int(
+Index: linux-2.6-xfs/fs/xfs/xfs_utils.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.h	2007-12-26 16:59:57.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.h	2007-12-26 17:03:28.000000000 +0100
-@@ -38,8 +38,6 @@ int xfs_readdir(struct xfs_inode	*dp, vo
- int xfs_symlink(struct xfs_inode *dp, bhv_vname_t *dentry,
- 		char *target_path, mode_t mode, bhv_vnode_t **vpp,
- 		struct cred *credp);
--int xfs_rwlock(struct xfs_inode *ip, bhv_vrwlock_t locktype);
--void xfs_rwunlock(struct xfs_inode *ip, bhv_vrwlock_t locktype);
- int xfs_inode_flush(struct xfs_inode *ip, int flags);
- int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
- int xfs_reclaim(struct xfs_inode *ip);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_utils.h	2007-12-17 14:49:28.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_utils.h	2007-12-26 16:35:10.000000000 +0100
+@@ -21,7 +21,6 @@
+ #define IRELE(ip)	VN_RELE(XFS_ITOV(ip))
+ #define IHOLD(ip)	VN_HOLD(XFS_ITOV(ip))
+ 
+-extern int xfs_get_dir_entry (bhv_vname_t *, xfs_inode_t **);
+ extern int xfs_dir_lookup_int (xfs_inode_t *, uint, bhv_vname_t *, xfs_ino_t *,
+ 				xfs_inode_t **);
+ extern int xfs_truncate_file (xfs_mount_t *, xfs_inode_t *);
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2007-12-21 07:45:40.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2007-12-26 16:35:10.000000000 +0100
+@@ -2277,41 +2277,30 @@ xfs_remove(
+ 	bhv_vnode_t		*dir_vp = XFS_ITOV(dp);
+ 	char			*name = VNAME(dentry);
+ 	xfs_mount_t		*mp = dp->i_mount;
+-	xfs_inode_t             *ip;
++	xfs_inode_t             *ip = VNAME_TO_INODE(dentry);
++	int			namelen = VNAMELEN(dentry);
+ 	xfs_trans_t             *tp = NULL;
+ 	int                     error = 0;
+ 	xfs_bmap_free_t         free_list;
+ 	xfs_fsblock_t           first_block;
+ 	int			cancel_flags;
+ 	int			committed;
+-	int			dm_di_mode = 0;
+ 	int			link_zero;
+ 	uint			resblks;
+-	int			namelen;
+ 
+ 	xfs_itrace_entry(dp);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	namelen = VNAMELEN(dentry);
+-
+-	if (!xfs_get_dir_entry(dentry, &ip)) {
+-	        dm_di_mode = ip->i_d.di_mode;
+-		IRELE(ip);
+-	}
+-
+ 	if (DM_EVENT_ENABLED(dp, DM_EVENT_REMOVE)) {
+ 		error = XFS_SEND_NAMESP(mp, DM_EVENT_REMOVE, dir_vp,
+ 					DM_RIGHT_NULL, NULL, DM_RIGHT_NULL,
+-					name, NULL, dm_di_mode, 0, 0);
++					name, NULL, ip->i_d.di_mode, 0, 0);
+ 		if (error)
+ 			return error;
+ 	}
+ 
+-	/* From this point on, return through std_return */
+-	ip = NULL;
+-
+ 	/*
+ 	 * We need to get a reference to ip before we get our log
+ 	 * reservation. The reason for this is that we cannot call
+@@ -2324,13 +2313,7 @@ xfs_remove(
+ 	 * when we call xfs_iget.  Instead we get an unlocked reference
+ 	 * to the inode before getting our log reservation.
+ 	 */
+-	error = xfs_get_dir_entry(dentry, &ip);
+-	if (error) {
+-		REMOVE_DEBUG_TRACE(__LINE__);
+-		goto std_return;
+-	}
+-
+-	dm_di_mode = ip->i_d.di_mode;
++	IHOLD(ip);
+ 
+ 	xfs_itrace_entry(ip);
+ 	xfs_itrace_ref(ip);
+@@ -2474,7 +2457,7 @@ xfs_remove(
+ 		(void) XFS_SEND_NAMESP(mp, DM_EVENT_POSTREMOVE,
+ 				dir_vp, DM_RIGHT_NULL,
+ 				NULL, DM_RIGHT_NULL,
+-				name, NULL, dm_di_mode, error, 0);
++				name, NULL, ip->i_d.di_mode, error, 0);
+ 	}
+ 	return error;
+ 
+@@ -2891,14 +2874,13 @@ xfs_rmdir(
+ 	char			*name = VNAME(dentry);
+ 	int			namelen = VNAMELEN(dentry);
+ 	xfs_mount_t		*mp = dp->i_mount;
+-  	xfs_inode_t             *cdp;   /* child directory */
++  	xfs_inode_t             *cdp = VNAME_TO_INODE(dentry);
+ 	xfs_trans_t             *tp;
+ 	int                     error;
+ 	xfs_bmap_free_t         free_list;
+ 	xfs_fsblock_t           first_block;
+ 	int			cancel_flags;
+ 	int			committed;
+-	int			dm_di_mode = S_IFDIR;
+ 	int			last_cdp_link;
+ 	uint			resblks;
+ 
+@@ -2907,24 +2889,15 @@ xfs_rmdir(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
+-	if (!xfs_get_dir_entry(dentry, &cdp)) {
+-	        dm_di_mode = cdp->i_d.di_mode;
+-		IRELE(cdp);
+-	}
+-
+ 	if (DM_EVENT_ENABLED(dp, DM_EVENT_REMOVE)) {
+ 		error = XFS_SEND_NAMESP(mp, DM_EVENT_REMOVE,
+ 					dir_vp, DM_RIGHT_NULL,
+ 					NULL, DM_RIGHT_NULL,
+-					name, NULL, dm_di_mode, 0, 0);
++					name, NULL, cdp->i_d.di_mode, 0, 0);
+ 		if (error)
+ 			return XFS_ERROR(error);
+ 	}
+ 
+-	/* Return through std_return after this point. */
+-
+-	cdp = NULL;
+-
+ 	/*
+ 	 * We need to get a reference to cdp before we get our log
+ 	 * reservation.  The reason for this is that we cannot call
+@@ -2937,13 +2910,7 @@ xfs_rmdir(
+ 	 * when we call xfs_iget.  Instead we get an unlocked reference
+ 	 * to the inode before getting our log reservation.
+ 	 */
+-	error = xfs_get_dir_entry(dentry, &cdp);
+-	if (error) {
+-		REMOVE_DEBUG_TRACE(__LINE__);
+-		goto std_return;
+-	}
+-	mp = dp->i_mount;
+-	dm_di_mode = cdp->i_d.di_mode;
++	IHOLD(cdp);
+ 
+ 	/*
+ 	 * Get the dquots for the inodes.
+@@ -3100,7 +3067,7 @@ xfs_rmdir(
+ 		(void) XFS_SEND_NAMESP(mp, DM_EVENT_POSTREMOVE,
+ 					dir_vp, DM_RIGHT_NULL,
+ 					NULL, DM_RIGHT_NULL,
+-					name, NULL, dm_di_mode,
++					name, NULL, cdp->i_d.di_mode,
+ 					error, 0);
+ 	}
+ 	return error;
