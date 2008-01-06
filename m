@@ -1,50 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 Jan 2008 14:04:25 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m04M4KZY011011
-	for <xfs@oss.sgi.com>; Fri, 4 Jan 2008 14:04:20 -0800
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25522BF95DC
-	for <xfs@oss.sgi.com>; Fri,  4 Jan 2008 14:04:30 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id X47CJ8ui2OBOo4kT for <xfs@oss.sgi.com>; Fri, 04 Jan 2008 14:04:30 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by lucidpixels.com (Postfix) with ESMTP id D49891C000EF7
-	for <xfs@oss.sgi.com>; Fri,  4 Jan 2008 17:04:29 -0500 (EST)
-Received: from lucidpixels.com ([127.0.0.1])
-	by localhost (p34.internal.lan [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id iL9EkKQm31JJ for <xfs@oss.sgi.com>;
-	Fri,  4 Jan 2008 17:04:27 -0500 (EST)
-Received: from localhost (localhost [127.0.0.1])
-	by lucidpixels.com (Postfix) with ESMTP id 7CE79408F24E
-	for <xfs@oss.sgi.com>; Fri,  4 Jan 2008 17:04:27 -0500 (EST)
-Date: Fri, 4 Jan 2008 17:04:27 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: external log doubles performance?
-Message-ID: <Pine.LNX.4.64.0801041704030.22541@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Jan 2008 15:22:44 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m06NMXKG024897
+	for <xfs@oss.sgi.com>; Sun, 6 Jan 2008 15:22:38 -0800
+Received: from postoffice.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1DFA4ECF23
+	for <xfs@oss.sgi.com>; Sun,  6 Jan 2008 15:22:47 -0800 (PST)
+Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id DOV5lv1aOoOcUCpy for <xfs@oss.sgi.com>; Sun, 06 Jan 2008 15:22:47 -0800 (PST)
+Subject: Re: how remove project quota
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <3b8ebef50712280418l663cafadm80f884f43dfd3a15@mail.gmail.com>
+References: <3b8ebef50712280418l663cafadm80f884f43dfd3a15@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 07 Jan 2008 10:24:46 +1100
+Message-Id: <1199661886.9463.4.camel@edge.scott.net.au>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nelzinho Rocha <tecnhouse@gmail.com>
+Cc: xfs@oss.sgi.com
 
-from a linux-admin page/post:
+On Fri, 2007-12-28 at 10:18 -0200, Nelzinho Rocha wrote:
+> Hello,
+> 
+>  how remove a project quota?
+> 
+>  Would be sufficient remove project quota the files /etc/projid and
+> /etc/projects? Or have to do something else?
 
-Mon Jul  3 14:22:45 PDT 2006
-10 clients started
-.......................+......+.......+++++....+*********
-Throughput 182.083 MB/sec (NB=227.604 MB/sec  1820.83 MBit/sec) 10 procs
-Mon Jul  3 14:22:52 PDT 2006
+See the xfs_quota man page, in particular the expert-mode "off" and
+"remove" commands.
 
-When the logbufs and logbsize options are added, throughput increases from
-92.7404 MB/sec to 96.4556 MB/sec. When the log is moved to an external
-device the throughput nearly doubles to 182.083 MB/sec. Clearly, the
-external log increases file system performance under dbench, a program 
-that
-has a large amount of metadata activity.
+cheers.
 
-Tuning the I/O Scheduler
-
---
-
-has anyone done any recent testing?
+-- 
+Nathan
