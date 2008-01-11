@@ -1,44 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jan 2008 23:07:36 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0B77RKO026384
-	for <xfs@oss.sgi.com>; Thu, 10 Jan 2008 23:07:31 -0800
-Date: Fri, 11 Jan 2008 18:07:36 +1100
-Subject: [GIT PULL] XFS update for 2.6.24-rc8
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Jan 2008 14:25:00 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0BMOXcs000402
+	for <xfs@oss.sgi.com>; Fri, 11 Jan 2008 14:24:36 -0800
+Received: from ext.agami.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD14150F402
+	for <xfs@oss.sgi.com>; Fri, 11 Jan 2008 14:24:50 -0800 (PST)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id 8Kg6yiB299TQ143Y for <xfs@oss.sgi.com>; Fri, 11 Jan 2008 14:24:50 -0800 (PST)
+Received: from agami.com (mail [192.168.168.5])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m0BMH3Wb018900
+	for <xfs@oss.sgi.com>; Fri, 11 Jan 2008 14:17:04 -0800
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id m0BMGwL3002040
+	for <xfs@oss.sgi.com>; Fri, 11 Jan 2008 14:16:58 -0800
+Message-ID: <4787EAF1.4080305@agami.com>
+Date: Fri, 11 Jan 2008 14:17:21 -0800
+From: Michael Nishimoto <miken@agami.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: CVS access down?
+References: <4786D35C.9030104@thebarn.com>
+In-Reply-To: <4786D35C.9030104@thebarn.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20080111070737.115D758C4C0F@chook.melbourne.sgi.com>
-From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-Please pull from the for-linus branch:
-    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+Russell Cattelan wrote:
+> Michael Nishimoto wrote:
+>  > It appears that CVS access is down.  Can someone please take
+>  > a look to see what's broken?
+>  >
+>  > Thanks!
+>  >
+> Anymore info?
+> I just did quick test
+> cvs -d :pserver:cvs@oss.sgi.com:/cvs co xfs-cmds
+> 
+> seems to be working fine for me.
+> 
+> -Russell
 
-This will update the following files:
+Sorry, it ends up that this was my fault.
 
- fs/xfs/linux-2.6/xfs_file.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
-
-through these commits:
-
-commit aea6ad0ce5e215ce99fe9e3edd9268f696862d8f
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Thu Jan 10 16:43:26 2008 +1100
-
-    [XFS] fix unaligned access in readdir
-    
-    This patch should fix the issue seen on Alpha with unaligned accesses in
-    the new readdir code. By aligning each dirent to sizeof(u64) we'll avoid
-    unaligned accesses. To make doubly sure we're not hitting problems also
-    rearrange struct hack_dirent to avoid holes.
-    
-    SGI-PV: 975411
-    SGI-Modid: xfs-linux-melb:xfs-kern:30302a
-    
-    Signed-off-by: Christoph Hellwig <hch@infradead.org>
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+    Michael
