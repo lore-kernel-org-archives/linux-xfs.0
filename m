@@ -1,98 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Jan 2008 13:38:41 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Jan 2008 13:52:11 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0DLcZBW007157
-	for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:38:37 -0800
-Received: from edna.telenet-ops.be (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CA4411CA579
-	for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:38:52 -0800 (PST)
-Received: from edna.telenet-ops.be (edna.telenet-ops.be [195.130.132.58]) by cuda.sgi.com with ESMTP id SdDHXkAeiQe70VwR for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:38:52 -0800 (PST)
-From: "Grozdan Nikolov (openSUSE Linux)" <microchip@telenet.be>
-Subject: Re: Cannot delete a directory on a XFS file system
-Date: Sun, 13 Jan 2008 22:38:51 +0100
-References: <200801131723.12626.microchip@telenet.be> <alpine.DEB.0.999999.0801131448070.17216@p34.internal.lan> <478A8256.8030000@sandeen.net>
-In-Reply-To: <478A8256.8030000@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0DLpgbo008485
+	for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:51:45 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7022411CA622
+	for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:52:00 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id yFpNzj2i9aNxsG8l for <xfs@oss.sgi.com>; Sun, 13 Jan 2008 13:52:00 -0800 (PST)
+Message-ID: <478A87FD.60203@sandeen.net>
+Date: Sun, 13 Jan 2008 15:51:57 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Subject: Re: Cannot delete a directory on a XFS file system
+References: <200801131723.12626.microchip@telenet.be> <alpine.DEB.0.999999.0801131448070.17216@p34.internal.lan> <478A8256.8030000@sandeen.net> <200801132238.52075.microchip@telenet.be>
+In-Reply-To: <200801132238.52075.microchip@telenet.be>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200801132238.52075.microchip@telenet.be>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: "Grozdan Nikolov (openSUSE Linux)" <microchip@telenet.be>
 Cc: xfs@oss.sgi.com
 
-On Sunday 13 January 2008 22:27, you wrote:
-> Justin Piszcz wrote:
-> > On Sun, 13 Jan 2008, Grozdan Nikolov (openSUSE Linux) wrote:
-> >> Hi,
-> >>
-> >> I have a small problem with XFS on a small 40 GB IDE disk that I use for
-> >> my music collection. The disk (/dev/hdb) has only one partition on it
-> >> formatted as XFS. On this partition, there is a directory that no matter
-> >> what I do, I cannot delete it. I tried everything, in Konqueror,
-> >> right-click on the directory and choose to delete it. As root on the
-> >> console
-> >> doing "rm -rf /media/data/DATA/MusicApps" ... but nothing works.
-> >>
-> >> When I try to "rm -rf" on this directory I get a message saying...
-> >>
-> >> rm: cannot remove directory `MusicApps/Loops/loops/Acid Loops/Bass':
-> >> Directory not empty
-> >>
-> >> But the "Bass" directory is completely empty, there's nothing in there.
-> >> Also when I unmount the file system and do a "xfs_check /dev/hdb1" I get
-> >> a message saying...
-> >>
-> >> link count mismatch for inode 184549517 (name ?), nlink 3, counted 2
-> >>
-> >> I did several times "xfs_repair /dev/hdb1" but I still get the same
-> >> result. xfs_check reports the same message and I still can't get rid of
-> >> this empty directory. I'm using kernel 2.6.24-rc7, but it's the same
-> >> with other kernels. I also did check the partition for bad block with
-> >> the "badblocks" program, but nothing came out, so the disk is just fine.
-> >>
-> >> Any ideas how I can delete this directory?
-> >
-> > The developers get in on Monday :P
-> >
-> > But some things they will ask:
-> >
-> > 1. run xfs_info /dev/hdb1
-> > 2. run (and capture the full output from the repair process)
->
-> ... with very latest xfsprogs please.  If latest repair doesn't fix it,
+Grozdan Nikolov (openSUSE Linux) wrote:
 
-I do not know what version is the latest of xfsprogs. I use my distro's 
-default (2.8.11)
+> I do not know what version is the latest of xfsprogs. I use my distro's 
+> default (2.8.11)
 
-> using xfs_metadump to provide a filesystem image for Barry to reproduce
-> with would be helpful.
+Ok, 2.9.4 is latest.  2.8.11 is from Aug 2006.... Perhaps the more
+recent version will properly fix your fs.
 
-I can't find xfs_metadump on my system. I only have xfsdump. Is this the same?
+>From the changelog:
 
->
-> > 3. run ls -lR on the dir that has problems
-> > 4. run ls -li on the director(ies) that cannot be deleted for the inode
-> > #s
->
-> ls -a on the dir to be sure there are no hidden dotfiles
+xfsprogs-2.8.15 (19 October 2006)
+        - Fix up nlink checks and repairs in phase 7 for xfs_repair.
 
-ls -a MusicApps
 
-.  ..  Loops
+>> using xfs_metadump to provide a filesystem image for Barry to reproduce
+>> with would be helpful.
+> 
+> I can't find xfs_metadump on my system. I only have xfsdump. Is this the same?
 
-ls -a "MusicApps/Loops/loops/Acid Loops/Bass"
+Nope, it's not there in your older xfsprogs.
 
-.  ..
+>>> 3. run ls -lR on the dir that has problems
+>>> 4. run ls -li on the director(ies) that cannot be deleted for the inode
+>>> #s
+>> ls -a on the dir to be sure there are no hidden dotfiles
 
-> ls -id on the dir to see if it is inode 184549517
+> ls -a "MusicApps/Loops/loops/Acid Loops/Bass"
+> 
+> .  ..
 
-ls -id "MusicApps/Loops/loops/Acid Loops/Bass"
+Ok, no hidden files.
 
-184549517 MusicApps/Loops/loops/Acid Loops/Bass
+> 
+>> ls -id on the dir to see if it is inode 184549517
+> 
+> ls -id "MusicApps/Loops/loops/Acid Loops/Bass"
 
->
-> -Eric
+So, the dir you can't delete is the one with the link count mismatch
+stated by xfs_check - that's what I figured but wanted to double check.
+
+I'd be willing to bet that the latest xfsprogs would fix this for you.
+
+Alternately some xfs_db hackery could too, but using more recent repair
+would be the best route I think.
+
+-Eric
+
+> 184549517 MusicApps/Loops/loops/Acid Loops/Bass
+> 
+>> -Eric
+> 
