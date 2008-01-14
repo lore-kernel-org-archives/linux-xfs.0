@@ -1,45 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jan 2008 10:05:41 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0EI5ZF2023586
-	for <xfs@oss.sgi.com>; Mon, 14 Jan 2008 10:05:36 -0800
-Received: from mail3.key-systems.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id DF64C5194D9
-	for <xfs@oss.sgi.com>; Mon, 14 Jan 2008 10:05:53 -0800 (PST)
-Received: from mail3.key-systems.net (mail3.key-systems.net [81.3.43.213]) by cuda.sgi.com with SMTP id YL9yS3c5tSVJ3fFC for <xfs@oss.sgi.com>; Mon, 14 Jan 2008 10:05:53 -0800 (PST)
-Subject: binary NULL errors
-From: Christoph Anton Mitterer <calestyo@scientia.net>
-Content-Type: text/plain
-Date: Mon, 14 Jan 2008 19:05:49 +0100
-Message-Id: <1200333949.3145.33.camel@fermat.scientia.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jan 2008 14:42:44 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0EMgaQ4029308
+	for <xfs@oss.sgi.com>; Mon, 14 Jan 2008 14:42:40 -0800
+Date: Tue, 15 Jan 2008 09:42:45 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Question related to XFS sync , especially fsync
+Message-ID: <20080114224245.GT155259@sgi.com>
+References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Gopala Krishna <gopalakrishna.n.m@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi.
+On Mon, Jan 14, 2008 at 05:44:22PM +0530, Gopala Krishna wrote:
+> Hi,
+> I am seeing some strange problem with XFS and would like to know  the
+> expected behavior and if it is faulty is there any patches to resolve the
+> problem.
+> 
+> Problem:
+> ======
+> Basically I am extracting metadata information for a given file by reading
+> the inode structure from the particular disk offset (based on it's  position
+> calculated by published inode structure and super block structure
+>  information). Before reading the metada data information from the disk, I
+> am calling fsync (I used to call sync, but later I changed to fsync, since
+> sync is not guranteed to flush all meta data)  to ensure all metadata
+> related to file is flushed to disk. Later I am reading particular disk
+> offset as per calculation.   I am getting XFS magic field properly after
+> mapping to XFs inode structure. However I am not getting dimode properly in
+> some cases (not all cases) and it shows 00000 even for regular file and
+> directory.
 
-I've got some questions about using XFS.
+How are you finding and reading the inode off disk?
 
-I've already used it as for all my discs about one or two years ago, but
-then I've suffered several times from the binary NULLs "bug", that
-happened when the system crashed or had a power loss.
+Cheers,
 
-I've lost more than one open files (like all my bookmarks in Firefox)
-and thus I've switched back to ext3
-
-In the FAQ at http://oss.sgi.com/projects/xfs/faq.html it says:
-Update: This issue has been addressed with a CVS fix on the 29th March
-2007 and merged into mainline on 8th May 2007 for 2.6.22-rc1.
-
-What does this exactly mean and what has been fixed/addressed?
-Is XFS now similar to ext3 and I won't see those binary NULLs stuff
-again?
-
-What happens now in case of a powerloss? Does XFS still make heavy use
-of caching techniques?
-
-Best wishes,
-Chris,
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
