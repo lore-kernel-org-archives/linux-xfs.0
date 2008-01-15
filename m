@@ -1,65 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jan 2008 13:34:13 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0FLY1x1002663
-	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 13:34:05 -0800
-Date: Wed, 16 Jan 2008 08:34:10 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Proper swidth and sunit for RAID 5 (does it matter)?
-Message-ID: <20080115213410.GM155407@sgi.com>
-References: <alpine.DEB.0.999999.0801151227001.25921@p34.internal.lan>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jan 2008 14:24:24 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0FMOI78010797
+	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 14:24:20 -0800
+Received: from postoffice.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFBFA522B04
+	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 14:24:32 -0800 (PST)
+Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id pp0bD6ULC8UZuxxt for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 14:24:32 -0800 (PST)
+Subject: Re: Question related to XFS sync , especially fsync
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <478CCEAC.9010008@sandeen.net>
+References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>
+	 <20080114224245.GT155259@sgi.com>
+	 <d711080c0801150544i53d7abb2hbea659116ce0006b@mail.gmail.com>
+	 <478CCEAC.9010008@sandeen.net>
+Content-Type: text/plain
+Date: Wed, 16 Jan 2008 09:26:52 +1100
+Message-Id: <1200436012.9463.184.camel@edge.scott.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.0.999999.0801151227001.25921@p34.internal.lan>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: Gopala Krishna <gopalakrishna.n.m@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, David Chinner <dgc@sgi.com>, Chris Wedgwood <cw@f00f.org>, Matthias Schniedermeyer <ms@citd.de>, "Olaf Fra;czyk" <olaf@cbk.poznan.pl>, Andi Kleen <andi@firstfloor.org>, xfs@oss.sgi.com
 
-On Tue, Jan 15, 2008 at 12:29:14PM -0500, Justin Piszcz wrote:
-> Dave,
+On Tue, 2008-01-15 at 09:18 -0600, Eric Sandeen wrote:
 > 
-> What is the proper sunit and swidth for a 64, 256, and 1024 kilobyte chunk 
-> size with a 10-disk raid 5?
+> > I have lot of code getting in to that. To explain that I have to go
+> through
+> > that complex part of the code to explain in detail.
+> > 
+> > Basically once we get indoe number for a given file from the
+> available
+> > system call, we only depending upon the XFS layout and it's
+> structure.  We
+> > are  reading super block from a particular disk offset  and
+> calculating
+> > address for inode offset and its address on the disk and reading
+> directly
+> > from the disk offset. We are totally depending on XFS on disk
+> layout.
 > 
-> Also, in the majority of benchmarks it does not seem to matter whether the 
-> FS is stripe-aligned or not (with SW raid)- does it mainly/only affect HW 
-> raid?
-
-Affects both. If you are doing large I/O, both SW and HW raid will
-avoid RMW cycles if you can do full stripe writes and that means
-they go faster. The faster the RAID array, the bigger the difference
-it will make.
-
-If your tests are with small I/O or with a config that can't
-do I/O large enough for full stripe writes, then you won't see
-any difference as you're not avoiding RMW cycles.
-
-> Current settings (10 disks):
+> Can I ask why you are doing this? :)
 > 
-> # xfs_info /dev/md3
-> meta-data=/dev/md3               isize=256    agcount=4, agsize=82417536 
 
-Why 4 ags?
+This would be good to know.  If you absolutely must use inode numbers
+instead of path names, you should use the "by-handle" interface (like
+xfsdump, xfs_fsr, etc) and not use the ondisk structures directly -
+doing so is always "broken by design" and you'll get little sympathy
+here for doing so. :)
 
-The low number of AGs is an optimisation for single disks,
-not multi-disk arrays that have much more parallelism and
-seek capacity available.
+cheers.
 
-> blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=329670144, imaxpct=25
->          =                       sunit=0      swidth=0 blks, unwritten=1
-
-And you don't even have su/sw set here, so XFS won't be doing
-any alignment optimisation at all.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Nathan
