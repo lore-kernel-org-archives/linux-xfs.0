@@ -1,41 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jan 2008 22:33:05 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jan 2008 22:43:47 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0G6WuMq016898
-	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:32:59 -0800
-Received: from pentafluge.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7468524A27
-	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:33:11 -0800 (PST)
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40]) by cuda.sgi.com with ESMTP id c5MBFsBxIXx9a3tI for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:33:11 -0800 (PST)
-Date: Wed, 16 Jan 2008 06:32:35 +0000
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [REVIEW] Refactor xfs_repair's process_dinode_int
-Message-ID: <20080116063234.GA21317@infradead.org>
-References: <4782B72D.8070208@agami.com> <47833C0F.6070206@agami.com> <op.t4m0r1an3jf8g2@pc-bnaujok.melbourne.sgi.com> <478D1899.9080201@agami.com> <op.t4zzbvbs3jf8g2@pc-bnaujok.melbourne.sgi.com> <478D75C2.5010004@sgi.com> <20080116045943.GU155407@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0G6hc0d017906
+	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:43:42 -0800
+Received: from wa-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 368E8524DC0
+	for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:43:57 -0800 (PST)
+Received: from wa-out-1112.google.com (wa-out-1112.google.com [209.85.146.177]) by cuda.sgi.com with ESMTP id sfJ81nCx7R4icHm5 for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:43:57 -0800 (PST)
+Received: by wa-out-1112.google.com with SMTP id k22so256234waf.18
+        for <xfs@oss.sgi.com>; Tue, 15 Jan 2008 22:43:54 -0800 (PST)
+Message-ID: <d711080c0801152243h7613bbean9daeab8658f75408@mail.gmail.com>
+Date: Wed, 16 Jan 2008 12:13:54 +0530
+From: "Gopala Krishna" <gopalakrishna.n.m@gmail.com>
+Subject: Re: Question related to XFS sync , especially fsync
+In-Reply-To: <1200436012.9463.184.camel@edge.scott.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>
+	 <20080114224245.GT155259@sgi.com>
+	 <d711080c0801150544i53d7abb2hbea659116ce0006b@mail.gmail.com>
+	 <478CCEAC.9010008@sandeen.net>
+	 <1200436012.9463.184.camel@edge.scott.net.au>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20080116045943.GU155407@sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Timothy Shimmin <tes@sgi.com>, Barry Naujok <bnaujok@sgi.com>, Chandan Talukdar <chandan@agami.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: nscott@aconex.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Jan 16, 2008 at 03:59:43PM +1100, David Chinner wrote:
-> As a result the kernel does not have endian types for single
-> byte variables (ie. there's __be16, __be32, __be64 but not __be8),
-> nor are there cpu_to_be8 or be8_to_cpu conversion functions.
-> Hence the lack of them in the XFS code ;)
-> 
-> > I guess you might consider that you are letting people know
-> > that we need to endian convert this value in general and
-> > that if we change the code in the future it might be needed...
-> 
-> Well, that should be obvious when changing the structure
-> that has lots of __beX types in already....
+Is there any XFS call from user level to flush metadata  for a given file or
+complete log  to disk?
 
-Actually enabling sparse checking for endianess annotations is still on
-my todo list.  I started this project a while ago but failed when the
-cgcc wrapper had some problems interacting with libtool.  I'll see how
-to get that resolved.
+Thanks,
+Gopal.
+
+On 1/16/08, Nathan Scott <nscott@aconex.com> wrote:
+>
+> On Tue, 2008-01-15 at 09:18 -0600, Eric Sandeen wrote:
+> >
+> > > I have lot of code getting in to that. To explain that I have to go
+> > through
+> > > that complex part of the code to explain in detail.
+> > >
+> > > Basically once we get indoe number for a given file from the
+> > available
+> > > system call, we only depending upon the XFS layout and it's
+> > structure.  We
+> > > are  reading super block from a particular disk offset  and
+> > calculating
+> > > address for inode offset and its address on the disk and reading
+> > directly
+> > > from the disk offset. We are totally depending on XFS on disk
+> > layout.
+> >
+> > Can I ask why you are doing this? :)
+> >
+>
+> This would be good to know.  If you absolutely must use inode numbers
+> instead of path names, you should use the "by-handle" interface (like
+> xfsdump, xfs_fsr, etc) and not use the ondisk structures directly -
+> doing so is always "broken by design" and you'll get little sympathy
+> here for doing so. :)
+>
+> cheers.
+>
+> --
+> Nathan
+>
+>
+
+
+[[HTML alternate version deleted]]
