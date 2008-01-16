@@ -1,61 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 10:19:42 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 13:17:38 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GIJcKx014629
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:19:40 -0800
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 26922C6078E
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:19:53 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id lHZfwhw5gl5jMXPR for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:19:53 -0800 (PST)
-Date: Wed, 16 Jan 2008 13:19:53 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
- Again
-In-Reply-To: <29a863790801161009h7bb1f0f7v34bc893fce338567@mail.gmail.com>
-Message-ID: <alpine.DEB.0.999999.0801161316280.1151@p34.internal.lan>
-References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan> <29a863790801161009h7bb1f0f7v34bc893fce338567@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GLHObJ002364
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:25 -0800
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80ACBC676DB
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:39 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id IAiUlFGtcokag4Mu for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:39 -0800 (PST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Question related to XFS sync , especially fsync
+Date: Wed, 16 Jan 2008 22:17:34 +0100
+References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com> <d711080c0801160100r7ae091f8k9c8f0f0152b9f203@mail.gmail.com> <478DEFF0.40004@sgi.com> (sfid-20080116_130938_790120_481702E4)
+In-Reply-To: <478DEFF0.40004@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200801162217.35594.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Greg Cormier <gcormier@gmail.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: markgw@sgi.com
+Cc: Gopala Krishna <gopalakrishna.n.m@gmail.com>, Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, nscott@aconex.com, xfs@oss.sgi.com
 
-On Wed, 16 Jan 2008, Greg Cormier wrote:
-
-> What sort of tools are you using to get these benchmarks, and can I
-> used them for ext3?
+Am Mittwoch 16 Januar 2008 schrieb Mark Goodwin:
+> Gopala,
 >
-> Very interested in running this on my server.
->
->
-> Thanks,
-> Greg
->
+> it sounds like you want something like NDMP. Check that out first.
 
-You can use whatever suits you, such as untar kernel source tree, copy files, untar backups, etc--, you should benchmark specifically what *your* workload is.
+Is there an open source implementation available for this protocol? Would 
+be interesting to know.
 
-Here is the skeleton, using bash:: (don't forget to turn off the cron 
-daemon)
-
-for i in 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536
-do
-   cd /
-   umount /r1
-   mdadm -S /dev/md3
-   mdadm --create --assume-clean --verbose /dev/md3 --level=5 --raid-devices=10 --chunk=$i --run /dev/sd[c-l]1
-
-   /etc/init.d/oraid.sh # to optimize my raid stuff
-
-   mkfs.xfs -f /dev/md3
-   mount /dev/md3 /r1 -o logbufs=8,logbsize=262144
-
-   # then simply add what you do often here
-   # everyone's workload is different
-   /usr/bin/time -f %E -o ~/$i=chunk.txt bash -c 'dd if=/dev/zero of=/r1/bigfile bs=1M count=10240; sync'
-done
-
-Then just, grep : /root/*chunk* | sort -n to get the results in the same format.
-
-Justin.
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
