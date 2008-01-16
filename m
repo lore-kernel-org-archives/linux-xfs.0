@@ -1,86 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 14:55:22 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 15:24:56 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GMtD1x009163
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:17 -0800
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07CD8C68CDB
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:31 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id m5CpVxSARcLbn6TD for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:31 -0800 (PST)
-Date: Wed, 16 Jan 2008 17:55:00 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
- Again
-In-Reply-To: <200801170019.04836.a1426z@gawab.com>
-Message-ID: <alpine.DEB.0.999999.0801161754180.4552@p34.internal.lan>
-References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan> <200801162027.00791.a1426z@gawab.com> <alpine.DEB.0.999999.0801161243380.1151@p34.internal.lan> <200801170019.04836.a1426z@gawab.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GNOlgr011912
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 15:24:49 -0800
+Received: from mail.purevideo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FF72C6920A
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 15:25:04 -0800 (PST)
+Received: from mail.purevideo.com (mail.purevideo.com [208.50.29.149]) by cuda.sgi.com with ESMTP id 4dQgQNU1I11IWCck for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 15:25:04 -0800 (PST)
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: Repairing a possibly incomplete xfs_growfs command?
+Date: Wed, 16 Jan 2008 15:19:19 -0800
+Message-ID: <9CE70E6ED2C2F64FB5537A2973FA4F0253594C@pvn-3001.purevideo.local>
+From: "Mark Magpayo" <mmagpayo@purevideo.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Al Boldi <a1426z@gawab.com>
-Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: xfs@oss.sgi.com
+
+Hi,
+
+So I have run across a strange situation which I hope there are some
+gurus out there to help.
+
+The original setup was a logical volume of 8.9TB.  I extended the volume
+to 17.7TB and attempted to run xfs_growfs.  I am not sure whether the
+command actually finished, as after I ran the command, the metadata was
+displayed, but there was no nothing that stated the the number of data
+blocks had changed.  I was just returned to the prompt, so I'm not sure
+whether the command completed or not..
+
+I was unable write to the logical volume I had just created.  I tried to
+remount it, but I kept getting an error saying the superblock could not
+be read.  I tried running an xfs_repair on the filesystem, and get the
+following:
+
+Phase 1 - find and verify superblock...
+superblock read failed, offset 19504058859520, size 2048, ag 64, rval 0
+
+fatal error -- Invalid argument
 
 
+I am not very experienced with xfs (I was following commands in some
+documentaion), and I was recommended to post to this mailing list.  If
+anyone could provide some help, it would be greatly appreciate.  Also,
+if there is any information I can provide to help, I will gladly provide
+it.  Thanks in advance!
 
-On Thu, 17 Jan 2008, Al Boldi wrote:
+Sincerely,
 
-> Justin Piszcz wrote:
->> On Wed, 16 Jan 2008, Al Boldi wrote:
->>>> Also, can you retest using dd with different block-sizes?
->>
->> I can do this, moment..
->>
->>
->> I know about oflag=direct but I choose to use dd with sync and measure the
->> total time it takes.
->> /usr/bin/time -f %E -o ~/$i=chunk.txt bash -c 'dd if=/dev/zero
->> of=/r1/bigfile bs=1M count=10240; sync'
->>
->> So I was asked on the mailing list to test dd with various chunk sizes,
->> here is the length of time it took
->> to write 10 GiB and sync per each chunk size:
->>
->> 4=chunk.txt:0:25.46
->> 8=chunk.txt:0:25.63
->> 16=chunk.txt:0:25.26
->> 32=chunk.txt:0:25.08
->> 64=chunk.txt:0:25.55
->> 128=chunk.txt:0:25.26
->> 256=chunk.txt:0:24.72
->> 512=chunk.txt:0:24.71
->> 1024=chunk.txt:0:25.40
->> 2048=chunk.txt:0:25.71
->> 4096=chunk.txt:0:27.18
->> 8192=chunk.txt:0:29.00
->> 16384=chunk.txt:0:31.43
->> 32768=chunk.txt:0:50.11
->> 65536=chunk.txt:2:20.80
->
-> What do you get with bs=512,1k,2k,4k,8k,16k...
->
->
-> Thanks!
->
-> --
-> Al
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-root      4621  0.0  0.0  12404   760 pts/2    D+   17:53   0:00 mdadm -S /dev/md3
-root      4664  0.0  0.0   4264   728 pts/5    S+   17:54   0:00 grep D
-
-Tried to stop it when it was re-syncing, DEADLOCK :(
-
-[  305.464904] md: md3 still in use.
-[  314.595281] md: md_do_sync() got signal ... exiting
-
-Anyhow, done testing, time to move data back on if I can kill the resync 
-process w/out deadlock.
-
-Justin.
+Mark
