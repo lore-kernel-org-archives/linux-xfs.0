@@ -1,82 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 03:52:25 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0GBqDm9013510
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 03:52:17 -0800
-Message-ID: <478DEFF0.40004@sgi.com>
-Date: Wed, 16 Jan 2008 22:52:16 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 10:02:55 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GI2MV0013197
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:02:24 -0800
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67551527FDC
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:02:41 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id lM5DCpYN5q3XyOtq for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 10:02:41 -0800 (PST)
+Date: Wed, 16 Jan 2008 13:02:40 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
+ Again
+In-Reply-To: <200801162027.00791.a1426z@gawab.com>
+Message-ID: <alpine.DEB.0.999999.0801161243380.1151@p34.internal.lan>
+References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan> <200801162027.00791.a1426z@gawab.com>
 MIME-Version: 1.0
-Subject: Re: Question related to XFS sync , especially fsync
-References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>	 <20080114224245.GT155259@sgi.com>	 <d711080c0801150544i53d7abb2hbea659116ce0006b@mail.gmail.com>	 <478CCEAC.9010008@sandeen.net>	 <1200436012.9463.184.camel@edge.scott.net.au>	 <d711080c0801152243h7613bbean9daeab8658f75408@mail.gmail.com>	 <20080116064840.GA5725@puku.stupidest.org>	 <d711080c0801152325g3d57965dm92e3687a5f98c5f6@mail.gmail.com>	 <20080116082502.GA24175@infradead.org> <d711080c0801160100r7ae091f8k9c8f0f0152b9f203@mail.gmail.com>
-In-Reply-To: <d711080c0801160100r7ae091f8k9c8f0f0152b9f203@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Gopala Krishna <gopalakrishna.n.m@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, nscott@aconex.com, xfs@oss.sgi.com
+To: Al Boldi <a1426z@gawab.com>
+Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 
-Gopala,
 
-it sounds like you want something like NDMP. Check that out first.
 
--- Mark
+On Wed, 16 Jan 2008, Al Boldi wrote:
 
-Gopala Krishna wrote:
-> Thanks for the suggestions!.  I will relook at the my idea and
-> design....implemetation. As of now what we are doing is in experimental
-> stage.
-> 
-> Thanks,
-> Gopal.
-> 
-> 
-> On 1/16/08, Christoph Hellwig <hch@infradead.org> wrote:
->> On Wed, Jan 16, 2008 at 12:55:17PM +0530, Gopala Krishna wrote:
->>> While  replying  to Eric, I mentioned why we are doing that. We are
->>> basically providing interfaces to back up applications in a pure storage
->>> environment that deals with the  back up at block level (sector level)
->> and
->>> hence depending upon different file system, we need to get information
->> about
->>> file like it's extent information and associated block numbers etc.
->> This basically can't work.  If you do a plain block based backup you
->> need to freeze the filesystem first and then either backup through a
->> newly created snapshot or the raw device.  Alternatively you can do
->> file-based backups assisted by the bulkstat interface as done by
->> xfsdump.  If you try to mix the two layers you get into deep trouble
->> due to various issues:
+> Justin Piszcz wrote:
+>> For these benchmarks I timed how long it takes to extract a standard 4.4
+>> GiB DVD:
 >>
->> - knowledge of the disk format.  The ondisk format can change anytime
->>   and will break your application.  And yes, additions to the ondisk
->>   format do happen quite frequently.
->> - no coherency between the filesystem and the block device node.  This
->>   is especially true for backup applications which use the buffered
->>   block device nodes because there is a real-life chance that stale
->>   cache is around
->> - no guarantee that the ondisk image is actually update.  XFS like
->>   most other current filesystems uses an intent log to provide
->>   reliabily and sync is only guaranteed to push updates into the log
->>   but not actually write it back to it's "normal" location on disk.
+>> Settings: Software RAID 5 with the following settings (until I change
+>> those too):
 >>
->> In short what you're trying to do is a road to disaster, so don't do it!
+>> Base setup:
+>> blockdev --setra 65536 /dev/md3
+>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>> echo "Disabling NCQ on all disks..."
+>> for i in $DISKS
+>> do
+>>    echo "Disabling NCQ on $i"
+>>    echo 1 > /sys/block/"$i"/device/queue_depth
+>> done
 >>
->> Note that the problems apply to any filesystem in one way or another,
->> not just XFS.
+>> p34:~# grep : *chunk* |sort -n
+>> 4-chunk.txt:0:45.31
+>> 8-chunk.txt:0:44.32
+>> 16-chunk.txt:0:41.02
+>> 32-chunk.txt:0:40.50
+>> 64-chunk.txt:0:40.88
+>> 128-chunk.txt:0:40.21
+>> 256-chunk.txt:0:40.14***
+>> 512-chunk.txt:0:40.35
+>> 1024-chunk.txt:0:41.11
+>> 2048-chunk.txt:0:43.89
+>> 4096-chunk.txt:0:47.34
+>> 8192-chunk.txt:0:57.86
+>> 16384-chunk.txt:1:09.39
+>> 32768-chunk.txt:1:26.61
 >>
->>
-> 
-> 
-> [[HTML alternate version deleted]]
-> 
-> 
+>> It would appear a 256 KiB chunk-size is optimal.
+>
+> Can you retest with different max_sectors_kb on both md and sd?
+Remember this is SW RAID, so max_sectors_kb will only affect the 
+individual disks underneath the SW RAID, I have benchmarked in the past, 
+the defaults chosen by the kernel are optimal, changing them did not make 
+any noticable improvements.
 
--- 
+> > Also, can you retest using dd with different block-sizes?
+I can do this, moment..
 
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+
+I know about oflag=direct but I choose to use dd with sync and measure the 
+total time it takes.
+/usr/bin/time -f %E -o ~/$i=chunk.txt bash -c 'dd if=/dev/zero 
+of=/r1/bigfile bs=1M count=10240; sync'
+
+So I was asked on the mailing list to test dd with various chunk sizes, 
+here is the length of time it took
+to write 10 GiB and sync per each chunk size:
+
+4=chunk.txt:0:25.46
+8=chunk.txt:0:25.63
+16=chunk.txt:0:25.26
+32=chunk.txt:0:25.08
+64=chunk.txt:0:25.55
+128=chunk.txt:0:25.26
+256=chunk.txt:0:24.72
+512=chunk.txt:0:24.71
+1024=chunk.txt:0:25.40
+2048=chunk.txt:0:25.71
+4096=chunk.txt:0:27.18
+8192=chunk.txt:0:29.00
+16384=chunk.txt:0:31.43
+32768=chunk.txt:0:50.11
+65536=chunk.txt:2:20.80
+
+Justin.
