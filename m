@@ -1,37 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 13:17:38 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GLHObJ002364
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:25 -0800
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80ACBC676DB
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:39 -0800 (PST)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id IAiUlFGtcokag4Mu for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 13:17:39 -0800 (PST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: Question related to XFS sync , especially fsync
-Date: Wed, 16 Jan 2008 22:17:34 +0100
-References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com> <d711080c0801160100r7ae091f8k9c8f0f0152b9f203@mail.gmail.com> <478DEFF0.40004@sgi.com> (sfid-20080116_130938_790120_481702E4)
-In-Reply-To: <478DEFF0.40004@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 14:52:53 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GMqn1E008804
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:52:50 -0800
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03D42529F50
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:53:06 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id FzQkZ4MGPnnZ7nDE for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:53:06 -0800 (PST)
+Date: Wed, 16 Jan 2008 17:53:05 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
+ Again
+In-Reply-To: <200801170019.04836.a1426z@gawab.com>
+Message-ID: <alpine.DEB.0.999999.0801161752420.4552@p34.internal.lan>
+References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan> <200801162027.00791.a1426z@gawab.com> <alpine.DEB.0.999999.0801161243380.1151@p34.internal.lan> <200801170019.04836.a1426z@gawab.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200801162217.35594.Martin@lichtvoll.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: Gopala Krishna <gopalakrishna.n.m@gmail.com>, Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, nscott@aconex.com, xfs@oss.sgi.com
+To: Al Boldi <a1426z@gawab.com>
+Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 
-Am Mittwoch 16 Januar 2008 schrieb Mark Goodwin:
-> Gopala,
+
+
+On Thu, 17 Jan 2008, Al Boldi wrote:
+
+> Justin Piszcz wrote:
+>> On Wed, 16 Jan 2008, Al Boldi wrote:
+>>>> Also, can you retest using dd with different block-sizes?
+>>
+>> I can do this, moment..
+>>
+>>
+>> I know about oflag=direct but I choose to use dd with sync and measure the
+>> total time it takes.
+>> /usr/bin/time -f %E -o ~/$i=chunk.txt bash -c 'dd if=/dev/zero
+>> of=/r1/bigfile bs=1M count=10240; sync'
+>>
+>> So I was asked on the mailing list to test dd with various chunk sizes,
+>> here is the length of time it took
+>> to write 10 GiB and sync per each chunk size:
+>>
+>> 4=chunk.txt:0:25.46
+>> 8=chunk.txt:0:25.63
+>> 16=chunk.txt:0:25.26
+>> 32=chunk.txt:0:25.08
+>> 64=chunk.txt:0:25.55
+>> 128=chunk.txt:0:25.26
+>> 256=chunk.txt:0:24.72
+>> 512=chunk.txt:0:24.71
+>> 1024=chunk.txt:0:25.40
+>> 2048=chunk.txt:0:25.71
+>> 4096=chunk.txt:0:27.18
+>> 8192=chunk.txt:0:29.00
+>> 16384=chunk.txt:0:31.43
+>> 32768=chunk.txt:0:50.11
+>> 65536=chunk.txt:2:20.80
 >
-> it sounds like you want something like NDMP. Check that out first.
+> What do you get with bs=512,1k,2k,4k,8k,16k...
+>
+>
+> Thanks!
+>
+> --
+> Al
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Is there an open source implementation available for this protocol? Would 
-be interesting to know.
+Done testing for now, but I did test with 256k with a 256k chunk and 
+obviously that got good results, just like 1m with a 1mb chunk, 460-480 
+MiB/s.
 
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Justin.
