@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 14:52:53 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GMqn1E008804
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:52:50 -0800
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 14:55:22 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0GMtD1x009163
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:17 -0800
 Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 03D42529F50
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:53:06 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id FzQkZ4MGPnnZ7nDE for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:53:06 -0800 (PST)
-Date: Wed, 16 Jan 2008 17:53:05 -0500 (EST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 07CD8C68CDB
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:31 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id m5CpVxSARcLbn6TD for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 14:55:31 -0800 (PST)
+Date: Wed, 16 Jan 2008 17:55:00 -0500 (EST)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Linux Software RAID 5 + XFS Multi-Benchmarks / 10 Raptors
  Again
 In-Reply-To: <200801170019.04836.a1426z@gawab.com>
-Message-ID: <alpine.DEB.0.999999.0801161752420.4552@p34.internal.lan>
+Message-ID: <alpine.DEB.0.999999.0801161754180.4552@p34.internal.lan>
 References: <alpine.DEB.0.999999.0801161105510.16168@p34.internal.lan> <200801162027.00791.a1426z@gawab.com> <alpine.DEB.0.999999.0801161243380.1151@p34.internal.lan> <200801170019.04836.a1426z@gawab.com>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
@@ -72,8 +72,15 @@ On Thu, 17 Jan 2008, Al Boldi wrote:
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-Done testing for now, but I did test with 256k with a 256k chunk and 
-obviously that got good results, just like 1m with a 1mb chunk, 460-480 
-MiB/s.
+root      4621  0.0  0.0  12404   760 pts/2    D+   17:53   0:00 mdadm -S /dev/md3
+root      4664  0.0  0.0   4264   728 pts/5    S+   17:54   0:00 grep D
+
+Tried to stop it when it was re-syncing, DEADLOCK :(
+
+[  305.464904] md: md3 still in use.
+[  314.595281] md: md_do_sync() got signal ... exiting
+
+Anyhow, done testing, time to move data back on if I can kill the resync 
+process w/out deadlock.
 
 Justin.
