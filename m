@@ -1,45 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 15:38:14 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0GNc3Vo013047
-	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 15:38:07 -0800
-Message-ID: <478E955F.9080607@sgi.com>
-Date: Thu, 17 Jan 2008 10:38:07 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jan 2008 17:24:52 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0H1Oihx023901
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 17:24:46 -0800
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2684E52A922
+	for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 17:25:02 -0800 (PST)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with ESMTP id sEIKgIYnETQ9CRfD for <xfs@oss.sgi.com>; Wed, 16 Jan 2008 17:25:02 -0800 (PST)
 Subject: Re: Question related to XFS sync , especially fsync
-References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com> <d711080c0801160100r7ae091f8k9c8f0f0152b9f203@mail.gmail.com> <478DEFF0.40004@sgi.com> (sfid-20080116_130938_790120_481702E4) <200801162217.35594.Martin@lichtvoll.de>
-In-Reply-To: <200801162217.35594.Martin@lichtvoll.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andi Kleen <andi@firstfloor.org>
+References: <d711080c0801140414n48e47140y88f545eba605eff9@mail.gmail.com>
+	<20080114224245.GT155259@sgi.com>
+	<d711080c0801150544i53d7abb2hbea659116ce0006b@mail.gmail.com>
+	<478CCEAC.9010008@sandeen.net>
+	<1200436012.9463.184.camel@edge.scott.net.au>
+	<d711080c0801152243h7613bbean9daeab8658f75408@mail.gmail.com>
+	<20080116064840.GA5725@puku.stupidest.org>
+	<d711080c0801152325g3d57965dm92e3687a5f98c5f6@mail.gmail.com>
+Date: Thu, 17 Jan 2008 02:25:00 +0100
+In-Reply-To: <d711080c0801152325g3d57965dm92e3687a5f98c5f6@mail.gmail.com> (Gopala Krishna's message of "Wed\, 16 Jan 2008 12\:55\:17 +0530")
+Message-ID: <p73ejchkzv7.fsf@bingen.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: Gopala Krishna <gopalakrishna.n.m@gmail.com>, Christoph Hellwig <hch@infradead.org>, Chris Wedgwood <cw@f00f.org>, nscott@aconex.com, xfs@oss.sgi.com
+To: Gopala Krishna <gopalakrishna.n.m@gmail.com>
+Cc: Chris Wedgwood <cw@f00f.org>, nscott@aconex.com, xfs@oss.sgi.com
 
+"Gopala Krishna" <gopalakrishna.n.m@gmail.com> writes:
 
+> we need to get information about
+> file like it's extent information and associated block numbers etc.
+ To
+> extract these there is no system call 
 
-Martin Steigerwald wrote:
-> Am Mittwoch 16 Januar 2008 schrieb Mark Goodwin:
->> Gopala,
->>
->> it sounds like you want something like NDMP. Check that out first.
-> 
-> Is there an open source implementation available for this protocol? Would 
-> be interesting to know.
+Actually there is the FIOBMAP ioctl for data blocks. e.g. it's used by
+boot loaders like lilo to create a block map to read a file without
+knowledge of the file system. Should work on all file systems that
+support lilo.
 
-See http://www.ndmp.org for the FAQ, spec, etc. THere is a download area
-with an SDK but no open source version that I know of.
+It won't give you information about metadata blocks though.
 
-Perhaps a new project is born ;-)
-
-Cheers
-
--- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+-Andi
