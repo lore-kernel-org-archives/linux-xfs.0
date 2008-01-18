@@ -1,69 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 18 Jan 2008 13:23:16 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0ILNC9S025858
-	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:23:13 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E15D5376AA
-	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:23:30 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id XJ9DjuHwsfc9J9Qr for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:23:30 -0800 (PST)
-Message-ID: <479118CF.1020302@sandeen.net>
-Date: Fri, 18 Jan 2008 15:23:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 18 Jan 2008 13:45:16 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0ILj6CO027277
+	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:45:07 -0800
+Received: from mail.g-house.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FF80C92A75
+	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:45:24 -0800 (PST)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75]) by cuda.sgi.com with ESMTP id zsbLoffF6koSEqAD for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 13:45:24 -0800 (PST)
+Date: Fri, 18 Jan 2008 22:45:17 +0100 (CET)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: 2.6.24-rc8: possible circular locking dependency detected
+Message-ID: <alpine.DEB.1.00.0801182240310.6521@sheep.housecafe.de>
 MIME-Version: 1.0
-Subject: Re: [REVIEW 2/2] Case insensitive support for XFS - user-space
-References: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: xfs@oss.sgi.com
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-Barry Naujok wrote:
-> This patch relies on the dinode.c refactoring patch posted recently.
-> I have attached the latest version (with fixes pointed out by Chandan).
+Hi,
 
-So, new mkfs.xfs -h output says:
+just FYI, upgrading to -rc8 gave the following messages in kern.log in
+the morning hours, when the backups were run:
 
-/* naming */		[-n log=n|size=num,version=n,utf8=none|default|turkic]
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.24-rc8 #2
+-------------------------------------------------------
+rsync/23295 is trying to acquire lock:
+  (iprune_mutex){--..}, at: [<c017a552>] shrink_icache_memory+0x72/0x220
 
-so I tried:
+but task is already holding lock:
+  (&(&ip->i_iolock)->mr_lock){----}, at: [<c0275056>] xfs_ilock+0x96/0xb0
 
-mkfs.xfs -dfile,name=fsfile,size=500m -nutf8=none
+which lock already depends on the new lock.
 
-and got:
 
-Illegal value none for -n utf8 option
+the existing dependency chain (in reverse order) is:
 
-(are there man page updates lurking somewhere?  Pls also update
-Documentation/filesystems/xfs.txt in the kernel)
+-> #1 (&(&ip->i_iolock)->mr_lock){----}:
+        [<c0138c01>] __lock_acquire+0xbe1/0x10b0
+        [<c0275056>] xfs_ilock+0x96/0xb0
+        [<c0137b4f>] trace_hardirqs_on+0x9f/0x140
+        [<c013912f>] lock_acquire+0x5f/0x80
+        [<c0275056>] xfs_ilock+0x96/0xb0
+        [<c012f4b1>] down_write_nested+0x41/0x60
+        [<c0275056>] xfs_ilock+0x96/0xb0
+        [<c0275056>] xfs_ilock+0x96/0xb0
+        [<c02751ea>] xfs_ireclaim+0x1a/0x60
+        [<c0294e73>] xfs_finish_reclaim+0x53/0x1a0
+        [<c02a40ce>] xfs_fs_clear_inode+0x5e/0x90
+        [<c017a102>] clear_inode+0x82/0x160
+        [<c017a55c>] shrink_icache_memory+0x7c/0x220
+        [<c017a43a>] dispose_list+0x1a/0xc0
+        [<c017a6c2>] shrink_icache_memory+0x1e2/0x220
+        [<c014f6d1>] shrink_slab+0x101/0x160
+        [<c014fa4a>] kswapd+0x2aa/0x410
+        [<c012c1f0>] autoremove_wake_function+0x0/0x40
+        [<c014f7a0>] kswapd+0x0/0x410
+        [<c012bf42>] kthread+0x42/0x70
 
-....
+Full dmesg and .config: http://nerdbynature.de/bits/2.6.24-rc8/
 
-Also, if I specify -nutf8=default on a 500m fs:
+Thanks,
+Christian.
+-- 
+BOFH excuse #18:
 
-# mkfs.xfs -dfile,name=fsfile,size=500m -nutf8=default
-meta-data=fsfile                 isize=256    agcount=4, agsize=32000 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=128000, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   utf8=default
-log      =internal log           bsize=4096   blocks=1200, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-mkfs.xfs: cannot reserve space: No space left on device
-
-However this works:
-
-# mkfs.xfs -dfile,name=fsfile,size=500m
-
-as does this:
-
-# mkfs.xfs -dfile,name=fsfile,size=1000m -nutf8=default
-
-eh? :)
-
--Eric
+excess surge protection
