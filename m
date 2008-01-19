@@ -1,56 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 18 Jan 2008 22:00:41 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0J60ZlB005707
-	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 22:00:37 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D4D8BC9C60B
-	for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 22:00:54 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id alNV448KQ9W27JlH for <xfs@oss.sgi.com>; Fri, 18 Jan 2008 22:00:54 -0800 (PST)
-Message-ID: <47919214.9000807@sandeen.net>
-Date: Sat, 19 Jan 2008 00:00:52 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 19 Jan 2008 07:54:03 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0JFrTd2019862
+	for <xfs@oss.sgi.com>; Sat, 19 Jan 2008 07:53:34 -0800
+Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C454B53A63B
+	for <xfs@oss.sgi.com>; Sat, 19 Jan 2008 07:53:48 -0800 (PST)
+Received: from sovereign.computergmbh.de (sovereign.computergmbh.de [85.214.69.204]) by cuda.sgi.com with ESMTP id bJk0IJG4mFjoBXSE for <xfs@oss.sgi.com>; Sat, 19 Jan 2008 07:53:48 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by sovereign.computergmbh.de (Postfix) with ESMTP id 231F91C008C9B
+	for <xfs@oss.sgi.com>; Sat, 19 Jan 2008 16:53:46 +0100 (CET)
+Date: Sat, 19 Jan 2008 16:53:46 +0100 (CET)
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Volume too big
+Message-ID: <Pine.LNX.4.64.0801191650260.4780@fbirervta.pbzchgretzou.qr>
 MIME-Version: 1.0
-Subject: Re: [REVIEW 2/2] Case insensitive support for XFS - user-space
-References: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com> <479118CF.1020302@sandeen.net>
-In-Reply-To: <479118CF.1020302@sandeen.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-
-> Also, if I specify -nutf8=default on a 500m fs:
-> 
-> # mkfs.xfs -dfile,name=fsfile,size=500m -nutf8=default
-> meta-data=fsfile                 isize=256    agcount=4, agsize=32000 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=128000, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   utf8=default
-> log      =internal log           bsize=4096   blocks=1200, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=0
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> mkfs.xfs: cannot reserve space: No space left on device
-
-        /*
-         * allocate the inode
-         */
-        tp = libxfs_trans_alloc(mp, 0);
-        error =  libxfs_trans_reserve(tp, XFS_CREATE_LOG_RES(mp), 0, 0,
-0, 0);
-        if (error) {
-                fprintf(stderr, _("%s: 1: cannot reserve space: %s (%d)\n"),
-                        progname, strerror(error), XFS_CREATE_LOG_RES(mp));
-                exit(1);
-        }
+Hi,
 
 
-I think there are some wrong arguments to that trans_reserve... at least
-XFS_CREATE_LOG_RES should be 3rd arg, no?
 
--Eric
+16:51 localhost:~ # fdisk -l /dev/md0
+
+Disk /dev/md0: 60183.2 GB, 60183225368576 bytes
+2 heads, 4 sectors/track, -1 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/md0 doesn't contain a valid partition table
+
+16:51 localhost:~ # mkfs.xfs -ff /dev/md0
+meta-data=/dev/md0               isize=256    agcount=55, agsize=268435455 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=14693170256, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal log           bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+16:51 localhost:~ # strace -e mount mount /dev/md0 /mnt
+mount("/dev/md0", "/mnt", "xfs", MS_MGC_VAL, NULL) = -1 E2BIG (Argument 
+list too long)
+mount: Argument list too long
+
+16:51 localhost:~ # uname -a
+Linux localhost 2.6.23.14-ccj63-regular #1 SMP 2007/10/26 14:17:15 UTC 
+i686 athlon i386 GNU/Linux
+
+CONFIG_LBD=y. Do I need an extra flag for mkfs?
