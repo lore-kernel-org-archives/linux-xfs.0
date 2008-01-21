@@ -1,73 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 18:15:33 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L2FOqV028227
-	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 18:15:29 -0800
-Subject: Re: [REVIEW 2/2] Case insensitive support for XFS - user-space
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 18:31:57 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0L2VnA6029210
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 18:31:53 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6237253E5B1
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 18:32:06 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id jXXjziANWAfJisWs for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 18:32:06 -0800 (PST)
+Message-ID: <47940404.1000009@sandeen.net>
+Date: Sun, 20 Jan 2008 20:31:32 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-References: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com> <479118CF.1020302@sandeen.net> <47919214.9000807@sandeen.net> <op.t49b6jkr3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Date: Mon, 21 Jan 2008 13:16:17 +1100
-Message-ID: <op.t49clfbc3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t49b6jkr3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Transfer-Encoding: 8bit
+Subject: Re: [REVIEW 2/2] Case insensitive support for XFS - user-space
+References: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com> <479118CF.1020302@sandeen.net> <47919214.9000807@sandeen.net> <op.t49b6jkr3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.t49clfbc3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.t49clfbc3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Barry Naujok <bnaujok@sgi.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Mon, 21 Jan 2008 13:07:21 +1100, Barry Naujok <bnaujok@sgi.com> wrote:
+Barry Naujok wrote:
 
-> On Sat, 19 Jan 2008 17:00:52 +1100, Eric Sandeen <sandeen@sandeen.net>  
-> wrote:
->
->> Eric Sandeen wrote:
+>>>         error =  libxfs_trans_reserve(tp, XFS_CREATE_LOG_RES(mp), 0, 0,
+>>> 0, 0);
+>> Can you try this instead?
 >>
->>> Also, if I specify -nutf8=default on a 500m fs:
->>>
->>> # mkfs.xfs -dfile,name=fsfile,size=500m -nutf8=default
->>> meta-data=fsfile                 isize=256    agcount=4, agsize=32000  
->>> blks
->>>          =                       sectsz=512   attr=2
->>> data     =                       bsize=4096   blocks=128000, imaxpct=25
->>>          =                       sunit=0      swidth=0 blks
->>> naming   =version 2              bsize=4096   utf8=default
->>> log      =internal log           bsize=4096   blocks=1200, version=2
->>>          =                       sectsz=512   sunit=0 blks,  
->>> lazy-count=0
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>> mkfs.xfs: cannot reserve space: No space left on device
->>
->>         /*
->>          * allocate the inode
->>          */
->>         tp = libxfs_trans_alloc(mp, 0);
->>         error =  libxfs_trans_reserve(tp, XFS_CREATE_LOG_RES(mp), 0, 0,
->> 0, 0);
->
-> Can you try this instead?
->
-> 	error =  libxfs_trans_reserve(tp, XFS_IALLOC_BLOCKS(mp) +
-> 			(XFS_IN_MAXLEVELS(mp) - 1), 0, 0, 0, 0);
+>> 	error =  libxfs_trans_reserve(tp, XFS_IALLOC_BLOCKS(mp) +
+>> 			(XFS_IN_MAXLEVELS(mp) - 1), 0, 0, 0, 0);
+> 
+> BTW. this fix works for me :)
 
-BTW. this fix works for me :)
+Ok, I'll trust you then.  I haven't looked at what those macros do,
+context, etc...  and probably not going to go look right now :)
 
->>         if (error) {
->>                 fprintf(stderr, _("%s: 1: cannot reserve space: %s  
->> (%d)\n"),
->>                         progname, strerror(error),  
->> XFS_CREATE_LOG_RES(mp));
->>                 exit(1);
->>         }
->>
->>
->> I think there are some wrong arguments to that trans_reserve... at least
->> XFS_CREATE_LOG_RES should be 3rd arg, no?
->>
->> -Eric
->
->
->
->
+-Eric
