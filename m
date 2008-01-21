@@ -1,91 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 21:23:24 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L5NHLP016266
-	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:23:21 -0800
-Date: Mon, 21 Jan 2008 16:23:30 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [patch] Prevent AIL lock contention during transaction completion
-Message-ID: <20080121052330.GG155259@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 21:29:16 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0L5T9hW016944
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:29:12 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2973A53EB71
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:29:28 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 8kprRHVRjr8y8MgY for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:29:28 -0800 (PST)
+Message-ID: <47942DB5.6040708@sandeen.net>
+Date: Sun, 20 Jan 2008 23:29:25 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: small problem w/ new xfs defaults patch
+References: <4794159F.9070505@sandeen.net> <20080121051341.GA31708862@melbourne.sgi.com>
+In-Reply-To: <20080121051341.GA31708862@melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
+To: Niv Sardi <xaiki@sgi.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-When hundreds of processors attempt to commit
-transactions at the same time, they can contend on the AIL
-lock when updating the tail LSN held in the in-core log
-structure.
+Niv Sardi wrote:
+> * Eric Sandeen <sandeen@sandeen.net> [2008-01-20 21:46:39 -0600]:
+> 
+>> Index: xfsprogs-2.9.4/growfs/xfs_growfs.c
+>> ===================================================================
+> [...]
+>> couple things... you lost a "\n" off the end of the data section there...
+> 
+> That has been fixed, I guess it needs to be sent to oss  (barry?)
 
-At the moment, the tail LSN is only needed when actually writing
-out an iclog, so it really does not need to be updated on every
-single transaction completion - only those that result in switching
-iclogs and flushing them to disk.
+Ok, see that.  Sorry... grabbed the original patch and didn't check cvs
+for updates.
 
-The result is that we reduce the number oftimes we need to grab the
-AIL lock and the log grant lock by up to two orders of magnitude
-on large processor count machines. The problem has previously been
-hidden by AIL lock contention walking the AIL list, which has
-recently been solved.
+Thanks,
+-Eric
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfs_log.c |   15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-01-21 16:06:27.187549816 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-01-21 16:16:51.804146394 +1100
-@@ -2815,15 +2815,13 @@ xlog_state_put_ticket(xlog_t	    *log,
-  *
-  */
- STATIC int
--xlog_state_release_iclog(xlog_t		*log,
--			 xlog_in_core_t	*iclog)
-+xlog_state_release_iclog(
-+	xlog_t		*log,
-+	xlog_in_core_t	*iclog)
- {
- 	int		sync = 0;	/* do we sync? */
- 
--	xlog_assign_tail_lsn(log->l_mp);
--
- 	spin_lock(&log->l_icloglock);
--
- 	if (iclog->ic_state & XLOG_STATE_IOERROR) {
- 		spin_unlock(&log->l_icloglock);
- 		return XFS_ERROR(EIO);
-@@ -2835,13 +2833,14 @@ xlog_state_release_iclog(xlog_t		*log,
- 
- 	if (--iclog->ic_refcnt == 0 &&
- 	    iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-+		/* update tail before writing to iclog */
-+		xlog_assign_tail_lsn(log->l_mp);
- 		sync++;
- 		iclog->ic_state = XLOG_STATE_SYNCING;
- 		iclog->ic_header.h_tail_lsn = cpu_to_be64(log->l_tail_lsn);
- 		xlog_verify_tail_lsn(log, iclog, log->l_tail_lsn);
- 		/* cycle incremented when incrementing curr_block */
- 	}
--
- 	spin_unlock(&log->l_icloglock);
- 
- 	/*
-@@ -2851,11 +2850,9 @@ xlog_state_release_iclog(xlog_t		*log,
- 	 * this iclog has consistent data, so we ignore IOERROR
- 	 * flags after this point.
- 	 */
--	if (sync) {
-+	if (sync)
- 		return xlog_sync(log, iclog);
--	}
- 	return 0;
--
- }	/* xlog_state_release_iclog */
- 
- 
+>> Also, do you really want to drop reporting of unwritten extents?  Even
+>> if you're disallowing the selection on new mkfs's there may still be
+>> different flavors of filesystems in existence, should it still be reported?
+> 
+> I don't really care, whatever the oss/xfs-master people like best.
+> 
+> Cheers
