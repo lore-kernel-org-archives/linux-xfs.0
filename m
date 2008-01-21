@@ -1,199 +1,145 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 21:30:18 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 21:36:16 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L5U9ZW017213
-	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:30:13 -0800
-Date: Mon, 21 Jan 2008 16:30:21 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [patch] Use atomics for iclog reference counting
-Message-ID: <20080121053021.GH155259@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L5a5nc018018
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 21:36:10 -0800
+Date: Mon, 21 Jan 2008 16:37:53 +1100
+Subject: [REVIEW] growfs support for CI
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------cnxN6PYfs48WGnrhyS2w9D
+MIME-Version: 1.0
+Message-ID: <op.t49lxfd93jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Now that we update the log tail LSN less frequently on
-transaction completion, we pass the contention straight to
-the global block stat lock (l_iclog_lock) during transaction
-completion.
+------------cnxN6PYfs48WGnrhyS2w9D
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-We currently have to take this lock to decrement the iclog
-reference count. there is a reference count on each iclog,
-so we need to take þhe global lock for all refcount changes.
+Missed in the first set of patches was xfs_growfs/xfs_info support
+for the CI stuff.
 
-When large numbers of processes are all doing small trnasctions,
-the iclog reference counts will be quite high, and the state change
-that absolutely requires the l_iclog_lock is the except rather than
-the norm.
+Attached is additional patches for kernel and user-space.
 
-Change the reference counting on the iclogs to use atomic_inc/dec
-so that we can use atomic_dec_and_lock during transaction completion
-and avoid the need for grabbing the l_iclog_lock for every reference
-count decrement except the one that matters - the last.
+Barry.
+------------cnxN6PYfs48WGnrhyS2w9D
+Content-Disposition: attachment; filename=ci_growfs_kernel.patch
+Content-Type: text/x-patch; name=ci_growfs_kernel.patch
+Content-Transfer-Encoding: Base64
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfs_log.c      |   36 +++++++++++++++++++++---------------
- fs/xfs/xfs_log_priv.h |    2 +-
- fs/xfs/xfsidbg.c      |    2 +-
- 3 files changed, 23 insertions(+), 17 deletions(-)
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpmcy94ZnMveGZzX2Zz
+LmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CgotLS0gYS9mcy94
+ZnMveGZzX2ZzLmgJMjAwOC0wMS0yMSAxNjozNDowMC4wMDAwMDAwMDAgKzEx
+MDAKKysrIGIvZnMveGZzL3hmc19mcy5oCTIwMDgtMDEtMjEgMTY6MTg6MjMu
+NzQ4NjI2NTQ1ICsxMTAwCkBAIC0yMzksNyArMjM5LDkgQEAgdHlwZWRlZiBz
+dHJ1Y3QgeGZzX2Zzb3BfcmVzYmxrcyB7CiAjZGVmaW5lIFhGU19GU09QX0dF
+T01fRkxBR1NfTE9HVjIJMHgwMTAwCS8qIGxvZyBmb3JtYXQgdmVyc2lvbiAy
+CSovCiAjZGVmaW5lIFhGU19GU09QX0dFT01fRkxBR1NfU0VDVE9SCTB4MDIw
+MAkvKiBzZWN0b3Igc2l6ZXMgPjFCQgkqLwogI2RlZmluZSBYRlNfRlNPUF9H
+RU9NX0ZMQUdTX0FUVFIyCTB4MDQwMAkvKiBpbmxpbmUgYXR0cmlidXRlcyBy
+ZXdvcmsgKi8KKyNkZWZpbmUgWEZTX0ZTT1BfR0VPTV9GTEFHU19ESVJWMkNJ
+CTB4MTAwMAkvKiBBU0NJSSBvbmx5IENJIG5hbWVzICovCiAjZGVmaW5lIFhG
+U19GU09QX0dFT01fRkxBR1NfTEFaWVNCCTB4NDAwMAkvKiBsYXp5IHN1cGVy
+YmxvY2sgY291bnRlcnMgKi8KKyNkZWZpbmUgWEZTX0ZTT1BfR0VPTV9GTEFH
+U19VTklDT0RFCTB4MTAwMDAJLyogdW5pY29kZSBmaWxlbmFtZXMgKi8KIAog
+CiAvKgoKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CmZzL3hmcy94
+ZnNfZnNvcHMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KCi0t
+LSBhL2ZzL3hmcy94ZnNfZnNvcHMuYwkyMDA4LTAxLTIxIDE2OjM0OjAwLjAw
+MDAwMDAwMCArMTEwMAorKysgYi9mcy94ZnMveGZzX2Zzb3BzLmMJMjAwOC0w
+MS0yMSAxNjoxMzoxMC42MDgyNzkzMTEgKzExMDAKQEAgLTk1LDEwICs5NSwx
+NCBAQCB4ZnNfZnNfZ2VvbWV0cnkoCiAJCQkJWEZTX0ZTT1BfR0VPTV9GTEFH
+U19ESVJWMiA6IDApIHwKIAkJCShYRlNfU0JfVkVSU0lPTl9IQVNTRUNUT1Io
+Jm1wLT5tX3NiKSA/CiAJCQkJWEZTX0ZTT1BfR0VPTV9GTEFHU19TRUNUT1Ig
+OiAwKSB8CisJCQkoeGZzX3NiX3ZlcnNpb25faGFzb2xkY2koJm1wLT5tX3Ni
+KSA/CisJCQkJWEZTX0ZTT1BfR0VPTV9GTEFHU19ESVJWMkNJIDogMCkgfAog
+CQkJKHhmc19zYl92ZXJzaW9uX2hhc2xhenlzYmNvdW50KCZtcC0+bV9zYikg
+PwogCQkJCVhGU19GU09QX0dFT01fRkxBR1NfTEFaWVNCIDogMCkgfAogCQkJ
+KFhGU19TQl9WRVJTSU9OX0hBU0FUVFIyKCZtcC0+bV9zYikgPwotCQkJCVhG
+U19GU09QX0dFT01fRkxBR1NfQVRUUjIgOiAwKTsKKwkJCQlYRlNfRlNPUF9H
+RU9NX0ZMQUdTX0FUVFIyIDogMCkgfAorCQkJKHhmc19zYl92ZXJzaW9uX2hh
+c3VuaWNvZGUoJm1wLT5tX3NiKSA/CisJCQkJWEZTX0ZTT1BfR0VPTV9GTEFH
+U19VTklDT0RFIDogMCk7CiAJCWdlby0+bG9nc2VjdHNpemUgPSBYRlNfU0Jf
+VkVSU0lPTl9IQVNTRUNUT1IoJm1wLT5tX3NiKSA/CiAJCQkJbXAtPm1fc2Iu
+c2JfbG9nc2VjdHNpemUgOiBCQlNJWkU7CiAJCWdlby0+cnRzZWN0c2l6ZSA9
+IG1wLT5tX3NiLnNiX2Jsb2Nrc2l6ZTsK
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-01-21 16:16:51.804146394 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-01-21 16:23:35.369691221 +1100
-@@ -675,7 +675,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 
- 		spin_lock(&log->l_icloglock);
- 		iclog = log->l_iclog;
--		iclog->ic_refcnt++;
-+		atomic_inc(&iclog->ic_refcnt);
- 		spin_unlock(&log->l_icloglock);
- 		xlog_state_want_sync(log, iclog);
- 		(void) xlog_state_release_iclog(log, iclog);
-@@ -713,7 +713,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 		 */
- 		spin_lock(&log->l_icloglock);
- 		iclog = log->l_iclog;
--		iclog->ic_refcnt++;
-+		atomic_inc(&iclog->ic_refcnt);
- 		spin_unlock(&log->l_icloglock);
- 
- 		xlog_state_want_sync(log, iclog);
-@@ -1405,7 +1405,7 @@ xlog_sync(xlog_t		*log,
- 	int		v2 = XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb);
- 
- 	XFS_STATS_INC(xs_log_writes);
--	ASSERT(iclog->ic_refcnt == 0);
-+	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
- 
- 	/* Add for LR header */
- 	count_init = log->l_iclog_hsize + iclog->ic_offset;
-@@ -2311,7 +2311,7 @@ xlog_state_done_syncing(
- 
- 	ASSERT(iclog->ic_state == XLOG_STATE_SYNCING ||
- 	       iclog->ic_state == XLOG_STATE_IOERROR);
--	ASSERT(iclog->ic_refcnt == 0);
-+	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
- 	ASSERT(iclog->ic_bwritecnt == 1 || iclog->ic_bwritecnt == 2);
- 
- 
-@@ -2393,7 +2393,7 @@ restart:
- 	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
- 	head = &iclog->ic_header;
- 
--	iclog->ic_refcnt++;			/* prevents sync */
-+	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
- 	log_offset = iclog->ic_offset;
- 
- 	/* On the 1st write to an iclog, figure out lsn.  This works
-@@ -2425,12 +2425,12 @@ restart:
- 		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
- 
- 		/* If I'm the only one writing to this iclog, sync it to disk */
--		if (iclog->ic_refcnt == 1) {
-+		if (atomic_read(&iclog->ic_refcnt) == 1) {
- 			spin_unlock(&log->l_icloglock);
- 			if ((error = xlog_state_release_iclog(log, iclog)))
- 				return error;
- 		} else {
--			iclog->ic_refcnt--;
-+			atomic_dec(&iclog->ic_refcnt);
- 			spin_unlock(&log->l_icloglock);
- 		}
- 		goto restart;
-@@ -2821,18 +2821,23 @@ xlog_state_release_iclog(
+------------cnxN6PYfs48WGnrhyS2w9D
+Content-Disposition: attachment; filename=ci_growfs_user.patch
+Content-Type: text/x-patch; name=ci_growfs_user.patch
+Content-Transfer-Encoding: Quoted-Printable
+
+Index: ci/xfsprogs/growfs/xfs_growfs.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- ci.orig/xfsprogs/growfs/xfs_growfs.c	2008-01-17 12:46:36.000000000 +1100
++++ ci/xfsprogs/growfs/xfs_growfs.c	2008-01-21 16:28:58.581225955 +1100
+@@ -59,7 +59,7 @@
+ 	char		*logname,
+ 	char		*rtname,
+ 	int		lazycount,
+-	int		dirversion,
++	char		*dirversion,
+ 	int		logversion,
+ 	int		attrversion)
  {
- 	int		sync = 0;	/* do we sync? */
- 
--	spin_lock(&log->l_icloglock);
- 	if (iclog->ic_state & XLOG_STATE_IOERROR) {
- 		spin_unlock(&log->l_icloglock);
- 		return XFS_ERROR(EIO);
+@@ -68,7 +68,7 @@
+ 	    "         =3D%-22s sectsz=3D%-5u attr=3D%u\n"
+ 	    "data     =3D%-22s bsize=3D%-6u blocks=3D%llu, imaxpct=3D%u\n"
+ 	    "         =3D%-22s sunit=3D%-6u swidth=3D%u blks\n"
+-	    "naming   =3Dversion %-14u bsize=3D%-6u\n"
++	    "naming   =3Dversion %-14s bsize=3D%-6u%s\n"
+ 	    "log      =3D%-22s bsize=3D%-6u blocks=3D%u, version=3D%u\n"
+ 	    "         =3D%-22s sectsz=3D%-5u sunit=3D%u blks, lazy-count=3D%u\n"
+ 	    "realtime =3D%-22s extsz=3D%-6u blocks=3D%llu, rtextents=3D%llu\n"),
+@@ -79,6 +79,7 @@
+ 			geo.imaxpct,
+ 		"", geo.sunit, geo.swidth,
+   		dirversion, geo.dirblocksize,
++  		geo.flags & XFS_FSOP_GEOM_FLAGS_UNICODE ? " utf8" : "",
+ 		isint ? _("internal") : logname ? logname : _("external"),
+ 			geo.blocksize, geo.logblocks, logversion,
+ 		"", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
+@@ -95,7 +96,7 @@
+ 	long long		ddsize;	/* device size in 512-byte blocks */
+ 	int			dflag;	/* -d flag */
+ 	int			attrversion;/* attribute version number */
+-	int			dirversion; /* directory version number */
++	char			*dirversion; /* directory version */
+ 	int			logversion; /* log version number */
+ 	long long		dlsize;	/* device size in 512-byte blocks */
+ 	long long		drsize;	/* device size in 512-byte blocks */
+@@ -235,7 +236,8 @@
  	}
- 
--	ASSERT(iclog->ic_refcnt > 0);
-+	ASSERT(atomic_read(&iclog->ic_refcnt) > 0);
-+	if (!atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock))
-+		return 0;
-+
-+	if (iclog->ic_state & XLOG_STATE_IOERROR) {
-+		spin_unlock(&log->l_icloglock);
-+		return XFS_ERROR(EIO);
-+	}
- 	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE ||
- 	       iclog->ic_state == XLOG_STATE_WANT_SYNC);
- 
--	if (--iclog->ic_refcnt == 0 &&
--	    iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-+	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
- 		/* update tail before writing to iclog */
- 		xlog_assign_tail_lsn(log->l_mp);
- 		sync++;
-@@ -2952,7 +2957,8 @@ xlog_state_sync_all(xlog_t *log, uint fl
- 		 * previous iclog and go to sleep.
- 		 */
- 		if (iclog->ic_state == XLOG_STATE_DIRTY ||
--		    (iclog->ic_refcnt == 0 && iclog->ic_offset == 0)) {
-+		    (atomic_read(&iclog->ic_refcnt) == 0
-+		     && iclog->ic_offset == 0)) {
- 			iclog = iclog->ic_prev;
- 			if (iclog->ic_state == XLOG_STATE_ACTIVE ||
- 			    iclog->ic_state == XLOG_STATE_DIRTY)
-@@ -2960,14 +2966,14 @@ xlog_state_sync_all(xlog_t *log, uint fl
- 			else
- 				goto maybe_sleep;
- 		} else {
--			if (iclog->ic_refcnt == 0) {
-+			if (atomic_read(&iclog->ic_refcnt) == 0) {
- 				/* We are the only one with access to this
- 				 * iclog.  Flush it out now.  There should
- 				 * be a roundoff of zero to show that someone
- 				 * has already taken care of the roundoff from
- 				 * the previous sync.
- 				 */
--				iclog->ic_refcnt++;
-+				atomic_inc(&iclog->ic_refcnt);
- 				lsn = be64_to_cpu(iclog->ic_header.h_lsn);
- 				xlog_state_switch_iclogs(log, iclog, 0);
- 				spin_unlock(&log->l_icloglock);
-@@ -3099,7 +3105,7 @@ try_again:
- 			already_slept = 1;
- 			goto try_again;
- 		} else {
--			iclog->ic_refcnt++;
-+			atomic_inc(&iclog->ic_refcnt);
- 			xlog_state_switch_iclogs(log, iclog, 0);
- 			spin_unlock(&log->l_icloglock);
- 			if (xlog_state_release_iclog(log, iclog))
-Index: 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_log_priv.h	2008-01-21 16:06:27.127557437 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h	2008-01-21 16:23:35.369691221 +1100
-@@ -339,7 +339,7 @@ typedef struct xlog_iclog_fields {
- #endif
- 	int			ic_size;
- 	int			ic_offset;
--	int			ic_refcnt;
-+	atomic_t		ic_refcnt;
- 	int			ic_bwritecnt;
- 	ushort_t		ic_state;
- 	char			*ic_datap;	/* pointer to iclog data */
-Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2008-01-21 16:06:27.127557437 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2008-01-21 16:23:35.385689220 +1100
-@@ -5633,7 +5633,7 @@ xfsidbg_xiclog(xlog_in_core_t *iclog)
- #else
- 		NULL,
- #endif
--		iclog->ic_refcnt, iclog->ic_bwritecnt);
-+		atomic_read(&iclog->ic_refcnt), iclog->ic_bwritecnt);
- 	if (iclog->ic_state & XLOG_STATE_ALL)
- 		printflags(iclog->ic_state, ic_flags, " state:");
- 	else
+ 	isint =3D geo.logstart > 0;
+ 	lazycount =3D geo.flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
+-	dirversion =3D geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? 2 : 1;
++	dirversion =3D geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI ? "ci" :
++			geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? "2" : "1";
+ 	logversion =3D geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
+ 	attrversion =3D geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
+ 			(geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR ? 1 : 0);
+Index: ci/xfsprogs/include/xfs_fs.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- ci.orig/xfsprogs/include/xfs_fs.h	2007-10-10 16:12:47.000000000 +1000
++++ ci/xfsprogs/include/xfs_fs.h	2008-01-21 16:18:09.726376630 +1100
+@@ -241,7 +241,9 @@
+ #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+ #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+ #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
++#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
+ #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
++#define XFS_FSOP_GEOM_FLAGS_UNICODE	0x10000	/* unicode filenames */
+=20
+=20
+ /*
+
+------------cnxN6PYfs48WGnrhyS2w9D--
