@@ -1,56 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 16:51:54 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Jan 2008 16:53:49 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L0pihX021203
-	for <linux-xfs@oss.sgi.com>; Sun, 20 Jan 2008 16:51:49 -0800
-Date: Mon, 21 Jan 2008 11:52:19 +1100
-Subject: Re: [REVIEW 0/2] Case insensitive support for XFS
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0L0rhE1021457
+	for <xfs@oss.sgi.com>; Sun, 20 Jan 2008 16:53:45 -0800
+Date: Mon, 21 Jan 2008 11:54:18 +1100
+Subject: Re: [REVIEW 2/2] Case insensitive support for XFS - user-space
 From: "Barry Naujok" <bnaujok@sgi.com>
 Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-References: <op.t43ze9ot3jf8g2@pc-bnaujok.melbourne.sgi.com> <200801181905.05263.Martin@lichtvoll.de>
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.t488phjj3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <200801181905.05263.Martin@lichtvoll.de>
+References: <op.t43zfeiz3jf8g2@pc-bnaujok.melbourne.sgi.com> <479118CF.1020302@sandeen.net>
+Message-ID: <op.t488ss0n3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <479118CF.1020302@sandeen.net>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Sat, 19 Jan 2008 05:05:04 +1100, Martin Steigerwald  
-<Martin@Lichtvoll.de> wrote:
+On Sat, 19 Jan 2008 08:23:27 +1100, Eric Sandeen <sandeen@sandeen.net>  
+wrote:
 
+> Barry Naujok wrote:
+>> This patch relies on the dinode.c refactoring patch posted recently.
+>> I have attached the latest version (with fixes pointed out by Chandan).
 >
-> Hi Barry!
+> So, new mkfs.xfs -h output says:
 >
-> Am Freitag 18 Januar 2008 schrieb Barry Naujok:
+> /* naming */		[-n log=n|size=num,version=n,utf8=none|default|turkic]
 >
->> There are two mount options for enabling case-insensitivity
->> on a Unicode XFS filesystem:
->>    - "ci" - enables case-insensitivity for file names
->>    - "ciattr" - enables case-insensitivity for extended
->>                 attributes.
+> so I tried:
 >
-> How do I know that I am on an Unicode XFS filesystem. Could I see this
-> with xfs_db -r -c 'sb 0' -c p <device>? Hmm, nothing unicode related in
-> there as far as I can see. The fs was created with 2.6.23, mkfs.xfs 2.9.4
-> and the mkfs options that David suggested.
-
-Good point, xfs_info should report this info.
-
-> Do I need to backup / mkfs / restore to switch to one? I understand that  
-> I
-> can switch between enable / disable case-insensitivity via a mount
-> option. Would I be able to enable unicode via xfs_db version command or
-> something like it?
+> mkfs.xfs -dfile,name=fsfile,size=500m -nutf8=none
 >
-> Just curious.
+> and got:
+>
+> Illegal value none for -n utf8 option
 
-Strictly speaking you do need to do backup/mkfs/restore to get utf8.
-But, with xfs_db hackery and xfs_repair, you can actually switch between
-them without mkfsing (I never said that ;) )
+Bad usage on my part. I have changed it to:
 
-Once your filesystem is unicode, ci is a mount option that can be turned
-on/off.
+/* naming */		[-n log=n|size=num,version=n,utf8[=default|turkic]]
 
-Barry.
+> (are there man page updates lurking somewhere?  Pls also update
+> Documentation/filesystems/xfs.txt in the kernel)
+
+Yes, these are coming.
