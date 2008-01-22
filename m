@@ -1,81 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 11:46:58 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 12:00:29 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0MJkTJ5005676
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:30 -0800
-Received: from mail.purevideo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 93CFCCC6DDF
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:46 -0800 (PST)
-Received: from mail.purevideo.com (mail.purevideo.com [208.50.29.149]) by cuda.sgi.com with ESMTP id VaeuUN2Hanmj9pxq for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:46 -0800 (PST)
-Content-class: urn:content-classes:message
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0MK0K2n009315
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:25 -0800
+Received: from ishtar.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0CBACC70EA
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:40 -0800 (PST)
+Received: from ishtar.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by cuda.sgi.com with ESMTP id gjBABjg3s9H4tILo for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:40 -0800 (PST)
+Message-ID: <47964B66.5020001@tlinx.org>
+Date: Tue, 22 Jan 2008 12:00:38 -0800
+From: Linda Walsh <lkml@tlinx.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Repairing a possibly incomplete xfs_growfs command?
-Date: Tue, 22 Jan 2008 11:40:52 -0800
-Message-ID: <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
-In-Reply-To: <20080119004018.GH155407@sgi.com>
-References: <9CE70E6ED2C2F64FB5537A2973FA4F0253595A@pvn-3001.purevideo.local> <20080117234604.GG155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253595B@pvn-3001.purevideo.local> <20080119004018.GH155407@sgi.com>
-From: "Mark Magpayo" <mmagpayo@purevideo.com>
-Content-Transfer-Encoding: 8bit
+Subject: Re: blktrace & btrace usability
+References: <47906577.8090604@tlinx.org> <20080122164145.GB4531@hasse.suse.de>
+In-Reply-To: <20080122164145.GB4531@hasse.suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Jan Blunck <jblunck@suse.de>
+Cc: linux-btrace@vger.kernel.org, Linux-Xfs <linux-xfs@oss.sgi.com>
 
+Jan Blunck wrote:
+> blktrace is used by the preload package. The preload package is capable of
+> remapping blocks for faster booting. Therefore we need the blktrace
+> output. But we only have a remapper for ext3.
+>   
+----
+    I wondered about that, but the blktrace package doesn't containg
+any utility for remapping blocks. The blktrace-0.99.3-12 package
+included in OSuse-10.3, I only see utilities "blkparse, blktrace, btrace,
+blkrawverify, btt, and verify_blktrace". 
 
-> -----Original Message-----
-> From: David Chinner [mailto:dgc@sgi.com]
-> Sent: Friday, January 18, 2008 4:40 PM
-> To: Mark Magpayo
-> Cc: David Chinner; xfs@oss.sgi.com
-> Subject: Re: Repairing a possibly incomplete xfs_growfs command?
-> 
-> On Fri, Jan 18, 2008 at 09:50:37AM -0800, Mark Magpayo wrote:
-> > > > So is this all I need then prior to an xfs_repair?:
-> > > >
-> > > > > # for i in `seq 0 1 63`; do
-> > > > > > xfs_db -x -c "sb $i" -c 'write agcount 64' -c 'write dblock
-> > > 4761733120'
-> > > > > /dev/vg0/lv0
-> > >
-> > > Yes, I think that is all that is necessary (that+repair was what
-fixed
-> > > the problem at the customer site successfully).
-> > >
-> >
-> > Is this supposed to be the proper output to the command above?
-> >
-> > purenas:~# for i in `seq 0 1 63`; do xfs_db -x -c "sb $i" -c 'write
-> > agcount 64' -c 'write dblock 4761733120' /dev/vg0/lv0; done
-> > agcount = 64
-> > field dblock not found
-> > parsing error
-> 
-> Ah - As eric pointed out, that should be "dblocks".
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> Principal Engineer
-> SGI Australian Software Group
+    Was it left out by accident?  ---or---
 
-Any ideas on how long the xfs_repair is supposed to take on 18TB?  I
-started it Friday nite, and it's now Tuesday afternoon.  It's stuck
-here:
+    If the remapping is in a separate package, then shouldn't
+the blktrace package "just" do the block tracing, regardless
+of file type (i.e. in typical unix fashion, it does its part, and
+another util (a block-re-arranger) does its part...? 
 
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
+    Having blktrace do it's thing no matter what filesystem
+follows might encourage or enable someone to write re-arrangers
+for other filesystems...(?)  After all, xfs already has
+one block-rearranger program (for what little it is needed)
+in "xfs_fsr".  Does ext3 have something similar now? 
 
-I figure traversing a filesystem of 18TB takes a while, but does 4 days
-sound right?
+    Was the ext3 block re-arranging tool supposed to be
+in the blktrace package? 
 
-Thanks,
-
-Mark
+thanks,
+linda
