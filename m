@@ -1,40 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 04:12:03 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0MCBvSv030333
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 04:12:00 -0800
-Received: from smtp3.vol.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B22A2545855
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 04:12:16 -0800 (PST)
-Received: from smtp3.vol.cz (smtp3.vol.cz [195.250.128.83]) by cuda.sgi.com with ESMTP id F9B0PkPrJbFCHROT for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 04:12:16 -0800 (PST)
-Received: from webmail2.vol.cz (webmail2.vol.cz [195.250.155.227])
-	by smtp3.vol.cz (Postfix) with ESMTP id E29445971E
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 13:11:43 +0100 (CET)
-Received: from webmail2.vol.cz (localhost.vol.cz [127.0.0.1])
-	by webmail2.vol.cz (8.13.8/8.13.8) with ESMTP id m0MCBhKg018818
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 13:11:43 +0100 (CET)
-	(envelope-from vtech@volny.cz)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 11:46:58 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0MJkTJ5005676
+	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:30 -0800
+Received: from mail.purevideo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93CFCCC6DDF
+	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:46 -0800 (PST)
+Received: from mail.purevideo.com (mail.purevideo.com [208.50.29.149]) by cuda.sgi.com with ESMTP id VaeuUN2Hanmj9pxq for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 11:46:46 -0800 (PST)
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Subject: =?iso-8859-2?Q?XFS_on_LVM2=2C_1st_drive_lost?=
-From: vtech@volny.cz
-Date: Tue, 22 Jan 2008 13:11:43 +0100 (CET)
-Message-ID: <1019eb6b77e0a78e430104592107169a@www2.mail.volny.cz>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: Repairing a possibly incomplete xfs_growfs command?
+Date: Tue, 22 Jan 2008 11:40:52 -0800
+Message-ID: <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
+In-Reply-To: <20080119004018.GH155407@sgi.com>
+References: <9CE70E6ED2C2F64FB5537A2973FA4F0253595A@pvn-3001.purevideo.local> <20080117234604.GG155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253595B@pvn-3001.purevideo.local> <20080119004018.GH155407@sgi.com>
+From: "Mark Magpayo" <mmagpayo@purevideo.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
 
-I have LVM2 logical volume built of 6 harddrives (total capacity 1.3TB).
-There is a single XFS filesystem on top of it.
-The 1st drive (ie. pv0) died, so I'm missing the XFS filesystem headers.
-What are my chances to rescue the data from drives, which are OK? (Over
-80% of data). What should I do/try?
+> -----Original Message-----
+> From: David Chinner [mailto:dgc@sgi.com]
+> Sent: Friday, January 18, 2008 4:40 PM
+> To: Mark Magpayo
+> Cc: David Chinner; xfs@oss.sgi.com
+> Subject: Re: Repairing a possibly incomplete xfs_growfs command?
+> 
+> On Fri, Jan 18, 2008 at 09:50:37AM -0800, Mark Magpayo wrote:
+> > > > So is this all I need then prior to an xfs_repair?:
+> > > >
+> > > > > # for i in `seq 0 1 63`; do
+> > > > > > xfs_db -x -c "sb $i" -c 'write agcount 64' -c 'write dblock
+> > > 4761733120'
+> > > > > /dev/vg0/lv0
+> > >
+> > > Yes, I think that is all that is necessary (that+repair was what
+fixed
+> > > the problem at the customer site successfully).
+> > >
+> >
+> > Is this supposed to be the proper output to the command above?
+> >
+> > purenas:~# for i in `seq 0 1 63`; do xfs_db -x -c "sb $i" -c 'write
+> > agcount 64' -c 'write dblock 4761733120' /dev/vg0/lv0; done
+> > agcount = 64
+> > field dblock not found
+> > parsing error
+> 
+> Ah - As eric pointed out, that should be "dblocks".
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
 
-Thank You, Vit Kavan
+Any ideas on how long the xfs_repair is supposed to take on 18TB?  I
+started it Friday nite, and it's now Tuesday afternoon.  It's stuck
+here:
 
-PS.: Yes, I know, it's a stupid design. I'll never do it again, I promise
-:)
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+
+I figure traversing a filesystem of 18TB takes a while, but does 4 days
+sound right?
+
+Thanks,
+
+Mark
