@@ -1,53 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 12:00:29 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0MK0K2n009315
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:25 -0800
-Received: from ishtar.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0CBACC70EA
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:40 -0800 (PST)
-Received: from ishtar.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by cuda.sgi.com with ESMTP id gjBABjg3s9H4tILo for <linux-xfs@oss.sgi.com>; Tue, 22 Jan 2008 12:00:40 -0800 (PST)
-Message-ID: <47964B66.5020001@tlinx.org>
-Date: Tue, 22 Jan 2008 12:00:38 -0800
-From: Linda Walsh <lkml@tlinx.org>
-MIME-Version: 1.0
-Subject: Re: blktrace & btrace usability
-References: <47906577.8090604@tlinx.org> <20080122164145.GB4531@hasse.suse.de>
-In-Reply-To: <20080122164145.GB4531@hasse.suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 13:13:05 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0MLCwQq031716
+	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 13:13:01 -0800
+Date: Wed, 23 Jan 2008 08:13:11 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Repairing a possibly incomplete xfs_growfs command?
+Message-ID: <20080122211311.GA155259@sgi.com>
+References: <9CE70E6ED2C2F64FB5537A2973FA4F0253595A@pvn-3001.purevideo.local> <20080117234604.GG155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253595B@pvn-3001.purevideo.local> <20080119004018.GH155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Blunck <jblunck@suse.de>
-Cc: linux-btrace@vger.kernel.org, Linux-Xfs <linux-xfs@oss.sgi.com>
+To: Mark Magpayo <mmagpayo@purevideo.com>
+Cc: xfs@oss.sgi.com
 
-Jan Blunck wrote:
-> blktrace is used by the preload package. The preload package is capable of
-> remapping blocks for faster booting. Therefore we need the blktrace
-> output. But we only have a remapper for ext3.
->   
-----
-    I wondered about that, but the blktrace package doesn't containg
-any utility for remapping blocks. The blktrace-0.99.3-12 package
-included in OSuse-10.3, I only see utilities "blkparse, blktrace, btrace,
-blkrawverify, btt, and verify_blktrace". 
+On Tue, Jan 22, 2008 at 11:40:52AM -0800, Mark Magpayo wrote:
+> Any ideas on how long the xfs_repair is supposed to take on 18TB?  I
+> started it Friday nite, and it's now Tuesday afternoon.  It's stuck
+> here:
+> 
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+> 
+> I figure traversing a filesystem of 18TB takes a while, but does 4 days
+> sound right?
 
-    Was it left out by accident?  ---or---
+Yes, it can if it's swapping like mad because you don't have enough
+RAM in the machine. Runtime is also detemrined by how many inodes there
+are in the filesystem - do you know how many there are? Also, more
+recent xfs_repair versions tend to be faster - what version are you
+using again?
 
-    If the remapping is in a separate package, then shouldn't
-the blktrace package "just" do the block tracing, regardless
-of file type (i.e. in typical unix fashion, it does its part, and
-another util (a block-re-arranger) does its part...? 
+Cheers,
 
-    Having blktrace do it's thing no matter what filesystem
-follows might encourage or enable someone to write re-arrangers
-for other filesystems...(?)  After all, xfs already has
-one block-rearranger program (for what little it is needed)
-in "xfs_fsr".  Does ext3 have something similar now? 
-
-    Was the ext3 block re-arranging tool supposed to be
-in the blktrace package? 
-
-thanks,
-linda
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
