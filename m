@@ -1,54 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jan 2008 09:14:09 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0LHE0u5018758
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Jan 2008 09:14:03 -0800
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FE04CB275B
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Jan 2008 09:14:20 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id rttnTGE2kfDAHyYI for <linux-xfs@oss.sgi.com>; Mon, 21 Jan 2008 09:14:20 -0800 (PST)
-Subject: Re: Known prob: MAX_LOCK_DEPTH too low?
-From: Peter Zijlstra <a.p.zijlstra@chello.nl>
-In-Reply-To: <4794C7C0.8030207@tlinx.org>
-References: <47914FA7.1000807@tlinx.org> <1200918448.6341.5.camel@lappy>
-	 <4794C7C0.8030207@tlinx.org>
-Content-Type: text/plain
-Date: Mon, 21 Jan 2008 18:13:49 +0100
-Message-Id: <1200935629.6341.9.camel@lappy>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jan 2008 18:27:51 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0M2RZuc023689
+	for <xfs@oss.sgi.com>; Mon, 21 Jan 2008 18:27:40 -0800
+Message-ID: <479554B3.70003@sgi.com>
+Date: Tue, 22 Jan 2008 13:28:03 +1100
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: small problem w/ new xfs defaults patch
+References: <4794159F.9070505@sandeen.net> <20080121051341.GA31708862@melbourne.sgi.com>
+In-Reply-To: <20080121051341.GA31708862@melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linda Walsh <lkml@tlinx.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linux-Xfs <linux-xfs@oss.sgi.com>, Ingo Molnar <mingo@elte.hu>
+To: Niv Sardi <xaiki@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
+Niv Sardi wrote:
+> * Eric Sandeen <sandeen@sandeen.net> [2008-01-20 21:46:39 -0600]:
+> 
+>> Index: xfsprogs-2.9.4/growfs/xfs_growfs.c
+>> ===================================================================
+> [...]
+>> couple things... you lost a "\n" off the end of the data section there...
+> 
+> That has been fixed, I guess it needs to be sent to oss  (barry?)
+> 
+>> Also, do you really want to drop reporting of unwritten extents?  Even
+>> if you're disallowing the selection on new mkfs's there may still be
+>> different flavors of filesystems in existence, should it still be reported?
+> 
+> I don't really care, whatever the oss/xfs-master people like best.
+> 
+> Cheers
 
-On Mon, 2008-01-21 at 08:26 -0800, Linda Walsh wrote:
-> Peter Zijlstra wrote:
-> > On Fri, 2008-01-18 at 17:17 -0800, Linda Walsh wrote:
-> >   
-> >> On my x86_64 machine, I got the following message
-> >> in log (kern = 2.6.23.14)
-> >>
-> >> Jan 16 04:08:38 Astara kernel: BUG: MAX_LOCK_DEPTH too low!
-> >> Jan 16 04:08:38 Astara kernel: turning off the locking correctness 
-> >> validator.
-> >>
-> >> Have no idea what caused it as I found the message on my console
-> >> somewhat after the fact.  The system had been up over 24 hours and
-> >> is still running.  System still seems 'fine' (been up 3 days now),
-> >> so you can treat this as a "data point".
-> >>     
-> >
-> > Are you perhaps an XFS user?
-> >
-> >   
-> ----
->     Funny you should mention that...  yes.  However, there were no
-> other messages that seem to indicate that the message had anything
-> to do with XFS.  Nice shot in the dark.
+My preference would be to report the unwritten extent flag as Eric suggested.
 
-:-), know issue, I guess I'll up the MAX_LOCK_DEPTH for the next
-release. I looked at dynamically allocating that stuff, but that gets
-awfully painful.
+--Tim
