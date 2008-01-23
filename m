@@ -1,88 +1,205 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 18:56:35 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 21:12:56 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0N2uRfb010311
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 18:56:30 -0800
-Date: Wed, 23 Jan 2008 13:57:37 +1100
-Subject: Re: Repairing a possibly incomplete xfs_growfs command?
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0N5ChlJ010393
+	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 21:12:47 -0800
+Message-ID: <4796CCF5.8010509@sgi.com>
+Date: Wed, 23 Jan 2008 16:13:25 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-References: <9CE70E6ED2C2F64FB5537A2973FA4F0253595A@pvn-3001.purevideo.local> <20080117234604.GG155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253595B@pvn-3001.purevideo.local> <20080119004018.GH155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
-Message-ID: <op.t5c3ubfg3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local>
+Subject: Re: [patch] Use atomics for iclog reference counting
+References: <20080121053021.GH155259@sgi.com>
+In-Reply-To: <20080121053021.GH155259@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Magpayo <mmagpayo@purevideo.com>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, 23 Jan 2008 06:40:52 +1100, Mark Magpayo <mmagpayo@purevideo.com>  
-wrote:
+I'll have a look...
 
->
->> -----Original Message-----
->> From: David Chinner [mailto:dgc@sgi.com]
->> Sent: Friday, January 18, 2008 4:40 PM
->> To: Mark Magpayo
->> Cc: David Chinner; xfs@oss.sgi.com
->> Subject: Re: Repairing a possibly incomplete xfs_growfs command?
->>
->> On Fri, Jan 18, 2008 at 09:50:37AM -0800, Mark Magpayo wrote:
->> > > > So is this all I need then prior to an xfs_repair?:
->> > > >
->> > > > > # for i in `seq 0 1 63`; do
->> > > > > > xfs_db -x -c "sb $i" -c 'write agcount 64' -c 'write dblock
->> > > 4761733120'
->> > > > > /dev/vg0/lv0
->> > >
->> > > Yes, I think that is all that is necessary (that+repair was what
-> fixed
->> > > the problem at the customer site successfully).
->> > >
->> >
->> > Is this supposed to be the proper output to the command above?
->> >
->> > purenas:~# for i in `seq 0 1 63`; do xfs_db -x -c "sb $i" -c 'write
->> > agcount 64' -c 'write dblock 4761733120' /dev/vg0/lv0; done
->> > agcount = 64
->> > field dblock not found
->> > parsing error
->>
->> Ah - As eric pointed out, that should be "dblocks".
->>
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> Principal Engineer
->> SGI Australian Software Group
->
-> Any ideas on how long the xfs_repair is supposed to take on 18TB?  I
-> started it Friday nite, and it's now Tuesday afternoon.  It's stuck
-> here:
->
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->
-> I figure traversing a filesystem of 18TB takes a while, but does 4 days
-> sound right?
+--Tim
 
-Was it stuck on Phase 6 all that time? With only 1GB of RAM (from your
-meminfo output) and 18TB filesystem, Phases 3 and 4 will take a very
-long time due to swapping.
-
-Phase 6 in your scenario should be relatively quick and light on
-memory usage (500MB as reported in your other email).
-
-It is feasible it is deadlocked by trying to double-access a buffer,
-or access a buffer that wasn't released. This is an unlikely scenario,
-but it is possible.
-
-Regards,
-Barry.
+David Chinner wrote:
+> Now that we update the log tail LSN less frequently on
+> transaction completion, we pass the contention straight to
+> the global block stat lock (l_iclog_lock) during transaction
+> completion.
+> 
+> We currently have to take this lock to decrement the iclog
+> reference count. there is a reference count on each iclog,
+> so we need to take þhe global lock for all refcount changes.
+> 
+> When large numbers of processes are all doing small trnasctions,
+> the iclog reference counts will be quite high, and the state change
+> that absolutely requires the l_iclog_lock is the except rather than
+> the norm.
+> 
+> Change the reference counting on the iclogs to use atomic_inc/dec
+> so that we can use atomic_dec_and_lock during transaction completion
+> and avoid the need for grabbing the l_iclog_lock for every reference
+> count decrement except the one that matters - the last.
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/xfs_log.c      |   36 +++++++++++++++++++++---------------
+>  fs/xfs/xfs_log_priv.h |    2 +-
+>  fs/xfs/xfsidbg.c      |    2 +-
+>  3 files changed, 23 insertions(+), 17 deletions(-)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-01-21 16:16:51.804146394 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-01-21 16:23:35.369691221 +1100
+> @@ -675,7 +675,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  
+>  		spin_lock(&log->l_icloglock);
+>  		iclog = log->l_iclog;
+> -		iclog->ic_refcnt++;
+> +		atomic_inc(&iclog->ic_refcnt);
+>  		spin_unlock(&log->l_icloglock);
+>  		xlog_state_want_sync(log, iclog);
+>  		(void) xlog_state_release_iclog(log, iclog);
+> @@ -713,7 +713,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  		 */
+>  		spin_lock(&log->l_icloglock);
+>  		iclog = log->l_iclog;
+> -		iclog->ic_refcnt++;
+> +		atomic_inc(&iclog->ic_refcnt);
+>  		spin_unlock(&log->l_icloglock);
+>  
+>  		xlog_state_want_sync(log, iclog);
+> @@ -1405,7 +1405,7 @@ xlog_sync(xlog_t		*log,
+>  	int		v2 = XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb);
+>  
+>  	XFS_STATS_INC(xs_log_writes);
+> -	ASSERT(iclog->ic_refcnt == 0);
+> +	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+>  
+>  	/* Add for LR header */
+>  	count_init = log->l_iclog_hsize + iclog->ic_offset;
+> @@ -2311,7 +2311,7 @@ xlog_state_done_syncing(
+>  
+>  	ASSERT(iclog->ic_state == XLOG_STATE_SYNCING ||
+>  	       iclog->ic_state == XLOG_STATE_IOERROR);
+> -	ASSERT(iclog->ic_refcnt == 0);
+> +	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+>  	ASSERT(iclog->ic_bwritecnt == 1 || iclog->ic_bwritecnt == 2);
+>  
+>  
+> @@ -2393,7 +2393,7 @@ restart:
+>  	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+>  	head = &iclog->ic_header;
+>  
+> -	iclog->ic_refcnt++;			/* prevents sync */
+> +	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
+>  	log_offset = iclog->ic_offset;
+>  
+>  	/* On the 1st write to an iclog, figure out lsn.  This works
+> @@ -2425,12 +2425,12 @@ restart:
+>  		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
+>  
+>  		/* If I'm the only one writing to this iclog, sync it to disk */
+> -		if (iclog->ic_refcnt == 1) {
+> +		if (atomic_read(&iclog->ic_refcnt) == 1) {
+>  			spin_unlock(&log->l_icloglock);
+>  			if ((error = xlog_state_release_iclog(log, iclog)))
+>  				return error;
+>  		} else {
+> -			iclog->ic_refcnt--;
+> +			atomic_dec(&iclog->ic_refcnt);
+>  			spin_unlock(&log->l_icloglock);
+>  		}
+>  		goto restart;
+> @@ -2821,18 +2821,23 @@ xlog_state_release_iclog(
+>  {
+>  	int		sync = 0;	/* do we sync? */
+>  
+> -	spin_lock(&log->l_icloglock);
+>  	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+>  		spin_unlock(&log->l_icloglock);
+>  		return XFS_ERROR(EIO);
+>  	}
+>  
+> -	ASSERT(iclog->ic_refcnt > 0);
+> +	ASSERT(atomic_read(&iclog->ic_refcnt) > 0);
+> +	if (!atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock))
+> +		return 0;
+> +
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> +		spin_unlock(&log->l_icloglock);
+> +		return XFS_ERROR(EIO);
+> +	}
+>  	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE ||
+>  	       iclog->ic_state == XLOG_STATE_WANT_SYNC);
+>  
+> -	if (--iclog->ic_refcnt == 0 &&
+> -	    iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+> +	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+>  		/* update tail before writing to iclog */
+>  		xlog_assign_tail_lsn(log->l_mp);
+>  		sync++;
+> @@ -2952,7 +2957,8 @@ xlog_state_sync_all(xlog_t *log, uint fl
+>  		 * previous iclog and go to sleep.
+>  		 */
+>  		if (iclog->ic_state == XLOG_STATE_DIRTY ||
+> -		    (iclog->ic_refcnt == 0 && iclog->ic_offset == 0)) {
+> +		    (atomic_read(&iclog->ic_refcnt) == 0
+> +		     && iclog->ic_offset == 0)) {
+>  			iclog = iclog->ic_prev;
+>  			if (iclog->ic_state == XLOG_STATE_ACTIVE ||
+>  			    iclog->ic_state == XLOG_STATE_DIRTY)
+> @@ -2960,14 +2966,14 @@ xlog_state_sync_all(xlog_t *log, uint fl
+>  			else
+>  				goto maybe_sleep;
+>  		} else {
+> -			if (iclog->ic_refcnt == 0) {
+> +			if (atomic_read(&iclog->ic_refcnt) == 0) {
+>  				/* We are the only one with access to this
+>  				 * iclog.  Flush it out now.  There should
+>  				 * be a roundoff of zero to show that someone
+>  				 * has already taken care of the roundoff from
+>  				 * the previous sync.
+>  				 */
+> -				iclog->ic_refcnt++;
+> +				atomic_inc(&iclog->ic_refcnt);
+>  				lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+>  				xlog_state_switch_iclogs(log, iclog, 0);
+>  				spin_unlock(&log->l_icloglock);
+> @@ -3099,7 +3105,7 @@ try_again:
+>  			already_slept = 1;
+>  			goto try_again;
+>  		} else {
+> -			iclog->ic_refcnt++;
+> +			atomic_inc(&iclog->ic_refcnt);
+>  			xlog_state_switch_iclogs(log, iclog, 0);
+>  			spin_unlock(&log->l_icloglock);
+>  			if (xlog_state_release_iclog(log, iclog))
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log_priv.h	2008-01-21 16:06:27.127557437 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h	2008-01-21 16:23:35.369691221 +1100
+> @@ -339,7 +339,7 @@ typedef struct xlog_iclog_fields {
+>  #endif
+>  	int			ic_size;
+>  	int			ic_offset;
+> -	int			ic_refcnt;
+> +	atomic_t		ic_refcnt;
+>  	int			ic_bwritecnt;
+>  	ushort_t		ic_state;
+>  	char			*ic_datap;	/* pointer to iclog data */
+> Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2008-01-21 16:06:27.127557437 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2008-01-21 16:23:35.385689220 +1100
+> @@ -5633,7 +5633,7 @@ xfsidbg_xiclog(xlog_in_core_t *iclog)
+>  #else
+>  		NULL,
+>  #endif
+> -		iclog->ic_refcnt, iclog->ic_bwritecnt);
+> +		atomic_read(&iclog->ic_refcnt), iclog->ic_bwritecnt);
+>  	if (iclog->ic_state & XLOG_STATE_ALL)
+>  		printflags(iclog->ic_state, ic_flags, " state:");
+>  	else
