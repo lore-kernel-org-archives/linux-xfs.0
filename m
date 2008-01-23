@@ -1,205 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 21:12:56 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0N5ChlJ010393
-	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 21:12:47 -0800
-Message-ID: <4796CCF5.8010509@sgi.com>
-Date: Wed, 23 Jan 2008 16:13:25 +1100
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jan 2008 22:55:12 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0N6t5id017290
+	for <xfs@oss.sgi.com>; Tue, 22 Jan 2008 22:55:08 -0800
+Date: Wed, 23 Jan 2008 06:55:22 +0000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [REVIEW 1/2] Case insensitive support for XFS - kernel patch
+Message-ID: <20080123065522.GA11132@infradead.org>
+References: <op.t43zfc073jf8g2@pc-bnaujok.melbourne.sgi.com> <47918927.2000603@sandeen.net> <op.t49g2olx3jf8g2@pc-bnaujok.melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: [patch] Use atomics for iclog reference counting
-References: <20080121053021.GH155259@sgi.com>
-In-Reply-To: <20080121053021.GH155259@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <op.t49g2olx3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-I'll have a look...
+I'm currently sick in my bed, so just a very quick glance over the
+patch and a few comments:
 
---Tim
-
-David Chinner wrote:
-> Now that we update the log tail LSN less frequently on
-> transaction completion, we pass the contention straight to
-> the global block stat lock (l_iclog_lock) during transaction
-> completion.
-> 
-> We currently have to take this lock to decrement the iclog
-> reference count. there is a reference count on each iclog,
-> so we need to take þhe global lock for all refcount changes.
-> 
-> When large numbers of processes are all doing small trnasctions,
-> the iclog reference counts will be quite high, and the state change
-> that absolutely requires the l_iclog_lock is the except rather than
-> the norm.
-> 
-> Change the reference counting on the iclogs to use atomic_inc/dec
-> so that we can use atomic_dec_and_lock during transaction completion
-> and avoid the need for grabbing the l_iclog_lock for every reference
-> count decrement except the one that matters - the last.
-> 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  fs/xfs/xfs_log.c      |   36 +++++++++++++++++++++---------------
->  fs/xfs/xfs_log_priv.h |    2 +-
->  fs/xfs/xfsidbg.c      |    2 +-
->  3 files changed, 23 insertions(+), 17 deletions(-)
-> 
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-01-21 16:16:51.804146394 +1100
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-01-21 16:23:35.369691221 +1100
-> @@ -675,7 +675,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
->  
->  		spin_lock(&log->l_icloglock);
->  		iclog = log->l_iclog;
-> -		iclog->ic_refcnt++;
-> +		atomic_inc(&iclog->ic_refcnt);
->  		spin_unlock(&log->l_icloglock);
->  		xlog_state_want_sync(log, iclog);
->  		(void) xlog_state_release_iclog(log, iclog);
-> @@ -713,7 +713,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
->  		 */
->  		spin_lock(&log->l_icloglock);
->  		iclog = log->l_iclog;
-> -		iclog->ic_refcnt++;
-> +		atomic_inc(&iclog->ic_refcnt);
->  		spin_unlock(&log->l_icloglock);
->  
->  		xlog_state_want_sync(log, iclog);
-> @@ -1405,7 +1405,7 @@ xlog_sync(xlog_t		*log,
->  	int		v2 = XFS_SB_VERSION_HASLOGV2(&log->l_mp->m_sb);
->  
->  	XFS_STATS_INC(xs_log_writes);
-> -	ASSERT(iclog->ic_refcnt == 0);
-> +	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
->  
->  	/* Add for LR header */
->  	count_init = log->l_iclog_hsize + iclog->ic_offset;
-> @@ -2311,7 +2311,7 @@ xlog_state_done_syncing(
->  
->  	ASSERT(iclog->ic_state == XLOG_STATE_SYNCING ||
->  	       iclog->ic_state == XLOG_STATE_IOERROR);
-> -	ASSERT(iclog->ic_refcnt == 0);
-> +	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
->  	ASSERT(iclog->ic_bwritecnt == 1 || iclog->ic_bwritecnt == 2);
->  
->  
-> @@ -2393,7 +2393,7 @@ restart:
->  	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
->  	head = &iclog->ic_header;
->  
-> -	iclog->ic_refcnt++;			/* prevents sync */
-> +	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
->  	log_offset = iclog->ic_offset;
->  
->  	/* On the 1st write to an iclog, figure out lsn.  This works
-> @@ -2425,12 +2425,12 @@ restart:
->  		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
->  
->  		/* If I'm the only one writing to this iclog, sync it to disk */
-> -		if (iclog->ic_refcnt == 1) {
-> +		if (atomic_read(&iclog->ic_refcnt) == 1) {
->  			spin_unlock(&log->l_icloglock);
->  			if ((error = xlog_state_release_iclog(log, iclog)))
->  				return error;
->  		} else {
-> -			iclog->ic_refcnt--;
-> +			atomic_dec(&iclog->ic_refcnt);
->  			spin_unlock(&log->l_icloglock);
->  		}
->  		goto restart;
-> @@ -2821,18 +2821,23 @@ xlog_state_release_iclog(
->  {
->  	int		sync = 0;	/* do we sync? */
->  
-> -	spin_lock(&log->l_icloglock);
->  	if (iclog->ic_state & XLOG_STATE_IOERROR) {
->  		spin_unlock(&log->l_icloglock);
->  		return XFS_ERROR(EIO);
->  	}
->  
-> -	ASSERT(iclog->ic_refcnt > 0);
-> +	ASSERT(atomic_read(&iclog->ic_refcnt) > 0);
-> +	if (!atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock))
-> +		return 0;
-> +
-> +	if (iclog->ic_state & XLOG_STATE_IOERROR) {
-> +		spin_unlock(&log->l_icloglock);
-> +		return XFS_ERROR(EIO);
-> +	}
->  	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE ||
->  	       iclog->ic_state == XLOG_STATE_WANT_SYNC);
->  
-> -	if (--iclog->ic_refcnt == 0 &&
-> -	    iclog->ic_state == XLOG_STATE_WANT_SYNC) {
-> +	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
->  		/* update tail before writing to iclog */
->  		xlog_assign_tail_lsn(log->l_mp);
->  		sync++;
-> @@ -2952,7 +2957,8 @@ xlog_state_sync_all(xlog_t *log, uint fl
->  		 * previous iclog and go to sleep.
->  		 */
->  		if (iclog->ic_state == XLOG_STATE_DIRTY ||
-> -		    (iclog->ic_refcnt == 0 && iclog->ic_offset == 0)) {
-> +		    (atomic_read(&iclog->ic_refcnt) == 0
-> +		     && iclog->ic_offset == 0)) {
->  			iclog = iclog->ic_prev;
->  			if (iclog->ic_state == XLOG_STATE_ACTIVE ||
->  			    iclog->ic_state == XLOG_STATE_DIRTY)
-> @@ -2960,14 +2966,14 @@ xlog_state_sync_all(xlog_t *log, uint fl
->  			else
->  				goto maybe_sleep;
->  		} else {
-> -			if (iclog->ic_refcnt == 0) {
-> +			if (atomic_read(&iclog->ic_refcnt) == 0) {
->  				/* We are the only one with access to this
->  				 * iclog.  Flush it out now.  There should
->  				 * be a roundoff of zero to show that someone
->  				 * has already taken care of the roundoff from
->  				 * the previous sync.
->  				 */
-> -				iclog->ic_refcnt++;
-> +				atomic_inc(&iclog->ic_refcnt);
->  				lsn = be64_to_cpu(iclog->ic_header.h_lsn);
->  				xlog_state_switch_iclogs(log, iclog, 0);
->  				spin_unlock(&log->l_icloglock);
-> @@ -3099,7 +3105,7 @@ try_again:
->  			already_slept = 1;
->  			goto try_again;
->  		} else {
-> -			iclog->ic_refcnt++;
-> +			atomic_inc(&iclog->ic_refcnt);
->  			xlog_state_switch_iclogs(log, iclog, 0);
->  			spin_unlock(&log->l_icloglock);
->  			if (xlog_state_release_iclog(log, iclog))
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log_priv.h	2008-01-21 16:06:27.127557437 +1100
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h	2008-01-21 16:23:35.369691221 +1100
-> @@ -339,7 +339,7 @@ typedef struct xlog_iclog_fields {
->  #endif
->  	int			ic_size;
->  	int			ic_offset;
-> -	int			ic_refcnt;
-> +	atomic_t		ic_refcnt;
->  	int			ic_bwritecnt;
->  	ushort_t		ic_state;
->  	char			*ic_datap;	/* pointer to iclog data */
-> Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2008-01-21 16:06:27.127557437 +1100
-> +++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2008-01-21 16:23:35.385689220 +1100
-> @@ -5633,7 +5633,7 @@ xfsidbg_xiclog(xlog_in_core_t *iclog)
->  #else
->  		NULL,
->  #endif
-> -		iclog->ic_refcnt, iclog->ic_bwritecnt);
-> +		atomic_read(&iclog->ic_refcnt), iclog->ic_bwritecnt);
->  	if (iclog->ic_state & XLOG_STATE_ALL)
->  		printflags(iclog->ic_state, ic_flags, " state:");
->  	else
+ - no need to export the new inode ops, they're not used by the quota
+   or dmapi methods.
+ - any chance you could rebase this ontop of my various vnode removals,
+   this should make some things a little cleaner.
+ - there's a lot of hair dcache internals in here, so please run this
+   patch past linux-fsdevel@vger.kernel.org to get some broader review.
