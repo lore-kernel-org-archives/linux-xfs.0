@@ -1,52 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jan 2008 16:31:12 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jan 2008 17:01:39 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0O0V21Z016499
-	for <xfs@oss.sgi.com>; Wed, 23 Jan 2008 16:31:06 -0800
-Date: Thu, 24 Jan 2008 11:31:14 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS doesn't correctly account for IO-Wait for directory reading
-Message-ID: <20080124003114.GD155259@sgi.com>
-References: <20080123110027.GA10366@citd.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080123110027.GA10366@citd.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0O11UeB019097
+	for <xfs@oss.sgi.com>; Wed, 23 Jan 2008 17:01:35 -0800
+Date: Thu, 24 Jan 2008 12:02:09 +1100
+Subject: Re: Repairing a possibly incomplete xfs_growfs command?
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <9CE70E6ED2C2F64FB5537A2973FA4F0253595A@pvn-3001.purevideo.local> <20080117234604.GG155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253595B@pvn-3001.purevideo.local> <20080119004018.GH155407@sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F0253596D@pvn-3001.purevideo.local> <op.t5c3ubfg3jf8g2@pc-bnaujok.melbourne.sgi.com> <9CE70E6ED2C2F64FB5537A2973FA4F02535973@pvn-3001.purevideo.local>
+Message-ID: <op.t5es5vi83jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <9CE70E6ED2C2F64FB5537A2973FA4F02535973@pvn-3001.purevideo.local>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Matthias Schniedermeyer <ms@citd.de>
+To: Mark Magpayo <mmagpayo@purevideo.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jan 23, 2008 at 12:00:27PM +0100, Matthias Schniedermeyer wrote:
-> Hi
-> 
-> 
-> Some days ago Mr. Chinner(?, don't have the e-mail anymore) said that 
-> XFS fakes ( :-) ) it's way around IO-wait accounting for file-deletion 
-> by deferring it to the log.
-> 
-> Today i thought again about the initial 'rm -rf'-isn't-accounted-properly
-> "problem", and the bigger part of "rm -rf" is the 
-> directory-traversal(IOW read) and not the actual "unlink"-part.
-> 
-> So what better test than a simple 'find'.
-> 
-> Situation: Cache is cold:
-> find /<wherever> >/dev/null
-> While running (which takes some time) it shows exactly 0.0%wa in top on 
-> an otherwise completely idle system, where there should be a near 50%wa 
-> (Dual-Core system) or 100% on a UP system.
+On Thu, 24 Jan 2008 04:24:17 +1100, Mark Magpayo <mmagpayo@purevideo.com>  
+wrote:
 
-XFS issues readahead on directories, so when the I/O has not completed,
-it waits on semaphores in the xfs_buf layer, not on the I/O itself.
-Hence we cannot account for the wait time as iowait as we cannot
-tell the semaphore to call io_schedule() instead of schedule().
+>>
+>> Was it stuck on Phase 6 all that time? With only 1GB of RAM (from your
+>> meminfo output) and 18TB filesystem, Phases 3 and 4 will take a very
+>> long time due to swapping.
+>
+> It's been stuck on Phase 6 since I came back to check on it on Monday.
+>
+>
+>>
+>> Phase 6 in your scenario should be relatively quick and light on
+>> memory usage (500MB as reported in your other email).
+>>
+>> It is feasible it is deadlocked by trying to double-access a buffer,
+>> or access a buffer that wasn't released. This is an unlikely scenario,
+>> but it is possible.
+>
+> Could I break out of the process here?  Seems like most of the repair
+> work has been done...  Then again, I imagine traversing the filesystem
+> is a pretty important step.
 
-Cheers,
+Breaking repair is fine.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> Are there any more phases after this by the way?
+
+Checking nlink counts in Phase 7 is the last.
+
+I would run xfs_check to see if there are any errors remaining.
+
+The other thing I can suggest is to run an older repair from the
+2.8.x series (2.8.21) with the options "-M -o bhash=512". This
+should finish.
+
+Regards,
+Barry.
