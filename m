@@ -1,148 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jan 2008 23:08:07 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m0P77qZs000898
-	for <xfs@oss.sgi.com>; Thu, 24 Jan 2008 23:07:57 -0800
-Date: Fri, 25 Jan 2008 18:08:00 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 1/1] XFS: Replace custom AIL linked-list code with struct list_head
-Message-ID: <20080125070800.GH155407@sgi.com>
-References: <1200875757-26598-1-git-send-email-jeffpc@josefsipek.net> <20080121040422.GA25541@infradead.org> <20080121040740.GA14938@josefsipek.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jan 2008 23:16:25 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0P7GKim001905
+	for <xfs@oss.sgi.com>; Thu, 24 Jan 2008 23:16:23 -0800
+Received: from m12-13.163.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id E2A8155C04C
+	for <xfs@oss.sgi.com>; Thu, 24 Jan 2008 23:16:36 -0800 (PST)
+Received: from m12-13.163.com (m12-13.163.com [220.181.12.13]) by cuda.sgi.com with SMTP id lWwzrAQYQCnuCmmP for <xfs@oss.sgi.com>; Thu, 24 Jan 2008 23:16:36 -0800 (PST)
+Date: Fri, 25 Jan 2008 15:16:36 +0800
+From: "lxh" <lxhzju@163.com>
+Reply-To: lxhzju@163.com
+Subject: kernel oops on debian, 2.6.18-5, large xfs volume
+Message-ID: <200801251516352343935@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080121040740.GA14938@josefsipek.net>
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-On Sun, Jan 20, 2008 at 11:07:40PM -0500, Josef 'Jeff' Sipek wrote:
-> On Mon, Jan 21, 2008 at 04:04:23AM +0000, Christoph Hellwig wrote:
-> > On Sun, Jan 20, 2008 at 07:35:57PM -0500, Josef 'Jeff' Sipek wrote:
-> > > Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-> > > ---
-> > > 
-> > > I tested it with xfsqa, and things work as well as they do without it.
-> > 
-> > I like this a lot, but I think Dave has plans to replace the linked list
-> > with a more efficient data structure soon, so it might not actually be
-> > worth applying.
-> 
-> I've spoken with him about this, and he wants to have a tree where the
-> leaves have linked lists (if I understood correctly). So this just makes it
-> easier/cleaner for him.
+Hello, 
+   we have dozens of file servers with a 1.5TB/2.5 TB large xfs file system volume running on a RAID6 SATA array.  Each volume contains about 10,000,000 files. The Operating system is debian GNU/Linux 2.6.18-5-amd64 #1 SMP. we got a kernel oops frequently last year. 
 
-Sort of.
+here is the oops :
+ Filesystem "cciss/c0d1": XFS internal error xfs_trans_cancel at line 1138
+ of file fs/xfs/xfs_trans.c.  Caller 0xffffffff881df006
+ Call Trace:
+ [<ffffffff881fed18>] :xfs:xfs_trans_cancel+0x5b/0xfe
+ [<ffffffff88207006>] :xfs:xfs_create+0x58b/0x5dd
+ [<ffffffff8820f496>] :xfs:xfs_vn_mknod+0x1bd/0x3c8
+ [<ffffffff8027d27d>] default_wake_function+0x0/0xe
+ [<ffffffff802200e5>] __up_read+0x13/0x8a
+ [<ffffffff881eb682>] :xfs:xfs_iunlock+0x57/0x79
+ [<ffffffff88204180>] :xfs:xfs_lookup+0x6c/0x7d
+ [<ffffffff802200e5>] __up_read+0x13/0x8a
+ [<ffffffff881eb682>] :xfs:xfs_iunlock+0x57/0x79
+ [<ffffffff882041ce>] :xfs:xfs_access+0x3d/0x46
+ [<ffffffff8820fa4b>] :xfs:xfs_vn_permission+0x14/0x18
+ [<ffffffff8020cc7d>] permission+0x87/0xce
+ [<ffffffff80208f26>] __link_path_walk+0x16a/0xf3c
+ [<ffffffff8022ae52>] mntput_no_expire+0x19/0x8b
+ [<ffffffff8020dd5f>] link_path_walk+0xd3/0xe5
+ [<ffffffff802381ed>] vfs_create+0xe7/0x12c
+ [<ffffffff80218efb>] open_namei+0x18d/0x69c
+ [<ffffffff802252f1>] do_filp_open+0x1c/0x3d
+ [<ffffffff80217baa>] do_sys_open+0x44/0xc5
+ [<ffffffff802584d6>] system_call+0x7e/0x83
+　　
+ Every time the error occurs, the volume can not be accessed. So we have to umount this volume, run xfs_repair, and then remount it. This problem causes seriously impact of our service. 
+  Could you help me resolve this problem ? 
 
-Few things that really should be done in this first patch. Rather
-than passing listheads to the xfs_ail_*() functions, it should
-really be changed to pass the xfs_ail_t to those functions. The
-structure of the list should be opaque to everything outside these
-functions.
-
-It also needs to build with XFS_DEBUG enabled - that means
-xfs_ail_check needs updating, but I've already got a patch
-for the other bit (xfsidbg.c) that works which is attached below.
-
-Cheers,
-
-Dave.
-
----
-make xfsidbg.c compile and work with listhead based AIL.
-
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfsidbg.c |   66 +++++++++++++++++++++++++------------------------------
- 1 file changed, 30 insertions(+), 36 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2008-01-21 16:23:35.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2008-01-21 18:16:11.450796254 +1100
-@@ -6167,7 +6167,7 @@ xfsidbg_xlogitem(xfs_log_item_t *lip)
- 	printflags((uint)(lip->li_flags), li_flags,"log");
- 	kdb_printf("\n");
- 	kdb_printf("ail forw 0x%p ail back 0x%p lsn %s\ndesc %p ops 0x%p",
--		lip->li_ail.ail_forw, lip->li_ail.ail_back,
-+		lip->li_ail.next, lip->li_ail.next,
- 		xfs_fmtlsn(&(lip->li_lsn)), lip->li_desc, lip->li_ops);
- 	kdb_printf(" iodonefunc &0x%p\n", lip->li_cb);
- 	if (lip->li_type == XFS_LI_BUF) {
-@@ -6220,45 +6220,39 @@ xfsidbg_xaildump(xfs_mount_t *mp)
- 		};
- 	int count;
- 
--	if ((mp->m_ail.xa_ail.ail_forw == NULL) ||
--	    (mp->m_ail.xa_ail.ail_forw == (xfs_log_item_t *)&mp->m_ail.xa_ail)) {
-+	if (list_empty(&mp->m_ail.xa_ail)) {
- 		kdb_printf("AIL is empty\n");
- 		return;
- 	}
- 	kdb_printf("AIL for mp 0x%p, oldest first\n", mp);
--	lip = (xfs_log_item_t*)mp->m_ail.xa_ail.ail_forw;
--	for (count = 0; lip; count++) {
--		kdb_printf("[%d] type %s ", count, xfsidbg_item_type_str(lip));
--		printflags((uint)(lip->li_flags), li_flags, "flags:");
--		kdb_printf("  lsn %s\n   ", xfs_fmtlsn(&(lip->li_lsn)));
--		switch (lip->li_type) {
--		case XFS_LI_BUF:
--			xfs_buf_item_print((xfs_buf_log_item_t *)lip, 1);
--			break;
--		case XFS_LI_INODE:
--			xfs_inode_item_print((xfs_inode_log_item_t *)lip, 1);
--			break;
--		case XFS_LI_EFI:
--			xfs_efi_item_print((xfs_efi_log_item_t *)lip, 1);
--			break;
--		case XFS_LI_EFD:
--			xfs_efd_item_print((xfs_efd_log_item_t *)lip, 1);
--			break;
--		case XFS_LI_DQUOT:
--			xfs_dquot_item_print((xfs_dq_logitem_t *)lip, 1);
--			break;
--		case XFS_LI_QUOTAOFF:
--			xfs_qoff_item_print((xfs_qoff_logitem_t *)lip, 1);
--			break;
--		default:
--			kdb_printf("Unknown item type %d\n", lip->li_type);
--			break;
--		}
--
--		if (lip->li_ail.ail_forw == (xfs_log_item_t*)&mp->m_ail.xa_ail) {
--			lip = NULL;
--		} else {
--			lip = lip->li_ail.ail_forw;
-+	list_for_each_entry(lip, &mp->m_ail.xa_ail, li_ail) {
-+		for (count = 0; lip; count++) {
-+			kdb_printf("[%d] type %s ", count, xfsidbg_item_type_str(lip));
-+			printflags((uint)(lip->li_flags), li_flags, "flags:");
-+			kdb_printf("  lsn %s\n   ", xfs_fmtlsn(&(lip->li_lsn)));
-+			switch (lip->li_type) {
-+			case XFS_LI_BUF:
-+				xfs_buf_item_print((xfs_buf_log_item_t *)lip, 1);
-+				break;
-+			case XFS_LI_INODE:
-+				xfs_inode_item_print((xfs_inode_log_item_t *)lip, 1);
-+				break;
-+			case XFS_LI_EFI:
-+				xfs_efi_item_print((xfs_efi_log_item_t *)lip, 1);
-+				break;
-+			case XFS_LI_EFD:
-+				xfs_efd_item_print((xfs_efd_log_item_t *)lip, 1);
-+				break;
-+			case XFS_LI_DQUOT:
-+				xfs_dquot_item_print((xfs_dq_logitem_t *)lip, 1);
-+				break;
-+			case XFS_LI_QUOTAOFF:
-+				xfs_qoff_item_print((xfs_qoff_logitem_t *)lip, 1);
-+				break;
-+			default:
-+				kdb_printf("Unknown item type %d\n", lip->li_type);
-+				break;
-+			}
- 		}
- 	}
- }
+　　　　　　　　Luo xiaohua
+　　　　　　　　lxhzju@163.com
+　　　　　　　　　　2008-01-25
