@@ -1,46 +1,100 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Jan 2008 08:59:14 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0TGx6K9031794
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 08:59:09 -0800
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Jan 2008 09:16:55 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0THGpdw000761
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 09:16:53 -0800
 Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ADAAD12335BD
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 08:59:27 -0800 (PST)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by cuda.sgi.com with ESMTP id j05qdMoRelOOJQiw for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 08:59:27 -0800 (PST)
-Date: Tue, 29 Jan 2008 17:58:42 +0100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFBC8574D67
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 09:17:09 -0800 (PST)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by cuda.sgi.com with ESMTP id 7nRj8oDhlzQSwYx0 for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 09:17:09 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by enyo.dsw2k3.info (Postfix) with ESMTP id B00662BC53
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 18:17:07 +0100 (CET)
+Received: from enyo.dsw2k3.info ([127.0.0.1])
+	by localhost (enyo.dsw2k3.info [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id ICgYVF5UuXwX for <xfs@oss.sgi.com>;
+	Tue, 29 Jan 2008 18:17:01 +0100 (CET)
+Received: from citd.de (p4FC4BD9B.dip.t-dialin.net [79.196.189.155])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by enyo.dsw2k3.info (Postfix) with ESMTP id 24A192BC51
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 18:17:01 +0100 (CET)
+Date: Tue, 29 Jan 2008 18:16:58 +0100
 From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: mkfs.xfs doesn't detect size of storage correctly
-Message-ID: <20080129165842.GA21228@citd.de>
-References: <20080129093201.GA16203@citd.de> <43347.192.168.3.1.1201601702.squirrel@mail.aconex.com> <20080129122051.GA18165@citd.de> <479F440F.2060506@sandeen.net> <20080129153337.GA20509@citd.de> <479F495E.4070700@sandeen.net>
+Message-ID: <20080129171658.GB21228@citd.de>
+References: <20080129093201.GA16203@citd.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <479F495E.4070700@sandeen.net>
+In-Reply-To: <20080129093201.GA16203@citd.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: nscott@aconex.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 29.01.2008 09:42, Eric Sandeen wrote:
-> Matthias Schniedermeyer wrote:
-> > On 29.01.2008 09:19, Eric Sandeen wrote:
-> >> Matthias Schniedermeyer wrote:
-> >>
-> >>> A maybe important detail, i forgot to mention in the original mail is:
-> >>> The machine has 8GB of RAM, so i compiled the kernel with "64bit=yes" 
-> >>> (formaly x86_64), BUT(!) the userspace is 32bit or plain old i386.
-> >> If you think that's the issue, I'd try compiling the above as a 32-bit
-> >> binary and re-run.
-> > 
-> > I don't think it's an issue, i just wanted to mention it.
-> > 
-> > But as soon as i get home i will connect the HDD to an all 32bit system 
-> > and see if it makes a difference. (I'm still undecided if i should hope 
-> > that it makes a difference. ;-) )
+On 29.01.2008 10:32, Matthias Schniedermeyer wrote:
+> Hi
+> 
+> 
+> Yesterday i bought a 750GB HDD.
+> I encrypt nearly everything with loop-aes, so i also did it with this 
+> HDD.
+> 
+> I create a "fake" partition table and:
+> losetup -e aes256 -p 0 -o 4096 /dev/loop6 /dev/sdb < key
+> 
+> This creates a loop with everything except the first 4KB, i.e. it leaves 
+> out the MBR and another 3,5KB.
+> 
+> /proc/partions shows the correct(tm) size informations for the HDD and 
+> the loop:
+> - snip -
+>    7     6  732574580 loop6
+>    8    16  732574584 sdb
+>    8    17  732572001 sdb1
+> - snip -
+> 
+> But when i mkfs.xfs the loop
+> #> mkfs.xfs /dev/loop6
+> meta-data=/dev/loop6             isize=256    agcount=3, agsize=45785911 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=137357733, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096
+> log      =internal log           bsize=4096   blocks=32768, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-I'm back home, and i just connected the HDD to my all 32bit system.
-No difference.
+I just found a workaround. :-)
+As can be seen above the agcount is 3.
+
+For a reason that lays years in the past, when there were issues with 
+the agcount (actually agsize), that to the best of my knowledge are 
+fixed years ago (but still cause a weird feeling whenever i see that 
+word) i just tried '-d agcount=4'
+
+#> mkfs.xfs -l size=1024b -d agcount=4 /dev/loop6 -f
+meta-data=/dev/loop6             isize=256    agcount=4, agsize=45785912 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=183143645, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+As can be seen the "blocks"-number is much higher.
+
+#> df -k /mnt
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/loop6           732570484      4256 732566228   1% /mnt
+
+matches(tm) with the loop-size.
+
+
+So i'm "burned" by agcount/agsize AGAIN, seems my weird feeling about 
+those two words are still with reason. ;-)
 
 
 
