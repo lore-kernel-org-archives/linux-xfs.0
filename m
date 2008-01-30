@@ -1,70 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Jan 2008 13:21:17 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Jan 2008 15:26:27 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0TLLCJj021332
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 13:21:14 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1109D5780EA
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 13:21:33 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id bGQUrQk6Ofx8g4kZ for <xfs@oss.sgi.com>; Tue, 29 Jan 2008 13:21:33 -0800 (PST)
-Message-ID: <479F98BC.6060507@sandeen.net>
-Date: Tue, 29 Jan 2008 15:21:00 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m0UNQIXi008275
+	for <xfs@oss.sgi.com>; Wed, 30 Jan 2008 15:26:24 -0800
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B09785821A0
+	for <xfs@oss.sgi.com>; Wed, 30 Jan 2008 15:26:40 -0800 (PST)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by cuda.sgi.com with ESMTP id G3CrFWqrudazO5Iq for <xfs@oss.sgi.com>; Wed, 30 Jan 2008 15:26:40 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by enyo.dsw2k3.info (Postfix) with ESMTP id 5869D2BC53
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2008 00:26:38 +0100 (CET)
+Received: from enyo.dsw2k3.info ([127.0.0.1])
+	by localhost (enyo.dsw2k3.info [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id X2ddSYNM4wgy for <xfs@oss.sgi.com>;
+	Thu, 31 Jan 2008 00:26:33 +0100 (CET)
+Received: from citd.de (p4FC4ED8B.dip.t-dialin.net [79.196.237.139])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by enyo.dsw2k3.info (Postfix) with ESMTP id 8C35B2BC47
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2008 00:26:32 +0100 (CET)
+Date: Thu, 31 Jan 2008 00:26:28 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: mkfs.xfs doesn't detect size of storage correctly
-References: <20080129093201.GA16203@citd.de> <20080129171658.GB21228@citd.de> <479F893A.1030402@sandeen.net> <20080129203731.GA29094@puku.stupidest.org>
-In-Reply-To: <20080129203731.GA29094@puku.stupidest.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Message-ID: <20080130232628.GA9671@citd.de>
+References: <20080129093201.GA16203@citd.de> <20080129171658.GB21228@citd.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080129171658.GB21228@citd.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Matthias Schniedermeyer <ms@citd.de>, xfs@oss.sgi.com, Barry Naujok <bnaujok@sgi.com>
+To: xfs@oss.sgi.com
 
-Chris Wedgwood wrote:
-> On Tue, Jan 29, 2008 at 02:14:50PM -0600, Eric Sandeen wrote:
->
->   
->> [root@magnesium tmp]# mkfs.xfs -dfile,name=xfsfile,size=750156369920
->>     
->
-> I see this too except I'm pre-creating a file of the right length:
->
-> -rw-r--r-- 1 root root 750156369920 Jan 29 12:35 xfsfile
->
-> [...]
->
-> /root/xfsfile  xfs    524G  4.2M  524G   1% /mnt/tmp
->
->   
-I think this fixes it, but it was just a quickie so pls double check :)
+A little followup.
 
-if agcount * agsize <= dblocks, then the last ag shouldn't be "small"
+Today i bought another 750GB HDD, and a 500GB.
 
--Eric
+Initializing the encryption of the 500GB finished a minute ago and the 
+same bug, of course with a different size (357702MB), was observable.
 
-Index: xfsprogs-2.9.5/mkfs/xfs_mkfs.c
-===================================================================
---- xfsprogs-2.9.5.orig/mkfs/xfs_mkfs.c
-+++ xfsprogs-2.9.5/mkfs/xfs_mkfs.c
-@@ -523,7 +523,8 @@ validate_ag_geometry(
- 	 * If the last AG is too small, reduce the filesystem size
- 	 * and drop the blocks.
- 	 */
--	if ( dblocks % agsize != 0 &&
-+	if ( agcount * agsize > dblocks &&
-+	     dblocks % agsize != 0 &&
- 	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
- 		fprintf(stderr,
- 	_("last AG size %lld blocks too small, minimum size is %lld blocks\n"),
-@@ -1808,7 +1809,8 @@ _("size %s specified for log subvolume i
- 	 * If the last AG is too small, reduce the filesystem size
- 	 * and drop the blocks.
- 	 */
--	if ( dblocks % agsize != 0 &&
-+	if ( agcount * agsize > dblocks &&
-+	     dblocks % agsize != 0 &&
- 	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
- 		dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
- 		agcount--;
+Workaround also worked in this case (Now its 476937MB). This also proves 
+that the bug is of recent nature, the last 500GB HDD i bought was just 
+over a month ago and this bug didn't show up then.
+
+
+
+
+
+
+Bis denn
+
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
