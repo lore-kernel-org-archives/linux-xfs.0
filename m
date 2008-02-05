@@ -1,68 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Feb 2008 21:24:37 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m155OB2F027535
-	for <xfs@oss.sgi.com>; Mon, 4 Feb 2008 21:24:14 -0800
-Date: Tue, 5 Feb 2008 16:24:18 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] Possible fix for 2.6.24 xfs_file_readdir crash
-Message-ID: <20080205052418.GU155259@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 03:48:23 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m15BmHoR018967
+	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 03:48:19 -0800
+Received: from fg-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0BA159FA5F
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2008 03:48:36 -0800 (PST)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.159]) by cuda.sgi.com with ESMTP id Fz8F6sf10Up2zKGu for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 03:48:36 -0800 (PST)
+Received: by fg-out-1718.google.com with SMTP id e12so2261341fga.8
+        for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 03:48:33 -0800 (PST)
+Message-ID: <b0a4f3350802050342i48525c02we95a2a4e89327688@mail.gmail.com>
+Date: Tue, 5 Feb 2008 11:42:23 +0000
+From: "Jamie Tufnell" <diesql@googlemail.com>
+Subject: Linux mkfs.xfs parameters for large files
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Sven Geggus <lists@fuchsschwanzdomain.de>
-Cc: xfs@oss.sgi.com, Tobias Ulmer <tu@emlix.com>, Andrea Perotti <andreamtp@goodfellow.it>
+To: xfs@oss.sgi.com
 
-Sven, Tomas, Andrea:
+Hi,
 
-Can you try the patch attached below to see if it fixes the
-xfs_file_readdir() oops you are seeing and let me know if it fixes
-the problem?
+I've done some research into how to best-prepare our Linux (2.6.18)
+XFS filesystem for a read-heavy workload of mostly large files (files
+between 50MB and 500MB) and I have some questions on block-sizes /
+extents.
 
-It looks like we're deferencing a pointer beyond the end of a buffer
-if the buffer is filled exactly. This bug does not crash ia64 (even
-with memory poisoning enabled), which is why the targeted corner
-case testing I did a while back did not pick this up when fixing a
-similar bug a month ago.
+My experience with other filesystems leads me to believe I should
+experiment with large block-sizes for this application.  In trying to
+do so, I found that the Linux XFS implementation forces the block size
+to not exceed the page size -- 4kB -- which seems a bit small in this
+case.  At first, I thought this was *really* bad news for me but I've
+since read some posts and the impression I'm getting is it's not that
+big of a deal?
 
-Cheers,
+Can someone please explain why (if that's true)?  I've read that an
+extent is one or more "continguous" blocks, so should I simply tune
+the extent size in the same way I was expecting to tune the
+block-size?  Are there any other mkfs.xfs parameters I should
+experiment with.. so far I plan to use stripe width/unit as the
+filesystem will be on a striped RAID.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Lastly, would you recommend XFS for this application?  Is there a
+better filesystem for what I'm trying to do?
 
----
-Fix yet another corner case oops in xfs_file_readdir().
+Any help greatly appreciated!
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/linux-2.6/xfs_file.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_file.c	2008-01-16 16:24:01.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c	2008-02-05 15:13:17.153110696 +1100
-@@ -351,8 +351,8 @@ xfs_file_readdir(
- 
- 		size = buf.used;
- 		de = (struct hack_dirent *)buf.dirent;
--		curr_offset = de->offset /* & 0x7fffffff */;
- 		while (size > 0) {
-+			curr_offset = de->offset /* & 0x7fffffff */;
- 			if (filldir(dirent, de->name, de->namlen,
- 					curr_offset & 0x7fffffff,
- 					de->ino, de->d_type)) {
-@@ -363,7 +363,6 @@ xfs_file_readdir(
- 				       sizeof(u64));
- 			size -= reclen;
- 			de = (struct hack_dirent *)((char *)de + reclen);
--			curr_offset = de->offset /* & 0x7fffffff */;
- 		}
- 	}
- 
+Thanks,
+J.
