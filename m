@@ -1,51 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 13:13:25 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m15LDGVJ027751
-	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 13:13:20 -0800
-Message-ID: <47A8D156.8060405@sgi.com>
-Date: Wed, 06 Feb 2008 08:12:54 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 14:51:36 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m15MpSua031723
+	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 14:51:29 -0800
+Received: from malkusch.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19D9F5A43BB
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2008 14:51:49 -0800 (PST)
+Received: from malkusch.de (malkusch.de [217.171.203.96]) by cuda.sgi.com with ESMTP id UdEK31tYV6kbtH2H for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 14:51:49 -0800 (PST)
+From: Markus Malkusch <markus@malkusch.de>
+Subject: Re: xfs_repair progress
+Date: Tue, 5 Feb 2008 23:51:40 +0100
+References: <200802051525.25101.markus@malkusch.de> <20080205172414.GA801@puku.stupidest.org>
+In-Reply-To: <20080205172414.GA801@puku.stupidest.org>
 MIME-Version: 1.0
-Subject: Re: mkfs.xfs doesn't detect size of storage correctly
-References: <20080129093201.GA16203@citd.de> <47A87877.1050106@sandeen.net>
-In-Reply-To: <47A87877.1050106@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200802052351.40553.markus@malkusch.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Matthias Schniedermeyer <ms@citd.de>, xfs@oss.sgi.com
+To: Chris Wedgwood <cw@f00f.org>
+Cc: xfs@oss.sgi.com
 
+Chris Wedgwood:
 
+> is it swapping?  (run vmstat)
 
-Eric Sandeen wrote:
-> Matthias Schniedermeyer wrote:
-> 
->> There is roughly 1/3 missing.
-> 
-> SGI, have you settled on a fix for this? 
+I can't run vmstat, as I cancelt the xfs_repair before your mail. I remember 
+that one CPU was fully loaded (Top said 107% CPU for xfs_repair). The system 
+doesn't feel that it was swaping. But I also remember that there were about 
+300M in Swap.
 
-Yes, Barry is reviewing and testing your proposed fix. The delay was caused
-by most of the XFS team attending LCA last week. .. sorry.
+Anyway, I deleted all those hardlinks which reduced the number of inodes from 
+about 1.5 million to 325735. Now I can run xfs_repair in two minutes.
 
-We'll get a new package out onto OSS asap.
-
-Cheers
--- Mark
-
-
-> Latest released xfsprogs,
-> 2.9.5 has this problem, and I've put it in rawhide; it's also in the F9
-> alpha spin.  Should I revert to 2.9.4 if you don't have plans to fix it
-> soon?
-> 
-> Nothing indicates to the user that their fs was misformatted, and there
-> will be a growing number fileystems missing a substantial portion of
-> their space out there....
-> 
-> -Eric
-> 
-> 
+Markus Malkusch
