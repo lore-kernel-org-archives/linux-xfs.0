@@ -1,45 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 06:56:17 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 07:35:24 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m15EuCqB001392
-	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 06:56:15 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D1905A0487
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2008 06:56:34 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id zdsWFWoL3N6y2KJx for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 06:56:34 -0800 (PST)
-Message-ID: <47A87901.7010508@sandeen.net>
-Date: Tue, 05 Feb 2008 08:56:01 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m15FZHLt003688
+	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 07:35:21 -0800
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01C7A5A0DE4
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2008 07:34:21 -0800 (PST)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by cuda.sgi.com with ESMTP id PAGFjQeGzFFkIYOj for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 07:34:21 -0800 (PST)
+Date: Tue, 5 Feb 2008 16:33:37 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: mkfs.xfs doesn't detect size of storage correctly
+Message-ID: <20080205153337.GA9915@citd.de>
+References: <20080129093201.GA16203@citd.de> <47A87877.1050106@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Linux mkfs.xfs parameters for large files
-References: <b0a4f3350802050342i48525c02we95a2a4e89327688@mail.gmail.com>
-In-Reply-To: <b0a4f3350802050342i48525c02we95a2a4e89327688@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <47A87877.1050106@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jamie Tufnell <diesql@googlemail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-Jamie Tufnell wrote:
-> Hi,
+On 05.02.2008 08:53, Eric Sandeen wrote:
+> Matthias Schniedermeyer wrote:
 > 
-> I've done some research into how to best-prepare our Linux (2.6.18)
-> XFS filesystem for a read-heavy workload of mostly large files (files
-> between 50MB and 500MB) and I have some questions on block-sizes /
-> extents.
+> > There is roughly 1/3 missing.
 > 
-> My experience with other filesystems leads me to believe I should
-> experiment with large block-sizes for this application.  In trying to
-> do so, I found that the Linux XFS implementation forces the block size
-> to not exceed the page size -- 4kB -- which seems a bit small in this
-> case.  At first, I thought this was *really* bad news for me but I've
-> since read some posts and the impression I'm getting is it's not that
-> big of a deal?
+> SGI, have you settled on a fix for this?  Latest released xfsprogs,
+> 2.9.5 has this problem, and I've put it in rawhide; it's also in the F9
+> alpha spin.  Should I revert to 2.9.4 if you don't have plans to fix it
+> soon?
+> 
+> Nothing indicates to the user that their fs was misformatted, and there
+> will be a growing number fileystems missing a substantial portion of
+> their space out there....
 
-In your careful benchmarking & testing, which aspects of the performance
-you've found does not meet your needs or expectations?  That's always a
-good place to start.
+The big question here is if you can grow the filesystem to fix it.
 
--Eric
+Before i found the workaround with the agcount i tested to grow the fs, 
+but it didn't work.
+
+So: A correctly(tm) fixed package i think it must include a xfs_grows 
+that can fix a damaged(tm) fs, otherwise people who use such a 
+filesystem (and can't backup/restore) are stuck with missing a large 
+chunk of space.
+
+
+
+
+Bis denn
+
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
