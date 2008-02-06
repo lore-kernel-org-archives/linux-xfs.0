@@ -1,33 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Feb 2008 21:05:27 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Feb 2008 01:46:12 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1655HIF024224
-	for <xfs@oss.sgi.com>; Tue, 5 Feb 2008 21:05:21 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1537DDA07C0
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2008 21:05:11 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id WGqjiFxanKgJhG7A for <xfs@oss.sgi.com>; Tue, 05 Feb 2008 21:05:11 -0800 (PST)
-Message-ID: <47A93FE4.3000808@sandeen.net>
-Date: Tue, 05 Feb 2008 23:04:36 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m169k1l2009273
+	for <xfs@oss.sgi.com>; Wed, 6 Feb 2008 01:46:05 -0800
+Date: Wed, 6 Feb 2008 10:46:17 +0100
+From: Tobias Ulmer <tu@emlix.com>
+Subject: Re: [PATCH] Possible fix for 2.6.24 xfs_file_readdir crash
+References: <20080205052418.GU155259@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix mkfs.xfs default AG sizing
-References: <op.t52twvh83jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t52twvh83jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080205052418.GU155259@sgi.com>
+Message-Id: <E1JMgrB-0002nu-Lq@mailer.emlix.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Sven Geggus <lists@fuchsschwanzdomain.de>, xfs@oss.sgi.com, Andrea Perotti <andreamtp@goodfellow.it>
 
-Barry Naujok wrote:
-> Based on Eric's patches and my investigations, I have generated
-> the attached patch.
+On Tue, Feb 05, 2008 at 04:24:18PM +1100, David Chinner wrote:
+> Sven, Tomas, Andrea:
 > 
+> Can you try the patch attached below to see if it fixes the
+> xfs_file_readdir() oops you are seeing and let me know if it fixes
+> the problem?
 
-Based on some testing of random fs sizes :), seems to resolve the problem.
+Works for me(TM) :)
 
-Thanks,
--Eric
+My testbox survived 24h with this patch, no problems.
+
+Tobias
+
+> 
+> It looks like we're deferencing a pointer beyond the end of a buffer
+> if the buffer is filled exactly. This bug does not crash ia64 (even
+> with memory poisoning enabled), which is why the targeted corner
+> case testing I did a while back did not pick this up when fixing a
+> similar bug a month ago.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
+> 
+> ---
+> Fix yet another corner case oops in xfs_file_readdir().
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_file.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_file.c	2008-01-16 16:24:01.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_file.c	2008-02-05 15:13:17.153110696 +1100
+> @@ -351,8 +351,8 @@ xfs_file_readdir(
+>  
+>  		size = buf.used;
+>  		de = (struct hack_dirent *)buf.dirent;
+> -		curr_offset = de->offset /* & 0x7fffffff */;
+>  		while (size > 0) {
+> +			curr_offset = de->offset /* & 0x7fffffff */;
+>  			if (filldir(dirent, de->name, de->namlen,
+>  					curr_offset & 0x7fffffff,
+>  					de->ino, de->d_type)) {
+> @@ -363,7 +363,6 @@ xfs_file_readdir(
+>  				       sizeof(u64));
+>  			size -= reclen;
+>  			de = (struct hack_dirent *)((char *)de + reclen);
+> -			curr_offset = de->offset /* & 0x7fffffff */;
+>  		}
+>  	}
+>  
