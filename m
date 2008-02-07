@@ -1,35 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Feb 2008 23:20:06 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m177JxkS031584
-	for <xfs@oss.sgi.com>; Wed, 6 Feb 2008 23:20:02 -0800
-Date: Thu, 7 Feb 2008 18:20:16 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH V2] make inode reclaim synchronise with xfs_iflush_done()
-Message-ID: <20080207072016.GR155407@sgi.com>
-References: <47AA86E5.5030804@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Feb 2008 00:27:52 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m178RkF5008353
+	for <xfs@oss.sgi.com>; Thu, 7 Feb 2008 00:27:47 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D629811E08CB
+	for <xfs@oss.sgi.com>; Thu,  7 Feb 2008 00:27:34 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id iPrfVZFgn3nve9d3 for <xfs@oss.sgi.com>; Thu, 07 Feb 2008 00:27:34 -0800 (PST)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m178RPF3014229
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 7 Feb 2008 09:27:25 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m178ROsa014227
+	for xfs@oss.sgi.com; Thu, 7 Feb 2008 09:27:24 +0100
+Date: Thu, 7 Feb 2008 09:27:24 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] kill t_sema member of struct xfs_trans
+Message-ID: <20080207082724.GA14119@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <47AA86E5.5030804@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Feb 07, 2008 at 03:19:49PM +1100, Lachlan McIlroy wrote:
-> On a forced shutdown, xfs_finish_reclaim() will skip flushing the inode.
-> If the inode flush lock is not already held and there is an outstanding
-> xfs_iflush_done() then we might free the inode prematurely.  By acquiring
-> and releasing the flush lock we will synchronise with xfs_iflush_done().
+It's completely unused so we might aswell kill it.  Note that there is
+another t_sema in struct xlog_ticket, which is used and actually an sv_t
+despite the name.  That one is left untouched by this patch.
 
-Looks fine.
 
-Cheers,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Index: linux-2.6-xfs/fs/xfs/xfs_trans.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_trans.h	2008-02-05 08:48:40.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_trans.h	2008-02-05 08:48:45.000000000 +0100
+@@ -341,7 +341,6 @@ typedef struct xfs_trans {
+ 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
+ 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
+ 	xfs_log_ticket_t	t_ticket;	/* log mgr ticket */
+-	sema_t			t_sema;		/* sema for commit completion */
+ 	xfs_lsn_t		t_lsn;		/* log seq num of start of
+ 						 * transaction. */
+ 	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of
