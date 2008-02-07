@@ -1,66 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Feb 2008 20:15:23 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m174FEfU018005
-	for <xfs@oss.sgi.com>; Wed, 6 Feb 2008 20:15:19 -0800
-Message-ID: <47AA86E5.5030804@sgi.com>
-Date: Thu, 07 Feb 2008 15:19:49 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Feb 2008 22:39:45 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m176dYY7029619
+	for <xfs@oss.sgi.com>; Wed, 6 Feb 2008 22:39:37 -0800
+Date: Thu, 7 Feb 2008 01:39:29 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: unpushed 4-month-old mods?
+Message-ID: <20080207063929.GA31513@infradead.org>
+References: <47A694F3.9010307@sandeen.net> <20080204044611.GF155407@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] make inode reclaim synchronise with xfs_iflush_done()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080204044611.GF155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On a forced shutdown, xfs_finish_reclaim() will skip flushing the inode.
-If the inode flush lock is not already held and there is an outstanding
-xfs_iflush_done() then we might free the inode prematurely.  By acquiring
-and releasing the flush lock we will synchronise with xfs_iflush_done().
+On Mon, Feb 04, 2008 at 03:46:11PM +1100, David Chinner wrote:
+> On Sun, Feb 03, 2008 at 10:30:43PM -0600, Eric Sandeen wrote:
+> > At least these three mods which I did back in September to get Fedora 8
+> > / 2.6.23 into shape on 4k stacks, and a bugfix, are still not pushed to
+> > kernel.org, and are missing in 2.6.24...
+> > 
+> > Is there any reason for the holdup?  Makes me wonder what else isn't
+> > pushed...
+> 
+> The holdup is that we drew a line in the sand for the 2.6.24 before
+> 2.6.23 was released. We did this because of the massive amount of invasive
+> change we already had queued up for 2.6.24.  All those mods that got
+> held up will be pushed into 2.6.25 release.
 
-Lachlan
-
---- fs/xfs/xfs_vnodeops.c_1.727	2008-01-10 16:00:48.000000000 +1100
-+++ fs/xfs/xfs_vnodeops.c	2008-02-07 15:15:26.000000000 +1100
-@@ -3721,12 +3721,12 @@ xfs_finish_reclaim(
-  	 * We get the flush lock regardless, though, just to make sure
-  	 * we don't free it while it is being flushed.
-  	 */
--	if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--		if (!locked) {
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
--			xfs_iflock(ip);
--		}
-+	if (!locked) {
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		xfs_iflock(ip);
-+	}
-
-+	if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-  		if (ip->i_update_core ||
-  		    ((ip->i_itemp != NULL) &&
-  		     (ip->i_itemp->ili_format.ilf_fields != 0))) {
-@@ -3746,17 +3746,11 @@ xfs_finish_reclaim(
-  		ASSERT(ip->i_update_core == 0);
-  		ASSERT(ip->i_itemp == NULL ||
-  		       ip->i_itemp->ili_format.ilf_fields == 0);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	} else if (locked) {
--		/*
--		 * We are not interested in doing an iflush if we're
--		 * in the process of shutting down the filesystem forcibly.
--		 * So, just reclaim the inode.
--		 */
--		xfs_ifunlock(ip);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-  	}
-
-+	xfs_ifunlock(ip);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-   reclaim:
-  	xfs_ireclaim(ip);
-  	return 0;
+For which it's getting about time.  The merge window started about with
+LCA, so by the tradition 2 weeks rule it'll close by the end of the
+week..
