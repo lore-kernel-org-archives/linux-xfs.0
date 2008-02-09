@@ -1,48 +1,298 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Feb 2008 21:03:00 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 08 Feb 2008 21:09:36 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1952o9s000548
-	for <xfs@oss.sgi.com>; Fri, 8 Feb 2008 21:02:52 -0800
-Date: Sat, 9 Feb 2008 00:03:12 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [GIT PULL] XFS update for 2.6.25
-Message-ID: <20080209050312.GC1428@infradead.org>
-References: <20080208022705.0DB1058C4C11@chook.melbourne.sgi.com> <47AD284F.7080603@sandeen.net> <20080209045645.GB1428@infradead.org> <47AD330D.3010603@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1959HGw001073
+	for <xfs@oss.sgi.com>; Fri, 8 Feb 2008 21:09:18 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14550DCEC19
+	for <xfs@oss.sgi.com>; Fri,  8 Feb 2008 21:09:40 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 5ihJV7a6SVxoL8n0 for <xfs@oss.sgi.com>; Fri, 08 Feb 2008 21:09:40 -0800 (PST)
+Message-ID: <47AD3593.1060700@sandeen.net>
+Date: Fri, 08 Feb 2008 23:09:39 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <47AD330D.3010603@sandeen.net>
+Subject: [PATCH 1/2] - unwrap makefiles (mainline only)
+References: <20080208022705.0DB1058C4C11@chook.melbourne.sgi.com> <47AD284F.7080603@sandeen.net>
+In-Reply-To: <47AD284F.7080603@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Feb 08, 2008 at 10:58:53PM -0600, Eric Sandeen wrote:
-> Christoph Hellwig wrote:
-> > On Fri, Feb 08, 2008 at 10:13:03PM -0600, Eric Sandeen wrote:
-> >> Lachlan McIlroy wrote:
-> >>> Please pull from the for-linus branch:
-> >>>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
-> >>>
-> >>> This will update the following files:
-> >>>
-> >>>  fs/xfs/Makefile-linux-2.6      |    1 -
-> >> Is there a reason the other various makefile updates still haven't been
-> >> pushed?  They're a lot tidier now, and they facilitate out-of-tree
-> >> building...
-> > 
-> > Well, the makefiles are pretty different for CVS vs mainline to modular
-> > quota and dmapi.  I'm thinking about doing a proof of concept modular
-> > quota patch for mainline and if it doesn't get too ugly that would
-> > mean the makefiles are a lot more in sync.
-> 
-> Even if they differ, they can still get the same basic treatment.  I'll
-> make a patch if desired.  The current kernel.org makefiles are a mess,
-> IMHO :)
+kernel.org git tree "port" of:
 
-They could, but I understand the SGI people fully if they try to touch
-the things that differ as little as possible.
+Remove Makefile wrappers in XFS
 
-But yeah, please send a patch, I've done quite a few mainline-only
-patches yesterday aswell :)
+Makefile (and Kbuild) would include Makefile-linux-26
+I doubt XFS will really still compile on 2.4; so drop that. This
+moves Makefile-linux-26 into Makefile and drops Kbuild.
+Also having wrappers as both Kbuild and Makefile seemed redundant
+anyways.
+
+The patch is relatively large because it renames a file, but
+no functional changes.
+
+Signed-off-by: Andi Kleen <ak@suse.de <mailto:ak@suse.de>>
+Merge of xfs-linux-melb:xfs-kern:29781a by kenmcd.
+
+  Remove Makefile wrappers in XFS.
+
+Index: linux-2.6/fs/xfs/Kbuild
+===================================================================
+--- linux-2.6.orig/fs/xfs/Kbuild
++++ /dev/null
+@@ -1,6 +0,0 @@
+-#
+-# The xfs people like to share Makefile with 2.6 and 2.4.
+-# Utilise file named Kbuild file which has precedence over Makefile.
+-#
+-
+-include $(srctree)/$(obj)/Makefile-linux-2.6
+Index: linux-2.6/fs/xfs/Makefile
+===================================================================
+--- linux-2.6.orig/fs/xfs/Makefile
++++ linux-2.6/fs/xfs/Makefile
+@@ -1 +1,117 @@
+-include $(TOPDIR)/fs/xfs/Makefile-linux-$(VERSION).$(PATCHLEVEL)
++#
++# Copyright (c) 2000-2005 Silicon Graphics, Inc.
++# All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++
++EXTRA_CFLAGS +=	 -Ifs/xfs -Ifs/xfs/linux-2.6 -funsigned-char
++
++XFS_LINUX := linux-2.6
++
++ifeq ($(CONFIG_XFS_DEBUG),y)
++	EXTRA_CFLAGS += -g
++endif
++
++obj-$(CONFIG_XFS_FS)		+= xfs.o
++
++xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix quota/, \
++				   xfs_dquot.o \
++				   xfs_dquot_item.o \
++				   xfs_trans_dquot.o \
++				   xfs_qm_syscalls.o \
++				   xfs_qm_bhv.o \
++				   xfs_qm.o)
++
++ifeq ($(CONFIG_XFS_QUOTA),y)
++xfs-$(CONFIG_PROC_FS)		+= quota/xfs_qm_stats.o
++endif
++
++xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
++xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
++xfs-$(CONFIG_PROC_FS)		+= $(XFS_LINUX)/xfs_stats.o
++xfs-$(CONFIG_SYSCTL)		+= $(XFS_LINUX)/xfs_sysctl.o
++xfs-$(CONFIG_COMPAT)		+= $(XFS_LINUX)/xfs_ioctl32.o
++
++
++xfs-y				+= xfs_alloc.o \
++				   xfs_alloc_btree.o \
++				   xfs_attr.o \
++				   xfs_attr_leaf.o \
++				   xfs_bit.o \
++				   xfs_bmap.o \
++				   xfs_bmap_btree.o \
++				   xfs_btree.o \
++				   xfs_buf_item.o \
++				   xfs_da_btree.o \
++				   xfs_dir2.o \
++				   xfs_dir2_block.o \
++				   xfs_dir2_data.o \
++				   xfs_dir2_leaf.o \
++				   xfs_dir2_node.o \
++				   xfs_dir2_sf.o \
++				   xfs_error.o \
++				   xfs_extfree_item.o \
++				   xfs_filestream.o \
++				   xfs_fsops.o \
++				   xfs_ialloc.o \
++				   xfs_ialloc_btree.o \
++				   xfs_iget.o \
++				   xfs_inode.o \
++				   xfs_inode_item.o \
++				   xfs_iomap.o \
++				   xfs_itable.o \
++				   xfs_dfrag.o \
++				   xfs_log.o \
++				   xfs_log_recover.o \
++				   xfs_mount.o \
++				   xfs_mru_cache.o \
++				   xfs_rename.o \
++				   xfs_trans.o \
++				   xfs_trans_ail.o \
++				   xfs_trans_buf.o \
++				   xfs_trans_extfree.o \
++				   xfs_trans_inode.o \
++				   xfs_trans_item.o \
++				   xfs_utils.o \
++				   xfs_vfsops.o \
++				   xfs_vnodeops.o \
++				   xfs_rw.o \
++				   xfs_dmops.o \
++				   xfs_qmops.o
++
++xfs-$(CONFIG_XFS_TRACE)		+= xfs_dir2_trace.o
++
++# Objects in linux/
++xfs-y				+= $(addprefix $(XFS_LINUX)/, \
++				   kmem.o \
++				   xfs_aops.o \
++				   xfs_buf.o \
++				   xfs_export.o \
++				   xfs_file.o \
++				   xfs_fs_subr.o \
++				   xfs_globals.o \
++				   xfs_ioctl.o \
++				   xfs_iops.o \
++				   xfs_lrw.o \
++				   xfs_super.o \
++				   xfs_vnode.o)
++
++# Objects in support/
++xfs-y				+= $(addprefix support/, \
++				   debug.o \
++				   uuid.o)
++
++xfs-$(CONFIG_XFS_TRACE)		+= support/ktrace.o
++
+Index: linux-2.6/fs/xfs/Makefile-linux-2.6
+===================================================================
+--- linux-2.6.orig/fs/xfs/Makefile-linux-2.6
++++ /dev/null
+@@ -1,117 +0,0 @@
+-#
+-# Copyright (c) 2000-2005 Silicon Graphics, Inc.
+-# All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-
+-EXTRA_CFLAGS +=	 -Ifs/xfs -Ifs/xfs/linux-2.6 -funsigned-char
+-
+-XFS_LINUX := linux-2.6
+-
+-ifeq ($(CONFIG_XFS_DEBUG),y)
+-	EXTRA_CFLAGS += -g
+-endif
+-
+-obj-$(CONFIG_XFS_FS)		+= xfs.o
+-
+-xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix quota/, \
+-				   xfs_dquot.o \
+-				   xfs_dquot_item.o \
+-				   xfs_trans_dquot.o \
+-				   xfs_qm_syscalls.o \
+-				   xfs_qm_bhv.o \
+-				   xfs_qm.o)
+-
+-ifeq ($(CONFIG_XFS_QUOTA),y)
+-xfs-$(CONFIG_PROC_FS)		+= quota/xfs_qm_stats.o
+-endif
+-
+-xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
+-xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+-xfs-$(CONFIG_PROC_FS)		+= $(XFS_LINUX)/xfs_stats.o
+-xfs-$(CONFIG_SYSCTL)		+= $(XFS_LINUX)/xfs_sysctl.o
+-xfs-$(CONFIG_COMPAT)		+= $(XFS_LINUX)/xfs_ioctl32.o
+-
+-
+-xfs-y				+= xfs_alloc.o \
+-				   xfs_alloc_btree.o \
+-				   xfs_attr.o \
+-				   xfs_attr_leaf.o \
+-				   xfs_bit.o \
+-				   xfs_bmap.o \
+-				   xfs_bmap_btree.o \
+-				   xfs_btree.o \
+-				   xfs_buf_item.o \
+-				   xfs_da_btree.o \
+-				   xfs_dir2.o \
+-				   xfs_dir2_block.o \
+-				   xfs_dir2_data.o \
+-				   xfs_dir2_leaf.o \
+-				   xfs_dir2_node.o \
+-				   xfs_dir2_sf.o \
+-				   xfs_error.o \
+-				   xfs_extfree_item.o \
+-				   xfs_filestream.o \
+-				   xfs_fsops.o \
+-				   xfs_ialloc.o \
+-				   xfs_ialloc_btree.o \
+-				   xfs_iget.o \
+-				   xfs_inode.o \
+-				   xfs_inode_item.o \
+-				   xfs_iomap.o \
+-				   xfs_itable.o \
+-				   xfs_dfrag.o \
+-				   xfs_log.o \
+-				   xfs_log_recover.o \
+-				   xfs_mount.o \
+-				   xfs_mru_cache.o \
+-				   xfs_rename.o \
+-				   xfs_trans.o \
+-				   xfs_trans_ail.o \
+-				   xfs_trans_buf.o \
+-				   xfs_trans_extfree.o \
+-				   xfs_trans_inode.o \
+-				   xfs_trans_item.o \
+-				   xfs_utils.o \
+-				   xfs_vfsops.o \
+-				   xfs_vnodeops.o \
+-				   xfs_rw.o \
+-				   xfs_dmops.o \
+-				   xfs_qmops.o
+-
+-xfs-$(CONFIG_XFS_TRACE)		+= xfs_dir2_trace.o
+-
+-# Objects in linux/
+-xfs-y				+= $(addprefix $(XFS_LINUX)/, \
+-				   kmem.o \
+-				   xfs_aops.o \
+-				   xfs_buf.o \
+-				   xfs_export.o \
+-				   xfs_file.o \
+-				   xfs_fs_subr.o \
+-				   xfs_globals.o \
+-				   xfs_ioctl.o \
+-				   xfs_iops.o \
+-				   xfs_lrw.o \
+-				   xfs_super.o \
+-				   xfs_vnode.o)
+-
+-# Objects in support/
+-xfs-y				+= $(addprefix support/, \
+-				   debug.o \
+-				   uuid.o)
+-
+-xfs-$(CONFIG_XFS_TRACE)		+= support/ktrace.o
+-
