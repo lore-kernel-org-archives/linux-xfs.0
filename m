@@ -1,57 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 08:46:18 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 09:12:02 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1BGk9Qu026003
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 08:46:11 -0800
-Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C3D67DE165E
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 08:46:33 -0800 (PST)
-Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28]) by cuda.sgi.com with ESMTP id FD304JH0CRMSQPvU for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 08:46:33 -0800 (PST)
-Received: from compute1.internal (compute1.internal [10.202.2.41])
-	by out1.messagingengine.com (Postfix) with ESMTP id A4AEB8834C
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 11:46:29 -0500 (EST)
-Message-Id: <1202748389.28320.1236240801@webmail.messagingengine.com>
-From: "Felix E. Klee" <felix.klee@inka.de>
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="ISO-8859-1"
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1BHBsAs027326
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 09:11:55 -0800
+Received: from ug-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B50DCDE1979
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 09:12:17 -0800 (PST)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.175]) by cuda.sgi.com with ESMTP id LnZtcQ2qAsCrVSbm for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 09:12:17 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id o29so841501ugd.20
+        for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 09:12:16 -0800 (PST)
+Date: Mon, 11 Feb 2008 18:12:09 +0100
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Data safety horror stories?
+Message-ID: <20080211171209.GA7567@teal.hq.k1024.org>
+References: <1202748389.28320.1236240801@webmail.messagingengine.com>
 MIME-Version: 1.0
-Subject: Data safety horror stories?
-Date: Mon, 11 Feb 2008 17:46:29 +0100
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1202748389.28320.1236240801@webmail.messagingengine.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Felix E. Klee" <felix.klee@inka.de>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-I heard that, in case of a power failure, XFS may lose data, even data
-that was already existing on the disk. For example, I heard horror
-stories of files being overwritten with zeros.
+On Mon, Feb 11, 2008 at 05:46:29PM +0100, Felix E. Klee wrote:
+> I heard that, in case of a power failure, XFS may lose data, even data
+> that was already existing on the disk. For example, I heard horror
+> stories of files being overwritten with zeros.
+> 
+> Are those stories true?
 
-Are those stories true?
+No, XFS will not lose any data that the application has committed to the
+disk.
 
-If so:
+Improperly written applications and/or improperly configured systems
+might have issues with recently written files losing data.
 
-* Do you recommend not using XFS on devices that may frequently fail due
-  to power failure?
+FWIW: I have never lost data with XFS, neither on home computers nor in
+SAN environments (in the presence of link/path failure).
 
-* Is it possible to find out what files have been damaged? If not,
-  will only files be affected that have been changed during the last
-  couple of hours?
+Be sure the read the FAQ, especially the section about write cache on
+dekstop/consumer HDDs.
 
-* Are there options to increase data safety? Should one run a regular
-  "sync" in a cron job?
+Just my opinion as an XFS user, your mileage might vary.
 
-* Is it unsafe to use XFS in a virtual machine which may sometimes be
-  terminated without proper shutdown? Suppose the virtual machine is
-  running under Windows, and Windows may sometimes be terminated without
-  proper shutdown.
-
-I currently am using XFS under Ubuntu 7.10 (Kernel 2.6.22), running in a
-virtual machine (VMware) under Windows.  The XFS file system is in a
-native partition on a second HDD.
-
--- 
-Felix E. Klee
-Jabber/Google Talk: feklee@jabber.org, SIP: 9779619@sipgate.de
-ICQ: 158124695, Yahoo!: feklee, AIM: felix.klee@inka.de
-Gizmo: felixklee, Skype: felix.klee
+iustin
