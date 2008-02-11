@@ -1,75 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Feb 2008 20:52:41 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1B4qXCd014269
-	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 20:52:35 -0800
-Message-ID: <47AFD5B5.7040506@sgi.com>
-Date: Mon, 11 Feb 2008 15:57:25 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Feb 2008 20:57:16 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1B4vAf0015451
+	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 20:57:13 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67BA8DDB1F5
+	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 20:57:33 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id Va0NZoPHaFFEdzWC for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 20:57:33 -0800 (PST)
+Message-ID: <47AFD5BB.7090607@sandeen.net>
+Date: Sun, 10 Feb 2008 22:57:31 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [GIT PULL] XFS update for 2.6.25
-References: <20080208022705.0DB1058C4C11@chook.melbourne.sgi.com> <47AD284F.7080603@sandeen.net>
-In-Reply-To: <47AD284F.7080603@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <20080208022705.0DB1058C4C11@chook.melbourne.sgi.com> <47AD284F.7080603@sandeen.net> <47AFD5B5.7040506@sgi.com>
+In-Reply-To: <47AFD5B5.7040506@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: lachlan@sgi.com
 Cc: xfs@oss.sgi.com
 
-Eric,
+Lachlan McIlroy wrote:
+> Eric,
+> 
+> The other makefile changes caused a merge failure because of changes we
+> keep in our development tree that are not in mainline.  I didn't have
+> time to fix them for rc1 so I'll get them out in rc2.  I know the changes
+> are good and very useful so sorry for the delay.
+> 
+> Lachlan
 
-The other makefile changes caused a merge failure because of changes we
-keep in our development tree that are not in mainline.  I didn't have
-time to fix them for rc1 so I'll get them out in rc2.  I know the changes
-are good and very useful so sorry for the delay.
+Thanks Lachlan, no worries.  Hopefully the patches I sent will help.
 
-Lachlan
-
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> Please pull from the for-linus branch:
->>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
->>
->> This will update the following files:
->>
->>  fs/xfs/Makefile-linux-2.6      |    1 -
-> 
-> Is there a reason the other various makefile updates still haven't been
-> pushed?  They're a lot tidier now, and they facilitate out-of-tree
-> building...
-> 
-> Thanks,
-> -Eric
-> 
-> Remove Makefile wrappers in XFS
-> 
-> Makefile (and Kbuild) would include Makefile-linux-26
-> I doubt XFS will really still compile on 2.4; so drop that. This
-> moves Makefile-linux-26 into Makefile and drops Kbuild.
-> Also having wrappers as both Kbuild and Makefile seemed redundant
-> anyways.
-> 
-> The patch is relatively large because it renames a file, but
-> no functional changes.
-> 
-> Signed-off-by: Andi Kleen <ak@suse.de>
-> Merge of xfs-linux-melb:xfs-kern:29781a by kenmcd.
-> 
->   Remove Makefile wrappers in XFS.
-> 
-> Fix up xfs out-of-tree builds. (a.k.a. external modules)
-> 
-> Change -I include directives to find headers in the out-of-tree spot.
-> This allows a directory containing only xfs files to be built as:
-> 
->   # make -C /path/to/kernel M=`pwd`
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> Merge of xfs-linux-melb:xfs-kern:29878a by kenmcd.
-> 
->   fix up out-of-tree xfs builds.
-> 
-> 
+-Eric
