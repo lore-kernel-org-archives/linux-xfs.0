@@ -1,82 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 14:03:33 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1BM3Mnc016077
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:03:26 -0800
-Date: Tue, 12 Feb 2008 09:03:39 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Data safety horror stories?
-Message-ID: <20080211220339.GZ155407@sgi.com>
-References: <1202748389.28320.1236240801@webmail.messagingengine.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 14:39:01 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1BMcn1j017719
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:38:54 -0800
+Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC338D60E3B
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:39:12 -0800 (PST)
+Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28]) by cuda.sgi.com with ESMTP id DjU8Vkwbwieo5hLE for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:39:12 -0800 (PST)
+Received: from compute1.internal (compute1.internal [10.202.2.41])
+	by out1.messagingengine.com (Postfix) with ESMTP id CF8D390A7A
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 17:39:11 -0500 (EST)
+Message-Id: <1202769551.16458.1236311973@webmail.messagingengine.com>
+From: "Felix E. Klee" <felix.klee@inka.de>
 Content-Disposition: inline
-In-Reply-To: <1202748389.28320.1236240801@webmail.messagingengine.com>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="ISO-8859-1"
+MIME-Version: 1.0
+Subject: Restoring damaged incremental XFS dump?
+Date: Mon, 11 Feb 2008 23:39:11 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Felix E. Klee" <felix.klee@inka.de>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Feb 11, 2008 at 05:46:29PM +0100, Felix E. Klee wrote:
-> I heard that, in case of a power failure, XFS may lose data, even data
-> that was already existing on the disk. For example, I heard horror
-> stories of files being overwritten with zeros.
-> 
-> Are those stories true?
-> 
-> If so:
-> 
-> * Do you recommend not using XFS on devices that may frequently fail due
->   to power failure?
+I wonder whether I should use xfsdump as a replacement for a more
+traditional incremental backup solution centered around the TAR archiver
+STAR.  The advantage of STAR seems to be that files can also be
+recovered even if, for example, the level 0 dump is damaged.  After all,
+one is dealing with TAR, a pretty transparent archive format. The
+advantage of xfsdump is that it creates true snapshots.
 
-Depends on how much you care about your system and data.
-
-I use XFS on write-cache enabled SATA drives without barriers with
-no UPS (yes, it's unsafe!) and I lose power at least once a week.  I
-haven't had a data loss or corruption in over two years and tens of
-power failures.... 
-
-> * Is it possible to find out what files have been damaged?
-
-Not easily.
-
-> If not,
->   will only files be affected that have been changed during the last
->   couple of hours?
-
-Last few seconds before the power fail, actually.
-
-> * Are there options to increase data safety? Should one run a regular
->   "sync" in a cron job?
-
-If you are truly paranoid - turn off drive caching and mount with
-the 'wsync' option.
-
-> * Is it unsafe to use XFS in a virtual machine which may sometimes be
->   terminated without proper shutdown?
-
-I do that all the time, too. Corruption is rare and usually
-as a result of some bug in the code I'm testing ;)
-
-> I currently am using XFS under Ubuntu 7.10 (Kernel 2.6.22), running in a
-> virtual machine (VMware) under Windows.  The XFS file system is in a
-> native partition on a second HDD.
-
-Should be just fine. If you are really concerned - test it.
-
-Cheers,
-
-Dave.
-> 
-> -- 
-> Felix E. Klee
-> Jabber/Google Talk: feklee@jabber.org, SIP: 9779619@sipgate.de
-> ICQ: 158124695, Yahoo!: feklee, AIM: felix.klee@inka.de
-> Gizmo: felixklee, Skype: felix.klee
-> 
+So, what happens when the level 0 dump created with xfsdump becomes
+damaged.  Will I still be able to recover some files?  What about files
+from >0 dumps?
 
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Dipl.-Phys. Felix E. Klee
+Naunynstr. 2, 76530 Baden-Baden, Germany
+Tel.: +49 7221 396961, Fax: +49 7221 396960, Mobile: +49 174 1386060
+http://www.linkedin.com/in/feklee
