@@ -1,67 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Feb 2008 22:35:37 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1B6ZEJE003813
-	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 22:35:15 -0800
-Received: from amanpulo.fs3.ph (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B97AD5BF5CE
-	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 22:35:38 -0800 (PST)
-Received: from amanpulo.fs3.ph (amanpulo.fs3.ph [202.81.162.101]) by cuda.sgi.com with ESMTP id I3AagPgudgHJ6nc6 for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 22:35:38 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by amanpulo.fs3.ph (Postfix) with ESMTP id 2056B2806A350
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:35:36 +0800 (PHT)
-Received: from amanpulo.fs3.ph ([127.0.0.1])
-	by localhost (amanpulo.fs3.ph [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id Ne6o6Ci3saH2 for <xfs@oss.sgi.com>;
-	Mon, 11 Feb 2008 14:35:27 +0800 (PHT)
-Received: from humanitas.leathercollection.ph (gusi.leathercollection.ph [202.163.192.10])
-	(using SSLv3 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by amanpulo.fs3.ph (Postfix) with ESMTP id 1247328056706
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:35:26 +0800 (PHT)
-Subject: Re: [PATCH] Possible fix for 2.6.24 xfs_file_readdir crash
-From: Federico Sevilla III <jijo@fs3.ph>
-In-Reply-To: <20080211001727.GO155407@sgi.com>
-References: <20080205052418.GU155259@sgi.com>
-	 <20080209120423.GA6699@diesel.geggus.net> <20080211001727.GO155407@sgi.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-B4Z5fp3dsNBz1w9ttDd3"
-Date: Mon, 11 Feb 2008 14:35:25 +0800
-Message-Id: <1202711725.4679.7.camel@humanitas.fs3.ph>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 10 Feb 2008 23:44:50 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1B7iOJt003541
+	for <xfs@oss.sgi.com>; Sun, 10 Feb 2008 23:44:32 -0800
+From: donaldd@sgi.com
+Subject: PARTIAL TAKE 971186 - 
+Message-Id: <20080211074442.604F8334AB1F@linuxbuild.melbourne.sgi.com>
+Date: Mon, 11 Feb 2008 18:44:42 +1100 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
---=-B4Z5fp3dsNBz1w9ttDd3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Remove the xfs_refcache, it was only needed while we were still building for
+2.4 kernels.
 
-On Mon, 2008-02-11 at 11:17 +1100, David Chinner wrote:
-> > Can we reckon that this patch will get included in one of the next
-> > minor releases?
->=20
-> Already queued for 2.6.24.2.
 
-2.6.24.2 has been released to address the vmsplice issue. Unfortunately,
-no other changes seem to have been included. Hopefully, the
-xfs_file_readdir patch will make it to 2.6.24.3.
+Date:  Mon Feb 11 18:43:07 AEDT 2008
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  lachlan,hch
 
---=20
-Federico Sevilla III
-F S 3 Consulting Inc.
-http://www.fs3.ph
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
---=-B4Z5fp3dsNBz1w9ttDd3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Modid:  xfs-linux-melb:xfs-kern:30472a
+fs/xfs/xfs_vnodeops.c - 1.732 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.732&r2=text&tr2=1.731&f=h
+	- Remove xfs_refcache.
 
-iD8DBQBHr+yt5rCBSJO3Rr4RAm7bAJ9NzYTg3e+DXaELNycXe0ggWIJ8BgCfQfUR
-D79B18ayHjZqGh2BbgNE5WU=
-=QVh1
------END PGP SIGNATURE-----
+fs/xfs/xfs_vfsops.c - 1.552 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.552&r2=text&tr2=1.551&f=h
+	- Remove xfs_refcache.
 
---=-B4Z5fp3dsNBz1w9ttDd3--
+fs/xfs/xfs_inode.h - 1.241 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.241&r2=text&tr2=1.240&f=h
+	- Remove xfs_refcache.
+
+fs/xfs/xfs_rename.c - 1.78 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rename.c.diff?r1=text&tr1=1.78&r2=text&tr2=1.77&f=h
+	- Remove xfs_refcache.
+
+fs/xfs/xfs_refcache.c - 1.8 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_refcache.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+	- Remove xfs_refcache.
+
+fs/xfs/xfs_refcache.h - 1.3 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_refcache.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
+	- Remove xfs_refcache.
+
+fs/xfs/linux-2.6/xfs_linux.h - 1.163 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.163&r2=text&tr2=1.162&f=h
+	- Remove xfs_refcache.
+
+fs/xfs/linux-2.6/xfs_ksyms.c - 1.79 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
+	- Remove xfs_refcache.
