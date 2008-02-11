@@ -1,66 +1,82 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 13:23:27 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1BLNHBD014435
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 13:23:21 -0800
-Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8ED58DE5184
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 13:23:40 -0800 (PST)
-Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28]) by cuda.sgi.com with ESMTP id 8Mu7Ek7W3NQtGPKs for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 13:23:40 -0800 (PST)
-Message-Id: <1202764989.11126.1236296081@webmail.messagingengine.com>
-From: "Felix E. Klee" <felix.klee@inka.de>
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="ISO-8859-1"
-MIME-Version: 1.0
-References: <1202748389.28320.1236240801@webmail.messagingengine.com>
-   <20080211171209.GA7567@teal.hq.k1024.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Feb 2008 14:03:33 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1BM3Mnc016077
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2008 14:03:26 -0800
+Date: Tue, 12 Feb 2008 09:03:39 +1100
+From: David Chinner <dgc@sgi.com>
 Subject: Re: Data safety horror stories?
-In-Reply-To: <20080211171209.GA7567@teal.hq.k1024.org>
-Date: Mon, 11 Feb 2008 22:23:09 +0100
+Message-ID: <20080211220339.GZ155407@sgi.com>
+References: <1202748389.28320.1236240801@webmail.messagingengine.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1202748389.28320.1236240801@webmail.messagingengine.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Iustin Pop <iusty@k1024.org>
+To: "Felix E. Klee" <felix.klee@inka.de>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hi Justin,
+On Mon, Feb 11, 2008 at 05:46:29PM +0100, Felix E. Klee wrote:
+> I heard that, in case of a power failure, XFS may lose data, even data
+> that was already existing on the disk. For example, I heard horror
+> stories of files being overwritten with zeros.
+> 
+> Are those stories true?
+> 
+> If so:
+> 
+> * Do you recommend not using XFS on devices that may frequently fail due
+>   to power failure?
 
-thanks for the info!
+Depends on how much you care about your system and data.
 
-On Mon, 11 Feb 2008 18:12:09 +0100, "Iustin Pop" <iusty@k1024.org> said:
-> No, XFS will not lose any data that the application has committed to
-> the disk.
+I use XFS on write-cache enabled SATA drives without barriers with
+no UPS (yes, it's unsafe!) and I lose power at least once a week.  I
+haven't had a data loss or corruption in over two years and tens of
+power failures.... 
 
-OK, but just to make sure: The following FAQ entry refers only to
-*newly* created files - right?
+> * Is it possible to find out what files have been damaged?
 
-http://oss.sgi.com/projects/xfs/faq.html#nulls
+Not easily.
 
-> Improperly written applications and/or improperly configured systems
-> might have issues with recently written files losing data.
+> If not,
+>   will only files be affected that have been changed during the last
+>   couple of hours?
 
-Again, just to make sure that I understood you correctly: Could you name
-an example?
+Last few seconds before the power fail, actually.
 
-> Be sure the read the FAQ, especially the section about write cache on
-> dekstop/consumer HDDs.
+> * Are there options to increase data safety? Should one run a regular
+>   "sync" in a cron job?
 
-You are probably referring to the following entry.  I now disabled the
-write cache of the 2nd HDD in Windows (remember my configuration).  I
-wonder though: Wouldn't it be possible to design journaling in a way so
-that the write cache does never cause problems? Could someone provide an
-example which illustrates the write cache problem in simple terms?
+If you are truly paranoid - turn off drive caching and mount with
+the 'wsync' option.
 
-http://oss.sgi.com/projects/xfs/faq.html#wcache
+> * Is it unsafe to use XFS in a virtual machine which may sometimes be
+>   terminated without proper shutdown?
 
-> Just my opinion as an XFS user, your mileage might vary.
+I do that all the time, too. Corruption is rare and usually
+as a result of some bug in the code I'm testing ;)
 
-Hopefully, it's not about opinions ...
+> I currently am using XFS under Ubuntu 7.10 (Kernel 2.6.22), running in a
+> virtual machine (VMware) under Windows.  The XFS file system is in a
+> native partition on a second HDD.
 
-- Felix
+Should be just fine. If you are really concerned - test it.
+
+Cheers,
+
+Dave.
+> 
+> -- 
+> Felix E. Klee
+> Jabber/Google Talk: feklee@jabber.org, SIP: 9779619@sipgate.de
+> ICQ: 158124695, Yahoo!: feklee, AIM: felix.klee@inka.de
+> Gizmo: felixklee, Skype: felix.klee
+> 
+
 -- 
-Dipl.-Phys. Felix E. Klee
-Naunynstr. 2, 76530 Baden-Baden, Germany
-Tel.: +49 7221 396961, Fax: +49 7221 396960, Mobile: +49 174 1386060
-http://www.linkedin.com/in/feklee
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
