@@ -1,139 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Feb 2008 00:58:04 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1C8voBr026490
-	for <xfs@oss.sgi.com>; Tue, 12 Feb 2008 00:57:55 -0800
-Date: Tue, 12 Feb 2008 19:58:02 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfs [_fsr] probs in 2.6.24.0
-Message-ID: <20080212085802.GA155407@sgi.com>
-References: <47B0F00D.3060802@tlinx.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 12 Feb 2008 03:17:34 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1CBGsme003056
+	for <xfs@oss.sgi.com>; Tue, 12 Feb 2008 03:16:57 -0800
+Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A30FD5C71A9
+	for <xfs@oss.sgi.com>; Tue, 12 Feb 2008 03:17:16 -0800 (PST)
+Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com [66.111.4.28]) by cuda.sgi.com with ESMTP id 3x3TQ2jeIhPkrKAo for <xfs@oss.sgi.com>; Tue, 12 Feb 2008 03:17:16 -0800 (PST)
+Message-Id: <1202815035.5821.1236404891@webmail.messagingengine.com>
+From: "Felix E. Klee" <felix.klee@inka.de>
 Content-Disposition: inline
-In-Reply-To: <47B0F00D.3060802@tlinx.org>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="ISO-8859-1"
+MIME-Version: 1.0
+References: <1202769551.16458.1236311973@webmail.messagingengine.com>
+   <47B0E26D.7070807@sgi.com>
+Subject: Re: Restoring damaged incremental XFS dump?
+In-Reply-To: <47B0E26D.7070807@sgi.com>
+Date: Tue, 12 Feb 2008 12:17:15 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs@oss.sgi.com, Linux-Kernel <linux-kernel@vger.kernel.org>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 11, 2008 at 05:02:05PM -0800, Linda Walsh wrote:
-> 
-> I'm getting similar errors on an x86-32 & x86-64 kernel.  The x86-64 system
-> (2nd log below w/date+times) was unusable this morning: one or more of the
-> xfs file systems had "gone off line" due to some unknown error (upon reboot,
-> no errors were indicated; all partitions on the same physical disk).
-> 
-> I keep ending up with random failures on two systems.  The 32-bit sys more
-> often than not just "locks-up" -- no messages, no keyboard response...etc.
-> Nothing to do except reset -- and of course, nothing in the logs....
+On Tue, 12 Feb 2008 11:03:57 +1100, "Timothy Shimmin"
+<tes@sgi.com> said:
+> I'm not sure what you mean by "true snapshots". I wouldn't really
+> call it snapshots as in what you could get if you froze the
+> filesystem etc..
 
-Filesystem bugs rarely hang systems hard like that - more likely is
-a hardware or driver problem. And neither of the lockdep reports
-below are likely to be responsible for a system wide, no-response
-hang.
+Oh, it does not freeze the filesystem - what a pity.  I recall someone
+telling me that it does.  Seems like that was bad information or my
+memory is failing on me.
 
-[cut a bunch of speculation and stuff about hardware problems
-causing XFS problems]
+> > So, what happens when the level 0 dump created with xfsdump becomes
+> > damaged.  Will I still be able to recover some files?  What about
+> > files from >0 dumps?
+>
+> Yes you will still be able to restore stuff. However, it is in its own
+> format so only xfsrestore will be able to do your restoring. Dumps are
+> separated into what it calls media files which are meant to be self
+> containing. So damage to 1 theoretically shouldn't prevent restoring
+> from another media file. Multiple media files are normally only used
+> for tape (only 1 used for a dump to a file). And an incremental dump
+> should also be able to be restored in isolation and there are some QA
+> tests (in xfs-cmds/xfstests) that test this.
 
-> Lemme know if I can provide any info in addressing these problems.  I don't
-> know if they are related to the other system crashes, but usage patterns
-> indicate it could be disk-activity related.  So eliminating known bugs &
-> problems in that area might help (?)...
+Thanks!
 
-If your hardware or drivers are unstable, then XFS cannot be
-expected to reliably work. Given that xfs_fsr apparently triggers
-the hangs, I'd suggest putting lots of I/O load on your disk subsystem
-by copying files around with direct I/O (just like xfs_fsr does) to
-try to reproduce the problem.
+Felix
 
-Perhaps by running xfs_fsr manually you could reproduce the
-problem while you are sitting in front of the machine...
-
-Looking at the lockdep reports:
-
-> The first set of errors the I have some diagnostics for, I could
-> only find in dmesg:
-> (ish-32bit machine)
-> =======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.24-ish #1
-> -------------------------------------------------------
-> xfs_fsr/2119 is trying to acquire lock:
-> (&mm->mmap_sem){----}, at: [<b01a3432>] dio_get_page+0x62/0x160
-> 
-> but task is already holding lock:
-> (&(&ip->i_iolock)->mr_lock){----}, at: [<b02651db>] xfs_ilock+0x5b/0xb0
-
-dio_get_page() takes the mmap_sem of the processes
-vma that has the pages we do I/O into. That's not new.
-We're holding the xfs inode iolock at this point to protect
-against truncate  and simultaneous buffered I/O races and
-this is also unchanged.  i.e. this is normal.
-
-> which lock already depends on the new lock.
-> 
-> 
-> the existing dependency chain (in reverse order) is:
-
-munmap() dropping the last reference to it's vm_file and
-calling ->release() which causes a truncate of speculatively
-allocated space to take place. IOWs, ->release() is called
-with the mmap_sem held. Hmmm....
-
-Looking at it in terms of i_mutex, other filesystems hold
-i_mutex over dio_get_page() (all those that use DIO_LOCKING)
-so question is whether we are allowed to take the i_mutex
-in ->release. I note that both reiserfs and hfsplus take 
-i_mutex in ->release as well as use DIO_LOCKING, so this
-problem is not isolated to XFS.
-
-However, it would appear that mmap_sem -> i_mutex is illegal
-according to the comment at the head of mm/filemap.c. While we are
-not using i_mutex in this case, the inversion would seem to be
-equivalent in nature.
-
-There's not going to be a quick fix for this.
-
-And the other one:
-
-> Feb  7 02:01:50 kern: 
-> -------------------------------------------------------
-> Feb  7 02:01:50 kern: xfs_fsr/6313 is trying to acquire lock:
-> Feb  7 02:01:50 kern:  (&(&ip->i_lock)->mr_lock/2){----}, at: 
-> [<ffffffff803c1b22>] xfs_ilock+0x82/0xc0
-> Feb  7 02:01:50 kern:
-> Feb  7 02:01:50 kern: but task is already holding lock:
-> Feb  7 02:01:50 kern:  (&(&ip->i_iolock)->mr_lock/3){--..}, at: 
-> [<ffffffff803c1b45>] xfs_ilock+0xa5/0xc0
-> Feb  7 02:01:50 kern:
-> Feb  7 02:01:50 kern: which lock already depends on the new lock.
-
-Looks like yet another false positive. Basically we do this
-in xfs_swap_extents:
-
-	inode A: i_iolock class 2
-	inode A: i_ilock class 2
-	inode B: i_iolock class 3
-	inode B: i_ilock class 3
-	.....
-	inode A: unlock ilock
-	inode B: unlock ilock
-	.....
->>>>>	inode A: ilock class 2
-	inode B: ilock class 3
-
-And lockdep appears to be complaining about the relocking of inode A
-as class 2 because we've got a class 3 iolock still held, hence
-violating the order it saw initially.  There's no possible deadlock
-here so we'll just have to add more hacks to the annotation code to make
-lockdep happy.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Dipl.-Phys. Felix E. Klee
+Naunynstr. 2, 76530 Baden-Baden, Germany
+Tel.: +49 7221 396961, Fax: +49 7221 396960, Mobile: +49 174 1386060
+http://www.linkedin.com/in/feklee
