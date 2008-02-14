@@ -1,64 +1,165 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Feb 2008 00:47:42 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1E8lXZE018569
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 00:47:37 -0800
-Received: from ug-out-1314.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1284E1220C
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 00:47:57 -0800 (PST)
-Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.173]) by cuda.sgi.com with ESMTP id LV3UvzLGn1HVeDg2 for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 00:47:57 -0800 (PST)
-Received: by ug-out-1314.google.com with SMTP id o29so1946148ugd.20
-        for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 00:47:55 -0800 (PST)
-Message-ID: <1a4a774c0802140041h49a88b9l281f5ac3213381a2@mail.gmail.com>
-Date: Thu, 14 Feb 2008 09:41:21 +0100
-From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
-Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
-In-Reply-To: <20080213214551.GR155407@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Disposition: inline
-References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
-	 <20080213214551.GR155407@sgi.com>
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Feb 2008 03:18:05 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1EBHxqC028059
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 03:18:01 -0800
+Received: from mta5.srv.hcvlny.cv.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 421E35D647C
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 03:18:22 -0800 (PST)
+Received: from mta5.srv.hcvlny.cv.net (mta5.srv.hcvlny.cv.net [167.206.4.200]) by cuda.sgi.com with ESMTP id P7a5u82JiibqHnpc for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 03:18:22 -0800 (PST)
+Received: from freyr.home (ool-44c218a8.dyn.optonline.net [68.194.24.168])
+ by mta5.srv.hcvlny.cv.net
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTP id <0JW7009UHXLA60U0@mta5.srv.hcvlny.cv.net> for xfs@oss.sgi.com;
+ Thu, 14 Feb 2008 02:46:30 -0500 (EST)
+Date: Thu, 14 Feb 2008 02:45:39 -0500
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: [PATCH 1/1] XFS: replace *_IDELETE with *_IKEEP
+In-reply-to: <47B3B6AE.4030505@sandeen.net>
+Message-id: <1202975139-10546-1-git-send-email-jeffpc@josefsipek.net>
+Content-transfer-encoding: 7BIT
+References: <47B3B6AE.4030505@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: sandeen@sandeen.net, Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 
-On Wed, Feb 13, 2008 at 10:45 PM, David Chinner <dgc@sgi.com> wrote:
-> On Wed, Feb 13, 2008 at 11:51:51AM +0100, Christian Røsnes wrote:
+Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
 
->  > Kernel: 2.6.17.7 (custom compiled)
->  >
->  > Are there any known XFS problems with this kernel version and nearly
->  > full partitions ?
->
->  Yes. Deadlocks that weren't properly fixed until 2.6.18 (partially
->  fixed in 2.6.17) and an accounting problem in the transaction code
->  that leads to the shutdown you are seeing. The accounting problem is
->  fixed by this commit:
->
->  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=45c34141126a89da07197d5b89c04c6847f1171a
->
->  which I think went into 2.6.22.
->
->  Luckily, neither of these problems result in corruption.
->
->
->  > I'm thinking about upgrading the kernel to a newer version, to see if
->  > it fixes this problem.
->  > Are there any known XFS problems with version 2.6.24.2 ?
->
->  Yes - a problem with readdir. The fix is currently in the stable
->  queue (i.e for 2.6.24.3):
->
->  http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=commit;h=ee864b866419890b019352412c7bc9634d96f61b
->
->  So we are just waiting for Greg to release 2.6.24.3 now.
->
+This completely eliminates the no-no-no-idelete madness.
 
-Thanks. I ran memtest overnight just to be sure and no errors were
-found.  I'll wait for 2.6.24.3, and then upgrade the kernel.
+Additionally, "ikeep" or "noikeep" is always displayed in /proc/mounts
+option string. This should help clear up any confusion about what the
+current mode is.
 
-Christian
+Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+---
+ fs/xfs/linux-2.6/xfs_super.c |   11 ++++++-----
+ fs/xfs/xfs_clnt.h            |    2 +-
+ fs/xfs/xfs_ialloc.c          |    2 +-
+ fs/xfs/xfs_mount.h           |    2 +-
+ fs/xfs/xfs_vfsops.c          |    4 ++--
+ fs/xfs/xfsidbg.c             |    2 +-
+ 6 files changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index a0b1235..5c343a0 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -171,7 +171,7 @@ xfs_parseargs(
+ 	char			*this_char, *value, *eov;
+ 	int			dsunit, dswidth, vol_dsunit, vol_dswidth;
+ 	int			iosize;
+-	int			ikeep = 0;
++	int			ikeep = 0; /* don't keep by default */
+ 
+ 	args->flags |= XFSMNT_BARRIER;
+ 	args->flags2 |= XFSMNT2_COMPAT_IOSIZE;
+@@ -303,9 +303,9 @@ xfs_parseargs(
+ 			args->flags &= ~XFSMNT_BARRIER;
+ 		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
+ 			ikeep = 1;
+-			args->flags &= ~XFSMNT_IDELETE;
++			args->flags |= XFSMNT_IKEEP;
+ 		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
+-			args->flags |= XFSMNT_IDELETE;
++			args->flags &= ~XFSMNT_IKEEP;
+ 		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
+ 			args->flags2 &= ~XFSMNT2_COMPAT_IOSIZE;
+ 		} else if (!strcmp(this_char, MNTOPT_NOLARGEIO)) {
+@@ -411,7 +411,7 @@ xfs_parseargs(
+ 	 * supplied, then they are honored.
+ 	 */
+ 	if (!(args->flags & XFSMNT_DMAPI) && !ikeep)
+-		args->flags |= XFSMNT_IDELETE;
++		args->flags &= ~XFSMNT_IKEEP;
+ 
+ 	if ((args->flags & XFSMNT_NOALIGN) != XFSMNT_NOALIGN) {
+ 		if (dsunit) {
+@@ -446,6 +446,7 @@ xfs_showargs(
+ {
+ 	static struct proc_xfs_info xfs_info_set[] = {
+ 		/* the few simple ones we can get from the mount struct */
++		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
+ 		{ XFS_MOUNT_WSYNC,		"," MNTOPT_WSYNC },
+ 		{ XFS_MOUNT_INO64,		"," MNTOPT_INO64 },
+ 		{ XFS_MOUNT_NOALIGN,		"," MNTOPT_NOALIGN },
+@@ -461,7 +462,7 @@ xfs_showargs(
+ 	};
+ 	static struct proc_xfs_info xfs_info_unset[] = {
+ 		/* the few simple ones we can get from the mount struct */
+-		{ XFS_MOUNT_IDELETE,		"," MNTOPT_IKEEP },
++		{ XFS_MOUNT_IKEEP,		"," MNTOPT_NOIKEEP },
+ 		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
+ 		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
+ 		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
+diff --git a/fs/xfs/xfs_clnt.h b/fs/xfs/xfs_clnt.h
+index d16c1b9..d5d1e60 100644
+--- a/fs/xfs/xfs_clnt.h
++++ b/fs/xfs/xfs_clnt.h
+@@ -86,7 +86,7 @@ struct xfs_mount_args {
+ #define XFSMNT_NOUUID		0x01000000	/* Ignore fs uuid */
+ #define XFSMNT_DMAPI		0x02000000	/* enable dmapi/xdsm */
+ #define XFSMNT_BARRIER		0x04000000	/* use write barriers */
+-#define XFSMNT_IDELETE		0x08000000	/* inode cluster delete */
++#define XFSMNT_IKEEP		0x08000000	/* inode cluster delete */
+ #define XFSMNT_SWALLOC		0x10000000	/* turn on stripe width
+ 						 * allocation */
+ #define XFSMNT_DIRSYNC		0x40000000	/* sync creat,link,unlink,rename
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 1409c2d..badf745 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1053,7 +1053,7 @@ xfs_difree(
+ 	/*
+ 	 * When an inode cluster is free, it becomes eligible for removal
+ 	 */
+-	if ((mp->m_flags & XFS_MOUNT_IDELETE) &&
++	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
+ 	    (rec.ir_freecount == XFS_IALLOC_INODES(mp))) {
+ 
+ 		*delete = 1;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 435d625..87ee8b8 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -366,7 +366,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_SMALL_INUMS	(1ULL << 15)	/* users wants 32bit inodes */
+ #define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
+ #define XFS_MOUNT_BARRIER	(1ULL << 17)
+-#define XFS_MOUNT_IDELETE	(1ULL << 18)	/* delete empty inode clusters*/
++#define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
+ #define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
+ 						 * allocation */
+ #define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
+diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
+index a0f287e..e809b1c 100644
+--- a/fs/xfs/xfs_vfsops.c
++++ b/fs/xfs/xfs_vfsops.c
+@@ -279,8 +279,8 @@ xfs_start_flags(
+ 		mp->m_readio_log = mp->m_writeio_log = ap->iosizelog;
+ 	}
+ 
+-	if (ap->flags & XFSMNT_IDELETE)
+-		mp->m_flags |= XFS_MOUNT_IDELETE;
++	if (ap->flags & XFSMNT_IKEEP)
++		mp->m_flags |= XFS_MOUNT_IKEEP;
+ 	if (ap->flags & XFSMNT_DIRSYNC)
+ 		mp->m_flags |= XFS_MOUNT_DIRSYNC;
+ 	if (ap->flags & XFSMNT_ATTR2)
+diff --git a/fs/xfs/xfsidbg.c b/fs/xfs/xfsidbg.c
+index aa029da..a875351 100644
+--- a/fs/xfs/xfsidbg.c
++++ b/fs/xfs/xfsidbg.c
+@@ -6282,7 +6282,7 @@ xfsidbg_xmount(xfs_mount_t *mp)
+ 		"SMALL_INUMS",	/* 0x8000 */
+ 		"NOUUID",	/* 0x10000 */
+ 		"BARRIER",	/* 0x20000 */
+-		"IDELETE",	/* 0x40000 */
++		"IKEEP",	/* 0x40000 */
+ 		"SWALLOC",	/* 0x80000 */
+ 		"RDONLY", 	/* 0x100000 */
+ 		"DIRSYNC",	/* 0x200000 */
+-- 
+1.5.4.rc2.85.g9de45-dirty
