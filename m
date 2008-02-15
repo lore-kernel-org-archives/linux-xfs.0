@@ -1,54 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Feb 2008 21:04:54 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 14 Feb 2008 22:53:19 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1F54lDF032401
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 21:04:49 -0800
-Message-ID: <47B51D82.1060509@sgi.com>
-Date: Fri, 15 Feb 2008 16:05:06 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [patch] Use atomics for iclog reference counting
-References: <20080121053021.GH155259@sgi.com> <4796CCF5.8010509@sgi.com> <20080214234758.GP155259@sgi.com> <20080215002429.GT155259@sgi.com> <47B5085D.30409@sgi.com> <20080215042712.GY155259@sgi.com>
-In-Reply-To: <20080215042712.GY155259@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1F6rBGk006737
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2008 22:53:14 -0800
+Subject: PARTIAL TAKE 970925 - Factor xfs_itobp() and xfs_inotobp()
+Message-Id: <20080215065330.60A3058C4C11@chook.melbourne.sgi.com>
+Date: Fri, 15 Feb 2008 17:53:30 +1100 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-David Chinner wrote:
-> On Fri, Feb 15, 2008 at 02:34:53PM +1100, Timothy Shimmin wrote:
->> In the 1st 2 cases of the patch:
->>> @@ -675,7 +675,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
->>>
->>>  		spin_lock(&log->l_icloglock);
->>>  		iclog = log->l_iclog;
->>> -		iclog->ic_refcnt++;
->>> +		atomic_inc(&iclog->ic_refcnt);
->>>  		spin_unlock(&log->l_icloglock);
->>>  		xlog_state_want_sync(log, iclog);
->>>  		(void) xlog_state_release_iclog(log, iclog);
->>> @@ -713,7 +713,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
->>>  		 */
->>>  		spin_lock(&log->l_icloglock);
->>>  		iclog = log->l_iclog;
->>> -		iclog->ic_refcnt++;
->>> +		atomic_inc(&iclog->ic_refcnt);
->>>  		spin_unlock(&log->l_icloglock);
->> Do we still really need to take the lock etc?
-> 
-> log->iclog is protected by the l_icloglock as well, 
+Factor xfs_itobp() and xfs_inotobp().
 
-Ah, yep :)
+The only difference between the functions is one passes an
+inode for the lookup, the other passes an inode number.
+However, they don't do the same validity checking or set
+all the same state on the buffer that is returned yet
+they should.
 
-> so the lock
-> needs to be retained to prevent races when reading and taking a
-> reference to it. IOWs, the l_icloglock still synchronises increments
-> and the final decrement on an iclog; we only need the atomic counter
-> to enable unlocked refcount decrements when the refcount is > 1.
->  
-Yep.
+Factor the functions into a common implementation.
 
---Tim
+
+Date:  Fri Feb 15 17:53:02 AEDT 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  lachlan@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30500a
+fs/xfs/xfs_inode.c - 1.491 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.491&r2=text&tr2=1.490&f=h
+	- Factor xfs_itobp() and xfs_inotobp() to use a common
+	  implementation.
