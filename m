@@ -1,50 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 16 Feb 2008 04:37:46 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1GCbd5b024624
-	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:37:41 -0800
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B82E9E381F9
-	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:38:03 -0800 (PST)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138]) by cuda.sgi.com with ESMTP id GZu7P0V7fNwApF8O for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:38:03 -0800 (PST)
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.66 #1)
-	id 1JQM4L-0004Uy-Ms
-	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 12:23:01 +0000
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 16 Feb 2008 05:22:26 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1GDMJI7026249
+	for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 05:22:23 -0800
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19E155E3294
+	for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 05:22:41 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id PNqJyVqKE7idsl9P for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 05:22:41 -0800 (PST)
+Date: Sat, 16 Feb 2008 08:22:38 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] XFS: replace *_IDELETE with *_IKEEP
+Message-ID: <20080216132238.GA1344@infradead.org>
+References: <47B3B6AE.4030505@sandeen.net> <1202975139-10546-1-git-send-email-jeffpc@josefsipek.net> <20080215161902.GA32398@infradead.org> <47B5BC8F.2090102@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <18358.54692.381632.107791@tree.ty.sabi.co.UK>
-Date: Sat, 16 Feb 2008 12:23:00 +0000
-Subject: Re: tuning, many small files, small blocksize
-In-Reply-To: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
-References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
-From: pg_xfs2@xfs2.for.sabi.co.UK
+Content-Disposition: inline
+In-Reply-To: <47B5BC8F.2090102@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linux XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, xfs@oss.sgi.com
 
->>> On Fri, 15 Feb 2008 21:01:10 -0800, "Jeff Breidenbach"
->>> <jeff@jab.org> said:
+On Fri, Feb 15, 2008 at 10:23:43AM -0600, Eric Sandeen wrote:
+> IMHO if we want to display defaults, then we should probably change it
+> so that all defaults are displayed, and not make noikeep special in this
+> respect.  (oh, and "noquota" is already there, too)
+> 
+> Doesn't matter much to me either way but it should be consistent across
+> all options, I think.
 
-jeff> I'm testing xfs for use in storing 100 million+ small
-jeff> files (roughly 4 to 10KB each) and some directories will
-jeff> contain tens of thousands of files. There will be a lot of
-jeff> random reading, and also some random writing, and very
-jeff> little deletion. The underlying disks use linux software
-jeff> RAID-1 manged by mdadm with 5X redundancy. E.g. 5 drives
-jeff> that completely mirror each other.
-
-Reading this was quite entertaining :-).
-
-jeff> [ ... ] The general consensus was xfs does pretty good
-jeff> tuning itself, but almost none of the published benchmarks
-jeff> or recommendation go with small blocksizes and I want to
-jeff> make sure I'm not about to do something totally stupid. [
-jeff> ... ]
-
-Makes me wonder why silly people come up with pointless stuff
-like this :-)
-
-  http://WWW.Oracle.com/database/berkeley-db.html
+True, it's probably better to kill the noikeep string.
