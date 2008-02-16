@@ -1,53 +1,86 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 21:07:29 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1G57Hw1032508
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:07:18 -0800
-Received: from rv-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 17A0FE36B18
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:07:42 -0800 (PST)
-Received: from rv-out-0910.google.com (rv-out-0910.google.com [209.85.198.187]) by cuda.sgi.com with ESMTP id 1IHnTHutEqBCBf1p for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:07:42 -0800 (PST)
-Received: by rv-out-0910.google.com with SMTP id k20so576545rvb.32
-        for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:07:41 -0800 (PST)
-Message-ID: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
-Date: Fri, 15 Feb 2008 21:01:10 -0800
-From: "Jeff Breidenbach" <jeff@jab.org>
-Subject: tuning, many small files, small blocksize
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 21:40:42 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1G5eZJI001085
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:40:36 -0800
+Received: from bob.dscon.sk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56F6E5E24BC
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:41:00 -0800 (PST)
+Received: from bob.dscon.sk (bob.dscon.sk [88.86.113.10]) by cuda.sgi.com with ESMTP id Qf8KdOWpaBq1LUrY for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 21:41:00 -0800 (PST)
+Date: Sat, 16 Feb 2008 06:41:42 +0100
+Subject: Re: rewrite very slow
+Message-ID: <20080216054142.GD4859@bob.dscon.sk>
+References: <20080215191636.GC4859@bob.dscon.sk> <47B62FF6.2000903@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <47B62FF6.2000903@sandeen.net>
+From: xfs@bob.dscon.sk (DS)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-I'm testing xfs for use in storing 100 million+ small files
-(roughly 4 to 10KB each) and some directories will contain
-tens of thousands of files. There will be a lot of random
-reading, and also some random writing, and very little
-deletion. The underlying disks use linux software RAID-1
-manged by mdadm with 5X redundancy. E.g. 5 drives that
-completely mirror each other.
+Test configuration:
+Linux kernel 2.6.23.1 #1 SMP
+2x Intel(R) Xeon(TM) CPU 2.40GHz with HT
 
-I am setting up the xfs partition now, and have only played
-with blocksize so far. 512 byte blocks are most space efficient,
-1024 byte blocks cost 3.3% additional space, and 4096 byte
-blocks cost 22.3% additional space. I do not know of a good
-way to benchmark filesystem speed; iozone -s 5 did not provide
-meaningful results due to poor timing quantization.
+iSCSI storage (1TB - 7 sata disks in RAID6, 2GB cache controler)
 
-My questions are:
 
-a) Should I just go with the 512 byte blocksize or is that going to be
-bad for some performance reason? Going to 1024 is no problem,
-but I'd prefer not to waste 20% of the partition capacity by using 4096.
+Yes, your "test" works fine:
+file1:/mnt/hosting/test# time ./test
 
-b) Are there any other mkfs.xfs paramters that I should play with.
+real    0m0.334s
+user    0m0.000s
+sys     0m0.000s
 
-Thanks for any response; I did do quite some searching for
-recommended turning parameters, but did not find definitive answers.
-The general consensus was xfs does pretty good tuning itself, but
-almost none of the published benchmarks or recommendation go with
-small blocksizes and I want to make sure I'm not about to do something
-totally stupid. Like quadruple the number of seeks on the disk.
+
+Is there any way to get it work for perl/php/other scripts/programs?
+
+DS
+
+
+On Fri, Feb 15, 2008 at 06:36:06PM -0600, Eric Sandeen wrote:
+> DS wrote:
+> > Hello,
+> > 
+> > I need some help to tunning my storage.
+> 
+> ...
+> > TIME 43 sekund
+> 
+> 
+> What kernel?  when I test on my 2.6.23.9-85.fc8 and 2.6.22.5 boxes, I
+> see 2 and 7 seconds for rewrite, respectively.
+> 
+> but granted, on ext3 I get 0 seconds for every run.
+> 
+> Also the difference appears to be O_TRUNC (which the perl script does);
+> if I code it in c:
+> 
+> #include <sys/types.h>
+> #include <sys/stat.h>
+> #include <fcntl.h>
+> 
+> void main(void)
+> {
+>         int i;
+>         int fd;
+>         char file[4];
+> 
+>         for (i = 0; i < 100; i++) {
+>                 sprintf(file, "%d.txt", i);
+>                 fd = open(file, O_CREAT|O_RDWR|O_TRUNC, 0644);
+>                 write(fd, "aaaaaaaaaaaaaaaaaaa\n");
+>                 close(fd);
+>         }
+> }
+> 
+> rewrite is a bit slower w/ O_TRUNC in place, plenty fast w/o it.  Not
+> sure about the xfs/ext3 difference... this is probably a side-effect of
+> flushes xfs put into place on truncate (IIRC?)
+> 
+> -Eric
+> 
+> 
