@@ -1,64 +1,108 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 16:35:49 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1G0ZhHJ019114
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:35:44 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89FE1E344FD
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:36:07 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id WeYXcmt42aRiNcmY for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:36:07 -0800 (PST)
-Message-ID: <47B62FF6.2000903@sandeen.net>
-Date: Fri, 15 Feb 2008 18:36:06 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 17:33:53 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1G1XlNV021699
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 17:33:48 -0800
+Received: from flyingAngel.upjs.sk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 960115E1BCD
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 17:34:11 -0800 (PST)
+Received: from flyingAngel.upjs.sk (static113-109.rudna.net [212.20.113.109]) by cuda.sgi.com with ESMTP id ZXKQA7fB1OQa1UtD for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 17:34:11 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by flyingAngel.upjs.sk (Postfix) with ESMTP id 90D212235A2
+	for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 02:34:08 +0100 (CET)
+Date: Sat, 16 Feb 2008 02:34:08 +0100 (CET)
+From: Jan Derfinak <ja@mail.upjs.sk>
+Subject: Differences in mkfs.xfs and xfs_info output.
+Message-ID: <Pine.LNX.4.63.0802160149590.4592@alienAngel.home.sk>
 MIME-Version: 1.0
-Subject: Re: rewrite very slow
-References: <20080215191636.GC4859@bob.dscon.sk>
-In-Reply-To: <20080215191636.GC4859@bob.dscon.sk>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: DS <xfs@bob.dscon.sk>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-DS wrote:
-> Hello,
-> 
-> I need some help to tunning my storage.
+Hello.
 
-...
-> TIME 43 sekund
+I found following problem with xfs_info (xfs_grows -p xfs_info) command:
 
+# mkfs.xfs -f /dev/loop0     
+meta-data=/dev/loop0             isize=256    agcount=4, agsize=32000 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=128000, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096  
+log      =internal log           bsize=4096   blocks=1200, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# mount /dev/loop0 /mnt/usb
+# xfs_info /mnt/usb
+meta-data=/dev/loop0             isize=256    agcount=4, agsize=32000 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=128000, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096  
+log      =internal               bsize=4096   blocks=1200, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-What kernel?  when I test on my 2.6.23.9-85.fc8 and 2.6.22.5 boxes, I
-see 2 and 7 seconds for rewrite, respectively.
+Can somebody explain the difference in attr and lazy-count parameters?
+Which output is the right one?
 
-but granted, on ext3 I get 0 seconds for every run.
+mkfs.xfs version 2.9.6
+SGI-XFS CVS-2008-02-14_08:00_UTC with ACLs, large block/inode numbers, no debug enabled
+SGI XFS Quota Management subsystem
+architecture x86_64
 
-Also the difference appears to be O_TRUNC (which the perl script does);
-if I code it in c:
+# xfs_db -r /dev/loop0 
+xfs_db> sb
+xfs_db> print
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 128000
+rblocks = 0
+rextents = 0
+uuid = 925f5530-62d4-4385-ad9e-e5c72e2fb609
+logstart = 65540
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 32000
+agcount = 4
+rbmblocks = 0
+logblocks = 1200
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 15
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 64
+ifree = 61
+fdblocks = 126780
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+Thanks,
+Jan
 
-void main(void)
-{
-        int i;
-        int fd;
-        char file[4];
-
-        for (i = 0; i < 100; i++) {
-                sprintf(file, "%d.txt", i);
-                fd = open(file, O_CREAT|O_RDWR|O_TRUNC, 0644);
-                write(fd, "aaaaaaaaaaaaaaaaaaa\n");
-                close(fd);
-        }
-}
-
-rewrite is a bit slower w/ O_TRUNC in place, plenty fast w/o it.  Not
-sure about the xfs/ext3 difference... this is probably a side-effect of
-flushes xfs put into place on truncate (IIRC?)
-
--Eric
+-- 
