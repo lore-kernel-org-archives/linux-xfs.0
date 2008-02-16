@@ -1,51 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 16 Feb 2008 02:23:59 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1GANq0f016318
-	for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 02:23:55 -0800
-Received: from fk-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 665F65E2E5B
-	for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 02:24:16 -0800 (PST)
-Received: from fk-out-0910.google.com (fk-out-0910.google.com [209.85.128.191]) by cuda.sgi.com with ESMTP id CMhbIvvFmHqdXOYg for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 02:24:16 -0800 (PST)
-Received: by fk-out-0910.google.com with SMTP id 18so1032396fks.4
-        for <xfs@oss.sgi.com>; Sat, 16 Feb 2008 02:24:14 -0800 (PST)
-Message-ID: <e03b90ae0802160224v600bd94exb2a1007ca7af7b65@mail.gmail.com>
-Date: Sat, 16 Feb 2008 02:24:14 -0800
-From: "Jeff Breidenbach" <jeff@jab.org>
-Subject: Re: tuning, many small files, small blocksize
-In-Reply-To: <47B6ACC5.3030605@theendofthetunnel.de>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 16 Feb 2008 04:37:46 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1GCbd5b024624
+	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:37:41 -0800
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B82E9E381F9
+	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:38:03 -0800 (PST)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138]) by cuda.sgi.com with ESMTP id GZu7P0V7fNwApF8O for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 04:38:03 -0800 (PST)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.66 #1)
+	id 1JQM4L-0004Uy-Ms
+	for <xfs@OSS.SGI.com>; Sat, 16 Feb 2008 12:23:01 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Message-ID: <18358.54692.381632.107791@tree.ty.sabi.co.UK>
+Date: Sat, 16 Feb 2008 12:23:00 +0000
+Subject: Re: tuning, many small files, small blocksize
+In-Reply-To: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
 References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
-	 <47B6ACC5.3030605@theendofthetunnel.de>
+From: pg_xfs2@xfs2.for.sabi.co.UK
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Hannes Dorbath <light@theendofthetunnel.de>
-Cc: xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
-> That's maybe a bit paranoid, but on the other hand it should give good
-> parallelism.
+>>> On Fri, 15 Feb 2008 21:01:10 -0800, "Jeff Breidenbach"
+>>> <jeff@jab.org> said:
 
-Yes, the goal is fast read performance for small files.
+jeff> I'm testing xfs for use in storing 100 million+ small
+jeff> files (roughly 4 to 10KB each) and some directories will
+jeff> contain tens of thousands of files. There will be a lot of
+jeff> random reading, and also some random writing, and very
+jeff> little deletion. The underlying disks use linux software
+jeff> RAID-1 manged by mdadm with 5X redundancy. E.g. 5 drives
+jeff> that completely mirror each other.
 
-> mkfs.xfs -n size=16k -i attr=2 -l lazy-count=1,version=2,size=32m -b
-> size=512 /dev/sda
->
-> mount -onoatime,logbufs=8,logbsize=256k /dev/sda /mnt/xfs
+Reading this was quite entertaining :-).
 
-This is highly appreciated, thank you very much.
+jeff> [ ... ] The general consensus was xfs does pretty good
+jeff> tuning itself, but almost none of the published benchmarks
+jeff> or recommendation go with small blocksizes and I want to
+jeff> make sure I'm not about to do something totally stupid. [
+jeff> ... ]
 
-> Requires kernel 2.6.23 and xfsprogs 2.9.5. As said, you might want to
-> use an external log device.
+Makes me wonder why silly people come up with pointless stuff
+like this :-)
 
-I'm running vendor a supplied kernel of 2.6.22 and a quick test shows
-the unsupported feature is lazy-count. How big a deal is it? Upgrading
-the kernel before April is painful but I'll do it if important. Presumably
-there's no simple way to migrate a non-lazy xfs filesytem to a lazy one.
-
-PS. I don't know if this affects any parameters, but the biggest directory
-will have approximately 1.5 million files. There are a few in the one to two
-hundred thousand range, and then very many in the tens of thousands.
+  http://WWW.Oracle.com/database/berkeley-db.html
