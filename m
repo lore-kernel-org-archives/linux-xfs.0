@@ -1,93 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 11:15:40 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Feb 2008 16:35:49 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1FJFYFX025377
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 11:15:35 -0800
-Received: from bob.dscon.sk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BFB5E31BD7
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 11:15:58 -0800 (PST)
-Received: from bob.dscon.sk (bob.dscon.sk [88.86.113.10]) by cuda.sgi.com with ESMTP id ovvSlOVVHsN3heIE for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 11:15:58 -0800 (PST)
-Date: Fri, 15 Feb 2008 20:16:37 +0100
-Subject: rewrite very slow
-Message-ID: <20080215191636.GC4859@bob.dscon.sk>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1G0ZhHJ019114
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:35:44 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 89FE1E344FD
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:36:07 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id WeYXcmt42aRiNcmY for <xfs@oss.sgi.com>; Fri, 15 Feb 2008 16:36:07 -0800 (PST)
+Message-ID: <47B62FF6.2000903@sandeen.net>
+Date: Fri, 15 Feb 2008 18:36:06 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-From: xfs@bob.dscon.sk (DS)
+Subject: Re: rewrite very slow
+References: <20080215191636.GC4859@bob.dscon.sk>
+In-Reply-To: <20080215191636.GC4859@bob.dscon.sk>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: DS <xfs@bob.dscon.sk>
+Cc: xfs@oss.sgi.com
 
-Hello,
+DS wrote:
+> Hello,
+> 
+> I need some help to tunning my storage.
 
-I need some help to tunning my storage.
+...
+> TIME 43 sekund
 
-Very simple test at begin (perl script test.pl):
 
-#!/usr/bin/perl
+What kernel?  when I test on my 2.6.23.9-85.fc8 and 2.6.22.5 boxes, I
+see 2 and 7 seconds for rewrite, respectively.
 
-$time=time();
-for ($i=1;$i<100;$i++)
+but granted, on ext3 I get 0 seconds for every run.
+
+Also the difference appears to be O_TRUNC (which the perl script does);
+if I code it in c:
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+void main(void)
 {
-open (SUBOR,">$i.txt");
-print SUBOR "aaaaaaaaaaaaaaaaaaa\n";
-close (SUBOR);
-print "WRITE $i. FILE\n";
+        int i;
+        int fd;
+        char file[4];
+
+        for (i = 0; i < 100; i++) {
+                sprintf(file, "%d.txt", i);
+                fd = open(file, O_CREAT|O_RDWR|O_TRUNC, 0644);
+                write(fd, "aaaaaaaaaaaaaaaaaaa\n");
+                close(fd);
+        }
 }
-$time2=time();
-$rozdiel_casov=$time2-$time;
 
-print "TIME ".$rozdiel_casov." sekund\n";
+rewrite is a bit slower w/ O_TRUNC in place, plenty fast w/o it.  Not
+sure about the xfs/ext3 difference... this is probably a side-effect of
+flushes xfs put into place on truncate (IIRC?)
 
-First run:
-file1:/mnt/hosting/test# ./test.pl
-WRITE 1. FILE
-WRITE 2. FILE
-...
-WRITE 98. FILE
-WRITE 99. FILE
-TIME 0 sekund
-
-
-Every next run (rewrite existing files) is very very very slow:
-
-file1:/mnt/hosting/test# ./test.pl
-WRITE 1. FILE
-WRITE 2. FILE
-...
-
-WRITE 98. FILE
-WRITE 99. FILE
-TIME 43 sekund
-
-
-I try it on ext3. Every run is only 1-3seconds.
-
-I tried tunning my storage.
-My last mount specification: 
-
-(rw,noatime,nodiratime,nobarrier,osyncisosync,logbsize=256k,logbufs=8,quota)
-I tried all possible configuration (barrier, nobarrier, osyncisosync,
-logbssize=XX,logbufs=2-8) nothing help me.
-
-file1:/mnt/hosting/test# xfs_info /mnt/hosting/
-meta-data=/dev/mapper/vghosting-hosting isize=256    agcount=32,
-agsize=7626752 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=244056064,
-imaxpct=25
-         =                       sunit=0      swidth=0 blks, unwritten=1
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=0 blks
-realtime =none                   extsz=65536  blocks=0, rtextents=0
-
-I test it on 4 other xfs storages and results was similar.
-
-
-Any ideas?
-
-Thanks.
-
-Dusan
+-Eric
