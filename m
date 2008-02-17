@@ -1,109 +1,105 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Feb 2008 10:29:55 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1HITiab012615
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2008 10:29:47 -0800
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9BC67E45101
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2008 10:30:09 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.153]) by cuda.sgi.com with ESMTP id XEppljF61khwuGuj for <xfs@oss.sgi.com>; Sun, 17 Feb 2008 10:30:09 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id e12so1090586fga.8
-        for <xfs@oss.sgi.com>; Sun, 17 Feb 2008 10:30:08 -0800 (PST)
-Message-ID: <47B863A9.5070206@gmail.com>
-Date: Sun, 17 Feb 2008 18:41:13 +0200
-From: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
-MIME-Version: 1.0
-Subject: xfsaild causing 30+ wakeups/s on an idle system since 2.6.25-rcX
-Content-Type: multipart/mixed;
- boundary="------------030908040306020509010605"
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Feb 2008 14:47:50 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1HMlb0i028680
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2008 14:47:40 -0800
+Date: Mon, 18 Feb 2008 09:47:36 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfsaild causing 30+ wakeups/s on an idle system since 2.6.25-rcX
+Message-ID: <20080217224736.GX155407@sgi.com>
+References: <47B863A9.5070206@gmail.com> <6101e8c40802170851w73db8130t9bcfdc5cf053f0dc@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6101e8c40802170851w73db8130t9bcfdc5cf053f0dc@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>
+To: Oliver Pinter <oliver.pntr@gmail.com>
+Cc: =?iso-8859-1?B?VPZy9ms=?= Edwin <edwintorok@gmail.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>, Christoph Lameter <clameter@sgi.com>, David Chinner <dgc@sgi.com>, Christoph Hellwig <hch@infradead.org>
 
-This is a multi-part message in MIME format.
---------------030908040306020509010605
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Sun, Feb 17, 2008 at 05:51:08PM +0100, Oliver Pinter wrote:
+> On 2/17/08, Török Edwin <edwintorok@gmail.com> wrote:
+> > Hi,
+> >
+> > xfsaild is causing many wakeups, a quick investigation shows
+> > xfsaild_push is always
+> > returning 30 msecs timeout value.
 
-Hi,
+That's a bug, and has nothing to do with power consumption. ;)
 
-xfsaild is causing many wakeups, a quick investigation shows
-xfsaild_push is always
-returning 30 msecs timeout value.
+I can see that there is a dirty item in the filesystem:
 
-This is on an idle system, running only gnome, and gnome-terminal.
+Entering kdb (current=0xe00000b8f4fe0000, pid 30046) on processor 3 due to Breakpoint @ 0xa000000100454fc0
+[3]kdb> bt
+Stack traceback for pid 30046
+0xe00000b8f4fe0000    30046        2  1    3   R  0xe00000b8f4fe0340 *xfsaild
+0xa000000100454fc0 xfsaild_push
+        args (0xe00000b8ffff9090, 0xe00000b8f4fe7e30, 0x31b)
+....
+[3]kdb> xail 0xe00000b8ffff9090
+AIL for mp 0xe00000b8ffff9090, oldest first
+[0] type buf flags: 0x1 <in ail >   lsn [1:13133]
+   buf 0xe00000b880258800 blkno 0x0 flags: 0x2 <dirty >
+   Superblock (at 0xe00000b8f9b3c000)
+[3]kdb>
 
-I suggest changing the timeout logic in xfsaild to be more power
-consumption friendly.
+the superblock is dirty, and the lsn is well beyond the target
+of the xfsaild hence it *should* be idling. However, it isn't
+idling because there is a dirty item in the list and the idle trigger
+of "is list empty" is not tripping.
 
-See below my original report to the powerTOP mailing list.
+I only managed to reproduce this on a lazy superblock counter
+filesystem (i.e.  new mkfs and recent kernel), as it logs the
+superblock every so often, and that is probably what is keeping the
+fs dirty like this.
 
-Best regards,
---Edwin
+Can you see if the patch below fixes the problem.
 
---------------030908040306020509010605
-Content-Type: message/rfc822;
- name="Re: new offender in 2.6.25-git: xfsaild.eml"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: inline;
- filename="Re: new offender in 2.6.25-git: xfsaild.eml"
+---
 
-Delivered-To: edwintorok@gmail.com
-Received: by 10.143.122.5 with SMTP id z5cs139388wfm;
-        Sun, 17 Feb 2008 08:09:47 -0800 (PST)
-Received: by 10.140.82.38 with SMTP id f38mr3238281rvb.30.1203264587861;
-        Sun, 17 Feb 2008 08:09:47 -0800 (PST)
-Return-Path: <arjan@linux.intel.com>
-Received: from orsmga101.jf.intel.com (mga06.intel.com [134.134.136.21])
-        by mx.google.com with ESMTP id f28si7517524rvb.35.2008.02.17.08.09.47;
-        Sun, 17 Feb 2008 08:09:47 -0800 (PST)
-Received-SPF: pass (google.com: domain of arjan@linux.intel.com designates 134.134.136.21 as permitted sender) client-ip=134.134.136.21;
-Authentication-Results: mx.google.com; spf=pass (google.com: domain of arjan@linux.intel.com designates 134.134.136.21 as permitted sender) smtp.mail=arjan@linux.intel.com
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP; 17 Feb 2008 08:09:47 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="4.25,366,1199692800";
-   d="scan'208";a="258320829"
-Received: from jf-86862470-dhcp-client.jf.intel.com (HELO [134.134.36.112]) ([134.134.36.112])
-  by orsmga002.jf.intel.com with ESMTP; 17 Feb 2008 08:09:47 -0800
-Message-ID: <47B85C22.3070504@linux.intel.com>
-Date: Sun, 17 Feb 2008 08:09:06 -0800
-From: Arjan van de Ven <arjan@linux.intel.com>
-User-Agent: Thunderbird 1.5.0.14 (Windows/20071210)
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
-CC: power@bughost.org
-Subject: Re: new offender in 2.6.25-git: xfsaild
-References: <47B5D405.409@gmail.com> <47B8538F.7060209@gmail.com>
-In-Reply-To: <47B8538F.7060209@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Idle state is not being detected properly by the xfsaild push
+code. The current idle state is detected by an empty list
+which may never happen with mostly idle filesystem or one
+using lazy superblock counters. A single dirty item in the
+list will result repeated looping to push everything past
+the target when everything because it fails to check if we
+managed to push anything.
 
-Török Edwin wrote:
-> Török Edwin wrote:
->> Hi,
->>
->> On latest -git of 2.6.25 I am getting lots of wakeups from xfsaild.
->>   23.5% ( 33.3)           xfsaild : schedule_timeout (process_timeout)
->>   
-> 
-> [Should I Cc: xfs mailing list / lkml on this?]
-> 
-> The problem seems to be with the timeout logic in xfsaild_push, which
-> can return 3 timeout values (msecs): 1000, 10, 20, 30.
-> I inserted a marker and attached a probe function, schedule_timeout
-> always got called with 9 jiffies (which is 30 msecs, I have HZ=300).
-> 
-> Changing xfs_trans_ail.c:270 from "tout += 20" to "tout = 1000", made
-> xfsaild only do 1 wakeup/s instead of 33!
-> 
-> For some reason xfs_aild always thinks it has work (I/O) to do, and
-> never chooses the 1000 msec sleep value.
-> 
+Fix by considering a dirty list with everything past the target
+as an idle state and set the timeout appropriately.
 
-sounds like an XFS bug... worth reporting to the xfs/lkml folks for sure.
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_trans_ail.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-
---------------030908040306020509010605--
+Index: 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_trans_ail.c	2008-02-18 09:14:34.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c	2008-02-18 09:18:52.070682570 +1100
+@@ -261,14 +261,17 @@ xfsaild_push(
+ 		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+ 	}
+ 
+-	/*
+-	 * We reached the target so wait a bit longer for I/O to complete and
+-	 * remove pushed items from the AIL before we start the next scan from
+-	 * the start of the AIL.
+-	 */
+-	if ((XFS_LSN_CMP(lsn, target) >= 0)) {
++	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
++		/*
++		 * We reached the target so wait a bit longer for I/O to
++		 * complete and remove pushed items from the AIL before we
++		 * start the next scan from the start of the AIL.
++		 */
+ 		tout += 20;
+ 		last_pushed_lsn = 0;
++	} else if (!count) {
++		/* We're past our target or empty, so idle */
++		tout = 1000;
+ 	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
+ 		   (count && ((stuck * 100) / count > 90))) {
+ 		/*
