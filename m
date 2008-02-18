@@ -1,62 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 02:21:54 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1IALmGX016298
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 02:21:50 -0800
-Date: Mon, 18 Feb 2008 21:21:50 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfsaild causing 30+ wakeups/s on an idle system since 2.6.25-rcX
-Message-ID: <20080218102150.GL155407@sgi.com>
-References: <47B863A9.5070206@gmail.com> <6101e8c40802170851w73db8130t9bcfdc5cf053f0dc@mail.gmail.com> <20080217224736.GX155407@sgi.com> <47B952D3.2030900@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <47B952D3.2030900@gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 06:38:12 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1IEc4jk031488
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 06:38:09 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9D8212409C0
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 06:38:29 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id vHQ2nSOzRGPEzJrM for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 06:38:29 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 10B2C18E21643
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 08:38:28 -0600 (CST)
+Message-ID: <47B99864.3050401@sandeen.net>
+Date: Mon, 18 Feb 2008 08:38:28 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix mount option pasing to make inode cluster deletion
+ default (again)
+References: <47B3B6AE.4030505@sandeen.net>
+In-Reply-To: <47B3B6AE.4030505@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-1?B?VPZy9ms=?= Edwin <edwintorok@gmail.com>
-Cc: David Chinner <dgc@sgi.com>, Oliver Pinter <oliver.pntr@gmail.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>, Christoph Lameter <clameter@sgi.com>, Christoph Hellwig <hch@infradead.org>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Feb 18, 2008 at 11:41:39AM +0200, Török Edwin wrote:
-> David Chinner wrote:
-> > On Sun, Feb 17, 2008 at 05:51:08PM +0100, Oliver Pinter wrote:
-> >   
-> >> On 2/17/08, Török Edwin <edwintorok@gmail.com> wrote:
-> >>     
-> >>> Hi,
-> >>>
-> >>> xfsaild is causing many wakeups, a quick investigation shows
-> >>> xfsaild_push is always
-> >>> returning 30 msecs timeout value.
-> >>>       
-> >
-> > That's a bug
+Eric Sandeen wrote:
+> mod xfs-linux-melb:xfs-kern:29683a / 
+> git commit 574342f4ad450b33bc85ec53210b8aa8bfff2fcf
 > 
-> Ok. Your patches fixes the 30+ wakeups :)
-
-Good. I'll push it out for review then.
-
-> > , and has nothing to do with power consumption. ;)
-> >   
+> broke default options in such a way that empty inode clusters 
+> are no longer deleted by default, because if no options are 
+> given, we "goto done;" without setting the default 
+> XFSMNT_IDELETE flag.
 > 
-> I suggest using a sysctl value (such as
-> /proc/sys/vm/dirty_writeback_centisecs), instead of a hardcoded default
-> 1000.
+> All this logic could probably be rearranged to make things
+> clearer, but for now I think this small patch fixes it:
+> 
+> Set IDELETE a.k.a. "noikeep" by default, but if dmapi is in
+> use, turn it back off (i.e. "ikeep") *unless* noikeep was 
+> specifically requested.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-No, too magic. I dislike adding knobs to workaround issues that
-really should be fixed by having sane default behaviour.  Further
-down the track as we correct know issues with the AIL push code
-we'll be able to increase this idle timeout or even make it purely
-wakeup driven once we get back to an idle state. However, right now
-it still needs that once a second wakeup to work around a nasty
-corner case that can hang the filesystem....
+While I like Jeff's patch in the long run... unless you are considering
+submitting it for 2.6.25, might you consider this smaller patch for
+2.6.25 to fix the inode reclamation problem in the short-term?
 
-Cheers,
+Thanks,
+-Eric
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> ---
+> 
+> 
+> Index: linux-2.6.24/fs/xfs/linux-2.6/xfs_super.c
+> ===================================================================
+> --- linux-2.6.24.orig/fs/xfs/linux-2.6/xfs_super.c
+> +++ linux-2.6.24/fs/xfs/linux-2.6/xfs_super.c
+> @@ -171,9 +171,10 @@ xfs_parseargs(
+>  	char			*this_char, *value, *eov;
+>  	int			dsunit, dswidth, vol_dsunit, vol_dswidth;
+>  	int			iosize;
+> -	int			ikeep = 0;
+> +	int			noikeep = 0; /* track _explicit_ requests */
+>  
+>  	args->flags |= XFSMNT_BARRIER;
+> +	args->flags |= XFSMNT_IDELETE;	/* i.e. "noikeep" is default */
+>  	args->flags2 |= XFSMNT2_COMPAT_IOSIZE;
+>  
+>  	if (!options)
+> @@ -302,9 +303,9 @@ xfs_parseargs(
+>  		} else if (!strcmp(this_char, MNTOPT_NOBARRIER)) {
+>  			args->flags &= ~XFSMNT_BARRIER;
+>  		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
+> -			ikeep = 1;
+>  			args->flags &= ~XFSMNT_IDELETE;
+>  		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
+> +			noikeep = 1; /* explicitly requested */
+>  			args->flags |= XFSMNT_IDELETE;
+>  		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
+>  			args->flags2 &= ~XFSMNT2_COMPAT_IOSIZE;
+> @@ -410,8 +411,8 @@ xfs_parseargs(
+>  	 * Note that if "ikeep" or "noikeep" mount options are
+>  	 * supplied, then they are honored.
+>  	 */
+> -	if (!(args->flags & XFSMNT_DMAPI) && !ikeep)
+> -		args->flags |= XFSMNT_IDELETE;
+> +	if ((args->flags & XFSMNT_DMAPI) && !noikeep)
+> +		args->flags &= ~XFSMNT_IDELETE;
+>  
+>  	if ((args->flags & XFSMNT_NOALIGN) != XFSMNT_NOALIGN) {
+>  		if (dsunit) {
+> 
+> 
