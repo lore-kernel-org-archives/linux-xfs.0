@@ -1,131 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 15:01:01 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1IN0t1j001860
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 15:00:57 -0800
-Date: Tue, 19 Feb 2008 10:01:12 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [patch, debug, 2/2] Use power-of-2 size ktrace buffers
-Message-ID: <20080218230112.GU155407@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 15:12:25 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1INCMmr002811
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 15:12:22 -0800
+Received: from ishtar.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03801E55C6F
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 15:12:47 -0800 (PST)
+Received: from ishtar.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by cuda.sgi.com with ESMTP id OB7BXMvUE4tvJUY7 for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 15:12:47 -0800 (PST)
+Message-ID: <47BA10EC.3090004@tlinx.org>
+Date: Mon, 18 Feb 2008 15:12:44 -0800
+From: Linda Walsh <xfs@tlinx.org>
+MIME-Version: 1.0
+Subject: Re: tuning, many small files, small blocksize
+References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
+In-Reply-To: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: xfs@oss.sgi.com
 
-Now that the ktrace_enter() code is using atomics,
-the non-power-of-2 buffer sizes - which require modulus
-operations to get the index - are showing up as using
-substantial CPU in the profiles.
+Jeff Breidenbach wrote:
+> I'm testing xfs for use in storing 100 million+ small files
+> (roughly 4 to 10KB each) and some directories will contain
+> tens of thousands of files. There will be a lot of random
+> reading, and also some random writing, and very little
+> deletion. 
+> 
+> I am setting up the xfs partition now, and have only played
+> with blocksize so far. 512 byte blocks are most space efficient,
+> 1024 byte blocks cost 3.3% additional space, and 4096 byte
+> blocks cost 22.3% additional space.
+>
+> a) Should I just go with the 512 byte blocksize or is that going to be
+> bad for some performance reason? Going to 1024 is no problem,
+> 
+> b) Are there any other mkfs.xfs paramters that I should play with.
 
-Force the buffer sizes to be rounded up to the nearest
-power of two and use masking rather than modulus operations
-to convert the index counter to the buffer index. This
-reduces ktrace_enter overhead to 8% of a CPU time, and
-again almost halves the trace intensive test runtime.
+If your minimum file size is 4KB and max is 10KB, a blocksize of
+2K might be give you a reasonable compaction level.
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/support/ktrace.c |   22 ++++++++++++++--------
- fs/xfs/support/ktrace.h |    1 +
- 2 files changed, 15 insertions(+), 8 deletions(-)
+Might also play with the inode size.  I *usually* go with 1K-inode+4k block,
+but with a 2k block, I'm slightly torn between 512-byte inodes and 1K
+inodes, but I can't think of a _great_ reason to ever go with the default
+256-byte inode size, since that size seems like it will always cause
+the inode to be shared with another, possibly unrelated file.
 
-Index: 2.6.x-xfs-new/fs/xfs/support/ktrace.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/support/ktrace.c	2008-02-18 15:33:13.849314747 +1100
-+++ 2.6.x-xfs-new/fs/xfs/support/ktrace.c	2008-02-18 15:33:16.920921133 +1100
-@@ -24,7 +24,7 @@ static int          ktrace_zentries;
- void __init
- ktrace_init(int zentries)
- {
--	ktrace_zentries = zentries;
-+	ktrace_zentries = roundup_pow_of_two(zentries);
- 
- 	ktrace_hdr_zone = kmem_zone_init(sizeof(ktrace_t),
- 					"ktrace_hdr");
-@@ -47,13 +47,16 @@ ktrace_uninit(void)
-  * ktrace_alloc()
-  *
-  * Allocate a ktrace header and enough buffering for the given
-- * number of entries.
-+ * number of entries. Round the number of entries up to a
-+ * power of 2 so we can do fast masking to get the index from
-+ * the atomic index counter.
-  */
- ktrace_t *
- ktrace_alloc(int nentries, unsigned int __nocast sleep)
- {
- 	ktrace_t        *ktp;
- 	ktrace_entry_t  *ktep;
-+	int		entries;
- 
- 	ktp = (ktrace_t*)kmem_zone_alloc(ktrace_hdr_zone, sleep);
- 
-@@ -70,11 +73,12 @@ ktrace_alloc(int nentries, unsigned int 
- 	/*
- 	 * Special treatment for buffers with the ktrace_zentries entries
- 	 */
--	if (nentries == ktrace_zentries) {
-+	entries = roundup_pow_of_two(nentries);
-+	if (entries == ktrace_zentries) {
- 		ktep = (ktrace_entry_t*)kmem_zone_zalloc(ktrace_ent_zone,
- 							    sleep);
- 	} else {
--		ktep = (ktrace_entry_t*)kmem_zalloc((nentries * sizeof(*ktep)),
-+		ktep = (ktrace_entry_t*)kmem_zalloc((entries * sizeof(*ktep)),
- 							    sleep | KM_LARGE);
- 	}
- 
-@@ -91,7 +95,9 @@ ktrace_alloc(int nentries, unsigned int 
- 	}
- 
- 	ktp->kt_entries  = ktep;
--	ktp->kt_nentries = nentries;
-+	ktp->kt_nentries = entries;
-+	ASSERT(is_power_of_2(entries));
-+	ktp->kt_index_mask = entries - 1;
- 	atomic_set(&ktp->kt_index, 0);
- 	ktp->kt_rollover = 0;
- 	return ktp;
-@@ -160,7 +166,7 @@ ktrace_enter(
- 	 * Grab an entry by pushing the index up to the next one.
- 	 */
- 	index = atomic_add_return(1, &ktp->kt_index);
--	index = (index - 1) % ktp->kt_nentries;
-+	index = (index - 1) & ktp->kt_index_mask;
- 	if (!ktp->kt_rollover && index == ktp->kt_nentries - 1)
- 		ktp->kt_rollover = 1;
- 
-@@ -197,7 +203,7 @@ ktrace_nentries(
- 	if (ktp == NULL)
- 		return 0;
- 
--	index = atomic_read(&ktp->kt_index) % ktp->kt_nentries;
-+	index = atomic_read(&ktp->kt_index) & ktp->kt_index_mask;
- 	return (ktp->kt_rollover ? ktp->kt_nentries : index);
- }
- 
-@@ -223,7 +229,7 @@ ktrace_first(ktrace_t   *ktp, ktrace_sna
- 	int             nentries;
- 
- 	if (ktp->kt_rollover)
--		index = atomic_read(&ktp->kt_index) % ktp->kt_nentries;
-+		index = atomic_read(&ktp->kt_index) & ktp->kt_index_mask;
- 	else
- 		index = 0;
- 
-Index: 2.6.x-xfs-new/fs/xfs/support/ktrace.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/support/ktrace.h	2008-02-18 15:32:28.911073469 +1100
-+++ 2.6.x-xfs-new/fs/xfs/support/ktrace.h	2008-02-18 15:33:16.920921133 +1100
-@@ -31,6 +31,7 @@ typedef struct ktrace_entry {
- typedef struct ktrace {
- 	int		kt_nentries;	/* number of entries in trace buf */
- 	atomic_t	kt_index;	/* current index in entries */
-+	unsigned int	kt_index_mask;
- 	int		kt_rollover;
- 	ktrace_entry_t	*kt_entries;	/* buffer of entries */
- } ktrace_t;
+Remember, in xfs, if the last bit of left-over data in an inode will fit
+into the inode, it can save a block-allocation, though I don't know
+how this will affect speed.
+
+Space-wise, a 2k block size and 1k-inode size might be good, but don't
+know how that would affect performance.
+
+My concern about 512-byte blocks is, in general (don't recall having
+used such a small block size on xfs), smaller blocks can lead to
+greater fragmentation, but xfs is better than the average 'fs' in
+laying out files.  While 'xfs_fsr' is good about keeping files
+linear, it didn't used to work on directories -- and if you have
+10's of thousands of files/directory...that might trigger some
+more directory fragmentation.  Dunno.
+
+After you write the many small files, will you be appending to them?
+
+As for benchmarks, their's always the standard 'bonnie' and 'bonnie++'.
+I don't know how they compare to iozone though -- I'm not familiar with
+that benchmark.
+
+I'm sure you are familiar with mount options noatime,nodiratime -- same
+concepts, but dir's are split out.  Someone else mentioned using
+logbsize=256k in the mount options.  My manpages may be dated, but
+they "claim", that valid sizes are 16k and 32k.
+
+Also, it depends on the situation, but sometimes flattening out the
+directory structure can speed up lookup time.
+
+Sometime back someone did some benchmarks involving log size and it seemed
+that 32768b(4k) or ~128Meg seemed optimal if memory serves me correctly.
+
+Good luck...
