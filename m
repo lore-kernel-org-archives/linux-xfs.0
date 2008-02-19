@@ -1,59 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 20:36:22 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1J4aBbo032740
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:36:15 -0800
-Message-ID: <47BA5CBF.1010307@sgi.com>
-Date: Tue, 19 Feb 2008 15:36:15 +1100
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 20:58:40 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1J4wXI3001557
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:34 -0800
+Received: from fk-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 209BDE5C25A
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:58 -0800 (PST)
+Received: from fk-out-0910.google.com (fk-out-0910.google.com [209.85.128.188]) by cuda.sgi.com with ESMTP id 1BjtSsmImHPvT2Jt for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:58 -0800 (PST)
+Received: by fk-out-0910.google.com with SMTP id 18so2129633fks.4
+        for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:57 -0800 (PST)
+Message-ID: <e03b90ae0802182058h7a1535c6w749eb46cbe434ef2@mail.gmail.com>
+Date: Mon, 18 Feb 2008 20:58:56 -0800
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: tuning, many small files, small blocksize
+In-Reply-To: <20080219024924.GB155407@sgi.com>
 MIME-Version: 1.0
-Subject: Re: xfs: convert beX_add to beX_add_cpu patch(2.6.25-rc2)
-References: <200802180257.AA00066@TNESB07328.wm.jp.nec.com>
-In-Reply-To: <200802180257.AA00066@TNESB07328.wm.jp.nec.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
+	 <47BA10EC.3090004@tlinx.org> <20080218235103.GW155407@sgi.com>
+	 <47BA2AFD.2060409@tlinx.org> <20080219024924.GB155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Utako Kusaka <u-kusaka@wm.jp.nec.com>
-Cc: t-sato@yk.jp.nec.com, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Linda Walsh <xfs@tlinx.org>, xfs@oss.sgi.com
 
-Hi Utako,
+Wow, this is quite some discussion.
 
-Thanks for the heads-up. I believe Lachlan is going to push that
-change into our development tree (which will sync with cvs).
-As we have number of people working on XFS and interested in it,
-can you please also include the XFS oss list on similar emails.
+I went with Hannes Dorbath's original suggestion (appended),
+and am now several days into copying data onto the filesystem.
+It's conceivable to change course at this point, but awkward.
+Dave, you suggested biting the bullet and sacrificing capacity.
+Are we talking an overwhelming difference in read performance
+from random files - e.g. reducing the number of seeks by 2X?
 
-Kind regards,
-Tim.
+Finally, in answer to Linda's question, I don't forsee any appends
+at all. The vast majority of files will be write once, read many. A
+small fraction will be re-written, e.g. new contents, same filename.
+An utterly insignificant fraction will be deleted.
 
-Utako Kusaka wrote:
-> Hi Timothy,
-> 
-> It seems that the following patch is not added to XFS cvs tree yet.
-> 
-> ChangeLog-2.6.25-rc2:
-> commit 413d57c9907c72ed608df2be72ef8ed13a3eeb46
-> Author: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Date:   Wed Feb 13 15:03:29 2008 -0800
-> 
->     xfs: convert beX_add to beX_add_cpu (new common API)
->     
->     remove beX_add functions and replace all uses with beX_add_cpu
->     
->     Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
->     Cc: Mark Fasheh <mark.fasheh@oracle.com>
->     Reviewed-by: Dave Chinner <dgc@sgi.com>
->     Cc: Timothy Shimmin <tes@sgi.com>
->     Cc: <linux-ext4@vger.kernel.org>
->     Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-> 
-> 
-> + xfs-convert-bex_add-to-bex_add_cpu-new-common-api.patch added to -mm tree
-> http://marc.info/?l=linux-ext4&m=119974956926515&w=4
-> 
-> Regards,
-> 
-> Utako.
+>mkfs.xfs -n size=16k -i attr=2 -l lazy-count=1,version=2,size=32m \
+>-b size=512 /dev/sda
+>
+>mount -onoatime,logbufs=8,logbsize=256k /dev/sda /mnt/xfs
