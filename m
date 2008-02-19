@@ -1,47 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 20:58:40 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1J4wXI3001557
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:34 -0800
-Received: from fk-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 209BDE5C25A
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:58 -0800 (PST)
-Received: from fk-out-0910.google.com (fk-out-0910.google.com [209.85.128.188]) by cuda.sgi.com with ESMTP id 1BjtSsmImHPvT2Jt for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:58 -0800 (PST)
-Received: by fk-out-0910.google.com with SMTP id 18so2129633fks.4
-        for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 20:58:57 -0800 (PST)
-Message-ID: <e03b90ae0802182058h7a1535c6w749eb46cbe434ef2@mail.gmail.com>
-Date: Mon, 18 Feb 2008 20:58:56 -0800
-From: "Jeff Breidenbach" <jeff@jab.org>
-Subject: Re: tuning, many small files, small blocksize
-In-Reply-To: <20080219024924.GB155407@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 00:20:16 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1J8K7jk019533
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 00:20:09 -0800
+Date: Tue, 19 Feb 2008 19:20:11 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: xfsaild causing 30+ wakeups/s on an idle system since 2.6.25-rcX
+Message-ID: <20080219082011.GD155407@sgi.com>
+References: <47B863A9.5070206@gmail.com> <47BA131A.5080908@tlinx.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
-	 <47BA10EC.3090004@tlinx.org> <20080218235103.GW155407@sgi.com>
-	 <47BA2AFD.2060409@tlinx.org> <20080219024924.GB155407@sgi.com>
+In-Reply-To: <47BA131A.5080908@tlinx.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Linda Walsh <xfs@tlinx.org>, xfs@oss.sgi.com
+To: Linda Walsh <xfs@tlinx.org>
+Cc: =?iso-8859-1?B?VMO2csO2aw==?= Edwin <edwintorok@gmail.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>
 
-Wow, this is quite some discussion.
+On Mon, Feb 18, 2008 at 03:22:02PM -0800, Linda Walsh wrote:
+> Not to look excessively dumb, but what's xfsaild?
 
-I went with Hannes Dorbath's original suggestion (appended),
-and am now several days into copying data onto the filesystem.
-It's conceivable to change course at this point, but awkward.
-Dave, you suggested biting the bullet and sacrificing capacity.
-Are we talking an overwhelming difference in read performance
-from random files - e.g. reducing the number of seeks by 2X?
+AIL = Active Item List
 
-Finally, in answer to Linda's question, I don't forsee any appends
-at all. The vast majority of files will be write once, read many. A
-small fraction will be re-written, e.g. new contents, same filename.
-An utterly insignificant fraction will be deleted.
+It is a sorted list all the logged metadata objects that have not
+yet been written back to disk.  The xfsaild is responsible for tail
+pushing the log.  i.e.  writing back objects in the AIL in the most
+efficient manner possible.
 
->mkfs.xfs -n size=16k -i attr=2 -l lazy-count=1,version=2,size=32m \
->-b size=512 /dev/sda
->
->mount -onoatime,logbufs=8,logbsize=256k /dev/sda /mnt/xfs
+Why a thread? Because allowing parallelism in tail pushing is a
+scalability problem and moving this to it's own thread completely
+isolates it from parallelism. Tail pushing only requires a small
+amount of CPU time, but it requires a global scope spinlock.
+Isolating the pushing to a single CPU means the spinlock is not
+contended across every CPU in the machine.
+
+How much did it improve scalability? on a 2048p machine with an
+MPI job that did a synchronised close of 12,000 files (6 per CPU),
+the close time went from ~5400s without the thread to 9s with the
+xfsaild. That's only about 600x faster. ;)
+
+> xfs seems to be sprouting daemons at a more rapid pace
+> these days...xfsbufd, xfssyncd, xfsdatad, xfslogd, xfs_mru_cache, and
+> now xfsaild?
+
+Why not? Got to make use of all those cores machines have these
+days. ;)
+
+Fundamentally, threads are cheap and simple. We'll keep adding
+threads where it makes sense as long as it improves performance and
+scalability.
+
+> Are there any design docs (scribbles?) saying what these do and why
+> they were added so I can just go read 'em myself?  I'm sure they
+> were added for good reason...just am curious more than anything.
+
+'git log' is your friend. The commits that introduce the new threads
+explain why they are necessary. ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
