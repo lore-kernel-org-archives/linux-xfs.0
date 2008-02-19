@@ -1,74 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 21:53:07 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1K5r05I019969
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 21:53:03 -0800
-Date: Wed, 20 Feb 2008 16:53:18 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [patch] Prevent excessive xfsaild wakeups
-Message-ID: <20080220055318.GO155407@sgi.com>
-References: <20080218225906.GS155407@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 22:13:25 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1K6DGsG021457
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 22:13:19 -0800
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC62F5F6A94
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 22:13:40 -0800 (PST)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk [82.69.39.138]) by cuda.sgi.com with ESMTP id 9mXWlFMeMF0rOZHM for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 22:13:40 -0800 (PST)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.66 #1)
+	id 1JRZx6-0000Sh-A6
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 21:24:36 +0000
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080218225906.GS155407@sgi.com>
+Content-Transfer-Encoding: 7bit
+Message-ID: <18363.18706.353677.744003@tree.ty.sabi.co.UK>
+Date: Tue, 19 Feb 2008 21:24:34 +0000
+Subject: Re: tuning, many small files, small blocksize
+In-Reply-To: <47BAC139.3000109@theendofthetunnel.de>
+References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>
+	<47BA10EC.3090004@tlinx.org>
+	<20080218235103.GW155407@sgi.com>
+	<47BA2AFD.2060409@tlinx.org>
+	<20080219024924.GB155407@sgi.com>
+	<e03b90ae0802182058h7a1535c6w749eb46cbe434ef2@mail.gmail.com>
+	<18362.37642.577718.529415@tree.ty.sabi.co.UK>
+	<47BAC139.3000109@theendofthetunnel.de>
+From: pg_xfs2@xfs2.for.sabi.co.UK (Peter Grandi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Linux XFS <xfs@oss.sgi.com>
 
-ping?
+>>> On Tue, 19 Feb 2008 12:44:57 +0100, Hannes Dorbath
+>>> <light@theendofthetunnel.de> said:
 
-This is needed for 2.6.25-rcX....
+[ ... a collection of millions of small records ... ]
 
-On Tue, Feb 19, 2008 at 09:59:06AM +1100, David Chinner wrote:
-> Idle state is not being detected properly by the xfsaild push
-> code. The current idle state is detected by an empty list
-> which may never happen with mostly idle filesystem or one
-> using lazy superblock counters. A single dirty item in the
-> list will result repeated looping to push everything past
-> the target when everything because it fails to check if we
-> managed to push anything.
-> 
-> Fix by considering a dirty list with everything past the target
-> as an idle state and set the timeout appropriately.
-> 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  fs/xfs/xfs_trans_ail.c |   15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
-> 
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_trans_ail.c	2008-02-18 09:14:34.000000000 +1100
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c	2008-02-18 09:18:52.070682570 +1100
-> @@ -261,14 +261,17 @@ xfsaild_push(
->  		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
->  	}
->  
-> -	/*
-> -	 * We reached the target so wait a bit longer for I/O to complete and
-> -	 * remove pushed items from the AIL before we start the next scan from
-> -	 * the start of the AIL.
-> -	 */
-> -	if ((XFS_LSN_CMP(lsn, target) >= 0)) {
-> +	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
-> +		/*
-> +		 * We reached the target so wait a bit longer for I/O to
-> +		 * complete and remove pushed items from the AIL before we
-> +		 * start the next scan from the start of the AIL.
-> +		 */
->  		tout += 20;
->  		last_pushed_lsn = 0;
-> +	} else if (!count) {
-> +		/* We're past our target or empty, so idle */
-> +		tout = 1000;
->  	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
->  		   (count && ((stuck * 100) / count > 90))) {
->  		/*
+>> That sounds like a good use for a LDAP database, but using
+>> Berkeley DB directly may be best. One could also do a FUSE
+>> module or a special purpose NFS server that presents a
+>> Berkeley DB as a filesystem, but then we would be getting
+>> rather close to ReiserFS.
 
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+light> During testing of HA clusters some time ago I found BDB
+light> to always be the first thing to break. It seems to have
+light> very poor recovery and seems not fine with neither file
+light> systems snapshots nor power failures. [ ... ]
+
+Sometimes BDB had problems, but that seems in the past. It also
+relies critically on some precise behaviour from the storage
+layer, filesystem downwards:
+
+  http://WWW.Oracle.com/technology/documentation/berkeley-db/db/ref/transapp/reclimit.html
+
+If all those conditions are not met, then it cannot do recovery.
+Fortunately XFS can meet those conditions (I think also the page
+size one), if properly configured and if the hardware does not
+lie.
+
+light> Personally I ended up doing this for OpenLDAP and never looked back: 
+light> http://www.samse.fr/GPL/ldap_pg/HOWTO/x12.html
+
+Well, PostgresQL is of course a much nicer, more scalable DBMS
+than BDB. But for a relatively small, mostly-ro collection of
+small records the latter may be appropriate. XFS works with it
+fairly well too.
