@@ -1,49 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 16:20:50 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Feb 2008 16:48:40 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1J0Ki2I013389
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 16:20:46 -0800
-Date: Tue, 19 Feb 2008 11:20:59 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Differences in mkfs.xfs and xfs_info output.
-Message-ID: <20080219002059.GX155407@sgi.com>
-References: <Pine.LNX.4.63.0802160149590.4592@alienAngel.home.sk> <20080216074019.GV155407@sgi.com> <Pine.LNX.4.63.0802162319300.6528@alienAngel.home.sk> <20080217230645.GY155407@sgi.com> <Pine.LNX.4.63.0802180015110.4514@alienAngel.home.sk> <Pine.LNX.4.63.0802190044350.8907@alienAngel.home.sk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0802190044350.8907@alienAngel.home.sk>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1J0mXpi015338
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2008 16:48:35 -0800
+Message-ID: <47BA2775.1060109@sgi.com>
+Date: Tue, 19 Feb 2008 11:48:53 +1100
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: tuning, many small files, small blocksize
+References: <e03b90ae0802152101t2bfa4644kcca5d6329239f9ff@mail.gmail.com>	 <47B6ACC5.3030605@theendofthetunnel.de> <e03b90ae0802160224v600bd94exb2a1007ca7af7b65@mail.gmail.com>
+In-Reply-To: <e03b90ae0802160224v600bd94exb2a1007ca7af7b65@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Derfinak <ja@mail.upjs.sk>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: Hannes Dorbath <light@theendofthetunnel.de>, xfs@oss.sgi.com
 
-On Tue, Feb 19, 2008 at 01:04:35AM +0100, Jan Derfinak wrote:
-> On Mon, 18 Feb 2008, Jan Derfinak wrote:
+Jeff Breidenbach wrote:
+> the kernel before April is painful but I'll do it if important. Presumably
+> there's no simple way to migrate a non-lazy xfs filesytem to a lazy one.
 > 
-> > > with dd and rm'ing a subset of the files before unmounting?
-> > > I've run some simple tests this morning that do this, and I
-> > > don't see any issues. I'd like to confirm that simple cases
-> > 
-> > Did you use x86_64 and latest CVS kernel?
+
+Dave would know that answer.
+
+But on IRIX we used xfs_chver...
+>      Using the +c option one can enable a filesystem to use lazy counters.
+>      Note that you must run xfs_repair(1M) after setting this option to build
+>      the internal state that is required to support this functionality.
 > 
-> I have run the mount,umount test on x86 architecture with the same kernel
-> source version. Kernel image is of course different, it is different
-> computer.
-> On x86 everything is ok.
-> I guess that problem is in 64-bit architecture. Is it possible?
+>      Using the -c option one can disable lazy counters if it is enabled. Note
+>      that you must run xfs_repair(1M) after clearing this option to ensure
+>      that the internal state of the filesystem is consistent.
 
-The output I showed you was from an ia64 machine, so it's not
-purely 64bit related.
+On Linux we have xfs_admin (wrapper around db) and the "version" command in xfs_db.
+However, it looks like "version" only does: extflg, v2-logs, attr1, attr2,
+but not lazy sb counters.
 
-Can you rebuild you x86_64 kernel from the same kernel
-tree you built the ia32 (make mrproper; make ....) and reinstall
-it and see if the still exists?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--Tim
