@@ -1,42 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 17:34:23 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 19:59:00 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1K1YE9H032233
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 17:34:17 -0800
-Message-ID: <47BB8367.8000700@sgi.com>
-Date: Wed, 20 Feb 2008 12:33:27 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH, mainline-only] remove sendfile leftovers
-References: <20080208044256.GA15013@lst.de> <20080219225746.GA26576@infradead.org>
-In-Reply-To: <20080219225746.GA26576@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1K3wqAC007755
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 19:58:55 -0800
+Date: Wed, 20 Feb 2008 14:59:05 +1100
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: [PATCH, mainline-only] remove dmapi cruft in xfs_file.c
+Message-ID: <20080220035905.GB69752007@melbourne.sgi.com>
+References: <20080208044405.GB15013@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080208044405.GB15013@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
+* Christoph Hellwig <hch@lst.de> [2008-02-08 05:44:06 +0100]:
 
+> The dmapi cruft in xfs_file.c is totally out of date in mainline vs
+> CVS, and at this point just removing this code which can't be used on
+> mainline at all seems to be the best option to keep it maintainable.
 
-Christoph Hellwig wrote:
-> On Fri, Feb 08, 2008 at 05:42:57AM +0100, Christoph Hellwig wrote:
->> Remove the last sendfile leftovers in mainline.  This code is already
->> gone in CVS.
-> 
-> Any chance to pass on these three no-risk mainline-only patches to
-> Linus?  I'm pretty sure they'll get lost otherwise until the next
-> merge window..
-
-Lachlan, has this been pushed upstream yet?
-
-Thanks
-
+looks reasonable, I'll make sure it gets pushed to oss->mainline.
 -- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+Niv
