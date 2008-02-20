@@ -1,39 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 21:42:13 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Feb 2008 21:53:07 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1K5g3v6018959
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 21:42:08 -0800
-Date: Wed, 20 Feb 2008 16:42:16 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1K5r05I019969
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2008 21:53:03 -0800
+Date: Wed, 20 Feb 2008 16:53:18 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Differences in mkfs.xfs and xfs_info output.
-Message-ID: <20080220054216.GN155407@sgi.com>
-References: <Pine.LNX.4.63.0802160149590.4592@alienAngel.home.sk> <20080216074019.GV155407@sgi.com> <Pine.LNX.4.63.0802162319300.6528@alienAngel.home.sk> <20080217230645.GY155407@sgi.com> <Pine.LNX.4.63.0802180015110.4514@alienAngel.home.sk> <Pine.LNX.4.63.0802190044350.8907@alienAngel.home.sk> <20080219002059.GX155407@sgi.com> <Pine.LNX.4.63.0802190209490.20408@alienAngel.home.sk> <20080219014619.GY155407@sgi.com> <Pine.LNX.4.63.0802191458080.4320@alienAngel.home.sk>
+Subject: Re: [patch] Prevent excessive xfsaild wakeups
+Message-ID: <20080220055318.GO155407@sgi.com>
+References: <20080218225906.GS155407@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0802191458080.4320@alienAngel.home.sk>
+In-Reply-To: <20080218225906.GS155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jan Derfinak <ja@mail.upjs.sk>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Feb 19, 2008 at 03:05:32PM +0100, Jan Derfinak wrote:
-> On Tue, 19 Feb 2008, David Chinner wrote:
+ping?
+
+This is needed for 2.6.25-rcX....
+
+On Tue, Feb 19, 2008 at 09:59:06AM +1100, David Chinner wrote:
+> Idle state is not being detected properly by the xfsaild push
+> code. The current idle state is detected by an empty list
+> which may never happen with mostly idle filesystem or one
+> using lazy superblock counters. A single dirty item in the
+> list will result repeated looping to push everything past
+> the target when everything because it fails to check if we
+> managed to push anything.
 > 
-> > I did not use a patched mkfs - just my patch that does correction.
+> Fix by considering a dirty list with everything past the target
+> as an idle state and set the timeout appropriately.
 > 
-> I tried with only your patch. The result is slightly different, but
-> not correct.
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/xfs_trans_ail.c |   15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+> 
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_trans_ail.c	2008-02-18 09:14:34.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_trans_ail.c	2008-02-18 09:18:52.070682570 +1100
+> @@ -261,14 +261,17 @@ xfsaild_push(
+>  		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+>  	}
+>  
+> -	/*
+> -	 * We reached the target so wait a bit longer for I/O to complete and
+> -	 * remove pushed items from the AIL before we start the next scan from
+> -	 * the start of the AIL.
+> -	 */
+> -	if ((XFS_LSN_CMP(lsn, target) >= 0)) {
+> +	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
+> +		/*
+> +		 * We reached the target so wait a bit longer for I/O to
+> +		 * complete and remove pushed items from the AIL before we
+> +		 * start the next scan from the start of the AIL.
+> +		 */
+>  		tout += 20;
+>  		last_pushed_lsn = 0;
+> +	} else if (!count) {
+> +		/* We're past our target or empty, so idle */
+> +		tout = 1000;
+>  	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
+>  		   (count && ((stuck * 100) / count > 90))) {
+>  		/*
 
-Ok, still 1024 blocks out. Still need to reproduce it locally.
-
-FYI - thisis not a corruption bug - just an accounting problem.
-IOWs, all it will cause is slightly premature detection of ENOSPC....
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 Principal Engineer
