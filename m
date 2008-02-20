@@ -1,46 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Feb 2008 06:13:27 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1KEDHdG017941
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2008 06:13:20 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 174C175A989
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2008 06:13:43 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id A6KH6wFMScPbkDVQ for <xfs@oss.sgi.com>; Wed, 20 Feb 2008 06:13:43 -0800 (PST)
-Message-ID: <47BC3578.5050209@sandeen.net>
-Date: Wed, 20 Feb 2008 08:13:12 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Feb 2008 11:09:48 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1KJ9c2G007537
+	for <xfs@oss.sgi.com>; Wed, 20 Feb 2008 11:09:42 -0800
+Date: Wed, 20 Feb 2008 14:10:00 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] Prevent excessive xfsaild wakeups
+Message-ID: <20080220191000.GA24257@infradead.org>
+References: <20080218225906.GS155407@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Is CVS stable?
-References: <eb736a810802200026g1b956abar922548d3e67a9682@mail.gmail.com>
-In-Reply-To: <eb736a810802200026g1b956abar922548d3e67a9682@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080218225906.GS155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: eric c <xcellula@gmail.com>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-eric c wrote:
-> Hello,
-> 
-> I have recently seen some patches for slabcache related
-> xfs_inode/xfs_vnode_t/dentry_cache taking up alot of memory:
->   http://oss.sgi.com/archives/xfs/2007-12/msg00154.html
->   http://oss.sgi.com/archives/xfs/2008-02/msg00138.html
-> 
-> If I cvs on linux-2.6-xfs, is it stable for production or bleeding?
+On Tue, Feb 19, 2008 at 09:59:06AM +1100, David Chinner wrote:
+> +	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
+> +		/*
+> +		 * We reached the target so wait a bit longer for I/O to
+> +		 * complete and remove pushed items from the AIL before we
+> +		 * start the next scan from the start of the AIL.
+> +		 */
+>  		tout += 20;
+>  		last_pushed_lsn = 0;
+> +	} else if (!count) {
+> +		/* We're past our target or empty, so idle */
+> +		tout = 1000;
+>  	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
+>  		   (count && ((stuck * 100) / count > 90))) {
+>  		/*
 
-I'd never consider any cvs head as "stable for production"
+When looking at this conditions it confuses the hell out of me.  Having
+count checked in each of three nested conditionals simply isn't readable
+:)
 
-That said, the xfs cvs tree is probably one of the more stable
-bleeding-edge trees you'll find. ;)
+Also some checks seem to be superflous, so how about:
 
--Eric
 
-> Thanks
-> eric c
-> xcellula@gmail.com
-> 
-> 
+	if (!count) {
+		/*
+		 * We're past our target or empty, so idle.
+		 */
+		 tout = 1000;
+	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
+		/*
+		 * We reached the target so wait a bit longer for I/O to
+		 * complete and remove pushed items from the AIL before we
+		 * start the next scan from the start of the AIL.
+		 */
+ 		tout += 20;
+ 		last_pushed_lsn = 0;
+	} else (restarts > XFS_TRANS_PUSH_AIL_RESTARTS ||
+	        ((stuck * 100) / count > 90)) {
+		...
+	}
