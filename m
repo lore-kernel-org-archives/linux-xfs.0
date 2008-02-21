@@ -1,86 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 02:42:37 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1LAgS88000920
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 02:42:30 -0800
-Received: from sipsolutions.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AD3315FF342
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 02:42:52 -0800 (PST)
-Received: from sipsolutions.net (crystal.sipsolutions.net [195.210.38.204]) by cuda.sgi.com with ESMTP id 85EAHrBi2E7yGmdC for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 02:42:52 -0800 (PST)
-Received: from [131.234.74.147]
-	by sipsolutions.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1JS8t7-0008Dg-D1
-	for xfs@oss.sgi.com; Thu, 21 Feb 2008 10:42:49 +0000
-Subject: possible FS corruption with 2.6.25-rc2
-From: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LilG77YVsX/F+4XqIDqD"
-Date: Thu, 21 Feb 2008 11:42:44 +0100
-Message-Id: <1203590564.17534.163.camel@johannes.berg>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 10:10:33 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1LIARbM016642
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 10:10:30 -0800
+Received: from mx1.scoregroup.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 41AABE89DFE
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 10:10:53 -0800 (PST)
+Received: from mx1.scoregroup.com (mx1.scoregroup.com [67.151.115.140]) by cuda.sgi.com with ESMTP id cDIroZrAbEeVYVIM for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 10:10:53 -0800 (PST)
+Received: from figm (figm.sg.lcl [172.16.0.142])
+	by mx1.scoregroup.com (Postfix) with ESMTP id 913661B78006
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 13:10:16 -0500 (EST)
+From: "Miakell Figueredo" <figueredom@scoregroup.com>
+Subject: XFS on Red Hat EL5
+Date: Thu, 21 Feb 2008 13:10:53 -0500
+Message-ID: <00fa01c874b5$1908d150$8e0010ac@sg.lcl>
+MIME-Version: 1.0
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---=-LilG77YVsX/F+4XqIDqD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello:
 
-[Please CC me, I'm not subscribed to the XFS list]
+ 
 
-Hi,
+Is there an RPM for XFS on Red Hat? Currently we are running
+"2.6.18-53.1.13.el5xen #1 SMP Mon Feb 11 13:41:50 EST 2008 x86_64 x86_64
+x86_64 GNU/Linux" and installed "xfsprogs.i386-2.9.5-1.fc9" and I cannot
+mount the volume.
 
-After having upgraded to 2.6.25-rc2 (more precisely
-9a4c8546f3e7c893888bccc2b3416d6214f2664a plus wireless-testing) I wanted
-to recompile the kernel and ran into weird issues like getting gcc
-output to stdout instead of a ccache cache file.
+ 
 
-My kernel tree was located on an XFS filesystem and the ccache cache dir
-was on another XFS filesystem, both of which were corrupted afterwards,
-the kernel tree had some temporary files (.*.d) that were listed in
-readdir() but didn't otherwise exist (you could create a file with the
-same name but not unlink or even stat the first one).
+Regards,
 
-Also, the ccache cache dir filesystem was corrupted in a way that first
-lead to a kernel hang during journal replay, and xfs_repair also hangs
-when checking the filesystem even after clearing the journal. I've
-uploaded a meta dump of that filesystem to
-http://johannes.sipsolutions.net/files/home.part.meta.bz2
+Miakell
 
-First I suspected memory corruption or similar issues but after copying
-all (relevant) data (reading the ccache cache dir would hang/oops the
-kernel) I can now do the same workload on the same kernel with two ext3
-filesystems which leads me to believe that XFS caused the corruption in
-some way.
+ 
 
-Unfortunately, because the filesystem with the kernel tree on it was so
-large, I don't have a copy of that filesystem, nor have I remembered to
-make a copy of either filesystem before zeroing the journal.
+ 
 
-johannes
+---
+Miakell Figueredo
+Network Administrator
+The SCORE Group
+305.662.5959 x.244
+ <mailto:figueredom@scoregroup.com> figueredom@scoregroup.com
 
---=-LilG77YVsX/F+4XqIDqD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+ 
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIVAwUAR71VoqVg1VMiehFYAQJXsg//VShpEpFVdvUR78rK3XgKgEwacSAA5/7b
-vuH27Ikm3ons+RWObbyFkx+8ojNZkEkImk886yWc7/G67Mo6AxsONuhdTjCR0q3U
-fMWKmiwbIPcEfqE6q1Uy58XpeCF3UKeNhZC2JK3I0DUp/jAfoeNFKTGZxP1/utjt
-ck2ivQhS4k8upFc61QD8CbHNonHz5m/yzLN2Xt2B7UGy9GjkVSu9od5wujChOt0W
-BYZ2He9Ow7lIARllRgu3VCHnqBCABT37fz6TCbrXeC8SZTDlkFOk0Di2VJKjZoUQ
-XdylLcpO2DaDHUUdqFgaqgHTNp3DDEGrJ4KURnyD4LSe+mEw8tqSHDCT/dhmPytF
-m4NBt82H6ZFxkBtMdZDCUDnI1DYAeJqlzxFPLTQZOZclX70lRrLYgFKjfarV0ijc
-9WV8qWC1fPk/0JH6O6eD8r+SMZJgS25J6xZqtxjqFu2y3djhfVK3JtNEw5egAXU3
-8Ydrd6eycx+dLEp27QL2yjEmRyIrlJBIGNPXy7xrXuaWGeGk4Zw6ZHLzTGT8lRzc
-IPRLkRk/H/xks0aBw8dIvnQMsMr5NtEvT87Q7V7hCqBnbFzka5eLn6fimeaRY8vp
-MWTQRDNZybYcalXgEHwF647fbzWXeBQJe4Mvp6n5zaZBPoJaccl7yVlXaDg7jICv
-zZbptOls0sQ=
-=YqRG
------END PGP SIGNATURE-----
 
---=-LilG77YVsX/F+4XqIDqD--
+[[HTML alternate version deleted]]
