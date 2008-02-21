@@ -1,62 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 11:42:46 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1LJgZfv022616
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:42:41 -0800
-Received: from mx1.scoregroup.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EB816024CF
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:43:00 -0800 (PST)
-Received: from mx1.scoregroup.com (mx1.scoregroup.com [67.151.115.140]) by cuda.sgi.com with ESMTP id 1BTGDx37cXM6HuAi for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:43:00 -0800 (PST)
-From: "Miakell Figueredo" <figueredom@scoregroup.com>
-References: <00fa01c874b5$1908d150$8e0010ac@sg.lcl> <alpine.DEB.1.00.0802211401590.17484@p34.internal.lan> <47BDD390.1040102@sandeen.net>
-Subject: RE: XFS on Red Hat EL5
-Date: Thu, 21 Feb 2008 14:43:19 -0500
-Message-ID: <010301c874c2$02c80700$8e0010ac@sg.lcl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <47BDD390.1040102@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 14:46:50 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1LMkeEE003279
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 14:46:43 -0800
+Date: Fri, 22 Feb 2008 09:47:00 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [patch] Prevent excessive xfsaild wakeups
+Message-ID: <20080221224700.GD155407@sgi.com>
+References: <20080218225906.GS155407@sgi.com> <20080220191000.GA24257@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080220191000.GA24257@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: 'Eric Sandeen' <sandeen@sandeen.net>, 'Justin Piszcz' <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Great! Thank you. I will attempt to install and mount our 10TB unit.
-
-Thanks, Again!
-Miakell
-
------Original Message-----
-From: Eric Sandeen [mailto:sandeen@sandeen.net] 
-Sent: Thursday, February 21, 2008 2:40 PM
-To: Justin Piszcz
-Cc: Miakell Figueredo; xfs@oss.sgi.com
-Subject: Re: XFS on Red Hat EL5
-
-Justin Piszcz wrote:
-> Eric makes some RPMs for them..
-
-Yep, take a look at http://sandeen.net/rhel5_xfs
-
-They're a bit outdated at this point, though I'm not aware of any
-significant bugs.
-
-Or, the centos distro has similar (if not the same) rpms.
-
-RHEL does not support xfs, so using xfs may change whatever support
-agreements you have in place.
-
--Eric (speaking only for himself)
-
-> On Thu, 21 Feb 2008, Miakell Figueredo wrote:
+On Wed, Feb 20, 2008 at 02:10:00PM -0500, Christoph Hellwig wrote:
+> On Tue, Feb 19, 2008 at 09:59:06AM +1100, David Chinner wrote:
+> > +	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
+> > +		/*
+> > +		 * We reached the target so wait a bit longer for I/O to
+> > +		 * complete and remove pushed items from the AIL before we
+> > +		 * start the next scan from the start of the AIL.
+> > +		 */
+> >  		tout += 20;
+> >  		last_pushed_lsn = 0;
+> > +	} else if (!count) {
+> > +		/* We're past our target or empty, so idle */
+> > +		tout = 1000;
+> >  	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
+> >  		   (count && ((stuck * 100) / count > 90))) {
+> >  		/*
 > 
->> Hello:
->>
->>
->>
->> Is there an RPM for XFS on Red Hat? Currently we are running
->> "2.6.18-53.1.13.el5xen #1 SMP Mon Feb 11 13:41:50 EST 2008 x86_64 x86_64
->> x86_64 GNU/Linux" and installed "xfsprogs.i386-2.9.5-1.fc9" and I cannot
->> mount the volume.
+> When looking at this conditions it confuses the hell out of me.  Having
+> count checked in each of three nested conditionals simply isn't readable
+> :)
+
+Yeah, I noticed that when posting it. Got to keep you busy, Christoph. ;)
+
+> Also some checks seem to be superflous, so how about:
+
+Yup, fixed to be like this. I'll run it through a qa run
+and go from there...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
