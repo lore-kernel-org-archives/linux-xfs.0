@@ -1,26 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 11:39:53 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1LJdm4m022209
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:39:49 -0800
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE550E8AD20
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:40:13 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id 92KoI1QHWj0EDYVj for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:40:13 -0800 (PST)
-Message-ID: <47BDD390.1040102@sandeen.net>
-Date: Thu, 21 Feb 2008 13:40:00 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 11:42:46 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1LJgZfv022616
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:42:41 -0800
+Received: from mx1.scoregroup.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EB816024CF
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:43:00 -0800 (PST)
+Received: from mx1.scoregroup.com (mx1.scoregroup.com [67.151.115.140]) by cuda.sgi.com with ESMTP id 1BTGDx37cXM6HuAi for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 11:43:00 -0800 (PST)
+From: "Miakell Figueredo" <figueredom@scoregroup.com>
+References: <00fa01c874b5$1908d150$8e0010ac@sg.lcl> <alpine.DEB.1.00.0802211401590.17484@p34.internal.lan> <47BDD390.1040102@sandeen.net>
+Subject: RE: XFS on Red Hat EL5
+Date: Thu, 21 Feb 2008 14:43:19 -0500
+Message-ID: <010301c874c2$02c80700$8e0010ac@sg.lcl>
 MIME-Version: 1.0
-Subject: Re: XFS on Red Hat EL5
-References: <00fa01c874b5$1908d150$8e0010ac@sg.lcl> <alpine.DEB.1.00.0802211401590.17484@p34.internal.lan>
-In-Reply-To: <alpine.DEB.1.00.0802211401590.17484@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <47BDD390.1040102@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Miakell Figueredo <figueredom@scoregroup.com>, xfs@oss.sgi.com
+To: 'Eric Sandeen' <sandeen@sandeen.net>, 'Justin Piszcz' <jpiszcz@lucidpixels.com>
+Cc: xfs@oss.sgi.com
+
+Great! Thank you. I will attempt to install and mount our 10TB unit.
+
+Thanks, Again!
+Miakell
+
+-----Original Message-----
+From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+Sent: Thursday, February 21, 2008 2:40 PM
+To: Justin Piszcz
+Cc: Miakell Figueredo; xfs@oss.sgi.com
+Subject: Re: XFS on Red Hat EL5
 
 Justin Piszcz wrote:
 > Eric makes some RPMs for them..
