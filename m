@@ -1,50 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 14:46:50 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 14:49:11 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1LMkeEE003279
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 14:46:43 -0800
-Date: Fri, 22 Feb 2008 09:47:00 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1LMn60j003719
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 14:49:08 -0800
+Date: Fri, 22 Feb 2008 09:49:28 +1100
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [patch] Prevent excessive xfsaild wakeups
-Message-ID: <20080221224700.GD155407@sgi.com>
-References: <20080218225906.GS155407@sgi.com> <20080220191000.GA24257@infradead.org>
+Subject: Re: [patch] detect and correct bad features2 superblock field
+Message-ID: <20080221224928.GE155407@sgi.com>
+References: <20080220054041.GM155407@sgi.com> <20080220191328.GB24257@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080220191000.GA24257@infradead.org>
+In-Reply-To: <20080220191328.GB24257@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Feb 20, 2008 at 02:10:00PM -0500, Christoph Hellwig wrote:
-> On Tue, Feb 19, 2008 at 09:59:06AM +1100, David Chinner wrote:
-> > +	if (count && (XFS_LSN_CMP(lsn, target) >= 0)) {
-> > +		/*
-> > +		 * We reached the target so wait a bit longer for I/O to
-> > +		 * complete and remove pushed items from the AIL before we
-> > +		 * start the next scan from the start of the AIL.
-> > +		 */
-> >  		tout += 20;
-> >  		last_pushed_lsn = 0;
-> > +	} else if (!count) {
-> > +		/* We're past our target or empty, so idle */
-> > +		tout = 1000;
-> >  	} else if ((restarts > XFS_TRANS_PUSH_AIL_RESTARTS) ||
-> >  		   (count && ((stuck * 100) / count > 90))) {
-> >  		/*
+On Wed, Feb 20, 2008 at 02:13:28PM -0500, Christoph Hellwig wrote:
+> On Wed, Feb 20, 2008 at 04:40:41PM +1100, David Chinner wrote:
+> > There is a bug in mkfs.xfs that can result in writing the features2
+> > field in the superblock to the wrong location. This only occurs
+> > on some architectures, typically those with 32 bit userspace and
+> > 64 bit kernels.
 > 
-> When looking at this conditions it confuses the hell out of me.  Having
-> count checked in each of three nested conditionals simply isn't readable
-> :)
+> Well, we don't use different ABIs for kernel vs userspace so some
+> kernels will get it wrong aswell, you just won't notice until moving
+> to a different box because userspace is the same.
 
-Yeah, I noticed that when posting it. Got to keep you busy, Christoph. ;)
+True.
 
-> Also some checks seem to be superflous, so how about:
+> > +
+> > +	/* must be padded to 64 bit alignment */
+> >  } xfs_dsb_t;
+> 
+> I'm pretty sure there is some gcc __packed__ magic to enfore that,
+> might it be worth to poke some gcc experts to add it?
 
-Yup, fixed to be like this. I'll run it through a qa run
-and go from there...
+Yes, it's probably the right thing to do. However, if we are going
+to "pack" disk structures, I'd like to do that all in one series
+of patches rather than mixed up in other fixes....
+
+> But the actual patch looks fine, ACK from me.
+
+Thanks.
 
 Cheers,
 
