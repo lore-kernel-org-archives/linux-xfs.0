@@ -1,60 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 19:48:34 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M3mRCv029690
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 19:48:30 -0800
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D14E6E8ED01
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 19:48:52 -0800 (PST)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id kPLfHwQovHKNpkEC for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 19:48:52 -0800 (PST)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m1M3mjF3005425
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 04:48:45 +0100
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m1M3mjxo005423
-	for xfs@oss.sgi.com; Fri, 22 Feb 2008 04:48:45 +0100
-Date: Fri, 22 Feb 2008 04:48:45 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] remove superflous xfs_readsb call in xfs_mountfs
-Message-ID: <20080222034845.GA5354@lst.de>
-References: <20071218174829.GA3195@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20071218174829.GA3195@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 19:54:21 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1M3sDdo030429
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 19:54:15 -0800
+Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id OAA10512 for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 14:54:39 +1100
+Date: Fri, 22 Feb 2008 14:56:20 +1100
+Subject: [REVIEW] Fix end of device zeroing with > 1K sector sizes
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: multipart/mixed; boundary=----------KKkRnrShlLmYU3HHyEqPoq
+MIME-Version: 1.0
+Message-ID: <op.t6wqj6zq3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Dec 18, 2007 at 06:48:29PM +0100, Christoph Hellwig wrote:
-> When xfs_mountfs is called by xfs_mount xfs_readsb was called 35 lines
-> above unconditionally, so there is no need to try to read the superblock
-> if it's not present.  If any other port doesn't have the superblock
-> read at this point it should just call it directly from it's xfs_mount
-> equivalent.
+------------KKkRnrShlLmYU3HHyEqPoq
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: Quoted-Printable
 
-Ping?
+It has been found that mkfs with big sector sizes and devices/partitions
+that aren't aligned to the sector size can cause short writes when zeroing
+the end of the device. As mkfs.xfs didn't complete, the filesystem is
+unmountable.
 
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2007-12-17 14:34:57.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2007-12-17 14:35:17.000000000 +0100
-> @@ -968,11 +968,6 @@ xfs_mountfs(
->  	int		uuid_mounted = 0;
->  	int		error = 0;
->  
-> -	if (mp->m_sb_bp == NULL) {
-> -		error = xfs_readsb(mp, mfsi_flags);
-> -		if (error)
-> -			return error;
-> -	}
->  	xfs_mount_common(mp, sbp);
->  
->  	/*
----end quoted text---
+Eg:
+
+# mkfs.xfs -f -L fs_1 -s size=3D4096 -l size=3D64m,sunit=3D512 /dev/hdd1
+mkfs.xfs: error - wrote only 130048 of 131072 bytes
+
+
+The attached patch rounds down the device size to either 1K or
+the sector size, whichever is greater.
+
+Barry.
+------------KKkRnrShlLmYU3HHyEqPoq
+Content-Disposition: attachment; filename=fix_eodev_zeroing.patch
+Content-Type: text/x-patch; name=fix_eodev_zeroing.patch
+Content-Transfer-Encoding: Quoted-Printable
+
+--- a/xfsprogs/mkfs/xfs_mkfs.c	2008-02-22 14:48:27.000000000 +1100
++++ b/xfsprogs/mkfs/xfs_mkfs.c	2008-02-22 14:41:38.093984235 +1100
+@@ -703,6 +703,7 @@ main(
+ 	int			sectoralign;
+ 	int			sectorlog;
+ 	unsigned int		sectorsize;
++	__uint64_t		sector_mask;
+ 	int			slflag;
+ 	int			ssflag;
+ 	__uint64_t		tmp_agsize;
+@@ -1637,12 +1638,18 @@ main(
+ 	 * Ok, Linux only has a 1024-byte resolution on device _size_,
+ 	 * and the sizes below are in basic 512-byte blocks,
+ 	 * so if we have (size % 2), on any partition, we can't get
+-	 * to the last 512 bytes.  Just chop it down by a block.
++	 * to the last 512 bytes.  The same issue exists for larger
++	 * sector sizes - we cannot write past the last sector.
++	 *
++	 * So, we reduce the size (in basic blocks) to a perfect
++	 * multiple of the sector size, or 1024, whichever is larger.
+ 	 */
+=20
+-	xi.dsize -=3D (xi.dsize % 2);
+-	xi.rtsize -=3D (xi.rtsize % 2);
+-	xi.logBBsize -=3D (xi.logBBsize % 2);
++	sector_mask =3D xfs_mask64hi((sectorlog < 10 ? 10 : sectorlog) - BBSHIFT);
++	xi.dsize &=3D sector_mask;
++	xi.rtsize &=3D sector_mask;
++	xi.logBBsize &=3D xfs_mask64hi((lsectorlog < 10 ? 10 : lsectorlog) -
++				BBSHIFT);
+=20
+ 	if (!force_overwrite) {
+ 		if (check_overwrite(dfile) ||
+
+------------KKkRnrShlLmYU3HHyEqPoq--
