@@ -1,76 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 19:54:21 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1M3sDdo030429
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 19:54:15 -0800
-Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id OAA10512 for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 14:54:39 +1100
-Date: Fri, 22 Feb 2008 14:56:20 +1100
-Subject: [REVIEW] Fix end of device zeroing with > 1K sector sizes
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------KKkRnrShlLmYU3HHyEqPoq
-MIME-Version: 1.0
-Message-ID: <op.t6wqj6zq3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 20:00:12 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M405ba031232
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 20:00:06 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3204E8EE03
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 20:00:27 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id GmcXIl6nbaocEYVI for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 20:00:27 -0800 (PST)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m1M3n6F3005472
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 04:49:06 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m1M3n5UT005462
+	for xfs@oss.sgi.com; Fri, 22 Feb 2008 04:49:05 +0100
+Date: Fri, 22 Feb 2008 04:49:05 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] don't encode parent in nfs filehandles unless nessecary
+Message-ID: <20080222034905.GB5354@lst.de>
+References: <20080103183311.GA23209@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080103183311.GA23209@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-------------KKkRnrShlLmYU3HHyEqPoq
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: Quoted-Printable
+On Thu, Jan 03, 2008 at 07:33:11PM +0100, Christoph Hellwig wrote:
+> As Dave pointed out after the export ops changes we now always encode
+> the parent into the filehandle for regular files, but it's not actually
+> needed when the filesystem is export with no_subtree_check.  This
+> one-liner fixes xfs_fs_encode_fh to skip encoding the parent unless
+> nessecary.
 
-It has been found that mkfs with big sector sizes and devices/partitions
-that aren't aligned to the sector size can cause short writes when zeroing
-the end of the device. As mkfs.xfs didn't complete, the filesystem is
-unmountable.
+ping?
 
-Eg:
-
-# mkfs.xfs -f -L fs_1 -s size=3D4096 -l size=3D64m,sunit=3D512 /dev/hdd1
-mkfs.xfs: error - wrote only 130048 of 131072 bytes
-
-
-The attached patch rounds down the device size to either 1K or
-the sector size, whichever is greater.
-
-Barry.
-------------KKkRnrShlLmYU3HHyEqPoq
-Content-Disposition: attachment; filename=fix_eodev_zeroing.patch
-Content-Type: text/x-patch; name=fix_eodev_zeroing.patch
-Content-Transfer-Encoding: Quoted-Printable
-
---- a/xfsprogs/mkfs/xfs_mkfs.c	2008-02-22 14:48:27.000000000 +1100
-+++ b/xfsprogs/mkfs/xfs_mkfs.c	2008-02-22 14:41:38.093984235 +1100
-@@ -703,6 +703,7 @@ main(
- 	int			sectoralign;
- 	int			sectorlog;
- 	unsigned int		sectorsize;
-+	__uint64_t		sector_mask;
- 	int			slflag;
- 	int			ssflag;
- 	__uint64_t		tmp_agsize;
-@@ -1637,12 +1638,18 @@ main(
- 	 * Ok, Linux only has a 1024-byte resolution on device _size_,
- 	 * and the sizes below are in basic 512-byte blocks,
- 	 * so if we have (size % 2), on any partition, we can't get
--	 * to the last 512 bytes.  Just chop it down by a block.
-+	 * to the last 512 bytes.  The same issue exists for larger
-+	 * sector sizes - we cannot write past the last sector.
-+	 *
-+	 * So, we reduce the size (in basic blocks) to a perfect
-+	 * multiple of the sector size, or 1024, whichever is larger.
- 	 */
-=20
--	xi.dsize -=3D (xi.dsize % 2);
--	xi.rtsize -=3D (xi.rtsize % 2);
--	xi.logBBsize -=3D (xi.logBBsize % 2);
-+	sector_mask =3D xfs_mask64hi((sectorlog < 10 ? 10 : sectorlog) - BBSHIFT);
-+	xi.dsize &=3D sector_mask;
-+	xi.rtsize &=3D sector_mask;
-+	xi.logBBsize &=3D xfs_mask64hi((lsectorlog < 10 ? 10 : lsectorlog) -
-+				BBSHIFT);
-=20
- 	if (!force_overwrite) {
- 		if (check_overwrite(dfile) ||
-
-------------KKkRnrShlLmYU3HHyEqPoq--
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2008-01-02 17:02:48.000000000 +0100
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c	2008-01-03 19:30:51.000000000 +0100
+> @@ -66,7 +66,7 @@ xfs_fs_encode_fh(
+>  	int			len;
+>  
+>  	/* Directories don't need their parent encoded, they have ".." */
+> -	if (S_ISDIR(inode->i_mode))
+> +	if (S_ISDIR(inode->i_mode) || !connectable)
+>  		fileid_type = FILEID_INO32_GEN;
+>  	else
+>  		fileid_type = FILEID_INO32_GEN_PARENT;
+---end quoted text---
