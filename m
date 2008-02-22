@@ -1,90 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 00:59:08 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M8x0Cg005680
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 00:59:01 -0800
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A83260613E
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 00:59:25 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.156]) by cuda.sgi.com with ESMTP id bdLNauLsRveNpfjc for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 00:59:25 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id e12so253485fga.8
-        for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 00:59:24 -0800 (PST)
-Message-ID: <47BE8EE8.5020005@gmail.com>
-Date: Fri, 22 Feb 2008 10:59:20 +0200
-From: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 01:44:45 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M9iZmR008554
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 01:44:38 -0800
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87E39E90388
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 01:45:02 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id 12XXawQFzg0wsQGT for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 01:45:02 -0800 (PST)
+Date: Fri, 22 Feb 2008 04:45:01 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: xfs_db on non-XFS FS causes a core dump (2.9.5-1)
+In-Reply-To: <alpine.DEB.1.00.0802210452070.24460@p34.internal.lan>
+Message-ID: <alpine.DEB.1.00.0802220444500.5851@p34.internal.lan>
+References: <alpine.DEB.1.00.0802210452070.24460@p34.internal.lan>
 MIME-Version: 1.0
-Subject: Re: Marking inode dirty latency > 1000 msec on XFS!
-References: <47B5DD9C.3080906@gmail.com> <47BE6C5C.2000605@sgi.com>
-In-Reply-To: <47BE6C5C.2000605@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
-Cc: Arjan van de Ven <arjan@linux.intel.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
-> Török Edwin wrote:
->> Hi,
->>
->> Using LatencyTOP 0.3, on the latest 2.6.25-git I see latencies of over a
->> second on __mark_ inode_dirty.
-> These are the maximum latencies, right?  
+Should it core dump on this condition?
 
-Yes.
-> What would be useful here is the
-> average latency time.  The average might actually be quite low but if
-> just
-> once we have a maximum that is unusually large then just looking at that
-> figure can be misleading.
+On Thu, 21 Feb 2008, Justin Piszcz wrote:
 
-I'll try to collect the raw numbers from /proc/latency_stats, that
-contain a count, total time, and max time.
-
->> I don't know how mark_inode_dirty ends up calling xfs_trans_commit, but
-> It doesn't, but xfs_trans_commit() does eventually call
-> mark_inode_dirty_sync()
-> through the IOP_FORMAT() log item operation.  If we are committing a
-> transaction
-> that involves an inode then we must have just modified the inode so
-> this is a
-> good time to mark it dirty so that it gets written out to disk later.
-
-Ok, then I misinterpreted the stacktrace, see below.
-[@Arjan: are the stacktraces below valid?]
-I thought mark_inode_dirty calls xfs_trans_commit().
-
->>
->> 7 93862 26567 _xfs_buf_ioapply default_wake_function
->> xlog_state_get_iclog_space xlog_state_release_iclog xlog_write
->> xfs_log_write _xfs_trans_commit __mark_inode_dirty igrab xfs_create
->> xfs_vn_mknod security_inode_permission
->> 1 96331 96331 default_wake_function xlog_state_get_iclog_space
->> xlog_state_release_iclog xlog_write xfs_log_write _xfs_trans_commit
->> __mark_inode_dirty igrab xfs_create xfs_vn_mknod
->> security_inode_permission xfs_vn_permission
->>
-> These don't look like valid stacktraces - are you sure they aren't just
-> the major offenders for latency delays?
-
-Looking at this entry, I assumed stacktraces are meant to be interpreted
-right to left (sys_read calls do_sync_read, etc.)
-
-4 8 2 hrtick_set pipe_wait autoremove_wake_function pipe_read
-do_sync_read autoremove_wake_function __resched_task
-security_file_permission rw_verify_area vfs_read do_sync_read sys_read
-
-However here,  if _xfs_trans_commit is calling __mark_inode_dirty,  I am
-confused.
-
-Also we have default_wake_function here, does that somehow invalidate
-the stacktrace, or change the direction I should be reading it? Arjan?
-
-7 93862 26567 _xfs_buf_ioapply default_wake_function
-xlog_state_get_iclog_space xlog_state_release_iclog xlog_write
-xfs_log_write _xfs_trans_commit __mark_inode_dirty igrab xfs_create
-xfs_vn_mknod security_inode_permission
-
-Best regards,
---Edwin
+> Checking fragmentation on a non-XFS filesystem causes xfs_db to core dump.
+>
+> # xfs_db -c frag -f /dev/sda
+> xfs_db: unexpected XFS SB magic number 0xfaeb2101
+> xfs_db: read failed: Invalid argument
+> xfs_db: data size check failed
+> cache_node_purge: refcount was 1, not zero (node=0x80dd670)
+> xfs_db: cannot read root inode (22)
+> cache_node_purge: refcount was 1, not zero (node=0x80dd770)
+> xfs_db: cannot read realtime bitmap inode (22)
+> Segmentation fault (core dumped)
+>
+> # dpkg -l | grep xfsprogs
+> ii  xfsprogs                             2.9.5-1
+>
+> Core was generated by `xfs_db -c frag -f /dev/sda'.
+> Program terminated with signal 11, Segmentation fault.
+> #0  0xb7ef3350 in pthread_mutex_lock () from /lib/libpthread.so.0
+> (gdb) bt
+> #0  0xb7ef3350 in pthread_mutex_lock () from /lib/libpthread.so.0
+> #1  0x080ab31a in ?? ()
+> #2  0x0000001c in ?? ()
+> #3  0x38006590 in ?? ()
+> #4  0x00000000 in ?? ()
+>
+> # xfs_db -c frag -f /dev/sda2
+> actual 208581, ideal 197229, fragmentation factor 5.44%
+>
+>
