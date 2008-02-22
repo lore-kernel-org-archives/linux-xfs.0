@@ -1,151 +1,114 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 15:09:31 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 17:41:26 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1LN9Nm5005678
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 15:09:26 -0800
-Date: Fri, 22 Feb 2008 10:09:43 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: [RFC, patch 2/2] xfsqa test to check log size scaling
-Message-ID: <20080221230943.GH155407@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1M1fBHU018831
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 17:41:18 -0800
+From: donaldd@sgi.com
+Subject: TAKE 976035 - remove shouting-indirection macros from xfs_sb.h
+Message-Id: <20080222014133.7AF36323B4D0@linuxbuild.melbourne.sgi.com>
+Date: Fri, 22 Feb 2008 12:41:33 +1100 (EST)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-XFS-QA test to check that log size scaling works correctly
-for old and new maximum log sizes.
+remove shouting-indirection macros from xfs_sb.h
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- xfstests/185     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- xfstests/185.out |   16 ++++++++++
- xfstests/group   |    1 
- 3 files changed, 105 insertions(+)
+Remove macro-to-small-function indirection from xfs_sb.h,
+and remove some which are completely unused.
 
-Index: xfs-cmds/xfstests/185
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfs-cmds/xfstests/185	2008-02-22 09:56:21.366897882 +1100
-@@ -0,0 +1,88 @@
-+#! /bin/sh
-+# FS QA Test No. 184
-+#
-+# large log size mkfs test.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2008 Silicon Graphics, Inc.  All Rights Reserved.
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=dgc@sgi.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+    _cleanup_testdir
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_setup_testdir
-+_require_scratch
-+_scratch_mkfs_xfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_require_loop
-+LOOP_DEV=$SCRATCH_MNT/test_fs
-+LOOP_MNT=$SCRATCH_MNT/test_fs_dir
-+
-+_do_mkfs()
-+{
-+	for i in $*; do
-+		echo -n "fssize=${i}g "
-+		$MKFS_XFS_PROG -f -b size=4096 -l version=2 \
-+			-d name=$LOOP_DEV,size=${i}g |grep log
-+		mount -o loop -t xfs $LOOP_DEV $LOOP_MNT
-+		echo "test write" > $LOOP_MNT/test
-+		umount $LOOP_MNT
-+	done
-+}
-+# make large holey file
-+$XFS_IO_PROG -f -c "truncate 100t" $LOOP_DEV
-+
-+#make loopback mount dir
-+mkdir $LOOP_MNT
-+
-+# test if large logs are supported
-+LARGE_LOG=
-+$MKFS_XFS_PROG -f -l size=256m -d name=$LOOP_DEV,size=10g > /dev/null 2>&1
-+if [ $? -eq 0 ]; then
-+	LARGE_LOG=true
-+fi
-+
-+# walk over standard sizes (up to 256GB)
-+_do_mkfs 1 2 4 8 16 32 64 128 256
-+
-+if [ -n "$LARGE_LOG" ]; then
-+	# walk over larger sizes
-+	_do_mkfs 512 1024 2048 4096 8192 16384
-+else
-+	# just cut'n'paste from the golden output for the remaining sizes
-+	cat << EOF
-+fssize=512g log      =internal log           bsize=4096   blocks=65536, version=2
-+fssize=1024g log      =internal log           bsize=4096   blocks=131072, version=2
-+fssize=2048g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=4096g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=8192g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=16384g log      =internal log           bsize=4096   blocks=262144, version=2
-+EOF
-+fi
-+
-+status=0
-+exit
-Index: xfs-cmds/xfstests/185.out
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfs-cmds/xfstests/185.out	2008-02-22 09:56:21.370897357 +1100
-@@ -0,0 +1,16 @@
-+QA output created by 185
-+fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
-+fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
-+fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
-+fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
-+fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
-+fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
-+fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
-+fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
-+fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
-+fssize=512g log      =internal log           bsize=4096   blocks=65536, version=2
-+fssize=1024g log      =internal log           bsize=4096   blocks=131072, version=2
-+fssize=2048g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=4096g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=8192g log      =internal log           bsize=4096   blocks=262144, version=2
-+fssize=16384g log      =internal log           bsize=4096   blocks=262144, version=2
-Index: xfs-cmds/xfstests/group
-===================================================================
---- xfs-cmds.orig/xfstests/group	2008-02-22 09:54:31.429339377 +1100
-+++ xfs-cmds/xfstests/group	2008-02-22 09:56:21.370897357 +1100
-@@ -272,3 +272,4 @@ filestreams	dgc@sgi.com
- 182 metadata rw auto
- 183 rw other auto
- 184 metadata auto
-+185 metadata log auto
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Fri Feb 22 12:40:40 AEDT 2008
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  donaldd
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30528a
+fs/xfs/xfs_log.c - 1.349 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.349&r2=text&tr2=1.348&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_ialloc.c - 1.196 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.196&r2=text&tr2=1.195&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_log_priv.h - 1.127 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.127&r2=text&tr2=1.126&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_sb.h - 1.70 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_sb.h.diff?r1=text&tr1=1.70&r2=text&tr2=1.69&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_vnodeops.c - 1.736 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.736&r2=text&tr2=1.735&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_itable.c - 1.162 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.162&r2=text&tr2=1.161&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_inode_item.c - 1.133 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode_item.c.diff?r1=text&tr1=1.133&r2=text&tr2=1.132&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_log_recover.c - 1.335 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.335&r2=text&tr2=1.334&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_vfsops.c - 1.554 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.554&r2=text&tr2=1.553&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_bmap_btree.h - 1.80 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.h.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_mount.c - 1.418 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.418&r2=text&tr2=1.417&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_inode.c - 1.495 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.495&r2=text&tr2=1.494&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_attr_leaf.c - 1.109 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.c.diff?r1=text&tr1=1.109&r2=text&tr2=1.108&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_utils.c - 1.80 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.c.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_fsops.c - 1.132 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_fsops.c.diff?r1=text&tr1=1.132&r2=text&tr2=1.131&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_bmap.c - 1.384 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.384&r2=text&tr2=1.383&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/xfs_dir2.c - 1.62 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dir2.c.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/quota/xfs_qm_bhv.c - 1.28 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_bhv.c.diff?r1=text&tr1=1.28&r2=text&tr2=1.27&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/quota/xfs_qm_syscalls.c - 1.37 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.37&r2=text&tr2=1.36&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/quota/xfs_qm.c - 1.59 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.59&r2=text&tr2=1.58&f=h
+	- remove shouting-indirection macros from xfs_sb.h
+
+fs/xfs/linux-2.6/xfs_ioctl.c - 1.160 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.160&r2=text&tr2=1.159&f=h
+	- remove shouting-indirection macros from xfs_sb.h
