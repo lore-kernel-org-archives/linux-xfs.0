@@ -1,426 +1,102 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 22:24:02 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M6Nuim020411
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 22:23:58 -0800
-Received: from filer.fsl.cs.sunysb.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E390E8F6D5
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 22:24:20 -0800 (PST)
-Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2]) by cuda.sgi.com with ESMTP id G533m1uytP6JFc4Y for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 22:24:20 -0800 (PST)
-Received: from josefsipek.net (baal.fsl.cs.sunysb.edu [130.245.126.78])
-	by filer.fsl.cs.sunysb.edu (8.12.11.20060308/8.13.1) with ESMTP id m1M6OHHA013709
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 01:24:17 -0500
-Date: Fri, 22 Feb 2008 01:24:20 -0500
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 1/1] XFS: Replace custom AIL linked-list code with
-	struct list_head
-Message-ID: <20080222062419.GC12940@josefsipek.net>
-References: <20080204205230.GA14084@lst.de> <1202273091-19629-1-git-send-email-jeffpc@josefsipek.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 22:26:39 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1M6QTU3020816
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 22:26:33 -0800
+Message-ID: <47BE6C5C.2000605@sgi.com>
+Date: Fri, 22 Feb 2008 17:31:56 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1202273091-19629-1-git-send-email-jeffpc@josefsipek.net>
+Subject: Re: Marking inode dirty latency > 1000 msec on XFS!
+References: <47B5DD9C.3080906@gmail.com>
+In-Reply-To: <47B5DD9C.3080906@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, xfs@oss.sgi.com
 
-ping?
+Török Edwin wrote:
+> Hi,
+> 
+> Using LatencyTOP 0.3, on the latest 2.6.25-git I see latencies of over a
+> second on __mark_ inode_dirty.
+These are the maximum latencies, right?  What would be useful here is the
+average latency time.  The average might actually be quite low but if just
+once we have a maximum that is unusually large then just looking at that
+figure can be misleading.
 
-On Tue, Feb 05, 2008 at 11:44:51PM -0500, Josef 'Jeff' Sipek wrote:
-> Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-> ---
-> This patch assumes you already have Dave Chinner's patch for
-> xfsidbg_xlogitem and xfsidbg_xaildump is needed.
->
-> Changes since V2:
+> [see a stacktrace at end of this email]
 > 
-> - remove extra parenthesis
-> 
-> Changes since V1:
-> 
-> - Pass around a pointer to the AIL, not the struct list_head
-> - Make sure things compile & run with CONFIG_XFS_DEBUG
-> ---
->  fs/xfs/xfs_mount.h     |    2 +-
->  fs/xfs/xfs_trans.h     |    7 +--
->  fs/xfs/xfs_trans_ail.c |  149 +++++++++++++++++++----------------------------
->  3 files changed, 62 insertions(+), 96 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index f7c620e..435d625 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -220,7 +220,7 @@ extern void	xfs_icsb_sync_counters_flags(struct xfs_mount *, int);
->  #endif
->  
->  typedef struct xfs_ail {
-> -	xfs_ail_entry_t		xa_ail;
-> +	struct list_head	xa_ail;
->  	uint			xa_gen;
->  	struct task_struct	*xa_task;
->  	xfs_lsn_t		xa_target;
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 7f40628..50ce02b 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -113,13 +113,8 @@ struct xfs_mount;
->  struct xfs_trans;
->  struct xfs_dquot_acct;
->  
-> -typedef struct xfs_ail_entry {
-> -	struct xfs_log_item	*ail_forw;	/* AIL forw pointer */
-> -	struct xfs_log_item	*ail_back;	/* AIL back pointer */
-> -} xfs_ail_entry_t;
-> -
->  typedef struct xfs_log_item {
-> -	xfs_ail_entry_t			li_ail;		/* AIL pointers */
-> +	struct list_head		li_ail;		/* AIL pointers */
->  	xfs_lsn_t			li_lsn;		/* last on-disk lsn */
->  	struct xfs_log_item_desc	*li_desc;	/* ptr to current desc*/
->  	struct xfs_mount		*li_mountp;	/* ptr to fs mount */
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 4d6330e..0fe9d59 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -28,13 +28,13 @@
->  #include "xfs_trans_priv.h"
->  #include "xfs_error.h"
->  
-> -STATIC void xfs_ail_insert(xfs_ail_entry_t *, xfs_log_item_t *);
-> -STATIC xfs_log_item_t * xfs_ail_delete(xfs_ail_entry_t *, xfs_log_item_t *);
-> -STATIC xfs_log_item_t * xfs_ail_min(xfs_ail_entry_t *);
-> -STATIC xfs_log_item_t * xfs_ail_next(xfs_ail_entry_t *, xfs_log_item_t *);
-> +STATIC void xfs_ail_insert(xfs_ail_t *, xfs_log_item_t *);
-> +STATIC xfs_log_item_t * xfs_ail_delete(xfs_ail_t *, xfs_log_item_t *);
-> +STATIC xfs_log_item_t * xfs_ail_min(xfs_ail_t *);
-> +STATIC xfs_log_item_t * xfs_ail_next(xfs_ail_t *, xfs_log_item_t *);
->  
->  #ifdef DEBUG
-> -STATIC void xfs_ail_check(xfs_ail_entry_t *, xfs_log_item_t *);
-> +STATIC void xfs_ail_check(xfs_ail_t *, xfs_log_item_t *);
->  #else
->  #define	xfs_ail_check(a,l)
->  #endif /* DEBUG */
-> @@ -57,7 +57,7 @@ xfs_trans_tail_ail(
->  	xfs_log_item_t	*lip;
->  
->  	spin_lock(&mp->m_ail_lock);
-> -	lip = xfs_ail_min(&(mp->m_ail.xa_ail));
-> +	lip = xfs_ail_min(&mp->m_ail);
->  	if (lip == NULL) {
->  		lsn = (xfs_lsn_t)0;
->  	} else {
-> @@ -91,7 +91,7 @@ xfs_trans_push_ail(
->  {
->  	xfs_log_item_t		*lip;
->  
-> -	lip = xfs_ail_min(&mp->m_ail.xa_ail);
-> +	lip = xfs_ail_min(&mp->m_ail);
->  	if (lip && !XFS_FORCED_SHUTDOWN(mp)) {
->  		if (XFS_LSN_CMP(threshold_lsn, mp->m_ail.xa_target) > 0)
->  			xfsaild_wakeup(mp, threshold_lsn);
-> @@ -111,15 +111,17 @@ xfs_trans_first_push_ail(
->  {
->  	xfs_log_item_t	*lip;
->  
-> -	lip = xfs_ail_min(&(mp->m_ail.xa_ail));
-> +	lip = xfs_ail_min(&mp->m_ail);
->  	*gen = (int)mp->m_ail.xa_gen;
->  	if (lsn == 0)
->  		return lip;
->  
-> -	while (lip && (XFS_LSN_CMP(lip->li_lsn, lsn) < 0))
-> -		lip = lip->li_ail.ail_forw;
-> +	list_for_each_entry(lip, &mp->m_ail.xa_ail, li_ail) {
-> +		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
-> +			return lip;
-> +	}
->  
-> -	return lip;
-> +	return NULL;
->  }
->  
->  /*
-> @@ -326,7 +328,7 @@ xfs_trans_unlocked_item(
->  	 * the call to xfs_log_move_tail() doesn't do anything if there's
->  	 * not enough free space to wake people up so we're safe calling it.
->  	 */
-> -	min_lip = xfs_ail_min(&mp->m_ail.xa_ail);
-> +	min_lip = xfs_ail_min(&mp->m_ail);
->  
->  	if (min_lip == lip)
->  		xfs_log_move_tail(mp, 1);
-> @@ -354,15 +356,13 @@ xfs_trans_update_ail(
->  	xfs_log_item_t	*lip,
->  	xfs_lsn_t	lsn) __releases(mp->m_ail_lock)
->  {
-> -	xfs_ail_entry_t		*ailp;
->  	xfs_log_item_t		*dlip=NULL;
->  	xfs_log_item_t		*mlip;	/* ptr to minimum lip */
->  
-> -	ailp = &(mp->m_ail.xa_ail);
-> -	mlip = xfs_ail_min(ailp);
-> +	mlip = xfs_ail_min(&mp->m_ail);
->  
->  	if (lip->li_flags & XFS_LI_IN_AIL) {
-> -		dlip = xfs_ail_delete(ailp, lip);
-> +		dlip = xfs_ail_delete(&mp->m_ail, lip);
->  		ASSERT(dlip == lip);
->  	} else {
->  		lip->li_flags |= XFS_LI_IN_AIL;
-> @@ -370,11 +370,11 @@ xfs_trans_update_ail(
->  
->  	lip->li_lsn = lsn;
->  
-> -	xfs_ail_insert(ailp, lip);
-> +	xfs_ail_insert(&mp->m_ail, lip);
->  	mp->m_ail.xa_gen++;
->  
->  	if (mlip == dlip) {
-> -		mlip = xfs_ail_min(&(mp->m_ail.xa_ail));
-> +		mlip = xfs_ail_min(&mp->m_ail);
->  		spin_unlock(&mp->m_ail_lock);
->  		xfs_log_move_tail(mp, mlip->li_lsn);
->  	} else {
-> @@ -404,14 +404,12 @@ xfs_trans_delete_ail(
->  	xfs_mount_t	*mp,
->  	xfs_log_item_t	*lip) __releases(mp->m_ail_lock)
->  {
-> -	xfs_ail_entry_t		*ailp;
->  	xfs_log_item_t		*dlip;
->  	xfs_log_item_t		*mlip;
->  
->  	if (lip->li_flags & XFS_LI_IN_AIL) {
-> -		ailp = &(mp->m_ail.xa_ail);
-> -		mlip = xfs_ail_min(ailp);
-> -		dlip = xfs_ail_delete(ailp, lip);
-> +		mlip = xfs_ail_min(&mp->m_ail);
-> +		dlip = xfs_ail_delete(&mp->m_ail, lip);
->  		ASSERT(dlip == lip);
->  
->  
-> @@ -420,7 +418,7 @@ xfs_trans_delete_ail(
->  		mp->m_ail.xa_gen++;
->  
->  		if (mlip == dlip) {
-> -			mlip = xfs_ail_min(&(mp->m_ail.xa_ail));
-> +			mlip = xfs_ail_min(&mp->m_ail);
->  			spin_unlock(&mp->m_ail_lock);
->  			xfs_log_move_tail(mp, (mlip ? mlip->li_lsn : 0));
->  		} else {
-> @@ -458,7 +456,7 @@ xfs_trans_first_ail(
->  {
->  	xfs_log_item_t	*lip;
->  
-> -	lip = xfs_ail_min(&(mp->m_ail.xa_ail));
-> +	lip = xfs_ail_min(&mp->m_ail);
->  	*gen = (int)mp->m_ail.xa_gen;
->  
->  	return lip;
-> @@ -482,9 +480,9 @@ xfs_trans_next_ail(
->  
->  	ASSERT(mp && lip && gen);
->  	if (mp->m_ail.xa_gen == *gen) {
-> -		nlip = xfs_ail_next(&(mp->m_ail.xa_ail), lip);
-> +		nlip = xfs_ail_next(&mp->m_ail, lip);
->  	} else {
-> -		nlip = xfs_ail_min(&(mp->m_ail).xa_ail);
-> +		nlip = xfs_ail_min(&mp->m_ail);
->  		*gen = (int)mp->m_ail.xa_gen;
->  		if (restarts != NULL) {
->  			XFS_STATS_INC(xs_push_ail_restarts);
-> @@ -514,8 +512,7 @@ int
->  xfs_trans_ail_init(
->  	xfs_mount_t	*mp)
->  {
-> -	mp->m_ail.xa_ail.ail_forw = (xfs_log_item_t*)&mp->m_ail.xa_ail;
-> -	mp->m_ail.xa_ail.ail_back = (xfs_log_item_t*)&mp->m_ail.xa_ail;
-> +	INIT_LIST_HEAD(&mp->m_ail.xa_ail);
->  	return xfsaild_start(mp);
->  }
->  
-> @@ -534,7 +531,7 @@ xfs_trans_ail_destroy(
->   */
->  STATIC void
->  xfs_ail_insert(
-> -	xfs_ail_entry_t	*base,
-> +	xfs_ail_t	*ailp,
->  	xfs_log_item_t	*lip)
->  /* ARGSUSED */
->  {
-> @@ -543,27 +540,22 @@ xfs_ail_insert(
->  	/*
->  	 * If the list is empty, just insert the item.
->  	 */
-> -	if (base->ail_back == (xfs_log_item_t*)base) {
-> -		base->ail_forw = lip;
-> -		base->ail_back = lip;
-> -		lip->li_ail.ail_forw = (xfs_log_item_t*)base;
-> -		lip->li_ail.ail_back = (xfs_log_item_t*)base;
-> +	if (list_empty(&ailp->xa_ail)) {
-> +		list_add(&lip->li_ail, &ailp->xa_ail);
->  		return;
->  	}
->  
-> -	next_lip = base->ail_back;
-> -	while ((next_lip != (xfs_log_item_t*)base) &&
-> -	       (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) > 0)) {
-> -		next_lip = next_lip->li_ail.ail_back;
-> +	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
-> +		if (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0)
-> +			break;
->  	}
-> -	ASSERT((next_lip == (xfs_log_item_t*)base) ||
-> +
-> +	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
->  	       (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0));
-> -	lip->li_ail.ail_forw = next_lip->li_ail.ail_forw;
-> -	lip->li_ail.ail_back = next_lip;
-> -	next_lip->li_ail.ail_forw = lip;
-> -	lip->li_ail.ail_forw->li_ail.ail_back = lip;
->  
-> -	xfs_ail_check(base, lip);
-> +	list_add(&lip->li_ail, &next_lip->li_ail);
-> +
-> +	xfs_ail_check(ailp, lip);
->  	return;
->  }
->  
-> @@ -573,15 +565,13 @@ xfs_ail_insert(
->  /*ARGSUSED*/
->  STATIC xfs_log_item_t *
->  xfs_ail_delete(
-> -	xfs_ail_entry_t	*base,
-> +	xfs_ail_t	*ailp,
->  	xfs_log_item_t	*lip)
->  /* ARGSUSED */
->  {
-> -	xfs_ail_check(base, lip);
-> -	lip->li_ail.ail_forw->li_ail.ail_back = lip->li_ail.ail_back;
-> -	lip->li_ail.ail_back->li_ail.ail_forw = lip->li_ail.ail_forw;
-> -	lip->li_ail.ail_forw = NULL;
-> -	lip->li_ail.ail_back = NULL;
-> +	xfs_ail_check(ailp, lip);
-> +
-> +	list_del(&lip->li_ail);
->  
->  	return lip;
->  }
-> @@ -592,14 +582,13 @@ xfs_ail_delete(
->   */
->  STATIC xfs_log_item_t *
->  xfs_ail_min(
-> -	xfs_ail_entry_t	*base)
-> +	xfs_ail_t	*ailp)
->  /* ARGSUSED */
->  {
-> -	register xfs_log_item_t *forw = base->ail_forw;
-> -	if (forw == (xfs_log_item_t*)base) {
-> +	if (list_empty(&ailp->xa_ail))
->  		return NULL;
-> -	}
-> -	return forw;
-> +
-> +	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
->  }
->  
->  /*
-> @@ -609,15 +598,14 @@ xfs_ail_min(
->   */
->  STATIC xfs_log_item_t *
->  xfs_ail_next(
-> -	xfs_ail_entry_t	*base,
-> +	xfs_ail_t	*ailp,
->  	xfs_log_item_t	*lip)
->  /* ARGSUSED */
->  {
-> -	if (lip->li_ail.ail_forw == (xfs_log_item_t*)base) {
-> +	if (lip->li_ail.next == &ailp->xa_ail)
->  		return NULL;
-> -	}
-> -	return lip->li_ail.ail_forw;
->  
-> +	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
->  }
->  
->  #ifdef DEBUG
-> @@ -626,57 +614,40 @@ xfs_ail_next(
->   */
->  STATIC void
->  xfs_ail_check(
-> -	xfs_ail_entry_t *base,
-> +	xfs_ail_t 	*ailp,
->  	xfs_log_item_t	*lip)
->  {
->  	xfs_log_item_t	*prev_lip;
->  
-> -	prev_lip = base->ail_forw;
-> -	if (prev_lip == (xfs_log_item_t*)base) {
-> -		/*
-> -		 * Make sure the pointers are correct when the list
-> -		 * is empty.
-> -		 */
-> -		ASSERT(base->ail_back == (xfs_log_item_t*)base);
-> +	if (list_empty(&ailp->xa_ail))
->  		return;
-> -	}
->  
->  	/*
->  	 * Check the next and previous entries are valid.
->  	 */
->  	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
-> -	prev_lip = lip->li_ail.ail_back;
-> -	if (prev_lip != (xfs_log_item_t*)base) {
-> -		ASSERT(prev_lip->li_ail.ail_forw == lip);
-> +	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
-> +	if (&prev_lip->li_ail != &ailp->xa_ail)
->  		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-> -	}
-> -	prev_lip = lip->li_ail.ail_forw;
-> -	if (prev_lip != (xfs_log_item_t*)base) {
-> -		ASSERT(prev_lip->li_ail.ail_back == lip);
-> +
-> +	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
-> +	if (&prev_lip->li_ail != &ailp->xa_ail)
->  		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
-> -	}
->  
->  
->  #ifdef XFS_TRANS_DEBUG
->  	/*
-> -	 * Walk the list checking forward and backward pointers,
-> -	 * lsn ordering, and that every entry has the XFS_LI_IN_AIL
-> -	 * flag set. This is really expensive, so only do it when
-> -	 * specifically debugging the transaction subsystem.
-> +	 * Walk the list checking lsn ordering, and that every entry has the
-> +	 * XFS_LI_IN_AIL flag set. This is really expensive, so only do it
-> +	 * when specifically debugging the transaction subsystem.
->  	 */
-> -	prev_lip = (xfs_log_item_t*)base;
-> -	while (lip != (xfs_log_item_t*)base) {
-> -		if (prev_lip != (xfs_log_item_t*)base) {
-> -			ASSERT(prev_lip->li_ail.ail_forw == lip);
-> +	prev_lip = list_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
-> +	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
-> +		if (&prev_lip->li_ail != &ailp->xa_ail)
->  			ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-> -		}
-> -		ASSERT(lip->li_ail.ail_back == prev_lip);
->  		ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
->  		prev_lip = lip;
-> -		lip = lip->li_ail.ail_forw;
->  	}
-> -	ASSERT(lip == (xfs_log_item_t*)base);
-> -	ASSERT(base->ail_back == prev_lip);
->  #endif /* XFS_TRANS_DEBUG */
->  }
->  #endif /* DEBUG */
-> -- 
-> 1.5.4.rc2.85.g9de45-dirty
-> 
+> I tried to locate xfs's implementation of super_operations.dirty_inode,
+> but it isn't specified in xfs_super.c.
+Yeah, we don't currently have one.
 
--- 
-Linux, n.:
-  Generous programmers from around the world all join forces to help
-  you shoot yourself in the foot for free. 
+> I don't know how mark_inode_dirty ends up calling xfs_trans_commit, but
+It doesn't, but xfs_trans_commit() does eventually call mark_inode_dirty_sync()
+through the IOP_FORMAT() log item operation.  If we are committing a transaction
+that involves an inode then we must have just modified the inode so this is a
+good time to mark it dirty so that it gets written out to disk later.
+
+> is it required to commit the dirty status of an inode to the transaction
+> log?
+No, not the dirty status - just the changes that made it dirty (actually the
+dirty status is in the Linux inode and we commit the xfs inode to the log).
+
+> 
+> FWIW, this is a slow laptop hdd (5400 rpm, ST96812AS), but latency of 1
+> second is still big.
+> 
+> Are there any settings I can tweak to reduce latency?
+Um, not that I am aware of.
+
+> 
+> LatencyTOP output during a 'svn up' on llvm-gcc source tree:
+> 
+> Cause                                                Maximum     Percentage
+> Marking inode dirty                               1105.8 msec          7.8 %
+> _xfs_buf_ioapply default_wake_function xlog_state_1065.2 msec          7.0 %
+> Deleting an inode                                 964.8 msec         20.0 %
+> _xfs_buf_ioapply default_wake_function xlog_state_780.1 msec          8.3 %
+> _xfs_buf_ioapply default_wake_function xlog_state_679.4 msec          3.3 %
+> _xfs_buf_ioapply default_wake_function xlog_state_610.1 msec          5.6 %
+> XFS I/O wait                                      585.9 msec         12.6 %
+> _xfs_buf_ioapply default_wake_function xlog_state_528.8 msec          6.8 %
+> Creating block layer request                      499.6 msec          5.7 %
+> 
+> Earlier I've seen this latencyTOP output too:
+> 
+> Cause                                                Maximum     Percentage
+> XFS I/O wait                                      407.6 msec         53.4 %
+> Marking inode dirty                               173.0 msec          0.9 %
+> Writing a page to disk                            141.6 msec         42.6 %
+> __generic_unplug_device default_wake_function xfs_ 86.0 msec          0.3 %
+> Page fault                                         44.1 msec          0.2 %
+> kobject_put put_device blk_start_queueing __generi 15.9 msec          0.1 %
+> Scheduler: waiting for cpubuf_find kmem_zone_alloc 12.4 msec          2.2 %
+> put_device scsi_request_fn blk_start_queueing defa  4.9 msec          0.0 %
+> Waiting for event (poll)                            4.7 msec          0.4 %
+> 
+> Process svn (10685)
+> Writing a page to disk                             23.9 msec         55.9 %
+> XFS I/O wait                                       15.9 msec         35.2 %
+> Scheduler: waiting for cpu                          0.8 msec          8.9 %
+> 
+> Raw output from /proc/latency shows stacktrace:
+> 
+> 7 93862 26567 _xfs_buf_ioapply default_wake_function
+> xlog_state_get_iclog_space xlog_state_release_iclog xlog_write
+> xfs_log_write _xfs_trans_commit __mark_inode_dirty igrab xfs_create
+> xfs_vn_mknod security_inode_permission
+> 1 96331 96331 default_wake_function xlog_state_get_iclog_space
+> xlog_state_release_iclog xlog_write xfs_log_write _xfs_trans_commit
+> __mark_inode_dirty igrab xfs_create xfs_vn_mknod
+> security_inode_permission xfs_vn_permission
+> 
+These don't look like valid stacktraces - are you sure they aren't just
+the major offenders for latency delays?
+
+Lachlan
