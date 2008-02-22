@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 09:41:37 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 10:03:19 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1MHfWlE008989
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 09:41:33 -0800
-Message-ID: <47BF0963.6020809@sandeen.net>
-Date: Fri, 22 Feb 2008 11:41:55 -0600
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1MI3ALF010422
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 10:03:14 -0800
+Message-ID: <47BF0859.6020707@sandeen.net>
+Date: Fri, 22 Feb 2008 11:37:29 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [REVIEW] User-space support for bad_features2 patch
-References: <op.t6w1h5f53jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t6w1h5f53jf8g2@pc-bnaujok.melbourne.sgi.com>
+Subject: Re: [REVIEW] Add lazy-counter conversion to xfs_repair
+References: <op.t6wyesz53jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.t6wyesz53jf8g2@pc-bnaujok.melbourne.sgi.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -19,40 +19,29 @@ To: Barry Naujok <bnaujok@sgi.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 Barry Naujok wrote:
-> The attached patch fixes mkfs.xfs writing the bad features2 in the first  
-> place (the change to xfs_sb.h does this).
+> In response to the thread "Differences in mkfs.xfs and xfs_info output.",  
+> xfs_repair has been improved to allow version changes/conversion of  
+> filesystems.
 > 
-> Next xfs_db support printing of this superblock field and xfs_check can  
-> report the bad_features2 field is set.
+> So, this patch introduces the first in an ongoing series of in-place  
+> filesystem version changes with xfs_repair and the "-c" (convert) option.
 > 
-> xfs_repair can correct the error in the same fashion that David Chinner's  
-> mount code does it.
+> To turn on/off the lazy-superblock feature, run the following xfs_repair  
+> commmand on your filesystem:
 > 
-> This patch applies to the lazy-count xfs_repair conversion code that I  
-> posted a short time before this patch.
-> 
-> Barry.
-> 
-+	 * Check bad_features2, if set and features2 is zero, copy
-+	 * bad_features2 to features2 and zero bad_features2.
-+	 */
-+	if (sb->sb_bad_features2 != 0) {
-+		if (sb->sb_features2 == 0)
-+			sb->sb_features2 = sb->sb_bad_features2;
-+		sb->sb_bad_features2 = 0;
-+		primary_sb_modified = 1;
-+		do_warn(_("superblock's features2 field is in the wrong "
-+			"location, correcting\n"));
-+	}
+> # xfs_repair -c lazycount=[0|1] <device>
 
-My only thought here is that if you repair it, then use an older kernel
-w/o the fix, suddenly your fs behavior changes, whereas before you often
-got lucky, and both userspace & kernelspace swapped the same way, and
-you found the bits you were looking for out of luck :)  (same goes for
-the recent kernel fix too, I guess)
+How about adding this to xfs_admin as well, since some flag changes are
+already in there?
 
-Should we flag the bad_features2 as "already copied to features2" but
-otherwise leave it?  Hmm I guess that would look like an unsupported
-feature flag to old kernels, wouldn't it.  Urgh.
+i.e. xfs_admin -<something... l and L are taken> could invoke xfs_repair
+-c lazycount ...?
+
+It just strikes me as a tad confusing that to change v2 logs or
+unwritten extent support, you use xfs_admin, and to change lazy sb
+counters, you must run repair...
+
+(I understand that repair must be run post-change, but a common tool to
+invoke all feature changes seems good to me)
 
 -Eric
