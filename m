@@ -1,49 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 18:16:26 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1M2GHOI021959
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 18:16:21 -0800
-Subject: PARTIAL TAKE 976035 - kill xfs_rwlock/xfs_rwunlock
-Message-Id: <20080222021635.F082558C4C0F@chook.melbourne.sgi.com>
-Date: Fri, 22 Feb 2008 13:16:35 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Feb 2008 18:50:45 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1M2obMA024188
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 18:50:38 -0800
+Received: from mail.sceen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C5825604C53
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 18:46:03 -0800 (PST)
+Received: from mail.sceen.net (sceen.net [213.41.243.68]) by cuda.sgi.com with ESMTP id XKMIIgLIk4SMcvcW for <xfs@oss.sgi.com>; Thu, 21 Feb 2008 18:46:03 -0800 (PST)
+From: Niv Sardi <xaiki@cxhome.ath.cx>
+Subject: Re: [RFC, patch 1/2] Allow up to 1GB logs in mkfs.xfs
+References: <20080221230833.GG155407@sgi.com>
+Date: Fri, 22 Feb 2008 13:44:38 +1100
+In-Reply-To: <20080221230833.GG155407@sgi.com> (David Chinner's message of
+	"Fri, 22 Feb 2008 10:08:34 +1100")
+Message-ID: <ncctzk11zhl.fsf@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-kill xfs_rwlock/xfs_rwunlock
+David Chinner <dgc@sgi.com> writes:
 
-We can just use xfs_ilock/xfs_iunlock instead and get rid of the ugly
-bhv_vrwlock_t.
+> Increase the maximum log size supported by mkfs.
+>
+> The log size can be increased easily in mkfs by changing a few
+> defines and a couple of types to allow the log size to increase to
+> 1GB. Theoretically, the log size can be made much, much larger than
+> this (up to 2^32 sectors), but going beyond 2^30 *bytes* causes
+> integer overflow issues in the kernel log code.
+>
+> e.g. a 2GB log (2^31 bytes) will not mount because the
+> space calculations in the kernel use "int" types and
+> overflow:
+>
+> STATIC int
+> xlog_space_left(xlog_t *log, int cycle, int bytes)
+>
+> Hence logs larger than 2^30 will not work without kernel
+> modifications.  Therefore this change is limited to increasing the
+> log size to what we can currently support in kernel space with
+> needing kernel modifications.
 
+I'm glad you got time to get around this, I didn't include it in the
+first batch as I was told it 'broke things'.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Looks good to me.
 
-Date:  Fri Feb 22 13:15:58 AEDT 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
-Inspected by:  lachlan
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30533a
-fs/xfs/xfs_vnodeops.c - 1.738 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.738&r2=text&tr2=1.737&f=h
-fs/xfs/xfs_mount.h - 1.257 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.257&r2=text&tr2=1.256&f=h
-fs/xfs/linux-2.6/xfs_lrw.c - 1.274 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.274&r2=text&tr2=1.273&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.146 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.146&r2=text&tr2=1.145&f=h
-fs/xfs/linux-2.6/xfs_aops.c - 1.160 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.160&r2=text&tr2=1.159&f=h
-fs/xfs/linux-2.6/xfs_ksyms.c - 1.81 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.81&r2=text&tr2=1.80&f=h
-fs/xfs/dmapi/xfs_dm.c - 1.64 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.64&r2=text&tr2=1.63&f=h
-fs/xfs/xfs_vnodeops.h - 1.7 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-	- kill xfs_rwlock/xfs_rwunlock
+Cheers,
+-- 
+Niv Sardi
