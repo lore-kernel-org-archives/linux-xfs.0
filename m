@@ -1,67 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 16:06:22 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1N06565030504
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 16:06:16 -0800
-Date: Sat, 23 Feb 2008 11:06:12 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Marking inode dirty latency > 1000 msec on XFS!
-Message-ID: <20080223000612.GE155259@sgi.com>
-References: <47B5DD9C.3080906@gmail.com> <47BE6C5C.2000605@sgi.com> <47BE8EE8.5020005@gmail.com> <47BEA1E7.3010107@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Feb 2008 16:16:57 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1N0GpmX031532
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2008 16:16:53 -0800
+Date: Fri, 22 Feb 2008 19:17:15 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch, debug, 2/2] Use power-of-2 size ktrace buffers
+Message-ID: <20080223001715.GA22614@infradead.org>
+References: <20080218230112.GU155407@sgi.com> <20080222040806.GB16993@infradead.org> <20080222043020.GN155407@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <47BEA1E7.3010107@gmail.com>
+In-Reply-To: <20080222043020.GN155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-1?B?VPZy9ms=?= Edwin <edwintorok@gmail.com>
-Cc: lachlan@sgi.com, Arjan van de Ven <arjan@linux.intel.com>, xfs@oss.sgi.com, David Chinner <dgc@sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Feb 22, 2008 at 12:20:23PM +0200, Török Edwin wrote:
-> Török Edwin wrote:
-> >> What would be useful here is the
-> >> average latency time.  The average might actually be quite low but if
-> >> just
-> >> once we have a maximum that is unusually large then just looking at that
-> >> figure can be misleading.
-> >>     
-> >
-> > I'll try to collect the raw numbers from /proc/latency_stats, that
-> > contain a count, total time, and max time.
+On Fri, Feb 22, 2008 at 03:30:20PM +1100, David Chinner wrote:
+> Ok, I'll cook up another patch for that and send it out.
+
+Yeah, making that a separate patch is fine with me.  It's just a logical
+next step.
+
+> > a second step ktrace should be replaced with something based on the
+> > various trace thingies floating around allowing to read out the trace
+> > buffer from userspace instead of having to rely on kdb.
 > 
-> I was not able to reproduce the 1 second latency with David Chinner's
-> reduce xaild wakeups patch, the maximum latency  I got was 685 msec.
-.....
-> 
-> <count> <sum> <maximum> <stacktrace>
-> ----------------
-> 2 47699 36897 xfs_buf_free default_wake_function xfs_buf_lock xfs_getsb
-....
-> 
-> Average = 478072 usecs
-> -----------------
-.....
-> -----------
-> 1 685021 685021 xfs_buf_free default_wake_function xfs_buf_lock
-> xfs_getsb xfs_trans_getsb xfs_trans_apply_sb_deltas _xfs_trans_commit
-......
+> Yeah, that make sense for tracing from userspace. But most of the
+> time I find a need for the tracing is when the machine has crashed
+> or assert failed. Hence I don't see that we can really remove the
+> kdb side of things. Perhaps two different tracing modules could
+> be done.....
 
-Note the xfs_getsb() call in there - that's what the lazy-count option
-avoids. That's waiting in the transaction subsystem to apply delta's
-to the superblock that is currently locked.
-
-Converting to a lazy-count filesystem is experimental right now;
-it may eat your data. If you still want to try, apply the patch
-in this email and convert it:
-
-http://oss.sgi.com/archives/xfs/2008-02/msg00295.html
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+It should still be one tracing buffer, with both a userspace space
+interface and one from the various kernel debuggers.  Adding the
+trace buffers to core dumps in addition would be even better.
