@@ -1,66 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Feb 2008 02:06:35 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Feb 2008 03:52:21 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1OA6Txk007251
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 02:06:30 -0800
-Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5BD3860F77C
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 02:06:54 -0800 (PST)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.157]) by cuda.sgi.com with ESMTP id jZMB46L8qH4LIaFz for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 02:06:54 -0800 (PST)
-Received: by fg-out-1718.google.com with SMTP id e12so790679fga.8
-        for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 02:06:53 -0800 (PST)
-Message-ID: <47C141B9.7050001@gmail.com>
-Date: Sun, 24 Feb 2008 11:06:49 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1OBqDkI012896
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 03:52:15 -0800
+Received: from wr-out-0506.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AB8D60F582
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 03:52:39 -0800 (PST)
+Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.235]) by cuda.sgi.com with ESMTP id XM6RFePmfUJCONA8 for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 03:52:39 -0800 (PST)
+Received: by wr-out-0506.google.com with SMTP id 50so1927829wra.18
+        for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 03:52:39 -0800 (PST)
+Message-ID: <2db2c6b80802240352o301a0d15q991efb97a1dbff82@mail.gmail.com>
+Date: Sun, 24 Feb 2008 12:52:38 +0100
+From: Rekrutacja119 <rekrutacja119@gmail.com>
+Subject: Re: xfs I/O error
+In-Reply-To: <20080224090106.GD27124@teal.hq.k1024.org>
 MIME-Version: 1.0
-Subject: Re: getting uninterruptible sleep processes after upgrade from 2.6.20.20
- to 2.6.24.2
-References: <47B892B9.7060205@allied-internet.ag>	<alpine.DEB.1.00.0802172133470.6469@sheep.housecafe.de>	<47B89DC6.4070906@allied-internet.ag> <20080217125407.5b76a052@laptopd505.fenrus.org> <47BD5B30.103@allied-internet.ag> <47BD7958.5080203@gmail.com> <47BD7E7F.2030603@allied-internet.ag>
-In-Reply-To: <47BD7E7F.2030603@allied-internet.ag>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <2db2c6b80802231346r78d59381j49927e15f40e7ef8@mail.gmail.com>
+	 <20080223220818.GC27124@teal.hq.k1024.org>
+	 <2db2c6b80802231414m38f70795n7f24fea1a40195df@mail.gmail.com>
+	 <20080224090106.GD27124@teal.hq.k1024.org>
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stefan Priebe - allied internet ag <s.priebe@allied-internet.ag>
-Cc: Arjan van de Ven <arjan@infradead.org>, Christian Kujau <lists@nerdbynature.de>, LKML <linux-kernel@vger.kernel.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org
+To: Rekrutacja119 <rekrutacja119@gmail.com>, xfs@oss.sgi.com
 
-Ccing xfs team
+smartctl -t offline is i think scheduling a SMART test
 
-On 02/21/2008 02:37 PM, Stefan Priebe - allied internet ag wrote:
-> Hello!
-> 
-> I'm using XFS. dmesg -s32000 does not help - no more output. In messages 
-> there is also no relevant output. Other than what I've posted here:
-> http://lkml.org/lkml/2008/2/21/76
+i will try what you say, but there is no way to force XFS to not unmount
+filesystem if it finds out I/O error?
 
-http://lkml.org/lkml/2008/2/21/86
+also, i didnt edit any info, it was just all i got from messages log
 
-Some kind of borkage in readdir, probably either in xfs or vfs?
+2008/2/24, Iustin Pop <iusty@k1024.org>:
+>
+> On Sat, Feb 23, 2008 at 11:14:32PM +0100, Rekrutacja119 wrote:
+> > so i should use the list i got from badblocks with dd but with bs=1024?
+> are
+> > you sure? i'm not sure what is my block size, but xfs_info says this:
+>
+> the block size of the filesystem has no relation to the block size
+> badblocks uses in checking the block device.
+> >
+> [...]
+>
+> >
+> > i think i made it with 4K stack size ... well anyways, i should use the
+> list
+> > i got earlier and just try dd but with bs=1024... ? don't want to erase
+> more
+> > than i have to. (i want to do it so i can smartctl -t offline /dev/sdb
+> then,
+> > so maybe it will somehow see that these blocks are broken and mark them)
+>
+>
+> I don't understand what do you want to do with smartctl at all. How
+> would offlining the disk would help?
+>
+> Again, I would:
+>   - take the block list given by badblocks
+>   - verify that each block can't be read  first via dd if=/dev/...
+>     of=/dev/null bs=1024 count=1 seek=NUMBER_FROM_BADBLOCK
+>   - if confirmed that you got the right 'bad' blocks, use that for dd
+>     with bs=1024 to write zeroes over them
+>
+> As Eric confirmed, you probably already destroyed some good data on the
+> drive.
+>
+> regards,
+>
+> iustin
+>
 
-> Sorry but i cannot recompile the kernel on all machines again - another 
-> downtime is not possible at the moment.
-> 
-> Stefan
-> 
-> Jiri Slaby schrieb:
->> Stefan Priebe - allied internet ag napsal(a):
->>> Hello!
->>>
->>> I've done the (echo t > /proc/sysrq-trigger) now but i'm not able to get
->>> the whole output via dmesg.
->>>
->>> Here is what i get:
->>> # dmesg
->>> 3.432124]  [<c0165a11>] do_select+0x390/0x46e
->>> [272363.432226]  [<c0166107>] __pollwait+0x0/0xcf
->>> [272363.432319]  [<c0115d90>] default_wake_function+0x0/0x8
->>
->> dmesg ring buffer is too small to fit this in. Please repeat it once 
->> again
->> with bigger ringbuffer (dmesg -s if you have this chosen in your 
->> kernel) or
->> post /var/log/meassages output of all processes. I see only waiters in
->> readdir, not seeing who could block them.
->>
->> Which filesystem did you run du on?
+
+[[HTML alternate version deleted]]
