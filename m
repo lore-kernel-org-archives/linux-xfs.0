@@ -1,36 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Feb 2008 04:17:19 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1OCHDNv015208
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:17:15 -0800
-Received: from stine.vestdata.no (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 59EE760F9FC
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:17:36 -0800 (PST)
-Received: from stine.vestdata.no (stine.vestdata.no [217.149.127.10]) by cuda.sgi.com with ESMTP id xIDS7kMhmNITy8KE for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:17:36 -0800 (PST)
-Date: Sun, 24 Feb 2008 13:17:23 +0100
-From: Ragnar =?iso-8859-15?Q?Kj=F8rstad?= <xfs@ragnark.vestdata.no>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Feb 2008 04:31:14 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1OCV9v2020400
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:31:11 -0800
+Received: from ug-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2483711EC356
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:31:35 -0800 (PST)
+Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.168]) by cuda.sgi.com with ESMTP id QJ1HEsaICZ4dyvWU for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:31:35 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id o29so720896ugd.20
+        for <xfs@oss.sgi.com>; Sun, 24 Feb 2008 04:31:33 -0800 (PST)
+Date: Sun, 24 Feb 2008 13:31:29 +0100
+From: Iustin Pop <iusty@k1024.org>
 Subject: Re: xfs I/O error
-Message-ID: <20080224121722.GY29277@vestdata.no>
-References: <2db2c6b80802231346r78d59381j49927e15f40e7ef8@mail.gmail.com>
+Message-ID: <20080224123129.GE27124@teal.hq.k1024.org>
+References: <2db2c6b80802231346r78d59381j49927e15f40e7ef8@mail.gmail.com> <20080223220818.GC27124@teal.hq.k1024.org> <2db2c6b80802231414m38f70795n7f24fea1a40195df@mail.gmail.com> <20080224090106.GD27124@teal.hq.k1024.org> <2db2c6b80802240352o301a0d15q991efb97a1dbff82@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2db2c6b80802231346r78d59381j49927e15f40e7ef8@mail.gmail.com>
+In-Reply-To: <2db2c6b80802240352o301a0d15q991efb97a1dbff82@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Rekrutacja119 <rekrutacja119@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Feb 23, 2008 at 10:46:52PM +0100, Rekrutacja119 wrote:
-> the easiest solution would be to just ignore errors, and if not, then to
-> somehow force xfs to mark them as bad sectors
+On Sun, Feb 24, 2008 at 12:52:38PM +0100, Rekrutacja119 wrote:
+> smartctl -t offline is i think scheduling a SMART test
+ah yes, you're right, I'm sorry.
 
-If you really wanted to you could probably use dm to map your bad
-sectors to another device.
+I would recommend to use not -t offline but -t long - AFAIK, the
+'offline' test just updates the attributes but not scan the whole of the
+disk.
 
--- 
-Ragnar Kjørstad
-Software Engineer
-Platform Computing
+In any case, I don't think a smart test is better than badblocks...
+
+regards,
+iustin
