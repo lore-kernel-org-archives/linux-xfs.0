@@ -1,70 +1,250 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Feb 2008 23:26:31 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Feb 2008 23:33:21 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1Q7QPM2018389
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:26:27 -0800
-Message-ID: <47C3C07C.2090009@sgi.com>
-Date: Tue, 26 Feb 2008 18:32:12 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1Q7XCLb018802
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:33:15 -0800
+Message-ID: <47C3C20A.90603@sgi.com>
+Date: Tue, 26 Feb 2008 18:38:50 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.25-rc4
-References: <20080226064909.5457F58C4C0F@chook.melbourne.sgi.com> <47C3BBF9.8090403@sandeen.net>
-In-Reply-To: <47C3BBF9.8090403@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: filesystem corruption in linus tree
+References: <03F8FD43-322F-41E3-A7A0-CD4E9AD8B4DE@ap.physik.uni-giessen.de> <op.t611a2kn3jf8g2@pc-bnaujok.melbourne.sgi.com> <200802252347.50576.marc.dietrich@ap.physik.uni-giessen.de>
+In-Reply-To: <200802252347.50576.marc.dietrich@ap.physik.uni-giessen.de>
+Content-Type: multipart/mixed;
+ boundary="------------040302000703060606050806"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Marc Dietrich <Marc.Dietrich@ap.physik.uni-giessen.de>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> Please pull from the for-linus branch:
->>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
->>
->> This will update the following files:
->>
->>  fs/xfs/xfs_bit.c     |  103 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  fs/xfs/xfs_bit.h     |   27 ++-----------
->>  fs/xfs/xfs_rtalloc.c |   19 ++++++---
->>  3 files changed, 120 insertions(+), 29 deletions(-)
-> 
-> what's the thought on fixing the ikeep regression for 2.6.25?
-I think the thought is we need to!  Niv is looking into which way we are
-going to fix it (Barry came up with an alternative) and I'll send out a git
-pull request as soon as we've checked in the fix.
+This is a multi-part message in MIME format.
+--------------040302000703060606050806
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Marc Dietrich wrote:
+> Hi,
 > 
-> -Eric
+> On Monday 25 February 2008 01:36:28 Barry Naujok wrote:
+>> On Sun, 24 Feb 2008 20:58:26 +1100, Marc Dietrich
+>>
+>> <Marc.Dietrich@ap.physik.uni-giessen.de> wrote:
+>>> Hi,
+>>>
+>>> somewhere after the release of 2.6.24 my xfs filesystem got corrupted.
+>>> Initialy I thought it was only related to the readdir bug.
+>>> (http://oss.sgi.com/archives/xfs/2008-02/msg00027.html) So I waited for
+>>> the fix to go into mainline. Yesterday I tried again, but got this error
+>>> during boot:
+>> [stack trace snipped]
+>>
+>>> I seems that the log is corrupted because I can't mount the filesystem
+>>> anymore (blocks while replaying). Mounting with norecovery option works.
+>>> I tried to repair the filesystem, but xfs_repair also hangs in "Phase 3
+>>> - scan and clear agi unlinks lists". Before, Phase 2 reports some
+>>> "ir_freecount/free.mismatch" lines.
+>> Might have to add this to the FAQ as this is the second time someone has
+>> reported Phase 3 hanging.
+>>
+>> Try running xfs_repair -P to try and get past this problem if you are
+>> running xfsprogs 2.9.x.
 > 
->> through these commits:
->>
->> commit ef8ece55d9b6825c28a5c1a4bd89b94040cb7b32
->> Author: Lachlan McIlroy <lachlan@sgi.com>
->> Date:   Tue Feb 26 17:00:22 2008 +1100
->>
->>     [XFS] Undo bit ops cleanup mod due to regression on 32-bit powermac
->>     platform.
->>     
->>     SGI-PV: 971186
->>     SGI-Modid: xfs-linux-melb:xfs-kern:30559a
->>     
->>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
->>
->> commit db69c915e67705daac25cad06d816c09be634de0
->> Author: Lachlan McIlroy <lachlan@sgi.com>
->> Date:   Tue Feb 26 17:00:14 2008 +1100
->>
->>     [XFS] Undo bit ops cleanup mod due to regression on 32-bit powermac
->>     platform.
->>     
->>     SGI-PV: 974005
->>     SGI-Modid: xfs-linux-melb:xfs-kern:30558a
->>     
->>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
->>
->>
+> I tried this, but didn't work either and is also not my main problem. The 
+> problem is, as the subject says, that every time I boot linux the filesystem 
+> gets corrupted (and unrepairable). 
 > 
+> I will setup a testing partition, do some additional tests (could be a 
+> miscompilation, I'm using gcc-4.3) and report back. 
 > 
+>>> This happens on a newly created filesystem with xfsprogs 2.6.9 (I also
+>>> tested 2.5.22). I have a 32bit powermac, so it could be an endian issue.
+> 
+
+We've had a few problems reported with XFS on 32-bit powermacs and the culprit
+appears to be some changes to bit manipulation routines.  Could you please try
+reverse applying the attached patches and see if the problem is resolved?
+
+Lachlan
+
+--------------040302000703060606050806
+Content-Type: text/plain;
+ name="patch.1"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="patch.1"
+
+Y29tbWl0IGVkZDMxOWRjNTI3NzMzZTYxZWVjNWJkYzljZTIwYzk0NjM0YjY0
+ODIKQXV0aG9yOiBEYXZpZCBDaGlubmVyIDxkZ2NAc2dpLmNvbT4KRGF0ZTog
+ICBGcmkgRGVjIDcgMTQ6MDg6NDggMjAwNyArMTEwMAoKICAgIFtYRlNdIEZp
+eCB4ZnNfbG93Yml0NjQKICAgIAogICAgeGZzX2xvd2JpdDY0IHdhcyBicm9r
+ZW4gb24gMzIgYml0IHBsYXRmb3JtcyBpbiBhIHJlY2VudCBjbGVhbnVwIG9m
+IHRoZSB4ZnMKICAgIGJpdG9wcy4gRml4IGl0IGJhY2sgdXAgYWdhaW4uCiAg
+ICAKICAgIFNHSS1QVjogOTc0MDA1CiAgICBTR0ktTW9kaWQ6IHhmcy1saW51
+eC1tZWxiOnhmcy1rZXJuOjMwMjAyYQogICAgCiAgICBTaWduZWQtb2ZmLWJ5
+OiBEYXZpZCBDaGlubmVyIDxkZ2NAc2dpLmNvbT4KICAgIFNpZ25lZC1vZmYt
+Ynk6IExhY2hsYW4gTWNJbHJveSA8bGFjaGxhbkBzZ2kuY29tPgoKZGlmZiAt
+LWdpdCBhL2ZzL3hmcy94ZnNfYml0LmggYi9mcy94ZnMveGZzX2JpdC5oCmlu
+ZGV4IDBmOWZjOWEuLjMyNWEwMDcgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNf
+Yml0LmgKKysrIGIvZnMveGZzL3hmc19iaXQuaApAQCAtNjEsMTUgKzYxLDE1
+IEBAIHN0YXRpYyBpbmxpbmUgaW50IHhmc19oaWdoYml0NjQoX191aW50NjQK
+IC8qIEdldCBsb3cgYml0IHNldCBvdXQgb2YgMzItYml0IGFyZ3VtZW50LCAt
+MSBpZiBub25lIHNldCAqLwogc3RhdGljIGlubGluZSBpbnQgeGZzX2xvd2Jp
+dDMyKF9fdWludDMyX3QgdikKIHsKLQl1bnNpZ25lZCBsb25nCXQgPSB2Owot
+CXJldHVybiAodikgPyBmaW5kX2ZpcnN0X2JpdCgmdCwgMzIpIDogLTE7CisJ
+X191aW50MzJfdCB0ID0gdjsKKwlyZXR1cm4gKHQpID8gZmluZF9maXJzdF9i
+aXQoKHVuc2lnbmVkIGxvbmcgKikmdCwgMzIpIDogLTE7CiB9CiAKIC8qIEdl
+dCBsb3cgYml0IHNldCBvdXQgb2YgNjQtYml0IGFyZ3VtZW50LCAtMSBpZiBu
+b25lIHNldCAqLwogc3RhdGljIGlubGluZSBpbnQgeGZzX2xvd2JpdDY0KF9f
+dWludDY0X3QgdikKIHsKLQl1bnNpZ25lZCBsb25nCXQgPSB2OwotCXJldHVy
+biAodikgPyBmaW5kX2ZpcnN0X2JpdCgmdCwgNjQpIDogLTE7CisJX191aW50
+NjRfdCB0ID0gdjsKKwlyZXR1cm4gKHQpID8gZmluZF9maXJzdF9iaXQoKHVu
+c2lnbmVkIGxvbmcgKikmdCwgNjQpIDogLTE7CiB9CiAKIC8qIFJldHVybiB3
+aGV0aGVyIGJpdG1hcCBpcyBlbXB0eSAoMSA9PSBlbXB0eSkgKi8K
+
+--------------040302000703060606050806
+Content-Type: text/plain;
+ name="patch.2"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="patch.2"
+
+Y29tbWl0IGE2OWIxNzZkZjI0NmQ1OTYyNmU2YTljNjQwYjQ0YzA5MjFmYTQ1
+NjYKQXV0aG9yOiBEYXZpZCBDaGlubmVyIDxkZ2NAc2dpLmNvbT4KRGF0ZTog
+ICBGcmkgTm92IDIzIDE2OjI3OjU5IDIwMDcgKzExMDAKCiAgICBbWEZTXSBV
+c2UgdGhlIGdlbmVyaWMgYml0b3BzIHJhdGhlciB0aGFuIGltcGxlbWVudGlu
+ZyB0aGVtIG91cnNlbHZlcy4KICAgIFBhdGNoIGluc3BpcmVkIGJ5IEFuZGkg
+S2xlZW4uCiAgICAKICAgIFNHSS1QVjogOTcxMTg2CiAgICBTR0ktTW9kaWQ6
+IHhmcy1saW51eC1tZWxiOnhmcy1rZXJuOjMwMDAwYQogICAgCiAgICBTaWdu
+ZWQtb2ZmLWJ5OiBEYXZpZCBDaGlubmVyIDxkZ2NAc2dpLmNvbT4KICAgIFNp
+Z25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFk
+Lm9yZz4KICAgIFNpZ25lZC1vZmYtYnk6IExhY2hsYW4gTWNJbHJveSA8bGFj
+aGxhbkBzZ2kuY29tPgoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYml0LmMg
+Yi9mcy94ZnMveGZzX2JpdC5jCmluZGV4IGZhYjBiNmQuLjQ4MjI4ODQgMTAw
+NjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfYml0LmMKKysrIGIvZnMveGZzL3hmc19i
+aXQuYwpAQCAtMjUsMTA5ICsyNSw2IEBACiAgKiBYRlMgYml0IG1hbmlwdWxh
+dGlvbiByb3V0aW5lcywgdXNlZCBpbiBub24tcmVhbHRpbWUgY29kZS4KICAq
+LwogCi0jaWZuZGVmIEhBVkVfQVJDSF9ISUdIQklUCi0vKgotICogSW5kZXgg
+b2YgaGlnaCBiaXQgbnVtYmVyIGluIGJ5dGUsIC0xIGZvciBub25lIHNldCwg
+MC4uNyBvdGhlcndpc2UuCi0gKi8KLXN0YXRpYyBjb25zdCBjaGFyIHhmc19o
+aWdoYml0WzI1Nl0gPSB7Ci0gICAgICAgLTEsIDAsIDEsIDEsIDIsIDIsIDIs
+IDIsCQkJLyogMDAgLi4gMDcgKi8KLQkzLCAzLCAzLCAzLCAzLCAzLCAzLCAz
+LAkJCS8qIDA4IC4uIDBmICovCi0JNCwgNCwgNCwgNCwgNCwgNCwgNCwgNCwJ
+CQkvKiAxMCAuLiAxNyAqLwotCTQsIDQsIDQsIDQsIDQsIDQsIDQsIDQsCQkJ
+LyogMTggLi4gMWYgKi8KLQk1LCA1LCA1LCA1LCA1LCA1LCA1LCA1LAkJCS8q
+IDIwIC4uIDI3ICovCi0JNSwgNSwgNSwgNSwgNSwgNSwgNSwgNSwJCQkvKiAy
+OCAuLiAyZiAqLwotCTUsIDUsIDUsIDUsIDUsIDUsIDUsIDUsCQkJLyogMzAg
+Li4gMzcgKi8KLQk1LCA1LCA1LCA1LCA1LCA1LCA1LCA1LAkJCS8qIDM4IC4u
+IDNmICovCi0JNiwgNiwgNiwgNiwgNiwgNiwgNiwgNiwJCQkvKiA0MCAuLiA0
+NyAqLwotCTYsIDYsIDYsIDYsIDYsIDYsIDYsIDYsCQkJLyogNDggLi4gNGYg
+Ki8KLQk2LCA2LCA2LCA2LCA2LCA2LCA2LCA2LAkJCS8qIDUwIC4uIDU3ICov
+Ci0JNiwgNiwgNiwgNiwgNiwgNiwgNiwgNiwJCQkvKiA1OCAuLiA1ZiAqLwot
+CTYsIDYsIDYsIDYsIDYsIDYsIDYsIDYsCQkJLyogNjAgLi4gNjcgKi8KLQk2
+LCA2LCA2LCA2LCA2LCA2LCA2LCA2LAkJCS8qIDY4IC4uIDZmICovCi0JNiwg
+NiwgNiwgNiwgNiwgNiwgNiwgNiwJCQkvKiA3MCAuLiA3NyAqLwotCTYsIDYs
+IDYsIDYsIDYsIDYsIDYsIDYsCQkJLyogNzggLi4gN2YgKi8KLQk3LCA3LCA3
+LCA3LCA3LCA3LCA3LCA3LAkJCS8qIDgwIC4uIDg3ICovCi0JNywgNywgNywg
+NywgNywgNywgNywgNywJCQkvKiA4OCAuLiA4ZiAqLwotCTcsIDcsIDcsIDcs
+IDcsIDcsIDcsIDcsCQkJLyogOTAgLi4gOTcgKi8KLQk3LCA3LCA3LCA3LCA3
+LCA3LCA3LCA3LAkJCS8qIDk4IC4uIDlmICovCi0JNywgNywgNywgNywgNywg
+NywgNywgNywJCQkvKiBhMCAuLiBhNyAqLwotCTcsIDcsIDcsIDcsIDcsIDcs
+IDcsIDcsCQkJLyogYTggLi4gYWYgKi8KLQk3LCA3LCA3LCA3LCA3LCA3LCA3
+LCA3LAkJCS8qIGIwIC4uIGI3ICovCi0JNywgNywgNywgNywgNywgNywgNywg
+NywJCQkvKiBiOCAuLiBiZiAqLwotCTcsIDcsIDcsIDcsIDcsIDcsIDcsIDcs
+CQkJLyogYzAgLi4gYzcgKi8KLQk3LCA3LCA3LCA3LCA3LCA3LCA3LCA3LAkJ
+CS8qIGM4IC4uIGNmICovCi0JNywgNywgNywgNywgNywgNywgNywgNywJCQkv
+KiBkMCAuLiBkNyAqLwotCTcsIDcsIDcsIDcsIDcsIDcsIDcsIDcsCQkJLyog
+ZDggLi4gZGYgKi8KLQk3LCA3LCA3LCA3LCA3LCA3LCA3LCA3LAkJCS8qIGUw
+IC4uIGU3ICovCi0JNywgNywgNywgNywgNywgNywgNywgNywJCQkvKiBlOCAu
+LiBlZiAqLwotCTcsIDcsIDcsIDcsIDcsIDcsIDcsIDcsCQkJLyogZjAgLi4g
+ZjcgKi8KLQk3LCA3LCA3LCA3LCA3LCA3LCA3LCA3LAkJCS8qIGY4IC4uIGZm
+ICovCi19OwotI2VuZGlmCi0KLS8qCi0gKiB4ZnNfaGlnaGJpdDMyOiBnZXQg
+aGlnaCBiaXQgc2V0IG91dCBvZiAzMi1iaXQgYXJndW1lbnQsIC0xIGlmIG5v
+bmUgc2V0LgotICovCi1pbmxpbmUgaW50Ci14ZnNfaGlnaGJpdDMyKAotCV9f
+dWludDMyX3QJdikKLXsKLSNpZmRlZiBIQVZFX0FSQ0hfSElHSEJJVAotCXJl
+dHVybiBoaWdoYml0MzIodik7Ci0jZWxzZQotCWludAkJaTsKLQotCWlmICh2
+ICYgMHhmZmZmMDAwMCkKLQkJaWYgKHYgJiAweGZmMDAwMDAwKQotCQkJaSA9
+IDI0OwotCQllbHNlCi0JCQlpID0gMTY7Ci0JZWxzZSBpZiAodiAmIDB4MDAw
+MGZmZmYpCi0JCWlmICh2ICYgMHgwMDAwZmYwMCkKLQkJCWkgPSA4OwotCQll
+bHNlCi0JCQlpID0gMDsKLQllbHNlCi0JCXJldHVybiAtMTsKLQlyZXR1cm4g
+aSArIHhmc19oaWdoYml0Wyh2ID4+IGkpICYgMHhmZl07Ci0jZW5kaWYKLX0K
+LQotLyoKLSAqIHhmc19sb3diaXQ2NDogZ2V0IGxvdyBiaXQgc2V0IG91dCBv
+ZiA2NC1iaXQgYXJndW1lbnQsIC0xIGlmIG5vbmUgc2V0LgotICovCi1pbnQK
+LXhmc19sb3diaXQ2NCgKLQlfX3VpbnQ2NF90CXYpCi17Ci0JX191aW50MzJf
+dAl3ID0gKF9fdWludDMyX3QpdjsKLQlpbnQJCW4gPSAwOwotCi0JaWYgKHcp
+IHsJLyogbG93ZXIgYml0cyAqLwotCQluID0gZmZzKHcpOwotCX0gZWxzZSB7
+CS8qIHVwcGVyIGJpdHMgKi8KLQkJdyA9IChfX3VpbnQzMl90KSh2ID4+IDMy
+KTsKLQkJaWYgKHcgJiYgKG4gPSBmZnModykpKQotCQkJbiArPSAzMjsKLQl9
+Ci0JcmV0dXJuIG4gLSAxOwotfQotCi0vKgotICogeGZzX2hpZ2hiaXQ2NDog
+Z2V0IGhpZ2ggYml0IHNldCBvdXQgb2YgNjQtYml0IGFyZ3VtZW50LCAtMSBp
+ZiBub25lIHNldC4KLSAqLwotaW50Ci14ZnNfaGlnaGJpdDY0KAotCV9fdWlu
+dDY0X3QJdikKLXsKLQlfX3VpbnQzMl90CWggPSAoX191aW50MzJfdCkodiA+
+PiAzMik7Ci0KLQlpZiAoaCkKLQkJcmV0dXJuIHhmc19oaWdoYml0MzIoaCkg
+KyAzMjsKLQlyZXR1cm4geGZzX2hpZ2hiaXQzMigoX191aW50MzJfdCl2KTsK
+LX0KLQotCiAvKgogICogUmV0dXJuIHdoZXRoZXIgYml0bWFwIGlzIGVtcHR5
+LgogICogU2l6ZSBpcyBudW1iZXIgb2Ygd29yZHMgaW4gdGhlIGJpdG1hcCwg
+d2hpY2ggaXMgcGFkZGVkIHRvIHdvcmQgYm91bmRhcnkKZGlmZiAtLWdpdCBh
+L2ZzL3hmcy94ZnNfYml0LmggYi9mcy94ZnMveGZzX2JpdC5oCmluZGV4IDA4
+MjY0MWEuLjBmOWZjOWEgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfYml0LmgK
+KysrIGIvZnMveGZzL3hmc19iaXQuaApAQCAtNDcsMTMgKzQ3LDMwIEBAIHN0
+YXRpYyBpbmxpbmUgX191aW50NjRfdCB4ZnNfbWFzazY0bG8oaW4KIH0KIAog
+LyogR2V0IGhpZ2ggYml0IHNldCBvdXQgb2YgMzItYml0IGFyZ3VtZW50LCAt
+MSBpZiBub25lIHNldCAqLwotZXh0ZXJuIGludCB4ZnNfaGlnaGJpdDMyKF9f
+dWludDMyX3Qgdik7Ci0KLS8qIEdldCBsb3cgYml0IHNldCBvdXQgb2YgNjQt
+Yml0IGFyZ3VtZW50LCAtMSBpZiBub25lIHNldCAqLwotZXh0ZXJuIGludCB4
+ZnNfbG93Yml0NjQoX191aW50NjRfdCB2KTsKK3N0YXRpYyBpbmxpbmUgaW50
+IHhmc19oaWdoYml0MzIoX191aW50MzJfdCB2KQoreworCXJldHVybiBmbHMo
+dikgLSAxOworfQogCiAvKiBHZXQgaGlnaCBiaXQgc2V0IG91dCBvZiA2NC1i
+aXQgYXJndW1lbnQsIC0xIGlmIG5vbmUgc2V0ICovCi1leHRlcm4gaW50IHhm
+c19oaWdoYml0NjQoX191aW50NjRfdCk7CitzdGF0aWMgaW5saW5lIGludCB4
+ZnNfaGlnaGJpdDY0KF9fdWludDY0X3QgdikKK3sKKwlyZXR1cm4gZmxzNjQo
+dikgLSAxOworfQorCisvKiBHZXQgbG93IGJpdCBzZXQgb3V0IG9mIDMyLWJp
+dCBhcmd1bWVudCwgLTEgaWYgbm9uZSBzZXQgKi8KK3N0YXRpYyBpbmxpbmUg
+aW50IHhmc19sb3diaXQzMihfX3VpbnQzMl90IHYpCit7CisJdW5zaWduZWQg
+bG9uZwl0ID0gdjsKKwlyZXR1cm4gKHYpID8gZmluZF9maXJzdF9iaXQoJnQs
+IDMyKSA6IC0xOworfQorCisvKiBHZXQgbG93IGJpdCBzZXQgb3V0IG9mIDY0
+LWJpdCBhcmd1bWVudCwgLTEgaWYgbm9uZSBzZXQgKi8KK3N0YXRpYyBpbmxp
+bmUgaW50IHhmc19sb3diaXQ2NChfX3VpbnQ2NF90IHYpCit7CisJdW5zaWdu
+ZWQgbG9uZwl0ID0gdjsKKwlyZXR1cm4gKHYpID8gZmluZF9maXJzdF9iaXQo
+JnQsIDY0KSA6IC0xOworfQogCiAvKiBSZXR1cm4gd2hldGhlciBiaXRtYXAg
+aXMgZW1wdHkgKDEgPT0gZW1wdHkpICovCiBleHRlcm4gaW50IHhmc19iaXRt
+YXBfZW1wdHkodWludCAqbWFwLCB1aW50IHNpemUpOwpkaWZmIC0tZ2l0IGEv
+ZnMveGZzL3hmc19ydGFsbG9jLmMgYi9mcy94ZnMveGZzX3J0YWxsb2MuYwpp
+bmRleCA0NzA4MmMwLi5jYTgzZGRmIDEwMDY0NAotLS0gYS9mcy94ZnMveGZz
+X3J0YWxsb2MuYworKysgYi9mcy94ZnMveGZzX3J0YWxsb2MuYwpAQCAtNzMs
+MTggKzczLDYgQEAgU1RBVElDIGludCB4ZnNfcnRtb2RpZnlfc3VtbWFyeSh4
+ZnNfbW91bgogICovCiAKIC8qCi0gKiB4ZnNfbG93Yml0MzI6IGdldCBsb3cg
+Yml0IHNldCBvdXQgb2YgMzItYml0IGFyZ3VtZW50LCAtMSBpZiBub25lIHNl
+dC4KLSAqLwotU1RBVElDIGludAoteGZzX2xvd2JpdDMyKAotCV9fdWludDMy
+X3QJdikKLXsKLQlpZiAodikKLQkJcmV0dXJuIGZmcyh2KSAtIDE7Ci0JcmV0
+dXJuIC0xOwotfQotCi0vKgogICogQWxsb2NhdGUgc3BhY2UgdG8gdGhlIGJp
+dG1hcCBvciBzdW1tYXJ5IGZpbGUsIGFuZCB6ZXJvIGl0LCBmb3IgZ3Jvd2Zz
+LgogICovCiBTVEFUSUMgaW50CQkJCS8qIGVycm9yICovCkBAIC00NDQsNiAr
+NDMyLDcgQEAgeGZzX3J0YWxsb2NhdGVfZXh0ZW50X25lYXIoCiAJfQogCWJi
+bm8gPSBYRlNfQklUVE9CTE9DSyhtcCwgYm5vKTsKIAlpID0gMDsKKwlBU1NF
+UlQobWlubGVuICE9IDApOwogCWxvZzJsZW4gPSB4ZnNfaGlnaGJpdDMyKG1p
+bmxlbik7CiAJLyoKIAkgKiBMb29wIG92ZXIgYWxsIGJpdG1hcCBibG9ja3Mg
+KGJibm8gKyBpIGlzIGN1cnJlbnQgYmxvY2spLgpAQCAtNjEyLDYgKzYwMSw4
+IEBAIHhmc19ydGFsbG9jYXRlX2V4dGVudF9zaXplKAogCXhmc19zdW1pbmZv
+X3QJc3VtOwkJLyogc3VtbWFyeSBpbmZvcm1hdGlvbiBmb3IgZXh0ZW50cyAq
+LwogCiAJQVNTRVJUKG1pbmxlbiAlIHByb2QgPT0gMCAmJiBtYXhsZW4gJSBw
+cm9kID09IDApOworCUFTU0VSVChtYXhsZW4gIT0gMCk7CisKIAkvKgogCSAq
+IExvb3Agb3ZlciBhbGwgdGhlIGxldmVscyBzdGFydGluZyB3aXRoIG1heGxl
+bi4KIAkgKiBBdCBlYWNoIGxldmVsLCBsb29rIGF0IGFsbCB0aGUgYml0bWFw
+IGJsb2NrcywgdG8gc2VlIGlmIHRoZXJlCkBAIC02NjksNiArNjYwLDkgQEAg
+eGZzX3J0YWxsb2NhdGVfZXh0ZW50X3NpemUoCiAJCSpydGJsb2NrID0gTlVM
+TFJUQkxPQ0s7CiAJCXJldHVybiAwOwogCX0KKwlBU1NFUlQobWlubGVuICE9
+IDApOworCUFTU0VSVChtYXhsZW4gIT0gMCk7CisKIAkvKgogCSAqIExvb3Ag
+b3ZlciBzaXplcywgZnJvbSBtYXhsZW4gZG93biB0byBtaW5sZW4uCiAJICog
+VGhpcyB0aW1lLCB3aGVuIHdlIGRvIHRoZSBhbGxvY2F0aW9ucywgYWxsb3cg
+c21hbGxlciBvbmVzCkBAIC0xOTU0LDYgKzE5NDgsNyBAQCB4ZnNfZ3Jvd2Zz
+X3J0KAogCQkJCSAgbnNicC0+c2JfYmxvY2tzaXplICogbnNicC0+c2JfcmV4
+dHNpemUpOwogCQluc2JwLT5zYl9yZXh0ZW50cyA9IG5zYnAtPnNiX3JibG9j
+a3M7CiAJCWRvX2Rpdihuc2JwLT5zYl9yZXh0ZW50cywgbnNicC0+c2JfcmV4
+dHNpemUpOworCQlBU1NFUlQobnNicC0+c2JfcmV4dGVudHMgIT0gMCk7CiAJ
+CW5zYnAtPnNiX3JleHRzbG9nID0geGZzX2hpZ2hiaXQzMihuc2JwLT5zYl9y
+ZXh0ZW50cyk7CiAJCW5yc3VtbGV2ZWxzID0gbm1wLT5tX3JzdW1sZXZlbHMg
+PSBuc2JwLT5zYl9yZXh0c2xvZyArIDE7CiAJCW5yc3Vtc2l6ZSA9Cg==
+
+--------------040302000703060606050806--
