@@ -1,65 +1,60 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Feb 2008 12:12:50 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Feb 2008 13:17:42 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1QKChDx021952
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 12:12:46 -0800
-Received: from gv-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9BEBC11EF9A7
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 12:13:10 -0800 (PST)
-Received: from gv-out-0910.google.com (gv-out-0910.google.com [216.239.58.187]) by cuda.sgi.com with ESMTP id GVy1F0JIRFm6TWha for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 12:13:10 -0800 (PST)
-Received: by gv-out-0910.google.com with SMTP id s4so782310gve.9
-        for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 12:13:09 -0800 (PST)
-Message-ID: <2db2c6b80802261213v40490c3ex217ed2d3a077d7d4@mail.gmail.com>
-Date: Tue, 26 Feb 2008 21:13:07 +0100
-From: Rekrutacja119 <rekrutacja119@gmail.com>
-Subject: Re: xfs I/O error
-In-Reply-To: <20080225211055.GK29277@vestdata.no>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1QLHXAV031480
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 13:17:34 -0800
+Received: from merkurneu.hrz.uni-giessen.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CC45ECD808
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 13:18:00 -0800 (PST)
+Received: from merkurneu.hrz.uni-giessen.de (merkurneu.hrz.uni-giessen.de [134.176.2.3]) by cuda.sgi.com with ESMTP id ZB2jxLxKapVwTVBQ for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 13:18:00 -0800 (PST)
+From: Marc Dietrich <Marc.Dietrich@ap.physik.uni-giessen.de>
+Subject: Re: filesystem corruption in linus tree
+Date: Tue, 26 Feb 2008 21:00:17 +0100
+References: <03F8FD43-322F-41E3-A7A0-CD4E9AD8B4DE@ap.physik.uni-giessen.de> <200802252347.50576.marc.dietrich@ap.physik.uni-giessen.de> <47C3C20A.90603@sgi.com>
+In-Reply-To: <47C3C20A.90603@sgi.com>
 MIME-Version: 1.0
-References: <2db2c6b80802231346r78d59381j49927e15f40e7ef8@mail.gmail.com>
-	 <20080224121722.GY29277@vestdata.no>
-	 <2db2c6b80802250847m2d161f5n276026dae396d3cc@mail.gmail.com>
-	 <20080225211055.GK29277@vestdata.no>
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Message-Id: <200802262100.18631.marc.dietrich@ap.physik.uni-giessen.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: lachlan@sgi.com
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-2008/2/25, Ragnar Kj=F8rstad <xfs@ragnark.vestdata.no>:
->
-> On Mon, Feb 25, 2008 at 05:47:12PM +0100, Rekrutacja119 wrote:
-> > 2008/2/24, Ragnar Kj=F8rstad <xfs@ragnark.vestdata.no>:
-> > >
-> > > On Sat, Feb 23, 2008 at 10:46:52PM +0100, Rekrutacja119 wrote:
-> > > > the easiest solution would be to just ignore errors, and if not,
-> then to
-> > > > somehow force xfs to mark them as bad sectors
-> > >
-> > > If you really wanted to you could probably use dm to map your bad
-> > > sectors to another device.
+
+Hi again,
+
+On Tuesday 26 February 2008 08:38:50 Lachlan McIlroy wrote:
+> Marc Dietrich wrote:
+> > Hi,
 > >
-> > what do you mean by that? how to do it ?
->
-> dm is the linux device mapper. It is used by LVM to map virtual blocks
-> from logical volumes to physical blocks on logical volumes, but you can
-> also create your custom remapping table to do other things.
->
-> I don't know the exact dmsetup command, but you should be able to find
-> that in the dm documentation or ask on the dm mailinglist.
->
-> http://sources.redhat.com/dm/
+> > On Monday 25 February 2008 01:36:28 Barry Naujok wrote:
+> >> On Sun, 24 Feb 2008 20:58:26 +1100, Marc Dietrich
+> >>
+> >> <Marc.Dietrich@ap.physik.uni-giessen.de> wrote:
+> >>> Hi,
+> >>>
+> >>> somewhere after the release of 2.6.24 my xfs filesystem got corrupted.
+> >>> Initialy I thought it was only related to the readdir bug.
+> >>> (http://oss.sgi.com/archives/xfs/2008-02/msg00027.html) So I waited for
+> >>> the fix to go into mainline. Yesterday I tried again, but got this
+> >>> error during boot:
 
+<sniped>
 
+> We've had a few problems reported with XFS on 32-bit powermacs and the
+> culprit appears to be some changes to bit manipulation routines.  Could you
+> please try reverse applying the attached patches and see if the problem is
+> resolved?
 
-but i suppose i can do it like Eric told me - mount it read only. effects
-would be the same - i will have acess to everything that is readable, and i
-wont even have to copy all the stuff into the same device (i can copy half
-of the dirs to one, and other half to others)
+I saw, that you already pushed it into mainline - for a good reason ;-) Works 
+as expeted.
 
-the read-only advice was very good and thank you very much eric, it helped
-me a lot.
+Please also don't forget 2.6.24-stable !
 
+Thanks
 
-[[HTML alternate version deleted]]
+Marc
