@@ -1,209 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Feb 2008 23:54:38 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1Q7sVgF019442
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:54:33 -0800
-Received: from toro.qb3.berkeley.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7552A11ED5FA
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:54:58 -0800 (PST)
-Received: from toro.qb3.berkeley.edu (toro.QB3.Berkeley.EDU [169.229.244.93]) by cuda.sgi.com with ESMTP id hPWraLdWpSTiQVKy for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:54:58 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by toro.qb3.berkeley.edu (Postfix) with ESMTP id 9696223913A
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2008 23:54:57 -0800 (PST)
-Date: Mon, 25 Feb 2008 23:54:57 -0800 (PST)
-From: slaton <slaton@berkeley.edu>
-Subject: Re: Linux XFS filesystem corruption (XFS_WANT_CORRUPTED_GOTO)
-In-Reply-To: <47C343D1.30304@sandeen.net>
-Message-ID: <Pine.LNX.4.64.0802251447390.20825@toro.qb3.berkeley.edu>
-References: <Pine.LNX.4.64.0802221718430.13471@toro.qb3.berkeley.edu>
- <47C343D1.30304@sandeen.net>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="679170-99521583-1204012497=:15468"
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 26 Feb 2008 09:57:49 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1QHvcmP012319
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 09:57:40 -0800
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CBE4161B888
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 09:58:05 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id Rp0dbsHa4GLrOE3c for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 09:58:05 -0800 (PST)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m1QHvwF3013396
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2008 18:57:59 +0100
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m1QHvweL013394
+	for xfs@oss.sgi.com; Tue, 26 Feb 2008 18:57:58 +0100
+Date: Tue, 26 Feb 2008 18:57:58 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] kill t_sema member of struct xfs_trans
+Message-ID: <20080226175758.GA13162@lst.de>
+References: <20080207082724.GA14119@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080207082724.GA14119@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Feb 07, 2008 at 09:27:24AM +0100, Christoph Hellwig wrote:
+> It's completely unused so we might aswell kill it.  Note that there is
+> another t_sema in struct xlog_ticket, which is used and actually an sv_t
+> despite the name.  That one is left untouched by this patch.
 
---679170-99521583-1204012497=:15468
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Ping?
 
-Thanks for the reply.
-
-> Are you hitting http://oss.sgi.com/projects/xfs/faq.html#dir2 ?
-
-Presumably not - i'm using 2.6.17.11, and that information indicates the 
-bug was fixed in 2.6.17.7.
-
-I've attached the output from running ksymoops on messages.1. First 
-crash/trace (Feb 21 19:xx) corresponds to the original XFS event; the 
-second (Feb 22 15:xx) is the system going down when i tried to unmount the 
-volume.
-
-Here are the additional syslog msgs corresponding to the Feb 22 15:xx 
-crash.
-
-Feb 22 15:47:13 qln01 kernel: grsec: From 10.0.2.93: unmount of /dev/sda1 
-by /bin/umount[umount:18604] uid/euid:0/0 gid/egid:0/0, parent 
-/bin/bash[bash:31972] uid/euid:0/0 gid/egid:0/0
-Feb 22 15:47:14 qln01 kernel: xfs_force_shutdown(sda1,0x1) called from 
-line 338 of file fs/xfs/xfs_rw.c.  Return address = 0xffffffff88173ce4
-Feb 22 15:47:14 qln01 kernel: xfs_force_shutdown(sda1,0x1) called from 
-line 338 of file fs/xfs/xfs_rw.c.  Return address = 0xffffffff88173ce4
-Feb 22 15:47:28 qln01 kernel: BUG: soft lockup detected on CPU#0!
-
-thanks
-slaton
---679170-99521583-1204012497=:15468
-Content-Type: TEXT/plain; charset=US-ASCII; name=ksymoops.txt
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.64.0802252354570.15468@toro.qb3.berkeley.edu>
-Content-Description: 
-Content-Disposition: attachment; filename=ksymoops.txt
-
-a3N5bW9vcHMgMi40Ljkgb24geDg2XzY0IDIuNi4xNy4xMS0xMDIuY2Fvcy5z
-bXAuICBPcHRpb25zIHVzZWQNCiAgICAgLVYgKGRlZmF1bHQpDQogICAgIC1r
-IC9wcm9jL2tzeW1zIChkZWZhdWx0KQ0KICAgICAtbCAvcHJvYy9tb2R1bGVz
-IChkZWZhdWx0KQ0KICAgICAtbyAvbGliL21vZHVsZXMvMi42LjE3LjExLTEw
-Mi5jYW9zLnNtcC8gKGRlZmF1bHQpDQogICAgIC1tIC91c3Ivc3JjL2xpbnV4
-L1N5c3RlbS5tYXAgKGRlZmF1bHQpDQoNCldhcm5pbmc6IFlvdSBkaWQgbm90
-IHRlbGwgbWUgd2hlcmUgdG8gZmluZCBzeW1ib2wgaW5mb3JtYXRpb24uICBJ
-IHdpbGwNCmFzc3VtZSB0aGF0IHRoZSBsb2cgbWF0Y2hlcyB0aGUga2VybmVs
-IGFuZCBtb2R1bGVzIHRoYXQgYXJlIHJ1bm5pbmcNCnJpZ2h0IG5vdyBhbmQg
-SSdsbCB1c2UgdGhlIGRlZmF1bHQgb3B0aW9ucyBhYm92ZSBmb3Igc3ltYm9s
-IHJlc29sdXRpb24uDQpJZiB0aGUgY3VycmVudCBrZXJuZWwgYW5kL29yIG1v
-ZHVsZXMgZG8gbm90IG1hdGNoIHRoZSBsb2csIHlvdSBjYW4gZ2V0DQptb3Jl
-IGFjY3VyYXRlIG91dHB1dCBieSB0ZWxsaW5nIG1lIHRoZSBrZXJuZWwgdmVy
-c2lvbiBhbmQgd2hlcmUgdG8gZmluZA0KbWFwLCBtb2R1bGVzLCBrc3ltcyBl
-dGMuICBrc3ltb29wcyAtaCBleHBsYWlucyB0aGUgb3B0aW9ucy4NCg0KRXJy
-b3IgKHJlZ3VsYXJfZmlsZSk6IHJlYWRfa3N5bXMgc3RhdCAvcHJvYy9rc3lt
-cyBmYWlsZWQNCk5vIG1vZHVsZXMgaW4ga3N5bXMsIHNraXBwaW5nIG9iamVj
-dHMNCk5vIGtzeW1zLCBza2lwcGluZyBsc21vZA0KRXJyb3IgKHJlZ3VsYXJf
-ZmlsZSk6IHJlYWRfc3lzdGVtX21hcCBzdGF0IC91c3Ivc3JjL2xpbnV4L1N5
-c3RlbS5tYXAgZmFpbGVkDQpXYXJuaW5nIChtZXJnZV9tYXBzKTogbm8gc3lt
-Ym9scyBpbiBtZXJnZWQgbWFwDQpGZWIgMTkgMTE6NDQ6MjcgcWxuMDEga2Vy
-bmVsOiBNYWNoaW5lIGNoZWNrIGV2ZW50cyBsb2dnZWQNCkZlYiAxOSAxNjo0
-NDoyNCBxbG4wMSBrZXJuZWw6IE1hY2hpbmUgY2hlY2sgZXZlbnRzIGxvZ2dl
-ZA0KRmViIDE5IDE4OjM5OjIzIHFsbjAxIGtlcm5lbDogTWFjaGluZSBjaGVj
-ayBldmVudHMgbG9nZ2VkDQpGZWIgMTkgMjE6MDk6MjIgcWxuMDEga2VybmVs
-OiBNYWNoaW5lIGNoZWNrIGV2ZW50cyBsb2dnZWQNCkZlYiAxOSAyMzo0OToy
-MCBxbG4wMSBrZXJuZWw6IE1hY2hpbmUgY2hlY2sgZXZlbnRzIGxvZ2dlZA0K
-RmViIDIwIDAyOjI5OjE5IHFsbjAxIGtlcm5lbDogTWFjaGluZSBjaGVjayBl
-dmVudHMgbG9nZ2VkDQpGZWIgMjAgMTQ6MjQ6MTIgcWxuMDEga2VybmVsOiBN
-YWNoaW5lIGNoZWNrIGV2ZW50cyBsb2dnZWQNCkZlYiAyMCAxOToyOToxMCBx
-bG4wMSBrZXJuZWw6IE1hY2hpbmUgY2hlY2sgZXZlbnRzIGxvZ2dlZA0KRmVi
-IDIxIDE5OjAwOjU4IHFsbjAxIGtlcm5lbDogQ2FsbCBUcmFjZTogWzxmZmZm
-ZmZmZjg4MTI5NzEzPl0gWzxmZmZmZmZmZjg4MTJiM2EzPl0NCkZlYiAyMSAx
-OTowMDo1OCBxbG4wMSBrZXJuZWw6ICAgICAgICBbPGZmZmZmZmZmODgxNTBk
-Zjc+XSBbPGZmZmZmZmZmODgxNmFmOGE+XSBbPGZmZmZmZmZmODgxMzdkNmM+
-XQ0KRmViIDIxIDE5OjAwOjU4IHFsbjAxIGtlcm5lbDogICAgICAgIFs8ZmZm
-ZmZmZmY4ODE1N2QyNT5dIFs8ZmZmZmZmZmY4ODE2ZWQxYz5dIFs8ZmZmZmZm
-ZmY4MTEwNTFmYT5dDQpGZWIgMjEgMTk6MDA6NTggcWxuMDEga2VybmVsOiAg
-ICAgICAgWzxmZmZmZmZmZjg4MTdhNWIyPl0gWzxmZmZmZmZmZjgxMDJjOTg4
-Pl0gWzxmZmZmZmZmZjg4MjU2NmVlPl0NCkZlYiAyMSAxOTowMDo1OCBxbG4w
-MSBrZXJuZWw6ICAgICAgICBbPGZmZmZmZmZmODgyNWJhNGQ+XSBbPGZmZmZm
-ZmZmODgyNTE3MGE+XSBbPGZmZmZmZmZmODgxYTM3OWU+XQ0KRmViIDIxIDE5
-OjAwOjU4IHFsbjAxIGtlcm5lbDogICAgICAgIFs8ZmZmZmZmZmY4ODI1MTJk
-YT5dIFs8ZmZmZmZmZmY4ODI1MTRhMD5dIFs8ZmZmZmZmZmY4MTA2MDRlMj5d
-DQpGZWIgMjEgMTk6MDA6NTggcWxuMDEga2VybmVsOiAgICAgICAgWzxmZmZm
-ZmZmZjg4MjUxMmRhPl0gWzxmZmZmZmZmZjg4MjUxMmRhPl0gWzxmZmZmZmZm
-ZjgxMDYwNGRhPl0NCldhcm5pbmcgKE9vcHNfcmVhZCk6IENvZGUgbGluZSBu
-b3Qgc2VlbiwgZHVtcGluZyB3aGF0IGRhdGEgaXMgYXZhaWxhYmxlDQoNCg0K
-VHJhY2U7IGZmZmZmZmZmODgxMjk3MTMgTm8gc3ltYm9scyBhdmFpbGFibGUN
-ClRyYWNlOyBmZmZmZmZmZjg4MTJiM2EzIE5vIHN5bWJvbHMgYXZhaWxhYmxl
-DQpUcmFjZTsgZmZmZmZmZmY4ODE1MGRmNyBObyBzeW1ib2xzIGF2YWlsYWJs
-ZQ0KVHJhY2U7IGZmZmZmZmZmODgxNmFmOGEgTm8gc3ltYm9scyBhdmFpbGFi
-bGUNClRyYWNlOyBmZmZmZmZmZjg4MTM3ZDZjIE5vIHN5bWJvbHMgYXZhaWxh
-YmxlDQpUcmFjZTsgZmZmZmZmZmY4ODE1N2QyNSBObyBzeW1ib2xzIGF2YWls
-YWJsZQ0KVHJhY2U7IGZmZmZmZmZmODgxNmVkMWMgTm8gc3ltYm9scyBhdmFp
-bGFibGUNClRyYWNlOyBmZmZmZmZmZjgxMTA1MWZhIE5vIHN5bWJvbHMgYXZh
-aWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4ODE3YTViMiBObyBzeW1ib2xzIGF2
-YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODEwMmM5ODggTm8gc3ltYm9scyBh
-dmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjg4MjU2NmVlIE5vIHN5bWJvbHMg
-YXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4ODI1YmE0ZCBObyBzeW1ib2xz
-IGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODgyNTE3MGEgTm8gc3ltYm9s
-cyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjg4MWEzNzllIE5vIHN5bWJv
-bHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4ODI1MTJkYSBObyBzeW1i
-b2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODgyNTE0YTAgTm8gc3lt
-Ym9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjgxMDYwNGUyIE5vIHN5
-bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4ODI1MTJkYSBObyBz
-eW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODgyNTEyZGEgTm8g
-c3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjgxMDYwNGRhIE5v
-IHN5bWJvbHMgYXZhaWxhYmxlDQoNCkZlYiAyMiAxNTowODoxMCBxbG4wMSBr
-ZXJuZWw6IGUxMDAwOiBldGgyOiBlMTAwMF93YXRjaGRvZ190YXNrOiBOSUMg
-TGluayBpcyBEb3duDQpGZWIgMjIgMTU6NDc6MjggcWxuMDEga2VybmVsOiBD
-YWxsIFRyYWNlOiA8SVJRPiBbPGZmZmZmZmZmODEwYWVmMWE+XSBbPGZmZmZm
-ZmZmODgxNThmN2E+XQ0KRmViIDIyIDE1OjQ3OjI4IHFsbjAxIGtlcm5lbDog
-ICAgICAgIFs8ZmZmZmZmZmY4MTA4YzI0NT5dIFs8ZmZmZmZmZmY4MTA3Mzdk
-ZD5dIFs8ZmZmZmZmZmY4MTA3Mzg0Mj5dDQpGZWIgMjIgMTU6NDc6MjggcWxu
-MDEga2VybmVsOiAgICAgICAgWzxmZmZmZmZmZjgxMDYwMThjPl0gPEVPST4g
-WzxmZmZmZmZmZjg4MTU4ZjdhPl0gWzxmZmZmZmZmZjg4MTU4ZjdhPl0NCkZl
-YiAyMiAxNTo0NzoyOCBxbG4wMSBrZXJuZWw6ICAgICAgICBbPGZmZmZmZmZm
-ODEwNjRhZTY+XSBbPGZmZmZmZmZmODEwNjRhYjc+XSBbPGZmZmZmZmZmODgx
-NzI3N2Y+XQ0KRmViIDIyIDE1OjQ3OjI4IHFsbjAxIGtlcm5lbDogICAgICAg
-IFs8ZmZmZmZmZmY4ODE1OGY3YT5dIFs8ZmZmZmZmZmY4ODE2NzdkZj5dIFs8
-ZmZmZmZmZmY4ODE2ZDc3YT5dDQpGZWIgMjIgMTU6NDc6MjggcWxuMDEga2Vy
-bmVsOiAgICAgICAgWzxmZmZmZmZmZjg4MTdjNjU2Pl0gWzxmZmZmZmZmZjgx
-MGMzYmRmPl0gWzxmZmZmZmZmZjgxMGM0OGRlPl0NCkZlYiAyMiAxNTo0Nzoy
-OCBxbG4wMSBrZXJuZWw6ICAgICAgICBbPGZmZmZmZmZmODEwYzNiMmQ+XSBb
-PGZmZmZmZmZmODEwY2MwYjc+XSBbPGZmZmZmZmZmODEwMTEyNGY+XQ0KRmVi
-IDIyIDE1OjQ3OjI4IHFsbjAxIGtlcm5lbDogICAgICAgIFs8ZmZmZmZmZmY4
-MTA2MDMyOT5dIFs8ZmZmZmZmZmY4MTA1ZjQ1Mj5dDQpXYXJuaW5nIChPb3Bz
-X3JlYWQpOiBDb2RlIGxpbmUgbm90IHNlZW4sIGR1bXBpbmcgd2hhdCBkYXRh
-IGlzIGF2YWlsYWJsZQ0KDQoNClRyYWNlOyBmZmZmZmZmZjgxMDhjMjQ1IE5v
-IHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4MTA3MzdkZCBO
-byBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODEwNzM4NDIg
-Tm8gc3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjgxMDYwMThj
-IE5vIHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4MTA2NGFl
-NiBObyBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODEwNjRh
-YjcgTm8gc3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjg4MTcy
-NzdmIE5vIHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4ODE1
-OGY3YSBObyBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZmODgx
-Njc3ZGYgTm8gc3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZmZjg4
-MTZkNzdhIE5vIHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZmZmY4
-ODE3YzY1NiBObyBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZmZmZm
-ODEwYzNiZGYgTm8gc3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZmZmZm
-ZjgxMGM0OGRlIE5vIHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZmZmZm
-ZmY4MTBjM2IyZCBObyBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZmZmZm
-ZmZmODEwY2MwYjcgTm8gc3ltYm9scyBhdmFpbGFibGUNClRyYWNlOyBmZmZm
-ZmZmZjgxMDExMjRmIE5vIHN5bWJvbHMgYXZhaWxhYmxlDQpUcmFjZTsgZmZm
-ZmZmZmY4MTA2MDMyOSBObyBzeW1ib2xzIGF2YWlsYWJsZQ0KVHJhY2U7IGZm
-ZmZmZmZmODEwNWY0NTIgTm8gc3ltYm9scyBhdmFpbGFibGUNCg0KRmViIDI1
-IDIxOjQ3OjUyIHFsbjAxIGtlcm5lbDogQ1BVIDA6IGFwZXJ0dXJlIEAgNzcw
-MDAwMDAwIHNpemUgMzIgTUINCkZlYiAyNSAyMTo0Nzo1MiBxbG4wMSBrZXJu
-ZWw6IENQVSAxOiBTeW5jaW5nIFRTQyB0byBDUFUgMC4NCkZlYiAyNSAyMTo0
-Nzo1MiBxbG4wMSBrZXJuZWw6IENQVSAxOiBzeW5jaHJvbml6ZWQgVFNDIHdp
-dGggQ1BVIDAgKGxhc3QgZGlmZiA1IGN5Y2xlcywgbWF4ZXJyIDEwNzcgY3lj
-bGVzKQ0KRmViIDI1IDIxOjQ3OjUyIHFsbjAxIGtlcm5lbDogdGVzdGluZyBO
-TUkgd2F0Y2hkb2cgLi4uIE9LLg0KRmViIDI1IDIxOjQ3OjU1IHFsbjAxIGtl
-cm5lbDogZTEwMDA6IDAwMDA6MDI6MDMuMDogZTEwMDBfcHJvYmU6IChQQ0k6
-NjZNSHo6MzItYml0KSAwMDpkMDo2ODowNjpiMDo1ZQ0KRmViIDI1IDIxOjQ3
-OjU1IHFsbjAxIGtlcm5lbDogZTEwMDA6IGV0aDA6IGUxMDAwX3Byb2JlOiBJ
-bnRlbChSKSBQUk8vMTAwMCBOZXR3b3JrIENvbm5lY3Rpb24NCkZlYiAyNSAy
-MTo0Nzo1NSBxbG4wMSBrZXJuZWw6IGUxMDAwOiAwMDAwOjAyOjA0LjA6IGUx
-MDAwX3Byb2JlOiAoUENJOjY2TUh6OjMyLWJpdCkgMDA6ZDA6Njg6MDY6YjA6
-NWYNCkZlYiAyNSAyMTo0Nzo1NSBxbG4wMSBrZXJuZWw6IGUxMDAwOiBldGgx
-OiBlMTAwMF9wcm9iZTogSW50ZWwoUikgUFJPLzEwMDAgTmV0d29yayBDb25u
-ZWN0aW9uDQpGZWIgMjUgMjE6NDc6NTUgcWxuMDEga2VybmVsOiBlMTAwMDog
-MDAwMDowMTowMS4wOiBlMTAwMF9wcm9iZTogKFBDSS1YOjEzM01Iejo2NC1i
-aXQpIDAwOjA0OjIzOmE4OmFjOjc4DQpGZWIgMjUgMjE6NDc6NTUgcWxuMDEg
-a2VybmVsOiBlMTAwMDogZXRoMjogZTEwMDBfcHJvYmU6IEludGVsKFIpIFBS
-Ty8xMDAwIE5ldHdvcmsgQ29ubmVjdGlvbg0KRmViIDI1IDIxOjQ3OjU1IHFs
-bjAxIGtlcm5lbDogZTEwMDA6IDAwMDA6MDE6MDEuMTogZTEwMDBfcHJvYmU6
-IChQQ0ktWDoxMzNNSHo6NjQtYml0KSAwMDowNDoyMzphODphYzo3OQ0KRmVi
-IDI1IDIxOjQ3OjU1IHFsbjAxIGtlcm5lbDogZTEwMDA6IGV0aDM6IGUxMDAw
-X3Byb2JlOiBJbnRlbChSKSBQUk8vMTAwMCBOZXR3b3JrIENvbm5lY3Rpb24N
-CkZlYiAyNSAyMTo0Nzo1NSBxbG4wMSBrZXJuZWw6IGUxMDAwOiBldGgwOiBl
-MTAwMF93YXRjaGRvZ190YXNrOiBOSUMgTGluayBpcyBVcCAxMDAwIE1icHMg
-RnVsbCBEdXBsZXgNCkZlYiAyNSAyMTo0Nzo1NSBxbG4wMSBrZXJuZWw6IGUx
-MDAwOiBldGgxOiBlMTAwMF93YXRjaGRvZ190YXNrOiBOSUMgTGluayBpcyBV
-cCAxMDAgTWJwcyBGdWxsIER1cGxleA0KRmViIDI1IDIxOjQ3OjU1IHFsbjAx
-IGtlcm5lbDogbG86IERpc2FibGVkIFByaXZhY3kgRXh0ZW5zaW9ucw0KRmVi
-IDI1IDIxOjQ4OjI3IHFsbjAxIGtlcm5lbDogZTEwMDA6IGV0aDI6IGUxMDAw
-X3dhdGNoZG9nX3Rhc2s6IE5JQyBMaW5rIGlzIFVwIDEwMCBNYnBzIEZ1bGwg
-RHVwbGV4DQoNCjQgd2FybmluZ3MgYW5kIDIgZXJyb3JzIGlzc3VlZC4gIFJl
-c3VsdHMgbWF5IG5vdCBiZSByZWxpYWJsZS4NCg==
-
---679170-99521583-1204012497=:15468--
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/xfs_trans.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_trans.h	2008-02-05 08:48:40.000000000 +0100
+> +++ linux-2.6-xfs/fs/xfs/xfs_trans.h	2008-02-05 08:48:45.000000000 +0100
+> @@ -341,7 +341,6 @@ typedef struct xfs_trans {
+>  	unsigned int		t_rtx_res;	/* # of rt extents resvd */
+>  	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
+>  	xfs_log_ticket_t	t_ticket;	/* log mgr ticket */
+> -	sema_t			t_sema;		/* sema for commit completion */
+>  	xfs_lsn_t		t_lsn;		/* log seq num of start of
+>  						 * transaction. */
+>  	xfs_lsn_t		t_commit_lsn;	/* log seq num of end of
+---end quoted text---
