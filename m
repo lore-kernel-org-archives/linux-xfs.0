@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 06:40:21 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1SEe3Z1011942
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 06:40:05 -0800
-Message-ID: <47C6C7DB.8070706@sandeen.net>
-Date: Thu, 28 Feb 2008 08:40:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [xfs-masters] Re: filesystem corruption on xfs after	2.6.25-rc1
- (bisected, powerpc related?)
-References: <20080225112310.GA5516@soziologie.ch>	 <200802260052.57875.rjw@sisk.pl> <20080225235703.GA17530@lst.de>	 <200802260113.57875.rjw@sisk.pl>  <20080226114419.GA5353@soziologie.ch> <1204049492.13162.265.camel@johannes.berg>
-In-Reply-To: <1204049492.13162.265.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 10:17:59 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1SIHKMQ001341
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 10:17:23 -0800
+Date: Fri, 29 Feb 2008 05:17:43 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [RFC, patch 1/2] Allow up to 1GB logs in mkfs.xfs
+Message-ID: <20080228181743.GX155259@sgi.com>
+References: <20080221230833.GG155407@sgi.com> <ncctzk11zhl.fsf@sgi.com> <20080222050301.GP155407@sgi.com> <47BE6122.5040007@sgi.com> <20080222065338.GQ155407@sgi.com> <47C21585.8030504@sgi.com> <47C21A67.1010706@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <47C21A67.1010706@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Gaudenz Steinlin <gaudenz@soziologie.ch>, "Rafael J. Wysocki" <rjw@sisk.pl>, Christoph Hellwig <hch@lst.de>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-kernel Mailing List <linux-kernel@vger.kernel.org>, Andi Kleen <andi@firstfloor.org>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: markgw@sgi.com, David Chinner <dgc@sgi.com>, Niv Sardi <xaiki@cxhome.ath.cx>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Johannes Berg wrote:
->> I debuged this a bit further by testing the 4 changed functions
->> individually. The problem only occurs with the new version of
->> xfs_lowbit64. 
-...
+On Mon, Feb 25, 2008 at 12:31:19PM +1100, Lachlan McIlroy wrote:
+> Does a larger on-disk log mean we can have a lot more items in the AIL?
 
-> You really need to keep xfs_lowbit64 defined as it was before, or, maybe
-> even better, define ffs64 in parallel to fls64.
+Yes.
 
-Yep, I agree.
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
