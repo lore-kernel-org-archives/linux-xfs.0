@@ -1,71 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Feb 2008 14:44:16 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1RMi9q2030283
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2008 14:44:13 -0800
-Received: from toro.qb3.berkeley.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 98188624642
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2008 14:44:36 -0800 (PST)
-Received: from toro.qb3.berkeley.edu (toro.QB3.Berkeley.EDU [169.229.244.93]) by cuda.sgi.com with ESMTP id Q57Zdi5XPIp2uaoo for <xfs@oss.sgi.com>; Wed, 27 Feb 2008 14:44:36 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by toro.qb3.berkeley.edu (Postfix) with ESMTP id 2EC7223913A
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2008 14:44:04 -0800 (PST)
-Date: Wed, 27 Feb 2008 14:44:04 -0800 (PST)
-From: slaton <slaton@berkeley.edu>
-Subject: Re: Linux XFS filesystem corruption (XFS_WANT_CORRUPTED_GOTO)
-In-Reply-To: <Pine.LNX.4.64.0802251447390.20825@toro.qb3.berkeley.edu>
-Message-ID: <Pine.LNX.4.64.0802271441390.19923@toro.qb3.berkeley.edu>
-References: <Pine.LNX.4.64.0802221718430.13471@toro.qb3.berkeley.edu>
- <47C343D1.30304@sandeen.net> <Pine.LNX.4.64.0802251447390.20825@toro.qb3.berkeley.edu>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Feb 2008 16:32:24 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1S0WH7u008816
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2008 16:32:19 -0800
+Subject: TAKE 977771 - 
+Message-Id: <20080228003236.9050858C4C0F@chook.melbourne.sgi.com>
+Date: Thu, 28 Feb 2008 11:32:36 +1100 (EST)
+From: xaiki@sgi.com (Niv Sardi-Altivanik)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Hi,
+If you mount an XFS filesystem with no mount options at all, then
+the "ikeep" option is set rather than "noikeep".
 
-I'm still hoping for some help with this. Is any more information needed 
-in addition to the ksymoops output previously posted?
+This regression was introduced in 970451. 
 
-In particular i'd like to know if just remounting the filesystem (to 
-replay the journal), then unmounting and running xfs_repair is the best 
-course of action. In addition, i'd like to know what recommended 
-kernel/xfsprogs versions to use for best results.
+With no mount options specified, xfs_parseargs() does the following:
 
-thanks
-slaton
+	int			ikeep = 0;
 
-Slaton Lipscomb
-Nogales Lab, Howard Hughes Medical Institute
-http://cryoem.berkeley.edu
+	args->flags |= XFSMNT_BARRIER;
+	args->flags2 |= XFSMNT2_COMPAT_IOSIZE;
 
-On Mon, 25 Feb 2008, slaton wrote:
+	if (!options)
+		goto done;
 
-> Thanks for the reply.
-> 
-> > Are you hitting http://oss.sgi.com/projects/xfs/faq.html#dir2 ?
-> 
-> Presumably not - i'm using 2.6.17.11, and that information indicates the 
-> bug was fixed in 2.6.17.7.
-> 
-> I've attached the output from running ksymoops on messages.1. First 
-> crash/trace (Feb 21 19:xx) corresponds to the original XFS event; the 
-> second (Feb 22 15:xx) is the system going down when i tried to unmount the 
-> volume.
-> 
-> Here are the additional syslog msgs corresponding to the Feb 22 15:xx 
-> crash.
-> 
-> Feb 22 15:47:13 qln01 kernel: grsec: From 10.0.2.93: unmount of /dev/sda1 
-> by /bin/umount[umount:18604] uid/euid:0/0 gid/egid:0/0, parent 
-> /bin/bash[bash:31972] uid/euid:0/0 gid/egid:0/0
-> Feb 22 15:47:14 qln01 kernel: xfs_force_shutdown(sda1,0x1) called from 
-> line 338 of file fs/xfs/xfs_rw.c.  Return address = 0xffffffff88173ce4
-> Feb 22 15:47:14 qln01 kernel: xfs_force_shutdown(sda1,0x1) called from 
-> line 338 of file fs/xfs/xfs_rw.c.  Return address = 0xffffffff88173ce4
-> Feb 22 15:47:28 qln01 kernel: BUG: soft lockup detected on CPU#0!
-> 
-> thanks
-> slaton
+It only sets the above two options by default and before, it also used to
+set XFSMNT_IDELETE by default.
+
+If options are specified, then
+
+	if (!(args->flags & XFSMNT_DMAPI) && !ikeep)
+		args->flags |= XFSMNT_IDELETE;
+
+is executed later on which is skipped by the "goto done;" above.
+
+The solution is to invert the logic.
+
+
+Date:  Thu Feb 28 11:32:16 AEDT 2008
+Workarea:  chook.melbourne.sgi.com:/home/xaiki/isms/2.6-xfs
+Inspected by:  bnaujok,jeffpc
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30590a
+fs/xfs/xfsidbg.c - 1.345 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.345&r2=text&tr2=1.344&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
+
+fs/xfs/xfs_ialloc.c - 1.197 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.197&r2=text&tr2=1.196&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
+
+fs/xfs/xfs_vfsops.c - 1.556 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.556&r2=text&tr2=1.555&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
+
+fs/xfs/xfs_clnt.h - 1.57 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_clnt.h.diff?r1=text&tr1=1.57&r2=text&tr2=1.56&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
+
+fs/xfs/xfs_mount.h - 1.259 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.259&r2=text&tr2=1.258&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
+
+fs/xfs/linux-2.6/xfs_super.c - 1.410 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.410&r2=text&tr2=1.409&f=h
+	- Change the *_IDELETE flags to *_IKEEP, and flip the logic as necessary.
