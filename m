@@ -1,39 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 14:03:33 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1SM3M65025961
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:03:26 -0800
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 14:39:59 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1SMdgfs028856
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:39:47 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E4DFD62B96D
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:03:50 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id MdqHAOWcKXKoMAka for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:03:50 -0800 (PST)
-Message-ID: <47C72FC5.7030908@sandeen.net>
-Date: Thu, 28 Feb 2008 16:03:49 -0600
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9581EEC51C
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:40:10 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id fr4aiLSrl81KVhDI for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 14:40:10 -0800 (PST)
+Message-ID: <47C73849.3090406@sandeen.net>
+Date: Thu, 28 Feb 2008 16:40:09 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: TAKE 977771 -
-References: <20080228003236.9050858C4C0F@chook.melbourne.sgi.com>
-In-Reply-To: <20080228003236.9050858C4C0F@chook.melbourne.sgi.com>
+Subject: Re: [PATCH, mainline-only] remove dmapi cruft in xfs_file.c
+References: <20080208044405.GB15013@lst.de>
+In-Reply-To: <20080208044405.GB15013@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi-Altivanik <xaiki@sgi.com>
-Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Niv Sardi-Altivanik wrote:
-> If you mount an XFS filesystem with no mount options at all, then
-> the "ikeep" option is set rather than "noikeep".
+Christoph Hellwig wrote:
+> The dmapi cruft in xfs_file.c is totally out of date in mainline vs
+> CVS, and at this point just removing this code which can't be used on
+> mainline at all seems to be the best option to keep it maintainable.
 
-Thanks for getting this in.
+When doing this should probably whack the:
 
-2 questions...
+#ifdef HAVE_FOP_OPEN_EXEC
+        .open_exec      = xfs_file_open_exec,
+#endif
 
-Is it going to make 2.6.25?
+from xfs_file_operations, too?
 
-And can you add a little text description to your subject line, for
-those doing inbox searches for things?  :)
-
-Thanks,
 -Eric
