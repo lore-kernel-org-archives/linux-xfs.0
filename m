@@ -1,49 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 16:47:24 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1T0l9If009652
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 16:47:13 -0800
-Received: from mail.sceen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 56E7762C572
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 16:47:36 -0800 (PST)
-Received: from mail.sceen.net (sceen.net [213.41.243.68]) by cuda.sgi.com with ESMTP id EiiHYnH1xAQIdajl for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 16:47:36 -0800 (PST)
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: TAKE 977771 -
-References: <20080228003236.9050858C4C0F@chook.melbourne.sgi.com>
-	<47C72FC5.7030908@sandeen.net>
-Date: Fri, 29 Feb 2008 11:47:05 +1100
-In-Reply-To: <47C72FC5.7030908@sandeen.net> (Eric Sandeen's message of "Thu,
-	28 Feb 2008 16:03:49 -0600")
-Message-ID: <ncchcfsk2ra.fsf@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 19:49:48 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1T3nbSa020653
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 19:49:40 -0800
+Date: Fri, 29 Feb 2008 14:50:00 +1100
+Subject: [GIT PULL] XFS update for 2.6.25-rc4
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-Id: <20080229035000.7B24058C4C0F@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Niv Sardi-Altivanik <xaiki@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com, Lachlan McIlroy <lachlan@sgi.com>
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-Eric Sandeen <sandeen@sandeen.net> writes:
+Please pull from the for-linus branch:
+    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
-> Niv Sardi-Altivanik wrote:
->> If you mount an XFS filesystem with no mount options at all, then
->> the "ikeep" option is set rather than "noikeep".
->
-> Thanks for getting this in.
->
-> 2 questions...
->
-> Is it going to make 2.6.25?
+This will update the following files:
 
-I hope so, but as I've been told to stay away from git trees it's in
-lachlan's (over-busy) hands.
+ fs/xfs/linux-2.6/xfs_super.c |   14 +++++++-------
+ fs/xfs/xfs_clnt.h            |    2 +-
+ fs/xfs/xfs_ialloc.c          |    2 +-
+ fs/xfs/xfs_mount.h           |    2 +-
+ fs/xfs/xfs_vfsops.c          |    4 ++--
+ 5 files changed, 12 insertions(+), 12 deletions(-)
 
-> And can you add a little text description to your subject line, for
-> those doing inbox searches for things?  :)
+through these commits:
 
-Yep, sorry, I thought our tools were not that d^W^W^Wsmarter than they
-are.
+commit b7405bb65a83e819dd3b21a6d9636c279d9ce79a
+Author: Niv Sardi <xaiki@sgi.com>
+Date:   Fri Feb 29 13:58:40 2008 +1100
 
-Cheers,
--- 
-Niv Sardi
+    [XFS] If you mount an XFS filesystem with no mount options at all, then
+    the "ikeep" option is set rather than "noikeep".
+    
+    This regression was introduced in 970451.
+    
+    With no mount options specified, xfs_parseargs() does the following:
+    
+    int ikeep = 0;
+    
+    args->flags |= XFSMNT_BARRIER;
+    
+    args->flags2 |= XFSMNT2_COMPAT_IOSIZE;
+    
+    if (!options)
+    
+    goto done;
+    
+    It only sets the above two options by default and before, it also used to
+    set XFSMNT_IDELETE by default.
+    
+    If options are specified, then
+    
+    if (!(args->flags & XFSMNT_DMAPI) && !ikeep)
+    
+    args->flags |= XFSMNT_IDELETE;
+    
+    is executed later on which is skipped by the "goto done;" above.
+    
+    The solution is to invert the logic.
+    
+    SGI-PV: 977771
+    SGI-Modid: xfs-linux-melb:xfs-kern:30590a
+    
+    Signed-off-by: Niv Sardi <xaiki@sgi.com>
+    Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+    Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
