@@ -1,43 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 20:50:49 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m1T4oWvA029165
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 20:50:38 -0800
-Message-ID: <47C79078.4070504@sgi.com>
-Date: Fri, 29 Feb 2008 15:56:24 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.25-rc4
-References: <20080229035000.7B24058C4C0F@chook.melbourne.sgi.com> <47C78629.104@sandeen.net>
-In-Reply-To: <47C78629.104@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Feb 2008 21:35:34 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m1T5ZKGq032748
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 21:35:23 -0800
+Received: from postoffice.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8CB4062D57A
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 21:35:47 -0800 (PST)
+Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id FBcfBLrDX7IzeB5X for <xfs@oss.sgi.com>; Thu, 28 Feb 2008 21:35:47 -0800 (PST)
+Subject: Re: [REVIEW #3] bad_features2 support in user-space
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <op.t69rt3bp3jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <op.t69rt3bp3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Type: text/plain
+Date: Fri, 29 Feb 2008 16:33:58 +1100
+Message-Id: <1204263238.13569.122.camel@edge.scott.net.au>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> Please pull from the for-linus branch:
->>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
->>
->> This will update the following files:
->>
->>  fs/xfs/linux-2.6/xfs_super.c |   14 +++++++-------
->>  fs/xfs/xfs_clnt.h            |    2 +-
->>  fs/xfs/xfs_ialloc.c          |    2 +-
->>  fs/xfs/xfs_mount.h           |    2 +-
->>  fs/xfs/xfs_vfsops.c          |    4 ++--
->>  5 files changed, 12 insertions(+), 12 deletions(-)
->>
->> through these commits:
->>
->> commit b7405bb65a83e819dd3b21a6d9636c279d9ce79a
->> Author: Niv Sardi <xaiki@sgi.com>
+On Fri, 2008-02-29 at 15:52 +1100, Barry Naujok wrote:
+> Ok, xfs_repair will leave bad_features2 in place just in case it is
+> being run with an older kernel that expects features2 in the bad
+> location. But, it will make sure the correct and bad features2 are
+> consistent if bad_features2 in non-zero.
 > 
-> um, I thought Jeff wrote that patch.
+> If bad_features2 is zero, it is left alone (eg. new mkfs or new
+> kernel with fixes it during mount time).
+> 
+> This seems to be the best solution to the problem.
+> 
 
-I'm sure he did too.  Every now and then our ptools -> git merge tools stuff up.
+*nod* - looks good to me...
+
+> +	if (sb->sb_bad_features2 != 0 &&
+> +			sb->sb_bad_features2 != sb->sb_features2) {
+> +		sb->sb_features2 |= sb->sb_bad_features2;
+> +		sb->sb_bad_features2 = sb->sb_features2;
+> +		primary_sb_modified = 1;
+
+No endian issues here are there?  It looks OK, but you tested it right?
+(looked at what a little endian system writes ondisk?)
+
+cheers.
+
+-- 
+Nathan
