@@ -1,35 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 01 Mar 2008 17:34:48 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m221YS1q006273
-	for <xfs@oss.sgi.com>; Sat, 1 Mar 2008 17:34:29 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B216563A621
-	for <xfs@oss.sgi.com>; Sat,  1 Mar 2008 17:34:57 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 9tQsP0WqoHlYyBSr for <xfs@oss.sgi.com>; Sat, 01 Mar 2008 17:34:57 -0800 (PST)
-Message-ID: <47CA043F.5070202@sandeen.net>
-Date: Sat, 01 Mar 2008 19:34:55 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 02:26:31 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m22AQBX4017473
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 02:26:12 -0800
+Received: from smtp-out02.alice-dsl.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD06B124824C
+	for <xfs@oss.sgi.com>; Sun,  2 Mar 2008 02:26:39 -0800 (PST)
+Received: from smtp-out02.alice-dsl.net (smtp-out02.alice-dsl.net [88.44.60.12]) by cuda.sgi.com with ESMTP id fREn2pCPaXWk1tnX for <xfs@oss.sgi.com>; Sun, 02 Mar 2008 02:26:39 -0800 (PST)
+Subject: Re: [REVIEW] Don't make lazy counters default for mkfs
+References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com>
+From: Andi Kleen <andi@firstfloor.org>
+Date: 02 Mar 2008 11:26:07 +0100
+In-Reply-To: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Message-ID: <87ir05h16o.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Subject: Re: Kernel oops / XFS filesystem corruption
-References: <47C93C32.40006@mathtm.de> <47C9C44D.8080400@sandeen.net> <47C9F5E9.70703@mathtm.de>
-In-Reply-To: <47C9F5E9.70703@mathtm.de>
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?ISO-8859-15?Q?Thomas_M=FCller?= <thomas@mathtm.de>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Thomas Müller wrote:
-> Eric Sandeen wrote:
->> Did you also happen to save the xfs_repair output?
-> No, but I made a complete copy of the file system before
-> repairing it, so I can easily recreate it... :)
+"Barry Naujok" <bnaujok@sgi.com> writes:
+> 
+> Lazy counters will default to on again in xfsprogs 2.10.0 (when CI
+> support  is released).
 
-oh, like a dd image?  great.  You can use xfs_metadump to make a more
-transportable image... xfs folks might even be able to use that to
-recreate the oops.
+CI is what? 
 
--Eric
+-Andi
