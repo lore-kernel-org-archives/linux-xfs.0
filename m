@@ -1,53 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 15:34:53 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m22NYT6j020544
-	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 15:34:32 -0800
-Received: from postoffice.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E63F63E3AA
-	for <xfs@oss.sgi.com>; Sun,  2 Mar 2008 15:34:57 -0800 (PST)
-Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id ZYz48CG7zGnCKmqG for <xfs@oss.sgi.com>; Sun, 02 Mar 2008 15:34:57 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 15:59:05 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m22NweNf022066
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 15:58:44 -0800
+Date: Mon, 03 Mar 2008 10:59:43 +1100
 Subject: Re: [REVIEW] Don't make lazy counters default for mkfs
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <47C89303.7070902@thebarn.com>
-References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com>
-	 <1204166101.13569.102.camel@edge.scott.net.au>
-	 <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net>
-	 <47C89303.7070902@thebarn.com>
-Content-Type: text/plain
-Date: Mon, 03 Mar 2008 10:34:55 +1100
-Message-Id: <1204500895.10190.3.camel@edge.scott.net.au>
-Mime-Version: 1.0
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com> <1204166101.13569.102.camel@edge.scott.net.au> <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net> <47C89303.7070902@thebarn.com> <47C8997A.9030804@sgi.com> <47C89B94.4060002@sandeen.net> <47C89F17.7040307@sandeen.net>
 Content-Transfer-Encoding: 7bit
+Message-ID: <op.t7ex9td03jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <47C89F17.7040307@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, markgw@sgi.com
+Cc: Russell Cattelan <cattelan@thebarn.com>, nscott@aconex.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, 2008-02-29 at 17:19 -0600, Russell Cattelan wrote:
-> 
-> > I thought about that; xfs *could* stick someting in /proc/fs/xfs
-> with
-> > supported features or somesuch.
-> >
-> > But, the kernel you mkfs under isn't necessarily the one you're
-> going to
-> > need to fall back to tomorrow, though...
-> >
-> >   
-> True but at least it could make a bit of a intelligent decision.
-> and maybe a warning for a while about potentially incompatible flags. 
+On Sat, 01 Mar 2008 11:11:03 +1100, Eric Sandeen <sandeen@sandeen.net>  
+wrote:
 
-Might also be a good idea to require -f to force a mkfs of a filesystem
-which the kernel doesn't support.
+> Eric Sandeen wrote:
+>
+>> maybe just 2 values, with the actual supported features (& features2)
+>> values anded together?  Easy enough to parse in the code.
+>>
+>> i.e.
+>>
+>> # cat /proc/fs/xfs/features
+>> 0xffffffff
+>> 0x00000001
+>
+> hm, but of course mkfs should never be checking for anything in the
+> first features slot; yesterday's kernels support all those flags but
+> don't export anything.
 
-Would be good to get blocksize > pagesize into this scheme too btw, and
-unfortunately that one isn't a superblock flag) - so this scheme might
-need to go beyond those flags, if anyone decides to implement it.
+Bzzzzt!
 
-cheers.
+IRIX/ASCII case-insensitive mode (or OLDCI or "V1 CI" as I'm  calling it  
+:) )
+is in the first features slot - 0x4000
 
--- 
-Nathan
+> wow, this is starting to feel as complex as ext4's flags ;)
+>
+> -Eric
+>
+>
