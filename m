@@ -1,38 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 16:57:44 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 17:01:50 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m230fbhJ031823
-	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 16:41:41 -0800
-From: donaldd@sgi.com
-Subject: TAKE 976035 - Remove superflous xfs_readsb call in xfs_mountfs.
-Message-Id: <20080303004201.C3753323900C@linuxbuild.melbourne.sgi.com>
-Date: Mon,  3 Mar 2008 11:42:01 +1100 (EST)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2311QtF001645
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 17:01:28 -0800
+Subject: Re: Kernel oops / XFS filesystem corruption
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <47C93C32.40006@mathtm.de> <47C9C44D.8080400@sandeen.net> <47C9F5E9.70703@mathtm.de> <47CA043F.5070202@sandeen.net> <47CAF9C4.6090000@mathtm.de>
+Content-Transfer-Encoding: 8bit
+Date: Mon, 03 Mar 2008 12:02:43 +1100
+Message-ID: <op.t7e06t193jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <47CAF9C4.6090000@mathtm.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: =?utf-8?Q?Thomas_M=C3=BCller?= <thomas@mathtm.de>, Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Remove superflous xfs_readsb call in xfs_mountfs.
+On Mon, 03 Mar 2008 06:02:28 +1100, Thomas Müller <thomas@mathtm.de> wrote:
 
-When xfs_mountfs is called by xfs_mount xfs_readsb was called 35 lines
-above unconditionally, so there is no need to try to read the superblock
-if it's not present.  If any other port doesn't have the superblock
-read at this point it should just call it directly from it's xfs_mount
-equivalent.
+> Eric Sandeen wrote:
+>> oh, like a dd image?  great.
+> Yup :)
+>
+>  > You can use xfs_metadump to make a more transportable image...
+> I will, if someone needs it.
+>
+> As said, I have a complete file system image, so if anyone needs
+> more information/data, just tell me.
 
+I could use the metadump image for the badness in key lookups that
+xfs_repair was reporting.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-
-Date:  Mon Mar  3 11:41:13 AEDT 2008
-Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
-Inspected by:  donaldd
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30603a
-fs/xfs/xfs_mount.c - 1.420 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.420&r2=text&tr2=1.419&f=h
-	- Remove superflous xfs_readsb call in xfs_mountfs.
+Thanks,
+Barry.
