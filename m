@@ -1,54 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 20:18:00 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m234Hmux003913
-	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 20:17:50 -0800
-Message-ID: <47CB7D52.2030704@sgi.com>
-Date: Mon, 03 Mar 2008 15:23:46 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 20:19:29 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m234JJPc008659
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 20:19:21 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DDE1F03727
+	for <xfs@oss.sgi.com>; Sun,  2 Mar 2008 20:19:48 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id f2F3OcpDO8FwuXXn for <xfs@oss.sgi.com>; Sun, 02 Mar 2008 20:19:48 -0800 (PST)
+Message-ID: <47CB7C44.2030508@sandeen.net>
+Date: Sun, 02 Mar 2008 22:19:16 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: filesystem corruption in linus tree
-References: <03F8FD43-322F-41E3-A7A0-CD4E9AD8B4DE@ap.physik.uni-giessen.de> <200802252347.50576.marc.dietrich@ap.physik.uni-giessen.de> <47C3C20A.90603@sgi.com> <200802262100.18631.marc.dietrich@ap.physik.uni-giessen.de>
-In-Reply-To: <200802262100.18631.marc.dietrich@ap.physik.uni-giessen.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [REVIEW] Don't make lazy counters default for mkfs
+References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com> <1204166101.13569.102.camel@edge.scott.net.au> <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net> <47C89303.7070902@thebarn.com> <1204500895.10190.3.camel@edge.scott.net.au> <47CB434B.4040005@sgi.com> <47CB4696.1030304@sgi.com> <20080303011559.GB13879@josefsipek.net> <47CB7702.5080905@sandeen.net> <20080303041409.GC13879@josefsipek.net>
+In-Reply-To: <20080303041409.GC13879@josefsipek.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Marc Dietrich <Marc.Dietrich@ap.physik.uni-giessen.de>
-Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: Mark Goodwin <markgw@sgi.com>, Timothy Shimmin <tes@sgi.com>, nscott@aconex.com, Russell Cattelan <cattelan@thebarn.com>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Marc Dietrich wrote:
-> Hi again,
-> 
-> On Tuesday 26 February 2008 08:38:50 Lachlan McIlroy wrote:
->> Marc Dietrich wrote:
->>> Hi,
+Josef 'Jeff' Sipek wrote:
+> On Sun, Mar 02, 2008 at 09:56:50PM -0600, Eric Sandeen wrote:
+>> Josef 'Jeff' Sipek wrote:
+>>> On Mon, Mar 03, 2008 at 11:30:14AM +1100, Mark Goodwin wrote:
+>>> ...
+>>>> Maybe I'm missing something, but if we export all the feature bits,
+>>>> both new and old, then (a) an old mkfs will continue to ignore them,
+>>>> and (b) future versions of mkfs will have all the information needed,
+>>>> but will need t be smart about how that information is used.
+>>> IMHO:
 >>>
->>> On Monday 25 February 2008 01:36:28 Barry Naujok wrote:
->>>> On Sun, 24 Feb 2008 20:58:26 +1100, Marc Dietrich
->>>>
->>>> <Marc.Dietrich@ap.physik.uni-giessen.de> wrote:
->>>>> Hi,
->>>>>
->>>>> somewhere after the release of 2.6.24 my xfs filesystem got corrupted.
->>>>> Initialy I thought it was only related to the readdir bug.
->>>>> (http://oss.sgi.com/archives/xfs/2008-02/msg00027.html) So I waited for
->>>>> the fix to go into mainline. Yesterday I tried again, but got this
->>>>> error during boot:
-> 
-> <sniped>
-> 
->> We've had a few problems reported with XFS on 32-bit powermacs and the
->> culprit appears to be some changes to bit manipulation routines.  Could you
->> please try reverse applying the attached patches and see if the problem is
->> resolved?
-> 
-> I saw, that you already pushed it into mainline - for a good reason ;-) Works 
-> as expeted.
-> 
-> Please also don't forget 2.6.24-stable !
+>>> 1) mkfs should make a filesystem, the defaults should be conservative (say
+>>>    using features that have been around >1 year)
+>> I suppose I have to agree, unfortunately that means most competetive
+>> benchmarks will be using sub-optimal mkfs's, but...
+>  
+> Benchmarks that use default mkfs options on xfs, but non-default on other
+> fs?
 
-The changes that caused this regression went into 2.6.25-rc1 so no need for a
-2.6.24 stable fix.
+most benchmarks I see tune the heck out of "the home team" and leave the
+rest ;)
+
+> If you want, have a simple printf in mkfs that tells the user that he's not
+> using the latest and greatest features (e.g., lazy-count); that should be
+> enough to make it obvious that there're better options than the default.
+
+eh, nobody reads that stuff :)
+
+-Eric
