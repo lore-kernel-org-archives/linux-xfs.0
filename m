@@ -1,45 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 16:24:21 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m230ODQ0029452
-	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 16:24:14 -0800
-Received: from postoffice.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC8CC124BCC3
-	for <xfs@oss.sgi.com>; Sun,  2 Mar 2008 16:24:42 -0800 (PST)
-Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id 7whER3PxB6Foh4ed for <xfs@oss.sgi.com>; Sun, 02 Mar 2008 16:24:42 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 16:31:41 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m230VIjx030322
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 16:31:20 -0800
+Message-ID: <47CB4696.1030304@sgi.com>
+Date: Mon, 03 Mar 2008 11:30:14 +1100
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
+MIME-Version: 1.0
 Subject: Re: [REVIEW] Don't make lazy counters default for mkfs
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <47CB43EE.3060405@sgi.com>
-References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com>
-	 <1204166101.13569.102.camel@edge.scott.net.au>
-	 <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net>
-	 <47C89303.7070902@thebarn.com> <1204500895.10190.3.camel@edge.scott.net.au>
-	  <47CB43EE.3060405@sgi.com>
-Content-Type: text/plain
-Date: Mon, 03 Mar 2008 11:24:09 +1100
-Message-Id: <1204503849.10190.26.camel@edge.scott.net.au>
-Mime-Version: 1.0
+References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com>	 <1204166101.13569.102.camel@edge.scott.net.au>	 <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net>	 <47C89303.7070902@thebarn.com> <1204500895.10190.3.camel@edge.scott.net.au> <47CB434B.4040005@sgi.com>
+In-Reply-To: <47CB434B.4040005@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: Russell Cattelan <cattelan@thebarn.com>, Eric Sandeen <sandeen@sandeen.net>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: nscott@aconex.com, Russell Cattelan <cattelan@thebarn.com>, Eric Sandeen <sandeen@sandeen.net>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, 2008-03-03 at 11:18 +1100, Donald Douwsma wrote:
+
+
+Timothy Shimmin wrote:
+> Nathan Scott wrote:
+>> On Fri, 2008-02-29 at 17:19 -0600, Russell Cattelan wrote:
+>>>> I thought about that; xfs *could* stick someting in /proc/fs/xfs
+>>> with
+>>>> supported features or somesuch.
+>>>>
+>>>> But, the kernel you mkfs under isn't necessarily the one you're
+>>> going to
+>>>> need to fall back to tomorrow, though...
+>>>>
+>>>>   
+>>> True but at least it could make a bit of a intelligent decision.
+>>> and maybe a warning for a while about potentially incompatible flags. 
+>>
+>> Might also be a good idea to require -f to force a mkfs of a filesystem
+>> which the kernel doesn't support.
+>>
+>      
+> 974981: mkfs.xfs should warn if it is about to create a fs that cannot 
+> be mounted
 > 
+> Ivan was wanting this in December last year. Remember, Mark?
+> He wanted to know what XFS features the running kernel supported?
+
+It was worse than that - IIRC, he wanted to know what features are
+supported by the XFS kernel module he just installed (this was part
+of an Appman upgrade scenario). I thought we rejected that bug ?
+
 > 
-> Could work but I dont like the idea of using -f for anything but
-> mkfsing an
-> existing filesystem. If that becomes habit for people it could lead to
-> disasters. 
+> I don't think Dave (dgc) and others were not so keen on it IIRC.
 
-Its already used for more than just overwriting existing filesystems. :)
-And it is already habit for some people.  Which leads to disasters, yes.
+anyone recall the reasons?
 
-Its not a perfect system, but there's only so much you can do for people
-before they shoot themselves in the foot.
+Maybe I'm missing something, but if we export all the feature bits,
+both new and old, then (a) an old mkfs will continue to ignore them,
+and (b) future versions of mkfs will have all the information needed,
+but will need t be smart about how that information is used.
+
+Cheers
 
 -- 
-Nathan
+
+  Mark Goodwin                                  markgw@sgi.com
+  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
+  SGI Australian Software Group           Cell: +61-4-18969583
+-------------------------------------------------------------
