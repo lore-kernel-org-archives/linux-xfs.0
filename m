@@ -1,41 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 17:03:35 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2313M5U002093
-	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 17:03:27 -0800
-Message-ID: <47CB4E20.5070808@sgi.com>
-Date: Mon, 03 Mar 2008 12:02:24 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Mar 2008 17:34:26 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m231Y68A004401
+	for <xfs@oss.sgi.com>; Sun, 2 Mar 2008 17:34:09 -0800
+Received: from filer.fsl.cs.sunysb.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46EF9F02C70
+	for <xfs@oss.sgi.com>; Sun,  2 Mar 2008 17:34:34 -0800 (PST)
+Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2]) by cuda.sgi.com with ESMTP id r1IJ0a6tCkeMoR5a for <xfs@oss.sgi.com>; Sun, 02 Mar 2008 17:34:34 -0800 (PST)
+Date: Sun, 2 Mar 2008 20:15:59 -0500
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [REVIEW] Don't make lazy counters default for mkfs
+Message-ID: <20080303011559.GB13879@josefsipek.net>
+References: <op.t67mtawg3jf8g2@pc-bnaujok.melbourne.sgi.com> <1204166101.13569.102.camel@edge.scott.net.au> <47C87775.2010007@thebarn.com> <47C89137.3070805@sandeen.net> <47C89303.7070902@thebarn.com> <1204500895.10190.3.camel@edge.scott.net.au> <47CB434B.4040005@sgi.com> <47CB4696.1030304@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Kernel oops / XFS filesystem corruption
-References: <47C93C32.40006@mathtm.de> <47C9C44D.8080400@sandeen.net> <47C9F5E9.70703@mathtm.de> <47CA043F.5070202@sandeen.net>
-In-Reply-To: <47CA043F.5070202@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <47CB4696.1030304@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: =?ISO-8859-15?Q?Thomas_M=FCller?= <thomas@mathtm.de>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Mark Goodwin <markgw@sgi.com>
+Cc: Timothy Shimmin <tes@sgi.com>, nscott@aconex.com, Russell Cattelan <cattelan@thebarn.com>, Eric Sandeen <sandeen@sandeen.net>, Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+On Mon, Mar 03, 2008 at 11:30:14AM +1100, Mark Goodwin wrote:
+...
+> Maybe I'm missing something, but if we export all the feature bits,
+> both new and old, then (a) an old mkfs will continue to ignore them,
+> and (b) future versions of mkfs will have all the information needed,
+> but will need t be smart about how that information is used.
 
+IMHO:
 
-Eric Sandeen wrote:
-> Thomas Müller wrote:
->> Eric Sandeen wrote:
->>> Did you also happen to save the xfs_repair output?
->> No, but I made a complete copy of the file system before
->> repairing it, so I can easily recreate it... :)
-> 
-> oh, like a dd image?  great.  You can use xfs_metadump to make a more
-> transportable image... xfs folks might even be able to use that to
-> recreate the oops.
+1) mkfs should make a filesystem, the defaults should be conservative (say
+   using features that have been around >1 year)
 
-YES PLEASE. See the xfs_metadump man page for instructions. It will
-obfuscate filenames by default (but please only do so if you need to).
+2) xfs should export supported features to userspace
 
-Please make it available for Barry, thanks.
+3) if you want to make sure that the fs you create will be mountable with
+   your current kernel, write a small shell script or something along those
+   lines that reads the features from some kernel interface, and based on
+   those passes the right options to mkfs
 
-Cheers
--- Mark
+4) if you just use mkfs and it creates a fs that's incompatible with your
+   current kernel, the mount will fail - as it does today, but perhaps a
+   less cryptic error message would be in order
+
+Since installers are just gigantic wrappers around basic commands like mkfs,
+#3 gets nicely covered.
+
+Josef 'Jeff' Sipek.
+
+-- 
+The reasonable man adapts himself to the world; the unreasonable one
+persists in trying to adapt the world to himself. Therefore all progress
+depends on the unreasonable man.
+		- George Bernard Shaw
