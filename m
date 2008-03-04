@@ -1,72 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Mar 2008 08:31:13 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Mar 2008 14:05:53 -0800 (PST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m24GUsvd005661
-	for <xfs@oss.sgi.com>; Tue, 4 Mar 2008 08:30:55 -0800
-Received: from ti-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C45F564D5A7
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2008 08:31:23 -0800 (PST)
-Received: from ti-out-0910.google.com (ti-out-0910.google.com [209.85.142.191]) by cuda.sgi.com with ESMTP id FmQKtoholXYeRcFp for <xfs@oss.sgi.com>; Tue, 04 Mar 2008 08:31:23 -0800 (PST)
-Received: by ti-out-0910.google.com with SMTP id d10so1204261tib.18
-        for <xfs@oss.sgi.com>; Tue, 04 Mar 2008 08:31:21 -0800 (PST)
-Message-ID: <47CD7950.9040001@gmail.com>
-Date: Tue, 04 Mar 2008 17:31:12 +0100
-From: =?UTF-8?B?QXJ0dXIgTWFrw7N3a2E=?= <artur.makowka@gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m24M5VBS001732
+	for <xfs@oss.sgi.com>; Tue, 4 Mar 2008 14:05:32 -0800
+Received: from web32504.mail.mud.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 1D48D650992
+	for <xfs@oss.sgi.com>; Tue,  4 Mar 2008 14:06:00 -0800 (PST)
+Received: from web32504.mail.mud.yahoo.com (web32504.mail.mud.yahoo.com [68.142.207.214]) by cuda.sgi.com with SMTP id pERavPbWZQ7iWdsY for <xfs@oss.sgi.com>; Tue, 04 Mar 2008 14:06:00 -0800 (PST)
+Date: Tue, 4 Mar 2008 14:05:59 -0800 (PST)
+From: Ravi Wijayaratne <ravi_wija@yahoo.com>
+Subject: corruption in xfs_end_bio_unwritten 
 MIME-Version: 1.0
-Subject: creating new array
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <629727.55106.qm@web32504.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-i want to create new array, because my last one (raid 0) is gone... now 
-it is going to be raid 5.
+Hi all,
 
-this will be on xfs fs of course. now the problem is i don't really know 
-what chunk size i should use, to get the best performance, but i can 
-still mount old array read-only and check what is average file size 
-there - just don't know how. (doing ls -lR * , adding sizes and dividing 
-by number is probably going to take days to complete)
+I am seeing data corruption in xfs_end_bio_unwritten. Possibly the corruption is happening before.
+Here is what I see.
 
-there was some xfs command that showed it, but i really have no idea 
-what it was, xfs_info doesnt give me much information
+The ioend->io_offset and ioend->io_size is completely beyond the range of the size of the file or
+the device altogether. The problem occurs under heavy I/O stress on 4 20GB files that was created
+using XFS_IOC_RESVSP64 ioctl. For a sparse file of the same size the problem does not occur. Also
+the problem is not seen on moderate the low system I/O loads(Created by I/O meter) 
 
-the currect situation is like this:
+It trips on the VOP_BMP(..) call that eventually calls xfs_btree_check_lblock. I am aware that
+this function has changed in the tip to call xfs_iomap_write_unwritten directly instead of calling
+xfs_iomap via VOP_BMAP. I believe that even if I change the code to what is in the tip I would
+still stumble some where on the fact that a write to a undefined range was completed. The call
+stack that was dumped by XFS_ERROR_REPORT was as follows
 
-meta-data=/dev/md0               isize=256    agcount=32, agsize=5723342 
-blks
-          =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=183146912, imaxpct=25
-          =                       sunit=2      swidth=6 blks
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=32768, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=24576  blocks=0, rtextents=0
+Any thoughts how I could fix this?
+
+Thanks in advance
+
+Ravi
+
+1> Oct 22 21:12:57 Foo kernel: Filesystem "dm-0": XFS internal error xfs_btree_check_lblock at
+line 215 of file fs/xfs/xfs_btree.c.  Caller 0x781f907a
+<4> Oct 22 21:12:57 Foo kernel:  [<781fc212>] xfs_btree_check_lblock+0x52/0x1c0
+<4> Oct 22 21:12:57 Foo kernel:  [<781f907a>] xfs_bmbt_lookup+0x1fa/0x5f0
+<4> Oct 22 21:12:57 Foo kernel:  [<781f907a>] xfs_bmbt_lookup+0x1fa/0x5f0
+<4> Oct 22 21:12:57 Foo kernel:  [<781ed172>] xfs_bmap_add_extent_unwritten_real+0xd62/0xfd0
+<4> Oct 22 21:12:57 Foo kernel:  [<781ee030>] xfs_bmap_add_extent+0x6f0/0x1f10
+<4> Oct 22 21:12:57 Foo kernel:  [<78324250>] dm_request+0xf0/0x13c
+<4> Oct 22 21:12:57 Foo kernel:  [<78324160>] dm_request+0x0/0x13c
+<4> Oct 22 21:12:57 Foo kernel:  [<78263561>] generic_make_request+0x161/0x210
+<4> Oct 22 21:12:57 Foo kernel:  [<782c97e5>] scsi_delete_timer+0x15/0x60
+<4> Oct 22 21:12:57 Foo kernel:  [<781150b6>] find_busiest_group+0x256/0x310
+<4> Oct 22 21:12:57 Foo kernel:  [<782653f5>] submit_bio+0x55/0x100
+<4> Oct 22 21:12:57 Foo kernel:  [<781678a7>] bio_add_page+0x37/0x50
+<4> Oct 22 21:12:57 Foo kernel:  [<781f6a54>] xfs_bmbt_get_state+0x14/0x30
+<4> Oct 22 21:12:57 Foo kernel:  [<781f02de>] xfs_bmap_do_search_extents+0x2fe/0x480
+<4> Oct 22 21:12:57 Foo kernel:  [<782462b7>] xfs_buf_iorequest+0x347/0x440
+<4> Oct 22 21:12:57 Foo kernel:  [<78247538>] kmem_zone_alloc+0x58/0xd0
+<4> Oct 22 21:12:57 Foo kernel:  [<781f1f73>] xfs_bmapi+0x19b3/0x2e20
+<4> Oct 22 21:12:57 Foo kernel:  [<78220466>] xlog_write+0x6e6/0x800
+<4> Oct 22 21:12:57 Foo kernel:  [<78228158>] xfs_icsb_modify_counters_locked+0x18/0x20
+<4> Oct 22 21:12:57 Foo kernel:  [<7822db93>] xfs_trans_tail_ail+0x13/0x30
+<4> Oct 22 21:12:58 Foo kernel:  [<7821f2d8>] xlog_assign_tail_lsn+0x28/0x60
+<4> Oct 22 21:12:58 Foo kernel:  [<7821f337>] xlog_state_release_iclog+0x27/0x530
+<4> Oct 22 21:12:58 Foo kernel:  [<7822f069>] xfs_trans_unlock_items+0xa9/0xb0
+<4> Oct 22 21:12:58 Foo kernel:  [<78221861>] xfs_log_release_iclog+0x11/0x40
+<4> Oct 22 21:12:58 Foo kernel:  [<7822d8b9>] _xfs_trans_commit+0x8e9/0xa60
+<4> Oct 22 21:12:58 Foo kernel:  [<782207bc>] xlog_grant_push_ail+0x3c/0x150
+<4> Oct 22 21:12:58 Foo kernel:  [<78220ece>] xfs_log_reserve+0x5fe/0x780
+<4> Oct 22 21:12:58 Foo kernel:  [<7822eb41>] xfs_trans_ijoin+0x31/0x70
+<4> Oct 22 21:12:58 Foo kernel:  [<7823ad6d>] xfs_iomap_write_unwritten+0x1bd/0x300
+<4> Oct 22 21:12:58 Foo kernel:  [<7823a633>] xfs_iomap+0x513/0x850
+<4> Oct 22 21:12:58 Foo kernel:  [<78149631>] test_clear_page_writeback+0x51/0xc0
+<4> Oct 22 21:12:58 Foo kernel:  [<78166059>] end_buffer_async_write+0xa9/0x140
+<4> Oct 22 21:12:58 Foo kernel:  [<7823ca58>] xfs_end_bio_unwritten+0x48/0x60
+<4> Oct 22 21:12:58 Foo kernel:  [<7812c712>] run_workqueue+0x72/0xf0
+<4> Oct 22 21:12:58 Foo kernel:  [<7823ca10>] xfs_end_bio_unwritten+0x0/0x60
+<4> Oct 22 21:12:58 Foo kernel:  [<7812cf5b>] worker_thread+0x13b/0x160
+<4> Oct 22 21:12:58 Foo kernel:  [<78115b40>] default_wake_function+0x0/0x10
+<4> Oct 22 21:12:58 Foo kernel:  [<7812ce20>] worker_thread+0x0/0x160
+<4> Oct 22 21:12:58 Foo kernel:  [<7812fd7b>] kthread+0xab/0xe0
+<4> Oct 22 21:12:58 Foo kernel:  [<7812fcd0>] kthread+0x0/0xe0
+<4> Oct 22 21:12:58 Foo kernel:  [<78100df5>] kernel_thread_helper+0x5/0x10
 
 
-some of the files are not on it anymore, as i said, it is damaged RAID 0
+------------------------------
+Ravi Wijayaratne
 
-the system is going to have millions of small files, (up to 3MB), or 
-even hundreds of millions (very popular free hosting)
 
-could you advice me any xfs and mdadm options? i plan to use lazyblocks 
-option with latest 2.6.24 kernel. any other ideas?
-
-this is going to be RAID 5, the stability is NOT very important, i will 
-have full backups, the most important thing is performance. i can get 
-hundreds of hits per second at peak times, i was planning to build it 
-from 5 * 500GB disks and it will be just partition for users file, 
-system is on another disk. (probably on lvm to give me option to resize 
-it in future)
-
-fs performance is critical, as i have many thousands of accounts, mostly 
-with just small websites, so it's impossible to put it all in RAM.
-
-if you have any xfs/mdadm creating advice (or mounting options), please 
-share with me. i installed xfsprogs 2.9.7, and i will compile 2.6.24 
-kernel for creation time ( i can even risk using 2.6.25-rcX if there is 
-some important thing changed that i need durning array/filesystem 
-creation, just not -mm as XFS version from -mm once corrupted some of my 
-users files )
+      ____________________________________________________________________________________
+Looking for last minute shopping deals?  
+Find them fast with Yahoo! Search.  http://tools.search.yahoo.com/newsearch/category.php?category=shopping
