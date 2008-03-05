@@ -1,43 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Mar 2008 19:52:48 -0800 (PST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m253qdam014414
-	for <xfs@oss.sgi.com>; Tue, 4 Mar 2008 19:52:40 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 63821652FA2
-	for <xfs@oss.sgi.com>; Tue,  4 Mar 2008 19:53:08 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id KUyUB1mFC4DTOQNg for <xfs@oss.sgi.com>; Tue, 04 Mar 2008 19:53:08 -0800 (PST)
-Message-ID: <47CE1921.9000708@sandeen.net>
-Date: Tue, 04 Mar 2008 21:53:05 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Mar 2008 20:50:04 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m254nnwj021005
+	for <xfs@oss.sgi.com>; Tue, 4 Mar 2008 20:49:56 -0800
+Date: Wed, 05 Mar 2008 15:52:13 +1100
+Subject: Re: [REVIEW #4] bad_features2 support in userspace
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Subject: Re: corruption in xfs_end_bio_unwritten
-References: <629727.55106.qm@web32504.mail.mud.yahoo.com> <47CDCA12.5060107@sandeen.net>
-In-Reply-To: <47CDCA12.5060107@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <op.t7i0f5123jf8g2@pc-bnaujok.melbourne.sgi.com> <20080305044539.GC19104@josefsipek.net>
 Content-Transfer-Encoding: 7bit
+Message-ID: <op.t7i05bf73jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080305044539.GC19104@josefsipek.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ravi Wijayaratne <ravi_wija@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
-> Ravi Wijayaratne wrote:
->> Hi all,
->>
->> I am seeing data corruption in xfs_end_bio_unwritten. Possibly the corruption is happening before.
->> Here is what I see.
-> 
-> what kernel, for starters?
+On Wed, 05 Mar 2008 15:45:39 +1100, Josef 'Jeff' Sipek  
+<jeffpc@josefsipek.net> wrote:
 
-2.6.16 + XFS from SLES10 I hear...  :)
+> P.S. Any reason why you inline the patch _and_ attach?
 
-So for starters, I'd bug SuSE....
+Inline for review, attach for actually applying the patch as my mailer
+mangles leading spaces for the inline patch :(
 
-otherwise I'd see if it persists upstream.
-
-Is AIO+DIO in the mix?  perhaps it is related to
-https://bugzilla.redhat.com/show_bug.cgi?id=217098
-
--Eric
+Barry.
