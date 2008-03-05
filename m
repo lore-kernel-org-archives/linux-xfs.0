@@ -1,170 +1,142 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Mar 2008 22:27:45 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m256RGDi023443
-	for <xfs@oss.sgi.com>; Tue, 4 Mar 2008 22:27:21 -0800
-Message-ID: <47CE3EBA.2040900@sgi.com>
-Date: Wed, 05 Mar 2008 17:33:30 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 05:53:17 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m25DqurT011261
+	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 05:52:59 -0800
+Received: from ti-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 036DB655FD2
+	for <xfs@oss.sgi.com>; Wed,  5 Mar 2008 05:53:23 -0800 (PST)
+Received: from ti-out-0910.google.com (ti-out-0910.google.com [209.85.142.185]) by cuda.sgi.com with ESMTP id 9HNvOPA3rZDYOSsw for <xfs@oss.sgi.com>; Wed, 05 Mar 2008 05:53:23 -0800 (PST)
+Received: by ti-out-0910.google.com with SMTP id d10so1998157tib.18
+        for <xfs@oss.sgi.com>; Wed, 05 Mar 2008 05:53:21 -0800 (PST)
+Message-ID: <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
+Date: Wed, 5 Mar 2008 14:53:18 +0100
+From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
+In-Reply-To: <20080213214551.GR155407@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [REVIEW #4] bad_features2 support in userspace
-References: <op.t7i0f5123jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.t7i0f5123jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Disposition: inline
+References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
+	 <20080213214551.GR155407@sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Looks good to me.
+On Wed, Feb 13, 2008 at 10:45 PM, David Chinner <dgc@sgi.com> wrote:
+> On Wed, Feb 13, 2008 at 11:51:51AM +0100, Christian Røsnes wrote:
+>  > Over the past month I've been hit with two cases of "xfs_trans_cancel
+>  > at line 1150"
+>  > The two errors occurred on different raid sets. In both cases the
+>  > error happened during
+>  > rsync from a remote server to this server, and the local partition
+>  > which reported
+>  > the error was 99% full (as reported by df -k, see below for details).
+>  >
+>  > System: Dell 2850
+>  > Mem: 4GB RAM
+>  > OS: Debian 3 (32-bit)
+>  > Kernel: 2.6.17.7 (custom compiled)
+>  >
+>  > I've been running this kernel since Aug 2006 without any of these
+>  > problems, until a month ago.
+>  >
+>  > I've not used any of the previous kernel in the 2.6.17 series.
+>  >
+>  > /usr/src/linux-2.6.17.7# grep 4K .config
+>  > # CONFIG_4KSTACKS is not set
+>  >
+>  >
+>  > Are there any known XFS problems with this kernel version and nearly
+>  > full partitions ?
+>
+>  Yes. Deadlocks that weren't properly fixed until 2.6.18 (partially
+>  fixed in 2.6.17) and an accounting problem in the transaction code
+>  that leads to the shutdown you are seeing. The accounting problem is
+>  fixed by this commit:
+>
+>  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=45c34141126a89da07197d5b89c04c6847f1171a
+>
+>  which I think went into 2.6.22.
+>
+>  Luckily, neither of these problems result in corruption.
+>
+>
+>  > I'm thinking about upgrading the kernel to a newer version, to see if
+>  > it fixes this problem.
+>  > Are there any known XFS problems with version 2.6.24.2 ?
+>
+>  Yes - a problem with readdir. The fix is currently in the stable
+>  queue (i.e for 2.6.24.3):
+>
+>  http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=commit;h=ee864b866419890b019352412c7bc9634d96f61b
+>
+>  So we are just waiting for Greg to release 2.6.24.3 now.
+>
+>  Cheers,
+>
+>  Dave.
+>  --
+>  Dave Chinner
+>  Principal Engineer
+>  SGI Australian Software Group
+>
 
-Barry Naujok wrote:
-> Due to the issue of mounting filesystem with older kernels and
-> potentially reading sb_features2 from the wrong location. It
-> seems the best course of action is to always make sb_features2
-> and sb_bad_features2 the same. This is pretty important as
-> new bits in this are supposed to stop older kernels from
-> mounting filesystems with unsupported features.
-> 
-> If sb_bad_features2 is zero, and the old kernel tries to read
-> sb_features2 from this location during mount, it will succeed
-> as it will read zero.
-> 
-> So, this patch changes mkfs.xfs to set sb_bad_features2 to
-> the same as sb_features2, xfs_check and xfs_repair now also
-> makes sure they are the same.
-> 
-> Barry.
-> 
-> -- 
-> 
-> 
-> ===========================================================================
-> xfsprogs/db/check.c
-> ===========================================================================
-> 
-> --- a/xfsprogs/db/check.c    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/db/check.c    2008-03-05 15:28:58.638097511 +1100
-> @@ -869,6 +869,14 @@ blockget_f(
->                  mp->m_sb.sb_frextents, frextents);
->          error++;
->      }
-> +    if (mp->m_sb.sb_bad_features2 != mp->m_sb.sb_features2) {
-> +        if (!sflag)
-> +            dbprintf("sb_features2 (0x%x) not same as "
-> +                "sb_bad_features2 (0x%x)\n",
-> +                mp->m_sb.sb_features2,
-> +                mp->m_sb.sb_bad_features2);
-> +        error++;
-> +    }
->      if ((sbversion & XFS_SB_VERSION_ATTRBIT) &&
->          !XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
->          if (!sflag)
-> 
-> ===========================================================================
-> xfsprogs/db/sb.c
-> ===========================================================================
-> 
-> --- a/xfsprogs/db/sb.c    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/db/sb.c    2008-02-29 17:16:33.770423296 +1100
-> @@ -108,6 +108,7 @@ const field_t    sb_flds[] = {
->      { "logsectsize", FLDT_UINT16D, OI(OFF(logsectsize)), C1, 0, 
-> TYP_NONE },
->      { "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
->      { "features2", FLDT_UINT32X, OI(OFF(features2)), C1, 0, TYP_NONE },
-> +    { "bad_features2", FLDT_UINT32X, OI(OFF(bad_features2)), C1, 0, 
-> TYP_NONE },
->      { NULL }
->  };
-> 
-> 
-> ===========================================================================
-> xfsprogs/include/xfs_sb.h
-> ===========================================================================
-> 
-> --- a/xfsprogs/include/xfs_sb.h    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/include/xfs_sb.h    2008-02-29 17:16:33.814417687 +1100
-> @@ -151,6 +151,7 @@ typedef struct xfs_sb
->      __uint16_t    sb_logsectsize;    /* sector size for the log, bytes */
->      __uint32_t    sb_logsunit;    /* stripe unit size for the log */
->      __uint32_t    sb_features2;    /* additional feature bits */
-> +    __uint32_t    sb_bad_features2; /* unusable space */
->  } xfs_sb_t;
-> 
->  /*
-> @@ -169,7 +170,7 @@ typedef enum {
->      XFS_SBS_GQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
->      XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
->      XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
-> -    XFS_SBS_FEATURES2,
-> +    XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2,
->      XFS_SBS_FIELDCOUNT
->  } xfs_sb_field_t;
-> 
-> 
-> ===========================================================================
-> xfsprogs/libxfs/xfs_mount.c
-> ===========================================================================
-> 
-> --- a/xfsprogs/libxfs/xfs_mount.c    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/libxfs/xfs_mount.c    2008-02-29 17:16:33.834415138 +1100
-> @@ -140,6 +140,7 @@ static struct {
->      { offsetof(xfs_sb_t, sb_logsectsize),0 },
->      { offsetof(xfs_sb_t, sb_logsunit),     0 },
->      { offsetof(xfs_sb_t, sb_features2),     0 },
-> +    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
->      { sizeof(xfs_sb_t),             0 }
->  };
-> 
-> 
-> ===========================================================================
-> xfsprogs/mkfs/xfs_mkfs.c
-> ===========================================================================
-> 
-> --- a/xfsprogs/mkfs/xfs_mkfs.c    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/mkfs/xfs_mkfs.c    2008-03-05 15:27:37.568461787 +1100
-> @@ -2103,6 +2103,13 @@ an AG size that is one stripe unit small
->              dirversion == 2, logversion == 2, attrversion == 1,
->              (sectorsize != BBSIZE || lsectorsize != BBSIZE),
->              sbp->sb_features2 != 0);
-> +    /*
-> +     * Due to a structure alignment issue, sb_features2 ended up in one
-> +     * of two locations, the second "incorrect" location represented by
-> +     * the sb_bad_features2 field. To avoid older kernels mounting
-> +     * filesystems they shouldn't, set both field to the same value.
-> +     */
-> +    sbp->sb_bad_features2 = sbp->sb_features2;
-> 
->      if (force_overwrite)
->          zero_old_xfs_structures(&xi, sbp);
-> 
-> ===========================================================================
-> xfsprogs/repair/phase1.c
-> ===========================================================================
-> 
-> --- a/xfsprogs/repair/phase1.c    2008-03-05 15:30:54.000000000 +1100
-> +++ b/xfsprogs/repair/phase1.c    2008-03-05 15:19:09.513415413 +1100
-> @@ -91,6 +91,19 @@ phase1(xfs_mount_t *mp)
->          primary_sb_modified = 1;
->      }
-> 
-> +    /*
-> +     * Check bad_features2 and make sure features2 the same as
-> +     * bad_features (ORing the two together). Leave bad_features2
-> +     * set so older kernels can still use it and not mount unsupported
-> +     * filesystems when it reads bad_features2.
-> +     */
-> +    if (sb->sb_bad_features2 != sb->sb_features2) {
-> +        sb->sb_features2 |= sb->sb_bad_features2;
-> +        sb->sb_bad_features2 = sb->sb_features2;
-> +        primary_sb_modified = 1;
-> +        do_warn(_("superblock has a features2 mismatch, correcting\n"));
-> +    }
-> +
->      if (primary_sb_modified)  {
->          if (!no_modify)  {
->              do_warn(_("writing modified primary superblock\n"));
-> 
+After being hit several times by the problem mentioned above (running
+kernel 2.6.17.7),
+I upgraded the kernel to version 2.6.24.3. I then ran a rsync test to
+a 99% full partition:
+
+df -k:
+/dev/sdb1            286380096 282994528   3385568  99% /data
+
+The rsync application will probably fail because it will most likely
+run out of space,
+but I got another xfs_trans_cancel kernel message:
+
+Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+Pid: 11642, comm: rsync Not tainted 2.6.24.3FC #1
+ [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+ [<c0222d70>] xfs_vn_mknod+0x165/0x243
+ [<c0217b9e>] xfs_access+0x2f/0x35
+ [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+ [<c016057b>] vfs_mkdir+0xa3/0xe2
+ [<c0160644>] sys_mkdirat+0x8a/0xc3
+ [<c016069c>] sys_mkdir+0x1f/0x23
+ [<c01025ee>] syscall_call+0x7/0xb
+ =======================
+xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+down filesystem: sdb1
+Please umount the filesystem, and rectify the problem(s)
+
+Trying to umount /dev/sdb1 fails (umount just hangs) .
+Rebooting the system seems to hang also - and I believe the kernel
+outputs this message
+when trying to umount /dev/sdb1:
+
+  xfs_force_shutdown(sdb1,0x1) called from line 420 of file fs/xfs/xfs_rw.c.
+  Return address = 0xc021cb21
+
+After waiting 5 minutes I power-cycle the system to bring it back up.
+
+After the restart, I ran:
+
+xfs_check /dev/sdb1
+
+(there was no output from xfs_check).
+
+Could this be the same problem I experienced with 2.6.17.7 ?
+
+Thanks
+Christian
+
+btw - I've previously run memtest overnight and not found any memory problems.
