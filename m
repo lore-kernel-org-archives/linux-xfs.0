@@ -1,67 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 22:13:14 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 22:13:16 -0800 (PST)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m266CSXW027587
-	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 22:12:33 -0800
-Date: Thu, 6 Mar 2008 17:12:42 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [REVIEW] mkfs.xfs man page needs the default settings updated, TAKE 2.
-Message-ID: <20080306061242.GG155407@sgi.com>
-References: <ncc8x0zhwxw.fsf@sgi.com> <47CD6D0E.3090301@sandeen.net> <47CD6ED7.5050505@sandeen.net> <ncczltcfoqu.fsf_-_@sgi.com>
-Mime-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m266Ch6Z027608
+	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 22:12:47 -0800
+Date: Thu, 06 Mar 2008 17:13:07 +1100
+Subject: [GIT PULL] XFS update for 2.6.25-rc5
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ncczltcfoqu.fsf_-_@sgi.com>
+Content-Transfer-Encoding: 7bit
+Message-Id: <20080306061308.0808658C4C0F@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, xfs-dev@sgi.com
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-On Thu, Mar 06, 2008 at 03:41:29PM +1100, Niv Sardi wrote:
-> Thanks to Eric for the comments, is this better ?
+Please pull from the for-linus branch:
+    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
-Not much of a changelog....
+This will update the following files:
 
+ fs/xfs/xfs_iget.c      |    1 +
+ fs/xfs/xfs_trans_ail.c |   17 ++++++++++-------
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-> diff --git a/xfsprogs/man/man8/mkfs.xfs.8 b/xfsprogs/man/man8/mkfs.xfs.8
-> index b6024c3..afc284c 100644
-> --- a/xfsprogs/man/man8/mkfs.xfs.8
-> +++ b/xfsprogs/man/man8/mkfs.xfs.8
-> @@ -304,10 +304,16 @@ bits.
->  This specifies the maximum percentage of space in the filesystem that
->  can be allocated to inodes. The default
->  .I value
-> -is 25%. Setting the
-> +is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
-> +for filesystems over 50TB. Setting the
->  .I value
-> -to 0 means that essentially all of the filesystem can
-> -become inode blocks.
-> +to 0 means that essentially all of the filesystem can become inode
-> +blocks. Note that this is only used by inode32 (on 32bits platforms),
-> +and is ignored on 64bits platforms. On 32 bits platforms, we can only
+through these commits:
 
-This is wrong. inode32 is the default on 64 bit platforms as well,
-and it matters then as well.
+commit 72772a3b5b158cddcfbbff3ef13b26b03a905158
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Mar 6 13:49:43 2008 +1100
 
-> +use the first TB of disk space for inodes, so the allocator will try
+    [XFS] fix inode leak in xfs_iget_core()
+    
+    If the radix_tree_preload() fails, we need to destroy the inode we just
+    read in before trying again. This could leak xfs_vnode structures when
+    there is memory pressure. Noticed by Christoph Hellwig.
+    
+    SGI-PV: 977823
+    SGI-Modid: xfs-linux-melb:xfs-kern:30606a
+    
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@infradead.org>
 
-That's not strictly true, either - it depends on inode size; 2k inodes
-stratch this to 8TB.
+commit 92d9cd1059f80b9c89dee191ffb88b0872e6a7ae
+Author: David Chinner <dgc@sgi.com>
+Date:   Thu Mar 6 13:45:10 2008 +1100
 
-> +to avoid this region, hence miss-using the first AG if this is set to
-> +high (the worst case is a 4TB filesystem where a full AG will be
-> +untouched by anything but inodes with a 25% maxpct).
-
-No, it doesn't "miss-use" this space - it reserves it for inodes and
-metadata and prevents data allocation in those AGs until all other space
-is consumed.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+    [XFS] 977545 977545 977545 977545 977545 977545 xfsaild causing too many
+    wakeups
+    
+    Idle state is not being detected properly by the xfsaild push code. The
+    current idle state is detected by an empty list which may never happen
+    with mostly idle filesystem or one using lazy superblock counters. A
+    single dirty item in the list that exists beyond the push target can
+    result repeated looping attempting to push up to the target because it
+    fails to check if the push target has been acheived or not.
+    
+    Fix by considering a dirty list with everything past the target as an idle
+    state and set the timeout appropriately.
+    
+    SGI-PV: 977545
+    SGI-Modid: xfs-linux-melb:xfs-kern:30532a
+    
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
