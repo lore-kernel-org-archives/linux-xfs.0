@@ -1,103 +1,179 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 22:19:36 -0800 (PST)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m266JNsU028769
-	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 22:19:27 -0800
-Date: Thu, 6 Mar 2008 17:19:41 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [REVIEW] mkfs.xfs man page needs the default settings updated, TAKE 2.
-Message-ID: <20080306061941.GH155407@sgi.com>
-References: <ncc8x0zhwxw.fsf@sgi.com> <47CD6D0E.3090301@sandeen.net> <47CD6ED7.5050505@sandeen.net> <ncczltcfoqu.fsf_-_@sgi.com> <47CF8127.40900@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 06 Mar 2008 03:10:24 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m26BA7cq017274
+	for <xfs@oss.sgi.com>; Thu, 6 Mar 2008 03:10:08 -0800
+Received: from ti-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 42D9065F041
+	for <xfs@oss.sgi.com>; Thu,  6 Mar 2008 03:10:35 -0800 (PST)
+Received: from ti-out-0910.google.com (ti-out-0910.google.com [209.85.142.184]) by cuda.sgi.com with ESMTP id dEl8L5FemDiuCkVF for <xfs@oss.sgi.com>; Thu, 06 Mar 2008 03:10:35 -0800 (PST)
+Received: by ti-out-0910.google.com with SMTP id d10so2606410tib.18
+        for <xfs@oss.sgi.com>; Thu, 06 Mar 2008 03:10:34 -0800 (PST)
+Message-ID: <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
+Date: Thu, 6 Mar 2008 12:10:32 +0100
+From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
+In-Reply-To: <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Disposition: inline
-In-Reply-To: <47CF8127.40900@sandeen.net>
+References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
+	 <20080213214551.GR155407@sgi.com>
+	 <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Mar 05, 2008 at 11:29:11PM -0600, Eric Sandeen wrote:
-> Niv Sardi wrote:
-> > Thanks to Eric for the comments, is this better ?
-> > 
-> > Cheers,
-> > 
-> > -- Niv Sardi
-> > 
-> > 
-> > 
-> > From 7e0e328663858ecf13f35678f1a6d349c3d4dd5a Mon Sep 17 00:00:00 2001
-> > From: Niv Sardi <xaiki@sgi.com>
-> > Date: Fri, 22 Feb 2008 16:48:32 +1100
-> > Subject: [PATCH] Update mkfs manpage for new defaults:
-> > 
-> > log, attr and inodes v2,
-> > Drop the ability to turn unwritten extents off completly,
-> > reduce imaxpct for big filesystems, less AGs for single disks configs.
-> > ---
-> >  xfsprogs/man/man8/mkfs.xfs.8 |   41 ++++++++++++++++++-----------------------
-> >  1 files changed, 18 insertions(+), 23 deletions(-)
-> > 
-> > diff --git a/xfsprogs/man/man8/mkfs.xfs.8 b/xfsprogs/man/man8/mkfs.xfs.8
-> > index b6024c3..afc284c 100644
-> > --- a/xfsprogs/man/man8/mkfs.xfs.8
-> > +++ b/xfsprogs/man/man8/mkfs.xfs.8
-> > @@ -304,10 +304,16 @@ bits.
-> >  This specifies the maximum percentage of space in the filesystem that
-> >  can be allocated to inodes. The default
-> >  .I value
-> > -is 25%. Setting the
-> > +is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
-> > +for filesystems over 50TB. Setting the
-> >  .I value
-> > -to 0 means that essentially all of the filesystem can
-> > -become inode blocks.
-> > +to 0 means that essentially all of the filesystem can become inode
-> > +blocks. Note that this is only used by inode32 (on 32bits platforms),
-> > +and is ignored on 64bits platforms. 
-> 
-> Really?  The m_maxicount tests in xfs_ialloc_ag_alloc and xfs_dialloc
-> don't seem to care about inode32 or not, unless I'm missing something.
+On Wed, Mar 5, 2008 at 2:53 PM, Christian Røsnes
+<christian.rosnes@gmail.com> wrote:
+> > On Wed, Feb 13, 2008 at 11:51:51AM +0100, Christian Røsnes wrote:
+>  >  > Over the past month I've been hit with two cases of "xfs_trans_cancel
+>  >  > at line 1150"
+>  >  > The two errors occurred on different raid sets. In both cases the
+>  >  > error happened during
+>  >  > rsync from a remote server to this server, and the local partition
+>  >  > which reported
+>  >  > the error was 99% full (as reported by df -k, see below for details).
+>  >  >
+>  >  > System: Dell 2850
+>  >  > Mem: 4GB RAM
+>  >  > OS: Debian 3 (32-bit)
+>  >  > Kernel: 2.6.17.7 (custom compiled)
+>  >  >
+>
+>  After being hit several times by the problem mentioned above (running
+>  kernel 2.6.17.7),
+>  I upgraded the kernel to version 2.6.24.3. I then ran a rsync test to
+>  a 99% full partition:
+>
+>  df -k:
+>  /dev/sdb1            286380096 282994528   3385568  99% /data
+>
+>  The rsync application will probably fail because it will most likely
+>  run out of space,
+>  but I got another xfs_trans_cancel kernel message:
+>
+>  Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+>  file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+>  Pid: 11642, comm: rsync Not tainted 2.6.24.3FC #1
+>   [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+>   [<c021a010>] xfs_mkdir+0x45a/0x493
+>   [<c021a010>] xfs_mkdir+0x45a/0x493
+>   [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+>   [<c0222d70>] xfs_vn_mknod+0x165/0x243
+>   [<c0217b9e>] xfs_access+0x2f/0x35
+>   [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+>   [<c016057b>] vfs_mkdir+0xa3/0xe2
+>   [<c0160644>] sys_mkdirat+0x8a/0xc3
+>   [<c016069c>] sys_mkdir+0x1f/0x23
+>   [<c01025ee>] syscall_call+0x7/0xb
+>   =======================
+>  xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+>  fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+>
+> Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+>  down filesystem: sdb1
+>  Please umount the filesystem, and rectify the problem(s)
+>
 
-See xfs_set_maxicount() and then how it is used in xfs_initialize_perag()
-to set up pag->pagi_inodeok, pag->pagf_metadata and mp->m_maxagi which
-are used by the allocator....
+Actually, a single mkdir command is enough to trigger the filesystem
+shutdown when its 99% full (according to df -k):
 
-> How about...
-> 
-> maxpct=value
-> 	This specifies the maximum percentage of space in the
-> 	filesystem that can be allocated to  inodes. The
-> 	default value is 25% for filesystems under 1TB, 5% for
-> 	filesystems under 50TB and 1% for filesystems over 50TB.
-> 
-> 	In the default inode allocation mode, inode blocks are
-> 	chosen such that inode numbers will not exceed 32 bits,
-> 	which restricts the inode blocks to the lower portion of
-> 	the filesystem.  The data block allocator will avoid these
-> 	low blocks to accommodate the specified maxpct, so a high
-> 	value may result in a filesystem with nothing but inodes
-> 	in a significant portion of the lower blocks of the
-> 	filesystem.  (This restriction is not present when
-> 	the filesystem is mounted with the "inode64" option on
-> 	64-bit platforms).
-> 
-> 	Setting the value to 0 means that essentially all of the
-> 	filesystem can become inode blocks, subject to inode32
-> 	restrictions.
-> 
-> 	This value can be modified with xfs_growfs(8).
-> 
-> eh... could be better... but how's it sound?
+/data# mkdir test
+mkdir: cannot create directory `test': No space left on device
 
-Much better.
 
-Cheers,
+Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+Pid: 23380, comm: mkdir Not tainted 2.6.24.3FC #1
+ [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+ [<c0222d70>] xfs_vn_mknod+0x165/0x243
+ [<c0217b9e>] xfs_access+0x2f/0x35
+ [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+ [<c016057b>] vfs_mkdir+0xa3/0xe2
+ [<c0160644>] sys_mkdirat+0x8a/0xc3
+ [<c016069c>] sys_mkdir+0x1f/0x23
+ [<c01025ee>] syscall_call+0x7/0xb
+ [<c03b0000>] atm_reset_addr+0xd/0x83
+ =======================
+xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+down filesystem: sdb1
+Please umount the filesystem, and rectify the problem(s)
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+df -k
+-----
+/dev/sdb1            286380096 282994528   3385568  99% /data
+
+df -i
+-----
+/dev/sdb1            10341248 3570112 6771136   35% /data
+
+
+xfs_info
+--------
+meta-data=/dev/sdb1              isize=512    agcount=16, agsize=4476752 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=71627792, imaxpct=25
+         =                       sunit=16     swidth=32 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=0
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+xfs_db -r -c 'sb 0' -c p /dev/sdb1
+----------------------------------
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 71627792
+rblocks = 0
+rextents = 0
+uuid = d16489ab-4898-48c2-8345-6334af943b2d
+logstart = 67108880
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 16
+agblocks = 4476752
+agcount = 16
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x3584
+sectsize = 512
+inodesize = 512
+inopblock = 8
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 9
+inopblog = 3
+agblklog = 23
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 3570112
+ifree = 0
+fdblocks = 847484
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 16
+width = 32
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 65536
+features2 = 0
+
+
+Christian
