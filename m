@@ -1,186 +1,161 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 21:29:27 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m265THoo025180
-	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 21:29:18 -0800
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D0D3811FAB43
-	for <xfs@oss.sgi.com>; Wed,  5 Mar 2008 21:29:45 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id RT2IPUsqN1GEhOO9 for <xfs@oss.sgi.com>; Wed, 05 Mar 2008 21:29:45 -0800 (PST)
-Message-ID: <47CF8127.40900@sandeen.net>
-Date: Wed, 05 Mar 2008 23:29:11 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Mar 2008 21:59:48 -0800 (PST)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m265xJUp026311
+	for <xfs@oss.sgi.com>; Wed, 5 Mar 2008 21:59:23 -0800
+Date: Thu, 06 Mar 2008 17:02:07 +1100
+Subject: Final call for review of sb_bad_features2 in userspace
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Subject: Re: [REVIEW] mkfs.xfs man page needs the default settings updated,
- TAKE 2.
-References: <ncc8x0zhwxw.fsf@sgi.com> <47CD6D0E.3090301@sandeen.net>	<47CD6ED7.5050505@sandeen.net> <ncczltcfoqu.fsf_-_@sgi.com>
-In-Reply-To: <ncczltcfoqu.fsf_-_@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Message-ID: <op.t7ky1txm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Niv Sardi wrote:
-> Thanks to Eric for the comments, is this better ?
-> 
-> Cheers,
-> 
-> -- Niv Sardi
-> 
-> 
-> 
-> From 7e0e328663858ecf13f35678f1a6d349c3d4dd5a Mon Sep 17 00:00:00 2001
-> From: Niv Sardi <xaiki@sgi.com>
-> Date: Fri, 22 Feb 2008 16:48:32 +1100
-> Subject: [PATCH] Update mkfs manpage for new defaults:
-> 
-> log, attr and inodes v2,
-> Drop the ability to turn unwritten extents off completly,
-> reduce imaxpct for big filesystems, less AGs for single disks configs.
-> ---
->  xfsprogs/man/man8/mkfs.xfs.8 |   41 ++++++++++++++++++-----------------------
->  1 files changed, 18 insertions(+), 23 deletions(-)
-> 
-> diff --git a/xfsprogs/man/man8/mkfs.xfs.8 b/xfsprogs/man/man8/mkfs.xfs.8
-> index b6024c3..afc284c 100644
-> --- a/xfsprogs/man/man8/mkfs.xfs.8
-> +++ b/xfsprogs/man/man8/mkfs.xfs.8
-> @@ -304,10 +304,16 @@ bits.
->  This specifies the maximum percentage of space in the filesystem that
->  can be allocated to inodes. The default
->  .I value
-> -is 25%. Setting the
-> +is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
-> +for filesystems over 50TB. Setting the
->  .I value
-> -to 0 means that essentially all of the filesystem can
-> -become inode blocks.
-> +to 0 means that essentially all of the filesystem can become inode
-> +blocks. Note that this is only used by inode32 (on 32bits platforms),
-> +and is ignored on 64bits platforms. 
+I think the attached patch maybe the least offensive for past
+kernels, and XFSQA!
 
-Really?  The m_maxicount tests in xfs_ialloc_ag_alloc and xfs_dialloc
-don't seem to care about inode32 or not, unless I'm missing something.
+xfs_check and xfs_repair will ignore sb_bad_features2 if it is
+zero, and if not, makes sure it's the same as sb_features2.
 
-> +On 32 bits platforms, we can only
-> +use the first TB of disk space for inodes, 
+mkfs.xfs will set sb_bad_features2 to be the same. Maybe if
+we change the behaviour of the kernel mount code with
+respects of sb_bad_features2, this can be revisited.
 
-well, that depends on the inode size...
+(An intermediate solution I has was if "xfs_repair -n" is
+run AND sb_bad_features is zero, then ignore it to let
+xfs_repair continue, otherwise duplicate it, but doing
+that requires a golden output change to QA 030 and 033
+unless the kernel mount code is changed... ARGH!)
 
-> +so the allocator will try
+--
 
-the data allocator...
+===========================================================================
+xfsprogs/db/check.c
+===========================================================================
 
-> +to avoid this region, hence miss-using the first AG if this is set to
-> +high (the worst case is a 4TB filesystem where a full AG will be
-> +untouched by anything but inodes with a 25% maxpct).
+--- a/xfsprogs/db/check.c	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/db/check.c	2008-03-06 12:32:54.664882390 +1100
+@@ -869,6 +869,15 @@ blockget_f(
+  				mp->m_sb.sb_frextents, frextents);
+  		error++;
+  	}
++	if (mp->m_sb.sb_bad_features2 != 0 &&
++			mp->m_sb.sb_bad_features2 != mp->m_sb.sb_features2) {
++		if (!sflag)
++			dbprintf("sb_features2 (0x%x) not same as "
++				"sb_bad_features2 (0x%x)\n",
++				mp->m_sb.sb_features2,
++				mp->m_sb.sb_bad_features2);
++		error++;
++	}
+  	if ((sbversion & XFS_SB_VERSION_ATTRBIT) &&
+  	    !XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
+  		if (!sflag)
 
-ah, ok.  It becomes slightly clearer.  :)
+===========================================================================
+xfsprogs/db/sb.c
+===========================================================================
 
-How about...
-
-maxpct=value
-	This specifies the maximum percentage of space in the
-	filesystem that can be allocated to  inodes. The
-	default value is 25% for filesystems under 1TB, 5% for
-	filesystems under 50TB and 1% for filesystems over 50TB.
-
-	In the default inode allocation mode, inode blocks are
-	chosen such that inode numbers will not exceed 32 bits,
-	which restricts the inode blocks to the lower portion of
-	the filesystem.  The data block allocator will avoid these
-	low blocks to accommodate the specified maxpct, so a high
-	value may result in a filesystem with nothing but inodes
-	in a significant portion of the lower blocks of the
-	filesystem.  (This restriction is not present when
-	the filesystem is mounted with the "inode64" option on
-	64-bit platforms).
-
-	Setting the value to 0 means that essentially all of the
-	filesystem can become inode blocks, subject to inode32
-	restrictions.
-
-	This value can be modified with xfs_growfs(8).
-
-eh... could be better... but how's it sound?
-
->  .TP
->  .BI align[= value ]
->  This is used to specify that inode allocation is or is not aligned. The
-> @@ -325,18 +331,11 @@ that does not have the inode alignment feature
->  (any release of IRIX before 6.2, and IRIX 6.2 without XFS patches).
->  .TP
->  .BI attr[= value ]
-> -This is used to specify the version of extended attribute inline allocation
-> -policy to be used.
-> -By default, this is zero.  Once extended attributes are used for the
-> -first time, the version will be set to either one or two.
-> -The current version (two) uses a more efficient algorithm for managing
-> -the available inline inode space than version one does, however, for
-> -backward compatibility reasons (and in the absence of the
-> -.B attr=2
-> -mkfs option, or the
-> -.B attr2
-> -mount option), version one will be selected
-> -by default when attributes are first used on a filesystem.
-> +This is used to specify the version of extended attribute inline
-> +allocation policy to be used.  By default, this is 2.  The current
-> +version (two) uses a more efficient algorithm for managing the
-> +available inline inode space than version one does. This option is
-> +kept for backward compatibility, attr2 was added in kernel 2.6.16.
-
-attr[=value] (hmm why the brackets; is value really optional?)
-	This is used to specify the version of extended attribute
-	inline allocation policy to be used.  By default, this is 2,
-	which uses an efficient algorithm for managing the available
-	inline inode space between attribute and extent data.
-
-	The previous version 1, which has fixed regions for attribute
-	and extent data, is kept for backwards compatibility with
-	kernels older than version 2.6.16.
-
-(aside: will older kernels refuse to mount attr2 filesystems?  I suppose
-they will but I'm not sure they need to?)
+--- a/xfsprogs/db/sb.c	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/db/sb.c	2008-02-29 17:16:33.770423296 +1100
+@@ -108,6 +108,7 @@ const field_t	sb_flds[] = {
+  	{ "logsectsize", FLDT_UINT16D, OI(OFF(logsectsize)), C1, 0, TYP_NONE },
+  	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
+  	{ "features2", FLDT_UINT32X, OI(OFF(features2)), C1, 0, TYP_NONE },
++	{ "bad_features2", FLDT_UINT32X, OI(OFF(bad_features2)), C1, 0, TYP_NONE  
+},
+  	{ NULL }
+  };
 
 
--Eric
+===========================================================================
+xfsprogs/include/xfs_sb.h
+===========================================================================
 
->  .RE
->  .TP
->  .BI \-l " log_section_options"
-> @@ -389,15 +388,11 @@ and directory block size, the minimum log size is larger than 512 blocks.
->  .BI version= value
->  This specifies the version of the log. The
->  .I value
-> -is either 1 or 2. Specifying
-> +is either 1 or 2 (the default is 2).
->  .B version=2
-> -enables the
-> -.B sunit
-> -suboption, and allows the logbsize to be increased beyond 32K.
-> -Version 2 logs are automatically selected if a log stripe unit
-> -is specified.  See
-> -.BR sunit " and " su
-> -suboptions, below.
-> +allows bigger log buffer size (version 1 had a limit at 32K), and the
-> +use of the sunit and su options. Possibility to use version=1 is left
-> +for backward compatibility only.
+--- a/xfsprogs/include/xfs_sb.h	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/include/xfs_sb.h	2008-02-29 17:16:33.814417687 +1100
+@@ -151,6 +151,7 @@ typedef struct xfs_sb
+  	__uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
+  	__uint32_t	sb_logsunit;	/* stripe unit size for the log */
+  	__uint32_t	sb_features2;	/* additional feature bits */
++	__uint32_t	sb_bad_features2; /* unusable space */
+  } xfs_sb_t;
 
-version=value
-	This specifies the version of the log.  The current default
-	is 2, which allows for larger log buffer sizes, as well as
-	supporting stripe-aligned log writes (see the sunit and su
-	options, below).
+  /*
+@@ -169,7 +170,7 @@ typedef enum {
+  	XFS_SBS_GQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
+  	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
+  	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
+-	XFS_SBS_FEATURES2,
++	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2,
+  	XFS_SBS_FIELDCOUNT
+  } xfs_sb_field_t;
 
-	The previous version 1, which is limited to 32k log buffers
-	and does not support stripe-aligned writes, is kept for
-	backwards compatibility with kernels older than version
-	2.XX.XX
 
->  .TP
->  .BI sunit= value
->  This specifies the alignment to be used for log writes. The
-> -- 1.5.4.3 
+===========================================================================
+xfsprogs/libxfs/xfs_mount.c
+===========================================================================
+
+--- a/xfsprogs/libxfs/xfs_mount.c	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/libxfs/xfs_mount.c	2008-02-29 17:16:33.834415138 +1100
+@@ -140,6 +140,7 @@ static struct {
+      { offsetof(xfs_sb_t, sb_logsectsize),0 },
+      { offsetof(xfs_sb_t, sb_logsunit),	 0 },
+      { offsetof(xfs_sb_t, sb_features2),	 0 },
++    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
+      { sizeof(xfs_sb_t),			 0 }
+  };
+
+
+===========================================================================
+xfsprogs/mkfs/xfs_mkfs.c
+===========================================================================
+
+--- a/xfsprogs/mkfs/xfs_mkfs.c	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/mkfs/xfs_mkfs.c	2008-03-05 15:27:37.568461787 +1100
+@@ -2103,6 +2103,13 @@ an AG size that is one stripe unit small
+  			dirversion == 2, logversion == 2, attrversion == 1,
+  			(sectorsize != BBSIZE || lsectorsize != BBSIZE),
+  			sbp->sb_features2 != 0);
++	/*
++	 * Due to a structure alignment issue, sb_features2 ended up in one
++	 * of two locations, the second "incorrect" location represented by
++	 * the sb_bad_features2 field. To avoid older kernels mounting
++	 * filesystems they shouldn't, set both field to the same value.
++	 */
++	sbp->sb_bad_features2 = sbp->sb_features2;
+
+  	if (force_overwrite)
+  		zero_old_xfs_structures(&xi, sbp);
+
+===========================================================================
+xfsprogs/repair/phase1.c
+===========================================================================
+
+--- a/xfsprogs/repair/phase1.c	2008-03-06 16:59:31.000000000 +1100
++++ b/xfsprogs/repair/phase1.c	2008-03-06 16:57:40.021125442 +1100
+@@ -91,6 +91,20 @@ phase1(xfs_mount_t *mp)
+  		primary_sb_modified = 1;
+  	}
+
++	/*
++	 * Check bad_features2 and make sure features2 the same as
++	 * bad_features (ORing the two together). Leave bad_features2
++	 * set so older kernels can still use it and not mount unsupported
++	 * filesystems when it reads bad_features2.
++	 */
++	if (sb->sb_bad_features2 != 0 &&
++			sb->sb_bad_features2 != sb->sb_features2) {
++		sb->sb_features2 |= sb->sb_bad_features2;
++		sb->sb_bad_features2 = sb->sb_features2;
++		primary_sb_modified = 1;
++		do_warn(_("superblock has a features2 mismatch, correcting\n"));
++	}
++
+  	if (primary_sb_modified)  {
+  		if (!no_modify)  {
+  			do_warn(_("writing modified primary superblock\n"));
