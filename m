@@ -1,134 +1,209 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Mar 2008 02:49:13 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Mar 2008 03:19:20 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m27AmnC5028460
-	for <xfs@oss.sgi.com>; Fri, 7 Mar 2008 02:48:54 -0800
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B60AFF38F86
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2008 02:49:19 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id xNjmMU7V9WY7VOey for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 02:49:19 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1JXa8c-0005D3-Mp
-	for xfs@oss.sgi.com; Fri, 07 Mar 2008 10:49:18 +0000
-Date: Fri, 7 Mar 2008 05:49:18 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [Chris.Knadle@coredump.us: assfail during unmount xfs 2.6.24.3
-	[from 2.6.24.y git]]
-Message-ID: <20080307104918.GA20000@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m27BJ10O029379
+	for <xfs@oss.sgi.com>; Fri, 7 Mar 2008 03:19:02 -0800
+Received: from rn-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FC45F394A8
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2008 03:19:30 -0800 (PST)
+Received: from rn-out-0910.google.com (rn-out-0910.google.com [64.233.170.186]) by cuda.sgi.com with ESMTP id tVSjiDERLZDqFvJo for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 03:19:30 -0800 (PST)
+Received: by rn-out-0910.google.com with SMTP id a43so695715rne.10
+        for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 03:19:29 -0800 (PST)
+Message-ID: <1a4a774c0803070319j1eb8790ek3daae4a16b3e6256@mail.gmail.com>
+Date: Fri, 7 Mar 2008 12:19:28 +0100
+From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
+In-Reply-To: <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Disposition: inline
+References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
+	 <20080213214551.GR155407@sgi.com>
+	 <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
+	 <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
------ Forwarded message from Chris Knadle <Chris.Knadle@coredump.us> -----
+On Thu, Mar 6, 2008 at 12:10 PM, Christian Røsnes
+<christian.rosnes@gmail.com> wrote:
+> On Wed, Mar 5, 2008 at 2:53 PM, Christian Røsnes
+>  <christian.rosnes@gmail.com> wrote:
+>  > > On Wed, Feb 13, 2008 at 11:51:51AM +0100, Christian Røsnes wrote:
+>  >  >  > Over the past month I've been hit with two cases of "xfs_trans_cancel
+>  >  >  > at line 1150"
+>  >  >  > The two errors occurred on different raid sets. In both cases the
+>  >  >  > error happened during
+>  >  >  > rsync from a remote server to this server, and the local partition
+>  >  >  > which reported
+>  >  >  > the error was 99% full (as reported by df -k, see below for details).
+>  >  >  >
+>  >  >  > System: Dell 2850
+>  >  >  > Mem: 4GB RAM
+>  >  >  > OS: Debian 3 (32-bit)
+>  >  >  > Kernel: 2.6.17.7 (custom compiled)
+>  >  >  >
+>  >
+>
+>
+> >  After being hit several times by the problem mentioned above (running
+>  >  kernel 2.6.17.7),
+>  >  I upgraded the kernel to version 2.6.24.3. I then ran a rsync test to
+>  >  a 99% full partition:
+>  >
+>  >  df -k:
+>  >  /dev/sdb1            286380096 282994528   3385568  99% /data
+>  >
+>  >  The rsync application will probably fail because it will most likely
+>  >  run out of space,
+>  >  but I got another xfs_trans_cancel kernel message:
+>  >
+>  >  Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+>  >  file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+>  >  Pid: 11642, comm: rsync Not tainted 2.6.24.3FC #1
+>  >   [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+>  >   [<c021a010>] xfs_mkdir+0x45a/0x493
+>  >   [<c021a010>] xfs_mkdir+0x45a/0x493
+>  >   [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+>  >   [<c0222d70>] xfs_vn_mknod+0x165/0x243
+>  >   [<c0217b9e>] xfs_access+0x2f/0x35
+>  >   [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+>  >   [<c016057b>] vfs_mkdir+0xa3/0xe2
+>  >   [<c0160644>] sys_mkdirat+0x8a/0xc3
+>  >   [<c016069c>] sys_mkdir+0x1f/0x23
+>  >   [<c01025ee>] syscall_call+0x7/0xb
+>  >   =======================
+>  >  xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+>  >  fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+>  >
+>  > Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+>  >  down filesystem: sdb1
+>  >  Please umount the filesystem, and rectify the problem(s)
+>  >
+>
+>  Actually, a single mkdir command is enough to trigger the filesystem
+>  shutdown when its 99% full (according to df -k):
+>
+>  /data# mkdir test
+>  mkdir: cannot create directory `test': No space left on device
+>
+>
+>
+>  Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+>  file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+>  Pid: 23380, comm: mkdir Not tainted 2.6.24.3FC #1
+>
+>  [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+>   [<c021a010>] xfs_mkdir+0x45a/0x493
+>   [<c021a010>] xfs_mkdir+0x45a/0x493
+>   [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+>   [<c0222d70>] xfs_vn_mknod+0x165/0x243
+>   [<c0217b9e>] xfs_access+0x2f/0x35
+>   [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+>   [<c016057b>] vfs_mkdir+0xa3/0xe2
+>   [<c0160644>] sys_mkdirat+0x8a/0xc3
+>   [<c016069c>] sys_mkdir+0x1f/0x23
+>   [<c01025ee>] syscall_call+0x7/0xb
+>   [<c03b0000>] atm_reset_addr+0xd/0x83
+>
+>  =======================
+>  xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+>  fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+>  Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+>  down filesystem: sdb1
+>  Please umount the filesystem, and rectify the problem(s)
+>
+>
+> df -k
+>  -----
+>  /dev/sdb1            286380096 282994528   3385568  99% /data
+>
+>  df -i
+>  -----
+>  /dev/sdb1            10341248 3570112 6771136   35% /data
+>
+>
+>  xfs_info
+>  --------
+>  meta-data=/dev/sdb1              isize=512    agcount=16, agsize=4476752 blks
+>          =                       sectsz=512   attr=0
+>  data     =                       bsize=4096   blocks=71627792, imaxpct=25
+>          =                       sunit=16     swidth=32 blks, unwritten=1
+>  naming   =version 2              bsize=4096
+>  log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=512   sunit=16 blks, lazy-count=0
+>  realtime =none                   extsz=65536  blocks=0, rtextents=0
+>
+>  xfs_db -r -c 'sb 0' -c p /dev/sdb1
+>  ----------------------------------
+>  magicnum = 0x58465342
+>  blocksize = 4096
+>  dblocks = 71627792
+>  rblocks = 0
+>  rextents = 0
+>  uuid = d16489ab-4898-48c2-8345-6334af943b2d
+>  logstart = 67108880
+>  rootino = 128
+>  rbmino = 129
+>  rsumino = 130
+>  rextsize = 16
+>  agblocks = 4476752
+>  agcount = 16
+>  rbmblocks = 0
+>  logblocks = 32768
+>  versionnum = 0x3584
+>  sectsize = 512
+>  inodesize = 512
+>  inopblock = 8
+>  fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+>  blocklog = 12
+>  sectlog = 9
+>  inodelog = 9
+>  inopblog = 3
+>  agblklog = 23
+>  rextslog = 0
+>  inprogress = 0
+>  imax_pct = 25
+>  icount = 3570112
+>  ifree = 0
+>  fdblocks = 847484
+>  frextents = 0
+>  uquotino = 0
+>  gquotino = 0
+>  qflags = 0
+>  flags = 0
+>  shared_vn = 0
+>  inoalignmt = 2
+>  unit = 16
+>  width = 32
+>  dirblklog = 0
+>  logsectlog = 0
+>  logsectsize = 0
+>  logsunit = 65536
+>  features2 = 0
+>
 
-Date: Thu, 6 Mar 2008 23:29:07 -0500
-From: Chris Knadle <Chris.Knadle@coredump.us>
-Subject: assfail during unmount xfs 2.6.24.3 [from 2.6.24.y git]
-To: linux-kernel@vger.kernel.org
+Instrumenting the code, I found that this occurs on my system when I
+do a 'mkdir /data/test' on the partition in question:
 
-During the final unmount before reboot there was an assertion failure from XFS 
-leading to the debug output below; I've included what was available on the 
-screendump, which I handwrote + transcribed.  [I also have screenshots from a 
-2.1 MP camera -- they're slightly ugly but usable.]  CONFIG_KEXEC was not 
-compiled in, so I was uanble to get a crashdump via SysRq.  I'm sending this 
-along in case someone working on the XFS fs can find + fix a bug.  I'm not 
-sending the kernel config in this first post just as not to spam everybody 
-with it if it's not needed -- if desired just ask and I'll send it.
-Source used: 2.6.24.y from git -- 2.6.24.3.
+in xfs_mkdir  (xfs_vnodeops.c):
 
-This is on my Desktop box, x86 system -- single P4 CPU @ 2.6 GHz, IDE disk 
-attached to an onboard HighPoint HPT370 controller, and running Debian Sid.
+  error = xfs_dir_ialloc(&tp, dp, mode, 2,
+                        0, credp, prid, resblks > 0,
+                &cdp, NULL);
 
-When replying please CC me, as I am not currently subscribed to the list.
+        if (error) {
+                if (error == ENOSPC)
+                        goto error_return;   <=== this is hit and then
+execution jumps to error_return
+                goto abort_return;
+        }
 
-Cheers.
--- Chris
+Is this the correct behavior for this type of situation: mkdir command
+fails due to no available space on filesystem,
+and xfs_mkdir goes to label error_return  ? (And after this the
+filesystem is shutdown)
 
--- 
-
-Chris Knadle
-Chris.Knadle@coredump.us
-
--------------------
-
-Cleaning up ifdown....
-Deactivating swap...done.
-Unmounting local filesystems...done.
-Assertion failed: atomic_read(&mp->m_active_trans) == 0, file: 
-fs/xfs/xfs_vfsops.c, line: 708
-------------[ cut here ]------------
-kernel BUG at fs/xfs/support/debug.c:82!
-infalid opcode: 0000 [#1]
-Modules lined in: nvidia(P) xt_multiport iptable_filter ip_tables x_tables 
-ppdev lp ac battery ipv6 ext2 mbcache joydev sidewinder kqemu loop 
-snd_emu10k1_synth snd_emux_synth snd_seq_virmidi snd_seq_midi_emul 
-snd_emu10k1 firmware_class snd_ac97_codec ac97_bus snd_util_mem snd_hwdep 
-parport_pc parport snd_pcm_oss snd_pcm snd_page_alloc snd_mixer_oss psmouse 
-rtc snd_deq_dummy pcspkr serio_raw evdev snd_seq_oss snd_seq_midi snd_rawmidi 
-snd_seq_midi_event snd_seq snd_timer snd_seq_device emu10k1_gp gameport snd 
-soundcore button i2c_i801 i2c_core intel_agp iTCO_wdt agpart shpchp 
-pci_hotplug usbhid hid xfs ide_cd cdrom ata_piix ata_generic libata scsi_mod 
-ide_disk floppy uhci_hcd usbcore hpt366 e1000 piix generic ide_core thermal 
-processor fan
-
-Pid: 25313, comm: mount Tainted: P   (2.6.24.3-686-initrd-crk1 #1)
-EIP: 0060:[>f8a67a3f>] EFLAGS: 00010292 CPU: 0
-EIP is at assfail+0x1b/0x1f [xfs]
-EAX: 00000061 EBX: f7faa400 ECX: ffffffff EDX: c034bda0
-ESI: dfc97000 EDI: f7faa400 EBP: db175e14 ESP: db175dcc
- DS: 007b ES: 007b FS: 0000 GS: 033 SS: 0068
-Process mount (pid: 25313, ti=db174000 task=f7c32560 task.ti=db174000)
-Stack: f8a6cc60 f8a6c6b0 f8a6a135 000002c4 f8a57e38 f7faa400 f8a57ee7 00000000
-       dfc97000 f7faa400 db175e14 f8a66ebc 00000001 f8a7fd20 f7fbd400 00000000
-       00000001 c0162bd2 00000001 f7fbd43c ffffffff f7fbd400 c0174c1b 00000000
-Call Trace:
- [<f8a57e38>] xfs_attr_quiesce+0x46/0x61 [xfs]
- [<f8a57ee7>] xfs_mntupdate+0x84/0xbb [xfs]
- [<f8a66ebc>] xfs_fs_remount+0x3d/0x57 [xfs]
- [<c0162bd2>] do_remount_sb+0xb5/0x101 [xfs]
- [<c0174c1b>] do_mount+0x5a9/0x65b
- [<c0148ec9>] __alloc_pages+0x5f/0x360
- [<c014430c>] find_lock_page+0x15/0x67
- [<c0150dd8>] handle_mm_fault+0x25a/0x52d
- [<c0148ec9>] __alloc_pages+0x5f/0x360
- [<c0173707>] copy_mount_options+0x28/0x113
- [<c0168b45>] getname+0x87/0xaf
- [<c0174d3f>] sys_mount+0x72/0xa4
- [<c0103cf2>] sysenter_past_esp+0x5f/0x85
- =======================
-Code: d7 6b c7 83 c3 08 81 fb c8 02 a8 f8 75 ee 5b c3 83 ec 10 89 4c 24 0c 89
- 54 24 08 89 44 24 04 c7 04 24 60 cc a6 f8 e8 0d ed 6a c7 <0f> 0b eb fe 56 53
- 83 ec 0c 89 c6 83 e6 07 9c 5b fa 89 0c 24 89
-EIP: [<f8a67a3f>] assfail+0x1b/0x1f [xfs] SS:ESP 0068:db175dcc
----[ end trace 65bd78ca1bf60304 ]---
-WARNING: at kernel/exit.c:917 do_exit()
-Pid: 25313, comm: mount Tainted: P         D 2.6.24.3-686-initrd-crk1 #1
- [<c0118ceb>] do_exit+0x669/0x7a4
- [<c0116767>] printk+0x1b/0x1f
- [<c010477a>] do_trap+0x0/0xbd
- [<c0104a56>] do_invalid_op+0x0/0x8a
- [<f8a67a3f>] assfail+0x1b/0x1f [xfs]
- [<f8a57e38>] xfs_attr_quiesce+0x46/0x61 [xfs]
- [<f8a57ee7>] xfs_mntupdate+0x84/0xbb [xfs]
- [<f8a66ebc>] xfs_fs_remount+0x3d/0x57 [xfs]
- [<c0162bd2>] do_remount_sb+0xb5/0x101
- [<c0174c1b>] do_mount+0x5a9/0x65b
- [<c0148ec9>] __alloc_pages+0x5f/0x360
- [<c014430c>] find_lock_page+0x15/0x67
- [<c0150dd8>] handle_mm_fault+0x25a/0x52d
- [<c0148ec9>] __alloc_pages+0x5f/0x360
- [<c0173707>] copy_mount_options+0x28/0x113
- [<c0168b45>] getname+0x87/0xaf
- [<c0174d3f>] sys_mount+0x72/0xa4
- [<c0103cf2>] sysenter_past_esp+0x5f/0x85
-========================
-/etc/rc6.d/S60umountroot: line17: 25313 Segmentation fault mount 
-$MOUNT_FORCE_OPT -n -o remount,ro -t dummytype dummydev / 2>/dev/null
-
-
-
------ End forwarded message -----
+Christian
