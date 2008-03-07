@@ -1,209 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Mar 2008 03:19:20 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Mar 2008 12:33:54 -0800 (PST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m27BJ10O029379
-	for <xfs@oss.sgi.com>; Fri, 7 Mar 2008 03:19:02 -0800
-Received: from rn-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FC45F394A8
-	for <xfs@oss.sgi.com>; Fri,  7 Mar 2008 03:19:30 -0800 (PST)
-Received: from rn-out-0910.google.com (rn-out-0910.google.com [64.233.170.186]) by cuda.sgi.com with ESMTP id tVSjiDERLZDqFvJo for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 03:19:30 -0800 (PST)
-Received: by rn-out-0910.google.com with SMTP id a43so695715rne.10
-        for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 03:19:29 -0800 (PST)
-Message-ID: <1a4a774c0803070319j1eb8790ek3daae4a16b3e6256@mail.gmail.com>
-Date: Fri, 7 Mar 2008 12:19:28 +0100
-From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
-Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
-In-Reply-To: <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m27KX8mr032191
+	for <xfs@oss.sgi.com>; Fri, 7 Mar 2008 12:33:11 -0800
+Received: from mail.g-house.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA958F3DFAB
+	for <xfs@oss.sgi.com>; Fri,  7 Mar 2008 12:33:33 -0800 (PST)
+Received: from mail.g-house.de (ns2.g-housing.de [81.169.133.75]) by cuda.sgi.com with ESMTP id qDw9Fz3psY1TlmH0 for <xfs@oss.sgi.com>; Fri, 07 Mar 2008 12:33:33 -0800 (PST)
+Date: Fri, 7 Mar 2008 21:32:57 +0100 (CET)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: INFO: task mount:11202 blocked for more than 120 seconds
+Message-ID: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Disposition: inline
-References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
-	 <20080213214551.GR155407@sgi.com>
-	 <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
-	 <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 6, 2008 at 12:10 PM, Christian Røsnes
-<christian.rosnes@gmail.com> wrote:
-> On Wed, Mar 5, 2008 at 2:53 PM, Christian Røsnes
->  <christian.rosnes@gmail.com> wrote:
->  > > On Wed, Feb 13, 2008 at 11:51:51AM +0100, Christian Røsnes wrote:
->  >  >  > Over the past month I've been hit with two cases of "xfs_trans_cancel
->  >  >  > at line 1150"
->  >  >  > The two errors occurred on different raid sets. In both cases the
->  >  >  > error happened during
->  >  >  > rsync from a remote server to this server, and the local partition
->  >  >  > which reported
->  >  >  > the error was 99% full (as reported by df -k, see below for details).
->  >  >  >
->  >  >  > System: Dell 2850
->  >  >  > Mem: 4GB RAM
->  >  >  > OS: Debian 3 (32-bit)
->  >  >  > Kernel: 2.6.17.7 (custom compiled)
->  >  >  >
->  >
->
->
-> >  After being hit several times by the problem mentioned above (running
->  >  kernel 2.6.17.7),
->  >  I upgraded the kernel to version 2.6.24.3. I then ran a rsync test to
->  >  a 99% full partition:
->  >
->  >  df -k:
->  >  /dev/sdb1            286380096 282994528   3385568  99% /data
->  >
->  >  The rsync application will probably fail because it will most likely
->  >  run out of space,
->  >  but I got another xfs_trans_cancel kernel message:
->  >
->  >  Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
->  >  file fs/xfs/xfs_trans.c.  Caller 0xc021a010
->  >  Pid: 11642, comm: rsync Not tainted 2.6.24.3FC #1
->  >   [<c0212678>] xfs_trans_cancel+0x5d/0xe6
->  >   [<c021a010>] xfs_mkdir+0x45a/0x493
->  >   [<c021a010>] xfs_mkdir+0x45a/0x493
->  >   [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
->  >   [<c0222d70>] xfs_vn_mknod+0x165/0x243
->  >   [<c0217b9e>] xfs_access+0x2f/0x35
->  >   [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
->  >   [<c016057b>] vfs_mkdir+0xa3/0xe2
->  >   [<c0160644>] sys_mkdirat+0x8a/0xc3
->  >   [<c016069c>] sys_mkdir+0x1f/0x23
->  >   [<c01025ee>] syscall_call+0x7/0xb
->  >   =======================
->  >  xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
->  >  fs/xfs/xfs_trans.c.  Return address = 0xc0212690
->  >
->  > Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
->  >  down filesystem: sdb1
->  >  Please umount the filesystem, and rectify the problem(s)
->  >
->
->  Actually, a single mkdir command is enough to trigger the filesystem
->  shutdown when its 99% full (according to df -k):
->
->  /data# mkdir test
->  mkdir: cannot create directory `test': No space left on device
->
->
->
->  Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
->  file fs/xfs/xfs_trans.c.  Caller 0xc021a010
->  Pid: 23380, comm: mkdir Not tainted 2.6.24.3FC #1
->
->  [<c0212678>] xfs_trans_cancel+0x5d/0xe6
->   [<c021a010>] xfs_mkdir+0x45a/0x493
->   [<c021a010>] xfs_mkdir+0x45a/0x493
->   [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
->   [<c0222d70>] xfs_vn_mknod+0x165/0x243
->   [<c0217b9e>] xfs_access+0x2f/0x35
->   [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
->   [<c016057b>] vfs_mkdir+0xa3/0xe2
->   [<c0160644>] sys_mkdirat+0x8a/0xc3
->   [<c016069c>] sys_mkdir+0x1f/0x23
->   [<c01025ee>] syscall_call+0x7/0xb
->   [<c03b0000>] atm_reset_addr+0xd/0x83
->
->  =======================
->  xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
->  fs/xfs/xfs_trans.c.  Return address = 0xc0212690
->  Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
->  down filesystem: sdb1
->  Please umount the filesystem, and rectify the problem(s)
->
->
-> df -k
->  -----
->  /dev/sdb1            286380096 282994528   3385568  99% /data
->
->  df -i
->  -----
->  /dev/sdb1            10341248 3570112 6771136   35% /data
->
->
->  xfs_info
->  --------
->  meta-data=/dev/sdb1              isize=512    agcount=16, agsize=4476752 blks
->          =                       sectsz=512   attr=0
->  data     =                       bsize=4096   blocks=71627792, imaxpct=25
->          =                       sunit=16     swidth=32 blks, unwritten=1
->  naming   =version 2              bsize=4096
->  log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=512   sunit=16 blks, lazy-count=0
->  realtime =none                   extsz=65536  blocks=0, rtextents=0
->
->  xfs_db -r -c 'sb 0' -c p /dev/sdb1
->  ----------------------------------
->  magicnum = 0x58465342
->  blocksize = 4096
->  dblocks = 71627792
->  rblocks = 0
->  rextents = 0
->  uuid = d16489ab-4898-48c2-8345-6334af943b2d
->  logstart = 67108880
->  rootino = 128
->  rbmino = 129
->  rsumino = 130
->  rextsize = 16
->  agblocks = 4476752
->  agcount = 16
->  rbmblocks = 0
->  logblocks = 32768
->  versionnum = 0x3584
->  sectsize = 512
->  inodesize = 512
->  inopblock = 8
->  fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
->  blocklog = 12
->  sectlog = 9
->  inodelog = 9
->  inopblog = 3
->  agblklog = 23
->  rextslog = 0
->  inprogress = 0
->  imax_pct = 25
->  icount = 3570112
->  ifree = 0
->  fdblocks = 847484
->  frextents = 0
->  uquotino = 0
->  gquotino = 0
->  qflags = 0
->  flags = 0
->  shared_vn = 0
->  inoalignmt = 2
->  unit = 16
->  width = 32
->  dirblklog = 0
->  logsectlog = 0
->  logsectsize = 0
->  logsunit = 65536
->  features2 = 0
->
+Hi,
 
-Instrumenting the code, I found that this occurs on my system when I
-do a 'mkdir /data/test' on the partition in question:
+after upgrading from 2.6.24.1 to 2.6.25-rc3, I came across[0]. This 
+warning seems to be gone now. With 2.6.25-rc4 (and the fix from [1])
+the box was running fine for 20 hours or so (doing its usual jobs plus 
+a "make randconfig && make" loop).
 
-in xfs_mkdir  (xfs_vnodeops.c):
+After this, I noticed that /bin/sync would not exit anymore and
+remains stuck in D state. Looking around I noticed that the rsync
+backup jobs (rsync'ing to an xfs partition) from earlier this
+morning did not exit either and hung in D state. With sync hung, the 
+following messages started to appear:
 
-  error = xfs_dir_ialloc(&tp, dp, mode, 2,
-                        0, credp, prid, resblks > 0,
-                &cdp, NULL);
+[75377.756985] INFO: task sync:2697 blocked for more than 120 seconds.
+[75377.757579] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[75377.758211] sync          D c013835c     0  2697  16457
+[75377.758216]        f59506c0 00000082 f4c34000 c013835c fffeffff f6c1bcb0 f5dd0000 f4c34000 
+[75377.758223]        c04405d7 f53f7e98 f6c1bcb4 f6c1bcd0 00000000 f6c1bcb0 00000000 f7ca1090 
+[75377.758230]        f4c34000 c044070a f6c1bcd0 f6c1bcd0 f5dd0000 00000001 f6c1bcb0 c044074b 
+[75377.758237] Call Trace:
+[75377.758253]  [<c013835c>] trace_hardirqs_on+0x9c/0x110
+[75377.758269]  [<c04405d7>] rwsem_down_failed_common+0x67/0x150
+[75377.758279]  [<c044070a>] rwsem_down_read_failed+0x1a/0x24
+[75377.758286]  [<c044074b>] call_rwsem_down_read_failed+0x7/0xc
+[75377.758291]  [<c012fd7c>] down_read_nested+0x4c/0x60
+[75377.758295]  [<c027a64b>] xfs_ilock+0x5b/0xb0
+[75377.758301]  [<c027a64b>] xfs_ilock+0x5b/0xb0
+[75377.758306]  [<c029693d>] xfs_sync_inodes+0x3dd/0x6b0
+[75377.758314]  [<c0440b14>] _spin_unlock+0x14/0x20
+[75377.758325]  [<c0296d9b>] xfs_syncsub+0x18b/0x300
+[75377.758330]  [<c0440b14>] _spin_unlock+0x14/0x20
+[75377.758335]  [<c02a7c2b>] xfs_fs_sync_super+0x2b/0xd0
+[75377.758342]  [<c016a124>] sync_filesystems+0xa4/0x100
+[75377.758351]  [<c043fdd8>] down_read+0x38/0x50
+[75377.758356]  [<c016a13f>] sync_filesystems+0xbf/0x100
+[75377.758361]  [<c01872b3>] do_sync+0x33/0x70
+[75377.758366]  [<c0102ed7>] restore_nocheck+0x12/0x15
+[75377.758371]  [<c01872fa>] sys_sync+0xa/0x10
+[75377.758375]  [<c0102dee>] sysenter_past_esp+0x5f/0xa5
+[75377.758402]  =======================
+[75377.758405] 3 locks held by sync/2697:
+[75377.758407]  #0:  (mutex){--..}, at: [<c016a091>] sync_filesystems+0x11/0x100
+[75377.758414]  #1:  (&type->s_umount_key#22){----}, at: [<c016a124>] sync_filesystems+0xa4/0x100
+[75377.758422]  #2:  (&(&ip->i_iolock)->mr_lock){----}, at: [<c027a64b>] xfs_ilock+0x5b/0xb0
 
-        if (error) {
-                if (error == ENOSPC)
-                        goto error_return;   <=== this is hit and then
-execution jumps to error_return
-                goto abort_return;
-        }
 
-Is this the correct behavior for this type of situation: mkdir command
-fails due to no available space on filesystem,
-and xfs_mkdir goes to label error_return  ? (And after this the
-filesystem is shutdown)
+The box is still up & running, although the load is increasing slightly. 
+I've gathered some details here: http://nerdbynature.de/bits/2.6.25-rc4/
 
-Christian
+I've searched the archives for this error, but the only thing was
+   * http://lkml.org/lkml/2008/2/12/44
+     [BUG] 2.6.25-rc1-git1 softlockup while bootup on powerpc
+     ...however, I don't get "CPU stuck" messages
+   * http://lkml.org/lkml/2008/1/29/370
+     Re: system hang on latest git
+     ...but calltrace looks a lot different.
+
+Since both mailings are not so current, I'd like to got back to -rc3 and 
+try to reproduce this one.
+
+Do you have any idea what's going on here?
+
+Thanks,
+Christian.
+
+[0] http://lkml.org/lkml/2008/3/2/171
+[1] http://lkml.org/lkml/2008/3/4/634
+-- 
+BOFH excuse #158:
+
+Defunct processes
