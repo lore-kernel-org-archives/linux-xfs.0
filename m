@@ -1,64 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 04:45:16 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2ABiudI021300
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 04:44:56 -0700
-Message-ID: <47D51FF0.2080000@steelbox.com>
-Date: Mon, 10 Mar 2008 07:48:00 -0400
-From: Kris Kersey <kkersey@steelbox.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 05:22:11 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2ACLocl024845
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 05:21:52 -0700
+Date: Mon, 10 Mar 2008 13:22:16 +0100
+From: Andreas Kotes <count-linux@flatline.de>
+Subject: Re: XFS internal error
+Message-ID: <20080310122216.GG14256@slop.flatline.de>
+References: <470831E6.4030704@fastmail.co.uk> <20071008001452.GX995458@sgi.com>
 MIME-Version: 1.0
-Subject: Re: pdflush hang on xlog_grant_log_space()
-References: <47D062AF.80501@steelbox.com> <20080307223510.GM155407@sgi.com>
-In-Reply-To: <20080307223510.GM155407@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20071008001452.GX995458@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, Bill Vaughan <billv@steelbox.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Thank you for your help.  Two questions:
+Hello,
 
-1) Can you define "much larger number"?  I know you recently increased
-this number from 10 to 1000, so should I increase it to 10,000?  100,000?
-
-2) Is this a fix or a work-around?  If this is a work-around, is there a
-fix in the works?  Can you explain the issue a bit, or if it's been
-covered, can you point me to the explanation?  I'd just like to
-understand what's going on.
-
-Thanks,
-Kris Kersey
-
-
-David Chinner wrote:
-> On Thu, Mar 06, 2008 at 04:31:27PM -0500, Kris Kersey wrote:
->> Hello,
->>
->> I'm working on a NAS product and we're currently having lock-ups that
->> seem to be hanging in XFS code.  We're running a NAS that has 1024 NFSD
->> threads accessing three RAID mounts.  All three mounts are running XFS
->> file systems.  Lately we've had random lockups on these boxes and I am
->> now running a kernel with KDB built-in.
->>
->> The lock-up takes the form of all NFSD threads in D state with one out
->> of three pdflush threads in D state.  The assumption can be made that
->> all NFSD threads are waiting on the one pdflush thread to complete.  So
->> two times now when an NAS has gotten in this state I have accessed KDB
->> and ran a stack trace on the pdflush thread.  Both times the thread was
->> stuck on xlog_grant_log_space+0xdb.
+* David Chinner <dgc@sgi.com> [20080310 13:18]:
+> Yes, but those previous corruptions get left on disk as a landmine
+> for you to trip over some time later, even on a kernel that has the
+> bug fixed.
 > 
-> Try bumping XFS_TRANS_PUSH_AIL_RESTARTS to a much larger number and
-> seeing if the problem goes away....
-> 
-> Alternatively, that restart hack is backed by a "watchdog" timeout
-> in 2.6.25-rc1, so if that is the cause of the problem perhaps the
-> latest -rcX kernel will prevent the hang?
-> 
-> BTW, you can get all the traces of D state threads through the sysrq
-> interface, so you don't need to drop into kdb to get this.....
-> 
-> Cheers,
-> 
-> Dave.
+> I suggest that you run xfs_check on the filesystem and if that
+> shows up errors, run xfs_repair onteh filesystem to correct them.
+
+I seem to be having similiar problems, and xfs_repair is not helping :(
+
+I always run into:
+
+[  137.099267] Filesystem "sda2": XFS internal error xfs_trans_cancel at line 1132 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff80372156
+[  137.106267]
+[  137.106268] Call Trace:
+[  137.113129]  [<ffffffff803692f0>] xfs_trans_cancel+0x100/0x130
+[  137.116524]  [<ffffffff80372156>] xfs_create+0x256/0x6e0
+[  137.119904]  [<ffffffff80341e09>] xfs_dir2_isleaf+0x19/0x50
+[  137.123269]  [<ffffffff8037e145>] xfs_vn_mknod+0x195/0x250
+[  137.126607]  [<ffffffff8028f32c>] vfs_create+0xac/0xf0
+[  137.129920]  [<ffffffff80292b3c>] open_namei+0x5dc/0x700
+[  137.133227]  [<ffffffff8022a443>] __wake_up+0x43/0x70
+[  137.136477]  [<ffffffff802851bc>] do_filp_open+0x1c/0x50
+[  137.139693]  [<ffffffff8028524a>] do_sys_open+0x5a/0x100
+[  137.142838]  [<ffffffff80220a83>] sysenter_do_call+0x1b/0x67
+[  137.145964]
+[  137.149014] xfs_force_shutdown(sda2,0x8) called from line 1133 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff8036930e
+[  137.163485] Filesystem "sda2": Corruption of in-memory data detected.  Shutting down filesystem: sda2
+
+directly after booting.
+
+I'm using kernel 2.6.22.16 and xfs_repair version 2.9.7
+
+How can I help finding the problem? I'd like xfs_repair to be able to
+fix this.
+
+Br,
+
+   Andreas
+
+-- 
+flatline IT services - Andreas Kotes - Tailored solutions for your IT needs
