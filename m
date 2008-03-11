@@ -1,112 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 18:55:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2B1tJCd007297
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 18:55:21 -0700
-Date: Mon, 10 Mar 2008 21:55:49 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: Final call for review of sb_bad_features2 in userspace
-Message-ID: <20080311015549.GB8870@josefsipek.net>
-References: <op.t7ky1txm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Mar 2008 01:08:28 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2B885HK002377
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 01:08:09 -0700
+Received: from wx-out-0506.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76506682E6F
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 01:08:35 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.236]) by cuda.sgi.com with ESMTP id lpJKIxI3l7zoErKD for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 01:08:35 -0700 (PDT)
+Received: by wx-out-0506.google.com with SMTP id s9so2307964wxc.32
+        for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 01:08:34 -0700 (PDT)
+Message-ID: <1a4a774c0803110108u3f01813fs7f9540f886be055@mail.gmail.com>
+Date: Tue, 11 Mar 2008 09:08:31 +0100
+From: "=?ISO-8859-1?Q?Christian_R=F8snes?=" <christian.rosnes@gmail.com>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
+In-Reply-To: <20080310222135.GZ155407@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <op.t7ky1txm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com>
+	 <20080213214551.GR155407@sgi.com>
+	 <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com>
+	 <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com>
+	 <1a4a774c0803070319j1eb8790ek3daae4a16b3e6256@mail.gmail.com>
+	 <20080310000809.GU155407@sgi.com>
+	 <1a4a774c0803100302y17530814wee7522aa0dfd7668@mail.gmail.com>
+	 <1a4a774c0803100134k258e1bcfma95e7969bc44b2af@mail.gmail.com>
+	 <20080310222135.GZ155407@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 06, 2008 at 05:02:07PM +1100, Barry Naujok wrote:
-> I think the attached patch maybe the least offensive for past
-> kernels, and XFSQA!
+On Mon, Mar 10, 2008 at 11:21 PM, David Chinner <dgc@sgi.com> wrote:
+
+>  You've got a filesystem with stripe alignment set. In xfs_ialloc_ag_alloc()
+>  we attempt inode allocation by the following rules:
 >
-> xfs_check and xfs_repair will ignore sb_bad_features2 if it is
-> zero, and if not, makes sure it's the same as sb_features2.
+>         1. a) If we haven't previously allocated inodes, fall through to 2.
+>            b) If we have previously allocated inode, attempt to allocate next
+>               to the last inode chunk.
 >
-> mkfs.xfs will set sb_bad_features2 to be the same. Maybe if
-> we change the behaviour of the kernel mount code with
-> respects of sb_bad_features2, this can be revisited.
+>         2. If we do not have an extent now:
+>                 a) if we have stripe alignment, try with alignment
+>                 b) if we don't have stripe alignment try cluster alignment
 >
-> (An intermediate solution I has was if "xfs_repair -n" is
-> run AND sb_bad_features is zero, then ignore it to let
-> xfs_repair continue, otherwise duplicate it, but doing
-> that requires a golden output change to QA 030 and 033
-> unless the kernel mount code is changed... ARGH!)
-
-Tiny comments below, but either way, looks good.
-
-Josef 'Jeff' Sipek.
-
-
-> ===========================================================================
-> xfsprogs/db/check.c
-> ===========================================================================
+>         3. If we do not have an extent now:
+>                 a) if we have stripe alignment, try with cluster alignment
+>                 b) no stripe alignment, turn off alignment.
 >
-> --- a/xfsprogs/db/check.c	2008-03-06 16:59:31.000000000 +1100
-> +++ b/xfsprogs/db/check.c	2008-03-06 12:32:54.664882390 +1100
-> @@ -869,6 +869,15 @@ blockget_f(
->  				mp->m_sb.sb_frextents, frextents);
->  		error++;
->  	}
-> +	if (mp->m_sb.sb_bad_features2 != 0 &&
-> +			mp->m_sb.sb_bad_features2 != mp->m_sb.sb_features2) {
-
-cosmetic: I'd align the second line to have the sb-> start in the same
-column :) It looks kinda odd to have the second line as indented as the
-dbprintf few lines later.
-
-> +		if (!sflag)
-> +			dbprintf("sb_features2 (0x%x) not same as "
-> +				"sb_bad_features2 (0x%x)\n",
-> +				mp->m_sb.sb_features2,
-> +				mp->m_sb.sb_bad_features2);
-> +		error++;
-> +	}
->  	if ((sbversion & XFS_SB_VERSION_ATTRBIT) &&
->  	    !XFS_SB_VERSION_HASATTR(&mp->m_sb)) {
->  		if (!sflag)
+>         4. If we do not have an extent now: FAIL.
 >
-...
-> ===========================================================================
-> xfsprogs/include/xfs_sb.h
-> ===========================================================================
+>  Note the case missing from the stripe alignment fallback path - it does not
+>  try without alignment at all. That means if all those extents large enough
+>  that we found above are not correctly aligned, then we will still fail
+>  to allocate an inode chunk. if all the AGs are like this, then we'll
+>  fail to allocate at all and fall out of xfs_dialloc() through the last
+>  fragment I quoted above.
 >
-> --- a/xfsprogs/include/xfs_sb.h	2008-03-06 16:59:31.000000000 +1100
-> +++ b/xfsprogs/include/xfs_sb.h	2008-02-29 17:16:33.814417687 +1100
-> @@ -151,6 +151,7 @@ typedef struct xfs_sb
->  	__uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
->  	__uint32_t	sb_logsunit;	/* stripe unit size for the log */
->  	__uint32_t	sb_features2;	/* additional feature bits */
-> +	__uint32_t	sb_bad_features2; /* unusable space */
->  } xfs_sb_t;
-
-__attribute__((packed))  ?
-
-...
-> ===========================================================================
-> xfsprogs/repair/phase1.c
-> ===========================================================================
+>  As to the shutdown that this triggers - the attempt to allocate dirties
+>  the AGFL and the AGF by moving free blocks into the free list for btree
+>  splits and cancelling a dirty transaction results in a shutdown.
 >
-> --- a/xfsprogs/repair/phase1.c	2008-03-06 16:59:31.000000000 +1100
-> +++ b/xfsprogs/repair/phase1.c	2008-03-06 16:57:40.021125442 +1100
-> @@ -91,6 +91,20 @@ phase1(xfs_mount_t *mp)
->  		primary_sb_modified = 1;
->  	}
+>  Now, to test this theory. ;) Luckily, it's easy to test. mount the
+>  filesystem with the mount option "noalign" and rerun the mkdir test.
+>  If it is an alignment problem, then setting noalign will prevent
+>  this ENOSPC and shutdown as the filesystem will be able to allocate
+>  more inodes.
 >
-> +	/*
-> +	 * Check bad_features2 and make sure features2 the same as
-> +	 * bad_features (ORing the two together). Leave bad_features2
-> +	 * set so older kernels can still use it and not mount unsupported
-> +	 * filesystems when it reads bad_features2.
-> +	 */
-> +	if (sb->sb_bad_features2 != 0 &&
-> +			sb->sb_bad_features2 != sb->sb_features2) {
+>  Can you test this for me, Christian?
 
-Same as the check.c comment above.
+Thanks. Unfortunately noalign didn't solve my problem:
 
--- 
-You measure democracy by the freedom it gives its dissidents, not the
-freedom it gives its assimilated conformists.
-		- Abbie Hoffman
+# mount | grep /data
+/dev/sdb1 on /data type xfs (rw,noatime,noalign,logbufs=8,nobarrier)
+
+# mkdir /data/test
+
+results in:
+
+Filesystem "sdb1": XFS internal error xfs_trans_cancel at line 1163 of
+file fs/xfs/xfs_trans.c.  Caller 0xc021a010
+Pid: 17889, comm: mkdir Not tainted 2.6.24.3FC #7
+ [<c0212678>] xfs_trans_cancel+0x5d/0xe6
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c021a010>] xfs_mkdir+0x45a/0x493
+ [<c01cbb8f>] xfs_acl_vhasacl_default+0x33/0x44
+ [<c0222d70>] xfs_vn_mknod+0x165/0x243
+ [<c0217b9e>] xfs_access+0x2f/0x35
+ [<c0222e6d>] xfs_vn_mkdir+0x12/0x14
+ [<c016057b>] vfs_mkdir+0xa3/0xe2
+ [<c0160644>] sys_mkdirat+0x8a/0xc3
+ [<c016069c>] sys_mkdir+0x1f/0x23
+ [<c01025ee>] syscall_call+0x7/0xb
+ [<c03b0000>] atm_reset_addr+0xd/0x83
+ =======================
+xfs_force_shutdown(sdb1,0x8) called from line 1164 of file
+fs/xfs/xfs_trans.c.  Return address = 0xc0212690
+Filesystem "sdb1": Corruption of in-memory data detected.  Shutting
+down filesystem: sdb1
+Please umount the filesystem, and rectify the problem(s)
+
+
+I'll try to add some printk statements to the codepaths you mentioned,
+and see where it leads.
+
+Christian
