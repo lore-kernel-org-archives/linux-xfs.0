@@ -1,57 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 18:15:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2B1Es9F001444
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 18:14:56 -0700
-Date: Tue, 11 Mar 2008 12:15:14 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: ADD 977766 - mkfs.xfs man page needs the default settings updated. [REVIEW TAKE 3]
-Message-ID: <20080311011514.GE155407@sgi.com>
-References: <incident_977766@bugworks.engr.sgi.com> <20080222003514.8D88E2C3@toolshop.engr.sgi.com> <nccskzlzg9f.fsf_-_@sgi.com> <nccablbf8ra.fsf_-_@sgi.com> <20080310060751.GY155407@sgi.com> <416c461f0803092315m7ae6f55ek9b64058c3793aaa7@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <416c461f0803092315m7ae6f55ek9b64058c3793aaa7@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 18:19:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2B1JI3a002192
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 18:19:23 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 89283F5C71C
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 18:19:48 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id mHZLCqrOgX4zbbgq for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 18:19:48 -0700 (PDT)
+Message-ID: <47D5DE13.8030902@sandeen.net>
+Date: Mon, 10 Mar 2008 20:19:15 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH, RFC] - remove mounpoint UUID code
+References: <47D20F78.7000103@sandeen.net> <1205196252.15982.69.camel@edge.scott.net.au>
+In-Reply-To: <1205196252.15982.69.camel@edge.scott.net.au>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@cxhome.ath.cx>
-Cc: David Chinner <dgc@sgi.com>, Niv Sardi <xaiki@sgi.com>, sgi.bugs.xfs@fido.engr.sgi.com, xfs-dev@sgi.com, xfs@oss.sgi.com
+To: nscott@aconex.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Mar 10, 2008 at 05:15:04PM +1100, Niv Sardi wrote:
-> On Mon, Mar 10, 2008 at 5:07 PM, David Chinner <dgc@sgi.com> wrote:
-> >  Secondly, version one logs are not being kept around for backwards
-> >  compatibility reasons. It's a valid, supported configuration, and in
-> >  some cases performs better than version 2 logs....
-> 
-> Can you be more specific ?
+Nathan Scott wrote:
 
-More specific about which comment?
 
-Re: performance - specSFS.
+(hope you didn't too much mind my quoting you in this thread) ;)
 
-IIRC, anything that is effectively a synchronous transaction workload
-tends to perform slightly better with v1 logs than v2 logs. It's
-in the order of a few percent, but some ppl kill for that ;)
+> Since effectively all versions of XFS support this feature ondisk,
+> including complete support in recovery, it would be better IMO to
+> leave it in for someone to implement/experiment with the syscall
+> and auto-mounting userspace support.  That would then require no
+> new feature bits, mkfs/repair changes, etc.  There is effectively
+> zero cost to leaving it there - and non-zero cost in removing it,
+> if our seriously bad regression-via-cleanup history is anything
+> to go by ... :|
 
-> the man page should document when this is
-> better supported and I believe you're the one that has the best
-> knowledge about that.
-> 
-> >  Realistically, I see no need for changing this text except to add that
-> >  the default is version 2.
-> 
-> The change was motivated by Eric's comments on OSS that it is not
-> clear why one should pick log v1 or v2, and I believe he is right.
+the only cost to leaving it is having another instance of "ok now what
+the heck is THIS?!" ... death by a thousand cuts of xfs complexity.  But
+yeah, removing it has some risk too.
 
-If you don't understand - use the default. In most cases v2 logs are the
-right thing to use and no amount of text in the man page is going to be
-able to explain the corner cases where you'd want to use v1 logs....
+> It would be really unfortunate to remove this, and then find that
+> it was useful to someone (who didn't know about it at this time).
+> OTOH, if there is definately never ever any chance this can ever
+> be useful, then it should indeed be removed. :)
 
-Cheers,
+Well I'm not hung up about it.  If anyone thinks it'll be useful, I'm
+not bothered by leaving it as is.  So, Nathan, what are your plans for
+this code? *grin*
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+-Eric
