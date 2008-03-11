@@ -1,59 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 16:45:36 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2ANjCUP018533
-	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 16:45:15 -0700
-Date: Tue, 11 Mar 2008 10:45:40 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS internal error
-Message-ID: <20080310234539.GC155407@sgi.com>
-References: <470831E6.4030704@fastmail.co.uk> <20071008001452.GX995458@sgi.com> <20080310122216.GG14256@slop.flatline.de> <20080310223018.GA155407@sgi.com> <20080310225927.GP14256@slop.flatline.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Mar 2008 17:44:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2B0iExN028589
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 17:44:15 -0700
+Received: from postoffice.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D63B125114A
+	for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 17:44:45 -0700 (PDT)
+Received: from postoffice.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id G6Aqgywa8bFvjw4u for <xfs@oss.sgi.com>; Mon, 10 Mar 2008 17:44:45 -0700 (PDT)
+Subject: Re: [PATCH, RFC] - remove mounpoint UUID code
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <47D20F78.7000103@sandeen.net>
+References: <47D20F78.7000103@sandeen.net>
+Content-Type: text/plain
+Date: Tue, 11 Mar 2008 11:44:12 +1100
+Message-Id: <1205196252.15982.69.camel@edge.scott.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080310225927.GP14256@slop.flatline.de>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andreas Kotes <count@flatline.de>
-Cc: David Chinner <dgc@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Mar 10, 2008 at 11:59:27PM +0100, Andreas Kotes wrote:
-> * David Chinner <dgc@sgi.com> [20080310 23:30]:
-> > On Mon, Mar 10, 2008 at 01:22:16PM +0100, Andreas Kotes wrote:
-> > > * David Chinner <dgc@sgi.com> [20080310 13:18]:
-> > > > Yes, but those previous corruptions get left on disk as a landmine
-> > > > for you to trip over some time later, even on a kernel that has the
-> > > > bug fixed.
-> > > > 
-> > > > I suggest that you run xfs_check on the filesystem and if that
-> > > > shows up errors, run xfs_repair onteh filesystem to correct them.
-> > > 
-> > > I seem to be having similiar problems, and xfs_repair is not helping :(
-> > 
-> > xfs_repair is ensuring that the problem is not being caused by on-disk
-> > corruption. In this case, it does not appear to be caused by on-disk
-> > corruption, so xfs_repair won't help.
+On Fri, 2008-03-07 at 22:00 -0600, Eric Sandeen wrote:
+> It looks like all of the below is unused... and according
+> to Nathan,
 > 
-> ok, too bad - btw, is it a problem that I'm doing the xfs_repair on a
-> mounted filesystem with xfs_repair -f -L after a remount rw?
+> "dont think it even got used/implemented anywhere, but i think it 
+> was meant to be an auto-mount kinda thing... such that when you look 
+> up at that point, it knows to mount the device with that uuid there, 
+> if its not already it was never really written anywhere ... just an 
+> idea in doug doucettes brain i think."
+> 
+> Think it'll ever go anywhere, or should it get pruned?
+> 
+> The below builds; not at all tested, until I get an idea if it's worth
+> doing.  Need to double check that some structures might not need padding
+> out to keep things compatible/consistent...
 
-If it was read only, and you rebooted immediately afterwards, you'd
-probably be ok. Doing this to a mounted, rw filesystem is asking
-for trouble. If the shutdown is occurring after you've run xfs_repair,
-then it is almost certainly the cause....
+Since effectively all versions of XFS support this feature ondisk,
+including complete support in recovery, it would be better IMO to
+leave it in for someone to implement/experiment with the syscall
+and auto-mounting userspace support.  That would then require no
+new feature bits, mkfs/repair changes, etc.  There is effectively
+zero cost to leaving it there - and non-zero cost in removing it,
+if our seriously bad regression-via-cleanup history is anything
+to go by ... :|
 
-I'd suggest getting a knoppix (or similar) rescue disk and repairing
-from that, rebooting and seeing if the problem persists. If it
-does, then we'll have to look further into it.
+It would be really unfortunate to remove this, and then find that
+it was useful to someone (who didn't know about it at this time).
+OTOH, if there is definately never ever any chance this can ever
+be useful, then it should indeed be removed. :)
 
-FWIW, you've got plenty of free inodes so this does not look
-to be the same problem I've just found. 
+cheers.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Nathan
