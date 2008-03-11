@@ -1,102 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Mar 2008 02:34:07 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2B9Xiaw015696
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 02:33:48 -0700
-Date: Tue, 11 Mar 2008 20:34:06 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS internal error xfs_trans_cancel at line 1150 of file fs/xfs/xfs_trans.c
-Message-ID: <20080311093406.GN155407@sgi.com>
-References: <1a4a774c0802130251h657a52f7lb97942e7afdf6e3f@mail.gmail.com> <20080213214551.GR155407@sgi.com> <1a4a774c0803050553h7f6294cfq41c38f34ea92ceae@mail.gmail.com> <1a4a774c0803060310w2642224w690ac8fa13f96ec@mail.gmail.com> <1a4a774c0803070319j1eb8790ek3daae4a16b3e6256@mail.gmail.com> <20080310000809.GU155407@sgi.com> <1a4a774c0803100302y17530814wee7522aa0dfd7668@mail.gmail.com> <1a4a774c0803100134k258e1bcfma95e7969bc44b2af@mail.gmail.com> <20080310222135.GZ155407@sgi.com> <1a4a774c0803110108u3f01813fs7f9540f886be055@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Mar 2008 02:59:32 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2B9xNPl018547
+	for <linux-xfs@oss.sgi.com>; Tue, 11 Mar 2008 02:59:25 -0700
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34DB4F60284
+	for <linux-xfs@oss.sgi.com>; Tue, 11 Mar 2008 02:59:53 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id 036j3u51AyA9OyHO for <linux-xfs@oss.sgi.com>; Tue, 11 Mar 2008 02:59:53 -0700 (PDT)
+Received: from nb27steigerwald.qs.de (unknown [212.204.70.254])
+	by mail.lichtvoll.de (Postfix) with ESMTP id E0FDC5ADD6
+	for <linux-xfs@oss.sgi.com>; Tue, 11 Mar 2008 10:59:50 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: disappearing xfs partition
+Date: Tue, 11 Mar 2008 10:59:50 +0100
+References: <e03b90ae0803030514v585249ecjf93af325287b59f@mail.gmail.com> <e03b90ae0803031407n6693d1b3k268d8858504a9ce9@mail.gmail.com> <e03b90ae0803031856s42ddf82dudb7fa9d84a637498@mail.gmail.com> (sfid-20080304_090400_023531_C318561D)
+In-Reply-To: <e03b90ae0803031856s42ddf82dudb7fa9d84a637498@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Disposition: inline
+Message-Id: <200803111059.50596.Martin@lichtvoll.de>
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1a4a774c0803110108u3f01813fs7f9540f886be055@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian =?iso-8859-1?Q?R=F8snes?= <christian.rosnes@gmail.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Tue, Mar 11, 2008 at 09:08:31AM +0100, Christian Røsnes wrote:
-> On Mon, Mar 10, 2008 at 11:21 PM, David Chinner <dgc@sgi.com> wrote:
-> >  You've got a filesystem with stripe alignment set. In xfs_ialloc_ag_alloc()
-> >  we attempt inode allocation by the following rules:
-> >
-> >         1. a) If we haven't previously allocated inodes, fall through to 2.
-> >            b) If we have previously allocated inode, attempt to allocate next
-> >               to the last inode chunk.
-> >
-> >         2. If we do not have an extent now:
-> >                 a) if we have stripe alignment, try with alignment
-> >                 b) if we don't have stripe alignment try cluster alignment
-> >
-> >         3. If we do not have an extent now:
-> >                 a) if we have stripe alignment, try with cluster alignment
-> >                 b) no stripe alignment, turn off alignment.
-> >
-> >         4. If we do not have an extent now: FAIL.
-> >
-> >  Note the case missing from the stripe alignment fallback path - it does not
-> >  try without alignment at all. That means if all those extents large enough
-> >  that we found above are not correctly aligned, then we will still fail
-> >  to allocate an inode chunk. if all the AGs are like this, then we'll
-> >  fail to allocate at all and fall out of xfs_dialloc() through the last
-> >  fragment I quoted above.
-> >
-> >  As to the shutdown that this triggers - the attempt to allocate dirties
-> >  the AGFL and the AGF by moving free blocks into the free list for btree
-> >  splits and cancelling a dirty transaction results in a shutdown.
-> >
-> >  Now, to test this theory. ;) Luckily, it's easy to test. mount the
-> >  filesystem with the mount option "noalign" and rerun the mkdir test.
-> >  If it is an alignment problem, then setting noalign will prevent
-> >  this ENOSPC and shutdown as the filesystem will be able to allocate
-> >  more inodes.
-> >
-> >  Can you test this for me, Christian?
-> 
-> Thanks. Unfortunately noalign didn't solve my problem:
+Am Dienstag 04 März 2008 schrieb Jeff Breidenbach:
+> Following up and close out the topic, I got this comment from Eric.
+>
+> >So parted has this bad habit of making partition tables that cannot
+> >actually be read from the disk, and poking the supposedly values
+> >directly into the kernel.  Then things work fine until reboot, at
+> > which time the partition table cannot be properly read.   Usually
+> > this turns into a truncated size due to an overflow....
+>
+> I'd been using cfdisk and not parted, but that's apparently what
+> happened. Rewriting the partition table with cfdisk fixed everything
+> and allowed the partition to mount. At least for this boot.
 
-Ok, reading the code a bit further, I've mixed up m_sinoalign,
-m_sinoalignmt and the noalign mount option. The noalign mount option
-turns off m_sinoalign, but it does not turn off inode cluster
-alignment, hence we can't fall back to an unaligned allocation.
+Hi Jan,
 
-So the above theory still holds, just the test case was broken.
+Its always a good idea to check whether the kernel reread the partition 
+table after partitioning with
 
-Unfortunately, further investigation indicates that inodes are
-always allocated aligned; I expect that I could count the number of
-linux XFS filesystems not using inode allocation alignment because
-mkfs.xfs has set this as the default since it was added in mid-1996.
+cat  /proc/partitions
 
-The problem with unaligned inode allocation is the lookup case
-(xfs_dilocate()) in that it requires btree lookups to convert the
-inode number to a block number as you don't know where in the chunk
-the inode exists just by looking at the inode number. With aligned
-allocations, the block number can be derived directly from the inode
-number because we know how the inode chunks are aligned.
+If it doesn't have you can tell the kernel to do it manually:
 
-IOWs, if we allow an unaligned inode chunk allocation to occur, we
-have to strip the "aligned inode allocation" feature bit from the
-filesystem and the related state and use the slow, btree based
-lookup path forever more. That involves I/O instead of a simple
-mask operation....
+blockdev --rereadpt /dev/sde
 
-Hence I'm inclined to leave the allocation alignment as it stands
-and work out how to prevent the shutdown (a difficult issue in
-itself).
+If that tells you something about device is busy or so you'd need to 
+unmount partitions on it or reboot.
 
-> I'll try to add some printk statements to the codepaths you mentioned,
-> and see where it leads.
-
-Definitely worth confirming this is where the error is coming from.
-
-Cheers,
-
-Dave.
+Ciao,
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
