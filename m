@@ -1,49 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Mar 2008 09:24:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 11 Mar 2008 10:30:35 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2BGNeae017364
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 09:23:42 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F2CCF64334
-	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 09:24:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id Ulxe0MgD8n3NKmYi for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 09:24:10 -0700 (PDT)
-Message-ID: <47D6B228.5070300@sandeen.net>
-Date: Tue, 11 Mar 2008 11:24:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2BHUDMX025044
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 10:30:17 -0700
+Received: from sargon.lncsa.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7169EF64F6F
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 10:30:44 -0700 (PDT)
+Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251]) by cuda.sgi.com with ESMTP id hnuchaShsZCPFF1q for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 10:30:44 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by sargon.lncsa.com (Postfix) with ESMTP id DF7EC3013BA3
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 18:30:02 +0100 (CET)
+Received: from sargon.lncsa.com ([127.0.0.1])
+	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 19-VkScLCTve for <xfs@oss.sgi.com>;
+	Tue, 11 Mar 2008 18:30:02 +0100 (CET)
+Received: from zenon.apartia.fr (zenon.apartia.fr [10.0.3.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "zenon.apartia.fr", Issuer "ca.apartia.fr" (verified OK))
+	by sargon.lncsa.com (Postfix) with ESMTP id B86E83015E26
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 18:30:02 +0100 (CET)
+Received: from trajan.apartia.fr (trajan.apartia.fr [10.0.3.121])
+	by zenon.apartia.fr (Postfix) with ESMTP id 38C4C59C5B414
+	for <xfs@oss.sgi.com>; Tue, 11 Mar 2008 18:29:58 +0100 (CET)
+Date: Tue, 11 Mar 2008 18:29:58 +0100
+From: Louis-David Mitterrand <vindex+lists-xfs@apartia.org>
+Subject: can I shrink an xfs?
+Message-ID: <20080311172958.GA31833@apartia.fr>
 MIME-Version: 1.0
-Subject: Re: Problem with xfs devices
-References: <47D6982D.7030305@t-online.de>
-In-Reply-To: <47D6982D.7030305@t-online.de>
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?ISO-8859-15?Q?J=FCrgen_Fischer?= <jfi.pcs@t-online.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Jürgen Fischer wrote:
-> Hi,
-> 
-> I have some problems with xfs devices which I can't mount and hope you 
-> can help me.
-> 
-> I have the devices md1, md5, md6, md7, md8 on a Root-Server by a german 
-> provider with SuSE linux 10.2. I've made yesterday evening an online 
-> update which updates the kernel and wants a reboot after that. Since 
-> that no rebbot is possible, no help available from provider.
-> The devices md1, md5 and md8 I can mount without problems. But if i try 
-> to mount md6 or md7 I got the following messages on the screen:
-> 
-> rescue:~# mount /dev/md6 /mnt
-> Killed
-> rescue:~#
-> Message from syslogd@rescue at Tue Mar 11 00:48:37 2008 ...
-> rescue kernel: Oops: 0000 [2] SMP
-> 
-> Message from syslogd@rescue at Tue Mar 11 00:48:37 2008 ...
-> rescue kernel: CR2: 0000000000000008
+Hi,
 
-type "dmesg" to get the whole oops.
+Is it possible to shrink an xfs? I tried using xfs_growfs to no avail.
 
--Eric
+	zenon:~# xfs_growfs -D 650000000 /backup
+	meta-data=/dev/md2               isize=256    agcount=32, agsize=20539552 blks
+			 =                       sectsz=4096  attr=1
+	data     =                       bsize=4096   blocks=657265248, imaxpct=25
+			 =                       sunit=16     swidth=48 blks
+	naming   =version 2              bsize=4096  
+	log      =internal               bsize=4096   blocks=32768, version=2
+			 =                       sectsz=4096  sunit=1 blks, lazy-count=0
+	realtime =none                   extsz=196608 blocks=0, rtextents=0
+	data size 650000000 too small, old size is 657265248
+
+... even though the fs is 80% full only.
+
+Thanks,
