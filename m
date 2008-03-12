@@ -1,38 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Mar 2008 00:22:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2C7MVgO001676
-	for <xfs@oss.sgi.com>; Wed, 12 Mar 2008 00:22:32 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 75E5BF7406E
-	for <xfs@oss.sgi.com>; Wed, 12 Mar 2008 00:23:02 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id x5cXt6TH1meFqMs2 for <xfs@oss.sgi.com>; Wed, 12 Mar 2008 00:23:02 -0700 (PDT)
-Date: Wed, 12 Mar 2008 03:22:59 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, RFC] - remove mounpoint UUID code
-Message-ID: <20080312072259.GA26148@infradead.org>
-References: <47D20F78.7000103@sandeen.net> <1205196252.15982.69.camel@edge.scott.net.au> <47D5DE13.8030902@sandeen.net> <34665.192.168.3.1.1205266196.squirrel@mail.aconex.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Mar 2008 02:18:14 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2C9HcBv026999
+	for <xfs@oss.sgi.com>; Wed, 12 Mar 2008 02:17:42 -0700
+Date: Wed, 12 Mar 2008 20:17:55 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: can I shrink an xfs?
+Message-ID: <20080312091755.GQ155407@sgi.com>
+References: <20080311172958.GA31833@apartia.fr> <20080311180210.GB5767@josefsipek.net>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <34665.192.168.3.1.1205266196.squirrel@mail.aconex.com>
+In-Reply-To: <20080311180210.GB5767@josefsipek.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: nscott@aconex.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: xfs@oss.sgi.com, ruben.porras@linworks.de
 
-On Wed, Mar 12, 2008 at 07:09:56AM +1100, nscott@aconex.com wrote:
-> I don't have any immediate plans.  I can imagine it could be used to
-> stitch parts of the namespace together in a filesystem that supports
-> multiple devices (in a chunkfs kinda way) ... or maybe more simply
-> just an in-filesystem auto-mounter.  *shrug*.  But its there, the tools
-> support it (once again, I didn't see a userspace patch - hohum), so I
-> would vote for leaving it in its current form so some enterprising,
-> constructive young coder can try to make something useful from it
-> at some point.  :)
+On Tue, Mar 11, 2008 at 02:02:10PM -0400, Josef 'Jeff' Sipek wrote:
+> On Tue, Mar 11, 2008 at 06:29:58PM +0100, Louis-David Mitterrand wrote:
+> > Hi,
+> > 
+> > Is it possible to shrink an xfs? I tried using xfs_growfs to no avail.
+>  
+> There's no official/supported way to do it. There might be some tool to do
+> it, but I'm not aware of any.
+> 
+> Dave, et. al.: why not support shrinking? I know, inode numbers and whatnot,
+> but that's already being messed up (at least to a degree) with the noikeep
+> mount option. I think that shrinking would be useful to have - even if you
+> have to pass it --i-know-what-i-am-doing kind of option. Maybe a offline
+> shrink via repair would be more viable?
 
-That kind of automounter really doesn't belong into the low-level
-filesystem.  If we really wanted it it would go into the VFS, storing
-the uuid or other identifier for the mountpoint in an xattr.  This is
-really just dead junk that should go away.
+It's being worked on - have a look in the achives at what Ruben Porras has
+been doing (and the patches he recently sent). Shrinking involves a lot of
+bits to come together sucessful, and we're slowly getting them together.
+If you want to get it done faster - help Ruben ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
