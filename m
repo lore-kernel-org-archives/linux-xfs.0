@@ -1,49 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Mar 2008 00:17:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 13 Mar 2008 02:12:51 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2D7HSc9000988
-	for <xfs@oss.sgi.com>; Thu, 13 Mar 2008 00:17:30 -0700
-Date: Thu, 13 Mar 2008 08:17:44 +0100
-From: Andreas Kotes <count@flatline.de>
-Subject: Re: XFS internal error
-Message-ID: <20080313071744.GB30874@slop.flatline.de>
-References: <470831E6.4030704@fastmail.co.uk> <20071008001452.GX995458@sgi.com> <20080310122216.GG14256@slop.flatline.de> <20080310223018.GA155407@sgi.com> <20080310225927.GP14256@slop.flatline.de> <20080310234539.GC155407@sgi.com> <20080311134746.GQ14256@slop.flatline.de> <20080312175050.GD14256@slop.flatline.de> <20080313000121.GU155407@sgi.com> <20080313071445.GA30874@slop.flatline.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2D9Cf65016574
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2008 02:12:43 -0700
+Received: from gw03.mail.saunalahti.fi (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 65FE9F80CD1
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2008 02:13:12 -0700 (PDT)
+Received: from gw03.mail.saunalahti.fi (gw03.mail.saunalahti.fi [195.197.172.111]) by cuda.sgi.com with ESMTP id iVkcoaJ7KVuAlfuD for <xfs@oss.sgi.com>; Thu, 13 Mar 2008 02:13:12 -0700 (PDT)
+Received: from uunet198.aac.fi (uunet198.aac.fi [193.64.61.198])
+	by gw03.mail.saunalahti.fi (Postfix) with ESMTP id C349D216D0D
+	for <xfs@oss.sgi.com>; Thu, 13 Mar 2008 11:12:39 +0200 (EET)
+Message-ID: <47D8F001.3030506@iki.fi>
+Date: Thu, 13 Mar 2008 11:12:33 +0200
+From: Erkki Lintunen <ebirdie@iki.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080313071445.GA30874@slop.flatline.de>
+Subject: Re: an occational trouble with xfs file system which xfs_repair 2.7.14
+ has been able to fix
+References: <47D52BE5.6010706@iki.fi> <47D5383E.50201@sandeen.net> <47D6CBE9.8090905@iki.fi>
+In-Reply-To: <47D6CBE9.8090905@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hello,
 
-* Andreas Kotes <count@flatline.de> [20080313 08:14]:
-> * David Chinner <dgc@sgi.com> [20080313 01:01]:
-> > On Wed, Mar 12, 2008 at 06:50:50PM +0100, Andreas Kotes wrote:
-> > > * Andreas Kotes <count-linux@flatline.de> [20080311 14:47]:
-> > > > I basically build a PXE image which does an xfs_repair -L /dev/sda2 from
-> > > > initrd - and the problem persists. Sigh. Exactly no change.
-> > 
-> > Do you do this on every boot?
-> 
-> no, I did this on a6b and a7b so far, where the problems I mentioned
-> occur, and only after I saw these in-memory problems. in general, XFS
-> proves to be realiable for us.
-> 
-> would you recommend running an xfs_check before running an xfs_repair in
-> case of problems?
 
-oh, btw - running xfs_check doesn't work most of the time, as the log
-usually contains entries, and isn't replayed before shutdown ..
+on 11.3.2008 20:14 Erkki Lintunen wrote:
+> I upgraded kernel to 2.6.24.3, ran xfs_repair 2.9.7 on the xfs file 
+> system and rest the case for next run.
 
-I figure running this on every boot would leave me killing my log all of
-the time, if the shutdown didn't leave time to write the changes to
-disk? ;)
+FWIW This time either kernel upgrade or xfs_repair 2.9.7 did provide 
+fix for the occasional hiccup in the xfs fs.
 
-   Andreas
-
--- 
-flatline IT services - Andreas Kotes - Tailored solutions for your IT needs
+Erkki
