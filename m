@@ -1,93 +1,132 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Mar 2008 16:57:49 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2ENvdnh015591
-	for <xfs@oss.sgi.com>; Fri, 14 Mar 2008 16:57:41 -0700
-Date: Sat, 15 Mar 2008 00:58:02 +0100 (CET)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: INFO: task mount:11202 blocked for more than 120 seconds
-In-Reply-To: <47DA44EB.8000307@redhat.com>
-Message-ID: <alpine.DEB.1.00.0803150044130.4696@sheep.housecafe.de>
-References: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de> <20080307224040.GV155259@sgi.com> <alpine.DEB.1.00.0803080032020.7723@sheep.housecafe.de> <20080309213441.GQ155407@sgi.com> <47DA44EB.8000307@redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 14 Mar 2008 20:25:08 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2F3OsVJ007035
+	for <xfs@oss.sgi.com>; Fri, 14 Mar 2008 20:24:55 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DDAF3FA57CE
+	for <xfs@oss.sgi.com>; Fri, 14 Mar 2008 20:25:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id xLd4PIdbTbfG0PWb for <xfs@oss.sgi.com>; Fri, 14 Mar 2008 20:25:20 -0700 (PDT)
+Message-ID: <47DB4181.7040603@sandeen.net>
+Date: Fri, 14 Mar 2008 22:24:49 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: [PATCH] fix dir2 shortform structures on ARM old ABI
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Milan Broz <mbroz@redhat.com>
-Cc: David Chinner <dgc@sgi.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, dm-devel@redhat.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: patches@arm.linux.org.uk
 
-On Fri, 14 Mar 2008, Milan Broz wrote:
-> Yes, there is bug in dm-crypt...
-> Please try if the patch here helps: http://lkml.org/lkml/2008/3/14/71
+This should fix the longstanding issues with xfs and old ABI
+arm boxes, which lead to various asserts and xfs shutdowns,
+and for which an (incorrect) patch has been floating around
+for years.  (Said patch made ARM internally consistent, but
+altered the normal xfs on-disk format such that it looked
+corrupted on other architectures):
+http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
 
-Hm, it seems to help the hangs, yes. Applied to today's -git a few hours 
-ago, the hangs are gone. However, when doing lots of disk I/O, the machine 
-locks up after a few (10-20) minutes. Sadly, netconsole got nothing :(
+Old ABI ARM has interesting packing & padding; for example
+on ARM old abi:
 
-After the first lockup I tried again and shortly after bootup I got:
+struct xfs_dir2_sf_entry {
+	__uint8_t                  namelen;      /*     0     1 */
 
-[  866.681441] [ INFO: possible circular locking dependency detected ]
-[  866.681876] 2.6.25-rc5 #1
-[  866.682203] -------------------------------------------------------
-[  866.682637] kswapd0/132 is trying to acquire lock:
-[  866.683028]  (&(&ip->i_iolock)->mr_lock){----}, at: [<c027a686>] xfs_ilock+0x96/0xb0
-[  866.683916] 
-[  866.683917] but task is already holding lock:
-[  866.684582]  (iprune_mutex){--..}, at: [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.685461] 
-[  866.685462] which lock already depends on the new lock.
-[  866.685463] 
-[  866.686440] 
-[  866.686441] the existing dependency chain (in reverse order) is:
-[  866.687151] 
-[  866.687152] -> #1 (iprune_mutex){--..}:
-[  866.687339]        [<c0136914>] add_lock_to_list+0x44/0xc0
-[  866.687339]        [<c01393a6>] __lock_acquire+0xc26/0x10b0
-[  866.687339]        [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.687339]        [<c013890f>] __lock_acquire+0x18f/0x10b0
-[  866.687339]        [<c013988e>] lock_acquire+0x5e/0x80
-[  866.687339]        [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.687339]        [<c043fc79>] mutex_lock_nested+0x89/0x240
-[  866.687339]        [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.687339]        [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.687339]        [<c017b592>] shrink_icache_memory+0x72/0x220
-[  866.687339]        [<c0150051>] shrink_slab+0x21/0x160
-[  866.687340]        [<c0150131>] shrink_slab+0x101/0x160
-[  866.687340]        [<c01502e2>] try_to_free_pages+0x152/0x230
-[  866.687340]        [<c014f060>] isolate_pages_global+0x0/0x60
-[  866.687340]        [<c014b95b>] __alloc_pages+0x14b/0x370
-[  866.687340]        [<c04413a0>] _read_unlock_irq+0x20/0x30
-[  866.687340]        [<c0146601>] __grab_cache_page+0x81/0xc0
-[  866.687340]        [<c01896f6>] block_write_begin+0x76/0xe0
-[  866.687340]        [<c029ec76>] xfs_vm_write_begin+0x46/0x50
-[  866.687340]        [<c029f4c0>] xfs_get_blocks+0x0/0x30
-[  866.687340]        [<c0147297>] generic_file_buffered_write+0x117/0x650
-[  866.687340]        [<c027a65d>] xfs_ilock+0x6d/0xb0
-[  866.687340]        [<c02a73cc>] xfs_write+0x7ac/0x8a0
-[  866.687340]        [<c0174ac1>] core_sys_select+0x21/0x350
-[  866.687340]        [<c02a32bc>] xfs_file_aio_write+0x5c/0x70
-[  866.687340]        [<c0167bf5>] do_sync_write+0xd5/0x120
-[  866.687340]        [<c012c630>] autoremove_wake_function+0x0/0x40
-[  866.687340]        [<c019cfd5>] dnotify_parent+0x35/0x90
-[  866.687340]        [<c0167b20>] do_sync_write+0x0/0x120
-[  866.687340]        [<c016846f>] vfs_write+0x9f/0x140
-[  866.687340]        [<c0168a21>] sys_write+0x41/0x70
-[  866.687340]        [<c0102dee>] sysenter_past_esp+0x5f/0xa5
-[  866.687340]        [<ffffffff>] 0xffffffff
-[  866.687340] 
-[  866.687340] -> #0 (&(&ip->i_iolock)->mr_lock){----}:
-[  866.687340]        [<c0136ba0>] print_circular_bug_entry+0x40/0x50
+	/* XXX 3 bytes hole, try to pack */
 
-The box was running fine then for ~20 minutes, then it locked up again.
+	xfs_dir2_sf_off_t          offset;       /*     4     4 */
+	__uint8_t                  name[1];      /*     8     1 */
 
-Full dmesg and .config: http://nerdbynature.de/bits/2.6.25-rc5/
+	/* XXX 3 bytes hole, try to pack */
 
-Right now I'm back to 2.6.24.3...
+	xfs_dir2_inou_t            inumber;      /*    12     8 */
 
-Thanks,
-Christian.
--- 
-BOFH excuse #350:
+	/* size: 20, cachelines: 1 */
+	/* sum members: 14, holes: 2, sum holes: 6 */
+	/* last cacheline: 20 bytes */
+};
 
-paradigm shift...without a clutch
+but on x86:
+
+struct xfs_dir2_sf_entry {
+	__uint8_t                  namelen;      /*     0     1 */
+	xfs_dir2_sf_off_t          offset;       /*     1     2 */
+	__uint8_t                  name[1];      /*     3     1 */
+	xfs_dir2_inou_t            inumber;      /*     4     8 */
+
+	/* size: 12, cachelines: 1 */
+	/* last cacheline: 12 bytes */
+};
+
+... this sort of discrepancy leads to problems.
+
+I've verified this patch by comparing the on-disk structure 
+layouts using pahole from the dwarves package, as well as 
+running through a bit of xfsqa under qemu-arm, modified so 
+that the check/repair phase after each test actually executes 
+check/repair from the x86 host, on the filesystem populated 
+by the arm emulator.  Thus far it all looks good.
+
+There are 2 other structures with extra padding at the end, 
+but they don't seem to cause trouble.  I suppose they could 
+be packed as well: xfs_dir2_data_unused_t and xfs_dir2_sf_t.
+
+Note that userspace needs a similar treatment, and any
+filesystems which were running with the previous rogue
+"fix" will now see corruption (either in the kernel, or
+during xfs_repair) with this fix properly in place; it 
+may be worth teaching xfs_repair to identify and fix that 
+specific issue.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+---
+
+Index: linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- linux-2.6.24.orig/fs/xfs/linux-2.6/xfs_linux.h
++++ linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
+@@ -300,4 +300,11 @@ static inline __uint64_t howmany_64(__ui
+ 	return x;
+ }
+ 
++/* ARM old ABI has some weird alignment/padding */
++#if defined(__arm__) && !defined(__ARM_EABI__)
++#define __arch_pack __attribute__((packed))
++#else
++#define __arch_pack
++#endif
++
+ #endif /* __XFS_LINUX__ */
+Index: linux-2.6.24/fs/xfs/xfs_dir2_sf.h
+===================================================================
+--- linux-2.6.24.orig/fs/xfs/xfs_dir2_sf.h
++++ linux-2.6.24/fs/xfs/xfs_dir2_sf.h
+@@ -62,7 +62,7 @@ typedef union {
+  * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
+  * Only need 16 bits, this is the byte offset into the single block form.
+  */
+-typedef struct { __uint8_t i[2]; } xfs_dir2_sf_off_t;
++typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
+ 
+ /*
+  * The parent directory has a dedicated field, and the self-pointer must
+@@ -76,14 +76,14 @@ typedef struct xfs_dir2_sf_hdr {
+ 	__uint8_t		count;		/* count of entries */
+ 	__uint8_t		i8count;	/* count of 8-byte inode #s */
+ 	xfs_dir2_inou_t		parent;		/* parent dir inode number */
+-} xfs_dir2_sf_hdr_t;
++} __arch_pack xfs_dir2_sf_hdr_t;
+ 
+ typedef struct xfs_dir2_sf_entry {
+ 	__uint8_t		namelen;	/* actual name length */
+ 	xfs_dir2_sf_off_t	offset;		/* saved offset */
+ 	__uint8_t		name[1];	/* name, variable size */
+ 	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
+-} xfs_dir2_sf_entry_t;
++} __arch_pack xfs_dir2_sf_entry_t; 
+ 
+ typedef struct xfs_dir2_sf {
+ 	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
