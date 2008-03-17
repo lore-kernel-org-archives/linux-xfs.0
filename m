@@ -1,60 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 13:03:50 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2HK3gdU024022
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 13:03:43 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BD7C6B13EB
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 13:04:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id Ow7EGSYk5mD6D6hB for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 13:04:14 -0700 (PDT)
-Message-ID: <47DECEBD.10604@sandeen.net>
-Date: Mon, 17 Mar 2008 15:04:13 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 16:27:39 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2HNR3FU018931
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 16:27:05 -0700
+Received: from knox.decisionsoft.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E4DA9FBDC69
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 16:27:32 -0700 (PDT)
+Received: from knox.decisionsoft.com (knox-be.decisionsoft.com [87.194.172.100]) by cuda.sgi.com with ESMTP id 0pAG2h5kKM1IpH3t for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 16:27:32 -0700 (PDT)
+Received: from kennet.dsl.local ([10.0.0.11])
+	by knox.decisionsoft.com with esmtp (Exim 4.63)
+	(envelope-from <strr-debian@decisionsoft.co.uk>)
+	id 1JbOjn-0003yq-NW
+	for xfs@oss.sgi.com; Mon, 17 Mar 2008 23:27:27 +0000
+Message-ID: <47DEFE5E.4030703@decisionsoft.co.uk>
+Date: Mon, 17 Mar 2008 23:27:26 +0000
+From: Stuart Rowan <strr-debian@decisionsoft.co.uk>
+Reply-To: strr-debian@decisionsoft.co.uk
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
-References: <47DB4181.7040603@sandeen.net> <20080315041722.GA25621@josefsipek.net> <47DB4F4F.8030407@sandeen.net> <20080315042703.GA28242@josefsipek.net> <47DB51A3.70200@sandeen.net> <20080315045147.GB28242@josefsipek.net> <47DEB930.7020108@sandeen.net> <20080317195313.GB16500@josefsipek.net>
-In-Reply-To: <20080317195313.GB16500@josefsipek.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: 2.6.24.3 nfs server on xfs keeps producing nfsd: non-standard errno:
+ -117
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Josef 'Jeff' Sipek wrote:
-> On Mon, Mar 17, 2008 at 01:32:16PM -0500, Eric Sandeen wrote:
->> Josef 'Jeff' Sipek wrote:
->>
->>> Josef 'Jeff' Sipek, wondering exactly how passionate one can get about
->>> structure member alignment :)
->> Very.  ;)
->>
->> Tossing packed at all the ondisk stuctures bloats things badly on ia64.
->>
->> cvs/linux-2.6-xfs> wc -l before.dis
->> 166688 before.dis
->> cvs/linux-2.6-xfs> wc -l after.dis
->> 182294 after.dis
->>
->> That's +15606 lines.
->  
-> I'm not done yet! :-P
-> 
-> First of all, the patch I showed you actually breaks a few things that I
-> still need to fix.
+Hi,
 
-Oh, I wasn't trying to blame you or our patch specifically, just wanted
-to highlight what I consider to be the bad idea of giving gcc a bunch of
-directives that IMHO we don't need.
+Firstly thanks for the great filesystem and apologies if this ends up being 
+NFS rather than XFS being weird! I'm not subscribed so please do keep me CC'd.
 
-> Second, I need to find out whether all the affected structures are always
-> aligned on some boundary (probably 4 or 8 byte). If there indeed is some
-> alignment, there might be a way to reduce those 15k extra lines to something
-> a whole lot less - I hope.
+I have *millions* of lines of (>200k per minute according to syslog):
+nfsd: non-standard errno: -117
+being sent out of dmesg
 
-To what end?  What are you trying to fix?  If it's not reduced to 0 then
-your change is introducing regressions, IMHO.
+Now errno 117 is
+#define EUCLEAN         117     /* Structure needs cleaning */
+which seems to be only used from a quick grep by XFS and JFFS and smbfs.
 
-Respectfully, ;)
--Eric
+
+My nfs server export two locations
+/home
+/home/archive
+both of these are XFS partitions, hence my suspicion that the -117 is 
+coming from XFS.
+
+xfs_repair -n says the filesystems are clean
+xfs_repair has been run multiple times to completion on the filesystems, 
+all is fine.
+
+The XFS partitions are lvm volumes as follows
+data/home 900G
+data/archive 400G
+The volume group, data, is sda3
+sda3 is a 6 drive 3ware 9550SXU-8LP RAID10 array
+
+The NFS server is currently in use (indeed the message only starts once 
+clients connect) and works absolutely fine.
+
+How do I find out what (if anything) is wrong with my filesystem / 
+appropriately silence this message?
+
+Many thanks,
+Stu.
