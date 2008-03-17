@@ -1,197 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 10:36:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 11:32:03 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2HHZrGj004817
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 10:35:56 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42034FB7F8B
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 10:36:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id cJ5WnuwU0RQ4DyKj for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 10:36:24 -0700 (PDT)
-Date: Mon, 17 Mar 2008 17:36:09 +0000
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-crypt] INFO: task mount:11202 blocked for more than 120 seconds
-Message-ID: <20080317173609.GD29322@agk.fab.redhat.com>
-References: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de> <200803150108.04008.chunkeey@web.de> <200803151432.11125.chunkeey@web.de> <200803152234.53199.chunkeey@web.de> <alpine.DEB.1.00.0803161406040.6213@sheep.housecafe.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.00.0803161406040.6213@sheep.housecafe.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2HIVpdH024313
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 11:31:56 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 843EEFBB478
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 11:32:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id teM1tUFjrcV7ANQD for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 11:32:20 -0700 (PDT)
+Message-ID: <47DEB930.7020108@sandeen.net>
+Date: Mon, 17 Mar 2008 13:32:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
+References: <47DB4181.7040603@sandeen.net> <20080315041722.GA25621@josefsipek.net> <47DB4F4F.8030407@sandeen.net> <20080315042703.GA28242@josefsipek.net> <47DB51A3.70200@sandeen.net> <20080315045147.GB28242@josefsipek.net>
+In-Reply-To: <20080315045147.GB28242@josefsipek.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>, Chr <chunkeey@web.de>, Milan Broz <mbroz@redhat.com>, David Chinner <dgc@sgi.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, dm-devel@redhat.com, dm-crypt@saout.de, Herbert Xu <herbert@gondor.apana.org.au>, Ritesh Raj Sarraf <rrs@researchut.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Latest version for everyone to try:
+Josef 'Jeff' Sipek wrote:
 
-From: Milan Broz <mbroz@redhat.com>
+> Josef 'Jeff' Sipek, wondering exactly how passionate one can get about
+> structure member alignment :)
 
-Fix regression in dm-crypt introduced in commit
-3a7f6c990ad04e6f576a159876c602d14d6f7fef
-(dm crypt: use async crypto).
+Very.  ;)
 
-If write requests need to be split into pieces, the code must not
-process them in parallel because the crypto context cannot be shared.
-So there can be parallel crypto operations on one part of the write,
-but only one write bio can be processed at a time.
+Tossing packed at all the ondisk stuctures bloats things badly on ia64.
 
-This is not optimal and the workqueue code need to be optimized for
-parallel processing, but for now it solves problem without affecting
-the performance of synchronous crypto operation (most of current
-dm-crypt users).
+cvs/linux-2.6-xfs> wc -l before.dis
+166688 before.dis
+cvs/linux-2.6-xfs> wc -l after.dis
+182294 after.dis
 
-Signed-off-by: Milan Broz <mbroz@redhat.com>
-Signed-off-by: Alasdair G Kergon <agk@redhat.com>
+That's +15606 lines.
 
----
- drivers/md/dm-crypt.c |   58 +++++++++++++++++++++++++-------------------------
- 1 files changed, 30 insertions(+), 28 deletions(-)
+http://digitalvampire.org/blog/index.php/2006/07/31/why-you-shouldnt-use-__attribute__packed/
 
-Index: linux-2.6.25-rc4/drivers/md/dm-crypt.c
-===================================================================
---- linux-2.6.25-rc4.orig/drivers/md/dm-crypt.c	2008-03-17 11:42:16.000000000 +0000
-+++ linux-2.6.25-rc4/drivers/md/dm-crypt.c	2008-03-17 11:42:28.000000000 +0000
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (C) 2003 Christophe Saout <christophe@saout.de>
-  * Copyright (C) 2004 Clemens Fruhwirth <clemens@endorphin.org>
-- * Copyright (C) 2006-2007 Red Hat, Inc. All rights reserved.
-+ * Copyright (C) 2006-2008 Red Hat, Inc. All rights reserved.
-  *
-  * This file is released under the GPL.
-  */
-@@ -93,6 +93,8 @@ struct crypt_config {
- 
- 	struct workqueue_struct *io_queue;
- 	struct workqueue_struct *crypt_queue;
-+	wait_queue_head_t writeq;
-+
- 	/*
- 	 * crypto related data
- 	 */
-@@ -331,14 +333,7 @@ static void crypt_convert_init(struct cr
- 	ctx->idx_out = bio_out ? bio_out->bi_idx : 0;
- 	ctx->sector = sector + cc->iv_offset;
- 	init_completion(&ctx->restart);
--	/*
--	 * Crypto operation can be asynchronous,
--	 * ctx->pending is increased after request submission.
--	 * We need to ensure that we don't call the crypt finish
--	 * operation before pending got incremented
--	 * (dependent on crypt submission return code).
--	 */
--	atomic_set(&ctx->pending, 2);
-+	atomic_set(&ctx->pending, 1);
- }
- 
- static int crypt_convert_block(struct crypt_config *cc,
-@@ -411,43 +406,42 @@ static void crypt_alloc_req(struct crypt
- static int crypt_convert(struct crypt_config *cc,
- 			 struct convert_context *ctx)
- {
--	int r = 0;
-+	int r;
- 
- 	while(ctx->idx_in < ctx->bio_in->bi_vcnt &&
- 	      ctx->idx_out < ctx->bio_out->bi_vcnt) {
- 
- 		crypt_alloc_req(cc, ctx);
- 
-+		atomic_inc(&ctx->pending);
-+
- 		r = crypt_convert_block(cc, ctx, cc->req);
- 
- 		switch (r) {
-+		/* async */
- 		case -EBUSY:
- 			wait_for_completion(&ctx->restart);
- 			INIT_COMPLETION(ctx->restart);
- 			/* fall through*/
- 		case -EINPROGRESS:
--			atomic_inc(&ctx->pending);
- 			cc->req = NULL;
--			r = 0;
--			/* fall through*/
-+			ctx->sector++;
-+			continue;
-+
-+		/* sync */
- 		case 0:
-+			atomic_dec(&ctx->pending);
- 			ctx->sector++;
- 			continue;
--		}
- 
--		break;
-+		/* error */
-+		default:
-+			atomic_dec(&ctx->pending);
-+			return r;
-+		}
- 	}
- 
--	/*
--	 * If there are pending crypto operation run async
--	 * code. Otherwise process return code synchronously.
--	 * The step of 2 ensures that async finish doesn't
--	 * call crypto finish too early.
--	 */
--	if (atomic_sub_return(2, &ctx->pending))
--		return -EINPROGRESS;
--
--	return r;
-+	return 0;
- }
- 
- static void dm_crypt_bio_destructor(struct bio *bio)
-@@ -624,8 +618,10 @@ static void kcryptd_io_read(struct dm_cr
- static void kcryptd_io_write(struct dm_crypt_io *io)
- {
- 	struct bio *clone = io->ctx.bio_out;
-+	struct crypt_config *cc = io->target->private;
- 
- 	generic_make_request(clone);
-+	wake_up(&cc->writeq);
- }
- 
- static void kcryptd_io(struct work_struct *work)
-@@ -698,7 +694,8 @@ static void kcryptd_crypt_write_convert_
- 
- 		r = crypt_convert(cc, &io->ctx);
- 
--		if (r != -EINPROGRESS) {
-+		if (atomic_dec_and_test(&io->ctx.pending)) {
-+			/* processed, no running async crypto  */
- 			kcryptd_crypt_write_io_submit(io, r, 0);
- 			if (unlikely(r < 0))
- 				return;
-@@ -706,8 +703,12 @@ static void kcryptd_crypt_write_convert_
- 			atomic_inc(&io->pending);
- 
- 		/* out of memory -> run queues */
--		if (unlikely(remaining))
-+		if (unlikely(remaining)) {
-+			/* wait for async crypto and reinitialize pending counter */
-+			wait_event(cc->writeq, !atomic_read(&io->ctx.pending));
-+			atomic_set(&io->ctx.pending, 1);
- 			congestion_wait(WRITE, HZ/100);
-+		}
- 	}
- }
- 
-@@ -746,7 +747,7 @@ static void kcryptd_crypt_read_convert(s
- 
- 	r = crypt_convert(cc, &io->ctx);
- 
--	if (r != -EINPROGRESS)
-+	if (atomic_dec_and_test(&io->ctx.pending))
- 		kcryptd_crypt_read_done(io, r);
- 
- 	crypt_dec_pending(io);
-@@ -1047,6 +1048,7 @@ static int crypt_ctr(struct dm_target *t
- 		goto bad_crypt_queue;
- 	}
- 
-+	init_waitqueue_head(&cc->writeq);
- 	ti->private = cc;
- 	return 0;
- 
+Please, don't do this.
+
+_Annotating_ ondisk structures sounds good to me, assuming something can
+be done with it (i.e., testing for holes - I'd thought of this a while
+ago too, but never came up with anything to make use of it) but don't
+pack stuff just for fun.
+
+-Eric
