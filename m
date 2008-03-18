@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Mar 2008 16:31:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 18 Mar 2008 16:48:49 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2INUt5x003815
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:30:57 -0700
-Received: from rv-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BA226BA6F6
-	for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:31:27 -0700 (PDT)
-Received: from rv-out-0910.google.com (rv-out-0910.google.com [209.85.198.187]) by cuda.sgi.com with ESMTP id XYtdvnO1QH2F5Im3 for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:31:27 -0700 (PDT)
-Received: by rv-out-0910.google.com with SMTP id k20so66322rvb.32
-        for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:31:27 -0700 (PDT)
-Message-ID: <b1b17e290803181631x60a3e921l836b115c3b026773@mail.gmail.com>
-Date: Tue, 18 Mar 2008 23:31:27 +0000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2INmepq005008
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:48:42 -0700
+Received: from wx-out-0506.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02A446BA665
+	for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:49:12 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.231]) by cuda.sgi.com with ESMTP id 1zPBpbEIa7rPcA6y for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:49:12 -0700 (PDT)
+Received: by wx-out-0506.google.com with SMTP id s9so150409wxc.32
+        for <xfs@oss.sgi.com>; Tue, 18 Mar 2008 16:49:12 -0700 (PDT)
+Message-ID: <b1b17e290803181649w507322e7mf1410b30a2621506@mail.gmail.com>
+Date: Tue, 18 Mar 2008 23:49:11 +0000
 From: "Andre Draszik" <xfs@andred.net>
 Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
 MIME-Version: 1.0
@@ -37,7 +37,7 @@ EABI basically behaves like other 'normal' arches/abis, but sometimes
 structures get padded to have a size of a multiple of 8, i.e. padding
 is added at the end of the struct, which as far as I can see for now
 affects 5 structs: xfs_dir2_data_entry_t, xfs_dinode_t, xfs_sb_t,
-xfs_dsb_t, and xfs_log_item_t
+xfs_dsb_t, and xlog_rec_header_t
 
 I must say, I like Jeff's approach of explicitly telling gcc about
 alignment much better :-) It makes it a) much easier to find structs
