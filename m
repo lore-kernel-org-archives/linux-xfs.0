@@ -1,97 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 20:34:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 17 Mar 2008 21:07:44 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2I3YT9W016715
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 20:34:32 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 10E2E6B3855
-	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 20:34:59 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id GmYGdH3LBZT1jxuO for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 20:34:59 -0700 (PDT)
-Message-ID: <47DF3861.6020308@sandeen.net>
-Date: Mon, 17 Mar 2008 22:34:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2I47VeJ020462
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 21:07:34 -0700
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 30EFC6B3D97
+	for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 21:08:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id FfxdFCCTaILZP2QH for <xfs@oss.sgi.com>; Mon, 17 Mar 2008 21:08:03 -0700 (PDT)
+Message-ID: <47DF400F.5080606@redhat.com>
+Date: Tue, 18 Mar 2008 05:07:43 +0100
+From: Milan Broz <mbroz@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC][PATCH 1/1] XFS: annotate all on-disk structures with __ondisk
-References: <20080317202853.GC16500@josefsipek.net> <1205800745-9217-1-git-send-email-jeffpc@josefsipek.net>
-In-Reply-To: <1205800745-9217-1-git-send-email-jeffpc@josefsipek.net>
+Subject: Re: [dm-crypt] INFO: task mount:11202 blocked for more than 120 seconds
+References: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de> <200803150108.04008.chunkeey@web.de> <200803151432.11125.chunkeey@web.de> <200803152234.53199.chunkeey@web.de> <alpine.DEB.1.00.0803161406040.6213@sheep.housecafe.de> <20080317173609.GD29322@agk.fab.redhat.com> <20080318005653.GA14575@gondor.apana.org.au>
+In-Reply-To: <20080318005653.GA14575@gondor.apana.org.au>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: xfs@oss.sgi.com, tes@sgi.com, dgc@sgi.com
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Christian Kujau <lists@nerdbynature.de>, Chr <chunkeey@web.de>, David Chinner <dgc@sgi.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, dm-devel@redhat.com, dm-crypt@saout.de, Ritesh Raj Sarraf <rrs@researchut.com>
 
-Josef 'Jeff' Sipek wrote:
-> Currently, the annotation just forces the structures to be packed, and
-> 4-byte aligned.
-
-Semantic nitpick: in my definition of "annotation" this is more than
-just an annotation.
-
-An "__ondisk" annotation, to me, would allow something like sparse to
-verify properly laid out on-disk structures, but would not affect the
-actual runtime code - I think that would be quite useful.  However, this
- change actually impacts the bytecode; it is a functional change.
-
-So I really do understand what you're trying to do, despite my
-protestations.  If there is some magical instruction to gcc which:
-
-a) leaves all current "non-broken" ABIs and gcc implementations'
-bytecode untouched (or at the very least, minimally/trivially modified), and
-
-b) fixes all possible future ABIs so they will always have things
-perfectly and properly aligned, again w/o undue molestation of the
-resulting bytecode
-
-then I could probably be convinced.  :)  But this seems like a tall
-order, and would require much scrutiny.
-
-I'm just very shy of a sweeping change like this, which has a material
-impact on the most common architectures, and does not actually provide,
-as far as I can see, any benefit to them - only risk.
-
-And for now I'll shut up and let the sgi guys chime in eventually.  :)
-
--Eric
-
-> Signed-off-by: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Herbert Xu wrote:
+> On Mon, Mar 17, 2008 at 05:36:09PM +0000, Alasdair G Kergon wrote:
+>> Latest version for everyone to try:
+>>
+>> From: Milan Broz <mbroz@redhat.com>
+>>
+>> Fix regression in dm-crypt introduced in commit
+>> 3a7f6c990ad04e6f576a159876c602d14d6f7fef
+>> (dm crypt: use async crypto).
+>>
+>> If write requests need to be split into pieces, the code must not
+>> process them in parallel because the crypto context cannot be shared.
+>> So there can be parallel crypto operations on one part of the write,
+>> but only one write bio can be processed at a time.
 > 
-> ---
-> This is just an RFC, and the alignment needs to be verified against the
-> offsets within the pages read from disk, and more xfsqa runs on various
-> architectures are needed. (I don't want to be responsible for something like
-> the bitops regression on ppc!)
-> 
-> The .text segment shrinks on x86 and s390x, but grows in ia64 (3776 bytes ==
-> 0.3%).
-> 
->    text    data     bss     dec     hex filename
->  542054    3171    3084  548309   85dd5 xfs-x86-original.ko
->  542026    3171    3084  548281   85db9 xfs-x86-packed-aligned4.ko
-> 1244057   70858    2480 1317395  141a13 xfs-ia64-original.ko
-> 1247833   70858    2480 1321171  1428d3 xfs-ia64-packed-aligned4.ko
->  679901   19374    3112  702387   ab7b3 xfs-s390x-original.ko
->  679781   19374    3112  702267   ab73b xfs-s390x-packed-aligned4.ko
-> 
-> The approximate number of instructions effectively stays the same on x86
-> (goes up by 2), s390x gets smaller (by 12 instructions), but ia64 bloats by
-> 708 instructions (0.34%).
-> 
-> $ for x in *.ko; do objdump -d $x > `basename $x .ko`.dis ; done
-> $ wc -l *.dis
->   141494 xfs-x86-original.dis
->   141496 xfs-x86-packed-aligned4.dis
->   208514 xfs-ia64-original.dis
->   209222 xfs-ia64-packed-aligned4.dis
->   121544 xfs-s390x-original.dis
->   121532 xfs-s390x-packed-aligned4.dis
-> 
-> I could try to compile things on a sparc64, mips, and x86_64, but that's for
-> another day - and depending on where this thread will lead.
-> 
-> The patch keeps xfsqa happy on x86 - well, it dies in the 100-range, but I
-> haven't had the time to check if that happens without this patch. Someone
-> (not it!) should nurse xfsqa back to health :)
-> 
-> Jeff.
+> Could you explain this part please? Crypto tfm objects are meant
+> to be reentrant, synchronous or not.
+
+Ah, sorry - I mean dm-crypt convert context (with crypto context included).
+
+Context is reentrant in the sense of crypto operations. But we need also
+sometimes split bio in writes (not only because of low memory,
+but also new memory layout of cloned bio can be different and we
+must not violate hardware restrictions - spec. XFS generates such
+highly optimized bio requests - it's why it discovers so many dm-crypt problems ;-)
+
+see problematic dm-crypt bio write path
+
+	while (remaining) {
+		clone = crypt_alloc_buffer(io, remaining);
+		...
+		io->ctx.bio_out = clone;
+		io->ctx.idx_out = 0;
+		remaining -= clone->bi_size;
+		...
+		r = crypt_convert(cc, &io->ctx);
+			-> fire sync or (multiple) async crypto operation
+
+		if (atomic_dec_and_test(&io->ctx.pending))
+			-> sync mode, submit clone direclty
+		...
+		if (unlikely(remaining))
+			congestion_wait(WRITE, HZ/100);
+	}
+
+and in async crypto completion callback (because async callback cannot
+call in its context generic_make_request directly) is called:
+
+	struct convert_context *ctx = async_req->data;
+	...
+	if (!atomic_dec_and_test(&ctx->pending))
+		return;
+	...
+	INIT_WORK(&io->work, kcryptd_io);
+	queue_work(cc->io_queue, &io->work);
+	...
+	(and from io thread later)
+	struct bio *clone = io->ctx.bio_out;
+	generic_make_request(clone);
+
+problems:
+1) we cannot use io->work struct in parallel
+2) io->ctx.pending is shared here between multiple sub-bio clones
+... 
+
+(there was no problems in sync crypto mode. and dm-crypt io struct is
+already allocated from mempool in crypt_map allocation, so changing this
+to per cloned sub-bio allocation can cause new problems in low-memory situations,
+not good idea change it in this development phase...)
+
+Milan
+--
+mbroz@redhat.com
