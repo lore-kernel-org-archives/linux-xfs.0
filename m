@@ -1,85 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Mar 2008 13:50:38 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2JKoOGe031001
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 13:50:25 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C03D16C0452
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 13:50:56 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id MUNXVPvBrKi3pDZ3 for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 13:50:56 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m2JKlOF3024361
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 21:47:24 +0100
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m2JKlO9K024359
-	for xfs@oss.sgi.com; Wed, 19 Mar 2008 21:47:24 +0100
-Date: Wed, 19 Mar 2008 21:47:24 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] cleanup root inode handling in xfs_fs_fill_super
-Message-ID: <20080319204724.GA24271@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Mar 2008 16:47:11 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2JNkwBY008552
+	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 16:47:01 -0700
+Date: Thu, 20 Mar 2008 10:48:31 +1100
+Subject: Re: Duplicate directory entries
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <D9A1816327F7BF4F931ADE74C248DFC90DD4FD00@it-004.Isys.com>
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.t8ae25ry3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <D9A1816327F7BF4F931ADE74C248DFC90DD4FD00@it-004.Isys.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Jim Paradis <jparadis@exagrid.com>, xfs@oss.sgi.com
 
- - rename rootvp to root for clarify
- - remove useless vn_to_inode call
- - check is_bad_inode before calling d_alloc_root
- - use iput instead of VN_RELE in the error case
+On Thu, 20 Mar 2008 06:26:05 +1100, Jim Paradis <jparadis@exagrid.com>  
+wrote:
 
+> We recently ran across a situation where we saw two directory entries
+> that were exactly the same.  A ls -li of the directory in question shows
+> the following:
+>
+>
+> 3758898162 -rw-r--r--  1 root root 1592 Jan 28 02:21
+> 4b13e98d-2165-4630-851d-c2d94149401f.i
+>
+> 3758898162 -rw-r--r--  1 root root 1592 Jan 28 02:21
+> 4b13e98d-2165-4630-851d-c2d94149401f.i
+>
+> 3758901942 -rw-r--r--  1 root root 1805 Mar 16 21:43
+> 848a74ed-ec3a-4504-a478-6b75cede7ccc.i
+>
+>
+> There are only three entries in the directory.  Note that the first two
+> are identical - same name, same inode number.  Note, too, that the inode
+> has a link count of *one* despite its having two directory entries
+> pointing at it.
+>
+>
+> When I run xfs_db and examine this directory, I see that this is a
+> short-form dir2 directory in the inode literal area, and it is the first
+> two entries that are identical.  I searched the archives and found a
+> similar situation described in 2006, but no resolution.  The xfs_db
+> inode dump is below... any thoughts as to how this happens and is there
+> a fix?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I can't comment on how it was caused, but xfs_repair -n on the filesystem
+should detect it, and running xfs_repair without the -n should fix it.
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-02-27 00:40:51.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-02-27 00:43:04.000000000 +0100
-@@ -1307,7 +1307,7 @@ xfs_fs_fill_super(
- 	void			*data,
- 	int			silent)
- {
--	struct inode		*rootvp;
-+	struct inode		*root;
- 	struct xfs_mount	*mp = NULL;
- 	struct xfs_mount_args	*args = xfs_args_allocate(sb, silent);
- 	int			error;
-@@ -1345,19 +1345,18 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
- 
--	rootvp = igrab(mp->m_rootip->i_vnode);
--	if (!rootvp) {
-+	root = igrab(mp->m_rootip->i_vnode);
-+	if (!root) {
- 		error = ENOENT;
- 		goto fail_unmount;
- 	}
--
--	sb->s_root = d_alloc_root(vn_to_inode(rootvp));
--	if (!sb->s_root) {
--		error = ENOMEM;
-+	if (is_bad_inode(root)) {
-+		error = EINVAL;
- 		goto fail_vnrele;
- 	}
--	if (is_bad_inode(sb->s_root->d_inode)) {
--		error = EINVAL;
-+	sb->s_root = d_alloc_root(root);
-+	if (!sb->s_root) {
-+		error = ENOMEM;
- 		goto fail_vnrele;
- 	}
- 
-@@ -1379,7 +1378,7 @@ fail_vnrele:
- 		dput(sb->s_root);
- 		sb->s_root = NULL;
- 	} else {
--		VN_RELE(rootvp);
-+		iput(root);
- 	}
- 
- fail_unmount:
+Regards,
+Barry.
