@@ -1,36 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Mar 2008 09:54:50 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 19 Mar 2008 11:24:32 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2JGsbE4019874
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 09:54:43 -0700
-Received: from relay-cv.club-internet.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B643DFC3B83
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 09:55:10 -0700 (PDT)
-Received: from relay-cv.club-internet.fr (relay-cv.club-internet.fr [194.158.96.103]) by cuda.sgi.com with ESMTP id GnF9LImNXDIuXiO4 for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 09:55:10 -0700 (PDT)
-Received: from petole.dyndns.org (i07v-62-34-16-56.d4.club-internet.fr [62.34.16.56])
-	by relay-cv.club-internet.fr (Postfix) with ESMTP id 2D86D25610
-	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 17:54:34 +0100 (CET)
-From: Nicolas KOWALSKI <niko@petole.dyndns.org>
-Subject: xfsdump debian package, wrong version number
-Date: Wed, 19 Mar 2008 17:54:45 +0100
-Message-ID: <87iqzi3b8q.fsf@petole.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2JIOMb4022678
+	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 11:24:25 -0700
+Received: from ventoso.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45CD8FD1E67
+	for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 11:24:51 -0700 (PDT)
+Received: from ventoso.org (61.pool85-52-226.static.orange.es [85.52.226.61]) by cuda.sgi.com with ESMTP id vMPDSvYfop1ReyME for <xfs@oss.sgi.com>; Wed, 19 Mar 2008 11:24:51 -0700 (PDT)
+Date: Wed, 19 Mar 2008 19:24:55 +0100
+From: Luca Olivetti <luca@ventoso.org>
+Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
+Message-ID: <20080319192455.30ad3f4a@Nokia-N800-50-2>
+In-Reply-To: <47E14FF1.2020100@sandeen.net>
+References: <b1b17e290803181649w507322e7mf1410b30a2621506@mail.gmail.com>
+	<20080319002307.GA11349@josefsipek.net>
+	<47E0F746.1090508@ventoso.org>
+	<47E10CBA.9020904@sandeen.net>
+	<47E11F4A.3090205@ventoso.org>
+	<47E12D20.4010901@sandeen.net>
+	<47E132A0.8030000@ventoso.org>
+	<47E14FF1.2020100@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Hello,
+El Wed, 19 Mar 2008 12:40:01 -0500
+Eric Sandeen <sandeen@sandeen.net> escribió:
 
-I just downloaded the lastest cmd_tars from
-ftp://oss.sgi.com/projects/xfs/cmd_tars/, and built the xfsdump
-package for Debian (etch). No problems.
+> Luca Olivetti wrote:
+> 
+> > I'll report your result on the nas-central.org forum and I'll check 
+> > what's the status of 2.6.25-rc2 on the linkstation (though I see
+> > that the orion.git repository is only updated to rc1).
+> > If I find that it's possible to boot this kernel with no (or
+> > little ;-) risk I'll try it.
+> > 
+> > Bye
+> 
+> FWIW... I think you guys would have much more luck if you bring these
+> problems to the xfs list.  Keeping them on the forums pretty much
+> ensures that no xfs developer will ever see them.  :)
 
-However, the generated package seems to have the wrong version number,
-2.2.45 instead of the expected 2.2.48. Apparently the debian/changelog
-file does not have the correct information.
+Sure, but I'm not a developer, just a lurker
+that reacted to the trigger word "arm" ;-) I'm just posting to the forum to know the status of the kernel for the
+linkstation.
 
-Regards,
+I think that the developers are subscribed to this list and exposed
+some of the problem with the linkstation a while ago.
+
+Bye
 -- 
-Nicolas
+Luca
