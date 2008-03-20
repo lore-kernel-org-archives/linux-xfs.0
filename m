@@ -1,195 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Mar 2008 01:25:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2K8PosV008974
-	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:25:51 -0700
-Received: from knox.decisionsoft.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DBBE6C506E
-	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:26:22 -0700 (PDT)
-Received: from knox.decisionsoft.com (knox-be.decisionsoft.com [87.194.172.100]) by cuda.sgi.com with ESMTP id UTEcMgNb3XXiM9fW for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:26:22 -0700 (PDT)
-Date: Thu, 20 Mar 2008 08:25:46 +0000 (GMT)
-From: Stuart Rowan <strr@decisionsoft.com>
-Subject: XFS internal error xfs_itobp at line 360 of file fs/xfs/xfs_inode.c.
- (was Re: 2.6.24.3 nfs server on xfs keeps producing nfsd: non-standard errno:
- -117)
-In-Reply-To: <47E1B939.3060008@sgi.com>
-Message-ID: <alpine.DEB.1.00.0803200812450.4712@tugela.dsl.local>
-References: <47DEFE5E.4030703@decisionsoft.co.uk> <47DF0C9D.1010602@sgi.com> <47DFC880.6040403@decisionsoft.co.uk> <47E1B939.3060008@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Mar 2008 01:50:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2K8ob8n009866
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:50:40 -0700
+Received: from deliver.uni-koblenz.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AABB4B8F103
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:51:09 -0700 (PDT)
+Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15]) by cuda.sgi.com with ESMTP id 0WRW50IBdGDv5BuA for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 01:51:09 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by deliver.uni-koblenz.de (Postfix) with ESMTP id 4D0287855789
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 09:51:09 +0100 (CET)
+Received: from bliss.uni-koblenz.de (bliss.uni-koblenz.de [141.26.64.65])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by deliver.uni-koblenz.de (Postfix) with ESMTP id EDC84785578B
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 09:51:07 +0100 (CET)
+From: Rainer Krienke <krienke@uni-koblenz.de>
+Subject: xfs_repair sometimes hangs during repair
+Date: Thu, 20 Mar 2008 09:51:03 +0100
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart2834985.ULnozQbeu3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Message-Id: <200803200951.07238.krienke@uni-koblenz.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: strr-debian@decisionsoft.co.uk, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+--nextPart2834985.ULnozQbeu3
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+Hello,
 
-On Thu, 20 Mar 2008, Timothy Shimmin wrote:
+lately I had a problem with a xfs filesystem on a Novell SLES10 SP1 system.=
+ I=20
+tried to repair the fs using xfs_repair (V2.9.7) but this did not work.=20
+xfs_repair failes with an out of memory error. The machine has 6GB of RAM b=
+ut=20
+is a 32 bit machine and I guess it limits one process to 3GB memory. At lea=
+st=20
+xfs_repair died when its virtual size was about 3GB. The filesystem is 360G=
+B=20
+in size and had 6.9 million inodes on it.
 
-> Stuart Rowan wrote:
->> Timothy Shimmin wrote, on 18/03/08 00:28:
->>> Hi Stuart,
->>> 
->>> Stuart Rowan wrote:
->>>> 
->>>> I have *millions* of lines of (>200k per minute according to syslog):
->>>> nfsd: non-standard errno: -117
->>>> being sent out of dmesg
->>>> 
->>>> Now errno 117 is
->>>> #define EUCLEAN         117     /* Structure needs cleaning */
->>>> 
->>> In XFS we mapped EFSCORRUPTED to EUCLEAN as EFSCORRUPTED
->>> didn't exist on Linux.
->>> However, normally if this error is encountered in XFS then
->>> we output an appropriate msg to the syslog.
->>> Our default error level is 3 and most reports are rated at 1
->>> so should show up I would have thought.
->>> 
->>> --Tim
->>> 
->>>> 
->>>> xfs_repair -n says the filesystems are clean
->>>> xfs_repair has been run multiple times to completion on the filesystems, 
->>>> all is fine.
->>>> 
->>>> The NFS server is currently in use (indeed the message only starts once 
->>>> clients connect) and works absolutely fine.
->>>> 
->>>> How do I find out what (if anything) is wrong with my filesystem / 
->>>> appropriately silence this message?
->>>> 
->>> 
->> I briefly changed the sysctl fs.xfs.error_level to 6 and then back to 3
->> 
-> Good idea (I was thinking about that :-).
->
-> Somehow, your subject line referring to 2.6.24 didn't stick in
-> my brain (that's pretty old).
-> So I was looking at recent code which I can't see has this error
-> case from xfs_itobp() (it is now in xfs_imap_to_bp()).
->
-Pretty old for you, latest released Linux kernel to me :-P
+This problem is well documented and I got an advice to set the -o=20
+bhash=3D<value> in the xfs_repair call.  This basically worked however it=
+=20
+rquired a lot of trial an error which is not what you want if you need to g=
+et=20
+your filesystem back online as soon as possible.
 
-> Looking at old code, I see 2 EFSCORRUPTED paths with the following
-> one triggering at XFS_ERRLEVEL_HIGH (and presumably why you didn't
-> see it until now) ...
->
-> montep    |1.198|                            |  /*
-> montep    |1.198|                            |   * Validate the magic number 
-> and version of every inode in the buffer
-> montep    |1.198|                            |   * (if DEBUG kernel) or the 
-> first inode in the buffer, otherwise.
-> montep    |1.198|                            |   */
-> nathans   |1.303|2.4.x-xfs:slinx:74929a      |#ifdef DEBUG
-> montep    |1.198|                            |  ni = BBTOB(imap.im_len) >> 
-> mp->m_sb.sb_inodelog;
-> montep    |1.198|                            |#else
-> montep    |1.198|                            |  ni = 1;
-> montep    |1.198|                            |#endif
-> montep    |1.198|                            |  for (i = 0; i < ni; i++) {
-> doucette  |1.245|irix6.5f:irix:09146b        |          int 
-> di_ok;
-> doucette  |1.245|irix6.5f:irix:09146b        |          xfs_dinode_t    *dip;
-> doucette  |1.245|irix6.5f:irix:09146b        |
-> lord      |1.292|2.4.0-test1-xfs:slinx:65571a|          dip = (xfs_dinode_t 
-> *)xfs_buf_offset(bp,
-> montep    |1.198|                            | 
-> (i << mp->m_sb.sb_inodelog));
-> dxm       |1.285|2.4.0-test1-xfs:slinx:62350a|          di_ok = 
-> INT_GET(dip->di_core.di_magic, ARCH_CONVERT) == XFS_DINODE_MAGIC &&
-> dxm       |1.285|2.4.0-test1-xfs:slinx:62350a| 
-> XFS_DINODE_GOOD_VERSION(INT_GET(dip->di_core.di_version, ARCH_CONVERT));
-> overby    |1.362|2.4.x-xfs:slinx:136445a     |          if 
-> (unlikely(XFS_TEST_ERROR(!di_ok, mp, XFS_ERRTAG_ITOBP_INOTOBP,
-> overby    |1.362|2.4.x-xfs:slinx:136445a     | 
-> XFS_RANDOM_ITOBP_INOTOBP))) {
-> montep    |1.198|                            |#ifdef DEBUG
-> nathans   |1.337|2.4.x-xfs:slinx:119399a     |                  prdev("bad 
-> inode magic/vsn daddr 0x%llx #%d (magic=%x)",
-> nathans   |1.337|2.4.x-xfs:slinx:119399a     | 
-> mp->m_dev, (unsigned long long)imap.im_blkno, i,
-> nathans   |1.303|2.4.x-xfs:slinx:74929a      | 
-> INT_GET(dip->di_core.di_magic, ARCH_CONVERT));
-> montep    |1.198|                            |#endif
-> lord      |1.376|2.4.x-xfs:slinx:150747a     | 
-> XFS_CORRUPTION_ERROR("xfs_itobp", XFS_ERRLEVEL_HIGH,
-> overby    |1.362|2.4.x-xfs:slinx:136445a     | 
-> mp, dip);
-> montep    |1.198|                            | 
-> xfs_trans_brelse(tp, bp);
-> sup       |1.216|                            |                  return 
-> XFS_ERROR(EFSCORRUPTED);
-> montep    |1.198|                            |          }
-> ajs       |1.143|                            |  }
->
-> So the first inode in the buffer has the wrong magic# or version#.
-> I'm surprised that this wasn't picked up by repair or check.
->
-> --Tim
->
-I have some more information! The server, evenlode, was previously serving 
-NFS exports of ext3 filesystems. Last week we rsycned the data to the new 
-server running XFS.
+In betwenn I created a test filesystem 360GB with 120million inodes on it.=
+=20
+xfs_repair without options is unable to complete. If I run xfs_repair -o=20
+bhash=3D8192 the repair process terminates normally (the filesystem is actu=
+ally=20
+ok).=20=20
 
-Eventually I spotted the high error rate was linked to the volume of NFS 
-read calls (200k / minute). A quick tcpdump gave me a couple of likely 
-looking hosts. I logged into one (bonny) and found gnome-panel using 100% 
-CPU. I killed that and these messages have now reduced to a handful an 
-hour. That gnome-panel will have had the NFS server and underlying NFS 
-backing filesystem (ext3-> XFS) changed underneath it.
+The problem is that if I specify smaller values for bhash, xfs_repair will =
+not=20
+issue any error or warning or out of memory message but it won't terminate=
+=20
+either. At some point sometimes in Phase3 sometimes in Phase6 it simply=20
+hangs. In this state xfs_repair uses 100% CPU and does no longer access the=
+=20
+disk with the filesystem to be raired as reported by iostat -d.
 
-So my questions ...
+This is not really good, because each try to run xfs_repair takes about 90=
+=20
+minutes until you finally find out, that it does not work (xfs_repair is=20
+hanging) and you have to restart xfs_repair using a larger bhash value.=20
 
-Is it possible that the errors are related to duff request data being sent 
-by the NFS clients because they are still referencing e.g. inodes as they 
-were when the NFS server was ext3 backed?
+Actually I would expect xfs_repair to issue an error or perhaps there shoul=
+d=20
+at least be some guidlines on how to set bhash depending on the size of the=
+=20
+filesystem.
 
-Is it also possible that things like the rather high request rate 
-(200k/sec) although that's reduced now, made a race in e.g. the XFS code 
-triggerable?
+Are there any hints on how to set a minimal bhash value for a given filesys=
+tem=20
+or is there another way to get a larger fs checked on a 32 bit machine?
 
-As you say, it's rather suprising that this sort of issue is not being 
-caught by xfs_repair (-n) and that's what leads me to suspect something 
-else at play ...
+Thanks in advance
+Rainer=20=20
+--=20
+Rainer Krienke, Uni Koblenz, Rechenzentrum, A22, Universitaetsstrasse  1
+56070 Koblenz, http://www.uni-koblenz.de/~krienke, Tel: +49261287 1312
+PGP: http://www.uni-koblenz.de/~krienke/mypgp.html,Fax: +49261287 1001312
 
-Cheers,
-Stu.
+--nextPart2834985.ULnozQbeu3
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
->> It gives the following message and backtrace
->> 
->>> Mar 18 13:35:15 evenlode kernel: nfsd: non-standard errno: -117
->>> Mar 18 13:35:15 evenlode kernel: 0x0: 00 00 00 00 00 00 00 00 00 00 00 00 
->>> 00 00 00 00 Mar 18 13:35:15 evenlode kernel: Filesystem "dm-0": XFS 
->>> internal error xfs_itobp at line 360 of file fs/xfs/xfs_inode.c.  Caller 
->>> 0xffffffff8821224d
->>> Mar 18 13:35:15 evenlode kernel: Pid: 2791, comm: nfsd Not tainted 
->>> 2.6.24.3-generic #1
->>> Mar 18 13:35:15 evenlode kernel: Mar 18 13:35:15 evenlode kernel: Call 
->>> Trace:
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8821224d>] 
->>> :xfs:xfs_iread+0x71/0x1e8
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8820f784>] 
->>> :xfs:xfs_itobp+0x141/0x17b
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8821224d>] 
->>> :xfs:xfs_iread+0x71/0x1e8
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8821224d>] 
->>> :xfs:xfs_iread+0x71/0x1e8
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8820d7c9>] 
->>> :xfs:xfs_iget_core+0x352/0x63a
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8029095f>] 
->>> alloc_inode+0x152/0x1c2
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff8820db4c>] 
->>> :xfs:xfs_iget+0x9b/0x13f
->>> Mar 18 13:35:15 evenlode kernel:  [<ffffffff882243d1>] 
->>> :xfs:xfs_vget+0x4d/0xbb
->> 
->> 
->> Does that help?
->> 
->> Thanks,
->> Stu.
->
->
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBH4iV7aldtjc/KDEoRAtbmAKD7O+LyqtUG1Tz5919MKi7JZX2r9wCeNqT7
+8Lob6qFRyObmVB5Ie5BBcOA=
+=NYNS
+-----END PGP SIGNATURE-----
+
+--nextPart2834985.ULnozQbeu3--
