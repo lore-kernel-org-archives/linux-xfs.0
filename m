@@ -1,33 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Mar 2008 13:36:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2KKaCxq006249
-	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 13:36:14 -0700
-Date: Thu, 20 Mar 2008 16:36:44 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 20 Mar 2008 13:37:14 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2KKb3pD006418
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 13:37:06 -0700
+Received: from filer.fsl.cs.sunysb.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11502FE1E45
+	for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 13:37:36 -0700 (PDT)
+Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2]) by cuda.sgi.com with ESMTP id Hz0cRFjp5GFMAGoq for <xfs@oss.sgi.com>; Thu, 20 Mar 2008 13:37:36 -0700 (PDT)
+Date: Thu, 20 Mar 2008 16:37:35 -0400
 From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] XFSQA 141: support 64k pagesize
-Message-ID: <20080320203644.GB16357@josefsipek.net>
-References: <20080320063427.GB103491721@sgi.com>
+Subject: Re: [PATCH] fix xfsqa 049 when using whole scratch device
+Message-ID: <20080320203735.GD16357@josefsipek.net>
+References: <47E1CCF0.9070904@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080320063427.GB103491721@sgi.com>
+In-Reply-To: <47E1CCF0.9070904@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 20, 2008 at 05:34:27PM +1100, David Chinner wrote:
-> Make the file larger and read 64k from it instead of 16k
-> so that it pulls in a full page from the middle of the file.
+On Wed, Mar 19, 2008 at 09:33:20PM -0500, Eric Sandeen wrote:
+> if SCRATCH_DEV happens to be a whole device, mke2fs will wait
+> for confirmation.
 > 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> (mke2fs -F would work, too...)
 
-Test; does NOT cause a regression.
+Tested; does NOT cause a regression.
 
 Josef 'Jeff' Sipek.
 
 -- 
-Once you have their hardware. Never give it back.
-(The First Rule of Hardware Acquisition)
+Failure is not an option,
+It comes bundled with your Microsoft product.
