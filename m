@@ -1,45 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Mar 2008 03:05:50 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Mar 2008 04:58:10 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2MA5eAS006731
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 03:05:41 -0700
-Received: from mx1.wp.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CEC096D3D28
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 03:06:12 -0700 (PDT)
-Received: from mx1.wp.pl (mx1.wp.pl [212.77.101.5]) by cuda.sgi.com with ESMTP id 8pXTaoeHBhyiyTT5 for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 03:06:12 -0700 (PDT)
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: BUG: xfs on linux lvm - lvconvert random hungs when doing i/o
-Date: Sat, 22 Mar 2008 11:20:41 +0100
-References: <200803211520.16398.stf_xl@wp.pl> <20080321174556.GA5433@josefsipek.net>
-In-Reply-To: <20080321174556.GA5433@josefsipek.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2MBvtMv019778
+	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 04:57:57 -0700
+Received: from node1.t-mail.cz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D50A6D427F
+	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 04:58:28 -0700 (PDT)
+Received: from node1.t-mail.cz (node1.t-mail.cz [62.141.0.166]) by cuda.sgi.com with ESMTP id fVXHgG3NhbG8eOl6 for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 04:58:28 -0700 (PDT)
+Subject: Re: serious problem with XFS on nvidia IDE controller
+From: Massimiliano Adamo <maxadamo@gmail.com>
+In-Reply-To: <20080322005528.GA917@puku.stupidest.org>
+References: <1206125778.6867.14.camel@dasa-laptop>
+	 <20080321230609.GA31222@puku.stupidest.org>
+	 <1206141665.6636.23.camel@dasa-laptop>
+	 <20080322005528.GA917@puku.stupidest.org>
+Content-Type: text/plain
+Date: Sat, 22 Mar 2008 12:57:47 +0100
+Message-Id: <1206187067.6595.15.camel@dasa-laptop>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200803221120.42144.stf_xl@wp.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+To: Chris Wedgwood <cw@f00f.org>
 Cc: xfs@oss.sgi.com
 
-On Friday 21 March 2008, Josef 'Jeff' Sipek wrote:
-> On Fri, Mar 21, 2008 at 03:20:16PM +0100, Stanislaw Gruszka wrote:
+
+Il giorno ven, 21/03/2008 alle 17.55 -0700, Chris Wedgwood ha scritto:
+> On Sat, Mar 22, 2008 at 12:21:05AM +0100, Massimiliano Adamo wrote:
 > 
-> Interesting, I've noticed similar hang (based on my un-expert inspection of
-> your backtraces) which went away as suddenly as it appeared. I wasn't making
-> snapshots or any other LVM operation at the time. It just happened - logs
-> didn't contain anything.
+> > let's say the problem is: "ubuntu people" are neither hacker or
+> > guru, and majority of people just use the default filesystem.
+> 
+> they have a bug tracker and kernel people, i'm sure if you have
+> module problems there is someone who can look into it
+> 
 
-What I showed in traces is real deadlock, processes will stay in this state
-as long as machine power off or end of the world, nothing will up semaphores.
+I have found this:
+https://answers.launchpad.net/ubuntu/+question/7694
+It's not completely true in my case (as I have /dev/sdxx), but it says
+that this driver is not  there anymore.
 
-Making snapshot when there is pending I/O on volume take much more
-time compering when there is no load, propably because of locks contention,
-which is problem by itself.  However in most cases processes unlock
-after some time. For me making snapshot take few seconds without I/O
-and something between 1 - 3 minutes with I/O . However, as I told before,
-in very rare cases making snapshot with I/O on xfs volume take forever.
+The reason for removing that driver could be this one:
+https://bugs.launchpad.net/ubuntu/+source/initramfs-tools/+bug/191007
 
-Stanislaw Gruszka
+Anyway, I wouldn't mind about the reason, and the point is that I should
+recompile the kernel.
+And no way, I am not using ubuntu to waste time recompiling kernels :)
+
+> > Agree, but why no problems like this with reiser?
+> 
+> xfs don't journal data, by design, that might be what you are seeing,
+> or something else, it's not clear without more information
+
+Now for me it's difficult to reproduce this bug, as the installation
+with XFS was completetely unsable (i was able to boot no more then
+two/three times). At least I should create a new partition with xfs and
+run tests over it. 
+
+
+-- 
+cheers
+Massimiliano
