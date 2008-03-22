@@ -1,83 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Mar 2008 16:21:20 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2LNLBBT011608
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2008 16:21:12 -0700
-Received: from node1.t-mail.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 497A76D22D1
-	for <xfs@oss.sgi.com>; Fri, 21 Mar 2008 16:21:42 -0700 (PDT)
-Received: from node1.t-mail.cz (node1.t-mail.cz [62.141.0.166]) by cuda.sgi.com with ESMTP id NT5GIdFOgOVBWXz7 for <xfs@oss.sgi.com>; Fri, 21 Mar 2008 16:21:42 -0700 (PDT)
-Subject: Re: serious problem with XFS on nvidia IDE controller
-From: Massimiliano Adamo <maxadamo@gmail.com>
-In-Reply-To: <20080321230609.GA31222@puku.stupidest.org>
-References: <1206125778.6867.14.camel@dasa-laptop>
-	 <20080321230609.GA31222@puku.stupidest.org>
-Content-Type: text/plain
-Date: Sat, 22 Mar 2008 00:21:05 +0100
-Message-Id: <1206141665.6636.23.camel@dasa-laptop>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 21 Mar 2008 19:52:20 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2M2peON020039
+	for <xfs@oss.sgi.com>; Fri, 21 Mar 2008 19:51:41 -0700
+Date: Sat, 22 Mar 2008 03:52:01 +0100 (CET)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: [dm-crypt] INFO: task mount:11202 blocked for more than 120
+ seconds
+In-Reply-To: <20080317173609.GD29322@agk.fab.redhat.com>
+Message-ID: <alpine.DEB.1.00.0803220348520.17137@sheep.housecafe.de>
+References: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de> <200803150108.04008.chunkeey@web.de> <200803151432.11125.chunkeey@web.de> <200803152234.53199.chunkeey@web.de> <alpine.DEB.1.00.0803161406040.6213@sheep.housecafe.de>
+ <20080317173609.GD29322@agk.fab.redhat.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Wedgwood <cw@f00f.org>
-Cc: xfs@oss.sgi.com
+To: Alasdair G Kergon <agk@redhat.com>
+Cc: Chr <chunkeey@web.de>, Milan Broz <mbroz@redhat.com>, David Chinner <dgc@sgi.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, dm-devel@redhat.com, dm-crypt@saout.de, Herbert Xu <herbert@gondor.apana.org.au>, Ritesh Raj Sarraf <rrs@researchut.com>
 
+On Mon, 17 Mar 2008, Alasdair G Kergon wrote:
+> From: Milan Broz <mbroz@redhat.com>
+>
+> Fix regression in dm-crypt introduced in commit
+> 3a7f6c990ad04e6f576a159876c602d14d6f7fef
+> (dm crypt: use async crypto).
 
-Il giorno ven, 21/03/2008 alle 16.06 -0700, Chris Wedgwood ha scritto:
-> On Fri, Mar 21, 2008 at 07:56:18PM +0100, Massimiliano Adamo wrote:
-> 
-> > I have a notebook, Acer Aspire 5520 using the following controller:
-> > 0:06.0 IDE interface: nVidia Corporation Unknown device 0560 (rev a1)
-> 
-> MCP67 IDE
-> 
-> drivers/ata/pata_amd.c got support for that with 05e2867a, so after
-> 2.6.19-rc4
+I finally got around to test this - and yes, 2.6.25-rc6 with this patch 
+applied make the hangs go away. There are other problems now[0], but they 
+don't seem to be related, AFAICT.
 
-You're right, now I know it. I updated pci ids with "update-piciids"
-command and I found the name of the controller. After that I booted from
-a live-cd and I got pata_amd running, but this module doesn't belong to
-Ubuntu kernel (I don't have it)... I'll search how to add this module,
-if possible. But I would never recompile a kernel on ubuntu (don't have
-time for this). I left gentoo to avoid recompiling.
+Thank you!
+Christian.
 
-
-> 
-> drivers/ide/pci/amd74xx.c, 9cbcc5e3, after v2.6.23
-> 
-> > My kernel is the one provided with Ubuntu 7.10: 2.6.22-14
-> 
-> For the sata driver that should work then i would think.  You might
-> want to see what the Ubuntu people have to say about that.
-
-let's say the problem is: "ubuntu people" are neither hacker or guru,
-and majority of people just use the default filesystem. 
-
-
-> > I have installed the system at least 3 times in one day, before
-> > understanding that the problem was XFS filesystem.
-> 
-> I doubt it.
-> 
-
-What is your doubt? System is now running fine.
-I have been reinstalling the system the whole day, and after each reboot
-I was missing files from the filesystem.
-I didn't have messages in dmes, or in logs.
-The last attempt was to change filesystem. I just reinstalled the same
-version of the operating system, just changing to reiser and everything
-is now ok.
-Is there anything else to understand?
-The syWith XFS the system was broken after 20 minutes.
-
-> > I also noticed that "sync" command was always taking a long time to
-> > complete.
-> 
-> Lots of dirty pages and slow writeout (PIO) might explain that.
-> 
-
-Agree, but why no problems like this with reiser?
-
+[0] http://lkml.org/lkml/2008/3/21/408
 -- 
-Massimiliano
+BOFH excuse #197:
+
+I'm sorry a pentium won't do, you need an SGI to connect with us.
