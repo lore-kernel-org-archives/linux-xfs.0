@@ -1,67 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 22 Mar 2008 20:34:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2N3YI8l021900
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 20:34:20 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D8F46D6BF9
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 20:34:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id iKHDoOyfNIsvA99y for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 20:34:51 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 2EB7C18004B4A
-	for <xfs@oss.sgi.com>; Sat, 22 Mar 2008 22:34:19 -0500 (CDT)
-Message-ID: <47E5CFBA.7060405@sandeen.net>
-Date: Sat, 22 Mar 2008 22:34:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Mar 2008 07:50:06 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2NEnYi7007666
+	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 07:49:35 -0700
+Received: from web52006.mail.re2.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 0C899125E5BA
+	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 07:50:07 -0700 (PDT)
+Received: from web52006.mail.re2.yahoo.com (web52006.mail.re2.yahoo.com [206.190.49.253]) by cuda.sgi.com with SMTP id FoSIoUbcE0tdBfwY for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 07:50:07 -0700 (PDT)
+Date: Sun, 23 Mar 2008 07:50:06 -0700 (PDT)
+From: "Hendrik ." <chasake@yahoo.com>
+Subject: Poor VMWare disk performance on XFS partition
 MIME-Version: 1.0
-Subject: [PATCH] xfsqa: call _notrun in common.dump if dump utils not found
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Message-ID: <876423.51989.qm@web52006.mail.re2.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-it may not always be obvious to outsiders that xfsdump is packaged
-separately from xfsprogs... is it worth checking for the binaries
-rather than spewing verbose failures if it's not installed?
+I've been converting some of my drives from EXT3 to
+XFS a while ago. Now I notice poor disk performance
+when using XFS as underlying filesystem for a VMware
+virtual drive. I did some experiments and it really
+seems to be the XFS filesystem 'trashing' the speed of
+a VMware Windows XP guest.
 
-(and are the locations ok for irix/bsd/whatnot too...?)
+The first thing that I noticed is that when I shut
+down the virtual machine it takes a very long time
+after the machine seems to be shut down until the
+VMware window becomes responsive again. In the mean
+time there is heavy disk I/O. I found out that VMware
+seems to write some kind of memory map on the host
+hard disk which get heavily fragmented. The removal of
+this file is probably very I/O intensive which causes
+the delay. This is very annoying but not really a
+problem as it only happens when a virtual machine is
+shut down.
 
-... also abort if bc not found (common.filter requires this,
-my minimal testing root didn't have it and much error spew
-ensued... nicer to check up front IMHO)
+But there seems to be another problem when running the
+guest operating system itself. I made two exact copies
+of a Windows XP virtual machine on two hard disks of
+the same type, size and brand. The first hard disk had
+a XFS partition to host the virtual machine, the
+seconds harddisk was formatted as EXT3. The XFS
+partition has no fragmentation at all thus all files
+only consisted of 1 extent. The EXT3 files were a bit
+fragmented but this was only marginal (some larger
+disk image files consisted of 17 extents where 16 was
+optimal, reported by 'filefrag').
 
--Eric
+Then I ran the virtual machines one by one and started
+a defragmentation program to cause a lot of I/O on the
+guest operating system. Defragmentation of the XP host
+running from the EXT3 partition took only 2m36 but the
+exact same guest on the XFS partition took 10m5 to
+complete. On the EXT3 partition hardly any noise was
+heard from the drive heads as if the host operating
+system was caching and delaying the I/O operations. On
+the XFS host however a lot of noise was heard as if
+the harddisk was trashing heavily.
 
-Index: xfstests/common.dump
-===================================================================
---- xfstests.orig/common.dump
-+++ xfstests/common.dump
-@@ -41,6 +41,10 @@ do_quota_check=true # do quota check if 
- 
- _need_to_be_root
- 
-+[ -x /usr/sbin/xfsdump ] || _notrun "xfsdump executable not found"
-+[ -x /usr/sbin/xfsrestore ] || _notrun "xfsrestore executable not found"
-+[ -x /usr/sbin/xfsinvutil ] || _notrun "xfsinvutil executable not found"
-+
- # install our cleaner
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
-Index: xfstests/common.config
-===================================================================
---- xfstests.orig/common.config
-+++ xfstests/common.config
-@@ -114,6 +114,9 @@ export AWK_PROG="`set_prog_path awk`"
- export SED_PROG="`set_prog_path sed`"
- [ "$SED_PROG" = "" ] && _fatal "sed not found"
- 
-+export BC_PROG="`set_prog_path bc`"
-+[ "$BC_PROG" = "" ] && _fatal "bc not found"
-+
- export PS_ALL_FLAGS="-ef"
- 
- export DF_PROG="`set_prog_path df`"
+The machine I ran the tests on had the following
+specifications:
+- Dual core AMD Athlon64 5200+
+- 2 GB memory
+- 2x 80 GB Samsung IDE harddisk
+- Ubuntu Gutsy Gibbon (7.10) 64-bit
+- Standard stock Ubuntu kernel
+- VMware workstation 6.0.2 build-59824
+
+The guest was a bare Windows XP SP-2 installation,
+running O&O defrag 10.
+
+Can anyone give me some information what might be
+causing this massive slowdown? 
+
+Regards,
+Hendrik van den Boogaard
+
+
+      ____________________________________________________________________________________
+Looking for last minute shopping deals?  
+Find them fast with Yahoo! Search.  http://tools.search.yahoo.com/newsearch/category.php?category=shopping
