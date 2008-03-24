@@ -1,152 +1,102 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 16:39:52 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2ONdab6032213
-	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 16:39:42 -0700
-Date: Tue, 25 Mar 2008 10:39:52 +1100
-From: David Chinner <dgc@sgi.com>
-Subject: Re: BUG: xfs on linux lvm - lvconvert random hungs when doing i/o
-Message-ID: <20080324233952.GF103491721@sgi.com>
-References: <200803211520.16398.stf_xl@wp.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 16:48:59 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2ONmn4U000441
+	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 16:48:52 -0700
+Received: from mga02.intel.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5184101B083
+	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 16:49:19 -0700 (PDT)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by cuda.sgi.com with ESMTP id HkDzxA4nXHxgBQYG for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 16:49:19 -0700 (PDT)
+MIME-Version: 1.0
+Subject: FW: Exciting Opportunities with Intel's High-End Graphics Team!
+Date: Mon, 24 Mar 2008 16:41:09 -0700
+Message-ID: <9964440690E9244BA2ED6D920D537B5A0246A3C9@fmsmsx418.amr.corp.intel.com>
+From: "Brooks, CamilleX A" <camillex.a.brooks@intel.com>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <200803211520.16398.stf_xl@wp.pl>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Mar 21, 2008 at 03:20:16PM +0100, Stanislaw Gruszka wrote:
-> Hello
-> 
-> I have problems using xfs and lvm snapshots on linux-2.6.24 , When I do
-> lvconvert  to create snapshots and when system is under heavy load, lvconvert
-> and I/O processes randomly hung .  I use below script to reproduce, but it is very hard
-> to catch this bug.
+Hello, David
 
-This looks like an I/O completion problem.
+ 
 
-You're writing 2 files and doing snap shots while they are running.
+My name is Camille Brooks. I'm with the Strategic Recruiting Group with
+Intel. I came across your information while conducting a critical search
+.  At this time, Intel is in the early development stages of building a
+team of software engineers. This group is much like a start-up
+environment, with the funding of a huge entity, "Intel".  
 
-> xfsdatad/1    D 00000000     0   288      2
-> Call Trace:
->  [<c05558e6>] rwsem_down_failed_common+0x76/0x170
->  [<c0555a2d>] rwsem_down_write_failed+0x1d/0x24
->  [<c0555aa2>] call_rwsem_down_write_failed+0x6/0x8
->  [<c05555d2>] down_write+0x12/0x20
->  [<c029906a>] xfs_ilock+0x5a/0xa0
->  [<c02c0093>] xfs_setfilesize+0x43/0x130
->  [<c02c0180>] xfs_end_bio_delalloc+0x0/0x20
->  [<c02c018d>] xfs_end_bio_delalloc+0xd/0x20
->  [<c01334d2>] run_workqueue+0x52/0x100
->  [<c01373a2>] prepare_to_wait+0x52/0x70
->  [<c01335ff>] worker_thread+0x7f/0xc0
+ 
 
-This is an xfs I/O completion workqueue, waiting to get the inode
-ilock in excusive mode to update the file size.
+Join this small team of the brightest minds in graphics technology,
+hardware and software engineering and redefine how the world sees 3D
+graphics, visualization and games.  You'll play a key role in developing
+a highly-parallel programmable architecture that will benefit graphics
+and other high-throughput workloads including scientific computing,
+recognition mining and synthesis, financial analysis and health
+applications. 
 
-> pdflush       D 00fc61cb     0  7337      2
-> Call Trace:
->  [<c0554fd7>] schedule_timeout+0x47/0x90
->  [<c012ca40>] process_timeout+0x0/0x10
->  [<c0137370>] prepare_to_wait+0x20/0x70
->  [<c0554f5b>] io_schedule_timeout+0x1b/0x30
->  [<c0162ede>] congestion_wait+0x7e/0xa0
+ 
 
-Is waiting for I/O completion to remove the congestion status.
+Are you ready to make new things possible?
 
-> lvconvert     D c4010a80     0 12930  12501
-> Call Trace:
->  [<c0133719>] flush_cpu_workqueue+0x69/0xa0
->  [<c0133640>] wq_barrier_func+0x0/0x10
->  [<c013377c>] flush_workqueue+0x2c/0x40
->  [<c02c3fc7>] xfs_flush_buftarg+0x17/0x120
->  [<c02b6f26>] xfs_quiesce_fs+0x16/0x70
->  [<c02b6fa0>] xfs_attr_quiesce+0x20/0x60
->  [<c02b8db8>] xfs_freeze+0x8/0x10
+ 
 
-That's waiting for the I/O completion workqueue to be flushed.
+ 
 
-> dd            D 00fc61cb     0 12953  29684
-> Call Trace:
->  [<c0554fd7>] schedule_timeout+0x47/0x90
->  [<c012ca40>] process_timeout+0x0/0x10
->  [<c0137370>] prepare_to_wait+0x20/0x70
->  [<c0554f5b>] io_schedule_timeout+0x1b/0x30
->  [<c0162ede>] congestion_wait+0x7e/0xa0
+If you're interested in more details, please feel free to send me an
+updated copy of your resume with the best number and time to reach you
+at.  If not, perhaps, you can pass along my contact information to
+someone within your professional network who you feel, might be
+interested in opportunities here.
 
-Stuck in congestion.
+ 
 
-This dd (I've trimmed the stack trace to make it readable):
+Locations: US-Texas, Hillsboro, OR and Santa Clara, CA
 
-> dd            D c4018ab4     0 12113  29734
-> Call Trace:
->  [<c0555b35>] __down+0x75/0xe0
->  [<c04793c7>] dm_unplug_all+0x17/0x30
->  [<c0555a3b>] __down_failed+0x7/0xc
->  [<c02e1ac0>] blk_backing_dev_unplug+0x0/0x10
->  [<c02c2e4c>] xfs_buf_lock+0x3c/0x50
->  [<c02c27d1>] _xfs_buf_find+0x151/0x1d0
->  [<c02c28a5>] xfs_buf_get_flags+0x55/0x130
->  [<c02c299c>] xfs_buf_read_flags+0x1c/0x90
->  [<c02b48cf>] xfs_trans_read_buf+0x16f/0x350
->  [<c02995fd>] xfs_itobp+0x7d/0x250
->  [<c029cfc9>] xfs_iflush+0x99/0x470
->  [<c02bd907>] xfs_inode_flush+0x127/0x1f0
->  [<c02c9732>] xfs_fs_write_inode+0x22/0x80
->  [<c01963fb>] write_inode+0x4b/0x50
->  [<c01966d0>] __sync_single_inode+0xf0/0x190
->  [<c01967b9>] __writeback_single_inode+0x49/0x1c0
->  [<c0196a0e>] sync_sb_inodes+0xde/0x1d0
->  [<c0196ba0>] writeback_inodes+0xa0/0xb0
->  [<c015d043>] balance_dirty_pages+0x193/0x2c0
->  [<c0158ad2>] generic_perform_write+0x142/0x190
->  [<c0158ba7>] generic_file_buffered_write+0x87/0x150
->  [<c02c8d0b>] xfs_write+0x61b/0x8c0
->  [<c02c45f6>] xfs_file_aio_write+0x76/0x90
->  [<c0178e9d>] do_sync_write+0xbd/0x110
->  [<c0179050>] vfs_write+0x160/0x170
->  [<c0179111>] sys_write+0x41/0x70
->  [<c010418e>] syscall_call+0x7/0xb
+ 
 
-Is writing to one file, hitting foreground write throttling and
-flushing either itself or the other file. It's stuct waiting on 
-I/O completion of the inode buffer.
+Please visit the link attached to find out more about the exciting
+products that are being designed by our new Game Engine Technology Group
+and Software organization. I think you would be pleasantly surprised!
 
-I suspect that the I/O completion has been blocked by the fact it's
-trying to get The xfsdatad process is blocked on this inode - the
-inode flush takes the ilock shared, which is holding off the I/O
-completion. As soon as the inode buffer I/O is issued, then inode
-will be unlocked and completion processing can continue.
+http://www.intel.com/personal/gaming/index.htm?iid=homepage+tech_gaming
 
-i.e. it seems that either we can't safely take the ilock in I/O
-completion without a trylock or we can't hold the ilock across
-I/O submission without a trylock on the buffer lock. Ouch! That's
-going to take some fixing....
+ 
 
-I'd suggest that these two patches (already queued for 2.6.26):
+ 
 
-http://oss.sgi.com/archives/xfs/2008-01/msg00153.html
-http://oss.sgi.com/archives/xfs/2008-01/msg00154.html
+ 
 
-Which make xfs_iflush do trylocks on the inode buffer in these
-writeback cases and that should avoid the problem you are seeing
-here. It won't avoid all possible problems, but it will not hang
-waiting on buffer I/O completion in async inode flushes like
-above....
+Thanks so much in advance, for your time and look forward to hearing
+back from you soon.
 
-> I also would like to ask if you have some propositions how to reproduce bug,
-> because my scripts need to work few hours or even days to hung processes.
+ 
 
-It's pure chance. Hence I don't think there's much you can do to
-improve the reproducability of this problem....
+ 
 
-Cheers,
+Camille Brooks
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Strategic Recruiting Team-Global Americas
+
+(916) 371-7621
+
+Camillex.a.brooks@intel.com
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+[[HTML alternate version deleted]]
