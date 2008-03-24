@@ -1,38 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Mar 2008 17:41:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2O0foYZ026330
-	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 17:41:53 -0700
-Received: from flyingAngel.upjs.sk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 86D966DA2AD
-	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 17:42:24 -0700 (PDT)
-Received: from flyingAngel.upjs.sk (static113-109.rudna.net [212.20.113.109]) by cuda.sgi.com with ESMTP id RAmJA4sFhKxNj0nR for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 17:42:24 -0700 (PDT)
-Date: Mon, 24 Mar 2008 01:41:50 +0100 (CET)
-From: Jan Derfinak <ja@mail.upjs.sk>
-Subject: Re: Poor VMWare disk performance on XFS partition
-In-Reply-To: <876423.51989.qm@web52006.mail.re2.yahoo.com>
-Message-ID: <Pine.LNX.4.64.0803240126501.4354@alienAngel.home.sk>
-References: <876423.51989.qm@web52006.mail.re2.yahoo.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 23 Mar 2008 20:04:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2O33ub2002328
+	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 20:03:59 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C210C1004FE5
+	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 20:04:30 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id PiFNCdRI2b8vOZ4T for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 20:04:30 -0700 (PDT)
+Received: from Liberator.local (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id BD3D318004B4A
+	for <xfs@oss.sgi.com>; Sun, 23 Mar 2008 22:04:29 -0500 (CDT)
+Message-ID: <47E71A3D.9040707@sandeen.net>
+Date: Sun, 23 Mar 2008 22:04:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: [PATCH] xfsqa: make 054 _require_quota
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Hendrik ." <chasake@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, 23 Mar 2008, Hendrik . wrote:
+054 needs quota support to run, but doesn't make that explicit.
 
-> I've been converting some of my drives from EXT3 to
-> XFS a while ago. Now I notice poor disk performance
-> when using XFS as underlying filesystem for a VMware
-> virtual drive. I did some experiments and it really
-> seems to be the XFS filesystem 'trashing' the speed of
-> a VMware Windows XP guest.
-
-Mount XFS partition with "nobarrier" option. I'm using also
-logbufs=8,logbsize=256k for vmware.
-
-jan
-
--- 
+Index: xfstests/054
+===================================================================
+--- xfstests.orig/054
++++ xfstests/054
+@@ -38,6 +38,7 @@ cp /dev/null $seq.full
+ chmod ugo+rwx $seq.full
+ 
+ _require_scratch
++_require_quota
+ 
+ _filter_stat()
+ {
