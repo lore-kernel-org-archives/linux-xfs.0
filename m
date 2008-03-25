@@ -1,98 +1,82 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 16:08:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2PN8fZo009179
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 16:08:42 -0700
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 098FC102D591
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 16:09:14 -0700 (PDT)
-Received: from mx2.suse.de (ns2.suse.de [195.135.220.15]) by cuda.sgi.com with ESMTP id rc7dpjquOwW52a4p for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 16:09:14 -0700 (PDT)
-From: "NeilBrown" <neilb@suse.de>
-Date: Wed, 26 Mar 2008 10:09:00 +1100 (EST)
-Message-ID: <45922.192.168.1.70.1206486540.squirrel@neil.brown.name>
-In-Reply-To: <20080325221321.GC20257@josefsipek.net>
-References: <9a8748490803121513w285cd45rb6b26a3d842cac1b@mail.gmail.com>
-    <20080312221511.GC31632@fieldses.org>
-    <9a8748490803121516u36395872i70cc88b0439adc74@mail.gmail.com>
-    <18394.1501.991087.80264@notabene.brown> <47DAEFD0.9020407@m2000.com>
-    <47E92F8E.7030504@m2000.com> <20080325190943.GF2237@fieldses.org>
-    <32953.192.168.1.70.1206477121.squirrel@neil.brown.name>
-    <20080325212425.GA20257@josefsipek.net>
-    <34178.192.168.1.70.1206481102.squirrel@neil.brown.name>
-    <20080325221321.GC20257@josefsipek.net>
-Subject: Re: [opensuse] nfs_update_inode: inode X mode changed, Y to Z
-MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 16:35:56 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2PNZjLX015626
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 16:35:47 -0700
+Date: Wed, 26 Mar 2008 10:36:11 +1100
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Serious XFS crash
+Message-ID: <20080325233611.GW103491721@sgi.com>
+References: <20080325185453.3a1957dd@galadriel.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080325185453.3a1957dd@galadriel.home>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, xfs@oss.sgi.com, Adam Schrotenboer <adam@m2000.com>, Jesper Juhl <jesper.juhl@gmail.com>, Trond Myklebust <trond.myklebust@netapp.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, Thomas Daniel <tdaniel@m2000.com>, Frederic Revenu <frevenu@m2000.com>, Jeff Doan <jdoan@m2000.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, March 26, 2008 9:13 am, Josef 'Jeff' Sipek wrote:
-> On Wed, Mar 26, 2008 at 08:38:22AM +1100, NeilBrown wrote:
-> ...
->> However you still need to do something about the generation number.  It
->> must be set to something.
->
-> Right.
->
->> When you allocate an inode that doesn't currently exist on the device,
->> you obviously cannot increment the old value and use that.
->
-> Makes sense.
->
->> However you can do a lot better than always using 0.
->
-> I looked at the code (xfs_ialloc.c:xfs_ialloc_ag_alloc)
->
->  290                 /*
->  291                  * Set initial values for the inodes in this buffer.
->  292                  */
->  293                 xfs_biozero(fbuf, 0, ninodes <<
-> args.mp->m_sb.sb_inodelog);
->  294                 for (i = 0; i < ninodes; i++) {
->  295                         free = XFS_MAKE_IPTR(args.mp, fbuf, i);
->  296                         free->di_core.di_magic =
-> cpu_to_be16(XFS_DINODE_MAGIC);
->  297                         free->di_core.di_version = version;
->  298                         free->di_next_unlinked =
-> cpu_to_be32(NULLAGINO);
->  299                         xfs_ialloc_log_di(tp, fbuf, i,
->  300                                 XFS_DI_CORE_BITS |
-> XFS_DI_NEXT_UNLINKED);
->  301                 }
->
-> xfs_biozero(...) turns into a memset(buf, 0, len), and since the loop that
-> follows doesn't change the generation number, it'll stay 0.
->
->> The simplest would be to generate a 'random' number (get_random_bytes).
->> Slightly better would be to generate a random number at boot time
->> and use that, incrementing it each time it is used to set the
->> generation number for an inode.
->
-> I'm not familiar enough with NFS, do you want something that's
-> monotonically
-> increasing or do you just test for inequality?  If it is inequality, why
-> not
-> just use something like the jiffies - that should be unique enough.
->
+On Tue, Mar 25, 2008 at 06:54:53PM +0100, Emmanuel Florac wrote:
+> 
+> Here is the setup : Debian sarge running kernel 2.6.18.8 smp (clean
+> build), xfsprogs version 2.6.20 (not used). An 8TB xfs filesystem broke
+> apart losing roughly 2TB of data in about 350 (big) files :
+> 
+> Mar 22 12:38:18 system3 kernel:
+> 0x0: c0 49 00 35 6a bc c3 80 fd d4 64 f8 16 ec b9 85 
+       | forw    | | back    | |mg1| |pad|
 
-What we need is for the "filehandle" to be stable and unique.
-By 'stable' I mean that every time I get the filehandle for a particular
-file, I get the same string of bytes.
-By 'uniqie' I mean that if I get two filehandles for two different
-files, they must differ in at least one bit.
-If a file is deleted and the inode is re-used for a new file, then the
-old and new files are different and must have different file handles.
+#define XFS_DA_NODE_MAGIC       0xfebe  /* magic number: non-leaf blocks */
+#define XFS_ATTR_LEAF_MAGIC     0xfbee  /* magic number: attribute leaf blks */
+#define XFS_DIR2_LEAF1_MAGIC    0xd2f1  /* magic number: v2 dirlf single blks */
+#define XFS_DIR2_LEAFN_MAGIC    0xd2ff  /* magic number: v2 dirlf multi blks */
 
-The filehandle is traditionally generated from the inode number and
-a generation number, but the filesystem can actually do whatever it
-likes.  xfs does it with xfs_fs_encode_fh().
+> 0x0: c0 49 00 35 6a bc c3 80 fd d4 64 f8 16 ec b9 85 
+       |hdr.magic|
 
-Certainly you could initialise the i_generation to jiffies in
-xfs_ialloc_ag_alloc.  That would be a suitable fix.  get_random_bytes
-might be better, but the difference probably wouldn't be noticeable.
+#define XFS_DIR2_BLOCK_MAGIC    0x58443242      /* XD2B: for one block dirs */
+#define XFS_DIR2_DATA_MAGIC     0x58443244      /* XD2D: for multiblock dirs */
 
-NeilBrown
+So none of the magic numbers for a directory block match.
+And FWIW, I can't see any XFs magic number in that block.
+
+> As a precaution, I booted with a live CD with xfsprogs 2.8.11. I first
+> ran xfs_repair -n :
+> 
+> No modify flag set, skipping phase 5
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> bad magic # 0x7c6999f7 for agf 0
+> bad version # 270461846 for agf 0
+> bad sequence # -506160237 for agf 0
+> bad length 1130385756 for agf 0, should be 68590288
+> flfirst 260475029 in agf 0 too large (max = 128)
+> fllast -1448142937 in agf 0 too large (max = 128)
+> bad magic # 0xfffde400 for agi 0
+> bad version # -1469688457 for agi 0
+> bad sequence # 2021095287 for agi 0
+> bad length # 2004318207 for agi 0, should be 68590288
+> would reset bad agf for ag 0
+> would reset bad agi for ag 0
+> bad uncorrected agheader 0, skipping ag...
+> root inode chunk not found
+
+Oh, that's toast. Something has overwritten the start of the
+filesystem and it does not appear to be other metadata.  Well, not
+exactly the start of the filesystem - the superblock is untouched.
+
+What sector size is being used for the XFS filesystem? If it's
+not the same as teh filesystem block size, then XFS can't have done
+this itself because the offset that this garbage starts at would
+not be block aligned.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
