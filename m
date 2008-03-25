@@ -1,66 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 23:13:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 23:45:05 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2P6DLLx007068
-	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 23:13:23 -0700
-Date: Tue, 25 Mar 2008 17:16:44 +1100
-Subject: Re: REVIEW: Write primary superblock info to ALL secondaries during mkfs
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <op.t8j4nch93jf8g2@pc-bnaujok.melbourne.sgi.com> <20080325060017.GK103491721@sgi.com>
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.t8j6d6sj3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080325060017.GK103491721@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2P6isZQ009840
+	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 23:44:56 -0700
+Subject: PARTIAL TAKE 976035 - cleanup root inode handling in xfs_fs_fill_super
+Message-Id: <20080325064522.9A7BD58C4C0F@chook.melbourne.sgi.com>
+Date: Tue, 25 Mar 2008 17:45:22 +1100 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Tue, 25 Mar 2008 17:00:17 +1100, David Chinner <dgc@sgi.com> wrote:
+cleanup root inode handling in xfs_fs_fill_super
 
-> On Tue, Mar 25, 2008 at 04:39:02PM +1100, Barry Naujok wrote:
->> Secondaries should contain redundant information from the primary
->> superblock. It does this for the filesystem geometry information,
->> but not inode values (rootino, rt inos, quota inos).
->>
->> This patch updates all the secondaries from the primary just before
->> it marks the filesystem as good to go.
->
-> So it's got all the inodes, geometry, etc correct in them?
->
-> So what about the fact that the kernel code doesn't keep all
-> copies up to date? e.g. growfs will only write new values into
-> a handful of superblocks, changing sunit/swidth via mount options
-> only change the primary, etc....
->
-> If you are going to change mkfs to keep them all up to date, the
-> kernel code really needs to do the same thing....
+ - rename rootvp to root for clarify
+ - remove useless vn_to_inode call
+ - check is_bad_inode before calling d_alloc_root
+ - use iput instead of VN_RELE in the error case
 
-Yes it should :) Geometry information was already done across all
-the AGs.
 
->>
->>  	/*
->> -	 * Dump all inodes and buffers before marking us all done.
->> -	 * Need to drop references to inodes we still hold, first.
->> +	 * Flush out all inodes and buffers before marking us all done.
->>  	 */
->>  	libxfs_rtmount_destroy(mp);
->>  	libxfs_icache_purge();
->> -	libxfs_bcache_purge();
->> +	libxfs_bcache_flush();
->
-> Don't you still need a purge there to free all the objects in the
-> cache?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-No, the flush does what is required. There is no libxfs_icache_flush
-at the moment, so I left the purge there for that.
+Date:  Tue Mar 25 17:44:23 AEDT 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
+Inspected by:  hch
+Author:  lachlan
 
-libxfs_umount later on does a libxfs_*_purge() anyway.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-The main thing is to make sure all objects are written to disk before
-the sb_inprogress field in the primary superblock is zeroed.
 
-Barry.
+Modid:  xfs-linux-melb:xfs-kern:30708a
+fs/xfs/linux-2.6/xfs_super.c - 1.411 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.411&r2=text&tr2=1.410&f=h
+	- cleanup root inode handling in xfs_fs_fill_super
