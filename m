@@ -1,94 +1,108 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 13:32:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2PKWA8E026877
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 13:32:11 -0700
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B17566E8B75
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 13:32:43 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com with ESMTP id DxvXDEro9Fd4h1uh for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 13:32:43 -0700 (PDT)
-From: "NeilBrown" <neilb@suse.de>
-Date: Wed, 26 Mar 2008 07:32:01 +1100 (EST)
-Message-ID: <32953.192.168.1.70.1206477121.squirrel@neil.brown.name>
-In-Reply-To: <20080325190943.GF2237@fieldses.org>
-References: <47CF157B.1010908@m2000.com>
-    <18383.24847.381754.517731@notabene.brown> <47CF62C5.7000908@m2000.com>
-    <18384.50909.866848.966192@notabene.brown>
-    <9a8748490803121513w285cd45rb6b26a3d842cac1b@mail.gmail.com>
-    <20080312221511.GC31632@fieldses.org>
-    <9a8748490803121516u36395872i70cc88b0439adc74@mail.gmail.com>
-    <18394.1501.991087.80264@notabene.brown> <47DAEFD0.9020407@m2000.com>
-    <47E92F8E.7030504@m2000.com> <20080325190943.GF2237@fieldses.org>
-Subject: Re: [opensuse] nfs_update_inode: inode X mode changed, Y to Z
-MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 14:21:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2PLL6M7030225
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 14:21:08 -0700
+Received: from adm01.ops.amientertainment.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A54B1102C92E
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 14:21:40 -0700 (PDT)
+Received: from adm01.ops.amientertainment.net (adm01.ops.amientertainment.net [64.141.138.10]) by cuda.sgi.com with ESMTP id hmHazZ1WTQKANbq7 for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 14:21:40 -0700 (PDT)
+Received: from dhcp-192-168-6-143.ops.amientertainment.net (dhcp-192-168-6-143.ops.amientertainment.net [192.168.6.143])
+	(authenticated bits=0)
+	by adm01.ops.amientertainment.net (8.13.1/8.13.1/BCH2.0) with ESMTP id m2PLLda3019457
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 17:21:39 -0400
+Subject: XFS performance on LVM2 mirror
+From: Scott Tanner <stanner@amientertainment.net>
+Content-Type: text/plain
+Date: Tue, 25 Mar 2008 17:37:32 -0400
+Message-Id: <1206481052.4283.17.camel@dhcp-192-168-6-143>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>, xfs@oss.sgi.com
-Cc: Adam Schrotenboer <adam@m2000.com>, Jesper Juhl <jesper.juhl@gmail.com>, Trond Myklebust <trond.myklebust@netapp.com>, lkml@vger.kernel.org, linux-nfs@vger.kernel.org, Thomas Daniel <tdaniel@m2000.com>, Frederic Revenu <frevenu@m2000.com>, Jeff Doan <jdoan@m2000.com>
+To: xfs@oss.sgi.com
 
-On Wed, March 26, 2008 6:09 am, J. Bruce Fields wrote:
-> On Tue, Mar 25, 2008 at 09:59:58AM -0700, Adam Schrotenboer wrote:
->> Adam Schrotenboer wrote:
->>> Neil Brown wrote:
->>>> On Wednesday March 12, jesper.juhl@gmail.com wrote:
->>>>> On 12/03/2008, J. Bruce Fields <bfields@fieldses.org> wrote:
->>>>>> What was the exported filesystem?
->>>>> XFS
->>>>
->>>> It's a bit of a long shot, but could you try mounting the XFS file
->>>> system with
->>>>    -o ikeep
->>>>
->>>> and see if it makes a difference.
->>>>
->>>> When you have "ikeep", I can find the code that increments the
->>>> generation number between different uses of the one inode number.
->>>>
->>>> When you have "noikeep" (which I think is the default) it doesn't keep
->>>> the inode of disk when deleted and so (presumably) needs generate a
->>>> random generation number for each use.  But I cannot find the code
->>>> that does that.  I'm probably not looking in the right place, but I
->>>> don't think it can hurt to try "-o ikeep".
->>>>
->>>> NeilBrown
->>>>
->>> Ok, I've unmounted and remounted with that option enabled
->>> (/proc/mounts confirms it's enabled). We'll see what happens.
->>
->>    Well, it's been almost 2 weeks (11 days anyhow) and I am not seeing
->> the nfs_update_inode message in the syslogs of any of our compute
->> servers. I need to talk to the various people who work with them to
->> verify, but it looks like this problem has been resolved.
->
-> That's a workaround, at least, but it's unfortunate if a special mount
-> option is required to get correct behavior for nfs exports.  Is there
-> anything we can do?
->
+Hello,
+  I've been doing some benchmarking (using bonnie++) of the XFS
+filesystem and found a substantial performance drop in rewrite and
+delete operations when using an LVM2 mirror. When using the Linux
+Software Raid driver to perform the mirror, XFS performance is quite
+good. I've tried a number of the performance tweaks from the mailing
+list archives, as seen below. The only option that seemed to make a real
+difference was LVM's --corelog, which only worked for 1 test then the
+server crashed. 
 
-I suggest taking it up with the XFS developers...
+Are there any special tweaks for XFS on LVM2 mirrors? Recommendations on
+my setup?
 
-Dear XFS developers.
- Adam (and Jesper, though that was some time ago) was having problems
-with an XFS filesystem that was exported via NFS.  The client would
-occasionally report the message given in the subject line.
-Examining the NFS code suggested that the most likely explanation
-was that the generation number used in the file handle was the same
-every time that the inode number was re-used.
-
-Examining the XFS code suggested that when the 'ikeep' mount option was
-used, the generation number be explicitly incremented for each
-re-use, while without 'ikeep', no evidence of setting the generation
-number could be found.  Maybe it defaults to zero.
-
-Experimental evidence suggests that setting 'ikeep' removes the symptom.
-
-Question:  Is is possible that without 'ikeep', XFS does not even try
-to provide unique generation numbers?  If this is the case, could it
-please be fixed.  If it is not the case, please help me find the code
-responsible.
 
 Thanks,
-NeilBrown
+Scott
+
+
+Here are some system specs and benchmark results:
+
+Dell 1750 (32bit)
+single Xeon 2.8GHz
+1GB ram
+Centos5 (2.6.18-53.1.14.el5)
+Emulex lightpulse L982 HBA
+
+2 x Jetstor Disk Arrays:
+     9 Disk Raid 5, 128K stripe
+     2 TB LU 
+
+16K readahead set on all disks (blockdev --setra 16384 /dev/sdx)
+Adjusted max_sectors_kb - no improvement
+Adjusted nr_requests - no improvement
+XFS mounted with -o noatime,nodiratime,nobarrier,logbufs=8
+All Bonnie++ tests using -s 2016M -n 2:5000000:1000000/64, displaying
+average of 3 runs.
+---------------------------------------------------------------------
+
+Single 2TB disk (LU) no LVM no XFS options:
+fs01,2G,40374,,186139,52,84250,24,43405,98,191468,14,745.0,0,,27,19,51,7,1389,20,26,20,18,1,1089,18
+(S.Out Block= 186M/s |S.Out Rewrite= 84M/s |S.In Block=191M/s |Del =
+1389)
+
+Linux Software Raid Mirror,  no XFS options:
+fs01,2G,39516,,93718,25,75745,22,43253,98,193540,23,1475.8,1,,24,19,36,7,1184,18,24,19,17,2,969,12
+(S.Out Block= 93M/s |Seq Out Rewrite= 75M/s |S.In Block=193M/s |Del =
+1184)
+
+LVM2 Mirror, no XFS options:
+fs01,2G,33459,,93708,28,18752,5,42716,97,196157,20,1031.9,0,,25,21,33,5,180,2,26,22,18,1,226,1
+(S.Out Block= 93M/s |S.Out Rewrite= 18M/s |S.In Block=196M/s |Del = 180)
+
+LVM2 Mirror, XFS options logsize=64M sunit=256  swidth=512 blks
+fs01,2G,34492,,93389,27,18381,5,43100,97,191331,21,1063.2,0,,23,20,29,4,178,1,24,19,17,1,191,1
+(S.Out Block= 93M/s |S.Out Rewrite= 18M/s |S.In Block=191M/s |Del = 178)
+
+LVM2 Mirror  XFS options logsize=64M sunit=64  swidth=1024 blks
+fs01,2G,36145,,92566,26,18430,5,43560,99,200523,21,1088.4,0,,23,20,34,5,211,2,25,20,18,1,172,1
+(S.Out Block= 92M/s |S.Out Rewrite= 18M/s |S.In Block=200M/s |Del = 211)
+
+LVM2 Mirror  XFS options logsize=64M sunit=32  swidth=256 blks
+fs01,2G,36922,,96298,26,18832,6,43623,97,199477,26,1187.2,3,,27,20,33,11,235,4,25,19,20,6,158,3
+(S.Out Block= 96M/s |S.Out Rewrite= 18M/s |S.In Block=199M/s |Del = 235)
+
+LVM2 Mirror --metadatasize=64k, XFS options logsize=64M sunit=32
+swidth=256 blks
+fs01,2G,34508,,96358,25,19132,6,43817,98,200040,27,1202.5,3,,29,22,33,10,234,4,29,23,19,6,195,4
+(S.Out Block= 96M/s |S.Out Rewrite= 19M/s |S.In Block=200M/s |Del = 234)
+
+LVM2 Mirror --metadatasize=64k, XFS options logsize=64M sunit=256
+swidth=256 blks
+fs01,2G,36367,,91923,24,18639,6,43732,97,199305,26,1230.0,3,,26,19,31,10,212,4,30,22,19,6,151,3
+(S.Out Block= 91M/s |S.Out Rewrite= 18M/s |S.In Block=199M/s |Del = 212)
+
+
+LVM2 Mirror --corelog, XFS options logsize=64M sunit=256 swidth=256 blks
+fs01,2G,39387,,95708,30,46650,15,43273,98,199461,21,1037.3,0,,25,20,29,4,889,10,26,20,17,1,927,14
+(S.Out Block= 95M/s |S.Out Rewrite= 46M/s |S.In Block=199M/s |Del = 889)
+
+And for comparison, EXT3 over LVM2 mirror:
+fs01,2G,33028,,117260,75,61222,38,36994,86,196760,45,885.5,2,,33,60,33,11,143,5,31,57,21,7,147,6
+(S.Out Block=117M/s |S.Out Rewrite= 61M/s |S.In Block=196M/s |Del = 143)
