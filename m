@@ -1,81 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 20:32:58 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 21:13:49 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2P3WkQq022098
-	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 20:32:50 -0700
-Date: Tue, 25 Mar 2008 14:35:22 +1100
-Subject: Re: [PATCH] xfsqa: call _notrun in common.dump if dump utils not found
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <47E5CFBA.7060405@sandeen.net> <47E8703C.30603@sgi.com>
-Message-ID: <op.t8jyw8i63jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <47E8703C.30603@sgi.com>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2P4DcGi025479
+	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 21:13:40 -0700
+Subject: TAKE 978886 - xfs_dialloc() dirtying transactions at ENOSPC incorrectly
+Message-Id: <20080325041407.F090958C4C0F@chook.melbourne.sgi.com>
+Date: Tue, 25 Mar 2008 15:14:07 +1100 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, 25 Mar 2008 14:23:40 +1100, Timothy Shimmin <tes@sgi.com> wrote:
+Account for inode cluster alignment in all allocations
 
-> Thanks, Eric.
->
-> On IRIX:
->  > where xfsdump xfsrestore xfsinvutil
-> /sbin/xfsdump
-> /usr/sbin/xfsdump
-> /sbin/xfsrestore
-> /usr/sbin/xfsinvutil
->  > ls -l /sbin/xfsdump
-> lrwxr-xr-x    ... /sbin/xfsdump -> ../usr/sbin/xfsdump*
->
-> I'll add the IRIX xfsrestore path and wait for Russell or
-> whoever to complain about BSD :)
+At ENOSPC, we can get a filesystem shutdown due to a cancelling a
+dirty transaction in xfs_mkdir or xfs_create. This is due to the
+initial allocation attempt not taking into account inode alignment and hence
+we can prepare the AGF freelist for allocation when it's not actually
+possible to do an allocation. This results in inode allocation returning
+ENOSPC with a dirty transaction, and hence we shut down the filesystem.
 
-common.config sets up environment variables for the various
-tools used and can handle these paths. It has them for the
-xfsprogs tools (XFS_REPAIR_PROG, XFS_DB_PROG, etc) but
-nothing for the xfsdump tools.
+Because the first allocation is an exact allocation attempt, we must tell
+the allocator that the alignment does not affect the allocation attempt.
+i.e. we will accept any extent alignment as long as the extent starts
+at the block we want. Unfortunately, this means that if the longest
+free extent is less than the length + alignment necessary for fallback
+allocation attempts but is long enough to attempt a non-aligned allocation,
+we will modify the free list.
 
-> --Tim
->
-> Eric Sandeen wrote:
->> it may not always be obvious to outsiders that xfsdump is packaged
->> separately from xfsprogs... is it worth checking for the binaries
->> rather than spewing verbose failures if it's not installed?
->>  (and are the locations ok for irix/bsd/whatnot too...?)
->>  ... also abort if bc not found (common.filter requires this,
->> my minimal testing root didn't have it and much error spew
->> ensued... nicer to check up front IMHO)
->>  -Eric
->>  Index: xfstests/common.dump
->> ===================================================================
->> --- xfstests.orig/common.dump
->> +++ xfstests/common.dump
->> @@ -41,6 +41,10 @@ do_quota_check=true # do quota check if   
->>  _need_to_be_root
->>  +[ -x /usr/sbin/xfsdump ] || _notrun "xfsdump executable not found"
->> +[ -x /usr/sbin/xfsrestore ] || _notrun "xfsrestore executable not  
->> found"
->> +[ -x /usr/sbin/xfsinvutil ] || _notrun "xfsinvutil executable not  
->> found"
->> +
->>  # install our cleaner
->>  trap "_cleanup; exit \$status" 0 1 2 3 15
->>  Index: xfstests/common.config
->> ===================================================================
->> --- xfstests.orig/common.config
->> +++ xfstests/common.config
->> @@ -114,6 +114,9 @@ export AWK_PROG="`set_prog_path awk`"
->>  export SED_PROG="`set_prog_path sed`"
->>  [ "$SED_PROG" = "" ] && _fatal "sed not found"
->>  +export BC_PROG="`set_prog_path bc`"
->> +[ "$BC_PROG" = "" ] && _fatal "bc not found"
->> +
->>  export PS_ALL_FLAGS="-ef"
->>   export DF_PROG="`set_prog_path df`"
->>
->
->
+If we then have the exact allocation fail, all other allocation attempts
+will also fail due to the alignment constraint being taken into account.
+Hence the initial attempt needs to set the "alignment slop" field so
+that alignment, while not required, must be taken into account when
+determining if there is enough space left in the AG to do the allocation.
+
+That means if the exact allocation fails, we will not dirty the freelist
+if there is not enough space available fo a subsequent allocation to
+succeed. Hence we get an ENOSPC error back to userspace without shutting
+down the filesystem.
+
+Date:  Tue Mar 25 15:13:28 AEDT 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30699a
+fs/xfs/xfs_ialloc.c - 1.198 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.198&r2=text&tr2=1.197&f=h
+	- Account for inode cluster allocation alignment even when trying to allocate
+	  at an exact block. This prevents a failed exact allocation attempt from
+	  dirtying the transaction when the conditions are such that no allocation
+	  can succeed.
