@@ -1,47 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 24 Mar 2008 23:55:42 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2P6tVwA011171
-	for <xfs@oss.sgi.com>; Mon, 24 Mar 2008 23:55:33 -0700
-Subject: PARTIAL TAKE 976035 - remove most calls to VN_RELE
-Message-Id: <20080325065601.5CD2D58C4C0F@chook.melbourne.sgi.com>
-Date: Tue, 25 Mar 2008 17:56:01 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 05:53:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2PCrnGO015481
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 05:53:52 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C63936E32D3
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 05:54:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id HGrDUxXIq6RT5gkJ for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 05:54:23 -0700 (PDT)
+Message-ID: <47E8F5FE.8040600@sandeen.net>
+Date: Tue, 25 Mar 2008 07:54:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfsqa: call _notrun in common.dump if dump utils not
+ found
+References: <47E5CFBA.7060405@sandeen.net> <47E8703C.30603@sgi.com> <op.t8jyw8i63jf8g2@pc-bnaujok.melbourne.sgi.com> <47E87D97.9050900@sandeen.net> <47E88676.7080006@sgi.com> <47E8960D.1000801@sgi.com>
+In-Reply-To: <47E8960D.1000801@sgi.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-remove most calls to VN_RELE
+Timothy Shimmin wrote:
+> Timothy Shimmin wrote:
+>  > Eric Sandeen wrote:
+>  >> Barry Naujok wrote:
+>  >>> On Tue, 25 Mar 2008 14:23:40 +1100, Timothy Shimmin <tes@sgi.com> wrote:
+>  >>>
+>  >>>> Thanks, Eric.
+>  >>>>
+>  >>>> On IRIX:
+>  >>>>  > where xfsdump xfsrestore xfsinvutil
+>  >>>> /sbin/xfsdump
+>  >>>> /usr/sbin/xfsdump
+>  >>>> /sbin/xfsrestore
+>  >>>> /usr/sbin/xfsinvutil
+>  >>>>  > ls -l /sbin/xfsdump
+>  >>>> lrwxr-xr-x    ... /sbin/xfsdump -> ../usr/sbin/xfsdump*
+>  >>>>
+>  >>>> I'll add the IRIX xfsrestore path and wait for Russell or
+>  >>>> whoever to complain about BSD :)
+>  >>> common.config sets up environment variables for the various
+>  >>> tools used and can handle these paths. It has them for the
+>  >>> xfsprogs tools (XFS_REPAIR_PROG, XFS_DB_PROG, etc) but
+>  >>> nothing for the xfsdump tools.
+>  >>
+>  >> yeah, that may be better...
+>  >>
+>  > Okay. Fair point.
+>  > I'll change common.dump to use the XFSDUMP_PROG etc....
+>  > and common.config to set the PROG vars.
+>  >
+>  > --Tim
+>  >
+>  >
+> 
+> Okay, something like below then.
+> Note, I only test for failure in common.dump and I need
+> to filter out the fullpaths for the commands now as
+> they output their full path.
+> Oh and I changed a bit for the DEBUGDUMP which can
+> use binaries in xfstests for debugging.
+> Ughhh.
 
-Most VN_RELE calls either directly contain a XFS_ITOV or have the
-corresponding xfs_inode already in scope.  Use the IRELE helper instead
-of VN_RELE to clarify the code.  With a little more work we can kill
-VN_RELE altogether and define IRELE in terms of iput directly.
+well, I don't want to make this too much work... it's not critical.
 
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Date:  Tue Mar 25 17:54:50 AEDT 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
-Inspected by:  hch
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30710a
-fs/xfs/xfs_rtalloc.c - 1.110 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rtalloc.c.diff?r1=text&tr1=1.110&r2=text&tr2=1.109&f=h
-fs/xfs/xfs_log_recover.c - 1.336 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.336&r2=text&tr2=1.335&f=h
-fs/xfs/xfs_vfsops.c - 1.557 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.557&r2=text&tr2=1.556&f=h
-fs/xfs/xfs_mount.c - 1.421 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.421&r2=text&tr2=1.420&f=h
-fs/xfs/quota/xfs_qm_syscalls.c - 1.38 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
-fs/xfs/quota/xfs_qm.c - 1.60 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.60&r2=text&tr2=1.59&f=h
-	- remove most calls to VN_RELE
+-eric
