@@ -1,285 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 19:26:03 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 20:27:15 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2Q2PiCW027868
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 19:25:46 -0700
-Message-ID: <47E9B5E3.7050007@sgi.com>
-Date: Wed, 26 Mar 2008 13:33:07 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2Q3R2aP008192
+	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 20:27:05 -0700
+Message-ID: <47E9C29E.6090703@sgi.com>
+Date: Wed, 26 Mar 2008 14:27:26 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] kill mrlock_t
-References: <20080320093940.GA28966@lst.de>
-In-Reply-To: <20080320093940.GA28966@lst.de>
+Subject: Re: [opensuse] nfs_update_inode: inode X mode changed, Y to Z
+References: <47CF62C5.7000908@m2000.com>    <18384.50909.866848.966192@notabene.brown>    <9a8748490803121513w285cd45rb6b26a3d842cac1b@mail.gmail.com>    <20080312221511.GC31632@fieldses.org>    <9a8748490803121516u36395872i70cc88b0439adc74@mail.gmail.com>    <18394.1501.991087.80264@notabene.brown> <47DAEFD0.9020407@m2000.com>    <47E92F8E.7030504@m2000.com> <20080325190943.GF2237@fieldses.org>    <32953.192.168.1.70.1206477121.squirrel@neil.brown.name>    <20080325212425.GA20257@josefsipek.net> <34178.192.168.1.70.1206481102.squirrel@neil.brown.name>
+In-Reply-To: <34178.192.168.1.70.1206481102.squirrel@neil.brown.name>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: NeilBrown <neilb@suse.de>
+Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, "J. Bruce Fields" <bfields@fieldses.org>, xfs@oss.sgi.com, Adam Schrotenboer <adam@m2000.com>, Jesper Juhl <jesper.juhl@gmail.com>, Trond Myklebust <trond.myklebust@netapp.com>, lkml@vger.kernel.org, linux-nfs@vger.kernel.org, Thomas Daniel <tdaniel@m2000.com>, Frederic Revenu <frevenu@m2000.com>, Jeff Doan <jdoan@m2000.com>
 
-I like the idea but the i_lock_state thing needs work.  See comments below.
+Hi Neil,
 
-Christoph Hellwig wrote:
-> XFS inodes are locked via the xfs_ilock family of functions which
-> internally use a rw_semaphore wrapper into an abstraction called
-> mrlock_t.  The mrlock_t should be purely internal to xfs_ilock functions
-> but leaks through to the callers via various lock state asserts.
+NeilBrown wrote:
+> On Wed, March 26, 2008 8:24 am, Josef 'Jeff' Sipek wrote:
 > 
-> This patch:
+>> Unless you specify the "ikeep" mount option, XFS will remove unused inode
+>> clusters.  The newly freed blocks can be then used to store data or
+>> possibly
+>> a new inode cluster.  If the blocks get reused for inodes, you'll end up
+>> with inodes whose generation numbers regressed. (inode number = f(block
+>> number))
+>>
+>> Using the "ikeep" mount option causes to _never_ free empty inode
+>> clusters.
+>> This means that if you create many files and then unlink them, you'll end
+>> up
+>> with many unused inodes that are still allocated (and taking up disk
+>> space)
+>> but free to be used by the next creat(2)/mkdir(2)/etc..
+>>
+>> This "problem" is inherent to any file system which dynamically allocates
+>> inodes.
 > 
->  - adds new xfs_isilocked abstraction to make the lock state asserts
->    fits into the xfs_ilock API family
->  - opencodes the mrlock wrappers in the xfs_ilock family of functions
->  - makes the state tracking debug-only and merged into a single state
->    word
->  - remove superflous flags to the xfs_ilock family of functions
+> Yes, I understand all that.
 > 
-> This kills 8 bytes per inode for non-debug builds, which would e.g.
-> be the space for ACL caching on 32bit systems.
+> However you still need to do something about the generation number.  It
+> must be set to something.
 > 
+> When you allocate an inode that doesn't currently exist on the device,
+> you obviously cannot increment the old value and use that.
+> However you can do a lot better than always using 0.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
->   */
->  void
-> -xfs_ilock(xfs_inode_t	*ip,
-> -	  uint		lock_flags)
-> +xfs_ilock(
-> +	xfs_inode_t		*ip,
-> +	uint			lock_flags)
->  {
->  	/*
->  	 * You can't set both SHARED and EXCL for the same lock,
-> @@ -608,16 +608,19 @@ xfs_ilock(xfs_inode_t	*ip,
->  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
->  
->  	if (lock_flags & XFS_IOLOCK_EXCL) {
-> -		mrupdate_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
-> +		down_write_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
->  	} else if (lock_flags & XFS_IOLOCK_SHARED) {
-> -		mraccess_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
-> +		down_read_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
->  	}
->  	if (lock_flags & XFS_ILOCK_EXCL) {
-> -		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-> +		down_write_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
->  	} else if (lock_flags & XFS_ILOCK_SHARED) {
-> -		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
-> +		down_read_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
->  	}
->  	xfs_ilock_trace(ip, 1, lock_flags, (inst_t *)__return_address);
-> +#ifdef DEBUG
-> +	ip->i_lock_state |= (lock_flags & (XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> +#endif
-This seems racy - if we only acquire one of ilock/iolock exclusive and another
-thread acquires the other lock exclusive then we'll race setting i_lock_state.
+Yes, this is a known problem.
+We came across it in about August last year I believe in the context of
+DMF as it wants to keep persistent file handles with gen#s in them:
+   SGI bug:
+   969192: Default mount option "noikeep" makes the inode generation number non-persistent
+I vaguely remember at the time that a number of different schemes were
+tossed around but in the end we just turned off the ikeep
+for DMAPI mounted filesystems.
+I thought we had a bug open to do a real fix but can't see
+it at the moment. Will look into it and discuss with our group.
 
->  }
->  
->  /*
-> @@ -634,11 +637,12 @@ xfs_ilock(xfs_inode_t	*ip,
->   *
->   */
->  int
-> -xfs_ilock_nowait(xfs_inode_t	*ip,
-> -		 uint		lock_flags)
-> +xfs_ilock_nowait(
-> +	xfs_inode_t		*ip,
-> +	uint			lock_flags)
->  {
-> -	int	iolocked;
-> -	int	ilocked;
-> +	int			iolocked;
-> +	int			ilocked;
->  
->  	/*
->  	 * You can't set both SHARED and EXCL for the same lock,
-> @@ -653,35 +657,36 @@ xfs_ilock_nowait(xfs_inode_t	*ip,
->  
->  	iolocked = 0;
->  	if (lock_flags & XFS_IOLOCK_EXCL) {
-> -		iolocked = mrtryupdate(&ip->i_iolock);
-> -		if (!iolocked) {
-> +		iolocked = down_write_trylock(&ip->i_iolock);
-> +		if (!iolocked)
->  			return 0;
-> -		}
->  	} else if (lock_flags & XFS_IOLOCK_SHARED) {
-> -		iolocked = mrtryaccess(&ip->i_iolock);
-> -		if (!iolocked) {
-> +		iolocked = down_read_trylock(&ip->i_iolock);
-> +		if (!iolocked)
->  			return 0;
-> -		}
->  	}
-> +
->  	if (lock_flags & XFS_ILOCK_EXCL) {
-> -		ilocked = mrtryupdate(&ip->i_lock);
-> -		if (!ilocked) {
-> -			if (iolocked) {
-> -				mrunlock(&ip->i_iolock);
-> -			}
-> -			return 0;
-> -		}
-> +		ilocked = down_write_trylock(&ip->i_lock);
-> +		if (!ilocked)
-> +			goto out_ilock_fail;
->  	} else if (lock_flags & XFS_ILOCK_SHARED) {
-> -		ilocked = mrtryaccess(&ip->i_lock);
-> -		if (!ilocked) {
-> -			if (iolocked) {
-> -				mrunlock(&ip->i_iolock);
-> -			}
-> -			return 0;
-> -		}
-> +		ilocked = down_read_trylock(&ip->i_lock);
-> +		if (!ilocked)
-> +			goto out_ilock_fail;
->  	}
->  	xfs_ilock_trace(ip, 2, lock_flags, (inst_t *)__return_address);
-> +#ifdef DEBUG
-> +	ip->i_lock_state |= (lock_flags & (XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> +#endif
-Same deal, setting i_lock_state looks racy.
-
->  	return 1;
-> +
-> + out_ilock_fail:
-> +	if (lock_flags & XFS_IOLOCK_EXCL)
-> +		up_write(&ip->i_iolock);
-> +	else if (lock_flags & XFS_IOLOCK_SHARED)
-> +		up_read(&ip->i_iolock);
-> +	return 0;
->  }
->  
->  /*
-> @@ -697,8 +702,9 @@ xfs_ilock_nowait(xfs_inode_t	*ip,
->   *
->   */
->  void
-> -xfs_iunlock(xfs_inode_t	*ip,
-> -	    uint	lock_flags)
-> +xfs_iunlock(
-> +	xfs_inode_t		*ip,
-> +	uint			lock_flags)
->  {
->  	/*
->  	 * You can't set both SHARED and EXCL for the same lock,
-> @@ -711,35 +717,33 @@ xfs_iunlock(xfs_inode_t	*ip,
->  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
->  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_IUNLOCK_NONOTIFY |
->  			XFS_LOCK_DEP_MASK)) == 0);
-> +	ASSERT(ip->i_lock_state & lock_flags);
-This assertion will always fail when *_SHARED flags are present in
-lock_flags.
-
->  	ASSERT(lock_flags != 0);
->  
-> -	if (lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) {
-> -		ASSERT(!(lock_flags & XFS_IOLOCK_SHARED) ||
-> -		       (ismrlocked(&ip->i_iolock, MR_ACCESS)));
-> -		ASSERT(!(lock_flags & XFS_IOLOCK_EXCL) ||
-> -		       (ismrlocked(&ip->i_iolock, MR_UPDATE)));
-> -		mrunlock(&ip->i_iolock);
-> -	}
-> -
-> -	if (lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) {
-> -		ASSERT(!(lock_flags & XFS_ILOCK_SHARED) ||
-> -		       (ismrlocked(&ip->i_lock, MR_ACCESS)));
-> -		ASSERT(!(lock_flags & XFS_ILOCK_EXCL) ||
-> -		       (ismrlocked(&ip->i_lock, MR_UPDATE)));
-> -		mrunlock(&ip->i_lock);
-> +	if (lock_flags & XFS_IOLOCK_EXCL)
-> +		up_write(&ip->i_iolock);
-> +	else if (lock_flags & XFS_IOLOCK_SHARED)
-> +		up_read(&ip->i_iolock);
-> +
-> +	if (lock_flags & XFS_ILOCK_EXCL)
-> +		up_write(&ip->i_lock);
-> +	else if (lock_flags & (XFS_ILOCK_SHARED))
-> +		up_read(&ip->i_lock);
->  
-> +	if ((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) &&
-> +	    !(lock_flags & XFS_IUNLOCK_NONOTIFY) && ip->i_itemp) {
->  		/*
->  		 * Let the AIL know that this item has been unlocked in case
->  		 * it is in the AIL and anyone is waiting on it.  Don't do
->  		 * this if the caller has asked us not to.
->  		 */
-> -		if (!(lock_flags & XFS_IUNLOCK_NONOTIFY) &&
-> -		     ip->i_itemp != NULL) {
-> -			xfs_trans_unlocked_item(ip->i_mount,
-> -						(xfs_log_item_t*)(ip->i_itemp));
-> -		}
-> +		xfs_trans_unlocked_item(ip->i_mount,
-> +					(xfs_log_item_t *)ip->i_itemp);
->  	}
->  	xfs_ilock_trace(ip, 3, lock_flags, (inst_t *)__return_address);
-> +#ifdef DEBUG
-> +	ip->i_lock_state &= ~(lock_flags & (XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> +#endif
-This seems racy - another thread could have acquired the ilock/iolock and set
-the flags before we get here and remove the flags.  Unsetting the flags before
-we release the lock would still be racy if both iolock and ilock are released
-at the same time by different threads.
-
->  }
->  
->  /*
-> @@ -747,21 +751,42 @@ xfs_iunlock(xfs_inode_t	*ip,
->   * if it is being demoted.
->   */
->  void
-> -xfs_ilock_demote(xfs_inode_t	*ip,
-> -		 uint		lock_flags)
-> +xfs_ilock_demote(
-> +	xfs_inode_t		*ip,
-> +	uint			lock_flags)
->  {
->  	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL));
->  	ASSERT((lock_flags & ~(XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
-> +	ASSERT(ip->i_lock_state & lock_flags);
->  
-> -	if (lock_flags & XFS_ILOCK_EXCL) {
-> -		ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
-> -		mrdemote(&ip->i_lock);
-> -	}
-> -	if (lock_flags & XFS_IOLOCK_EXCL) {
-> -		ASSERT(ismrlocked(&ip->i_iolock, MR_UPDATE));
-> -		mrdemote(&ip->i_iolock);
-> -	}
-> +	if (lock_flags & XFS_ILOCK_EXCL)
-> +		downgrade_write(&ip->i_lock);
-> +	if (lock_flags & XFS_IOLOCK_EXCL)
-> +		downgrade_write(&ip->i_iolock);
-> +
-> +#ifdef DEBUG
-> +	ip->i_lock_state &= ~lock_flags;
-> +#endif
-> +}
-> +
-> +#ifdef DEBUG
-> +/*
-> + * Debug-only routine, without additional rw_semaphore APIs, we can
-> + * now only answer requests regarding whether we hold the lock for write
-> + * (reader state is outside our visibility, we only track writer state).
-> + *
-> + * Note: means !xfs_isilocked would give false positives, so don't do that.
-> + */
-> +int
-> +xfs_isilocked(
-> +	xfs_inode_t		*ip,
-> +	uint			lock_flags)
-> +{
-> +	if (lock_flags & (XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL))
-> +		return (ip->i_lock_state & lock_flags);
-> +	return 1;
->  }
-> +#endif
->  
-
-Splitting i_lock_state into two separate fields - one for each lock - and
-unsetting the fields prior to releasing/demoting the lock might be enough
-to solve all these races.
+Cheers,
+--Tim
