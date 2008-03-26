@@ -1,38 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 25 Mar 2008 23:53:43 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2Q6rVKP020968
-	for <xfs@oss.sgi.com>; Tue, 25 Mar 2008 23:53:33 -0700
-Subject: PARTIAL TAKE 976035 - Prevent xfs_bmap_check_leaf_extents() from referencing unmapped memory.
-Message-Id: <20080326065400.CD6F158C4C0F@chook.melbourne.sgi.com>
-Date: Wed, 26 Mar 2008 17:54:00 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 26 Mar 2008 00:54:01 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2Q7rpbG031393
+	for <xfs@oss.sgi.com>; Wed, 26 Mar 2008 00:53:52 -0700
+Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D9B58E12DC
+	for <xfs@oss.sgi.com>; Wed, 26 Mar 2008 00:54:25 -0700 (PDT)
+Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64]) by cuda.sgi.com with ESMTP id p0qyOZ5iyghj8XLB for <xfs@oss.sgi.com>; Wed, 26 Mar 2008 00:54:25 -0700 (PDT)
+Date: Wed, 26 Mar 2008 08:51:22 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Serious XFS crash
+Message-ID: <20080326085122.2b60f7c7@galadriel.home>
+In-Reply-To: <20080325233611.GW103491721@sgi.com>
+References: <20080325185453.3a1957dd@galadriel.home>
+	<20080325233611.GW103491721@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Prevent xfs_bmap_check_leaf_extents() from referencing unmapped memory.
+Le Wed, 26 Mar 2008 10:36:11 +1100 vous écriviez:
 
-While investigating the extent corruption bug I ran into this bug in
-debug only code.  xfs_bmap_check_leaf_extents() loops through the leaf
-blocks of the extent btree checking that every extent is entirely
-before the next extent.  It also compares the last extent in the previous
-block to the first extent in the current block when the previous block
-has been released and potentially unmapped.  So take a copy of the last
-extent instead of a pointer.  Also move the last extent check out of the
-loop because we only need to do it once.
+> So none of the magic numbers for a directory block match.
+> And FWIW, I can't see any XFs magic number in that block.
+> 
 
-Date:  Wed Mar 26 17:53:07 AEDT 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-xfs
-Inspected by:  hch
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+There weren't any directory. As a matter of fact this FS was used to
+dump (thru samba) big videos files for later use. After the repair,
+there were several directories in lost+found, though...
 
 
-Modid:  xfs-linux-melb:xfs-kern:30718a
-fs/xfs/xfs_bmap.c - 1.387 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.387&r2=text&tr2=1.386&f=h
-	- Prevent xfs_bmap_check_leaf_extents() from referencing unmapped memory.
+> Oh, that's toast. Something has overwritten the start of the
+> filesystem and it does not appear to be other metadata.  Well, not
+> exactly the start of the filesystem - the superblock is untouched.
+> 
+
+That's weird. 
+
+> What sector size is being used for the XFS filesystem?
+
+Well the /dev/md0 uses 4KB blocks as default IIRC. I'll have to check
+this.
+
+> If it's
+> not the same as teh filesystem block size, then XFS can't have done
+> this itself because the offset that this garbage starts at would
+> not be block aligned.....
+
+Could it be an md bug then? I also had some IO errors on this setup
+lately due to a dead disk, but I've changed it and it looked OK since
+then, until yesterday.
+
+regards,
+Emmmanuel.
+
+-- 
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   
+--------------------------------------------------
