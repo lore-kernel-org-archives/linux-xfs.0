@@ -1,40 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Mar 2008 01:21:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 27 Mar 2008 09:31:57 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2R8LGIL002361
-	for <xfs@oss.sgi.com>; Thu, 27 Mar 2008 01:21:19 -0700
-Date: Thu, 27 Mar 2008 09:21:40 +0100 (CET)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: [dm-crypt] INFO: task mount:11202 blocked for more than 120
- seconds
-In-Reply-To: <alpine.DEB.1.00.0803220348520.17137@sheep.housecafe.de>
-Message-ID: <alpine.DEB.1.10.0803270918450.5041@sheep.housecafe.de>
-References: <alpine.DEB.1.00.0803072116420.7723@sheep.housecafe.de> <200803150108.04008.chunkeey@web.de> <200803151432.11125.chunkeey@web.de> <200803152234.53199.chunkeey@web.de> <alpine.DEB.1.00.0803161406040.6213@sheep.housecafe.de>
- <20080317173609.GD29322@agk.fab.redhat.com> <alpine.DEB.1.00.0803220348520.17137@sheep.housecafe.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2RGViZ4022864
+	for <xfs@oss.sgi.com>; Thu, 27 Mar 2008 09:31:46 -0700
+Received: from ext.agami.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CF74104824F
+	for <xfs@oss.sgi.com>; Thu, 27 Mar 2008 09:32:18 -0700 (PDT)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id cUtfWOIddgVbMZEK for <xfs@oss.sgi.com>; Thu, 27 Mar 2008 09:32:18 -0700 (PDT)
+Received: from agami.com (mail [192.168.168.5])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m2RGUn3M022386
+	for <xfs@oss.sgi.com>; Thu, 27 Mar 2008 09:31:53 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id m2R0u4jc026339
+	for <xfs@oss.sgi.com>; Wed, 26 Mar 2008 17:56:04 -0700
+Message-ID: <47EAF0BA.4040909@agami.com>
+Date: Wed, 26 Mar 2008 17:56:26 -0700
+From: Michael Nishimoto <miken@agami.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: accounting disk quotas in space reservation
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alasdair G Kergon <agk@redhat.com>
-Cc: Chr <chunkeey@web.de>, Milan Broz <mbroz@redhat.com>, David Chinner <dgc@sgi.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, dm-devel@redhat.com, dm-crypt@saout.de, Herbert Xu <herbert@gondor.apana.org.au>, Ritesh Raj Sarraf <rrs@researchut.com>
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-On Sat, 22 Mar 2008, Christian Kujau wrote:
-> On Mon, 17 Mar 2008, Alasdair G Kergon wrote:
->> From: Milan Broz <mbroz@redhat.com>
->> 
->> Fix regression in dm-crypt introduced in commit
->> 3a7f6c990ad04e6f576a159876c602d14d6f7fef
->> (dm crypt: use async crypto).
+Hi,
 
-I noticed that this patch[0] hasn't made it into mainline yet,
-will this be included or is this fixed by something else?
+When allocating a space reservation at xfs_trans_reserve time,
+it doesn't look like xfs takes into account new disk blocks which
+might get allocated in the quota DBs.  There is code to handle the
+log reservation for disk quotas, but I don't see anything for
+the space reservation.
 
-Thanks,
-Christian.
+Am I missing something?
 
-[0] http://lkml.org/lkml/2008/3/17/214
--- 
-BOFH excuse #416:
+thanks,
 
-We're out of slots on the server
+    Michael
