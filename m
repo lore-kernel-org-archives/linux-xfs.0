@@ -1,51 +1,127 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Mar 2008 18:44:44 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Mar 2008 20:03:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2V1iZ0Z009001
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 18:44:37 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2V337L4017874
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 20:03:08 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A71008AC28F
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 18:45:11 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id oobFsbHEdVKLpDgk for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 18:45:11 -0700 (PDT)
-Message-ID: <47F04225.4030405@sandeen.net>
-Date: Sun, 30 Mar 2008 20:45:09 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EDC88CA46E
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 20:03:42 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id R24Tv8210m3su3k4 for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 20:03:42 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 0BA94180307E3
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 22:03:09 -0500 (CDT)
+Message-ID: <47F0546C.9070709@sandeen.net>
+Date: Sun, 30 Mar 2008 22:03:08 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] fix attr fit checking for filesystems which have
- lost their attr2
-References: <47EDCBF9.4070102@sandeen.net> <47F035E3.1030004@sgi.com>
-In-Reply-To: <47F035E3.1030004@sgi.com>
+Subject: [PATCH] combined features2 fixup patches (updating/rewriting what
+ was sent in other threads)
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-Timothy Shimmin wrote:
-> Hi Eric,
-> 
-> Eric Sandeen wrote:
-...
+Ensure "both" features2 slots are consistent, and set mp attr2 flag.
 
+Since older kernels may look in the sb_bad_features2 slot for
+flags, rather than zeroing it out on fixup, we should make it 
+equal to the sb_features2 value.
 
->> My understanding of this is that if di_forkoff is non-zero,
->> we should always be using it for space calculations, regardless
->> of whether we are mounted with attr2 or not...
->>
-> That was my understanding as well.
-> I'll have a look at the code soon and see if I can
-> see any problems with the change and the consistency
-> of it all.
-> 
-> Thanks a bunch,
-> Tim.
+Also, if the ATTR2 flag was not found prior to features2
+fixup, it was not set in the mount flags, so re-check after the
+fixup so that the current session will use the feature.
 
-Thanks.  FWIW, if I install F8 with bona-fide attr2 in effect, with
-selinux (so attrs on everything) and then update it while mounted as an
-attr1 filesystem, with this patch in place, it does not result in
-anything bad as far as xfs_repair can see.   (and it's a big update,
-probably touching most files...)
+Also fix up the comments to reflect these changes.
 
--Eric
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c
+@@ -967,22 +967,26 @@ xfs_mountfs(
+ 	xfs_mount_common(mp, sbp);
+ 
+ 	/*
+-	 * Check for a bad features2 field alignment. This happened on
+-	 * some platforms due to xfs_sb_t not being 64bit size aligned
+-	 * when sb_features was added and hence the compiler put it in
+-	 * the wrong place.
++	 * Check for a mismatched features2 values.  Older kernels
++	 * read & wrote into the wrong sb offset for sb_features2
++	 * on some platforms due to xfs_sb_t not being 64bit size aligned
++	 * when sb_features2 was added, which made older superblock
++	 * reading/writing routines swap it as a 64-bit value.
+ 	 *
+-	 * If we detect a bad field, we or the set bits into the existing
+-	 * features2 field in case it has already been modified and we
+-	 * don't want to lose any features. Zero the bad one and mark
+-	 * the two fields as needing updates once the transaction subsystem
+-	 * is online.
++	 * For backwards compatibility, we make both slots equal.
++	 *
++	 * If we detect a mismatched field, we OR the set bits into the
++	 * existing features2 field in case it has already been modified; we
++	 * don't want to lose any features.  We then update the bad location
++	 * with the ORed value so that older kernels will see any features2
++	 * flags, and mark the two fields as needing updates once the 
++	 * transaction subsystem is online.
+ 	 */
+-	if (xfs_sb_has_bad_features2(sbp)) {
++	if (xfs_sb_has_mismatched_features2(sbp)) {
+ 		cmn_err(CE_WARN,
+ 			"XFS: correcting sb_features alignment problem");
+ 		sbp->sb_features2 |= sbp->sb_bad_features2;
+-		sbp->sb_bad_features2 = 0;
++		sbp->sb_bad_features2 = sbp->sb_features2;
+ 		update_flags |= XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
+ 	}
+ 
+@@ -1181,6 +1185,12 @@ xfs_mountfs(
+ 		xfs_mount_log_sb(mp, update_flags);
+ 
+ 	/*
++	 * Re-check for ATTR2 in case it was found in bad_features2 slot.
++	 */
++	if (xfs_sb_version_hasattr2(&mp->m_sb))
++		mp->m_flags |= XFS_MOUNT_ATTR2;
++
++	/*
+ 	 * Initialise the XFS quota management subsystem for this mount
+ 	 */
+ 	error = XFS_QM_INIT(mp, &quotamount, &quotaflags);
+@@ -1890,7 +1900,8 @@ xfs_uuid_unmount(
+ 
+ /*
+  * Used to log changes to the superblock unit and width fields which could
+- * be altered by the mount options. Only the first superblock is updated.
++ * be altered by the mount options, as well as any potential sb_features2
++ * fixup. Only the first superblock is updated.
+  */
+ STATIC void
+ xfs_mount_log_sb(
+Index: linux-2.6-xfs/fs/xfs/xfs_sb.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_sb.h
++++ linux-2.6-xfs/fs/xfs/xfs_sb.h
+@@ -320,11 +320,12 @@ static inline int xfs_sb_good_version(xf
+ #endif /* __KERNEL__ */
+ 
+ /*
+- * Detect a bad features2 field
++ * Detect a mismatched features2 field.  Older kernels read/wrote
++ * this into the wrong slot, so to be safe we keep them in sync.
+  */
+-static inline int xfs_sb_has_bad_features2(xfs_sb_t *sbp)
++static inline int xfs_sb_has_mismatched_features2(xfs_sb_t *sbp)
+ {
+-	return (sbp->sb_bad_features2 != 0);
++	return (sbp->sb_bad_features2 != sbp->sb_features2);
+ }
+ 
+ static inline unsigned xfs_sb_version_tonew(unsigned v)
