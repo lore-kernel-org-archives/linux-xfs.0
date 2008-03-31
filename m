@@ -1,100 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Mar 2008 17:06:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m2V06DcO017878
-	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 17:06:15 -0700
-Date: Mon, 31 Mar 2008 10:06:35 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [RFC PATCH 1/2] Implement generic freeze feature
-Message-ID: <20080331000635.GJ108924158@sgi.com>
-References: <20080328180522t-sato@mail.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080328180522t-sato@mail.jp.nec.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 30 Mar 2008 17:31:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2V0V5HB026469
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 17:31:08 -0700
+Received: from server.dwo.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B8956711F00
+	for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 17:31:40 -0700 (PDT)
+Received: from server.dwo.hu (server.dwo.hu [87.229.110.63]) by cuda.sgi.com with ESMTP id gvCtP355gFjnfKoa for <xfs@oss.sgi.com>; Sun, 30 Mar 2008 17:31:40 -0700 (PDT)
+From: =?iso-8859-2?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Subject: RE: free space problem
+Date: Mon, 31 Mar 2008 02:31:16 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-2"
+In-Reply-To: <20080330235444.7d357bb6@galadriel.home>
+Message-Id: <20080331003140.B8956711F00@cuda.sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: David Chinner <dgc@sgi.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: 'Emmanuel Florac' <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 28, 2008 at 06:05:22PM +0900, Takashi Sato wrote:
-> The ioctls for the generic freeze feature are below.
-> o Freeze the filesystem
->   int ioctl(int fd, int FIFREEZE, arg)
->     fd: The file descriptor of the mountpoint
->     FIFREEZE: request code for the freeze
->     arg: Ignored
->     Return value: 0 if the operation succeeds. Otherwise, -1
-> 
-> o Unfreeze the filesystem
->   int ioctl(int fd, int FITHAW, arg)
->     fd: The file descriptor of the mountpoint
->     FITHAW: request code for unfreeze
->     arg: Ignored
->     Return value: 0 if the operation succeeds. Otherwise, -1
+There is nothing extraordinary in it, you can see umount-mount and that it
+was mounted after all xfs activity (check, repair, db).
 
-Patch below to remove the XFS specific ioctl interfaces for this
-functionality.
+root@mailslave:/home/void# grep -i xfs /var/log/{messages,kern.log,syslog}
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: SGI XFS with ACLs,
+security attributes, realtime, large block/inode numbers, no debug enabled
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: SGI XFS Quota
+Management subsystem
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: XFS mounting
+filesystem md1
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: Ending clean XFS mount
+for filesystem: md1
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 18 01:46:08 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: SGI XFS with ACLs,
+security attributes, realtime, large block/inode numbers, no debug enabled
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: SGI XFS Quota
+Management subsystem
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: XFS mounting
+filesystem md1
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: Ending clean XFS mount
+for filesystem: md1
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 18 02:23:16 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: SGI XFS with ACLs,
+security attributes, realtime, large block/inode numbers, no debug enabled
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: SGI XFS Quota
+Management subsystem
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: XFS mounting
+filesystem md1
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: Ending clean XFS mount
+for filesystem: md1
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 18 02:34:13 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: SGI XFS with ACLs,
+security attributes, realtime, large block/inode numbers, no debug enabled
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: SGI XFS Quota
+Management subsystem
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: XFS mounting
+filesystem md1
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: Ending clean XFS mount
+for filesystem: md1
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 20 09:57:50 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 26 22:05:54 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 26 22:05:54 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 27 04:32:09 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 27 04:32:09 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 27 04:36:54 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 27 04:36:54 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
+/var/log/kern.log:Mar 27 05:02:29 mailslave kernel: XFS mounting
+filesystem dm-0
+/var/log/kern.log:Mar 27 05:02:29 mailslave kernel: Ending clean XFS mount
+for filesystem: dm-0
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/linux-2.6/xfs_ioctl.c   |   15 ---------------
- fs/xfs/linux-2.6/xfs_ioctl32.c |    2 --
- fs/xfs/xfs_fs.h                |    4 ++--
- 3 files changed, 2 insertions(+), 19 deletions(-)
+-----Original Message-----
+From: Emmanuel Florac [mailto:eflorac@intellique.com] 
+Sent: Sunday, March 30, 2008 11:55 PM
+To: Huszár Viktor Dénes
+Cc: xfs@oss.sgi.com
+Subject: Re: free space problem
 
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-03-31 08:33:19.000000000 +1000
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl.c	2008-03-31 09:06:08.531294896 +1000
-@@ -1228,21 +1228,6 @@ xfs_ioctl(
- 		return -error;
- 	}
+Le Sun, 30 Mar 2008 22:29:06 +0200 vous écriviez:
+
+>  We run
+> 2.6.23 kernel.
+
+Look in /var/log/messages and the output of dmesg command for xfs
+related messages and post them here, please. 
+
+-- 
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   
+--------------------------------------------------
+
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 2985 (20080330) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+
  
--	case XFS_IOC_FREEZE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EPERM;
--
--		if (inode->i_sb->s_frozen == SB_UNFROZEN)
--			freeze_bdev(inode->i_sb->s_bdev, 0);
--		return 0;
--
--	case XFS_IOC_THAW:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EPERM;
--		if (inode->i_sb->s_frozen != SB_UNFROZEN)
--			thaw_bdev(inode->i_sb->s_bdev, inode->i_sb);
--		return 0;
--
- 	case XFS_IOC_GOINGDOWN: {
- 		__uint32_t in;
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 2985 (20080330) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
  
-Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl32.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2007-11-20 16:12:45.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-03-31 09:06:38.011484411 +1000
-@@ -398,8 +398,6 @@ xfs_compat_ioctl(
- 	case XFS_IOC_FSGROWFSDATA:
- 	case XFS_IOC_FSGROWFSLOG:
- 	case XFS_IOC_FSGROWFSRT:
--	case XFS_IOC_FREEZE:
--	case XFS_IOC_THAW:
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
-Index: 2.6.x-xfs-new/fs/xfs/xfs_fs.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_fs.h	2007-11-20 18:38:49.000000000 +1100
-+++ 2.6.x-xfs-new/fs/xfs/xfs_fs.h	2008-03-31 09:09:54.902040723 +1000
-@@ -473,8 +473,8 @@ typedef struct xfs_handle {
- #define XFS_IOC_ERROR_INJECTION	     _IOW ('X', 116, struct xfs_error_injection)
- #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
- /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
--#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
--#define XFS_IOC_THAW		     _IOWR('X', 120, int)
-+/*	XFS_IOC_FREEZE		  -- FIFREEZE   119	 */
-+/*	XFS_IOC_THAW		  -- FITHAW     120	 */
- #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
- #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
