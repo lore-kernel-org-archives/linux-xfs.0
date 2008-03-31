@@ -1,75 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 07:04:17 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 10:37:00 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2VE49T9005820
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 07:04:09 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E8518D0C26
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 07:04:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id aC7DdX9RrmQGSVPl for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 07:04:43 -0700 (PDT)
-Message-ID: <47F0E7E6.8000006@sandeen.net>
-Date: Mon, 31 Mar 2008 08:32:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2VHaonV007831
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 10:36:52 -0700
+Received: from server.dwo.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 24BB68D1DF4
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 10:37:24 -0700 (PDT)
+Received: from server.dwo.hu (server.dwo.hu [87.229.110.63]) by cuda.sgi.com with ESMTP id WDQQNwaApTK0tr7l for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 10:37:24 -0700 (PDT)
+From: =?iso-8859-2?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Subject: RE: free space problem
+Date: Mon, 31 Mar 2008 19:36:56 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] fix attr fit checking for filesystems which have
- lost their attr2
-References: <47EDCBF9.4070102@sandeen.net> <47F035E3.1030004@sgi.com> <47F06A8B.4090609@sgi.com> <47F086C8.7070400@sgi.com>
-In-Reply-To: <47F086C8.7070400@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-2"
+In-Reply-To: <20080331093951.100ec125@galadriel.home>
+Message-Id: <20080331173724.24BB68D1DF4@cuda.sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
 
-Timothy Shimmin wrote:
-> Eric,
-> 
-> So probably need something like this for xfs_bmap_compute_maxlevels()...
+-----Original Message-----
+From: Emmanuel Florac [mailto:eflorac@intellique.com] 
+Sent: Monday, March 31, 2008 9:40 AM
+To: Huszár Viktor Dénes; xfs@oss.sgi.com
+Subject: Re: free space problem
 
-Yep, I think that looks good.  I had forgotten that you could mount with
-"noattr2" to change the default behavior... so this isn't only a bug
-w.r.t. bad_features2, is it.
+Le Mon, 31 Mar 2008 02:31:16 +0200 vous écriviez:
 
-Thanks,
+>Then maybe you simply ran out of inodes. It's common if you have lots
+>of small files. There is a way to increase the number of inodes but I
+>don't remember it right now.
+--
+No, unfortunately not. There are not many small files and the inode usage is
+1%. See.
 
--Eric
+/bin/df -i
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/md0             5494272  154415 5339857    3% /
+tmpfs                2056252       5 2056247    1% /lib/init/rw
+udev                 2056252     487 2055765    1% /dev
+tmpfs                2056252      10 2056242    1% /dev/shm
+/dev/mapper/a-a      88427616  867107 87560509    1% /var/www/users
+ 
 
-> 
-> --Tim
-> 
-> ===========================================================================
-> Index: fs/xfs/xfs_bmap.c
-> ===========================================================================
-> 
-> --- a/fs/xfs/xfs_bmap.c	2008-03-31 16:32:24.000000000 +1000
-> +++ b/fs/xfs/xfs_bmap.c	2008-03-31 16:21:11.439806073 +1000
-> @@ -4154,16 +4154,21 @@ xfs_bmap_compute_maxlevels(
->   	 * number of leaf entries, is controlled by the type of di_nextents
->   	 * (a signed 32-bit number, xfs_extnum_t), or by di_anextents
->   	 * (a signed 16-bit number, xfs_aextnum_t).
-> +	 *
-> +	 * Note that we can no longer assume that if we are in ATTR1 that
-> +	 * the fork offset of all the inodes will be (m_attroffset >> 3)
-> +	 * because we could have mounted with ATTR2 and then mounted back
-> +	 * with ATTR1, keeping the di_forkoff's fixed but probably at
-> +	 * various positions. Therefore, for both ATTR1 and ATTR2
-> +	 * we have to assume the worst case scenario of a minimum size
-> +	 * available.
->   	 */
->   	if (whichfork == XFS_DATA_FORK) {
->   		maxleafents = MAXEXTNUM;
-> -		sz = (mp->m_flags & XFS_MOUNT_ATTR2) ?
-> -			XFS_BMDR_SPACE_CALC(MINDBTPTRS) : mp->m_attroffset;
-> +		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
->   	} else {
->   		maxleafents = MAXAEXTNUM;
-> -		sz = (mp->m_flags & XFS_MOUNT_ATTR2) ?
-> -			XFS_BMDR_SPACE_CALC(MINABTPTRS) :
-> -			mp->m_sb.sb_inodesize - mp->m_attroffset;
-> +		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
->   	}
->   	maxrootrecs = (int)XFS_BTREE_BLOCK_MAXRECS(sz, xfs_bmdr, 0);
->   	minleafrecs = mp->m_bmap_dmnr[0];
-> 
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 2987 (20080331) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+ 
