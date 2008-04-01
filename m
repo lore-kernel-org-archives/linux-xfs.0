@@ -1,113 +1,157 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 18:11:09 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 18:11:19 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m321Aogo014887
-	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 18:10:52 -0700
-Date: Wed, 2 Apr 2008 10:29:40 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m321Aogs014887
+	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 18:10:58 -0700
+Date: Wed, 2 Apr 2008 09:18:15 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] combined features2 fixup patches (updating/rewriting what was sent in other threads)
-Message-ID: <20080402002940.GZ103491721@sgi.com>
-References: <47F0546C.9070709@sandeen.net>
+Subject: [Patch] unique per-AG inode generation number initialisation
+Message-ID: <20080401231815.GW103491721@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <47F0546C.9070709@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: xfs-dev <xfs-dev@sgi.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Mar 30, 2008 at 10:03:08PM -0500, Eric Sandeen wrote:
-> Ensure "both" features2 slots are consistent, and set mp attr2 flag.
-> 
-> Since older kernels may look in the sb_bad_features2 slot for
-> flags, rather than zeroing it out on fixup, we should make it 
-> equal to the sb_features2 value.
-> 
-> Also, if the ATTR2 flag was not found prior to features2
-> fixup, it was not set in the mount flags, so re-check after the
-> fixup so that the current session will use the feature.
-> 
-> Also fix up the comments to reflect these changes.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
-> 
-> Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
-> +++ linux-2.6-xfs/fs/xfs/xfs_mount.c
-> @@ -967,22 +967,26 @@ xfs_mountfs(
->  	xfs_mount_common(mp, sbp);
->  
->  	/*
-> -	 * Check for a bad features2 field alignment. This happened on
-> -	 * some platforms due to xfs_sb_t not being 64bit size aligned
-> -	 * when sb_features was added and hence the compiler put it in
-> -	 * the wrong place.
-> +	 * Check for a mismatched features2 values.  Older kernels
-> +	 * read & wrote into the wrong sb offset for sb_features2
-> +	 * on some platforms due to xfs_sb_t not being 64bit size aligned
-> +	 * when sb_features2 was added, which made older superblock
-> +	 * reading/writing routines swap it as a 64-bit value.
->  	 *
-> -	 * If we detect a bad field, we or the set bits into the existing
-> -	 * features2 field in case it has already been modified and we
-> -	 * don't want to lose any features. Zero the bad one and mark
-> -	 * the two fields as needing updates once the transaction subsystem
-> -	 * is online.
-> +	 * For backwards compatibility, we make both slots equal.
-> +	 *
-> +	 * If we detect a mismatched field, we OR the set bits into the
-> +	 * existing features2 field in case it has already been modified; we
-> +	 * don't want to lose any features.  We then update the bad location
-> +	 * with the ORed value so that older kernels will see any features2
-> +	 * flags, and mark the two fields as needing updates once the 
-> +	 * transaction subsystem is online.
->  	 */
-> -	if (xfs_sb_has_bad_features2(sbp)) {
-> +	if (xfs_sb_has_mismatched_features2(sbp)) {
->  		cmn_err(CE_WARN,
->  			"XFS: correcting sb_features alignment problem");
->  		sbp->sb_features2 |= sbp->sb_bad_features2;
-> -		sbp->sb_bad_features2 = 0;
-> +		sbp->sb_bad_features2 = sbp->sb_features2;
->  		update_flags |= XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
+Don't initialise new inode generation numbers to zero
 
-Probably should update XFS_MOUNT_ATTR2 here, not later. i.e. before
-we mount he log and start recovery.
+When we allocation new inode chunks, we initialise the generation
+numbers to zero. This works fine until we delete a chunk and then
+reallocate it, resulting in the same inode numbers but with a
+reset generation count. This can result in inode/generation
+pairs of different inodes occurring relatively close together.
 
-> @@ -1181,6 +1185,12 @@ xfs_mountfs(
->  		xfs_mount_log_sb(mp, update_flags);
->  
->  	/*
-> +	 * Re-check for ATTR2 in case it was found in bad_features2 slot.
-> +	 */
-> +	if (xfs_sb_version_hasattr2(&mp->m_sb))
-> +		mp->m_flags |= XFS_MOUNT_ATTR2;
-> +
+Given that the inode/gen pair makes up the "unique" portion of
+an NFS filehandle on XFS, this can result in file handles cached
+on clients being seen on the wire from the server but refer to
+a different file. This causes .... issues for NFS clients.
 
-Rather than here.
+Hence we need a unique generation number initialisation for
+each inode to prevent reuse of a small portion of the generation
+number space. Make this initialiser per-allocation group so
+that it is not a single point of contention in the filesystem,
+and increment it on every allocation within an AG to reduce the
+chance that a generation number is reused for a given inode number
+if the inode chunk is deleted and reallocated immediately
+afterwards.
 
->  /*
-> - * Detect a bad features2 field
-> + * Detect a mismatched features2 field.  Older kernels read/wrote
-> + * this into the wrong slot, so to be safe we keep them in sync.
->   */
-> -static inline int xfs_sb_has_bad_features2(xfs_sb_t *sbp)
-> +static inline int xfs_sb_has_mismatched_features2(xfs_sb_t *sbp)
->  {
-> -	return (sbp->sb_bad_features2 != 0);
-> +	return (sbp->sb_bad_features2 != sbp->sb_features2);
->  }
+It is safe to add the agi_newinogen field to the AGI without
+using a feature bit. If an older kernel is used, it simply
+will not update the field on allocation. If the kernel is
+updated and the field has garbage in it, then it's like having a
+random seed to the generation number....
 
-Yep, makes sense.
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_ag.h     |    4 +++-
+ fs/xfs/xfs_ialloc.c |   30 ++++++++++++++++++++++--------
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Index: 2.6.x-xfs-new/fs/xfs/xfs_ag.h
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_ag.h	2008-01-18 18:30:06.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_ag.h	2008-03-26 13:03:41.122918236 +1100
+@@ -121,6 +121,7 @@ typedef struct xfs_agi {
+ 	 * still being referenced.
+ 	 */
+ 	__be32		agi_unlinked[XFS_AGI_UNLINKED_BUCKETS];
++	__be32		agi_newinogen;	/* inode cluster generation */
+ } xfs_agi_t;
+ 
+ #define	XFS_AGI_MAGICNUM	0x00000001
+@@ -134,7 +135,8 @@ typedef struct xfs_agi {
+ #define	XFS_AGI_NEWINO		0x00000100
+ #define	XFS_AGI_DIRINO		0x00000200
+ #define	XFS_AGI_UNLINKED	0x00000400
+-#define	XFS_AGI_NUM_BITS	11
++#define	XFS_AGI_NEWINOGEN	0x00000800
++#define	XFS_AGI_NUM_BITS	12
+ #define	XFS_AGI_ALL_BITS	((1 << XFS_AGI_NUM_BITS) - 1)
+ 
+ /* disk block (xfs_daddr_t) in the AG */
+Index: 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_ialloc.c	2008-03-25 15:41:27.000000000 +1100
++++ 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c	2008-03-26 14:29:47.998554368 +1100
+@@ -309,6 +309,8 @@ xfs_ialloc_ag_alloc(
+ 			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
+ 			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 			free->di_core.di_version = version;
++			free->di_core.di_gen = agi->agi_newinogen;
++			be32_add_cpu(&agi->agi_newinogen, 1);
+ 			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
+ 			xfs_ialloc_log_di(tp, fbuf, i,
+ 				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
+@@ -347,7 +349,8 @@ xfs_ialloc_ag_alloc(
+ 	 * Log allocation group header fields
+ 	 */
+ 	xfs_ialloc_log_agi(tp, agbp,
+-		XFS_AGI_COUNT | XFS_AGI_FREECOUNT | XFS_AGI_NEWINO);
++		XFS_AGI_COUNT | XFS_AGI_FREECOUNT |
++		XFS_AGI_NEWINO | XFS_AGI_NEWINOGEN);
+ 	/*
+ 	 * Modify/log superblock values for inode count and inode free count.
+ 	 */
+@@ -896,11 +899,12 @@ nextag:
+ 	ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino + offset);
+ 	XFS_INOBT_CLR_FREE(&rec, offset);
+ 	rec.ir_freecount--;
++	be32_add_cpu(&agi->agi_newinogen, 1);
+ 	if ((error = xfs_inobt_update(cur, rec.ir_startino, rec.ir_freecount,
+ 			rec.ir_free)))
+ 		goto error0;
+ 	be32_add(&agi->agi_freecount, -1);
+-	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
++	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT | XFS_AGI_NEWINOGEN);
+ 	down_read(&mp->m_peraglock);
+ 	mp->m_perag[tagno].pagi_freecount--;
+ 	up_read(&mp->m_peraglock);
+@@ -1320,6 +1324,11 @@ xfs_ialloc_compute_maxlevels(
+ 
+ /*
+  * Log specified fields for the ag hdr (inode section)
++ *
++ * We don't log the unlinked inode fields through here; they
++ * get logged directly to the buffer. Hence we have a discontinuity
++ * in the fields we are logging and we need two calls to map all
++ * the dirtied parts of the agi....
+  */
+ void
+ xfs_ialloc_log_agi(
+@@ -1342,22 +1351,27 @@ xfs_ialloc_log_agi(
+ 		offsetof(xfs_agi_t, agi_newino),
+ 		offsetof(xfs_agi_t, agi_dirino),
+ 		offsetof(xfs_agi_t, agi_unlinked),
++		offsetof(xfs_agi_t, agi_newinogen),
+ 		sizeof(xfs_agi_t)
+ 	};
++	int			log_newino = fields & XFS_AGI_NEWINOGEN;
++
+ #ifdef DEBUG
+ 	xfs_agi_t		*agi;	/* allocation group header */
+ 
+ 	agi = XFS_BUF_TO_AGI(bp);
+ 	ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
+ #endif
+-	/*
+-	 * Compute byte offsets for the first and last fields.
+-	 */
++	fields &= ~XFS_AGI_NEWINOGEN;
++
++	/* Compute byte offsets for the first and last fields.  */
+ 	xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS, &first, &last);
+-	/*
+-	 * Log the allocation group inode header buffer.
+-	 */
+ 	xfs_trans_log_buf(tp, bp, first, last);
++	if (log_newino) {
++		xfs_btree_offsets(XFS_AGI_NEWINOGEN, offsets, XFS_AGI_NUM_BITS,
++					&first, &last);
++		xfs_trans_log_buf(tp, bp, first, last);
++	}
+ }
+ 
+ /*
