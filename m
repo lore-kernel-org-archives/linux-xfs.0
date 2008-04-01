@@ -1,78 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 18:28:44 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m311SWcX007842
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 18:28:35 -0700
-Date: Tue, 1 Apr 2008 11:28:56 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Definition of XFS_DQUOT_LOGRES()
-Message-ID: <20080401012856.GL103491721@sgi.com>
-References: <47F16988.2080406@agami.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <47F16988.2080406@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 20:08:56 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3138mIW017805
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 20:08:49 -0700
+From: =?iso-8859-2?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Subject: RE: free space problem
+Date: Tue, 1 Apr 2008 05:08:52 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20080401003518.GK103491721@sgi.com>
+Message-Id: <20080401030921.9CA0171CF52@cuda.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Michael Nishimoto <miken@agami.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: 'David Chinner' <dgc@sgi.com>
+Cc: 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
 
-On Mon, Mar 31, 2008 at 03:45:28PM -0700, Michael Nishimoto wrote:
-> The comment for XFS_DQUOT_LOGRES states that we need to reserve space
-> for 3 dquots.  I can't figure out why we need to add this amount to *all*
-> operations and why this amount wasn't added after doing a runtime
-> quotaon check.
+>Yes, but if you have fragemented free space then it is possible that there
+>are not enough free extents large enough (or aligned correctly) to
+>allocate more inodes. The number of "free inodes" reported doesn't take
+>this into account; it only looks at the number of free blocks and converts
+>that to a theoretical number of inodes that could be allocated in that
+>space (i.e. it assumes perfect fit and no waste). 
 
-It probably could be done that way.  But given that:
+>In this "not quite full filesystem" situation, you can write data to the
+>filesystem, but any attempt to create a new inode (new file, directory,
+>etc) will fail with ENOSPC. This sounds like the symptoms you are
+>reporting....
 
-> /*
->  * In the worst case, when both user and group quotas are on,
->  * we can have a max of three dquots changing in a single transaction.
->  */
-> #define XFS_DQUOT_LOGRES(mp)    (sizeof(xfs_disk_dquot_t) * 3)
+>Cheers,
 
-sizeof(xfs_disk_dquot_t) = 104 bytes,
+>Dave.
 
-the overall addition to the reservations is minor considering:
+What you described might happen with lot of small files, but in our case,
+our attempts fail to create a new inode and fail to write data. You suppose
+that we have fractured free spaces, and on these fractures no inodes can be
+created. In our case, the situation was different, however as it started to
+work again I still can't provide you any xfs_info/debug.
 
-[0]kdb> xtrres 0xe0000038055ac6c0
-write: 109752   truncate: 223672        rename: 305976
-link: 153144    remove: 153144  symlink: 158520
-create: 158392  mkdir: 158392   ifree: 58936
-ichange: 2104   growdata: 45696 swrite: 384
-addafork: 70584 writeid: 384    attrinval: 179328
-attrset: 22968  attrrm: 90552   clearagi: 1152
-growrtalloc: 66048      growrtzero: 4224        growrtfree: 6272
-[0]kdb>
+Thanks again,
+Viktor
+ 
 
-on a 14GB filesystem most of the transactions this is added to
-are on the far side of 150k and that means we're talking about less
-than 0.2% of the entire reservation comes from the dquot. With
-larger block sizes and/or larger filesystems, these get much
-larger. e.g. same 14GB device, 64k block size instead of 4k:
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 2989 (20080401) __________
 
-[0]kdb> xtrres 0xe00000b8027d39f8
-write: 987576   truncate: 1977272       rename: 2891064
-link: 1445688   remove: 1445688 symlink: 1512504
-create: 1511864 mkdir: 1511864  ifree: 470584
-ichange: 1592   growdata: 395904        swrite: 384
-addafork: 658616        writeid: 384    attrinval: 1581696
-attrset: 329656 attrrm: 791480  clearagi: 640
-growrtalloc: 592640     growrtzero: 65664       growrtfree: 67200
+The message was checked by ESET NOD32 Antivirus.
 
-The rename reservation is *2.8MB* (up from 300k). IOWs, 300 bytes is
-really noise when it comes to reservation space. (OT: See why I want to
-increase the log size now? :)
-
-Is it worth the complexity of adding this dquot reservation at
-runtime for a best case reduction of 0.2% in log space reservation
-usage? Probably not, but patches can be convincing ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+http://www.eset.com
+ 
