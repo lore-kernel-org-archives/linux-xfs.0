@@ -1,41 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 16:32:35 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m2VNWMcQ028298
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 16:32:28 -0700
-Received: from ext.agami.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A07671BBEF
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 16:32:59 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id DQ5ttPpR1iKxF9gc for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 16:32:59 -0700 (PDT)
-Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m2VMj62L019621
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 15:45:06 -0700
-Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id m2VMj6wB006571
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 15:45:06 -0700
-Message-ID: <47F16988.2080406@agami.com>
-Date: Mon, 31 Mar 2008 15:45:28 -0700
-From: Michael Nishimoto <miken@agami.com>
-MIME-Version: 1.0
-Subject: Definition of XFS_DQUOT_LOGRES()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 17:29:52 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m310TeAT001755
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 17:29:42 -0700
+Date: Tue, 1 Apr 2008 10:30:05 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: Does XFS prevent disk spindown?
+Message-ID: <20080401003005.GJ103491721@sgi.com>
+References: <m2tzimbvif.fsf@getmail.no>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <m2tzimbvif.fsf@getmail.no>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: Thor Kristoffersen <thorkr@gmail.com>
+Cc: xfs@oss.sgi.com
 
-The comment for XFS_DQUOT_LOGRES states that we need to reserve space
-for 3 dquots.  I can't figure out why we need to add this amount to *all*
-operations and why this amount wasn't added after doing a runtime
-quotaon check.
+On Mon, Mar 31, 2008 at 08:26:00PM +0200, Thor Kristoffersen wrote:
+> I've noticed that when I spin down XFS-mounted disks they spin up again
+> shortly afterwards.  I used iostat to monitor disk accesses to a mounted
+> partition (with noatime) in single user mode.  Apparently there is a write
+> access to the partition approximately every 35 seconds, even if the
+> partition is idle.  As far as I can understand, since there is no data that
+> needs to be flushed this must be done by an XFS daemon for some purpose.
+> 
+> Is there any setting or mount option I can use to get rid of this behavior?
+> I know I can freeze the filesystem, but then I have to remember to unfreeze
+> it every time I need to write to it, so it's not an ideal solution.
 
-Comments?
+Turn on laptop mode?
 
-     Michael
+Cheers,
 
-/*
-  * In the worst case, when both user and group quotas are on,
-  * we can have a max of three dquots changing in a single transaction.
-  */
-#define XFS_DQUOT_LOGRES(mp)    (sizeof(xfs_disk_dquot_t) * 3)
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
