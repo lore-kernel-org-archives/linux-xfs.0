@@ -1,36 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 17:29:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 17:35:14 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m310TeAT001755
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 17:29:42 -0700
-Date: Tue, 1 Apr 2008 10:30:05 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m310Z2mL002567
+	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 17:35:06 -0700
+Date: Tue, 1 Apr 2008 10:35:18 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Does XFS prevent disk spindown?
-Message-ID: <20080401003005.GJ103491721@sgi.com>
-References: <m2tzimbvif.fsf@getmail.no>
+Subject: Re: free space problem
+Message-ID: <20080401003518.GK103491721@sgi.com>
+References: <20080331093951.100ec125@galadriel.home> <20080331173724.24BB68D1DF4@cuda.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <m2tzimbvif.fsf@getmail.no>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20080331173724.24BB68D1DF4@cuda.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Thor Kristoffersen <thorkr@gmail.com>
-Cc: xfs@oss.sgi.com
+To: =?iso-8859-1?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Cc: 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
 
-On Mon, Mar 31, 2008 at 08:26:00PM +0200, Thor Kristoffersen wrote:
-> I've noticed that when I spin down XFS-mounted disks they spin up again
-> shortly afterwards.  I used iostat to monitor disk accesses to a mounted
-> partition (with noatime) in single user mode.  Apparently there is a write
-> access to the partition approximately every 35 seconds, even if the
-> partition is idle.  As far as I can understand, since there is no data that
-> needs to be flushed this must be done by an XFS daemon for some purpose.
+On Mon, Mar 31, 2008 at 07:36:56PM +0200, Huszár Viktor Dénes wrote:
+> -----Original Message-----
+> From: Emmanuel Florac [mailto:eflorac@intellique.com] 
+> Sent: Monday, March 31, 2008 9:40 AM
+> To: Huszár Viktor Dénes; xfs@oss.sgi.com
+> Subject: Re: free space problem
 > 
-> Is there any setting or mount option I can use to get rid of this behavior?
-> I know I can freeze the filesystem, but then I have to remember to unfreeze
-> it every time I need to write to it, so it's not an ideal solution.
+> Le Mon, 31 Mar 2008 02:31:16 +0200 vous écriviez:
+> 
+> >Then maybe you simply ran out of inodes. It's common if you have lots
+> >of small files. There is a way to increase the number of inodes but I
+> >don't remember it right now.
+> --
+> No, unfortunately not. There are not many small files and the inode usage is
+> 1%. See.
 
-Turn on laptop mode?
+Yes, but if you have fragemented free space then it is possible that there
+are not enough free extents large enough (or aligned correctly) to
+allocate more inodes. The number of "free inodes" reported doesn't take
+this into account; it only looks at the number of free blocks and converts
+that to a theoretical number of inodes that could be allocated in that
+space (i.e. it assumes perfect fit and no waste). 
+
+In this "not quite full filesystem" situation, you can write data to the
+filesystem, but any attempt to create a new inode (new file, directory,
+etc) will fail with ENOSPC. This sounds like the symptoms you are
+reporting....
 
 Cheers,
 
