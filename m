@@ -1,75 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 05:00:17 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m31C072n001075
-	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 05:00:09 -0700
-Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 589EC126E470
-	for <xfs@oss.sgi.com>; Tue,  1 Apr 2008 05:00:42 -0700 (PDT)
-Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64]) by cuda.sgi.com with ESMTP id 2UuA7V0r8wBjabRR for <xfs@oss.sgi.com>; Tue, 01 Apr 2008 05:00:42 -0700 (PDT)
-Date: Tue, 1 Apr 2008 14:00:35 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Serious XFS crash
-Message-ID: <20080401140035.46470306@galadriel.home>
-In-Reply-To: <20080325233611.GW103491721@sgi.com>
-References: <20080325185453.3a1957dd@galadriel.home>
-	<20080325233611.GW103491721@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 05:15:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m31CFimi003143
+	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 05:15:47 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2BDFD72047F
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2008 05:16:20 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id IGMg2GftSWpUw1iF for <xfs@oss.sgi.com>; Tue, 01 Apr 2008 05:16:20 -0700 (PDT)
+Subject: [RFC PATCH 0/3] freeze feature ver 1.1
+Message-Id: <20080401211614t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+From: Takashi Sato <t-sato@yk.jp.nec.com>
+Date: Tue, 1 Apr 2008 21:16:14 +0900
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Le Wed, 26 Mar 2008 10:36:11 +1100 vous écriviez:
+Hi,
 
-> What sector size is being used for the XFS filesystem? If it's
-> not the same as teh filesystem block size, then XFS can't have done
-> this itself because the offset that this garbage starts at would
-> not be block aligned.....
+David Chinner wrote:
+> Patch below to remove the XFS specific ioctl interfaces for this
+> functionality.
 
-I've gone thru the logs. This machine had a serious XFS crash on march
-6 due to bad blocks (failed drive in the RAID-5). Is it possible that
-the March 19 XFS crash is related to this, i. e. after running
-xfs_repair on march 6 it remained some on-disk garbage that provoked a
-new crash a couple of weeks later?
+Thank you very much for your patch to remove the XFS specific code.
+I have merged your patch into 2.6.25-rc7 and included it in the
+freeze patch-set as the following [PATCH 2/3].
 
-Here is the march 6 crash :
+[PATCH 1/3] Implement generic freeze feature
+  The ioctls for the generic freeze feature are below.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, arg)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
 
-Mar  6 10:42:46 system3 kernel:  [xfs_alloc_read_agf+244/432]
-xfs_alloc_read_agf+0xf4/0x1b0 Mar  6 10:42:46 system3 kernel:
-[xfs_alloc_fix_freelist+1000/1120] xfs_alloc_fix_freelist+0x3e8/0x460
-Mar  6 10:42:46 system3 last message repeated 2 times Mar  6 10:42:46
-system3 kernel:  [_xfs_trans_commit+489/928]
-_xfs_trans_commit+0x1e9/0x3a0 Mar  6 10:42:46 system3 kernel:
-[xfs_free_extent+152/224] xfs_free_extent+0x98/0xe0 Mar  6 10:42:46
-system3 kernel:  [xfs_bmap_finish+263/400] xfs_bmap_finish+0x107/0x190
-Mar  6 10:42:46 system3 kernel:  [xfs_itruncate_finish+544/976]
-xfs_itruncate_finish+0x220/0x3d0 Mar  6 10:42:46 system3 kernel:
-[xfs_trans_ijoin+43/128] xfs_trans_ijoin+0x2b/0x80 Mar  6 10:42:46
-system3 kernel:  [xfs_inactive+1195/1296] xfs_inactive+0x4ab/0x510 Mar
-6 10:42:46 system3 kernel:  [xfs_fs_clear_inode+156/192]
-xfs_fs_clear_inode+0x9c/0xc0 Mar  6 10:42:46 system3 kernel:
-[invalidate_inode_buffers+21/112] invalidate_inode_buffers+0x15/0x70
-Mar  6 10:42:46 system3 kernel:  [clear_inode+212/320]
-clear_inode+0xd4/0x140 Mar  6 10:42:46 system3 kernel:
-[truncate_inode_pages+23/32] truncate_inode_pages+0x17/0x20 Mar  6
-10:42:46 system3 kernel:  [generic_delete_inode+264/272]
-generic_delete_inode+0x108/0x110 Mar  6 10:42:46 system3 kernel:
-[iput+83/112] iput+0x53/0x70 Mar  6 10:42:46 system3 kernel:
-[do_unlinkat+186/272] do_unlinkat+0xba/0x110 Mar  6 10:42:46 system3
-kernel:  [sys_fcntl64+89/144] sys_fcntl64+0x59/0x90 Mar  6 10:42:46
-system3 kernel:  [syscall_call+7/11] syscall_call+0x7/0xb Mar  6
-10:42:46 system3 kernel: xfs_force_shutdown(md0,0x8) called from line
-4267 of file fs/xfs/xfs_bmap.c.  Return address = 0xc0256b29 Mar  6
-10:51:19 system3 kernel: 3w-9xxx: scsi0: AEN: WARNING (0x04:0x0023):
-Sector repair completed:port=6, LBA=0xE6E00. Mar  6 10:51:20 system3
-kernel: 3w-9xxx: scsi0: AEN: WARNING (0x04:0x0023): Sector repair
-completed:port=6, LBA=0xE6DCA.
+  o Unfreeze the filesystem
+    int ioctl(int fd, int FITHAW, arg)
+      fd: The file descriptor of the mountpoint
+      FITHAW: request code for unfreeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
 
--- 
---------------------------------------------------
-Emmanuel Florac               www.intellique.com   
---------------------------------------------------
+[PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+  It removes XFS specific ioctl interfaces and request codes
+  for freeze feature.
+  This patch has been supplied by David Chinner.
+
+[PATCH 3/3] Add timeout feature
+  The timeout feature is added to freeze ioctl.  And new ioctl
+  to reset the timeout period is added.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, long *timeval)
+    fd: The file descriptor of the mountpoint
+    FIFREEZE: request code for the freeze
+    timeval: the timeout period in seconds
+             If it's 0 or 1, the timeout isn't set.
+             This special case of "1" is implemented to keep
+             the compatibility with XFS applications.
+    Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Reset the timeout period
+    This is useful for the application to set the timeval more accurately.
+    For example, the freezer resets the timeval to 10 seconds every 5
+    seconds.  In this approach, even if the freezer causes a deadlock
+    by accessing the frozen filesystem, it will be solved by the timeout
+    in 10 seconds and the freezer can recognize that at the next reset
+    of timeval.
+    int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeval)
+      fd:file descriptor of mountpoint
+      FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+      timeval: new timeout period in seconds
+      Return value: 0 if the operation succeeds. Otherwise, -1
+      Error number: If the filesystem has already been unfrozen,
+                    errno is set to EINVAL.
+
+Any comments are very welcome.
+
+Cheers, Takashi
