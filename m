@@ -1,142 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 31 Mar 2008 23:00:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 03:54:24 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m315xdEH006595
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 22:59:40 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D36671D0EB
-	for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 23:00:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id C0Nb4JtgNDG0SCv8 for <xfs@oss.sgi.com>; Mon, 31 Mar 2008 23:00:14 -0700 (PDT)
-Message-ID: <47F1CF6D.2040103@sandeen.net>
-Date: Tue, 01 Apr 2008 01:00:13 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m31AsCZf019813
+	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 03:54:15 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0868A71FB12
+	for <xfs@oss.sgi.com>; Tue,  1 Apr 2008 03:54:45 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id kkOsEnCzEHwgECVp for <xfs@oss.sgi.com>; Tue, 01 Apr 2008 03:54:45 -0700 (PDT)
+Message-Id: <2530BB4B166747659C8F65C9C3DE7CFB@nsl.ad.nec.co.jp>
+From: "Takashi Sato" <t-sato@yk.jp.nec.com>
+References: <20080328180736t-sato@mail.jp.nec.com> <20080331000057.GI108924158@sgi.com>
+In-Reply-To: <20080331000057.GI108924158@sgi.com>
+Subject: Re: [RFC PATCH 2/2] Add timeout feature
+Date: Tue, 1 Apr 2008 19:54:42 +0900
 MIME-Version: 1.0
-Subject: Re: Does XFS prevent disk spindown?
-References: <m2tzimbvif.fsf@getmail.no> <20080401003005.GJ103491721@sgi.com>
-In-Reply-To: <20080401003005.GJ103491721@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: Thor Kristoffersen <thorkr@gmail.com>, xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+
+Hi,
 
 David Chinner wrote:
-> On Mon, Mar 31, 2008 at 08:26:00PM +0200, Thor Kristoffersen wrote:
->> I've noticed that when I spin down XFS-mounted disks they spin up again
->> shortly afterwards.  I used iostat to monitor disk accesses to a mounted
->> partition (with noatime) in single user mode.  Apparently there is a write
->> access to the partition approximately every 35 seconds, even if the
->> partition is idle.  As far as I can understand, since there is no data that
->> needs to be flushed this must be done by an XFS daemon for some purpose.
+> The timeout is not for the freeze operation - the timeout is
+> only set up once the freeze is complete. i.e:
+>
+> $ time sudo ~/test_src/xfs_io -f -x -c 'gfreeze 10' /mnt/scratch/test
+> freezing with level = 10
+>
+> real    0m23.204s
+> user    0m0.008s
+> sys     0m0.012s
+>
+> The freeze takes 23s, and then the 10s timeout is started. So
+> this timeout does not protect against freeze_bdev() hangs at all.
+> All it does is introduce silent unfreezing of the block device that
+> can not be synchronised with the application that is operating
+> on the frozen device.
 
-Use blktrace, or echo 1 > /proc/sys/vm/block_dump to see what block and
-who's writing it...  it's probably the superblock?  what kernel?
+Exactly my timeout feature is only for an application, not for freeze_bdev().
+I think it is needed for the situation we can't unfreeze from userspace.
+(e.g. Freezing the root filesystem)
 
-On an idle-in-gdm 2.6.25 system, xfs root, I see something like this
-from block_dump... it does settle out after a while:
+> FWIW, resetting this timeout from userspace is unreliable - there's
+> no guarantee that under load your userspace process will get to run
+> again inside the timeout to reset it, hence leaving you with a
+> unfrozen filesystem when you really want it frozen...
 
-# while true
-> do
-> date
-> sleep 5
-> dmesg -c
-> done
+The timeout period specified to the reset ioctl should be much larger than
+the interval for calling the reset ioctl repeatedly.
+(e.g timeout period = 2 minutes, calling interval = 5 seconds)
+The reset ioctl will work under such setting.
+If a timeout still occurs before a reset, it would imply that an unexpected
+problem (e.g. deadlock) occur in an application.
 
-bash(2986): READ block 448128 on sda2
-bash(2986): dirtied inode 820453 (date) on sda2
-date(2986): READ block 448160 on sda2
-bash(2987): READ block 449736 on sda2
-bash(2987): dirtied inode 820470 (sleep) on sda2
-sleep(2987): READ block 449768 on sda2
-Tue Apr  1 00:24:12 CDT 2008
-xfssyncd(465): dirtied inode 128 (/) on sda2
-xfssyncd(465): WRITE block 10246607 on sda2
-Tue Apr  1 00:24:17 CDT 2008
-Tue Apr  1 00:24:22 CDT 2008
-Tue Apr  1 00:24:27 CDT 2008
-Tue Apr  1 00:24:32 CDT 2008
-Tue Apr  1 00:24:37 CDT 2008
-Tue Apr  1 00:24:42 CDT 2008
-pdflush(178): WRITE block 64 on sda2
-Tue Apr  1 00:24:47 CDT 2008
-Tue Apr  1 00:24:52 CDT 2008
-Tue Apr  1 00:24:57 CDT 2008
-Tue Apr  1 00:25:02 CDT 2008
-Tue Apr  1 00:25:07 CDT 2008
-Tue Apr  1 00:25:12 CDT 2008
-xfssyncd(465): dirtied inode 128 (/) on sda2
-xfssyncd(465): WRITE block 10246609 on sda2
-Tue Apr  1 00:25:17 CDT 2008
-Tue Apr  1 00:25:22 CDT 2008
-Tue Apr  1 00:25:27 CDT 2008
-Tue Apr  1 00:25:32 CDT 2008
-Tue Apr  1 00:25:37 CDT 2008
-Tue Apr  1 00:25:42 CDT 2008
-pdflush(178): WRITE block 64 on sda2
-Tue Apr  1 00:25:47 CDT 2008
-Tue Apr  1 00:25:52 CDT 2008
-Tue Apr  1 00:25:57 CDT 2008
-Tue Apr  1 00:26:02 CDT 2008
-Tue Apr  1 00:26:07 CDT 2008
-Tue Apr  1 00:26:12 CDT 2008
-Tue Apr  1 00:26:17 CDT 2008
-Tue Apr  1 00:26:22 CDT 2008
-Tue Apr  1 00:26:27 CDT 2008
-Tue Apr  1 00:26:32 CDT 2008
-Tue Apr  1 00:26:37 CDT 2008
-Tue Apr  1 00:26:42 CDT 2008
-Tue Apr  1 00:26:47 CDT 2008
-Tue Apr  1 00:26:52 CDT 2008
-Tue Apr  1 00:26:57 CDT 2008
-Tue Apr  1 00:27:02 CDT 2008
-Tue Apr  1 00:27:07 CDT 2008
-Tue Apr  1 00:27:12 CDT 2008
-Tue Apr  1 00:27:17 CDT 2008
-Tue Apr  1 00:27:22 CDT 2008
-Tue Apr  1 00:27:27 CDT 2008
-Tue Apr  1 00:27:32 CDT 2008
-Tue Apr  1 00:27:37 CDT 2008
-Tue Apr  1 00:27:42 CDT 2008
-Tue Apr  1 00:27:47 CDT 2008
-Tue Apr  1 00:27:52 CDT 2008
-Tue Apr  1 00:27:57 CDT 2008
-Tue Apr  1 00:28:02 CDT 2008
-Tue Apr  1 00:28:07 CDT 2008
-Tue Apr  1 00:28:12 CDT 2008
-Tue Apr  1 00:28:17 CDT 2008
-Tue Apr  1 00:28:22 CDT 2008
-Tue Apr  1 00:28:27 CDT 2008
-Tue Apr  1 00:28:32 CDT 2008
-Tue Apr  1 00:28:37 CDT 2008
-Tue Apr  1 00:28:42 CDT 2008
-Tue Apr  1 00:28:47 CDT 2008
-Tue Apr  1 00:28:52 CDT 2008
-Tue Apr  1 00:28:57 CDT 2008
-Tue Apr  1 00:29:02 CDT 2008
-Tue Apr  1 00:29:07 CDT 2008
-Tue Apr  1 00:29:12 CDT 2008
-Tue Apr  1 00:29:17 CDT 2008
-Tue Apr  1 00:29:22 CDT 2008
-Tue Apr  1 00:29:27 CDT 2008
-Tue Apr  1 00:29:32 CDT 2008
-Tue Apr  1 00:29:37 CDT 2008
-Tue Apr  1 00:29:42 CDT 2008
-Tue Apr  1 00:29:47 CDT 2008
-Tue Apr  1 00:29:52 CDT 2008
-Tue Apr  1 00:29:57 CDT 2008
-....
-
-
--Eric
-
->> Is there any setting or mount option I can use to get rid of this behavior?
->> I know I can freeze the filesystem, but then I have to remember to unfreeze
->> it every time I need to write to it, so it's not an ideal solution.
-> 
-> Turn on laptop mode?
-> 
-> Cheers,
-> 
-> Dave.
+Cheers, Takashi 
