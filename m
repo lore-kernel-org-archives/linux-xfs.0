@@ -1,309 +1,520 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 23:27:04 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 23:26:51 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m326QXnX006082
-	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 23:26:37 -0700
-Message-Id: <20080402062708.071715758@chook.melbourne.sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m326QXgu006083
+	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 23:26:36 -0700
+Message-Id: <20080402062708.380299192@chook.melbourne.sgi.com>
 References: <20080402062508.017738664@chook.melbourne.sgi.com>
-Date: Wed, 02 Apr 2008 16:25:10 +1000
+Date: Wed, 02 Apr 2008 16:25:11 +1000
 From: Barry Naujok <bnaujok@sgi.com>
-Subject: [PATCH 2/7] XFS: ASCII case-insensitive support
-Content-Disposition: inline; filename=ascii_ci.patch
+Subject: [PATCH 3/7] XFS: Refactor node format directory lookup/addname
+Content-Disposition: inline; filename=refactor_leafn_lookup.patch
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org
 
-Implement ASCII case-insensitive support. It's primary purpose 
-is for supporting existing filesystems that already use this
-case-insensitive mode migrated from IRIX. But, if you only need
-ASCII-only case-insensitive support (ie. English only) and will
-never use another language, then this mode is perfectly adequate.
+The next step for case-insensitive support is to avoid polution of
+the dentry cache with entries pointing to the same inode, but with
+names that only differ in case.
 
-ASCII-CI is implemented by generating hashes based on lower-case
-letters and doing lower-case compares. It implements a new
-xfs_nameops vector for doing the hashes and comparisons for
-all filename operations.
+To perform this, we will need to pass the actual filename that
+matched backup to the XFS/VFS interface and make sure the dentry
+cache only contains entries with the actual case-sensitive name.
 
-It also overrides the Linux dentry cache operations with its
-own hash and compare functions (the same as used in the xfs_nameops
-vector).
+But, before we can do this, it was found that the directory lookup
+code with multiple leaves was shared with code adding a name to
+that directory. Most of xfs_dir2_leafn_lookup_int() could be broken
+into two functions determined by if (args->addname) { } else { }.
 
-To create a filesystem with this CI mode, use:
-# mkfs.xfs -n version=ci <device>
+For the following patch, only the lookup case needs to handle the
+various xfs_nameops, with case-insensitive match handling in
+addition to returning the actual name.
+
+So, this patch separates xfs_dir2_leafn_lookup_int() into
+xfs_dir2_leafn_lookup_for_addname() and xfs_dir2_leafn_lookup_for_entry().
+
+xfs_dir2_leafn_lookup_for_addname() iterates through the data blocks looking
+for a suitable empty space to insert the name while
+xfs_dir2_leafn_lookup_for_entry() uses the xfs_nameops to find the entry.
+
+xfs_dir2_leafn_lookup_for_entry() path also retains the data block where
+the first case-insensitive match occured as in the next patch which will
+return the name, the name is obtained from that block.
 
 Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 
 ---
- fs/xfs/linux-2.6/xfs_iops.c  |   46 +++++++++++++++++++++++++++++++++++++-
- fs/xfs/linux-2.6/xfs_linux.h |    1
- fs/xfs/linux-2.6/xfs_super.c |    4 +++
- fs/xfs/xfs_dir2.c            |   52 ++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_fs.h              |    1
- fs/xfs/linux-2.6/xfs_iops.c  |   46 +++++++++++++++++++++++++++++++++++++-
- fs/xfs/linux-2.6/xfs_linux.h |    1 
- fs/xfs/linux-2.6/xfs_super.c |    4 +++
- fs/xfs/xfs_dir2.c            |   52 ++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_fs.h              |    1 
- fs/xfs/xfs_fsops.c           |    4 ++-
- fs/xfs/xfs_sb.h              |   10 +++++++-
- 7 files changed, 114 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_dir2_node.c |  373 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 225 insertions(+), 148 deletions(-)
 
-Index: kern_ci/fs/xfs/linux-2.6/xfs_iops.c
+Index: kern_ci/fs/xfs/xfs_dir2_node.c
 ===================================================================
---- kern_ci.orig/fs/xfs/linux-2.6/xfs_iops.c
-+++ kern_ci/fs/xfs/linux-2.6/xfs_iops.c
-@@ -47,6 +47,7 @@
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_da_btree.h"
- 
- #include <linux/capability.h>
- #include <linux/xattr.h>
-@@ -54,6 +55,8 @@
- #include <linux/security.h>
- #include <linux/falloc.h>
- 
-+struct dentry_operations xfs_ci_dentry_operations;
-+
- /*
-  * Bring the atime in the XFS inode uptodate.
-  * Used before logging the inode to disk or when the Linux inode goes away.
-@@ -372,10 +375,15 @@ xfs_vn_lookup(
- {
- 	struct xfs_inode *cip;
- 	int		error;
-+	struct xfs_mount *mp = XFS_I(dir)->i_mount;
-+	struct dentry	*result;
- 
- 	if (dentry->d_name.len >= MAXNAMELEN)
- 		return ERR_PTR(-ENAMETOOLONG);
- 
-+	if (xfs_sb_version_hasoldci(&mp->m_sb))
-+		dentry->d_op = &xfs_ci_dentry_operations;
-+
- 	error = xfs_lookup(XFS_I(dir), dentry, &cip);
- 	if (unlikely(error)) {
- 		if (unlikely(error != ENOENT))
-@@ -384,7 +392,10 @@ xfs_vn_lookup(
- 		return NULL;
- 	}
- 
--	return d_splice_alias(cip->i_vnode, dentry);
-+	result = d_splice_alias(cip->i_vnode, dentry);
-+	if (result)
-+		result->d_op = dentry->d_op;
-+	return result;
- }
- 
- STATIC int
-@@ -887,3 +898,36 @@ const struct inode_operations xfs_symlin
- 	.listxattr		= xfs_vn_listxattr,
- 	.removexattr		= xfs_vn_removexattr,
- };
-+
-+STATIC int
-+xfs_ci_dentry_hash(
-+	struct dentry	*dir,
-+	struct qstr	*this)
-+{
-+	this->hash = xfs_dir_hashname(XFS_I(dir->d_inode),
-+				this->name, this->len);
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_ci_dentry_compare(
-+	struct dentry	*dir,
-+	struct qstr	*a,
-+	struct qstr	*b)
-+{
-+	int	result = xfs_dir_compname(XFS_I(dir->d_inode), a->name, a->len,
-+					b->name, b->len) == XFS_CMP_DIFFERENT;
-+	/*
-+	 * result == 0 if a match is found, and if so, copy the name in "b"
-+	 * to "a" to cope with negative dentries getting the correct name.
-+	 */
-+	if (result == 0)
-+		memcpy((unsigned char *)a->name, b->name, a->len);
-+	return result;
-+}
-+
-+struct dentry_operations xfs_ci_dentry_operations =
-+{
-+	.d_hash = xfs_ci_dentry_hash,
-+	.d_compare = xfs_ci_dentry_compare,
-+};
-Index: kern_ci/fs/xfs/linux-2.6/xfs_linux.h
-===================================================================
---- kern_ci.orig/fs/xfs/linux-2.6/xfs_linux.h
-+++ kern_ci/fs/xfs/linux-2.6/xfs_linux.h
-@@ -75,6 +75,7 @@
- #include <linux/delay.h>
- #include <linux/log2.h>
- #include <linux/spinlock.h>
-+#include <linux/ctype.h>
- 
- #include <asm/page.h>
- #include <asm/div64.h>
-Index: kern_ci/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- kern_ci.orig/fs/xfs/linux-2.6/xfs_super.c
-+++ kern_ci/fs/xfs/linux-2.6/xfs_super.c
-@@ -67,6 +67,8 @@ static kmem_zone_t *xfs_vnode_zone;
- static kmem_zone_t *xfs_ioend_zone;
- mempool_t *xfs_ioend_pool;
- 
-+extern struct dentry_operations xfs_ci_dentry_operations;
-+
- STATIC struct xfs_mount_args *
- xfs_args_allocate(
- 	struct super_block	*sb,
-@@ -1359,6 +1361,8 @@ xfs_fs_fill_super(
- 		error = ENOMEM;
- 		goto fail_vnrele;
- 	}
-+	if (xfs_sb_version_hasoldci(&mp->m_sb))
-+		sb->s_root->d_op = &xfs_ci_dentry_operations;
- 
- 	mp->m_sync_work.w_syncer = xfs_sync_worker;
- 	mp->m_sync_work.w_mount = mp;
-Index: kern_ci/fs/xfs/xfs_dir2.c
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_dir2.c
-+++ kern_ci/fs/xfs/xfs_dir2.c
-@@ -45,6 +45,55 @@
- #include "xfs_vnodeops.h"
- 
- 
-+/*
-+ * V1/OLDCI case-insensitive support for directories
-+ *
-+ * This is ASCII only case support, ie. A-Z.
-+ */
-+static xfs_dahash_t
-+xfs_ascii_ci_hashname(
-+	const uchar_t	*name,
-+	int		namelen)
-+{
-+	xfs_dahash_t	hash;
-+	int		i;
-+
-+	for (i = 0, hash = 0; i < namelen; i++)
-+		hash = tolower(name[i]) ^ rol32(hash, 7);
-+
-+	return hash;
-+}
-+
-+static xfs_dacmp_t
-+xfs_ascii_ci_compname(
-+	const uchar_t	*name1,
-+	int		len1,
-+	const uchar_t	*name2,
-+	int 		len2)
-+{
-+	xfs_dacmp_t	result;
-+	int		i;
-+
-+	if (len1 != len2)
-+		return XFS_CMP_DIFFERENT;
-+
-+	result = XFS_CMP_EXACT;
-+	for (i = 0; i < len1; i++) {
-+		if (name1[i] == name2[i])
-+			continue;
-+		if (tolower(name1[i]) != tolower(name2[i]))
-+			return XFS_CMP_DIFFERENT;
-+		result = XFS_CMP_CASE;
-+	}
-+
-+	return result;
-+}
-+
-+static struct xfs_nameops xfs_ascii_ci_nameops = {
-+	.hashname	= xfs_ascii_ci_hashname,
-+	.compname	= xfs_ascii_ci_compname,
-+};
-+
- void
- xfs_dir_mount(
- 	xfs_mount_t	*mp)
-@@ -64,7 +113,8 @@ xfs_dir_mount(
- 		(mp->m_dirblksize - (uint)sizeof(xfs_da_node_hdr_t)) /
- 		(uint)sizeof(xfs_da_node_entry_t);
- 	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
--	mp->m_dirnameops = &xfs_default_nameops;
-+	mp->m_dirnameops = xfs_sb_version_hasoldci(&mp->m_sb) ?
-+		&xfs_ascii_ci_nameops : &xfs_default_nameops;
+--- kern_ci.orig/fs/xfs/xfs_dir2_node.c
++++ kern_ci/fs/xfs/xfs_dir2_node.c
+@@ -387,12 +387,11 @@ xfs_dir2_leafn_lasthash(
  }
  
  /*
-Index: kern_ci/fs/xfs/xfs_fs.h
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_fs.h
-+++ kern_ci/fs/xfs/xfs_fs.h
-@@ -239,6 +239,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
- #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
- #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
-+#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
- #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+- * Look up a leaf entry in a node-format leaf block.
+- * If this is an addname then the extrablk in state is a freespace block,
+- * otherwise it's a data block.
++ * Look up a leaf entry for space to add a name in a node-format leaf block.
++ * The extrablk in state is a freespace block.
+  */
+-int
+-xfs_dir2_leafn_lookup_int(
++static int
++xfs_dir2_leafn_lookup_for_addname(
+ 	xfs_dabuf_t		*bp,		/* leaf buffer */
+ 	xfs_da_args_t		*args,		/* operation arguments */
+ 	int			*indexp,	/* out: leaf entry index */
+@@ -401,7 +400,6 @@ xfs_dir2_leafn_lookup_int(
+ 	xfs_dabuf_t		*curbp;		/* current data/free buffer */
+ 	xfs_dir2_db_t		curdb;		/* current data block number */
+ 	xfs_dir2_db_t		curfdb;		/* current free block number */
+-	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	int			error;		/* error return value */
+ 	int			fi;		/* free entry index */
+@@ -414,7 +412,6 @@ xfs_dir2_leafn_lookup_int(
+ 	xfs_dir2_db_t		newdb;		/* new data block number */
+ 	xfs_dir2_db_t		newfdb;		/* new free block number */
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+-	xfs_dacmp_t		cmp;		/* comparison result */
  
- 
-Index: kern_ci/fs/xfs/xfs_fsops.c
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_fsops.c
-+++ kern_ci/fs/xfs/xfs_fsops.c
-@@ -95,6 +95,8 @@ xfs_fs_geometry(
- 				XFS_FSOP_GEOM_FLAGS_DIRV2 : 0) |
- 			(xfs_sb_version_hassector(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
-+			(xfs_sb_version_hasoldci(&mp->m_sb) ?
-+				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
- 			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
- 			(xfs_sb_version_hasattr2(&mp->m_sb) ?
-@@ -629,7 +631,7 @@ xfs_fs_goingdown(
- 			xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
- 			thaw_bdev(sb->s_bdev, sb);
+ 	dp = args->dp;
+ 	tp = args->trans;
+@@ -432,27 +429,15 @@ xfs_dir2_leafn_lookup_int(
+ 	/*
+ 	 * Do we have a buffer coming in?
+ 	 */
+-	if (state->extravalid)
+-		curbp = state->extrablk.bp;
+-	else
+-		curbp = NULL;
++	curbp = state->extravalid ? state->extrablk.bp : NULL;
+ 	/*
+ 	 * For addname, it's a free block buffer, get the block number.
+ 	 */
+-	if (args->addname) {
+-		curfdb = curbp ? state->extrablk.blkno : -1;
+-		curdb = -1;
+-		length = xfs_dir2_data_entsize(args->namelen);
+-		if ((free = (curbp ? curbp->data : NULL)))
+-			ASSERT(be32_to_cpu(free->hdr.magic) == XFS_DIR2_FREE_MAGIC);
+-	}
+-	/*
+-	 * For others, it's a data block buffer, get the block number.
+-	 */
+-	else {
+-		curfdb = -1;
+-		curdb = curbp ? state->extrablk.blkno : -1;
+-	}
++	curfdb = curbp ? state->extrablk.blkno : -1;
++	free = curbp ? curbp->data : NULL;
++	curdb = -1;
++	length = xfs_dir2_data_entsize(args->namelen);
++	ASSERT(!free || be32_to_cpu(free->hdr.magic) == XFS_DIR2_FREE_MAGIC);
+ 	/*
+ 	 * Loop over leaf entries with the right hash value.
+ 	 */
+@@ -472,134 +457,69 @@ xfs_dir2_leafn_lookup_int(
+ 		 * For addname, we're looking for a place to put the new entry.
+ 		 * We want to use a data block with an entry of equal
+ 		 * hash value to ours if there is one with room.
++		 *
++		 * If this block isn't the data block we already have
++		 * in hand, take a look at it.
+ 		 */
+-		if (args->addname) {
++		if (newdb != curdb) {
++			curdb = newdb;
+ 			/*
+-			 * If this block isn't the data block we already have
+-			 * in hand, take a look at it.
++			 * Convert the data block to the free block
++			 * holding its freespace information.
+ 			 */
+-			if (newdb != curdb) {
+-				curdb = newdb;
+-				/*
+-				 * Convert the data block to the free block
+-				 * holding its freespace information.
+-				 */
+-				newfdb = xfs_dir2_db_to_fdb(mp, newdb);
+-				/*
+-				 * If it's not the one we have in hand,
+-				 * read it in.
+-				 */
+-				if (newfdb != curfdb) {
+-					/*
+-					 * If we had one before, drop it.
+-					 */
+-					if (curbp)
+-						xfs_da_brelse(tp, curbp);
+-					/*
+-					 * Read the free block.
+-					 */
+-					if ((error = xfs_da_read_buf(tp, dp,
+-							xfs_dir2_db_to_da(mp,
+-								newfdb),
+-							-1, &curbp,
+-							XFS_DATA_FORK))) {
+-						return error;
+-					}
+-					free = curbp->data;
+-					ASSERT(be32_to_cpu(free->hdr.magic) ==
+-					       XFS_DIR2_FREE_MAGIC);
+-					ASSERT((be32_to_cpu(free->hdr.firstdb) %
+-						XFS_DIR2_MAX_FREE_BESTS(mp)) ==
+-					       0);
+-					ASSERT(be32_to_cpu(free->hdr.firstdb) <= curdb);
+-					ASSERT(curdb <
+-					       be32_to_cpu(free->hdr.firstdb) +
+-					       be32_to_cpu(free->hdr.nvalid));
+-				}
+-				/*
+-				 * Get the index for our entry.
+-				 */
+-				fi = xfs_dir2_db_to_fdindex(mp, curdb);
+-				/*
+-				 * If it has room, return it.
+-				 */
+-				if (unlikely(be16_to_cpu(free->bests[fi]) == NULLDATAOFF)) {
+-					XFS_ERROR_REPORT("xfs_dir2_leafn_lookup_int",
+-							 XFS_ERRLEVEL_LOW, mp);
+-					if (curfdb != newfdb)
+-						xfs_da_brelse(tp, curbp);
+-					return XFS_ERROR(EFSCORRUPTED);
+-				}
+-				curfdb = newfdb;
+-				if (be16_to_cpu(free->bests[fi]) >= length) {
+-					*indexp = index;
+-					state->extravalid = 1;
+-					state->extrablk.bp = curbp;
+-					state->extrablk.blkno = curfdb;
+-					state->extrablk.index = fi;
+-					state->extrablk.magic =
+-						XFS_DIR2_FREE_MAGIC;
+-					ASSERT(args->oknoent);
+-					return XFS_ERROR(ENOENT);
+-				}
+-			}
+-		}
+-		/*
+-		 * Not adding a new entry, so we really want to find
+-		 * the name given to us.
+-		 */
+-		else {
++			newfdb = xfs_dir2_db_to_fdb(mp, newdb);
+ 			/*
+-			 * If it's a different data block, go get it.
++			 * If it's not the one we have in hand,
++			 * read it in.
+ 			 */
+-			if (newdb != curdb) {
++			if (newfdb != curfdb) {
+ 				/*
+-				 * If we had a block before, drop it.
++				 * If we had one before, drop it.
+ 				 */
+ 				if (curbp)
+ 					xfs_da_brelse(tp, curbp);
+ 				/*
+-				 * Read the data block.
++				 * Read the free block.
+ 				 */
+-				if ((error =
+-				    xfs_da_read_buf(tp, dp,
+-					    xfs_dir2_db_to_da(mp, newdb), -1,
+-					    &curbp, XFS_DATA_FORK))) {
++				error = xfs_da_read_buf(tp, dp,
++						xfs_dir2_db_to_da(mp, newfdb),
++						-1, &curbp, XFS_DATA_FORK);
++				if (error)
+ 					return error;
+-				}
+-				xfs_dir2_data_check(dp, curbp);
+-				curdb = newdb;
++
++				free = curbp->data;
++				ASSERT(be32_to_cpu(free->hdr.magic) ==
++				       XFS_DIR2_FREE_MAGIC);
++				ASSERT((be32_to_cpu(free->hdr.firstdb) %
++					XFS_DIR2_MAX_FREE_BESTS(mp)) == 0);
++				ASSERT(be32_to_cpu(free->hdr.firstdb) <= curdb);
++				ASSERT(curdb < be32_to_cpu(free->hdr.firstdb) +
++				       be32_to_cpu(free->hdr.nvalid));
+ 			}
+ 			/*
+-			 * Point to the data entry.
++			 * Get the index for our entry.
++			 */
++			fi = xfs_dir2_db_to_fdindex(mp, curdb);
++			/*
++			 * If it has room, return it.
+ 			 */
+-			dep = (xfs_dir2_data_entry_t *)
+-			      ((char *)curbp->data +
+-			       xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
+-			/*
+-			 * Compare the entry, return it if it matches.
+-			 */
+-			cmp = args->oknoent ?
+-				xfs_dir_compname(dp, dep->name, dep->namelen,
+-						args->name, args->namelen):
+-				xfs_da_compname(dep->name, dep->namelen,
+-						args->name, args->namelen);
+-			if (cmp != XFS_CMP_DIFFERENT &&
+-					cmp != args->cmpresult) {
+-				args->cmpresult = cmp;
+-				args->inumber = be64_to_cpu(dep->inumber);
++			if (unlikely(be16_to_cpu(free->bests[fi]) == NULLDATAOFF)) {
++				XFS_ERROR_REPORT("xfs_dir2_leafn_lookup_int",
++						 XFS_ERRLEVEL_LOW, mp);
++				if (curfdb != newfdb)
++					xfs_da_brelse(tp, curbp);
++				return XFS_ERROR(EFSCORRUPTED);
++			}
++			curfdb = newfdb;
++			if (be16_to_cpu(free->bests[fi]) >= length) {
+ 				*indexp = index;
+-				if (cmp == XFS_CMP_EXACT) {
+-					state->extravalid = 1;
+-					state->extrablk.blkno = curdb;
+-					state->extrablk.index =
+-						(int)((char *)dep -
+-						      (char *)curbp->data);
+-					state->extrablk.magic =
+-						XFS_DIR2_DATA_MAGIC;
+-					state->extrablk.bp = curbp;
+-					return XFS_ERROR(EEXIST);
+-				}
++				state->extravalid = 1;
++				state->extrablk.bp = curbp;
++				state->extrablk.blkno = curfdb;
++				state->extrablk.index = fi;
++				state->extrablk.magic = XFS_DIR2_FREE_MAGIC;
++				ASSERT(args->oknoent);
++				return XFS_ERROR(ENOENT);
+ 			}
  		}
--	
-+
- 		break;
  	}
- 	case XFS_FSOP_GOING_FLAGS_LOGFLUSH:
-Index: kern_ci/fs/xfs/xfs_sb.h
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_sb.h
-+++ kern_ci/fs/xfs/xfs_sb.h
-@@ -46,10 +46,12 @@ struct xfs_mount;
- #define XFS_SB_VERSION_SECTORBIT	0x0800
- #define	XFS_SB_VERSION_EXTFLGBIT	0x1000
- #define	XFS_SB_VERSION_DIRV2BIT		0x2000
-+#define XFS_SB_VERSION_OLDCIBIT		0x4000	/* ASCII only case-insens. */
- #define	XFS_SB_VERSION_MOREBITSBIT	0x8000
- #define	XFS_SB_VERSION_OKSASHFBITS	\
- 	(XFS_SB_VERSION_EXTFLGBIT | \
--	 XFS_SB_VERSION_DIRV2BIT)
-+	 XFS_SB_VERSION_DIRV2BIT | \
-+	 XFS_SB_VERSION_OLDCIBIT)
- #define	XFS_SB_VERSION_OKREALFBITS	\
- 	(XFS_SB_VERSION_ATTRBIT | \
- 	 XFS_SB_VERSION_NLINKBIT | \
-@@ -436,6 +438,12 @@ static inline int xfs_sb_version_hassect
- 		((sbp)->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
- }
- 
-+static inline int xfs_sb_version_hasoldci(xfs_sb_t *sbp)
-+{
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
-+		((sbp)->sb_versionnum & XFS_SB_VERSION_OLDCIBIT);
+@@ -608,31 +528,166 @@ xfs_dir2_leafn_lookup_int(
+ 	 * If we are holding a buffer, give it back in case our caller
+ 	 * finds it useful.
+ 	 */
+-	if ((state->extravalid = (curbp != NULL))) {
++	if (curbp != NULL) {
++		state->extravalid = 1;
+ 		state->extrablk.bp = curbp;
+ 		state->extrablk.index = -1;
+ 		/*
+ 		 * For addname, giving back a free block.
+ 		 */
+-		if (args->addname) {
+-			state->extrablk.blkno = curfdb;
+-			state->extrablk.magic = XFS_DIR2_FREE_MAGIC;
++		state->extrablk.blkno = curfdb;
++		state->extrablk.magic = XFS_DIR2_FREE_MAGIC;
++	}
++	/*
++	 * Return the final index, that will be the insertion point.
++	 */
++	*indexp = index;
++	ASSERT(index == be16_to_cpu(leaf->hdr.count) || args->oknoent);
++	return XFS_ERROR(ENOENT);
 +}
 +
- static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
- {
- 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
++/*
++ * Look up a leaf entry in a node-format leaf block.
++ * The extrablk in state a data block.
++ */
++static int
++xfs_dir2_leafn_lookup_for_entry(
++	xfs_dabuf_t		*bp,		/* leaf buffer */
++	xfs_da_args_t		*args,		/* operation arguments */
++	int			*indexp,	/* out: leaf entry index */
++	xfs_da_state_t		*state)		/* state to fill in */
++{
++	xfs_dabuf_t		*curbp;		/* current data/free buffer */
++	xfs_dir2_db_t		curdb;		/* current data block number */
++	xfs_dir2_data_entry_t	*dep;		/* data block entry */
++	xfs_inode_t		*dp;		/* incore directory inode */
++	int			error;		/* error return value */
++	int			index;		/* leaf entry index */
++	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
++	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
++	xfs_mount_t		*mp;		/* filesystem mount point */
++	xfs_dir2_db_t		newdb;		/* new data block number */
++	xfs_trans_t		*tp;		/* transaction pointer */
++	xfs_dacmp_t		cmp;		/* comparison result */
++	xfs_dabuf_t		*ci_bp = NULL;	/* buffer with CI match */
++
++	dp = args->dp;
++	tp = args->trans;
++	mp = dp->i_mount;
++	leaf = bp->data;
++	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAFN_MAGIC);
++#ifdef __KERNEL__
++	ASSERT(be16_to_cpu(leaf->hdr.count) > 0);
++#endif
++	xfs_dir2_leafn_check(dp, bp);
++	/*
++	 * Look up the hash value in the leaf entries.
++	 */
++	index = xfs_dir2_leaf_search_hash(args, bp);
++	/*
++	 * Do we have a buffer coming in?
++	 */
++	if (state->extravalid) {
++		curbp = state->extrablk.bp;
++		curdb = state->extrablk.blkno;
++		if (args->cmpresult == XFS_CMP_CASE)
++			ci_bp = curbp;
++	} else {
++		curbp = NULL;
++		curdb = -1;
++	}
++	/*
++	 * Loop over leaf entries with the right hash value.
++	 */
++	for (lep = &leaf->ents[index];
++	     index < be16_to_cpu(leaf->hdr.count) &&
++			be32_to_cpu(lep->hashval) == args->hashval;
++	     lep++, index++) {
++		/*
++		 * Skip stale leaf entries.
++		 */
++		if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
++			continue;
++		/*
++		 * Pull the data block number from the entry.
++		 */
++		newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
++		/*
++		 * Not adding a new entry, so we really want to find
++		 * the name given to us.
++		 *
++		 * If it's a different data block, go get it.
++		 */
++		if (newdb != curdb) {
++			/*
++			 * If we had a block before, drop it (unless it
++			 * contains a case-insensitive match).
++			 */
++			if (curbp && curbp != ci_bp)
++				xfs_da_brelse(tp, curbp);
++			/*
++			 * Read the data block.
++			 */
++			error = xfs_da_read_buf(tp, dp,
++					xfs_dir2_db_to_da(mp, newdb), -1,
++					&curbp, XFS_DATA_FORK);
++			if (error)
++				return error;
++			xfs_dir2_data_check(dp, curbp);
++			curdb = newdb;
+ 		}
+ 		/*
+-		 * For other callers, giving back a data block.
++		 * Point to the data entry.
+ 		 */
+-		else {
++		dep = (xfs_dir2_data_entry_t *)((char *)curbp->data +
++			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
++		/*
++		 * Compare the entry, return it if it matches.
++		 */
++		cmp = args->oknoent ?
++			xfs_dir_compname(dp, dep->name, dep->namelen,
++					args->name, args->namelen):
++			xfs_da_compname(dep->name, dep->namelen,
++					args->name, args->namelen);
++		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++			args->cmpresult = cmp;
++			args->inumber = be64_to_cpu(dep->inumber);
++			*indexp = index;
++			if (ci_bp && ci_bp != curbp)
++				xfs_da_brelse(tp, ci_bp);
++			state->extravalid = 1;
+ 			state->extrablk.blkno = curdb;
++			state->extrablk.index = (int)((char *)dep -
++					(char *)curbp->data);
+ 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
++			state->extrablk.bp = curbp;
++			if (cmp == XFS_CMP_EXACT)
++				return XFS_ERROR(EEXIST);
+ 		}
+ 	}
+ 	/*
+-	 * For lookup (where args->oknoent is set, and args->addname is not
+-	 * set, the state->extrablk info is not used, just freed.
++	 * if we have a case-insensitive match, we have to return ENOENT
++	 * so xfs_da_node_lookup_int() can try the next leaf if one exists
++	 * for the hash that may have an exact match.
++	 * xfs_dir2_node_lookup() below handles the ENOENT and args->cmpresult
++	 * to find the case-insensitive match and returns EEXIST.
+ 	 */
+-	if (args->cmpresult == XFS_CMP_CASE) {
+-		ASSERT(!args->addname);
+-		return XFS_ERROR(EEXIST);
++	if (args->cmpresult == XFS_CMP_CASE)
++		return XFS_ERROR(ENOENT);
++	/*
++	 * Didn't find a match.
++	 * If we are holding a buffer, give it back in case our caller
++	 * finds it useful.
++	 */
++	if (curbp != NULL) {
++		state->extravalid = 1;
++		state->extrablk.bp = curbp;
++		state->extrablk.index = -1;
++		/*
++		 * Giving back a data block.
++		 */
++		state->extrablk.blkno = curdb;
++		state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+ 	}
+ 	/*
+ 	 * Return the final index, that will be the insertion point.
+@@ -643,6 +698,23 @@ xfs_dir2_leafn_lookup_int(
+ }
+ 
+ /*
++ * Look up a leaf entry in a node-format leaf block.
++ * If this is an addname then the extrablk in state is a freespace block,
++ * otherwise it's a data block.
++ */
++int
++xfs_dir2_leafn_lookup_int(
++	xfs_dabuf_t		*bp,		/* leaf buffer */
++	xfs_da_args_t		*args,		/* operation arguments */
++	int			*indexp,	/* out: leaf entry index */
++	xfs_da_state_t		*state)		/* state to fill in */
++{
++	return args->addname ?
++		xfs_dir2_leafn_lookup_for_addname(bp, args, indexp, state) :
++		xfs_dir2_leafn_lookup_for_entry(bp, args, indexp, state);
++}
++
++/*
+  * Move count leaf entries from source to destination leaf.
+  * Log entries and headers.  Stale entries are preserved.
+  */
+@@ -1785,6 +1857,11 @@ xfs_dir2_node_lookup(
+ 	if (error)
+ 		rval = error;
+ 	/*
++	 * If case-insensitive match was found in a leaf, return EEXIST.
++	 */
++	else if (rval == ENOENT && args->cmpresult == XFS_CMP_CASE)
++		rval = EEXIST;
++	/*
+ 	 * Release the btree blocks and leaf block.
+ 	 */
+ 	for (i = 0; i < state->path.active; i++) {
 
 -- 
