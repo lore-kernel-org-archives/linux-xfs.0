@@ -1,99 +1,208 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 21:07:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Apr 2008 21:26:10 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3246bLD018479
-	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 21:06:41 -0700
-Date: Wed, 2 Apr 2008 14:07:08 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [Review] Improve XFS error checking and propagation
-Message-ID: <20080402040708.GB103491721@sgi.com>
-References: <20080311010420.GD155407@sgi.com> <20080401230044.GS103491721@sgi.com> <nccfxu5kloe.fsf@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <nccfxu5kloe.fsf@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m324PnuU021284
+	for <xfs@oss.sgi.com>; Tue, 1 Apr 2008 21:25:51 -0700
+Message-ID: <47F3150B.6000106@sgi.com>
+Date: Wed, 02 Apr 2008 15:09:31 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: [Patch] Per iclog callback chain lock
+References: <20080401231348.GT103491721@sgi.com>
+In-Reply-To: <20080401231348.GT103491721@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@cxhome.ath.cx>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Apr 02, 2008 at 01:58:09PM +1100, Niv Sardi wrote:
-> David Chinner <dgc@sgi.com> writes:
-> > On Tue, Mar 11, 2008 at 12:04:21PM +1100, David Chinner wrote:
-> >> A recent paper at the FAST08 conference highlighted a large number
-> >> of unchecked error paths in Linux filesystems and I/O layers.  As a
-> >> subsystem, XFS had the highest aggregate numbers of bad error
-> >> propagation. A tarball which contains a quilt patch series of 32
-> >> patches aimed at improving this situation can be found here:
-> >> 
-> >> http://oss.sgi.com/~dgc/xfs/error-check/xfs-error-checking.tar.gz
+Looks fine to me - just one small comment.
+
+David Chinner wrote:
+> Introduce an iclog callback chain lock.
 > 
-> All looks good except some minor typo-editing,
+> Rather than use the icloglock for protecting the iclog completion
+> callback chain, use a new per-iclog lock so that walking the
+> callback chain doesn't require holding a global lock.
 > 
-> and
+> This reduces contention on the icloglock during log buffer I/O
+> completion as the callback chain lock is take for every callback
+> that is issued. On large log buffers, this can number in the
+> hundreds to thousands per iclog so isolating the lock to the
+> iclog makes a lot of sense.
 > 
-> NOK xfs-mustcheck-quotamount.patch # need to check if can happen when forcing quotas
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/xfs_log.c      |   35 +++++++++++++++++++----------------
+>  fs/xfs/xfs_log_priv.h |   33 ++++++++++++++++++++++++++-------
+>  2 files changed, 45 insertions(+), 23 deletions(-)
 > 
-> I'm not sure what happens if we really DO want quotas (specified on
-> mount line and such).
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-03-13 13:10:23.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-03-13 19:35:51.251913648 +1100
+> @@ -397,12 +397,10 @@ xfs_log_notify(xfs_mount_t	  *mp,		/* mo
+>  	       void		  *iclog_hndl,	/* iclog to hang callback off */
+>  	       xfs_log_callback_t *cb)
+>  {
+> -	xlog_t *log = mp->m_log;
+>  	xlog_in_core_t	  *iclog = (xlog_in_core_t *)iclog_hndl;
+>  	int	abortflg;
+>  
+> -	cb->cb_next = NULL;
+> -	spin_lock(&log->l_icloglock);
+> +	spin_lock(&iclog->ic_callback_lock);
+>  	abortflg = (iclog->ic_state & XLOG_STATE_IOERROR);
+>  	if (!abortflg) {
+>  		ASSERT_ALWAYS((iclog->ic_state == XLOG_STATE_ACTIVE) ||
+> @@ -411,7 +409,7 @@ xfs_log_notify(xfs_mount_t	  *mp,		/* mo
+>  		*(iclog->ic_callback_tail) = cb;
+>  		iclog->ic_callback_tail = &(cb->cb_next);
+>  	}
+> -	spin_unlock(&log->l_icloglock);
+> +	spin_unlock(&iclog->ic_callback_lock);
+>  	return abortflg;
+>  }	/* xfs_log_notify */
+>  
+> @@ -1257,6 +1255,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+>  		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
+>  		iclog->ic_state = XLOG_STATE_ACTIVE;
+>  		iclog->ic_log = log;
+> +		atomic_set(&iclog->ic_refcnt, 0);
+Not related to this change but looks like we need it anyway.
+Did you mean to include it in this change?
 
-The behaviour will be exactly the same as previously, because the
-error returned by xfs_qm_mount_quotas() is ignored.  i.e. if we try
-to mount with quotas and the quota mount fails, we continue (after
-issuing a warning to syslog) that quotas were not turned on.
+> +		spin_lock_init(&iclog->ic_callback_lock);
+>  		iclog->ic_callback_tail = &(iclog->ic_callback);
+>  		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
+>  
+> @@ -1990,7 +1990,7 @@ xlog_state_clean_log(xlog_t *log)
+>  		if (iclog->ic_state == XLOG_STATE_DIRTY) {
+>  			iclog->ic_state	= XLOG_STATE_ACTIVE;
+>  			iclog->ic_offset       = 0;
+> -			iclog->ic_callback	= NULL;   /* don't need to free */
+> +			ASSERT(iclog->ic_callback == NULL);
+>  			/*
+>  			 * If the number of ops in this iclog indicate it just
+>  			 * contains the dummy transaction, we can
+> @@ -2193,37 +2193,40 @@ xlog_state_do_callback(
+>  					be64_to_cpu(iclog->ic_header.h_lsn);
+>  				spin_unlock(&log->l_grant_lock);
+>  
+> -				/*
+> -				 * Keep processing entries in the callback list
+> -				 * until we come around and it is empty.  We
+> -				 * need to atomically see that the list is
+> -				 * empty and change the state to DIRTY so that
+> -				 * we don't miss any more callbacks being added.
+> -				 */
+> -				spin_lock(&log->l_icloglock);
+>  			} else {
+> +				spin_unlock(&log->l_icloglock);
+>  				ioerrors++;
+>  			}
+> -			cb = iclog->ic_callback;
+>  
+> +			/*
+> +			 * Keep processing entries in the callback list until
+> +			 * we come around and it is empty.  We need to
+> +			 * atomically see that the list is empty and change the
+> +			 * state to DIRTY so that we don't miss any more
+> +			 * callbacks being added.
+> +			 */
+> +			spin_lock(&iclog->ic_callback_lock);
+> +			cb = iclog->ic_callback;
+>  			while (cb) {
+>  				iclog->ic_callback_tail = &(iclog->ic_callback);
+>  				iclog->ic_callback = NULL;
+> -				spin_unlock(&log->l_icloglock);
+> +				spin_unlock(&iclog->ic_callback_lock);
+>  
+>  				/* perform callbacks in the order given */
+>  				for (; cb; cb = cb_next) {
+>  					cb_next = cb->cb_next;
+>  					cb->cb_func(cb->cb_arg, aborted);
+>  				}
+> -				spin_lock(&log->l_icloglock);
+> +				spin_lock(&iclog->ic_callback_lock);
+>  				cb = iclog->ic_callback;
+>  			}
+>  
+>  			loopdidcallbacks++;
+>  			funcdidcallbacks++;
+>  
+> +			spin_lock(&log->l_icloglock);
+>  			ASSERT(iclog->ic_callback == NULL);
+> +			spin_unlock(&iclog->ic_callback_lock);
+Okay so we can acquire the l_icloglock while holding ic_callback_lock.
 
-This is especially important for root filesystems with quota
-enabled....
-
-> OK xfs-mustcheck-reset-dqcounts.patch
-> OK xfs-mustcheck-dqflushall.patch
-> OK xfs-mustcheck-acl-setmode.patch
-> OK xfs-mustcheck-search-busy.patch
-> EDITED xfs-mustcheck-compute-diff.patch # xfs_fs_cmn_err alignment
-
-That patch doesn't have any calls to xfs_fs_cmn_err() in it. Can you
-clarify, please?
-
-> OK xfs-mustcheck-bmap-adjacent.patch
-> OK xfs-mustcheck-iflush-fork.patch # less error handeling !!
-
-You can't have less error handling than intentionally ignoring
-the return from a function that can't return an error. You can
-have simpler code, though, by declaring the function void....
-
-> OK xfs-mustcheck-bulkstat-dinode.patch
-> OK xfs-mustcheck-quiesce-fs.patch
-> OK xfs-mustcheck-bdstrat.patch
-> OK xfs-fix-error-prototypes.patch # not error handeling related
-> OK xfs-mustcheck-acl-vremove.patch
-> OK xfs-mustcheck-icsb-disable.patch
-> OK xfs-mustcheck-ioend-unwritten.patch
-> OK xfs-mustcheck-buf-associate.patch
-> OK xfs-mustcheck-reserve-blocks.patch
-> EDITED xfs-mustcheck-bawrite.patch # xfs_fs_cmn_err alignment
-
-Which means?
-
-> OK xfs-mustcheck-bdwrite.patch
-> OK xfs-mustcheck-truncate-page.patch # might be incomplete
-
-Incomplete in what way?
-
-> EDITED xfs-mustcheck-dqflush.patch # slight style change/typo
-
-Details?
-
-> OK xfs-mustcheck-reset-sbqflags.patch
-> OK xfs-mustcheck-quotaoff.patch
-> EDITED xfs-mustcheck-inactive.patch # slight style change/typo
-
-Details?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+>  			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
+>  				iclog->ic_state = XLOG_STATE_DIRTY;
+>  
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_log_priv.h	2008-02-22 13:48:25.000000000 +1100
+> +++ 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h	2008-03-13 19:34:57.430809151 +1100
+> @@ -324,6 +324,19 @@ typedef struct xlog_rec_ext_header {
+>   * - ic_offset is the current number of bytes written to in this iclog.
+>   * - ic_refcnt is bumped when someone is writing to the log.
+>   * - ic_state is the state of the iclog.
+> + *
+> + * Because of cacheline contention on large machines, we need to separate
+> + * various resources onto different cachelines. To start with, make the
+> + * structure cacheline aligned. The following fields can be contended on
+> + * by independent processes:
+> + *
+> + *	- ic_callback_*
+> + *	- ic_refcnt
+> + *	- fields protected by the global l_icloglock
+> + *
+> + * so we need to ensure that these fields are located in separate cachelines.
+> + * We'll put all the read-only and l_icloglock fields in the first cacheline,
+> + * and move everything else out to subsequent cachelines.
+>   */
+>  typedef struct xlog_iclog_fields {
+>  	sv_t			ic_forcesema;
+> @@ -332,18 +345,23 @@ typedef struct xlog_iclog_fields {
+>  	struct xlog_in_core	*ic_prev;
+>  	struct xfs_buf		*ic_bp;
+>  	struct log		*ic_log;
+> -	xfs_log_callback_t	*ic_callback;
+> -	xfs_log_callback_t	**ic_callback_tail;
+> -#ifdef XFS_LOG_TRACE
+> -	struct ktrace		*ic_trace;
+> -#endif
+>  	int			ic_size;
+>  	int			ic_offset;
+> -	atomic_t		ic_refcnt;
+>  	int			ic_bwritecnt;
+>  	ushort_t		ic_state;
+>  	char			*ic_datap;	/* pointer to iclog data */
+> -} xlog_iclog_fields_t;
+> +#ifdef XFS_LOG_TRACE
+> +	struct ktrace		*ic_trace;
+> +#endif
+> +
+> +	/* Callback structures need their own cacheline */
+> +	spinlock_t		ic_callback_lock ____cacheline_aligned_in_smp;
+> +	xfs_log_callback_t	*ic_callback;
+> +	xfs_log_callback_t	**ic_callback_tail;
+> +
+> +	/* reference counts need their own cacheline */
+> +	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
+> +} xlog_iclog_fields_t ____cacheline_aligned_in_smp;
+>  
+>  typedef union xlog_in_core2 {
+>  	xlog_rec_header_t	hic_header;
+> @@ -366,6 +384,7 @@ typedef struct xlog_in_core {
+>  #define	ic_bp		hic_fields.ic_bp
+>  #define	ic_log		hic_fields.ic_log
+>  #define	ic_callback	hic_fields.ic_callback
+> +#define	ic_callback_lock hic_fields.ic_callback_lock
+>  #define	ic_callback_tail hic_fields.ic_callback_tail
+>  #define	ic_trace	hic_fields.ic_trace
+>  #define	ic_size		hic_fields.ic_size
+> 
