@@ -1,54 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 16:51:53 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 16:56:24 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33NphAE025758
-	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 16:51:45 -0700
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E368373BE11
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2008 16:52:20 -0700 (PDT)
-Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id umJnvYoMnFugqv62 for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 16:52:20 -0700 (PDT)
-Subject: Re: xfs_check running out of memory
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <4f52331f0804031623hc880b03i90f1eed342e97f3c@mail.gmail.com>
-References: <4f52331f0804031556n1f00e435g3273c516aacc5d95@mail.gmail.com>
-	 <1207263793.21048.150.camel@edge.scott.net.au>
-	 <4f52331f0804031611u30e706ddk10aa7a4d011df6a2@mail.gmail.com>
-	 <1207264560.21048.153.camel@edge.scott.net.au>
-	 <4f52331f0804031623hc880b03i90f1eed342e97f3c@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 04 Apr 2008 10:33:38 +1100
-Message-Id: <1207265618.21048.159.camel@edge.scott.net.au>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33NuEYR026730
+	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 16:56:16 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E95BF7397C9
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2008 11:44:04 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id fiMpGFCBDhD3P44h for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 11:44:04 -0700 (PDT)
+Date: Thu, 3 Apr 2008 14:43:33 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/7] XFS: Unicode case-insensitive lookup implementation
+Message-ID: <20080403184333.GA30595@infradead.org>
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062709.011126702@chook.melbourne.sgi.com> <20080403171450.GB22385@infradead.org> <20080403172400.GC22812@samba1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080403172400.GC22812@samba1>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Fong Vang <sudoyang@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Jeremy Allison <jra@samba.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-
-On Thu, 2008-04-03 at 16:23 -0700, Fong Vang wrote:
+On Thu, Apr 03, 2008 at 10:24:00AM -0700, Jeremy Allison wrote:
+> On Thu, Apr 03, 2008 at 01:14:50PM -0400, Christoph Hellwig wrote:
+> > Validating file names is not the filesystem job.  In fact it's utterly
+> > stupid, a unix filename is a sequence of bytes without special meaning
+> > except for ., .., / and \0
 > 
-> 
-> 
-> 
-> good to know.  Doesn't xfs_check also repair?  with xfs_repair -n,
+> This patch will be extremely useful for users who are serving
+> Windows clients using Samba. It allow admins to turn off the
+> userspace case insensitivity we have to emulate and be a significant
+> speed increase.
 
-No, it doesn't.
-
->  this doesn't do any repair.  SO the right approach on big volumes
-> would be to run xfs_repair -n first to detect problem then xfs_repair
-> to fix?
-
-Sure - whatever floats your boat.
-
-> thank you for the info.  much appreciated.  just, curious.  where did
-> you get this info?
-
->From the source.
-
-cheers.
-
--- 
-Nathan
+CI filenames can work perfectly fine without adding validation of file
+names by treating non-conformant bytestreams as not having lower/upper
+case variants.
