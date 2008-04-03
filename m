@@ -1,110 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 21:33:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 21:49:59 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m334X0Zt003411
-	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 21:33:03 -0700
-Date: Thu, 3 Apr 2008 14:33:29 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 3/7] XFS: Refactor node format directory lookup/addname
-Message-ID: <20080403043329.GQ103491721@sgi.com>
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.380299192@chook.melbourne.sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080402062708.380299192@chook.melbourne.sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m334naBs005547
+	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 21:49:46 -0700
+Date: Thu, 03 Apr 2008 14:50:39 +1000
+Subject: Re: [PATCH 1/7] XFS: Name operation vector for hash and compare
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062707.797672682@chook.melbourne.sgi.com> <20080403002246.GB5211@josefsipek.net>
+Message-ID: <op.t80qepmm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080403002246.GB5211@josefsipek.net>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Apr 02, 2008 at 04:25:11PM +1000, Barry Naujok wrote:
-> The next step for case-insensitive support is to avoid polution of
-> the dentry cache with entries pointing to the same inode, but with
-> names that only differ in case.
-> 
-> To perform this, we will need to pass the actual filename that
-> matched backup to the XFS/VFS interface and make sure the dentry
-> cache only contains entries with the actual case-sensitive name.
-> 
-> But, before we can do this, it was found that the directory lookup
-> code with multiple leaves was shared with code adding a name to
-> that directory. Most of xfs_dir2_leafn_lookup_int() could be broken
-> into two functions determined by if (args->addname) { } else { }.
-> 
-> For the following patch, only the lookup case needs to handle the
-> various xfs_nameops, with case-insensitive match handling in
-> addition to returning the actual name.
-> 
-> So, this patch separates xfs_dir2_leafn_lookup_int() into
-> xfs_dir2_leafn_lookup_for_addname() and xfs_dir2_leafn_lookup_for_entry().
-> 
-> xfs_dir2_leafn_lookup_for_addname() iterates through the data blocks looking
-> for a suitable empty space to insert the name while
-> xfs_dir2_leafn_lookup_for_entry() uses the xfs_nameops to find the entry.
-> 
-> xfs_dir2_leafn_lookup_for_entry() path also retains the data block where
-> the first case-insensitive match occured as in the next patch which will
-> return the name, the name is obtained from that block.
-> 
-> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
-> 
-> ---
->  fs/xfs/xfs_dir2_node.c |  373 +++++++++++++++++++++++++++++--------------------
->  1 file changed, 225 insertions(+), 148 deletions(-)
-> 
-> Index: kern_ci/fs/xfs/xfs_dir2_node.c
-> ===================================================================
-> --- kern_ci.orig/fs/xfs/xfs_dir2_node.c
-> +++ kern_ci/fs/xfs/xfs_dir2_node.c
-> @@ -387,12 +387,11 @@ xfs_dir2_leafn_lasthash(
->  }
->  
->  /*
-> - * Look up a leaf entry in a node-format leaf block.
-> - * If this is an addname then the extrablk in state is a freespace block,
-> - * otherwise it's a data block.
-> + * Look up a leaf entry for space to add a name in a node-format leaf block.
-> + * The extrablk in state is a freespace block.
->   */
-> -int
-> -xfs_dir2_leafn_lookup_int(
-> +static int
+On Thu, 03 Apr 2008 10:22:46 +1000, Josef 'Jeff' Sipek  
+<jeffpc@josefsipek.net> wrote:
 
-STATIC
+> On Wed, Apr 02, 2008 at 04:25:09PM +1000, Barry Naujok wrote:
+> ...
+>> +/*
+>> + * Name ops for directory and/or attr name operations
+>> + */
+>> +
+>> +typedef xfs_dahash_t	(*xfs_hashname_t)(const uchar_t *, int);
+>> +typedef xfs_dacmp_t	(*xfs_compname_t)(const uchar_t *, int,
+>> +					  const uchar_t *, int);
+>
+> Why have typedefs for function pointers? Sometimes, they even cause  
+> problems
+> (I remember Eric finding a nasty 64-bit bug related to a function pointer
+> typedef).
+>
+> Since IRIX isn't on the supported OS list anymore, what's the policy with
+> coding style within XFS?
 
-(and for the other new function)
+Ok, I have fixed it:
 
-> +xfs_dir2_leafn_lookup_for_addname(
->  	xfs_dabuf_t		*bp,		/* leaf buffer */
->  	xfs_da_args_t		*args,		/* operation arguments */
->  	int			*indexp,	/* out: leaf entry index */
-....
++/*
++ * Name ops for directory and/or attr name operations
++ */
++struct xfs_nameops {
++	xfs_dahash_t (*hashname)(const uchar_t *, int);
++	xfs_dacmp_t  (*compname)(const uchar_t *, int, const uchar_t *, int);
++};
 
-> @@ -1785,6 +1857,11 @@ xfs_dir2_node_lookup(
->  	if (error)
->  		rval = error;
->  	/*
-> +	 * If case-insensitive match was found in a leaf, return EEXIST.
-> +	 */
-> +	else if (rval == ENOENT && args->cmpresult == XFS_CMP_CASE)
-> +		rval = EEXIST;
+> ...
+>> Index: kern_ci/fs/xfs/xfs_dir2.h
+>> ===================================================================
+>> --- kern_ci.orig/fs/xfs/xfs_dir2.h
+>> +++ kern_ci/fs/xfs/xfs_dir2.h
+>> @@ -85,6 +85,12 @@ extern int xfs_dir_canenter(struct xfs_t
+>>  				char *name, int namelen);
+>>  extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
+>>
+>> +#define xfs_dir_hashname(dp, n, l) \
+>> +		((dp)->i_mount->m_dirnameops->hashname((n), (l)))
+>> +
+>> +#define xfs_dir_compname(dp, n1, l1, n2, l2) \
+>> +		((dp)->i_mount->m_dirnameops->compname((n1), (l1), (n2), (l2)))
+>
+> #define vs. static inline...
+>
+> I guess this comes back to my question before...what is the coding style
+> direction you want XFS to go in? More Linux-like (static inline)? or  
+> keep it
+> more IRIX-like (#define)?
 
-Can you put the comment inside the if branch?
+Nasty gotcha in this scenario, I have added a comment before them:
 
-	if (error) {
-		rval = error;
-	} else if (rval == ENOENT && args->cmpresult == XFS_CMP_CASE) {
-		/* found a case-insensitive match in a leaf */
-		rval = EEXIST;
-	}
++/*
++ * Macros are used calling for the xfs_inode's xfs_mount's name  
+operations as
++ * in most cases, xfs_dir2.h is included before xfs_inode.h and  
+xfs_mount.h.
++ */
++#define xfs_dir_hashname(dp, n, l) \
++		((dp)->i_mount->m_dirnameops->hashname((n), (l)))
++
++#define xfs_dir_compname(dp, n1, l1, n2, l2) \
++		((dp)->i_mount->m_dirnameops->compname((n1), (l1), (n2), (l2)))
 
-I think Josef got the others...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+The alternative is reorganising the #includes in most of the .c files!
