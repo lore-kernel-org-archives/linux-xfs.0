@@ -1,41 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 16:26:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 16:31:53 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33NQA9O021312
-	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 16:26:11 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 56EB190A5FB
-	for <xfs@oss.sgi.com>; Thu,  3 Apr 2008 11:11:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id d5jD2g562W7ZAuU9 for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 11:11:44 -0700 (PDT)
-Message-ID: <47F51DDE.8070501@sandeen.net>
-Date: Thu, 03 Apr 2008 13:11:42 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 5/7] XFS: Unicode case-insensitive lookup implementation
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062709.011126702@chook.melbourne.sgi.com> <20080403171450.GB22385@infradead.org> <20080403172400.GC22812@samba1>
-In-Reply-To: <20080403172400.GC22812@samba1>
-Content-Type: text/plain; charset=ISO-8859-1
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33NVhaX022695
+	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 16:31:45 -0700
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8427B91214C
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2008 16:32:20 -0700 (PDT)
+Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id ldDT0p9JiG8ZXFjT for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 16:32:20 -0700 (PDT)
+Subject: Re: [PATCH 2/7] XFS: ASCII case-insensitive support
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <20080403225556.GB448@infradead.org>
+References: <20080402062508.017738664@chook.melbourne.sgi.com>
+	 <20080402062708.071715758@chook.melbourne.sgi.com>
+	 <20080403225556.GB448@infradead.org>
+Content-Type: text/plain
+Date: Fri, 04 Apr 2008 10:01:08 +1100
+Message-Id: <1207263668.21048.147.camel@edge.scott.net.au>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jeremy Allison <jra@samba.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com
 
-Jeremy Allison wrote:
-> On Thu, Apr 03, 2008 at 01:14:50PM -0400, Christoph Hellwig wrote:
->> Validating file names is not the filesystem job.  In fact it's utterly
->> stupid, a unix filename is a sequence of bytes without special meaning
->> except for ., .., / and \0
+
+On Thu, 2008-04-03 at 18:55 -0400, Christoph Hellwig wrote:
 > 
-> This patch will be extremely useful for users who are serving
-> Windows clients using Samba. It allow admins to turn off the
-> userspace case insensitivity we have to emulate and be a significant
-> speed increase.
+> is the use of STATIC now officially phased out for XFS?
 
-I'd like to see the numbers... Simo tested an earlier version of this
-patch, and it was not faster.... Jeremy, what would be a representative
-test setup to use?
+userspace requires it for a bunch of stuff (via libxfs).
 
-Thanks,
--Eric
+cheers.
+
+-- 
+Nathan
