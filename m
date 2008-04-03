@@ -1,115 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 19:50:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m332oDTX017472
-	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 19:50:17 -0700
-Date: Wed, 2 Apr 2008 22:34:34 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 4/7] XFS: Return case-insensitive match for dentry cache
-Message-ID: <20080403023434.GF5211@josefsipek.net>
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.654277049@chook.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 21:03:37 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3343DjF031328
+	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 21:03:15 -0700
+Date: Thu, 03 Apr 2008 14:04:05 +1000
+Subject: Re: [PATCH 3/7] XFS: Refactor node format directory lookup/addname
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080402062708.654277049@chook.melbourne.sgi.com>
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.380299192@chook.melbourne.sgi.com> <20080403015122.GE5211@josefsipek.net>
+Message-ID: <op.t80n83u33jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080403015122.GE5211@josefsipek.net>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Apr 02, 2008 at 04:25:12PM +1000, Barry Naujok wrote:
-...
-> +	/*
-> +	 * Directory with a 'disconnected' dentry; get a reference to the
-> +	 * 'disconnected' dentry.
-> +	 */
-> +	dentry = list_entry(inode->i_dentry.next, struct dentry, d_alias);
+On Thu, 03 Apr 2008 11:51:22 +1000, Josef 'Jeff' Sipek  
+<jeffpc@josefsipek.net> wrote:
 
-list_first_entry does the .next for you.
+>> +static int
+>> +xfs_dir2_leafn_lookup_for_entry(
+>> +	xfs_dabuf_t		*bp,		/* leaf buffer */
+>> +	xfs_da_args_t		*args,		/* operation arguments */
+>> +	int			*indexp,	/* out: leaf entry index */
+>> +	xfs_da_state_t		*state)		/* state to fill in */
+>> +{
+>> +	xfs_dabuf_t		*curbp;		/* current data/free buffer */
+>> +	xfs_dir2_db_t		curdb;		/* current data block number */
+>> +	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+>> +	xfs_inode_t		*dp;		/* incore directory inode */
+>> +	int			error;		/* error return value */
+>> +	int			index;		/* leaf entry index */
+>> +	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+>> +	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
+>> +	xfs_mount_t		*mp;		/* filesystem mount point */
+>> +	xfs_dir2_db_t		newdb;		/* new data block number */
+>> +	xfs_trans_t		*tp;		/* transaction pointer */
+>> +	xfs_dacmp_t		cmp;		/* comparison result */
+>> +	xfs_dabuf_t		*ci_bp = NULL;	/* buffer with CI match */
+>
+> Did you try to check the stack usage (scripts/checkstack.pl)?
 
-...
-> --- kern_ci.orig/fs/xfs/xfs_da_btree.c
-> +++ kern_ci/fs/xfs/xfs_da_btree.c
-> @@ -2176,6 +2176,22 @@ xfs_da_reada_buf(
->  		return rval;
->  }
->  
-> +
-> +kmem_zone_t	*xfs_da_name_zone;
-> +
-> +uchar_t *
-> +xfs_da_name_alloc(void)
-> +{
-> +	return kmem_zone_zalloc(xfs_da_name_zone, KM_SLEEP);
-> +}
-> +
-> +void
-> +xfs_da_name_free(const uchar_t *name)
+on x86_64:
 
-Since you don't care about the type anyway, you might want to make it void*,
-and remove the cast from the lookup_ci code.
+nameops.patch
+   -> no difference
 
-> +{
-> +	kmem_zone_free(xfs_da_name_zone, (void *)name);
+ascii_ci.patch
+   -> no difference
 
-No need for the cast.
+refactor_leafn_lookup.patch (this one)
+   -> no difference
 
-> --- kern_ci.orig/fs/xfs/xfs_dir2_leaf.c
-> +++ kern_ci/fs/xfs/xfs_dir2_leaf.c
-> @@ -1301,6 +1301,15 @@ xfs_dir2_leaf_lookup(
->  	 * Return the found inode number.
->  	 */
->  	args->inumber = be64_to_cpu(dep->inumber);
-> +	/*
-> +	 * If a case-insensitive match, allocate a buffer and copy the actual
-> +	 * name into the buffer. Return it via args->value.
-> +	 */
-> +	if (args->cmpresult == XFS_CMP_CASE) {
-> +		args->value = xfs_da_name_alloc();
-> +		memcpy(args->value, dep->name, dep->namelen);
-> +		args->valuelen = dep->namelen;
+return_name.patch
+   -> xfs_dir_lookup from 152 down to 144 :)
 
-Perhaps having a static inline xfs_da_name_dup(...) would be useful...
+unicode_ci.patch
+   -> xfs_mkdir from 152 down to 136 :)
+   -> new xfs_unicode_read_cft @ 120
 
-...
-> --- kern_ci.orig/fs/xfs/xfs_vnodeops.c
-> +++ kern_ci/fs/xfs/xfs_vnodeops.c
-> @@ -1762,24 +1762,33 @@ xfs_inactive(
->  int
->  xfs_lookup(
->  	xfs_inode_t		*dp,
-> -	bhv_vname_t		*dentry,
-> -	xfs_inode_t		**ipp)
-> +	bhv_vstr_t		*d_name,
-> +	xfs_inode_t		**ipp,
-> +	bhv_vstr_t		*ci_name)
->  {
->  	xfs_inode_t		*ip;
->  	xfs_ino_t		e_inum;
->  	int			error;
->  	uint			lock_mode;
-> +	xfs_name_t		name, rname;
->  
->  	xfs_itrace_entry(dp);
->  
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return XFS_ERROR(EIO);
->  
-> +	name.name = (uchar_t *)d_name->name;
+nls_support.patch
+   -> xfs_dir2_leaf_getdents from 136 up to 200 (ouch!)
+   -> xfs_mkdir from 136 back to 152!
+   -> xfs_create from 152 up to 168
+   -> xfs_rmdir from 104 down to < 100?
 
-d_name->name is: const unsigned char*
-name.name is:	 const uchar_t*
-
-Is there any reason why you use uchar_t - beyond the other parts of XFS use
-it? (I guess this is the same question that I asked before - coding style.)
-
-xfs_types.h defines uchar_t as unsigned char...
-
-Josef 'Jeff' Sipek.
-
--- 
-Defenestration n. (formal or joc.):
-  The act of removing Windows from your computer in disgust, usually
-  followed by the installation of Linux or some other Unix-like operating
-  system.
+This seems to be better than the stack usage Eric posted back in
+response to my last patch set.
