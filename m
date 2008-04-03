@@ -1,51 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 15:55:36 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33MtKSX007413
-	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 15:55:23 -0700
-Date: Thu, 3 Apr 2008 18:55:56 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] XFS: ASCII case-insensitive support
-Message-ID: <20080403225556.GB448@infradead.org>
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.071715758@chook.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 15:56:20 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m33Mu7iA007762
+	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 15:56:08 -0700
+Received: from yw-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACB6C910D60
+	for <xfs@oss.sgi.com>; Thu,  3 Apr 2008 15:56:44 -0700 (PDT)
+Received: from yw-out-1718.google.com (yw-out-1718.google.com [74.125.46.152]) by cuda.sgi.com with ESMTP id wknRGaFoMA6JnwrH for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 15:56:44 -0700 (PDT)
+Received: by yw-out-1718.google.com with SMTP id 6so1237866ywa.32
+        for <xfs@oss.sgi.com>; Thu, 03 Apr 2008 15:56:43 -0700 (PDT)
+Message-ID: <4f52331f0804031556n1f00e435g3273c516aacc5d95@mail.gmail.com>
+Date: Thu, 3 Apr 2008 15:56:43 -0700
+From: "Fong Vang" <sudoyang@gmail.com>
+Subject: xfs_check running out of memory
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <20080402062708.071715758@chook.melbourne.sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Wed, Apr 02, 2008 at 04:25:10PM +1000, Barry Naujok wrote:
-> +	struct qstr	*a,
-> +	struct qstr	*b)
-> +{
-> +	int	result = xfs_dir_compname(XFS_I(dir->d_inode), a->name, a->len,
-> +					b->name, b->len) == XFS_CMP_DIFFERENT;
-> +	/*
-> +	 * result == 0 if a match is found, and if so, copy the name in "b"
-> +	 * to "a" to cope with negative dentries getting the correct name.
-> +	 */
-> +	if (result == 0)
-> +		memcpy((unsigned char *)a->name, b->name, a->len);
-> +	return result;
+xfs_check on one of my 64-bit server keeps running out of memory checking a
+6.5TB file system with millions of files.  xfsprogs is version 2.9.4  One of
+the man pages online mentions a xfs_check64 version but I can't seem to find
+this anyway.  Where can I find this tool?
 
-qstr->name is marked const for a reason, please don't overwrite
-it after it's creation.
+thank you.
 
-> +struct dentry_operations xfs_ci_dentry_operations =
-> +{
 
-struct dentry_operations xfs_ci_dentry_operations = {
-> +static xfs_dahash_t
-> +xfs_ascii_ci_hashname(
-
-is the use of STATIC now officially phased out for XFS?
-
-> +		((sbp)->sb_versionnum & XFS_SB_VERSION_OLDCIBIT);
-
-no need for the braces around sbp
-
->
+[[HTML alternate version deleted]]
