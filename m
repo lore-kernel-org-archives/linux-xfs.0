@@ -1,120 +1,272 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:05:58 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3315oWx001067
-	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:05:50 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 95BB0731FE1
-	for <xfs@oss.sgi.com>; Wed,  2 Apr 2008 18:06:23 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id IVcFAq3MqrmmpOkK for <xfs@oss.sgi.com>; Wed, 02 Apr 2008 18:06:23 -0700 (PDT)
-Message-ID: <47F42D8D.3030406@sandeen.net>
-Date: Wed, 02 Apr 2008 20:06:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: [PATCH V2] combined features2 fixup patches (updating/rewriting what
- was sent in other threads)
-References: <47F0546C.9070709@sandeen.net> <20080402002940.GZ103491721@sgi.com>
-In-Reply-To: <20080402002940.GZ103491721@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:28:58 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m331Shv4004533
+	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:28:45 -0700
+Date: Thu, 3 Apr 2008 11:29:12 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 1/7] XFS: Name operation vector for hash and compare
+Message-ID: <20080403012912.GO103491721@sgi.com>
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062707.797672682@chook.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080402062707.797672682@chook.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-(Addressing Dave's review point)
+On Wed, Apr 02, 2008 at 04:25:09PM +1000, Barry Naujok wrote:
+> Adds two pieces of functionality for the basis of case-insensitive
+> support in XFS:
+> 
+> 1.  A comparison result enumerated type: xfs_dacmp_t. It represents an
+>     exact match, case-insensitive match or no match at all. This patch
+>     only implements different and exact results.
+> 
+> 2.  xfs_nameops vector for specifying how to perform the hash generation
+>     of filenames and comparision methods. In this patch the hash vector
+>     points to the existing xfs_da_hashname function and the comparison
+>     method does a length compare, and if the same, does a memcmp and
+>     return the xfs_dacmp_t result.
+> 
+> All filename functions that use the hash (create, lookup remove, rename,
+> etc) now use the xfs_nameops.hashname function and all directory lookup
+> functions also use the xfs_nameops.compname function.
 
-Ensure "both" features2 slots are consistent, and set mp attr2 flag.
+Ok, so internally I see this is not the case. I'll comment on that
+inline.
 
-Since older kernels may look in the sb_bad_features2 slot for
-flags, rather than zeroing it out on fixup, we should make it 
-equal to the sb_features2 value.
+> The lookup functions also handle case-insensitive results even though
+> the default comparison function cannot return that. And important
+> aspect of the lookup functions is that an exact match always has
+> precedence over a case-insensitive. So while a case-insensitive match
+> is found, we have to keep looking just in case there is an exact
+> match. In the meantime, the info for the first case-insensitive match
+> is retained if no exact match is found.
+> 
+> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+......
+>  }
+>  
+> +xfs_dacmp_t
+> +xfs_da_compname(const uchar_t *name1, int len1, const uchar_t *name2, int len2)
+> +{
+> +	return (len1 == len2 && memcmp(name1, name2, len1) == 0) ?
+> +			XFS_CMP_EXACT : XFS_CMP_DIFFERENT;
+> +}
+> +
+> +struct xfs_nameops xfs_default_nameops = {
 
-Also, if the ATTR2 flag was not found prior to features2
-fixup, it was not set in the mount flags, so re-check after the
-fixup so that the current session will use the feature.
+const.
 
-Also fix up the comments to reflect these changes.
+>  #ifdef __KERNEL__
+>  /*========================================================================
+> @@ -248,7 +271,12 @@ xfs_daddr_t	xfs_da_reada_buf(struct xfs_
+>  int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
+>  					  xfs_dabuf_t *dead_buf);
+>  
+> +extern struct xfs_nameops xfs_default_nameops;
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Does this need global visibility? It's only needed in xfs_dir_mount(),
+right?
 
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.c
-@@ -967,23 +967,32 @@ xfs_mountfs(
- 	xfs_mount_common(mp, sbp);
- 
- 	/*
--	 * Check for a bad features2 field alignment. This happened on
--	 * some platforms due to xfs_sb_t not being 64bit size aligned
--	 * when sb_features was added and hence the compiler put it in
--	 * the wrong place.
-+	 * Check for a mismatched features2 values.  Older kernels
-+	 * read & wrote into the wrong sb offset for sb_features2
-+	 * on some platforms due to xfs_sb_t not being 64bit size aligned
-+	 * when sb_features2 was added, which made older superblock
-+	 * reading/writing routines swap it as a 64-bit value.
- 	 *
--	 * If we detect a bad field, we or the set bits into the existing
--	 * features2 field in case it has already been modified and we
--	 * don't want to lose any features. Zero the bad one and mark
--	 * the two fields as needing updates once the transaction subsystem
--	 * is online.
-+	 * For backwards compatibility, we make both slots equal.
-+	 *
-+	 * If we detect a mismatched field, we OR the set bits into the
-+	 * existing features2 field in case it has already been modified; we
-+	 * don't want to lose any features.  We then update the bad location
-+	 * with the ORed value so that older kernels will see any features2
-+	 * flags, and mark the two fields as needing updates once the
-+	 * transaction subsystem is online.
- 	 */
--	if (xfs_sb_has_bad_features2(sbp)) {
-+	if (xfs_sb_has_mismatched_features2(sbp)) {
- 		cmn_err(CE_WARN,
- 			"XFS: correcting sb_features alignment problem");
- 		sbp->sb_features2 |= sbp->sb_bad_features2;
--		sbp->sb_bad_features2 = 0;
-+		sbp->sb_bad_features2 = sbp->sb_features2;
- 		update_flags |= XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
-+		/*
-+		 * Re-check for ATTR2 from the bad_features2 slot.
-+		 */
-+		if (xfs_sb_version_hasattr2(&mp->m_sb))
-+			mp->m_flags |= XFS_MOUNT_ATTR2;
- 	}
- 
- 	/*
-@@ -1890,7 +1899,8 @@ xfs_uuid_unmount(
- 
- /*
-  * Used to log changes to the superblock unit and width fields which could
-- * be altered by the mount options. Only the first superblock is updated.
-+ * be altered by the mount options, as well as any potential sb_features2
-+ * fixup. Only the first superblock is updated.
-  */
- STATIC void
- xfs_mount_log_sb(
-Index: linux-2.6-xfs/fs/xfs/xfs_sb.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_sb.h
-+++ linux-2.6-xfs/fs/xfs/xfs_sb.h
-@@ -320,11 +320,12 @@ static inline int xfs_sb_good_version(xf
- #endif /* __KERNEL__ */
- 
- /*
-- * Detect a bad features2 field
-+ * Detect a mismatched features2 field.  Older kernels read/wrote
-+ * this into the wrong slot, so to be safe we keep them in sync.
-  */
--static inline int xfs_sb_has_bad_features2(xfs_sb_t *sbp)
-+static inline int xfs_sb_has_mismatched_features2(xfs_sb_t *sbp)
- {
--	return (sbp->sb_bad_features2 != 0);
-+	return (sbp->sb_bad_features2 != sbp->sb_features2);
- }
- 
- static inline unsigned xfs_sb_version_tonew(unsigned v)
+> Index: kern_ci/fs/xfs/xfs_dir2.h
+> ===================================================================
+> --- kern_ci.orig/fs/xfs/xfs_dir2.h
+> +++ kern_ci/fs/xfs/xfs_dir2.h
+> @@ -85,6 +85,12 @@ extern int xfs_dir_canenter(struct xfs_t
+>  				char *name, int namelen);
+>  extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
+>  
+> +#define xfs_dir_hashname(dp, n, l) \
+> +		((dp)->i_mount->m_dirnameops->hashname((n), (l)))
+> +
+> +#define xfs_dir_compname(dp, n1, l1, n2, l2) \
+> +		((dp)->i_mount->m_dirnameops->compname((n1), (l1), (n2), (l2)))
+> +
+
+Static inline functions, please.
+
+>  /*
+>   * Utility routines for v2 directories.
+>   */
+> Index: kern_ci/fs/xfs/xfs_dir2_block.c
+> ===================================================================
+> --- kern_ci.orig/fs/xfs/xfs_dir2_block.c
+> +++ kern_ci/fs/xfs/xfs_dir2_block.c
+> @@ -643,6 +643,7 @@ xfs_dir2_block_lookup_int(
+>  	int			mid;		/* binary search current idx */
+>  	xfs_mount_t		*mp;		/* filesystem mount point */
+>  	xfs_trans_t		*tp;		/* transaction pointer */
+> +	xfs_dacmp_t		cmp;		/* comparison result */
+>  
+>  	dp = args->dp;
+>  	tp = args->trans;
+> @@ -698,19 +699,33 @@ xfs_dir2_block_lookup_int(
+>  			((char *)block + xfs_dir2_dataptr_to_off(mp, addr));
+>  		/*
+>  		 * Compare, if it's right give back buffer & entry number.
+> +		 *
+> +		 * lookup case - use nameops;
+> +		 *
+> +		 * replace/remove case - as lookup has been already been
+> +		 * performed, look for an exact match using the fast method
+>  		 */
+> -		if (dep->namelen == args->namelen &&
+> -		    dep->name[0] == args->name[0] &&
+> -		    memcmp(dep->name, args->name, args->namelen) == 0) {
+> +		cmp = args->oknoent ?
+> +			xfs_dir_compname(dp, dep->name, dep->namelen,
+> +						args->name, args->namelen) :
+> +			xfs_da_compname(dep->name, dep->namelen,
+> +						args->name, args->namelen);
+
+Why add this "fast path"? All you're saving here is a few
+instructions but making the code much harder to follow.
+
+		cmp = xfs_dir_compname(dp, dep->name, dep->namelen,
+						args->name, args->namelen);
+
+Will do exactly the same thing and I'd much prefer readable code
+over prematurely optimised code any day of the week....
+
+> +		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+> +			args->cmpresult = cmp;
+>  			*bpp = bp;
+>  			*entno = mid;
+> -			return 0;
+> +			if (cmp == XFS_CMP_EXACT)
+> +				return 0;
+>  		}
+> -	} while (++mid < be32_to_cpu(btp->count) && be32_to_cpu(blp[mid].hashval) == hash);
+> +	} while (++mid < be32_to_cpu(btp->count) &&
+> +			be32_to_cpu(blp[mid].hashval) == hash);
+> +
+> +	ASSERT(args->oknoent);
+> +	if (args->cmpresult == XFS_CMP_CASE)
+> +		return 0;
+
+So if we find multiple case matches, we'll take the last we find?
+
+>  	/*
+>  	 * No match, release the buffer and return ENOENT.
+>  	 */
+> -	ASSERT(args->oknoent);
+>  	xfs_da_brelse(tp, bp);
+>  	return XFS_ERROR(ENOENT);
+
+Should we really be promoting that assert to before we return a successful
+case match?
+
+> @@ -1391,19 +1394,49 @@ xfs_dir2_leaf_lookup_int(
+>  		       xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
+>  		/*
+>  		 * If it matches then return it.
+> +		 *
+> +		 * lookup case - use nameops;
+> +		 *
+> +		 * replace/remove case - as lookup has been already been
+> +		 * performed, look for an exact match using the fast method
+>  		 */
+> -		if (dep->namelen == args->namelen &&
+> -		    dep->name[0] == args->name[0] &&
+> -		    memcmp(dep->name, args->name, args->namelen) == 0) {
+> -			*dbpp = dbp;
+> +		cmp = args->oknoent ?
+> +			xfs_dir_compname(dp, dep->name, dep->namelen,
+> +						args->name, args->namelen) :
+> +			xfs_da_compname(dep->name, dep->namelen,
+> +						args->name, args->namelen);
+
+Same again.
+
+> +		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+> +			args->cmpresult = cmp;
+>  			*indexp = index;
+> -			return 0;
+> +			if (cmp == XFS_CMP_EXACT) {
+> +				/*
+> +				 * case exact match: release the case-insens.
+> +				 * match buffer if it exists and return the
+> +				 * current data buffer.
+> +				 */
+> +				if (cbp && cbp != dbp)
+> +					xfs_da_brelse(tp, cbp);
+> +				*dbpp = dbp;
+> +				return 0;
+> +			}
+> +			cbp = dbp;
+>  		}
+>  	}
+> +	ASSERT(args->oknoent);
+> +	if (args->cmpresult == XFS_CMP_CASE) {
+> +		/*
+> +		 * case-insensitive match: release current buffer and
+> +		 * return the buffer with the case-insensitive match.
+> +		 */
+> +		if (cbp != dbp)
+> +			xfs_da_brelse(tp, dbp);
+> +		*dbpp = cbp;
+> +		return 0;
+> +	}
+>  	/*
+>  	 * No match found, return ENOENT.
+>  	 */
+> -	ASSERT(args->oknoent);
+
+Same question about promoting the assert....
+
+> @@ -578,19 +579,27 @@ xfs_dir2_leafn_lookup_int(
+>  			/*
+>  			 * Compare the entry, return it if it matches.
+>  			 */
+> -			if (dep->namelen == args->namelen &&
+> -			    dep->name[0] == args->name[0] &&
+> -			    memcmp(dep->name, args->name, args->namelen) == 0) {
+> +			cmp = args->oknoent ?
+> +				xfs_dir_compname(dp, dep->name, dep->namelen,
+> +						args->name, args->namelen):
+> +				xfs_da_compname(dep->name, dep->namelen,
+> +						args->name, args->namelen);
+
+Same again.
+
+> @@ -907,9 +914,8 @@ xfs_dir2_sf_removename(
+>  	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+>  	     i < sfp->hdr.count;
+>  	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+> -		if (sfep->namelen == args->namelen &&
+> -		    sfep->name[0] == args->name[0] &&
+> -		    memcmp(sfep->name, args->name, args->namelen) == 0) {
+> +		if (xfs_da_compname(sfep->name, sfep->namelen,
+> +				args->name, args->namelen) == XFS_CMP_EXACT) {
+>  			ASSERT(xfs_dir2_sf_get_inumber(sfp,
+>  					xfs_dir2_sf_inumberp(sfep)) ==
+>  				args->inumber);
+
+This only checks for an exact match - what is supposed to happen
+with a XFS_CMP_CASE return?
+
+> @@ -1044,9 +1050,9 @@ xfs_dir2_sf_replace(
+>  		for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+>  		     i < sfp->hdr.count;
+>  		     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+> -			if (sfep->namelen == args->namelen &&
+> -			    sfep->name[0] == args->name[0] &&
+> -			    memcmp(args->name, sfep->name, args->namelen) == 0) {
+> +			if (xfs_da_compname(sfep->name, sfep->namelen,
+> +					    args->name, args->namelen) ==
+> +					XFS_CMP_EXACT) {
+
+ditto.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
