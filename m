@@ -1,206 +1,142 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:53:15 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m331r3Cv009081
-	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:53:06 -0700
-Date: Thu, 3 Apr 2008 11:53:31 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH 2/7] XFS: ASCII case-insensitive support
-Message-ID: <20080403015331.GP103491721@sgi.com>
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.071715758@chook.melbourne.sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:55:18 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m331sxkj009624
+	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:55:01 -0700
+Date: Wed, 2 Apr 2008 21:51:22 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 3/7] XFS: Refactor node format directory lookup/addname
+Message-ID: <20080403015122.GE5211@josefsipek.net>
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062708.380299192@chook.melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080402062708.071715758@chook.melbourne.sgi.com>
+In-Reply-To: <20080402062708.380299192@chook.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Barry Naujok <bnaujok@sgi.com>
 Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Apr 02, 2008 at 04:25:10PM +1000, Barry Naujok wrote:
-> Implement ASCII case-insensitive support. It's primary purpose 
-> is for supporting existing filesystems that already use this
-> case-insensitive mode migrated from IRIX. But, if you only need
-> ASCII-only case-insensitive support (ie. English only) and will
-> never use another language, then this mode is perfectly adequate.
-> 
-> ASCII-CI is implemented by generating hashes based on lower-case
-> letters and doing lower-case compares. It implements a new
-> xfs_nameops vector for doing the hashes and comparisons for
-> all filename operations.
-> 
-> It also overrides the Linux dentry cache operations with its
-> own hash and compare functions (the same as used in the xfs_nameops
-> vector).
-> 
-> To create a filesystem with this CI mode, use:
-> # mkfs.xfs -n version=ci <device>
-> 
-> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
-> 
-> ---
->  fs/xfs/linux-2.6/xfs_iops.c  |   46 +++++++++++++++++++++++++++++++++++++-
->  fs/xfs/linux-2.6/xfs_linux.h |    1
->  fs/xfs/linux-2.6/xfs_super.c |    4 +++
->  fs/xfs/xfs_dir2.c            |   52 ++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_fs.h              |    1
->  fs/xfs/linux-2.6/xfs_iops.c  |   46 +++++++++++++++++++++++++++++++++++++-
->  fs/xfs/linux-2.6/xfs_linux.h |    1 
->  fs/xfs/linux-2.6/xfs_super.c |    4 +++
->  fs/xfs/xfs_dir2.c            |   52 ++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_fs.h              |    1 
->  fs/xfs/xfs_fsops.c           |    4 ++-
->  fs/xfs/xfs_sb.h              |   10 +++++++-
->  7 files changed, 114 insertions(+), 4 deletions(-)
-> 
-> Index: kern_ci/fs/xfs/linux-2.6/xfs_iops.c
-> ===================================================================
-> --- kern_ci.orig/fs/xfs/linux-2.6/xfs_iops.c
-> +++ kern_ci/fs/xfs/linux-2.6/xfs_iops.c
-> @@ -47,6 +47,7 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_utils.h"
->  #include "xfs_vnodeops.h"
-> +#include "xfs_da_btree.h"
->  
->  #include <linux/capability.h>
->  #include <linux/xattr.h>
-> @@ -54,6 +55,8 @@
->  #include <linux/security.h>
->  #include <linux/falloc.h>
->  
-> +struct dentry_operations xfs_ci_dentry_operations;
+On Wed, Apr 02, 2008 at 04:25:11PM +1000, Barry Naujok wrote:
+...
+> --- kern_ci.orig/fs/xfs/xfs_dir2_node.c
+> +++ kern_ci/fs/xfs/xfs_dir2_node.c
+...
+> @@ -432,27 +429,15 @@ xfs_dir2_leafn_lookup_int(
+>  	/*
+>  	 * Do we have a buffer coming in?
+>  	 */
+> -	if (state->extravalid)
+> -		curbp = state->extrablk.bp;
+> -	else
+> -		curbp = NULL;
+> +	curbp = state->extravalid ? state->extrablk.bp : NULL;
+>  	/*
+>  	 * For addname, it's a free block buffer, get the block number.
+>  	 */
+> -	if (args->addname) {
+> -		curfdb = curbp ? state->extrablk.blkno : -1;
+> -		curdb = -1;
+> -		length = xfs_dir2_data_entsize(args->namelen);
+> -		if ((free = (curbp ? curbp->data : NULL)))
+> -			ASSERT(be32_to_cpu(free->hdr.magic) == XFS_DIR2_FREE_MAGIC);
+> -	}
+> -	/*
+> -	 * For others, it's a data block buffer, get the block number.
+> -	 */
+> -	else {
+> -		curfdb = -1;
+> -		curdb = curbp ? state->extrablk.blkno : -1;
+> -	}
+> +	curfdb = curbp ? state->extrablk.blkno : -1;
+> +	free = curbp ? curbp->data : NULL;
 
-static?
+The previous 3 lines can be cleaned up as:
 
-> +
-> +STATIC int
-> +xfs_ci_dentry_hash(
-> +	struct dentry	*dir,
-> +	struct qstr	*this)
-> +{
-> +	this->hash = xfs_dir_hashname(XFS_I(dir->d_inode),
-> +				this->name, this->len);
-> +	return 0;
-> +}
-> +
-> +STATIC int
-> +xfs_ci_dentry_compare(
-> +	struct dentry	*dir,
-> +	struct qstr	*a,
-> +	struct qstr	*b)
-> +{
-> +	int	result = xfs_dir_compname(XFS_I(dir->d_inode), a->name, a->len,
-> +					b->name, b->len) == XFS_CMP_DIFFERENT;
-> +	/*
-> +	 * result == 0 if a match is found, and if so, copy the name in "b"
-> +	 * to "a" to cope with negative dentries getting the correct name.
-> +	 */
-> +	if (result == 0)
-> +		memcpy((unsigned char *)a->name, b->name, a->len);
-> +	return result;
-> +}
+if (state->extravalid)
+	curbp = state->extrablk.bp;
+else
+	curbp = NULL;
 
-large comment in the middle of a 5 line function? Move it above
-the function. Also should not need a cast in memcpy()....
-
-/*
- * xfs_dir_compname will return 0 if a match is found. If so, we
- * need to copy the name in "b" to "a" to cope with negative dentries
- * getting the correct name.
- */
-STATIC int
-xfs_ci_dentry_compare(
-	struct dentry	*dir,
-	struct qstr	*a,
-	struct qstr	*b)
-{
-	int	result;
-	
-	result = xfs_dir_compname(XFS_I(dir->d_inode), a->name, a->len,
-					b->name, b->len) == XFS_CMP_DIFFERENT;
-	if (!result)
-		memcpy(a->name, b->name, a->len);
-	return result;
+if (curbp) {
+	curfdb = state->extrablk.blkno;
+	free = curbp->data;
+} else {
+	curfdb = -1;
+	free = NULL;
 }
 
-> +
-> +struct dentry_operations xfs_ci_dentry_operations =
+
+or, if (state->extravalid && state->extrablk.bp == NULL) is _ALWAYS_ false
+(which seems to be the case), you can do:
+
+
+if (state->extravalid) {
+	curbp = state->extrablk.bp;
+	curfdb = state->extrablk.blkno;
+	free = curbp->data;
+} else {
+	curbp = NULL;
+	curfdb = -1;
+	free = NULL;
+}
+
+...
+> +static int
+> +xfs_dir2_leafn_lookup_for_entry(
+> +	xfs_dabuf_t		*bp,		/* leaf buffer */
+> +	xfs_da_args_t		*args,		/* operation arguments */
+> +	int			*indexp,	/* out: leaf entry index */
+> +	xfs_da_state_t		*state)		/* state to fill in */
 > +{
-> +	.d_hash = xfs_ci_dentry_hash,
-> +	.d_compare = xfs_ci_dentry_compare,
-> +};
+> +	xfs_dabuf_t		*curbp;		/* current data/free buffer */
+> +	xfs_dir2_db_t		curdb;		/* current data block number */
+> +	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+> +	xfs_inode_t		*dp;		/* incore directory inode */
+> +	int			error;		/* error return value */
+> +	int			index;		/* leaf entry index */
+> +	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+> +	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
+> +	xfs_mount_t		*mp;		/* filesystem mount point */
+> +	xfs_dir2_db_t		newdb;		/* new data block number */
+> +	xfs_trans_t		*tp;		/* transaction pointer */
+> +	xfs_dacmp_t		cmp;		/* comparison result */
+> +	xfs_dabuf_t		*ci_bp = NULL;	/* buffer with CI match */
 
-static.
+Did you try to check the stack usage (scripts/checkstack.pl)?
 
-You should probably move these functions and declarations to before
-xfs_ci_dentry_operations is used so you can avoid the forward
-declaration....
+> +	dp = args->dp;
+> +	tp = args->trans;
+> +	mp = dp->i_mount;
+> +	leaf = bp->data;
+> +	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAFN_MAGIC);
+> +#ifdef __KERNEL__
+> +	ASSERT(be16_to_cpu(leaf->hdr.count) > 0);
+> +#endif
 
-> ===================================================================
-> --- kern_ci.orig/fs/xfs/linux-2.6/xfs_super.c
-> +++ kern_ci/fs/xfs/linux-2.6/xfs_super.c
-> @@ -67,6 +67,8 @@ static kmem_zone_t *xfs_vnode_zone;
->  static kmem_zone_t *xfs_ioend_zone;
->  mempool_t *xfs_ioend_pool;
->  
-> +extern struct dentry_operations xfs_ci_dentry_operations;
-> +
->  STATIC struct xfs_mount_args *
->  xfs_args_allocate(
->  	struct super_block	*sb,
-> @@ -1359,6 +1361,8 @@ xfs_fs_fill_super(
->  		error = ENOMEM;
->  		goto fail_vnrele;
->  	}
-> +	if (xfs_sb_version_hasoldci(&mp->m_sb))
-> +		sb->s_root->d_op = &xfs_ci_dentry_operations;
+What's this #ifdef for?
 
-Write a helper function for this: xfs_set_ci_dentry_ops(mp, dentry)
-rather than exporting the xfs_ci_dentry_operations structure.
+> +		dep = (xfs_dir2_data_entry_t *)((char *)curbp->data +
+> +			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
 
->  
-> +/*
-> + * V1/OLDCI case-insensitive support for directories
-> + *
-> + * This is ASCII only case support, ie. A-Z.
-> + */
+Perhaps a static inline to do this calculation more cleanly (assuming it's
+done elsewhere as well).
 
-I'd mention that this is legacy code for supporting the Irix
-format CI.
+...
+> +		/*
+> +		 * Compare the entry, return it if it matches.
+> +		 */
+> +		cmp = args->oknoent ?
+> +			xfs_dir_compname(dp, dep->name, dep->namelen,
+> +					args->name, args->namelen):
+> +			xfs_da_compname(dep->name, dep->namelen,
+> +					args->name, args->namelen);
 
-> @@ -629,7 +631,7 @@ xfs_fs_goingdown(
->  			xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
->  			thaw_bdev(sb->s_bdev, sb);
->  		}
-> -	
-> +
->  		break;
+same as comment for 1/7.
 
-random whitespace change?
+Josef 'Jeff' Sipek.
 
-> Index: kern_ci/fs/xfs/xfs_sb.h
-> ===================================================================
-> --- kern_ci.orig/fs/xfs/xfs_sb.h
-> +++ kern_ci/fs/xfs/xfs_sb.h
-> @@ -46,10 +46,12 @@ struct xfs_mount;
->  #define XFS_SB_VERSION_SECTORBIT	0x0800
->  #define	XFS_SB_VERSION_EXTFLGBIT	0x1000
->  #define	XFS_SB_VERSION_DIRV2BIT		0x2000
-> +#define XFS_SB_VERSION_OLDCIBIT		0x4000	/* ASCII only case-insens. */
->  #define	XFS_SB_VERSION_MOREBITSBIT	0x8000
->  #define	XFS_SB_VERSION_OKSASHFBITS	\
-
-Whitespace. 
-
-But it's a shame you're being sensible about this - I kinda liked
-the Irix name for this feature (XFS_SB_VERSION_BORGBIT). :)
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+My public GPG key can be found at
+http://www.josefsipek.net/gpg/public-0xC7958FFE.txt
