@@ -1,89 +1,213 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:32:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Apr 2008 18:39:43 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m331W4RU005120
-	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:32:06 -0700
-Subject: Re: [PATCH 7/7] XFS: NLS config option
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m331dNOs006463
+	for <xfs@oss.sgi.com>; Wed, 2 Apr 2008 18:39:28 -0700
+Date: Thu, 03 Apr 2008 11:45:33 +1000
+Subject: Re: [PATCH 1/7] XFS: Name operation vector for hash and compare
 From: "Barry Naujok" <bnaujok@sgi.com>
 Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062709.577869936@chook.melbourne.sgi.com> <20080403012610.GD5211@josefsipek.net>
-Date: Thu, 03 Apr 2008 11:38:11 +1000
-Message-ID: <op.t80hhxue3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080403012610.GD5211@josefsipek.net>
+References: <20080402062508.017738664@chook.melbourne.sgi.com> <20080402062707.797672682@chook.melbourne.sgi.com> <20080403012912.GO103491721@sgi.com>
+Message-ID: <op.t80ht7n33jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080403012912.GO103491721@sgi.com>
 Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+To: David Chinner <dgc@sgi.com>
 Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Thu, 03 Apr 2008 11:26:10 +1000, Josef 'Jeff' Sipek  
-<jeffpc@josefsipek.net> wrote:
+On Thu, 03 Apr 2008 11:29:12 +1000, David Chinner <dgc@sgi.com> wrote:
 
-> On Wed, Apr 02, 2008 at 04:25:15PM +1000, Barry Naujok wrote:
->> This optional patch implements the NLS support as a CONFIG option.
->
-> Any reason this is a separate patch, and not part of the previous  
-> patches?
->
-> ...
->> --- kern_ci.orig/fs/xfs/Kconfig
->> +++ kern_ci/fs/xfs/Kconfig
->> @@ -87,6 +87,16 @@ config XFS_UNICODE
+> On Wed, Apr 02, 2008 at 04:25:09PM +1000, Barry Naujok wrote:
+>> Adds two pieces of functionality for the basis of case-insensitive
+>> support in XFS:
 >>
->>  	  If you don't require UTF-8 enforcement, say N.
+>> 1.  A comparison result enumerated type: xfs_dacmp_t. It represents an
+>>     exact match, case-insensitive match or no match at all. This patch
+>>     only implements different and exact results.
 >>
->> +config XFS_UNICODE_NLS
->> +	bool "XFS NLS Unicode support
->> +	depends on XFS_UNICODE
->> +	help
->> +	  NLS (Native Language Support) allows non-UTF8 locales to
->> +	  interact with XFS Unicode support. To specify the character
->> +	  set being used, use the "-n nls=<charset>" mount option.
+>> 2.  xfs_nameops vector for specifying how to perform the hash generation
+>>     of filenames and comparision methods. In this patch the hash vector
+>>     points to the existing xfs_da_hashname function and the comparison
+>>     method does a length compare, and if the same, does a memcmp and
+>>     return the xfs_dacmp_t result.
+>>
+>> All filename functions that use the hash (create, lookup remove, rename,
+>> etc) now use the xfs_nameops.hashname function and all directory lookup
+>> functions also use the xfs_nameops.compname function.
 >
-> "mount option"? Or was that supposed to say mkfs?
+> Ok, so internally I see this is not the case. I'll comment on that
+> inline.
 
-Hmm... typo: "-o nls=<charset>" in mount :)
+Ah yes. Remove and rename rely on an exact match. Forgot about that
+when documenting this patch.
 
-> from mount(8) manpage:
+>> The lookup functions also handle case-insensitive results even though
+>> the default comparison function cannot return that. And important
+>> aspect of the lookup functions is that an exact match always has
+>> precedence over a case-insensitive. So while a case-insensitive match
+>> is found, we have to keep looking just in case there is an exact
+>> match. In the meantime, the info for the first case-insensitive match
+>> is retained if no exact match is found.
+>>
+>> Signed-off-by: Barry Naujok <bnaujok@sgi.com>
+> ......
+>>  }
+>>
+>> +xfs_dacmp_t
+>> +xfs_da_compname(const uchar_t *name1, int len1, const uchar_t *name2,  
+>> int len2)
+>> +{
+>> +	return (len1 == len2 && memcmp(name1, name2, len1) == 0) ?
+>> +			XFS_CMP_EXACT : XFS_CMP_DIFFERENT;
+>> +}
+>> +
+>> +struct xfs_nameops xfs_default_nameops = {
 >
->        -n     Mount without writing in /etc/mtab.  This is necessary for
->               example when /etc is on a read-only file system.
+> const.
 >
-> ...
->> Index: kern_ci/fs/xfs/xfs_unicode.h
+>>  #ifdef __KERNEL__
+>>  /*========================================================================
+>> @@ -248,7 +271,12 @@ xfs_daddr_t	xfs_da_reada_buf(struct xfs_
+>>  int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
+>>  					  xfs_dabuf_t *dead_buf);
+>>
+>> +extern struct xfs_nameops xfs_default_nameops;
+>
+> Does this need global visibility? It's only needed in xfs_dir_mount(),
+> right?
+
+Good point, I'll fix this.
+
+>> Index: kern_ci/fs/xfs/xfs_dir2.h
 >> ===================================================================
->> --- kern_ci.orig/fs/xfs/xfs_unicode.h
->> +++ kern_ci/fs/xfs/xfs_unicode.h
->> @@ -65,6 +65,8 @@ int xfs_unicode_validate(const uchar_t *
->>  int xfs_unicode_read_cft(struct xfs_mount *mp);
->>  void xfs_unicode_free_cft(const xfs_cft_t *cft);
+>> --- kern_ci.orig/fs/xfs/xfs_dir2.h
+>> +++ kern_ci/fs/xfs/xfs_dir2.h
+>> @@ -85,6 +85,12 @@ extern int xfs_dir_canenter(struct xfs_t
+>>  				char *name, int namelen);
+>>  extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
 >>
->> +#ifdef CONFIG_XFS_UNICODE_NLS
+>> +#define xfs_dir_hashname(dp, n, l) \
+>> +		((dp)->i_mount->m_dirnameops->hashname((n), (l)))
 >> +
->>  #define xfs_is_using_nls(mp)	((mp)->m_nls != NULL)
+>> +#define xfs_dir_compname(dp, n1, l1, n2, l2) \
+>> +		((dp)->i_mount->m_dirnameops->compname((n1), (l1), (n2), (l2)))
+>> +
+>
+> Static inline functions, please.
+
+Ok.
+
+>>  /*
+>>   * Utility routines for v2 directories.
+>>   */
+>> Index: kern_ci/fs/xfs/xfs_dir2_block.c
+>> ===================================================================
+>> --- kern_ci.orig/fs/xfs/xfs_dir2_block.c
+>> +++ kern_ci/fs/xfs/xfs_dir2_block.c
+>> @@ -643,6 +643,7 @@ xfs_dir2_block_lookup_int(
+>>  	int			mid;		/* binary search current idx */
+>>  	xfs_mount_t		*mp;		/* filesystem mount point */
+>>  	xfs_trans_t		*tp;		/* transaction pointer */
+>> +	xfs_dacmp_t		cmp;		/* comparison result */
 >>
->>  int xfs_unicode_to_nls(struct xfs_mount *mp, const uchar_t *uni_name,
->> @@ -73,7 +75,20 @@ int xfs_nls_to_unicode(struct xfs_mount
->>  		int nls_namelen, const uchar_t **uni_name, int *uni_namelen);
->>  void xfs_unicode_nls_free(const uchar_t *src_name, const uchar_t  
->> *conv_name);
->>
->> -#else
->> +#else /* CONFIG_XFS_UNICODE_NLS */
+>>  	dp = args->dp;
+>>  	tp = args->trans;
+>> @@ -698,19 +699,33 @@ xfs_dir2_block_lookup_int(
+>>  			((char *)block + xfs_dir2_dataptr_to_off(mp, addr));
+>>  		/*
+>>  		 * Compare, if it's right give back buffer & entry number.
+>> +		 *
+>> +		 * lookup case - use nameops;
+>> +		 *
+>> +		 * replace/remove case - as lookup has been already been
+>> +		 * performed, look for an exact match using the fast method
+>>  		 */
+>> -		if (dep->namelen == args->namelen &&
+>> -		    dep->name[0] == args->name[0] &&
+>> -		    memcmp(dep->name, args->name, args->namelen) == 0) {
+>> +		cmp = args->oknoent ?
+>> +			xfs_dir_compname(dp, dep->name, dep->namelen,
+>> +						args->name, args->namelen) :
+>> +			xfs_da_compname(dep->name, dep->namelen,
+>> +						args->name, args->namelen);
+>
+> Why add this "fast path"? All you're saving here is a few
+> instructions but making the code much harder to follow.
+>
+> 		cmp = xfs_dir_compname(dp, dep->name, dep->namelen,
+> 						args->name, args->namelen);
+>
+> Will do exactly the same thing and I'd much prefer readable code
+> over prematurely optimised code any day of the week....
+
+Ok, I'll change that code (might make it more CONFIG_XFS_CI capable ;) )
+
+>> +		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+>> +			args->cmpresult = cmp;
+>>  			*bpp = bp;
+>>  			*entno = mid;
+>> -			return 0;
+>> +			if (cmp == XFS_CMP_EXACT)
+>> +				return 0;
+>>  		}
+>> -	} while (++mid < be32_to_cpu(btp->count) &&  
+>> be32_to_cpu(blp[mid].hashval) == hash);
+>> +	} while (++mid < be32_to_cpu(btp->count) &&
+>> +			be32_to_cpu(blp[mid].hashval) == hash);
 >> +
->> +#define xfs_is_using_nls(mp)		0
->> +
->> +#define xfs_unicode_to_nls(mp, uname, ulen, pnname, pnlen) \
->> +		((*(pnname)) = (uname), (*(pnlen)) = (ulen), 0)
->> +#define xfs_nls_to_unicode(mp, nname, nlen, puname, pulen) \
->> +		((*(puname)) = (nname), (*(pulen)) = (nlen), \
->> +		 xfs_unicode_validate(nname, nlen))
+>> +	ASSERT(args->oknoent);
+>> +	if (args->cmpresult == XFS_CMP_CASE)
+>> +		return 0;
 >
-> While I commend your use of the comma operator, I really think those  
-> should
-> be static inlines :)
+> So if we find multiple case matches, we'll take the last we find?
+
+No, the first as *bpp and *entno is only set for the first
+case-insensitive match or overriden for an exact match.
+
+>>  	/*
+>>  	 * No match, release the buffer and return ENOENT.
+>>  	 */
+>> -	ASSERT(args->oknoent);
+>>  	xfs_da_brelse(tp, bp);
+>>  	return XFS_ERROR(ENOENT);
 >
-> Josef 'Jeff' Sipek.
+> Should we really be promoting that assert to before we return a  
+> successful
+> case match?
+
+Yes as a !args->oknoent has to find an exact match. It's a big
+failure otherwise (ie. remove/rename case).
+
+>> @@ -907,9 +914,8 @@ xfs_dir2_sf_removename(
+>>  	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+>>  	     i < sfp->hdr.count;
+>>  	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+>> -		if (sfep->namelen == args->namelen &&
+>> -		    sfep->name[0] == args->name[0] &&
+>> -		    memcmp(sfep->name, args->name, args->namelen) == 0) {
+>> +		if (xfs_da_compname(sfep->name, sfep->namelen,
+>> +				args->name, args->namelen) == XFS_CMP_EXACT) {
+>>  			ASSERT(xfs_dir2_sf_get_inumber(sfp,
+>>  					xfs_dir2_sf_inumberp(sfep)) ==
+>>  				args->inumber);
 >
+> This only checks for an exact match - what is supposed to happen
+> with a XFS_CMP_CASE return?
+>
+>> @@ -1044,9 +1050,9 @@ xfs_dir2_sf_replace(
+>>  		for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+>>  		     i < sfp->hdr.count;
+>>  		     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+>> -			if (sfep->namelen == args->namelen &&
+>> -			    sfep->name[0] == args->name[0] &&
+>> -			    memcmp(args->name, sfep->name, args->namelen) == 0) {
+>> +			if (xfs_da_compname(sfep->name, sfep->namelen,
+>> +					    args->name, args->namelen) ==
+>> +					XFS_CMP_EXACT) {
+>
+> ditto.
+
+Like I stated above, remove/rename (replace) require an exact match.
