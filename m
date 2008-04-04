@@ -1,201 +1,177 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Apr 2008 18:18:10 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m341Hwcw015836
-	for <xfs@oss.sgi.com>; Thu, 3 Apr 2008 18:18:00 -0700
-Date: Fri, 4 Apr 2008 11:18:31 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [Patch] Cacheline align xlog_t
-Message-ID: <20080404011831.GZ103491721@sgi.com>
-References: <20080401231552.GV103491721@sgi.com> <47F3293C.6090708@sgi.com> <20080402054403.GF103491721@sgi.com> <87myocek4o.fsf@basil.nowhere.org> <20080402222347.GK103491721@sgi.com> <20080403064608.GS29105@one.firstfloor.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 04 Apr 2008 02:08:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3498LuC031292
+	for <xfs@oss.sgi.com>; Fri, 4 Apr 2008 02:08:23 -0700
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B4A0106F71F
+	for <xfs@oss.sgi.com>; Fri,  4 Apr 2008 02:08:53 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.188]) by cuda.sgi.com with ESMTP id zcz1JY8RiMyKgrMF for <xfs@oss.sgi.com>; Fri, 04 Apr 2008 02:08:53 -0700 (PDT)
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: [Patch] unique per-AG inode generation number initialisation
+Date: Fri, 4 Apr 2008 11:08:42 +0200
+References: <20080401231815.GW103491721@sgi.com>
+In-Reply-To: <20080401231815.GW103491721@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20080403064608.GS29105@one.firstfloor.org>
+Message-Id: <200804041108.43442.hpj@urpla.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>
-Cc: David Chinner <dgc@sgi.com>, Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Apr 03, 2008 at 08:46:08AM +0200, Andi Kleen wrote:
-> On Thu, Apr 03, 2008 at 08:23:47AM +1000, David Chinner wrote:
-> > > For the dynamic allocation you would rather need to make sure it
-> > > starts at a cache line boundary explicitely because the allocator doesn't
-> > > know the alignment of the target type, otherwise your careful
-> > > padding might be useless.
-> > 
-> > Yup. Is there an allocator function gives us cacheline aligned
-> > allocation 
-> 
-> __get_free_pages() @) [ok not serious]
-> 
-> > (apart from a slab initialised with SLAB_HWCACHE_ALIGN)?
-> 
-> That too yes.
-> 
-> > There isn't one, right?
-> 
-> You can always align yourself with kmalloc (or any other arbitary 
-> size allocator) with the standard technique:
-> get L1_CACHE_BYTES-1 or possibly better cache_line_size() - 1 bytes
-> more and then align the pointer manually with ALIGN. Only tricky part
-> is that you have to undo the alignment before freeing.
+Dear David,
 
-Great. I guess that means a wrapper function is in order. I'm not
-going to deal with this as part of this patch series, though. I'll
-just remove the superfluous notations.
+Am Mittwoch, 2. April 2008 schrieb David Chinner:
+> Don't initialise new inode generation numbers to zero
+>
+> When we allocation new inode chunks, we initialise the generation
+> numbers to zero. This works fine until we delete a chunk and then
+> reallocate it, resulting in the same inode numbers but with a
+> reset generation count. This can result in inode/generation
+> pairs of different inodes occurring relatively close together.
+>
+> Given that the inode/gen pair makes up the "unique" portion of
+> an NFS filehandle on XFS, this can result in file handles cached
+> on clients being seen on the wire from the server but refer to
+> a different file. This causes .... issues for NFS clients.
+>
+> Hence we need a unique generation number initialisation for
+> each inode to prevent reuse of a small portion of the generation
+> number space. Make this initialiser per-allocation group so
+> that it is not a single point of contention in the filesystem,
+> and increment it on every allocation within an AG to reduce the
+> chance that a generation number is reused for a given inode number
+> if the inode chunk is deleted and reallocated immediately
+> afterwards.
+>
+> It is safe to add the agi_newinogen field to the AGI without
+> using a feature bit. If an older kernel is used, it simply
+> will not update the field on allocation. If the kernel is
+> updated and the field has garbage in it, then it's like having a
+> random seed to the generation number....
 
-Patch below.
+Is this patch ready for production systems? Did it went through QA already?
 
-Cheers,
+If it's ready, shouldn't it go to the Linux stable team then, also, since it 
+sounds like a serious issue. My systems hit file servers with solely xfs 
+via NFS3 rather heavily - hence I am concerned..
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Thanks,
+Pete
 
----
-Reorganise xlog_t for better cacheline isolation of contention
-
-To reduce contention on the log in large CPU count, separate
-out different parts of the xlog_t structure onto different cachelines.
-Move each lock onto a different cacheline along with all the members
-that are accessed/modified while that lock is held.
-
-Also, move the debugging code into debug code.
-
-Version 2:
-o kill the structure alignment hint as these are dynamically
-  allocated structures.
-
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- fs/xfs/xfs_log.c      |    5 +---
- fs/xfs/xfs_log_priv.h |   55 +++++++++++++++++++++++++++-----------------------
- 2 files changed, 32 insertions(+), 28 deletions(-)
-
-Index: 2.6.x-xfs-new/fs/xfs/xfs_log.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c	2008-04-02 21:57:09.664237248 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_log.c	2008-04-02 21:57:12.591863526 +1000
-@@ -1237,9 +1237,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
- 		iclog->ic_bp = bp;
- 		iclog->hic_data = bp->b_addr;
--
-+#ifdef DEBUG
- 		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
--
-+#endif
- 		head = &iclog->ic_header;
- 		memset(head, 0, sizeof(xlog_rec_header_t));
- 		head->h_magicno = cpu_to_be32(XLOG_HEADER_MAGIC_NUM);
-@@ -1250,7 +1250,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		head->h_fmt = cpu_to_be32(XLOG_FMT);
- 		memcpy(&head->h_fs_uuid, &mp->m_sb.sb_uuid, sizeof(uuid_t));
- 
--
- 		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
- 		iclog->ic_state = XLOG_STATE_ACTIVE;
- 		iclog->ic_log = log;
-Index: 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_log_priv.h	2008-04-02 21:57:09.668236737 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_log_priv.h	2008-04-03 07:46:41.418849158 +1000
-@@ -361,7 +361,7 @@ typedef struct xlog_iclog_fields {
- 
- 	/* reference counts need their own cacheline */
- 	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
--} xlog_iclog_fields_t ____cacheline_aligned_in_smp;
-+} xlog_iclog_fields_t;
- 
- typedef union xlog_in_core2 {
- 	xlog_rec_header_t	hic_header;
-@@ -402,8 +402,29 @@ typedef struct xlog_in_core {
-  * that round off problems won't occur when releasing partial reservations.
-  */
- typedef struct log {
-+	/* The following fields don't need locking */
-+	struct xfs_mount	*l_mp;	        /* mount point */
-+	struct xfs_buf		*l_xbuf;        /* extra buffer for log
-+						 * wrapping */
-+	struct xfs_buftarg	*l_targ;        /* buftarg of log */
-+	uint			l_flags;
-+	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
-+	struct xfs_buf_cancel	**l_buf_cancel_table;
-+	int			l_iclog_hsize;  /* size of iclog header */
-+	int			l_iclog_heads;  /* # of iclog header sectors */
-+	uint			l_sectbb_log;   /* log2 of sector size in BBs */
-+	uint			l_sectbb_mask;  /* sector size (in BBs)
-+						 * alignment mask */
-+	int			l_iclog_size;	/* size of log in bytes */
-+	int			l_iclog_size_log; /* log power size of log */
-+	int			l_iclog_bufs;	/* number of iclog buffers */
-+	xfs_daddr_t		l_logBBstart;   /* start block of log */
-+	int			l_logsize;      /* size of log in bytes */
-+	int			l_logBBsize;    /* size of log in BB chunks */
-+
- 	/* The following block of fields are changed while holding icloglock */
--	sema_t			l_flushsema;    /* iclog flushing semaphore */
-+	sema_t			l_flushsema ____cacheline_aligned_in_smp;
-+						/* iclog flushing semaphore */
- 	int			l_flushcnt;	/* # of procs waiting on this
- 						 * sema */
- 	int			l_covered_state;/* state of "covering disk
-@@ -413,27 +434,14 @@ typedef struct log {
- 	xfs_lsn_t		l_tail_lsn;     /* lsn of 1st LR with unflushed
- 						 * buffers */
- 	xfs_lsn_t		l_last_sync_lsn;/* lsn of last LR on disk */
--	struct xfs_mount	*l_mp;	        /* mount point */
--	struct xfs_buf		*l_xbuf;        /* extra buffer for log
--						 * wrapping */
--	struct xfs_buftarg	*l_targ;        /* buftarg of log */
--	xfs_daddr_t		l_logBBstart;   /* start block of log */
--	int			l_logsize;      /* size of log in bytes */
--	int			l_logBBsize;    /* size of log in BB chunks */
- 	int			l_curr_cycle;   /* Cycle number of log writes */
- 	int			l_prev_cycle;   /* Cycle number before last
- 						 * block increment */
- 	int			l_curr_block;   /* current logical log block */
- 	int			l_prev_block;   /* previous logical log block */
--	int			l_iclog_size;	/* size of log in bytes */
--	int			l_iclog_size_log; /* log power size of log */
--	int			l_iclog_bufs;	/* number of iclog buffers */
--
--	/* The following field are used for debugging; need to hold icloglock */
--	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
- 
- 	/* The following block of fields are changed while holding grant_lock */
--	spinlock_t		l_grant_lock;
-+	spinlock_t		l_grant_lock ____cacheline_aligned_in_smp;
- 	xlog_ticket_t		*l_reserve_headq;
- 	xlog_ticket_t		*l_write_headq;
- 	int			l_grant_reserve_cycle;
-@@ -441,19 +449,16 @@ typedef struct log {
- 	int			l_grant_write_cycle;
- 	int			l_grant_write_bytes;
- 
--	/* The following fields don't need locking */
- #ifdef XFS_LOG_TRACE
- 	struct ktrace		*l_trace;
- 	struct ktrace		*l_grant_trace;
- #endif
--	uint			l_flags;
--	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
--	struct xfs_buf_cancel	**l_buf_cancel_table;
--	int			l_iclog_hsize;  /* size of iclog header */
--	int			l_iclog_heads;  /* # of iclog header sectors */
--	uint			l_sectbb_log;   /* log2 of sector size in BBs */
--	uint			l_sectbb_mask;  /* sector size (in BBs)
--						 * alignment mask */
-+
-+	/* The following field are used for debugging; need to hold icloglock */
-+#ifdef DEBUG
-+	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
-+#endif
-+
- } xlog_t;
- 
- #define XLOG_FORCED_SHUTDOWN(log)	((log)->l_flags & XLOG_IO_ERROR)
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  fs/xfs/xfs_ag.h     |    4 +++-
+>  fs/xfs/xfs_ialloc.c |   30 ++++++++++++++++++++++--------
+>  2 files changed, 25 insertions(+), 9 deletions(-)
+>
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_ag.h
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_ag.h	2008-01-18 18:30:06.000000000
+> +1100 +++ 2.6.x-xfs-new/fs/xfs/xfs_ag.h	2008-03-26 13:03:41.122918236
+> +1100 @@ -121,6 +121,7 @@ typedef struct xfs_agi {
+>  	 * still being referenced.
+>  	 */
+>  	__be32		agi_unlinked[XFS_AGI_UNLINKED_BUCKETS];
+> +	__be32		agi_newinogen;	/* inode cluster generation */
+>  } xfs_agi_t;
+>
+>  #define	XFS_AGI_MAGICNUM	0x00000001
+> @@ -134,7 +135,8 @@ typedef struct xfs_agi {
+>  #define	XFS_AGI_NEWINO		0x00000100
+>  #define	XFS_AGI_DIRINO		0x00000200
+>  #define	XFS_AGI_UNLINKED	0x00000400
+> -#define	XFS_AGI_NUM_BITS	11
+> +#define	XFS_AGI_NEWINOGEN	0x00000800
+> +#define	XFS_AGI_NUM_BITS	12
+>  #define	XFS_AGI_ALL_BITS	((1 << XFS_AGI_NUM_BITS) - 1)
+>
+>  /* disk block (xfs_daddr_t) in the AG */
+> Index: 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c
+> ===================================================================
+> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_ialloc.c	2008-03-25 15:41:27.000000000
+> +1100 +++ 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c	2008-03-26 14:29:47.998554368
+> +1100 @@ -309,6 +309,8 @@ xfs_ialloc_ag_alloc(
+>  			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
+>  			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+>  			free->di_core.di_version = version;
+> +			free->di_core.di_gen = agi->agi_newinogen;
+> +			be32_add_cpu(&agi->agi_newinogen, 1);
+>  			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
+>  			xfs_ialloc_log_di(tp, fbuf, i,
+>  				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
+> @@ -347,7 +349,8 @@ xfs_ialloc_ag_alloc(
+>  	 * Log allocation group header fields
+>  	 */
+>  	xfs_ialloc_log_agi(tp, agbp,
+> -		XFS_AGI_COUNT | XFS_AGI_FREECOUNT | XFS_AGI_NEWINO);
+> +		XFS_AGI_COUNT | XFS_AGI_FREECOUNT |
+> +		XFS_AGI_NEWINO | XFS_AGI_NEWINOGEN);
+>  	/*
+>  	 * Modify/log superblock values for inode count and inode free count.
+>  	 */
+> @@ -896,11 +899,12 @@ nextag:
+>  	ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino + offset);
+>  	XFS_INOBT_CLR_FREE(&rec, offset);
+>  	rec.ir_freecount--;
+> +	be32_add_cpu(&agi->agi_newinogen, 1);
+>  	if ((error = xfs_inobt_update(cur, rec.ir_startino, rec.ir_freecount,
+>  			rec.ir_free)))
+>  		goto error0;
+>  	be32_add(&agi->agi_freecount, -1);
+> -	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT);
+> +	xfs_ialloc_log_agi(tp, agbp, XFS_AGI_FREECOUNT | XFS_AGI_NEWINOGEN);
+>  	down_read(&mp->m_peraglock);
+>  	mp->m_perag[tagno].pagi_freecount--;
+>  	up_read(&mp->m_peraglock);
+> @@ -1320,6 +1324,11 @@ xfs_ialloc_compute_maxlevels(
+>
+>  /*
+>   * Log specified fields for the ag hdr (inode section)
+> + *
+> + * We don't log the unlinked inode fields through here; they
+> + * get logged directly to the buffer. Hence we have a discontinuity
+> + * in the fields we are logging and we need two calls to map all
+> + * the dirtied parts of the agi....
+>   */
+>  void
+>  xfs_ialloc_log_agi(
+> @@ -1342,22 +1351,27 @@ xfs_ialloc_log_agi(
+>  		offsetof(xfs_agi_t, agi_newino),
+>  		offsetof(xfs_agi_t, agi_dirino),
+>  		offsetof(xfs_agi_t, agi_unlinked),
+> +		offsetof(xfs_agi_t, agi_newinogen),
+>  		sizeof(xfs_agi_t)
+>  	};
+> +	int			log_newino = fields & XFS_AGI_NEWINOGEN;
+> +
+>  #ifdef DEBUG
+>  	xfs_agi_t		*agi;	/* allocation group header */
+>
+>  	agi = XFS_BUF_TO_AGI(bp);
+>  	ASSERT(be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC);
+>  #endif
+> -	/*
+> -	 * Compute byte offsets for the first and last fields.
+> -	 */
+> +	fields &= ~XFS_AGI_NEWINOGEN;
+> +
+> +	/* Compute byte offsets for the first and last fields.  */
+>  	xfs_btree_offsets(fields, offsets, XFS_AGI_NUM_BITS, &first, &last);
+> -	/*
+> -	 * Log the allocation group inode header buffer.
+> -	 */
+>  	xfs_trans_log_buf(tp, bp, first, last);
+> +	if (log_newino) {
+> +		xfs_btree_offsets(XFS_AGI_NEWINOGEN, offsets, XFS_AGI_NUM_BITS,
+> +					&first, &last);
+> +		xfs_trans_log_buf(tp, bp, first, last);
+> +	}
+>  }
+>
+>  /*
