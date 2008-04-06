@@ -1,29 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Apr 2008 09:26:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m36GQkj8010585
-	for <xfs@oss.sgi.com>; Sun, 6 Apr 2008 09:26:48 -0700
-Received: from ninsei.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D00F94473A
-	for <xfs@oss.sgi.com>; Sun,  6 Apr 2008 09:27:23 -0700 (PDT)
-Received: from ninsei.hu (ninsei.hu [212.92.23.158]) by cuda.sgi.com with ESMTP id rxBaihDeRvu2Dz76 for <xfs@oss.sgi.com>; Sun, 06 Apr 2008 09:27:23 -0700 (PDT)
-Date: Sun, 6 Apr 2008 18:26:46 +0200
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: free space problem
-Message-ID: <20080406162645.GA10648@luba>
-References: <20080401003518.GK103491721@sgi.com> <20080406160953.D47CF944596@cuda.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 06 Apr 2008 09:37:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m36Gbgtp012528
+	for <xfs@oss.sgi.com>; Sun, 6 Apr 2008 09:37:43 -0700
+From: =?iso-8859-2?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Subject: RE: free space problem
+Date: Sun, 6 Apr 2008 18:38:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain;
+	charset="iso-8859-2"
+In-Reply-To: <20080406162645.GA10648@luba>
+Message-Id: <20080406163817.06E10750B05@cuda.sgi.com>
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20080406160953.D47CF944596@cuda.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?utf-8?B?SHVzesOhciBWaWt0b3IgRMOpbmVz?= <hvd@dwo.hu>
+To: 'KELEMEN Peter' <Peter.Kelemen@cern.ch>
 Cc: 'David Chinner' <dgc@sgi.com>, 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
 
-* HuszÃ¡r Viktor DÃ©nes (hvd@dwo.hu) [20080406 18:09]:
+Peter, are you Hungarian :) too?
+For us this 0.3 % is vital 50-100 GBytes. Do you think that if we would have
+a free space arund 400-500 Gb the problem would never appear?
+
+Thanks, Viktor
+
+-----Original Message-----
+From: KELEMEN Peter [mailto:Peter.Kelemen@cern.ch] 
+Sent: Sunday, April 06, 2008 6:27 PM
+To: Huszár Viktor Dénes
+Cc: 'David Chinner'; 'Emmanuel Florac'; xfs@oss.sgi.com
+Subject: Re: free space problem
+
+* Huszár Viktor Dénes (hvd@dwo.hu) [20080406 18:09]:
 
 > /dev/mapper/a-a        17T   17T   51G 100% /var/www/users/sms
 
@@ -33,5 +41,23 @@ Peter
 
 -- 
     .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+''
- Kelemen PÃ©ter     /       \       /       \     Peter.Kelemen@cern.ch
+ Kelemen Péter     /       \       /       \     Peter.Kelemen@cern.ch
 .+'         `+...+'         `+...+'         `+...+'         `+...+'
+
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 3005 (20080406) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+
+ 
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 3005 (20080406) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+ 
