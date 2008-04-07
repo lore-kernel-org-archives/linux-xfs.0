@@ -1,50 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Apr 2008 14:58:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Apr 2008 15:00:46 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m37LwSvl002118
-	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 14:58:31 -0700
-Date: Tue, 8 Apr 2008 07:58:55 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m37M0aMC002775
+	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 15:00:38 -0700
+Date: Tue, 8 Apr 2008 08:01:06 +1000
 From: David Chinner <dgc@sgi.com>
-Subject: Re: Does XFS prevent disk spindown?
-Message-ID: <20080407215855.GE108924158@sgi.com>
-References: <m2tzimbvif.fsf@getmail.no> <20080401003005.GJ103491721@sgi.com> <47F1CF6D.2040103@sandeen.net> <m2d4p9o2sc.fsf@getmail.no> <m2y77smmdj.fsf@getmail.no> <47F9735E.8020900@sgi.com> <m2wsn9qub4.fsf@getmail.no>
+Subject: Re: performance problems with XFS and Linux kernel 2.6.24.4
+Message-ID: <20080407220106.GF108924158@sgi.com>
+References: <007001c898f5$cae2f4a0$60a8dde0$@masuda@jlbond.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <m2wsn9qub4.fsf@getmail.no>
+In-Reply-To: <007001c898f5$cae2f4a0$60a8dde0$@masuda@jlbond.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Thor Kristoffersen <thorkr@gmail.com>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: Bond Masuda <bond.masuda@jlbond.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 07, 2008 at 10:33:19PM +0200, Thor Kristoffersen wrote:
-> Timothy Shimmin <tes@sgi.com> writes:
-> > Thor Kristoffersen wrote:
-> >>> Use blktrace, or echo 1 > /proc/sys/vm/block_dump to see what block and
-> >>> who's writing it...  it's probably the superblock?  what kernel?
-> >>
-> >> This is kernel version 2.6.24.  More specifically it's a Debian kernel from
-> >> package linux-image-2.6.24-1-686 (2.6.24-4).
-> >>
-> >> I put the system in runlevel 1 and executed the test as you suggested.  On
-> >> /dev/sda3 I have mounted (with noatime) an XFS filesystem that contains
-> >> data that is not supposed to be accessed by any process.  In the output
-> >> below I have filtered out all accesses to other partitions.  (BTW, this is
-> >> not actually the disk that I wanted to spin down, but I think the log
-> >> proves my point.)
-> >>
-> >>
-> > I'm wondering if that is writing to the xfs ondisk log/journal in those cases.
-> > What does 'xfs_logprint -t' show in these "idle" states
-> > after these writes?
+On Mon, Apr 07, 2008 at 02:24:41PM -0700, Bond Masuda wrote:
+> Hi,
 > 
-> xfs_logprint produces output like the one shown below, so it does indeed
-> look like it's writing to the journal.  But why should it need to keep
-> writing to the journal when there have been no updates to any files on that
-> partition recently?
+> I am aware of the change regarding barrier/nobarrier in 2.6.17 and above.
+> However, the performance hit I'm seeing is very severe and much worse than
+> what I was seeing in 2.6.17 (bundled with latest updates in Fedora Core 4).
+> 
+> I'm currently running Fedora 8 with 2.6.24.4-64.fc8. If I remove nobarrier
+> mount option, it takes seconds just to write few megabytes and the system
+> becomes very very sluggish. On 2.6.17 (Fedora 4) without the nobarrier
+> option it was still usable.
 
-Are you using lazy-count=1? (i.e. output of 'xfs_info <mtpt>', please).
+Doesn't sound like a barrier problem.
+
+> The XFS file system is about 900GB, if that matters.
+> 
+> Is this a known problem?
+
+<shrug>
+
+> How can I gather more information to figure out
+> exactly what is going on?
+
+Start with what your hardware is, what your storage config is, output
+of 'xfs_info <mtpt>', the log of your test (complete output) on working
+and non-working kernels, etc.
 
 Cheers,
 
