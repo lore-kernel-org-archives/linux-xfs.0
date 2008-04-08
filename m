@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 12:31:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 14:36:03 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m38JUu5F029735
-	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 12:30:58 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m38LZsBn014378
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 14:35:56 -0700
 Received: from ext.agami.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CC951288641
-	for <xfs@oss.sgi.com>; Tue,  8 Apr 2008 12:31:33 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id dlUUNUDCjQJDf2Wj for <xfs@oss.sgi.com>; Tue, 08 Apr 2008 12:31:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FC4F10790D1
+	for <xfs@oss.sgi.com>; Tue,  8 Apr 2008 14:36:31 -0700 (PDT)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id AH6PC1sWAOHqaOV0 for <xfs@oss.sgi.com>; Tue, 08 Apr 2008 14:36:31 -0700 (PDT)
 Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m38GEG9d008016
-	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 09:14:16 -0700
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m38La79d020176
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 14:36:08 -0700
 Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id m38GEGgY006412
-	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 09:14:16 -0700
-Message-ID: <47FB99F9.1040703@agami.com>
-Date: Tue, 08 Apr 2008 09:14:49 -0700
+	by agami.com (8.12.11/8.12.11) with ESMTP id m38La1jn029545
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 14:36:03 -0700
+Message-ID: <47FBE558.1020106@agami.com>
+Date: Tue, 08 Apr 2008 14:36:24 -0700
 From: Michael Nishimoto <miken@agami.com>
 MIME-Version: 1.0
 Subject: Re: inconsistent xfs log record
 References: <47FAD04D.5080308@agami.com> <20080408155043.GZ108924158@sgi.com>
 In-Reply-To: <20080408155043.GZ108924158@sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
 Cc: XFS Mailing List <xfs@oss.sgi.com>
+
 
 David Chinner wrote:
 > On Mon, Apr 07, 2008 at 06:54:21PM -0700, Michael Nishimoto wrote:
@@ -50,13 +51,6 @@ David Chinner wrote:
 > 
 > Still, it's a single bit error so that's always suspicious - can you
 > reproduce this error reliably?
-
-We haven't tried doing this yet, but I doubt we will because the test that
-found this problem is not unusual.  We just pulled power while alot of
-activity was present.
-
-A single bit, but also off-by-one. :-)
-
 > 
 >  > Does this issue ring a bell with anyone?
 > 
@@ -74,4 +68,8 @@ A single bit, but also off-by-one. :-)
 > Dave Chinner
 > Principal Engineer
 > SGI Australian Software Group
-> 
+
+When you saw the problem, did you also have an off-by-one or one-bit difference
+between num_logops and the real count?
+
+     Michael
