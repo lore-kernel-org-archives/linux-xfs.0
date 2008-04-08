@@ -1,41 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Apr 2008 21:50:08 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m384nweo005819
-	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 21:50:00 -0700
-Received: from ext.agami.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFB3A963791
-	for <xfs@oss.sgi.com>; Mon,  7 Apr 2008 21:50:34 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id K37pTpQKesyyIFCh for <xfs@oss.sgi.com>; Mon, 07 Apr 2008 21:50:34 -0700 (PDT)
-Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m381rwwB015475
-	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 18:53:58 -0700
-Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id m381rw8N027773
-	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 18:53:58 -0700
-Message-ID: <47FAD04D.5080308@agami.com>
-Date: Mon, 07 Apr 2008 18:54:21 -0700
-From: Michael Nishimoto <miken@agami.com>
-MIME-Version: 1.0
-Subject: inconsistent xfs log record
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Apr 2008 21:51:23 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m384pAQ8006478
+	for <xfs@oss.sgi.com>; Mon, 7 Apr 2008 21:51:14 -0700
+Subject: TAKE 980014 - xfsqa 185 shouldn't have uninitialised variables in the golden output
+Message-Id: <20080408045141.957F758C4C0F@chook.melbourne.sgi.com>
+Date: Tue,  8 Apr 2008 14:51:41 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-I've just finished analyzing an xfs filesystem which won't recover.
-An inconsistent log record has 332 log operations but the num_logop field
-in the record header says 333 log operations.  The result is that xfs recovery
-complains with "bad clientid" because recovery eventually attempts to decode
-garbage.
+xfsqa 185 shouldn't have uninitialised variables in the golden output
 
-The log record really has 332 log ops (I counted!).
+Kill the output of uninitialised values when punching a hole.
+This prevents the test from passing on just about everything.
 
-Looking through xlog_write(), I don't see any way that record_cnt can be bumped
-without also writing out a log operation.
 
-Does this issue ring a bell with anyone?
+Date:  Tue Apr  8 14:51:19 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/xfs-cmds
+Inspected by:  xaiki@sgi.com
 
-    Michael
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:30762a
+xfstests/185.out - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/185.out.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+xfstests/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/dmapi/src/suite1/probe_punch_xfsctl_hole.c.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+	- remove roffp and rlenp output for punch operations.
