@@ -1,32 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 00:30:37 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m397UKLF020658
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 00:30:22 -0700
-Subject: PARTIAL TAKE 980084 - Catch errors returned from xfs_bmap_last_offset().
-Message-Id: <20080409073054.E39AB58C4C0F@chook.melbourne.sgi.com>
-Date: Wed,  9 Apr 2008 17:30:54 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 00:49:06 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m397mwXp023661
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 00:48:59 -0700
+Date: Wed, 9 Apr 2008 03:49:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [REVIEW #3] cleanup - remove bhv_vname_t
+Message-ID: <20080409074924.GA27552@infradead.org>
+References: <op.t9b1ien03jf8g2@pc-bnaujok.melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <op.t9b1ien03jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Catch errors returned from xfs_bmap_last_offset().
+On Wed, Apr 09, 2008 at 05:24:04PM +1000, Barry Naujok wrote:
+> +	ASSERT(ip1);
 
-xfs_bmap_last_offset() can fail and return an error.
-xfs_iomap_write_allocate() fails to detect and propagate the error.
-
-Date:  Wed Apr  9 17:30:31 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  xaiki@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+No need for an assert here, there's only one caller and we know it's
+there.
 
 
-Modid:  xfs-linux-melb:xfs-kern:30802a
-fs/xfs/xfs_iomap.c - 1.62 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iomap.c.diff?r1=text&tr1=1.62&r2=text&tr2=1.61&f=h
-	- Catch errors returned from xfs_bmap_last_offset().
+Except for that nitpick the patch looks fine to me.
