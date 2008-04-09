@@ -1,154 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 13:40:47 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m39Kecsl024262
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 13:40:38 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AC9676EF39
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2008 13:41:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id vbQUjnywRSisojOd for <xfs@oss.sgi.com>; Wed, 09 Apr 2008 13:41:13 -0700 (PDT)
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m39Jrwju032550
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:59 -0400
-Received: from file.rdu.redhat.com (file.rdu.redhat.com [10.11.255.147])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m39JrwcL026226
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:58 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by file.rdu.redhat.com (8.13.1/8.13.1) with ESMTP id m39Jrvjs013683
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:58 -0400
-Message-ID: <47FD1ED5.9000308@sandeen.net>
-Date: Wed, 09 Apr 2008 14:53:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
-References: <47DB4181.7040603@sandeen.net>
-In-Reply-To: <47DB4181.7040603@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 14:41:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m39Lf05f032597
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 14:41:04 -0700
+Date: Thu, 10 Apr 2008 07:41:06 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: TAKE 979087 - Test 091 fails on sector size != 512 bytes
+Message-ID: <20080409214106.GF108924158@sgi.com>
+References: <20080408022933.170C258C4C0F@chook.melbourne.sgi.com> <20080409191518.GA18486@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080409191518.GA18486@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> This should fix the longstanding issues with xfs and old ABI
-> arm boxes, which lead to various asserts and xfs shutdowns,
-> and for which an (incorrect) patch has been floating around
-> for years.  (Said patch made ARM internally consistent, but
-> altered the normal xfs on-disk format such that it looked
-> corrupted on other architectures):
-> http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
+On Wed, Apr 09, 2008 at 03:15:18PM -0400, Christoph Hellwig wrote:
+> On Tue, Apr 08, 2008 at 12:29:32PM +1000, David Chinner wrote:
+> > Test 091 fails on sector size != 512 bytes
+> > 
+> > Test 091 assumes a direct I/O alignment of 512 bytes,
+> > a hold over from 2.4 kernels. On 2.6. kernels, direct
+> > I/O needs to be aligned to the sector size the filesystem
+> > was mkfs'd with.
+> 
+> Actually this makes 091 fail in my kvm test setup now:
+> 
+> 091 49s ... - output mismatch (see 091.out.bad)
+> 1a2,7
+> > meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+> > data     = bsize=XXX blocks=XXX, imaxpct=PCT
+> >          = sunit=XXX swidth=XXX, unwritten=X
+> > naming   =VERN bsize=XXX
+> > log      =LDEV bsize=XXX blocks=XXX
+> > realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
 
-So, I'm wondering what the sgi guys think of this.  I know Jeff wants an
-all-singing, all-dancing pack-and-align patch, and maybe when it's ready
-it could replace this, but I wonder if maybe now this could go in just,
-you know, to fix the bug?  :)
+Looks like a redirect issue. My bad.
 
-Thanks,
--Eric
+(stems from 091 failing later on 64k page size, and the
+above output not appearing in any of the output files when
+a test failure occurs.)
 
-> Old ABI ARM has interesting packing & padding; for example
-> on ARM old abi:
-> 
-> struct xfs_dir2_sf_entry {
-> 	__uint8_t                  namelen;      /*     0     1 */
-> 
-> 	/* XXX 3 bytes hole, try to pack */
-> 
-> 	xfs_dir2_sf_off_t          offset;       /*     4     4 */
-> 	__uint8_t                  name[1];      /*     8     1 */
-> 
-> 	/* XXX 3 bytes hole, try to pack */
-> 
-> 	xfs_dir2_inou_t            inumber;      /*    12     8 */
-> 
-> 	/* size: 20, cachelines: 1 */
-> 	/* sum members: 14, holes: 2, sum holes: 6 */
-> 	/* last cacheline: 20 bytes */
-> };
-> 
-> but on x86:
-> 
-> struct xfs_dir2_sf_entry {
-> 	__uint8_t                  namelen;      /*     0     1 */
-> 	xfs_dir2_sf_off_t          offset;       /*     1     2 */
-> 	__uint8_t                  name[1];      /*     3     1 */
-> 	xfs_dir2_inou_t            inumber;      /*     4     8 */
-> 
-> 	/* size: 12, cachelines: 1 */
-> 	/* last cacheline: 12 bytes */
-> };
-> 
-> ... this sort of discrepancy leads to problems.
-> 
-> I've verified this patch by comparing the on-disk structure 
-> layouts using pahole from the dwarves package, as well as 
-> running through a bit of xfsqa under qemu-arm, modified so 
-> that the check/repair phase after each test actually executes 
-> check/repair from the x86 host, on the filesystem populated 
-> by the arm emulator.  Thus far it all looks good.
-> 
-> There are 2 other structures with extra padding at the end, 
-> but they don't seem to cause trouble.  I suppose they could 
-> be packed as well: xfs_dir2_data_unused_t and xfs_dir2_sf_t.
-> 
-> Note that userspace needs a similar treatment, and any
-> filesystems which were running with the previous rogue
-> "fix" will now see corruption (either in the kernel, or
-> during xfs_repair) with this fix properly in place; it 
-> may be worth teaching xfs_repair to identify and fix that 
-> specific issue.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> ---
-> 
-> Index: linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
-> ===================================================================
-> --- linux-2.6.24.orig/fs/xfs/linux-2.6/xfs_linux.h
-> +++ linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
-> @@ -300,4 +300,11 @@ static inline __uint64_t howmany_64(__ui
->  	return x;
->  }
->  
-> +/* ARM old ABI has some weird alignment/padding */
-> +#if defined(__arm__) && !defined(__ARM_EABI__)
-> +#define __arch_pack __attribute__((packed))
-> +#else
-> +#define __arch_pack
-> +#endif
-> +
->  #endif /* __XFS_LINUX__ */
-> Index: linux-2.6.24/fs/xfs/xfs_dir2_sf.h
-> ===================================================================
-> --- linux-2.6.24.orig/fs/xfs/xfs_dir2_sf.h
-> +++ linux-2.6.24/fs/xfs/xfs_dir2_sf.h
-> @@ -62,7 +62,7 @@ typedef union {
->   * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
->   * Only need 16 bits, this is the byte offset into the single block form.
->   */
-> -typedef struct { __uint8_t i[2]; } xfs_dir2_sf_off_t;
-> +typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
->  
->  /*
->   * The parent directory has a dedicated field, and the self-pointer must
-> @@ -76,14 +76,14 @@ typedef struct xfs_dir2_sf_hdr {
->  	__uint8_t		count;		/* count of entries */
->  	__uint8_t		i8count;	/* count of 8-byte inode #s */
->  	xfs_dir2_inou_t		parent;		/* parent dir inode number */
-> -} xfs_dir2_sf_hdr_t;
-> +} __arch_pack xfs_dir2_sf_hdr_t;
->  
->  typedef struct xfs_dir2_sf_entry {
->  	__uint8_t		namelen;	/* actual name length */
->  	xfs_dir2_sf_off_t	offset;		/* saved offset */
->  	__uint8_t		name[1];	/* name, variable size */
->  	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
-> -} xfs_dir2_sf_entry_t;
-> +} __arch_pack xfs_dir2_sf_entry_t; 
->  
->  typedef struct xfs_dir2_sf {
->  	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
-> 
-> 
-> 
+Patch below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+---
+ xfstests/091 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: xfs-cmds/xfstests/091
+===================================================================
+--- xfs-cmds.orig/xfstests/091	2008-04-08 12:25:08.000000000 +1000
++++ xfs-cmds/xfstests/091	2008-04-10 07:33:10.674694972 +1000
+@@ -50,7 +50,7 @@ kernel=`uname -r  | sed -e 's/\(2\..\).*
+ 
+ # 2.6 Linux kernels support sector aligned direct I/O only
+ if [ "$HOSTOS" = "Linux" -a "$kernel" = "2.6" ]; then
+-	xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.info
++	xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.info > /dev/null
+ 	if [ $? -eq 0 ]; then
+ 		source $tmp.info
+ 		bsize=$sectsz
