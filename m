@@ -1,64 +1,516 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 01:08:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 01:10:15 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3988QZI027220
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 01:08:28 -0700
-Subject: PARTIAL TAKE 976035 - cleanup - remove bhv_vname_t
-Message-Id: <20080409080859.D7ABB58C4C0F@chook.melbourne.sgi.com>
-Date: Wed,  9 Apr 2008 18:08:59 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m398A311027749
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 01:10:04 -0700
+Message-ID: <47FC79FC.5020803@sgi.com>
+Date: Wed, 09 Apr 2008 18:10:36 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: REVIEW XFSQA test out xfs_attr_shortform_bytesfit attr2/attr1 fix
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>, asg-qa <asgqa@sgi.com>
 
-remove bhv_vname_t and xfs_rename code
+Hi there,
 
+A test to test out Eric's fix for xfs_attr_shortform_bytesfit
+bug when going from attr2 to attr1.
 
-Date:  Wed Apr  9 18:06:28 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/2.6.x-xfs
-Inspected by:  hch@infradead.org
+With TOT kernel, without patch, one can see the corrupted inline
+dirents. With patch, all is well.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+The 186.out _should_ be output'ing ATTR2 for the db version
+command but I'm awaiting Barry's xfsprogs checkin to fix that one -
+and then I will regenerate it.
 
+186 does have some superfluous functionality: _cleanup, _rmv_eas
+but it may be handy to have for more attr2 testing later.
 
-Modid:  xfs-linux-melb:xfs-kern:30804a
-fs/xfs/xfs_vnodeops.c - 1.747 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.747&r2=text&tr2=1.746&f=h
-fs/xfs/xfs_mount.h - 1.261 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.261&r2=text&tr2=1.260&f=h
-fs/xfs/xfs_types.h - 1.81 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_types.h.diff?r1=text&tr1=1.81&r2=text&tr2=1.80&f=h
-fs/xfs/xfs_utils.c - 1.82 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.c.diff?r1=text&tr1=1.82&r2=text&tr2=1.81&f=h
-fs/xfs/xfs_utils.h - 1.41 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.h.diff?r1=text&tr1=1.41&r2=text&tr2=1.40&f=h
-fs/xfs/xfs_rename.c - 1.82 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rename.c.diff?r1=text&tr1=1.82&r2=text&tr2=1.81&f=h
-fs/xfs/xfs_dir2.h - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dir2.h.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-fs/xfs/xfs_dir2.c - 1.63 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dir2.c.diff?r1=text&tr1=1.63&r2=text&tr2=1.62&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.148 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.148&r2=text&tr2=1.147&f=h
-fs/xfs/linux-2.6/xfs_iops.c - 1.283 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.283&r2=text&tr2=1.282&f=h
-fs/xfs/linux-2.6/xfs_export.c - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-fs/xfs/dmapi/xfs_dm.c - 1.68 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.68&r2=text&tr2=1.67&f=h
-fs/xfs/xfs_vnodeops.h - 1.12 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
-	- remove bhv_vname_t and xfs_rename code
+--Tim
 
 
 
+===========================================================================
+Index: xfstests/186
+===========================================================================
 
-Modid:  linux-melb:dmapi:30804b
-fs/dmapi/dmapi_event.c - 1.35 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/fs/dmapi/dmapi_event.c.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
-fs/dmapi/dmapi_kern.h - 1.21 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/fs/dmapi/dmapi_kern.h.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
-	- remove bhv_vname_t and xfs_rename code
+--- a/xfstests/186	2006-06-17 00:58:24.000000000 +1000
++++ b/xfstests/186	2008-04-09 19:19:37.544194700 +1000
+@@ -0,0 +1,165 @@
++#! /bin/sh
++# FS QA Test No. 186
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2008 Silicon Graphics, Inc.  All Rights Reserved.
++#-----------------------------------------------------------------------
++#
++# Test out:
++# pv#979606: xfs bug in going from attr2 back to attr1
++#
++# Test bug in going from attr2 back to attr1 where xfs
++# (due to xfs_attr_shortform_bytesfit)
++# would reset the di_forkoff to the m_offset instead of
++# leaving the di_forkoff alone as was intended.
++#
++# We create enough dirents to push us past m_attroffset,
++# and create an EA so we have a fork offset
++# and then turn on attr1 and add one more EA which
++# will write over the shortform dirents.
++#
++#
++# creator
++owner=tes@emu.melbourne.sgi.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++_create_dirents()
++{
++	start_num=$1
++	end_num=$2
++	cd $fork_dir
++	for i in `seq $start_num $end_num`; do
++		touch file.$i
++	done
++}
++
++_create_eas()
++{
++	start_num=$1
++	end_num=$2
++	for i in `seq $start_num $end_num`; do
++		setfattr -n user.$i -v 0xbabe $fork_dir
++	done
++}
++
++_rmv_eas()
++{
++	start_num=$1
++	end_num=$2
++	for i in `seq $start_num $end_num`; do
++		setfattr -x user.$i $fork_dir
++	done
++}
++
++_filter_inode()
++{
++	egrep '^u.sfdir2|^a.sfattr|core.forkoff' |\
++	egrep -v 'inumber|parent'
++}
++
++_filter_version()
++{
++	tr ',' '\n' | grep ATTR
++}
++
++_print_inode()
++{
++	echo ""
++	echo "================================="
++	$XFS_DB_PROG -c "version" $SCRATCH_DEV 2>&1 | _filter_version
++	$XFS_DB_PROG -c "inode $inum" -c p $SCRATCH_DEV 2>&1 | _filter_inode
++	echo "================================="
++}
++
++_do_eas()
++{
++	echo ""
++	_scratch_mount
++	if [ $1 = "-r" ]; then
++		echo "*** remove EAs start $2 end $3 ***"
++		_rmv_eas $2 $3
++	else
++		echo "*** create EAs start $2 end $3 ***"
++		_create_eas $2 $3
++	fi
++	echo ""
++	cd /; $UMOUNT_PROG $SCRATCH_MNT
++	_print_inode
++}
++
++_do_dirents()
++{
++	num=`expr $2 - $1 + 1`
++	echo ""
++	echo "*** create $num dirents ***"
++	echo ""
++	_scratch_mount
++	_create_dirents $1 $2
++	cd /; $UMOUNT_PROG $SCRATCH_MNT
++	_print_inode
++}
++
++_changeto_attr1()
++{
++	echo ""
++	echo "Try setting attr1 by db"
++	echo ""
++	$XFS_DB_PROG -x -c "version attr1" $SCRATCH_DEV | _filter_version
++}
++
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs -i attr=2,size=512 >/dev/null 2>&1
++
++# set inum to root dir ino
++# we'll add in dirents and EAs into the root directory
++eval `$XFS_DB_PROG -r -c 'sb 0' -c 'p rootino' $SCRATCH_DEV | $SED_PROG 's/ //g'`
++inum=$rootino
++fork_dir=$SCRATCH_MNT
++_print_inode
++
++# add enough dirents to be inline but more
++# than will fit for m_attroffset for 512b inodes
++# for attr2 this is not a problem
++_do_dirents 1 25
++
++# add 1 ea so we get our forkoff happening
++_do_eas -c 1 1
++
++# now change back to attr1 where forkoff is constant now
++_changeto_attr1
++
++# now add another EA
++# for a bug in xfs_add_shortform_bytesfit
++# where it reset the forkoff to m_attroffset>>3 instead of
++# leaving as di_forkoff
++# If it resets to m_attroffset which is in the middle of
++# the dirents then they will get corrupted
++_do_eas -c 2 2
++
++# success, all done
++status=0
++exit
+
+===========================================================================
+Index: xfstests/186.out
+===========================================================================
+
+--- a/xfstests/186.out	2006-06-17 00:58:24.000000000 +1000
++++ b/xfstests/186.out	2008-04-09 19:22:57.792187350 +1000
+@@ -0,0 +1,288 @@
++QA output created by 186
++
++=================================
++ATTR2
++core.forkoff = 0
++u.sfdir2.hdr.count = 0
++u.sfdir2.hdr.i8count = 0
++=================================
++
++*** create 25 dirents ***
++
++
++=================================
++core.forkoff = 0
++u.sfdir2.hdr.count = 25
++u.sfdir2.hdr.i8count = 0
++u.sfdir2.list[0].namelen = 6
++u.sfdir2.list[0].offset = 0x30
++u.sfdir2.list[0].name = "file.1"
++u.sfdir2.list[1].namelen = 6
++u.sfdir2.list[1].offset = 0x48
++u.sfdir2.list[1].name = "file.2"
++u.sfdir2.list[2].namelen = 6
++u.sfdir2.list[2].offset = 0x60
++u.sfdir2.list[2].name = "file.3"
++u.sfdir2.list[3].namelen = 6
++u.sfdir2.list[3].offset = 0x78
++u.sfdir2.list[3].name = "file.4"
++u.sfdir2.list[4].namelen = 6
++u.sfdir2.list[4].offset = 0x90
++u.sfdir2.list[4].name = "file.5"
++u.sfdir2.list[5].namelen = 6
++u.sfdir2.list[5].offset = 0xa8
++u.sfdir2.list[5].name = "file.6"
++u.sfdir2.list[6].namelen = 6
++u.sfdir2.list[6].offset = 0xc0
++u.sfdir2.list[6].name = "file.7"
++u.sfdir2.list[7].namelen = 6
++u.sfdir2.list[7].offset = 0xd8
++u.sfdir2.list[7].name = "file.8"
++u.sfdir2.list[8].namelen = 6
++u.sfdir2.list[8].offset = 0xf0
++u.sfdir2.list[8].name = "file.9"
++u.sfdir2.list[9].namelen = 7
++u.sfdir2.list[9].offset = 0x108
++u.sfdir2.list[9].name = "file.10"
++u.sfdir2.list[10].namelen = 7
++u.sfdir2.list[10].offset = 0x120
++u.sfdir2.list[10].name = "file.11"
++u.sfdir2.list[11].namelen = 7
++u.sfdir2.list[11].offset = 0x138
++u.sfdir2.list[11].name = "file.12"
++u.sfdir2.list[12].namelen = 7
++u.sfdir2.list[12].offset = 0x150
++u.sfdir2.list[12].name = "file.13"
++u.sfdir2.list[13].namelen = 7
++u.sfdir2.list[13].offset = 0x168
++u.sfdir2.list[13].name = "file.14"
++u.sfdir2.list[14].namelen = 7
++u.sfdir2.list[14].offset = 0x180
++u.sfdir2.list[14].name = "file.15"
++u.sfdir2.list[15].namelen = 7
++u.sfdir2.list[15].offset = 0x198
++u.sfdir2.list[15].name = "file.16"
++u.sfdir2.list[16].namelen = 7
++u.sfdir2.list[16].offset = 0x1b0
++u.sfdir2.list[16].name = "file.17"
++u.sfdir2.list[17].namelen = 7
++u.sfdir2.list[17].offset = 0x1c8
++u.sfdir2.list[17].name = "file.18"
++u.sfdir2.list[18].namelen = 7
++u.sfdir2.list[18].offset = 0x1e0
++u.sfdir2.list[18].name = "file.19"
++u.sfdir2.list[19].namelen = 7
++u.sfdir2.list[19].offset = 0x1f8
++u.sfdir2.list[19].name = "file.20"
++u.sfdir2.list[20].namelen = 7
++u.sfdir2.list[20].offset = 0x210
++u.sfdir2.list[20].name = "file.21"
++u.sfdir2.list[21].namelen = 7
++u.sfdir2.list[21].offset = 0x228
++u.sfdir2.list[21].name = "file.22"
++u.sfdir2.list[22].namelen = 7
++u.sfdir2.list[22].offset = 0x240
++u.sfdir2.list[22].name = "file.23"
++u.sfdir2.list[23].namelen = 7
++u.sfdir2.list[23].offset = 0x258
++u.sfdir2.list[23].name = "file.24"
++u.sfdir2.list[24].namelen = 7
++u.sfdir2.list[24].offset = 0x270
++u.sfdir2.list[24].name = "file.25"
++=================================
++
++*** create EAs start 1 end 1 ***
++
++
++=================================
++ATTR
++core.forkoff = 47
++u.sfdir2.hdr.count = 25
++u.sfdir2.hdr.i8count = 0
++u.sfdir2.list[0].namelen = 6
++u.sfdir2.list[0].offset = 0x30
++u.sfdir2.list[0].name = "file.1"
++u.sfdir2.list[1].namelen = 6
++u.sfdir2.list[1].offset = 0x48
++u.sfdir2.list[1].name = "file.2"
++u.sfdir2.list[2].namelen = 6
++u.sfdir2.list[2].offset = 0x60
++u.sfdir2.list[2].name = "file.3"
++u.sfdir2.list[3].namelen = 6
++u.sfdir2.list[3].offset = 0x78
++u.sfdir2.list[3].name = "file.4"
++u.sfdir2.list[4].namelen = 6
++u.sfdir2.list[4].offset = 0x90
++u.sfdir2.list[4].name = "file.5"
++u.sfdir2.list[5].namelen = 6
++u.sfdir2.list[5].offset = 0xa8
++u.sfdir2.list[5].name = "file.6"
++u.sfdir2.list[6].namelen = 6
++u.sfdir2.list[6].offset = 0xc0
++u.sfdir2.list[6].name = "file.7"
++u.sfdir2.list[7].namelen = 6
++u.sfdir2.list[7].offset = 0xd8
++u.sfdir2.list[7].name = "file.8"
++u.sfdir2.list[8].namelen = 6
++u.sfdir2.list[8].offset = 0xf0
++u.sfdir2.list[8].name = "file.9"
++u.sfdir2.list[9].namelen = 7
++u.sfdir2.list[9].offset = 0x108
++u.sfdir2.list[9].name = "file.10"
++u.sfdir2.list[10].namelen = 7
++u.sfdir2.list[10].offset = 0x120
++u.sfdir2.list[10].name = "file.11"
++u.sfdir2.list[11].namelen = 7
++u.sfdir2.list[11].offset = 0x138
++u.sfdir2.list[11].name = "file.12"
++u.sfdir2.list[12].namelen = 7
++u.sfdir2.list[12].offset = 0x150
++u.sfdir2.list[12].name = "file.13"
++u.sfdir2.list[13].namelen = 7
++u.sfdir2.list[13].offset = 0x168
++u.sfdir2.list[13].name = "file.14"
++u.sfdir2.list[14].namelen = 7
++u.sfdir2.list[14].offset = 0x180
++u.sfdir2.list[14].name = "file.15"
++u.sfdir2.list[15].namelen = 7
++u.sfdir2.list[15].offset = 0x198
++u.sfdir2.list[15].name = "file.16"
++u.sfdir2.list[16].namelen = 7
++u.sfdir2.list[16].offset = 0x1b0
++u.sfdir2.list[16].name = "file.17"
++u.sfdir2.list[17].namelen = 7
++u.sfdir2.list[17].offset = 0x1c8
++u.sfdir2.list[17].name = "file.18"
++u.sfdir2.list[18].namelen = 7
++u.sfdir2.list[18].offset = 0x1e0
++u.sfdir2.list[18].name = "file.19"
++u.sfdir2.list[19].namelen = 7
++u.sfdir2.list[19].offset = 0x1f8
++u.sfdir2.list[19].name = "file.20"
++u.sfdir2.list[20].namelen = 7
++u.sfdir2.list[20].offset = 0x210
++u.sfdir2.list[20].name = "file.21"
++u.sfdir2.list[21].namelen = 7
++u.sfdir2.list[21].offset = 0x228
++u.sfdir2.list[21].name = "file.22"
++u.sfdir2.list[22].namelen = 7
++u.sfdir2.list[22].offset = 0x240
++u.sfdir2.list[22].name = "file.23"
++u.sfdir2.list[23].namelen = 7
++u.sfdir2.list[23].offset = 0x258
++u.sfdir2.list[23].name = "file.24"
++u.sfdir2.list[24].namelen = 7
++u.sfdir2.list[24].offset = 0x270
++u.sfdir2.list[24].name = "file.25"
++a.sfattr.hdr.totsize = 10
++a.sfattr.hdr.count = 1
++a.sfattr.list[0].namelen = 1
++a.sfattr.list[0].valuelen = 2
++a.sfattr.list[0].root = 0
++a.sfattr.list[0].secure = 0
++a.sfattr.list[0].name = "1"
++a.sfattr.list[0].value = "\272\276"
++=================================
++
++Try setting attr1 by db
++
++ATTR
++
++*** create EAs start 2 end 2 ***
++
++
++=================================
++ATTR
++core.forkoff = 47
++u.sfdir2.hdr.count = 25
++u.sfdir2.hdr.i8count = 0
++u.sfdir2.list[0].namelen = 6
++u.sfdir2.list[0].offset = 0x30
++u.sfdir2.list[0].name = "file.1"
++u.sfdir2.list[1].namelen = 6
++u.sfdir2.list[1].offset = 0x48
++u.sfdir2.list[1].name = "file.2"
++u.sfdir2.list[2].namelen = 6
++u.sfdir2.list[2].offset = 0x60
++u.sfdir2.list[2].name = "file.3"
++u.sfdir2.list[3].namelen = 6
++u.sfdir2.list[3].offset = 0x78
++u.sfdir2.list[3].name = "file.4"
++u.sfdir2.list[4].namelen = 6
++u.sfdir2.list[4].offset = 0x90
++u.sfdir2.list[4].name = "file.5"
++u.sfdir2.list[5].namelen = 6
++u.sfdir2.list[5].offset = 0xa8
++u.sfdir2.list[5].name = "file.6"
++u.sfdir2.list[6].namelen = 6
++u.sfdir2.list[6].offset = 0xc0
++u.sfdir2.list[6].name = "file.7"
++u.sfdir2.list[7].namelen = 6
++u.sfdir2.list[7].offset = 0xd8
++u.sfdir2.list[7].name = "file.8"
++u.sfdir2.list[8].namelen = 6
++u.sfdir2.list[8].offset = 0xf0
++u.sfdir2.list[8].name = "file.9"
++u.sfdir2.list[9].namelen = 7
++u.sfdir2.list[9].offset = 0x108
++u.sfdir2.list[9].name = "file.10"
++u.sfdir2.list[10].namelen = 7
++u.sfdir2.list[10].offset = 0x120
++u.sfdir2.list[10].name = "file.11"
++u.sfdir2.list[11].namelen = 7
++u.sfdir2.list[11].offset = 0x138
++u.sfdir2.list[11].name = "file.12"
++u.sfdir2.list[12].namelen = 7
++u.sfdir2.list[12].offset = 0x150
++u.sfdir2.list[12].name = "file.13"
++u.sfdir2.list[13].namelen = 7
++u.sfdir2.list[13].offset = 0x168
++u.sfdir2.list[13].name = "file.14"
++u.sfdir2.list[14].namelen = 7
++u.sfdir2.list[14].offset = 0x180
++u.sfdir2.list[14].name = "file.15"
++u.sfdir2.list[15].namelen = 7
++u.sfdir2.list[15].offset = 0x198
++u.sfdir2.list[15].name = "file.16"
++u.sfdir2.list[16].namelen = 7
++u.sfdir2.list[16].offset = 0x1b0
++u.sfdir2.list[16].name = "file.17"
++u.sfdir2.list[17].namelen = 7
++u.sfdir2.list[17].offset = 0x1c8
++u.sfdir2.list[17].name = "file.18"
++u.sfdir2.list[18].namelen = 7
++u.sfdir2.list[18].offset = 0x1e0
++u.sfdir2.list[18].name = "file.19"
++u.sfdir2.list[19].namelen = 7
++u.sfdir2.list[19].offset = 0x1f8
++u.sfdir2.list[19].name = "file.20"
++u.sfdir2.list[20].namelen = 7
++u.sfdir2.list[20].offset = 0x210
++u.sfdir2.list[20].name = "file.21"
++u.sfdir2.list[21].namelen = 7
++u.sfdir2.list[21].offset = 0x228
++u.sfdir2.list[21].name = "file.22"
++u.sfdir2.list[22].namelen = 7
++u.sfdir2.list[22].offset = 0x240
++u.sfdir2.list[22].name = "file.23"
++u.sfdir2.list[23].namelen = 7
++u.sfdir2.list[23].offset = 0x258
++u.sfdir2.list[23].name = "file.24"
++u.sfdir2.list[24].namelen = 7
++u.sfdir2.list[24].offset = 0x270
++u.sfdir2.list[24].name = "file.25"
++a.sfattr.hdr.totsize = 16
++a.sfattr.hdr.count = 2
++a.sfattr.list[0].namelen = 1
++a.sfattr.list[0].valuelen = 2
++a.sfattr.list[0].root = 0
++a.sfattr.list[0].secure = 0
++a.sfattr.list[0].name = "1"
++a.sfattr.list[0].value = "\272\276"
++a.sfattr.list[1].namelen = 1
++a.sfattr.list[1].valuelen = 2
++a.sfattr.list[1].root = 0
++a.sfattr.list[1].secure = 0
++a.sfattr.list[1].name = "2"
++a.sfattr.list[1].value = "\272\276"
++=================================
+
+===========================================================================
+Index: xfstests/group
+===========================================================================
+
+--- a/xfstests/group	2008-04-09 18:00:27.000000000 +1000
++++ b/xfstests/group	2008-04-09 19:28:53.924187450 +1000
+@@ -273,3 +273,4 @@ filestreams	dgc@sgi.com
+  183 rw other auto
+  184 metadata auto
+  185 dmapi auto
++186 attr auto
