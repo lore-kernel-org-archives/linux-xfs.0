@@ -1,74 +1,154 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 13:17:54 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 13:40:47 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m39KHkX8021415
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 13:17:48 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C46C576E7B7
-	for <xfs@oss.sgi.com>; Wed,  9 Apr 2008 13:18:22 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id lssgL0jXPfGt3HiV for <xfs@oss.sgi.com>; Wed, 09 Apr 2008 13:18:22 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m39KIGF3002009
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 22:18:17 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m39KIGl2002007
-	for xfs@oss.sgi.com; Wed, 9 Apr 2008 22:18:16 +0200
-Date: Wed, 9 Apr 2008 22:18:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: test 001 oopses starting from today
-Message-ID: <20080409201816.GB1866@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m39Kecsl024262
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 13:40:38 -0700
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AC9676EF39
+	for <xfs@oss.sgi.com>; Wed,  9 Apr 2008 13:41:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id vbQUjnywRSisojOd for <xfs@oss.sgi.com>; Wed, 09 Apr 2008 13:41:13 -0700 (PDT)
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m39Jrwju032550
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:59 -0400
+Received: from file.rdu.redhat.com (file.rdu.redhat.com [10.11.255.147])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m39JrwcL026226
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:58 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by file.rdu.redhat.com (8.13.1/8.13.1) with ESMTP id m39Jrvjs013683
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 15:53:58 -0400
+Message-ID: <47FD1ED5.9000308@sandeen.net>
+Date: Wed, 09 Apr 2008 14:53:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
+References: <47DB4181.7040603@sandeen.net>
+In-Reply-To: <47DB4181.7040603@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-now that the big commit storm from last night hit cvs the tree seems
-rathe broken, already in xfsqa 001:
+Eric Sandeen wrote:
+> This should fix the longstanding issues with xfs and old ABI
+> arm boxes, which lead to various asserts and xfs shutdowns,
+> and for which an (incorrect) patch has been floating around
+> for years.  (Said patch made ARM internally consistent, but
+> altered the normal xfs on-disk format such that it looked
+> corrupted on other architectures):
+> http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
 
-001 15s ...[   79.522114] Assertion failed: ip->i_transp == tp, file:
-fs/xfs/xfs_trans_inode.c, line: 258
-[   79.525823] ------------[ cut here ]------------
-[   79.525900] kernel BUG at fs/xfs/support/debug.c:81!
-[   79.525900] invalid opcode: 0000 [#1] SMP 
-[   79.525900] Modules linked in: xfs binfmt_misc nfsd auth_rpcgss
-exportfs af_packet nfs lockd nfs_acl sunrpc loop psmouse pcspkr
-serio_raw evdev
-[   79.525900] 
-[   79.525900] Pid: 2634, comm: fill Not tainted (2.6.25-rc3 #38)
-[   79.525900] EIP: 0060:[<f0a0066e>] EFLAGS: 00010286 CPU: 0
-[   79.525900] EIP is at assfail+0x1e/0x30 [xfs]
-[   79.525900] EAX: 00000062 EBX: ef713c90 ECX: c011b450 EDX: ec8e7540
-[   79.525900] ESI: ef713c90 EDI: ec8ef2d8 EBP: eeba1d98 ESP: eeba1d88
-[   79.525900]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[   79.525900] Process fill (pid: 2634, ti=eeba0000 task=ec8e7540 task.ti=eeba0000)
-[   79.525900] Stack: f0a1366c f0a06195 f0a0617c 00000102 eeba1db0 f09e7d6f 00000001 ef713c90 
-[   79.525900]        eeba1dfc ec8ef2d8 eeba1e24 f09cd20a 0000000a 00000000 00000002 00000001 
-[   79.525900]        00000040 00000002 eeba1e08 eeba1dfc 00000000 eeba1e14 ef713c90 eeba1e94 
-[   79.525900] Call Trace:
-[   79.525900]  [<f09e7d6f>] ? xfs_trans_log_inode+0x2f/0xb0 [xfs]
-[   79.525900]  [<f09cd20a>] ? xfs_itruncate_finish+0x56a/0x720 [xfs]
-[   79.525900]  [<f09ecd63>] ? xfs_free_eofblocks+0x2b3/0x2f0 [xfs]
-[   79.525900]  [<f09ef546>] ? xfs_release+0x156/0x1b0 [xfs]
-[   79.525900]  [<f09f8fae>] ? xfs_file_release+0xe/0x20 [xfs]
-[   79.525900]  [<c017dd16>] ? __fput+0xb6/0x190
-[   79.525900]  [<c017dfe9>] ? fput+0x19/0x20
-[   79.525900]  [<c017b107>] ? filp_close+0x47/0x70
-[   79.525900]  [<c0123c7b>] ? put_files_struct+0x9b/0xb0
-[   79.525900]  [<c0123cd2>] ? __exit_files+0x42/0x60
-[   79.525900]  [<c0124e82>] ? do_exit+0x172/0x730
-[   79.525900]  [<c0138c26>] ? up_read+0x16/0x30
-[   79.525900]  [<c0328bc6>] ? do_page_fault+0x186/0x650
-[   79.525900]  [<c017d2b8>] ? vfs_write+0xf8/0x130
-[   79.525900]  [<c017c960>] ? do_sync_write+0x0/0x110
-[   79.525900]  [<c0125469>] ? do_group_exit+0x29/0x80
-[   79.525900]  [<c01254cf>] ? sys_exit_group+0xf/0x20
-[   79.525900]  [<c0103dd2>] ? sysenter_past_esp+0x5f/0xa5
-[   79.525900]  =======================
-[   79.525900] Code: 00 e8 27 fc 80 cf c9 c3 90 8d 74 26 00 55 89 e5 83 ec 10 89 4c 24 0c 89 54 24 08 89 44 24 04 c7 04 24 6c 36 a1 f0 e8 a2 1f 72 cf <0f> 0b eb fe 8d b4 26 00 00 00 00 8d bc 27 00 00 00 00 55 83 e0 
-[   79.525900] EIP: [<f0a0066e>] assfail+0x1e/0x30 [xfs] SS:ESP 0068:eeba1d88
-[   79.525906] ---[ end trace 9d447135ab7111e4 ]---
-[   79.526511] Fixing recursive fault but reboot is needed!
+So, I'm wondering what the sgi guys think of this.  I know Jeff wants an
+all-singing, all-dancing pack-and-align patch, and maybe when it's ready
+it could replace this, but I wonder if maybe now this could go in just,
+you know, to fix the bug?  :)
+
+Thanks,
+-Eric
+
+> Old ABI ARM has interesting packing & padding; for example
+> on ARM old abi:
+> 
+> struct xfs_dir2_sf_entry {
+> 	__uint8_t                  namelen;      /*     0     1 */
+> 
+> 	/* XXX 3 bytes hole, try to pack */
+> 
+> 	xfs_dir2_sf_off_t          offset;       /*     4     4 */
+> 	__uint8_t                  name[1];      /*     8     1 */
+> 
+> 	/* XXX 3 bytes hole, try to pack */
+> 
+> 	xfs_dir2_inou_t            inumber;      /*    12     8 */
+> 
+> 	/* size: 20, cachelines: 1 */
+> 	/* sum members: 14, holes: 2, sum holes: 6 */
+> 	/* last cacheline: 20 bytes */
+> };
+> 
+> but on x86:
+> 
+> struct xfs_dir2_sf_entry {
+> 	__uint8_t                  namelen;      /*     0     1 */
+> 	xfs_dir2_sf_off_t          offset;       /*     1     2 */
+> 	__uint8_t                  name[1];      /*     3     1 */
+> 	xfs_dir2_inou_t            inumber;      /*     4     8 */
+> 
+> 	/* size: 12, cachelines: 1 */
+> 	/* last cacheline: 12 bytes */
+> };
+> 
+> ... this sort of discrepancy leads to problems.
+> 
+> I've verified this patch by comparing the on-disk structure 
+> layouts using pahole from the dwarves package, as well as 
+> running through a bit of xfsqa under qemu-arm, modified so 
+> that the check/repair phase after each test actually executes 
+> check/repair from the x86 host, on the filesystem populated 
+> by the arm emulator.  Thus far it all looks good.
+> 
+> There are 2 other structures with extra padding at the end, 
+> but they don't seem to cause trouble.  I suppose they could 
+> be packed as well: xfs_dir2_data_unused_t and xfs_dir2_sf_t.
+> 
+> Note that userspace needs a similar treatment, and any
+> filesystems which were running with the previous rogue
+> "fix" will now see corruption (either in the kernel, or
+> during xfs_repair) with this fix properly in place; it 
+> may be worth teaching xfs_repair to identify and fix that 
+> specific issue.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> 
+> ---
+> 
+> Index: linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
+> ===================================================================
+> --- linux-2.6.24.orig/fs/xfs/linux-2.6/xfs_linux.h
+> +++ linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
+> @@ -300,4 +300,11 @@ static inline __uint64_t howmany_64(__ui
+>  	return x;
+>  }
+>  
+> +/* ARM old ABI has some weird alignment/padding */
+> +#if defined(__arm__) && !defined(__ARM_EABI__)
+> +#define __arch_pack __attribute__((packed))
+> +#else
+> +#define __arch_pack
+> +#endif
+> +
+>  #endif /* __XFS_LINUX__ */
+> Index: linux-2.6.24/fs/xfs/xfs_dir2_sf.h
+> ===================================================================
+> --- linux-2.6.24.orig/fs/xfs/xfs_dir2_sf.h
+> +++ linux-2.6.24/fs/xfs/xfs_dir2_sf.h
+> @@ -62,7 +62,7 @@ typedef union {
+>   * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
+>   * Only need 16 bits, this is the byte offset into the single block form.
+>   */
+> -typedef struct { __uint8_t i[2]; } xfs_dir2_sf_off_t;
+> +typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
+>  
+>  /*
+>   * The parent directory has a dedicated field, and the self-pointer must
+> @@ -76,14 +76,14 @@ typedef struct xfs_dir2_sf_hdr {
+>  	__uint8_t		count;		/* count of entries */
+>  	__uint8_t		i8count;	/* count of 8-byte inode #s */
+>  	xfs_dir2_inou_t		parent;		/* parent dir inode number */
+> -} xfs_dir2_sf_hdr_t;
+> +} __arch_pack xfs_dir2_sf_hdr_t;
+>  
+>  typedef struct xfs_dir2_sf_entry {
+>  	__uint8_t		namelen;	/* actual name length */
+>  	xfs_dir2_sf_off_t	offset;		/* saved offset */
+>  	__uint8_t		name[1];	/* name, variable size */
+>  	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
+> -} xfs_dir2_sf_entry_t;
+> +} __arch_pack xfs_dir2_sf_entry_t; 
+>  
+>  typedef struct xfs_dir2_sf {
+>  	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
+> 
+> 
+> 
