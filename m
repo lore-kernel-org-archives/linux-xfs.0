@@ -1,41 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 20:58:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 21:01:14 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m393wLrQ009059
-	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 20:58:24 -0700
-Subject: PARTIAL TAKE 978729 - Reorganise xlog_t for better cacheline isolation of contention
-Message-Id: <20080409035855.C6B3F58C4C0F@chook.melbourne.sgi.com>
-Date: Wed,  9 Apr 2008 13:58:55 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3940moI009676
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 21:00:50 -0700
+Subject: Re: [REVIEW #2] cleanup - remove bhv_vname_t
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <op.t897ipuu3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080408085153.GA19699@infradead.org>
+Content-Transfer-Encoding: 7bit
+Date: Wed, 09 Apr 2008 14:01:45 +1000
+Message-ID: <op.t9br47yz3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080408085153.GA19699@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Reorganise xlog_t for better cacheline isolation of contention
+On Tue, 08 Apr 2008 18:51:53 +1000, Christoph Hellwig <hch@infradead.org>  
+wrote:
 
-To reduce contention on the log in large CPU count, separate
-out different parts of the xlog_t structure onto different cachelines.
-Move each lock onto a different cacheline along with all the members
-that are accessed/modified while that lock is held.
+>> --- kern_ci.orig/fs/xfs/xfs_dir2.h
+>> +++ kern_ci/fs/xfs/xfs_dir2.h
+>> @@ -60,6 +60,16 @@ typedef	__uint32_t	xfs_dir2_db_t;
+>>  typedef	xfs_off_t	xfs_dir2_off_t;
+>>
+>>  /*
+>> + * Counted string for file names.
+>> + */
+>> +struct xfs_name {
+>> +	const char	*name;
+>> +	int		len;
+>> +};
+>> +
+>> +extern struct xfs_name	xfs_name_dotdot;
+>
+> I think these should be in a different header as they are used a lot
+> outside the low-level directory code.
 
-Also, move the debugging code into debug code.
-
-
-Date:  Wed Apr  9 13:58:11 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  lachlan@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30772a
-fs/xfs/xfs_log.c - 1.352 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.352&r2=text&tr2=1.351&f=h
-	- Isolate some debugging to the debug build.
-
-fs/xfs/xfs_log_priv.h - 1.130 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_priv.h.diff?r1=text&tr1=1.130&r2=text&tr2=1.129&f=h
-	- Reorganise xlog_t for better cacheline isolation of contention
+xfs_types.h ?
