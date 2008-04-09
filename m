@@ -1,42 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 21:01:14 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Apr 2008 21:03:11 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3940moI009676
-	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 21:00:50 -0700
-Subject: Re: [REVIEW #2] cleanup - remove bhv_vname_t
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <op.t897ipuu3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080408085153.GA19699@infradead.org>
-Content-Transfer-Encoding: 7bit
-Date: Wed, 09 Apr 2008 14:01:45 +1000
-Message-ID: <op.t9br47yz3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080408085153.GA19699@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3942lHP010170
+	for <xfs@oss.sgi.com>; Tue, 8 Apr 2008 21:02:49 -0700
+Subject: TAKE 979661 - Fix lock inversion in forced shutdown.
+Message-Id: <20080409040321.64CDF58C4C0F@chook.melbourne.sgi.com>
+Date: Wed,  9 Apr 2008 14:03:21 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, 08 Apr 2008 18:51:53 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
+Fix lock inversion in forced shutdown.
 
->> --- kern_ci.orig/fs/xfs/xfs_dir2.h
->> +++ kern_ci/fs/xfs/xfs_dir2.h
->> @@ -60,6 +60,16 @@ typedef	__uint32_t	xfs_dir2_db_t;
->>  typedef	xfs_off_t	xfs_dir2_off_t;
->>
->>  /*
->> + * Counted string for file names.
->> + */
->> +struct xfs_name {
->> +	const char	*name;
->> +	int		len;
->> +};
->> +
->> +extern struct xfs_name	xfs_name_dotdot;
->
-> I think these should be in a different header as they are used a lot
-> outside the low-level directory code.
+Recent changes to xlog_state_release_iclog() placed the grant_lock
+inside the icloglock. forced unmount of the log does this the opposite
+way around, but does not depend on the order for correct working.
+Fix the inversion by changing the order locks are gained in
+xfs_log_force_umount().
 
-xfs_types.h ?
+
+Date:  Wed Apr  9 14:02:59 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@infradead.org
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30773a
+fs/xfs/xfs_log.c - 1.353 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log.c.diff?r1=text&tr1=1.353&r2=text&tr2=1.352&f=h
+	- Fix lock inversion in forced shutdown.
