@@ -1,33 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 22:01:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 22:01:44 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A51Ii4002521
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 22:01:20 -0700
-Subject: Re: Czech translation for attr-2.4.41
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <20080409160843.GA20142@album.bayer.ipv6ia.org>
-Content-Transfer-Encoding: 7bit
-Date: Thu, 10 Apr 2008 15:02:36 +1000
-Message-ID: <op.t9dpmms63jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080409160843.GA20142@album.bayer.ipv6ia.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A51VBI002580
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 22:01:34 -0700
+Subject: TAKE 980084 - fix logic error in xfs_alloc_ag_vextent_near()
+Message-Id: <20080410050206.3EC8558C4C15@chook.melbourne.sgi.com>
+Date: Thu, 10 Apr 2008 15:02:06 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: petr.pisar@atlas.cz, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, 10 Apr 2008 02:08:45 +1000, <petr.pisar@atlas.cz> wrote:
+fix logic error in xfs_alloc_ag_vextent_near()
 
-> Hello,
->
-> I'v tranlated attr package into Czech language. Patch against version  
-> 2.4.41
-> is attached.
->
-> -- Petr
+Fix a logic error in xfs_alloc_ag_vextent_near(). This is
+a regression introduced by the error handling changes.
 
-Will appear in xfs-cmds CVS tree within a few hours.
 
-Regards,
-Barry.
+Date:  Thu Apr 10 15:01:27 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  bnaujok@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30838a
+fs/xfs/xfs_alloc.c - 1.193 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc.c.diff?r1=text&tr1=1.193&r2=text&tr2=1.192&f=h
+	- Fix a logic error introduced by the error handling changes.
