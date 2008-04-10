@@ -1,31 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 20:21:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 20:25:33 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A3Kscc021925
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 20:20:57 -0700
-Subject: PARTIAL TAKE 980084 -  Don't error out on good I/Os in xfsbdstrat
-Message-Id: <20080410032128.E612358C4C15@chook.melbourne.sgi.com>
-Date: Thu, 10 Apr 2008 13:21:28 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A3PMhb022567
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 20:25:25 -0700
+Date: Thu, 10 Apr 2008 13:25:55 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: [patch] fix logic error in xfs_alloc_ag_vextent_near()
+Message-ID: <20080410032555.GS108924158@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Don't error out on good I/Os.
+Fix a logic error in xfs_alloc_ag_vextent_near(). This is
+a regression introduced by the error handling changes.
 
-xfsbdstrat() made all I/Os error out, good or bad. Fix it.
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_alloc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Date:  Thu Apr 10 13:21:03 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  donaldd@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:30836a
-fs/xfs/linux-2.6/xfs_lrw.c - 1.279 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.279&r2=text&tr2=1.278&f=h
-	- Don't error out on good I/Os in xfsbdstrat()
+Index: 2.6.x-xfs-new/fs/xfs/xfs_alloc.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_alloc.c	2008-04-10 10:00:50.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_alloc.c	2008-04-10 13:10:17.948126881 +1000
+@@ -838,7 +838,7 @@ xfs_alloc_ag_vextent_near(
+ 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+ 			xfs_alloc_compute_aligned(ltbno, ltlen, args->alignment,
+ 					args->minlen, &ltbnoa, &ltlena);
+-			if (ltlena >= args->minlen)
++			if (ltlena < args->minlen)
+ 				continue;
+ 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
+ 			xfs_alloc_fix_len(args);
