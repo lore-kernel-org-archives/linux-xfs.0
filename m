@@ -1,45 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 21:32:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 21:34:10 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A4WNjd030346
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 21:32:25 -0700
-Message-ID: <47FD987A.40804@sgi.com>
-Date: Thu, 10 Apr 2008 14:32:58 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [patch] xfsqa - fix redirection in 091
-References: <20080410042701.GG108924158@sgi.com>
-In-Reply-To: <20080410042701.GG108924158@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A4Xxbo030828
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 21:34:02 -0700
+Date: Thu, 10 Apr 2008 14:34:32 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [Patch] unique per-AG inode generation number initialisation
+Message-ID: <20080410043432.GH108924158@sgi.com>
+References: <20080401231815.GW103491721@sgi.com> <20080407125738.GD27350@infradead.org> <20080407215203.GB108924158@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080407215203.GB108924158@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
-> Fix the filtering of xfsinfo by punting stdout to /dev/null.
+Ping? Any further concerns on this? I'd like to get this
+resolved quickly.....
+
+Cheers,
+
+Dave.
+
+On Tue, Apr 08, 2008 at 07:52:03AM +1000, David Chinner wrote:
+> On Mon, Apr 07, 2008 at 08:57:38AM -0400, Christoph Hellwig wrote:
+> > I don't really like this.  The chance to hit a previously used generation
+> > seems to high.
 > 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  xfstests/091 |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The chance to hit an existing generation number is almost non-existant.
 > 
-> Index: xfs-cmds/xfstests/091
-> ===================================================================
-> --- xfs-cmds.orig/xfstests/091	2008-04-08 12:25:08.000000000 +1000
-> +++ xfs-cmds/xfstests/091	2008-04-10 07:33:10.674694972 +1000
-> @@ -50,7 +50,7 @@ kernel=`uname -r  | sed -e 's/\(2\..\).*
->  
->  # 2.6 Linux kernels support sector aligned direct I/O only
->  if [ "$HOSTOS" = "Linux" -a "$kernel" = "2.6" ]; then
-> -	xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.info
-> +	xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.info > /dev/null
->  	if [ $? -eq 0 ]; then
->  		source $tmp.info
->  		bsize=$sectsz
+> The counter is incremented on every allocation and not just when
+> inode chunks are allocated on disk. Hence a series of "allocate
+> chunk, unlink + free chunk, realloc chunk" is guaranteed to get a
+> higher generation number on reallocation, as is the "allocate a
+> chunk, while [1] {allocate; unlink}, unlink chunk, reallocate
+> chunk." These are the issues that are causing use problems right
+> now.
+> 
+> The generation number won't get reused at all until it wraps at 2^32
+> allocations within the AG, and then you've got to have a chunk of inodes
+> get freed and reallocated at the same time the counter matches an inode
+> generation number. While not impossible, it'll be pretty rare....
+> 
+> > What about making the first few bits of each generation
+> > number a per-ag counter that's incremented anytime we deallocate an inode
+> > cluster?
+> 
+> First thing I considered - increment on chunk freeing is not
+> sufficient guarantee of short-term uniqueness. To guarantee short
+> term uniqueness, the generation number used to initialise the inode
+> chunk if it is immediately reallocated needs to be greater than the
+> maximum used by any inode in the chunk that got freed. Now the "counter"
+> becomes a "maximum generation number used in the AG" value. This
+> also adds significant complexity to xfs_icluster_free() as we have to
+> look at every inode in the chunk and not just the ones that are
+> in-core.
+> 
+> FWIW, the biggest complexity with this approach is wrapping - how do
+> you tell what the highest highest generation number in the inode
+> chunk being freed is when some have wrapped through zero?
+> 
+> I basically gave up on this approach because of the extra complexity
+> and nasty, untestable corner cases it introduced into code that is
+> already complex. A simple incrementing counter solves the short-term
+> uniqueness problem while still making it very hard to get duplicates in
+> the long term. If you really, really need long term uniqueness, then
+> use 'ikeep'.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> Principal Engineer
+> SGI Australian Software Group
 
-fine
-
---Tim
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
