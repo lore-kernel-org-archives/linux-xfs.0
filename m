@@ -1,98 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 21:48:50 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Apr 2008 21:51:44 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A4mdIS000625
-	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 21:48:41 -0700
-Date: Thu, 10 Apr 2008 14:49:55 +1000
-Subject: Re: [patch] remove unnecessary periodic superblock logging.
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <20080410042001.GF108924158@sgi.com>
-Message-ID: <op.t9do1hkj3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080410042001.GF108924158@sgi.com>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3A4pX1Y001187
+	for <xfs@oss.sgi.com>; Wed, 9 Apr 2008 21:51:36 -0700
+Subject: TAKE 979087 - xfsqa - fix redirection in 091
+Message-Id: <20080410045207.4A84758C4C15@chook.melbourne.sgi.com>
+Date: Thu, 10 Apr 2008 14:52:07 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, 10 Apr 2008 14:20:01 +1000, David Chinner <dgc@sgi.com> wrote:
+Fix the filtering of xfsinfo by punting stdout to /dev/null.
 
-> Remove periodic logging of in-core superblock counters.
->
-> xfssyncd triggers the logging of superblock counters every
-> 30s if the filesystem is made with lazy-count=1. This will
-> prevent disks from idling and spinning down as there will
-> be a log write every 30s. With the way counter recovery
-> works for lazy-count=1, this code is unnecessary and provides
-> no real benefit, so just remove it.
 
-I'm happy with this (xfs_initialize_perag_data() does the
-global counter recovery during mount).
+Date:  Thu Apr 10 14:51:29 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/xfs-cmds
+Inspected by:  bnaujok,tes
 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  fs/xfs/linux-2.6/xfs_super.c |    3 +--
->  fs/xfs/linux-2.6/xfs_vfs.h   |    1 -
->  fs/xfs/xfs_vfsops.c          |   13 -------------
->  3 files changed, 1 insertion(+), 16 deletions(-)
->
-> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_super.c	2008-04-10  
-> 10:02:14.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_super.c	2008-04-10  
-> 10:02:58.419346393 +1000
-> @@ -1028,8 +1028,7 @@ xfs_sync_worker(
->  	int		error;
-> 	if (!(mp->m_flags & XFS_MOUNT_RDONLY))
-> -		error = xfs_sync(mp, SYNC_FSDATA | SYNC_BDFLUSH | SYNC_ATTR |
-> -				     SYNC_REFCACHE | SYNC_SUPER);
-> +		error = xfs_sync(mp, SYNC_FSDATA | SYNC_BDFLUSH | SYNC_ATTR);
->  	mp->m_sync_seq++;
->  	wake_up(&mp->m_wait_single_sync_task);
->  }
-> Index: 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/linux-2.6/xfs_vfs.h	2008-04-10  
-> 10:00:25.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/linux-2.6/xfs_vfs.h	2008-04-10  
-> 10:02:58.419346393 +1000
-> @@ -49,7 +49,6 @@ typedef struct bhv_vfs_sync_work {
->  #define SYNC_REFCACHE		0x0040  /* prune some of the nfs ref cache */
->  #define SYNC_REMOUNT		0x0080  /* remount readonly, no dummy LRs */
->  #define SYNC_IOWAIT		0x0100  /* wait for all I/O to complete */
-> -#define SYNC_SUPER		0x0200  /* flush superblock to disk */
-> /*
->   * When remounting a filesystem read-only or freezing the filesystem,
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_vfsops.c	2008-04-10 10:01:54.000000000  
-> +1000
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_vfsops.c	2008-04-10 10:03:35.288729547 +1000
-> @@ -1326,21 +1326,8 @@ xfs_syncsub(
->  	}
-> 	/*
-> -	 * If asked, update the disk superblock with incore counter values if  
-> we
-> -	 * are using non-persistent counters so that they don't get too far out
-> -	 * of sync if we crash or get a forced shutdown. We don't want to force
-> -	 * this to disk, just get a transaction into the iclogs....
-> -	 */
-> -	if (flags & SYNC_SUPER) {
-> -		error = xfs_log_sbcount(mp, 0);
-> -		if (error)
-> -			last_error = error;
-> -	}
-> -
-> -	/*
->  	 * Now check to see if the log needs a "dummy" transaction.
->  	 */
-> -
->  	if (!(flags & SYNC_REMOUNT) && xfs_log_need_covered(mp)) {
->  		xfs_trans_t *tp;
->  		xfs_inode_t *ip;
->
->
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:30837a
+xfstests/091 - 1.8 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/091.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+	- Fix the filtering of xfsinfo by punting stdout to /dev/null.
