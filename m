@@ -1,29 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 00:40:11 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3B7dplr010189
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 00:39:53 -0700
-Date: Fri, 11 Apr 2008 09:40:23 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: odd code in xfs_remove
-Message-ID: <20080411074023.GB9236@lst.de>
-References: <20080410185445.GA7521@lst.de> <20080411023145.GK103491721@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 00:41:12 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3B7f4Pn010493
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 00:41:05 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE8FF128EC7C
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 00:41:41 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 9vMoEyndozdRy66D for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 00:41:41 -0700 (PDT)
+Date: Fri, 11 Apr 2008 03:41:09 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [REVIEW] Remove unused HAVE_SPLICE macro
+Message-ID: <20080411074109.GA3936@infradead.org>
+References: <20080411072832.98C2C58C4C15@chook.melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080411023145.GK103491721@sgi.com>
+In-Reply-To: <20080411072832.98C2C58C4C15@chook.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 11, 2008 at 12:31:45PM +1000, David Chinner wrote:
-> Looks like no harm is done by this and it's a rarely hit corner
-> case, but it would appear that we should be passing in resblks in
-> remove if only to avoid a potential transaction reservation
-> overrun....
+On Fri, Apr 11, 2008 at 05:28:32PM +1000, Donald Douwsma wrote:
+> Still more 2.4 build remnants to get rid of...
+> 
+> HAVE_SPLICE was part of the infrastructure for building 2.4 and 2.6
+> kernels out of the same tree. Now we don't build 2.4 kernels this 
+> way anymore its unused.
 
-Okay, I'll prepare a patch and test it a little.  This was the only
-spurious difference between xfs_remove and xfs_rmdir left, after this
-we can almost trivially merge them.
+Looks good.
