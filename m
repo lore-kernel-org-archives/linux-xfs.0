@@ -1,30 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 09:05:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 09:13:32 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3BG5Yw6020252
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:05:34 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E2BC3780D24
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:06:11 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id VoY8xBjFPYggVqYf for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:06:11 -0700 (PDT)
-Date: Fri, 11 Apr 2008 12:05:41 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] remove INT_GET and friends
-Message-ID: <20080411160541.GB26929@infradead.org>
-References: <47FF794C.4020801@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3BGDMdK021380
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:13:23 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0307D781813
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:14:01 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id xNwOxXke3xNBJ0Dc for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 09:14:01 -0700 (PDT)
+Message-ID: <47FF8E2A.30900@sandeen.net>
+Date: Fri, 11 Apr 2008 11:13:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <47FF794C.4020801@sandeen.net>
+Subject: Re: [PATCH V2] remove CONFIG_XFS_SECURITY
+References: <47819E47.4030906@sandeen.net> <47BB7774.5080401@sandeen.net> <47F985BA.7060100@sgi.com> <47FF781D.2020006@sandeen.net> <20080411160448.GA26929@infradead.org>
+In-Reply-To: <20080411160448.GA26929@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Apr 11, 2008 at 09:44:28AM -0500, Eric Sandeen wrote:
-> Thanks to hch's endian work, INT_GET etc are no longer used,
-> and may as well be removed.  INT_SET is still used in
-> the acl code, though.
+Christoph Hellwig wrote:
+>> +#define XFS_SECURITY_STRING	"security attributes, "
+> 
+> This one should just be killed completely, as it's not an optional
+> feature anymore.
+> 
 
-Looks good.
+My only concern is that if people are used to seeing it, they'll assume
+that somehow xfs now doesn't support it now, or was built without it, or ...
+
+*shrug*
+
+-Eric
