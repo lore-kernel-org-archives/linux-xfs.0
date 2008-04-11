@@ -1,53 +1,126 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 03:51:23 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3BAp1YE004441
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 03:51:05 -0700
-Date: Fri, 11 Apr 2008 20:51:33 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: xfslogd Page Allocation Failure
-Message-ID: <20080411105133.GU103491721@sgi.com>
-References: <1207908397.4745.9.camel@humanitas.fs3.ph>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1207908397.4745.9.camel@humanitas.fs3.ph>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 07:21:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3BELOs2000959
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 07:21:26 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A17029B4B48
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 07:22:02 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id kgSTuzLk12P7YFLg for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 07:22:02 -0700 (PDT)
+Message-ID: <47FF7408.5000609@sandeen.net>
+Date: Fri, 11 Apr 2008 09:22:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [GIT PULL] XFS update for 2.6.25-rc9
+References: <20080410075208.C88B958C4C15@chook.melbourne.sgi.com>
+In-Reply-To: <20080410075208.C88B958C4C15@chook.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Federico Sevilla III <jijo@fs3.ph>
+To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Apr 11, 2008 at 06:06:37PM +0800, Federico Sevilla III wrote:
-> Hi,
-> 
-> I noticed the below logs in my dmesg. The machine continues to be
-> useable, and I'm not aware of which process wasn't able to perform
-> correctly. Is this a cause for concern? Hope you can advise.
-> 
-> Thank you very much.
-> 
-> xfslogd/1: page allocation failure. order:0, mode:0x0
-> Pid: 261, comm: xfslogd/1 Not tainted 2.6.24.2 #1
-> 
-> Call Trace:
->  [<ffffffff8025a9b2>] __alloc_pages+0x223/0x381
->  [<ffffffff802753be>] __slab_alloc+0x178/0x53b
->  [<ffffffff80321c39>] free_address+0x17/0x66
->  [<ffffffff802759ac>] kmem_cache_alloc+0x76/0x7c
->  [<ffffffff80321c39>] free_address+0x17/0x66
->  [<ffffffff80321d03>] xfs_buf_free+0x7b/0x7d
->  [<ffffffff802eb4fc>] xfs_buf_iodone_callbacks+0x107/0x17b
->  [<ffffffff80322ba0>] xfs_buf_iodone_work+0x0/0x72
+Lachlan McIlroy wrote:
+> Please pull from the for-linus branch:
+>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
-There's nothing to worry about from an XFs perspective from this
-error message.  XFS handles the memory allocation error here and
-does the right thing. The memory allocator is just being noisy.
+Wondering if you guys might consider this for 2.6.24.x stable as well...
 
-Cheers,
+-Eric
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+> This will update the following files:
+> 
+>  fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
+>  fs/xfs/quota/xfs_qm.c          |    6 +-
+>  fs/xfs/quota/xfs_qm_bhv.c      |    2 +-
+>  fs/xfs/quota/xfs_qm_syscalls.c |    4 +-
+>  fs/xfs/xfs_attr_leaf.c         |    6 +-
+>  fs/xfs/xfs_bmap.c              |   18 +++---
+>  fs/xfs/xfs_bmap_btree.h        |    2 +-
+>  fs/xfs/xfs_dir2.c              |    2 +-
+>  fs/xfs/xfs_fsops.c             |   24 +++++-----
+>  fs/xfs/xfs_ialloc.c            |    6 +-
+>  fs/xfs/xfs_inode.c             |    6 +-
+>  fs/xfs/xfs_inode_item.c        |    4 +-
+>  fs/xfs/xfs_itable.c            |    2 +-
+>  fs/xfs/xfs_log.c               |   14 +++---
+>  fs/xfs/xfs_log_priv.h          |    4 +-
+>  fs/xfs/xfs_log_recover.c       |   16 +++---
+>  fs/xfs/xfs_mount.c             |   59 +++++++++++++++++-----
+>  fs/xfs/xfs_sb.h                |  107 ++++++++++++++-------------------------
+>  fs/xfs/xfs_utils.c             |    6 +-
+>  fs/xfs/xfs_vfsops.c            |    9 ++--
+>  fs/xfs/xfs_vnodeops.c          |    2 +-
+>  21 files changed, 153 insertions(+), 148 deletions(-)
+> 
+> through these commits:
+> 
+> commit e6957ea48429aeda4f5d51af4238231d44b0dc4a
+> Author: Eric Sandeen <sandeen@sandeen.net>
+> Date:   Thu Apr 10 12:19:34 2008 +1000
+> 
+>     [XFS] Ensure "both" features2 slots are consistent
+>     
+>     Since older kernels may look in the sb_bad_features2 slot for flags,
+>     rather than zeroing it out on fixup, we should make it equal to the
+>     sb_features2 value.
+>     
+>     Also, if the ATTR2 flag was not found prior to features2 fixup, it was not
+>     set in the mount flags, so re-check after the fixup so that the current
+>     session will use the feature.
+>     
+>     Also fix up the comments to reflect these changes.
+>     
+>     SGI-PV: 980085
+>     SGI-Modid: xfs-linux-melb:xfs-kern:30778a
+>     
+>     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>     Signed-off-by: David Chinner <dgc@sgi.com>
+>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+> 
+> commit ee1c090825bf2f1cb9712489c234eabf69a9a78f
+> Author: David Chinner <dgc@sgi.com>
+> Date:   Thu Mar 6 13:45:50 2008 +1100
+> 
+>     [XFS] Fix superblock features2 field alignment problem
+>     
+>     Due to the xfs_dsb_t structure not being 64 bit aligned, the last field of
+>     the on-disk superblock can vary in location This causes problems when the
+>     filesystem gets moved to a different platform, or there is a 32 bit
+>     userspace and 64 bit kernel.
+>     
+>     This patch detects the defect at mount time, logs a warning such as:
+>     
+>     XFS: correcting sb_features alignment problem
+>     
+>     in dmesg and corrects the problem so that everything is OK. it also
+>     blacklists the bad field in the superblock so it does not get used for
+>     something else later on.
+>     
+>     SGI-PV: 977636
+>     SGI-Modid: xfs-linux-melb:xfs-kern:30539a
+>     
+>     Signed-off-by: David Chinner <dgc@sgi.com>
+>     Signed-off-by: Christoph Hellwig <hch@infradead.org>
+>     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+> 
+> commit 6211870992502efdccf9cd6bae155c83277835fa
+> Author: Eric Sandeen <sandeen@sandeen.net>
+> Date:   Thu Mar 6 13:44:28 2008 +1100
+> 
+>     [XFS] remove shouting-indirection macros from xfs_sb.h
+>     
+>     Remove macro-to-small-function indirection from xfs_sb.h, and remove some
+>     which are completely unused.
+>     
+>     SGI-PV: 976035
+>     SGI-Modid: xfs-linux-melb:xfs-kern:30528a
+>     
+>     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>     Signed-off-by: Donald Douwsma <donaldd@sgi.com>
+>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+> 
+> 
