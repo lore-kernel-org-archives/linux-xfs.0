@@ -1,69 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Apr 2008 17:21:06 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3B0Kgm5013444
-	for <xfs@oss.sgi.com>; Thu, 10 Apr 2008 17:20:45 -0700
-Date: Fri, 11 Apr 2008 10:24:43 +1000
-Subject: Re: [PATCH 2/2] simplify xfs_lock_for_rename
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Apr 2008 19:07:04 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3B26iT1024968
+	for <xfs@oss.sgi.com>; Thu, 10 Apr 2008 19:06:45 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: Lost+found
+References: <1207632033.11530.10.camel@localhost.localdomain>
+	<op.t9bm23aa3jf8g2@pc-bnaujok.melbourne.sgi.com>
+	<alpine.DEB.1.10.0804090628080.322@p34.internal.lan>
+	<47FCC071.40201@sandeen.net> <20080409132945.GA25114@infradead.org>
+Date: Fri, 11 Apr 2008 12:07:07 +1000
+In-Reply-To: <20080409132945.GA25114@infradead.org> (Christoph Hellwig's
+	message of "Wed, 9 Apr 2008 09:29:45 -0400")
+Message-ID: <nccy77lf8l0.fsf@sgi.com>
 MIME-Version: 1.0
-References: <20080410184413.GB6771@lst.de>
-Message-ID: <op.t9e7fhiw3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080410184413.GB6771@lst.de>
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, Barry Naujok <bnaujok@sgi.com>, Jeffrey Sandel <webmaster@javainbaja.com>, xfs@oss.sgi.com
 
-On Fri, 11 Apr 2008 04:44:13 +1000, Christoph Hellwig <hch@lst.de> wrote:
-
-> as with lookup merge what's left of xfs_dir_lookup_int into it, kill
-> a useless lock roundtrip left over from IRIX and kill a bunch of useless
-> variables.
+Christoph Hellwig <hch@infradead.org> writes:
+> On Wed, Apr 09, 2008 at 08:11:13AM -0500, Eric Sandeen wrote:
+>> The whole reason they're in lost+found is because they are "orphaned" -
+>> allocated & in use but not referenced by any directory... so the best
+>> xfs_repair can do is rename to lost+found with the inode number.
 >
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> Index: linux-2.6-xfs/fs/xfs/xfs_rename.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_rename.c	2008-04-09 20:30:08.000000000  
-> +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_rename.c	2008-04-10 08:58:50.000000000 +0200
-> @@ -67,10 +67,6 @@ xfs_rename_unlock4(
->  	}
->  }
-> -#ifdef DEBUG
-> -int xfs_rename_skip, xfs_rename_nskip;
-> -#endif
-> -
->  /*
->   * The following routine will acquire the locks required for a rename
->   * operation. The code understands the semantics of renames and will
-> @@ -92,47 +88,33 @@ xfs_lock_for_rename(
->  	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
->  	int		*num_inodes)  /* out: number of inodes in array */
->  {
-> -	xfs_inode_t		*ip2 = NULL;
->  	xfs_inode_t		*temp;
-> -	xfs_ino_t		inum1, inum2;
-> +	xfs_ino_t		inum2;
->  	int			error;
->  	int			i, j;
->  	uint			lock_mode;
-> -	int			diff_dirs = (dp1 != dp2);
-> -	/*
-> -	 * First, find out the current inums of the entries so that we
-> -	 * can determine the initial locking order.  We'll have to
-> -	 * sanity check stuff after all the locks have been acquired
-> -	 * to see if we still have the right inodes, directories, etc.
-> -	 */
-> -	lock_mode = xfs_ilock_map_shared(dp1);
-> +	*ipp2 = NULL;
-> +
+> At least until we get parent pointers.  Niv, any updates?
 
-Isn't it bad form to modify these (passed in params to return values
-with - ipp2, i_tab, num_inodes) on error cases?
+I was lost in DMAPI land for a while, I'll resume work on PP next week,
+patches up for review soonish after I fix some issues.
 
-Barry.
+Cheers,
+-- 
+Niv Sardi
