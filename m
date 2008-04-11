@@ -1,139 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 02:51:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3B9og5F028128
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 02:50:43 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 839F9128F267
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 02:51:18 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id J9GaOMP1NJc58elF for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 02:51:18 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m3B9DvF3015067
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 11:13:57 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m3B9Dvvv015065
-	for xfs@oss.sgi.com; Fri, 11 Apr 2008 11:13:57 +0200
-Date: Fri, 11 Apr 2008 11:13:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill di_mode checks after xfs_iget
-Message-ID: <20080411091357.GA15008@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 03:12:39 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3BACK1b031115
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 03:12:21 -0700
+Received: from py-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14E8C77EADA
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 03:12:56 -0700 (PDT)
+Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.176]) by cuda.sgi.com with ESMTP id SSH4CeEIUAKK35tp for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 03:12:56 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id j37so440061pyc.4
+        for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 03:12:56 -0700 (PDT)
+Subject: xfslogd Page Allocation Failure
+From: Federico Sevilla III <jijo@fs3.ph>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-T/HTTSfTh3F8ZKWkN8vK"
+Date: Fri, 11 Apr 2008 18:06:37 +0800
+Message-Id: <1207908397.4745.9.camel@humanitas.fs3.ph>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Unless XFS_IGET_CREATE is passed xfs_iget will return ENOENT if it
-encounters an inode with di_mode == 0.  Remove the duplicated checks
-in the callers.
+--=-T/HTTSfTh3F8ZKWkN8vK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-(the log recovery case is not touched for now)
+Hi,
+
+I noticed the below logs in my dmesg. The machine continues to be
+useable, and I'm not aware of which process wasn't able to perform
+correctly. Is this a cause for concern? Hope you can advise.
+
+Thank you very much.
+
+xfslogd/1: page allocation failure. order:0, mode:0x0
+Pid: 261, comm: xfslogd/1 Not tainted 2.6.24.2 #1
+
+Call Trace:
+ [<ffffffff8025a9b2>] __alloc_pages+0x223/0x381
+ [<ffffffff802753be>] __slab_alloc+0x178/0x53b
+ [<ffffffff80321c39>] free_address+0x17/0x66
+ [<ffffffff802759ac>] kmem_cache_alloc+0x76/0x7c
+ [<ffffffff80321c39>] free_address+0x17/0x66
+ [<ffffffff80321d03>] xfs_buf_free+0x7b/0x7d
+ [<ffffffff802eb4fc>] xfs_buf_iodone_callbacks+0x107/0x17b
+ [<ffffffff80322ba0>] xfs_buf_iodone_work+0x0/0x72
+ [<ffffffff8023ca2b>] run_workqueue+0x7f/0x108
+ [<ffffffff8023d2ce>] worker_thread+0x0/0xc8
+ [<ffffffff8023d35f>] worker_thread+0x91/0xc8
+ [<ffffffff802405af>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff8023d2ce>] worker_thread+0x0/0xc8
+ [<ffffffff8023d2ce>] worker_thread+0x0/0xc8
+ [<ffffffff80240244>] kthread+0x3d/0x61
+ [<ffffffff8020c638>] child_rip+0xa/0x12
+ [<ffffffff80240207>] kthread+0x0/0x61
+ [<ffffffff8020c62e>] child_rip+0x0/0x12
+
+Mem-info:
+DMA per-cpu:
+CPU    0: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd=
+:   0
+CPU    1: Hot: hi:    0, btch:   1 usd:   0   Cold: hi:    0, btch:   1 usd=
+:   0
+DMA32 per-cpu:
+CPU    0: Hot: hi:  186, btch:  31 usd: 137   Cold: hi:   62, btch:  15 usd=
+:  47
+CPU    1: Hot: hi:  186, btch:  31 usd: 135   Cold: hi:   62, btch:  15 usd=
+:  48
+Active:385341 inactive:88628 dirty:29329 writeback:5822 unstable:0
+ free:3056 slab:17672 mapped:15772 pagetables:11363 bounce:0
+DMA free:8016kB min:28kB low:32kB high:40kB active:2180kB inactive:976kB pr=
+esent:11424kB pages_scanned:32 all_unreclaimable? no
+lowmem_reserve[]: 0 2004 2004 2004
+DMA32 free:4208kB min:5712kB low:7140kB high:8568kB active:1539184kB inacti=
+ve:353536kB present:2052196kB pages_scanned:795 all_unreclaimable? no
+lowmem_reserve[]: 0 0 0 0
+DMA: 18*4kB 31*8kB 29*16kB 32*32kB 23*64kB 3*128kB 1*256kB 0*512kB 0*1024kB=
+ 0*2048kB 1*4096kB =3D 8016kB
+DMA32: 31*4kB 1*8kB 1*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0=
+*2048kB 1*4096kB =3D 4244kB
+Swap cache: add 3597048, delete 3537164, find 170970595/171758094, race 0+9=
+658
+Free swap  =3D 535892kB
+Total swap =3D 1048568kB
+Free swap:       535892kB
+524256 pages of RAM
+9091 reserved pages
+357974 pages shared
+59885 pages swap cached
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+--=20
+Federico Sevilla III
+F S 3 Consulting Inc.
+http://www.fs3.ph
 
-Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-04-10 19:59:00.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-04-10 19:59:58.000000000 +0200
-@@ -503,10 +503,6 @@ xfs_dm_bulkall_iget_one(
- 			 XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, bno);
- 	if (error)
- 		return error;
--	if (ip->i_d.di_mode == 0) {
--		xfs_iput_new(ip, XFS_ILOCK_SHARED);
--		return ENOENT;
--	}
- 
- 	xfs_ip_to_stat(mp, ino, ip, &xbuf->dx_statinfo);
- 	dm_ip_to_handle(ip->i_vnode, &handle);
-@@ -766,10 +762,6 @@ xfs_dm_bulkattr_iget_one(
- 			 XFS_IGET_BULKSTAT, XFS_ILOCK_SHARED, &ip, bno);
- 	if (error)
- 		return error;
--	if (ip->i_d.di_mode == 0) {
--		xfs_iput_new(ip, XFS_ILOCK_SHARED);
--		return ENOENT;
--	}
- 
- 	xfs_ip_to_stat(mp, ino, ip, sbuf);
- 	dm_ip_to_handle(ip->i_vnode, &handle);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-04-10 20:00:13.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-04-10 20:00:38.000000000 +0200
-@@ -238,7 +238,7 @@ xfs_vget_fsop_handlereq(
- 		return error;
- 	if (ip == NULL)
- 		return XFS_ERROR(EIO);
--	if (ip->i_d.di_mode == 0 || ip->i_d.di_gen != igen) {
-+	if (ip->i_d.di_gen != igen) {
- 		xfs_iput_new(ip, XFS_ILOCK_SHARED);
- 		return XFS_ERROR(ENOENT);
- 	}
-Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm.c	2008-04-10 19:58:50.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/quota/xfs_qm.c	2008-04-10 19:58:54.000000000 +0200
-@@ -1737,12 +1737,6 @@ xfs_qm_dqusage_adjust(
- 		return error;
- 	}
- 
--	if (ip->i_d.di_mode == 0) {
--		xfs_iput_new(ip, XFS_ILOCK_EXCL);
--		*res = BULKSTAT_RV_NOTHING;
--		return XFS_ERROR(ENOENT);
--	}
--
- 	/*
- 	 * Obtain the locked dquots. In case of an error (eg. allocation
- 	 * fails for ENOSPC), we return the negative of the error number
-Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2008-04-10 19:58:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c	2008-04-10 19:58:45.000000000 +0200
-@@ -1366,12 +1366,6 @@ xfs_qm_internalqcheck_adjust(
- 		return (error);
- 	}
- 
--	if (ip->i_d.di_mode == 0) {
--		xfs_iput_new(ip, lock_flags);
--		*res = BULKSTAT_RV_NOTHING;
--		return XFS_ERROR(ENOENT);
--	}
--
- 	/*
- 	 * This inode can have blocks after eof which can get released
- 	 * when we send it to inactive. Since we don't check the dquot
-Index: linux-2.6-xfs/fs/xfs/xfs_itable.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_itable.c	2008-04-10 20:05:04.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_itable.c	2008-04-10 20:05:18.000000000 +0200
-@@ -71,11 +71,6 @@ xfs_bulkstat_one_iget(
- 
- 	ASSERT(ip != NULL);
- 	ASSERT(ip->i_blkno != (xfs_daddr_t)0);
--	if (ip->i_d.di_mode == 0) {
--		*stat = BULKSTAT_RV_NOTHING;
--		error = XFS_ERROR(ENOENT);
--		goto out_iput;
--	}
- 
- 	vp = XFS_ITOV(ip);
- 	dic = &ip->i_d;
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2008-04-10 20:07:06.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c	2008-04-10 20:07:20.000000000 +0200
-@@ -133,7 +133,7 @@ xfs_nfs_get_inode(
- 	if (!ip)
- 		return ERR_PTR(-EIO);
- 
--	if (!ip->i_d.di_mode || ip->i_d.di_gen != generation) {
-+	if (ip->i_d.di_gen != generation) {
- 		xfs_iput_new(ip, XFS_ILOCK_SHARED);
- 		return ERR_PTR(-ENOENT);
- 	}
+--=-T/HTTSfTh3F8ZKWkN8vK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBH/zgt5rCBSJO3Rr4RAjJpAJ9BPfzGlURkLtsXYhErfxoDLyNaHQCfdgy7
+teV0Z99ySScT/bzm1p/TRSs=
+=/AUi
+-----END PGP SIGNATURE-----
+
+--=-T/HTTSfTh3F8ZKWkN8vK--
