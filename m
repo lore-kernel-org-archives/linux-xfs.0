@@ -1,108 +1,210 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 19:41:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3C2f27i027288
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:41:04 -0700
-Received: from wf-out-1314.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DCF312926E1
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:41:39 -0700 (PDT)
-Received: from wf-out-1314.google.com (wf-out-1314.google.com [209.85.200.173]) by cuda.sgi.com with ESMTP id 6cgrUhZugWGSN9p2 for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:41:39 -0700 (PDT)
-Received: by wf-out-1314.google.com with SMTP id 29so819242wff.32
-        for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:41:39 -0700 (PDT)
-Message-ID: <efe536470804111935q262008b4va3cf8143804936ed@mail.gmail.com>
-Date: Fri, 11 Apr 2008 19:35:35 -0700
-From: "Robert Navarro" <crshman@gmail.com>
-Subject: lost+found Delete Error
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 19:56:36 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3C2uE65028921
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:56:17 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A32F2241A
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:56:45 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id PirEHZ6fQ68GH0IK for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 19:56:45 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 5166618019ABE
+	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 21:56:13 -0500 (CDT)
+Message-ID: <480024CC.8040407@sandeen.net>
+Date: Fri, 11 Apr 2008 21:56:12 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Disposition: inline
+Subject: [PATCH] de-duplicate calls to xfs_attr_trace_enter
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hello Everyone,
+Every call to xfs_attr_trace_enter() shares the exact 
+same 16 args in the middle... just send in the context
+pointer and let the next level down split it into the
+ktrace.
 
-I'm having an issue deleting some files from lost+found....
+Compile tested only.
 
-crshman@mcepc:/media/Data/lost+found$ ls -la
-total 352
-drwxr-xr-x  4 crshman    crshman                307200 2008-04-11 11:51 .
-drwxr-xr-x 11 crshman    crshman                 24576 2008-04-11 11:28 ..
-drwxr-xr-x  3 crshman    root                       24 2008-04-11
-11:19 1082386363
-drwxrwxrwx  3 crshman    crshman                    16 2008-04-11
-11:51 1153339163
--rwxr-xrw-  1   33622760   50332648    845524441880619 2007-10-11
-01:36 2453227806
--rwxr-xr-t  1       1512  251670529               9116 2007-08-06
-15:01 2840594848
--rwxr-xr-x  1 1174438352 1431656169 504510914699959044 1970-07-24
-00:15 2887819688
--rwxr-xr-x  1 2686042304 1349606297 504546338931787648 2004-01-14
-06:53 2887819692
--rwxr-xr-x  1 3222348776  829785687 504617807677724801 1901-12-16
-17:38 2887819700
--rwxr-xr-x  1 3222348752        936 504546338916775344 1901-12-17
-02:52 2887819703
--rwxr-xr-x  1 3222397921 2425389928 504511155016456306 1901-12-16
-22:06 2887819704
--rwxr-xr-x  1 3222340584 3930769858 504546339569310213 1918-12-21
-14:38 2887819705
--rwxr-xr-x  1  117457640 2667662080 504582622414146942 1905-09-24
-11:53 2887819707
--rwxr-xr-x  1 3222397921        888 504510914481005384 1987-07-28
-23:36 2887819708
---w--wxrw-  1 1280770657 3287811048               7080 2007-10-08
-05:12 3038302590
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+ xfs_attr.c    |  106 +++++++++++++---------------------------------------------
+ xfs_attr_sf.h |   10 +----
+ 2 files changed, 28 insertions(+), 88 deletions(-)
 
 
-crshman@mcepc:/media/Data/lost+found$ rm -fr *
-rm: cannot remove directory `1082386363/56_Sim_Lane': Directory not empty
-rm: cannot remove directory `1153339163/hl2/materials/Decals':
-Directory not empty
-rm: cannot remove `2453227806': Operation not permitted
-
-
-crshman@mcepc:/media/Data/lost+found$ ls -la
-total 352
-drwxr-xr-x  4 crshman    crshman                307200 2008-04-11 11:51 .
-drwxr-xr-x 11 crshman    crshman                 24576 2008-04-11 11:28 ..
-drwxr-xr-x  3 crshman    root                       24 2008-04-11
-11:19 1082386363
-drwxrwxrwx  3 crshman    crshman                    16 2008-04-11
-11:51 1153339163
--rwxr-xrw-  1   33622760   50332648    845524441880619 2007-10-11
-01:36 2453227806
--rwxr-xr-t  1       1512  251670529               9116 2007-08-06
-15:01 2840594848
--rwxr-xr-x  1 1174438352 1431656169 504510914699959044 1970-07-24
-00:15 2887819688
--rwxr-xr-x  1 2686042304 1349606297 504546338931787648 2004-01-14
-06:53 2887819692
--rwxr-xr-x  1 3222348776  829785687 504617807677724801 1901-12-16
-17:38 2887819700
--rwxr-xr-x  1 3222348752        936 504546338916775344 1901-12-17
-02:52 2887819703
--rwxr-xr-x  1 3222397921 2425389928 504511155016456306 1901-12-16
-22:06 2887819704
--rwxr-xr-x  1 3222340584 3930769858 504546339569310213 1918-12-21
-14:38 2887819705
--rwxr-xr-x  1  117457640 2667662080 504582622414146942 1905-09-24
-11:53 2887819707
--rwxr-xr-x  1 3222397921        888 504510914481005384 1987-07-28
-23:36 2887819708
---w--wxrw-  1 1280770657 3287811048               7080 2007-10-08
-05:12 3038302590
-crshman@mcepc:/media/Data/lost+found$
-
-Any ideas?
-
-I've tried unmounting, and remounting the file system with no luck
-
--- 
-~Robert Navarro
-
-
-[[HTML alternate version deleted]]
+Index: linux-2.6-xfs/fs/xfs/xfs_attr.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_attr.c
++++ linux-2.6-xfs/fs/xfs/xfs_attr.c
+@@ -2286,23 +2286,7 @@ xfs_attr_rmtval_remove(xfs_da_args_t *ar
+ void
+ xfs_attr_trace_l_c(char *where, struct xfs_attr_list_context *context)
+ {
+-	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_C, where,
+-		(__psunsigned_t)context->dp,
+-		(__psunsigned_t)context->cursor->hashval,
+-		(__psunsigned_t)context->cursor->blkno,
+-		(__psunsigned_t)context->cursor->offset,
+-		(__psunsigned_t)context->alist,
+-		(__psunsigned_t)context->bufsize,
+-		(__psunsigned_t)context->count,
+-		(__psunsigned_t)context->firstu,
+-		(__psunsigned_t)
+-			((context->count > 0) &&
+-			!(context->flags & (ATTR_KERNAMELS|ATTR_KERNOVAL)))
+-				? (ATTR_ENTRY(context->alist,
+-					      context->count-1)->a_valuelen)
+-				: 0,
+-		(__psunsigned_t)context->dupcnt,
+-		(__psunsigned_t)context->flags,
++	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_C, where, context,
+ 		(__psunsigned_t)NULL,
+ 		(__psunsigned_t)NULL,
+ 		(__psunsigned_t)NULL);
+@@ -2315,23 +2299,7 @@ void
+ xfs_attr_trace_l_cn(char *where, struct xfs_attr_list_context *context,
+ 			 struct xfs_da_intnode *node)
+ {
+-	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CN, where,
+-		(__psunsigned_t)context->dp,
+-		(__psunsigned_t)context->cursor->hashval,
+-		(__psunsigned_t)context->cursor->blkno,
+-		(__psunsigned_t)context->cursor->offset,
+-		(__psunsigned_t)context->alist,
+-		(__psunsigned_t)context->bufsize,
+-		(__psunsigned_t)context->count,
+-		(__psunsigned_t)context->firstu,
+-		(__psunsigned_t)
+-			((context->count > 0) &&
+-			!(context->flags & (ATTR_KERNAMELS|ATTR_KERNOVAL)))
+-				? (ATTR_ENTRY(context->alist,
+-					      context->count-1)->a_valuelen)
+-				: 0,
+-		(__psunsigned_t)context->dupcnt,
+-		(__psunsigned_t)context->flags,
++	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CN, where, context,
+ 		(__psunsigned_t)be16_to_cpu(node->hdr.count),
+ 		(__psunsigned_t)be32_to_cpu(node->btree[0].hashval),
+ 		(__psunsigned_t)be32_to_cpu(node->btree[
+@@ -2345,23 +2313,7 @@ void
+ xfs_attr_trace_l_cb(char *where, struct xfs_attr_list_context *context,
+ 			  struct xfs_da_node_entry *btree)
+ {
+-	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CB, where,
+-		(__psunsigned_t)context->dp,
+-		(__psunsigned_t)context->cursor->hashval,
+-		(__psunsigned_t)context->cursor->blkno,
+-		(__psunsigned_t)context->cursor->offset,
+-		(__psunsigned_t)context->alist,
+-		(__psunsigned_t)context->bufsize,
+-		(__psunsigned_t)context->count,
+-		(__psunsigned_t)context->firstu,
+-		(__psunsigned_t)
+-			((context->count > 0) &&
+-			!(context->flags & (ATTR_KERNAMELS|ATTR_KERNOVAL)))
+-				? (ATTR_ENTRY(context->alist,
+-					      context->count-1)->a_valuelen)
+-				: 0,
+-		(__psunsigned_t)context->dupcnt,
+-		(__psunsigned_t)context->flags,
++	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CB, where, context,
+ 		(__psunsigned_t)be32_to_cpu(btree->hashval),
+ 		(__psunsigned_t)be32_to_cpu(btree->before),
+ 		(__psunsigned_t)NULL);
+@@ -2374,23 +2326,7 @@ void
+ xfs_attr_trace_l_cl(char *where, struct xfs_attr_list_context *context,
+ 			      struct xfs_attr_leafblock *leaf)
+ {
+-	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CL, where,
+-		(__psunsigned_t)context->dp,
+-		(__psunsigned_t)context->cursor->hashval,
+-		(__psunsigned_t)context->cursor->blkno,
+-		(__psunsigned_t)context->cursor->offset,
+-		(__psunsigned_t)context->alist,
+-		(__psunsigned_t)context->bufsize,
+-		(__psunsigned_t)context->count,
+-		(__psunsigned_t)context->firstu,
+-		(__psunsigned_t)
+-			((context->count > 0) &&
+-			!(context->flags & (ATTR_KERNAMELS|ATTR_KERNOVAL)))
+-				? (ATTR_ENTRY(context->alist,
+-					      context->count-1)->a_valuelen)
+-				: 0,
+-		(__psunsigned_t)context->dupcnt,
+-		(__psunsigned_t)context->flags,
++	xfs_attr_trace_enter(XFS_ATTR_KTRACE_L_CL, where, context,
+ 		(__psunsigned_t)be16_to_cpu(leaf->hdr.count),
+ 		(__psunsigned_t)be32_to_cpu(leaf->entries[0].hashval),
+ 		(__psunsigned_t)be32_to_cpu(leaf->entries[
+@@ -2403,22 +2339,30 @@ xfs_attr_trace_l_cl(char *where, struct 
+  */
+ void
+ xfs_attr_trace_enter(int type, char *where,
+-			 __psunsigned_t a2, __psunsigned_t a3,
+-			 __psunsigned_t a4, __psunsigned_t a5,
+-			 __psunsigned_t a6, __psunsigned_t a7,
+-			 __psunsigned_t a8, __psunsigned_t a9,
+-			 __psunsigned_t a10, __psunsigned_t a11,
+-			 __psunsigned_t a12, __psunsigned_t a13,
+-			 __psunsigned_t a14, __psunsigned_t a15)
++			 struct xfs_attr_list_context *context,
++			 __psunsigned_t a13, __psunsigned_t a14,
++			 __psunsigned_t a15)
+ {
+ 	ASSERT(xfs_attr_trace_buf);
+ 	ktrace_enter(xfs_attr_trace_buf, (void *)((__psunsigned_t)type),
+-					 (void *)where,
+-					 (void *)a2,  (void *)a3,  (void *)a4,
+-					 (void *)a5,  (void *)a6,  (void *)a7,
+-					 (void *)a8,  (void *)a9,  (void *)a10,
+-					 (void *)a11, (void *)a12, (void *)a13,
+-					 (void *)a14, (void *)a15);
++		(void *)((__psunsigned_t)where),
++		(void *)((__psunsigned_t)context->dp),
++		(void *)((__psunsigned_t)context->cursor->hashval),
++		(void *)((__psunsigned_t)context->cursor->blkno),
++		(void *)((__psunsigned_t)context->cursor->offset),
++		(void *)((__psunsigned_t)context->alist),
++		(void *)((__psunsigned_t)context->bufsize),
++		(void *)((__psunsigned_t)context->count),
++		(void *)((__psunsigned_t)context->firstu),
++		(void *)((__psunsigned_t)
++			(((context->count > 0) &&
++			!(context->flags & (ATTR_KERNAMELS|ATTR_KERNOVAL)))
++				? (ATTR_ENTRY(context->alist,
++					      context->count-1)->a_valuelen)
++				: 0)),
++		(void *)((__psunsigned_t)context->dupcnt),
++		(void *)((__psunsigned_t)context->flags),
++		(void *)a13, (void *)a14, (void *)a15);
+ }
+ #endif	/* XFS_ATTR_TRACE */
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_attr_sf.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_attr_sf.h
++++ linux-2.6-xfs/fs/xfs/xfs_attr_sf.h
+@@ -97,13 +97,9 @@ void xfs_attr_trace_l_cb(char *where, st
+ void xfs_attr_trace_l_cl(char *where, struct xfs_attr_list_context *context,
+ 			      struct xfs_attr_leafblock *leaf);
+ void xfs_attr_trace_enter(int type, char *where,
+-			     __psunsigned_t a2, __psunsigned_t a3,
+-			     __psunsigned_t a4, __psunsigned_t a5,
+-			     __psunsigned_t a6, __psunsigned_t a7,
+-			     __psunsigned_t a8, __psunsigned_t a9,
+-			     __psunsigned_t a10, __psunsigned_t a11,
+-			     __psunsigned_t a12, __psunsigned_t a13,
+-			     __psunsigned_t a14, __psunsigned_t a15);
++			     struct xfs_attr_list_context *context,
++			     __psunsigned_t a13, __psunsigned_t a14,
++			     __psunsigned_t a15);
+ #else
+ #define	xfs_attr_trace_l_c(w,c)
+ #define	xfs_attr_trace_l_cn(w,c,n)
