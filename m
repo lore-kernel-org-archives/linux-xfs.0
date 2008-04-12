@@ -1,39 +1,22 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Apr 2008 20:01:22 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 Apr 2008 10:37:48 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3C31CEh029726
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 20:01:14 -0700
-Received: from filer.fsl.cs.sunysb.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9608B9B8041
-	for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 20:01:51 -0700 (PDT)
-Received: from filer.fsl.cs.sunysb.edu (filer.fsl.cs.sunysb.edu [130.245.126.2]) by cuda.sgi.com with ESMTP id E9pDnRzpMztItnxa for <xfs@oss.sgi.com>; Fri, 11 Apr 2008 20:01:51 -0700 (PDT)
-Date: Fri, 11 Apr 2008 23:01:50 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] de-duplicate calls to xfs_attr_trace_enter
-Message-ID: <20080412030150.GB5431@josefsipek.net>
-References: <480024CC.8040407@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3CHbPRw027582
+	for <linux-xfs@oss.sgi.com>; Sat, 12 Apr 2008 10:37:26 -0700
+Received: from fmailhost01.isp.att.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E41010940AC
+	for <linux-xfs@oss.sgi.com>; Sat, 12 Apr 2008 10:38:05 -0700 (PDT)
+Received: from fmailhost01.isp.att.net (fmailhost02.isp.att.net [207.115.11.52]) by cuda.sgi.com with ESMTP id Mdkn26rbeSGdCHVb for <linux-xfs@oss.sgi.com>; Sat, 12 Apr 2008 10:38:05 -0700 (PDT)
+From: "Paul Amodio" <photo@paulamodio.com>
+Subject: RE: error
+Date: Sat, 12 Apr 2008 13:36:18 -0400
+Message-ID: <003901c89cc3$bded4b20$9c01a8c0@FFE80C38742A44A>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <480024CC.8040407@sandeen.net>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-On Fri, Apr 11, 2008 at 09:56:12PM -0500, Eric Sandeen wrote:
-> Every call to xfs_attr_trace_enter() shares the exact 
-> same 16 args in the middle... just send in the context
-> pointer and let the next level down split it into the
-> ktrace.
-> 
-> Compile tested only.
- 
-Very nice.
-
-Josef 'Jeff' Sipek.
-
--- 
-I think there is a world market for maybe five computers.
-		- Thomas Watson, chairman of IBM, 1943.
