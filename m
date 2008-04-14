@@ -1,218 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Apr 2008 20:14:23 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E3EB45003560
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 20:14:15 -0700
-From: Niv Sardi <xaiki@cxhome.ath.cx>
-Subject: Re: [PATCH] split xfs_ioc_xattr
-References: <20080319204014.GA23644@lst.de>
-Date: Mon, 14 Apr 2008 13:14:47 +1000
-In-Reply-To: <20080319204014.GA23644@lst.de> (Christoph Hellwig's message of
-	"Wed, 19 Mar 2008 21:40:14 +0100")
-Message-ID: <ncciqylf7q0.fsf@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Apr 2008 20:19:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E3JPgm009023
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 20:19:27 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A87F19C4B0B
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 20:20:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id JPbZ1PSCZyqmClfQ for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 20:20:04 -0700 (PDT)
+Message-ID: <4802CD62.4040201@sandeen.net>
+Date: Sun, 13 Apr 2008 22:20:02 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [patch] xfsqa - 166 - fix filter for stripe aligned filesystems
+References: <20080411033628.GN103491721@sgi.com> <nccprstf7yg.fsf@sgi.com>
+In-Reply-To: <nccprstf7yg.fsf@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Niv Sardi <xaiki@cxhome.ath.cx>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
+Niv Sardi wrote:
+> Looks good, one minor comment.
+> 
+> David Chinner <dgc@sgi.com> writes:
+> 
+>> Flags has extra bits set in it xfs_bmap output when
+>> the filesyste is using stripe alignment. Fix the test
+>> to only look at the unwritten flag. Capture the xfs_bmap
+>> output as well so failures can be debugged easily.
+>>
+>> Signed-off-by: Dave Chinner <dgc@sgi.com>
+>> ---
+>>  xfstests/166 |   17 ++++++++++-------
+>>  1 file changed, 10 insertions(+), 7 deletions(-)
+>>
+>> Index: xfs-cmds/xfstests/166
+>> ===================================================================
+>> --- xfs-cmds.orig/xfstests/166	2008-03-25 15:29:35.000000000 +1100
+>> +++ xfs-cmds/xfstests/166	2008-04-11 13:33:31.220068950 +1000
+>> @@ -17,6 +17,7 @@ here=`pwd`
+>>  tmp=/tmp/$$
+>>  status=1    # failure is the default!
+>>  trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +rm $seq.full
+> 
+> rm -f ? so that it doesn't complain when file is not there ?
 
+All other tests do use rm -f here, it seems.
 
-Christoph Hellwig <hch@lst.de> writes:
-> The three subcases of xfs_ioc_xattr don't share any semantics and almost
-> no code, so split it into three separate helpers.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good to me, aren't the likely() unlinkely() deprecated ? shouldn't
-they be killed ?
-
-Cheers,
-
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-03-04 18:14:57.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-03-04 18:25:51.000000000 +0100
-> @@ -871,85 +871,85 @@ xfs_ioc_fsgetxattr(
->  }
->  
->  STATIC int
-> -xfs_ioc_xattr(
-> +xfs_ioc_fssetxattr(
->  	xfs_inode_t		*ip,
->  	struct file		*filp,
-> -	unsigned int		cmd,
->  	void			__user *arg)
->  {
->  	struct fsxattr		fa;
->  	struct bhv_vattr	*vattr;
-> -	int			error = 0;
-> +	int			error;
->  	int			attr_flags;
-> -	unsigned int		flags;
-> +
-> +	if (copy_from_user(&fa, arg, sizeof(fa)))
-> +		return -EFAULT;
->  
->  	vattr = kmalloc(sizeof(*vattr), GFP_KERNEL);
->  	if (unlikely(!vattr))
->  		return -ENOMEM;
->  
-> -	switch (cmd) {
-> -	case XFS_IOC_FSSETXATTR: {
-> -		if (copy_from_user(&fa, arg, sizeof(fa))) {
-> -			error = -EFAULT;
-> -			break;
-> -		}
-> -
-> -		attr_flags = 0;
-> -		if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> -			attr_flags |= ATTR_NONBLOCK;
-> -
-> -		vattr->va_mask = XFS_AT_XFLAGS | XFS_AT_EXTSIZE | XFS_AT_PROJID;
-> -		vattr->va_xflags  = fa.fsx_xflags;
-> -		vattr->va_extsize = fa.fsx_extsize;
-> -		vattr->va_projid  = fa.fsx_projid;
-> -
-> -		error = xfs_setattr(ip, vattr, attr_flags, NULL);
-> -		if (likely(!error))
-
-*HERE* 
-
-> -			vn_revalidate(XFS_ITOV(ip));	/* update flags */
-> -		error = -error;
-> -		break;
-> -	}
-> -
-> -	case XFS_IOC_GETXFLAGS: {
-> -		flags = xfs_di2lxflags(ip->i_d.di_flags);
-> -		if (copy_to_user(arg, &flags, sizeof(flags)))
-> -			error = -EFAULT;
-> -		break;
-> -	}
-> -
-> -	case XFS_IOC_SETXFLAGS: {
-> -		if (copy_from_user(&flags, arg, sizeof(flags))) {
-> -			error = -EFAULT;
-> -			break;
-> -		}
-> -
-> -		if (flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL | \
-> -			      FS_NOATIME_FL | FS_NODUMP_FL | \
-> -			      FS_SYNC_FL)) {
-> -			error = -EOPNOTSUPP;
-> -			break;
-> -		}
-> -
-> -		attr_flags = 0;
-> -		if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> -			attr_flags |= ATTR_NONBLOCK;
-> -
-> -		vattr->va_mask = XFS_AT_XFLAGS;
-> -		vattr->va_xflags = xfs_merge_ioc_xflags(flags,
-> -							xfs_ip2xflags(ip));
-> -
-> -		error = xfs_setattr(ip, vattr, attr_flags, NULL);
-> -		if (likely(!error))
-
-*HERE* 
-
-> -			vn_revalidate(XFS_ITOV(ip));	/* update flags */
-> -		error = -error;
-> -		break;
-> -	}
-> +	attr_flags = 0;
-> +	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> +		attr_flags |= ATTR_NONBLOCK;
-> +
-> +	vattr->va_mask = XFS_AT_XFLAGS | XFS_AT_EXTSIZE | XFS_AT_PROJID;
-> +	vattr->va_xflags  = fa.fsx_xflags;
-> +	vattr->va_extsize = fa.fsx_extsize;
-> +	vattr->va_projid  = fa.fsx_projid;
-> +
-> +	error = -xfs_setattr(ip, vattr, attr_flags, NULL);
-> +	if (!error)
-> +		vn_revalidate(XFS_ITOV(ip));	/* update flags */
-> +	kfree(vattr);
-> +	return 0;
-> +}
->  
-> -	default:
-> -		error = -ENOTTY;
-> -		break;
-> -	}
-> +STATIC int
-> +xfs_ioc_getxflags(
-> +	xfs_inode_t		*ip,
-> +	void			__user *arg)
-> +{
-> +	unsigned int		flags;
-> +
-> +	flags = xfs_di2lxflags(ip->i_d.di_flags);
-> +	if (copy_to_user(arg, &flags, sizeof(flags)))
-> +		return -EFAULT;
-> +	return 0;
-> +}
->  
-> +STATIC int
-> +xfs_ioc_setxflags(
-> +	xfs_inode_t		*ip,
-> +	struct file		*filp,
-> +	void			__user *arg)
-> +{
-> +	struct bhv_vattr	*vattr;
-> +	unsigned int		flags;
-> +	int			attr_flags;
-> +	int			error;
-> +
-> +	if (copy_from_user(&flags, arg, sizeof(flags)))
-> +		return -EFAULT;
-> +
-> +	if (flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL | \
-> +		      FS_NOATIME_FL | FS_NODUMP_FL | \
-> +		      FS_SYNC_FL))
-> +		return -EOPNOTSUPP;
-> +
-> +	vattr = kmalloc(sizeof(*vattr), GFP_KERNEL);
-> +	if (unlikely(!vattr))
-
-*HERE* 
-
-> +		return -ENOMEM;
-> +
-> +	attr_flags = 0;
-> +	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> +		attr_flags |= ATTR_NONBLOCK;
-> +
-> +	vattr->va_mask = XFS_AT_XFLAGS;
-> +	vattr->va_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
-> +
-> +	error = -xfs_setattr(ip, vattr, attr_flags, NULL);
-> +	if (likely(!error))
-
-*HERE*
-
-> +		vn_revalidate(XFS_ITOV(ip));	/* update flags */
->  	kfree(vattr);
->  	return error;
->  }
-> @@ -1090,10 +1090,12 @@ xfs_ioctl(
->  		return xfs_ioc_fsgetxattr(ip, 0, arg);
->  	case XFS_IOC_FSGETXATTRA:
->  		return xfs_ioc_fsgetxattr(ip, 1, arg);
-> +	case XFS_IOC_FSSETXATTR:
-> +		return xfs_ioc_fssetxattr(ip, filp, arg);
->  	case XFS_IOC_GETXFLAGS:
-> +		return xfs_ioc_getxflags(ip, arg);
->  	case XFS_IOC_SETXFLAGS:
-> -	case XFS_IOC_FSSETXATTR:
-> -		return xfs_ioc_xattr(ip, filp, cmd, arg);
-> +		return xfs_ioc_setxflags(ip, filp, arg);
->  
->  	case XFS_IOC_FSSETDM: {
->  		struct fsdmidata	dmi;
-
--- 
-Niv Sardi
+-Eric
