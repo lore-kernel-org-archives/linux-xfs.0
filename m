@@ -1,48 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Apr 2008 18:50:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3E1oD4x028252
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 18:50:15 -0700
-Subject: TAKE 977637 - Duplicate sb_features2 into following 4 bytes in superblock due to bug
-Message-Id: <20080414015047.BA5C958C4C15@chook.melbourne.sgi.com>
-Date: Mon, 14 Apr 2008 11:50:47 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Apr 2008 20:09:31 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E39BtA002815
+	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 20:09:12 -0700
+From: Niv Sardi <xaiki@cxhome.ath.cx>
+Subject: Re: [patch] xfsqa - 166 - fix filter for stripe aligned filesystems
+References: <20080411033628.GN103491721@sgi.com>
+Date: Mon, 14 Apr 2008 13:09:43 +1000
+In-Reply-To: <20080411033628.GN103491721@sgi.com> (David Chinner's message of
+	"Fri, 11 Apr 2008 13:36:28 +1000")
+Message-ID: <nccprstf7yg.fsf@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
 
-Date:  Mon Apr 14 11:50:24 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  sandeen@sandeen.net
+Looks good, one minor comment.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+David Chinner <dgc@sgi.com> writes:
 
+> Flags has extra bits set in it xfs_bmap output when
+> the filesyste is using stripe alignment. Fix the test
+> to only look at the unwritten flag. Capture the xfs_bmap
+> output as well so failures can be debugged easily.
+>
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  xfstests/166 |   17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
+>
+> Index: xfs-cmds/xfstests/166
+> ===================================================================
+> --- xfs-cmds.orig/xfstests/166	2008-03-25 15:29:35.000000000 +1100
+> +++ xfs-cmds/xfstests/166	2008-04-11 13:33:31.220068950 +1000
+> @@ -17,6 +17,7 @@ here=`pwd`
+>  tmp=/tmp/$$
+>  status=1    # failure is the default!
+>  trap "_cleanup; exit \$status" 0 1 2 3 15
+> +rm $seq.full
 
-Modid:  master-melb:xfs-cmds:30855a
-xfsprogs/db/sb.c - 1.23 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/sb.c.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
-	- Update xfs_db for extra superblock field
+rm -f ? so that it doesn't complain when file is not there ?
+  
+>  _cleanup()
+>  {
+> @@ -39,9 +40,14 @@ _filter_blocks()
+>  		unwritten2 = ((1048576/512) / 2) - 2 * written_size
+>  	}
+>  
+> -	if ($7) {
+> -		size = "RIGHT"
+> -		flags = "GOOD"
+> +	/* is the extent unwritten? */
+> +	unwritten_ext = 0;
+> +	if ($7 >= 10000)
+> +		unwritten_ext = 1;
+> +
+> +	size = "RIGHT"
+> +	flags = "GOOD"
+> +	if (unwritten_ext) {
+>  		if (unwritten1) {
+>  			if ($6 != unwritten1)
+>  				size = "WRONG"
+> @@ -49,11 +55,7 @@ _filter_blocks()
+>  		} else if ($6 != unwritten2) {
+>  			size = "WRONG"
+>  		}
+> -		if ($7 < 10000)
+> -			flags = "BAD"
+>  	} else {
+> -		size = "RIGHT"
+> -		flags = "GOOD"
+>  		if ($6 != written_size)
+>  			size = "WRONG"
+>  	}
+> @@ -77,6 +79,7 @@ FILE_SIZE=1048576
+>  rm -f $TEST_FILE
+>  $TEST_PROG $FILE_SIZE $TEST_FILE
+>  
+> +xfs_bmap -vp $TEST_FILE >> $seq.full
+>  xfs_bmap -vp $TEST_FILE | _filter_blocks
+>  
+>  status=0
 
-xfsprogs/db/check.c - 1.34 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/check.c.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
-	- Detect features2 in wrong location in superblock
-
-xfsprogs/mkfs/xfs_mkfs.c - 1.88 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c.diff?r1=text&tr1=1.88&r2=text&tr2=1.87&f=h
-	- Make sure features2 is the same in bad and good locations when creating a filesystem
-
-xfsprogs/include/xfs_sb.h - 1.20 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/xfs_sb.h.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
-	- Add sb_bad_features2 to superblock structure
-
-xfsprogs/repair/phase1.c - 1.12 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/phase1.c.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
-	- Detect and fix features2 in wrong location
-
-xfsprogs/libxfs/xfs_mount.c - 1.26 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/xfs_mount.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
-	- Add sb_bad_features2 to superblock structure
+-- 
+Niv Sardi
