@@ -1,48 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Apr 2008 01:58:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E8vg4j019941
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:57:44 -0700
-Received: from smtp-gw1.ncc.eurodata.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C299D58390
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:58:21 -0700 (PDT)
-Received: from smtp-gw1.ncc.eurodata.de (smtp-gw1.ncc.eurodata.de [212.89.134.30]) by cuda.sgi.com with ESMTP id HixZmV9MiR6kNc1P for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:58:21 -0700 (PDT)
-Received: from ed-imap.hip100.ncc.eurodata.de (ed-imap.hip100.ncc.eurodata.de [10.2.2.100])
-	by smtp-gw1.ncc.eurodata.de (Postfix) with ESMTP id 0AB9050405E
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:22 +0200 (CEST)
-Received: from localhost (mailscan1.ncc.eurodata.de [212.89.134.20])
-	by ed-imap.hip100.ncc.eurodata.de (Postfix) with ESMTP id 32A082BF37
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:20 +0200 (CEST)
-Received: from ed-imap.hip100.ncc.eurodata.de ([10.2.2.100])
-	by localhost (mailscan1.ncc.eurodata.de [212.89.134.20]) (amavisd-new, port 10024)
-	with ESMTP id QWEmaRGkJuqo for <xfs@oss.sgi.com>;
-	Mon, 14 Apr 2008 10:58:12 +0200 (CEST)
-Received: from [10.1.21.111] (warndt.eurodata.de [10.1.21.111])
-	by ed-imap.hip100.ncc.eurodata.de (Postfix) with ESMTP id 30B082BF26
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:12 +0200 (CEST)
-Subject: xfs_check: out of memory
-From: Andreas Koch <a.koch@eurodata.de>
-Reply-To: a.koch@eurodata.de
-Content-Type: text/plain
-Date: Mon, 14 Apr 2008 10:58:11 +0200
-Message-Id: <1208163492.2436.11.camel@warndt.eurodata.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Apr 2008 02:50:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E9njeR026758
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:49:46 -0700
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C67C9CB94F
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:50:23 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id VrBN7PetrFlUamMZ for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:50:23 -0700 (PDT)
+Date: Mon, 14 Apr 2008 05:50:23 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: xfs_check: out of memory
+In-Reply-To: <1208163492.2436.11.camel@warndt.eurodata.de>
+Message-ID: <alpine.DEB.1.10.0804140550160.4355@p34.internal.lan>
+References: <1208163492.2436.11.camel@warndt.eurodata.de>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Andreas Koch <a.koch@eurodata.de>
+Cc: xfs@oss.sgi.com
 
-Hello all.
 
-I have a 2TB Partition.
 
-When i want to check the Partition, xfs_check return -> out of memory.
+On Mon, 14 Apr 2008, Andreas Koch wrote:
 
-The Memory (2GB) was realy full.
+> Hello all.
+>
+> I have a 2TB Partition.
+>
+> When i want to check the Partition, xfs_check return -> out of memory.
+>
+> The Memory (2GB) was realy full.
+>
+> How i can check this great Partition.
+>
+> Best Regards
+>
+> Andreas Koch
+>
+>
 
-How i can check this great Partition.
-
-Best Regards
-
-Andreas Koch
+What about xfs_repair or xfs_repair -n ?
