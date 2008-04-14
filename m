@@ -1,37 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Apr 2008 22:31:01 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3E5UXRN021371
-	for <xfs@oss.sgi.com>; Sun, 13 Apr 2008 22:30:35 -0700
-Subject: TAKE 979606 - xfs bug in going from attr2 back to attr1
-Message-Id: <20080414053108.3C30758C4C15@chook.melbourne.sgi.com>
-Date: Mon, 14 Apr 2008 15:31:08 +1000 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Apr 2008 01:58:02 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E8vg4j019941
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:57:44 -0700
+Received: from smtp-gw1.ncc.eurodata.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C299D58390
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:58:21 -0700 (PDT)
+Received: from smtp-gw1.ncc.eurodata.de (smtp-gw1.ncc.eurodata.de [212.89.134.30]) by cuda.sgi.com with ESMTP id HixZmV9MiR6kNc1P for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 01:58:21 -0700 (PDT)
+Received: from ed-imap.hip100.ncc.eurodata.de (ed-imap.hip100.ncc.eurodata.de [10.2.2.100])
+	by smtp-gw1.ncc.eurodata.de (Postfix) with ESMTP id 0AB9050405E
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:22 +0200 (CEST)
+Received: from localhost (mailscan1.ncc.eurodata.de [212.89.134.20])
+	by ed-imap.hip100.ncc.eurodata.de (Postfix) with ESMTP id 32A082BF37
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:20 +0200 (CEST)
+Received: from ed-imap.hip100.ncc.eurodata.de ([10.2.2.100])
+	by localhost (mailscan1.ncc.eurodata.de [212.89.134.20]) (amavisd-new, port 10024)
+	with ESMTP id QWEmaRGkJuqo for <xfs@oss.sgi.com>;
+	Mon, 14 Apr 2008 10:58:12 +0200 (CEST)
+Received: from [10.1.21.111] (warndt.eurodata.de [10.1.21.111])
+	by ed-imap.hip100.ncc.eurodata.de (Postfix) with ESMTP id 30B082BF26
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 10:58:12 +0200 (CEST)
+Subject: xfs_check: out of memory
+From: Andreas Koch <a.koch@eurodata.de>
+Reply-To: a.koch@eurodata.de
+Content-Type: text/plain
+Date: Mon, 14 Apr 2008 10:58:11 +0200
+Message-Id: <1208163492.2436.11.camel@warndt.eurodata.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: xfs@oss.sgi.com
 
-Test out bug in xfs_attr_shortform_bytesfit for its use of m_attroffset
-instead of di_forkoff.
+Hello all.
 
+I have a 2TB Partition.
 
-Date:  Mon Apr 14 15:24:55 AEST 2008
-Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  dgc@sgi.com
+When i want to check the Partition, xfs_check return -> out of memory.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+The Memory (2GB) was realy full.
 
+How i can check this great Partition.
 
-Modid:  master-melb:xfs-cmds:30863a
-xfstests/186 - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/186
-xfstests/186.out - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/186.out
-	- Test out bug in xfs_attr_shortform_bytesfit for its use of m_attroffset
-	  instead of di_forkoff.
+Best Regards
 
-xfstests/group - 1.119 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.119&r2=text&tr2=1.118&f=h
-	- Add 186 for attr.
+Andreas Koch
