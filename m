@@ -1,44 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Apr 2008 02:50:03 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3E9njeR026758
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:49:46 -0700
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C67C9CB94F
-	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:50:23 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id VrBN7PetrFlUamMZ for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 02:50:23 -0700 (PDT)
-Date: Mon, 14 Apr 2008 05:50:23 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: xfs_check: out of memory
-In-Reply-To: <1208163492.2436.11.camel@warndt.eurodata.de>
-Message-ID: <alpine.DEB.1.10.0804140550160.4355@p34.internal.lan>
-References: <1208163492.2436.11.camel@warndt.eurodata.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Apr 2008 17:33:32 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3F0X7sb009736
+	for <xfs@oss.sgi.com>; Mon, 14 Apr 2008 17:33:09 -0700
+Message-ID: <4803F7DF.50706@sgi.com>
+Date: Tue, 15 Apr 2008 10:33:35 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Subject: Re: [PATCH V2] remove CONFIG_XFS_SECURITY
+References: <47819E47.4030906@sandeen.net> <47BB7774.5080401@sandeen.net> <47F985BA.7060100@sgi.com> <47FF781D.2020006@sandeen.net> <20080411160448.GA26929@infradead.org> <47FF8E2A.30900@sandeen.net>
+In-Reply-To: <47FF8E2A.30900@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andreas Koch <a.koch@eurodata.de>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
+Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+>>> +#define XFS_SECURITY_STRING	"security attributes, "
+>> This one should just be killed completely, as it's not an optional
+>> feature anymore.
+>>
+> 
+> My only concern is that if people are used to seeing it, they'll assume
+> that somehow xfs now doesn't support it now, or was built without it, or ...
+> 
+> *shrug*
+> 
+> -Eric
+Yeah, I kind of see your point there.
+I think I'd prefer to keep it too.
 
-
-On Mon, 14 Apr 2008, Andreas Koch wrote:
-
-> Hello all.
->
-> I have a 2TB Partition.
->
-> When i want to check the Partition, xfs_check return -> out of memory.
->
-> The Memory (2GB) was realy full.
->
-> How i can check this great Partition.
->
-> Best Regards
->
-> Andreas Koch
->
->
-
-What about xfs_repair or xfs_repair -n ?
+--Tim
