@@ -1,38 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Apr 2008 02:00:35 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3H90C9k004809
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 02:00:15 -0700
-Date: Thu, 17 Apr 2008 19:00:50 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: oss git tree busted....
-Message-ID: <20080417090050.GY108924158@sgi.com>
-References: <20080417035144.GU108924158@sgi.com> <4806EFF8.4000908@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Apr 2008 11:26:49 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3HIQRWL015628
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 11:26:28 -0700
+Date: Thu, 17 Apr 2008 14:27:02 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [REVIEW] - cleanup xfs_attr a bit
+Message-ID: <20080417182702.GA7154@infradead.org>
+References: <op.t9qhhmhx3jf8g2@pc-bnaujok.melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4806EFF8.4000908@sgi.com>
+In-Reply-To: <op.t9qhhmhx3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Thu, Apr 17, 2008 at 04:36:40PM +1000, Lachlan McIlroy wrote:
-> I pushed all available changes, at the time I did the merge, into the master
-> branch so all these changes must have been checked in after (or during) the
-> last merge.  I'll run another merge now.
+On Thu, Apr 17, 2008 at 12:35:36PM +1000, Barry Naujok wrote:
+> This patch starts using struct xfs_name more for the xattr code and
+> is another step for using xfs_name in xfs_da_args.
+>
+> Also, the cred parameter is removed from xfs_attr_get and xfs_attr_fetch.
 
-Interesting - one of the bug fixes went in in the middle of the series,
-but it was missed while all the subsequent mods were picked up. Very
-strange....
-
-Anyway, looks like it's all up to date now. Thanks.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Looks good, but I'd really not expected a function called
+xfs_attr_name_to_name to do the shutdown check.  Either keep it in the
+callers or give the function a different name.
