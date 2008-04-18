@@ -1,60 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Apr 2008 12:37:11 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3HJaeYO024131
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 12:36:43 -0700
-Received: from perch.m2000.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F70B158526E
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 12:37:20 -0700 (PDT)
-Received: from perch.m2000.com (adsl-71-159-205-6.dsl.pltn13.sbcglobal.net [71.159.205.6]) by cuda.sgi.com with ESMTP id 5FBkjEbOXs2OexY4 for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 12:37:20 -0700 (PDT)
-Message-ID: <4807A6E8.6010102@m2000.com>
-Date: Thu, 17 Apr 2008 12:37:12 -0700
-From: Adam Schrotenboer <adam@m2000.com>
-MIME-Version: 1.0
-Subject: Re: [opensuse] nfs_update_inode: inode X mode changed, Y to Z
-References: <9a8748490803121516u36395872i70cc88b0439adc74@mail.gmail.com>	<18394.1501.991087.80264@notabene.brown> <47DAEFD0.9020407@m2000.com>	<47E92F8E.7030504@m2000.com> <20080325190943.GF2237@fieldses.org>	<32953.192.168.1.70.1206477121.squirrel@neil.brown.name>	<20080325212425.GA20257@josefsipek.net>	<34178.192.168.1.70.1206481102.squirrel@neil.brown.name>	<20080325221321.GC20257@josefsipek.net>	<20080326033738.GX103491721@sgi.com> <20080326050208.GH108924158@sgi.com>
-In-Reply-To: <20080326050208.GH108924158@sgi.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig1BF6A4C9FFDE6A417CF8AEFD"
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Apr 2008 17:06:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3I06VIY008909
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2008 17:06:34 -0700
+Date: Fri, 18 Apr 2008 10:06:57 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.25 released with bug, which leads to XFS crash?
+Message-ID: <20080418000657.GC108924158@sgi.com>
+References: <200804170949.36864.denys@visp.net.lb>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <200804170949.36864.denys@visp.net.lb>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, NeilBrown <neilb@suse.de>, "J. Bruce Fields" <bfields@fieldses.org>, xfs@oss.sgi.com, Jesper Juhl <jesper.juhl@gmail.com>, Trond Myklebust <trond.myklebust@netapp.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, Thomas Daniel <tdaniel@m2000.com>, Frederic Revenu <frevenu@m2000.com>, Jeff Doan <jdoan@m2000.com>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig1BF6A4C9FFDE6A417CF8AEFD
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
+On Thu, Apr 17, 2008 at 09:49:36AM +0300, Denys Fedoryshchenko wrote:
+> Hi again
+> 
+> I reported about http://bugzilla.kernel.org/show_bug.cgi?id=10421 , and it
+> is triggerable on different loaded servers with XFS (squid with aufs),
+> just it is happening even on heavy load after 1-2 days. IMHO such bugs is
+> critical (same as getting kernel panic, and etc),
 
-David Chinner wrote:
-> On Wed, Mar 26, 2008 at 02:37:38PM +1100, David Chinner wrote:
->=20=20=20
->> Given this state of affairs (i.e. HSM using ikeep), I guess we can do
->> anything we want for the noikeep case. I'll cook up a patch that does
->> something similar to ext3 generation numbers for the initial seeding....
->>=20=20=20=20=20
->
-> Patch below for comments. It passes xfsqa, but there's no userspace
-> support for it yet. 2.6.26 is the likely target for this change.
->=20=20=20
-2.6.26 merge window begins now. Has this been pushed yet? Is it in=20
-linux-next tree ?
+Well, yes, and we treat shutdown bugs as such. A filesystem shutdown
+is effectively a filesystem panic and is indicative of either a
+corruption or a bug. The reality is that it takes time to triage
+such a problem that only occurs on one workload on one set of
+identical machines once every day or two. This does not make the
+problem a release blocker, though.
 
+The other side of it is that problems like this in Linux are often
+the result of a bug in a lower layer and not XFS itself. Given this
+particular problem seems to be memory corruption it could be anything
+that is causing it....
 
---------------enig1BF6A4C9FFDE6A417CF8AEFD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+> cause they are unrecoverable, causing minor filesystem corruption, and only
+> way to fix them - wakeup sysadmin. Worst thing, it is hapenning at night,
+> when i restart squid, and probably it is doing agressive unlinking stale
+> cache entries. It doesn't do panic, or even oops, but filesystem will be
+> disconnected, > and squid will remain in loop trying to restart. Sure it is
+> easy to restart it, but maybe it has to be OOPS? so at least i can do
+> sysctl -w kernel.panic_on_oops = 1, and FS will be recovered on reboot.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Rather than fearmongering, perhaps you should ask on the XFS list
+(xfs@oss.sgi.com) whether anything like this can be done.  Then you
+might have learnt about Documentation/filesystems/xfs.txt and
+/proc/sys/fs/xfs/panic_mask:
 
-iD8DBQFIB6bsyWYDdvnGArwRAgWsAJ9t0nH7ajRgEVsj/2t/tIa6MO+TRwCgnChk
-IpX4Rz5Lfw83P0S23KKixBc=
-=pnkR
------END PGP SIGNATURE-----
+  fs.xfs.panic_mask             (Min: 0  Default: 0  Max: 127)
+        Causes certain error conditions to call BUG(). Value is a bitmask;
+        AND together the tags which represent errors which should cause panics:
 
---------------enig1BF6A4C9FFDE6A417CF8AEFD--
+> Just want to warn people who is using XFS on loaded servers to keep
+> attention while using 2.6.25, and if you face same bug, report to bugzilla.
+
+Actually, I'd much prefer XFS bug reports to go to xfs@oss.sgi.com
+rather than the kernel bugzilla - that way most of the XFS community
+will see the bug report and the triage being done and then there's
+no need for spamming lkml like this....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
