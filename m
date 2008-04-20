@@ -1,42 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 19 Apr 2008 20:21:53 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3K3LZYh009694
-	for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 20:21:36 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0200107EF81
-	for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 20:22:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id vBccuK7J6YwNpHKF for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 20:22:15 -0700 (PDT)
-Message-ID: <480AB6E5.7030003@sandeen.net>
-Date: Sat, 19 Apr 2008 22:22:13 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 19 Apr 2008 21:14:26 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3K4E2UY012829
+	for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 21:14:05 -0700
+Received: from mail114c25.carrierzone.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8982B12A17A7
+	for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 21:14:42 -0700 (PDT)
+Received: from mail114c25.carrierzone.com (mail114c25.carrierzone.com [64.29.147.184]) by cuda.sgi.com with ESMTP id Sts0Zm7Uyg7NjURe for <xfs@oss.sgi.com>; Sat, 19 Apr 2008 21:14:42 -0700 (PDT)
+From: support@geoglobal.com
+Subject: xfs_repair -n report
+Date: Sat, 19 Apr 2008 23:22:26 -0600
 MIME-Version: 1.0
-Subject: Re: review: add a splice command to xfs_io
-References: <20060901165450.T3186664@wobbly.melbourne.sgi.com>
-In-Reply-To: <20060901165450.T3186664@wobbly.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Message-Id: <200804192322.26555.support@geoglobal.com>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_SMtCICdJHLPHwYF"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nscott@aconex.com>
-Cc: dgc@melbourne.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, vincent.roy@geoglobal.com
 
-Nathan Scott wrote:
-> Yo Dave,
-> 
-> Here's some code which should help exercising the splice functionality
-> from a QA test.  Needs a /usr/include/sys/splice.h (attached also, but
-> glibc will get this at some point I guess).  No QA test yet though - I
-> will hack something up there on Monday (its beer o'clock).
-> 
-> cheers.
-> 
-> 
+--Boundary-00=_SMtCICdJHLPHwYF
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-hm, any reason this never went in?
+RAID 5 - 4 disks on 9550 AMCC production machine / backup disk failed also
+verified without error - rebuilt after abrupt power shut down
+cannot mount - inconsistencies indicated - could not dump fs
 
-It still applies, though "sys/splice.h" doesn't exist; you just need
-fcntl.h (see the splice(2) man page...)
+Here is testfile based  xfs_repair -n 
 
--Eric
+Please help in anyway. All comments welcome....
+
+Regards,
+Vincent
+
+--Boundary-00=_SMtCICdJHLPHwYF
+Content-Type: application/x-zerosize;
+  name="testfile"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="testfile"
+
+
+--Boundary-00=_SMtCICdJHLPHwYF--
