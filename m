@@ -1,45 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 13:04:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3LK3w7t021711
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 13:04:00 -0700
-Received: from gv-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F0C8A83466
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 13:04:39 -0700 (PDT)
-Received: from gv-out-0910.google.com (gv-out-0910.google.com [216.239.58.191]) by cuda.sgi.com with ESMTP id rWTU5HmFC9tMkDal for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 13:04:39 -0700 (PDT)
-Received: by gv-out-0910.google.com with SMTP id s4so175518gve.9
-        for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 13:04:37 -0700 (PDT)
-Message-ID: <4f52331f0804211257n47c1d21fiffb6d07235c5b302@mail.gmail.com>
-Date: Mon, 21 Apr 2008 12:57:22 -0700
-From: "Fong Vang" <sudoyang@gmail.com>
-Subject: xfs_check and xfs_repair internal working details
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 14:12:55 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3LLCTVe026381
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 14:12:33 -0700
+Date: Tue, 22 Apr 2008 07:13:01 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH 2/4] XFS: Return case-insensitive match for dentry cache
+Message-ID: <20080421211300.GO108924158@sgi.com>
+References: <20080421083103.433280025@chook.melbourne.sgi.com> <20080421083644.809426871@chook.melbourne.sgi.com> <20080421085947.GA10399@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20080421085947.GA10399@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-I would like to find how how xfs_check and xfs_repair do their work
-internally.  I need to find answers to the following questions:
+On Mon, Apr 21, 2008 at 04:59:47AM -0400, Christoph Hellwig wrote:
+> > +STATIC struct dentry *
+> > +xfs_ci_dentry_update(
+> > +	struct dentry	*dent,
+> > +	struct inode	*dent_inode,
+> > +	struct xfs_name	*name)
+> > +{
+> > +	int		err;
+> > +	struct dentry	*real_dent;
+> > +	struct dentry	*new_dent;
+> > +	struct qstr	nls_name;
+> 
+> This helper should go into fs/dcache.c with a slightly move descritive
+> name (d_add_ci?).
+> 
+> Also the naming is rather odd, please replace every occurance of
+> dent with dentry, and the variable dent_inode should be just inode.
+> 
+> Also when moving this to dcache.c please provide a nice big kerneldoc
+> comment describing it like Anton did for the ntfs lookup instance.
 
-a) assuming the amount of data is the same for file systems, does it take
-longer for xfs_check and xfs_repair to check/repair a file system with a lot
-more files than one that has fewer?  Assuming two file systems are 1TB each
-completely filled.  One of the file systems is filled with very large files
-while the other one is filled with very small files, does it take longer to
-check and repair the latter?
+Perhaps this can be done (moving to dcache.c) as a followup patch
+series that also removes the duplicate code from ntfs and other
+places. Similarly for all the NLS stuff...
 
-b) does xfs_check and repair check only the used blocks or does it check
-everything?  I think there's a free list as well so I'm assuming it checks
-that list as well.
+Cheers,
 
-If anyone can provide more insight into xfs_check and repair, it would be
-greatly appreciated.
-
-Thank you.
-
-
-[[HTML alternate version deleted]]
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
