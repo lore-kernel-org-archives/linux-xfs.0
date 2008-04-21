@@ -1,53 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 15:31:09 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3LMUgoj000410
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 15:30:44 -0700
-Date: Tue, 22 Apr 2008 08:31:14 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Fwd: xfs_repair -n report
-Message-ID: <20080421223114.GS108924158@sgi.com>
-References: <200804211452.01772.support@geoglobal.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <200804211452.01772.support@geoglobal.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 16:07:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3LN7Oe0003039
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 16:07:25 -0700
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FE97A85C4F
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 16:08:04 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.179]) by cuda.sgi.com with ESMTP id Z1MCEPZTzZ8Jt5nu for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 16:08:04 -0700 (PDT)
+Date: Tue, 22 Apr 2008 01:08:02 +0200 (CEST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: [OT]: how to change the email address in bugzilla
+In-Reply-To: <20080421220459.GR108924158@sgi.com>
+Message-ID: <alpine.DEB.1.10.0804220107130.4028@sheep.housecafe.de>
+References: <alpine.DEB.1.10.0804212157080.4028@sheep.housecafe.de> <20080421220459.GR108924158@sgi.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: support@geoglobal.com
-Cc: xfs@oss.sgi.com, vincent.roy@geoglobal.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 21, 2008 at 02:52:01PM -0600, support@geoglobal.com wrote:
-> Sorry, I truncated the original logfile of 128MB to a short version for 
-> review. Again, all comments welcome.
+On Tue, 22 Apr 2008, David Chinner wrote:
+> You can't. Your email address is your account identifier.
 
-Firstly, please post plain text attachments - that will cut down the
-size of them as well...
+Hm, ok.
 
-> 
-> Subject: xfs_repair -n report
-> Date: Saturday 19 April 2008 23:22
-> From: support@geoglobal.com
-> To: xfs@oss.sgi.com, vincent.roy@geoglobal.com
-> 
-> RAID 5 - 4 disks on 9550 AMCC production machine / backup disk failed also
-> verified without error - rebuilt after abrupt power shut down
-> cannot mount - inconsistencies indicated - could not dump fs
+> Just create a new one.
 
-Secondly, your raid has completely screwed the filesystem. I would
-strongly suggest that you confirm that the rebuild of the RAID put
-stuff back together properly (check things like the order of disks
-in the stripe, etc). If it claims nothing is wrong, then it has been
-lying to you.
+will do, thanks!
 
-I hope you have backups, because that's the only way you're going
-to recover this mess.
-
-Cheers,
-
-Dave.
+Christian.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+BOFH excuse #100:
+
+IRQ dropout
