@@ -1,41 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Apr 2008 19:59:19 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3L2x126020958
-	for <xfs@oss.sgi.com>; Sun, 20 Apr 2008 19:59:02 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C331A68137
-	for <xfs@oss.sgi.com>; Sun, 20 Apr 2008 19:59:42 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id EDDT21HDWbTCcxq3 for <xfs@oss.sgi.com>; Sun, 20 Apr 2008 19:59:42 -0700 (PDT)
-Message-ID: <480C031B.6010802@sandeen.net>
-Date: Sun, 20 Apr 2008 21:59:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.26-rc1
-References: <20080418050547.0E70F58C4C15@chook.melbourne.sgi.com> <20080420190515.GA19219@infradead.org> <480BFE97.9090008@sgi.com>
-In-Reply-To: <480BFE97.9090008@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 20 Apr 2008 21:45:33 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3L4j9bL031967
+	for <xfs@oss.sgi.com>; Sun, 20 Apr 2008 21:45:11 -0700
+Subject: PARTIAL TAKE 976035 - Remove VN_IS* macros and related cruft.
+Message-Id: <20080421044545.912E658C4C15@chook.melbourne.sgi.com>
+Date: Mon, 21 Apr 2008 14:45:45 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
-> What were they?
+Remove VN_IS* macros and related cruft.
 
-[PATCH, mainline-only] remove sendfile leftovers
-[PATCH, mainline-only] remove dmapi cruft in xfs_file.c
-[PATCH, mainline-only] allow enabling CONFIG_XFS_DEBUG
+We can just check i_mode / di_mode directly.
 
--Eric
 
-> Christoph Hellwig wrote:
->> On Fri, Apr 18, 2008 at 03:05:46PM +1000, Lachlan McIlroy wrote:
->>> Please pull from the for-linus branch:
->>>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
->>>
->>> This will update the following files:
->> Seems like you forgot the three mainline-only patches I sent a while
->> ago.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Mon Apr 21 14:44:57 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
+Inspected by:  hch
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30896a
+fs/xfs/xfs_vnodeops.c - 1.750 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.750&r2=text&tr2=1.749&f=h
+fs/xfs/xfs_acl.c - 1.71 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.c.diff?r1=text&tr1=1.71&r2=text&tr2=1.70&f=h
+fs/xfs/linux-2.6/xfs_vnode.h - 1.149 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.149&r2=text&tr2=1.148&f=h
+	- Remove VN_IS* macros and related cruft.
