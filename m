@@ -1,57 +1,96 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 02:46:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3L9k0iF032101
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 02:46:03 -0700
-Date: Mon, 21 Apr 2008 05:46:41 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] XFS: Return case-insensitive match for dentry cache
-Message-ID: <20080421094641.GA5191@infradead.org>
-References: <20080421083103.433280025@chook.melbourne.sgi.com> <20080421083644.809426871@chook.melbourne.sgi.com> <20080421085947.GA10399@infradead.org>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 04:07:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3LB7Ikv004818
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 04:07:19 -0700
+Date: Mon, 21 Apr 2008 21:07:48 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: OOM killer doesn't kill the right task....
+Message-ID: <20080421110748.GN108924158@sgi.com>
+References: <20080421070123.GM108924158@sgi.com> <20080421172255.C45A.KOSAKI.MOTOHIRO@jp.fujitsu.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080421085947.GA10399@infradead.org>
+In-Reply-To: <20080421172255.C45A.KOSAKI.MOTOHIRO@jp.fujitsu.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Cc: David Chinner <dgc@sgi.com>, lkml <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm <linux-mm@kvack.org>
 
-> > +kmem_zone_t	*xfs_name_zone;
+On Mon, Apr 21, 2008 at 05:24:04PM +0900, KOSAKI Motohiro wrote:
+> Hi David
 > 
-> What about just using kmalloc here?  We know the length of the name
-> anyway, so there is no point of allocating the maximum possible size.
+> > Running in a 512MB UML system without swap, XFSQA test 084 reliably
+> > kills the kernel completely as the OOM killer is unable to find a
+> > task to kill. log output is below.
+> > 
+> > I don't know when it started failing - ISTR this working just fine
+> > on 2.6.24 kernels.
 > 
-> >  	error = xfs_iget(dp->i_mount, NULL, inum, 0, 0, ipp, 0);
-> > -	if (error)
-> > +	if (error) {
-> > +		if (ci_match && *ci_match)
-> > +			xfs_name_free(name->name);
-> >  		goto out;
-> > +	}
-> 
-> All the allocation and freeing for ci_match looks odd and error prone
-> to me.  I think the low-level directory code should never allocate
-> args->value unless it's explicitly asked for a CI match.  That way
-> there's only one place in xfs_ci_lookup to free it either.
+> Can you reproduce it on non UML box?
 
-Also the low-level name duplication code could be factored out a little
-more ala:
+Not exactly. On a 64k page size ia64 box it kills my ssh session and all
+it's children which includes the errant process (log below).
 
-/*
- * If a case-insensitive match, allocate a buffer and copy the actual
- * name into the buffer. Return it via args->value.
- */
-void xfs_copy_ci_name(struct xfs_da_args *args, const char *name, int namelen)
-{
-	if (args->return_ci_name && args->cmpresult == XFS_CMP_CASE) {
-		args->valuelen = namelen;
-		args->value = kmemdup(name, namelen, GFP_NOFS);
-		/* error handled in higher layers */
-	}
-}
+It doesn't kill the machine, but if I cared enough I'd argue that
+even that is killing the wrong process because it's pretty damn
+clear that the only process on the box using more than a couple of
+MB of memory is the resvtest program....
 
-Instead of adding args->return_ci_name it might make sense to just
-replace the last four chars there with an unsigned short lookup_flags
-and just set bits in it.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+resvtest invoked oom-killer: gfp_mask=0x1280d2, order=0, oomkilladj=0
+
+Call Trace:
+ [<a0000001000125e0>] show_stack+0x40/0xa0
+                                sp=e000003022f0fb20 bsp=e000003022f01168
+ [<a000000100012670>] dump_stack+0x30/0x60
+                                sp=e000003022f0fcf0 bsp=e000003022f01150
+ [<a000000100104060>] oom_kill_process+0x80/0x3a0
+                                sp=e000003022f0fcf0 bsp=e000003022f010f8
+ [<a000000100104ce0>] out_of_memory+0x4e0/0x660
+                                sp=e000003022f0fd00 bsp=e000003022f010b0
+ [<a00000010010bf00>] __alloc_pages+0x500/0x620
+                                sp=e000003022f0fd90 bsp=e000003022f01040
+ [<a000000100145020>] alloc_page_vma+0x1c0/0x200
+                                sp=e000003022f0fda0 bsp=e000003022f01008
+ [<a000000100122d00>] handle_mm_fault+0x3a0/0xe60
+                                sp=e000003022f0fda0 bsp=e000003022f00f88
+ [<a00000010085b700>] ia64_do_page_fault+0x2a0/0xaa0
+                                sp=e000003022f0fda0 bsp=e000003022f00f30
+ [<a000000100009e20>] ia64_leave_kernel+0x0/0x270
+                                sp=e000003022f0fe30 bsp=e000003022f00f30
+Mem-info:
+Node 0 Normal per-cpu:
+CPU    0: hi:    0, btch:   1 usd:   0
+CPU    1: hi:    0, btch:   1 usd:   0
+CPU    2: hi:    0, btch:   1 usd:   0
+CPU    3: hi:    0, btch:   1 usd:   0
+Active:5044 inactive:64 dirty:0 writeback:0 unstable:0
+ free:34 slab:1110 mapped:6 pagetables:104 bounce:0
+Node 0 Normal free:2176kB min:2880kB low:3584kB high:4288kB active:322816kB inactive:4096kB present:523776kB pages_scanned:32980 all_unreclaimable? yes
+lowmem_reserve[]: 0 0
+Node 0 Normal: 2*64kB 2*128kB 0*256kB 0*512kB 0*1024kB 1*2048kB 0*4096kB 0*8192kB 0*16384kB 0*32768kB 0*65536kB 0*131072kB 0*262144kB 0*524288kB 0*1048576kB 0*2097152kB 0*4194304kB = 2432kB
+76 total pagecache pages
+Swap cache: add 0, delete 0, find 0/0
+Free swap  = 0kB
+Total swap = 0kB
+Free swap:            0kB
+Node memory in pages:
+Node    0:  RAM:        8192, rsvd:     1327, shrd:        129, swpd:          0
+Node    1:  RAM:           0, rsvd:        0, shrd:          0, swpd:          0
+8192 pages of RAM
+1327 reserved pages
+129 pages shared
+0 pages swap cached
+Total of 45 pages in page table cache
+8117 free buffer pages
+Out of memory: kill process 2908 (sshd) score 379 or a child
+Killed process 2909 (bash)
