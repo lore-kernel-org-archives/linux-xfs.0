@@ -1,64 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 21:06:28 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3M461cT031019
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 21:06:02 -0700
-Message-ID: <480D641B.8060301@melbourne.sgi.com>
-Date: Tue, 22 Apr 2008 14:05:47 +1000
-From: Greg Banks <gnb@melbourne.sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] Don't initialise new inode generation numbers to zero
- V2
-References: <20080422015806.GU108924158@sgi.com>
-In-Reply-To: <20080422015806.GU108924158@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 21:24:45 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3M4OMB5032350
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 21:24:25 -0700
+Subject: TAKE 971046 - Fix broken HAVE_SPLICE removal commit.
+Message-Id: <20080422042459.2511658C4C15@chook.melbourne.sgi.com>
+Date: Tue, 22 Apr 2008 14:24:59 +1000 (EST)
+From: donaldd@sgi.com (Donald Douwsma)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-David Chinner wrote:
-> Don't initialise new inode generation numbers to zero
->
-> When we allocation new inode chunks, we initialise the generation
-> numbers to zero. This works fine until we delete a chunk and then
-> reallocate it, resulting in the same inode numbers but with a
-> reset generation count. This can result in inode/generation
-> pairs of different inodes occurring relatively close together.
->
-> Given that the inode/gen pair makes up the "unique" portion of
-> an NFS filehandle on XFS, this can result in file handles cached
-> on clients being seen on the wire from the server but refer to
-> a different file. This causes .... issues for NFS clients.
->
-> Hence we need a unique generation number initialisation for
-> each inode to prevent reuse of a small portion of the generation
-> number space. Make this initialiser per-allocation group so
-> that it is not a single point of contention in the filesystem,
-> and increment it on every allocation within an AG to reduce the
-> chance that a generation number is reused for a given inode number
-> if the inode chunk is deleted and reallocated immediately
-> afterwards.
->
-> Version 2:
-> o remove persistent per-AGI agi_newinogen field and replace with
->   randomly generated 32 bit number for each new cluster. This prevents
->   NFS clients from potentially guessing what the next generation
->   number is going to be.
->   
-I'm confused, why would an NFS client be trying to guess the generation
-number?  AFAICS the important thing is to ensure that the (inode,gen)
-tuple isn't reused for a long time to prevent accidental filehandle
-identity issues on clients; whether the gen is predictable or not
-doesn't matter at all.  You could just as well use a 32 bit hash of the
-nanosecond-precision timestamp when the inode cluster is first
-allocated.  This patch seems to me to be draining entropy from the
-random bit pool, which is needed for important things on the network,
-for little benefit.
+Fix broken HAVE_SPLICE removal commit. 
 
--- 
-Greg Banks, P.Engineer, SGI Australian Software Group.
-The cake is *not* a lie.
-I don't speak for SGI.
+Commit e687330b5ed1ea899fdaf0dea50aba196b6e019a was meant to
+remove the unused HAVE_SPLICE macro, instead an unrelated
+change was checked enabling QUOTADEBUG when building DEBUG XFS.
+Restore the intended changes.
+
+Date:  Tue Apr 22 14:24:24 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  bnaujok
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:30924a
+fs/xfs/xfs.h - 1.53 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs.h.diff?r1=text&tr1=1.53&r2=text&tr2=1.52&f=h
+	- Restore disabled QUOTADEBUG for DEBUG builds.
+
+fs/xfs/linux-2.6/xfs_linux.h - 1.164 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.164&r2=text&tr2=1.163&f=h
+	- Remove unused HAVE_SPLICE macro.
