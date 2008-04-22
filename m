@@ -1,99 +1,110 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 18:57:53 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 19:06:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3M1vWXB018318
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 18:57:35 -0700
-Date: Tue, 22 Apr 2008 11:58:06 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: [PATCH] Don't initialise new inode generation numbers to zero V2
-Message-ID: <20080422015806.GU108924158@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3M26EuZ019133
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 19:06:16 -0700
+Date: Tue, 22 Apr 2008 12:07:01 +1000
+Subject: Re: [PATCH 2/4] XFS: Return case-insensitive match for dentry cache
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+References: <20080421083103.433280025@chook.melbourne.sgi.com> <20080421083644.809426871@chook.melbourne.sgi.com> <20080421085947.GA10399@infradead.org>
+Message-ID: <op.t9zphzsa3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080421085947.GA10399@infradead.org>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, gnb@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-Don't initialise new inode generation numbers to zero
+On Mon, 21 Apr 2008 18:59:47 +1000, Christoph Hellwig <hch@infradead.org>  
+wrote:
 
-When we allocation new inode chunks, we initialise the generation
-numbers to zero. This works fine until we delete a chunk and then
-reallocate it, resulting in the same inode numbers but with a
-reset generation count. This can result in inode/generation
-pairs of different inodes occurring relatively close together.
+>> +STATIC struct dentry *
+>> +xfs_ci_dentry_update(
+>> +	struct dentry	*dent,
+>> +	struct inode	*dent_inode,
+>> +	struct xfs_name	*name)
+>> +{
+>> +	int		err;
+>> +	struct dentry	*real_dent;
+>> +	struct dentry	*new_dent;
+>> +	struct qstr	nls_name;
+>
+> This helper should go into fs/dcache.c with a slightly move descritive
+> name (d_add_ci?).
+>
+> Also the naming is rather odd, please replace every occurance of
+> dent with dentry, and the variable dent_inode should be just inode.
+>
+> Also when moving this to dcache.c please provide a nice big kerneldoc
+> comment describing it like Anton did for the ntfs lookup instance.
+> of the
+>
+>> +	/*
+>> +	 * following code from ntfs_lookup() in fs/ntfs/namei.c
+>> +	 */
+>
+> Not a very helpful comment :)
+>
+>> +		new_dent = d_splice_alias(dent_inode, real_dent);
+>> +		if (new_dent)
+>> +			dput(real_dent);
+>> +		else
+>> +			new_dent = real_dent;
+>> +		return new_dent;
+>
+> I think this would be more readable as
+>
+> 		if (new_dentry) {
+> 			dput(real_dentry);
+> 			return new_dentry;
+> 		}
+> 		return real_dentry;
+>
+>> +	/* Matching dentry exists, check if it is negative. */
+>> +	if (real_dent->d_inode) {
+>> +		if (unlikely(real_dent->d_inode != dent_inode)) {
+>> +			/* This can happen because bad inodes are unhashed. */
+>> +			BUG_ON(!is_bad_inode(dent_inode));
+>> +			BUG_ON(!is_bad_inode(real_dent->d_inode));
+>> +		}
+>
+> Shouldn't this be a can't above?
+>
+>> +		 * Already have the inode and the dentry attached, decrement
+>> +		 * the reference count to balance the xfs_lookup() we did
+>> +		 * earlier on.  We found the dentry using d_lookup() so it
+>> +		 * cannot be disconnected and thus we do not need to worry
+>> +		 * about any NFS/disconnectedness issues here.
+>
+> 		s/xfs_lookup/iget/
 
-Given that the inode/gen pair makes up the "unique" portion of
-an NFS filehandle on XFS, this can result in file handles cached
-on clients being seen on the wire from the server but refer to
-a different file. This causes .... issues for NFS clients.
+This whole function (other than the xfs_blah) is a direct copy of
+Anton's code, I left the variable names etc the same.
 
-Hence we need a unique generation number initialisation for
-each inode to prevent reuse of a small portion of the generation
-number space. Make this initialiser per-allocation group so
-that it is not a single point of contention in the filesystem,
-and increment it on every allocation within an AG to reduce the
-chance that a generation number is reused for a given inode number
-if the inode chunk is deleted and reallocated immediately
-afterwards.
+>> +kmem_zone_t	*xfs_name_zone;
+>
+> What about just using kmalloc here?  We know the length of the name
+> anyway, so there is no point of allocating the maximum possible size.
 
-Version 2:
-o remove persistent per-AGI agi_newinogen field and replace with
-  randomly generated 32 bit number for each new cluster. This prevents
-  NFS clients from potentially guessing what the next generation
-  number is going to be.
+Not with the CI/NLS, the length could be different.
 
-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- drivers/char/random.c |    1 +
- fs/xfs/xfs_ialloc.c   |   10 ++++++++++
- 2 files changed, 11 insertions(+)
+>>  	error = xfs_iget(dp->i_mount, NULL, inum, 0, 0, ipp, 0);
+>> -	if (error)
+>> +	if (error) {
+>> +		if (ci_match && *ci_match)
+>> +			xfs_name_free(name->name);
+>>  		goto out;
+>> +	}
+>
+> All the allocation and freeing for ci_match looks odd and error prone
+> to me.  I think the low-level directory code should never allocate
+> args->value unless it's explicitly asked for a CI match.  That way
+> there's only one place in xfs_ci_lookup to free it either.
 
-Index: 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c
-===================================================================
---- 2.6.x-xfs-new.orig/fs/xfs/xfs_ialloc.c	2008-04-21 09:48:39.279043874 +1000
-+++ 2.6.x-xfs-new/fs/xfs/xfs_ialloc.c	2008-04-21 10:14:07.242106131 +1000
-@@ -147,6 +147,7 @@ xfs_ialloc_ag_alloc(
- 	int		version;	/* inode version number to use */
- 	int		isaligned = 0;	/* inode allocation at stripe unit */
- 					/* boundary */
-+	unsigned int	gen;
- 
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
-@@ -290,6 +291,14 @@ xfs_ialloc_ag_alloc(
- 	else
- 		version = XFS_DINODE_VERSION_1;
- 
-+	/*
-+	 * Seed the new inode cluster with a random generation number. This
-+	 * prevents short-term reuse of generation numbers if a chunk is
-+	 * freed and then immediately reallocated. We use random numbers
-+	 * rather than a linear progression to prevent the next generation
-+	 * number from being guessable.
-+	 */
-+	gen = get_random_int();
- 	for (j = 0; j < nbufs; j++) {
- 		/*
- 		 * Get the block.
-@@ -309,6 +318,7 @@ xfs_ialloc_ag_alloc(
- 			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
- 			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
- 			free->di_core.di_version = version;
-+			free->di_core.di_gen = cpu_to_be32(gen);
- 			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
- 			xfs_ialloc_log_di(tp, fbuf, i,
- 				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
-Index: 2.6.x-xfs-new/drivers/char/random.c
-===================================================================
---- 2.6.x-xfs-new.orig/drivers/char/random.c	2008-03-13 13:05:54.000000000 +1100
-+++ 2.6.x-xfs-new/drivers/char/random.c	2008-04-21 10:12:18.464202803 +1000
-@@ -1646,6 +1646,7 @@ unsigned int get_random_int(void)
- 	 */
- 	return secure_ip_id((__force __be32)(current->pid + jiffies));
- }
-+EXPORT_SYMBOL(get_random_int);
- 
- /*
-  * randomize_range() returns a start address such that
+Yes, I could do that, it is a neater, cleaner implementation. I did it
+this way to only alloc as required rather than an alloc for every lookup.
+
+Barry.
