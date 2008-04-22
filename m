@@ -1,67 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 20:53:46 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3M3rGCN030006
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 20:53:19 -0700
-Date: Tue, 22 Apr 2008 13:54:28 +1000
-Subject: Re: [PATCH 2/4] XFS: Return case-insensitive match for dentry cache
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Apr 2008 21:06:28 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3M461cT031019
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2008 21:06:02 -0700
+Message-ID: <480D641B.8060301@melbourne.sgi.com>
+Date: Tue, 22 Apr 2008 14:05:47 +1000
+From: Greg Banks <gnb@melbourne.sgi.com>
 MIME-Version: 1.0
-References: <20080421083103.433280025@chook.melbourne.sgi.com> <20080421083644.809426871@chook.melbourne.sgi.com> <20080421085947.GA10399@infradead.org> <20080421094641.GA5191@infradead.org>
-Message-ID: <op.t9zug2dn3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080421094641.GA5191@infradead.org>
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] Don't initialise new inode generation numbers to zero
+ V2
+References: <20080422015806.GU108924158@sgi.com>
+In-Reply-To: <20080422015806.GU108924158@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 21 Apr 2008 19:46:41 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
-
->> > +kmem_zone_t	*xfs_name_zone;
->>
->> What about just using kmalloc here?  We know the length of the name
->> anyway, so there is no point of allocating the maximum possible size.
->>
->> >  	error = xfs_iget(dp->i_mount, NULL, inum, 0, 0, ipp, 0);
->> > -	if (error)
->> > +	if (error) {
->> > +		if (ci_match && *ci_match)
->> > +			xfs_name_free(name->name);
->> >  		goto out;
->> > +	}
->>
->> All the allocation and freeing for ci_match looks odd and error prone
->> to me.  I think the low-level directory code should never allocate
->> args->value unless it's explicitly asked for a CI match.  That way
->> there's only one place in xfs_ci_lookup to free it either.
+David Chinner wrote:
+> Don't initialise new inode generation numbers to zero
 >
-> Also the low-level name duplication code could be factored out a little
-> more ala:
+> When we allocation new inode chunks, we initialise the generation
+> numbers to zero. This works fine until we delete a chunk and then
+> reallocate it, resulting in the same inode numbers but with a
+> reset generation count. This can result in inode/generation
+> pairs of different inodes occurring relatively close together.
 >
-> /*
->  * If a case-insensitive match, allocate a buffer and copy the actual
->  * name into the buffer. Return it via args->value.
->  */
-> void xfs_copy_ci_name(struct xfs_da_args *args, const char *name, int  
-> namelen)
-> {
-> 	if (args->return_ci_name && args->cmpresult == XFS_CMP_CASE) {
-> 		args->valuelen = namelen;
-> 		args->value = kmemdup(name, namelen, GFP_NOFS);
-> 		/* error handled in higher layers */
-> 	}
-> }
+> Given that the inode/gen pair makes up the "unique" portion of
+> an NFS filehandle on XFS, this can result in file handles cached
+> on clients being seen on the wire from the server but refer to
+> a different file. This causes .... issues for NFS clients.
 >
-> Instead of adding args->return_ci_name it might make sense to just
-> replace the last four chars there with an unsigned short lookup_flags
-> and just set bits in it.
+> Hence we need a unique generation number initialisation for
+> each inode to prevent reuse of a small portion of the generation
+> number space. Make this initialiser per-allocation group so
+> that it is not a single point of contention in the filesystem,
+> and increment it on every allocation within an AG to reduce the
+> chance that a generation number is reused for a given inode number
+> if the inode chunk is deleted and reallocated immediately
+> afterwards.
+>
+> Version 2:
+> o remove persistent per-AGI agi_newinogen field and replace with
+>   randomly generated 32 bit number for each new cluster. This prevents
+>   NFS clients from potentially guessing what the next generation
+>   number is going to be.
+>   
+I'm confused, why would an NFS client be trying to guess the generation
+number?  AFAICS the important thing is to ensure that the (inode,gen)
+tuple isn't reused for a long time to prevent accidental filehandle
+identity issues on clients; whether the gen is predictable or not
+doesn't matter at all.  You could just as well use a 32 bit hash of the
+nanosecond-precision timestamp when the inode cluster is first
+allocated.  This patch seems to me to be draining entropy from the
+random bit pool, which is needed for important things on the network,
+for little benefit.
 
-There's already a "flags" field in xfs_da_args and only the low 16 bits
-are currently used for attr operations.
-
-We could use 5 of the high bits for these flags, or just add another
-flags field (which are used for things other than lookup).
+-- 
+Greg Banks, P.Engineer, SGI Australian Software Group.
+The cake is *not* a lie.
+I don't speak for SGI.
