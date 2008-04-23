@@ -1,54 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Apr 2008 14:16:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3NLG0kG010042
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:16:01 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB8CD15C522A
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:16:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id DuYj4Of3UWlmb1XR for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:16:42 -0700 (PDT)
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m3NLGfh4018822
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 17:16:41 -0400
-Message-ID: <480FA737.5030001@sandeen.net>
-Date: Wed, 23 Apr 2008 16:16:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Apr 2008 14:26:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3NLQVxY010847
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:26:31 -0700
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E683DD9FC
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:27:10 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id LDRDxa68s0cu0wIZ for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 14:27:10 -0700 (PDT)
+Date: Wed, 23 Apr 2008 17:27:10 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: xfsprogs 2.9.8 source tarball released
+In-Reply-To: <480FA0ED.90609@sandeen.net>
+Message-ID: <alpine.DEB.1.10.0804231726300.14175@p34.internal.lan>
+References: <op.t91vzgbk3jf8g2@pc-bnaujok.melbourne.sgi.com> <480FA0ED.90609@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] convert xfs to use ERR_CAST
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs mailing list <xfs@oss.sgi.com>
-Cc: David Howells <dhowells@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Barry Naujok <bnaujok@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Looks like somehow xfs got missed in the conversion that
-took place in e231c2ee64eb1c5cd3c63c31da9dac7d888dcf7f,
-"Convert ERR_PTR(PTR_ERR(p)) instances to ERR_CAST(p) <http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=e231c2ee64eb1c5cd3c63c31da9dac7d888dcf7f>"
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
 
-ndex: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_export.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c
-@@ -167,7 +167,7 @@ xfs_fs_fh_to_dentry(struct super_block *
- 	if (!inode)
- 		return NULL;
- 	if (IS_ERR(inode))
--		return ERR_PTR(PTR_ERR(inode));
-+		return ERR_CAST(inode);
- 	result = d_alloc_anon(inode);
- 	if (!result) {
- 		iput(inode);
-@@ -198,7 +198,7 @@ xfs_fs_fh_to_parent(struct super_block *
- 	if (!inode)
- 		return NULL;
- 	if (IS_ERR(inode))
--		return ERR_PTR(PTR_ERR(inode));
-+		return ERR_CAST(inode);
- 	result = d_alloc_anon(inode);
- 	if (!result) {
- 		iput(inode);
+On Wed, 23 Apr 2008, Eric Sandeen wrote:
+
+> Barry Naujok wrote:
+>> ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs_2.9.8-1.tar.gz
+>>
+>> Changes since 2.9.7:
+>>
+>>          - Add support for sb_features2 in wrong location in mkfs.xfs,
+>>            xfs_repair and xfs_db.
+>>          - Improve memory limits for libxfs cache in xfs_repair and added
+>>            a -m option to manually limit usage of xfs_repair.
+>>          - Add -c option to xfs_admin to turn lazy-counters on/off.
+>>          - Added support for mdp in libdisk/mkfs.xfs, thanks to
+>>            Hubert Verstraete.
+>>          - Add -p option to fsck.xfs, thanks to Markus Rothe.
+>>          - Cleanup sys v3 bzero/bcopy calls, thanks to Nigel Kukard.
+>>
+>>
+>
+> This is in Fedora Rawhide now too, for anyone interested.
+>
+> -Eric
+>
+>
+
+Does not compile on Debian Testing / x86_64:
+
+xfsprogs-2.9.8$ make
+=== include ===
+rm -f xfs disk
+ln -s . xfs
+ln -s . disk
+=== libxfs ===
+/usr/bin/libtool --mode=compile gcc -I. -g -O2 -DNDEBUG -DVERSION=\"2.9.8\" -DLOCALEDIR=\"/usr/local/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall   -c logitem.c
+  gcc -I. -g -O2 -DNDEBUG -DVERSION=\"2.9.8\" -DLOCALEDIR=\"/usr/local/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -c logitem.c  -fPIC -DPIC -o .libs/logitem.o
+logitem.c:21: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+logitem.c:22: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+logitem.c:33: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+logitem.c:132: error: expected ')' before '*' token
+logitem.c:178: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+logitem.c:197: error: expected ')' before '*' token
+logitem.c:239: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'xfs_buf_t'
+logitem.c:314: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'xfs_buf_t'
+logitem.c:398: error: expected ')' before '*' token
+logitem.c:451: error: expected ')' before '*' token
+logitem.c:467: error: expected ')' before '*' token
+make[1]: *** [logitem.lo] Error 1
+make: *** [default] Error 2
+Command exited with non-zero status 2
+0.07user 0.07system 0:00.15elapsed 94%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+25010minor)pagefaults 0swaps
