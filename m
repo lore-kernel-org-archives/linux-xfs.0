@@ -1,47 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Apr 2008 08:39:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3OFd34c001755
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 08:39:04 -0700
-Received: from rn-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C035D15CDF64
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 08:39:40 -0700 (PDT)
-Received: from rn-out-0910.google.com (rn-out-0910.google.com [64.233.170.184]) by cuda.sgi.com with ESMTP id BfZo3afZS8n9ROS5 for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 08:39:40 -0700 (PDT)
-Received: by rn-out-0910.google.com with SMTP id e24so1499976rng.8
-        for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 08:39:39 -0700 (PDT)
-Message-ID: <c33e4330804240839x60dad34elaad6459aeef00d98@mail.gmail.com>
-Date: Thu, 24 Apr 2008 11:39:39 -0400
-From: "Michael Darling" <darlingm@gmail.com>
-Subject: Re: XFS drops create/delete files to 6.6% of EXT3 (software raid) and to 0.6% of EXT3 (3ware hardware raid)
-In-Reply-To: <20080424063102.GX103491721@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Apr 2008 10:17:44 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3OHHO4Z007956
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 10:17:26 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64D4AE3324
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 10:18:05 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id j7deiZIpJEQfeWal for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 10:18:05 -0700 (PDT)
+Message-ID: <4810C0D3.1070107@sandeen.net>
+Date: Thu, 24 Apr 2008 12:18:11 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: XFS drops create/delete files to 6.6% of EXT3 (software raid)
+ and to 0.6% of EXT3 (3ware hardware raid)
+References: <c33e4330804231848n72ce683cqd48a8d45937f302@mail.gmail.com>
+In-Reply-To: <c33e4330804231848n72ce683cqd48a8d45937f302@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <c33e4330804231848n72ce683cqd48a8d45937f302@mail.gmail.com>
-	 <4810062F.50100@sandeen.net> <20080424053358.GW103491721@sgi.com>
-	 <c33e4330804232323p1b6d5121oc56b0c43663a4e84@mail.gmail.com>
-	 <20080424063102.GX103491721@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
+To: Michael Darling <darlingm@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Apr 24, 2008 at 2:31 AM, David Chinner <dgc@sgi.com> wrote:
-> Are you using write caching on the RAID card? If yes, then you need a BBU
-> for the card if you want to enable the write cache safely.
+Michael Darling wrote:
+> I am preparing a new server, and benchmarking EXT3 against XFS, both using
+> software RAID and hardware RAID using a 3ware 9650SE-4LPML.
+> 
+> Using bonnie++ as a benchmark, I am seeing significant performance boosts in
+> my block sequential reads and writes moving from EXT3 to XFS.  I am aware
+> that XFS won't create and delete files as quickly as EXT3, however I am
+> seeing drops from 29455/second to 1957/second using software RAID, and from
+> 32524/second to 189/second using hardware RAID.  I'm not sure if when using
+> software raid, if creating and deleting files should drop to 6.6% of EXT3.
+> But, what I'm pretty sure of, is when using hardware raid, that creating and
+> deleting files shouldn't drop to 0.6% of EXT3.
 
-I am using write caching.  Without write caching, the 3ware
-9650SE-4LMPL crawls along at 5MB/sec writing.  3ware tech support said
-awful write performance without write caching to a RAID 5 was typical,
-that write caching really needs to be on for a RAID 5.
+Chris Mason reminded me that bonnie++ may not be creating enough files
+to actually cause much if any IO on ext3; you might play with the -n
+option to get it to the point where it's actually doing a significant
+number of creates (I don't know what the default is offhand... checks
+source... it's 16k maybe?) but more sustained creation might be interesting.
 
-Is nobarrier safe to use, as long as before putting real data on the
-RAID I obtain a BBU for the 3ware card, in addition to the existing
-battery backup for the server as a whole?
-
-
-On Thu, Apr 24, 2008 at 10:20 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Which program is this that you are using to measure this, bonnie++, or?
-
-I'm also using bonnie++, v1.03 from http://www.coker.com.au/bonnie++/
+-Eric
