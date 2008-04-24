@@ -1,71 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Apr 2008 16:34:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3NNYTPM024452
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 16:34:32 -0700
-Received: from ext.agami.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AED67AB7FD7
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 16:35:09 -0700 (PDT)
-Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id ACl0Uegd3J26EtYC for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 16:35:09 -0700 (PDT)
-Received: from agami.com (mail [192.168.168.5])
-	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m3NNYhUE029354
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 16:34:45 -0700
-Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
-	by agami.com (8.12.11/8.12.11) with ESMTP id m3NNYhsF017189
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 16:34:43 -0700
-Message-ID: <480FC7AA.5060401@agami.com>
-Date: Wed, 23 Apr 2008 16:35:06 -0700
-From: Michael Nishimoto <miken@agami.com>
-MIME-Version: 1.0
-Subject: [PATCH] fix xfs kernel so  2GiB logs work
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Apr 2008 17:45:51 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3O0jMsQ029323
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2008 17:45:24 -0700
+Date: Thu, 24 Apr 2008 10:45:56 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] fix xfs kernel so  2GiB logs work
+Message-ID: <20080424004556.GU103491721@sgi.com>
+References: <480FC7AA.5060401@agami.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <480FC7AA.5060401@agami.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: Michael Nishimoto <miken@agami.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-I hope that I've got everything now.
+On Wed, Apr 23, 2008 at 04:35:06PM -0700, Michael Nishimoto wrote:
+> I hope that I've got everything now.
 
-Ensure that 2 GiB xfs logs work properly.
+Almost ;)
 
-We found this while experimenting with 2GiB xfs logs.
-The previous code never assumed that xfs logs would
-ever get so large.
+> Ensure that 2 GiB xfs logs work properly.
+> 
+> We found this while experimenting with 2GiB xfs logs.
+> The previous code never assumed that xfs logs would
+> ever get so large.
+> 
+> Signed-off-by: Michael Nishimoto <miken@agami.com>
+> ===========================================================
+> --- xfs_log.2.c 2008-04-01 11:55:45.000000000 -0700
+> +++ xfs_log.3.c 2008-04-01 11:56:53.000000000 -0700
 
-Signed-off-by: Michael Nishimoto <miken@agami.com>
-===========================================================
---- xfs_log.2.c 2008-04-01 11:55:45.000000000 -0700
-+++ xfs_log.3.c 2008-04-01 11:56:53.000000000 -0700
-@@ -230,20 +230,24 @@
-  static void
-  xlog_grant_add_space_write(struct log *log, int bytes)
-  {
--       log->l_grant_write_bytes += bytes;
--       if (log->l_grant_write_bytes > log->l_logsize) {
--               log->l_grant_write_bytes -= log->l_logsize;
--               log->l_grant_write_cycle++;
-+       int tmp = log->l_logsize - log->l_grant_write_bytes;
-+       if (tmp > bytes)
-+               log->l_grant_write_bytes += bytes;
-+       else {
-+               log->l_grant_write_cycle++;
-+               log->l_grant_write_bytes = bytes - tmp;
-         }
-  }
+We normally diff from the root of the kernel tree between a
+pristine tree and a modified tree such that:
 
-  static void
-  xlog_grant_add_space_reserve(struct log *log, int bytes)
-  {
--       log->l_grant_reserve_bytes += bytes;
--       if (log->l_grant_reserve_bytes > log->l_logsize) {
--               log->l_grant_reserve_bytes -= log->l_logsize;
--               log->l_grant_reserve_cycle++;
-+       int tmp = log->l_logsize - log->l_grant_reserve_bytes;
-+       if (tmp > bytes)
-+               log->l_grant_reserve_bytes += bytes;
-+       else {
-+               log->l_grant_reserve_cycle++;
-+               log->l_grant_reserve_bytes = bytes - tmp;
-         }
-  }
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_log.c 2008-04-23 09:31:29.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_log.c      2008-04-24 10:39:15.696830268 +1000
+@@ -226,20 +226,24 @@ xlog_grant_sub_space(struct log *log, in
+ static void
+ xlog_grant_add_space_write(struct log *log, int bytes)
+....
+
+is the path in the patch and you apply it via 'patch -p1 < file'
+in the root of the kernel tree.
+
+> @@ -230,20 +230,24 @@
+>  static void
+>  xlog_grant_add_space_write(struct log *log, int bytes)
+>  {
+> -       log->l_grant_write_bytes += bytes;
+> -       if (log->l_grant_write_bytes > log->l_logsize) {
+   ^^^^^^^
+
+And it looks like your mailer has converted tabs to spaces.
+
+Don't worry about either of those things for this patch, I've
+fixed them up when applying them to my test tree.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
