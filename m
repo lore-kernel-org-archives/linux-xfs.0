@@ -1,42 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 Apr 2008 01:57:47 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3P8v9l0019704
-	for <xfs@oss.sgi.com>; Fri, 25 Apr 2008 01:57:17 -0700
-Date: Fri, 25 Apr 2008 04:57:50 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 Apr 2008 01:58:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3P8wNkx019766
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2008 01:58:29 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C772C15D73B3
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2008 01:59:04 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id EeuPTuwCK5ZaeCOc for <xfs@oss.sgi.com>; Fri, 25 Apr 2008 01:59:04 -0700 (PDT)
+Date: Fri, 25 Apr 2008 04:59:04 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Don't initialise new inode generation numbers to zero
-	V2
-Message-ID: <20080425085750.GA6395@infradead.org>
-References: <20080422015806.GU108924158@sgi.com> <480D641B.8060301@melbourne.sgi.com> <20080422050447.GV103491721@sgi.com>
+Subject: Re: [PATCH] convert xfs to use ERR_CAST
+Message-ID: <20080425085904.GB6395@infradead.org>
+References: <480FA737.5030001@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080422050447.GV103491721@sgi.com>
+In-Reply-To: <480FA737.5030001@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Greg Banks <gnb@melbourne.sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>, David Howells <dhowells@redhat.com>
 
-On Tue, Apr 22, 2008 at 03:04:48PM +1000, David Chinner wrote:
-> > I'm confused, why would an NFS client be trying to guess the generation
-> > number?  AFAICS the important thing is to ensure that the (inode,gen)
-> > tuple isn't reused for a long time to prevent accidental filehandle
-> > identity issues on clients; whether the gen is predictable or not
-> > doesn't matter at all.
-> 
-> Yeah, that's exactly what I said to Christoph, but that's the issue he
-> raised w.r.t a malicious client triggering inode/gen collisions
-> intentionally. If that's not a problem, then I can just use random32()
-> for the inode number. If it is a real problem, then it needs to be
-> a cryptographically secure random number. Personally, I don't care
-> either way - I just want to get the issue fixed.
-> 
-> Christoph, care to explain how and why this is a problem to everyone?
+On Wed, Apr 23, 2008 at 04:16:39PM -0500, Eric Sandeen wrote:
+> Looks like somehow xfs got missed in the conversion that
+> took place in e231c2ee64eb1c5cd3c63c31da9dac7d888dcf7f,
+> "Convert ERR_PTR(PTR_ERR(p)) instances to ERR_CAST(p) <http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=e231c2ee64eb1c5cd3c63c31da9dac7d888dcf7f>"
 
-XFS has some heuristics for inode placement and of course for removing
-the inode cluster and re-allocting it.  I have a gut feeling that there
-is a small chance to trigger a re-use via nfs operations.  Making the
-initial generation number random means we remove one of the major
-user-triggerable inputs from the equation.
+Looks good.
