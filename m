@@ -1,58 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Apr 2008 21:10:57 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3P4AGQu027268
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 21:10:19 -0700
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21177E424D
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 21:10:57 -0700 (PDT)
-Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id 2Zp1okWTAxWxO6gy for <xfs@oss.sgi.com>; Thu, 24 Apr 2008 21:10:57 -0700 (PDT)
-Message-ID: <34168.192.168.3.1.1209096655.squirrel@mail.aconex.com>
-In-Reply-To: <200804250049.34740.arekm@maven.pl>
-References: <200804250049.34740.arekm@maven.pl>
-Date: Fri, 25 Apr 2008 14:10:55 +1000 (EST)
-Subject: Re: xfs_quota report
-From: nscott@aconex.com
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 Apr 2008 01:57:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3P8v9l0019704
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2008 01:57:17 -0700
+Date: Fri, 25 Apr 2008 04:57:50 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Don't initialise new inode generation numbers to zero
+	V2
+Message-ID: <20080425085750.GA6395@infradead.org>
+References: <20080422015806.GU108924158@sgi.com> <480D641B.8060301@melbourne.sgi.com> <20080422050447.GV103491721@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080422050447.GV103491721@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Greg Banks <gnb@melbourne.sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-> Hello,
->
-> xfs_quota -x -c "report" by default walks passwd and displays quota only
-> for
-> users found there.
+On Tue, Apr 22, 2008 at 03:04:48PM +1000, David Chinner wrote:
+> > I'm confused, why would an NFS client be trying to guess the generation
+> > number?  AFAICS the important thing is to ensure that the (inode,gen)
+> > tuple isn't reused for a long time to prevent accidental filehandle
+> > identity issues on clients; whether the gen is predictable or not
+> > doesn't matter at all.
+> 
+> Yeah, that's exactly what I said to Christoph, but that's the issue he
+> raised w.r.t a malicious client triggering inode/gen collisions
+> intentionally. If that's not a problem, then I can just use random32()
+> for the inode number. If it is a real problem, then it needs to be
+> a cryptographically secure random number. Personally, I don't care
+> either way - I just want to get the issue fixed.
+> 
+> Christoph, care to explain how and why this is a problem to everyone?
 
-Yep.  Its quite lame really (all quota implementations I'm aware of do this).
-
-> I wonder if there is a better way to get information about uid/gids that
-> have
-> any files on xfs filesystem? So report command could be enhanced to
-> display
-> such "users", too.
-
-There is a better way.  No code exists to do it, but its been a long-standing
-RFE that a new quotactl command be implement to do this - it would be a
-bit like the XFS bulkstat interface, but instead of passing out the-next-big-
-bunch-of-inode-stat-data-in-bulk-from-some-arbitary-inode, it would
-pass out the next-big-bunch-of-dquot-data-in-bulk-from-some-id.
-The idea being you would call it iteratively from userspace starting from id
-zero, until it tells you you've reached the end, and the kernel would pass
-out all valid dquots.
-
-> Right now the only option is to use report -L0 -Usome_very_high_number
-> with a
-> hope that the number will always be high enough.
-
-Heh, yeah, thats pretty ordinary.  Your mission, should you choose to accept
-it...
-
-cheers.
-
---
-Nathan
+XFS has some heuristics for inode placement and of course for removing
+the inode cluster and re-allocting it.  I have a gut feeling that there
+is a small chance to trigger a re-use via nfs operations.  Making the
+initial generation number random means we remove one of the major
+user-triggerable inputs from the equation.
