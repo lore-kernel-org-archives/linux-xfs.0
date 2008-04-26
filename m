@@ -1,60 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Apr 2008 11:54:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Apr 2008 12:47:39 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3QIsG8r015579
-	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 11:54:23 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8451315EDBB0
-	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 11:54:57 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id uEi7Mt5eowWenSby for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 11:54:57 -0700 (PDT)
-Message-ID: <48137A7E.4000202@sandeen.net>
-Date: Sat, 26 Apr 2008 13:54:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3QJlL3E023615
+	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 12:47:22 -0700
+Received: from vorlon.fourfold.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2261615EDFF8
+	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 12:48:03 -0700 (PDT)
+Received: from vorlon.fourfold.org (cpu2095.adsl.bellglobal.com [207.236.3.72]) by cuda.sgi.com with ESMTP id jzFrKEHmsfqoiW9H for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 12:48:03 -0700 (PDT)
+Received: from [127.0.0.1] (list@vorlon [127.0.0.1])
+	by vorlon.fourfold.org (8.13.4/8.13.4/Debian-3sarge3) with ESMTP id m3QJvlrY017503
+	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 15:57:47 -0400
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: reduce stack usage in xfs_bmap_btalloc()
-References: <200804261651.02078.vda.linux@googlemail.com>
-In-Reply-To: <200804261651.02078.vda.linux@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Subject: Your message to Mendo_recce awaits moderator approval
+From: mendo_recce-bounces@fourfold.org
+Message-ID: <mailman.29022.1209239865.1243.mendo_recce@fourfold.org>
+Date: Sat, 26 Apr 2008 15:57:45 -0400
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Denys Vlasenko wrote:
-> Hi David,
-> 
-> This patch reduces xfs_bmap_btalloc() stack usage by 50 bytes
-> by moving part of its body into a helper function.
-> 
-> This results in some variables not taking stack space in
-> xfs_bmap_btalloc() anymore.
-> 
-> The helper itself does not call anything stack-deep.
-> Stack-deep call to xfs_alloc_vextent() happen
-> in xfs_bmap_btalloc(), as before.
-> 
-> Compile tested only.
-> 
-> Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
-> --
-> vda
-> 
+Your mail to 'Mendo_recce' with the subject
 
-Looks like a very good approach, it pushes a lot of large local vars off
-into the helper.
+    Delivery failed
 
-There is one build-time problem if DEBUG is turned on:
+Is being held until the list moderator can review it for approval.
 
-        if (args.fsbno != NULLFSBLOCK) {
-                ap->firstblock = ap->rval = args.fsbno;
-                ASSERT(nullfb || fb_agno == args.agno ||
-                       (ap->low && fb_agno < args.agno));
+The reason it is being held:
 
-in xfs_bmap_btalloc, which no longer has an fb_agno variable which the
-ASSERT macro uses.
+    Post by non-member to a members-only list
 
-Thanks,
+Either the message will get posted to the list, or you will receive
+notification of the moderator's decision.  If you would like to cancel
+this posting, please visit the following URL:
 
--Eric
+    http://www.fourfold.org/cgi-bin/mailman/confirm/mendo_recce/5746252a364234070e5d467f1ea87bf2cadec03d
