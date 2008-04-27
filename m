@@ -1,147 +1,147 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Apr 2008 17:47:40 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3R0lJwc017867
-	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 17:47:19 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 26 Apr 2008 19:24:57 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3R2OWOF024700
+	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 19:24:33 -0700
 Received: from fg-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C58010C03C3
-	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 17:48:01 -0700 (PDT)
-Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.152]) by cuda.sgi.com with ESMTP id dv4yuBZApzD6Lb8y for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 17:48:01 -0700 (PDT)
-Received: by fg-out-1718.google.com with SMTP id e12so3688918fga.8
-        for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 17:48:00 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A238F6073
+	for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 19:25:12 -0700 (PDT)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.159]) by cuda.sgi.com with ESMTP id sRQH29DvM7od0FlS for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 19:25:12 -0700 (PDT)
+Received: by fg-out-1718.google.com with SMTP id e12so3714749fga.8
+        for <xfs@oss.sgi.com>; Sat, 26 Apr 2008 19:25:11 -0700 (PDT)
 From: Denys Vlasenko <vda.linux@googlemail.com>
-Subject: [PATCH] xfs: reduce stack usage in xfs_page_state_convert()
-Date: Sun, 27 Apr 2008 02:46:58 +0200
+Subject: [PATCH] vfs: reduce stack usage in write_cache_pages()
+Date: Sun, 27 Apr 2008 04:24:10 +0200
 MIME-Version: 1.0
 Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_C08EI5Sq2GBn7oU"
-Message-Id: <200804270246.58828.vda.linux@googlemail.com>
+  boundary="Boundary-00=_KP+EIUHH3dxBdol"
+Message-Id: <200804270424.10343.vda.linux@googlemail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
---Boundary-00=_C08EI5Sq2GBn7oU
+--Boundary-00=_KP+EIUHH3dxBdol
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
-Hi David,
+Hi Al, David,
 
-This patch reduces xfs_page_state_convert() stack usage by 16 bytes
-by eliminating some local variables, and reducing the size
-of scope for other locals.
+vfs function write_cache_pages() appears on the xfs
+writeout path. It's *the* path which causes 4k stack
+overflows on i386 with xfs.
 
-Compile tested only.
+This function uses ~100 bytes of stack on 32-bit i386.
+
+This patch transforms it a little so that it uses
+a bit less stack - minus 8 bytes to be precise.
+
+This isn't much, but it helps not only xfs,
+but all filesystems.
+
+Only compile tested.
 
 Signed-off-by: Denys Vlasenko <vda.linux@googlemail.com>
-
-P.S.
-
-xfs_page_state_convert() carries the following comment:
- * Calling this without startio set means we are being asked to make a dirty
- * page ready for freeing it's buffers.  When called with startio set then
- * we are coming from writepage.
-which leads to the following proposal: reimplement it as two
-functions, one which work as if startio parameter == 0
-and the other as if startio == 1.
-This will result in a bit of code duplication, but reduces
-stack usage on writepage path and allows for these two functions
-to have more descriptive names. (Presently the meaning of this
-function needs to be explained in that comment -> function
-name is not descriptive enough, because it does different things
-depending on startio value).
-
-Do you like this idea?
 --
 vda
 
---Boundary-00=_C08EI5Sq2GBn7oU
+--Boundary-00=_KP+EIUHH3dxBdol
 Content-Type: text/x-diff;
   charset="us-ascii";
-  name="stk2.diff"
+  name="stk3.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
-	filename="stk2.diff"
+	filename="stk3.diff"
 
-diff -urpN linux-2.6-xfs1/fs/xfs/linux-2.6/xfs_aops.c linux-2.6-xfs1.stk2/fs/xfs/linux-2.6/xfs_aops.c
---- linux-2.6-xfs1/fs/xfs/linux-2.6/xfs_aops.c	2008-04-22 04:06:46.000000000 +0200
-+++ linux-2.6-xfs1.stk2/fs/xfs/linux-2.6/xfs_aops.c	2008-04-27 02:38:51.000000000 +0200
-@@ -935,17 +935,11 @@ xfs_page_state_convert(
- 	unsigned long           p_offset = 0;
- 	unsigned int		type;
- 	__uint64_t              end_offset;
--	pgoff_t                 end_index, last_index, tlast;
--	ssize_t			size, len;
-+	pgoff_t                 end_index, last_index;
- 	int			flags, err, iomap_valid = 0, uptodate = 1;
- 	int			page_dirty, count = 0;
--	int			trylock = 0;
- 	int			all_bh = unmapped;
--
--	if (startio) {
--		if (wbc->sync_mode == WB_SYNC_NONE && wbc->nonblocking)
--			trylock |= BMAPI_TRYLOCK;
--	}
-+#define len (1 << inode->i_blkbits)
+diff -urpN linux-2.6-xfs1/mm/page-writeback.c linux-2.6-xfs1.stk3/mm/page-writeback.c
+--- linux-2.6-xfs1/mm/page-writeback.c	2008-03-30 03:27:55.000000000 +0200
++++ linux-2.6-xfs1.stk3/mm/page-writeback.c	2008-04-27 04:14:39.000000000 +0200
+@@ -798,17 +798,14 @@ int write_cache_pages(struct address_spa
+ 		      struct writeback_control *wbc, writepage_t writepage,
+ 		      void *data)
+ {
+-	struct backing_dev_info *bdi = mapping->backing_dev_info;
+ 	int ret = 0;
+ 	int done = 0;
+ 	struct pagevec pvec;
+-	int nr_pages;
+ 	pgoff_t index;
+ 	pgoff_t end;		/* Inclusive */
+ 	int scanned = 0;
+-	int range_whole = 0;
  
- 	/* Is this page beyond the end of the file? */
- 	offset = i_size_read(inode);
-@@ -975,7 +969,6 @@ xfs_page_state_convert(
-  	 */
- 	end_offset = min_t(unsigned long long,
- 			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT, offset);
--	len = 1 << inode->i_blkbits;
- 	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
- 					PAGE_CACHE_SIZE);
- 	p_offset = p_offset ? roundup(p_offset, len) : PAGE_CACHE_SIZE;
-@@ -1031,13 +1024,18 @@ xfs_page_state_convert(
- 				flags = BMAPI_WRITE | BMAPI_IGNSTATE;
- 			} else if (buffer_delay(bh)) {
- 				type = IOMAP_DELAY;
--				flags = BMAPI_ALLOCATE | trylock;
-+				flags = BMAPI_ALLOCATE;
-+				if (startio && wbc->sync_mode == WB_SYNC_NONE && wbc->nonblocking) {
-+					flags = BMAPI_ALLOCATE | BMAPI_TRYLOCK;
-+				}
- 			} else {
- 				type = IOMAP_NEW;
- 				flags = BMAPI_WRITE | BMAPI_MMAP;
- 			}
- 
- 			if (!iomap_valid) {
-+				ssize_t size;
-+
- 				/*
- 				 * if we didn't have a valid mapping then we
- 				 * need to ensure that we put the new mapping
-@@ -1082,6 +1080,8 @@ xfs_page_state_convert(
- 			 * underneath it. Map the extent by reading it.
- 			 */
- 			if (!iomap_valid || flags != BMAPI_READ) {
-+				ssize_t size;
-+
- 				flags = BMAPI_READ;
- 				size = xfs_probe_cluster(inode, page, bh,
- 								head, 1);
-@@ -1129,6 +1129,8 @@ xfs_page_state_convert(
- 		xfs_start_page_writeback(page, wbc, 1, count);
- 
- 	if (ioend && iomap_valid) {
-+		pgoff_t tlast;
-+
- 		offset = (iomap.iomap_offset + iomap.iomap_bsize - 1) >>
- 					PAGE_CACHE_SHIFT;
- 		tlast = min_t(pgoff_t, offset, last_index);
-@@ -1156,6 +1158,7 @@ error:
- 		ClearPageUptodate(page);
+-	if (wbc->nonblocking && bdi_write_congested(bdi)) {
++	if (wbc->nonblocking && bdi_write_congested(mapping->backing_dev_info)) {
+ 		wbc->encountered_congestion = 1;
+ 		return 0;
  	}
- 	return err;
-+#undef len
- }
+@@ -820,20 +817,30 @@ int write_cache_pages(struct address_spa
+ 	} else {
+ 		index = wbc->range_start >> PAGE_CACHE_SHIFT;
+ 		end = wbc->range_end >> PAGE_CACHE_SHIFT;
+-		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+-			range_whole = 1;
+ 		scanned = 1;
+ 	}
++
++	/* Minimizing stack use:
++	 * "nr_pages" hopefully won't require a stack slot -
++	 * we reuse "scanned" to keep its value.
++	 */
++
+ retry:
+-	while (!done && (index <= end) &&
+-	       (nr_pages = pagevec_lookup_tag(&pvec, mapping, &index,
+-					      PAGECACHE_TAG_DIRTY,
+-					      min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1))) {
++	while (!done && (index <= end)) {
+ 		unsigned i;
++		int nr_pages;
  
- /*
+-		scanned = 1;
+-		for (i = 0; i < nr_pages; i++) {
+-			struct page *page = pvec.pages[i];
++		nr_pages = pagevec_lookup_tag(&pvec, mapping, &index,
++					      PAGECACHE_TAG_DIRTY,
++					      min(end - index, (pgoff_t)PAGEVEC_SIZE-1) + 1);
++		if (!nr_pages)
++			break;
++		scanned = nr_pages;
++		/* "scanned" counts down to 1, and later acts as nonzero flag */
++
++		i = (unsigned)-1;
++		while (1) { /* for i in [0..nr_pages-1] */
++			struct page *page = pvec.pages[++i];
+ 
+ 			/*
+ 			 * At this point we hold neither mapping->tree_lock nor
+@@ -872,10 +879,13 @@ retry:
+ 			}
+ 			if (ret || (--(wbc->nr_to_write) <= 0))
+ 				done = 1;
+-			if (wbc->nonblocking && bdi_write_congested(bdi)) {
++			if (wbc->nonblocking && bdi_write_congested(mapping->backing_dev_info)) {
+ 				wbc->encountered_congestion = 1;
+ 				done = 1;
+ 			}
++			if (scanned == 1)
++				break;
++			scanned--;
+ 		}
+ 		pagevec_release(&pvec);
+ 		cond_resched();
+@@ -889,7 +899,8 @@ retry:
+ 		index = 0;
+ 		goto retry;
+ 	}
+-	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
++	if (wbc->range_cyclic || (wbc->range_start == 0 && wbc->range_end == LLONG_MAX /* whole range */
++	                         && wbc->nr_to_write > 0))
+ 		mapping->writeback_index = index;
+ 	return ret;
+ }
 
---Boundary-00=_C08EI5Sq2GBn7oU--
+--Boundary-00=_KP+EIUHH3dxBdol--
