@@ -1,26 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 22:59:08 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3S5wkvZ005349
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 22:58:55 -0700
-Date: Mon, 28 Apr 2008 01:59:22 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Don't initialise new inode generation numbers to zero
-	V2
-Message-ID: <20080428055922.GD3192@infradead.org>
-References: <20080422015806.GU108924158@sgi.com> <480D641B.8060301@melbourne.sgi.com> <20080422050447.GV103491721@sgi.com> <20080425085750.GA6395@infradead.org> <20080428031120.GD103491721@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080428031120.GD103491721@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 23:00:07 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3S5xrmm005588
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 22:59:57 -0700
+Subject: TAKE 980007 - XFSQA 008 - Fix intermittent failure on 64k pagesize
+Message-Id: <20080428060030.C80A858C4C15@chook.melbourne.sgi.com>
+Date: Mon, 28 Apr 2008 16:00:30 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Greg Banks <gnb@melbourne.sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 28, 2008 at 01:11:20PM +1000, David Chinner wrote:
-> Ok, so is random32() good enough or does it need to be get_random_int()?
+Fix intermittent failure on 64k pagesize
 
-I'm not sure offhand what random32 actually is, but a not
-cryptographically strong random number should be enough.
+Files are too small for 64k sized I/Os to reliably produce 50
+extents +/-10%. Increase the size of the files to increase
+reliability.
+
+Date:  Mon Apr 28 16:00:06 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/xfs-cmds
+Inspected by:  hch@infradead.org
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:30996a
+xfstests/008 - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/008.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+xfstests/008.out - 1.4 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/008.out.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
+	- Fix intermittent failure on 64k pagesize.
