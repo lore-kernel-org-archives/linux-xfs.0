@@ -1,57 +1,111 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 09:13:00 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 11:30:37 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SGCgaf003827
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 09:12:43 -0700
-Received: from tetsuo.zabbo.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F01AFBADD
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 09:13:24 -0700 (PDT)
-Received: from tetsuo.zabbo.net (tetsuo.zabbo.net [207.173.201.20]) by cuda.sgi.com with ESMTP id 9ia29zUbqGAtFGG4 for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 09:13:24 -0700 (PDT)
-Message-ID: <4815F7A2.7060605@oracle.com>
-Date: Mon, 28 Apr 2008 09:13:22 -0700
-From: Zach Brown <zach.brown@oracle.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SIUHai024071
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 11:30:19 -0700
+Received: from mail.gmx.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 10E85FCAB5
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 11:30:58 -0700 (PDT)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com with SMTP id 9wPhC0WZjzZJSC9Q for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 11:30:58 -0700 (PDT)
+Message-ID: <481617E0.3070801@gmx.net>
+Date: Mon, 28 Apr 2008 20:30:56 +0200
+From: Daniel Bast <daniel.bast@gmx.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] vfs: reduce stack usage by shrinking struct kiocb
-References: <200804270617.36629.vda.linux@googlemail.com>
-In-Reply-To: <200804270617.36629.vda.linux@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: xfs_admin -c 1  + xfs_repair problem
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: David Chinner <dgc@sgi.com>, Benjamin LaHaise <bcrl@kvack.org>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org
+To: xfs@oss.sgi.com
 
-Denys Vlasenko wrote:
-> Hi Al, Benjamin, David,
-> 
-> struct kiocb is placed on stack by, for example, do_sync_write().
-> Eventually it contributes to xfs writeout path's stack usage, among others.
-> This is *the* path which causes 4k stack overflows on i386 with xfs.
-> 
-> This patch trivially reorders fields of this structure,
-> and makes some of them smaller.
+Hi,
 
-Great, thanks for doing this.  I see one fatal bug, though.  Can you fix
-it up and resubmit?
+i tried to enable lazy counts with "xfs_admin -c 1 device" with 
+xfs_admin from xfsprogs 2.9.8. Unfortunately that process got stuck 
+without any message. After several hours without any IO or CPU workload 
+i killed the process and started xfs_repair, but that also got stuck (in 
+"Phase 6") without any IO or CPU workload or any extra message. The 
+xfs_repair being stuck in "Phase 6" is reproduceable with a 
+metadump-image of the filesystem.
 
--	unsigned long		ki_flags;
-+	unsigned short		ki_flags; /* range: 0..2 */
+I was able to mount the device but don't want to use it because i'm not 
+sure if everything is ok.
 
-Careful, ki_flags is used by the bitops routines which require an
-unsigned long.  I'd just leave ki_flags as is.
+How can i resolve that problem? What information do you need? I can 
+provide the metadump image (bzip compressed: 28MB) if necessary.
 
-> ki_nr_segs: ulong -> uint: nobody uses 4 billion element writev's
->                            (and it would not work anyway)
+Here are some informations that are maybe useful:
 
-Indeed.  Maybe explicitly mention that it's safe 'cause we pass
-ki_nbytes to rw_copy_check_uvector() for comparison against UIO_MAXIOV
-before we store it in the kiocb.
+  xfs_repair -v /dev/sda7
+  Phase 1 - find and verify superblock...
+          - block cache size set to 11472 entries
+  Phase 2 - using internal log
+          - zero log...
+  zero_log: head block 2 tail block 2
+          - scan filesystem freespace and inode maps...
+          - found root inode chunk
+  Phase 3 - for each AG...
+          - scan and clear agi unlinked lists...
+          - process known inodes and perform inode discovery...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - process newly discovered inodes...
+  Phase 4 - check for duplicate blocks...
+          - setting up duplicate extent list...
+          - check for inodes claiming duplicate blocks...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+  Phase 5 - rebuild AG headers and trees...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - reset superblock...
+  Phase 6 - check inode connectivity...
+          - resetting contents of realtime bitmap and summary inodes
+          - traversing filesystem ...
+          - agno = 0
 
-+	/*unsigned short	ki_opcode; - moved up for denser packing */
 
-Don't bother commenting out fields that are moved, just move 'em.
+after the killed xfs_admin -c 1 and xfs_repair processes:
+xfs_info /dev/sda7
+meta-data=/dev/sda7              isize=256    agcount=4, agsize=24719013 
+blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=98876050, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=65536  blocks=0, rtextents=0
 
-Otherwise it looks great, thanks.
 
-- z
+a new 'xfs_repair -v /dev/sda7' straced:
+strace -ff -p 6364
+Process 6409 attached with 6 threads - interrupt to quit
+[pid  6364] futex(0x851e2cc, FUTEX_WAIT, 2, NULL <unfinished ...>
+[pid  6405] futex(0xb146e3d8, FUTEX_WAIT, 0, NULL <unfinished ...>
+[pid  6406] futex(0xb146e358, FUTEX_WAIT, 1, NULL <unfinished ...>
+[pid  6407] futex(0xb146e358, FUTEX_WAIT, 2, NULL <unfinished ...>
+[pid  6408] futex(0xb146e358, FUTEX_WAIT, 3, NULL <unfinished ...>
+[pid  6409] futex(0xb146e358, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  6406] <... futex resumed> )       = -1 EAGAIN (Resource 
+temporarily unavailable)
+[pid  6407] <... futex resumed> )       = -1 EAGAIN (Resource 
+temporarily unavailable)
+[pid  6408] <... futex resumed> )       = -1 EAGAIN (Resource 
+temporarily unavailable)
+[pid  6406] futex(0xb146e358, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  6407] futex(0xb146e358, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  6408] futex(0xb146e358, FUTEX_WAIT, 4, NULL
+
+
+Thanks
+  Daniel
+
+P.S. Please CC me, because i'm not subscribed to the list.
