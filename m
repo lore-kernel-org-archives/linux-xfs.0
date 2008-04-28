@@ -1,58 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 17:06:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3S06FPv007780
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 17:06:18 -0700
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F247AF8067
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 17:06:58 -0700 (PDT)
-Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id 4cFeOeEj5c8hE4oK for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 17:06:58 -0700 (PDT)
-Subject: Re: [PATCH] xfs: reduce stack usage in xfs_bmap_btalloc()
-From: Nathan Scott <nscott@aconex.com>
-Reply-To: nscott@aconex.com
-In-Reply-To: <20080426202323.GA14245@infradead.org>
-References: 
-	 <200804261651.02078.vda.linux__2040.04651536724$1209223026$gmane$org@googlemail.com>
-	 <87iqy4wfjq.fsf@basil.nowhere.org> <20080426200701.GA10883@infradead.org>
-	 <20080426202630.GG17905@one.firstfloor.org>
-	 <20080426202323.GA14245@infradead.org>
-Content-Type: text/plain
-Date: Mon, 28 Apr 2008 10:06:51 +1000
-Message-Id: <1209341212.23166.122.camel@edge.scott.net.au>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 17:09:23 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3S095Ch008112
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 17:09:06 -0700
+Message-ID: <481515C8.6020601@sgi.com>
+Date: Mon, 28 Apr 2008 10:09:44 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH, XFSQA] Don't run 175-177 if DMAPI is not supported
+References: <20080423013802.GJ103491721@sgi.com> <480EDE04.5080003@sgi.com> <20080424065822.GY103491721@sgi.com>
+In-Reply-To: <20080424065822.GY103491721@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andi Kleen <andi@firstfloor.org>, Denys Vlasenko <vda.linux@googlemail.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, 2008-04-26 at 16:23 -0400, Christoph Hellwig wrote:
+David Chinner wrote:
+> On Wed, Apr 23, 2008 at 04:58:12PM +1000, Timothy Shimmin wrote:
+>> Hi,
+>>
+>> _test_punch already does a umount $SCRATCH_MNT.
+>> However, IMHO, it would probably be nicer if one could
+>> use a _require_dmapi or really it may be simpler if
+>> we could roll it into common.dmapi
+>> so one just needs to include common.dmapi and
+>> it would complain at that point if the kernel
+>> didn't support it.
 > 
+> Sure, but we don't have that, and I'm not about to spend the time to
+> convert >20 tests to something like this. Right now I just want to
+> remove all the bloody silly test failures on mainline kernels.
 > 
+> All the other dmapi tests "not run" just fine, I want these to do
+> the same thing. Is that good enough to check in right now?
 > 
+> Cheers,
 > 
->                              Date: 
-> Sat, 26 Apr 2008 16:23:23 -0400
-> (Sun, 06:23 EST)
-> 
-> 
-> On Sat, Apr 26, 2008 at 10:26:30PM +0200, Andi Kleen wrote:
-> > > STATIC as defined by xfs already does this..
-> > 
-> > Weird. Unexpected. Different from everyone else. Is this some
-> exercise in 
-> > obfuscation?
-> 
-> The whole STATIC thing is weird to start with..
-> 
+> Dave.
 
-Having to compile chunks of XFS code in both kernel and
-userspace is also wierd (relative to other drivers), and
-its a side-effect of needing to do that (all the code
-dealing with specifics of ondisk format is shared).
+Sure, that's fine.
 
-cheers.
+I was really just suggesting to put:
 
--- 
-Nathan
++# test that we have DMAPI support
++_dmapi_scratch_mount
++unmount $SCRATCH_MNT > /dev/null 2>&1
+
+directly into common.dmapi - not as a function
+but just as code to always execute.
+As long as there is no output under normal circumstances from
+this, then all dmapi tests should not require any change
+and it is simpler (all they need is to include common.dmapi
+which most do).
+There may be an extra mount in some of the
+tests (for those that want to keep it mounted) but who cares.
+Why include common.dmapi if you don't require it to be supported :)
+
+--Tim
