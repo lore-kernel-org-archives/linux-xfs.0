@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 22:55:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3S5sUQW004783
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 22:54:37 -0700
-Date: Mon, 28 Apr 2008 01:55:11 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Apr 2008 22:56:18 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3S5tsEm004947
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2008 22:56:03 -0700
+Date: Mon, 28 Apr 2008 01:56:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch] xfsqa - 008 is unreliable on 64k page size
-Message-ID: <20080428055511.GA3192@infradead.org>
-References: <20080408013833.GN108924158@sgi.com>
+Subject: Re: [PATCH] xfs: reduce stack usage in xfs_bmap_btalloc()
+Message-ID: <20080428055629.GB3192@infradead.org>
+References: <200804261651.02078.vda.linux__2040.04651536724$1209223026$gmane$org@googlemail.com> <87iqy4wfjq.fsf@basil.nowhere.org> <20080426200701.GA10883@infradead.org> <20080426202630.GG17905@one.firstfloor.org> <20080426202323.GA14245@infradead.org> <1209341212.23166.122.camel@edge.scott.net.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080408013833.GN108924158@sgi.com>
+In-Reply-To: <1209341212.23166.122.camel@edge.scott.net.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Nathan Scott <nscott@aconex.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andi Kleen <andi@firstfloor.org>, Denys Vlasenko <vda.linux@googlemail.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
 
-On Tue, Apr 08, 2008 at 11:38:33AM +1000, David Chinner wrote:
-> Test 008 is unreliable on 64k page size. The I/O size is large
-> enough that the probability of extent merging results in intermittent
-> failures due to fewer extents that the +/- 10% tolerance allows.
+On Mon, Apr 28, 2008 at 10:06:51AM +1000, Nathan Scott wrote:
+> Having to compile chunks of XFS code in both kernel and
+> userspace is also wierd (relative to other drivers), and
+> its a side-effect of needing to do that (all the code
+> dealing with specifics of ondisk format is shared).
 
-Looks good.
+There would be neater ways to deal with that, but then again there
+are more urgent things to tackle.  And for the time beeing using
+STATIC to imply non-inline is actually a very useful hack for XFS.
