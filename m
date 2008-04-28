@@ -1,75 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 15:22:35 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3SMMFd5011457
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 15:22:17 -0700
-Date: Tue, 29 Apr 2008 08:22:37 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] xfs: reduce stack usage in xfs_page_state_convert()
-Message-ID: <20080428222237.GE108924158@sgi.com>
-References: <200804270246.58828.vda.linux@googlemail.com> <20080427232317.GB103491721@sgi.com> <20080428035023.GA14275@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080428035023.GA14275@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 15:34:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SMXnNk012593
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 15:33:49 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B64E10D036F
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 15:34:31 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id JtL2UB3Vho95FRNo for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 15:34:31 -0700 (PDT)
+Message-ID: <481650F5.40205@sandeen.net>
+Date: Mon, 28 Apr 2008 17:34:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Problems with xfs_grow on large LVM + XFS filesystem 20TB size
+ check 2 failed
+References: <6A32BC807C106440B7E23208F280DDAF01D21F36FD@bcmail1.VIDMARK.LOCAL>
+In-Reply-To: <6A32BC807C106440B7E23208F280DDAF01D21F36FD@bcmail1.VIDMARK.LOCAL>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: David Chinner <dgc@sgi.com>, Denys Vlasenko <vda.linux@googlemail.com>, xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
+To: Lance Reed <lreed@brightcove.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Apr 27, 2008 at 11:50:23PM -0400, Christoph Hellwig wrote:
-> On Mon, Apr 28, 2008 at 09:23:17AM +1000, David Chinner wrote:
-> > No. That code is complex enough with only one copy of it around. I don't
-> > want two copies that differ subtly and hence have two different sets
-> > of nasty, rarely hit corner cases in them.
+Lance Reed wrote:
+> I recently experienced a problem trying to expand an existing LVM + XFS installation.
+> The core problem was that xfs_growfs did not correctly resize the XFS filesystem while trying to expand from 11 TB to about 21 TB.
 > 
-> Actually the split makes some sense.  I had a ready patch to split out
-> releasepage which makes the whole code a lot nicer.  I didn't go forward
-> with it because I had this idea that it would get replaced by Chris
-> extent_map stuff ASAP..
+> The previous setup had 5 x 2.18 TB LUNs using LVM2 for a total of just under 11 TB.
+> This is a 64bit Linux system.
+> Linux nfs3 2.6.18-8.1.15.el5 #1 SMP Mon Oct 22 08:32:28 EDT 2007 x86_64 x86_64 x86_64 GNU/Linux
+> CentOS release 5 (Final)
+> 
+> XFS versions:
+> xfsprogs-2.9.4-1.el5.centos
+> xfsdump-2.2.46-1.el5.centos
+> kmod-xfs-0.4-1.2.6.18_8.1.15.el5
+> 
+...
 
-I think we need to move forward on this, Christoph - I've just found
-the cause of a long standing assert failure (test 083 failing on
-inode teardown with outstanding delayed allocation extents) and it
-appears to me that the way XFS handles page invalidation (i.e.
-->invalidate_page/->release_page) is completely broken w.r.t.
-standalone calls to vmtruncate() and state being held on
-buggerheads. i.e.  we're leaving delalloc turds lying around when
-get_blocks returns an error in __block_prepare_write() and the write
-is beyond EOF.
+> Thanks in advance for any help....
 
-The problem is that block_invalidate_page() calls discard_buffer()
-on every buffer head on the page, thereby stripping all the state
-that xfs_vm_releasepage needs to convert delalloc extents to real
-extents to avoid the assert failures that occur in different places.
+You probably hit:
 
-Even if we had the state, xfs_vm_releasepage does the wrong thing.
-We don't want to allocate those extents in this case; we want to
-remove those extents because we've just truncated them away.
+TAKE 959978 - growing an XFS filesystem by more than 2TB is broken
+http://oss.sgi.com/archives/xfs/2007-01/msg00053.html
 
-The unfortunate part here is that the design appears to have
-carefully optimised the invalidate page path so we don't need to
-call xfs_bunmapi in this case, as all normal truncates run through
-xfs_setattr() and the vmtruncate call is followed by a transaction
-to free all extents in the range being truncated (see the
-xfs_itruncate_data() call). The only other place vmtruncate() is
-called from is block_begin_write(), which assumes that de-allocation
-is done by the filesystem which is not the case for XFS.
+which unfortunately probably was never backported to the centos5 xfs
+module.  Hmm maybe I should do that.  :(
 
-This is a bug that has been around for years. Christoph - I think
-we really need to kill buffer heads as soon as possible and clean
-up the ugly, ugly mess that makes up the I/O path. I'll talk
-off-line with you about this....
+Dave, do you remember what the fs looked like after hitting that bug?
 
-In the mean time, I'm going to do a nasty hack that picks on
-!uptodate pages with delalloc extents and xfs_free_file_space()
-them and see if that works.
+You may want to read through the "Repairing a possibly incomplete
+xfs_growfs command?" thread from earlier, on this list...
 
-Cheers,
+I assume you need to try to recover this fs...?  If so I'd not try
+shrinking or doing anything else to the fs until there's a chance to see
+what shape it's in at this point.
 
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+-Eric
