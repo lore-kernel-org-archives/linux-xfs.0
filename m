@@ -1,48 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 02:42:23 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 03:29:06 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3S9fsB9030104
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 02:41:56 -0700
-Received: from smtp8-g19.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DDBB11214AED
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 02:42:36 -0700 (PDT)
-Received: from smtp8-g19.free.fr (smtp8-g19.free.fr [212.27.42.65]) by cuda.sgi.com with ESMTP id UBzyfBS4VqjAk2Bh for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 02:42:36 -0700 (PDT)
-Date: Mon, 28 Apr 2008 11:42:38 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: disk I/O error
-Message-ID: <20080428114238.67b5a633@harpe.intellique.com>
-In-Reply-To: <1d3e8bf0804220842r26411f51vc714da371255aa90@mail.gmail.com>
-References: <1d3e8bf0804220842r26411f51vc714da371255aa90@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SASeRU001584
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 03:28:48 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 30EF312150A4
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 03:29:23 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id xJi5sdv26kWQkRyj for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 03:29:23 -0700 (PDT)
+Subject: [RFC PATCH 0/3] freeze feature ver 1.2
+Message-Id: <20080428192920t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+From: Takashi Sato <t-sato@yk.jp.nec.com>
+Date: Mon, 28 Apr 2008 19:29:20 +0900
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dovydas Sankauskas <laisve@gmail.com>, xfs@oss.sgi.com
+To: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Le Tue, 22 Apr 2008 15:42:45 +0000
-"Dovydas Sankauskas" <laisve@gmail.com> écrivait:
+Hi,
 
-> Any insight on what has happened and what are my chances to restore
-> data? Here are my logs.
+I have re-based my freeze patches from linux-2.6.25-rc7 to
+linux-2.6.25.
+There is no functional change from the previous version.
+The patch-set consists of the following three patches.
 
-The disk physically died while in use. You may try to cycle power a
-couple of times on it, it may revive it for a while. 
+[PATCH 1/3] Implement generic freeze feature
+  The ioctls for the generic freeze feature are below.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, arg)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
 
-If this is not enough, maybe the USB interface is broken. You can
-remove the drive from the enclosure and use a direct ATA or SATA
-connection to your PC and see if it works any better.
+  o Unfreeze the filesystem
+    int ioctl(int fd, int FITHAW, arg)
+      fd: The file descriptor of the mountpoint
+      FITHAW: request code for unfreeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
 
-If the disk isn't detected when using a direct ATA or SATA connection,
-it's dead once and for all, and your only hope would be Ontrack or
-another data recovery service. If the disk is detected but partially
-readable (I/O errors), you may repair it using disk tools like SpinRite.
-Last, if the disk is detected but completely unreadable, _sometimes_
-putting it to the freezer for 15 minutes in a very closely sealed
-plastic bag /may/ revive it for a while, as a very last resort.
+[PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+  It removes XFS specific ioctl interfaces and request codes
+  for freeze feature.
+  This patch has been supplied by David Chinner.
 
--- 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+[PATCH 3/3] Add timeout feature
+  The timeout feature is added to freeze ioctl.  And new ioctl
+  to reset the timeout period is added.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, long *timeval)
+    fd: The file descriptor of the mountpoint
+    FIFREEZE: request code for the freeze
+    timeval: the timeout period in seconds
+             If it's 0 or 1, the timeout isn't set.
+             This special case of "1" is implemented to keep
+             the compatibility with XFS applications.
+    Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Reset the timeout period
+    This is useful for the application to set the timeval more accurately.
+    For example, the freezer resets the timeval to 10 seconds every 5
+    seconds.  In this approach, even if the freezer causes a deadlock
+    by accessing the frozen filesystem, it will be solved by the timeout
+    in 10 seconds and the freezer can recognize that at the next reset
+    of timeval.
+    int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeval)
+      fd:file descriptor of mountpoint
+      FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+      timeval: new timeout period in seconds
+      Return value: 0 if the operation succeeds. Otherwise, -1
+      Error number: If the filesystem has already been unfrozen,
+                    errno is set to EINVAL.
+
+Any comments are very welcome.
+
+Cheers, Takashi
