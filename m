@@ -1,50 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 10:10:48 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3THAItL032574
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 10:10:24 -0700
-Received: from tetsuo.zabbo.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9191010DB19A
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 10:11:00 -0700 (PDT)
-Received: from tetsuo.zabbo.net (tetsuo.zabbo.net [207.173.201.20]) by cuda.sgi.com with ESMTP id pNtLNkgazzrPVA2b for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 10:11:00 -0700 (PDT)
-Message-ID: <481756A3.20601@oracle.com>
-Date: Tue, 29 Apr 2008 10:10:59 -0700
-From: Zach Brown <zach.brown@oracle.com>
-MIME-Version: 1.0
-Subject: Re: correct use of vmtruncate()?
-References: <20080429100601.GO108924158@sgi.com>
-In-Reply-To: <20080429100601.GO108924158@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 14:29:25 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3TLT55r028714
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 14:29:07 -0700
+Date: Wed, 30 Apr 2008 07:29:43 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: review: s/i_flags_lock/i_inner_lock/g
+Message-ID: <20080429212942.GQ108924158@sgi.com>
+References: <4816AEEB.8090907@sgi.com> <20080429053757.GA30708@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080429053757.GA30708@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
+On Tue, Apr 29, 2008 at 01:37:57AM -0400, Christoph Hellwig wrote:
+> On Tue, Apr 29, 2008 at 03:15:23PM +1000, Timothy Shimmin wrote:
+> > Hi there,
+> >
+> > As part of future plans to cache incore versions of acls
+> > off the inode, we want to protect its modification by a spin lock.
+> > Dave suggested that we use the i_flags_lock but rename it to
+> > reflect its more general purpose on other fields, such as "i_inner_lock".
+> > This patch is then basically s/i_flags_lock/i_inner_lock/g.
+> 
+> Not too happpy about that, as I'd rather kill this lock in it's current
+> form and use atomic bitops on the flags.  I'd rather use i_lock in the
+> Linux inode for the ACLs.
 
-> The obvious fix for this is that block_write_begin() and
-> friends should be calling ->setattr to do the truncation and hence
-> follow normal convention for truncating blocks off an inode.
-> However, even that appears to have thorns. e.g. in XFS we hold the
-> iolock exclusively when we call block_write_begin(), but it is not
-> held in all cases where ->setattr is currently called. Hence calling
-> ->setattr from block_write_begin in this failure case will deadlock
-> unless we also pass a "nolock" flag as well. XFS already
-> supports this (e.g. see the XFS fallocate implementation) but no other
-> filesystem does (some probably don't need to).
+The problem with that is that some of the flags work together and can't
+be used as separate bitops. eg. xfs_finish_reclaim() and xfs_iget_core().
+Hence they currently need to be protected by a spinlock.
 
-This paragraph in particular reminds me of an outstanding bug with
-O_DIRECT and ext*.  It isn't truncating partial allocations when a dio
-fails with ENOSPC.  This was noticed by a user who saw that fsck found
-bocks outside i_size in the file that saw ENOSPC if they tried to
-unmount and check the volume after the failed write.
+Also, protecting something in the XFs inode with the linux inode lock
+could have issues with the lifecycle differences between the inodes.
+Just something to be careful of....
 
-So, whether we decide that failed writes should call setattr or
-vmtruncate, we should also keep the generic O_DIRECT path in
-consideration.  Today it doesn't even try the supposed generic method of
-calling vmtrunate().
+Cheers,
 
-- z
-
-(Though I'm sure XFS' dio code already handles freeing blocks :))
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
