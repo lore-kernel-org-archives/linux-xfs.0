@@ -1,33 +1,29 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 08:54:02 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 09:05:32 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3TFrijO020274
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 08:53:45 -0700
-Date: Tue, 29 Apr 2008 08:53:52 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] XFS update for 2.6.26-rc1
-In-Reply-To: <20080429082031.A323B58C4C15@chook.melbourne.sgi.com>
-Message-ID: <alpine.LFD.1.10.0804290853250.3119@woody.linux-foundation.org>
-References: <20080429082031.A323B58C4C15@chook.melbourne.sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3TG58dw021050
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 09:05:16 -0700
+Received: from gate2-sandiego.nmci.navy.mil (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDD5310DA7E0
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 09:05:49 -0700 (PDT)
+Received: from gate2-sandiego.nmci.navy.mil (gate2-sandiego.nmci.navy.mil [138.163.0.42]) by cuda.sgi.com with ESMTP id h6AxcuyCEEtEqVDt for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 09:05:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Deleting Files
+Date: Tue, 29 Apr 2008 09:05:47 -0700
+Message-ID: <32600B6A46438141B01042C966B1AE3F274B3C@nawechlkez02.nadsuswe.nads.navy.mil>
+From: "Benson, Aaron D CIV NAVAIR, 414200D" <aaron.benson@navy.mil>
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: xfs@oss.sgi.com
+
+I was wondering if someone could explain the process of deleting files
+in an XFS file system. Mostly on how it affect inodes, vnodes and
+allocation groups. I am struggle trying to find information on the
+internals of xfs file systems. Thank you in advance.
 
 
-
-On Tue, 29 Apr 2008, Lachlan McIlroy wrote:
->
-> Please pull from the for-linus branch:
->     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
-
-Hmm..
-
-	"Already up-to-date."
-
-Forgot to push?
-
-		Linus
+[[HTML alternate version deleted]]
