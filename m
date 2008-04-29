@@ -1,67 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 17:21:51 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Apr 2008 17:39:08 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3T0LU3f025765
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 17:21:34 -0700
-Date: Tue, 29 Apr 2008 10:22:11 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH, XFSQA] Don't run 175-177 if DMAPI is not supported
-Message-ID: <20080429002211.GH108924158@sgi.com>
-References: <20080423013802.GJ103491721@sgi.com> <480EDE04.5080003@sgi.com> <20080424065822.GY103491721@sgi.com> <481515C8.6020601@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <481515C8.6020601@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3T0cjWR026992
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2008 17:38:49 -0700
+Message-ID: <48166E18.10008@sgi.com>
+Date: Tue, 29 Apr 2008 10:38:48 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
+MIME-Version: 1.0
+Subject: Re: Problems with xfs_grow on large LVM + XFS filesystem 20TB size
+ check 2 failed
+References: <6A32BC807C106440B7E23208F280DDAF01D21F36FD@bcmail1.VIDMARK.LOCAL> <481650F5.40205@sandeen.net> <6A32BC807C106440B7E23208F280DDAF01D21F3718@bcmail1.VIDMARK.LOCAL> <481656F6.5030300@sandeen.net>
+In-Reply-To: <481656F6.5030300@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Lance Reed <lreed@brightcove.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Apr 28, 2008 at 10:09:44AM +1000, Timothy Shimmin wrote:
-> David Chinner wrote:
-> >On Wed, Apr 23, 2008 at 04:58:12PM +1000, Timothy Shimmin wrote:
-> >>Hi,
-> >>
-> >>_test_punch already does a umount $SCRATCH_MNT.
-> >>However, IMHO, it would probably be nicer if one could
-> >>use a _require_dmapi or really it may be simpler if
-> >>we could roll it into common.dmapi
-> >>so one just needs to include common.dmapi and
-> >>it would complain at that point if the kernel
-> >>didn't support it.
-> >
-> >Sure, but we don't have that, and I'm not about to spend the time to
-> >convert >20 tests to something like this. Right now I just want to
-> >remove all the bloody silly test failures on mainline kernels.
-> >
-> >All the other dmapi tests "not run" just fine, I want these to do
-> >the same thing. Is that good enough to check in right now?
-> >
-> >Cheers,
-> >
-> >Dave.
-> 
-> Sure, that's fine.
-> 
-> I was really just suggesting to put:
-> 
-> +# test that we have DMAPI support
-> +_dmapi_scratch_mount
-> +unmount $SCRATCH_MNT > /dev/null 2>&1
-> 
-> directly into common.dmapi - not as a function
-> but just as code to always execute.
 
-Ok, so i tried this and all the dmapi tests then gave "not run"
-status even though dmapi was build into the kernel.
 
-Don't know why, don't really have time to find out right now.
+Eric Sandeen wrote:
+> Lance Reed wrote:
+>> Thanks for the quick response.
+>>
+>> Actually, I was able to run an xfs_repair and all was well.(took 45 minutes...)
+>>
+>> But I would love to be able to expand the XFS file system out to the max.
+>>
+>> I guess I could expand it in < 2TB increments then maybe?
+>>
+>> Thanks for the update and I will look around.
+>>
+>> I did find this which I think is related.
+>>
+>> http://oss.sgi.com/archives/xfs/2008-01/msg00097.html
+>
+> Yep, I think expanding it in, say, 1T increments should be fine, and it
+>  should all (I think...) end up the same as if you'd done it all at once
+> (modulo the bug, of course...)
 
-Cheers,
+I think we verified a while back that growing in 2T increments is an
+effective workaround - the bug is due to a signed 32 bit overflow.
+The fix has been available for some time now, but apparently hasn't
+made it's way into Centos yet.
 
-Dave.
+Cheers
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+
+  Mark Goodwin                                  markgw@sgi.com
+  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
+  SGI Australian Software Group           Cell: +61-4-18969583
+-------------------------------------------------------------
