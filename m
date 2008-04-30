@@ -1,69 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 02:23:38 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U9NDSL024069
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 02:23:20 -0700
-Message-ID: <48183AA5.9030804@decisionsoft.co.uk>
-Date: Wed, 30 Apr 2008 10:23:49 +0100
-From: Stuart Rowan <strr-debian@decisionsoft.co.uk>
-Reply-To: strr-debian@decisionsoft.co.uk
-MIME-Version: 1.0
-Subject: Re: TAKE 979416 - Don't initialise new inode generation numbers to
- zero
-References: <20080429004144.757D658C4C15@chook.melbourne.sgi.com>
-In-Reply-To: <20080429004144.757D658C4C15@chook.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 03:15:31 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3UAEwWQ028057
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 03:15:01 -0700
+Date: Wed, 30 Apr 2008 20:15:25 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: correct use of vmtruncate()?
+Message-ID: <20080430101525.GJ108924158@sgi.com>
+References: <20080429100601.GO108924158@sgi.com> <20080430074738.GC7791@skywalker>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080430074738.GC7791@skywalker>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: David Chinner <dgc@sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
 
-Is this liable to affect the stable releases, 2.6.24.y and 2.6.25.y? If so, 
-is it appropriate for forwarding to the stable team?
+On Wed, Apr 30, 2008 at 01:17:38PM +0530, Aneesh Kumar K.V wrote:
+> On Tue, Apr 29, 2008 at 08:06:01PM +1000, David Chinner wrote:
+> > Folks,
+> > 
+> > It appears to me that vmtruncate() is not used correctly in
+> > block_write_begin() and friends. The short summary is that it
+> > appears that the usage in these functions implies that vmtruncate()
+> > should cause truncation of blocks on disk but no filesystem
+> > appears to do this, nor does the documentation imply they should.
+> 
+> Looking at ext*_truncate, I see we are freeing blocks as a part of vmtruncate.
+> Or did I miss something ?
 
-I only ask because we have a heavily used NFS /home-directory server that 
-uses XFS for the underlying store.
+No I missed something. I was looking at block_truncate_page() which is
+called by various truncate methods but does not do truncation itself.
+
+Still doesn't help XFS, though, as updating different parts of the
+inode in different transactions will result in non-atomic ->setattr
+updates. Which, given that XFS tends to excel at exposing non-atomic
+modifications in crash recovery, is a really bad thing.
+
+Looking further, doing the truncate operation in ->truncate is
+probably really stupid simply because the interface does not allow
+errors to be returned to the caller. e.g. ufs_setattr() has this
+comment:
+
+/*
+ * We don't define our `inode->i_op->truncate', and call it here,
+ * because of:
+ * - there is no way to know old size
+ * - there is no way inform user about error, if it happens in `truncate'
+ */
+
+and I've just added a WARN_ON(error) to xfs_vn_truncate() so that
+errors don't get lost silently.
+
+UFS also uses block_write_begin(), so it will have exactly the same
+problem as XFS - blocks beyond EOF don't get truncated away by
+vmtruncate if an error occurs in block_write_begin().
+
+AFAICT, gfs2 is another filesystem that does not have a ->truncate
+callback - truncation is driven through the ->setattr interface.
+However, gfs2_write_begin() calls vmtruncate() like
+block_write_begin() on error from block_prepare_write() and hence
+also has this bug. 
+
+I'm sure there are other filesystems that, like XFS, UFS and GFS2,
+don't do block truncation in ->truncate. Hence it really does seem
+that calling vmtruncate() from anything other than a ->setattr method
+is a bug because to do so is to make a false assumption about how
+filesystems are implemented....
 
 Cheers,
-Stu.
 
-David Chinner wrote, on 29/04/08 01:41:
-> Don't initialise new inode generation numbers to zero
-> 
-> When we allocation new inode chunks, we initialise the generation
-> numbers to zero. This works fine until we delete a chunk and then
-> reallocate it, resulting in the same inode numbers but with a
-> reset generation count. This can result in inode/generation
-> pairs of different inodes occurring relatively close together.
-> 
-> Given that the inode/gen pair makes up the "unique" portion of
-> an NFS filehandle on XFS, this can result in file handles cached
-> on clients being seen on the wire from the server but refer to
-> a different file. This causes .... issues for NFS clients.
-> 
-> Hence we need a unique generation number initialisation for
-> each inode to prevent reuse of a small portion of the generation
-> number space. Use a random number to initialise the generation
-> number so we don't need to keep any new state on disk whilst
-> making the new number difficult to guess from previous allocations.
-> 
-> Date:  Tue Apr 29 10:41:26 AEST 2008
-> Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-> Inspected by:  hch@infradead.org
-> 
-> The following file(s) were checked into:
->   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-> 
-> 
-> Modid:  xfs-linux-melb:xfs-kern:31001a
-> fs/xfs/xfs_ialloc.c - 1.199 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_ialloc.c.diff?r1=text&tr1=1.199&r2=text&tr2=1.198&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.199&r2=text&tr2=1.198&f=h
-> 	- use random32() to initialise the generation in newly allocated
-> 	  inodes to prevent short term reuse of inode,gen pairs which
-> 	  can cause ESTALE problems for NFS clients.
-> 
-> 
-> 
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
