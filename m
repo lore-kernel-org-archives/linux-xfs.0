@@ -1,40 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 18:10:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U19cFv017688
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:09:45 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85B5010A40A
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:10:21 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id fn1FGblkTlmXmSEE for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:10:21 -0700 (PDT)
-Message-Id: <D8E7FEBEEB9649CF9E2FC389BC5F8C6B@nsl.ad.nec.co.jp>
-From: "Takashi Sato" <t-sato@yk.jp.nec.com>
-References: <20080428193123t-sato@mail.jp.nec.com> <20080428103719.GA16030@infradead.org> <2E042A67F72447F6AAA0CC0605DBFA84@nsl.ad.nec.co.jp> <20080428130358.GB2798@infradead.org>
-In-Reply-To: <20080428130358.GB2798@infradead.org>
-Subject: Re: [RFC PATCH 1/3] Implement generic freeze feature
-Date: Wed, 30 Apr 2008 10:10:13 +0900
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 19:42:45 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3U2gKmi022399
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 19:42:24 -0700
+Message-ID: <4817DCE2.4090706@sgi.com>
+Date: Wed, 30 Apr 2008 12:43:46 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=original
+Subject: Re: [GIT PULL] XFS update for 2.6.26-rc1
+References: <20080429082031.A323B58C4C15@chook.melbourne.sgi.com> <alpine.LFD.1.10.0804290853250.3119@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.1.10.0804290853250.3119@woody.linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-Hi,
+Yup, forgot to push.  Fixed now - could you please try again?
 
->> bd_mount_sem can protect against only freezes and cannot protect against
->> unfreezes.  If multiple unfreezes run in parallel,  the multiple up() for
->> bd_mount_sem might occur incorrectly.
->
-> Indeed.  The bit flag would fix that because unfreeze could then check
-> for the bit beeing set first.  So that's probably the easiest way to go.
-
-I think the bit flag is more efficient than the semaphore.
-So I will consider whether it can be used for the freeze feature.
-
-Cheers, Takashi
+Linus Torvalds wrote:
+> 
+> On Tue, 29 Apr 2008, Lachlan McIlroy wrote:
+>> Please pull from the for-linus branch:
+>>     git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
+> 
+> Hmm..
+> 
+> 	"Already up-to-date."
+> 
+> Forgot to push?
+> 
+> 		Linus
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
