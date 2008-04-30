@@ -1,138 +1,188 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 04:15:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3UBEcTR001047
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:14:43 -0700
-Date: Wed, 30 Apr 2008 07:15:21 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Remove l_flushsema
-Message-ID: <20080430111521.GA16571@infradead.org>
-References: <20080430090502.GH14976@parisc-linux.org> <20080430104125.GM108924158@sgi.com> <20080430105832.GA20442@infradead.org> <20080430111154.GO108924158@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 04:22:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3UBLc8M006759
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:21:50 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5787C10E3F0
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:22:20 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id QcVwFbGlGjGrSzOl for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:22:20 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m3UBMDF3017469
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:22:13 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m3UBMDmi017467
+	for xfs@oss.sgi.com; Wed, 30 Apr 2008 13:22:13 +0200
+Date: Wed, 30 Apr 2008 13:22:13 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] kill attr_capable callbacks
+Message-ID: <20080430112213.GA16966@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080430111154.GO108924158@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Apr 30, 2008 at 09:11:54PM +1000, David Chinner wrote:
-> > waitqueues are loked internally and don't need synchronization.  With
-> > a little bit of re-arranging the code the wake_up could probably be
-> > moved out of the critical section.
-> 
-> Yeah, I just realised that myself and was about to reply as such....
-> 
-> I'll move the wakeup outside the lock.
+No need for addition permission checks in the xattr handler,
+fs/xattr.c:xattr_permission() already does them, and in fact slightly
+more strict then what was in the attr_capable handlers.
 
-Below is the version I have now.  One of the rare cases where using
-sv_t actually cleans up the code (althoug the whole sv_ family should
-probably loose some arguments).
 
-Index: linux-2.6-xfs/fs/xfs/xfs_log.c
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-04-25 20:11:58.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-04-30 13:13:48.000000000 +0200
-@@ -1228,7 +1228,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:32:56.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:33:30.000000000 +0200
+@@ -747,15 +747,11 @@ xfs_vn_setxattr(
+ 	char		*attr = (char *)name;
+ 	attrnames_t	*namesp;
+ 	int		xflags = 0;
+-	int		error;
  
- 	spin_lock_init(&log->l_icloglock);
- 	spin_lock_init(&log->l_grant_lock);
--	initnsema(&log->l_flushsema, 0, "ic-flush");
-+	sv_init(&log->l_flush_wait, 0, "flush_wait");
+ 	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+ 	if (!namesp)
+ 		return -EOPNOTSUPP;
+ 	attr += namesp->attr_namelen;
+-	error = namesp->attr_capable(vp, NULL);
+-	if (error)
+-		return error;
  
- 	/* log record size must be multiple of BBSIZE; see xlog_rec_header_t */
- 	ASSERT((XFS_BUF_SIZE(bp) & BBMASK) == 0);
-@@ -1573,7 +1573,6 @@ xlog_dealloc_log(xlog_t *log)
- 		kmem_free(iclog, sizeof(xlog_in_core_t));
- 		iclog = next_iclog;
- 	}
--	freesema(&log->l_flushsema);
- 	spinlock_destroy(&log->l_icloglock);
- 	spinlock_destroy(&log->l_grant_lock);
+ 	/* Convert Linux syscall to XFS internal ATTR flags */
+ 	if (flags & XATTR_CREATE)
+@@ -777,15 +773,11 @@ xfs_vn_getxattr(
+ 	char		*attr = (char *)name;
+ 	attrnames_t	*namesp;
+ 	int		xflags = 0;
+-	ssize_t		error;
  
-@@ -2097,6 +2096,7 @@ xlog_state_do_callback(
- 	int		   funcdidcallbacks; /* flag: function did callbacks */
- 	int		   repeats;	/* for issuing console warnings if
- 					 * looping too many times */
-+	int		   wake = 0;
+ 	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+ 	if (!namesp)
+ 		return -EOPNOTSUPP;
+ 	attr += namesp->attr_namelen;
+-	error = namesp->attr_capable(vp, NULL);
+-	if (error)
+-		return error;
  
- 	spin_lock(&log->l_icloglock);
- 	first_iclog = iclog = log->l_iclog;
-@@ -2278,15 +2278,13 @@ xlog_state_do_callback(
- 	}
- #endif
+ 	/* Convert Linux syscall to XFS internal ATTR flags */
+ 	if (!size) {
+@@ -825,15 +817,12 @@ xfs_vn_removexattr(
+ 	char		*attr = (char *)name;
+ 	attrnames_t	*namesp;
+ 	int		xflags = 0;
+-	int		error;
  
--	flushcnt = 0;
--	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR)) {
--		flushcnt = log->l_flushcnt;
--		log->l_flushcnt = 0;
--	}
-+	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
-+		wake = 1;
- 	spin_unlock(&log->l_icloglock);
--	while (flushcnt--)
--		vsema(&log->l_flushsema);
--}	/* xlog_state_do_callback */
+ 	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+ 	if (!namesp)
+ 		return -EOPNOTSUPP;
+ 	attr += namesp->attr_namelen;
+-	error = namesp->attr_capable(vp, NULL);
+-	if (error)
+-		return error;
 +
-+	if (wake)
-+		sv_broadcast(&log->l_flush_wait);
-+}
- 
- 
- /*
-@@ -2384,16 +2382,15 @@ restart:
- 	}
- 
- 	iclog = log->l_iclog;
--	if (! (iclog->ic_state == XLOG_STATE_ACTIVE)) {
--		log->l_flushcnt++;
--		spin_unlock(&log->l_icloglock);
-+	if (iclog->ic_state != XLOG_STATE_ACTIVE) {
- 		xlog_trace_iclog(iclog, XLOG_TRACE_SLEEP_FLUSH);
- 		XFS_STATS_INC(xs_log_noiclogs);
--		/* Ensure that log writes happen */
--		psema(&log->l_flushsema, PINOD);
-+
-+		/* Wait for log writes to have flushed */
-+		sv_wait(&log->l_flush_wait, 0, &log->l_icloglock, 0);
- 		goto restart;
- 	}
--	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
-+
- 	head = &iclog->ic_header;
- 
- 	atomic_inc(&iclog->ic_refcnt);	/* prevents sync */
-Index: linux-2.6-xfs/fs/xfs/xfs_log_priv.h
+ 	xflags |= namesp->attr_flag;
+ 	return namesp->attr_remove(vp, attr, xflags);
+ }
+Index: linux-2.6-xfs/fs/xfs/xfs_attr.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_priv.h	2008-04-25 20:11:58.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_priv.h	2008-04-30 13:09:33.000000000 +0200
-@@ -423,10 +423,8 @@ typedef struct log {
- 	int			l_logBBsize;    /* size of log in BB chunks */
+--- linux-2.6-xfs.orig/fs/xfs/xfs_attr.c	2008-04-29 21:32:25.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_attr.c	2008-04-29 21:32:51.000000000 +0200
+@@ -2622,43 +2622,6 @@ attr_lookup_namespace(
+ 	return NULL;
+ }
  
- 	/* The following block of fields are changed while holding icloglock */
--	sema_t			l_flushsema ____cacheline_aligned_in_smp;
--						/* iclog flushing semaphore */
--	int			l_flushcnt;	/* # of procs waiting on this
--						 * sema */
-+	sv_t			l_flush_wait ____cacheline_aligned_in_smp;
-+						/* waiting for iclog flush */
- 	int			l_covered_state;/* state of "covering disk
- 						 * log entries" */
- 	xlog_in_core_t		*l_iclog;       /* head log queue	*/
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+-/*
+- * Some checks to prevent people abusing EAs to get over quota:
+- * - Don't allow modifying user EAs on devices/symlinks;
+- * - Don't allow modifying user EAs if sticky bit set;
+- */
+-STATIC int
+-attr_user_capable(
+-	bhv_vnode_t	*vp,
+-	cred_t		*cred)
+-{
+-	struct inode	*inode = vn_to_inode(vp);
+-
+-	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-		return -EPERM;
+-	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
+-	    !capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-	if (S_ISDIR(inode->i_mode) && (inode->i_mode & S_ISVTX) &&
+-	    (current_fsuid(cred) != inode->i_uid) && !capable(CAP_FOWNER))
+-		return -EPERM;
+-	return 0;
+-}
+-
+-STATIC int
+-attr_trusted_capable(
+-	bhv_vnode_t	*vp,
+-	cred_t		*cred)
+-{
+-	struct inode	*inode = vn_to_inode(vp);
+-
+-	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-		return -EPERM;
+-	if (!capable(CAP_SYS_ADMIN))
+-		return -EPERM;
+-	return 0;
+-}
+-
+ STATIC int
+ attr_system_set(
+ 	bhv_vnode_t *vp, char *name, void *data, size_t size, int xflags)
+@@ -2709,7 +2672,6 @@ struct attrnames attr_system = {
+ 	.attr_get	= attr_system_get,
+ 	.attr_set	= attr_system_set,
+ 	.attr_remove	= attr_system_remove,
+-	.attr_capable	= (attrcapable_t)fs_noerr,
+ };
+ 
+ struct attrnames attr_trusted = {
+@@ -2719,7 +2681,6 @@ struct attrnames attr_trusted = {
+ 	.attr_get	= attr_generic_get,
+ 	.attr_set	= attr_generic_set,
+ 	.attr_remove	= attr_generic_remove,
+-	.attr_capable	= attr_trusted_capable,
+ };
+ 
+ struct attrnames attr_secure = {
+@@ -2729,7 +2690,6 @@ struct attrnames attr_secure = {
+ 	.attr_get	= attr_generic_get,
+ 	.attr_set	= attr_generic_set,
+ 	.attr_remove	= attr_generic_remove,
+-	.attr_capable	= (attrcapable_t)fs_noerr,
+ };
+ 
+ struct attrnames attr_user = {
+@@ -2738,7 +2698,6 @@ struct attrnames attr_user = {
+ 	.attr_get	= attr_generic_get,
+ 	.attr_set	= attr_generic_set,
+ 	.attr_remove	= attr_generic_remove,
+-	.attr_capable	= attr_user_capable,
+ };
+ 
+ struct attrnames *attr_namespaces[] =
+Index: linux-2.6-xfs/fs/xfs/xfs_attr.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-04-30 13:09:58.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-04-30 13:10:26.000000000 +0200
-@@ -5829,8 +5829,8 @@ xfsidbg_xlog(xlog_t *log)
- 	};
+--- linux-2.6-xfs.orig/fs/xfs/xfs_attr.h	2008-04-29 21:33:38.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_attr.h	2008-04-29 21:33:52.000000000 +0200
+@@ -42,7 +42,6 @@ typedef int (*attrset_t)(bhv_vnode_t *, 
+ typedef int (*attrget_t)(bhv_vnode_t *, char *, void *, size_t, int);
+ typedef int (*attrremove_t)(bhv_vnode_t *, char *, int);
+ typedef int (*attrexists_t)(bhv_vnode_t *);
+-typedef int (*attrcapable_t)(bhv_vnode_t *, struct cred *);
  
- 	kdb_printf("xlog at 0x%p\n", log);
--	kdb_printf("&flushsm: 0x%p  flushcnt: %d  ICLOG: 0x%p  \n",
--		&log->l_flushsema, log->l_flushcnt, log->l_iclog);
-+	kdb_printf("&flush_wait: 0x%p  ICLOG: 0x%p  \n",
-+		&log->l_flush_wait, log->l_iclog);
- 	kdb_printf("&icloglock: 0x%p  tail_lsn: %s  last_sync_lsn: %s \n",
- 		&log->l_icloglock, xfs_fmtlsn(&log->l_tail_lsn),
- 		xfs_fmtlsn(&log->l_last_sync_lsn));
+ typedef struct attrnames {
+ 	char *		attr_name;
+@@ -52,7 +51,6 @@ typedef struct attrnames {
+ 	attrset_t	attr_set;
+ 	attrremove_t	attr_remove;
+ 	attrexists_t	attr_exists;
+-	attrcapable_t	attr_capable;
+ } attrnames_t;
+ 
+ #define ATTR_NAMECOUNT	4
