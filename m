@@ -1,120 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 02:04:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 02:23:38 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U94KoG023006
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 02:04:26 -0700
-Received: from mail.parisc-linux.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 68A74160C447
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 02:05:04 -0700 (PDT)
-Received: from mail.parisc-linux.org (palinux.external.hp.com [192.25.206.14]) by cuda.sgi.com with ESMTP id freYBHni3bDc7RcJ for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 02:05:04 -0700 (PDT)
-Date: Wed, 30 Apr 2008 03:05:03 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Remove l_flushsema
-Message-ID: <20080430090502.GH14976@parisc-linux.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U9NDSL024069
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 02:23:20 -0700
+Message-ID: <48183AA5.9030804@decisionsoft.co.uk>
+Date: Wed, 30 Apr 2008 10:23:49 +0100
+From: Stuart Rowan <strr-debian@decisionsoft.co.uk>
+Reply-To: strr-debian@decisionsoft.co.uk
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Subject: Re: TAKE 979416 - Don't initialise new inode generation numbers to
+ zero
+References: <20080429004144.757D658C4C15@chook.melbourne.sgi.com>
+In-Reply-To: <20080429004144.757D658C4C15@chook.melbourne.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
+Is this liable to affect the stable releases, 2.6.24.y and 2.6.25.y? If so, 
+is it appropriate for forwarding to the stable team?
 
-The l_flushsema doesn't exactly have completion semantics, nor mutex
-semantics.  It's used as a list of tasks which are waiting to be notified
-that a flush has completed.  It was also being used in a way that was
-potentially racy, depending on the semaphore implementation.
+I only ask because we have a heavily used NFS /home-directory server that 
+uses XFS for the underlying store.
 
-By using a waitqueue instead of a semaphore we avoid the need for a
-separate counter, since we know we just need to wake everything on the
-queue.
+Cheers,
+Stu.
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-
--- 
-
-I've only given this light testing, it could use some more.
-
- fs/xfs/xfs_log.c             |   19 +++++++------------
- fs/xfs/xfs_log_priv.h        |    6 ++----
- 2 files changed, 9 insertions(+), 16 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index afaee30..d2e3092 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1228,7 +1228,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 
- 	spin_lock_init(&log->l_icloglock);
- 	spin_lock_init(&log->l_grant_lock);
--	initnsema(&log->l_flushsema, 0, "ic-flush");
-+	init_waitqueue_head(&log->l_flush_wq);
- 
- 	/* log record size must be multiple of BBSIZE; see xlog_rec_header_t */
- 	ASSERT((XFS_BUF_SIZE(bp) & BBMASK) == 0);
-@@ -1573,7 +1573,6 @@ xlog_dealloc_log(xlog_t *log)
- 		kmem_free(iclog, sizeof(xlog_in_core_t));
- 		iclog = next_iclog;
- 	}
--	freesema(&log->l_flushsema);
- 	spinlock_destroy(&log->l_icloglock);
- 	spinlock_destroy(&log->l_grant_lock);
- 
-@@ -2278,14 +2277,9 @@ xlog_state_do_callback(
- 	}
- #endif
- 
--	flushcnt = 0;
--	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR)) {
--		flushcnt = log->l_flushcnt;
--		log->l_flushcnt = 0;
--	}
-+	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR)) 
-+		wake_up_all(&log->l_flush_wq);
- 	spin_unlock(&log->l_icloglock);
--	while (flushcnt--)
--		vsema(&log->l_flushsema);
- }	/* xlog_state_do_callback */
- 
- 
-@@ -2385,12 +2379,13 @@ restart:
- 
- 	iclog = log->l_iclog;
- 	if (! (iclog->ic_state == XLOG_STATE_ACTIVE)) {
--		log->l_flushcnt++;
-+		DEFINE_WAIT(wait);
-+		prepare_to_wait(&log->l_flush_wq, &wait, TASK_UNINTERRUPTIBLE);
- 		spin_unlock(&log->l_icloglock);
- 		xlog_trace_iclog(iclog, XLOG_TRACE_SLEEP_FLUSH);
- 		XFS_STATS_INC(xs_log_noiclogs);
--		/* Ensure that log writes happen */
--		psema(&log->l_flushsema, PINOD);
-+		/* Wait for log writes to have flushed */
-+		schedule();
- 		goto restart;
- 	}
- 	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 8952a39..a6dff16 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -423,10 +423,8 @@ typedef struct log {
- 	int			l_logBBsize;    /* size of log in BB chunks */
- 
- 	/* The following block of fields are changed while holding icloglock */
--	sema_t			l_flushsema ____cacheline_aligned_in_smp;
--						/* iclog flushing semaphore */
--	int			l_flushcnt;	/* # of procs waiting on this
--						 * sema */
-+	wait_queue_head_t	l_flush_wq ____cacheline_aligned_in_smp;
-+						/* waiting for iclog flush */
- 	int			l_covered_state;/* state of "covering disk
- 						 * log entries" */
- 	xlog_in_core_t		*l_iclog;       /* head log queue	*/
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+David Chinner wrote, on 29/04/08 01:41:
+> Don't initialise new inode generation numbers to zero
+> 
+> When we allocation new inode chunks, we initialise the generation
+> numbers to zero. This works fine until we delete a chunk and then
+> reallocate it, resulting in the same inode numbers but with a
+> reset generation count. This can result in inode/generation
+> pairs of different inodes occurring relatively close together.
+> 
+> Given that the inode/gen pair makes up the "unique" portion of
+> an NFS filehandle on XFS, this can result in file handles cached
+> on clients being seen on the wire from the server but refer to
+> a different file. This causes .... issues for NFS clients.
+> 
+> Hence we need a unique generation number initialisation for
+> each inode to prevent reuse of a small portion of the generation
+> number space. Use a random number to initialise the generation
+> number so we don't need to keep any new state on disk whilst
+> making the new number difficult to guess from previous allocations.
+> 
+> Date:  Tue Apr 29 10:41:26 AEST 2008
+> Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+> Inspected by:  hch@infradead.org
+> 
+> The following file(s) were checked into:
+>   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+> 
+> 
+> Modid:  xfs-linux-melb:xfs-kern:31001a
+> fs/xfs/xfs_ialloc.c - 1.199 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_ialloc.c.diff?r1=text&tr1=1.199&r2=text&tr2=1.198&f=h
+> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.199&r2=text&tr2=1.198&f=h
+> 	- use random32() to initialise the generation in newly allocated
+> 	  inodes to prevent short term reuse of inode,gen pairs which
+> 	  can cause ESTALE problems for NFS clients.
+> 
+> 
+> 
