@@ -1,56 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:25:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:47:38 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U7Oigs016145
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:24:52 -0700
-Received: from e28smtp01.in.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED52A1059B7
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:25:17 -0700 (PDT)
-Received: from e28smtp01.in.ibm.com (e28smtp01.in.ibm.com [59.145.155.1]) by cuda.sgi.com with ESMTP id TOmbMs0AlDAwGErU for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:25:17 -0700 (PDT)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U7lHlb018004
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:25 -0700
+Received: from e28smtp02.in.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C653310D187
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:52 -0700 (PDT)
+Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [59.145.155.2]) by cuda.sgi.com with ESMTP id jcZI6CFpfqN59gJs for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:52 -0700 (PDT)
 Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by e28smtp01.in.ibm.com (8.13.1/8.13.1) with ESMTP id m3U7P71n028348
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 12:55:07 +0530
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3U7P1TK1384448
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 12:55:01 +0530
-Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
-	by d28av04.in.ibm.com (8.13.1/8.13.3) with ESMTP id m3U7P7gH020839
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 07:25:07 GMT
-Date: Wed, 30 Apr 2008 12:54:57 +0530
+	by e28smtp02.in.ibm.com (8.13.1/8.13.1) with ESMTP id m3U7lmTI021624
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:17:48 +0530
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3U7lfUe1171552
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:17:41 +0530
+Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
+	by d28av03.in.ibm.com (8.13.1/8.13.3) with ESMTP id m3U7llNO024142
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 07:47:48 GMT
+Date: Wed, 30 Apr 2008 13:17:38 +0530
 From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
 Subject: Re: correct use of vmtruncate()?
-Message-ID: <20080430072457.GB7791@skywalker>
-References: <20080429100601.GO108924158@sgi.com> <481756A3.20601@oracle.com>
+Message-ID: <20080430074738.GC7791@skywalker>
+References: <20080429100601.GO108924158@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <481756A3.20601@oracle.com>
+In-Reply-To: <20080429100601.GO108924158@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Zach Brown <zach.brown@oracle.com>
-Cc: David Chinner <dgc@sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Apr 29, 2008 at 10:10:59AM -0700, Zach Brown wrote:
+On Tue, Apr 29, 2008 at 08:06:01PM +1000, David Chinner wrote:
+> Folks,
 > 
-> > The obvious fix for this is that block_write_begin() and
-> > friends should be calling ->setattr to do the truncation and hence
-> > follow normal convention for truncating blocks off an inode.
-> > However, even that appears to have thorns. e.g. in XFS we hold the
-> > iolock exclusively when we call block_write_begin(), but it is not
-> > held in all cases where ->setattr is currently called. Hence calling
-> > ->setattr from block_write_begin in this failure case will deadlock
-> > unless we also pass a "nolock" flag as well. XFS already
-> > supports this (e.g. see the XFS fallocate implementation) but no other
-> > filesystem does (some probably don't need to).
-> 
-> This paragraph in particular reminds me of an outstanding bug with
-> O_DIRECT and ext*.  It isn't truncating partial allocations when a dio
-> fails with ENOSPC.  This was noticed by a user who saw that fsck found
-> bocks outside i_size in the file that saw ENOSPC if they tried to
-> unmount and check the volume after the failed write.
+> It appears to me that vmtruncate() is not used correctly in
+> block_write_begin() and friends. The short summary is that it
+> appears that the usage in these functions implies that vmtruncate()
+> should cause truncation of blocks on disk but no filesystem
+> appears to do this, nor does the documentation imply they should.
 
-This patch should be the fix I guess
-	http://lkml.org/lkml/2006/12/18/103
+Looking at ext*_truncate, I see we are freeing blocks as a part of vmtruncate.
+Or did I miss something ?
 
 -aneesh
