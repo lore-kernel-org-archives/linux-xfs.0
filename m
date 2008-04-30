@@ -1,34 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:42:50 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3U7gSOu017564
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:42:30 -0700
-Subject: TAKE 979416 - Include linux/random.h in all builds
-Message-Id: <20080430074307.019CC58C4C15@chook.melbourne.sgi.com>
-Date: Wed, 30 Apr 2008 17:43:06 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 01:58:13 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U8vgNw022382
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 01:57:49 -0700
+Received: from mail.parisc-linux.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD421160F3E4
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 01:58:23 -0700 (PDT)
+Received: from mail.parisc-linux.org (palinux.external.hp.com [192.25.206.14]) by cuda.sgi.com with ESMTP id TRD0Zy1GSbOidjaa for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 01:58:23 -0700 (PDT)
+Date: Wed, 30 Apr 2008 02:58:12 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Fix current xfs build
+Message-ID: <20080430085812.GG14976@parisc-linux.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
-
-Include linux/random.h in all builds, not just debug builds.
+To: David Chinner <dgc@sgi.com>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
 
-Date:  Wed Apr 30 17:40:15 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  lachlan@sgi.com
+Linus' current git tree appears to be missing a header file which makes
+xfs fail to build.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
+diff --git a/fs/xfs/linux-2.6/xfs_linux.h b/fs/xfs/linux-2.6/xfs_linux.h
+index 1bc9f60..4edc469 100644
+--- a/fs/xfs/linux-2.6/xfs_linux.h
++++ b/fs/xfs/linux-2.6/xfs_linux.h
+@@ -75,6 +75,7 @@
+ #include <linux/delay.h>
+ #include <linux/log2.h>
+ #include <linux/spinlock.h>
++#include <linux/random.h>
+ 
+ #include <asm/page.h>
+ #include <asm/div64.h>
 
-Modid:  xfs-linux-melb:xfs-kern:31008a
-fs/xfs/support/debug.h - 1.19 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/debug.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-	- Include linux/random.h in all builds.
-
-fs/xfs/linux-2.6/xfs_linux.h - 1.165 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.165&r2=text&tr2=1.164&f=h
-	- Include linux/random.h in all builds.
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
