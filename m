@@ -1,37 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 16:10:34 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3TNA32g005079
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 16:10:07 -0700
-Date: Wed, 30 Apr 2008 09:10:34 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: Deleting Files
-Message-ID: <20080429231034.GV108924158@sgi.com>
-References: <32600B6A46438141B01042C966B1AE3F274B3C@nawechlkez02.nadsuswe.nads.navy.mil>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <32600B6A46438141B01042C966B1AE3F274B3C@nawechlkez02.nadsuswe.nads.navy.mil>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Apr 2008 18:10:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U19cFv017688
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:09:45 -0700
+Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85B5010A40A
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:10:21 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id fn1FGblkTlmXmSEE for <xfs@oss.sgi.com>; Tue, 29 Apr 2008 18:10:21 -0700 (PDT)
+Message-Id: <D8E7FEBEEB9649CF9E2FC389BC5F8C6B@nsl.ad.nec.co.jp>
+From: "Takashi Sato" <t-sato@yk.jp.nec.com>
+References: <20080428193123t-sato@mail.jp.nec.com> <20080428103719.GA16030@infradead.org> <2E042A67F72447F6AAA0CC0605DBFA84@nsl.ad.nec.co.jp> <20080428130358.GB2798@infradead.org>
+In-Reply-To: <20080428130358.GB2798@infradead.org>
+Subject: Re: [RFC PATCH 1/3] Implement generic freeze feature
+Date: Wed, 30 Apr 2008 10:10:13 +0900
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Benson, Aaron D CIV NAVAIR, 414200D" <aaron.benson@navy.mil>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, xfs@oss.sgi.com, linux-ext4@vger.kernel.org
 
-On Tue, Apr 29, 2008 at 09:05:47AM -0700, Benson, Aaron D CIV NAVAIR, 414200D wrote:
-> I was wondering if someone could explain the process of deleting files
-> in an XFS file system. Mostly on how it affect inodes, vnodes and
-> allocation groups. I am struggle trying to find information on the
-> internals of xfs file systems. Thank you in advance.
+Hi,
 
-Start here:
+>> bd_mount_sem can protect against only freezes and cannot protect against
+>> unfreezes.  If multiple unfreezes run in parallel,  the multiple up() for
+>> bd_mount_sem might occur incorrectly.
+>
+> Indeed.  The bit flag would fix that because unfreeze could then check
+> for the bit beeing set first.  So that's probably the easiest way to go.
 
-http://oss.sgi.com/projects/xfs/publications
+I think the bit flag is more efficient than the semaphore.
+So I will consider whether it can be used for the freeze feature.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Cheers, Takashi
