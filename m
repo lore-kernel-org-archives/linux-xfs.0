@@ -1,172 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 04:24:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 04:31:48 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3UBOB7U007059
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:24:20 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC29C10E42D
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:24:54 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id mUbjMGgqtlV5Bril for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:24:54 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m3UBOmF3017655
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:24:48 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m3UBOmNq017653
-	for xfs@oss.sgi.com; Wed, 30 Apr 2008 13:24:48 +0200
-Date: Wed, 30 Apr 2008 13:24:48 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill xfs_igrow_start and xfs_igrow_finish
-Message-ID: <20080430112448.GA17537@lst.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3UBVCSD007869
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:31:20 -0700
+Received: from munster3.sis.pasteur.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02F2D10E4B0
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:31:55 -0700 (PDT)
+Received: from munster3.sis.pasteur.fr (munster3.sis.pasteur.fr [157.99.64.214]) by cuda.sgi.com with ESMTP id o0wWfvcrEZbiBap8 for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 04:31:55 -0700 (PDT)
+Date: Wed, 30 Apr 2008 13:31:54 +0200
+From: Tru Huynh <tru@pasteur.fr>
+Subject: CentOS project? <- (Re: Problems with xfs_grow on large LVM + XFS filesystem 20TB size check 2 failed)
+Message-ID: <20080430113154.GA26651@sillage.bis.pasteur.fr>
+References: <6A32BC807C106440B7E23208F280DDAF01D21F36FD@bcmail1.VIDMARK.LOCAL> <481650F5.40205@sandeen.net> <6A32BC807C106440B7E23208F280DDAF01D21F3718@bcmail1.VIDMARK.LOCAL> <481656F6.5030300@sandeen.net> <48166E18.10008@sgi.com> <48166F42.50104@sandeen.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <48166F42.50104@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: markgw@sgi.com, Lance Reed <lreed@brightcove.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-xfs_igrow_start just expands to xfs_zero_eof with two assers that are
-useless in the context of the only caller and some rather confusing
-comments.
+On Mon, Apr 28, 2008 at 07:43:46PM -0500, Eric Sandeen wrote:
+...
+> 
+> Honestly, I think nothing makes its way back to Centos... I really don't
+> have the time to maintain it.  If anyone on the list uses Centos + xfs
+> and wants to backport patches that appear to be bugfixes, I'm sure it'd
+> be welcomed.  I'd be happy to facilitate w/ review or whatnot, but
+> probably won't have time to actually take on this task myself (despite
+> being the instigator of the centos module originally, which was, in
+> retrospect, perhaps a tad irresponsible...)  :)
 
-xfs_igrow_finish is just a few lines of code decorated again with
-useless asserts and confusing comments.
+Let's start a new CentOS project http://wiki.centos.org/Projects
+for kmod-xfs CentOS-4 and 5.
 
-Just kill those two and merge them into xfs_setattr.
+Cheers,
 
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-04-24 21:18:18.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-04-24 21:23:58.000000000 +0200
-@@ -1763,67 +1763,6 @@ xfs_itruncate_finish(
- 	return 0;
- }
- 
--
--/*
-- * xfs_igrow_start
-- *
-- * Do the first part of growing a file: zero any data in the last
-- * block that is beyond the old EOF.  We need to do this before
-- * the inode is joined to the transaction to modify the i_size.
-- * That way we can drop the inode lock and call into the buffer
-- * cache to get the buffer mapping the EOF.
-- */
--int
--xfs_igrow_start(
--	xfs_inode_t	*ip,
--	xfs_fsize_t	new_size,
--	cred_t		*credp)
--{
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--	ASSERT(new_size > ip->i_size);
--
--	/*
--	 * Zero any pages that may have been created by
--	 * xfs_write_file() beyond the end of the file
--	 * and any blocks between the old and new file sizes.
--	 */
--	return xfs_zero_eof(ip, new_size, ip->i_size);
--}
--
--/*
-- * xfs_igrow_finish
-- *
-- * This routine is called to extend the size of a file.
-- * The inode must have both the iolock and the ilock locked
-- * for update and it must be a part of the current transaction.
-- * The xfs_igrow_start() function must have been called previously.
-- * If the change_flag is not zero, the inode change timestamp will
-- * be updated.
-- */
--void
--xfs_igrow_finish(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip,
--	xfs_fsize_t	new_size,
--	int		change_flag)
--{
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--	ASSERT(ip->i_transp == tp);
--	ASSERT(new_size > ip->i_size);
--
--	/*
--	 * Update the file size.  Update the inode change timestamp
--	 * if change_flag set.
--	 */
--	ip->i_d.di_size = new_size;
--	ip->i_size = new_size;
--	if (change_flag)
--		xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--}
--
--
- /*
-  * This is called when the inode's link count goes to 0.
-  * We place the on-disk inode on a list in the AGI.  It
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-04-24 21:18:10.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-04-24 21:18:14.000000000 +0200
-@@ -507,9 +507,6 @@ int		xfs_itruncate_start(xfs_inode_t *, 
- int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
- 				     xfs_fsize_t, int, int);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
--int		xfs_igrow_start(xfs_inode_t *, xfs_fsize_t, struct cred *);
--void		xfs_igrow_finish(struct xfs_trans *, xfs_inode_t *,
--				 xfs_fsize_t, int);
- 
- void		xfs_idestroy_fork(xfs_inode_t *, int);
- void		xfs_idestroy(xfs_inode_t *);
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-04-24 21:18:18.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-04-24 21:24:07.000000000 +0200
-@@ -444,7 +444,13 @@ xfs_setattr(
- 		code = 0;
- 		if ((vap->va_size > ip->i_size) &&
- 		    (flags & ATTR_NOSIZETOK) == 0) {
--			code = xfs_igrow_start(ip, vap->va_size, credp);
-+			/*
-+			 * Do the first part of growing a file: zero any data
-+			 * in the last block that is beyond the old EOF.  We
-+			 * need to do this before the inode is joined to the
-+			 * transaction to modify the i_size.
-+			 */
-+			code = xfs_zero_eof(ip, vap->va_size, ip->i_size);
- 		}
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
-@@ -512,8 +518,11 @@ xfs_setattr(
- 			timeflags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
- 
- 		if (vap->va_size > ip->i_size) {
--			xfs_igrow_finish(tp, ip, vap->va_size,
--			    !(flags & ATTR_DMI));
-+			ip->i_d.di_size = vap->va_size;
-+			ip->i_size = vap->va_size;
-+			if (!(flags & ATTR_DMI))
-+				xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-+			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		} else if ((vap->va_size <= ip->i_size) ||
- 			   ((vap->va_size == 0) && ip->i_d.di_nextents)) {
- 			/*
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-04-24 21:24:34.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-04-24 21:24:37.000000000 +0200
-@@ -235,8 +235,6 @@ EXPORT_SYMBOL(xfs_iflock_nowait);
- EXPORT_SYMBOL(xfs_iflush);
- EXPORT_SYMBOL(xfs_ifunlock);
- EXPORT_SYMBOL(xfs_iget);
--EXPORT_SYMBOL(xfs_igrow_start);
--EXPORT_SYMBOL(xfs_igrow_finish);
- EXPORT_SYMBOL(xfs_ilock);
- EXPORT_SYMBOL(xfs_ilock_map_shared);
- EXPORT_SYMBOL(xfs_ilock_nowait);
+Tru
+-- 
+Dr Tru Huynh          | http://www.pasteur.fr/recherche/unites/Binfs/
+mailto:tru@pasteur.fr | tel/fax +33 1 45 68 87 37/19
+Institut Pasteur, 25-28 rue du Docteur Roux, 75724 Paris CEDEX 15 France  
