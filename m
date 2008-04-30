@@ -1,46 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:47:38 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U7lHlb018004
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:25 -0700
-Received: from e28smtp02.in.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C653310D187
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:52 -0700 (PDT)
-Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [59.145.155.2]) by cuda.sgi.com with ESMTP id jcZI6CFpfqN59gJs for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:47:52 -0700 (PDT)
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by e28smtp02.in.ibm.com (8.13.1/8.13.1) with ESMTP id m3U7lmTI021624
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:17:48 +0530
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3U7lfUe1171552
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 13:17:41 +0530
-Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
-	by d28av03.in.ibm.com (8.13.1/8.13.3) with ESMTP id m3U7llNO024142
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 07:47:48 GMT
-Date: Wed, 30 Apr 2008 13:17:38 +0530
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Subject: Re: correct use of vmtruncate()?
-Message-ID: <20080430074738.GC7791@skywalker>
-References: <20080429100601.GO108924158@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080429100601.GO108924158@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:42:50 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3U7gSOu017564
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:42:30 -0700
+Subject: TAKE 979416 - Include linux/random.h in all builds
+Message-Id: <20080430074307.019CC58C4C15@chook.melbourne.sgi.com>
+Date: Wed, 30 Apr 2008 17:43:06 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 29, 2008 at 08:06:01PM +1000, David Chinner wrote:
-> Folks,
-> 
-> It appears to me that vmtruncate() is not used correctly in
-> block_write_begin() and friends. The short summary is that it
-> appears that the usage in these functions implies that vmtruncate()
-> should cause truncation of blocks on disk but no filesystem
-> appears to do this, nor does the documentation imply they should.
+Include linux/random.h in all builds, not just debug builds.
 
-Looking at ext*_truncate, I see we are freeing blocks as a part of vmtruncate.
-Or did I miss something ?
 
--aneesh
+Date:  Wed Apr 30 17:40:15 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  lachlan@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31008a
+fs/xfs/support/debug.h - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/debug.h.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+	- Include linux/random.h in all builds.
+
+fs/xfs/linux-2.6/xfs_linux.h - 1.165 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.165&r2=text&tr2=1.164&f=h
+	- Include linux/random.h in all builds.
