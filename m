@@ -1,52 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:16:06 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m3U7Fset011083
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:15:56 -0700
-Message-ID: <48181D04.4030902@sgi.com>
-Date: Wed, 30 Apr 2008 17:17:24 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 00:25:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3U7Oigs016145
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:24:52 -0700
+Received: from e28smtp01.in.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ED52A1059B7
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:25:17 -0700 (PDT)
+Received: from e28smtp01.in.ibm.com (e28smtp01.in.ibm.com [59.145.155.1]) by cuda.sgi.com with ESMTP id TOmbMs0AlDAwGErU for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 00:25:17 -0700 (PDT)
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by e28smtp01.in.ibm.com (8.13.1/8.13.1) with ESMTP id m3U7P71n028348
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 12:55:07 +0530
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m3U7P1TK1384448
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 12:55:01 +0530
+Received: from d28av04.in.ibm.com (loopback [127.0.0.1])
+	by d28av04.in.ibm.com (8.13.1/8.13.3) with ESMTP id m3U7P7gH020839
+	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 07:25:07 GMT
+Date: Wed, 30 Apr 2008 12:54:57 +0530
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: correct use of vmtruncate()?
+Message-ID: <20080430072457.GB7791@skywalker>
+References: <20080429100601.GO108924158@sgi.com> <481756A3.20601@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix non-debug build for xfsidbg.c
-References: <20080430065937.GC108924158@sgi.com>
-In-Reply-To: <20080430065937.GC108924158@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <481756A3.20601@oracle.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Zach Brown <zach.brown@oracle.com>
+Cc: David Chinner <dgc@sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, xfs-oss <xfs@oss.sgi.com>
 
-Dave, would the code look cleaner if iclog_bak was printed on a line by itself?
-That way we wouldn't need the #else and we wouldn't be duplicating code.
+On Tue, Apr 29, 2008 at 10:10:59AM -0700, Zach Brown wrote:
+> 
+> > The obvious fix for this is that block_write_begin() and
+> > friends should be calling ->setattr to do the truncation and hence
+> > follow normal convention for truncating blocks off an inode.
+> > However, even that appears to have thorns. e.g. in XFS we hold the
+> > iolock exclusively when we call block_write_begin(), but it is not
+> > held in all cases where ->setattr is currently called. Hence calling
+> > ->setattr from block_write_begin in this failure case will deadlock
+> > unless we also pass a "nolock" flag as well. XFS already
+> > supports this (e.g. see the XFS fallocate implementation) but no other
+> > filesystem does (some probably don't need to).
+> 
+> This paragraph in particular reminds me of an outstanding bug with
+> O_DIRECT and ext*.  It isn't truncating partial allocations when a dio
+> fails with ENOSPC.  This was noticed by a user who saw that fsck found
+> bocks outside i_size in the file that saw ENOSPC if they tried to
+> unmount and check the volume after the failed write.
 
-David Chinner wrote:
-> Make the use of l_iclog_bak conditional on debug configs.
-> 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  fs/xfs/xfsidbg.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> Index: 2.6.x-xfs-new/fs/xfs/xfsidbg.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfsidbg.c	2008-04-30 16:47:06.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/xfsidbg.c	2008-04-30 16:49:33.615164895 +1000
-> @@ -5845,9 +5845,14 @@ xfsidbg_xlog(xlog_t *log)
->  	kdb_printf("curr_cycle: %d  prev_cycle: %d  curr_block: %d  prev_block: %d\n",
->  	     log->l_curr_cycle, log->l_prev_cycle, log->l_curr_block,
->  	     log->l_prev_block);
-> +#ifdef DEBUG
->  	kdb_printf("iclog_bak: 0x%p  iclog_size: 0x%x (%d)  num iclogs: %d\n",
->  		log->l_iclog_bak, log->l_iclog_size, log->l_iclog_size,
->  		log->l_iclog_bufs);
-> +#else
-> +	kdb_printf("iclog_size: 0x%x (%d)  num iclogs: %d\n",
-> +		log->l_iclog_size, log->l_iclog_size, log->l_iclog_bufs);
-> +#endif
->  	kdb_printf("l_iclog_hsize %d l_iclog_heads %d\n",
->  		log->l_iclog_hsize, log->l_iclog_heads);
->  	kdb_printf("l_sectbb_log %u l_sectbb_mask %u\n",
-> 
+This patch should be the fix I guess
+	http://lkml.org/lkml/2006/12/18/103
+
+-aneesh
