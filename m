@@ -1,74 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 15:01:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m41M0uRM001323
-	for <xfs@oss.sgi.com>; Thu, 1 May 2008 15:01:04 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BCEA91B2BBD9
-	for <xfs@oss.sgi.com>; Thu,  1 May 2008 15:01:40 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id Yu8WrgKKzto30mn3 for <xfs@oss.sgi.com>; Thu, 01 May 2008 15:01:40 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m41M1XF3002489
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 2 May 2008 00:01:33 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m41M1XoI002486
-	for xfs@oss.sgi.com; Fri, 2 May 2008 00:01:33 +0200
-Date: Fri, 2 May 2008 00:01:33 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 9/10] rename error2 goto label in xfs_fs_fill_super
-Message-ID: <20080501220133.GI2315@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 15:08:01 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m41M7oMr002380
+	for <xfs@oss.sgi.com>; Thu, 1 May 2008 15:07:53 -0700
+Date: Fri, 2 May 2008 08:08:25 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [PATCH] Don't allow memory reclaim to wait on the filesystem in inode writeback
+Message-ID: <20080501220825.GN108924158@sgi.com>
+References: <20080501122611.GK108924158@sgi.com> <20080501131521.GA7435@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20080501131521.GA7435@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
+On Thu, May 01, 2008 at 09:15:21AM -0400, Christoph Hellwig wrote:
+> On Thu, May 01, 2008 at 10:26:11PM +1000, David Chinner wrote:
+> > Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
+> > ===================================================================
+> > --- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2008-04-28 16:35:23.000000000 +1000
+> > +++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2008-05-01 20:04:55.151880341 +1000
+> > @@ -2986,7 +2986,7 @@ xfs_iflush_cluster(
+> >  	ASSERT(pag->pag_ici_init);
+> >  
+> >  	ilist_size = XFS_INODE_CLUSTER_SIZE(mp) * sizeof(xfs_inode_t *);
+> > -	ilist = kmem_alloc(ilist_size, KM_MAYFAIL);
+> > +	ilist = kmem_alloc(ilist_size, KM_NOFS);
+> >  	if (!ilist)
+> >  		return 0;
+> 
+> This should be KM_MAYFAIL | KM_NOFS, because KM_NOFS doesn't imply that
+> the allocation may fail.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Yes, right you are - I only looked at the effect of __GFP_FS, not
+what kmem_alloc does. i.e. kmem_flags_convert() doesn't do anything
+with KM_MAYFAIL, forgetting that it's kmem_alloc() that uses it...
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
+New patch below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
+
+---
+Don't allow memory reclaim to wait on the filesystem in inode writeback
+
+If we allow memory reclaim to wait on the pages under writeback in
+inode cluster writeback we could deadlock because we are currently
+holding the ILOCK on the initial writeback inode which is needed in
+data I/O completion to change the file size or do unwritten extent
+conversion before the pages are taken out of writeback state.
+
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_inode.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-05-01 20:34:56.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-05-01 20:35:30.000000000 +0200
-@@ -1796,22 +1796,22 @@ xfs_fs_fill_super(
- 		goto out_destroy_counters;
- 	error = xfs_finish_flags(args, mp);
- 	if (error)
--		goto error2;
-+		goto out_free_sb;
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2008-04-28 16:35:23.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2008-05-02 08:03:30.071824780 +1000
+@@ -2986,7 +2986,7 @@ xfs_iflush_cluster(
+ 	ASSERT(pag->pag_ici_init);
  
- 	error = xfs_setup_devices(mp);
- 	if (error)
--		goto error2;
-+		goto out_free_sb;
+ 	ilist_size = XFS_INODE_CLUSTER_SIZE(mp) * sizeof(xfs_inode_t *);
+-	ilist = kmem_alloc(ilist_size, KM_MAYFAIL);
++	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
+ 	if (!ilist)
+ 		return 0;
  
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
- 		xfs_mountfs_check_barriers(mp);
- 
- 	error = xfs_filestream_mount(mp);
- 	if (error)
--		goto error2;
-+		goto out_free_sb;
- 
- 	error = xfs_mountfs(mp, flags);
- 	if (error)
--		goto error2;
-+		goto out_free_sb;
- 
- 	XFS_SEND_MOUNT(mp, DM_RIGHT_NULL, args->mtpt, args->fsname);
- 
-@@ -1851,9 +1851,8 @@ xfs_fs_fill_super(
- 	kfree(args);
- 	return 0;
- 
-- error2:
--	if (mp->m_sb_bp)
--		xfs_freesb(mp);
-+ out_free_sb:
-+	xfs_freesb(mp);
-  out_destroy_counters:
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_close_devices(mp);
