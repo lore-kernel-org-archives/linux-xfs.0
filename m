@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 30 Apr 2008 23:09:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 00:21:19 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m41699Ui000836
-	for <xfs@oss.sgi.com>; Wed, 30 Apr 2008 23:09:12 -0700
-Subject: TAKE update xfstests/dmapi....Makefile.in
-Message-Id: <20080501060949.2664358C4C15@chook.melbourne.sgi.com>
-Date: Thu,  1 May 2008 16:09:49 +1000 (EST)
-From: tes@sgi.com (Tim Shimmin)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m417Ku1G010798
+	for <xfs@oss.sgi.com>; Thu, 1 May 2008 00:21:00 -0700
+Message-ID: <48196FB6.9040503@sgi.com>
+Date: Thu, 01 May 2008 17:22:30 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] Fix non-debug build for xfsidbg.c
+References: <20080430065937.GC108924158@sgi.com> <48181D04.4030902@sgi.com> <20080501004925.GU108924158@sgi.com> <48191FE8.9080607@sgi.com> <20080501030149.GC108924158@sgi.com>
+In-Reply-To: <20080501030149.GC108924158@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-regenerate dmapi Makefile in using automake
+Agree.
 
-Date:  Thu May  1 16:07:18 AEST 2008
-Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  xaiki@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:31014a
-xfstests/dmapi/aclocal.m4 - 1.7 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/dmapi/aclocal.m4.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-	- regenerate using aclocal
-
-xfstests/dmapi/src/suite1/cmd/Makefile.in - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/dmapi/src/suite1/Makefile.in.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-	- regenerate using automake
+David Chinner wrote:
+> On Thu, May 01, 2008 at 11:42:00AM +1000, Lachlan McIlroy wrote:
+>> Sorry I should have been clearer.  What I actually meant was something
+>> like this:
+> 
+> Whatever. It's not worth arguing about. I just want to get it fixed.
+> 
+> Cheers,
+> 
+> Dave.
