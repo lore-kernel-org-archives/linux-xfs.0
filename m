@@ -1,37 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 06:14:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m41DEcxp032091
-	for <xfs@oss.sgi.com>; Thu, 1 May 2008 06:14:39 -0700
-Date: Thu, 1 May 2008 09:15:21 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 06:16:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m41DGgur032203
+	for <xfs@oss.sgi.com>; Thu, 1 May 2008 06:16:46 -0700
+Date: Thu, 1 May 2008 09:17:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Don't allow memory reclaim to wait on the filesystem
-	in inode writeback
-Message-ID: <20080501131521.GA7435@infradead.org>
-References: <20080501122611.GK108924158@sgi.com>
+Subject: Re: REVIEW: ASCII CI support in xfsprogs
+Message-ID: <20080501131725.GB7435@infradead.org>
+References: <op.uagkf9jl3jf8g2@pc-bnaujok.melbourne.sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080501122611.GK108924158@sgi.com>
+In-Reply-To: <op.uagkf9jl3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-On Thu, May 01, 2008 at 10:26:11PM +1000, David Chinner wrote:
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_inode.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_inode.c	2008-04-28 16:35:23.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_inode.c	2008-05-01 20:04:55.151880341 +1000
-> @@ -2986,7 +2986,7 @@ xfs_iflush_cluster(
->  	ASSERT(pag->pag_ici_init);
->  
->  	ilist_size = XFS_INODE_CLUSTER_SIZE(mp) * sizeof(xfs_inode_t *);
-> -	ilist = kmem_alloc(ilist_size, KM_MAYFAIL);
-> +	ilist = kmem_alloc(ilist_size, KM_NOFS);
->  	if (!ilist)
->  		return 0;
+On Thu, May 01, 2008 at 02:37:11PM +1000, Barry Naujok wrote:
+> I've reworked xfsprogs userspace tools from scratch with ASCII CI support
+> only. Much simpler than previous patches with Unicode CI.
+>
+> One issue that sort of bugs me a bit is I've maintained the same output as
+> the original IRIX mkfs.xfs with CI mode:
+> naming   =version 2              bsize=4096   mixed-case=Y|N
+>
+> where "N" = CI enabled and "Y" = normal case-senstive filesystem.
+>
+> Should this be changed to something clearer?
 
-This should be KM_MAYFAIL | KM_NOFS, because KM_NOFS doesn't imply that
-the allocation may fail.
+I'd prefer something cleaner.  Like case-insensitive=Y|N.  Otherwise
+the patch looks fine, but I wonder if you shouldn't better backport the
+xfs_dir* files from the kernel completely instead of applying the
+changes selectively, otherwise we'll get totoally out of sync codebases.
