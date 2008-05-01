@@ -1,36 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 06:16:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m41DGgur032203
-	for <xfs@oss.sgi.com>; Thu, 1 May 2008 06:16:46 -0700
-Date: Thu, 1 May 2008 09:17:25 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: REVIEW: ASCII CI support in xfsprogs
-Message-ID: <20080501131725.GB7435@infradead.org>
-References: <op.uagkf9jl3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 08:25:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m41FOk1p009340
+	for <xfs@oss.sgi.com>; Thu, 1 May 2008 08:24:52 -0700
+Received: from py-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F253E1B8E55B
+	for <xfs@oss.sgi.com>; Thu,  1 May 2008 08:25:30 -0700 (PDT)
+Received: from py-out-1112.google.com (py-out-1112.google.com [64.233.166.181]) by cuda.sgi.com with ESMTP id UU1Qvs2DVaNIWn75 for <xfs@oss.sgi.com>; Thu, 01 May 2008 08:25:30 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id j37so1039332pyc.4
+        for <xfs@oss.sgi.com>; Thu, 01 May 2008 08:25:30 -0700 (PDT)
+Message-ID: <1d3e8bf0805010825o7a6a0765ofeb63b730fef3c4e@mail.gmail.com>
+Date: Thu, 1 May 2008 16:25:29 +0100
+From: "Dovydas Sankauskas" <laisve@gmail.com>
+Subject: Re: disk I/O error
+In-Reply-To: <480E17C7.7070606@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <op.uagkf9jl3jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <1d3e8bf0804220842r26411f51vc714da371255aa90@mail.gmail.com>
+	 <480E17C7.7070606@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, May 01, 2008 at 02:37:11PM +1000, Barry Naujok wrote:
-> I've reworked xfsprogs userspace tools from scratch with ASCII CI support
-> only. Much simpler than previous patches with Unicode CI.
+2008/4/22 Eric Sandeen <sandeen@sandeen.net>:
 >
-> One issue that sort of bugs me a bit is I've maintained the same output as
-> the original IRIX mkfs.xfs with CI mode:
-> naming   =version 2              bsize=4096   mixed-case=Y|N
->
-> where "N" = CI enabled and "Y" = normal case-senstive filesystem.
->
-> Should this be changed to something clearer?
+>  In any case to recover as best you can from the dying disk, try
+>  dd_rescue to image every readable sector, then run xfs_repair on that
+>  image and mount it loopback to get to what's left.
 
-I'd prefer something cleaner.  Like case-insensitive=Y|N.  Otherwise
-the patch looks fine, but I wonder if you shouldn't better backport the
-xfs_dir* files from the kernel completely instead of applying the
-changes selectively, otherwise we'll get totoally out of sync codebases.
+I did exactly as you said. It took a while, but I managed to recover
+all data I have lost. ddrescue is a great tool!
+
+Thank you for your help.
+
+
+-- 
+
+Dovydas Sankauskas
