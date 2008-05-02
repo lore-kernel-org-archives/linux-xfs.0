@@ -1,163 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 May 2008 13:55:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m42Kt2pH021009
-	for <xfs@oss.sgi.com>; Fri, 2 May 2008 13:55:03 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 00FB411C703
-	for <xfs@oss.sgi.com>; Fri,  2 May 2008 13:55:47 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id AWKHM2OElKxPeOsQ for <xfs@oss.sgi.com>; Fri, 02 May 2008 13:55:47 -0700 (PDT)
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m42KtkLd003927
-	for <xfs@oss.sgi.com>; Fri, 2 May 2008 16:55:46 -0400
-Received: from file.rdu.redhat.com (file.rdu.redhat.com [10.11.255.147])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m42Ktkse028851
-	for <xfs@oss.sgi.com>; Fri, 2 May 2008 16:55:46 -0400
-Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
-	by file.rdu.redhat.com (8.13.1/8.13.1) with ESMTP id m42KtjSp022225
-	for <xfs@oss.sgi.com>; Fri, 2 May 2008 16:55:45 -0400
-Message-ID: <481B7FD1.3030107@sandeen.net>
-Date: Fri, 02 May 2008 15:55:45 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 May 2008 14:01:14 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m42L14NI021673
+	for <xfs@oss.sgi.com>; Fri, 2 May 2008 14:01:07 -0700
+Received: from ext.agami.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8F29AEA96E
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 14:01:48 -0700 (PDT)
+Received: from ext.agami.com (64.221.212.177.ptr.us.xo.net [64.221.212.177]) by cuda.sgi.com with ESMTP id 9bgRNDMkLEOhzSG6 for <xfs@oss.sgi.com>; Fri, 02 May 2008 14:01:48 -0700 (PDT)
+Received: from agami.com (mail [192.168.168.5])
+	by ext.agami.com (8.12.5/8.12.5) with ESMTP id m42L1PO8023171
+	for <xfs@oss.sgi.com>; Fri, 2 May 2008 14:01:25 -0700
+Received: from mx1.agami.com (mx1.agami.com [10.123.10.30])
+	by agami.com (8.12.11/8.12.11) with ESMTP id m42L1P1u016883
+	for <xfs@oss.sgi.com>; Fri, 2 May 2008 14:01:25 -0700
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
-References: <47DB4181.7040603@sandeen.net> <480E89B5.8070006@sandeen.net>
-In-Reply-To: <480E89B5.8070006@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: question about xfs_alloc_fix_freelist()
+Date: Fri, 2 May 2008 14:01:47 -0700
+Message-ID: <038C959C13632143B902BE360CA5B58E3C552E@mx1.ddns.agami.com>
+From: "Michael Nishimoto" <miken@agami.com>
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
-
-Eric Sandeen wrote:
-> Eric Sandeen wrote:
->> This should fix the longstanding issues with xfs and old ABI
->> arm boxes, which lead to various asserts and xfs shutdowns,
->> and for which an (incorrect) patch has been floating around
->> for years.  (Said patch made ARM internally consistent, but
->> altered the normal xfs on-disk format such that it looked
->> corrupted on other architectures):
->> http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
-> 
-> ping again...
-
-ping #3...
+To: xfs@oss.sgi.com
 
 
+The following code can be found near the end of xfs_alloc_fix_freelist:
 
-> There is still the cache flushing issue, I guess, but I think the
-> on-disk alignment is still worth fixing.
-> 
-> Oh, I'm sorry Jeff - I meant "fixing."  :)
-> 
-> Thanks,
-> -Eric
-> 
->> Old ABI ARM has interesting packing & padding; for example
->> on ARM old abi:
->>
->> struct xfs_dir2_sf_entry {
->> 	__uint8_t                  namelen;      /*     0     1 */
->>
->> 	/* XXX 3 bytes hole, try to pack */
->>
->> 	xfs_dir2_sf_off_t          offset;       /*     4     4 */
->> 	__uint8_t                  name[1];      /*     8     1 */
->>
->> 	/* XXX 3 bytes hole, try to pack */
->>
->> 	xfs_dir2_inou_t            inumber;      /*    12     8 */
->>
->> 	/* size: 20, cachelines: 1 */
->> 	/* sum members: 14, holes: 2, sum holes: 6 */
->> 	/* last cacheline: 20 bytes */
->> };
->>
->> but on x86:
->>
->> struct xfs_dir2_sf_entry {
->> 	__uint8_t                  namelen;      /*     0     1 */
->> 	xfs_dir2_sf_off_t          offset;       /*     1     2 */
->> 	__uint8_t                  name[1];      /*     3     1 */
->> 	xfs_dir2_inou_t            inumber;      /*     4     8 */
->>
->> 	/* size: 12, cachelines: 1 */
->> 	/* last cacheline: 12 bytes */
->> };
->>
->> ... this sort of discrepancy leads to problems.
->>
->> I've verified this patch by comparing the on-disk structure 
->> layouts using pahole from the dwarves package, as well as 
->> running through a bit of xfsqa under qemu-arm, modified so 
->> that the check/repair phase after each test actually executes 
->> check/repair from the x86 host, on the filesystem populated 
->> by the arm emulator.  Thus far it all looks good.
->>
->> There are 2 other structures with extra padding at the end, 
->> but they don't seem to cause trouble.  I suppose they could 
->> be packed as well: xfs_dir2_data_unused_t and xfs_dir2_sf_t.
->>
->> Note that userspace needs a similar treatment, and any
->> filesystems which were running with the previous rogue
->> "fix" will now see corruption (either in the kernel, or
->> during xfs_repair) with this fix properly in place; it 
->> may be worth teaching xfs_repair to identify and fix that 
->> specific issue.
->>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->>
->> ---
->>
->> Index: linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
->> ===================================================================
->> --- linux-2.6.24.orig/fs/xfs/linux-2.6/xfs_linux.h
->> +++ linux-2.6.24/fs/xfs/linux-2.6/xfs_linux.h
->> @@ -300,4 +300,11 @@ static inline __uint64_t howmany_64(__ui
->>  	return x;
->>  }
->>  
->> +/* ARM old ABI has some weird alignment/padding */
->> +#if defined(__arm__) && !defined(__ARM_EABI__)
->> +#define __arch_pack __attribute__((packed))
->> +#else
->> +#define __arch_pack
->> +#endif
->> +
->>  #endif /* __XFS_LINUX__ */
->> Index: linux-2.6.24/fs/xfs/xfs_dir2_sf.h
->> ===================================================================
->> --- linux-2.6.24.orig/fs/xfs/xfs_dir2_sf.h
->> +++ linux-2.6.24/fs/xfs/xfs_dir2_sf.h
->> @@ -62,7 +62,7 @@ typedef union {
->>   * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
->>   * Only need 16 bits, this is the byte offset into the single block form.
->>   */
->> -typedef struct { __uint8_t i[2]; } xfs_dir2_sf_off_t;
->> +typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
->>  
->>  /*
->>   * The parent directory has a dedicated field, and the self-pointer must
->> @@ -76,14 +76,14 @@ typedef struct xfs_dir2_sf_hdr {
->>  	__uint8_t		count;		/* count of entries */
->>  	__uint8_t		i8count;	/* count of 8-byte inode #s */
->>  	xfs_dir2_inou_t		parent;		/* parent dir inode number */
->> -} xfs_dir2_sf_hdr_t;
->> +} __arch_pack xfs_dir2_sf_hdr_t;
->>  
->>  typedef struct xfs_dir2_sf_entry {
->>  	__uint8_t		namelen;	/* actual name length */
->>  	xfs_dir2_sf_off_t	offset;		/* saved offset */
->>  	__uint8_t		name[1];	/* name, variable size */
->>  	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
->> -} xfs_dir2_sf_entry_t;
->> +} __arch_pack xfs_dir2_sf_entry_t; 
->>  
->>  typedef struct xfs_dir2_sf {
->>  	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
->>
->>
->>
-> 
-> 
+                if (targs.agbno == NULLAGBLOCK) {
+                        if (flags & XFS_ALLOC_FLAG_FREEING)
+                                break;
+                        xfs_trans_brelse(tp, agflbp);
+                        args->agbp = NULL;
+                        return 0;
+                }
+
+Don't we need to release agbp too by calling xfs_trans_brelse(tp, agbp)?
+
+   Michael
+
+
+
+[[HTML alternate version deleted]]
