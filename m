@@ -1,34 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 23:06:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4266Cnw007535
-	for <xfs@oss.sgi.com>; Thu, 1 May 2008 23:06:16 -0700
-Date: Fri, 2 May 2008 02:06:54 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Don't use d_alloc_anon for open_by_handle
-Message-ID: <20080502060654.GA23912@infradead.org>
-References: <20080501070244.GH108924158@sgi.com> <1209693339-4861-1-git-send-email-xaiki@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 02 May 2008 03:11:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m42ABNfg028723
+	for <xfs@oss.sgi.com>; Fri, 2 May 2008 03:11:28 -0700
+Received: from outbound4-dub-R.bigfish.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1255BADE1CF
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 03:12:07 -0700 (PDT)
+Received: from outbound4-dub-R.bigfish.com (outbound-dub.frontbridge.com [213.199.154.16]) by cuda.sgi.com with ESMTP id kI7PUUc9eLqd6eK0 for <xfs@oss.sgi.com>; Fri, 02 May 2008 03:12:07 -0700 (PDT)
+Received: from outbound4-dub.bigfish.com (localhost.localdomain [127.0.0.1])
+	by outbound4-dub-R.bigfish.com (Postfix) with ESMTP id 5DE3417C047D
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 10:08:25 +0000 (UTC)
+Received: from mail72-dub-R.bigfish.com (unknown [10.5.252.3])
+	by outbound4-dub.bigfish.com (Postfix) with ESMTP id 36940136805C
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 10:08:25 +0000 (UTC)
+Received: from mail72-dub (localhost.localdomain [127.0.0.1])
+	by mail72-dub-R.bigfish.com (Postfix) with ESMTP id 2702410082E2
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 10:08:24 +0000 (UTC)
+Received: from mailus1.cgg.com (72-20-130-72.cgg.com [72.20.130.72])
+	by mail72-dub.bigfish.com (Postfix) with ESMTP id 7CACCA78073
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 10:08:22 +0000 (UTC)
+Received: from in02ex01.int.cgg.com (in02ex01.int.cgg.com [192.168.53.201])
+	by mailus1.cgg.com (MailerCGG) with ESMTP id 5862A1D4001
+	for <xfs@oss.sgi.com>; Fri,  2 May 2008 05:08:17 -0500 (CDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: query
+Date: Fri, 2 May 2008 15:38:13 +0530
+Message-ID: <87604E51C77C4F4988CF1C7F088D562D9BE614@in02ex01.int.cgg.com>
+From: "Nandedkar, Rishiraj" <Rishiraj.Nandedkar@cggveritas.com>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <1209693339-4861-1-git-send-email-xaiki@sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xaiki@sgi.com
-Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, May 02, 2008 at 11:55:37AM +1000, xaiki@sgi.com wrote:
-> One of our DMAPI user found that in some cases inodes weren't getting through
-> xfs_inactive() in any reasonable amount of time. Investigation tracked it down
-> to the use of d_alloc_anon() combined with another thread accessing the same
-> inode via an open().
-> 
-> So we introduce a stripped down version of d_alloc_anon, that won't try to find
-> an existing dentry, nor will hash it.
+Hi,
 
-No, this is even more buggy than using d_alloc_anon.  What really needs
-to be done in the handle code is to do the full reconnect logic nfsd
-would be doing.  Aka you should be using exportfs_decode_fh and update
-xfs's fh_to_dentry method to accept the file handle type used by the
-handle interface.
+ 
+
+I would like to know which Linux version support XFS file system. I am
+working on linux3.5 and 4.3 and 7.3 but all these versions not support
+XFS.
+
+Please let me know which Linux version supports xfs and where can I get
+this versions
+
+Thanks in advance
+
+ 
+
+Thx & Regards
+
+Rishi Nandedkar
+
+It support
+
+CGGVERITAS
+
+ 
+
+
+
+[[HTML alternate version deleted]]
