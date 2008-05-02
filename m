@@ -1,54 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 17:09:32 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m42099F6014328
-	for <xfs@oss.sgi.com>; Thu, 1 May 2008 17:09:12 -0700
-Date: Fri, 02 May 2008 10:13:38 +1000
-Subject: Re: REVIEW: ASCII CI support in xfsprogs
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <op.uagkf9jl3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080501131725.GB7435@infradead.org>
-Message-ID: <op.uah2w02l3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080501131725.GB7435@infradead.org>
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 01 May 2008 19:08:39 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4228JgW020381
+	for <xfs@oss.sgi.com>; Thu, 1 May 2008 19:08:19 -0700
+From: xaiki@sgi.com
+Subject: [PATCH] Use xfs_d_alloc_anon for DM rdwr using handle code.
+Date: Fri,  2 May 2008 11:55:39 +1000
+Message-Id: <1209693339-4861-3-git-send-email-xaiki@sgi.com>
+In-Reply-To: <1209693339-4861-2-git-send-email-xaiki@sgi.com>
+References: <20080501070244.GH108924158@sgi.com>
+ <1209693339-4861-1-git-send-email-xaiki@sgi.com>
+ <1209693339-4861-2-git-send-email-xaiki@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: xfs-dev@sgi.com
+Cc: xfs@oss.sgi.com, Niv Sardi <xaiki@debian.org>, Niv Sardi <xaiki@sgi.com>
 
-On Thu, 01 May 2008 23:17:25 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
+From: Niv Sardi <xaiki@debian.org>
 
-> On Thu, May 01, 2008 at 02:37:11PM +1000, Barry Naujok wrote:
->> I've reworked xfsprogs userspace tools from scratch with ASCII CI  
->> support
->> only. Much simpler than previous patches with Unicode CI.
->>
->> One issue that sort of bugs me a bit is I've maintained the same output  
->> as
->> the original IRIX mkfs.xfs with CI mode:
->> naming   =version 2              bsize=4096   mixed-case=Y|N
->>
->> where "N" = CI enabled and "Y" = normal case-senstive filesystem.
->>
->> Should this be changed to something clearer?
->
-> I'd prefer something cleaner.  Like case-insensitive=Y|N.
+When doing invisible IO through the DMAPI we only require a handle, but
+that doesn't give us a file descriptor that we require, before we used
+to call d_alloc_annon() that created an annonymous disconnected but
+hashed dentry, from which we extracted the file descriptor, if no one
+else uses the dentry, the dput on fclose should unhash the dentry and
+(if not used) tear appart the dentry, and call into xfs_inactive where
+we will send the DESTROY EVENT. The issue was, that in some cases (as
+the dentry was hashed) another thread could use the same dentry
+inibiting the unhash on the first dput, and hence leaving that dentry on
+the unused list for ever (or untill caches are dropped).
 
-Yes, I was going to do "ascii-ci=Y|N", got to keep it clear in only
-does CI for A-Z.
+This uses the cuted down d_alloc_annon xfs implementation so that the dentry
+is never hashed.
 
-> Otherwise
-> the patch looks fine, but I wonder if you shouldn't better backport the
-> xfs_dir* files from the kernel completely instead of applying the
-> changes selectively, otherwise we'll get totoally out of sync codebases.
+Signed-off-by: Niv Sardi <xaiki@sgi.com>
+---
+ fs/xfs/dmapi/xfs_dm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I was thinking of that, but libxfs is pretty out of date anyway from
-all the cleanup changes that have occured and would like to sync them
-back at some stage in the near future. The sync would bring those other
-changes in at that time (Nathan can correct me if I misunderstand the
-sync process!)
-
-Barry.
+diff --git a/fs/xfs/dmapi/xfs_dm.c b/fs/xfs/dmapi/xfs_dm.c
+index c4f57a9..5aa00a9 100644
+--- a/fs/xfs/dmapi/xfs_dm.c
++++ b/fs/xfs/dmapi/xfs_dm.c
+@@ -1126,7 +1126,7 @@ xfs_dm_rdwr(
+ 
+ 	igrab(inode);
+ 
+-	dentry = d_alloc_anon(inode);
++	dentry = xfs_d_alloc_anon(inode);
+ 	if (dentry == NULL) {
+ 		iput(inode);
+ 		return ENOMEM;
+-- 
+1.5.5.1
