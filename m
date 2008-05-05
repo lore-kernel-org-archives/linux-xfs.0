@@ -1,124 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 May 2008 20:29:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 May 2008 22:42:48 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m453Sk71013218
-	for <xfs@oss.sgi.com>; Sun, 4 May 2008 20:28:48 -0700
-Message-ID: <481E7F17.5090601@sgi.com>
-Date: Mon, 05 May 2008 13:29:27 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: review: xfstests/016 change
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m455gRLa019318
+	for <xfs@oss.sgi.com>; Sun, 4 May 2008 22:42:29 -0700
+Subject: TAKE 981154 - Add support for sb_bad_features2 in QA 122
+Message-Id: <20080505054307.562FB58C4C15@chook.melbourne.sgi.com>
+Date: Mon,  5 May 2008 15:43:07 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
-
-Hi there,
-
-xfstests/016 has been failing for a while in many cases.
-It was relying on the log traffic for create/rm to be unaltered
-in XFS over the life of XFS.
-Its initial purpose was to test out the writing of the log around
-wrapping and checking that as we wrapped we didn't corrupt any data
-after the end of the log.
-
-The patch is to modify xfstest, 016, to take a sampling of the log traffic
-to guestimate how many ops are needed to get to the end of the log,
-instead of hard-coding in how many ops are expected to get there.
-
---Tim
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
 
-===========================================================================
-Index: xfstests/016
-===========================================================================
+Date:  Mon May  5 15:42:52 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/repair
+Inspected by:  tes@sgi.com
 
---- a/xfstests/016	2008-05-05 11:26:50.000000000 +1000
-+++ b/xfstests/016	2008-05-05 13:07:01.040000000 +1000
-@@ -50,7 +50,7 @@ _init()
-      echo "*** reset partition"
-      $here/src/devzero -b 2048 -n 50 -v 198 $SCRATCH_DEV
-      echo "*** mkfs"
--    force_opts="-dsize=50m -lsize=2097152"
-+    force_opts="-dsize=50m -lsize=$log_size"
-      echo mkfs_xfs $force_opts $SCRATCH_DEV >>$seq.full
-      _scratch_mkfs_xfs $force_opts >$tmp.mkfs0 2>&1
-      [ $? -ne 0 ] && \
-@@ -156,6 +156,10 @@ _supported_os Linux
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-  rm -f $seq.full
 
-+# mkfs sizes
-+log_size=2097152
-+log_size_bb=`expr $log_size / 512`
-+
-  _require_scratch
-  _init
-
-@@ -163,27 +167,47 @@ block=`_after_log $SCRATCH_DEV`
-  echo "fsblock after log = $block"               >>$seq.full
-  _check_corrupt $SCRATCH_DEV $block
-
--size=`_log_size`
--echo "log size = $size BB"                      >>$seq.full
-+actual_log_size=`_log_size`
-+echo "log size = $actual_log_size BB"                      >>$seq.full
-  head=`_log_head`
-  echo "log position = $head"                     >>$seq.full
-  lsunit=`_log_sunit`
-  echo "log sunit = $lsunit"			>>$seq.full
-
--[ $size -eq 4096 ] || \
-+# sanity checks
-+[ $actual_log_size -eq $log_size_bb ] || \
-      _fail "!!! unexpected log size $size"
-  [ $head -eq 2 -o $head -eq $((lsunit/512)) ] || \
-      _fail "!!! unexpected initial log position $head vs. $((lsunit/512))"
-
--echo "    lots of traffic"                      >>$seq.full
--_log_traffic 850
-+# find how how many blocks per op for 100 ops
-+# ignore the fact that it will also include an unmount record etc...
-+# this should be small overall
-+echo "    lots of traffic for sampling" >>$seq.full
-+sample_size_ops=100
-+_log_traffic $sample_size_ops
-+head1=`_log_head`
-+num_blocks=`expr $head1 - $head`
-+blocks_per_op=`echo "scale=3; $num_blocks / $sample_size_ops" | bc`
-+echo "blocks_per_op = $blocks_per_op" >>$seq.full
-+num_expected_ops=`echo "$log_size_bb / $blocks_per_op" | bc`
-+echo "num_expected_ops = $num_expected_ops" >>$seq.full
-+num_expected_to_go=`echo "$num_expected_ops - $sample_size_ops" | bc`
-+echo "num_expected_to_go = $num_expected_to_go" >>$seq.full
-+
-+echo "    lots more traffic" >>$seq.full
-+_log_traffic $num_expected_to_go
-  head=`_log_head`
-  echo "log position = $head"                     >>$seq.full
-
--[ $head -gt 3850 -a $head -lt 4050 ] || \
--    _fail "!!! unexpected log position $head"
-+# e.g. 3891
-+near_end_min=`echo "0.95 * $log_size_bb" | bc | sed 's/\..*//'`
-+echo "near_end_min = $near_end_min" >>$seq.full
-+
-+[ $head -gt $near_end_min -a $head -lt $log_size_bb ] || \
-+    _fail "!!! unexpected near end log position $head"
-
--for c in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-+for c in `seq 0 20`
-  do
-      echo "   little traffic"            >>$seq.full
-      _log_traffic 2
-@@ -193,7 +217,7 @@ do
-  done
-
-  [ $head -lt 1000 ] || \
--    _fail "!!! unexpected log position $head"
-+    _fail "!!! unexpected wrapped log position $head"
-
-  # success, all done
-  status=0
+Modid:  master-melb:xfs-cmds:31022a
+xfstests/122 - 1.8 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/122.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+xfstests/122.out - 1.5 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/122.out.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
+	- Add support for sb_bad_features2 in superblock structure
