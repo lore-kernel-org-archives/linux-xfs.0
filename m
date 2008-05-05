@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 May 2008 18:47:00 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m451kRpV001679
-	for <xfs@oss.sgi.com>; Sun, 4 May 2008 18:46:28 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 04 May 2008 18:56:22 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m451u6Vs002501
+	for <xfs@oss.sgi.com>; Sun, 4 May 2008 18:56:07 -0700
 Received: from ozlabs.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 980F5123B9E
-	for <xfs@oss.sgi.com>; Sun,  4 May 2008 18:46:47 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [203.10.76.45]) by cuda.sgi.com with ESMTP id ccs2LUvdFgROePy4 for <xfs@oss.sgi.com>; Sun, 04 May 2008 18:46:47 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E309163068B
+	for <xfs@oss.sgi.com>; Sun,  4 May 2008 18:56:47 -0700 (PDT)
+Received: from ozlabs.org (ozlabs.org [203.10.76.45]) by cuda.sgi.com with ESMTP id NkdzIdrVj00wVNkn for <xfs@oss.sgi.com>; Sun, 04 May 2008 18:56:47 -0700 (PDT)
 From: Rusty Russell <rusty@rustcorp.com.au>
-Date: Mon, 5 May 2008 01:46:36 +0000
-Subject: [PATCH] Replace down_trylock() with down_try(), reverse return values.
+Date: Mon, 5 May 2008 01:56:35 +0000
+Subject: [PATCH 1/1] Replace down_trylock() with down_try(), reverse return values.
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200805051146.38563.rusty@rustcorp.com.au>
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200805051156.36437.rusty@rustcorp.com.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
-Cc: gregkh@suse.de, kaos@sgi.com, Stephen Rothwell <sfr@au1.ibm.com>, rolandd@cisco.com, "Brian S. Julin" <bri@calyx.com>, Martin Diehl <info@mdiehl.de>, mokuno@sm.sony.co.jp, aacraid@adaptec.com, mfasheh@suse.com, wim@iguana.be, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>kaos@sgi.comStephen Rothwell <sfr@au1.ibm.com>rolandd@cisco.com"Brian S. Julin" <bri@calyx.com>Martin Diehl <info@mdiehl.de>mokuno@sm.sony.co.jpaacraid@adaptec.commfasheh@suse.comwim@iguana.bexfs@oss.sgi.comreiserfs-devel@vger.kernel.orgMatthew Wilcox <willy@linux.intel.com>kaos@sgi.comStephen Rothwell <sfr@au1.ibm.com>rolandd@cisco.com"Brian S. Julin" <bri@calyx.com>Martin Diehl <info@mdiehl.de>mokuno@sm.sony.co.jpaacraid@adaptec.commfasheh@suse.comwim@iguana.bexfs@oss.sgi.comreiserfs-devel@vger.kernel.orgMatthew Wilcox <willy@linux.intel.com>
+Cc: gregkh@suse.de, kaos@sgi.com, Stephen Rothwell <sfr@au1.ibm.com>, rolandd@cisco.com, "Brian S. Julin" <bri@calyx.com>, Martin Diehl <info@mdiehl.de>, mokuno@sm.sony.co.jp, aacraid@adaptec.com, mfasheh@suse.com, wim@iguana.be, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>kaos@sgi.comStephen Rothwell <sfr@au1.ibm.com>rolandd@cisco.com"Brian S. Julin" <bri@calyx.com>Martin Diehl <info@mdiehl.de>mokuno@sm.sony.co.jpaacraid@adaptec.commfasheh@suse.comwim@iguana.bexfs@oss.sgi.comreiserfs-devel@vger.kernel.orgMatthew Wilcox <willy@linux.intel.com>
+
 
 down_trylock() returns 1 on failure, 0 on success.  This differs from
 spin_trylock(), mutex_trylock() and common sense.  Or as ocfs2 put it
