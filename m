@@ -1,49 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 May 2008 06:07:37 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m45D7EWP005275
-	for <xfs@oss.sgi.com>; Mon, 5 May 2008 06:07:18 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C95A278D567
-	for <xfs@oss.sgi.com>; Mon,  5 May 2008 06:07:57 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id xQuBHq13UJhEQDJJ for <xfs@oss.sgi.com>; Mon, 05 May 2008 06:07:57 -0700 (PDT)
-Message-ID: <481F06AA.4060301@sandeen.net>
-Date: Mon, 05 May 2008 08:07:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 05 May 2008 11:30:59 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m45IUdMd014920
+	for <xfs@oss.sgi.com>; Mon, 5 May 2008 11:30:42 -0700
+Date: Mon, 5 May 2008 14:31:22 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: review: xfstests/016 change
+Message-ID: <20080505183122.GA11163@infradead.org>
+References: <481E7F17.5090601@sgi.com> <20080505055446.GB15609@infradead.org> <481EA70A.2030500@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
-References: <47DB4181.7040603@sandeen.net> <480E89B5.8070006@sandeen.net> <481B7FD1.3030107@sandeen.net> <20080505070847.GH155679365@sgi.com>
-In-Reply-To: <20080505070847.GH155679365@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <481EA70A.2030500@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
-> On Fri, May 02, 2008 at 03:55:45PM -0500, Eric Sandeen wrote:
->> Eric Sandeen wrote:
->>> Eric Sandeen wrote:
->>>> This should fix the longstanding issues with xfs and old ABI
->>>> arm boxes, which lead to various asserts and xfs shutdowns,
->>>> and for which an (incorrect) patch has been floating around
->>>> for years.  (Said patch made ARM internally consistent, but
->>>> altered the normal xfs on-disk format such that it looked
->>>> corrupted on other architectures):
->>>> http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
->>> ping again...
->> ping #3...
-> 
-> <sigh>
-> 
-> Looks like if I don't pick it up then nobody is going to answer.
-> I'll run it through my ia64 and x86_64 test boxes and if it's ok
-> then I'll commit it.
-> 
-> Did you ever send an equivalent userspace patch?
+On Mon, May 05, 2008 at 04:19:54PM +1000, Timothy Shimmin wrote:
+> Groan. Sorry.
+> I'll attach 016.patch for the moment.
+>
+> Need to see where things went wrong with the whitespace.
 
-I did ... I can resend too.
+Still fails for me with that patch applied:
 
--Eric
+016 43s ...
+ - output mismatch (see 016.out.bad)
+13a14,17
+> *** generate log traffic
+>    *** mount
+>    *** fiddle
+>    *** unmount
+Failures: 016
+Failed 1 of 1 tests
