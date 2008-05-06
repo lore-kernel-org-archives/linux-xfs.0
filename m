@@ -1,42 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 May 2008 02:27:20 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m469R0jj025852
-	for <xfs@oss.sgi.com>; Tue, 6 May 2008 02:27:04 -0700
-Received: from bay0-omc1-s30.bay0.hotmail.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCC1B1418A
-	for <xfs@oss.sgi.com>; Tue,  6 May 2008 02:27:46 -0700 (PDT)
-Received: from bay0-omc1-s30.bay0.hotmail.com (bay0-omc1-s30.bay0.hotmail.com [65.54.246.102]) by cuda.sgi.com with ESMTP id YROHSlfGJwAsGt6m for <xfs@oss.sgi.com>; Tue, 06 May 2008 02:27:46 -0700 (PDT)
-Message-ID: <BAY103-DAV78BE1E59193F0C8852503B2D60@phx.gbl>
-From: "Marco Berizzi" <pupilla@hotmail.com>
-References: <BAY103-DAV7CF38DF784B82EC3F2CFAB2D70@phx.gbl> <20080505231754.GL155679365@sgi.com> <BAY103-DAV584F4B005A4F9B7B5E19CB2D60@phx.gbl> <20080506085632.GT155679365@sgi.com>
-Subject: Re: XFS shutdown in xfs_iunlink_remove() (was Re: 2.6.25: swapper: page allocation failure. order:3, mode:0x4020)
-Date: Tue, 6 May 2008 11:25:21 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 06 May 2008 06:43:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m46DhEtc014925
+	for <xfs@oss.sgi.com>; Tue, 6 May 2008 06:43:16 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE5EB131933
+	for <xfs@oss.sgi.com>; Tue,  6 May 2008 06:43:58 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id jHavppCDootS9Vj0 for <xfs@oss.sgi.com>; Tue, 06 May 2008 06:43:58 -0700 (PDT)
+Message-ID: <4820609C.9090306@sandeen.net>
+Date: Tue, 06 May 2008 08:43:56 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix dir2 shortform structures on ARM old ABI
+References: <47DB4181.7040603@sandeen.net> <480E89B5.8070006@sandeen.net> <481B7FD1.3030107@sandeen.net> <20080505070847.GH155679365@sgi.com> <481FDCD1.2010905@sgi.com>
+In-Reply-To: <481FDCD1.2010905@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: David Chinner <dgc@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-David Chinner wrote:
+Timothy Shimmin wrote:
+> David Chinner wrote:
+>> On Fri, May 02, 2008 at 03:55:45PM -0500, Eric Sandeen wrote:
+>>> Eric Sandeen wrote:
+>>>> Eric Sandeen wrote:
+>>>>> This should fix the longstanding issues with xfs and old ABI
+>>>>> arm boxes, which lead to various asserts and xfs shutdowns,
+>>>>> and for which an (incorrect) patch has been floating around
+>>>>> for years.  (Said patch made ARM internally consistent, but
+>>>>> altered the normal xfs on-disk format such that it looked
+>>>>> corrupted on other architectures):
+>>>>> http://lists.arm.linux.org.uk/lurker/message/20040311.002034.5ecf21a2.html
+>>>> ping again...
+>>> ping #3...
+>> <sigh>
+>>
+>> Looks like if I don't pick it up then nobody is going to answer.
+>> I'll run it through my ia64 and x86_64 test boxes and if it's ok
+>> then I'll commit it.
+>>
+> As it only defines __arch_pack for __arm__,
+> I literally can't see how on earth it won't pass for ia64 and x86-64,
+> though I realise (I guess) we need to test to be sure :)
+> 
+> So Eric tested this on qemu-arm with success.
+> And there was a little debate over whether ARM-EABI would work
+> currently in XFS, 
+> with Luca Olivetti saying in one kernel he has success and in another
+> he doesn't. And Andre Draszik saying that for ARM-EABI it wouldn't
+> work.
 
-> Hmmmmm - interesting. Both the reports of this problem are from
-> machines running as squid proxies. Are you using AUFS for the cache?
+The patch should only affect behavior on *old* abi:
 
-no, I'm using cache_dir ufs with cache_replacement_policy heap LFUDA
++#if defined(__arm__) && !defined(__ARM_EABI__)
 
-> You've run repair, there's not much I can look at now.
->
-> As a suggestion, when the cache gets close to full next time, can
-> you take a metadump of the filesystem (obfuscates names and contains
-> no data) and then trigger the cache cleanup function? If the
-> filesystem falls over, I'd be very interested in getting a copy of
-> hte metadump image and trying to reproduce the problem locally.
-> (BTW, you'll need a newer xfsprogs to get xfs_metadump).
+it is the only one with the unique alignment that matters here.
 
-could you please tell me the exact command to run
-when this happen again?
+There *is* still another issue on some arm chips related to processor
+cache flushing; I didn't see the problem in qemu because it the emulator
+does not have this behavior.
 
-> Still, thank you for the information
+But, it's a separate issue from the structure alignment this patch
+addresses.
 
-no problem: 2.6.25 is a bit unlucky for me :-((
+One thing at a time. :)
+
+Thanks,
+
+-Eric
+
+> That aside, Eric has tried out on ARM without EABI (old ABI) and has had success,
+> so it is at least useful for this case.
+> I don't see us doing any arm testing for this ourselves :)
+> 
+> --Tim
+> 
