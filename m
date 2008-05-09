@@ -1,30 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 May 2008 18:14:24 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 08 May 2008 18:16:12 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m491E3gL007037
-	for <xfs@oss.sgi.com>; Thu, 8 May 2008 18:14:06 -0700
-Subject: PARTIAL TAKE 981498 - Remove unused kmem_free() args from XFS DMAPI code.
-Message-Id: <20080509011445.ABF3D58C4C15@chook.melbourne.sgi.com>
-Date: Fri,  9 May 2008 11:14:45 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m491G0p4007308
+	for <xfs@oss.sgi.com>; Thu, 8 May 2008 18:16:03 -0700
+Subject: TAKE 981361 - xfstests/016
+Message-Id: <20080509011646.5424558C4C15@chook.melbourne.sgi.com>
+Date: Fri,  9 May 2008 11:16:46 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, xfs-bugs-internal@sgi.com
 
-Remove unused kmem_free() args from XFS DMAPI code.
+Sample the log traffic to work out its data rate so that we
+have a better idea of predicting when it will get to the end
+of the log. This way we can handle a change in log traffic in
+the future. A test to keep an eye on log traffic is more of
+a performance test than should be done elsewhere.
 
+--Tim
 
-Date:  Fri May  9 11:14:19 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  dgc@sgi.com
+Date:  Fri May  9 11:15:14 AEST 2008
+Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
+Inspected by:  xaiki@sgi.com
 
 The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:31054a
-fs/xfs/dmapi/xfs_dm.c - 1.72 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.72&r2=text&tr2=1.71&f=h
-	- remove unused kmem_free() arg.
+Modid:  master-melb:xfs-cmds:31053a
+xfstests/016 - 1.21 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/016.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
+xfstests/016.out - 1.2 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/016.out.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
+	- Sample the log traffic to work out its data rate so that we
+	  have a better idea of predicting when it will get to the end
+	  of the log. This way we can handle a change in log traffic in
+	  the future.
