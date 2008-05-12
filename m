@@ -1,63 +1,104 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 09:48:51 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 15:55:11 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4CGmea2028353
-	for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:48:43 -0700
-Received: from kernel.dk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9010158A65
-	for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:49:26 -0700 (PDT)
-Received: from kernel.dk (brick.kernel.dk [87.55.233.238]) by cuda.sgi.com with ESMTP id 4l4q7iT5FnCTwXCo for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:49:26 -0700 (PDT)
-Date: Mon, 12 May 2008 18:49:20 +0200
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: XFS/md/blkdev warning (was Re: Linux 2.6.26-rc2)
-Message-ID: <20080512164920.GE16217@kernel.dk>
-References: <alpine.LFD.1.10.0805120731480.3188@woody.linux-foundation.org> <200805121726.15576.alistair@devzero.co.uk> <alpine.LFD.1.10.0805120933310.3019@woody.linux-foundation.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4CMsfVF023432
+	for <xfs@oss.sgi.com>; Mon, 12 May 2008 15:54:47 -0700
+Received: from ns.unixsol.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0ACD157D2F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2008 15:55:25 -0700 (PDT)
+Received: from ns.unixsol.org ([193.110.159.2]) by cuda.sgi.com with ESMTP id DAGNpR1I6NkPV6HW for <xfs@oss.sgi.com>; Mon, 12 May 2008 15:55:25 -0700 (PDT)
+Message-ID: <4828CAC6.3090402@unixsol.org>
+Date: Tue, 13 May 2008 01:55:02 +0300
+From: Georgi Chorbadzhiyski <gf@unixsol.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.1.10.0805120933310.3019@woody.linux-foundation.org>
+Subject: Unneeded kernel threads (xfs, jfs, gfs2)
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alistair John Strachan <alistair@devzero.co.uk>, xfs@oss.sgi.com, Neil Brown <neilb@suse.de>, Nick Piggin <npiggin@suse.de>
+To: xfs@oss.sgi.com, jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, May 12 2008, Linus Torvalds wrote:
-> 
-> 
-> On Mon, 12 May 2008, Alistair John Strachan wrote:
-> >
-> > I've been getting this since -rc1. It's still present in -rc2, so I thought 
-> > I'd bug some people. Everything seems to be working fine.
-> 
-> Hmm. The problem is that blk_remove_plug() does a non-atomic 
-> 
-> 	queue_flag_clear(QUEUE_FLAG_PLUGGED, q);
-> 
-> without holding the queue lock.
-> 
-> Now, sometimes that's ok, because of higher-level locking on the same 
-> queue, so there is no possibility of any races.
-> 
-> And yes, this comes through the raid5 layer, and yes, the raid layer holds 
-> the 'device_lock' on the raid5_conf_t, so it's all safe from other 
-> accesses by that raid5 configuration, but I wonder if at least in theory 
-> somebody could access that same device directly.
-> 
-> So I do suspect that this whole situation with md needs to be resolved 
-> some way. Either the queue is already safe (because of md layer locking), 
-> and in that case maybe the queue lock should be changed to point to that 
-> md layer lock (or that sanity test simply needs to be removed). Or the 
-> queue is unsafe (because non-md users can find it too), and we need to fix 
-> the locking.
-> 
-> Alternatively, we may just need to totally revert the thing that made the 
-> bit operations non-atomic and depend on the locking. This was introduced 
-> by Nick in commit 75ad23bc0fcb4f992a5d06982bf0857ab1738e9e ("block: make 
-> queue flags non-atomic"), and maybe it simply isn't viable.
+Hi guys, I know that not all kernel thread users are converted to
+start only when needed but the following is little annoying specially
+when I'm not even using jfs, xfs and gfs2.
 
-There's been a proposed patch for at least a week, so Neil just needs to
-send it in...
+Look at the ps output from a standard distro 2.6.24.5 kernel after a
+fresh boot:
+
+>   PID TTY      STAT   TIME COMMAND
+>     2 ?        S<     0:00 [kthreadd]
+>     3 ?        S<     0:00  \_ [migration/0]
+>     4 ?        S<     0:00  \_ [ksoftirqd/0]
+>     5 ?        S<     0:00  \_ [migration/1]
+>     6 ?        S<     0:00  \_ [ksoftirqd/1]
+>     7 ?        S<     0:00  \_ [events/0]
+>     8 ?        S<     0:00  \_ [events/1]
+>     9 ?        S<     0:00  \_ [khelper]
+>   102 ?        S<     0:00  \_ [kblockd/0]
+>   103 ?        S<     0:00  \_ [kblockd/1]
+>   106 ?        S<     0:00  \_ [kacpid]
+>   107 ?        S<     0:00  \_ [kacpi_notify]
+>   230 ?        S<     0:00  \_ [ata/0]
+>   231 ?        S<     0:00  \_ [ata/1]
+>   232 ?        S<     0:00  \_ [ata_aux]
+>   233 ?        S<     0:00  \_ [ksuspend_usbd]
+>   239 ?        S<     0:00  \_ [khubd]
+>   242 ?        S<     0:00  \_ [kseriod]
+>   284 ?        S      0:00  \_ [pdflush]
+>   285 ?        S      0:00  \_ [pdflush]
+>   286 ?        S<     0:00  \_ [kswapd0]
+>   326 ?        S<     0:00  \_ [aio/0]
+>   327 ?        S<     0:00  \_ [aio/1]
+>   349 ?        S<     0:00  \_ [jfsIO]
+>   350 ?        S<     0:00  \_ [jfsCommit]
+>   351 ?        S<     0:00  \_ [jfsCommit]
+>   352 ?        S<     0:00  \_ [jfsSync]
+
+Not needed here, because no jfs partition is in use.
+
+>   354 ?        S<     0:00  \_ [xfslogd/0]
+>   355 ?        S<     0:00  \_ [xfslogd/1]
+>   356 ?        S<     0:00  \_ [xfsdatad/0]
+>   357 ?        S<     0:00  \_ [xfsdatad/1]
+>   361 ?        S<     0:00  \_ [xfs_mru_cache]
+
+Not needed here, because no xfs partition is in use.
+
+>   366 ?        S<     0:00  \_ [gfs2_scand]
+>   367 ?        S<     0:00  \_ [glock_workqueue]
+>   368 ?        S<     0:00  \_ [glock_workqueue]
+
+I dont use gfs2
+
+>  1047 ?        S<     0:00  \_ [scsi_tgtd/0]
+>  1048 ?        S<     0:00  \_ [scsi_tgtd/1]
+>  1118 ?        S<     0:00  \_ [scsi_eh_2]
+>  1120 ?        S<     0:00  \_ [scsi_eh_3]
+>  1122 ?        S<     0:00  \_ [scsi_eh_4]
+>  1124 ?        S<     0:00  \_ [scsi_eh_5]
+>  1133 ?        S<     0:00  \_ [exec-osm/0]
+>  1134 ?        S<     0:00  \_ [exec-osm/1]
+>  1140 ?        S<     0:00  \_ [block-osm/0]
+>  1141 ?        S<     0:00  \_ [block-osm/1]
+
+What is osm? Can't find anything in kernel config?
+
+>  1148 ?        S<     0:00  \_ [khpsbpkt]
+
+What is this?
+
+>  1193 ?        S<     0:00  \_ [ksnapd]
+>  1201 ?        S<     0:00  \_ [rpciod/0]
+>  1202 ?        S<     0:00  \_ [rpciod/1]
+>  1204 ?        S<     0:00  \_ [kjournald]
+>  2448 ?        S<     0:00  \_ [kjournald]
+>  2649 ?        S      0:00  \_ [lockd]
+
+Kernel config can be found here:
+  http://mirrors.unixsol.org/slackware/slackware-12.1/kernels/hugesmp.s/config
 
 -- 
-Jens Axboe
+Georgi Chorbadzhiyski
+http://georgi.unixsol.org/
