@@ -1,116 +1,98 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 04:01:27 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4CB10If027379
-	for <xfs@oss.sgi.com>; Mon, 12 May 2008 04:01:02 -0700
-Date: Mon, 12 May 2008 21:01:34 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: [patch] xfsqa 008 takes too long on UML...
-Message-ID: <20080512110134.GH155679365@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 09:25:59 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4CGPYiC026466
+	for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:25:37 -0700
+Received: from smtp1.betherenow.co.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id F21E61143646
+	for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:26:20 -0700 (PDT)
+Received: from smtp1.betherenow.co.uk (smtp1.betherenow.co.uk [87.194.0.68]) by cuda.sgi.com with SMTP id f9YCFAtGED5IXuAg for <xfs@oss.sgi.com>; Mon, 12 May 2008 09:26:20 -0700 (PDT)
+From: Alistair John Strachan <alistair@devzero.co.uk>
+Subject: XFS/md/blkdev warning (was Re: Linux 2.6.26-rc2)
+Date: Mon, 12 May 2008 17:26:15 +0100
+References: <alpine.LFD.1.10.0805120731480.3188@woody.linux-foundation.org>
+In-Reply-To: <alpine.LFD.1.10.0805120731480.3188@woody.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Message-Id: <200805121726.15576.alistair@devzero.co.uk>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: xfs@oss.sgi.com, Jens Axboe <jens.axboe@oracle.com>, neilb@suse.de
 
-With the recent change for reliability with 64k page size
-made to test 008,the file sizes got much larger. It appears
-that randholes actually reads the entire file, so this has
-slowed the test down by a factor of ten (all file sizes
-were increased by 10x). This means the test is now taking
-about 18 minutes to run on a UML session, and all the time
-is spent reading the files.
+I've been getting this since -rc1. It's still present in -rc2, so I thought 
+I'd bug some people. Everything seems to be working fine.
 
-Instead, scale the file size based on the page size. We know
-how many holes we are trying to produce and the I/O size
-being used to produce them, so the size of the files can be
-finely tuned. Assuming a decent random distribution, if the
-number of blocks in the file is 4x the page size and the
-I/O size is page sized, this means that every I/O should
-generate a new hole and we'll only get a small amount of
-adjacent extents. This has passed over 10 times on ia64
-w/ 64k page and another 15 times on UML with 4k page.
+I'm not sure who's to blame here so I've added a few people to CC; if I've 
+done so in error, sorry for the noise.
 
-UML runtime is down from ~1000s to 5s, ia64 runtime is down from
-~30s to 7s.
+The taint is from loading a custom (fixed) DSDT which I've been doing for 
+ages, and which shouldn't affect this trace.
 
-Cheers,
+XFS: correcting sb_features alignment problem
+XFS mounting filesystem md1
+------------[ cut here ]------------
+WARNING: at include/linux/blkdev.h:443 blk_remove_plug+0x60/0x88()
+Modules linked in:
+Pid: 1, comm: swapper Tainted: G       A  2.6.26-rc2-damocles #2
 
-Dave.
+Call Trace:
+ [<ffffffff802305be>] warn_on_slowpath+0x58/0x82
+ [<ffffffff80250038>] ? find_symbol+0x21e/0x236
+ [<ffffffff8025d617>] ? __rmqueue+0x1f/0x1c1
+ [<ffffffff8032c02f>] blk_remove_plug+0x60/0x88
+ [<ffffffff803eb3ea>] raid5_unplug_device+0x31/0xe6
+ [<ffffffff803eb6ba>] get_active_stripe+0x21b/0x4c0
+ [<ffffffff802265b3>] ? __wake_up+0x43/0x50
+ [<ffffffff80226a66>] ? default_wake_function+0x0/0xf
+ [<ffffffff803f14e7>] make_request+0x4d7/0x675
+ [<ffffffff8025bc02>] ? mempool_alloc_slab+0x11/0x13
+ [<ffffffff802429b2>] ? autoremove_wake_function+0x0/0x38
+ [<ffffffff8025bc02>] ? mempool_alloc_slab+0x11/0x13
+ [<ffffffff8032b793>] generic_make_request+0x1ec/0x227
+ [<ffffffff8025eb5b>] ? __get_free_pages+0x15/0x54
+ [<ffffffff8032cd19>] submit_bio+0x112/0x11b
+ [<ffffffff8031bb6f>] _xfs_buf_ioapply+0x1eb/0x216
+ [<ffffffff8031bbd8>] xfs_buf_iorequest+0x3e/0x65
+ [<ffffffff8031f33f>] xfs_bdstrat_cb+0x19/0x3b
+ [<ffffffff803181bd>] xfs_bwrite+0x5f/0xc0
+ [<ffffffff8030818c>] xlog_bwrite+0x81/0xac
+ [<ffffffff80308f29>] xlog_write_log_records+0x1eb/0x228
+ [<ffffffff803090a0>] xlog_clear_stale_blocks+0x13a/0x147
+ [<ffffffff80309a77>] xlog_find_tail+0x33f/0x3a5
+ [<ffffffff8030b221>] xlog_recover+0x19/0x88
+ [<ffffffff8030533c>] xfs_log_mount+0xb9/0x10d
+ [<ffffffff8030d563>] xfs_mountfs+0x252/0x5a2
+ [<ffffffff8031886f>] ? kmem_zalloc+0x11/0x2c
+ [<ffffffff8030df35>] ? xfs_mru_cache_create+0x119/0x166
+ [<ffffffff80313693>] xfs_mount+0x2a1/0x352
+ [<ffffffff80321ca6>] xfs_fs_fill_super+0xc3/0x1f9
+ [<ffffffff8027fc1f>] get_sb_bdev+0xfe/0x14d
+ [<ffffffff80321be3>] ? xfs_fs_fill_super+0x0/0x1f9
+ [<ffffffff8032035a>] xfs_fs_get_sb+0x13/0x15
+ [<ffffffff8027f9e2>] vfs_kern_mount+0x52/0x99
+ [<ffffffff8027fa86>] do_kern_mount+0x47/0xe2
+ [<ffffffff80294d44>] do_new_mount+0x5f/0x92
+ [<ffffffff80294f26>] do_mount+0x1af/0x1de
+ [<ffffffff8025eb44>] ? __alloc_pages+0xb/0xd
+ [<ffffffff80294fde>] sys_mount+0x89/0xd5
+ [<ffffffff805cdcdd>] mount_block_root+0xda/0x263
+ [<ffffffff805cdebc>] mount_root+0x56/0x5a
+ [<ffffffff805cdfdd>] prepare_namespace+0x11d/0x14a
+ [<ffffffff805cd845>] kernel_init+0x251/0x267
+ [<ffffffff8020c128>] child_rip+0xa/0x12
+ [<ffffffff805cd5f4>] ? kernel_init+0x0/0x267
+ [<ffffffff8020c11e>] ? child_rip+0x0/0x12
+
+---[ end trace 693a3c7fd0010c41 ]---
+Ending clean XFS mount for filesystem: md1
+
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Cheers,
+Alistair.
 
----
- xfstests/008     |   13 +++++++------
- xfstests/008.out |   10 +++++-----
- 2 files changed, 12 insertions(+), 11 deletions(-)
-
-Index: xfs-cmds/xfstests/008
-===================================================================
---- xfs-cmds.orig/xfstests/008	2008-04-28 15:57:02.000000000 +1000
-+++ xfs-cmds/xfstests/008	2008-05-12 20:43:11.946325031 +1000
-@@ -28,7 +28,8 @@ _cleanup()
- 
- _filter()
- {
--    sed -e "s/-b $pgsize/-b PGSIZE/g"
-+    sed -e "s/-b $pgsize/-b PGSIZE/g" \
-+	-e "s/-l .* -c/-l FSIZE -c/g"
- }
- 
- # get standard environment, filters and checks
-@@ -79,13 +80,13 @@ _setup_testdir
- 
- rm -f $here/$seq.out.full
- 
--_do_test 1 50 "-l 50000000 -c 50 -b $pgsize"
--_do_test 2 100 "-l 100000000 -c 100 -b $pgsize"
--_do_test 3 100 "-l 100000000 -c 100 -b 512"   # test partial pages
-+_do_test 1 50 "-l `expr 200 \* $pgsize` -c 50 -b $pgsize"
-+_do_test 2 100 "-l `expr 400 \* $pgsize` -c 100 -b $pgsize"
-+_do_test 3 100 "-l `expr 400 \* $pgsize` -c 100 -b 512"   # test partial pages
- 
- # rinse, lather, repeat for direct IO
--_do_test 4 50 "-d -l 50000000 -c 50 -b $pgsize"
--_do_test 5 100 "-d -l 100000000 -c 100 -b $pgsize"
-+_do_test 4 50 "-d -l `expr 200 \* $pgsize` -c 50 -b $pgsize"
-+_do_test 5 100 "-d -l `expr 400 \* $pgsize` -c 100 -b $pgsize"
- # note: direct IO requires page aligned IO
- 
- # todo: realtime.
-Index: xfs-cmds/xfstests/008.out
-===================================================================
---- xfs-cmds.orig/xfstests/008.out	2008-04-28 15:57:02.000000000 +1000
-+++ xfs-cmds/xfstests/008.out	2008-05-12 20:41:12.053827580 +1000
-@@ -1,21 +1,21 @@
- QA output created by 008
- 
--randholes.1 : -l 50000000 -c 50 -b PGSIZE
-+randholes.1 : -l FSIZE -c 50 -b PGSIZE
- ------------------------------------------
- holes is in range
- 
--randholes.2 : -l 100000000 -c 100 -b PGSIZE
-+randholes.2 : -l FSIZE -c 100 -b PGSIZE
- ------------------------------------------
- holes is in range
- 
--randholes.3 : -l 100000000 -c 100 -b 512
-+randholes.3 : -l FSIZE -c 100 -b 512
- ------------------------------------------
- holes is in range
- 
--randholes.4 : -d -l 50000000 -c 50 -b PGSIZE
-+randholes.4 : -d -l FSIZE -c 50 -b PGSIZE
- ------------------------------------------
- holes is in range
- 
--randholes.5 : -d -l 100000000 -c 100 -b PGSIZE
-+randholes.5 : -d -l FSIZE -c 100 -b PGSIZE
- ------------------------------------------
- holes is in range
+137/1 Warrender Park Road, Edinburgh, UK.
