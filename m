@@ -1,34 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 18:29:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 12 May 2008 22:29:24 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4D1Stp9005690
-	for <xfs@oss.sgi.com>; Mon, 12 May 2008 18:28:58 -0700
-Subject: TAKE 980705 - xfsqa 17[5-7] - fix "unmount" typo
-Message-Id: <20080513012938.45EE158C4C29@chook.melbourne.sgi.com>
-Date: Tue, 13 May 2008 11:29:38 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4D5Sxdl022830
+	for <xfs@oss.sgi.com>; Mon, 12 May 2008 22:29:03 -0700
+Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id PAA11667; Tue, 13 May 2008 15:29:38 +1000
+Message-ID: <48292742.8090409@sgi.com>
+Date: Tue, 13 May 2008 15:29:38 +1000
+From: Donald Douwsma <donaldd@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Unneeded kernel threads (xfs, jfs, gfs2)
+References: <4828CAC6.3090402@unixsol.org>
+In-Reply-To: <4828CAC6.3090402@unixsol.org>
+Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Georgi Chorbadzhiyski <gf@unixsol.org>
+Cc: xfs@oss.sgi.com, jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Fix silly "unmount" typo in dmapi test.
+Georgi Chorbadzhiyski wrote:
+> Hi guys, I know that not all kernel thread users are converted to
+> start only when needed but the following is little annoying specially
+> when I'm not even using jfs, xfs and gfs2.
+> 
+> Look at the ps output from a standard distro 2.6.24.5 kernel after a
+> fresh boot:
+...
 
+> 
+> Kernel config can be found here:
+>   http://mirrors.unixsol.org/slackware/slackware-12.1/kernels/hugesmp.s/config
+> 
 
-Date:  Tue May 13 11:29:01 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/xfs-cmds
-Inspected by:  bnaujok@sgi.com
+Your distro is building all of these modules into the kernel.
+	CONFIG_XFS_FS=y
+	CONFIG_JFS_FS=y
+	CONFIG_GFS2_FS=y
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+This isnt exactly standard practice, normally they'd be set to =m and only
+used if required to mount a filesystem. You may want to ask the slackware
+people why they chose to do this for their hugexxx.s kernels.
 
-
-Modid:  master-melb:xfs-cmds:31069a
-xfstests/177 - 1.4 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/177.diff?r1=text&tr1=1.4&r2=text&tr2=1.3&f=h
-xfstests/175 - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/175.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-xfstests/176 - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/176.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-	- Fix silly "unmount" typo in dmapi test.
+Don
