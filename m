@@ -1,614 +1,641 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 May 2008 01:01:36 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 May 2008 01:01:47 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4D816La006482
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4D816cf006484
 	for <xfs@oss.sgi.com>; Tue, 13 May 2008 01:01:09 -0700
-Message-Id: <20080513080152.312488863@chook.melbourne.sgi.com>
+Message-Id: <20080513080152.598022276@chook.melbourne.sgi.com>
 References: <20080513075749.477238845@chook.melbourne.sgi.com>
-Date: Tue, 13 May 2008 17:57:50 +1000
+Date: Tue, 13 May 2008 17:57:51 +1000
 From: Barry Naujok <bnaujok@sgi.com>
-Subject: [PATCH 1/4] XFS: Name operation vector for hash and compare
-Content-Disposition: inline; filename=nameops.patch
+Subject: [PATCH 2/4] XFS: add op_flags field and helpers to xfs_da_args
+Content-Disposition: inline; filename=additional_da_args_flag.patch
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org
 
-Adds two pieces of functionality for the basis of case-insensitive
-support in XFS:
+The end of the xfs_da_args structure has 4 unsigned char fields for 
+true/false information on directory and attr operations using the
+xfs_da_args structure.
 
-1.  A comparison result enumerated type: xfs_dacmp. It represents an
-    exact match, case-insensitive match or no match at all. This patch
-    only implements different and exact results.
+The following converts these 4 into a op_flags field that uses the
+first 4 bits for these fields and allows expansion for future 
+operation information (eg. case-insensitive lookup request).
 
-2.  xfs_nameops vector for specifying how to perform the hash generation
-    of filenames and comparision methods. In this patch the hash vector
-    points to the existing xfs_da_hashname function and the comparison
-    method does a length compare, and if the same, does a memcmp and
-    return the xfs_dacmp result.
-
-All filename functions that use the hash (create, lookup remove, rename,
-etc) now use the xfs_nameops.hashname function and all directory lookup
-functions also use the xfs_nameops.compname function.
-
-The lookup functions also handle case-insensitive results even though
-the default comparison function cannot return that. And important
-aspect of the lookup functions is that an exact match always has
-precedence over a case-insensitive. So while a case-insensitive match
-is found, we have to keep looking just in case there is an exact
-match. In the meantime, the info for the first case-insensitive match
-is retained if no exact match is found.
+There is also a bit of EOL whitespace cleanup too.
 
 Signed-off-by: Barry Naujok <bnaujok@sgi.com>
 
 ---
- fs/xfs/xfs_da_btree.c   |   22 +++++++++++++++++
- fs/xfs/xfs_da_btree.h   |   22 +++++++++++++++++
- fs/xfs/xfs_dir2.c       |   12 +++++----
- fs/xfs/xfs_dir2_block.c |   33 ++++++++++++++++++-------
- fs/xfs/xfs_dir2_data.c  |    5 +++
- fs/xfs/xfs_dir2_leaf.c  |   60 +++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_dir2_node.c  |   25 +++++++++++--------
- fs/xfs/xfs_dir2_sf.c    |   62 +++++++++++++++++++++++++++---------------------
- fs/xfs/xfs_mount.h      |    2 +
- 9 files changed, 175 insertions(+), 68 deletions(-)
+ fs/xfs/xfs_attr.c       |   11 ++++------
+ fs/xfs/xfs_attr_leaf.c  |   52 ++++++++++++++++++++++++------------------------
+ fs/xfs/xfs_da_btree.c   |    2 -
+ fs/xfs/xfs_da_btree.h   |   33 ++++++++++++++++++++++++++----
+ fs/xfs/xfs_dir2.c       |   12 +++++------
+ fs/xfs/xfs_dir2_block.c |   10 ++++-----
+ fs/xfs/xfs_dir2_leaf.c  |    6 ++---
+ fs/xfs/xfs_dir2_node.c  |   15 +++++++------
+ fs/xfs/xfs_dir2_sf.c    |    8 +++----
+ fs/xfs/xfs_dir2_trace.c |   19 +++++++++--------
+ fs/xfs/xfsidbg.c        |   13 ++++++------
+ 11 files changed, 105 insertions(+), 76 deletions(-)
 
+Index: kern_ci/fs/xfs/xfs_attr.c
+===================================================================
+--- kern_ci.orig/fs/xfs/xfs_attr.c
++++ kern_ci/fs/xfs/xfs_attr.c
+@@ -241,8 +241,7 @@ xfs_attr_set_int(xfs_inode_t *dp, struct
+ 	args.firstblock = &firstblock;
+ 	args.flist = &flist;
+ 	args.whichfork = XFS_ATTR_FORK;
+-	args.addname = 1;
+-	args.oknoent = 1;
++	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+ 
+ 	/*
+ 	 * Determine space new attribute will use, and if it would be
+@@ -974,7 +973,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *arg
+ 			xfs_da_brelse(args->trans, bp);
+ 			return(retval);
+ 		}
+-		args->rename = 1;			/* an atomic rename */
++		args->op_flags |= XFS_DA_OP_RENAME;	/* an atomic rename */
+ 		args->blkno2 = args->blkno;		/* set 2nd entry info*/
+ 		args->index2 = args->index;
+ 		args->rmtblkno2 = args->rmtblkno;
+@@ -1054,7 +1053,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *arg
+ 	 * so that one disappears and one appears atomically.  Then we
+ 	 * must remove the "old" attribute/value pair.
+ 	 */
+-	if (args->rename) {
++	if (xfs_da_isrename_op(args)) {
+ 		/*
+ 		 * In a separate transaction, set the incomplete flag on the
+ 		 * "old" attr and clear the incomplete flag on the "new" attr.
+@@ -1307,7 +1306,7 @@ restart:
+ 	} else if (retval == EEXIST) {
+ 		if (args->flags & ATTR_CREATE)
+ 			goto out;
+-		args->rename = 1;			/* atomic rename op */
++		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
+ 		args->blkno2 = args->blkno;		/* set 2nd entry info*/
+ 		args->index2 = args->index;
+ 		args->rmtblkno2 = args->rmtblkno;
+@@ -1425,7 +1424,7 @@ restart:
+ 	 * so that one disappears and one appears atomically.  Then we
+ 	 * must remove the "old" attribute/value pair.
+ 	 */
+-	if (args->rename) {
++	if (xfs_da_isrename_op(args)) {
+ 		/*
+ 		 * In a separate transaction, set the incomplete flag on the
+ 		 * "old" attr and clear the incomplete flag on the "new" attr.
+Index: kern_ci/fs/xfs/xfs_attr_leaf.c
+===================================================================
+--- kern_ci.orig/fs/xfs/xfs_attr_leaf.c
++++ kern_ci/fs/xfs/xfs_attr_leaf.c
+@@ -150,7 +150,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
+ 	int offset;
+ 	int minforkoff;	/* lower limit on valid forkoff locations */
+ 	int maxforkoff;	/* upper limit on valid forkoff locations */
+-	int dsize;	
++	int dsize;
+ 	xfs_mount_t *mp = dp->i_mount;
+ 
+ 	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
+@@ -171,39 +171,39 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
+ 	}
+ 
+ 	dsize = dp->i_df.if_bytes;
+-	
++
+ 	switch (dp->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		/* 
+-		 * If there is no attr fork and the data fork is extents, 
+-		 * determine if creating the default attr fork will result 
+-		 * in the extents form migrating to btree. If so, the 
+-		 * minimum offset only needs to be the space required for 
++		/*
++		 * If there is no attr fork and the data fork is extents,
++		 * determine if creating the default attr fork will result
++		 * in the extents form migrating to btree. If so, the
++		 * minimum offset only needs to be the space required for
+ 		 * the btree root.
+-		 */ 
++		 */
+ 		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes > mp->m_attroffset)
+ 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+ 		break;
+-		
++
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/*
+ 		 * If have data btree then keep forkoff if we have one,
+-		 * otherwise we are adding a new attr, so then we set 
+-		 * minforkoff to where the btree root can finish so we have 
++		 * otherwise we are adding a new attr, so then we set
++		 * minforkoff to where the btree root can finish so we have
+ 		 * plenty of room for attrs
+ 		 */
+ 		if (dp->i_d.di_forkoff) {
+-			if (offset < dp->i_d.di_forkoff) 
++			if (offset < dp->i_d.di_forkoff)
+ 				return 0;
+-			else 
++			else
+ 				return dp->i_d.di_forkoff;
+ 		} else
+ 			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
+ 		break;
+ 	}
+-	
+-	/* 
+-	 * A data fork btree root must have space for at least 
++
++	/*
++	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+ 	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+@@ -369,9 +369,10 @@ xfs_attr_shortform_remove(xfs_da_args_t 
+ 	 * Fix up the start offset of the attribute fork
+ 	 */
+ 	totsize -= size;
+-	if (totsize == sizeof(xfs_attr_sf_hdr_t) && !args->addname &&
+-	    (mp->m_flags & XFS_MOUNT_ATTR2) && 
+-	    (dp->i_d.di_format != XFS_DINODE_FMT_BTREE)) {
++	if (totsize == sizeof(xfs_attr_sf_hdr_t) &&
++				!xfs_da_isaddname_op(args) &&
++				(mp->m_flags & XFS_MOUNT_ATTR2) &&
++				(dp->i_d.di_format != XFS_DINODE_FMT_BTREE)) {
+ 		/*
+ 		 * Last attribute now removed, revert to original
+ 		 * inode format making all literal area available
+@@ -389,9 +390,10 @@ xfs_attr_shortform_remove(xfs_da_args_t 
+ 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
+ 		dp->i_d.di_forkoff = xfs_attr_shortform_bytesfit(dp, totsize);
+ 		ASSERT(dp->i_d.di_forkoff);
+-		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) || args->addname ||
+-			!(mp->m_flags & XFS_MOUNT_ATTR2) ||
+-			dp->i_d.di_format == XFS_DINODE_FMT_BTREE);
++		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) ||
++				xfs_da_isaddname_op(args) ||
++				!(mp->m_flags & XFS_MOUNT_ATTR2) ||
++				dp->i_d.di_format == XFS_DINODE_FMT_BTREE);
+ 		dp->i_afp->if_ext_max =
+ 			XFS_IFORK_ASIZE(dp) / (uint)sizeof(xfs_bmbt_rec_t);
+ 		dp->i_df.if_ext_max =
+@@ -531,7 +533,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t
+ 	nargs.total = args->total;
+ 	nargs.whichfork = XFS_ATTR_FORK;
+ 	nargs.trans = args->trans;
+-	nargs.oknoent = 1;
++	nargs.op_flags = XFS_DA_OP_OKNOENT;
+ 
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count; i++) {
+@@ -853,7 +855,7 @@ xfs_attr_leaf_to_shortform(xfs_dabuf_t *
+ 	nargs.total = args->total;
+ 	nargs.whichfork = XFS_ATTR_FORK;
+ 	nargs.trans = args->trans;
+-	nargs.oknoent = 1;
++	nargs.op_flags = XFS_DA_OP_OKNOENT;
+ 	entry = &leaf->entries[0];
+ 	for (i = 0; i < be16_to_cpu(leaf->hdr.count); entry++, i++) {
+ 		if (entry->flags & XFS_ATTR_INCOMPLETE)
+@@ -1155,7 +1157,7 @@ xfs_attr_leaf_add_work(xfs_dabuf_t *bp, 
+ 	entry->hashval = cpu_to_be32(args->hashval);
+ 	entry->flags = tmp ? XFS_ATTR_LOCAL : 0;
+ 	entry->flags |= XFS_ATTR_NSP_ARGS_TO_ONDISK(args->flags);
+-	if (args->rename) {
++	if (xfs_da_isrename_op(args)) {
+ 		entry->flags |= XFS_ATTR_INCOMPLETE;
+ 		if ((args->blkno2 == args->blkno) &&
+ 		    (args->index2 <= args->index)) {
 Index: kern_ci/fs/xfs/xfs_da_btree.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_da_btree.c
 +++ kern_ci/fs/xfs/xfs_da_btree.c
-@@ -1530,6 +1530,28 @@ xfs_da_hashname(const uchar_t *name, int
+@@ -1431,7 +1431,7 @@ xfs_da_path_shift(xfs_da_state_t *state,
  	}
- }
+ 	if (level < 0) {
+ 		*result = XFS_ERROR(ENOENT);	/* we're out of our tree */
+-		ASSERT(args->oknoent);
++		ASSERT(xfs_da_isoknoent_op(args));
+ 		return(0);
+ 	}
  
-+enum xfs_dacmp
-+xfs_da_compname(
-+	struct xfs_da_args *args,
-+	const char 	*name,
-+	int 		len)
-+{
-+	return (args->namelen == len && memcmp(args->name, name, len) == 0) ?
-+					XFS_CMP_EXACT : XFS_CMP_DIFFERENT;
-+}
-+
-+static xfs_dahash_t
-+xfs_default_hashname(
-+	struct xfs_name	*name)
-+{
-+	return xfs_da_hashname(name->name, name->len);
-+}
-+
-+const struct xfs_nameops xfs_default_nameops = {
-+	.hashname	= xfs_default_hashname,
-+	.compname	= xfs_da_compname
-+};
-+
- /*
-  * Add a block to the btree ahead of the file.
-  * Return the new block number to the caller.
 Index: kern_ci/fs/xfs/xfs_da_btree.h
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_da_btree.h
 +++ kern_ci/fs/xfs/xfs_da_btree.h
-@@ -99,6 +99,15 @@ typedef struct xfs_da_node_entry xfs_da_
-  *========================================================================*/
- 
- /*
-+ * Search comparison results
-+ */
-+enum xfs_dacmp {
-+	XFS_CMP_DIFFERENT,	/* names are completely different */
-+	XFS_CMP_EXACT,		/* names are exactly the same */
-+	XFS_CMP_CASE		/* names are same but differ in case */
-+};
-+
-+/*
-  * Structure to ease passing around component names.
-  */
- typedef struct xfs_da_args {
-@@ -127,6 +136,7 @@ typedef struct xfs_da_args {
- 	unsigned char	rename;		/* T/F: this is an atomic rename op */
- 	unsigned char	addname;	/* T/F: this is an add operation */
- 	unsigned char	oknoent;	/* T/F: ok to return ENOENT, else die */
-+	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
+@@ -132,14 +132,39 @@ typedef struct xfs_da_args {
+ 	int		index2;		/* index of 2nd attr in blk */
+ 	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
+ 	int		rmtblkcnt2;	/* remote attr value block count */
+-	unsigned char	justcheck;	/* T/F: check for ok with no space */
+-	unsigned char	rename;		/* T/F: this is an atomic rename op */
+-	unsigned char	addname;	/* T/F: this is an add operation */
+-	unsigned char	oknoent;	/* T/F: ok to return ENOENT, else die */
++	int		op_flags;	/* operation flags */
+ 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
  } xfs_da_args_t;
  
  /*
-@@ -201,6 +211,14 @@ typedef struct xfs_da_state {
- 		(uint)(XFS_DA_LOGOFF(BASE, ADDR)), \
- 		(uint)(XFS_DA_LOGOFF(BASE, ADDR)+(SIZE)-1)
- 
-+/*
-+ * Name ops for directory and/or attr name operations
++ * Operation flags:
 + */
-+struct xfs_nameops {
-+	xfs_dahash_t	(*hashname)(struct xfs_name *);
-+	enum xfs_dacmp	(*compname)(struct xfs_da_args *, const char *, int);
-+};
++#define XFS_DA_OP_JUSTCHECK	0x0001	/* check for ok with no space */
++#define XFS_DA_OP_RENAME	0x0002	/* this is an atomic rename op */
++#define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
++#define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
 +
- 
- #ifdef __KERNEL__
- /*========================================================================
-@@ -249,6 +267,10 @@ int	xfs_da_shrink_inode(xfs_da_args_t *a
- 					  xfs_dabuf_t *dead_buf);
- 
- uint xfs_da_hashname(const uchar_t *name_string, int name_length);
-+enum xfs_dacmp xfs_da_compname(struct xfs_da_args *args,
-+				const char *name, int len);
++static inline int xfs_da_isjustcheck_op(struct xfs_da_args *args)
++{
++	return args->op_flags & XFS_DA_OP_JUSTCHECK;
++}
 +
++static inline int xfs_da_isrename_op(struct xfs_da_args *args)
++{
++	return args->op_flags & XFS_DA_OP_RENAME;
++}
 +
- xfs_da_state_t *xfs_da_state_alloc(void);
- void xfs_da_state_free(xfs_da_state_t *state);
- 
++static inline int xfs_da_isaddname_op(struct xfs_da_args *args)
++{
++	return args->op_flags & XFS_DA_OP_ADDNAME;
++}
++
++static inline int xfs_da_isoknoent_op(struct xfs_da_args *args)
++{
++	return args->op_flags & XFS_DA_OP_OKNOENT;
++}
++
++/*
+  * Structure to describe buffer(s) for a block.
+  * This is needed in the directory version 2 format case, when
+  * multiple non-contiguous fsblocks might be needed to cover one
 Index: kern_ci/fs/xfs/xfs_dir2.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_dir2.c
 +++ kern_ci/fs/xfs/xfs_dir2.c
-@@ -67,6 +67,7 @@ xfs_dir_mount(
- 		(mp->m_dirblksize - (uint)sizeof(xfs_da_node_hdr_t)) /
- 		(uint)sizeof(xfs_da_node_entry_t);
- 	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
-+	mp->m_dirnameops = &xfs_default_nameops;
- }
- 
- /*
-@@ -166,7 +167,7 @@ xfs_dir_createname(
- 
- 	args.name = name->name;
- 	args.namelen = name->len;
--	args.hashval = xfs_da_hashname(name->name, name->len);
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.inumber = inum;
- 	args.dp = dp;
- 	args.firstblock = first;
-@@ -212,11 +213,12 @@ xfs_dir_lookup(
- 
- 	args.name = name->name;
- 	args.namelen = name->len;
--	args.hashval = xfs_da_hashname(name->name, name->len);
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.dp = dp;
+@@ -175,8 +175,7 @@ xfs_dir_createname(
+ 	args.total = total;
  	args.whichfork = XFS_DATA_FORK;
  	args.trans = tp;
- 	args.oknoent = 1;
-+	args.cmpresult = XFS_CMP_DIFFERENT;
+-	args.justcheck = 0;
+-	args.addname = args.oknoent = 1;
++	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
  
  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_lookup(&args);
-@@ -259,7 +261,7 @@ xfs_dir_removename(
- 
- 	args.name = name->name;
- 	args.namelen = name->len;
--	args.hashval = xfs_da_hashname(name->name, name->len);
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.inumber = ino;
- 	args.dp = dp;
- 	args.firstblock = first;
-@@ -342,7 +344,7 @@ xfs_dir_replace(
- 
- 	args.name = name->name;
- 	args.namelen = name->len;
--	args.hashval = xfs_da_hashname(name->name, name->len);
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args.inumber = inum;
- 	args.dp = dp;
- 	args.firstblock = first;
-@@ -390,7 +392,7 @@ xfs_dir_canenter(
- 
- 	args.name = name->name;
- 	args.namelen = name->len;
--	args.hashval = xfs_da_hashname(name->name, name->len);
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
+ 		rval = xfs_dir2_sf_addname(&args);
+@@ -217,7 +216,7 @@ xfs_dir_lookup(
  	args.dp = dp;
  	args.whichfork = XFS_DATA_FORK;
  	args.trans = tp;
+-	args.oknoent = 1;
++	args.op_flags = XFS_DA_OP_OKNOENT;
+ 	args.cmpresult = XFS_CMP_DIFFERENT;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+@@ -269,7 +268,7 @@ xfs_dir_removename(
+ 	args.total = total;
+ 	args.whichfork = XFS_DATA_FORK;
+ 	args.trans = tp;
+-	args.justcheck = args.addname = args.oknoent = 0;
++	args.op_flags = 0;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_removename(&args);
+@@ -352,7 +351,7 @@ xfs_dir_replace(
+ 	args.total = total;
+ 	args.whichfork = XFS_DATA_FORK;
+ 	args.trans = tp;
+-	args.justcheck = args.addname = args.oknoent = 0;
++	args.op_flags = 0;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_replace(&args);
+@@ -396,7 +395,8 @@ xfs_dir_canenter(
+ 	args.dp = dp;
+ 	args.whichfork = XFS_DATA_FORK;
+ 	args.trans = tp;
+-	args.justcheck = args.addname = args.oknoent = 1;
++	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
++							XFS_DA_OP_OKNOENT;
+ 
+ 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+ 		rval = xfs_dir2_sf_addname(&args);
 Index: kern_ci/fs/xfs/xfs_dir2_block.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_dir2_block.c
 +++ kern_ci/fs/xfs/xfs_dir2_block.c
-@@ -643,6 +643,7 @@ xfs_dir2_block_lookup_int(
- 	int			mid;		/* binary search current idx */
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	enum xfs_dacmp		cmp;		/* comparison result */
- 
- 	dp = args->dp;
- 	tp = args->trans;
-@@ -697,20 +698,31 @@ xfs_dir2_block_lookup_int(
- 		dep = (xfs_dir2_data_entry_t *)
- 			((char *)block + xfs_dir2_dataptr_to_off(mp, addr));
- 		/*
--		 * Compare, if it's right give back buffer & entry number.
-+		 * Compare name and if it's an exact match, return the index
-+		 * and buffer. If it's the first case-insensitive match, store
-+		 * the index and buffer and continue looking for an exact match.
- 		 */
--		if (dep->namelen == args->namelen &&
--		    dep->name[0] == args->name[0] &&
--		    memcmp(dep->name, args->name, args->namelen) == 0) {
-+		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
-+		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
-+			args->cmpresult = cmp;
- 			*bpp = bp;
- 			*entno = mid;
--			return 0;
-+			if (cmp == XFS_CMP_EXACT)
-+				return 0;
- 		}
--	} while (++mid < be32_to_cpu(btp->count) && be32_to_cpu(blp[mid].hashval) == hash);
-+	} while (++mid < be32_to_cpu(btp->count) &&
-+			be32_to_cpu(blp[mid].hashval) == hash);
-+
-+	ASSERT(args->oknoent);
-+	/*
-+	 * Here, we can only be doing a lookup (not a rename or replace).
-+	 * If a case-insensitive match was found earlier, return success.
-+	 */
-+	if (args->cmpresult == XFS_CMP_CASE)
-+		return 0;
+@@ -215,7 +215,7 @@ xfs_dir2_block_addname(
  	/*
- 	 * No match, release the buffer and return ENOENT.
+ 	 * If this isn't a real add, we're done with the buffer.
  	 */
+-	if (args->justcheck)
++	if (xfs_da_isjustcheck_op(args))
+ 		xfs_da_brelse(tp, bp);
+ 	/*
+ 	 * If we don't have space for the new entry & leaf ...
+@@ -225,7 +225,7 @@ xfs_dir2_block_addname(
+ 		 * Not trying to actually do anything, or don't have
+ 		 * a space reservation: return no-space.
+ 		 */
+-		if (args->justcheck || args->total == 0)
++		if (xfs_da_isjustcheck_op(args) || args->total == 0)
+ 			return XFS_ERROR(ENOSPC);
+ 		/*
+ 		 * Convert to the next larger format.
+@@ -240,7 +240,7 @@ xfs_dir2_block_addname(
+ 	/*
+ 	 * Just checking, and it would work, so say so.
+ 	 */
+-	if (args->justcheck)
++	if (xfs_da_isjustcheck_op(args))
+ 		return 0;
+ 	needlog = needscan = 0;
+ 	/*
+@@ -674,7 +674,7 @@ xfs_dir2_block_lookup_int(
+ 		else
+ 			high = mid - 1;
+ 		if (low > high) {
+-			ASSERT(args->oknoent);
++			ASSERT(xfs_da_isoknoent_op(args));
+ 			xfs_da_brelse(tp, bp);
+ 			return XFS_ERROR(ENOENT);
+ 		}
+@@ -713,7 +713,7 @@ xfs_dir2_block_lookup_int(
+ 	} while (++mid < be32_to_cpu(btp->count) &&
+ 			be32_to_cpu(blp[mid].hashval) == hash);
+ 
 -	ASSERT(args->oknoent);
- 	xfs_da_brelse(tp, bp);
- 	return XFS_ERROR(ENOENT);
- }
-@@ -1033,6 +1045,7 @@ xfs_dir2_sf_to_block(
- 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
- 	__be16			*tagp;		/* end of data entry */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_name		name;
- 
- 	xfs_dir2_trace_args("sf_to_block", args);
- 	dp = args->dp;
-@@ -1187,8 +1200,10 @@ xfs_dir2_sf_to_block(
- 		tagp = xfs_dir2_data_entry_tag_p(dep);
- 		*tagp = cpu_to_be16((char *)dep - (char *)block);
- 		xfs_dir2_data_log_entry(tp, bp, dep);
--		blp[2 + i].hashval = cpu_to_be32(xfs_da_hashname(
--					(char *)sfep->name, sfep->namelen));
-+		name.name = sfep->name;
-+		name.len = sfep->namelen;
-+		blp[2 + i].hashval = cpu_to_be32(mp->m_dirnameops->
-+							hashname(&name));
- 		blp[2 + i].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
- 						 (char *)dep - (char *)block));
- 		offset = (int)((char *)(tagp + 1) - (char *)block);
-Index: kern_ci/fs/xfs/xfs_dir2_data.c
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_dir2_data.c
-+++ kern_ci/fs/xfs/xfs_dir2_data.c
-@@ -65,6 +65,7 @@ xfs_dir2_data_check(
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	char			*p;		/* current data position */
- 	int			stale;		/* count of stale leaves */
-+	struct xfs_name		name;
- 
- 	mp = dp->i_mount;
- 	d = bp->data;
-@@ -140,7 +141,9 @@ xfs_dir2_data_check(
- 			addr = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
- 				(xfs_dir2_data_aoff_t)
- 				((char *)dep - (char *)d));
--			hash = xfs_da_hashname((char *)dep->name, dep->namelen);
-+			name.name = dep->name;
-+			name.len = dep->namelen;
-+			hash = mp->m_dirnameops->hashname(&name);
- 			for (i = 0; i < be32_to_cpu(btp->count); i++) {
- 				if (be32_to_cpu(lep[i].address) == addr &&
- 				    be32_to_cpu(lep[i].hashval) == hash)
++	ASSERT(xfs_da_isoknoent_op(args));
+ 	/*
+ 	 * Here, we can only be doing a lookup (not a rename or replace).
+ 	 * If a case-insensitive match was found earlier, return success.
 Index: kern_ci/fs/xfs/xfs_dir2_leaf.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_dir2_leaf.c
 +++ kern_ci/fs/xfs/xfs_dir2_leaf.c
-@@ -1331,6 +1331,8 @@ xfs_dir2_leaf_lookup_int(
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	xfs_dir2_db_t		newdb;		/* new data block number */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	xfs_dabuf_t		*cbp;		/* case match data buffer */
-+	enum xfs_dacmp		cmp;		/* name compare result */
- 
- 	dp = args->dp;
- 	tp = args->trans;
-@@ -1354,9 +1356,11 @@ xfs_dir2_leaf_lookup_int(
- 	 * Loop over all the entries with the right hash value
- 	 * looking to match the name.
+@@ -276,7 +276,7 @@ xfs_dir2_leaf_addname(
+ 		/*
+ 		 * Just checking or no space reservation, give up.
+ 		 */
+-		if (args->justcheck || args->total == 0) {
++		if (xfs_da_isjustcheck_op(args) || args->total == 0) {
+ 			xfs_da_brelse(tp, lbp);
+ 			return XFS_ERROR(ENOSPC);
+ 		}
+@@ -301,7 +301,7 @@ xfs_dir2_leaf_addname(
+ 	 * If just checking, then it will fit unless we needed to allocate
+ 	 * a new data block.
  	 */
-+	cbp = NULL;
- 	for (lep = &leaf->ents[index], dbp = NULL, curdb = -1;
--	     index < be16_to_cpu(leaf->hdr.count) && be32_to_cpu(lep->hashval) == args->hashval;
--	     lep++, index++) {
-+				index < be16_to_cpu(leaf->hdr.count) &&
-+				be32_to_cpu(lep->hashval) == args->hashval;
-+				lep++, index++) {
- 		/*
- 		 * Skip over stale leaf entries.
- 		 */
-@@ -1371,12 +1375,12 @@ xfs_dir2_leaf_lookup_int(
- 		 * need to pitch the old one and read the new one.
- 		 */
- 		if (newdb != curdb) {
--			if (dbp)
-+			if (dbp != cbp)
- 				xfs_da_brelse(tp, dbp);
--			if ((error =
--			    xfs_da_read_buf(tp, dp,
--				    xfs_dir2_db_to_da(mp, newdb), -1, &dbp,
--				    XFS_DATA_FORK))) {
-+			error = xfs_da_read_buf(tp, dp,
-+						xfs_dir2_db_to_da(mp, newdb),
-+						-1, &dbp, XFS_DATA_FORK);
-+			if (error) {
- 				xfs_da_brelse(tp, lbp);
- 				return error;
- 			}
-@@ -1386,24 +1390,46 @@ xfs_dir2_leaf_lookup_int(
- 		/*
- 		 * Point to the data entry.
- 		 */
--		dep = (xfs_dir2_data_entry_t *)
--		      ((char *)dbp->data +
--		       xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
-+		dep = (xfs_dir2_data_entry_t *)((char *)dbp->data +
-+			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
- 		/*
--		 * If it matches then return it.
-+		 * Compare name and if it's an exact match, return the index
-+		 * and buffer. If it's the first case-insensitive match, store
-+		 * the index and buffer and continue looking for an exact match.
- 		 */
--		if (dep->namelen == args->namelen &&
--		    dep->name[0] == args->name[0] &&
--		    memcmp(dep->name, args->name, args->namelen) == 0) {
--			*dbpp = dbp;
-+		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
-+		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
-+			args->cmpresult = cmp;
- 			*indexp = index;
--			return 0;
-+			/*
-+			 * case exact match: release the stored CI buffer if it
-+			 * exists and return the current buffer.
-+			 */
-+			if (cmp == XFS_CMP_EXACT) {
-+				if (cbp && cbp != dbp)
-+					xfs_da_brelse(tp, cbp);
-+				*dbpp = dbp;
-+				return 0;
-+			}
-+			cbp = dbp;
+-	if (args->justcheck) {
++	if (xfs_da_isjustcheck_op(args)) {
+ 		xfs_da_brelse(tp, lbp);
+ 		return use_block == -1 ? XFS_ERROR(ENOSPC) : 0;
+ 	}
+@@ -1414,7 +1414,7 @@ xfs_dir2_leaf_lookup_int(
+ 			cbp = dbp;
  		}
  	}
-+	ASSERT(args->oknoent);
-+	/*
-+	 * Here, we can only be doing a lookup (not a rename or replace).
-+	 * If a case-insensitive match was found earlier, release the current
-+	 * buffer and return the stored CI matching buffer.
-+	 */
-+	if (args->cmpresult == XFS_CMP_CASE) {
-+		if (cbp != dbp)
-+			xfs_da_brelse(tp, dbp);
-+		*dbpp = cbp;
-+		return 0;
-+	}
- 	/*
- 	 * No match found, return ENOENT.
- 	 */
 -	ASSERT(args->oknoent);
-+	ASSERT(cbp == NULL);
- 	if (dbp)
- 		xfs_da_brelse(tp, dbp);
- 	xfs_da_brelse(tp, lbp);
++	ASSERT(xfs_da_isoknoent_op(args));
+ 	/*
+ 	 * Here, we can only be doing a lookup (not a rename or replace).
+ 	 * If a case-insensitive match was found earlier, release the current
 Index: kern_ci/fs/xfs/xfs_dir2_node.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_dir2_node.c
 +++ kern_ci/fs/xfs/xfs_dir2_node.c
-@@ -556,6 +556,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	xfs_dir2_db_t		newdb;		/* new data block number */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	enum xfs_dacmp		cmp;		/* comparison result */
+@@ -226,7 +226,7 @@ xfs_dir2_leafn_add(
+ 	ASSERT(index == be16_to_cpu(leaf->hdr.count) ||
+ 	       be32_to_cpu(leaf->ents[index].hashval) >= args->hashval);
  
- 	dp = args->dp;
- 	tp = args->trans;
-@@ -620,17 +621,21 @@ xfs_dir2_leafn_lookup_for_entry(
- 		dep = (xfs_dir2_data_entry_t *)((char *)curbp->data +
- 			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
- 		/*
--		 * Compare the entry, return it if it matches.
--		 */
--		if (dep->namelen == args->namelen && memcmp(dep->name,
--					args->name, args->namelen) == 0) {
-+		 * Compare the entry and if it's an exact match, return
-+		 * EEXIST immediately. If it's the first case-insensitive
-+		 * match, store the inode number and continue looking.
-+		 */
-+		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
-+		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
-+			args->cmpresult = cmp;
- 			args->inumber = be64_to_cpu(dep->inumber);
- 			di = (int)((char *)dep - (char *)curbp->data);
- 			error = EEXIST;
--			goto out;
-+			if (cmp == XFS_CMP_EXACT)
-+				goto out;
- 		}
- 	}
--	/* Didn't find a match. */
-+	/* Didn't find an exact match. */
+-	if (args->justcheck)
++	if (xfs_da_isjustcheck_op(args))
+ 		return 0;
+ 
+ 	/*
+@@ -515,7 +515,7 @@ xfs_dir2_leafn_lookup_for_addname(
+ 	/* Didn't find any space */
+ 	fi = -1;
+ out:
+-	ASSERT(args->oknoent);
++	ASSERT(xfs_da_isoknoent_op(args));
+ 	if (curbp) {
+ 		/* Giving back a free block. */
+ 		state->extravalid = 1;
+@@ -638,7 +638,8 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	/* Didn't find an exact match. */
  	error = ENOENT;
  	di = -1;
- 	ASSERT(index == be16_to_cpu(leaf->hdr.count) || args->oknoent);
-@@ -1813,6 +1818,8 @@ xfs_dir2_node_lookup(
- 	error = xfs_da_node_lookup_int(state, &rval);
- 	if (error)
- 		rval = error;
-+	else if (rval == ENOENT && args->cmpresult == XFS_CMP_CASE)
-+		rval = EEXIST;	/* a case-insensitive match was found */
- 	/*
- 	 * Release the btree blocks and leaf block.
- 	 */
-@@ -1856,9 +1863,8 @@ xfs_dir2_node_removename(
- 	 * Look up the entry we're deleting, set up the cursor.
- 	 */
- 	error = xfs_da_node_lookup_int(state, &rval);
--	if (error) {
-+	if (error)
- 		rval = error;
--	}
- 	/*
- 	 * Didn't find it, upper layer screwed up.
- 	 */
-@@ -1875,9 +1881,8 @@ xfs_dir2_node_removename(
- 	 */
- 	error = xfs_dir2_leafn_remove(args, blk->bp, blk->index,
- 		&state->extrablk, &rval);
--	if (error) {
-+	if (error)
- 		return error;
--	}
- 	/*
- 	 * Fix the hash values up the btree.
- 	 */
+-	ASSERT(index == be16_to_cpu(leaf->hdr.count) || args->oknoent);
++	ASSERT(index == be16_to_cpu(leaf->hdr.count) ||
++					xfs_da_isoknoent_op(args));
+ out:
+ 	if (curbp) {
+ 		/* Giving back a data block. */
+@@ -669,7 +670,7 @@ xfs_dir2_leafn_lookup_int(
+ 	int			*indexp,	/* out: leaf entry index */
+ 	xfs_da_state_t		*state)		/* state to fill in */
+ {
+-	if (args->addname)
++	if (xfs_da_isaddname_op(args))
+ 		return xfs_dir2_leafn_lookup_for_addname(bp, args, indexp,
+ 							state);
+ 	return xfs_dir2_leafn_lookup_for_entry(bp, args, indexp, state);
+@@ -1383,7 +1384,7 @@ xfs_dir2_node_addname(
+ 		/*
+ 		 * It worked, fix the hash values up the btree.
+ 		 */
+-		if (!args->justcheck)
++		if (!xfs_da_isjustcheck_op(args))
+ 			xfs_da_fixhashpath(state, &state->path);
+ 	} else {
+ 		/*
+@@ -1566,7 +1567,7 @@ xfs_dir2_node_addname_int(
+ 		/*
+ 		 * Not allowed to allocate, return failure.
+ 		 */
+-		if (args->justcheck || args->total == 0) {
++		if (xfs_da_isjustcheck_op(args) || args->total == 0) {
+ 			/*
+ 			 * Drop the freespace buffer unless it came from our
+ 			 * caller.
+@@ -1712,7 +1713,7 @@ xfs_dir2_node_addname_int(
+ 		/*
+ 		 * If just checking, we succeeded.
+ 		 */
+-		if (args->justcheck) {
++		if (xfs_da_isjustcheck_op(args)) {
+ 			if ((fblk == NULL || fblk->bp == NULL) && fbp != NULL)
+ 				xfs_da_buf_done(fbp);
+ 			return 0;
 Index: kern_ci/fs/xfs/xfs_dir2_sf.c
 ===================================================================
 --- kern_ci.orig/fs/xfs/xfs_dir2_sf.c
 +++ kern_ci/fs/xfs/xfs_dir2_sf.c
-@@ -814,6 +814,7 @@ xfs_dir2_sf_lookup(
- 	int			i;		/* entry index */
- 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
- 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
-+	enum xfs_dacmp		cmp;		/* comparison result */
- 
- 	xfs_dir2_trace_args("sf_lookup", args);
- 	xfs_dir2_sf_check(args);
-@@ -836,6 +837,7 @@ xfs_dir2_sf_lookup(
- 	 */
- 	if (args->namelen == 1 && args->name[0] == '.') {
- 		args->inumber = dp->i_ino;
-+		args->cmpresult = XFS_CMP_EXACT;
- 		return XFS_ERROR(EEXIST);
- 	}
+@@ -332,7 +332,7 @@ xfs_dir2_sf_addname(
+ 		/*
+ 		 * Just checking or no space reservation, it doesn't fit.
+ 		 */
+-		if (args->justcheck || args->total == 0)
++		if (xfs_da_isjustcheck_op(args) || args->total == 0)
+ 			return XFS_ERROR(ENOSPC);
+ 		/*
+ 		 * Convert to block form then add the name.
+@@ -345,7 +345,7 @@ xfs_dir2_sf_addname(
  	/*
-@@ -844,27 +846,39 @@ xfs_dir2_sf_lookup(
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
- 		args->inumber = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
-+		args->cmpresult = XFS_CMP_EXACT;
- 		return XFS_ERROR(EEXIST);
- 	}
- 	/*
- 	 * Loop over all the entries trying to match ours.
+ 	 * Just checking, it fits.
  	 */
--	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
--	     i < sfp->hdr.count;
--	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
--		if (sfep->namelen == args->namelen &&
--		    sfep->name[0] == args->name[0] &&
--		    memcmp(args->name, sfep->name, args->namelen) == 0) {
--			args->inumber =
--				xfs_dir2_sf_get_inumber(sfp,
--					xfs_dir2_sf_inumberp(sfep));
--			return XFS_ERROR(EEXIST);
-+	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->hdr.count;
-+				i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
-+		/*
-+		 * Compare name and if it's an exact match, return the inode
-+		 * number. If it's the first case-insensitive match, store the
-+		 * inode number and continue looking for an exact match.
-+		 */
-+		cmp = dp->i_mount->m_dirnameops->compname(args, sfep->name,
-+								sfep->namelen);
-+		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
-+			args->cmpresult = cmp;
-+			args->inumber = xfs_dir2_sf_get_inumber(sfp,
-+						xfs_dir2_sf_inumberp(sfep));
-+			if (cmp == XFS_CMP_EXACT)
-+				return XFS_ERROR(EEXIST);
+-	if (args->justcheck)
++	if (xfs_da_isjustcheck_op(args))
+ 		return 0;
+ 	/*
+ 	 * Do it the easy way - just add it at the end.
+@@ -869,7 +869,7 @@ xfs_dir2_sf_lookup(
+ 				return XFS_ERROR(EEXIST);
  		}
  	}
-+	ASSERT(args->oknoent);
-+	/*
-+	 * Here, we can only be doing a lookup (not a rename or replace).
-+	 * If a case-insensitive match was found earlier, return "found".
-+	 */
-+	if (args->cmpresult == XFS_CMP_CASE)
-+		return XFS_ERROR(EEXIST);
- 	/*
- 	 * Didn't find it.
- 	 */
 -	ASSERT(args->oknoent);
- 	return XFS_ERROR(ENOENT);
++	ASSERT(xfs_da_isoknoent_op(args));
+ 	/*
+ 	 * Here, we can only be doing a lookup (not a rename or replace).
+ 	 * If a case-insensitive match was found earlier, return "found".
+@@ -1071,7 +1071,7 @@ xfs_dir2_sf_replace(
+ 		 * Didn't find it.
+ 		 */
+ 		if (i == sfp->hdr.count) {
+-			ASSERT(args->oknoent);
++			ASSERT(xfs_da_isoknoent_op(args));
+ #if XFS_BIG_INUMS
+ 			if (i8elevated)
+ 				xfs_dir2_sf_toino4(args);
+Index: kern_ci/fs/xfs/xfs_dir2_trace.c
+===================================================================
+--- kern_ci.orig/fs/xfs/xfs_dir2_trace.c
++++ kern_ci/fs/xfs/xfs_dir2_trace.c
+@@ -85,7 +85,7 @@ xfs_dir2_trace_args(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck, NULL, NULL);
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args), NULL, NULL);
  }
  
-@@ -904,24 +918,21 @@ xfs_dir2_sf_removename(
- 	 * Loop over the old directory entries.
- 	 * Find the one we're deleting.
- 	 */
--	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
--	     i < sfp->hdr.count;
--	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
--		if (sfep->namelen == args->namelen &&
--		    sfep->name[0] == args->name[0] &&
--		    memcmp(sfep->name, args->name, args->namelen) == 0) {
-+	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->hdr.count;
-+				i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
-+		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
-+								XFS_CMP_EXACT) {
- 			ASSERT(xfs_dir2_sf_get_inumber(sfp,
--					xfs_dir2_sf_inumberp(sfep)) ==
--				args->inumber);
-+						xfs_dir2_sf_inumberp(sfep)) ==
-+								args->inumber);
- 			break;
- 		}
- 	}
- 	/*
- 	 * Didn't find it.
- 	 */
--	if (i == sfp->hdr.count) {
-+	if (i == sfp->hdr.count)
- 		return XFS_ERROR(ENOENT);
--	}
- 	/*
- 	 * Calculate sizes.
- 	 */
-@@ -1042,11 +1053,10 @@ xfs_dir2_sf_replace(
- 	 */
- 	else {
- 		for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
--		     i < sfp->hdr.count;
--		     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
--			if (sfep->namelen == args->namelen &&
--			    sfep->name[0] == args->name[0] &&
--			    memcmp(args->name, sfep->name, args->namelen) == 0) {
-+				i < sfp->hdr.count;
-+				i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
-+			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
-+								XFS_CMP_EXACT) {
- #if XFS_BIG_INUMS || defined(DEBUG)
- 				ino = xfs_dir2_sf_get_inumber(sfp,
- 					xfs_dir2_sf_inumberp(sfep));
-Index: kern_ci/fs/xfs/xfs_mount.h
-===================================================================
---- kern_ci.orig/fs/xfs/xfs_mount.h
-+++ kern_ci/fs/xfs/xfs_mount.h
-@@ -61,6 +61,7 @@ struct xfs_bmap_free;
- struct xfs_extdelta;
- struct xfs_swapext;
- struct xfs_mru_cache;
-+struct xfs_nameops;
+ void
+@@ -100,7 +100,7 @@ xfs_dir2_trace_args_b(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck,
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
+ 		(void *)(bp ? bp->bps[0] : NULL), NULL);
+ }
  
- /*
-  * Prototypes and functions for the Data Migration subsystem.
-@@ -313,6 +314,7 @@ typedef struct xfs_mount {
- 	__uint8_t		m_inode_quiesce;/* call quiesce on new inodes.
- 						   field governed by m_ilock */
- 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
-+	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
- 	int			m_dirblksize;	/* directory block sz--bytes */
- 	int			m_dirblkfsbs;	/* directory block sz--fsbs */
- 	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
+@@ -117,7 +117,7 @@ xfs_dir2_trace_args_bb(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck,
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
+ 		(void *)(lbp ? lbp->bps[0] : NULL),
+ 		(void *)(dbp ? dbp->bps[0] : NULL));
+ }
+@@ -157,8 +157,8 @@ xfs_dir2_trace_args_db(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck, (void *)(long)db,
+-		(void *)dbp);
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
++		(void *)(long)db, (void *)dbp);
+ }
+ 
+ void
+@@ -173,7 +173,7 @@ xfs_dir2_trace_args_i(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck,
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
+ 		(void *)((unsigned long)(i >> 32)),
+ 		(void *)((unsigned long)(i & 0xFFFFFFFF)));
+ }
+@@ -190,7 +190,8 @@ xfs_dir2_trace_args_s(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck, (void *)(long)s, NULL);
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
++		(void *)(long)s, NULL);
+ }
+ 
+ void
+@@ -208,7 +209,7 @@ xfs_dir2_trace_args_sb(
+ 		(void *)((unsigned long)(args->inumber >> 32)),
+ 		(void *)((unsigned long)(args->inumber & 0xFFFFFFFF)),
+ 		(void *)args->dp, (void *)args->trans,
+-		(void *)(unsigned long)args->justcheck, (void *)(long)s,
+-		(void *)dbp);
++		(void *)(unsigned long)xfs_da_isjustcheck_op(args),
++		(void *)(long)s, (void *)dbp);
+ }
+ #endif	/* XFS_DIR2_TRACE */
+Index: kern_ci/fs/xfs/xfsidbg.c
+===================================================================
+--- kern_ci.orig/fs/xfs/xfsidbg.c
++++ kern_ci/fs/xfs/xfsidbg.c
+@@ -308,7 +308,7 @@ static int	kdbm_xfs_xalatrace(
+ 	int nextarg = 1;
+ 	long offset = 0;
+ 	int diag;
+-	
++
+ 	if (argc != 1)
+ 		return KDB_ARGCOUNT;
+ 
+@@ -5237,7 +5237,8 @@ xfsidbg_xdaargs(xfs_da_args_t *n)
+ 		kdb_printf("0x%x", n->flags & i);
+ 	kdb_printf(">\n");
+ 	kdb_printf(" rename %d justcheck %d addname %d oknoent %d\n",
+-		  n->rename, n->justcheck, n->addname, n->oknoent);
++		  xfs_da_isrename_op(n) != 0, xfs_da_isjustcheck_op(n) != 0,
++		  xfs_da_isaddname_op(n) != 0, xfs_da_isoknoent_op(n) != 0);
+ 	kdb_printf(" leaf: blkno %d index %d rmtblkno %d rmtblkcnt %d\n",
+ 		  n->blkno, n->index, n->rmtblkno, n->rmtblkcnt);
+ 	kdb_printf(" leaf2: blkno %d index %d rmtblkno %d rmtblkcnt %d\n",
+@@ -5955,7 +5956,7 @@ xfsidbg_xlog_granttrace(xlog_t *log)
+ 		xfsidbg_print_trans_type((unsigned long)ktep->val[12]);
+ 		qprintf("]\n");
+ 		qprintf("  t_ocnt = %lu, t_cnt = %lu, t_curr_res = %lu, "
+-			"t_unit_res = %lu\n", 
++			"t_unit_res = %lu\n",
+ 			t_ocnt, t_cnt, (unsigned long)ktep->val[14],
+ 			(unsigned long)ktep->val[15]);
+ 		qprintf("  tic:0x%p resQ:0x%p wrQ:0x%p ",
+@@ -6449,16 +6450,16 @@ xfsidbg_xnode(xfs_inode_t *ip)
+ #endif
+ #ifdef XFS_BMBT_TRACE
+ 	qprintf(" bmbt trace 0x%p\n", ip->i_btrace);
+-#endif  
++#endif
+ #ifdef XFS_RW_TRACE
+ 	qprintf(" rw trace 0x%p\n", ip->i_rwtrace);
+-#endif  
++#endif
+ #ifdef XFS_ILOCK_TRACE
+ 	qprintf(" ilock trace 0x%p\n", ip->i_lock_trace);
+ #endif
+ #ifdef XFS_DIR2_TRACE
+ 	qprintf(" dir trace 0x%p\n", ip->i_dir_trace);
+-#endif  
++#endif
+ 	kdb_printf("\n");
+ 	xfs_xnode_fork("data", &ip->i_df);
+ 	xfs_xnode_fork("attr", ip->i_afp);
 
 -- 
