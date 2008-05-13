@@ -1,95 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 May 2008 01:34:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 May 2008 01:35:28 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4D8YBIw010521
-	for <xfs@oss.sgi.com>; Tue, 13 May 2008 01:34:12 -0700
-Date: Tue, 13 May 2008 04:34:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] XFS: add op_flags field and helpers to xfs_da_args
-Message-ID: <20080513083458.GB21919@infradead.org>
-References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.598022276@chook.melbourne.sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4D8ZH6r010785
+	for <xfs@oss.sgi.com>; Tue, 13 May 2008 01:35:18 -0700
+Received: from ns.unixsol.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D001D1225EDE
+	for <xfs@oss.sgi.com>; Tue, 13 May 2008 01:36:04 -0700 (PDT)
+Received: from ns.unixsol.org (ns.unixsol.org [193.110.159.2]) by cuda.sgi.com with ESMTP id pMryDR90uLVScHpL for <xfs@oss.sgi.com>; Tue, 13 May 2008 01:36:04 -0700 (PDT)
+Message-ID: <482952F2.3080608@unixsol.org>
+Date: Tue, 13 May 2008 11:36:02 +0300
+From: Georgi Chorbadzhiyski <gf@unixsol.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080513080152.598022276@chook.melbourne.sgi.com>
+Subject: Re: Unneeded kernel threads (xfs, jfs, gfs2)
+References: <4828CAC6.3090402@unixsol.org> <alpine.LNX.1.10.0805130115090.25441@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <alpine.LNX.1.10.0805130115090.25441@fbirervta.pbzchgretzou.qr>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: xfs@oss.sgi.com, jfs-discussion@lists.sourceforge.net, cluster-devel@redhat.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, May 13, 2008 at 05:57:51PM +1000, Barry Naujok wrote:
-> The end of the xfs_da_args structure has 4 unsigned char fields for 
-> true/false information on directory and attr operations using the
-> xfs_da_args structure.
+Jan Engelhardt mumbled something about, On 5/13/08 2:21 AM:
+> On Tuesday 2008-05-13 00:55, Georgi Chorbadzhiyski wrote:
+>> Not needed here, because no jfs partition is in use.
+>> Not needed here, because no xfs partition is in use.
+>> I dont use gfs2
 > 
-> The following converts these 4 into a op_flags field that uses the
-> first 4 bits for these fields and allows expansion for future 
-> operation information (eg. case-insensitive lookup request).
+> You miss the best of Linux. So, why not unload the modules?
+
+ext3 is working just fine for now, thanks (:
+
+>>>  1141 ?        S<     0:00  \_ [block-osm/1]
+>> What is osm? Can't find anything in kernel config?
 > 
-> There is also a bit of EOL whitespace cleanup too.
+> drivers/message/i2o/i2o_block.c:#define OSM_NAME        "block-osm"
+> 
+>>>  1148 ?        S<     0:00  \_ [khpsbpkt]
+>> What is this?
+> 
+> ieee1394/ieee1394_core.c:static struct task_struct *khpsbpkt_thread;
 
-Looks generally good to me.  A few stylistic comments:
+Strange names :)
 
- - I don't think the xfs_da_is*_op wrappers help readability, we'd
-   be better off without those.
- - op_flags seems like a rather odd name to me, what about
-   lookup_flags instead?
-
-
-And the hinks below are an awfull lot of random reformatting that don't
-belong into this patch.  As they're sensible what about just commiting
-the beforehand?
-
->  	dsize = dp->i_df.if_bytes;
-> -	
-> +
->  	switch (dp->i_d.di_format) {
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		/* 
-> -		 * If there is no attr fork and the data fork is extents, 
-> -		 * determine if creating the default attr fork will result 
-> -		 * in the extents form migrating to btree. If so, the 
-> -		 * minimum offset only needs to be the space required for 
-> +		/*
-> +		 * If there is no attr fork and the data fork is extents,
-> +		 * determine if creating the default attr fork will result
-> +		 * in the extents form migrating to btree. If so, the
-> +		 * minimum offset only needs to be the space required for
->  		 * the btree root.
-> -		 */ 
-> +		 */
->  		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes > mp->m_attroffset)
->  			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
->  		break;
-> -		
-> +
->  	case XFS_DINODE_FMT_BTREE:
->  		/*
->  		 * If have data btree then keep forkoff if we have one,
-> -		 * otherwise we are adding a new attr, so then we set 
-> -		 * minforkoff to where the btree root can finish so we have 
-> +		 * otherwise we are adding a new attr, so then we set
-> +		 * minforkoff to where the btree root can finish so we have
->  		 * plenty of room for attrs
->  		 */
->  		if (dp->i_d.di_forkoff) {
-> -			if (offset < dp->i_d.di_forkoff) 
-> +			if (offset < dp->i_d.di_forkoff)
->  				return 0;
-> -			else 
-> +			else
->  				return dp->i_d.di_forkoff;
->  		} else
->  			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
->  		break;
->  	}
-> -	
-> -	/* 
-> -	 * A data fork btree root must have space for at least 
-> +
-> +	/*
-> +	 * A data fork btree root must have space for at least
->  	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
->  	 */
->  	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+-- 
+Georgi Chorbadzhiyski
+http://georgi.unixsol.org/
