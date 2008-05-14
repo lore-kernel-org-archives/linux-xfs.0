@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 01:05:50 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4E85g65031627
-	for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:05:43 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C96D116E3AD
-	for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:06:28 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id 8P3Fjd40LzcZQTN0 for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:06:28 -0700 (PDT)
-Subject: [RFC PATCH 1/3] Implement generic freeze feature
-Message-Id: <20080514170625t-sato@mail.jp.nec.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 01:06:28 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4E86JvC031760
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:06:20 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F2B1916B1DB5
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:07:03 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id 5oBRSADFhU2CIvJD for <xfs@oss.sgi.com>; Wed, 14 May 2008 01:07:03 -0700 (PDT)
+Subject: [RFC PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+Message-Id: <20080514170700t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
 From: Takashi Sato <t-sato@yk.jp.nec.com>
-Date: Wed, 14 May 2008 17:06:25 +0900
+Date: Wed, 14 May 2008 17:07:00 +0900
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -20,283 +20,69 @@ List-Id: xfs
 To: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-I have modified the following two points from the previous version.
-These are suggested by Christoph Hellwig.
-o Two helper functions for ioctls (ioctl_freeze and ioctl_thaw) are
-  added for the readability.
-o The semaphore for the freeze operation is replaced with new bit
-  flag (bd_state) for the efficiency of the locking. 
+It removes XFS specific ioctl interfaces and request codes
+for freeze feature.
+This patch has been supplied by David Chinner.
 
-The ioctls for the generic freeze feature are below.
-o Freeze the filesystem
-  int ioctl(int fd, int FIFREEZE, arg)
-    fd: The file descriptor of the mountpoint
-    FIFREEZE: request code for the freeze
-    arg: Ignored
-    Return value: 0 if the operation succeeds. Otherwise, -1
-
-o Unfreeze the filesystem
-  int ioctl(int fd, int FITHAW, arg)
-    fd: The file descriptor of the mountpoint
-    FITHAW: request code for unfreeze
-    arg: Ignored
-    Return value: 0 if the operation succeeds. Otherwise, -1
-
+Signed-off-by: Dave Chinner <dgc@sgi.com>
 Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
-Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
 ---
- fs/block_dev.c     |    3 +++
- fs/buffer.c        |   25 +++++++++++++++++++++++++
- fs/ioctl.c         |   35 +++++++++++++++++++++++++++++++++++
- fs/super.c         |   32 +++++++++++++++++++++++++++++++-
- include/linux/fs.h |    7 +++++++
- 5 files changed, 101 insertions(+), 1 deletion(-)
+ linux-2.6/xfs_ioctl.c   |   15 ---------------
+ linux-2.6/xfs_ioctl32.c |    2 --
+ xfs_fs.h                |    4 ++--
+ 3 files changed, 2 insertions(+), 19 deletions(-)
 
-diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2.org/fs/buffer.c linux-2.6.26-rc2-bit/fs/buffer.c
---- linux-2.6.26-rc2.org/fs/buffer.c	2008-05-12 09:09:41.000000000 +0900
-+++ linux-2.6.26-rc2-bit/fs/buffer.c	2008-05-12 11:20:19.000000000 +0900
-@@ -201,6 +201,21 @@ struct super_block *freeze_bdev(struct b
- {
- 	struct super_block *sb;
- 
-+	if (test_and_set_bit(BD_FREEZE_OP, &bdev->bd_state))
-+		return ERR_PTR(-EBUSY);
-+
-+	sb = get_super_without_lock(bdev);
-+
-+	/* If super_block has been already frozen, return. */
-+	if (sb && sb->s_frozen != SB_UNFROZEN) {
-+		put_super(sb);
-+		clear_bit(BD_FREEZE_OP, &bdev->bd_state);
-+		return sb;
-+	}
-+
-+	if (sb)
-+		put_super(sb);
-+
- 	down(&bdev->bd_mount_sem);
- 	sb = get_super(bdev);
- 	if (sb && !(sb->s_flags & MS_RDONLY)) {
-@@ -219,6 +234,8 @@ struct super_block *freeze_bdev(struct b
+diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2-bit/fs/xfs/linux-2.6/xfs_ioctl.c linux-2.6.26-rc2-xf
+s/fs/xfs/linux-2.6/xfs_ioctl.c
+--- linux-2.6.26-rc2-bit/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-12 11:15:10.000000000 +0900
++++ linux-2.6.26-rc2-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-12 11:25:50.000000000 +0900
+@@ -1233,21 +1233,6 @@ xfs_ioctl(
+ 		return -error;
  	}
  
- 	sync_blockdev(bdev);
-+	clear_bit(BD_FREEZE_OP, &bdev->bd_state);
-+
- 	return sb;	/* thaw_bdev releases s->s_umount and bd_mount_sem */
- }
- EXPORT_SYMBOL(freeze_bdev);
-@@ -230,8 +247,17 @@ EXPORT_SYMBOL(freeze_bdev);
-  *
-  * Unlocks the filesystem and marks it writeable again after freeze_bdev().
-  */
--void thaw_bdev(struct block_device *bdev, struct super_block *sb)
-+int thaw_bdev(struct block_device *bdev, struct super_block *sb)
- {
-+
-+	if (test_and_set_bit(BD_FREEZE_OP, &bdev->bd_state))
-+		return -EBUSY;
-+
-+	if (sb && sb->s_frozen == SB_UNFROZEN) {
-+		clear_bit(BD_FREEZE_OP, &bdev->bd_state);
-+		return 0;
-+	}
-+
- 	if (sb) {
- 		BUG_ON(sb->s_bdev != bdev);
+-	case XFS_IOC_FREEZE:
+-		if (!capable(CAP_SYS_ADMIN))
+-			return -EPERM;
+-
+-		if (inode->i_sb->s_frozen == SB_UNFROZEN)
+-			freeze_bdev(inode->i_sb->s_bdev);
+-		return 0;
+-
+-	case XFS_IOC_THAW:
+-		if (!capable(CAP_SYS_ADMIN))
+-			return -EPERM;
+-		if (inode->i_sb->s_frozen != SB_UNFROZEN)
+-			thaw_bdev(inode->i_sb->s_bdev, inode->i_sb);
+-		return 0;
+-
+ 	case XFS_IOC_GOINGDOWN: {
+ 		__uint32_t in;
  
-@@ -244,6 +270,8 @@ void thaw_bdev(struct block_device *bdev
- 	}
- 
- 	up(&bdev->bd_mount_sem);
-+	clear_bit(BD_FREEZE_OP, &bdev->bd_state);
-+	return 0;
- }
- EXPORT_SYMBOL(thaw_bdev);
- 
-diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2.org/fs/ioctl.c linux-2.6.26-rc2-bit/fs/ioctl.c
---- linux-2.6.26-rc2.org/fs/ioctl.c	2008-05-12 09:09:41.000000000 +0900
-+++ linux-2.6.26-rc2-bit/fs/ioctl.c	2008-05-13 14:33:33.000000000 +0900
-@@ -13,6 +13,7 @@
- #include <linux/security.h>
- #include <linux/module.h>
- #include <linux/uaccess.h>
-+#include <linux/buffer_head.h>
- 
- #include <asm/ioctls.h>
- 
-@@ -141,6 +142,49 @@ static int ioctl_fioasync(unsigned int f
- }
- 
- /*
-+ * ioctl_freeze - Freeze the filesystem.
-+ *
-+ * @filp:	target file
-+ *
-+ * Call freeze_bdev() to freeze the filesystem.
-+ */
-+static int ioctl_freeze(struct file *filp)
-+{
-+	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	/* If filesystem doesn't support freeze feature, return. */
-+	if (sb->s_op->write_super_lockfs == NULL)
-+		return -EINVAL;
-+
-+	/* Freeze */
-+	sb = freeze_bdev(sb->s_bdev);
-+	if (IS_ERR(sb))
-+		return PTR_ERR(sb);
-+	return 0;
-+}
-+
-+/*
-+ * ioctl_thaw - Thaw the filesystem.
-+ *
-+ * @filp:	target file
-+ *
-+ * Call thaw_bdev() to thaw the filesystem.
-+ */
-+static int ioctl_thaw(struct file *filp)
-+{
-+	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	/* Thaw */
-+	return thaw_bdev(sb->s_bdev, sb);
-+}
-+
-+/*
-  * When you add any new common ioctls to the switches above and below
-  * please update compat_sys_ioctl() too.
-  *
-@@ -181,6 +225,15 @@ int do_vfs_ioctl(struct file *filp, unsi
- 		} else
- 			error = -ENOTTY;
- 		break;
-+
-+	case FIFREEZE:
-+		error = ioctl_freeze(filp);
-+		break;
-+
-+	case FITHAW:
-+		error = ioctl_thaw(filp);
-+		break;
-+
- 	default:
- 		if (S_ISREG(filp->f_path.dentry->d_inode->i_mode))
- 			error = file_ioctl(filp, cmd, arg);
-diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2.org/fs/super.c linux-2.6.26-rc2-bit/fs/super.c
---- linux-2.6.26-rc2.org/fs/super.c	2008-05-12 09:09:41.000000000 +0900
-+++ linux-2.6.26-rc2-bit/fs/super.c	2008-05-12 11:20:19.000000000 +0900
-@@ -156,7 +156,7 @@ int __put_super_and_need_restart(struct 
-  *	Drops a temporary reference, frees superblock if there's no
-  *	references left.
-  */
--static void put_super(struct super_block *sb)
-+void put_super(struct super_block *sb)
- {
- 	spin_lock(&sb_lock);
- 	__put_super(sb);
-@@ -509,6 +509,36 @@ rescan:
- 
- EXPORT_SYMBOL(get_super);
-  
-+/*
-+ * get_super_without_lock - Get super_block from block_device without lock.
-+ * @bdev:	block device struct
-+ *
-+ * Scan the superblock list and finds the superblock of the file system
-+ * mounted on the block device given. This doesn't lock anyone.
-+ * %NULL is returned if no match is found.
-+ */
-+struct super_block *get_super_without_lock(struct block_device *bdev)
-+{
-+	struct super_block *sb;
-+
-+	if (!bdev)
-+		return NULL;
-+
-+	spin_lock(&sb_lock);
-+	list_for_each_entry(sb, &super_blocks, s_list) {
-+		if (sb->s_bdev == bdev) {
-+			if (sb->s_root) {
-+				sb->s_count++;
-+				spin_unlock(&sb_lock);
-+				return sb;
-+			}
-+		}
-+	}
-+	spin_unlock(&sb_lock);
-+	return NULL;
-+}
-+EXPORT_SYMBOL(get_super_without_lock);
-+
- struct super_block * user_get_super(dev_t dev)
- {
- 	struct super_block *sb;
-diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2.org/include/linux/buffer_head.h linux-2.6.26-rc2-bit
-/include/linux/buffer_head.h
---- linux-2.6.26-rc2.org/include/linux/buffer_head.h	2008-05-12 09:09:41.000000000 +0900
-+++ linux-2.6.26-rc2-bit/include/linux/buffer_head.h	2008-05-12 11:20:19.000000000 +0900
-@@ -171,7 +171,7 @@ void __wait_on_buffer(struct buffer_head
- wait_queue_head_t *bh_waitq_head(struct buffer_head *bh);
- int fsync_bdev(struct block_device *);
- struct super_block *freeze_bdev(struct block_device *);
--void thaw_bdev(struct block_device *, struct super_block *);
-+int thaw_bdev(struct block_device *, struct super_block *);
- int fsync_super(struct super_block *);
- int fsync_no_super(struct block_device *);
- struct buffer_head *__find_get_block(struct block_device *bdev, sector_t block,
-diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2.org/include/linux/fs.h linux-2.6.26-rc2-bit/include/
-linux/fs.h
---- linux-2.6.26-rc2.org/include/linux/fs.h	2008-05-12 09:09:41.000000000 +0900
-+++ linux-2.6.26-rc2-bit/include/linux/fs.h	2008-05-12 11:20:19.000000000 +0900
-@@ -223,6 +223,8 @@ extern int dir_notify_enable;
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
- #define FIGETBSZ   _IO(0x00,2)	/* get the block size used for bmap */
-+#define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
-+#define FITHAW		_IOWR('X', 120, int)	/* Thaw */
- 
- #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
- #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
-@@ -494,6 +496,13 @@ int pagecache_write_end(struct file *, s
- 				loff_t pos, unsigned len, unsigned copied,
- 				struct page *page, void *fsdata);
- 
-+/*
-+ * Bits in block_device.bd_state.
-+ */
-+enum bd_state {
-+	BD_FREEZE_OP	/* In freeze operation */
-+};
-+
- struct backing_dev_info;
- struct address_space {
- 	struct inode		*host;		/* owner: inode, block_device */
-@@ -547,6 +556,9 @@ struct block_device {
- 	 * care to not mess up bd_private for that case.
- 	 */
- 	unsigned long		bd_private;
-+
-+	/* State of the block device. (Used by freeze feature) */
-+	unsigned long		bd_state;
- };
- 
- /*
-@@ -1964,7 +1976,9 @@ extern int do_vfs_ioctl(struct file *fil
- extern void get_filesystem(struct file_system_type *fs);
- extern void put_filesystem(struct file_system_type *fs);
- extern struct file_system_type *get_fs_type(const char *name);
-+extern void put_super(struct super_block *sb);
- extern struct super_block *get_super(struct block_device *);
-+extern struct super_block *get_super_without_lock(struct block_device *);
- extern struct super_block *user_get_super(dev_t);
- extern void drop_super(struct super_block *sb);
- 
+diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2-bit/fs/xfs/linux-2.6/xfs_ioctl32.c linux-2.6.26-rc2-
+xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
+--- linux-2.6.26-rc2-bit/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-05-12 11:15:10.000000000 +0900
++++ linux-2.6.26-rc2-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-05-12 11:25:50.000000000 +0900
+@@ -398,8 +398,6 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_FSGROWFSDATA:
+ 	case XFS_IOC_FSGROWFSLOG:
+ 	case XFS_IOC_FSGROWFSRT:
+-	case XFS_IOC_FREEZE:
+-	case XFS_IOC_THAW:
+ 	case XFS_IOC_GOINGDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
+diff -uprN -X /home/sho/pub/MC/freeze-set/dontdiff linux-2.6.26-rc2-bit/fs/xfs/xfs_fs.h linux-2.6.26-rc2-xfs/fs/xfs/xfs_
+fs.h
+--- linux-2.6.26-rc2-bit/fs/xfs/xfs_fs.h	2008-05-12 11:15:11.000000000 +0900
++++ linux-2.6.26-rc2-xfs/fs/xfs/xfs_fs.h	2008-05-12 11:25:50.000000000 +0900
+@@ -473,8 +473,8 @@ typedef struct xfs_handle {
+ #define XFS_IOC_ERROR_INJECTION	     _IOW ('X', 116, struct xfs_error_injection)
+ #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
+ /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
+-#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
+-#define XFS_IOC_THAW		     _IOWR('X', 120, int)
++/*	XFS_IOC_FREEZE		  -- FIFREEZE   119	 */
++/*	XFS_IOC_THAW		  -- FITHAW     120	 */
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
