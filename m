@@ -1,85 +1,195 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 13 May 2008 23:44:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 00:05:34 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4E6iAta017693
-	for <xfs@oss.sgi.com>; Tue, 13 May 2008 23:44:13 -0700
-Date: Wed, 14 May 2008 16:44:51 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] make inode reclaim wait for log I/O to complete
-Message-ID: <20080514064451.GF155679365@sgi.com>
-References: <482A77A9.5040806@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <482A77A9.5040806@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4E755fn021436
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 00:05:09 -0700
+Message-ID: <482A8F49.6050003@sgi.com>
+Date: Wed, 14 May 2008 17:05:45 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] kill attr_capable callbacks
+References: <20080430112213.GA16966@lst.de>
+In-Reply-To: <20080430112213.GA16966@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, May 14, 2008 at 03:24:57PM +1000, Lachlan McIlroy wrote:
-> An xfs inode can be destroyed before log I/O involving that inode
-> is complete.  We need to wait for the inode to be unpinned before
-> tearing it down.
+Hi Christoph,
+
+Looks reasonable to me - comparing xattr_permission() with
+attr_user_capable() and attr_trusted_capable().
+Also the xattr_permission() makes more sense with its MAY_WRITE
+testing otherwise it looks like we'd be doing some unfair
+tests in the getxattr case.
+
+I'll run thru qa and check in soon.
+
+--Tim
+
+
+Christoph Hellwig wrote:
+> No need for addition permission checks in the xattr handler,
+> fs/xattr.c:xattr_permission() already does them, and in fact slightly
+> more strict then what was in the attr_capable handlers.
 > 
-> Lachlan
 > 
-> --- fs/xfs/xfs_inode.c_1.501	2008-05-12 14:45:17.000000000 +1000
-> +++ fs/xfs/xfs_inode.c	2008-05-12 12:23:48.000000000 +1000
-> @@ -2787,7 +2787,7 @@ __xfs_iunpin_wait(
-> 		wait_event(ip->i_ipin_wait, (atomic_read(&ip->i_pincount) == 
-> 		0));
-> }
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> -static inline void
-> +inline void
-> xfs_iunpin_wait(
-> 	xfs_inode_t	*ip)
-> {
-
-You want to kill the inline on this.
-
-> --- fs/xfs/xfs_inode.h_1.245	2008-05-12 14:45:20.000000000 +1000
-> +++ fs/xfs/xfs_inode.h	2008-05-12 12:31:37.000000000 +1000
-> @@ -481,6 +481,7 @@ void		xfs_ifunlock(xfs_inode_t *);
-> void		xfs_ireclaim(xfs_inode_t *);
-> int		xfs_finish_reclaim(xfs_inode_t *, int, int);
-> int		xfs_finish_reclaim_all(struct xfs_mount *, int);
-> +void		xfs_iunpin_wait(xfs_inode_t *);
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:32:56.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:33:30.000000000 +0200
+> @@ -747,15 +747,11 @@ xfs_vn_setxattr(
+>  	char		*attr = (char *)name;
+>  	attrnames_t	*namesp;
+>  	int		xflags = 0;
+> -	int		error;
+>  
+>  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+>  	if (!namesp)
+>  		return -EOPNOTSUPP;
+>  	attr += namesp->attr_namelen;
+> -	error = namesp->attr_capable(vp, NULL);
+> -	if (error)
+> -		return error;
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (flags & XATTR_CREATE)
+> @@ -777,15 +773,11 @@ xfs_vn_getxattr(
+>  	char		*attr = (char *)name;
+>  	attrnames_t	*namesp;
+>  	int		xflags = 0;
+> -	ssize_t		error;
+>  
+>  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+>  	if (!namesp)
+>  		return -EOPNOTSUPP;
+>  	attr += namesp->attr_namelen;
+> -	error = namesp->attr_capable(vp, NULL);
+> -	if (error)
+> -		return error;
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (!size) {
+> @@ -825,15 +817,12 @@ xfs_vn_removexattr(
+>  	char		*attr = (char *)name;
+>  	attrnames_t	*namesp;
+>  	int		xflags = 0;
+> -	int		error;
+>  
+>  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
+>  	if (!namesp)
+>  		return -EOPNOTSUPP;
+>  	attr += namesp->attr_namelen;
+> -	error = namesp->attr_capable(vp, NULL);
+> -	if (error)
+> -		return error;
+> +
+>  	xflags |= namesp->attr_flag;
+>  	return namesp->attr_remove(vp, attr, xflags);
+>  }
+> Index: linux-2.6-xfs/fs/xfs/xfs_attr.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_attr.c	2008-04-29 21:32:25.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_attr.c	2008-04-29 21:32:51.000000000 +0200
+> @@ -2622,43 +2622,6 @@ attr_lookup_namespace(
+>  	return NULL;
+>  }
+>  
+> -/*
+> - * Some checks to prevent people abusing EAs to get over quota:
+> - * - Don't allow modifying user EAs on devices/symlinks;
+> - * - Don't allow modifying user EAs if sticky bit set;
+> - */
+> -STATIC int
+> -attr_user_capable(
+> -	bhv_vnode_t	*vp,
+> -	cred_t		*cred)
+> -{
+> -	struct inode	*inode = vn_to_inode(vp);
+> -
+> -	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+> -		return -EPERM;
+> -	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
+> -	    !capable(CAP_SYS_ADMIN))
+> -		return -EPERM;
+> -	if (S_ISDIR(inode->i_mode) && (inode->i_mode & S_ISVTX) &&
+> -	    (current_fsuid(cred) != inode->i_uid) && !capable(CAP_FOWNER))
+> -		return -EPERM;
+> -	return 0;
+> -}
+> -
+> -STATIC int
+> -attr_trusted_capable(
+> -	bhv_vnode_t	*vp,
+> -	cred_t		*cred)
+> -{
+> -	struct inode	*inode = vn_to_inode(vp);
+> -
+> -	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+> -		return -EPERM;
+> -	if (!capable(CAP_SYS_ADMIN))
+> -		return -EPERM;
+> -	return 0;
+> -}
+> -
+>  STATIC int
+>  attr_system_set(
+>  	bhv_vnode_t *vp, char *name, void *data, size_t size, int xflags)
+> @@ -2709,7 +2672,6 @@ struct attrnames attr_system = {
+>  	.attr_get	= attr_system_get,
+>  	.attr_set	= attr_system_set,
+>  	.attr_remove	= attr_system_remove,
+> -	.attr_capable	= (attrcapable_t)fs_noerr,
+>  };
+>  
+>  struct attrnames attr_trusted = {
+> @@ -2719,7 +2681,6 @@ struct attrnames attr_trusted = {
+>  	.attr_get	= attr_generic_get,
+>  	.attr_set	= attr_generic_set,
+>  	.attr_remove	= attr_generic_remove,
+> -	.attr_capable	= attr_trusted_capable,
+>  };
+>  
+>  struct attrnames attr_secure = {
+> @@ -2729,7 +2690,6 @@ struct attrnames attr_secure = {
+>  	.attr_get	= attr_generic_get,
+>  	.attr_set	= attr_generic_set,
+>  	.attr_remove	= attr_generic_remove,
+> -	.attr_capable	= (attrcapable_t)fs_noerr,
+>  };
+>  
+>  struct attrnames attr_user = {
+> @@ -2738,7 +2698,6 @@ struct attrnames attr_user = {
+>  	.attr_get	= attr_generic_get,
+>  	.attr_set	= attr_generic_set,
+>  	.attr_remove	= attr_generic_remove,
+> -	.attr_capable	= attr_user_capable,
+>  };
+>  
+>  struct attrnames *attr_namespaces[] =
+> Index: linux-2.6-xfs/fs/xfs/xfs_attr.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_attr.h	2008-04-29 21:33:38.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_attr.h	2008-04-29 21:33:52.000000000 +0200
+> @@ -42,7 +42,6 @@ typedef int (*attrset_t)(bhv_vnode_t *, 
+>  typedef int (*attrget_t)(bhv_vnode_t *, char *, void *, size_t, int);
+>  typedef int (*attrremove_t)(bhv_vnode_t *, char *, int);
+>  typedef int (*attrexists_t)(bhv_vnode_t *);
+> -typedef int (*attrcapable_t)(bhv_vnode_t *, struct cred *);
+>  
+>  typedef struct attrnames {
+>  	char *		attr_name;
+> @@ -52,7 +51,6 @@ typedef struct attrnames {
+>  	attrset_t	attr_set;
+>  	attrremove_t	attr_remove;
+>  	attrexists_t	attr_exists;
+> -	attrcapable_t	attr_capable;
+>  } attrnames_t;
+>  
+>  #define ATTR_NAMECOUNT	4
 > 
-> /*
->  * xfs_inode.c prototypes.
-> --- fs/xfs/xfs_vnodeops.c_1.757	2008-05-12 12:02:45.000000000 +1000
-> +++ fs/xfs/xfs_vnodeops.c	2008-05-12 12:28:15.000000000 +1000
-> @@ -3324,6 +3324,7 @@ xfs_finish_reclaim(
-> 			 * because we're gonna reclaim the inode anyway.
-> 			 */
-> 			if (error) {
-> +				xfs_iunpin_wait(ip);
-> 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> 				goto reclaim;
-> 			}
-
-We can't get an error from xfs_iflush() from here that hasn't
-already passed through xfs_iunpin_wait() in xfs_iflush().
-Hence we should never see a pinned inode through this path.
-
-> @@ -3336,6 +3337,7 @@ xfs_finish_reclaim(
-> 	}
-> 
-> 	xfs_ifunlock(ip);
-> +	xfs_iunpin_wait(ip);
-
-If we are not shutting down the filesystem, how do we get a pinned
-inode here?  A pinned inode is a dirty inode and should be caught by
-the above code. Is the crash occurring when a force shutdown is in
-progress?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
