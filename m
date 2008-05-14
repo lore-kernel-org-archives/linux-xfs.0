@@ -1,195 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 00:05:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 00:51:11 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4E755fn021436
-	for <xfs@oss.sgi.com>; Wed, 14 May 2008 00:05:09 -0700
-Message-ID: <482A8F49.6050003@sgi.com>
-Date: Wed, 14 May 2008 17:05:45 +1000
-From: Timothy Shimmin <tes@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4E7onvB028763
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 00:50:52 -0700
+Date: Wed, 14 May 2008 17:55:45 +1000
+Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] kill attr_capable callbacks
-References: <20080430112213.GA16966@lst.de>
-In-Reply-To: <20080430112213.GA16966@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org>
 Content-Transfer-Encoding: 7bit
+Message-ID: <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20080513085724.GC21919@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, aia21@cantab.net
 
-Hi Christoph,
+On Tue, 13 May 2008 18:57:24 +1000, Christoph Hellwig <hch@infradead.org>  
+wrote:
 
-Looks reasonable to me - comparing xattr_permission() with
-attr_user_capable() and attr_trusted_capable().
-Also the xattr_permission() makes more sense with its MAY_WRITE
-testing otherwise it looks like we'd be doing some unfair
-tests in the getxattr case.
+> First please Cc Anton on this as he wrote the original version of
+> what's now d_add_ci, I suspect he might have some useful comments.
+>
+>
+> On Tue, May 13, 2008 at 05:57:52PM +1000, Barry Naujok wrote:
+>> Another unusual interaction with the dcache is not storing
+>> negative dentries like other filesystems doing a d_add(dentry, NULL)
+>> when an ENOENT is returned. During the VFS lookup, if a dentry
+>> returned has no inode, dput is called and ENOENT is returned.
+>> By not doing a d_add, this actually removes it completely from
+>> the dcache to be reused.
+>
+> That is a way to implement this correctly, but I suspect not creating
+> negative dentries will degrade performance quite badly on some
+> workloads.  Then again CI is useful only for samba serving where the
+> namecache on the client side should mitigate that effect.
 
-I'll run thru qa and check in soon.
+Not quite sure if this is the right test, but I did 1000 creates on
+a brand new filesystem with and without ci on my SATA drive, both
+sustained almost 600 creates per second.
 
---Tim
+I believe creates would be the worst case scenario for not adding
+negative dentries?
 
+> We'd probably be better off long-term implementing Anton's earlier
+> suggestion to have a routine that purges all ci aliased negative
+> dentries on a successfull lookup.
 
-Christoph Hellwig wrote:
-> No need for addition permission checks in the xattr handler,
-> fs/xattr.c:xattr_permission() already does them, and in fact slightly
-> more strict then what was in the attr_capable handlers.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:32:56.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-04-29 21:33:30.000000000 +0200
-> @@ -747,15 +747,11 @@ xfs_vn_setxattr(
->  	char		*attr = (char *)name;
->  	attrnames_t	*namesp;
->  	int		xflags = 0;
-> -	int		error;
->  
->  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
->  	if (!namesp)
->  		return -EOPNOTSUPP;
->  	attr += namesp->attr_namelen;
-> -	error = namesp->attr_capable(vp, NULL);
-> -	if (error)
-> -		return error;
->  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (flags & XATTR_CREATE)
-> @@ -777,15 +773,11 @@ xfs_vn_getxattr(
->  	char		*attr = (char *)name;
->  	attrnames_t	*namesp;
->  	int		xflags = 0;
-> -	ssize_t		error;
->  
->  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
->  	if (!namesp)
->  		return -EOPNOTSUPP;
->  	attr += namesp->attr_namelen;
-> -	error = namesp->attr_capable(vp, NULL);
-> -	if (error)
-> -		return error;
->  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (!size) {
-> @@ -825,15 +817,12 @@ xfs_vn_removexattr(
->  	char		*attr = (char *)name;
->  	attrnames_t	*namesp;
->  	int		xflags = 0;
-> -	int		error;
->  
->  	namesp = attr_lookup_namespace(attr, attr_namespaces, ATTR_NAMECOUNT);
->  	if (!namesp)
->  		return -EOPNOTSUPP;
->  	attr += namesp->attr_namelen;
-> -	error = namesp->attr_capable(vp, NULL);
-> -	if (error)
-> -		return error;
-> +
->  	xflags |= namesp->attr_flag;
->  	return namesp->attr_remove(vp, attr, xflags);
->  }
-> Index: linux-2.6-xfs/fs/xfs/xfs_attr.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_attr.c	2008-04-29 21:32:25.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_attr.c	2008-04-29 21:32:51.000000000 +0200
-> @@ -2622,43 +2622,6 @@ attr_lookup_namespace(
->  	return NULL;
->  }
->  
-> -/*
-> - * Some checks to prevent people abusing EAs to get over quota:
-> - * - Don't allow modifying user EAs on devices/symlinks;
-> - * - Don't allow modifying user EAs if sticky bit set;
-> - */
-> -STATIC int
-> -attr_user_capable(
-> -	bhv_vnode_t	*vp,
-> -	cred_t		*cred)
-> -{
-> -	struct inode	*inode = vn_to_inode(vp);
-> -
-> -	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
-> -		return -EPERM;
-> -	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
-> -	    !capable(CAP_SYS_ADMIN))
-> -		return -EPERM;
-> -	if (S_ISDIR(inode->i_mode) && (inode->i_mode & S_ISVTX) &&
-> -	    (current_fsuid(cred) != inode->i_uid) && !capable(CAP_FOWNER))
-> -		return -EPERM;
-> -	return 0;
-> -}
-> -
-> -STATIC int
-> -attr_trusted_capable(
-> -	bhv_vnode_t	*vp,
-> -	cred_t		*cred)
-> -{
-> -	struct inode	*inode = vn_to_inode(vp);
-> -
-> -	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
-> -		return -EPERM;
-> -	if (!capable(CAP_SYS_ADMIN))
-> -		return -EPERM;
-> -	return 0;
-> -}
-> -
->  STATIC int
->  attr_system_set(
->  	bhv_vnode_t *vp, char *name, void *data, size_t size, int xflags)
-> @@ -2709,7 +2672,6 @@ struct attrnames attr_system = {
->  	.attr_get	= attr_system_get,
->  	.attr_set	= attr_system_set,
->  	.attr_remove	= attr_system_remove,
-> -	.attr_capable	= (attrcapable_t)fs_noerr,
->  };
->  
->  struct attrnames attr_trusted = {
-> @@ -2719,7 +2681,6 @@ struct attrnames attr_trusted = {
->  	.attr_get	= attr_generic_get,
->  	.attr_set	= attr_generic_set,
->  	.attr_remove	= attr_generic_remove,
-> -	.attr_capable	= attr_trusted_capable,
->  };
->  
->  struct attrnames attr_secure = {
-> @@ -2729,7 +2690,6 @@ struct attrnames attr_secure = {
->  	.attr_get	= attr_generic_get,
->  	.attr_set	= attr_generic_set,
->  	.attr_remove	= attr_generic_remove,
-> -	.attr_capable	= (attrcapable_t)fs_noerr,
->  };
->  
->  struct attrnames attr_user = {
-> @@ -2738,7 +2698,6 @@ struct attrnames attr_user = {
->  	.attr_get	= attr_generic_get,
->  	.attr_set	= attr_generic_set,
->  	.attr_remove	= attr_generic_remove,
-> -	.attr_capable	= attr_user_capable,
->  };
->  
->  struct attrnames *attr_namespaces[] =
-> Index: linux-2.6-xfs/fs/xfs/xfs_attr.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_attr.h	2008-04-29 21:33:38.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_attr.h	2008-04-29 21:33:52.000000000 +0200
-> @@ -42,7 +42,6 @@ typedef int (*attrset_t)(bhv_vnode_t *, 
->  typedef int (*attrget_t)(bhv_vnode_t *, char *, void *, size_t, int);
->  typedef int (*attrremove_t)(bhv_vnode_t *, char *, int);
->  typedef int (*attrexists_t)(bhv_vnode_t *);
-> -typedef int (*attrcapable_t)(bhv_vnode_t *, struct cred *);
->  
->  typedef struct attrnames {
->  	char *		attr_name;
-> @@ -52,7 +51,6 @@ typedef struct attrnames {
->  	attrset_t	attr_set;
->  	attrremove_t	attr_remove;
->  	attrexists_t	attr_exists;
-> -	attrcapable_t	attr_capable;
->  } attrnames_t;
->  
->  #define ATTR_NAMECOUNT	4
-> 
+Barry.
