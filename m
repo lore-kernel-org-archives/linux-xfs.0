@@ -1,158 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 09:16:54 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 10:04:52 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FGGZAn012887
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:16:36 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D0E61185DDA
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:17:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id td0SO9jSQVxbOh9R for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:17:22 -0700 (PDT)
-Message-ID: <482C6211.4050506@sandeen.net>
-Date: Thu, 15 May 2008 11:17:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] fix memory corruption with small buffer reads
-References: <20080515142306.GA29842@lst.de>
-In-Reply-To: <20080515142306.GA29842@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FH4VdE017149
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 10:04:33 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D9AF11866F3
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 10:05:13 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id UIVn8C8u6TQpryKT for <xfs@oss.sgi.com>; Thu, 15 May 2008 10:05:13 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4FH56F3009109
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 19:05:06 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4FH56US009106
+	for xfs@oss.sgi.com; Thu, 15 May 2008 19:05:06 +0200
+Date: Thu, 15 May 2008 19:05:05 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix reiserfs case in 032
+Message-ID: <20080515170505.GA8949@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> When we have multiple buffers in a single page for a blocksize == pagesize
-> filesystem we might overwrite the page contents if two callers hit it
-> shortly after each other.  To prevent that we need to keep the page
-> locked until I/O is completed and the page marked uptodate.
-> 
-> Thanks to Eric Sandeen for triaging this bug and finding a reproducible
-> testcase and Dave Chinner for additional advice.
-> 
-> This should fix kernel.org bz #10421.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+mkfs.reiserfs refuses to create a filesystem on full devices without
+partitions unless it's given -f in addition to the already required Y
+input to confirm the fs creation, so give the argument to it.
 
-Thanks for the fix, Christoph.
-
-This has passed many, many iterations of my original testcase, which
-almost always failed first-time on stock 2.6.25.
-
-Tested-by: Eric Sandeen <sandeen@sandeen.net>
+While we're at it also write the full command line used to create the
+filesystem into the log to ease future debugging.
 
 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2008-05-15 11:45:10.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c	2008-05-15 15:26:09.000000000 +0200
-> @@ -386,6 +386,8 @@ _xfs_buf_lookup_pages(
->  		if (unlikely(page == NULL)) {
->  			if (flags & XBF_READ_AHEAD) {
->  				bp->b_page_count = i;
-> +				for (i = 0; i < bp->b_page_count; i++)
-> +					unlock_page(bp->b_pages[i]);
->  				return -ENOMEM;
->  			}
->  
-> @@ -415,17 +417,24 @@ _xfs_buf_lookup_pages(
->  		ASSERT(!PagePrivate(page));
->  		if (!PageUptodate(page)) {
->  			page_count--;
-> -			if (blocksize < PAGE_CACHE_SIZE && !PagePrivate(page)) {
-> +			if (blocksize >= PAGE_CACHE_SIZE) {
-> +				if (flags & XBF_READ)
-> +					bp->b_flags |= _XBF_PAGE_LOCKED;
-> +			} else if (!PagePrivate(page)) {
->  				if (test_page_region(page, offset, nbytes))
->  					page_count++;
->  			}
->  		}
->  
-> -		unlock_page(page);
->  		bp->b_pages[i] = page;
->  		offset = 0;
->  	}
->  
-> +	if (!(bp->b_flags & _XBF_PAGE_LOCKED)) {
-> +		for (i = 0; i < bp->b_page_count; i++)
-> +			unlock_page(bp->b_pages[i]);
-> +	}
-> +
->  	if (page_count == bp->b_page_count)
->  		bp->b_flags |= XBF_DONE;
->  
-> @@ -746,6 +755,7 @@ xfs_buf_associate_memory(
->  	bp->b_count_desired = len;
->  	bp->b_buffer_length = buflen;
->  	bp->b_flags |= XBF_MAPPED;
-> +	bp->b_flags &= ~_XBF_PAGE_LOCKED;
->  
->  	return 0;
->  }
-> @@ -1093,8 +1103,10 @@ _xfs_buf_ioend(
->  	xfs_buf_t		*bp,
->  	int			schedule)
->  {
-> -	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-> +	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-> +		bp->b_flags &= ~_XBF_PAGE_LOCKED;
->  		xfs_buf_ioend(bp, schedule);
-> +	}
->  }
->  
->  STATIC void
-> @@ -1125,6 +1137,9 @@ xfs_buf_bio_end_io(
->  
->  		if (--bvec >= bio->bi_io_vec)
->  			prefetchw(&bvec->bv_page->flags);
-> +
-> +		if (bp->b_flags & _XBF_PAGE_LOCKED)
-> +			unlock_page(page);
->  	} while (bvec >= bio->bi_io_vec);
->  
->  	_xfs_buf_ioend(bp, 1);
-> @@ -1163,7 +1178,8 @@ _xfs_buf_ioapply(
->  	 * filesystem block size is not smaller than the page size.
->  	 */
->  	if ((bp->b_buffer_length < PAGE_CACHE_SIZE) &&
-> -	    (bp->b_flags & XBF_READ) &&
-> +	    ((bp->b_flags & (XBF_READ|_XBF_PAGE_LOCKED)) ==
-> +	      (XBF_READ|_XBF_PAGE_LOCKED)) &&
->  	    (blocksize >= PAGE_CACHE_SIZE)) {
->  		bio = bio_alloc(GFP_NOIO, 1);
->  
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2008-05-15 11:45:10.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h	2008-05-15 15:26:09.000000000 +0200
-> @@ -66,6 +66,25 @@ typedef enum {
->  	_XBF_PAGES = (1 << 18),	    /* backed by refcounted pages	   */
->  	_XBF_RUN_QUEUES = (1 << 19),/* run block device task queue	   */
->  	_XBF_DELWRI_Q = (1 << 21),   /* buffer on delwri queue		   */
-> +
-> +	/*
-> +	 * Special flag for supporting metadata blocks smaller than a FSB.
-> +	 *
-> +	 * In this case we can have multiple xfs_buf_t on a single page and
-> +	 * need to lock out concurrent xfs_buf_t readers as they only
-> +	 * serialise access to the buffer.
-> +	 *
-> +	 * If the FSB size >= PAGE_CACHE_SIZE case, we have no serialisation
-> +	 * between reads of the page. Hence we can have one thread read the
-> +	 * page and modify it, but then race with another thread that thinks
-> +	 * the page is not up-to-date and hence reads it again.
-> +	 *
-> +	 * The result is that the first modifcation to the page is lost.
-> +	 * This sort of AGF/AGI reading race can happen when unlinking inodes
-> +	 * that require truncation and results in the AGI unlinked list
-> +	 * modifications being lost.
-> +	 */
-> +	_XBF_PAGE_LOCKED = (1 << 22),
->  } xfs_buf_flags_t;
->  
->  typedef enum {
-> 
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfstests/032
+===================================================================
+RCS file: /cvs/xfs-cmds/xfstests/032,v
+retrieving revision 1.13
+diff -u -p -r1.13 032
+--- xfstests/032	9 Nov 2005 02:49:08 -0000	1.13
++++ xfstests/032	15 May 2008 17:02:08 -0000
+@@ -43,7 +43,7 @@ do
+ 	[ $fs = vfat ] && postargs=2000
+ 	# these folks prompt before writing
+ 	[ $fs = jfs ] && preop="echo Y |"
+-	[ $fs = reiserfs ] && preop="echo y |"
++	[ $fs = reiserfs ] && preop="echo y |" && preargs="-f"
+ 	# cramfs mkfs requires a directory argument
+ 	[ $fs = cramfs ] && preargs=/proc/fs/xfs
+ 
+@@ -52,7 +52,7 @@ do
+ 
+ 	# create a filesystem of this type
+ 	echo "=== Creating $fs filesystem..." >>$seq.full
+-	echo "    ( mkfs -t $fs $SCRATCH_DEV )" >>$seq.full
++	echo "    ( $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs )" >>$seq.full
+ 	eval $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs >>$seq.full 2>&1
+ 
+ 	# next, ensure we don't overwrite it
