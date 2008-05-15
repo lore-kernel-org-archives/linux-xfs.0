@@ -1,31 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 23:05:18 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4F65A8J017160
-	for <xfs@oss.sgi.com>; Wed, 14 May 2008 23:05:11 -0700
-Date: Thu, 15 May 2008 02:05:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch] xfsqa 073 - don't host loopback images in /tmp
-Message-ID: <20080515060558.GB8780@infradead.org>
-References: <20080515013255.GM155679365@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 23:39:41 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4F6dMJr019676
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 23:39:24 -0700
+Message-ID: <482BDAC1.7070407@sgi.com>
+Date: Thu, 15 May 2008 16:40:01 +1000
+From: Tim Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080515013255.GM155679365@sgi.com>
+Subject: Re: [PATCH] don't run test 167 if killall is not installed
+References: <20080515053918.GA16530@lst.de>
+In-Reply-To: <20080515053918.GA16530@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, May 15, 2008 at 11:32:55AM +1000, David Chinner wrote:
-> /tmp might be small, might not support files larger than 2GB,
-> etc, so trying to host loopback images of 100GB filesystems
-> will break in some situations. We should use $TEST_DIR for the
-> images.
+Christoph Hellwig wrote:
+> Test 167 will leave runaway fsstress processes around in case killall is
+> not installed and thus make all following tests fail.  This patch checks
+> for killall beeing installed and error out otherwise.
 > 
-> Note: remounting of loopback images has a major bug (in mount)
-> that "leaks" loopback device references. Hence all the hackery
-> with losetup to work around this.
+> 
 
-Looks good.
+Looks reasonable.
+
+However:
+
+* could use set_prog_path like we do in common.config.
+
+* I wonder if one could use "kill -$pgid" on the process group
+for fsstress instead of killall (I've never tried it :).
+
+--Tim
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfstests/167
+> ===================================================================
+> RCS file: /cvs/xfs-cmds/xfstests/167,v
+> retrieving revision 1.3
+> diff -u -p -r1.3 167
+> --- xfstests/167	2 Aug 2007 16:19:56 -0000	1.3
+> +++ xfstests/167	15 May 2008 05:34:20 -0000
+> @@ -13,6 +13,7 @@ owner=dgc@sgi.com
+>  seq=`basename $0`
+>  echo "QA output created by $seq"
+>  
+> +killall="/usr/bin/killall"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  rm -f $seq.full
+> @@ -43,6 +44,8 @@ workout()
+>  _supported_fs xfs
+>  _supported_os Linux
+>  
+> +[ -x $killall ] || _notrun "$killall executable not found"
+> +
+>  _setup_testdir
+>  _require_scratch
+>  _scratch_mkfs_xfs >/dev/null 2>&1
+> 
