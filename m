@@ -1,275 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 01:45:41 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4F8jCNi004638
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 01:45:14 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA24553; Thu, 15 May 2008 18:45:53 +1000
-Message-ID: <482BF841.8050704@sgi.com>
-Date: Thu, 15 May 2008 18:45:53 +1000
-From: Donald Douwsma <donaldd@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] re-remove xfs custom bitops
-References: <480EB397.1040304@sandeen.net> <4829C360.5060500@sandeen.net>
-In-Reply-To: <4829C360.5060500@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 06:37:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FDb2LY028977
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 06:37:09 -0700
+From: Anton Altaparmakov <aia21@cam.ac.uk>
+In-Reply-To: <20080515043546.GA22054@infradead.org>
+Subject: Re: VFS case-insenstive dcache code (was Re: [PATCH 0/4] XFS: ASCII case-insensitivity support)
+References: <20080514075244.738514733@chook.melbourne.sgi.com> <20080514084344.GA4333@infradead.org> <op.ua57wpji3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515043546.GA22054@infradead.org>
+Message-Id: <CC175332-A5E6-4075-9596-5D351A5C874B@cam.ac.uk>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Date: Thu, 15 May 2008 14:37:45 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-Eric Sandeen wrote:
-> Eric Sandeen wrote:
->> Once more, with feeling!
->>
->> This re-instates the reverted mod after the ppc panic of
->> Feb '08.  You guys do have ppc boxes in the test farm now right? :)
->>
->> This keeps xfs_lowbit64 as it was since there aren't good
->> generic helpers there ...
->>
->> This should probably keep Dave's signed-off line, there's
->> a bit of my (userspace) testing here but no original work. 
->>
->> This exact patch isn't tested but it's based on a conglomeration
->> of prior testing...
-> 
-> SGI guys, any takers on this one?
-> -Eric
+Hi,
 
-Sorry Eric, havent had chance to run this on all platforms yet.
-I want to test it on ppc as well as the usual x86_64/ia64 combinations,
-then I'll get it committed.
+On 15 May 2008, at 05:35, Christoph Hellwig wrote:
+> On Thu, May 15, 2008 at 11:03:51AM +1000, Barry Naujok wrote:
+>> On Wed, 14 May 2008 18:43:44 +1000, Christoph Hellwig <hch@infradead.org 
+>> >
+>> wrote:
+>>
+>>> All patches looks good to me, but please add a comment describing  
+>>> the
+>>> conditional d_reash in the create case.
+>>
+>> I'm separating the "return name" patch into two patches: one for  
+>> the dcache
+>> code which Anton wrote and one with the XFS specific code.
+>>
+>> So, how does one apply the Signed-off line and copyright for the  
+>> dcache
+>> code (below - possibly mangled)?
+>
+> In this from it should be From: and Signed-off-by: you as you factored
+> it out of the ntfs code.  Just mention it's originally Anton's ntfs
+> code in the description.  Of course getting Anton to sign off on it
+> and prepare a patch to use it in ntfs would be even better.
 
-Don
+You can certainly add SOB:
 
-> 
->> Thanks,
->> -Eric
->>
->> Index: linux-2.6-xfs/fs/xfs/xfs_bit.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/xfs_bit.c
->> +++ linux-2.6-xfs/fs/xfs/xfs_bit.c
->> @@ -25,109 +25,6 @@
->>   * XFS bit manipulation routines, used in non-realtime code.
->>   */
->>  
->> -#ifndef HAVE_ARCH_HIGHBIT
->> -/*
->> - * Index of high bit number in byte, -1 for none set, 0..7 otherwise.
->> - */
->> -static const char xfs_highbit[256] = {
->> -       -1, 0, 1, 1, 2, 2, 2, 2,			/* 00 .. 07 */
->> -	3, 3, 3, 3, 3, 3, 3, 3,			/* 08 .. 0f */
->> -	4, 4, 4, 4, 4, 4, 4, 4,			/* 10 .. 17 */
->> -	4, 4, 4, 4, 4, 4, 4, 4,			/* 18 .. 1f */
->> -	5, 5, 5, 5, 5, 5, 5, 5,			/* 20 .. 27 */
->> -	5, 5, 5, 5, 5, 5, 5, 5,			/* 28 .. 2f */
->> -	5, 5, 5, 5, 5, 5, 5, 5,			/* 30 .. 37 */
->> -	5, 5, 5, 5, 5, 5, 5, 5,			/* 38 .. 3f */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 40 .. 47 */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 48 .. 4f */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 50 .. 57 */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 58 .. 5f */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 60 .. 67 */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 68 .. 6f */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 70 .. 77 */
->> -	6, 6, 6, 6, 6, 6, 6, 6,			/* 78 .. 7f */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* 80 .. 87 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* 88 .. 8f */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* 90 .. 97 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* 98 .. 9f */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* a0 .. a7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* a8 .. af */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* b0 .. b7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* b8 .. bf */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* c0 .. c7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* c8 .. cf */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* d0 .. d7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* d8 .. df */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* e0 .. e7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* e8 .. ef */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* f0 .. f7 */
->> -	7, 7, 7, 7, 7, 7, 7, 7,			/* f8 .. ff */
->> -};
->> -#endif
->> -
->> -/*
->> - * xfs_highbit32: get high bit set out of 32-bit argument, -1 if none set.
->> - */
->> -inline int
->> -xfs_highbit32(
->> -	__uint32_t	v)
->> -{
->> -#ifdef HAVE_ARCH_HIGHBIT
->> -	return highbit32(v);
->> -#else
->> -	int		i;
->> -
->> -	if (v & 0xffff0000)
->> -		if (v & 0xff000000)
->> -			i = 24;
->> -		else
->> -			i = 16;
->> -	else if (v & 0x0000ffff)
->> -		if (v & 0x0000ff00)
->> -			i = 8;
->> -		else
->> -			i = 0;
->> -	else
->> -		return -1;
->> -	return i + xfs_highbit[(v >> i) & 0xff];
->> -#endif
->> -}
->> -
->> -/*
->> - * xfs_lowbit64: get low bit set out of 64-bit argument, -1 if none set.
->> - */
->> -int
->> -xfs_lowbit64(
->> -	__uint64_t	v)
->> -{
->> -	__uint32_t	w = (__uint32_t)v;
->> -	int		n = 0;
->> -
->> -	if (w) {	/* lower bits */
->> -		n = ffs(w);
->> -	} else {	/* upper bits */
->> -		w = (__uint32_t)(v >> 32);
->> -		if (w && (n = ffs(w)))
->> -			n += 32;
->> -	}
->> -	return n - 1;
->> -}
->> -
->> -/*
->> - * xfs_highbit64: get high bit set out of 64-bit argument, -1 if none set.
->> - */
->> -int
->> -xfs_highbit64(
->> -	__uint64_t	v)
->> -{
->> -	__uint32_t	h = (__uint32_t)(v >> 32);
->> -
->> -	if (h)
->> -		return xfs_highbit32(h) + 32;
->> -	return xfs_highbit32((__uint32_t)v);
->> -}
->> -
->> -
->>  /*
->>   * Return whether bitmap is empty.
->>   * Size is number of words in the bitmap, which is padded to word boundary
->> Index: linux-2.6-xfs/fs/xfs/xfs_bit.h
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/xfs_bit.h
->> +++ linux-2.6-xfs/fs/xfs/xfs_bit.h
->> @@ -47,13 +47,39 @@ static inline __uint64_t xfs_mask64lo(in
->>  }
->>  
->>  /* Get high bit set out of 32-bit argument, -1 if none set */
->> -extern int xfs_highbit32(__uint32_t v);
->> -
->> -/* Get low bit set out of 64-bit argument, -1 if none set */
->> -extern int xfs_lowbit64(__uint64_t v);
->> +static inline int xfs_highbit32(__uint32_t v)
->> +{
->> +	return fls(v) - 1;
->> +}
->>  
->>  /* Get high bit set out of 64-bit argument, -1 if none set */
->> -extern int xfs_highbit64(__uint64_t);
->> +static inline int xfs_highbit64(__uint64_t v)
->> +{
->> +	return fls64(v) - 1;
->> +}
->> +
->> +/* Get low bit set out of 32-bit argument, -1 if none set */
->> +static inline int xfs_lowbit32(__uint32_t v)
->> +{
->> +	unsigned long	t = v;
->> +	return (v) ? find_first_bit(&t, 32) : -1;
->> +}
->> +
->> +/* Get low bit set out of 64-bit argument, -1 if none set */
->> +static inline int xfs_lowbit64(__uint64_t v)
->> +{
->> +	__uint32_t	w = (__uint32_t)v;
->> +	int		n = 0;
->> +
->> +	if (w) {	/* lower bits */
->> +		n = ffs(w);
->> +	} else {	/* upper bits */
->> +		w = (__uint32_t)(v >> 32);
->> +		if (w && (n = ffs(w)))
->> +		n += 32;
->> +	}
->> +	return n - 1;
->> +}
->>  
->>  /* Return whether bitmap is empty (1 == empty) */
->>  extern int xfs_bitmap_empty(uint *map, uint size);
->> Index: linux-2.6-xfs/fs/xfs/xfs_rtalloc.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/xfs_rtalloc.c
->> +++ linux-2.6-xfs/fs/xfs/xfs_rtalloc.c
->> @@ -74,18 +74,6 @@ STATIC int xfs_rtmodify_summary(xfs_moun
->>   */
->>  
->>  /*
->> - * xfs_lowbit32: get low bit set out of 32-bit argument, -1 if none set.
->> - */
->> -STATIC int
->> -xfs_lowbit32(
->> -	__uint32_t	v)
->> -{
->> -	if (v)
->> -		return ffs(v) - 1;
->> -	return -1;
->> -}
->> -
->> -/*
->>   * Allocate space to the bitmap or summary file, and zero it, for growfs.
->>   */
->>  STATIC int				/* error */
->> @@ -450,6 +438,7 @@ xfs_rtallocate_extent_near(
->>  	}
->>  	bbno = XFS_BITTOBLOCK(mp, bno);
->>  	i = 0;
->> +	ASSERT(minlen != 0);
->>  	log2len = xfs_highbit32(minlen);
->>  	/*
->>  	 * Loop over all bitmap blocks (bbno + i is current block).
->> @@ -618,6 +607,8 @@ xfs_rtallocate_extent_size(
->>  	xfs_suminfo_t	sum;		/* summary information for extents */
->>  
->>  	ASSERT(minlen % prod == 0 && maxlen % prod == 0);
->> +	ASSERT(maxlen != 0);
->> +
->>  	/*
->>  	 * Loop over all the levels starting with maxlen.
->>  	 * At each level, look at all the bitmap blocks, to see if there
->> @@ -675,6 +666,9 @@ xfs_rtallocate_extent_size(
->>  		*rtblock = NULLRTBLOCK;
->>  		return 0;
->>  	}
->> +	ASSERT(minlen != 0);
->> +	ASSERT(maxlen != 0);
->> +
->>  	/*
->>  	 * Loop over sizes, from maxlen down to minlen.
->>  	 * This time, when we do the allocations, allow smaller ones
->> @@ -1961,6 +1955,7 @@ xfs_growfs_rt(
->>  				  nsbp->sb_blocksize * nsbp->sb_rextsize);
->>  		nsbp->sb_rextents = nsbp->sb_rblocks;
->>  		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
->> +		ASSERT(nsbp->sb_rextents != 0);
->>  		nsbp->sb_rextslog = xfs_highbit32(nsbp->sb_rextents);
->>  		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
->>  		nrsumsize =
->>
->>
->>
-> 
+Signed-off-by: Anton Altaparmakov <aia21@cantab.net> to the patch.  It  
+looks good to me.
+
+Once Linus has applied this I will try and get NTFS switched to using  
+the new function.  I have got a few other patches that need applying  
+for NTFS anyway so I will roll them all up in one go into the NTFS git  
+tree and get Linus to apply them...
+
+Best regards,
+
+	Anton
+-- 
+Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
+Linux NTFS maintainer, http://www.linux-ntfs.org/
