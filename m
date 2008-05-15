@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 09:17:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FGHIVr012947
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:17:19 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 09:16:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FGGZAn012887
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:16:36 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB5CB1723B8
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:18:06 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id IXm5aHdu17OKzuEy for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:18:06 -0700 (PDT)
-Message-ID: <482C623D.7070208@sandeen.net>
-Date: Thu, 15 May 2008 11:18:05 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D0E61185DDA
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:17:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id td0SO9jSQVxbOh9R for <xfs@oss.sgi.com>; Thu, 15 May 2008 09:17:22 -0700 (PDT)
+Message-ID: <482C6211.4050506@sandeen.net>
+Date: Thu, 15 May 2008 11:17:21 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: [PATCH] fix memory corruption with small buffer reads
@@ -32,16 +32,18 @@ Christoph Hellwig wrote:
 > testcase and Dave Chinner for additional advice.
 > 
 > This should fix kernel.org bz #10421.
-
-Oh, this should go to -stable too, when everyone is happy with it...
-
-Thanks,
-
--Eric
-
+> 
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+
+Thanks for the fix, Christoph.
+
+This has passed many, many iterations of my original testcase, which
+almost always failed first-time on stock 2.6.25.
+
+Tested-by: Eric Sandeen <sandeen@sandeen.net>
+
+
 > Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
 > ===================================================================
 > --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2008-05-15 11:45:10.000000000 +0200
