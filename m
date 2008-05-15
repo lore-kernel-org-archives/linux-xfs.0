@@ -1,57 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 06:37:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 06:43:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FDb2LY028977
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 06:37:09 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4FDh4W3029565
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 06:43:07 -0700
 From: Anton Altaparmakov <aia21@cam.ac.uk>
-In-Reply-To: <20080515043546.GA22054@infradead.org>
-Subject: Re: VFS case-insenstive dcache code (was Re: [PATCH 0/4] XFS: ASCII case-insensitivity support)
-References: <20080514075244.738514733@chook.melbourne.sgi.com> <20080514084344.GA4333@infradead.org> <op.ua57wpji3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515043546.GA22054@infradead.org>
-Message-Id: <CC175332-A5E6-4075-9596-5D351A5C874B@cam.ac.uk>
+In-Reply-To: <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com>
+Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
+References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com>
+Message-Id: <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk>
 Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Mime-Version: 1.0 (Apple Message framework v919.2)
-Date: Thu, 15 May 2008 14:37:45 +0100
+Date: Thu, 15 May 2008 14:43:44 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
 Hi,
 
-On 15 May 2008, at 05:35, Christoph Hellwig wrote:
-> On Thu, May 15, 2008 at 11:03:51AM +1000, Barry Naujok wrote:
->> On Wed, 14 May 2008 18:43:44 +1000, Christoph Hellwig <hch@infradead.org 
->> >
->> wrote:
+On 15 May 2008, at 06:14, Barry Naujok wrote:
+> On Thu, 15 May 2008 14:57:00 +1000, Christoph Hellwig <hch@infradead.org 
+> > wrote:
+>> On Wed, May 14, 2008 at 05:55:45PM +1000, Barry Naujok wrote:
+>>> Not quite sure if this is the right test, but I did 1000 creates on
+>>> a brand new filesystem with and without ci on my SATA drive, both
+>>> sustained almost 600 creates per second.
+>>>
+>>> I believe creates would be the worst case scenario for not adding
+>>> negative dentries?
 >>
->>> All patches looks good to me, but please add a comment describing  
->>> the
->>> conditional d_reash in the create case.
->>
->> I'm separating the "return name" patch into two patches: one for  
->> the dcache
->> code which Anton wrote and one with the XFS specific code.
->>
->> So, how does one apply the Signed-off line and copyright for the  
->> dcache
->> code (below - possibly mangled)?
+>> No, negative dentries shouldn't have any effect on that.  negative
+>> entries help to optimize away lookups.  E.g. thing of the PATH  
+>> variable
+>> and say your shell is not in the first directory listed there.   
+>> Having
+>> a negative dentry for it means that you don't have to do a lookup in
+>> the first directories everytime someone wants to use the shell.
 >
-> In this from it should be From: and Signed-off-by: you as you factored
-> it out of the ntfs code.  Just mention it's originally Anton's ntfs
-> code in the description.  Of course getting Anton to sign off on it
-> and prepare a patch to use it in ntfs would be even better.
+> Ah, that makes more sense. I did a test of a million lookups to a
+> non-existant file in a short-form directory (dual 1.6G opteron):
+>
+> CI = 4.6s
+> non-CI = 3.7s
+>
+> And a directory with 10000 files:
+>
+> CI = 10.3s
+> non-CI = 3.9s
 
-You can certainly add SOB:
 
-Signed-off-by: Anton Altaparmakov <aia21@cantab.net> to the patch.  It  
-looks good to me.
+Yes, and you can get the performance back if you allow negative  
+dentries to be created.  You just have to make sure that every time a  
+directory entry is created in directory X, all negative dentries which  
+are children of directory X are thrown away.
 
-Once Linus has applied this I will try and get NTFS switched to using  
-the new function.  I have got a few other patches that need applying  
-for NTFS anyway so I will roll them all up in one go into the NTFS git  
-tree and get Linus to apply them...
+Failure to do so will result in lookups returning ENOENT even though a  
+file now exists that matches case insensitively.  This happens because  
+the VFS will find the negative dentry and return ENOENT without  
+calling the file system lookup method thus the file system does not  
+get a chance to discover the new matching directory entry...
 
 Best regards,
 
