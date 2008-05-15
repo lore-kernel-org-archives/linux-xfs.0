@@ -1,49 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 22:13:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4F5D2Gm013176
-	for <xfs@oss.sgi.com>; Wed, 14 May 2008 22:13:05 -0700
-Date: Thu, 15 May 2008 15:14:54 +1000
-Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org>
-Message-ID: <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080515045700.GA4328@infradead.org>
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 14 May 2008 22:38:56 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4F5ccth015373
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 22:38:39 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0D4C16FA0D
+	for <xfs@oss.sgi.com>; Wed, 14 May 2008 22:39:25 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id cZCUk75Z8I0gT4kI for <xfs@oss.sgi.com>; Wed, 14 May 2008 22:39:25 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4F5dIF3016691
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 07:39:18 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4F5dIKc016689
+	for xfs@oss.sgi.com; Thu, 15 May 2008 07:39:18 +0200
+Date: Thu, 15 May 2008 07:39:18 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] don't run test 167 if killall is not installed
+Message-ID: <20080515053918.GA16530@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, aia21@cantab.net
+To: xfs@oss.sgi.com
 
-On Thu, 15 May 2008 14:57:00 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
+Test 167 will leave runaway fsstress processes around in case killall is
+not installed and thus make all following tests fail.  This patch checks
+for killall beeing installed and error out otherwise.
 
-> On Wed, May 14, 2008 at 05:55:45PM +1000, Barry Naujok wrote:
->> Not quite sure if this is the right test, but I did 1000 creates on
->> a brand new filesystem with and without ci on my SATA drive, both
->> sustained almost 600 creates per second.
->>
->> I believe creates would be the worst case scenario for not adding
->> negative dentries?
->
-> No, negative dentries shouldn't have any effect on that.  negative
-> entries help to optimize away lookups.  E.g. thing of the PATH variable
-> and say your shell is not in the first directory listed there.  Having
-> a negative dentry for it means that you don't have to do a lookup in
-> the first directories everytime someone wants to use the shell.
 
-Ah, that makes more sense. I did a test of a million lookups to a
-non-existant file in a short-form directory (dual 1.6G opteron):
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-CI = 4.6s
-non-CI = 3.7s
-
-And a directory with 10000 files:
-
-CI = 10.3s
-non-CI = 3.9s
-
-Barry.
+Index: xfstests/167
+===================================================================
+RCS file: /cvs/xfs-cmds/xfstests/167,v
+retrieving revision 1.3
+diff -u -p -r1.3 167
+--- xfstests/167	2 Aug 2007 16:19:56 -0000	1.3
++++ xfstests/167	15 May 2008 05:34:20 -0000
+@@ -13,6 +13,7 @@ owner=dgc@sgi.com
+ seq=`basename $0`
+ echo "QA output created by $seq"
+ 
++killall="/usr/bin/killall"
+ here=`pwd`
+ tmp=/tmp/$$
+ rm -f $seq.full
+@@ -43,6 +44,8 @@ workout()
+ _supported_fs xfs
+ _supported_os Linux
+ 
++[ -x $killall ] || _notrun "$killall executable not found"
++
+ _setup_testdir
+ _require_scratch
+ _scratch_mkfs_xfs >/dev/null 2>&1
