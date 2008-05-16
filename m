@@ -1,35 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 00:22:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4G7MBsm030605
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:17 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 00:22:30 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4G7MIpO030619
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:21 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A20AB6DBDE
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:59 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 0ZJQLIBypJr2ftsg for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E5B316D5708
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:23:06 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 9lpowwbDCwv6TMCv for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:23:06 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4G7MpF3001133
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4G7MxF3001147
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 09:22:52 +0200
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 09:22:59 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4G7MpvY001131
-	for xfs@oss.sgi.com; Fri, 16 May 2008 09:22:51 +0200
-Date: Fri, 16 May 2008 09:22:51 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4G7MxGA001145
+	for xfs@oss.sgi.com; Fri, 16 May 2008 09:22:59 +0200
+Date: Fri, 16 May 2008 09:22:59 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill xfs_uuid_unmount
-Message-ID: <20080516072251.GB1052@lst.de>
-References: <20080426200923.GA14172@lst.de>
+Subject: Re: [PATCH] merge xfs_mntupdate into xfs_fs_remount
+Message-ID: <20080516072259.GC1052@lst.de>
+References: <20080426201029.GB14172@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080426200923.GA14172@lst.de>
+In-Reply-To: <20080426201029.GB14172@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-On Sat, Apr 26, 2008 at 10:09:23PM +0200, Christoph Hellwig wrote:
-> Quite useless wrapper that doesn't help making the code more readable.
+On Sat, Apr 26, 2008 at 10:10:29PM +0200, Christoph Hellwig wrote:
+> xfs_mntupdate already is completely Linux specific due to the VFS flags
+> passed in, so it might aswell be merged into xfs_fs_remount.
 
 ping?
 
@@ -37,51 +38,93 @@ ping?
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
 > ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-04-25 20:40:50.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-04-25 20:48:27.000000000 +0200
-> @@ -47,7 +47,6 @@
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-04-25 20:42:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-04-25 20:44:55.000000000 +0200
+> @@ -52,6 +52,7 @@
+>  #include "xfs_version.h"
+>  #include "xfs_log_priv.h"
+>  #include "xfs_trans_priv.h"
+> +#include "xfs_filestream.h"
 >  
->  STATIC int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
->  STATIC int	xfs_uuid_mount(xfs_mount_t *);
-> -STATIC void	xfs_uuid_unmount(xfs_mount_t *mp);
->  STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
+>  #include <linux/namei.h>
+>  #include <linux/init.h>
+> @@ -1220,8 +1221,26 @@ xfs_fs_remount(
+>  	int			error;
 >  
->  
-> @@ -1262,7 +1261,7 @@ xfs_mountfs(
->  	/* FALLTHROUGH */
->   error1:
->  	if (uuid_mounted)
-> -		xfs_uuid_unmount(mp);
-> +		uuid_table_remove(&mp->m_sb.sb_uuid);
->  	xfs_freesb(mp);
->  	return error;
+>  	error = xfs_parseargs(mp, options, args, 1);
+> -	if (!error)
+> -		error = xfs_mntupdate(mp, flags, args);
+> +	if (error)
+> +		goto out_free_args;
+> +
+> +	if (!(*flags & MS_RDONLY)) {			/* rw/ro -> rw */
+> +		if (mp->m_flags & XFS_MOUNT_RDONLY)
+> +			mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> +		if (args->flags & XFSMNT_BARRIER) {
+> +			mp->m_flags |= XFS_MOUNT_BARRIER;
+> +			xfs_mountfs_check_barriers(mp);
+> +		} else {
+> +			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> +		}
+> +	} else if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {	/* rw -> ro */
+> +		xfs_filestream_flush(mp);
+> +		xfs_sync(mp, SYNC_DATA_QUIESCE);
+> +		xfs_attr_quiesce(mp);
+> +		mp->m_flags |= XFS_MOUNT_RDONLY;
+> +	}
+> +
+> + out_free_args:
+>  	kmem_free(args, sizeof(*args));
+>  	return -error;
 >  }
-> @@ -1343,7 +1342,7 @@ xfs_unmountfs(xfs_mount_t *mp, struct cr
->  
->  	xfs_unmountfs_close(mp, cr);
->  	if ((mp->m_flags & XFS_MOUNT_NOUUID) == 0)
-> -		xfs_uuid_unmount(mp);
-> +		uuid_table_remove(&mp->m_sb.sb_uuid);
->  
->  #if defined(DEBUG) || defined(INDUCE_IO_ERROR)
->  	xfs_errortag_clearall(mp, 0);
-> @@ -1905,16 +1904,6 @@ xfs_uuid_mount(
+> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2008-04-25 20:42:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2008-04-25 20:43:36.000000000 +0200
+> @@ -693,30 +693,6 @@ xfs_attr_quiesce(
+>  	xfs_unmountfs_writesb(mp);
 >  }
 >  
->  /*
-> - * Remove filesystem from the UUID table.
-> - */
-> -STATIC void
-> -xfs_uuid_unmount(
-> -	xfs_mount_t	*mp)
+> -int
+> -xfs_mntupdate(
+> -	struct xfs_mount		*mp,
+> -	int				*flags,
+> -	struct xfs_mount_args		*args)
 > -{
-> -	uuid_table_remove(&mp->m_sb.sb_uuid);
+> -	if (!(*flags & MS_RDONLY)) {			/* rw/ro -> rw */
+> -		if (mp->m_flags & XFS_MOUNT_RDONLY)
+> -			mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> -		if (args->flags & XFSMNT_BARRIER) {
+> -			mp->m_flags |= XFS_MOUNT_BARRIER;
+> -			xfs_mountfs_check_barriers(mp);
+> -		} else {
+> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -		}
+> -	} else if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {	/* rw -> ro */
+> -		xfs_filestream_flush(mp);
+> -		xfs_sync(mp, SYNC_DATA_QUIESCE);
+> -		xfs_attr_quiesce(mp);
+> -		mp->m_flags |= XFS_MOUNT_RDONLY;
+> -	}
+> -	return 0;
 > -}
 > -
-> -/*
->   * Used to log changes to the superblock unit and width fields which could
->   * be altered by the mount options, as well as any potential sb_features2
->   * fixup. Only the first superblock is updated.
+>  /*
+>   * xfs_unmount_flush implements a set of flush operation on special
+>   * inodes, which are needed as a separate set of operations so that
+> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2008-04-25 20:42:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.h	2008-04-25 20:42:48.000000000 +0200
+> @@ -11,8 +11,6 @@ struct xfs_mount_args;
+>  int xfs_mount(struct xfs_mount *mp, struct xfs_mount_args *args,
+>  		struct cred *credp);
+>  int xfs_unmount(struct xfs_mount *mp, int flags, struct cred *credp);
+> -int xfs_mntupdate(struct xfs_mount *mp, int *flags,
+> -		struct xfs_mount_args *args);
+>  int xfs_sync(struct xfs_mount *mp, int flags);
+>  void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+>  		int lnnum);
 ---end quoted text---
