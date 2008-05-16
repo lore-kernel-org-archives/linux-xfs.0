@@ -1,63 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 06:50:16 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4GDnwji032367
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 06:49:59 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ADD3D17D7B2
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 06:50:45 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id xJlJuLCesUGHPLz0 for <xfs@oss.sgi.com>; Fri, 16 May 2008 06:50:45 -0700 (PDT)
-Message-ID: <482D9133.8030403@sandeen.net>
-Date: Fri, 16 May 2008 08:50:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 10:11:06 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4GHAvua024912
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 10:10:58 -0700
+Received: from mail.ukfsn.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8027B76CAE
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 10:11:45 -0700 (PDT)
+Received: from mail.ukfsn.org (mx1.ukfsn.org [77.75.108.10]) by cuda.sgi.com with ESMTP id sqg6BSHCATlTHl2D for <xfs@oss.sgi.com>; Fri, 16 May 2008 10:11:45 -0700 (PDT)
+Message-ID: <482DC043.5000307@dgreaves.com>
+Date: Fri, 16 May 2008 18:11:31 +0100
+From: David Greaves <david@dgreaves.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] update check on valid sb fields being modified on mount
-References: <20080516131548.GX103491721@sgi.com>
-In-Reply-To: <20080516131548.GX103491721@sgi.com>
+Subject: Regression- XFS won't mount on partitioned md array
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-David Chinner wrote:
-> Recent changes to update the version number during mount
-> (attr2 stuff) failed to change the assert that checked for
-> calid flags being changed on mount. Clearly this path hasn't
-> been exercised by the test code....
-> 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  fs/xfs/xfs_mount.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> Index: 2.6.x-xfs-new/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- 2.6.x-xfs-new.orig/fs/xfs/xfs_mount.c	2008-05-16 23:08:18.000000000 +1000
-> +++ 2.6.x-xfs-new/fs/xfs/xfs_mount.c	2008-05-16 23:10:00.224848630 +1000
-> @@ -1887,7 +1887,8 @@ xfs_mount_log_sb(
->  	int		error;
->  
->  	ASSERT(fields & (XFS_SB_UNIT | XFS_SB_WIDTH | XFS_SB_UUID |
-> -			 XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2));
-> +			 XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2 |
-> +			 XFS_SB_VERSIONNUM));
->  
->  	tp = xfs_trans_alloc(mp, XFS_TRANS_SB_UNIT);
->  	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
-> 
-> 
+I just attempted a kernel upgrade from 2.6.20.7 to 2.6.25.3 and it no longer
+mounts my xfs filesystem.
 
-Ah, looks like this is from:
+I bisected it to around
+a67d7c5f5d25d0b13a4dfb182697135b014fa478
+[XFS] Move platform specific mount option parse out of core XFS code
 
-                /* update sb_versionnum for the clearing of the morebits */
-                if (!sbp->sb_features2)
-                        update_flags |= XFS_SB_VERSIONNUM;
+I have a RAID5 array with partitions:
 
-when attr2 gets turned back off?
+Partition Table for /dev/md_d0
 
-Anyway, looks fine.
+               First       Last
+ # Type       Sector      Sector   Offset    Length   Filesystem Type (ID) Flag
+-- ------- ----------- ----------- ------ ----------- -------------------- ----
+ 1 Primary           0  2500288279      4  2500288280 Linux (83)           None
+ 2 Primary  2500288280  2500483583      0      195304 Non-FS data (DA)     None
 
--Eric
+
+when I attempt to mount /media:
+/dev/md_d0p1 /media xfs rw,nobarrier,noatime,logdev=/dev/md_d0p2,allocsize=512m 0 0
+
+I get:
+ md_d0: p1 p2
+XFS mounting filesystem md_d0p1
+attempt to access beyond end of device
+md_d0p2: rw=0, want=195311, limit=195304
+I/O error in filesystem ("md_d0p1") meta-data dev md_d0p2 block 0x2fae7
+("xlog_bread") error 5 buf count 512
+XFS: empty log check failed
+XFS: log mount/recovery failed: error 5
+XFS: log mount failed
+
+A repair:
+  xfs_repair /dev/md_d0p1 -l /dev/md_d0p2
+gives no errors.
+
+Phase 1 - find and verify superblock...
+Phase 2 - using external log on /dev/md_d0p2
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+...
+
+
+David
