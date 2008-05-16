@@ -1,68 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 11:58:29 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4GIwRwt032088
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 11:58:27 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FF21118A9C3
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 11:59:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 7yyO9zuneEcEKwTv for <xfs@oss.sgi.com>; Fri, 16 May 2008 11:59:15 -0700 (PDT)
-Message-ID: <482DD981.5070004@sandeen.net>
-Date: Fri, 16 May 2008 13:59:13 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Regression- XFS won't mount on partitioned md array
-References: <482DC043.5000307@dgreaves.com>
-In-Reply-To: <482DC043.5000307@dgreaves.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 13:34:54 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4GKYoHS010614
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 13:34:51 -0700
+Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C47316DA3A7
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 13:35:37 -0700 (PDT)
+Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64]) by cuda.sgi.com with ESMTP id BLfM7bJFabfEx1y8 for <xfs@oss.sgi.com>; Fri, 16 May 2008 13:35:37 -0700 (PDT)
+Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
+	by smtp7-g19.free.fr (Postfix) with ESMTP id AD51A322813
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 22:35:15 +0200 (CEST)
+Received: from galadriel.home (pla78-1-82-235-234-79.fbx.proxad.net [82.235.234.79])
+	by smtp7-g19.free.fr (Postfix) with ESMTP id 726093227FB
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 22:35:15 +0200 (CEST)
+Date: Fri, 16 May 2008 22:27:55 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: XFS filesystem reports as full though it isn't
+Message-ID: <20080516222755.3e557c00@galadriel.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Greaves <david@dgreaves.com>
-Cc: David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-David Greaves wrote:
-> I just attempted a kernel upgrade from 2.6.20.7 to 2.6.25.3 and it no longer
-> mounts my xfs filesystem.
-> 
-> I bisected it to around
-> a67d7c5f5d25d0b13a4dfb182697135b014fa478
-> [XFS] Move platform specific mount option parse out of core XFS code
 
-around that... not exactly?  That commit should have been largely a code
-move, which is not to say that it can't contain a bug... :)
+I have a 64 bits (x86_64) machine running Linux 2.6.22.19 with a 24TB
+XFS filesystem. There are some 15TB of data on it. All is well, no
+error except that I can't create a single file (touch foo : no space
+left on device). I don't understand what can be going wrong... 
 
-> I have a RAID5 array with partitions:
-> 
-> Partition Table for /dev/md_d0
-> 
->                First       Last
->  # Type       Sector      Sector   Offset    Length   Filesystem Type (ID) Flag
-> -- ------- ----------- ----------- ------ ----------- -------------------- ----
->  1 Primary           0  2500288279      4  2500288280 Linux (83)           None
->  2 Primary  2500288280  2500483583      0      195304 Non-FS data (DA)     None
-> 
-> 
-> when I attempt to mount /media:
-> /dev/md_d0p1 /media xfs rw,nobarrier,noatime,logdev=/dev/md_d0p2,allocsize=512m 0 0
+History : this filesystem was extended (xfs_growfs) from 16TB to 24.
 
-mythbox?  :)
+I've tought about all XFS problems I can remember of; first, inode
+exhaustion :
 
-Hm, so it's the external log size that it doesn't much like...
+cluster1:/proc/sys/fs# df -i
+Sys. de fich.         Inodes   IUtil.  ILib. %IUti. Mont?sur
+/dev/sda1                  0       0       0    -  /
+tmpfs                2058624       3 2058621    1% /lib/init/rw
+udev                 2058624    1445 2057179    1% /dev
+tmpfs                2058624       1 2058623    1% /dev/shm
+/dev/mapper/vg0-lv0  25379856384    4287 25379852097    1% /mnt/raid
 
-> I get:
->  md_d0: p1 p2
-> XFS mounting filesystem md_d0p1
-> attempt to access beyond end of device
-> md_d0p2: rw=0, want=195311, limit=195304
+OK so there's still plenty of inodes available here, that should be OK.
+Then maybe we have something wrong elsewhere :
 
-what does /proc/partitions say about md_d0p1 and p2?  Is it different
-between the older & newer kernel?
+cluster1:/proc/sys/fs# xfs_db -r -c 'freesp -s -a 0' /dev/vg0/lv0
+   from      to extents  blocks    pct
+      1       1       5       5  71.43
+      2       3       1       2  28.57
+total free extents 6
+total free blocks 7
+average free extent size 1.16667
 
-What does xfs_info /mount/point say about the filesystem when you mount
-it under the older kernel?  Or... if you can't mount it,
+7 blocks free? But there are 9 TB of free space! 
 
-xfs_db -r -c "sb 0" -c p /dev/md_d0p1
+Here is the output from xfs_info /dev/vg0/lv0
 
--Eric
+meta-data=/dev/vg0/lv0           isize=256    agcount=47,
+agsize=137245616 blks =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=6344964096,
+imaxpct=25 =                       sunit=16     swidth=32 blks,
+unwritten=1 naming   =version 2              bsize=4096  
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=131072 blocks=0, rtextents=0
+
+I fail to see nothing special there however.
+
+The only significant thing I see is that the FS is really close to 16
+TB of allocated data (15.7TB). I tried mounting it with "inode64"
+option with no more loving.
+
+Any help would be tremendously welcome. Users are starving for more
+space and they can't even create a single file! 
+
+-- 
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   
+--------------------------------------------------
