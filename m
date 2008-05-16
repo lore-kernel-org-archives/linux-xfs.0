@@ -1,36 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 04:35:06 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4GBYiMW021967
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 04:34:48 -0700
-Received: from smtp-out03.alice-dsl.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5ECA17C7B0
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 04:35:32 -0700 (PDT)
-Received: from smtp-out03.alice-dsl.net (smtp-out03.alice-dsl.net [88.44.63.5]) by cuda.sgi.com with ESMTP id KAKNnSI6KCMaM6BG for <xfs@oss.sgi.com>; Fri, 16 May 2008 04:35:32 -0700 (PDT)
-Subject: Re: [PATCH] XFS tuning on software RAID5 partitionable array; error in xfsprogs 2.9.8
-From: Andi Kleen <andi@firstfloor.org>
-References: <47D90614.9040206@free.fr>
-	<18408.36753.223347.129420@notabene.brown> <47E92EE2.1080108@free.fr>
-	<20080326065232.GA21970@percy.comedia.it> <47EA71BF.8050800@tmr.com>
-	<47EA8CF4.7080201@free.fr> <47EA99AD.9060400@free.fr>
-	<482D6388.7040602@free.fr>
-Date: Fri, 16 May 2008 13:30:15 +0200
-In-Reply-To: <482D6388.7040602@free.fr> (Hubert Verstraete's message of "Fri, 16 May 2008 12:35:52 +0200")
-Message-ID: <87fxsi32rc.fsf@basil.nowhere.org>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 06:15:25 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4GDF7Ri029494
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 06:15:08 -0700
+Date: Fri, 16 May 2008 23:15:48 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: [PATCH] update check on valid sb fields being modified on mount
+Message-ID: <20080516131548.GX103491721@sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Hubert Verstraete <hubskml@free.fr>
-Cc: xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hubert Verstraete <hubskml@free.fr> writes:
->
-> The line 89 in libdisk/md.c is: "free(dfile2);" but it should have
-> remained "if (dfile2) free(dfile2);" because dfile2 is null in case
-> mkfs.xfs is run on an MD device.
+Recent changes to update the version number during mount
+(attr2 stuff) failed to change the assert that checked for
+calid flags being changed on mount. Clearly this path hasn't
+been exercised by the test code....
 
-ISO-C free() is defined to do nothing on a NULL input.
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+---
+ fs/xfs/xfs_mount.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
--Andi
+Index: 2.6.x-xfs-new/fs/xfs/xfs_mount.c
+===================================================================
+--- 2.6.x-xfs-new.orig/fs/xfs/xfs_mount.c	2008-05-16 23:08:18.000000000 +1000
++++ 2.6.x-xfs-new/fs/xfs/xfs_mount.c	2008-05-16 23:10:00.224848630 +1000
+@@ -1887,7 +1887,8 @@ xfs_mount_log_sb(
+ 	int		error;
+ 
+ 	ASSERT(fields & (XFS_SB_UNIT | XFS_SB_WIDTH | XFS_SB_UUID |
+-			 XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2));
++			 XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2 |
++			 XFS_SB_VERSIONNUM));
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SB_UNIT);
+ 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
