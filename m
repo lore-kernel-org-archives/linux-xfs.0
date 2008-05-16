@@ -1,179 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 00:22:14 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4G7LnN3030580
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:21:56 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E48016D5143
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:36 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id hT5qzeIKaXh1XZpM for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:22:36 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4G7MSF3001097
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 16 May 2008 09:22:28 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4G7MSDL001095
-	for xfs@oss.sgi.com; Fri, 16 May 2008 09:22:28 +0200
-Date: Fri, 16 May 2008 09:22:28 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill xfs_igrow_start and xfs_igrow_finish
-Message-ID: <20080516072228.GA1052@lst.de>
-References: <20080430112448.GA17537@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080430112448.GA17537@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 16 May 2008 00:25:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4G7PCQd030941
+	for <xfs@oss.sgi.com>; Fri, 16 May 2008 00:25:15 -0700
+From: Anton Altaparmakov <aia21@cam.ac.uk>
+In-Reply-To: <20080515141121.GA14198@infradead.org>
+Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
+References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com> <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk> <20080515141121.GA14198@infradead.org>
+Message-Id: <7C3356E7-7985-4B0D-B29E-3357464ED787@cam.ac.uk>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Date: Fri, 16 May 2008 08:25:55 +0100
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Apr 30, 2008 at 01:24:48PM +0200, Christoph Hellwig wrote:
-> xfs_igrow_start just expands to xfs_zero_eof with two assers that are
-> useless in the context of the only caller and some rather confusing
-> comments.
-> 
-> xfs_igrow_finish is just a few lines of code decorated again with
-> useless asserts and confusing comments.
-> 
-> Just kill those two and merge them into xfs_setattr.
+Hi,
 
-ping?
+On 15 May 2008, at 15:11, Christoph Hellwig wrote:
+> On Thu, May 15, 2008 at 02:43:44PM +0100, Anton Altaparmakov wrote:
+>> Yes, and you can get the performance back if you allow negative  
+>> dentries to
+>> be created.  You just have to make sure that every time a directory  
+>> entry
+>> is created in directory X, all negative dentries which are children  
+>> of
+>> directory X are thrown away.
+>
+> We might even be able to optimize this a little by calling d_compare  
+> on
+> each alias to see if it hashes down to the same one down in the fs.
 
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-04-24 21:18:18.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-04-24 21:23:58.000000000 +0200
-> @@ -1763,67 +1763,6 @@ xfs_itruncate_finish(
->  	return 0;
->  }
->  
-> -
-> -/*
-> - * xfs_igrow_start
-> - *
-> - * Do the first part of growing a file: zero any data in the last
-> - * block that is beyond the old EOF.  We need to do this before
-> - * the inode is joined to the transaction to modify the i_size.
-> - * That way we can drop the inode lock and call into the buffer
-> - * cache to get the buffer mapping the EOF.
-> - */
-> -int
-> -xfs_igrow_start(
-> -	xfs_inode_t	*ip,
-> -	xfs_fsize_t	new_size,
-> -	cred_t		*credp)
-> -{
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> -	ASSERT(new_size > ip->i_size);
-> -
-> -	/*
-> -	 * Zero any pages that may have been created by
-> -	 * xfs_write_file() beyond the end of the file
-> -	 * and any blocks between the old and new file sizes.
-> -	 */
-> -	return xfs_zero_eof(ip, new_size, ip->i_size);
-> -}
-> -
-> -/*
-> - * xfs_igrow_finish
-> - *
-> - * This routine is called to extend the size of a file.
-> - * The inode must have both the iolock and the ilock locked
-> - * for update and it must be a part of the current transaction.
-> - * The xfs_igrow_start() function must have been called previously.
-> - * If the change_flag is not zero, the inode change timestamp will
-> - * be updated.
-> - */
-> -void
-> -xfs_igrow_finish(
-> -	xfs_trans_t	*tp,
-> -	xfs_inode_t	*ip,
-> -	xfs_fsize_t	new_size,
-> -	int		change_flag)
-> -{
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> -	ASSERT(ip->i_transp == tp);
-> -	ASSERT(new_size > ip->i_size);
-> -
-> -	/*
-> -	 * Update the file size.  Update the inode change timestamp
-> -	 * if change_flag set.
-> -	 */
-> -	ip->i_d.di_size = new_size;
-> -	ip->i_size = new_size;
-> -	if (change_flag)
-> -		xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -
-> -}
-> -
-> -
->  /*
->   * This is called when the inode's link count goes to 0.
->   * We place the on-disk inode on a list in the AGI.  It
-> Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-04-24 21:18:10.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-04-24 21:18:14.000000000 +0200
-> @@ -507,9 +507,6 @@ int		xfs_itruncate_start(xfs_inode_t *, 
->  int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
->  				     xfs_fsize_t, int, int);
->  int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
-> -int		xfs_igrow_start(xfs_inode_t *, xfs_fsize_t, struct cred *);
-> -void		xfs_igrow_finish(struct xfs_trans *, xfs_inode_t *,
-> -				 xfs_fsize_t, int);
->  
->  void		xfs_idestroy_fork(xfs_inode_t *, int);
->  void		xfs_idestroy(xfs_inode_t *);
-> Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-04-24 21:18:18.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-04-24 21:24:07.000000000 +0200
-> @@ -444,7 +444,13 @@ xfs_setattr(
->  		code = 0;
->  		if ((vap->va_size > ip->i_size) &&
->  		    (flags & ATTR_NOSIZETOK) == 0) {
-> -			code = xfs_igrow_start(ip, vap->va_size, credp);
-> +			/*
-> +			 * Do the first part of growing a file: zero any data
-> +			 * in the last block that is beyond the old EOF.  We
-> +			 * need to do this before the inode is joined to the
-> +			 * transaction to modify the i_size.
-> +			 */
-> +			code = xfs_zero_eof(ip, vap->va_size, ip->i_size);
->  		}
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  
-> @@ -512,8 +518,11 @@ xfs_setattr(
->  			timeflags |= XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG;
->  
->  		if (vap->va_size > ip->i_size) {
-> -			xfs_igrow_finish(tp, ip, vap->va_size,
-> -			    !(flags & ATTR_DMI));
-> +			ip->i_d.di_size = vap->va_size;
-> +			ip->i_size = vap->va_size;
-> +			if (!(flags & ATTR_DMI))
-> +				xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-> +			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  		} else if ((vap->va_size <= ip->i_size) ||
->  			   ((vap->va_size == 0) && ip->i_d.di_nextents)) {
->  			/*
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-04-24 21:24:34.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-04-24 21:24:37.000000000 +0200
-> @@ -235,8 +235,6 @@ EXPORT_SYMBOL(xfs_iflock_nowait);
->  EXPORT_SYMBOL(xfs_iflush);
->  EXPORT_SYMBOL(xfs_ifunlock);
->  EXPORT_SYMBOL(xfs_iget);
-> -EXPORT_SYMBOL(xfs_igrow_start);
-> -EXPORT_SYMBOL(xfs_igrow_finish);
->  EXPORT_SYMBOL(xfs_ilock);
->  EXPORT_SYMBOL(xfs_ilock_map_shared);
->  EXPORT_SYMBOL(xfs_ilock_nowait);
----end quoted text---
+
+Perhaps, although I am not convinced that wouldn't be worse than just  
+throwing them all away.  For example think of a very active directory  
+with thousands of negative dentries in it.  A create comes in and we  
+either throw away thousands of entries or we perform a case  
+insensitive comparison thousands of times and discard only a few  
+entries.  I am concerned that the "thousands of case insensitive  
+comparisons" would actually be very costly and far outweigh the cost  
+of throwing all negative dentries away and letting them be created  
+again if they are requested again.
+
+At lest in NTFS the case insensitive comparison is very expensive as  
+it involves converting both the UTF8 strings into little endian 2-byte  
+fixed width Unicode, and then for each Unicode character of each of  
+the strings being compared, individually performing a look up in the  
+128kiB large Unicode upcase table and then the two upcased characters  
+are compared and if they match we move to the next character.
+
+Doing that a thousand times would be way more expensive then simply  
+throwing all negative dentries away I would think.
+
+In the end it probably depends on the usage scenario as to what will  
+be more efficient and perhaps on the file system as well so it may be  
+worth allowing the file system to decide whether to try and do  
+comparisons or to simply throw all the negative dentries away.
+
+Best regards,
+
+	Anton
+-- 
+Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
+Linux NTFS maintainer, http://www.linux-ntfs.org/
