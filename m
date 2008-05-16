@@ -1,41 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 17:30:22 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 15 May 2008 18:28:06 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4G0TxXq026889
-	for <xfs@oss.sgi.com>; Thu, 15 May 2008 17:30:01 -0700
-Date: Fri, 16 May 2008 10:30:37 +1000
-Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4G1RgN7030732
+	for <xfs@oss.sgi.com>; Thu, 15 May 2008 18:27:45 -0700
+Message-ID: <482CE39F.9050404@sgi.com>
+Date: Fri, 16 May 2008 11:30:07 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com> <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk> <20080515141121.GA14198@infradead.org>
+Subject: [PATCH] xfs_dm_rdwr() needs to pass a vfsmount to dentry_open()
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <op.ua701bha3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080515141121.GA14198@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Anton Altaparmakov <aia21@cam.ac.uk>
-Cc: xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, 16 May 2008 00:11:21 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
+There's a new check added to dentry_open():
 
-> On Thu, May 15, 2008 at 02:43:44PM +0100, Anton Altaparmakov wrote:
->> Yes, and you can get the performance back if you allow negative  
->> dentries to
->> be created.  You just have to make sure that every time a directory  
->> entry
->> is created in directory X, all negative dentries which are children of
->> directory X are thrown away.
->
-> We might even be able to optimize this a little by calling d_compare on
-> each alias to see if it hashes down to the same one down in the fs.
+    if (!mnt) {
+        printk(KERN_WARNING "%s called with NULL vfsmount\n", __func__);
+        dump_stack();
+        return ERR_PTR(-EINVAL);
+    }
 
-So, I gather from this comment is that the CI FS implementation overrides
-d_compare but not d_hash, and the CI purge function will behave differently
-if d_compare is overridden or not? If overridden, use it as per your
-suggestion and if not (due to oversight or unexpected problems), purge
-all negative children?
+We need to pass a mountpoint in the call to dentry_open() in xfs_dm_rdwr()
+to avoid this code.
 
-Barry.
+--- fs/xfs/dmapi/xfs_dm.c_1.72	2008-05-15 13:23:41.000000000 +1000
++++ fs/xfs/dmapi/xfs_dm.c	2008-05-15 17:51:41.000000000 +1000
+@@ -52,6 +52,8 @@
+ #include <dmapi_kern.h>
+ #include "xfs_dm.h"
+ 
++#include <linux/mount.h>
++
+ #define MAXNAMLEN MAXNAMELEN
+ 
+ #define MIN_DIO_SIZE(mp)		((mp)->m_sb.sb_sectsize)
+@@ -1121,7 +1123,7 @@ xfs_dm_rdwr(
+ 		return ENOMEM;
+ 	}
+ 
+-	file = dentry_open(dentry, NULL, oflags);
++	file = dentry_open(dentry, mntget(ip->i_mount->m_vfsmount), oflags);
+ 	if (IS_ERR(file)) {
+ 		return -PTR_ERR(file);
+ 	}
+--- fs/xfs/linux-2.6/xfs_super.c_1.416	2008-05-15 13:23:43.000000000 +1000
++++ fs/xfs/linux-2.6/xfs_super.c	2008-05-15 13:29:49.000000000 +1000
+@@ -1397,8 +1397,14 @@ xfs_fs_get_sb(
+ 	void			*data,
+ 	struct vfsmount		*mnt)
+ {
+-	return get_sb_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super,
++	int	error;
++
++	error = get_sb_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super,
+ 			   mnt);
++	if (!error)
++		((struct xfs_mount *)mnt->mnt_sb->s_fs_info)->m_vfsmount = mnt;
++
++	return error;
+ }
+ 
+ static struct super_operations xfs_super_operations = {
+--- fs/xfs/xfs_mount.h_1.265	2008-05-15 13:23:49.000000000 +1000
++++ fs/xfs/xfs_mount.h	2008-05-15 13:21:50.000000000 +1000
+@@ -337,6 +337,7 @@ typedef struct xfs_mount {
+ 	spinlock_t		m_sync_lock;	/* work item list lock */
+ 	int			m_sync_seq;	/* sync thread generation no. */
+ 	wait_queue_head_t	m_wait_single_sync_task;
++	struct vfsmount		*m_vfsmount;
+ } xfs_mount_t;
+ 
+ /*
