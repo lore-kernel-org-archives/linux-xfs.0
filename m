@@ -1,48 +1,89 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 May 2008 07:47:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4HElJ9q026153
-	for <xfs@oss.sgi.com>; Sat, 17 May 2008 07:47:20 -0700
-Received: from mail.ukfsn.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ECE278FE3F
-	for <xfs@oss.sgi.com>; Sat, 17 May 2008 07:48:07 -0700 (PDT)
-Received: from mail.ukfsn.org (mx1.ukfsn.org [77.75.108.10]) by cuda.sgi.com with ESMTP id aZZM11wbKEWXGDzC for <xfs@oss.sgi.com>; Sat, 17 May 2008 07:48:07 -0700 (PDT)
-Message-ID: <482EF026.9000206@dgreaves.com>
-Date: Sat, 17 May 2008 15:48:06 +0100
-From: David Greaves <david@dgreaves.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 17 May 2008 08:17:11 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4HFGRpZ027176
+	for <xfs@oss.sgi.com>; Sat, 17 May 2008 08:16:37 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 05B7616DF224
+	for <xfs@oss.sgi.com>; Sat, 17 May 2008 08:16:52 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id D0q01cWSKe5cCixf for <xfs@oss.sgi.com>; Sat, 17 May 2008 08:16:52 -0700 (PDT)
+Message-ID: <482EF6A7.2020909@sandeen.net>
+Date: Sat, 17 May 2008 10:15:51 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Regression- XFS won't mount on partitioned md array
-References: <482DC043.5000307@dgreaves.com>	 <alpine.DEB.1.10.0805161316100.3118@p34.internal.lan>	 <482DCCCD.8020503@dgreaves.com> <6101e8c40805161135w7470123uaac93ca59caee026@mail.gmail.com>
-In-Reply-To: <6101e8c40805161135w7470123uaac93ca59caee026@mail.gmail.com>
+References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com>
+In-Reply-To: <482EEFDA.50101@dgreaves.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Oliver Pinter <oliver.pntr@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: David Greaves <david@dgreaves.com>
+Cc: David Chinner <dgc@sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-Oliver Pinter wrote:
-> this[1] patch fixed?
->
-> 1:
-http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=queue-2.6.25/block-do_mounts-accept-root-non-existant-partition.patch;h=097cda9928b434994dbb157065b2ca38e7cec3a1;hb=8cc4c3b370d59deb16c2e92165a466c82e914020
+David Greaves wrote:
+> Eric Sandeen wrote:
 
+>>> I get:
+>>>  md_d0: p1 p2
+>>> XFS mounting filesystem md_d0p1
+>>> attempt to access beyond end of device
+>>> md_d0p2: rw=0, want=195311, limit=195304
+>> what does /proc/partitions say about md_d0p1 and p2?  Is it different
+>> between the older & newer kernel?
 
-Looks like a possible candidate - thanks.
+...
 
-I think this patch is for mounting root on an md device when the partitions
-aren't yet initialised.
+> 2.6.25.4 (bad)
+>  254     0 1250241792 md_d0
+>  254     1 1250144138 md_d0p1
+>  254     2      97652 md_d0p2
+> 
+> So nothing obvious there then...
+> 
+>> What does xfs_info /mount/point say about the filesystem when you mount
+>> it under the older kernel?  Or... if you can't mount it,
+> teak:~# xfs_info /media/
+> meta-data=/dev/md_d0p1           isize=256    agcount=32, agsize=9766751 blks
+>          =                       sectsz=512   attr=0
+> data     =                       bsize=4096   blocks=312536032, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096
+> log      =external               bsize=4096   blocks=24413, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=65536  blocks=0, rtextents=0
 
-However:
-* When I run cfdisk I can read the partition table.
-* Subsequent attempts to mount the xfs when /proc/partitions is clearly present
-still fail.
+ok, and with:
 
-> this patch is for 2.6.25.5 kernel
-? there isn't a 2.6.25.5
-It doesn't apply to 2.6.25.4
+> Partition Table for /dev/md_d0
+> 
+>                First       Last
+>  # Type       Sector      Sector   Offset    Length   Filesystem Type (ID) Flag
+> -- ------- ----------- ----------- ------ ----------- -------------------- ----
+>  1 Primary           0  2500288279      4  2500288280 Linux (83)           None
+>  2 Primary  2500288280  2500483583      0      195304 Non-FS data (DA)     None
 
-I'll see if I can make it apply...
+So, xfs thinks the external log is 24413 4k blocks (from the sb geometry
+printed by xfs_info).  This is 97652 1k units (matching your
+/proc/partitions output) and 195304 512-byte sectors (matching the
+partition table output).  So that all looks consistent.
 
-David
+So if xfs is doing:
+
+>>> md_d0p2: rw=0, want=195311, limit=195304
+>>> XFS: empty log check failed
+
+it surely does seem to be trying to read past the end of what even it
+thinks is the end of its log.
+
+And, with your geometry I can reproduce this w/o md, partitioned or not.
+ So looks like xfs itself is busted:
+
+loop5: rw=0, want=195311, limit=195304
+
+I'll see if I have a little time today to track down the problem.
+
+Thanks,
+
+-Eric
