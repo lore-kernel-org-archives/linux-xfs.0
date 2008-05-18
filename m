@@ -1,49 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 May 2008 01:25:35 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 May 2008 01:47:50 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4I8PW6J000469
-	for <xfs@oss.sgi.com>; Sun, 18 May 2008 01:25:32 -0700
-Date: Sun, 18 May 2008 04:26:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [xfs-masters] lockdep report (2.6.26-rc2)
-Message-ID: <20080518082618.GA27923@infradead.org>
-References: <1210858590.3900.1.camel@johannes.berg> <20080515220757.GS155679365@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4I8lkDN002393
+	for <xfs@oss.sgi.com>; Sun, 18 May 2008 01:47:48 -0700
+Received: from mail.ukfsn.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD659183C9F
+	for <xfs@oss.sgi.com>; Sun, 18 May 2008 01:48:35 -0700 (PDT)
+Received: from mail.ukfsn.org (mx1.ukfsn.org [77.75.108.10]) by cuda.sgi.com with ESMTP id kcZHhwIQ0aJV1TRa for <xfs@oss.sgi.com>; Sun, 18 May 2008 01:48:35 -0700 (PDT)
+Message-ID: <482FED60.7060405@dgreaves.com>
+Date: Sun, 18 May 2008 09:48:32 +0100
+From: David Greaves <david@dgreaves.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080515220757.GS155679365@sgi.com>
+Subject: Re: Regression- XFS won't mount on partitioned md array
+References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net>
+In-Reply-To: <482FBD4C.20608@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-masters@oss.sgi.com, xfs <xfs@oss.sgi.com>, linux-mm <linux-mm@kvack.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>
 
-On Fri, May 16, 2008 at 08:07:57AM +1000, David Chinner wrote:
-> Fundamentally  - if a filesystem takes the same lock in
-> ->file_aio_read as it does in ->release, then this will happen.
-> The lock outside the filesystem (the mmap lock) is can be taken
-> before we enter the filesystem or while we are inside a filesystem
-> method reading or writing data.
+Eric Sandeen wrote:
+> Eric Sandeen wrote:
+>> Eric Sandeen wrote:
+>>
+>>> I'll see if I have a little time today to track down the problem.
+>>
+>> Does this patch fix it for you?  Does for me though I can't yet explain
+>> why ;)
+>>
+>> http://www.linux.sgi.com/archives/xfs/2008-05/msg00190.html
+>>
+>> -Eric
+Yes, this fixes it for me - thanks :)
+
+> So what's happening is that xfs is trying to read a page-sized IO from
+> the last sector of the log... which goes off the end of the device.
+> This looks like another regression introduced by
+> a9759f2de38a3443d5107bddde03b4f3f550060e, but fixed by Christoph's patch
+> in the URL above, which should be headed towards -stable.
+Damn, I guess I misread my bisect readings when things crashed then.
+Still, I said 'around' :)
+
+> (aside: it seems that this breaks any external log setup where the log
+> consists of the entire device... but I'd have expected the xfsqa suite
+> to catch this...?)
 > 
-> In this case, XFS uses the iolock to serialise I/O vs truncate.
-> We hold the iolock shared over read I/O, and exclusive when we
-> do a truncate. The truncate in this case is a truncate of blocks
-> past EOF on ->release. 
-> 
-> Whether this can deadlock depends on whether these two things can
-> happen on the same mmap->sem and same inode at the same time.
-> I know they can happen onteh same inode at the same time, but
-> can this happen on the same mmap->sem? VM gurus?
+> The patch avoids the problem by looking for some extra locking but it
+> seems to me that the root cause is that the buffer being read at this
+> point doesn't have it's b_offset, the offset in it's page, set.  Might
+> be another little buglet but harmless it seems.
+mmmm
+'little buglets' in the filesystem holding a few Tb of data...
+mmmm
+Anything I can do to help find that? I suspect not if you can reproduce it.
 
-I think it can.  Think of a process with two threads, and two open file
-instances of the same inode.
+Anyhow - thanks again.
 
-thread 1:
-	in read() fauling in from the inode via file 1
-
-thread 2:
-	at the same time dropping the last reference to a file via
-	munmap.
-
-Getting this right would mean not doing any fputs from under the
-mmap_seem in munmap.
+David
+PS I'll be back soon, back in 2.6.23 I was hitting a hibernate/xfs bug which
+I've been avoiding by powering down. Well, it's still there in 2.6.25.3...
