@@ -1,44 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 May 2008 18:39:49 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 18 May 2008 18:45:15 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4J1dihh030185
-	for <xfs@oss.sgi.com>; Sun, 18 May 2008 18:39:45 -0700
-Subject: PARTIAL TAKE 981558 - Add configurable xattr copy support
-Message-Id: <20080519014029.3685258C4C29@chook.melbourne.sgi.com>
-Date: Mon, 19 May 2008 11:40:29 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4J1j6sr030830
+	for <xfs@oss.sgi.com>; Sun, 18 May 2008 18:45:11 -0700
+Message-ID: <4830DBC1.1060501@sgi.com>
+Date: Mon, 19 May 2008 11:45:37 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] don't run test 167 if killall is not installed
+References: <20080515053918.GA16530@lst.de> <482BDAC1.7070407@sgi.com> <20080515071338.GA26247@lst.de> <20080515073605.GR155679365@sgi.com> <20080515073837.GA28530@lst.de>
+In-Reply-To: <20080515073837.GA28530@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: David Chinner <dgc@sgi.com>, xfs@oss.sgi.com
 
-The current attribute copying functions attr_copy_file and
-attr_copy_fd is a static list of exceptions for attributes that need special
-treatment. The list of those attributes tends to change (slowly) with kernel
-versions. We replaced the static list with a config file a while ago; this is
-the patch used.
+Christoph Hellwig wrote:
+> On Thu, May 15, 2008 at 05:36:05PM +1000, David Chinner wrote:
+>>> Dave already commited the original version, but I'll send an update
+>>> to use set_prog_path later today.
+>> Sorry, didn't see that Tim replied as well. set_prog_path is fine
+>> by me too, but stopping every test from running because killall is
+>> not present is a bit of overkill, isn't it?
+> 
+> My plan was to use it in 167 not common.config.  But I don't really care
+> either way.
 
+Yeah, I was just meaning for 167 too.
 
-Date:  Mon May 19 11:39:49 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  agruen@suse.de
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:31181a
-attr/libattr/attr_copy_action.c - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/attr_copy_action.c
-attr/libattr/Makefile - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/Makefile.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-attr/include/libattr.h - 1.3 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/include/libattr.h.diff?r1=text&tr1=1.3&r2=text&tr2=1.2&f=h
-attr/libattr/attr_copy_fd.c - 1.6 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/attr_copy_fd.c.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-attr/libattr/attr_copy_file.c - 1.8 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/attr_copy_file.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
-attr/libattr/attr_copy_check.c - 1.6 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/libattr/attr_copy_check.c.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-	- Add configurable xattr copy
+--Tim
