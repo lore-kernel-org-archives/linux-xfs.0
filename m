@@ -1,34 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 18:47:44 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 18:49:35 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K1leEI002028
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 18:47:41 -0700
-Message-ID: <48322E58.8060009@sgi.com>
-Date: Tue, 20 May 2008 11:50:16 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: take messages
-References: <20080518102710.GA17618@lst.de> <4830CA28.9060805@sgi.com> <20080519060022.GA15529@lst.de>
-In-Reply-To: <20080519060022.GA15529@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K1mtnJ002426
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 18:49:32 -0700
+Subject: PARTIAL TAKE 981951 - rename error2 goto label in xfs_fs_fill_super
+Message-Id: <20080520014941.920A158C4C29@chook.melbourne.sgi.com>
+Date: Tue, 20 May 2008 11:49:41 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Mark Goodwin <markgw@sgi.com>, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Mon, May 19, 2008 at 10:30:32AM +1000, Mark Goodwin wrote:
->> Christoph Hellwig wrote:
->>> folks, any chance to get take messages sent to the list, please? 
->> do you mean for any checkin, or just oss pushes?
-> 
-> Well, the oss pushes are automatic, so it should be sent with the
-> actual commit.  Even better would be migrating XFS to a proper git
-> tree with a commit trigger so that people can't accidentally forget it..
+rename error2 goto label in xfs_fs_fill_super
 
-oss pushes automatic?  They could be but aren't.  Yes, migrating XFS
-to a git tree is a great idea - one we have been talking about for
-far too long...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+
+Date:  Tue May 20 11:49:23 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31198a
+fs/xfs/linux-2.6/xfs_super.c - 1.426 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.426&r2=text&tr2=1.425&f=h
+	- rename error2 goto label in xfs_fs_fill_super.
