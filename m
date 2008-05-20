@@ -1,38 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 13:39:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4JKdn1L008910
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 13:39:50 -0700
-Received: from smtp7-g19.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 674A318B218
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 13:40:38 -0700 (PDT)
-Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64]) by cuda.sgi.com with ESMTP id m0DA9dZCqEYMWE2B for <xfs@oss.sgi.com>; Mon, 19 May 2008 13:40:38 -0700 (PDT)
-Date: Mon, 19 May 2008 22:39:15 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS filesystem reports as full though it isn't
-Message-ID: <20080519223915.4c88859c@galadriel.home>
-In-Reply-To: <1a4a774c0805190448q5e38b893mfaa0122e8d2c1e5f@mail.gmail.com>
-References: <20080516222755.3e557c00@galadriel.home>
-	<1a4a774c0805190431j31a182bdu61030bbfcc80f41@mail.gmail.com>
-	<1a4a774c0805190448q5e38b893mfaa0122e8d2c1e5f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 17:43:24 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K0hIF6027704
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 17:43:20 -0700
+Subject: PARTIAL TAKE 981951 - merge xfs_unmount into xfs_fs_put_super / xfs_fs_fill_super
+Message-Id: <20080520004401.35C0958C4C29@chook.melbourne.sgi.com>
+Date: Tue, 20 May 2008 10:44:01 +1000 (EST)
+From: dgc@sgi.com (David Chinner)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian =?ISO-8859-1?Q?R=F8snes?= <christian.rosnes@gmail.com>
+To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-Le Mon, 19 May 2008 13:48:01 +0200 vous écriviez:
+merge xfs_unmount into xfs_fs_put_super / xfs_fs_fill_super
 
-> Correction to last sentence: ... and I could copy the missing data
-> _to_ partition B.
+xfs_unmount is small and already pretty Linux specific, so merge it into
+the callers.  The real unmount path is simplified a little by doing a
+WARN_ON on the xfs_unmount_flush retval directly instead of propagating
+the error back to the caller, and the mout failure case in simplified
+significantly by removing the forced shutdown case and all the dmapi
+events that shouldn't be sent because the dmapi mount event hasn't been
+sent by that time either.
 
-Another reminder that we should always keep our disks less than 95ù
-full :)
 
--- 
---------------------------------------------------
-Emmanuel Florac               www.intellique.com   
---------------------------------------------------
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Tue May 20 10:43:13 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31188a
+fs/xfs/xfs_vfsops.c - 1.566 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.566&r2=text&tr2=1.565&f=h
+	- merge xfs_unmount into xfs_fs_put_super / xfs_fs_fill_super
+
+fs/xfs/linux-2.6/xfs_super.c - 1.419 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.419&r2=text&tr2=1.418&f=h
+	- merge xfs_unmount into xfs_fs_put_super / xfs_fs_fill_super
+
+fs/xfs/xfs_vfsops.h - 1.10 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
+	- merge xfs_unmount into xfs_fs_put_super / xfs_fs_fill_super
