@@ -1,35 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 18:28:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 18:42:31 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K1ShDg032067
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 18:28:44 -0700
-Subject: PARTIAL TAKE 981951 - allow xfs_args_allocate to fail
-Message-Id: <20080520012928.8BFB258C4C29@chook.melbourne.sgi.com>
-Date: Tue, 20 May 2008 11:29:28 +1000 (EST)
-From: dgc@sgi.com (David Chinner)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K1gPId000770
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 18:42:27 -0700
+Message-ID: <48322D15.3050201@sgi.com>
+Date: Tue, 20 May 2008 11:44:53 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: take messages
+References: <20080518102710.GA17618@lst.de> <4830CA28.9060805@sgi.com>
+In-Reply-To: <4830CA28.9060805@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: markgw@sgi.com
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-allow xfs_args_allocate to fail
+Mark Goodwin wrote:
+> 
+> 
+> Christoph Hellwig wrote:
+>> folks, any chance to get take messages sent to the list, please? 
+> 
+> do you mean for any checkin, or just oss pushes?
+> 
+>> Kust
+>> saw the tree is merged up to 2.6.25 (why not .26-rc, btw?) and there's
+>> been no take message sent to the list again..
+>>
+> 
+> Lachlan was held up with QA failures on updating the internal dev tree,
+> which was in turn holding up .26-rc I think.
+> 
+> Lachlan, what's the status with this?
 
-Switch xfs_args_allocate to kzalloc and handle failures.
+It was a big TAKE message so it was probably dropped on the floor
+somewhere.
 
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-
-Date:  Tue May 20 11:29:10 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/dgc/isms/2.6.x-xfs
-Inspected by:  hch@lst.de
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31195a
-fs/xfs/linux-2.6/xfs_super.c - 1.423 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.423&r2=text&tr2=1.422&f=h
-	- allow xfs_args_allocate to fail.
+Updates to the internal dev tree are dependent on the kdb patches
+and at the time they were only available for 2.6.26-rc1.  2.6.25
+was a more stable choice.  We usually wait until -rc3 for an update
+so as soon as the kdb patches are available I'll do another merge.
