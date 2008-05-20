@@ -1,98 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 19:23:48 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K2NfLI005980
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 19:23:42 -0700
-Date: Tue, 20 May 2008 12:24:57 +1000
-Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com> <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk>
-Message-ID: <op.ubfkzvjx3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk>
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 20:56:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4K3uX9f017376
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 20:56:33 -0700
+Received: from sca-es-mail-1.sun.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FA25B9EB5A
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 20:57:22 -0700 (PDT)
+Received: from sca-es-mail-1.sun.com (sca-es-mail-1.Sun.COM [192.18.43.132]) by cuda.sgi.com with ESMTP id Gy9rvEUVtBnkMgSC for <xfs@oss.sgi.com>; Mon, 19 May 2008 20:57:22 -0700 (PDT)
+Received: from fe-sfbay-10.sun.com ([192.18.43.129])
+	by sca-es-mail-1.sun.com (8.13.7+Sun/8.12.9) with ESMTP id m4K3vLGb005690
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 20:57:22 -0700 (PDT)
+Received: from conversion-daemon.fe-sfbay-10.sun.com by fe-sfbay-10.sun.com
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ id <0K1500901EW6PY00@fe-sfbay-10.sun.com> (original mail from adilger@sun.com)
+ for xfs@oss.sgi.com; Mon, 19 May 2008 20:57:21 -0700 (PDT)
+Date: Mon, 19 May 2008 21:57:12 -0600
+From: Andreas Dilger <adilger@sun.com>
+Subject: Re: [RFC PATCH 1/3] Implement generic freeze feature
+In-reply-to: <20080514170625t-sato@mail.jp.nec.com>
+Message-id: <20080520035712.GA7252@webber.adilger.int>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Content-transfer-encoding: 7BIT
+Content-disposition: inline
+References: <20080514170625t-sato@mail.jp.nec.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Anton Altaparmakov <aia21@cam.ac.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, 15 May 2008 23:43:44 +1000, Anton Altaparmakov <aia21@cam.ac.uk>  
-wrote:
+On May 14, 2008  17:06 +0900, Takashi Sato wrote:
+> +static int ioctl_freeze(struct file *filp)
+> +{
+> +	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	/* If filesystem doesn't support freeze feature, return. */
+> +	if (sb->s_op->write_super_lockfs == NULL)
+> +		return -EINVAL;
 
-> Hi,
->
-> On 15 May 2008, at 06:14, Barry Naujok wrote:
->> On Thu, 15 May 2008 14:57:00 +1000, Christoph Hellwig <hch@infradead.org 
->> > wrote:
->>> On Wed, May 14, 2008 at 05:55:45PM +1000, Barry Naujok wrote:
->>>> Not quite sure if this is the right test, but I did 1000 creates on
->>>> a brand new filesystem with and without ci on my SATA drive, both
->>>> sustained almost 600 creates per second.
->>>>
->>>> I believe creates would be the worst case scenario for not adding
->>>> negative dentries?
->>>
->>> No, negative dentries shouldn't have any effect on that.  negative
->>> entries help to optimize away lookups.  E.g. thing of the PATH variable
->>> and say your shell is not in the first directory listed there.  Having
->>> a negative dentry for it means that you don't have to do a lookup in
->>> the first directories everytime someone wants to use the shell.
->>
->> Ah, that makes more sense. I did a test of a million lookups to a
->> non-existant file in a short-form directory (dual 1.6G opteron):
->>
->> CI = 4.6s
->> non-CI = 3.7s
->>
->> And a directory with 10000 files:
->>
->> CI = 10.3s
->> non-CI = 3.9s
->
->
-> Yes, and you can get the performance back if you allow negative dentries  
-> to be created.  You just have to make sure that every time a directory  
-> entry is created in directory X, all negative dentries which are  
-> children of directory X are thrown away.
->
-> Failure to do so will result in lookups returning ENOENT even though a  
-> file now exists that matches case insensitively.  This happens because  
-> the VFS will find the negative dentry and return ENOENT without calling  
-> the file system lookup method thus the file system does not get a chance  
-> to discover the new matching directory entry...
+Should this be EINVAL, or EOPNOTSUPP?  Usually EINVAL means there is
+something wrong with the passed ioctl parameters (e.g. bad value),
+while EOPNOTSUPP is "operation not supported" and makes more sense.
 
-Ok, with the following snippet of code, it now takes 2.9s for shortform CI
-loop and 2.7s with 10000 files. Don't know why it's quicker, but, anyway,
-no slowdown with CI anymore.
-
-
-+/**
-+ * d_drop_neg_children - drop negative child dentries
-+ * @parent: parent dentry
-+ *
-+ * Searches the children of the @parent dentry for negative dentries and
-+ * drops them as they are found.
-+ *
-+ * This is primarily useful for case-insensitive filesystems to drop these
-+ * entries when a new entry is created in the parent. The new entry must
-+ * be instantiated before calling this function.
-+ */
-+
-+void d_drop_neg_children(struct dentry *parent)
-+{
-+	struct dentry *dentry;
-+
-+	spin_lock(&dcache_lock);
-+	list_for_each_entry(dentry, &parent->d_subdirs, d_u.d_child) {
-+		if (!dentry->d_inode) {
-+			spin_lock(&dentry->d_lock);
-+			__d_drop(dentry);
-+			spin_unlock(&dentry->d_lock);
-+			cond_resched_lock(&dcache_lock);
-+		}
-+	}
-+	spin_unlock(&dcache_lock);
-+
-+}
+Cheers, Andreas
+--
+Andreas Dilger
+Sr. Staff Engineer, Lustre Group
+Sun Microsystems of Canada, Inc.
