@@ -1,47 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 May 2008 12:29:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4KJTOHu025405
-	for <xfs@oss.sgi.com>; Tue, 20 May 2008 12:29:25 -0700
-Message-ID: <483326AE.3040902@thebarn.com>
-Date: Tue, 20 May 2008 14:29:50 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 May 2008 13:49:29 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4KKnOUf002313
+	for <xfs@oss.sgi.com>; Tue, 20 May 2008 13:49:24 -0700
+Message-ID: <4833397B.2000109@oracle.com>
+Date: Tue, 20 May 2008 13:50:03 -0700
+From: Sunil Mushran <Sunil.Mushran@oracle.com>
 MIME-Version: 1.0
-Subject: Re: take messages
-References: <20080518102710.GA17618@lst.de> <4830CA28.9060805@sgi.com> <20080519060022.GA15529@lst.de> <48322E58.8060009@sgi.com> <20080520102012.GB24579@infradead.org> <4832B868.7050001@sgi.com>
-In-Reply-To: <4832B868.7050001@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
+References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com> <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk> <op.ubfkzvjx3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080520182315.GA8456@infradead.org>
+In-Reply-To: <20080520182315.GA8456@infradead.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Barry Naujok <bnaujok@sgi.com>, Anton Altaparmakov <aia21@cam.ac.uk>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Mark Goodwin wrote:
+Christoph Hellwig wrote:
+> The cond_resched_lock here is not safe here, because the pointer you
+> are going to dereference in list_for_each_entry might not be valid
+> anymore.  This should look more like:
 >
+> void d_drop_negative_children(struct dentry *parent)
+> {
+> 	struct dentry *dentry;
 >
-> Christoph Hellwig wrote:
->> On Tue, May 20, 2008 at 11:50:16AM +1000, Lachlan McIlroy wrote:
->>> oss pushes automatic?  They could be but aren't.
->>
->> They aren't?  Back in the days the CVS tree on OSS was updated from
->> ptools once a day.
->>
+>  again:
+> 	spin_lock(&dcache_lock);
+> 	list_for_each_entry(dentry, &parent->d_subdirs, d_u.d_child) {
+> 		if !(dentry->d_inode)
+> 			continue;
 >
-> The ptools->cvs push is automatic. The git updates are not.
-> We have a plan to fix that ... just catching our breath a bit
-> at the moment.
-ptools to oss cvs is done once every hour.
-Which is probably a bit silly now given updates come from the CA ptools 
-server
-and most XFS commits probably originate at the AU server. If I recall 
-correctly
-the AU <-> CA ptools sync is only once a day.
+> 		spin_lock(&dentry->d_lock);
+> 		__d_drop(dentry);
+> 		spin_unlock(&dentry->d_lock);
+>
+> 		if (need_resched()) {
+> 			spin_unlock(&dcache_lock);
+> 			cond_resched();
+> 			goto again;
+> 		}
+> 	}
+> 	spin_unlock(&dcache_lock);
+> }
+>   
+Yes, we have been bitten by the same issue.
 
-There is also the xfs git and the dmapi git trees that are auto synced 
-with the
-cvs tree once a day.  (minus the autoversion stuff)
->
-> Cheers
->
+Instead of need_resched(), it may be better if you do:
+
+		if (cond_resched_lock(&dcache_lock))
+			goto again;
