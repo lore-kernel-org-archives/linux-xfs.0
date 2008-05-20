@@ -1,52 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 23:10:17 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4K6A9um027534
-	for <xfs@oss.sgi.com>; Mon, 19 May 2008 23:10:13 -0700
-Date: Tue, 20 May 2008 16:10:47 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: Re: XFS filesystem reports as full though it isn't
-Message-ID: <20080520061047.GP103491721@sgi.com>
-References: <20080516222755.3e557c00@galadriel.home> <20080518131855.GA1383@infradead.org> <20080518132127.GA19006@infradead.org> <20080518154208.77b6be3e@galadriel.home> <20080519221057.75e0a775@galadriel.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 19 May 2008 23:18:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4K6Imnn028636
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 23:18:51 -0700
+Received: from mgw-mx06.nokia.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4E4118D1F8
+	for <xfs@oss.sgi.com>; Mon, 19 May 2008 23:19:36 -0700 (PDT)
+Received: from mgw-mx06.nokia.com (smtp.nokia.com [192.100.122.233]) by cuda.sgi.com with ESMTP id Y6p17GP7EdbY6Fxt for <xfs@oss.sgi.com>; Mon, 19 May 2008 23:19:36 -0700 (PDT)
+Message-ID: <48326D66.8000106@nokia.com>
+Date: Tue, 20 May 2008 09:19:18 +0300
+From: Artem Bityutskiy <Artem.Bityutskiy@nokia.com>
+Reply-To: Artem.Bityutskiy@nokia.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] always set a/c/mtime through ->setattr
+References: <20080520060838.GA6436@lst.de>
+In-Reply-To: <20080520060838.GA6436@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20080519221057.75e0a775@galadriel.home>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, May 19, 2008 at 10:10:57PM +0200, Emmanuel Florac wrote:
-> Le Sun, 18 May 2008 15:42:08 +0200 vous �criviez:
+Christoph,
+
+Christoph Hellwig wrote:
+> Currently touch_atime and file_update_time directly update a/c/mtime
+> in the inode and just mark the inode dirty afterwards.  This is pretty
+> bad for some more complex filesystems that have various different types
+> of dirtying an inode and/or need to store the data in another place
+> for example for a buffer to be logged.
 > 
-> > IIRC I tried both, however I'll double check monday...
-> 
-> Well obviously I didn't try both, because it worked as expected when
-> using "inode64". However there'ssomething slightly weird in the data
-> layout:
-> 
-> /dev/dm-0:
-> AG     Inodes    IUsed    IFree    Use%
->   0      4288     4277       11     99%
->   1         0        0        0      0%
->   2         0        0        0      0%
-.....
+> This patch changes touch_atime and file_update_time to not update the
+> inode directly but rather call through ->setattr into the filessystem.
 
-If there's no free space in AGs > 0 when you enable inode64, then
-you will still get enospc...
+This patch would make our (UBIFS develpers') life easier, thank you!
 
-> See how all inodes are in the same vg? is it OK?
-                                     ^^ AG
+Could we go a further and allow the file-system returning error if it
+for some reasons cannot change the time? For example, the FS could
+return -EIO or -ENOSPC up and VFS would have to free resources and
+propagate this error to user-space. Is this possible?
 
-This is typical of inode32 allocation...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Best Regards,
+Artem Bityutskiy (Артём Битюцкий)
