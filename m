@@ -1,54 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 May 2008 13:49:29 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4KKnOUf002313
-	for <xfs@oss.sgi.com>; Tue, 20 May 2008 13:49:24 -0700
-Message-ID: <4833397B.2000109@oracle.com>
-Date: Tue, 20 May 2008 13:50:03 -0700
-From: Sunil Mushran <Sunil.Mushran@oracle.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 20 May 2008 17:40:29 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4L0eQgQ027700
+	for <xfs@oss.sgi.com>; Tue, 20 May 2008 17:40:27 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: [PATCH] streamline init/exit path
+References: <20080518130511.GA28501@lst.de>
+Date: Wed, 21 May 2008 10:41:12 +1000
+In-Reply-To: <20080518130511.GA28501@lst.de> (Christoph Hellwig's message of
+	"Sun, 18 May 2008 15:05:11 +0200")
+Message-ID: <nccprrg32vr.fsf@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/4] XFS: Return case-insensitive match for dentry cache
-References: <20080513075749.477238845@chook.melbourne.sgi.com> <20080513080152.911303131@chook.melbourne.sgi.com> <20080513085724.GC21919@infradead.org> <op.ua4wa7t03jf8g2@pc-bnaujok.melbourne.sgi.com> <20080515045700.GA4328@infradead.org> <op.ua6ji4r93jf8g2@pc-bnaujok.melbourne.sgi.com> <DCB15FFF-F942-47BD-B8FB-38AADC24B9D6@cam.ac.uk> <op.ubfkzvjx3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080520182315.GA8456@infradead.org>
-In-Reply-To: <20080520182315.GA8456@infradead.org>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Barry Naujok <bnaujok@sgi.com>, Anton Altaparmakov <aia21@cam.ac.uk>, xfs@oss.sgi.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> The cond_resched_lock here is not safe here, because the pointer you
-> are going to dereference in list_for_each_entry might not be valid
-> anymore.  This should look more like:
->
-> void d_drop_negative_children(struct dentry *parent)
-> {
-> 	struct dentry *dentry;
->
->  again:
-> 	spin_lock(&dcache_lock);
-> 	list_for_each_entry(dentry, &parent->d_subdirs, d_u.d_child) {
-> 		if !(dentry->d_inode)
-> 			continue;
->
-> 		spin_lock(&dentry->d_lock);
-> 		__d_drop(dentry);
-> 		spin_unlock(&dentry->d_lock);
->
-> 		if (need_resched()) {
-> 			spin_unlock(&dcache_lock);
-> 			cond_resched();
-> 			goto again;
-> 		}
-> 	}
-> 	spin_unlock(&dcache_lock);
-> }
->   
-Yes, we have been bitten by the same issue.
+Christoph Hellwig <hch@lst.de> writes:
 
-Instead of need_resched(), it may be better if you do:
+> Currently the xfs module init/exit code is a mess.  It's farmed out
+> over a lot of function with very little error checking.  This patch
+> merges xfs_init_zones and xfs_init into init_xfs_fs, and makes sure
+> we propagate all initialization failures properly and clean up after
+> them.  Various runtime initializations are replaced with compile-time
+> initializations where possible to make this easier.  The exit path
+> is similarly consolidated.
 
-		if (cond_resched_lock(&dcache_lock))
-			goto again;
+Looks good, appart from the fact that I don't see the point of merging
+xfs_{init,destroy}_zones into xfs_{init,exit}, appart from clobbering it
+and making it less readeable.
+
+could be:
+error = xfs_init_zones();
+if (error)
+      goto out;
+
+and all the other error cases will end with
+xfs_destroy_zones();
+
+That would look much more like the rest of the calls in these functions.
+-- 
+Niv Sardi
