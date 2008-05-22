@@ -1,43 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 11:10:18 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4MIAAWu031962
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 11:10:13 -0700
-Received: from pomaz-ex.szeredi.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0BE63171D499
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 11:10:58 -0700 (PDT)
-Received: from pomaz-ex.szeredi.hu (fxip-0047f.externet.hu [88.209.222.127]) by cuda.sgi.com with ESMTP id ChQnIHlBvWcUcrr2 for <xfs@oss.sgi.com>; Thu, 22 May 2008 11:10:58 -0700 (PDT)
-In-reply-to: <20080520083351.GA14826@lst.de> (message from Christoph Hellwig
-	on Tue, 20 May 2008 10:33:51 +0200)
-Subject: Re: [PATCH] always set a/c/mtime through ->setattr
-References: <20080520060838.GA6436@lst.de> <E1JyMSu-0001au-96@pomaz-ex.szeredi.hu> <20080520083351.GA14826@lst.de>
-Message-Id: <E1JzFFa-0008VR-9B@pomaz-ex.szeredi.hu>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Thu, 22 May 2008 20:10:50 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 15:12:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4MMCAOe022826
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 15:12:12 -0700
+Date: Fri, 23 May 2008 08:12:52 +1000
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [patch] xfsqa test to check log size scaling
+Message-ID: <20080522221252.GV173056135@sgi.com>
+References: <20080522061257.GR173056135@sgi.com> <20080522132542.GC4972@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080522132542.GC4972@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: hch@lst.de
-Cc: miklos@szeredi.hu, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, Artem.Bityutskiy@nokia.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Chinner <dgc@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-> All major disk or in-memory filesystems except for XFS just pass down
-> ATTR_*TIME requests to inode_setattr which is not more than just
-> dirtying the inode.  NFS and CIFS set S_NOCMTIME so they're not affected
-> by this at all.
+On Thu, May 22, 2008 at 09:25:42AM -0400, Christoph Hellwig wrote:
+> On Thu, May 22, 2008 at 04:12:57PM +1000, David Chinner wrote:
+> > XFS-QA test to check that log size scaling works correctly
+> > for old and new maximum log sizes.
+> 
+> Am I missing somethign or would this fail if the partitions used for
+> xfsqa are smaller than 256GB?  I don't even have that much total storage
+> on my laptop :)
 
-I've checked, and relatively few filesystems set S_NOCMTIME:
+Uses loop devices and sparse files - should work just fine on any partition a
+bit over 2GB (the log gets zeroed during mkfs). I know it passses on a 14GB
+scratch filesystem....
 
- cifs, fuse, nfs
+Cheers,
 
-But there are quite a few others which don't call inode_setattr (which
-means that the unchanged time optimization is lost), or which do
-something possibly slow in their ->setattr():
-
- adfs, 9p, afs, coda, gfs2 ...
-
-just to name a few at the start of the alphabet.
-
-So it looks to me as this could cause some unintended performance
-regressions in these filesystems.
-
-Miklos
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
