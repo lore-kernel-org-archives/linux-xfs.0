@@ -1,43 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 08:55:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 09:25:18 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4MFtaax021405
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 08:55:37 -0700
-Date: Thu, 22 May 2008 17:56:16 +0200
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4MGPFsD024231
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 09:25:16 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7531C1713612
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 09:26:05 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id sNjYRsA58GZrf3Pn for <xfs@oss.sgi.com>; Thu, 22 May 2008 09:26:05 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4MGPwF3011108
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 18:25:58 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4MGPwG1011106
+	for xfs@oss.sgi.com; Thu, 22 May 2008 18:25:58 +0200
+Date: Thu, 22 May 2008 18:25:58 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: TAKE streamline init/exit path
-Message-ID: <20080522155616.GA7682@lst.de>
-References: <20080518130511.GA28501@lst.de> <nccprrg32vr.fsf@sgi.com> <20080521060103.GA25003@lst.de> <nccej7w2l9c.fsf@sgi.com> <20080521072425.GA29889@lst.de> <ncc7ido2i1g.fsf_-_@sgi.com>
+Subject: xfs_open
+Message-ID: <20080522162558.GA11036@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ncc7ido2i1g.fsf_-_@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, May 21, 2008 at 06:11:23PM +1000, Niv Sardi wrote:
-> 
-> Christoph Hellwig <hch@lst.de> writes:
-> 
-> > Updated patch below.  There's now split out function to create/destroy
-> > the kmem zones and alloc/free the trace buffers.  I've also changed the
-> > ktrace allocations to KM_MAYFAIL and handled errors resulting from that.
-> >
-> > And yes, we really should replace the XFS_*_TRACE ifdefs with a single
-> > XFS_TRACE..
-> 
-> Thanks, 
-> 
-> it's in, forgot to send the TAKE message to oss, here it comes:
-> 
-> Subject: TAKE 976035 -  streamline init/exit path
-> 
-> Date:  Wed, 21 May 2008 18:02:18 +1000
-> Workarea:  chook.melbourne.sgi.com:/build/xaiki/isms/mangrove-1.3
-> Inspected by:  hch
+Currently xfs_open is only called for regular files, but the only
+non-trivial code in there is for directories.  We probably should wire
+up an ->open that does the XFS_FORCED_SHUTDOWN check for directories
+anyway, but should we bring back the directory readahead?
 
-Well, mangrove was the sles10 NAS tree if I remember correctly.  And it
-indeed hasn't made it to either the CVS or git tree on oss.sgi.com yet.
+Anyone on this list bored enough to benchmark it?
