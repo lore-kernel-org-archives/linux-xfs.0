@@ -1,30 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 00:19:23 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 01:20:57 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4M7JI20001231
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 00:19:19 -0700
-Subject: TAKE 981521 - Remove d_add call for an ENOENT CI lookup return code
-Message-Id: <20080522072004.EA21458C4C29@chook.melbourne.sgi.com>
-Date: Thu, 22 May 2008 17:20:04 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4M8Kpc2006623
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 01:20:53 -0700
+Message-ID: <48352D8C.8090505@sgi.com>
+Date: Thu, 22 May 2008 18:23:40 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] make inode reclaim wait for log I/O to complete
+References: <482A77A9.5040806@sgi.com> <20080514064451.GF155679365@sgi.com> <4834EBB7.5010200@sgi.com> <20080522043150.GM173056135@sgi.com>
+In-Reply-To: <20080522043150.GM173056135@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Remove d_add call for an ENOENT CI lookup return code
+David Chinner wrote:
+> On Thu, May 22, 2008 at 01:42:47PM +1000, Lachlan McIlroy wrote:
+>> David Chinner wrote:
+>>> On Wed, May 14, 2008 at 03:24:57PM +1000, Lachlan McIlroy wrote:
+>>>> An xfs inode can be destroyed before log I/O involving that inode
+>>>> is complete.  We need to wait for the inode to be unpinned before
+>>>> tearing it down.
+> .....
+>>>> --- fs/xfs/xfs_vnodeops.c_1.757	2008-05-12 12:02:45.000000000 +1000
+>>>> +++ fs/xfs/xfs_vnodeops.c	2008-05-12 12:28:15.000000000 +1000
+>>>> @@ -3324,6 +3324,7 @@ xfs_finish_reclaim(
+>>>> 			 * because we're gonna reclaim the inode anyway.
+>>>> 			 */
+>>>> 			if (error) {
+>>>> +				xfs_iunpin_wait(ip);
+>>>> 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>>> 				goto reclaim;
+>>>> 			}
+>>> We can't get an error from xfs_iflush() from here that hasn't
+>>> already passed through xfs_iunpin_wait() in xfs_iflush().
+>>> Hence we should never see a pinned inode through this path.
+>> Okay, good point.  I'll remove that one.  I thought about removing
+>> the XFS_FORCED_SHUTDOWN() and dirty inode checks from xfs_finish_reclaim()
+>> and calling xfs_iflush() anyway.  It will abort if it's a clean inode
+>> or it will do the unpin and then abort if it's a forced shutdown.
+>> It would make the code in xfs_finish_reclaim() a bit cleaner.  I also
+>> wouldn't need to export xfs_iunpin_wait().  Thoughts?
+> 
+> Sounds like a fine plan. Please comment it appropriately, though.
 
+Sounded too easy.  Hit this assert with an inode that's still in
+the AIL on a forced shutdown.
 
-Date:  Thu May 22 17:18:57 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/2.6.x-xfs
-Inspected by:  dgc@sgi.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31214a
-fs/xfs/linux-2.6/xfs_iops.c - 1.287 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.287&r2=text&tr2=1.286&f=h
-	- Remove d_add call for an ENOENT lookup return code
+	/*
+	 * If the inode isn't dirty, then just release the inode
+	 * flush lock and do nothing.
+	 */
+	if (xfs_inode_clean(ip)) {
+		ASSERT((iip != NULL) ?
+			 !(iip->ili_item.li_flags & XFS_LI_IN_AIL) : 1);
+		xfs_ifunlock(ip);
+		return 0;
+	}
