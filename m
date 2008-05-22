@@ -1,64 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 01:20:57 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4M8Kpc2006623
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 01:20:53 -0700
-Message-ID: <48352D8C.8090505@sgi.com>
-Date: Thu, 22 May 2008 18:23:40 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH] make inode reclaim wait for log I/O to complete
-References: <482A77A9.5040806@sgi.com> <20080514064451.GF155679365@sgi.com> <4834EBB7.5010200@sgi.com> <20080522043150.GM173056135@sgi.com>
-In-Reply-To: <20080522043150.GM173056135@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 01:48:43 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4M8meqn008830
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 01:48:41 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1616ABC1058
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 01:49:28 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id oWRKH2xphTe8O5Ey for <xfs@oss.sgi.com>; Thu, 22 May 2008 01:49:28 -0700 (PDT)
+Subject: [RFC PATCH 0/3] freeze feature ver 1.4
+Message-Id: <20080522174924t-sato@mail.jp.nec.com>
+Mime-Version: 1.0
+From: Takashi Sato <t-sato@yk.jp.nec.com>
+Date: Thu, 22 May 2008 17:49:24 +0900
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Chinner <dgc@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-David Chinner wrote:
-> On Thu, May 22, 2008 at 01:42:47PM +1000, Lachlan McIlroy wrote:
->> David Chinner wrote:
->>> On Wed, May 14, 2008 at 03:24:57PM +1000, Lachlan McIlroy wrote:
->>>> An xfs inode can be destroyed before log I/O involving that inode
->>>> is complete.  We need to wait for the inode to be unpinned before
->>>> tearing it down.
-> .....
->>>> --- fs/xfs/xfs_vnodeops.c_1.757	2008-05-12 12:02:45.000000000 +1000
->>>> +++ fs/xfs/xfs_vnodeops.c	2008-05-12 12:28:15.000000000 +1000
->>>> @@ -3324,6 +3324,7 @@ xfs_finish_reclaim(
->>>> 			 * because we're gonna reclaim the inode anyway.
->>>> 			 */
->>>> 			if (error) {
->>>> +				xfs_iunpin_wait(ip);
->>>> 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>>> 				goto reclaim;
->>>> 			}
->>> We can't get an error from xfs_iflush() from here that hasn't
->>> already passed through xfs_iunpin_wait() in xfs_iflush().
->>> Hence we should never see a pinned inode through this path.
->> Okay, good point.  I'll remove that one.  I thought about removing
->> the XFS_FORCED_SHUTDOWN() and dirty inode checks from xfs_finish_reclaim()
->> and calling xfs_iflush() anyway.  It will abort if it's a clean inode
->> or it will do the unpin and then abort if it's a forced shutdown.
->> It would make the code in xfs_finish_reclaim() a bit cleaner.  I also
->> wouldn't need to export xfs_iunpin_wait().  Thoughts?
-> 
-> Sounds like a fine plan. Please comment it appropriately, though.
+Hi,
 
-Sounded too easy.  Hit this assert with an inode that's still in
-the AIL on a forced shutdown.
+The freeze feature can suspend accesses to the filesystem
+keeping the filesystem's consistency.
+We can take the consistent backup with it cooperating with
+the backup software.
 
-	/*
-	 * If the inode isn't dirty, then just release the inode
-	 * flush lock and do nothing.
-	 */
-	if (xfs_inode_clean(ip)) {
-		ASSERT((iip != NULL) ?
-			 !(iip->ili_item.li_flags & XFS_LI_IN_AIL) : 1);
-		xfs_ifunlock(ip);
-		return 0;
-	}
+I've modified [PATCH 1/3] to set the suitable error number (EOPNOTSUPP)
+in case the filesystem doesn't support the freeze feature.
+This was pointed out by Andreas Dilger.
+In addition, the patches are re-based from linux-2.6.26-rc2 to
+linux-2.6.26-rc3.
+
+The patch-set consists of the following three patches.
+
+[PATCH 1/3] Implement generic freeze feature
+  I have modified to set the suitable error number (EOPNOTSUPP)
+  in case the filesystem doesn't support the freeze feature.
+
+  The ioctls for the generic freeze feature are below.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, arg)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Unfreeze the filesystem
+    int ioctl(int fd, int FITHAW, arg)
+      fd: The file descriptor of the mountpoint
+      FITHAW: request code for unfreeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+[PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+  It removes XFS specific ioctl interfaces and request codes
+  for freeze feature.
+  This patch has been supplied by David Chinner.
+
+[PATCH 3/3] Add timeout feature
+  The timeout feature is added to freeze ioctl.  And new ioctl
+  to reset the timeout period is added.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, long *timeval)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      timeval: the timeout period in seconds
+               If it's 0 or 1, the timeout isn't set.
+               This special case of "1" is implemented to keep
+               the compatibility with XFS applications.
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Reset the timeout period
+    This is useful for the application to set the timeval more accurately.
+    For example, the freezer resets the timeval to 10 seconds every 5
+    seconds.  In this approach, even if the freezer causes a deadlock
+    by accessing the frozen filesystem, it will be solved by the timeout
+    in 10 seconds and the freezer can recognize that at the next reset
+    of timeval.
+    int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeval)
+      fd:file descriptor of mountpoint
+      FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+      timeval: new timeout period in seconds
+      Return value: 0 if the operation succeeds. Otherwise, -1
+      Error number: If the filesystem has already been unfrozen,
+                    errno is set to EINVAL.
+
+Any comments are very welcome.
+
+Cheers, Takashi
