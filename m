@@ -1,67 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 May 2008 23:14:59 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4M6EYWT019964
-	for <xfs@oss.sgi.com>; Wed, 21 May 2008 23:14:38 -0700
-Date: Thu, 22 May 2008 16:15:19 +1000
-From: David Chinner <dgc@sgi.com>
-Subject: [hack] allow xfsrestore to run on 64k page size machines
-Message-ID: <20080522061519.GT173056135@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 21 May 2008 23:38:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4M6cCsc021735
+	for <xfs@oss.sgi.com>; Wed, 21 May 2008 23:38:12 -0700
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 52757BC02C7
+	for <xfs@oss.sgi.com>; Wed, 21 May 2008 23:39:02 -0700 (PDT)
+Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id pBHwxY21a2ACCrSq for <xfs@oss.sgi.com>; Wed, 21 May 2008 23:39:02 -0700 (PDT)
+Subject: Re: [patch] rudimetary fallocate support for xfs_io
+From: Nathan Scott <nscott@aconex.com>
+Reply-To: nscott@aconex.com
+In-Reply-To: <20080522061029.GO173056135@sgi.com>
+References: <20080522061029.GO173056135@sgi.com>
+Content-Type: text/plain
+Date: Thu, 22 May 2008 16:39:01 +1000
+Message-Id: <1211438341.25294.506.camel@edge.scott.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: David Chinner <dgc@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
+On Thu, 2008-05-22 at 16:10 +1000, David Chinner wrote:
+> 
+> +#if defined(__i386__)
+> +#define __NR_fallocate 324
+> +#elif defined(__x86_64__)
+> +#define __NR_fallocate 285
+> +#elif defined(__ia64__)
+> +#define __NR_fallocate 1303
+> +#endif
+> +
+> +static int
+> +fallocate(int fd, int cmd, off64_t start, off64_t len)
+> +{
+> +       return syscall(__NR_fallocate, fd, cmd, start, len);
+> +}
 
-xfsrestore has assumptions about page size built into the inode hunk
-size in the dump format. Seems to be a stupid thing to do - this
-patch simply comments out the asserts to allow it to work on
-64k page size machine, but probably subtly breaks the code.
-Nasty hack, really, but allows xfsqa tests to pass.
+This will cause xfsprogs build breakage on any architecture
+other than the above three; check out the approach taken in
+xfs-cmds/attr/libattr/syscalls.c to avoid this (give ENOSYS
+for the unknown archs).
 
-Not-Signed-off-by: Dave Chinner <dgc@sgi.com>
----
- xfsdump/restore/inomap.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+cheers.
 
-Index: xfs-cmds/xfsdump/restore/inomap.c
-===================================================================
---- xfs-cmds.orig/xfsdump/restore/inomap.c	2006-11-14 19:57:32.000000000 +1100
-+++ xfs-cmds/xfsdump/restore/inomap.c	2008-05-13 10:34:05.963909158 +1000
-@@ -197,8 +197,8 @@ inomap_restore_pers( drive_t *drivep,
- 	 */
- 	ASSERT( INOPERSEG == ( sizeof( (( seg_t * )0 )->lobits ) * NBBY ));
- 	ASSERT( sizeof( hnk_t ) == HNKSZ );
--	ASSERT( HNKSZ >= pgsz );
--	ASSERT( ! ( HNKSZ % pgsz ));
-+	//ASSERT( HNKSZ >= pgsz );
-+	//ASSERT( ! ( HNKSZ % pgsz ));
- 	ASSERT( sizeof( pers_t ) <= PERSSZ );
- 
- 	/* get inomap info from media hdr
-@@ -224,8 +224,8 @@ inomap_restore_pers( drive_t *drivep,
- 
- 	/* mmap the persistent hdr and space for the map
- 	 */
--	ASSERT( sizeof( hnk_t ) * ( size_t )hnkcnt >= pgsz );
--	ASSERT( ! ( sizeof( hnk_t ) * ( size_t )hnkcnt % pgsz ));
-+	//ASSERT( sizeof( hnk_t ) * ( size_t )hnkcnt >= pgsz );
-+	//ASSERT( ! ( sizeof( hnk_t ) * ( size_t )hnkcnt % pgsz ));
- 	persp = ( pers_t * ) mmap_autogrow(
- 				     PERSSZ
- 				     +
-@@ -355,8 +355,8 @@ inomap_sync_pers( char *hkdir )
- 	/* sanity checks
- 	 */
- 	ASSERT( sizeof( hnk_t ) == HNKSZ );
--	ASSERT( HNKSZ >= pgsz );
--	ASSERT( ! ( HNKSZ % pgsz ));
-+	//ASSERT( HNKSZ >= pgsz );
-+	//ASSERT( ! ( HNKSZ % pgsz ));
- 
- 	/* only needed once per session
- 	 */
+-- 
+Nathan
