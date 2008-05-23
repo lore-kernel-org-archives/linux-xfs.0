@@ -1,108 +1,94 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 23:22:43 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4N6MfuE011998
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 23:22:42 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8137E1721032
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 23:23:31 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id mQq5xlJF8kZ5mITW for <xfs@oss.sgi.com>; Thu, 22 May 2008 23:23:31 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4N6NNF3032714
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 23 May 2008 08:23:23 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4N6NNQX032707
-	for xfs@oss.sgi.com; Fri, 23 May 2008 08:23:23 +0200
-Date: Fri, 23 May 2008 08:23:23 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill INDUCE_IO_ERROR
-Message-ID: <20080523062323.GA32637@lst.de>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 23 May 2008 00:58:08 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4N7w2MP000701
+	for <xfs@oss.sgi.com>; Fri, 23 May 2008 00:58:03 -0700
+Date: Fri, 23 May 2008 17:58:46 +1000
+Subject: [GIT PULL] XFS update for 2.6.26-rc4
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+Message-Id: <20080523075846.F1ECF58C4C29@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-All the error injection is already enabled through ifdef DEBUG, so kill
-the never set second cpp symbol to activate it without the rest of the
-debugging infrastructure.
+Please pull from the for-linus branch:
+    git pull git://oss.sgi.com:8090/xfs/xfs-2.6.git for-linus
 
+This will update the following files:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+ fs/xfs/linux-2.6/xfs_file.c  |   17 ++++--
+ fs/xfs/linux-2.6/xfs_vnode.h |    8 ---
+ fs/xfs/xfs_inode.c           |    9 ++--
+ fs/xfs/xfs_vnodeops.c        |  112 ++++++++++++++++--------------------------
+ fs/xfs/xfs_vnodeops.h        |    3 +-
+ 5 files changed, 59 insertions(+), 90 deletions(-)
 
-Index: linux-2.6-xfs/fs/xfs/xfs_error.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_error.c	2008-05-22 18:55:04.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_error.c	2008-05-22 18:55:16.000000000 +0200
-@@ -58,9 +58,6 @@ xfs_error_trap(int e)
- 	}
- 	return e;
- }
--#endif
--
--#if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
- 
- int	xfs_etest[XFS_NUM_INJECT_ERROR];
- int64_t	xfs_etest_fsid[XFS_NUM_INJECT_ERROR];
-@@ -154,7 +151,7 @@ xfs_errortag_clearall(xfs_mount_t *mp, i
- 
- 	return 0;
- }
--#endif /* DEBUG || INDUCE_IO_ERROR */
-+#endif /* DEBUG */
- 
- static void
- xfs_fs_vcmn_err(int level, xfs_mount_t *mp, char *fmt, va_list ap)
-Index: linux-2.6-xfs/fs/xfs/xfs_error.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_error.h	2008-05-22 18:55:04.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_error.h	2008-05-22 18:55:16.000000000 +0200
-@@ -125,22 +125,14 @@ extern void xfs_corruption_error(char *t
- #define XFS_RANDOM_DIOWRITE_IOERR			(XFS_RANDOM_DEFAULT/10)
- #define	XFS_RANDOM_BMAPIFORMAT				XFS_RANDOM_DEFAULT
- 
--#if (defined(DEBUG) || defined(INDUCE_IO_ERROR))
-+#ifdef DEBUG
- extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
- 
- #define	XFS_NUM_INJECT_ERROR				10
--
--#ifdef __ANSI_CPP__
--#define XFS_TEST_ERROR(expr, mp, tag, rf)		\
--	((expr) || \
--	 xfs_error_test((tag), (mp)->m_fixedfsid, #expr, __LINE__, __FILE__, \
--			 (rf)))
--#else
- #define XFS_TEST_ERROR(expr, mp, tag, rf)		\
- 	((expr) || \
- 	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
- 			(rf)))
--#endif /* __ANSI_CPP__ */
- 
- extern int xfs_errortag_add(int error_tag, xfs_mount_t *mp);
- extern int xfs_errortag_clearall(xfs_mount_t *mp, int loud);
-@@ -148,7 +140,7 @@ extern int xfs_errortag_clearall(xfs_mou
- #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
- #define xfs_errortag_add(tag, mp)		(ENOSYS)
- #define xfs_errortag_clearall(mp, loud)		(ENOSYS)
--#endif /* (DEBUG || INDUCE_IO_ERROR) */
-+#endif /* DEBUG */
- 
- /*
-  * XFS panic tags -- allow a call to xfs_cmn_err() be turned into
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-05-22 18:55:05.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-05-23 08:11:46.000000000 +0200
-@@ -1322,7 +1322,7 @@ xfs_unmountfs(xfs_mount_t *mp)
- 	if ((mp->m_flags & XFS_MOUNT_NOUUID) == 0)
- 		uuid_table_remove(&mp->m_sb.sb_uuid);
- 
--#if defined(DEBUG) || defined(INDUCE_IO_ERROR)
-+#if defined(DEBUG)
- 	xfs_errortag_clearall(mp, 0);
- #endif
- 	xfs_mount_free(mp);
+through these commits:
+
+commit c8f5f12e46f079a954d4f7163ba59dadee08ca26
+Author: David Chinner <dgc@sgi.com>
+Date:   Tue May 20 11:30:15 2008 +1000
+
+    [XFS] Fix inode list allocation size in writeback.
+    
+    We only need to allocate space for the number of inodes in the cluster
+    when writing back inodes, not every byte in the inode cluster. This
+    reduces the amount of memory needing to be allocated to 256 bytes instead
+    of 64k.
+    
+    SGI-PV: 981949
+    SGI-Modid: xfs-linux-melb:xfs-kern:31182a
+    
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+
+commit 49383b0e98ad1f69ff4c816eb1961f703df12318
+Author: David Chinner <dgc@sgi.com>
+Date:   Mon May 19 16:29:34 2008 +1000
+
+    [XFS] Don't allow memory reclaim to wait on the filesystem in inode
+    writeback
+    
+    If we allow memory reclaim to wait on the pages under writeback in inode
+    cluster writeback we could deadlock because we are currently holding the
+    ILOCK on the initial writeback inode which is needed in data I/O
+    completion to change the file size or do unwritten extent conversion
+    before the pages are taken out of writeback state.
+    
+    SGI-PV: 981091
+    SGI-Modid: xfs-linux-melb:xfs-kern:31015a
+    
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+
+commit 978b7237123d007b9fa983af6e0e2fa8f97f9934
+Author: David Chinner <dgc@sgi.com>
+Date:   Mon May 19 16:29:46 2008 +1000
+
+    [XFS] Fix fsync() b0rkage.
+    
+    xfs_fsync() fails to wait for data I/O completion before checking if the
+    inode is dirty or clean to decide whether to log the inode or not. This
+    misses inode size updates when the data flushed by the fsync() is
+    extending the file.
+    
+    Hence, like fdatasync(), we need to wait for I/o completion first, then
+    check the inode for cleanliness. Doing so makes the behaviour of
+    xfs_fsync() identical for fsync and fdatasync and we *always* use
+    synchronous semantics if the inode is dirty. Therefore also kill the
+    differences and remove the unused flags from the xfs_fsync function and
+    callers.
+    
+    SGI-PV: 981296
+    SGI-Modid: xfs-linux-melb:xfs-kern:31033a
+    
+    Signed-off-by: David Chinner <dgc@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
