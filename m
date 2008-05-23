@@ -1,70 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 18:57:14 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4N1v9aI019975
-	for <xfs@oss.sgi.com>; Thu, 22 May 2008 18:57:10 -0700
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: TAKE streamline init/exit path
-References: <20080518130511.GA28501@lst.de> <nccprrg32vr.fsf@sgi.com>
-	<20080521060103.GA25003@lst.de> <nccej7w2l9c.fsf@sgi.com>
-	<20080521072425.GA29889@lst.de> <ncc7ido2i1g.fsf_-_@sgi.com>
-	<20080522155616.GA7682@lst.de>
-	<op.ubkzio0b3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Date: Fri, 23 May 2008 11:57:57 +1000
-In-Reply-To: <op.ubkzio0b3jf8g2@pc-bnaujok.melbourne.sgi.com> (Barry Naujok's
-	message of "Fri, 23 May 2008 10:26:38 +1000")
-Message-ID: <nccmymh234q.fsf@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 22 May 2008 21:52:51 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4N4qg5D004802
+	for <xfs@oss.sgi.com>; Thu, 22 May 2008 21:52:46 -0700
+Message-ID: <48364E43.3030108@sgi.com>
+Date: Fri, 23 May 2008 14:55:31 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH V2] make inode reclaim wait for log I/O to complete
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-"Barry Naujok" <bnaujok@sgi.com> writes:
+During a forced shutdown a xfs inode can be destroyed before log
+I/O involving that inode is complete.  We need to wait for the
+inode to be unpinned before tearing it down.  Version 2 cleans up
+the code a bit by relying on xfs_iflush() to do the unpinning and
+forced shutdown check.
 
-> On Fri, 23 May 2008 01:56:16 +1000, Christoph Hellwig <hch@lst.de> wrote:
->
->> On Wed, May 21, 2008 at 06:11:23PM +1000, Niv Sardi wrote:
->>>
->>> Christoph Hellwig <hch@lst.de> writes:
->>>
->>> > Updated patch below.  There's now split out function to create/destroy
->>> > the kmem zones and alloc/free the trace buffers.  I've also
->>> changed the
->>> > ktrace allocations to KM_MAYFAIL and handled errors resulting
->>> from that.
->>> >
->>> > And yes, we really should replace the XFS_*_TRACE ifdefs with a single
->>> > XFS_TRACE..
->>>
->>> Thanks,
->>>
->>> it's in, forgot to send the TAKE message to oss, here it comes:
->>>
->>> Subject: TAKE 976035 -  streamline init/exit path
->>>
->>> Date:  Wed, 21 May 2008 18:02:18 +1000
->>> Workarea:  chook.melbourne.sgi.com:/build/xaiki/isms/mangrove-1.3
->>> Inspected by:  hch
->>
->> Well, mangrove was the sles10 NAS tree if I remember correctly.  And it
->> indeed hasn't made it to either the CVS or git tree on oss.sgi.com yet.
->
-> That's the name of the workarea (and why it's called that... I have
-> no idea!!)
->
-> But, the mod did go to the correct location:
->
-> Modid:  xfs-linux-melb:xfs-kern:31210a
->
-> But there is a few hour gap going from Melbourne to the US repository
-> and then to oss.
-
-You really don't want to know how much kittens had to suffer for that
-TAKE message to be sent out =)
-
-Cheers,
--- 
-Niv Sardi
+--- fs/xfs/xfs_inode.c_1.504	2008-05-23 11:19:21.000000000 +1000
++++ fs/xfs/xfs_inode.c	2008-05-23 11:21:14.000000000 +1000
+@@ -3082,8 +3082,6 @@ xfs_iflush(
+ 	 * flush lock and do nothing.
+ 	 */
+ 	if (xfs_inode_clean(ip)) {
+-		ASSERT((iip != NULL) ?
+-			 !(iip->ili_item.li_flags & XFS_LI_IN_AIL) : 1);
+ 		xfs_ifunlock(ip);
+ 		return 0;
+ 	}
+--- fs/xfs/xfs_vnodeops.c_1.760	2008-05-22 16:01:09.000000000 +1000
++++ fs/xfs/xfs_vnodeops.c	2008-05-23 11:52:54.000000000 +1000
+@@ -3260,7 +3260,6 @@ xfs_finish_reclaim(
+ {
+ 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+ 	bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
+-	int		error;
+ 
+ 	if (vp && VN_BAD(vp))
+ 		goto reclaim;
+@@ -3303,29 +3302,16 @@ xfs_finish_reclaim(
+ 		xfs_iflock(ip);
+ 	}
+ 
+-	if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-		if (ip->i_update_core ||
+-		    ((ip->i_itemp != NULL) &&
+-		     (ip->i_itemp->ili_format.ilf_fields != 0))) {
+-			error = xfs_iflush(ip, sync_mode);
+-			/*
+-			 * If we hit an error, typically because of filesystem
+-			 * shutdown, we don't need to let vn_reclaim to know
+-			 * because we're gonna reclaim the inode anyway.
+-			 */
+-			if (error) {
+-				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				goto reclaim;
+-			}
+-			xfs_iflock(ip); /* synchronize with xfs_iflush_done */
+-		}
+-
+-		ASSERT(ip->i_update_core == 0);
+-		ASSERT(ip->i_itemp == NULL ||
+-		       ip->i_itemp->ili_format.ilf_fields == 0);
++	/*
++	 * In the case of a forced shutdown we rely on xfs_iflush() to
++	 * wait for the inode to be unpinned before returning an error.
++	 */
++	if (xfs_iflush(ip, sync_mode) == 0) {
++		/* synchronize with xfs_iflush_done */
++		xfs_iflock(ip);
++		xfs_ifunlock(ip);
+ 	}
+ 
+-	xfs_ifunlock(ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+  reclaim:
