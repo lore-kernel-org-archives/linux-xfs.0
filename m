@@ -1,39 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 May 2008 08:38:49 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 24 May 2008 09:18:15 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4OFckGK006442
-	for <xfs@oss.sgi.com>; Sat, 24 May 2008 08:38:47 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 091DE172AD0A
-	for <xfs@oss.sgi.com>; Sat, 24 May 2008 08:39:37 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id geUVH1LTjInhedUB for <xfs@oss.sgi.com>; Sat, 24 May 2008 08:39:37 -0700 (PDT)
-Message-ID: <483836B6.8030406@sandeen.net>
-Date: Sat, 24 May 2008 10:39:34 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4OGIDCq009090
+	for <linux-xfs@oss.sgi.com>; Sat, 24 May 2008 09:18:13 -0700
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3261172AD06
+	for <linux-xfs@oss.sgi.com>; Sat, 24 May 2008 09:19:03 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id crBknegJrtWANVqB for <linux-xfs@oss.sgi.com>; Sat, 24 May 2008 09:19:03 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: XFS for lots of small files
+Date: Sat, 24 May 2008 18:16:55 +0200
+References: <4820832B.3070903@dubielvitrum.pl> <200805062055.36755.Martin@lichtvoll.de> <4836135D.9050409@tlinx.org> (sfid-20080523_104048_864520_772E3EC8)
+In-Reply-To: <4836135D.9050409@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: RFI for 2.6.25.5 : Re: Regression- XFS won't mount on partitioned
- md array
-References: <482DC043.5000307@dgreaves.com> <482DD981.5070004@sandeen.net> <482EEFDA.50101@dgreaves.com> <482EF6A7.2020909@sandeen.net> <482F67D9.70400@sandeen.net> <482FBD4C.20608@sandeen.net> <482FED60.7060405@dgreaves.com> <4838192F.3050004@dgreaves.com> <20080524135258.GF6749@1wt.eu>
-In-Reply-To: <20080524135258.GF6749@1wt.eu>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Disposition: inline
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <200805241816.56080.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Willy Tarreau <w@1wt.eu>
-Cc: David Greaves <david@dgreaves.com>, Greg KH <greg@kroah.com>, David Chinner <dgc@sgi.com>, xfs@oss.sgi.com, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, LinuxRaid <linux-raid@vger.kernel.org>, stable@kernel.org
+To: linux-xfs@oss.sgi.com
+Cc: Linda Walsh <xfs@tlinx.org>
 
-Willy Tarreau wrote:
 
-> It would have helped to CC stable (fixed) and to give the mainline commit
-> ID since the stable branch only holds already merged patches. Greg, the
-> commit is 6ab455ee...
-> 
-> Willy
+Hi Linda,
 
-Yup I'll agree that this should probably go to -stable unless hch or
-dchinner disagree.
+Am Freitag 23 Mai 2008 schrieb Linda Walsh:
+> Martin Steigerwald wrote:
+> > And there is quite some fragmentation on it:
+> >
+> > xfs_db> frag
+> > actual 653519, ideal 587066, fragmentation factor 10.17%
+>
+> ----
+> 	Not to disturb you, but are  you running xfs_fsr on a
+> regular basis?
 
-FWIW I've already put it in the Fedora kernels.
+No, not yet. I had those bad experiences with xfs_fsr on a ck patchset 
+patched kernel and after this I didn't try again. Its pretty sure that my 
+file content corruption issues was related to the ck patchset as I was 
+not able to reproduce it with a CFS or mainline kernel. But still I have 
+been reluctant. I think, I give it a try after I made my backups.
 
--Eric
+> I have a shell script that runs in my 'cron.daily' that has two
+> lines:
+> ----
+> #!/bin/bash
+> ionice -c 3 /usr/sbin/xfs_fsr &
+> -------
+>
+> I've never noticed fragmentation above 1% on my disks...but your
+> mileage may vary ....
+
+Lets see ;-)
+
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
