@@ -1,118 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 May 2008 08:12:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4QFChUF029015
-	for <xfs@oss.sgi.com>; Mon, 26 May 2008 08:12:48 -0700
-Received: from dqmail.dynamicquest.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 08C7C1B3135
-	for <xfs@oss.sgi.com>; Mon, 26 May 2008 08:13:34 -0700 (PDT)
-Received: from dqmail.dynamicquest.com (dqmail.dynamicquest.com [74.202.150.200]) by cuda.sgi.com with ESMTP id BDTQhSGQWMGk4fGq for <xfs@oss.sgi.com>; Mon, 26 May 2008 08:13:34 -0700 (PDT)
-Message-ID: <483AD39C.8040201@dynamicquest.com>
-Date: Mon, 26 May 2008 11:13:32 -0400
-From: Javier Gomez <gomez@dynamicquest.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 May 2008 09:24:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4QGOh1L005802
+	for <xfs@oss.sgi.com>; Mon, 26 May 2008 09:24:43 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ED70DBE30E9
+	for <xfs@oss.sgi.com>; Mon, 26 May 2008 09:25:34 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id cG5hj19fOPgwzt5e for <xfs@oss.sgi.com>; Mon, 26 May 2008 09:25:34 -0700 (PDT)
+Message-ID: <483AE47B.20101@sandeen.net>
+Date: Mon, 26 May 2008 11:25:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Lost Superblock and need help recovering
-References: <483A231F.2030207@dynamicquest.com> <483A3112.4090502@sandeen.net> <483A9254.8010509@dynamicquest.com> <483ACE00.4050701@sandeen.net>
-In-Reply-To: <483ACE00.4050701@sandeen.net>
-Content-Type: text/plain
-Content-Disposition: inline
+References: <483A231F.2030207@dynamicquest.com> <483A3112.4090502@sandeen.net> <483A9254.8010509@dynamicquest.com> <483ACE00.4050701@sandeen.net> <483AD39C.8040201@dynamicquest.com>
+In-Reply-To: <483AD39C.8040201@dynamicquest.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Javier Gomez <gomez@dynamicquest.com>
+Cc: xfs@oss.sgi.com
+
+Javier Gomez wrote:
+> 
+>     Thanks for the feedback.  Your right on the mark.  We did use
+> "parted" to create the partitions on this device.  That would explain
+> the issue we are having right now.  Do you have any suggestions on what
+> to do next to correct this issue.  I have not seen any clear information
+> on the net about this issue.  The information on these devices is very
+> important to us and very critical we get it up again prior to tomorrow
+> (or reasonably soon after).
+> 
+>     How would you suggest we try to repair the partition table.  Also
+> given that its 13 TB a "dd" to backup the device will take a long time
+> and I am also not sure what dd command to run that will grab the data
+> correctly given the bad partition information currently in place.
+>                 Javier
+
+Basically, you want to replace the dos partition table with a GPT
+partition table, without overwriting any of your filesystem (on dos
+partition #1)  I can give you a basic walkthough but, do your own
+thinking and don't assume that what I'm saying here is 100% perfect and
+infallible.  This is the general idea.
+
+For the backup, I'm just recommending backing up the partition table.
+
+So I would use parted, and set the units to "sectors" :
+
+(parted) unit s
+
+print it out and you'll see where it starts:
+
+Number  Start    End        Size       Type     File system  Flags
+ 1      63s      XXXXXXs    xxxxxxs    primary  ext3
+
+So the original partition starts at sector #63; therefore I'd back up
+the first 64 sectors:
+
+dd if=/dev/etherd/e4.1 bs=512 count=64 of=e4.1.table.backup
+
+Actually if it were me I'd probably back up a bit more in case something
+goes wrong in the next steps, i.e. count=256 or so.  That'll get the dos
+table and the first part of the fs, in case it were to get overwritten.
+
+Now you want to remove the dos partition table & add a gpt partition
+table, essentially what you have now:
+
+1: [  dos table ][xfs filesystem data ... ]
+
+then remove the dos partition table with parted to get:
+
+2: [    empty   ][xfs filesystem data ... ]
+
+And add a new gpt table with parted, with the first partition at exactly
+the same start-point (63s) but this time extending to the end of the device:
+
+3: [gpt][ empty ][xfs filesystem data ... ]
+
+but this requires 3 things:
+
+* the gpt table must fit in the first 63 sectors to not overwrite the
+xfs filesystem (IIRC it should fit).
+* the gpt table must point to a first-partition start point exactly the
+same as what the dos table pointed to (sector 63) (I assume this starts
+at 0 so sector 63 is the 64th sector; in any case you'd tell parted to
+start at "63s" AFAIK.)
+* the gpt table doesn't write anything to the *end* of the device, or if
+it does, it's not clobbering any of the filesystem.
+
+The last part is probably the trickiest; IIRC gpt can write backup
+tables at the end of the device; however it's possible that your
+filesystem doesn't actually extend that far.  I suppose I would use dd
+to copy out the last few sectors of your pristine device as well, to
+keep a copy before you do this.  Then I'd probably strace parted and
+save output to a file to see where it actually wrote data when I created
+the gpt table.  Maybe this is all overkill but it'd be safest.
+
+After you've written the gpt table and convinced yourself that it didn't
+overwrite any of the filesystem, I'd probably try an xfs_repair -n to
+see if all looks well...
+
+-Eric (who thinks maybe this is a common enough problem that it warrants
+a faq, and maybe even automatic recovery script...)
 
 
-    Thanks for the feedback.  Your right on the mark.  We did use 
-"parted" to create the partitions on this device.  That would explain 
-the issue we are having right now.  Do you have any suggestions on what 
-to do next to correct this issue.  I have not seen any clear information 
-on the net about this issue.  The information on these devices is very 
-important to us and very critical we get it up again prior to tomorrow 
-(or reasonably soon after).
+p.s.
 
-    How would you suggest we try to repair the partition table.  Also 
-given that its 13 TB a "dd" to backup the device will take a long time 
-and I am also not sure what dd command to run that will grab the data 
-correctly given the bad partition information currently in place.
-                Javier
-
-
-
-
-Eric Sandeen wrote:
-> Javier Gomez wrote:
->   
->>     The two devices having issues are /dev/etherd/e5.1p1    and   
->> /dev/etherd/e4.1p1
->>
->>     You make a very valid point.  Notice the main device shows the full
->> size (one has 12.6 TB and the other is 9.5 TB).  Each of these two
->> devices contain a single complete partition on it taking up the full
->> size of the device.  It looks like both of these are short on the size
->> for the actual partition "1p1".  
->>     
->
-> Yep....
->
->   
->> Note that for device /dev/etherd/e3.1
->> and /dev/etherd/e7.1  and /dev/etherd/e7.2 we formated the xfs
->> filesystem directly on the device.  The groups on the net had noted that
->> it could be done either way, but it might be a little safer to do it
->> with the xfs formated directly on the device (not sure if this is
->> valid).  
->>     
->
-> >From the xfs perspective, it does not really matter.
->
->   
->> In this case /dev/etherd/e3 and /dev/etherd/e7 both came up
->> just fine after the hard shutdown while the /dev/etherd/e4 and
->> /dev/etherd/e5 both have this superblock issue.  
->>     
->
-> If we look at those devices in /proc/partitions:
->
->   
->>  152     0 12697913278 etherd/e4.1	<-- 11.8GiB
->>  152     1 1960494281 etherd/e4.1p1	<--  1.8GiB
->>  152    48 9523468862 etherd/e5.1	<--  8.8GiB
->>  152    49  933533929 etherd/e5.1p1	<--  0.9GiB
->>     
->
-> you can see that the partitions don't actually seeem to span much of the
-> device.  I don't know how that happened, but it's unlikely to be an xfs
-> problem.... perhaps if you can figure out what went wrong there, and get
-> your partitions back to the right(?) size xfs will see a consistent
-> filesystem.
->
->   
->> Each of these devices
->> are running the same stuff except that /dev/etherd/e5 is slightly
->> smaller then the other ones in disk space.  See this information below,
->> do you have any suggestions to recover from it?  Is there anyway to
->> remap the partition description to fill the entire size correctly so
->> that the xfs_repair can complete its job?
->>     
->
-> What sort of partition tables are on the devices?  I'll hazard a guess
-> that they're dos partition tables made with parted?  Hmm yep from
-> looking at the sizes of your devices and partitions, it does appear that
-> the high bits of the size have been lost.
->
-> If so then you've been bitten by a parted bug that lets you "create" dos
-> partition tables larger than can actually be stored on-disk (2T IIRC),
-> so that when you reboot, it appears to be truncated.  However, the xfs
-> data is still there, if so.
->
-> Depending on how big the dos partition table is I think some people have
-> successfully replaced it with a GPT table, which can handle these larger
-> sizes.  Doing that is a little tricky, and backing up the old table with
-> dd is well-advised.
->
-> -Eric
->   
-
-
-[[HTML alternate version deleted]]
+I suppose one other alternative, which is less involved but isn't a 100%
+fix, would be to simply delete and recreate the *dos* partition table
+with parted.  This would get you back the whole partition size for this
+session, but it'd get lost on reboot.  This works for the current
+session because parted actually pokes the too-large partition size
+directly into the kernel when it writes the table, even though it can't
+re-read it from disk on the next boot.
