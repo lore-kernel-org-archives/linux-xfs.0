@@ -1,41 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 May 2008 22:37:24 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4Q5bHRx013054
-	for <xfs@oss.sgi.com>; Sun, 25 May 2008 22:37:17 -0700
-Date: Mon, 26 May 2008 07:37:59 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] use generic_*xattr routines
-Message-ID: <20080526053759.GA17825@lst.de>
-References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 May 2008 23:01:50 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4Q61km1014658
+	for <xfs@oss.sgi.com>; Sun, 25 May 2008 23:01:46 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: TAKE 981875 - xfs_dm_rdwr() needs to pass a vfsmount to dentry_open()
+References: <20080516045732.F12DC58C4C29@chook.melbourne.sgi.com>
+	<20080516051048.GB5035@infradead.org>
+	<20080520064356.GA8711@infradead.org>
+Date: Mon, 26 May 2008 16:02:29 +1000
+In-Reply-To: <20080520064356.GA8711@infradead.org> (Christoph Hellwig's
+	message of "Tue, 20 May 2008 02:43:56 -0400")
+Message-ID: <nccmymdzjpm.fsf@sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <483A15CE.9060409@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lachlan McIlroy <lachlan@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Mon, May 26, 2008 at 11:43:42AM +1000, Timothy Shimmin wrote:
-> I guess this is done to some extent by the put_listent() callback.
-> Though, the context structure is probably a bit overused in different
-> ways.
-> The callback was also used for searching (for parent-ptr code) as well
-> as for list formatting.
-> I presume we are preserving the valuelen list format to keep the API
-> for xfs_attrlist_by_handle used by xfsdump and probably for dmf.
+Christoph Hellwig <hch@infradead.org> writes:
 
-Yes, the idea is to change the put_listen callback for work more like
-filldir.  Thas is:
+> On Fri, May 16, 2008 at 01:10:48AM -0400, Christoph Hellwig wrote:
+>> On Fri, May 16, 2008 at 02:57:32PM +1000, Lachlan McIlroy wrote:
+>> > xfs_dm_rdwr() needs to pass a vfsmount to dentry_open()
+>> > 
+>> > We need a vfsmount pointer in xfs_dm_rdwr() but we are not
+>> > provided with one and there's no way to get to it.  So add
+>> > a m_vfsmount field to the xfs_mount structure and set it
+>> > up at mount time.  We can then access it through the xfs
+>> > inode.
+>> 
+>> Stong NACK for this crap, and double NACK for pushing this towards
+>> mainline.
+>
+> No reply yet.  Folks, you realize this is an instant oops if you perform
+> dmapi operations after one fs instance has been unmounted?
 
- - the callback is supplied by the xfs_attr_list caller, not set based
-   on options
- - there will be an opaque object supplied to xfs_attr_list that is to
-   be used by put_listent so that we don't have to pass down
-   implementation-specific arguments directly.
+This is not going into mainline, but we need it in -dev to make sure we
+can still QA DMAPI. We (I should be but flooded with other stuff) are
+looking at other solutions to fix the issue the right way.
 
-I'd also like to move the attrlist_cursor_kern_t into this callback
-opaque context because it doesn't make sense for the normal xattr API,
-but I'll have to see if that's actually feasible.
+Cheers,
+-- 
+Niv Sardi
