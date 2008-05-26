@@ -1,52 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 May 2008 20:39:17 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 25 May 2008 22:37:24 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4Q3dE3U006426
-	for <xfs@oss.sgi.com>; Sun, 25 May 2008 20:39:14 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7773712B890E
-	for <xfs@oss.sgi.com>; Sun, 25 May 2008 20:40:05 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id H3kMVMuA5I32VJlk for <xfs@oss.sgi.com>; Sun, 25 May 2008 20:40:05 -0700 (PDT)
-Message-ID: <483A3112.4090502@sandeen.net>
-Date: Sun, 25 May 2008 22:40:02 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Lost Superblock and need help recovering
-References: <483A231F.2030207@dynamicquest.com>
-In-Reply-To: <483A231F.2030207@dynamicquest.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4Q5bHRx013054
+	for <xfs@oss.sgi.com>; Sun, 25 May 2008 22:37:17 -0700
+Date: Mon, 26 May 2008 07:37:59 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] use generic_*xattr routines
+Message-ID: <20080526053759.GA17825@lst.de>
+References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <483A15CE.9060409@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Javier Gomez <gomez@dynamicquest.com>
-Cc: xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Javier Gomez wrote:
+On Mon, May 26, 2008 at 11:43:42AM +1000, Timothy Shimmin wrote:
+> I guess this is done to some extent by the put_listent() callback.
+> Though, the context structure is probably a bit overused in different
+> ways.
+> The callback was also used for searching (for parent-ptr code) as well
+> as for list formatting.
+> I presume we are preserving the valuelen list format to keep the API
+> for xfs_attrlist_by_handle used by xfsdump and probably for dmf.
 
->  > xfs_repair -nv /dev/etherd/e4.1p1
-> ---------------------------------------------------------------
-> Phase 1 - find and verify superblock...
-> error reading superblock 4 -- seek to offset 1219003957248 failed
-> couldn't verify primary superblock - bad magic number !!!
+Yes, the idea is to change the put_listen callback for work more like
+filldir.  Thas is:
 
-Looks to me like you still have storage problems.
+ - the callback is supplied by the xfs_attr_list caller, not set based
+   on options
+ - there will be an opaque object supplied to xfs_attr_list that is to
+   be used by put_listent so that we don't have to pass down
+   implementation-specific arguments directly.
 
-1219003957248 is just over 1 terabyte... why can't repair seek to that
-location if it's a 13T device?
-
-What does /proc/partitions say about this block device (or do AoE
-devices go there?)
-
--Eric
-
-> attempting to find secondary superblock...
-> ................................................................................................
-> ......................................................
-> ..................
-> ..................
-> ............Sorry, could not find valid secondary superblock
-> Exiting now.
-> ---------------------------------------------------------------
-> 
-> 
+I'd also like to move the attrlist_cursor_kern_t into this callback
+opaque context because it doesn't make sense for the normal xattr API,
+but I'll have to see if that's actually feasible.
