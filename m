@@ -1,63 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 26 May 2008 21:37:35 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4R4bTT9032169
-	for <xfs@oss.sgi.com>; Mon, 26 May 2008 21:37:31 -0700
-Subject: TAKE 982343 - make xfs use generic set/get/remove xattr routines
-Message-Id: <20080527043816.4ADD558C4C3F@chook.melbourne.sgi.com>
-Date: Tue, 27 May 2008 14:38:16 +1000 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 03:19:35 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RAJTdT026405
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:19:30 -0700
+Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 90B10173426F
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:20:19 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id nlcE4dJPOARhPYEC for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:20:19 -0700 (PDT)
+Message-Id: <7654D29B4EC648FD8E32AB331941F941@nsl.ad.nec.co.jp>
+From: "Takashi Sato" <t-sato@yk.jp.nec.com>
+References: <20080522175020t-sato@mail.jp.nec.com> <20080525193211.GA24328@infradead.org>
+In-Reply-To: <20080525193211.GA24328@infradead.org>
+Subject: Re: [RFC PATCH 1/3] Implement generic freeze feature
+Date: Tue, 27 May 2008 19:20:11 +0900
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Use the generic xattr methods.
+Hi,
 
-Use the generic set, get and removexattr methods and supply the s_xattr
-array with fine-grained handlers.  All XFS/Linux highlevel attr handling is
-rewritten from scratch and placed into fs/xfs/linux-2.6/xfs_xattr.c so
-that it's separated from the generic low-level code.
+>> +    if (test_and_set_bit(BD_FREEZE_OP, &bdev->bd_state))
+>> +        return ERR_PTR(-EBUSY);
+>> +
+>> +    sb = get_super_without_lock(bdev);
+>> +
+>> +    /* If super_block has been already frozen, return. */
+>> +    if (sb && sb->s_frozen != SB_UNFROZEN) {
+>> +        put_super(sb);
+>> +       clear_bit(BD_FREEZE_OP, &bdev->bd_state);
+>> +       return sb;
+>> +    }
+>
+> The BD_FREEZE_OP flag in the block_device already prevents multiple
+> freezes for a singe block device, so there is no need for this
+> additional check and the get_super_without_lock helper.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I think the above check is needed because BD_FREEZE_OP is used to
+guarantee that the following two operations are done atomically.
+1. Check if the filesystem has already been frozen.
+   (sb->s_frozen != SB_UNFROZEN)
+2. Do the filesystem specific freeze operation
+   (write_super_lockfs)
 
-Date:  Tue May 27 14:37:16 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
-Inspected by:  hch@lst.de
+The freeze operation can be done again for the frozen filesystem
+unless the filesystem is checked.
+And if write_super_lockfs doesn't consider that the filesystem
+has already been frozen, a problem might occur.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+>>  down(&bdev->bd_mount_sem);
+> 
+> And with that flag bd_mount_sem is also obsolete for preventing the
+> multiple freeze operations.  
 
+bd_mount_sem is needed because it is used to guarantee that the freeze
+operation never run while mounting (get_sb_bdev()).
 
-Modid:  xfs-linux-melb:xfs-kern:31234a
-fs/xfs/linux-2.6/xfs_xattr.c - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_xattr.c
-	- Use generic set/get/remove xattr methods.
+> We still need investigate what
+> synchronization we need vs unmount which also takes bd_mount_sem without
+> every having document what it exactly protects.
 
-fs/xfs/Makefile - 1.61 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/Makefile.diff?r1=text&tr1=1.61&r2=text&tr2=1.60&f=h
-	- Use generic set/get/remove xattr methods.
+And s_umount (semaphore) is acquired in get_user() (called by freeze_bdev())
+to guarantee that unmount never run while the filesystem is frozen.
 
-fs/xfs/xfs_attr.c - 1.152 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.c.diff?r1=text&tr1=1.152&r2=text&tr2=1.151&f=h
-	- Use generic set/get/remove xattr methods.
-
-fs/xfs/xfs_attr.h - 1.41 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.h.diff?r1=text&tr1=1.41&r2=text&tr2=1.40&f=h
-	- Use generic set/get/remove xattr methods.
-
-fs/xfs/linux-2.6/xfs_super.h - 1.79 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.h.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
-	- Use generic set/get/remove xattr methods.
-
-fs/xfs/linux-2.6/xfs_super.c - 1.430 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.430&r2=text&tr2=1.429&f=h
-	- Use generic set/get/remove xattr methods.
-
-fs/xfs/linux-2.6/xfs_iops.c - 1.288 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.288&r2=text&tr2=1.287&f=h
-	- Use generic set/get/remove xattr methods.
-
-fs/xfs/linux-2.6/xfs_iops.h - 1.34 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.h.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
-	- Use generic set/get/remove xattr methods.
+Cheers, Takashi
