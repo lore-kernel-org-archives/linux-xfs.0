@@ -1,111 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 03:50:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4RAo42K028280
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:50:07 -0700
-Message-ID: <483BE788.4050504@sgi.com>
-Date: Tue, 27 May 2008 20:50:48 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 09:12:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RGCnkd021668
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:12:50 -0700
+Received: from mail07do.versatel.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 66B98119C341
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:13:40 -0700 (PDT)
+Received: from mail07do.versatel.de (mail07do.versatel.de [89.245.129.27]) by cuda.sgi.com with ESMTP id HIi4BeuDWt23wnFa for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:13:40 -0700 (PDT)
+Received: from webmail02.versatel-nord.de ([62.214.102.232])
+          (envelope-sender <andre.nitschke@versanet.de>)
+          by mail07do.versatel.de (qmail-ldap-1.03) with SMTP
+          for <xfs@oss.sgi.com>; 27 May 2008 16:13:38 -0000
+Message-ID: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de>
+Date: Tue, 27 May 2008 18:13:36 +0200
+From: Andre Nitschke <andre.nitschke@versanet.de>
+Subject: Question for XFS (mounting and clean bit)
 MIME-Version: 1.0
-Subject: Re: [PATCH] use generic_*xattr routines
-References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com> <20080526053759.GA17825@lst.de>
-In-Reply-To: <20080526053759.GA17825@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset=ISO-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Mon, May 26, 2008 at 11:43:42AM +1000, Timothy Shimmin wrote:
->> I guess this is done to some extent by the put_listent() callback.
->> Though, the context structure is probably a bit overused in different
->> ways.
->> The callback was also used for searching (for parent-ptr code) as well
->> as for list formatting.
->> I presume we are preserving the valuelen list format to keep the API
->> for xfs_attrlist_by_handle used by xfsdump and probably for dmf.
-> 
-> Yes, the idea is to change the put_listen callback for work more like
-> filldir.  Thas is:
-> 
->  - the callback is supplied by the xfs_attr_list caller, not set based
->    on options
+Hello,
+i am a Linux User from Germany and chanched to xfs. I use Debian 4 and the
+installer creates lilo. Because of a wrong configuration i destroyed the
+lilo.conf and rebootet with a systemrescuecd. from here i mount the xfs
+partition and try to run lilo, but it fails.
+then i had a realy bad idea. i unmount the xfs partition and then mount it as
+root, but there exit a root file system.
+i type
+mount /dev/sda2 /
+no error appears. i could not access the partiton from the hdd, only see the
+tmpfs from the live-boot cd. hm
+i type mount and the mount command says:
+tmpfs on / as tmpfs (rw)
+....(some entrys...)
+/dev/sda2 on / as xfs (rw)
+ok, both devices were mountet as /
+but i could only access the tmpfs system from the live cd.
+i try to reboot. the system sends the term and kill signal, then hang up.
+nothing happesn.
+i press reset.
+then linux startet normal and says ...
 
-Oh, okay. For example, instead of setting the flags to ATTR_KERNOVAL
-such as in xfs_vn_listxattr when size is 0, one could just set the callback
-to xfs_attr_kern_list_sizes and pass it in etc...
+ XFS mounting filesystem sda2
+ Ending clean XFS mount for filesystem: sda2
 
->  - there will be an opaque object supplied to xfs_attr_list that is to
->    be used by put_listent so that we don't have to pass down
->    implementation-specific arguments directly.
->
+so i think nothing should happens to the xfs.
+but i cant stop thinking, go to my testpc with linux and xfs and create the same
+situtation. everytime ... clean xfs.
+when i start writing data and then press reset comes this message:
 
-Ok.
-So instead of overloading fields in xfs_attr_list_context_t,
-you'll pass down a void* argument or some such for callback specific data.
+ SGI XFS Quota Management subsystem
+ XFS mounting filesystem hda2
+ Starting XFS recovery on filesystem: hda2 (logdev: internal)
+ Ending XFS recovery on filesystem: hda2 (logdev: internal)
 
-> I'd also like to move the attrlist_cursor_kern_t into this callback
-> opaque context because it doesn't make sense for the normal xattr API,
-> but I'll have to see if that's actually feasible.
+i have two questions. first, is the xfs on my working-machine damaged by my bad
+idea mounting two devices as root
+and secound, is the clean bit removed when mounting a xfs or when i first write
+data on it?
 
-BTW, the cursor stuff is a bit flawed. Like the dir1 code (I believe),
-if from userspace you use the cursor and modifications happen to the EAs
-(add or removal) between calls, 
-we can end up repeating elements in the list or miss some.
-We don't preserve the position and we can compact the data etc.
+thanks
 
---Tim
-
-
-xfs_attr_list(
-        xfs_inode_t     *dp,
-        char            *buffer,
-        int             bufsize,
-        int             flags,
-        attrlist_cursor_kern_t *cursor)
-{       
-        xfs_attr_list_context_t context;
-...
-        if (flags & ATTR_KERNAMELS) {
-                context.bufsize = bufsize;
-                context.firstu = context.bufsize;
-                if (flags & ATTR_KERNOVAL)
-                        context.put_listent = xfs_attr_kern_list_sizes;
-                else
-                        context.put_listent = xfs_attr_kern_list;
-        } else {
-                context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
-                context.firstu = context.bufsize;
-                context.alist->al_count = 0;
-                context.alist->al_more = 0;
-                context.alist->al_offset[0] = context.bufsize;
-                context.put_listent = xfs_attr_put_listent;
-        }
-
-
-ssize_t
-xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
-{
-        struct inode            *inode = dentry->d_inode;
-        struct xfs_inode        *ip = XFS_I(inode);
-        attrlist_cursor_kern_t  cursor = { 0 };
-        int                     error, xflags;
-        ssize_t                 result;
-
-        xflags = ATTR_KERNAMELS;
-        if (!size)
-                xflags |= ATTR_KERNOVAL;
-
-        if (capable(CAP_SYS_ADMIN))
-                xflags |= ATTR_KERNFULLS;
-        else
-                xflags |= ATTR_KERNORMALS;
-
-
-        /*
-         * First read the regular on-disk attributes.
-         */
-        result = -xfs_attr_list(ip, data, size, xflags, &cursor);
+andre
