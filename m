@@ -1,70 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 09:12:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 09:25:27 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RGCnkd021668
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:12:50 -0700
-Received: from mail07do.versatel.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 66B98119C341
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:13:40 -0700 (PDT)
-Received: from mail07do.versatel.de (mail07do.versatel.de [89.245.129.27]) by cuda.sgi.com with ESMTP id HIi4BeuDWt23wnFa for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:13:40 -0700 (PDT)
-Received: from webmail02.versatel-nord.de ([62.214.102.232])
-          (envelope-sender <andre.nitschke@versanet.de>)
-          by mail07do.versatel.de (qmail-ldap-1.03) with SMTP
-          for <xfs@oss.sgi.com>; 27 May 2008 16:13:38 -0000
-Message-ID: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de>
-Date: Tue, 27 May 2008 18:13:36 +0200
-From: Andre Nitschke <andre.nitschke@versanet.de>
-Subject: Question for XFS (mounting and clean bit)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RGPNrh022861
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:25:23 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B53CBEEB06
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:26:14 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id RGPTyeWrf8i3ilUA for <xfs@oss.sgi.com>; Tue, 27 May 2008 09:26:14 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m4RGQ6Oc030432
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 18:26:06 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m4RGQ5jv030430
+	for xfs@oss.sgi.com; Tue, 27 May 2008 18:26:05 +0200
+Date: Tue, 27 May 2008 18:26:05 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: xfs_check
+Message-ID: <20080527162605.GA30344@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hello,
-i am a Linux User from Germany and chanched to xfs. I use Debian 4 and the
-installer creates lilo. Because of a wrong configuration i destroyed the
-lilo.conf and rebootet with a systemrescuecd. from here i mount the xfs
-partition and try to run lilo, but it fails.
-then i had a realy bad idea. i unmount the xfs partition and then mount it as
-root, but there exit a root file system.
-i type
-mount /dev/sda2 /
-no error appears. i could not access the partiton from the hdd, only see the
-tmpfs from the live-boot cd. hm
-i type mount and the mount command says:
-tmpfs on / as tmpfs (rw)
-....(some entrys...)
-/dev/sda2 on / as xfs (rw)
-ok, both devices were mountet as /
-but i could only access the tmpfs system from the live cd.
-i try to reboot. the system sends the term and kill signal, then hang up.
-nothing happesn.
-i press reset.
-then linux startet normal and says ...
-
- XFS mounting filesystem sda2
- Ending clean XFS mount for filesystem: sda2
-
-so i think nothing should happens to the xfs.
-but i cant stop thinking, go to my testpc with linux and xfs and create the same
-situtation. everytime ... clean xfs.
-when i start writing data and then press reset comes this message:
-
- SGI XFS Quota Management subsystem
- XFS mounting filesystem hda2
- Starting XFS recovery on filesystem: hda2 (logdev: internal)
- Ending XFS recovery on filesystem: hda2 (logdev: internal)
-
-i have two questions. first, is the xfs on my working-machine damaged by my bad
-idea mounting two devices as root
-and secound, is the clean bit removed when mounting a xfs or when i first write
-data on it?
-
-thanks
-
-andre
+In the past we had quite a few cases where we told people to run
+xfs_repair -n instead of xfs_check.  I think that makes a lot of sense
+because xfs_repair -n generally gives output at least as useful as
+xfs_check if not more so and also is a lot faster.  Is there any reason
+why we shouldn't simply kill xfs_check and replaced it with a wrapper
+around xfs_repair?
