@@ -1,73 +1,111 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 03:19:35 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RAJTdT026405
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:19:30 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90B10173426F
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:20:19 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id nlcE4dJPOARhPYEC for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:20:19 -0700 (PDT)
-Message-Id: <7654D29B4EC648FD8E32AB331941F941@nsl.ad.nec.co.jp>
-From: "Takashi Sato" <t-sato@yk.jp.nec.com>
-References: <20080522175020t-sato@mail.jp.nec.com> <20080525193211.GA24328@infradead.org>
-In-Reply-To: <20080525193211.GA24328@infradead.org>
-Subject: Re: [RFC PATCH 1/3] Implement generic freeze feature
-Date: Tue, 27 May 2008 19:20:11 +0900
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 03:50:12 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4RAo42K028280
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 03:50:07 -0700
+Message-ID: <483BE788.4050504@sgi.com>
+Date: Tue, 27 May 2008 20:50:48 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Subject: Re: [PATCH] use generic_*xattr routines
+References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com> <20080526053759.GA17825@lst.de>
+In-Reply-To: <20080526053759.GA17825@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hi,
-
->> +    if (test_and_set_bit(BD_FREEZE_OP, &bdev->bd_state))
->> +        return ERR_PTR(-EBUSY);
->> +
->> +    sb = get_super_without_lock(bdev);
->> +
->> +    /* If super_block has been already frozen, return. */
->> +    if (sb && sb->s_frozen != SB_UNFROZEN) {
->> +        put_super(sb);
->> +       clear_bit(BD_FREEZE_OP, &bdev->bd_state);
->> +       return sb;
->> +    }
->
-> The BD_FREEZE_OP flag in the block_device already prevents multiple
-> freezes for a singe block device, so there is no need for this
-> additional check and the get_super_without_lock helper.
-
-I think the above check is needed because BD_FREEZE_OP is used to
-guarantee that the following two operations are done atomically.
-1. Check if the filesystem has already been frozen.
-   (sb->s_frozen != SB_UNFROZEN)
-2. Do the filesystem specific freeze operation
-   (write_super_lockfs)
-
-The freeze operation can be done again for the frozen filesystem
-unless the filesystem is checked.
-And if write_super_lockfs doesn't consider that the filesystem
-has already been frozen, a problem might occur.
-
->>  down(&bdev->bd_mount_sem);
+Christoph Hellwig wrote:
+> On Mon, May 26, 2008 at 11:43:42AM +1000, Timothy Shimmin wrote:
+>> I guess this is done to some extent by the put_listent() callback.
+>> Though, the context structure is probably a bit overused in different
+>> ways.
+>> The callback was also used for searching (for parent-ptr code) as well
+>> as for list formatting.
+>> I presume we are preserving the valuelen list format to keep the API
+>> for xfs_attrlist_by_handle used by xfsdump and probably for dmf.
 > 
-> And with that flag bd_mount_sem is also obsolete for preventing the
-> multiple freeze operations.  
+> Yes, the idea is to change the put_listen callback for work more like
+> filldir.  Thas is:
+> 
+>  - the callback is supplied by the xfs_attr_list caller, not set based
+>    on options
 
-bd_mount_sem is needed because it is used to guarantee that the freeze
-operation never run while mounting (get_sb_bdev()).
+Oh, okay. For example, instead of setting the flags to ATTR_KERNOVAL
+such as in xfs_vn_listxattr when size is 0, one could just set the callback
+to xfs_attr_kern_list_sizes and pass it in etc...
 
-> We still need investigate what
-> synchronization we need vs unmount which also takes bd_mount_sem without
-> every having document what it exactly protects.
+>  - there will be an opaque object supplied to xfs_attr_list that is to
+>    be used by put_listent so that we don't have to pass down
+>    implementation-specific arguments directly.
+>
 
-And s_umount (semaphore) is acquired in get_user() (called by freeze_bdev())
-to guarantee that unmount never run while the filesystem is frozen.
+Ok.
+So instead of overloading fields in xfs_attr_list_context_t,
+you'll pass down a void* argument or some such for callback specific data.
 
-Cheers, Takashi
+> I'd also like to move the attrlist_cursor_kern_t into this callback
+> opaque context because it doesn't make sense for the normal xattr API,
+> but I'll have to see if that's actually feasible.
+
+BTW, the cursor stuff is a bit flawed. Like the dir1 code (I believe),
+if from userspace you use the cursor and modifications happen to the EAs
+(add or removal) between calls, 
+we can end up repeating elements in the list or miss some.
+We don't preserve the position and we can compact the data etc.
+
+--Tim
+
+
+xfs_attr_list(
+        xfs_inode_t     *dp,
+        char            *buffer,
+        int             bufsize,
+        int             flags,
+        attrlist_cursor_kern_t *cursor)
+{       
+        xfs_attr_list_context_t context;
+...
+        if (flags & ATTR_KERNAMELS) {
+                context.bufsize = bufsize;
+                context.firstu = context.bufsize;
+                if (flags & ATTR_KERNOVAL)
+                        context.put_listent = xfs_attr_kern_list_sizes;
+                else
+                        context.put_listent = xfs_attr_kern_list;
+        } else {
+                context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
+                context.firstu = context.bufsize;
+                context.alist->al_count = 0;
+                context.alist->al_more = 0;
+                context.alist->al_offset[0] = context.bufsize;
+                context.put_listent = xfs_attr_put_listent;
+        }
+
+
+ssize_t
+xfs_vn_listxattr(struct dentry *dentry, char *data, size_t size)
+{
+        struct inode            *inode = dentry->d_inode;
+        struct xfs_inode        *ip = XFS_I(inode);
+        attrlist_cursor_kern_t  cursor = { 0 };
+        int                     error, xflags;
+        ssize_t                 result;
+
+        xflags = ATTR_KERNAMELS;
+        if (!size)
+                xflags |= ATTR_KERNOVAL;
+
+        if (capable(CAP_SYS_ADMIN))
+                xflags |= ATTR_KERNFULLS;
+        else
+                xflags |= ATTR_KERNORMALS;
+
+
+        /*
+         * First read the regular on-disk attributes.
+         */
+        result = -xfs_attr_list(ip, data, size, xflags, &cursor);
