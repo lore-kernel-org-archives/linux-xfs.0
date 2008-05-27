@@ -1,51 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 14:49:49 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4RLnios016626
-	for <xfs@oss.sgi.com>; Tue, 27 May 2008 14:49:45 -0700
-Message-ID: <483C8227.6090408@sgi.com>
-Date: Wed, 28 May 2008 07:50:31 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 27 May 2008 16:20:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4RNKQ64026560
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 16:20:28 -0700
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 95A401C00CD
+	for <xfs@oss.sgi.com>; Tue, 27 May 2008 16:21:16 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 47xYwaX2gE1Nd9vU for <xfs@oss.sgi.com>; Tue, 27 May 2008 16:21:16 -0700 (PDT)
+Date: Wed, 28 May 2008 09:21:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_check
+Message-ID: <20080527232111.GB3819@disturbed>
+References: <20080527162605.GA30344@lst.de>
 MIME-Version: 1.0
-Subject: Re: DMAPI JFS bug fixes
-References: <483C78E2.4090000@sonic.net>
-In-Reply-To: <483C78E2.4090000@sonic.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080527162605.GA30344@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Gary Lowell <glowell@sonic.net>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
+On Tue, May 27, 2008 at 06:26:05PM +0200, Christoph Hellwig wrote:
+> In the past we had quite a few cases where we told people to run
+> xfs_repair -n instead of xfs_check.  I think that makes a lot of sense
+> because xfs_repair -n generally gives output at least as useful as
+> xfs_check if not more so and also is a lot faster.  Is there any reason
+> why we shouldn't simply kill xfs_check and replaced it with a wrapper
+> around xfs_repair?
 
+xfs_repair doesn't yet check free space btrees - it simply
+blows them away and rebuilds htem from scratch. Hence errors
+in those btrees will go unreported. xfs_check will tell you
+about errors in those trees.
 
-Gary Lowell wrote:
-> Hi -
-> 
-> The JFS version of DMAPI had a handful of bug fixes that don't seem to 
-> be in the current tree.  I couldn't find anything in the list archive 
-> about them.  Would there be any interest in applying  those fixes or is 
-> DMAPI pretty much dead ?
+Cheers,
 
-no it's not dead :)
-
-> If there is interest, I've got a patch.
-
-yes please post it here, with due reference to the original author(s).
-
-Thanks
-
-> 
-> Cheers,
-> Gary
-> 
-> 
-
+Dave.
 -- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+Dave Chinner
+david@fromorbit.com
