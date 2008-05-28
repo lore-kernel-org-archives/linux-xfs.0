@@ -1,68 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 May 2008 12:27:10 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4SJR7Y5008237
-	for <xfs@oss.sgi.com>; Wed, 28 May 2008 12:27:07 -0700
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C02A8119E082
-	for <xfs@oss.sgi.com>; Wed, 28 May 2008 12:27:59 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id AY8fIUESmsg5SLJ3 for <xfs@oss.sgi.com>; Wed, 28 May 2008 12:27:59 -0700 (PDT)
-Date: Wed, 28 May 2008 15:27:58 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Performance Characteristics of All Linux RAIDs
- (mdadm/bonnie++)
-In-Reply-To: <483DB0EC.3090403@redhat.com>
-Message-ID: <alpine.DEB.1.10.0805281523560.29755@p34.internal.lan>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <483D7CE8.4000600@redhat.com> <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan> <483DB0EC.3090403@redhat.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 May 2008 15:21:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4SML6cQ024930
+	for <linux-xfs@oss.sgi.com>; Wed, 28 May 2008 15:21:06 -0700
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 871C61C7E15
+	for <linux-xfs@oss.sgi.com>; Wed, 28 May 2008 15:21:56 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id 7ozsPjGnsIPX9wZi for <linux-xfs@oss.sgi.com>; Wed, 28 May 2008 15:21:56 -0700 (PDT)
+Received: from [10.0.0.21] (g226140169.adsl.alicedsl.de [92.226.140.169])
+	by mail.lichtvoll.de (Postfix) with ESMTP id BF7D85AE0E
+	for <linux-xfs@oss.sgi.com>; Thu, 29 May 2008 00:22:13 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Question for XFS (mounting and clean bit)
+Date: Thu, 29 May 2008 00:21:52 +0200
+References: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de> (sfid-20080527_213946_881555_0B129DA7)
+In-Reply-To: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200805290021.53240.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Chris Snook <csnook@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
 
+Hi Andre,
 
-On Wed, 28 May 2008, Chris Snook wrote:
+Am Dienstag 27 Mai 2008 schrieb Andre Nitschke:
+> Hello,
+> i am a Linux User from Germany and chanched to xfs. I use Debian 4 and
+> the installer creates lilo. Because of a wrong configuration i
+> destroyed the lilo.conf and rebootet with a systemrescuecd. from here i
+> mount the xfs partition and try to run lilo, but it fails.
+> then i had a realy bad idea. i unmount the xfs partition and then mount
+> it as root, but there exit a root file system.
 
-> Justin Piszcz wrote:
->> 
->> 
->> On Wed, 28 May 2008, Chris Snook wrote:
->> 
->>> Justin Piszcz wrote:
->>>> Hardware:
->>>> 
->>> Given that one of the greatest benefits of NCQ/TCQ is with parity RAID, 
->>> I'd be fascinated to see how enabling NCQ changes your results.  Of 
->>> course, you'd want to use a single SATA controller with a known good NCQ 
->>> implementation, and hard drives known to not do stupid things like disable 
->>> readahead when NCQ is enabled.
->> Only/usually on multi-threaded jobs/tasks, yes?
->
-> Generally, yes, but there's caching and readahead at various layers in 
-> software that can expose the benefit on certain single-threaded workloads as 
-> well.
->
->> Also, I turn off NCQ on all of my hosts that has it enabled by default 
->> because
->> there are many bugs that occur when NCQ is on, they are working on it in 
->> the
->> libata layer but IMO it is not safe at all for running SATA disks w/NCQ as
->> with it on I have seen drives drop out of the array (with it off, no 
->> problems).
->> 
->
-> Are you using SATA drives with RAID-optimized firmware?  Most SATA 
-> manufacturers have variants of their drives for a few dollars more that have 
-> firmware that provides bounded latency for error recovery operations, for 
-> precisely this reason.
-I see--however, as I understood it there were bugs utilizing NCQ in libata?
+[...]
 
-But FYI--
-In this test, they were regular SATA drives, not special raid-ones (RE2,etc).
+> i have two questions. first, is the xfs on my working-machine damaged
+> by my bad idea mounting two devices as root
+> and secound, is the clean bit removed when mounting a xfs or when i
+> first write data on it?
 
-Thanks for the info!
+Mounting two devices on / should not harm the XFS filesystem in itself. I 
+even think that also new files created from within the already running 
+part of the live distribution should go to the initially mounted root 
+filesystem (if the live distro creates new files in there at all). But I 
+am not completely sure on that.
 
-Justin.
+Anyway, there are two ways to check: xfs_check or xfs_repair -n
+
+I do not know an answer to you second question. But when atime updates are 
+enabled you usually have your first write pretty soon.
+
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
