@@ -1,39 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 May 2008 09:45:30 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 28 May 2008 10:31:57 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4SGjRAW024647
-	for <xfs@oss.sgi.com>; Wed, 28 May 2008 09:45:27 -0700
-Received: from atlantis.cc.ndsu.NoDak.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 330DE1747621
-	for <xfs@oss.sgi.com>; Wed, 28 May 2008 09:46:18 -0700 (PDT)
-Received: from atlantis.cc.ndsu.NoDak.edu (atlantis.cc.ndsu.NoDak.edu [134.129.99.37]) by cuda.sgi.com with ESMTP id yaNQiERLryHPqWYz for <xfs@oss.sgi.com>; Wed, 28 May 2008 09:46:18 -0700 (PDT)
-Date: Wed, 28 May 2008 11:46:16 -0500
-From: Bryan Mesich <bryan.mesich@ndsu.edu>
-Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
-Message-ID: <20080528164616.GB29722@atlantis.cc.ndsu.NoDak.edu>
-Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
-References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4SHVrVU027981
+	for <xfs@oss.sgi.com>; Wed, 28 May 2008 10:31:53 -0700
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67C821747517
+	for <xfs@oss.sgi.com>; Wed, 28 May 2008 10:32:44 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id PkO5G838xwkAtQAz for <xfs@oss.sgi.com>; Wed, 28 May 2008 10:32:44 -0700 (PDT)
+Date: Wed, 28 May 2008 13:32:44 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Performance Characteristics of All Linux RAIDs
+ (mdadm/bonnie++)
+In-Reply-To: <483D7CE8.4000600@redhat.com>
+Message-ID: <alpine.DEB.1.10.0805281329450.29755@p34.internal.lan>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan> <483D7CE8.4000600@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jens =?iso-8859-1?Q?B=E4ckman?= <jens.backman@gmail.com>
+To: Chris Snook <csnook@redhat.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 28, 2008 at 06:34:00PM +0200, Jens Bäckman wrote:
 
-> Either the RAID 1 read speed must be wrong, or something is odd in the
-> Linux implementation. There's six drives that can be used for reading
-> at the same time, as they contain the very same data. 63MB/s
-> sequential looks like what you would get from a single drive.
 
-The RAID 1 read speed metrics do not depict multithreaded
-processes reading from the array simutaneouly. I would suspect
-that the read performance metrics would look better if 2 bonnie
-simulations were ran together (for RAID 1 that is).
+On Wed, 28 May 2008, Chris Snook wrote:
 
-Bryan 
+> Justin Piszcz wrote:
+>> Hardware:
+>> 
+>> 1. Utilized (6) 400 gigabyte sata hard drives.
+>> 2. Everything is on PCI-e (965 chipset & a 2port sata card)
+>> 
+>> Used the following 'optimizations' for all tests.
+>> 
+>> # Set read-ahead.
+>> echo "Setting read-ahead to 64 MiB for /dev/md3"
+>> blockdev --setra 65536 /dev/md3
+>> 
+>> # Set stripe-cache_size for RAID5.
+>> echo "Setting stripe_cache_size to 16 MiB for /dev/md3"
+>> echo 16384 > /sys/block/md3/md/stripe_cache_size
+>> 
+>> # Disable NCQ on all disks.
+>> echo "Disabling NCQ on all disks..."
+>> for i in $DISKS
+>> do
+>>   echo "Disabling NCQ on $i"
+>>   echo 1 > /sys/block/"$i"/device/queue_depth
+>> done
+>
+> Given that one of the greatest benefits of NCQ/TCQ is with parity RAID, I'd 
+> be fascinated to see how enabling NCQ changes your results.  Of course, you'd 
+> want to use a single SATA controller with a known good NCQ implementation, 
+> and hard drives known to not do stupid things like disable readahead when NCQ 
+> is enabled.
+Only/usually on multi-threaded jobs/tasks, yes?
+
+Also, I turn off NCQ on all of my hosts that has it enabled by default because
+there are many bugs that occur when NCQ is on, they are working on it in the
+libata layer but IMO it is not safe at all for running SATA disks w/NCQ as
+with it on I have seen drives drop out of the array (with it off, no problems).
