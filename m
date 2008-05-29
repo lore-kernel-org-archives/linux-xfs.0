@@ -1,63 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 05:38:32 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TCcS4o004617
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 05:38:29 -0700
-Date: Thu, 29 May 2008 14:39:10 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] use generic_*xattr routines
-Message-ID: <20080529123910.GA30874@lst.de>
-References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com> <20080526053759.GA17825@lst.de> <483BE788.4050504@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <483BE788.4050504@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 06:25:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TDPW56008049
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 06:25:32 -0700
+Received: from server.dwo.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3CDCC0D418
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 06:26:24 -0700 (PDT)
+Received: from server.dwo.hu (server.dwo.hu [87.229.110.63]) by cuda.sgi.com with ESMTP id ci9g3ELOcUmWjRGF for <xfs@oss.sgi.com>; Thu, 29 May 2008 06:26:24 -0700 (PDT)
+From: =?iso-8859-2?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
+Subject: RE: free space problem
+Date: Thu, 29 May 2008 15:26:16 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-2"
+In-Reply-To: <20080529125509.136aa653@harpe.intellique.com>
+Message-Id: <20080529132624.E3CDCC0D418@cuda.sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs-oss <xfs@oss.sgi.com>
+To: 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
 
-On Tue, May 27, 2008 at 08:50:48PM +1000, Timothy Shimmin wrote:
-> >  - the callback is supplied by the xfs_attr_list caller, not set based
-> >    on options
-> 
-> Oh, okay. For example, instead of setting the flags to ATTR_KERNOVAL
-> such as in xfs_vn_listxattr when size is 0, one could just set the callback
-> to xfs_attr_kern_list_sizes and pass it in etc...
+YES! Finally the problem is solved! Thank you Emmanuel and everyone else!
+After adding inode64 to the mount option [only umount and mount worked, with
+remount it didn't] it works. Although the icount and ifree numbers have not
+changed, we can write to the disk. 
 
-Yes.  I have an initial patch that goes directly to xfs_attr_list_int
-from xfs_xattr.c and kills most of the ATTR_KERN flags.  It's a quite
-nice cleanup already.  Next step will be to convert dmapi to use it's
-own callback aswell.  This will be an even bigger cleanup as
-put_listent gets the xattr value aswell and we can kill the additional
-xfs_attr_get calls, making this code simpler and more efficient.
+Hope this will help anyone who encounters this problem. In the xfs man and
+debian docs we could not find anything about this inode64, so thank you once
+again for the help!!!! 
 
-> >  - there will be an opaque object supplied to xfs_attr_list that is to
-> >    be used by put_listent so that we don't have to pass down
-> >    implementation-specific arguments directly.
-> >
-> 
-> Ok.
-> So instead of overloading fields in xfs_attr_list_context_t,
-> you'll pass down a void* argument or some such for callback specific data.
+Viktor
 
-I've started looking at this and after some investigattion I think
-we should just pass the xfs_inode directly to all the functions and then
-a void parameter, yes.  We'll need to find a solution for the
-seen_enough paramter, but I think this could be handled similar to
-filldir.  There's also some functions directly touching the attr cursor
-which seems solveable, too.
+-----Original Message-----
+From: Emmanuel Florac [mailto:eflorac@intellique.com] 
+Sent: Thursday, May 29, 2008 12:55 PM
+To: xfs@oss.sgi.com
+Cc: Huszár Viktor Dénes
+Subject: Re: free space problem
 
-> > I'd also like to move the attrlist_cursor_kern_t into this callback
-> > opaque context because it doesn't make sense for the normal xattr API,
-> > but I'll have to see if that's actually feasible.
-> 
-> BTW, the cursor stuff is a bit flawed. Like the dir1 code (I believe),
-> if from userspace you use the cursor and modifications happen to the EAs
-> (add or removal) between calls, 
-> we can end up repeating elements in the list or miss some.
-> We don't preserve the position and we can compact the data etc.
+Le Thu, 29 May 2008 12:29:25 +0200
+Emmanuel Florac <eflorac@intellique.com> écrivait:
 
-Yes, I think this whole cursor is a rather bad idea.  But given that
-it's used by xfsdump we can't easily get rid of it.
+> Is it mounted with the inode64 option? 
+
+You should try it then. You must unmount it and remount it for this to
+take effect. Either add "inode64" to the option line in /etc/fstab, or
+use mount -t xfs -o inode64 /some/device /some/mountpoint
+
+-- 
+----------------------------------------
+Emmanuel Florac     |   Intellique
+----------------------------------------
+
+
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 3143 (20080529) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+
+ 
+
+__________ Information from ESET NOD32 Antivirus, version of virus signature
+database 3143 (20080529) __________
+
+The message was checked by ESET NOD32 Antivirus.
+
+http://www.eset.com
+ 
