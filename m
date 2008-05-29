@@ -1,64 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 07:57:15 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TEvBNI015041
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 07:57:12 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 804DC17533DD
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 07:58:02 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id rC8A0cyraTyZjEyG for <xfs@oss.sgi.com>; Thu, 29 May 2008 07:58:02 -0700 (PDT)
-Date: Fri, 30 May 2008 00:57:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: free space problem
-Message-ID: <20080529145759.GA5134@disturbed>
-References: <20080529125509.136aa653@harpe.intellique.com> <20080529132624.E3CDCC0D418@cuda.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 10:05:02 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TH4wpT027311
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 10:04:59 -0700
+Received: from yx-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46D09C11E0F
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 10:05:49 -0700 (PDT)
+Received: from yx-out-1718.google.com (yx-out-1718.google.com [74.125.44.156]) by cuda.sgi.com with ESMTP id 8s9lNuDh3GMZPKDJ for <xfs@oss.sgi.com>; Thu, 29 May 2008 10:05:49 -0700 (PDT)
+Received: by yx-out-1718.google.com with SMTP id 36so310197yxh.32
+        for <xfs@oss.sgi.com>; Thu, 29 May 2008 10:05:49 -0700 (PDT)
+Message-ID: <3607657a0805291005k457791cej1c5f867da0f95965@mail.gmail.com>
+Date: Thu, 29 May 2008 13:05:48 -0400
+From: "Spam Magnet" <spam.wax@gmail.com>
+Subject: XFS: SB validate failed
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20080529132624.E3CDCC0D418@cuda.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-1?Q?Husz=E1r_Viktor_D=E9nes?= <hvd@dwo.hu>
-Cc: 'Emmanuel Florac' <eflorac@intellique.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 29, 2008 at 03:26:16PM +0200, Huszár Viktor Dénes wrote:
-> YES! Finally the problem is solved! Thank you Emmanuel and everyone else!
-> After adding inode64 to the mount option [only umount and mount worked, with
-> remount it didn't] it works. Although the icount and ifree numbers have not
-> changed, we can write to the disk. 
-> 
-> Hope this will help anyone who encounters this problem. In the xfs man and
-> debian docs we could not find anything about this inode64, so thank you once
-> again for the help!!!! 
+Hello there :)
 
-I can think of two places off the top of my head where it is
-documented:
+I have a Iomega Jaz cartrdige which seems to be formatted in xfs under
+Irix 6.5.
+When I insert the cartridge in a drive attached to an Octane machine
+(running IRIX 6.5) I get an error message saying that the drive could not
+be mounted:
+The file system on device: /dev/dsk/dks1d3s7 cannot be mounted
 
-Documentation/filesystems/xfs.txt in your local kernel source tree:
+I connected the Jaz drive to a Linux box using a SCSI-to-USB
+adapter. When I do a fdisk I get:
 
-  inode64
-        Indicates that XFS is allowed to create inodes at any location
-        in the filesystem, including those which will result in inode
-        numbers occupying more than 32 bits of significance.  This is
-        provided for backwards compatibility, but causes problems for
-        backup applications that cannot handle large inode numbers.
+$ sudo fdisk -l /dev/sdb
 
-$ man 8 mount
+Disk /dev/sdb (SGI disk label): 33 heads, 62 sectors, 1022 cylinders
+Units = cylinders of 2046 * 512 bytes
 
-  inode64
+----- partitions -----
+Pt#    Device  Info     Start       End   Sectors  Id  System
+ 8: /dev/sdb1               2      1021   2087936   a  SGI xfs
+ 9: /dev/sdb2               0         1      3072   0  SGI volhdr
+11: /dev/sdb3               0      1021   2091008   6  SGI volume
+----- Bootinfo -----
+Bootfile: /unix
+----- Directory Entries -----
+ 0: sgilabel   sector    3 size     512
 
-	Indicates that XFS is allowed to create inodes at any location in the
-	filesystem,  including  those which will result in inode numbers occupying more
-	than 32 bits of significance.  This is provided for backwards compatibility,
-	but causes problems for backup applications that cannot handle large inode
-	numbers.
+But trying to mount the device fails:
 
+$ sudo mount -t xfs /dev/sdb /mnt
+$ sudo mount -t xfs /dev/sdb8 /mnt
+$ sudo mount -t xfs /dev/sdb11 /mnt
 
-Cheers,
+Checking the log messages, I get:
+[6815277.617579] XFS: bad magic number
+[6815277.617587] XFS: SB validate failed
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+(I found similar problems reported here
+http://osdir.com/ml/security.forensics/2006-04/msg00025.html)
+# /usr/sysadm/privbin/getDiskParts -d dks1d3vol
+7:10:3072:2087936;8:0:0:3072;10:6:0:2091008;
+
+I also tried to use xfs_check and xfs_repair.
+xfs_check crashes:
+/usr/sbin/xfs_check: line 28: 25216 Segmentation fault
+(core dumped) xfs_db$DBOPTS -i -p xfs_check -c "check$OPTS" $1
+
+and xfs_repair reports that:
+bad primary superblock - bad magic number !!!
+attempting to find secondary superblock
+Sorry, could not find valid secondary superblock
+Exiting now.
+
+My questions:
+1-Is this related to the information stated in FAQ regarding
+XLV support or v2 directories under Irix ?
+2-Do I need to be concerned about byte ordering when it comes
+to how the partition table info are stored on my Jaz cartridge ?
+3-If this is a corrupt partition problem, would you suggest that
+I attempt to fix it under Irix or the Linux xfs tools will be sufficient ?
+
+I'd really appreciate any input that can help me resolve this issue.
+
+thanks in advance.
