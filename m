@@ -1,39 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 03:54:17 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TAsFu8025111
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 03:54:15 -0700
-Received: from smtp8-g19.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 91B7EC0907E
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 03:55:07 -0700 (PDT)
-Received: from smtp8-g19.free.fr (smtp8-g19.free.fr [212.27.42.65]) by cuda.sgi.com with ESMTP id GrEN8kVb8u0XZeHR for <xfs@oss.sgi.com>; Thu, 29 May 2008 03:55:07 -0700 (PDT)
-Date: Thu, 29 May 2008 12:55:09 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: free space problem
-Message-ID: <20080529125509.136aa653@harpe.intellique.com>
-In-Reply-To: <20080529122925.159ddb34@harpe.intellique.com>
-References: <20080331093951.100ec125@galadriel.home>
-	<20080529102107.73D6D1CA6D0@cuda.sgi.com>
-	<20080529122925.159ddb34@harpe.intellique.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 04:35:54 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4TBZkZ3001101
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 04:35:49 -0700
+Received: from lxorguk.ukuu.org.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EEAC11B98682
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 04:36:38 -0700 (PDT)
+Received: from lxorguk.ukuu.org.uk (earthlight.etchedpixels.co.uk [81.2.110.250]) by cuda.sgi.com with ESMTP id mEzQk6t9bHGHA2p3 for <xfs@oss.sgi.com>; Thu, 29 May 2008 04:36:38 -0700 (PDT)
+Date: Thu, 29 May 2008 12:22:23 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
+Message-ID: <20080529122223.462bf396@core>
+In-Reply-To: <483DE40D.8090608@tmr.com>
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>
+	<95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>
+	<20080528195752.0cdcbc6d@core>
+	<483DE40D.8090608@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: =?ISO-8859-1?Q?Husz=E1r?= Viktor =?ISO-8859-1?Q?D=E9nes?= <hvd@dwo.hu>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Jens =?UTF-8?B?QsOkY2ttYW4=?= <jens.backman@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-Le Thu, 29 May 2008 12:29:25 +0200
-Emmanuel Florac <eflorac@intellique.com> écrivait:
+> I really don't think that's any part of the issue, the same memory and 
+> bridge went 4-5x faster in other read cases. The truth is that the 
+> raid-1 performance is really bad, and it's the code causing it AFAIK. If 
+> you track the actual io it seems to read one drive at a time, in order, 
+> without overlap.
 
-> Is it mounted with the inode64 option? 
-
-You should try it then. You must unmount it and remount it for this to
-take effect. Either add "inode64" to the option line in /etc/fstab, or
-use mount -t xfs -o inode64 /some/device /some/mountpoint
-
--- 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+Make sure the readahead is set to be a fair bit over the stripe size if
+you are doing bulk data tests for a single file. (Or indeed in the real
+world for that specific case ;))
