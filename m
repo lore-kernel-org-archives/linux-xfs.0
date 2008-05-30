@@ -1,44 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 19:15:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4U2FAkp005459
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 19:15:10 -0700
-Message-Id: <4FC34C16-F0FA-49C5-88CC-83EEF616C218@sonic.net>
-From: Gary Lowell <glowell@sonic.net>
-In-Reply-To: <483C8227.6090408@sgi.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 22:27:49 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U5Rghf019631
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 22:27:44 -0700
+Message-ID: <483F907A.3020108@sgi.com>
+Date: Fri, 30 May 2008 15:28:26 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: XFS: SB validate failed
+References: <3607657a0805291005k457791cej1c5f867da0f95965@mail.gmail.com>	 <483EE5BD.8020407@sandeen.net>	 <3607657a0805291255i59fd006fi9d6836cf528d19a6@mail.gmail.com>	 <483F0BC3.2050901@sandeen.net>	 <3607657a0805291400h3c50165lea6fbea919deed0f@mail.gmail.com>	 <483F1AED.3010808@sandeen.net> <3607657a0805291446t79808c63l664780c1cbc3d871@mail.gmail.com>
+In-Reply-To: <3607657a0805291446t79808c63l664780c1cbc3d871@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Subject: Re: DMAPI JFS bug fixes
-Date: Thu, 29 May 2008 19:16:01 -0700
-References: <483C78E2.4090000@sonic.net> <483C8227.6090408@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: xfs@oss.sgi.com
+To: Spam Magnet <spam.wax@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
+Spam Magnet wrote:
+>> try xfs_repair -n then maybe.  Or update xfsprogs.  check shouldn't
+>> segfault, regardless of the fs state.
+>>
+> 
+> I updated xfsprogs to the latest version (cvs checkout) and it solved
+> the segfault.
+> 
+>> nah that's fine, images or disks, whichever.
+>>
+> 
+> So I guess it doesn't matter if I do the image either using dd or xfsdump.
 
-On May 27, 2008, at 2:50 PM, Mark Goodwin wrote:
+xfsdump won't give you an image.
+xfsdump has its own format (with a bunch of overhead) which can just
+be read by xfsrestore. And restore then just writes out the files
+using mostly standard posix calls.
+You'll want dd or xfs_copy if you want it as an image.
 
->
->
-> Gary Lowell wrote:
->> Hi -
->> The JFS version of DMAPI had a handful of bug fixes that don't seem  
->> to be in the current tree.  I couldn't find anything in the list  
->> archive about them.  Would there be any interest in applying  those  
->> fixes or is DMAPI pretty much dead ?
->
-> no it's not dead :)
->
->> If there is interest, I've got a patch.
->
-> yes please post it here, with due reference to the original author(s).
->
-> Thanks
+>> ----- partitions -----
+>> >> Pt#    Device  Info     Start       End   Sectors  Id  System
+>> >>  8: /dev/sdb1               2      1021   2087936   a  SGI xfs
+>> >>  9: /dev/sdb2               0         1      3072   0  SGI volhdr
+>> >> 11: /dev/sdb3               0      1021   2091008   6  SGI volume
+>>
+Certainly partition 8 here.
+You can tell by the name (System) and the sizes.
+The SGI Volume is for the whole volume including the hdr and the
+filesystem and the SGI volhdr has the partition info.
 
-Great.  I'll double check that they still work with TOT and post them.
+> So can this be related to the byte ordering or any of the other
+>> issues mentioned in the FAQ regarding xfs under Linux ?
+As Eric said.
+We chose the ondisk format to have the byte ordering of IRIX so
+it should not be a problem. However, parts of the log code in Linux
+does not do the necessary endian conversion (due to lack of info at
+the relevant points - it only knows as blobs of data) and so you
+need the log to be clean. i.e. byte ordering problem just for the log.
 
-Cheers,
-Gary
+OOI, as Eric asked, how were you able to mount it all of a sudden?
+
+--Tim
