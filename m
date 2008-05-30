@@ -1,44 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 18:27:15 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U1RA7i002730
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 18:27:11 -0700
-Subject: TAKE 982545 - Only use xfs_buf_t locks when doing prefetched repair
-Message-Id: <20080530012759.12BD458C4C3F@chook.melbourne.sgi.com>
-Date: Fri, 30 May 2008 11:27:58 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 19:15:12 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4U2FAkp005459
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 19:15:10 -0700
+Message-Id: <4FC34C16-F0FA-49C5-88CC-83EEF616C218@sonic.net>
+From: Gary Lowell <glowell@sonic.net>
+In-Reply-To: <483C8227.6090408@sgi.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Subject: Re: DMAPI JFS bug fixes
+Date: Thu, 29 May 2008 19:16:01 -0700
+References: <483C78E2.4090000@sonic.net> <483C8227.6090408@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
+To: markgw@sgi.com
 Cc: xfs@oss.sgi.com
 
 
-Date:  Fri May 30 11:27:33 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  tes@sgi.com, sandeen@sandeen.net
+On May 27, 2008, at 2:50 PM, Mark Goodwin wrote:
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+>
+>
+> Gary Lowell wrote:
+>> Hi -
+>> The JFS version of DMAPI had a handful of bug fixes that don't seem  
+>> to be in the current tree.  I couldn't find anything in the list  
+>> archive about them.  Would there be any interest in applying  those  
+>> fixes or is DMAPI pretty much dead ?
+>
+> no it's not dead :)
+>
+>> If there is interest, I've got a patch.
+>
+> yes please post it here, with due reference to the original author(s).
+>
+> Thanks
 
+Great.  I'll double check that they still work with TOT and post them.
 
-Modid:  master-melb:xfs-cmds:31256a
-xfsprogs/man/man8/xfs_repair.8 - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/man8/xfs_repair.8.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-	- Update -P description in xfs_repair man page
-
-xfsprogs/include/libxfs.h - 1.65 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/libxfs.h.diff?r1=text&tr1=1.65&r2=text&tr2=1.64&f=h
-	- Add "usebuflock" field to xfs_init
-
-xfsprogs/repair/init.c - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/init.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-	- Set "usebuflock" flag if doing prefetched repair
-
-xfsprogs/libxfs/rdwr.c - 1.38 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/rdwr.c.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
-	- Only lock xfs_buf_t when use_xfs_buf_lock flag set
-
-xfsprogs/libxfs/init.c - 1.56 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/init.c.diff?r1=text&tr1=1.56&r2=text&tr2=1.55&f=h
-	- Handle usebuflock flag in xfs_init
+Cheers,
+Gary
