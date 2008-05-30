@@ -1,58 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 30 May 2008 00:52:31 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4U7qS2p002221
-	for <xfs@oss.sgi.com>; Fri, 30 May 2008 00:52:28 -0700
-Date: Fri, 30 May 2008 09:53:11 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] use generic_*xattr routines
-Message-ID: <20080530075310.GA8446@lst.de>
-References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com> <20080526053759.GA17825@lst.de> <483BE788.4050504@sgi.com> <20080529123910.GA30874@lst.de> <483FA0B6.1030703@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <483FA0B6.1030703@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 30 May 2008 05:09:23 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m4UC9G65020629
+	for <xfs@oss.sgi.com>; Fri, 30 May 2008 05:09:16 -0700
+Received: from gaimboi.tmr.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 568A6C25E7D
+	for <xfs@oss.sgi.com>; Fri, 30 May 2008 05:10:08 -0700 (PDT)
+Received: from gaimboi.tmr.com (mail.tmr.com [64.65.253.246]) by cuda.sgi.com with ESMTP id U8RiFG9NSpYF25t8 for <xfs@oss.sgi.com>; Fri, 30 May 2008 05:10:08 -0700 (PDT)
+Message-ID: <483FF174.80602@tmr.com>
+Date: Fri, 30 May 2008 08:22:12 -0400
+From: Bill Davidsen <davidsen@tmr.com>
+MIME-Version: 1.0
+Subject: Re: Performance Characteristics of All Linux RAIDs (mdadm/bonnie++)
+References: <alpine.DEB.1.10.0805280442330.4527@p34.internal.lan>	<95711f160805280934y77ed7d91tec5aeb531bf8013c@mail.gmail.com>	<20080528195752.0cdcbc6d@core>	<483DE40D.8090608@tmr.com> <20080529122223.462bf396@core>
+In-Reply-To: <20080529122223.462bf396@core>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: =?ISO-8859-1?Q?Jens_B=E4ckman?= <jens.backman@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 30, 2008 at 04:37:42PM +1000, Timothy Shimmin wrote:
-> > Yes.  I have an initial patch that goes directly to xfs_attr_list_int
-> > from xfs_xattr.c and kills most of the ATTR_KERN flags.  It's a quite
-> > nice cleanup already.  Next step will be to convert dmapi to use it's
-> > own callback aswell.  This will be an even bigger cleanup as
-> > put_listent gets the xattr value aswell and we can kill the additional
-> > xfs_attr_get calls, making this code simpler and more efficient.
-> > 
-> Sorry, what xfs_attr_get call are you referring to?
+Alan Cox wrote:
+>> I really don't think that's any part of the issue, the same memory and 
+>> bridge went 4-5x faster in other read cases. The truth is that the 
+>> raid-1 performance is really bad, and it's the code causing it AFAIK. If 
+>> you track the actual io it seems to read one drive at a time, in order, 
+>> without overlap.
+>>     
+>
+> Make sure the readahead is set to be a fair bit over the stripe size if
+> you are doing bulk data tests for a single file. (Or indeed in the real
+> world for that specific case ;))
+>   
 
-xfs_dm_getall_dmattr currently does an xfs_attr_list and then performs
-and xfs_attr_get for each attribute it cares about.  But rewriting this
-to use put_listent we not only get rid of the temporary buffer but
-also the need to calls xfs_attr_get because put_listent already gets
-the attribute value passed.  It also fixes the race mentioned in the
-comment and with a properly written put_listent helper can copy the
-attributes directly to userspace without any kernel buffer at all.
+IIRC Justin has readahead at 16MB and chunk at 256k. I would think that 
+if multiple devices were used at all by the md code, that the chunk 
+rather than stripe size would be the issue. In this case the RA seems 
+large enough to trigger good behavior, were there are available.
 
-That would also fix the direct userspace pointer dereference currently
-lingering in that code :)
+Note: this testing was done with an old(er) kernel, as were all of mine. 
+Since my one large raid array has become more mission critical I'm not 
+comfortable playing with new kernels. The fate of big, fast, and stable 
+machines is to slide into production use. :-(
+I suppose that's not a bad way to do it, I now have faith in what I'm 
+running.
 
-> > I've started looking at this and after some investigation I think
-> > we should just pass the xfs_inode directly to all the functions and then
-> > a void parameter, yes.  We'll need to find a solution for the
-> > seen_enough paramter, but I think this could be handled similar to
-> > filldir.  There's also some functions directly touching the attr cursor
-> > which seems solveable, too.
-> > 
-> I'll await the patch :)
-> The seen_enough param was added for search type callbacks so the callback
-> could terminate the list walk early.
-> Oh okay, I also used it to stop when we fill the buffer.
-
-Yes. May idea is to break out of the loop as soon as put_listent returns
-a non-zero value just like filldir.  We can then decided to play with
-positivie / begative values to allow for a sucessfull early exit, or
-just like filldir have the actual errno inside the private context
-structure.  I suspect the first variant will be cleaner.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
