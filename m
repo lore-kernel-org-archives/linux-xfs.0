@@ -1,62 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 22:27:49 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 22:58:13 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U5Rghf019631
-	for <xfs@oss.sgi.com>; Thu, 29 May 2008 22:27:44 -0700
-Message-ID: <483F907A.3020108@sgi.com>
-Date: Fri, 30 May 2008 15:28:26 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U5w8sc021352
+	for <linux-xfs@oss.sgi.com>; Thu, 29 May 2008 22:58:09 -0700
+Message-ID: <483F979B.5070206@sgi.com>
+Date: Fri, 30 May 2008 15:58:51 +1000
 From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: XFS: SB validate failed
-References: <3607657a0805291005k457791cej1c5f867da0f95965@mail.gmail.com>	 <483EE5BD.8020407@sandeen.net>	 <3607657a0805291255i59fd006fi9d6836cf528d19a6@mail.gmail.com>	 <483F0BC3.2050901@sandeen.net>	 <3607657a0805291400h3c50165lea6fbea919deed0f@mail.gmail.com>	 <483F1AED.3010808@sandeen.net> <3607657a0805291446t79808c63l664780c1cbc3d871@mail.gmail.com>
-In-Reply-To: <3607657a0805291446t79808c63l664780c1cbc3d871@mail.gmail.com>
+Subject: Re: Question for XFS (mounting and clean bit)
+References: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de> <483E5462.1080604@sgi.com> (sfid-20080529_093513_291114_64DAE2F5) <200805291009.36229.Martin@lichtvoll.de>
+In-Reply-To: <200805291009.36229.Martin@lichtvoll.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Spam Magnet <spam.wax@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-xfs@oss.sgi.com
 
-Spam Magnet wrote:
->> try xfs_repair -n then maybe.  Or update xfsprogs.  check shouldn't
->> segfault, regardless of the fs state.
->>
+Martin Steigerwald wrote:
+> Am Donnerstag 29 Mai 2008 schrieb Timothy Shimmin:
+>> Hi Andre,
 > 
-> I updated xfsprogs to the latest version (cvs checkout) and it solved
-> the segfault.
+> Hi Timothy,
 > 
->> nah that's fine, images or disks, whichever.
->>
+>> I didn't follow all of this, sorry.
+>> When you ask about the "clean bit", I assume that you are referring
+>> to "clean XFS mount for filesystem".
+>> We effectively mark it clean if we do a successful unmount.
+>> As part of unmount, we write an unmount record into the xfs log.
+>> On the next mount we look for the head of the log and then for the
+>> unmount record nearby. If we find the unmount record then we know
+>> we have had a clean unmount previously, otherwise we replay the log.
+>> So it's really a question of doing an unmount versus resetting the
+>> box beforehand or forcing a shutdown beforehand.
 > 
-> So I guess it doesn't matter if I do the image either using dd or xfsdump.
+> But when is it dirtied? If the clean log entry is the actual "clean bit" I 
+> guess: When the first new entry is written in the log.
+> 
+Yes.
+As soon as the first new entry is written in the log it will effectively
+change the head of the log.
+The head of the log can basically be seen (simplified version) at the
+change of cycle#s of the 512byte sectors of the log (each sector is encoded
+with a cycle# at or near the start; the cycle# is the number of times
+that we have wrapped the log).
+e.g.     5 5 5 5 5 5 4 4 4 4 4
+                   ^head
+(we actually typically have a set of 8 log buffers that have writes issued on so
+ there could easily be bumps in the example....5 5 4 4 5 4 4 etc..)
+When we find the head we scan back for the start of a log record
+and look for the unmount record and so we'd have
+a problem if we don't find one and then we'd know it is dirty.
 
-xfsdump won't give you an image.
-xfsdump has its own format (with a bunch of overhead) which can just
-be read by xfsrestore. And restore then just writes out the files
-using mostly standard posix calls.
-You'll want dd or xfs_copy if you want it as an image.
 
->> ----- partitions -----
->> >> Pt#    Device  Info     Start       End   Sectors  Id  System
->> >>  8: /dev/sdb1               2      1021   2087936   a  SGI xfs
->> >>  9: /dev/sdb2               0         1      3072   0  SGI volhdr
->> >> 11: /dev/sdb3               0      1021   2091008   6  SGI volume
->>
-Certainly partition 8 here.
-You can tell by the name (System) and the sizes.
-The SGI Volume is for the whole volume including the hdr and the
-filesystem and the SGI volhdr has the partition info.
-
-> So can this be related to the byte ordering or any of the other
->> issues mentioned in the FAQ regarding xfs under Linux ?
-As Eric said.
-We chose the ondisk format to have the byte ordering of IRIX so
-it should not be a problem. However, parts of the log code in Linux
-does not do the necessary endian conversion (due to lack of info at
-the relevant points - it only knows as blobs of data) and so you
-need the log to be clean. i.e. byte ordering problem just for the log.
-
-OOI, as Eric asked, how were you able to mount it all of a sudden?
+> Does XFS write a log entry on mounting it already or only on the first 
+> real write? Or in other words if I mount a XFS filesystem without writing 
+> to it and reset the machine, would it be marked clean or dirty then? 
+> Hmmm, I could test this ;-).
+> 
+I believe it will be clean and I tried it out too :)
 
 --Tim
