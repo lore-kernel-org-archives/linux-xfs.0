@@ -1,64 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 22:58:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 29 May 2008 23:37:09 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U5w8sc021352
-	for <linux-xfs@oss.sgi.com>; Thu, 29 May 2008 22:58:09 -0700
-Message-ID: <483F979B.5070206@sgi.com>
-Date: Fri, 30 May 2008 15:58:51 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m4U6b4ES023696
+	for <xfs@oss.sgi.com>; Thu, 29 May 2008 23:37:06 -0700
+Message-ID: <483FA0B6.1030703@sgi.com>
+Date: Fri, 30 May 2008 16:37:42 +1000
 From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Question for XFS (mounting and clean bit)
-References: <20080527181336.22qjfcgcfdlwsg40@webmail.versatel.de> <483E5462.1080604@sgi.com> (sfid-20080529_093513_291114_64DAE2F5) <200805291009.36229.Martin@lichtvoll.de>
-In-Reply-To: <200805291009.36229.Martin@lichtvoll.de>
+Subject: Re: [PATCH] use generic_*xattr routines
+References: <20080430112217.GB16966@lst.de> <20080521081656.GA2638@lst.de> <48365486.3060503@sgi.com> <20080523054848.GA29507@lst.de> <483A15CE.9060409@sgi.com> <20080526053759.GA17825@lst.de> <483BE788.4050504@sgi.com> <20080529123910.GA30874@lst.de>
+In-Reply-To: <20080529123910.GA30874@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Martin Steigerwald wrote:
-> Am Donnerstag 29 Mai 2008 schrieb Timothy Shimmin:
->> Hi Andre,
+Christoph Hellwig wrote:
+> On Tue, May 27, 2008 at 08:50:48PM +1000, Timothy Shimmin wrote:
+>>>  - the callback is supplied by the xfs_attr_list caller, not set based
+>>>    on options
+>> Oh, okay. For example, instead of setting the flags to ATTR_KERNOVAL
+>> such as in xfs_vn_listxattr when size is 0, one could just set the callback
+>> to xfs_attr_kern_list_sizes and pass it in etc...
 > 
-> Hi Timothy,
+> Yes.  I have an initial patch that goes directly to xfs_attr_list_int
+> from xfs_xattr.c and kills most of the ATTR_KERN flags.  It's a quite
+> nice cleanup already.  Next step will be to convert dmapi to use it's
+> own callback aswell.  This will be an even bigger cleanup as
+> put_listent gets the xattr value aswell and we can kill the additional
+> xfs_attr_get calls, making this code simpler and more efficient.
 > 
->> I didn't follow all of this, sorry.
->> When you ask about the "clean bit", I assume that you are referring
->> to "clean XFS mount for filesystem".
->> We effectively mark it clean if we do a successful unmount.
->> As part of unmount, we write an unmount record into the xfs log.
->> On the next mount we look for the head of the log and then for the
->> unmount record nearby. If we find the unmount record then we know
->> we have had a clean unmount previously, otherwise we replay the log.
->> So it's really a question of doing an unmount versus resetting the
->> box beforehand or forcing a shutdown beforehand.
-> 
-> But when is it dirtied? If the clean log entry is the actual "clean bit" I 
-> guess: When the first new entry is written in the log.
-> 
-Yes.
-As soon as the first new entry is written in the log it will effectively
-change the head of the log.
-The head of the log can basically be seen (simplified version) at the
-change of cycle#s of the 512byte sectors of the log (each sector is encoded
-with a cycle# at or near the start; the cycle# is the number of times
-that we have wrapped the log).
-e.g.     5 5 5 5 5 5 4 4 4 4 4
-                   ^head
-(we actually typically have a set of 8 log buffers that have writes issued on so
- there could easily be bumps in the example....5 5 4 4 5 4 4 etc..)
-When we find the head we scan back for the start of a log record
-and look for the unmount record and so we'd have
-a problem if we don't find one and then we'd know it is dirty.
+Sorry, what xfs_attr_get call are you referring to?
 
-
-> Does XFS write a log entry on mounting it already or only on the first 
-> real write? Or in other words if I mount a XFS filesystem without writing 
-> to it and reset the machine, would it be marked clean or dirty then? 
-> Hmmm, I could test this ;-).
+>>>  - there will be an opaque object supplied to xfs_attr_list that is to
+>>>    be used by put_listent so that we don't have to pass down
+>>>    implementation-specific arguments directly.
+>>>
+>> Ok.
+>> So instead of overloading fields in xfs_attr_list_context_t,
+>> you'll pass down a void* argument or some such for callback specific data.
 > 
-I believe it will be clean and I tried it out too :)
+> I've started looking at this and after some investigation I think
+> we should just pass the xfs_inode directly to all the functions and then
+> a void parameter, yes.  We'll need to find a solution for the
+> seen_enough paramter, but I think this could be handled similar to
+> filldir.  There's also some functions directly touching the attr cursor
+> which seems solveable, too.
+> 
+I'll await the patch :)
+The seen_enough param was added for search type callbacks so the callback
+could terminate the list walk early.
+Oh okay, I also used it to stop when we fill the buffer.
+
+>>> I'd also like to move the attrlist_cursor_kern_t into this callback
+>>> opaque context because it doesn't make sense for the normal xattr API,
+>>> but I'll have to see if that's actually feasible.
+>> BTW, the cursor stuff is a bit flawed. Like the dir1 code (I believe),
+>> if from userspace you use the cursor and modifications happen to the EAs
+>> (add or removal) between calls, 
+>> we can end up repeating elements in the list or miss some.
+>> We don't preserve the position and we can compact the data etc.
+> 
+> Yes, I think this whole cursor is a rather bad idea.  But given that
+> it's used by xfsdump we can't easily get rid of it.
+Not if we are to remain compatible with old xfsdump programs (assuming we changed
+the latest one).
+Yep.
 
 --Tim
