@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 04:39:17 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 04:48:06 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53BdAnU016084
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 04:39:11 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53Bm43T016939
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 04:48:04 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 692051DE2F8
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 04:40:03 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id jTq5FFMzks6vWkAf for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 04:40:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB9901DE1C7
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 04:48:56 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id C8bfQEZg1Qee0TMr for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 04:48:56 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m53BdtOc002844
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m53BmmOc003407
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 13:39:55 +0200
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 13:48:48 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m53BdtEt002842
-	for xfs@oss.sgi.com; Tue, 3 Jun 2008 13:39:55 +0200
-Date: Tue, 3 Jun 2008 13:39:55 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m53BmmbL003405
+	for xfs@oss.sgi.com; Tue, 3 Jun 2008 13:48:48 +0200
+Date: Tue, 3 Jun 2008 13:48:48 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] factor out inode has attrs check
-Message-ID: <20080603113955.GA2703@lst.de>
+Subject: [PATCH 2/2] dmapi: use ->put_listen callback directly
+Message-ID: <20080603114848.GC2703@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,122 +26,307 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Note that xfs_attr_fetch did the check twice while keeping the inode
-locked and we can just remove the superflous check.
+Rewrite xfs_dm_getall_dmattr to directly call xfs_list_attr_int in
+fill the userspace buffer directly from the listent. Doing the direct
+put means the need for the large kernel space buffer is gone, there
+is only one btree traversal needed and thus the list vs get race
+is fixed.  By doing the proper put_user/copy_to_user the direct
+userspace memory derference is fixed, too and the code is a lot
+simpler and easier to understand.
+
+This patch passes xfsqa but I don't really trust it much vs dmapi,
+so please review carefully.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_attr.c
+Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_attr.c	2008-06-01 14:32:06.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_attr.c	2008-06-01 14:40:04.000000000 +0200
-@@ -111,6 +111,17 @@ xfs_attr_name_to_xname(
- 	return 0;
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-06-01 14:45:20.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-06-03 12:00:22.000000000 +0200
+@@ -2092,149 +2092,136 @@ xfs_dm_get_region(
  }
  
-+STATIC int
-+xfs_inode_hasattr(
-+	struct xfs_inode	*ip)
-+{
-+	if (!XFS_IFORK_Q(ip) ||
-+	    (ip->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
-+	     ip->i_d.di_anextents == 0))
-+		return 0;
-+	return 1;
-+}
+ 
++#define DM_GETALL_DMATTR_ALIGN	(sizeof(int) - 1)
 +
- /*========================================================================
-  * Overall external interface routines.
-  *========================================================================*/
-@@ -122,10 +133,8 @@ xfs_attr_fetch(xfs_inode_t *ip, struct x
- 	xfs_da_args_t   args;
- 	int             error;
+ STATIC int
+-xfs_dm_getall_dmattr(
+-	struct inode	*inode,
+-	dm_right_t	right,
+-	size_t		buflen,
+-	void		__user *bufp,
+-	size_t		__user *rlenp)
++xfs_dm_put_listent(
++	xfs_attr_list_context_t	*context,
++	int			flags,
++	char			*name,
++	int			namelen,
++	int			valuelen,
++	char			*value)
+ {
+-	attrlist_cursor_kern_t cursor;
+-	attrlist_t	*attrlist;
+-	dm_attrlist_t	__user *ulist;
+-	int		*last_link;
+-	int		alignment;
+-	int		total_size;
+-	int		list_size = 8192;	/* should be big enough */
+-	int		error;
++	dm_attrlist_t __user	*ulist;
++	int			size_needed;
  
--	if ((XFS_IFORK_Q(ip) == 0) ||
--	    (ip->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     ip->i_d.di_anextents == 0))
--		return(ENOATTR);
-+	if (!xfs_inode_hasattr(ip))
-+		return ENOATTR;
+-	/* Returns negative errors to DMAPI */
++	ASSERT(context->count >= 0);
  
- 	/*
- 	 * Fill in the arg structure for this request.
-@@ -143,11 +152,7 @@ xfs_attr_fetch(xfs_inode_t *ip, struct x
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
- 	 */
--	if (XFS_IFORK_Q(ip) == 0 ||
--	    (ip->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     ip->i_d.di_anextents == 0)) {
--		error = XFS_ERROR(ENOATTR);
--	} else if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+	if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
- 		error = xfs_attr_shortform_getvalue(&args);
- 	} else if (xfs_bmap_one_block(ip, XFS_ATTR_FORK)) {
- 		error = xfs_attr_leaf_get(&args);
-@@ -523,9 +528,7 @@ xfs_attr_remove_int(xfs_inode_t *dp, str
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
- 	 */
--	if (XFS_IFORK_Q(dp) == 0 ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
-+	if (!xfs_inode_hasattr(dp)) {
- 		error = XFS_ERROR(ENOATTR);
- 		goto out;
- 	}
-@@ -595,11 +598,9 @@ xfs_attr_remove(
- 		return error;
- 
- 	xfs_ilock(dp, XFS_ILOCK_SHARED);
--	if (XFS_IFORK_Q(dp) == 0 ||
--		   (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--		    dp->i_d.di_anextents == 0)) {
-+	if (!xfs_inode_hasattr(dp)) {
- 		xfs_iunlock(dp, XFS_ILOCK_SHARED);
--		return(XFS_ERROR(ENOATTR));
-+		return XFS_ERROR(ENOATTR);
- 	}
- 	xfs_iunlock(dp, XFS_ILOCK_SHARED);
- 
-@@ -615,9 +616,7 @@ xfs_attr_list_int(xfs_attr_list_context_
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
- 	 */
--	if (XFS_IFORK_Q(dp) == 0 ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
-+	if (!xfs_inode_hasattr(dp)) {
- 		error = 0;
- 	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
- 		error = xfs_attr_shortform_list(context);
-@@ -810,12 +809,10 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
- 
- 	xfs_ilock(dp, XFS_ILOCK_SHARED);
--	if ((XFS_IFORK_Q(dp) == 0) ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
-+	if (!xfs_inode_hasattr(dp) ||
-+	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
- 		xfs_iunlock(dp, XFS_ILOCK_SHARED);
--		return(0);
+-	if (right < DM_RIGHT_SHARED)
+-		return(-EACCES);
++	/*
++	 * Skip over all non-DMAPI attributes.	If the attribute name is too
++	 * long, we assume it is non-DMAPI even if it starts with the correct
++	 * prefix.
++	 */
++	if (!(flags & XFS_ATTR_ROOT))
 +		return 0;
- 	}
- 	xfs_iunlock(dp, XFS_ILOCK_SHARED);
++	if (namelen > DM_ATTR_NAME_SIZE)
++		return 0;
++	if (strncmp(name, dmattr_prefix, DMATTR_PREFIXLEN))
++		return 0;
  
-@@ -848,10 +845,8 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
- 	 */
--	if ((XFS_IFORK_Q(dp) == 0) ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) ||
--	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
--	     dp->i_d.di_anextents == 0)) {
-+	if (!xfs_inode_hasattr(dp) ||
-+	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
- 		error = 0;
- 		goto out;
+-	/* Verify that the user gave us a buffer that is 4-byte aligned, lock
+-	   it down, and work directly within that buffer.  As a side-effect,
+-	   values of buflen < sizeof(int) return EINVAL.
+-	*/
++	size_needed = sizeof(dm_attrlist_t) + valuelen;
++	size_needed = (size_needed + DM_GETALL_DMATTR_ALIGN) &
++			~DM_GETALL_DMATTR_ALIGN;
+ 
+-	alignment = sizeof(int) - 1;
+-	if ((((__psint_t)bufp & alignment) != 0) ||
+-               !access_ok(VERIFY_WRITE, bufp, buflen)) {
+-		return(-EFAULT);
++	/*
++	 * We have a valid DMAPI attribute to return.  If it won't fit in the
++	 * user's buffer, we still need to keep track of the number of bytes
++	 * for the user's next call.
++	 */
++	context->count += size_needed;
++	if (context->count > context->bufsize) {
++		context->seen_enough = 1;
++		return 1;
++	}
++
++	ulist = (dm_attrlist_t __user __force *)
++		 (context->alist + context->count);
++
++	if (copy_to_user(ulist->al_name.an_chars, name, namelen) ||
++	    clear_user(ulist->al_name.an_chars + namelen,
++			DM_ATTR_NAME_SIZE - namelen) ||
++	    put_user(sizeof(dm_attrlist_t), &ulist->al_data.vd_offset) ||
++	    put_user(valuelen, &ulist->al_data.vd_length) ||
++	    put_user(size_needed, &ulist->_link) ||
++	    copy_to_user(ulist + 1, value, valuelen)) {
++		context->count = -1;
++		return 1;
  	}
+-	buflen &= ~alignment;		/* round down the alignment */
+ 
+-	/* Initialize all the structures and variables for the main loop. */
++	context->last_link = &ulist->_link;
++	return 0;
++}
+ 
+-	memset(&cursor, 0, sizeof(cursor));
+-	attrlist = (attrlist_t *)kmem_alloc(list_size, KM_SLEEP);
+-	total_size = 0;
+-	ulist = (dm_attrlist_t *)bufp;
+-	last_link = NULL;
+-
+-	/* Use vop_attr_list to get the names of DMAPI attributes, and use
+-	   vop_attr_get to get their values.  There is a risk here that the
+-	   DMAPI attributes could change between the vop_attr_list and
+-	   vop_attr_get calls.	If we can detect it, we return EIO to notify
+-	   the user.
+-	*/
++STATIC int
++xfs_dm_getall_dmattr(
++	struct inode		*inode,
++	dm_right_t		right,
++	size_t			buflen,
++	void			__user *bufp,
++	size_t			__user *rlenp)
++{
++	xfs_attr_list_context_t	context;
++	attrlist_cursor_kern_t	cursor = { 0, };
++	int			error;
+ 
+-	do {
+-		int	i;
++	if (right < DM_RIGHT_SHARED)
++		return -EACCES;
+ 
+-		/* Get a buffer full of attribute names.  If there aren't any
+-		   more or if we encounter an error, then finish up.
+-		*/
++	/* verify that the user gave us a buffer that is 4-byte aligned */
++	if ((unsigned long)bufp & DM_GETALL_DMATTR_ALIGN)
++		return -EFAULT;
+ 
+-		error = xfs_attr_list(XFS_I(inode), (char *)attrlist, list_size,
+-						ATTR_ROOT, &cursor);
+-		DM_EA_XLATE_ERR(error);
++	/* round down the alignment */
++	buflen &= ~DM_GETALL_DMATTR_ALIGN;
+ 
+-		if (error || attrlist->al_count == 0)
+-			break;
++	memset(&context, 0, sizeof(context));
++	context.dp = XFS_I(inode);
++	context.cursor = &cursor;
++	context.resynch = 1;
++	context.flags = ATTR_ROOT;
++	/* alist is just a cookie */
++	context.alist = (char * __force)bufp;
++	context.bufsize = buflen;
++	context.put_value = 1;
++	context.put_listent = xfs_dm_put_listent;
+ 
+-		for (i = 0; i < attrlist->al_count; i++) {
+-			attrlist_ent_t	*entry;
+-			char		*user_name;
+-			int		size_needed;
+-			int		value_len;
+-
+-			/* Skip over all non-DMAPI attributes.	If the
+-			   attribute name is too long, we assume it is
+-			   non-DMAPI even if it starts with the correct
+-			   prefix.
+-			*/
+-
+-			entry = ATTR_ENTRY(attrlist, i);
+-			if (strncmp(entry->a_name, dmattr_prefix, DMATTR_PREFIXLEN))
+-				continue;
+-			user_name = &entry->a_name[DMATTR_PREFIXLEN];
+-			if (strlen(user_name) > DM_ATTR_NAME_SIZE)
+-				continue;
+-
+-			/* We have a valid DMAPI attribute to return.  If it
+-			   won't fit in the user's buffer, we still need to
+-			   keep track of the number of bytes for the user's
+-			   next call.
+-			*/
+-
+-
+-			size_needed = sizeof(*ulist) + entry->a_valuelen;
+-			size_needed = (size_needed + alignment) & ~alignment;
+-
+-			total_size += size_needed;
+-			if (total_size > buflen)
+-				continue;
+-
+-			/* Start by filling in all the fields in the
+-			   dm_attrlist_t structure.
+-			*/
+-
+-			strncpy((char *)ulist->al_name.an_chars, user_name,
+-				DM_ATTR_NAME_SIZE);
+-			ulist->al_data.vd_offset = sizeof(*ulist);
+-			ulist->al_data.vd_length = entry->a_valuelen;
+-			ulist->_link =	size_needed;
+-			last_link = &ulist->_link;
+-
+-			/* Next read the attribute's value into its correct
+-			   location after the dm_attrlist structure.  Any sort
+-			   of error indicates that the data is moving under us,
+-			   so we return EIO to let the user know.
+-			*/
+-
+-			value_len = entry->a_valuelen;
+-
+-			error = xfs_attr_get(XFS_I(inode), entry->a_name,
+-						(void *)(ulist + 1), &value_len,
+-						ATTR_ROOT);
+-			DM_EA_XLATE_ERR(error);
+-
+-			if (error || value_len != entry->a_valuelen) {
+-				error = EIO;
+-				break;
+-			}
++	error = -xfs_attr_list_int(&context);
++	ASSERT(error <= 0);
+ 
+-			ulist = (dm_attrlist_t *)((char *)ulist + ulist->_link);
+-		}
+-	} while (!error && attrlist->al_more);
+-	if (last_link)
+-		*last_link = 0;
+-
+-	if (!error && total_size > buflen)
+-		error = E2BIG;
+-	if (!error || error == E2BIG) {
+-		if (put_user(total_size, rlenp))
+-			error = EFAULT;
++	/*
++	 * Count smaller zero means the iterator got an EFAULT.
++	 *
++	 * XXX(hch): we badly need a better way to deal with this, including
++	 *	     passing and actual errno value back from the iterator.
++	 */
++	if (context.count < 0)
++		return -EFAULT;
++
++	/*
++	 * Terminate the list if we were successfull.
++	 */
++	if (context.last_link && put_user(0, context.last_link))
++		return -EFAULT;
++
++	if (!error) {
++		/*
++		 * We still need to copy the count member to userspace in the
++		 * case where there was not enough buffer space for the request.
++		 *
++		 * The ABI defines a count bigger as the passed in buffer length
++		 * as indicator for requiring to call again with a bigger buffer.
++		 */
++		if (context.count > buflen)
++			error = -E2BIG;
++
++		if (put_user(context.count, rlenp))
++			error = -EFAULT;
+ 	}
+ 
+-	kmem_free(attrlist);
+-	return(-error); /* Return negative error to DMAPI */
++	return error;
+ }
+ 
+-
+ /* ARGSUSED */
+ STATIC int
+ xfs_dm_getall_inherit(
+Index: linux-2.6-xfs/fs/xfs/xfs_attr.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_attr.h	2008-06-03 09:56:25.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_attr.h	2008-06-03 11:45:11.000000000 +0200
+@@ -119,6 +119,7 @@ typedef struct xfs_attr_list_context {
+ 	int				put_value;	/* T/F: need value for listent */
+ 	put_listent_func_t		put_listent;	/* list output fmt function */
+ 	int				index;		/* index into output buffer */
++	int __user			*last_link;	/* list terminator */
+ } xfs_attr_list_context_t;
+ 
+ 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-06-03 12:01:08.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-06-03 12:01:13.000000000 +0200
+@@ -262,7 +262,7 @@ EXPORT_SYMBOL(xfs_attr_get);
+ EXPORT_SYMBOL(xfs_attr_set);
+ EXPORT_SYMBOL(xfs_fsync);
+ EXPORT_SYMBOL(xfs_attr_remove);
+-EXPORT_SYMBOL(xfs_attr_list);
++EXPORT_SYMBOL(xfs_attr_list_int);
+ EXPORT_SYMBOL(xfs_readdir);
+ EXPORT_SYMBOL(xfs_setsize_buftarg);
+ EXPORT_SYMBOL(xfs_syncsub);
