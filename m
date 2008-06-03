@@ -1,48 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 06:04:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53D4n2h021751
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 06:04:49 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85E571DDDAA
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 06:05:42 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id BffiYCscHIWAQevg for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 06:05:42 -0700 (PDT)
-Date: Tue, 3 Jun 2008 15:05:34 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fix mount option parsing in remount
-Message-ID: <20080603130534.GA8694@lst.de>
-References: <20080518153539.GA5218@lst.de> <48453E5D.8050301@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48453E5D.8050301@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 08:34:18 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53FYCkE001300
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 08:34:14 -0700
+Received: from hrndva-omtalb.mail.rr.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2AB9411AA347
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 08:35:04 -0700 (PDT)
+Received: from hrndva-omtalb.mail.rr.com (hrndva-omtalb.mail.rr.com [71.74.56.123]) by cuda.sgi.com with ESMTP id ybzLf1Lu54ChGxB5 for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 08:35:04 -0700 (PDT)
+Received: from tomslinux.homelinux.org ([24.28.24.180])
+          by hrndva-omta01.mail.rr.com with ESMTP
+          id <20080603153503.JZVQ17285.hrndva-omta01.mail.rr.com@tomslinux.homelinux.org>
+          for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 15:35:03 +0000
+Received: from tomslinux.homelinux.org (localhost [127.0.0.1])
+	by tomslinux.homelinux.org (8.13.7/8.13.7) with ESMTP id m53FYoY0026675
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 10:34:50 -0500
+From: Thomas King <kingttx@tomslinux.homelinux.org>
+Message-ID: <19868.143.166.226.57.1212507288.squirrel@tomslinux.homelinux.org>
+Date: Tue, 3 Jun 2008 10:34:48 -0500 (CDT)
+Subject: Questions for article
+MIME-Version: 1.0
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jun 03, 2008 at 07:51:41AM -0500, Eric Sandeen wrote:
-> Maybe expand this a little:
-> 
-> /*
->  * Today only the barrier/nobarrier xfs mount options are handled
->  * on remount.  This table should be expanded to cover all options,
->  * and used for the initial mount path, too.
->  */
-> 
-> ... I'd also like this for the mount path because for example:
-> 
-> mount -t xfs -o barrier=0 /dev/blah /mnt/foo
-> 
-> works... but does not turn off barriers.
-> 
-> So as a first step/example this looks ok but I'd sure like to see it
-> extended soon.  Maybe when I'm bored... :)
+I am writing an article to answer Henry Newman's at
+http://www.enterprisestorageforum.com/sans/features/article.php/3749926. I've
+already been bugging folks on the ext4 mailing list and one of them mentioned I
+should also send some of the same questions to this list. Please let me know if
+I may do so.
 
-Doh.  But yeah, mount path should be switched over soon.  I alredy
-posted the patches to kill the xfs_mount_args gunk which have been on
-the list for a while and happily ignored, and switching to the parser.h
-helper ontop of that is quite easy.  I just want to wait a little bit
-so that any problems with the previous patch are shaked out before the
-new one gets added.
+Thanks!
+Tom King
