@@ -1,69 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 13:48:13 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53KmAJY022638
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 13:48:11 -0700
-Received: from hrndva-omtalb.mail.rr.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FA781E3A69
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 13:49:04 -0700 (PDT)
-Received: from hrndva-omtalb.mail.rr.com (hrndva-omtalb.mail.rr.com [71.74.56.124]) by cuda.sgi.com with ESMTP id TGikzCV7qZVEFSWc for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 13:49:04 -0700 (PDT)
-Received: from tomslinux.homelinux.org ([24.28.24.180])
-          by hrndva-omta06.mail.rr.com with ESMTP
-          id <20080603204900.FOKT9231.hrndva-omta06.mail.rr.com@tomslinux.homelinux.org>
-          for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 20:49:00 +0000
-Received: from tomslinux.homelinux.org (localhost [127.0.0.1])
-	by tomslinux.homelinux.org (8.13.7/8.13.7) with ESMTP id m53Kmnem029499
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 15:48:50 -0500
-From: Thomas King <kingttx@tomslinux.homelinux.org>
-Message-ID: <13033.143.166.226.57.1212526129.squirrel@tomslinux.homelinux.org>
-Date: Tue, 3 Jun 2008 15:48:49 -0500 (CDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 03 Jun 2008 15:03:14 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m53M3Baj026254
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2008 15:03:11 -0700
+Received: from rgminet01.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 425901776F3D
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2008 15:04:04 -0700 (PDT)
+Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118]) by cuda.sgi.com with ESMTP id aF0HUKrDMgHcRnZx for <xfs@oss.sgi.com>; Tue, 03 Jun 2008 15:04:04 -0700 (PDT)
 Subject: Re: Questions for article
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <13033.143.166.226.57.1212526129.squirrel@tomslinux.homelinux.org>
+Date: Tue, 03 Jun 2008 18:00:42 -0400
+In-Reply-To: <13033.143.166.226.57.1212526129.squirrel@tomslinux.homelinux.org> (Thomas King's message of "Tue\, 3 Jun 2008 15\:48\:49 -0500 \(CDT\)")
+Message-ID: <yq1mym2nppx.fsf@sermon.lab.mkp.net>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Thomas King <kingttx@tomslinux.homelinux.org>
+Cc: xfs@oss.sgi.com
 
->
->
-> On Tue, 3 Jun 2008, Thomas King wrote:
->
->> I am writing an article to answer Henry Newman's at
->> http://www.enterprisestorageforum.com/sans/features/article.php/3749926. I've
->> already been bugging folks on the ext4 mailing list and one of them mentioned
->> I
->> should also send some of the same questions to this list. Please let me know
->> if
->> I may do so.
->>
->> Thanks!
->> Tom King
->>
->>
->
-> What are the questions?
->
-> Justin.
+>>>>> "Thomas" == Thomas King <kingttx@tomslinux.homelinux.org> writes:
 
-For the most part, XFS is used for massive filesystems (hundreds of petabytes)
-successfully in Linux (among other OS's). However, Mr. Newman still believes
-there are details that he believes XFS doesn't include or Linux limits (such as
-page sizes in x86 limiting block sizes).
+Thomas> -Is XFS fully RAID aware inthat it aligns metadata with RAID
+Thomas> stripes? Some of the information I see states XFS can get
+Thomas> geometry information from LVM and MD, but what about hardware
+Thomas> RAID? 
 
-With that preface, here are some questions:
--Is XFS fully RAID aware inthat it aligns metadata with RAID stripes? Some of
-the information I see states XFS can get geometry information from LVM and MD,
-but what about hardware RAID?
--Does XFS take advantage of T10 DIF (block protection?)?
--Does/Will XFS support NFS v4.1?
--Concerning the block-size limit, will this eventually be a thing of the past?
-Mr. Newman's contention is massive filesystems should have much larger block
-sizes, but he also contends that OSD is the eventual answer instead of using
-block allocation.
--Is there anything else y'all would like folks to understand about XFS and
-massive implementations?
+The stuff that queries MD/LVM for stripe unit/stripe size has been in
+XFS for a while[1].
 
-Thanks!
-Tom King
+For hardware RAID there is no non-proprietary way to obtain the
+information from the device.  So whoever runs mkfs on a hardware RAID
+device must manually specify the geometry using the sunit and swidth
+parameters.  That capability has been there since the dawn of time.
+
+Note that in the upcoming version of SBC-3 (SCSI Block Commands)
+finally features a VPD page that the array firmware can fill out to
+let the operating system know about stripe size, etc.  I have been
+working on a patch that extracts this information and presents it to
+the block layer in a generic fashion.  But so far I have not seen a
+single array that implements said VPD page.  IOW, there hasn't been
+much motivation to finish that work.
+
+Also, SBC-3 is work in progress.  The standard has not been ratified
+yet so things could change before it is released.  I doubt they are
+going to change the block limits VPD, but who knows?
+
+
+Thomas> -Does XFS take advantage of T10 DIF (block protection?)?
+
+As I mentioned earlier today, filesystems do not need to be explicitly
+DIF-aware.  I/Os submitted by XFS will be protected if the kernel does
+DIF.
+
+The DIF support has not been accepted upstream yet.  Working on that.
+But in any case DIF-capable hardware is not generally available.
+
+
+[1] http://www.linux.sgi.com/archives/xfs/2001-03/msg00435.html
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
