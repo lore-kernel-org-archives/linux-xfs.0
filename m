@@ -1,51 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Jun 2008 08:05:58 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m54F5tOQ009142
-	for <xfs@oss.sgi.com>; Wed, 4 Jun 2008 08:05:55 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 69D3F11B76DD
-	for <xfs@oss.sgi.com>; Wed,  4 Jun 2008 08:06:49 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 2miyFXGNzRNsP3BK for <xfs@oss.sgi.com>; Wed, 04 Jun 2008 08:06:49 -0700 (PDT)
-Message-ID: <4846AF87.8010307@sandeen.net>
-Date: Wed, 04 Jun 2008 10:06:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 04 Jun 2008 08:16:02 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m54FFw9R010400
+	for <xfs@oss.sgi.com>; Wed, 4 Jun 2008 08:15:59 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8E051B9E6F4
+	for <xfs@oss.sgi.com>; Wed,  4 Jun 2008 08:16:52 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 6LKn1d013GhRNjhY for <xfs@oss.sgi.com>; Wed, 04 Jun 2008 08:16:52 -0700 (PDT)
+Date: Wed, 4 Jun 2008 11:16:51 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: vfs dmapi handle generation problem
+Message-ID: <20080604151651.GA16376@infradead.org>
+References: <8efbf9761cbff87b03e5326866cd914d.squirrel@webmailer.fh-worms.de>
 MIME-Version: 1.0
-Subject: Re: Questions for article
-References: <13033.143.166.226.57.1212526129.squirrel@tomslinux.homelinux.org>    <20080604053156.GB6509@infradead.org> <32954.143.166.226.42.1212588962.squirrel@tomslinux.homelinux.org>
-In-Reply-To: <32954.143.166.226.42.1212588962.squirrel@tomslinux.homelinux.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8efbf9761cbff87b03e5326866cd914d.squirrel@webmailer.fh-worms.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Thomas King <kingttx@tomslinux.homelinux.org>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Tim J?dicke <tim.joedicke@fh-worms.de>
+Cc: xfs@oss.sgi.com
 
-Thomas King wrote:
->> On Tue, Jun 03, 2008 at 03:48:49PM -0500, Thomas King wrote:
->>> For the most part, XFS is used for massive filesystems (hundreds of petabytes)
->> I think undreds of petabytes is not something we commonly see today :)
->> hundreds of TB is more reasonable.
+On Wed, Jun 04, 2008 at 03:55:04PM +0200, Tim J?dicke wrote:
+> int
+> vfs_dm_inode_to_fh(struct inode *ip, dm_fid_t *dmfid, dm_fsid_t *dmfsid)
+> {
+>    dmfid->dm_fid_len = sizeof(dm_fid_t) - sizeof(dmfid->dm_fid_len);
+>    dmfid->dm_fid_pad = 0;
+>    memcpy(&dmfid->dm_fid_ino, &ip->i_ino, sizeof(dmfid->dm_fid_ino));
+>    dmfid->dm_fid_gen = ip->i_generation;
 > 
-> If I'm going to answer his two articles, he's speaking in the context of massive
-> filesystems. True, hundreds of petabytes are not common but that's the
-> environment he's talking about.
+>    *dmfsid = 11; // need generation system
 > 
-> From what I'm seeing from XFS, BTRFS, ext4, and HAMMER, Linux filesystems are
-> going to easily keep up with the current trend. For the massive filesystems
-> Henry speaks of, XFS has some new features I don't think he's aware of and needs
-> to come out in this answer.
-> 
-> Tom King
+>    return 0;
 
-One thing I would be careful of is not to fall into the trap of letting
-Linux filesystems get bashed over things that *nobody* really has today.
- Stuff like PNFS, OSD, DIF etc are bleeding-edge for almost *everybody*
+i_ino in struct inode is unsigned long.  If you run the above code
+on a 32bit system you'll get crap in the upper half of dm_fid_ino.
 
-Petabyte filesystems are hard.  For *everybody*
+Try:
 
-And hundred-petabyte filesystems aren't just uncommon, they don't exist
-AFAIK.
+int
+vfs_dm_inode_to_fh(struct inode *ip, dm_fid_t *dmfid, dm_fsid_t *dmfsid)
+{
+	dmfid->dm_fid_len = sizeof(dm_fid_t) - sizeof(dmfid->dm_fid_len);
+	dmfid->dm_fid_pad = 0;
+	dmfid->dm_fid_ino = ip->i_ino;
+	dmfid->dm_fid_gen = ip->i_generation;
 
--Eric
+	*dmfsid = 11; // need generation system
+	return 0;
+}
+
+instead.  If you actually want to support 64bit inode numbers on 32bit
+systems you'll have to query for it with vfs_getattr, though.
