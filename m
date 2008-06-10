@@ -1,56 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jun 2008 15:59:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5AMx9kF022396
-	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 15:59:10 -0700
-Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E4FFEC7154D
-	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 16:00:03 -0700 (PDT)
-Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by cuda.sgi.com with ESMTP id lorknRtkVkyDQh5h for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 16:00:03 -0700 (PDT)
-Message-ID: <484F0998.90306@sauce.co.nz>
-Date: Wed, 11 Jun 2008 11:09:12 +1200
-From: Richard Scobie <richard@sauce.co.nz>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jun 2008 16:52:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5ANqSA2031776
+	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 16:52:29 -0700
+Date: Wed, 11 Jun 2008 09:53:40 +1000
+Subject: Re: XFS directory entries sort order
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Subject: Re: Filestreams (and 64bit inodes)
-References: <484B15A3.4030505@sauce.co.nz> <484CA425.3080606@sandeen.net> <484DDDB3.70000@sgi.com>
-In-Reply-To: <484DDDB3.70000@sgi.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+References: <200806101245.09950.dizzy@roedu.net> <87prqpp5q7.fsf@basil.nowhere.org>
 Content-Transfer-Encoding: 7bit
+Message-ID: <op.ucj4nqkv3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <87prqpp5q7.fsf@basil.nowhere.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
+To: Andi Kleen <andi@firstfloor.org>, dizzy <dizzy@roedu.net>
 Cc: xfs@oss.sgi.com
 
-Timothy Shimmin wrote:
+On Wed, 11 Jun 2008 03:20:00 +1000, Andi Kleen <andi@firstfloor.org> wrote:
 
-> BTW, Sam Vaughan wrote some tutorial notes on the allocator and in particular
-> filestreams which I've pasted below:
-> (I thought it might be here:
->  http://oss.sgi.com/projects/xfs/training/ but I can't see it
->  in the allocator lab and slides).
+> dizzy <dizzy@roedu.net> writes:
+>
+>> Can someone tell me (in English or C :) ) the algorithm of the sorting  
+>> order
+>> of the entries in an XFS directory as I would get them with a readdir()  
+>> (or
+>> shell "find" command)?
+>>
+>> I am trying to figure it out by reading linux/fs/xfs/xfs_dir2*.c code  
+>> but I
+>> don't seem to be doing much progress and I was hoping maybe someone that
+>> knows these details can help.
+>
+> I believe it computes a hash over the name and then sorts by the hash
+> numerical value. At least the b*tree large directories do, small inline
+> directories might be different (XFS uses different algorithms for
+> different directory sizes)
 
-I did actually find an entry for filestreams in slide 6.
+readdir order is not dependant on the hashes. The order depends on the
+order of files being created, unlinked and the length of the filenames
+being unlinked/created.
 
-While there I also found the information on 64bit inodes.
+> The hash function is in xfs_da_btree.c:xfs_da_hashname()
+>
+> With the recent case insensitive support there are also differences
+> on the file systems which have that enabled.
+>
+> Also better don't rely on it never changing.
 
-My filesystem is 9.6TB and could well end up with a large quantity of 
-1-15MB files stored and the statement:
+Yes :)
 
-  "Operating system interfaces and legacy software products often 
-mandate the use of 32 bit inode numbers even on systems that support 64 
-bit inode numbers."
-
-makes me wonder how common this still is in practice - the slide was 
-written in 2006)?
-
-My initial preference would be to go with 64 bit inodes for performance 
-reasons, but as one cannot revert the fs back to 32 bit inodes once 
-committed, I am somewhat hesitant.
-
-Or am I worrying unecessarily about the negative impact of 32 bit 
-inodes, given 9.6TB full of 1 to 15MB files?
-
-Regards,
-
-Richard
+Barry.
