@@ -1,41 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jun 2008 15:51:13 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5AMpA5g021415
-	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 15:51:10 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9D33212879
-	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 15:52:06 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 31KbFTaNyyE09Aua for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 15:52:06 -0700 (PDT)
-Message-ID: <484F0594.1010406@sandeen.net>
-Date: Tue, 10 Jun 2008 17:52:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 10 Jun 2008 15:59:12 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5AMx9kF022396
+	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 15:59:10 -0700
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E4FFEC7154D
+	for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 16:00:03 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by cuda.sgi.com with ESMTP id lorknRtkVkyDQh5h for <xfs@oss.sgi.com>; Tue, 10 Jun 2008 16:00:03 -0700 (PDT)
+Message-ID: <484F0998.90306@sauce.co.nz>
+Date: Wed, 11 Jun 2008 11:09:12 +1200
+From: Richard Scobie <richard@sauce.co.nz>
 MIME-Version: 1.0
-Subject: Re: [XFS] oss.sgi
-References: <6101e8c40806100426i7a8d691brd87256ad49052e49@mail.gmail.com>	 <20080610122420.GA15871@infradead.org> <6101e8c40806101451tb160ed8rc0ba2739cafee84f@mail.gmail.com>
-In-Reply-To: <6101e8c40806101451tb160ed8rc0ba2739cafee84f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Filestreams (and 64bit inodes)
+References: <484B15A3.4030505@sauce.co.nz> <484CA425.3080606@sandeen.net> <484DDDB3.70000@sgi.com>
+In-Reply-To: <484DDDB3.70000@sgi.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Oliver Pinter <oliver.pntr@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Oliver Pinter wrote:
-> hi!
-> 
-> thanks the info
-> 
-> On 6/10/08, Christoph Hellwig <hch@infradead.org> wrote:
->> On Tue, Jun 10, 2008 at 01:26:39PM +0200, Oliver Pinter wrote:
->>> Hi All!
->>>
->>> is the http://oss.sgi.com/projects/xfs/ site up to date?
->> More or less.  It could have a few more recent news items or reference
->> to presentations from the last few month, but I can't find anything
->> grossly out of date.
+Timothy Shimmin wrote:
 
-Is there any info in particular that you wondered about? :)
+> BTW, Sam Vaughan wrote some tutorial notes on the allocator and in particular
+> filestreams which I've pasted below:
+> (I thought it might be here:
+>  http://oss.sgi.com/projects/xfs/training/ but I can't see it
+>  in the allocator lab and slides).
 
--Eric
+I did actually find an entry for filestreams in slide 6.
+
+While there I also found the information on 64bit inodes.
+
+My filesystem is 9.6TB and could well end up with a large quantity of 
+1-15MB files stored and the statement:
+
+  "Operating system interfaces and legacy software products often 
+mandate the use of 32 bit inode numbers even on systems that support 64 
+bit inode numbers."
+
+makes me wonder how common this still is in practice - the slide was 
+written in 2006)?
+
+My initial preference would be to go with 64 bit inodes for performance 
+reasons, but as one cannot revert the fs back to 32 bit inodes once 
+committed, I am somewhat hesitant.
+
+Or am I worrying unecessarily about the negative impact of 32 bit 
+inodes, given 9.6TB full of 1 to 15MB files?
+
+Regards,
+
+Richard
