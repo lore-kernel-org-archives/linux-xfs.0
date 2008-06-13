@@ -1,61 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jun 2008 06:27:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jun 2008 06:43:25 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5DDRaB9008956
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 06:27:36 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C0ADD12C4D0E
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 06:28:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 9IlivrV2v4mJm3KP for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 06:28:32 -0700 (PDT)
-Message-ID: <485275FF.2050909@sandeen.net>
-Date: Fri, 13 Jun 2008 08:28:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5DDhN21010733
+	for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 06:43:23 -0700
+Date: Fri, 13 Jun 2008 09:44:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Prevent extent btree block allocation failures
+Message-ID: <20080613134418.GA31720@infradead.org>
+References: <485223E4.6030404@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Filestreams (and 64bit inodes)
-References: <484B15A3.4030505@sauce.co.nz> <484CA425.3080606@sandeen.net> <484DDDB3.70000@sgi.com> <484F0998.90306@sauce.co.nz> <484F2CD7.9070506@sgi.com> <484F452A.8090909@sandeen.net> <48512A34.1020604@sandeen.net> <4851CD32.7080106@melbourne.sgi.com> <4851E774.2070401@sgi.com> <4851EC2D.6010504@melbourne.sgi.com> <48520704.8050903@melbourne.sgi.com>
-In-Reply-To: <48520704.8050903@melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <485223E4.6030404@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Greg Banks <gnb@melbourne.sgi.com>
-Cc: markgw@sgi.com, Timothy Shimmin <tes@sgi.com>, Richard Scobie <richard@sauce.co.nz>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Greg Banks wrote:
+On Fri, Jun 13, 2008 at 05:38:12PM +1000, Lachlan McIlroy wrote:
+> This change fixes xfs_bmap_extents_to_btree(), xfs_bmap_local_to_extents(),
+> xfs_bmbt_split() and xfs_bmbt_newroot() so that they can search other AGs
+> for the space needed.  Since we have reserved the space these allocations
+> are now guaranteed to succeed.
 
->> I'll need to improve
->> the scanning tool :-)
-> Attached.
-> 
+This looks good and makes lot of sense to me.  Please also add a comment
+to enum xfs_alloctype in xfs_alloc.h about the danger of the allocation
+types that never go out of the AG when used inside transactions.
 
-I had done something similar, except:
+> In order to search all AGs I had to revert
+> a change made to xfs_alloc_vextent() that prevented a search from looking
+> at AGs lower than the starting AG.  This original change was made to prevent
+> out of order AG locking when allocating multiple extents on data writeout
+> but since we only allocate one extent at a time now this particular problem
+> can't happen.
 
---- summarise-stat64-2.pl.orig	2008-06-13 08:26:07.000000000 -0500
-+++ summarise-stat64-2.pl	2008-06-13 08:26:24.000000000 -0500
-@@ -93,11 +93,11 @@
- 		{
- 			$res{used64}++;
- 		}
--		elsif (m/^\s+U readdir$/)
-+		elsif (m/^\s+U readdir(|_r)$/)
- 		{
- 			$res{used32}++;
- 		}
--		elsif (m/^\s+U readdir64$/)
-+		elsif (m/^\s+U readdir64(|_r)$/)
- 		{
- 			$res{used64}++;
- 		}
+This one also makes sense, but I have a very bad gut feeling about it.
+There's nothing preventing the same deadlock scenario from coming back
+when people modify the highlevel data allocator again.  We really need
+some sort of assert to trigger early in that case to not got a nasty
+hard to trigger deadlock.
 
-(lazily whitespace-mangled, sorry)
+> +			if (++(args->agno) == mp->m_sb.sb_agcount)
 
-A new scan with my slightly different version of the tool yielded:
+and while we're at it this should be
 
-  447 readdir32
-  908 stat32
-   38 statfs32
-
-where the nr. is the nr. of packages with that particular 32-bit call.
-
--Eric
+			if (++args->agno == mp->m_sb.sb_agcount)
