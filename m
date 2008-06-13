@@ -1,45 +1,94 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 12 Jun 2008 23:04:12 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 13 Jun 2008 00:18:20 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5D6427H031812
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2008 23:04:08 -0700
-Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id QAA14191 for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 16:04:58 +1000
-Date: Fri, 13 Jun 2008 16:06:57 +1000
-Subject: [REVIEW] Invalidate dentry on unlink/rmdir if using CI mode
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5D7IGlB005405
+	for <xfs@oss.sgi.com>; Fri, 13 Jun 2008 00:18:17 -0700
+Message-ID: <48522031.5060700@sgi.com>
+Date: Fri, 13 Jun 2008 17:22:25 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
+Subject: [PATCH] fix extent corruption in xfs_iext_irec_compact_full()
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-ID: <op.ucoa9vjb3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Once of the interesting features of vfs_unlink/d_delete functionality
-is that if it's the only inode being referenced, it makes the dentry
-negative. CI doesn't work with negative dentries, so the following code
-invalidate the dentry in CI mode.
+This function is used to compact the indirect extent list by moving
+extents from one page to the previous to fill them up.  After we
+move some extents to an earlier page we need to shuffle the remaining
+extents to the start of the page.  The actual bug here is the second
+argument to memmove() needs to index past the extents, that were copied
+to the previous page, and move the remaining extents.  For pages that
+are already full (ie ext_avail == 0) the compaction code has no net
+effect so don't do it.
 
---
+Thanks to Dave Chinner for pointing out the bug.
 
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -482,6 +482,8 @@ xfs_vn_unlink(
-         if (likely(!error)) {
-                 xfs_validate_fields(dir);       /* size needs update */
-                 xfs_validate_fields(inode);
-+               if (xfs_sb_version_hasasciici(&XFS_M(dir->i_sb)->m_sb))
-+                       d_invalidate(dentry);
-         }
-         return -error;
-  }
-@@ -538,6 +540,8 @@ xfs_vn_rmdir(
-         if (likely(!error)) {
-                 xfs_validate_fields(inode);
-                 xfs_validate_fields(dir);
-+               if (xfs_sb_version_hasasciici(&XFS_M(dir->i_sb)->m_sb))
-+                       d_invalidate(dentry);
-         }
-         return -error;
-  }
+Lachlan
+
+--- fs/xfs/xfs_inode.c_1.504	2008-06-05 16:46:33.000000000 +1000
++++ fs/xfs/xfs_inode.c	2008-06-05 17:39:20.000000000 +1000
+@@ -4541,31 +4541,35 @@ xfs_iext_irec_compact_full(
+ 	ep_next = erp_next->er_extbuf;
+ 	while (erp_idx < nlists - 1) {
+ 		ext_avail = XFS_LINEAR_EXTS - erp->er_extcount;
+-		ext_diff = MIN(ext_avail, erp_next->er_extcount);
+-		memcpy(ep, ep_next, ext_diff * sizeof(xfs_bmbt_rec_t));
+-		erp->er_extcount += ext_diff;
+-		erp_next->er_extcount -= ext_diff;
+-		/* Remove next page */
+-		if (erp_next->er_extcount == 0) {
+-			/*
+-			 * Free page before removing extent record
+-			 * so er_extoffs don't get modified in
+-			 * xfs_iext_irec_remove.
+-			 */
+-			kmem_free(erp_next->er_extbuf);
+-			erp_next->er_extbuf = NULL;
+-			xfs_iext_irec_remove(ifp, erp_idx + 1);
+-			erp = &ifp->if_u1.if_ext_irec[erp_idx];
+-			nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-		/* Update next page */
+-		} else {
+-			/* Move rest of page up to become next new page */
+-			memmove(erp_next->er_extbuf, ep_next,
+-				erp_next->er_extcount * sizeof(xfs_bmbt_rec_t));
+-			ep_next = erp_next->er_extbuf;
+-			memset(&ep_next[erp_next->er_extcount], 0,
+-				(XFS_LINEAR_EXTS - erp_next->er_extcount) *
+-				sizeof(xfs_bmbt_rec_t));
++		if (ext_avail) {
++			ext_diff = MIN(ext_avail, erp_next->er_extcount);
++			memcpy(ep, ep_next, ext_diff * sizeof(xfs_bmbt_rec_t));
++			erp->er_extcount += ext_diff;
++			erp_next->er_extcount -= ext_diff;
++			/* Remove next page */
++			if (erp_next->er_extcount == 0) {
++				/*
++				 * Free page before removing extent record
++				 * so er_extoffs don't get modified in
++				 * xfs_iext_irec_remove.
++				 */
++				kmem_free(erp_next->er_extbuf);
++				erp_next->er_extbuf = NULL;
++				xfs_iext_irec_remove(ifp, erp_idx + 1);
++				erp = &ifp->if_u1.if_ext_irec[erp_idx];
++				nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++			/* Update next page */
++			} else {
++				/* Move rest of page up to become next new page */
++				memmove(erp_next->er_extbuf, &ep_next[ext_diff],
++					erp_next->er_extcount *
++					sizeof(xfs_bmbt_rec_t));
++				ep_next = erp_next->er_extbuf;
++				memset(&ep_next[erp_next->er_extcount], 0,
++					(XFS_LINEAR_EXTS -
++						erp_next->er_extcount) *
++					sizeof(xfs_bmbt_rec_t));
++			}
+ 		}
+ 		if (erp->er_extcount == XFS_LINEAR_EXTS) {
+ 			erp_idx++;
