@@ -1,62 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jun 2008 09:50:34 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5EGoWLO023236
-	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:50:32 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jun 2008 09:52:36 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5EGqYWM023732
+	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:52:34 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB4CC17C19B6
-	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:51:29 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id SVAOuMySlMwL7B98 for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:51:29 -0700 (PDT)
-Message-ID: <4853F70F.6010400@sandeen.net>
-Date: Sat, 14 Jun 2008 11:51:27 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26A95CBA819
+	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:53:31 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id yB5lX6i93NLE0QbC for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:53:31 -0700 (PDT)
+Message-ID: <4853F78A.1060605@sandeen.net>
+Date: Sat, 14 Jun 2008 11:53:30 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_repair aborting ... dir2.c:2133
-References: <74d4a1e10806140124s3ed8dfa6x7e5ca656fea0e06e@mail.gmail.com>
-In-Reply-To: <74d4a1e10806140124s3ed8dfa6x7e5ca656fea0e06e@mail.gmail.com>
+Subject: Re: GRIO for Linux...please!
+References: <4853CC74.8040206@verizon.net>
+In-Reply-To: <4853CC74.8040206@verizon.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Paul Guermonprez <paul@guermonprez.eu>
+To: Dave Littell <littelld@verizon.net>
 Cc: xfs@oss.sgi.com
 
-Paul Guermonprez wrote:
-> hello,
+Dave Littell wrote:
+> Hi all,
 > 
-> i have a xfs dump i want to repair under linux ubuntu.
-> the partition was created by a storage system ss4000-e.
+> Is there any plan (or even hope!) to have GRIO ported to Linux?  XFS is
+> an excellent filesystem in any case, but GRIO would put it head and
+> shoulders above the competition.
 
-Do you mean that you did xfsrestore on a previous dump and then tried to
-repair the resulting filesystem?  Maybe the dump was corrupt?
+GRIOV1 was a highly irix-specific beast... GRIOV2 was quite different,
+and available on linux but AFAIK there were never any plans to make it GPL.
 
-> if i use version 2.9.4, i have a segfault
-> and version 2.9.8, the proces is aborted with message :
-> xfs_repair: dir2.c:2133: process_dir2: Assertion `(ino !=
-> mp->m_sb.sb_rootino && ino != *parent) || (ino == mp->m_sb.sb_rootino
-> && (ino == *parent || need_root_dotdot == 1))' failed.
-> Aborted
+Doesn't hurt to ask I suppose.  :)
 
-If you are willing to provide an xfs_metadump image, Barry would
-probably look into it for you :)
-
-Did anything interesting go wrong before your fs got so mangled?
-
-> i also tried to comment this test, but it returns a segfault just as
-> version 2.9.4.
-> 
-> note :
-> i already restored 3 xfs dumps from the same machine, and everything
-> went in the lost+found, partly with no name, no directory, partly with
-> a directory structure and filenames as expected.
-
-xfsrestore did this?  that's pretty weird.
+You do have the realtime subvolume on linux, though, which was
+originally a component of GRIOV1.
 
 -Eric
 
-> before xfs_repair, the mounted fs was empty, not even the ".." for root !
+
 > 
-> thanks, paul.
+> Thanks,
+> Dave
 > 
 > 
