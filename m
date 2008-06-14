@@ -1,99 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jun 2008 09:55:42 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5EGteVj024378
-	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:55:40 -0700
-Received: from ug-out-1314.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C2D117C5E6D
-	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:56:36 -0700 (PDT)
-Received: from ug-out-1314.google.com (ug-out-1314.google.com [66.249.92.169]) by cuda.sgi.com with ESMTP id 5Xz6W58sT8FI4ju1 for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:56:36 -0700 (PDT)
-Received: by ug-out-1314.google.com with SMTP id m3so221502uge.20
-        for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 09:56:35 -0700 (PDT)
-Message-ID: <fe7d5b270806140956n6240f724oea57e296fda865e7@mail.gmail.com>
-Date: Sat, 14 Jun 2008 12:56:34 -0400
-From: "Simon J" <simonjj@gmail.com>
-Subject: xfs_repair trouble
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 14 Jun 2008 10:54:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5EHsNJf028363
+	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 10:54:23 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46FD3230DE7
+	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 10:55:19 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 9J6uMDAvZEstudwR for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 10:55:19 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m5EHtANW021192
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 14 Jun 2008 19:55:10 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m5EHtArm021190
+	for xfs@oss.sgi.com; Sat, 14 Jun 2008 19:55:10 +0200
+Date: Sat, 14 Jun 2008 19:55:10 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH, RFC] fix XFSQA 145 / test_hole
+Message-ID: <20080614175510.GA21014@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hello all,
+There are two errors I see all the time in 145:
+
+ - dm_probe_hole returns EINVAL for offsets close to the file size
+ - dm_probe_hole wants EAGAIN for a probe at offset 1, length 0
 
 
-I have a corrupted xfs filesystem on top of a RAID 5 (1TB in size).
-The RAID is still fully intact but the filesystem was damaged. When
-trying to repair the filesystem xfs_repair fails. I have tried various
-versions of xfs_repair, the latest stable (2.9.8) and the latest trunk
-(from CVS). I'd love to investigate and/or fix the issue further but I
-am a bit confused about some of my xfs_repair runs (both done with
-trunk).
-Could someone shed some light on where the problem could be, I'd be
-happy to continue digging if I would only know where roughly
+The first error is a consequence of how the hole puching / probing
+works.  It always rounds the requested offset up to the next block
+size and then checks if that rounded offset still fits into the file
+size.  Just do the same rounding in the testcase to make sure we don't
+probe invalid offsets.
 
-Run 1 ============================================
-./xfs_repair -P -m 170 /dev/evms/monster_evms
-... more output ...
-bad hash table for directory inode 4842 (no data entry): rebuilding
-rebuilding directory inode 4842
-entry ".." in directory inode 27930072 points to free inode 2013274702
-bad hash table for directory inode 27930072 (no data entry): rebuilding
-rebuilding directory inode 27930072
-bad hash table for directory inode 28776251 (no data entry): rebuilding
-rebuilding directory inode 28776251
-fixing i8count in inode 29111010
-xfs_repair: phase6.c:3411: shortform_dir2_entry_check: Assertion
-`bytes_deleted > 0' failed.
-Aborted
-=================================================
-Exits with an Assert, it would be interesting to know why this Assert
-is there and what it means for bytes_deleted to be 0.
+The second error is very odd to me, as we never return AGAIN in the
+whole dm_probe_hole path.  I've just commented it out.
+
+I've also re-enabled the E2BIG to past-EOF test that was uncommented
+before because it works perfectly fine now.
 
 
-Run 2 ============================================
-./xfs_repair -P -m 166 /dev/evms/monster_evms
-... more output ...
-bad hash table for directory inode 2013274673 (no data entry): rebuilding
-rebuilding directory inode 2013274673
-bad hash table for directory inode 2029477400 (no data entry): rebuilding
-rebuilding directory inode 2029477400
-bad hash table for directory inode 2037825112 (no data entry): rebuilding
-rebuilding directory inode 2037825112
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-fatal error -- malloc failed in longform_dir2_entry_check (2585598792 bytes)
-=================================================
-Exists with an malloc failed, even though I am using the -m option
-which I think was created to avoid exactly this scenario. Run 3
-
-
-Run 3 ============================================
-./xfs_repair -P -m 200 /dev/evms/monster_evms
-... more output ...
-      - agno = 38
-      - agno = 39
-Phase 5 - rebuild AG headers and trees...
-      - reset superblock...
-Phase 6 - check inode connectivity...
-      - resetting contents of realtime bitmap and summary inodes
-      - traversing filesystem ...
-bad hash table for directory inode 4842 (no data entry): rebuilding
-rebuilding directory inode 4842
-bad hash table for directory inode 28776251 (no data entry): rebuilding
-rebuilding directory inode 28776251
-fixing i8count in inode 29111010
-corrupt block 0 in directory inode 321685982: junking block
-Segmentation fault
-=================================================
-Exists with a Seg Fault. I found this one interesting especially since
-it happens at the exact same inode as Run 1
-
-
-All comments appreciated.
-Simon
-
-
-[[HTML alternate version deleted]]
+--- xfstests/145.out	19 Dec 2006 02:55:36 -0000	1.1
++++ xfstests/145.out	14 Jun 2008 17:49:49 -0000
+@@ -16,13 +16,13 @@ Hole test beginning...
+ 	Verified hole at 4096
+ 	(beginning errno subtests...)
+ 	report on test for E2BIG in probe (from past EOF): test successful
++	report on test for E2BIG in probe (to past EOF): test successful
+ 	report on test for EACCES in no-right probe: test successful
+ 	report on test for success in SHARED probe: test successful.
+ 	report on test for success in EXCL probe: test successful.
+ 	report on test for EACCES in no-right punch: test successful
+ 	report on test for EACCES in SHARED punch: test successful
+ 	report on test for success in EXCL punch: test successful.
+-	report on test for EAGAIN in punch: test successful
+ 	report on test for EBADF in probe: test successful
+ 	report on test for EBADF in punch: test successful
+ 	report on test for EFAULT in probe (null handle): test successful
+--- xfstests/dmapi/src/suite2/src/test_hole.c	9 Nov 2005 02:50:19 -0000	1.8
++++ xfstests/dmapi/src/suite2/src/test_hole.c	14 Jun 2008 17:49:49 -0000
+@@ -69,7 +69,7 @@ main(
+ 	dm_sessid_t	sid = DM_NO_SESSION;
+ 	char		*pathname = NULL;
+ 	char		*ls_path = NULL;
+-	dm_off_t	offset = 0;
++	dm_off_t	offset = 0, end;
+ 	dm_off_t	ex_off = 0;
+ 	dm_extent_t     extent[20];
+ 	u_int           nelem;
+@@ -162,10 +162,16 @@ main(
+ 	  exit(1);
+ 	}
+ 
++	/*
++	 * The kernel always rounds the offset up to the next block
++	 * size, so we can only probes up to the previous to last block.
++	 */
++	end = (29604 / blocksize) * blocksize;
++
+ 	/* Check that dm_probe_hole returns an extent from the next
+ 	 * highest multiple of the block size, to the end of the file
+ 	 */
+-	for (offset = 0; offset < 29604; offset++) { 
++	for (offset = 0; offset < end; offset++) { 
+ 	  if (dm_probe_hole(sid, hanp, hlen, DM_NO_TOKEN, offset, length,
+ 			    &roff, &rlen)) {
+ 	    fprintf(stdout, "dm_probe_hole failed on pass %lld (%s)\n",
+@@ -275,15 +281,10 @@ main(
+ 		dm_probe_hole(sid, hanp, hlen, DM_NO_TOKEN, 30000, length,
+ 			      &roff, &rlen))
+ 	/*---------------------------------------------------------*/
+-#if 0
+-	PROBLEM: No error is produced.  
+-	off+len >= filesize should produce E2BIG...
+-
+ 	ERRTEST(E2BIG,
+ 		"probe (to past EOF)",
+ 		dm_probe_hole(sid, hanp, hlen, DM_NO_TOKEN, 15000, 150000,
+ 			      &roff, &rlen))
+-#endif
+         /*---------------------------------------------------------*/
+ 	SHAREDTEST("probe", hanp, hlen, test_token, 
+ 		 dm_probe_hole(sid, hanp, hlen, test_token, 
+@@ -292,10 +293,18 @@ main(
+ 	EXCLTEST("punch", hanp, hlen, test_token, 
+ 		   dm_punch_hole(sid, hanp, hlen, test_token, 0, 0)) 
+ 	/*---------------------------------------------------------*/
++	/*
++	 * No idea where that EAGAIN should come from, it's never
++	 * returned from the kernel.
++	 *
++	 * 		-- hch
++	 */
++#if 0
+ 	ERRTEST(EAGAIN,
+ 		"punch",
+ 		dm_punch_hole(sid, hanp, hlen, DM_NO_TOKEN,
+ 			      1, length))	
++#endif
+ 	/*---------------------------------------------------------*/
+ 	if ((test_vp = handle_clone(hanp, hlen)) == NULL) {
+ 	  fprintf(stderr, 
