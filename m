@@ -1,56 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jun 2008 18:10:48 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5G1AiDd022583
-	for <xfs@oss.sgi.com>; Sun, 15 Jun 2008 18:10:45 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 246A81B33405
-	for <xfs@oss.sgi.com>; Sun, 15 Jun 2008 18:11:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id erH60O8DUdzKk7Fb for <xfs@oss.sgi.com>; Sun, 15 Jun 2008 18:11:40 -0700 (PDT)
-Message-ID: <4855BDCB.3030103@sandeen.net>
-Date: Sun, 15 Jun 2008 20:11:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS errors / BUG / panic, with 2.6.25.7-queue (and older 2.6.25.y)
-References: <6101e8c40806141241h4a23f7a6ka5366c84130f1291@mail.gmail.com>	 <48547604.9060700@sandeen.net>	 <6101e8c40806150538h4372dcedob2ab9c45aa01741c@mail.gmail.com>	 <48553C11.2060606@sandeen.net>	 <6101e8c40806150909s4f9b95d2u685c09a0ba3767e3@mail.gmail.com>	 <48553F53.7000208@sandeen.net> <6101e8c40806150914k1226611ej52b20b7bb9ffa9d5@mail.gmail.com>
-In-Reply-To: <6101e8c40806150914k1226611ej52b20b7bb9ffa9d5@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 15 Jun 2008 19:04:09 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5G2431g026509
+	for <xfs@oss.sgi.com>; Sun, 15 Jun 2008 19:04:05 -0700
+Subject: TAKE 983102 - XFS case-insensitive: Assertion Failed: xfs_dir2_sf_lookup(args) == ENOENT
+Message-Id: <20080616020450.0068258C4C3F@chook.melbourne.sgi.com>
+Date: Mon, 16 Jun 2008 12:04:49 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Oliver Pinter <oliver.pntr@gmail.com>
+To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-Oliver Pinter wrote:
-> sorry, but I did not learn English, is going a little bit slowly in this manner.
+The vfs_unlink/d_delete functionality in the Linux VFS make the dentry
+negative if it is the only inode being referenced. Case-insensitive mode
+doesn't work with negative dentries, so if using CI-mode, invalidate the
+dentry on unlink/rmdir.
 
-That's, ok, it's just useful to know what you were doing when it
-panicked.  I'm sure you speak english better than I speak you native
-language ;)
 
-> yeah, under poweroff (init 0) panics the system
+Date:  Mon Jun 16 12:04:04 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/2.6.x-xfs
+Inspected by:  hch
 
-Hm, interesting.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-> but now it was him that you say the antecedents apt-get update &
-> upgrade and git-update-tree (is is a script, that updated 3 git tree
-> (linux-2.6, linux-2.6.25.y and stable-queue)) , that is heavy disc i/o
-> with much small files
 
-So, you had a lot of IO just before shutdown?
-
--Eric
-
-> On 6/15/08, Eric Sandeen <sandeen@sandeen.net> wrote:
->> Oliver Pinter wrote:
->>> this is the debian way of the unmounting the root fs:
->> Ok we're slowly getting to useful information.
->>
->> So you were shutting down the system when the panic happened, correct?
->>
->> -Eric
->>
->>
-> 
-> 
+Modid:  xfs-linux-melb:xfs-kern:31308a
+fs/xfs/linux-2.6/xfs_iops.c - 1.289 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.289&r2=text&tr2=1.288&f=h
+	- Invalidate dentry in unlink/rmdir if in CI mode
