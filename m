@@ -1,49 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jun 2008 22:29:17 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5J5TFwS009020
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:29:16 -0700
-Received: from zimbra.vpac.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 512BE17E5AD3
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:30:13 -0700 (PDT)
-Received: from zimbra.vpac.org (zimbra.vpac.org [202.158.218.6]) by cuda.sgi.com with ESMTP id TeQoqjOOXRShOCYe for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:30:13 -0700 (PDT)
-Message-ID: <4859EEDA.3060906@vpac.org>
-Date: Thu, 19 Jun 2008 15:30:02 +1000
-From: Brian May <brian@vpac.org>
-MIME-Version: 1.0
-Subject: Re: open sleeps
-References: <4859EE54.6050801@vpac.org>
-In-Reply-To: <4859EE54.6050801@vpac.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jun 2008 22:34:03 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5J5XwMa009941
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:34:00 -0700
+Subject: TAKE 983395 - fix warning for: simplify xfs_vn_listxattr
+Message-Id: <20080619053450.5F57058C4C3F@chook.melbourne.sgi.com>
+Date: Thu, 19 Jun 2008 15:34:50 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Brian May <brian@vpac.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Sorry, repost with the weird Followup-To header (was hoping Thunderbird 
-would use Mail-Followup-To but obviously not).
+Fix up 64bit warning for xfs_vn_listxattr's call of list_one_attr() with context count
+of ssize_t versus int. Change context count to be ssize_t.
+As suggested by hch.
 
-Brian May wrote:
-> Hello,
->
-> I am having (weird) issues with XFS, in that open(...) on certain 
-> files takes 45 seconds to return. After the file has been opened, the 
-> next file in the same directory takes 45 seconds. If the file was 
-> recently opened it returns immediately.
->
-> I thought this was a low level I/O issue, so copied the files in 
-> question to a completely independent RAID array  (separate LVM, RAID, 
-> controllers, disks), but the problem remains.
->
-> More details at thread starting from 
-> <http://lists.luv.asn.au/wws/arc/luv-main/2008-06/msg00143.html>.
->
-> Any ideas?
->
-> Please CC me responses.
->
-> Thanks.
->
-> Brian May
+--Tim
+
+Date:  Thu Jun 19 15:33:13 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  lachlan@sgi.com
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31333a
+fs/xfs/xfs_attr.h - 1.43 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.h.diff?r1=text&tr1=1.43&r2=text&tr2=1.42&f=h
+	- Fix up warning for xfs_vn_listxattr's call of list_one_attr() with context count
+	  of ssize_t versus int. Change context count to be ssize_t.
