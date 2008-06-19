@@ -1,57 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 01:36:18 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5J8aDT8008846
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 01:36:14 -0700
-Date: Thu, 19 Jun 2008 18:39:55 +1000
-Subject: Re: [PATCH] XFS: Fix returning case-preserved name with CI node form directories
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 01:42:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5J8gDAe009695
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 01:42:14 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 709C2CEE67A
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 01:43:12 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id RpSrxWZbacNHQUc6 for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 01:43:12 -0700 (PDT)
+Date: Thu, 19 Jun 2008 04:43:11 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: open sleeps
+Message-ID: <20080619084311.GA16736@infradead.org>
+References: <4859EE54.6050801@vpac.org> <20080619062118.GY3700@disturbed> <4859FF40.8010206@vpac.org>
 MIME-Version: 1.0
-References: <op.ucxszl2d3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080619083243.GA8821@infradead.org>
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.uczmctru3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080619083243.GA8821@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4859FF40.8010206@vpac.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Brian May <brian@vpac.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, 19 Jun 2008 18:32:43 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
-
-> On Wed, Jun 18, 2008 at 07:07:59PM +1000, Barry Naujok wrote:
->> xfs_dir2_node_lookup() calls xfs_da_node_lookup_int() which iterates
->> through leaf blocks containing the matching hash value for the name
->> being looked up. Inside xfs_da_node_lookup_int(), it calls the
->> xfs_dir2_leafn_lookup_for_entry() for each leaf block.
->> xfs_dir2_leafn_lookup_for_entry() iterates through each matching
->> hash/offset pair doing a name comparison to find the matching
->> dirent.
->>
->> For CI mode, the state->extrablk retains the details of the block
->> that has the CI match so xfs_dir2_node_lookup() can return the
->> case-preserved name.
->>
->> The original implementation didn't retain the xfs_da_buf_t properly,
->> so the lookup was returning a bogus name to be stored in the dentry.
->>
->> In the case of unlink, the bad name was passed and in debug mode,
->> ASSERTed when it can't find the entry.
+On Thu, Jun 19, 2008 at 04:40:00PM +1000, Brian May wrote:
+> Does the following help? I still have the logs of the other processes, if 
+> required (just in case it is some weird interaction between multiple 
+> processes?)
 >
-> Looks good to me, although I don't really like how much of a mess
-> xfs_dir2_leafn_lookup_for_entry has become. No idea for a nice why
-> to write it, though.
+> It seems to be pretty consistent with lock_timer_base, every time I look 
+> (assuming I haven't read the stack trace upside down...).
+>
+> Jun 19 16:33:30 hq kernel: grep          S 00000000     0 12793  12567                     (NOTLB)
+>
+> Jun 19 16:33:30 hq kernel:        f0c23e7c 00200082 000a1089 00000000 
+> 00000010 00000008 cd0db550 dfa97550 
+> Jun 19 16:33:30 hq kernel:        34f84262 00273db2 0008a1dc 00000001 
+> cd0db660 c20140a0 dfe1cbe8 00200286 
+> Jun 19 16:33:30 hq kernel:        c0125380 a4dbf26b dfa6a000 00200286 
+> 000000ff 00000000 00000000 a4dbf26b 
+> Jun 19 16:33:30 hq kernel: Call Trace:
+>
+> Jun 19 16:33:30 hq kernel:  [<c0125380>] lock_timer_base+0x15/0x2f
+>
+> Jun 19 16:33:30 hq kernel:  [<c027f960>] schedule_timeout+0x71/0x8c
+>
+> Jun 19 16:33:30 hq kernel:  [<c0124a81>] process_timeout+0x0/0x5
+>
+> Jun 19 16:33:30 hq kernel:  [<c016c801>] __break_lease+0x2a8/0x2b9
 
-Yeah, bit of a problem with that. I can un-optimise the original code
-by not keeping the current block between calls to
-xfs_dir2_leafn_lookup_for_entry() and always freeing it. That will
-clean it up a lot.
-
-> Btw, any chance we could get some CI tests in xfsqa?  Looks like you
-> have quite a few testcases that found issues so far.
-
-Yes, they are coming.
-
-Barry.
+That's the lease breaking code in the VFS, long before we call
+into XFS.  Looks like someone (samba?) has a least on this file and
+we're having trouble having it broken.  Try sending a report about
+this to linux-fsdevel@vger.kernel.org
