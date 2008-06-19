@@ -1,39 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jun 2008 21:38:13 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5J4c8pY004344
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 21:38:10 -0700
-Subject: TAKE 983337 - fix extent corruption in xfs_iext_irec_compact_full()
-Message-Id: <20080619043903.A166B58C4C3F@chook.melbourne.sgi.com>
-Date: Thu, 19 Jun 2008 14:39:03 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 18 Jun 2008 22:27:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5J5R2tU008475
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:27:03 -0700
+Received: from zimbra.vpac.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A2E0CEE3D6
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:27:57 -0700 (PDT)
+Received: from zimbra.vpac.org (zimbra.vpac.org [202.158.218.6]) by cuda.sgi.com with ESMTP id FjB5dhCXdmKO6sdD for <xfs@oss.sgi.com>; Wed, 18 Jun 2008 22:27:57 -0700 (PDT)
+Message-ID: <4859EE54.6050801@vpac.org>
+Date: Thu, 19 Jun 2008 15:27:48 +1000
+From: Brian May <brian@vpac.org>
+MIME-Version: 1.0
+Subject: open sleeps
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-fix extent corruption in xfs_iext_irec_compact_full()
+Hello,
 
-This function is used to compact the indirect extent list by moving
-extents from one page to the previous to fill them up.  After we
-move some extents to an earlier page we need to shuffle the remaining
-extents to the start of the page.  The actual bug here is the second
-argument to memmove() needs to index past the extents, that were copied
-to the previous page, and move the remaining extents.  For pages that
-are already full (ie ext_avail == 0) the compaction code has no net
-effect so don't do it.
+I am having (weird) issues with XFS, in that open(...) on certain files 
+takes 45 seconds to return. After the file has been opened, the next 
+file in the same directory takes 45 seconds. If the file was recently 
+opened it returns immediately.
 
+I thought this was a low level I/O issue, so copied the files in 
+question to a completely independent RAID array  (separate LVM, RAID, 
+controllers, disks), but the problem remains.
 
-Date:  Thu Jun 19 14:38:15 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-agno2
-Inspected by:  hch
-Author:  lachlan
+More details at thread starting from 
+<http://lists.luv.asn.au/wws/arc/luv-main/2008-06/msg00143.html>.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Any ideas?
 
+Please CC me responses.
 
-Modid:  xfs-linux-melb:xfs-kern:31332a
-fs/xfs/xfs_inode.c - 1.506 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.506&r2=text&tr2=1.505&f=h
-	- fix extent corruption in xfs_iext_irec_compact_full()
+Thanks.
+
+Brian May
