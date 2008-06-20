@@ -1,65 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 14:55:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5JLtm9k013101
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 14:55:49 -0700
-Received: from realtouchweb.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8768BCFFF4A
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 14:56:46 -0700 (PDT)
-Received: from realtouchweb.com (realtouchweb.com [161.58.239.72]) by cuda.sgi.com with ESMTP id 9lNIFwpWisD0bcMa for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 14:56:46 -0700 (PDT)
-Message-ID: <485AD667.1060402@qwest.net>
-Date: Thu, 19 Jun 2008 15:57:59 -0600
-From: Ash <ashovi@qwest.net>
-MIME-Version: 1.0
-Subject: xfs_repair taking a long time
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 18:08:02 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5K17s2i007867
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 18:07:55 -0700
+Subject: TAKE 981498 - Merge xfs_rmdir into xfs_remove
+Message-Id: <20080620010848.8977858C4C3F@chook.melbourne.sgi.com>
+Date: Fri, 20 Jun 2008 11:08:48 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-I am having the same problem as the person in this thread:
+Merge xfs_rmdir into xfs_remove
+
+xfs_remove and xfs_rmdir are almost the same with a little more work
+performed in xfs_rmdir due to the . and .. entries.  This patch merges
+xfs_rmdir into xfs_remove and performs these actions conditionally.
+
+Also clean up the error handling which was a nightmare in both versions
+before.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 
-Which is xfs_repair has been running for 16 hours on a 1 TB raid array. 
-It gave the same errors as this thread, saying that it could not use any 
-of the super blocks it found. The last email in the thread says:
+Date:  Fri Jun 20 11:07:57 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/2.6.x-xfs
+Inspected by:  hch@lst.de
 
------------------------------------------
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-xfs-repair did find candidate secondary superblocks - it discarded them
-for some reason or another. If they were ok, all repair would have done
-is copied them to block zero and then continued.
 
-I'm suggesting that you manually do this step, and then see if repair
-will run.
+Modid:  xfs-linux-melb:xfs-kern:31335a
+fs/xfs/xfs_vnodeops.c - 1.762 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.762&r2=text&tr2=1.761&f=h
+	- Merge xfs_remove and xfs_rmdir
 
- >    Before wrapping this up, if you could just clarify a couple 
-things.  If I
- >    look at the bytes at the beginning of each physical part of the LVM's,
- >    what am I looking for?  "XFSB"?
+fs/xfs/linux-2.6/xfs_iops.c - 1.290 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.290&r2=text&tr2=1.289&f=h
+	- Merge xfs_vn_rmdir and xfs_vn_unlink
 
-yes.
-
- >    If I do find that byte string, why
- >    couldn't xfs_repair find it when it did the scan and what do I do 
-with it
- >    if I do find one?
-
-As I said above, xfs-repair did find some, but rejected them for some
-(unknown) reason. if you find one, copy it over block zero of the partition,
-and see if repair will run. Like I said, though, you'll probably want to
-back up th partition first, or at least run repair in no-modify mode.
-
---------------------------------------
-
-The poster, Dave Chinner, says to manually copy the superblock to the 
-right place, but not how to do it. I am familiar with dd, but would like 
-to know the exact command or steps to take to replace the primary 
-superblock manually with a secondary superblock.
-
-Ashley
-
-(I sent this earlier but I haven't seen it come over the list yet, so 
-I'll send it again. Please forgive the duplicate.)
+fs/xfs/xfs_vnodeops.h - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+	- Merge xfs_remove and xfs_rmdir
