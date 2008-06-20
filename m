@@ -1,31 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 23:19:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5K6IxUX021116
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 23:18:59 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 96D69D0200F
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 23:19:57 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 3kuGX0eDmprW08SZ for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 23:19:57 -0700 (PDT)
-Date: Fri, 20 Jun 2008 08:18:41 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill XFS_PURGE_INODE
-Message-ID: <20080620061841.GA26777@lst.de>
-References: <20080616062634.GA5971@lst.de> <200806161015.12363.dchinner@agami.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <200806161015.12363.dchinner@agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 20 Jun 2008 00:31:32 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5K7VM85004973
+	for <xfs@oss.sgi.com>; Fri, 20 Jun 2008 00:31:24 -0700
+Message-ID: <485B5DD4.3020201@sgi.com>
+Date: Fri, 20 Jun 2008 17:35:48 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH V2] Always reset btree cursor after an insert
+References: <4859F9EB.5050505@sgi.com> <20080619083544.GA19606@infradead.org> <485B0B04.80808@sgi.com> <20080620033710.GZ3700@disturbed>
+In-Reply-To: <20080620033710.GZ3700@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <dchinner@agami.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jun 16, 2008 at 10:15:12AM -0700, Dave Chinner wrote:
-> On Sunday 15 June 2008 11:26 pm, Christoph Hellwig wrote:
-> > Just a useless alias for IRELE.
+Dave Chinner wrote:
+> On Fri, Jun 20, 2008 at 11:42:28AM +1000, Lachlan McIlroy wrote:
+>> Christoph Hellwig wrote:
+>>> On Thu, Jun 19, 2008 at 04:17:15PM +1000, Lachlan McIlroy wrote:
+>>>> After a btree insert operation a cursor can be invalid due to block
+>>>> splits and a maybe a new root block.  We reset the cursor in
+>>>> xfs_bmbt_insert() in the cases where we think we need to but it
+>>>> isn't enough as we still see assertions.  Just do what we do elsewhere
+>>>> and reset the cursor unconditionally.  Version 2 adds
+>>>> XFS_WANT_CORRUPTED_GOTO checks throughout xfs_bmap.c and removes the
+>>>> fix to revalidate the original cursor in xfs_bmbt_insert().
+>>> Can you commit the XFS_WANT_CORRUPTED_GOTO checks as a separate patch
+>>> before the cursor reset?  ACK from me for those hunks.
+>>>
+>> Yeah, no problem, thanks.
 > 
-> Looks sane.
+> The rest of it looks ok as well, Lachlan.
+> 
 
-Could someone of the SGI people commit this rather trivial patch?
+Ta.
