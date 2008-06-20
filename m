@@ -1,66 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 22:44:19 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5K5iGxm015668
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 22:44:16 -0700
-Date: Fri, 20 Jun 2008 07:45:04 +0200
-From: Konstantin Kletschke <lists@ku-gbr.de>
-Subject: Re: XFS internal error xfs_trans_cancel at line 1163 of file
-	fs/xfs/xfs_trans.c
-Message-ID: <20080620054504.GA2075@anita>
-References: <20080612123031.21594jyk6rjc1lfk@imp.ku-gbr.de> <6101e8c40806120733m3c8647ccy149eb237e2c6d027@mail.gmail.com> <1213309629.29745.8.camel@localhost.localdomain> <20080613030841.GC3700@disturbed> <20080620052716.GA2022@anita>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 22:44:55 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5K5inhN015958
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 22:44:50 -0700
+Message-ID: <485B4406.6060906@sgi.com>
+Date: Fri, 20 Jun 2008 15:45:42 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080620052716.GA2022@anita>
+Subject: Re: [PATCH] attrmulti cleanup
+References: <20080531080121.GB5424@lst.de>
+In-Reply-To: <20080531080121.GB5424@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Miquel van Smoorenburg <mikevs@xs4all.net>, Oliver Pinter <oliver.pntr@gmail.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Again. Before strace looks weird, this looks like the old one:
+Cool.
+I'll run thru qa and check it in.
+Funny how we had two versions.
 
-ksymoops 2.4.11 on x86_64 2.6.26-rc6.  Options used
-     -V (default)
-     -k /proc/ksyms (default)
-     -l /proc/modules (default)
-     -o /lib/modules/2.6.26-rc6/ (default)
-     -m /usr/src/linux-2.6.26-rc6/System.map (specified)
+--Tim
 
-Error (regular_file): read_ksyms stat /proc/ksyms failed
-ksymoops: No such file or directory
-No modules in ksyms, skipping objects
-No ksyms, skipping lsmod
-Pid: 2137, comm: fetchnews Not tainted 2.6.26-rc6 #1
-Call Trace:
- [<ffffffff802ffa42>]
- [<ffffffff802fa35a>]
- [<ffffffff802ffa42>]
- [<ffffffff80308a29>]
- [<ffffffff80262799>]
- [<ffffffff8026500a>]
- [<ffffffff80223506>]
- [<ffffffff8023116c>]
- [<ffffffff8025a0fa>]
- [<ffffffff8020afab>]
-Warning (Oops_read): Code line not seen, dumping what data is available
-
-
-Trace; ffffffff802ffa42 <xfs_create+41d/462>
-Trace; ffffffff802fa35a <xfs_trans_cancel+56/ee>
-Trace; ffffffff802ffa42 <xfs_create+41d/462>
-Trace; ffffffff80308a29 <xfs_vn_mknod+148/229>
-Trace; ffffffff80262799 <vfs_create+75/ba>
-Trace; ffffffff8026500a <do_filp_open+1dc/7c5>
-Trace; ffffffff80223506 <ns_to_timeval+9/27>
-Trace; ffffffff8023116c <__remove_hrtimer+6b/78>
-Trace; ffffffff8025a0fa <do_sys_open+4a/f1>
-Trace; ffffffff8020afab <system_call_after_swapgs+7b/80>
-
-
-1 warning and 1 error issued.  Results may not be reliable.
-
-
--- 
-GPG KeyID EF62FCEF
-Fingerprint: 13C9 B16B 9844 EC15 CC2E  A080 1E69 3FDA EF62 FCEF
+Christoph Hellwig wrote:
+> xfs_attrmulti_by_handle currently request the size based on
+> sizeof(attr_multiop_t) but should be using sizeof(xfs_attr_multiop_t)
+> because that is what it is dealing with.  Despite beeing wrong this
+> actually harmless in practice because both structures are the same size
+> on all platforms.
+> 
+> But this sizeof was the only user of struct attr_multiop so we can just
+> kill it.  Also move the ATTR_OP_* defines xfs_attr.h into the
+> struct xfs_attr_multiop defintion in xfs_fs.h because they are only used
+> with that structure, and are part of the user ABI for the
+> XFS_IOC_ATTRMULTI_BY_HANDLE ioctl.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-28 17:42:18.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-28 17:42:36.000000000 +0200
+> @@ -598,7 +598,7 @@ xfs_attrmulti_by_handle(
+>  		goto out;
+>  
+>  	error = E2BIG;
+> -	size = am_hreq.opcount * sizeof(attr_multiop_t);
+> +	size = am_hreq.opcount * sizeof(xfs_attr_multiop_t);
+>  	if (!size || size > 16 * PAGE_SIZE)
+>  		goto out_vn_rele;
+>  
+> Index: linux-2.6-xfs/fs/xfs/xfs_attr.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_attr.h	2008-05-28 17:41:06.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_attr.h	2008-05-28 17:42:36.000000000 +0200
+> @@ -100,22 +100,6 @@ typedef struct attrlist_ent {	/* data fr
+>  	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
+>  
+>  /*
+> - * Multi-attribute operation vector.
+> - */
+> -typedef struct attr_multiop {
+> -	int	am_opcode;	/* operation to perform (ATTR_OP_GET, etc.) */
+> -	int	am_error;	/* [out arg] result of this sub-op (an errno) */
+> -	char	*am_attrname;	/* attribute name to work with */
+> -	char	*am_attrvalue;	/* [in/out arg] attribute value (raw bytes) */
+> -	int	am_length;	/* [in/out arg] length of value */
+> -	int	am_flags;	/* bitwise OR of attr API flags defined above */
+> -} attr_multiop_t;
+> -
+> -#define ATTR_OP_GET	1	/* return the indicated attr's value */
+> -#define ATTR_OP_SET	2	/* set/create the indicated attr/value pair */
+> -#define ATTR_OP_REMOVE	3	/* remove the indicated attr */
+> -
+> -/*
+>   * Kernel-internal version of the attrlist cursor.
+>   */
+>  typedef struct attrlist_cursor_kern {
+> Index: linux-2.6-xfs/fs/xfs/xfs_fs.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_fs.h	2008-05-28 17:41:06.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_fs.h	2008-05-28 17:42:36.000000000 +0200
+> @@ -372,6 +372,9 @@ typedef struct xfs_fsop_attrlist_handler
+>  
+>  typedef struct xfs_attr_multiop {
+>  	__u32		am_opcode;
+> +#define ATTR_OP_GET	1	/* return the indicated attr's value */
+> +#define ATTR_OP_SET	2	/* set/create the indicated attr/value pair */
+> +#define ATTR_OP_REMOVE	3	/* remove the indicated attr */
+>  	__s32		am_error;
+>  	void		__user *am_attrname;
+>  	void		__user *am_attrvalue;
+> 
