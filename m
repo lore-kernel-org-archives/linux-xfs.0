@@ -1,63 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 22:41:07 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5K5f1Km015250
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 22:41:03 -0700
-Message-ID: <485B431F.2070905@sgi.com>
-Date: Fri, 20 Jun 2008 15:41:51 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 19 Jun 2008 22:44:19 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5K5iGxm015668
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2008 22:44:16 -0700
+Date: Fri, 20 Jun 2008 07:45:04 +0200
+From: Konstantin Kletschke <lists@ku-gbr.de>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1163 of file
+	fs/xfs/xfs_trans.c
+Message-ID: <20080620054504.GA2075@anita>
+References: <20080612123031.21594jyk6rjc1lfk@imp.ku-gbr.de> <6101e8c40806120733m3c8647ccy149eb237e2c6d027@mail.gmail.com> <1213309629.29745.8.camel@localhost.localdomain> <20080613030841.GC3700@disturbed> <20080620052716.GA2022@anita>
 MIME-Version: 1.0
-Subject: Re: [PATCH] check for invalid flags in xfs_attrlist_by_handle
-References: <20080531075829.GA5424@lst.de>
-In-Reply-To: <20080531075829.GA5424@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080620052716.GA2022@anita>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Miquel van Smoorenburg <mikevs@xs4all.net>, Oliver Pinter <oliver.pntr@gmail.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
 
-Fair enough.
-Actually, I think we only use ATTR_ROOT and ATTR_SECURE for the
-namespace flags.
-So you could probably use: XFS_ATTR_NSP_ARGS
-xfs_attr_leaf.h:#define XFS_ATTR_NSP_ARGS_MASK	 (ATTR_ROOT | ATTR_SECURE)
-xfs_attr_leaf.h:#define XFS_ATTR_NSP_ARGS(flags) ((flags) & XFS_ATTR_NSP_ARGS_MASK)
-and something like:
+Again. Before strace looks weird, this looks like the old one:
 
-if (!XFS_ATTR_NSP_ARGS(al_hreq.flags))
-         return -XFS_ERROR(EINVAL);
+ksymoops 2.4.11 on x86_64 2.6.26-rc6.  Options used
+     -V (default)
+     -k /proc/ksyms (default)
+     -l /proc/modules (default)
+     -o /lib/modules/2.6.26-rc6/ (default)
+     -m /usr/src/linux-2.6.26-rc6/System.map (specified)
 
-Though would probably then need to include the right header (xfs_attr_leaf.h) for it...
+Error (regular_file): read_ksyms stat /proc/ksyms failed
+ksymoops: No such file or directory
+No modules in ksyms, skipping objects
+No ksyms, skipping lsmod
+Pid: 2137, comm: fetchnews Not tainted 2.6.26-rc6 #1
+Call Trace:
+ [<ffffffff802ffa42>]
+ [<ffffffff802fa35a>]
+ [<ffffffff802ffa42>]
+ [<ffffffff80308a29>]
+ [<ffffffff80262799>]
+ [<ffffffff8026500a>]
+ [<ffffffff80223506>]
+ [<ffffffff8023116c>]
+ [<ffffffff8025a0fa>]
+ [<ffffffff8020afab>]
+Warning (Oops_read): Code line not seen, dumping what data is available
 
---Tim
 
-Christoph Hellwig wrote:
-> xfs_attrlist_by_handle should only take the ATTR_ flags for the root
-> namespaces.  The ATTR_KERN* flags may change at anytime and expect special
-> preconditions that can't be guaranteed for userspace-originating
-> requests.  For example passing down ATTR_KERNNOVAL through
-> xfs_attrlist_by_handle will hit an assert in debug builds currently.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-28 17:37:02.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-05-28 17:42:18.000000000 +0200
-> @@ -470,6 +470,12 @@ xfs_attrlist_by_handle(
->  	if (al_hreq.buflen > XATTR_LIST_MAX)
->  		return -XFS_ERROR(EINVAL);
->  
-> +	/*
-> +	 * Reject flags, only allow namespaces.
-> +	 */
-> +	if (al_hreq.flags & ~(ATTR_ROOT|ATTR_TRUST|ATTR_SECURE))
-> +		return -XFS_ERROR(EINVAL);
-> +
->  	error = xfs_vget_fsop_handlereq(mp, parinode, &al_hreq.hreq, &inode);
->  	if (error)
->  		goto out;
-> 
+Trace; ffffffff802ffa42 <xfs_create+41d/462>
+Trace; ffffffff802fa35a <xfs_trans_cancel+56/ee>
+Trace; ffffffff802ffa42 <xfs_create+41d/462>
+Trace; ffffffff80308a29 <xfs_vn_mknod+148/229>
+Trace; ffffffff80262799 <vfs_create+75/ba>
+Trace; ffffffff8026500a <do_filp_open+1dc/7c5>
+Trace; ffffffff80223506 <ns_to_timeval+9/27>
+Trace; ffffffff8023116c <__remove_hrtimer+6b/78>
+Trace; ffffffff8025a0fa <do_sys_open+4a/f1>
+Trace; ffffffff8020afab <system_call_after_swapgs+7b/80>
+
+
+1 warning and 1 error issued.  Results may not be reliable.
+
+
+-- 
+GPG KeyID EF62FCEF
+Fingerprint: 13C9 B16B 9844 EC15 CC2E  A080 1E69 3FDA EF62 FCEF
