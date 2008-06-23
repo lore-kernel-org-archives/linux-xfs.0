@@ -1,41 +1,163 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 15:53:03 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5MMr0OB002165
-	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 15:53:00 -0700
-Date: Mon, 23 Jun 2008 08:53:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS internal error xfs_trans_cancel at line 1163 of file
-	fs/xfs/xfs_trans.c
-Message-ID: <20080622225355.GD11558@disturbed>
-References: <20080612123031.21594jyk6rjc1lfk@imp.ku-gbr.de> <6101e8c40806120733m3c8647ccy149eb237e2c6d027@mail.gmail.com> <1213309629.29745.8.camel@localhost.localdomain> <20080613030841.GC3700@disturbed> <20080620052716.GA2022@anita>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 17:23:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N0NLmJ015184
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 17:23:21 -0700
+Received: from gir.skynet.ie (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C773265DD7
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 17:24:18 -0700 (PDT)
+Received: from gir.skynet.ie (gir.skynet.ie [193.1.99.77]) by cuda.sgi.com with ESMTP id CErfTJryR6S6CaXx for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 17:24:18 -0700 (PDT)
+Date: Mon, 23 Jun 2008 01:24:15 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: [2.6.26-rc7] shrink_icache from pagefault locking (nee: nfsd hangs for a few sec)...
+Message-ID: <20080623002415.GB21597@csn.ul.ie>
+References: <6278d2220806220256g674304ectb945c14e7e09fede@mail.gmail.com> <6278d2220806220258p28de00c1x615ad7b2f708e3f8@mail.gmail.com> <20080622221930.GA11558@disturbed>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Content-Disposition: inline
-In-Reply-To: <20080620052716.GA2022@anita>
+In-Reply-To: <20080622221930.GA11558@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Miquel van Smoorenburg <mikevs@xs4all.net>, Oliver Pinter <oliver.pntr@gmail.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
+To: Daniel J Blueman <daniel.blueman@gmail.com>, Christoph Lameter <clameter@sgi.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Beregalov <a.beregalov@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Jun 20, 2008 at 07:27:17AM +0200, Konstantin Kletschke wrote:
-> Am 2008-06-13 13:08 +1000 schrieb Dave Chinner:
+On (23/06/08 08:19), Dave Chinner didst pronounce:
+> [added xfs@oss.sgi.com to cc]
 > 
-> > This commit in 2.6.26 will probably fix it.
+> On Sun, Jun 22, 2008 at 10:58:56AM +0100, Daniel J Blueman wrote:
+> > I'm seeing a similar issue [2] to what was recently reported [1] by
+> > Alexander, but with another workload involving XFS and memory
+> > pressure.
 > > 
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=75de2a91c98a6f486f261c1367fe59f5583e15a3
+> > SLUB allocator is in use and config is at http://quora.org/config-client-debug .
+> > 
+> > Let me know if you'd like more details/vmlinux objdump etc.
+> > 
+> > Thanks,
+> >  Daniel
+> > 
+> > --- [1]
+> > 
+> > http://groups.google.com/group/fa.linux.kernel/browse_thread/thread/e673c9173d45a735/db9213ef39e4e11c
+> > 
+> > --- [2]
+> > 
+> > =======================================================
+> > [ INFO: possible circular locking dependency detected ]
+> > 2.6.26-rc7-210c #2
+> > -------------------------------------------------------
+> > AutopanoPro/4470 is trying to acquire lock:
+> >  (iprune_mutex){--..}, at: [<ffffffff802d94fd>] shrink_icache_memory+0x7d/0x290
+> > 
+> > but task is already holding lock:
+> >  (&mm->mmap_sem){----}, at: [<ffffffff805e3e15>] do_page_fault+0x255/0x890
+> > 
+> > which lock already depends on the new lock.
+> > 
+> > 
+> > the existing dependency chain (in reverse order) is:
+> > 
+> > -> #2 (&mm->mmap_sem){----}:
+> >       [<ffffffff80278f4d>] __lock_acquire+0xbdd/0x1020
+> >       [<ffffffff802793f5>] lock_acquire+0x65/0x90
+> >       [<ffffffff805df5ab>] down_read+0x3b/0x70
+> >       [<ffffffff805e3e3c>] do_page_fault+0x27c/0x890
+> >       [<ffffffff805e16cd>] error_exit+0x0/0xa9
+> >       [<ffffffffffffffff>] 0xffffffffffffffff
+> > 
+> > -> #1 (&(&ip->i_iolock)->mr_lock){----}:
+> >       [<ffffffff80278f4d>] __lock_acquire+0xbdd/0x1020
+> >       [<ffffffff802793f5>] lock_acquire+0x65/0x90
+> >       [<ffffffff8026d746>] down_write_nested+0x46/0x80
+> >       [<ffffffff8039df29>] xfs_ilock+0x99/0xa0
+> >       [<ffffffff8039e0cf>] xfs_ireclaim+0x3f/0x90
+> >       [<ffffffff803ba889>] xfs_finish_reclaim+0x59/0x1a0
+> >       [<ffffffff803bc199>] xfs_reclaim+0x109/0x110
+> >       [<ffffffff803c9541>] xfs_fs_clear_inode+0xe1/0x110
+> >       [<ffffffff802d906d>] clear_inode+0x7d/0x110
+> >       [<ffffffff802d93aa>] dispose_list+0x2a/0x100
+> >       [<ffffffff802d96af>] shrink_icache_memory+0x22f/0x290
+> >       [<ffffffff8029d868>] shrink_slab+0x168/0x1d0
+> >       [<ffffffff8029e0b6>] kswapd+0x3b6/0x560
+> >       [<ffffffff8026921d>] kthread+0x4d/0x80
+> >       [<ffffffff80227428>] child_rip+0xa/0x12
+> >       [<ffffffffffffffff>] 0xffffffffffffffff
 > 
-> If I am correct, this fix is included in 2.6.26-rc6:
+> You may as well ignore anything invlving this path in XFS until
+> lockdep gets fixed. The kswapd reclaim path is inverted over the
+> synchronous reclaim path that is xfs_ilock -> run out of memory ->
+> prune_icache and then potentially another -> xfs_ilock.
+> 
 
-Yes, so if you're seeing it again then there's a different problem.
+In that case, have you any theory as to why this circular dependency is
+being reported now but wasn't before 2.6.26-rc1? I'm beginning to wonder
+if the bisecting fingering the zonelist modifiation is just a
+co-incidence.
 
-Please provide a pointer to a xfs_metadump image of the filesystem
-and the steps to reproduce the error from the image so we can
-get to the bottom of it...
+Also, do you think the stalls were happening before but just not being noticed?
 
-Cheers,
+> In this case, XFS can *never* deadlock because the second xfs_ilock
+> is on a different, unreferenced, unlocked inode, but without turning
+> off lockdep there is nothing in XFS that can be done to prevent
+> this warning.
+> 
+> Therxp eis a similar bug in the VM w.r.t the mmap_sem in that the
+> mmap_sem is held across a call to put_filp() which can result in
+> inversions between the xfs_ilock and mmap_sem.
+> 
+> Both of these cases cannot be solved by changing XFS - lockdep
+> needs to be made aware of paths that can invert normal locking
+> order (like prune_icache) so it doesn't give false positives
+> like this.
+> 
+> > -> #0 (iprune_mutex){--..}:
+> >       [<ffffffff80278db7>] __lock_acquire+0xa47/0x1020
+> >       [<ffffffff802793f5>] lock_acquire+0x65/0x90
+> >       [<ffffffff805dedd5>] mutex_lock_nested+0xb5/0x300
+> >       [<ffffffff802d94fd>] shrink_icache_memory+0x7d/0x290
+> >       [<ffffffff8029d868>] shrink_slab+0x168/0x1d0
+> >       [<ffffffff8029db38>] try_to_free_pages+0x268/0x3a0
+> >       [<ffffffff802979d6>] __alloc_pages_internal+0x206/0x4b0
+> >       [<ffffffff80297c89>] __alloc_pages_nodemask+0x9/0x10
+> >       [<ffffffff802b2bc2>] alloc_page_vma+0x72/0x1b0
+> >       [<ffffffff802a3642>] handle_mm_fault+0x462/0x7b0
+> >       [<ffffffff805e3ecc>] do_page_fault+0x30c/0x890
+> >       [<ffffffff805e16cd>] error_exit+0x0/0xa9
+> >       [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> This case is different in that it ??s complaining about mmap_sem vs
+> iprune_mutex, so I think that we can pretty much ignore the XFS side
+> of things here - the problem is higher level code....
+> 
+> >  [<ffffffff8029db38>] try_to_free_pages+0x268/0x3a0
+> >  [<ffffffff8029c240>] ? isolate_pages_global+0x0/0x40
+> >  [<ffffffff802979d6>] __alloc_pages_internal+0x206/0x4b0
+> >  [<ffffffff80297c89>] __alloc_pages_nodemask+0x9/0x10
+> >  [<ffffffff802b2bc2>] alloc_page_vma+0x72/0x1b0
+> >  [<ffffffff802a3642>] handle_mm_fault+0x462/0x7b0
+> 
+> FWIW, should page allocation in a page fault be allowed to recurse
+> into the filesystem? If I follow the spaghetti of inline and
+> compiler inlined functions correctly, this is a GFP_HIGHUSER_MOVABLE
+> allocation, right? Should we be allowing shrink_icache_memory()
+> to be called at all in the page fault path?
+> 
 
-Dave.
+Well, the page fault path is able to go to sleep and can enter direct
+reclaim under low memory situations. Right now, I'm failing to see why a
+page fault should not be allowed to reclaim pages in use by a
+filesystem. It was allowed before so the question still is why the
+circular lock warning appears now but didn't before.
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
