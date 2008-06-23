@@ -1,119 +1,125 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 23:13:28 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N6DQ3m031957
-	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:13:26 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 23:21:04 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N6L1kI001050
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:21:01 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DD6B180AEEF
-	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:14:25 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id N9wuRbF5Cxs473PX for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:14:25 -0700 (PDT)
-Date: Mon, 23 Jun 2008 16:14:21 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55EB3D1D9E6
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:22:00 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 26KpanblBhk7PhPt for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 23:22:00 -0700 (PDT)
+Date: Mon, 23 Jun 2008 16:21:58 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] Prevent extent btree block allocation failures
-Message-ID: <20080623061421.GG29319@disturbed>
-References: <485223E4.6030404@sgi.com> <20080613155708.GG3700@disturbed> <485603FD.2080204@sgi.com> <200806161010.22476.dchinner@agami.com> <48571A57.5090901@sgi.com> <20080617073949.GP3700@disturbed> <485A0AB2.4060009@sgi.com> <20080620052120.GA3700@disturbed> <20080623052025.GF29319@disturbed> <485F3B42.9050300@sgi.com>
+Message-ID: <20080623062157.GH29319@disturbed>
+References: <485223E4.6030404@sgi.com> <20080613155708.GG3700@disturbed> <485603FD.2080204@sgi.com> <200806161010.22476.dchinner@agami.com> <48571A57.5090901@sgi.com> <20080617073949.GP3700@disturbed> <485A0AB2.4060009@sgi.com> <20080620052120.GA3700@disturbed> <485F339D.7090802@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <485F3B42.9050300@sgi.com>
+In-Reply-To: <485F339D.7090802@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jun 23, 2008 at 03:57:22PM +1000, Lachlan McIlroy wrote:
+On Mon, Jun 23, 2008 at 03:24:45PM +1000, Lachlan McIlroy wrote:
 > Dave Chinner wrote:
->> On Fri, Jun 20, 2008 at 03:21:20PM +1000, Dave Chinner wrote:
->>> On Thu, Jun 19, 2008 at 05:28:50PM +1000, Lachlan McIlroy wrote:
->>>> There's something else that looks suspicious to me - this code in
->>>> xfs_bmap_btalloc() is setting minleft to 0.  Doesn't this go against
->>>> what you were saying about setting minleft to be the space we might
->>>> need for the btree operations?
->>>>
->>>> 	if (args.fsbno == NULLFSBLOCK && nullfb) {
->>>> 		args.fsbno = 0;
->>>> 		args.type = XFS_ALLOCTYPE_FIRST_AG;
->>>> 		args.total = ap->minlen;
->>>> 		args.minleft = 0;
->>>> 		if ((error = xfs_alloc_vextent(&args)))
->>>> 			return error;
->>>> 		ap->low = 1;
->>>> 	}
->>> Hmmm - that looks suspicious. In xfs_bmapi(), when we are doing a
->>> write and *firstblock == NULLFSBLOCK (which leads to nullfb being
->>> set in the above code), we do:
+>> On Thu, Jun 19, 2008 at 05:28:50PM +1000, Lachlan McIlroy wrote:
+>>> I see it sets a lowspace indicator which filters back up and into
+>>> some btree operations.  It appears the purpose of this feature is to
+>>> allow allocations to search for space in other AGs as in this example
+>>> from xfs_bmap_extents_to_btree():
 >>>
->>>         if (wr && *firstblock == NULLFSBLOCK) {
->>>                 if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
->>>                         minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
->>>                 else
->>>                         minleft = 1;
->>>         } else
->>>                 minleft = 0;
->>>
->>> If we are in btree format we set the minleft to the number of blocks needed
->>> for a split. If we are in extent or local format, change to extent of btree
->>> format requires one extra block.
->>>
->>> The above code you point out definitely breaks this - we haven't done a
->>> previous allocation so we can start from the first AG, but we sure as
->>> hell still need minleft set to the number of blocks needed for a
->>> format change or btree split.
+>>> 	if (*firstblock == NULLFSBLOCK) {
+>>> 		args.type = XFS_ALLOCTYPE_START_BNO;
+>>> 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+>>> 	} else if (flist->xbf_low) {
+>>> 		args.type = XFS_ALLOCTYPE_START_BNO;
+>>> 		args.fsbno = *firstblock;
+>>> 	} else {
+>>> 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+>>> 		args.fsbno = *firstblock;
+>>> 	}
 >>
->> Just to point out yet another problem in this code (one that's just
->> been tripped over @ agami) is unwritten extent conversion.
->>
->> Basically, we don't do an allocation here, so when we end up in
->> xfs_bmap_add_extent_unwritten_real() with a null firstblock. Hence
->> the cases where conversion can cause a split - case
->> MASK(LEFT_FILLING), MASK(RIGHT_FILLING) and 0 (convert the middle of
->> an extent) - we can select an AG that doesn't have enough space for
->> the entire split as we've ignored the number of blocks we might
->> need to allocate in the split (the minleft parameter) entirely.
->>
->> I suspect that xfs_bmbt_split() needs to handle the null first block
->> case slightly differently - the minleft parameter passed to the
->> allocation should not be zero - it should be the number of levels
->> above the current level left in the tree. i.e:
->>
->> 	minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
->>
->> If we've already got a firstblock set, then this should have already
->> been taken into account (i.e. we still need to fix the low space
->> case where it got ignored as we were discussing).
+>> Hmmm - the only place xbf_low is used in the extent-to-btree conversion. I
+>> don't have access to the revision history anymore, so i can't find out what
+>> bug the xbf_low condition was added for. It certainly looks like it is
+>> allowing the btree block to be allocated in a different AG to data block.
 >
-> Funny.  I tested the exact same change last week to try to fix the same
-> problem.  Seemed to work okay.
+> The lowspace algorithm was added way back in the early '90s and has been
+> 'tweaked' many times since.
 
-Cool. Got a patch for review?
+It's good to have a complete revision history around somewhere. ;)
 
-> In the case where we convert the middle of an existing unwritten extent
-> we need to insert two new extents.  I might be paranoid here but I'll
-> assume the worst case scenario and that we'll need space for two complete
-> tree splits.
+>>> This is sort of what I was trying to do with my patch but without the
+>>> special lowspace condition.  This lowspace feature is probably broken
+>>> because there was a similar special case in xfs_bmbt_split() that got
+>>> removed with the changes that fixed the AG out-of-order locking problem.
+>>>
+>>> @@ -1569,12 +1569,11 @@
+>>> 	lbno = XFS_DADDR_TO_FSB(args.mp, XFS_BUF_ADDR(lbp));
+>>> 	left = XFS_BUF_TO_BMBT_BLOCK(lbp);
+>>> 	args.fsbno = cur->bc_private.b.firstblock;
+>>> +	args.firstblock = args.fsbno;
+>>> 	if (args.fsbno == NULLFSBLOCK) {
+>>> 		args.fsbno = lbno;
+>>> 		args.type = XFS_ALLOCTYPE_START_BNO;
+>>> -	} else if (cur->bc_private.b.flist->xbf_low)
+>>> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+>>> -	else
+>>> +	} else
+>>> 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+>>> 	args.mod = args.minleft = args.alignment = args.total = args.isfl =
+>>> 		args.userdata = args.minalignslop = 0;
+>>>
+>>> This could be why we have allocations failing now. 
+>>
+>> Hmmm - yes, could be. Well found, Lachlan. Was there an equivalent change
+>> to the allocation of a new root block?
+>
+> Yeah but it got dropped 14 years ago in a code cleanup change!  Looks like
+> it was by mistake too. 
 
-Yes, I think so. Certainly, if you look at the block reservation in
-xfs_iomap_write_unwritten():
+Ouch.
 
-892         resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
+> There used to be another special case for converting
+> delayed allocations that had the same semantics as this low space trick - it
+> used XFS_ALLOCTYPE_FIRST_AG instead - maybe to try a little harder to find
+> space for cases where it is too late to return an error to the user.
 
-#define XFS_DIOSTRAT_SPACE_RES(mp, v)   \
-        (XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK) + (v))
+Interesting. Any idea why that was removed? Or another accident?
 
-#define XFS_EXTENTADD_SPACE_RES(mp,w)   (XFS_BM_MAXLEVELS(mp,w) - 1)
+[....]
 
-It reserves enough blocks for 2 bmbt splits so I think this is
-definitely a possibility we need to handle.
+>> Hmmmm - perhaps before allocating with minleft = 0 we need to
+>> check if we can allocate the rest of the blocks from another AG and
+>> lock both AGs in the correct order first, recheck we can allocate
+>> from both of them after they are locked but before modifying anything
+>> and only then proceed. If we can't find two AGs to allocate from then
+>> we can safely ENOSPC without any problems. In this special case we'd then
+>> be able to search the entire FS for space and hence only get an ENOSPC
+>> if we are really at ENOSPC. Can you pick holes in this?
+>
+> Sounds like it should work.  We may need to lock more than two AGs at once to
+> find all the space we need.  Since we can't lock AGs out of order then if we get
+> to the last AG and we still don't have enough space then we will need to try
+> again but start at an earlier AG (say AG 0 which should work).
 
-> The first allocation for the first insert will set minleft
-> correctly but what about the allocations for splits during the second
-> insert?  We could run out of space in the chosen AG because minleft wasn't
-> enough.
+In this case, I'd just start from XFS_ALLOCTYPE_FIRST_AG rather than
+doing multiple passes and having to undo between them....
 
-Yeah, so we probably need pass a flag in the cursor to indicate
-it's a double split case when doing the first allocation in
-xfs_bmbt_split....
+> So the code in xfs_alloc_vextent() that uses XFS_ALLOCTYPE_FIRST_AG and sets
+> minleft to 0 should work.
+
+Yes, as long as the next selected AG has the original minleft blocks
+available in it.
+
+> If we start at AG 0 and we've done the proper reservations
+> then we should eventually find all the space we need - as long as everything that
+> needs to allocate space obeys the lowspace algorithm and we always kick off each
+> search for space from the AG we last allocated from.
+
+Yup. Seems sane to me.
 
 Cheers,
 
