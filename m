@@ -1,117 +1,109 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jun 2008 01:04:46 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N84gKl021913
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 01:04:42 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22110D1DC92
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 01:05:41 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id ilg0Xdirki3L8qVT for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 01:05:41 -0700 (PDT)
-Date: Mon, 23 Jun 2008 18:05:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Prevent extent btree block allocation failures
-Message-ID: <20080623080530.GI29319@disturbed>
-References: <485603FD.2080204@sgi.com> <200806161010.22476.dchinner@agami.com> <48571A57.5090901@sgi.com> <20080617073949.GP3700@disturbed> <485A0AB2.4060009@sgi.com> <20080620052120.GA3700@disturbed> <20080623052025.GF29319@disturbed> <485F3B42.9050300@sgi.com> <20080623061421.GG29319@disturbed> <485F455A.9060701@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jun 2008 01:41:08 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5N8f3bm027002
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 01:41:05 -0700
+Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA14569 for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 18:42:03 +1000
+Date: Mon, 23 Jun 2008 18:44:58 +1000
+Subject: REVIEW: Fix CI lookup in leaf-form directories
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <485F455A.9060701@sgi.com>
+Message-ID: <op.uc6088qm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Jun 23, 2008 at 04:40:26PM +1000, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> On Mon, Jun 23, 2008 at 03:57:22PM +1000, Lachlan McIlroy wrote:
->>> Dave Chinner wrote:
->>>> On Fri, Jun 20, 2008 at 03:21:20PM +1000, Dave Chinner wrote:
->>>>> On Thu, Jun 19, 2008 at 05:28:50PM +1000, Lachlan McIlroy wrote:
->>>>>> There's something else that looks suspicious to me - this code in
->>>>>> xfs_bmap_btalloc() is setting minleft to 0.  Doesn't this go against
->>>>>> what you were saying about setting minleft to be the space we might
->>>>>> need for the btree operations?
->>>>>>
->>>>>> 	if (args.fsbno == NULLFSBLOCK && nullfb) {
->>>>>> 		args.fsbno = 0;
->>>>>> 		args.type = XFS_ALLOCTYPE_FIRST_AG;
->>>>>> 		args.total = ap->minlen;
->>>>>> 		args.minleft = 0;
->>>>>> 		if ((error = xfs_alloc_vextent(&args)))
->>>>>> 			return error;
->>>>>> 		ap->low = 1;
->>>>>> 	}
->>>>> Hmmm - that looks suspicious. In xfs_bmapi(), when we are doing a
->>>>> write and *firstblock == NULLFSBLOCK (which leads to nullfb being
->>>>> set in the above code), we do:
->>>>>
->>>>>         if (wr && *firstblock == NULLFSBLOCK) {
->>>>>                 if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
->>>>>                         minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
->>>>>                 else
->>>>>                         minleft = 1;
->>>>>         } else
->>>>>                 minleft = 0;
->>>>>
->>>>> If we are in btree format we set the minleft to the number of blocks needed
->>>>> for a split. If we are in extent or local format, change to extent of btree
->>>>> format requires one extra block.
->>>>>
->>>>> The above code you point out definitely breaks this - we haven't done a
->>>>> previous allocation so we can start from the first AG, but we sure as
->>>>> hell still need minleft set to the number of blocks needed for a
->>>>> format change or btree split.
->>>> Just to point out yet another problem in this code (one that's just
->>>> been tripped over @ agami) is unwritten extent conversion.
->>>>
->>>> Basically, we don't do an allocation here, so when we end up in
->>>> xfs_bmap_add_extent_unwritten_real() with a null firstblock. Hence
->>>> the cases where conversion can cause a split - case
->>>> MASK(LEFT_FILLING), MASK(RIGHT_FILLING) and 0 (convert the middle of
->>>> an extent) - we can select an AG that doesn't have enough space for
->>>> the entire split as we've ignored the number of blocks we might
->>>> need to allocate in the split (the minleft parameter) entirely.
->>>>
->>>> I suspect that xfs_bmbt_split() needs to handle the null first block
->>>> case slightly differently - the minleft parameter passed to the
->>>> allocation should not be zero - it should be the number of levels
->>>> above the current level left in the tree. i.e:
->>>>
->>>> 	minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
->>>>
->>>> If we've already got a firstblock set, then this should have already
->>>> been taken into account (i.e. we still need to fix the low space
->>>> case where it got ignored as we were discussing).
->>> Funny.  I tested the exact same change last week to try to fix the same
->>> problem.  Seemed to work okay.
->>
->> Cool. Got a patch for review?
->
-> I couldn't find the original patch that calculated minleft as above - instead
-> here's a variant that addresses the double insert problem by retrieving the
-> reservation amount from the transaction.  It could very well be overkill though.
+Along the same lines as the node-form directory patch last week,
+the leaf-form is not handling directory buffers properly and
+locks up.
 
-No, that seems valid; all allocations need to pass in a reservation
-for a number of blocks needed for the transaction to proceed. I did
-a quick check and everything appears to be reserving only what
-is necessary for a bmbt split (or two)...
+Instead of comparing buffer pointers, compare buffer block numbers
+and don't keep buffers hanging around.
 
-> --- fs/xfs/xfs_bmap_btree.c_1.169	2008-06-16 17:25:10.000000000 +1000
-> +++ fs/xfs/xfs_bmap_btree.c	2008-06-16 18:32:45.000000000 +1000
-> @@ -1496,9 +1496,12 @@ xfs_bmbt_split(
-> 	if (args.fsbno == NULLFSBLOCK) {
-> 		args.fsbno = lbno;
-> 		args.type = XFS_ALLOCTYPE_START_BNO;
-> -	} else
-> +		args.minleft = xfs_trans_get_block_res(args.tp);
-> +	} else {
 
-Might be worth a comment ;)
+--- a/fs/xfs/xfs_dir2_leaf.c	2008-06-23 18:35:54.000000000 +1000
++++ b/fs/xfs/xfs_dir2_leaf.c	2008-06-23 18:27:38.214277630 +1000
+@@ -1333,7 +1333,7 @@ xfs_dir2_leaf_lookup_int(
+  	xfs_mount_t		*mp;		/* filesystem mount point */
+  	xfs_dir2_db_t		newdb;		/* new data block number */
+  	xfs_trans_t		*tp;		/* transaction pointer */
+-	xfs_dabuf_t		*cbp;		/* case match data buffer */
++	xfs_dir2_db_t		cidb;		/* case match data block no. */
+  	enum xfs_dacmp		cmp;		/* name compare result */
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  	dp = args->dp;
+@@ -1358,8 +1358,7 @@ xfs_dir2_leaf_lookup_int(
+  	 * Loop over all the entries with the right hash value
+  	 * looking to match the name.
+  	 */
+-	cbp = NULL;
+-	for (lep = &leaf->ents[index], dbp = NULL, curdb = -1;
++	for (lep = &leaf->ents[index], dbp = NULL, curdb = -1, cidb = -1;
+  				index < be16_to_cpu(leaf->hdr.count) &&
+  				be32_to_cpu(lep->hashval) == args->hashval;
+  				lep++, index++) {
+@@ -1377,7 +1376,7 @@ xfs_dir2_leaf_lookup_int(
+  		 * need to pitch the old one and read the new one.
+  		 */
+  		if (newdb != curdb) {
+-			if (dbp != cbp)
++			if (dbp)
+  				xfs_da_brelse(tp, dbp);
+  			error = xfs_da_read_buf(tp, dp,
+  						xfs_dir2_db_to_da(mp, newdb),
+@@ -1403,35 +1402,39 @@ xfs_dir2_leaf_lookup_int(
+  		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+  			args->cmpresult = cmp;
+  			*indexp = index;
+-			/*
+-			 * case exact match: release the stored CI buffer if it
+-			 * exists and return the current buffer.
+-			 */
++			/* case exact match: return the current buffer. */
+  			if (cmp == XFS_CMP_EXACT) {
+-				if (cbp && cbp != dbp)
+-					xfs_da_brelse(tp, cbp);
+  				*dbpp = dbp;
+  				return 0;
+  			}
+-			cbp = dbp;
++			cidb = curdb;
+  		}
+  	}
+  	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+  	/*
+-	 * Here, we can only be doing a lookup (not a rename or replace).
+-	 * If a case-insensitive match was found earlier, release the current
+-	 * buffer and return the stored CI matching buffer.
++	 * Here, we can only be doing a lookup (not a rename or remove).
++	 * If a case-insensitive match was found earlier, re-read the
++	 * appropriate data block if required and return it.
+  	 */
+  	if (args->cmpresult == XFS_CMP_CASE) {
+-		if (cbp != dbp)
++		ASSERT(cidb != -1);
++		if (cidb != curdb) {
+  			xfs_da_brelse(tp, dbp);
+-		*dbpp = cbp;
++			error = xfs_da_read_buf(tp, dp,
++						xfs_dir2_db_to_da(mp, cidb),
++						-1, &dbp, XFS_DATA_FORK);
++			if (error) {
++				xfs_da_brelse(tp, lbp);
++				return error;
++			}
++		}
++		*dbpp = dbp;
+  		return 0;
+  	}
+  	/*
+  	 * No match found, return ENOENT.
+  	 */
+-	ASSERT(cbp == NULL);
++	ASSERT(cidb == -1);
+  	if (dbp)
+  		xfs_da_brelse(tp, dbp);
+  	xfs_da_brelse(tp, lbp);
