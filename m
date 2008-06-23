@@ -1,284 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 21:42:31 -0700 (PDT)
-Received: from itchy (itchy.melbourne.sgi.com [134.14.55.96])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N4gJQL017143
-	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 21:42:20 -0700
-From: Niv Sardi <xaiki@sgi.com>
-Subject: [PATCH] Give a transaction to xfs_attr_set_int
-Date: Mon, 23 Jun 2008 14:42:30 +1000
-Message-Id: <1214196150-5427-5-git-send-email-xaiki@sgi.com>
-In-Reply-To: <1214196150-5427-4-git-send-email-xaiki@sgi.com>
-References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
- <1214196150-5427-2-git-send-email-xaiki@sgi.com>
- <1214196150-5427-3-git-send-email-xaiki@sgi.com>
- <1214196150-5427-4-git-send-email-xaiki@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 22 Jun 2008 22:19:32 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5N5JVDC023950
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 22:19:31 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 37FE3266580
+	for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 22:20:30 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id I4qmFrtWsKncSuKX for <xfs@oss.sgi.com>; Sun, 22 Jun 2008 22:20:30 -0700 (PDT)
+Date: Mon, 23 Jun 2008 15:20:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Prevent extent btree block allocation failures
+Message-ID: <20080623052025.GF29319@disturbed>
+References: <485223E4.6030404@sgi.com> <20080613155708.GG3700@disturbed> <485603FD.2080204@sgi.com> <200806161010.22476.dchinner@agami.com> <48571A57.5090901@sgi.com> <20080617073949.GP3700@disturbed> <485A0AB2.4060009@sgi.com> <20080620052120.GA3700@disturbed>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080620052120.GA3700@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: Niv Sardi <xaiki@debian.org>, Niv Sardi <xaiki@sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-From: Niv Sardi <xaiki@debian.org>
+On Fri, Jun 20, 2008 at 03:21:20PM +1000, Dave Chinner wrote:
+> On Thu, Jun 19, 2008 at 05:28:50PM +1000, Lachlan McIlroy wrote:
+> > Dave Chinner wrote:
+> >> On Tue, Jun 17, 2008 at 11:58:47AM +1000, Lachlan McIlroy wrote:
+> >>> Dave Chinner wrote:
+> >>>> On Sunday 15 June 2008 11:11 pm, Lachlan McIlroy wrote:
+> >>>>> I'm well aware of that particular deadlock involving the freelist - I
+> >>>>> hit it while testing.  If you look closely at the code that deadlock
+> >>>>> can occur with or without the AG locking avoidance logic.  This is
+> >>>>> because the rest of the transaction is unaware that an AG has been
+> >>>>> locked due to a freelist operation.
+> >>>> Yes, which is why you need to prevent freelist modifications occurring
+> >>>> when you can't allocate anything out of the AG.
+> >>> That sounds reasonable but it isn't consistent with the deadlock I saw.
+> >>> One of the threads that was deadlocked had tried to allocate a data extent
+> >>> in AG3 but didn't find the space.  It had modified, and hence locked, AG3
+> >>> due to modifying the freelist but since it didn't get the space it needed
+> >>> it had to go on to another AG.
+> >>
+> >> That sounds like an exact allocation failure - there is enough
+> >> space, a large enough extent but no free space at the exact block
+> >> required. This is exactly the case that occurred with the inode
+> >> allocation - and then allocation in the same AG failed because of
+> >> alignment that wasn't taken into account by the first exact
+> >> allocation attempt. Perhaps the minalignslop calculation in
+> >> xfs_bmap_btalloc() is incorrect...
+> >
+> > Okay I'll look into that.
+> >
+> > There's something else that looks suspicious to me - this code in
+> > xfs_bmap_btalloc() is setting minleft to 0.  Doesn't this go against
+> > what you were saying about setting minleft to be the space we might
+> > need for the btree operations?
+> >
+> > 	if (args.fsbno == NULLFSBLOCK && nullfb) {
+> > 		args.fsbno = 0;
+> > 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> > 		args.total = ap->minlen;
+> > 		args.minleft = 0;
+> > 		if ((error = xfs_alloc_vextent(&args)))
+> > 			return error;
+> > 		ap->low = 1;
+> > 	}
+> 
+> Hmmm - that looks suspicious. In xfs_bmapi(), when we are doing a
+> write and *firstblock == NULLFSBLOCK (which leads to nullfb being
+> set in the above code), we do:
+> 
+>         if (wr && *firstblock == NULLFSBLOCK) {
+>                 if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+>                         minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+>                 else
+>                         minleft = 1;
+>         } else
+>                 minleft = 0;
+> 
+> If we are in btree format we set the minleft to the number of blocks needed
+> for a split. If we are in extent or local format, change to extent of btree
+> format requires one extra block.
+> 
+> The above code you point out definitely breaks this - we haven't done a
+> previous allocation so we can start from the first AG, but we sure as
+> hell still need minleft set to the number of blocks needed for a
+> format change or btree split.
 
-We introduce xfs_trans_attr_set_int that takes a transaction pointer
-as an argument (or creates one if NULL) and only finishes the
-transaction if it has created it. We use xfs_attr_rolltrans to do the
-tranS_dup dance.
+Just to point out yet another problem in this code (one that's just
+been tripped over @ agami) is unwritten extent conversion.
 
-xfs_attr_set_int is changed to a wrapper that will only call
-xfs_trans_attr_set_int with a NULL transaction.
+Basically, we don't do an allocation here, so when we end up in
+xfs_bmap_add_extent_unwritten_real() with a null firstblock. Hence
+the cases where conversion can cause a split - case
+MASK(LEFT_FILLING), MASK(RIGHT_FILLING) and 0 (convert the middle of
+an extent) - we can select an AG that doesn't have enough space for
+the entire split as we've ignored the number of blocks we might
+need to allocate in the split (the minleft parameter) entirely.
 
-make it use the new xfs_trans_bmap_add_attrfork();
+I suspect that xfs_bmbt_split() needs to handle the null first block
+case slightly differently - the minleft parameter passed to the
+allocation should not be zero - it should be the number of levels
+above the current level left in the tree. i.e:
 
-This is needed for Create+EA/Parent Pointers
+	minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
 
-Signed-off-by: Niv Sardi <xaiki@sgi.com>
----
- fs/xfs/xfs_attr.c |  140 +++++++++++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_attr.h |    2 +
- 2 files changed, 96 insertions(+), 46 deletions(-)
+If we've already got a firstblock set, then this should have already
+been taken into account (i.e. we still need to fix the low space
+case where it got ignored as we were discussing).
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index be6bfc4..a4787f7 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -209,7 +209,7 @@ xfs_attr_calc_size(
- 			nblks <<= 1;
- 		}
- 	} else {
--		/* 
-+		/*
- 		 * Out of line attribute, cannot double split, but
- 		 * make room for the attribute value itself.
- 		 */
-@@ -221,9 +221,20 @@ xfs_attr_calc_size(
- 	return nblks;
- }
- 
-+/*
-+ * So if the trans is given we don't have the right to dispose of it,
-+ * we can't commit it either as we don't know if the upper class is
-+ * done with it.
-+ */
- int
--xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
--		 char *value, int valuelen, int flags)
-+xfs_trans_attr_set_int(
-+	xfs_trans_t	**tpp,
-+	xfs_inode_t	*dp,
-+	const char	*name,
-+	int		namelen,
-+	char		*value,
-+	int		valuelen,
-+	int		flags)
- {
- 	xfs_da_args_t	args;
- 	xfs_fsblock_t	firstblock;
-@@ -247,8 +258,9 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 		int sf_size = sizeof(xfs_attr_sf_hdr_t) +
- 			      XFS_ATTR_SF_ENTSIZE_BYNAME(namelen, valuelen);
- 
--		if ((error = xfs_bmap_add_attrfork(dp, sf_size, rsvd)))
--			return(error);
-+		error = xfs_trans_bmap_add_attrfork(tpp, dp, sf_size, rsvd);
-+		if (error)
-+			return error;
- 	}
- 
- 	/*
-@@ -271,46 +283,53 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	/* Size is now blocks for attribute data */
- 	args.total = xfs_attr_calc_size(dp, namelen, valuelen, &local);
- 
--	/*
--	 * Start our first transaction of the day.
--	 *
--	 * All future transactions during this code must be "chained" off
--	 * this one via the trans_dup() call.  All transactions will contain
--	 * the inode, and the inode will always be marked with trans_ihold().
--	 * Since the inode will be locked in all transactions, we must log
--	 * the inode in every transaction to let it float upward through
--	 * the log.
--	 */
--	args.trans = xfs_trans_alloc(mp, XFS_TRANS_ATTR_SET);
-+	if (tpp) {
-+		ASSERT(*tpp);
-+		args.trans = *tpp;
-+	} else {
-+		/*
-+		 * Start our first transaction of the day.
-+		 *
-+		 * All future transactions during this code must be "chained" off
-+		 * this one via the trans_dup() call.  All transactions will contain
-+		 * the inode, and the inode will always be marked with trans_ihold().
-+		 * Since the inode will be locked in all transactions, we must log
-+		 * the inode in every transaction to let it float upward through
-+		 * the log.
-+		 */
-+		args.trans = xfs_trans_alloc(mp, XFS_TRANS_ATTR_SET);
- 
--	/*
--	 * Root fork attributes can use reserved data blocks for this
--	 * operation if necessary
--	 */
-+		/*
-+		 * Root fork attributes can use reserved data blocks for this
-+		 * operation if necessary
-+		 */
- 
--	if (rsvd)
--		args.trans->t_flags |= XFS_TRANS_RESERVE;
-+		if (rsvd)
-+			args.trans->t_flags |= XFS_TRANS_RESERVE;
- 
--	if ((error = xfs_trans_reserve(args.trans, (uint) args.total,
--				       XFS_ATTRSET_LOG_RES(mp, args.total),
--				       0, XFS_TRANS_PERM_LOG_RES,
--				       XFS_ATTRSET_LOG_COUNT))) {
--		xfs_trans_cancel(args.trans, 0);
--		return(error);
--	}
--	xfs_ilock(dp, XFS_ILOCK_EXCL);
-+		error = xfs_trans_reserve(args.trans, args.total,
-+					  XFS_ATTRSET_LOG_RES(mp, args.total),
-+					  0, XFS_TRANS_PERM_LOG_RES,
-+					  XFS_ATTRSET_LOG_COUNT);
-+		if (error) {
-+			xfs_trans_cancel(args.trans, 0);
-+			return(error);
-+		}
-+		xfs_ilock(dp, XFS_ILOCK_EXCL);
- 
--	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp, args.total, 0,
--				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
-+		error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp,
-+					args.total, 0,
-+				rsvd?XFS_QMOPT_RES_REGBLKS|XFS_QMOPT_FORCE_RES:
- 				       XFS_QMOPT_RES_REGBLKS);
--	if (error) {
--		xfs_iunlock(dp, XFS_ILOCK_EXCL);
--		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
--		return (error);
--	}
-+		if (error) {
-+			xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+			xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-+			return (error);
-+		}
- 
--	xfs_trans_ijoin(args.trans, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ihold(args.trans, dp);
-+		xfs_trans_ijoin(args.trans, dp, XFS_ILOCK_EXCL);
-+		xfs_trans_ihold(args.trans, dp);
-+	}
- 
- 	/*
- 	 * If the attribute list is non-existent or a shortform list,
-@@ -346,8 +365,14 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 			if (mp->m_flags & XFS_MOUNT_WSYNC) {
- 				xfs_trans_set_sync(args.trans);
- 			}
--			err2 = xfs_trans_commit(args.trans,
--						 XFS_TRANS_RELEASE_LOG_RES);
-+
-+			/* Only finish trans if it's ours */
-+			if (tpp) {
-+				err2 = xfs_trans_roll(&args.trans, dp);
-+			} else {
-+				err2 = xfs_trans_commit(args.trans,
-+							XFS_TRANS_RELEASE_LOG_RES);
-+			}
- 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 			/*
-@@ -356,6 +381,8 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 			if (!error && (flags & ATTR_KERNOTIME) == 0) {
- 				xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
- 			}
-+			if (tpp)
-+				tpp = &args.trans;
- 			return(error == 0 ? err2 : error);
- 		}
- 
-@@ -401,13 +428,13 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	} else {
- 		error = xfs_attr_node_addname(&args);
- 	}
--	if (error) {
-+	if (error)
- 		goto out;
--	}
- 
- 	/*
- 	 * If this is a synchronous mount, make sure that the
--	 * transaction goes to disk before returning to the user.
-+	 * transaction goes to disk before returning to the user. If
-+	 * this is not our transaction, the allocator should do this.
- 	 */
- 	if (mp->m_flags & XFS_MOUNT_WSYNC) {
- 		xfs_trans_set_sync(args.trans);
-@@ -416,8 +443,12 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
--	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
--	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-+	if (tpp) {
-+		xfs_trans_roll(&args.trans, dp);
-+	} else {
-+		xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
-+		error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-+	}
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
- 	/*
-@@ -427,6 +458,8 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 		xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
- 	}
- 
-+	if (tpp)
-+		tpp = &args.trans;
- 	return(error);
- 
- out:
-@@ -434,10 +467,25 @@ out:
- 		xfs_trans_cancel(args.trans,
- 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (tpp)
-+		tpp = &args.trans;
- 	return(error);
- }
- 
- int
-+xfs_attr_set_int(
-+	xfs_inode_t	*dp,
-+	const char	*name,
-+	int		namelen,
-+	char		*value,
-+	int		valuelen,
-+	int		flags)
-+{
-+	return xfs_trans_attr_set_int(NULL, dp, name, namelen,
-+				      value, valuelen, flags);
-+}
-+
-+int
- xfs_attr_set(
- 	xfs_inode_t	*dp,
- 	const char	*name,
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index b0b5405..c076c85 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -160,6 +160,8 @@ struct xfs_da_args;
-  */
- int xfs_attr_calc_size(struct xfs_inode *, int, int, int *);
- int xfs_attr_set_int(struct xfs_inode *, const char *, int, char *, int, int);
-+ int xfs_trans_attr_set_int(struct xfs_trans **, struct xfs_inode *, const char *,
-+			    int, char *, int, int);
- int xfs_attr_remove_int(struct xfs_inode *, const char *, int, int);
- int xfs_attr_list_int(struct xfs_attr_list_context *);
- int xfs_attr_inactive(struct xfs_inode *dp);
+Cheers,
+
+Dave.
 -- 
-1.5.5.4
+Dave Chinner
+david@fromorbit.com
