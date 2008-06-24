@@ -1,70 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 01:13:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O8D07n005226
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:13:00 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 481FDD2C85F
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:13:59 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id G607gdf3S4VmsgqG for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:13:59 -0700 (PDT)
-Date: Tue, 24 Jun 2008 10:13:48 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH]
-Message-ID: <20080624081348.GA31048@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 02:30:21 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O9UFaM018419
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Jun 2008 02:30:16 -0700
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CD5A26F3CD
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Jun 2008 02:31:14 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id xcoA0GE567tYTC0E for <linux-xfs@oss.sgi.com>; Tue, 24 Jun 2008 02:31:14 -0700 (PDT)
+Received: from nb27steigerwald.qs.de (unknown [212.204.70.254])
+	by mail.lichtvoll.de (Postfix) with ESMTP id A682B5ADEF
+	for <linux-xfs@oss.sgi.com>; Tue, 24 Jun 2008 11:27:46 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+Date: Tue, 24 Jun 2008 11:31:11 +0200
+References: <48605A8E.9070903@sandeen.net> (sfid-20080624_084605_814814_B137A507)
+In-Reply-To: <48605A8E.9070903@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Message-Id: <200806241131.12112.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
-Cc: mj@mjturner.net
-
-As reported by Michael-John Turner XFS updates the mtime on the source
-inode of a rename call in case it's a directory and changes the parent.
-
-This doesn't make any sense, is not mentioned in the standards and not
-performed by any other Linux filesystems so remove it.
+To: linux-xfs@oss.sgi.com
 
 
-(resending this as it might have been lost in the previous thread)
+Hi Eric!
 
+Am Dienstag 24 Juni 2008 schrieb Eric Sandeen:
+> So md raid1 is happy to pass down any barrier writes that it sees, but
+> this bit in xfs_mountfs_check_barriers() at mount time:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Interesting. Since when?
 
-Index: linux-2.6-xfs/fs/xfs/xfs_rename.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_rename.c	2008-06-18 18:24:38.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_rename.c	2008-06-18 18:30:17.000000000 +0200
-@@ -336,22 +336,18 @@ xfs_rename(
- 		ASSERT(error != EEXIST);
- 		if (error)
- 			goto abort_return;
--		xfs_ichgtime(src_ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--
--	} else {
--		/*
--		 * We always want to hit the ctime on the source inode.
--		 * We do it in the if clause above for the 'new_parent &&
--		 * src_is_directory' case, and here we get all the other
--		 * cases.  This isn't strictly required by the standards
--		 * since the source inode isn't really being changed,
--		 * but old unix file systems did it and some incremental
--		 * backup programs won't work without it.
--		 */
--		xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
- 	}
- 
- 	/*
-+	 * We always want to hit the ctime on the source inode.
-+	 *
-+	 * This isn't strictly required by the standards since the source
-+	 * inode isn't really being changed, but old unix file systems did
-+	 * it and some incremental backup programs won't work without it.
-+	 */
-+	xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
-+
-+	/*
- 	 * Adjust the link count on src_dp.  This is necessary when
- 	 * renaming a directory, either within one parent when
- 	 * the target existed, or across two parent directories.
+On my last test also ext3 disabled barries over device mapper / 
+reiserfs[1]. well but I used it with LVM, maybe its different with RAID 
+1. I thought this to be a generic device mapper issue.
+
+Did you test with ext3 too?
+
+[1] http://bugzilla.kernel.org/show_bug.cgi?id=9554
+
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
