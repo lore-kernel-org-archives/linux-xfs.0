@@ -1,91 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 15:44:41 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5OMicap008802
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:44:39 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 15:56:33 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5OMuTuV010116
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:56:30 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E115227547C
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:45:38 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id lEecNMB425yDIw5p for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:45:38 -0700 (PDT)
-Date: Wed, 25 Jun 2008 08:45:33 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3319F1802087
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:57:28 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id r63WJ28vdkrkZolz for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:57:28 -0700 (PDT)
+Date: Wed, 25 Jun 2008 08:57:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] set minleft in xfs_bmbt_split()
-Message-ID: <20080624224533.GM29319@disturbed>
-References: <48605744.8070400@sgi.com> <20080624045841.GN16257@build-svl-1.agami.com> <4860847B.7070703@sgi.com> <20080624052556.GR16257@build-svl-1.agami.com> <48609152.7050208@sgi.com> <20080624062551.GU16257@build-svl-1.agami.com> <48609DD0.80604@sgi.com>
+Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+Message-ID: <20080624225724.GN29319@disturbed>
+References: <48605A8E.9070903@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48609DD0.80604@sgi.com>
+In-Reply-To: <48605A8E.9070903@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jun 24, 2008 at 05:10:08PM +1000, Lachlan McIlroy wrote:
+On Mon, Jun 23, 2008 at 09:23:10PM -0500, Eric Sandeen wrote:
+> So md raid1 is happy to pass down any barrier writes that it sees, but
+> this bit in xfs_mountfs_check_barriers() at mount time:
+> 
+>         if (mp->m_ddev_targp->bt_bdev->bd_disk->queue->ordered ==
+>                                         QUEUE_ORDERED_NONE) {
+>                 xfs_fs_cmn_err(CE_NOTE, mp,
+>                   "Disabling barriers, not supported by the underlying
+> device");
+>                 mp->m_flags &= ~XFS_MOUNT_BARRIER;
+>                 return;
+>         }
+> 
+> winds up with XFS disabling barriers on these devices.  However, if this
+> is simply commented out, XFS happily tests barriers, finds that they
+> work, leaves them turned on and all subsequent barrier writes to the
+> device succeed.
+> 
+> Perhaps what we have here is a failure to communicate?  :)
 
-[....]
+What we have is MD doing something strange and non-standard to
+implement barriers on RAID1. All other devices that support barriers
+define the barrier implementation as something other than
+QUEUE_ORDERED_NONE.
 
-> This is the fallback code.  Do you think I also need to make the same
-> minleft change above and this change below to xfs_bmbt_newroot()?
->
-> I'm inclined to change both xfs_bmbt_split() and xfs_bmbt_newroot()
-> and keep them as similar as possible.  For the newroot case we know we
-> only need one block and we know there will be no more allocations for
-> this insert so using 'minleft = xfs_trans_get_block_res()' is silly but
-> on the other hand we don't have any other way to detect the double
-> insert case.
+> I'm not sure; *should* XFS be looking for a QUEUE_ORDERED tag?
 
-OTOH, if we do a double insert, is it even possible for that to
-trigger a full tree double split? i.e. after the first split that
-allocates a new root, the new root will only be partially full, so
-we should be able to insert there in all cases without a split on
-the second insert. The case of a second split occurring is when the
-second insert goes into a different leaf block to the first insert
-and that needs splitting as well. If it's a completely different
-path up to the root of the tree, then the place where they will join
-is the old root block (remember that the new root block contains the
-old contents of the inode fork - it's not really a split but a move
-operation) and so a second newroot allocation will not be necessary.
-Hence I think that the newroot allocation will never be triggered
-twice in the unwritten extent double insert case.
+It was put there for some reason - now lost in the mists of time, I
+think. I suspect it was for detecting volume managers that didn't
+support barriers properly and weren't returning the correct
+errors to barrier I/O....
 
-*However*, if the newroot function is first allocation, it still may
-need to take into account the second insert which may split a leaf
-as well. I don't think this can happen - the only time we'll do a
-newroot allocation without having first done an allocation in
-xfs_bmbt_split() is when adding an attribute fork and we need to
-push the data fork root out to make room for the attr fork.  In this
-case, we don't have a split occurring at all and so we only need one
-block for the new root.
+> Should MD be setting one?
 
-Hence I don't think the newroot case needs to reserve space for
-entire splits or multiple splits at all - if that is going to happen
-it should already have been taken into account by earlier allocations...
+If it supports barriers, then it probably should be.
 
-> --- 2.6.x-agno2.orig/fs/xfs/xfs_bmap_btree.c
-> +++ 2.6.x-agno2/fs/xfs/xfs_bmap_btree.c
-> @@ -1525,6 +1525,21 @@ xfs_bmbt_split(
-> 		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
-> 		return error;
-> 	}
-> +	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-> +		/*
-> +		 * Could not find an AG will enough free space to satisfy
-> +		 * a full btree split.  Try again without minleft and if
-> +		 * successful activate the lowspace algorithm.
-> +		 */
-> +		args.fsbno = 0;
-> +		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> +		args.minleft = 0;
-> +		if ((error = xfs_alloc_vextent(&args))) {
-> +			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
-> +			return error;
-> +		}
-> +		cur->bc_private.b.flist->xbf_low = 1;
-> +	}
+> Maybe there should be a QUEUE_ORDERED_PASSTHRU flag?
+> Or should XFS just stick with the test write and ignore the flag?  I'm
+> not sure of the queue->ordered flag details, but it seems that XFS & md
+> raid1 both try hard to keep barriers in force, and there's a disconnect
+> here somewhere.
 
-Yes, that change makes sense for the split case.
+Yeah, the problem was that last time this check was removed was
+that a bunch of existing hardware had barriers enabled on them when
+not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+devices. Having to change the root drive config on a wide install
+base was considered much more of support pain than leaving the
+check there. I guess that was more of a distro upgrade issue than
+a mainline problem, but that's the history. Hence I think we
+should probably do whatever everyone else is doing here....
 
 Cheers,
 
