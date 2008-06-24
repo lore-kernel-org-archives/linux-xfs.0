@@ -1,373 +1,238 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 00:01:06 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 00:01:59 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O70fIU022817
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:00:42 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1047526E8A0
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:01:39 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id cpO1OGFR9mpEQrEy for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:01:39 -0700 (PDT)
-Subject: [PATCH 3/3] Add timeout feature
-Message-Id: <20080624160056t-sato@mail.jp.nec.com>
-Mime-Version: 1.0
-From: Takashi Sato <t-sato@yk.jp.nec.com>
-Date: Tue, 24 Jun 2008 16:00:56 +0900
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O71ok3023306
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:01:50 -0700
+Received: from bby1mta01.pmc-sierra.bc.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4360226E8D5
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:02:49 -0700 (PDT)
+Received: from bby1mta01.pmc-sierra.bc.ca (bby1mta01.pmc-sierra.com [216.241.235.116]) by cuda.sgi.com with ESMTP id DIKfXJVJSGhOGEWR for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:02:49 -0700 (PDT)
+Received: from bby1mta01.pmc-sierra.bc.ca (localhost.pmc-sierra.bc.ca [127.0.0.1])
+	by localhost (Postfix) with SMTP id C4E7518900C1
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:05:28 -0700 (PDT)
+Received: from bby1exg02.pmc_nt.nt.pmc-sierra.bc.ca (BBY1EXG02.pmc-sierra.bc.ca [216.241.231.167])
+	by bby1mta01.pmc-sierra.bc.ca (Postfix) with SMTP id 5F61A18900BF
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:05:28 -0700 (PDT)
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Subject: Xfs Access to block zero  exception and system crash
+Date: Tue, 24 Jun 2008 00:03:16 -0700
+Message-ID: <340C71CD25A7EB49BFA81AE8C839266701323BD8@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+From: "Sagar Borikar" <Sagar_Borikar@pmc-sierra.com>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: akpm@linux-foundation.org, viro@ZenIV.linux.org.uk
-Cc: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, axboe@kernel.dk, mtk.manpages@googlemail.com
+To: xfs@oss.sgi.com
+Cc: Sagar Borikar <Sagar_Borikar@pmc-sierra.com>
 
-The timeout feature is added to freeze ioctl.  And new ioctl
-to reset the timeout period is added.
-o Freeze the filesystem
-  int ioctl(int fd, int FIFREEZE, long *timeval)
-    fd: The file descriptor of the mountpoint
-    FIFREEZE: request code for the freeze
-    timeval: the timeout period in seconds
-             If it's 0 or 1, the timeout isn't set.
-             This special case of "1" is implemented to keep
-             the compatibility with XFS applications.
-    Return value: 0 if the operation succeeds. Otherwise, -1
 
-o Reset the timeout period
-  int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeval)
-    fd:file descriptor of mountpoint
-    FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
-    timeval: new timeout period in seconds
-    Return value: 0 if the operation succeeds. Otherwise, -1
-    Error number: If the filesystem has already been unfrozen,
-                  errno is set to EINVAL.
+Hello,
 
-Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
-Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
----
- drivers/md/dm.c             |    2 -
- fs/block_dev.c              |    2 +
- fs/buffer.c                 |   14 ++++++-
- fs/ioctl.c                  |   78 ++++++++++++++++++++++++++++++++++++++++++--
- fs/super.c                  |   51 ++++++++++++++++++++++++++++
- fs/xfs/xfs_fsops.c          |    2 -
- include/linux/buffer_head.h |    2 -
- include/linux/fs.h          |    8 ++++
- 8 files changed, 151 insertions(+), 8 deletions(-)
+I hope this is the right list to address this issue. If not please divert me to the right list. 
 
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/drivers/md/dm.c linux-2.6.26-rc7-timeout/
-drivers/md/dm.c
---- linux-2.6.26-rc7-xfs/drivers/md/dm.c	2008-06-23 11:55:11.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/drivers/md/dm.c	2008-06-23 11:56:47.000000000 +0900
-@@ -1407,7 +1407,7 @@ static int lock_fs(struct mapped_device 
- 
- 	WARN_ON(md->frozen_sb);
- 
--	md->frozen_sb = freeze_bdev(md->suspended_bdev);
-+	md->frozen_sb = freeze_bdev(md->suspended_bdev, 0);
- 	if (IS_ERR(md->frozen_sb)) {
- 		r = PTR_ERR(md->frozen_sb);
- 		md->frozen_sb = NULL;
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/fs/block_dev.c linux-2.6.26-rc7-timeout/f
-s/block_dev.c
---- linux-2.6.26-rc7-xfs/fs/block_dev.c	2008-06-23 11:55:15.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/fs/block_dev.c	2008-06-23 11:56:47.000000000 +0900
-@@ -285,6 +285,8 @@ static void init_once(struct kmem_cache 
- 	INIT_LIST_HEAD(&bdev->bd_holder_list);
- #endif
- 	inode_init_once(&ei->vfs_inode);
-+	/* Setup freeze timeout function. */
-+	INIT_DELAYED_WORK(&bdev->bd_freeze_timeout, freeze_timeout);
- }
- 
- static inline void __bd_forget(struct inode *inode)
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/fs/buffer.c linux-2.6.26-rc7-timeout/fs/b
-uffer.c
---- linux-2.6.26-rc7-xfs/fs/buffer.c	2008-06-23 11:55:15.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/fs/buffer.c	2008-06-23 11:56:47.000000000 +0900
-@@ -190,14 +190,17 @@ int fsync_bdev(struct block_device *bdev
- 
- /**
-  * freeze_bdev  --  lock a filesystem and force it into a consistent state
-- * @bdev:	blockdevice to lock
-+ * @bdev:              blockdevice to lock
-+ * @timeout_msec:      timeout period
-  *
-  * This takes the block device bd_mount_sem to make sure no new mounts
-  * happen on bdev until thaw_bdev() is called.
-  * If a superblock is found on this device, we take the s_umount semaphore
-  * on it to make sure nobody unmounts until the snapshot creation is done.
-+ * If timeout_msec is bigger than 0, this registers the delayed work for
-+ * timeout of the freeze feature.
-  */
--struct super_block *freeze_bdev(struct block_device *bdev)
-+struct super_block *freeze_bdev(struct block_device *bdev, long timeout_msec)
- {
- 	struct super_block *sb;
- 
-@@ -234,6 +237,10 @@ struct super_block *freeze_bdev(struct b
- 	}
- 
- 	sync_blockdev(bdev);
-+	/* Setup unfreeze timer. */
-+	if (timeout_msec > 0)
-+		add_freeze_timeout(bdev, timeout_msec);
-+
- 	clear_bit(BD_FREEZE_OP, &bdev->bd_state);
- 
- 	return sb;	/* thaw_bdev releases s->s_umount and bd_mount_sem */
-@@ -258,6 +265,9 @@ int thaw_bdev(struct block_device *bdev,
- 		return 0;
- 	}
- 
-+	/* Delete unfreeze timer. */
-+	del_freeze_timeout(bdev);
-+
- 	if (sb) {
- 		BUG_ON(sb->s_bdev != bdev);
- 
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/fs/ioctl.c linux-2.6.26-rc7-timeout/fs/io
-ctl.c
---- linux-2.6.26-rc7-xfs/fs/ioctl.c	2008-06-23 11:55:15.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/fs/ioctl.c	2008-06-23 11:56:47.000000000 +0900
-@@ -145,12 +145,16 @@ static int ioctl_fioasync(unsigned int f
-  * ioctl_freeze - Freeze the filesystem.
-  *
-  * @filp:	target file
-+ * @argp:       timeout value(sec)
-  *
-  * Call freeze_bdev() to freeze the filesystem.
-  */
--static int ioctl_freeze(struct file *filp)
-+static int ioctl_freeze(struct file *filp, unsigned long arg)
- {
-+	long timeout_sec;
-+	long timeout_msec;
- 	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
-+	int error;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
-@@ -159,8 +163,27 @@ static int ioctl_freeze(struct file *fil
- 	if (sb->s_op->write_super_lockfs == NULL)
- 		return -EOPNOTSUPP;
- 
-+	/* arg(sec) to tick value. */
-+	error = get_user(timeout_sec, (long __user *) arg);
-+	if (error != 0)
-+		return error;
-+	/*
-+	 * If 1 is specified as the timeout period,
-+	 * it will be changed into 0 to keep the compatibility
-+	 * of XFS application(xfs_freeze).
-+	 */
-+	if (timeout_sec < 0)
-+		return -EINVAL;
-+	else if (timeout_sec < 2)
-+		timeout_sec = 0;
-+
-+	timeout_msec = timeout_sec * 1000;
-+	/* overflow case */
-+	if (timeout_msec < 0)
-+		return -EINVAL;
-+
- 	/* Freeze */
--	sb = freeze_bdev(sb->s_bdev);
-+	sb = freeze_bdev(sb->s_bdev, timeout_msec);
- 	if (IS_ERR(sb))
- 		return PTR_ERR(sb);
- 	return 0;
-@@ -185,6 +208,51 @@ static int ioctl_thaw(struct file *filp)
- }
- 
- /*
-+ * ioctl_freeze_reset_timeout - Reset timeout for freeze.
-+ *
-+ * @filp:       target file
-+ * @argp:       timeout value(sec)
-+ *
-+ * Rest timeout for freeze.
-+ */
-+static int
-+ioctl_freeze_reset_timeout(struct file *filp, unsigned long arg)
-+{
-+	long timeout_sec;
-+	long timeout_msec;
-+	struct super_block *sb
-+			= filp->f_path.dentry->d_inode->i_sb;
-+	int error;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	/* arg(sec) to tick value */
-+	error = get_user(timeout_sec, (long __user *) arg);
-+	if (error)
-+		return error;
-+	timeout_msec = timeout_sec * 1000;
-+	if (timeout_msec < 0)
-+		return -EINVAL;
-+
-+	if (sb) {
-+		if (test_and_set_bit(BD_FREEZE_OP, &sb->s_bdev->bd_state))
-+			return -EBUSY;
-+		if (sb->s_frozen == SB_UNFROZEN) {
-+			clear_bit(BD_FREEZE_OP, &sb->s_bdev->bd_state);
-+			return -EINVAL;
-+		}
-+		/* setup unfreeze timer */
-+		if (timeout_msec > 0)
-+			add_freeze_timeout(sb->s_bdev,
-+					timeout_msec);
-+		clear_bit(BD_FREEZE_OP, &sb->s_bdev->bd_state);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-  * When you add any new common ioctls to the switches above and below
-  * please update compat_sys_ioctl() too.
-  *
-@@ -227,13 +295,17 @@ int do_vfs_ioctl(struct file *filp, unsi
- 		break;
- 
- 	case FIFREEZE:
--		error = ioctl_freeze(filp);
-+		error = ioctl_freeze(filp, arg);
- 		break;
- 
- 	case FITHAW:
- 		error = ioctl_thaw(filp);
- 		break;
- 
-+	case FIFREEZE_RESET_TIMEOUT:
-+		error = ioctl_freeze_reset_timeout(filp, arg);
-+		break;
-+
- 	default:
- 		if (S_ISREG(filp->f_path.dentry->d_inode->i_mode))
- 			error = file_ioctl(filp, cmd, arg);
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/fs/super.c linux-2.6.26-rc7-timeout/fs/su
-per.c
---- linux-2.6.26-rc7-xfs/fs/super.c	2008-06-23 11:55:15.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/fs/super.c	2008-06-23 11:56:47.000000000 +0900
-@@ -1010,3 +1010,54 @@ struct vfsmount *kern_mount_data(struct 
- }
- 
- EXPORT_SYMBOL_GPL(kern_mount_data);
-+
-+/*
-+ * freeze_timeout - Thaw the filesystem.
-+ *
-+ * @work:	work queue (delayed_work.work)
-+ *
-+ * Called by the delayed work when elapsing the timeout period.
-+ * Thaw the filesystem.
-+ */
-+void freeze_timeout(struct work_struct *work)
-+{
-+	struct block_device *bd = container_of(work,
-+			struct block_device, bd_freeze_timeout.work);
-+	struct super_block *sb = get_super_without_lock(bd);
-+
-+	thaw_bdev(bd, sb);
-+
-+	if (sb)
-+		put_super(sb);
-+}
-+EXPORT_SYMBOL_GPL(freeze_timeout);
-+
-+/*
-+ * add_freeze_timeout - Add timeout for freeze.
-+ *
-+ * @bdev:		block device struct
-+ * @timeout_msec:	timeout period
-+ *
-+ * Add the delayed work for freeze timeout to the delayed work queue.
-+ */
-+void add_freeze_timeout(struct block_device *bdev, long timeout_msec)
-+{
-+	s64 timeout_jiffies = msecs_to_jiffies(timeout_msec);
-+
-+	/* Set delayed work queue */
-+	cancel_delayed_work(&bdev->bd_freeze_timeout);
-+	schedule_delayed_work(&bdev->bd_freeze_timeout, timeout_jiffies);
-+}
-+
-+/*
-+ * del_freeze_timeout - Delete timeout for freeze.
-+ *
-+ * @bdev:	block device struct
-+ *
-+ * Delete the delayed work for freeze timeout from the delayed work queue.
-+ */
-+void del_freeze_timeout(struct block_device *bdev)
-+{
-+	if (delayed_work_pending(&bdev->bd_freeze_timeout))
-+		cancel_delayed_work(&bdev->bd_freeze_timeout);
-+}
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/fs/xfs/xfs_fsops.c linux-2.6.26-rc7-timeo
-ut/fs/xfs/xfs_fsops.c
---- linux-2.6.26-rc7-xfs/fs/xfs/xfs_fsops.c	2008-06-23 11:55:15.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/fs/xfs/xfs_fsops.c	2008-06-23 11:56:47.000000000 +0900
-@@ -619,7 +619,7 @@ xfs_fs_goingdown(
- {
- 	switch (inflags) {
- 	case XFS_FSOP_GOING_FLAGS_DEFAULT: {
--		struct super_block *sb = freeze_bdev(mp->m_super->s_bdev);
-+		struct super_block *sb = freeze_bdev(mp->m_super->s_bdev, 0);
- 
- 		if (sb && !IS_ERR(sb)) {
- 			xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/include/linux/buffer_head.h linux-2.6.26-
-rc7-timeout/include/linux/buffer_head.h
---- linux-2.6.26-rc7-xfs/include/linux/buffer_head.h	2008-06-23 11:55:16.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/include/linux/buffer_head.h	2008-06-23 11:56:47.000000000 +0900
-@@ -170,7 +170,7 @@ int sync_blockdev(struct block_device *b
- void __wait_on_buffer(struct buffer_head *);
- wait_queue_head_t *bh_waitq_head(struct buffer_head *bh);
- int fsync_bdev(struct block_device *);
--struct super_block *freeze_bdev(struct block_device *);
-+struct super_block *freeze_bdev(struct block_device *, long timeout_msec);
- int thaw_bdev(struct block_device *, struct super_block *);
- int fsync_super(struct super_block *);
- int fsync_no_super(struct block_device *);
-diff -uprN -X linux-2.6.26-rc7.org/Documentation/dontdiff linux-2.6.26-rc7-xfs/include/linux/fs.h linux-2.6.26-rc7-timeo
-ut/include/linux/fs.h
---- linux-2.6.26-rc7-xfs/include/linux/fs.h	2008-06-23 11:55:16.000000000 +0900
-+++ linux-2.6.26-rc7-timeout/include/linux/fs.h	2008-06-23 11:56:47.000000000 +0900
-@@ -8,6 +8,7 @@
- 
- #include <linux/limits.h>
- #include <linux/ioctl.h>
-+#include <linux/workqueue.h>
- 
- /*
-  * It's silly to have NR_OPEN bigger than NR_FILE, but you can change
-@@ -225,6 +226,7 @@ extern int dir_notify_enable;
- #define FIGETBSZ   _IO(0x00,2)	/* get the block size used for bmap */
- #define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
- #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
-+#define	FIFREEZE_RESET_TIMEOUT	_IO(0x00, 3)	/* Reset freeze timeout */
- 
- #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
- #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
-@@ -559,6 +561,8 @@ struct block_device {
- 
- 	/* State of the block device. (Used by freeze feature) */
- 	unsigned long		bd_state;
-+	/* Delayed work for freeze */
-+	struct delayed_work     bd_freeze_timeout;
- };
- 
- /*
-@@ -2149,5 +2153,9 @@ int proc_nr_files(struct ctl_table *tabl
- 
- int get_filesystem_list(char * buf);
- 
-+extern void add_freeze_timeout(struct block_device *bdev, long timeout_msec);
-+extern void del_freeze_timeout(struct block_device *bdev);
-+extern void freeze_timeout(struct work_struct *work);
-+
- #endif /* __KERNEL__ */
- #endif /* _LINUX_FS_H */
+We are facing strange issue with xfs under heavy load. It's a NAS box with 2.6.18 kernel,128 MB of RAM, MIPS architecture and XFS version 2.8.11. 
+NAS allows to create RAID1,RAID5 over XFS. The system is stable in general without any stress. We don't see any issues in day to day activities. 
+But when it is exposed to stress with multiple iozone clients, it starts giving weird issues. 
+The iozone stress test is ran with 15 CIFS clients, pumping data over 1GBps network, continuously for 48 hours as a part of calculating MTBF of the system, it crashes at different stages in different stimulus but in XFS only. 
+
+
+A. Initially it used to give access to block zero exception and system used to crash for which I applied Nathan Scott's patch which removes the kernel panic when this situation is hit. http://oss.sgi.com/archives/xfs/2006-08/msg00073.html
+After back porting this patch, we observed that the system is not crashing but the warning messages are still coming. And after some time the system goes in soft lockup state and becomes non-responsive. 
+
+I couldn't run the xfs_db or xfs_repair to check what is the state of the inode as console was not reachable after hitting the lockup state. 
+Here is the log 
+"
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+af
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+af
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+af
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+b0
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+b0
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+e7
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+e7
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 7
+e7
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 8
+20
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 8
+20
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffe000000 blkcnt: 68 extent-sta
+te: 1 lastx: 88d
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffe000000 blkcnt: 68 extent-sta
+te: 1 lastx: 88d
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffe000000 blkcnt: 68 extent-sta
+te: 1 lastx: 88d
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffc000000 blkcnt: 180 extent-st
+ate: 1 lastx: 88f
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffc000000 blkcnt: 180 extent-st
+ate: 1 lastx: 88f
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffc000000 blkcnt: 180 extent-st
+ate: 1 lastx: 88f
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffe000000 blkcnt: 1a0 extent-st
+ate: 1 lastx: 891
+Filesystem "dm-0": Access to block zero in inode 33554565 start_block: 0 start_off: 3ffffffe000000 blkcnt: 1a0 extent-st
+"
+
+Once we hit the soft lockup, system has to be rebooted as it is completely stalled and we can't even check which processes are running. I could be wrong but it was surprising to me that the same inode was referring to different offsets and blkcnt. It took 48 hours to reach this state and system had to be rebooted.
+
+
+B. In another DUT, the system just rebooted after displaying couple of warning messages without entering in soft lockup state.
+
+
+"
+Filesystem "dm-1": Access to block zero in inode 2097283 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 46
+d
+Filesystem "dm-1": Access to block zero in inode 2097283 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 46
+d
+Filesystem "dm-1": Access to block zero in inode 2097283 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 46
+d
+Filesystem "dm-1": Access to block zero in inode 2097283 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 46
+d
+Filesystem "dm-1": Access to block zero in inode 2097283 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 46
+d
+Filesystem "dm-1": Access to block zero in inï
+
+
+
+PMON2000 MIPS Initializing. Standby...
+ERRORPC=bfc00004 CONFIG=0042e4bb STATUS=00400000
+CPU PRID 000034c1, MaskID 00001320
+Initializing caches...done (CONFIG=0042e4bb)
+Switching to runtime address map...done
+Setting up SDRAM controller: Manual SDRAM setup
+  drive strength 0x000073c7
+  output timing  0x00000fca
+  general config 0x80010000
+master clock 100 Mhz, MulFundBIU 0x02, DivXSDRAM 0x02
+sdram freq 0x09ef21aa hz, sdram period: 0x06 nsec
+
+"
+
+
+It took 43 hours to come to this state. 
+
+C. In another stimulus, device driver mentioned that it can't access the block. Which means that filesystem got corrupted. I inferred that Filesystem was trying to reach block which is not existing in the disk. After some time, it recovers itself and starts giving weird issue. Finally it hits the memory access exception and system crashes.
+
+"
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a
+8
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a
+8
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a
+1
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a
+1
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a
+1
+attempt to access beyond end of device
+dm-1: rw=0, want=1003118956380168, limit=8388608
+I/O error in filesystem ("dm-1") meta-data dev dm-1 block 0x39054d5100001       ("xfs_trans_read_buf") error 5 buf count
+ 512
+attempt to access beyond end of device
+dm-1: rw=0, want=1003118956380168, limit=8388608
+I/O error in filesystem ("dm-1") meta-data dev dm-1 block 0x39054d5100001       ("xfs_trans_read_buf") error 5 buf count
+ 512
+attempt to access beyond end of device
+dm-1: rw=0, want=1003118956380168, limit=8388608
+I/O error in filesystem ("dm-1") meta-data dev dm-1 block 0x39054d5100001       ("xfs_trans_read_buf") error 5 buf count
+ 512
+attempt to access beyond end of device
+dm-1: rw=0, want=1003118956380168, limit=8388608
+I/O error in filesystem ("dm-1") meta-data dev dm-1 block 0x39054d5100001       ("xfs_trans_read_buf") error 5 buf count
+ 512
+attempt to access beyond end of device
+
+
+
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1f
+e
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1f
+e
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1f
+f
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1f
+f
+Filesystem "dm-1": Access to block zero in inode 2097284 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1f
+f
+CPU 0 Unable to handle kernel paging request at virtual address 04e81080, epc == 802a90ac, ra == 802a9094
+Oops[#1]:
+Cpu 0
+$ 0   : 00000000 9000a001 84e81080 80000000
+$ 4   : 82ce6dd0 00000000 ffffffff ffffffff
+$ 8   : 00086800 00000000 00086800 00000001
+$12   : 00000004 34000000 82ce6c00 00000001
+$16   : ffffffff 04e81080 34000000 81213978
+$20   : 82ce6c00 82ce6dd0 00000000 34000000
+$24   : 00086800 00000000                  
+$28   : 81212000 81213878 00000000 802a9094
+Hi    : 00000000
+Lo    : 00036a20
+epc   : 802a90ac xfs_bmap_btalloc+0x33c/0x950     Not tainted
+ra    : 802a9094 xfs_bmap_btalloc+0x324/0x950
+Status: 9000a003    KERNEL EXL IE 
+Cause : 00000008
+BadVA : 04e81080
+PrId  : 000034c1
+Modules linked in: aes autofs4
+Process pdflush (pid: 66, threadinfo=81212000, task=8120b138)
+Stack : 81213880 811c9074 00000003 863af000 00000000 00000001 000000cb 805c1f90
+        812139b8 8616ece0 8538e6f8 82ce6c00 812139fc ffffffff 00086800 00000000
+        802aad9c 802aad80 8616ed30 00000001 8173c6f4 813cf200 812138d8 00000001
+        00000200 00000000 812139b8 00000004 81213a00 00000000 ffffffff ffffffff
+        00000000 00000000 00000001 00000000 00000000 81213a00 000002a3 81213ac0
+        ...
+Call Trace:
+[<802a90ac>] xfs_bmap_btalloc+0x33c/0x950
+[<802a9700>] xfs_bmap_alloc+0x40/0x4c
+[<802acc9c>] xfs_bmapi+0x8d8/0x13e4
+[<802d42d4>] xfs_iomap_write_allocate+0x3c0/0x5f4
+[<802d2b28>] xfs_iomap+0x408/0x4dc
+[<802fe90c>] xfs_bmap+0x30/0x3c
+[<802f3cfc>] xfs_map_blocks+0x50/0x84
+[<802f512c>] xfs_page_state_convert+0x3f4/0x840
+[<802f565c>] xfs_vm_writepage+0xe4/0x140
+[<80198758>] mpage_writepages+0x24c/0x45c
+[<802f56e8>] xfs_vm_writepages+0x30/0x3c
+[<801507b4>] do_writepages+0x44/0x84
+[<80196628>] __sync_single_inode+0x68/0x234
+[<80196980>] __writeback_single_inode+0x18c/0x1ac
+[<80196ba8>] sync_sb_inodes+0x208/0x2f0
+[<80196d14>] writeback_inodes+0x84/0xd0
+[<801503e0>] background_writeout+0xac/0xfc
+[<80151330>] __pdflush+0x130/0x228
+[<80151458>] pdflush+0x30/0x3c
+[<801398bc>] kthread+0x98/0xe0
+[<80104c38>] kernel_thread_helper+0x10/0x18
+
+"
+
+
+In all the three cases, when I tried to perform the slower tests i.e. with 6 clients but with the same stimulus, there we re no exceptions and system was stable for 5 days. 
+
+[root@Cousteau6 ~]# df -k
+Filesystem           1k-blocks      Used Available Use% Mounted on
+/dev/scsibd2              41664     41664         0 100% /
+udev                      62044         4     62040   0% /dev
+tmpfs                      5120      3468      1652  68% /var
+tmpfs                     62044        24     62020   0% /tmp
+tmpfs                       128         4       124   3% /mnt
+/dev/mtdblock1             1664       436      1228  26% /linuxrwfs
+/dev/RAIDA/Volume1     10475520       624  10474896   0% /mnt/RAIDA/Volume1
+/dev/RAIDA/Volume1     10475520       624  10474896   0% /mnt/ftp_dir/homes
+/dev/RAIDA/IOZONETEST   4184064   2479044   1705020  59% /mnt/RAIDA/IOZONETEST
+/dev/RAIDA/IOZONETEST   4184064   2479044   1705020  59% /mnt/ftp_dir/share1
+/dev/RAIDA/Volume1     10475520       624  10474896   0% /mnt/ftp_dir/share2
+
+Can anyone let me know what could be the probable cause of this issue.
+
+Thanks in advance
+Sagar
