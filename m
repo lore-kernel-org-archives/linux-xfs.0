@@ -1,49 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jun 2008 19:22:17 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O2MDkX010811
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 19:22:13 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 789A512331B6
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 19:23:13 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id EXaJM9S5yoqQhfix for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 19:23:13 -0700 (PDT)
-Message-ID: <48605A8E.9070903@sandeen.net>
-Date: Mon, 23 Jun 2008 21:23:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 23 Jun 2008 19:47:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5O2lio2014186
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2008 19:47:46 -0700
+Message-ID: <4860604C.4090109@sgi.com>
+Date: Tue, 24 Jun 2008 12:47:40 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: md raid1 passes barriers, but xfs doesn't use them?
+Subject: Re: [PATCH] check for invalid flags in xfs_attrlist_by_handle
+References: <20080531075829.GA5424@lst.de> <485B431F.2070905@sgi.com> <20080623113946.GA32665@lst.de>
+In-Reply-To: <20080623113946.GA32665@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-So md raid1 is happy to pass down any barrier writes that it sees, but
-this bit in xfs_mountfs_check_barriers() at mount time:
+Christoph Hellwig wrote:
+> On Fri, Jun 20, 2008 at 03:41:51PM +1000, Timothy Shimmin wrote:
+>> Fair enough.
+>> Actually, I think we only use ATTR_ROOT and ATTR_SECURE for the
+>> namespace flags.
+>> So you could probably use: XFS_ATTR_NSP_ARGS
+>> xfs_attr_leaf.h:#define XFS_ATTR_NSP_ARGS_MASK	 (ATTR_ROOT | ATTR_SECURE)
+>> xfs_attr_leaf.h:#define XFS_ATTR_NSP_ARGS(flags) ((flags) & XFS_ATTR_NSP_ARGS_MASK)
+>> and something like:
+>>
+>> if (!XFS_ATTR_NSP_ARGS(al_hreq.flags))
+>>          return -XFS_ERROR(EINVAL);
+> 
+> Actually a zero flags is of course valid too.
+> 
+Ah, that would be why I used the phrase "something like" ;-))
+Good pt.
 
-        if (mp->m_ddev_targp->bt_bdev->bd_disk->queue->ordered ==
-                                        QUEUE_ORDERED_NONE) {
-                xfs_fs_cmn_err(CE_NOTE, mp,
-                  "Disabling barriers, not supported by the underlying
-device");
-                mp->m_flags &= ~XFS_MOUNT_BARRIER;
-                return;
-        }
+> So the check should be & ~(ATTR_ROOT | ATTR_SECURE).  I could use
+> XFS_ATTR_NSP_ARGS_MASK but that would pull in not just xfs_attr_leaf.h
+> but also xfs_da_btree.h and that needs even more headers..
+> 
+> So I propose this simple version:
+> 
+Cool.
+I was just thinking about centralising stuff in case we extend the
+namespaces. But that's fine.
+I'll check it in...
 
-winds up with XFS disabling barriers on these devices.  However, if this
-is simply commented out, XFS happily tests barriers, finds that they
-work, leaves them turned on and all subsequent barrier writes to the
-device succeed.
+--Tim
 
-Perhaps what we have here is a failure to communicate?  :)
-
-I'm not sure; *should* XFS be looking for a QUEUE_ORDERED tag?  Should
-MD be setting one?  Maybe there should be a QUEUE_ORDERED_PASSTHRU flag?
- Or should XFS just stick with the test write and ignore the flag?  I'm
-not sure of the queue->ordered flag details, but it seems that XFS & md
-raid1 both try hard to keep barriers in force, and there's a disconnect
-here somewhere.
-
-Thanks,
--Eric
+> 
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-06-20 08:17:13.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-06-23 13:38:17.000000000 +0200
+> @@ -470,6 +470,12 @@ xfs_attrlist_by_handle(
+>  	if (al_hreq.buflen > XATTR_LIST_MAX)
+>  		return -XFS_ERROR(EINVAL);
+>  
+> +	/*
+> +	 * Reject flags, only allow namespaces.
+> +	 */
+> +	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
+> +		return -XFS_ERROR(EINVAL);
+> +
+>  	error = xfs_vget_fsop_handlereq(mp, parinode, &al_hreq.hreq, &inode);
+>  	if (error)
+>  		goto out;
+> 
