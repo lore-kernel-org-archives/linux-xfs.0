@@ -1,128 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 00:05:30 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5O75KIq024155
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 00:05:21 -0700
-Message-ID: <48609DD0.80604@sgi.com>
-Date: Tue, 24 Jun 2008 17:10:08 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] set minleft in xfs_bmbt_split()
-References: <48605744.8070400@sgi.com> <20080624045841.GN16257@build-svl-1.agami.com> <4860847B.7070703@sgi.com> <20080624052556.GR16257@build-svl-1.agami.com> <48609152.7050208@sgi.com> <20080624062551.GU16257@build-svl-1.agami.com>
-In-Reply-To: <20080624062551.GU16257@build-svl-1.agami.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 01:16:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5O8GUkq006173
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:16:30 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B4AA26EBFB
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:17:30 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id GOLOfFtv2DPnDfIv for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 01:17:30 -0700 (PDT)
+Date: Tue, 24 Jun 2008 10:17:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] don't update mtime on rename source
+Message-ID: <20080624081719.GA31440@lst.de>
+References: <20080624081348.GA31048@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080624081348.GA31048@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: mj@mjturner.net
 
+Sorry for the missing subject, should be the one in this mail
 
-
-Dave Chinner wrote:
-> On Tue, Jun 24, 2008 at 04:16:50PM +1000, Lachlan McIlroy wrote:
->> Dave Chinner wrote:
->>> On Tue, Jun 24, 2008 at 03:22:03PM +1000, Lachlan McIlroy wrote:
->>>> Dave Chinner wrote:
->>>>> On Tue, Jun 24, 2008 at 12:09:08PM +1000, Lachlan McIlroy wrote:
->>>>>> The bmap btree split code relies on a previous data extent allocation
->>>>>> (from xfs_bmap_btalloc()) to find an AG that has sufficient space
->>>>>> to perform a full btree split, when inserting the extent.  When
->>>>>> converting unwritten extents we don't allocate a data extent so a
->>>>>> btree split will be the first allocation.  In this case we need to
->>>>>> set minleft so the allocator will pick an AG that has space to
->>>>>> complete the split(s).
->>>>> looks good, execpt...
->>>>>
->>>>>> Lachlan
->>>>>>
->>>>>> --- 2.6.x-agno2.orig/fs/xfs/xfs_bmap_btree.c
->>>>>> +++ 2.6.x-agno2/fs/xfs/xfs_bmap_btree.c
->>>>>> @@ -1493,12 +1493,20 @@ xfs_bmbt_split(
->>>>>> 	left = XFS_BUF_TO_BMBT_BLOCK(lbp);
->>>>>> 	args.fsbno = cur->bc_private.b.firstblock;
->>>>>> 	args.firstblock = args.fsbno;
->>>>>> +	args.minleft = 0;
->>>>>> 	if (args.fsbno == NULLFSBLOCK) {
->>>>>> 		args.fsbno = lbno;
->>>>>> 		args.type = XFS_ALLOCTYPE_START_BNO;
->>>>>> +		/*
->>>>>> +		 * Make sure there is sufficient room left in the AG to
->>>>>> +		 * complete a full tree split for an extent insert.  If
->>>>>> +		 * we are converting the middle part of an extent then
->>>>>> +		 * we may need space for two tree splits.
->>>>>> +		 */
->>>>>> +		args.minleft = xfs_trans_get_block_res(args.tp);
->>>>> I'd mention in this comment that transaction reservation needs to
->>>>> take this specifically into account.
->>>> How would transaction reservation take this into account?  Are you
->>>> implying they could do something different if they knew about this
->>>> fix?
->>> No, I'm implying that the transaction reservation better be correct.
->>> i.e. anywhere that unwritten extent conversion can take place needs
->>> to supply a reservation of enough blocks to allow a double split to
->>> occur.  i.e. we are relying on the caller to get this right, so we
->>> need to ensure that a comment explaining the potential landmine is
->>> present....
->> Okay.  With the change above we can still have xfs_bmbt_split() fail
->> to allocate btree blocks if it cannot find a single AG with enough
->> free space.  Although in my testing I haven't seen it fail yet.
+On Tue, Jun 24, 2008 at 10:13:48AM +0200, Christoph Hellwig wrote:
+> As reported by Michael-John Turner XFS updates the mtime on the source
+> inode of a rename call in case it's a directory and changes the parent.
 > 
-> Sure, but at that point you've most likely got a real ENOSPC condition.
+> This doesn't make any sense, is not mentioned in the standards and not
+> performed by any other Linux filesystems so remove it.
 > 
->> We really don't want to fail here because we have already partly
->> modified the extent btree (ie for the case where we convert the middle
->> part of an unwritten extent we do an xfs_bmbt_update before the insert)
->> and we dont undo the damage. 
 > 
-> Yes, but lets deal with one problem at a time ;)
+> (resending this as it might have been lost in the previous thread)
 > 
->> Also a failure to allocate in
->> xfs_bmbt_split() will be caught by the XFS_WANT_CORRUPTED_GOTO() in
->> xfs_bmbt_insert() and the error set to EFSCORRUPTED which is only going
->> to create confusion. 
 > 
-> For whom? Log an error message when allocation fails if you're
-> worried that we won't be able to determine what went wrong...
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
->> I have another patch that allows xfs_bmbt_split()
->> and xfs_bmbt_newroot() to fall back to the lowspace algorithm - I'm
->> just testing it now.
-> 
-> Cool - that should solve the corner cases you mention above...
-
-This is the fallback code.  Do you think I also need to make the same
-minleft change above and this change below to xfs_bmbt_newroot()?
-
-I'm inclined to change both xfs_bmbt_split() and xfs_bmbt_newroot()
-and keep them as similar as possible.  For the newroot case we know we
-only need one block and we know there will be no more allocations for
-this insert so using 'minleft = xfs_trans_get_block_res()' is silly but
-on the other hand we don't have any other way to detect the double
-insert case.
-
---- 2.6.x-agno2.orig/fs/xfs/xfs_bmap_btree.c
-+++ 2.6.x-agno2/fs/xfs/xfs_bmap_btree.c
-@@ -1525,6 +1525,21 @@ xfs_bmbt_split(
- 		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
- 		return error;
- 	}
-+	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-+		/*
-+		 * Could not find an AG will enough free space to satisfy
-+		 * a full btree split.  Try again without minleft and if
-+		 * successful activate the lowspace algorithm.
-+		 */
-+		args.fsbno = 0;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
-+		args.minleft = 0;
-+		if ((error = xfs_alloc_vextent(&args))) {
-+			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
-+			return error;
-+		}
-+		cur->bc_private.b.flist->xbf_low = 1;
-+	}
- 	if (args.fsbno == NULLFSBLOCK) {
- 		XFS_BMBT_TRACE_CURSOR(cur, EXIT);
- 		*stat = 0;
+> Index: linux-2.6-xfs/fs/xfs/xfs_rename.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_rename.c	2008-06-18 18:24:38.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_rename.c	2008-06-18 18:30:17.000000000 +0200
+> @@ -336,22 +336,18 @@ xfs_rename(
+>  		ASSERT(error != EEXIST);
+>  		if (error)
+>  			goto abort_return;
+> -		xfs_ichgtime(src_ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+> -
+> -	} else {
+> -		/*
+> -		 * We always want to hit the ctime on the source inode.
+> -		 * We do it in the if clause above for the 'new_parent &&
+> -		 * src_is_directory' case, and here we get all the other
+> -		 * cases.  This isn't strictly required by the standards
+> -		 * since the source inode isn't really being changed,
+> -		 * but old unix file systems did it and some incremental
+> -		 * backup programs won't work without it.
+> -		 */
+> -		xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
+>  	}
+>  
+>  	/*
+> +	 * We always want to hit the ctime on the source inode.
+> +	 *
+> +	 * This isn't strictly required by the standards since the source
+> +	 * inode isn't really being changed, but old unix file systems did
+> +	 * it and some incremental backup programs won't work without it.
+> +	 */
+> +	xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
+> +
+> +	/*
+>  	 * Adjust the link count on src_dp.  This is necessary when
+>  	 * renaming a directory, either within one parent when
+>  	 * the target existed, or across two parent directories.
+---end quoted text---
