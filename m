@@ -1,81 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 15:56:33 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5OMuTuV010116
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:56:30 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3319F1802087
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:57:28 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id r63WJ28vdkrkZolz for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 15:57:28 -0700 (PDT)
-Date: Wed, 25 Jun 2008 08:57:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
-Message-ID: <20080624225724.GN29319@disturbed>
-References: <48605A8E.9070903@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48605A8E.9070903@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 17:17:43 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5P0Hcbv021296
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 17:17:38 -0700
+Received: from larry.melbourne.sgi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id ACF0B275912
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 17:18:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130]) by cuda.sgi.com with SMTP id LvsxDrTfEesHvOTR for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 17:18:36 -0700 (PDT)
+Subject: TAKE 983677 - check for invalid flags in xfs_attrlist_by_handle
+Message-Id: <20080625001829.B60BD58C4C3F@chook.melbourne.sgi.com>
+Date: Wed, 25 Jun 2008 10:18:29 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Mon, Jun 23, 2008 at 09:23:10PM -0500, Eric Sandeen wrote:
-> So md raid1 is happy to pass down any barrier writes that it sees, but
-> this bit in xfs_mountfs_check_barriers() at mount time:
-> 
->         if (mp->m_ddev_targp->bt_bdev->bd_disk->queue->ordered ==
->                                         QUEUE_ORDERED_NONE) {
->                 xfs_fs_cmn_err(CE_NOTE, mp,
->                   "Disabling barriers, not supported by the underlying
-> device");
->                 mp->m_flags &= ~XFS_MOUNT_BARRIER;
->                 return;
->         }
-> 
-> winds up with XFS disabling barriers on these devices.  However, if this
-> is simply commented out, XFS happily tests barriers, finds that they
-> work, leaves them turned on and all subsequent barrier writes to the
-> device succeed.
-> 
-> Perhaps what we have here is a failure to communicate?  :)
+Check for invalid flags in xfs_attrlist_by_handle.
 
-What we have is MD doing something strange and non-standard to
-implement barriers on RAID1. All other devices that support barriers
-define the barrier implementation as something other than
-QUEUE_ORDERED_NONE.
+xfs_attrlist_by_handle should only take the ATTR_ flags for the root
+namespaces.  The ATTR_KERN* flags may change at anytime and expect special
+preconditions that can't be guaranteed for userspace-originating
+requests.  For example passing down ATTR_KERNNOVAL through
+xfs_attrlist_by_handle will hit an assert in debug builds currently.
 
-> I'm not sure; *should* XFS be looking for a QUEUE_ORDERED tag?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It was put there for some reason - now lost in the mists of time, I
-think. I suspect it was for detecting volume managers that didn't
-support barriers properly and weren't returning the correct
-errors to barrier I/O....
+Date:  Wed Jun 25 10:17:00 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  hch@lst.de
 
-> Should MD be setting one?
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-If it supports barriers, then it probably should be.
 
-> Maybe there should be a QUEUE_ORDERED_PASSTHRU flag?
-> Or should XFS just stick with the test write and ignore the flag?  I'm
-> not sure of the queue->ordered flag details, but it seems that XFS & md
-> raid1 both try hard to keep barriers in force, and there's a disconnect
-> here somewhere.
-
-Yeah, the problem was that last time this check was removed was
-that a bunch of existing hardware had barriers enabled on them when
-not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
-devices. Having to change the root drive config on a wide install
-base was considered much more of support pain than leaving the
-check there. I guess that was more of a distro upgrade issue than
-a mainline problem, but that's the history. Hence I think we
-should probably do whatever everyone else is doing here....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Modid:  xfs-linux-melb:xfs-kern:31351a
+fs/xfs/linux-2.6/xfs_ioctl.c - 1.166 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.166&r2=text&tr2=1.165&f=h
+	- check for invalid flags in xfs_attrlist_by_handle
