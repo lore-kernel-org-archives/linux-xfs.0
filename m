@@ -1,65 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 18:49:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 20:00:12 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5P1n5dd001595
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 18:49:08 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FFED181D21F
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 18:50:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id yW6Ex8HsPWaugrtQ for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 18:50:02 -0700 (PDT)
-Message-ID: <4861A447.5090208@sandeen.net>
-Date: Tue, 24 Jun 2008 20:49:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
-References: <48605A8E.9070903@sandeen.net> <20080624225724.GN29319@disturbed>
-In-Reply-To: <20080624225724.GN29319@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5P309U1011902
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:00:09 -0700
+Received: from itchy (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88CD9181D56D
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:01:07 -0700 (PDT)
+Received: from itchy (itchy.melbourne.sgi.com [134.14.55.96]) by cuda.sgi.com with ESMTP id 1eB55DoGN3xi0ej0 for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:01:07 -0700 (PDT)
+Subject: TAKE 976035 - streamline init/exit path
+Message-Id: <20080625030057.973173A5D1@itchy>
+Date: Wed, 25 Jun 2008 13:00:57 +1000 (EST)
+From: xaiki@sgi.com (Niv Sardi)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: melbourne@sgi.com, local@sgi.com, xfs@sgi.com, guys@sgi.com, "p_bugpost.bug_groups.9:sgi.bugs.xfssgi.bugs.xfs"@engr.sgi.com, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Jun 23, 2008 at 09:23:10PM -0500, Eric Sandeen wrote:
+streamline init/exit path
+
+Currently the xfs module init/exit code is a mess.  It's farmed out
+over a lot of function with very little error checking.  This patch
+makes sure we propagate all initialization failures properly and clean
+up after them.  Various runtime initializations are replaced with
+compile-time initializations where possible to make this easier.  The
+exit path is similarly consolidated.
+
+There's now split out function to create/destroy the kmem zones and
+alloc/free the trace buffers.  I've also changed the ktrace
+allocations to KM_MAYFAIL and handled errors resulting from that.
+
+And yes, we really should replace the XFS_*_TRACE ifdefs with a single
+XFS_TRACE..
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Niv Sardi <xaiki@sgi.com>
 
 
->> Maybe there should be a QUEUE_ORDERED_PASSTHRU flag?
->> Or should XFS just stick with the test write and ignore the flag?  I'm
->> not sure of the queue->ordered flag details, but it seems that XFS & md
->> raid1 both try hard to keep barriers in force, and there's a disconnect
->> here somewhere.
-> 
-> Yeah, the problem was that last time this check was removed was
-> that a bunch of existing hardware had barriers enabled on them when
-> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
-> devices. 
 
-Hm,
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c#rev1.402,
- putting back what was removed in
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c#rev1.380
- I guess.  But this seems like a very weird argument to me.  Whether a
-drive/raid has battery backed raid, is 1 spindle or 100, is connected to
-a UPS or whatnot really is orthogonal to what should be set on the queue
-flag... This should be an admin decision.  Leaving it this way for this
-odd reason leaves smaller users w/ 2 raid1 spindles in the desktop box
-actually completely unable to use barriers even if they wanted to;
-removing the check at least lets the savvy admin mount with an option to
-turn them off.
+Date:  Wed Jun 25 12:59:48 AEST 2008
+Workarea:  itchy.melbourne.sgi.com:/home/xaiki/Wrk/git/pmod2git
+Inspected by:  hch
 
-> Having to change the root drive config on a wide install
-> base was considered much more of support pain than leaving the
-> check there. I guess that was more of a distro upgrade issue than
-> a mainline problem, but that's the history. Hence I think we
-> should probably do whatever everyone else is doing here...
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-I'll submit a patch to remove the check ;)
 
--Eric
-
-> 
-> Cheers,
-> 
-> Dave.
+Modid:  xfs-linux-melb:xfs-kern:31354a
+fs/xfs/xfs_da_btree.c - 1.182 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_da_btree.c.diff?r1=text&tr1=1.182&r2=text&tr2=1.181&f=h
+fs/xfs/xfs_vfsops.c - 1.570 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.570&r2=text&tr2=1.569&f=h
+fs/xfs/xfs_mount.h - 1.272 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.272&r2=text&tr2=1.271&f=h
+fs/xfs/xfs_error.c - 1.63 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.c.diff?r1=text&tr1=1.63&r2=text&tr2=1.62&f=h
+fs/xfs/xfs_error.h - 1.52 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.h.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
+fs/xfs/support/uuid.h - 1.16 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/uuid.h.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
+fs/xfs/support/uuid.c - 1.24 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/uuid.c.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
+fs/xfs/linux-2.6/xfs_stats.c - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_stats.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+fs/xfs/linux-2.6/xfs_stats.h - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_stats.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+fs/xfs/linux-2.6/xfs_super.c - 1.432 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.432&r2=text&tr2=1.431&f=h
+fs/xfs/linux-2.6/xfs_sysctl.c - 1.46 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.c.diff?r1=text&tr1=1.46&r2=text&tr2=1.45&f=h
+fs/xfs/linux-2.6/xfs_sysctl.h - 1.31 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.h.diff?r1=text&tr1=1.31&r2=text&tr2=1.30&f=h
+fs/xfs/xfs_mru_cache.c - 1.9 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mru_cache.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
+fs/xfs/xfs_filestream.c - 1.8 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_filestream.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
