@@ -1,76 +1,138 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 20:00:12 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 24 Jun 2008 23:36:02 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5P309U1011902
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:00:09 -0700
-Received: from itchy (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 88CD9181D56D
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:01:07 -0700 (PDT)
-Received: from itchy (itchy.melbourne.sgi.com [134.14.55.96]) by cuda.sgi.com with ESMTP id 1eB55DoGN3xi0ej0 for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 20:01:07 -0700 (PDT)
-Subject: TAKE 976035 - streamline init/exit path
-Message-Id: <20080625030057.973173A5D1@itchy>
-Date: Wed, 25 Jun 2008 13:00:57 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5P6ZvNv007155
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 23:35:57 -0700
+Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D66C181E19D
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 23:36:55 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id 6uVGMqSB3AQHGH53 for <xfs@oss.sgi.com>; Tue, 24 Jun 2008 23:36:55 -0700 (PDT)
+Message-Id: <27A96BE5FB224E9A876DA3326A6A6B27@nsl.ad.nec.co.jp>
+From: "Takashi Sato" <t-sato@yk.jp.nec.com>
+References: <20080624155919t-sato@mail.jp.nec.com> <20080624143840.c183d0d9.akpm@linux-foundation.org>
+In-Reply-To: <20080624143840.c183d0d9.akpm@linux-foundation.org>
+Subject: Re: [PATCH 0/3] freeze feature ver 1.6
+Date: Wed, 25 Jun 2008 15:36:40 +0900
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: melbourne@sgi.com, local@sgi.com, xfs@sgi.com, guys@sgi.com, "p_bugpost.bug_groups.9:sgi.bugs.xfssgi.bugs.xfs"@engr.sgi.com, xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, mtk.manpages@googlemail.com
 
-streamline init/exit path
+Hi,
 
-Currently the xfs module init/exit code is a mess.  It's farmed out
-over a lot of function with very little error checking.  This patch
-makes sure we propagate all initialization failures properly and clean
-up after them.  Various runtime initializations are replaced with
-compile-time initializations where possible to make this easier.  The
-exit path is similarly consolidated.
+> umm, OK, but nowhere in this patch series can I find a justification or
+> reason for making these changes to Linux.  Why do we want to do this?
+> What is the benefit?  What is the motivation.  What are the use-cases,
+> etc?
 
-There's now split out function to create/destroy the kmem zones and
-alloc/free the trace buffers.  I've also changed the ktrace
-allocations to KM_MAYFAIL and handled errors resulting from that.
+Currently, ext3 in mainline Linux doesn't have the freeze feature which
+suspends write requests.  So, we cannot take a backup which keeps
+the filesystem's consistency with the storage device's features
+(snapshot and replication) while it is mounted.
+In many case, a commercial filesystem (e.g. VxFS) has
+the freeze feature and it would be used to get the consistent backup.
+If Linux's standard filesytem ext3 has the freeze feature, we can do it
+without a commercial filesystem.
 
-And yes, we really should replace the XFS_*_TRACE ifdefs with a single
-XFS_TRACE..
+So I have implemented the ioctls of the freeze feature.
+I think we can take the consistent backup with the following steps.
+1. Freeze the filesystem with the freeze ioctl.
+2. Separate the replication volume or create the snapshot
+   with the storage device's feature.
+3. Unfreeze the filesystem with the unfreeze ioctl.
+4. Take the backup from the separated replication volume
+   or the snapshot.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Niv Sardi <xaiki@sgi.com>
+Cheers, Takashi
 
-
-
-Date:  Wed Jun 25 12:59:48 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/home/xaiki/Wrk/git/pmod2git
-Inspected by:  hch
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31354a
-fs/xfs/xfs_da_btree.c - 1.182 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_da_btree.c.diff?r1=text&tr1=1.182&r2=text&tr2=1.181&f=h
-fs/xfs/xfs_vfsops.c - 1.570 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.570&r2=text&tr2=1.569&f=h
-fs/xfs/xfs_mount.h - 1.272 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.272&r2=text&tr2=1.271&f=h
-fs/xfs/xfs_error.c - 1.63 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.c.diff?r1=text&tr1=1.63&r2=text&tr2=1.62&f=h
-fs/xfs/xfs_error.h - 1.52 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.h.diff?r1=text&tr1=1.52&r2=text&tr2=1.51&f=h
-fs/xfs/support/uuid.h - 1.16 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/uuid.h.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-fs/xfs/support/uuid.c - 1.24 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/support/uuid.c.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
-fs/xfs/linux-2.6/xfs_stats.c - 1.26 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_stats.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
-fs/xfs/linux-2.6/xfs_stats.h - 1.18 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_stats.h.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
-fs/xfs/linux-2.6/xfs_super.c - 1.432 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.432&r2=text&tr2=1.431&f=h
-fs/xfs/linux-2.6/xfs_sysctl.c - 1.46 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.c.diff?r1=text&tr1=1.46&r2=text&tr2=1.45&f=h
-fs/xfs/linux-2.6/xfs_sysctl.h - 1.31 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.h.diff?r1=text&tr1=1.31&r2=text&tr2=1.30&f=h
-fs/xfs/xfs_mru_cache.c - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mru_cache.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-fs/xfs/xfs_filestream.c - 1.8 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_filestream.c.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+> On Tue, 24 Jun 2008 15:59:19 +0900
+> Takashi Sato <t-sato@yk.jp.nec.com> wrote:
+> 
+>> Hi Andrew and Alexander,
+>> 
+>> I have implemented the ioctls for the filesystem freeze feature
+>> and discussed its implementation on the ML (linux-ext4, xfs,
+>> linux-fsdevel, linux-kernel) for five months.  All of the comments are
+>> addressed in my patch-set.
+>> Could you consider merging it into Linux?
+>> 
+>> The filesystem freeze feature can suspend accesses to the filesystem
+>> keeping the filesystem's consistency.  We can take the consistent backup
+>> with it cooperating with the backup software.
+>> 
+>> The patches are re-based from linux-2.6.26-rc3 to linux-2.6.26-rc7
+>> There is no functional change from the previous version.
+>> The patch-set consists of the following three patches.
+>> 
+>> [PATCH 1/3] Implement generic freeze feature
+>>   I have modified to set the suitable error number (EOPNOTSUPP)
+>>   in case the filesystem doesn't support the freeze feature.
+>> 
+>>   The ioctls for the generic freeze feature are below.
+>>   o Freeze the filesystem
+>>     int ioctl(int fd, int FIFREEZE, arg)
+>>       fd: The file descriptor of the mountpoint
+>>       FIFREEZE: request code for the freeze
+>>       arg: Ignored
+>>       Return value: 0 if the operation succeeds. Otherwise, -1
+>> 
+>>   o Unfreeze the filesystem
+>>     int ioctl(int fd, int FITHAW, arg)
+>>       fd: The file descriptor of the mountpoint
+>>       FITHAW: request code for unfreeze
+>>       arg: Ignored
+>>       Return value: 0 if the operation succeeds. Otherwise, -1
+>> 
+>> [PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+>>   It removes XFS specific ioctl interfaces and request codes
+>>   for freeze feature.
+>>   This patch has been supplied by David Chinner.
+>> 
+>> [PATCH 3/3] Add timeout feature
+>>   The timeout feature is added to freeze ioctl.  And new ioctl
+>>   to reset the timeout period is added.
+>>   o Freeze the filesystem
+>>     int ioctl(int fd, int FIFREEZE, long *timeval)
+>>       fd: The file descriptor of the mountpoint
+>>       FIFREEZE: request code for the freeze
+>>       timeval: the timeout period in seconds
+>>                If it's 0 or 1, the timeout isn't set.
+>>                This special case of "1" is implemented to keep
+>>                the compatibility with XFS applications.
+>>       Return value: 0 if the operation succeeds. Otherwise, -1
+>> 
+>>   o Reset the timeout period
+>>     This is useful for the application to set the timeval more accurately.
+>>     For example, the freezer resets the timeval to 10 seconds every 5
+>>     seconds.  In this approach, even if the freezer causes a deadlock
+>>     by accessing the frozen filesystem, it will be solved by the timeout
+>>     in 10 seconds and the freezer can recognize that at the next reset
+>>     of timeval.
+>>     int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeval)
+>>       fd:file descriptor of mountpoint
+>>       FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+>>       timeval: new timeout period in seconds
+>>       Return value: 0 if the operation succeeds. Otherwise, -1
+>>       Error number: If the filesystem has already been unfrozen,
+>>                     errno is set to EINVAL.
+>> 
+>> Any comments are very welcome.
+> 
+> umm, OK, but nowhere in this patch series can I find a justification or
+> reason for making these changes to Linux.  Why do we want to do this? 
+> What is the benefit?  What is the motivation.  What are the use-cases,
+> etc?
+> 
+> Thanks.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
