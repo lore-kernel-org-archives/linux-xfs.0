@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Jun 2008 21:40:46 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Jun 2008 21:41:05 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q4eNOu008317
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:40:23 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q4eMFS008309
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:40:22 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81FE0D5613D
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:23 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id UwQXkY3RzTablLdb for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A23AD5613B
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:22 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id H7QWsVUplx5pU4nz for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:22 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] Remove the sema_t from XFS.
-Date: Thu, 26 Jun 2008 14:41:16 +1000
-Message-Id: <1214455277-6387-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] Extend completions to provide XFS object flush requirements
+Date: Thu, 26 Jun 2008 14:41:12 +1000
+Message-Id: <1214455277-6387-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1214455277-6387-1-git-send-email-david@fromorbit.com>
 References: <1214455277-6387-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -19,92 +19,107 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: matthew@wil.cx, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-Now that all users of the sema_t are gone from XFS we
-can finally kill it.
+XFS object flushing doesn't quite match existing completion semantics.  It
+mixed exclusive access with completion. That is, we need to mark an object as
+being flushed before flushing it to disk, and then block any other attempt to
+flush it until the completion occurs.
+
+To do this we introduce:
+
+void init_completion_flush(struct completion *x)
+	which initialises x->done = 1
+
+void completion_flush_start(struct completion *x)
+	which blocks if done == 0, otherwise decrements done to zero and
+	allows the caller to continue.
+
+bool completion_flush_start_nowait(struct completion *x)
+	returns a failure status if done == 0, otherwise decrements done
+	to zero and returns a "flush started" status. This is provided
+	to allow flushing to begin safely while holding object locks in
+	inverted order.
+
+This replaces the use of semaphores for providing this exclusion
+and completion mechanism.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/sema.h      |   52 ------------------------------------------
- fs/xfs/linux-2.6/xfs_linux.h |    2 +-
- 2 files changed, 1 insertions(+), 53 deletions(-)
- delete mode 100644 fs/xfs/linux-2.6/sema.h
+ include/linux/completion.h |   65 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 65 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/sema.h b/fs/xfs/linux-2.6/sema.h
-deleted file mode 100644
-index 3abe7e9..0000000
---- a/fs/xfs/linux-2.6/sema.h
-+++ /dev/null
-@@ -1,52 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_SUPPORT_SEMA_H__
--#define __XFS_SUPPORT_SEMA_H__
--
--#include <linux/time.h>
--#include <linux/wait.h>
--#include <linux/semaphore.h>
--#include <asm/atomic.h>
--
--/*
-- * sema_t structure just maps to struct semaphore in Linux kernel.
-- */
--
--typedef struct semaphore sema_t;
--
--#define initnsema(sp, val, name)	sema_init(sp, val)
--#define psema(sp, b)			down(sp)
--#define vsema(sp)			up(sp)
--#define freesema(sema)			do { } while (0)
--
--static inline int issemalocked(sema_t *sp)
--{
--	return down_trylock(sp) || (up(sp), 0);
--}
--
--/*
-- * Map cpsema (try to get the sema) to down_trylock. We need to switch
-- * the return values since cpsema returns 1 (acquired) 0 (failed) and
-- * down_trylock returns the reverse 0 (acquired) 1 (failed).
-- */
--static inline int cpsema(sema_t *sp)
--{
--	return down_trylock(sp) ? 0 : 1;
--}
--
--#endif /* __XFS_SUPPORT_SEMA_H__ */
-diff --git a/fs/xfs/linux-2.6/xfs_linux.h b/fs/xfs/linux-2.6/xfs_linux.h
-index 4d45d93..4fb838f 100644
---- a/fs/xfs/linux-2.6/xfs_linux.h
-+++ b/fs/xfs/linux-2.6/xfs_linux.h
-@@ -45,13 +45,13 @@
- #include <mrlock.h>
- #include <sv.h>
- #include <mutex.h>
--#include <sema.h>
- #include <time.h>
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index d2961b6..82d9fa4 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -55,4 +55,69 @@ extern void complete_all(struct completion *);
  
- #include <support/ktrace.h>
- #include <support/debug.h>
- #include <support/uuid.h>
+ #define INIT_COMPLETION(x)	((x).done = 0)
  
-+#include <linux/semaphore.h>
- #include <linux/mm.h>
- #include <linux/kernel.h>
- #include <linux/blkdev.h>
++/*
++ * Give completions flush lock semantics.
++ *
++ * A flush lock is a completion that allows only a single thread to be flushing
++ * a queue. That is, the first thread does not block on the completion, but
++ * forces all subsequent threads to block until the first thread issues a
++ * complete().  This allows only a single I/O at a time on an object protected
++ * by such a completion queue.
++ *
++ * Rather than make the code using this confusing by calling
++ * "wait_for_completion()", introduce a new interface that "starts
++ * a flush." In some cases, we may want to try to start a flush
++ * but not do so if it would involve sleeping, so allow those
++ * semantics as well.
++ */
++
++static inline void init_completion_flush(struct completion *x)
++{
++	x->done = 1;
++	init_waitqueue_head(&x->wait);
++}
++
++
++static inline void completion_flush_start(struct completion *x)
++{
++	wait_for_completion(x);
++}
++
++/*
++ * Start a flush without blocking if possible.
++ *
++ * Returns 0 if a completion is in progress without
++ * modifying the done counter. Otherwise, take a count
++ * so that others will see a completion in progress and
++ * return 1 to indicate a flush can be started.
++ */
++static inline bool completion_flush_start_nowait(struct completion *x)
++{
++	int ret = 1;
++
++	spin_lock_irq(&x->wait.lock);
++	if (!x->done)
++		ret = 0;
++	else
++		x->done--;
++	spin_unlock_irq(&x->wait.lock);
++	return ret;
++}
++
++/*
++ * Test to see if a flush is in progress.
++ *
++ * Returns 1 if a flush is in progress, otherwise 0.
++ */
++static inline bool completion_flush_inprogress(struct completion *x)
++{
++	int ret = 0;
++
++	spin_lock_irq(&x->wait.lock);
++	if (!x->done)
++		ret = 1;
++	spin_unlock_irq(&x->wait.lock);
++	return ret;
++}
++
+ #endif
 -- 
 1.5.5.4
