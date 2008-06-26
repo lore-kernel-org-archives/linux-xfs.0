@@ -1,47 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 06:17:36 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QDHXtI025872
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:17:33 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36BC611D6622
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:18:33 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id voRNgeicES5cvQnK for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:18:33 -0700 (PDT)
-Date: Thu, 26 Jun 2008 23:18:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
-	requirements
-Message-ID: <20080626131829.GT29319@disturbed>
-References: <1214455277-6387-1-git-send-email-david@fromorbit.com> <1214455277-6387-2-git-send-email-david@fromorbit.com> <20080626074636.GB7064@infradead.org> <20080626112133.GJ11558@disturbed> <20080626130700.GA24325@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 06:24:21 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QDODSE027022
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:24:13 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6570028795A
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:25:13 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 5Mz2HyP0xXDkdcv4 for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 06:25:13 -0700 (PDT)
+Message-ID: <486398B7.50306@sandeen.net>
+Date: Thu, 26 Jun 2008 08:25:11 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080626130700.GA24325@infradead.org>
+Subject: Re: [PATCH] disable queue flag test in barrier check
+References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com>
+In-Reply-To: <48635284.3060001@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, matthew@wil.cx, linux-kernel@vger.kernel.org
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
 
-On Thu, Jun 26, 2008 at 09:07:00AM -0400, Christoph Hellwig wrote:
-> On Thu, Jun 26, 2008 at 09:21:33PM +1000, Dave Chinner wrote:
-> > Ok, so that involves exactly what? A new header file, a new API name
-> > (ideas anyone?) and kerneldoc comments?
+Timothy Shimmin wrote:
+
+> Also from memory, I believe Neil checked this removal into the SLES10sp1 tree
+> and some sgi boxes started having slow downs
+> (looking at Dave's email below - we were not wanting to tell them
+> to use nobarrier but needed it to work by default - I forget now).
+
+But that's an admin issue.
+
+The way it is now, for example a home user of md raid1 (me!) can't run
+barriers even if they wanted to.
+
+Until there is a way to know if a write cache is non-volatile the only
+safe option is to enable barriers when possible.
+
+> 6.
+>> Date: Wed, 25 Jun 2008 08:57:24 +1000
+>> From: Dave Chinner <david@fromorbit.com>
+>> To: Eric Sandeen <sandeen@sandeen.net>
+>> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+>> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+>>
+>> Yeah, the problem was that last time this check was removed was
+>> that a bunch of existing hardware had barriers enabled on them when
+>> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+>> devices. Having to change the root drive config on a wide install
+>> base was considered much more of support pain than leaving the
+>> check there. I guess that was more of a distro upgrade issue than
+>> a mainline problem, but that's the history. Hence I think we
+>> should probably do whatever everyone else is doing here....
+>>
+>> Cheers,
+>>
+>> Dave.
 > 
-> Yes, probably just a new header with properly documented functions.
-> Thew two non-trivial ones you added should probably not be inlines,
-> btw.
+> So I guess my question is whether there are cases where we are
+> going to be in trouble again.
+> Jeremy, do you see some problems?
 
-Yeah, they grew a little bigger than expected...
+FWIW, the problem *I* foresee is that some people are going to slow down
+when using the defaults, yes, because barriers will start working again.
+ But I don't see any other safe way around it.
 
-> flush_lock_init/flush_lock/flush_trylock/flush_done/flush_is_locked?
+Education would be in order, I suppose.  :)
 
-Ok, I was thinking along those lines. I'll redo the patch series
-using that interface tomorrow.
+-Eric
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --Tim
+> 
+> 
+> 
