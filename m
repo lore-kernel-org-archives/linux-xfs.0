@@ -1,63 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 08:24:00 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QFNtZi014527
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 08:23:55 -0700
-Received: from server515.appriver.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34ACF1233969
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 08:24:54 -0700 (PDT)
-Received: from server515.appriver.com (server515a.exghost.com [72.32.253.70]) by cuda.sgi.com with ESMTP id BXJH6gIEFnseNh3s for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 08:24:54 -0700 (PDT)
-Reply-To: <David@santools.com>
-Message-ID: <22f301c8d7a0$c5e87fc0$9201a8c0@exchange.rackspace.com>
-Subject: Re: [PATCH] disable queue flag test in barrier check
-From: "David Lethe" <david@santools.com>
-Date: Thu, 26 Jun 2008 10:24:00 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 13:32:42 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QKWWhR015386
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:32:34 -0700
+Received: from gateway-1237.mvista.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E33DB182F6BB
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:33:31 -0700 (PDT)
+Received: from gateway-1237.mvista.com (gateway-1237.mvista.com [63.81.120.158]) by cuda.sgi.com with ESMTP id OS0ZGckuG100V4js for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:33:31 -0700 (PDT)
+Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
+	requirements
+From: Daniel Walker <dwalker@mvista.com>
+In-Reply-To: <1214455277-6387-2-git-send-email-david@fromorbit.com>
+References: <1214455277-6387-1-git-send-email-david@fromorbit.com>
+	 <1214455277-6387-2-git-send-email-david@fromorbit.com>
+Content-Type: text/plain
+Date: Thu, 26 Jun 2008 13:33:25 -0700
+Message-Id: <1214512405.21035.110.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, matthew@wil.cx, linux-kernel@vger.kernel.org
 
-Unflushed writes are 100% effective for losing data and corrupting file systems.  Data isn't saved until it is on the magnetic media.  Batterybackup modules for disk controllers help, but there is no substitute for a ups.  Even with a bbu on disk controller, if the kernel hasn't flushed write to the controller, and system crashes or loses power, the kernel io queue will never reach the controllers bbu.
 
-You have a moral obligation to use a ups... And if you work for a US company, then Sarbox pretty much makes this a legal obligation and a criminal offense if you don't protect certain databases with something as reasonable and cheap as a ups
+On Thu, 2008-06-26 at 14:41 +1000, Dave Chinner wrote:
+> XFS object flushing doesn't quite match existing completion semantics.  It
+> mixed exclusive access with completion. That is, we need to mark an object as
+> being flushed before flushing it to disk, and then block any other attempt to
+> flush it until the completion occurs.
+> 
+> To do this we introduce:
+> 
+> void init_completion_flush(struct completion *x)
+> 	which initialises x->done = 1
+> 
+> void completion_flush_start(struct completion *x)
+> 	which blocks if done == 0, otherwise decrements done to zero and
+> 	allows the caller to continue.
+> 
+> bool completion_flush_start_nowait(struct completion *x)
+> 	returns a failure status if done == 0, otherwise decrements done
+> 	to zero and returns a "flush started" status. This is provided
+> 	to allow flushing to begin safely while holding object locks in
+> 	inverted order.
+> 
+> This replaces the use of semaphores for providing this exclusion
+> and completion mechanism.
 
------Original Message-----
+I think there is some basis to make the changes that you have here.
+Specifically this email and thread,
 
-From:  "Eric Sandeen" <sandeen@sandeen.net>
-Subj:  Re: [PATCH] disable queue flag test in barrier check
-Date:  Thu Jun 26, 2008 9:57 am
-Size:  1K
-To:  "David Lethe" <david@santools.com>
-cc:  "Timothy Shimmin" <tes@sgi.com>; "xfs-oss" <xfs@oss.sgi.com>; "LinuxRaid" <linux-raid@vger.kernel.org>; "NeilBrown" <neilb@suse.de>; "jeremy@sgi.comwe" <jeremy@sgi.comwe>
+http://lkml.org/lkml/2008/4/15/232
 
-David Lethe wrote: 
-> Fyi - related problem is seen with solaris & zfs when users attach them 
-> to hardware-based RAID subsystems.  The vendors had 
-> to make firmware tweaks to address solaris's 
-> flush-to-disk-after-all-writes.   
->  
-> Not sure what you mean about non-volatile vs. volatile write cache, 
-> however.  If you want to see if write cache is enabled on a disk drive, 
-> or  
-> Even a logical disk on a hardware-based RAId, under Linux, then google 
-> "mode page editor" for lots of choices.  Also look up zfs write cache 
-> raid and you'll get information that you can just as easily apply to 
-> Linux implementations of md.  
- 
-I'm not so interested in whether it is enabled; I'd like to know if it 
-is safe (to varying degrees) in the event of a power failure, and I 
-don't think there's any way we can know that. 
- 
-So the administrator, if she's sure that all cached writes will hit disk 
-even if a breaker pops, can disable barriers.  If it's just a 32MB cache 
-seagate drive plugged  into the wall, you probably had better be sure 
-barriers are enabled or you may well have a scrambled filesystem 
-post-power-outage. 
- 
--Eric 
- 
+However, I don't like how your implementing this as specifically a
+"flush" mechanism for XFS, and the count is limited to just 1 .. There
+are several other places that do this kind of counting with semaphores,
+and have counts above 1..
+
+> +
+> +static inline void completion_flush_start(struct completion *x)
+> +{
+> +	wait_for_completion(x);
+> +}
+
+Above seems completely pointless.. I would just call
+wait_for_completion(), and make the rest of the interface generic.
+
+Daniel
