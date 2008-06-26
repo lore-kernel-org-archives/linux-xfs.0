@@ -1,87 +1,248 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 01:23:39 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q8Nch9007927
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 01:23:38 -0700
-Date: Thu, 26 Jun 2008 04:24:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Move attr log alloc size calculator to another
-	function.
-Message-ID: <20080626082438.GB23954@infradead.org>
-References: <1214196150-5427-1-git-send-email-xaiki@sgi.com> <1214196150-5427-2-git-send-email-xaiki@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 01:24:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5Q8OpNG008355
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 01:24:52 -0700
+Message-ID: <48635284.3060001@sgi.com>
+Date: Thu, 26 Jun 2008 18:25:40 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1214196150-5427-2-git-send-email-xaiki@sgi.com>
+Subject: Re: [PATCH] disable queue flag test in barrier check
+References: <486307EA.7080007@sandeen.net>
+In-Reply-To: <486307EA.7080007@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: xfs@oss.sgi.com, Niv Sardi <xaiki@debian.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
 
-On Mon, Jun 23, 2008 at 02:42:27PM +1000, Niv Sardi wrote:
-> From: Niv Sardi <xaiki@debian.org>
+Eric Sandeen wrote:
+> md raid1 can pass down barriers, but does not set an ordered flag 
+> on the queue, so xfs does not even attempt a barrier write, and 
+> will never use barriers on these block devices.
 > 
-> We will need that to be able to calculate the size of log we need for
-> a specific attr (for parent pointers in create). We need the local so
-> that we can fail if we run into ENOSPC when trying to alloc blocks
+> I propose removing the flag check and just let the barrier write
+> test determine barrier support.
 > 
-> Signed-off-by: Niv Sardi <xaiki@sgi.com>
+> The risk here, I suppose, is that if something does not set an ordered
+> flag and also does not properly return an error on a barrier write...
+> but if it's any consolation jbd/ext3/reiserfs never test the flag, 
+> and don't even do a test write, they just disable barriers the first 
+> time an actual journal barrier write fails.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
->  fs/xfs/xfs_attr.c |   78 +++++++++++++++++++++++++++++++---------------------
->  fs/xfs/xfs_attr.h |    2 +-
->  2 files changed, 47 insertions(+), 33 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-> index e58f321..0d19e90 100644
-> --- a/fs/xfs/xfs_attr.c
-> +++ b/fs/xfs/xfs_attr.c
-> @@ -185,6 +185,43 @@ xfs_attr_get(
->  }
+> Index: linux-2.6.25.1/fs/xfs/linux-2.6/xfs_super.c
+> ===================================================================
+> --- linux-2.6.25.1.orig/fs/xfs/linux-2.6/xfs_super.c
+> +++ linux-2.6.25.1/fs/xfs/linux-2.6/xfs_super.c
+> @@ -733,14 +733,6 @@ xfs_mountfs_check_barriers(xfs_mount_t *
+>  		return;
+>  	}
 >  
->  int
-> +xfs_attr_calc_size(
+> -	if (mp->m_ddev_targp->bt_bdev->bd_disk->queue->ordered ==
+> -					QUEUE_ORDERED_NONE) {
+> -		xfs_fs_cmn_err(CE_NOTE, mp,
+> -		  "Disabling barriers, not supported by the underlying device");
+> -		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -		return;
+> -	}
+> -
+>  	if (xfs_readonly_buftarg(mp->m_ddev_targp)) {
+>  		xfs_fs_cmn_err(CE_NOTE, mp,
+>  		  "Disabling barriers, underlying device is readonly");
+> 
+> 
 
-should be marked STATIC, and a little comment describing what
-the function does would help, too.
 
-> +	xfs_inode_t	*ip,
+Yeah, okay so we are revisiting this stuff again. Fair enough. (Groan;-)
 
-please use struct xfs_inode instead of the typedef for new code.
+So it was brought to our attention by Neil a while ago:
 
-> +	int		namelen,
-> +	int		valuelen,
-> +	int		*local)
-> +{
-> +	xfs_mount_t	*mp = ip->i_mount;
+1.
+> To: 	xfs@xxxxxxxxxxx
+> Subject: 	XFS and write barriers.
+> From: 	Neil Brown <neilb@xxxxxxx>
+> Date: 	Fri, 23 Mar 2007 12:26:31 +1100
+> 
+> Hi,
+>  I have two concerns related to XFS and write barrier support that I'm
+>  hoping can be resolved.
+> 
+> Firstly in xfs_mountfs_check_barriers in fs/xfs/linux-2.6/xfs_super.c,
+> it tests ....->queue->ordered to see if that is QUEUE_ORDERED_NONE.
+> If it is, then barriers are disabled.
+> 
+> I think this is a layering violation - xfs really has no business
+> looking that deeply into the device.
+> For dm and md devices, ->ordered is never used and so never set, so
+> xfs will never use barriers on those devices (as the default value is
+> 0 or NONE).  It is true that md and dm could set ->ordered to some
+> non-zero value just to please XFS, but that would be telling a lie and
+> there is no possible value that is relevant to a layered devices.
+> 
+> I think this test should just be removed and the xfs_barrier_test
+> should be the main mechanism for seeing if barriers work.
 
-Same here, should be struct xfs_mount
+Looking back, we agreed at the time that this seemed reasonable.
+(some mails from dgc and hch)
 
-> +	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
-> +	if (*local) {
-> +		if (size > (mp->m_sb.sb_blocksize >> 1)) {
-> +			/* Double split possible */
-> +			nblks <<= 1;
-> +		}
+2.
+> To: 	Neil Brown <neilb@xxxxxxx>
+> Subject: 	Re: XFS and write barriers.
+> From: 	David Chinner <dgc@xxxxxxx>
+> Date: 	Fri, 23 Mar 2007 16:30:43 +1100
+> Cc: 	xfs@xxxxxxxxxxx, hch@xxxxxxxxxxxxx
+> 
+> On Fri, Mar 23, 2007 at 12:26:31PM +1100, Neil Brown wrote:
+>> 
+>> Hi,
+>>  I have two concerns related to XFS and write barrier support that I'm
+>>  hoping can be resolved.
+>> 
+>> Firstly in xfs_mountfs_check_barriers in fs/xfs/linux-2.6/xfs_super.c,
+>> it tests ....->queue->ordered to see if that is QUEUE_ORDERED_NONE.
+>> If it is, then barriers are disabled.
+>> 
+>> I think this is a layering violation - xfs really has no business
+>> looking that deeply into the device.
+> 
+> Except that the device behaviour determines what XFS needs to do
+> and there used to be no other way to find out.
+> 
+> Christoph, any reason for needing this check anymore? I can't see
+> any particular reason for needing to do this as __make_request()
+> will check it for us when we test now.
+> 
+>> I think this test should just be removed and the xfs_barrier_test
+>> should be the main mechanism for seeing if barriers work.
+> 
+> Yup.
 
-The comment cold be a little more verbose, and using a *= 2 would
-be more descriptive (the compiler will optimize it to a shift anyway)
+3.
+> To: 	David Chinner <dgc@xxxxxxx>
+> Subject: 	Re: XFS and write barriers.
+> From: 	Christoph Hellwig <hch@xxxxxxxxxxxxx>
+> Date: 	Fri, 23 Mar 2007 09:50:55 +0000
+> Cc: 	Neil Brown <neilb@xxxxxxx>, xfs@xxxxxxxxxxx, hch@xxxxxxxxxxxxx
+> 
+> On Fri, Mar 23, 2007 at 04:30:43PM +1100, David Chinner wrote:
+>> On Fri, Mar 23, 2007 at 12:26:31PM +1100, Neil Brown wrote:
+>> > 
+>> > Hi,
+>> >  I have two concerns related to XFS and write barrier support that I'm
+>> >  hoping can be resolved.
+>> > 
+>> > Firstly in xfs_mountfs_check_barriers in fs/xfs/linux-2.6/xfs_super.c,
+>> > it tests ....->queue->ordered to see if that is QUEUE_ORDERED_NONE.
+>> > If it is, then barriers are disabled.
+>> > 
+>> > I think this is a layering violation - xfs really has no business
+>> > looking that deeply into the device.
+>> 
+>> Except that the device behaviour determines what XFS needs to do
+>> and there used to be no other way to find out.
+>> 
+>> Christoph, any reason for needing this check anymore? I can't see
+>> any particular reason for needing to do this as __make_request()
+>> will check it for us when we test now.
+> 
+> When I first implemented it I really dislike the idea of having request
+> fail asynchrnously due to the lack of barriers.  Then someone (Jens?)
+> told me we need to do this check anyway because devices might lie to
+> us, at which point I implemented the test superblock writeback to
+> check if it actually works.
+> 
+> So yes, we could probably get rid of the check now, although I'd
+> prefer the block layer exporting an API to the filesystem to tell
+> it whether there is any point in trying to use barriers.
 
-> -	if ((error = xfs_trans_reserve(args.trans, (uint) nblks,
-> -				      XFS_ATTRSET_LOG_RES(mp, nblks),
-> -				      0, XFS_TRANS_PERM_LOG_RES,
-> -				      XFS_ATTRSET_LOG_COUNT))) {
-> +	if ((error = xfs_trans_reserve(args.trans, (uint) args.total,
-> +				       XFS_ATTRSET_LOG_RES(mp, args.total),
-> +				       0, XFS_TRANS_PERM_LOG_RES,
-> +				       XFS_ATTRSET_LOG_COUNT))) {
+4.
+> review: handle barriers being switched off dynamically.
+> 
+>     * To: xfs-dev <xfs-dev@sgi.com>
+>     * Subject: review: handle barriers being switched off dynamically.
+>     * From: David Chinner <dgc@sgi.com>
+>     * Date: Thu, 19 Apr 2007 17:37:14 +1000
+>     * Cc: xfs-oss <xfs@oss.sgi.com>
+> 
+> As pointed out by Neil Brown, MD can switch barriers off
+> dynamically underneath a mounted filesystem. If this happens
+> to XFS, it will shutdown the filesystem immediately.
+> 
+> Handle this more sanely by yelling into the syslog, retrying
+> the I/O without barriers and if that is successful, turn
+> off barriers.
+> 
+> Also remove an unnecessary check when first checking to
+> see if the underlying device supports barriers.
+> 
+> Cheers,
+> 
+> Dave.
 
-When you touch this anyway please rewrite it to the canonical form:
+Looking at our xfs ptools logs...
 
-	error = xfs_trans_reserve(args.trans, args.total,
-			XFS_ATTRSET_LOG_RES(mp, args.total), 0,
-			XFS_TRANS_PERM_LOG_RES, XFS_ATTRSET_LOG_COUNT);
-	if (error) {
+5.
+> ----------------------------
+> revision 1.402
+> date: 2007/10/15 01:33:50;  author: tes;  state: Exp;  lines: +8 -0
+> modid: xfs-linux-melb:xfs-kern:29882a
+> Put back the QUEUE_ORDERED_NONE test in the barrier check.
+> 
+> Put back the QUEUE_ORDERED_NONE test which caused us grief in sles when it was taken out
+> as, IIRC, it allowed md/lvm to be thought of as supporting barriers when they weren't
+> in some configurations.
+> This patch will be reverting what went in as part of a change for
+> the SGI-pv 964544 (SGI-Modid: xfs-linux-melb:xfs-kern:28568a).
+> Put back the QUEUE_ORDERED_NONE test in the barrier check.
+> ----------------------------
+> ----------------------------
+> revision 1.380
+> date: 2007/05/11 05:35:19;  author: dgc;  state: Exp;  lines: +0 -8
+> modid: xfs-linux-melb:xfs-kern:28568a
+> Barriers need to be dynamically checked and switched off
+> 
+> If the underlying block device sudden stops supporting barriers,
+> we need to handle the -EOPNOTSUPP error in a sane manner rather
+> than shutting downteh filesystem. If we get this error, clear the
+> barrier flag, reissue the I/O, and tell the world bad things are
+> occurring.
+> We shouldn't peer down into the backing device to see if barriers
+> are supported or not - the test I/O is sufficient to tell us
+> this.
+> ----------------------------
 
-With these little tidyups this looks good enough as a cleanup that can
-go in anytime.
+Also from memory, I believe Neil checked this removal into the SLES10sp1 tree
+and some sgi boxes started having slow downs
+(looking at Dave's email below - we were not wanting to tell them
+to use nobarrier but needed it to work by default - I forget now).
+
+6.
+> Date: Wed, 25 Jun 2008 08:57:24 +1000
+> From: Dave Chinner <david@fromorbit.com>
+> To: Eric Sandeen <sandeen@sandeen.net>
+> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+>
+> Yeah, the problem was that last time this check was removed was
+> that a bunch of existing hardware had barriers enabled on them when
+> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+> devices. Having to change the root drive config on a wide install
+> base was considered much more of support pain than leaving the
+> check there. I guess that was more of a distro upgrade issue than
+> a mainline problem, but that's the history. Hence I think we
+> should probably do whatever everyone else is doing here....
+> 
+> Cheers,
+> 
+> Dave.
+
+So I guess my question is whether there are cases where we are
+going to be in trouble again.
+Jeremy, do you see some problems?
+
+--Tim
