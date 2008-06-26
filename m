@@ -1,71 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 13:32:42 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QKWWhR015386
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:32:34 -0700
-Received: from gateway-1237.mvista.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E33DB182F6BB
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:33:31 -0700 (PDT)
-Received: from gateway-1237.mvista.com (gateway-1237.mvista.com [63.81.120.158]) by cuda.sgi.com with ESMTP id OS0ZGckuG100V4js for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 13:33:31 -0700 (PDT)
-Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
-	requirements
-From: Daniel Walker <dwalker@mvista.com>
-In-Reply-To: <1214455277-6387-2-git-send-email-david@fromorbit.com>
-References: <1214455277-6387-1-git-send-email-david@fromorbit.com>
-	 <1214455277-6387-2-git-send-email-david@fromorbit.com>
-Content-Type: text/plain
-Date: Thu, 26 Jun 2008 13:33:25 -0700
-Message-Id: <1214512405.21035.110.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 14:08:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QL8CNS018767
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 14:08:12 -0700
+Received: from bob.dscon.sk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 96E1C123508F
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 14:09:12 -0700 (PDT)
+Received: from bob.dscon.sk (bob.dscon.sk [88.86.113.10]) by cuda.sgi.com with ESMTP id DKvcBdP7VTH4G1XV for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 14:09:12 -0700 (PDT)
+Date: Thu, 26 Jun 2008 23:09:04 +0200
+Subject: Re: is the flush-on-close-after-truncate still needed?
+Message-ID: <20080626210904.GA15920@bob.dscon.sk>
+References: <4859415B.3000009@sandeen.net> <200806181049.07812.dchinner@agami.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <200806181049.07812.dchinner@agami.com>
+From: xfs@bob.dscon.sk (DS)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, matthew@wil.cx, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
+Hmm, but file overwrite in perl/php is slow, very slow.
 
-On Thu, 2008-06-26 at 14:41 +1000, Dave Chinner wrote:
-> XFS object flushing doesn't quite match existing completion semantics.  It
-> mixed exclusive access with completion. That is, we need to mark an object as
-> being flushed before flushing it to disk, and then block any other attempt to
-> flush it until the completion occurs.
+Which FS is best for me?
+XFS - perl/php overwrite problem
+EXT3 - 32000 subdirs limit
+REISER - no future
+JFS - ?
+
+DS
+
+On Wed, Jun 18, 2008 at 10:49:07AM -0700, Dave Chinner wrote:
+> On Wednesday 18 June 2008 10:09 am, Eric Sandeen wrote:
+> > After Lachlan's fix to separate on-disk and in-memory sizes, and only
+> > update on-disk when data is on-disk
+> > (http://www.linux.sgi.com/archives/xfs/2007-05/msg00020.html) is the
+> > XFS_ITRUNCATED flag / flush-on-close-after-truncate still needed?
 > 
-> To do this we introduce:
+> Yes, because waiting 30s before writing back /etc/fstab after it
+> has been modified will result in lots of bug reports of /etc/fstab
+> being zero length after a crash instead of being full of NULLs.
+> We have had very few reports of zero length files or files with
+> NULLs since this change was made (regardless of the file size 
+> update ordering changes). i.e. if we remove this code then the
+> common case where NULL files occurred will return - only this
+> time as zero length files.
 > 
-> void init_completion_flush(struct completion *x)
-> 	which initialises x->done = 1
+> Cheers,
 > 
-> void completion_flush_start(struct completion *x)
-> 	which blocks if done == 0, otherwise decrements done to zero and
-> 	allows the caller to continue.
+> Dave.
 > 
-> bool completion_flush_start_nowait(struct completion *x)
-> 	returns a failure status if done == 0, otherwise decrements done
-> 	to zero and returns a "flush started" status. This is provided
-> 	to allow flushing to begin safely while holding object locks in
-> 	inverted order.
 > 
-> This replaces the use of semaphores for providing this exclusion
-> and completion mechanism.
-
-I think there is some basis to make the changes that you have here.
-Specifically this email and thread,
-
-http://lkml.org/lkml/2008/4/15/232
-
-However, I don't like how your implementing this as specifically a
-"flush" mechanism for XFS, and the count is limited to just 1 .. There
-are several other places that do this kind of counting with semaphores,
-and have counts above 1..
-
-> +
-> +static inline void completion_flush_start(struct completion *x)
-> +{
-> +	wait_for_completion(x);
-> +}
-
-Above seems completely pointless.. I would just call
-wait_for_completion(), and make the rest of the interface generic.
-
-Daniel
