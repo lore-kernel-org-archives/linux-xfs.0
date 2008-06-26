@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Jun 2008 21:41:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q4eOQ4008324
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:40:24 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 25 Jun 2008 21:40:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q4eNoA008313
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:40:23 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB5462825EA
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:23 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id BbPctgKMRXI8UP2O for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BF8C5D5613F
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:22 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id hzYsX8kb5IzdwM5L for <xfs@oss.sgi.com>; Wed, 25 Jun 2008 21:41:22 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] Replace dquot flush semaphore with a completion
-Date: Thu, 26 Jun 2008 14:41:14 +1000
-Message-Id: <1214455277-6387-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/6] Replace inode flush semaphore with a completion
+Date: Thu, 26 Jun 2008 14:41:13 +1000
+Message-Id: <1214455277-6387-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1214455277-6387-1-git-send-email-david@fromorbit.com>
 References: <1214455277-6387-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -19,153 +19,156 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: matthew@wil.cx, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-Use the new completion flush code to implement the dquot
+Use the new completion flush code to implement the inode
 flush lock. Removes one of the final users of semaphores
 in the XFS code base.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/quota/xfs_dquot.c      |   18 +++++-------------
- fs/xfs/quota/xfs_dquot.h      |   23 +++++++++++++----------
- fs/xfs/quota/xfs_dquot_item.c |    6 +++---
- 3 files changed, 21 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_iget.c       |   15 +++++++--------
+ fs/xfs/xfs_inode.c      |   11 +++++------
+ fs/xfs/xfs_inode.h      |    2 +-
+ fs/xfs/xfs_inode_item.c |   11 +++++------
+ 4 files changed, 18 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index fc9f3fb..c3e3080 100644
---- a/fs/xfs/quota/xfs_dquot.c
-+++ b/fs/xfs/quota/xfs_dquot.c
-@@ -101,7 +101,7 @@ xfs_qm_dqinit(
- 	if (brandnewdquot) {
- 		dqp->dq_flnext = dqp->dq_flprev = dqp;
- 		mutex_init(&dqp->q_qlock);
--		initnsema(&dqp->q_flock, 1, "fdq");
-+		init_completion_flush(&dqp->q_flush);
- 		sv_init(&dqp->q_pinwait, SV_DEFAULT, "pdq");
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index b07604b..5eed054 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -216,7 +216,7 @@ finish_inode:
+ 	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
+ 	init_waitqueue_head(&ip->i_ipin_wait);
+ 	atomic_set(&ip->i_pincount, 0);
+-	initnsema(&ip->i_flock, 1, "xfsfino");
++	init_completion_flush(&ip->i_flush);
  
- #ifdef XFS_DQUOT_TRACE
-@@ -150,7 +150,6 @@ xfs_qm_dqdestroy(
- 	ASSERT(! XFS_DQ_IS_ON_FREELIST(dqp));
- 
- 	mutex_destroy(&dqp->q_qlock);
--	freesema(&dqp->q_flock);
- 	sv_destroy(&dqp->q_pinwait);
- 
- #ifdef XFS_DQUOT_TRACE
-@@ -1211,7 +1210,7 @@ xfs_qm_dqflush(
- 	int			error;
- 
- 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
--	ASSERT(XFS_DQ_IS_FLUSH_LOCKED(dqp));
-+	ASSERT(completion_flush_inprogress(&dqp->q_flush));
- 	xfs_dqtrace_entry(dqp, "DQFLUSH");
- 
- 	/*
-@@ -1353,14 +1352,7 @@ int
- xfs_qm_dqflock_nowait(
- 	xfs_dquot_t *dqp)
- {
--	int locked;
--
--	locked = cpsema(&((dqp)->q_flock));
--
--	/* XXX ifdef these out */
--	if (locked)
--		(dqp)->dq_flags |= XFS_DQ_FLOCKED;
--	return (locked);
-+	return completion_flush_start_nowait(&dqp->q_flush);
- }
- 
- 
-@@ -1368,14 +1360,14 @@ int
- xfs_qm_dqlock_nowait(
- 	xfs_dquot_t *dqp)
- {
--	return (mutex_trylock(&((dqp)->q_qlock)));
-+	return mutex_trylock(&dqp->q_qlock);
- }
- 
- void
- xfs_dqlock(
- 	xfs_dquot_t *dqp)
- {
--	mutex_lock(&(dqp->q_qlock));
-+	mutex_lock(&dqp->q_qlock);
- }
- 
- void
-diff --git a/fs/xfs/quota/xfs_dquot.h b/fs/xfs/quota/xfs_dquot.h
-index f7393bb..c127a45 100644
---- a/fs/xfs/quota/xfs_dquot.h
-+++ b/fs/xfs/quota/xfs_dquot.h
-@@ -82,7 +82,7 @@ typedef struct xfs_dquot {
- 	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
- 	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
- 	mutex_t		 q_qlock;	/* quota lock */
--	sema_t		 q_flock;	/* flush lock */
-+	struct completion q_flush;	/* flush completion queue */
- 	uint		 q_pincount;	/* pin count for this dquot */
- 	sv_t		 q_pinwait;	/* sync var for pinning */
- #ifdef XFS_DQUOT_TRACE
-@@ -113,17 +113,20 @@ XFS_DQ_IS_LOCKED(xfs_dquot_t *dqp)
- 
+ 	if (lock_flags)
+ 		xfs_ilock(ip, lock_flags);
+@@ -776,25 +776,24 @@ xfs_isilocked(
+ #endif
  
  /*
-- * The following three routines simply manage the q_flock
-- * semaphore embedded in the dquot.  This semaphore synchronizes
-- * processes attempting to flush the in-core dquot back to disk.
-+ * Manage the q_flush completion queue embedded in the dquot.  This completion
-+ * queue synchronizes processes attempting to flush the in-core dquot back to
-+ * disk.
+- * The following three routines simply manage the i_flock
+- * semaphore embedded in the inode.  This semaphore synchronizes
+- * processes attempting to flush the in-core inode back to disk.
++ * Manage the i_flush queue embedded in the inode.  This completion
++ * queue synchronizes processes attempting to flush the in-core
++ * inode back to disk.
   */
--#define xfs_dqflock(dqp)	 { psema(&((dqp)->q_flock), PINOD | PRECALC);\
--				   (dqp)->dq_flags |= XFS_DQ_FLOCKED; }
--#define xfs_dqfunlock(dqp)	 { ASSERT(issemalocked(&((dqp)->q_flock))); \
--				   vsema(&((dqp)->q_flock)); \
--				   (dqp)->dq_flags &= ~(XFS_DQ_FLOCKED); }
-+static inline void xfs_dqflock(xfs_dquot_t *dqp)
-+{
-+	completion_flush_start(&dqp->q_flush);
-+}
-+
-+static inline void xfs_dqfunlock(xfs_dquot_t *dqp)
-+{
-+	complete(&dqp->q_flush);
-+}
+ void
+ xfs_iflock(xfs_inode_t *ip)
+ {
+-	psema(&(ip->i_flock), PINOD|PLTWAIT);
++	completion_flush_start(&ip->i_flush);
+ }
  
--#define XFS_DQ_IS_FLUSH_LOCKED(dqp) (issemalocked(&((dqp)->q_flock)))
- #define XFS_DQ_IS_ON_FREELIST(dqp)  ((dqp)->dq_flnext != (dqp))
- #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->dq_flags & XFS_DQ_DIRTY)
- #define XFS_QM_ISUDQ(dqp)	((dqp)->dq_flags & XFS_DQ_USER)
-diff --git a/fs/xfs/quota/xfs_dquot_item.c b/fs/xfs/quota/xfs_dquot_item.c
-index 08d2fc8..a91efa8 100644
---- a/fs/xfs/quota/xfs_dquot_item.c
-+++ b/fs/xfs/quota/xfs_dquot_item.c
-@@ -151,7 +151,7 @@ xfs_qm_dquot_logitem_push(
- 	dqp = logitem->qli_dquot;
+ int
+ xfs_iflock_nowait(xfs_inode_t *ip)
+ {
+-	return (cpsema(&(ip->i_flock)));
++	return completion_flush_start_nowait(&ip->i_flush);
+ }
  
- 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
--	ASSERT(XFS_DQ_IS_FLUSH_LOCKED(dqp));
-+	ASSERT(completion_flush_inprogress(&dqp->q_flush));
+ void
+ xfs_ifunlock(xfs_inode_t *ip)
+ {
+-	ASSERT(issemalocked(&(ip->i_flock)));
+-	vsema(&(ip->i_flock));
++	complete(&ip->i_flush);
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index bedc661..81e2040 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2630,7 +2630,6 @@ xfs_idestroy(
+ 		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+ 	mrfree(&ip->i_lock);
+ 	mrfree(&ip->i_iolock);
+-	freesema(&ip->i_flock);
+ 
+ #ifdef XFS_INODE_TRACE
+ 	ktrace_free(ip->i_trace);
+@@ -3048,10 +3047,10 @@ cluster_corrupt_out:
+ /*
+  * xfs_iflush() will write a modified inode's changes out to the
+  * inode's on disk home.  The caller must have the inode lock held
+- * in at least shared mode and the inode flush semaphore must be
+- * held as well.  The inode lock will still be held upon return from
++ * in at least shared mode and the inode flush completion must be
++ * active as well.  The inode lock will still be held upon return from
+  * the call and the caller is free to unlock it.
+- * The inode flush lock will be unlocked when the inode reaches the disk.
++ * The inode flush will be completed when the inode reaches the disk.
+  * The flags indicate how the inode's buffer should be written out.
+  */
+ int
+@@ -3070,7 +3069,7 @@ xfs_iflush(
+ 	XFS_STATS_INC(xs_iflush_count);
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+-	ASSERT(issemalocked(&(ip->i_flock)));
++	ASSERT(completion_flush_inprogress(&ip->i_flush));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
+ 
+@@ -3233,7 +3232,7 @@ xfs_iflush_int(
+ #endif
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+-	ASSERT(issemalocked(&(ip->i_flock)));
++	ASSERT(completion_flush_inprogress(&ip->i_flush));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 17a04b6..caaec3c 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -223,7 +223,7 @@ typedef struct xfs_inode {
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+ 	mrlock_t		i_iolock;	/* inode IO lock */
+-	sema_t			i_flock;	/* inode flush lock */
++	struct completion	i_flush;	/* inode flush completion q */
+ 	atomic_t		i_pincount;	/* inode pin count */
+ 	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
+ 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 0eee08a..7c54046 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -779,11 +779,10 @@ xfs_inode_item_pushbuf(
+ 	ASSERT(iip->ili_push_owner == current_pid());
  
  	/*
- 	 * Since we were able to lock the dquot's flush lock and
-@@ -245,7 +245,7 @@ xfs_qm_dquot_logitem_pushbuf(
- 	 * inode flush completed and the inode was taken off the AIL.
- 	 * So, just get out.
+-	 * If flushlock isn't locked anymore, chances are that the
+-	 * inode flush completed and the inode was taken off the AIL.
+-	 * So, just get out.
++	 * If a flush is not in progress anymore, chances are that the
++	 * inode was taken off the AIL. So, just get out.
  	 */
--	if (!issemalocked(&(dqp->q_flock))  ||
-+	if (!completion_flush_inprogress(&dqp->q_flush)  ||
- 	    ((qip->qli_item.li_flags & XFS_LI_IN_AIL) == 0)) {
- 		qip->qli_pushbuf_flag = 0;
- 		xfs_dqunlock(dqp);
-@@ -258,7 +258,7 @@ xfs_qm_dquot_logitem_pushbuf(
- 	if (bp != NULL) {
- 		if (XFS_BUF_ISDELAYWRITE(bp)) {
- 			dopush = ((qip->qli_item.li_flags & XFS_LI_IN_AIL) &&
--				  issemalocked(&(dqp->q_flock)));
-+				  completion_flush_inprogress(&dqp->q_flush));
- 			qip->qli_pushbuf_flag = 0;
- 			xfs_dqunlock(dqp);
+-	if (!issemalocked(&(ip->i_flock)) ||
++	if (!completion_flush_inprogress(&ip->i_flush) ||
+ 	    ((iip->ili_item.li_flags & XFS_LI_IN_AIL) == 0)) {
+ 		iip->ili_pushbuf_flag = 0;
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+@@ -805,7 +804,7 @@ xfs_inode_item_pushbuf(
+ 			 * If not, we can flush it async.
+ 			 */
+ 			dopush = ((iip->ili_item.li_flags & XFS_LI_IN_AIL) &&
+-				  issemalocked(&(ip->i_flock)));
++				  completion_flush_inprogress(&ip->i_flush));
+ 			iip->ili_pushbuf_flag = 0;
+ 			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 			xfs_buftrace("INODE ITEM PUSH", bp);
+@@ -858,7 +857,7 @@ xfs_inode_item_push(
+ 	ip = iip->ili_inode;
  
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED));
+-	ASSERT(issemalocked(&(ip->i_flock)));
++	ASSERT(completion_flush_inprogress(&ip->i_flush));
+ 	/*
+ 	 * Since we were able to lock the inode's flush lock and
+ 	 * we found it on the AIL, the inode must be dirty.  This
 -- 
 1.5.5.4
