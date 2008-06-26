@@ -1,78 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 05:20:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QCKFhQ015980
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:20:16 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74C7112CBC02
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:21:15 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id MVCsAdtNA3Gmeuor for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:21:15 -0700 (PDT)
-Date: Thu, 26 Jun 2008 22:21:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
-	requirements
-Message-ID: <20080626122112.GL11558@disturbed>
-References: <1214455277-6387-1-git-send-email-david@fromorbit.com> <1214455277-6387-2-git-send-email-david@fromorbit.com> <20080626112612.GW4392@parisc-linux.org> <20080626113209.GK11558@disturbed> <20080626114242.GX4392@parisc-linux.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 05:31:25 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QCVKTH017617
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:31:20 -0700
+Received: from fg-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F94E182BA28
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:32:20 -0700 (PDT)
+Received: from fg-out-1718.google.com (fg-out-1718.google.com [72.14.220.152]) by cuda.sgi.com with ESMTP id hIrCB1xG3uWKRkQv for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:32:20 -0700 (PDT)
+Received: by fg-out-1718.google.com with SMTP id l26so4730fgb.8
+        for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 05:32:20 -0700 (PDT)
+Message-ID: <6101e8c40806260532j3bed1c7k9a60c41ea297549f@mail.gmail.com>
+Date: Thu, 26 Jun 2008 14:32:19 +0200
+From: "Oliver Pinter" <oliver.pntr@gmail.com>
+Subject: [XFS] kernel panic on halt (2.6.26-rc7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20080626114242.GX4392@parisc-linux.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Matthew Wilcox <matthew@wil.cx>
 
-On Thu, Jun 26, 2008 at 05:42:42AM -0600, Matthew Wilcox wrote:
-> On Thu, Jun 26, 2008 at 09:32:09PM +1000, Dave Chinner wrote:
-> > On Thu, Jun 26, 2008 at 05:26:12AM -0600, Matthew Wilcox wrote:
-> > > On Thu, Jun 26, 2008 at 02:41:12PM +1000, Dave Chinner wrote:
-> > > > XFS object flushing doesn't quite match existing completion semantics.  It
-> > > > mixed exclusive access with completion. That is, we need to mark an object as
-> > > > being flushed before flushing it to disk, and then block any other attempt to
-> > > > flush it until the completion occurs.
-> > > 
-> > > This sounds like mutex semantics.  Why are the existing mutexes not
-> > > appropriate for your needs?
-> > 
-> > Different threads doing wait and complete.
-> 
-> Then let's leave it as a semaphore.  You can get rid of the sema_t if
-> you like, but I don't think that turning completions into semaphores is
-> a good idea (because it's confusing).
+Hi Christoph, Dave,
 
-So remind me what the point of the semaphore removal tree is again?
+a similar problem came out the with 2.6.26, than the was in post early
+with 2.6.25[1][2]
 
-As Christoph suggested, I can put this under another API that
-is implemented using completions. If I have to do that in XFS,
-so be it....
+http://students.zipernowsky.hu/~oliverp/upload/xfs_error_2.6.26/dsc00807.jpg
+http://students.zipernowsky.hu/~oliverp/upload/xfs_error_2.6.26/dsc00808.jpg
+http://students.zipernowsky.hu/~oliverp/upload/xfs_error_2.6.26/dsc00809.jpg
+http://students.zipernowsky.hu/~oliverp/upload/xfs_error_2.6.26/dsc00810.jpg
+http://students.zipernowsky.hu/~oliverp/upload/xfs_error_2.6.26/dsc00811.jpg
 
-The main reason for this that we've just uncovered the fact that the
-way XFS uses semaphores is completely unsafe [*] on x86/x86_64 for
-kernels prior to the new generic semaphores.
+the git head is on 2.6.26-rc7,
+was an any kind of bigger load however here, only desktop usage
 
-[*] 2.6.20 panics in up() because of this race when I/O completion
-(the up call) races with a simultaneous down() (iowaiter):
+the compiler is GCC-4.3.1 gcc (Debian 4.3.1-2) 4.3.1
+pc: i386 (Pentium 4 HT Northwood, with enabled HT )
 
-	T1		T2
-	up()		down()
-			kmem_free()
+fs usage: 88%
 
-When the down() call completes, the up() call can still be
-referencing the semaphore, and hence if we free the structure after
-the down call then the up() will reference freed memory.  This is
-probably the cause of many unexplained log replay or unmount panics
-that we've been hitting for years with buffers that been freed while
-apparently still in use....
 
-Hence I'd prefer just to move completely away from semaphores for
-this flush interface.  I'd like to start with getting the upstream
-code fixed in a sane manner so all the backports to older kernels
-start from the same series of commits.
-
-Cheers,
-
-Dave.
+--
+[1] http://archives.free.net.ph/thread/20080616.100122.14303e7a.en.html
+[2] http://students.zipernowsky.hu/~oliverp/upload/xfs_error/
 -- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Oliver
