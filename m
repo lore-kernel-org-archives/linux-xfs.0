@@ -1,88 +1,105 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 00:01:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q71IxF025555
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:01:19 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 663D5282F9A
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:02:18 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id A5rqGyUMHKVfsVuh for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:02:18 -0700 (PDT)
-Date: Thu, 26 Jun 2008 17:02:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Xfs Access to block zero  exception and system crash
-Message-ID: <20080626070215.GI11558@disturbed>
-References: <340C71CD25A7EB49BFA81AE8C839266701323BD8@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080625084931.GI16257@build-svl-1.agami.com> <340C71CD25A7EB49BFA81AE8C839266701323BE8@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 00:28:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5Q7SBBA000898
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:28:11 -0700
+Received: from deliver.uni-koblenz.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FB99D56E74
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:29:10 -0700 (PDT)
+Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15]) by cuda.sgi.com with ESMTP id McU0E6UNOoA6IAFd for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 00:29:10 -0700 (PDT)
+Message-ID: <48634544.3020107@uni-koblenz.de>
+Date: Thu, 26 Jun 2008 09:29:08 +0200
+From: Christoph Litauer <litauer@uni-koblenz.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <340C71CD25A7EB49BFA81AE8C839266701323BE8@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+Subject: Re: Performance problems with millions of inodes
+References: <4862598B.80905@uni-koblenz.de> <20080625231210.GF11558@disturbed>
+In-Reply-To: <20080625231210.GF11558@disturbed>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Sagar Borikar <Sagar_Borikar@pmc-sierra.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-[please wrap your replies at 72 columns]
-
-On Wed, Jun 25, 2008 at 11:46:59PM -0700, Sagar Borikar wrote:
-> >> with 2.6.18 kernel,128 MB of RAM, MIPS architecture and XFS version 
-> >> 2.8.11.
+Dave Chinner schrieb:
+> On Wed, Jun 25, 2008 at 04:43:23PM +0200, Christoph Litauer wrote:
+>> Hi,
+>>
+>> sorry if this has been asked before, I am new to this mailing list. I
+>> didn't find any hints in the FAQ or by googling ...
+>>
+>> I have a backup server driving two kinds of backup software: bacula and
+>> backuppc. bacula saves it's backups on raid1, backuppc on raid2
+>> (different hardware, but both fast hardware raids).
+>> I have massive performance problems with backuppc which I tracked down
+>> to performance problems of the filesystem on raid2 (I think so). The
+>> main difference between the two backup systems is that backuppc uses
+>> millions of inodes for it's backup (in fact it duplicates the directory
+>> structure of the backup client).
+>>
+>> raid1 consists of 91675 inodes, raid2 of 143646439. The filesystems were
+>> created without any options. raid1 is about 7 TB, raid2 about 10TB. Both
+>> filesystems are mounted with options  
+>> '(rw,noatime,nodiratime,ihashsize=65536)'.
+>>
+>> I used bonnie++ to benchmark both filesystems. Here are the results of
+>> 'bonnie++ -u root -f -n 10:0:0:1000':
+>>
+>> raid1:
+>> -------------------
+>> Sequential Output: 82505 K/sec
+>> Sequential Input : 102192 K/sec
+>> Sequential file creation: 7184/sec
+>> Random file creation    : 17277/sec
+>>
+>> raid2:
+>> -------------------
+>> Sequential Output: 124802 K/sec
+>> Sequential Input : 109158 K/sec
+>> Sequential file creation: 123/sec
+>> Random file creation    : 138/sec
+>>
+>> As you can see, raid2's throughput is higher than raid1's. But the file
+>> creation times are rather slow ...
+>>
+>> Maybe the 143 million inodes cause this effect?
 > 
-> > [...]
+> Certain will be. You've got about 3 AGs that are holding inodes, so
+> that's probably 35M+ inodes per AG. With the way allocation works,
+> it's probably doing a dual-traversal of the AGI btree to find a free
+> inode "near" to the parent and that is consuming lots and lots of
+> CPU time.
+
+So, would more AGs improve performance? As backuppc is still in testing 
+state (for me) it would be no problem to create a new xfs filesystem 
+with a "better" configuration. I am afraid that the number of inodes 
+will increase very much if I backup more clients and filesystems. So, 
+what configuration would you recommend?
+
 > 
-> >> Can anyone let me know what could be the probable cause of this issue.
+>> Any idea how to avoid it?
 > 
-> > they are all from  corrupted extent btrees.  There are many
-> > possible causes of this that we've fixed over the past years
-> > since 2.6.18 was released. Indeed, we are currently discussing
-> > fixes for a bunch of problems that lead to corrupted extent
-> > btrees and problems like this. I'd suggest that you should
-> > probably start with a more recent kernel, make sure you have a
-> > serial console and set the xfs_error_level to 11 so that it
-> > gives as much information as possible on the console when the
-> > error it > hit.  if that doesn't give a stack trace, then  you
-> > need to set the xfs_panic_mask to crash the machine on block
-> > zero accesses and report the stack ﬆraces that it outputs...
->  
-> Yes, I went through the changes between 2.6.24 and 2.6.18 and they
-> are quite a few. But as this is production system and on field,
-> its not viable to upgrade the kernel.
+> I had a protoype patch back when I was at SGI than stopped this
+> search when the search reached a radius that was no longer "near".
+> This greatly reduced CPU time for allocation on large inode count
+> AGs and hence create rates increased significantly.
+> 
+> [Mark - IIRC that patch was in the miscellaneous patch tarball I
+> left behind...]
+> 
+> The only other way of dealing with this is to use inode64 so that
+> inodes get spread across the entire filesystem instead of just a
+> few AGs at the start of the filesystem. It's too late to change the
+> existing inodes, but new inodes would get spread around....
 
-Well, you're pretty much on your own then :/
+Unfortunatly my backup server is a 32 bit system ...
 
-> I do understand that there
-> could be many places which can cause the corruption.
-> Unfortunately, three different systems have given three different
-> places of corruption as stated.
-
-Yes, but all the same pattern of corruption, so it is likely
-that it is one problem.
-
-> Now I am sleeping in the access to
-> block zero exception and rescheduling so that it won't stall the
-> system and I can monitor the state of the filesystem. As the
-> frequency of landing the error is once in 2.5 days under extreme
-> stress,  if you could point me to the probable place to look at, I
-> can narrow down the debugging path.
-
-Like I said - it's a corrupt bmap btree. It could be a bug in the
-bmap btree code, the alloc btree code, the inode data fork
-manipulation code, it could be a block device bug returning bad data
-to XFS on on a cancelled btree readahead, etc. IOWs, there are so many
-possible causes of a corrupted btree that a bug report by itself is
-mostly useless.
-
-All I can suggest is working out a reproducable test case in your
-development environment, attaching a debugger and start digging around
-in memory when the problem is hit and try to find out exactly what
-is corrupted. If you can't reproduce it or work out what is
-occurring to trigger the problem, then we're not going to be able to
-find the cause...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Regards
+Christoph
+________________________________________________________________________
+Christoph Litauer                  litauer@uni-koblenz.de
+Uni Koblenz, Computing Center,     http://www.uni-koblenz.de/~litauer
+Postfach 201602, 56016 Koblenz     Fon: +49 261 287-1311, Fax: -100 1311
+PGP-Fingerprint: F39C E314 2650 650D 8092 9514 3A56 FBD8 79E3 27B2
