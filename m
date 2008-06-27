@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:41:54 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R4foNM007829
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:41:50 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:44:10 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R4i7TN008337
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:44:07 -0700
 From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: [PATCH] Introduce xfs_trans_bmap_add_attrfork.
+Subject: Re: [PATCH] Move xfs_attr_rolltrans to xfs_trans_roll
 References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
 	<1214196150-5427-2-git-send-email-xaiki@sgi.com>
 	<1214196150-5427-3-git-send-email-xaiki@sgi.com>
-	<1214196150-5427-4-git-send-email-xaiki@sgi.com>
-	<20080626092856.GA27069@infradead.org>
-Date: Fri, 27 Jun 2008 14:42:17 +1000
-In-Reply-To: <20080626092856.GA27069@infradead.org> (Christoph Hellwig's
-	message of "Thu, 26 Jun 2008 05:28:56 -0400")
-Message-ID: <nccy74r1oba.fsf@sgi.com>
+	<20080626082827.GC23954@infradead.org>
+Date: Fri, 27 Jun 2008 14:44:37 +1000
+In-Reply-To: <20080626082827.GC23954@infradead.org> (Christoph Hellwig's
+	message of "Thu, 26 Jun 2008 04:28:27 -0400")
+Message-ID: <ncctzff1o7e.fsf@sgi.com>
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="=-=-="
 Sender: xfs-bounce@oss.sgi.com
@@ -25,238 +24,167 @@ Cc: xfs@oss.sgi.com
 --=-=-=
 
 
-Updated patch attached,
-Moved case where there is no transaction back into
-xfs_bmap_add_attrfork() and rely on caller to call xfs_trans_roll(),
+New patch attached, assignemnts out of conditionals, updated comments
+and types.
 
-Christoph Hellwig <hch@infradead.org> writes:
->> +xfs_bmap_add_attrfork(
-[...]
-> Care to add this below xfs_trans_bmap_add_attrfork?  Also please
-> us struct xfs_inode instead of the typedef.
 
-Done,
-
->> +	if (tpp) {
->> +		ASSERT(*tpp);
->> +		tp = *tpp;
->> +	} else {
-[...]
->
-> I think it would be much cleaner if all the transaction setup, joining
-> etc was done in xfs_bmap_add_attrfork, and xfs_trans_bmap_add_attrfork
-> just gets an always non-NULL xfs_trans pointer.  That would mean
-> the common code would become just a helper, and
-> xfs_trans_bmap_add_attrfork would be a small wrapper including the 
-> xfs_trans_roll.  Alternatively the caller could always do the roll.
-
-I think I got it right, but error handeling is a bit weird this way,
-looks logically identical.
-
+-- 
+Niv Sardi
 
 --=-=-=
 Content-Type: text/x-diff
 Content-Disposition: inline;
- filename=0003-Introduce-xfs_trans_bmap_add_attrfork.patch
+ filename=0001-Move-attr-log-alloc-size-calculator-to-another-funct.patch
 
->From 8409ab9129b788ec9b1c2fb81131f70de0f4bf65 Mon Sep 17 00:00:00 2001
+>From 1ca0cbca566944d8d26027d4b877be11b2ebaad0 Mon Sep 17 00:00:00 2001
 From: Niv Sardi <xaiki@sgi.com>
-Date: Thu, 22 May 2008 16:18:00 +1000
-Subject: [PATCH] Introduce xfs_trans_bmap_add_attrfork.
+Date: Thu, 8 May 2008 16:34:32 +1000
+Subject: [PATCH] Move attr log alloc size calculator to another function.
 
-That takes a transaction and doesn't require everything to be locked
-anymore. This doesn't commit the transaction ! so direct callers,
-willing to use xfs_trans_roll() should do it themselves.
-
-Change xfs_bmap_add_attrfork to do the initialization/allocation of
-the transaction and commit arround xfs_trans_bmap_add_attrfork.
+We will need that to be able to calculate the size of log we need for
+a specific attr (for Create+EA). The local flag is needed so that we
+can fail if we run into ENOSPC when trying to alloc blocks.
 
 Signed-off-by: Niv Sardi <xaiki@sgi.com>
 ---
- fs/xfs/xfs_bmap.c |  100 ++++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_bmap.h |    7 ++++
- 2 files changed, 72 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_attr.c |   80 +++++++++++++++++++++++++++++++---------------------
+ fs/xfs/xfs_attr.h |    1 +
+ 2 files changed, 49 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 1c0a5a5..d4bd6e7 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -3946,16 +3946,16 @@ xfs_bunmap_trace(
-  * Must not be in a transaction, ip must not be locked.
-  */
- int						/* error code */
--xfs_bmap_add_attrfork(
--	xfs_inode_t		*ip,		/* incore inode pointer */
-+xfs_trans_bmap_add_attrfork(
-+	struct xfs_trans	**tpp,		/* transaction pointer */
-+	struct xfs_inode	*ip,		/* incore inode pointer */
- 	int			size,		/* space new attribute needs */
- 	int			rsvd)		/* xact may use reserved blks */
- {
- 	xfs_fsblock_t		firstblock;	/* 1st block/ag allocated */
--	xfs_bmap_free_t		flist;		/* freed extent records */
--	xfs_mount_t		*mp;		/* mount structure */
--	xfs_trans_t		*tp;		/* transaction pointer */
--	int			blks;		/* space reservation */
-+	struct xfs_bmap_free	flist;		/* freed extent records */
-+	struct xfs_mount	*mp;		/* mount structure */
-+	struct xfs_trans	*tp;		/* transaction pointer */
- 	int			version = 1;	/* superblock attr version */
- 	int			committed;	/* xaction was committed */
- 	int			logflags;	/* logging flags */
-@@ -3967,24 +3967,8 @@ xfs_bmap_add_attrfork(
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index e58f321..ca3cabf 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -184,6 +184,46 @@ xfs_attr_get(
+ 	return(error);
+ }
  
- 	mp = ip->i_mount;
- 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
--	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
--	blks = XFS_ADDAFORK_SPACE_RES(mp);
--	if (rsvd)
--		tp->t_flags |= XFS_TRANS_RESERVE;
--	if ((error = xfs_trans_reserve(tp, blks, XFS_ADDAFORK_LOG_RES(mp), 0,
--			XFS_TRANS_PERM_LOG_RES, XFS_ADDAFORK_LOG_COUNT)))
--		goto error0;
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, tp, ip, blks, 0, rsvd ?
--			XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
--			XFS_QMOPT_RES_REGBLKS);
--	if (error) {
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
--		return error;
--	}
--	if (XFS_IFORK_Q(ip))
--		goto error1;
-+	ASSERT(*tpp);
-+	tp = *tpp;
- 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
- 		/*
- 		 * For inodes coming from pre-6.2 filesystems.
-@@ -3992,10 +3976,7 @@ xfs_bmap_add_attrfork(
- 		ASSERT(ip->i_d.di_aformat == 0);
- 		ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
- 	}
--	ASSERT(ip->i_d.di_anextents == 0);
--	VN_HOLD(XFS_ITOV(ip));
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++/*
++ * Calculate how many blocks we need for the new attribute,
++ */
++int
++xfs_attr_calc_size(
++	struct xfs_inode *ip,
++	int		namelen,
++	int		valuelen,
++	int		*local)
++{
++	struct xfs_mount *mp = ip->i_mount;
++	int		size;
++	int		nblks;
 +
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_DEV:
- 		ip->i_d.di_forkoff = roundup(sizeof(xfs_dev_t), 8) >> 3;
-@@ -4015,7 +3996,7 @@ xfs_bmap_add_attrfork(
- 	default:
- 		ASSERT(0);
- 		error = XFS_ERROR(EINVAL);
--		goto error1;
-+		goto error0;
- 	}
- 	ip->i_df.if_ext_max =
- 		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
-@@ -4046,7 +4027,7 @@ xfs_bmap_add_attrfork(
- 	if (logflags)
- 		xfs_trans_log_inode(tp, ip, logflags);
- 	if (error)
--		goto error2;
-+		goto error1;
- 	if (!XFS_SB_VERSION_HASATTR(&mp->m_sb) ||
- 	   (!XFS_SB_VERSION_HASATTR2(&mp->m_sb) && version == 2)) {
- 		__int64_t sbfields = 0;
-@@ -4066,14 +4047,63 @@ xfs_bmap_add_attrfork(
- 		} else
- 			spin_unlock(&mp->m_sb_lock);
- 	}
--	if ((error = xfs_bmap_finish(&tp, &flist, &committed)))
--		goto error2;
--	error = xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES);
-+	error = xfs_bmap_finish(tpp, &flist, &committed);
-+	if (error)
-+		goto error1;
- 	ASSERT(ip->i_df.if_ext_max ==
- 	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
--	return error;
--error2:
-+	return 0;
-+error1:
- 	xfs_bmap_cancel(&flist);
-+	ASSERT(ismrlocked(&ip->i_lock, MR_UPDATE));
-+error0:
-+	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-+	ASSERT(ip->i_df.if_ext_max ==
-+	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
-+	return error;
++	/*
++	 * Determine space new attribute will use, and if it would be
++	 * "local" or "remote" (note: local != inline).
++	 */
++	size = xfs_attr_leaf_newentsize(namelen, valuelen,
++					mp->m_sb.sb_blocksize, local);
++
++	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
++	if (*local) {
++		if (size > (mp->m_sb.sb_blocksize >> 1)) {
++			/* Double split possible */
++			nblks *= 2;
++		}
++	} else {
++		/*
++		 * Out of line attribute, cannot double split, but
++		 * make room for the attribute value itself.
++		 */
++		uint	dblocks = XFS_B_TO_FSB(mp, valuelen);
++		nblks += dblocks;
++		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
++	}
++
++	return nblks;
 +}
 +
-+int
-+xfs_bmap_add_attrfork(
-+	struct xfs_inode	*ip,		/* incore inode pointer */
-+	int			size,		/* space new attribute needs */
-+	int			rsvd)		/* xact may use reserved blks */
-+{
-+	struct xfs_trans	*tp;		/* transaction pointer */
-+	struct xfs_mount	*mp;		/* mount structure */
-+	int			blks;		/* space reservation */
-+	int			error;		/* error return value */
-+
-+	mp = ip->i_mount;
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_ADDAFORK);
-+	blks = XFS_ADDAFORK_SPACE_RES(mp);
-+
-+	if (rsvd)
-+		tp->t_flags |= XFS_TRANS_RESERVE;
-+	error = xfs_trans_reserve(tp, blks, XFS_ADDAFORK_LOG_RES(mp), 0,
-+				XFS_TRANS_PERM_LOG_RES, XFS_ADDAFORK_LOG_COUNT);
-+	if (error)
-+		goto error0;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, tp, ip, blks, 0, rsvd ?
-+			      XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
-+			      XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto error1;
-+
-+	if (XFS_IFORK_Q(ip))
-+		goto error1;
-+
-+	ASSERT(ip->i_d.di_anextents == 0);
-+	VN_HOLD(XFS_ITOV(ip));
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = xfs_trans_bmap_add_attrfork(NULL, ip, size, rsvd);
-+	if (error)
-+		return error;
-+	return xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES);
- error1:
- 	ASSERT(ismrlocked(&ip->i_lock,MR_UPDATE));
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 87224b7..7a21e41 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -166,6 +166,13 @@ xfs_bmap_add_attrfork(
- 	int			size,	/* space needed for new attribute */
- 	int			rsvd);	/* flag for reserved block allocation */
+ int
+ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
+ 		 char *value, int valuelen, int flags)
+@@ -192,10 +232,9 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
+ 	xfs_fsblock_t	firstblock;
+ 	xfs_bmap_free_t flist;
+ 	int		error, err2, committed;
+-	int		local, size;
+-	uint		nblks;
+ 	xfs_mount_t	*mp = dp->i_mount;
+ 	int             rsvd = (flags & ATTR_ROOT) != 0;
++	int		local;
  
-+int					/* error code */
-+xfs_trans_bmap_add_attrfork(
-+	struct xfs_trans	**tpp,   /* transaction */
-+	struct xfs_inode	*ip,	/* incore inode pointer */
-+	int			size,	/* space needed for new attribute */
-+	int			rsvd);	/* flag for reserved block allocation */
-+
+ 	/*
+ 	 * Attach the dquots to the inode.
+@@ -232,30 +271,8 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
+ 	args.addname = 1;
+ 	args.oknoent = 1;
+ 
+-	/*
+-	 * Determine space new attribute will use, and if it would be
+-	 * "local" or "remote" (note: local != inline).
+-	 */
+-	size = xfs_attr_leaf_newentsize(namelen, valuelen,
+-					mp->m_sb.sb_blocksize, &local);
+-
+-	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+-	if (local) {
+-		if (size > (mp->m_sb.sb_blocksize >> 1)) {
+-			/* Double split possible */
+-			nblks <<= 1;
+-		}
+-	} else {
+-		uint	dblocks = XFS_B_TO_FSB(mp, valuelen);
+-		/* Out of line attribute, cannot double split, but make
+-		 * room for the attribute value itself.
+-		 */
+-		nblks += dblocks;
+-		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
+-	}
+-
+ 	/* Size is now blocks for attribute data */
+-	args.total = nblks;
++	args.total = xfs_attr_calc_size(dp, namelen, valuelen, &local);
+ 
+ 	/*
+ 	 * Start our first transaction of the day.
+@@ -277,18 +294,17 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
+ 	if (rsvd)
+ 		args.trans->t_flags |= XFS_TRANS_RESERVE;
+ 
+-	if ((error = xfs_trans_reserve(args.trans, (uint) nblks,
+-				      XFS_ATTRSET_LOG_RES(mp, nblks),
+-				      0, XFS_TRANS_PERM_LOG_RES,
+-				      XFS_ATTRSET_LOG_COUNT))) {
++	if ((error = xfs_trans_reserve(args.trans, args.total,
++			XFS_ATTRSET_LOG_RES(mp, args.total), 0,
++			XFS_TRANS_PERM_LOG_RES, XFS_ATTRSET_LOG_COUNT))) {
+ 		xfs_trans_cancel(args.trans, 0);
+ 		return(error);
+ 	}
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL);
+ 
+-	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp, nblks, 0,
+-			 rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
+-				XFS_QMOPT_RES_REGBLKS);
++	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp, args.total, 0,
++				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
++				       XFS_QMOPT_RES_REGBLKS);
+ 	if (error) {
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index 786eba3..ea457f5 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -158,6 +158,7 @@ struct xfs_da_args;
  /*
-  * Add the extent to the list of extents to be free at transaction end.
-  * The list is maintained sorted (by block number).
+  * Overall external interface routines.
+  */
++int xfs_attr_calc_size(struct xfs_inode *, int, int, int *);
+ int xfs_attr_set_int(struct xfs_inode *, const char *, int, char *, int, int);
+ int xfs_attr_remove_int(struct xfs_inode *, const char *, int, int);
+ int xfs_attr_list_int(struct xfs_attr_list_context *);
 -- 
 1.5.6
 
-
---=-=-=
-
-
-Thanks for this extensive review =)
--- 
-Niv Sardi
 
 --=-=-=--
