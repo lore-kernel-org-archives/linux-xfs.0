@@ -1,41 +1,35 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Jun 2008 07:36:19 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5REaEtO015787
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:36:14 -0700
-Received: from gateway-1237.mvista.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7148183C661
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:37:14 -0700 (PDT)
-Received: from gateway-1237.mvista.com (homer.mvista.com [63.81.120.158]) by cuda.sgi.com with ESMTP id oRoD0KyKvjZPPNMe for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:37:14 -0700 (PDT)
-Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
-	requirements
-From: Daniel Walker <dwalker@mvista.com>
-In-Reply-To: <20080627091509.GA31148@infradead.org>
-References: <1214455277-6387-1-git-send-email-david@fromorbit.com>
-	 <1214455277-6387-2-git-send-email-david@fromorbit.com>
-	 <1214512405.21035.110.camel@localhost.localdomain>
-	 <20080627022407.GB7703@parisc-linux.org>
-	 <1214537199.21035.179.camel@localhost.localdomain>
-	 <20080627091509.GA31148@infradead.org>
-Content-Type: text/plain
-Date: Fri, 27 Jun 2008 07:37:12 -0700
-Message-Id: <1214577432.21035.181.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Jun 2008 07:48:45 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5REmgeh017328
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:48:42 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87AA2292C63
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:49:43 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id ppC2yX5iiJDWDbSb for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 07:49:43 -0700 (PDT)
+Message-ID: <4864FE05.9000706@sandeen.net>
+Date: Fri, 27 Jun 2008 09:49:41 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] fix mount option parsing in remount
+References: <20080518153539.GA5218@lst.de> <20080603080019.GB19608@lst.de> <20080627131136.GD23431@lst.de>
+In-Reply-To: <20080627131136.GD23431@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-
-On Fri, 2008-06-27 at 05:15 -0400, Christoph Hellwig wrote:
-> On Thu, Jun 26, 2008 at 08:26:39PM -0700, Daniel Walker wrote:
-> > Are you saying you want to keep semaphores? Cause I think that goes
-> > against the overall agenda that I've seen,
+Christoph Hellwig wrote:
+> ping^2
 > 
-> Which overall agenda? 
+> On Tue, Jun 03, 2008 at 10:00:19AM +0200, Christoph Hellwig wrote:
+>> ping?  silently ignoring wrong options causes a lot of confusion for
+>> users, and the patch sould simple enough.  Anyone take 10 minutes to
+>> review it and check it in?
 
-Semaphore removal ..
+I sorta reviewed it earlier but I'll give it my formal ACK.
 
-Daniel
+-Eric
