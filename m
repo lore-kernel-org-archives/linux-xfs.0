@@ -1,58 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 16:55:38 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5QNtVGV003284
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 16:55:33 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 594FF28F305
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 16:56:31 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id ZX9q0H3l5y2NeIoE for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 16:56:31 -0700 (PDT)
-Date: Fri, 27 Jun 2008 09:54:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: TAKE 976035 - streamline init/exit path
-Message-ID: <20080626235441.GU29319@disturbed>
-References: <20080625030057.973173A5D1@itchy>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080625030057.973173A5D1@itchy>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 17:58:20 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5R0wE9o007682
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 17:58:16 -0700
+Subject: TAKE 982343 - fix up the _ACL_TYPE refs when CONFIG_XFS_POSIX_ACL not set.
+Message-Id: <20080627005910.640EC58C4C29@chook.melbourne.sgi.com>
+Date: Fri, 27 Jun 2008 10:59:10 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Wed, Jun 25, 2008 at 01:00:57PM +1000, Niv Sardi wrote:
-> streamline init/exit path
-> 
-> Currently the xfs module init/exit code is a mess.  It's farmed out
-> over a lot of function with very little error checking.  This patch
-> makes sure we propagate all initialization failures properly and clean
-> up after them.  Various runtime initializations are replaced with
-> compile-time initializations where possible to make this easier.  The
-> exit path is similarly consolidated.
-> 
-> There's now split out function to create/destroy the kmem zones and
-> alloc/free the trace buffers.  I've also changed the ktrace
-> allocations to KM_MAYFAIL and handled errors resulting from that.
-> 
-> And yes, we really should replace the XFS_*_TRACE ifdefs with a single
-> XFS_TRACE..
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Niv Sardi <xaiki@sgi.com>
+Fix up problem when CONFIG_XFS_POSIX_ACL is not set and yet we still can use
+the _ACL_TYPE_* definitions in linux-2.6/xfs_xattr.c.
+The forthcoming generic acl code will also fix this problem.
 
-Niv, can you now do another checkin that fixes the compilation
-error when CONFIG_PROCFS=N in fs/xfs/linux-2.6/xfs_stats.h that
-was reported on linux-next (i.e. fix the bug that led up to
-everyone discovering the busted commit)?
+--Tim
 
-BTW, your script is still busted - look at the wacky cc list
-on the take message. Please be a little more careful...
+Date:  Fri Jun 27 10:58:01 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  lachlan@sgi.com,hch@lst.de
 
-Cheers,
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+Modid:  xfs-linux-melb:xfs-kern:31369a
+fs/xfs/xfs_acl.h - 1.38 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.h.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
+	- Fix up problem when CONFIG_XFS_POSIX_ACL is not set and yet we still can use
+	  the _ACL_TYPE_* definitions in linux-2.6/xfs_xattr.c.
+	  Move the definitions further up before the #ifdef config stuff.
