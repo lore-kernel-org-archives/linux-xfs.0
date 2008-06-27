@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:44:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:49:01 -0700 (PDT)
 Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R4i7TN008337
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:44:07 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R4mxZv009115
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:48:59 -0700
 From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: [PATCH] Move xfs_attr_rolltrans to xfs_trans_roll
+Subject: Re: [PATCH] Move attr log alloc size calculator to another function.
 References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
 	<1214196150-5427-2-git-send-email-xaiki@sgi.com>
-	<1214196150-5427-3-git-send-email-xaiki@sgi.com>
-	<20080626082827.GC23954@infradead.org>
-Date: Fri, 27 Jun 2008 14:44:37 +1000
-In-Reply-To: <20080626082827.GC23954@infradead.org> (Christoph Hellwig's
-	message of "Thu, 26 Jun 2008 04:28:27 -0400")
-Message-ID: <ncctzff1o7e.fsf@sgi.com>
+	<20080626082438.GB23954@infradead.org>
+Date: Fri, 27 Jun 2008 14:49:31 +1000
+In-Reply-To: <20080626082438.GB23954@infradead.org> (Christoph Hellwig's
+	message of "Thu, 26 Jun 2008 04:24:38 -0400")
+Message-ID: <nccprq31nz8.fsf@sgi.com>
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary="=-=-="
 Sender: xfs-bounce@oss.sgi.com
@@ -23,13 +22,37 @@ Cc: xfs@oss.sgi.com
 
 --=-=-=
 
+Attached updated patch.
 
-New patch attached, assignemnts out of conditionals, updated comments
-and types.
+Christoph Hellwig <hch@infradead.org> writes:
+> On Mon, Jun 23, 2008 at 02:42:27PM +1000, Niv Sardi wrote:
+>> From: Niv Sardi <xaiki@debian.org>
+>> 
+>> We will need that to be able to calculate the size of log we need for
+>> a specific attr (for parent pointers in create). We need the local so
+>> that we can fail if we run into ENOSPC when trying to alloc blocks
 
+Updated Comments, structs instead of typdefs
+ 
+>> Signed-off-by: Niv Sardi <xaiki@sgi.com>
+>> ---
+>>  fs/xfs/xfs_attr.c |   78 +++++++++++++++++++++++++++++++---------------------
+>>  fs/xfs/xfs_attr.h |    2 +-
+>>  2 files changed, 47 insertions(+), 33 deletions(-)
+>> 
+>> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+>> index e58f321..0d19e90 100644
+>> --- a/fs/xfs/xfs_attr.c
+>> +++ b/fs/xfs/xfs_attr.c
+>> @@ -185,6 +185,43 @@ xfs_attr_get(
+>>  }
+>>  
+>>  int
+>> +xfs_attr_calc_size(
+>
+> should be marked STATIC,
 
--- 
-Niv Sardi
+The whole idea is to be able to use it in xfs_create().
 
 --=-=-=
 Content-Type: text/x-diff
@@ -186,5 +209,12 @@ index 786eba3..ea457f5 100644
 -- 
 1.5.6
 
+
+--=-=-=
+
+
+Cheers,
+-- 
+Niv Sardi
 
 --=-=-=--
