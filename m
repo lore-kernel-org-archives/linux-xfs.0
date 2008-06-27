@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Jun 2008 02:07:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 27 Jun 2008 02:14:42 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R97MoC031739
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 02:07:23 -0700
-Date: Fri, 27 Jun 2008 05:08:22 -0400
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R9Edrh001073
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 02:14:39 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 24C89E4FCE2
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 02:15:41 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id hmykF2AJlTfrxpWp for <xfs@oss.sgi.com>; Fri, 27 Jun 2008 02:15:41 -0700 (PDT)
+Date: Fri, 27 Jun 2008 05:15:09 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix use after free when closing log/rt devices
-Message-ID: <20080627090822.GA17374@infradead.org>
-References: <48647746.5010007@sgi.com> <20080627063219.GA25015@infradead.org> <48648B2B.3080709@sgi.com>
+Subject: Re: [PATCH 1/6] Extend completions to provide XFS object flush
+	requirements
+Message-ID: <20080627091509.GA31148@infradead.org>
+References: <1214455277-6387-1-git-send-email-david@fromorbit.com> <1214455277-6387-2-git-send-email-david@fromorbit.com> <1214512405.21035.110.camel@localhost.localdomain> <20080627022407.GB7703@parisc-linux.org> <1214537199.21035.179.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48648B2B.3080709@sgi.com>
+In-Reply-To: <1214537199.21035.179.camel@localhost.localdomain>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Goodwin <markgw@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Daniel Walker <dwalker@mvista.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Fri, Jun 27, 2008 at 04:39:39PM +1000, Mark Goodwin wrote:
-> do we have any QA tests that test external log?
+On Thu, Jun 26, 2008 at 08:26:39PM -0700, Daniel Walker wrote:
+> Are you saying you want to keep semaphores? Cause I think that goes
+> against the overall agenda that I've seen,
 
-Most QA tests will use the external log if you set it up that way.  But
-ithout slab poisoning this won't be noticed either.
+Which overall agenda? 
