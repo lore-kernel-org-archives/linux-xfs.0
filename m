@@ -1,220 +1,80 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:49:01 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5R4mxZv009115
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:48:59 -0700
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: [PATCH] Move attr log alloc size calculator to another function.
-References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
-	<1214196150-5427-2-git-send-email-xaiki@sgi.com>
-	<20080626082438.GB23954@infradead.org>
-Date: Fri, 27 Jun 2008 14:49:31 +1000
-In-Reply-To: <20080626082438.GB23954@infradead.org> (Christoph Hellwig's
-	message of "Thu, 26 Jun 2008 04:24:38 -0400")
-Message-ID: <nccprq31nz8.fsf@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 26 Jun 2008 21:51:01 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5R4opRL009576
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2008 21:50:55 -0700
+Message-ID: <486471DD.8010604@sgi.com>
+Date: Fri, 27 Jun 2008 14:51:41 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Subject: Re: [PATCH] disable queue flag test in barrier check
+References: <486307EA.7080007@sandeen.net> <48635284.3060001@sgi.com> <486398B7.50306@sandeen.net>
+In-Reply-To: <486398B7.50306@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>, LinuxRaid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, jeremy@sgi.comwe
 
---=-=-=
+Eric Sandeen wrote:
+> Timothy Shimmin wrote:
+> 
+>> Also from memory, I believe Neil checked this removal into the SLES10sp1 tree
+>> and some sgi boxes started having slow downs
+>> (looking at Dave's email below - we were not wanting to tell them
+>> to use nobarrier but needed it to work by default - I forget now).
+> 
+> But that's an admin issue.
+> 
+> The way it is now, for example a home user of md raid1 (me!) can't run
+> barriers even if they wanted to.
+> 
+I understand what you are saying. I agree. And I agreed
+when it went out last time.
 
-Attached updated patch.
-
-Christoph Hellwig <hch@infradead.org> writes:
-> On Mon, Jun 23, 2008 at 02:42:27PM +1000, Niv Sardi wrote:
->> From: Niv Sardi <xaiki@debian.org>
->> 
->> We will need that to be able to calculate the size of log we need for
->> a specific attr (for parent pointers in create). We need the local so
->> that we can fail if we run into ENOSPC when trying to alloc blocks
-
-Updated Comments, structs instead of typdefs
- 
->> Signed-off-by: Niv Sardi <xaiki@sgi.com>
->> ---
->>  fs/xfs/xfs_attr.c |   78 +++++++++++++++++++++++++++++++---------------------
->>  fs/xfs/xfs_attr.h |    2 +-
->>  2 files changed, 47 insertions(+), 33 deletions(-)
->> 
->> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
->> index e58f321..0d19e90 100644
->> --- a/fs/xfs/xfs_attr.c
->> +++ b/fs/xfs/xfs_attr.c
->> @@ -185,6 +185,43 @@ xfs_attr_get(
->>  }
->>  
->>  int
->> +xfs_attr_calc_size(
->
-> should be marked STATIC,
-
-The whole idea is to be able to use it in xfs_create().
-
---=-=-=
-Content-Type: text/x-diff
-Content-Disposition: inline;
- filename=0001-Move-attr-log-alloc-size-calculator-to-another-funct.patch
-
->From 1ca0cbca566944d8d26027d4b877be11b2ebaad0 Mon Sep 17 00:00:00 2001
-From: Niv Sardi <xaiki@sgi.com>
-Date: Thu, 8 May 2008 16:34:32 +1000
-Subject: [PATCH] Move attr log alloc size calculator to another function.
-
-We will need that to be able to calculate the size of log we need for
-a specific attr (for Create+EA). The local flag is needed so that we
-can fail if we run into ENOSPC when trying to alloc blocks.
-
-Signed-off-by: Niv Sardi <xaiki@sgi.com>
----
- fs/xfs/xfs_attr.c |   80 +++++++++++++++++++++++++++++++---------------------
- fs/xfs/xfs_attr.h |    1 +
- 2 files changed, 49 insertions(+), 32 deletions(-)
-
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index e58f321..ca3cabf 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -184,6 +184,46 @@ xfs_attr_get(
- 	return(error);
- }
- 
-+/*
-+ * Calculate how many blocks we need for the new attribute,
-+ */
-+int
-+xfs_attr_calc_size(
-+	struct xfs_inode *ip,
-+	int		namelen,
-+	int		valuelen,
-+	int		*local)
-+{
-+	struct xfs_mount *mp = ip->i_mount;
-+	int		size;
-+	int		nblks;
-+
-+	/*
-+	 * Determine space new attribute will use, and if it would be
-+	 * "local" or "remote" (note: local != inline).
-+	 */
-+	size = xfs_attr_leaf_newentsize(namelen, valuelen,
-+					mp->m_sb.sb_blocksize, local);
-+
-+	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
-+	if (*local) {
-+		if (size > (mp->m_sb.sb_blocksize >> 1)) {
-+			/* Double split possible */
-+			nblks *= 2;
-+		}
-+	} else {
-+		/*
-+		 * Out of line attribute, cannot double split, but
-+		 * make room for the attribute value itself.
-+		 */
-+		uint	dblocks = XFS_B_TO_FSB(mp, valuelen);
-+		nblks += dblocks;
-+		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
-+	}
-+
-+	return nblks;
-+}
-+
- int
- xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 		 char *value, int valuelen, int flags)
-@@ -192,10 +232,9 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	xfs_fsblock_t	firstblock;
- 	xfs_bmap_free_t flist;
- 	int		error, err2, committed;
--	int		local, size;
--	uint		nblks;
- 	xfs_mount_t	*mp = dp->i_mount;
- 	int             rsvd = (flags & ATTR_ROOT) != 0;
-+	int		local;
- 
- 	/*
- 	 * Attach the dquots to the inode.
-@@ -232,30 +271,8 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	args.addname = 1;
- 	args.oknoent = 1;
- 
--	/*
--	 * Determine space new attribute will use, and if it would be
--	 * "local" or "remote" (note: local != inline).
--	 */
--	size = xfs_attr_leaf_newentsize(namelen, valuelen,
--					mp->m_sb.sb_blocksize, &local);
--
--	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
--	if (local) {
--		if (size > (mp->m_sb.sb_blocksize >> 1)) {
--			/* Double split possible */
--			nblks <<= 1;
--		}
--	} else {
--		uint	dblocks = XFS_B_TO_FSB(mp, valuelen);
--		/* Out of line attribute, cannot double split, but make
--		 * room for the attribute value itself.
--		 */
--		nblks += dblocks;
--		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
--	}
--
- 	/* Size is now blocks for attribute data */
--	args.total = nblks;
-+	args.total = xfs_attr_calc_size(dp, namelen, valuelen, &local);
- 
- 	/*
- 	 * Start our first transaction of the day.
-@@ -277,18 +294,17 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
- 	if (rsvd)
- 		args.trans->t_flags |= XFS_TRANS_RESERVE;
- 
--	if ((error = xfs_trans_reserve(args.trans, (uint) nblks,
--				      XFS_ATTRSET_LOG_RES(mp, nblks),
--				      0, XFS_TRANS_PERM_LOG_RES,
--				      XFS_ATTRSET_LOG_COUNT))) {
-+	if ((error = xfs_trans_reserve(args.trans, args.total,
-+			XFS_ATTRSET_LOG_RES(mp, args.total), 0,
-+			XFS_TRANS_PERM_LOG_RES, XFS_ATTRSET_LOG_COUNT))) {
- 		xfs_trans_cancel(args.trans, 0);
- 		return(error);
- 	}
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
- 
--	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp, nblks, 0,
--			 rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
--				XFS_QMOPT_RES_REGBLKS);
-+	error = XFS_TRANS_RESERVE_QUOTA_NBLKS(mp, args.trans, dp, args.total, 0,
-+				rsvd ? XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_FORCE_RES :
-+				       XFS_QMOPT_RES_REGBLKS);
- 	if (error) {
- 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index 786eba3..ea457f5 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -158,6 +158,7 @@ struct xfs_da_args;
- /*
-  * Overall external interface routines.
-  */
-+int xfs_attr_calc_size(struct xfs_inode *, int, int, int *);
- int xfs_attr_set_int(struct xfs_inode *, const char *, int, char *, int, int);
- int xfs_attr_remove_int(struct xfs_inode *, const char *, int, int);
- int xfs_attr_list_int(struct xfs_attr_list_context *);
--- 
-1.5.6
+But as it has:
+-> gone in
+<- gone out
+-> gone in
+I want to make sure that everyone is happy for it to go
+back out again. (Cut the string of the yoyo :-)
 
 
---=-=-=
+> Until there is a way to know if a write cache is non-volatile the only
+> safe option is to enable barriers when possible.
+> 
+>> 6.
+>>> Date: Wed, 25 Jun 2008 08:57:24 +1000
+>>> From: Dave Chinner <david@fromorbit.com>
+>>> To: Eric Sandeen <sandeen@sandeen.net>
+>>> Cc: LinuxRaid <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+>>> Subject: Re: md raid1 passes barriers, but xfs doesn't use them?
+>>>
+>>> Yeah, the problem was that last time this check was removed was
+>>> that a bunch of existing hardware had barriers enabled on them when
+>>> not necessary (e.g. had NVRAM) and they went 5x slower on MD raid1
+>>> devices. Having to change the root drive config on a wide install
+>>> base was considered much more of support pain than leaving the
+>>> check there. I guess that was more of a distro upgrade issue than
+>>> a mainline problem, but that's the history. Hence I think we
+>>> should probably do whatever everyone else is doing here....
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>> So I guess my question is whether there are cases where we are
+>> going to be in trouble again.
+>> Jeremy, do you see some problems?
+> 
+> FWIW, the problem *I* foresee is that some people are going to slow down
+> when using the defaults, yes, because barriers will start working again.
+>  But I don't see any other safe way around it.
+> 
+> Education would be in order, I suppose.  :)
+> 
+Well that's an ongoing problem.
+(Tell 'em to use laptop drives ;-))
 
-
-Cheers,
--- 
-Niv Sardi
-
---=-=-=--
+--Tim
