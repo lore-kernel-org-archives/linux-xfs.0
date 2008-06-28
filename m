@@ -1,45 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 28 Jun 2008 12:51:11 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 28 Jun 2008 13:07:38 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5SJp8ac012389
-	for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 12:51:08 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m5SK7afJ014343
+	for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 13:07:37 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 60E6212376DB
-	for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 12:52:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id KlLhRKRkRDFoppP7 for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 12:52:09 -0700 (PDT)
-Message-ID: <48669668.4060204@sandeen.net>
-Date: Sat, 28 Jun 2008 14:52:08 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3F5C1237BDF
+	for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 13:08:38 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id iROmFbJ3qzLezsdF for <xfs@oss.sgi.com>; Sat, 28 Jun 2008 13:08:38 -0700 (PDT)
+Message-ID: <48669A45.1050104@sandeen.net>
+Date: Sat, 28 Jun 2008 15:08:37 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: rfc: kill ino64 mount option
-References: <20080627153928.GA31384@lst.de> <20080628000914.GE29319@disturbed> <486589E7.9010705@sgi.com> <4865BEAB.4030108@sandeen.net> <20080628152540.GB22484@lst.de>
-In-Reply-To: <20080628152540.GB22484@lst.de>
+Subject: Re: [PATCH] re-remove xfs custom bitops
+References: <480EB397.1040304@sandeen.net> <4829C360.5060500@sandeen.net> <482BF841.8050704@sgi.com>
+In-Reply-To: <482BF841.8050704@sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: markgw@sgi.com, xfs@oss.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Fri, Jun 27, 2008 at 11:31:39PM -0500, Eric Sandeen wrote:
->> I guess I'm ambivalent too, is it really that invasive?  Maybe 10, 15
->> lines of code looks like?
+Donald Douwsma wrote:
+> Eric Sandeen wrote:
+>> Eric Sandeen wrote:
+>>> Once more, with feeling!
+>>>
+>>> This re-instates the reverted mod after the ppc panic of
+>>> Feb '08.  You guys do have ppc boxes in the test farm now right? :)
+>>>
+>>> This keeps xfs_lowbit64 as it was since there aren't good
+>>> generic helpers there ...
+>>>
+>>> This should probably keep Dave's signed-off line, there's
+>>> a bit of my (userspace) testing here but no original work. 
+>>>
+>>> This exact patch isn't tested but it's based on a conglomeration
+>>> of prior testing...
+>> SGI guys, any takers on this one?
+>> -Eric
 > 
-> Currently it's implemented by adding m_inoadd surrounded by an
-> #if XFS_BIG_INUMS.  This can be cleaned up by adding a helper ala
+> Sorry Eric, havent had chance to run this on all platforms yet.
+> I want to test it on ppc as well as the usual x86_64/ia64 combinations,
+> then I'll get it committed.
 > 
-> xfs_ino_t xfs_user_ino(struct xfs_mount *mp, xfs_ino_t ino);
-> 
-> but I don't really see the point as the option seems quite useless.  But
-> if others thing the option is worth keeping around I'll do the helper
-> instead.
+> Don
 
-Well, to be honest i've never even enabled it  :)
+Don, how's that all going then? :)
 
-how much does xfsqa use it?
-
-I guess I don't really care if it goes.
-
+Thanks,
 -Eric
