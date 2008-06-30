@@ -1,601 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jun 2008 00:51:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jun 2008 02:01:22 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5U7pKDc030150
-	for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 00:51:22 -0700
-Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id RAA23153 for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 17:52:21 +1000
-Date: Mon, 30 Jun 2008 17:53:53 +1000
-Subject: REVIEW: xfs_metadump improvements
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: multipart/mixed; boundary=----------YV3huUsCLm2zPlwEmnbw53
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m5U91FIA003187
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 02:01:17 -0700
+Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id TAA24479; Mon, 30 Jun 2008 19:02:12 +1000
+Message-ID: <4868A114.9080106@sgi.com>
+Date: Mon, 30 Jun 2008 19:02:12 +1000
+From: Donald Douwsma <donaldd@sgi.com>
 MIME-Version: 1.0
-Message-ID: <op.udjxj3hm3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Subject: Re: [PATCH] re-remove xfs custom bitops
+References: <480EB397.1040304@sandeen.net> <4829C360.5060500@sandeen.net> <482BF841.8050704@sgi.com> <48669A45.1050104@sandeen.net>
+In-Reply-To: <48669A45.1050104@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-------------YV3huUsCLm2zPlwEmnbw53
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: Quoted-Printable
+Eric Sandeen wrote:
+> Donald Douwsma wrote:
+>> Eric Sandeen wrote:
+>>> Eric Sandeen wrote:
+>>>> Once more, with feeling!
+>>>>
+>>>> This re-instates the reverted mod after the ppc panic of
+>>>> Feb '08.  You guys do have ppc boxes in the test farm now right? :)
+>>>>
+>>>> This keeps xfs_lowbit64 as it was since there aren't good
+>>>> generic helpers there ...
+>>>>
+>>>> This should probably keep Dave's signed-off line, there's
+>>>> a bit of my (userspace) testing here but no original work. 
+>>>>
+>>>> This exact patch isn't tested but it's based on a conglomeration
+>>>> of prior testing...
+>>> SGI guys, any takers on this one?
+>>> -Eric
+>> Sorry Eric, havent had chance to run this on all platforms yet.
+>> I want to test it on ppc as well as the usual x86_64/ia64 combinations,
+>> then I'll get it committed.
+>>
+>> Don
+> 
+> Don, how's that all going then? :)
+> 
+Good question, got sidetracked with product releases.
 
-Based on what I found in xfs_check, I fixed up xfs_metadump in the
-same way.
+First time round I hit an Oops on xfstests/177 while running the auto group
+on ppc32. I dont seem to hit it running the single test, its intermittent.
 
-Also, I've increased the default maximum expected extent size for
-a directory, as in practice, 400 block extents for directory
-structures is not rare.
+I also hit this oops once back in Feb running x86_64, which was around
+the time we pulled the last version of this cleanup out, but it may be unrelated.
 
---
+Looping through the auto group overnight, I'll see If I hit it again.
 
---- a/xfsprogs/db/metadump.c	2008-06-30 17:51:10.000000000 +1000
-+++ b/xfsprogs/db/metadump.c	2008-06-30 17:45:59.609352130 +1000
-@@ -27,6 +27,8 @@
-  #include "sig.h"
-  #include "xfs_metadump.h"
-
-+#define DEFAULT_MAX_EXT_SIZE	1000
-+
-  /* copy all metadata structures to/from a file */
-
-  static int	metadump_f(int argc, char **argv);
-@@ -58,7 +60,7 @@ static xfs_ino_t	cur_ino;
-
-  static int		show_progress =3D 0;
-  static int		stop_on_read_error =3D 0;
--static int		max_extent_size =3D 20;
-+static int		max_extent_size =3D DEFAULT_MAX_EXT_SIZE;
-  static int		dont_obfuscate =3D 0;
-  static int		show_warnings =3D 0;
-  static int		progress_since_warning =3D 0;
-@@ -80,10 +82,10 @@ metadump_help(void)
-  " Options:\n"
-  "   -e -- Ignore read errors and keep going\n"
-  "   -g -- Display dump progress\n"
--"   -m -- Specify max extent size in blocks to copy (default =3D 20=20=20
-blocks)\n"
-+"   -m -- Specify max extent size in blocks to copy (default =3D %d=20=20
-blocks)\n"
-  "   -o -- Don't obfuscate names and extended attributes\n"
-  "   -w -- Show warnings of bad metadata information\n"
--"\n");
-+"\n", DEFAULT_MAX_EXT_SIZE);
-  }
-
-  static void
-@@ -186,22 +188,26 @@ scan_btree(
-  				typnm_t			btype,
-  				void			*arg))
-  {
-+	int		rval =3D 0;
-+
-  	push_cur();
-  	set_cur(&typtab[btype], XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb,
-  			DB_RING_IGN, NULL);
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read %s block %u/%u", typtab[btype].name,
-  				agno, agbno);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
-  	}
-  	if (!write_buf(iocur_top))
--		return 0;
-+		goto pop_out;
-
-  	if (!(*func)(iocur_top->data, agno, agbno, level - 1, btype, arg))
--		return 0;
--
-+		goto pop_out;
-+	rval =3D 1;
-+pop_out:
-  	pop_cur();
--	return 1;
-+	return rval;
-  }
-
-  /* free space tree copy routines */
-@@ -949,8 +955,10 @@ process_bmbt_reclist(
-  		if (iocur_top->data =3D=3D NULL) {
-  			print_warning("cannot read %s block %u/%u (%llu)",
-  					typtab[btype].name, agno, agbno, s);
--			if (stop_on_read_error)
-+			if (stop_on_read_error) {
-+				pop_cur();
-  				return 0;
-+			}
-  		} else {
-  			if (!dont_obfuscate)
-  			    switch (btype) {
-@@ -973,8 +981,10 @@ process_bmbt_reclist(
-
-  				default: ;
-  			    }
--			if (!write_buf(iocur_top))
-+			if (!write_buf(iocur_top)) {
-+				pop_cur();
-  				return 0;
-+			}
-  		}
-  		pop_cur();
-  	}
-@@ -1238,6 +1248,7 @@ copy_inode_chunk(
-  	int			off;
-  	xfs_agblock_t		agbno;
-  	int			i;
-+	int			rval =3D 0;
-
-  	agino =3D be32_to_cpu(rp->ir_startino);
-  	agbno =3D XFS_AGINO_TO_AGBNO(mp, agino);
-@@ -1258,7 +1269,8 @@ copy_inode_chunk(
-  			DB_RING_IGN, NULL);
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read inode block %u/%u", agno, agbno);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
-  	}
-
-  	/*
-@@ -1291,11 +1303,11 @@ copy_inode_chunk(
-  				((off + i) << mp->m_sb.sb_inodelog));
-
-  		if (!process_inode(agno, agino + i, dip))
--			return 0;
-+			goto pop_out;
-  	}
-  skip_processing:
-  	if (!write_buf(iocur_top))
--		return 0;
-+		goto pop_out;
-
-  	inodes_copied +=3D XFS_INODES_PER_CHUNK;
-
-@@ -1303,10 +1315,10 @@ skip_processing:
-  		print_progress("Copied %u of %u inodes (%u of %u AGs)",
-  				inodes_copied, mp->m_sb.sb_icount, agno,
-  				mp->m_sb.sb_agcount);
--
-+	rval =3D 1;
-+pop_out:
-  	pop_cur();
--
--	return 1;
-+	return rval;
-  }
-
-  static int
-@@ -1401,61 +1413,66 @@ scan_ag(
-  {
-  	xfs_agf_t	*agf;
-  	xfs_agi_t	*agi;
-+	int		stack_count =3D 0;
-+	int		rval =3D 0;
-
-  	/* copy the superblock of the AG */
-  	push_cur();
-+	stack_count++;
-  	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-  			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-  	if (!iocur_top->data) {
-  		print_warning("cannot read superblock for ag %u", agno);
-  		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
-  	} else {
-  		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
-  	}
-
-  	/* copy the AG free space btree root */
-  	push_cur();
-+	stack_count++;
-  	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
-  			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-  	agf =3D iocur_top->data;
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read agf block for ag %u", agno);
-  		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
-  	} else {
-  		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
-  	}
-
-  	/* copy the AG inode btree root */
-  	push_cur();
-+	stack_count++;
-  	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
-  			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-  	agi =3D iocur_top->data;
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read agi block for ag %u", agno);
-  		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
-  	} else {
-  		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
-  	}
-
-  	/* copy the AG free list header */
-  	push_cur();
-+	stack_count++;
-  	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
-  			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read agfl block for ag %u", agno);
-  		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
-  	} else {
-  		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
-  	}
--	pop_cur();
-
-  	/* copy AG free space btrees */
-  	if (agf) {
-@@ -1463,22 +1480,21 @@ scan_ag(
-  			print_progress("Copying free space trees of AG %u",
-  					agno);
-  		if (!copy_free_bno_btree(agno, agf))
--			return 0;
-+			goto pop_out;
-  		if (!copy_free_cnt_btree(agno, agf))
--			return 0;
-+			goto pop_out;
-  	}
-
-  	/* copy inode btrees and the inodes and their associated metadata */
-  	if (agi) {
-  		if (!copy_inodes(agno, agi))
--			return 0;
-+			goto pop_out;
-  	}
--
--	pop_cur();
--	pop_cur();
--	pop_cur();
--
--	return 1;
-+	rval =3D 1;
-+pop_out:
-+	while (stack_count--)
-+		pop_cur();
-+	return rval;
-  }
-
-  static int
-@@ -1492,6 +1508,7 @@ copy_ino(
-  	xfs_dinode_t		*dip;
-  	xfs_dinode_core_t	tdic;
-  	int			offset;
-+	int			rval =3D 0;
-
-  	if (ino =3D=3D 0)
-  		return 1;
-@@ -1515,7 +1532,8 @@ copy_ino(
-  	if (iocur_top->data =3D=3D NULL) {
-  		print_warning("cannot read %s inode %lld",
-  				typtab[itype].name, (long long)ino);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
-  	}
-  	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
-
-@@ -1524,7 +1542,10 @@ copy_ino(
-  	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
-
-  	cur_ino =3D ino;
--	return process_inode_data(dip, itype);
-+	rval =3D process_inode_data(dip, itype);
-+pop_out:
-+	pop_cur();
-+	return rval;
-  }
-
-
-@@ -1553,6 +1574,7 @@ copy_log(void)
-  	set_cur(&typtab[TYP_LOG], XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-  			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
-  	if (iocur_top->data =3D=3D NULL) {
-+		pop_cur();
-  		print_warning("cannot read log");
-  		return !stop_on_read_error;
-  	}
-------------YV3huUsCLm2zPlwEmnbw53
-Content-Disposition: attachment; filename=fix_metadump.patch
-Content-Type: text/x-patch; name=fix_metadump.patch
-Content-Transfer-Encoding: Quoted-Printable
-
---- a/xfsprogs/db/metadump.c	2008-06-30 17:51:10.000000000 +1000
-+++ b/xfsprogs/db/metadump.c	2008-06-30 17:45:59.609352130 +1000
-@@ -27,6 +27,8 @@
- #include "sig.h"
- #include "xfs_metadump.h"
-=20
-+#define DEFAULT_MAX_EXT_SIZE	1000
-+
- /* copy all metadata structures to/from a file */
-=20
- static int	metadump_f(int argc, char **argv);
-@@ -58,7 +60,7 @@ static xfs_ino_t	cur_ino;
-=20
- static int		show_progress =3D 0;
- static int		stop_on_read_error =3D 0;
--static int		max_extent_size =3D 20;
-+static int		max_extent_size =3D DEFAULT_MAX_EXT_SIZE;
- static int		dont_obfuscate =3D 0;
- static int		show_warnings =3D 0;
- static int		progress_since_warning =3D 0;
-@@ -80,10 +82,10 @@ metadump_help(void)
- " Options:\n"
- "   -e -- Ignore read errors and keep going\n"
- "   -g -- Display dump progress\n"
--"   -m -- Specify max extent size in blocks to copy (default =3D 20 blocks=
-)\n"
-+"   -m -- Specify max extent size in blocks to copy (default =3D %d blocks=
-)\n"
- "   -o -- Don't obfuscate names and extended attributes\n"
- "   -w -- Show warnings of bad metadata information\n"
--"\n");
-+"\n", DEFAULT_MAX_EXT_SIZE);
- }
-=20
- static void
-@@ -186,22 +188,26 @@ scan_btree(
- 				typnm_t			btype,
- 				void			*arg))
- {
-+	int		rval =3D 0;
-+
- 	push_cur();
- 	set_cur(&typtab[btype], XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb,
- 			DB_RING_IGN, NULL);
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read %s block %u/%u", typtab[btype].name,
- 				agno, agbno);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
- 	}
- 	if (!write_buf(iocur_top))
--		return 0;
-+		goto pop_out;
-=20
- 	if (!(*func)(iocur_top->data, agno, agbno, level - 1, btype, arg))
--		return 0;
--
-+		goto pop_out;
-+	rval =3D 1;
-+pop_out:
- 	pop_cur();
--	return 1;
-+	return rval;
- }
-=20
- /* free space tree copy routines */
-@@ -949,8 +955,10 @@ process_bmbt_reclist(
- 		if (iocur_top->data =3D=3D NULL) {
- 			print_warning("cannot read %s block %u/%u (%llu)",
- 					typtab[btype].name, agno, agbno, s);
--			if (stop_on_read_error)
-+			if (stop_on_read_error) {
-+				pop_cur();
- 				return 0;
-+			}
- 		} else {
- 			if (!dont_obfuscate)
- 			    switch (btype) {
-@@ -973,8 +981,10 @@ process_bmbt_reclist(
-=20
- 				default: ;
- 			    }
--			if (!write_buf(iocur_top))
-+			if (!write_buf(iocur_top)) {
-+				pop_cur();
- 				return 0;
-+			}
- 		}
- 		pop_cur();
- 	}
-@@ -1238,6 +1248,7 @@ copy_inode_chunk(
- 	int			off;
- 	xfs_agblock_t		agbno;
- 	int			i;
-+	int			rval =3D 0;
-=20
- 	agino =3D be32_to_cpu(rp->ir_startino);
- 	agbno =3D XFS_AGINO_TO_AGBNO(mp, agino);
-@@ -1258,7 +1269,8 @@ copy_inode_chunk(
- 			DB_RING_IGN, NULL);
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read inode block %u/%u", agno, agbno);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
- 	}
-=20
- 	/*
-@@ -1291,11 +1303,11 @@ copy_inode_chunk(
- 				((off + i) << mp->m_sb.sb_inodelog));
-=20
- 		if (!process_inode(agno, agino + i, dip))
--			return 0;
-+			goto pop_out;
- 	}
- skip_processing:
- 	if (!write_buf(iocur_top))
--		return 0;
-+		goto pop_out;
-=20
- 	inodes_copied +=3D XFS_INODES_PER_CHUNK;
-=20
-@@ -1303,10 +1315,10 @@ skip_processing:
- 		print_progress("Copied %u of %u inodes (%u of %u AGs)",
- 				inodes_copied, mp->m_sb.sb_icount, agno,
- 				mp->m_sb.sb_agcount);
--
-+	rval =3D 1;
-+pop_out:
- 	pop_cur();
--
--	return 1;
-+	return rval;
- }
-=20
- static int
-@@ -1401,61 +1413,66 @@ scan_ag(
- {
- 	xfs_agf_t	*agf;
- 	xfs_agi_t	*agi;
-+	int		stack_count =3D 0;
-+	int		rval =3D 0;
-=20
- 	/* copy the superblock of the AG */
- 	push_cur();
-+	stack_count++;
- 	set_cur(&typtab[TYP_SB], XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
- 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
- 	if (!iocur_top->data) {
- 		print_warning("cannot read superblock for ag %u", agno);
- 		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
- 	} else {
- 		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
- 	}
-=20
- 	/* copy the AG free space btree root */
- 	push_cur();
-+	stack_count++;
- 	set_cur(&typtab[TYP_AGF], XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
- 	agf =3D iocur_top->data;
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read agf block for ag %u", agno);
- 		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
- 	} else {
- 		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
- 	}
-=20
- 	/* copy the AG inode btree root */
- 	push_cur();
-+	stack_count++;
- 	set_cur(&typtab[TYP_AGI], XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
- 	agi =3D iocur_top->data;
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read agi block for ag %u", agno);
- 		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
- 	} else {
- 		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
- 	}
-=20
- 	/* copy the AG free list header */
- 	push_cur();
-+	stack_count++;
- 	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read agfl block for ag %u", agno);
- 		if (stop_on_read_error)
--			return 0;
-+			goto pop_out;
- 	} else {
- 		if (!write_buf(iocur_top))
--			return 0;
-+			goto pop_out;
- 	}
--	pop_cur();
-=20
- 	/* copy AG free space btrees */
- 	if (agf) {
-@@ -1463,22 +1480,21 @@ scan_ag(
- 			print_progress("Copying free space trees of AG %u",
- 					agno);
- 		if (!copy_free_bno_btree(agno, agf))
--			return 0;
-+			goto pop_out;
- 		if (!copy_free_cnt_btree(agno, agf))
--			return 0;
-+			goto pop_out;
- 	}
-=20
- 	/* copy inode btrees and the inodes and their associated metadata */
- 	if (agi) {
- 		if (!copy_inodes(agno, agi))
--			return 0;
-+			goto pop_out;
- 	}
--
--	pop_cur();
--	pop_cur();
--	pop_cur();
--
--	return 1;
-+	rval =3D 1;
-+pop_out:
-+	while (stack_count--)
-+		pop_cur();
-+	return rval;
- }
-=20
- static int
-@@ -1492,6 +1508,7 @@ copy_ino(
- 	xfs_dinode_t		*dip;
- 	xfs_dinode_core_t	tdic;
- 	int			offset;
-+	int			rval =3D 0;
-=20
- 	if (ino =3D=3D 0)
- 		return 1;
-@@ -1515,7 +1532,8 @@ copy_ino(
- 	if (iocur_top->data =3D=3D NULL) {
- 		print_warning("cannot read %s inode %lld",
- 				typtab[itype].name, (long long)ino);
--		return !stop_on_read_error;
-+		rval =3D !stop_on_read_error;
-+		goto pop_out;
- 	}
- 	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
-=20
-@@ -1524,7 +1542,10 @@ copy_ino(
- 	memcpy(&dip->di_core, &tdic, sizeof(xfs_dinode_core_t));
-=20
- 	cur_ino =3D ino;
--	return process_inode_data(dip, itype);
-+	rval =3D process_inode_data(dip, itype);
-+pop_out:
-+	pop_cur();
-+	return rval;
- }
-=20
-=20
-@@ -1553,6 +1574,7 @@ copy_log(void)
- 	set_cur(&typtab[TYP_LOG], XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
- 			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
- 	if (iocur_top->data =3D=3D NULL) {
-+		pop_cur();
- 		print_warning("cannot read log");
- 		return !stop_on_read_error;
- 	}
-
-------------YV3huUsCLm2zPlwEmnbw53--
+XFS mounting filesystem hdb4
+Ending clean XFS mount for filesystem: hdb4
+Device hdb4 - bad inode magic/vsn daddr 23607192 #0 (magic=0)
+------------[ cut here ]------------
+kernel BUG at fs/xfs/support/debug.c:54!
+Oops: Exception in kernel mode, sig: 5 [#1]
+PowerMac
+Modules linked in: iptable_filter ip_tables ip6table_filter ip6_tables x_tables ipv6 dm_mod ide_cd_mod cdrom uninorth_agp ohci1394 agpgart sungem sungem_phy natsemi ieee1394 ehci_hcd
+NIP: c01955c8 LR: c01955bc CTR: c0032cc4
+REGS: c3359d10 TRAP: 0700   Not tainted  (2.6.25-donaldd)
+MSR: 00029032 <EE,ME,IR,DR>  CR: 24002082  XER: 00000000
+TASK = da1a4660[31911] 'xfssyncd' THREAD: c3358000
+GPR00: 00000001 c3359dc0 da1a4660 00000041 00000001 00000000 00000000 00000001
+GPR08: 0014ff97 c0500d48 d2aea3f2 c0500d48 00190834 00000000 0242db00 0242dc14
+GPR16: 0242d860 02464870 0242dc38 c0448f8c c04512c8 00000000 c0160984 c3359e88
+GPR24: 00000000 00000020 c3b1d1e0 00000000 c3359e90 00000000 c056cf34 00009032
+NIP [c01955c8] cmn_err+0xd4/0xec
+LR [c01955bc] cmn_err+0xc8/0xec
+Call Trace:
+[c3359dc0] [c01955bc] cmn_err+0xc8/0xec (unreliable)
+[c3359e00] [c0160844] xfs_imap_to_bp+0x1a0/0x200
+[c3359e80] [c0160984] xfs_itobp+0xe0/0x18c
+[c3359ed0] [c0162890] xfs_iflush+0x268/0x3f4
+[c3359f10] [c017f98c] xfs_finish_reclaim+0xe8/0x190
+[c3359f30] [c017facc] xfs_finish_reclaim_all+0x98/0xf4
+[c3359f60] [c017ded0] xfs_syncsub+0x5c/0x290
+[c3359f90] [c0192820] xfs_sync_worker+0x30/0x64
+[c3359fa0] [c019404c] xfssyncd+0x118/0x16c
+[c3359fe0] [c004a790] kthread+0x4c/0x88
+[c3359ff0] [c0012f9c] kernel_thread+0x44/0x60
+Instruction dump:
+7c1e19ae 3d20c03a 57a0103a 39291c84 3c60c047 7c89002e 7fc5f378 3863ae70
+4bea0c49 7fe00124 7fa00034 5400d97e <0f000000> 80010044 bba10034 38210040
+---[ end trace f4636d0864e8be53 ]---
