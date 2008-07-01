@@ -1,46 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 08:14:44 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m61FEerY007384
-	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 08:14:41 -0700
-Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1498F2A4A08
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 08:15:42 -0700 (PDT)
-Received: from sovereign.computergmbh.de (sovereign.computergmbh.de [85.214.69.204]) by cuda.sgi.com with ESMTP id DrSSskCD9XhUYagD for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 08:15:42 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by sovereign.computergmbh.de (Postfix) with ESMTP id E19871C0E7213
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 17:15:40 +0200 (CEST)
-Date: Tue, 1 Jul 2008 17:15:40 +0200 (CEST)
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: grub fails boot after update
-Message-ID: <alpine.LNX.1.10.0807011712470.20393@fbirervta.pbzchgretzou.qr>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 08:48:57 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m61FmtS3014919
+	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 08:48:55 -0700
+Date: Tue, 1 Jul 2008 11:49:46 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH] Give a transaction to xfs_attr_set_int
+Message-ID: <20080701154946.GB20383@josefsipek.net>
+References: <1214196150-5427-1-git-send-email-xaiki@sgi.com> <1214196150-5427-2-git-send-email-xaiki@sgi.com> <1214196150-5427-3-git-send-email-xaiki@sgi.com> <1214196150-5427-4-git-send-email-xaiki@sgi.com> <1214196150-5427-5-git-send-email-xaiki@sgi.com> <20080629220859.GL29319@disturbed>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080629220859.GL29319@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com, Niv Sardi <xaiki@debian.org>
 
+On Mon, Jun 30, 2008 at 08:08:59AM +1000, Dave Chinner wrote:
+...
+> > @@ -356,6 +381,8 @@ xfs_attr_set_int(xfs_inode_t *dp, const char *name, int namelen,
+> >  			if (!error && (flags & ATTR_KERNOTIME) == 0) {
+> >  				xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
+> >  			}
+> > +			if (tpp)
+> > +				tpp = &args.trans;
+> 
+> That's busted too. Can you please review all the places where you
+> return transactio pointers to the caller via a function parameterrr
+> for this bug as you've made in at least a couple of places.
 
+Niv: Why not return the pointer as a return value?
 
->From Novell Bugzilla, I gather that XFS has a serious problem with grub. 
-Since I'd like to keep XFS for the time being, is there any way to fix 
-this issue, or make dead sure that a given file is on disk?
-Like ioctl(fd, XFS_FLUSH_I_MEAN_IT)?
+Josef 'Jeff' Sipek.
 
-
----------- Forwarded message ----------
-https://bugzilla.novell.com/show_bug.cgi?id=223773
-
---- Comment #39  2008-07-01 08:44:49 MDT ---
-I agree with comment #37: XFS really does suck, especially when it comes to
-booting Linux on a PC. Fortunately we do not support it any more for new
-installations, an ext2 /boot partition is highly recommended.
-
-The problem is that with XFS, sync(2) returns, but the data isn't synced.
-The first time yast calls grub install, grub does not find the new stage1.5,
-because it is not on the disk yet, despite a successful sync; thus it modifies
-stage2 to do the job. On the second invocation, stage1.5 is found and
-installed, but stage2 already is modified.
-
-So once again this isn't a grub bug, but an XFS bug with FS semantics.
+-- 
+Humans were created by water to transport it upward.
