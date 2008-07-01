@@ -1,66 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 01:06:05 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m61861ON004902
-	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 01:06:01 -0700
-Received: from deliver.uni-koblenz.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 09055185AC70
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 01:07:02 -0700 (PDT)
-Received: from deliver.uni-koblenz.de (deliver.uni-koblenz.de [141.26.64.15]) by cuda.sgi.com with ESMTP id fUOn0Sp57SoaqrBx for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 01:07:02 -0700 (PDT)
-Message-ID: <4869E5A4.4020900@uni-koblenz.de>
-Date: Tue, 01 Jul 2008 10:07:00 +0200
-From: Christoph Litauer <litauer@uni-koblenz.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 01:07:55 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6187n0x005404
+	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 01:07:49 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC2CE2A242E
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 01:08:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 7hUteJ3rcpSyIIq5 for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 01:08:51 -0700 (PDT)
+Date: Tue, 1 Jul 2008 04:08:44 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] Implement generic freeze feature
+Message-ID: <20080701080844.GA16691@infradead.org>
+References: <20080630212323t-sato@mail.jp.nec.com>
 MIME-Version: 1.0
-Subject: Re: rfc: kill ino64 mount option
-References: <20080627153928.GA31384@lst.de> <20080628000914.GE29319@disturbed> <486589E7.9010705@sgi.com>
-In-Reply-To: <486589E7.9010705@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080630212323t-sato@mail.jp.nec.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, axboe@kernel.dk, mtk.manpages@googlemail.com
 
-Mark Goodwin schrieb:
-> 
-> 
-> Dave Chinner wrote:
->> On Fri, Jun 27, 2008 at 05:39:28PM +0200, Christoph Hellwig wrote:
->>> Does anyone have objections to kill the ino64 mount option?  It's purely
->>> a debug tool to force inode numbers outside of the range representable
->>> in 32bits and is quite invasive for something that could easily be
->>> debugged by just having a large enough filesystem..
->>
->> It's the "large enough fs" that is the problem. XFSQA uses
->> small partitions for the most part, and this allows testing
->> of 64 bit inode numbers with a standard qa config.
->>
->> That being said, I don't really if it goes or stays...
-> 
-> Although ino64 has interoperability issues with 32bit apps, it does
-> have significant performance advantages over inode32 for some
-> storage topologies and workloads, i.e. it's generally desirable to
-> keep inodes near their data, but with large configs inode32 can't
-> always oblige. ino64 is not just a debug tool.
-> 
-> We have a design proposal known as "inode32+" that essentially removes
-> the direct mapping between inode number and disk offset. This will
-> provide all the layout and performance benefits of ino64 without the
-> interop issues.  Until inode32+ is available, we need to keep ino64.
+>  {
+>  	struct super_block *sb;
+>  
+> +	if (test_and_set_bit(BD_FREEZE_OP, &bdev->bd_state))
+> +		return ERR_PTR(-EBUSY);
+> +
+> +	sb = get_super(bdev);
+> +
+> +	/* If super_block has been already frozen, return. */
+> +	if (sb && sb->s_frozen != SB_UNFROZEN) {
+> +		drop_super(sb);
+> +		clear_bit(BD_FREEZE_OP, &bdev->bd_state);
+> +		return sb;
+> +	}
+> +
+> +	if (sb)
+> +		drop_super(sb);
+> +
+>  	down(&bdev->bd_mount_sem);
+>  	sb = get_super(bdev);
+>  	if (sb && !(sb->s_flags & MS_RDONLY)) {
+> @@ -219,6 +234,8 @@ struct super_block *freeze_bdev(struct b
+>  	}
+>  
+>  	sync_blockdev(bdev);
+> +	clear_bit(BD_FREEZE_OP, &bdev->bd_state);
+> +
 
-Hi,
+Please only clear BD_FREEZE_OP in thaw_bdev, that way you can also get
+rid of the frozen check above, and the double-get_super.  Also
+bd_mount_sem could be removed that way by checking for BD_FREEZE_OP
+in the unmount path.
 
-as I have massive performance problems using xfs with millions of 
-inodes, I am very interested in this "incode32+". My server is a 32 bit 
-machine, so I am not able to use inode64.
-Is it available?
+>  /*
+> + * ioctl_freeze - Freeze the filesystem.
+> + *
+> + * @filp:	target file
+> + *
+> + * Call freeze_bdev() to freeze the filesystem.
+> + */
 
--- 
-Regards
-Christoph
-________________________________________________________________________
-Christoph Litauer                  litauer@uni-koblenz.de
-Uni Koblenz, Computing Center,     http://www.uni-koblenz.de/~litauer
-Postfach 201602, 56016 Koblenz     Fon: +49 261 287-1311, Fax: -100 1311
-PGP-Fingerprint: F39C E314 2650 650D 8092 9514 3A56 FBD8 79E3 27B2
+This is not a kerneldoc comment.  But I think it can be simply removed
+anyway, as it's a quite trivial function with static scope.
+
+> +/*
+> + * ioctl_thaw - Thaw the filesystem.
+> + *
+> + * @filp:	target file
+> + *
+> + * Call thaw_bdev() to thaw the filesystem.
+> + */
+
+Same here.
