@@ -1,62 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jun 2008 23:16:31 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m616GQ94023741
-	for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 23:16:28 -0700
-Message-ID: <4869CCE9.1020304@sgi.com>
-Date: Tue, 01 Jul 2008 16:21:29 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 30 Jun 2008 23:43:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m616hrvE025447
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 23:43:53 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 91B3C2A1F29
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 23:44:55 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id u36qQ07IBIw59prz for <xfs@oss.sgi.com>; Mon, 30 Jun 2008 23:44:55 -0700 (PDT)
+Date: Tue, 1 Jul 2008 16:44:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Xfs Access to block zero  exception and system crash
+Message-ID: <20080701064437.GR29319@disturbed>
+References: <20080625084931.GI16257@build-svl-1.agami.com> <340C71CD25A7EB49BFA81AE8C839266701323BE8@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080626070215.GI11558@disturbed> <4864BD5D.1050202@pmc-sierra.com> <4864C001.2010308@pmc-sierra.com> <20080628000516.GD29319@disturbed> <340C71CD25A7EB49BFA81AE8C8392667028A1CA7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080629215647.GJ29319@disturbed> <20080630034112.055CF18904C4@bby1mta01.pmc-sierra.bc.ca> <4868B46C.9000200@pmc-sierra.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix use after free when closing log/rt devices
-References: <48647746.5010007@sgi.com> <20080627063219.GA25015@infradead.org>
-In-Reply-To: <20080627063219.GA25015@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4868B46C.9000200@pmc-sierra.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Sagar Borikar <sagar_borikar@pmc-sierra.com>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Fri, Jun 27, 2008 at 03:14:46PM +1000, Lachlan McIlroy wrote:
->> The call to xfs_free_buftarg() will free the memory used by it's argument
->> so we need to save the bdev to pass to xfs_blkdev_put()
->>
->> Lachlan
->>
->> --- fs/xfs/linux-2.6/xfs_super.c_1.432	2008-06-27 14:51:17.000000000 +1000
->> +++ fs/xfs/linux-2.6/xfs_super.c	2008-06-27 14:59:26.000000000 +1000
->> @@ -781,13 +781,17 @@ STATIC void
->> xfs_close_devices(
->> 	struct xfs_mount	*mp)
->> {
->> +	struct block_device	*bdev;
->> +
->> 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
->> +		bdev = mp->m_logdev_targp->bt_bdev;
->> 		xfs_free_buftarg(mp->m_logdev_targp);
->> -		xfs_blkdev_put(mp->m_logdev_targp->bt_bdev);
->> +		xfs_blkdev_put(bdev);
->> 	}
->> 	if (mp->m_rtdev_targp) {
->> +		bdev = mp->m_rtdev_targp->bt_bdev;
->> 		xfs_free_buftarg(mp->m_rtdev_targp);
->> -		xfs_blkdev_put(mp->m_rtdev_targp->bt_bdev);
->> +		xfs_blkdev_put(bdev);
->> 	}
-> 
-> Looks good, alhough two local variables inside the ifs might be cleaner:
-> 
-> 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
-> 		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
-> 
-> 		xfs_free_buftarg(mp->m_logdev_targp);
-> 		xfs_blkdev_put(logdev);
-> 	}
-> 
-> 	...
-> 
+On Mon, Jun 30, 2008 at 03:54:44PM +0530, Sagar Borikar wrote:
+> After running my test for 20 min, when I check the fragmentation status  
+> of file system, I observe that it
+> is severely fragmented.
 
-Thought someone might suggest that.  I'll make the changes, thanks.
+Depends on your definition of fragmentation....
+
+> [root@NAS001ee5ab9c85 ~]# xfs_db -c frag -r /dev/RAIDA/vol
+> actual 94343, ideal 107, fragmentation factor 99.89%
+
+And that one is a bad one ;)
+
+Still, there are a lot of extents - ~1000 to a file - which
+will be stressing the btree extent format code.
+
+> Do you think, this can cause the issue?
+
+Sure - just like any other workload that generates enough
+extents. Like I said originally, we've fixed so many problems
+in this code since 2.6.18 I'd suggest that your only sane
+hope for us to help you track done the problem is to upgrade
+to a current kernel and go from there....
+
+Cheers,,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
