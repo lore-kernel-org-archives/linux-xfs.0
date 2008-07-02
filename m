@@ -1,51 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 12:35:40 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m62JZc0U026515
-	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 12:35:38 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 083CF12D6607
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2008 12:36:39 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id XTzys3CWWks2qK9y for <xfs@oss.sgi.com>; Wed, 02 Jul 2008 12:36:39 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m62JaUNW019830
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 21:36:30 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m62JaUx2019828
-	for xfs@oss.sgi.com; Wed, 2 Jul 2008 21:36:30 +0200
-Date: Wed, 2 Jul 2008 21:36:30 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix compilation without CONFIG_PROC_FS
-Message-ID: <20080702193630.GA19715@lst.de>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 16:39:58 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m62NdS4a013490
+	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 16:39:28 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: [PATCH] Introduce xfs_trans_bmap_add_attrfork.
+References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
+	<1214196150-5427-2-git-send-email-xaiki@sgi.com>
+	<1214196150-5427-3-git-send-email-xaiki@sgi.com>
+	<1214196150-5427-4-git-send-email-xaiki@sgi.com>
+	<20080626092856.GA27069@infradead.org> <nccy74r1oba.fsf@sgi.com>
+	<486B3B76.8020303@sgi.com>
+Date: Thu, 03 Jul 2008 09:39:52 +1000
+In-Reply-To: <486B3B76.8020303@sgi.com> (Timothy Shimmin's message of "Wed, 02
+	Jul 2008 18:25:26 +1000")
+Message-ID: <nccwsk34zzr.fsf@sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+Timothy Shimmin <tes@sgi.com> writes:
+[...]
+>> +	if (error)
+>> +		goto error1;
+>> +
+>> +	if (XFS_IFORK_Q(ip))
+>> +		goto error1;
+>> +
+>> +	ASSERT(ip->i_d.di_anextents == 0);
+>> +	VN_HOLD(XFS_ITOV(ip));
+>> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>> +
+>> +	error = xfs_trans_bmap_add_attrfork(NULL, ip, size, rsvd);
+>> +	if (error)
+>> +		return error;
+>> +	return xfs_trans_commit(tp, XFS_TRANS_PERM_LOG_RES);
+>
+> I was kind of expecting the transaction, &tp, to be passed into
+> xfs_trans_bmap_add_attrfork().
+> (And then xfs_trans_bmap_add_attrfork() which calls
+> xfs_bmap_finish() which calls xfs_trans_dup() and so from that
+> point on we would then have to update tp if we were to use it.)
+>
+> So how come we pass in NULL?
+> I'm tired so I'm probably missing something obvious.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+No you're right, it took me a while to remember you're working out of
+git. I haven't really re-read it properly yet but thanks for this one.
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.h	2008-06-27 15:16:21.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h	2008-06-27 15:19:18.000000000 +0200
-@@ -146,11 +146,12 @@ extern void xfs_cleanup_procfs(void);
- 
- static inline int xfs_init_procfs(void)
- {
--	return 0
--};
-+	return 0;
-+}
-+
- static inline void xfs_cleanup_procfs(void)
- {
--};
-+}
- 
- #endif	/* !CONFIG_PROC_FS */
- 
+Cheers,
+-- 
+Niv Sardi
