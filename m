@@ -1,49 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 23:56:13 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m626u7FV021416
-	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 23:56:09 -0700
-Received: from build-svl-1.agami.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CDD0A2A6978
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 23:57:10 -0700 (PDT)
-Received: from build-svl-1.agami.com (colo-nat-pool.agami.com [216.218.227.40]) by cuda.sgi.com with ESMTP id fAr2CMyef5nfFFET for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 23:57:10 -0700 (PDT)
-Date: Tue, 1 Jul 2008 23:56:52 -0700
-From: Dave Chinner <dchinner@agami.com>
-Subject: Re: Xfs Access to block zero  exception and system crash
-Message-ID: <20080702065652.GS14251@build-svl-1.agami.com>
-References: <20080628000516.GD29319@disturbed> <340C71CD25A7EB49BFA81AE8C8392667028A1CA7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080629215647.GJ29319@disturbed> <20080630034112.055CF18904C4@bby1mta01.pmc-sierra.bc.ca> <4868B46C.9000200@pmc-sierra.com> <20080701064437.GR29319@disturbed> <486B01A6.4030104@pmc-sierra.com> <20080702051337.GX29319@disturbed> <486B13AD.2010500@pmc-sierra.com> <1214979191.6025.22.camel@verge.scott.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1214979191.6025.22.camel@verge.scott.net.au>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 00:13:28 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m627DKs2025195
+	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 00:13:22 -0700
+Message-ID: <486B2ACA.2050506@sgi.com>
+Date: Wed, 02 Jul 2008 17:14:18 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] Move xfs_attr_rolltrans to xfs_trans_roll
+References: <1214196150-5427-1-git-send-email-xaiki@sgi.com> <1214196150-5427-2-git-send-email-xaiki@sgi.com> <1214196150-5427-3-git-send-email-xaiki@sgi.com>
+In-Reply-To: <1214196150-5427-3-git-send-email-xaiki@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nathan Scott <nscott@aconex.com>
-Cc: Sagar Borikar <sagar_borikar@pmc-sierra.com>, xfs@oss.sgi.com, sandeen@sandeen.net
+To: Niv Sardi <xaiki@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 02, 2008 at 04:13:11PM +1000, Nathan Scott wrote:
-> On Wed, 2008-07-02 at 11:05 +0530, Sagar Borikar wrote:
-> > 
-> > Unfortunately the architecture is customized mips for which the
-> > standard 
-> > kernel port is
-> > not available  and we have to port the new kernel in order to try
-> > this 
-> > which is why I was
-> > hesitating to do this.
+Niv Sardi wrote:
+> Move it from the attr code to the transaction code and make the attr
+> code call the new function.
 > 
-> You can always try the reverse - replace fs/xfs from your mips build
-> tree with the one from the current/a recent kernel.  Theres very few
-> changes in the surrounding kernel code that xfs needs.
+> We rolltrans is really usefull whenever we want to use rolling
+> transaction, should be generic, it isn't dependent on any part of the
+> attr code anyway.
+> 
+So you just have some renames on calls and change where func definition is located.
+And you've added comments.
 
-Eric should be able to comment on the pitfalls in doing this having
-tried to backport a 2.6.25 fs/xfs to a 2.6.18 RHEL kernel. Eric -
-any comments?
 
-Cheers,
+> +/*
+> + * Roll from one trans in the sequence of PERMANENT transactions to
+> + * the next: permanent transactions are only flushed out when commited
+> + * with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon as
+> + * possible to let chunks of it go to the log. So we commit the chunck
+> + * we've been working on and get a new transaction to continue.
+> + */
 
-Dave.
--- 
-Dave Chinner
-dchinner@agami.com
+typos:
+s/chunck/chunk/
+s/commited/committed/
+
+--Tim
