@@ -1,53 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 19:53:57 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m622rtVV001504
-	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 19:53:55 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C4071860317
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 19:54:57 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 6KUdSymz7qdWpfBu for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 19:54:57 -0700 (PDT)
-Date: Wed, 2 Jul 2008 12:54:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Fix use after free when closing log/rt devices
-Message-ID: <20080702025454.GW29319@disturbed>
-References: <48647746.5010007@sgi.com> <20080627063219.GA25015@infradead.org> <48648B2B.3080709@sgi.com> <20080627090822.GA17374@infradead.org> <486AE0F8.5080506@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <486AE0F8.5080506@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 20:42:10 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m623fxr3008701
+	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 20:42:00 -0700
+Subject: TAKE 983964 - fix mount option parsing in remount
+Message-Id: <20080702034258.0250058C4C29@chook.melbourne.sgi.com>
+Date: Wed,  2 Jul 2008 13:42:57 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Mark Goodwin <markgw@sgi.com>, Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Wed, Jul 02, 2008 at 11:59:20AM +1000, Timothy Shimmin wrote:
-> Christoph Hellwig wrote:
-> > On Fri, Jun 27, 2008 at 04:39:39PM +1000, Mark Goodwin wrote:
-> >> do we have any QA tests that test external log?
-> > 
-> > Most QA tests will use the external log if you set it up that way.  But
-> > ithout slab poisoning this won't be noticed either.
-> 
-> I think you need:
->   USE_EXTERNAL=yes
->   SCRATCH_LOGDEV=somelogdevice
->   TEST_LOGDEV=somelogdevice
-> to get the scratch and test mounts using an external log.
+Fix mount option parsing in remount.
 
-Yes. Typically I used to use SCRATCH_LOGDEV=/dev/ram0 so I didn't
-need another block device on the machine just for an external
-log on a throw-away filesystem....
+Remount currently happily accept any option thrown at it, although the
+only filesystem specific option it actually handles is barrier/nobarrier.
+And it actually doesn't handle these correctly either because it only
+uses the value it parsed when we're doing a ro->rw transition.  In
+addition to that there's also a bad bug in xfs_parseargs which doesn't
+touch the actual option in the mount point except for a single one,
+XFS_MOUNT_SMALL_INUMS and thus forced any filesystem that's every
+remounted in some way to not support 64bit inodes with no way to recover
+unless unmounted.
 
-> There are no explicit external log tests (logdev=) that I can see.
+This patch changes xfs_fs_remount to use it's own linux/parser.h based
+options parse instead of xfs_parseargs and reject all options except
+for barrier/nobarrier and to the right thing in general.  Eventually
+I'd like to have a single big option table used for mount aswell but
+that can wait for a while.
 
-It should be easy to write one using files and multiple
-loopback devices.
 
-Cheers,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+Date:  Wed Jul  2 13:41:58 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  hch@lst.de
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31382a
+fs/xfs/linux-2.6/xfs_super.c - 1.434 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.434&r2=text&tr2=1.433&f=h
+	- fix mount option parsing in remount
