@@ -1,50 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 23:13:42 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m626DSSY018353
-	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 23:13:29 -0700
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0541718607AE
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2008 23:14:30 -0700 (PDT)
-Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id A78DuKs9sroIDqmm for <xfs@oss.sgi.com>; Tue, 01 Jul 2008 23:14:30 -0700 (PDT)
-Subject: Re: Xfs Access to block zero  exception and system crash
-From: Nathan Scott <nscott@aconex.com>
-In-Reply-To: <486B13AD.2010500@pmc-sierra.com>
-References: <20080626070215.GI11558@disturbed>
-	 <4864BD5D.1050202@pmc-sierra.com> <4864C001.2010308@pmc-sierra.com>
-	 <20080628000516.GD29319@disturbed>
-	 <340C71CD25A7EB49BFA81AE8C8392667028A1CA7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-	 <20080629215647.GJ29319@disturbed>
-	 <20080630034112.055CF18904C4@bby1mta01.pmc-sierra.bc.ca>
-	 <4868B46C.9000200@pmc-sierra.com> <20080701064437.GR29319@disturbed>
-	 <486B01A6.4030104@pmc-sierra.com> <20080702051337.GX29319@disturbed>
-	 <486B13AD.2010500@pmc-sierra.com>
-Content-Type: text/plain
-Date: Wed, 02 Jul 2008 16:13:11 +1000
-Message-Id: <1214979191.6025.22.camel@verge.scott.net.au>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 01 Jul 2008 23:37:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m626b7LE020112
+	for <xfs@oss.sgi.com>; Tue, 1 Jul 2008 23:37:09 -0700
+Message-ID: <486B2248.5080400@sgi.com>
+Date: Wed, 02 Jul 2008 16:38:00 +1000
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] Move attr log alloc size calculator to another function.
+References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>	<1214196150-5427-2-git-send-email-xaiki@sgi.com>	<20080626082438.GB23954@infradead.org> <nccprq31nz8.fsf@sgi.com>
+In-Reply-To: <nccprq31nz8.fsf@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Sagar Borikar <sagar_borikar@pmc-sierra.com>
-Cc: xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, 2008-07-02 at 11:05 +0530, Sagar Borikar wrote:
+Niv Sardi wrote:
+> Attached updated patch.
 > 
-> Unfortunately the architecture is customized mips for which the
-> standard 
-> kernel port is
-> not available  and we have to port the new kernel in order to try
-> this 
-> which is why I was
-> hesitating to do this.
+> Christoph Hellwig <hch@infradead.org> writes:
+>> On Mon, Jun 23, 2008 at 02:42:27PM +1000, Niv Sardi wrote:
+>>> From: Niv Sardi <xaiki@debian.org>
+>>>
+>>> We will need that to be able to calculate the size of log we need for
+>>> a specific attr (for parent pointers in create). We need the local so
+>>> that we can fail if we run into ENOSPC when trying to alloc blocks
+> 
+> Updated Comments, structs instead of typdefs
+>  
+>>> Signed-off-by: Niv Sardi <xaiki@sgi.com>
+>>> ---
+>>>  fs/xfs/xfs_attr.c |   78 +++++++++++++++++++++++++++++++---------------------
+>>>  fs/xfs/xfs_attr.h |    2 +-
+>>>  2 files changed, 47 insertions(+), 33 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+>>> index e58f321..0d19e90 100644
+>>> --- a/fs/xfs/xfs_attr.c
+>>> +++ b/fs/xfs/xfs_attr.c
+>>> @@ -185,6 +185,43 @@ xfs_attr_get(
+>>>  }
+>>>  
+>>>  int
+>>> +xfs_attr_calc_size(
+>> should be marked STATIC,
+> 
+> The whole idea is to be able to use it in xfs_create().
+>
+I guess in isolation it just looks weird as the only caller is within
+the file.
+In isolation it would make sense to be STATIC.
+(Then again, in isolation, it looks strange returning the "local" parameter -
+ as you said, you need it elsewhere).
+And I guess, Christoph's point was that it could go in as an isolated
+cleanup patch if it was made static.
 
-You can always try the reverse - replace fs/xfs from your mips build
-tree with the one from the current/a recent kernel.  Theres very few
-changes in the surrounding kernel code that xfs needs.
-
-cheers.
-
---
-Nathan
+--Tim
