@@ -1,50 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 20:56:21 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 21:02:29 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m633uAWm001060
-	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 20:56:11 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6342JCL001822
+	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 21:02:19 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A2F5A644E5
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2008 20:57:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id A6AKOiWz2kPSJoSe for <xfs@oss.sgi.com>; Wed, 02 Jul 2008 20:57:14 -0700 (PDT)
-Message-ID: <486C4E19.6080203@sandeen.net>
-Date: Wed, 02 Jul 2008 22:57:13 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 71EEBD9443D
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2008 21:03:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 6BB6OGih8wPCQQ4R for <xfs@oss.sgi.com>; Wed, 02 Jul 2008 21:03:22 -0700 (PDT)
+Message-ID: <486C4F89.9030009@sandeen.net>
+Date: Wed, 02 Jul 2008 23:03:21 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: XFS Compatibility Questions
-References: <0EEA30D7D649274EB38B0B140022557F23B36C@corpistemb01.edocorp.com>
-In-Reply-To: <0EEA30D7D649274EB38B0B140022557F23B36C@corpistemb01.edocorp.com>
+Subject: Re: Xfs Access to block zero  exception and system crash
+References: <20080628000516.GD29319@disturbed> <340C71CD25A7EB49BFA81AE8C8392667028A1CA7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080629215647.GJ29319@disturbed> <20080630034112.055CF18904C4@bby1mta01.pmc-sierra.bc.ca> <4868B46C.9000200@pmc-sierra.com> <20080701064437.GR29319@disturbed> <486B01A6.4030104@pmc-sierra.com> <20080702051337.GX29319@disturbed> <486B13AD.2010500@pmc-sierra.com> <1214979191.6025.22.camel@verge.scott.net.au> <20080702065652.GS14251@build-svl-1.agami.com> <486B6062.6040201@pmc-sierra.com>
+In-Reply-To: <486B6062.6040201@pmc-sierra.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Arensdorf, Christopher" <Chris.Arensdorf@itt.com>
-Cc: xfs@oss.sgi.com
+To: Sagar Borikar <sagar_borikar@pmc-sierra.com>
+Cc: Nathan Scott <nscott@aconex.com>, xfs@oss.sgi.com
 
-Arensdorf, Christopher wrote:
-> Hello,
+Sagar Borikar wrote:
 > 
-> My name is Chris and I'm with ITT Corporation in Nashua, NH. We're currently looking to upgrade one of our products to make use of InfiniBand technology, and unfortunately we're running QFS which does not support InfiniBand. We're interested in exploring the idea of using XFS so I had a few questions I was hoping you might be able to answer that I didn't seem to find in the FAQ section.
-> 
-> Is XFS compatible with InfiniBand?
+> Dave Chinner wrote:
+>> On Wed, Jul 02, 2008 at 04:13:11PM +1000, Nathan Scott wrote:
 
-XFS just needs a block device to talk to; the transport to the block
-device etc should not matter.
 
-> Is XFS compatible with RHEL 5.0 or higher?
+>>> You can always try the reverse - replace fs/xfs from your mips build
+>>> tree with the one from the current/a recent kernel.  Theres very few
+>>> changes in the surrounding kernel code that xfs needs.
+>>>     
+>> Eric should be able to comment on the pitfalls in doing this having
+>> tried to backport a 2.6.25 fs/xfs to a 2.6.18 RHEL kernel. Eric -
+>> any comments?
+>>
+>> Cheers,
+>>
+>> Dave.
+>>   
+> Eric, Could you please let me know about bits and pieces that we need to 
+> remember while back porting xfs to 2.6.18?
+> If you share patches which takes care of it, that would be great.
 
-Compatible yes but not supported or shipped by Red Hat.
+http://sandeen.net/rhel5_xfs/xfs-2.6.25-for-rhel5-testing.tar.bz2
 
-> Is XFS compatible with Fibre Channel?
-
-See the first answer.  (but anyway the the short answer is Yes.)
-
-> Is XFS compatible with Solaris 10 x86?
-
-AFAIK XFS has never been ported to Solaris.  It's only a production FS
-on Linux & Irix.
+should be pretty close.  It was quick 'n' dirty and it has some warts
+but would give an idea of what backporting was done (see patches/ and
+the associated quilt series; quilt push -a to apply them all)
 
 -Eric
-
-> Thanks very much for your time and I look forward to hearing back from you.
