@@ -1,53 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 21:02:29 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 02 Jul 2008 21:47:03 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6342JCL001822
-	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 21:02:19 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71EEBD9443D
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2008 21:03:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 6BB6OGih8wPCQQ4R for <xfs@oss.sgi.com>; Wed, 02 Jul 2008 21:03:22 -0700 (PDT)
-Message-ID: <486C4F89.9030009@sandeen.net>
-Date: Wed, 02 Jul 2008 23:03:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m634l1s4004597
+	for <xfs@oss.sgi.com>; Wed, 2 Jul 2008 21:47:01 -0700
+Received: from opera.rednote.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98BD4D94A82
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2008 21:48:04 -0700 (PDT)
+Received: from opera.rednote.net (opera.rednote.net [75.125.70.226]) by cuda.sgi.com with ESMTP id bOqkML1GLIWk3nEb for <xfs@oss.sgi.com>; Wed, 02 Jul 2008 21:48:04 -0700 (PDT)
+Received: from jdc.jasonjgw.net (localhost6.localdomain6 [IPv6:::1])
+	by opera.rednote.net (8.14.2/8.14.2) with ESMTP id m634m0MH003787
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 04:48:02 GMT
+Received: from jdc.jasonjgw.net (ip6-localhost [IPv6:::1])
+	by jdc.jasonjgw.net (8.14.3/8.14.3/Debian-4) with ESMTP id m634ltwF020723
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 14:47:55 +1000
+Received: (from jason@localhost)
+	by jdc.jasonjgw.net (8.14.3/8.14.3/Submit) id m634ltlq020722
+	for xfs@oss.sgi.com; Thu, 3 Jul 2008 14:47:55 +1000
+Date: Thu, 3 Jul 2008 14:47:55 +1000
+From: Jason White <jason@jasonjgw.net>
+Subject: Re: grub fails boot after update
+Message-ID: <20080703044755.GA13630@jdc.jasonjgw.net>
+References: <alpine.LNX.1.10.0807011712470.20393@fbirervta.pbzchgretzou.qr> <20080701155522.GA29722@infradead.org> <486C4D7E.8060608@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Xfs Access to block zero  exception and system crash
-References: <20080628000516.GD29319@disturbed> <340C71CD25A7EB49BFA81AE8C8392667028A1CA7@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca> <20080629215647.GJ29319@disturbed> <20080630034112.055CF18904C4@bby1mta01.pmc-sierra.bc.ca> <4868B46C.9000200@pmc-sierra.com> <20080701064437.GR29319@disturbed> <486B01A6.4030104@pmc-sierra.com> <20080702051337.GX29319@disturbed> <486B13AD.2010500@pmc-sierra.com> <1214979191.6025.22.camel@verge.scott.net.au> <20080702065652.GS14251@build-svl-1.agami.com> <486B6062.6040201@pmc-sierra.com>
-In-Reply-To: <486B6062.6040201@pmc-sierra.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <486C4D7E.8060608@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Sagar Borikar <sagar_borikar@pmc-sierra.com>
-Cc: Nathan Scott <nscott@aconex.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Sagar Borikar wrote:
+On Wed, Jul 02, 2008 at 10:54:38PM -0500, Eric Sandeen wrote:
+ 
+> This really is grub that is busted, but I'd still just suggest using
+> ext3 to (mostly) work around the breakage for the foreseeable future.
 > 
-> Dave Chinner wrote:
->> On Wed, Jul 02, 2008 at 04:13:11PM +1000, Nathan Scott wrote:
+> The other option is to teach grub to always do its io via the filesystem
+> not the block device while the fs is mounted (IIRC there are various &
+> sundry non-intuitive commands which actually nudge grub towards or away
+> from this desired behavior... --with-stage2=/path is one I think,
+> skipping the "verification" phase (i.e. trying to read the block dev
+> while mounted) is another)
 
+Does grub 2 (still in development when last I checked) improve on this
+situation?
 
->>> You can always try the reverse - replace fs/xfs from your mips build
->>> tree with the one from the current/a recent kernel.  Theres very few
->>> changes in the surrounding kernel code that xfs needs.
->>>     
->> Eric should be able to comment on the pitfalls in doing this having
->> tried to backport a 2.6.25 fs/xfs to a 2.6.18 RHEL kernel. Eric -
->> any comments?
->>
->> Cheers,
->>
->> Dave.
->>   
-> Eric, Could you please let me know about bits and pieces that we need to 
-> remember while back porting xfs to 2.6.18?
-> If you share patches which takes care of it, that would be great.
-
-http://sandeen.net/rhel5_xfs/xfs-2.6.25-for-rhel5-testing.tar.bz2
-
-should be pretty close.  It was quick 'n' dirty and it has some warts
-but would give an idea of what backporting was done (see patches/ and
-the associated quilt series; quilt push -a to apply them all)
-
--Eric
+I managed to get Grub 1 installed on machines with XFS root file systems by
+running the install from within the grub "shell" environment rather than using
+grub-install. Maybe this skips the checks that attempt to read the block
+device directly. I also recall that grub-install failed.
