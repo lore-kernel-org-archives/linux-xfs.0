@@ -1,113 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jul 2008 22:15:02 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m645EBqu018246
-	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 22:14:14 -0700
-Message-ID: <486DB1D9.20207@sgi.com>
-Date: Fri, 04 Jul 2008 15:15:05 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jul 2008 23:40:26 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m646eM2m025979
+	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 23:40:23 -0700
+Received: from mailgate01.web.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10AB52B6700
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2008 23:41:25 -0700 (PDT)
+Received: from mailgate01.web.de (mailgate01.web.de [217.72.192.251]) by cuda.sgi.com with ESMTP id niGYqJEbPdcJabmX for <xfs@oss.sgi.com>; Thu, 03 Jul 2008 23:41:25 -0700 (PDT)
+Date: Fri, 4 Jul 2008 08:41:26 +0200
+From: Jens Beyer <jens.beyer@1und1.de>
+Subject: XFS perfomance degradation on growing filesystem size
+Message-ID: <20080704064126.GA14847@webde.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH] kill XFS_PURGE_INODE
-References: <20080616062634.GA5971@lst.de> <20080702192224.GB18817@lst.de>
-In-Reply-To: <20080702192224.GB18817@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Ping?  Already got a review from Dave.
-> 
-Yeah, this is basically a substitute and replace.
 
-Okay, looks like there is also a s/VN_HOLD(XFS_ITOV())/IHOLD()/
-thrown in too (which is what IHOLD is defined as).
+Hi,
 
-I'll check it in.
+I have encountered a strange performance problem during some 
+hardware evaluation tests: 
 
---Tim
+I am running a benchmark to measure especially random read/write 
+I/O on an raid device and found that (under some circumstances) 
+the performance of Random Read I/O is inverse proportional to the 
+size of the tested XFS filesystem. 
 
-> On Mon, Jun 16, 2008 at 08:26:34AM +0200, Christoph Hellwig wrote:
->> Just a useless alias for IRELE.
->>
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm.c	2008-06-05 20:21:04.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/quota/xfs_qm.c	2008-06-05 20:22:37.000000000 +0200
->> @@ -444,11 +444,11 @@ xfs_qm_unmount_quotas(
->>  		}
->>  	}
->>  	if (uqp) {
->> -		 XFS_PURGE_INODE(uqp);
->> +		 IRELE(uqp);
->>  		 mp->m_quotainfo->qi_uquotaip = NULL;
->>  	}
->>  	if (gqp) {
->> -		XFS_PURGE_INODE(gqp);
->> +		IRELE(gqp);
->>  		mp->m_quotainfo->qi_gquotaip = NULL;
->>  	}
->>  out:
->> @@ -1239,11 +1239,11 @@ xfs_qm_destroy_quotainfo(
->>  	xfs_qm_list_destroy(&qi->qi_dqlist);
->>  
->>  	if (qi->qi_uquotaip) {
->> -		XFS_PURGE_INODE(qi->qi_uquotaip);
->> +		IRELE(qi->qi_uquotaip);
->>  		qi->qi_uquotaip = NULL; /* paranoia */
->>  	}
->>  	if (qi->qi_gquotaip) {
->> -		XFS_PURGE_INODE(qi->qi_gquotaip);
->> +		IRELE(qi->qi_gquotaip);
->>  		qi->qi_gquotaip = NULL;
->>  	}
->>  	mutex_destroy(&qi->qi_quotaofflock);
->> @@ -1393,7 +1393,7 @@ xfs_qm_qino_alloc(
->>  	 * locked exclusively and joined to the transaction already.
->>  	 */
->>  	ASSERT(xfs_isilocked(*ip, XFS_ILOCK_EXCL));
->> -	VN_HOLD(XFS_ITOV((*ip)));
->> +	IHOLD(*ip);
->>  
->>  	/*
->>  	 * Make the changes in the superblock, and log those too.
->> Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2008-05-23 09:31:39.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c	2008-06-05 20:21:09.000000000 +0200
->> @@ -362,11 +362,11 @@ xfs_qm_scall_quotaoff(
->>  	 * if we don't need them anymore.
->>  	 */
->>  	if ((dqtype & XFS_QMOPT_UQUOTA) && XFS_QI_UQIP(mp)) {
->> -		XFS_PURGE_INODE(XFS_QI_UQIP(mp));
->> +		IRELE(XFS_QI_UQIP(mp));
->>  		XFS_QI_UQIP(mp) = NULL;
->>  	}
->>  	if ((dqtype & (XFS_QMOPT_GQUOTA|XFS_QMOPT_PQUOTA)) && XFS_QI_GQIP(mp)) {
->> -		XFS_PURGE_INODE(XFS_QI_GQIP(mp));
->> +		IRELE(XFS_QI_GQIP(mp));
->>  		XFS_QI_GQIP(mp) = NULL;
->>  	}
->>  out_error:
->> Index: linux-2.6-xfs/fs/xfs/quota/xfs_quota_priv.h
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/quota/xfs_quota_priv.h	2008-05-23 09:31:39.000000000 +0200
->> +++ linux-2.6-xfs/fs/xfs/quota/xfs_quota_priv.h	2008-06-05 20:21:09.000000000 +0200
->> @@ -158,9 +158,6 @@ for ((dqp) = (qlist)->qh_next; (dqp) != 
->>  #define XFS_IS_SUSER_DQUOT(dqp)		\
->>  	(!((dqp)->q_core.d_id))
->>  
->> -#define XFS_PURGE_INODE(ip)		\
->> -	IRELE(ip);
->> -
->>  #define DQFLAGTO_TYPESTR(d)	(((d)->dq_flags & XFS_DQ_USER) ? "USR" : \
->>  				 (((d)->dq_flags & XFS_DQ_GROUP) ? "GRP" : \
->>  				 (((d)->dq_flags & XFS_DQ_PROJ) ? "PRJ":"???")))
-> ---end quoted text---
-> 
+In numbers this means that on a 100GB partition I get a throughput 
+of ~25 MB/s and on the same hardware at 1TB FS size only 18 MB/s 
+(and at 2+ TB like 14 MB/s) (absolute values depend on options, 
+kernel version and are for random read i/o at 8k test block size).
+
+Surprisingly this degradation does not affect random write or 
+seq read/write (at least not by this factor).
+Even more surprising using an ext3 filesystem I always get ~25 MB/s.
+
+My test setups included: 
+- kernel vanilla 2.6.24, 2.6.25.8, 2.6.24-ubuntu_8.04, 2.6.20, 32/64bit
+- xfsprogs v2.9.8/7
+- benchmarks:
+  - iozone:   iozone -i 0 -i 2 -r 8k -s 1g -t 32 -+p 100
+  - tiobench: tiobench.pl --size 32000 --random 100000 --block 8192 \
+                          --dir /mnt --threads 32 --numruns 1
+    (Bench is for 8k blocksize, 32 Threads with enough data to 
+    be beyond simple ram cache).
+- The hardware itself where recent HP dual/quadcores with 4GB RAM 
+  with external SAS Raids (MSA60, MSA70) and 15k SAS disks (different 
+  types).
+
+I tried most options like but not limited to: agcount, logbufs, 
+nobarrier, blockdev --setra, (...), but none had an significant impact. 
+All benchmarks where run using deadline i/o scheduler
+
+Does anyone has a clue on what is going on - or even can reproduce 
+this? Or, is this the default behavior? Could this be an hardware 
+problem ?
+
+Thanks for any comment,
+Jens
