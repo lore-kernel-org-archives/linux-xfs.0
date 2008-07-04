@@ -1,54 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jul 2008 20:50:25 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m643oKkV012452
-	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 20:50:21 -0700
-Received: from web34507.mail.mud.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 226321877C48
-	for <xfs@oss.sgi.com>; Thu,  3 Jul 2008 20:51:23 -0700 (PDT)
-Received: from web34507.mail.mud.yahoo.com (web34507.mail.mud.yahoo.com [66.163.178.173]) by cuda.sgi.com with SMTP id wzh0PhFdVmhGNAHW for <xfs@oss.sgi.com>; Thu, 03 Jul 2008 20:51:23 -0700 (PDT)
-Date: Thu, 3 Jul 2008 20:51:23 -0700 (PDT)
-From: Mark <musicman529@yahoo.com>
-Reply-To: MusicMan529@yahoo.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 03 Jul 2008 21:02:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6442SEe013458
+	for <xfs@oss.sgi.com>; Thu, 3 Jul 2008 21:02:28 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4387DA25BA
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2008 21:03:30 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id O75QAt5Cj2EK0LMP for <xfs@oss.sgi.com>; Thu, 03 Jul 2008 21:03:30 -0700 (PDT)
+Date: Fri, 4 Jul 2008 14:03:15 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: user defined cache
-In-Reply-To: <1215139205.7187.33.camel@quadski>
+Message-ID: <20080704040315.GD29319@disturbed>
+References: <1215139205.7187.33.camel@quadski>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <328802.35603.qm@web34507.mail.mud.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <1215139205.7187.33.camel@quadski>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, Warwick Boote <wboote@civica.com.au>
+To: Warwick Boote <wboote@civica.com.au>
+Cc: xfs@oss.sgi.com
 
---- On Thu, 7/3/08, Warwick Boote <wboote@civica.com.au> wrote:
+On Fri, Jul 04, 2008 at 12:40:05PM +1000, Warwick Boote wrote:
 > Hi all,
 > 
-> Do you know of setting or layered file system that enables
-> me to define
-> a large buffer in main memory and cache writes to this
-> buffer?
-> 
-> Obviously i'd need the file system to also read from
-> this buffer if the
-> data hasn't been flushed to the disk yet.
+> Do you know of setting or layered file system that enables me to define
+> a large buffer in main memory and cache writes to this buffer?
 
-XFS supports the following mount options, and they do 
-increase throughput somewhat on my system:
+I know there's wrapper libraries that do this - like FFIO -
+but I don't think there's a free one.
 
-logbufs=N (helps concurrency)
-logbsize=N (helps log buffering)
+However, why doesn't the page cache do what you want already?
 
-If you are using an internal XFS log, you may also try 
-"nobarrier" to reduce force-to-disk write frequency. 
-NB: I have seen this option discussed on this mailing 
-list, but I do not see it in the mount(8) man page.
+Cheers,
 
-Bear in mind that the XFS log is for metadata, rather than 
-actual file data. This may be what you're looking for, or at
-least sufficient; if not, my apologies.
+Dave.
 -- 
-Mark
-
-"What better place to find oneself than
- on the streets of one's home village?"
-      --Capt. Jean-Luc Picard, "Family"
+Dave Chinner
+david@fromorbit.com
