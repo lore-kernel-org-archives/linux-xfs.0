@@ -1,49 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Jul 2008 01:03:03 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6782rqG022479
-	for <xfs@oss.sgi.com>; Mon, 7 Jul 2008 01:02:55 -0700
-Received: from mailgate02.web.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FE7911DE847
-	for <xfs@oss.sgi.com>; Mon,  7 Jul 2008 01:03:58 -0700 (PDT)
-Received: from mailgate02.web.de (mailgate02.web.de [217.72.192.252]) by cuda.sgi.com with ESMTP id vsgGyXW5HYa0GJus for <xfs@oss.sgi.com>; Mon, 07 Jul 2008 01:03:58 -0700 (PDT)
-Date: Mon, 7 Jul 2008 10:04:09 +0200
-From: Jens Beyer <jens.beyer@1und1.de>
-Subject: Re: XFS perfomance degradation on growing filesystem size
-Message-ID: <20080707080409.GA18390@webde.de>
-References: <20080704064126.GA14847@webde.de> <20080704075941.GP16257@build-svl-1.agami.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 07 Jul 2008 02:44:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m679ihvx029797
+	for <xfs@oss.sgi.com>; Mon, 7 Jul 2008 02:44:44 -0700
+Received: from mail.acc.umu.se (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D479B2C0A4B
+	for <xfs@oss.sgi.com>; Mon,  7 Jul 2008 02:45:48 -0700 (PDT)
+Received: from mail.acc.umu.se (mail.acc.umu.se [130.239.18.156]) by cuda.sgi.com with ESMTP id mVPIVcpnGjegrNPD for <xfs@oss.sgi.com>; Mon, 07 Jul 2008 02:45:48 -0700 (PDT)
+Date: Mon, 7 Jul 2008 11:45:44 +0200 (MEST)
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+In-Reply-To: <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
+Message-ID: <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se>
+References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca>
+ <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca>
+ <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080704075941.GP16257@build-svl-1.agami.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 
-On Fri, Jul 04, 2008 at 12:59:41AM -0700, Dave Chinner wrote:
-> On Fri, Jul 04, 2008 at 08:41:26AM +0200, Jens Beyer wrote:
-> > 
-> > I have encountered a strange performance problem during some 
-> > hardware evaluation tests: 
-> > 
-> > I am running a benchmark to measure especially random read/write 
-> > I/O on an raid device and found that (under some circumstances) 
-> > the performance of Random Read I/O is inverse proportional to the 
-> > size of the tested XFS filesystem. 
-> > 
-> > In numbers this means that on a 100GB partition I get a throughput 
-> > of ~25 MB/s and on the same hardware at 1TB FS size only 18 MB/s 
-> > (and at 2+ TB like 14 MB/s) (absolute values depend on options, 
-> > kernel version and are for random read i/o at 8k test block size).
-> 
-> Of course - as the filesystem size grows, so does the amount of
-> each disk in use so the average seek distance increases and hence
-> read I/Os take longer.
-> 
+On Sat, 5 Jul 2008, Justin Piszcz wrote:
 
-But then - why does the rate of ext3 does not decrease and stays at the
-higher value? 
+>
+>
+> On Sat, 5 Jul 2008, Robert Hancock wrote:
+>
+>> Justin Piszcz wrote:
+>>>> Can you post your dmesg from bootup with the controller/drive detection?
+>> 
+>> So you've got 6 drives in the machine. Intel chipsets normally seem pretty 
+>> robust with AHCI.
+>> 
+>> Are you certain that your machine has enough power to run all those drives 
+>> properly? We've seen in a number of cases that power fluctuations or noise 
+>> can cause these kinds of errors.
+>
+> I have a 650watt PSU (nice antec one) and the power draw of the box is 
+> ~148watts w/ veliciraptors, ~250 when fully load all 4 cores + all 12 disks 
+> writing.  I have turned off the irqbalance daemon and I am going to see if 
+> the problem re-occurs.
 
-Thanks,
-Jens
+Looking at the sum wattage number is really misleading for this. You need 
+to dig out the specs for how many amps it can provide on the different 
+voltages (5 and 12 volts). In particular, many modern PSUs have several 
+separate 12V rails, where one (or more, some have the 12V supply split 
+into 3 or 4 parts!) is used for CPU and GFX card power and usually only 
+one is available for disks.
+
+You can also have plenty of 12V left but run out of 5V, or the other way 
+around. I've spent quite some time trying to find a PSU that would handle 
+18 disks without costing too much. The splitting of the 12V power into 
+separate rails and a general lack of 5V compared to what the disks need 
+according to their specs just made it difficult, and I ended up bonding 
+two PSUs together (linking the ground together with some custom cabling) 
+to get a stable machine again.
+
+/Mattias Wadenstein
