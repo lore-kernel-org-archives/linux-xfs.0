@@ -1,57 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Jul 2008 01:38:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 08 Jul 2008 06:37:31 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m688cU1k012142
-	for <xfs@oss.sgi.com>; Tue, 8 Jul 2008 01:38:30 -0700
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE5542C7411
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2008 01:39:35 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id yLPPKBtiWZMIg74P for <xfs@oss.sgi.com>; Tue, 08 Jul 2008 01:39:35 -0700 (PDT)
-Date: Tue, 8 Jul 2008 04:39:34 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 12 Veliciraptors again w/x4 card (~1gbyte/sec aggregate read)!
-In-Reply-To: <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
-Message-ID: <alpine.DEB.1.10.0807080438560.17980@p34.internal.lan>
-References: <alpine.DEB.1.10.0807071424100.4694@p34.internal.lan> <4872A2F4.2010604@dgreaves.com> <alpine.DEB.1.10.0807080429440.17980@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m68DbMDl003746
+	for <xfs@oss.sgi.com>; Tue, 8 Jul 2008 06:37:22 -0700
+Received: from spitz.ucw.cz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 001A02C8987
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2008 06:38:16 -0700 (PDT)
+Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id vyHGEJIEo7eq4HgI for <xfs@oss.sgi.com>; Tue, 08 Jul 2008 06:38:16 -0700 (PDT)
+Date: Mon, 7 Jul 2008 13:07:31 +0200
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [PATCH 3/3] Add timeout feature
+Message-ID: <20080707110730.GG5643@ucw.cz>
+References: <20080630212450t-sato@mail.jp.nec.com> <20080701081026.GB16691@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080701081026.GB16691@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: David Greaves <david@dgreaves.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Takashi Sato <t-sato@yk.jp.nec.com>, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, axboe@kernel.dk, mtk.manpages@googlemail.com
 
+Hi!
 
+> I still disagree with this whole patch.  There is not reason to let
+> the freeze request timeout - an auto-unfreezing will only confuse the
+> hell out of the caller.  The only reason where the current XFS freeze
+> call can hang and this would be theoretically useful is when the
 
-On Tue, 8 Jul 2008, Justin Piszcz wrote:
+What happens when someone dirties so much data that vm swaps out
+whatever process that frozen the filesystem?
 
->
->
-> On Tue, 8 Jul 2008, David Greaves wrote:
->
->> Justin Piszcz wrote:
->>> Each PCI-e x1 card has 1 veliciraptor on it now.
->>> Got an x4 card wit 4 sata ports:
->> 
->> Useful - which card?
->> 
->> David
->> 
->> 
->
-> StarTech 4 Port PCI Express x4 SATA II Card Model PEXSATA24E
->
-> Justin.
->
->
->
-Chipset: Marvell 88SX7042
-SATA Connectivity: Use four internal ports at the same time or two 
-internal and two external ports
-
-Which is fully supported in the latest kernels (didn't try an old kernel):
-
-linux-2.6.25.10/drivers/ata/sata_mv.c
-
-   /* Marvell 7042 support */
-   { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
+I though that was why the timeout was there...
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
