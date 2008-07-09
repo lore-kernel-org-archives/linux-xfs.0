@@ -1,156 +1,77 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Jul 2008 09:56:11 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Jul 2008 13:55:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m69Gu7hf006502
-	for <xfs@oss.sgi.com>; Wed, 9 Jul 2008 09:56:08 -0700
-Received: from bby1mta02.pmc-sierra.bc.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D360DDABEC
-	for <xfs@oss.sgi.com>; Wed,  9 Jul 2008 09:57:12 -0700 (PDT)
-Received: from bby1mta02.pmc-sierra.bc.ca (bby1mta02.pmc-sierra.com [216.241.235.117]) by cuda.sgi.com with ESMTP id 4EdQua2VeC5VQRXX for <xfs@oss.sgi.com>; Wed, 09 Jul 2008 09:57:12 -0700 (PDT)
-Content-class: urn:content-classes:message
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Xfs Access to block zero  exception and system crash
-Date: Wed, 9 Jul 2008 09:57:48 -0700
-Message-ID: <340C71CD25A7EB49BFA81AE8C839266702A08F91@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-In-Reply-To: <4872E33E.3090107@sandeen.net>
-References: <4872E0BC.6070400@pmc-sierra.com> <4872E33E.3090107@sandeen.net>
-From: "Sagar Borikar" <Sagar_Borikar@pmc-sierra.com>
-Content-Transfer-Encoding: 8bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m69Kt27Y027947
+	for <xfs@oss.sgi.com>; Wed, 9 Jul 2008 13:55:03 -0700
+Received: from spitz.ucw.cz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02F69123BE7A
+	for <xfs@oss.sgi.com>; Wed,  9 Jul 2008 13:55:38 -0700 (PDT)
+Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id oTWqmD2IiPI2x14m for <xfs@oss.sgi.com>; Wed, 09 Jul 2008 13:55:38 -0700 (PDT)
+Date: Wed, 9 Jul 2008 22:44:13 +0200
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [PATCH 3/3] Add timeout feature
+Message-ID: <20080709204412.GG11006@ucw.cz>
+References: <20080630212450t-sato@mail.jp.nec.com> <20080701081026.GB16691@infradead.org> <20080707110730.GG5643@ucw.cz> <20080708231026.GP11558@disturbed> <20080708232031.GE18195@elf.ucw.cz> <20080709005254.GQ11558@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080709005254.GQ11558@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, Takashi Sato <t-sato@yk.jp.nec.com>, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, axboe@kernel.dk, mtk.manpages@googlemail.com
 
-Sagar Borikar wrote:
-> That's right Eric but I am still surprised that why should we get a
-dead 
-> lock in this scenario as it is a plain copy of file in multiple 
-> directories.  Our customer is reporting similar kind of lockup in our 
-> platform. 
+Hi!
 
-ok, I guess I had missed that, sorry.
-
-> I do understand that we are chasing the access to block zero 
-> exception and XFS forced shutdown which I mentioned earlier.  But we 
-> also see quite a few smbd processes which are writing data to XFS are
-in 
-> uninterruptible sleep state and the system locks up too. 
-
-Ok; then the next step is probably to do sysrq-t and see where things
-are stuck.  It might be better to see if you can reproduce w/o the
-loopback file, too, since that's just another layer to go through that
-might be changing things.
-
-<Sagar> I ran it on actual device w/o loopback file and even there
-observed that XFS transactions going into uninterruptible sleep state
-and the copies were stalled. I had to hard reboot the system to bring
-XFS out of that state since soft reboot didn't work, it was waiting for
-file system to get unmounted. I shall provide the sysrq-t update later.
-
-> So I thought 
-> the test which I am running could be pointing to similar issue which
-we 
-> are observing on our platform. But does this indicate that the problem
-
-> lies with x86 XFS too ?  
-
-or maybe the vm ...
-
-> Also I presume in enterprise market such kind 
-> of simultaneous write situation may happen.  Has anybody reported 
-> similar issues to you? As you observed it over x86 and 2.6.24 kernel, 
-> could you say what would be root cause of this?
-
-Haven't really seen it before that I recall, and at this point can't say
-for sure what it might be.
-
--Eric
-
->     Sorry for lots of questions at same time :) But I am happy that
-you 
-> were able to see the deadlock in x86 on your setup with 2.6.24
+> > > > > I still disagree with this whole patch.  There is not reason to let
+> > > > > the freeze request timeout - an auto-unfreezing will only confuse the
+> > > > > hell out of the caller.  The only reason where the current XFS freeze
+> > > > > call can hang and this would be theoretically useful is when the
+> > > > 
+> > > > What happens when someone dirties so much data that vm swaps out
+> > > > whatever process that frozen the filesystem?
+> > > 
+> > > a) you can't dirty a frozen filesystem - by definition a frozen
+> > >    filesystem is a *clean filesystem* and *cannot be dirtied*.
+> > 
+> > Can you stop me?
+> > 
+> > mmap("/some/huge_file", MAP_SHARED);
+> > 
+> > then write to memory mapping?
 > 
-> Thanks
-> Sagar
+> Sure - we can put a hook in ->page_mkwrite() to prevent it.  We
+> don't right now because nobody in the real world really cares if one
+> half of a concurrent user data change is in the old snapshot or the
+> new one......
 > 
+> > > b) Swap doesn't write through the filesystem
+> > > c) you can still read from a frozen filesystem to page your
+> > >    executable?? in.
+> > 
+> > atime modification should mean dirty data, right?
 > 
-> Eric Sandeen wrote:
->> Sagar Borikar wrote:
->>   
->>> Hi Eric,
->>>
->>> Did you see any issues in your test? 
->>>     
->> I got a deadlock but that's it; I don't think that's the bug you want
-to
->> chase...
->>
->>
->> -Eric
->>
->>   
->>> Thanks
->>> Sagar
->>>
->>>
->>> Sagar Borikar wrote:
->>>     
->>>> Eric Sandeen wrote:
->>>>       
->>>>> Sagar Borikar wrote:
->>>>>
->>>>>
->>>>>  
->>>>>         
->>>>>> Could you kindly try with my test? I presume you should see
-failure 
->>>>>> soon. I tried this on
->>>>>> 2 different x86 systems 2 times ( after rebooting the system )
-and I 
->>>>>> saw it every time.
->>>>>>     
->>>>>>           
->>>>> Sure.  Is there a reason you're doing this on a loopback file?
-That
->>>>> probably stresses the vm a bit more, and might get even trickier
-if the
->>>>> loopback file is sparse...
->>>>>   
->>>>>         
->>>> Initially I thought to do that since I didn't want to have a strict
+> Metadata, not data. If that's really a problem (and it never has
+> been for XFS because we always allow in memory changes to atime)
+> then touch_atime could be easily changed to avoid this...
+> 
+> > And dirty data mean
+> > memory pressure, right? 
+> 
+> If you walk enough inodes while the filesystem is frozen, it
+> theoretically could happen.  Typically a filesystem is only for a
+> few seconds at a time so in the real world this has never, ever been
+> a problem.
 
->>>> allocation limit but
->>>> allowing allocations to  grow as needed until the backing
-filesystem 
->>>> runs out of free space
->>>> due to type of the test case I had. But then I dropped the plan and
+So we have freezing interface that does not really freeze, and
+that can break the system when filesystem is frozen for too long...
+:-(.
 
->>>> created a non-sparse
->>>> loopback device. There was no specific reason to create loopback
-but 
->>>> as it was
->>>> simplest option to do it.
->>>>       
->>>>> But anyway, on an x86_64 machine with 2G of memory and a
-non-sparse 10G
->>>>> loopback file on 2.6.24.7-92.fc8, your test runs w/o problems for
-me,
->>>>> though the system does get sluggish.  I let it run a bit then ran
-repair
->>>>> and it found no problems, I'll run it overnight to see if anything
-else
->>>>> turns up.
->>>>>   
->>>>>         
->>>> That will be great.  Thanks indeed.
->>>> Sagar
->>>>
->>>>       
->>>>> -Eric
->>>>>   
->>>>>         
->>   
-> 
+Maybe you could use process freezer -- cgroup people are adding
+userspace interface to that -- to solve those... but that would mean
+stopping everyone but thread doing freezing...
+
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
