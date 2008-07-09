@@ -1,77 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Jul 2008 13:55:15 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m69Kt27Y027947
-	for <xfs@oss.sgi.com>; Wed, 9 Jul 2008 13:55:03 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Jul 2008 13:54:44 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m69Kscd1027876
+	for <xfs@oss.sgi.com>; Wed, 9 Jul 2008 13:54:39 -0700
 Received: from spitz.ucw.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 02F69123BE7A
-	for <xfs@oss.sgi.com>; Wed,  9 Jul 2008 13:55:38 -0700 (PDT)
-Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id oTWqmD2IiPI2x14m for <xfs@oss.sgi.com>; Wed, 09 Jul 2008 13:55:38 -0700 (PDT)
-Date: Wed, 9 Jul 2008 22:44:13 +0200
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8ED52D1C3D
+	for <xfs@oss.sgi.com>; Wed,  9 Jul 2008 13:55:34 -0700 (PDT)
+Received: from spitz.ucw.cz (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id DDNL9ouyg4f96XWD for <xfs@oss.sgi.com>; Wed, 09 Jul 2008 13:55:34 -0700 (PDT)
+Date: Wed, 9 Jul 2008 22:48:30 +0200
 From: Pavel Machek <pavel@suse.cz>
 Subject: Re: [PATCH 3/3] Add timeout feature
-Message-ID: <20080709204412.GG11006@ucw.cz>
-References: <20080630212450t-sato@mail.jp.nec.com> <20080701081026.GB16691@infradead.org> <20080707110730.GG5643@ucw.cz> <20080708231026.GP11558@disturbed> <20080708232031.GE18195@elf.ucw.cz> <20080709005254.GQ11558@disturbed>
+Message-ID: <20080709204829.GH11006@ucw.cz>
+References: <20080708232031.GE18195@elf.ucw.cz> <20080709005254.GQ11558@disturbed> <20080709010922.GE9957@mit.edu> <E1KGSvZ-0006dB-53@pomaz-ex.szeredi.hu> <20080709061621.GA5260@infradead.org> <E1KGT4q-0006fD-Jb@pomaz-ex.szeredi.hu> <20080708234120.5072111f@infradead.org> <E1KGTTm-0006ke-Jh@pomaz-ex.szeredi.hu> <20080708235502.1c52a586@infradead.org> <E1KGTmZ-0006oz-Qi@pomaz-ex.szeredi.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080709005254.GQ11558@disturbed>
+In-Reply-To: <E1KGTmZ-0006oz-Qi@pomaz-ex.szeredi.hu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Takashi Sato <t-sato@yk.jp.nec.com>, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, axboe@kernel.dk, mtk.manpages@googlemail.com
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: arjan@infradead.org, hch@infradead.org, tytso@mit.edu, t-sato@yk.jp.nec.com, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, mtk.manpages@googlemail.com
 
-Hi!
-
-> > > > > I still disagree with this whole patch.  There is not reason to let
-> > > > > the freeze request timeout - an auto-unfreezing will only confuse the
-> > > > > hell out of the caller.  The only reason where the current XFS freeze
-> > > > > call can hang and this would be theoretically useful is when the
-> > > > 
-> > > > What happens when someone dirties so much data that vm swaps out
-> > > > whatever process that frozen the filesystem?
-> > > 
-> > > a) you can't dirty a frozen filesystem - by definition a frozen
-> > >    filesystem is a *clean filesystem* and *cannot be dirtied*.
+On Wed 2008-07-09 09:08:07, Miklos Szeredi wrote:
+> On Tue, 8 Jul 2008, Arjan van de Ven wrote:
+> > I tihnk the idea there is
 > > 
-> > Can you stop me?
-> > 
-> > mmap("/some/huge_file", MAP_SHARED);
-> > 
-> > then write to memory mapping?
+> > freeze . do the snapshot op . unfreeze . make backup of snapshot
 > 
-> Sure - we can put a hook in ->page_mkwrite() to prevent it.  We
-> don't right now because nobody in the real world really cares if one
-> half of a concurrent user data change is in the old snapshot or the
-> new one......
+> Ah, so then my proposal would become
 > 
-> > > b) Swap doesn't write through the filesystem
-> > > c) you can still read from a frozen filesystem to page your
-> > >    executable?? in.
-> > 
-> > atime modification should mean dirty data, right?
+>   run_frozen mountpoint do-snapshot
+>   do-backup
+>   release-snapshot
 > 
-> Metadata, not data. If that's really a problem (and it never has
-> been for XFS because we always allow in memory changes to atime)
-> then touch_atime could be easily changed to avoid this...
+> and if they are afraid of deadlocks they can just implement the
+> timeout in userspace:
 > 
-> > And dirty data mean
-> > memory pressure, right? 
+>   run_frozen -t timeout mountpoint do-snapshot
 > 
-> If you walk enough inodes while the filesystem is frozen, it
-> theoretically could happen.  Typically a filesystem is only for a
-> few seconds at a time so in the real world this has never, ever been
-> a problem.
+> 'run_frozen' can be a trivial 30 line app, that can be guaranteed not
+> to deadlock.
 
-So we have freezing interface that does not really freeze, and
-that can break the system when filesystem is frozen for too long...
-:-(.
+Userland apps can be swapped out and need kernel memory allocations
+during syscalls.
 
-Maybe you could use process freezer -- cgroup people are adding
-userspace interface to that -- to solve those... but that would mean
-stopping everyone but thread doing freezing...
+I bet even sleep(30) uses kmalloc internally.
 
-								Pavel
+So yes, even trivial applications can deadlock.
+
 -- 
 (english) http://www.livejournal.com/~pavelmachek
 (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
