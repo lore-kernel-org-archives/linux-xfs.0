@@ -1,61 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 09 Jul 2008 23:04:18 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6A64Dwa004266
-	for <xfs@oss.sgi.com>; Wed, 9 Jul 2008 23:04:15 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D0F02D330B
-	for <xfs@oss.sgi.com>; Wed,  9 Jul 2008 23:05:18 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id VrG1OBe1vPbU3GPJ for <xfs@oss.sgi.com>; Wed, 09 Jul 2008 23:05:18 -0700 (PDT)
-Date: Thu, 10 Jul 2008 16:05:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] re-remove xfs custom bitops
-Message-ID: <20080710060506.GW11558@disturbed>
-References: <480EB397.1040304@sandeen.net> <4829C360.5060500@sandeen.net> <482BF841.8050704@sgi.com> <48669A45.1050104@sandeen.net> <4868A114.9080106@sgi.com> <486C322D.7080203@sandeen.net> <486C75DD.2040109@sgi.com> <48759813.2080601@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48759813.2080601@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 00:25:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6A7P5Cu016229
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 00:25:07 -0700
+Subject: PARTIAL TAKE 981498 - Use the generic bitops rather than implementing them ourselves
+Message-Id: <20080710072604.7F28732F6987@linuxbuild.melbourne.sgi.com>
+Date: Thu, 10 Jul 2008 17:26:04 +1000 (EST)
+From: donaldd@sgi.com (Donald Douwsma)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Donald Douwsma <donaldd@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Jul 10, 2008 at 03:03:15PM +1000, Donald Douwsma wrote:
-> Donald Douwsma wrote:
->> Eric Sandeen wrote:
->>> Donald Douwsma wrote:
->>>
->>>> First time round I hit an Oops on xfstests/177 while running the 
->>>> auto group
->>>> on ppc32. I dont seem to hit it running the single test, its  
->>>> intermittent.
->>>
->>> Funky.  Do you ever hit it w/ the patch reverted?
->>
->> That's the question. So far no, the QA guys said they hit it a while
->> ago, but the time frame still matches last time. I dont think this
->> is related but I need to get some more ppc32 runs without.
->>
->> I'm probably being over cautious but I'd like to avoid the
->> inagain/outagain/inagain/outagain approach we keep using with
->> some of these cleanups.
->>
->> Don
->>
->
-> Ok I hit the Oops again last weekend without the patch.
-> Which means I have a patch to checkin and another bug to fix Yea!
->
-> Dave, Eric said this should still be considered signed-off-by you,
-> You ok with that?
+Use the generic bitops rather than implementing them ourselves.
 
-Yeah, no problems there.
+This keeps xfs_lowbit64 as it was since there aren't good generic
+helpers there ...
+Patch inspired by Andi Kleen.
 
-Cheers,
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+Date:  Thu Jul 10 17:25:02 AEST 2008
+Workarea:  linuxbuild.melbourne.sgi.com:/home/donaldd/isms/2.6.x-xfs
+Inspected by:  david@fromorbit.com,sandeen@sandeen.net
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31472a
+fs/xfs/xfs_bit.h - 1.25 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bit.h.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
+	- Use the generic bitops rather than implementing them ourselves.
+
+fs/xfs/xfs_bit.c - 1.34 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bit.c.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
+	- Use the generic bitops rather than implementing them ourselves.
+
+fs/xfs/xfs_rtalloc.c - 1.113 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_rtalloc.c.diff?r1=text&tr1=1.113&r2=text&tr2=1.112&f=h
+	- Use the generic bitops rather than implementing them ourselves.
