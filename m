@@ -1,95 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 09:47:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6AGlIsW026122
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 09:47:18 -0700
-Received: from yx-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E5892D7DEB
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 09:48:23 -0700 (PDT)
-Received: from yx-out-1718.google.com (yx-out-1718.google.com [74.125.44.153]) by cuda.sgi.com with ESMTP id hqSLy4qTdDejaNBs for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 09:48:23 -0700 (PDT)
-Received: by yx-out-1718.google.com with SMTP id 36so895715yxh.32
-        for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 09:48:21 -0700 (PDT)
-Date: Thu, 10 Jul 2008 17:53:40 -0700
-From: Brandon Philips <brandon@ifup.org>
-Subject: [PATCH] acl: Fix WALK_TREE_RECURSIVE for the WALK_TREE_DEREFERENCE
-	case
-Message-ID: <20080711005340.GA30185@potty.ifup.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 15:41:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6AMfo6U030424
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:41:52 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A5DCDF2F31
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:42:55 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id ySo8bYDKupSItD0N for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:42:55 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1KH4qU-0002jZ-23
+	for xfs@oss.sgi.com; Fri, 11 Jul 2008 08:42:38 +1000
+Date: Fri, 11 Jul 2008 08:42:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] xfsqa 078 - use rmdir to remove directories
+Message-ID: <20080710224237.GX11558@disturbed>
+References: <20080522061120.GP173056135@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20080522061120.GP173056135@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andreas Gruenbacher <agruen@suse.de>, tes@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-NOTE: Sending to xfs@oss.sgi.com instead of acl-devel since it doesn't
-seem active anymore.
+ping?
 
-getfacl.c calls walk_tree() with WALK_TREE_DEREFERENCE.  This causes a
-stat() of symlinks which in turn causes S_ISDIR(st.st_mode) to be true
-on symlinks.
+On Thu, May 22, 2008 at 04:11:20PM +1000, David Chinner wrote:
+> 
+> If test 078 fails and you try to run it again immediately, it
+> will execute a 'rm -f' on a directory which will fail. This should
+> be a rmdir....
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> ---
+>  xfstests/078 |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: xfs-cmds/xfstests/078
+> ===================================================================
+> --- xfs-cmds.orig/xfstests/078	2008-03-20 09:10:02.000000000 +1100
+> +++ xfs-cmds/xfstests/078	2008-05-15 23:21:58.192413673 +1000
+> @@ -50,8 +50,8 @@ _filter_io()
+>  # real QA test starts here
+>  
+>  echo "*** create loop mount point"
+> -rm -f $LOOP_MNT 2>/dev/null
+> -mkdir $LOOP_MNT || _fail "cannot create loopback mount point"
+> +rmdir $LOOP_MNT 2>/dev/null
+> +mkdir -p $LOOP_MNT || _fail "cannot create loopback mount point"
+>  
+>  _grow_loop()
+>  {
+> 
+> 
 
-This causes getfacl -P to return the contents of symlinks...
-
-e.g.
-
-$ mkdir -p test/sub
-$ mkdir test/link
-$ touch test/link/file
-$ ln -s `pwd`/test/link test/sub/link
-$ getfacl -P -R test/sub
-
-
-# file: test/sub
-# owner: philips
-# group: users
-user::rwx
-group::r-x
-other::r-x
-
-# file: test/sub/link/file
-# owner: philips
-# group: users
-user::rw-
-group::r--
-other::r--
-
-After the fix:
-
-$ getfacl -R -P test/sub/
-# file: test/sub/
-# owner: philips
-# group: users
-user::rwx
-group::r-x
-other::r-x
-
-
-Signed-off-by: Brandon Philips <bphilips@suse.de>
-
----
- libmisc/walk_tree.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-Index: acl-2.2.47/libmisc/walk_tree.c
-===================================================================
---- acl-2.2.47.orig/libmisc/walk_tree.c
-+++ acl-2.2.47/libmisc/walk_tree.c
-@@ -93,8 +93,15 @@ static int walk_tree_rec(const char *pat
- 		have_dir_stat = 1;
- 	}
- 	err = func(path, &st, flags, arg);
-+
-+	/*
-+	 * Recurse if WALK_TREE_RECURSIVE and the path is:
-+	 * 	a dir not from a symlink
-+	 * 	a link and follow_symlinks
-+	 */
- 	if ((flags & WALK_TREE_RECURSIVE) &&
--	    (S_ISDIR(st.st_mode) || (S_ISLNK(st.st_mode) && follow_symlinks))) {
-+	    (!(flags & WALK_TREE_SYMLINK) && S_ISDIR(st.st_mode)) ||
-+	    ((flags & WALK_TREE_SYMLINK) && follow_symlinks)) {
- 		struct dirent *entry;
- 
- 		/*
+-- 
+Dave Chinner
+david@fromorbit.com
