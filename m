@@ -1,71 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Jul 2008 16:21:05 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6BNL0kO028620
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:21:02 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Jul 2008 16:37:32 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6BNbUmQ029816
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:37:30 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CE7A618BA5D2
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:22:05 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id ytiqRef8R371SCtV for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:22:05 -0700 (PDT)
-Date: Sat, 12 Jul 2008 09:22:01 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CC67DFE816
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:38:35 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id cHcac6LIPPlRgvdE for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 16:38:35 -0700 (PDT)
+Date: Sat, 12 Jul 2008 09:38:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs bug in 2.6.26-rc9
-Message-ID: <20080711232201.GG11558@disturbed>
-References: <alpine.DEB.1.10.0807110939520.30192@uplift.swm.pp.se> <20080711084248.GU29319@disturbed> <20080711190209.GA7401@Chamillionaire.breakpoint.cc>
+Subject: Re: xfs leaking?
+Message-ID: <20080711233832.GH11558@disturbed>
+References: <4877928A.1020008@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080711190209.GA7401@Chamillionaire.breakpoint.cc>
+In-Reply-To: <4877928A.1020008@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Sebastian Siewior <lkml@ml.breakpoint.cc>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jul 11, 2008 at 09:02:09PM +0200, Sebastian Siewior wrote:
-> * Dave Chinner | 2008-07-11 18:42:49 [+1000]:
+On Fri, Jul 11, 2008 at 12:04:10PM -0500, Eric Sandeen wrote:
+> after my  fill-the-1T-fs-with-20k-files test I tried an xfs_repair, and
+> it was sorrowfully slow compared to e2fsck of ext4 - I stopped it after
+> almost 2 hours, and only half complete.
 > 
-> >Oh - you must be running a debug XFS.  CONFIG_XFS_DEBUG was only
-> >introduced in 2.6.26-rc1 and defaults to 'N', so you must have
-> >selected the non-default option when prompted. This will cause your
-> >machine to oops at the slightest inconsistency that is found,
-> >regardless of whether it is fatal or not. Like the help text says,
-> >don't set this unless you are an XFS developer....
-> Could you please add this to the Kconfig entry.
+> I noticed that during the run, I was about out of memory (8G) and
+> swapping badly.
+> 
+> So I unmounted the fs, dropped caches, and was astounded to find
+> 10492540 buffer heads still in the slab caches.
 
-I effectively quoted from it:
+Curious - that implies buffer heads aren't being freed. But
+if the pages have been freed, then the bufferheads should have
+been. Generic code or VM bug perhaps?
 
-config XFS_DEBUG
-        bool "XFS Debugging support (EXPERIMENTAL)"
-        depends on XFS_FS && EXPERIMENTAL
-        help
-          Say Y here to get an XFS build with many debugging features,
-          including ASSERT checks, function wrappers around macros,
-          and extra sanity-checking functions in various code paths.
+> This was all  on 2.6.26-rc2 (I need to update) and lazy-count=1, 1T fs,
+> 32 ags, mounted with inode64, nobarriers, and maximal logbuf count & size.
+> 
+> Rebooted, let the fs_mark test run just a bit, then tried removing the
+> xfs module because I forgot to load the one with dave's  fix, and:
+> 
+> slab error in kmem_cache_destroy(): cache `xfs_inode': Can't free all objects
+> Pid: 3676, comm: rmmod Not tainted 2.6.26-rc2 #3
+> 
+> Call Trace:
+>  [<ffffffff80287e18>] kmem_cache_destroy+0x7d/0xb9
+>  [<ffffffffa03e6708>] :xfs:xfs_cleanup+0x5c/0xf9
+>  [<ffffffffa03e67bf>] :xfs:exit_xfs_fs+0x1a/0x28
+>  [<ffffffff80250b1f>] sys_delete_module+0x186/0x1de
+>  [<ffffffff8020bee2>] tracesys+0xd5/0xda
 
-          Note that the resulting code will be HUGE and SLOW, and probably
-          not useful unless you are debugging a particular problem.
+....
 
-          Say N unless you are an XFS developer, or you play one on TV.
+That's rather unhealthy. I'm running a 2.6.26-rc9-git? on
+my uml system, and when no filesystems are mounted all the XFS
+slab caches have zero objects in them, even after several runs
+on xfsqa. So I don't see any obvious leak here. You did unmount
+the filesystem(s) first, right?
 
-> Debug mode is usually
-> noisy, little slower and mostly usefull just to the developers but *I*
-> would not expect to BUG() in the non-fatal case.
-
-What do you expect debug code to do? Asserts are designed to
-drop the machine into a debugger when they fail so the problem can
-be, well, debugged.
-
-> Not sure but if this is just for hch and you than a define in xfs.h
-> might be safer :)
-
-And any other XFS developer using the XFS git tree or mainline, as
-tends to happen these days. And there are cases where a debug XFS
-might be needed to help find a problem that is being hit out in
-the field.
-
-Like all other debug config options, don't set them unless you know
-what you are doing....
+I'd suggest updating to 2.6.26-rc9 and repeating the test.  After
+unmounting all the filesystems and before you rmmod the kernel
+module, dump /proc/slabinfo so we can see if there are remaining
+objects in the XFs slabs....
 
 Cheers,
 
