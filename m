@@ -1,95 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 17:32:08 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6B0VxbR012864
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 17:32:01 -0700
-Message-ID: <4876AA39.804@sgi.com>
-Date: Fri, 11 Jul 2008 10:32:57 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 18:07:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6B170Ym015834
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:07:00 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBF20DF3C9C
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:08:01 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id qbp094yC3jddYMQk for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:08:01 -0700 (PDT)
+Date: Fri, 11 Jul 2008 11:07:59 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 2/3] simplify xfs_setattr
-References: <20080627154557.GB31476@lst.de> <20080705172021.GA7177@lst.de> <48747DAD.7060501@sgi.com> <20080709162914.GA16308@lst.de>
-In-Reply-To: <20080709162914.GA16308@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Message-ID: <20080711010759.GA11558@disturbed>
+References: <20080627154557.GB31476@lst.de> <20080705172021.GA7177@lst.de> <48747DAD.7060501@sgi.com> <20080709162914.GA16308@lst.de> <4876AA39.804@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4876AA39.804@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Wed, Jul 09, 2008 at 06:58:21PM +1000, Timothy Shimmin wrote:
->>> -	if (ia_valid & (ATTR_MTIME_SET | ATTR_ATIME_SET))
->>> -		flags |= ATTR_UTIME;
->>> -#ifdef ATTR_NO_BLOCK
->>> -	if ((ia_valid & ATTR_NO_BLOCK))
->>> -		flags |= ATTR_NONBLOCK;
->>> -#endif
->>> -
->> So this code looks different.
->> We are now dropping the flags. Why is that?
->> Presumably because we were mapping ia_valid's:
->>    ATTR_MTIME_SET or ATTR_ATIME_SET --> ATTR_UTIME
->>    ATTR_NO_BLOCK -> ATTR_NONBLOCK
->> But now we pass ATTR_?TIME_SET and ATTR_NO_BLOCK straight thru.
->> So previously we didn't map them onto va_mask bits but as separate flags
->> instead.
-> 
-> Yeah, not that ATTR_NO_BLOCK doesn't actually exist in any tree I have
-> access to, and thus it's not actually handled in the new xfs_setattr.
-> 
+On Fri, Jul 11, 2008 at 10:32:57AM +1000, Timothy Shimmin wrote:
+> Christoph Hellwig wrote:
+> > On Wed, Jul 09, 2008 at 06:58:21PM +1000, Timothy Shimmin wrote:
+> >>> -	if (ia_valid & (ATTR_MTIME_SET | ATTR_ATIME_SET))
+> >>> -		flags |= ATTR_UTIME;
+> >>> -#ifdef ATTR_NO_BLOCK
+> >>> -	if ((ia_valid & ATTR_NO_BLOCK))
+> >>> -		flags |= ATTR_NONBLOCK;
+> >>> -#endif
+> >>> -
+> >> So this code looks different.
+> >> We are now dropping the flags. Why is that?
+> >> Presumably because we were mapping ia_valid's:
+> >>    ATTR_MTIME_SET or ATTR_ATIME_SET --> ATTR_UTIME
+> >>    ATTR_NO_BLOCK -> ATTR_NONBLOCK
+> >> But now we pass ATTR_?TIME_SET and ATTR_NO_BLOCK straight thru.
+> >> So previously we didn't map them onto va_mask bits but as separate flags
+> >> instead.
+> > 
+> > Yeah, not that ATTR_NO_BLOCK doesn't actually exist in any tree I have
+> > access to, and thus it's not actually handled in the new xfs_setattr.
 
-Hmm...confusing re NO_BLOCK.
+Look in SLES9 and SLES10. It's used to enable the NFS server to
+return EAGAIN for truncates that might block for a long time. This
+can occur if a file migration to/from HSM is in progress. This will
+return EJUKEBOX to NFS clients to prevent them from unnecessarily
+resending the truncate over the wire due to timeouts and blocking
+multiple (potentially all) nfsds trying to service the truncate....
 
-1 linux-2.6/xfs_vnode.h <global>           228 #define ATTR_NONBLOCK 0x100
-2 linux-2.6/xfs_ioctl.c xfs_ioc_space      686 attr_flags |= ATTR_NONBLOCK;
-3 linux-2.6/xfs_ioctl.c xfs_ioc_fssetxattr 899 attr_flags |= ATTR_NONBLOCK;
-4 linux-2.6/xfs_ioctl.c xfs_ioc_setxflags  951 attr_flags |= ATTR_NONBLOCK;
-5 linux-2.6/xfs_iops.c  xfs_vn_setattr     703 flags |= ATTR_NONBLOCK;
+It's just that someone here NACKed the mainline patches to the
+NFS server to set this flag.... ;)
 
-1 xfs/xfs_dmapi.h    <global>     169 #define AT_DELAY_FLAG(f) ((f&ATTR_NONBLOCK) ? DM_FLAGS_NDELAY : 0)
-2 xfs/xfs_vnodeops.c xfs_setattr          200 int dmflags = AT_DELAY_FLAG(flags) | DM_SEM_FLAG_WR;
-3 xfs/xfs_vnodeops.c xfs_setattr          757 0, 0, AT_DELAY_FLAG(flags));
-4 xfs/xfs_vnodeops.c xfs_free_file_space 3536 AT_DELAY_FLAG(attr_flags), NULL);
+Cheers,
 
-So it's just used for dmapi stuff as it only looks like it is tested by
-AT_DELAY_FLAG().
-So for xfs_setattr it will be expecting it coming in as flags param
-and then testing it via AT_DELAY_FLAG.
-Hmmm...doesn't seem so good. So looks like it was handled by
-xfs_setattr and still is.
-So are we going to be doing the right thing now?
-If it could just never be set then what is the point of using
-AT_DELAY_FLAG() in xfs_setattr?
-
-
->> So we get rid of the test for XFS_AT_NOSET.
->> where:
->> #define XFS_AT_NOSET    (XFS_AT_NLINK|XFS_AT_RDEV|XFS_AT_FSID|XFS_AT_NODEID|\
->>                 XFS_AT_TYPE|XFS_AT_BLKSIZE|XFS_AT_NBLOCKS|XFS_AT_VCODE|\
->>                 XFS_AT_NEXTENTS|XFS_AT_ANEXTENTS|XFS_AT_GENCOUNT)
->>
->> I can't see anywhere we set any of these.
->> Presumably out of the xattr calls.
->> Some left over from IRIX I guess.
-> 
-> Probably.  Note that linux uses the ATTR_ flags only for ->setattr so
-> there are per defintion none that can't be set.
-> 
-Which is nice.
-
->> #define XFS_AT_UPDATIME         0x00010000
->> #define XFS_AT_UPDMTIME         0x00020000
->> #define XFS_AT_UPDCTIME         0x00040000
->> 3 more not supported by vfs ATTR_* macros.
->> I can't see where we set any of these.
->> So no loss there I guess.
->> Presumably they were just for IRIX.
-> 
-> It's an IRIX leftover.  I will submit a patch to introduce something
-> similar to Linux for 2.6.27, that's why I'd like these patches in for
-> 2.6.26 so that I have a clean base to start from.
-Ok.
-
---Tim
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
