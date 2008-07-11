@@ -1,99 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 23:52:49 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6B6qh1f004546
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 23:52:44 -0700
-Message-ID: <48770375.1060308@sgi.com>
-Date: Fri, 11 Jul 2008 16:53:41 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Jul 2008 00:18:53 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6B7Io6a008922
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 00:18:50 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BAF831BB5000
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 00:19:55 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id NZSikBeVLCXTkgeE for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 00:19:55 -0700 (PDT)
+Date: Fri, 11 Jul 2008 17:19:53 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] Fix reference counting race on log buffers
-References: <1215752481-6862-1-git-send-email-david@fromorbit.com> <4876FD7E.3080207@sandeen.net>
-In-Reply-To: <4876FD7E.3080207@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20080711071953.GR29319@disturbed>
+References: <1215752481-6862-1-git-send-email-david@fromorbit.com> <4876EED7.8060004@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4876EED7.8060004@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs@oss.sgi.com
 
-
-
-Eric Sandeen wrote:
-> Dave Chinner wrote:
->> When we release the iclog, we do an atomic_dec_and_lock to determine
->> if we are the last reference to enable update of log headers and
->> writeout. however, in xlog_state_get_iclog_space() we need to check
->> if we have the last reference count there.  if we do, we release the
->> log buffer, otherwise we decrement the reference count.
->>
->> The issue is that the compare and decrement in
->> xlog_state_get_iclog_space() is not atomic, so both places can see a
->> reference count of 2 and neither will release the iclog. That leads
->> to a filesystem hang.
->>
->> Close the hole replacing the compare and decrement with
->> atomic_add_unless() to ensure that they are executed atomically.
->>
->> Signed-off-by: Dave Chinner <david@fromorbit.com>
+On Fri, Jul 11, 2008 at 03:25:43PM +1000, Timothy Shimmin wrote:
+> Dave,
 > 
-> Tested-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> Passes the fs_mark testcase I hit this on, 18 million inodes & counting.
+> Yeah, looks good. Thanks.
 
-Thanks Eric & Dave. Given the short time available, could one of you
-please push this directly to Linus? I don't have anyone here to do that
-until Monday, which is probably too late.
+Thanks, Tim - I'll add the right tags and send it to Linus.
 
-Cheers
--- Mark
+> (My personal preference is for reversing if/else than using !
+>  as it is easier to read but whatever :)
 
+It looked funny with one line in the upper branch, and I added
+the comment inside the if() because it wasn't obvious from the
+code (either way) which branch was the 'only ref' branch....
 
-> 
-> Thanks,
-> -Eric
-> 
->> ---
->>  fs/xfs/xfs_log.c |   15 +++++++++++----
->>  1 files changed, 11 insertions(+), 4 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
->> index 760d543..0816c5d 100644
->> --- a/fs/xfs/xfs_log.c
->> +++ b/fs/xfs/xfs_log.c
->> @@ -2425,13 +2425,20 @@ restart:
->>  	if (iclog->ic_size - iclog->ic_offset < 2*sizeof(xlog_op_header_t)) {
->>  		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
->>  
->> -		/* If I'm the only one writing to this iclog, sync it to disk */
->> -		if (atomic_read(&iclog->ic_refcnt) == 1) {
->> +		/*
->> +		 * If I'm the only one writing to this iclog, sync it to disk.
->> +		 * We need to do an atomic compare and decrement here to avoid
->> +		 * racing with concurrent atomic_dec_and_lock() calls in
->> +		 * xlog_state_release_iclog() when there is more than one
->> +		 * reference to the iclog.
->> +		 */
->> +		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1)) {
->> +			/* we are the only one */
->>  			spin_unlock(&log->l_icloglock);
->> -			if ((error = xlog_state_release_iclog(log, iclog)))
->> +			error = xlog_state_release_iclog(log, iclog);
->> +			if (error)
->>  				return error;
->>  		} else {
->> -			atomic_dec(&iclog->ic_refcnt);
->>  			spin_unlock(&log->l_icloglock);
->>  		}
->>  		goto restart;
-> 
-> 
+> But will need Eric's result before checking it in.
 
+Seems like it's working fine, and i've got a coupl eof runs
+through xfsqa now, so it should be good to go.
+
+Cheers,
+
+Dave.
 -- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+Dave Chinner
+david@fromorbit.com
