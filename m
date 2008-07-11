@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 18:12:58 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6B1Cpt5017345
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:12:52 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 18:13:00 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6B1CrJj017372
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:12:54 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0C0818B0CC3
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:13:54 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 7gXcfiXuYYelrQCD for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:13:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C48B2DAE13
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:13:57 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id gPfzJaKwytvYTlDt for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 18:13:57 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] Clean up stale references to semaphores
-Date: Fri, 11 Jul 2008 11:13:45 +1000
-Message-Id: <1215738830-31048-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] Replace dquot flush semaphore with a completion
+Date: Fri, 11 Jul 2008 11:13:49 +1000
+Message-Id: <1215738830-31048-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1215738830-31048-1-git-send-email-david@fromorbit.com>
 References: <1215738830-31048-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -19,339 +19,243 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: linux-kernel@vger.kernel.org, matthew@wil.cx, Dave Chinner <david@fromorbit.com>
 
-A lot of code has been converted away from semaphores,
-but there are still comments that reference semaphore
-behaviour. The log code is the worst offender. Update
-the comments to reflect what the code really does now.
+Use the new completion flush code to implement the dquot
+flush lock. Removes one of the final users of semaphores
+in the XFS code base.
+
+Version 2:
+o make xfs_qm_dqflock_nowait() a static inline and rename to
+  match xfs_dqflock/xfs_dqfunlock operations.
+o use new completion interface.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_vnode.c |    6 ++--
- fs/xfs/xfs_log.c             |   67 ++++++++++++++++++++----------------------
- fs/xfs/xfs_log_priv.h        |   12 ++++----
- 3 files changed, 41 insertions(+), 44 deletions(-)
+ fs/xfs/quota/xfs_dquot.c      |   34 ++++++++++++----------------------
+ fs/xfs/quota/xfs_dquot.h      |   29 ++++++++++++++++++-----------
+ fs/xfs/quota/xfs_dquot_item.c |    8 ++++----
+ fs/xfs/quota/xfs_qm.c         |    8 ++++----
+ 4 files changed, 38 insertions(+), 41 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_vnode.c b/fs/xfs/linux-2.6/xfs_vnode.c
-index bc7afe0..1881c79 100644
---- a/fs/xfs/linux-2.6/xfs_vnode.c
-+++ b/fs/xfs/linux-2.6/xfs_vnode.c
-@@ -33,7 +33,7 @@
+diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+index fc9f3fb..4a2194d 100644
+--- a/fs/xfs/quota/xfs_dquot.c
++++ b/fs/xfs/quota/xfs_dquot.c
+@@ -101,9 +101,16 @@ xfs_qm_dqinit(
+ 	if (brandnewdquot) {
+ 		dqp->dq_flnext = dqp->dq_flprev = dqp;
+ 		mutex_init(&dqp->q_qlock);
+-		initnsema(&dqp->q_flock, 1, "fdq");
+ 		sv_init(&dqp->q_pinwait, SV_DEFAULT, "pdq");
  
++		/*
++		 * Because we want to use a counting completion, complete
++		 * the flush completion once to allow a single access to
++		 * the flush completion without blocking.
++		 */
++		init_completion(&dqp->q_flush);
++		complete(&dqp->q_flush);
++
+ #ifdef XFS_DQUOT_TRACE
+ 		dqp->q_trace = ktrace_alloc(DQUOT_TRACE_SIZE, KM_SLEEP);
+ 		xfs_dqtrace_entry(dqp, "DQINIT");
+@@ -150,7 +157,6 @@ xfs_qm_dqdestroy(
+ 	ASSERT(! XFS_DQ_IS_ON_FREELIST(dqp));
  
- /*
-- * Dedicated vnode inactive/reclaim sync semaphores.
-+ * Dedicated vnode inactive/reclaim sync wait queues.
-  * Prime number of hash buckets since address is used as the key.
-  */
- #define NVSYNC                  37
-@@ -84,8 +84,8 @@ vn_ioerror(
+ 	mutex_destroy(&dqp->q_qlock);
+-	freesema(&dqp->q_flock);
+ 	sv_destroy(&dqp->q_pinwait);
  
- /*
-  * Revalidate the Linux inode from the XFS inode.
-- * Note: i_size _not_ updated; we must hold the inode
-- * semaphore when doing that - callers responsibility.
-+ * Note: i_size _not_ updated; we must hold the i_mutex when doing
-+ * that - callers responsibility.
-  */
+ #ifdef XFS_DQUOT_TRACE
+@@ -1211,7 +1217,7 @@ xfs_qm_dqflush(
+ 	int			error;
+ 
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+-	ASSERT(XFS_DQ_IS_FLUSH_LOCKED(dqp));
++	ASSERT(!completion_done(&dqp->q_flush));
+ 	xfs_dqtrace_entry(dqp, "DQFLUSH");
+ 
+ 	/*
+@@ -1348,34 +1354,18 @@ xfs_qm_dqflush_done(
+ 	xfs_dqfunlock(dqp);
+ }
+ 
+-
+-int
+-xfs_qm_dqflock_nowait(
+-	xfs_dquot_t *dqp)
+-{
+-	int locked;
+-
+-	locked = cpsema(&((dqp)->q_flock));
+-
+-	/* XXX ifdef these out */
+-	if (locked)
+-		(dqp)->dq_flags |= XFS_DQ_FLOCKED;
+-	return (locked);
+-}
+-
+-
  int
- vn_revalidate(
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 2497de8..760d543 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -357,11 +357,11 @@ xfs_log_done(xfs_mount_t	*mp,
-  * Asynchronous forces are implemented by setting the WANT_SYNC
-  * bit in the appropriate in-core log and then returning.
-  *
-- * Synchronous forces are implemented with a semaphore.  All callers
-- * to force a given lsn to disk will wait on a semaphore attached to the
-+ * Synchronous forces are implemented with a signal variable. All callers
-+ * to force a given lsn to disk will wait on a the sv attached to the
-  * specific in-core log.  When given in-core log finally completes its
-  * write to disk, that thread will wake up all threads waiting on the
-- * semaphore.
-+ * sv.
-  */
- int
- _xfs_log_force(
-@@ -707,7 +707,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 		if (!(iclog->ic_state == XLOG_STATE_ACTIVE ||
- 		      iclog->ic_state == XLOG_STATE_DIRTY)) {
- 			if (!XLOG_FORCED_SHUTDOWN(log)) {
--				sv_wait(&iclog->ic_forcesema, PMEM,
-+				sv_wait(&iclog->ic_force_wait, PMEM,
- 					&log->l_icloglock, s);
- 			} else {
- 				spin_unlock(&log->l_icloglock);
-@@ -748,7 +748,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 			|| iclog->ic_state == XLOG_STATE_DIRTY
- 			|| iclog->ic_state == XLOG_STATE_IOERROR) ) {
- 
--				sv_wait(&iclog->ic_forcesema, PMEM,
-+				sv_wait(&iclog->ic_force_wait, PMEM,
- 					&log->l_icloglock, s);
- 		} else {
- 			spin_unlock(&log->l_icloglock);
-@@ -838,7 +838,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 				break;
- 			tail_lsn = 0;
- 			free_bytes -= tic->t_unit_res;
--			sv_signal(&tic->t_sema);
-+			sv_signal(&tic->t_wait);
- 			tic = tic->t_next;
- 		} while (tic != log->l_write_headq);
- 	}
-@@ -859,7 +859,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 				break;
- 			tail_lsn = 0;
- 			free_bytes -= need_bytes;
--			sv_signal(&tic->t_sema);
-+			sv_signal(&tic->t_wait);
- 			tic = tic->t_next;
- 		} while (tic != log->l_reserve_headq);
- 	}
-@@ -1285,8 +1285,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 
- 		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
- 		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
--		sv_init(&iclog->ic_forcesema, SV_DEFAULT, "iclog-force");
--		sv_init(&iclog->ic_writesema, SV_DEFAULT, "iclog-write");
-+		sv_init(&iclog->ic_force_wait, SV_DEFAULT, "iclog-force");
-+		sv_init(&iclog->ic_write_wait, SV_DEFAULT, "iclog-write");
- 
- 		iclogp = &iclog->ic_next;
- 	}
-@@ -1565,8 +1565,8 @@ xlog_dealloc_log(xlog_t *log)
- 
- 	iclog = log->l_iclog;
- 	for (i=0; i<log->l_iclog_bufs; i++) {
--		sv_destroy(&iclog->ic_forcesema);
--		sv_destroy(&iclog->ic_writesema);
-+		sv_destroy(&iclog->ic_force_wait);
-+		sv_destroy(&iclog->ic_write_wait);
- 		xfs_buf_free(iclog->ic_bp);
- #ifdef XFS_LOG_TRACE
- 		if (iclog->ic_trace != NULL) {
-@@ -1976,7 +1976,7 @@ xlog_write(xfs_mount_t *	mp,
- /* Clean iclogs starting from the head.  This ordering must be
-  * maintained, so an iclog doesn't become ACTIVE beyond one that
-  * is SYNCING.  This is also required to maintain the notion that we use
-- * a counting semaphore to hold off would be writers to the log when every
-+ * a ordered wait queue to hold off would be writers to the log when every
-  * iclog is trying to sync to disk.
-  *
-  * State Change: DIRTY -> ACTIVE
-@@ -2240,7 +2240,7 @@ xlog_state_do_callback(
- 			xlog_state_clean_log(log);
- 
- 			/* wake up threads waiting in xfs_log_force() */
--			sv_broadcast(&iclog->ic_forcesema);
-+			sv_broadcast(&iclog->ic_force_wait);
- 
- 			iclog = iclog->ic_next;
- 		} while (first_iclog != iclog);
-@@ -2302,8 +2302,7 @@ xlog_state_do_callback(
-  * the second completion goes through.
-  *
-  * Callbacks could take time, so they are done outside the scope of the
-- * global state machine log lock.  Assume that the calls to cvsema won't
-- * take a long time.  At least we know it won't sleep.
-+ * global state machine log lock.
-  */
- STATIC void
- xlog_state_done_syncing(
-@@ -2339,7 +2338,7 @@ xlog_state_done_syncing(
- 	 * iclog buffer, we wake them all, one will get to do the
- 	 * I/O, the others get to wait for the result.
- 	 */
--	sv_broadcast(&iclog->ic_writesema);
-+	sv_broadcast(&iclog->ic_write_wait);
- 	spin_unlock(&log->l_icloglock);
- 	xlog_state_do_callback(log, aborted, iclog);	/* also cleans log */
- }	/* xlog_state_done_syncing */
-@@ -2347,11 +2346,9 @@ xlog_state_done_syncing(
- 
- /*
-  * If the head of the in-core log ring is not (ACTIVE or DIRTY), then we must
-- * sleep.  The flush semaphore is set to the number of in-core buffers and
-- * decremented around disk syncing.  Therefore, if all buffers are syncing,
-- * this semaphore will cause new writes to sleep until a sync completes.
-- * Otherwise, this code just does p() followed by v().  This approximates
-- * a sleep/wakeup except we can't race.
-+ * sleep.  We wait on the flush queue on the head iclog as that should be
-+ * the first iclog to complete flushing. Hence if all iclogs are syncing,
-+ * we will wait here and all new writes will sleep until a sync completes.
-  *
-  * The in-core logs are used in a circular fashion. They are not used
-  * out-of-order even when an iclog past the head is free.
-@@ -2501,7 +2498,7 @@ xlog_grant_log_space(xlog_t	   *log,
- 			goto error_return;
- 
- 		XFS_STATS_INC(xs_sleep_logspace);
--		sv_wait(&tic->t_sema, PINOD|PLTWAIT, &log->l_grant_lock, s);
-+		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
- 		/*
- 		 * If we got an error, and the filesystem is shutting down,
- 		 * we'll catch it down below. So just continue...
-@@ -2527,7 +2524,7 @@ redo:
- 		xlog_trace_loggrant(log, tic,
- 				    "xlog_grant_log_space: sleep 2");
- 		XFS_STATS_INC(xs_sleep_logspace);
--		sv_wait(&tic->t_sema, PINOD|PLTWAIT, &log->l_grant_lock, s);
-+		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
- 
- 		if (XLOG_FORCED_SHUTDOWN(log)) {
- 			spin_lock(&log->l_grant_lock);
-@@ -2626,7 +2623,7 @@ xlog_regrant_write_log_space(xlog_t	   *log,
- 			if (free_bytes < ntic->t_unit_res)
- 				break;
- 			free_bytes -= ntic->t_unit_res;
--			sv_signal(&ntic->t_sema);
-+			sv_signal(&ntic->t_wait);
- 			ntic = ntic->t_next;
- 		} while (ntic != log->l_write_headq);
- 
-@@ -2637,7 +2634,7 @@ xlog_regrant_write_log_space(xlog_t	   *log,
- 			xlog_trace_loggrant(log, tic,
- 				    "xlog_regrant_write_log_space: sleep 1");
- 			XFS_STATS_INC(xs_sleep_logspace);
--			sv_wait(&tic->t_sema, PINOD|PLTWAIT,
-+			sv_wait(&tic->t_wait, PINOD|PLTWAIT,
- 				&log->l_grant_lock, s);
- 
- 			/* If we're shutting down, this tic is already
-@@ -2666,7 +2663,7 @@ redo:
- 		if ((tic->t_flags & XLOG_TIC_IN_Q) == 0)
- 			xlog_ins_ticketq(&log->l_write_headq, tic);
- 		XFS_STATS_INC(xs_sleep_logspace);
--		sv_wait(&tic->t_sema, PINOD|PLTWAIT, &log->l_grant_lock, s);
-+		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
- 
- 		/* If we're shutting down, this tic is already off the queue */
- 		if (XLOG_FORCED_SHUTDOWN(log)) {
-@@ -2909,7 +2906,7 @@ xlog_state_switch_iclogs(xlog_t		*log,
-  *	2. the current iclog is drity, and the previous iclog is in the
-  *		active or dirty state.
-  *
-- * We may sleep (call psema) if:
-+ * We may sleep if:
-  *
-  *	1. the current iclog is not in the active nor dirty state.
-  *	2. the current iclog dirty, and the previous iclog is not in the
-@@ -3006,7 +3003,7 @@ maybe_sleep:
- 			return XFS_ERROR(EIO);
- 		}
- 		XFS_STATS_INC(xs_log_force_sleep);
--		sv_wait(&iclog->ic_forcesema, PINOD, &log->l_icloglock, s);
-+		sv_wait(&iclog->ic_force_wait, PINOD, &log->l_icloglock, s);
- 		/*
- 		 * No need to grab the log lock here since we're
- 		 * only deciding whether or not to return EIO
-@@ -3089,7 +3086,7 @@ try_again:
- 						 XLOG_STATE_SYNCING))) {
- 			ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
- 			XFS_STATS_INC(xs_log_force_sleep);
--			sv_wait(&iclog->ic_prev->ic_writesema, PSWP,
-+			sv_wait(&iclog->ic_prev->ic_write_wait, PSWP,
- 				&log->l_icloglock, s);
- 			*log_flushed = 1;
- 			already_slept = 1;
-@@ -3109,7 +3106,7 @@ try_again:
- 	    !(iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))) {
- 
- 		/*
--		 * Don't wait on the forcesema if we know that we've
-+		 * Don't wait on completion if we know that we've
- 		 * gotten a log write error.
- 		 */
- 		if (iclog->ic_state & XLOG_STATE_IOERROR) {
-@@ -3117,7 +3114,7 @@ try_again:
- 			return XFS_ERROR(EIO);
- 		}
- 		XFS_STATS_INC(xs_log_force_sleep);
--		sv_wait(&iclog->ic_forcesema, PSWP, &log->l_icloglock, s);
-+		sv_wait(&iclog->ic_force_wait, PSWP, &log->l_icloglock, s);
- 		/*
- 		 * No need to grab the log lock here since we're
- 		 * only deciding whether or not to return EIO
-@@ -3173,7 +3170,7 @@ STATIC void
- xlog_ticket_put(xlog_t		*log,
- 		xlog_ticket_t	*ticket)
+ xfs_qm_dqlock_nowait(
+ 	xfs_dquot_t *dqp)
  {
--	sv_destroy(&ticket->t_sema);
-+	sv_destroy(&ticket->t_wait);
- 	kmem_zone_free(xfs_log_ticket_zone, ticket);
- }	/* xlog_ticket_put */
+-	return (mutex_trylock(&((dqp)->q_qlock)));
++	return mutex_trylock(&dqp->q_qlock);
+ }
  
-@@ -3263,7 +3260,7 @@ xlog_ticket_get(xlog_t		*log,
- 	tic->t_trans_type	= 0;
- 	if (xflags & XFS_LOG_PERM_RESERV)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
--	sv_init(&(tic->t_sema), SV_DEFAULT, "logtick");
-+	sv_init(&(tic->t_wait), SV_DEFAULT, "logtick");
+ void
+ xfs_dqlock(
+ 	xfs_dquot_t *dqp)
+ {
+-	mutex_lock(&(dqp->q_qlock));
++	mutex_lock(&dqp->q_qlock);
+ }
  
- 	xlog_tic_reset_res(tic);
- 
-@@ -3550,14 +3547,14 @@ xfs_log_force_umount(
+ void
+@@ -1468,7 +1458,7 @@ xfs_qm_dqpurge(
+ 	 * if we're turning off quotas. Basically, we need this flush
+ 	 * lock, and are willing to block on it.
  	 */
- 	if ((tic = log->l_reserve_headq)) {
- 		do {
--			sv_signal(&tic->t_sema);
-+			sv_signal(&tic->t_wait);
- 			tic = tic->t_next;
- 		} while (tic != log->l_reserve_headq);
- 	}
+-	if (! xfs_qm_dqflock_nowait(dqp)) {
++	if (!xfs_dqflock_nowait(dqp)) {
+ 		/*
+ 		 * Block on the flush lock after nudging dquot buffer,
+ 		 * if it is incore.
+diff --git a/fs/xfs/quota/xfs_dquot.h b/fs/xfs/quota/xfs_dquot.h
+index f7393bb..8958d0f 100644
+--- a/fs/xfs/quota/xfs_dquot.h
++++ b/fs/xfs/quota/xfs_dquot.h
+@@ -82,7 +82,7 @@ typedef struct xfs_dquot {
+ 	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
+ 	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
+ 	mutex_t		 q_qlock;	/* quota lock */
+-	sema_t		 q_flock;	/* flush lock */
++	struct completion q_flush;	/* flush completion queue */
+ 	uint		 q_pincount;	/* pin count for this dquot */
+ 	sv_t		 q_pinwait;	/* sync var for pinning */
+ #ifdef XFS_DQUOT_TRACE
+@@ -113,17 +113,25 @@ XFS_DQ_IS_LOCKED(xfs_dquot_t *dqp)
  
- 	if ((tic = log->l_write_headq)) {
- 		do {
--			sv_signal(&tic->t_sema);
-+			sv_signal(&tic->t_wait);
- 			tic = tic->t_next;
- 		} while (tic != log->l_write_headq);
- 	}
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 6245913..7dcf11e 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -241,7 +241,7 @@ typedef struct xlog_res {
- } xlog_res_t;
  
- typedef struct xlog_ticket {
--	sv_t		   t_sema;	 /* sleep on this semaphore      : 20 */
-+	sv_t		   t_wait;	 /* ticket wait queue            : 20 */
- 	struct xlog_ticket *t_next;	 /*			         :4|8 */
- 	struct xlog_ticket *t_prev;	 /*				 :4|8 */
- 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
-@@ -314,7 +314,7 @@ typedef struct xlog_rec_ext_header {
-  *	xlog_rec_header_t into the reserved space.
-  * - ic_data follows, so a write to disk can start at the beginning of
-  *	the iclog.
-- * - ic_forcesema is used to implement synchronous forcing of the iclog to disk.
-+ * - ic_forcewait is used to implement synchronous forcing of the iclog to disk.
-  * - ic_next is the pointer to the next iclog in the ring.
-  * - ic_bp is a pointer to the buffer used to write this incore log to disk.
-  * - ic_log is a pointer back to the global log structure.
-@@ -339,8 +339,8 @@ typedef struct xlog_rec_ext_header {
-  * and move everything else out to subsequent cachelines.
-  */
- typedef struct xlog_iclog_fields {
--	sv_t			ic_forcesema;
--	sv_t			ic_writesema;
-+	sv_t			ic_force_wait;
-+	sv_t			ic_write_wait;
- 	struct xlog_in_core	*ic_next;
- 	struct xlog_in_core	*ic_prev;
- 	struct xfs_buf		*ic_bp;
-@@ -377,8 +377,8 @@ typedef struct xlog_in_core {
  /*
-  * Defines to save our code from this glop.
+- * The following three routines simply manage the q_flock
+- * semaphore embedded in the dquot.  This semaphore synchronizes
+- * processes attempting to flush the in-core dquot back to disk.
++ * Manage the q_flush completion queue embedded in the dquot.  This completion
++ * queue synchronizes processes attempting to flush the in-core dquot back to
++ * disk.
   */
--#define	ic_forcesema	hic_fields.ic_forcesema
--#define ic_writesema	hic_fields.ic_writesema
-+#define	ic_force_wait	hic_fields.ic_force_wait
-+#define ic_write_wait	hic_fields.ic_write_wait
- #define	ic_next		hic_fields.ic_next
- #define	ic_prev		hic_fields.ic_prev
- #define	ic_bp		hic_fields.ic_bp
+-#define xfs_dqflock(dqp)	 { psema(&((dqp)->q_flock), PINOD | PRECALC);\
+-				   (dqp)->dq_flags |= XFS_DQ_FLOCKED; }
+-#define xfs_dqfunlock(dqp)	 { ASSERT(issemalocked(&((dqp)->q_flock))); \
+-				   vsema(&((dqp)->q_flock)); \
+-				   (dqp)->dq_flags &= ~(XFS_DQ_FLOCKED); }
++static inline void xfs_dqflock(xfs_dquot_t *dqp)
++{
++	wait_for_completion(&dqp->q_flush);
++}
++
++static inline int xfs_dqflock_nowait(xfs_dquot_t *dqp)
++{
++	return try_wait_for_completion(&dqp->q_flush);
++}
++
++static inline void xfs_dqfunlock(xfs_dquot_t *dqp)
++{
++	complete(&dqp->q_flush);
++}
+ 
+-#define XFS_DQ_IS_FLUSH_LOCKED(dqp) (issemalocked(&((dqp)->q_flock)))
+ #define XFS_DQ_IS_ON_FREELIST(dqp)  ((dqp)->dq_flnext != (dqp))
+ #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->dq_flags & XFS_DQ_DIRTY)
+ #define XFS_QM_ISUDQ(dqp)	((dqp)->dq_flags & XFS_DQ_USER)
+@@ -167,7 +175,6 @@ extern int		xfs_qm_dqflush(xfs_dquot_t *, uint);
+ extern int		xfs_qm_dqpurge(xfs_dquot_t *);
+ extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
+ extern int		xfs_qm_dqlock_nowait(xfs_dquot_t *);
+-extern int		xfs_qm_dqflock_nowait(xfs_dquot_t *);
+ extern void		xfs_qm_dqflock_pushbuf_wait(xfs_dquot_t *dqp);
+ extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
+ 					xfs_disk_dquot_t *);
+diff --git a/fs/xfs/quota/xfs_dquot_item.c b/fs/xfs/quota/xfs_dquot_item.c
+index 08d2fc8..f028644 100644
+--- a/fs/xfs/quota/xfs_dquot_item.c
++++ b/fs/xfs/quota/xfs_dquot_item.c
+@@ -151,7 +151,7 @@ xfs_qm_dquot_logitem_push(
+ 	dqp = logitem->qli_dquot;
+ 
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+-	ASSERT(XFS_DQ_IS_FLUSH_LOCKED(dqp));
++	ASSERT(!completion_done(&dqp->q_flush));
+ 
+ 	/*
+ 	 * Since we were able to lock the dquot's flush lock and
+@@ -245,7 +245,7 @@ xfs_qm_dquot_logitem_pushbuf(
+ 	 * inode flush completed and the inode was taken off the AIL.
+ 	 * So, just get out.
+ 	 */
+-	if (!issemalocked(&(dqp->q_flock))  ||
++	if (completion_done(&dqp->q_flush)  ||
+ 	    ((qip->qli_item.li_flags & XFS_LI_IN_AIL) == 0)) {
+ 		qip->qli_pushbuf_flag = 0;
+ 		xfs_dqunlock(dqp);
+@@ -258,7 +258,7 @@ xfs_qm_dquot_logitem_pushbuf(
+ 	if (bp != NULL) {
+ 		if (XFS_BUF_ISDELAYWRITE(bp)) {
+ 			dopush = ((qip->qli_item.li_flags & XFS_LI_IN_AIL) &&
+-				  issemalocked(&(dqp->q_flock)));
++				  !completion_done(&dqp->q_flush));
+ 			qip->qli_pushbuf_flag = 0;
+ 			xfs_dqunlock(dqp);
+ 
+@@ -317,7 +317,7 @@ xfs_qm_dquot_logitem_trylock(
+ 		return (XFS_ITEM_LOCKED);
+ 
+ 	retval = XFS_ITEM_SUCCESS;
+-	if (! xfs_qm_dqflock_nowait(dqp)) {
++	if (!xfs_dqflock_nowait(dqp)) {
+ 		/*
+ 		 * The dquot is already being flushed.	It may have been
+ 		 * flushed delayed write, however, and we don't want to
+diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
+index 26370a3..234b6d1 100644
+--- a/fs/xfs/quota/xfs_qm.c
++++ b/fs/xfs/quota/xfs_qm.c
+@@ -484,7 +484,7 @@ again:
+ 		xfs_dqtrace_entry(dqp, "FLUSHALL: DQDIRTY");
+ 		/* XXX a sentinel would be better */
+ 		recl = XFS_QI_MPLRECLAIMS(mp);
+-		if (! xfs_qm_dqflock_nowait(dqp)) {
++		if (!xfs_dqflock_nowait(dqp)) {
+ 			/*
+ 			 * If we can't grab the flush lock then check
+ 			 * to see if the dquot has been flushed delayed
+@@ -1062,7 +1062,7 @@ xfs_qm_sync(
+ 
+ 		/* XXX a sentinel would be better */
+ 		recl = XFS_QI_MPLRECLAIMS(mp);
+-		if (! xfs_qm_dqflock_nowait(dqp)) {
++		if (!xfs_dqflock_nowait(dqp)) {
+ 			if (nowait) {
+ 				xfs_dqunlock(dqp);
+ 				continue;
+@@ -2079,7 +2079,7 @@ xfs_qm_shake_freelist(
+ 		 * Try to grab the flush lock. If this dquot is in the process of
+ 		 * getting flushed to disk, we don't want to reclaim it.
+ 		 */
+-		if (! xfs_qm_dqflock_nowait(dqp)) {
++		if (!xfs_dqflock_nowait(dqp)) {
+ 			xfs_dqunlock(dqp);
+ 			dqp = dqp->dq_flnext;
+ 			continue;
+@@ -2257,7 +2257,7 @@ xfs_qm_dqreclaim_one(void)
+ 		 * Try to grab the flush lock. If this dquot is in the process of
+ 		 * getting flushed to disk, we don't want to reclaim it.
+ 		 */
+-		if (! xfs_qm_dqflock_nowait(dqp)) {
++		if (!xfs_dqflock_nowait(dqp)) {
+ 			xfs_dqunlock(dqp);
+ 			continue;
+ 		}
 -- 
 1.5.6
