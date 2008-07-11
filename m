@@ -1,169 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 15:44:15 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6AMiCcX031075
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:44:12 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C9452D7BA0
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:45:17 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id lpAAxVMQAKfVgHJS for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 15:45:17 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1KH4t1-0002ne-F4
-	for xfs@oss.sgi.com; Fri, 11 Jul 2008 08:45:15 +1000
-Date: Fri, 11 Jul 2008 08:45:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch] xfsqa test to check log size scaling
-Message-ID: <20080710224515.GZ11558@disturbed>
-References: <20080522061257.GR173056135@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 10 Jul 2008 17:32:08 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6B0VxbR012864
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2008 17:32:01 -0700
+Message-ID: <4876AA39.804@sgi.com>
+Date: Fri, 11 Jul 2008 10:32:57 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080522061257.GR173056135@sgi.com>
+Subject: Re: [PATCH 2/3] simplify xfs_setattr
+References: <20080627154557.GB31476@lst.de> <20080705172021.GA7177@lst.de> <48747DAD.7060501@sgi.com> <20080709162914.GA16308@lst.de>
+In-Reply-To: <20080709162914.GA16308@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-ping?
-
-On Thu, May 22, 2008 at 04:12:57PM +1000, David Chinner wrote:
-> XFS-QA test to check that log size scaling works correctly
-> for old and new maximum log sizes.
+Christoph Hellwig wrote:
+> On Wed, Jul 09, 2008 at 06:58:21PM +1000, Timothy Shimmin wrote:
+>>> -	if (ia_valid & (ATTR_MTIME_SET | ATTR_ATIME_SET))
+>>> -		flags |= ATTR_UTIME;
+>>> -#ifdef ATTR_NO_BLOCK
+>>> -	if ((ia_valid & ATTR_NO_BLOCK))
+>>> -		flags |= ATTR_NONBLOCK;
+>>> -#endif
+>>> -
+>> So this code looks different.
+>> We are now dropping the flags. Why is that?
+>> Presumably because we were mapping ia_valid's:
+>>    ATTR_MTIME_SET or ATTR_ATIME_SET --> ATTR_UTIME
+>>    ATTR_NO_BLOCK -> ATTR_NONBLOCK
+>> But now we pass ATTR_?TIME_SET and ATTR_NO_BLOCK straight thru.
+>> So previously we didn't map them onto va_mask bits but as separate flags
+>> instead.
 > 
-> Signed-off-by: Dave Chinner <dgc@sgi.com>
-> ---
->  xfstests/188     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  xfstests/188.out |   16 ++++++++++
->  xfstests/group   |    1 
->  3 files changed, 105 insertions(+)
-> 
-> Index: xfs-cmds/xfstests/188
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfs-cmds/xfstests/188	2008-05-15 22:39:08.741203552 +1000
-> @@ -0,0 +1,88 @@
-> +#! /bin/sh
-> +# FS QA Test No. 188
-> +#
-> +# large log size mkfs test - ensure the log size scaling works
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2008 Silicon Graphics, Inc.  All Rights Reserved.
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=dgc@sgi.com
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +    _cleanup_testdir
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +_setup_testdir
-> +_require_scratch
-> +_scratch_mkfs_xfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +_require_loop
-> +LOOP_DEV=$SCRATCH_MNT/test_fs
-> +LOOP_MNT=$SCRATCH_MNT/test_fs_dir
-> +
-> +_do_mkfs()
-> +{
-> +	for i in $*; do
-> +		echo -n "fssize=${i}g "
-> +		$MKFS_XFS_PROG -f -b size=4096 -l version=2 \
-> +			-d name=$LOOP_DEV,size=${i}g |grep log
-> +		mount -o loop -t xfs $LOOP_DEV $LOOP_MNT
-> +		echo "test write" > $LOOP_MNT/test
-> +		umount $LOOP_MNT
-> +	done
-> +}
-> +# make large holey file
-> +$XFS_IO_PROG -f -c "truncate 100t" $LOOP_DEV
-> +
-> +#make loopback mount dir
-> +mkdir $LOOP_MNT
-> +
-> +# test if large logs are supported
-> +LARGE_LOG=
-> +$MKFS_XFS_PROG -f -l size=256m -d name=$LOOP_DEV,size=10g > /dev/null 2>&1
-> +if [ $? -eq 0 ]; then
-> +	LARGE_LOG=true
-> +fi
-> +
-> +# walk over standard sizes (up to 256GB)
-> +_do_mkfs 1 2 4 8 16 32 64 128 256
-> +
-> +if [ -n "$LARGE_LOG" ]; then
-> +	# walk over larger sizes
-> +	_do_mkfs 512 1024 2048 4096 8192 16384
-> +else
-> +	# just cut'n'paste from the golden output for the remaining sizes
-> +	cat << EOF
-> +fssize=512g log      =internal log           bsize=4096   blocks=65536, version=2
-> +fssize=1024g log      =internal log           bsize=4096   blocks=131072, version=2
-> +fssize=2048g log      =internal log           bsize=4096   blocks=262144, version=2
-> +fssize=4096g log      =internal log           bsize=4096   blocks=521728, version=2
-> +fssize=8192g log      =internal log           bsize=4096   blocks=521728, version=2
-> +fssize=16384g log      =internal log           bsize=4096   blocks=521728, version=2
-> +EOF
-> +fi
-> +
-> +status=0
-> +exit
-> Index: xfs-cmds/xfstests/188.out
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfs-cmds/xfstests/188.out	2008-05-15 22:39:26.254922874 +1000
-> @@ -0,0 +1,16 @@
-> +QA output created by 188
-> +fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
-> +fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
-> +fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
-> +fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
-> +fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
-> +fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
-> +fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
-> +fssize=128g log      =internal log           bsize=4096   blocks=16384, version=2
-> +fssize=256g log      =internal log           bsize=4096   blocks=32768, version=2
-> +fssize=512g log      =internal log           bsize=4096   blocks=65536, version=2
-> +fssize=1024g log      =internal log           bsize=4096   blocks=131072, version=2
-> +fssize=2048g log      =internal log           bsize=4096   blocks=262144, version=2
-> +fssize=4096g log      =internal log           bsize=4096   blocks=521728, version=2
-> +fssize=8192g log      =internal log           bsize=4096   blocks=521728, version=2
-> +fssize=16384g log      =internal log           bsize=4096   blocks=521728, version=2
-> Index: xfs-cmds/xfstests/group
-> ===================================================================
-> --- xfs-cmds.orig/xfstests/group	2008-05-15 16:32:52.489519140 +1000
-> +++ xfs-cmds/xfstests/group	2008-05-15 22:38:32.000000000 +1000
-> @@ -275,3 +275,4 @@ filestreams	dgc@sgi.com
->  185 dmapi auto
->  186 attr auto
->  187 attr auto
-> +188 log metadata auto
-> 
+> Yeah, not that ATTR_NO_BLOCK doesn't actually exist in any tree I have
+> access to, and thus it's not actually handled in the new xfs_setattr.
 > 
 
--- 
-Dave Chinner
-david@fromorbit.com
+Hmm...confusing re NO_BLOCK.
+
+1 linux-2.6/xfs_vnode.h <global>           228 #define ATTR_NONBLOCK 0x100
+2 linux-2.6/xfs_ioctl.c xfs_ioc_space      686 attr_flags |= ATTR_NONBLOCK;
+3 linux-2.6/xfs_ioctl.c xfs_ioc_fssetxattr 899 attr_flags |= ATTR_NONBLOCK;
+4 linux-2.6/xfs_ioctl.c xfs_ioc_setxflags  951 attr_flags |= ATTR_NONBLOCK;
+5 linux-2.6/xfs_iops.c  xfs_vn_setattr     703 flags |= ATTR_NONBLOCK;
+
+1 xfs/xfs_dmapi.h    <global>     169 #define AT_DELAY_FLAG(f) ((f&ATTR_NONBLOCK) ? DM_FLAGS_NDELAY : 0)
+2 xfs/xfs_vnodeops.c xfs_setattr          200 int dmflags = AT_DELAY_FLAG(flags) | DM_SEM_FLAG_WR;
+3 xfs/xfs_vnodeops.c xfs_setattr          757 0, 0, AT_DELAY_FLAG(flags));
+4 xfs/xfs_vnodeops.c xfs_free_file_space 3536 AT_DELAY_FLAG(attr_flags), NULL);
+
+So it's just used for dmapi stuff as it only looks like it is tested by
+AT_DELAY_FLAG().
+So for xfs_setattr it will be expecting it coming in as flags param
+and then testing it via AT_DELAY_FLAG.
+Hmmm...doesn't seem so good. So looks like it was handled by
+xfs_setattr and still is.
+So are we going to be doing the right thing now?
+If it could just never be set then what is the point of using
+AT_DELAY_FLAG() in xfs_setattr?
+
+
+>> So we get rid of the test for XFS_AT_NOSET.
+>> where:
+>> #define XFS_AT_NOSET    (XFS_AT_NLINK|XFS_AT_RDEV|XFS_AT_FSID|XFS_AT_NODEID|\
+>>                 XFS_AT_TYPE|XFS_AT_BLKSIZE|XFS_AT_NBLOCKS|XFS_AT_VCODE|\
+>>                 XFS_AT_NEXTENTS|XFS_AT_ANEXTENTS|XFS_AT_GENCOUNT)
+>>
+>> I can't see anywhere we set any of these.
+>> Presumably out of the xattr calls.
+>> Some left over from IRIX I guess.
+> 
+> Probably.  Note that linux uses the ATTR_ flags only for ->setattr so
+> there are per defintion none that can't be set.
+> 
+Which is nice.
+
+>> #define XFS_AT_UPDATIME         0x00010000
+>> #define XFS_AT_UPDMTIME         0x00020000
+>> #define XFS_AT_UPDCTIME         0x00040000
+>> 3 more not supported by vfs ATTR_* macros.
+>> I can't see where we set any of these.
+>> So no loss there I guess.
+>> Presumably they were just for IRIX.
+> 
+> It's an IRIX leftover.  I will submit a patch to introduce something
+> similar to Linux for 2.6.27, that's why I'd like these patches in for
+> 2.6.26 so that I have a clean base to start from.
+Ok.
+
+--Tim
