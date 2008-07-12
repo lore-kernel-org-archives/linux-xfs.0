@@ -1,53 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 11 Jul 2008 22:06:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 12 Jul 2008 04:38:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6C55JBj029158
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 22:05:20 -0700
-Received: from Chamillionaire.breakpoint.cc (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C298DFEC13
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 22:06:25 -0700 (PDT)
-Received: from Chamillionaire.breakpoint.cc (Chamillionaire.breakpoint.cc [85.10.199.196]) by cuda.sgi.com with ESMTP id hacZCWaJ9bqaEFmd for <xfs@oss.sgi.com>; Fri, 11 Jul 2008 22:06:25 -0700 (PDT)
-Date: Sat, 12 Jul 2008 07:06:12 +0200
-From: Sebastian Siewior <lkml@ml.breakpoint.cc>
-Subject: Re: xfs bug in 2.6.26-rc9
-Message-ID: <20080712050612.GA11334@Chamillionaire.breakpoint.cc>
-References: <alpine.DEB.1.10.0807110939520.30192@uplift.swm.pp.se> <20080711084248.GU29319@disturbed> <20080711190209.GA7401@Chamillionaire.breakpoint.cc> <20080711232201.GG11558@disturbed>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6CBcDJD028021
+	for <linux-xfs@oss.sgi.com>; Sat, 12 Jul 2008 04:38:13 -0700
+Received: from naf-server05.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 33614DFECED
+	for <linux-xfs@oss.sgi.com>; Sat, 12 Jul 2008 04:39:19 -0700 (PDT)
+Received: from naf-server05.com (naf-server05.com [69.73.155.186]) by cuda.sgi.com with ESMTP id 4BUZNCeJFa2dQ4dV for <linux-xfs@oss.sgi.com>; Sat, 12 Jul 2008 04:39:19 -0700 (PDT)
+Received: from apache by naf-server05.com with local (Exim 4.68)
+	(envelope-from <torment@torm3nt.com>)
+	id 1KHdRe-0008UD-KI
+	for linux-xfs@oss.sgi.com; Sat, 12 Jul 2008 07:39:18 -0400
+Subject: Update Your E-mail now.
+From: "Email Update Center." <webupdate@update.org>
+Reply-To: webupdate@live.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-In-Reply-To: <20080711232201.GG11558@disturbed>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Message-Id: <E1KHdRe-0008UD-KI@naf-server05.com>
+Date: Sat, 12 Jul 2008 07:39:18 -0400
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-* Dave Chinner | 2008-07-12 09:22:01 [+1000]:
+Update Your E-mail now.
 
->I effectively quoted from it:
->
->config XFS_DEBUG
->        bool "XFS Debugging support (EXPERIMENTAL)"
->        depends on XFS_FS && EXPERIMENTAL
->        help
->          Say Y here to get an XFS build with many debugging features,
->          including ASSERT checks, function wrappers around macros,
->          and extra sanity-checking functions in various code paths.
->
->          Note that the resulting code will be HUGE and SLOW, and probably
->          not useful unless you are debugging a particular problem.
->
->          Say N unless you are an XFS developer, or you play one on TV.
->
->> Debug mode is usually
->> noisy, little slower and mostly usefull just to the developers but *I*
->> would not expect to BUG() in the non-fatal case.
->
->What do you expect debug code to do? Asserts are designed to
->drop the machine into a debugger when they fail so the problem can
->be, well, debugged.
-Sorry, I haven't read this. Userspace assert() results in abort() so it
-sane to bug() in kernel.
+Dear Email Owner,
 
->Dave.
-Sebastian
+This message is from messaging center to all Email owners.  
+We are currently upgrading our data base and e-mail center.
+
+We are deleting all unused email to create more  
+space for new one.
+
+CONFIRM YOUR EMAIL BELOW.
+
+Email Username : .......... .....
+EMAIL Password : ................
+
+Warning!!! Email owner that refuses to update his or her Email,within
+Seven days of receiving this warning will lose his or her Email  
+permanently.
