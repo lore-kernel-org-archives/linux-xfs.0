@@ -1,33 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Jul 2008 21:12:01 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6E4BwUr015488
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 21:11:58 -0700
-Date: Mon, 14 Jul 2008 00:13:03 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs leaking?
-Message-ID: <20080714041303.GA5040@infradead.org>
-References: <4877928A.1020008@sandeen.net> <20080711233832.GH11558@disturbed> <4877FC4F.7020906@sandeen.net> <487810BE.5050701@sandeen.net> <487AD102.9020306@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Jul 2008 21:14:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6E4EOIq015959
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 21:14:25 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2C24E0884E
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 21:15:30 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id FONojpJFcV6kgk0U for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 21:15:30 -0700 (PDT)
+Message-ID: <487AD2E1.6030704@sandeen.net>
+Date: Sun, 13 Jul 2008 23:15:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Subject: Re: xfs leaking?
+References: <4877928A.1020008@sandeen.net> <20080711233832.GH11558@disturbed> <4877FC4F.7020906@sandeen.net> <487810BE.5050701@sandeen.net> <487AD102.9020306@sgi.com>
 In-Reply-To: <487AD102.9020306@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Goodwin <markgw@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: markgw@sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jul 14, 2008 at 02:07:30PM +1000, Mark Goodwin wrote:
->
->
+Mark Goodwin wrote:
+> 
 > Eric Sandeen wrote:
->>
 >> 2.6.26-rc9 passed without incident.
->
+> 
 > So what is the conclusion here? Because you just down-rev? Or do we have
 > an intermittent leak of some kind?
 
-The symptoms in the first post look like an inode leak, which is more
-likely to be in common code than in XFS.  I'd expect -rc9 just fixed it
-or Eric didn't manage to hit it as easily.
+haven't yet re-tested on -rc2... not 100% sure yet.  So far I'd be
+willing to chalk it up to something wrong in -rc2.
+
+-Eric
