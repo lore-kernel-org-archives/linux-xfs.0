@@ -1,61 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 13 Jul 2008 23:35:05 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6E6YW4X025542
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 23:34:33 -0700
-Received: from gprs189-60.eurotel.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C7A042EA21C
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 23:35:37 -0700 (PDT)
-Received: from gprs189-60.eurotel.cz (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id J1HuIoqnsvadFeW1 for <xfs@oss.sgi.com>; Sun, 13 Jul 2008 23:35:37 -0700 (PDT)
-Date: Mon, 14 Jul 2008 08:36:17 +0200
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [PATCH 3/3] Add timeout feature
-Message-ID: <20080714063617.GF31949@elf.ucw.cz>
-References: <E1KGT4q-0006fD-Jb@pomaz-ex.szeredi.hu> <20080708234120.5072111f@infradead.org> <E1KGTTm-0006ke-Jh@pomaz-ex.szeredi.hu> <20080708235502.1c52a586@infradead.org> <20080709071346.GS11558@disturbed> <20080709110900.GI9957@mit.edu> <20080709114958.GV11558@disturbed> <4874C3E8.20804@hp.com> <20080713120602.GC7517@elf.ucw.cz> <487A383F.50600@hp.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 00:03:36 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6E73OsG029374
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 00:03:27 -0700
+From: tes@sgi.com
+Date: Mon, 14 Jul 2008 17:04:31 +1000
+Subject: [PATCH] fix up delta calculation for
+ xfs_bmap_add_extent_unwritten_real
+Message-ID: <487afa7f.JM4ZHhEHVRIFNZ+O%tes@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <487A383F.50600@hp.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: jim owens <jowens@hp.com>
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Theodore Tso <tytso@mit.edu>, Arjan van de Ven <arjan@infradead.org>, Miklos Szeredi <miklos@szeredi.hu>, hch@infradead.org, t-sato@yk.jp.nec.com, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, mtk.manpages@googlemail.com
+To: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-On Sun 2008-07-13 13:15:43, jim owens wrote:
-> Pavel Machek wrote:
->
->>> This means ONLY SOME metadata (or no metadata) is flushed and
->>> then all metadata updates are stopped.  User/kernel writes
->>> to already allocated file pages WILL go to a frozen disk.
->>
->> That's the difference here. They do write file data, and thus avoid
->> mmap()-writes problem.
->>
->> ...and they _still_ provide auto-thaw.
->> 								Pavel
->
-> One of the hardest things to make people understand is that
-> stopping file data writes in the filesystem during a freeze
-> is not just dangerous, it is also __worthless__ unless you
-> have a complete "user environment freeze" mechanism.
+pv#984030
+Patch provided by olaf@sgi.com and has been reviewed
+but putting out there for others to see the change.
 
-Eh?
+A bug was found in xfs_bmap_add_extent_unwritten_real() which will
+not affect xfs in its normal use.
+In a particular case, the delta param which is supposed to describe
+the region where extents have changed was not updated appropriately.
 
-> And unless each independent component has a freeze and they
-> can all be coordinated, the data in the pipeline is never
-> stable enough to say "if you stop all writes to disk and
-> take a snapshot, this is the same as an orderly shutdown,
-> backup, restore, and startup".
+The case of interest is:
+   1707         case 0:
+   1708                 /*
+   1709                  * Setting the middle part of a previous oldext extent to
+   1710                  * newext.  Contiguity is impossible here.
+   1711                  * One extent becomes three extents.
+   1712                  */
 
-If you also freeze data writes, at least snapshot is not worse than
-_unexpected_ shutdown.
+where we are not left-filling (on LHS) or right-filling (on RHS) and so
+are also not contiguous with neighbours. But we are in the middle.
 
-And apps should already be ready for unexpected shutdowns (using fsync
-etc).
+PREV:------------------------------------------------------------>|
+-----------------------|--------------------|----------------------
+|  cur->bc_rec.b  LHS  |    r[0] = new      |    r[1] RHS         |
+-----------------------|--------------------|----------------------
 
-								Pavel
+So our new extent is in the middle and r[1] is on the RHS.
+The LHS, cur, is set to PREV after making PREV's count smaller
+to its new size. However, this means that our original PREV's count
+is no longer covering the whole range.
+So Olaf's change leave's PREV alone and just updates cur->bc_rec.b to have
+PREV's contents and decrements its new count.
+Mainly, because below we calculate the delta based on the PREV values
+(in particular expecting the original block count).
+We are not using PREV anywhere else after that AFAICS so I think the
+change is safe from causing a regression elsewhere.
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+--Tim
+
+ xfs_bmap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+Index: 2.6.x-xfs-quilt/fs/xfs/xfs_bmap.c
+===================================================================
+--- 2.6.x-xfs-quilt.orig/fs/xfs/xfs_bmap.c	2008-07-04 15:34:38.000000000 +1000
++++ 2.6.x-xfs-quilt/fs/xfs/xfs_bmap.c	2008-07-09 16:24:17.250532483 +1000
+@@ -1740,9 +1740,9 @@ xfs_bmap_add_extent_unwritten_real(
+ 				r[1].br_state)))
+ 				goto done;
+ 			/* new left extent - oldext */
+-			PREV.br_blockcount =
+-				new->br_startoff - PREV.br_startoff;
+ 			cur->bc_rec.b = PREV;
++			cur->bc_rec.b.br_blockcount =
++				new->br_startoff - PREV.br_startoff;
+ 			if ((error = xfs_bmbt_insert(cur, &i)))
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
