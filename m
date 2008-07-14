@@ -1,88 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 06:41:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6EDfnK4003880
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:41:49 -0700
-Received: from rproxy.teamix.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5E462EBAA3
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:42:54 -0700 (PDT)
-Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id K0WIBsNOBAz57LdC for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:42:54 -0700 (PDT)
-Received: from nb27steigerwald.qs.de (unknown [212.204.70.254])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by rproxy.teamix.net (Postfix) with ESMTP id DEFA98144
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 15:42:52 +0200 (CEST)
-From: Martin Steigerwald <ms@teamix.de>
-Subject: Is it possible the check an frozen XFS filesytem to avoid downtime
-Date: Mon, 14 Jul 2008 15:42:51 +0200
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 07:03:41 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6EE3Z8s005780
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 07:03:37 -0700
+Received: from g1t0027.austin.hp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 645D8E1007D
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 07:04:43 -0700 (PDT)
+Received: from g1t0027.austin.hp.com (g1t0027.austin.hp.com [15.216.28.34]) by cuda.sgi.com with ESMTP id KVWiI5iaIyQDM548 for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 07:04:43 -0700 (PDT)
+Message-ID: <487B5CEE.90404@hp.com>
+Date: Mon, 14 Jul 2008 10:04:30 -0400
+From: jim owens <jowens@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Subject: Re: [PATCH 3/3] Add timeout feature
+References: <20080709005254.GQ11558@disturbed> <20080709010922.GE9957@mit.edu> <E1KGSvZ-0006dB-53@pomaz-ex.szeredi.hu> <20080709061621.GA5260@infradead.org> <E1KGT4q-0006fD-Jb@pomaz-ex.szeredi.hu> <20080708234120.5072111f@infradead.org> <E1KGTTm-0006ke-Jh@pomaz-ex.szeredi.hu> <20080708235502.1c52a586@infradead.org> <20080709071346.GS11558@disturbed> <20080709110900.GI9957@mit.edu> <20080709114958.GV11558@disturbed> <4874C3E8.20804@hp.com> <88E7CDF01964465CB9F33DE11298271D@nsl.ad.nec.co.jp>
+In-Reply-To: <88E7CDF01964465CB9F33DE11298271D@nsl.ad.nec.co.jp>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <200807141542.51613.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: mtk.manpages@googlemail.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, dm-devel@redhat.com, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, viro@ZenIV.linux.org.uk, akpm@linux-foundation.org, pavel@suse.cz, linux-fsdevel@vger.kernel.org, hch@infradead.org, Miklos Szeredi <miklos@szeredi.hu>, Arjan van de Ven <arjan@infradead.org>, Theodore Tso <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>
 
+Takashi Sato wrote:
 
-Hi!
+> What is the difference between the timeout and AUTO-THAW?
+> When the kernel detects a deadlock, does it occur to solve it?
 
-We seen in-memory corruption on two XFS filesystem on a server heartbeat 
-cluster of one of our customers:
+TIMEOUT is a user-specified limit for the freeze.  It is
+not a deadlock preventer or deadlock breaker.  The reason
+it exists is:
 
+    - middle of the night (low but not zero users)
+    - cron triggers freeze and hardware snapshot
+    - san is overloaded by tape copy traffic so
+      hardware will take 2 hours to ack snapshot done
+    - user "company president" tries to create a report
+      needed for an AM meeting with bankers
+    - with so few users, system will just patiently
+      wait for hardware to finish
+    - after 10 minutes "company president" pages
+      admin, admin's boss, and "IT vice president"
+      in a real unhappy mood
 
-XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1563 of file 
-fs/xfs/xfs_alloc.c.  Caller 0xffffffff8824eb5d
+AUTO-THAW is simply a name for the effect of all deadlock
+preventer and deadlock breaker code that the kernel has
+in the freeze implementation paths... if that code would
+unfreeze the filesystem.  We also implemented deadlock
+preventer code that does not thaw the freeze.
 
-Call Trace:
- [<ffffffff8824cff3>] :xfs:xfs_free_ag_extent+0x1a6/0x6b5
- [<ffffffff8824eb5d>] :xfs:xfs_free_extent+0xa9/0xc9
- [<ffffffff88258636>] :xfs:xfs_bmap_finish+0xf0/0x169
- [<ffffffff88278b4c>] :xfs:xfs_itruncate_finish+0x180/0x2c1
- [<ffffffff8829071a>] :xfs:xfs_setattr+0x841/0xe59
- [<ffffffff8022e868>] sock_common_recvmsg+0x30/0x45
- [<ffffffff8829adc8>] :xfs:xfs_vn_setattr+0x121/0x144
- [<ffffffff8022a06d>] notify_change+0x156/0x2ef
- [<ffffffff883bf9c6>] :nfsd:nfsd_setattr+0x334/0x4b1
- [<ffffffff883c61d6>] :nfsd:nfsd3_proc_setattr+0xa2/0xae
- [<ffffffff883bb24d>] :nfsd:nfsd_dispatch+0xdd/0x19e
- [<ffffffff8833a10e>] :sunrpc:svc_process+0x3cb/0x6d9
- [<ffffffff8025b20b>] __down_read+0x12/0x9a
- [<ffffffff883bb816>] :nfsd:nfsd+0x192/0x2b0
- [<ffffffff80255f38>] child_rip+0xa/0x12
- [<ffffffff883bb684>] :nfsd:nfsd+0x0/0x2b0
- [<ffffffff80255f2e>] child_rip+0x0/0x12
+None of the AUTO-THAW code is there to stop a stupid
+userspace program caller of freeze.  It handles things
+like "a system in our cluster is going down so we
+must have this filesystem unfrozen or the whole
+cluster will crash".   In places where there could be
+a kernel deadlock we made it "lock-only-if-non-blocking"
+and if we could not wait to retry later, the failure
+to lock would trigger an immediate unfreeze.
 
-xfs_force_shutdown(dm-1,0x8) called from line 4261 of file fs/xfs/xfs_bmap.c.  
-Return address = 0xffffffff88258673
-Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down 
-filesystem: dm-1
-Please umount the filesystem, and rectify the problem(s)
+Deadlock prevention needs code in critical paths in more
+than just filesystems.  Sometimes this is as simple as
+an "I can't wait on freeze" flag added to a vm-filesystem
+interface.
 
-on
+Timers just don't work for keeping the kernel alive
+because they don't trigger on resource exhaustion.
 
-Linux version 2.6.21-1-amd64 (Debian 2.6.21-4~bpo.1) (nobse@backports.org) 
-(gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #1 SMP Tue Jun 5 
-07:43:32 UTC 2007
-
-
-We plan to do a takeover so that the server which appears to have memory 
-errors can be memtested. 
-
-After the takeover we would like to make sure that the XFS filesystems are 
-intact. Is it possible to do so without taking the filesystem completely 
-offline?
-
-I thought about mounting read only and it might be the best choice available, 
-but then it will *fail* write accesses. I would prefer if these are just 
-stalled.
-
-I tried xfs_freeze -f on my laptop home directory, but then did not machine to 
-get it check via xfs_check or xfs_repair -nd... is it possible at all?
-
-Ciao,
--- 
-Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
-gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
+jim
