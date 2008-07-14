@@ -1,76 +1,88 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 06:18:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 06:41:51 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6EDHw7E001776
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:17:58 -0700
-Received: from g4t0015.houston.hp.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 14F142EB6CF
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:19:05 -0700 (PDT)
-Received: from g4t0015.houston.hp.com (g4t0015.houston.hp.com [15.201.24.18]) by cuda.sgi.com with ESMTP id EE2xupV6dw1Z64VC for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:19:05 -0700 (PDT)
-Message-ID: <487B51DD.2080206@hp.com>
-Date: Mon, 14 Jul 2008 09:17:17 -0400
-From: jim owens <jowens@hp.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6EDfnK4003880
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:41:49 -0700
+Received: from rproxy.teamix.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5E462EBAA3
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:42:54 -0700 (PDT)
+Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id K0WIBsNOBAz57LdC for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 06:42:54 -0700 (PDT)
+Received: from nb27steigerwald.qs.de (unknown [212.204.70.254])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by rproxy.teamix.net (Postfix) with ESMTP id DEFA98144
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 15:42:52 +0200 (CEST)
+From: Martin Steigerwald <ms@teamix.de>
+Subject: Is it possible the check an frozen XFS filesytem to avoid downtime
+Date: Mon, 14 Jul 2008 15:42:51 +0200
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] Add timeout feature
-References: <E1KGT4q-0006fD-Jb@pomaz-ex.szeredi.hu> <20080708234120.5072111f@infradead.org> <E1KGTTm-0006ke-Jh@pomaz-ex.szeredi.hu> <20080708235502.1c52a586@infradead.org> <20080709071346.GS11558@disturbed> <20080709110900.GI9957@mit.edu> <20080709114958.GV11558@disturbed> <4874C3E8.20804@hp.com> <20080713120602.GC7517@elf.ucw.cz> <487A383F.50600@hp.com> <20080714063617.GF31949@elf.ucw.cz>
-In-Reply-To: <20080714063617.GF31949@elf.ucw.cz>
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200807141542.51613.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Pavel Machek <pavel@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Theodore Tso <tytso@mit.edu>, Arjan van de Ven <arjan@infradead.org>, Miklos Szeredi <miklos@szeredi.hu>, hch@infradead.org, t-sato@yk.jp.nec.com, akpm@linux-foundation.org, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, axboe@kernel.dk, mtk.manpages@googlemail.com
+To: xfs@oss.sgi.com
 
-Pavel Machek wrote:
 
-> If you also freeze data writes, at least snapshot is not worse than
-> _unexpected_ shutdown.
+Hi!
 
-True.  But the key point is also that stopping file writes is
-__no better__ than an unexpected shutdown for applications.
+We seen in-memory corruption on two XFS filesystem on a server heartbeat 
+cluster of one of our customers:
 
-Once kernel people accept that it is identical to an unknown
-shutdown state, they realize that as you said...
 
-> And apps should already be ready for unexpected shutdowns (using fsync
-> etc).
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1563 of file 
+fs/xfs/xfs_alloc.c.  Caller 0xffffffff8824eb5d
 
-The people writing the code outside the kernel are the ones
-responsible for the logic of handling "we don't know what
-application writes made it to disk".
+Call Trace:
+ [<ffffffff8824cff3>] :xfs:xfs_free_ag_extent+0x1a6/0x6b5
+ [<ffffffff8824eb5d>] :xfs:xfs_free_extent+0xa9/0xc9
+ [<ffffffff88258636>] :xfs:xfs_bmap_finish+0xf0/0x169
+ [<ffffffff88278b4c>] :xfs:xfs_itruncate_finish+0x180/0x2c1
+ [<ffffffff8829071a>] :xfs:xfs_setattr+0x841/0xe59
+ [<ffffffff8022e868>] sock_common_recvmsg+0x30/0x45
+ [<ffffffff8829adc8>] :xfs:xfs_vn_setattr+0x121/0x144
+ [<ffffffff8022a06d>] notify_change+0x156/0x2ef
+ [<ffffffff883bf9c6>] :nfsd:nfsd_setattr+0x334/0x4b1
+ [<ffffffff883c61d6>] :nfsd:nfsd3_proc_setattr+0xa2/0xae
+ [<ffffffff883bb24d>] :nfsd:nfsd_dispatch+0xdd/0x19e
+ [<ffffffff8833a10e>] :sunrpc:svc_process+0x3cb/0x6d9
+ [<ffffffff8025b20b>] __down_read+0x12/0x9a
+ [<ffffffff883bb816>] :nfsd:nfsd+0x192/0x2b0
+ [<ffffffff80255f38>] child_rip+0xa/0x12
+ [<ffffffff883bb684>] :nfsd:nfsd+0x0/0x2b0
+ [<ffffffff80255f2e>] child_rip+0x0/0x12
 
-Remember that immediately after fsync(), the next write
-can make the file inconsistent.  For example, look at this
-simple sales processing database type sequence:
+xfs_force_shutdown(dm-1,0x8) called from line 4261 of file fs/xfs/xfs_bmap.c.  
+Return address = 0xffffffff88258673
+Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down 
+filesystem: dm-1
+Please umount the filesystem, and rectify the problem(s)
 
-    write(sale_last_name_file, "Mackek"
-    write(sale_first_name_file, "Pavel")
-    fsync(sale_last_name_file)
-    fsync(sale_first_name_file)
-       ...
-    write(sale_last_name_file, "Owens")
-    write(sale_first_name_file, "Jim")
-    fsync(sale_last_name_file)
+on
 
-FREEZEFS [defined to NOT allow file data writes]
+Linux version 2.6.21-1-amd64 (Debian 2.6.21-4~bpo.1) (nobse@backports.org) 
+(gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #1 SMP Tue Jun 5 
+07:43:32 UTC 2007
 
-So if we restart from that snapshot, the sales order
-thinks the customer is "Pavel Owens"... unless there
-is some mechanism such as seqence numbers that tie
-the files together.  And if they have such a mechanism
-then it doesn't matter if we allow even more writes
-such as:
 
-    write(sale_first_name_file, "Ted")
+We plan to do a takeover so that the server which appears to have memory 
+errors can be memtested. 
 
-There just is no way inside the kernel to know a
-freeze was triggered at a stable application point
-such that data before the freeze must be on disk
-and data after the freez must not go to disk.
+After the takeover we would like to make sure that the XFS filesystems are 
+intact. Is it possible to do so without taking the filesystem completely 
+offline?
 
-This issue is not unique to freeze, it is also
-present with filesystems that have snapshots and
-cow/versioning built in.
+I thought about mounting read only and it might be the best choice available, 
+but then it will *fail* write accesses. I would prefer if these are just 
+stalled.
 
-jim
+I tried xfs_freeze -f on my laptop home directory, but then did not machine to 
+get it check via xfs_check or xfs_repair -nd... is it possible at all?
+
+Ciao,
+-- 
+Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
+gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
