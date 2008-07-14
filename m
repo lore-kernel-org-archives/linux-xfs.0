@@ -1,35 +1,81 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 01:15:41 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6E8FEB1007217
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 01:15:14 -0700
-Received: from uplift.swm.pp.se (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B35762EAA0F
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 01:16:20 -0700 (PDT)
-Received: from uplift.swm.pp.se (swm.pp.se [212.247.200.143]) by cuda.sgi.com with ESMTP id baZ1tc95x9DfGgwB for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 01:16:20 -0700 (PDT)
-Date: Mon, 14 Jul 2008 10:16:19 +0200 (CEST)
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 05:12:38 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6ECCWLH028552
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 05:12:34 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6429018C77DC
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 05:13:37 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id a2IG1b0UctWbpmlq for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 05:13:37 -0700 (PDT)
+Date: Mon, 14 Jul 2008 22:13:32 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs bug in 2.6.26-rc9
-In-Reply-To: <20080714073035.GV29319@disturbed>
-Message-ID: <alpine.DEB.1.10.0807141015010.30192@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.0807110939520.30192@uplift.swm.pp.se> <20080711084248.GU29319@disturbed> <alpine.DEB.1.10.0807111215040.30192@uplift.swm.pp.se> <20080714073035.GV29319@disturbed>
+Message-ID: <20080714121332.GX29319@disturbed>
+References: <alpine.DEB.1.10.0807110939520.30192@uplift.swm.pp.se> <20080711084248.GU29319@disturbed> <alpine.DEB.1.10.0807111215040.30192@uplift.swm.pp.se> <487B019B.9090401@sgi.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <487B019B.9090401@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org
 
-On Mon, 14 Jul 2008, Dave Chinner wrote:
+On Mon, Jul 14, 2008 at 05:34:51PM +1000, Lachlan McIlroy wrote:
+> Mikael Abrahamsson wrote:
+>> On Fri, 11 Jul 2008, Dave Chinner wrote:
+>>
+>>> That aside, what was the assert failure reported prior to the oops?  
+>>> i.e. paste the lines in the log before the ---[ cut here ]--- line?  
+>>> One of them will start with 'Assertion failed:', I think....
+>>
+>> These ones?
+>>
+>> Jul  8 04:44:56 via kernel: [554197.888008] Assertion failed: whichfork 
+>> == XFS_ATTR_FORK || ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c,  
+>> line: 5879
+>> Jul  9 03:25:21 via kernel: [42940.748007] Assertion failed: whichfork  
+>> == XFS_ATTR_FORK || ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c,  
+>> line: 5879
+>
+> 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>
+> 	if (whichfork == XFS_DATA_FORK &&
+> 		(ip->i_delayed_blks || ip->i_size > ip->i_d.di_size)) {
+> 		/* xfs_fsize_t last_byte = xfs_file_last_byte(ip); */
+> 		error = xfs_flush_pages(ip, (xfs_off_t)0,
+> 					       -1, 0, FI_REMAPF);
+> 		if (error) {
+> 			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> 		return error;
+> 		}
+> 	}
+>
+> 	ASSERT(whichfork == XFS_ATTR_FORK || ip->i_delayed_blks == 0);
+>
+> This is a race between xfs_fsr and a mmap write. xfs_fsr acquires the
+> iolock and then flushes the file and because it has the iolock it doesn't
+> expect any new delayed allocations to occur.  A mmap write can allocate
+> delayed allocations without acquiring the iolock so is able to get in
+> after the flush but before the ASSERT.
 
-> Can you find the file it is failing on and run 'xfs_bmap -vvp <file>' to 
-> just extract the extent map outside the context of xfs_fsr?
+Christoph and I were contemplating this problem with ->page_mkwrite
+reecently. The problem is that we can't, right now, return an
+EAGAIN-like error to ->page_mkwrite() and have it retry the
+page fault. Other parts of the page faulting code can do this,
+so it seems like a solvable problem.
 
-It's run twice without any errors now, so I guess I can't reproduce it 
-anymore. If it happens again, how can I find out which file is causing the 
-problem? I looked at the xfs_fsr man page and it didn't say much, would it 
-help if I ran it in "-v" mode?
+The basic concept is that if we can return a EAGAIN result we can
+try-lock the inode and hold the locks necessary to avoid this race
+or prevent the page fault from dirtying the page until the
+filesystem is unfrozen.
 
+Added linux-mm to the cc list for discussion.
+
+Cheers,
+
+Dave.
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Dave Chinner
+david@fromorbit.com
