@@ -1,69 +1,90 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 19:07:07 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 14 Jul 2008 19:37:27 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6F270Pa007203
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 19:07:02 -0700
-Message-ID: <487C07A4.70202@sgi.com>
-Date: Tue, 15 Jul 2008 12:12:52 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6F2bLP3009249
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2008 19:37:22 -0700
+Message-ID: <487C0ECD.5050205@sgi.com>
+Date: Tue, 15 Jul 2008 12:43:25 +1000
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: xfs bug in 2.6.26-rc9
-References: <alpine.DEB.1.10.0807110939520.30192@uplift.swm.pp.se> <20080711084248.GU29319@disturbed> <alpine.DEB.1.10.0807111215040.30192@uplift.swm.pp.se> <487B019B.9090401@sgi.com> <20080714121332.GX29319@disturbed>
-In-Reply-To: <20080714121332.GX29319@disturbed>
+Subject: Re: [PATCH] fix up delta calculation for xfs_bmap_add_extent_unwritten_real
+References: <487afa7f.JM4ZHhEHVRIFNZ+O%tes@sgi.com>
+In-Reply-To: <487afa7f.JM4ZHhEHVRIFNZ+O%tes@sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org
+To: tes@sgi.com
+Cc: xfs-dev@sgi.com, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Jul 14, 2008 at 05:34:51PM +1000, Lachlan McIlroy wrote:
->> Mikael Abrahamsson wrote:
->>> On Fri, 11 Jul 2008, Dave Chinner wrote:
->>>
->>>> That aside, what was the assert failure reported prior to the oops?  
->>>> i.e. paste the lines in the log before the ---[ cut here ]--- line?  
->>>> One of them will start with 'Assertion failed:', I think....
->>> These ones?
->>>
->>> Jul  8 04:44:56 via kernel: [554197.888008] Assertion failed: whichfork 
->>> == XFS_ATTR_FORK || ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c,  
->>> line: 5879
->>> Jul  9 03:25:21 via kernel: [42940.748007] Assertion failed: whichfork  
->>> == XFS_ATTR_FORK || ip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap.c,  
->>> line: 5879
->> 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
->>
->> 	if (whichfork == XFS_DATA_FORK &&
->> 		(ip->i_delayed_blks || ip->i_size > ip->i_d.di_size)) {
->> 		/* xfs_fsize_t last_byte = xfs_file_last_byte(ip); */
->> 		error = xfs_flush_pages(ip, (xfs_off_t)0,
->> 					       -1, 0, FI_REMAPF);
->> 		if (error) {
->> 			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->> 		return error;
->> 		}
->> 	}
->>
->> 	ASSERT(whichfork == XFS_ATTR_FORK || ip->i_delayed_blks == 0);
->>
->> This is a race between xfs_fsr and a mmap write. xfs_fsr acquires the
->> iolock and then flushes the file and because it has the iolock it doesn't
->> expect any new delayed allocations to occur.  A mmap write can allocate
->> delayed allocations without acquiring the iolock so is able to get in
->> after the flush but before the ASSERT.
+Looks good to me.
+
+I can't understand why this code is inconsistent with the other cases
+- no other cases adjusts PREV or the cursor (other than the state).
+To be consistent it would update PREV to become the new LHS by passing
+'new->br_startoff - PREV.br_startoff' into xfs_bmbt_update() and then
+inserting r[0] and r[1] although that way would require an extra call
+to xfs_bmbt_increment().
+
+tes@sgi.com wrote:
+> pv#984030
+> Patch provided by olaf@sgi.com and has been reviewed
+> but putting out there for others to see the change.
 > 
-> Christoph and I were contemplating this problem with ->page_mkwrite
-> reecently. The problem is that we can't, right now, return an
-> EAGAIN-like error to ->page_mkwrite() and have it retry the
-> page fault. Other parts of the page faulting code can do this,
-> so it seems like a solvable problem.
+> A bug was found in xfs_bmap_add_extent_unwritten_real() which will
+> not affect xfs in its normal use.
+> In a particular case, the delta param which is supposed to describe
+> the region where extents have changed was not updated appropriately.
 > 
-> The basic concept is that if we can return a EAGAIN result we can
-> try-lock the inode and hold the locks necessary to avoid this race
-> or prevent the page fault from dirtying the page until the
-> filesystem is unfrozen.
-Why do we need to try-lock the inode?  Will we have an ABBA deadlock
-if we block on the iolock in ->page_mkwrite()?
+> The case of interest is:
+>    1707         case 0:
+>    1708                 /*
+>    1709                  * Setting the middle part of a previous oldext extent to
+>    1710                  * newext.  Contiguity is impossible here.
+>    1711                  * One extent becomes three extents.
+>    1712                  */
+> 
+> where we are not left-filling (on LHS) or right-filling (on RHS) and so
+> are also not contiguous with neighbours. But we are in the middle.
+> 
+> PREV:------------------------------------------------------------>|
+> -----------------------|--------------------|----------------------
+> |  cur->bc_rec.b  LHS  |    r[0] = new      |    r[1] RHS         |
+> -----------------------|--------------------|----------------------
+> 
+> So our new extent is in the middle and r[1] is on the RHS.
+> The LHS, cur, is set to PREV after making PREV's count smaller
+> to its new size. However, this means that our original PREV's count
+> is no longer covering the whole range.
+> So Olaf's change leave's PREV alone and just updates cur->bc_rec.b to have
+> PREV's contents and decrements its new count.
+> Mainly, because below we calculate the delta based on the PREV values
+> (in particular expecting the original block count).
+> We are not using PREV anywhere else after that AFAICS so I think the
+> change is safe from causing a regression elsewhere.
+> 
+> --Tim
+> 
+>  xfs_bmap.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> Index: 2.6.x-xfs-quilt/fs/xfs/xfs_bmap.c
+> ===================================================================
+> --- 2.6.x-xfs-quilt.orig/fs/xfs/xfs_bmap.c	2008-07-04 15:34:38.000000000 +1000
+> +++ 2.6.x-xfs-quilt/fs/xfs/xfs_bmap.c	2008-07-09 16:24:17.250532483 +1000
+> @@ -1740,9 +1740,9 @@ xfs_bmap_add_extent_unwritten_real(
+>  				r[1].br_state)))
+>  				goto done;
+>  			/* new left extent - oldext */
+> -			PREV.br_blockcount =
+> -				new->br_startoff - PREV.br_startoff;
+>  			cur->bc_rec.b = PREV;
+> +			cur->bc_rec.b.br_blockcount =
+> +				new->br_startoff - PREV.br_startoff;
+>  			if ((error = xfs_bmbt_insert(cur, &i)))
+>  				goto done;
+>  			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
+> 
+> 
+> 
