@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jul 2008 00:43:13 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6F7hB4W009682
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:43:11 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jul 2008 00:46:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6F7kDwf010161
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:46:13 -0700
 Received: from rproxy.teamix.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0ACB11BB86BD
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:44:15 -0700 (PDT)
-Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id JcVCWNswDKaIefHX for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:44:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F00A3E213C8
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:47:20 -0700 (PDT)
+Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id qiBUppcJx3bXWsiK for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 00:47:20 -0700 (PDT)
 From: Martin Steigerwald <ms@teamix.de>
 Subject: Re: Is it possible the check an frozen XFS filesytem to avoid downtime
-Date: Tue, 15 Jul 2008 09:44:12 +0200
+Date: Tue, 15 Jul 2008 09:47:17 +0200
 References: <200807141542.51613.ms@teamix.de> <487C1BAF.2030404@sgi.com>
 In-Reply-To: <487C1BAF.2030404@sgi.com>
 MIME-Version: 1.0
@@ -17,7 +17,7 @@ Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-Message-Id: <200807150944.13277.ms@teamix.de>
+Message-Id: <200807150947.17727.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
@@ -26,9 +26,7 @@ Cc: xfs@oss.sgi.com
 
 Am Dienstag, 15. Juli 2008 05:38:23 schrieb Timothy Shimmin:
 > Hi Martin,
-
-Hi Tim,
-
+>
 > Martin Steigerwald wrote:
 > > Hi!
 > >
@@ -92,55 +90,23 @@ Hi Tim,
 > change things) it wouldn't work.
 > However, I think it could/should be changed to make it work.
 
-Okay... we recommended the customer to do it the safe way unmounting the 
-filesystem completely. He did and the filesystem appear to be intact *phew*. 
-XFS appeared to detect the in memory corruption early enough.
+I am wondering whether it would need to set an option at all.
 
-Its a bit strange however, cause we now know that the server sports ECC RAM. 
-Well we will see what memtest86+ has to say about it.
+Shouldn't checking a filesystem that is not being written too be safe? So 
+xfs_check and xfs_repair -n could just check whether fs is readonly or frozen 
+and if so continue without requiring a special option? They can print the 
+fact aka
 
-> My notes from the SGI bug:
->
-> 958642: running xfs_check and "xfs_repair -n" on a frozen xfs filesystem
->
-> > We've been asked a few times about the possibility of running xfs_check
-> > or xfs_repair -n on a frozen filesystem.
-> > And a while back I looked into what some of the hinderances were.
-> > And now I've forgotten ;-))
-> >
-> > I think there are hinderances for libxfs_init (check_open()) and
-> > for having a dirty log.
-> >
-> > For libxfs_init, I found that I couldn't run the tools without error'ing
-> > out. I think I found out that I needed the INACTIVE flag,
-> > without READONLY/DANGEROUSLY, like xfs_logprint does.
-> >
-> > ----------------------------------------
-> > Date: Thu, 19 Oct 2006 11:24:06 +1000
-> > From: Timothy Shimmin <tes@sgi.com>
-> > To: lachlan@sgi.com
-> > cc: xfs-dev@sgi.com
-> > Subject: Re: init.c patch
-> > ------------------------------------------------------
-> >   Ok, my understanding of the READONLY/DANGEROUSLY flags were wrong.
-> >   I thought they were just overriding flags when you were guaranteeing
-> > you were only reading and it would be more permissive,
-> >   but they are for doing stuff on readonly (ro) mounts.
-> >
-> >   They are rather confusing to me. When you go with defaults for repair
-> > and db then it doesn't set the INACTIVE flag.
-> >   It means if I do _not_ want to be fatal then I need to set INACTIVE but
-> > not set READONLY or DANGEROUSLY - which is what logprint does.
-> >
+Checking a frozen filesystem
 
-I think that there should be different options for readonly / frozen fs 
-checking and dangerous repair... since I think readonly checks are a 
-different thing than repairing a mounted filesystem and hoping that the 
-running XFS will not choke upon the filesystem that xfs_repair changes under 
-its hood.
+or 
 
-I expected a "-r" for read only in xfs_check and xfs_repair, well but for 
-xfs_repair this option is already taken for specifying the realtime volume.
+Checking a read only filesystem
+
+in the beginning tough.
+
+Only thing is the log itself... when that is not cleared upon a freeze or 
+readonly mount, it might be a problem for xfs_check and xfs_repair -n.
 
 Ciao,
 -- 
