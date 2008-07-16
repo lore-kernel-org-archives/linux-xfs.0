@@ -1,55 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jul 2008 00:53:01 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G7qrFh012166
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:52:53 -0700
-Received: from rproxy.teamix.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 08BF018DB303
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:53:58 -0700 (PDT)
-Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id yKp7LQsAbbZ4rtzj for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:53:58 -0700 (PDT)
-From: Martin Steigerwald <ms@teamix.de>
-Subject: Re: Is it possible the check an frozen XFS filesytem to avoid downtime
-Date: Wed, 16 Jul 2008 09:53:56 +0200
-References: <200807141542.51613.ms@teamix.de> <200807150944.13277.ms@teamix.de> <487CC1EB.6030100@sandeen.net>
-In-Reply-To: <487CC1EB.6030100@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jul 2008 01:16:57 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G8GqLu014550
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 01:16:53 -0700
+Received: from rsbne02.RSBNE.LOCAL (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 13ED612E59D9
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 01:17:59 -0700 (PDT)
+Received: from rsbne02.RSBNE.LOCAL (robert87.lnk.telstra.net [203.45.17.90]) by cuda.sgi.com with ESMTP id dFwQ3o9mJBpHubVp for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 01:17:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: RE: Power loss causes bad magic number??
+Date: Wed, 16 Jul 2008 18:17:37 +1000
+Message-ID: <F46A887185FC6044A7FAC577E31118AE021E0625@rsbne01.RSBNE.LOCAL>
+References: <F46A887185FC6044A7FAC577E31118AE022316C0@rsbne01.RSBNE.LOCAL> <487D5F80.1050909@sandeen.net> <F46A887185FC6044A7FAC577E31118AE021E0623@rsbne01.RSBNE.LOCAL> <20080716073503.GE29319@disturbed>
+From: "Stephen Porter" <stephenp@r-s.com.au>
+Content-Type: text/plain
 Content-Disposition: inline
-Message-Id: <200807160953.56503.ms@teamix.de>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, sandeen@sandeen.net
 
-Am Dienstag, 15. Juli 2008 17:27:39 schrieb Eric Sandeen:
-> Martin Steigerwald wrote:
-> > Okay... we recommended the customer to do it the safe way unmounting the
-> > filesystem completely. He did and the filesystem appear to be intact
-> > *phew*. XFS appeared to detect the in memory corruption early enough.
-> >
-> > Its a bit strange however, cause we now know that the server sports ECC
-> > RAM. Well we will see what memtest86+ has to say about it.
->
-> in-memory corruption could mean, but certainly does not absolutely mean,
-> problematic memory.  It could be, and usually is, a plain ol' bug (in
-> xfs or elsewhere).
 
-Thanks. 
 
-Yes, I thought about this, too. But then the machine ran over one year without 
-any visible issues. And it happened only on one server, not on the other. It 
-happened on the server that does NFS tough... could be an NFS related issue 
-then. The other one does MySQL with the database stored on a XFS volume, too. 
-But there haven't been any visible issues.
 
-Well we will see whether it happens again on the server that has taken over 
-and is now doing both MySQL and NFS. If it does, I think we will update to 
-one of the lastest Debian Etch backport kernels (2.6.24 or even 2.6.25) on 
-one of the servers and see whether that helps.
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com]
 
--- 
-Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
-gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
+> That looks like a boot loader.
+
+That's what I thought, but again, this isn't a boot volume, could running xfs_repair without the -n have done this?
+
+> And at 0x200 I'd expect to see an AGF header, not zeros. To
+> me, that says that either XFS is inside a partition on the drive
+> or someone ran a partitioning tool on /dev/sdc and overwrote the
+> XFS filesystem headers...
+
+relevant line from /etc/fstab:
+
+/dev/sdc	/home/username/Data	xfs	defaults	0	2
+
+the raid management tool is reporting everythings ok... any idea what could have caused this?  
+
+....
+
+Ok, my apologies, I've just done an ls of /dev/sd* and the devices have been remapped (any idea what would have caused that?), sdc is no longer sdc, it is now sda, the boot devices are now detected as sdb and sdc (2 mirrored physical disks, used to be sda and sdb).  How was the machine able to boot?  I'm more confused than ever now, but the data is all there.
+
+Sorry for wasting everyones time.
+
+Regards,
+
+Stephen.
+
+
+
+
+[[HTML alternate version deleted]]
