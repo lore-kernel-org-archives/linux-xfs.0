@@ -1,104 +1,129 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jul 2008 19:38:57 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G2ctap012031
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 19:38:55 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0630AE28C74
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 19:40:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id Jp7wkW3YmNvSMGDH for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 19:40:02 -0700 (PDT)
-Message-ID: <487D5F80.1050909@sandeen.net>
-Date: Tue, 15 Jul 2008 21:40:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Power loss causes bad magic number??
-References: <F46A887185FC6044A7FAC577E31118AE022316C0@rsbne01.RSBNE.LOCAL>
-In-Reply-To: <F46A887185FC6044A7FAC577E31118AE022316C0@rsbne01.RSBNE.LOCAL>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jul 2008 21:13:56 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G4DIfd022356
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:13:19 -0700
+Received: from hosted05.westnet.com.au (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4900D18DA483
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:14:25 -0700 (PDT)
+Received: from hosted05.westnet.com.au (hosted05.westnet.com.au [203.10.1.219]) by cuda.sgi.com with ESMTP id WYkNppth0mz7yA2Z for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:14:25 -0700 (PDT)
+Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
+From: Ben Martin <monkeyiq@users.sourceforge.net>
+In-Reply-To: <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
+References: <1216130769.5633.318.camel@sam.localdomain>
+	 <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eqWGov+xheIdLAOn7Tit"
+Date: Wed, 16 Jul 2008 14:14:16 +1000
+Message-Id: <1216181656.5633.380.camel@sam.localdomain>
+Mime-Version: 1.0
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Stephen Porter <stephenp@r-s.com.au>
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Ben Martin <monkeyiq@users.sourceforge.net>
 
-Stephen Porter wrote:
-> Hello,
-> 
-> Hoping someone may be able to offer some advice/assistance.
-> 
-> I lost power twice (within a few hours) to my machine which had a ~2.2TB
-> XFS volume on it.  The first time the machine (running Xubuntu 8.04)
-> came back up ok, the second time the XFS volume will not mount.  Is
-> there any chance of recovering the data? /dev/sdc is seen by xubuntu as
-> one ~2.2TB disk, and I put the XFS file system straight onto the disk.
-> It's 4x750GB drives on a hardware raid controller (rocketraid 2320).
-> Driver/module for rocket raid (rr232x) is loaded ok.
+--=-eqWGov+xheIdLAOn7Tit
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-hm, not an in-kernel driver, I guess?
+On Tue, 2008-07-15 at 10:42 -0400, Justin Piszcz wrote:
+> What were the commands used when creating the XFS filesystem=20
+> (sunit,swidth)?
+>=20
+> Justin.
 
-> In the system log I see:
-> 
-> XFS: bad magic number
-> 
-> XFS: SB validate failed
-> 
-> I tried running xfs_check, the result of this was:
-> 
-> xfs_check /dev/sdc
-> xfs_check: unexpected XFS SB magic number 0x33c08ed0
-> xfs_check: size check failed
-> xfs_check: read failed: Invalid argument
-> xfs_check: data size check failed
-> xfs_check: failed to alloc -225176656 bytes: Cannot allocate memory
-> 
-> I looked at running xfs_repair, but the man page states that this will
-> only work on a volume that has been unmounted cleanly... as I lost power
-> the volume has not been unmounted cleanly, but I cannot mount it again
-> to unmount it cleanly.
+I noticed that on the hardware card I had to use nobarrier to get decent
+file metadata performance (create,del etc). I have noticed also recently
+on an 32gb Mtron SSD that with barriers enabled with XFS on the SSD
+metadata performance was an order of magnitude slower.
 
-If you have to, you can zero the log w/ xfs_repair as a last resort.
+The below is a snippit from the hardware RAID testing config. The XFS
+creation and mounting args are identical for software RAID.
 
-> Running xfs_repair gives the following:
-> 
-> xfs_repair -n /dev/sdc
-> 
-> Phase 1 - find and verify superblock...
-> 
-> bad primary superblock - bad magic number !!!
-> 
-> ...attempting to find secondary superblock...
-> 
-> ...found candidate secondary superblock... unable to verify superblock,
-> continuing...
+#!/bin/bash
 
-I always wished it said where, and why it did not verify....
+RAIDLEVEL=3D6
+CHUNK_SZ_KB=3D256
+PARITY_DRIVE_COUNT=3D2
+NON_PARITY_DRIVE_COUNT=3D4
+DEVICE=3D/dev/disk/by-id/scsi-SAdaptec_1024ktmpraid6
+...
+run_bonnie() {
+    fsdev=3D$1
+    mountopts=3D$2
+    N=3D256
 
-> (the above appears a few times, until finally)
-> 
-> ...Sorry, could not find valid secondary superblock
-> 
-> Exiting now.
-> 
-> I've seen it mentioned in other posts to the xfs archive to check that
-> there is an xfs volume there, so I've also included the output of "dd
-> if=/dev/sdc bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x" below:
-> 
-> $ dd if=/dev/sdc bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
-> 
-> 000000 c033 d08e 00bc fb7c 0750 1f50 befc 7c1b
-> 000010 1bbf 5006 b957 01e5 a4f3 bdcb 07be 04b1
+    mount -o "$mountopts" $DEVICE /mnt/tmpraid
+    chown ben /mnt/tmpraid
+    sync=20
+    sleep 1
+    sudo -u ben /usr/sbin/bonnie++ -q -m $fsdev -n $N -d \
+         /mnt/tmpraid >>/T/adaptec-raid
+${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-bonnie.csv
+    umount /mnt/tmpraid
+}
+
+...
+
+fsdev=3Dhardxfsdefaultnb
+mkfs.xfs -f -l lazy-count=3D1 \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+fsdev=3Dhardxfsalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+	-l lazy-count=3D1 \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+fsdev=3Dhardxfsdlalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+        -l lazy-count=3D1,sunit=3D$((CHUNK_SZ_KB*2)),size=3D128m \
+        $DEVICE
+run_bonnie $fsdev "nobarrier"
+
+# run iozone on it.
+fsdev=3Dhardxfsalign
+mkfs.xfs -f -s size=3D4096 \
+	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
+$NON_PARITY_DRIVE_COUNT)) \
+	-l lazy-count=3D1 \
+        $DEVICE
+mount -o "nobarrier" $DEVICE /mnt/tmpraid
+chown ben /mnt/tmpraid
+sync=20
+sleep 1
+sudo -u ben iozone -a -g 4G -f /mnt/tmpraid/iozone_file  \
+   >/T/adaptec-raid${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-iozone.txt
+umount /mnt/tmpraid
 
 
-Can you try piping it through "hexdump -C" instead, I'm more used to
-eyeballing that output :)
+>=20
+> On Wed, 16 Jul 2008, Ben Martin wrote:
+>=20
+> > Hi,
+> >  Apologies if posting this here is inappropriate but a recent article
+> > of mine compares the Linux Kernel RAID code to an $800 hardware RAID
+> > card and might be of interest to list members:
+> >
+> > http://www.linux.com/feature/140734
+> >
+> >
 
-You might also try looking a bit further:
+--=-eqWGov+xheIdLAOn7Tit
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-dd if=/dev/sdc bs=512 count=128 iflag=direct | hexdump -C | grep XFSB
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-to see if maybe the raid card does something else at the front of your
-disk and the superblock is further in, and something got scrambled up?
-Just a longshot....
+iEYEABECAAYFAkh9dZgACgkQsIKOrI+5WvME7wCgqDwC00Tb5gQlucvYwDJYdPEO
+UDAAoKUZnIWfmI+qX4+O27Zvm7RISOyQ
+=/Dwo
+-----END PGP SIGNATURE-----
 
--Eric
+--=-eqWGov+xheIdLAOn7Tit--
