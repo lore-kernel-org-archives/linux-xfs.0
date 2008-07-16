@@ -1,129 +1,376 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 15 Jul 2008 21:13:56 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G4DIfd022356
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:13:19 -0700
-Received: from hosted05.westnet.com.au (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4900D18DA483
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:14:25 -0700 (PDT)
-Received: from hosted05.westnet.com.au (hosted05.westnet.com.au [203.10.1.219]) by cuda.sgi.com with ESMTP id WYkNppth0mz7yA2Z for <xfs@oss.sgi.com>; Tue, 15 Jul 2008 21:14:25 -0700 (PDT)
-Subject: Re: Benchmarks: Linux Kernel RAID vs a Hardware RAID setup
-From: Ben Martin <monkeyiq@users.sourceforge.net>
-In-Reply-To: <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
-References: <1216130769.5633.318.camel@sam.localdomain>
-	 <alpine.DEB.1.10.0807151042320.20094@p34.internal.lan>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eqWGov+xheIdLAOn7Tit"
-Date: Wed, 16 Jul 2008 14:14:16 +1000
-Message-Id: <1216181656.5633.380.camel@sam.localdomain>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 16 Jul 2008 00:01:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6G71Awv002484
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:01:11 -0700
+Received: from rsbne02.RSBNE.LOCAL (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D72F7E29656
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:02:13 -0700 (PDT)
+Received: from rsbne02.RSBNE.LOCAL (robert87.lnk.telstra.net [203.45.17.90]) by cuda.sgi.com with ESMTP id MuvSyyh7wWHFImgh for <xfs@oss.sgi.com>; Wed, 16 Jul 2008 00:02:13 -0700 (PDT)
+MIME-Version: 1.0
+Subject: RE: Power loss causes bad magic number??
+Date: Wed, 16 Jul 2008 17:01:56 +1000
+Message-ID: <F46A887185FC6044A7FAC577E31118AE021E0623@rsbne01.RSBNE.LOCAL>
+References: <F46A887185FC6044A7FAC577E31118AE022316C0@rsbne01.RSBNE.LOCAL> <487D5F80.1050909@sandeen.net>
+From: "Stephen Porter" <stephenp@r-s.com.au>
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Ben Martin <monkeyiq@users.sourceforge.net>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
---=-eqWGov+xheIdLAOn7Tit
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Eric,
 
-On Tue, 2008-07-15 at 10:42 -0400, Justin Piszcz wrote:
-> What were the commands used when creating the XFS filesystem=20
-> (sunit,swidth)?
->=20
-> Justin.
+It's not an in-kernel driver, I need to rebuild it each time the kernel is updated.
 
-I noticed that on the hardware card I had to use nobarrier to get decent
-file metadata performance (create,del etc). I have noticed also recently
-on an 32gb Mtron SSD that with barriers enabled with XFS on the SSD
-metadata performance was an order of magnitude slower.
+The output of the dd command follows:
 
-The below is a snippit from the hardware RAID testing config. The XFS
-creation and mounting args are identical for software RAID.
+$ sudo dd if=/dev/sdc bs=512 count=128 iflag=direct | hexdump -C | grep XFSB
+128+0 records in
+128+0 records out
+65536 bytes (66 kB) copied, 0.0241381 s, 2.7 MB/s
 
-#!/bin/bash
+I thought the XFSB marked the start of the superblock... and it not being there would be a Bad Thing??
 
-RAIDLEVEL=3D6
-CHUNK_SZ_KB=3D256
-PARITY_DRIVE_COUNT=3D2
-NON_PARITY_DRIVE_COUNT=3D4
-DEVICE=3D/dev/disk/by-id/scsi-SAdaptec_1024ktmpraid6
-...
-run_bonnie() {
-    fsdev=3D$1
-    mountopts=3D$2
-    N=3D256
+without the "| grep XFSB" the output looks like:
 
-    mount -o "$mountopts" $DEVICE /mnt/tmpraid
-    chown ben /mnt/tmpraid
-    sync=20
-    sleep 1
-    sudo -u ben /usr/sbin/bonnie++ -q -m $fsdev -n $N -d \
-         /mnt/tmpraid >>/T/adaptec-raid
-${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-bonnie.csv
-    umount /mnt/tmpraid
-}
+$ sudo dd if=/dev/sdc bs=512 count=128 iflag=direct | hexdump -C
+00000000  33 c0 8e d0 bc 00 7c fb  50 07 50 1f fc be 1b 7c  |3.....|.P.P....||
+00000010  bf 1b 06 50 57 b9 e5 01  f3 a4 cb bd be 07 b1 04  |...PW...........|
+00000020  38 6e 00 7c 09 75 13 83  c5 10 e2 f4 cd 18 8b f5  |8n.|.u..........|
+00000030  83 c6 10 49 74 19 38 2c  74 f6 a0 b5 07 b4 07 8b  |...It.8,t.......|
+00000040  f0 ac 3c 00 74 fc bb 07  00 b4 0e cd 10 eb f2 88  |..<.t...........|
+00000050  4e 10 e8 46 00 73 2a fe  46 10 80 7e 04 0b 74 0b  |N..F.s*.F..~..t.|
+00000060  80 7e 04 0c 74 05 a0 b6  07 75 d2 80 46 02 06 83  |.~..t....u..F...|
+00000070  46 08 06 83 56 0a 00 e8  21 00 73 05 a0 b6 07 eb  |F...V...!.s.....|
+00000080  bc 81 3e fe 7d 55 aa 74  0b 80 7e 10 00 74 c8 a0  |..>.}U.t..~..t..|
+00000090  b7 07 eb a9 8b fc 1e 57  8b f5 cb bf 05 00 8a 56  |.......W.......V|
+000000a0  00 b4 08 cd 13 72 23 8a  c1 24 3f 98 8a de 8a fc  |.....r#..$?.....|
+000000b0  43 f7 e3 8b d1 86 d6 b1  06 d2 ee 42 f7 e2 39 56  |C..........B..9V|
+000000c0  0a 77 23 72 05 39 46 08  73 1c b8 01 02 bb 00 7c  |.w#r.9F.s......||
+000000d0  8b 4e 02 8b 56 00 cd 13  73 51 4f 74 4e 32 e4 8a  |.N..V...sQOtN2..|
+000000e0  56 00 cd 13 eb e4 8a 56  00 60 bb aa 55 b4 41 cd  |V......V.`..U.A.|
+000000f0  13 72 36 81 fb 55 aa 75  30 f6 c1 01 74 2b 61 60  |.r6..U.u0...t+a`|
+00000100  6a 00 6a 00 ff 76 0a ff  76 08 6a 00 68 00 7c 6a  |j.j..v..v.j.h.|j|
+00000110  01 6a 10 b4 42 8b f4 cd  13 61 61 73 0e 4f 74 0b  |.j..B....aas.Ot.|
+00000120  32 e4 8a 56 00 cd 13 eb  d6 61 f9 c3 49 6e 76 61  |2..V.....a..Inva|
+00000130  6c 69 64 20 70 61 72 74  69 74 69 6f 6e 20 74 61  |lid partition ta|
+00000140  62 6c 65 00 45 72 72 6f  72 20 6c 6f 61 64 69 6e  |ble.Error loadin|
+00000150  67 20 6f 70 65 72 61 74  69 6e 67 20 73 79 73 74  |g operating syst|
+00000160  65 6d 00 4d 69 73 73 69  6e 67 20 6f 70 65 72 61  |em.Missing opera|
+00000170  74 69 6e 67 20 73 79 73  74 65 6d 00 00 00 00 00  |ting system.....|
+00000180  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000001b0  00 00 00 00 00 2c 44 63  9d 08 9e 08 00 00 00 01  |.....,Dc........|
+000001c0  01 00 fd fe 3f 3c 3f 00  00 00 be f3 0e 00 00 00  |....?<?.........|
+000001d0  01 3d fd fe ff ff fd f3  0e 00 e5 cb 40 0e 00 00  |.=..........@...|
+000001e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000001f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 aa  |..............U.|
+00000200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00008200  20 be 03 00 80 79 07 00  ac 5f 00 00 11 b5 06 00  | ....y..._......|
+00008210  01 be 03 00 01 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008220  00 20 00 00 00 20 00 00  f8 0f 00 00 31 9a 1d 48  |. ... ......1..H|
+00008230  d0 9d 1d 48 01 00 1e 00  53 ef 01 00 01 00 00 00  |...H....S.......|
+00008240  00 00 00 00 00 00 00 00  00 00 00 00 01 00 00 00  |................|
+00008250  00 00 00 00 0b 00 00 00  80 00 00 00 00 00 00 00  |................|
+00008260  02 00 00 00 01 00 00 00  d6 ce 40 e9 33 3a 4d 30  |..........@.3:M0|
+00008270  8f 62 60 62 04 e9 34 24  62 6f 6f 74 00 00 00 00  |.b`b..4$boot....|
+00008280  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00008600  04 00 00 00 05 00 00 00  06 00 00 00 00 00 e8 0f  |................|
+00008610  02 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008620  04 20 00 00 05 20 00 00  06 20 00 00 d2 10 f8 0f  |. ... ... ......|
+00008630  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008640  01 40 00 00 02 40 00 00  06 40 00 00 ff 1d f8 0f  |.@...@...@......|
+00008650  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008660  04 60 00 00 05 60 00 00  06 60 00 00 fc 1d f6 0f  |.`...`...`......|
+00008670  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008680  01 80 00 00 02 80 00 00  06 80 00 00 69 10 f8 0f  |............i...|
+00008690  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000086a0  04 a0 00 00 05 a0 00 00  06 a0 00 00 4b 0b f8 0f  |............K...|
+000086b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000086c0  01 c0 00 00 02 c0 00 00  06 c0 00 00 ff 1d f8 0f  |................|
+000086d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000086e0  04 e0 00 00 05 e0 00 00  06 e0 00 00 fc 1d f8 0f  |................|
+000086f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008700  01 00 01 00 02 00 01 00  06 00 01 00 ff 1d f8 0f  |................|
+00008710  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008720  04 20 01 00 05 20 01 00  06 20 01 00 fc 1d f8 0f  |. ... ... ......|
+00008730  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008740  01 40 01 00 02 40 01 00  06 40 01 00 ff 1d f8 0f  |.@...@...@......|
+00008750  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008760  01 60 01 00 02 60 01 00  06 60 01 00 ff 1d f8 0f  |.`...`...`......|
+00008770  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008780  01 80 01 00 02 80 01 00  06 80 01 00 ff 1d f8 0f  |................|
+00008790  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000087a0  01 a0 01 00 02 a0 01 00  06 a0 01 00 ff 1d f8 0f  |................|
+000087b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000087c0  01 c0 01 00 02 c0 01 00  06 c0 01 00 ff 1d f8 0f  |................|
+000087d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000087e0  01 e0 01 00 02 e0 01 00  06 e0 01 00 ff 1d f8 0f  |................|
+000087f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008800  01 00 02 00 02 00 02 00  06 00 02 00 ff 1d f8 0f  |................|
+00008810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008820  01 20 02 00 02 20 02 00  06 20 02 00 ff 1d f8 0f  |. ... ... ......|
+00008830  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008840  01 40 02 00 02 40 02 00  06 40 02 00 ff 1d f8 0f  |.@...@...@......|
+00008850  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008860  01 60 02 00 02 60 02 00  06 60 02 00 ff 1d f8 0f  |.`...`...`......|
+00008870  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008880  01 80 02 00 02 80 02 00  06 80 02 00 ff 1d f8 0f  |................|
+00008890  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000088a0  01 a0 02 00 02 a0 02 00  06 a0 02 00 ff 1d f8 0f  |................|
+000088b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000088c0  01 c0 02 00 02 c0 02 00  06 c0 02 00 ff 1d f8 0f  |................|
+000088d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000088e0  01 e0 02 00 02 e0 02 00  06 e0 02 00 ff 1d f8 0f  |................|
+000088f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008900  01 00 03 00 02 00 03 00  06 00 03 00 ff 1d f8 0f  |................|
+00008910  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008920  04 20 03 00 05 20 03 00  06 20 03 00 fc 1d f8 0f  |. ... ... ......|
+00008930  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008940  01 40 03 00 02 40 03 00  06 40 03 00 55 1d eb 0f  |.@...@...@..U...|
+00008950  01 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008960  04 60 03 00 05 60 03 00  06 60 03 00 fc 1d f8 0f  |.`...`...`......|
+00008970  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008980  01 80 03 00 02 80 03 00  06 80 03 00 ff 1d f8 0f  |................|
+00008990  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000089a0  01 a0 03 00 02 a0 03 00  06 a0 03 00 ff 1d f8 0f  |................|
+000089b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000089c0  01 c0 03 00 02 c0 03 00  06 c0 03 00 ff 1d f8 0f  |................|
+000089d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000089e0  01 e0 03 00 02 e0 03 00  06 e0 03 00 ff 1d f8 0f  |................|
+000089f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008a00  01 00 04 00 02 00 04 00  06 00 04 00 ff 1d f8 0f  |................|
+00008a10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008a20  01 20 04 00 02 20 04 00  06 20 04 00 ff 1d f8 0f  |. ... ... ......|
+00008a30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008a40  01 40 04 00 02 40 04 00  06 40 04 00 ff 1d f8 0f  |.@...@...@......|
+00008a50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008a60  01 60 04 00 02 60 04 00  06 60 04 00 ff 1d f8 0f  |.`...`...`......|
+00008a70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008a80  01 80 04 00 02 80 04 00  06 80 04 00 ff 1d f8 0f  |................|
+00008a90  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008aa0  01 a0 04 00 02 a0 04 00  06 a0 04 00 ff 1d f8 0f  |................|
+00008ab0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008ac0  01 c0 04 00 02 c0 04 00  06 c0 04 00 ff 1d f8 0f  |................|
+00008ad0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008ae0  01 e0 04 00 02 e0 04 00  06 e0 04 00 ff 1d f8 0f  |................|
+00008af0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008b00  01 00 05 00 02 00 05 00  06 00 05 00 ff 1d f8 0f  |................|
+00008b10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008b20  01 20 05 00 02 20 05 00  06 20 05 00 ff 1d f8 0f  |. ... ... ......|
+00008b30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008b40  01 40 05 00 02 40 05 00  06 40 05 00 ff 1d f8 0f  |.@...@...@......|
+00008b50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008b60  01 60 05 00 02 60 05 00  06 60 05 00 ff 1d f8 0f  |.`...`...`......|
+00008b70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008b80  01 80 05 00 02 80 05 00  06 80 05 00 ff 1d f8 0f  |................|
+00008b90  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008ba0  01 a0 05 00 02 a0 05 00  06 a0 05 00 ff 1d f8 0f  |................|
+00008bb0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008bc0  01 c0 05 00 02 c0 05 00  06 c0 05 00 ff 1d f8 0f  |................|
+00008bd0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008be0  01 e0 05 00 02 e0 05 00  06 e0 05 00 ff 1d f8 0f  |................|
+00008bf0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008c00  01 00 06 00 02 00 06 00  06 00 06 00 ff 1d f8 0f  |................|
+00008c10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008c20  04 20 06 00 05 20 06 00  06 20 06 00 fc 1d f8 0f  |. ... ... ......|
+00008c30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008c40  01 40 06 00 02 40 06 00  06 40 06 00 ff 1d f8 0f  |.@...@...@......|
+00008c50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008c60  01 60 06 00 02 60 06 00  06 60 06 00 ff 1d f8 0f  |.`...`...`......|
+00008c70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008c80  01 80 06 00 02 80 06 00  06 80 06 00 ff 1d f8 0f  |................|
+00008c90  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008ca0  01 a0 06 00 02 a0 06 00  06 a0 06 00 ff 1d f8 0f  |................|
+00008cb0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008cc0  01 c0 06 00 02 c0 06 00  06 c0 06 00 ff 1d f8 0f  |................|
+00008cd0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008ce0  01 e0 06 00 02 e0 06 00  06 e0 06 00 ff 1d f8 0f  |................|
+00008cf0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008d00  01 00 07 00 02 00 07 00  06 00 07 00 ff 1d f8 0f  |................|
+00008d10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008d20  01 20 07 00 02 20 07 00  06 20 07 00 ff 1d f8 0f  |. ... ... ......|
+00008d30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008d40  01 40 07 00 02 40 07 00  06 40 07 00 ff 1d f8 0f  |.@...@...@......|
+00008d50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008d60  01 60 07 00 02 60 07 00  06 60 07 00 7e 17 f8 0f  |.`...`...`..~...|
+00008d70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00008d80  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
+*
+00009200  ff ff 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00009210  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00009680  ed 41 00 00 00 04 00 00  f7 42 04 48 a9 9d 1d 48  |.A.......B.H...H|
+00009690  a9 9d 1d 48 00 00 00 00  00 00 04 00 02 00 00 00  |...H............|
+000096a0  00 00 00 00 00 00 00 00  05 02 00 00 00 00 00 00  |................|
+000096b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00009b00  ed 41 00 00 00 30 00 00  12 9a 1d 48 12 9a 1d 48  |.A...0.....H...H|
+00009b10  12 9a 1d 48 00 00 00 00  00 00 02 00 18 00 00 00  |...H............|
+00009b20  00 00 00 00 00 00 00 00  06 02 00 00 07 02 00 00  |................|
+00009b30  08 02 00 00 09 02 00 00  0a 02 00 00 0b 02 00 00  |................|
+00009b40  0c 02 00 00 0d 02 00 00  0e 02 00 00 0f 02 00 00  |................|
+00009b50  10 02 00 00 11 02 00 00  00 00 00 00 00 00 00 00  |................|
+00009b60  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00009b80  a4 81 00 00 78 0e 1d 00  ab 9a 1d 48 ab 9a 1d 48  |....x......H...H|
+00009b90  95 45 fe 47 00 00 00 00  00 00 01 00 9a 0e 00 00  |.E.G............|
+00009ba0  00 00 00 00 00 00 00 00  12 02 00 00 13 02 00 00  |................|
+00009bb0  14 02 00 00 15 02 00 00  16 02 00 00 17 02 00 00  |................|
+00009bc0  18 02 00 00 19 02 00 00  1a 02 00 00 1b 02 00 00  |................|
+00009bd0  1c 02 00 00 1d 02 00 00  1e 02 00 00 1f 03 00 00  |................|
+00009be0  00 00 00 00 d9 e9 41 20  00 00 00 00 00 00 00 00  |......A ........|
+00009bf0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00009c00  a4 81 00 00 5c 38 01 00  ab 9a 1d 48 ab 9a 1d 48  |....\8.....H...H|
+00009c10  95 45 fe 47 00 00 00 00  00 00 01 00 a0 00 00 00  |.E.G............|
+00009c20  00 00 00 00 00 00 00 00  5f 09 00 00 60 09 00 00  |........_...`...|
+128+0 records in
+128+0 records out
+65536 bytes (66 kB) copied, 0.0243211 s, 2.7 MB/s
+00009c30  61 09 00 00 62 09 00 00  63 09 00 00 64 09 00 00  |a...b...c...d...|
+00009c40  65 09 00 00 66 09 00 00  67 09 00 00 68 09 00 00  |e...f...g...h...|
+00009c50  69 09 00 00 6a 09 00 00  6b 09 00 00 00 00 00 00  |i...j...k.......|
+00009c60  00 00 00 00 da e9 41 20  00 00 00 00 00 00 00 00  |......A ........|
+00009c70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00009c80  a4 81 00 00 cf 72 06 00  ab 9a 1d 48 ab 9a 1d 48  |.....r.....H...H|
+00009c90  95 45 fe 47 00 00 00 00  00 00 01 00 40 03 00 00  |.E.G........@...|
+00009ca0  00 00 00 00 00 00 00 00  af 09 00 00 b0 09 00 00  |................|
+00009cb0  b1 09 00 00 b2 09 00 00  b3 09 00 00 b4 09 00 00  |................|
+00009cc0  b5 09 00 00 b6 09 00 00  b7 09 00 00 b8 09 00 00  |................|
+00009cd0  b9 09 00 00 ba 09 00 00  bb 09 00 00 bc 0a 00 00  |................|
+00009ce0  00 00 00 00 db e9 41 20  00 00 00 00 00 00 00 00  |......A ........|
+00009cf0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00009d00  a4 81 00 00 34 bb 0d 00  ab 9a 1d 48 ab 9a 1d 48  |....4......H...H|
+00009d10  95 45 fe 47 00 00 00 00  00 00 01 00 e8 06 00 00  |.E.G............|
+00009d20  00 00 00 00 00 00 00 00  4f 0b 00 00 50 0b 00 00  |........O...P...|
+00009d30  51 0b 00 00 52 0b 00 00  53 0b 00 00 54 0b 00 00  |Q...R...S...T...|
+00009d40  55 0b 00 00 56 0b 00 00  57 0b 00 00 58 0b 00 00  |U...V...W...X...|
+00009d50  59 0b 00 00 5a 0b 00 00  5b 0b 00 00 5c 0c 00 00  |Y...Z...[...\...|
+00009d60  00 00 00 00 dc e9 41 20  00 00 00 00 00 00 00 00  |......A ........|
+00009d70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00009d80  a4 81 00 00 6b 1f 79 00  b5 9a 1d 48 c8 9a 1d 48  |....k.y....H...H|
+00009d90  be 9a 1d 48 00 00 00 00  00 00 01 00 d0 3c 00 00  |...H.........<..|
+00009da0  00 00 00 00 00 00 00 00  c3 0e 00 00 c4 0e 00 00  |................|
+00009db0  c5 0e 00 00 c6 0e 00 00  c7 0e 00 00 c8 0e 00 00  |................|
+00009dc0  c9 0e 00 00 ca 0e 00 00  cb 0e 00 00 cc 0e 00 00  |................|
+00009dd0  cd 0e 00 00 ce 0e 00 00  cf 0e 00 00 d0 0f 00 00  |................|
+00009de0  00 00 00 00 dd e9 41 20  00 00 00 00 00 00 00 00  |......A ........|
+00009df0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00010000
+cypr3ss@server1:~$ 
 
-...
+This volume isn't now, and has never been (as far as i can remember) a boot volume.
 
-fsdev=3Dhardxfsdefaultnb
-mkfs.xfs -f -l lazy-count=3D1 \
-        $DEVICE
-run_bonnie $fsdev "nobarrier"
+I also did some more googling and found this, which (afaict) is just a replication of the above, but thought it may help.
 
-fsdev=3Dhardxfsalign
-mkfs.xfs -f -s size=3D4096 \
-	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
-$NON_PARITY_DRIVE_COUNT)) \
-	-l lazy-count=3D1 \
-        $DEVICE
-run_bonnie $fsdev "nobarrier"
+$ sudo hexdump -C /dev/sdc | head
+00000000  33 c0 8e d0 bc 00 7c fb  50 07 50 1f fc be 1b 7c  |3.....|.P.P....||
+00000010  bf 1b 06 50 57 b9 e5 01  f3 a4 cb bd be 07 b1 04  |...PW...........|
+00000020  38 6e 00 7c 09 75 13 83  c5 10 e2 f4 cd 18 8b f5  |8n.|.u..........|
+00000030  83 c6 10 49 74 19 38 2c  74 f6 a0 b5 07 b4 07 8b  |...It.8,t.......|
+00000040  f0 ac 3c 00 74 fc bb 07  00 b4 0e cd 10 eb f2 88  |..<.t...........|
+00000050  4e 10 e8 46 00 73 2a fe  46 10 80 7e 04 0b 74 0b  |N..F.s*.F..~..t.|
+00000060  80 7e 04 0c 74 05 a0 b6  07 75 d2 80 46 02 06 83  |.~..t....u..F...|
+00000070  46 08 06 83 56 0a 00 e8  21 00 73 05 a0 b6 07 eb  |F...V...!.s.....|
+00000080  bc 81 3e fe 7d 55 aa 74  0b 80 7e 10 00 74 c8 a0  |..>.}U.t..~..t..|
+00000090  b7 07 eb a9 8b fc 1e 57  8b f5 cb bf 05 00 8a 56  |.......W.......V|
 
-fsdev=3Dhardxfsdlalign
-mkfs.xfs -f -s size=3D4096 \
-	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
-$NON_PARITY_DRIVE_COUNT)) \
-        -l lazy-count=3D1,sunit=3D$((CHUNK_SZ_KB*2)),size=3D128m \
-        $DEVICE
-run_bonnie $fsdev "nobarrier"
+I don't know what this output should look like when it's "correct", but I get the feeling this isn't right.
 
-# run iozone on it.
-fsdev=3Dhardxfsalign
-mkfs.xfs -f -s size=3D4096 \
-	-d sunit=3D$(($CHUNK_SZ_KB*2)),swidth=3D$(($CHUNK_SZ_KB*2*
-$NON_PARITY_DRIVE_COUNT)) \
-	-l lazy-count=3D1 \
-        $DEVICE
-mount -o "nobarrier" $DEVICE /mnt/tmpraid
-chown ben /mnt/tmpraid
-sync=20
-sleep 1
-sudo -u ben iozone -a -g 4G -f /mnt/tmpraid/iozone_file  \
-   >/T/adaptec-raid${RAIDLEVEL}-${CHUNK_SZ_KB}kb-chunks-iozone.txt
-umount /mnt/tmpraid
+Regards,
+
+Stephen.
+
+Stephen Porter wrote:
+> Hello,
+> 
+> Hoping someone may be able to offer some advice/assistance.
+> 
+> I lost power twice (within a few hours) to my machine which had a ~2.2TB
+> XFS volume on it.  The first time the machine (running Xubuntu 8.04)
+> came back up ok, the second time the XFS volume will not mount.  Is
+> there any chance of recovering the data? /dev/sdc is seen by xubuntu as
+> one ~2.2TB disk, and I put the XFS file system straight onto the disk.
+> It's 4x750GB drives on a hardware raid controller (rocketraid 2320).
+> Driver/module for rocket raid (rr232x) is loaded ok.
+
+hm, not an in-kernel driver, I guess?
+
+> In the system log I see:
+> 
+> XFS: bad magic number
+> 
+> XFS: SB validate failed
+> 
+> I tried running xfs_check, the result of this was:
+> 
+> xfs_check /dev/sdc
+> xfs_check: unexpected XFS SB magic number 0x33c08ed0
+> xfs_check: size check failed
+> xfs_check: read failed: Invalid argument
+> xfs_check: data size check failed
+> xfs_check: failed to alloc -225176656 bytes: Cannot allocate memory
+> 
+> I looked at running xfs_repair, but the man page states that this will
+> only work on a volume that has been unmounted cleanly... as I lost power
+> the volume has not been unmounted cleanly, but I cannot mount it again
+> to unmount it cleanly.
+
+If you have to, you can zero the log w/ xfs_repair as a last resort.
+
+> Running xfs_repair gives the following:
+> 
+> xfs_repair -n /dev/sdc
+> 
+> Phase 1 - find and verify superblock...
+> 
+> bad primary superblock - bad magic number !!!
+> 
+> ...attempting to find secondary superblock...
+> 
+> ...found candidate secondary superblock... unable to verify superblock,
+> continuing...
+
+I always wished it said where, and why it did not verify....
+
+> (the above appears a few times, until finally)
+> 
+> ...Sorry, could not find valid secondary superblock
+> 
+> Exiting now.
+> 
+> I've seen it mentioned in other posts to the xfs archive to check that
+> there is an xfs volume there, so I've also included the output of "dd
+> if=/dev/sdc bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x" below:
+> 
+> $ dd if=/dev/sdc bs=512 count=1 iflag=direct 2> /dev/null | od -Ax -x
+> 
+> 000000 c033 d08e 00bc fb7c 0750 1f50 befc 7c1b
+> 000010 1bbf 5006 b957 01e5 a4f3 bdcb 07be 04b1
 
 
->=20
-> On Wed, 16 Jul 2008, Ben Martin wrote:
->=20
-> > Hi,
-> >  Apologies if posting this here is inappropriate but a recent article
-> > of mine compares the Linux Kernel RAID code to an $800 hardware RAID
-> > card and might be of interest to list members:
-> >
-> > http://www.linux.com/feature/140734
-> >
-> >
+Can you try piping it through "hexdump -C" instead, I'm more used to
+eyeballing that output :)
 
---=-eqWGov+xheIdLAOn7Tit
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+You might also try looking a bit further:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+dd if=/dev/sdc bs=512 count=128 iflag=direct | hexdump -C | grep XFSB
 
-iEYEABECAAYFAkh9dZgACgkQsIKOrI+5WvME7wCgqDwC00Tb5gQlucvYwDJYdPEO
-UDAAoKUZnIWfmI+qX4+O27Zvm7RISOyQ
-=/Dwo
------END PGP SIGNATURE-----
+to see if maybe the raid card does something else at the front of your
+disk and the superblock is further in, and something got scrambled up?
+Just a longshot....
 
---=-eqWGov+xheIdLAOn7Tit--
+-Eric
+
+
+
+
+
+[[HTML alternate version deleted]]
