@@ -1,48 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Jul 2008 12:28:37 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Jul 2008 14:51:52 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6HJSWTM019655
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 12:28:32 -0700
-Received: from el-out-1112.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89073E52A7B
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 12:29:40 -0700 (PDT)
-Received: from el-out-1112.google.com (el-out-1112.google.com [209.85.162.177]) by cuda.sgi.com with ESMTP id DIrDT6QTGCC0ZO0C for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 12:29:40 -0700 (PDT)
-Received: by el-out-1112.google.com with SMTP id v27so30663ele.23
-        for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 12:29:39 -0700 (PDT)
-Message-ID: <19f34abd0807171229p724cc44ese3cb064a65fbd2c0@mail.gmail.com>
-Date: Thu, 17 Jul 2008 21:29:39 +0200
-From: "Vegard Nossum" <vegard.nossum@gmail.com>
-Subject: Re: latest -git: kernel BUG at fs/xfs/support/debug.c:54!
-In-Reply-To: <19f34abd0807171218u3de86ddbt506b0b4fa0548406@mail.gmail.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6HLpng0029889
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 14:51:50 -0700
+Received: from rsbne02.RSBNE.LOCAL (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FF49E5396A
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 14:52:56 -0700 (PDT)
+Received: from rsbne02.RSBNE.LOCAL (robert87.lnk.telstra.net [203.45.17.90]) by cuda.sgi.com with ESMTP id sRsQCCJk2ypeaA8Y for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 14:52:56 -0700 (PDT)
+Content-class: urn:content-classes:message
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-References: <19f34abd0807171046j425bebc6m8d8eb80a641e0e5b@mail.gmail.com>
-	 <487F980F.7070708@redhat.com>
-	 <19f34abd0807171218u3de86ddbt506b0b4fa0548406@mail.gmail.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: Power loss causes bad magic number??
+Date: Fri, 18 Jul 2008 07:52:43 +1000
+Message-ID: <F46A887185FC6044A7FAC577E31118AE02231846@rsbne01.RSBNE.LOCAL>
+In-Reply-To: <487F4AC5.3000806@thebarn.com>
+References: <F46A887185FC6044A7FAC577E31118AE022316C0@rsbne01.RSBNE.LOCAL> <487D5F80.1050909@sandeen.net> <F46A887185FC6044A7FAC577E31118AE021E0623@rsbne01.RSBNE.LOCAL> <20080716073503.GE29319@disturbed> <F46A887185FC6044A7FAC577E31118AE021E0625@rsbne01.RSBNE.LOCAL> <487F4AC5.3000806@thebarn.com>
+From: "Stephen Porter" <stephenp@r-s.com.au>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Tim Shimmin <xfs-masters@oss.sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@saeurebad.de>
-
-On Thu, Jul 17, 2008 at 9:18 PM, Vegard Nossum <vegard.nossum@gmail.com> wrote:
-> Thanks, you are right. I have adjusted my configuration, but I am
-> still able to produce this:
->
-> BUG: unable to handle kernel paging request at b62a66e0
-> IP: [<c030ef88>] xfs_alloc_fix_freelist+0x28/0x490
-
-FWIW, this is fs/xfs/xfs_alloc.c:1817:
-
-        if (!pag->pagf_init) {
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: xfs@oss.sgi.com
 
 
-Vegard
+-----Original Message-----
+From: Russell Cattelan [mailto:cattelan@thebarn.com] 
+Sent: Thursday, 17 July 2008 11:36 PM
+To: Stephen Porter
+Cc: xfs@oss.sgi.com
+Subject: Re: Power loss causes bad magic number??
+   
+> Heh welcome to the world of linux's poor device name handling.
 
--- 
-"The animistic metaphor of the bug that maliciously sneaked in while
-the programmer was not looking is intellectually dishonest as it
-disguises that the error is the programmer's own creation."
-	-- E. W. Dijkstra, EWD1036
+Hehe, gee thanks! :)
+
+> Did you make some sort of change to the hardware? added drives, moved 
+> cards around, etc?
+> Anything that changes the order that drives are discovered will affect
+
+> the sd[a-...] naming.
+
+No changes were made to the hardware, though as I mentioned originally I
+did loose power twice within a few hours, and it was the 2nd time the
+issue appeared.
+
+Having said that, after "fixing" the issue (updating the fstab entry) I
+have since installed a few updates, and it broke again (remapped back to
+sdc). :/
+
+> Mount by label or mount by uuid may be your friend in this case.
+  
+I think this is going to be my only option (unless I want to keep
+updating fstab entries each time _something_ updates on the box).  Time
+to visit google again.  I realise this is now way off topic, but is
+there a "preferred method" with regards to mounting by labels or uuid?
+
+
+Thanks.
+
+Stephen.
