@@ -1,48 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Jul 2008 15:39:15 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6HMdAHk001328
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 15:39:10 -0700
-Date: Fri, 18 Jul 2008 08:40:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: latest -git: kernel BUG at fs/xfs/support/debug.c:54!
-Message-ID: <20080717224012.GH29319@disturbed>
-References: <19f34abd0807171046j425bebc6m8d8eb80a641e0e5b@mail.gmail.com> <487F980F.7070708@redhat.com> <19f34abd0807171218u3de86ddbt506b0b4fa0548406@mail.gmail.com> <19f34abd0807171229p724cc44ese3cb064a65fbd2c0@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <19f34abd0807171229p724cc44ese3cb064a65fbd2c0@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 17 Jul 2008 23:23:56 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6I6NG4q008572
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2008 23:23:19 -0700
+Subject: TAKE 984564 - split out xfs value-add from xfs_setattr
+Message-Id: <20080718062419.B444058C4C3F@chook.melbourne.sgi.com>
+Date: Fri, 18 Jul 2008 16:24:19 +1000 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Vegard Nossum <vegard.nossum@gmail.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Tim Shimmin <xfs-masters@oss.sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@saeurebad.de>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Jul 17, 2008 at 09:29:39PM +0200, Vegard Nossum wrote:
-> On Thu, Jul 17, 2008 at 9:18 PM, Vegard Nossum <vegard.nossum@gmail.com> wrote:
-> > Thanks, you are right. I have adjusted my configuration, but I am
-> > still able to produce this:
-> >
-> > BUG: unable to handle kernel paging request at b62a66e0
-> > IP: [<c030ef88>] xfs_alloc_fix_freelist+0x28/0x490
-> 
-> FWIW, this is fs/xfs/xfs_alloc.c:1817:
-> 
->         if (!pag->pagf_init) {
+xfs_setattr currently doesn't just handle the attributes set through
+->setattr but also addition XFS-specific attributes: project id, inode
+flags and extent size hint.  Having these in a single function makes it
+more complicated and forces to have us a bhv_vattr intermediate
+structure eating up stackspace.
 
-Which kind of implies that we've got a bogus fsbno
-that we're using as the basis of allocation.....
+This patch adds a new xfs_ioctl_setattr helper for the XFS ioctls that
+set these attributes and remove the code to set them through
+xfs_setattr.
 
-What is the corruption you are inducing? Can you produce
-a xfs_metadump image of the filesystem and put it up somewhere
-that we can access it?
 
-I suspect that we are not validating the block numbers coming
-out of the various btrees as landing inside the filesystem....
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
+Date:  Fri Jul 18 16:22:14 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
+Inspected by:  hch@lst.de
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+Modid:  xfs-linux-melb:xfs-kern:31677a
+fs/xfs/xfs_vnodeops.c - 1.763 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.763&r2=text&tr2=1.762&f=h
+fs/xfs/linux-2.6/xfs_ioctl.c - 1.168 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.168&r2=text&tr2=1.167&f=h
+fs/xfs/linux-2.6/xfs_vnode.h - 1.151 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.151&r2=text&tr2=1.150&f=h
