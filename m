@@ -1,98 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 04:45:59 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 04:45:55 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LBjrdL021629
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:45:53 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LBjqHG021620
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:45:52 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 19EF030D986
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:02 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 5WVyFvzBtqUNLRRX for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2008C30D986
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:01 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id wEuGa0OHuxKqohpZ for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:01 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1KKtr1-0005G7-2G
+	for xfs@oss.sgi.com; Mon, 21 Jul 2008 21:46:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] XFS: kill shouty XFS_ITOV_NULL macro
-Date: Mon, 21 Jul 2008 21:46:58 +1000
-Message-Id: <1216640819-19924-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1216640819-19924-1-git-send-email-david@fromorbit.com>
-References: <1216640819-19924-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/3] XFS: sanitise VFS inode extraction V2
+Date: Mon, 21 Jul 2008 21:46:56 +1000
+Message-Id: <1216640819-19924-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
-Cc: Dave Chinner <david@fromorbit.com>
 
-Replace XFS_ITOV_NULL() with the new VFS_I() inline.
+Getting the VFS inode from the XFS inode is done in a variety of
+ways right now - direct deference or one of two XFS_ITOV macros.
+This should be consistent throughout the code - this patch
+series does that in a way that is consistent with the opposite
+XFS_I() conversion. We now use VFS_I() to extract the VFS inode
+from the XFS inode.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_vnode.c   |    2 +-
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- fs/xfs/xfs_inode.h             |    1 -
- fs/xfs/xfs_vfsops.c            |    2 +-
- fs/xfs/xfs_vnodeops.c          |    2 +-
- 5 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_vnode.c b/fs/xfs/linux-2.6/xfs_vnode.c
-index bc7afe0..ffd6003 100644
---- a/fs/xfs/linux-2.6/xfs_vnode.c
-+++ b/fs/xfs/linux-2.6/xfs_vnode.c
-@@ -158,7 +158,7 @@ vn_hold(
-  */
- static inline int xfs_icount(struct xfs_inode *ip)
- {
--	bhv_vnode_t *vp = XFS_ITOV_NULL(ip);
-+	bhv_vnode_t *vp = VFS_I(ip);
- 
- 	if (vp)
- 		return vn_count(vp);
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index c43b6d4..8407f32 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -1054,7 +1054,7 @@ xfs_qm_dqrele_inodes_ag(
- 		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
- 
- 		/* Root inode, rbmip and rsumip have associated blocks */
--		vp = XFS_ITOV_NULL(ip);
-+		vp = VFS_I(ip);
- 		if (!vp || ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
- 			ASSERT(ip->i_udquot == NULL);
- 			ASSERT(ip->i_gdquot == NULL);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index acb87d7..5dd4796 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -272,7 +272,6 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
- 	return (struct inode *)ip->i_vnode;
- }
- #define	XFS_ITOV(ip)		VFS_I(ip)
--#define	XFS_ITOV_NULL(ip)	VFS_I(ip)
- 
- /*
-  * i_flags helper functions
-diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index 8d8ea72..ff6a916 100644
---- a/fs/xfs/xfs_vfsops.c
-+++ b/fs/xfs/xfs_vfsops.c
-@@ -325,7 +325,7 @@ xfs_sync_inodes_ag(
- 		 * skip inodes in reclaim. Let xfs_syncsub do that for
- 		 * us so we don't need to worry.
- 		 */
--		vp = XFS_ITOV_NULL(ip);
-+		vp = VFS_I(ip);
- 		if (!vp) {
- 			read_unlock(&pag->pag_ici_lock);
- 			continue;
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 2af1be3..5d1b254 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2924,7 +2924,7 @@ xfs_finish_reclaim(
- 	int		sync_mode)
- {
- 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
--	bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
-+	bhv_vnode_t	*vp = VFS_I(ip);
- 
- 	if (vp && VN_BAD(vp))
- 		goto reclaim;
--- 
-1.5.6
+Version 2:
+o don't use vn_to_inode() and inode_to_vn() functions as they
+  are not needed
+o rediff patches 2 and 3 against the change patch.
