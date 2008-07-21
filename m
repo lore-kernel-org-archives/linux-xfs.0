@@ -1,42 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 13:32:36 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LKWYqx004114
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 13:32:34 -0700
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C7F8304086
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 13:33:41 -0700 (PDT)
-Message-ID: <4884F2A5.5050507@sgi.com>
-Date: Mon, 21 Jul 2008 15:33:41 -0500
-From: Bill Kendall <wkendall@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 15:58:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LMwPCx014387
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 15:58:26 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56E12310A0C
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 15:59:34 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id fBG2FG0oBEVQJOS9 for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 15:59:34 -0700 (PDT)
+Date: Tue, 22 Jul 2008 08:59:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4] don't leak m_fsname/m_rtname/m_logname
+Message-ID: <20080721225931.GF6761@disturbed>
+References: <20080525190736.GA13372@lst.de>
 MIME-Version: 1.0
-Subject: Re: xfsrestore over ssh?
-References: <2d460de70807211317m75bc236y403d8fa57514262e@mail.gmail.com>
-In-Reply-To: <2d460de70807211317m75bc236y403d8fa57514262e@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080525190736.GA13372@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Richard Hartmann <richih.mailinglist@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On 07/21/2008 03:17 PM, Richard Hartmann wrote:
-> Hi all,
-> 
-> I am unable to find the correct command to restore a xfs dump
-> over ssh. I don't care on which of the two boxes I need to run
-> the command, if anyone could tell me either way, that would
-> be hugely appreciated!
-> 
-> 
-> Thanks in advance,
-> Richard
-> 
+On Sun, May 25, 2008 at 09:07:37PM +0200, Christoph Hellwig wrote:
+> Add a helper to free the m_fsname/m_rtname/m_logname allocations and use
+> it properly for all mount failure cases.  Also switch the allocations
+> for these to kstrdup while we're at it.
 
-Something like this should work. Run it from the host that
-has the dump file and ssh to the box that needs to have restore.
+Looks good.
 
-% cat dumpfile | ssh root@host xfsrestore - /restore/here
+Cheers,
 
-Bill
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
