@@ -1,178 +1,314 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 05:17:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LCHTVs027097
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:17:30 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BA2112E8370
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:18:36 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id ycCbN6Cm28cUCToG for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:18:36 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6LCIQNg012255
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 14:18:26 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6LCIQ5A012252
-	for xfs@oss.sgi.com; Mon, 21 Jul 2008 14:18:26 +0200
-Date: Mon, 21 Jul 2008 14:18:26 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] don't leak m_fsname/m_rtname/m_logname
-Message-ID: <20080721121826.GA12214@lst.de>
-References: <20080525190736.GA13372@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080525190736.GA13372@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 05:20:48 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LCKit4027528
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:20:44 -0700
+Received: from web63903.mail.re1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 6194730DB22
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:21:53 -0700 (PDT)
+Received: from web63903.mail.re1.yahoo.com (web63903.mail.re1.yahoo.com [69.147.97.118]) by cuda.sgi.com with SMTP id 8SlZzQE3K5O8PdVc for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 05:21:53 -0700 (PDT)
+Date: Mon, 21 Jul 2008 05:21:52 -0700 (PDT)
+From: Jack Brown <zidibik@yahoo.com>
+Subject: XFS_WANT_CORRUPTED_GOTO followed by "Attempt to access beyond end of device"
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="0-794145701-1216642912=:53207"
+Message-ID: <37662.53207.qm@web63903.mail.re1.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-On Sun, May 25, 2008 at 09:07:36PM +0200, Christoph Hellwig wrote:
-> Add a helper to free the m_fsname/m_rtname/m_logname allocations and use
-> it properly for all mount failure cases.  Also switch the allocations
-> for these to kstrdup while we're at it.
+--0-794145701-1216642912=:53207
+Content-Type: text/plain; charset=us-ascii
 
-ping.
+dear list,
 
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-05-22 19:30:25.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-05-22 19:30:44.000000000 +0200
-> @@ -1079,6 +1079,15 @@ xfssyncd(
->  }
->  
->  STATIC void
-> +xfs_free_fsname(
-> +	struct xfs_mount	*mp)
-> +{
-> +	kfree(mp->m_fsname);
-> +	kfree(mp->m_rtname);
-> +	kfree(mp->m_logname);
-> +}
-> +
-> +STATIC void
->  xfs_fs_put_super(
->  	struct super_block	*sb)
->  {
-> @@ -1139,6 +1148,7 @@ xfs_fs_put_super(
->  	xfs_close_devices(mp);
->  	xfs_qmops_put(mp);
->  	xfs_dmops_put(mp);
-> +	xfs_free_fsname(mp);
->  	kfree(mp);
->  }
->  
-> @@ -1408,6 +1418,8 @@ xfs_start_flags(
->  	struct xfs_mount_args	*ap,
->  	struct xfs_mount	*mp)
->  {
-> +	int			error;
-> +
->  	/* Values are in BBs */
->  	if ((ap->flags & XFSMNT_NOALIGN) != XFSMNT_NOALIGN) {
->  		/*
-> @@ -1440,17 +1452,27 @@ xfs_start_flags(
->  			ap->logbufsize);
->  		return XFS_ERROR(EINVAL);
->  	}
-> +
-> +	error = ENOMEM;
-> +
->  	mp->m_logbsize = ap->logbufsize;
->  	mp->m_fsname_len = strlen(ap->fsname) + 1;
-> -	mp->m_fsname = kmem_alloc(mp->m_fsname_len, KM_SLEEP);
-> -	strcpy(mp->m_fsname, ap->fsname);
-> +
-> +	mp->m_fsname = kstrdup(ap->fsname, GFP_KERNEL);
-> +	if (!mp->m_fsname)
-> +		goto out;
-> +
->  	if (ap->rtname[0]) {
-> -		mp->m_rtname = kmem_alloc(strlen(ap->rtname) + 1, KM_SLEEP);
-> -		strcpy(mp->m_rtname, ap->rtname);
-> +		mp->m_rtname = kstrdup(ap->rtname, GFP_KERNEL);
-> +		if (!mp->m_rtname)
-> +			goto out_free_fsname;
-> +
->  	}
-> +
->  	if (ap->logname[0]) {
-> -		mp->m_logname = kmem_alloc(strlen(ap->logname) + 1, KM_SLEEP);
-> -		strcpy(mp->m_logname, ap->logname);
-> +		mp->m_logname = kstrdup(ap->logname, GFP_KERNEL);
-> +		if (!mp->m_logname)
-> +			goto out_free_rtname;
->  	}
->  
->  	if (ap->flags & XFSMNT_WSYNC)
-> @@ -1523,6 +1545,14 @@ xfs_start_flags(
->  	if (ap->flags & XFSMNT_DMAPI)
->  		mp->m_flags |= XFS_MOUNT_DMAPI;
->  	return 0;
-> +
-> +
-> + out_free_rtname:
-> +	kfree(mp->m_rtname);
-> + out_free_fsname:
-> +	kfree(mp->m_fsname);
-> + out:
-> +	return error;
->  }
->  
->  /*
-> @@ -1683,10 +1713,10 @@ xfs_fs_fill_super(
->  	 */
->  	error = xfs_start_flags(args, mp);
->  	if (error)
-> -		goto out_destroy_counters;
-> +		goto out_free_fsname;
->  	error = xfs_readsb(mp, flags);
->  	if (error)
-> -		goto out_destroy_counters;
-> +		goto out_free_fsname;
->  	error = xfs_finish_flags(args, mp);
->  	if (error)
->  		goto out_free_sb;
-> @@ -1748,7 +1778,8 @@ xfs_fs_fill_super(
->  	xfs_filestream_unmount(mp);
->   out_free_sb:
->  	xfs_freesb(mp);
-> - out_destroy_counters:
-> + out_free_fsname:
-> +	xfs_free_fsname(mp);
->  	xfs_icsb_destroy_counters(mp);
->  	xfs_close_devices(mp);
->   out_put_qmops:
-> @@ -1784,7 +1815,7 @@ xfs_fs_fill_super(
->  	IRELE(mp->m_rootip);
->  
->  	xfs_unmountfs(mp);
-> -	goto out_destroy_counters;
-> +	goto out_free_fsname;
->  }
->  
->  STATIC int
-> Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-05-22 19:31:25.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-05-22 19:31:29.000000000 +0200
-> @@ -146,13 +146,6 @@ xfs_mount_free(
->  	mutex_destroy(&mp->m_growlock);
->  	if (mp->m_quotainfo)
->  		XFS_QM_DONE(mp);
-> -
-> -	if (mp->m_fsname != NULL)
-> -		kmem_free(mp->m_fsname);
-> -	if (mp->m_rtname != NULL)
-> -		kmem_free(mp->m_rtname);
-> -	if (mp->m_logname != NULL)
-> -		kmem_free(mp->m_logname);
->  }
->  
->  /*
----end quoted text---
+i tried to give as much details as possible about an incident I had with xfs below. executive summary: A happily working xfs partition failed, and refuse to be repaired, after a series of setfacl executions.
+
+here's the full story:
+
+i'm running a gentoo machine with 2.6.20-xen-r6 kernel, xfsprogs-2.9.7. i have a ~300 gb xfs partition on software raid1, mounted to /var, in a server that is mainly used as a samba fileserver and a mail server, also being home to 3 hvm guests os (windows). guest oses live on a separate hard disk. all three disks are SATA and are connected to:
+
+Intel Corporation 631xESB/632xESB/3100 Chipset SATA IDE Controller (rev 09)
+
+anyway, i recently implemented acls for our samba users. after some recursive setfacl commands, my trying to rm -rf a ~20 gb directory failed. (Jul 20 ~01:00):
+
+rm: FATAL: cannot ensure `<filename>' (returned to via ..) is safe: Input/output error
+
+dmesg showed:
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 4533 of file fs/xfs/xfs_bmap.c.
+Filesystem "md5": XFS internal error xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c.
+xfs_force_shutdown(md5,0x8) called from line 1139 of file fs/xfs/xfs_trans.c.  Return address = 0xee2a9a28
+Filesystem "md5": Corruption of in-memory data detected.  Shutting down filesystem: md5
+Please umount the filesystem, and rectify the problem(s)
+
+and that's when I looked at /var/log/messages (it logs dmesg output) I saw the first xfs-related error to be:
+
+Jul 19 19:46:52 canavar XFS internal error XFS_WANT_CORRUPTED_GOTO at line 4533 of file fs/xfs/xfs_bmap.c.  Caller 0xee27d8c6 < stack addresses removed >
+
+which probably started when I was executing setfacl commands. after rm failing, xfs stopped all operations. /var being rendered read-only, i cold rebooted.
+
+upon reboot, I saw i/o errors related to incorrect partition size, as such:
+
+Jul 20 02:23:38 canavar attempt to access beyond end of device
+Jul 20 02:23:38 canavar md5: rw=0, want=405021982988992520, limit=603529728
+
+and kernel refused to mount the filesystem. xfs_repair refused to run as well because the file system log was yet to be replayed. I then ran xfs_repair -L which started repairing things but hung in the middle of repairs in phase 3. I ctrl+c'd my way out of it and was at least able to mount my partition. most of the data seemed undamaged, but same things happen when i try to rm -rf that directory (it's officially haunted :)). after copying some important stuff out, i retried the xfs_repair, this time it hung around phase 4. (for this run, i have the repairlog attached).
+
+# ps uax | grep xfs_repair
+root      2022  0.4 57.1 653488 599572 pts/0   Sl   12:32   0:03 xfs_repair -L /dev/md5 -v
+
+I had taken xfs_metadump sometime between, when it was hanging in phase 3. it's a bzipped 67 mb file. if somebody can provide a place to upload it, i can send it over.
+
+If anyone will be interested in further data i can provide it, i'm keeping the cripped file system in case it may be of any use to you.
+
+
+best regards,
+jack
+
+
+      
+--0-794145701-1216642912=:53207
+Content-Type: application/octet-stream; name="repairlog.scrubbed"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="repairlog.scrubbed"
+
+UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCiAgICAg
+ICAgLSBibG9jayBjYWNoZSBzaXplIHNldCB0byA5MzE4NCBlbnRyaWVzClBo
+YXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAgICAtIHplcm8gbG9n
+Li4uCnplcm9fbG9nOiBoZWFkIGJsb2NrIDIgdGFpbCBibG9jayAyCiAgICAg
+ICAgLSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9kZSBtYXBz
+Li4uCiAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rClBoYXNlIDMg
+LSBmb3IgZWFjaCBBRy4uLgogICAgICAgIC0gc2NhbiBhbmQgY2xlYXIgYWdp
+IHVubGlua2VkIGxpc3RzLi4uCiAgICAgICAgLSBwcm9jZXNzIGtub3duIGlu
+b2RlcyBhbmQgcGVyZm9ybSBpbm9kZSBkaXNjb3ZlcnkuLi4KICAgICAgICAt
+IGFnbm8gPSAwCmIzOTExYjkwOiBCYWRuZXNzIGluIGtleSBsb29rdXAgKGxl
+bmd0aCkKYnA9KGJubyAwLCBsZW4gNTEyIGJ5dGVzKSBrZXk9KGJubyAwLCBs
+ZW4gNDA5NiBieXRlcykKYmFkIGJtYXAgYnRyZWUgcHRyIDB4ZDQwMDQ0MDAw
+MDAwMDAwIGluIGlubyA2ODIzODQ0CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUg
+NjgyMzg0NApjbGVhcmVkIGlub2RlIDY4MjM4NDQKYmFkIG1hZ2ljICMgMHg1
+ODQ2NTM0MiBpbiBpbm9kZSA2MTYzNzEzMCAoZGF0YSBmb3JrKSBibWJ0IGJs
+b2NrIDAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA2MTYzNzEzMApjbGVhcmVk
+IGlub2RlIDYxNjM3MTMwCmJhZCBtYWdpYyAjIDB4NTg0NjUzNDIgaW4gaW5v
+ZGUgMTA4Mzc3ODU1IChkYXRhIGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0
+YSBmb3JrIGluIGlub2RlIDEwODM3Nzg1NQpjbGVhcmVkIGlub2RlIDEwODM3
+Nzg1NQpiYWQgYm1hcCBidHJlZSBwdHIgMHg4ZTIwMDBjMDAwMDAwMDAwIGlu
+IGlubyAxNTY4NTE4MjMKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAxNTY4NTE4
+MjMKY2xlYXJlZCBpbm9kZSAxNTY4NTE4MjMKYmFkIG1hZ2ljICMgMHg1ODQ2
+NTM0MiBpbiBpbm9kZSAxNjkzNzE2NDAgKGRhdGEgZm9yaykgYm1idCBibG9j
+ayAwCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTY5MzcxNjQwCmNsZWFyZWQg
+aW5vZGUgMTY5MzcxNjQwCmJhZCBibWFwIGJ0cmVlIHB0ciAweGRhYzAxYjAw
+MDAwMDAwMDAgaW4gaW5vIDE5NjIyNjg2NwpiYWQgZGF0YSBmb3JrIGluIGlu
+b2RlIDE5NjIyNjg2NwpjbGVhcmVkIGlub2RlIDE5NjIyNjg2NwpiYWQgYm1h
+cCBidHJlZSBwdHIgMHg1MDYxNmU2ZTZmNzQ2MSBpbiBpbm8gMTk2MjI2ODcx
+CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTk2MjI2ODcxCmNsZWFyZWQgaW5v
+ZGUgMTk2MjI2ODcxCmJhZCBibWFwIGJ0cmVlIHB0ciAweGFjMDAwOTAwMDAw
+MDAwMDAgaW4gaW5vIDE5NjIyNjg3OApiYWQgZGF0YSBmb3JrIGluIGlub2Rl
+IDE5NjIyNjg3OApjbGVhcmVkIGlub2RlIDE5NjIyNjg3OApiYWQgYm1hcCBi
+dHJlZSBwdHIgMHg1MDYxNmU2ZTZmNzQ2MSBpbiBpbm8gMTk2MjI2ODgwCmJh
+ZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTk2MjI2ODgwCmNsZWFyZWQgaW5vZGUg
+MTk2MjI2ODgwCmJhZCBibWFwIGJ0cmVlIHB0ciAweGQxNDAwMDQwMDAwMDAw
+MDAgaW4gaW5vIDE5NjIyNjkwNQpiYWQgZGF0YSBmb3JrIGluIGlub2RlIDE5
+NjIyNjkwNQpjbGVhcmVkIGlub2RlIDE5NjIyNjkwNQpiYWQgYm1hcCBidHJl
+ZSBwdHIgMHhmZTAwMDA4MDAwMDAwMDAwIGluIGlubyAyMjY3NDk2MzIKYmFk
+IGRhdGEgZm9yayBpbiBpbm9kZSAyMjY3NDk2MzIKY2xlYXJlZCBpbm9kZSAy
+MjY3NDk2MzIKICAgICAgICAtIGFnbm8gPSAxCmJhZCBibWFwIGJ0cmVlIHB0
+ciAweGM5MDAwMWMwMDAwMDAwMDAgaW4gaW5vIDUzOTM0OTg5MQpiYWQgZGF0
+YSBmb3JrIGluIGlub2RlIDUzOTM0OTg5MQpjbGVhcmVkIGlub2RlIDUzOTM0
+OTg5MQpiYWQgYm1hcCBidHJlZSBwdHIgMHg2MTgwMDEwMDAwMDAwMDAwIGlu
+IGlubyA1MzkzNTMwMTAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1MzkzNTMw
+MTAKY2xlYXJlZCBpbm9kZSA1MzkzNTMwMTAKYmFkIGJtYXAgYnRyZWUgcHRy
+IDB4NDAyMDAwODAwMDAwMDAwMCBpbiBpbm8gNTM5MzUzMDI2CmJhZCBkYXRh
+IGZvcmsgaW4gaW5vZGUgNTM5MzUzMDI2CmNsZWFyZWQgaW5vZGUgNTM5MzUz
+MDI2CmJhZCBibWFwIGJ0cmVlIHB0ciAweDIyODAwMTAwMDAwMDAwMDAgaW4g
+aW5vIDUzOTM1MzAzNgpiYWQgZGF0YSBmb3JrIGluIGlub2RlIDUzOTM1MzAz
+NgpjbGVhcmVkIGlub2RlIDUzOTM1MzAzNgpiYWQgYm1hcCBidHJlZSBwdHIg
+MHgyZTgwMDEwMDAwMDAwMDAwIGluIGlubyA1MzkzNTMwMzcKYmFkIGRhdGEg
+Zm9yayBpbiBpbm9kZSA1MzkzNTMwMzcKY2xlYXJlZCBpbm9kZSA1MzkzNTMw
+MzcKYmFkIGJtYXAgYnRyZWUgcHRyIDB4YTdjMDAwYzAwMDAwMDAwMCBpbiBp
+bm8gNTM5MzUzNDE3CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgNTM5MzUzNDE3
+CmNsZWFyZWQgaW5vZGUgNTM5MzUzNDE3CmJhZCBibWFwIGJ0cmVlIHB0ciAw
+eGU4MDA0NDAwMDAwMDAwMCBpbiBpbm8gNTM5MzU0MzI5CmJhZCBkYXRhIGZv
+cmsgaW4gaW5vZGUgNTM5MzU0MzI5CmNsZWFyZWQgaW5vZGUgNTM5MzU0MzI5
+CmJhZCBibWFwIGJ0cmVlIHB0ciAweGM2MDAxODAwMDAwMDAwMCBpbiBpbm8g
+NTM5MzU2Njk5CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgNTM5MzU2Njk5CmNs
+ZWFyZWQgaW5vZGUgNTM5MzU2Njk5CmJhZCBibWFwIGJ0cmVlIHB0ciAweGYx
+NDAwMWMwMDAwMDAwMDAgaW4gaW5vIDUzOTM1ODIyMwpiYWQgZGF0YSBmb3Jr
+IGluIGlub2RlIDUzOTM1ODIyMwpjbGVhcmVkIGlub2RlIDUzOTM1ODIyMwpi
+YWQgYm1hcCBidHJlZSBwdHIgMHhmMzIwMDA0MDAwMDAwMDAwIGluIGlubyA1
+MzkzNjYyODAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1MzkzNjYyODAKY2xl
+YXJlZCBpbm9kZSA1MzkzNjYyODAKYmFkIGJtYXAgYnRyZWUgcHRyIDB4ZDc4
+MDAwYzAwMDAwMDAwMCBpbiBpbm8gNTM5MzcyMzYyCmJhZCBkYXRhIGZvcmsg
+aW4gaW5vZGUgNTM5MzcyMzYyCmNsZWFyZWQgaW5vZGUgNTM5MzcyMzYyCmJh
+ZCBtYWdpYyAjIDB4NTg0NjUzNDIgaW4gaW5vZGUgNTM5MzcyNjY1IChkYXRh
+IGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDUz
+OTM3MjY2NQpjbGVhcmVkIGlub2RlIDUzOTM3MjY2NQpiYWQgbWFnaWMgIyAw
+eDU4NDY1MzQyIGluIGlub2RlIDUzOTY0OTU3NSAoZGF0YSBmb3JrKSBibWJ0
+IGJsb2NrIDAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1Mzk2NDk1NzUKY2xl
+YXJlZCBpbm9kZSA1Mzk2NDk1NzUKYmFkIGJtYXAgYnRyZWUgcHRyIDB4ZDY4
+MDA0ODAwMDAwMDAwMCBpbiBpbm8gNTM5NjQ5NTg5CmJhZCBkYXRhIGZvcmsg
+aW4gaW5vZGUgNTM5NjQ5NTg5CmNsZWFyZWQgaW5vZGUgNTM5NjQ5NTg5CmJh
+ZCBtYWdpYyAjIDB4NTg0NjUzNDIgaW4gaW5vZGUgNTQyMzc1NTY4IChkYXRh
+IGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDU0
+MjM3NTU2OApjbGVhcmVkIGlub2RlIDU0MjM3NTU2OApiYWQgYm1hcCBidHJl
+ZSBwdHIgMHgxNGIwMDAwMDAwNGZlNCBpbiBpbm8gNTQ3MTg5MjA2CmJhZCBk
+YXRhIGZvcmsgaW4gaW5vZGUgNTQ3MTg5MjA2CmNsZWFyZWQgaW5vZGUgNTQ3
+MTg5MjA2CmJhZCBtYWdpYyAjIDB4NTg0NjUzNDIgaW4gaW5vZGUgNTU1Mzc5
+ODE1IChkYXRhIGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0YSBmb3JrIGlu
+IGlub2RlIDU1NTM3OTgxNQpjbGVhcmVkIGlub2RlIDU1NTM3OTgxNQpiYWQg
+bWFnaWMgIyAweDU4NDY1MzQyIGluIGlub2RlIDU1OTY1MDIwOSAoZGF0YSBm
+b3JrKSBibWJ0IGJsb2NrIDAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1NTk2
+NTAyMDkKY2xlYXJlZCBpbm9kZSA1NTk2NTAyMDkKYmFkIG1hZ2ljICMgMHg1
+ODQ2NTM0MiBpbiBpbm9kZSA1NzI1NzQ0OTMgKGRhdGEgZm9yaykgYm1idCBi
+bG9jayAwCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgNTcyNTc0NDkzCmNsZWFy
+ZWQgaW5vZGUgNTcyNTc0NDkzCmJhZCBibWFwIGJ0cmVlIHB0ciAweDE0MDAw
+MDIwMDAwMDAwMCBpbiBpbm8gNTcyNjEzNDU2CmJhZCBkYXRhIGZvcmsgaW4g
+aW5vZGUgNTcyNjEzNDU2CmNsZWFyZWQgaW5vZGUgNTcyNjEzNDU2CmJhZCBi
+bWFwIGJ0cmVlIHB0ciAweDNmMDAwMDAxMDAwMDAwMDAgaW4gaW5vIDYxOTYz
+NTM2MApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDYxOTYzNTM2MApjbGVhcmVk
+IGlub2RlIDYxOTYzNTM2MApiYWQgbWFnaWMgIyAweDU4NDY1MzQyIGluIGlu
+b2RlIDY3MDI4NzM4MSAoZGF0YSBmb3JrKSBibWJ0IGJsb2NrIDAKYmFkIGRh
+dGEgZm9yayBpbiBpbm9kZSA2NzAyODczODEKY2xlYXJlZCBpbm9kZSA2NzAy
+ODczODEKICAgICAgICAtIGFnbm8gPSAyCmJhZCBibWFwIGJ0cmVlIHB0ciAw
+eGFkYzAwMWMwMDAwMDAwMDAgaW4gaW5vIDEwODAwOTE0NjAKYmFkIGRhdGEg
+Zm9yayBpbiBpbm9kZSAxMDgwMDkxNDYwCmNsZWFyZWQgaW5vZGUgMTA4MDA5
+MTQ2MApiYWQgYm1hcCBidHJlZSBwdHIgMHhkNTQwMDBjMDAwMDAwMDAwIGlu
+IGlubyAxMDgwMDkxNDY5CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTA4MDA5
+MTQ2OQpjbGVhcmVkIGlub2RlIDEwODAwOTE0NjkKYmFkIGJtYXAgYnRyZWUg
+cHRyIDB4YTcwMDAxMDAwMDAwMDAwMCBpbiBpbm8gMTA4MDA5MTQ3OQpiYWQg
+ZGF0YSBmb3JrIGluIGlub2RlIDEwODAwOTE0NzkKY2xlYXJlZCBpbm9kZSAx
+MDgwMDkxNDc5CmJhZCBibWFwIGJ0cmVlIHB0ciAweDM1NDAwMTgwMDAwMDAw
+MDAgaW4gaW5vIDEwODAwOTE0ODcKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAx
+MDgwMDkxNDg3CmNsZWFyZWQgaW5vZGUgMTA4MDA5MTQ4NwpiYWQgYm1hcCBi
+dHJlZSBwdHIgMHhjOGMwMDBjMDAwMDAwMDAwIGluIGlubyAxMDgzNjQyODE3
+CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTA4MzY0MjgxNwpjbGVhcmVkIGlu
+b2RlIDEwODM2NDI4MTcKYmFkIGJtYXAgYnRyZWUgcHRyIDB4NzFhMDAwYzAw
+MDAwMDAwMCBpbiBpbm8gMTA4MzY0MjgxOApiYWQgZGF0YSBmb3JrIGluIGlu
+b2RlIDEwODM2NDI4MTgKY2xlYXJlZCBpbm9kZSAxMDgzNjQyODE4CmJhZCBi
+bWFwIGJ0cmVlIHB0ciAweDdmZTAwMGMwMDAwMDAwMDAgaW4gaW5vIDEwODM2
+NDI4MjEKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAxMDgzNjQyODIxCmNsZWFy
+ZWQgaW5vZGUgMTA4MzY0MjgyMQpiYWQgYm1hcCBidHJlZSBwdHIgMHg1ZGUw
+MDIwMDAwMDAwMDAwIGluIGlubyAxMDgzNzgzMTIyCmJhZCBkYXRhIGZvcmsg
+aW4gaW5vZGUgMTA4Mzc4MzEyMgpjbGVhcmVkIGlub2RlIDEwODM3ODMxMjIK
+YmFkIGJtYXAgYnRyZWUgcHRyIDB4NmMwMDE4MDAwMDAwMDAwIGluIGlubyAx
+MDgzNzgzMTIzCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTA4Mzc4MzEyMwpj
+bGVhcmVkIGlub2RlIDEwODM3ODMxMjMKYmFkIGJtYXAgYnRyZWUgcHRyIDB4
+ZTY2MDA0NDAwMDAwMDAwMCBpbiBpbm8gMTA4NTQ3NTc4OQpiYWQgZGF0YSBm
+b3JrIGluIGlub2RlIDEwODU0NzU3ODkKY2xlYXJlZCBpbm9kZSAxMDg1NDc1
+Nzg5CmJhZCBibWFwIGJ0cmVlIHB0ciAweDY1ODAwMmMwMDAwMDAwMDAgaW4g
+aW5vIDEwODU2NDc5NDcKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAxMDg1NjQ3
+OTQ3CmNsZWFyZWQgaW5vZGUgMTA4NTY0Nzk0NwpiYWQgYm1hcCBidHJlZSBw
+dHIgMHhiN2EwMDBjMDAwMDAwMDAwIGluIGlubyAxMDg1NjQ3OTYzCmJhZCBk
+YXRhIGZvcmsgaW4gaW5vZGUgMTA4NTY0Nzk2MwpjbGVhcmVkIGlub2RlIDEw
+ODU2NDc5NjMKYmFkIG1hZ2ljICMgMHg1ODQ2NTM0MiBpbiBpbm9kZSAxMDg1
+NjQ3OTY0IChkYXRhIGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0YSBmb3Jr
+IGluIGlub2RlIDEwODU2NDc5NjQKY2xlYXJlZCBpbm9kZSAxMDg1NjQ3OTY0
+CmJhZCBtYWdpYyAjIDB4NTg0NjUzNDIgaW4gaW5vZGUgMTEyMjgxNDU4MSAo
+ZGF0YSBmb3JrKSBibWJ0IGJsb2NrIDAKYmFkIGRhdGEgZm9yayBpbiBpbm9k
+ZSAxMTIyODE0NTgxCmNsZWFyZWQgaW5vZGUgMTEyMjgxNDU4MQpiYWQgbWFn
+aWMgIyAweDU4NDY1MzQyIGluIGlub2RlIDExMjI4NTM0NjkgKGRhdGEgZm9y
+aykgYm1idCBibG9jayAwCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTEyMjg1
+MzQ2OQpjbGVhcmVkIGlub2RlIDExMjI4NTM0NjkKYmFkIG1hZ2ljICMgMHg1
+ODQ2NTM0MiBpbiBpbm9kZSAxMTIzNDYyMzkyIChkYXRhIGZvcmspIGJtYnQg
+YmxvY2sgMApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDExMjM0NjIzOTIKY2xl
+YXJlZCBpbm9kZSAxMTIzNDYyMzkyCmJhZCBtYWdpYyAjIDB4NTg0NjUzNDIg
+aW4gaW5vZGUgMTEyNDA5ODgyNyAoZGF0YSBmb3JrKSBibWJ0IGJsb2NrIDAK
+YmFkIGRhdGEgZm9yayBpbiBpbm9kZSAxMTI0MDk4ODI3CmNsZWFyZWQgaW5v
+ZGUgMTEyNDA5ODgyNwpiYWQgbWFnaWMgIyAweDU4NDY1MzQyIGluIGlub2Rl
+IDExNDE3MTkyNDcgKGRhdGEgZm9yaykgYm1idCBibG9jayAwCmJhZCBkYXRh
+IGZvcmsgaW4gaW5vZGUgMTE0MTcxOTI0NwpjbGVhcmVkIGlub2RlIDExNDE3
+MTkyNDcKYmFkIGJtYXAgYnRyZWUgcHRyIDB4ZDkyMDAwNDAwMDAwMDAwMCBp
+biBpbm8gMTI1NTk4Njg1OApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDEyNTU5
+ODY4NTgKY2xlYXJlZCBpbm9kZSAxMjU1OTg2ODU4CmJhZCBibWFwIGJ0cmVl
+IHB0ciAweDVmMDAwMDAxMDAwMDAwMDAgaW4gaW5vIDEyNTYzNTI0MTkKYmFk
+IGRhdGEgZm9yayBpbiBpbm9kZSAxMjU2MzUyNDE5CmNsZWFyZWQgaW5vZGUg
+MTI1NjM1MjQxOQpiYWQgYm1hcCBidHJlZSBwdHIgMHhhYzgwMTNiMDAwMDAw
+MDAwIGluIGlubyAxMzQwNTUxMzkyCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUg
+MTM0MDU1MTM5MgpjbGVhcmVkIGlub2RlIDEzNDA1NTEzOTIKYmFkIGJtYXAg
+YnRyZWUgcHRyIDB4Y2NhMDAwMDEwMDAwMDAwMCBpbiBpbm8gMTM2MDQ4ODI1
+NApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDEzNjA0ODgyNTQKY2xlYXJlZCBp
+bm9kZSAxMzYwNDg4MjU0CiAgICAgICAgLSBhZ25vID0gMwpiYWQgYm1hcCBi
+dHJlZSBwdHIgMHhjMjgwMDBjMDAwMDAwMDAwIGluIGlubyAxNjE3NTY3NDcw
+CmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTYxNzU2NzQ3MApjbGVhcmVkIGlu
+b2RlIDE2MTc1Njc0NzAKYmFkIGJtYXAgYnRyZWUgcHRyIDB4YjUwMDAyMDAw
+MDAwMDAwMCBpbiBpbm8gMTYxNzU2NzUwNwpiYWQgZGF0YSBmb3JrIGluIGlu
+b2RlIDE2MTc1Njc1MDcKY2xlYXJlZCBpbm9kZSAxNjE3NTY3NTA3CmJhZCBi
+bWFwIGJ0cmVlIHB0ciAweGM3YTAwMWMwMDAwMDAwMDAgaW4gaW5vIDE2MjM3
+NTM3NzEKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAxNjIzNzUzNzcxCmNsZWFy
+ZWQgaW5vZGUgMTYyMzc1Mzc3MQpiYWQgYm1hcCBidHJlZSBwdHIgMHgyNTQw
+MDA4MDAwMDAwMDAwIGluIGlubyAxNjI2Mzk2ODA0CmJhZCBkYXRhIGZvcmsg
+aW4gaW5vZGUgMTYyNjM5NjgwNApjbGVhcmVkIGlub2RlIDE2MjYzOTY4MDQK
+YmFkIG1hZ2ljICMgMHg1ODQ2NTM0MiBpbiBpbm9kZSAxNjI4NjI5MzcwIChk
+YXRhIGZvcmspIGJtYnQgYmxvY2sgMApiYWQgZGF0YSBmb3JrIGluIGlub2Rl
+IDE2Mjg2MjkzNzAKY2xlYXJlZCBpbm9kZSAxNjI4NjI5MzcwCmJhZCBibWFw
+IGJ0cmVlIHB0ciAweDk4MDAxODAwMDAwMDAwMCBpbiBpbm8gMTYyODY5NTA4
+NQpiYWQgZGF0YSBmb3JrIGluIGlub2RlIDE2Mjg2OTUwODUKY2xlYXJlZCBp
+bm9kZSAxNjI4Njk1MDg1CmJhZCBibWFwIGJ0cmVlIHB0ciAweDM4YTAwMTAw
+MDAwMDAwMDAgaW4gaW5vIDE2Mjg2OTUwODcKYmFkIGRhdGEgZm9yayBpbiBp
+bm9kZSAxNjI4Njk1MDg3CmNsZWFyZWQgaW5vZGUgMTYyODY5NTA4NwpiYWQg
+bWFnaWMgIyAweDU4NDY1MzQyIGluIGlub2RlIDE2Mjg2OTUxMDcgKGRhdGEg
+Zm9yaykgYm1idCBibG9jayAwCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTYy
+ODY5NTEwNwpjbGVhcmVkIGlub2RlIDE2Mjg2OTUxMDcKYmFkIG1hZ2ljICMg
+MHg1ODQ2NTM0MiBpbiBpbm9kZSAxNjMxOTIwNTYwIChkYXRhIGZvcmspIGJt
+YnQgYmxvY2sgMApiYWQgZGF0YSBmb3JrIGluIGlub2RlIDE2MzE5MjA1NjAK
+Y2xlYXJlZCBpbm9kZSAxNjMxOTIwNTYwCmJhZCBibWFwIGJ0cmVlIHB0ciAw
+eGE5YzAwMGMwMDAwMDAwMDAgaW4gaW5vIDE3NDQzMjk4MzQKYmFkIGRhdGEg
+Zm9yayBpbiBpbm9kZSAxNzQ0MzI5ODM0CmNsZWFyZWQgaW5vZGUgMTc0NDMy
+OTgzNApiYWQgYm1hcCBidHJlZSBwdHIgMHhjMDgwMjNiZTAwMDAwMDAwIGlu
+IGlubyAxODk3NjM2NjUzCmJhZCBkYXRhIGZvcmsgaW4gaW5vZGUgMTg5NzYz
+NjY1MwpjbGVhcmVkIGlub2RlIDE4OTc2MzY2NTMKYmFkIGJtYXAgYnRyZWUg
+cHRyIDB4MWRlMDE4MzMwMDAwMDAwMCBpbiBpbm8gMTkwNTExOTY3OQpiYWQg
+ZGF0YSBmb3JrIGluIGlub2RlIDE5MDUxMTk2NzkKY2xlYXJlZCBpbm9kZSAx
+OTA1MTE5Njc5CiAgICAgICAgLSBwcm9jZXNzIG5ld2x5IGRpc2NvdmVyZWQg
+aW5vZGVzLi4uClBoYXNlIDQgLSBjaGVjayBmb3IgZHVwbGljYXRlIGJsb2Nr
+cy4uLgogICAgICAgIC0gc2V0dGluZyB1cCBkdXBsaWNhdGUgZXh0ZW50IGxp
+c3QuLi4KICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcgZHVw
+bGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gYWdubyA9IDAKZW50cnkgInNj
+cnViYmVkLjAiIGF0IGJsb2NrIDAgb2Zmc2V0IDM0MDAgaW4gZGlyZWN0b3J5
+IGlub2RlIDExNzQ1MCByZWZlcmVuY2VzIGZyZWUgaW5vZGUgNjgyMzg0NAoJ
+Y2xlYXJpbmcgaW5vZGUgbnVtYmVyIGluIGVudHJ5IGF0IG9mZnNldCAzNDAw
+Li4uCmVudHJ5ICJzY3J1YmJlZC4xIiBpbiBzaG9ydGZvcm0gZGlyZWN0b3J5
+IDExMzYwMDggcmVmZXJlbmNlcyBmcmVlIGlub2RlIDE1Njg1MTgyMwpqdW5r
+aW5nIGVudHJ5ICJzY3J1YmJlZC4xIiBpbiBkaXJlY3RvcnkgaW5vZGUgMTEz
+NjAwOAplbnRyeSAic2NydWJiZWQuMiIgaW4gc2hvcnRmb3JtIGRpcmVjdG9y
+eSAxMTM2MDQ4IHJlZmVyZW5jZXMgZnJlZSBpbm9kZSAxOTYyMjY4NjcKanVu
+a2luZyBlbnRyeSAic2NydWJiZWQuMiIgaW4gZGlyZWN0b3J5IGlub2RlIDEx
+MzYwNDgKZW50cnkgInNjcnViYmVkLjMiIGluIHNob3J0Zm9ybSBkaXJlY3Rv
+cnkgMTEzNjA0OCByZWZlcmVuY2VzIGZyZWUgaW5vZGUgMTk2MjI2OTA1Cmp1
+bmtpbmcgZW50cnkgInNjcnViYmVkLjMiIGluIGRpcmVjdG9yeSBpbm9kZSAx
+MTM2MDQ4CmVudHJ5ICJzY3J1YmJlZC40IiBpbiBzaG9ydGZvcm0gZGlyZWN0
+b3J5IDExMzYwNDggcmVmZXJlbmNlcyBmcmVlIGlub2RlIDE5NjIyNjg3OApq
+dW5raW5nIGVudHJ5ICJzY3J1YmJlZC40IiBpbiBkaXJlY3RvcnkgaW5vZGUg
+MTEzNjA0OAplbnRyeSAic2NydWJiZWQuNSIgaW4gc2hvcnRmb3JtIGRpcmVj
+dG9yeSAxMTM2MDQ4IHJlZmVyZW5jZXMgZnJlZSBpbm9kZSAxOTYyMjY4NzEK
+anVua2luZyBlbnRyeSAic2NydWJiZWQuNSIgaW4gZGlyZWN0b3J5IGlub2Rl
+IDExMzYwNDgKZW50cnkgInNjcnViYmVkLjYiIGluIHNob3J0Zm9ybSBkaXJl
+Y3RvcnkgMTEzNjA1NSByZWZlcmVuY2VzIGZyZWUgaW5vZGUgMTk2MjI2ODgw
+Cmp1bmtpbmcgZW50cnkgInNjcnViYmVkLjYiIGluIGRpcmVjdG9yeSBpbm9k
+ZSAxMTM2MDU1CmVudHJ5ICJzY3J1YmJlZC43IiBpbiBzaG9ydGZvcm0gZGly
+ZWN0b3J5IDExMzYwNTUgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDE2OTM3MTY0
+MApqdW5raW5nIGVudHJ5ICJzY3J1YmJlZC43IiBpbiBkaXJlY3RvcnkgaW5v
+ZGUgMTEzNjA1NQplbnRyeSAic2NydWJiZWQuOCIgYXQgYmxvY2sgMCBvZmZz
+ZXQgMzA0IGluIGRpcmVjdG9yeSBpbm9kZSA0NTcyMDIxIHJlZmVyZW5jZXMg
+ZnJlZSBpbm9kZSA1NDIzNzU1NjgKCWNsZWFyaW5nIGlub2RlIG51bWJlciBp
+biBlbnRyeSBhdCBvZmZzZXQgMzA0Li4uCmVudHJ5ICJzY3J1YmJlZC45IiBp
+biBzaG9ydGZvcm0gZGlyZWN0b3J5IDUwNzEwNTUgcmVmZXJlbmNlcyBmcmVl
+IGlub2RlIDIyNjc0OTYzMgpqdW5raW5nIGVudHJ5ICJzY3J1YmJlZC45IiBp
+biBkaXJlY3RvcnkgaW5vZGUgNTA3MTA1NQplbnRyeSAic2NydWJiZWQuMTAi
+IGF0IGJsb2NrIDAgb2Zmc2V0IDM1NTIgaW4gZGlyZWN0b3J5IGlub2RlIDE1
+Mjg4NTY0IHJlZmVyZW5jZXMgZnJlZSBpbm9kZSA1NTUzNzk4MTUKCWNsZWFy
+aW5nIGlub2RlIG51bWJlciBpbiBlbnRyeSBhdCBvZmZzZXQgMzU1Mi4uLgpl
+bnRyeSAic2NydWJiZWQuMTEiIGF0IGJsb2NrIDAgb2Zmc2V0IDMyIGluIGRp
+cmVjdG9yeSBpbm9kZSAxNzA1MTYwNCByZWZlcmVuY2VzIGZyZWUgaW5vZGUg
+MTEyMzQ2MjM5MgoJY2xlYXJpbmcgaW5vZGUgbnVtYmVyIGluIGVudHJ5IGF0
+IG9mZnNldCAzMi4uLgpubyAuLiBlbnRyeSBmb3IgZGlyZWN0b3J5IDE3MDUx
+NjA0CmVudHJ5ICJzY3J1YmJlZC4xMCIgYXQgYmxvY2sgMCBvZmZzZXQgOTc2
+IGluIGRpcmVjdG9yeSBpbm9kZSAxNzI0MzU5MyByZWZlcmVuY2VzIGZyZWUg
+aW5vZGUgMTEyNDA5ODgyNwoJY2xlYXJpbmcgaW5vZGUgbnVtYmVyIGluIGVu
+dHJ5IGF0IG9mZnNldCA5NzYuLi4KZW50cnkgInNjcnViYmVkLjExIiBhdCBi
+bG9jayAwIG9mZnNldCAzMiBpbiBkaXJlY3RvcnkgaW5vZGUgODMwNzY4Mjgg
+cmVmZXJlbmNlcyBmcmVlIGlub2RlIDYxOTYzNTM2MAoJY2xlYXJpbmcgaW5v
+ZGUgbnVtYmVyIGluIGVudHJ5IGF0IG9mZnNldCAzMi4uLgpubyAuLiBlbnRy
+eSBmb3IgZGlyZWN0b3J5IDgzMDc2ODI4Cg==
+
+--0-794145701-1216642912=:53207--
