@@ -1,48 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 02:32:40 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6L9WWpE006963
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 02:32:33 -0700
-Message-ID: <488457F3.2050405@cape-horn-eng.com>
-Date: Mon, 21 Jul 2008 11:33:39 +0200
-From: Richard Ems <Richard.Ems@cape-horn-eng.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 03:58:23 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LAwHLV012496
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 03:58:18 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C612711E98E3
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 03:59:24 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id krTIAOBxqgHMn8Bz for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 03:59:24 -0700 (PDT)
+Date: Mon, 21 Jul 2008 20:59:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] XFS: Use KM_NOFS for incore inode extent tree
+	allocation
+Message-ID: <20080721105915.GB6761@disturbed>
+References: <1216615959-23010-1-git-send-email-david@fromorbit.com> <20080721075235.GA6692@infradead.org>
 MIME-Version: 1.0
-Subject: Re: XFS internal error xfs_btree_check_lblock
-References: <4880AEF8.2080906@cape-horn-eng.com> <48815AA6.3080102@sgi.com>
-In-Reply-To: <48815AA6.3080102@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080721075235.GA6692@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: xfs@oss.sgi.com, Bill O'Donnell <billodo@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Mark Goodwin wrote:
-> Hi Richard,
+On Mon, Jul 21, 2008 at 03:52:35AM -0400, Christoph Hellwig wrote:
+> On Mon, Jul 21, 2008 at 02:52:39PM +1000, Dave Chinner wrote:
+> > If we allow incore extent tree allocations to recurse into the
+> > filesystem under memory pressure, new delayed allocations through
+> > xfs_iomap_write_delay() can deadlock on themselves if memory reclaim
+> > tries to write back dirty pages from that inode.
+> > 
+> > It will deadlock in xfs_iomap_write_allocate() trying to take the
+> > ilock we already hold. This can also show up as complex ABBA
+> > deadlocks when multiple threeads are triggering memory reclaim when
+> > trying to allocate extents.
+> > 
+> > The main cause of this is the fact that delayed allocation is
+> > not done in a transaction, so KM_NOFS is not automatically
+> > added to the allocations to prevent this recursion.
+> > 
+> > Mark all allocations done for the incore inode extent tree as
+> > KM_NOFS to ensure they never recurse back into the filesystem.
 > 
-> this looks like XFS b-tree corruption of some sort. We have some patches
-> that should help here. The patches are being back-ported to SLES10 and
-> should also apply to OpenSUSE. We should have something ready early next
-> week.
+> Looks good.  Note that KM_NOFS alone already means a allocation
+> that can't fail, so no need to or it to KM_SLEEP.
 
-Thanks Mark. The most annoying thing is that, after many repairs, it's 
-working again! But my big question is ... for how long? How stable is 
-the filesystem now? Should I better recreate it? WHY did this happen? 
-Why did the FS fail again after some repairs?  8(
+Right. I'll update the patch and resend it.
 
-Where can I get more info about these patches? Is there a developer 
-mailing list? Or some webpage to follow the development progress?
+> And long term we should try to look into allowing these to fail,
+> allocations that aren't allowed to fail but can't recurse back into
+> the fs still have a chance to deadlock.
 
-Thanks, Richard
+We need dirty transaction rollback capabilities before we can do that.
 
+Cheers,
 
-
-
+Dave.
 -- 
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. Dómine 1, 5º piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
+Dave Chinner
+david@fromorbit.com
