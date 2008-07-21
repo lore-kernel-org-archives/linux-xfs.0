@@ -1,257 +1,98 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 04:32:03 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LBVxMK020701
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:32:00 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 04:45:59 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6LBjrdL021629
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:45:53 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2AB2E12E8066
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:33:05 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id FKZh9EbP8F6ZIp6V for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:33:05 -0700 (PDT)
-Date: Mon, 21 Jul 2008 21:33:02 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 19EF030D986
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:02 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 5WVyFvzBtqUNLRRX for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 04:47:02 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4] XFS: Remove xfs_iflush_all and clean up
-	xfs_finish_reclaim_all()
-Message-ID: <20080721113302.GD6761@disturbed>
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-2-git-send-email-david@fromorbit.com> <20080721075826.GC6692@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080721075826.GC6692@infradead.org>
+Subject: [PATCH 2/3] XFS: kill shouty XFS_ITOV_NULL macro
+Date: Mon, 21 Jul 2008 21:46:58 +1000
+Message-Id: <1216640819-19924-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1216640819-19924-1-git-send-email-david@fromorbit.com>
+References: <1216640819-19924-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Mon, Jul 21, 2008 at 03:58:26AM -0400, Christoph Hellwig wrote:
-> On Sun, Jul 20, 2008 at 10:19:51PM +1000, Dave Chinner wrote:
-> > xfs_iflush_all() walks the m_inodes list to find inodes that
-> > need reclaiming. We already have such a list - the m_del_inodes
-> > list. Replace xfs_iflush_all() with a call to xfs_finish_reclaim_all()
-> > and clean up xfs_finish_reclaim_all() to handle the different flush
-> > modes now needed.
-> >
-> >
-> > 
-> > Originally based on a patch from Christoph Hellwig.
-> 
-> Unlike my original patch is also now calls xfs_finish_reclaim_all
-> unconditonal in xfs_syncsub.  This looks harmless but useless in the
-> context of this patch, and actually useful for your next patches.
-
-It's not really harmless - it reclaims inodes faster as reclaim
-is now triggered by means other than xfssyncd. I'm not sure I should
-perturb the reclaim behaviour right now (wasn't my intent) so I'll
-change it back to the original code. It doesn't affect the other
-patches in any material way...
-
-> The xfs_finish_reclaim_all in xfs_quiesce_fs changes from
-> XFS_IFLUSH_DELWRI_ELSE_ASYNC to XFS_IFLUSH_ASYNC, which needs an
-> explanation.
-
-Ah - that slipped through from the original patches - this change
-was much later in the original series I wrote. It doesn't make much
-sense to make this change until the inode writeback clustering gets
-optimised.
-
-Fixed patch is below.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-XFS: Remove xfs_iflush_all and clean up xfs_finish_reclaim_all() V2
-
-xfs_iflush_all() walks the m_inodes list to find inodes that
-need reclaiming. We already have such a list - the m_del_inodes
-list. Replace xfs_iflush_all() with a call to xfs_finish_reclaim_all()
-and clean up xfs_finish_reclaim_all() to handle the different flush
-modes now needed.
-
-Originally based on a patch from Christoph Hellwig.
+Replace XFS_ITOV_NULL() with the new VFS_I() inline.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
-
 ---
-Version 2
-o revert xfs_syncsub() inode reclaim behaviour back to original
-  code
-o xfs_quiesce_fs() should use XFS_IFLUSH_DELWRI_ELSE_ASYNC, not
-  XFS_IFLUSH_ASYNC, to prevent change of behaviour.
+ fs/xfs/linux-2.6/xfs_vnode.c   |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
+ fs/xfs/xfs_inode.h             |    1 -
+ fs/xfs/xfs_vfsops.c            |    2 +-
+ fs/xfs/xfs_vnodeops.c          |    2 +-
+ 5 files changed, 4 insertions(+), 5 deletions(-)
 
- fs/xfs/xfs_inode.c    |   39 ---------------------------------------
- fs/xfs/xfs_inode.h    |    3 +--
- fs/xfs/xfs_mount.c    |    2 +-
- fs/xfs/xfs_vfsops.c   |    4 ++--
- fs/xfs/xfs_vnodeops.c |   42 ++++++++++++++++++------------------------
- 5 files changed, 22 insertions(+), 68 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 20b6f87..ae19b05 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3456,45 +3456,6 @@ corrupt_out:
- 	return XFS_ERROR(EFSCORRUPTED);
- }
+diff --git a/fs/xfs/linux-2.6/xfs_vnode.c b/fs/xfs/linux-2.6/xfs_vnode.c
+index bc7afe0..ffd6003 100644
+--- a/fs/xfs/linux-2.6/xfs_vnode.c
++++ b/fs/xfs/linux-2.6/xfs_vnode.c
+@@ -158,7 +158,7 @@ vn_hold(
+  */
+ static inline int xfs_icount(struct xfs_inode *ip)
+ {
+-	bhv_vnode_t *vp = XFS_ITOV_NULL(ip);
++	bhv_vnode_t *vp = VFS_I(ip);
  
--
--/*
-- * Flush all inactive inodes in mp.
-- */
--void
--xfs_iflush_all(
--	xfs_mount_t	*mp)
--{
--	xfs_inode_t	*ip;
--	bhv_vnode_t	*vp;
--
-- again:
--	XFS_MOUNT_ILOCK(mp);
--	ip = mp->m_inodes;
--	if (ip == NULL)
--		goto out;
--
--	do {
--		/* Make sure we skip markers inserted by sync */
--		if (ip->i_mount == NULL) {
--			ip = ip->i_mnext;
--			continue;
--		}
--
+ 	if (vp)
+ 		return vn_count(vp);
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index c43b6d4..8407f32 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -1054,7 +1054,7 @@ xfs_qm_dqrele_inodes_ag(
+ 		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+ 
+ 		/* Root inode, rbmip and rsumip have associated blocks */
 -		vp = XFS_ITOV_NULL(ip);
--		if (!vp) {
--			XFS_MOUNT_IUNLOCK(mp);
--			xfs_finish_reclaim(ip, 0, XFS_IFLUSH_ASYNC);
--			goto again;
--		}
--
--		ASSERT(vn_count(vp) == 0);
--
--		ip = ip->i_mnext;
--	} while (ip != mp->m_inodes);
-- out:
--	XFS_MOUNT_IUNLOCK(mp);
--}
--
- #ifdef XFS_ILOCK_TRACE
- ktrace_t	*xfs_ilock_trace_buf;
- 
++		vp = VFS_I(ip);
+ 		if (!vp || ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+ 			ASSERT(ip->i_udquot == NULL);
+ 			ASSERT(ip->i_gdquot == NULL);
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 17a04b6..7ce41d3 100644
+index acb87d7..5dd4796 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -480,7 +480,7 @@ void		xfs_iunlock_map_shared(xfs_inode_t *, uint);
- void		xfs_ifunlock(xfs_inode_t *);
- void		xfs_ireclaim(xfs_inode_t *);
- int		xfs_finish_reclaim(xfs_inode_t *, int, int);
--int		xfs_finish_reclaim_all(struct xfs_mount *, int);
-+int		xfs_finish_reclaim_all(struct xfs_mount *, int, int);
+@@ -272,7 +272,6 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
+ 	return (struct inode *)ip->i_vnode;
+ }
+ #define	XFS_ITOV(ip)		VFS_I(ip)
+-#define	XFS_ITOV_NULL(ip)	VFS_I(ip)
  
  /*
-  * xfs_inode.c prototypes.
-@@ -518,7 +518,6 @@ void		xfs_ipin(xfs_inode_t *);
- void		xfs_iunpin(xfs_inode_t *);
- int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_t *, int);
- int		xfs_iflush(xfs_inode_t *, uint);
--void		xfs_iflush_all(struct xfs_mount *);
- void		xfs_ichgtime(xfs_inode_t *, int);
- xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
- void		xfs_lock_inodes(xfs_inode_t **, int, uint);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 6c5d132..0c23f6a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1268,7 +1268,7 @@ xfs_unmountfs(xfs_mount_t *mp)
- 	 * need to force the log first.
- 	 */
- 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
--	xfs_iflush_all(mp);
-+	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_ASYNC);
- 
- 	XFS_QM_DQPURGEALL(mp, XFS_QMOPT_QUOTALL | XFS_QMOPT_UMOUNTING);
- 
+  * i_flags helper functions
 diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index 4a9a433..ab3f004 100644
+index 8d8ea72..ff6a916 100644
 --- a/fs/xfs/xfs_vfsops.c
 +++ b/fs/xfs/xfs_vfsops.c
-@@ -65,7 +65,7 @@ xfs_quiesce_fs(
- 	int			count = 0, pincount;
- 
- 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
--	xfs_finish_reclaim_all(mp, 0);
-+	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 
- 	/* This loop must run at least twice.
- 	 * The first instance of the loop will flush
-@@ -654,7 +654,7 @@ xfs_syncsub(
- 
- 	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
- 		if (flags & SYNC_BDFLUSH)
--			xfs_finish_reclaim_all(mp, 1);
-+			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		else
- 			error = xfs_sync_inodes(mp, flags, bypassed);
- 	}
+@@ -325,7 +325,7 @@ xfs_sync_inodes_ag(
+ 		 * skip inodes in reclaim. Let xfs_syncsub do that for
+ 		 * us so we don't need to worry.
+ 		 */
+-		vp = XFS_ITOV_NULL(ip);
++		vp = VFS_I(ip);
+ 		if (!vp) {
+ 			read_unlock(&pag->pag_ici_lock);
+ 			continue;
 diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index b792a12..2af1be3 100644
+index 2af1be3..5d1b254 100644
 --- a/fs/xfs/xfs_vnodeops.c
 +++ b/fs/xfs/xfs_vnodeops.c
-@@ -2985,36 +2985,30 @@ xfs_finish_reclaim(
- }
- 
- int
--xfs_finish_reclaim_all(xfs_mount_t *mp, int noblock)
-+xfs_finish_reclaim_all(
-+	xfs_mount_t	*mp,
-+	int		 noblock,
-+	int		mode)
+@@ -2924,7 +2924,7 @@ xfs_finish_reclaim(
+ 	int		sync_mode)
  {
--	int		purged;
- 	xfs_inode_t	*ip, *n;
--	int		done = 0;
+ 	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+-	bhv_vnode_t	*vp = XFS_ITOV_NULL(ip);
++	bhv_vnode_t	*vp = VFS_I(ip);
  
--	while (!done) {
--		purged = 0;
--		XFS_MOUNT_ILOCK(mp);
--		list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
--			if (noblock) {
--				if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
--					continue;
--				if (xfs_ipincount(ip) ||
--				    !xfs_iflock_nowait(ip)) {
--					xfs_iunlock(ip, XFS_ILOCK_EXCL);
--					continue;
--				}
-+restart:
-+	XFS_MOUNT_ILOCK(mp);
-+	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
-+		if (noblock) {
-+			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
-+				continue;
-+			if (xfs_ipincount(ip) ||
-+			    !xfs_iflock_nowait(ip)) {
-+				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+				continue;
- 			}
--			XFS_MOUNT_IUNLOCK(mp);
--			if (xfs_finish_reclaim(ip, noblock,
--					XFS_IFLUSH_DELWRI_ELSE_ASYNC))
--				delay(1);
--			purged = 1;
--			break;
- 		}
--
--		done = !purged;
-+		XFS_MOUNT_IUNLOCK(mp);
-+		if (xfs_finish_reclaim(ip, noblock, mode))
-+			delay(1);
-+		goto restart;
- 	}
--
- 	XFS_MOUNT_IUNLOCK(mp);
- 	return 0;
- }
+ 	if (vp && VN_BAD(vp))
+ 		goto reclaim;
+-- 
+1.5.6
