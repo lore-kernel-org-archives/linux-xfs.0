@@ -1,41 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 21:37:45 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M4bg7f015750
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:37:43 -0700
-Date: Tue, 22 Jul 2008 00:38:51 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 21:27:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M4RL18014529
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:27:21 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45B8A311127
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:28:31 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 21uXZaqCm50QpK1V for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:28:31 -0700 (PDT)
+Date: Tue, 22 Jul 2008 00:28:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [UPDATED RFC] Create with EA initial work
-Message-ID: <20080722043851.GA7244@infradead.org>
-References: <1214196150-5427-1-git-send-email-xaiki@sgi.com> <1215675545-2707-1-git-send-email-xaiki@sgi.com>
+Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
+Message-ID: <20080722042829.GB27123@infradead.org>
+References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1215675545-2707-1-git-send-email-xaiki@sgi.com>
+In-Reply-To: <1216556394-17529-3-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 10, 2008 at 05:39:01PM +1000, Niv Sardi wrote:
-> There is a bug in this, that I can see with the Parent Pointers code
-> going on top of it (that will be posted soon), it is basically calling
-> xfs_attr_set_int_trans() in xfs_create() just before the last
-> commit. For some reason, the first call to xfs_roll_trans (after
-> xfs_bmap_add_attrfork_trans()) will complain about the inode being
-> unlocked after xfs_trans_commit(). I understand I need to call
-> xfs_trans_ihold(ip) on it, but we already do in xfs_create() so I
-> think I must be missing something else??? any ideas ?
+On Sun, Jul 20, 2008 at 10:19:52PM +1000, Dave Chinner wrote:
+> Update xfs_sync_inodes to walk the inode radix tree cache to find
+> dirty inodes. This removes a huge bunch of nasty, messy code for
+> traversing the mount inode list safely and removes another user of
+> the mount inode list.
 
-There are multiple ways to deal with inodes linked to transactions.
+Looks good, some minor nits below:
 
-In all cases it needs to be linked into the transaction by
-xfs_trans_ijoin, or the opencoded equivalent for a new inode in
-xfs_trans_iget.  Then you can use xfs_trans_ihold to make sure on
-transaction commit the inode reference count is not dropped and the
-inode is not unlocked, or simply grab a reference to the inode and let
-the transaction commit handler unlock it and decrement the reference
-count.  The latter is what's used by xfs_create and the former is what
-the attr code does, and as far as I can see the only things what works
-with xfs_attr_rolltrans.
+>  	xfs_inode_t	*ip = NULL;
+>  	bhv_vnode_t	*vp = NULL;
+
+As you're touching most uses of vp what about just turning it
+into a plain Linux inode?
+
+> +	if (!pag->pag_ici_init)
+> +		return 0;
+
+I think it would be cleaner to move this into the caller and not even
+call into this function for uninitialized AGs.
+
+> +		read_lock(&pag->pag_ici_lock);
+> +		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
+> +				(void**)&ip, first_index, 1);
+
+This needs a big comment on why you're using the gang lookup for
+a single lookup.  I guess that's because the gang lookup skips to
+the next actually existing entry instead of returning NULL, but that's
+not really obvious to the reader.
+
+> +			VN_RELE(vp);
+
+This should either be an iput or IRELE, VN_RELE is on it's way out.
+
+Btw, all these also apply to the next patch, I won't comment on them
+there again.
