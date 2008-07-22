@@ -1,50 +1,132 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 01:49:10 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M8n72M014956
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 01:49:08 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D8441918579
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 01:50:16 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 0oa2rAfYfLk67e9U for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 01:50:16 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6M8o7Ng000705
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 10:50:07 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6M8o7i1000703
-	for xfs@oss.sgi.com; Tue, 22 Jul 2008 10:50:07 +0200
-Date: Tue, 22 Jul 2008 10:50:07 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix XFSQA 096 for recent xfsprogs
-Message-ID: <20080722085007.GA32499@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 02:36:04 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M9a3Om018066
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 02:36:03 -0700
+Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E448CE7DF63
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 02:37:12 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id HBBKWBkVEb1iCQzQ for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 02:37:12 -0700 (PDT)
+Subject: [PATCH 0/3] freeze feature ver 1.9
+Message-Id: <20080722183659t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
+From: Takashi Sato <t-sato@yk.jp.nec.com>
+Date: Tue, 22 Jul 2008 18:36:59 +0900
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-With recent xfsprogs xfs_info is aware of the case insensitive support
-and displays ascii-ci=[01] in the naming section.  Update testcase 096
-to strip away this information in the big sed expression.
+Hi,
 
+When multiple freeze requests arrive simultaneously, only the last
+unfreeze process should unfreeze the frozen filesystem actually
+(as Dave Chinner, Eric Sandeen and Alasdair G Kergon commented).
+So I've added the reference counter to the freeze feature.
+It counts up in freeze_bdev() and counts down in thaw_bdev().
+When it becomes "0", thaw_bdev() will unfreeze actually.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The following regular cases have worked correctly.
 
-Index: xfstests/096
-===================================================================
-RCS file: /cvs/xfs-cmds/xfstests/096,v
-retrieving revision 1.13
-diff -u -p -r1.13 096
---- xfstests/096	30 Nov 2007 03:07:14 -0000	1.13
-+++ xfstests/096	22 Jul 2008 08:34:53 -0000
-@@ -64,6 +64,7 @@ _mkfs_filter()
- 	-e '/ *= *sectsz=[0-9][0-9]* *attr=[0-9][0-9]*$/d' \
- 	-e '/ *= *mmr=[0-9][0-9]* *$/d' \
- 	-e 's/ *mixed-case=[YN]//' \
-+	-e 's/ *ascii-ci=[01]//' \
- 	-e 's/sectsz=[0-9][0-9]* *//' \
- 	-e 's/, lazy-count.*//' \
- 	-e '/inode-paths/d' \
+A)
+1. dmsetup suspend
+2. FIFREEZE
+3. FITHAW
+4. dmsetup resume
+B)
+1. FIFREEZE
+2. dmsetup suspend
+3. dmsetup resume
+4. FITHAW
+
+But in the following case, the last FITHAW has been frozen
+for writing the super block because device-mapper layer is still frozen.
+It's a irregular case (app's bug) and the next "dmsetup resume"
+can solve it.  So I don't think it is a problem.
+C)
+1. dmsetup suspend
+2. FIFREEZE
+3. FITHAW
+4. FITHAW<- The thaw process was frozen.
+
+In my previous mail, I have mentioned considering removing the timeout
+feature.  But I leave it in my patch-set because we need it for the case
+someone dirties so much data that the freeze process is swapped out
+(as some people said).
+
+Currently, ext3 in mainline Linux doesn't have the freeze feature which
+suspends write requests.  So, we cannot take a backup which keeps
+the filesystem's consistency with the storage device's features
+(snapshot and replication) while it is mounted.
+In many case, a commercial filesystem (e.g. VxFS) has
+the freeze feature and it would be used to get the consistent backup.
+If Linux's standard filesytem ext3 has the freeze feature, we can do it
+without a commercial filesystem.
+
+So I have implemented the ioctls of the freeze feature.
+I think we can take the consistent backup with the following steps.
+1. Freeze the filesystem with the freeze ioctl.
+2. Separate the replication volume or create the snapshot
+   with the storage device's feature.
+3. Unfreeze the filesystem with the unfreeze ioctl.
+4. Take the backup from the separated replication volume
+   or the snapshot.
+
+[PATCH 1/3] Implement generic freeze feature
+  I have modified to set the suitable error number (EOPNOTSUPP)
+  in case the filesystem doesn't support the freeze feature.
+
+  The ioctls for the generic freeze feature are below.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, arg)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Unfreeze the filesystem
+    int ioctl(int fd, int FITHAW, arg)
+      fd: The file descriptor of the mountpoint
+      FITHAW: request code for unfreeze
+      arg: Ignored
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+[PATCH 2/3] Remove XFS specific ioctl interfaces for freeze feature
+  It removes XFS specific ioctl interfaces and request codes
+  for freeze feature.
+  This patch has been supplied by David Chinner.
+
+[PATCH 3/3] Add timeout feature
+  The timeout feature is added to freeze ioctl.  And new ioctl
+  to reset the timeout period is added.
+  o Freeze the filesystem
+    int ioctl(int fd, int FIFREEZE, long *timeout_sec)
+      fd: The file descriptor of the mountpoint
+      FIFREEZE: request code for the freeze
+      timeout_sec: the timeout period in seconds
+               If it's 0 or 1, the timeout isn't set.
+               This special case of "1" is implemented to keep
+               the compatibility with XFS applications.
+      Return value: 0 if the operation succeeds. Otherwise, -1
+
+  o Reset the timeout period
+    This is useful for the application to set the timeout_sec more accurately.
+    For example, the freezer resets the timeout_sec to 10 seconds every 5
+    seconds.  In this approach, even if the freezer causes a deadlock
+    by accessing the frozen filesystem, it will be solved by the timeout
+    in 10 seconds and the freezer can recognize that at the next reset
+    of timeout_sec.
+    int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeout_sec)
+      fd:file descriptor of mountpoint
+      FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+      timeout_sec: new timeout period in seconds
+      Return value: 0 if the operation succeeds. Otherwise, -1
+      Error number: If the filesystem has already been unfrozen,
+                    errno is set to EINVAL.
+
+Any comments are very welcome.
+
+Cheers, Takashi
