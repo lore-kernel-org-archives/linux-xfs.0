@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 21:42:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M4gSJ5016436
-	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:42:28 -0700
-Date: Tue, 22 Jul 2008 00:43:37 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 21 Jul 2008 21:28:03 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6M4RsNg014741
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:27:54 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A6EF191688D
+	for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:29:03 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id RjnKaufuobjDSOzT for <xfs@oss.sgi.com>; Mon, 21 Jul 2008 21:29:03 -0700 (PDT)
+Date: Tue, 22 Jul 2008 00:29:03 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Export xfs_attr_set_int_trans
-Message-ID: <20080722044337.GA10290@infradead.org>
-References: <1215675545-2707-5-git-send-email-xaiki@sgi.com> <1215754695-6958-1-git-send-email-xaiki@sgi.com>
+Subject: Re: [PATCH 4/4] XFS: remove the mount inode list
+Message-ID: <20080722042903.GC27123@infradead.org>
+References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1215754695-6958-1-git-send-email-xaiki@sgi.com>
+In-Reply-To: <1216556394-17529-5-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jul 11, 2008 at 03:38:14PM +1000, Niv Sardi wrote:
-> make xfs_attr_set_int_trans non static so we can use it outside of xfs_attr.c
-> (Needed to use it in vnodeops.c, for create+EA)
+On Sun, Jul 20, 2008 at 10:19:54PM +1000, Dave Chinner wrote:
+> Now we've removed all users of the mount inode list,
+> we can kill it. This reduces the size of the xfs_inode
+> by 2 pointers.
 
-Any reason this is not merged into the previous patch?
+Looks good, but xfsidbg needs to be fixed up for this.
