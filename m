@@ -1,202 +1,158 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 12:55:31 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:46:01 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NJtPYq014274
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 12:55:25 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C913D31C14B
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 12:56:34 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 2knIDgZEtBfoeOvB for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 12:56:34 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NJuONg006983
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 21:56:24 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NJuOjb006981
-	for xfs@oss.sgi.com; Wed, 23 Jul 2008 21:56:24 +0200
-Date: Wed, 23 Jul 2008 21:56:24 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] factor out xfs_read_agf helper
-Message-ID: <20080723195624.GE6645@lst.de>
-Mime-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NKjwUO021933
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:45:58 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3DF631C396
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:46:47 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id xwp8iLKMvCFsiZa4 for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:46:47 -0700 (PDT)
+Date: Wed, 23 Jul 2008 16:46:45 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] XFS: remove the mount inode list
+Message-ID: <20080723204645.GA8421@infradead.org>
+References: <1216773673-3620-1-git-send-email-david@fromorbit.com> <1216773673-3620-5-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1216773673-3620-5-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Add a helper to read the AGF header and perform basic verification.
-Based on hunks from a larger patch from Dave Chinner.
+On Wed, Jul 23, 2008 at 10:41:13AM +1000, Dave Chinner wrote:
+> Now we've removed all users of the mount inode list,
+> we can kill it. This reduces the size of the xfs_inode
+> by 2 pointers.
+
+With this m_ilock can also become a spinlock.  Might not be worth
+depending on how soon you want to kill m_del_inodes.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_ag.h
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ag.h	2008-07-23 14:58:11.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ag.h	2008-07-23 14:58:13.000000000 +0200
-@@ -91,6 +91,8 @@ typedef struct xfs_agf {
- #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
- #define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)XFS_BUF_PTR(bp))
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 15:18:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 15:19:28.000000000 +0200
+@@ -1554,7 +1554,7 @@ xfs_fs_fill_super(
+ 		goto out;
  
-+extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
-+			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ 	spin_lock_init(&mp->m_sb_lock);
+-	mutex_init(&mp->m_ilock);
++	spin_lock_init(&mp->m_ilock);
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+ 	INIT_LIST_HEAD(&mp->m_sync_list);
+Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2008-07-23 15:18:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2008-07-23 15:19:28.000000000 +0200
+@@ -144,9 +144,9 @@ again:
+ 			xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
+ 			read_unlock(&pag->pag_ici_lock);
+ 
+-			XFS_MOUNT_ILOCK(mp);
++			spin_lock(&mp->m_ilock);
+ 			list_del_init(&ip->i_reclaim);
+-			XFS_MOUNT_IUNLOCK(mp);
++			spin_unlock(&mp->m_ilock);
+ 
+ 			goto finish_inode;
+ 
+@@ -484,10 +484,10 @@ xfs_iextract(
+ 	xfs_put_perag(mp, pag);
+ 
+ 	/* Deal with the deleted inodes list */
+-	XFS_MOUNT_ILOCK(mp);
++	spin_lock(&mp->m_ilock);
+ 	list_del_init(&ip->i_reclaim);
+ 	mp->m_ireclaims++;
+-	XFS_MOUNT_IUNLOCK(mp);
++	spin_unlock(&mp->m_ilock);
+ }
  
  /*
-  * Size of the unlinked inode hash table in the agi.
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-07-23 14:58:11.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-07-23 14:58:13.000000000 +0200
-@@ -2150,51 +2150,77 @@ xfs_alloc_put_freelist(
-  * Read in the allocation group header (free/alloc section).
-  */
- int					/* error */
--xfs_alloc_read_agf(
--	xfs_mount_t	*mp,		/* mount point structure */
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_agnumber_t	agno,		/* allocation group number */
--	int		flags,		/* XFS_ALLOC_FLAG_... */
--	xfs_buf_t	**bpp)		/* buffer for the ag freelist header */
-+xfs_read_agf(
-+	struct xfs_mount	*mp,	/* mount point structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	int			flags,	/* XFS_BUF_ */
-+	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
- {
--	xfs_agf_t	*agf;		/* ag freelist header */
-+	struct xfs_agf	*agf;		/* ag freelist header */
- 	int		agf_ok;		/* set if agf is consistent */
--	xfs_buf_t	*bp;		/* return value */
--	xfs_perag_t	*pag;		/* per allocation group data */
- 	int		error;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-07-23 15:18:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-07-23 15:19:28.000000000 +0200
+@@ -142,7 +142,7 @@ xfs_mount_free(
  
- 	ASSERT(agno != NULLAGNUMBER);
- 	error = xfs_trans_read_buf(
- 			mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1),
--			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0U,
--			&bp);
-+			XFS_FSS_TO_BB(mp, 1), flags, bpp);
- 	if (error)
- 		return error;
--	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
--	if (!bp) {
--		*bpp = NULL;
-+	if (!*bpp)
- 		return 0;
--	}
-+
-+	ASSERT(!XFS_BUF_GETERROR(*bpp));
-+	agf = XFS_BUF_TO_AGF(*bpp);
-+
- 	/*
- 	 * Validate the magic number of the agf block.
- 	 */
--	agf = XFS_BUF_TO_AGF(bp);
- 	agf_ok =
- 		be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC &&
- 		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
- 		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
- 		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
- 		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
--		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
-+		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
-+		be32_to_cpu(agf->agf_seqno) == agno;
- 	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
- 			XFS_RANDOM_ALLOC_READ_AGF))) {
- 		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
- 				     XFS_ERRLEVEL_LOW, mp, agf);
--		xfs_trans_brelse(tp, bp);
-+		xfs_trans_brelse(tp, *bpp);
- 		return XFS_ERROR(EFSCORRUPTED);
+ 	spinlock_destroy(&mp->m_ail_lock);
+ 	spinlock_destroy(&mp->m_sb_lock);
+-	mutex_destroy(&mp->m_ilock);
++	spinlock_destroy(&mp->m_ilock);
+ 	mutex_destroy(&mp->m_growlock);
+ 	if (mp->m_quotainfo)
+ 		XFS_QM_DONE(mp);
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-07-23 15:18:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-07-23 15:19:28.000000000 +0200
+@@ -248,7 +248,7 @@ typedef struct xfs_mount {
+ 	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+ 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+ 	struct list_head	m_del_inodes;	/* inodes to reclaim */
+-	mutex_t			m_ilock;	/* inode list mutex */
++	spinlock_t		m_ilock;	/* synchronize m_del_inodes */
+ 	uint			m_ireclaims;	/* count of calls to reclaim*/
+ 	uint			m_readio_log;	/* min read size log bytes */
+ 	uint			m_readio_blocks; /* min read size blocks */
+@@ -509,9 +509,6 @@ typedef struct xfs_mod_sb {
+ 	int64_t		msb_delta;	/* Change to make to specified field */
+ } xfs_mod_sb_t;
+ 
+-#define	XFS_MOUNT_ILOCK(mp)	mutex_lock(&((mp)->m_ilock))
+-#define	XFS_MOUNT_IUNLOCK(mp)	mutex_unlock(&((mp)->m_ilock))
+-
+ extern void	xfs_mod_sb(xfs_trans_t *, __int64_t);
+ extern int	xfs_log_sbcount(xfs_mount_t *, uint);
+ extern int	xfs_mountfs(xfs_mount_t *mp, int);
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-07-23 15:18:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-07-23 15:19:28.000000000 +0200
+@@ -2834,14 +2834,14 @@ xfs_reclaim(
+ 		xfs_mount_t	*mp = ip->i_mount;
+ 
+ 		/* Protect sync and unpin from us */
+-		XFS_MOUNT_ILOCK(mp);
++		spin_lock(&mp->m_ilock);
+ 		spin_lock(&ip->i_flags_lock);
+ 		__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 		vn_to_inode(vp)->i_private = NULL;
+ 		ip->i_vnode = NULL;
+ 		spin_unlock(&ip->i_flags_lock);
+ 		list_add_tail(&ip->i_reclaim, &mp->m_del_inodes);
+-		XFS_MOUNT_IUNLOCK(mp);
++		spin_unlock(&mp->m_ilock);
  	}
-+
-+	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGF, XFS_AGF_REF);
-+	return 0;
-+}
-+
-+/*
-+ * Read in the allocation group header (free/alloc section).
-+ */
-+int					/* error */
-+xfs_alloc_read_agf(
-+	struct xfs_mount	*mp,	/* mount point structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	int			flags,	/* XFS_ALLOC_FLAG_... */
-+	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
-+{
-+	struct xfs_agf		*agf;		/* ag freelist header */
-+	struct xfs_perag	*pag;		/* per allocation group data */
-+	int			error;
-+
-+	ASSERT(agno != NULLAGNUMBER);
-+
-+	error = xfs_read_agf(mp, tp, agno,
-+			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0,
-+			bpp);
-+	ASSERT(!*bpp || !XFS_BUF_GETERROR(*bpp));
-+	if (!*bpp)
-+		return 0;
-+	agf = XFS_BUF_TO_AGF(*bpp);
- 	pag = &mp->m_perag[agno];
- 	if (!pag->pagf_init) {
- 		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
-@@ -2221,8 +2247,6 @@ xfs_alloc_read_agf(
- 		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
+ 	return 0;
+ }
+@@ -2922,7 +2922,7 @@ xfs_finish_reclaim_all(
+ 	xfs_inode_t	*ip, *n;
+ 
+ restart:
+-	XFS_MOUNT_ILOCK(mp);
++	spin_lock(&mp->m_ilock);
+ 	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
+ 		if (noblock) {
+ 			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
+@@ -2933,12 +2933,12 @@ restart:
+ 				continue;
+ 			}
+ 		}
+-		XFS_MOUNT_IUNLOCK(mp);
++		spin_unlock(&mp->m_ilock);
+ 		if (xfs_finish_reclaim(ip, noblock, mode))
+ 			delay(1);
+ 		goto restart;
  	}
- #endif
--	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGF, XFS_AGF_REF);
--	*bpp = bp;
+-	XFS_MOUNT_IUNLOCK(mp);
++	spin_unlock(&mp->m_ilock);
  	return 0;
  }
  
-Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-07-23 14:58:11.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-07-23 14:59:05.000000000 +0200
-@@ -4001,7 +4001,6 @@ xlog_recover_check_summary(
- 	xfs_agi_t	*agip;
- 	xfs_buf_t	*agfbp;
- 	xfs_buf_t	*agibp;
--	xfs_daddr_t	agfdaddr;
- 	xfs_buf_t	*sbbp;
- #ifdef XFS_LOUD_RECOVERY
- 	xfs_sb_t	*sbp;
-@@ -4018,21 +4017,18 @@ xlog_recover_check_summary(
- 	itotal = 0LL;
- 	ifree = 0LL;
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
--		agfdaddr = XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp));
--		agfbp = xfs_buf_read(mp->m_ddev_targp, agfdaddr,
--				XFS_FSS_TO_BB(mp, 1), 0);
--		if (XFS_BUF_ISERROR(agfbp)) {
--			xfs_ioerror_alert("xlog_recover_check_summary(agf)",
--						mp, agfbp, agfdaddr);
-+		error = xfs_read_agf(mp, NULL, agno, 0, &agfbp);
-+		if (error) {
-+			xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_check_summary(agf)"
-+					"agf read failed agno %d error %d",
-+							agno, error);
-+		} else {
-+			agfp = XFS_BUF_TO_AGF(agfbp);
-+			freeblks += be32_to_cpu(agfp->agf_freeblks) +
-+				    be32_to_cpu(agfp->agf_flcount);
-+			xfs_buf_relse(agfbp);
- 		}
--		agfp = XFS_BUF_TO_AGF(agfbp);
--		ASSERT(XFS_AGF_MAGIC == be32_to_cpu(agfp->agf_magicnum));
--		ASSERT(XFS_AGF_GOOD_VERSION(be32_to_cpu(agfp->agf_versionnum)));
--		ASSERT(be32_to_cpu(agfp->agf_seqno) == agno);
--
--		freeblks += be32_to_cpu(agfp->agf_freeblks) +
--			    be32_to_cpu(agfp->agf_flcount);
--		xfs_buf_relse(agfbp);
- 
- 		error = xfs_read_agi(mp, NULL, agno, &agibp);
- 		if (error) {
