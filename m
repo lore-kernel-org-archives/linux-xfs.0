@@ -1,135 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 22:34:27 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6N5YPrX026062
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 22:34:25 -0700
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: [UPDATED RFC] Create with EA initial work
-References: <1214196150-5427-1-git-send-email-xaiki@sgi.com>
-	<1215675545-2707-1-git-send-email-xaiki@sgi.com>
-	<20080722043851.GA7244@infradead.org>
-Date: Wed, 23 Jul 2008 15:35:23 +1000
-In-Reply-To: <20080722043851.GA7244@infradead.org> (Christoph Hellwig's
-	message of "Tue, 22 Jul 2008 00:38:51 -0400")
-Message-ID: <87y73t9n8k.fsf@cxhome.ath.cx>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 23:35:15 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6N6Z812029900
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 23:35:10 -0700
+Subject: TAKE 981498 -  XFS: Avoid directly referencing the VFS inode V2
+Message-Id: <20080723063612.8939B58C4C3F@chook.melbourne.sgi.com>
+Date: Wed, 23 Jul 2008 16:36:12 +1000 (EST)
+From: xaiki@sgi.com (Niv Sardi-Altivanik)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
---=-=-=
+In several places we directly convert from the XFS inode
+to the linux (VFS) inode by a simple deference of ip->i_vnode.
+We should not do this - a helper function should be used to
+extract the VFS inode from the XFS inode.
 
-Christoph Hellwig <hch@infradead.org> writes:
-> On Thu, Jul 10, 2008 at 05:39:01PM +1000, Niv Sardi wrote:
->> There is a bug in this, that I can see with the Parent Pointers code
->> going on top of it (that will be posted soon), it is basically calling
->> xfs_attr_set_int_trans() in xfs_create() just before the last
->> commit. For some reason, the first call to xfs_roll_trans (after
->> xfs_bmap_add_attrfork_trans()) will complain about the inode being
->> unlocked after xfs_trans_commit(). I understand I need to call
->> xfs_trans_ihold(ip) on it, but we already do in xfs_create() so I
->> think I must be missing something else??? any ideas ?
->
-> There are multiple ways to deal with inodes linked to transactions.
->
-> In all cases it needs to be linked into the transaction by
-> xfs_trans_ijoin, or the opencoded equivalent for a new inode in
-> xfs_trans_iget.
+Introduce the function VFS_I() to extract the VFS inode
+from the XFS inode. The name was chosen to match XFS_I() which
+is used to extract the XFS inode from the VFS inode.
 
-Shouldn't the inode already be in the transaction ? we just created it
-and added it to the directory ?
+Version 2:
+o don't use vn_to_inode() and inode_to_vn() functions as they
+  are not needed
 
-xfs_create()
-  xfs_dir_ialloc(tp, dp, ip)
-    xfs_ialloc(tp, dp, ip)
-      xfs_trans_iget(tp, ip)
-
-and it has a i_transp after dir_ialloc.
-
-And is why don't we use ijoin in iget as we copy the exact same code a
-few lines later ? (like in [0])
-
->  Then you can use xfs_trans_ihold to make sure on transaction commit
-> the inode reference count is not dropped and the inode is not
-> unlocked, or simply grab a reference to the inode and let the
-> transaction commit handler unlock it and decrement the reference
-> count.  The latter is what's used by xfs_create and the former is what
-> the attr code does, and as far as I can see the only things what works
-> with xfs_attr_rolltrans.
-
-hum, that seemed to work on my UML, shall we require callers to do all
-the ihold, ijoin stuff or should we do that (or at least check it) from
-the new attr*_trans code ?
-
-[0] 
---=-=-=
-Content-Disposition: attachment
-
->From 18a682c77b0f89faae6906ebc0d73af59ddff632 Mon Sep 17 00:00:00 2001
-From: Niv Sardi <xaiki@debian.org>
-Date: Wed, 23 Jul 2008 11:27:20 +1000
-Subject: [PATCH] Use xfs_trans_ijoin in xfs_trans_iget
-
-Avoid some code duplication
-
-Signed-off-by: Niv Sardi <xaiki@sgi.com>
----
- fs/xfs/xfs_trans_inode.c |   30 +-----------------------------
- 1 files changed, 1 insertions(+), 29 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index 2a1c0f0..1dbcbe9 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -138,35 +138,7 @@ xfs_trans_iget(
- 	}
- 	ASSERT(ip != NULL);
- 
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	if (ip->i_itemp == NULL)
--		xfs_inode_item_init(ip, mp);
--	iip = ip->i_itemp;
--	(void) xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
--
--	xfs_trans_inode_broot_debug(ip);
--
--	/*
--	 * If the IO lock has been acquired, mark that in
--	 * the inode log item so we'll know to unlock it
--	 * when the transaction commits.
--	 */
--	ASSERT(iip->ili_flags == 0);
--	if (lock_flags & XFS_IOLOCK_EXCL) {
--		iip->ili_flags |= XFS_ILI_IOLOCKED_EXCL;
--	} else if (lock_flags & XFS_IOLOCK_SHARED) {
--		iip->ili_flags |= XFS_ILI_IOLOCKED_SHARED;
--	}
--
--	/*
--	 * Initialize i_transp so we can find it with xfs_inode_incore()
--	 * above.
--	 */
--	ip->i_transp = tp;
--
--	*ipp = ip;
-+	xfs_trans_ijoin(tp, ip, lock_flags);
- 	return 0;
- }
- 
--- 
-1.5.6
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 
---=-=-=
+Date:  Wed Jul 23 16:32:07 AEST 2008
+Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
+Inspected by:  dchinner,hch,xaiki
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Cheers,
--- 
-Niv Sardi
-
---=-=-=--
+Modid:  xfs-linux-melb:xfs-kern:31720a
+fs/xfs/xfs_iget.c - 1.242 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.242&r2=text&tr2=1.241&f=h
+fs/xfs/xfs_inode.h - 1.247 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.247&r2=text&tr2=1.246&f=h
+fs/xfs/xfs_utils.c - 1.85 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_utils.c.diff?r1=text&tr1=1.85&r2=text&tr2=1.84&f=h
+fs/xfs/linux-2.6/xfs_lrw.c - 1.281 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.281&r2=text&tr2=1.280&f=h
+fs/xfs/linux-2.6/xfs_fs_subr.c - 1.54 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_fs_subr.c.diff?r1=text&tr1=1.54&r2=text&tr2=1.53&f=h
+fs/xfs/linux-2.6/xfs_super.c - 1.436 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.436&r2=text&tr2=1.435&f=h
+fs/xfs/linux-2.6/xfs_iops.c - 1.294 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.294&r2=text&tr2=1.293&f=h
+fs/xfs/linux-2.6/xfs_iops.h - 1.35 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.h.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
+fs/xfs/linux-2.6/xfs_export.c - 1.25 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_export.c.diff?r1=text&tr1=1.25&r2=text&tr2=1.24&f=h
