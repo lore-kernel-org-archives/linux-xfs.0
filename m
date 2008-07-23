@@ -1,52 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 04:38:50 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NBcmsc003445
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 04:38:48 -0700
-Received: from an-out-0708.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 82D43E8B120
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 04:39:58 -0700 (PDT)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.245]) by cuda.sgi.com with ESMTP id 7rh7mHBkTMYulwpl for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 04:39:58 -0700 (PDT)
-Received: by an-out-0708.google.com with SMTP id d30so543148and.75
-        for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 04:39:57 -0700 (PDT)
-Message-ID: <2d460de70807230439gd058b9csa6a5e0be5bbadc0d@mail.gmail.com>
-Date: Wed, 23 Jul 2008 13:39:57 +0200
-From: "Richard Hartmann" <richih.mailinglist@gmail.com>
-Subject: Re: xfsrestore over ssh?
-In-Reply-To: <4886790C.7040100@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 07:26:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NEQNTZ013417
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 07:26:23 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 285D2319A37
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 07:27:32 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id hAEfvcF27SoLHv6x for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 07:27:32 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NERMNg023000
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 16:27:23 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NERMRG022998
+	for xfs@oss.sgi.com; Wed, 23 Jul 2008 16:27:22 +0200
+Date: Wed, 23 Jul 2008 16:27:22 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] remove unused m_inode_quiesce member from struct xfs_mount
+Message-ID: <20080723142720.GB22859@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <2d460de70807211317m75bc236y403d8fa57514262e@mail.gmail.com>
-	 <4884F2A5.5050507@sgi.com>
-	 <2d460de70807212002k1a95706ic8291e2abd8796b8@mail.gmail.com>
-	 <48855B16.4050208@sgi.com>
-	 <1216708397.4499.57.camel@verge.scott.net.au>
-	 <48858676.3030105@sgi.com>
-	 <2d460de70807220351i7c468de5o33fa5aa5e9ddab99@mail.gmail.com>
-	 <4886790C.7040100@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Nathan Scott <nscott@aconex.com>, Bill Kendall <wkendall@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jul 23, 2008 at 02:19, Timothy Shimmin <tes@sgi.com> wrote:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-> Okay, my best guess is that you are trying to restore to a non-xfs
-> filesystem. This was fixed again in 2.2.26 so that it would work
-> on a non-xfs filesystem.
-> Otherwise the xfs ioctl will be being called and get back an EINVAL
-> as we saw in the strace.
-
-As I cancelled the first working xfsrestore (kept the strace in the
-command), re-mkfs-ed and then restored, there is no way to verify,
-but I am _sure_ it was a xfs partition. I did not even know you could
-restore to non-xfs so I would never try to do that (not that I would use
-anything else, anyway ;)
-
-
-Thanks for looking into this,
-Richard
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-07-23 15:07:43.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-07-23 15:07:51.000000000 +0200
+@@ -313,8 +313,6 @@ typedef struct xfs_mount {
+ 	int			m_attr_magicpct;/* 37% of the blocksize */
+ 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
+ 	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
+-	__uint8_t		m_inode_quiesce;/* call quiesce on new inodes.
+-						   field governed by m_ilock */
+ 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+ 	int			m_dirblksize;	/* directory block sz--bytes */
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-07-23 15:07:25.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-07-23 15:07:38.000000000 +0200
+@@ -6377,8 +6377,8 @@ xfsidbg_xmount(xfs_mount_t *mp)
+ 	kdb_printf("dalign %d swidth %d sinoalign %d attr_magicpct %d dir_magicpct %d\n",
+ 		mp->m_dalign, mp->m_swidth, mp->m_sinoalign,
+ 		mp->m_attr_magicpct, mp->m_dir_magicpct);
+-	kdb_printf("mk_sharedro %d inode_quiesce %d sectbb_log %d\n",
+-		mp->m_mk_sharedro, mp->m_inode_quiesce, mp->m_sectbb_log);
++	kdb_printf("mk_sharedro %d sectbb_log %d\n",
++		mp->m_mk_sharedro, mp->m_sectbb_log);
+ 	kdb_printf("dirblkfsbs %d\n", mp->m_dirblkfsbs);
+ 	kdb_printf("dirblksize %d dirdatablk 0x%Lx dirleafblk 0x%Lx dirfreeblk 0x%Lx\n",
+ 		mp->m_dirblksize,
