@@ -1,62 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 21:32:39 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6N4WaRU021913
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 21:32:36 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92E2A3178C1
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 21:33:45 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id NhyefeiIVoS5p5hG for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 21:33:45 -0700 (PDT)
-Date: Wed, 23 Jul 2008 14:33:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/4] XFS: replace the mount inode list with radix tree
-	traversals V2
-Message-ID: <20080723043343.GJ5947@disturbed>
-References: <1216773673-3620-1-git-send-email-david@fromorbit.com> <48869628.8010201@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 22:00:04 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6N4xuoK023882
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 21:59:57 -0700
+Message-ID: <4886BB09.3080400@sgi.com>
+Date: Wed, 23 Jul 2008 15:00:57 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48869628.8010201@sgi.com>
+Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
+References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com> <4886A9A3.8090805@sandeen.net> <4886ADB6.5060109@sgi.com> <4886AF06.40808@sandeen.net>
+In-Reply-To: <4886AF06.40808@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Goodwin <markgw@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Jul 23, 2008 at 12:23:36PM +1000, Mark Goodwin wrote:
->
->
-> Dave Chinner wrote:
->> The list of all inodes on a mount is superfluous. We can traverse
->> all inodes now by walking the per-AG inode radix trees without
->> needing a separate list. This enables us to remove a bunch of
->> complex list traversal code and remove another two pointers from
->> the xfs_inode.
->
-> sounds like a good move.
->
->> Also, by replacing the sync traversal with an ascending inode
->> number traversal, we will issue better inode I/O patterns for
->> writeback triggered by xfssyncd or unmount.
->
-> Dave, have you made any performance measurements showing this to
-> be the case?  If so, what is the improvement?
 
-I don't have a test rig I can use to measure it sufficiently
-accurately.
 
-> Or should we just assume
-> such traversals will be more naturally sequential and therefore more
-> efficient?
+Eric Sandeen wrote:
+> Mark Goodwin wrote:
+> 
+>> As above, just run QA for cleanups.
+> 
+> Out of curiosity, will you trust this?  You'll run QA anyway, right?
 
-Not an assumption - I've verified this occurs with blktrace. I'm
-seeing ascending order dispatch and a reduction in the number and
-distance of seeks as well as I/Os being issued to "disk" during such
-events (like unmount, for example)....
+yes we run it anyway, so maybe this (as a requirement) is overkill.
 
-Cheers,
+> And do you very often find errors in submitted patches by running QA?
+> 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+don't know, but it is part of the review process. For cleanups,
+bugs/regressions seem to be fairly rare (hence they're subtle and
+unexpected). I think you found one such regression a while back,
+(after a herculean effort).
+
+Cheers
+-- Mark
