@@ -1,104 +1,166 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:08:30 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:08:39 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK86T2016198
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:07 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK8AV2016269
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:10 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B04C31C27D
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:15 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 2tdP4uSXisNhPxHO for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:15 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK8sNg007500
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:08:54 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK8r4k007498
-	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:08:53 +0200
-Date: Wed, 23 Jul 2008 22:08:53 +0200
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58B9831C281
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:20 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id RF5UjtZq3MkYEjBG for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:20 -0700 (PDT)
+Date: Wed, 23 Jul 2008 22:09:10 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/15] add a long pointers flag to xfs_btree_cur
-Message-ID: <20080723200853.GG7401@lst.de>
+Subject: [PATCH 09/15] add new btree statistics
+Message-ID: <20080723200910.GJ7401@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-btree-long-flag
+Content-Disposition: inline; filename=xfs-btree-stats
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dgc@sgi.com>
 
-Add a flag to the xfs btree cursor when using long (64bit) block pointers
-instead of checking btnum == XFS_BTNUM_BMAP.
+From: Dave Chinner <dgc@sgi.com>
+
+Introduce statistics coverage of all the btrees and cover
+all the btree operations, not just some.
+
+Invaluable for determining test code coverage of all the btree
+operations....
 
 
+Signed-off-by: Dave Chinner <dgc@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-07-11 11:12:37.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-07-11 11:13:15.000000000 +0200
-@@ -90,7 +90,7 @@ xfs_btree_check_block(
- 	int			level,	/* level of the btree block */
- 	xfs_buf_t		*bp)	/* buffer containing block, if any */
- {
--	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum))
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
- 		xfs_btree_check_lblock(cur, (xfs_btree_lblock_t *)block, level,
- 			bp);
- 	else
-@@ -500,7 +500,7 @@ xfs_btree_islastblock(
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.c	2008-07-14 17:24:05.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c	2008-07-14 17:29:17.000000000 +0200
+@@ -53,6 +53,10 @@ xfs_read_xfsstats(
+ 		{ "icluster",		XFSSTAT_END_INODE_CLUSTER	},
+ 		{ "vnodes",		XFSSTAT_END_VNODE_OPS		},
+ 		{ "buf",		XFSSTAT_END_BUF			},
++		{ "abtb2",		XFSSTAT_END_ABTB_V2		},
++		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
++		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
++		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+ 	};
  
- 	block = xfs_btree_get_block(cur, level, &bp);
- 	xfs_btree_check_block(cur, block, level, bp);
--	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum))
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
- 		return be64_to_cpu(block->bb_u.l.bb_rightsib) == NULLDFSBNO;
- 	else
- 		return be32_to_cpu(block->bb_u.s.bb_rightsib) == NULLAGBLOCK;
-@@ -792,7 +792,7 @@ xfs_btree_setbuf(
- 	if (!bp)
- 		return;
- 	b = XFS_BUF_TO_BLOCK(bp);
--	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum)) {
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
- 		if (be64_to_cpu(b->bb_u.l.bb_leftsib) == NULLDFSBNO)
- 			cur->bc_ra[lev] |= XFS_BTCUR_LEFTRA;
- 		if (be64_to_cpu(b->bb_u.l.bb_rightsib) == NULLDFSBNO)
+ 	/* Loop over all stats groups */
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.h	2008-07-14 17:24:05.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h	2008-07-14 17:29:17.000000000 +0200
+@@ -118,6 +118,71 @@ struct xfsstats {
+ 	__uint32_t		xb_page_retries;
+ 	__uint32_t		xb_page_found;
+ 	__uint32_t		xb_get_read;
++/* Version 2 btree counters */
++#define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+15)
++	__uint32_t		xs_abtb_2_lookup;
++	__uint32_t		xs_abtb_2_compare;
++	__uint32_t		xs_abtb_2_insrec;
++	__uint32_t		xs_abtb_2_delrec;
++	__uint32_t		xs_abtb_2_newroot;
++	__uint32_t		xs_abtb_2_killroot;
++	__uint32_t		xs_abtb_2_increment;
++	__uint32_t		xs_abtb_2_decrement;
++	__uint32_t		xs_abtb_2_lshift;
++	__uint32_t		xs_abtb_2_rshift;
++	__uint32_t		xs_abtb_2_split;
++	__uint32_t		xs_abtb_2_join;
++	__uint32_t		xs_abtb_2_alloc;
++	__uint32_t		xs_abtb_2_free;
++	__uint32_t		xs_abtb_2_moves;
++#define XFSSTAT_END_ABTC_V2		(XFSSTAT_END_ABTB_V2+15)
++	__uint32_t		xs_abtc_2_lookup;
++	__uint32_t		xs_abtc_2_compare;
++	__uint32_t		xs_abtc_2_insrec;
++	__uint32_t		xs_abtc_2_delrec;
++	__uint32_t		xs_abtc_2_newroot;
++	__uint32_t		xs_abtc_2_killroot;
++	__uint32_t		xs_abtc_2_increment;
++	__uint32_t		xs_abtc_2_decrement;
++	__uint32_t		xs_abtc_2_lshift;
++	__uint32_t		xs_abtc_2_rshift;
++	__uint32_t		xs_abtc_2_split;
++	__uint32_t		xs_abtc_2_join;
++	__uint32_t		xs_abtc_2_alloc;
++	__uint32_t		xs_abtc_2_free;
++	__uint32_t		xs_abtc_2_moves;
++#define XFSSTAT_END_BMBT_V2		(XFSSTAT_END_ABTC_V2+15)
++	__uint32_t		xs_bmbt_2_lookup;
++	__uint32_t		xs_bmbt_2_compare;
++	__uint32_t		xs_bmbt_2_insrec;
++	__uint32_t		xs_bmbt_2_delrec;
++	__uint32_t		xs_bmbt_2_newroot;
++	__uint32_t		xs_bmbt_2_killroot;
++	__uint32_t		xs_bmbt_2_increment;
++	__uint32_t		xs_bmbt_2_decrement;
++	__uint32_t		xs_bmbt_2_lshift;
++	__uint32_t		xs_bmbt_2_rshift;
++	__uint32_t		xs_bmbt_2_split;
++	__uint32_t		xs_bmbt_2_join;
++	__uint32_t		xs_bmbt_2_alloc;
++	__uint32_t		xs_bmbt_2_free;
++	__uint32_t		xs_bmbt_2_moves;
++#define XFSSTAT_END_IBT_V2		(XFSSTAT_END_BMBT_V2+15)
++	__uint32_t		xs_ibt_2_lookup;
++	__uint32_t		xs_ibt_2_compare;
++	__uint32_t		xs_ibt_2_insrec;
++	__uint32_t		xs_ibt_2_delrec;
++	__uint32_t		xs_ibt_2_newroot;
++	__uint32_t		xs_ibt_2_killroot;
++	__uint32_t		xs_ibt_2_increment;
++	__uint32_t		xs_ibt_2_decrement;
++	__uint32_t		xs_ibt_2_lshift;
++	__uint32_t		xs_ibt_2_rshift;
++	__uint32_t		xs_ibt_2_split;
++	__uint32_t		xs_ibt_2_join;
++	__uint32_t		xs_ibt_2_alloc;
++	__uint32_t		xs_ibt_2_free;
++	__uint32_t		xs_ibt_2_moves;
+ /* Extra precision counters */
+ 	__uint64_t		xs_xstrat_bytes;
+ 	__uint64_t		xs_write_bytes;
 Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-11 11:12:37.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-11 11:13:15.000000000 +0200
-@@ -121,11 +121,6 @@ union xfs_btree_rec {
- #define	XFS_BB_ALL_BITS		((1 << XFS_BB_NUM_BITS) - 1)
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-14 17:28:45.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-14 17:29:17.000000000 +0200
+@@ -126,6 +126,34 @@ union xfs_btree_rec {
+ extern const __uint32_t	xfs_magics[];
  
  /*
-- * Boolean to select which form of xfs_btree_block_t.bb_u to use.
-- */
--#define	XFS_BTREE_LONG_PTRS(btnum)	((btnum) == XFS_BTNUM_BMAP)
--
--/*
-  * Magic numbers for btree blocks.
-  */
- extern const __uint32_t	xfs_magics[];
-@@ -211,6 +206,7 @@ typedef struct xfs_btree_cur
- } xfs_btree_cur_t;
- 
- /* cursor flags */
-+#define XFS_BTREE_LONG_PTRS		(1<<0)	/* pointers are 64bits long */
- #define XFS_BTREE_ROOT_IN_INODE		(1<<1)	/* root may be variable size */
- 
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-07-11 11:12:37.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-07-11 11:13:15.000000000 +0200
-@@ -2667,7 +2667,7 @@ xfs_bmbt_init_cursor(
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
- 
- 	cur->bc_ops = &xfs_bmbt_ops;
--	cur->bc_flags = XFS_BTREE_ROOT_IN_INODE;
-+	cur->bc_flags = XFS_BTREE_LONG_PTRS | XFS_BTREE_ROOT_IN_INODE;
- 
- 	cur->bc_private.b.forksize = XFS_IFORK_SIZE(ip, whichfork);
- 	cur->bc_private.b.ip = ip;
++ * Generic stats interface
++ */
++#define __XFS_BTREE_STATS_INC(type, stat) \
++	XFS_STATS_INC(xs_ ## type ## _2_ ## stat)
++#define XFS_BTREE_STATS_INC(cur, stat)  \
++do {    \
++	switch (cur->bc_btnum) {  \
++	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_INC(abtb, stat); break;	\
++	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(abtc, stat); break;	\
++	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
++	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
++	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	}       \
++} while (0)
++
++#define __XFS_BTREE_STATS_ADD(type, stat, val) \
++	XFS_STATS_ADD(xs_ ## type ## _2_ ## stat, val)
++#define XFS_BTREE_STATS_ADD(cur, stat, val)  \
++do {    \
++	switch (cur->bc_btnum) {  \
++	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_ADD(abtb, stat, val); break; \
++	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_ADD(abtc, stat, val); break; \
++	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
++	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
++	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	}       \
++} while (0)
++/*
+  * Maximum and minimum records in a btree block.
+  * Given block size, type prefix, and leaf flag (0 or 1).
+  * The divisor below is equivalent to lf ? (e1) : (e2) but that produces
 
 -- 
