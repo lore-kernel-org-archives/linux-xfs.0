@@ -1,37 +1,84 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:07:17 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK7EbF015417
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:07:15 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:07:48 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK7flr015750
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:07:41 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0B2D31C26C
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:24 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id Aozsi4BGBMxdRcyb for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:24 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 997D81B3ED45
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:51 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id A25ZRE4rbZg0ZRUt for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:51 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK8ENg007416
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK8gNg007475
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:08:15 +0200
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:08:42 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK8ERD007414
-	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:08:14 +0200
-Date: Wed, 23 Jul 2008 22:08:14 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK8gfw007473
+	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:08:42 +0200
+Date: Wed, 23 Jul 2008 22:08:42 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 00/15] Btree cleanups and unification
-Message-ID: <20080723200814.GA7401@lst.de>
+Subject: [PATCH 04/15] add generic btree types
+Message-ID: <20080723200842.GE7401@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Disposition: inline; filename=xfs-btree-add-generic-types
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-I've started reviewing and reshuffling the common btree implementations
-from Dave.  This patch series is a status of the patches I have run
-successfully through XFSQA so far.  All the really hairy operations are
-still missing, but I'm interested in some feedback on the approach.
+Add generic union types for btree pointers, keys and records.  The generic
+btree pointer contains a 32 and 64bit big endian type for short and long
+form btrees, and the key and record contain the relevant type for each
+possible btree.
 
-Patches 1 and 2 are rather trivial cleanups that could probably be
-applied ASAP.
+Split out from a bigger patch from Dave Chinner and simplified a little
+further.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-14 17:26:11.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-14 17:27:59.000000000 +0200
+@@ -70,6 +70,12 @@ typedef struct xfs_btree_hdr
+ 	__be16		bb_numrecs;	/* current # of data records */
+ } xfs_btree_hdr_t;
+ 
++/*
++ * Generic block, key, ptr and record wrapper structures
++ * These are disk format structures, and are converted where
++ * necessary be the btree specific code that needs to interpret
++ * them.
++ */
+ typedef struct xfs_btree_block {
+ 	xfs_btree_hdr_t	bb_h;		/* header */
+ 	union {
+@@ -84,6 +90,25 @@ typedef struct xfs_btree_block {
+ 	} bb_u;				/* rest */
+ } xfs_btree_block_t;
+ 
++union xfs_btree_ptr {
++	__be32			s;	/* short form ptr */
++	__be64			l;	/* long form ptr */
++};
++
++union xfs_btree_key {
++	xfs_bmbt_key_t		bmbt;
++	xfs_bmdr_key_t		bmbr;	/* bmbt root block */
++	xfs_alloc_key_t		alloc;
++	xfs_inobt_key_t		inobt;
++};
++
++union xfs_btree_rec {
++	xfs_bmbt_rec_t		bmbt;
++	xfs_bmdr_rec_t		bmbr;	/* bmbt root block */
++	xfs_alloc_rec_t		alloc;
++	xfs_inobt_rec_t		inobt;
++};
++
+ /*
+  * For logging record fields.
+  */
 
 -- 
