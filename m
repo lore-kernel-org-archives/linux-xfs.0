@@ -1,40 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 00:10:29 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6N7ANuj002945
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:10:26 -0700
-Subject: TAKE 981498 - XFS: Kill xfs_vtoi()
-Message-Id: <20080723071129.2579258C4C3F@chook.melbourne.sgi.com>
-Date: Wed, 23 Jul 2008 17:11:29 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi-Altivanik)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 00:16:42 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6N7Gdk2003853
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:16:40 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 497B6317DC0
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:17:49 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 8kesupJmnNcDyQey for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:17:49 -0700 (PDT)
+Date: Wed, 23 Jul 2008 03:17:48 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/4] XFS: replace the mount inode list with radix tree
+	traversals V2
+Message-ID: <20080723071748.GA25807@infradead.org>
+References: <1216773673-3620-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1216773673-3620-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-XFS: Kill xfs_vtoi()
+On Wed, Jul 23, 2008 at 10:41:09AM +1000, Dave Chinner wrote:
+> The list of all inodes on a mount is superfluous. We can traverse
+> all inodes now by walking the per-AG inode radix trees without
+> needing a separate list. This enables us to remove a bunch of
+> complex list traversal code and remove another two pointers from
+> the xfs_inode.
+> 
+> Also, by replacing the sync traversal with an ascending inode
+> number traversal, we will issue better inode I/O patterns for
+> writeback triggered by xfssyncd or unmount.
 
-xfs_vtoi() is redundant and only unsed in small sections
-of code. Replace them with widely used XFS_I() inline and
-kill xfs_vtoi().
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-
-Date:  Wed Jul 23 17:10:41 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-Inspected by:  dgc,hch,xaiki
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31725a
-fs/xfs/xfs_acl.c - 1.76 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.c.diff?r1=text&tr1=1.76&r2=text&tr2=1.75&f=h
-fs/xfs/xfs_inode.h - 1.250 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.250&r2=text&tr2=1.249&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.154 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.154&r2=text&tr2=1.153&f=h
-fs/xfs/linux-2.6/xfs_aops.c - 1.163 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.163&r2=text&tr2=1.162&f=h
+All patches looks good to me.  Well, minus the xfsidbg issue in 4
+which would be a merge blocker for that patch.
