@@ -1,1012 +1,1567 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:09:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK8nNV016954
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:49 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:08:59 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK8Ho9016393
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:18 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21C07E8E89B
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:56 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id o8f0XO6f4pZNR39t for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0436B1B3ED5A
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:25 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id J7G5qf1ixsxaumx9 for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:25 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK9kNg007658
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK9FNg007565
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:09:46 +0200
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:09:15 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK9jIx007656
-	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:09:45 +0200
-Date: Wed, 23 Jul 2008 22:09:45 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK9F7u007563
+	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:09:15 +0200
+Date: Wed, 23 Jul 2008 22:09:15 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/15] implement generic xfs_btree_update
-Message-ID: <20080723200945.GP7401@lst.de>
+Subject: [PATCH 10/15] make btree tracing generic
+Message-ID: <20080723200915.GK7401@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
-Content-Disposition: inline; filename=xfs-common-btree-update
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline; filename=xfs-btree-trace
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dgc@sgi.com>
+make the existing bmap btree tracing generic so that it applies to all
+btree types.
 
-The most complicated part here is the lastrec tracking for
-the alloc btree.  Most logic is in the update_lastrec method
-which has to do some hopefully good enough dirty magic to
-maintain it.
-
-[hch: split out from bigger patch and a rework of the lastrec
- logic]
+Some fragments lifted from a patch by Dave Chinner.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-07-21 05:10:43.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-07-21 05:24:20.000000000 +0200
-@@ -867,6 +867,30 @@ xfs_btree_get_sibling(
- 	}
- }
- 
-+/*
-+ * Return true if ptr is the last record in the btree and
-+ * we need to track updateѕ to this record.  The decision
-+ * will be further refined in the update_lastrec method.
-+ */
-+STATIC int
-+xfs_btree_is_lastrec(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*block,
-+	int			level)
-+{
-+	union xfs_btree_ptr	ptr;
-+
-+	if (level > 0)
-+		return 0;
-+	if (!(cur->bc_flags & XFS_BTREE_LASTREC_UPDATE))
-+		return 0;
-+
-+	xfs_btree_get_sibling(cur, block, &ptr, XFS_BB_RIGHTSIB);
-+	if (!xfs_btree_ptr_is_null(cur, &ptr))
-+		return 0;
-+	return 1;
-+}
-+
- STATIC struct xfs_btree_block *
- xfs_btree_buf_to_block(
- 	struct xfs_btree_cur	*cur,
-@@ -1417,3 +1441,66 @@ xfs_btree_updkey(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 	return 0;
- }
-+
-+/*
-+ * Update the record referred to by cur to the value in the
-+ * given record. This either works (return 0) or gets an
-+ * EFSCORRUPTED error.
-+ */
-+int
-+xfs_btree_update(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*rec)
-+{
-+	struct xfs_btree_block	*block;
-+	struct xfs_buf		*bp;
-+	int			error;
-+	int			ptr;
-+	union xfs_btree_rec	*rp;
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGR(cur, rec);
-+
-+	/* Pick up the current block. */
-+	block = xfs_btree_get_block(cur, 0, &bp);
-+
-+#ifdef DEBUG
-+	error = xfs_btree_check_block(cur, block, 0, bp);
-+	if (error)
-+		goto error0;
-+#endif
-+	/* Get the address of the rec to be updated. */
-+	ptr = cur->bc_ptrs[0];
-+	rp = cur->bc_ops->rec_addr(cur, ptr, block);
-+
-+	/* Fill in the new contents and log them. */
-+	cur->bc_ops->copy_recs(cur, rec, rp, 1);
-+	cur->bc_ops->log_recs(cur, bp, ptr, ptr);
-+
-+	/*
-+	 * If we are tracking the last record in the tree and
-+	 * we are at the far right edge of the tree, update it.
-+	 */
-+	if (xfs_btree_is_lastrec(cur, block, 0)) {
-+		cur->bc_ops->update_lastrec(cur, block, rec,
-+					    ptr, LASTREC_UPDATE);
-+	}
-+
-+	/* Updating first rec in leaf. Pass new key value up to our parent. */
-+	if (ptr == 1) {
-+		union xfs_btree_key	key;
-+
-+		cur->bc_ops->init_key_from_rec(cur, &key, rec);
-+		error = xfs_btree_updkey(cur, &key, 1);
-+		if (error)
-+			goto error0;
-+	}
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-+	return 0;
-+
-+error0:
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
-+	return error;
-+}
-+
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.c	2008-07-21 05:10:35.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c	2008-07-21 05:45:02.000000000 +0200
-@@ -49,7 +49,9 @@ STATIC void xfs_allocbt_log_keys(xfs_btr
- #define xfs_alloc_log_keys(c, b, i, j) \
- 	xfs_allocbt_log_keys(c, b, i, j)
- STATIC void xfs_alloc_log_ptrs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
--STATIC void xfs_alloc_log_recs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
-+STATIC void xfs_allocbt_log_recs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
-+#define xfs_alloc_log_recs(c, b, i, j) \
-+	xfs_allocbt_log_recs(c, b, i, j)
- STATIC int xfs_alloc_lshift(xfs_btree_cur_t *, int, int *);
- STATIC int xfs_alloc_newroot(xfs_btree_cur_t *, int *);
- STATIC int xfs_alloc_rshift(xfs_btree_cur_t *, int, int *);
-@@ -883,41 +885,6 @@ xfs_alloc_log_ptrs(
- }
- 
- /*
-- * Log records from a btree block (leaf).
-- */
--STATIC void
--xfs_alloc_log_recs(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_buf_t		*bp,	/* buffer containing btree block */
--	int			rfirst,	/* index of first record to log */
--	int			rlast)	/* index of last record to log */
--{
--	xfs_alloc_block_t	*block;	/* btree block to log from */
--	int			first;	/* first byte offset logged */
--	int			last;	/* last byte offset logged */
--	xfs_alloc_rec_t		*rp;	/* record pointer for btree block */
--
--
--	block = XFS_BUF_TO_ALLOC_BLOCK(bp);
--	rp = XFS_ALLOC_REC_ADDR(block, 1, cur);
--#ifdef DEBUG
--	{
--		xfs_agf_t	*agf;
--		xfs_alloc_rec_t	*p;
--
--		agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
--		for (p = &rp[rfirst - 1]; p <= &rp[rlast - 1]; p++)
--			ASSERT(be32_to_cpu(p->ar_startblock) +
--			       be32_to_cpu(p->ar_blockcount) <=
--			       be32_to_cpu(agf->agf_length));
--	}
--#endif
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
--}
--
--/*
-  * Move 1 record left from cur/level if possible.
-  * Update cur to reflect the new path.
-  */
-@@ -1642,83 +1609,50 @@ xfs_alloc_insert(
- 	return 0;
- }
- 
-+STATIC struct xfs_btree_cur *
-+xfs_allocbt_dup_cursor(
-+	struct xfs_btree_cur	*cur)
-+{
-+	return xfs_allocbt_init_cursor(cur->bc_mp, cur->bc_tp,
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno,
-+			cur->bc_btnum);
-+}
-+
- /*
-- * Update the record referred to by cur, to the value given by [bno, len].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-+ * Update the longest extent in the AGF
-  */
--int					/* error */
--xfs_alloc_update(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_agblock_t		bno,	/* starting block of extent */
--	xfs_extlen_t		len)	/* length of extent */
-+STATIC void
-+xfs_allocbt_update_lastrec(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*block,
-+	union xfs_btree_rec	*rec,
-+	int			ptr,
-+	int			reason)
- {
--	xfs_alloc_block_t	*block;	/* btree block to update */
--	int			error;	/* error return value */
--	int			ptr;	/* current record number (updating) */
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	__be32			len;
- 
--	ASSERT(len > 0);
--	/*
--	 * Pick up the a.g. freelist struct and the current block.
--	 */
--	block = XFS_BUF_TO_ALLOC_BLOCK(cur->bc_bufs[0]);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_sblock(cur, block, 0, cur->bc_bufs[0])))
--		return error;
--#endif
--	/*
--	 * Get the address of the rec to be updated.
--	 */
--	ptr = cur->bc_ptrs[0];
--	{
--		xfs_alloc_rec_t		*rp;	/* pointer to updated record */
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_CNT);
- 
--		rp = XFS_ALLOC_REC_ADDR(block, ptr, cur);
-+	switch (reason) {
-+	case LASTREC_UPDATE:
- 		/*
--		 * Fill in the new contents and log them.
-+		 * If this is the last leaf block and it's the last record,
-+		 * then update the size of the longest extent in the AG.
- 		 */
--		rp->ar_startblock = cpu_to_be32(bno);
--		rp->ar_blockcount = cpu_to_be32(len);
--		xfs_alloc_log_recs(cur, cur->bc_bufs[0], ptr, ptr);
-+		if (ptr != xfs_btree_get_numrecs(block))
-+			return;
-+		len = rec->alloc.ar_blockcount;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return;
- 	}
--	/*
--	 * If it's the by-size btree and it's the last leaf block and
--	 * it's the last record... then update the size of the longest
--	 * extent in the a.g., which we cache in the a.g. freelist header.
--	 */
--	if (cur->bc_btnum == XFS_BTNUM_CNT &&
--	    be32_to_cpu(block->bb_rightsib) == NULLAGBLOCK &&
--	    ptr == be16_to_cpu(block->bb_numrecs)) {
--		xfs_agf_t	*agf;	/* a.g. freespace header */
--		xfs_agnumber_t	seqno;
--
--		agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
--		seqno = be32_to_cpu(agf->agf_seqno);
--		cur->bc_mp->m_perag[seqno].pagf_longest = len;
--		agf->agf_longest = cpu_to_be32(len);
--		xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp,
--			XFS_AGF_LONGEST);
--	}
--	/*
--	 * Updating first record in leaf. Pass new key value up to our parent.
--	 */
--	if (ptr == 1) {
--		xfs_alloc_key_t	key;	/* key containing [bno, len] */
--
--		key.ar_startblock = cpu_to_be32(bno);
--		key.ar_blockcount = cpu_to_be32(len);
--		if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1)))
--			return error;
--	}
--	return 0;
--}
- 
--STATIC struct xfs_btree_cur *
--xfs_allocbt_dup_cursor(
--	struct xfs_btree_cur	*cur)
--{
--	return xfs_allocbt_init_cursor(cur->bc_mp, cur->bc_tp,
--			cur->bc_private.a.agbp, cur->bc_private.a.agno,
--			cur->bc_btnum);
-+	agf->agf_longest = len;
-+	cur->bc_mp->m_perag[seqno].pagf_longest = be32_to_cpu(len);
-+	xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp, XFS_AGF_LONGEST);
- }
- 
- STATIC void
-@@ -1808,6 +1742,17 @@ xfs_allocbt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_alloc_key_t));
- }
- 
-+STATIC void
-+xfs_allocbt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
-+{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_alloc_rec_t));
-+}
-+
- /*
-  * Log keys from a btree block (nonleaf).
-  */
-@@ -1835,6 +1780,44 @@ xfs_allocbt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- }
- 
-+/*
-+ * Log records from a btree block (leaf).
-+ */
-+STATIC void
-+xfs_alloc_log_recs(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	struct xfs_buf		*bp,	/* buffer containing btree block */
-+	int			rfirst,	/* index of first record to log */
-+	int			rlast)	/* index of last record to log */
-+{
-+	struct xfs_btree_sblock	*block;	/* btree block to log from */
-+	int			first;	/* first byte offset logged */
-+	int			last;	/* last byte offset logged */
-+	xfs_alloc_rec_t		*rp;	/* record pointer for btree block */
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, rfirst, rlast);
-+
-+	block = XFS_BUF_TO_SBLOCK(bp);
-+	rp = XFS_ALLOC_REC_ADDR(block, 1, cur);
-+#ifdef DEBUG
-+	{
-+		struct xfs_agf	*agf;
-+		xfs_alloc_rec_t	*p;
-+
-+		agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
-+		for (p = &rp[rfirst - 1]; p <= &rp[rlast - 1]; p++)
-+			ASSERT(be32_to_cpu(p->ar_startblock) +
-+			       be32_to_cpu(p->ar_blockcount) <=
-+			       be32_to_cpu(agf->agf_length));
-+	}
-+#endif
-+	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
-+	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
-+	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-+}
- 
- #ifdef XFS_BTREE_TRACE
- 
-@@ -1905,6 +1888,7 @@ xfs_allocbt_trace_record(
- 
- static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.dup_cursor		= xfs_allocbt_dup_cursor,
-+	.update_lastrec		= xfs_allocbt_update_lastrec,
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.ptr_addr		= xfs_allocbt_ptr_addr,
-@@ -1912,7 +1896,9 @@ static const struct xfs_btree_ops xfs_al
- 	.rec_addr		= xfs_allocbt_rec_addr,
- 	.key_diff		= xfs_allocbt_key_diff,
- 	.copy_keys		= xfs_allocbt_copy_keys,
-+	.copy_recs		= xfs_allocbt_copy_recs,
- 	.log_keys		= xfs_allocbt_log_keys,
-+	.log_recs		= xfs_allocbt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_allocbt_trace_enter,
-@@ -1947,6 +1933,8 @@ xfs_allocbt_init_cursor(
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
- 
- 	cur->bc_ops = &xfs_allocbt_ops;
-+	if (btnum == XFS_BTNUM_CNT)
-+		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
- 
- 	cur->bc_private.a.agbp = agbp;
- 	cur->bc_private.a.agno = agno;
 Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-21 05:11:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-21 05:23:07.000000000 +0200
-@@ -191,6 +191,11 @@ struct xfs_btree_ops {
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-21 01:54:02.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-21 01:54:02.000000000 +0200
+@@ -190,6 +190,25 @@ struct xfs_btree_ops {
+ 
  	/* get inode rooted btree root */
  	struct xfs_btree_block *(*get_root_from_inode)(struct xfs_btree_cur *);
- 
-+	/* updated last record information */
-+	void	(*update_lastrec)(struct xfs_btree_cur *,
-+				  struct xfs_btree_block *,
-+				  union xfs_btree_rec *, int, int);
 +
- 	/* return address of btree structures */
- 	union xfs_btree_ptr *(*ptr_addr)(struct xfs_btree_cur *cur, int index,
- 					 struct xfs_btree_block *block);
-@@ -214,11 +219,15 @@ struct xfs_btree_ops {
- 	void	(*copy_keys)(struct xfs_btree_cur *cur,
- 			     union xfs_btree_key *src_key,
- 			     union xfs_btree_key *dst_key, int numkeys);
-+	void	(*copy_recs)(struct xfs_btree_cur *cur,
-+			     union xfs_btree_rec *src_rec,
-+			     union xfs_btree_rec *dst_rec, int numkeys);
- 
- 	/* log changes to btree structures */
- 	void	(*log_keys)(struct xfs_btree_cur *cur, struct xfs_buf *bp,
- 			    int first, int last);
--
-+	void	(*log_recs)(struct xfs_btree_cur *cur, struct xfs_buf *bp,
-+			    int first, int last);
- 
- 	/* btree tracing */
- #ifdef XFS_BTREE_TRACE
-@@ -241,6 +250,12 @@ struct xfs_btree_ops {
++	/* btree tracing */
++#ifdef XFS_BTREE_TRACE
++	void		(*trace_enter)(struct xfs_btree_cur *, const char *,
++				       char *, int, int, __psunsigned_t,
++				       __psunsigned_t, __psunsigned_t,
++				       __psunsigned_t, __psunsigned_t,
++				       __psunsigned_t, __psunsigned_t,
++				       __psunsigned_t, __psunsigned_t,
++				       __psunsigned_t, __psunsigned_t);
++	void		(*trace_cursor)(struct xfs_btree_cur *, __uint32_t *,
++					__uint64_t *, __uint64_t *);
++	void		(*trace_key)(struct xfs_btree_cur *,
++				     union xfs_btree_key *, __uint64_t *,
++				     __uint64_t *);
++	void		(*trace_record)(struct xfs_btree_cur *,
++					union xfs_btree_rec *, __uint64_t *,
++					__uint64_t *, __uint64_t *);
++#endif
  };
- 
- /*
-+ * Reasons for the update_lastrec method to be called.
-+ */
-+#define LASTREC_UPDATE	0
-+
-+
-+/*
-  * Btree cursor structure.
-  * This collects all information needed by the btree code in one place.
-  */
-@@ -284,6 +299,7 @@ typedef struct xfs_btree_cur
- /* cursor flags */
- #define XFS_BTREE_LONG_PTRS		(1<<0)	/* pointers are 64bits long */
- #define XFS_BTREE_ROOT_IN_INODE		(1<<1)	/* root may be variable size */
-+#define XFS_BTREE_LASTREC_UPDATE	(1<<2)	/* track last rec externally */
- 
- 
- #define	XFS_BTREE_NOERROR	0
-@@ -539,6 +555,7 @@ int xfs_btree_increment(struct xfs_btree
- int xfs_btree_decrement(struct xfs_btree_cur *, int, int *);
- int xfs_btree_lookup(struct xfs_btree_cur *, xfs_lookup_t, int *);
- int xfs_btree_updkey(struct xfs_btree_cur *, union xfs_btree_key *, int);
-+int xfs_btree_update(struct xfs_btree_cur *, union xfs_btree_rec *);
- 
  
  /*
 Index: linux-2.6-xfs/fs/xfs/xfs_btree_trace.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree_trace.c	2008-07-21 05:08:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree_trace.c	2008-07-21 05:17:12.000000000 +0200
-@@ -158,6 +158,27 @@ xfs_btree_trace_argik(
- }
- 
- /*
-+ * Add a trace buffer entry for arguments, for record.
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-2.6-xfs/fs/xfs/xfs_btree_trace.c	2008-07-21 01:54:02.000000000 +0200
+@@ -0,0 +1,203 @@
++/*
++ * Copyright (c) 2008 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_types.h"
++#include "xfs_inum.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_inode.h"
++#include "xfs_btree.h"
++#include "xfs_btree_trace.h"
++
++
++/*
++ * Add a trace buffer entry for arguments, for a buffer & 1 integer arg.
 + */
 +void
-+xfs_btree_trace_argr(
++xfs_btree_trace_argbi(
 +	const char		*func,
 +	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*b,
++	int			i,
++	int			line)
++{
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGBI,
++				 line, (__psunsigned_t)b, i, 0, 0, 0, 0, 0,
++				 0, 0, 0, 0);
++}
++
++/*
++ * Add a trace buffer entry for arguments, for a buffer & 2 integer args.
++ */
++void
++xfs_btree_trace_argbii(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*b,
++	int			i0,
++	int			i1,
++	int			line)
++{
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGBII,
++				 line, (__psunsigned_t)b, i0, i1, 0, 0, 0, 0,
++				 0, 0, 0, 0);
++}
++
++/*
++ * Add a trace buffer entry for arguments, for 3 block-length args
++ * and an integer arg.
++ */
++void
++xfs_btree_trace_argfffi(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	xfs_dfiloff_t		o,
++	xfs_dfsbno_t		b,
++	xfs_dfilblks_t		i,
++	int			j,
++	int			line)
++{
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGFFFI, line,
++		o >> 32, (int)o, b >> 32, (int)b,
++		i >> 32, (int)i, (int)j, 0,
++		0, 0, 0);
++}
++
++/*
++ * Add a trace buffer entry for arguments, for one integer arg.
++ */
++void
++xfs_btree_trace_argi(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	int			i,
++	int			line)
++{
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGI,
++				 line, i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
++}
++
++/*
++ * Add a trace buffer entry for arguments, for int, fsblock, key.
++ */
++void
++xfs_btree_trace_argifk(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	int			i,
++	xfs_fsblock_t		f,
++	xfs_dfiloff_t		o,
++	int			line)
++{
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIFK,
++				 line, i,
++				 (xfs_dfsbno_t)f >> 32, (int)f,
++				 o >> 32, (int)o,
++				 0, 0, 0, 0, 0, 0);
++}
++
++/*
++ * Add a trace buffer entry for arguments, for int, fsblock, rec.
++ */
++void
++xfs_btree_trace_argifr(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	int			i,
++	xfs_fsblock_t		f,
 +	union xfs_btree_rec	*rec,
 +	int			line)
 +{
 +	__uint64_t		l0, l1, l2;
 +
 +	cur->bc_ops->trace_record(cur, rec, &l0, &l1, &l2);
-+	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGR,
-+			      line,
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIFR,
++			      line, i,
++			      f >> 32, (int)f,
 +			      l0 >> 32, (int)l0,
 +			      l1 >> 32, (int)l1,
 +			      l2 >> 32, (int)l2,
-+			      0, 0, 0, 0, 0);
++			      0, 0);
 +}
 +
 +/*
-  * Add a trace buffer entry for the cursor/operation.
-  */
- void
-Index: linux-2.6-xfs/fs/xfs/xfs_btree_trace.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree_trace.h	2008-07-21 05:08:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree_trace.h	2008-07-21 05:17:12.000000000 +0200
-@@ -44,7 +44,8 @@ struct xfs_buf;
- #define XFS_BTREE_KTRACE_ARGIFK  5
- #define XFS_BTREE_KTRACE_ARGIFR  6
- #define XFS_BTREE_KTRACE_ARGIK   7
--#define XFS_BTREE_KTRACE_CUR     8
-+#define XFS_BTREE_KTRACE_ARGR	 8
-+#define XFS_BTREE_KTRACE_CUR     9
- 
- /*
-  * Sub-types for cursor traces.
-@@ -67,6 +68,8 @@ void xfs_btree_trace_argifr(const char *
- 		xfs_fsblock_t, union xfs_btree_rec *, int);
- void xfs_btree_trace_argik(const char *, struct xfs_btree_cur *, int,
- 		union xfs_btree_key *, int);
-+void xfs_btree_trace_argr(const char *, struct xfs_btree_cur *,
-+		union xfs_btree_rec *, int);
- void xfs_btree_trace_cursor(const char *, struct xfs_btree_cur *, int, int);
- 
- 
-@@ -95,6 +98,8 @@ extern ktrace_t	*xfs_bmbt_trace_buf;
- 	xfs_btree_trace_argifr(__func__, c, i, f, r, __LINE__)
- #define	XFS_BTREE_TRACE_ARGIK(c,i,k)	\
- 	xfs_btree_trace_argik(__func__, c, i, k, __LINE__)
-+#define XFS_BTREE_TRACE_ARGR(c,r)	\
-+	xfs_btree_trace_argr(__func__, c, r, __LINE__)
- #define	XFS_BTREE_TRACE_CURSOR(c,t)	\
- 	xfs_btree_trace_cursor(__func__, c, t, __LINE__)
- #else
-@@ -105,6 +110,7 @@ extern ktrace_t	*xfs_bmbt_trace_buf;
- #define	XFS_BTREE_TRACE_ARGIFK(c,i,f,s)
- #define	XFS_BTREE_TRACE_ARGIFR(c,i,f,r)
- #define	XFS_BTREE_TRACE_ARGIK(c,i,k)
-+#define XFS_BTREE_TRACE_ARGR(c,r)
- #define	XFS_BTREE_TRACE_CURSOR(c,t)
- #endif	/* XFS_BTREE_TRACE */
- 
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-07-21 05:08:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-07-21 05:17:12.000000000 +0200
-@@ -2952,6 +2952,15 @@ xfs_btree_trace_entry(
- 				      (unsigned long)ktep->val[8],
- 				      (unsigned long)ktep->val[9]);
- 		break;
-+	case XFS_BTREE_KTRACE_ARGR:
-+		xfsidb_btree_trace_record(btnum,
-+					 (unsigned long)ktep->val[5],
-+					 (unsigned long)ktep->val[6],
-+					 (unsigned long)ktep->val[7],
-+					 (unsigned long)ktep->val[8],
-+					 (unsigned long)ktep->val[9],
-+					 (unsigned long)ktep->val[10]);
-+		break;
- 	case XFS_BTREE_KTRACE_CUR:
- 
- 		xfsidb_btree_trace_cursor(btnum,
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-07-21 05:08:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-07-21 05:22:00.000000000 +0200
-@@ -136,6 +136,23 @@ xfs_alloc_lookup_le(
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
- }
- 
-+/*
-+ * Update the record referred to by cur to the value given
-+ * by [bno, len].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
++ * Add a trace buffer entry for arguments, for int, key.
 + */
-+STATIC int				/* error */
-+xfs_alloc_update(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len)	/* length of extent */
++void
++xfs_btree_trace_argik(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	int			i,
++	union xfs_btree_key	*key,
++	int			line)
 +{
-+	union xfs_btree_rec	rec;
++	__uint64_t		l0, l1;
 +
-+	rec.alloc.ar_startblock = cpu_to_be32(bno);
-+	rec.alloc.ar_blockcount = cpu_to_be32(len);
-+	return xfs_btree_update(cur, &rec);
++	cur->bc_ops->trace_key(cur, key, &l0, &l1);
++	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIFK,
++				 line, i,
++				 l0 >> 32, (int)l0,
++				 l1 >> 32, (int)l1,
++				 0, 0, 0, 0, 0, 0);
 +}
- 
- /*
-  * Compute aligned version of the found extent.
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.h
++
++/*
++ * Add a trace buffer entry for the cursor/operation.
++ */
++void
++xfs_btree_trace_cursor(
++	const char		*func,
++	struct xfs_btree_cur	*cur,
++	int			type,
++	int			line)
++{
++	__uint32_t		s0;
++	__uint64_t		l0, l1;
++	char			*s;
++
++	switch (type) {
++	case XBT_ARGS:
++		s = "args";
++		break;
++	case XBT_ENTRY:
++		s = "entry";
++		break;
++	case XBT_ERROR:
++		s = "error";
++		break;
++	case XBT_EXIT:
++		s = "exit";
++		break;
++	default:
++		s = "unknown";
++		break;
++	}
++
++	cur->bc_ops->trace_cursor(cur, &s0, &l0, &l1);
++	cur->bc_ops->trace_enter(cur, func, s, XFS_BTREE_KTRACE_CUR, line,
++				 s0,
++				 l0 >> 32, (int)l0,
++				 l1 >> 32, (int)l1,
++				 (__psunsigned_t)cur->bc_bufs[0],
++				 (__psunsigned_t)cur->bc_bufs[1],
++				 (__psunsigned_t)cur->bc_bufs[2],
++				 (__psunsigned_t)cur->bc_bufs[3],
++				 (cur->bc_ptrs[0] << 16) | cur->bc_ptrs[1],
++				 (cur->bc_ptrs[2] << 16) | cur->bc_ptrs[3]);
++}
+Index: linux-2.6-xfs/fs/xfs/Makefile
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.h	2008-07-21 05:08:28.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.h	2008-07-21 05:17:12.000000000 +0200
-@@ -113,13 +113,6 @@ extern int xfs_alloc_get_rec(struct xfs_
+--- linux-2.6-xfs.orig/fs/xfs/Makefile	2008-07-21 01:45:57.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/Makefile	2008-07-21 01:54:02.000000000 +0200
+@@ -81,7 +81,8 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_dmops.o \
+ 				   xfs_qmops.o
+ 
+-xfs-$(CONFIG_XFS_TRACE)		+= xfs_dir2_trace.o
++xfs-$(CONFIG_XFS_TRACE)		+= xfs_btree_trace.o \
++				   xfs_dir2_trace.o
+ 
+ # Objects in linux/
+ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
+Index: linux-2.6-xfs/fs/xfs/xfs.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs.h	2008-07-21 01:35:46.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs.h	2008-07-21 01:54:02.000000000 +0200
+@@ -30,7 +30,7 @@
+ #define XFS_ATTR_TRACE 1
+ #define XFS_BLI_TRACE 1
+ #define XFS_BMAP_TRACE 1
+-#define XFS_BMBT_TRACE 1
++#define XFS_BTREE_TRACE 1
+ #define XFS_DIR2_TRACE 1
+ #define XFS_DQUOT_TRACE 1
+ #define XFS_ILOCK_TRACE 1
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-07-21 01:54:01.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-07-21 01:54:02.000000000 +0200
+@@ -37,16 +37,13 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_alloc.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_trace.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_itable.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+ 
+-#if defined(XFS_BMBT_TRACE)
+-ktrace_t	*xfs_bmbt_trace_buf;
+-#endif
+-
+ /*
+  * Prototypes for internal btree functions.
   */
- extern int xfs_alloc_insert(struct xfs_btree_cur *cur, int *stat);
+@@ -61,245 +58,32 @@ STATIC int xfs_bmbt_split(xfs_btree_cur_
+ 		__uint64_t *, xfs_btree_cur_t **, int *);
+ STATIC int xfs_bmbt_updkey(xfs_btree_cur_t *, xfs_bmbt_key_t *, int);
+ 
+-
+-#if defined(XFS_BMBT_TRACE)
+-
+-static char	ARGS[] = "args";
+-static char	ENTRY[] = "entry";
+-static char	ERROR[] = "error";
+ #undef EXIT
+-static char	EXIT[] = "exit";
  
 -/*
-- * Update the record referred to by cur, to the value given by [bno, len].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--extern int xfs_alloc_update(struct xfs_btree_cur *cur, xfs_agblock_t bno,
--				xfs_extlen_t len);
--
- 
- extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_buf *,
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-07-21 05:25:57.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-07-21 05:30:09.000000000 +0200
-@@ -172,6 +172,26 @@ xfs_inobt_lookup_le(
- }
- 
- /*
-+ * Update the record referred to by cur to the value given
-+ * by [ino, fcnt, free].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
-+ */
-+STATIC int				/* error */
-+xfs_inobt_update(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agino_t		ino,	/* starting inode of chunk */
-+	__int32_t		fcnt,	/* free inode count */
-+	xfs_inofree_t		free)	/* free inode mask */
-+{
-+	union xfs_btree_rec	rec;
-+
-+	rec.inobt.ir_startino = cpu_to_be32(ino);
-+	rec.inobt.ir_freecount = cpu_to_be32(fcnt);
-+	rec.inobt.ir_free = cpu_to_be64(free);
-+	return xfs_btree_update(cur, &rec);
-+}
-+
-+/*
-  * Allocate new inodes in the allocation group specified by agbp.
-  * Return 0 for success, else error code.
-  */
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.c	2008-07-21 05:25:48.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c	2008-07-21 05:44:35.000000000 +0200
-@@ -785,28 +785,6 @@ xfs_inobt_log_ptrs(
- }
- 
- /*
-- * Log records from a btree block (leaf).
+- * Add a trace buffer entry for the arguments given to the routine,
+- * generic form.
 - */
 -STATIC void
--xfs_inobt_log_recs(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_buf_t		*bp,	/* buffer containing btree block */
--	int			rfirst,	/* index of first record to log */
--	int			rlast)	/* index of last record to log */
+-xfs_bmbt_trace_enter(
+-	const char	*func,
+-	xfs_btree_cur_t	*cur,
+-	char		*s,
+-	int		type,
+-	int		line,
+-	__psunsigned_t	a0,
+-	__psunsigned_t	a1,
+-	__psunsigned_t	a2,
+-	__psunsigned_t	a3,
+-	__psunsigned_t	a4,
+-	__psunsigned_t	a5,
+-	__psunsigned_t	a6,
+-	__psunsigned_t	a7,
+-	__psunsigned_t	a8,
+-	__psunsigned_t	a9,
+-	__psunsigned_t	a10)
 -{
--	xfs_inobt_block_t	*block;	/* btree block to log from */
--	int			first;	/* first byte offset logged */
--	int			last;	/* last byte offset logged */
--	xfs_inobt_rec_t		*rp;	/* record pointer for btree block */
+-	xfs_inode_t	*ip;
+-	int		whichfork;
 -
--	block = XFS_BUF_TO_INOBT_BLOCK(bp);
--	rp = XFS_INOBT_REC_ADDR(block, 1, cur);
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
+-	ip = cur->bc_private.b.ip;
+-	whichfork = cur->bc_private.b.whichfork;
+-	ktrace_enter(xfs_bmbt_trace_buf,
+-		(void *)((__psint_t)type | (whichfork << 8) | (line << 16)),
+-		(void *)func, (void *)s, (void *)ip, (void *)cur,
+-		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
+-		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
+-		(void *)a8, (void *)a9, (void *)a10);
+-	ASSERT(ip->i_btrace);
+-	ktrace_enter(ip->i_btrace,
+-		(void *)((__psint_t)type | (whichfork << 8) | (line << 16)),
+-		(void *)func, (void *)s, (void *)ip, (void *)cur,
+-		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
+-		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
+-		(void *)a8, (void *)a9, (void *)a10);
+-}
+-/*
+- * Add a trace buffer entry for arguments, for a buffer & 1 integer arg.
+- */
+-STATIC void
+-xfs_bmbt_trace_argbi(
+-	const char	*func,
+-	xfs_btree_cur_t	*cur,
+-	xfs_buf_t	*b,
+-	int		i,
+-	int		line)
+-{
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGBI, line,
+-		(__psunsigned_t)b, i, 0, 0,
+-		0, 0, 0, 0,
+-		0, 0, 0);
 -}
 -
 -/*
-  * Move 1 record left from cur/level if possible.
-  * Update cur to reflect the new path.
+- * Add a trace buffer entry for arguments, for a buffer & 2 integer args.
+- */
+-STATIC void
+-xfs_bmbt_trace_argbii(
+-	const char	*func,
+-	xfs_btree_cur_t	*cur,
+-	xfs_buf_t	*b,
+-	int		i0,
+-	int		i1,
+-	int		line)
+-{
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGBII, line,
+-		(__psunsigned_t)b, i0, i1, 0,
+-		0, 0, 0, 0,
+-		0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for 3 block-length args
+- * and an integer arg.
+- */
+-STATIC void
+-xfs_bmbt_trace_argfffi(
+-	const char		*func,
+-	xfs_btree_cur_t		*cur,
+-	xfs_dfiloff_t		o,
+-	xfs_dfsbno_t		b,
+-	xfs_dfilblks_t		i,
+-	int			j,
+-	int			line)
+-{
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGFFFI, line,
+-		o >> 32, (int)o, b >> 32, (int)b,
+-		i >> 32, (int)i, (int)j, 0,
+-		0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for one integer arg.
+- */
+-STATIC void
+-xfs_bmbt_trace_argi(
+-	const char	*func,
+-	xfs_btree_cur_t	*cur,
+-	int		i,
+-	int		line)
+-{
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGI, line,
+-		i, 0, 0, 0,
+-		0, 0, 0, 0,
+-		0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, fsblock, key.
+- */
+-STATIC void
+-xfs_bmbt_trace_argifk(
+-	const char		*func,
+-	xfs_btree_cur_t		*cur,
+-	int			i,
+-	xfs_fsblock_t		f,
+-	xfs_dfiloff_t		o,
+-	int			line)
+-{
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGIFK, line,
+-		i, (xfs_dfsbno_t)f >> 32, (int)f, o >> 32,
+-		(int)o, 0, 0, 0,
+-		0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, fsblock, rec.
+- */
+-STATIC void
+-xfs_bmbt_trace_argifr(
+-	const char		*func,
+-	xfs_btree_cur_t		*cur,
+-	int			i,
+-	xfs_fsblock_t		f,
+-	xfs_bmbt_rec_t		*r,
+-	int			line)
+-{
+-	xfs_dfsbno_t		b;
+-	xfs_dfilblks_t		c;
+-	xfs_dfsbno_t		d;
+-	xfs_dfiloff_t		o;
+-	xfs_bmbt_irec_t		s;
+-
+-	d = (xfs_dfsbno_t)f;
+-	xfs_bmbt_disk_get_all(r, &s);
+-	o = (xfs_dfiloff_t)s.br_startoff;
+-	b = (xfs_dfsbno_t)s.br_startblock;
+-	c = s.br_blockcount;
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGIFR, line,
+-		i, d >> 32, (int)d, o >> 32,
+-		(int)o, b >> 32, (int)b, c >> 32,
+-		(int)c, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, key.
+- */
+-STATIC void
+-xfs_bmbt_trace_argik(
+-	const char		*func,
+-	xfs_btree_cur_t		*cur,
+-	int			i,
+-	xfs_bmbt_key_t		*k,
+-	int			line)
+-{
+-	xfs_dfiloff_t		o;
+-
+-	o = be64_to_cpu(k->br_startoff);
+-	xfs_bmbt_trace_enter(func, cur, ARGS, XFS_BMBT_KTRACE_ARGIFK, line,
+-		i, o >> 32, (int)o, 0,
+-		0, 0, 0, 0,
+-		0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for the cursor/operation.
+- */
+-STATIC void
+-xfs_bmbt_trace_cursor(
+-	const char	*func,
+-	xfs_btree_cur_t	*cur,
+-	char		*s,
+-	int		line)
+-{
+-	xfs_bmbt_rec_host_t	r;
+-
+-	xfs_bmbt_set_all(&r, &cur->bc_rec.b);
+-	xfs_bmbt_trace_enter(func, cur, s, XFS_BMBT_KTRACE_CUR, line,
+-		(cur->bc_nlevels << 24) | (cur->bc_private.b.flags << 16) |
+-		cur->bc_private.b.allocated,
+-		r.l0 >> 32, (int)r.l0,
+-		r.l1 >> 32, (int)r.l1,
+-		(unsigned long)cur->bc_bufs[0], (unsigned long)cur->bc_bufs[1],
+-		(unsigned long)cur->bc_bufs[2], (unsigned long)cur->bc_bufs[3],
+-		(cur->bc_ptrs[0] << 16) | cur->bc_ptrs[1],
+-		(cur->bc_ptrs[2] << 16) | cur->bc_ptrs[3]);
+-}
+-
+-#define	XFS_BMBT_TRACE_ARGBI(c,b,i)	\
+-	xfs_bmbt_trace_argbi(__func__, c, b, i, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGBII(c,b,i,j)	\
+-	xfs_bmbt_trace_argbii(__func__, c, b, i, j, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGFFFI(c,o,b,i,j)	\
+-	xfs_bmbt_trace_argfffi(__func__, c, o, b, i, j, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGI(c,i)	\
+-	xfs_bmbt_trace_argi(__func__, c, i, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGIFK(c,i,f,s)	\
+-	xfs_bmbt_trace_argifk(__func__, c, i, f, s, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGIFR(c,i,f,r)	\
+-	xfs_bmbt_trace_argifr(__func__, c, i, f, r, __LINE__)
+-#define	XFS_BMBT_TRACE_ARGIK(c,i,k)	\
+-	xfs_bmbt_trace_argik(__func__, c, i, k, __LINE__)
+-#define	XFS_BMBT_TRACE_CURSOR(c,s)	\
+-	xfs_bmbt_trace_cursor(__func__, c, s, __LINE__)
+-#else
+-#define	XFS_BMBT_TRACE_ARGBI(c,b,i)
+-#define	XFS_BMBT_TRACE_ARGBII(c,b,i,j)
+-#define	XFS_BMBT_TRACE_ARGFFFI(c,o,b,i,j)
+-#define	XFS_BMBT_TRACE_ARGI(c,i)
+-#define	XFS_BMBT_TRACE_ARGIFK(c,i,f,s)
+-#define	XFS_BMBT_TRACE_ARGIFR(c,i,f,r)
+-#define	XFS_BMBT_TRACE_ARGIK(c,i,k)
+-#define	XFS_BMBT_TRACE_CURSOR(c,s)
+-#endif	/* XFS_BMBT_TRACE */
++#define ENTRY	XBT_ENTRY
++#define ERROR	XBT_ERROR
++#define EXIT	XBT_EXIT
++
++/*
++ * Keep the XFS_BMBT_TRACE_ names around for now until all code using them
++ * is converted to be generic and thus switches to the XFS_BTREE_TRACE_ names.
++ */
++#define	XFS_BMBT_TRACE_ARGBI(c,b,i) \
++	XFS_BTREE_TRACE_ARGBI(c,b,i)
++#define	XFS_BMBT_TRACE_ARGBII(c,b,i,j) \
++	XFS_BTREE_TRACE_ARGBII(c,b,i,j)
++#define	XFS_BMBT_TRACE_ARGFFFI(c,o,b,i,j) \
++	XFS_BTREE_TRACE_ARGFFFI(c,o,b,i,j)
++#define	XFS_BMBT_TRACE_ARGI(c,i) \
++	XFS_BTREE_TRACE_ARGI(c,i)
++#define	XFS_BMBT_TRACE_ARGIFK(c,i,f,s) \
++	XFS_BTREE_TRACE_ARGIFK(c,i,f,s)
++#define	XFS_BMBT_TRACE_ARGIFR(c,i,f,r) \
++	XFS_BTREE_TRACE_ARGIFR(c,i,f,(union xfs_btree_rec *)r)
++#define	XFS_BMBT_TRACE_ARGIK(c,i,k) \
++	XFS_BTREE_TRACE_ARGIK(c,i,(union xfs_btree_key *)k)
++#define	XFS_BMBT_TRACE_CURSOR(c,s) \
++	XFS_BTREE_TRACE_CURSOR(c,s)
+ 
+ 
+ /*
+@@ -2639,9 +2423,102 @@ xfs_bmbt_get_root_from_inode(
+ 	return (struct xfs_btree_block *)ifp->if_broot;
+ }
+ 
++#ifdef XFS_BTREE_TRACE
++
++ktrace_t	*xfs_bmbt_trace_buf;
++
++STATIC void
++xfs_bmbt_trace_enter(
++	struct xfs_btree_cur	*cur,
++	const char		*func,
++	char			*s,
++	int			type,
++	int			line,
++	__psunsigned_t		a0,
++	__psunsigned_t		a1,
++	__psunsigned_t		a2,
++	__psunsigned_t		a3,
++	__psunsigned_t		a4,
++	__psunsigned_t		a5,
++	__psunsigned_t		a6,
++	__psunsigned_t		a7,
++	__psunsigned_t		a8,
++	__psunsigned_t		a9,
++	__psunsigned_t		a10)
++{
++	struct xfs_inode	*ip = cur->bc_private.b.ip;
++	int			whichfork = cur->bc_private.b.whichfork;
++
++	ktrace_enter(xfs_bmbt_trace_buf,
++		(void *)((__psint_t)type | (whichfork << 8) | (line << 16)),
++		(void *)func, (void *)s, (void *)ip, (void *)cur,
++		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
++		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
++		(void *)a8, (void *)a9, (void *)a10);
++	ktrace_enter(ip->i_btrace,
++		(void *)((__psint_t)type | (whichfork << 8) | (line << 16)),
++		(void *)func, (void *)s, (void *)ip, (void *)cur,
++		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
++		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
++		(void *)a8, (void *)a9, (void *)a10);
++}
++
++STATIC void
++xfs_bmbt_trace_cursor(
++	struct xfs_btree_cur	*cur,
++	__uint32_t		*s0,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	struct xfs_bmbt_rec_host r;
++
++	xfs_bmbt_set_all(&r, &cur->bc_rec.b);
++
++	*s0 = (cur->bc_nlevels << 24) |
++	      (cur->bc_private.b.flags << 16) |
++	       cur->bc_private.b.allocated;
++	*l0 = r.l0;
++	*l1 = r.l1;
++}
++
++STATIC void
++xfs_bmbt_trace_key(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	*l0 = be64_to_cpu(key->bmbt.br_startoff);
++	*l1 = 0;
++}
++
++STATIC void
++xfs_bmbt_trace_record(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec,
++	__uint64_t		*l0,
++	__uint64_t		*l1,
++	__uint64_t		*l2)
++{
++	struct xfs_bmbt_irec	irec;
++
++	xfs_bmbt_disk_get_all(&rec->bmbt, &irec);
++	*l0 = irec.br_startoff;
++	*l1 = irec.br_startblock;
++	*l2 = irec.br_blockcount;
++}
++#endif /* XFS_BTREE_TRACE */
++
+ static const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.dup_cursor		= xfs_bmbt_dup_cursor,
+ 	.get_root_from_inode	= xfs_bmbt_get_root_from_inode,
++
++#ifdef XFS_BTREE_TRACE
++	.trace_enter		= xfs_bmbt_trace_enter,
++	.trace_cursor		= xfs_bmbt_trace_cursor,
++	.trace_key		= xfs_bmbt_trace_key,
++	.trace_record		= xfs_bmbt_trace_record,
++#endif
+ };
+ 
+ /*
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-07-21 01:53:52.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-07-21 01:54:02.000000000 +0200
+@@ -39,6 +39,7 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_trace.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_rtalloc.h"
+@@ -97,7 +98,9 @@ EXPORT_SYMBOL(xfs_alloc_trace_buf);
+ #ifdef XFS_BMAP_TRACE
+ EXPORT_SYMBOL(xfs_bmap_trace_buf);
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
++EXPORT_SYMBOL(xfs_allocbt_trace_buf);
++EXPORT_SYMBOL(xfs_inobt_trace_buf);
+ EXPORT_SYMBOL(xfs_bmbt_trace_buf);
+ #endif
+ #ifdef XFS_ATTR_TRACE
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-07-21 01:53:57.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-07-21 01:54:02.000000000 +0200
+@@ -35,6 +35,7 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_trace.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_rtalloc.h"
+@@ -1760,10 +1761,18 @@ xfs_alloc_trace_bufs(void)
+ 	if (!xfs_bmap_trace_buf)
+ 		goto out_free_alloc_trace;
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
++	xfs_allocbt_trace_buf = ktrace_alloc(XFS_ALLOCBT_TRACE_SIZE, KM_MAYFAIL);
++	if (!xfs_allocbt_trace_buf)
++		goto out_free_bmap_trace;
++
++	xfs_inobt_trace_buf = ktrace_alloc(XFS_INOBT_TRACE_SIZE, KM_MAYFAIL);
++	if (!xfs_inobt_trace_buf)
++		goto out_free_allocbt_trace;
++
+ 	xfs_bmbt_trace_buf = ktrace_alloc(XFS_BMBT_TRACE_SIZE, KM_MAYFAIL);
+ 	if (!xfs_bmbt_trace_buf)
+-		goto out_free_bmap_trace;
++		goto out_free_inobt_trace;
+ #endif
+ #ifdef XFS_ATTR_TRACE
+ 	xfs_attr_trace_buf = ktrace_alloc(XFS_ATTR_TRACE_SIZE, KM_MAYFAIL);
+@@ -1785,8 +1794,12 @@ xfs_alloc_trace_bufs(void)
+ 	ktrace_free(xfs_attr_trace_buf);
+  out_free_bmbt_trace:
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	ktrace_free(xfs_bmbt_trace_buf);
++ out_free_inobt_trace:
++	ktrace_free(xfs_inobt_trace_buf);
++ out_free_allocbt_trace:
++	ktrace_free(xfs_allocbt_trace_buf);
+  out_free_bmap_trace:
+ #endif
+ #ifdef XFS_BMAP_TRACE
+@@ -1809,8 +1822,10 @@ xfs_free_trace_bufs(void)
+ #ifdef XFS_ATTR_TRACE
+ 	ktrace_free(xfs_attr_trace_buf);
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	ktrace_free(xfs_bmbt_trace_buf);
++	ktrace_free(xfs_inobt_trace_buf);
++	ktrace_free(xfs_allocbt_trace_buf);
+ #endif
+ #ifdef XFS_BMAP_TRACE
+ 	ktrace_free(xfs_bmap_trace_buf);
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.h	2008-07-21 01:54:00.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h	2008-07-21 01:54:02.000000000 +0200
+@@ -233,24 +233,6 @@ typedef struct xfs_btree_lblock xfs_bmbt
+ 
+ #ifdef __KERNEL__
+ 
+-#if defined(XFS_BMBT_TRACE)
+-/*
+- * Trace buffer entry types.
+- */
+-#define XFS_BMBT_KTRACE_ARGBI	1
+-#define XFS_BMBT_KTRACE_ARGBII	2
+-#define XFS_BMBT_KTRACE_ARGFFFI 3
+-#define XFS_BMBT_KTRACE_ARGI	4
+-#define XFS_BMBT_KTRACE_ARGIFK	5
+-#define XFS_BMBT_KTRACE_ARGIFR	6
+-#define XFS_BMBT_KTRACE_ARGIK	7
+-#define XFS_BMBT_KTRACE_CUR	8
+-
+-#define XFS_BMBT_TRACE_SIZE	4096	/* size of global trace buffer */
+-#define XFS_BMBT_KTRACE_SIZE	32	/* size of per-inode trace buffer */
+-extern ktrace_t	*xfs_bmbt_trace_buf;
+-#endif
+-
+ /*
+  * Prototypes for xfs_bmap.c to call.
   */
-@@ -1530,58 +1508,6 @@ xfs_inobt_insert(
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-07-21 01:45:57.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-07-21 01:54:02.000000000 +0200
+@@ -41,6 +41,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_trace.h"
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+@@ -841,7 +842,7 @@ xfs_iread(
+ #ifdef XFS_BMAP_TRACE
+ 	ip->i_xtrace = ktrace_alloc(XFS_BMAP_KTRACE_SIZE, KM_SLEEP);
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	ip->i_btrace = ktrace_alloc(XFS_BMBT_KTRACE_SIZE, KM_SLEEP);
+ #endif
+ #ifdef XFS_RW_TRACE
+@@ -2637,7 +2638,7 @@ xfs_idestroy(
+ #ifdef XFS_BMAP_TRACE
+ 	ktrace_free(ip->i_xtrace);
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	ktrace_free(ip->i_btrace);
+ #endif
+ #ifdef XFS_RW_TRACE
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-07-21 01:45:57.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-07-21 01:54:02.000000000 +0200
+@@ -252,7 +252,7 @@ typedef struct xfs_inode {
+ #ifdef XFS_BMAP_TRACE
+ 	struct ktrace		*i_xtrace;	/* inode extent list trace */
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	struct ktrace		*i_btrace;	/* inode bmap btree trace */
+ #endif
+ #ifdef XFS_RW_TRACE
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-07-21 01:53:59.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-07-21 02:08:41.000000000 +0200
+@@ -45,6 +45,7 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
++#include "xfs_btree_trace.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_extfree_item.h"
+@@ -88,7 +89,7 @@ static void	xfsidbg_xattrtrace(int);
+ static void	xfsidbg_xblitrace(xfs_buf_log_item_t *);
+ #endif
+ #ifdef XFS_BMAP_TRACE
+-static void	xfsidbg_xbmatrace(int);
++static void	xfsidbg_xbtatrace(int, struct ktrace *, int);
+ static void	xfsidbg_xbmitrace(xfs_inode_t *);
+ static void	xfsidbg_xbmstrace(xfs_inode_t *);
+ static void	xfsidbg_xbxatrace(int);
+@@ -133,7 +134,7 @@ static void	xfsidbg_xattrleaf(xfs_attr_l
+ static void	xfsidbg_xattrsf(xfs_attr_shortform_t *);
+ static void	xfsidbg_xbirec(xfs_bmbt_irec_t *r);
+ static void	xfsidbg_xbmalla(xfs_bmalloca_t *);
+-static void	xfsidbg_xbrec(xfs_bmbt_rec_host_t *);
++static void	xfsidbg_xbmbtrec(xfs_bmbt_rec_host_t *);
+ static void	xfsidbg_xbroot(xfs_inode_t *);
+ static void	xfsidbg_xbroota(xfs_inode_t *);
+ static void	xfsidbg_xbtcur(xfs_btree_cur_t *);
+@@ -199,9 +200,6 @@ static int	xfs_attr_trace_entry(ktrace_e
+ #ifdef XFS_BMAP_TRACE
+ static int	xfs_bmap_trace_entry(ktrace_entry_t *ktep);
+ #endif
+-#ifdef XFS_BMAP_TRACE
+-static int	xfs_bmbt_trace_entry(ktrace_entry_t *ktep);
+-#endif
+ #ifdef XFS_DIR2_TRACE
+ static int	xfs_dir2_trace_entry(ktrace_entry_t *ktep);
+ #endif
+@@ -422,10 +420,52 @@ static int	kdbm_xfs_xbmatrace(
+ 	if (diag)
+ 		return diag;
+ 
+-	xfsidbg_xbmatrace((int) addr);
++	xfsidbg_xbtatrace(XFS_BTNUM_BMAP, xfs_bmbt_trace_buf, (int)addr);
  	return 0;
  }
  
--/*
-- * Update the record referred to by cur, to the value given
-- * by [ino, fcnt, free].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--int					/* error */
--xfs_inobt_update(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_agino_t		ino,	/* starting inode of chunk */
--	__int32_t		fcnt,	/* free inode count */
--	xfs_inofree_t		free)	/* free inode mask */
--{
--	xfs_inobt_block_t	*block;	/* btree block to update */
--	xfs_buf_t		*bp;	/* buffer containing btree block */
--	int			error;	/* error return value */
--	int			ptr;	/* current record number (updating) */
--	xfs_inobt_rec_t		*rp;	/* pointer to updated record */
--
--	/*
--	 * Pick up the current block.
--	 */
--	bp = cur->bc_bufs[0];
--	block = XFS_BUF_TO_INOBT_BLOCK(bp);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_sblock(cur, block, 0, bp)))
--		return error;
--#endif
--	/*
--	 * Get the address of the rec to be updated.
--	 */
--	ptr = cur->bc_ptrs[0];
--	rp = XFS_INOBT_REC_ADDR(block, ptr, cur);
--	/*
--	 * Fill in the new contents and log them.
--	 */
--	rp->ir_startino = cpu_to_be32(ino);
--	rp->ir_freecount = cpu_to_be32(fcnt);
--	rp->ir_free = cpu_to_be64(free);
--	xfs_inobt_log_recs(cur, bp, ptr, ptr);
--	/*
--	 * Updating first record in leaf. Pass new key value up to our parent.
--	 */
--	if (ptr == 1) {
--		xfs_inobt_key_t	key;	/* key containing [ino] */
--
--		key.ir_startino = cpu_to_be32(ino);
--		if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1)))
--			return error;
--	}
--	return 0;
--}
--
- STATIC struct xfs_btree_cur *
- xfs_inobt_dup_cursor(
- 	struct xfs_btree_cur	*cur)
-@@ -1664,6 +1590,17 @@ xfs_inobt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_inobt_key_t));
++static int	kdbm_xfs_xbtaatrace(
++	int	argc,
++	const char **argv)
++{
++	unsigned long addr;
++	int nextarg = 1;
++	long offset = 0;
++	int diag;
++
++	if (argc != 1)
++		return KDB_ARGCOUNT;
++
++	diag = kdbgetaddrarg(argc, argv, &nextarg, &addr, &offset, NULL);
++	if (diag)
++		return diag;
++
++	/* also contains XFS_BTNUM_CNT */
++	xfsidbg_xbtatrace(XFS_BTNUM_BNO, xfs_allocbt_trace_buf, (int)addr);
++	return 0;
++}
++
++static int	kdbm_xfs_xbtiatrace(
++	int	argc,
++	const char **argv)
++{
++	unsigned long addr;
++	int nextarg = 1;
++	long offset = 0;
++	int diag;
++
++	if (argc != 1)
++		return KDB_ARGCOUNT;
++
++	diag = kdbgetaddrarg(argc, argv, &nextarg, &addr, &offset, NULL);
++	if (diag)
++		return diag;
++
++	xfsidbg_xbtatrace(XFS_BTNUM_INO, xfs_inobt_trace_buf, (int)addr);
++	return 0;
++}
++
++
+ static int	kdbm_xfs_xbmitrace(
+ 	int	argc,
+ 	const char **argv)
+@@ -903,7 +943,7 @@ static int	kdbm_xfs_xbrec(
+ 	if (diag)
+ 		return diag;
+ 
+-	xfsidbg_xbrec((xfs_bmbt_rec_host_t *) addr);
++	xfsidbg_xbmbtrec((xfs_bmbt_rec_host_t *) addr);
+ 	return 0;
  }
  
-+STATIC void
-+xfs_inobt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
+@@ -2294,6 +2334,10 @@ static struct xif xfsidbg_funcs[] = {
+ 				"Dump XFS bmap btree per-inode trace" },
+   {  "xbmstrc",	kdbm_xfs_xbmstrace,	"<xfs_inode_t>",
+ 				"Dump XFS bmap btree inode trace" },
++  {  "xbtaatrc", kdbm_xfs_xbtaatrace,	"<count>",
++				"Dump XFS alloc btree count trace" },
++  {  "xbtiatrc", kdbm_xfs_xbtiatrace,	"<count>",
++				"Dump XFS inobt btree count trace" },
+ #endif
+   {  "xbrec",	kdbm_xfs_xbrec,		"<xfs_bmbt_rec_64_t>",
+ 				"Dump XFS bmap record"},
+@@ -2729,16 +2773,115 @@ xfs_bmap_trace_entry(ktrace_entry_t *kte
+ 	return 1;
+ }
+ 
++static void
++xfsidb_btree_trace_record(
++	int			btnum,
++	unsigned long		l0,
++	unsigned long		l1,
++	unsigned long		l2,
++	unsigned long		l3,
++	unsigned long		l4,
++	unsigned long		l5)
 +{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_inobt_rec_t));
++	switch (btnum) {
++	case XFS_BTNUM_BMAP:
++	{
++		struct xfs_bmbt_irec s;
++
++		s.br_startoff = ((xfs_dfiloff_t)l0 << 32) | (xfs_dfiloff_t)l1;
++		s.br_startblock = ((xfs_dfsbno_t)l2 << 32) | (xfs_dfsbno_t)l3;
++		s.br_blockcount = ((xfs_dfilblks_t)l4 << 32) | (xfs_dfilblks_t)l5;
++
++		xfsidbg_xbirec(&s);
++		break;
++	}
++	case XFS_BTNUM_BNO:
++	case XFS_BTNUM_CNT:
++		qprintf(" startblock = %d, blockcount = %d\n",
++			(unsigned int)l0, (unsigned int)l2);
++		break;
++	case XFS_BTNUM_INO:
++		qprintf(" startino = %d, freecount = %d, free = %lld\n",
++			(unsigned int)l0, (unsigned int)l2,
++			((xfs_inofree_t)l4 << 32) | (xfs_inofree_t)l5);
++		break;
++	default:
++		break;
++	}
++}
++
++static void
++xfsidb_btree_trace_key(
++	int			btnum,
++	unsigned long		l0,
++	unsigned long		l1,
++	unsigned long		l2,
++	unsigned long		l3)
++{
++	switch (btnum) {
++	case XFS_BTNUM_BMAP:
++		qprintf(" startoff 0x%x%08x\n", (unsigned int)l0, (unsigned int)l1);
++		break;
++	case XFS_BTNUM_BNO:
++	case XFS_BTNUM_CNT:
++		qprintf(" startblock %d blockcount %d\n",
++			(unsigned int)l0, (unsigned int)l3);
++		break;
++	case XFS_BTNUM_INO:
++		qprintf(" startino %d\n", (unsigned int)l0);
++		break;
++	default:
++		break;
++	}
++}
++
++static void
++xfsidb_btree_trace_cursor(
++	int			btnum,
++	unsigned long		l0,
++	unsigned long		l1,
++	unsigned long		l2,
++	unsigned long		l3,
++	unsigned long		l4)
++{
++	switch (btnum) {
++	case XFS_BTNUM_BMAP:
++	{
++		struct xfs_bmbt_rec_host r;
++
++		qprintf(" nlevels %ld flags %ld allocated %ld ",
++			(l0 >> 24) & 0xff, (l0 >> 16) & 0xff, l0 & 0xffff);
++
++		r.l0 = (unsigned long long)l1 << 32 | l2;
++		r.l1 = (unsigned long long)l3 << 32 | l4;
++
++		xfsidbg_xbmbtrec(&r);
++		break;
++	}
++	case XFS_BTNUM_BNO:
++	case XFS_BTNUM_CNT:
++		qprintf(" agno %d startblock %d blockcount %d\n",
++			(unsigned int)l0, (unsigned int)l1, (unsigned int)l3);
++		break;
++	case XFS_BTNUM_INO:
++		qprintf(" agno %d startino %d free %lld\n",
++			(unsigned int)l0, (unsigned int)l1,
++			((xfs_inofree_t)l3 << 32) | (xfs_inofree_t)l4);
++		break;
++	default:
++		break;
++	}
 +}
 +
  /*
-  * Log keys from a btree block (nonleaf).
+  * Print xfs bmap btree trace buffer entry.
   */
-@@ -1691,6 +1628,34 @@ xfs_inobt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ static int
+-xfs_bmbt_trace_entry(
+-	ktrace_entry_t	  *ktep)
++xfs_btree_trace_entry(
++	int			btnum,
++	ktrace_entry_t	  	*ktep)
+ {
+ 	int			line;
+-	xfs_bmbt_rec_host_t	r;
+-	xfs_bmbt_irec_t		s;
+ 	int			type;
+ 	int			whichfork;
+ 
+@@ -2755,18 +2898,18 @@ xfs_bmbt_trace_entry(
+ 		"da"[whichfork],
+ 		(xfs_btree_cur_t *)ktep->val[4]);
+ 	switch (type) {
+-	case XFS_BMBT_KTRACE_ARGBI:
++	case XFS_BTREE_KTRACE_ARGBI:
+ 		qprintf(" buf 0x%p i %ld\n",
+ 			(xfs_buf_t *)ktep->val[5],
+ 			(long)ktep->val[6]);
+ 		break;
+-	case XFS_BMBT_KTRACE_ARGBII:
++	case XFS_BTREE_KTRACE_ARGBII:
+ 		qprintf(" buf 0x%p i0 %ld i1 %ld\n",
+ 			(xfs_buf_t *)ktep->val[5],
+ 			(long)ktep->val[6],
+ 			(long)ktep->val[7]);
+ 		break;
+-	case XFS_BMBT_KTRACE_ARGFFFI:
++	case XFS_BTREE_KTRACE_ARGFFFI:
+ 		qprintf(" o 0x%x%08x b 0x%x%08x i 0x%x%08x j %ld\n",
+ 			(unsigned int)(long)ktep->val[5],
+ 			(unsigned int)(long)ktep->val[6],
+@@ -2776,11 +2919,11 @@ xfs_bmbt_trace_entry(
+ 			(unsigned int)(long)ktep->val[10],
+ 			(long)ktep->val[11]);
+ 		break;
+-	case XFS_BMBT_KTRACE_ARGI:
++	case XFS_BTREE_KTRACE_ARGI:
+ 		qprintf(" i 0x%lx\n",
+ 			(long)ktep->val[5]);
+ 		break;
+-	case XFS_BMBT_KTRACE_ARGIFK:
++	case XFS_BTREE_KTRACE_ARGIFK:
+ 		qprintf(" i 0x%lx f 0x%x%08x o 0x%x%08x\n",
+ 			(long)ktep->val[5],
+ 			(unsigned int)(long)ktep->val[6],
+@@ -2788,39 +2931,36 @@ xfs_bmbt_trace_entry(
+ 			(unsigned int)(long)ktep->val[8],
+ 			(unsigned int)(long)ktep->val[9]);
+ 		break;
+-	case XFS_BMBT_KTRACE_ARGIFR:
++	case XFS_BTREE_KTRACE_ARGIFR:
+ 		qprintf(" i 0x%lx f 0x%x%08x ",
+ 			(long)ktep->val[5],
+ 			(unsigned int)(long)ktep->val[6],
+ 			(unsigned int)(long)ktep->val[7]);
+-		s.br_startoff = (xfs_fileoff_t)
+-			(((xfs_dfiloff_t)(unsigned long)ktep->val[8] << 32) |
+-				(xfs_dfiloff_t)(unsigned long)ktep->val[9]);
+-		s.br_startblock = (xfs_fsblock_t)
+-			(((xfs_dfsbno_t)(unsigned long)ktep->val[10] << 32) |
+-				(xfs_dfsbno_t)(unsigned long)ktep->val[11]);
+-		s.br_blockcount = (xfs_filblks_t)
+-			(((xfs_dfilblks_t)(unsigned long)ktep->val[12] << 32) |
+-				(xfs_dfilblks_t)(unsigned long)ktep->val[13]);
+-		xfsidbg_xbirec(&s);
+-		break;
+-	case XFS_BMBT_KTRACE_ARGIK:
+-		qprintf(" i 0x%lx o 0x%x%08x\n",
+-			(long)ktep->val[5],
+-			(unsigned int)(long)ktep->val[6],
+-			(unsigned int)(long)ktep->val[7]);
+-		break;
+-	case XFS_BMBT_KTRACE_CUR:
+-		qprintf(" nlevels %ld flags %ld allocated %ld ",
+-			((long)ktep->val[5] >> 24) & 0xff,
+-			((long)ktep->val[5] >> 16) & 0xff,
+-			(long)ktep->val[5] & 0xffff);
+-		r.l0 = (unsigned long long)(unsigned long)ktep->val[6] << 32 |
+-			(unsigned long)ktep->val[7];
+-		r.l1 = (unsigned long long)(unsigned long)ktep->val[8] << 32 |
+-			(unsigned long)ktep->val[9];
++		xfsidb_btree_trace_record(btnum,
++					 (unsigned long)ktep->val[8],
++					 (unsigned long)ktep->val[9],
++					 (unsigned long)ktep->val[10],
++					 (unsigned long)ktep->val[11],
++					 (unsigned long)ktep->val[12],
++					 (unsigned long)ktep->val[13]);
++		break;
++	case XFS_BTREE_KTRACE_ARGIK:
++		qprintf(" i 0x%lx\n", (long)ktep->val[5]);
++		xfsidb_btree_trace_key(btnum,
++				      (unsigned long)ktep->val[6],
++				      (unsigned long)ktep->val[7],
++				      (unsigned long)ktep->val[8],
++				      (unsigned long)ktep->val[9]);
++		break;
++	case XFS_BTREE_KTRACE_CUR:
++
++		xfsidb_btree_trace_cursor(btnum,
++					  (unsigned long)ktep->val[5],
++					  (unsigned long)ktep->val[6],
++					  (unsigned long)ktep->val[7],
++					  (unsigned long)ktep->val[8],
++					  (unsigned long)ktep->val[9]);
+ 
+-		xfsidbg_xbrec(&r);
+ 		qprintf(" bufs 0x%p 0x%p 0x%p 0x%p ",
+ 			(xfs_buf_t *)ktep->val[10],
+ 			(xfs_buf_t *)ktep->val[11],
+@@ -4406,21 +4546,21 @@ xfsidbg_xbmalla(xfs_bmalloca_t *a)
+ 
+ #ifdef XFS_BMAP_TRACE
+ /*
+- * Print out the last "count" entries in the bmap btree trace buffer.
++ * Print out the last "count" entries in a btree trace buffer.
+  * The "a" is for "all" inodes.
+  */
+ static void
+-xfsidbg_xbmatrace(int count)
++xfsidbg_xbtatrace(int btnum, struct ktrace *trace_buf, int count)
+ {
+ 	ktrace_entry_t  *ktep;
+ 	ktrace_snap_t   kts;
+ 	int	     nentries;
+ 	int	     skip_entries;
+ 
+-	if (xfs_bmbt_trace_buf == NULL) {
++	if (trace_buf == NULL) {
+ 		qprintf("The xfs bmap btree trace buffer is not initialized\n");		return;
+ 	}
+-	nentries = ktrace_nentries(xfs_bmbt_trace_buf);
++	nentries = ktrace_nentries(trace_buf);
+ 	if (count == -1) {
+ 		count = nentries;
+ 	}
+@@ -4429,23 +4569,23 @@ xfsidbg_xbmatrace(int count)
+ 		return;
+ 	}
+ 
+-	ktep = ktrace_first(xfs_bmbt_trace_buf, &kts);
++	ktep = ktrace_first(trace_buf, &kts);
+ 	if (count != nentries) {
+ 		/*
+ 		 * Skip the total minus the number to look at minus one
+ 		 * for the entry returned by ktrace_first().
+ 		 */
+ 		skip_entries = nentries - count - 1;
+-		ktep = ktrace_skip(xfs_bmbt_trace_buf, skip_entries, &kts);
++		ktep = ktrace_skip(trace_buf, skip_entries, &kts);
+ 		if (ktep == NULL) {
+ 			qprintf("Skipped them all\n");
+ 			return;
+ 		}
+ 	}
+ 	while (ktep != NULL) {
+-		if (xfs_bmbt_trace_entry(ktep))
++		if (xfs_btree_trace_entry(btnum, ktep))
+ 			qprintf("\n");
+-		ktep = ktrace_next(xfs_bmbt_trace_buf, &kts);
++		ktep = ktrace_next(trace_buf, &kts);
+ 	}
  }
  
+@@ -4465,7 +4605,7 @@ xfsidbg_xbmitrace(xfs_inode_t *ip)
+ 
+ 	ktep = ktrace_first(ip->i_btrace, &kts);
+ 	while (ktep != NULL) {
+-		if (xfs_bmbt_trace_entry(ktep))
++		if (xfs_btree_trace_entry(XFS_BTNUM_BMAP, ktep))
+ 			qprintf("\n");
+ 		ktep = ktrace_next(ip->i_btrace, &kts);
+ 	}
+@@ -4488,7 +4628,7 @@ xfsidbg_xbmstrace(xfs_inode_t *ip)
+ 	ktep = ktrace_first(xfs_bmbt_trace_buf, &kts);
+ 	while (ktep != NULL) {
+ 		if ((xfs_inode_t *)(ktep->val[2]) == ip) {
+-			if (xfs_bmbt_trace_entry(ktep))
++			if (xfs_btree_trace_entry(XFS_BTNUM_BMAP, ktep))
+ 				qprintf("\n");
+ 		}
+ 		ktep = ktrace_next(xfs_bmbt_trace_buf, &kts);
+@@ -4500,7 +4640,7 @@ xfsidbg_xbmstrace(xfs_inode_t *ip)
+  * Print xfs bmap record
+  */
+ static void
+-xfsidbg_xbrec(xfs_bmbt_rec_host_t *r)
++xfsidbg_xbmbtrec(xfs_bmbt_rec_host_t *r)
+ {
+ 	xfs_bmbt_irec_t	irec;
+ 
+@@ -6445,7 +6585,7 @@ xfsidbg_xnode(xfs_inode_t *ip)
+ #ifdef XFS_BMAP_TRACE
+ 	qprintf(" bmap_trace 0x%p\n", ip->i_xtrace);
+ #endif
+-#ifdef XFS_BMBT_TRACE
++#ifdef XFS_BTREE_TRACE
+ 	qprintf(" bmbt trace 0x%p\n", ip->i_btrace);
+ #endif
+ #ifdef XFS_RW_TRACE
+Index: linux-2.6-xfs/fs/xfs/xfs_btree_trace.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-2.6-xfs/fs/xfs/xfs_btree_trace.h	2008-07-21 01:54:02.000000000 +0200
+@@ -0,0 +1,111 @@
 +/*
-+ * Log records from a btree block (leaf).
++ * Copyright (c) 2008 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+STATIC void
-+xfs_inobt_log_recs(
-+	xfs_btree_cur_t		*cur,	/* btree cursor */
-+	xfs_buf_t		*bp,	/* buffer containing btree block */
-+	int			rfirst,	/* index of first record to log */
-+	int			rlast)	/* index of last record to log */
-+{
-+	struct xfs_btree_sblock	*block;	/* btree block to log from */
-+	int			first;	/* first byte offset logged */
-+	int			last;	/* last byte offset logged */
-+	xfs_inobt_rec_t		*rp;	/* record pointer for btree block */
++#ifndef __XFS_BTREE_TRACE_H__
++#define	__XFS_BTREE_TRACE_H__
 +
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, rfirst, rlast);
-+
-+	block = XFS_BUF_TO_SBLOCK(bp);
-+	rp = XFS_INOBT_REC_ADDR(block, 1, cur);
-+	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
-+	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
-+	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-+}
++struct xfs_btree_cur;
++struct xfs_buf;
 +
 +
- #ifdef XFS_BTREE_TRACE
- 
- ktrace_t	*xfs_inobt_trace_buf;
-@@ -1767,7 +1732,9 @@ static const struct xfs_btree_ops xfs_in
- 	.rec_addr		= xfs_inobt_rec_addr,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.copy_keys		= xfs_inobt_copy_keys,
-+	.copy_recs		= xfs_inobt_copy_recs,
- 	.log_keys		= xfs_inobt_log_keys,
-+	.log_recs		= xfs_inobt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_inobt_trace_enter,
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.h	2008-07-21 05:25:23.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.h	2008-07-21 05:25:47.000000000 +0200
-@@ -135,14 +135,6 @@ extern int xfs_inobt_get_rec(struct xfs_
-  */
- extern int xfs_inobt_insert(struct xfs_btree_cur *cur, int *stat);
- 
--/*
-- * Update the record referred to by cur, to the value given
-- * by [ino, fcnt, free].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--extern int xfs_inobt_update(struct xfs_btree_cur *cur, xfs_agino_t ino,
--				__int32_t fcnt, xfs_inofree_t free);
--
- 
- extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.c	2008-07-21 05:27:45.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap.c	2008-07-21 05:29:42.000000000 +0200
-@@ -430,6 +430,24 @@ xfs_bmbt_lookup_ge(
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
- }
- 
 +/*
-+* Update the record referred to by cur to the value given
-+ * by [off, bno, len, state].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
++ * Trace hooks.
++ * i,j = integer (32 bit)
++ * b = btree block buffer (xfs_buf_t)
++ * p = btree ptr
++ * r = btree record
++ * k = btree key
++ * f = fsblock
 + */
-+STATIC int
-+xfs_bmbt_update(
-+	struct xfs_btree_cur	*cur,
-+	xfs_fileoff_t		off,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
-+	xfs_exntst_t		state)
-+{
-+	union xfs_btree_rec	rec;
 +
-+	xfs_bmbt_disk_set_allf(&rec.bmbt, off, bno, len, state);
-+	return xfs_btree_update(cur, &rec);
-+}
- 
- /*
-  * Called from xfs_bmap_add_attrfork to handle btree format files.
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-07-21 05:27:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-07-21 05:49:46.000000000 +0200
-@@ -1565,34 +1565,6 @@ xfs_bmbt_log_block(
- }
- 
- /*
-- * Log record values from the btree block.
-- */
--void
--xfs_bmbt_log_recs(
--	xfs_btree_cur_t		*cur,
--	xfs_buf_t		*bp,
--	int			rfirst,
--	int			rlast)
--{
--	xfs_bmbt_block_t	*block;
--	int			first;
--	int			last;
--	xfs_bmbt_rec_t		*rp;
--	xfs_trans_t		*tp;
--
--	XFS_BMBT_TRACE_CURSOR(cur, ENTRY);
--	XFS_BMBT_TRACE_ARGBII(cur, bp, rfirst, rlast);
--	ASSERT(bp);
--	tp = cur->bc_tp;
--	block = XFS_BUF_TO_BMBT_BLOCK(bp);
--	rp = XFS_BMAP_REC_DADDR(block, 1, cur);
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(tp, bp, first, last);
--	XFS_BMBT_TRACE_CURSOR(cur, EXIT);
--}
--
--/*
-  * Give the bmap btree a new root block.  Copy the old broot contents
-  * down into a real block and make the broot point to it.
-  */
-@@ -1926,51 +1898,6 @@ xfs_bmbt_to_bmdr(
- }
- 
- /*
-- * Update the record to the passed values.
-- */
--int
--xfs_bmbt_update(
--	xfs_btree_cur_t		*cur,
--	xfs_fileoff_t		off,
--	xfs_fsblock_t		bno,
--	xfs_filblks_t		len,
--	xfs_exntst_t		state)
--{
--	xfs_bmbt_block_t	*block;
--	xfs_buf_t		*bp;
--	int			error;
--	xfs_bmbt_key_t		key;
--	int			ptr;
--	xfs_bmbt_rec_t		*rp;
--
--	XFS_BMBT_TRACE_CURSOR(cur, ENTRY);
--	XFS_BMBT_TRACE_ARGFFFI(cur, (xfs_dfiloff_t)off, (xfs_dfsbno_t)bno,
--		(xfs_dfilblks_t)len, (int)state);
--	block = xfs_bmbt_get_block(cur, 0, &bp);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_lblock(cur, block, 0, bp))) {
--		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
--		return error;
--	}
--#endif
--	ptr = cur->bc_ptrs[0];
--	rp = XFS_BMAP_REC_IADDR(block, ptr, cur);
--	xfs_bmbt_disk_set_allf(rp, off, bno, len, state);
--	xfs_bmbt_log_recs(cur, bp, ptr, ptr);
--	if (ptr > 1) {
--		XFS_BMBT_TRACE_CURSOR(cur, EXIT);
--		return 0;
--	}
--	key.br_startoff = cpu_to_be64(off);
--	if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1))) {
--		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
--		return error;
--	}
--	XFS_BMBT_TRACE_CURSOR(cur, EXIT);
--	return 0;
--}
--
--/*
-  * Check extent records, which have just been read, for
-  * any bit in the extent flag field. ASSERT on debug
-  * kernels, as this condition should not occur.
-@@ -2094,6 +2021,17 @@ xfs_bmbt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_bmbt_key_t));
- }
- 
-+STATIC void
-+xfs_bmbt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
-+{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_bmbt_rec_t));
-+}
++#ifdef XFS_BTREE_TRACE
 +
- /*
-  * Log key values from the btree block.
-  */
-@@ -2126,6 +2064,33 @@ xfs_bmbt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- }
- 
 +/*
-+ * Log record values from the btree block.
++ * Trace buffer entry types.
 + */
-+void
-+xfs_bmbt_log_recs(
++#define XFS_BTREE_KTRACE_ARGBI   1
++#define XFS_BTREE_KTRACE_ARGBII  2
++#define XFS_BTREE_KTRACE_ARGFFFI 3
++#define XFS_BTREE_KTRACE_ARGI    4
++#define XFS_BTREE_KTRACE_ARGIFK  5
++#define XFS_BTREE_KTRACE_ARGIFR  6
++#define XFS_BTREE_KTRACE_ARGIK   7
++#define XFS_BTREE_KTRACE_CUR     8
++
++/*
++ * Sub-types for cursor traces.
++ */
++#define XBT_ARGS	0
++#define XBT_ENTRY	1
++#define XBT_ERROR	2
++#define XBT_EXIT	3
++
++void xfs_btree_trace_argbi(const char *, struct xfs_btree_cur *,
++		struct xfs_buf *, int, int);
++void xfs_btree_trace_argbii(const char *, struct xfs_btree_cur *,
++		struct xfs_buf *, int, int, int);
++void xfs_btree_trace_argfffi(const char *, struct xfs_btree_cur *,
++		xfs_dfiloff_t, xfs_dfsbno_t, xfs_dfilblks_t, int, int);
++void xfs_btree_trace_argi(const char *, struct xfs_btree_cur *, int, int);
++void xfs_btree_trace_argifk(const char *, struct xfs_btree_cur *, int,
++		xfs_fsblock_t, xfs_dfiloff_t, int);
++void xfs_btree_trace_argifr(const char *, struct xfs_btree_cur *, int,
++		xfs_fsblock_t, union xfs_btree_rec *, int);
++void xfs_btree_trace_argik(const char *, struct xfs_btree_cur *, int,
++		union xfs_btree_key *, int);
++void xfs_btree_trace_cursor(const char *, struct xfs_btree_cur *, int, int);
++
++
++#define XFS_ALLOCBT_TRACE_SIZE	4096	/* size of global trace buffer */
++extern ktrace_t	*xfs_allocbt_trace_buf;
++
++#define XFS_INOBT_TRACE_SIZE	4096	/* size of global trace buffer */
++extern ktrace_t	*xfs_inobt_trace_buf;
++
++#define XFS_BMBT_TRACE_SIZE	4096	/* size of global trace buffer */
++#define XFS_BMBT_KTRACE_SIZE	32	/* size of per-inode trace buffer */
++extern ktrace_t	*xfs_bmbt_trace_buf;
++
++
++#define	XFS_BTREE_TRACE_ARGBI(c,b,i)	\
++	xfs_btree_trace_argbi(__func__, c, b, i, __LINE__)
++#define	XFS_BTREE_TRACE_ARGBII(c,b,i,j)	\
++	xfs_btree_trace_argbii(__func__, c, b, i, j, __LINE__)
++#define	XFS_BTREE_TRACE_ARGFFFI(c,o,b,i,j)	\
++	xfs_btree_trace_argfffi(__func__, c, o, b, i, j, __LINE__)
++#define	XFS_BTREE_TRACE_ARGI(c,i)	\
++	xfs_btree_trace_argi(__func__, c, i, __LINE__)
++#define	XFS_BTREE_TRACE_ARGIFK(c,i,f,s)	\
++	xfs_btree_trace_argifk(__func__, c, i, f, s, __LINE__)
++#define	XFS_BTREE_TRACE_ARGIFR(c,i,f,r)	\
++	xfs_btree_trace_argifr(__func__, c, i, f, r, __LINE__)
++#define	XFS_BTREE_TRACE_ARGIK(c,i,k)	\
++	xfs_btree_trace_argik(__func__, c, i, k, __LINE__)
++#define	XFS_BTREE_TRACE_CURSOR(c,t)	\
++	xfs_btree_trace_cursor(__func__, c, t, __LINE__)
++#else
++#define	XFS_BTREE_TRACE_ARGBI(c,b,i)
++#define	XFS_BTREE_TRACE_ARGBII(c,b,i,j)
++#define	XFS_BTREE_TRACE_ARGFFFI(c,o,b,i,j)
++#define	XFS_BTREE_TRACE_ARGI(c,i)
++#define	XFS_BTREE_TRACE_ARGIFK(c,i,f,s)
++#define	XFS_BTREE_TRACE_ARGIFR(c,i,f,r)
++#define	XFS_BTREE_TRACE_ARGIK(c,i,k)
++#define	XFS_BTREE_TRACE_CURSOR(c,t)
++#endif	/* XFS_BTREE_TRACE */
++
++#endif /* __XFS_BTREE_TRACE_H__ */
+Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.c	2008-07-21 01:54:00.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c	2008-07-21 01:54:02.000000000 +0200
+@@ -2219,8 +2219,82 @@ xfs_allocbt_dup_cursor(
+ 			cur->bc_btnum);
+ }
+ 
++#ifdef XFS_BTREE_TRACE
++
++ktrace_t	*xfs_allocbt_trace_buf;
++
++STATIC void
++xfs_allocbt_trace_enter(
 +	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp,
-+	int			rfirst,
-+	int			rlast)
++	const char		*func,
++	char			*s,
++	int			type,
++	int			line,
++	__psunsigned_t		a0,
++	__psunsigned_t		a1,
++	__psunsigned_t		a2,
++	__psunsigned_t		a3,
++	__psunsigned_t		a4,
++	__psunsigned_t		a5,
++	__psunsigned_t		a6,
++	__psunsigned_t		a7,
++	__psunsigned_t		a8,
++	__psunsigned_t		a9,
++	__psunsigned_t		a10)
 +{
-+	struct xfs_btree_lblock	*block;
-+	int			first;
-+	int			last;
-+	xfs_bmbt_rec_t		*rp;
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, rfirst, rlast);
-+
-+	block = XFS_BUF_TO_LBLOCK(bp);
-+	rp = XFS_BMAP_REC_DADDR(block, 1, cur);
-+	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
-+	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
-+	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
++	ktrace_enter(xfs_allocbt_trace_buf, (void *)(__psint_t)type,
++		(void *)func, (void *)s, NULL, (void *)cur,
++		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
++		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
++		(void *)a8, (void *)a9, (void *)a10);
 +}
 +
- #ifdef XFS_BTREE_TRACE
++STATIC void
++xfs_allocbt_trace_cursor(
++	struct xfs_btree_cur	*cur,
++	__uint32_t		*s0,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	*s0 = cur->bc_private.a.agno;
++	*l0 = cur->bc_rec.a.ar_startblock;
++	*l1 = cur->bc_rec.a.ar_blockcount;
++}
++
++STATIC void
++xfs_allocbt_trace_key(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	*l0 = be32_to_cpu(key->alloc.ar_startblock);
++	*l1 = be32_to_cpu(key->alloc.ar_blockcount);
++}
++
++STATIC void
++xfs_allocbt_trace_record(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec,
++	__uint64_t		*l0,
++	__uint64_t		*l1,
++	__uint64_t		*l2)
++{
++	*l0 = be32_to_cpu(&rec->alloc.ar_startblock);
++	*l1 = be32_to_cpu(&rec->alloc.ar_blockcount);
++	*l2 = 0;
++}
++#endif /* XFS_BTREE_TRACE */
++
+ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
++
++#ifdef XFS_BTREE_TRACE
++	.trace_enter		= xfs_allocbt_trace_enter,
++	.trace_cursor		= xfs_allocbt_trace_cursor,
++	.trace_key		= xfs_allocbt_trace_key,
++	.trace_record		= xfs_allocbt_trace_record,
++#endif
+ };
  
- ktrace_t	*xfs_bmbt_trace_buf;
-@@ -2222,7 +2187,9 @@ static const struct xfs_btree_ops xfs_bm
- 	.rec_addr		= xfs_bmbt_rec_addr,
- 	.key_diff		= xfs_bmbt_key_diff,
- 	.copy_keys		= xfs_bmbt_copy_keys,
-+	.copy_recs		= xfs_bmbt_copy_recs,
- 	.log_keys		= xfs_bmbt_log_keys,
-+	.log_recs		= xfs_bmbt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_bmbt_trace_enter,
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h
+ /*
+Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.h	2008-07-21 05:27:31.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h	2008-07-21 05:27:35.000000000 +0200
-@@ -274,8 +274,6 @@ extern void xfs_bmbt_disk_set_allf(xfs_b
- 			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.c	2008-07-21 01:54:00.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c	2008-07-21 01:54:02.000000000 +0200
+@@ -2085,8 +2085,82 @@ xfs_inobt_dup_cursor(
+ 			cur->bc_private.a.agbp, cur->bc_private.a.agno);
+ }
  
- extern void xfs_bmbt_to_bmdr(xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
--extern int xfs_bmbt_update(struct xfs_btree_cur *, xfs_fileoff_t,
--				xfs_fsblock_t, xfs_filblks_t, xfs_exntst_t);
++#ifdef XFS_BTREE_TRACE
++
++ktrace_t	*xfs_inobt_trace_buf;
++
++STATIC void
++xfs_inobt_trace_enter(
++	struct xfs_btree_cur	*cur,
++	const char		*func,
++	char			*s,
++	int			type,
++	int			line,
++	__psunsigned_t		a0,
++	__psunsigned_t		a1,
++	__psunsigned_t		a2,
++	__psunsigned_t		a3,
++	__psunsigned_t		a4,
++	__psunsigned_t		a5,
++	__psunsigned_t		a6,
++	__psunsigned_t		a7,
++	__psunsigned_t		a8,
++	__psunsigned_t		a9,
++	__psunsigned_t		a10)
++{
++	ktrace_enter(xfs_inobt_trace_buf, (void *)(__psint_t)type,
++		(void *)func, (void *)s, NULL, (void *)cur,
++		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
++		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
++		(void *)a8, (void *)a9, (void *)a10);
++}
++
++STATIC void
++xfs_inobt_trace_cursor(
++	struct xfs_btree_cur	*cur,
++	__uint32_t		*s0,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	*s0 = cur->bc_private.a.agno;
++	*l0 = cur->bc_rec.i.ir_startino;
++	*l1 = cur->bc_rec.i.ir_free;
++}
++
++STATIC void
++xfs_inobt_trace_key(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key,
++	__uint64_t		*l0,
++	__uint64_t		*l1)
++{
++	*l0 = be32_to_cpu(key->inobt.ir_startino);
++	*l1 = 0;
++}
++
++STATIC void
++xfs_inobt_trace_record(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec,
++	__uint64_t		*l0,
++	__uint64_t		*l1,
++	__uint64_t		*l2)
++{
++	*l0 = be32_to_cpu(rec->inobt.ir_startino);
++	*l1 = be32_to_cpu(rec->inobt.ir_freecount);
++	*l2 = be64_to_cpu(rec->inobt.ir_free);
++}
++#endif /* XFS_BTREE_TRACE */
++
+ static const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
++
++#ifdef XFS_BTREE_TRACE
++	.trace_enter		= xfs_inobt_trace_enter,
++	.trace_cursor		= xfs_inobt_trace_cursor,
++	.trace_key		= xfs_inobt_trace_key,
++	.trace_record		= xfs_inobt_trace_record,
++#endif
+ };
  
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
+ /*
 
 -- 
