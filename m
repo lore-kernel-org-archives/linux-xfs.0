@@ -1,119 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 17:05:00 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6N04tco024191
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 17:04:57 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C06C6191C700
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 17:06:04 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id VPU6WQCRlyMEhzHJ for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 17:06:04 -0700 (PDT)
-Date: Wed, 23 Jul 2008 10:05:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
-Message-ID: <20080723000548.GG5947@disturbed>
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 22 Jul 2008 17:18:31 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6N0IP7R025267
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2008 17:18:27 -0700
+Message-ID: <4886790C.7040100@sgi.com>
+Date: Wed, 23 Jul 2008 10:19:24 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080722072733.GA15376@infradead.org>
+Subject: Re: xfsrestore over ssh?
+References: <2d460de70807211317m75bc236y403d8fa57514262e@mail.gmail.com>	 <4884F2A5.5050507@sgi.com>	 <2d460de70807212002k1a95706ic8291e2abd8796b8@mail.gmail.com>	 <48855B16.4050208@sgi.com>	 <1216708397.4499.57.camel@verge.scott.net.au>	 <48858676.3030105@sgi.com> <2d460de70807220351i7c468de5o33fa5aa5e9ddab99@mail.gmail.com>
+In-Reply-To: <2d460de70807220351i7c468de5o33fa5aa5e9ddab99@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Richard Hartmann <richih.mailinglist@gmail.com>
+Cc: Nathan Scott <nscott@aconex.com>, Bill Kendall <wkendall@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Jul 22, 2008 at 03:27:33AM -0400, Christoph Hellwig wrote:
-> On Tue, Jul 22, 2008 at 03:30:19PM +1000, Dave Chinner wrote:
-> > Until the method we'll use for referencing VFS inodes in core XFS
-> > code is clear, I'd rather leave it consistent with the rest of the code.
+Richard Hartmann wrote:
+> On Tue, Jul 22, 2008 at 09:04, Timothy Shimmin <tes@sgi.com> wrote:
+>> If you could strace it then we could see what call was failing> in path_to_fshandle().
+> First with -ttt to get rid of a tty allocation error, then without:
+> % cat root.xfs | ssh -ttt root@192.168.1.213 strace xfsrestore - /mnt/sda3
+
+>From your output:
+> open("/mnt/sda3", O_RDONLY|O_LARGEFILE) = 4
+> ioctl(4, 0xc01c5868, 0xbfd4178c)        = -1 EINVAL (Invalid argument)
+> close(4) 
+
+(I probably should have just asked for:
+ # strace -o output -e trace=open,ioctl xfsrestore ...)
+
+
+> On Tue, Jul 22, 2008 at 12:49, Richard Hartmann
+> <richih.mailinglist@gmail.com> wrote:
 > 
-> I would expect your cleanups in this area to go in before this patch,
-> or not?
-
-The cleanups are on top of these patches. I'll have to reorder and
-redo them if they are to go in first...
-
-> > As it is, I expect that this code will be revisited several times as
-> > new functionality is added (e.g. combining the VFS and XFS inodes)
-> > because that will change the way we interface with VFS and XFS inodes.
-> > Much of this vnode specific code will change at that time; I'd
-> > rather just change it once when the time is appropriate than have
-> > to change it multiple times....
+>> > The Knoppix boot CD is am using to restore has 2.2.24-1, btw.
 > 
-> Well, it's not vnode specific code.  bhv_vnode_t is just a typedef for
-> struct inode and the various functions dealing with it are trivial
-> wrapper, many of them in fact expanding to no code at all.
-
-Right, but we are still using bhv_vnode_t in core XFS code, not
-struct inode. There haven't been patches to decide that one way or
-another.
-
-> But maybe
-> killing this syntactic sugar should be a separate patch.
-
-I think so - do it once and once only.
-
-> I only fear
-> we'll never get it in with the current review and commit latencies
-> for XFS :(
-
-I can see this being a big issue in the not-too-distant future.....
-
-> > > This needs a big comment on why you're using the gang lookup for
-> > > a single lookup.  I guess that's because the gang lookup skips to
-> > > the next actually existing entry instead of returning NULL, but that's
-> > > not really obvious to the reader.
-> > 
-> > Fair enough. This was later in the original series where this was
-> > a dirty tag lookup and didn't need commenting ;)
+> Grml to the rescue.. I downloaded a grml iso, which has 2.2.45-1,
+> and was able to restore the image.
 > 
-> Actually even then a comment describing why we want a gang lookup
-> when just looking up a single element might be a good idea.
+> Extremely annoying, as I spent quite some time poking various
+> options, thinking I had been doing something very basic very
+> wrong. I assume the issue has been fixed between .24 and .45.
+> 
+> 
+> Thanks again,
+> Richard
 
-Sure - I added that.
 
-> On the
-> other hand I wonder whether we might actually want to use the gang
-> lookups, the unconditional igrab is probably cheaper than lots of
-> radix tree lookups.
+Okay, my best guess is that you are trying to restore to a non-xfs
+filesystem. This was fixed again in 2.2.26 so that it would work
+on a non-xfs filesystem.
+Otherwise the xfs ioctl will be being called and get back an EINVAL
+as we saw in the strace.
 
-Yes, agreed, and that is the way I'm heading. I want to get
-everything working against the radix tree before attempting
-to optimise the lookups.
+Personally, I can't remember why we are bothering with handle code
+in restore (in dump, yes, because of bulkstat but restore....
+I vaguely remember a comment about optimitisation).
 
-The next steps are:
 
-	- combine the XFS + VFS inodes into one structure so that we
-	  can simplify inode lookup.
-	- bypass the linux icache so all lookups run from the radix
-	  tree. This involves adding our own dirty VFS inode
-	  tracking. This initially just uses the VFS superblock
-	  dirty list like the generic code
-	- expand the dirty inode tracking to setting a tag in the
-	  radix tree.
-	- changing radix tree walkers looking for dirty inodes to
-	  use tag lookups - this requires adding interfaces to the
-	  radix tree code
-	- Use a tag in the radix tree to mark inodes for reclaim.
-	- change reclaim to use a radix tree walk.
-	- changing radix tree walkers to all use gang and gang-tag
-	  lookups - this requires adding interfaces to the radix
-	  tree code
-	- factor the individual radix tree walk implementations once
-	  commonalities are obvious.
 
-This is just basic groundwork. The interesting stuff starts after
-this - separating data and inode flushing, avoiding RMW cycles in
-xfs_iflush, writeback aggregation beyond a single inode cluster,
-multi-level caching and cache compression, RCU locking, thread pools
-to parallelise tree walks, and so on.
+Looking at the code (annotated version) in restore:
 
-There's a bunch of stuff in the pipeline - this is the basic
-groundwork needed to catch it all effectively...
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|  /* effectively initialize libhandle on this filesystem by
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|   * allocating a file system handle. this needs to be done
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|   * before any open_by_handle() calls (and possibly other
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|   * libhandle calls).
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|   */
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|  if ( persp->a.dstdirisxfspr ) {
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          void    *fshanp;
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          size_t  fshlen=0;
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          if(path_to_fshandle(persp->a.dstdir, &fshanp, &fshlen)) {
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                  mlog( MLOG_NORMAL,
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                          _("unable to construct a file "
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                            "system handle for %s: %s\n"),
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                          persp->a.dstdir,
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                          strerror( errno ));
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|                  return BOOL_FALSE;
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          }
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          /* libhandle has it cached, release this copy */
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|          free_handle(fshanp, fshlen);
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|  }
+wkendall  |1.34 |master-melb:xfs-cmds:187436a|
 
-Cheers,
+----------------------------
+revision 1.34
+date: 2005/02/10 02:14:17;  author: wkendall.bonnie.engr.sgi.com;  state: Exp;  lines: +34 -26
+modid: master-melb:xfs-cmds:187436a
+Fix a couple of spots in xfsrestore where XFS-specific calls were
+being made without first checking to see if the filesystem being
+restored is XFS.
+Merge of master:xfs-cmds:187436a by kenmcd.
+----------------------------
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+xfsdump-2.2.26 (09 February 2005)
+        - Fix xfsrestore so that it can restore to non-XFS filesystems again.
+
+
+--Tim
