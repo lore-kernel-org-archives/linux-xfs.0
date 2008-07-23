@@ -1,40 +1,104 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:48:25 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NKmNCw022358
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:48:24 -0700
-Date: Wed, 23 Jul 2008 16:49:27 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
-Message-ID: <20080723204927.GB8421@infradead.org>
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 13:08:30 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6NK86T2016198
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:08:07 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B04C31C27D
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:15 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 2tdP4uSXisNhPxHO for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 13:09:15 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6NK8sNg007500
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:08:54 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6NK8r4k007498
+	for xfs@oss.sgi.com; Wed, 23 Jul 2008 22:08:53 +0200
+Date: Wed, 23 Jul 2008 22:08:53 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/15] add a long pointers flag to xfs_btree_cur
+Message-ID: <20080723200853.GG7401@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <488692FB.1010101@sgi.com>
+Content-Disposition: inline; filename=xfs-btree-long-flag
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Mark Goodwin <markgw@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jul 23, 2008 at 12:10:03PM +1000, Mark Goodwin wrote:
-> [getting off-topic for this thread, but anyway ..]
-> This is already a big issue, obviously, and has been for some time.
->
-> Internally, we're attempting to refine our patch acceptance processes,
-> (e.g. gitify our internal dev tree and mirror it on oss so it's much
-> easier to push back out to oss). But the QA overhead remains a stubborn
-> problem. I think we're going to have to ask for QA tests (both regression
-> and performance) to be written as part of the patch acceptance policy -
-> under this policy, merely passing existing QA will not be sufficient.
-> Comments?
+Add a flag to the xfs btree cursor when using long (64bit) block pointers
+instead of checking btnum == XFS_BTNUM_BMAP.
 
-For most patches that just clean things up or change internal
-implementations adding new testcases doesn't make much sense.  The only
-case is when you suspect/know the testcase don't cover this area enough.
 
-What would be nice is if we'd add more testcases for user reported
-regressions.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Btw, does anyone have recent gcov data for XFS?
+Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-07-11 11:12:37.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-07-11 11:13:15.000000000 +0200
+@@ -90,7 +90,7 @@ xfs_btree_check_block(
+ 	int			level,	/* level of the btree block */
+ 	xfs_buf_t		*bp)	/* buffer containing block, if any */
+ {
+-	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum))
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+ 		xfs_btree_check_lblock(cur, (xfs_btree_lblock_t *)block, level,
+ 			bp);
+ 	else
+@@ -500,7 +500,7 @@ xfs_btree_islastblock(
+ 
+ 	block = xfs_btree_get_block(cur, level, &bp);
+ 	xfs_btree_check_block(cur, block, level, bp);
+-	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum))
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+ 		return be64_to_cpu(block->bb_u.l.bb_rightsib) == NULLDFSBNO;
+ 	else
+ 		return be32_to_cpu(block->bb_u.s.bb_rightsib) == NULLAGBLOCK;
+@@ -792,7 +792,7 @@ xfs_btree_setbuf(
+ 	if (!bp)
+ 		return;
+ 	b = XFS_BUF_TO_BLOCK(bp);
+-	if (XFS_BTREE_LONG_PTRS(cur->bc_btnum)) {
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+ 		if (be64_to_cpu(b->bb_u.l.bb_leftsib) == NULLDFSBNO)
+ 			cur->bc_ra[lev] |= XFS_BTCUR_LEFTRA;
+ 		if (be64_to_cpu(b->bb_u.l.bb_rightsib) == NULLDFSBNO)
+Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-11 11:12:37.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-11 11:13:15.000000000 +0200
+@@ -121,11 +121,6 @@ union xfs_btree_rec {
+ #define	XFS_BB_ALL_BITS		((1 << XFS_BB_NUM_BITS) - 1)
+ 
+ /*
+- * Boolean to select which form of xfs_btree_block_t.bb_u to use.
+- */
+-#define	XFS_BTREE_LONG_PTRS(btnum)	((btnum) == XFS_BTNUM_BMAP)
+-
+-/*
+  * Magic numbers for btree blocks.
+  */
+ extern const __uint32_t	xfs_magics[];
+@@ -211,6 +206,7 @@ typedef struct xfs_btree_cur
+ } xfs_btree_cur_t;
+ 
+ /* cursor flags */
++#define XFS_BTREE_LONG_PTRS		(1<<0)	/* pointers are 64bits long */
+ #define XFS_BTREE_ROOT_IN_INODE		(1<<1)	/* root may be variable size */
+ 
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-07-11 11:12:37.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-07-11 11:13:15.000000000 +0200
+@@ -2667,7 +2667,7 @@ xfs_bmbt_init_cursor(
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+ 
+ 	cur->bc_ops = &xfs_bmbt_ops;
+-	cur->bc_flags = XFS_BTREE_ROOT_IN_INODE;
++	cur->bc_flags = XFS_BTREE_LONG_PTRS | XFS_BTREE_ROOT_IN_INODE;
+ 
+ 	cur->bc_private.b.forksize = XFS_IFORK_SIZE(ip, whichfork);
+ 	cur->bc_private.b.ip = ip;
+
+-- 
