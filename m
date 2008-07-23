@@ -1,52 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 00:57:12 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6N7v7gT013834
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:57:08 -0700
-Subject: TAKE 981498 - Move xfs_attr_rolltrans to xfs_trans_roll
-Message-Id: <20080723075810.8F0B958C4C3F@chook.melbourne.sgi.com>
-Date: Wed, 23 Jul 2008 17:58:10 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi-Altivanik)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 00:57:21 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6N7vGJf013884
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 00:57:17 -0700
+Date: Wed, 23 Jul 2008 03:58:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Introduce xfs_bmap_add_attrfork_trans.
+Message-ID: <20080723075826.GA27533@infradead.org>
+References: <1214196150-5427-1-git-send-email-xaiki@sgi.com> <1215675545-2707-1-git-send-email-xaiki@sgi.com> <1215675545-2707-2-git-send-email-xaiki@sgi.com> <1215675545-2707-3-git-send-email-xaiki@sgi.com> <1215675545-2707-4-git-send-email-xaiki@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1215675545-2707-4-git-send-email-xaiki@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Move xfs_attr_rolltrans to xfs_trans_roll
+> +error0:
+> +	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+> +	ASSERT(ip->i_df.if_ext_max ==
+> +	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+> +	return error;
 
-Move it from the attr code to the transaction code and make the attr
-code call the new function.
+I think the transaction cancelling should be done by the caller.  The
+callers will surely have cases where they have to cancel the transaction
+already, and it's also more symmetric.
 
-We rolltrans is really usefull whenever we want to use rolling
-transaction, should be generic, it isn't dependent on any part of the
-attr code anyway.
+> +	VN_HOLD(XFS_ITOV(ip));
 
-We use this excuse to change all the:
- if ((error = xfs_attr_rolltrans()))
+Please just use
 
-calls into:
- error = xfs_trans_roll();
- if (error)
+	IHOLD(ip);
 
-Signed-off-by: Niv Sardi <xaiki@sgi.com>
+instead of the above construct.
 
-
-Date:  Wed Jul 23 17:57:24 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-Inspected by:  hch,xaiki
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31729a
-fs/xfs/xfs_attr_leaf.h - 1.49 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.h.diff?r1=text&tr1=1.49&r2=text&tr2=1.48&f=h
-fs/xfs/xfs_attr_leaf.c - 1.114 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.c.diff?r1=text&tr1=1.114&r2=text&tr2=1.113&f=h
-fs/xfs/xfs_trans.c - 1.186 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.c.diff?r1=text&tr1=1.186&r2=text&tr2=1.185&f=h
-fs/xfs/xfs_trans.h - 1.150 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.h.diff?r1=text&tr1=1.150&r2=text&tr2=1.149&f=h
-fs/xfs/xfs_attr.c - 1.156 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr.c.diff?r1=text&tr1=1.156&r2=text&tr2=1.155&f=h
+Otherwise this looks fine and like another candidate to commit already.
