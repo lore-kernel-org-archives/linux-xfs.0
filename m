@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 22:50:58 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 22:53:15 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O5otIJ004490
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:50:55 -0700
-Message-ID: <488819CC.5060100@sgi.com>
-Date: Thu, 24 Jul 2008 15:57:32 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O5rALe005054
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:53:11 -0700
+Message-ID: <48881A55.7010909@sgi.com>
+Date: Thu, 24 Jul 2008 15:59:49 +1000
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] remove some easy bhv_vnode_t instances
-References: <20080723214741.GB10655@lst.de>
-In-Reply-To: <20080723214741.GB10655@lst.de>
+Subject: Re: [PATCH 2/2] kill bhv_vnode_t
+References: <20080723214745.GC10655@lst.de>
+In-Reply-To: <20080723214745.GC10655@lst.de>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -19,290 +19,307 @@ List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-All looks good to me.
+Same again, all looks good.
 
 Christoph Hellwig wrote:
-> In various places we can just move a VFS_I call into the argument list
-> of called functions/macros instead of having a local bhv_vnode_t.
+> All remaining bhv_vnode_t instance are in code that's more or less Linux
+> specific.  (Well, for xfs_acl.c that could be argued, but that code is
+> on the removal list, too).  So just do an s/bhv_vnode_t/struct inode/
+> over the whole tree.  We can clean up variable naming and some useless
+> helpers later.
 > 
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Index: linux-2.6-xfs/fs/xfs/xfs_dfrag.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_dfrag.c	2008-07-23 22:25:42.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_dfrag.c	2008-07-23 22:26:16.000000000 +0200
-> @@ -130,7 +130,6 @@ xfs_swap_extents(
->  	xfs_mount_t	*mp;
->  	xfs_trans_t	*tp;
->  	xfs_bstat_t	*sbp = &sxp->sx_stat;
-> -	bhv_vnode_t	*vp, *tvp;
->  	xfs_ifork_t	*tempifp, *ifp, *tifp;
->  	int		ilf_fields, tilf_fields;
->  	static uint	lock_flags = XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL;
-> @@ -149,8 +148,6 @@ xfs_swap_extents(
->  	}
->  
->  	sbp = &sxp->sx_stat;
-> -	vp = VFS_I(ip);
-> -	tvp = VFS_I(tip);
->  
->  	xfs_lock_two_inodes(ip, tip, lock_flags);
->  	locked = 1;
-> @@ -174,7 +171,7 @@ xfs_swap_extents(
->  		goto error0;
->  	}
->  
-> -	if (VN_CACHED(tvp) != 0) {
-> +	if (VN_CACHED(VFS_I(tip)) != 0) {
->  		xfs_inval_cached_trace(tip, 0, -1, 0, -1);
->  		error = xfs_flushinval_pages(tip, 0, -1,
->  				FI_REMAPF_LOCKED);
-> @@ -183,7 +180,7 @@ xfs_swap_extents(
->  	}
->  
->  	/* Verify O_DIRECT for ftmp */
-> -	if (VN_CACHED(tvp) != 0) {
-> +	if (VN_CACHED(VFS_I(tip)) != 0) {
->  		error = XFS_ERROR(EINVAL);
->  		goto error0;
->  	}
-> @@ -227,7 +224,7 @@ xfs_swap_extents(
->  	 * vop_read (or write in the case of autogrow) they block on the iolock
->  	 * until we have switched the extents.
->  	 */
-> -	if (VN_MAPPED(vp)) {
-> +	if (VN_MAPPED(VFS_I(ip))) {
->  		error = XFS_ERROR(EBUSY);
->  		goto error0;
->  	}
-> Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-07-23 22:22:20.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-07-23 22:29:36.000000000 +0200
-> @@ -1397,7 +1397,6 @@ xfs_itruncate_start(
->  	xfs_fsize_t	last_byte;
->  	xfs_off_t	toss_start;
->  	xfs_mount_t	*mp;
-> -	bhv_vnode_t	*vp;
->  	int		error = 0;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> @@ -1406,7 +1405,6 @@ xfs_itruncate_start(
->  	       (flags == XFS_ITRUNC_MAYBE));
->  
->  	mp = ip->i_mount;
-> -	vp = VFS_I(ip);
->  
->  	/* wait for the completion of any pending DIOs */
->  	if (new_size < ip->i_size)
-> @@ -1455,7 +1453,7 @@ xfs_itruncate_start(
->  
->  #ifdef DEBUG
->  	if (new_size == 0) {
-> -		ASSERT(VN_CACHED(vp) == 0);
-> +		ASSERT(VN_CACHED(VFS_I(ip)) == 0);
->  	}
->  #endif
->  	return error;
-> @@ -3421,7 +3419,6 @@ xfs_iflush_all(
->  	xfs_mount_t	*mp)
->  {
->  	xfs_inode_t	*ip;
-> -	bhv_vnode_t	*vp;
->  
->   again:
->  	XFS_MOUNT_ILOCK(mp);
-> @@ -3436,14 +3433,13 @@ xfs_iflush_all(
->  			continue;
->  		}
->  
-> -		vp = VFS_I(ip);
-> -		if (!vp) {
-> +		if (!VFS_I(ip)) {
->  			XFS_MOUNT_IUNLOCK(mp);
->  			xfs_finish_reclaim(ip, 0, XFS_IFLUSH_ASYNC);
->  			goto again;
->  		}
->  
-> -		ASSERT(vn_count(vp) == 0);
-> +		ASSERT(vn_count(VFS_I(ip)) == 0);
->  
->  		ip = ip->i_mnext;
->  	} while (ip != mp->m_inodes);
-> Index: linux-2.6-xfs/fs/xfs/xfs_itable.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_itable.c	2008-07-23 22:26:29.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_itable.c	2008-07-23 22:26:45.000000000 +0200
-> @@ -59,7 +59,6 @@ xfs_bulkstat_one_iget(
->  {
->  	xfs_icdinode_t	*dic;	/* dinode core info pointer */
->  	xfs_inode_t	*ip;		/* incore inode pointer */
-> -	bhv_vnode_t	*vp;
->  	int		error;
->  
->  	error = xfs_iget(mp, NULL, ino,
-> @@ -72,7 +71,6 @@ xfs_bulkstat_one_iget(
->  	ASSERT(ip != NULL);
->  	ASSERT(ip->i_blkno != (xfs_daddr_t)0);
->  
-> -	vp = VFS_I(ip);
->  	dic = &ip->i_d;
->  
->  	/* xfs_iget returns the following without needing
-> @@ -85,7 +83,7 @@ xfs_bulkstat_one_iget(
->  	buf->bs_uid = dic->di_uid;
->  	buf->bs_gid = dic->di_gid;
->  	buf->bs_size = dic->di_size;
-> -	vn_atime_to_bstime(vp, &buf->bs_atime);
-> +	vn_atime_to_bstime(VFS_I(ip), &buf->bs_atime);
->  	buf->bs_mtime.tv_sec = dic->di_mtime.t_sec;
->  	buf->bs_mtime.tv_nsec = dic->di_mtime.t_nsec;
->  	buf->bs_ctime.tv_sec = dic->di_ctime.t_sec;
-> Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-07-23 22:23:16.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-07-23 22:33:43.000000000 +0200
-> @@ -1160,7 +1160,6 @@ int
->  xfs_release(
->  	xfs_inode_t	*ip)
->  {
-> -	bhv_vnode_t	*vp = VFS_I(ip);
->  	xfs_mount_t	*mp = ip->i_mount;
->  	int		error;
->  
-> @@ -1195,13 +1194,13 @@ xfs_release(
->  		 * be exposed to that problem.
->  		 */
->  		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
-> -		if (truncated && VN_DIRTY(vp) && ip->i_delayed_blks > 0)
-> +		if (truncated && VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
->  			xfs_flush_pages(ip, 0, -1, XFS_B_ASYNC, FI_NONE);
->  	}
->  
->  	if (ip->i_d.di_nlink != 0) {
->  		if ((((ip->i_d.di_mode & S_IFMT) == S_IFREG) &&
-> -		     ((ip->i_size > 0) || (VN_CACHED(vp) > 0 ||
-> +		     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
->  		       ip->i_delayed_blks > 0)) &&
->  		     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
->  		    (!(ip->i_d.di_flags &
-> @@ -1227,7 +1226,6 @@ int
->  xfs_inactive(
->  	xfs_inode_t	*ip)
->  {
-> -	bhv_vnode_t	*vp = VFS_I(ip);
->  	xfs_bmap_free_t	free_list;
->  	xfs_fsblock_t	first_block;
->  	int		committed;
-> @@ -1242,7 +1240,7 @@ xfs_inactive(
->  	 * If the inode is already free, then there can be nothing
->  	 * to clean up here.
->  	 */
-> -	if (ip->i_d.di_mode == 0 || VN_BAD(vp)) {
-> +	if (ip->i_d.di_mode == 0 || VN_BAD(VFS_I(ip))) {
->  		ASSERT(ip->i_df.if_real_bytes == 0);
->  		ASSERT(ip->i_df.if_broot_bytes == 0);
->  		return VN_INACTIVE_CACHE;
-> @@ -1272,7 +1270,7 @@ xfs_inactive(
->  
->  	if (ip->i_d.di_nlink != 0) {
->  		if ((((ip->i_d.di_mode & S_IFMT) == S_IFREG) &&
-> -                     ((ip->i_size > 0) || (VN_CACHED(vp) > 0 ||
-> +                     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
->                         ip->i_delayed_blks > 0)) &&
->  		      (ip->i_df.if_flags & XFS_IFEXTENTS) &&
->  		     (!(ip->i_d.di_flags &
-> @@ -2793,14 +2791,13 @@ int
->  xfs_reclaim(
->  	xfs_inode_t	*ip)
->  {
-> -	bhv_vnode_t	*vp = VFS_I(ip);
->  
->  	xfs_itrace_entry(ip);
->  
-> -	ASSERT(!VN_MAPPED(vp));
-> +	ASSERT(!VN_MAPPED(VFS_I(ip)));
->  
->  	/* bad inode, get out here ASAP */
-> -	if (VN_BAD(vp)) {
-> +	if (VN_BAD(VFS_I(ip))) {
->  		xfs_ireclaim(ip);
->  		return 0;
->  	}
-> @@ -2837,7 +2834,7 @@ xfs_reclaim(
->  		XFS_MOUNT_ILOCK(mp);
->  		spin_lock(&ip->i_flags_lock);
->  		__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
-> -		vp->i_private = NULL;
-> +		VFS_I(ip)->i_private = NULL;
->  		ip->i_vnode = NULL;
->  		spin_unlock(&ip->i_flags_lock);
->  		list_add_tail(&ip->i_reclaim, &mp->m_del_inodes);
-> @@ -3241,7 +3238,6 @@ xfs_free_file_space(
->  	xfs_off_t		len,
->  	int			attr_flags)
->  {
-> -	bhv_vnode_t		*vp;
->  	int			committed;
->  	int			done;
->  	xfs_off_t		end_dmi_offset;
-> @@ -3261,7 +3257,6 @@ xfs_free_file_space(
->  	xfs_trans_t		*tp;
->  	int			need_iolock = 1;
->  
-> -	vp = VFS_I(ip);
->  	mp = ip->i_mount;
->  
->  	xfs_itrace_entry(ip);
-> @@ -3298,7 +3293,7 @@ xfs_free_file_space(
->  	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
->  	ioffset = offset & ~(rounding - 1);
->  
-> -	if (VN_CACHED(vp) != 0) {
-> +	if (VN_CACHED(VFS_I(ip)) != 0) {
->  		xfs_inval_cached_trace(ip, ioffset, -1, ioffset, -1);
->  		error = xfs_flushinval_pages(ip, ioffset, -1, FI_REMAPF_LOCKED);
->  		if (error)
-> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2008-07-23 22:28:36.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2008-07-23 22:33:43.000000000 +0200
-> @@ -127,7 +127,6 @@ xfs_unmount_flush(
->  	xfs_inode_t	*rip = mp->m_rootip;
->  	xfs_inode_t	*rbmip;
->  	xfs_inode_t	*rsumip = NULL;
-> -	bhv_vnode_t	*rvp = VFS_I(rip);
->  	int		error;
->  
->  	xfs_ilock(rip, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
-> @@ -166,7 +165,7 @@ xfs_unmount_flush(
->  	if (error == EFSCORRUPTED)
->  		goto fscorrupt_out2;
->  
-> -	if (vn_count(rvp) != 1 && !relocation) {
-> +	if (vn_count(VFS_I(rip)) != 1 && !relocation) {
->  		xfs_iunlock(rip, XFS_ILOCK_EXCL);
->  		return XFS_ERROR(EBUSY);
->  	}
 > Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
 > ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 22:33:47.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 22:33:54.000000000 +0200
-> @@ -922,12 +922,7 @@ STATIC struct inode *
->  xfs_fs_alloc_inode(
->  	struct super_block	*sb)
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 22:33:54.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-07-23 22:33:58.000000000 +0200
+> @@ -1818,7 +1818,7 @@ xfs_free_trace_bufs(void)
+>  STATIC int __init
+>  xfs_init_zones(void)
 >  {
-> -	bhv_vnode_t		*vp;
+> -	xfs_vnode_zone = kmem_zone_init_flags(sizeof(bhv_vnode_t), "xfs_vnode",
+> +	xfs_vnode_zone = kmem_zone_init_flags(sizeof(struct inode), "xfs_vnode",
+>  					KM_ZONE_HWALIGN | KM_ZONE_RECLAIM |
+>  					KM_ZONE_SPREAD,
+>  					xfs_fs_inode_init_once);
+> Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/quota/xfs_qm_syscalls.c	2008-07-23 22:33:58.000000000 +0200
+> @@ -1034,7 +1034,7 @@ xfs_qm_dqrele_all_inodes(
+>  {
+>  	xfs_inode_t	*ip, *topino;
+>  	uint		ireclaims;
+> -	bhv_vnode_t	*vp;
+> +	struct inode	*vp;
+>  	boolean_t	vnode_refd;
+>  
+>  	ASSERT(mp->m_quotainfo);
+> Index: linux-2.6-xfs/fs/xfs/xfs_acl.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_acl.c	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_acl.c	2008-07-23 22:33:58.000000000 +0200
+> @@ -37,15 +37,15 @@
+>  #include <linux/capability.h>
+>  #include <linux/posix_acl_xattr.h>
+>  
+> -STATIC int	xfs_acl_setmode(bhv_vnode_t *, xfs_acl_t *, int *);
+> +STATIC int	xfs_acl_setmode(struct inode *, xfs_acl_t *, int *);
+>  STATIC void     xfs_acl_filter_mode(mode_t, xfs_acl_t *);
+>  STATIC void	xfs_acl_get_endian(xfs_acl_t *);
+>  STATIC int	xfs_acl_access(uid_t, gid_t, xfs_acl_t *, mode_t, cred_t *);
+>  STATIC int	xfs_acl_invalid(xfs_acl_t *);
+>  STATIC void	xfs_acl_sync_mode(mode_t, xfs_acl_t *);
+> -STATIC void	xfs_acl_get_attr(bhv_vnode_t *, xfs_acl_t *, int, int, int *);
+> -STATIC void	xfs_acl_set_attr(bhv_vnode_t *, xfs_acl_t *, int, int *);
+> -STATIC int	xfs_acl_allow_set(bhv_vnode_t *, int);
+> +STATIC void	xfs_acl_get_attr(struct inode *, xfs_acl_t *, int, int, int *);
+> +STATIC void	xfs_acl_set_attr(struct inode *, xfs_acl_t *, int, int *);
+> +STATIC int	xfs_acl_allow_set(struct inode *, int);
+>  
+>  kmem_zone_t *xfs_acl_zone;
+>  
+> @@ -55,7 +55,7 @@ kmem_zone_t *xfs_acl_zone;
+>   */
+>  int
+>  xfs_acl_vhasacl_access(
+> -	bhv_vnode_t	*vp)
+> +	struct inode	*vp)
+>  {
+>  	int		error;
+>  
+> @@ -68,7 +68,7 @@ xfs_acl_vhasacl_access(
+>   */
+>  int
+>  xfs_acl_vhasacl_default(
+> -	bhv_vnode_t	*vp)
+> +	struct inode	*vp)
+>  {
+>  	int		error;
+>  
+> @@ -207,7 +207,7 @@ posix_acl_xfs_to_xattr(
+>  
+>  int
+>  xfs_acl_vget(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	void		*acl,
+>  	size_t		size,
+>  	int		kind)
+> @@ -249,7 +249,7 @@ out:
+>  
+>  int
+>  xfs_acl_vremove(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	int		kind)
+>  {
+>  	int		error;
+> @@ -268,7 +268,7 @@ xfs_acl_vremove(
+>  
+>  int
+>  xfs_acl_vset(
+> -	bhv_vnode_t		*vp,
+> +	struct inode		*vp,
+>  	void			*acl,
+>  	size_t			size,
+>  	int			kind)
+> @@ -357,7 +357,7 @@ xfs_acl_iaccess(
+>  
+>  STATIC int
+>  xfs_acl_allow_set(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	int		kind)
+>  {
+>  	if (vp->i_flags & (S_IMMUTABLE|S_APPEND))
+> @@ -561,7 +561,7 @@ xfs_acl_get_endian(
+>   */
+>  STATIC void
+>  xfs_acl_get_attr(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	xfs_acl_t	*aclp,
+>  	int		kind,
+>  	int		flags,
+> @@ -585,7 +585,7 @@ xfs_acl_get_attr(
+>   */
+>  STATIC void
+>  xfs_acl_set_attr(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	xfs_acl_t	*aclp,
+>  	int		kind,
+>  	int		*error)
+> @@ -619,7 +619,7 @@ xfs_acl_set_attr(
+>  
+>  int
+>  xfs_acl_vtoacl(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	xfs_acl_t	*access_acl,
+>  	xfs_acl_t	*default_acl)
+>  {
+> @@ -651,7 +651,7 @@ xfs_acl_vtoacl(
+>   */
+>  int
+>  xfs_acl_inherit(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	mode_t		mode,
+>  	xfs_acl_t	*pdaclp)
+>  {
+> @@ -710,7 +710,7 @@ out_error:
+>   */
+>  STATIC int
+>  xfs_acl_setmode(
+> -	bhv_vnode_t	*vp,
+> +	struct inode	*vp,
+>  	xfs_acl_t	*acl,
+>  	int		*basicperms)
+>  {
+> Index: linux-2.6-xfs/fs/xfs/xfs_acl.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_acl.h	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_acl.h	2008-07-23 22:33:58.000000000 +0200
+> @@ -59,14 +59,14 @@ extern struct kmem_zone *xfs_acl_zone;
+>  		(zone) = kmem_zone_init(sizeof(xfs_acl_t), (name))
+>  #define xfs_acl_zone_destroy(zone)	kmem_zone_destroy(zone)
+>  
+> -extern int xfs_acl_inherit(bhv_vnode_t *, mode_t mode, xfs_acl_t *);
+> +extern int xfs_acl_inherit(struct inode *, mode_t mode, xfs_acl_t *);
+>  extern int xfs_acl_iaccess(struct xfs_inode *, mode_t, cred_t *);
+> -extern int xfs_acl_vtoacl(bhv_vnode_t *, xfs_acl_t *, xfs_acl_t *);
+> -extern int xfs_acl_vhasacl_access(bhv_vnode_t *);
+> -extern int xfs_acl_vhasacl_default(bhv_vnode_t *);
+> -extern int xfs_acl_vset(bhv_vnode_t *, void *, size_t, int);
+> -extern int xfs_acl_vget(bhv_vnode_t *, void *, size_t, int);
+> -extern int xfs_acl_vremove(bhv_vnode_t *, int);
+> +extern int xfs_acl_vtoacl(struct inode *, xfs_acl_t *, xfs_acl_t *);
+> +extern int xfs_acl_vhasacl_access(struct inode *);
+> +extern int xfs_acl_vhasacl_default(struct inode *);
+> +extern int xfs_acl_vset(struct inode *, void *, size_t, int);
+> +extern int xfs_acl_vget(struct inode *, void *, size_t, int);
+> +extern int xfs_acl_vremove(struct inode *, int);
+>  
+>  #define _ACL_PERM_INVALID(perm)	((perm) & ~(ACL_READ|ACL_WRITE|ACL_EXECUTE))
+>  
+> Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-07-23 22:33:58.000000000 +0200
+> @@ -204,7 +204,7 @@ typedef struct xfs_inode {
+>  	struct xfs_inode	*i_mprev;	/* ptr to prev inode */
+>  	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+>  	struct list_head	i_reclaim;	/* reclaim list */
+> -	bhv_vnode_t		*i_vnode;	/* vnode backpointer */
+> +	struct inode		*i_vnode;	/* vnode backpointer */
+>  	struct xfs_dquot	*i_udquot;	/* user dquot */
+>  	struct xfs_dquot	*i_gdquot;	/* group dquot */
+>  
+> Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2008-07-23 22:35:36.000000000 +0200
+> @@ -282,7 +282,7 @@ xfs_sync_inodes(
+>  	int             *bypassed)
+>  {
+>  	xfs_inode_t	*ip = NULL;
+> -	bhv_vnode_t	*vp = NULL;
+> +	struct inode	*vp = NULL;
+>  	int		error;
+>  	int		last_error;
+>  	uint64_t	fflag;
+> Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-07-23 22:33:43.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-07-23 22:33:58.000000000 +0200
+> @@ -2850,7 +2850,7 @@ xfs_finish_reclaim(
+>  	int		sync_mode)
+>  {
+>  	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+> -	bhv_vnode_t	*vp = VFS_I(ip);
+> +	struct inode	*vp = VFS_I(ip);
+>  
+>  	if (vp && VN_BAD(vp))
+>  		goto reclaim;
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2008-07-23 22:34:05.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c	2008-07-23 22:34:31.000000000 +0200
+> @@ -90,7 +90,7 @@ vn_ioerror(
+>   */
+>  static inline int xfs_icount(struct xfs_inode *ip)
+>  {
+> -	bhv_vnode_t *vp = VFS_I(ip);
+> +	struct inode *vp = VFS_I(ip);
+>  
+>  	if (vp)
+>  		return vn_count(vp);
+> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
+> ===================================================================
+> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-07-23 22:34:40.000000000 +0200
+> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-07-23 22:36:29.000000000 +0200
+> @@ -22,8 +22,6 @@ struct file;
+>  struct xfs_iomap;
+>  struct attrlist_cursor_kern;
+>  
+> -typedef struct inode	bhv_vnode_t;
 > -
-> -	vp = kmem_zone_alloc(xfs_vnode_zone, KM_SLEEP);
-> -	if (unlikely(!vp))
-> -		return NULL;
-> -	return vp;
-> +	return kmem_zone_alloc(xfs_vnode_zone, KM_SLEEP);
+>  /*
+>   * Return values for xfs_inactive.  A return value of
+>   * VN_INACTIVE_NOCACHE implies that the file system behavior
+> @@ -64,7 +62,7 @@ extern void	vn_iowait(struct xfs_inode *
+>  extern void	vn_iowake(struct xfs_inode *ip);
+>  extern void	vn_ioerror(struct xfs_inode *ip, int error, char *f, int l);
+>  
+> -static inline int vn_count(bhv_vnode_t *vp)
+> +static inline int vn_count(struct inode *vp)
+>  {
+>  	return atomic_read(&vp->i_count);
+>  }
+> @@ -81,7 +79,7 @@ do { \
+>  	iput(VFS_I(ip)); \
+>  } while (0)
+>  
+> -static inline bhv_vnode_t *vn_grab(bhv_vnode_t *vp)
+> +static inline struct inode *vn_grab(struct inode *vp)
+>  {
+>  	return igrab(vp);
+>  }
+> @@ -89,7 +87,7 @@ static inline bhv_vnode_t *vn_grab(bhv_v
+>  /*
+>   * Dealing with bad inodes
+>   */
+> -static inline int VN_BAD(bhv_vnode_t *vp)
+> +static inline int VN_BAD(struct inode *vp)
+>  {
+>  	return is_bad_inode(vp);
+>  }
+> @@ -97,18 +95,18 @@ static inline int VN_BAD(bhv_vnode_t *vp
+>  /*
+>   * Extracting atime values in various formats
+>   */
+> -static inline void vn_atime_to_bstime(bhv_vnode_t *vp, xfs_bstime_t *bs_atime)
+> +static inline void vn_atime_to_bstime(struct inode *vp, xfs_bstime_t *bs_atime)
+>  {
+>  	bs_atime->tv_sec = vp->i_atime.tv_sec;
+>  	bs_atime->tv_nsec = vp->i_atime.tv_nsec;
 >  }
 >  
->  STATIC void
+> -static inline void vn_atime_to_timespec(bhv_vnode_t *vp, struct timespec *ts)
+> +static inline void vn_atime_to_timespec(struct inode *vp, struct timespec *ts)
+>  {
+>  	*ts = vp->i_atime;
+>  }
+>  
+> -static inline void vn_atime_to_time_t(bhv_vnode_t *vp, time_t *tt)
+> +static inline void vn_atime_to_time_t(struct inode *vp, time_t *tt)
+>  {
+>  	*tt = vp->i_atime.tv_sec;
+>  }
 > 
 > 
 > 
