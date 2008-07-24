@@ -1,29 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 01:14:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 01:15:23 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O8EqmP031086
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 01:14:53 -0700
-Message-ID: <48883B8B.9090802@sgi.com>
-Date: Thu, 24 Jul 2008 18:21:31 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH 5/5] implement IHOLD/IRELE directly
-References: <20080723194950.GF6188@lst.de> <20080723225548.GO6761@disturbed> <20080724062220.GB26938@lst.de> <20080724080727.GA31612@lst.de>
-In-Reply-To: <20080724080727.GA31612@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O8FJEY031297
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 01:15:20 -0700
+Subject: TAKE 981498 - remove INT_GET and friends 
+Message-Id: <20080724081628.6EB3558C4C3F@chook.melbourne.sgi.com>
+Date: Thu, 24 Jul 2008 18:16:28 +1000 (EST)
+From: xaiki@sgi.com (Niv Sardi-Altivanik)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Thu, Jul 24, 2008 at 08:22:20AM +0200, Christoph Hellwig wrote:
->> Makes sense, updated patch below.  (Half-way through xfsqa with a debug
->> kernel so far)
-> 
-> xfsqa passed fine with this patch applied.
-> 
-Great.  All five patches look good to me.  I'll get them into the tree tomorrow.
+remove INT_GET and friends
+
+Thanks to hch's endian work, INT_GET etc are no longer used,
+and may as well be removed.  INT_SET is still used in
+the acl code, though.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
+
+Date:  Thu Jul 24 18:15:32 AEST 2008
+Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
+Inspected by:  esandeen,hch,xaiki
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31756a
+fs/xfs/xfs_arch.h - 1.53 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_arch.h.diff?r1=text&tr1=1.53&r2=text&tr2=1.52&f=h
