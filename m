@@ -1,54 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 23:54:25 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6O6sNhl014937
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:54:23 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 00:05:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6O74u0U018766
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 00:04:57 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0C1191F8BA
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:55:33 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id XHc4bFE3BZHC8dWJ for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:55:33 -0700 (PDT)
-Date: Thu, 24 Jul 2008 16:22:00 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C62AE91DD3
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 00:06:07 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id DKzixzD7XmRGm6Bt for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 00:06:07 -0700 (PDT)
+Date: Thu, 24 Jul 2008 17:05:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] kill xfs_lock_dir_and_entry
-Message-ID: <20080724062200.GS6761@disturbed>
-References: <20080502105803.GC17870@lst.de> <20080520063639.GC8869@lst.de> <20080627130627.GC23431@lst.de> <20080723081315.GA3863@lst.de>
+Subject: Re: [PATCH 2/4] kill struct xfs_mount_args
+Message-ID: <20080724070541.GT6761@disturbed>
+References: <20080525190741.GB13372@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080723081315.GA3863@lst.de>
+In-Reply-To: <20080525190741.GB13372@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 23, 2008 at 10:13:15AM +0200, Christoph Hellwig wrote:
-> ping^3 - this time for real :)
+On Sun, May 25, 2008 at 09:07:41PM +0200, Christoph Hellwig wrote:
+> No need to parse the mount option into a structure before applying it
+> to struct xfs_mount.
 > 
-> On Fri, Jun 27, 2008 at 03:06:27PM +0200, Christoph Hellwig wrote:
-> > ping^2
-> > 
-> > On Tue, May 20, 2008 at 08:36:39AM +0200, Christoph Hellwig wrote:
-> > > ping?
-> > > 
-> > > On Fri, May 02, 2008 at 12:58:03PM +0200, Christoph Hellwig wrote:
-> > > > When multiple inodes are locked in XFS it happens in order of the inode
-> > > > number, with the everything but the first inode trylocked if any of
-> > > > the previous inodes is in the AIL.
-> > > > 
-> > > > Except for the sorting of the inodes this logic is implemented in
-> > > > xfs_lock_inodes, but also partially duplicated in xfs_lock_dir_and_entry
-> > > > in a particularly stupid way adds a lock roundtrip if the inode ordering
-> > > > is not optimal.
-> > > > 
-> > > > This patch adds a new helper xfs_lock_two_inodes that takes two inodes
-> > > > and locks them in the most optimal way according to the above locking
-> > > > protocol and uses it for all places that want to lock two inodes.
-> > > > 
-> > > > The only caller of xfs_lock_inodes is xfs_rename which might lock up to
-> > > > four inodes.
+> The content of xfs_start_flags gets merged into xfs_parseargs.  Calls
+> inbetween don't care and can use mount members instead of the args
+> struct.
+> 
+> This patch uncovered that the mount option for shared filesystems wasn't
+> ever exposed on Linux.  The code to handle it is #if 0'ed in this patch
+> pending a decision on this feature.  I'll send a writeup about it to
+> the list soon.
 
-Looks good and passes xfsqa here....
+Overall is good - cleans up a lot of mess, but a couple of things
+need fixing:
+
+> @@ -228,7 +231,9 @@ xfs_parseargs(
+>  					this_char);
+>  				return EINVAL;
+>  			}
+> -			strncpy(args->mtpt, value, MAXNAMELEN);
+> +			*mtpt = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
+> +			if (!*mtpt)
+> +				return ENOMEM;
+
+It's a double ptr that dup'd the mtpt= value to successfully.
+we check we have a string, but it still count be a null string.
+
+> -	if ((args->flags & XFSMNT_DMAPI) && *args->mtpt == '\0') {
+> +	if ((mp->m_flags & XFS_MOUNT_DMAPI) && !mtpt) {
+
+Which means that check is not doing the same thing. Did you mean
+to check it was not a null string like the original code
+(i.e !**mtpt)?
+
+Also, a comment needs to be made in the function header that mtpt
+needs to be freed by the caller.
+
+> @@ -131,9 +130,11 @@ static struct xfs_qmops xfs_qmcore_stub 
+>  };
+>  
+>  int
+> -xfs_qmops_get(struct xfs_mount *mp, struct xfs_mount_args *args)
+> +xfs_qmops_get(struct xfs_mount *mp)
+>  {
+> -	if (args->flags & (XFSMNT_UQUOTA | XFSMNT_PQUOTA | XFSMNT_GQUOTA)) {
+> +	if (mp->m_qflags & (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+> +			    XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+> +			    XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) {
+>  		struct xfs_qmops *ops;
+>  
+>  		ops = symbol_get(xfs_qmcore_xfs);
+
+I think *QUOTA_ACTIVE implies *QUOTA_ACCT. i.e. the quota can't
+be active if we are not accounting it. Hence I think this can
+be simplified to :
+
+	if (XFS_IS_QUOTA_RUNNING(mp)) {
 
 Cheers,
 
