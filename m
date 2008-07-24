@@ -1,36 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 22:24:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6O5NeVP032685
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:23:42 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 87E24E919CA
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:24:50 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id bFhmQhUX2d5We471 for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:24:50 -0700 (PDT)
-Date: Thu, 24 Jul 2008 07:24:40 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/5] more vnode related macro cleanups
-Message-ID: <20080724052440.GA24613@lst.de>
-References: <20080723194930.GA6188@lst.de> <20080723232702.GP6761@disturbed>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080723232702.GP6761@disturbed>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 22:41:20 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O5fECO002579
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 22:41:16 -0700
+Message-ID: <48881788.7010709@sgi.com>
+Date: Thu, 24 Jul 2008 15:47:52 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] Prevent log tail pushing from blocking on buffer locks
+References: <48857EFB.3030301@sgi.com> <20080723112154.GA17338@infradead.org>
+In-Reply-To: <20080723112154.GA17338@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jul 24, 2008 at 09:27:02AM +1000, Dave Chinner wrote:
-> On Wed, Jul 23, 2008 at 09:49:30PM +0200, Christoph Hellwig wrote:
-> > As Dave's cleanups got in so fast (thanks Niv!) I'll give these patches
-> > a spin to.  They are all over so I'd love to get them in fast too and
-> > get the leftover bhv_vnode_t bits sorted out ASAP.
+Christoph Hellwig wrote:
+> On Tue, Jul 22, 2008 at 04:32:27PM +1000, Lachlan McIlroy wrote:
+>> This changes xfs_inode_item_push() to use XFS_IFLUSH_ASYNC_NOBLOCK when
+>> flushing an inode so the flush wont block on inode cluster buffer lock.
+>> Also change the prototype of the IOP_PUSH operation so that xfsaild_push()
+>> can bump it's stuck count.
+>>
+>> This change was prompted by a deadlock that would only occur on a debug
+>> XFS where a thread creating an inode had the buffer locked and was trying
+>> to allocate space for the inode tracing facility.  That recursed back into
+>> the filesystem to flush data which created a transaction and needed log
+>> space which wasn't available.
 > 
-> This series applies on a pristine tree? Not on top of your
-> other changes (like the sanitize init vnode one)? Several of
-> the patches won't apply to my incoming branch because of that.
+> The stuck propagation looks good, but I don't think this should be
+> blindly done for all errors.  The only error where it makes sense is
+> the EAGAIN from xfs_iflush.  All other returns inside the item_push
+> handlers basically indicate filesystem corruption.
 
-Yes, this applies straight ontop of your patches.  Interestingly I only had
-to rediff '[PATCH] sanitize xfs_initialize_vnode' and the generic ACL patch
-for these - I expected a lot more.
+Good point.  Regardless of the error it's still an item that could not
+be pushed and is effectively 'stuck'.  What do you recommend I do for
+other errors?  Shutdown the filesystem?
