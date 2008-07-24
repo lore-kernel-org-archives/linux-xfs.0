@@ -1,58 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 23:01:41 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O61ZXr006489
-	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:01:36 -0700
-Message-ID: <48881B02.20900@sgi.com>
-Date: Thu, 24 Jul 2008 16:02:42 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 23 Jul 2008 23:15:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6O6FPgI008742
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:15:25 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 123FCE92098
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:16:35 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id sFGTUdoU4ndIBQJD for <xfs@oss.sgi.com>; Wed, 23 Jul 2008 23:16:35 -0700 (PDT)
+Date: Thu, 24 Jul 2008 16:16:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] sanitize xfs_initialize_vnode
+Message-ID: <20080724061615.GR6761@disturbed>
+References: <20080502105215.GA17870@lst.de> <20080723195110.GA6645@lst.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com> <48875040.9090400@thebarn.com>
-In-Reply-To: <48875040.9090400@thebarn.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080723195110.GA6645@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
+On Wed, Jul 23, 2008 at 09:51:10PM +0200, Christoph Hellwig wrote:
+> On Fri, May 02, 2008 at 12:52:15PM +0200, Christoph Hellwig wrote:
+> > Sanitize setting up the Linux indode.
+> > 
+> > Setting up the xfs_inode <-> inode link is opencoded in xfs_iget_core
+> > now because that's the only place it needs to be done,
+> > xfs_initialize_vnode is renamed to xfs_setup_inode and loses all
+> > superflous paramaters.  The check for I_NEW is removed because it always
+> > is true and the di_mode check moves into xfs_iget_core because it's only
+> > needed there.
+> > 
+> > xfs_set_inodeops and xfs_revalidate_inode are merged into
+> > xfs_setup_inode and the whole things is moved into xfs_iops.c where it
+> > belongs.
+> 
+> Rediffed to apply ontop of Dave's and my vnode helper cleanups:
 
+Looks good and has been passing testing here for the past week...
 
-Russell Cattelan wrote:
->> Internally, we're attempting to refine our patch acceptance processes,
->> (e.g. gitify our internal dev tree and mirror it on oss so it's much
->> easier to push back out to oss).
-> I'm sure you have seen this before:
-> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/xfs-import/.git;a=summary'
-> That is a running mirror of the ptools tree into git. (via the cvs tree)
+One question, though:
 
-yes. But it's git -> ptools scripts that we need, preserving history, etc.
-Niv has some scripts for this - they're not production quality yet, but
-we're getting there. Once this transitions, it'll be a *lot* easier for
-us to pull in patches from external developer branches because we'll all
-be using git for checkin.
+> +	}
+> +
+> +	xfs_iflags_clear(ip, XFS_INEW);
+> +	barrier();
+> +
+> +	unlock_new_inode(inode);
+> +}
 
-> It would be really nice to move all xfs development to git finally shut
-> down
-> the whole ptools -> cvs update process.
+Do we still need that barrier()? Or has the reason for it
+existing been lost in the mists of time? Regardless, it was
+there before so this is not a reason to stop the patch from
+going in...
 
-once our internal dev tree is git based and internal git->ptools merging
-is fully automatic, there is no actual need to shutdown the cvs crons.
-It's worked for years and can stay running, no harm.
+Cheers,
 
-> This would help facilitate creation of more "experimental" trees and/or
-> branches
-> so there would not be such a long delay of getting patches distributed.
+Dave.
 
-I think we'd just end up with a git dev branch on oss, maybe with a
-daily pull from the internal dev tree (Russell, that would render
-your cvs->git mirror obsolete I guess). In any case, patch flow and
-turn-around should be greatly improved.
-
-Anyone have comments on any of the above?
-
-Cheers
--- Mark
+-- 
+Dave Chinner
+david@fromorbit.com
