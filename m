@@ -1,44 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 01:24:32 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6O8OQXj001143
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 01:24:27 -0700
-Subject: TAKE 981498 -  remove shouting-indirection macros  from xfs_trans.h
-Message-Id: <20080724082535.694A758C4C3F@chook.melbourne.sgi.com>
-Date: Thu, 24 Jul 2008 18:25:35 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi-Altivanik)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 04:40:48 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6OBeh9k019301
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 04:40:46 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C1CD327E49
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 04:41:52 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id JHl8Us8swYqmDnvh for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 04:41:52 -0700 (PDT)
+Date: Thu, 24 Jul 2008 21:41:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Prevent log tail pushing from blocking on buffer locks
+Message-ID: <20080724114128.GW6761@disturbed>
+References: <48857EFB.3030301@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48857EFB.3030301@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-remove shouting-indirection macros  from xfs_trans.h
+On Tue, Jul 22, 2008 at 04:32:27PM +1000, Lachlan McIlroy wrote:
+> This changes xfs_inode_item_push() to use XFS_IFLUSH_ASYNC_NOBLOCK when
+> flushing an inode so the flush wont block on inode cluster buffer lock.
+> Also change the prototype of the IOP_PUSH operation so that xfsaild_push()
+> can bump it's stuck count.
+>
+> This change was prompted by a deadlock that would only occur on a debug
+> XFS where a thread creating an inode had the buffer locked and was trying
+> to allocate space for the inode tracing facility.  That recursed back into
+> the filesystem to flush data which created a transaction and needed log
+> space which wasn't available.
 
-compile-tested, fairly easy to inspect with:
+A quick question - shouldn't the allocation use KM_NOFS if it
+being called in place that would cause recursion? Anywhere the
+inode tracing is called with a an inode lock held outside a
+transaction will also be suseptible to this deadlock.
 
-quilt diff --diff="diff -iu"
+Also, there is the possibility that aborting writeback from
+the AIL in this manner could cause stalls or deadlocks
+if this item is at the of the log and it doesn't get written
+back straight away and the trigger thread then goes to sleep
+waiting for the tail to move. In that case, everything subsequent
+transaction will then go to sleep without trying to push the
+log and only the watchdog timeout on aild will get things
+moving again.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+So to fix a deadlock in debug code, I don't think we want to
+change the flush semantics of the AIL push on inodes for
+production code. Prevent the debug tracing code from recursing,
+instead....
 
+Cheers,
 
-Date:  Thu Jul 24 18:24:36 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-Inspected by:  esandeen,xaiki
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31758a
-fs/xfs/xfsidbg.c - 1.355 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.355&r2=text&tr2=1.354&f=h
-fs/xfs/xfs_trans_item.c - 1.48 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans_item.c.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
-fs/xfs/xfs_trans.c - 1.187 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.c.diff?r1=text&tr1=1.187&r2=text&tr2=1.186&f=h
-fs/xfs/xfs_trans.h - 1.151 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans.h.diff?r1=text&tr1=1.151&r2=text&tr2=1.150&f=h
-fs/xfs/xfs_bmap.c - 1.397 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.397&r2=text&tr2=1.396&f=h
-fs/xfs/xfs_trans_buf.c - 1.131 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans_buf.c.diff?r1=text&tr1=1.131&r2=text&tr2=1.130&f=h
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
