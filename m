@@ -1,40 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 22:25:11 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P5P5mb017439
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 22:25:06 -0700
-Subject: REOPEN 981498 - Revert remove mounpoint UUID code 
-Message-Id: <20080725052614.B173B58C4C3F@chook.melbourne.sgi.com>
-Date: Fri, 25 Jul 2008 15:26:14 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi-Altivanik)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 22:39:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P5dTG7018464
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 22:39:29 -0700
+Message-ID: <48896756.6040101@thebarn.com>
+Date: Fri, 25 Jul 2008 00:40:38 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
+References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com> <48875040.9090400@thebarn.com> <48881B02.20900@sgi.com> <48894ECC.1070609@thebarn.com> <488951A1.9000408@sgi.com>
+In-Reply-To: <488951A1.9000408@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: markgw@sgi.com
+Cc: xfs@oss.sgi.com
 
-Revert remove mounpoint UUID code
+Mark Goodwin wrote:
+>
+>
+> Russell Cattelan wrote:
+>> Personally I don't see a reason to keep a ptools tree in lock step with
+>> with a git tree. ...
+>
+> you might not, but you're not working for SGI anymore :)
+> We have loads of other trees to merge stuff into other than
+> those on oss. 
+Ya I'm familiar with the complexity disguising itself as productivity.
+(But I will say I experienced a much worse complexity for the sake of
+complexity situation)
+> Many of the internal scripts for managing this
+> are very intertwined with ptools. The one thing that will
+> really help with handling externally contributed patches is
+> for the primary internal SGI dev tree to become GIT based.
+> But not having git->ptools auto merge is not an option.
+Actually if auto merge is a requirement I don't really see a shift in
+policy. I don't see much difference in a ptool->git vs a git->ptools 
+process.
 
-As spotted by dchinner and hch, this touches on-disk format and log format, should be more carefully reviewed.
+Just because  git is the birthing repo for changes, it seems like that 
+is just
+drawing more process into things and making change adoption
+just as slow if not slower.
 
+It seems like decoupling the process, not just switching SCM's and allowing
+experimental  changes to come to light sooner is what people are looking 
+for.
 
-Date:  Fri Jul 25 15:25:25 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-Inspected by:  hch,xaiki
-Undoes mod:  xfs-linux-melb:xfs-kern:31766a
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31773a
-fs/xfs/xfsidbg.c - 1.357 - changed
-fs/xfs/xfs_itable.c - 1.168 - changed
-fs/xfs/xfs_inode_item.c - 1.138 - changed
-fs/xfs/xfs_inode_item.h - 1.52 - changed
-fs/xfs/xfs_log_recover.c - 1.346 - changed
-fs/xfs/xfs_inode.c - 1.511 - changed
-fs/xfs/xfs_inode.h - 1.253 - changed
-fs/xfs/xfs_attr_leaf.c - 1.116 - changed
-fs/xfs/xfs_bmap.c - 1.400 - changed
-fs/xfs/xfs_dinode.h - 1.86 - changed
-fs/xfs/dmapi/xfs_dm.c - 1.78 - changed
+>
+> PCP is in the same boat, just ask Nathan :)
+>
+> Looking at this next week ...
+>
+> Cheers
+> -- Mark
+>
