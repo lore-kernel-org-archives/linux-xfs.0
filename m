@@ -1,43 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:13:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P4DHom009802
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:13:18 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FDFF32C681
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:14:28 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id hCeykChuwWXJ0VCy for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:14:28 -0700 (PDT)
-Date: Fri, 25 Jul 2008 06:14:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 07/15] refactor xfs_btree_readahead
-Message-ID: <20080725041418.GB20636@lst.de>
-References: <20080723200859.GH7401@lst.de> <20080724233655.GH15438@disturbed>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:27:33 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P4RTlC011047
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:27:30 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: [PATCH] use generic posix ACL code, enable ACL caching
+References: <20080614160127.GA15404@lst.de> <20080723201940.GA7908@lst.de>
+Date: Fri, 25 Jul 2008 14:28:30 +1000
+In-Reply-To: <20080723201940.GA7908@lst.de> (Christoph Hellwig's message of
+	"Wed, 23 Jul 2008 22:19:40 +0200")
+Message-ID: <ncctzeetwnl.fsf@itchy.melbourne.sgi.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080724233655.GH15438@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 25, 2008 at 09:36:55AM +1000, Dave Chinner wrote:
-> On Wed, Jul 23, 2008 at 10:08:59PM +0200, Christoph Hellwig wrote:
-> > From: Dave Chinner <dgc@sgi.com>
-> 
-> Can i review my own code? ;)
+Christoph Hellwig <hch@lst.de> writes:
 
-Sure..
+> On Sat, Jun 14, 2008 at 06:01:27PM +0200, Christoph Hellwig wrote:
+>> Switch XFS to use the generic ACL code and enable caching the ACL values
+>> in the XFS inode.
+>> 
+>> Compared to the last post various bugs have been fixed and a locking
+>> strategy has been designed and implemented.  This now passes XFSQA.
+>> 
+>> You'll need my various attr-related patches applies before this one.
+>
+> With various recent changes going in it needed another rediff.  I also
+> moved the xfs_acl_chmod call into xfs_setattr from xfs_vn_setattr
+> because we would miss it for updates from dmapi.  While doing this
+> I found out that xfs_acl_chmod is non-atomic vs the setattr which is
+> probably a bad thing, but also done that way in all other filesystems.
+>
+> Maybe we want to delay this patch until Niv's infrastructure to
+> piggy-back an attr_set ontop of an existing transaction is done so
+> that this issue could be solved.
 
-> > +STATIC int
-> > +xfs_btree_reada_corel(
-> 
-> I've been wondering if this is the best naming convention -
-> appending a single s or l to indicate short or long btree ops.
-> Perhaps this would be better as xfs_btree_readahead_short() and
-> xfs_btree_readahead_long(), esp. as we dropped the 'core' from
-> the caller to make it xfs_btree_readahead().
-> 
-> Otherwise it looks good.
+I like the patch, and don't think we need to wait for the trans aware
+attr code to get it in (it's not attomic now and nobody cares as you
+pointed out) that said, it's pretty big, and I'm did not review it
+carefully enough, and'd be *much* more comfortable if someone that knows
+the code more (like tes) could have a look at it before putting it in.
 
-I'll see if I can find a saner name.
+Cheers,
+-- 
+Niv Sardi
