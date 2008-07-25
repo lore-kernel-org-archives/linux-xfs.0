@@ -1,93 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 20:44:36 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 20:54:58 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P3iYHr007294
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 20:44:34 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 955B519255DD
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 20:45:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id pj6Vgm9BZWAqdZai for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 20:45:44 -0700 (PDT)
-Message-ID: <48894C66.5060204@sandeen.net>
-Date: Thu, 24 Jul 2008 22:45:42 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P3smku008160
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 20:54:49 -0700
+Message-ID: <48894ECC.1070609@thebarn.com>
+Date: Thu, 24 Jul 2008 22:55:56 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
-Subject: Re: TAKE 981498 - remove mounpoint UUID code
-References: <20080725033841.D689558C4C3F@chook.melbourne.sgi.com>
-In-Reply-To: <20080725033841.D689558C4C3F@chook.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
+References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com> <48875040.9090400@thebarn.com> <48881B02.20900@sgi.com>
+In-Reply-To: <48881B02.20900@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi-Altivanik <xaiki@sgi.com>
-Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: markgw@sgi.com
+Cc: xfs@oss.sgi.com
 
-Niv Sardi-Altivanik wrote:
-> remove mounpoint UUID code
+Mark Goodwin wrote:
+>
+>
+> Russell Cattelan wrote:
+>>> Internally, we're attempting to refine our patch acceptance processes,
+>>> (e.g. gitify our internal dev tree and mirror it on oss so it's much
+>>> easier to push back out to oss).
+>> I'm sure you have seen this before:
+>> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/xfs-import/.git;a=summary' 
+>>
+>> That is a running mirror of the ptools tree into git. (via the cvs tree)
+>
+> yes. But it's git -> ptools scripts that we need, preserving history, 
+> etc.
+> Niv has some scripts for this - they're not production quality yet, but
+> we're getting there. Once this transitions, it'll be a *lot* easier for
+> us to pull in patches from external developer branches because we'll all
+> be using git for checkin.
+Personally I don't see a reason to keep a ptools tree in lock step with
+with a git tree. I all for not losing history (and I spent a bit of time 
+when
+the tree was re-organized to keep the rcs history in tack).
+At this point the git tree has full xfs history and I would think this would
+be sufficient for what ever code archeology  comes up.
+>
+>> It would be really nice to move all xfs development to git finally shut
+>> down
+>> the whole ptools -> cvs update process.
+>
+> once our internal dev tree is git based and internal git->ptools merging
+> is fully automatic, there is no actual need to shutdown the cvs crons.
+> It's worked for years and can stay running, no harm.
+Ya I'm still amazed those scripts are holding up given nobody is giving
+them any TLC.  :-(
 
-Are you sure this didn't change any disk structures?  The patch I sent
-was RFC and completely untested...  (and disclosed as such...) :)
+>
+>> This would help facilitate creation of more "experimental" trees and/or
+>> branches
+>> so there would not be such a long delay of getting patches distributed.
+>
+> I think we'd just end up with a git dev branch on oss, maybe with a
+> daily pull from the internal dev tree (Russell, that would render
+> your cvs->git mirror obsolete I guess). In any case, patch flow and
+> turn-around should be greatly improved.
+The one thing about about SCM's that they are entirely a pain in the
+ass, but one of the most important tools in software engineering.
+So whatever happens it should be simple yet sufficient.
 
--Eric
-
-> It looks like all of the below is unused... and according
-> to Nathan,
-> 
-> "dont think it even got used/implemented anywhere, but i think it 
-> was meant to be an auto-mount kinda thing... such that when you look 
-> up at that point, it knows to mount the device with that uuid there, 
-> if its not already it was never really written anywhere ... just an 
-> idea in doug doucettes brain i think."
-> 
-> Think it'll ever go anywhere, or should it get pruned?
-> 
-> The below builds; not at all tested, until I get an idea if it's worth
-> doing.  Need to double check that some structures might not need padding
-> out to keep things compatible/consistent...
-> 
-> 
-> 
-> Date:  Fri Jul 25 13:37:43 AEST 2008
-> Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-> Inspected by:  esandeen,hch,xaiki
-> 
-> The following file(s) were checked into:
->   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-> 
-> 
-> Modid:  xfs-linux-melb:xfs-kern:31766a
-> fs/xfs/xfsidbg.c - 1.356 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfsidbg.c.diff?r1=text&tr1=1.356&r2=text&tr2=1.355&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.356&r2=text&tr2=1.355&f=h
-> fs/xfs/xfs_itable.c - 1.167 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_itable.c.diff?r1=text&tr1=1.167&r2=text&tr2=1.166&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.167&r2=text&tr2=1.166&f=h
-> fs/xfs/xfs_inode_item.c - 1.137 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_inode_item.c.diff?r1=text&tr1=1.137&r2=text&tr2=1.136&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode_item.c.diff?r1=text&tr1=1.137&r2=text&tr2=1.136&f=h
-> fs/xfs/xfs_inode_item.h - 1.51 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_inode_item.h.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode_item.h.diff?r1=text&tr1=1.51&r2=text&tr2=1.50&f=h
-> fs/xfs/xfs_log_recover.c - 1.345 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_log_recover.c.diff?r1=text&tr1=1.345&r2=text&tr2=1.344&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.345&r2=text&tr2=1.344&f=h
-> fs/xfs/xfs_inode.c - 1.510 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_inode.c.diff?r1=text&tr1=1.510&r2=text&tr2=1.509&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.510&r2=text&tr2=1.509&f=h
-> fs/xfs/xfs_inode.h - 1.251 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_inode.h.diff?r1=text&tr1=1.251&r2=text&tr2=1.250&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.251&r2=text&tr2=1.250&f=h
-> fs/xfs/xfs_attr_leaf.c - 1.115 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_attr_leaf.c.diff?r1=text&tr1=1.115&r2=text&tr2=1.114&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_attr_leaf.c.diff?r1=text&tr1=1.115&r2=text&tr2=1.114&f=h
-> fs/xfs/xfs_bmap.c - 1.399 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_bmap.c.diff?r1=text&tr1=1.399&r2=text&tr2=1.398&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.399&r2=text&tr2=1.398&f=h
-> fs/xfs/xfs_dinode.h - 1.85 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> xfs_dinode.h.diff?r1=text&tr1=1.85&r2=text&tr2=1.84&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dinode.h.diff?r1=text&tr1=1.85&r2=text&tr2=1.84&f=h
-> fs/xfs/dmapi/xfs_dm.c - 1.77 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/> dmapi/xfs_dm.c.diff?r1=text&tr1=1.77&r2=text&tr2=1.76&f=h
-> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.77&r2=text&tr2=1.76&f=h
-> 
-> 
+>
+> Anyone have comments on any of the above?
+>
+> Cheers
+> -- Mark
+>
