@@ -1,35 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 22:08:56 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 22:11:48 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P58qc6015123
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 22:08:53 -0700
-Received: from cxfsmac10.melbourne.sgi.com (cxfsmac10.melbourne.sgi.com [134.14.55.100]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id PAA09232; Fri, 25 Jul 2008 15:09:59 +1000
-Message-ID: <48896038.4060207@sgi.com>
-Date: Fri, 25 Jul 2008 15:10:16 +1000
-From: Donald Douwsma <donaldd@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P5BjRo015568
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 22:11:46 -0700
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: [PATCH, RFC] - remove mounpoint UUID code
+References: <47D20F78.7000103@sandeen.net>
+	<ncc7ibavh1s.fsf@itchy.melbourne.sgi.com>
+	<48894466.4020507@sandeen.net>
+Date: Fri, 25 Jul 2008 15:12:46 +1000
+In-Reply-To: <48894466.4020507@sandeen.net> (Eric Sandeen's message of "Thu,
+	24 Jul 2008 22:11:34 -0500")
+Message-ID: <nccljzqtult.fsf@itchy.melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] kill INDUCE_IO_ERROR
-References: <20080523062323.GA32637@lst.de> <nccprp2twjw.fsf@itchy.melbourne.sgi.com> <20080725043259.GB21392@lst.de>
-In-Reply-To: <20080725043259.GB21392@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Niv Sardi <xaiki@sgi.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Fri, Jul 25, 2008 at 02:30:43PM +1000, Niv Sardi wrote:
->> looks good, checking it in
-> 
-> Donald NACKed this one..
-> 
+Eric Sandeen <sandeen@sandeen.net> writes:
 
-Yep, but I changed my mind on it a while ago, the blocklayer
-error injection looks like a more useful framework for testing
-with release builds.
+> Niv Sardi wrote:
+>> ACK, removing it, it should be trivial to put back in if we ever need it.
+>
+> Ok, hch had some comments and this needs a careful eye towards any
+> affected disk structures so probably should not go in immediately as-is.
 
-Niv and I chatted about it and its fine by me.
+Yeah, just saw that, well it's only in -dev now, so we'll audit it
+carefully, and see where it goes.
 
-Don
+I only read hch's last comment which ended in «This is really just dead
+junk that should go away.».
+
+Anyway, we now can use the awesome xfsqa infrastructure to have this
+tested =)
+
+Cheers,
+-- 
+Niv Sardi
