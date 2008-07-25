@@ -1,72 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 23:54:25 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P6sLel023071
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 23:54:22 -0700
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com>
-	<1216556394-17529-3-git-send-email-david@fromorbit.com>
-	<20080722042829.GB27123@infradead.org>
-	<20080722053019.GI6761@disturbed>
-	<20080722072733.GA15376@infradead.org>
-	<20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com>
-	<48875040.9090400@thebarn.com> <48881B02.20900@sgi.com>
-	<48894ECC.1070609@thebarn.com>
-Date: Fri, 25 Jul 2008 16:55:22 +1000
-In-Reply-To: <48894ECC.1070609@thebarn.com> (Russell Cattelan's message of
-	"Thu, 24 Jul 2008 22:55:56 -0500")
-Message-ID: <nccd4l2tput.fsf@itchy.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 25 Jul 2008 08:00:24 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6PF0KM6000496
+	for <xfs@oss.sgi.com>; Fri, 25 Jul 2008 08:00:21 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E7D91BBBE1C
+	for <xfs@oss.sgi.com>; Fri, 25 Jul 2008 08:01:31 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id iDqWBxCQpvYyQdpJ for <xfs@oss.sgi.com>; Fri, 25 Jul 2008 08:01:31 -0700 (PDT)
+Message-ID: <4889EAC9.5070304@sandeen.net>
+Date: Fri, 25 Jul 2008 10:01:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: TAKE 981498 - remove mounpoint UUID code
+References: <20080725033841.D689558C4C3F@chook.melbourne.sgi.com> <48894C66.5060204@sandeen.net> <20080725050149.GL5947@disturbed>
+In-Reply-To: <20080725050149.GL5947@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: markgw@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Niv Sardi-Altivanik <xaiki@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Russell Cattelan <cattelan@thebarn.com> writes:
-> Mark Goodwin wrote:
->> Russell Cattelan wrote:
->>>> Internally, we're attempting to refine our patch acceptance processes,
->>>> (e.g. gitify our internal dev tree and mirror it on oss so it's much
->>>> easier to push back out to oss).
->>> I'm sure you have seen this before:
->>> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=cattelan/xfs-import/.git;a=summary' 
+Dave Chinner wrote:
+> On Thu, Jul 24, 2008 at 10:45:42PM -0500, Eric Sandeen wrote:
+>> Niv Sardi-Altivanik wrote:
+>>> remove mounpoint UUID code
+>> Are you sure this didn't change any disk structures?  The patch I sent
+>> was RFC and completely untested...  (and disclosed as such...) :)
+> 
+> Looking at the original patch, it definitely does change the format
+> of log structures on disk. it removes the union of the uuid and rdev
+> in the xfs_inode_log_format[32|64] which takes that entry from 16
+> bytes down to 4 bytes. So I'd suggest that thisss should be removed
+> immediately before it hits public and people start corrupting their
+> filesystems....
 
-moving from one SCM that is not syncable with the community to another
-is not helping at all. While that clone is great to work *with* git, the
-commit ids have nothing to do with the community's one, and we stil have
-to convert all the work (to fixup commiter names and so forth too) to be
-able to be integrated in the community.
+Yep.  Well crud, I even knew that when I sent it, hence the
+RFC/untested/blah/blah but I suppose I shouldn't send a patch that I
+know to be busted even if it's just as a whaddya-think.  I'll pad out
+the union, check all the log structs, run qa & resend.
 
->>> That is a running mirror of the ptools tree into git. (via the cvs tree)
->> yes. But it's git -> ptools scripts that we need, preserving
->> history, etc.
->> Niv has some scripts for this - they're not production quality yet, but
->> we're getting there. Once this transitions, it'll be a *lot* easier for
->> us to pull in patches from external developer branches because we'll all
->> be using git for checkin.
-> Personally I don't see a reason to keep a ptools tree in lock step with
-> with a git tree. I all for not losing history (and I spent a bit of
-> time when
-> the tree was re-organized to keep the rcs history in tack).
-> At this point the git tree has full xfs history and I would think this would
-> be sufficient for what ever code archeology  comes up.
+And despite all the talk about community & contributors running qa and
+helping with test coverage - as a general rule do sgi devels run qa too
+before committing?
 
-for code archeology, we have many other trees. I'm more interested to be
-able to answer things like: 'what commits have never made it to linus ?'
-(dmapi, patches that had to be slightly changed) and be able to sort all
-our mods in 3 categories: merged-upstream (git-patch-id equality),
-partly-merged-upstream (commit title equality), unkonwn-upstream.
+-Eric
 
-I have a tree here, ready to be used to replace the internal ptools
-tree, it needs some more work to detect the non-merged part of the
-partly-merged-upstream, but well, the diff is mostly whitespaces, and I
-guess we can discard them.
-
-Hopefully, this can be widely used RSN.
-
-Cheers,
--- 
-Niv Sardi
+> Cheers,
+> 
+> Dave.
