@@ -1,41 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:07:03 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P46reA009148
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:06:54 -0700
-Message-ID: <488951A1.9000408@sgi.com>
-Date: Fri, 25 Jul 2008 14:08:01 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] XFS: Use the inode tree for finding dirty inodes
-References: <1216556394-17529-1-git-send-email-david@fromorbit.com> <1216556394-17529-3-git-send-email-david@fromorbit.com> <20080722042829.GB27123@infradead.org> <20080722053019.GI6761@disturbed> <20080722072733.GA15376@infradead.org> <20080723000548.GG5947@disturbed> <488692FB.1010101@sgi.com> <48875040.9090400@thebarn.com> <48881B02.20900@sgi.com> <48894ECC.1070609@thebarn.com>
-In-Reply-To: <48894ECC.1070609@thebarn.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:13:23 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P4DHom009802
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:13:18 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FDFF32C681
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:14:28 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id hCeykChuwWXJ0VCy for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:14:28 -0700 (PDT)
+Date: Fri, 25 Jul 2008 06:14:18 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 07/15] refactor xfs_btree_readahead
+Message-ID: <20080725041418.GB20636@lst.de>
+References: <20080723200859.GH7401@lst.de> <20080724233655.GH15438@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080724233655.GH15438@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
+On Fri, Jul 25, 2008 at 09:36:55AM +1000, Dave Chinner wrote:
+> On Wed, Jul 23, 2008 at 10:08:59PM +0200, Christoph Hellwig wrote:
+> > From: Dave Chinner <dgc@sgi.com>
+> 
+> Can i review my own code? ;)
 
+Sure..
 
-Russell Cattelan wrote:
-> Personally I don't see a reason to keep a ptools tree in lock step with
-> with a git tree. ...
+> > +STATIC int
+> > +xfs_btree_reada_corel(
+> 
+> I've been wondering if this is the best naming convention -
+> appending a single s or l to indicate short or long btree ops.
+> Perhaps this would be better as xfs_btree_readahead_short() and
+> xfs_btree_readahead_long(), esp. as we dropped the 'core' from
+> the caller to make it xfs_btree_readahead().
+> 
+> Otherwise it looks good.
 
-you might not, but you're not working for SGI anymore :)
-We have loads of other trees to merge stuff into other than
-those on oss. Many of the internal scripts for managing this
-are very intertwined with ptools. The one thing that will
-really help with handling externally contributed patches is
-for the primary internal SGI dev tree to become GIT based.
-But not having git->ptools auto merge is not an option.
-
-PCP is in the same boat, just ask Nathan :)
-
-Looking at this next week ...
-
-Cheers
--- Mark
+I'll see if I can find a saner name.
