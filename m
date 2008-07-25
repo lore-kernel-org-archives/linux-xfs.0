@@ -1,40 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:30:29 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6P4UQor011926
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:30:26 -0700
-Subject: TAKE 981498 - kill INDUCE_IO_ERROR
-Message-Id: <20080725043134.7BEFC58C4C3F@chook.melbourne.sgi.com>
-Date: Fri, 25 Jul 2008 14:31:34 +1000 (EST)
-From: xaiki@sgi.com (Niv Sardi-Altivanik)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 24 Jul 2008 21:31:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6P4ViDk012338
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2008 21:31:44 -0700
+Date: Fri, 25 Jul 2008 06:32:30 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] use generic posix ACL code, enable ACL caching
+Message-ID: <20080725043230.GA21392@lst.de>
+References: <20080614160127.GA15404@lst.de> <20080723201940.GA7908@lst.de> <ncctzeetwnl.fsf@itchy.melbourne.sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ncctzeetwnl.fsf@itchy.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: xfs@oss.sgi.com
 
- kill INDUCE_IO_ERROR
+On Fri, Jul 25, 2008 at 02:28:30PM +1000, Niv Sardi wrote:
+> I like the patch, and don't think we need to wait for the trans aware
+> attr code to get it in (it's not attomic now and nobody cares as you
+> pointed out) that said, it's pretty big, and I'm did not review it
+> carefully enough, and'd be *much* more comfortable if someone that knows
+> the code more (like tes) could have a look at it before putting it in.
 
-All the error injection is already enabled through ifdef DEBUG, so kill
-the never set second cpp symbol to activate it without the rest of the
-debugging infrastructure.
+Tim had started looking at it a while ago, and for a patch of this
+complexity I'm more than happy to wait a long time for a throughout review.
 
+This particular non-atomicy doesn't exist with the current code, btw
+because we don't do any adjustments of the ACL entries on chmod time.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-
-
-Date:  Fri Jul 25 14:30:56 AEST 2008
-Workarea:  itchy.melbourne.sgi.com:/i386/home/xaiki/Wrk/ptools/xfs-2.6
-Inspected by:  hch,xaiki
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31771a
-fs/xfs/xfs_mount.c - 1.439 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.439&r2=text&tr2=1.438&f=h
-fs/xfs/xfs_error.c - 1.64 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.c.diff?r1=text&tr1=1.64&r2=text&tr2=1.63&f=h
-fs/xfs/xfs_error.h - 1.53 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_error.h.diff?r1=text&tr1=1.53&r2=text&tr2=1.52&f=h
+In fact we might just drop this call because XFS doesn't require the
+ACL to be minimal and the other filesystems only do it for compatiblity
+with future ACE entry types that will most likely never exist.  That's
+why I'd like to wait for some comments from Tim - I just make sure
+the latest version of the patch always stays posted for anyone to look
+at it.
