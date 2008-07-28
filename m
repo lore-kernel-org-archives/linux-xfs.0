@@ -1,423 +1,130 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Jul 2008 15:56:04 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6SMu0Kf023485
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 15:56:02 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6DB233A246
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 15:57:10 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id JDwzLHBYDGnzPJEw for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 15:57:10 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m6SMv8IF019195
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 00:57:08 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m6SMv810019192
-	for xfs@oss.sgi.com; Tue, 29 Jul 2008 00:57:08 +0200
-Date: Tue, 29 Jul 2008 00:57:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] sanitize xfs_initialize_vnode
-Message-ID: <20080728225708.GA19096@lst.de>
-References: <20080502105215.GA17870@lst.de> <20080723195110.GA6645@lst.de>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Jul 2008 16:33:01 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6SNWvdu030670
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 16:32:57 -0700
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FA268F8094
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 16:34:07 -0700 (PDT)
+Date: Mon, 28 Jul 2008 18:34:07 -0500
+From: Robin Holt <holt@sgi.com>
+Subject: Re: [rfc][patch 1/3] mm: vmap rewrite
+Message-ID: <20080728233407.GB10501@sgi.com>
+References: <20080728123438.GA13926@wotan.suse.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080723195110.GA6645@lst.de>
+In-Reply-To: <20080728123438.GA13926@wotan.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@suse.de>
+Cc: Linux Memory Management List <linux-mm@kvack.org>, xfs@oss.sgi.com, xen-devel@lists.xensource.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel@lists.sourceforge.net
 
-On Wed, Jul 23, 2008 at 09:51:10PM +0200, Christoph Hellwig wrote:
-> On Fri, May 02, 2008 at 12:52:15PM +0200, Christoph Hellwig wrote:
-> > Sanitize setting up the Linux indode.
-> > 
-> > Setting up the xfs_inode <-> inode link is opencoded in xfs_iget_core
-> > now because that's the only place it needs to be done,
-> > xfs_initialize_vnode is renamed to xfs_setup_inode and loses all
-> > superflous paramaters.  The check for I_NEW is removed because it always
-> > is true and the di_mode check moves into xfs_iget_core because it's only
-> > needed there.
-> > 
-> > xfs_set_inodeops and xfs_revalidate_inode are merged into
-> > xfs_setup_inode and the whole things is moved into xfs_iops.c where it
-> > belongs.
-> 
-> Rediffed to apply ontop of Dave's and my vnode helper cleanups:
+> After:
+>  78406 total                                      0.0081
+>  40053 default_idle                              89.4040
+>  33576 ia64_spinlock_contention                 349.7500 
+>   1650 _spin_lock                                17.1875
 
-And another rediff after the vnode removal which was supposed to apply
-after this patch.  Any chance to get in before it gets three month old?
+Here is a patch that will unroll those two sample and let you see which
+function is hitting the contention.  This has been submitted and
+rejected at least once a few years ago.  I keep and old copy around
+because it is often very handy.
+
+I have not tested it in a couple years (usually working on performance with
+a SLES kernel).  It applied with a couple minor fixups so I assume it
+works.  If not, please let me know.
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
+Index: ia64_spinlock_contention/arch/ia64/kernel/head.S
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-07-29 00:48:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-07-29 00:51:19.000000000 +0200
-@@ -718,7 +718,7 @@ out_error:
- 	return error;
- }
+--- ia64_spinlock_contention.orig/arch/ia64/kernel/head.S	2008-07-28 17:35:21.000000000 -0500
++++ ia64_spinlock_contention/arch/ia64/kernel/head.S	2008-07-28 17:35:51.000000000 -0500
+@@ -1137,6 +1137,8 @@ GLOBAL_ENTRY(ia64_spinlock_contention_pr
+ 	tbit.nz p15,p0=r27,IA64_PSR_I_BIT
+ 	.restore sp		// pop existing prologue after next insn
+ 	mov b6 = r28
++	.global ia64_spinlock_contention_pre3_4_beg	// for kernprof
++ia64_spinlock_contention_pre3_4_beg:
+ 	.prologue
+ 	.save ar.pfs, r0
+ 	.altrp b6
+@@ -1185,6 +1187,8 @@ GLOBAL_ENTRY(ia64_spinlock_contention)
+ (p14)	br.cond.sptk.few .wait
  
--const struct inode_operations xfs_inode_operations = {
-+static const struct inode_operations xfs_inode_operations = {
- 	.permission		= xfs_vn_permission,
- 	.truncate		= xfs_vn_truncate,
- 	.getattr		= xfs_vn_getattr,
-@@ -730,7 +730,7 @@ const struct inode_operations xfs_inode_
- 	.fallocate		= xfs_vn_fallocate,
- };
+ 	br.ret.sptk.many b6	// lock is now taken
++	.global ia64_spinlock_contention_end	// for determining if we are in ia64_spinlock_contention code.
++ia64_spinlock_contention_end:
+ END(ia64_spinlock_contention)
  
--const struct inode_operations xfs_dir_inode_operations = {
-+static const struct inode_operations xfs_dir_inode_operations = {
- 	.create			= xfs_vn_create,
- 	.lookup			= xfs_vn_lookup,
- 	.link			= xfs_vn_link,
-@@ -755,7 +755,7 @@ const struct inode_operations xfs_dir_in
- 	.listxattr		= xfs_vn_listxattr,
- };
- 
--const struct inode_operations xfs_dir_ci_inode_operations = {
-+static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	.create			= xfs_vn_create,
- 	.lookup			= xfs_vn_ci_lookup,
- 	.link			= xfs_vn_link,
-@@ -780,7 +780,7 @@ const struct inode_operations xfs_dir_ci
- 	.listxattr		= xfs_vn_listxattr,
- };
- 
--const struct inode_operations xfs_symlink_inode_operations = {
-+static const struct inode_operations xfs_symlink_inode_operations = {
- 	.readlink		= generic_readlink,
- 	.follow_link		= xfs_vn_follow_link,
- 	.put_link		= xfs_vn_put_link,
-@@ -792,3 +792,98 @@ const struct inode_operations xfs_symlin
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- };
-+
-+STATIC void
-+xfs_diflags_to_iflags(
-+	struct inode		*inode,
-+	struct xfs_inode	*ip)
-+{
-+	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
-+		inode->i_flags |= S_IMMUTABLE;
-+	else
-+		inode->i_flags &= ~S_IMMUTABLE;
-+	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
-+		inode->i_flags |= S_APPEND;
-+	else
-+		inode->i_flags &= ~S_APPEND;
-+	if (ip->i_d.di_flags & XFS_DIFLAG_SYNC)
-+		inode->i_flags |= S_SYNC;
-+	else
-+		inode->i_flags &= ~S_SYNC;
-+	if (ip->i_d.di_flags & XFS_DIFLAG_NOATIME)
-+		inode->i_flags |= S_NOATIME;
-+	else
-+		inode->i_flags &= ~S_NOATIME;
-+}
-+
-+/*
-+ * Initialize the Linux inode, set up the operation vectors and
-+ * unlock the inode.
-+ *
-+ * When reading existing inodes from disk this is called directly
-+ * from xfs_iget, when creating a new inode it is called from
-+ * xfs_ialloc after setting up the inode.
-+ */
-+void
-+xfs_setup_inode(
-+	struct xfs_inode	*ip)
-+{
-+	struct inode		*inode = ip->i_vnode;
-+
-+	inode->i_mode	= ip->i_d.di_mode;
-+	inode->i_nlink	= ip->i_d.di_nlink;
-+	inode->i_uid	= ip->i_d.di_uid;
-+	inode->i_gid	= ip->i_d.di_gid;
-+
-+	switch (inode->i_mode & S_IFMT) {
-+	case S_IFBLK:
-+	case S_IFCHR:
-+		inode->i_rdev =
-+			MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
-+			      sysv_minor(ip->i_df.if_u2.if_rdev));
-+		break;
-+	default:
-+		inode->i_rdev = 0;
-+		break;
-+	}
-+
-+	inode->i_generation = ip->i_d.di_gen;
-+	i_size_write(inode, ip->i_d.di_size);
-+	inode->i_atime.tv_sec	= ip->i_d.di_atime.t_sec;
-+	inode->i_atime.tv_nsec	= ip->i_d.di_atime.t_nsec;
-+	inode->i_mtime.tv_sec	= ip->i_d.di_mtime.t_sec;
-+	inode->i_mtime.tv_nsec	= ip->i_d.di_mtime.t_nsec;
-+	inode->i_ctime.tv_sec	= ip->i_d.di_ctime.t_sec;
-+	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
-+	xfs_diflags_to_iflags(inode, ip);
-+	xfs_iflags_clear(ip, XFS_IMODIFIED);
-+
-+	switch (inode->i_mode & S_IFMT) {
-+	case S_IFREG:
-+		inode->i_op = &xfs_inode_operations;
-+		inode->i_fop = &xfs_file_operations;
-+		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		break;
-+	case S_IFDIR:
-+		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
-+			inode->i_op = &xfs_dir_ci_inode_operations;
-+		else
-+			inode->i_op = &xfs_dir_inode_operations;
-+		inode->i_fop = &xfs_dir_file_operations;
-+		break;
-+	case S_IFLNK:
-+		inode->i_op = &xfs_symlink_inode_operations;
-+		if (!(ip->i_df.if_flags & XFS_IFINLINE))
-+			inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		break;
-+	default:
-+		inode->i_op = &xfs_inode_operations;
-+		init_special_inode(inode, inode->i_mode, inode->i_rdev);
-+		break;
-+	}
-+
-+	xfs_iflags_clear(ip, XFS_INEW);
-+	barrier();
-+
-+	unlock_new_inode(inode);
-+}
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.h
+ #endif
+Index: ia64_spinlock_contention/arch/ia64/kernel/ia64_ksyms.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.h	2008-07-29 00:48:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.h	2008-07-29 00:51:19.000000000 +0200
-@@ -18,10 +18,7 @@
- #ifndef __XFS_IOPS_H__
- #define __XFS_IOPS_H__
- 
--extern const struct inode_operations xfs_inode_operations;
--extern const struct inode_operations xfs_dir_inode_operations;
--extern const struct inode_operations xfs_dir_ci_inode_operations;
--extern const struct inode_operations xfs_symlink_inode_operations;
-+struct xfs_inode;
- 
- extern const struct file_operations xfs_file_operations;
- extern const struct file_operations xfs_dir_file_operations;
-@@ -29,8 +26,9 @@ extern const struct file_operations xfs_
- 
- extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
- 
--struct xfs_inode;
- extern void xfs_ichgtime(struct xfs_inode *, int);
- extern void xfs_ichgtime_fast(struct xfs_inode *, struct inode *, int);
- 
-+extern void xfs_setup_inode(struct xfs_inode *);
-+
- #endif /* __XFS_IOPS_H__ */
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+--- ia64_spinlock_contention.orig/arch/ia64/kernel/ia64_ksyms.c	2008-07-28 17:35:21.000000000 -0500
++++ ia64_spinlock_contention/arch/ia64/kernel/ia64_ksyms.c	2008-07-28 17:35:51.000000000 -0500
+@@ -95,6 +95,10 @@ EXPORT_SYMBOL(unw_init_running);
+  */
+ extern char ia64_spinlock_contention_pre3_4;
+ EXPORT_SYMBOL(ia64_spinlock_contention_pre3_4);
++extern char ia64_spinlock_contention_pre3_4_beg;
++EXPORT_SYMBOL(ia64_spinlock_contention_pre3_4_beg);
++extern char ia64_spinlock_contention_pre3_4_end;
++EXPORT_SYMBOL(ia64_spinlock_contention_pre3_4_end);
+ #  else
+ /*
+  * This is not a normal routine and we don't want a function descriptor for it, so we use
+@@ -102,6 +106,8 @@ EXPORT_SYMBOL(ia64_spinlock_contention_p
+  */
+ extern char ia64_spinlock_contention;
+ EXPORT_SYMBOL(ia64_spinlock_contention);
++extern char ia64_spinlock_contention_end;
++EXPORT_SYMBOL(ia64_spinlock_contention_end);
+ #  endif
+ # endif
+ #endif
+Index: ia64_spinlock_contention/arch/ia64/kernel/perfmon_default_smpl.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-07-29 00:48:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-07-29 00:51:19.000000000 +0200
-@@ -155,12 +155,9 @@ EXPORT_SYMBOL(kmem_zone_free);
- EXPORT_SYMBOL(kmem_zone_init);
- EXPORT_SYMBOL(kmem_zone_zalloc);
- EXPORT_SYMBOL(xfs_address_space_operations);
--EXPORT_SYMBOL(xfs_dir_inode_operations);
- EXPORT_SYMBOL(xfs_dir_file_operations);
--EXPORT_SYMBOL(xfs_inode_operations);
- EXPORT_SYMBOL(xfs_file_operations);
- EXPORT_SYMBOL(xfs_invis_file_operations);
--EXPORT_SYMBOL(xfs_symlink_inode_operations);
- EXPORT_SYMBOL(xfs_buf_delwri_dequeue);
- EXPORT_SYMBOL(_xfs_buf_find);
- EXPORT_SYMBOL(xfs_buf_iostart);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.h	2008-07-29 00:50:55.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.h	2008-07-29 00:51:35.000000000 +0200
-@@ -72,9 +72,6 @@ struct block_device;
+--- ia64_spinlock_contention.orig/arch/ia64/kernel/perfmon_default_smpl.c	2008-07-28 17:35:21.000000000 -0500
++++ ia64_spinlock_contention/arch/ia64/kernel/perfmon_default_smpl.c	2008-07-28 18:18:56.000000000 -0500
+@@ -11,6 +11,7 @@
+ #include <linux/init.h>
+ #include <asm/delay.h>
+ #include <linux/smp.h>
++#include <linux/spinlock.h>
  
- extern __uint64_t xfs_max_file_offset(unsigned int);
- 
--extern void xfs_initialize_vnode(struct xfs_mount *mp, struct inode *vp,
--		struct xfs_inode *ip);
--
- extern void xfs_flush_inode(struct xfs_inode *);
- extern void xfs_flush_device(struct xfs_inode *);
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2008-07-29 00:48:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2008-07-29 00:51:19.000000000 +0200
-@@ -288,10 +288,17 @@ finish_inode:
- 	*ipp = ip;
- 
- 	/*
-+	 * Set up the Linux with the Linux inode.
-+	 */
-+	ip->i_vnode = inode;
-+	inode->i_private = ip;
-+
-+	/*
- 	 * If we have a real type for an on-disk inode, we can set ops(&unlock)
- 	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
- 	 */
--	xfs_initialize_vnode(mp, inode, ip);
-+	if (ip->i_d.di_mode != 0)
-+		xfs_setup_inode(ip);
+ #include <asm/perfmon.h>
+ #include <asm/perfmon_default_smpl.h>
+@@ -98,6 +99,16 @@ default_init(struct task_struct *task, v
  	return 0;
  }
  
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-07-29 00:50:55.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-07-29 00:54:42.000000000 +0200
-@@ -1046,7 +1046,6 @@ xfs_ialloc(
++#ifdef CONFIG_SMP
++#if __GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 3)
++extern char ia64_spinlock_contention_pre3_4_beg[], ia64_spinlock_contention_pre3_4_end[];
++#define ia64_spinlock_contention		ia64_spinlock_contention_pre3_4_beg
++#define ia64_spinlock_contention_end		ia64_spinlock_contention_pre3_4_end
++#else
++extern char ia64_spinlock_contention[], ia64_spinlock_contention_end[];
++#endif
++#endif
++
+ static int
+ default_handler(struct task_struct *task, void *buf, pfm_ovfl_arg_t *arg, struct pt_regs *regs, unsigned long stamp)
  {
- 	xfs_ino_t	ino;
- 	xfs_inode_t	*ip;
--	struct inode	*vp;
- 	uint		flags;
- 	int		error;
+@@ -164,6 +175,14 @@ default_handler(struct task_struct *task
+ 	 * where did the fault happen (includes slot number)
+ 	 */
+ 	ent->ip = regs->cr_iip | ((regs->cr_ipsr >> 41) & 0x3);
++#ifdef CONFIG_SMP
++	/* Fix up the ip for code in the spinlock contention path. */
++	if ((ent->ip >= (unsigned long)ia64_spinlock_contention) &&
++	    (ent->ip < (unsigned long)ia64_spinlock_contention_end))
++		ent->ip = regs->b6;
++#endif
++	if (in_lock_functions(ent->ip))
++		ent->ip = regs->r28;
  
-@@ -1077,7 +1076,6 @@ xfs_ialloc(
- 	}
- 	ASSERT(ip != NULL);
- 
--	vp = VFS_I(ip);
- 	ip->i_d.di_mode = (__uint16_t)mode;
- 	ip->i_d.di_onlink = 0;
- 	ip->i_d.di_nlink = nlink;
-@@ -1220,7 +1218,7 @@ xfs_ialloc(
- 	xfs_trans_log_inode(tp, ip, flags);
- 
- 	/* now that we have an i_mode we can setup inode ops and unlock */
--	xfs_initialize_vnode(tp->t_mountp, vp, ip);
-+	xfs_setup_inode(ip);
- 
- 	*ipp = ip;
- 	return 0;
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-07-29 00:50:55.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-07-29 00:51:19.000000000 +0200
-@@ -581,116 +581,6 @@ xfs_max_file_offset(
- 	return (((__uint64_t)pagefactor) << bitshift) - 1;
- }
- 
--STATIC_INLINE void
--xfs_set_inodeops(
--	struct inode		*inode)
--{
--	switch (inode->i_mode & S_IFMT) {
--	case S_IFREG:
--		inode->i_op = &xfs_inode_operations;
--		inode->i_fop = &xfs_file_operations;
--		inode->i_mapping->a_ops = &xfs_address_space_operations;
--		break;
--	case S_IFDIR:
--		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
--			inode->i_op = &xfs_dir_ci_inode_operations;
--		else
--			inode->i_op = &xfs_dir_inode_operations;
--		inode->i_fop = &xfs_dir_file_operations;
--		break;
--	case S_IFLNK:
--		inode->i_op = &xfs_symlink_inode_operations;
--		if (!(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE))
--			inode->i_mapping->a_ops = &xfs_address_space_operations;
--		break;
--	default:
--		inode->i_op = &xfs_inode_operations;
--		init_special_inode(inode, inode->i_mode, inode->i_rdev);
--		break;
--	}
--}
--
--STATIC_INLINE void
--xfs_revalidate_inode(
--	xfs_mount_t		*mp,
--	struct inode		*inode,
--	xfs_inode_t		*ip)
--{
--
--	inode->i_mode	= ip->i_d.di_mode;
--	inode->i_nlink	= ip->i_d.di_nlink;
--	inode->i_uid	= ip->i_d.di_uid;
--	inode->i_gid	= ip->i_d.di_gid;
--
--	switch (inode->i_mode & S_IFMT) {
--	case S_IFBLK:
--	case S_IFCHR:
--		inode->i_rdev =
--			MKDEV(sysv_major(ip->i_df.if_u2.if_rdev) & 0x1ff,
--			      sysv_minor(ip->i_df.if_u2.if_rdev));
--		break;
--	default:
--		inode->i_rdev = 0;
--		break;
--	}
--
--	inode->i_generation = ip->i_d.di_gen;
--	i_size_write(inode, ip->i_d.di_size);
--	inode->i_atime.tv_sec	= ip->i_d.di_atime.t_sec;
--	inode->i_atime.tv_nsec	= ip->i_d.di_atime.t_nsec;
--	inode->i_mtime.tv_sec	= ip->i_d.di_mtime.t_sec;
--	inode->i_mtime.tv_nsec	= ip->i_d.di_mtime.t_nsec;
--	inode->i_ctime.tv_sec	= ip->i_d.di_ctime.t_sec;
--	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
--	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
--		inode->i_flags |= S_IMMUTABLE;
--	else
--		inode->i_flags &= ~S_IMMUTABLE;
--	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
--		inode->i_flags |= S_APPEND;
--	else
--		inode->i_flags &= ~S_APPEND;
--	if (ip->i_d.di_flags & XFS_DIFLAG_SYNC)
--		inode->i_flags |= S_SYNC;
--	else
--		inode->i_flags &= ~S_SYNC;
--	if (ip->i_d.di_flags & XFS_DIFLAG_NOATIME)
--		inode->i_flags |= S_NOATIME;
--	else
--		inode->i_flags &= ~S_NOATIME;
--	xfs_iflags_clear(ip, XFS_IMODIFIED);
--}
--
--void
--xfs_initialize_vnode(
--	struct xfs_mount	*mp,
--	struct inode		*inode,
--	struct xfs_inode	*ip)
--{
--
--	if (!ip->i_vnode) {
--		ip->i_vnode = inode;
--		inode->i_private = ip;
--	}
--
--	/*
--	 * We need to set the ops vectors, and unlock the inode, but if
--	 * we have been called during the new inode create process, it is
--	 * too early to fill in the Linux inode.  We will get called a
--	 * second time once the inode is properly set up, and then we can
--	 * finish our work.
--	 */
--	if (ip->i_d.di_mode != 0 && (inode->i_state & I_NEW)) {
--		xfs_revalidate_inode(mp, inode, ip);
--		xfs_set_inodeops(inode);
--
--		xfs_iflags_clear(ip, XFS_INEW);
--		barrier();
--
--		unlock_new_inode(inode);
--	}
--}
--
- int
- xfs_blkdev_get(
- 	xfs_mount_t		*mp,
+ 	ent->tstamp    = stamp;
+ 	ent->cpu       = smp_processor_id();
