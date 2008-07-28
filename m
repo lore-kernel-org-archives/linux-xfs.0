@@ -1,63 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Jul 2008 18:55:53 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Jul 2008 19:36:37 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6S1tlvS010823
-	for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 18:55:50 -0700
-Message-ID: <488D2763.1020607@sgi.com>
-Date: Mon, 28 Jul 2008 11:56:51 +1000
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: TAKE 981498 - remove mounpoint UUID code
-References: <20080725033841.D689558C4C3F@chook.melbourne.sgi.com> <48894C66.5060204@sandeen.net> <20080725050149.GL5947@disturbed> <4889EAC9.5070304@sandeen.net>
-In-Reply-To: <4889EAC9.5070304@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6S2aX8m014349
+	for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 19:36:34 -0700
+Subject: TAKE 981498 - remove some easy bhv_vnode_t instances
+Message-Id: <20080728023743.4016258C4C3F@chook.melbourne.sgi.com>
+Date: Mon, 28 Jul 2008 12:37:43 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Niv Sardi-Altivanik <xaiki@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> Dave Chinner wrote:
->> On Thu, Jul 24, 2008 at 10:45:42PM -0500, Eric Sandeen wrote:
->>> Niv Sardi-Altivanik wrote:
->>>> remove mounpoint UUID code
->>> Are you sure this didn't change any disk structures?  The patch I sent
->>> was RFC and completely untested...  (and disclosed as such...) :)
->> Looking at the original patch, it definitely does change the format
->> of log structures on disk. it removes the union of the uuid and rdev
->> in the xfs_inode_log_format[32|64] which takes that entry from 16
->> bytes down to 4 bytes. So I'd suggest that thisss should be removed
->> immediately before it hits public and people start corrupting their
->> filesystems....
-> 
-> Yep.  Well crud, I even knew that when I sent it, hence the
-> RFC/untested/blah/blah but I suppose I shouldn't send a patch that I
-> know to be busted even if it's just as a whaddya-think.  I'll pad out
-> the union, check all the log structs, run qa & resend.
-> 
+remove some easy bhv_vnode_t instances
 
-Well, I wouldn't think it is a problem for xfs_dinode_t, 
-after di_next_unlinked the data structure is basically documentation
-and certainly di_a really starts at the attribute fork offset :)
+In various places we can just move a VFS_I call into the argument list
+of called functions/macros instead of having a local bhv_vnode_t.
 
-As Dave said, it is a problem for xfs_inode_log_format and friends,
-(ones which were changed for 32/64 bit variants).
-This is not good but it is only a problem if you need to do log replay
-with a new kernel on a dirty log created on the old kernel
-(or vice-versa).
-I don't think I want to change log replay to handle yet another variant
-of inode item :) But it aint as bad as before as there is a cutoff point
-and it only becomes a problem on unclean mount at that cutoff point.
-Then again, if rc-1 is unstable and we crash out with a dirty log
-and then try to replay using a more stable old kernel, it would have
-trouble in log replay. (Just thinking aloud of possiblities :-)
 
-> And despite all the talk about community & contributors running qa and
-> helping with test coverage - as a general rule do sgi devels run qa too
-> before committing?
-> 
-Yes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---Tim
+Date:  Mon Jul 28 12:36:08 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
+Inspected by:  
+hch
+lachlan
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31776a
+fs/xfs/xfs_vnodeops.c - 1.770 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.770&r2=text&tr2=1.769&f=h
+fs/xfs/xfs_itable.c - 1.169 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.169&r2=text&tr2=1.168&f=h
+fs/xfs/xfs_vfsops.c - 1.573 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.573&r2=text&tr2=1.572&f=h
+fs/xfs/xfs_dfrag.c - 1.71 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dfrag.c.diff?r1=text&tr1=1.71&r2=text&tr2=1.70&f=h
+fs/xfs/xfs_inode.c - 1.512 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.512&r2=text&tr2=1.511&f=h
+fs/xfs/linux-2.6/xfs_super.c - 1.441 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.441&r2=text&tr2=1.440&f=h
+	- remove some easy bhv_vnode_t instances
