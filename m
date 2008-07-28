@@ -1,60 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Jul 2008 23:25:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m6S6PFpR000997
-	for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 23:25:16 -0700
-Subject: TAKE 981498 - kill bhv_vnode_t
-Message-Id: <20080728062625.BB57158C4C3F@chook.melbourne.sgi.com>
-Date: Mon, 28 Jul 2008 16:26:25 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 27 Jul 2008 23:50:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6S6oPlI002554
+	for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 23:50:25 -0700
+Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 14FAEEB93A4
+	for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 23:51:36 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id nWQDdV6eKl5YI93I for <xfs@oss.sgi.com>; Sun, 27 Jul 2008 23:51:36 -0700 (PDT)
+Date: Sun, 27 Jul 2008 23:51:24 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: partially uptodate page reads
+Message-Id: <20080727235124.5b04fd8b.akpm@linux-foundation.org>
+In-Reply-To: <6.0.0.20.2.20080728115511.045088a8@172.19.0.2>
+References: <200807250117.11331.nickpiggin@yahoo.com.au>
+	<20080724175913.GA32117@infradead.org>
+	<20080724120841.81c72be9.akpm@linux-foundation.org>
+	<6.0.0.20.2.20080728115511.045088a8@172.19.0.2>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Cc: Christoph Hellwig <hch@infradead.org>, Nick Piggin <nickpiggin@yahoo.com.au>, jack@ucw.cz, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-kill bhv_vnode_t
+On Mon, 28 Jul 2008 13:34:12 +0900 Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp> wrote:
 
-All remaining bhv_vnode_t instance are in code that's more or less Linux
-specific.  (Well, for xfs_acl.c that could be argued, but that code is
-on the removal list, too).  So just do an s/bhv_vnode_t/struct inode/
-over the whole tree.  We can clean up variable naming and some useless
-helpers later.
+> Hi
+> 
+> >> > 
+> >> > Are there significant numbers of people using block size < page size in
+> >> > situations where performance is important and significantly improved by
+> >> > this patch? Can you give any performance numbers to illustrate perhaps?
+> >> 
+> >> With XFS lots of people use 4k blocksize filesystems on ia64 systems
+> >> with 16k pages, so an optimization like this would be useful.
+> >
+> >As Nick says, we really should have some measurement results which
+> >confirm this theory.  Maybe we did do some but they didn't find theor
+> >way into the changelog.
+> >
+> >I've put the patch on hold until this confirmation data is available.
+> >
+> 
+> I've got some performance number.
+> I wrote a benchmark program and got result number with this program.
+> This benchmark do:
+> 	1, mount and open a test file.
+> 	2, create a 512MB file.
+> 	3, close a file and umount.
+> 	4, mount and again open a test file.
+> 	5, pwrite randomly 300000 times on a test file. offset is aligned by IO size(1024bytes).
+> 	6, measure time of preading randomly 100000 times on a test file.
+> 
+> The result was:
+> 	2.6.26
+>         330 sec
+> 
+> 	2.6.26-patched
+>         226 sec
+> 
+> Arch:i386 
+> Filesystem:ext3
+> Blocksize:1024 bytes
+> Memory: 1GB
+> 
+> On ext3/4, a file is written through buffer/block. So random read/write mixed workloads
+> or random read after random write workloads are optimized with this patch under 
+> pagesize != blocksize environment. This test result showed this.
 
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Date:  Mon Jul 28 16:25:27 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-hch
-Inspected by:  
-hch
-lachlan
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31781a
-fs/xfs/xfs_vnodeops.c - 1.771 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.771&r2=text&tr2=1.770&f=h
-fs/xfs/xfs_vfsops.c - 1.574 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.574&r2=text&tr2=1.573&f=h
-fs/xfs/xfs_acl.h - 1.39 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.h.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
-fs/xfs/xfs_acl.c - 1.79 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.c.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
-fs/xfs/xfs_inode.c - 1.513 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.513&r2=text&tr2=1.512&f=h
-fs/xfs/xfs_inode.h - 1.254 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.254&r2=text&tr2=1.253&f=h
-fs/xfs/quota/xfs_qm_syscalls.c - 1.46 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.46&r2=text&tr2=1.45&f=h
-fs/xfs/linux-2.6/xfs_vnode.c - 1.161 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.c.diff?r1=text&tr1=1.161&r2=text&tr2=1.160&f=h
-fs/xfs/linux-2.6/xfs_vnode.h - 1.158 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_vnode.h.diff?r1=text&tr1=1.158&r2=text&tr2=1.157&f=h
-fs/xfs/linux-2.6/xfs_super.h - 1.80 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.h.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
-fs/xfs/linux-2.6/xfs_super.c - 1.442 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.442&r2=text&tr2=1.441&f=h
-	- kill bhv_vnode_t
+OK, thanks.  Those are pretty nice numbers for what is probably a
+fairly common workload.
