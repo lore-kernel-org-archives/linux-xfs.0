@@ -1,87 +1,824 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Jul 2008 00:08:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6S78CfX006565
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 00:08:13 -0700
-Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBC91EB966E
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 00:09:24 -0700 (PDT)
-Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id mIotzW5GCbf6eP2v for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 00:09:24 -0700 (PDT)
-Date: Mon, 28 Jul 2008 00:09:08 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: partially uptodate page reads
-Message-Id: <20080728000908.869c3e85.akpm@linux-foundation.org>
-In-Reply-To: <200807281656.37908.nickpiggin@yahoo.com.au>
-References: <200807250117.11331.nickpiggin@yahoo.com.au>
-	<6.0.0.20.2.20080728115511.045088a8@172.19.0.2>
-	<20080727235124.5b04fd8b.akpm@linux-foundation.org>
-	<200807281656.37908.nickpiggin@yahoo.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 28 Jul 2008 04:03:41 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6SB3W47030256
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2008 04:03:33 -0700
+Message-ID: <488DA7C5.4090001@cape-horn-eng.com>
+Date: Mon, 28 Jul 2008 13:04:37 +0200
+From: Richard Ems <Richard.Ems@cape-horn-eng.com>
+MIME-Version: 1.0
+Subject: Dropped Patches PING   [ XFS internal error xfs_btree_check_lblock]
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, jack@ucw.cz, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xaiki@sgi.com, xfs@oss.sgi.com
 
-On Mon, 28 Jul 2008 16:56:37 +1000 Nick Piggin <nickpiggin@yahoo.com.au> wrote:
+PING ! (Re: Dropped Patches)
 
-> On Monday 28 July 2008 16:51, Andrew Morton wrote:
-> > On Mon, 28 Jul 2008 13:34:12 +0900 Hisashi Hifumi 
-> <hifumi.hisashi@oss.ntt.co.jp> wrote:
-> > > Hi
-> > >
-> > > >> > Are there significant numbers of people using block size < page size
-> > > >> > in situations where performance is important and significantly
-> > > >> > improved by this patch? Can you give any performance numbers to
-> > > >> > illustrate perhaps?
-> > > >>
-> > > >> With XFS lots of people use 4k blocksize filesystems on ia64 systems
-> > > >> with 16k pages, so an optimization like this would be useful.
-> > > >
-> > > >As Nick says, we really should have some measurement results which
-> > > >confirm this theory.  Maybe we did do some but they didn't find theor
-> > > >way into the changelog.
-> > > >
-> > > >I've put the patch on hold until this confirmation data is available.
-> > >
-> > > I've got some performance number.
-> > > I wrote a benchmark program and got result number with this program.
-> > > This benchmark do:
-> > > 	1, mount and open a test file.
-> > > 	2, create a 512MB file.
-> > > 	3, close a file and umount.
-> > > 	4, mount and again open a test file.
-> > > 	5, pwrite randomly 300000 times on a test file. offset is aligned by IO
-> > > size(1024bytes). 6, measure time of preading randomly 100000 times on a
-> > > test file.
-> > >
-> > > The result was:
-> > > 	2.6.26
-> > >         330 sec
-> > >
-> > > 	2.6.26-patched
-> > >         226 sec
-> > >
-> > > Arch:i386
-> > > Filesystem:ext3
-> > > Blocksize:1024 bytes
-> > > Memory: 1GB
-> > >
-> > > On ext3/4, a file is written through buffer/block. So random read/write
-> > > mixed workloads or random read after random write workloads are optimized
-> > > with this patch under pagesize != blocksize environment. This test result
-> > > showed this.
-> 
-> Yeah, thanks for the numbers.
-> 
-> 
-> > OK, thanks.  Those are pretty nice numbers for what is probably a
-> > fairly common workload.
-> 
-> What kind of workloads does this kind of thing?
+Cheers, Richard
 
-Various databases?  (confused).
+-------- Original Message --------
+Subject: Re: XFS internal error xfs_btree_check_lblock
+Date: Tue, 22 Jul 2008 13:24:28 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
+Organization: SGI Engineering
+To: Russell Cattelan <cattelan@thebarn.com>
+CC: Richard Ems <Richard.Ems@cape-horn-eng.com>, xfs@oss.sgi.com, 
+  "Bill O'Donnell" <billodo@sgi.com>
+References: <4880AEF8.2080906@cape-horn-eng.com> 
+<48815AA6.3080102@sgi.com> <4884B419.6080603@thebarn.com>
 
-More likely pattern is 8k IOs with 16k pagesize or thereabouts.
+
+
+Russell Cattelan wrote:
+> If the patches are for current XFS can we post them here? / reviewed?
+> Not sure why the backport to sles10 should hold them up if they are ready?
+
+For the record, the patches I'm referring to are:
+
+# Prevent extent btree block allocation failures
+http://oss.sgi.com/archives/xfs/2008-06/msg00122.html
+
+# fix extent corruption in xfs_iext_irec_compact_full()
+http://oss.sgi.com/archives/xfs/2008-06/msg00209.html
+
+# Convert ASSERTs to XFS_WANT_CORRUPTED_GOTOs
+http://oss.sgi.com/archives/xfs/2008-06/msg00231.html
+
+# Always reset btree cursor after an insert
+http://oss.sgi.com/archives/xfs/2008-06/msg00243.html
+
+# set minleft in xfs_bmbt_split()
+http://oss.sgi.com/archives/xfs/2008-06/msg00280.html
+
+# Restore the lowspace extent allocator algorithm
+http://oss.sgi.com/archives/xfs/2008-06/msg00281.html
+
+Some of the above might not refer directly to the final committed
+patches but the thread URLs should be accurate. These are bug fixes
+that go a long way back and really do need to be back-ported and
+pushed out for the mentioned distros. There are probably other patches
+not listed above that should be considered too.
+
+Cheers
+
+
+>> Richard Ems wrote:
+>>> Hi,
+>>>
+>>> this FS error occurred on an openSUSE 10.3 64 bit, with all openSUSE 
+>>> updates. xfsprogs is xfsprogs-2.9.4-17.1 .
+>>>
+>>> The filesystem with the error is our /home, on an Areca ARC-1220 RAID 
+>>> Controller, 6 Hitachi 1TB disks on RAID 5.
+>>>
+>>> The controller reports all disks are fine, no errors.
+>>>
+>>> The system had an uptime of 74 days, and had no problems with any FS 
+>>> before.
+>>>
+>>>
+>>> First errors logged on /var/log/messages start at today 11:16 :
+>>>
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: f
+>>> Jul 18 11:16:08 c3m syslog-ng[15627]: last message repeated 2 times
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: 10
+>>> Jul 18 11:16:08 c3m syslog-ng[15627]: last message repeated 3 times
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: 11
+>>> Jul 18 11:16:08 c3m syslog-ng[15627]: last message repeated 20 times
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: 12
+>>> Jul 18 11:16:08 c3m syslog-ng[15627]: last message repeated 3 times
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: 13
+>>> Jul 18 11:16:08 c3m kernel: Filesystem "sdc1": Access to block zero 
+>>> in inode 381260 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 
+>>> lastx: 13
+>>>
+>>>
+>>> and this continues up to 11:58 where we got
+>>>
+>>>
+>>> Jul 18 11:58:37 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_lblock at line 213 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff88306053
+>>> Jul 18 11:58:37 c3m kernel:
+>>> Jul 18 11:58:37 c3m kernel: Call Trace:
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88309c57>] 
+>>> :xfs:xfs_btree_check_lblock+0xf4/0xfe
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88306053>] 
+>>> :xfs:xfs_bmbt_lookup+0x16e/0x44b
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88301104>] 
+>>> :xfs:xfs_bmap_add_extent_delay_real+0x3f7/0xf16
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802f7fe5>] __up_read+0x13/0x8a
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8830018d>] 
+>>> :xfs:xfs_bmap_btalloc+0x5d7/0x693
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883023be>] 
+>>> :xfs:xfs_bmap_add_extent+0x21c/0x3ad
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8830952a>] 
+>>> :xfs:xfs_btree_init_cursor+0x37/0x168
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88303aeb>] 
+>>> :xfs:xfs_bmapi+0xa98/0x108f
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802f368d>] 
+>>> cfq_set_request+0x2e7/0x345
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8832e92f>] 
+>>> :xfs:xfs_trans_reserve+0xdd/0x1b0
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88321e7f>] 
+>>> :xfs:xfs_iomap_write_allocate+0x255/0x3ce
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802e8610>] elv_insert+0x153/0x221
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8832100c>] 
+>>> :xfs:xfs_iomap+0x2a3/0x33b
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88339ded>] 
+>>> :xfs:xfs_map_blocks+0x35/0x66
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833a053>] 
+>>> :xfs:xfs_submit_ioend+0xb2/0xc4
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833abee>] 
+>>> :xfs:xfs_page_state_convert+0x2b3/0x556
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833afe3>] 
+>>> :xfs:xfs_vm_writepage+0xa7/0xe0
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802698e6>] __writepage+0xa/0x23
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff80269d95>] 
+>>> write_cache_pages+0x184/0x2cd
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802698dc>] __writepage+0x0/0x23
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883ffd5e>] 
+>>> :nfsd:nfsd_acceptable+0x0/0xca
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff80269f1a>] 
+>>> do_writepages+0x20/0x2d
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802657ea>] 
+>>> __filemap_fdatawrite_range+0x5b/0x6e
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802886ee>] 
+>>> __dentry_open+0x101/0x1aa
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88400c26>] 
+>>> :nfsd:nfsd_sync+0x5b/0xa5
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88401512>] 
+>>> :nfsd:nfsd_commit+0x57/0x7a
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88407f18>] 
+>>> :nfsd:nfsd3_proc_commit+0xc5/0xd2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd248>] 
+>>> :nfsd:nfsd_dispatch+0xdd/0x19e
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883b025b>] 
+>>> :sunrpc:svc_process+0x3e1/0x726
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff803fb8d6>] __down_read+0x12/0x9a
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd7fd>] :nfsd:nfsd+0x197/0x2b2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8020aa48>] child_rip+0xa/0x12
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd666>] :nfsd:nfsd+0x0/0x2b2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8020aa3e>] child_rip+0x0/0x12
+>>> Jul 18 11:58:37 c3m kernel:
+>>> Jul 18 11:58:37 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_trans_cancel at line 1132 of file fs/xfs/xfs_trans.c.  Caller 
+>>> 0xffffffff88321fd2
+>>> Jul 18 11:58:37 c3m kernel:
+>>> Jul 18 11:58:37 c3m kernel: Call Trace:
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8832ea5e>] 
+>>> :xfs:xfs_trans_cancel+0x5c/0xf2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88321fd2>] 
+>>> :xfs:xfs_iomap_write_allocate+0x3a8/0x3ce
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802e8610>] elv_insert+0x153/0x221
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8832100c>] 
+>>> :xfs:xfs_iomap+0x2a3/0x33b
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88339ded>] 
+>>> :xfs:xfs_map_blocks+0x35/0x66
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833a053>] 
+>>> :xfs:xfs_submit_ioend+0xb2/0xc4
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833abee>] 
+>>> :xfs:xfs_page_state_convert+0x2b3/0x556
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8833afe3>] 
+>>> :xfs:xfs_vm_writepage+0xa7/0xe0
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802698e6>] __writepage+0xa/0x23
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff80269d95>] 
+>>> write_cache_pages+0x184/0x2cd
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802698dc>] __writepage+0x0/0x23
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883ffd5e>] 
+>>> :nfsd:nfsd_acceptable+0x0/0xca
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff80269f1a>] 
+>>> do_writepages+0x20/0x2d
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802657ea>] 
+>>> __filemap_fdatawrite_range+0x5b/0x6e
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff802886ee>] 
+>>> __dentry_open+0x101/0x1aa
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88400c26>] 
+>>> :nfsd:nfsd_sync+0x5b/0xa5
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88401512>] 
+>>> :nfsd:nfsd_commit+0x57/0x7a
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff88407f18>] 
+>>> :nfsd:nfsd3_proc_commit+0xc5/0xd2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd248>] 
+>>> :nfsd:nfsd_dispatch+0xdd/0x19e
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883b025b>] 
+>>> :sunrpc:svc_process+0x3e1/0x726
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff803fb8d6>] __down_read+0x12/0x9a
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd7fd>] :nfsd:nfsd+0x197/0x2b2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8020aa48>] child_rip+0xa/0x12
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff883fd666>] :nfsd:nfsd+0x0/0x2b2
+>>> Jul 18 11:58:37 c3m kernel:  [<ffffffff8020aa3e>] child_rip+0x0/0x12
+>>> Jul 18 11:58:37 c3m kernel:
+>>> Jul 18 11:58:37 c3m kernel: xfs_force_shutdown(sdc1,0x8) called from 
+>>> line 1133 of file fs/xfs/xfs_trans.c.  Return address = 
+>>> 0xffffffff8832ea7c
+>>> Jul 18 11:58:37 c3m kernel: Filesystem "sdc1": Corruption of 
+>>> in-memory data detected.  Shutting down filesystem: sdc1
+>>> Jul 18 11:58:37 c3m kernel: Please umount the filesystem, and rectify 
+>>> the problem(s)
+>>> Jul 18 11:58:37 c3m kernel: nfsd: non-standard errno: -117
+>>>
+>>>
+>>>
+>>> It was impossible for me to xfs_check (out of memory) or repair 
+>>> without rebooting.
+>>> After rebooting only "xfs_repair -L" worked and repaired the FS, but 
+>>> short time
+>>> later it failed again and it continues failing after each repair.
+>>>
+>>> What's happening here?
+>>>
+>>> Any help would be very appreciated!
+>>>
+>>> Many thanks, Richard
+>>>
+>>>
+>>>
+>>> # grep -i "xfs internal error" /var/log/messages | wc -l
+>>> 182
+>>>
+>>> # grep -i "xfs internal error" /var/log/messages
+>>> Jul 18 11:58:37 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_lblock at line 213 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff88306053
+>>> Jul 18 11:58:37 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_trans_cancel at line 1132 of file fs/xfs/xfs_trans.c.  Caller 
+>>> 0xffffffff88321fd2
+>>> Jul 18 12:39:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xlog_recover_do_inode_trans(1) at line 2310 of file 
+>>> fs/xfs/xfs_log_recover.c.  Caller 0xffffffff8830be0e
+>>> Jul 18 12:41:32 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xlog_recover_do_inode_trans(1) at line 2310 of file 
+>>> fs/xfs/xfs_log_recover.c.  Caller 0xffffffff8830be0e
+>>> Jul 18 12:44:15 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xlog_recover_do_inode_trans(1) at line 2310 of file 
+>>> fs/xfs/xfs_log_recover.c.  Caller 0xffffffff8830be0e
+>>> Jul 18 12:57:35 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:35 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:36 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:36 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:36 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:36 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:37 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:38 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:38 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:38 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:38 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:39 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:39 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:39 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:39 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:40 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:42 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:42 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:42 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:43 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:43 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:45 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:46 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:47 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:47 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:48 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:49 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:50 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:50 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:51 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:52 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:52 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:52 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:53 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:54 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:54 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:54 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:54 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:54 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:54 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:54 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:54 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:57:54 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:57:54 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:15 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d7451
+>>> Jul 18 12:58:16 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:16 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:16 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 12:58:16 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:43 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:44 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:45 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:02:46 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882ff9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:31 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:32 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:09:32 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:18:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 13:18:06 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff882fc9bc
+>>> Jul 18 16:21:48 c3m kernel: XFS internal error 
+> 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:48 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:49 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:50 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:51 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:51 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:51 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:52 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:53 c3m kernel: XFS internal error 
+>>> XFS_WANT_CORRUPTED_GOTO at line 4522 of file fs/xfs/xfs_bmap.c.  
+>>> Caller 0xffffffff883009bc
+>>> Jul 18 16:21:53 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_btree_check_sblock at line 334 of file fs/xfs/xfs_btree.c.  
+>>> Caller 0xffffffff882d8451
+>>> Jul 18 16:21:53 c3m kernel: Filesystem "sdc1": XFS internal error 
+>>> xfs_trans_cancel at line 1132 of file fs/xfs/xfs_trans.c.  Caller 
+>>> 0xffffffff88304f9e
+>>>
+>>>
+>>>
+>>
+> 
+> 
+
+-- 
+
+  Mark Goodwin                                  markgw@sgi.com
+  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
+  SGI Australian Software Group           Cell: +61-4-18969583
+-------------------------------------------------------------
+
+
+
+-- 
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+
+Cape Horn Engineering S.L.
+C/ Dr. J.J. Dómine 1, 5º piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
