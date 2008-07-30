@@ -1,145 +1,97 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Jul 2008 21:58:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 29 Jul 2008 22:08:41 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6U4wTaT031062
-	for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 21:58:29 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m6U58csv032119
+	for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 22:08:39 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55A631950AC2
-	for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 21:59:41 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id QziVnpyF2DJJxDRp for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 21:59:41 -0700 (PDT)
-Date: Wed, 30 Jul 2008 14:59:37 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D8B1019530B8
+	for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 22:09:49 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id GIsPsMn5QOBYpmOZ for <xfs@oss.sgi.com>; Tue, 29 Jul 2008 22:09:49 -0700 (PDT)
+Date: Wed, 30 Jul 2008 15:09:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/21] implement generic xfs_btree_lookup
-Message-ID: <20080730045937.GL13395@disturbed>
-References: <20080729193104.GL19104@lst.de>
+Subject: Re: [PATCH 12/21] implement generic xfs_btree_updkey
+Message-ID: <20080730050936.GM13395@disturbed>
+References: <20080729193110.GM19104@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080729193104.GL19104@lst.de>
+In-Reply-To: <20080729193110.GM19104@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jul 29, 2008 at 09:31:04PM +0200, Christoph Hellwig wrote:
+On Tue, Jul 29, 2008 at 09:31:10PM +0200, Christoph Hellwig wrote:
 > From: Dave Chinner <dgc@sgi.com>
+> 
+> Note that there are many > 80 char lines introduced due to the
+> xfs_btree_key casts.  But the places where this happens is throw-away
+> code once the whole btree code gets merged into a common implementation.
+> 
+> The same is true for the temporary xfs_alloc_log_keys define to the new
+> name.  All old users will be gone after a few patches.
 > 
 > [hch: split out from bigger patch and minor adaptions]
 > 
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
 .....
 
-> +
 > +/*
-> + * Get current search key.  For level 0 we don't actually have a key
-> + * structure so we make one up from the record.  For all other levels
-> + * we just return the right key.
+> + * Update keys at all levels from here to the root along the cursor's path.
 > + */
-> +STATIC union xfs_btree_key *
-> +xfs_lookup_get_search_key(
+> +int
+> +xfs_btree_updkey(
 > +	struct xfs_btree_cur	*cur,
-> +	int			level,
-> +	int			keyno,
-> +	struct xfs_btree_block	*block,
-> +	union xfs_btree_key	*kp)
+> +	union xfs_btree_key	*keyp,
+> +	int			level)
 > +{
-> +	if (level == 0) {
-> +		union xfs_btree_rec	*krp;
+> +	struct xfs_btree_block	*block;
+> +	struct xfs_buf		*bp;
+> +	union xfs_btree_key	*kp;
+> +	int			ptr;
+> +#ifdef DEBUG
+> +	int			error;
+> +#endif
+
+This can be scoped inside the for loop.
+
 > +
-> +		krp = cur->bc_ops->rec_addr(cur, keyno, block);
-> +		cur->bc_ops->init_key_from_rec(cur, kp, krp);
-> +		return kp;
-
-I think the record pointer variable "krp" is confusing with "kp", the key
-pointer. It's a record pointer; 'rp' it should be.
-
+> +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> +	XFS_BTREE_TRACE_ARGIK(cur, level, keyp);
+> +
+> +	ASSERT(!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) || level >= 1);
+> +
 > +	/*
-> +	 * Iterate over each level in the btree, starting at the root.
-> +	 * For each level above the leaves, find the key we need, based
-> +	 * on the lookup record, then follow the corresponding block
-> +	 * pointer down to the next level.
+> +	 * Go up the tree from this level toward the root.
+> +	 * At each level, update the key value to the value input.
+> +	 * Stop when we reach a level where the cursor isn't pointing
+> +	 * at the first entry in the block.
 > +	 */
-> +	for (level = cur->bc_nlevels - 1, diff = 1; level >= 0; level--) {
-> +		/* Get the block we need to do the lookup on. */
-> +		error = xfs_btree_lookup_get_block(cur, level, pp, &block);
-> +		if (error)
-> +			goto error0;
-> +
-> +		/*
-> +		 * If we already had a key match at a higher level, we know
-> +		 * we need to use the first entry in this block.
-> +		 */
-> +		if (diff == 0)
-> +			keyno = 1;
-> +
-> +		/* Otherwise search this block. Do a binary search. */
-> +		else {
+> +	for (ptr = 1; ptr == 1 && level < cur->bc_nlevels; level++) {
+> +		block = xfs_btree_get_block(cur, level, &bp);
+> +#ifdef DEBUG
+> +		error = xfs_btree_check_block(cur, block, level, bp);
+> +		if (error) {
+> +			XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+> +			return error;
+> +		}
+> +#endif
 
-Can you make the {} consistent here ant move the comment for the
-else? i.e.
+And even then I think we might not need an error variable - it can
+only return EFSCORRUPTED, so:
 
-		if (diff == 0) {
-			keyno = 1;
-		} else {
-			/* Otherwise search this block. Do a binary search. */
+#ifdef DEBUG
+		if (xfs_btree_check_block(cur, block, level, bp)) {
+			XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+			return EFSCORRUPTED;
+		}
+#endif
 
-> +			int	high;	/* high entry number */
-> +			int	low;	/* low entry number */
-> +
-> +			/* Set low and high entry numbers, 1-based. */
-> +			low = 1;
-> +			high = xfs_btree_get_numrecs(block);
-> +			if (!high) {
-> +				/* Block is empty, must be an empty leaf. */
-> +				ASSERT(level == 0 && cur->bc_nlevels == 1);
-> +				cur->bc_ptrs[0] = dir != XFS_LOOKUP_LE;
-> +				XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> +				*stat = 0;
-> +				return 0;
-> +			}
-> +			/* Binary search the block. */
+Would remove the need for the error variable.
 
-Can we add a couple of empty lines there to break up that code a
-bit?
-
-			high = xfs_btree_get_numrecs(block);
-			if (!high) {
-				/* Block is empty, must be an empty leaf. */
-				ASSERT(level == 0 && cur->bc_nlevels == 1);
-
-				cur->bc_ptrs[0] = dir != XFS_LOOKUP_LE;
-				XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-				*stat = 0;
-				return 0;
-			}
-
-			/* Binary search the block. */
-
-> +	/* Return if we succeeded or not. */
-> +	if (keyno == 0 || keyno > xfs_btree_get_numrecs(block))
-> +		*stat = 0;
-> +	else
-> +		*stat = ((dir != XFS_LOOKUP_EQ) || (diff == 0));
-
-Can probably kill all the extra () in that.
-
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-07-15 17:46:52.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-07-15 17:51:41.000000000 +0200
-> @@ -90,6 +90,54 @@ STATIC int xfs_alloc_ag_vextent_small(xf
->   */
->  
->  /*
-> + * Lookup the record equal to [bno, len] in the btree given by cur.
-> + */
-> +STATIC int				/* error */
-> +xfs_alloc_lookup_eq(
-
-Should these be xfs_allocbt_lookup_*() to be consistent
-with all the other allocbt functions (and inobt_lookup/bmbt_lookup)?
-
-Otherwise look sane.
+Otherwise looks ok.
 
 Cheers,
 
