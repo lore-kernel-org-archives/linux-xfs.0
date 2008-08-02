@@ -1,62 +1,306 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Aug 2008 18:32:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 02 Aug 2008 08:10:38 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m721WQEG024896
-	for <xfs@oss.sgi.com>; Fri, 1 Aug 2008 18:32:26 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6B481EF0CAF
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2008 18:33:39 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id L2kMhz3OCbU2m57g for <xfs@oss.sgi.com>; Fri, 01 Aug 2008 18:33:39 -0700 (PDT)
-Date: Sat, 2 Aug 2008 11:33:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/21] implement generic xfs_btree_split
-Message-ID: <20080802013301.GP6201@disturbed>
-References: <20080729192113.493074843@verein.lst.de> <20080729193137.GR19104@lst.de> <20080730065349.GR13395@disturbed> <20080801195507.GK1263@lst.de>
-MIME-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m72FABhT004897
+	for <xfs@oss.sgi.com>; Sat, 2 Aug 2008 08:10:12 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47B2FEF24FA
+	for <xfs@oss.sgi.com>; Sat,  2 Aug 2008 08:11:22 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id O2iB3ZBlHUSWBgts for <xfs@oss.sgi.com>; Sat, 02 Aug 2008 08:11:22 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m72FBOIF019777
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 2 Aug 2008 17:11:24 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m72FBOBo019775
+	for xfs@oss.sgi.com; Sat, 2 Aug 2008 17:11:24 +0200
+Date: Sat, 2 Aug 2008 17:11:24 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] cleanup xfs_sb.h feature flag helpers
+Message-ID: <20080802151124.GA19689@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080801195507.GK1263@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 01, 2008 at 09:55:07PM +0200, Christoph Hellwig wrote:
-> > This is where I begin to question this approach (i.e. using
-> > helpers like this rather than specific ops like I did). It's
-> > taken me 4 ??r 5 patches to put my finger on it.
-> > 
-> > The intent of this factorisation is to make implementing new btree
-> > structures easy, not making the current code better or more
-> > managable. The first thing we need is is btrees with different
-> > header blocks (self describing information, CRCs, etc). This above
-> > function will suddenly have four combinations to deal with - long and
-> > short, version 1 and version 2 header formats. The more we change,
-> > the more this complicates these helpers. That is why I pushed
-> > seemingly trivial stuff out to operations vectors - because of the
-> > future flexibility it allowed in implementation of new btrees.....
-> > 
-> > I don't see this a problem for this patch series, but I can see that
-> > some of this work will end up being converted back to ops vectors
-> > as soon as we start modifying between structures....
-> 
-> Maybe.  But even when we convert it to ops vectors it should not
-> be the btree implementation vector, but a btree_block_ops that's
-> implemented once instead of duplicated for the alloc vs ialloc
-> btree.
+The various inlines in xfs_sb.h that deal with the superblock version
+and fature flags were converted from macros a while ago, and this
+show by the odd coding style full of useless braces and backslashes
+and the avoidance of conditionals.
 
-Yes, that makes sense - I had sort of headed that way, but it
-was not fully though out...
+Clean these up to look like normal C code.
 
-> And for now having all this in xfs_btree.c makes reading
-> and working on the patch series easier, so..
 
-Fair enough - do the work when we implement a new btree ;)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: linux-2.6-xfs/fs/xfs/xfs_sb.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_sb.h	2008-07-24 22:27:36.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_sb.h	2008-07-24 22:47:12.000000000 +0200
+@@ -296,30 +296,34 @@ typedef enum {
+ 
+ #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+ 
+-#ifdef __KERNEL__
+ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
+ {
+-	return (((sbp->sb_versionnum >= XFS_SB_VERSION_1) && \
+-		  (sbp->sb_versionnum <= XFS_SB_VERSION_3)) || \
+-		   ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		    !((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) || \
+-		      ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) && \
+-		       (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS))) && \
+-	  	    (sbp->sb_shared_vn <= XFS_SB_MAX_SHARED_VN)));
+-}
++	/* We always support version 1-3 */
++	if (sbp->sb_versionnum >= XFS_SB_VERSION_1 &&
++	    sbp->sb_versionnum <= XFS_SB_VERSION_3)
++		return 1;
++
++	/* We support version 4 if all feature bits are supported */
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) {
++	    	if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) ||
++		    ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) &&
++		     (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS)))
++			return 0;
++
++#ifdef __KERNEL__
++		if (sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
++			return 0;
+ #else
+-static inline int xfs_sb_good_version(xfs_sb_t *sbp)
+-{
+-	return (((sbp->sb_versionnum >= XFS_SB_VERSION_1) && \
+-		  (sbp->sb_versionnum <= XFS_SB_VERSION_3)) || \
+-		   ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		    !((sbp->sb_versionnum & ~XFS_SB_VERSION_OKREALBITS) || \
+-		      ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) && \
+-		       (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS))) && \
+-		  (!(sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) || \
+-		   (sbp->sb_shared_vn <= XFS_SB_MAX_SHARED_VN))));
++		if ((sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) &&
++		    sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
++			return 0;
++#endif
++
++		return 1;
++	}
++
++	return 0;
+ }
+-#endif /* __KERNEL__ */
+ 
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+@@ -332,123 +336,127 @@ static inline int xfs_sb_has_mismatched_
+ 
+ static inline unsigned xfs_sb_version_tonew(unsigned v)
+ {
+-	return ((((v) == XFS_SB_VERSION_1) ? \
+-		0 : \
+-		(((v) == XFS_SB_VERSION_2) ? \
+-			XFS_SB_VERSION_ATTRBIT : \
+-			(XFS_SB_VERSION_ATTRBIT | XFS_SB_VERSION_NLINKBIT))) | \
+-		XFS_SB_VERSION_4);
++	if (v == XFS_SB_VERSION_1)
++		return XFS_SB_VERSION_4;
++
++	if (v == XFS_SB_VERSION_2)
++		return XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
++
++	return XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT |
++		XFS_SB_VERSION_NLINKBIT;
+ }
+ 
+ static inline unsigned xfs_sb_version_toold(unsigned v)
+ {
+-	return (((v) & (XFS_SB_VERSION_QUOTABIT | XFS_SB_VERSION_ALIGNBIT)) ? \
+-		0 : \
+-		(((v) & XFS_SB_VERSION_NLINKBIT) ? \
+-			XFS_SB_VERSION_3 : \
+-			(((v) & XFS_SB_VERSION_ATTRBIT) ?  \
+-				XFS_SB_VERSION_2 : \
+-				XFS_SB_VERSION_1)));
++	if (v & (XFS_SB_VERSION_QUOTABIT | XFS_SB_VERSION_ALIGNBIT))
++		return 0;
++	if (v & XFS_SB_VERSION_NLINKBIT)
++		return XFS_SB_VERSION_3;
++	if (v & XFS_SB_VERSION_ATTRBIT)
++		return XFS_SB_VERSION_2;
++	return XFS_SB_VERSION_1;
+ }
+ 
+ static inline int xfs_sb_version_hasattr(xfs_sb_t *sbp)
+ {
+-	return ((sbp)->sb_versionnum == XFS_SB_VERSION_2) || \
+-		 ((sbp)->sb_versionnum == XFS_SB_VERSION_3) || \
+-		 ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		  ((sbp)->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
++	return sbp->sb_versionnum == XFS_SB_VERSION_2 ||
++		sbp->sb_versionnum == XFS_SB_VERSION_3 ||
++		(XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		 (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
+ }
+ 
+ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = (((sbp)->sb_versionnum == XFS_SB_VERSION_1) ? \
+-		XFS_SB_VERSION_2 : \
+-		((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) ? \
+-			((sbp)->sb_versionnum | XFS_SB_VERSION_ATTRBIT) : \
+-			(XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT)));
++	if (sbp->sb_versionnum == XFS_SB_VERSION_1)
++		sbp->sb_versionnum = XFS_SB_VERSION_2;
++	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
++		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
++	else
++		sbp->sb_versionnum = XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
+ }
+ 
+ static inline int xfs_sb_version_hasnlink(xfs_sb_t *sbp)
+ {
+-	return ((sbp)->sb_versionnum == XFS_SB_VERSION_3) || \
+-		 ((XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		  ((sbp)->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
++	return sbp->sb_versionnum == XFS_SB_VERSION_3 ||
++		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		  (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
+ }
+ 
+ static inline void xfs_sb_version_addnlink(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = ((sbp)->sb_versionnum <= XFS_SB_VERSION_2 ? \
+-		XFS_SB_VERSION_3 : \
+-		((sbp)->sb_versionnum | XFS_SB_VERSION_NLINKBIT));
++	if (sbp->sb_versionnum <= XFS_SB_VERSION_2)
++		sbp->sb_versionnum = XFS_SB_VERSION_3;
++	else
++		sbp->sb_versionnum |= XFS_SB_VERSION_NLINKBIT;
+ }
+ 
+ static inline int xfs_sb_version_hasquota(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
+ }
+ 
+ static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
+ {
+-	(sbp)->sb_versionnum = \
+-		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 ? \
+-			((sbp)->sb_versionnum | XFS_SB_VERSION_QUOTABIT) : \
+-			(xfs_sb_version_tonew((sbp)->sb_versionnum) | \
+-			 XFS_SB_VERSION_QUOTABIT));
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
++		sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
++	else
++		sbp->sb_versionnum = xfs_sb_version_tonew(sbp->sb_versionnum) |
++					XFS_SB_VERSION_QUOTABIT;
+ }
+ 
+ static inline int xfs_sb_version_hasalign(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasdalign(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasshared(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_SHAREDBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasdirv2(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
+ }
+ 
+ static inline int xfs_sb_version_haslogv2(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
+ }
+ 
+ static inline int xfs_sb_version_hasextflgbit(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
+ }
+ 
+ static inline int xfs_sb_version_hassector(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasasciici(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+ 		(sbp->sb_versionnum & XFS_SB_VERSION_BORGBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
+ {
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4) && \
+-		((sbp)->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
++		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+ }
+ 
+ /*
+@@ -463,22 +471,20 @@ static inline int xfs_sb_version_hasmore
+ 
+ static inline int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp)
+ {
+-	return (xfs_sb_version_hasmorebits(sbp) &&	\
+-		((sbp)->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT);
+ }
+ 
+ static inline int xfs_sb_version_hasattr2(xfs_sb_t *sbp)
+ {
+-	return (xfs_sb_version_hasmorebits(sbp)) &&	\
+-		((sbp)->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
+ }
+ 
+ static inline void xfs_sb_version_addattr2(xfs_sb_t *sbp)
+ {
+-	((sbp)->sb_versionnum =	\
+-		((sbp)->sb_versionnum | XFS_SB_VERSION_MOREBITSBIT),	\
+-	((sbp)->sb_features2 =	\
+-		((sbp)->sb_features2 | XFS_SB_VERSION2_ATTR2BIT)));
++	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
++	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
+ }
+ 
+ static inline void xfs_sb_version_removeattr2(xfs_sb_t *sbp)
