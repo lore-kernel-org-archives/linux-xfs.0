@@ -1,64 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Aug 2008 17:34:29 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m720Xv7a019133
-	for <xfs@oss.sgi.com>; Fri, 1 Aug 2008 17:33:57 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Aug 2008 18:12:53 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m721Cpum021806
+	for <xfs@oss.sgi.com>; Fri, 1 Aug 2008 18:12:51 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 09D5B2FF491
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2008 17:35:10 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id mrCcq1W0WvGEFFte for <xfs@oss.sgi.com>; Fri, 01 Aug 2008 17:35:10 -0700 (PDT)
-Date: Sat, 2 Aug 2008 10:35:06 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C2466196B220
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2008 18:14:03 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id CfDGaCG3TOEDPv5A for <xfs@oss.sgi.com>; Fri, 01 Aug 2008 18:14:03 -0700 (PDT)
+Date: Sat, 2 Aug 2008 11:14:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/21] implement generic xfs_btree_increment
-Message-ID: <20080802003506.GJ6201@disturbed>
-References: <20080729193053.GJ19104@lst.de> <20080730020645.GJ13395@disturbed> <20080801194000.GC1263@lst.de>
+Subject: Re: [PATCH 11/21] implement generic xfs_btree_lookup
+Message-ID: <20080802011400.GK6201@disturbed>
+References: <20080729193104.GL19104@lst.de> <20080730045937.GL13395@disturbed> <20080801194336.GE1263@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080801194000.GC1263@lst.de>
+In-Reply-To: <20080801194336.GE1263@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 01, 2008 at 09:40:00PM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 30, 2008 at 12:06:45PM +1000, Dave Chinner wrote:
-> > > +int xfs_btree_increment(struct xfs_btree_cur *, int, int *);
+On Fri, Aug 01, 2008 at 09:43:36PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 30, 2008 at 02:59:37PM +1000, Dave Chinner wrote:
+> > > --- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-07-15 17:46:52.000000000 +0200
+> > > +++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-07-15 17:51:41.000000000 +0200
+> > > @@ -90,6 +90,54 @@ STATIC int xfs_alloc_ag_vextent_small(xf
+> > >   */
+> > >  
+> > >  /*
+> > > + * Lookup the record equal to [bno, len] in the btree given by cur.
+> > > + */
+> > > +STATIC int				/* error */
+> > > +xfs_alloc_lookup_eq(
 > > 
-> > I think for these interfaces it woul dbe better to include
-> > variable names in the prototypes. i.e.:
-> > 
-> > int xfs_btree_increment(struct xfs_btree_cur *cur, int level, int *stat);
+> > Should these be xfs_allocbt_lookup_*() to be consistent
+> > with all the other allocbt functions (and inobt_lookup/bmbt_lookup)?
 > 
-> Well, all this and much more is documented at the implementation site,
-> so I'd avoid this churn.  If there are strong feelings for it I
-> can change the prototypes.
+> Currently only the btree_ops methods are named allocbt.  Comments on
+> that scheme would be appreciated.
 
-Not a big deal, really. I was just looking at consistency with the
-other prototypes around this one....
-
-> > Would it be better here to explicitly test this rather than assert?
-> > ie.:
-> > 
-> > 	if (lev == cur->bc_nlevels) {
-> > 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
-> > 			goto out0;
-> > 		ASSERT(0);
-> > 		error = EFSCORRUPTED;
-> > 		goto error0;
-> > 	}
-> > 
-> > So that we get an explicit error reported in the production systems
-> > rather than carrying on and dying a horrible death somewhere else....
-> 
-> Yes, this is much better.  But we're getting on a slipperly slope here
-> to introduce too many improvements. For the initial patches I'd like
-> to stay as close as possible to the old btree implementations.
-
-Sure, but this particular piece of code is different to wthe original
-btree anyway because it has to handle two different cases. better
-to get it right first time, IMO.
+I think I used 'abt' for it. Perhaps 'albt'? allocbt is probably ok,
+though, just longer.
 
 Cheers,
 
