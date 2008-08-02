@@ -1,84 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Aug 2008 14:17:05 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m71LH2bR002221
-	for <xfs@oss.sgi.com>; Fri, 1 Aug 2008 14:17:03 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BEC82EEDE55
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2008 14:18:14 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id NDHJcMaEBADVbetj for <xfs@oss.sgi.com>; Fri, 01 Aug 2008 14:18:14 -0700 (PDT)
-Date: Fri, 1 Aug 2008 23:18:06 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] optimize xfs_ichgtime
-Message-ID: <20080801211806.GA6529@lst.de>
-References: <20080726063335.GB22603@lst.de> <20080726091230.GS5947@disturbed>
-Mime-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 01 Aug 2008 17:34:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m720Xv7a019133
+	for <xfs@oss.sgi.com>; Fri, 1 Aug 2008 17:33:57 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 09D5B2FF491
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2008 17:35:10 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id mrCcq1W0WvGEFFte for <xfs@oss.sgi.com>; Fri, 01 Aug 2008 17:35:10 -0700 (PDT)
+Date: Sat, 2 Aug 2008 10:35:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 09/21] implement generic xfs_btree_increment
+Message-ID: <20080802003506.GJ6201@disturbed>
+References: <20080729193053.GJ19104@lst.de> <20080730020645.GJ13395@disturbed> <20080801194000.GC1263@lst.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080726091230.GS5947@disturbed>
+In-Reply-To: <20080801194000.GC1263@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Sat, Jul 26, 2008 at 07:12:30PM +1000, Dave Chinner wrote:
-> On Sat, Jul 26, 2008 at 08:33:35AM +0200, Christoph Hellwig wrote:
-> > Port a little optmization from file_update_time to xfs_ichgtime, and
-> > only update the timestamp and mark the inode dirty if the timestamp
-> > actually changes in the timer tick resultion supported by the running
-> > kernel.
+On Fri, Aug 01, 2008 at 09:40:00PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 30, 2008 at 12:06:45PM +1000, Dave Chinner wrote:
+> > > +int xfs_btree_increment(struct xfs_btree_cur *, int, int *);
+> > 
+> > I think for these interfaces it woul dbe better to include
+> > variable names in the prototypes. i.e.:
+> > 
+> > int xfs_btree_increment(struct xfs_btree_cur *cur, int level, int *stat);
 > 
-> Looks ok.
+> Well, all this and much more is documented at the implementation site,
+> so I'd avoid this churn.  If there are strong feelings for it I
+> can change the prototypes.
 
-Updated version that removes the I_NEW check (I could do this in patch
-1, but doing it here causes less churn)
+Not a big deal, really. I was just looking at consistency with the
+other prototypes around this one....
 
+> > Would it be better here to explicitly test this rather than assert?
+> > ie.:
+> > 
+> > 	if (lev == cur->bc_nlevels) {
+> > 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> > 			goto out0;
+> > 		ASSERT(0);
+> > 		error = EFSCORRUPTED;
+> > 		goto error0;
+> > 	}
+> > 
+> > So that we get an explicit error reported in the production systems
+> > rather than carrying on and dying a horrible death somewhere else....
+> 
+> Yes, this is much better.  But we're getting on a slipperly slope here
+> to introduce too many improvements. For the initial patches I'd like
+> to stay as close as possible to the old btree implementations.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Sure, but this particular piece of code is different to wthe original
+btree anyway because it has to handle two different cases. better
+to get it right first time, IMO.
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-07-26 11:14:45.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-07-26 11:15:54.000000000 +0200
-@@ -97,17 +97,23 @@ xfs_ichgtime(
- {
- 	struct inode	*inode = VFS_I(ip);
- 	timespec_t	tv;
-+	int		sync_it = 0;
- 
--	nanotime(&tv);
--	if (flags & XFS_ICHGTIME_MOD) {
-+	tv = current_fs_time(inode->i_sb);
-+
-+	if ((flags & XFS_ICHGTIME_MOD) &&
-+	    !timespec_equal(&inode->i_mtime, &tv)) {
- 		inode->i_mtime = tv;
- 		ip->i_d.di_mtime.t_sec = (__int32_t)tv.tv_sec;
- 		ip->i_d.di_mtime.t_nsec = (__int32_t)tv.tv_nsec;
-+		sync_it = 1;
- 	}
--	if (flags & XFS_ICHGTIME_CHG) {
-+	if ((flags & XFS_ICHGTIME_CHG) &&
-+	    !timespec_equal(&inode->i_ctime, &tv)) {
- 		inode->i_ctime = tv;
- 		ip->i_d.di_ctime.t_sec = (__int32_t)tv.tv_sec;
- 		ip->i_d.di_ctime.t_nsec = (__int32_t)tv.tv_nsec;
-+		sync_it = 1;
- 	}
- 
- 	/*
-@@ -119,10 +125,11 @@ xfs_ichgtime(
- 	 * ensure that the compiler does not reorder the update
- 	 * of i_update_core above the timestamp updates above.
- 	 */
--	SYNCHRONIZE();
--	ip->i_update_core = 1;
--	if (!(inode->i_state & I_NEW))
-+	if (sync_it) {
-+		SYNCHRONIZE();
-+		ip->i_update_core = 1;
- 		mark_inode_dirty_sync(inode);
-+	}
- }
- 
- /*
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
