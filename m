@@ -1,154 +1,166 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Aug 2008 18:31:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Aug 2008 18:32:17 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m741VU0U030453
-	for <xfs@oss.sgi.com>; Sun, 3 Aug 2008 18:31:30 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m741WD2S031032
+	for <xfs@oss.sgi.com>; Sun, 3 Aug 2008 18:32:13 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E8693566B0
-	for <xfs@oss.sgi.com>; Sun,  3 Aug 2008 18:32:42 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 7QWqzMbP0KQFphDC for <xfs@oss.sgi.com>; Sun, 03 Aug 2008 18:32:42 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m741WiIF008922
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 03:32:44 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m741WidF008920
-	for xfs@oss.sgi.com; Mon, 4 Aug 2008 03:32:44 +0200
-Date: Mon, 4 Aug 2008 03:32:44 +0200
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 866A23566BC
+	for <xfs@oss.sgi.com>; Sun,  3 Aug 2008 18:33:26 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 8FXtPsBQXAztlsCN for <xfs@oss.sgi.com>; Sun, 03 Aug 2008 18:33:26 -0700 (PDT)
+Date: Mon, 4 Aug 2008 03:33:27 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/26] make btree root in inode support generic
-Message-ID: <20080804013244.GE8819@lst.de>
+Subject: [PATCH 08/26] add new btree statistics
+Message-ID: <20080804013327.GI8819@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-btree-generic-inode-root-support
+Content-Disposition: inline; filename=xfs-btree-stats
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dgc@sgi.com>
 
-The bmap btree is rooted in the inode and not in a single disk block.  Make
-the support for this feature more generic by:
+From: Dave Chinner <dgc@sgi.com>
 
- (a) adding a btree flag to check for instead of the XFS_BTNUM_BMAP type
- (b) add a get_root_from_inode btree operation to get a btree block from
-     the inode, with the implementation details left to the individual btree.
+Introduce statistics coverage of all the btrees and cover
+all the btree operations, not just some.
 
-Also clean up xfs_btree_get_block, which is the place these two features
-are used.
-
-The XFS_BTREE_ROOT_IN_INODE is based upon a patch from Dave Chinner.
+Invaluable for determining test code coverage of all the btree
+operations....
 
 
+Signed-off-by: Dave Chinner <dgc@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-08-02 04:05:35.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-08-02 04:05:37.000000000 +0200
-@@ -2630,8 +2630,19 @@ xfs_bmbt_dup_cursor(
- 	return new;
- }
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.c	2008-07-14 17:24:05.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c	2008-07-14 17:29:17.000000000 +0200
+@@ -53,6 +53,10 @@ xfs_read_xfsstats(
+ 		{ "icluster",		XFSSTAT_END_INODE_CLUSTER	},
+ 		{ "vnodes",		XFSSTAT_END_VNODE_OPS		},
+ 		{ "buf",		XFSSTAT_END_BUF			},
++		{ "abtb2",		XFSSTAT_END_ABTB_V2		},
++		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
++		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
++		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+ 	};
  
-+STATIC struct xfs_btree_block *
-+xfs_bmbt_get_root_from_inode(
-+	struct xfs_btree_cur	*cur)
-+{
-+	struct xfs_ifork	*ifp;
-+
-+	ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, cur->bc_private.b.whichfork);
-+	return (struct xfs_btree_block *)ifp->if_broot;
-+}
-+
- static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.dup_cursor		= xfs_bmbt_dup_cursor,
-+	.get_root_from_inode	= xfs_bmbt_get_root_from_inode,
- };
- 
- /*
-@@ -2656,6 +2667,7 @@ xfs_bmbt_init_cursor(
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
- 
- 	cur->bc_ops = &xfs_bmbt_ops;
-+	cur->bc_flags = XFS_BTREE_ROOT_IN_INODE;
- 
- 	cur->bc_private.b.forksize = XFS_IFORK_SIZE(ip, whichfork);
- 	cur->bc_private.b.ip = ip;
-Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
+ 	/* Loop over all stats groups */
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-08-02 04:05:35.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-08-02 04:05:37.000000000 +0200
-@@ -425,29 +425,20 @@ xfs_btree_dup_cursor(
-  * Retrieve the block pointer from the cursor at the given level.
-  * This may be a bmap btree root or from a buffer.
-  */
--STATIC xfs_btree_block_t *		/* generic btree block pointer */
-+STATIC struct xfs_btree_block *		/* generic btree block pointer */
- xfs_btree_get_block(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	int			level,	/* level in btree */
--	xfs_buf_t		**bpp)	/* buffer containing the block */
-+	struct xfs_buf		**bpp)	/* buffer containing the block */
- {
--	xfs_btree_block_t	*block;	/* return value */
--	xfs_buf_t		*bp;	/* return buffer */
--	xfs_ifork_t		*ifp;	/* inode fork pointer */
--	int			whichfork; /* data or attr fork */
--
--	if (cur->bc_btnum == XFS_BTNUM_BMAP && level == cur->bc_nlevels - 1) {
--		whichfork = cur->bc_private.b.whichfork;
--		ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, whichfork);
--		block = (xfs_btree_block_t *)ifp->if_broot;
--		bp = NULL;
--	} else {
--		bp = cur->bc_bufs[level];
--		block = XFS_BUF_TO_BLOCK(bp);
-+	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
-+	    (level == cur->bc_nlevels - 1)) {
-+		*bpp = NULL;
-+		return cur->bc_ops->get_root_from_inode(cur);
- 	}
--	ASSERT(block != NULL);
--	*bpp = bp;
--	return block;
-+
-+	*bpp = cur->bc_bufs[level];
-+	return XFS_BUF_TO_BLOCK(*bpp);
- }
- 
- /*
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.h	2008-07-14 17:24:05.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.h	2008-07-14 17:29:17.000000000 +0200
+@@ -118,6 +118,71 @@ struct xfsstats {
+ 	__uint32_t		xb_page_retries;
+ 	__uint32_t		xb_page_found;
+ 	__uint32_t		xb_get_read;
++/* Version 2 btree counters */
++#define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+15)
++	__uint32_t		xs_abtb_2_lookup;
++	__uint32_t		xs_abtb_2_compare;
++	__uint32_t		xs_abtb_2_insrec;
++	__uint32_t		xs_abtb_2_delrec;
++	__uint32_t		xs_abtb_2_newroot;
++	__uint32_t		xs_abtb_2_killroot;
++	__uint32_t		xs_abtb_2_increment;
++	__uint32_t		xs_abtb_2_decrement;
++	__uint32_t		xs_abtb_2_lshift;
++	__uint32_t		xs_abtb_2_rshift;
++	__uint32_t		xs_abtb_2_split;
++	__uint32_t		xs_abtb_2_join;
++	__uint32_t		xs_abtb_2_alloc;
++	__uint32_t		xs_abtb_2_free;
++	__uint32_t		xs_abtb_2_moves;
++#define XFSSTAT_END_ABTC_V2		(XFSSTAT_END_ABTB_V2+15)
++	__uint32_t		xs_abtc_2_lookup;
++	__uint32_t		xs_abtc_2_compare;
++	__uint32_t		xs_abtc_2_insrec;
++	__uint32_t		xs_abtc_2_delrec;
++	__uint32_t		xs_abtc_2_newroot;
++	__uint32_t		xs_abtc_2_killroot;
++	__uint32_t		xs_abtc_2_increment;
++	__uint32_t		xs_abtc_2_decrement;
++	__uint32_t		xs_abtc_2_lshift;
++	__uint32_t		xs_abtc_2_rshift;
++	__uint32_t		xs_abtc_2_split;
++	__uint32_t		xs_abtc_2_join;
++	__uint32_t		xs_abtc_2_alloc;
++	__uint32_t		xs_abtc_2_free;
++	__uint32_t		xs_abtc_2_moves;
++#define XFSSTAT_END_BMBT_V2		(XFSSTAT_END_ABTC_V2+15)
++	__uint32_t		xs_bmbt_2_lookup;
++	__uint32_t		xs_bmbt_2_compare;
++	__uint32_t		xs_bmbt_2_insrec;
++	__uint32_t		xs_bmbt_2_delrec;
++	__uint32_t		xs_bmbt_2_newroot;
++	__uint32_t		xs_bmbt_2_killroot;
++	__uint32_t		xs_bmbt_2_increment;
++	__uint32_t		xs_bmbt_2_decrement;
++	__uint32_t		xs_bmbt_2_lshift;
++	__uint32_t		xs_bmbt_2_rshift;
++	__uint32_t		xs_bmbt_2_split;
++	__uint32_t		xs_bmbt_2_join;
++	__uint32_t		xs_bmbt_2_alloc;
++	__uint32_t		xs_bmbt_2_free;
++	__uint32_t		xs_bmbt_2_moves;
++#define XFSSTAT_END_IBT_V2		(XFSSTAT_END_BMBT_V2+15)
++	__uint32_t		xs_ibt_2_lookup;
++	__uint32_t		xs_ibt_2_compare;
++	__uint32_t		xs_ibt_2_insrec;
++	__uint32_t		xs_ibt_2_delrec;
++	__uint32_t		xs_ibt_2_newroot;
++	__uint32_t		xs_ibt_2_killroot;
++	__uint32_t		xs_ibt_2_increment;
++	__uint32_t		xs_ibt_2_decrement;
++	__uint32_t		xs_ibt_2_lshift;
++	__uint32_t		xs_ibt_2_rshift;
++	__uint32_t		xs_ibt_2_split;
++	__uint32_t		xs_ibt_2_join;
++	__uint32_t		xs_ibt_2_alloc;
++	__uint32_t		xs_ibt_2_free;
++	__uint32_t		xs_ibt_2_moves;
+ /* Extra precision counters */
+ 	__uint64_t		xs_xstrat_bytes;
+ 	__uint64_t		xs_write_bytes;
 Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-08-02 04:05:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-08-02 04:05:37.000000000 +0200
-@@ -159,6 +159,9 @@ extern const __uint32_t	xfs_magics[];
- struct xfs_btree_ops {
- 	/* cursor operations */
- 	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
-+
-+	/* get inode rooted btree root */
-+	struct xfs_btree_block *(*get_root_from_inode)(struct xfs_btree_cur *);
- };
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-07-14 17:28:45.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-07-14 17:29:17.000000000 +0200
+@@ -126,6 +126,34 @@ union xfs_btree_rec {
+ extern const __uint32_t	xfs_magics[];
  
  /*
-@@ -170,6 +173,7 @@ typedef struct xfs_btree_cur
- 	struct xfs_trans	*bc_tp;	/* transaction we're in, if any */
- 	struct xfs_mount	*bc_mp;	/* file system mount struct */
- 	const struct xfs_btree_ops *bc_ops;
-+	uint			bc_flags; /* btree features - below */
- 	union {
- 		xfs_alloc_rec_incore_t	a;
- 		xfs_bmbt_irec_t		b;
-@@ -201,6 +205,10 @@ typedef struct xfs_btree_cur
- 	}		bc_private;	/* per-btree type data */
- } xfs_btree_cur_t;
- 
-+/* cursor flags */
-+#define XFS_BTREE_ROOT_IN_INODE		(1<<1)	/* root may be variable size */
++ * Generic stats interface
++ */
++#define __XFS_BTREE_STATS_INC(type, stat) \
++	XFS_STATS_INC(xs_ ## type ## _2_ ## stat)
++#define XFS_BTREE_STATS_INC(cur, stat)  \
++do {    \
++	switch (cur->bc_btnum) {  \
++	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_INC(abtb, stat); break;	\
++	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_INC(abtc, stat); break;	\
++	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
++	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
++	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	}       \
++} while (0)
 +
-+
- #define	XFS_BTREE_NOERROR	0
- #define	XFS_BTREE_ERROR		1
- 
++#define __XFS_BTREE_STATS_ADD(type, stat, val) \
++	XFS_STATS_ADD(xs_ ## type ## _2_ ## stat, val)
++#define XFS_BTREE_STATS_ADD(cur, stat, val)  \
++do {    \
++	switch (cur->bc_btnum) {  \
++	case XFS_BTNUM_BNO: __XFS_BTREE_STATS_ADD(abtb, stat, val); break; \
++	case XFS_BTNUM_CNT: __XFS_BTREE_STATS_ADD(abtc, stat, val); break; \
++	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
++	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
++	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	}       \
++} while (0)
++/*
+  * Maximum and minimum records in a btree block.
+  * Given block size, type prefix, and leaf flag (0 or 1).
+  * The divisor below is equivalent to lf ? (e1) : (e2) but that produces
 
 -- 
