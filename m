@@ -1,57 +1,56 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Aug 2008 23:21:24 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m746LKQE027398
-	for <xfs@oss.sgi.com>; Sun, 3 Aug 2008 23:21:21 -0700
-Message-ID: <4896A197.3090004@sgi.com>
-Date: Mon, 04 Aug 2008 16:28:39 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [rfc][patch 3/3] xfs: use new vmap API
-References: <20080728123438.GA13926@wotan.suse.de> <20080728123703.GC13926@wotan.suse.de>
-In-Reply-To: <20080728123703.GC13926@wotan.suse.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 07:20:48 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m74EKK7A002839
+	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 07:20:21 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B340EFE952
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 07:21:33 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id auB4GioeNUJRKnMV for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 07:21:33 -0700 (PDT)
+Date: Mon, 4 Aug 2008 16:21:32 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 00/26] generic btree implementation, version 3
+Message-ID: <20080804142131.GA9892@lst.de>
+References: <20080804013158.GA8819@lst.de> <20080804015425.GE6119@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080804015425.GE6119@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <npiggin@suse.de>
-Cc: Linux Memory Management List <linux-mm@kvack.org>, xfs@oss.sgi.com, xen-devel@lists.xensource.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel@lists.sourceforge.net
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Looks good to me.
+On Mon, Aug 04, 2008 at 11:54:25AM +1000, Dave Chinner wrote:
+> > I'm not sure
+> > what to do with move_* - these are the most ugly helpers, so maybe
+> > we should just make them memmove wrappers in the style of copy_
+> > and leave all addressing to the callers.
+> 
+> Yes, it would be nice to have them use the same interface. If
+> we do that, then there's no real point for having a copy vs move
+> distinction - we could just make everything use the
+> memmove version and drop one of the interfaces altogether....
 
-Nick Piggin wrote:
-> Implement XFS's large buffer support with the new vmap APIs. See the vmap
-> rewrite patch for some numbers.
-> 
-> Signed-off-by: Nick Piggin <npiggin@suse.de>
-> ---
-> 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -265,7 +265,7 @@ xfs_buf_free(
->  		uint		i;
->  
->  		if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1))
-> -			vunmap(bp->b_addr - bp->b_offset);
-> +			vm_unmap_ram(bp->b_addr - bp->b_offset, bp->b_page_count);
->  
->  		for (i = 0; i < bp->b_page_count; i++) {
->  			struct page	*page = bp->b_pages[i];
-> @@ -387,8 +387,8 @@ _xfs_buf_map_pages(
->  		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
->  		bp->b_flags |= XBF_MAPPED;
->  	} else if (flags & XBF_MAPPED) {
-> -		bp->b_addr = vmap(bp->b_pages, bp->b_page_count,
-> -					VM_MAP, PAGE_KERNEL);
-> +		bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
-> +					-1, PAGE_KERNEL);
->  		if (unlikely(bp->b_addr == NULL))
->  			return -ENOMEM;
->  		bp->b_addr += bp->b_offset;
-> 
-> 
-> 
+I've actually come up with another variant.  Since what we do in the
+memmove case is to move a number of entries in a single block up or down
+one position I've added the following helper:
+
+STATIC void
+xfs_btree_shift_keys(
+	struct xfs_btree_cur    *cur,
+	union xfs_btree_key     *key
+	int                     dir,
+	int                     numkeys)
+{
+	char			*dst_key;
+
+	ASSERT(numkeys >= 0);
+	ASSERT(dir == 1 || dir == -1);
+
+	dst_key = (char *)key + (dir * cur->bc_ops->key_len);
+	memmove(dst_key, key, numkeys * cur->bc_ops->key_len);
+}
+
+and the same for ptrs and recs.  This follows the original code in
+spirit and is quite readable.
