@@ -1,929 +1,424 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Aug 2008 18:33:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 03 Aug 2008 18:34:48 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m741XINk032166
-	for <xfs@oss.sgi.com>; Sun, 3 Aug 2008 18:33:18 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m741YTEP001298
+	for <xfs@oss.sgi.com>; Sun, 3 Aug 2008 18:34:29 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 779A8EF6A7C
-	for <xfs@oss.sgi.com>; Sun,  3 Aug 2008 18:34:29 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 1vt4xt0KGdXlO6nk for <xfs@oss.sgi.com>; Sun, 03 Aug 2008 18:34:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 009F3EF6AC8
+	for <xfs@oss.sgi.com>; Sun,  3 Aug 2008 18:35:41 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id qxep9kea7fzfFKcC for <xfs@oss.sgi.com>; Sun, 03 Aug 2008 18:35:41 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m741YUIF009151
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m741ZgIF009297
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 03:34:30 +0200
+	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 03:35:43 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m741YUYl009149
-	for xfs@oss.sgi.com; Mon, 4 Aug 2008 03:34:30 +0200
-Date: Mon, 4 Aug 2008 03:34:30 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m741ZgAN009295
+	for xfs@oss.sgi.com; Mon, 4 Aug 2008 03:35:42 +0200
+Date: Mon, 4 Aug 2008 03:35:42 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/26] implement generic xfs_btree_update
-Message-ID: <20080804013430.GO8819@lst.de>
+Subject: [PATCH 22/26] move xfs_bmbt_killroot to common code
+Message-ID: <20080804013542.GW8819@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
-Content-Disposition: inline; filename=xfs-common-btree-update
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline; filename=xfs-common-btree-root_to_iroot
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dgc@sgi.com>
+xfs_bmbt_killroot is a mostly generic implementation of moving from
+a real block based root to an inode based root.  So move it to xfs_btree.c
+where it can use all the nice infrastructure there and make it pointer
+size agnostic
 
-The most complicated part here is the lastrec tracking for
-the alloc btree.  Most logic is in the update_lastrec method
-which has to do some hopefully good enough dirty magic to
-maintain it.
-
-[hch: split out from bigger patch and a rework of the lastrec
- logic]
+The new name for it is xfs_btree_root_to_iroot which is not very
+nice but at least slightly more descriptive than the old name.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-08-02 02:55:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-08-02 02:57:08.000000000 +0200
-@@ -868,6 +868,30 @@ xfs_btree_get_sibling(
- 	}
- }
- 
-+/*
-+ * Return true if ptr is the last record in the btree and
-+ * we need to track updateѕ to this record.  The decision
-+ * will be further refined in the update_lastrec method.
-+ */
-+STATIC int
-+xfs_btree_is_lastrec(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*block,
-+	int			level)
-+{
-+	union xfs_btree_ptr	ptr;
-+
-+	if (level > 0)
-+		return 0;
-+	if (!(cur->bc_flags & XFS_BTREE_LASTREC_UPDATE))
-+		return 0;
-+
-+	xfs_btree_get_sibling(cur, block, &ptr, XFS_BB_RIGHTSIB);
-+	if (!xfs_btree_ptr_is_null(cur, &ptr))
-+		return 0;
-+	return 1;
-+}
-+
- STATIC xfs_daddr_t
- xfs_btree_ptr_to_daddr(
- 	struct xfs_btree_cur	*cur,
-@@ -1419,3 +1443,66 @@ xfs_btree_updkey(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 	return 0;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-08-04 01:15:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-08-04 01:45:52.000000000 +0200
+@@ -2838,3 +2838,109 @@ error0:
+ 	XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
+ 	return error;
  }
 +
-+/*
-+ * Update the record referred to by cur to the value in the
-+ * given record. This either works (return 0) or gets an
-+ * EFSCORRUPTED error.
-+ */
 +int
-+xfs_btree_update(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*rec)
-+{
-+	struct xfs_btree_block	*block;
-+	struct xfs_buf		*bp;
-+	int			error;
-+	int			ptr;
-+	union xfs_btree_rec	*rp;
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGR(cur, rec);
-+
-+	/* Pick up the current block. */
-+	block = xfs_btree_get_block(cur, 0, &bp);
-+
-+#ifdef DEBUG
-+	error = xfs_btree_check_block(cur, block, 0, bp);
-+	if (error)
-+		goto error0;
-+#endif
-+	/* Get the address of the rec to be updated. */
-+	ptr = cur->bc_ptrs[0];
-+	rp = cur->bc_ops->rec_addr(cur, ptr, block);
-+
-+	/* Fill in the new contents and log them. */
-+	cur->bc_ops->copy_recs(cur, rec, rp, 1);
-+	cur->bc_ops->log_recs(cur, bp, ptr, ptr);
-+
-+	/*
-+	 * If we are tracking the last record in the tree and
-+	 * we are at the far right edge of the tree, update it.
-+	 */
-+	if (xfs_btree_is_lastrec(cur, block, 0)) {
-+		cur->bc_ops->update_lastrec(cur, block, rec,
-+					    ptr, LASTREC_UPDATE);
-+	}
-+
-+	/* Updating first rec in leaf. Pass new key value up to our parent. */
-+	if (ptr == 1) {
-+		union xfs_btree_key	key;
-+
-+		cur->bc_ops->init_key_from_rec(cur, &key, rec);
-+		error = xfs_btree_updkey(cur, &key, 1);
-+		if (error)
-+			goto error0;
-+	}
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-+	return 0;
-+
-+error0:
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
-+	return error;
-+}
-+
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.c	2008-08-02 02:55:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c	2008-08-02 02:58:05.000000000 +0200
-@@ -49,7 +49,9 @@ STATIC void xfs_allocbt_log_keys(xfs_btr
- #define xfs_alloc_log_keys(c, b, i, j) \
- 	xfs_allocbt_log_keys(c, b, i, j)
- STATIC void xfs_alloc_log_ptrs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
--STATIC void xfs_alloc_log_recs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
-+STATIC void xfs_allocbt_log_recs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
-+#define xfs_alloc_log_recs(c, b, i, j) \
-+	xfs_allocbt_log_recs(c, b, i, j)
- STATIC int xfs_alloc_lshift(xfs_btree_cur_t *, int, int *);
- STATIC int xfs_alloc_newroot(xfs_btree_cur_t *, int *);
- STATIC int xfs_alloc_rshift(xfs_btree_cur_t *, int, int *);
-@@ -883,41 +885,6 @@ xfs_alloc_log_ptrs(
- }
- 
- /*
-- * Log records from a btree block (leaf).
-- */
--STATIC void
--xfs_alloc_log_recs(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_buf_t		*bp,	/* buffer containing btree block */
--	int			rfirst,	/* index of first record to log */
--	int			rlast)	/* index of last record to log */
--{
--	xfs_alloc_block_t	*block;	/* btree block to log from */
--	int			first;	/* first byte offset logged */
--	int			last;	/* last byte offset logged */
--	xfs_alloc_rec_t		*rp;	/* record pointer for btree block */
--
--
--	block = XFS_BUF_TO_ALLOC_BLOCK(bp);
--	rp = XFS_ALLOC_REC_ADDR(block, 1, cur);
--#ifdef DEBUG
--	{
--		xfs_agf_t	*agf;
--		xfs_alloc_rec_t	*p;
--
--		agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
--		for (p = &rp[rfirst - 1]; p <= &rp[rlast - 1]; p++)
--			ASSERT(be32_to_cpu(p->ar_startblock) +
--			       be32_to_cpu(p->ar_blockcount) <=
--			       be32_to_cpu(agf->agf_length));
--	}
--#endif
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
--}
--
--/*
-  * Move 1 record left from cur/level if possible.
-  * Update cur to reflect the new path.
-  */
-@@ -1642,83 +1609,50 @@ xfs_alloc_insert(
- 	return 0;
- }
- 
-+STATIC struct xfs_btree_cur *
-+xfs_allocbt_dup_cursor(
++xfs_btree_root_to_iroot(
 +	struct xfs_btree_cur	*cur)
 +{
-+	return xfs_allocbt_init_cursor(cur->bc_mp, cur->bc_tp,
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno,
-+			cur->bc_btnum);
-+}
-+
- /*
-- * Update the record referred to by cur, to the value given by [bno, len].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-+ * Update the longest extent in the AGF
-  */
--int					/* error */
--xfs_alloc_update(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_agblock_t		bno,	/* starting block of extent */
--	xfs_extlen_t		len)	/* length of extent */
-+STATIC void
-+xfs_allocbt_update_lastrec(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_btree_block	*block,
-+	union xfs_btree_rec	*rec,
-+	int			ptr,
-+	int			reason)
- {
--	xfs_alloc_block_t	*block;	/* btree block to update */
--	int			error;	/* error return value */
--	int			ptr;	/* current record number (updating) */
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	__be32			len;
- 
--	ASSERT(len > 0);
--	/*
--	 * Pick up the a.g. freelist struct and the current block.
--	 */
--	block = XFS_BUF_TO_ALLOC_BLOCK(cur->bc_bufs[0]);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_sblock(cur, block, 0, cur->bc_bufs[0])))
--		return error;
--#endif
--	/*
--	 * Get the address of the rec to be updated.
--	 */
--	ptr = cur->bc_ptrs[0];
--	{
--		xfs_alloc_rec_t		*rp;	/* pointer to updated record */
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_CNT);
- 
--		rp = XFS_ALLOC_REC_ADDR(block, ptr, cur);
-+	switch (reason) {
-+	case LASTREC_UPDATE:
- 		/*
--		 * Fill in the new contents and log them.
-+		 * If this is the last leaf block and it's the last record,
-+		 * then update the size of the longest extent in the AG.
- 		 */
--		rp->ar_startblock = cpu_to_be32(bno);
--		rp->ar_blockcount = cpu_to_be32(len);
--		xfs_alloc_log_recs(cur, cur->bc_bufs[0], ptr, ptr);
--	}
--	/*
--	 * If it's the by-size btree and it's the last leaf block and
--	 * it's the last record... then update the size of the longest
--	 * extent in the a.g., which we cache in the a.g. freelist header.
--	 */
--	if (cur->bc_btnum == XFS_BTNUM_CNT &&
--	    be32_to_cpu(block->bb_rightsib) == NULLAGBLOCK &&
--	    ptr == be16_to_cpu(block->bb_numrecs)) {
--		xfs_agf_t	*agf;	/* a.g. freespace header */
--		xfs_agnumber_t	seqno;
--
--		agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
--		seqno = be32_to_cpu(agf->agf_seqno);
--		cur->bc_mp->m_perag[seqno].pagf_longest = len;
--		agf->agf_longest = cpu_to_be32(len);
--		xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp,
--			XFS_AGF_LONGEST);
--	}
--	/*
--	 * Updating first record in leaf. Pass new key value up to our parent.
--	 */
--	if (ptr == 1) {
--		xfs_alloc_key_t	key;	/* key containing [bno, len] */
--
--		key.ar_startblock = cpu_to_be32(bno);
--		key.ar_blockcount = cpu_to_be32(len);
--		if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1)))
--			return error;
-+		if (ptr != xfs_btree_get_numrecs(block))
-+			return;
-+		len = rec->alloc.ar_blockcount;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return;
- 	}
--	return 0;
--}
- 
--STATIC struct xfs_btree_cur *
--xfs_allocbt_dup_cursor(
--	struct xfs_btree_cur	*cur)
--{
--	return xfs_allocbt_init_cursor(cur->bc_mp, cur->bc_tp,
--			cur->bc_private.a.agbp, cur->bc_private.a.agno,
--			cur->bc_btnum);
-+	agf->agf_longest = len;
-+	cur->bc_mp->m_perag[seqno].pagf_longest = be32_to_cpu(len);
-+	xfs_alloc_log_agf(cur->bc_tp, cur->bc_private.a.agbp, XFS_AGF_LONGEST);
- }
- 
- STATIC void
-@@ -1805,6 +1739,17 @@ xfs_allocbt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_alloc_key_t));
- }
- 
-+STATIC void
-+xfs_allocbt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
-+{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_alloc_rec_t));
-+}
-+
- /*
-  * Log keys from a btree block (nonleaf).
-  */
-@@ -1831,6 +1776,54 @@ xfs_allocbt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- }
- 
++	int			whichfork = cur->bc_private.b.whichfork;
++	struct xfs_inode	*ip = cur->bc_private.b.ip;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_btree_block	*block;
++	struct xfs_btree_block	*cblock;
++	union xfs_btree_key	*kp;
++	union xfs_btree_key	*ckp;
++	union xfs_btree_ptr	*pp;
++	union xfs_btree_ptr	*cpp;
++	struct xfs_buf		*cbp;
++	int			level;
++	int			index;
++	int			numrecs;
 +#ifdef DEBUG
-+STATIC void
-+xfs_alloc_log_recs_check(
-+	struct xfs_btree_cur	*cur,
-+	xfs_alloc_rec_t		*rp,
-+	int			first,
-+	int			last)
-+{
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
-+	xfs_alloc_rec_t		*p;
-+
-+	for (p = &rp[first - 1]; p <= &rp[last - 1]; p++) {
-+		ASSERT(be32_to_cpu(p->ar_startblock) +
-+		       be32_to_cpu(p->ar_blockcount) <=
-+		       be32_to_cpu(agf->agf_length));
-+	}
-+}
-+#else
-+#define xfs_alloc_log_recs_check(cur, bp, first, last)
++	union xfs_btree_ptr	ptr;
++	int			i;
 +#endif
 +
-+/*
-+ * Log records from a btree block (leaf).
-+ */
-+STATIC void
-+xfs_alloc_log_recs(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	struct xfs_buf		*bp,	/* buffer containing btree block */
-+	int			first,	/* index of first record to log */
-+	int			last)	/* index of last record to log */
-+{
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_alloc_rec_t		*rp = XFS_ALLOC_REC_ADDR(block, 1, cur);
-+	char			*baddr = (char *)block;
-+	int			start;	/* first byte offset logged */
-+	int			end;	/* last byte offset logged */
-+
 +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
++	level = cur->bc_nlevels - 1;
++	ASSERT(level >= 1);
 +
-+	xfs_alloc_log_recs_check(cur, rp, first, last);
++	/*
++	 * Don't deal with the root block needs to be a leaf case.
++	 * We're just going to turn the thing back into extents anyway.
++	 */
++	if (level == 1)
++		goto out0;
 +
-+	start = (char *)&rp[first - 1] - baddr;
-+	end = (char *)&rp[last] - 1 - baddr;
-+	xfs_trans_log_buf(cur->bc_tp, bp, start, end);
++	block = xfs_btree_get_block(cur, level, &cbp);
 +
++	/*
++	 * Give up if the root has multiple children.
++	 */
++	if (xfs_btree_get_numrecs(block) != 1)
++		goto out0;
++
++	/*
++	 * Only do this if the next level will fit.
++	 * Then the data must be copied up to the inode,
++	 * instead of freeing the root you free the next level.
++	 */
++	cblock = xfs_btree_get_block(cur, level - 1, &cbp);
++	numrecs = xfs_btree_get_numrecs(cblock);
++
++	if (numrecs > cur->bc_ops->get_dmaxrecs(cur, level))
++	    	goto out0;
++
++	XFS_BTREE_STATS_INC(cur, killroot);
++
++#ifdef DEBUG
++	xfs_btree_get_sibling(cur, block, &ptr, XFS_BB_LEFTSIB);
++	ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
++	xfs_btree_get_sibling(cur, block, &ptr, XFS_BB_RIGHTSIB);
++	ASSERT(xfs_btree_ptr_is_null(cur, &ptr));
++
++	// XXX(hch): this assert is bmap btree specific
++ 	ASSERT(cur->bc_ops->get_maxrecs(cur, level) ==
++	       XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes));
++#endif
++
++	index = numrecs - cur->bc_ops->get_maxrecs(cur, level);
++	if (index) {
++		cur->bc_ops->realloc_root(cur, index);
++		block = (struct xfs_btree_block *)ifp->if_broot;
++	}
++
++	be16_add(&block->bb_numrecs, index);
++	ASSERT(block->bb_numrecs == numrecs);
++
++	kp = cur->bc_ops->key_addr(cur, 1, block);
++	ckp = cur->bc_ops->key_addr(cur, 1, cblock);
++	cur->bc_ops->copy_keys(cur, ckp, kp, numrecs);
++
++	pp = cur->bc_ops->ptr_addr(cur, 1, block);
++	cpp = cur->bc_ops->ptr_addr(cur, 1, cblock);
++#ifdef DEBUG
++	for (i = 0; i < numrecs; i++) {
++		int		error;
++
++		error = xfs_btree_check_ptr(cur, cpp, i, level - 1);
++		if (error) {
++			XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
++			return error;
++		}
++	}
++#endif
++	xfs_btree_copy_ptrs(cur, cpp, pp, numrecs);
++
++	cur->bc_ops->free_block(cur, cbp, 1);
++	XFS_BTREE_STATS_INC(cur, free);
++
++	cur->bc_bufs[level - 1] = NULL;
++	be16_add(&block->bb_level, -1);
++	xfs_trans_log_inode(cur->bc_tp, ip,
++		XFS_ILOG_CORE | XFS_ILOG_FBROOT(cur->bc_private.b.whichfork));
++	cur->bc_nlevels--;
++out0:
 +	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
++	return 0;
 +}
- 
- #ifdef XFS_BTREE_TRACE
- 
-@@ -1901,6 +1894,7 @@ xfs_allocbt_trace_record(
- 
- static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.dup_cursor		= xfs_allocbt_dup_cursor,
-+	.update_lastrec		= xfs_allocbt_update_lastrec,
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.ptr_addr		= xfs_allocbt_ptr_addr,
-@@ -1908,7 +1902,9 @@ static const struct xfs_btree_ops xfs_al
- 	.rec_addr		= xfs_allocbt_rec_addr,
- 	.key_diff		= xfs_allocbt_key_diff,
- 	.copy_keys		= xfs_allocbt_copy_keys,
-+	.copy_recs		= xfs_allocbt_copy_recs,
- 	.log_keys		= xfs_allocbt_log_keys,
-+	.log_recs		= xfs_allocbt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_allocbt_trace_enter,
-@@ -1943,6 +1939,8 @@ xfs_allocbt_init_cursor(
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
- 
- 	cur->bc_ops = &xfs_allocbt_ops;
-+	if (btnum == XFS_BTNUM_CNT)
-+		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
- 
- 	cur->bc_private.a.agbp = agbp;
- 	cur->bc_private.a.agno = agno;
-Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
+Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-08-02 02:55:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-08-02 02:57:08.000000000 +0200
-@@ -191,6 +191,12 @@ struct xfs_btree_ops {
- 	/* get inode rooted btree root */
- 	struct xfs_btree_block *(*get_root_from_inode)(struct xfs_btree_cur *);
- 
-+	/* updated last record information */
-+	void	(*update_lastrec)(struct xfs_btree_cur *cur,
-+				  struct xfs_btree_block *block,
-+				  union xfs_btree_rec *rec,
-+				  int ptr, int reason);
-+
- 	/* return address of btree structures */
- 	union xfs_btree_ptr *(*ptr_addr)(struct xfs_btree_cur *cur, int index,
- 					 struct xfs_btree_block *block);
-@@ -214,11 +220,15 @@ struct xfs_btree_ops {
- 	void	(*copy_keys)(struct xfs_btree_cur *cur,
- 			     union xfs_btree_key *src_key,
- 			     union xfs_btree_key *dst_key, int numkeys);
-+	void	(*copy_recs)(struct xfs_btree_cur *cur,
-+			     union xfs_btree_rec *src_rec,
-+			     union xfs_btree_rec *dst_rec, int numkeys);
- 
- 	/* log changes to btree structures */
- 	void	(*log_keys)(struct xfs_btree_cur *cur, struct xfs_buf *bp,
- 			    int first, int last);
--
-+	void	(*log_recs)(struct xfs_btree_cur *cur, struct xfs_buf *bp,
-+			    int first, int last);
- 
- 	/* btree tracing */
- #ifdef XFS_BTREE_TRACE
-@@ -241,6 +251,12 @@ struct xfs_btree_ops {
- };
- 
- /*
-+ * Reasons for the update_lastrec method to be called.
-+ */
-+#define LASTREC_UPDATE	0
-+
-+
-+/*
-  * Btree cursor structure.
-  * This collects all information needed by the btree code in one place.
-  */
-@@ -284,6 +300,7 @@ typedef struct xfs_btree_cur
- /* cursor flags */
- #define XFS_BTREE_LONG_PTRS		(1<<0)	/* pointers are 64bits long */
- #define XFS_BTREE_ROOT_IN_INODE		(1<<1)	/* root may be variable size */
-+#define XFS_BTREE_LASTREC_UPDATE	(1<<2)	/* track last rec externally */
- 
- 
- #define	XFS_BTREE_NOERROR	0
-@@ -539,6 +556,7 @@ int xfs_btree_increment(struct xfs_btree
- int xfs_btree_decrement(struct xfs_btree_cur *, int, int *);
- int xfs_btree_lookup(struct xfs_btree_cur *, xfs_lookup_t, int *);
- int xfs_btree_updkey(struct xfs_btree_cur *, union xfs_btree_key *, int);
-+int xfs_btree_update(struct xfs_btree_cur *, union xfs_btree_rec *);
- 
- 
- /*
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-08-02 02:57:04.000000000 +0200
-@@ -136,6 +136,23 @@ xfs_alloc_lookup_le(
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
- }
- 
-+/*
-+ * Update the record referred to by cur to the value given
-+ * by [bno, len].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
-+ */
-+STATIC int				/* error */
-+xfs_alloc_update(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len)	/* length of extent */
-+{
-+	union xfs_btree_rec	rec;
-+
-+	rec.alloc.ar_startblock = cpu_to_be32(bno);
-+	rec.alloc.ar_blockcount = cpu_to_be32(len);
-+	return xfs_btree_update(cur, &rec);
-+}
- 
- /*
-  * Compute aligned version of the found extent.
-Index: linux-2.6-xfs/fs/xfs/xfs_alloc_btree.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.h	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.h	2008-08-02 02:57:04.000000000 +0200
-@@ -113,13 +113,6 @@ extern int xfs_alloc_get_rec(struct xfs_
-  */
- extern int xfs_alloc_insert(struct xfs_btree_cur *cur, int *stat);
- 
--/*
-- * Update the record referred to by cur, to the value given by [bno, len].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--extern int xfs_alloc_update(struct xfs_btree_cur *cur, xfs_agblock_t bno,
--				xfs_extlen_t len);
--
- 
- extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_buf *,
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-08-02 02:57:04.000000000 +0200
-@@ -172,6 +172,26 @@ xfs_inobt_lookup_le(
- }
- 
- /*
-+ * Update the record referred to by cur to the value given
-+ * by [ino, fcnt, free].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
-+ */
-+STATIC int				/* error */
-+xfs_inobt_update(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agino_t		ino,	/* starting inode of chunk */
-+	__int32_t		fcnt,	/* free inode count */
-+	xfs_inofree_t		free)	/* free inode mask */
-+{
-+	union xfs_btree_rec	rec;
-+
-+	rec.inobt.ir_startino = cpu_to_be32(ino);
-+	rec.inobt.ir_freecount = cpu_to_be32(fcnt);
-+	rec.inobt.ir_free = cpu_to_be64(free);
-+	return xfs_btree_update(cur, &rec);
-+}
-+
-+/*
-  * Allocate new inodes in the allocation group specified by agbp.
-  * Return 0 for success, else error code.
-  */
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.c	2008-08-02 02:55:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c	2008-08-02 02:58:27.000000000 +0200
-@@ -785,28 +785,6 @@ xfs_inobt_log_ptrs(
- }
- 
- /*
-- * Log records from a btree block (leaf).
-- */
--STATIC void
--xfs_inobt_log_recs(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_buf_t		*bp,	/* buffer containing btree block */
--	int			rfirst,	/* index of first record to log */
--	int			rlast)	/* index of last record to log */
--{
--	xfs_inobt_block_t	*block;	/* btree block to log from */
--	int			first;	/* first byte offset logged */
--	int			last;	/* last byte offset logged */
--	xfs_inobt_rec_t		*rp;	/* record pointer for btree block */
--
--	block = XFS_BUF_TO_INOBT_BLOCK(bp);
--	rp = XFS_INOBT_REC_ADDR(block, 1, cur);
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(cur->bc_tp, bp, first, last);
--}
--
--/*
-  * Move 1 record left from cur/level if possible.
-  * Update cur to reflect the new path.
-  */
-@@ -1530,58 +1508,6 @@ xfs_inobt_insert(
+--- linux-2.6-xfs.orig/fs/xfs/xfs_alloc_btree.c	2008-08-04 01:15:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_alloc_btree.c	2008-08-04 01:42:19.000000000 +0200
+@@ -781,6 +781,39 @@ xfs_allocbt_alloc_block(
  	return 0;
  }
  
--/*
-- * Update the record referred to by cur, to the value given
-- * by [ino, fcnt, free].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--int					/* error */
--xfs_inobt_update(
--	xfs_btree_cur_t		*cur,	/* btree cursor */
--	xfs_agino_t		ino,	/* starting inode of chunk */
--	__int32_t		fcnt,	/* free inode count */
--	xfs_inofree_t		free)	/* free inode mask */
--{
--	xfs_inobt_block_t	*block;	/* btree block to update */
--	xfs_buf_t		*bp;	/* buffer containing btree block */
--	int			error;	/* error return value */
--	int			ptr;	/* current record number (updating) */
--	xfs_inobt_rec_t		*rp;	/* pointer to updated record */
--
--	/*
--	 * Pick up the current block.
--	 */
--	bp = cur->bc_bufs[0];
--	block = XFS_BUF_TO_INOBT_BLOCK(bp);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_sblock(cur, block, 0, bp)))
--		return error;
--#endif
--	/*
--	 * Get the address of the rec to be updated.
--	 */
--	ptr = cur->bc_ptrs[0];
--	rp = XFS_INOBT_REC_ADDR(block, ptr, cur);
--	/*
--	 * Fill in the new contents and log them.
--	 */
--	rp->ir_startino = cpu_to_be32(ino);
--	rp->ir_freecount = cpu_to_be32(fcnt);
--	rp->ir_free = cpu_to_be64(free);
--	xfs_inobt_log_recs(cur, bp, ptr, ptr);
--	/*
--	 * Updating first record in leaf. Pass new key value up to our parent.
--	 */
--	if (ptr == 1) {
--		xfs_inobt_key_t	key;	/* key containing [ino] */
--
--		key.ir_startino = cpu_to_be32(ino);
--		if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1)))
--			return error;
--	}
--	return 0;
--}
--
- STATIC struct xfs_btree_cur *
- xfs_inobt_dup_cursor(
- 	struct xfs_btree_cur	*cur)
-@@ -1661,6 +1587,17 @@ xfs_inobt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_inobt_key_t));
- }
- 
-+STATIC void
-+xfs_inobt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
-+{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_inobt_rec_t));
-+}
-+
- /*
-  * Log keys from a btree block (nonleaf).
-  */
-@@ -1687,6 +1624,33 @@ xfs_inobt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- }
- 
-+/*
-+ * Log records from a btree block (leaf).
-+ */
-+STATIC void
-+xfs_inobt_log_recs(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	struct xfs_buf		*bp,	/* buffer containing btree block */
-+	int			first,	/* index of first record to log */
-+	int			last)	/* index of last record to log */
-+{
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_inobt_rec_t		*rp = XFS_INOBT_REC_ADDR(block, 1, cur);
-+	char			*baddr = (char *)block;
-+	int			start;	/* first byte offset logged */
-+	int			end;	/* last byte offset logged */
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
-+
-+	start = (char *)&rp[first - 1] - baddr;
-+	end = (char *)&rp[last] - 1 - baddr;
-+	xfs_trans_log_buf(cur->bc_tp, bp, start, end);
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-+}
-+
-+
- #ifdef XFS_BTREE_TRACE
- 
- ktrace_t	*xfs_inobt_trace_buf;
-@@ -1763,7 +1727,9 @@ static const struct xfs_btree_ops xfs_in
- 	.rec_addr		= xfs_inobt_rec_addr,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.copy_keys		= xfs_inobt_copy_keys,
-+	.copy_recs		= xfs_inobt_copy_recs,
- 	.log_keys		= xfs_inobt_log_keys,
-+	.log_recs		= xfs_inobt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_inobt_trace_enter,
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.h	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.h	2008-08-02 02:57:04.000000000 +0200
-@@ -135,14 +135,6 @@ extern int xfs_inobt_get_rec(struct xfs_
-  */
- extern int xfs_inobt_insert(struct xfs_btree_cur *cur, int *stat);
- 
--/*
-- * Update the record referred to by cur, to the value given
-- * by [ino, fcnt, free].
-- * This either works (return 0) or gets an EFSCORRUPTED error.
-- */
--extern int xfs_inobt_update(struct xfs_btree_cur *cur, xfs_agino_t ino,
--				__int32_t fcnt, xfs_inofree_t free);
--
- 
- extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.c	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap.c	2008-08-02 02:57:04.000000000 +0200
-@@ -430,6 +430,24 @@ xfs_bmbt_lookup_ge(
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
- }
- 
-+/*
-+* Update the record referred to by cur to the value given
-+ * by [off, bno, len, state].
-+ * This either works (return 0) or gets an EFSCORRUPTED error.
-+ */
 +STATIC int
-+xfs_bmbt_update(
++xfs_allocbt_free_block(
 +	struct xfs_btree_cur	*cur,
-+	xfs_fileoff_t		off,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
-+	xfs_exntst_t		state)
++	struct xfs_buf		*bp,
++	int			size)
 +{
-+	union xfs_btree_rec	rec;
++	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
++	xfs_agblock_t		bno;
++	int			error;
 +
-+	xfs_bmbt_disk_set_allf(&rec.bmbt, off, bno, len, state);
-+	return xfs_btree_update(cur, &rec);
++	bno = XFS_DADDR_TO_AGBNO(cur->bc_mp, XFS_BUF_ADDR(bp));
++
++	error = xfs_alloc_put_freelist(cur->bc_tp, cur->bc_private.a.agbp,
++						NULL, bno, size);
++	if (error)
++		return error;
++
++	/*
++	 * Since blocks move to the free list without the coordination used in
++	 * xfs_bmap_finish, we can't allow block to be available for
++	 * reallocation and non-transaction writing (user data) until we know
++	 * that the transaction that moved it to the free list is permanently
++	 * on disk. We track the blocks by declaring these blocks as "busy";
++	 * the busy list is maintained on a per-ag basis and each transaction
++	 * records which entries should be removed when the iclog commits to
++	 * disk. If a busy block is allocated, the iclog is pushed up to the
++	 * LSN that freed the block.
++	 */
++	xfs_alloc_mark_busy(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1);
++	xfs_trans_agbtree_delta(cur->bc_tp, -1);
++	return 0;
 +}
- 
++
  /*
-  * Called from xfs_bmap_add_attrfork to handle btree format files.
+  * Update the longest extent in the AGF
+  */
+@@ -1153,6 +1186,7 @@ static const struct xfs_btree_ops xfs_al
+ 	.dup_cursor		= xfs_allocbt_dup_cursor,
+ 	.set_root		= xfs_allocbt_set_root,
+ 	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
+ 	.update_lastrec		= xfs_allocbt_update_lastrec,
+ 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
 Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-08-02 02:55:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-08-02 02:57:36.000000000 +0200
-@@ -1567,34 +1567,6 @@ xfs_bmbt_log_block(
- }
- 
- /*
-- * Log record values from the btree block.
-- */
--void
--xfs_bmbt_log_recs(
--	xfs_btree_cur_t		*cur,
--	xfs_buf_t		*bp,
--	int			rfirst,
--	int			rlast)
--{
--	xfs_bmbt_block_t	*block;
--	int			first;
--	int			last;
--	xfs_bmbt_rec_t		*rp;
--	xfs_trans_t		*tp;
--
--	XFS_BMBT_TRACE_CURSOR(cur, ENTRY);
--	XFS_BMBT_TRACE_ARGBII(cur, bp, rfirst, rlast);
--	ASSERT(bp);
--	tp = cur->bc_tp;
--	block = XFS_BUF_TO_BMBT_BLOCK(bp);
--	rp = XFS_BMAP_REC_DADDR(block, 1, cur);
--	first = (int)((xfs_caddr_t)&rp[rfirst - 1] - (xfs_caddr_t)block);
--	last = (int)(((xfs_caddr_t)&rp[rlast] - 1) - (xfs_caddr_t)block);
--	xfs_trans_log_buf(tp, bp, first, last);
--	XFS_BMBT_TRACE_CURSOR(cur, EXIT);
--}
--
--/*
-  * Give the bmap btree a new root block.  Copy the old broot contents
-  * down into a real block and make the broot point to it.
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.c	2008-08-04 01:15:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.c	2008-08-04 01:42:19.000000000 +0200
+@@ -49,7 +49,6 @@
   */
-@@ -1928,51 +1900,6 @@ xfs_bmbt_to_bmdr(
+ 
+ 
+-STATIC int xfs_bmbt_killroot(xfs_btree_cur_t *);
+ STATIC void xfs_bmbt_log_keys(xfs_btree_cur_t *, xfs_buf_t *, int, int);
+ STATIC void xfs_bmbt_log_ptrs(xfs_btree_cur_t *, xfs_buf_t *, int, int);
+ 
+@@ -194,7 +193,7 @@ xfs_bmbt_delrec(
+ 	if (level == cur->bc_nlevels - 1) {
+ 		xfs_iroot_realloc(cur->bc_private.b.ip, -1,
+ 			cur->bc_private.b.whichfork);
+-		if ((error = xfs_bmbt_killroot(cur))) {
++		if ((error = xfs_btree_root_to_iroot(cur))) {
+ 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
+ 			goto error0;
+ 		}
+@@ -228,7 +227,7 @@ xfs_bmbt_delrec(
+ 	 */
+ 	if (lbno == NULLFSBLOCK && rbno == NULLFSBLOCK &&
+ 	    level == cur->bc_nlevels - 2) {
+-		if ((error = xfs_bmbt_killroot(cur))) {
++		if ((error = xfs_btree_root_to_iroot(cur))) {
+ 			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
+ 			goto error0;
+ 		}
+@@ -456,97 +455,6 @@ error0:
+ 	return error;
  }
  
- /*
-- * Update the record to the passed values.
-- */
--int
--xfs_bmbt_update(
--	xfs_btree_cur_t		*cur,
--	xfs_fileoff_t		off,
--	xfs_fsblock_t		bno,
--	xfs_filblks_t		len,
--	xfs_exntst_t		state)
+-STATIC int
+-xfs_bmbt_killroot(
+-	xfs_btree_cur_t		*cur)
 -{
 -	xfs_bmbt_block_t	*block;
--	xfs_buf_t		*bp;
+-	xfs_bmbt_block_t	*cblock;
+-	xfs_buf_t		*cbp;
+-	xfs_bmbt_key_t		*ckp;
+-	xfs_bmbt_ptr_t		*cpp;
+-#ifdef DEBUG
 -	int			error;
--	xfs_bmbt_key_t		key;
--	int			ptr;
--	xfs_bmbt_rec_t		*rp;
+-#endif
+-	int			i;
+-	xfs_bmbt_key_t		*kp;
+-	xfs_inode_t		*ip;
+-	xfs_ifork_t		*ifp;
+-	int			level;
+-	xfs_bmbt_ptr_t		*pp;
 -
 -	XFS_BMBT_TRACE_CURSOR(cur, ENTRY);
--	XFS_BMBT_TRACE_ARGFFFI(cur, (xfs_dfiloff_t)off, (xfs_dfsbno_t)bno,
--		(xfs_dfilblks_t)len, (int)state);
--	block = xfs_bmbt_get_block(cur, 0, &bp);
--#ifdef DEBUG
--	if ((error = xfs_btree_check_lblock(cur, block, 0, bp))) {
--		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
--		return error;
--	}
--#endif
--	ptr = cur->bc_ptrs[0];
--	rp = XFS_BMAP_REC_IADDR(block, ptr, cur);
--	xfs_bmbt_disk_set_allf(rp, off, bno, len, state);
--	xfs_bmbt_log_recs(cur, bp, ptr, ptr);
--	if (ptr > 1) {
+-	level = cur->bc_nlevels - 1;
+-	ASSERT(level >= 1);
+-	/*
+-	 * Don't deal with the root block needs to be a leaf case.
+-	 * We're just going to turn the thing back into extents anyway.
+-	 */
+-	if (level == 1) {
 -		XFS_BMBT_TRACE_CURSOR(cur, EXIT);
 -		return 0;
 -	}
--	key.br_startoff = cpu_to_be64(off);
--	if ((error = xfs_btree_updkey(cur, (union xfs_btree_key *)&key, 1))) {
--		XFS_BMBT_TRACE_CURSOR(cur, ERROR);
--		return error;
+-	block = xfs_bmbt_get_block(cur, level, &cbp);
+-	/*
+-	 * Give up if the root has multiple children.
+-	 */
+-	if (be16_to_cpu(block->bb_numrecs) != 1) {
+-		XFS_BMBT_TRACE_CURSOR(cur, EXIT);
+-		return 0;
 -	}
+-	/*
+-	 * Only do this if the next level will fit.
+-	 * Then the data must be copied up to the inode,
+-	 * instead of freeing the root you free the next level.
+-	 */
+-	cbp = cur->bc_bufs[level - 1];
+-	cblock = XFS_BUF_TO_BMBT_BLOCK(cbp);
+-	if (be16_to_cpu(cblock->bb_numrecs) > XFS_BMAP_BLOCK_DMAXRECS(level, cur)) {
+-		XFS_BMBT_TRACE_CURSOR(cur, EXIT);
+-		return 0;
+-	}
+-	ASSERT(be64_to_cpu(cblock->bb_leftsib) == NULLDFSBNO);
+-	ASSERT(be64_to_cpu(cblock->bb_rightsib) == NULLDFSBNO);
+-	ip = cur->bc_private.b.ip;
+-	ifp = XFS_IFORK_PTR(ip, cur->bc_private.b.whichfork);
+-	ASSERT(XFS_BMAP_BLOCK_IMAXRECS(level, cur) ==
+-	       XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes));
+-	i = (int)(be16_to_cpu(cblock->bb_numrecs) - XFS_BMAP_BLOCK_IMAXRECS(level, cur));
+-	if (i) {
+-		xfs_iroot_realloc(ip, i, cur->bc_private.b.whichfork);
+-		block = ifp->if_broot;
+-	}
+-	be16_add(&block->bb_numrecs, i);
+-	ASSERT(block->bb_numrecs == cblock->bb_numrecs);
+-	kp = XFS_BMAP_KEY_IADDR(block, 1, cur);
+-	ckp = XFS_BMAP_KEY_IADDR(cblock, 1, cur);
+-	memcpy(kp, ckp, be16_to_cpu(block->bb_numrecs) * sizeof(*kp));
+-	pp = XFS_BMAP_PTR_IADDR(block, 1, cur);
+-	cpp = XFS_BMAP_PTR_IADDR(cblock, 1, cur);
+-#ifdef DEBUG
+-	for (i = 0; i < be16_to_cpu(cblock->bb_numrecs); i++) {
+-		if ((error = xfs_btree_check_lptr_disk(cur, cpp[i], level - 1))) {
+-			XFS_BMBT_TRACE_CURSOR(cur, ERROR);
+-			return error;
+-		}
+-	}
+-#endif
+-	memcpy(pp, cpp, be16_to_cpu(block->bb_numrecs) * sizeof(*pp));
+-	xfs_bmap_add_free(XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(cbp)), 1,
+-			cur->bc_private.b.flist, cur->bc_mp);
+-	ip->i_d.di_nblocks--;
+-	XFS_TRANS_MOD_DQUOT_BYINO(cur->bc_mp, cur->bc_tp, ip,
+-			XFS_TRANS_DQ_BCOUNT, -1L);
+-	xfs_trans_binval(cur->bc_tp, cbp);
+-	cur->bc_bufs[level - 1] = NULL;
+-	be16_add(&block->bb_level, -1);
+-	xfs_trans_log_inode(cur->bc_tp, ip,
+-		XFS_ILOG_CORE | XFS_ILOG_FBROOT(cur->bc_private.b.whichfork));
+-	cur->bc_nlevels--;
 -	XFS_BMBT_TRACE_CURSOR(cur, EXIT);
 -	return 0;
 -}
 -
--/*
-  * Check extent records, which have just been read, for
-  * any bit in the extent flag field. ASSERT on debug
-  * kernels, as this condition should not occur.
-@@ -2094,6 +2021,17 @@ xfs_bmbt_copy_keys(
- 	memcpy(dst_key, src_key, numkeys * sizeof(xfs_bmbt_key_t));
- }
- 
-+STATIC void
-+xfs_bmbt_copy_recs(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*src_rec,
-+	union xfs_btree_rec	*dst_rec,
-+	int			numrecs)
-+{
-+	ASSERT(numrecs >= 0);
-+	memcpy(dst_rec, src_rec, numrecs * sizeof(xfs_bmbt_rec_t));
-+}
-+
  /*
-  * Log key values from the btree block.
+  * Log pointer values from the btree block.
   */
-@@ -2125,6 +2063,32 @@ xfs_bmbt_log_keys(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+@@ -1234,6 +1142,24 @@ xfs_bmbt_alloc_block(
+ 	return error;
  }
  
-+/*
-+ * Log record values from the btree block.
-+ */
-+void
-+xfs_bmbt_log_recs(
++STATIC int
++xfs_bmbt_free_block(
 +	struct xfs_btree_cur	*cur,
 +	struct xfs_buf		*bp,
-+	int			first,
-+	int			last)
++	int			size)
 +{
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	xfs_bmbt_rec_t		*rp = XFS_BMAP_REC_DADDR(block, 1, cur);
-+	char			*baddr = (char *)block;
-+	int			start;
-+	int			end;
++	struct xfs_mount	*mp = cur->bc_mp;
++	struct xfs_inode	*ip = cur->bc_private.b.ip;
 +
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-+	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
-+
-+	start = (char *)&rp[first - 1] - baddr;
-+	end = (char *)&rp[last] - 1 - baddr;
-+	xfs_trans_log_buf(cur->bc_tp, bp, start, end);
-+
-+	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
++	xfs_bmap_add_free(XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp)), 1,
++		cur->bc_private.b.flist, mp);
++	ip->i_d.di_nblocks--;
++	xfs_trans_log_inode(cur->bc_tp, ip, XFS_ILOG_CORE);
++	XFS_TRANS_MOD_DQUOT_BYINO(mp, cur->bc_tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
++	xfs_trans_binval(cur->bc_tp, bp);
++	return 0;
 +}
 +
- #ifdef XFS_BTREE_TRACE
- 
- ktrace_t	*xfs_bmbt_trace_buf;
-@@ -2221,7 +2185,9 @@ static const struct xfs_btree_ops xfs_bm
- 	.rec_addr		= xfs_bmbt_rec_addr,
- 	.key_diff		= xfs_bmbt_key_diff,
- 	.copy_keys		= xfs_bmbt_copy_keys,
-+	.copy_recs		= xfs_bmbt_copy_recs,
- 	.log_keys		= xfs_bmbt_log_keys,
-+	.log_recs		= xfs_bmbt_log_recs,
- 
- #ifdef XFS_BTREE_TRACE
- 	.trace_enter		= xfs_bmbt_trace_enter,
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h
+ STATIC struct xfs_btree_block *
+ xfs_bmbt_get_root_from_inode(
+ 	struct xfs_btree_cur	*cur)
+@@ -1571,6 +1497,7 @@ static const struct xfs_btree_ops xfs_bm
+ 	.get_root_from_inode	= xfs_bmbt_get_root_from_inode,
+ 	.realloc_root		= xfs_bmbt_realloc_root,
+ 	.alloc_block		= xfs_bmbt_alloc_block,
++	.free_block		= xfs_bmbt_free_block,
+ 	.init_key_from_rec	= xfs_bmbt_init_key_from_rec,
+ 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
+ 	.init_rec_from_key	= xfs_bmbt_init_rec_from_key,
+Index: linux-2.6-xfs/fs/xfs/xfs_btree.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap_btree.h	2008-08-02 02:53:26.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap_btree.h	2008-08-02 02:57:04.000000000 +0200
-@@ -274,8 +274,6 @@ extern void xfs_bmbt_disk_set_allf(xfs_b
- 			xfs_fsblock_t b, xfs_filblks_t c, xfs_exntst_t v);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_btree.h	2008-08-04 01:15:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_btree.h	2008-08-04 01:42:19.000000000 +0200
+@@ -198,6 +198,8 @@ struct xfs_btree_ops {
+ 			       union xfs_btree_ptr *start_bno,
+ 			       union xfs_btree_ptr *new_bno,
+ 			       int length, int *stat);
++	int	(*free_block)(struct xfs_btree_cur *cur, struct xfs_buf *bp,
++			      int length);
  
- extern void xfs_bmbt_to_bmdr(xfs_bmbt_block_t *, int, xfs_bmdr_block_t *, int);
--extern int xfs_bmbt_update(struct xfs_btree_cur *, xfs_fileoff_t,
--				xfs_fsblock_t, xfs_filblks_t, xfs_exntst_t);
+ 	/* updated last record information */
+ 	void	(*update_lastrec)(struct xfs_btree_cur *cur,
+@@ -596,6 +598,7 @@ int xfs_btree_split(struct xfs_btree_cur
+ 		union xfs_btree_key *, struct xfs_btree_cur **, int *);
+ int xfs_btree_new_root(struct xfs_btree_cur *, int *);
+ int xfs_btree_iroot_to_root(struct xfs_btree_cur *, int *, int *);
++int xfs_btree_root_to_iroot(struct xfs_btree_cur *);
+ int xfs_btree_insert(struct xfs_btree_cur *, int *);
  
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc_btree.c	2008-08-04 01:15:17.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_ialloc_btree.c	2008-08-04 01:42:19.000000000 +0200
+@@ -710,6 +710,22 @@ xfs_inobt_alloc_block(
+ 	return 0;
+ }
+ 
++STATIC int
++xfs_inobt_free_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp,
++	int			size)
++{
++	int			error;
++
++	error = xfs_free_extent(cur->bc_tp,
++			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1);
++	if (error)
++		return error;
++
++	xfs_trans_binval(cur->bc_tp, bp);
++	return 0;
++}
+ 
+ STATIC int
+ xfs_inobt_get_maxrecs(
+@@ -1001,6 +1017,7 @@ static const struct xfs_btree_ops xfs_in
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_inobt_set_root,
+ 	.alloc_block		= xfs_inobt_alloc_block,
++	.free_block		= xfs_inobt_free_block,
+ 	.get_maxrecs		= xfs_inobt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+ 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
 
 -- 
