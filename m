@@ -1,72 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 18:28:34 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 18:35:37 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m751ST9v023720
-	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 18:28:29 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5222C12432CA
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 18:29:44 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id puDLVgivkGY3NzNw for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 18:29:44 -0700 (PDT)
-Date: Mon, 4 Aug 2008 21:29:43 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 21/26] implement generic xfs_btree_in??ert/insrec
-Message-ID: <20080805012943.GB22147@infradead.org>
-References: <20080804013535.GV8819@lst.de> <20080805010557.GL6119@disturbed>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m751ZZnn024372
+	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 18:35:36 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7005612434AA
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 18:36:49 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id Serp44RR43fZmMHz for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 18:36:49 -0700 (PDT)
+Date: Tue, 5 Aug 2008 11:36:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 23/26] implement generic xfs_btree_delete/delrec
+Message-ID: <20080805013625.GN6119@disturbed>
+References: <20080804013550.GX8819@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080805010557.GL6119@disturbed>
+In-Reply-To: <20080804013550.GX8819@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 05, 2008 at 11:05:57AM +1000, Dave Chinner wrote:
-> I think that ->get_dmaxrecs is probably badly named. I called it
-> that originally because it matched the macro name it was wrapping.
-> Realisitically it should be ->get_root_maxrecs....
+On Mon, Aug 04, 2008 at 03:35:50AM +0200, Christoph Hellwig wrote:
+> Make the btree delete code generic.  Based on a patch from David Chinner
+> with lots of changes to follow the original btree implementations more
+> closely.  While this loses some of the generic helper routines for
+> inserting/moving/removing records it also solves some of the one off
+> bugs in the original code and makes it easier to verify.
+.....
+> +STATIC int
+> +xfs_btree_update_root(
+> +	struct xfs_btree_cur	*cur,
+> +	struct xfs_buf		*bp,
+> +	int			level,
+> +	union xfs_btree_ptr	*newroot)
+> +{
+> +	int			error;
+> +
+> +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> +	XFS_BTREE_STATS_INC(cur, killroot);
+> +
+> +#ifdef DEBUG
+> +	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_CNT) {
+> +		struct xfs_buf		*agbp = cur->bc_private.a.agbp;
+> +		struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+> +
+> +		ASSERT(be32_to_cpu(agf->agf_roots[cur->bc_btnum]) ==
+> +		       XFS_DADDR_TO_AGBNO(cur->bc_mp, XFS_BUF_ADDR(bp)));
+> +	} else if (cur->bc_btnum == XFS_BTNUM_INO) {
+> +		struct xfs_buf		*agbp = cur->bc_private.a.agbp;
+> +		struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
+> +		xfs_fsblock_t		fsbno;
+> +
+> +		fsbno = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
+> +				       be32_to_cpu(agi->agi_root));
+> +
+> +		ASSERT(fsbno == XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)));
+> +	}
+> +#endif
 
-Yeah.  The name giving macro is already gone in my current tree.
+That's kind of messy - can it be pushed out to a separate debug only
+function? Also, why do we check the inobt against a long pointer,
+and the allocbt against a short pointer? both are short pointer
+btrees, so it doesn't really make sense to me to have different
+checks on them...
 
-> 
-> > +	/* Make a key out of the record data to be inserted, and save it. */
-> > +	cur->bc_ops->init_key_from_rec(cur, &key, recp);
-> > +
-> > +	/* If we're off the left edge, return failure. */
-> > +	ptr = cur->bc_ptrs[level];
-> > +	if (ptr == 0) {
-> > +		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> > +		*stat = 0;
-> > +		return 0;
-> > +	}
-> 
-> You can probably move the key initialisation till after then initial
-> 'in this block' checks.
+Otherwise looks pretty good.
 
-Done.
+Cheers,
 
-> > +	/*
-> > +	 * If the block is full, we can't insert the new entry until we
-> > +	 * make the block un-full.
-> > +	 */
-> > +	xfs_btree_set_ptr_null(cur, &nptr);
-> > +	if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
-> > +		error = xfs_btree_make_block_unfull(cur, level, numrecs,
-> > +					&optr, &ptr, &nptr, &ncur, &nrec, stat);
-> > +		if (error || *stat == 0)
-> > +			goto error0;
-> > +	}
-> > +
-> > +	/* The current block may have changed during the split. */
-> > +	block = xfs_btree_get_block(cur, level, &bp);
-> > +	numrecs = xfs_btree_get_numrecs(block);
-> 
-> The comment here should probably refer to the unfull call, not a
-> 'split'. i.e.:
-> 
-> 	/*
-> 	 * the current block may have changed if the block was
-> 	 * previously full and we have just made space in it.
-> 	 */
-
-Updated.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
