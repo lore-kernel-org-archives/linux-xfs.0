@@ -1,67 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 18:25:23 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m751PGU0023270
-	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 18:25:18 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 18:28:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m751ST9v023720
+	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 18:28:29 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C275B19848A1
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 18:26:30 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id rVFx9uulCixCSbsr for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 18:26:30 -0700 (PDT)
-Date: Mon, 4 Aug 2008 21:26:30 -0400
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5222C12432CA
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 18:29:44 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id puDLVgivkGY3NzNw for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 18:29:44 -0700 (PDT)
+Date: Mon, 4 Aug 2008 21:29:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 22/26] move xfs_bmbt_killroot to common code
-Message-ID: <20080805012630.GA22147@infradead.org>
-References: <20080804013542.GW8819@lst.de> <20080805011437.GM6119@disturbed>
+Subject: Re: [PATCH 21/26] implement generic xfs_btree_in??ert/insrec
+Message-ID: <20080805012943.GB22147@infradead.org>
+References: <20080804013535.GV8819@lst.de> <20080805010557.GL6119@disturbed>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080805011437.GM6119@disturbed>
+In-Reply-To: <20080805010557.GL6119@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue, Aug 05, 2008 at 11:14:37AM +1000, Dave Chinner wrote:
-> On Mon, Aug 04, 2008 at 03:35:42AM +0200, Christoph Hellwig wrote:
-> > xfs_bmbt_killroot is a mostly generic implementation of moving from
-> > a real block based root to an inode based root.  So move it to xfs_btree.c
-> > where it can use all the nice infrastructure there and make it pointer
-> > size agnostic
-> > 
-> > The new name for it is xfs_btree_root_to_iroot which is not very
-> > nice but at least slightly more descriptive than the old name.
-> .....
+On Tue, Aug 05, 2008 at 11:05:57AM +1000, Dave Chinner wrote:
+> I think that ->get_dmaxrecs is probably badly named. I called it
+> that originally because it matched the macro name it was wrapping.
+> Realisitically it should be ->get_root_maxrecs....
+
+Yeah.  The name giving macro is already gone in my current tree.
+
+> 
+> > +	/* Make a key out of the record data to be inserted, and save it. */
+> > +	cur->bc_ops->init_key_from_rec(cur, &key, recp);
 > > +
-> > +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-> > +	level = cur->bc_nlevels - 1;
-> > +	ASSERT(level >= 1);
+> > +	/* If we're off the left edge, return failure. */
+> > +	ptr = cur->bc_ptrs[level];
+> > +	if (ptr == 0) {
+> > +		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+> > +		*stat = 0;
+> > +		return 0;
+> > +	}
 > 
-> probably should assert root in inode is set here.
+> You can probably move the key initialisation till after then initial
+> 'in this block' checks.
 
-We have that check just before the call, so this might be a little
-overkill..
+Done.
 
-> 
-> > +	cblock = xfs_btree_get_block(cur, level - 1, &cbp);
-> > +	numrecs = xfs_btree_get_numrecs(cblock);
+> > +	/*
+> > +	 * If the block is full, we can't insert the new entry until we
+> > +	 * make the block un-full.
+> > +	 */
+> > +	xfs_btree_set_ptr_null(cur, &nptr);
+> > +	if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
+> > +		error = xfs_btree_make_block_unfull(cur, level, numrecs,
+> > +					&optr, &ptr, &nptr, &ncur, &nrec, stat);
+> > +		if (error || *stat == 0)
+> > +			goto error0;
+> > +	}
 > > +
-> > +	if (numrecs > cur->bc_ops->get_dmaxrecs(cur, level))
-> > +	    	goto out0;
->         ^^^^
-> Stray whitespace.
-
-Already fixed before your mail after I ran checkpatch.pl
-over all patches - there were a few spread over the various patches.
-
-> > +	// XXX(hch): this assert is bmap btree specific
-> > + 	ASSERT(cur->bc_ops->get_maxrecs(cur, level) ==
->    ^
-> > +	       XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes));
+> > +	/* The current block may have changed during the split. */
+> > +	block = xfs_btree_get_block(cur, level, &bp);
+> > +	numrecs = xfs_btree_get_numrecs(block);
 > 
-> Stray whitespace. As to the assert - what is it really trying to
-> check? That the btree root space in the inode is large enough to
-> fit the max number of records? If so, does it really need to be
-> checked here (i.e. could the caller do it?)
+> The comment here should probably refer to the unfull call, not a
+> 'split'. i.e.:
+> 
+> 	/*
+> 	 * the current block may have changed if the block was
+> 	 * previously full and we have just made space in it.
+> 	 */
 
-I don't think it makes much sense at all.  My preference would
-be to simply kill it.
+Updated.
