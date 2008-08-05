@@ -1,127 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 19:06:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7526qdK028074
-	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 19:06:52 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 04 Aug 2008 19:08:29 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7528QjO028483
+	for <xfs@oss.sgi.com>; Mon, 4 Aug 2008 19:08:27 -0700
 Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBE6735C369
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 19:08:05 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id hyoqI3gnJGSx1xQS for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 19:08:05 -0700 (PDT)
-Date: Tue, 5 Aug 2008 12:06:51 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1CE2198487A
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2008 19:09:40 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id r4anVa9FG52aojV6 for <xfs@oss.sgi.com>; Mon, 04 Aug 2008 19:09:40 -0700 (PDT)
+Date: Tue, 5 Aug 2008 12:08:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 26/26] add rec_len and key_len fields to struct
-	xfs_btree_ops
-Message-ID: <20080805020651.GQ6119@disturbed>
-References: <20080804013608.GA8819@lst.de>
+Subject: Re: [PATCH 22/26] move xfs_bmbt_killroot to common code
+Message-ID: <20080805020856.GR6119@disturbed>
+References: <20080804013542.GW8819@lst.de> <20080805011437.GM6119@disturbed> <20080805012630.GA22147@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080804013608.GA8819@lst.de>
+In-Reply-To: <20080805012630.GA22147@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Mon, Aug 04, 2008 at 03:36:08AM +0200, Christoph Hellwig wrote:
-> XXX: add detailed patch explanation here
+On Mon, Aug 04, 2008 at 09:26:30PM -0400, Christoph Hellwig wrote:
+> On Tue, Aug 05, 2008 at 11:14:37AM +1000, Dave Chinner wrote:
+> > On Mon, Aug 04, 2008 at 03:35:42AM +0200, Christoph Hellwig wrote:
+> > > xfs_bmbt_killroot is a mostly generic implementation of moving from
+> > > a real block based root to an inode based root.  So move it to xfs_btree.c
+> > > where it can use all the nice infrastructure there and make it pointer
+> > > size agnostic
+> > > 
+> > > The new name for it is xfs_btree_root_to_iroot which is not very
+> > > nice but at least slightly more descriptive than the old name.
+> > .....
+> > > +
+> > > +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> > > +	level = cur->bc_nlevels - 1;
+> > > +	ASSERT(level >= 1);
+> > 
+> > probably should assert root in inode is set here.
+> 
+> We have that check just before the call, so this might be a little
+> overkill..
 
-heh ;)
+Fair enough.
 
-.....
+> > > +	// XXX(hch): this assert is bmap btree specific
+> > > + 	ASSERT(cur->bc_ops->get_maxrecs(cur, level) ==
+> >    ^
+> > > +	       XFS_BMAP_BROOT_MAXRECS(ifp->if_broot_bytes));
+> > 
+> > Stray whitespace. As to the assert - what is it really trying to
+> > check? That the btree root space in the inode is large enough to
+> > fit the max number of records? If so, does it really need to be
+> > checked here (i.e. could the caller do it?)
+> 
+> I don't think it makes much sense at all.  My preference would
+> be to simply kill it.
 
-> Index: linux-2.6-xfs/fs/xfs/xfs_btree.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_btree.c	2008-08-04 01:48:35.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_btree.c	2008-08-04 01:49:13.000000000 +0200
-> @@ -1037,6 +1037,82 @@ xfs_btree_read_buf_block(
->  	return error;
->  }
->  
-> +static inline size_t xfs_btree_block_len(struct xfs_btree_cur *cur)
-> +{
-> +	return (cur->bc_flags & XFS_BTREE_LONG_PTRS) ?
-> +		sizeof(struct xfs_btree_lblock) :
-> +		sizeof(struct xfs_btree_sblock);
-> +}
-
-That's really the block header length, not the block length.
-Can you change the name to reflect that?
-
-> +
-> +static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
-> +{
-> +	return (cur->bc_flags & XFS_BTREE_LONG_PTRS) ?
-> +		sizeof(__be64) : sizeof(__be32);
-> +}
-> +
-> +static size_t
-> +xfs_btree_ptr_offset(
-> +	struct xfs_btree_cur	*cur,
-> +	int			index,
-> +	int			level)
-> +{
-> +	return xfs_btree_block_len(cur) +
-> +		cur->bc_ops->get_maxrecs(cur, level) * cur->bc_ops->key_len +
-> +		(index - 1) * xfs_btree_ptr_len(cur);
-> +}
-
-I'd suggest a comment here just reminding the reader about the
-key/ptr block structure. i.e. key space is at the start of the
-block, ptr space is after the key space.
-
-Also a comment here reminding that btree indexes are 1-numbered,
-not 0-numbered and hence the need for 'index - 1' in the
-offset calculations.
-
->  STATIC void
-> +xfs_btree_set_key(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*key_addr,
-> +	int			index,
-> +	union xfs_btree_key	*newkey)
-> +{
-> +	char			*kp;
-> +
-> +	kp = (char *)key_addr + (index * cur->bc_ops->key_len);
-> +
-> +	memcpy(kp, newkey, cur->bc_ops->key_len);
-> +}
-
-And then for these set functions, the index has already been
-converted from 1-numbered to 0-numbered by the caller, hence the
-direct use of 'index' without correction.
-
-> @@ -1079,6 +1183,44 @@ xfs_btree_move_ptrs(
->  }
->  
->  STATIC void
-> +xfs_btree_move_keys(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*key,
-> +	int			from,
-> +	int			to,
-> +	int			numkeys)
-> +{
-> +	char			*base = (char *)key;
-> +
-> +	ASSERT(from >= 0);
-> +	ASSERT(to >= 0);
-> +	ASSERT(numkeys >= 0);
-> +
-> +	memmove(base + (to * cur->bc_ops->key_len),
-> +		base + (from * cur->bc_ops->key_len),
-> +		numkeys * cur->bc_ops->key_len);
-> +}
-
-Comment about from and to being logical offsets from the base,
-not byte counts.
-
-Hmmm - seeing how frequently the functions like xfs_btree_key_addr()
-are called, should we prevent them from being inlined automatically
-by the compiler (i.e. make them STATIC or explictly noinline)?
-
-Otherwise seems sane to me.
+Agreed. Kill it - I don't think it adds any value.
 
 Cheers,
 
