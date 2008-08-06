@@ -1,37 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:30:33 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m764UPv4019947
-	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:30:26 -0700
-Subject: TAKE 981498 - remove the sema_t from XFS.
-Message-Id: <20080806043138.1E66D58C52A4@chook.melbourne.sgi.com>
-Date: Wed,  6 Aug 2008 14:31:38 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:32:49 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m764Wc04020419
+	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:32:38 -0700
+Received: from web34502.mail.mud.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 59E6E362848
+	for <xfs@oss.sgi.com>; Tue,  5 Aug 2008 21:33:52 -0700 (PDT)
+Received: from web34502.mail.mud.yahoo.com (web34502.mail.mud.yahoo.com [66.163.178.168]) by cuda.sgi.com with SMTP id XJSVaaALqU54sPWi for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 21:33:52 -0700 (PDT)
+Date: Tue, 5 Aug 2008 21:33:52 -0700 (PDT)
+From: gus3 <musicman529@yahoo.com>
+Reply-To: MusicMan529@yahoo.com
+Subject: Re: XFS noikeep remount in 2.6.27-rc1-next-20080730
+In-Reply-To: <20080805233956.GI21635@disturbed>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <510965.21937.qm@web34502.mail.mud.yahoo.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Karel Zak <kzak@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jasper Bryant-Greene <jasper@amiton.co.nz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, util-linux-ng@vger.kernel.org
 
-remove the sema_t from XFS.
+--- On Tue, 8/5/08, Dave Chinner <david@fromorbit.com> wrote:
 
-Now that all users of the sema_t are gone from XFS we can finally kill it.
+> So what is the correct behaviour? Should the filesystem
+> *silently
+> ignore* unchangable options in the remount command, or
+> should it
+> fail the remount and warn the user that certain options are
+> not
+> allowed in remount?
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+How about a middle ground: ignore, but not silently? Report an error, or send it to the syslog, or both, but ultimately ignore unchangeable options, change what can be changed, and give the user/admin as much as possible.
 
-Date:  Wed Aug  6 14:30:56 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-mm
-Inspected by:  
-david@fromorbit.com
-lachlan
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:31823a
-fs/xfs/linux-2.6/xfs_linux.h - 1.170 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.170&r2=text&tr2=1.169&f=h
-fs/xfs/linux-2.6/sema.h - 1.16 - deleted
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/sema.h.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-	- remove the sema_t from XFS.
+This can be particularly pertinent for XFS root. If it's mounted RO at first, it may (will?) need to become RW at some later point. Failing the remount could result in a system that requires a rescue CD (or lots of headaches for remote administration).
