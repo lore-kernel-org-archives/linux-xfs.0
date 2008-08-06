@@ -1,47 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:35:39 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m764ZBis020859
-	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:35:12 -0700
-Received: from mars.unix.geek.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A416635BE23
-	for <xfs@oss.sgi.com>; Tue,  5 Aug 2008 21:36:25 -0700 (PDT)
-Received: from mars.unix.geek.nz ([116.90.133.99]) by cuda.sgi.com with ESMTP id yBFWFKohUfS4rcSY for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 21:36:25 -0700 (PDT)
-Subject: Re: XFS noikeep remount in 2.6.27-rc1-next-20080730
-From: Jasper Bryant-Greene <jasper@amiton.co.nz>
-In-Reply-To: <510965.21937.qm@web34502.mail.mud.yahoo.com>
-References: <510965.21937.qm@web34502.mail.mud.yahoo.com>
-Content-Type: text/plain
-Date: Wed, 06 Aug 2008 16:36:35 +1200
-Message-Id: <1217997395.3456.1.camel@luna.unix.geek.nz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:45:37 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m764jVsK022249
+	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:45:32 -0700
+Subject: TAKE 981498 - update timestamp in xfs_ialloc manually
+Message-Id: <20080806044643.6DC7858C52A4@chook.melbourne.sgi.com>
+Date: Wed,  6 Aug 2008 14:46:43 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: MusicMan529@yahoo.com
-Cc: Karel Zak <kzak@redhat.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, util-linux-ng@vger.kernel.org
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Tue, 2008-08-05 at 21:33 -0700, gus3 wrote:
-> --- On Tue, 8/5/08, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > So what is the correct behaviour? Should the filesystem
-> > *silently
-> > ignore* unchangable options in the remount command, or
-> > should it
-> > fail the remount and warn the user that certain options are
-> > not
-> > allowed in remount?
-> 
-> How about a middle ground: ignore, but not silently? Report an error, or send it to the syslog, or both, but ultimately ignore unchangeable options, change what can be changed, and give the user/admin as much as possible.
+update timestamp in xfs_ialloc manually
 
-I think the idea is to behave the same as other FS do, not to innovate.
+In xfs_ialloc we just want to set all timestamps to the current time.
+We don't need to mark the inode dirty like xfs_ichgtime does, and we
+don't need nor want the opimizations in xfs_ichgtime that I will
+introduce in the next patch.
 
-> This can be particularly pertinent for XFS root. If it's mounted RO at first, it may (will?) need to become RW at some later point. Failing the remount could result in a system that requires a rescue CD (or lots of headaches for remote administration).
+So just opencode the timestamp update in xfs_ialloc, and remove the new
+unused XFS_ICHGTIME_ACC case in xfs_ichgtime.
 
-FWIW, your root filesystem does not need to be rw. I keep mine ro nearly
-all the time on my laptop, only mounting rw if I need to install
-software that puts files outside /usr or if I need to modify a config
-file in /etc.
 
--jasper
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Wed Aug  6 14:44:59 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-mm
+Inspected by:  
+hch
+lachlan
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31825a
+fs/xfs/xfs_vnodeops.c - 1.772 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.772&r2=text&tr2=1.771&f=h
+fs/xfs/xfs_inode.c - 1.517 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.517&r2=text&tr2=1.516&f=h
+fs/xfs/xfs_inode.h - 1.256 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.256&r2=text&tr2=1.255&f=h
+fs/xfs/linux-2.6/xfs_iops.c - 1.297 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.297&r2=text&tr2=1.296&f=h
+	- update timestamp in xfs_ialloc manually
