@@ -1,74 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 17:52:51 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m760qiAZ032043
-	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 17:52:45 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A935D198F977
-	for <xfs@oss.sgi.com>; Tue,  5 Aug 2008 17:53:57 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id LCSDpqHvoprOn7t0 for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 17:53:57 -0700 (PDT)
-Date: Wed, 6 Aug 2008 10:53:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS noikeep remount in 2.6.27-rc1-next-20080730
-Message-ID: <20080806005354.GL21635@disturbed>
-References: <1217553598.3860.16.camel@luna.unix.geek.nz> <20080801073033.GF6201@disturbed> <20080801193133.GA838@lst.de> <20080805110357.GL21873@nb.net.home> <20080805233956.GI21635@disturbed> <1217979862.2887.39.camel@luna.unix.geek.nz>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 19:01:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m76214T1003680
+	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 19:01:06 -0700
+Received: from dolby.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 153163621D1
+	for <xfs@oss.sgi.com>; Tue,  5 Aug 2008 19:02:18 -0700 (PDT)
+Received: from dolby.com (silver.dolby.com [12.144.165.24]) by cuda.sgi.com with ESMTP id 2z6Hie4Q64teM2PO for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 19:02:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: xfs_force_shutdown - file fs/xfs/xfs_rw.c
+Date: Tue, 5 Aug 2008 19:02:05 -0700
+Message-ID: <05BB196AB3DA6C4BBE11AB6C957581FE0E61DA47@sfo-exch-01.dolby.net>
+From: "Martinez, Sergio" <sergio.martinez@dolby.com>
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <1217979862.2887.39.camel@luna.unix.geek.nz>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jasper Bryant-Greene <jasper@amiton.co.nz>
-Cc: Karel Zak <kzak@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, util-linux-ng@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Wed, Aug 06, 2008 at 11:44:22AM +1200, Jasper Bryant-Greene wrote:
-> On Wed, 2008-08-06 at 09:39 +1000, Dave Chinner wrote:
-> > We're seeing the second case where mount is merging all the options in
-> > /etc/fstab into the options passed into the remount command. How is
-> > the filesystem expected to behave in these difference cases? The
-> > first simply changes the ro/rw status, the second potentially
-> > asks for the filesystem to change a bunch of other mount options
-> > as well, which it may not be able to do.
-> > 
-> > So what is the correct behaviour? Should the filesystem *silently
-> > ignore* unchangable options in the remount command, or should it
-> > fail the remount and warn the user that certain options are not
-> > allowed in remount?
-> 
-> (forgive me, I'm an XFS user, not an XFS developer, so this might be
-> ignorant)
-> 
-> The filesystem presumably knows what options it was originally mounted
-> with.
-> 
-> Thus if you take the difference of the set of options you were mounted
-> with, and the set of options you are now being asked to remount with,
-> you have the options which are being asked to change.
 
-Sure. But that does not answer my question about what to do with
-options that can't be changed. Options can come from more than just
-/etc/fstab - they can come from the mount command line itself as
-entered by the admin. What do we do if an option is specified that
-we do not support in a remount?
+I'm running into a force shutdown issue on a system running
+linux-2.6.25.  The xfs partition is 2 GB and we're using a hardware
+RAID-5 for storage.
 
-The problem is the way mount combines command line options with
-options in fstab. I'm not questioning what you did - I'm asking what
-the expected behaviour is supposed to be so we can make it behave
-the same way as all the other filesystems.
+dmesg shows this error:
 
-> If changing any of them is unsupported I would expect an error, but in
-> this case the result of taking the above set difference would be merely
-> replacing ro with rw, and thus the filesystem is presumably capable of
-> doing the remount.
+xfs_force_shutdown(sda2,0x1) called from line 420 of file
+fs/xfs/xfs_rw.c.  Return address = 0xc02ddebc
 
-Use the full device/directory syntax for the remount command and it
-will do just that. The command you issued was not a "pure" remount,rw,
-it was silently changed by mount....
+An XFS_bwrite() calls is failing.
 
-Cheers,
+Any suggestions on how to debug this?  I'm suspecting that there's a
+problem with the RAID controller firmware, but I'd like to eliminate the
+possibility of a file system bug.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Sergio
+
+
+
+
+
+-----------------------------------------
+This message (including any attachments) may contain confidential
+information intended for a specific individual and purpose.  If you
+are not the intended recipient, delete this message.  If you are
+not the intended recipient, disclosing, copying, distributing, or
+taking any action based on this message is strictly prohibited.
+
+[[HTML alternate version deleted]]
