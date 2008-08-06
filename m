@@ -1,33 +1,167 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Aug 2008 01:50:15 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m768oAll008900
-	for <xfs@oss.sgi.com>; Wed, 6 Aug 2008 01:50:11 -0700
-Subject: TAKE 981498 - Make xfs_bmap_*_count_leaves void.
-Message-Id: <20080806085121.E146D3D2B6DB@chapter11.melbourne.sgi.com>
-Date: Wed,  6 Aug 2008 18:51:21 +1000 (EST)
-From: donaldd@sgi.com (Donald Douwsma)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 06 Aug 2008 02:37:38 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m769bZ4k009502
+	for <xfs@oss.sgi.com>; Wed, 6 Aug 2008 02:37:35 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6555B363505
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2008 02:38:48 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id GXOm9dUEhU25NVpI for <xfs@oss.sgi.com>; Wed, 06 Aug 2008 02:38:48 -0700 (PDT)
+Date: Wed, 6 Aug 2008 19:38:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Move vn_iowait() earlier in the reclaim path
+Message-ID: <20080806093844.GZ6119@disturbed>
+References: <4897F691.6010806@sgi.com> <20080805073711.GA21635@disturbed> <489806C2.7020200@sgi.com> <20080805084220.GF21635@disturbed> <48990C4E.9070102@sgi.com> <20080806052053.GU6119@disturbed> <4899406D.5020802@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4899406D.5020802@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
 
-Make xfs_bmap_*_count_leaves void.
+On Wed, Aug 06, 2008 at 04:10:53PM +1000, Lachlan McIlroy wrote:
+> Dave Chinner wrote:
+>> On Wed, Aug 06, 2008 at 12:28:30PM +1000, Lachlan McIlroy wrote:
+>>> Dave Chinner wrote:
+>>>> On Tue, Aug 05, 2008 at 05:52:34PM +1000, Lachlan McIlroy wrote:
+>>>>> Dave Chinner wrote:
+>>>>>> On Tue, Aug 05, 2008 at 04:43:29PM +1000, Lachlan McIlroy wrote:
+>>>>>>> Currently by the time we get to vn_iowait() in xfs_reclaim() we have already
+>>>>>>> gone through xfs_inactive()/xfs_free() and recycled the inode.  Any I/O
+>>>>>> xfs_free()? What's that?
+>>>>> Sorry that should have been xfs_ifree() (we set the inode's mode to
+>>>>> zero in there).
+>>>>>
+>>>>>>> completions still running (file size updates and unwritten extent conversions)
+>>>>>>> may be working on an inode that is no longer valid.
+>>>>>> The linux inode does not get freed until after ->clear_inode
+>>>>>> completes, hence it is perfectly valid to reference it anywhere
+>>>>>> in the ->clear_inode path.
+>>>>> The problem I see is an assert in xfs_setfilesize() fail:
+>>>>>
+>>>>> 	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFREG);
+>>>>>
+>>>>> The mode of the XFS inode is zero at this time.
+>>>> Ok, so the question has to be why is there I/O still in progress
+>>>> after the truncate is supposed to have already occurred and the
+>>>> vn_iowait() in xfs_itruncate_start() been executed.
+>>>>
+>>>> Something doesn't add up here - you can't be doing I/O on a file
+>>>> with no extents or delalloc blocks, hence that means we should be
+>>>> passing through the truncate path in xfs_inactive() before we
+>>>> call xfs_ifree() and therefore doing the vn_iowait()..
+>>>>
+>>>> Hmmmm - the vn_iowait() is conditional based on:
+>>>>
+>>>>         /* wait for the completion of any pending DIOs */
+>>>>         if (new_size < ip->i_size)
+>>>>                 vn_iowait(ip);
+>>>>
+>>>> We are truncating to zero (new_size == 0), so the only case where
+>>>> this would not wait is if ip->i_size == 0. Still - I can't see
+>>>> how we'd be doing I/O on an inode with a zero i_size. I suspect
+>>>> ensuring we call vn_iowait() if newsize == 0 as well would fix
+>>>> the problem. If not, there's something much more subtle going
+>>>> on here that we should understand....
+>>> If we make the vn_iowait() unconditional we might re-introduce the
+>>> NFS exclusivity bug that killed performance.  That was through
+>>> xfs_release()->xfs_free_eofblocks()->xfs_itruncate_start().
+>>
+>> It won't reintroduce that problem because ->clear_inode()
+>> is not called on every NFS write operation.
+> Yes but xfs_itruncate_start() can be called from every NFS write so
+> modifying the above code will re-introduce the problem.
 
-xfs_bmap_count_leaves and xfs_bmap_disk_count_leaves always
-return always 0, make them void. 
+Ah, no. The case here is new_size == 0, which will almost never be
+the case in the ->release call...
 
-Signed-off-by: Ruben Porras <ruben.porras@linworks.de>
+>
+>>
+>>> So if we leave the above code as is then we need another
+>>> vn_iowait() in xfs_inactive() to catch any remaining workqueue
+>>> items that we didn't wait for in xfs_itruncate_start().
+>>
+>> How do we have any new *data* I/O at all in progress at this point?
+> It's not new data I/O.
 
-Date:  Wed Aug  6 18:50:30 AEST 2008
-Workarea:  chapter11.melbourne.sgi.com:/scratch/donaldd/isms/2.6.x-xfs
-Inspected by:  ruben.porras@linworks.de
+Then why isn't is being caught by the vn_iowait() in the truncate
+code?????
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+>  It's workqueue items that have been queued
+> from previous I/Os that are still outstanding.
 
+The iocount is decremented when the completion is finished, not when it
+is queued. Hence vn_iowait() should be taking into account this case.
 
-Modid:  xfs-linux-melb:xfs-kern:31844a
-fs/xfs/xfs_bmap.c - 1.401 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.401&r2=text&tr2=1.400&f=h
-	- Make xfs_bmap_*_count_leaves void.
+>> That does not explain why we need an additional vn_iowait() call.
+>> All I see from this is a truncate race that has somethign to do with
+>> the vn_iowait() call being conditional.
+>>
+>> That is, if we truncate to zero, then the current code in
+>> xfs_itruncate_start() should wait unconditinally for *all* I/O to
+>> complete because, by definition, all that I/O is beyond the new EOF
+>> and we have to wait for it to complete before truncating the file.
+> That makes sense.  If new_size is zero and ip->i_size is not then we
+> will wait.  If ip->i_size is also zero we will not wait but if the
+> file size is already zero there should not be any I/Os in progress
+> and therefore no workqueue items outstanding.
+
+I note from the debug below that the linux inode size is zero,
+but you didn't include the dump of the xfs inode so we can't see
+what the other variables are.
+
+Also, i_size is updated after write I/O is dispatched. If we are
+doing synchronous I/O, then i_size is not updated until after the
+I/O completes (in xfs_write()). Hence we could have the situation of
+I/O being run while i_size = 0. This is why I wanted to know what
+i_new_size is, because that gets set before the I/O is issued.
+
+if i_new_size is non-zero and i_size is zero,that tends to imply
+the conditional vn_iowait() in the truncate path needs to take
+MAX(ip->i_size, ip->i_new_size) for the check, not just ip->i_size...
+
+FWIW, from the dump below, we have:
+
+typedef struct xfs_ioend {
+        struct xfs_ioend        *io_list = NULL
+        unsigned int            io_type = 0x20 = IOMAP_UNWRITTEN
+        int                     io_error = 0
+        atomic_t                io_remaining = 0;
+        struct inode            *io_inode = 0xffff810054062048
+        struct buffer_head      *io_buffer_head = NULL
+        struct buffer_head      *io_buffer_tail = NULL
+        size_t                  io_size = 0x3400
+        xfs_off_t               io_offset = 0xfe200
+        struct work_struct      io_work;        /* xfsdatad work queue */
+} xfs_ioend_t;
+
+So the I/O was not even close to offset zero.
+
+Also, the fact that the stack trace says it came through the
+written path, but the io_type says unwritten which says that there's
+something fishy here.  Either the stack trace is wrong, or there's
+been a memory corruption....
+
+>> If either the vn_iowait() in the truncate path is not sufficient, or
+>> the truncate code is not being called, there is *some other bug*
+>> that we don't yet understand.  Adding an unconditional vn_iowait()
+>> appear to me to be fixing a symptom, not the underlying cause of
+>> the problem....
+>
+> I'm not adding a new call to vn_iowait().  I'm just moving the
+> existing one from xfs_ireclaim() so that we wait for all I/O to
+> complete before we tear the inode down.
+
+Yes, but that is there to catch inodes with non-zero link counts because
+we are not doing a truncate in that case. We still need to get to the
+bottom of why the truncate is not waiting for all I/O.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
