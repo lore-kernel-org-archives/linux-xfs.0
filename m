@@ -1,76 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:51:50 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m764pdlM023520
-	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:51:41 -0700
-Received: from wr-out-0506.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C8BDF06DC4
-	for <xfs@oss.sgi.com>; Tue,  5 Aug 2008 21:52:51 -0700 (PDT)
-Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.230]) by cuda.sgi.com with ESMTP id oxDAuK1IIEXj7dIP for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 21:52:51 -0700 (PDT)
-Received: by wr-out-0506.google.com with SMTP id 57so2248136wri.12
-        for <xfs@oss.sgi.com>; Tue, 05 Aug 2008 21:52:51 -0700 (PDT)
-Message-ID: <cc7060690808052152j6ec3d411g7bfbc7bb1a1a770c@mail.gmail.com>
-Date: Wed, 6 Aug 2008 10:22:49 +0530
-From: "Bhagi rathi" <jahnu77@gmail.com>
-Subject: Re: xfs_force_shutdown - file fs/xfs/xfs_rw.c
-In-Reply-To: <05BB196AB3DA6C4BBE11AB6C957581FE0E61DA47@sfo-exch-01.dolby.net>
-MIME-Version: 1.0
-References: <05BB196AB3DA6C4BBE11AB6C957581FE0E61DA47@sfo-exch-01.dolby.net>
-Content-Type: text/plain
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 05 Aug 2008 21:55:57 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m764th2a024217
+	for <xfs@oss.sgi.com>; Tue, 5 Aug 2008 21:55:45 -0700
+Subject: TAKE 981498 - stop using file_update_time
+Message-Id: <20080806045655.3489958C52A4@chook.melbourne.sgi.com>
+Date: Wed,  6 Aug 2008 14:56:55 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "Martinez, Sergio" <sergio.martinez@dolby.com>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-You can just run without raid controller and rule out XFS  issue.
+stop using file_update_time
 
-If the file-system meta-data/log-flush update meets an error, the
-file-system will
-be marked for shutdown. The reason for this seems to be xfs_bwrite failure.
-Investigate on xfs_bwrite failure.
-
--Bhagi.
-
-On Wed, Aug 6, 2008 at 7:32 AM, Martinez, Sergio
-<sergio.martinez@dolby.com>wrote:
-
->
-> I'm running into a force shutdown issue on a system running
-> linux-2.6.25.  The xfs partition is 2 GB and we're using a hardware
-> RAID-5 for storage.
->
-> dmesg shows this error:
->
-> xfs_force_shutdown(sda2,0x1) called from line 420 of file
-> fs/xfs/xfs_rw.c.  Return address = 0xc02ddebc
->
-> An XFS_bwrite() calls is failing.
->
-> Any suggestions on how to debug this?  I'm suspecting that there's a
-> problem with the RAID controller firmware, but I'd like to eliminate the
-> possibility of a file system bug.
->
-> Thanks,
-> Sergio
->
->
->
->
->
-> -----------------------------------------
-> This message (including any attachments) may contain confidential
-> information intended for a specific individual and purpose.  If you
-> are not the intended recipient, delete this message.  If you are
-> not the intended recipient, disclosing, copying, distributing, or
-> taking any action based on this message is strictly prohibited.
->
-> [[HTML alternate version deleted]]
->
->
->
+xfs_ichtime updates the xfs_inode and Linux inode timestamps just fine,
+no need to call file_update_time and then copy the values over to the
+XFS inode.  The only additional thing in file_update_time are checks
+not applicable to the write path.
 
 
-[[HTML alternate version deleted]]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Wed Aug  6 14:56:16 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-mm
+Inspected by:  
+hch
+lachlan
+david@fromorbit.com
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:31829a
+fs/xfs/linux-2.6/xfs_lrw.c - 1.282 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.282&r2=text&tr2=1.281&f=h
+fs/xfs/linux-2.6/xfs_iops.c - 1.299 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.299&r2=text&tr2=1.298&f=h
+fs/xfs/linux-2.6/xfs_iops.h - 1.37 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.h.diff?r1=text&tr1=1.37&r2=text&tr2=1.36&f=h
+fs/xfs/linux-2.6/xfs_ksyms.c - 1.89 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.89&r2=text&tr2=1.88&f=h
+	- stop using file_update_time
