@@ -1,78 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Aug 2008 10:17:35 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m77HHWPG017728
-	for <xfs@oss.sgi.com>; Thu, 7 Aug 2008 10:17:33 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Aug 2008 10:22:45 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m77HMhGj018461
+	for <xfs@oss.sgi.com>; Thu, 7 Aug 2008 10:22:43 -0700
 Received: from wr-out-0506.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5209C124CA89
-	for <xfs@oss.sgi.com>; Thu,  7 Aug 2008 10:18:47 -0700 (PDT)
-Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.230]) by cuda.sgi.com with ESMTP id b4dkVsMXfVTi3BhD for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:18:47 -0700 (PDT)
-Received: by wr-out-0506.google.com with SMTP id 57so438565wri.12
-        for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:18:47 -0700 (PDT)
-Message-ID: <cc7060690808071018n3a264ca3ld1368d27b5b2f59b@mail.gmail.com>
-Date: Thu, 7 Aug 2008 22:48:46 +0530
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39D6E373493
+	for <xfs@oss.sgi.com>; Thu,  7 Aug 2008 10:23:56 -0700 (PDT)
+Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.229]) by cuda.sgi.com with ESMTP id FFYvfDrtrxYhcHMG for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:23:56 -0700 (PDT)
+Received: by wr-out-0506.google.com with SMTP id 57so440709wri.12
+        for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:23:56 -0700 (PDT)
+Message-ID: <cc7060690808071023r6b29d6c0k9240eb677e78524e@mail.gmail.com>
+Date: Thu, 7 Aug 2008 22:53:55 +0530
 From: "Bhagi rathi" <jahnu77@gmail.com>
 Subject: Re: TAKE 981498 - use KM_MAYFAIL in xfs_mountfs
-In-Reply-To: <489A01B0.5050606@sandeen.net>
+In-Reply-To: <20080806202256.GR21635@disturbed>
 MIME-Version: 1.0
 References: <20080806054121.CB2F258C52A4@chook.melbourne.sgi.com>
 	 <cc7060690808061022i1dce01dfx9e43ad3a75e5c936@mail.gmail.com>
-	 <489A01B0.5050606@sandeen.net>
+	 <489A01B0.5050606@sandeen.net> <20080806202256.GR21635@disturbed>
 Content-Type: text/plain
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Bhagi rathi <jahnu77@gmail.com>, Lachlan McIlroy <lachlan@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Thu, Aug 7, 2008 at 1:25 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+On Thu, Aug 7, 2008 at 1:52 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-> Bhagi rathi wrote:
-> > Why are we going to block for ever? Mounting a file-system
-> > requires in-core log space buffers, reading of other buffers
-> > which needs allocation of memory greater than per ag
-> > structures.
-> >
-> > I am trying to understand why xfs_perag_t? Mount/Unmount
-> > are not frequent activities, it is better for them to succeed
-> > if operating system can allocate memory and take them
-> > forward.
+> On Wed, Aug 06, 2008 at 02:55:28PM -0500, Eric Sandeen wrote:
+> > Bhagi rathi wrote:
+> > > Why are we going to block for ever? Mounting a file-system
+> > > requires in-core log space buffers, reading of other buffers
+> > > which needs allocation of memory greater than per ag
+> > > structures.
+> .....
+> > In general KM_MAYFAIL sounds like a good plan when you can handle the
+> > failure gracefully, I think.
 >
-> But that's the big if, right?
->
-> If the system is so starved that you can't get this memory to even start
-> the mount process, I'm sure it's better to fail the mount with -ENOMEM
-> than to add to the current system memory stress.
+> Yes, and that is the long term plan - to remove all KM_SLEEP
+> allocations from XFS and allow them to fail gracefully. There's
+> lots of work needed before we get there, though. e.g.
+> right now we cannot survive an ENOMEM error in a transaction....
 
 
- Not really. It is going to fail many automated scripts.  We are designing
- for a problem that system  is starved with memory. It points to a bug
- in memory & system dirty state cleaning, they are the ideal problems
- to be solved this instead of this.  As long as system recovers, it is  good
- not to disturb automated scripts by introducing these kind of  unnecessary
- failures of the mount command.
+ I am not sure that we are solving right problem. Isn't the above is
+fall-out
+ of XFS needing memory to clean dirty memory? That is of good priority
+ to engineer than this handling of ENOMEM in transactions.
 
-
-
->
->
-> In general KM_MAYFAIL sounds like a good plan when you can handle the
-> failure gracefully, I think.
-
-
- Not really. It fails mount gracefully, however, it needs administrative
-action.
- It is expected that operating system will recover and functional without
- admin intervention.
 
 Cheers,
 Bhagi.
 
+
 >
 >
-> -Eric
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 >
 
 
