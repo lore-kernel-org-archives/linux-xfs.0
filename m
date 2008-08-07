@@ -1,60 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Aug 2008 10:22:45 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m77HMhGj018461
-	for <xfs@oss.sgi.com>; Thu, 7 Aug 2008 10:22:43 -0700
-Received: from wr-out-0506.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39D6E373493
-	for <xfs@oss.sgi.com>; Thu,  7 Aug 2008 10:23:56 -0700 (PDT)
-Received: from wr-out-0506.google.com (wr-out-0506.google.com [64.233.184.229]) by cuda.sgi.com with ESMTP id FFYvfDrtrxYhcHMG for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:23:56 -0700 (PDT)
-Received: by wr-out-0506.google.com with SMTP id 57so440709wri.12
-        for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:23:56 -0700 (PDT)
-Message-ID: <cc7060690808071023r6b29d6c0k9240eb677e78524e@mail.gmail.com>
-Date: Thu, 7 Aug 2008 22:53:55 +0530
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 07 Aug 2008 10:42:49 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m77HgkM0020196
+	for <xfs@oss.sgi.com>; Thu, 7 Aug 2008 10:42:47 -0700
+Received: from wf-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D84CE124C9CF
+	for <xfs@oss.sgi.com>; Thu,  7 Aug 2008 10:44:00 -0700 (PDT)
+Received: from wf-out-1314.google.com (wf-out-1314.google.com [209.85.200.173]) by cuda.sgi.com with ESMTP id d8cXTcvhG1L73thw for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:44:00 -0700 (PDT)
+Received: by wf-out-1314.google.com with SMTP id 26so480661wfd.32
+        for <xfs@oss.sgi.com>; Thu, 07 Aug 2008 10:44:00 -0700 (PDT)
+Message-ID: <cc7060690808071043r659aea9fn4e28959b3a62081e@mail.gmail.com>
+Date: Thu, 7 Aug 2008 23:13:59 +0530
 From: "Bhagi rathi" <jahnu77@gmail.com>
-Subject: Re: TAKE 981498 - use KM_MAYFAIL in xfs_mountfs
-In-Reply-To: <20080806202256.GR21635@disturbed>
+Subject: Re: TAKE 981498 - Use KM_NOFS for debug trace buffers
+In-Reply-To: <20080806201957.GQ21635@disturbed>
 MIME-Version: 1.0
-References: <20080806054121.CB2F258C52A4@chook.melbourne.sgi.com>
-	 <cc7060690808061022i1dce01dfx9e43ad3a75e5c936@mail.gmail.com>
-	 <489A01B0.5050606@sandeen.net> <20080806202256.GR21635@disturbed>
+References: <20080806061553.A8D8958C52A4@chook.melbourne.sgi.com>
+	 <cc7060690808061012x43511581m15c794e72129becc@mail.gmail.com>
+	 <20080806201957.GQ21635@disturbed>
 Content-Type: text/plain
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Bhagi rathi <jahnu77@gmail.com>, Lachlan McIlroy <lachlan@sgi.com>, sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Bhagi rathi <jahnu77@gmail.com>, Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Aug 7, 2008 at 1:52 AM, Dave Chinner <david@fromorbit.com> wrote:
+On Thu, Aug 7, 2008 at 1:49 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-> On Wed, Aug 06, 2008 at 02:55:28PM -0500, Eric Sandeen wrote:
-> > Bhagi rathi wrote:
-> > > Why are we going to block for ever? Mounting a file-system
-> > > requires in-core log space buffers, reading of other buffers
-> > > which needs allocation of memory greater than per ag
-> > > structures.
-> .....
-> > In general KM_MAYFAIL sounds like a good plan when you can handle the
-> > failure gracefully, I think.
+> On Wed, Aug 06, 2008 at 10:42:15PM +0530, Bhagi rathi wrote:
+> > I couldn't get a chance to read the diff's completely. If I click on
+> > Lachlan's url for diff's, I couldn't access them. It looks to me that
+> > the issue is not just with trace buffers. It can extend to xfs_iformat
+> > as well. The same dead-lock can spring via
+> >
+> > xfs_iread -> xfs_iformat -> xfs_iformat_extents -> xfs_iext_add ->
+> > xfs_iext_inline_to_direct -> which can do kmem_alloc with
+> > KM_SLEEP flag.
 >
-> Yes, and that is the long term plan - to remove all KM_SLEEP
-> allocations from XFS and allow them to fail gracefully. There's
-> lots of work needed before we get there, though. e.g.
-> right now we cannot survive an ENOMEM error in a transaction....
-
-
- I am not sure that we are solving right problem. Isn't the above is
-fall-out
- of XFS needing memory to clean dirty memory? That is of good priority
- to engineer than this handling of ENOMEM in transactions.
-
-
-Cheers,
-Bhagi.
-
-
+> Fixed already:
 >
+>
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git;a=commit;h=8c6266658cb76e282c14cb92f8ba5a1c674f4928
+>
+
+ Thanks Dave. However, My concern is just not one allocation. We
+ need to clean all allocations that can re-enter to file-system.
+ I see that this issue exists in attributes format for i_afp allocations.
+ It may exist with local format of data and attributes too.
+
+ xfs_iread->xfs_iformat->xfs_iformat_local.
+
+ Are we safe that we fixed all these real problems by looking
+ into possible allocations that will enter into file-system? The
+ problem with trace buffers is telling us to clean this code path.
+
+ By the way, I browse the source code from lxr.linux.no.
+ If I have to browse the latest xfs source code with linux
+ kernel that is used at SGI, how can I do that?
+
+ Cheers,
+ Bhagi.
+
 >
 > Cheers,
 >
