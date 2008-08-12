@@ -1,44 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Aug 2008 20:34:24 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7C3YBkh014712
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 20:34:11 -0700
-Received: from ishtar.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E03B7F2E40A
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 20:35:10 -0700 (PDT)
-Received: from ishtar.tlinx.org (ishtar.tlinx.org [64.81.245.74]) by cuda.sgi.com with ESMTP id gq7X60tq8Ahz2nH2 for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 20:35:10 -0700 (PDT)
-Message-ID: <48A104EB.6040509@tlinx.org>
-Date: Mon, 11 Aug 2008 20:35:07 -0700
-From: Linda Walsh <lkml@tlinx.org>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Aug 2008 21:29:14 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7C4SfhN017801
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 21:28:42 -0700
+Message-ID: <48A1134B.9010606@sgi.com>
+Date: Tue, 12 Aug 2008 14:36:27 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: Lock debugging noise or real problem?
-References: <48A093A7.40606@tlinx.org> <48A09CA9.9080705@sandeen.net> <48A0F686.2090700@tlinx.org> <48A0F9FC.1070805@sandeen.net>
-In-Reply-To: <48A0F9FC.1070805@sandeen.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: Ooops in Kernel 2.6.26.2
+References: <20080808180938.GA3760@diesel.geggus.net> <489FECCD.6050703@sgi.com> <489FF0EE.5040607@sgi.com> <20080812015508.GM6119@disturbed>
+In-Reply-To: <20080812015508.GM6119@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>, Sven Geggus <lists@fuchsschwanzdomain.de>, xfs@oss.sgi.com
 
-Eric Sandeen wrote:
-> I haven't looked closely at #2 but there have been so many lockdep
-> reports for xfs, and so many explanations of why they don't always get
-> along, you'll probably be able to find something with some searching.
->   
-----
+Dave Chinner wrote:
+> On Mon, Aug 11, 2008 at 05:57:34PM +1000, Lachlan McIlroy wrote:
+>> The ticket allocation code got reworked in 2.6.26 and we now free
+>> tickets whereas before we used to cache them so the use-after-free
+>> went undetected.
+>>
+>> This patch should do the trick.
+>>
+>> --- a/fs/xfs/xfs_log.c	2008-08-11 17:47:18.000000000 +1000
+>> +++ b/fs/xfs/xfs_log.c	2008-08-11 17:53:24.000000000 +1000
+>> @@ -336,15 +364,12 @@ xfs_log_done(xfs_mount_t	*mp,
+>> 	} else {
+>> 		xlog_trace_loggrant(log, ticket, "xfs_log_done: (permanent)");
+>> 		xlog_regrant_reserve_log_space(log, ticket);
+>> -	}
+>> -
+>> -	/* If this ticket was a permanent reservation and we aren't
+>> -	 * trying to release it, reset the inited flags; so next time
+>> -	 * we write, a start record will be written out.
+>> -	 */
+>> -	if ((ticket->t_flags & XLOG_TIC_PERM_RESERV) &&
+>> -	    (flags & XFS_LOG_REL_PERM_RESERV) == 0)
+>> +		/* If this ticket was a permanent reservation and we aren't
+>> +		 * trying to release it, reset the inited flags; so next time
+>> +		 * we write, a start record will be written out.
+>> +		 */
+>> 		ticket->t_flags |= XLOG_TIC_INITED;
+>> +	}
+>>
+>> 	return lsn;
+>> }	/* xfs_log_done */
+> 
+> Looks sane, Lachlan. Good catch, though it makes me wonder how we
+> didn't hit it in debug builds with memory poisoning turned on.
+> Compiler optimisation, perhaps?
 
-      So in debugging mysterious 'lockups' where I've, at least once, 
-noticed a
-hangcheck_timer elapse, this lock-checking stuff is just nonsensical?  
-It is very
-frustrating trying to turn on debug tools in the kernel and get so many 
-false positives.
+Memory poisoning will only trigger a panic if we use the contents
+of the freed structure as an address and dereference it.  For the
+code above the compiler will take the contents of 'ticket' (which
+is still an address) and add the offset of t_flags and then modify
+the contents at that address (ie modify the poison pattern).
 
-Would it be possible or, perhaps, desirable to eliminate the buggy 
-lock-checks in the
-xfs code?
-
-Meanwhile...back to finding reasons for the semi-random, periodic hanging...
-;^/
+I think this panic was caused by the page that contained the freed
+ticket being unmapped from the kernel - that just comes down to
+getting the timing right.
