@@ -1,65 +1,201 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Aug 2008 18:54:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7C1rsvl003089
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:53:56 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Aug 2008 18:57:13 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7C1v9xW003580
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:57:10 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 042A0384054
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:55:11 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 0p8jNVL6RBMr7oBf for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:55:11 -0700 (PDT)
-Date: Tue, 12 Aug 2008 11:55:08 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68B06F2D103
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:58:22 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id uGHQ12B3w2iJxLnI for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 18:58:22 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Ooops in Kernel 2.6.26.2
-Message-ID: <20080812015508.GM6119@disturbed>
-References: <20080808180938.GA3760@diesel.geggus.net> <489FECCD.6050703@sgi.com> <489FF0EE.5040607@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <489FF0EE.5040607@sgi.com>
+Subject: [PATCH 5/6] XFS: Traverse inode trees when releasing dquots V2
+Date: Tue, 12 Aug 2008 11:46:10 +1000
+Message-Id: <1218505571-27588-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1218505571-27588-1-git-send-email-david@fromorbit.com>
+References: <1218505571-27588-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: Sven Geggus <lists@fuchsschwanzdomain.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Mon, Aug 11, 2008 at 05:57:34PM +1000, Lachlan McIlroy wrote:
-> The ticket allocation code got reworked in 2.6.26 and we now free
-> tickets whereas before we used to cache them so the use-after-free
-> went undetected.
->
-> This patch should do the trick.
->
-> --- a/fs/xfs/xfs_log.c	2008-08-11 17:47:18.000000000 +1000
-> +++ b/fs/xfs/xfs_log.c	2008-08-11 17:53:24.000000000 +1000
-> @@ -336,15 +364,12 @@ xfs_log_done(xfs_mount_t	*mp,
-> 	} else {
-> 		xlog_trace_loggrant(log, ticket, "xfs_log_done: (permanent)");
-> 		xlog_regrant_reserve_log_space(log, ticket);
-> -	}
-> -
-> -	/* If this ticket was a permanent reservation and we aren't
-> -	 * trying to release it, reset the inited flags; so next time
-> -	 * we write, a start record will be written out.
-> -	 */
-> -	if ((ticket->t_flags & XLOG_TIC_PERM_RESERV) &&
-> -	    (flags & XFS_LOG_REL_PERM_RESERV) == 0)
-> +		/* If this ticket was a permanent reservation and we aren't
-> +		 * trying to release it, reset the inited flags; so next time
-> +		 * we write, a start record will be written out.
-> +		 */
-> 		ticket->t_flags |= XLOG_TIC_INITED;
-> +	}
->
-> 	return lsn;
-> }	/* xfs_log_done */
+Make releasing all inode dquots traverse the per-ag
+inode radix trees rather than the mount inode list.
+This removes another user of the mount inode list.
 
-Looks sane, Lachlan. Good catch, though it makes me wonder how we
-didn't hit it in debug builds with memory poisoning turned on.
-Compiler optimisation, perhaps?
+Version 2
+o add comment explaining use of gang lookups for a single inode
+o use IRELE, not VN_RELE
+o move check for ag initialisation to caller.
 
-Cheers,
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/quota/xfs_qm_syscalls.c |  125 ++++++++++++++++++---------------------
+ 1 files changed, 58 insertions(+), 67 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index 1a3b803..d292e55 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -1022,101 +1022,92 @@ xfs_qm_export_flags(
+ 
+ 
+ /*
+- * Go thru all the inodes in the file system, releasing their dquots.
+- * Note that the mount structure gets modified to indicate that quotas are off
+- * AFTER this, in the case of quotaoff. This also gets called from
+- * xfs_rootumount.
++ * Release all the dquots on the inodes in an AG.
+  */
+-void
+-xfs_qm_dqrele_all_inodes(
+-	struct xfs_mount *mp,
+-	uint		 flags)
++STATIC void
++xfs_qm_dqrele_inodes_ag(
++	xfs_mount_t	*mp,
++	int		ag,
++	uint		flags)
+ {
+-	xfs_inode_t	*ip, *topino;
+-	uint		ireclaims;
+-	struct inode	*vp;
+-	boolean_t	vnode_refd;
++	xfs_inode_t	*ip = NULL;
++	struct inode	*vp = NULL;
++	xfs_perag_t	*pag = &mp->m_perag[ag];
++	int		first_index = 0;
++	int		nr_found;
+ 
+-	ASSERT(mp->m_quotainfo);
+-
+-	XFS_MOUNT_ILOCK(mp);
+-again:
+-	ip = mp->m_inodes;
+-	if (ip == NULL) {
+-		XFS_MOUNT_IUNLOCK(mp);
+-		return;
+-	}
+ 	do {
+-		/* Skip markers inserted by xfs_sync */
+-		if (ip->i_mount == NULL) {
+-			ip = ip->i_mnext;
+-			continue;
++		boolean_t	vnode_refd = B_FALSE;
++
++		/*
++		 * use a gang lookup to find the next inode in the tree
++		 * as the tree is sparse and a gang lookup walks to find
++		 * the number of objects requested.
++		 */
++		read_lock(&pag->pag_ici_lock);
++		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
++				(void**)&ip, first_index, 1);
++
++		if (!nr_found) {
++			read_unlock(&pag->pag_ici_lock);
++			break;
+ 		}
++
++		/* update the index for the next lookup */
++		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++
+ 		/* Root inode, rbmip and rsumip have associated blocks */
+-		if (ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+-			ASSERT(ip->i_udquot == NULL);
+-			ASSERT(ip->i_gdquot == NULL);
+-			ip = ip->i_mnext;
+-			continue;
+-		}
+ 		vp = VFS_I(ip);
+-		if (!vp) {
++		if (!vp || ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+ 			ASSERT(ip->i_udquot == NULL);
+ 			ASSERT(ip->i_gdquot == NULL);
+-			ip = ip->i_mnext;
++			read_unlock(&pag->pag_ici_lock);
+ 			continue;
+ 		}
+-		vnode_refd = B_FALSE;
+ 		if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0) {
+-			ireclaims = mp->m_ireclaims;
+-			topino = mp->m_inodes;
+ 			vp = vn_grab(vp);
++			read_unlock(&pag->pag_ici_lock);
+ 			if (!vp)
+-				goto again;
+-
+-			XFS_MOUNT_IUNLOCK(mp);
+-			/* XXX restart limit ? */
+-			xfs_ilock(ip, XFS_ILOCK_EXCL);
++				continue;
+ 			vnode_refd = B_TRUE;
++			xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		} else {
+-			ireclaims = mp->m_ireclaims;
+-			topino = mp->m_inodes;
+-			XFS_MOUNT_IUNLOCK(mp);
++			read_unlock(&pag->pag_ici_lock);
+ 		}
+-
+-		/*
+-		 * We don't keep the mountlock across the dqrele() call,
+-		 * since it can take a while..
+-		 */
+ 		if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+ 			xfs_qm_dqrele(ip->i_udquot);
+ 			ip->i_udquot = NULL;
+ 		}
+-		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) && ip->i_gdquot) {
++		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) &&
++		    ip->i_gdquot) {
+ 			xfs_qm_dqrele(ip->i_gdquot);
+ 			ip->i_gdquot = NULL;
+ 		}
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		/*
+-		 * Wait until we've dropped the ilock and mountlock to
+-		 * do the vn_rele. Or be condemned to an eternity in the
+-		 * inactive code in hell.
+-		 */
+ 		if (vnode_refd)
+ 			IRELE(ip);
+-		XFS_MOUNT_ILOCK(mp);
+-		/*
+-		 * If an inode was inserted or removed, we gotta
+-		 * start over again.
+-		 */
+-		if (topino != mp->m_inodes || mp->m_ireclaims != ireclaims) {
+-			/* XXX use a sentinel */
+-			goto again;
+-		}
+-		ip = ip->i_mnext;
+-	} while (ip != mp->m_inodes);
++	} while (nr_found);
++}
+ 
+-	XFS_MOUNT_IUNLOCK(mp);
++/*
++ * Go thru all the inodes in the file system, releasing their dquots.
++ * Note that the mount structure gets modified to indicate that quotas are off
++ * AFTER this, in the case of quotaoff. This also gets called from
++ * xfs_rootumount.
++ */
++void
++xfs_qm_dqrele_all_inodes(
++	struct xfs_mount *mp,
++	uint		 flags)
++{
++	int		i;
++
++	ASSERT(mp->m_quotainfo);
++	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++		if (!mp->m_perag[i].pag_ici_init)
++			continue;
++		xfs_qm_dqrele_inodes_ag(mp, i, flags);
++	}
+ }
+ 
+ /*------------------------------------------------------------------------*/
 -- 
-Dave Chinner
-david@fromorbit.com
+1.5.6
