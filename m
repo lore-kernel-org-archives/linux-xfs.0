@@ -1,65 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 11 Aug 2008 21:29:14 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7C4SfhN017801
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2008 21:28:42 -0700
-Message-ID: <48A1134B.9010606@sgi.com>
-Date: Tue, 12 Aug 2008 14:36:27 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: Ooops in Kernel 2.6.26.2
-References: <20080808180938.GA3760@diesel.geggus.net> <489FECCD.6050703@sgi.com> <489FF0EE.5040607@sgi.com> <20080812015508.GM6119@disturbed>
-In-Reply-To: <20080812015508.GM6119@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 15 Aug 2008 15:00:49 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7FM0jNU021694
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2008 15:00:45 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C1753A0CBB
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2008 15:02:03 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id dDoBReOy1rN8xetm for <xfs@oss.sgi.com>; Fri, 15 Aug 2008 15:02:03 -0700 (PDT)
+Date: Sat, 16 Aug 2008 00:02:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC] btree test harness
+Message-ID: <20080815220203.GA25942@lst.de>
+References: <20080813223022.GA15025@lst.de> <20080814005755.GF6119@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080814005755.GF6119@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, Sven Geggus <lists@fuchsschwanzdomain.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Aug 11, 2008 at 05:57:34PM +1000, Lachlan McIlroy wrote:
->> The ticket allocation code got reworked in 2.6.26 and we now free
->> tickets whereas before we used to cache them so the use-after-free
->> went undetected.
->>
->> This patch should do the trick.
->>
->> --- a/fs/xfs/xfs_log.c	2008-08-11 17:47:18.000000000 +1000
->> +++ b/fs/xfs/xfs_log.c	2008-08-11 17:53:24.000000000 +1000
->> @@ -336,15 +364,12 @@ xfs_log_done(xfs_mount_t	*mp,
->> 	} else {
->> 		xlog_trace_loggrant(log, ticket, "xfs_log_done: (permanent)");
->> 		xlog_regrant_reserve_log_space(log, ticket);
->> -	}
->> -
->> -	/* If this ticket was a permanent reservation and we aren't
->> -	 * trying to release it, reset the inited flags; so next time
->> -	 * we write, a start record will be written out.
->> -	 */
->> -	if ((ticket->t_flags & XLOG_TIC_PERM_RESERV) &&
->> -	    (flags & XFS_LOG_REL_PERM_RESERV) == 0)
->> +		/* If this ticket was a permanent reservation and we aren't
->> +		 * trying to release it, reset the inited flags; so next time
->> +		 * we write, a start record will be written out.
->> +		 */
->> 		ticket->t_flags |= XLOG_TIC_INITED;
->> +	}
->>
->> 	return lsn;
->> }	/* xfs_log_done */
+> > does it's own freelist to avoid having to call in the alloc code
+> > and make it even slower.
 > 
-> Looks sane, Lachlan. Good catch, though it makes me wonder how we
-> didn't hit it in debug builds with memory poisoning turned on.
-> Compiler optimisation, perhaps?
+> I'll have a closer look in a while. It's just a bitmap array, right?
 
-Memory poisoning will only trigger a panic if we use the contents
-of the freed structure as an address and dereference it.  For the
-code above the compiler will take the contents of 'ticket' (which
-is still an address) and add the offset of t_flags and then modify
-the contents at that address (ie modify the poison pattern).
+Yes, it's just a trivial bitmap of all blocks.
 
-I think this panic was caused by the page that contained the freed
-ticket being unmapped from the kernel - that just comes down to
-getting the timing right.
+> > I'd also like some input on how interface to userspace.  Doing it during
+> > mount but conditional would be one option, the other one an ioctl -
+> > in both cases I'd like to be able to specify up to which maxlevel to go
+> > as the tests for higher levels can take forever.
+> 
+> I was thinking of a couple of approaches when I started on this
+> harness:
+> 
+> 	- similar to RCU torture tests, the btree test harness is
+> 	  run on XFS intialisation if config'd in. Requires faking a
+> 	  struct xfs_mount, though, and isn't configurable.
+> 	- ioctl interface to run each test operation individually,
+> 	  and hook that up to an xfsqa test that used a sparse
+> 	  loopback mounted filesytem to exercise AG sizes up to 1TB.
+> 
+> I think the second approach allows us to test btrees on demand on
+> arbitrary disposable filesystems. It would also allow us to easily
+> extend the test harness over time - a new xfsqa test group could be
+> added so that each test can be written as a standalone test so
+> that we can easily isolate regressions.
+
+Faking up the mount doesn't really wrok, we need a _lot_ of fields
+in there, plus a buftarg plus a real xfs_trans and thus the whole log
+subsystem, so we need a real filesystem anyway.  With the way I use a
+separate btree I can just use up the whole filesystem without making
+it sprase.  But yes, splitting things into individual ioctls makes sense
+to make the tests a little more flexible.
