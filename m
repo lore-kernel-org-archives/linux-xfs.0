@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 02:54:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 04:06:49 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I9sUSw018854
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:54:30 -0700
-Received: from nf-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B82D8F62345
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:47 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.189]) by cuda.sgi.com with ESMTP id RR6cG3i3kqaS7fjk for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:47 -0700 (PDT)
-Received: by nf-out-0910.google.com with SMTP id h3so975573nfh.42
-        for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:46 -0700 (PDT)
-Message-ID: <702ec7d40808180255n28683008p68f7c1e9a24173c1@mail.gmail.com>
-Date: Mon, 18 Aug 2008 11:55:46 +0200
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7IB6liI022957
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:06:47 -0700
+Received: from ik-out-1112.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68D90F623C1
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:06 -0700 (PDT)
+Received: from ik-out-1112.google.com (ik-out-1112.google.com [66.249.90.177]) by cuda.sgi.com with ESMTP id x4vIkRzK3l6Fwbv6 for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:06 -0700 (PDT)
+Received: by ik-out-1112.google.com with SMTP id c29so2671621ika.4
+        for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:05 -0700 (PDT)
+Message-ID: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
+Date: Mon, 18 Aug 2008 13:08:05 +0200
 From: daniel <luriad@gmail.com>
-Subject: xfs slow ops
+Subject: xfs _ slow rewrite ?
 MIME-Version: 1.0
 Content-Type: text/plain
 Content-Disposition: inline
