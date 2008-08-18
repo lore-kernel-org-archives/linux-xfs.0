@@ -1,52 +1,149 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 01:13:05 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I8Cmlq013411
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:12:49 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 127303A99A5
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:14:08 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id KHAb3IQT5gJ9VO5d for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:14:08 -0700 (PDT)
-Date: Mon, 18 Aug 2008 18:14:03 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Allocate inode tracing buffers before locking inode
-	cluster
-Message-ID: <20080818081403.GJ19760@disturbed>
-References: <48A92BC6.5020105@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 02:54:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I9sUSw018854
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:54:30 -0700
+Received: from nf-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B82D8F62345
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:47 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.189]) by cuda.sgi.com with ESMTP id RR6cG3i3kqaS7fjk for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:47 -0700 (PDT)
+Received: by nf-out-0910.google.com with SMTP id h3so975573nfh.42
+        for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 02:55:46 -0700 (PDT)
+Message-ID: <702ec7d40808180255n28683008p68f7c1e9a24173c1@mail.gmail.com>
+Date: Mon, 18 Aug 2008 11:55:46 +0200
+From: daniel <luriad@gmail.com>
+Subject: xfs slow ops
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Disposition: inline
-In-Reply-To: <48A92BC6.5020105@sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Aug 18, 2008 at 05:59:02PM +1000, Lachlan McIlroy wrote:
-> Trying to allocate memory while holding the inode cluster locked can cause
-> deadlocks; a thread creating an inode will have the inode cluster locked
-> and is stuck allocating memory, pdflush/kswapd are both trying to push out
-> dirty pages and convert delayed allocations which need space in the log and
-> xfsaild is trying to push on the tail of the log but is stuck trying to
-> acquire the inode cluster lock.
->
-> I tried fixing this with KM_NOFS but turned a two-way deadlock into a
-> three-way deadlock.  This patch moves the allocation of the inode tracing
-> buffers before we lock the inode cluster.  We can also leak memory because
-> we don't free these allocations if we return from this function early so
-> use xfs_idestroy() to fully clean up the inode first.
+I'm working on a new server and test the performance from xfs and ext3 with
+iozone.
 
-Seems sane, but I think it should be wrapped up in the
-xfs_inode_alloc() code added as part of the 'Make use of the
-init-once slab optimisation' patch I posted recently. This
-moves the initialisation of all things inode related into a
-separate function - xfs_inode_alloc() - instead of doing all
-these intialisations around the place....
+iozone -T -t 32 -F /data/iozonefile{0..31} -o -O -i6 -i7 -i0 -i1 -i2 -s512m
+-r16k -+u
 
-Cheers,
+system : SLES 10.2 : 2.6.16.60-0.27-smp #1 SMP on a DELL 2950 : 1 GB RAM:
+raid: raid 10 with 8 disks 15k : 64k chunksize : dell md 1000 : perc 6/e :
+WriteBack, ReadAheadNone, Cached,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+echo "3" >  /proc/sys/vm/drop_caches
+
+why is the xfs read, reread and rewrite so slow ?
+
+1) xfs
+mkfs.xfs -f -L DATA /dev/sdb1
+/dev/sdb1 on /data type xfs (rw,noatime,nodiratime)
+
+        Children see throughput for 32 initial writers  =    5940.92 ops/sec
+        Parent sees throughput for 32 initial writers   =    1244.99 ops/sec
+        Min throughput per thread                       =     127.88 ops/sec
+        Max throughput per thread                       =     742.80 ops/sec
+        Avg throughput per thread                       =     185.65 ops/sec
+        Min xfer                                        =    5641.00 ops
+        CPU Utilization: Wall time  210.499    CPU time 3323.852    CPU
+utilization 1579.03 %
+
+
+        Children see throughput for 32 rewriters        =    2298.54 ops/sec
+        Parent sees throughput for 32 rewriters         =    2293.51 ops/sec
+        Min throughput per thread                       =      66.23 ops/sec
+        Max throughput per thread                       =      79.09 ops/sec
+        Avg throughput per thread                       =      71.83 ops/sec
+        Min xfer                                        =   27439.00 ops
+        CPU utilization: Wall time  415.265    CPU time 1032.129    CPU
+utilization 248.55 %
+
+
+        Children see throughput for 32 readers          =    6923.75 ops/sec
+        Parent sees throughput for 32 readers           =    6920.53 ops/sec
+        Min throughput per thread                       =     211.00 ops/sec
+        Max throughput per thread                       =     226.58 ops/sec
+        Avg throughput per thread                       =     216.37 ops/sec
+        Min xfer                                        =   30525.00 ops
+        CPU utilization: Wall time  144.732    CPU time  389.016    CPU
+utilization 268.78 %
+
+
+        Children see throughput for 32 re-readers       =    6864.93 ops/sec
+        Parent sees throughput for 32 re-readers        =    6861.38 ops/sec
+        Min throughput per thread                       =     209.57 ops/sec
+        Max throughput per thread                       =     220.73 ops/sec
+        Avg throughput per thread                       =     214.53 ops/sec
+        Min xfer                                        =   31133.00 ops
+        CPU utilization: Wall time  148.571    CPU time  400.709    CPU
+utilization 269.71 %
+
+
+        Children see throughput for 32 random readers   =    2335.44 ops/sec
+        Parent sees throughput for 32 random readers    =    2335.30 ops/sec
+        Min throughput per thread                       =      70.48 ops/sec
+        Max throughput per thread                       =      74.36 ops/sec
+        Avg throughput per thread                       =      72.98 ops/sec
+        Min xfer                                        =   31058.00 ops
+        CPU utilization: Wall time  440.693    CPU time  647.208    CPU
+utilization 146.86 %
+
+2) ext3
+mkfs.ext3 /dev/sdb1 -E stride=16
+/dev/sdb1 on /data type ext3 (rw,noatime,nodiratime)
+
+    Children see throughput for 32 initial writers     =    3238.64 ops/sec
+    Parent sees throughput for 32 initial writers     =    3238.20 ops/sec
+    Min throughput per thread             =     101.20 ops/sec
+    Max throughput per thread             =     101.21 ops/sec
+    Avg throughput per thread             =     101.21 ops/sec
+    Min xfer                     =   32763.00 ops
+    CPU Utilization: Wall time  323.791    CPU time  281.362    CPU
+utilization  86.90 %
+
+
+    Children see throughput for 32 rewriters     =   10553.17 ops/sec
+    Parent sees throughput for 32 rewriters     =   10517.38 ops/sec
+    Min throughput per thread             =     307.10 ops/sec
+    Max throughput per thread             =     378.34 ops/sec
+    Avg throughput per thread             =     329.79 ops/sec
+    Min xfer                     =   26628.00 ops
+    CPU utilization: Wall time   87.079    CPU time  966.580    CPU
+utilization 1110.00 %
+
+
+    Children see throughput for 32 readers         =   20602.73 ops/sec
+    Parent sees throughput for 32 readers         =   20579.60 ops/sec
+    Min throughput per thread             =     518.61 ops/sec
+    Max throughput per thread             =     683.18 ops/sec
+    Avg throughput per thread             =     643.84 ops/sec
+    Min xfer                     =   24893.00 ops
+    CPU utilization: Wall time   48.045    CPU time  292.886    CPU
+utilization 609.61 %
+
+
+    Children see throughput for 32 re-readers     =   20938.47 ops/sec
+    Parent sees throughput for 32 re-readers     =   20912.34 ops/sec
+    Min throughput per thread             =     587.57 ops/sec
+    Max throughput per thread             =     685.95 ops/sec
+    Avg throughput per thread             =     654.33 ops/sec
+    Min xfer                     =   28093.00 ops
+    CPU utilization: Wall time   47.864    CPU time  291.858    CPU
+utilization 609.76 %
+
+
+    Children see throughput for 32 random readers     =    3315.69 ops/sec
+    Parent sees throughput for 32 random readers     =    3315.50 ops/sec
+    Min throughput per thread             =     102.18 ops/sec
+    Max throughput per thread             =     105.06 ops/sec
+    Avg throughput per thread             =     103.62 ops/sec
+    Min xfer                     =   31868.00 ops
+    CPU utilization: Wall time  311.905    CPU time  619.687    CPU
+utilization 198.68 %
+
+who can me explain that results ?
+thanks, daniel
+
+
+[[HTML alternate version deleted]]
