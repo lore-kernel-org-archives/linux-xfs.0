@@ -1,90 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 00:51:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7I7ooNQ011692
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 00:50:51 -0700
-Message-ID: <48A92BC6.5020105@sgi.com>
-Date: Mon, 18 Aug 2008 17:59:02 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 01:13:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I8Cmlq013411
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:12:49 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 127303A99A5
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:14:08 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id KHAb3IQT5gJ9VO5d for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 01:14:08 -0700 (PDT)
+Date: Mon, 18 Aug 2008 18:14:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Allocate inode tracing buffers before locking inode
+	cluster
+Message-ID: <20080818081403.GJ19760@disturbed>
+References: <48A92BC6.5020105@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] Allocate inode tracing buffers before locking inode cluster
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48A92BC6.5020105@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Trying to allocate memory while holding the inode cluster locked can cause
-deadlocks; a thread creating an inode will have the inode cluster locked
-and is stuck allocating memory, pdflush/kswapd are both trying to push out
-dirty pages and convert delayed allocations which need space in the log and
-xfsaild is trying to push on the tail of the log but is stuck trying to
-acquire the inode cluster lock.
+On Mon, Aug 18, 2008 at 05:59:02PM +1000, Lachlan McIlroy wrote:
+> Trying to allocate memory while holding the inode cluster locked can cause
+> deadlocks; a thread creating an inode will have the inode cluster locked
+> and is stuck allocating memory, pdflush/kswapd are both trying to push out
+> dirty pages and convert delayed allocations which need space in the log and
+> xfsaild is trying to push on the tail of the log but is stuck trying to
+> acquire the inode cluster lock.
+>
+> I tried fixing this with KM_NOFS but turned a two-way deadlock into a
+> three-way deadlock.  This patch moves the allocation of the inode tracing
+> buffers before we lock the inode cluster.  We can also leak memory because
+> we don't free these allocations if we return from this function early so
+> use xfs_idestroy() to fully clean up the inode first.
 
-I tried fixing this with KM_NOFS but turned a two-way deadlock into a
-three-way deadlock.  This patch moves the allocation of the inode tracing
-buffers before we lock the inode cluster.  We can also leak memory because
-we don't free these allocations if we return from this function early so
-use xfs_idestroy() to fully clean up the inode first.
+Seems sane, but I think it should be wrapped up in the
+xfs_inode_alloc() code added as part of the 'Make use of the
+init-once slab optimisation' patch I posted recently. This
+moves the initialisation of all things inode related into a
+separate function - xfs_inode_alloc() - instead of doing all
+these intialisations around the place....
 
-Lachlan
+Cheers,
 
---- a/fs/xfs/xfs_inode.c	2008-08-18 17:40:42.000000000 +1000
-+++ b/fs/xfs/xfs_inode.c	2008-08-15 12:05:14.000000000 +1000
-@@ -818,19 +818,6 @@ xfs_iread(
- 	spin_lock_init(&ip->i_flags_lock);
- 
- 	/*
--	 * Get pointer's to the on-disk inode and the buffer containing it.
--	 * If the inode number refers to a block outside the file system
--	 * then xfs_itobp() will return NULL.  In this case we should
--	 * return NULL as well.  Set i_blkno to 0 so that xfs_itobp() will
--	 * know that this is a new incore inode.
--	 */
--	error = xfs_itobp(mp, tp, ip, &dip, &bp, bno, imap_flags, XFS_BUF_LOCK);
--	if (error) {
--		kmem_zone_free(xfs_inode_zone, ip);
--		return error;
--	}
--
--	/*
- 	 * Initialize inode's trace buffers.
- 	 * Do this before xfs_iformat in case it adds entries.
- 	 */
-@@ -854,11 +841,24 @@ xfs_iread(
- #endif
- 
- 	/*
-+	 * Get pointer's to the on-disk inode and the buffer containing it.
-+	 * If the inode number refers to a block outside the file system
-+	 * then xfs_itobp() will return NULL.  In this case we should
-+	 * return NULL as well.  Set i_blkno to 0 so that xfs_itobp() will
-+	 * know that this is a new incore inode.
-+	 */
-+	error = xfs_itobp(mp, tp, ip, &dip, &bp, bno, imap_flags, XFS_BUF_LOCK);
-+	if (error) {
-+		xfs_idestroy(ip);
-+		return error;
-+	}
-+
-+	/*
- 	 * If we got something that isn't an inode it means someone
- 	 * (nfs or dmi) has a stale handle.
- 	 */
- 	if (be16_to_cpu(dip->di_core.di_magic) != XFS_DINODE_MAGIC) {
--		kmem_zone_free(xfs_inode_zone, ip);
-+		xfs_idestroy(ip);
- 		xfs_trans_brelse(tp, bp);
- #ifdef DEBUG
- 		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
-@@ -881,7 +881,7 @@ xfs_iread(
- 		xfs_dinode_from_disk(&ip->i_d, &dip->di_core);
- 		error = xfs_iformat(ip, dip);
- 		if (error)  {
--			kmem_zone_free(xfs_inode_zone, ip);
-+			xfs_idestroy(ip);
- 			xfs_trans_brelse(tp, bp);
- #ifdef DEBUG
- 			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
