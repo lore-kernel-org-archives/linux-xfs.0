@@ -1,129 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Aug 2008 17:33:38 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I0XaMK007768
-	for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:33:36 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 17 Aug 2008 17:40:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7I0etCa008582
+	for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:40:55 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E1DA1BC6374
-	for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:34:55 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id Ic7nWFsweJiXUaOP for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:34:55 -0700 (PDT)
-Date: Mon, 18 Aug 2008 10:34:51 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8CF1FF5D24A
+	for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:42:14 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 8a5A4dD2MeUxSKJk for <xfs@oss.sgi.com>; Sun, 17 Aug 2008 17:42:14 -0700 (PDT)
+Date: Mon, 18 Aug 2008 10:42:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/7] XFS: Combine the XFS and Linux inodes.
-Message-ID: <20080818003451.GG19760@disturbed>
-References: <1218698083-11226-1-git-send-email-david@fromorbit.com> <1218698083-11226-7-git-send-email-david@fromorbit.com> <20080814200006.GC12237@infradead.org>
+Subject: Re: [PATCH 7/7] XFS: don't use vnodes where unnecessary
+Message-ID: <20080818004209.GH19760@disturbed>
+References: <1218698083-11226-1-git-send-email-david@fromorbit.com> <1218698083-11226-8-git-send-email-david@fromorbit.com> <20080814201022.GA20557@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080814200006.GC12237@infradead.org>
+In-Reply-To: <20080814201022.GA20557@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 14, 2008 at 04:00:06PM -0400, Christoph Hellwig wrote:
-> > +	if (!(inode->i_state & I_CLEAR)) {
-> >  		ip->i_d.di_atime.t_sec = (__int32_t)inode->i_atime.tv_sec;
-> >  		ip->i_d.di_atime.t_nsec = (__int32_t)inode->i_atime.tv_nsec;
-> >  	}
+On Thu, Aug 14, 2008 at 04:10:22PM -0400, Christoph Hellwig wrote:
+> >  	do {
+> > +		struct inode	*inode;
+> > +		boolean_t	vnode_refed;
+> > +		xfs_inode_t	*ip = NULL;
 > 
-> Actually we can just do this unconditionally, as the atime values don't
-> become invalid just because the VFS doesn't know about the inode
-> anymore.  And two useless because already previously updated assignments
-> are cheaper than a branch.
+> This should not be inode_refed, no? :)
 
-Ok, I'll make it unconditional.
+Yeah ;)
 
-> > + * We are always called with an uninitialised linux inode here.
-> > + * We need to initialise the necessary fields and take a reference
-> > + * on it.
-> >   */
-> >  void
-> >  xfs_setup_inode(
-> >  	struct xfs_inode	*ip)
-> >  {
-> > -	struct inode		*inode = ip->i_vnode;
-> > +	struct inode		*inode = &ip->i_vnode;
+> > -		vp = VFS_I(ip);
+> > -		if (!vp) {
+> > +		if (xfs_iflags_test(ip, (XFS_IRECLAIM|XFS_IRECLAIMABLE))) {
 > 
-> VFS_I?
+> These changes really need to be folded into the previous patch for
+> bisectability reasons..
 
-Yup, I thought I caught all of them :/
+Right - this was catching all this bits that I missed in the
+previous patch ;)
 
 > 
-> > +	inode->i_ino = ip->i_ino;
-> > +	inode->i_state = I_NEW|I_LOCK;
-> > +	inode_used(ip->i_mount->m_super, inode);
-> > +	ASSERT(atomic_read(&inode->i_count) == 1);
+> > +		inode = VFS_I(ip);
+> > +		if (VN_BAD(inode)) {
 > 
-> Where does inode_used come from?  (It's also a rather ugly name..)
+> Just use is_bad_inode directly.  (Also in a few other places)
 
-Ah, separate patch not sent. basically does:
+Will do.
 
-void inode_used(struct super_block *sb, struct inode *inode)
-{
-       spin_lock(&inode_lock);
-       inodes_stat.nr_inodes++;
-       list_add(&inode->i_list, &inode_in_use);
-       list_add(&inode->i_sb_list, &sb->s_inodes);
-       spin_unlock(&inode_lock);
-}
-
-> > +/* XXX: development debug only */
-> >  STATIC struct inode *
-> >  xfs_fs_alloc_inode(
-> >  	struct super_block	*sb)
-> >  {
-> > -	return kmem_zone_alloc(xfs_vnode_zone, KM_SLEEP);
-> > +	BUG();
-> >  }
+> >  		} else {
+> > -			/* safe to unlock here as we have a reference */
+> > +			if (!xfs_ilock_nowait(ip, lock_flags)) {
+> > +				/* leave it to reclaim */
+> > +				read_unlock(&pag->pag_ici_lock);
+> > +				continue;
+> > +			}
+> >  			read_unlock(&pag->pag_ici_lock);
+> >  		}
 > 
-> Actually keeping this one is a good idea, even if it's just to catch
-> really dumb things like the iget_locked OpenAFS's cache manager does on
-> random filesystems..
+> Maybe not for this patch, but in general, why do we even bother about
+> the inodes we can't get a reference to, shouldn't we just always leave
+> this to reclaim?
 
-Ok, I'll leave that in.
+Right now, we either get a reference or an ilock to prevent reclaim
+from freeing it. The case ofthe vnode disappearing made it difficult
+to make a clear delineation. With the combined inode, it is much
+easier to make this distinction, but if we are doing ascending order
+writeback of inodes, we really want to get all the inodes that are
+dirty regardless of whether they are in reclaim or not.
 
-> > -void
-> > -xfs_inode_init_once(
-> > +STATIC void
-> > +xfs_fs_inode_init_once(
+> > -		if ((flags & SYNC_DELWRI) && VN_DIRTY(vp)) {
+> > +		if ((flags & SYNC_DELWRI) && VN_DIRTY(VFS_I(ip))) {
 > 
-> might be a good idea to already use that name in the patch that
-> introduces it :)
+> Why not use the "inode" variable we have in scope anyway?
 
-The problem was that we have two init functions at this point;
-one for the vnode, one for the inode....
+Yup, should do that.
 
-> >  /*
-> > + * we need to provide an empty inode free function to prevent
-> > + * the generic code from trying to free ouuur combined inode.
-> > + */
-> > +STATIC void
-> > +xfs_fs_destroy_inode(
-> > +	struct inode		*inode)
-> > +{
-> > +	return;
-> > +}
+> > +	if (!(inode->i_state & I_CLEAR))
+> > +		return atomic_read(&inode->i_count);
 > 
-> Why it's this kept in the original place, close to alloc_inode?
+> Well, it's just zero when the inode is out of the vfs, so we could
+> probably simply do it unconditional.
 
-Just the way things happened. I'll move it back.
+Ok, I'll have a look at that.
 
-> Also the return statement is superflous.
-
-Yup.
-
-> >  /* convert from xfs inode to vfs inode */
-> >  static inline struct inode *VFS_I(struct xfs_inode *ip)
-> >  {
-> > -	return (struct inode *)ip->i_vnode;
-> > +	return (struct inode *)&ip->i_vnode;
-> >  }
 > 
-> No need for the cast in either version..
+> > +		vp = vn_grab(VFS_I(ip));
+> > +		if (vp) {
+> 
+> Please switch this one to igrab, and the inode name, too.  As this
+> is the last caller of vn_grab we can kill it now.
 
-Ok, I'll kill it.
+Ok, I'll fix that one up, too.
 
 Cheers,
 
