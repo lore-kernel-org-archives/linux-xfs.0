@@ -1,36 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 04:06:49 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7IB6liI022957
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:06:47 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 18 Aug 2008 04:10:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7IBAqU3023592
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:10:52 -0700
 Received: from ik-out-1112.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 68D90F623C1
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:06 -0700 (PDT)
-Received: from ik-out-1112.google.com (ik-out-1112.google.com [66.249.90.177]) by cuda.sgi.com with ESMTP id x4vIkRzK3l6Fwbv6 for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:06 -0700 (PDT)
-Received: by ik-out-1112.google.com with SMTP id c29so2671621ika.4
-        for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:08:05 -0700 (PDT)
-Message-ID: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
-Date: Mon, 18 Aug 2008 13:08:05 +0200
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 532313AA043
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:12:10 -0700 (PDT)
+Received: from ik-out-1112.google.com (ik-out-1112.google.com [66.249.90.180]) by cuda.sgi.com with ESMTP id aSvlTGCNNNao3OhH for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:12:10 -0700 (PDT)
+Received: by ik-out-1112.google.com with SMTP id c29so2673232ika.4
+        for <xfs@oss.sgi.com>; Mon, 18 Aug 2008 04:12:10 -0700 (PDT)
+Message-ID: <702ec7d40808180412u21613a03q757f4e20748ec039@mail.gmail.com>
+Date: Mon, 18 Aug 2008 13:12:09 +0200
 From: daniel <luriad@gmail.com>
 Subject: xfs _ slow rewrite ?
+In-Reply-To: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-I'm working on a new server and test the performance from xfs and ext3 with
-iozone.
+I'm working on a new server and test the performance from xfs and ext3
+with iozone.
 
-iozone -T -t 32 -F /data/iozonefile{0..31} -o -O -i6 -i7 -i0 -i1 -i2 -s512m
--r16k -+u
+iozone -T -t 32 -F /data/iozonefile{0..31} -o -O -i6 -i7 -i0 -i1 -i2
+-s512m -r16k -+u
 
 system : SLES 10.2 : 2.6.16.60-0.27-smp #1 SMP on a DELL 2950 : 1 GB RAM:
-raid: raid 10 with 8 disks 15k : 64k chunksize : dell md 1000 : perc 6/e :
-WriteBack, ReadAheadNone, Cached,
+raid: raid 10 with 8 disks 15k : 64k chunksize : dell md 1000 : perc
+6/e : WriteBack, ReadAheadNone, Cached,
 
 echo "3" >  /proc/sys/vm/drop_caches
 
@@ -45,9 +47,10 @@ mkfs.xfs -f -L DATA /dev/sdb1
         Min throughput per thread                       =     127.88 ops/sec
         Max throughput per thread                       =     742.80 ops/sec
         Avg throughput per thread                       =     185.65 ops/sec
-        Min xfer                                        =    5641.00 ops
-        CPU Utilization: Wall time  210.499    CPU time 3323.852    CPU
-utilization 1579.03 %
+        Min xfer
+              =    5641.00 ops
+        CPU Utilization: Wall time  210.499    CPU time 3323.852
+CPU utilization 1579.03 %
 
 
         Children see throughput for 32 rewriters        =    2298.54 ops/sec
@@ -56,8 +59,8 @@ utilization 1579.03 %
         Max throughput per thread                       =      79.09 ops/sec
         Avg throughput per thread                       =      71.83 ops/sec
         Min xfer                                        =   27439.00 ops
-        CPU utilization: Wall time  415.265    CPU time 1032.129    CPU
-utilization 248.55 %
+        CPU utilization: Wall time  415.265    CPU time 1032.129
+CPU utilization 248.55 %
 
 
         Children see throughput for 32 readers          =    6923.75 ops/sec
@@ -66,8 +69,8 @@ utilization 248.55 %
         Max throughput per thread                       =     226.58 ops/sec
         Avg throughput per thread                       =     216.37 ops/sec
         Min xfer                                        =   30525.00 ops
-        CPU utilization: Wall time  144.732    CPU time  389.016    CPU
-utilization 268.78 %
+        CPU utilization: Wall time  144.732    CPU time  389.016
+CPU utilization 268.78 %
 
 
         Children see throughput for 32 re-readers       =    6864.93 ops/sec
@@ -76,8 +79,8 @@ utilization 268.78 %
         Max throughput per thread                       =     220.73 ops/sec
         Avg throughput per thread                       =     214.53 ops/sec
         Min xfer                                        =   31133.00 ops
-        CPU utilization: Wall time  148.571    CPU time  400.709    CPU
-utilization 269.71 %
+        CPU utilization: Wall time  148.571    CPU time  400.709
+CPU utilization 269.71 %
 
 
         Children see throughput for 32 random readers   =    2335.44 ops/sec
@@ -86,8 +89,8 @@ utilization 269.71 %
         Max throughput per thread                       =      74.36 ops/sec
         Avg throughput per thread                       =      72.98 ops/sec
         Min xfer                                        =   31058.00 ops
-        CPU utilization: Wall time  440.693    CPU time  647.208    CPU
-utilization 146.86 %
+        CPU utilization: Wall time  440.693    CPU time  647.208
+CPU utilization 146.86 %
 
 2) ext3
 mkfs.ext3 /dev/sdb1 -E stride=16
@@ -144,6 +147,3 @@ utilization 198.68 %
 
 who can me explain that results ?
 thanks, daniel
-
-
-[[HTML alternate version deleted]]
