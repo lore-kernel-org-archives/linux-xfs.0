@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFgLI022897
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:42 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:32 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFXok022768
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:33 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 19EA112F9424
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:17:02 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id jo1u0Dh0rHS140ZR for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:17:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ABBFB1BC6727
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:52 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id vkVOLENK5nsJkbKQ for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:52 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4w-0008Bh-Oy
-	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:54 +1000
+	id 1KVR4n-0008AN-N7
+	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 26/28] XFS: rename inode reclaim functions
-Date: Tue, 19 Aug 2008 23:16:42 +1000
-Message-Id: <1219151804-30749-27-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/28] XFS: split out two helpers from xfs_syncsub
+Date: Tue, 19 Aug 2008 23:16:24 +1000
+Message-Id: <1219151804-30749-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,107 +22,213 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-The function names xfs_finish_reclaim and xfs_finish_reclaim_all
-are not very descriptive of what they are reclaiming. Rename to
-xfs_reclaim_inode[s] to match the xfs_sync_inodes() function.
+From: Christoph Hellwig <hch@lst.de>
 
+Split out two helpers from xfs_syncsub for the dummy log commit
+and the superblock writeout.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   10 +++++-----
- fs/xfs/linux-2.6/xfs_sync.h |    4 ++--
- fs/xfs/xfs_mount.c          |    2 +-
- fs/xfs/xfs_vnodeops.c       |    2 +-
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |  162 +++++++++++++++++++++++++------------------
+ 1 files changed, 93 insertions(+), 69 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index ebe2932..3141c25 100644
+index 53d85ec..59da332 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -359,7 +359,7 @@ xfs_quiesce_fs(
- 	int	count = 0, pincount;
+@@ -315,6 +315,93 @@ xfs_sync_inodes(
+ 	return XFS_ERROR(last_error);
+ }
  
- 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++STATIC int
++xfs_commit_dummy_trans(
++	struct xfs_mount	*mp,
++	uint			log_flags)
++{
++	struct xfs_inode	*ip = mp->m_rootip;
++	struct xfs_trans	*tp;
++	int			error;
++
++	/*
++	 * Put a dummy transaction in the log to tell recovery
++	 * that all others are OK.
++	 */
++	tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
++	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++	xfs_trans_ihold(tp, ip);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	/* XXX(hch): ignoring the error here.. */
++	error = xfs_trans_commit(tp, 0);
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	xfs_log_force(mp, 0, log_flags);
++	return 0;
++}
++
++STATIC int
++xfs_sync_fsdata(
++	struct xfs_mount	*mp,
++	int			flags)
++{
++	struct xfs_buf		*bp;
++	struct xfs_buf_log_item	*bip;
++	int			error = 0;
++
++	/*
++	 * If this is xfssyncd() then only sync the superblock if we can
++	 * lock it without sleeping and it is not pinned.
++	 */
++	if (flags & SYNC_BDFLUSH) {
++		ASSERT(!(flags & SYNC_WAIT));
++
++		bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
++		if (!bp)
++			goto out;
++
++		bip = XFS_BUF_FSPRIVATE(bp, struct xfs_buf_log_item *);
++		if (!bip || !xfs_buf_item_dirty(bip) || XFS_BUF_ISPINNED(bp))
++			goto out_brelse;
++	} else {
++		bp = xfs_getsb(mp, 0);
++
++		/*
++		 * If the buffer is pinned then push on the log so we won't
++		 * get stuck waiting in the write for someone, maybe
++		 * ourselves, to flush the log.
++		 *
++		 * Even though we just pushed the log above, we did not have
++		 * the superblock buffer locked at that point so it can
++		 * become pinned in between there and here.
++		 */
++		if (XFS_BUF_ISPINNED(bp))
++			xfs_log_force(mp, 0, XFS_LOG_FORCE);
++	}
++
++
++	if (flags & SYNC_WAIT)
++		XFS_BUF_UNASYNC(bp);
++	else
++		XFS_BUF_ASYNC(bp);
++
++	return xfs_bwrite(mp, bp);
++
++ out_brelse:
++	xfs_buf_relse(bp);
++ out:
++	return error;
++}
++
+ /*
+  * xfs sync routine for internal use
+  *
+@@ -331,8 +418,6 @@ xfs_syncsub(
+ 	int		error = 0;
+ 	int		last_error = 0;
+ 	uint		log_flags = XFS_LOG_FORCE;
+-	xfs_buf_t	*bp;
+-	xfs_buf_log_item_t	*bip;
  
  	/*
- 	 * This loop must run at least twice.  The first instance of the loop
-@@ -501,7 +501,7 @@ xfs_sync_worker(
- 
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
--		xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+		xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		/* dgc: errors ignored here */
- 		error = XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
- 		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
-@@ -580,7 +580,7 @@ xfs_syncd_stop(
- }
- 
- int
--xfs_finish_reclaim(
-+xfs_reclaim_inode(
- 	xfs_inode_t	*ip,
- 	int		locked,
- 	int		sync_mode)
-@@ -682,7 +682,7 @@ xfs_inode_clear_reclaim_tag(
- }
- 
- int
--xfs_finish_reclaim_all(
-+xfs_reclaim_inodes(
- 	xfs_mount_t	*mp,
- 	int		 noblock,
- 	int		mode)
-@@ -702,7 +702,7 @@ restart:
- 			}
- 		}
- 		XFS_MOUNT_IUNLOCK(mp);
--		if (xfs_finish_reclaim(ip, noblock, mode))
-+		if (xfs_reclaim_inode(ip, noblock, mode))
- 			delay(1);
- 		goto restart;
- 	}
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index fcaf004..5f6de1e 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -45,8 +45,8 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
- void xfs_flush_inode(struct xfs_inode *ip);
- void xfs_flush_device(struct xfs_inode *ip);
- 
--int xfs_finish_reclaim(struct xfs_inode *ip, int locked, int sync_mode);
--int xfs_finish_reclaim_all(struct xfs_mount *mp, int noblock, int mode);
-+int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
-+int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 8372b3d..25698ee 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1241,7 +1241,7 @@ xfs_unmountfs(
- 	 * need to force the log first.
+ 	 * Sync out the log.  This ensures that the log is periodically
+@@ -355,83 +440,22 @@ xfs_syncsub(
+ 	 * log activity, so if this isn't vfs_sync() then flush
+ 	 * the log again.
  	 */
- 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_ASYNC);
-+	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_ASYNC);
+-	if (flags & SYNC_DELWRI) {
+-		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
+-	}
++	if (flags & SYNC_DELWRI)
++		xfs_log_force(mp, 0, log_flags);
  
- 	XFS_QM_DQPURGEALL(mp, XFS_QMOPT_QUOTALL | XFS_QMOPT_UMOUNTING);
+ 	if (flags & SYNC_FSDATA) {
+-		/*
+-		 * If this is vfs_sync() then only sync the superblock
+-		 * if we can lock it without sleeping and it is not pinned.
+-		 */
+-		if (flags & SYNC_BDFLUSH) {
+-			bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
+-			if (bp != NULL) {
+-				bip = XFS_BUF_FSPRIVATE(bp,xfs_buf_log_item_t*);
+-				if ((bip != NULL) &&
+-				    xfs_buf_item_dirty(bip)) {
+-					if (!(XFS_BUF_ISPINNED(bp))) {
+-						XFS_BUF_ASYNC(bp);
+-						error = xfs_bwrite(mp, bp);
+-					} else {
+-						xfs_buf_relse(bp);
+-					}
+-				} else {
+-					xfs_buf_relse(bp);
+-				}
+-			}
+-		} else {
+-			bp = xfs_getsb(mp, 0);
+-			/*
+-			 * If the buffer is pinned then push on the log so
+-			 * we won't get stuck waiting in the write for
+-			 * someone, maybe ourselves, to flush the log.
+-			 * Even though we just pushed the log above, we
+-			 * did not have the superblock buffer locked at
+-			 * that point so it can become pinned in between
+-			 * there and here.
+-			 */
+-			if (XFS_BUF_ISPINNED(bp))
+-				xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+-			if (flags & SYNC_WAIT)
+-				XFS_BUF_UNASYNC(bp);
+-			else
+-				XFS_BUF_ASYNC(bp);
+-			error = xfs_bwrite(mp, bp);
+-		}
+-		if (error) {
++		error = xfs_sync_fsdata(mp, flags);
++		if (error)
+ 			last_error = error;
+-		}
+ 	}
  
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 1f56ea1..47b3e68 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2801,7 +2801,7 @@ xfs_reclaim(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_iflock(ip);
- 		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
--		return xfs_finish_reclaim(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
-+		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
- 	} else {
- 		xfs_mount_t	*mp = ip->i_mount;
+ 	/*
+ 	 * Now check to see if the log needs a "dummy" transaction.
+ 	 */
+ 	if (!(flags & SYNC_REMOUNT) && xfs_log_need_covered(mp)) {
+-		xfs_trans_t *tp;
+-		xfs_inode_t *ip;
+-
+-		/*
+-		 * Put a dummy transaction in the log to tell
+-		 * recovery that all others are OK.
+-		 */
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+-		if ((error = xfs_trans_reserve(tp, 0,
+-				XFS_ICHANGE_LOG_RES(mp),
+-				0, 0, 0)))  {
+-			xfs_trans_cancel(tp, 0);
++		error = xfs_commit_dummy_trans(mp, log_flags);
++		if (error)
+ 			return error;
+-		}
+-
+-		ip = mp->m_rootip;
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-
+-		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ihold(tp, ip);
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		error = xfs_trans_commit(tp, 0);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
+ 	}
  
+ 	/*
 -- 
 1.5.6
