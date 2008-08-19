@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:17:00 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFelM022868
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:40 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:17:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFlNq022956
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:47 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 984B11BC6735
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:59 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id k5D8dHQ4DhsHPuRR for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E8743AFDDB
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:17:00 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id m95uXBu4cCLl5PT6 for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:17:00 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4v-0008BT-80
+	id 1KVR4v-0008Bc-GA
 	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/28] Inode: Allow external initialisers
-Date: Tue, 19 Aug 2008 23:16:37 +1000
-Message-Id: <1219151804-30749-22-git-send-email-david@fromorbit.com>
+Subject: [PATCH 24/28] XFS: move inode reclaim functions to xfs_sync.c
+Date: Tue, 19 Aug 2008 23:16:40 +1000
+Message-Id: <1219151804-30749-25-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,200 +22,243 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-To allow XFS to combine the XFS and linux inodes into a single
-structure, we need to drive inode lookup from the XFS inode cache,
-not the generic inode cache. This means that we need initialise a
-struct inode from a context outside alloc_inode() as it is no longer
-used by XFS.
-
-Factor and export the struct inode initialisation code from
-alloc_inode() to inode_init_always() as a counterpart to
-inode_init_once().  i.e. we have to call this init function for each
-inode instantiation (always), as opposed inode_init_once() which is
-only called on slab object instantiation (once).
+Background inode reclaim is run by the xfssyncd. Move the
+reclaim worker functions to be close to the sync code as
+the are very similar in structure and are both run from
+the same background thread.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/inode.c         |  146 +++++++++++++++++++++++++++++-----------------------
- include/linux/fs.h |    1 +
- 2 files changed, 82 insertions(+), 65 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   91 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_sync.h |    3 +
+ fs/xfs/xfs_inode.h          |    2 -
+ fs/xfs/xfs_vnodeops.c       |   90 ------------------------------------------
+ 4 files changed, 94 insertions(+), 92 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index b6726f6..1ec2b5b 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -108,83 +108,99 @@ static void wake_up_inode(struct inode *inode)
- 	wake_up_bit(&inode->i_state, __I_LOCK);
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 98a33a5..afb0569 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -579,3 +579,94 @@ xfs_syncd_stop(
+ 	kthread_stop(mp->m_sync_task);
  }
  
--static struct inode *alloc_inode(struct super_block *sb)
-+/**
-+ * inode_init_always - perform inode structure intialisation
-+ * @sb		- superblock inode belongs to.
-+ * @inode	- inode to initialise
-+ *
-+ * These are initializations that need to be done on every inode
-+ * allocation as the fields are not initialised by slab allocation.
-+ */
-+struct inode *inode_init_always(struct super_block *sb, struct inode *inode)
- {
- 	static const struct address_space_operations empty_aops;
- 	static struct inode_operations empty_iops;
- 	static const struct file_operations empty_fops;
--	struct inode *inode;
- 
--	if (sb->s_op->alloc_inode)
--		inode = sb->s_op->alloc_inode(sb);
--	else
--		inode = (struct inode *) kmem_cache_alloc(inode_cachep, GFP_KERNEL);
--
--	if (inode) {
--		struct address_space * const mapping = &inode->i_data;
--
--		inode->i_sb = sb;
--		inode->i_blkbits = sb->s_blocksize_bits;
--		inode->i_flags = 0;
--		atomic_set(&inode->i_count, 1);
--		inode->i_op = &empty_iops;
--		inode->i_fop = &empty_fops;
--		inode->i_nlink = 1;
--		atomic_set(&inode->i_writecount, 0);
--		inode->i_size = 0;
--		inode->i_blocks = 0;
--		inode->i_bytes = 0;
--		inode->i_generation = 0;
-+	struct address_space * const mapping = &inode->i_data;
-+
-+	inode->i_sb = sb;
-+	inode->i_blkbits = sb->s_blocksize_bits;
-+	inode->i_flags = 0;
-+	atomic_set(&inode->i_count, 1);
-+	inode->i_op = &empty_iops;
-+	inode->i_fop = &empty_fops;
-+	inode->i_nlink = 1;
-+	atomic_set(&inode->i_writecount, 0);
-+	inode->i_size = 0;
-+	inode->i_blocks = 0;
-+	inode->i_bytes = 0;
-+	inode->i_generation = 0;
- #ifdef CONFIG_QUOTA
--		memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
-+	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
- #endif
--		inode->i_pipe = NULL;
--		inode->i_bdev = NULL;
--		inode->i_cdev = NULL;
--		inode->i_rdev = 0;
--		inode->dirtied_when = 0;
--		if (security_inode_alloc(inode)) {
--			if (inode->i_sb->s_op->destroy_inode)
--				inode->i_sb->s_op->destroy_inode(inode);
--			else
--				kmem_cache_free(inode_cachep, (inode));
--			return NULL;
--		}
-+	inode->i_pipe = NULL;
-+	inode->i_bdev = NULL;
-+	inode->i_cdev = NULL;
-+	inode->i_rdev = 0;
-+	inode->dirtied_when = 0;
-+	if (security_inode_alloc(inode)) {
-+		if (inode->i_sb->s_op->destroy_inode)
-+			inode->i_sb->s_op->destroy_inode(inode);
-+		else
-+			kmem_cache_free(inode_cachep, (inode));
-+		return NULL;
-+	}
- 
--		spin_lock_init(&inode->i_lock);
--		lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
-+	spin_lock_init(&inode->i_lock);
-+	lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
- 
--		mutex_init(&inode->i_mutex);
--		lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
-+	mutex_init(&inode->i_mutex);
-+	lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
- 
--		init_rwsem(&inode->i_alloc_sem);
--		lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
-+	init_rwsem(&inode->i_alloc_sem);
-+	lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
- 
--		mapping->a_ops = &empty_aops;
-- 		mapping->host = inode;
--		mapping->flags = 0;
--		mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
--		mapping->assoc_mapping = NULL;
--		mapping->backing_dev_info = &default_backing_dev_info;
-+	mapping->a_ops = &empty_aops;
-+	mapping->host = inode;
-+	mapping->flags = 0;
-+	mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
-+	mapping->assoc_mapping = NULL;
-+	mapping->backing_dev_info = &default_backing_dev_info;
- 
--		/*
--		 * If the block_device provides a backing_dev_info for client
--		 * inodes then use that.  Otherwise the inode share the bdev's
--		 * backing_dev_info.
--		 */
--		if (sb->s_bdev) {
--			struct backing_dev_info *bdi;
-+	/*
-+	 * If the block_device provides a backing_dev_info for client
-+	 * inodes then use that.  Otherwise the inode share the bdev's
-+	 * backing_dev_info.
-+	 */
-+	if (sb->s_bdev) {
-+		struct backing_dev_info *bdi;
- 
--			bdi = sb->s_bdev->bd_inode_backing_dev_info;
--			if (!bdi)
--				bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
--			mapping->backing_dev_info = bdi;
--		}
--		inode->i_private = NULL;
--		inode->i_mapping = mapping;
-+		bdi = sb->s_bdev->bd_inode_backing_dev_info;
-+		if (!bdi)
-+			bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
-+		mapping->backing_dev_info = bdi;
- 	}
-+	inode->i_private = NULL;
-+	inode->i_mapping = mapping;
-+
- 	return inode;
- }
-+EXPORT_SYMBOL(inode_init_always);
-+
-+static struct inode *alloc_inode(struct super_block *sb)
++int
++xfs_finish_reclaim(
++	xfs_inode_t	*ip,
++	int		locked,
++	int		sync_mode)
 +{
-+	struct inode *inode;
++	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
 +
-+	if (sb->s_op->alloc_inode)
-+		inode = sb->s_op->alloc_inode(sb);
-+	else
-+		inode = (struct inode *) kmem_cache_alloc(inode_cachep, GFP_KERNEL);
++	/* The hash lock here protects a thread in xfs_iget_core from
++	 * racing with us on linking the inode back with a vnode.
++	 * Once we have the XFS_IRECLAIM flag set it will not touch
++	 * us.
++	 */
++	write_lock(&pag->pag_ici_lock);
++	spin_lock(&ip->i_flags_lock);
++	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
++	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
++		spin_unlock(&ip->i_flags_lock);
++		write_unlock(&pag->pag_ici_lock);
++		if (locked) {
++			xfs_ifunlock(ip);
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		}
++		return 1;
++	}
++	__xfs_iflags_set(ip, XFS_IRECLAIM);
++	spin_unlock(&ip->i_flags_lock);
++	write_unlock(&pag->pag_ici_lock);
++	xfs_put_perag(ip->i_mount, pag);
 +
-+	if (inode)
-+		return inode_init_always(sb, inode);
-+	return NULL;
++	/*
++	 * If the inode is still dirty, then flush it out.  If the inode
++	 * is not in the AIL, then it will be OK to flush it delwri as
++	 * long as xfs_iflush() does not keep any references to the inode.
++	 * We leave that decision up to xfs_iflush() since it has the
++	 * knowledge of whether it's OK to simply do a delwri flush of
++	 * the inode or whether we need to wait until the inode is
++	 * pulled from the AIL.
++	 * We get the flush lock regardless, though, just to make sure
++	 * we don't free it while it is being flushed.
++	 */
++	if (!locked) {
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		xfs_iflock(ip);
++	}
++
++	/*
++	 * In the case of a forced shutdown we rely on xfs_iflush() to
++	 * wait for the inode to be unpinned before returning an error.
++	 */
++	if (!VN_BAD(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
++		/* synchronize with xfs_iflush_done */
++		xfs_iflock(ip);
++		xfs_ifunlock(ip);
++	}
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_ireclaim(ip);
++	return 0;
 +}
++
++int
++xfs_finish_reclaim_all(
++	xfs_mount_t	*mp,
++	int		 noblock,
++	int		mode)
++{
++	xfs_inode_t	*ip, *n;
++
++restart:
++	XFS_MOUNT_ILOCK(mp);
++	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
++		if (noblock) {
++			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
++				continue;
++			if (xfs_ipincount(ip) ||
++			    !xfs_iflock_nowait(ip)) {
++				xfs_iunlock(ip, XFS_ILOCK_EXCL);
++				continue;
++			}
++		}
++		XFS_MOUNT_IUNLOCK(mp);
++		if (xfs_finish_reclaim(ip, noblock, mode))
++			delay(1);
++		goto restart;
++	}
++	XFS_MOUNT_IUNLOCK(mp);
++	return 0;
++}
++
++
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index 3b49aa3..23117a1 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -45,4 +45,7 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
+ void xfs_flush_inode(struct xfs_inode *ip);
+ void xfs_flush_device(struct xfs_inode *ip);
  
- void destroy_inode(struct inode *inode) 
- {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 580b513..ce55983 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1811,6 +1811,7 @@ extern loff_t default_llseek(struct file *file, loff_t offset, int origin);
++int xfs_finish_reclaim(struct xfs_inode *ip, int locked, int sync_mode);
++int xfs_finish_reclaim_all(struct xfs_mount *mp, int noblock, int mode);
++
+ #endif
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 4350d94..b81ebca 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -478,8 +478,6 @@ int		xfs_isilocked(xfs_inode_t *, uint);
+ uint		xfs_ilock_map_shared(xfs_inode_t *);
+ void		xfs_iunlock_map_shared(xfs_inode_t *, uint);
+ void		xfs_ireclaim(xfs_inode_t *);
+-int		xfs_finish_reclaim(xfs_inode_t *, int, int);
+-int		xfs_finish_reclaim_all(struct xfs_mount *, int, int);
  
- extern loff_t vfs_llseek(struct file *file, loff_t offset, int origin);
+ /*
+  * xfs_inode.c prototypes.
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index c0ce803..dc4d807 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2816,96 +2816,6 @@ xfs_reclaim(
+ 	return 0;
+ }
  
-+extern struct inode * inode_init_always(struct super_block *, struct inode *);
- extern void inode_init_once(struct inode *);
- extern void iput(struct inode *);
- extern struct inode * igrab(struct inode *);
+-int
+-xfs_finish_reclaim(
+-	xfs_inode_t	*ip,
+-	int		locked,
+-	int		sync_mode)
+-{
+-	xfs_perag_t	*pag = xfs_get_perag(ip->i_mount, ip->i_ino);
+-
+-	/* The hash lock here protects a thread in xfs_iget_core from
+-	 * racing with us on linking the inode back with a vnode.
+-	 * Once we have the XFS_IRECLAIM flag set it will not touch
+-	 * us.
+-	 */
+-	write_lock(&pag->pag_ici_lock);
+-	spin_lock(&ip->i_flags_lock);
+-	if (__xfs_iflags_test(ip, XFS_IRECLAIM) ||
+-	    !__xfs_iflags_test(ip, XFS_IRECLAIMABLE)) {
+-		spin_unlock(&ip->i_flags_lock);
+-		write_unlock(&pag->pag_ici_lock);
+-		if (locked) {
+-			xfs_ifunlock(ip);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		}
+-		return 1;
+-	}
+-	__xfs_iflags_set(ip, XFS_IRECLAIM);
+-	spin_unlock(&ip->i_flags_lock);
+-	write_unlock(&pag->pag_ici_lock);
+-	xfs_put_perag(ip->i_mount, pag);
+-
+-	/*
+-	 * If the inode is still dirty, then flush it out.  If the inode
+-	 * is not in the AIL, then it will be OK to flush it delwri as
+-	 * long as xfs_iflush() does not keep any references to the inode.
+-	 * We leave that decision up to xfs_iflush() since it has the
+-	 * knowledge of whether it's OK to simply do a delwri flush of
+-	 * the inode or whether we need to wait until the inode is
+-	 * pulled from the AIL.
+-	 * We get the flush lock regardless, though, just to make sure
+-	 * we don't free it while it is being flushed.
+-	 */
+-	if (!locked) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_iflock(ip);
+-	}
+-
+-	/*
+-	 * In the case of a forced shutdown we rely on xfs_iflush() to
+-	 * wait for the inode to be unpinned before returning an error.
+-	 */
+-	if (!VN_BAD(VFS_I(ip)) && xfs_iflush(ip, sync_mode) == 0) {
+-		/* synchronize with xfs_iflush_done */
+-		xfs_iflock(ip);
+-		xfs_ifunlock(ip);
+-	}
+-
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	xfs_ireclaim(ip);
+-	return 0;
+-}
+-
+-int
+-xfs_finish_reclaim_all(
+-	xfs_mount_t	*mp,
+-	int		 noblock,
+-	int		mode)
+-{
+-	xfs_inode_t	*ip, *n;
+-
+-restart:
+-	XFS_MOUNT_ILOCK(mp);
+-	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
+-		if (noblock) {
+-			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
+-				continue;
+-			if (xfs_ipincount(ip) ||
+-			    !xfs_iflock_nowait(ip)) {
+-				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				continue;
+-			}
+-		}
+-		XFS_MOUNT_IUNLOCK(mp);
+-		if (xfs_finish_reclaim(ip, noblock, mode))
+-			delay(1);
+-		goto restart;
+-	}
+-	XFS_MOUNT_IUNLOCK(mp);
+-	return 0;
+-}
+-
+ /*
+  * xfs_alloc_file_space()
+  *      This routine allocates disk space for the given file.
 -- 
 1.5.6
