@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:17:09 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFce2022841
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:38 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:17:00 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFelM022868
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:40 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FD3412F9416
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:58 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id l6WiEu2JmoIoOhcs for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 984B11BC6735
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:59 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id k5D8dHQ4DhsHPuRR for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:59 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4u-0008BI-Ax
-	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:52 +1000
+	id 1KVR4v-0008BT-80
+	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/28] XFS: Move remaining quiesce code.
-Date: Tue, 19 Aug 2008 23:16:33 +1000
-Message-Id: <1219151804-30749-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/28] Inode: Allow external initialisers
+Date: Tue, 19 Aug 2008 23:16:37 +1000
+Message-Id: <1219151804-30749-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,207 +22,200 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-With all the other filesystem sync code it in xfs_sync.c
-including the data quiesce code, it makes sense to move
-the remaining quiesce code to the same place.
+To allow XFS to combine the XFS and linux inodes into a single
+structure, we need to drive inode lookup from the XFS inode cache,
+not the generic inode cache. This means that we need initialise a
+struct inode from a context outside alloc_inode() as it is no longer
+used by XFS.
+
+Factor and export the struct inode initialisation code from
+alloc_inode() to inode_init_always() as a counterpart to
+inode_init_once().  i.e. we have to call this init function for each
+inode instantiation (always), as opposed inode_init_once() which is
+only called on slab object instantiation (once).
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    6 ++--
- fs/xfs/linux-2.6/xfs_sync.c  |   56 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_sync.h  |    1 +
- fs/xfs/xfs_vfsops.c          |   57 ------------------------------------------
- fs/xfs/xfs_vfsops.h          |    1 -
- 5 files changed, 60 insertions(+), 61 deletions(-)
+ fs/inode.c         |  146 +++++++++++++++++++++++++++++-----------------------
+ include/linux/fs.h |    1 +
+ 2 files changed, 82 insertions(+), 65 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 1846ea7..8c47ed1 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1158,7 +1158,7 @@ xfs_fs_remount(
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
- 		xfs_quiesce_data(mp);
--		xfs_attr_quiesce(mp);
-+		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
- 
-@@ -1167,7 +1167,7 @@ xfs_fs_remount(
- 
- /*
-  * Second stage of a freeze. The data is already frozen so we only
-- * need to take care of themetadata. Once that's done write a dummy
-+ * need to take care of the metadata. Once that's done write a dummy
-  * record to dirty the log in case of a crash while frozen.
-  */
- STATIC void
-@@ -1176,7 +1176,7 @@ xfs_fs_lockfs(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
--	xfs_attr_quiesce(mp);
-+	xfs_quiesce_attr(mp);
- 	xfs_fs_log_dummy(mp);
+diff --git a/fs/inode.c b/fs/inode.c
+index b6726f6..1ec2b5b 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -108,83 +108,99 @@ static void wake_up_inode(struct inode *inode)
+ 	wake_up_bit(&inode->i_state, __I_LOCK);
  }
  
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index c134cad..98a33a5 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -352,6 +352,62 @@ xfs_quiesce_data(
- 	return error;
- }
- 
-+STATIC void
-+xfs_quiesce_fs(
-+	struct xfs_mount	*mp)
-+{
-+	int	count = 0, pincount;
-+
-+	xfs_flush_buftarg(mp->m_ddev_targp, 0);
-+	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+
-+	/*
-+	 * This loop must run at least twice.  The first instance of the loop
-+	 * will flush most meta data but that will generate more meta data
-+	 * (typically directory updates).  Which then must be flushed and
-+	 * logged before we can write the unmount record.
-+	 */
-+	do {
-+		xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
-+		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
-+		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-+		if (!pincount) {
-+			delay(50);
-+			count++;
-+		}
-+	} while (count < 2);
-+}
-+
-+/*
-+ * Second stage of a quiesce. The data is already synced, now we have to take
-+ * care of the metadata. New transactions are already blocked, so we need to
-+ * wait for any remaining transactions to drain out before proceding.
+-static struct inode *alloc_inode(struct super_block *sb)
++/**
++ * inode_init_always - perform inode structure intialisation
++ * @sb		- superblock inode belongs to.
++ * @inode	- inode to initialise
++ *
++ * These are initializations that need to be done on every inode
++ * allocation as the fields are not initialised by slab allocation.
 + */
-+void
-+xfs_quiesce_attr(
-+	struct xfs_mount	*mp)
-+{
-+	int	error = 0;
-+
-+	/* wait for all modifications to complete */
-+	while (atomic_read(&mp->m_active_trans) > 0)
-+		delay(100);
-+
-+	/* flush inodes and push all remaining buffers out to disk */
-+	xfs_quiesce_fs(mp);
-+
-+	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
-+
-+	/* Push the superblock and write an unmount record */
-+	error = xfs_log_sbcount(mp, 1);
-+	if (error)
-+		xfs_fs_cmn_err(CE_WARN, mp,
-+				"xfs_attr_quiesce: failed to log sb changes. "
-+				"Frozen image may not be consistent.");
-+	xfs_log_unmount_write(mp);
-+	xfs_unmountfs_writesb(mp);
-+}
-+
- /*
-  * Enqueue a work item to be picked up by the vfs xfssyncd thread.
-  * Doing this has two advantages:
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 4591dc0..3b49aa3 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -40,6 +40,7 @@ int xfs_sync_inodes(struct xfs_mount *mp, int flags);
- int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
++struct inode *inode_init_always(struct super_block *sb, struct inode *inode)
+ {
+ 	static const struct address_space_operations empty_aops;
+ 	static struct inode_operations empty_iops;
+ 	static const struct file_operations empty_fops;
+-	struct inode *inode;
  
- int xfs_quiesce_data(struct xfs_mount *mp);
-+void xfs_quiesce_attr(struct xfs_mount *mp);
- 
- void xfs_flush_inode(struct xfs_inode *ip);
- void xfs_flush_device(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index c82b955..72b3265 100644
---- a/fs/xfs/xfs_vfsops.c
-+++ b/fs/xfs/xfs_vfsops.c
-@@ -58,63 +58,6 @@
- #include "xfs_utils.h"
- #include "xfs_sync.h"
- 
+-	if (sb->s_op->alloc_inode)
+-		inode = sb->s_op->alloc_inode(sb);
+-	else
+-		inode = (struct inode *) kmem_cache_alloc(inode_cachep, GFP_KERNEL);
 -
--STATIC void
--xfs_quiesce_fs(
--	xfs_mount_t		*mp)
--{
--	int			count = 0, pincount;
+-	if (inode) {
+-		struct address_space * const mapping = &inode->i_data;
 -
--	xfs_flush_buftarg(mp->m_ddev_targp, 0);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
--
--	/*
--	 * This loop must run at least twice.  The first instance of the loop
--	 * will flush most meta data but that will generate more meta data
--	 * (typically directory updates).  Which then must be flushed and
--	 * logged before we can write the unmount record.
--	 */
--	do {
--		xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
--		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
--		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
--		if (!pincount) {
--			delay(50);
--			count++;
+-		inode->i_sb = sb;
+-		inode->i_blkbits = sb->s_blocksize_bits;
+-		inode->i_flags = 0;
+-		atomic_set(&inode->i_count, 1);
+-		inode->i_op = &empty_iops;
+-		inode->i_fop = &empty_fops;
+-		inode->i_nlink = 1;
+-		atomic_set(&inode->i_writecount, 0);
+-		inode->i_size = 0;
+-		inode->i_blocks = 0;
+-		inode->i_bytes = 0;
+-		inode->i_generation = 0;
++	struct address_space * const mapping = &inode->i_data;
++
++	inode->i_sb = sb;
++	inode->i_blkbits = sb->s_blocksize_bits;
++	inode->i_flags = 0;
++	atomic_set(&inode->i_count, 1);
++	inode->i_op = &empty_iops;
++	inode->i_fop = &empty_fops;
++	inode->i_nlink = 1;
++	atomic_set(&inode->i_writecount, 0);
++	inode->i_size = 0;
++	inode->i_blocks = 0;
++	inode->i_bytes = 0;
++	inode->i_generation = 0;
+ #ifdef CONFIG_QUOTA
+-		memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
++	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
+ #endif
+-		inode->i_pipe = NULL;
+-		inode->i_bdev = NULL;
+-		inode->i_cdev = NULL;
+-		inode->i_rdev = 0;
+-		inode->dirtied_when = 0;
+-		if (security_inode_alloc(inode)) {
+-			if (inode->i_sb->s_op->destroy_inode)
+-				inode->i_sb->s_op->destroy_inode(inode);
+-			else
+-				kmem_cache_free(inode_cachep, (inode));
+-			return NULL;
 -		}
--	} while (count < 2);
--}
--
--/*
-- * Second stage of a quiesce. The data is already synced, now we have to take
-- * care of the metadata. New transactions are already blocked, so we need to
-- * wait for any remaining transactions to drain out before proceding.
-- */
--void
--xfs_attr_quiesce(
--	xfs_mount_t	*mp)
--{
--	int	error = 0;
--
--	/* wait for all modifications to complete */
--	while (atomic_read(&mp->m_active_trans) > 0)
--		delay(100);
--
--	/* flush inodes and push all remaining buffers out to disk */
--	xfs_quiesce_fs(mp);
--
--	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
--
--	/* Push the superblock and write an unmount record */
--	error = xfs_log_sbcount(mp, 1);
--	if (error)
--		xfs_fs_cmn_err(CE_WARN, mp,
--				"xfs_attr_quiesce: failed to log sb changes. "
--				"Frozen image may not be consistent.");
--	xfs_log_unmount_write(mp);
--	xfs_unmountfs_writesb(mp);
--}
--
- /*
-  * xfs_unmount_flush implements a set of flush operation on special
-  * inodes, which are needed as a separate set of operations so that
-diff --git a/fs/xfs/xfs_vfsops.h b/fs/xfs/xfs_vfsops.h
-index 6701d0e..6b8e0b5 100644
---- a/fs/xfs/xfs_vfsops.h
-+++ b/fs/xfs/xfs_vfsops.h
-@@ -10,6 +10,5 @@ struct xfs_mount_args;
++	inode->i_pipe = NULL;
++	inode->i_bdev = NULL;
++	inode->i_cdev = NULL;
++	inode->i_rdev = 0;
++	inode->dirtied_when = 0;
++	if (security_inode_alloc(inode)) {
++		if (inode->i_sb->s_op->destroy_inode)
++			inode->i_sb->s_op->destroy_inode(inode);
++		else
++			kmem_cache_free(inode_cachep, (inode));
++		return NULL;
++	}
  
- void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- 		int lnnum);
--void xfs_attr_quiesce(struct xfs_mount *mp);
+-		spin_lock_init(&inode->i_lock);
+-		lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
++	spin_lock_init(&inode->i_lock);
++	lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
  
- #endif /* _XFS_VFSOPS_H */
+-		mutex_init(&inode->i_mutex);
+-		lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
++	mutex_init(&inode->i_mutex);
++	lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
+ 
+-		init_rwsem(&inode->i_alloc_sem);
+-		lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
++	init_rwsem(&inode->i_alloc_sem);
++	lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
+ 
+-		mapping->a_ops = &empty_aops;
+- 		mapping->host = inode;
+-		mapping->flags = 0;
+-		mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
+-		mapping->assoc_mapping = NULL;
+-		mapping->backing_dev_info = &default_backing_dev_info;
++	mapping->a_ops = &empty_aops;
++	mapping->host = inode;
++	mapping->flags = 0;
++	mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
++	mapping->assoc_mapping = NULL;
++	mapping->backing_dev_info = &default_backing_dev_info;
+ 
+-		/*
+-		 * If the block_device provides a backing_dev_info for client
+-		 * inodes then use that.  Otherwise the inode share the bdev's
+-		 * backing_dev_info.
+-		 */
+-		if (sb->s_bdev) {
+-			struct backing_dev_info *bdi;
++	/*
++	 * If the block_device provides a backing_dev_info for client
++	 * inodes then use that.  Otherwise the inode share the bdev's
++	 * backing_dev_info.
++	 */
++	if (sb->s_bdev) {
++		struct backing_dev_info *bdi;
+ 
+-			bdi = sb->s_bdev->bd_inode_backing_dev_info;
+-			if (!bdi)
+-				bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
+-			mapping->backing_dev_info = bdi;
+-		}
+-		inode->i_private = NULL;
+-		inode->i_mapping = mapping;
++		bdi = sb->s_bdev->bd_inode_backing_dev_info;
++		if (!bdi)
++			bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
++		mapping->backing_dev_info = bdi;
+ 	}
++	inode->i_private = NULL;
++	inode->i_mapping = mapping;
++
+ 	return inode;
+ }
++EXPORT_SYMBOL(inode_init_always);
++
++static struct inode *alloc_inode(struct super_block *sb)
++{
++	struct inode *inode;
++
++	if (sb->s_op->alloc_inode)
++		inode = sb->s_op->alloc_inode(sb);
++	else
++		inode = (struct inode *) kmem_cache_alloc(inode_cachep, GFP_KERNEL);
++
++	if (inode)
++		return inode_init_always(sb, inode);
++	return NULL;
++}
+ 
+ void destroy_inode(struct inode *inode) 
+ {
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 580b513..ce55983 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1811,6 +1811,7 @@ extern loff_t default_llseek(struct file *file, loff_t offset, int origin);
+ 
+ extern loff_t vfs_llseek(struct file *file, loff_t offset, int origin);
+ 
++extern struct inode * inode_init_always(struct super_block *, struct inode *);
+ extern void inode_init_once(struct inode *);
+ extern void iput(struct inode *);
+ extern struct inode * igrab(struct inode *);
 -- 
 1.5.6
