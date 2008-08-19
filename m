@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:24 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFdK1022846
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:40 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFX4S022773
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:33 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 731071BC6735
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:58 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id it3QP1GHi4kGEQPH for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3876412F9409
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:51 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id XhSDQHGfSmAwtlI5 for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:51 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4u-0008BE-88
-	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:52 +1000
+	id 1KVR4n-0008A4-2f
+	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/28] XFS: Kill xfs_sync()
-Date: Tue, 19 Aug 2008 23:16:32 +1000
-Message-Id: <1219151804-30749-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/28] XFS: move sync code to its own file
+Date: Tue, 19 Aug 2008 23:16:18 +1000
+Message-Id: <1219151804-30749-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,64 +22,688 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-There are no more callers to xfs_sync() now, so remove the
-function altogther.
+The sync code in XFS is spread around several files.
+While it used to make sense to have such a distribution,
+the code is about to be cleaned up and so centralising it
+in one spot as the first step makes sense.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |  132 +++++--------------------------------------
- fs/xfs/linux-2.6/xfs_sync.h |   25 +-------
- fs/xfs/quota/xfs_qm.c       |   10 +--
- fs/xfs/xfs_iget.c           |   15 ++---
- 4 files changed, 29 insertions(+), 153 deletions(-)
+ fs/xfs/Makefile              |    1 +
+ fs/xfs/linux-2.6/xfs_super.c |    1 +
+ fs/xfs/linux-2.6/xfs_sync.c  |  605 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_sync.h  |    7 +
+ fs/xfs/xfs_vfsops.c          |  560 +--------------------------------------
+ fs/xfs/xfs_vfsops.h          |    1 -
+ 6 files changed, 615 insertions(+), 560 deletions(-)
+ create mode 100644 fs/xfs/linux-2.6/xfs_sync.c
+ create mode 100644 fs/xfs/linux-2.6/xfs_sync.h
 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 737c9a4..f42ea60 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -106,6 +106,7 @@ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
+ 				   xfs_iops.o \
+ 				   xfs_lrw.o \
+ 				   xfs_super.o \
++				   xfs_sync.o \
+ 				   xfs_vnode.o \
+ 				   xfs_xattr.o)
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 7d4bdfd..aba1cf0 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -58,6 +58,7 @@
+ #include "xfs_extfree_item.h"
+ #include "xfs_mru_cache.h"
+ #include "xfs_inode_item.h"
++#include "xfs_sync.h"
+ 
+ #include <linux/namei.h>
+ #include <linux/init.h>
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index f9b0816..c134cad 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
+new file mode 100644
+index 0000000..c765eb2
+--- /dev/null
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -309,11 +309,21 @@ xfs_sync_fsdata(
- }
- 
- /*
-- * First stage of freeze - no more writers will make progress now we are here,
-+ * When remounting a filesystem read-only or freezing the filesystem, we have
-+ * two phases to execute. This first phase is syncing the data before we
-+ * quiesce the filesystem, and the second is flushing all the inodes out after
-+ * we've waited for all the transactions created by the first phase to
-+ * complete. The second phase ensures that the inodes are written to their
-+ * location on disk rather than just existing in transactions in the log. This
-+ * means after a quiesce there is no log replay required to write the inodes to
-+ * disk (this is the main difference between a sync and a quiesce).
-+ */
+@@ -0,0 +1,605 @@
 +/*
-+ * First stage of freeze - no writers will make progress now we are here,
-  * so we flush delwri and delalloc buffers here, then wait for all I/O to
-  * complete.  Data is frozen at that point. Metadata is not frozen,
-- * transactions can still occur here so don't bother flushing the buftarg (i.e
-- * SYNC_QUIESCE) because it'll just get dirty again.
-+ * transactions can still occur here so don't bother flushing the buftarg
-+ * because it'll just get dirty again.
-  */
- int
- xfs_quiesce_data(
-@@ -332,11 +342,10 @@ xfs_quiesce_data(
- 	xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
- 	XFS_QM_DQSYNC(mp, SYNC_WAIT);
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_types.h"
++#include "xfs_bit.h"
++#include "xfs_log.h"
++#include "xfs_inum.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_dir2.h"
++#include "xfs_dmapi.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_btree.h"
++#include "xfs_dir2_sf.h"
++#include "xfs_attr_sf.h"
++#include "xfs_inode.h"
++#include "xfs_dinode.h"
++#include "xfs_error.h"
++#include "xfs_mru_cache.h"
++#include "xfs_filestream.h"
++#include "xfs_vnodeops.h"
++#include "xfs_utils.h"
++#include "xfs_buf_item.h"
++#include "xfs_inode_item.h"
++#include "xfs_rw.h"
++
++/*
++ * xfs_sync flushes any pending I/O to file system vfsp.
++ *
++ * This routine is called by vfs_sync() to make sure that things make it
++ * out to disk eventually, on sync() system calls to flush out everything,
++ * and when the file system is unmounted.  For the vfs_sync() case, all
++ * we really need to do is sync out the log to make all of our meta-data
++ * updates permanent (except for timestamps).  For calls from pflushd(),
++ * dirty pages are kept moving by calling pdflush() on the inodes
++ * containing them.  We also flush the inodes that we can lock without
++ * sleeping and the superblock if we can lock it without sleeping from
++ * vfs_sync() so that items at the tail of the log are always moving out.
++ *
++ * Flags:
++ *      SYNC_BDFLUSH - We're being called from vfs_sync() so we don't want
++ *		       to sleep if we can help it.  All we really need
++ *		       to do is ensure that the log is synced at least
++ *		       periodically.  We also push the inodes and
++ *		       superblock if we can lock them without sleeping
++ *			and they are not pinned.
++ *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
++ *		       set, then we really want to lock each inode and flush
++ *		       it.
++ *      SYNC_WAIT    - All the flushes that take place in this call should
++ *		       be synchronous.
++ *      SYNC_DELWRI  - This tells us to push dirty pages associated with
++ *		       inodes.  SYNC_WAIT and SYNC_BDFLUSH are used to
++ *		       determine if they should be flushed sync, async, or
++ *		       delwri.
++ *      SYNC_CLOSE   - This flag is passed when the system is being
++ *		       unmounted.  We should sync and invalidate everything.
++ *      SYNC_FSDATA  - This indicates that the caller would like to make
++ *		       sure the superblock is safe on disk.  We can ensure
++ *		       this by simply making sure the log gets flushed
++ *		       if SYNC_BDFLUSH is set, and by actually writing it
++ *		       out otherwise.
++ *	SYNC_IOWAIT  - The caller wants us to wait for all data I/O to complete
++ *		       before we return (including direct I/O). Forms the drain
++ *		       side of the write barrier needed to safely quiesce the
++ *		       filesystem.
++ *
++ */
++int
++xfs_sync(
++	xfs_mount_t	*mp,
++	int		flags)
++{
++	int		error;
++
++	/*
++	 * Get the Quota Manager to flush the dquots.
++	 *
++	 * If XFS quota support is not enabled or this filesystem
++	 * instance does not use quotas XFS_QM_DQSYNC will always
++	 * return zero.
++	 */
++	error = XFS_QM_DQSYNC(mp, flags);
++	if (error) {
++		/*
++		 * If we got an IO error, we will be shutting down.
++		 * So, there's nothing more for us to do here.
++		 */
++		ASSERT(error != EIO || XFS_FORCED_SHUTDOWN(mp));
++		if (XFS_FORCED_SHUTDOWN(mp))
++			return XFS_ERROR(error);
++	}
++
++	if (flags & SYNC_IOWAIT)
++		xfs_filestream_flush(mp);
++
++	return xfs_syncsub(mp, flags, NULL);
++}
++
++/*
++ * xfs sync routine for internal use
++ *
++ * This routine supports all of the flags defined for the generic vfs_sync
++ * interface as explained above under xfs_sync.
++ *
++ */
++int
++xfs_sync_inodes(
++	xfs_mount_t	*mp,
++	int		flags,
++	int             *bypassed)
++{
++	xfs_inode_t	*ip = NULL;
++	struct inode	*vp = NULL;
++	int		error;
++	int		last_error;
++	uint64_t	fflag;
++	uint		lock_flags;
++	uint		base_lock_flags;
++	boolean_t	mount_locked;
++	boolean_t	vnode_refed;
++	int		preempt;
++	xfs_iptr_t	*ipointer;
++#ifdef DEBUG
++	boolean_t	ipointer_in = B_FALSE;
++
++#define IPOINTER_SET	ipointer_in = B_TRUE
++#define IPOINTER_CLR	ipointer_in = B_FALSE
++#else
++#define IPOINTER_SET
++#define IPOINTER_CLR
++#endif
++
++
++/* Insert a marker record into the inode list after inode ip. The list
++ * must be locked when this is called. After the call the list will no
++ * longer be locked.
++ */
++#define IPOINTER_INSERT(ip, mp)	{ \
++		ASSERT(ipointer_in == B_FALSE); \
++		ipointer->ip_mnext = ip->i_mnext; \
++		ipointer->ip_mprev = ip; \
++		ip->i_mnext = (xfs_inode_t *)ipointer; \
++		ipointer->ip_mnext->i_mprev = (xfs_inode_t *)ipointer; \
++		preempt = 0; \
++		XFS_MOUNT_IUNLOCK(mp); \
++		mount_locked = B_FALSE; \
++		IPOINTER_SET; \
++	}
++
++/* Remove the marker from the inode list. If the marker was the only item
++ * in the list then there are no remaining inodes and we should zero out
++ * the whole list. If we are the current head of the list then move the head
++ * past us.
++ */
++#define IPOINTER_REMOVE(ip, mp)	{ \
++		ASSERT(ipointer_in == B_TRUE); \
++		if (ipointer->ip_mnext != (xfs_inode_t *)ipointer) { \
++			ip = ipointer->ip_mnext; \
++			ip->i_mprev = ipointer->ip_mprev; \
++			ipointer->ip_mprev->i_mnext = ip; \
++			if (mp->m_inodes == (xfs_inode_t *)ipointer) { \
++				mp->m_inodes = ip; \
++			} \
++		} else { \
++			ASSERT(mp->m_inodes == (xfs_inode_t *)ipointer); \
++			mp->m_inodes = NULL; \
++			ip = NULL; \
++		} \
++		IPOINTER_CLR; \
++	}
++
++#define XFS_PREEMPT_MASK	0x7f
++
++	ASSERT(!(flags & SYNC_BDFLUSH));
++
++	if (bypassed)
++		*bypassed = 0;
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return 0;
++	error = 0;
++	last_error = 0;
++	preempt = 0;
++
++	/* Allocate a reference marker */
++	ipointer = (xfs_iptr_t *)kmem_zalloc(sizeof(xfs_iptr_t), KM_SLEEP);
++
++	fflag = XFS_B_ASYNC;		/* default is don't wait */
++	if (flags & SYNC_DELWRI)
++		fflag = XFS_B_DELWRI;
++	if (flags & SYNC_WAIT)
++		fflag = 0;		/* synchronous overrides all */
++
++	base_lock_flags = XFS_ILOCK_SHARED;
++	if (flags & (SYNC_DELWRI | SYNC_CLOSE)) {
++		/*
++		 * We need the I/O lock if we're going to call any of
++		 * the flush/inval routines.
++		 */
++		base_lock_flags |= XFS_IOLOCK_SHARED;
++	}
++
++	XFS_MOUNT_ILOCK(mp);
++
++	ip = mp->m_inodes;
++
++	mount_locked = B_TRUE;
++	vnode_refed  = B_FALSE;
++
++	IPOINTER_CLR;
++
++	do {
++		ASSERT(ipointer_in == B_FALSE);
++		ASSERT(vnode_refed == B_FALSE);
++
++		lock_flags = base_lock_flags;
++
++		/*
++		 * There were no inodes in the list, just break out
++		 * of the loop.
++		 */
++		if (ip == NULL) {
++			break;
++		}
++
++		/*
++		 * We found another sync thread marker - skip it
++		 */
++		if (ip->i_mount == NULL) {
++			ip = ip->i_mnext;
++			continue;
++		}
++
++		vp = VFS_I(ip);
++
++		/*
++		 * If the vnode is gone then this is being torn down,
++		 * call reclaim if it is flushed, else let regular flush
++		 * code deal with it later in the loop.
++		 */
++
++		if (vp == NULL) {
++			/* Skip ones already in reclaim */
++			if (ip->i_flags & XFS_IRECLAIM) {
++				ip = ip->i_mnext;
++				continue;
++			}
++			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0) {
++				ip = ip->i_mnext;
++			} else if ((xfs_ipincount(ip) == 0) &&
++				    xfs_iflock_nowait(ip)) {
++				IPOINTER_INSERT(ip, mp);
++
++				xfs_finish_reclaim(ip, 1,
++						XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++
++				XFS_MOUNT_ILOCK(mp);
++				mount_locked = B_TRUE;
++				IPOINTER_REMOVE(ip, mp);
++			} else {
++				xfs_iunlock(ip, XFS_ILOCK_EXCL);
++				ip = ip->i_mnext;
++			}
++			continue;
++		}
++
++		if (VN_BAD(vp)) {
++			ip = ip->i_mnext;
++			continue;
++		}
++
++		if (XFS_FORCED_SHUTDOWN(mp) && !(flags & SYNC_CLOSE)) {
++			XFS_MOUNT_IUNLOCK(mp);
++			kmem_free(ipointer);
++			return 0;
++		}
++
++		/*
++		 * Try to lock without sleeping.  We're out of order with
++		 * the inode list lock here, so if we fail we need to drop
++		 * the mount lock and try again.  If we're called from
++		 * bdflush() here, then don't bother.
++		 *
++		 * The inode lock here actually coordinates with the
++		 * almost spurious inode lock in xfs_ireclaim() to prevent
++		 * the vnode we handle here without a reference from
++		 * being freed while we reference it.  If we lock the inode
++		 * while it's on the mount list here, then the spurious inode
++		 * lock in xfs_ireclaim() after the inode is pulled from
++		 * the mount list will sleep until we release it here.
++		 * This keeps the vnode from being freed while we reference
++		 * it.
++		 */
++		if (xfs_ilock_nowait(ip, lock_flags) == 0) {
++			if (vp == NULL) {
++				ip = ip->i_mnext;
++				continue;
++			}
++
++			vp = vn_grab(vp);
++			if (vp == NULL) {
++				ip = ip->i_mnext;
++				continue;
++			}
++
++			IPOINTER_INSERT(ip, mp);
++			xfs_ilock(ip, lock_flags);
++
++			ASSERT(vp == VFS_I(ip));
++			ASSERT(ip->i_mount == mp);
++
++			vnode_refed = B_TRUE;
++		}
++
++		/* From here on in the loop we may have a marker record
++		 * in the inode list.
++		 */
++
++		/*
++		 * If we have to flush data or wait for I/O completion
++		 * we need to drop the ilock that we currently hold.
++		 * If we need to drop the lock, insert a marker if we
++		 * have not already done so.
++		 */
++		if ((flags & (SYNC_CLOSE|SYNC_IOWAIT)) ||
++		    ((flags & SYNC_DELWRI) && VN_DIRTY(vp))) {
++			if (mount_locked) {
++				IPOINTER_INSERT(ip, mp);
++			}
++			xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++			if (flags & SYNC_CLOSE) {
++				/* Shutdown case. Flush and invalidate. */
++				if (XFS_FORCED_SHUTDOWN(mp))
++					xfs_tosspages(ip, 0, -1,
++							     FI_REMAPF);
++				else
++					error = xfs_flushinval_pages(ip,
++							0, -1, FI_REMAPF);
++			} else if ((flags & SYNC_DELWRI) && VN_DIRTY(vp)) {
++				error = xfs_flush_pages(ip, 0,
++							-1, fflag, FI_NONE);
++			}
++
++			/*
++			 * When freezing, we need to wait ensure all I/O (including direct
++			 * I/O) is complete to ensure no further data modification can take
++			 * place after this point
++			 */
++			if (flags & SYNC_IOWAIT)
++				vn_iowait(ip);
++
++			xfs_ilock(ip, XFS_ILOCK_SHARED);
++		}
++
++		if ((flags & SYNC_ATTR) &&
++		    (ip->i_update_core ||
++		     (ip->i_itemp && ip->i_itemp->ili_format.ilf_fields))) {
++			if (mount_locked)
++				IPOINTER_INSERT(ip, mp);
++
++			if (flags & SYNC_WAIT) {
++				xfs_iflock(ip);
++				error = xfs_iflush(ip, XFS_IFLUSH_SYNC);
++
++			/*
++			 * If we can't acquire the flush lock, then the inode
++			 * is already being flushed so don't bother waiting.
++			 *
++			 * If we can lock it then do a delwri flush so we can
++			 * combine multiple inode flushes in each disk write.
++			 */
++			} else if (xfs_iflock_nowait(ip)) {
++				error = xfs_iflush(ip, XFS_IFLUSH_DELWRI);
++			} else if (bypassed) {
++				(*bypassed)++;
++			}
++		}
++
++		if (lock_flags != 0) {
++			xfs_iunlock(ip, lock_flags);
++		}
++
++		if (vnode_refed) {
++			/*
++			 * If we had to take a reference on the vnode
++			 * above, then wait until after we've unlocked
++			 * the inode to release the reference.  This is
++			 * because we can be already holding the inode
++			 * lock when IRELE() calls xfs_inactive().
++			 *
++			 * Make sure to drop the mount lock before calling
++			 * IRELE() so that we don't trip over ourselves if
++			 * we have to go for the mount lock again in the
++			 * inactive code.
++			 */
++			if (mount_locked) {
++				IPOINTER_INSERT(ip, mp);
++			}
++
++			IRELE(ip);
++
++			vnode_refed = B_FALSE;
++		}
++
++		if (error) {
++			last_error = error;
++		}
++
++		/*
++		 * bail out if the filesystem is corrupted.
++		 */
++		if (error == EFSCORRUPTED)  {
++			if (!mount_locked) {
++				XFS_MOUNT_ILOCK(mp);
++				IPOINTER_REMOVE(ip, mp);
++			}
++			XFS_MOUNT_IUNLOCK(mp);
++			ASSERT(ipointer_in == B_FALSE);
++			kmem_free(ipointer);
++			return XFS_ERROR(error);
++		}
++
++		/* Let other threads have a chance at the mount lock
++		 * if we have looped many times without dropping the
++		 * lock.
++		 */
++		if ((++preempt & XFS_PREEMPT_MASK) == 0) {
++			if (mount_locked) {
++				IPOINTER_INSERT(ip, mp);
++			}
++		}
++
++		if (mount_locked == B_FALSE) {
++			XFS_MOUNT_ILOCK(mp);
++			mount_locked = B_TRUE;
++			IPOINTER_REMOVE(ip, mp);
++			continue;
++		}
++
++		ASSERT(ipointer_in == B_FALSE);
++		ip = ip->i_mnext;
++
++	} while (ip != mp->m_inodes);
++
++	XFS_MOUNT_IUNLOCK(mp);
++
++	ASSERT(ipointer_in == B_FALSE);
++
++	kmem_free(ipointer);
++	return XFS_ERROR(last_error);
++}
++
++/*
++ * xfs sync routine for internal use
++ *
++ * This routine supports all of the flags defined for the generic vfs_sync
++ * interface as explained above under xfs_sync.
++ *
++ */
++int
++xfs_syncsub(
++	xfs_mount_t	*mp,
++	int		flags,
++	int             *bypassed)
++{
++	int		error = 0;
++	int		last_error = 0;
++	uint		log_flags = XFS_LOG_FORCE;
++	xfs_buf_t	*bp;
++	xfs_buf_log_item_t	*bip;
++
++	/*
++	 * Sync out the log.  This ensures that the log is periodically
++	 * flushed even if there is not enough activity to fill it up.
++	 */
++	if (flags & SYNC_WAIT)
++		log_flags |= XFS_LOG_SYNC;
++
++	xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
++
++	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
++		if (flags & SYNC_BDFLUSH)
++			xfs_finish_reclaim_all(mp, 1);
++		else
++			error = xfs_sync_inodes(mp, flags, bypassed);
++	}
++
++	/*
++	 * Flushing out dirty data above probably generated more
++	 * log activity, so if this isn't vfs_sync() then flush
++	 * the log again.
++	 */
++	if (flags & SYNC_DELWRI) {
++		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
++	}
++
++	if (flags & SYNC_FSDATA) {
++		/*
++		 * If this is vfs_sync() then only sync the superblock
++		 * if we can lock it without sleeping and it is not pinned.
++		 */
++		if (flags & SYNC_BDFLUSH) {
++			bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
++			if (bp != NULL) {
++				bip = XFS_BUF_FSPRIVATE(bp,xfs_buf_log_item_t*);
++				if ((bip != NULL) &&
++				    xfs_buf_item_dirty(bip)) {
++					if (!(XFS_BUF_ISPINNED(bp))) {
++						XFS_BUF_ASYNC(bp);
++						error = xfs_bwrite(mp, bp);
++					} else {
++						xfs_buf_relse(bp);
++					}
++				} else {
++					xfs_buf_relse(bp);
++				}
++			}
++		} else {
++			bp = xfs_getsb(mp, 0);
++			/*
++			 * If the buffer is pinned then push on the log so
++			 * we won't get stuck waiting in the write for
++			 * someone, maybe ourselves, to flush the log.
++			 * Even though we just pushed the log above, we
++			 * did not have the superblock buffer locked at
++			 * that point so it can become pinned in between
++			 * there and here.
++			 */
++			if (XFS_BUF_ISPINNED(bp))
++				xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
++			if (flags & SYNC_WAIT)
++				XFS_BUF_UNASYNC(bp);
++			else
++				XFS_BUF_ASYNC(bp);
++			error = xfs_bwrite(mp, bp);
++		}
++		if (error) {
++			last_error = error;
++		}
++	}
++
++	/*
++	 * Now check to see if the log needs a "dummy" transaction.
++	 */
++	if (!(flags & SYNC_REMOUNT) && xfs_log_need_covered(mp)) {
++		xfs_trans_t *tp;
++		xfs_inode_t *ip;
++
++		/*
++		 * Put a dummy transaction in the log to tell
++		 * recovery that all others are OK.
++		 */
++		tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
++		if ((error = xfs_trans_reserve(tp, 0,
++				XFS_ICHANGE_LOG_RES(mp),
++				0, 0, 0)))  {
++			xfs_trans_cancel(tp, 0);
++			return error;
++		}
++
++		ip = mp->m_rootip;
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++		xfs_trans_ihold(tp, ip);
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++		error = xfs_trans_commit(tp, 0);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
++	}
++
++	/*
++	 * When shutting down, we need to insure that the AIL is pushed
++	 * to disk or the filesystem can appear corrupt from the PROM.
++	 */
++	if ((flags & (SYNC_CLOSE|SYNC_WAIT)) == (SYNC_CLOSE|SYNC_WAIT)) {
++		XFS_bflush(mp->m_ddev_targp);
++		if (mp->m_rtdev_targp) {
++			XFS_bflush(mp->m_rtdev_targp);
++		}
++	}
++
++	return XFS_ERROR(last_error);
++}
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+new file mode 100644
+index 0000000..f4c3b1e
+--- /dev/null
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -0,0 +1,7 @@
++#ifndef XFS_SYNC_H
++#define XFS_SYNC_H 1
++
++int xfs_sync(struct xfs_mount *mp, int flags);
++int xfs_syncsub(struct xfs_mount *mp, int flags, int *bypassed);
++
++#endif
+diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
+index 439dd39..01e274b 100644
+--- a/fs/xfs/xfs_vfsops.c
++++ b/fs/xfs/xfs_vfsops.c
+@@ -56,6 +56,7 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_vfsops.h"
+ #include "xfs_utils.h"
++#include "xfs_sync.h"
  
--	/* write superblock and hoover shutdown errors */
-+	/* write superblock and hoover up shutdown errors */
- 	error = xfs_sync_fsdata(mp, 0);
  
--	/* flush devices */
--	XFS_bflush(mp->m_ddev_targp);
-+	/* flush data-only devices */
- 	if (mp->m_rtdev_targp)
- 		XFS_bflush(mp->m_rtdev_targp);
- 
-@@ -344,117 +353,6 @@ xfs_quiesce_data(
+ STATIC void
+@@ -196,562 +197,3 @@ fscorrupt_out2:
+ 	return XFS_ERROR(EFSCORRUPTED);
  }
  
- /*
+-/*
 - * xfs_sync flushes any pending I/O to file system vfsp.
 - *
 - * This routine is called by vfs_sync() to make sure that things make it
@@ -99,14 +723,17 @@ index f9b0816..c134cad 100644
 - *		       periodically.  We also push the inodes and
 - *		       superblock if we can lock them without sleeping
 - *			and they are not pinned.
-- *      SYNC_ATTR    - We need to flush the inodes. Now handled by direct calls
-- *		       to xfs_sync_inodes().
+- *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
+- *		       set, then we really want to lock each inode and flush
+- *		       it.
 - *      SYNC_WAIT    - All the flushes that take place in this call should
 - *		       be synchronous.
 - *      SYNC_DELWRI  - This tells us to push dirty pages associated with
 - *		       inodes.  SYNC_WAIT and SYNC_BDFLUSH are used to
 - *		       determine if they should be flushed sync, async, or
 - *		       delwri.
+- *      SYNC_CLOSE   - This flag is passed when the system is being
+- *		       unmounted.  We should sync and invalidate everything.
 - *      SYNC_FSDATA  - This indicates that the caller would like to make
 - *		       sure the superblock is safe on disk.  We can ensure
 - *		       this by simply making sure the log gets flushed
@@ -124,10 +751,6 @@ index f9b0816..c134cad 100644
 -	int		flags)
 -{
 -	int		error;
--	int		last_error = 0;
--	uint		log_flags = XFS_LOG_FORCE;
--
--	ASSERT(!(flags & SYNC_ATTR));
 -
 -	/*
 -	 * Get the Quota Manager to flush the dquots.
@@ -150,6 +773,382 @@ index f9b0816..c134cad 100644
 -	if (flags & SYNC_IOWAIT)
 -		xfs_filestream_flush(mp);
 -
+-	return xfs_syncsub(mp, flags, NULL);
+-}
+-
+-/*
+- * xfs sync routine for internal use
+- *
+- * This routine supports all of the flags defined for the generic vfs_sync
+- * interface as explained above under xfs_sync.
+- *
+- */
+-int
+-xfs_sync_inodes(
+-	xfs_mount_t	*mp,
+-	int		flags,
+-	int             *bypassed)
+-{
+-	xfs_inode_t	*ip = NULL;
+-	struct inode	*vp = NULL;
+-	int		error;
+-	int		last_error;
+-	uint64_t	fflag;
+-	uint		lock_flags;
+-	uint		base_lock_flags;
+-	boolean_t	mount_locked;
+-	boolean_t	vnode_refed;
+-	int		preempt;
+-	xfs_iptr_t	*ipointer;
+-#ifdef DEBUG
+-	boolean_t	ipointer_in = B_FALSE;
+-
+-#define IPOINTER_SET	ipointer_in = B_TRUE
+-#define IPOINTER_CLR	ipointer_in = B_FALSE
+-#else
+-#define IPOINTER_SET
+-#define IPOINTER_CLR
+-#endif
+-
+-
+-/* Insert a marker record into the inode list after inode ip. The list
+- * must be locked when this is called. After the call the list will no
+- * longer be locked.
+- */
+-#define IPOINTER_INSERT(ip, mp)	{ \
+-		ASSERT(ipointer_in == B_FALSE); \
+-		ipointer->ip_mnext = ip->i_mnext; \
+-		ipointer->ip_mprev = ip; \
+-		ip->i_mnext = (xfs_inode_t *)ipointer; \
+-		ipointer->ip_mnext->i_mprev = (xfs_inode_t *)ipointer; \
+-		preempt = 0; \
+-		XFS_MOUNT_IUNLOCK(mp); \
+-		mount_locked = B_FALSE; \
+-		IPOINTER_SET; \
+-	}
+-
+-/* Remove the marker from the inode list. If the marker was the only item
+- * in the list then there are no remaining inodes and we should zero out
+- * the whole list. If we are the current head of the list then move the head
+- * past us.
+- */
+-#define IPOINTER_REMOVE(ip, mp)	{ \
+-		ASSERT(ipointer_in == B_TRUE); \
+-		if (ipointer->ip_mnext != (xfs_inode_t *)ipointer) { \
+-			ip = ipointer->ip_mnext; \
+-			ip->i_mprev = ipointer->ip_mprev; \
+-			ipointer->ip_mprev->i_mnext = ip; \
+-			if (mp->m_inodes == (xfs_inode_t *)ipointer) { \
+-				mp->m_inodes = ip; \
+-			} \
+-		} else { \
+-			ASSERT(mp->m_inodes == (xfs_inode_t *)ipointer); \
+-			mp->m_inodes = NULL; \
+-			ip = NULL; \
+-		} \
+-		IPOINTER_CLR; \
+-	}
+-
+-#define XFS_PREEMPT_MASK	0x7f
+-
+-	ASSERT(!(flags & SYNC_BDFLUSH));
+-
+-	if (bypassed)
+-		*bypassed = 0;
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return 0;
+-	error = 0;
+-	last_error = 0;
+-	preempt = 0;
+-
+-	/* Allocate a reference marker */
+-	ipointer = (xfs_iptr_t *)kmem_zalloc(sizeof(xfs_iptr_t), KM_SLEEP);
+-
+-	fflag = XFS_B_ASYNC;		/* default is don't wait */
+-	if (flags & SYNC_DELWRI)
+-		fflag = XFS_B_DELWRI;
+-	if (flags & SYNC_WAIT)
+-		fflag = 0;		/* synchronous overrides all */
+-
+-	base_lock_flags = XFS_ILOCK_SHARED;
+-	if (flags & (SYNC_DELWRI | SYNC_CLOSE)) {
+-		/*
+-		 * We need the I/O lock if we're going to call any of
+-		 * the flush/inval routines.
+-		 */
+-		base_lock_flags |= XFS_IOLOCK_SHARED;
+-	}
+-
+-	XFS_MOUNT_ILOCK(mp);
+-
+-	ip = mp->m_inodes;
+-
+-	mount_locked = B_TRUE;
+-	vnode_refed  = B_FALSE;
+-
+-	IPOINTER_CLR;
+-
+-	do {
+-		ASSERT(ipointer_in == B_FALSE);
+-		ASSERT(vnode_refed == B_FALSE);
+-
+-		lock_flags = base_lock_flags;
+-
+-		/*
+-		 * There were no inodes in the list, just break out
+-		 * of the loop.
+-		 */
+-		if (ip == NULL) {
+-			break;
+-		}
+-
+-		/*
+-		 * We found another sync thread marker - skip it
+-		 */
+-		if (ip->i_mount == NULL) {
+-			ip = ip->i_mnext;
+-			continue;
+-		}
+-
+-		vp = VFS_I(ip);
+-
+-		/*
+-		 * If the vnode is gone then this is being torn down,
+-		 * call reclaim if it is flushed, else let regular flush
+-		 * code deal with it later in the loop.
+-		 */
+-
+-		if (vp == NULL) {
+-			/* Skip ones already in reclaim */
+-			if (ip->i_flags & XFS_IRECLAIM) {
+-				ip = ip->i_mnext;
+-				continue;
+-			}
+-			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0) {
+-				ip = ip->i_mnext;
+-			} else if ((xfs_ipincount(ip) == 0) &&
+-				    xfs_iflock_nowait(ip)) {
+-				IPOINTER_INSERT(ip, mp);
+-
+-				xfs_finish_reclaim(ip, 1,
+-						XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+-
+-				XFS_MOUNT_ILOCK(mp);
+-				mount_locked = B_TRUE;
+-				IPOINTER_REMOVE(ip, mp);
+-			} else {
+-				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-				ip = ip->i_mnext;
+-			}
+-			continue;
+-		}
+-
+-		if (VN_BAD(vp)) {
+-			ip = ip->i_mnext;
+-			continue;
+-		}
+-
+-		if (XFS_FORCED_SHUTDOWN(mp) && !(flags & SYNC_CLOSE)) {
+-			XFS_MOUNT_IUNLOCK(mp);
+-			kmem_free(ipointer);
+-			return 0;
+-		}
+-
+-		/*
+-		 * Try to lock without sleeping.  We're out of order with
+-		 * the inode list lock here, so if we fail we need to drop
+-		 * the mount lock and try again.  If we're called from
+-		 * bdflush() here, then don't bother.
+-		 *
+-		 * The inode lock here actually coordinates with the
+-		 * almost spurious inode lock in xfs_ireclaim() to prevent
+-		 * the vnode we handle here without a reference from
+-		 * being freed while we reference it.  If we lock the inode
+-		 * while it's on the mount list here, then the spurious inode
+-		 * lock in xfs_ireclaim() after the inode is pulled from
+-		 * the mount list will sleep until we release it here.
+-		 * This keeps the vnode from being freed while we reference
+-		 * it.
+-		 */
+-		if (xfs_ilock_nowait(ip, lock_flags) == 0) {
+-			if (vp == NULL) {
+-				ip = ip->i_mnext;
+-				continue;
+-			}
+-
+-			vp = vn_grab(vp);
+-			if (vp == NULL) {
+-				ip = ip->i_mnext;
+-				continue;
+-			}
+-
+-			IPOINTER_INSERT(ip, mp);
+-			xfs_ilock(ip, lock_flags);
+-
+-			ASSERT(vp == VFS_I(ip));
+-			ASSERT(ip->i_mount == mp);
+-
+-			vnode_refed = B_TRUE;
+-		}
+-
+-		/* From here on in the loop we may have a marker record
+-		 * in the inode list.
+-		 */
+-
+-		/*
+-		 * If we have to flush data or wait for I/O completion
+-		 * we need to drop the ilock that we currently hold.
+-		 * If we need to drop the lock, insert a marker if we
+-		 * have not already done so.
+-		 */
+-		if ((flags & (SYNC_CLOSE|SYNC_IOWAIT)) ||
+-		    ((flags & SYNC_DELWRI) && VN_DIRTY(vp))) {
+-			if (mount_locked) {
+-				IPOINTER_INSERT(ip, mp);
+-			}
+-			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-			if (flags & SYNC_CLOSE) {
+-				/* Shutdown case. Flush and invalidate. */
+-				if (XFS_FORCED_SHUTDOWN(mp))
+-					xfs_tosspages(ip, 0, -1,
+-							     FI_REMAPF);
+-				else
+-					error = xfs_flushinval_pages(ip,
+-							0, -1, FI_REMAPF);
+-			} else if ((flags & SYNC_DELWRI) && VN_DIRTY(vp)) {
+-				error = xfs_flush_pages(ip, 0,
+-							-1, fflag, FI_NONE);
+-			}
+-
+-			/*
+-			 * When freezing, we need to wait ensure all I/O (including direct
+-			 * I/O) is complete to ensure no further data modification can take
+-			 * place after this point
+-			 */
+-			if (flags & SYNC_IOWAIT)
+-				vn_iowait(ip);
+-
+-			xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		}
+-
+-		if ((flags & SYNC_ATTR) &&
+-		    (ip->i_update_core ||
+-		     (ip->i_itemp && ip->i_itemp->ili_format.ilf_fields))) {
+-			if (mount_locked)
+-				IPOINTER_INSERT(ip, mp);
+-
+-			if (flags & SYNC_WAIT) {
+-				xfs_iflock(ip);
+-				error = xfs_iflush(ip, XFS_IFLUSH_SYNC);
+-
+-			/*
+-			 * If we can't acquire the flush lock, then the inode
+-			 * is already being flushed so don't bother waiting.
+-			 *
+-			 * If we can lock it then do a delwri flush so we can
+-			 * combine multiple inode flushes in each disk write.
+-			 */
+-			} else if (xfs_iflock_nowait(ip)) {
+-				error = xfs_iflush(ip, XFS_IFLUSH_DELWRI);
+-			} else if (bypassed) {
+-				(*bypassed)++;
+-			}
+-		}
+-
+-		if (lock_flags != 0) {
+-			xfs_iunlock(ip, lock_flags);
+-		}
+-
+-		if (vnode_refed) {
+-			/*
+-			 * If we had to take a reference on the vnode
+-			 * above, then wait until after we've unlocked
+-			 * the inode to release the reference.  This is
+-			 * because we can be already holding the inode
+-			 * lock when IRELE() calls xfs_inactive().
+-			 *
+-			 * Make sure to drop the mount lock before calling
+-			 * IRELE() so that we don't trip over ourselves if
+-			 * we have to go for the mount lock again in the
+-			 * inactive code.
+-			 */
+-			if (mount_locked) {
+-				IPOINTER_INSERT(ip, mp);
+-			}
+-
+-			IRELE(ip);
+-
+-			vnode_refed = B_FALSE;
+-		}
+-
+-		if (error) {
+-			last_error = error;
+-		}
+-
+-		/*
+-		 * bail out if the filesystem is corrupted.
+-		 */
+-		if (error == EFSCORRUPTED)  {
+-			if (!mount_locked) {
+-				XFS_MOUNT_ILOCK(mp);
+-				IPOINTER_REMOVE(ip, mp);
+-			}
+-			XFS_MOUNT_IUNLOCK(mp);
+-			ASSERT(ipointer_in == B_FALSE);
+-			kmem_free(ipointer);
+-			return XFS_ERROR(error);
+-		}
+-
+-		/* Let other threads have a chance at the mount lock
+-		 * if we have looped many times without dropping the
+-		 * lock.
+-		 */
+-		if ((++preempt & XFS_PREEMPT_MASK) == 0) {
+-			if (mount_locked) {
+-				IPOINTER_INSERT(ip, mp);
+-			}
+-		}
+-
+-		if (mount_locked == B_FALSE) {
+-			XFS_MOUNT_ILOCK(mp);
+-			mount_locked = B_TRUE;
+-			IPOINTER_REMOVE(ip, mp);
+-			continue;
+-		}
+-
+-		ASSERT(ipointer_in == B_FALSE);
+-		ip = ip->i_mnext;
+-
+-	} while (ip != mp->m_inodes);
+-
+-	XFS_MOUNT_IUNLOCK(mp);
+-
+-	ASSERT(ipointer_in == B_FALSE);
+-
+-	kmem_free(ipointer);
+-	return XFS_ERROR(last_error);
+-}
+-
+-/*
+- * xfs sync routine for internal use
+- *
+- * This routine supports all of the flags defined for the generic vfs_sync
+- * interface as explained above under xfs_sync.
+- *
+- */
+-int
+-xfs_syncsub(
+-	xfs_mount_t	*mp,
+-	int		flags,
+-	int             *bypassed)
+-{
+-	int		error = 0;
+-	int		last_error = 0;
+-	uint		log_flags = XFS_LOG_FORCE;
+-	xfs_buf_t	*bp;
+-	xfs_buf_log_item_t	*bip;
+-
 -	/*
 -	 * Sync out the log.  This ensures that the log is periodically
 -	 * flushed even if there is not enough activity to fill it up.
@@ -159,128 +1158,121 @@ index f9b0816..c134cad 100644
 -
 -	xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
 -
--	if (flags & SYNC_DELWRI) {
+-	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
 -		if (flags & SYNC_BDFLUSH)
--			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+-			xfs_finish_reclaim_all(mp, 1);
 -		else
--			error = xfs_sync_inodes(mp, flags);
--		/*
--		 * Flushing out dirty data above probably generated more
--		 * log activity, so if this isn't vfs_sync() then flush
--		 * the log again.
--		 */
--		xfs_log_force(mp, 0, log_flags);
+-			error = xfs_sync_inodes(mp, flags, bypassed);
+-	}
+-
+-	/*
+-	 * Flushing out dirty data above probably generated more
+-	 * log activity, so if this isn't vfs_sync() then flush
+-	 * the log again.
+-	 */
+-	if (flags & SYNC_DELWRI) {
+-		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
 -	}
 -
 -	if (flags & SYNC_FSDATA) {
--		error = xfs_sync_fsdata(mp, flags);
--		if (error)
+-		/*
+-		 * If this is vfs_sync() then only sync the superblock
+-		 * if we can lock it without sleeping and it is not pinned.
+-		 */
+-		if (flags & SYNC_BDFLUSH) {
+-			bp = xfs_getsb(mp, XFS_BUF_TRYLOCK);
+-			if (bp != NULL) {
+-				bip = XFS_BUF_FSPRIVATE(bp,xfs_buf_log_item_t*);
+-				if ((bip != NULL) &&
+-				    xfs_buf_item_dirty(bip)) {
+-					if (!(XFS_BUF_ISPINNED(bp))) {
+-						XFS_BUF_ASYNC(bp);
+-						error = xfs_bwrite(mp, bp);
+-					} else {
+-						xfs_buf_relse(bp);
+-					}
+-				} else {
+-					xfs_buf_relse(bp);
+-				}
+-			}
+-		} else {
+-			bp = xfs_getsb(mp, 0);
+-			/*
+-			 * If the buffer is pinned then push on the log so
+-			 * we won't get stuck waiting in the write for
+-			 * someone, maybe ourselves, to flush the log.
+-			 * Even though we just pushed the log above, we
+-			 * did not have the superblock buffer locked at
+-			 * that point so it can become pinned in between
+-			 * there and here.
+-			 */
+-			if (XFS_BUF_ISPINNED(bp))
+-				xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
+-			if (flags & SYNC_WAIT)
+-				XFS_BUF_UNASYNC(bp);
+-			else
+-				XFS_BUF_ASYNC(bp);
+-			error = xfs_bwrite(mp, bp);
+-		}
+-		if (error) {
 -			last_error = error;
+-		}
 -	}
 -
 -	/*
 -	 * Now check to see if the log needs a "dummy" transaction.
 -	 */
 -	if (!(flags & SYNC_REMOUNT) && xfs_log_need_covered(mp)) {
--		error = xfs_commit_dummy_trans(mp, log_flags);
--		if (error)
+-		xfs_trans_t *tp;
+-		xfs_inode_t *ip;
+-
+-		/*
+-		 * Put a dummy transaction in the log to tell
+-		 * recovery that all others are OK.
+-		 */
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+-		if ((error = xfs_trans_reserve(tp, 0,
+-				XFS_ICHANGE_LOG_RES(mp),
+-				0, 0, 0)))  {
+-			xfs_trans_cancel(tp, 0);
 -			return error;
+-		}
+-
+-		ip = mp->m_rootip;
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-
+-		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ihold(tp, ip);
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		error = xfs_trans_commit(tp, 0);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
+-	}
+-
+-	/*
+-	 * When shutting down, we need to insure that the AIL is pushed
+-	 * to disk or the filesystem can appear corrupt from the PROM.
+-	 */
+-	if ((flags & (SYNC_CLOSE|SYNC_WAIT)) == (SYNC_CLOSE|SYNC_WAIT)) {
+-		XFS_bflush(mp->m_ddev_targp);
+-		if (mp->m_rtdev_targp) {
+-			XFS_bflush(mp->m_rtdev_targp);
+-		}
 -	}
 -
 -	return XFS_ERROR(last_error);
 -}
--
--/*
-  * Enqueue a work item to be picked up by the vfs xfssyncd thread.
-  * Doing this has two advantages:
-  * - It saves on stack space, which is tight in certain situations
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 2509db0..4591dc0 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -28,31 +28,14 @@ typedef struct bhv_vfs_sync_work {
- } bhv_vfs_sync_work_t;
- 
- #define SYNC_ATTR		0x0001	/* sync attributes */
--#define SYNC_DELWRI		0x0004	/* look at delayed writes */
--#define SYNC_WAIT		0x0008	/* wait for i/o to complete */
--#define SYNC_BDFLUSH		0x0010	/* BDFLUSH is calling -- don't block */
--#define SYNC_FSDATA		0x0020	/* flush fs data (e.g. superblocks) */
--#define SYNC_REFCACHE		0x0040  /* prune some of the nfs ref cache */
--#define SYNC_REMOUNT		0x0080  /* remount readonly, no dummy LRs */
--#define SYNC_IOWAIT		0x0100  /* wait for all I/O to complete */
--
--/*
-- * When remounting a filesystem read-only or freezing the filesystem,
-- * we have two phases to execute. This first phase is syncing the data
-- * before we quiesce the fielsystem, and the second is flushing all the
-- * inodes out after we've waited for all the transactions created by
-- * the first phase to complete. The second phase uses SYNC_INODE_QUIESCE
-- * to ensure that the inodes are written to their location on disk
-- * rather than just existing in transactions in the log. This means
-- * after a quiesce there is no log replay required to write the inodes
-- * to disk (this is the main difference between a sync and a quiesce).
-- */
--#define SYNC_DATA_QUIESCE	(SYNC_DELWRI|SYNC_FSDATA|SYNC_WAIT|SYNC_IOWAIT)
-+#define SYNC_DELWRI		0x0002	/* look at delayed writes */
-+#define SYNC_WAIT		0x0004	/* wait for i/o to complete */
-+#define SYNC_BDFLUSH		0x0008	/* BDFLUSH is calling -- don't block */
-+#define SYNC_IOWAIT		0x0010  /* wait for all I/O to complete */
- 
- int xfs_syncd_init(struct xfs_mount *mp);
- void xfs_syncd_stop(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_vfsops.h b/fs/xfs/xfs_vfsops.h
+index a74b050..6701d0e 100644
+--- a/fs/xfs/xfs_vfsops.h
++++ b/fs/xfs/xfs_vfsops.h
+@@ -8,7 +8,6 @@ struct kstatfs;
+ struct xfs_mount;
+ struct xfs_mount_args;
  
 -int xfs_sync(struct xfs_mount *mp, int flags);
- int xfs_sync_inodes(struct xfs_mount *mp, int flags);
- int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
- 
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index df0ffef..46465e7 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -987,14 +987,10 @@ xfs_qm_dqdetach(
- }
- 
- /*
-- * This is called by VFS_SYNC and flags arg determines the caller,
-- * and its motives, as done in xfs_sync.
-- *
-- * vfs_sync: SYNC_FSDATA|SYNC_ATTR|SYNC_BDFLUSH 0x31
-- * syscall sync: SYNC_FSDATA|SYNC_ATTR|SYNC_DELWRI 0x25
-- * umountroot : SYNC_WAIT | SYNC_CLOSE | SYNC_ATTR | SYNC_FSDATA
-+ * This is called to sync quotas. We can be told to use non-blocking
-+ * semantics by either the SYNC_BDFLUSH flag or the absence of the
-+ * SYNC_WAIT flag.
-  */
--
- int
- xfs_qm_sync(
- 	xfs_mount_t	*mp,
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 60554ce..7932551 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -443,14 +443,13 @@ xfs_ireclaim(xfs_inode_t *ip)
- 	xfs_iextract(ip);
- 
- 	/*
--	 * Here we do a spurious inode lock in order to coordinate with
--	 * xfs_sync().  This is because xfs_sync() references the inodes
--	 * in the mount list without taking references on the corresponding
--	 * vnodes.  We make that OK here by ensuring that we wait until
--	 * the inode is unlocked in xfs_sync() before we go ahead and
--	 * free it.  We get both the regular lock and the io lock because
--	 * the xfs_sync() code may need to drop the regular one but will
--	 * still hold the io lock.
-+	 * Here we do a spurious inode lock in order to coordinate with inode
-+	 * cache radix tree lookups.  This is because the lookup can reference
-+	 * the inodes in the cache without taking references.  We make that OK
-+	 * here by ensuring that we wait until the inode is unlocked after the
-+	 * lookup before we go ahead and free it.  We get both the ilock and
-+	 * the iolock because the code may need to drop the ilock one but will
-+	 * still hold the iolock.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
- 
+ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+ 		int lnnum);
+ void xfs_attr_quiesce(struct xfs_mount *mp);
 -- 
 1.5.6
