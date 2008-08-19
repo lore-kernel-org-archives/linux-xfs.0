@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:59 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFYwN022787
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:34 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFZ0N022798
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:36 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 65E9512F940F
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:54 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id k0dJnIUP4POb0Zs3 for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AD8D12F940F
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:55 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id BSqWfWHW80GvMC5i for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:55 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4o-0008Ab-1U
-	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:46 +1000
+	id 1KVR4n-0008AY-VV
+	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/28] XFS: make SYNC_ATTR no longer use xfs_sync
-Date: Tue, 19 Aug 2008 23:16:29 +1000
-Message-Id: <1219151804-30749-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/28] XFS: xfssyncd: don't call xfs_sync
+Date: Tue, 19 Aug 2008 23:16:28 +1000
+Message-Id: <1219151804-30749-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,109 +22,49 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Continue to de-multiplex xfs_sync be replacing all SYNC_ATTR
-callers with direct calls xfs_sync_inodes(). Add an assert
-into xfs_sync() to ensure we caught all the SYNC_ATTR callers.
+Start de-multiplexing xfs_sync() by making xfs_sync_worker()
+call the specific sync functions it needs. This is only a small,
+unique subset of the entire xfs_sync() code so is easier to
+follow.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    3 ++-
- fs/xfs/linux-2.6/xfs_sync.c  |   23 +++++++++++------------
- fs/xfs/linux-2.6/xfs_sync.h  |    1 -
- fs/xfs/xfs_vfsops.c          |    2 +-
- 4 files changed, 14 insertions(+), 15 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   16 ++++++++++++++--
+ 1 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 59f6209..59663f2 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -963,7 +963,8 @@ xfs_fs_put_super(
- 	int			error;
- 
- 	xfs_syncd_stop(mp);
--	xfs_sync(mp, SYNC_ATTR | SYNC_DELWRI);
-+	xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
-+	xfs_sync_inodes(mp, SYNC_ATTR|SYNC_DELWRI);
- 
- #ifdef HAVE_DMAPI
- 	if (mp->m_flags & XFS_MOUNT_DMAPI) {
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 3c31137..002ccb6 100644
+index d4b7b21..3c31137 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -342,9 +342,8 @@ xfs_sync_fsdata(
-  *		       periodically.  We also push the inodes and
-  *		       superblock if we can lock them without sleeping
-  *			and they are not pinned.
-- *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
-- *		       set, then we really want to lock each inode and flush
-- *		       it.
-+ *      SYNC_ATTR    - We need to flush the inodes. Now handled by direct calls
-+ *		       to xfs_sync_inodes().
-  *      SYNC_WAIT    - All the flushes that take place in this call should
-  *		       be synchronous.
-  *      SYNC_DELWRI  - This tells us to push dirty pages associated with
-@@ -373,6 +372,8 @@ xfs_sync(
- 	int		last_error = 0;
- 	uint		log_flags = XFS_LOG_FORCE;
+@@ -526,6 +526,11 @@ xfs_flush_device(
+ 	xfs_log_force(ip->i_mount, (xfs_lsn_t)0, XFS_LOG_FORCE|XFS_LOG_SYNC);
+ }
  
-+	ASSERT(!(flags & SYNC_ATTR));
-+
- 	/*
- 	 * Get the Quota Manager to flush the dquots.
- 	 *
-@@ -403,20 +404,18 @@ xfs_sync(
++/*
++ * Every sync period we need to unpin all items, reclaim inodes, sync
++ * quota and write out the superblock. We might need to cover the log
++ * to indicate it is idle.
++ */
+ STATIC void
+ xfs_sync_worker(
+ 	struct xfs_mount *mp,
+@@ -533,8 +538,15 @@ xfs_sync_worker(
+ {
+ 	int		error;
  
- 	xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
- 
--	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
-+	if (flags & SYNC_DELWRI) {
- 		if (flags & SYNC_BDFLUSH)
- 			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		else
- 			error = xfs_sync_inodes(mp, flags);
--	}
--
--	/*
--	 * Flushing out dirty data above probably generated more
--	 * log activity, so if this isn't vfs_sync() then flush
--	 * the log again.
--	 */
--	if (flags & SYNC_DELWRI)
-+		/*
-+		 * Flushing out dirty data above probably generated more
-+		 * log activity, so if this isn't vfs_sync() then flush
-+		 * the log again.
-+		 */
- 		xfs_log_force(mp, 0, log_flags);
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY))
+-		error = xfs_sync(mp, SYNC_FSDATA | SYNC_BDFLUSH | SYNC_ATTR);
++	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
++		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
++		xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++		/* dgc: errors ignored here */
++		error = XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
++		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
++		if (xfs_log_need_covered(mp))
++			error = xfs_commit_dummy_trans(mp, XFS_LOG_FORCE);
 +	}
- 
- 	if (flags & SYNC_FSDATA) {
- 		error = xfs_sync_fsdata(mp, flags);
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 2954861..5316915 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -49,7 +49,6 @@ typedef struct bhv_vfs_sync_work {
-  * to disk (this is the main difference between a sync and a quiesce).
-  */
- #define SYNC_DATA_QUIESCE	(SYNC_DELWRI|SYNC_FSDATA|SYNC_WAIT|SYNC_IOWAIT)
--#define SYNC_INODE_QUIESCE	(SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT)
- 
- int xfs_syncd_init(struct xfs_mount *mp);
- void xfs_syncd_stop(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index d5396d6..c82b955 100644
---- a/fs/xfs/xfs_vfsops.c
-+++ b/fs/xfs/xfs_vfsops.c
-@@ -76,7 +76,7 @@ xfs_quiesce_fs(
- 	 */
- 	do {
- 		xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
--		xfs_sync_inodes(mp, SYNC_INODE_QUIESCE);
-+		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
- 		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 		if (!pincount) {
- 			delay(50);
+ 	mp->m_sync_seq++;
+ 	wake_up(&mp->m_wait_single_sync_task);
+ }
 -- 
 1.5.6
