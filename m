@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:06 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 06:16:19 -0700 (PDT)
 Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFVT6022752
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:32 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7JDFZMS022796
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:15:36 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36DCB1BC6722
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:51 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id qOFaMHIOokhBcZUn for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF1B11BC6727
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:55 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id QbbNW4FPe28oKXOL for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 06:16:55 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KVR4n-0008A2-0s
-	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:45 +1000
+	id 1KVR4o-0008Ae-3o
+	for xfs@oss.sgi.com; Tue, 19 Aug 2008 23:16:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/28] XFS: remove i_gen from incore inode
-Date: Tue, 19 Aug 2008 23:16:17 +1000
-Message-Id: <1219151804-30749-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/28] XFS: make SYNC_DELWRI no longer use xfs_sync
+Date: Tue, 19 Aug 2008 23:16:30 +1000
+Message-Id: <1219151804-30749-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 References: <1219151804-30749-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,138 +22,142 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-i_gen is incremented in directory operations when the
-directory is changed. It is never read or otherwise used
-so it should be removed to help reduce the size of the
-struct xfs_inode.
-
-The patch also removes a duplicate logging of the directory
-inode core. We only need to do this once per transaction
-so kill the one associated with the i_gen increment.
+Continue to de-multiplex xfs_sync be replacing all SYNC_DELWRI
+callers with direct calls functions that do the work. Isolate the
+data quiesce case to a function in xfs_sync.c. Isolate the
+FSDATA case with explicit calls to xfs_sync_fsdata().
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_inode.h    |    1 -
- fs/xfs/xfs_rename.c   |   12 ++----------
- fs/xfs/xfs_vnodeops.c |   29 ++---------------------------
- 3 files changed, 4 insertions(+), 38 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   24 ++++++------------------
+ fs/xfs/linux-2.6/xfs_sync.c  |   37 ++++++++++++++++++++++++++++++++++++-
+ fs/xfs/linux-2.6/xfs_sync.h  |    3 +++
+ 3 files changed, 45 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1420c49..9559e0b 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -230,7 +230,6 @@ typedef struct xfs_inode {
- 	unsigned short		i_flags;	/* see defined flags below */
- 	unsigned char		i_update_core;	/* timestamps/size is dirty */
- 	unsigned char		i_update_size;	/* di_size field is dirty */
--	unsigned int		i_gen;		/* generation count */
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 59663f2..a4ff642 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1022,7 +1022,7 @@ xfs_fs_write_super(
+ 	struct super_block	*sb)
+ {
+ 	if (!(sb->s_flags & MS_RDONLY))
+-		xfs_sync(XFS_M(sb), SYNC_FSDATA);
++		xfs_sync_fsdata(XFS_M(sb), 0);
+ 	sb->s_dirt = 0;
+ }
  
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
-diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-index d700dac..02f0e8f 100644
---- a/fs/xfs/xfs_rename.c
-+++ b/fs/xfs/xfs_rename.c
-@@ -367,19 +367,11 @@ xfs_rename(
- 					&first_block, &free_list, spaceres);
- 	if (error)
- 		goto abort_return;
--	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
--	/*
--	 * Update the generation counts on all the directory inodes
--	 * that we're modifying.
--	 */
--	src_dp->i_gen++;
-+	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
--
--	if (new_parent) {
--		target_dp->i_gen++;
-+	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
--	}
+@@ -1033,7 +1033,6 @@ xfs_fs_sync_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 	int			error;
+-	int			flags;
  
  	/*
- 	 * If this is a synchronous mount, make sure that the
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 588bb4a..0a5999f 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1625,8 +1625,6 @@ xfs_create(
- 		xfs_trans_set_sync(tp);
- 	}
- 
--	dp->i_gen++;
+ 	 * Treat a sync operation like a freeze.  This is to work
+@@ -1047,20 +1046,10 @@ xfs_fs_sync_super(
+ 	 * dirty the Linux inode until after the transaction I/O
+ 	 * completes.
+ 	 */
+-	if (wait || unlikely(sb->s_frozen == SB_FREEZE_WRITE)) {
+-		/*
+-		 * First stage of freeze - no more writers will make progress
+-		 * now we are here, so we flush delwri and delalloc buffers
+-		 * here, then wait for all I/O to complete.  Data is frozen at
+-		 * that point. Metadata is not frozen, transactions can still
+-		 * occur here so don't bother flushing the buftarg (i.e
+-		 * SYNC_QUIESCE) because it'll just get dirty again.
+-		 */
+-		flags = SYNC_DATA_QUIESCE;
+-	} else
+-		flags = SYNC_FSDATA;
 -
- 	/*
- 	 * Attach the dquot(s) to the inodes and modify them incore.
- 	 * These ids of the inode couldn't have changed since the new
-@@ -1985,13 +1983,6 @@ xfs_remove(
+-	error = xfs_sync(mp, flags);
++	if (wait || unlikely(sb->s_frozen == SB_FREEZE_WRITE))
++		error = xfs_quiesce_data(mp);
++	else
++		error = xfs_sync_fsdata(mp, 0);
+ 	sb->s_dirt = 0;
+ 
+ 	if (unlikely(laptop_mode)) {
+@@ -1178,8 +1167,7 @@ xfs_fs_remount(
+ 
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+-		xfs_filestream_flush(mp);
+-		xfs_sync(mp, SYNC_DATA_QUIESCE);
++		xfs_quiesce_data(mp);
+ 		xfs_attr_quiesce(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
  	}
- 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 002ccb6..adbbdd5 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -269,7 +269,7 @@ xfs_commit_dummy_trans(
+ 	return 0;
+ }
  
--	/*
--	 * Bump the in memory generation count on the parent
--	 * directory so that other can know that it has changed.
--	 */
--	dp->i_gen++;
--	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
--
- 	if (is_dir) {
- 		/*
- 		 * Drop the link from ip's "..".
-@@ -2009,8 +2000,8 @@ xfs_remove(
- 	} else {
- 		/*
- 		 * When removing a non-directory we need to log the parent
--		 * inode here for the i_gen update.  For a directory this is
--		 * done implicitly by the xfs_droplink call for the ".." entry.
-+		 * inode here.  For a directory this is done implicitly
-+		 * by the xfs_droplink call for the ".." entry.
- 		 */
- 		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 	}
-@@ -2170,7 +2161,6 @@ xfs_link(
- 	if (error)
- 		goto abort_return;
- 	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	tdp->i_gen++;
- 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+-STATIC int
++int
+ xfs_sync_fsdata(
+ 	struct xfs_mount	*mp,
+ 	int			flags)
+@@ -323,6 +323,41 @@ xfs_sync_fsdata(
+ }
  
- 	error = xfs_bumplink(tp, sip);
-@@ -2347,18 +2337,10 @@ xfs_mkdir(
- 	}
- 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ /*
++ * First stage of freeze - no more writers will make progress now we are here,
++ * so we flush delwri and delalloc buffers here, then wait for all I/O to
++ * complete.  Data is frozen at that point. Metadata is not frozen,
++ * transactions can still occur here so don't bother flushing the buftarg (i.e
++ * SYNC_QUIESCE) because it'll just get dirty again.
++ */
++int
++xfs_quiesce_data(
++	struct xfs_mount	*mp)
++{
++	int error;
++
++	/* push non-blocking */
++	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_BDFLUSH);
++	XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
++	xfs_filestream_flush(mp);
++
++	/* push and block */
++	xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
++	xfs_sync_inodes(mp, SYNC_DELWRI|SYNC_WAIT|SYNC_IOWAIT);
++	xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
++	XFS_QM_DQSYNC(mp, SYNC_WAIT);
++
++	/* write superblock and hoover shutdown errors */
++	error = xfs_sync_fsdata(mp, 0);
++
++	/* flush devices */
++	XFS_bflush(mp->m_ddev_targp);
++	if (mp->m_rtdev_targp)
++		XFS_bflush(mp->m_rtdev_targp);
++
++	return error;
++}
++
++/*
+  * xfs_sync flushes any pending I/O to file system vfsp.
+  *
+  * This routine is called by vfs_sync() to make sure that things make it
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index 5316915..fcd4040 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -55,6 +55,9 @@ void xfs_syncd_stop(struct xfs_mount *mp);
  
--	/*
--	 * Bump the in memory version number of the parent directory
--	 * so that other processes accessing it will recognize that
--	 * the directory has changed.
--	 */
--	dp->i_gen++;
--
- 	error = xfs_dir_init(tp, cdp, dp);
- 	if (error)
- 		goto error2;
+ int xfs_sync(struct xfs_mount *mp, int flags);
+ int xfs_sync_inodes(struct xfs_mount *mp, int flags);
++int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
++
++int xfs_quiesce_data(struct xfs_mount *mp);
  
--	cdp->i_gen = 1;
- 	error = xfs_bumplink(tp, dp);
- 	if (error)
- 		goto error2;
-@@ -2645,13 +2627,6 @@ xfs_symlink(
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	/*
--	 * Bump the in memory version number of the parent directory
--	 * so that other processes accessing it will recognize that
--	 * the directory has changed.
--	 */
--	dp->i_gen++;
--
--	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * symlink transaction goes to disk before returning to
- 	 * the user.
+ void xfs_flush_inode(struct xfs_inode *ip);
+ void xfs_flush_device(struct xfs_inode *ip);
 -- 
 1.5.6
