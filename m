@@ -1,45 +1,151 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 23:07:19 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7K67D3w022660
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2008 23:07:14 -0700
-Subject: PARTIAL TAKE 983683 - Prevent direct I/O from mapping extents beyond eof
-Message-Id: <20080820060831.B658D58C52A8@chook.melbourne.sgi.com>
-Date: Wed, 20 Aug 2008 16:08:31 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 19 Aug 2008 23:44:00 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7K6hviG025149
+	for <linux-xfs@oss.sgi.com>; Tue, 19 Aug 2008 23:43:58 -0700
+Received: from nf-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98008F7CA5E
+	for <linux-xfs@oss.sgi.com>; Tue, 19 Aug 2008 23:45:17 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.188]) by cuda.sgi.com with ESMTP id WlhoBCiAcjkEO4SB for <linux-xfs@oss.sgi.com>; Tue, 19 Aug 2008 23:45:17 -0700 (PDT)
+Received: by nf-out-0910.google.com with SMTP id h3so174975nfh.42
+        for <linux-xfs@oss.sgi.com>; Tue, 19 Aug 2008 23:45:16 -0700 (PDT)
+Message-ID: <702ec7d40808192345s17b02fdaxc0e667743896de@mail.gmail.com>
+Date: Wed, 20 Aug 2008 08:45:16 +0200
+From: daniel <luriad@gmail.com>
+Subject: Re: xfs _ slow rewrite ?
+In-Reply-To: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <702ec7d40808180408u57c14e82p778cfb7af6f3dc9e@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Prevent direct I/O from mapping extents beyond eof
+I'm working on a new server and test the performance from xfs and ext3
+with iozone.
 
-With the help from some tracing I found that we try to map extents beyond
-eof when doing a direct I/O read.  It appears that the way to inform the
-generic direct I/O path (ie do_direct_IO()) that we have breached eof is
-to return an unmapped buffer from xfs_get_blocks_direct().  This will cause
-do_direct_IO() to jump to the hole handling code where is will check for
-eof and then abort.
+iozone -T -t 32 -F /data/iozonefile{0..31} -o -O -i6 -i7 -i0 -i1 -i2
+-s512m -r16k -+u
 
-This problem was found because a direct I/O read was trying to map beyond
-eof and was encountering delayed allocations.  The delayed allocations beyond
-eof are speculative allocations and they didn't get converted when the direct
-I/O flushed the file because there was only enough space in the current AG
-to convert and write out the dirty pages within eof.  Note that
-xfs_iomap_write_allocate() wont necessarily convert all the delayed allocation
-passed to it - it will return after allocating the first extent - so if the
-delayed allocation extends beyond eof then it will stay that way.
+system : SLES 10.2 : 2.6.16.60-0.27-smp #1 SMP on a DELL 2950 : 1 GB RAM:
+raid: raid 10 with 8 disks 15k : 64k chunksize : dell md 1000 : perc
+6/e : WriteBack, ReadAheadNone, Cached,
 
-Date:  Wed Aug 20 16:07:36 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-xfs
-Inspected by:  hch
-Author:  lachlan
+echo "3" >  /proc/sys/vm/drop_caches
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+why is the xfs read, reread and rewrite so slow ?
+
+1) xfs
+mkfs.xfs -f -L DATA /dev/sdb1
+/dev/sdb1 on /data type xfs (rw,noatime,nodiratime)
+
+        Children see throughput for 32 initial writers  =    5940.92 ops/sec
+        Parent sees throughput for 32 initial writers   =    1244.99 ops/sec
+        Min throughput per thread                       =     127.88 ops/sec
+        Max throughput per thread                       =     742.80 ops/sec
+        Avg throughput per thread                       =     185.65 ops/sec
+        Min xfer
+              =    5641.00 ops
+        CPU Utilization: Wall time  210.499    CPU time 3323.852
+CPU utilization 1579.03 %
 
 
-Modid:  xfs-linux-melb:xfs-kern:31929a
-fs/xfs/linux-2.6/xfs_aops.c - 1.164 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.164&r2=text&tr2=1.163&f=h
-	- Prevent direct I/O from mapping extents beyond eof
+        Children see throughput for 32 rewriters        =    2298.54 ops/sec
+        Parent sees throughput for 32 rewriters         =    2293.51 ops/sec
+        Min throughput per thread                       =      66.23 ops/sec
+        Max throughput per thread                       =      79.09 ops/sec
+        Avg throughput per thread                       =      71.83 ops/sec
+        Min xfer                                        =   27439.00 ops
+        CPU utilization: Wall time  415.265    CPU time 1032.129
+CPU utilization 248.55 %
+
+
+        Children see throughput for 32 readers          =    6923.75 ops/sec
+        Parent sees throughput for 32 readers           =    6920.53 ops/sec
+        Min throughput per thread                       =     211.00 ops/sec
+        Max throughput per thread                       =     226.58 ops/sec
+        Avg throughput per thread                       =     216.37 ops/sec
+        Min xfer                                        =   30525.00 ops
+        CPU utilization: Wall time  144.732    CPU time  389.016
+CPU utilization 268.78 %
+
+
+        Children see throughput for 32 re-readers       =    6864.93 ops/sec
+        Parent sees throughput for 32 re-readers        =    6861.38 ops/sec
+        Min throughput per thread                       =     209.57 ops/sec
+        Max throughput per thread                       =     220.73 ops/sec
+        Avg throughput per thread                       =     214.53 ops/sec
+        Min xfer                                        =   31133.00 ops
+        CPU utilization: Wall time  148.571    CPU time  400.709
+CPU utilization 269.71 %
+
+
+        Children see throughput for 32 random readers   =    2335.44 ops/sec
+        Parent sees throughput for 32 random readers    =    2335.30 ops/sec
+        Min throughput per thread                       =      70.48 ops/sec
+        Max throughput per thread                       =      74.36 ops/sec
+        Avg throughput per thread                       =      72.98 ops/sec
+        Min xfer                                        =   31058.00 ops
+        CPU utilization: Wall time  440.693    CPU time  647.208
+CPU utilization 146.86 %
+
+2) ext3
+mkfs.ext3 /dev/sdb1 -E stride=16
+/dev/sdb1 on /data type ext3 (rw,noatime,nodiratime)
+
+    Children see throughput for 32 initial writers     =    3238.64 ops/sec
+    Parent sees throughput for 32 initial writers     =    3238.20 ops/sec
+    Min throughput per thread             =     101.20 ops/sec
+    Max throughput per thread             =     101.21 ops/sec
+    Avg throughput per thread             =     101.21 ops/sec
+    Min xfer                     =   32763.00 ops
+    CPU Utilization: Wall time  323.791    CPU time  281.362    CPU
+utilization  86.90 %
+
+
+    Children see throughput for 32 rewriters     =   10553.17 ops/sec
+    Parent sees throughput for 32 rewriters     =   10517.38 ops/sec
+    Min throughput per thread             =     307.10 ops/sec
+    Max throughput per thread             =     378.34 ops/sec
+    Avg throughput per thread             =     329.79 ops/sec
+    Min xfer                     =   26628.00 ops
+    CPU utilization: Wall time   87.079    CPU time  966.580    CPU
+utilization 1110.00 %
+
+
+    Children see throughput for 32 readers         =   20602.73 ops/sec
+    Parent sees throughput for 32 readers         =   20579.60 ops/sec
+    Min throughput per thread             =     518.61 ops/sec
+    Max throughput per thread             =     683.18 ops/sec
+    Avg throughput per thread             =     643.84 ops/sec
+    Min xfer                     =   24893.00 ops
+    CPU utilization: Wall time   48.045    CPU time  292.886    CPU
+utilization 609.61 %
+
+
+    Children see throughput for 32 re-readers     =   20938.47 ops/sec
+    Parent sees throughput for 32 re-readers     =   20912.34 ops/sec
+    Min throughput per thread             =     587.57 ops/sec
+    Max throughput per thread             =     685.95 ops/sec
+    Avg throughput per thread             =     654.33 ops/sec
+    Min xfer                     =   28093.00 ops
+    CPU utilization: Wall time   47.864    CPU time  291.858    CPU
+utilization 609.76 %
+
+
+    Children see throughput for 32 random readers     =    3315.69 ops/sec
+    Parent sees throughput for 32 random readers     =    3315.50 ops/sec
+    Min throughput per thread             =     102.18 ops/sec
+    Max throughput per thread             =     105.06 ops/sec
+    Avg throughput per thread             =     103.62 ops/sec
+    Min xfer                     =   31868.00 ops
+    CPU utilization: Wall time  311.905    CPU time  619.687    CPU
+utilization 198.68 %
+
+who can me please explain that results ?
+the differences between both file systems are really strange.
+
+thanks, daniel
