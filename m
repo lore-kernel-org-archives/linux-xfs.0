@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Aug 2008 12:58:23 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Aug 2008 13:19:00 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7LJwD9u017762
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 12:58:13 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7LKIs6h019576
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 13:18:54 -0700
 Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE493F9DDAF
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 12:59:34 -0700 (PDT)
-Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id KHFXnshXhkfp7qvy for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 12:59:34 -0700 (PDT)
-Date: Thu, 21 Aug 2008 12:58:41 -0700
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64802F9D862
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 13:20:14 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id W2XFXplkzFyCvIOH for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 13:20:14 -0700 (PDT)
+Date: Thu, 21 Aug 2008 13:20:06 -0700
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/3] Implement generic freeze feature
-Message-Id: <20080821125841.a04a706f.akpm@linux-foundation.org>
-In-Reply-To: <20080818212819t-sato@mail.jp.nec.com>
-References: <20080818212819t-sato@mail.jp.nec.com>
+Subject: Re: [PATCH 3/3] Add timeout feature
+Message-Id: <20080821132006.9949101c.akpm@linux-foundation.org>
+In-Reply-To: <20080818212856t-sato@mail.jp.nec.com>
+References: <20080818212856t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
@@ -20,60 +20,194 @@ Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org, Oleg Nesterov <oleg@tv-sign.ru>
 
-On Mon, 18 Aug 2008 21:28:19 +0900
+On Mon, 18 Aug 2008 21:28:56 +0900
 Takashi Sato <t-sato@yk.jp.nec.com> wrote:
 
-> The ioctls for the generic freeze feature are below.
+> The timeout feature is added to freeze ioctl.  And new ioctl
+> to reset the timeout period is added.
 > o Freeze the filesystem
->   int ioctl(int fd, int FIFREEZE, arg)
+>   int ioctl(int fd, int FIFREEZE, long *timeout_sec)
 >     fd: The file descriptor of the mountpoint
 >     FIFREEZE: request code for the freeze
->     arg: Ignored
+>     timeout_sec: the timeout period in seconds
+>              If it's 0 or 1, the timeout isn't set.
+>              This special case of "1" is implemented to keep
+>              the compatibility with XFS applications.
 >     Return value: 0 if the operation succeeds. Otherwise, -1
 > 
-> o Unfreeze the filesystem
->   int ioctl(int fd, int FITHAW, arg)
->     fd: The file descriptor of the mountpoint
->     FITHAW: request code for unfreeze
->     arg: Ignored
+> o Reset the timeout period
+>   int ioctl(int fd, int FIFREEZE_RESET_TIMEOUT, long *timeout_sec)
+>     fd:file descriptor of mountpoint
+>     FIFREEZE_RESET_TIMEOUT: request code for reset of timeout period
+>     timeout_sec: new timeout period in seconds
 >     Return value: 0 if the operation succeeds. Otherwise, -1
-> 
+>     Error number: If the filesystem has already been unfrozen,
+>                   errno is set to EINVAL.
+
+I don't think the changelogs actually explained why this feature is
+being added?
+
+Which userspace tools are expected to send these ioctls?  Something in
+util-linux?  dm-utils?  Are patches to those packages planned?
+
 >
 > ...
 >
-> --- linux-2.6.27-rc2.org/include/linux/fs.h	2008-08-06 13:49:54.000000000 +0900
-> +++ linux-2.6.27-rc2-freeze/include/linux/fs.h	2008-08-07 08:59:54.000000000 +0900
-> @@ -226,6 +226,8 @@ extern int dir_notify_enable;
->  #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
->  #define FIBMAP	   _IO(0x00,1)	/* bmap access */
->  #define FIGETBSZ   _IO(0x00,2)	/* get the block size used for bmap */
-> +#define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
-> +#define FITHAW		_IOWR('X', 120, int)	/* Thaw */
+>  /*
+> + * ioctl_freeze_reset_timeout - Reset timeout for freeze.
+> + *
+> + * @filp:       target file
+> + * @argp:       timeout value(sec)
+> + *
+> + * Reset timeout for freeze.
+> + */
+> +static int
+> +ioctl_freeze_reset_timeout(struct file *filp, int __user *argp)
+> +{
+> +	int timeout_sec;
+> +	unsigned int timeout_msec;
+> +	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
+> +	struct block_device *bdev = sb->s_bdev;
+> +	int error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	/* If a regular file or a directory isn't specified, return EINVAL. */
+> +	if (bdev == NULL)
+> +		return -EINVAL;
+> +
+> +	/* arg(sec) to tick value */
+> +	error = get_user(timeout_sec, argp);
+> +	if (error)
+> +		return error;
+> +
+> +	if (timeout_sec <= 0 || timeout_sec > UINT_MAX/1000)
+> +		return -EINVAL;
+> +
+> +	timeout_msec = timeout_sec * 1000;
+> +
+> +	down(&bdev->bd_freeze_sem);
+> +	if (!bdev->bd_freeze_count) {
+> +		up(&bdev->bd_freeze_sem);
+> +		return -EINVAL;
+> +	}
+> +	/* setup unfreeze timer */
+> +	add_freeze_timeout(bdev, timeout_msec);
+> +	up(&bdev->bd_freeze_sem);
+> +
+> +	return 0;
+> +}
 
-FIFREEZE is 119, but a few lines above we have
+This duplicates quite a bit of code from ioctl_freeze().  Can this be
+cleaned up?
 
-#define BLKDISCARD _IO(0x12,119)
 
-Should we be using 120 and 121 here?
+> +/*
+>   * When you add any new common ioctls to the switches above and below
+>   * please update compat_sys_ioctl() too.
+>   *
+> @@ -235,13 +302,17 @@ int do_vfs_ioctl(struct file *filp, unsi
+>  		break;
+>  
+>  	case FIFREEZE:
+> -		error = ioctl_freeze(filp);
+> +		error = ioctl_freeze(filp, argp);
+>  		break;
+>  
+>  	case FITHAW:
+>  		error = ioctl_thaw(filp);
+>  		break;
+>  
+> +	case FIFREEZE_RESET_TIMEOUT:
+> +		error = ioctl_freeze_reset_timeout(filp, argp);
+> +		break;
+> +
+>  	default:
+>  		if (S_ISREG(filp->f_path.dentry->d_inode->i_mode))
+>  			error = file_ioctl(filp, cmd, arg);
+>
+> ...
+>
+>  EXPORT_SYMBOL_GPL(kern_mount_data);
+> +
+> +/*
+> + * freeze_timeout - Thaw the filesystem.
+> + *
+> + * @work:	work queue (delayed_work.work)
+> + *
+> + * Called by the delayed work when elapsing the timeout period.
+> + * Thaw the filesystem.
+> + */
+> +void freeze_timeout(struct work_struct *work)
+> +{
+> +	struct block_device *bd = container_of(work,
+> +			struct block_device, bd_freeze_timeout.work);
+> +	struct super_block *sb = get_super(bd);
+> +
+> +	thaw_bdev(bd, sb);
+> +
+> +	if (sb)
+> +		drop_super(sb);
+> +}
+> +EXPORT_SYMBOL_GPL(freeze_timeout);
 
->  #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
->  #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
-> @@ -574,6 +576,10 @@ struct block_device {
->  	 * care to not mess up bd_private for that case.
->  	 */
->  	unsigned long		bd_private;
-> +	/* The counter of freeze processes */
-> +	int			bd_freeze_count;
-> +	/* Semaphore for freeze */
-> +	struct semaphore	bd_freeze_sem;
+I can't see why this was exported.
 
-"freeze" is not an adequate description of what this protects.  I think
-it's only the modification and testing of bd_freeze_count, isn't it?
+> +/*
+> + * add_freeze_timeout - Add timeout for freeze.
+> + *
+> + * @bdev:		block device struct
+> + * @timeout_msec:	timeout period
+> + *
+> + * Add the delayed work for freeze timeout to the delayed work queue.
+> + */
+> +void add_freeze_timeout(struct block_device *bdev, unsigned int timeout_msec)
+> +{
+> +	s64 timeout_jiffies = msecs_to_jiffies(timeout_msec);
+> +
+> +	/* Set delayed work queue */
+> +	cancel_delayed_work_sync(&bdev->bd_freeze_timeout);
+> +	schedule_delayed_work(&bdev->bd_freeze_timeout, timeout_jiffies);
+> +}
 
-If so, all this could be done more neatly by removing the lock,
-switching to atomic_t and using our (rich) atomic_t operations.
+I don't particularly like the names of these new global symbols.  The
+kernel already has a "freezer" thing, part of power-management. 
+Introducing another one is a bit confusing.
 
-otoh, perhaps it protects more than this, in which case the lock
-can/should be switched to a `struct mutex'?
+otoh, freezer seems to have consistently used "freezer", so the 'r'
+arguable saves us.
+
+Still, I'd have thought that "fsfreeze" would have been a clearer, more
+specific identifier for the whole project.
+
+> +/*
+> + * del_freeze_timeout - Delete timeout for freeze.
+> + *
+> + * @bdev:	block device struct
+> + *
+> + * Delete the delayed work for freeze timeout from the delayed work queue.
+> + */
+> +void del_freeze_timeout(struct block_device *bdev)
+> +{
+> +	/*
+> +	 * It's possible that the delayed work task (freeze_timeout()) calls
+> +	 * del_freeze_timeout().  If the delayed work task calls
+> +	 * cancel_delayed_work_sync((), the deadlock will occur.
+> +	 * So we need this check (delayed_work_pending()).
+> +	 */
+> +	if (delayed_work_pending(&bdev->bd_freeze_timeout))
+> +		cancel_delayed_work_sync(&bdev->bd_freeze_timeout);
+> +}
+
+So if the calling task is keventd via run_workqueue() then
+delayed_work_pending() should return false due to run_workqueue()
+ordering, so we avoid the deadlock.
+
+Seems a bit racy if some other process starts the delayed-work while
+this function is running but I guess the new semaphore prevents that.
+
+Perhaps cancel_delayed_work_sync() shouldn't hang up if called from the
+work handler?
