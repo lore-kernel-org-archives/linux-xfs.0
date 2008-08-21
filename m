@@ -1,34 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Aug 2008 01:11:14 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7L8B9TQ022634
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:11:10 -0700
-Received: from note.orchestra.cse.unsw.EDU.AU (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BDF691252B4C
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:12:29 -0700 (PDT)
-Received: from note.orchestra.cse.unsw.EDU.AU (note.orchestra.cse.unsw.EDU.AU [129.94.242.24]) by cuda.sgi.com with ESMTP id tOXtGnyL8vziMzOW for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:12:29 -0700 (PDT)
-From: Aaron Carroll <aaronc@gelato.unsw.edu.au>
-Date: Thu, 21 Aug 2008 18:07:38 +1000
-Message-ID: <48AD224A.7080107@gelato.unsw.edu.au>
-MIME-Version: 1.0
-Subject: Re: XFS vs Elevators (was Re: [PATCH RFC] nilfs2: continuous	snapshotting
- file system)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 21 Aug 2008 01:24:20 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7L8OGkW023839
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:24:16 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7BC171A1E8D3
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:25:35 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id fiD5QcvCjlu8oUDQ for <xfs@oss.sgi.com>; Thu, 21 Aug 2008 01:25:35 -0700 (PDT)
+Date: Thu, 21 Aug 2008 18:25:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS vs Elevators (was Re: [PATCH RFC] nilfs2: continuous
+	snapshotting file system)
+Message-ID: <20080821082532.GE5706@disturbed>
 References: <20080820004326.519405a2.akpm@linux-foundation.org> <200808201613.AA00212@capsicum.lab.ntt.co.jp> <Pine.LNX.4.61.0808202352450.4532@dhcppc2> <20080820143916.1a7eddab.akpm@linux-foundation.org> <20080821021259.GA5706@disturbed> <Pine.LNX.4.62.0808210535450.25448@tamago.serverit.net> <20080821051508.GB5706@disturbed> <20080821060418.GC5706@disturbed>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20080821060418.GC5706@disturbed>
-Content-Type: multipart/mixed;
- boundary="------------040209080705080100020407"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: david@fromorbit.com
-Cc: Szabolcs Szakacsits <szaka@ntfs-3g.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Szabolcs Szakacsits <szaka@ntfs-3g.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------040209080705080100020407
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Dave Chinner wrote:
+On Thu, Aug 21, 2008 at 04:04:18PM +1000, Dave Chinner wrote:
+> On Thu, Aug 21, 2008 at 03:15:08PM +1000, Dave Chinner wrote:
+> > On Thu, Aug 21, 2008 at 05:46:00AM +0300, Szabolcs Szakacsits wrote:
+> > > On Thu, 21 Aug 2008, Dave Chinner wrote:
+> > > Everything is default.
+> > > 
+> > >   % rpm -qf =mkfs.xfs
+> > >   xfsprogs-2.9.8-7.1 
+> > > 
+> > > which, according to ftp://oss.sgi.com/projects/xfs/cmd_tars, is the 
+> > > latest stable mkfs.xfs. Its output is
+> > > 
+> > > meta-data=/dev/sda8              isize=256    agcount=4, agsize=1221440 blks
+> > >          =                       sectsz=512   attr=2
+> > > data     =                       bsize=4096   blocks=4885760, imaxpct=25
+> > >          =                       sunit=0      swidth=0 blks
+> > > naming   =version 2              bsize=4096  
+> > > log      =internal log           bsize=4096   blocks=2560, version=2
+> > >          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > 
+> > Ok, I thought it might be the tiny log, but it didn't improve anything
+> > here when increased the log size, or the log buffer size.
+> 
 > One thing I just found out - my old *laptop* is 4-5x faster than the
 > 10krpm scsi disk behind an old cciss raid controller.  I'm wondering
 > if the long delays in dispatch is caused by an interaction with CTQ
@@ -36,209 +53,14 @@ Dave Chinner wrote:
 > ctq/ncq on your machine?  If so, can you reduce the depth to
 > something less than 4 and see what difference that makes?
 
-I've been benchmarking on a cciss card, and patched the driver to
-control the queue depth via sysfs.  Maybe you'll find it useful...
+Just to point out - this is not a new problem - I can reproduce
+it on 2.6.24 as well as 2.6.26. Likewise, my laptop shows XFS
+being faster than ext3 on both 2.6.24 and 2.6.26. So the difference
+is something related to the disk subsystem on the server....
 
-The original patch was for 2.6.24, but that won't apply on git head.
-I fixed it for 2.6.27, and it seems to work fine.  Both are attached.
+Cheers,
 
-
-   -- Aaron
-
-
---------------040209080705080100020407
-Content-Type: text/plain;
- name="cciss_qdepth-2.6.24.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="cciss_qdepth-2.6.24.patch"
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmxvY2svY2Npc3MuYyBiL2RyaXZlcnMv
-YmxvY2svY2Npc3MuYwppbmRleCA1NWJkMzVjLi43MDljNDE5IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL2Jsb2NrL2NjaXNzLmMKKysrIGIvZHJpdmVycy9ibG9j
-ay9jY2lzcy5jCkBAIC00NzQsNyArNDc0LDcgQEAgc3RhdGljIENvbW1hbmRM
-aXN0X3N0cnVjdCAqY21kX2FsbG9jKGN0bHJfaW5mb190ICpoLCBpbnQgZ2V0
-X2Zyb21fcG9vbCkKIAogCQlkbyB7CiAJCQlpID0gZmluZF9maXJzdF96ZXJv
-X2JpdChoLT5jbWRfcG9vbF9iaXRzLCBoLT5ucl9jbWRzKTsKLQkJCWlmIChp
-ID09IGgtPm5yX2NtZHMpCisJCQlpZiAoaSA+PSBoLT5xZGVwdGhfbWF4KQog
-CQkJCXJldHVybiBOVUxMOwogCQl9IHdoaWxlICh0ZXN0X2FuZF9zZXRfYml0
-CiAJCQkgKGkgJiAoQklUU19QRVJfTE9ORyAtIDEpLApAQCAtMTI1Nyw3ICsx
-MjU3LDcgQEAgc3RhdGljIHZvaWQgY2Npc3NfY2hlY2tfcXVldWVzKGN0bHJf
-aW5mb190ICpoKQogCSAqIGluIGNhc2UgdGhlIGludGVycnVwdCB3ZSBzZXJ2
-aWNlZCB3YXMgZnJvbSBhbiBpb2N0bCBhbmQgZGlkIG5vdAogCSAqIGZyZWUg
-YW55IG5ldyBjb21tYW5kcy4KIAkgKi8KLQlpZiAoKGZpbmRfZmlyc3RfemVy
-b19iaXQoaC0+Y21kX3Bvb2xfYml0cywgaC0+bnJfY21kcykpID09IGgtPm5y
-X2NtZHMpCisJaWYgKChmaW5kX2ZpcnN0X3plcm9fYml0KGgtPmNtZF9wb29s
-X2JpdHMsIGgtPm5yX2NtZHMpKSA+PSBoLT5xZGVwdGhfbWF4KQogCQlyZXR1
-cm47CiAKIAkvKiBXZSBoYXZlIHJvb20gb24gdGhlIHF1ZXVlIGZvciBtb3Jl
-IGNvbW1hbmRzLiAgTm93IHdlIG5lZWQgdG8gcXVldWUKQEAgLTEyNzYsNyAr
-MTI3Niw3IEBAIHN0YXRpYyB2b2lkIGNjaXNzX2NoZWNrX3F1ZXVlcyhjdGxy
-X2luZm9fdCAqaCkKIAkJLyogY2hlY2sgdG8gc2VlIGlmIHdlIGhhdmUgbWF4
-ZWQgb3V0IHRoZSBudW1iZXIgb2YgY29tbWFuZHMKIAkJICogdGhhdCBjYW4g
-YmUgcGxhY2VkIG9uIHRoZSBxdWV1ZS4KIAkJICovCi0JCWlmICgoZmluZF9m
-aXJzdF96ZXJvX2JpdChoLT5jbWRfcG9vbF9iaXRzLCBoLT5ucl9jbWRzKSkg
-PT0gaC0+bnJfY21kcykgeworCQlpZiAoKGZpbmRfZmlyc3RfemVyb19iaXQo
-aC0+Y21kX3Bvb2xfYml0cywgaC0+bnJfY21kcykpID49IGgtPnFkZXB0aF9t
-YXgpIHsKIAkJCWlmIChjdXJyX3F1ZXVlID09IHN0YXJ0X3F1ZXVlKSB7CiAJ
-CQkJaC0+bmV4dF90b19ydW4gPQogCQkJCSAgICAoc3RhcnRfcXVldWUgKyAx
-KSAlIChoLT5oaWdoZXN0X2x1biArIDEpOwpAQCAtMzA3NSw2ICszMDc1LDcg
-QEAgc3RhdGljIGludCBfX2RldmluaXQgY2Npc3NfcGNpX2luaXQoY3Rscl9p
-bmZvX3QgKmMsIHN0cnVjdCBwY2lfZGV2ICpwZGV2KQogCQkJYy0+cHJvZHVj
-dF9uYW1lID0gcHJvZHVjdHNbaV0ucHJvZHVjdF9uYW1lOwogCQkJYy0+YWNj
-ZXNzID0gKihwcm9kdWN0c1tpXS5hY2Nlc3MpOwogCQkJYy0+bnJfY21kcyA9
-IHByb2R1Y3RzW2ldLm5yX2NtZHM7CisJCQljLT5xZGVwdGhfbWF4ID0gcHJv
-ZHVjdHNbaV0ubnJfY21kczsKIAkJCWJyZWFrOwogCQl9CiAJfQpAQCAtMzA5
-NSw2ICszMDk2LDcgQEAgc3RhdGljIGludCBfX2RldmluaXQgY2Npc3NfcGNp
-X2luaXQoY3Rscl9pbmZvX3QgKmMsIHN0cnVjdCBwY2lfZGV2ICpwZGV2KQog
-CQkJYy0+cHJvZHVjdF9uYW1lID0gcHJvZHVjdHNbaS0xXS5wcm9kdWN0X25h
-bWU7CiAJCQljLT5hY2Nlc3MgPSAqKHByb2R1Y3RzW2ktMV0uYWNjZXNzKTsK
-IAkJCWMtPm5yX2NtZHMgPSBwcm9kdWN0c1tpLTFdLm5yX2NtZHM7CisJCQlj
-LT5xZGVwdGhfbWF4ID0gcHJvZHVjdHNbaS0xXS5ucl9jbWRzOwogCQkJcHJp
-bnRrKEtFUk5fV0FSTklORyAiY2Npc3M6IFRoaXMgaXMgYW4gdW5rbm93biAi
-CiAJCQkJIlNtYXJ0IEFycmF5IGNvbnRyb2xsZXIuXG4iCiAJCQkJImNjaXNz
-OiBQbGVhc2UgdXBkYXRlIHRvIHRoZSBsYXRlc3QgZHJpdmVyICIKQEAgLTMz
-NDYsNiArMzM0OCw0NCBAQCBzdGF0aWMgdm9pZCBmcmVlX2hiYShpbnQgaSkK
-IAlrZnJlZShwKTsKIH0KIAorc3RhdGljIGlubGluZSBjdGxyX2luZm9fdCAq
-Y2Npc3NfZ2V0X2N0bHJfaW5mbyhzdHJ1Y3QgZGV2aWNlICpkZXYpCit7CisJ
-c3RydWN0IHBjaV9kZXYgKnBkZXYgPSBjb250YWluZXJfb2YoZGV2LCBzdHJ1
-Y3QgcGNpX2RldiwgZGV2KTsKKwlyZXR1cm4gcGNpX2dldF9kcnZkYXRhKHBk
-ZXYpOworfQorCitzdGF0aWMgc3NpemVfdCBjY2lzc19zaG93X3F1ZXVlX2Rl
-cHRoKHN0cnVjdCBkZXZpY2UgKmRldiwKKwkJc3RydWN0IGRldmljZV9hdHRy
-aWJ1dGUgKmF0dHIsIGNoYXIgKmJ1ZikKK3sKKwljdGxyX2luZm9fdCAqY3Rs
-ciA9IGNjaXNzX2dldF9jdGxyX2luZm8oZGV2KTsKKwlCVUdfT04oIWN0bHIp
-OworCisJcmV0dXJuIHNwcmludGYoYnVmLCAiJXVcbiIsIGN0bHItPnFkZXB0
-aF9tYXgpOworfQorCitzdGF0aWMgc3NpemVfdCBjY2lzc19zdG9yZV9xdWV1
-ZV9kZXB0aChzdHJ1Y3QgZGV2aWNlICpkZXYsCisJCXN0cnVjdCBkZXZpY2Vf
-YXR0cmlidXRlICphdHRyLCBjb25zdCBjaGFyICpidWYsIHNpemVfdCBjb3Vu
-dCkKK3sKKwljdGxyX2luZm9fdCAqY3RsciA9IGNjaXNzX2dldF9jdGxyX2lu
-Zm8oZGV2KTsKKwl1bnNpZ25lZCBsb25nIHFkZXB0aF9tYXg7CisKKwlCVUdf
-T04oIWN0bHIpOworCXFkZXB0aF9tYXggPSBzaW1wbGVfc3RydG91bChidWYs
-IE5VTEwsIDEwKTsKKworCWlmIChxZGVwdGhfbWF4IDwgMSkKKwkJcWRlcHRo
-X21heCA9IDE7CisJZWxzZSBpZiAocWRlcHRoX21heCA+IGN0bHItPm5yX2Nt
-ZHMpCisJCXFkZXB0aF9tYXggPSBjdGxyLT5ucl9jbWRzOworCisJY3Rsci0+
-cWRlcHRoX21heCA9ICh1bnNpZ25lZClxZGVwdGhfbWF4OworCXJldHVybiBj
-b3VudDsKK30KKworc3RhdGljIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlIGNj
-aXNzX3F1ZXVlX2RlcHRoID0KKwkJX19BVFRSKHF1ZXVlX2RlcHRoLCBTX0lS
-VUdPIHwgU19JV1VTUiwKKwkJCSZjY2lzc19zaG93X3F1ZXVlX2RlcHRoLAor
-CQkJJmNjaXNzX3N0b3JlX3F1ZXVlX2RlcHRoKTsKKwogLyoKICAqICBUaGlz
-IGlzIGl0LiAgRmluZCBhbGwgdGhlIGNvbnRyb2xsZXJzIGFuZCByZWdpc3Rl
-ciB0aGVtLiAgSSByZWFsbHkgaGF0ZQogICogIHN0ZWFsaW5nIGFsbCB0aGVz
-ZSBtYWpvciBkZXZpY2UgbnVtYmVycy4KQEAgLTM0NTAsNiArMzQ5MCwxMSBA
-QCBzdGF0aWMgaW50IF9fZGV2aW5pdCBjY2lzc19pbml0X29uZShzdHJ1Y3Qg
-cGNpX2RldiAqcGRldiwKIAkgICAgICAgKChoYmFbaV0tPm5yX2NtZHMgKyBC
-SVRTX1BFUl9MT05HIC0KIAkJIDEpIC8gQklUU19QRVJfTE9ORykgKiBzaXpl
-b2YodW5zaWduZWQgbG9uZykpOwogCisJLyogU2V0dXAgcXVldWVfZGVwdGgg
-c3lzZnMgZW50cnkgKi8KKwlyYyA9IGRldmljZV9jcmVhdGVfZmlsZSgmcGRl
-di0+ZGV2LCAmY2Npc3NfcXVldWVfZGVwdGgpOworCWlmIChyYykKKwkJZ290
-byBjbGVhbjQ7CisKICNpZmRlZiBDQ0lTU19ERUJVRwogCXByaW50ayhLRVJO
-X0RFQlVHICJTY2FubmluZyBmb3IgZHJpdmVzIG9uIGNvbnRyb2xsZXIgY2Np
-c3MlZFxuIiwgaSk7CiAjZW5kaWYJCQkJLyogQ0NJU1NfREVCVUcgKi8KZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvYmxvY2svY2Npc3MuaCBiL2RyaXZlcnMvYmxv
-Y2svY2Npc3MuaAppbmRleCBiNzA5ODhkLi42YTRhMzhhIDEwMDY0NAotLS0g
-YS9kcml2ZXJzL2Jsb2NrL2NjaXNzLmgKKysrIGIvZHJpdmVycy9ibG9jay9j
-Y2lzcy5oCkBAIC02MCw2ICs2MCw3IEBAIHN0cnVjdCBjdGxyX2luZm8KIAl2
-b2lkIF9faW9tZW0gKnZhZGRyOwogCXVuc2lnbmVkIGxvbmcgcGFkZHI7CiAJ
-aW50IAlucl9jbWRzOyAvKiBOdW1iZXIgb2YgY29tbWFuZHMgYWxsb3dlZCBv
-biB0aGlzIGNvbnRyb2xsZXIgKi8KKwl1bnNpZ25lZCBxZGVwdGhfbWF4OyAg
-LyogdXNlcnNwYWNlIHF1ZXVlIGRlcHRoIGxpbWl0ICovCiAJQ2ZnVGFibGVf
-c3RydWN0IF9faW9tZW0gKmNmZ3RhYmxlOwogCWludAlpbnRlcnJ1cHRzX2Vu
-YWJsZWQ7CiAJaW50CW1ham9yOwo=
-
---------------040209080705080100020407
-Content-Type: text/plain;
- name="cciss_qdepth-2.6.27.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="cciss_qdepth-2.6.27.patch"
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmxvY2svY2Npc3MuYyBiL2RyaXZlcnMv
-YmxvY2svY2Npc3MuYwppbmRleCBiNzMxMTZlLi4wNjY1NzdmIDEwMDY0NAot
-LS0gYS9kcml2ZXJzL2Jsb2NrL2NjaXNzLmMKKysrIGIvZHJpdmVycy9ibG9j
-ay9jY2lzcy5jCkBAIC00ODAsNyArNDgwLDcgQEAgc3RhdGljIENvbW1hbmRM
-aXN0X3N0cnVjdCAqY21kX2FsbG9jKGN0bHJfaW5mb190ICpoLCBpbnQgZ2V0
-X2Zyb21fcG9vbCkKIAogCQlkbyB7CiAJCQlpID0gZmluZF9maXJzdF96ZXJv
-X2JpdChoLT5jbWRfcG9vbF9iaXRzLCBoLT5ucl9jbWRzKTsKLQkJCWlmIChp
-ID09IGgtPm5yX2NtZHMpCisJCQlpZiAoaSA+PSBoLT5xZGVwdGhfbWF4KQog
-CQkJCXJldHVybiBOVUxMOwogCQl9IHdoaWxlICh0ZXN0X2FuZF9zZXRfYml0
-CiAJCQkgKGkgJiAoQklUU19QRVJfTE9ORyAtIDEpLApAQCAtMTI1OSw3ICsx
-MjU5LDcgQEAgc3RhdGljIHZvaWQgY2Npc3NfY2hlY2tfcXVldWVzKGN0bHJf
-aW5mb190ICpoKQogCSAqIGluIGNhc2UgdGhlIGludGVycnVwdCB3ZSBzZXJ2
-aWNlZCB3YXMgZnJvbSBhbiBpb2N0bCBhbmQgZGlkIG5vdAogCSAqIGZyZWUg
-YW55IG5ldyBjb21tYW5kcy4KIAkgKi8KLQlpZiAoKGZpbmRfZmlyc3RfemVy
-b19iaXQoaC0+Y21kX3Bvb2xfYml0cywgaC0+bnJfY21kcykpID09IGgtPm5y
-X2NtZHMpCisJaWYgKChmaW5kX2ZpcnN0X3plcm9fYml0KGgtPmNtZF9wb29s
-X2JpdHMsIGgtPm5yX2NtZHMpKSA+PSBoLT5xZGVwdGhfbWF4KQogCQlyZXR1
-cm47CiAKIAkvKiBXZSBoYXZlIHJvb20gb24gdGhlIHF1ZXVlIGZvciBtb3Jl
-IGNvbW1hbmRzLiAgTm93IHdlIG5lZWQgdG8gcXVldWUKQEAgLTEyNzgsNyAr
-MTI3OCw3IEBAIHN0YXRpYyB2b2lkIGNjaXNzX2NoZWNrX3F1ZXVlcyhjdGxy
-X2luZm9fdCAqaCkKIAkJLyogY2hlY2sgdG8gc2VlIGlmIHdlIGhhdmUgbWF4
-ZWQgb3V0IHRoZSBudW1iZXIgb2YgY29tbWFuZHMKIAkJICogdGhhdCBjYW4g
-YmUgcGxhY2VkIG9uIHRoZSBxdWV1ZS4KIAkJICovCi0JCWlmICgoZmluZF9m
-aXJzdF96ZXJvX2JpdChoLT5jbWRfcG9vbF9iaXRzLCBoLT5ucl9jbWRzKSkg
-PT0gaC0+bnJfY21kcykgeworCQlpZiAoKGZpbmRfZmlyc3RfemVyb19iaXQo
-aC0+Y21kX3Bvb2xfYml0cywgaC0+bnJfY21kcykpID49IGgtPnFkZXB0aF9t
-YXgpIHsKIAkJCWlmIChjdXJyX3F1ZXVlID09IHN0YXJ0X3F1ZXVlKSB7CiAJ
-CQkJaC0+bmV4dF90b19ydW4gPQogCQkJCSAgICAoc3RhcnRfcXVldWUgKyAx
-KSAlIChoLT5oaWdoZXN0X2x1biArIDEpOwpAQCAtMzI1Myw2ICszMjUzLDcg
-QEAgc3RhdGljIGludCBfX2RldmluaXQgY2Npc3NfcGNpX2luaXQoY3Rscl9p
-bmZvX3QgKmMsIHN0cnVjdCBwY2lfZGV2ICpwZGV2KQogCQkJYy0+cHJvZHVj
-dF9uYW1lID0gcHJvZHVjdHNbaV0ucHJvZHVjdF9uYW1lOwogCQkJYy0+YWNj
-ZXNzID0gKihwcm9kdWN0c1tpXS5hY2Nlc3MpOwogCQkJYy0+bnJfY21kcyA9
-IGMtPm1heF9jb21tYW5kcyAtIDQ7CisJCQljLT5xZGVwdGhfbWF4ID0gYy0+
-bnJfY21kczsKIAkJCWJyZWFrOwogCQl9CiAJfQpAQCAtMzI3Myw2ICszMjc0
-LDcgQEAgc3RhdGljIGludCBfX2RldmluaXQgY2Npc3NfcGNpX2luaXQoY3Rs
-cl9pbmZvX3QgKmMsIHN0cnVjdCBwY2lfZGV2ICpwZGV2KQogCQkJYy0+cHJv
-ZHVjdF9uYW1lID0gcHJvZHVjdHNbaS0xXS5wcm9kdWN0X25hbWU7CiAJCQlj
-LT5hY2Nlc3MgPSAqKHByb2R1Y3RzW2ktMV0uYWNjZXNzKTsKIAkJCWMtPm5y
-X2NtZHMgPSBjLT5tYXhfY29tbWFuZHMgLSA0OworCQkJYy0+cWRlcHRoX21h
-eCA9IGMtPm5yX2NtZHM7CiAJCQlwcmludGsoS0VSTl9XQVJOSU5HICJjY2lz
-czogVGhpcyBpcyBhbiB1bmtub3duICIKIAkJCQkiU21hcnQgQXJyYXkgY29u
-dHJvbGxlci5cbiIKIAkJCQkiY2Npc3M6IFBsZWFzZSB1cGRhdGUgdG8gdGhl
-IGxhdGVzdCBkcml2ZXIgIgpAQCAtMzM5Miw2ICszMzk0LDQ0IEBAIHN0YXRp
-YyB2b2lkIGZyZWVfaGJhKGludCBpKQogCWtmcmVlKHApOwogfQogCitzdGF0
-aWMgaW5saW5lIGN0bHJfaW5mb190ICpjY2lzc19nZXRfY3Rscl9pbmZvKHN0
-cnVjdCBkZXZpY2UgKmRldikKK3sKKwlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9
-IGNvbnRhaW5lcl9vZihkZXYsIHN0cnVjdCBwY2lfZGV2LCBkZXYpOworCXJl
-dHVybiBwY2lfZ2V0X2RydmRhdGEocGRldik7Cit9CisKK3N0YXRpYyBzc2l6
-ZV90IGNjaXNzX3Nob3dfcXVldWVfZGVwdGgoc3RydWN0IGRldmljZSAqZGV2
-LAorCQlzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwgY2hhciAqYnVm
-KQoreworCWN0bHJfaW5mb190ICpjdGxyID0gY2Npc3NfZ2V0X2N0bHJfaW5m
-byhkZXYpOworCUJVR19PTighY3Rscik7CisKKwlyZXR1cm4gc3ByaW50Zihi
-dWYsICIldVxuIiwgY3Rsci0+cWRlcHRoX21heCk7Cit9CisKK3N0YXRpYyBz
-c2l6ZV90IGNjaXNzX3N0b3JlX3F1ZXVlX2RlcHRoKHN0cnVjdCBkZXZpY2Ug
-KmRldiwKKwkJc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsIGNvbnN0
-IGNoYXIgKmJ1Ziwgc2l6ZV90IGNvdW50KQoreworCWN0bHJfaW5mb190ICpj
-dGxyID0gY2Npc3NfZ2V0X2N0bHJfaW5mbyhkZXYpOworCXVuc2lnbmVkIGxv
-bmcgcWRlcHRoX21heDsKKworCUJVR19PTighY3Rscik7CisJcWRlcHRoX21h
-eCA9IHNpbXBsZV9zdHJ0b3VsKGJ1ZiwgTlVMTCwgMTApOworCisJaWYgKHFk
-ZXB0aF9tYXggPCAxKQorCQlxZGVwdGhfbWF4ID0gMTsKKwllbHNlIGlmIChx
-ZGVwdGhfbWF4ID4gY3Rsci0+bnJfY21kcykKKwkJcWRlcHRoX21heCA9IGN0
-bHItPm5yX2NtZHM7CisKKwljdGxyLT5xZGVwdGhfbWF4ID0gKHVuc2lnbmVk
-KXFkZXB0aF9tYXg7CisJcmV0dXJuIGNvdW50OworfQorCitzdGF0aWMgc3Ry
-dWN0IGRldmljZV9hdHRyaWJ1dGUgY2Npc3NfcXVldWVfZGVwdGggPQorCQlf
-X0FUVFIocXVldWVfZGVwdGgsIFNfSVJVR08gfCBTX0lXVVNSLAorCQkJJmNj
-aXNzX3Nob3dfcXVldWVfZGVwdGgsCisJCQkmY2Npc3Nfc3RvcmVfcXVldWVf
-ZGVwdGgpOworCiAvKgogICogIFRoaXMgaXMgaXQuICBGaW5kIGFsbCB0aGUg
-Y29udHJvbGxlcnMgYW5kIHJlZ2lzdGVyIHRoZW0uICBJIHJlYWxseSBoYXRl
-CiAgKiAgc3RlYWxpbmcgYWxsIHRoZXNlIG1ham9yIGRldmljZSBudW1iZXJz
-LgpAQCAtMzQ5Niw2ICszNTM2LDExIEBAIHN0YXRpYyBpbnQgX19kZXZpbml0
-IGNjaXNzX2luaXRfb25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2LAogCSAgICAg
-ICAoKGhiYVtpXS0+bnJfY21kcyArIEJJVFNfUEVSX0xPTkcgLQogCQkgMSkg
-LyBCSVRTX1BFUl9MT05HKSAqIHNpemVvZih1bnNpZ25lZCBsb25nKSk7CiAK
-KwkvKiBTZXR1cCBxdWV1ZV9kZXB0aCBzeXNmcyBlbnRyeSAqLworCXJjID0g
-ZGV2aWNlX2NyZWF0ZV9maWxlKCZwZGV2LT5kZXYsICZjY2lzc19xdWV1ZV9k
-ZXB0aCk7CisJaWYgKHJjKQorCQlnb3RvIGNsZWFuNDsKKwogCWhiYVtpXS0+
-bnVtX2x1bnMgPSAwOwogCWhiYVtpXS0+aGlnaGVzdF9sdW4gPSAtMTsKIAlm
-b3IgKGogPSAwOyBqIDwgQ0lTU19NQVhfTFVOOyBqKyspIHsKZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvYmxvY2svY2Npc3MuaCBiL2RyaXZlcnMvYmxvY2svY2Np
-c3MuaAppbmRleCAyNGE3ZWZhLi45MWRjYWM2IDEwMDY0NAotLS0gYS9kcml2
-ZXJzL2Jsb2NrL2NjaXNzLmgKKysrIGIvZHJpdmVycy9ibG9jay9jY2lzcy5o
-CkBAIC02Miw2ICs2Miw3IEBAIHN0cnVjdCBjdGxyX2luZm8KIAl2b2lkIF9f
-aW9tZW0gKnZhZGRyOwogCXVuc2lnbmVkIGxvbmcgcGFkZHI7CiAJaW50IAlu
-cl9jbWRzOyAvKiBOdW1iZXIgb2YgY29tbWFuZHMgYWxsb3dlZCBvbiB0aGlz
-IGNvbnRyb2xsZXIgKi8KKwl1bnNpZ25lZCBxZGVwdGhfbWF4OyAgLyogdXNl
-cnNwYWNlIHF1ZXVlIGRlcHRoIGxpbWl0ICovCiAJQ2ZnVGFibGVfc3RydWN0
-IF9faW9tZW0gKmNmZ3RhYmxlOwogCWludAlpbnRlcnJ1cHRzX2VuYWJsZWQ7
-CiAJaW50CW1ham9yOwo=
-
---------------040209080705080100020407--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
