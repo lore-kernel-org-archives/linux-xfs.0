@@ -1,84 +1,51 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Aug 2008 23:13:30 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7L6DQHb008499
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:13:27 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 000C81A1DB7F
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:14:47 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id vrp7HndiCpaQbKr6 for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:14:47 -0700 (PDT)
-Date: Thu, 21 Aug 2008 16:14:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS vs Elevators (was Re: [PATCH RFC] nilfs2: continuous
-	snapshotting file system)
-Message-ID: <20080821061443.GD5706@disturbed>
-References: <20080821051508.GB5706@disturbed> <684252.68814.qm@web34508.mail.mud.yahoo.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 20 Aug 2008 23:30:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7L6UiUs009939
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:30:44 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77583F8FD63
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:32:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id Z4XqlFJfddPAIA96 for <xfs@oss.sgi.com>; Wed, 20 Aug 2008 23:32:04 -0700 (PDT)
+Message-ID: <48AD0BE3.7020403@sandeen.net>
+Date: Thu, 21 Aug 2008 01:32:03 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <684252.68814.qm@web34508.mail.mud.yahoo.com>
+Subject: Re: 5 concurrent bonnie runs failing after first pass .
+References: <Pine.LNX.4.64.0808201853480.26204@filesrv1.baby-dragons.com>
+In-Reply-To: <Pine.LNX.4.64.0808201853480.26204@filesrv1.baby-dragons.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: gus3 <musicman529@yahoo.com>
-Cc: Szabolcs Szakacsits <szaka@ntfs-3g.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: xfs@oss.sgi.com, linux-raid maillist <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Aug 20, 2008 at 11:00:07PM -0700, gus3 wrote:
-> --- On Wed, 8/20/08, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > Ok, I thought it might be the tiny log, but it didn't improve
-> > anything here when increased the log size, or the log buffer
-> > size.
-> > 
-> > Looking at the block trace, I think elevator merging is somewhat
-> > busted. I'm seeing adjacent I/Os being dispatched without having
-> > been merged.  e.g:
-> 
-> [snip]
-> 
-> > Also, CFQ appears to not be merging WRITE_SYNC bios or issuing
-> > them with any urgency.  The result of this is that it stalls the
-> > XFS transaction subsystem by capturing all the log buffers in
-> > the elevator and not issuing them. e.g.:
-> 
-> [snip]
-> 
-> > The I/Os are merged, but there's still that 700ms delay before
-> > dispatch.  i was looking at this a while back but didn't get to
-> > finishing it off.  i.e.:
-> > 
-> > http://oss.sgi.com/archives/xfs/2008-01/msg00151.html
-> > http://oss.sgi.com/archives/xfs/2008-01/msg00152.html
-> > 
-> > I'll have a bit more of a look at this w.r.t to compilebench
-> > performance, because it seems like a similar set of problems
-> > that I was seeing back then...
-> 
-> I concur your observation, esp. w.r.t. XFS and CFQ clashing:
-> 
-> http://gus3.typepad.com/i_am_therefore_i_think/2008/07/finding-the-fas.html
-> 
-> CFQ is the default on most Linux systems AFAIK; for decent XFS
-> performance one needs to switch to "noop" or "deadline". I wasn't
-> sure if it was broken code, or simply base assumptions in conflict
-> (XFS vs. CFQ). Your log output sheds light on the matter for me,
-> thanks.
+Mr. James W. Laferriere wrote:
+>  	Hello Dave (& Dan & All) ,
+>  	Even with your patch to xfs (49641f1acfdfd437ed9b0a70b86bf36626c02afe) 
+> Under some conditions multiple concurrent bonnie runs just halt .  No log to 
+> dmesg or serial console .  But there is a message from something when bonnie 
+> halts . 
 
-I'm wondering if these elevators are just getting too smart for
-their own good. w.r.t to the above test, deadline was about twice
-as slow as CFQ - it does immediate dispatch on SYNC_WRITE bios and
-so caused more seeks that CFQ and hence went slower. noop had
-similar dispatch latency problems to CFQ, so it wasn't any
-faster either.
+that "something" == bonnie ...
 
-I think that we need to issue explicit unplugs to get the log I/O
-dispatched the way we want on all elevators and stop trying to
-give elevators implicit hints by abusing the bio types and hoping
-they do the right thing....
+>  Also note the really low I/O .
+> 
+> 
+> --- Bad Bonnie --- (multiple concurrent processes)
+> filesrv2,136G,,,14389,16,10165,13,,,64722,9,134.3,0,16,212,2,+++++,+++,206,2,226,1,+++++,+++,177,2
+> semop: semop failed.
+> : Resource temporarily unavailable
+> 
 
-Cheers,
+Is it unique to xfs?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+this is an error from bonnie's semop() call; it's not immediately clear
+that there is a problem with xfs.  Is bonnie deadlocking?  Is xfs stuck?
+
+echo w > /proc/sysrq-trigger to see if there are stuck processes and
+where they are.
+
+-Eric
