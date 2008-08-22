@@ -1,52 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Aug 2008 00:08:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7M78n9x021047
-	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 00:08:50 -0700
-Received: from sca-es-mail-1.sun.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0319EF9E0DC
-	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 00:10:04 -0700 (PDT)
-Received: from sca-es-mail-1.sun.com (sca-es-mail-1.Sun.COM [192.18.43.132]) by cuda.sgi.com with ESMTP id sSI1lOk99utbSCBb for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 00:10:04 -0700 (PDT)
-Received: from fe-sfbay-09.sun.com ([192.18.43.129])
-	by sca-es-mail-1.sun.com (8.13.7+Sun/8.12.9) with ESMTP id m7M7A4BD002352
-	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 00:10:04 -0700 (PDT)
-Received: from conversion-daemon.fe-sfbay-09.sun.com by fe-sfbay-09.sun.com
- (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
- id <0K5Z00001QK32R00@fe-sfbay-09.sun.com> (original mail from adilger@sun.com)
- for xfs@oss.sgi.com; Fri, 22 Aug 2008 00:10:04 -0700 (PDT)
-Date: Fri, 22 Aug 2008 01:09:58 -0600
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: [PATCH 1/3] Implement generic freeze feature
-In-reply-to: <20080821125841.a04a706f.akpm@linux-foundation.org>
-Message-id: <20080822070958.GU3392@webber.adilger.int>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Content-transfer-encoding: 7BIT
-Content-disposition: inline
-References: <20080818212819t-sato@mail.jp.nec.com>
- <20080821125841.a04a706f.akpm@linux-foundation.org>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Aug 2008 03:02:23 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7MA2Kcu007261
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 03:02:20 -0700
+Received: from wf-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 29BA21A2CEEC
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 03:03:41 -0700 (PDT)
+Received: from wf-out-1314.google.com (wf-out-1314.google.com [209.85.200.174]) by cuda.sgi.com with ESMTP id 6fHuzWFH9CffDC9O for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 03:03:41 -0700 (PDT)
+Received: by wf-out-1314.google.com with SMTP id 26so369020wfd.32
+        for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 03:03:40 -0700 (PDT)
+Message-ID: <50ed5c760808220303p37e03e8dge5b868a572374e0b@mail.gmail.com>
+Date: Fri, 22 Aug 2008 12:03:40 +0200
+From: "=?ISO-8859-2?Q?S=B3awomir_Nowakowski?=" <nailman23@gmail.com>
+Subject: XFS issue under 2.6.25.13 kernel
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Takashi Sato <t-sato@yk.jp.nec.com>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Aug 21, 2008  12:58 -0700, Andrew Morton wrote:
-> >  #define FIGETBSZ   _IO(0x00,2)	/* get the block size used for bmap */
-> > +#define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
-> > +#define FITHAW		_IOWR('X', 120, int)	/* Thaw */
-> 
-> FIFREEZE is 119, but a few lines above we have
-> 
-> #define BLKDISCARD _IO(0x12,119)
->
-> Should we be using 120 and 121 here?
+Dear All,
 
-No, because 'X' != 0x12...  The 'X' is used because this ioctl is compatible
-with the XFS implementation of this feature.
+We have a problem with implementing xfs file system for Linux. The problem
+appears after mounting xfs file system on 2.6.25.13 kernel that is created on
+2.6.17.13 kernel.
 
-Cheers, Andreas
---
-Andreas Dilger
-Sr. Staff Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
+File system is created on logical volume in the following way:
+
+lvcreate -L 4G volume1 -n test
+mkfs.xfs /dev/volume1/test
+mount /dev/volume1/test /mnt/x
+
+After mounting it on 2.6.17.13 kernel "df -B 1" output looks like this:
+
+/dev/volume1/test    4284481536    147456 4284334080   1% /mnt/x
+
+but in case of 2.6.25.13 kernel:
+
+/dev/volume1/test    4284481536   4489216 4279992320   1% /mnt/x
+
+The same happens in case of 2.6.26.3 kernel.
+
+As it is shown after mounting the volume in newer kernel size of file system
+is visible smaller. The problem appears when on this volume exists one big
+file, occupying all available space. After trying to mount it under newer
+kernel, the file is cut because available free space is smaller.
+
+Is it known issue and/or does solution or workaround exists?
+
+Thank you in advance for your help.
+
+Best Regards
+Roland
