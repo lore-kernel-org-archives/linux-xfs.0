@@ -1,48 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Aug 2008 15:25:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7MMPQsq013901
-	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 15:25:26 -0700
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3D71FA98C3
-	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 15:26:47 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.126.188]) by cuda.sgi.com with ESMTP id zLmW3juRy2cQTgKq for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 15:26:47 -0700 (PDT)
-Date: Sat, 23 Aug 2008 00:26:46 +0200 (CEST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: agi unlinked bucket
-Message-ID: <alpine.DEB.1.10.0808230017150.20126@sheep.housecafe.de>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 22 Aug 2008 16:37:00 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7MNavTo024644
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 16:36:57 -0700
+Received: from chef.nerp.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 200A73C4659
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 16:38:18 -0700 (PDT)
+Received: from chef.nerp.net (chef.nerp.net [199.199.210.160]) by cuda.sgi.com with ESMTP id zHEKpi9SqmpVaLEs for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 16:38:18 -0700 (PDT)
+Received: from chef.nerp.net (localhost [127.0.0.1])
+	by chef.nerp.net (Postfix) with ESMTP id 0FF1C140254A
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 18:38:17 -0500 (CDT)
+Received: from [75.209.92.19] (19.sub-75-209-92.myvzw.com [75.209.92.19])
+	by chef.nerp.net (Postfix) with ESMTPA id 1D5C6140253E
+	for <xfs@oss.sgi.com>; Fri, 22 Aug 2008 18:38:14 -0500 (CDT)
+Message-ID: <48AF4DD1.5080603@nerp.net>
+Date: Fri, 22 Aug 2008 13:37:53 -1000
+From: Dan <dan@nerp.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Subject: xfs_quota free
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Hi there,
+Hi,
 
-there's an XFS here (and since it's mounted on top of a dm-crypt device, 
-it's not checked regulary. Checking the filesystem just now gave:
+Some time ago I needed to determine the free space on a real time 
+device.  Nate indicated to use xfs_quota free.  I've read the man pages 
+and tried many iterations of this command but I cannot get any results.
 
-----------------------
-# xfs_repair -V
-xfs_repair version 2.9.8
-# blockdev --getsize64 /dev/mapper/md3
-147445706752
-# xfs_check /dev/mapper/md3
-agi unlinked bucket 26 is 20208090 in ag 0 (inode=20208090)
-link count mismatch for inode 128 (name ?), nlink 333, counted 334
-link count mismatch for inode 20208090 (name ?), nlink 0, counted 1
-Command exited with non-zero status 3
-----------------------
+One potential problem is I'm uncertain of the folder or device to point 
+the command at.  My filesystem is mounted to /mnt, the rtdev is /dev/md0 
+and meta data is on /dev/sdb.  Basically it boils down to xfs_quota -c 
+'free -r -h'  /mnt I think but I get the following error:
 
-Should I worry? Would it be safe to run xfs_repair on it?
-Searching for these errors in the archives only brings up scenarios with 
-kernel oopses involved. Not here, the box is running fine (2.6.27-rc3, 
-i386) and the filesystem is doing its job.
+XFS_IOC_FSGEOMETRY_V1: Invalid argument
+
+How do you use this?
 
 Thanks,
-Christian.
--- 
-BOFH excuse #198:
 
-Post-it Note Sludge leaked into the monitor.
+Dan
