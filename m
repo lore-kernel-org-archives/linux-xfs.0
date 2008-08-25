@@ -1,81 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Aug 2008 20:25:04 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7P3P1N2028282
-	for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:25:01 -0700
-Received: from larry.melbourne.sgi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id CC3A3FAF57F
-	for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:26:22 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130]) by cuda.sgi.com with SMTP id x9BU1go9UiRBbiFJ for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:26:22 -0700 (PDT)
-Message-ID: <48B22659.9050301@sgi.com>
-Date: Mon, 25 Aug 2008 13:26:17 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 24 Aug 2008 20:54:28 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7P3sP25030847
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:54:25 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48C521A3F54F
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:55:47 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id DTjUunKGlkAswP0S for <xfs@oss.sgi.com>; Sun, 24 Aug 2008 20:55:47 -0700 (PDT)
+Date: Mon, 25 Aug 2008 13:55:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [2.6.27-rc4] XFS i_lock vs i_iolock...
+Message-ID: <20080825035542.GR5706@disturbed>
+References: <6278d2220808221412x28f4ac5dl508884c8030b364a@mail.gmail.com> <20080825010213.GO5706@disturbed> <48B21507.9050708@sgi.com>
 MIME-Version: 1.0
-Subject: Re: agi unlinked bucket
-References: <alpine.DEB.1.10.0808230017150.20126@sheep.housecafe.de> <alpine.DEB.1.10.0808231412230.20126@sheep.housecafe.de> <20080825003929.GN5706@disturbed> <alpine.DEB.1.10.0808250254380.26780@sheep.housecafe.de>
-In-Reply-To: <alpine.DEB.1.10.0808250254380.26780@sheep.housecafe.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48B21507.9050708@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Daniel J Blueman <daniel.blueman@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, hch@lst.de
 
-Christian Kujau wrote:
-> On Mon, 25 Aug 2008, Dave Chinner wrote:
->> If you do a mount then unmount then rerun xfs-check, does it go
->> away?
-> 
-> Did that a few times already, and the fs is getting mounted during boot
-> anyway, but xfs_check still complains:
-> 
-> --------------------------------------
-> # xfs_check /dev/mapper/md3 2>&1 | tee fsck_md3.log
-> agi unlinked bucket 26 is 20208090 in ag 0 (inode=20208090)
-> link count mismatch for inode 128 (name ?), nlink 335, counted 336
-> link count mismatch for inode 20208090 (name ?), nlink 0, counted 1
-> # mount /mnt/md3
-> # dmesg | tail -2
->  XFS mounting filesystem dm-3
->  Ending clean XFS mount for filesystem: dm-3
-> # grep xfs /proc/mounts
-> /dev/mapper/md3 /mnt/md3 xfs ro,nosuid,nodev,noexec,nobarrier,noquota 0 0
-> --------------------------------------
-> 
-> 
-> The fs is ~138 GB in size. I shall run a backup and then just let
-> xfs_repair have its way. I just thought you guys might have an idea what
-> these messages are about and why mounting the fs (Thanks, Dave) does not
-> seem to care.
-> 
-The file systems is divided up into allocation groups, AGs.
-In each AG we have an unlinked list which is a hash table array
-whose elements (often called buckets) can point to a linked list
-of inodes. There is a next unlinked pointer in each inode.
-The list is used to represent unlinked inodes (inodes removed from directories)
-but are still referenced by processes. If we don't have a clean
-unmount then the unlinked lists may not be empty and we have to remove
-the inodes on the next mount (done at the same stage as log replay) by
-traversing the lists.
-So in your case, it looks like in AG#0 on the 26th element of the array it is pointing
-to inode# 20208090. Which would infer that inode#20208090 was unlinked
-but still had references to it at the time the filesystem was not cleanly
-unmounted (power loss, crash etc..). It looks like for the root directory inode #128
-it has a count of 335 but it is finding 336 entries.
-And for inode#20208090 it has a link count of 0 and yet it has 1 entry
-in the directory. It's as if the inode was deleted (its link count decremented
-to zero and its parent directory decremented, unlinked list updated)
-but the directory wasn't updated properly.
+On Mon, Aug 25, 2008 at 12:12:23PM +1000, Lachlan McIlroy wrote:
+> Dave Chinner wrote:
+>> On Fri, Aug 22, 2008 at 10:12:59PM +0100, Daniel J Blueman wrote:
+>>> On 2.6.27-rc4 with various debug options enabled, lockdep claims lock
+>>> ordering issues with XFS [1] - easiest reproducer is just running
+>>> xfs_fsr. Mount options I was using were
+>>> 'nobarrier,noatime,nodiratime'.
+>>>
+>>> Thanks,
+>>>   Daniel
+>>>
+>>> --- [1]
+>>>
+>>> =======================================================
+>>> [ INFO: possible circular locking dependency detected ]
+>>> 2.6.27-rc4-224c #1
+>>> -------------------------------------------------------
+>>> xfs_fsr/5763 is trying to acquire lock:
+>>>  (&(&ip->i_lock)->mr_lock/2){--..}, at: [<ffffffff803ad8fc>] xfs_ilock+0x8c/0xb0
+>>>
+>>> but task is already holding lock:
+>>>  (&(&ip->i_iolock)->mr_lock/3){--..}, at: [<ffffffff803ad915>]
+>>> xfs_ilock+0xa5/0xb0
+>>
+>> False positive. We do:
+>>
+>> 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
+>
+> Why not just change the above line to two lines:
+> 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
+> 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
 
-Hence Dave's comments:
-> Ok, so if you do a 'ls -i /' do you see an inode numbered 20208090?
-> i.e. is it the unlinked bucket that is incorrect, or the root
-> directory.
-> You are not using barriers. Are you using write caching? The
-> problems with filesystem corruption on powerloss when using volatile
-> write caching have traditionally shown up in directory
-> corruptions...
+Yeah, that'd work, but it implllies that we no longer allow
+xfs_lock_two_inodes() to take both inode locks at once. It
+would need a comment blaming^Wexplaining why lockdep requires
+us to do this, and then debug code in xfs_lock_two_inodes() to
+catch this when someone makes this mistake again in the future.
 
+Cheers,
 
---Tim
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
