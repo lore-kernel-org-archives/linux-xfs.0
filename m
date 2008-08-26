@@ -1,41 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 19:44:36 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7Q2iTEf017389
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:44:30 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 20:06:52 -0700 (PDT)
+Received: from cuda.sgi.com ([192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7Q36kuF018915
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 20:06:46 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A9ECFBC0FE
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:45:52 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id AgmXbUbepuSc8hEI for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:45:52 -0700 (PDT)
-Date: Tue, 26 Aug 2008 12:45:47 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA0171A4828C
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 20:08:08 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id M63KD7tc87jf1t8e for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 20:08:08 -0700 (PDT)
+Date: Tue, 26 Aug 2008 13:07:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [2.6.27-rc4] XFS i_lock vs i_iolock...
-Message-ID: <20080826024547.GX5706@disturbed>
-References: <6278d2220808221412x28f4ac5dl508884c8030b364a@mail.gmail.com> <20080825010213.GO5706@disturbed> <48B21507.9050708@sgi.com> <20080825035542.GR5706@disturbed> <1219647573.20732.28.camel@twins> <20080825215532.GB28188@lst.de>
+Subject: Re: XFS vs Elevators (was Re: [PATCH RFC] nilfs2: continuous
+	snapshotting file system)
+Message-ID: <20080826030759.GY5706@disturbed>
+References: <20080821051508.GB5706@disturbed> <200808211933.34565.nickpiggin@yahoo.com.au> <20080821170854.GJ5706@disturbed> <200808221229.11069.nickpiggin@yahoo.com.au> <20080825015922.GP5706@disturbed> <20080825120146.GC20960@shareable.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080825215532.GB28188@lst.de>
+In-Reply-To: <20080825120146.GC20960@shareable.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Peter Zijlstra <peterz@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Daniel J Blueman <daniel.blueman@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Jamie Lokier <jamie@shareable.org>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, gus3 <musicman529@yahoo.com>, Szabolcs Szakacsits <szaka@ntfs-3g.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Aug 25, 2008 at 11:55:32PM +0200, Christoph Hellwig wrote:
-> On Mon, Aug 25, 2008 at 08:59:33AM +0200, Peter Zijlstra wrote:
-> > How can you take two locks in one go? It seems to me you always need to
-> > take them one after another, and as soon as you do that, you have
-> > ordering constraints.
+On Mon, Aug 25, 2008 at 01:01:47PM +0100, Jamie Lokier wrote:
+> Dave Chinner wrote:
+> > To keep on top of this, we keep adding new variations and types and
+> > expect the filesystems to make best use of them (without
+> > documentation) to optimise for certain situations. Example - the
+> > new(ish) BIO_META tag that only CFQ understands. I can change the
+> > way XFS issues bios to use this tag to make CFQ behave the same way
+> > it used to w.r.t. metadata I/O from XFS, but then the deadline and
+> > AS will probably regress because they don't understand that tag and
+> > still need the old optimisations that just got removed. Ditto for
+> > prioritised bio dispatch - CFQ supports it but none of the others
+> > do.
 > 
-> Yes, you would.  Except that in all other places we only have a single
-> iolock involved, so the ordering of the second iolock and second ilock
-> don't matter.
-> 
-> Because of that I think declaring that xfs_lock_two_inodes can just
-> lock on lock type at a time might be the better solution.
+> There's nothing wrong with adding BIO_META (for example) and other
+> hints in _principle_.  You should be able to ignore it with no adverse
+> effects.  If its not used by a filesystem (and there's nothing else
+> competing to use the same disk), I would hope to see the same
+> performance as other kernels which don't have it.
 
-Agreed. Patch below.
+Right, but it's what we need to do to make use of that optimisation
+that is the problem. For XFS, it needs to replace the current
+BIO_SYNC hints we use (even for async I/O) to get metadata
+dispatched quickly. i.e. CFQ looks at the sync flag first then the
+meta flag.  Hence to take advantage of it, we need to remove the
+BIO_SYNC hints we currently use which will change the behaviour on
+all other elevators as a side effect.
+
+This is the optimisation problem I'm refering to - the BIO_SYNC
+usage was done years ago to get metadata dispatched quickly because
+that is what all the elevators did with sync I/O. Now to optimise
+for CFQ we need to remove that BIO_SYNC optimisation which is still
+valid for the other elevators....
+
+> If the elevators are being changed in such a way that old filesystem
+> code which doesn't use new hint bits is running significantly slower,
+> surely that's blatant elevator regression, and that's where the bugs
+> should be reported and fixed?
+
+Sure, but in reality getting ppl to go through the pain of triage is
+extremely rare because it only takes 10s to change elevators and 
+make the problem go away...
 
 Cheers,
 
@@ -43,72 +71,3 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-XFS: prevent lockdep false positives when locking two inodes
-
-If we call xfs_lock_two_inodes() to grab both the iolock and
-the ilock, then drop the ilocks on both inodes, then grab
-them again (as xfs_swap_extents() does) then lockdep will
-report a locking order problem. This is a false positive.
-
-To avoid this, disallow xfs_lock_two_inodes() fom locking both
-inode locks at once - force calers to make two separate calls.
-This means that nested dropping and regaining of the ilocks
-will retain the same lockdep subclass and so lockdep will
-not see anything wrong with this code.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_dfrag.c    |    9 ++++++++-
- fs/xfs/xfs_vnodeops.c |   10 ++++++++++
- 2 files changed, 18 insertions(+), 1 deletions(-)
-
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index 760f4c5..75b0cd4 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -149,7 +149,14 @@ xfs_swap_extents(
- 
- 	sbp = &sxp->sx_stat;
- 
--	xfs_lock_two_inodes(ip, tip, lock_flags);
-+	/*
-+	 * we have to do two separate lock calls here to keep lockdep
-+	 * happy. If we try to get all the locks in one call, lock will
-+	 * report false positives when we drop the ILOCK and regain them
-+	 * below.
-+	 */
-+	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
- 	locked = 1;
- 
- 	/* Verify that both files have the same format */
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index f108102..cb1b5fd 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1836,6 +1836,12 @@ again:
- #endif
- }
- 
-+/*
-+ * xfs_lock_two_inodes() can only be used to lock one type of lock
-+ * at a time - the iolock or the ilock, but not both at once. If
-+ * we lock both at once, lockdep will report false positives saying
-+ * we have violated locking orders.
-+ */
- void
- xfs_lock_two_inodes(
- 	xfs_inode_t		*ip0,
-@@ -1846,7 +1852,11 @@ xfs_lock_two_inodes(
- 	int			attempts = 0;
- 	xfs_log_item_t		*lp;
- 
-+#ifdef DEBUG
-+	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
-+		ASSERT((lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) == 0);
- 	ASSERT(ip0->i_ino != ip1->i_ino);
-+#endif
- 
- 	if (ip0->i_ino > ip1->i_ino) {
- 		temp = ip0;
