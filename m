@@ -1,67 +1,74 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 18:54:37 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 18:59:49 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7Q1sUEX012342
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 18:54:31 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7Q1xhiR012950
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 18:59:47 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DC713CD48C
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 18:55:53 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id Dv77OX9UipMuZOGW for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 18:55:53 -0700 (PDT)
-Date: Tue, 26 Aug 2008 11:55:49 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 119DF3CD562
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:01:06 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id NBTMVWAWeRhna07t for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:01:06 -0700 (PDT)
+Date: Tue, 26 Aug 2008 12:01:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [2.6.27-rc4] XFS i_lock vs i_iolock...
-Message-ID: <20080826015549.GT5706@disturbed>
-References: <6278d2220808221412x28f4ac5dl508884c8030b364a@mail.gmail.com> <20080825010213.GO5706@disturbed> <48B21507.9050708@sgi.com> <20080825035542.GR5706@disturbed> <1219647573.20732.28.camel@twins>
+Subject: Re: xfs_growfs fix backport for 2.6.16.y
+Message-ID: <20080826020101.GU5706@disturbed>
+References: <20080825153931.GD7575@coraid.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1219647573.20732.28.camel@twins>
+In-Reply-To: <20080825153931.GD7575@coraid.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, Daniel J Blueman <daniel.blueman@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, hch@lst.de
+To: Ed Cashin <ecashin@coraid.com>
+Cc: xfs@oss.sgi.com, Adrian Bunk <bunk@kernel.org>
 
-On Mon, Aug 25, 2008 at 08:59:33AM +0200, Peter Zijlstra wrote:
-> On Mon, 2008-08-25 at 13:55 +1000, Dave Chinner wrote:
-> > On Mon, Aug 25, 2008 at 12:12:23PM +1000, Lachlan McIlroy wrote:
-> > > Dave Chinner wrote:
-> > >> On Fri, Aug 22, 2008 at 10:12:59PM +0100, Daniel J Blueman wrote:
-> > >>> =======================================================
-> > >>> [ INFO: possible circular locking dependency detected ]
-> > >>> 2.6.27-rc4-224c #1
-> > >>> -------------------------------------------------------
-> > >>> xfs_fsr/5763 is trying to acquire lock:
-> > >>>  (&(&ip->i_lock)->mr_lock/2){--..}, at: [<ffffffff803ad8fc>] xfs_ilock+0x8c/0xb0
-> > >>>
-> > >>> but task is already holding lock:
-> > >>>  (&(&ip->i_iolock)->mr_lock/3){--..}, at: [<ffffffff803ad915>]
-> > >>> xfs_ilock+0xa5/0xb0
-> > >>
-> > >> False positive. We do:
-> > >>
-> > >> 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
-> > >
-> > > Why not just change the above line to two lines:
-> > > 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-> > > 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-> > 
-> > Yeah, that'd work, but it implllies that we no longer allow
-> > xfs_lock_two_inodes() to take both inode locks at once. 
+On Mon, Aug 25, 2008 at 11:39:31AM -0400, Ed Cashin wrote:
+> Dave Chinner, hello.
 > 
-> How can you take two locks in one go? It seems to me you always need to
-> take them one after another, and as soon as you do that, you have
-> ordering constraints.
+> Your fix for the counters that had been preventing an XFS from growing
+> by more than two terabytes went into 2.6.21, after the introduction of
+> the per-cpu in-core superblock counters.  The per-cpu in-core
+> superblock counters are not in the latest version of the long-lived
+> stable kernel 2.6.16.y, maintained by Adrian Bunk.
+> 
+> The problem with growing by more than two terabytes appears to be
+> there, though.  The 2.6.16.62 kernel will not allow me to grow an XFS
+> by, e.g., 10 terabytes, so xfs_growfs does not report any change in
+> the data blocks.
+> 
+> I backported your fix,
+> 
+>     commit 20f4ebf2bf2f57c1a9abb3655391336cc90314b3
+>     Author: David Chinner <dgc@sgi.com>
+>     Date:   Sat Feb 10 18:36:10 2007 +1100
+>     
+>         [XFS] Make growfs work for amounts greater than 2TB
+>         
+>         The free block modification code has a 32bit interface, limiting the size
+>         the filesystem can be grown even on 64 bit machines. On 32 bit machines,
+>         there are other 32bit variables in transaction structures and interfaces
+>         that need to be expanded to allow this to work.
+>         
+>         SGI-PV: 959978
+>         SGI-Modid: xfs-linux-melb:xfs-kern:27894a
+>         
+>         Signed-off-by: David Chinner <dgc@sgi.com>
+>         Signed-off-by: Christoph Hellwig <hch@infradead.org>
+>         Signed-off-by: Tim Shimmin <tes@sgi.com>
+> 
+> ... to the 2.6.16.y git tree, and the result is included below.  When
+> I apply this backported fix to 2.6.16.62, I can grow an online XFS by
+> 10 terabytes without any trouble.
+> 
+> Do you see any problems with this backport?  If not, I will submit it
+> for inclusion in the next 2.6.16.y release.
 
-It doesn't take them both inode locks in one go - it does them
-separately in a given order via xfs_ilock(). Basically there are two
-layers of constraints here - xfs_ilock() handles the order
-withing a given inode, xfs_lock_two_inodes() handles order and
-deadlock prevention between inodes.
+I suggest you make sure it passes test 078 in the xfsqa suite (part
+of the xfs-cmds tree) as that tests all the nasty growfs corner
+cases. You'll need to test it on 32 bit and 64 bit machines....
 
-What lockdep is complaining about is a difference in the lock
-order between different locks in different inodes - a situation
-that does not result in a deadlock...
+If it passes that then I don't see any problems - SGI backported
+this for sles10 which is based on 2.6.16 a long time ago.
 
 Cheers,
 
