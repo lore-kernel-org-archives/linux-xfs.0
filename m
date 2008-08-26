@@ -1,52 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 19:06:09 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7Q266B1013859
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:06:07 -0700
-Date: Tue, 26 Aug 2008 12:08:27 +1000
-Subject: Re: REVIEW: xfs_repair fixes for bad directories
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 25 Aug 2008 19:08:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7Q289YB014363
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:08:09 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39A64FBBE61
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:09:32 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id z2jjpBHDieHbqICW for <xfs@oss.sgi.com>; Mon, 25 Aug 2008 19:09:32 -0700 (PDT)
+Date: Tue, 26 Aug 2008 12:09:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS_BUF_ORDERED instead of XFS_BUF_ISORDERED?
+Message-ID: <20080826020927.GV5706@disturbed>
+References: <48B32E36.7060305@houseofnate.net>
 MIME-Version: 1.0
-References: <op.udlsirmx3jf8g2@pc-bnaujok.melbourne.sgi.com>
- <20080701081306.GA11135@infradead.org>
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.ugg1kdqw3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20080701081306.GA11135@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48B32E36.7060305@houseofnate.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "Nathaniel W. Turner" <nate@houseofnate.net>
+Cc: xfs@oss.sgi.com
 
-On Tue, 01 Jul 2008 18:13:06 +1000, Christoph Hellwig <hch@infradead.org>  
-wrote:
+On Mon, Aug 25, 2008 at 06:12:06PM -0400, Nathaniel W. Turner wrote:
+> Hi folks,
+>
+> While doing a little light reading, I noticed the following in  
+> fs/xfs/xfs_log.c:1011 (in the 2.6.26.3 Linux kernel tree).  Am I missing  
+> something, or should XFS_BUF_ORDERED be replaced with XFS_BUF_ISORDERED  
+> in this check?
 
-> On Tue, Jul 01, 2008 at 06:00:17PM +1000, Barry Naujok wrote:
->> Two issues have been encounted with xfs_repair and badly corrupted
->> directories.
->>
->> 1. A huge size (inode di_size) can cause malloc which will fail.
->>    Patch dir_size_check.patch checks for a valid directory size
->>    and if it's bad, junks the directory. The di_size for a dir
->>    only counts the data blocks being used, not all the other
->>    associated metadata. This is limited to 32GB by the
->>    XFS_DIR2_LEAF_OFFSET value in XFS. Anything greater than this
->>    must be invalid.
->
-> This one looks good.
->
->> 2. An update a while ago to xfs_repair attempts to fix invalid
->>    ".." entries for subdirectories where there is a valid parent
->>    with the appropriate entry. It was a partial fix that never
->>    did the full job, especially if the subdirectory was short-
->>    form or it has already been processed.
->>
->>    Patch fix_dir_rebuild_without_dotdot_entry.patch creates a
->>    post-processing queue after the main scan to update any
->>    directories with an invalid ".." entry.
->
-> For this one I'll need to read the surrounding code first to do
-> a useful review, so it'll take some time.
+Yes, it is wrong. Well spotted. I guess this shows that I was right
+when I complained about needing this untestable barrier handling
+code in every filesystem....
 
-Ping?
+Patch below.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+XFS: Fix barrier status change detection
+
+The current code in xlog_iodone() uses the wrong macro
+to check if the barrier has been cleared due to an EOPNOTSUPP
+error form the lower layer.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_log.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index ccba14e..ff2ac20 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1009,7 +1009,7 @@ xlog_iodone(xfs_buf_t *bp)
+ 	 * layer, it means the underlyin device no longer supports
+ 	 * barrier I/O. Warn loudly and turn off barriers.
+ 	 */
+-	if ((l->l_mp->m_flags & XFS_MOUNT_BARRIER) && !XFS_BUF_ORDERED(bp)) {
++	if ((l->l_mp->m_flags & XFS_MOUNT_BARRIER) && !XFS_BUF_ISORDERED(bp)) {
+ 		l->l_mp->m_flags &= ~XFS_MOUNT_BARRIER;
+ 		xfs_fs_cmn_err(CE_WARN, l->l_mp,
+ 				"xlog_iodone: Barriers are no longer supported"
