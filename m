@@ -1,87 +1,271 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Aug 2008 06:48:55 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Aug 2008 11:08:01 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7RDmP9E005734
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 06:48:25 -0700
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 699C43D7929
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 06:49:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id Q5zNf204a2FsWP3r for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 06:49:48 -0700 (PDT)
-From: David Howells <dhowells@redhat.com>
-Subject: [PATCH 47/59] CRED: Wrap task credential accesses in the XFS
-	filesystem
-Date: Wed, 27 Aug 2008 14:49:44 +0100
-Message-ID: <20080827134944.19980.51300.stgit@warthog.procyon.org.uk>
-In-Reply-To: <20080827134541.19980.61042.stgit@warthog.procyon.org.uk>
-References: <20080827134541.19980.61042.stgit@warthog.procyon.org.uk>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7RI7w9q027824
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 11:07:58 -0700
+Received: from wx-out-0506.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DDD43DBF8B
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 11:09:20 -0700 (PDT)
+Received: from wx-out-0506.google.com (wx-out-0506.google.com [66.249.82.225]) by cuda.sgi.com with ESMTP id CWIynhYDsEppNrbg for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 11:09:20 -0700 (PDT)
+Received: by wx-out-0506.google.com with SMTP id h30so1052757wxd.32
+        for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 11:09:20 -0700 (PDT)
+Message-ID: <50ed5c760808271109u4dee0311ha7cf2c1e7cae31dd@mail.gmail.com>
+Date: Wed, 27 Aug 2008 20:09:18 +0200
+From: "=?ISO-8859-2?Q?S=B3awomir_Nowakowski?=" <nailman23@gmail.com>
+Subject: Re: XFS issue under 2.6.25.13 kernel
+In-Reply-To: <20080827005243.GB5706@disturbed>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_35313_16004752.1219860558769"
+References: <50ed5c760808220303p37e03e8dge5b868a572374e0b@mail.gmail.com>
+	 <20080823010524.GM5706@disturbed>
+	 <50ed5c760808250408o44aeaf07me262eab8da8340ba@mail.gmail.com>
+	 <20080826014133.GS5706@disturbed>
+	 <50ed5c760808260553i7def5e93qb0bcb4d2206a4a38@mail.gmail.com>
+	 <20080827005243.GB5706@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, David Howells <dhowells@redhat.com>, Serge Hallyn <serue@us.ibm.com>, xfs@oss.sgi.com
+To: =?ISO-8859-2?Q?S=B3awomir_Nowakowski?= <nailman23@gmail.com>, xfs@oss.sgi.com
 
-Wrap access to task credentials so that they can be separated more easily from
-the task_struct during the introduction of COW creds.
+------=_Part_35313_16004752.1219860558769
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
-Change most current->(|e|s|fs)[ug]id to current_(|e|s|fs)[ug]id().
+RGVhciBEYXZlLAoKV2UgcmVhbGx5IGFwcmVjaWF0ZSB5b3VyIGhlbHAuLgoK
+SW4gdGhlIHJlYWx0aW9uIHRvIHByZXZpb3VzIGNvcnJlc3BvbmRhdGlvbnMg
+YWJvdXQgZGlmZmVyZW5jZXMgYmV0d2VlbgppbXBsZW1lbnRhdGlvbiBvZiBr
+ZXJuZWxzIDIuNi4xNy4xMyBhbmQgMi42LjI1LjEzIHdlJ2QgbGlrZSB0byBh
+c2sKc29tZSBxdWVzdGlvbnMuCgpXZSB3YXMgYmFzZWQgb24gZ2l0IHJlcG9z
+aXRvcnk6CgpnaXQ6Ly9naXQua2VybmVsLm9yZwoKV2UgaGF2ZSByZXZlcnRl
+ZCBzb21lIGNoYW5nZXMgZm9yIFhGUyBpbiAyLjYuMjUuMTMga2VybmVsLiBX
+ZSBoYXZlCnVzZWRmIDMgY29tbWl0czoKCi0gOTRFMUU5OUYxMS4uLiAoU0dJ
+LVBWOiA5NjQ0NjgpCi0gNEJFNTM2REVCRS4uLiAoU0dJLVBWOiA5NTU2NzQp
+Ci0gNENBNDg4RUI0Li4uICAoU0dJLVBWOiA5NzExODYpCgpXaXRoIHRoZXNl
+IGNoYW5nZXMgd2UgaGF2ZSBjcmVhdGVkIHBhdGNoIGZvciAyLjYuMjUuMTMg
+a2VybmVsLiBUaGlzCnBhdGNoIHNob3VsZCBlbGltaW5hdGUgYWRkaXRpb25h
+bCByZXNlcnZhdGlvbiBvZiBkaXNrIHNwYWNlIGluIFhGUwpmaWxlIHN5c3Rl
+bS4gT3VyIGludGVudGlvbiB3YXMgdG8gZ2V0IHNpbWlsYXJpdHkgc3BhY2Ug
+b2YgZGlzayBiZXR3ZWVuCjIuNi4xNy4xMyBhbmQgMi42LjI1LjEzIGtlcm5l
+bHMuCgpEb2VzIHBhdGNoIHRoYXQgaXMgYXR0YWNoZWQgdG8gdGhpcyBtYWls
+IGRvIGV2ZXJ5dGhpbmcgcHJvcGVybHk/IElzIGl0CjEwMCUgY29tcGF0aWJl
+IHdpdGggWEZTIEFQST8KCklmIHlvdSB3bmF0IGFueXRoaW5nIG1vcmUgZnJv
+bSB1cyBqdXRzIGFzay4gV1FlIGRlbGl2ZXIgaXQuCgpUaGFuayB5b3UgdmV5
+IG11Y2ggZm9yIHlvdXIgYXR0aXR1ZGUuCgpSb2xhbmQKCjIwMDgvOC8yNywg
+RGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjoKPiBPbiBUdWUs
+IEF1ZyAyNiwgMjAwOCBhdCAwMjo1MzoyM1BNICswMjAwLCBTs2F3b21pciBO
+b3dha293c2tpIHdyb3RlOgo+ID4gMjAwOC84LzI2IERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT46Cj4gPiBydW4gdW5kZXIgMi42LjE3LjE3
+IGFuZCAyLjYuMjUuMTMga2VybmVscz8KPiA+Cj4gPiBIZXJlIGlzIGEgc2l0
+dWF0aW9uIG9uIDIuNi4xNy4xMyBrZXJuZWw6Cj4gPgo+ID4geGZzX2lvIC14
+IC1jICdzdGF0ZnMnIC9tbnQvcG9pbnQKPiA+Cj4gPiBmZC5wYXRoID0gIi9t
+bnQvc2RhIgo+ID4gc3RhdGZzLmZfYnNpemUgPSA0MDk2Cj4gPiBzdGF0ZnMu
+Zl9ibG9ja3MgPSA0ODc0MTYKPiA+IHN0YXRmcy5mX2JhdmFpbCA9IDYKPiA+
+IHN0YXRmcy5mX2ZpbGVzID0gMTYwCj4gPiBzdGF0ZnMuZl9mZnJlZSA9IDE1
+NAo+ID4gZ2VvbS5ic2l6ZSA9IDQwOTYKPiA+IGdlb20uYWdjb3VudCA9IDgK
+PiA+IGdlb20uYWdibG9ja3MgPSA2MTI0Nwo+ID4gZ2VvbS5kYXRhYmxvY2tz
+ID0gNDg5OTc2Cj4gPiBnZW9tLnJ0YmxvY2tzID0gMAo+ID4gZ2VvbS5ydGV4
+dGVudHMgPSAwCj4gPiBnZW9tLnJ0ZXh0c2l6ZSA9IDEKPiA+IGdlb20uc3Vu
+aXQgPSAwCj4gPiBnZW9tLnN3aWR0aCA9IDAKPiA+IGNvdW50cy5mcmVlZGF0
+YSA9IDYKPiA+IGNvdW50cy5mcmVlcnR4ID0gMAo+ID4gY291bnRzLmZyZWVp
+bm8gPSA1OAo+ID4gY291bnRzLmFsbG9jaW5vID0gNjQKPgo+IFRoZSBjb3Vu
+dHMuKiBudW1iZXJzIGFyZSB0aGUgcmVhbCBudW1iZXJzLCBub3QgdGggc3Rh
+dGZzIG51bWJlcnMKPiB3aGljaCBhcmUgc29tZXdoYXQgbWFkZSB1cCAtIHRo
+ZSBpbm9kZSBjb3VudCBmb3IgZXhhbXBsZSBpcwo+IGluZmx1ZW5jZWQgYnkg
+dGhlIGFtb3VudCBvZiBmcmVlIHNwYWNlLi4uLgo+Cj4gPiB4ZnNfaW8gLXgg
+LWMgJ3Jlc2Jsa3MnIC9tbnQvcG9pbnQKPiA+Cj4gPiByZXNlcnZlZCBibG9j
+a3MgPSAwCj4gPiBhdmFpbGFibGUgcmVzZXJ2ZWQgYmxvY2tzID0gMAo+IC4u
+Li4KPgo+ID4KPiA+IEJ1dCB1bmRlciAyLjYuMjUuMTMga2VybmVsIHRoZSBz
+aXR1YXRpb24gbG9va3MgZGlmZmVyZW50Ogo+ID4KPiA+IHhmc19pbyAteCAt
+YyAnc3RhdGZzJyAvbW50L3BvaW50Ogo+ID4KPiA+IGZkLnBhdGggPSAiL21u
+dC8tc2RhNCIKPiA+IHN0YXRmcy5mX2JzaXplID0gNDA5Ngo+ID4gc3RhdGZz
+LmZfYmxvY2tzID0gNDg3NDE2Cj4gPiBzdGF0ZnMuZl9iYXZhaWwgPSAzMAo+
+ID4gc3RhdGZzLmZfZmlsZXMgPSA1NDQKPiA+IHN0YXRmcy5mX2ZmcmVlID0g
+NTM4Cj4KPiBNb3JlIGZyZWUgc3BhY2UsIHRoZXJlZm9yZSBtb3JlIGlub2Rl
+cy4uLi4KPgo+ID4gZ2VvbS5ic2l6ZSA9IDQwOTYKPiA+IGdlb20uYWdjb3Vu
+dCA9IDgKPiA+IGdlb20uYWdibG9ja3MgPSA2MTI0Nwo+ID4gZ2VvbS5kYXRh
+YmxvY2tzID0gNDg5OTc2Cj4gPiBnZW9tLnJ0YmxvY2tzID0gMAo+ID4gZ2Vv
+bS5ydGV4dGVudHMgPSAwCj4gPiBnZW9tLnJ0ZXh0c2l6ZSA9IDEKPiA+IGdl
+b20uc3VuaXQgPSAwCj4gPiBnZW9tLnN3aWR0aCA9IDAKPiA+IGNvdW50cy5m
+cmVlZGF0YSA9IDMwCj4gPiBjb3VudHMuZnJlZXJ0eCA9IDAKPiA+IGNvdW50
+cy5mcmVlaW5vID0gNTgKPiA+IGNvdW50cy5hbGxvY2lubyA9IDY0Cj4KPiBi
+dXQgdGhlIGNvdW50cy4qIHZhbHVlcyBzaG93IHRoYXQgdGhlIGlub2RlIGNv
+dW50cyBhcmUgdGhlIHNhbWUuCj4gSG93ZXZlciwgdGhlIGZyZWUgc3BhY2Ug
+aXMgZGlmZmVyZW50LCBwYXJ0aWFsbHkgZHVlIHRvIGEgZGlmZmVyZW50Cj4g
+c2V0IG9mIEVOT1NQQyBkZWFkbG9jayBmaXhlcyB0aGF0IHdlcmUgZG9uZSB0
+aGF0IHJlcXVpcmVkIGRpZmZlcmVudAo+IGNhbGN1bGF0aW9ucyBvZiBzcGFj
+ZSB1c2FnZS4uLi4KPgo+ID4geGZzX2lvIC14IC1jICdyZXNibGtzJyAvbW50
+L3BvaW50Ogo+ID4KPiA+IHJlc2VydmVkIGJsb2NrcyA9IDE4NDQ2NzQ0MDcz
+NzA5NTUxNTg2Cj4gPiBhdmFpbGFibGUgcmVzZXJ2ZWQgYmxvY2tzID0gMTg0
+NDY3NDQwNzM3MDk1NTE1ODYKPgo+IFdlbGwsIHRoYXQgaXMgd3JvbmcgLSB0
+aGF0J3MgYSBsYXJnZSBuZWdhdGl2ZSBudW1iZXIuCj4KPiBGV0lXLCBJIGNh
+bid0IHJlcHJvZHVjZSB0aGlzIG9uIGEgcHVyZSAyLjYuMjQgb24gaWEzMiBv
+ciAyLjYuMjctcmM0IGtlcm5lbAo+IG9uIHg4Nl82NC1VTUw6Cj4KPiAjIG1v
+dW50IC9tbnQveGZzMgo+ICMgZGYgLWsgL21udC94ZnMyCj4gRmlsZXN5c3Rl
+bSAgICAgICAgICAgMUstYmxvY2tzICAgICAgVXNlZCBBdmFpbGFibGUgVXNl
+JSBNb3VudGVkIG9uCj4gL2Rldi91YmQvMiAgICAgICAgICAgICAyMDg2OTEy
+ICAgICAgMTE3NiAgIDIwODU3MzYgICAxJSAvbW50L3hmczIKPiAjIHhmc19p
+byAteCAtYyAncmVzYmxrcyAwJyAvbW50L3hmczIKPiByZXNlcnZlZCBibG9j
+a3MgPSAwCj4gYXZhaWxhYmxlIHJlc2VydmVkIGJsb2NrcyA9IDAKPiAjIGRm
+IC1rIC9tbnQveGZzMgo+IEZpbGVzeXN0ZW0gICAgICAgICAgIDFLLWJsb2Nr
+cyAgICAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBvbgo+IC9kZXYv
+dWJkLzIgICAgICAgICAgICAgMjA4NjkxMiAgICAgICAxNjAgICAyMDg2NzUy
+ICAgMSUgL21udC94ZnMyCj4gIyB4ZnNfaW8gLWYgLWMgJ3RydW5jYXRlIDJn
+JyAtYyAncmVzdnNwIDAgMjA4NjcyMGsnIC9tbnQveGZzMi9mcmVkCj4gIyBk
+ZiAtayAvbW50L3hmczIKPiBGaWxlc3lzdGVtICAgICAgICAgICAxSy1ibG9j
+a3MgICAgICBVc2VkIEF2YWlsYWJsZSBVc2UlIE1vdW50ZWQgb24KPiAvZGV2
+L3ViZC8yICAgICAgICAgICAgIDIwODY5MTIgICAyMDg2ODgwICAgICAgICAz
+MiAxMDAlIC9tbnQveGZzMgo+ICMgeGZzX2lvIC14IC1jIHN0YXRmcyAvbW50
+L3hmczIKPiBmZC5wYXRoID0gIi9tbnQveGZzMiIKPiBzdGF0ZnMuZl9ic2l6
+ZSA9IDQwOTYKPiBzdGF0ZnMuZl9ibG9ja3MgPSA1MjE3MjgKPiBzdGF0ZnMu
+Zl9iYXZhaWwgPSA4Cj4gc3RhdGZzLmZfZmlsZXMgPSAxOTIKPiBzdGF0ZnMu
+Zl9mZnJlZSA9IDE4OAo+IC4uLi4KPiBjb3VudHMuZnJlZWRhdGEgPSA4Cj4g
+Y291bnRzLmZyZWVydHggPSAwCj4gY291bnRzLmZyZWVpbm8gPSA2MAo+IGNv
+dW50cy5hbGxvY2lubyA9IDY0Cj4gZGVhdGg6L21udCMgdW1vdW50IC9tbnQv
+eGZzMgo+IGRlYXRoOi9tbnQjIG1vdW50IC9tbnQveGZzMgo+ICMgeGZzX2lv
+IC14IC1jIHN0YXRmcyAvbW50L3hmczIKPiBmZC5wYXRoID0gIi9tbnQveGZz
+MiIKPiBzdGF0ZnMuZl9ic2l6ZSA9IDQwOTYKPiBzdGF0ZnMuZl9ibG9ja3Mg
+PSA1MjE3MjgKPiBzdGF0ZnMuZl9iYXZhaWwgPSAwCj4gc3RhdGZzLmZfZmls
+ZXMgPSA2NAo+IHN0YXRmcy5mX2ZmcmVlID0gNjAKPiAuLi4uCj4gY291bnRz
+LmZyZWVkYXRhID0gMAo+IGNvdW50cy5mcmVlcnR4ID0gMAo+IGNvdW50cy5m
+cmVlaW5vID0gNjAKPiBjb3VudHMuYWxsb2Npbm8gPSA2NAo+ICMgZGYgLWsg
+L21udC94ZnMyCj4gRmlsZXN5c3RlbSAgICAgICAgICAgMUstYmxvY2tzICAg
+ICAgVXNlZCBBdmFpbGFibGUgVXNlJSBNb3VudGVkIG9uCj4gL2Rldi91YmQv
+MiAgICAgICAgICAgICAyMDg2OTEyICAgMjA4NjkxMiAgICAgICAgIDAgMTAw
+JSAvbW50L3hmczIKPiAjIHhmc19pbyAteCAtYyByZXNibGtzIC9tbnQveGZz
+Mgo+IHJlc2VydmVkIGJsb2NrcyA9IDgKPiBhdmFpbGFibGUgcmVzZXJ2ZWQg
+YmxvY2tzID0gOAo+Cj4gQ2FuIHlvdSBwcm9kdWNlIGEgbWV0YWR1bXAgb2Yg
+dGhlIGZpbGVzeXN0ZW0gaW1hZ2UgdGhhdCB5b3VyIGhhdmUgcHJvZHVjZWQK
+PiBvbiAyLjYuMTcgdGhhdCByZXN1bHRzIGluIGJhZCBiZWhhdmlvdXIgb24g
+bGF0ZXIga2VybmVscyBzbyBJIGNhbiBzZWUgaWYKPiBJIGNhbiByZXByb2R1
+Y2UgdGhlIHNhbWUgcmVzdWx0cyBoZXJlPyBJZiB5b3UndmUgb25seSBnb3Qg
+YSBoYW5kZnVsIG9mIGZpbGVzCj4gdGhlIGltYWdlIHdpbGwgYmUgc21hbGwg
+ZW5vdWdoIHRvIG1haWwgdG8gbWUuLi4uCj4KPiBDaGVlcnMsCj4KPiBEYXZl
+Lgo+IC0tCj4gRGF2ZSBDaGlubmVyCj4gZGF2aWRAZnJvbW9yYml0LmNvbQo+
+Cg==
 
-Change some task->e?[ug]id to task_e?[ug]id().  In some places it makes more
-sense to use RCU directly rather than a convenient wrapper; these will be
-addressed by later patches.
+------=_Part_35313_16004752.1219860558769
+Content-Type: text/plain; name=d10.diff.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fke9diii
+Content-Disposition: attachment; filename=d10.diff.txt
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: James Morris <jmorris@namei.org>
-Acked-by: Serge Hallyn <serue@us.ibm.com>
-Cc: xfs@oss.sgi.com
----
+ZGlmZiAtck51cCB4ZnMvbGludXgtMi42L3hmc19zdXBlci5jIHhmcy9saW51
+eC0yLjYveGZzX3N1cGVyLmMKLS0tIHhmcy9saW51eC0yLjYveGZzX3N1cGVy
+LmMJMjAwOC0wOC0yNSAxNDoyNToxMS4wMDAwMDAwMDAgKzAyMDAKKysrIHhm
+cy9saW51eC0yLjYveGZzX3N1cGVyLmMJMjAwOC0wOC0yNyAxMTo1NTozMy4w
+MDAwMDAwMDAgKzAyMDAKQEAgLTYxLDYgKzYxLDkgQEAKICNpbmNsdWRlIDxs
+aW51eC9rdGhyZWFkLmg+CiAjaW5jbHVkZSA8bGludXgvZnJlZXplci5oPgog
+CisKKyNkZWZpbmUgTk9fMjYxOF9YRlMKKwogc3RhdGljIHN0cnVjdCBxdW90
+YWN0bF9vcHMgeGZzX3F1b3RhY3RsX29wZXJhdGlvbnM7CiBzdGF0aWMgc3Ry
+dWN0IHN1cGVyX29wZXJhdGlvbnMgeGZzX3N1cGVyX29wZXJhdGlvbnM7CiBz
+dGF0aWMga21lbV96b25lX3QgKnhmc192bm9kZV96b25lOwpAQCAtMTE4Nyw4
+ICsxMTkwLDEzIEBAIHhmc19mc19zdGF0ZnMoCiAJc3RhdHAtPmZfYnNpemUg
+PSBzYnAtPnNiX2Jsb2Nrc2l6ZTsKIAlsc2l6ZSA9IHNicC0+c2JfbG9nc3Rh
+cnQgPyBzYnAtPnNiX2xvZ2Jsb2NrcyA6IDA7CiAJc3RhdHAtPmZfYmxvY2tz
+ID0gc2JwLT5zYl9kYmxvY2tzIC0gbHNpemU7CisjaWZuZGVmIE5PXzI2MThf
+WEZTCiAJc3RhdHAtPmZfYmZyZWUgPSBzdGF0cC0+Zl9iYXZhaWwgPQogCQkJ
+CXNicC0+c2JfZmRibG9ja3MgLSBYRlNfQUxMT0NfU0VUX0FTSURFKG1wKTsK
+KyNlbHNlCisJc3RhdHAtPmZfYmZyZWUgPSBzdGF0cC0+Zl9iYXZhaWwgPSBz
+YnAtPnNiX2ZkYmxvY2tzOworI2VuZGlmCisKIAlmYWtlaW5vcyA9IHN0YXRw
+LT5mX2JmcmVlIDw8IHNicC0+c2JfaW5vcGJsb2c7CiAjaWYgWEZTX0JJR19J
+TlVNUwogCWZha2Vpbm9zICs9IG1wLT5tX2lub2FkZDsKZGlmZiAtck51cCB4
+ZnMveGZzX2Zzb3BzLmMgeGZzL3hmc19mc29wcy5jCi0tLSB4ZnMveGZzX2Zz
+b3BzLmMJMjAwOC0wOC0yNSAxNDoyNToxMy4wMDAwMDAwMDAgKzAyMDAKKysr
+IHhmcy94ZnNfZnNvcHMuYwkyMDA4LTA4LTI3IDExOjU2OjMwLjAwMDAwMDAw
+MCArMDIwMApAQCAtNDYsNiArNDYsOCBAQAogI2luY2x1ZGUgInhmc19ydy5o
+IgogI2luY2x1ZGUgInhmc19maWxlc3RyZWFtLmgiCiAKKyNkZWZpbmUgTk9f
+MjYxOF9YRlMKKwogLyoKICAqIEZpbGUgc3lzdGVtIG9wZXJhdGlvbnMKICAq
+LwpAQCAtNDY0LDcgKzQ2NiwxMSBAQCB4ZnNfZnNfY291bnRzKAogewogCXhm
+c19pY3NiX3N5bmNfY291bnRlcnNfZmxhZ3MobXAsIFhGU19JQ1NCX0xBWllf
+Q09VTlQpOwogCXNwaW5fbG9jaygmbXAtPm1fc2JfbG9jayk7CisjaWZkZWYg
+Tk9fMjYxOF9YRlMKKwljbnQtPmZyZWVkYXRhID0gbXAtPm1fc2Iuc2JfZmRi
+bG9ja3M7CisjZWxzZQogCWNudC0+ZnJlZWRhdGEgPSBtcC0+bV9zYi5zYl9m
+ZGJsb2NrcyAtIFhGU19BTExPQ19TRVRfQVNJREUobXApOworI2VuZGlmCQog
+CWNudC0+ZnJlZXJ0eCA9IG1wLT5tX3NiLnNiX2ZyZXh0ZW50czsKIAljbnQt
+PmZyZWVpbm8gPSBtcC0+bV9zYi5zYl9pZnJlZTsKIAljbnQtPmFsbG9jaW5v
+ID0gbXAtPm1fc2Iuc2JfaWNvdW50OwpAQCAtNTM5LDI0ICs1NDUsNDIgQEAg
+cmV0cnk6CiAJCX0KIAkJbXAtPm1fcmVzYmxrcyA9IHJlcXVlc3Q7CiAJfSBl
+bHNlIHsKKyNpZm5kZWYgTk9fMjYxOF9YRlMKIAkJX19pbnQ2NF90CWZyZWU7
+CiAKIAkJZnJlZSA9ICBtcC0+bV9zYi5zYl9mZGJsb2NrcyAtIFhGU19BTExP
+Q19TRVRfQVNJREUobXApOwogCQlpZiAoIWZyZWUpCiAJCQlnb3RvIG91dDsg
+LyogRU5PU1BDIGFuZCBmZGJsa3NfZGVsdGEgPSAwICovCi0KKwkJCQorI2Vu
+ZGlmCiAJCWRlbHRhID0gcmVxdWVzdCAtIG1wLT5tX3Jlc2Jsa3M7CisKKyNp
+Zm5kZWYgTk9fMjYxOF9YRlMKIAkJbGNvdW50ZXIgPSBmcmVlIC0gZGVsdGE7
+CisjZWxzZQorCQlsY291bnRlciA9IG1wLT5tX3NiLnNiX2ZkYmxvY2tzIC0g
+ZGVsdGE7CisjZW5kaWYKIAkJaWYgKGxjb3VudGVyIDwgMCkgewogCQkJLyog
+V2UgY2FuJ3Qgc2F0aXNmeSB0aGUgcmVxdWVzdCwganVzdCBnZXQgd2hhdCB3
+ZSBjYW4gKi8KKyNpZm5kZWYgTk9fMjYxOF9YRlMKIAkJCW1wLT5tX3Jlc2Js
+a3MgKz0gZnJlZTsKIAkJCW1wLT5tX3Jlc2Jsa3NfYXZhaWwgKz0gZnJlZTsK
+IAkJCWZkYmxrc19kZWx0YSA9IC1mcmVlOwogCQkJbXAtPm1fc2Iuc2JfZmRi
+bG9ja3MgPSBYRlNfQUxMT0NfU0VUX0FTSURFKG1wKTsKKyNlbHNlCisJCQlt
+cC0+bV9yZXNibGtzICs9IG1wLT5tX3NiLnNiX2ZkYmxvY2tzOworCQkJbXAt
+Pm1fcmVzYmxrc19hdmFpbCArPSBtcC0+bV9zYi5zYl9mZGJsb2NrczsKKwkJ
+CWZkYmxrc19kZWx0YSA9IC1tcC0+bV9zYi5zYl9mZGJsb2NrczsKKwkJCW1w
+LT5tX3NiLnNiX2ZkYmxvY2tzID0gMDsKKyNlbmRpZgogCQl9IGVsc2Ugewog
+CQkJZmRibGtzX2RlbHRhID0gLWRlbHRhOworI2lmbmRlZiBOT18yNjE4X1hG
+UwogCQkJbXAtPm1fc2Iuc2JfZmRibG9ja3MgPQogCQkJCWxjb3VudGVyICsg
+WEZTX0FMTE9DX1NFVF9BU0lERShtcCk7CisjZWxzZQorCQkJbXAtPm1fc2Iu
+c2JfZmRibG9ja3MgPSBsY291bnRlcjsKKyNlbmRpZgogCQkJbXAtPm1fcmVz
+YmxrcyA9IHJlcXVlc3Q7CiAJCQltcC0+bV9yZXNibGtzX2F2YWlsICs9IGRl
+bHRhOwogCQl9CmRpZmYgLXJOdXAgeGZzL3hmc19tb3VudC5jIHhmcy94ZnNf
+bW91bnQuYwotLS0geGZzL3hmc19tb3VudC5jCTIwMDgtMDgtMjUgMTQ6MjU6
+MTQuMDAwMDAwMDAwICswMjAwCisrKyB4ZnMveGZzX21vdW50LmMJMjAwOC0w
+OC0yNyAxNDo0MjowMi4wMDAwMDAwMDAgKzAyMDAKQEAgLTQ0LDYgKzQ0LDkg
+QEAKICNpbmNsdWRlICJ4ZnNfcXVvdGEuaCIKICNpbmNsdWRlICJ4ZnNfZnNv
+cHMuaCIKIAorCisjZGVmaW5lIE5PXzI2MThfWEZTCisKIFNUQVRJQyB2b2lk
+CXhmc19tb3VudF9sb2dfc2IoeGZzX21vdW50X3QgKiwgX19pbnQ2NF90KTsK
+IFNUQVRJQyBpbnQJeGZzX3V1aWRfbW91bnQoeGZzX21vdW50X3QgKik7CiBT
+VEFUSUMgdm9pZAl4ZnNfdXVpZF91bm1vdW50KHhmc19tb3VudF90ICptcCk7
+CkBAIC0xNTI1LDYgKzE1MjgsMTEgQEAgeGZzX21vZF9zYih4ZnNfdHJhbnNf
+dCAqdHAsIF9faW50NjRfdCBmaQogICoKICAqIFRoZSBtX3NiX2xvY2sgbXVz
+dCBiZSBoZWxkIHdoZW4gdGhpcyByb3V0aW5lIGlzIGNhbGxlZC4KICAqLwor
+IAorI2lmZGVmIE5PXzI2MThfWEZTCQorICAgICNkZWZpbmUgU0VUX0FTSURF
+X0JMT0NLUyA4CisjZW5kaWYgCisgCiBpbnQKIHhmc19tb2RfaW5jb3JlX3Ni
+X3VubG9ja2VkKAogCXhmc19tb3VudF90CSptcCwKQEAgLTE1NjIsOCArMTU3
+MCwxMiBAQCB4ZnNfbW9kX2luY29yZV9zYl91bmxvY2tlZCgKIAkJbXAtPm1f
+c2Iuc2JfaWZyZWUgPSBsY291bnRlcjsKIAkJcmV0dXJuIDA7CiAJY2FzZSBY
+RlNfU0JTX0ZEQkxPQ0tTOgorI2lmbmRlZiBOT18yNjE4X1hGUwkKIAkJbGNv
+dW50ZXIgPSAobG9uZyBsb25nKQogCQkJbXAtPm1fc2Iuc2JfZmRibG9ja3Mg
+LSBYRlNfQUxMT0NfU0VUX0FTSURFKG1wKTsKKyNlbHNlCisJCWxjb3VudGVy
+ID0gKGxvbmcgbG9uZyltcC0+bV9zYi5zYl9mZGJsb2NrcyAtIFNFVF9BU0lE
+RV9CTE9DS1M7CisjZW5kaWYKIAkJcmVzX3VzZWQgPSAobG9uZyBsb25nKSht
+cC0+bV9yZXNibGtzIC0gbXAtPm1fcmVzYmxrc19hdmFpbCk7CiAKIAkJaWYg
+KGRlbHRhID4gMCkgewkJLyogUHV0dGluZyBibG9ja3MgYmFjayAqLwpAQCAt
+MTU5Niw4ICsxNjA4LDExIEBAIHhmc19tb2RfaW5jb3JlX3NiX3VubG9ja2Vk
+KAogCQkJCX0KIAkJCX0KIAkJfQotCisjaWZuZGVmIE5PXzI2MThfWEZTCQog
+CQltcC0+bV9zYi5zYl9mZGJsb2NrcyA9IGxjb3VudGVyICsgWEZTX0FMTE9D
+X1NFVF9BU0lERShtcCk7CisjZWxzZQorCQltcC0+bV9zYi5zYl9mZGJsb2Nr
+cyA9IGxjb3VudGVyICsgU0VUX0FTSURFX0JMT0NLUzsgICAgCisjZW5kaWYJ
+CQogCQlyZXR1cm4gMDsKIAljYXNlIFhGU19TQlNfRlJFWFRFTlRTOgogCQls
+Y291bnRlciA9IChsb25nIGxvbmcpbXAtPm1fc2Iuc2JfZnJleHRlbnRzOwpA
+QCAtMjMyMSw4ICsyMzM2LDE0IEBAIHhmc19pY3NiX3N5bmNfY291bnRlcnMo
+CiAgKi8KIAogI2RlZmluZSBYRlNfSUNTQl9JTk9fQ05UUl9SRUVOQUJMRQko
+dWludDY0X3QpNjQKKworI2lmbmRlZiBOT18yNjE4X1hGUwogI2RlZmluZSBY
+RlNfSUNTQl9GREJMS19DTlRSX1JFRU5BQkxFKG1wKSBcCiAJCSh1aW50NjRf
+dCkoNTEyICsgWEZTX0FMTE9DX1NFVF9BU0lERShtcCkpCisjZWxzZQorI2Rl
+ZmluZSBYRlNfSUNTQl9GREJMS19DTlRSX1JFRU5BQkxFICAgNTEyCisjZW5k
+aWYKKwkJCiBTVEFUSUMgdm9pZAogeGZzX2ljc2JfYmFsYW5jZV9jb3VudGVy
+KAogCXhmc19tb3VudF90CSptcCwKQEAgLTIzNTcsNyArMjM3OCwxMSBAQCB4
+ZnNfaWNzYl9iYWxhbmNlX2NvdW50ZXIoCiAJY2FzZSBYRlNfU0JTX0ZEQkxP
+Q0tTOgogCQljb3VudCA9IG1wLT5tX3NiLnNiX2ZkYmxvY2tzOwogCQlyZXNp
+ZCA9IGRvX2Rpdihjb3VudCwgd2VpZ2h0KTsKKyNpZm5kZWYgTk9fMjYxOF9Y
+RlMKIAkJaWYgKGNvdW50IDwgbWF4KG1pbiwgWEZTX0lDU0JfRkRCTEtfQ05U
+Ul9SRUVOQUJMRShtcCkpKQorI2Vsc2UKKwkJaWYgKGNvdW50IDwgbWF4KG1p
+biwgWEZTX0lDU0JfRkRCTEtfQ05UUl9SRUVOQUJMRSkpCisjZW5kaWYJCQog
+CQkJZ290byBvdXQ7CiAJCWJyZWFrOwogCWRlZmF1bHQ6CkBAIC0yNDE4LDEy
+ICsyNDQzLDE5IEBAIGFnYWluOgogCiAJY2FzZSBYRlNfU0JTX0ZEQkxPQ0tT
+OgogCQlCVUdfT04oKG1wLT5tX3Jlc2Jsa3MgLSBtcC0+bV9yZXNibGtzX2F2
+YWlsKSAhPSAwKTsKLQorI2lmbmRlZiBOT18yNjE4X1hGUwogCQlsY291bnRl
+ciA9IGljc2JwLT5pY3NiX2ZkYmxvY2tzIC0gWEZTX0FMTE9DX1NFVF9BU0lE
+RShtcCk7CisjZWxzZQorICAgICAgICAgICAgICAgIGxjb3VudGVyID0gaWNz
+YnAtPmljc2JfZmRibG9ja3M7CisjZW5kaWYJCQogCQlsY291bnRlciArPSBk
+ZWx0YTsKIAkJaWYgKHVubGlrZWx5KGxjb3VudGVyIDwgMCkpCiAJCQlnb3Rv
+IGJhbGFuY2VfY291bnRlcjsKKyNpZm5kZWYgTk9fMjYxOF9YRlMKIAkJaWNz
+YnAtPmljc2JfZmRibG9ja3MgPSBsY291bnRlciArIFhGU19BTExPQ19TRVRf
+QVNJREUobXApOworI2Vsc2UJCQorCQlpY3NicC0+aWNzYl9mZGJsb2NrcyA9
+IGxjb3VudGVyOworI2VuZGlmCiAJCWJyZWFrOwogCWRlZmF1bHQ6CiAJCUJV
+RygpOwo=
 
- fs/xfs/linux-2.6/xfs_cred.h |    2 +-
- fs/xfs/xfs_acl.c            |    6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-
-diff --git a/fs/xfs/linux-2.6/xfs_cred.h b/fs/xfs/linux-2.6/xfs_cred.h
-index 652721c..293043a 100644
---- a/fs/xfs/linux-2.6/xfs_cred.h
-+++ b/fs/xfs/linux-2.6/xfs_cred.h
-@@ -24,7 +24,7 @@
-  * Credentials
-  */
- typedef struct cred {
--	/* EMPTY */
-+       /* EMPTY */
- } cred_t;
- 
- extern struct cred *sys_cred;
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index b2f639a..91d6933 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -366,7 +366,7 @@ xfs_acl_allow_set(
- 		return ENOTDIR;
- 	if (vp->i_sb->s_flags & MS_RDONLY)
- 		return EROFS;
--	if (XFS_I(vp)->i_d.di_uid != current->fsuid && !capable(CAP_FOWNER))
-+	if (XFS_I(vp)->i_d.di_uid != current_fsuid() && !capable(CAP_FOWNER))
- 		return EPERM;
- 	return 0;
- }
-@@ -413,13 +413,13 @@ xfs_acl_access(
- 		switch (fap->acl_entry[i].ae_tag) {
- 		case ACL_USER_OBJ:
- 			seen_userobj = 1;
--			if (fuid != current->fsuid)
-+			if (fuid != current_fsuid())
- 				continue;
- 			matched.ae_tag = ACL_USER_OBJ;
- 			matched.ae_perm = allows;
- 			break;
- 		case ACL_USER:
--			if (fap->acl_entry[i].ae_id != current->fsuid)
-+			if (fap->acl_entry[i].ae_id != current_fsuid())
- 				continue;
- 			matched.ae_tag = ACL_USER;
- 			matched.ae_perm = allows;
+------=_Part_35313_16004752.1219860558769--
