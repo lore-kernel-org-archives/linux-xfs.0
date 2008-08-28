@@ -1,91 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Aug 2008 14:53:49 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 27 Aug 2008 17:18:50 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7RLrgWN017331
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 14:53:44 -0700
-Received: from bifrost.lang.hm (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E0A1FD01A3
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 14:55:04 -0700 (PDT)
-Received: from bifrost.lang.hm (mail.lang.hm [64.81.33.126]) by cuda.sgi.com with ESMTP id ph1qSRnEJGoPzOjf for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 14:55:04 -0700 (PDT)
-Date: Wed, 27 Aug 2008 14:54:28 -0700 (PDT)
-From: david@lang.hm
-Subject: Re: XFS vs Elevators (was Re: [PATCH RFC] nilfs2: continuous
- snapshotting file system)
-In-Reply-To: <20080827012013.GC5706@disturbed>
-Message-ID: <alpine.DEB.1.10.0808271450280.907@asgard.lang.hm>
-References: <20080821051508.GB5706@disturbed> <200808211933.34565.nickpiggin@yahoo.com.au> <20080821170854.GJ5706@disturbed> <200808221229.11069.nickpiggin@yahoo.com.au> <20080825015922.GP5706@disturbed> <20080825120146.GC20960@shareable.org>
- <20080826030759.GY5706@disturbed> <alpine.DEB.1.10.0808252041300.29665@asgard.lang.hm> <20080827012013.GC5706@disturbed>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7S0IlFi030182
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 17:18:48 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 856DDFD1021
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 17:20:10 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id qEwHBiyCHw0DwnpZ for <xfs@oss.sgi.com>; Wed, 27 Aug 2008 17:20:10 -0700 (PDT)
+Date: Thu, 28 Aug 2008 10:20:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS issue under 2.6.25.13 kernel
+Message-ID: <20080828002005.GA30189@disturbed>
+References: <50ed5c760808220303p37e03e8dge5b868a572374e0b@mail.gmail.com> <20080823010524.GM5706@disturbed> <50ed5c760808250408o44aeaf07me262eab8da8340ba@mail.gmail.com> <20080826014133.GS5706@disturbed> <50ed5c760808260553i7def5e93qb0bcb4d2206a4a38@mail.gmail.com> <20080827005243.GB5706@disturbed> <50ed5c760808271109u4dee0311ha7cf2c1e7cae31dd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <50ed5c760808271109u4dee0311ha7cf2c1e7cae31dd@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jamie Lokier <jamie@shareable.org>, Nick Piggin <nickpiggin@yahoo.com.au>, gus3 <musicman529@yahoo.com>, Szabolcs Szakacsits <szaka@ntfs-3g.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: =?utf-8?B?U8WCYXdvbWly?= Nowakowski <nailman23@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, 27 Aug 2008, Dave Chinner wrote:
+On Wed, Aug 27, 2008 at 08:09:18PM +0200, Sławomir Nowakowski wrote:
+> Dear Dave,
+> 
+> We really apreciate your help..
+> 
+> In the realtion to previous correspondations about differences between
+> implementation of kernels 2.6.17.13 and 2.6.25.13 we'd like to ask
+> some questions.
+> 
+> We was based on git repository:
+> 
+> git://git.kernel.org
+> 
+> We have reverted some changes for XFS in 2.6.25.13 kernel. We have
+> usedf 3 commits:
+> 
+> - 94E1E99F11... (SGI-PV: 964468)
+> - 4BE536DEBE... (SGI-PV: 955674)
+> - 4CA488EB4...  (SGI-PV: 971186)
+> 
+> With these changes we have created patch for 2.6.25.13 kernel. This
+> patch should eliminate additional reservation of disk space in XFS
+> file system. Our intention was to get similarity space of disk between
+> 2.6.17.13 and 2.6.25.13 kernels.
 
-> On Mon, Aug 25, 2008 at 08:50:14PM -0700, david@lang.hm wrote:
->> it sounds as if the various flag definitions have been evolving, would it
->> be worthwhile to sep back and try to get the various filesystem folks to
->> brainstorm together on what types of hints they would _like_ to see
->> supported?
->
-> Three types:
->
-> 	1. immediate dispatch - merge first with adjacent requests
-> 	   then dispatch
-> 	2. delayed dispatch - queue for a short while to allow
-> 	   merging of requests from above
-> 	3. bulk data - queue and merge. dispatch is completely
-> 	   controlled by the elevator
+After removing the reservation with xfs_io (the big difference), I
+don't see why you need to hack the kernel as well. Have you got
+such little margin in your filesystem provisioning that you can't
+spare 4 blocks per AG?
 
-does this list change if you consider the fact that there may be a raid 
-array or some more complex structure for the block device instead of a 
-simple single disk partition?
+> Does patch that is attached to this mail do everything properly?
 
-since I am suggesting re-thinking the filesystem <-> elevator interface, 
-is there anything you need to have the elevator tell the filesystem? (I'm 
-thinking that this may be the path for the filesystem to learn things 
-about the block device that's under it, is it a raid array, a solid-state 
-drive, etc)
+Don't know. You've taken away a bunch of reserved blocks other
+code relies on existing for correct operation at ENOSPC. Given
+that you are doing this because you are running so close to
+ENOSPC there's a good chance that you've broken something.
 
-David Lang
+I don't have the time (or the desire) to analyse the impact of the
+changes being made, but I bet that the XFSQA tests that exercise
+behaviour at ENOSPC will start to deadlock again...
 
-> Basically most metadata and log writes would fall into category 2,
-> which every logbufs/2 log writes or every log force using a category
-> 1 to prevent log I/O from being stalled too long by other I/O.
->
-> Data writes from the filesystem would appear as category 3 (read and write)
-> and are subject to the specific elevator scheduling. That is, things
-> like the CFQ ionice throttling would work on the bulk data queue,
-> but not the other queues that the filesystem is using for metadata.
->
-> Tagging the I/O as a sync I/O can still be done, but that only
-> affects category 3 scheduling - category 1 or 2 would do the same
-> thing whether sync or async....
->
->> it sounds like you are using 'sync' for things where you really should be
->> saying 'metadata' (or 'journal contents'), it's happened to work well
->> enough in the past, but it's forcing you to keep tweaking the
->> filesystems.
->
-> Right, because there was no 'metadata' tagging, and 'sync' happened
-> to do exactly what we needed on all elevators at the time.
->
->> it may be better to try and define things from the
->> filesystem point of view and let the elevators do the tweaking.
->>
->> basicly I'm proposing a complete rethink of the filesyste <-> elevator
->> interface.
->
-> Yeah, I've been saying that for a while w.r.t. the filesystem/block
-> layer interfaces, esp. now with discard requests, data integrity,
-> device alignment information, barriers, etc being exposed by the
-> layers below the filesystem, but with no interface for filesystems
-> to be able to access that information...
->
-> Cheers,
->
-> Dave.
->
+> Is it
+> 100% compatibe with XFS API?
+
+You've changed statfs. You'll have to make sure it reports
+the correct thing in all cases (there's an XFSQA test for this).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
