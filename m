@@ -1,61 +1,24 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Aug 2008 16:17:44 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7SNHeZ2029915
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2008 16:17:40 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA2843E2A78
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2008 16:19:03 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id F37eqxMfF5eDa4OJ for <xfs@oss.sgi.com>; Thu, 28 Aug 2008 16:19:03 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m7SNJ4IF019892
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 01:19:04 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m7SNJ4BD019890
-	for xfs@oss.sgi.com; Fri, 29 Aug 2008 01:19:04 +0200
-Date: Fri, 29 Aug 2008 01:19:04 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/4] fix biosize option
-Message-ID: <20080828231904.GD19757@lst.de>
-References: <20080525190754.GD13372@lst.de> <20080723080520.GC3417@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080723080520.GC3417@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 28 Aug 2008 18:19:18 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m7T1JCXW010789
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2008 18:19:13 -0700
+Message-ID: <48B74EDB.7060407@sgi.com>
+Date: Fri, 29 Aug 2008 11:20:27 +1000
+From: Peter Leckie <pleckie@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [2.6.27-rc4] XFS i_lock vs i_iolock...
+References: <6278d2220808221412x28f4ac5dl508884c8030b364a@mail.gmail.com> <20080825010213.GO5706@disturbed> <48B21507.9050708@sgi.com> <20080825035542.GR5706@disturbed> <1219647573.20732.28.camel@twins> <20080825215532.GB28188@lst.de> <20080826024547.GX5706@disturbed> <20080826193508.GA17542@infradead.org>
+In-Reply-To: <20080826193508.GA17542@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: David Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, Peter Zijlstra <peterz@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, Daniel J Blueman <daniel.blueman@gmail.com>, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-ping^2?
-
-On Wed, Jul 23, 2008 at 10:05:20AM +0200, Christoph Hellwig wrote:
-> ping?
-> 
-> On Sun, May 25, 2008 at 09:07:54PM +0200, Christoph Hellwig wrote:
-> > iosizelog shouldn't be the same as iosize but the logarithm of it.  Then
-> > again the current biosize option doesn't make much sense to me as it
-> > doesn't set the preferred I/O size as mentioned in the comment next to
-> > it but rather the allocation size and thus is identical to the allocsize
-> > option (except for the missing logarithm).  It's also not documented in
-> > Documentation/filesystems/xfs.txt or the mount manpage.
-> > 
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-> > ===================================================================
-> > --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-05-25 20:59:04.000000000 +0200
-> > +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-05-25 20:59:38.000000000 +0200
-> > @@ -252,7 +252,7 @@ xfs_parseargs(
-> >  				return EINVAL;
-> >  			}
-> >  			iosize = simple_strtoul(value, &eov, 10);
-> > -			iosizelog = (uint8_t) iosize;
-> > +			iosizelog = ffs(iosize) - 1;
-> >  		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
-> >  			if (!value || !*value) {
-> >  				cmn_err(CE_WARN,
-> ---end quoted text---
----end quoted text---
+Christoph Hellwig wrote:
+> Looks good.  We probably don't need the #ifdef DEBUG as ASSERT is
+> debug-only anyway.
+Hey Dave did you want to update the patch?
