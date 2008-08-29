@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Aug 2008 02:36:31 -0700 (PDT)
-Received: from cuda.sgi.com ([192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7T9aP3a030612
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 29 Aug 2008 02:36:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m7T9aOD2030608
 	for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 02:36:25 -0700
 Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3AA01BC82ED
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 02:37:48 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id 9MEj773BQYPiRoDo for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 02:37:48 -0700 (PDT)
-Message-ID: <4DF7C90FADA442868BA3D4C269F96DBF@nsl.ad.nec.co.jp>
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7359F125784D
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 02:37:46 -0700 (PDT)
+Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id sAkXDTiJBXuejXa4 for <xfs@oss.sgi.com>; Fri, 29 Aug 2008 02:37:46 -0700 (PDT)
+Message-ID: <328724AE665B49F8A8B60D92187C4BBF@nsl.ad.nec.co.jp>
 From: "Takashi Sato" <t-sato@yk.jp.nec.com>
-References: <20080818212819t-sato@mail.jp.nec.com> <20080821125841.a04a706f.akpm@linux-foundation.org>
-In-Reply-To: <20080821125841.a04a706f.akpm@linux-foundation.org>
+References: <20080818212819t-sato@mail.jp.nec.com> <20080822181458.GA15469@infradead.org>
+In-Reply-To: <20080822181458.GA15469@infradead.org>
 Subject: Re: [PATCH 1/3] Implement generic freeze feature
-Date: Fri, 29 Aug 2008 18:36:56 +0900
+Date: Fri, 29 Aug 2008 18:37:28 +0900
 MIME-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
@@ -22,69 +22,88 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
 
 Hi,
 
-Andrew Morton wrote:
->> --- linux-2.6.27-rc2.org/include/linux/fs.h  2008-08-06 13:49:54.000000000 +0900
->> +++ linux-2.6.27-rc2-freeze/include/linux/fs.h       2008-08-07 08:59:54.000000000 +0900
->> @@ -226,6 +226,8 @@ extern int dir_notify_enable;
->>  #define BMAP_IOCTL 1                /* obsolete - kept for compatibility */
->>  #define FIBMAP         _IO(0x00,1)  /* bmap access */
->>  #define FIGETBSZ   _IO(0x00,2)      /* get the block size used for bmap */
->> +#define FIFREEZE    _IOWR('X', 119, int)    /* Freeze */
->> +#define FITHAW              _IOWR('X', 120, int)    /* Thaw */
+Christoph Hellwig wrote:
+>On Mon, Aug 18, 2008 at 09:28:19PM +0900, Takashi Sato wrote:
+>> +    down(&bdev->bd_freeze_sem);
+>> +    bdev->bd_freeze_count++;
+>> +    if (bdev->bd_freeze_count > 1) {
+>> +            sb = get_super(bdev);
+>> +            drop_super(sb);
+>> +            up(&bdev->bd_freeze_sem);
+>> +            return sb;
+>> +    }
+>> +
+>>      down(&bdev->bd_mount_sem);
 >
->FIFREEZE is 119, but a few lines above we have
->
->#define BLKDISCARD _IO(0x12,119)
->
->Should we be using 120 and 121 here?
+>Now you have a reference counter of freezes which actually is pretty
+>sensible, but also needs some documentation.  What I don't understand
+>here at all is why you do the get_super/drop_super in the already frozen
+>case.
 
-As Andreas said, we need to use 'X' to keep compatibility with
-XFS's freeze ioctl.
+Even if the filesystem has already been frozen, the superblock
+should be returned. Because a caller should recognize the success of
+freeze_bdev() and call thaw_bdev() to decrease the reference count. 
+But I will remove drop_super() as it should be called in thaw_bdev().
 
 >
->>  #define     FS_IOC_GETFLAGS                 _IOR('f', 1, long)
->>  #define     FS_IOC_SETFLAGS                 _IOW('f', 2, long)
->> @@ -574,6 +576,10 @@ struct block_device {
->>       * care to not mess up bd_private for that case.
->>       */
->>      unsigned long           bd_private;
->> +    /* The counter of freeze processes */
->> +    int                     bd_freeze_count;
->> +    /* Semaphore for freeze */
->> +    struct semaphore        bd_freeze_sem;
->
->"freeze" is not an adequate description of what this protects.  I think
->it's only the modification and testing of bd_freeze_count, isn't it?
->
->If so, all this could be done more neatly by removing the lock,
->switching to atomic_t and using our (rich) atomic_t operations.
->
->otoh, perhaps it protects more than this, in which case the lock
->can/should be switched to a `struct mutex'?
+>Now that the freeze_count has replaced one of the uses of bd_mount_sem
+>you should also replace the other use in the unmount path by simply
+>checking for the freez_count and abort if it's set.  To do so you'll
+>need to hold the bd_mount_sem over the whole unmount operation to
+>prevent new frezes from coming in.
 
-bd_freeze_sem protects the following two sequences.
-1. freeze_bdev()
-  - Test of bd_freeze_count
-  - Increment of bd_freeze_count
-  - s_op->write_super_lockfs
-  - Set unfreeze timer
+In the original implementation,
+unmount is protected by s_umount(semaphore),
+not bd_mount_sem.  So, unmount task waits for unfreeze.
+I think this original behavior shouldn't be changed, 
+so the existing s_umount lock is better.
 
-2. thaw_bdev()
-  - Test of bd_freeze_count
-  - Decrement of bd_freeze_count
-  - s_op->unlockfs
-  - Unset unfreeze timer
-Because the journal sync in ext3's write_super_lockfs might
-need a long time, we should use the mutex (not atomic_t).
-If bd_freeze_sem protects only the modification and
-testing of bd_freeze_count, freeze_bdev() and thaw_bdev() will
-run simultaneously and unexpected problem will occur. 
-(For example, after we run the freeze ioctl with timeout period,
-the filesystem is frozen, but the unfreeze timer isn't set.)
+>
+>As others noted it should be a mutex and not a semaphore.
+
+As you said, we should use the mutex.
+I will replace it.
+
+>
+>>  /*
+>> + * ioctl_freeze - Freeze the filesystem.
+>> + *
+>> + * @filp:   target file
+>> + *
+>> + * Call freeze_bdev() to freeze the filesystem.
+>> + */
+>> +static int ioctl_freeze(struct file *filp)
+>
+>This is not quite kerneldcoc format, which would ne a /** as commnt
+>start.  But I don't think the comment is actually needed, it's a pretty
+>obvious file scope function. (Same commnt also applies to ioctl_thaw)
+
+I will remove these comments.
+
+>
+>> +    struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
+>> +
+>> +    if (!capable(CAP_SYS_ADMIN))
+>> +            return -EPERM;
+>> +
+>> +    /* If filesystem doesn't support freeze feature, return. */
+>> +    if (sb->s_op->write_super_lockfs == NULL)
+>> +            return -EOPNOTSUPP;
+>> +
+>> +    /* If a regular file or a directory isn't specified, return. */
+>> +    if (sb->s_bdev == NULL)
+>> +            return -EINVAL;
+>
+>I don't understand this commnt.  What you are checking is that the
+>filesystem has a non-NULL s_bdev, which implies a not blockdevice-backed
+>filesystem.
+
+I will fix the comment as :
+" If a blockdevice-backed filesystem isn't specified, return."
 
 Cheers, Takashi
