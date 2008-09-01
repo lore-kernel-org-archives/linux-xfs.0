@@ -1,39 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 31 Aug 2008 22:00:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m814xxbU026918
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2008 22:00:04 -0700
-Date: Mon, 1 Sep 2008 01:00:45 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [REVIEW #2]  Update kernel code to compile in userspace
-	(libxfs)
-Message-ID: <20080901050045.GA1396@infradead.org>
-References: <op.ugmy3u2o3jf8g2@pc-bnaujok.melbourne.sgi.com> <op.ugm1ttzb3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080829181120.GA9455@infradead.org> <op.ugr4zpyv3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080901015950.GA16825@infradead.org> <op.ugr5hsao3jf8g2@pc-bnaujok.melbourne.sgi.com> <20080901020826.GA31724@infradead.org> <op.ugsdamyd3jf8g2@pc-bnaujok.melbourne.sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <op.ugsdamyd3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 31 Aug 2008 23:39:30 -0700 (PDT)
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m816dOjS001086
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2008 23:39:25 -0700
+Subject: TAKE 907752 - Fix nametest.c warnings
+Message-Id: <20080901064047.415A958C52AB@chook.melbourne.sgi.com>
+Date: Mon,  1 Sep 2008 16:40:47 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-> --- 2.6.x-xfs.orig/fs/xfs/xfs_ag.h
-> +++ 2.6.x-xfs/fs/xfs/xfs_ag.h
-> @@ -192,15 +192,16 @@ typedef struct xfs_perag
->  	xfs_agino_t	pagi_freecount;	/* number of free inodes */
->  	xfs_agino_t	pagi_count;	/* number of allocated inodes */
->  	int		pagb_count;	/* pagb slots in use */
-> +	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
->  #ifdef __KERNEL__
->  	spinlock_t	pagb_lock;	/* lock for pagb_list */
-> -#endif
-> -	xfs_perag_busy_t *pagb_list;	/* unstable blocks */
-> +
 
-Inside structures we should be more careful about reordering,
-but this one looks fine becaus pagb_list and pagb_lock should
-be in the same cache line either way.
+Date:  Mon Sep  1 16:40:09 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  hch@lst.de
 
-The rest looks good, too.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:32013a
+xfstests/src/nametest.c - 1.9 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/src/nametest.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
+	- Fix nametest.c build warnings
