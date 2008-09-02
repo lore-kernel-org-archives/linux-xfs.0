@@ -1,44 +1,116 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Sep 2008 00:03:16 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m82739wS022591
-	for <xfs@oss.sgi.com>; Tue, 2 Sep 2008 00:03:10 -0700
-Message-ID: <48BCE564.5070408@sgi.com>
-Date: Tue, 02 Sep 2008 17:04:04 +1000
-From: Timothy Shimmin <tes@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Sep 2008 14:49:19 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m82Lmerf028099
+	for <xfs@oss.sgi.com>; Tue, 2 Sep 2008 14:48:42 -0700
+Date: Tue, 2 Sep 2008 17:50:05 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V2] Fix use-after-free with buffers
+Message-ID: <20080902215005.GB9204@infradead.org>
+References: <48BCD79B.1070100@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] buffer flag NONE is actually DONE
-References: <48BCC8C2.7040103@sgi.com>
-In-Reply-To: <48BCC8C2.7040103@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48BCD79B.1070100@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Lachlan McIlroy wrote:
-> Amazing but true.
-> 
-> --- a/fs/xfs/xfsidbg.c    2008-09-02 14:52:11.000000000 +1000
-> +++ b/fs/xfs/xfsidbg.c    2008-09-02 14:51:04.000000000 +1000
-> @@ -1926,7 +1926,7 @@ static int    kdbm_iptraceaddr(
-> 
-> static char    *bp_flag_vals[] = {
-> /*  0 */ "READ", "WRITE", "MAPPED", "PARTIAL", "ASYNC",
-> -/*  5 */ "NONE", "DELWRI",  "STALE", "FS_MANAGED", "FS_DATAIOD",
-> +/*  5 */ "DONE", "DELWRI",  "STALE", "FS_MANAGED", "FS_DATAIOD",
-> /* 10 */ "FORCEIO", "FLUSH", "READ_AHEAD", "DIRECTIO", "LOCK",
-> /* 15 */ "TRYLOCK", "DONT_BLOCK", "PAGE_CACHE", "KMEM_ALLOC", "RUN_QUEUES",
-> /* 20 */ "PRIVATE_BH", "DELWRI_Q",
+On Tue, Sep 02, 2008 at 04:05:15PM +1000, Lachlan McIlroy wrote:
+> We have a use-after-free issue where log completions access buffers via the
+> buffer log item and the buffer has already been freed.  Fix this by taking
+> a reference on the buffer when attaching the buffer log item and release
+> the hold when the buffer log item is detached and we no longer need the
+> buffer.  Also create a new function xfs_buf_item_free() to combine some
+> common code and move an ASSERT in xfs_buf_rele() so that we can catch more
+> cases. 
 
-Looks good.
+Looks good, but please mark xfs_buf_item_free static.
 
-Quick look at possible mismatching names:
-
-11 "FLUSH" vs "ORDERED"
-18 "KMEM_ALLOC" vs "PAGES"
-22 NULL vs "PAGE_LOCKED"
-
---Tim
+>
+> --- a/fs/xfs/xfs_buf_item.c	2008-09-02 15:56:20.000000000 +1000
+> +++ b/fs/xfs/xfs_buf_item.c	2008-08-22 13:23:53.000000000 +1000
+> @@ -732,6 +732,7 @@ xfs_buf_item_init(
+> 	bip->bli_item.li_ops = &xfs_buf_item_ops;
+> 	bip->bli_item.li_mountp = mp;
+> 	bip->bli_buf = bp;
+> +	xfs_buf_hold(bp);
+> 	bip->bli_format.blf_type = XFS_LI_BUF;
+> 	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
+> 	bip->bli_format.blf_len = (ushort)BTOBB(XFS_BUF_COUNT(bp));
+> @@ -867,6 +868,21 @@ xfs_buf_item_dirty(
+> 	return (bip->bli_flags & XFS_BLI_DIRTY);
+> }
+>
+> +void
+> +xfs_buf_item_free(
+> +	xfs_buf_log_item_t	*bip)
+> +{
+> +#ifdef XFS_TRANS_DEBUG
+> +	kmem_free(bip->bli_orig);
+> +	kmem_free(bip->bli_logged);
+> +#endif /* XFS_TRANS_DEBUG */
+> +
+> +#ifdef XFS_BLI_TRACE
+> +	ktrace_free(bip->bli_trace);
+> +#endif
+> +	kmem_zone_free(xfs_buf_item_zone, bip);
+> +}
+> +
+> /*
+>  * This is called when the buf log item is no longer needed.  It should
+>  * free the buf log item associated with the given buffer and clear
+> @@ -887,18 +903,8 @@ xfs_buf_item_relse(
+> 	    (XFS_BUF_IODONE_FUNC(bp) != NULL)) {
+> 		XFS_BUF_CLR_IODONE_FUNC(bp);
+> 	}
+> -
+> -#ifdef XFS_TRANS_DEBUG
+> -	kmem_free(bip->bli_orig);
+> -	bip->bli_orig = NULL;
+> -	kmem_free(bip->bli_logged);
+> -	bip->bli_logged = NULL;
+> -#endif /* XFS_TRANS_DEBUG */
+> -
+> -#ifdef XFS_BLI_TRACE
+> -	ktrace_free(bip->bli_trace);
+> -#endif
+> -	kmem_zone_free(xfs_buf_item_zone, bip);
+> +	xfs_buf_rele(bp);
+> +	xfs_buf_item_free(bip);
+> }
+>
+>
+> @@ -1120,6 +1126,7 @@ xfs_buf_iodone(
+>
+> 	ASSERT(bip->bli_buf == bp);
+>
+> +	xfs_buf_rele(bp);
+> 	mp = bip->bli_item.li_mountp;
+>
+> 	/*
+> @@ -1136,18 +1143,7 @@ xfs_buf_iodone(
+> 	 * xfs_trans_delete_ail() drops the AIL lock.
+> 	 */
+> 	xfs_trans_delete_ail(mp, (xfs_log_item_t *)bip);
+> -
+> -#ifdef XFS_TRANS_DEBUG
+> -	kmem_free(bip->bli_orig);
+> -	bip->bli_orig = NULL;
+> -	kmem_free(bip->bli_logged);
+> -	bip->bli_logged = NULL;
+> -#endif /* XFS_TRANS_DEBUG */
+> -
+> -#ifdef XFS_BLI_TRACE
+> -	ktrace_free(bip->bli_trace);
+> -#endif
+> -	kmem_zone_free(xfs_buf_item_zone, bip);
+> +	xfs_buf_item_free(bip);
+> }
+>
+> #if defined(XFS_BLI_TRACE)
+>
+>
+---end quoted text---
