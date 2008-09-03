@@ -1,37 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Sep 2008 20:59:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 02 Sep 2008 21:29:19 -0700 (PDT)
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m833xF2i001903
-	for <xfs@oss.sgi.com>; Tue, 2 Sep 2008 20:59:15 -0700
-Subject: TAKE 985757 - Fix use-after-free with buffers
-Message-Id: <20080903040038.E2F7E58C52AB@chook.melbourne.sgi.com>
-Date: Wed,  3 Sep 2008 14:00:38 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m834TDf0004376
+	for <xfs@oss.sgi.com>; Tue, 2 Sep 2008 21:29:13 -0700
+Message-ID: <48BE14BF.2010906@sgi.com>
+Date: Wed, 03 Sep 2008 14:38:23 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: [PATCH V2] Don't do I/O beyond eof when unreserving space
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Fix use-after-free with buffers
+When unreserving space with boundaries that are not block aligned we round
+up the start and round down the end boundaries and then use this function,
+xfs_zero_remaining_bytes(), to zero the parts of the blocks that got dropped
+during the rounding.  The problem is we don't consider if these blocks are
+beyond eof.  Worse still is if we encounter delayed allocations beyond eof
+we will try to use the magic delayed allocation block number as a real block
+number.  If the file size is ever extended to expose these blocks then we'll
+go through xfs_zero_eof() to zero them anyway.  Version 2 adds some comments.
 
-We have a use-after-free issue where log completions access buffers via the
-buffer log item and the buffer has already been freed.  Fix this by taking
-a reference on the buffer when attaching the buffer log item and release
-the hold when the buffer log item is detached and we no longer need the
-buffer.  Also create a new function xfs_buf_item_free() to combine some
-common code and move an ASSERT in xfs_buf_rele() so that we can catch more
-cases.
-
-Date:  Wed Sep  3 13:59:35 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-tot
-Inspected by:  hch
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:32025a
-fs/xfs/xfs_buf_item.c - 1.169 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_buf_item.c.diff?r1=text&tr1=1.169&r2=text&tr2=1.168&f=h
-	- Fix use-after-free with buffers
+--- a/fs/xfs/xfs_vnodeops.c	2008-09-03 14:28:09.000000000 +1000
++++ b/fs/xfs/xfs_vnodeops.c	2008-09-03 14:20:10.000000000 +1000
+@@ -3160,6 +3162,13 @@ error1:	/* Just cancel transaction */
+ /*
+  * Zero file bytes between startoff and endoff inclusive.
+  * The iolock is held exclusive and no blocks are buffered.
++ *
++ * This function is used by xfs_free_file_space() to zero
++ * partial blocks when the range to free is not block aligned.
++ * When unreserving space with boundaries that are not block
++ * aligned we round up the start and round down the end
++ * boundaries and then use this function to zero the parts of
++ * the blocks that got dropped during the rounding.
+  */
+ STATIC int
+ xfs_zero_remaining_bytes(
+@@ -3176,6 +3185,17 @@ xfs_zero_remaining_bytes(
+ 	int			nimap;
+ 	int			error = 0;
+ 
++	/*
++	 * Avoid doing I/O beyond eof - it's not necessary
++	 * since nothing can read beyond eof.  The space will
++	 * be zeroed when the file is extended anyway.
++	 */
++	if (startoff >= ip->i_size)
++		return 0;
++
++	if (endoff > ip->i_size)
++		endoff = ip->i_size;
++
+ 	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
+ 				XFS_IS_REALTIME_INODE(ip) ?
+ 				mp->m_rtdev_targp : mp->m_ddev_targp);
