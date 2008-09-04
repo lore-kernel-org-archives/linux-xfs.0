@@ -1,74 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Sep 2008 16:00:56 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Sep 2008 16:13:02 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m84N0qQC027978
-	for <linux-xfs@oss.sgi.com>; Thu, 4 Sep 2008 16:00:52 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m84NCubt028760
+	for <xfs@oss.sgi.com>; Thu, 4 Sep 2008 16:12:58 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B22963F1783
-	for <linux-xfs@oss.sgi.com>; Thu,  4 Sep 2008 16:02:18 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id JtcF9CGbBlcjVglo for <linux-xfs@oss.sgi.com>; Thu, 04 Sep 2008 16:02:18 -0700 (PDT)
-Date: Fri, 5 Sep 2008 09:02:10 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AFAA404295
+	for <xfs@oss.sgi.com>; Thu,  4 Sep 2008 16:14:21 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 9E0fDc3bI6DGCEQg for <xfs@oss.sgi.com>; Thu, 04 Sep 2008 16:14:21 -0700 (PDT)
+Date: Fri, 5 Sep 2008 09:14:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs corruptions
-Message-ID: <20080904230210.GA5991@disturbed>
-References: <g9p4sl$smg$1@ger.gmane.org>
+Subject: Re: xfs_growfs fix backport for 2.6.16.y
+Message-ID: <20080904231418.GB5991@disturbed>
+References: <20080825153931.GD7575@coraid.com> <20080826020101.GU5706@disturbed> <20080903182701.GA29192@coraid.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <g9p4sl$smg$1@ger.gmane.org>
+In-Reply-To: <20080903182701.GA29192@coraid.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Bernd Schubert <bs@q-leap.de>
-Cc: linux-xfs@oss.sgi.com
+To: Ed Cashin <ecashin@coraid.com>
+Cc: xfs@oss.sgi.com, Adrian Bunk <bunk@kernel.org>
 
-On Thu, Sep 04, 2008 at 07:11:48PM +0200, Bernd Schubert wrote:
-> Hello,
+On Wed, Sep 03, 2008 at 02:27:02PM -0400, Ed Cashin wrote:
+> On Tue, Aug 26, 2008 at 12:01:01PM +1000, Dave Chinner wrote:
+> > On Mon, Aug 25, 2008 at 11:39:31AM -0400, Ed Cashin wrote:
+> ...
+> > > I backported your fix,
+> > > 
+> > >     commit 20f4ebf2bf2f57c1a9abb3655391336cc90314b3
+> ...
+> > > ... to the 2.6.16.y git tree, and the result is included below.  When
+> > > I apply this backported fix to 2.6.16.62, I can grow an online XFS by
+> > > 10 terabytes without any trouble.
 > 
-> I'm presently debugging the error handler of the MPT fusion driver and
-> therefore causing errors on the disk (Infortrend scsi hardware raids).
-> When I later on try to delete files and directories having been created
-> before and during the failures, "rm -fr" simply says directory not empty.
-> No message in dmesg about it, but xfs_repair reports errors, see below.
-> Once xfs_repair has done its jobs, removing these directories works fine.
-> But this shouldn't happen, should it? This is with 2.6.26
+> ...
+> > I suggest you make sure it passes test 078 in the xfsqa suite (part
+> > of the xfs-cmds tree) as that tests all the nasty growfs corner
+> > cases. You'll need to test it on 32 bit and 64 bit machines....
+> > 
+> > If it passes that then I don't see any problems - SGI backported
+> > this for sles10 which is based on 2.6.16 a long time ago.
+> 
+> On a 64-bit system running 2.6.16.62 with this patch, test 078 does
+> not succeed because of one difference in the output file, the line in
+> the diff below.  Instead of a new size of 4194304001 blocks, the new
+> size is 4194304000 blocks.
 
-So we have an inode that is marked free in the AGI btree, but
-apparently still in use according to the shortform directory that
-referenced it.
+Ah, yes. That. I think Barry can try to explain that one because:
 
-There are two possibilities here:
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/078.out.diff?r1=1.3;r2=1.4
 
-The first possibility is the inode btree buffer containing the
-record indicating the inode is free/used never got written to
-disk while the other metadata blocks made it to disk. Seeing as
-the filesystem didn't hang here, it implies that the buffer was
-written so that on I/O completion the tail of the log could
-move forward. That is, the I/O was issued, no error was reported,
-but the I/O never made it to disk. If there was an error, you
-should see something like:
+The test golden output was changed instead of someone understanding
+why the fixes to growfs changed the size that the filesystem was
+grown to. ISTR being opposed to changing the golden output because
+it was the wrong thing to do and would break QA on older kernels,
+not to mention that it indicated some possible off-by-one bug in
+a change that had been made at some point...
 
-Warning: Device <bdevname>, XFS metadata write error, block 0x456 in <bdev>
-
-in the syslog indicating a write error. In this case it woul dbe
-non-fatal and XFS would try to write it again a little later.
-
-The second possibility is that the write of the inode containing the 
-shortform directory to disk did not actually hit the disk, but that
-implies unlinks had already taken place well before the 'rm -rf'
-was executed. Perhaps your workload does that....
-
-However, both cases imply that an I/O was indicated as completing
-successfully when they did not get written to disk, and that points
-to a bug in the error handling in the underlying driver.
-
-That being said - it could be a bug in the XFS error handling that
-is causing this, but XFS tends to be pretty noisy when errors occur.
-I guess that you need to add more tracing to indicate when errors
-are induced so we can check if errors are being created against
-the same buffers that the inconsistent state is being found in. That
-will help point out if the errors are being reported to XFS or not
-correctly.
+Other than that, the backport should be fine given it passed all the
+other parts of the test....
 
 Cheers,
 
