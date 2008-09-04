@@ -1,82 +1,76 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Sep 2008 02:07:19 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Sep 2008 09:58:16 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8497EP5010790
-	for <xfs@oss.sgi.com>; Thu, 4 Sep 2008 02:07:16 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92FA711C7E7D
-	for <xfs@oss.sgi.com>; Thu,  4 Sep 2008 02:08:39 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id T3lAmD73XgctCE4B for <xfs@oss.sgi.com>; Thu, 04 Sep 2008 02:08:39 -0700 (PDT)
-Date: Thu, 4 Sep 2008 19:08:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Filesystem corruption writing out unlinked inodes
-Message-ID: <20080904090835.GE15950@disturbed>
-References: <48BCC5B1.7080300@sgi.com> <20080902051524.GC15962@disturbed> <48BCD622.1080406@sgi.com> <20080902062155.GE15962@disturbed> <48BF33EC.7080406@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m84Gw81X030781
+	for <xfs@oss.sgi.com>; Thu, 4 Sep 2008 09:58:10 -0700
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 92FC7130115B
+	for <xfs@oss.sgi.com>; Thu,  4 Sep 2008 09:59:35 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com with ESMTP id yAPM2VASVgzSbFEJ for <xfs@oss.sgi.com>; Thu, 04 Sep 2008 09:59:35 -0700 (PDT)
+Message-ID: <48C012F3.3000408@redhat.com>
+Date: Thu, 04 Sep 2008 11:55:15 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 1/3] Implement generic freeze feature
+References: <20080818212819t-sato@mail.jp.nec.com>
+In-Reply-To: <20080818212819t-sato@mail.jp.nec.com>
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48BF33EC.7080406@sgi.com>
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, Sep 04, 2008 at 11:03:40AM +1000, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> On Tue, Sep 02, 2008 at 03:58:58PM +1000, Lachlan McIlroy wrote:
->>> I'm just not sure about the assumption
->>> that if the flush lock cannot be acquired in xfs_ifree_cluster() then
->>> the inode must be in the process of being flushed. The flush could
->>> be aborted due to the inode being pinned or some other case and the
->>> inode never gets marked as stale.
->>
->> Did that happen?
->>
->> Basically I'm asking what the sequence of events is that leads up
->> to this problem - we need to identify the actual race condition
->> before speculating on potential fixes....
->>
->
-> In the trace below pid 7731 is unlinking an inode and it's not the last
-> inode so it doesn't go through xfs_ifree_cluster() and mark the other
-> inodes as stale.  At the same time pid 12269 unlinks the final inode in
-> the cluster and calls xfs_ifree_cluster() but fails to lock the inode
-> held by pid 7731 so it skips it.  Pid 12269 deallocates the inode cluster
-> and the disk space is reallocated as user data (the data "temp28/file00006"
-> is what the test writes into it's files).  Meanwhile pid 7731 finally
-> continues and tries to flush the inode.
+Takashi Sato wrote:
 
-Ah - how are we unlinking two inodes in the one AG at the same time?
-That's supposed to be serialised by the AGI buffer lock....
+> @@ -141,6 +142,57 @@ static int ioctl_fioasync(unsigned int f
+>  }
+>  
+>  /*
+> + * ioctl_freeze - Freeze the filesystem.
+> + *
+> + * @filp:	target file
+> + *
+> + * Call freeze_bdev() to freeze the filesystem.
+> + */
+> +static int ioctl_freeze(struct file *filp)
+> +{
+> +	struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	/* If filesystem doesn't support freeze feature, return. */
+> +	if (sb->s_op->write_super_lockfs == NULL)
+> +		return -EOPNOTSUPP;
+> +
+> +	/* If a regular file or a directory isn't specified, return. */
+> +	if (sb->s_bdev == NULL)
+> +		return -EINVAL;
+> +
+> +	/* Freeze */
+> +	sb = freeze_bdev(sb->s_bdev);
+> +	if (IS_ERR(sb))
+> +		return PTR_ERR(sb);
+> +	return 0;
+> +}
 
-Ah - I see - we hold the inode across the transaction commit in
-xfs_inactive(). That means that the AGI is unlocked well before the
-inode is unlocked, which allows the racing inode inactivate to lock
-the AGI and call xfs_icluster_free() before the inode is unlocked
-after the transaction commit.
+Not a problem with your patch exactly, but I was just wondering; you
+check here whether the sb returned from freeze_bdev is an ERR_PTR (as
+does lock_fs()) - but, freeze_bdev never returns an error, does it?
+->write_super_lockfs is a void...
 
-Ok, now we understand the race condition....
+It really seems that at least we should be able to handle IO errors on
+the freeze request, and tell the user "No, your filesystem was not
+frozen..."?
 
-> Looks like xfs_ifree_cluster() should do a blocking wait on the ilock and
-> maybe move the setting of XFS_ISTALE outside the flock.
+Maybe I'll whip up a patch to see about propagating freeze errors up
+from the filesystems that implement it, unless I'm missing some reason
+not to do so...?
 
-No, we can't do a blocking wait on the ilock - we already hold the
-ilock on other inodes and so we could deadlock by doing that.
+Also, should this be checking for a NULL returned from freeze_bdev as
+well?  I guess this should never happen if we have a file open on which
+we are calling the ioctl ...
 
-Hmmmm - I wonder what the reason for the holding of the inode lock
-over the transaction commit is.... Perhaps it is to make the
-detatching of the dquots atomic with the inactivation (seems like
-a valid reason to me).
-
-Perhap we should also hold the AGI buffer across the transaction
-commit as well and only release that after the inode is
-unlocked so the cluster free does not make progress until after
-the inode inactivation of all inodes in the cluster is complete....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
