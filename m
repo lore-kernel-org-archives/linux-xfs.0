@@ -1,79 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 04 Sep 2008 23:14:27 -0700 (PDT)
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with SMTP id m856DrSJ029332
-	for <xfs@oss.sgi.com>; Thu, 4 Sep 2008 23:13:55 -0700
-Message-ID: <48C0D04E.1010708@sgi.com>
-Date: Fri, 05 Sep 2008 16:23:10 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 05 Sep 2008 09:27:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m85GR1U0013290
+	for <xfs@oss.sgi.com>; Fri, 5 Sep 2008 09:27:01 -0700
+Received: from coraid.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77EC9124CBBC
+	for <xfs@oss.sgi.com>; Fri,  5 Sep 2008 09:28:27 -0700 (PDT)
+Received: from coraid.com (baron.coraid.com [12.51.113.4]) by cuda.sgi.com with ESMTP id 5UGMkogN6Fy5YBGu for <xfs@oss.sgi.com>; Fri, 05 Sep 2008 09:28:27 -0700 (PDT)
+Date: Fri, 5 Sep 2008 12:29:21 -0400
+From: Ed Cashin <ecashin@coraid.com>
+Subject: Re: xfs_growfs fix backport for 2.6.16.y
+Message-ID: <20080905162921.GA8000@coraid.com>
+References: <20080825153931.GD7575@coraid.com> <20080826020101.GU5706@disturbed> <20080903182701.GA29192@coraid.com> <20080904231418.GB5991@disturbed>
 MIME-Version: 1.0
-Subject: Re: Filesystem corruption writing out unlinked inodes
-References: <48BCC5B1.7080300@sgi.com> <20080902051524.GC15962@disturbed> <48BCD622.1080406@sgi.com> <20080902062155.GE15962@disturbed> <48BF33EC.7080406@sgi.com> <20080904090835.GE15950@disturbed>
-In-Reply-To: <20080904090835.GE15950@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080904231418.GB5991@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Adrian Bunk <bunk@kernel.org>
 
-Dave Chinner wrote:
-> On Thu, Sep 04, 2008 at 11:03:40AM +1000, Lachlan McIlroy wrote:
->> Dave Chinner wrote:
->>> On Tue, Sep 02, 2008 at 03:58:58PM +1000, Lachlan McIlroy wrote:
->>>> I'm just not sure about the assumption
->>>> that if the flush lock cannot be acquired in xfs_ifree_cluster() then
->>>> the inode must be in the process of being flushed. The flush could
->>>> be aborted due to the inode being pinned or some other case and the
->>>> inode never gets marked as stale.
->>> Did that happen?
->>>
->>> Basically I'm asking what the sequence of events is that leads up
->>> to this problem - we need to identify the actual race condition
->>> before speculating on potential fixes....
->>>
->> In the trace below pid 7731 is unlinking an inode and it's not the last
->> inode so it doesn't go through xfs_ifree_cluster() and mark the other
->> inodes as stale.  At the same time pid 12269 unlinks the final inode in
->> the cluster and calls xfs_ifree_cluster() but fails to lock the inode
->> held by pid 7731 so it skips it.  Pid 12269 deallocates the inode cluster
->> and the disk space is reallocated as user data (the data "temp28/file00006"
->> is what the test writes into it's files).  Meanwhile pid 7731 finally
->> continues and tries to flush the inode.
+On Fri, Sep 05, 2008 at 09:14:18AM +1000, Dave Chinner wrote:
+...
+> Ah, yes. That. I think Barry can try to explain that one because:
 > 
-> Ah - how are we unlinking two inodes in the one AG at the same time?
-> That's supposed to be serialised by the AGI buffer lock....
+> http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/078.out.diff?r1=1.3;r2=1.4
 > 
-> Ah - I see - we hold the inode across the transaction commit in
-> xfs_inactive(). That means that the AGI is unlocked well before the
-> inode is unlocked, which allows the racing inode inactivate to lock
-> the AGI and call xfs_icluster_free() before the inode is unlocked
-> after the transaction commit.
+> The test golden output was changed instead of someone understanding
+> why the fixes to growfs changed the size that the filesystem was
+> grown to. ISTR being opposed to changing the golden output because
+> it was the wrong thing to do and would break QA on older kernels,
+> not to mention that it indicated some possible off-by-one bug in
+> a change that had been made at some point...
 > 
-> Ok, now we understand the race condition....
-> 
->> Looks like xfs_ifree_cluster() should do a blocking wait on the ilock and
->> maybe move the setting of XFS_ISTALE outside the flock.
-> 
-> No, we can't do a blocking wait on the ilock - we already hold the
-> ilock on other inodes and so we could deadlock by doing that.
-> 
-> Hmmmm - I wonder what the reason for the holding of the inode lock
-> over the transaction commit is.... Perhaps it is to make the
-> detatching of the dquots atomic with the inactivation (seems like
-> a valid reason to me).
-> 
-> Perhap we should also hold the AGI buffer across the transaction
-> commit as well and only release that after the inode is
-> unlocked so the cluster free does not make progress until after
-> the inode inactivation of all inodes in the cluster is complete....
-> 
+> Other than that, the backport should be fine given it passed all the
+> other parts of the test....
 
-Okay, I think I understand what you are saying and it makes some sense.
-I think there is still a chance that the xfs_ilock_nowait() will fail in
-xfs_ifree_cluster() if the inode it is trying to lock has just been locked
-before entering xfs_finish_reclaim() and consequently we wont mark it stale.
-The thread in xfs_ifree_cluster() may also grab the lock on the inode
-cluster buffer before the xfs_finish_reclaim() thread so we wont find the
-inode's log item attached to the buffer either.
+Oh, that's good news, thanks.
+
+I just need to test the patch on a 32-bit O.S. now, but
+I am having a difficult time building xfs-cmds/xfstests
+on a CentOS 5 VM.
+
+Does anyone have a recommendation for an O.S. I can use
+to build and run the xfsqa test 078?  It would be running
+the 2.6.16.62 kernel with the patch in question, not the
+stock distro kernel.
+
+-- 
+  Ed Cashin <ecashin@coraid.com>
