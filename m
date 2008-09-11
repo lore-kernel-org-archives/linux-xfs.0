@@ -1,66 +1,79 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 03:32:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 03:57:14 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8BAWESG031234
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 03:32:16 -0700
-Date: Thu, 11 Sep 2008 06:33:43 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Re-dirty pages on I/O error
-Message-ID: <20080911103342.GA17482@infradead.org>
-References: <48C8D8CD.7050508@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8BAv8IR000309
+	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 03:57:08 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EFA698BC640
+	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 03:58:37 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id z7DeBSRjcTiQTYiq for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 03:58:37 -0700 (PDT)
+Message-ID: <85FB1C9FF587411A99FF66E76008D2A6@nsl.ad.nec.co.jp>
+From: "Takashi Sato" <t-sato@yk.jp.nec.com>
+References: <20080818212819t-sato@mail.jp.nec.com> <48C012F3.3000408@redhat.com>
+In-Reply-To: <48C012F3.3000408@redhat.com>
+Subject: Re: [PATCH 1/3] Implement generic freeze feature
+Date: Thu, 11 Sep 2008 19:58:08 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48C8D8CD.7050508@sgi.com>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
 
-On Thu, Sep 11, 2008 at 06:37:33PM +1000, Lachlan McIlroy wrote:
-> If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
-> we throw away the dirty page without converting the delayed allocation.  This
-> leaves delayed allocations that can never be removed and confuses code that
-> expects a flush of the file to clear them.  We need to re-dirty the page on
-> error so we can try again later or report that the flush failed.
+Hi,
+
+Eric Sandeen:
+>> +static int ioctl_freeze(struct file *filp)
+>> +{
+>> +     struct super_block *sb = filp->f_path.dentry->d_inode->i_sb;
+>> +
+>> +     if (!capable(CAP_SYS_ADMIN))
+>> +         return -EPERM;
+>> +
+>> +     /* If filesystem doesn't support freeze feature, return. */
+>> +     if (sb->s_op->write_super_lockfs == NULL)
+>> +         return -EOPNOTSUPP;
+>> +
+>> +     /* If a regular file or a directory isn't specified, return. */
+>> +     if (sb->s_bdev == NULL)
+>> +         return -EINVAL;
+>> +
+>> +     /* Freeze */
+>> +     sb = freeze_bdev(sb->s_bdev);
+>> +     if (IS_ERR(sb))
+>> +         return PTR_ERR(sb);
+>> +     return 0;
+>> +}
 >
-> --- a/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 16:32:11.000000000 +1000
-> +++ b/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 15:44:09.000000000 +1000
-> @@ -1147,16 +1147,6 @@ error:
-> 	if (iohead)
-> 		xfs_cancel_ioend(iohead);
+> Not a problem with your patch exactly, but I was just wondering; you
+> check here whether the sb returned from freeze_bdev is an ERR_PTR (as
+> does lock_fs()) - but, freeze_bdev never returns an error, does it?
+> ->write_super_lockfs is a void...
 >
-> -	/*
-> -	 * If it's delalloc and we have nowhere to put it,
-> -	 * throw it away, unless the lower layers told
-> -	 * us to try again.
-> -	 */
-> -	if (err != -EAGAIN) {
-> -		if (!unmapped)
-> -			block_invalidatepage(page, 0);
-> -		ClearPageUptodate(page);
-> -	}
+> It really seems that at least we should be able to handle IO errors on
+> the freeze request, and tell the user "No, your filesystem was not
+> frozen..."?
+>
+> Maybe I'll whip up a patch to see about propagating freeze errors up
+> from the filesystems that implement it, unless I'm missing some reason
+> not to do so...?
 
-While this always looked fishy to me we it needs a good explanation to
-kill this.  I try to remember why Steve did it this way long time ago.
+Right.
+We should handle an IO error which occurs in write_super_lockfs.
+I will change the write_super_lockfs's type to "int" so that it can return an error.
+And I will consider returning an error of ext3_write_super_lockfs because
+journal_flush() in ext3_write_super_lockfs() doesn't handle an IO error.
 
-> @@ -1216,8 +1206,11 @@ xfs_vm_writepage(
-> 	 * then mark the page dirty again and leave the page
-> 	 * as is.
-> 	 */
-> -	if (current_test_flags(PF_FSTRANS) && need_trans)
-> -		goto out_fail;
-> +	if (current_test_flags(PF_FSTRANS) && need_trans) {
-> +		redirty_page_for_writepage(wbc, page);
-> +		unlock_page(page);
-> +		return -EAGAIN;
+> Also, should this be checking for a NULL returned from freeze_bdev as
+> well?  I guess this should never happen if we have a file open on which
+> we are calling the ioctl ...
 
-The redirty, unlock, return sequence is duplicated after your
-patch, I think we should still keep the out_fail goto.  Also returning
--EGAIN from ->writepage is wrong.  The return values goes through
-handle_write_error and mapping_set_error into the return value of e.g.
-msync.  If you look at all similar writepage implementation they only
-return a negative error for a real error condition and simply return 0
-when just redirtying it due to transaction constraints or when trylocks
-fail.
+I think ioctl_freeze doesn't need to check NULL because it never happen
+as you said.
+
+Cheers, Takashi
