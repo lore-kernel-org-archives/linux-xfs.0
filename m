@@ -1,89 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 04:10:34 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8BBATnq001438
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 04:10:29 -0700
-Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 31CCE42BCF6
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 04:11:58 -0700 (PDT)
-Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id ADEBpJOTPjAkTy9p for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 04:11:58 -0700 (PDT)
-Message-ID: <059C75EDB49641A49EF986D81EED4200@nsl.ad.nec.co.jp>
-From: "Takashi Sato" <t-sato@yk.jp.nec.com>
-References: <20080908205245t-sato@mail.jp.nec.com> <20080908171020.GA22521@infradead.org>
-In-Reply-To: <20080908171020.GA22521@infradead.org>
-Subject: Re: [PATCH 1/3] Implement generic freeze feature
-Date: Thu, 11 Sep 2008 20:11:06 +0900
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 14:21:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8BLLhNd022014
+	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 14:21:44 -0700
+Message-ID: <48C98BE4.3000309@sandeen.net>
+Date: Thu, 11 Sep 2008 16:21:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Subject: Re: [PATCH] Re-dirty pages on I/O error
+References: <48C8D8CD.7050508@sgi.com> <20080911103342.GA17482@infradead.org>
+In-Reply-To: <20080911103342.GA17482@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
-
-Hi,
+Cc: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
 Christoph Hellwig wrote:
->> --- linux-2.6.27-rc5.org/fs/block_dev.c 2008-08-29 07:52:02.000000000 +0900
->> +++ linux-2.6.27-rc5-freeze/fs/block_dev.c 2008-09-05 20:00:29.000000000 +0900
->> @@ -285,6 +285,8 @@ static void init_once(void *foo)
->>      INIT_LIST_HEAD(&bdev->bd_holder_list);
->>  #endif
->>      inode_init_once(&ei->vfs_inode);
->> +     /* Initialize mutex for freeze. */
->> +     mutex_init(&bdev->bd_fsfreeze_mutex);
->
-> Why not just freeze_mutex?
-
-The Linux kernel has already had the name of "freezer" in the part of
-power-management.  So I named the above mutex "fsfreeze"
-(filesystem freeze) to distinguish it from the existent "freezer".
-Andrew pointed it out.
-
->>  struct super_block *freeze_bdev(struct block_device *bdev)
->>  {
->>       struct super_block *sb;
+> On Thu, Sep 11, 2008 at 06:37:33PM +1000, Lachlan McIlroy wrote:
+>> If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
+>> we throw away the dirty page without converting the delayed allocation.  This
+>> leaves delayed allocations that can never be removed and confuses code that
+>> expects a flush of the file to clear them.  We need to re-dirty the page on
+>> error so we can try again later or report that the flush failed.
 >>
->> +    mutex_lock(&bdev->bd_fsfreeze_mutex);
->> +    if (bdev->bd_fsfreeze_count > 0) {
->> +        bdev->bd_fsfreeze_count++;
->> +        sb = get_super(bdev);
->> +        mutex_unlock(&bdev->bd_fsfreeze_mutex);
->> +        return sb;
->> +    }
->> +    bdev->bd_fsfreeze_count++;
->> +
->>      down(&bdev->bd_mount_sem);
->
-> Note that we still have duplication with the bd_mount_sem.  I think
-> you should look into getting rid of it and instead do a check of
-> the freeze_count under proper freeze_mutex protection.
-
-In the original implementation,
-while the filesystem is frozen, subsequent mounts wait for unfreeze
-with the semaphore (bd_mount_sem).
-But if we replace the semphore with the check of the freeze_count,
-subsequent mounts will abort.
-I think the original behavior shouldn't be changed, so the existing bd_mount_sem
-is better.
-
->> @@ -244,6 +274,8 @@ void thaw_bdev(struct block_device *bdev
->>  }
+>> --- a/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 16:32:11.000000000 +1000
+>> +++ b/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 15:44:09.000000000 +1000
+>> @@ -1147,16 +1147,6 @@ error:
+>> 	if (iohead)
+>> 		xfs_cancel_ioend(iohead);
 >>
->>        up(&bdev->bd_mount_sem);
->> +     mutex_unlock(&bdev->bd_fsfreeze_mutex);
->> +     return 0;
->
-> Why do you add a return value here if we always return 0 anyway?
+>> -	/*
+>> -	 * If it's delalloc and we have nowhere to put it,
+>> -	 * throw it away, unless the lower layers told
+>> -	 * us to try again.
+>> -	 */
+>> -	if (err != -EAGAIN) {
+>> -		if (!unmapped)
+>> -			block_invalidatepage(page, 0);
+>> -		ClearPageUptodate(page);
+>> -	}
+> 
+> While this always looked fishy to me we it needs a good explanation to
+> kill this.  I try to remember why Steve did it this way long time ago.
 
-I forgot to remove the unneeded return value in above old patch.
-But I need to implement a return value in the new patch
-because thaw_bdev() needs to return an IO error which occurs
-in unlockfs().
-Eric pointed it out.
+Hrm some of that was my fault, ages ago.
 
-Cheers, Takashi
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/pagebuf/Attic/page_buf_io.c.diff?r1=1.2;r2=1.3;hideattic=0
+
+I don't remember the details fo why.... ah here's a clue
+
+http://oss.sgi.com/archives/xfs/2002-01/msg00475.html
+
+> As _xfs_force_shutdown was written, it tried to schedule in an interrupt context
+> and caused a BUG() to be thrown.
+
+> Also, even if we didn't try to deal with leftover buffers in the interrupt,
+> they subsequently had their delalloc flags removed, and thus queued up
+> to clobber block 0 (1,2,3) on the disk, thus corrupting the filesystem.
+
+so back then, delalloc buffers w/o a home would eventually slam into the
+superblock, I guess.
+
+Anyway, if this is redirtied, will it ever go away for an IO error that
+persists?
+
+-Eric
+
+>> @@ -1216,8 +1206,11 @@ xfs_vm_writepage(
+>> 	 * then mark the page dirty again and leave the page
+>> 	 * as is.
+>> 	 */
+>> -	if (current_test_flags(PF_FSTRANS) && need_trans)
+>> -		goto out_fail;
+>> +	if (current_test_flags(PF_FSTRANS) && need_trans) {
+>> +		redirty_page_for_writepage(wbc, page);
+>> +		unlock_page(page);
+>> +		return -EAGAIN;
+> 
+> The redirty, unlock, return sequence is duplicated after your
+> patch, I think we should still keep the out_fail goto.  Also returning
+> -EGAIN from ->writepage is wrong.  The return values goes through
+> handle_write_error and mapping_set_error into the return value of e.g.
+> msync.  If you look at all similar writepage implementation they only
+> return a negative error for a real error condition and simply return 0
+> when just redirtying it due to transaction constraints or when trylocks
+> fail.
+> 
+> 
