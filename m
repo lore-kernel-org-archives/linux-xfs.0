@@ -1,63 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 19:59:13 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8C2xA6H011079
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 19:59:10 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 785148D3A0B
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 20:00:39 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id gmh5aDLsy2SRINRy for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 20:00:39 -0700 (PDT)
-Message-ID: <48C9DB57.10909@sandeen.net>
-Date: Thu, 11 Sep 2008 22:00:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 11 Sep 2008 22:55:59 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8C5tAZI024617
+	for <xfs@oss.sgi.com>; Thu, 11 Sep 2008 22:55:10 -0700
+Message-ID: <48CA067F.1050402@sgi.com>
+Date: Fri, 12 Sep 2008 16:04:47 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: xfs, ubuntu, & xen
-References: <BLU141-W21A745812EB94C128504C680510@phx.gbl>
-In-Reply-To: <BLU141-W21A745812EB94C128504C680510@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] Re-dirty pages on I/O error
+References: <48C8D8CD.7050508@sgi.com> <20080911103342.GA17482@infradead.org>
+In-Reply-To: <20080911103342.GA17482@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Andrew Lawry <a_lawry@hotmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Andrew Lawry wrote:
+Christoph Hellwig wrote:
+> On Thu, Sep 11, 2008 at 06:37:33PM +1000, Lachlan McIlroy wrote:
+>> If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
+>> we throw away the dirty page without converting the delayed allocation.  This
+>> leaves delayed allocations that can never be removed and confuses code that
+>> expects a flush of the file to clear them.  We need to re-dirty the page on
+>> error so we can try again later or report that the flush failed.
+>>
+>> --- a/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 16:32:11.000000000 +1000
+>> +++ b/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 15:44:09.000000000 +1000
+>> @@ -1147,16 +1147,6 @@ error:
+>> 	if (iohead)
+>> 		xfs_cancel_ioend(iohead);
+>>
+>> -	/*
+>> -	 * If it's delalloc and we have nowhere to put it,
+>> -	 * throw it away, unless the lower layers told
+>> -	 * us to try again.
+>> -	 */
+>> -	if (err != -EAGAIN) {
+>> -		if (!unmapped)
+>> -			block_invalidatepage(page, 0);
+>> -		ClearPageUptodate(page);
+>> -	}
 > 
-> Hi,
-> 
-> I am setting up a new Xen installation using XFS as the file system. On our test
-> machine we have been having some problems with a domU crashing and some
-> data loss on the domU (on recovery of the file system at the next boot
-> some files have become truncated.
+> While this always looked fishy to me we it needs a good explanation to
+> kill this.  I try to remember why Steve did it this way long time ago.
+We'd need an even better explanation to keep it.  It's just plain wrong
+and has caused serious customer issues for us.
 
-Why is the domU crashing; does it look at all related to these problems,
-or is it something different?
+At ENOSPC calls to xfs_trans_reserve() can fail if the reserved space is
+also exhausted (see m_resblks).  This causes conversion of delayed allocs
+to fail with ENOSPC.  This dodgy code throws the page away and leaves the
+delayed alloc.  A direct I/O then panics because it finds a delayed
+allocation when it does not expect one.
 
-Does the filesystem image check out ok with xfs_repair when this
-happens?  If not, what does it find?
+This code has been there since the initial version of the file.
 
-Which files are truncated, system files or files that were being written
-at the time of the crash?  And just to be clear, what exactly do you
-mean by truncated; that the data is correct up to EOF, but the file is
-smaller than you expect?  Is this more than simply buffered writes
-getting lost, which is to be expected?
+> 
+>> @@ -1216,8 +1206,11 @@ xfs_vm_writepage(
+>> 	 * then mark the page dirty again and leave the page
+>> 	 * as is.
+>> 	 */
+>> -	if (current_test_flags(PF_FSTRANS) && need_trans)
+>> -		goto out_fail;
+>> +	if (current_test_flags(PF_FSTRANS) && need_trans) {
+>> +		redirty_page_for_writepage(wbc, page);
+>> +		unlock_page(page);
+>> +		return -EAGAIN;
+> 
+> The redirty, unlock, return sequence is duplicated after your
+> patch, I think we should still keep the out_fail goto.  Also returning
+> -EGAIN from ->writepage is wrong.  The return values goes through
+> handle_write_error and mapping_set_error into the return value of e.g.
+> msync.  If you look at all similar writepage implementation they only
+> return a negative error for a real error condition and simply return 0
+> when just redirtying it due to transaction constraints or when trylocks
+> fail.
 
--Eric
+I got rid of the goto because it looked messy but if you want it back I'll
+change it.
 
-> Our setup:
-> 
-> Dom0 and
-> domUs are Ubuntu 8.04 64 bit  Server edition. The domUs use tap file
-> based backends. The file system holding the image files is XFS and the
-> filesystem in each domU is also XFS.
-> 
-> We are using xen 3.2 packaged with ubuntu.
-> 
-> I
-> have read on this mailing list and on google that xen and XFS do not
-> work well together and some patches have been produced. Has this issue been addressed? Would those patches be in the stable release and have found their way into Ubuntu packages?
-> 
-> Thanks for your help.
-> 
-> Andrew
+As for the EAGAIN, I'll change that to 0.  I don't think it makes any
+difference to the problem I'm trying to fix.
