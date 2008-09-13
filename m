@@ -1,133 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:50 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEuZ5U022246
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:35 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DC31126C1AD
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:05 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 7md9VGCoOAqH24X2 for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:05 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1KeWZS-0002Nv-2Z
-	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:57:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/8] XFS: Allow 64 bit machines to avoid the AIL lock during flushes
-Date: Sun, 14 Sep 2008 00:57:53 +1000
-Message-Id: <1221317877-8333-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1221317877-8333-1-git-send-email-david@fromorbit.com>
-References: <1221317877-8333-1-git-send-email-david@fromorbit.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 09:52:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DGqCOA003436
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:52:12 -0700
+Received: from josefsipek.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DF5FD1ADEC4D
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:53:42 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by cuda.sgi.com with ESMTP id Vf5BSEo9Nuojj3EU for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:53:42 -0700 (PDT)
+Date: Sat, 13 Sep 2008 12:53:41 -0400
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH 01/10] XFS: split out two helpers from xfs_syncsub
+Message-ID: <20080913165341.GA17721@josefsipek.net>
+References: <1221314230-28618-1-git-send-email-david@fromorbit.com> <1221314230-28618-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1221314230-28618-2-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-When copying lsn's from the log item to the inode or dquot
-flush lsn, we currently grab the AIL lock. We do this because the
-LSN is a 64 bit quantity and it needs to be read atomically.
-The lock is used to guarantee atomicity for 32 bit platforms.
+On Sat, Sep 13, 2008 at 11:57:01PM +1000, Dave Chinner wrote:
+...
+> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+> index 53d85ec..59da332 100644
+> --- a/fs/xfs/linux-2.6/xfs_sync.c
+> +++ b/fs/xfs/linux-2.6/xfs_sync.c
+> @@ -315,6 +315,93 @@ xfs_sync_inodes(
+>  	return XFS_ERROR(last_error);
+>  }
+>  
+> +STATIC int
+> +xfs_commit_dummy_trans(
+> +	struct xfs_mount	*mp,
+> +	uint			log_flags)
+> +{
+> +	struct xfs_inode	*ip = mp->m_rootip;
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +
+> +	/*
+> +	 * Put a dummy transaction in the log to tell recovery
+> +	 * that all others are OK.
+> +	 */
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+> +	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+> +	if (error) {
+> +		xfs_trans_cancel(tp, 0);
+> +		return error;
+> +	}
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ihold(tp, ip);
+> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +	/* XXX(hch): ignoring the error here.. */
 
-Make the LSN copying a small function, and make the function
-used conditional on BITS_PER_LONG so that 64 bit machines don't
-need to take the AIL lock in these places.
+Why? Was this supposed to be ignored in the final version of these patches?
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/quota/xfs_dquot.c |    6 ++----
- fs/xfs/xfs_inode.c       |   17 +++++++----------
- fs/xfs/xfs_trans_priv.h  |   23 +++++++++++++++++++++++
- 3 files changed, 32 insertions(+), 14 deletions(-)
+> +	error = xfs_trans_commit(tp, 0);
+> +
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	xfs_log_force(mp, 0, log_flags);
+> +	return 0;
+> +}
 
-diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index f2705f2..8e30a10 100644
---- a/fs/xfs/quota/xfs_dquot.c
-+++ b/fs/xfs/quota/xfs_dquot.c
-@@ -1274,10 +1274,8 @@ xfs_qm_dqflush(
- 	dqp->dq_flags &= ~(XFS_DQ_DIRTY);
- 	mp = dqp->q_mount;
- 
--	/* lsn is 64 bits */
--	spin_lock(&mp->m_ail_lock);
--	dqp->q_logitem.qli_flush_lsn = dqp->q_logitem.qli_item.li_lsn;
--	spin_unlock(&mp->m_ail_lock);
-+	xfs_trans_ail_copy_lsn(mp->m_ail, &dqp->q_logitem.qli_flush_lsn,
-+					&dqp->q_logitem.qli_item.li_lsn);
- 
- 	/*
- 	 * Attach an iodone routine so that we can remove this dquot from the
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 401b92c..448f507 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2213,9 +2213,9 @@ xfs_ifree_cluster(
- 				iip = (xfs_inode_log_item_t *)lip;
- 				ASSERT(iip->ili_logged == 1);
- 				lip->li_cb = (void(*)(xfs_buf_t*,xfs_log_item_t*)) xfs_istale_done;
--				spin_lock(&mp->m_ail_lock);
--				iip->ili_flush_lsn = iip->ili_item.li_lsn;
--				spin_unlock(&mp->m_ail_lock);
-+				xfs_trans_ail_copy_lsn(mp->m_ail,
-+							&iip->ili_flush_lsn,
-+							&iip->ili_item.li_lsn);
- 				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
- 				pre_flushed++;
- 			}
-@@ -2236,9 +2236,8 @@ xfs_ifree_cluster(
- 			iip->ili_last_fields = iip->ili_format.ilf_fields;
- 			iip->ili_format.ilf_fields = 0;
- 			iip->ili_logged = 1;
--			spin_lock(&mp->m_ail_lock);
--			iip->ili_flush_lsn = iip->ili_item.li_lsn;
--			spin_unlock(&mp->m_ail_lock);
-+			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
-+						&iip->ili_item.li_lsn);
- 
- 			xfs_buf_attach_iodone(bp,
- 				(void(*)(xfs_buf_t*,xfs_log_item_t*))
-@@ -3479,10 +3478,8 @@ xfs_iflush_int(
- 		iip->ili_format.ilf_fields = 0;
- 		iip->ili_logged = 1;
- 
--		ASSERT(sizeof(xfs_lsn_t) == 8);	/* don't lock if it shrinks */
--		spin_lock(&mp->m_ail_lock);
--		iip->ili_flush_lsn = iip->ili_item.li_lsn;
--		spin_unlock(&mp->m_ail_lock);
-+		xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
-+					&iip->ili_item.li_lsn);
- 
- 		/*
- 		 * Attach the function xfs_iflush_done to the inode's
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 8b84167..c6ea7fe 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -103,4 +103,27 @@ void	xfsaild_wakeup(struct xfs_ail *, xfs_lsn_t);
- int	xfsaild_start(struct xfs_ail *);
- void	xfsaild_stop(struct xfs_ail *);
- 
-+#if BITS_PER_LONG != 64
-+static inline void
-+xfs_trans_ail_copy_lsn(
-+	struct xfs_ail	*ailp,
-+	xfs_lsn_t	*dst,
-+	xfs_lsn_t	*src)
-+{
-+	ASSERT(sizeof(xfs_lsn_t) == 8);	/* don't lock if it shrinks */
-+	spin_lock(&ailp->xa_mount->m_ail_lock);
-+	*dst = *src;
-+	spin_unlock(&ailp->xa_mount->m_ail_lock);
-+}
-+#else
-+static inline void
-+xfs_trans_ail_copy_lsn(
-+	struct xfs_ail	*ailp,
-+	xfs_lsn_t	*dst,
-+	xfs_lsn_t	*src)
-+{
-+	ASSERT(sizeof(xfs_lsn_t) == 8);
-+	*dst = *src;
-+}
-+#endif
- #endif	/* __XFS_TRANS_PRIV_H__ */
+Josef 'Jeff' Sipek.
+
 -- 
-1.5.6
+UNIX is user-friendly ... it's just selective about who its friends are
