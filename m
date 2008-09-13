@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEuYCY022232
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:34 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEua3q022271
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:36 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 31185126C1A6
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:04 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id pVsXlEXTiyIgdYqK for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94D74126C1AE
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:06 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id fGH4BKNsKLWHSUdf for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:06 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeWZS-0002Ns-0l
+	id 1KeWZS-0002O4-8G
 	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:57:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/8] XFS: move the AIl traversal over to a consistent interface
-Date: Sun, 14 Sep 2008 00:57:52 +1000
-Message-Id: <1221317877-8333-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/8] XFS: Add ail pointer into log items
+Date: Sun, 14 Sep 2008 00:57:56 +1000
+Message-Id: <1221317877-8333-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1221317877-8333-1-git-send-email-david@fromorbit.com>
 References: <1221317877-8333-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,331 +22,248 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-With the new cursor interface, it makes sense to make all the
-traversing code use the cursor interface and make the old one go
-away. This means more of the AIL interfacing is done by passing
-struct xfs_ail pointers around the place instead of struct
-xfs_mount pointers.
-
-We can replace the use of xfs_trans_first_ail() in
-xfs_log_need_covered() as it is only checking if the AIL is empty.
-We can do that with a call to xfs_trans_ail_tail() instead, where a
-zero LSN returned indicates and empty AIL...
+Add an xfs_ail pointer to log items so that the log items can
+reference the AIL directly during callbacks without needed a
+struct xfs_mount.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_log.c         |    4 +-
- fs/xfs/xfs_log_recover.c |   14 +++----
- fs/xfs/xfs_trans.h       |    1 -
- fs/xfs/xfs_trans_ail.c   |  102 +++++++++++++++-------------------------------
- fs/xfs/xfs_trans_priv.h  |   13 +++---
- 5 files changed, 48 insertions(+), 86 deletions(-)
+ fs/xfs/xfs_buf_item.c     |    5 ++++-
+ fs/xfs/xfs_extfree_item.c |   28 ++++++++++++++++++----------
+ fs/xfs/xfs_inode_item.c   |    1 +
+ fs/xfs/xfs_trans.c        |    9 ++++++---
+ fs/xfs/xfs_trans.h        |    1 +
+ fs/xfs/xfs_trans_item.c   |   10 ++++++++++
+ 6 files changed, 40 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a3e0dd5..70f5063 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -881,7 +881,7 @@ xfs_log_need_covered(xfs_mount_t *mp)
- 	spin_lock(&log->l_icloglock);
- 	if (((log->l_covered_state == XLOG_STATE_COVER_NEED) ||
- 		(log->l_covered_state == XLOG_STATE_COVER_NEED2))
--			&& !xfs_trans_first_ail(mp, NULL)
-+			&& !xfs_trans_ail_tail(mp->m_ail)
- 			&& xlog_iclogs_empty(log)) {
- 		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
- 			log->l_covered_state = XLOG_STATE_COVER_DONE;
-@@ -918,7 +918,7 @@ xlog_assign_tail_lsn(xfs_mount_t *mp)
- 	xfs_lsn_t tail_lsn;
- 	xlog_t	  *log = mp->m_log;
- 
--	tail_lsn = xfs_trans_tail_ail(mp);
-+	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
- 	spin_lock(&log->l_grant_lock);
- 	if (tail_lsn != 0) {
- 		log->l_tail_lsn = tail_lsn;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d967baf..46ef060 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2731,8 +2731,7 @@ xlog_recover_do_efd_trans(
- 	 */
- 	mp = log->l_mp;
- 	spin_lock(&mp->m_ail_lock);
--	xfs_trans_ail_cursor_init(mp->m_ail, &cur);
--	lip = xfs_trans_first_ail(mp, &cur);
-+	lip = xfs_trans_ail_cursor_first(mp->m_ail, &cur, 0);
- 	while (lip != NULL) {
- 		if (lip->li_type == XFS_LI_EFI) {
- 			efip = (xfs_efi_log_item_t *)lip;
-@@ -2747,7 +2746,7 @@ xlog_recover_do_efd_trans(
- 				break;
- 			}
- 		}
--		lip = xfs_trans_next_ail(mp, &cur);
-+		lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
- 	}
- 	xfs_trans_ail_cursor_done(mp->m_ail, &cur);
- 	spin_unlock(&mp->m_ail_lock);
-@@ -3046,7 +3045,7 @@ xlog_recover_check_ail(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 7f1e266..c170421 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -731,6 +731,7 @@ xfs_buf_item_init(
+ 	bip->bli_item.li_type = XFS_LI_BUF;
+ 	bip->bli_item.li_ops = &xfs_buf_item_ops;
+ 	bip->bli_item.li_mountp = mp;
++	bip->bli_item.li_ailp = mp->m_ail;
+ 	bip->bli_buf = bp;
+ 	bip->bli_format.blf_type = XFS_LI_BUF;
+ 	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
+@@ -1117,10 +1118,12 @@ xfs_buf_iodone(
+ 	xfs_buf_log_item_t	*bip)
  {
- 	do {
- 		ASSERT(lip->li_type != XFS_LI_EFI);
--		lip = xfs_trans_next_ail(mp, cur);
-+		lip = xfs_trans_ail_cursor_next(mp->m_ail, cur);
- 	} while (lip != NULL);
- }
- #endif	/* DEBUG */
-@@ -3082,8 +3081,7 @@ xlog_recover_process_efis(
- 	mp = log->l_mp;
- 	spin_lock(&mp->m_ail_lock);
+ 	struct xfs_mount	*mp;
++	struct xfs_ail		*ailp;
  
--	xfs_trans_ail_cursor_init(mp->m_ail, &cur);
--	lip = xfs_trans_first_ail(mp, &cur);
-+	lip = xfs_trans_ail_cursor_first(mp->m_ail, &cur, 0);
- 	while (lip != NULL) {
+ 	ASSERT(bip->bli_buf == bp);
+ 
+ 	mp = bip->bli_item.li_mountp;
++	ailp = bip->bli_item.li_ailp;
+ 
+ 	/*
+ 	 * If we are forcibly shutting down, this may well be
+@@ -1131,7 +1134,7 @@ xfs_buf_iodone(
+ 	 *
+ 	 * Either way, AIL is useless if we're forcing a shutdown.
+ 	 */
+-	spin_lock(&mp->m_ail->xa_lock);
++	spin_lock(&ailp->xa_lock);
+ 	/*
+ 	 * xfs_trans_delete_ail() drops the AIL lock.
+ 	 */
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index f1dcd80..dab5737 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -108,10 +108,12 @@ xfs_efi_item_pin(xfs_efi_log_item_t *efip)
+ STATIC void
+ xfs_efi_item_unpin(xfs_efi_log_item_t *efip, int stale)
+ {
+-	xfs_mount_t	*mp;
++	xfs_mount_t		*mp;
++	struct xfs_ail		*ailp;
+ 
+ 	mp = efip->efi_item.li_mountp;
+-	spin_lock(&mp->m_ail->xa_lock);
++	ailp = efip->efi_item.li_ailp;
++	spin_lock(&ailp->xa_lock);
+ 	if (efip->efi_flags & XFS_EFI_CANCELED) {
  		/*
- 		 * We're done when we see something other than an EFI.
-@@ -3098,7 +3096,7 @@ xlog_recover_process_efis(
- 		 */
- 		efip = (xfs_efi_log_item_t *)lip;
- 		if (efip->efi_flags & XFS_EFI_RECOVERED) {
--			lip = xfs_trans_next_ail(mp, &cur);
-+			lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
+ 		 * xfs_trans_delete_ail() drops the AIL lock.
+@@ -120,7 +122,7 @@ xfs_efi_item_unpin(xfs_efi_log_item_t *efip, int stale)
+ 		xfs_efi_item_free(efip);
+ 	} else {
+ 		efip->efi_flags |= XFS_EFI_COMMITTED;
+-		spin_unlock(&mp->m_ail->xa_lock);
++		spin_unlock(&ailp->xa_lock);
+ 	}
+ }
+ 
+@@ -134,11 +136,13 @@ xfs_efi_item_unpin(xfs_efi_log_item_t *efip, int stale)
+ STATIC void
+ xfs_efi_item_unpin_remove(xfs_efi_log_item_t *efip, xfs_trans_t *tp)
+ {
+-	xfs_mount_t	*mp;
++	xfs_mount_t		*mp;
++	struct xfs_ail		*ailp;
+ 	xfs_log_item_desc_t	*lidp;
+ 
+ 	mp = efip->efi_item.li_mountp;
+-	spin_lock(&mp->m_ail->xa_lock);
++	ailp = efip->efi_item.li_ailp;
++	spin_lock(&ailp->xa_lock);
+ 	if (efip->efi_flags & XFS_EFI_CANCELED) {
+ 		/*
+ 		 * free the xaction descriptor pointing to this item
+@@ -153,7 +157,7 @@ xfs_efi_item_unpin_remove(xfs_efi_log_item_t *efip, xfs_trans_t *tp)
+ 		xfs_efi_item_free(efip);
+ 	} else {
+ 		efip->efi_flags |= XFS_EFI_COMMITTED;
+-		spin_unlock(&mp->m_ail->xa_lock);
++		spin_unlock(&ailp->xa_lock);
+ 	}
+ }
+ 
+@@ -268,6 +272,7 @@ xfs_efi_init(xfs_mount_t	*mp,
+ 	efip->efi_item.li_type = XFS_LI_EFI;
+ 	efip->efi_item.li_ops = &xfs_efi_item_ops;
+ 	efip->efi_item.li_mountp = mp;
++	efip->efi_item.li_ailp = mp->m_ail;
+ 	efip->efi_format.efi_nextents = nextents;
+ 	efip->efi_format.efi_id = (__psint_t)(void*)efip;
+ 
+@@ -345,14 +350,16 @@ void
+ xfs_efi_release(xfs_efi_log_item_t	*efip,
+ 		uint			nextents)
+ {
+-	xfs_mount_t	*mp;
+-	int		extents_left;
++	xfs_mount_t		*mp;
++	struct xfs_ail		*ailp;
++	int			extents_left;
+ 
+ 	mp = efip->efi_item.li_mountp;
++	ailp = efip->efi_item.li_ailp;
+ 	ASSERT(efip->efi_next_extent > 0);
+ 	ASSERT(efip->efi_flags & XFS_EFI_COMMITTED);
+ 
+-	spin_lock(&mp->m_ail->xa_lock);
++	spin_lock(&ailp->xa_lock);
+ 	ASSERT(efip->efi_next_extent >= nextents);
+ 	efip->efi_next_extent -= nextents;
+ 	extents_left = efip->efi_next_extent;
+@@ -363,7 +370,7 @@ xfs_efi_release(xfs_efi_log_item_t	*efip,
+ 		xfs_trans_delete_ail(mp, (xfs_log_item_t *)efip);
+ 		xfs_efi_item_free(efip);
+ 	} else {
+-		spin_unlock(&mp->m_ail->xa_lock);
++		spin_unlock(&ailp->xa_lock);
+ 	}
+ }
+ 
+@@ -565,6 +572,7 @@ xfs_efd_init(xfs_mount_t	*mp,
+ 	efdp->efd_item.li_type = XFS_LI_EFD;
+ 	efdp->efd_item.li_ops = &xfs_efd_item_ops;
+ 	efdp->efd_item.li_mountp = mp;
++	efdp->efd_item.li_ailp = mp->m_ail;
+ 	efdp->efd_efip = efip;
+ 	efdp->efd_format.efd_nextents = nextents;
+ 	efdp->efd_format.efd_efi_id = efip->efi_format.efi_id;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 291d30a..47594f4 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -932,6 +932,7 @@ xfs_inode_item_init(
+ 	iip->ili_item.li_type = XFS_LI_INODE;
+ 	iip->ili_item.li_ops = &xfs_inode_item_ops;
+ 	iip->ili_item.li_mountp = mp;
++	iip->ili_item.li_ailp = mp->m_ail;
+ 	iip->ili_inode = ip;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 99ba0e2..5163e12 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1383,11 +1383,13 @@ xfs_trans_chunk_committed(
+ 	xfs_log_item_desc_t	*lidp;
+ 	xfs_log_item_t		*lip;
+ 	xfs_lsn_t		item_lsn;
+-	struct xfs_mount	*mp;
+ 	int			i;
+ 
+ 	lidp = licp->lic_descs;
+ 	for (i = 0; i < licp->lic_unused; i++, lidp++) {
++		struct xfs_mount	*mp;
++		struct xfs_ail		*ailp;
++
+ 		if (xfs_lic_isfree(licp, i)) {
  			continue;
  		}
+@@ -1425,7 +1427,8 @@ xfs_trans_chunk_committed(
+ 		 * the test below.
+ 		 */
+ 		mp = lip->li_mountp;
+-		spin_lock(&mp->m_ail->xa_lock);
++		ailp = lip->li_ailp;
++		spin_lock(&ailp->xa_lock);
+ 		if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0) {
+ 			/*
+ 			 * This will set the item's lsn to item_lsn
+@@ -1436,7 +1439,7 @@ xfs_trans_chunk_committed(
+ 			 */
+ 			xfs_trans_update_ail(mp, lip, item_lsn);
+ 		} else {
+-			spin_unlock(&mp->m_ail->xa_lock);
++			spin_unlock(&ailp->xa_lock);
+ 		}
  
-@@ -3107,7 +3105,7 @@ xlog_recover_process_efis(
- 		spin_lock(&mp->m_ail_lock);
- 		if (error)
- 			goto out;
--		lip = xfs_trans_next_ail(mp, &cur);
-+		lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
- 	}
- out:
- 	xfs_trans_ail_cursor_done(mp->m_ail, &cur);
+ 		/*
 diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 74c80bd..ead53bd 100644
+index ead53bd..d6a9c5c 100644
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
-@@ -979,7 +979,6 @@ int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
- int		xfs_trans_ail_init(struct xfs_mount *);
- void		xfs_trans_ail_destroy(struct xfs_mount *);
- void		xfs_trans_push_ail(struct xfs_mount *, xfs_lsn_t);
--xfs_lsn_t	xfs_trans_tail_ail(struct xfs_mount *);
- void		xfs_trans_unlocked_item(struct xfs_mount *,
- 					xfs_log_item_t *);
- xfs_log_busy_slot_t *xfs_trans_add_busy(xfs_trans_t *tp,
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 668f2af..0591888 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -50,20 +50,20 @@ STATIC void xfs_ail_check(struct xfs_ail *, xfs_log_item_t *);
-  * lsn of the last item in the AIL.
-  */
- xfs_lsn_t
--xfs_trans_tail_ail(
--	xfs_mount_t	*mp)
-+xfs_trans_ail_tail(
-+	struct xfs_ail	*ailp)
- {
- 	xfs_lsn_t	lsn;
- 	xfs_log_item_t	*lip;
+@@ -118,6 +118,7 @@ typedef struct xfs_log_item {
+ 	xfs_lsn_t			li_lsn;		/* last on-disk lsn */
+ 	struct xfs_log_item_desc	*li_desc;	/* ptr to current desc*/
+ 	struct xfs_mount		*li_mountp;	/* ptr to fs mount */
++	struct xfs_ail			*li_ailp;	/* ptr to AIL */
+ 	uint				li_type;	/* item type */
+ 	uint				li_flags;	/* misc flags */
+ 	struct xfs_log_item		*li_bio_list;	/* buffer item list */
+diff --git a/fs/xfs/xfs_trans_item.c b/fs/xfs/xfs_trans_item.c
+index 3c666e8..e110bf5 100644
+--- a/fs/xfs/xfs_trans_item.c
++++ b/fs/xfs/xfs_trans_item.c
+@@ -22,6 +22,14 @@
+ #include "xfs_inum.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
++/* XXX: from here down needed until struct xfs_trans has it's own ailp */
++#include "xfs_bit.h"
++#include "xfs_buf_item.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_dir2.h"
++#include "xfs_dmapi.h"
++#include "xfs_mount.h"
  
--	spin_lock(&mp->m_ail_lock);
--	lip = xfs_ail_min(mp->m_ail);
-+	spin_lock(&ailp->xa_mount->m_ail_lock);
-+	lip = xfs_ail_min(ailp);
- 	if (lip == NULL) {
- 		lsn = (xfs_lsn_t)0;
- 	} else {
- 		lsn = lip->li_lsn;
+ STATIC int	xfs_trans_unlock_chunk(xfs_log_item_chunk_t *,
+ 					int, int, xfs_lsn_t);
+@@ -79,6 +87,7 @@ xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
+ 		lidp->lid_size = 0;
+ 		lip->li_desc = lidp;
+ 		lip->li_mountp = tp->t_mountp;
++		lip->li_ailp = tp->t_mountp->m_ail;
+ 		return lidp;
  	}
--	spin_unlock(&mp->m_ail_lock);
-+	spin_unlock(&ailp->xa_mount->m_ail_lock);
  
- 	return lsn;
- }
-@@ -98,7 +98,7 @@ xfs_trans_push_ail(
- 	}
- }
- 
--void
-+STATIC void
- xfs_trans_ail_cursor_init(
- 	struct xfs_ail		*ailp,
- 	struct xfs_ail_cursor	*cur)
-@@ -125,7 +125,7 @@ xfs_trans_ail_cursor_set(
- 		cur->item = xfs_ail_next(ailp, lip);
+@@ -120,6 +129,7 @@ xfs_trans_add_item(xfs_trans_t *tp, xfs_log_item_t *lip)
+ 	lidp->lid_size = 0;
+ 	lip->li_desc = lidp;
+ 	lip->li_mountp = tp->t_mountp;
++	lip->li_ailp = tp->t_mountp->m_ail;
+ 	return lidp;
  }
  
--STATIC struct xfs_log_item *
-+struct xfs_log_item *
- xfs_trans_ail_cursor_next(
- 	struct xfs_ail		*ailp,
- 	struct xfs_ail_cursor	*cur)
-@@ -136,20 +136,6 @@ xfs_trans_ail_cursor_next(
- 	return lip;
- }
- 
--STATIC void
--xfs_trans_ail_cursor_clear(
--	struct xfs_ail		*ailp,
--	struct xfs_log_item	*lip)
--{
--	struct xfs_ail_cursor	*cur;
--
--	/* need to search all cursors */
--	for (cur = &ailp->xa_cursors; cur; cur = cur->next) {
--		if (cur->item == lip)
--			cur->item = NULL;
--	}
--}
--
- void
- xfs_trans_ail_cursor_done(
- 	struct xfs_ail		*ailp,
-@@ -170,33 +156,45 @@ xfs_trans_ail_cursor_done(
- 	}
- }
- 
-+STATIC void
-+xfs_trans_ail_cursor_clear(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_ail_cursor	*cur;
-+
-+	/* need to search all cursors */
-+	for (cur = &ailp->xa_cursors; cur; cur = cur->next) {
-+		if (cur->item == lip)
-+			cur->item = NULL;
-+	}
-+}
-+
- /*
-  * Return the item in the AIL with the current lsn.
-  * Return the current tree generation number for use
-  * in calls to xfs_trans_next_ail().
-  */
--STATIC xfs_log_item_t *
--xfs_trans_first_push_ail(
--	struct xfs_mount	*mp,
-+xfs_log_item_t *
-+xfs_trans_ail_cursor_first(
-+	struct xfs_ail		*ailp,
- 	struct xfs_ail_cursor	*cur,
- 	xfs_lsn_t		lsn)
- {
--	struct xfs_ail		*ailp = mp->m_ail;
- 	xfs_log_item_t		*lip;
- 
-+	xfs_trans_ail_cursor_init(ailp, cur);
- 	lip = xfs_ail_min(ailp);
--	xfs_trans_ail_cursor_set(ailp, cur, lip);
- 	if (lsn == 0)
--		return lip;
-+		goto out;
- 
- 	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
--		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0) {
--			xfs_trans_ail_cursor_set(ailp, cur, lip);
--			return lip;
--		}
-+		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
-+			break;
- 	}
--
--	return NULL;
-+out:
-+	xfs_trans_ail_cursor_set(ailp, cur, lip);
-+	return lip;
- }
- 
- /*
-@@ -217,8 +215,7 @@ xfsaild_push(
- 	struct xfs_ail_cursor	*cur = &ailp->xa_cursors;
- 
- 	spin_lock(&mp->m_ail_lock);
--	xfs_trans_ail_cursor_init(ailp, cur);
--	lip = xfs_trans_first_push_ail(mp, cur, *last_lsn);
-+	lip = xfs_trans_ail_cursor_first(ailp, cur, *last_lsn);
- 	if (!lip || XFS_FORCED_SHUTDOWN(mp)) {
- 		/*
- 		 * AIL is empty or our push has reached the end.
-@@ -319,7 +316,7 @@ xfsaild_push(
- 		if (stuck > 100)
- 			break;
- 
--		lip = xfs_trans_next_ail(mp, cur);
-+		lip = xfs_trans_ail_cursor_next(ailp, cur);
- 		if (lip == NULL)
- 			break;
- 		lsn = lip->li_lsn;
-@@ -516,39 +513,6 @@ xfs_trans_delete_ail(
- 
- 
- /*
-- * Return the item in the AIL with the smallest lsn.
-- * Return the current tree generation number for use
-- * in calls to xfs_trans_next_ail().
-- */
--xfs_log_item_t *
--xfs_trans_first_ail(
--	struct xfs_mount	*mp,
--	struct xfs_ail_cursor	*cur)
--{
--	xfs_log_item_t		*lip;
--	struct xfs_ail		*ailp = mp->m_ail;
--
--	lip = xfs_ail_min(ailp);
--	xfs_trans_ail_cursor_set(ailp, cur, lip);
--
--	return lip;
--}
--
--/*
-- * Grab the next item in the AIL from the cursor passed in.
-- */
--xfs_log_item_t *
--xfs_trans_next_ail(
--	struct xfs_mount	*mp,
--	struct xfs_ail_cursor	*cur)
--{
--	struct xfs_ail		*ailp = mp->m_ail;
--
--	return xfs_trans_ail_cursor_next(ailp, cur);
--}
--
--
--/*
-  * The active item list (AIL) is a doubly linked list of log
-  * items sorted by ascending lsn.  The base of the list is
-  * a forw/back pointer pair embedded in the xfs mount structure.
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index c596e34..8b84167 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -87,14 +87,15 @@ void			xfs_trans_update_ail(struct xfs_mount *mp,
- void			xfs_trans_delete_ail(struct xfs_mount *mp,
- 				     struct xfs_log_item *lip)
- 				     __releases(mp->m_ail_lock);
--struct xfs_log_item	*xfs_trans_first_ail(struct xfs_mount *mp,
--					struct xfs_ail_cursor *cur);
--struct xfs_log_item	*xfs_trans_next_ail(struct xfs_mount *mp,
--					struct xfs_ail_cursor *cur);
- 
--void xfs_trans_ail_cursor_init(struct xfs_ail *ailp,
-+xfs_lsn_t		xfs_trans_ail_tail(struct xfs_ail *ailp);
-+
-+struct xfs_log_item	*xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
-+					struct xfs_ail_cursor *cur,
-+					xfs_lsn_t lsn);
-+struct xfs_log_item	*xfs_trans_ail_cursor_next(struct xfs_ail *ailp,
- 					struct xfs_ail_cursor *cur);
--void xfs_trans_ail_cursor_done(struct xfs_ail *ailp,
-+void			xfs_trans_ail_cursor_done(struct xfs_ail *ailp,
- 					struct xfs_ail_cursor *cur);
- 
- long	xfsaild_push(struct xfs_ail *, xfs_lsn_t *);
 -- 
 1.5.6
