@@ -1,128 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:14:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEDZ59018070
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:13:35 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:41 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEuWZl022213
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:33 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78BBC1ADE3D6
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:15:04 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id jto6sdjUsrHRiPA0 for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:15:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 04DFA126C1A4
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:03 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id ldsW8936UECYAOWV for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:03 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeVts-0007yJ-8E
-	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:15:00 +1000
+	id 1KeWZR-0002Nl-Re
+	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:57:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] XFS: rename inode reclaim functions
-Date: Sun, 14 Sep 2008 00:14:57 +1000
-Message-Id: <1221315300-30336-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1221315300-30336-1-git-send-email-david@fromorbit.com>
-References: <1221315300-30336-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/8] XFS: AIL cleanup and bug fixes
+Date: Sun, 14 Sep 2008 00:57:49 +1000
+Message-Id: <1221317877-8333-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-The function names xfs_finish_reclaim and xfs_finish_reclaim_all
-are not very descriptive of what they are reclaiming. Rename to
-xfs_reclaim_inode[s] to match the xfs_sync_inodes() function.
+Clean up the AIL interfaces and the way it is referenced by
+external code by making the struct xfs_ail the primary method
+of accessing the AIL.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |   10 +++++-----
- fs/xfs/linux-2.6/xfs_sync.h |    4 ++--
- fs/xfs/xfs_mount.c          |    2 +-
- fs/xfs/xfs_vnodeops.c       |    2 +-
- 4 files changed, 9 insertions(+), 9 deletions(-)
+The main bug fix in this patch series is the second patch - it fixes
+the restart bug in traversals of the AIL. The method used is
+to track the next item in the list in a stack based cursor so
+we don't need to trust the current log item after we've dropped
+the AIL lock.
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index b01748c..4fcb385 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -364,7 +364,7 @@ xfs_quiesce_fs(
- 	int	count = 0, pincount;
- 
- 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 
- 	/*
- 	 * This loop must run at least twice.  The first instance of the loop
-@@ -505,7 +505,7 @@ xfs_sync_worker(
- 
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
--		xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+		xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		/* dgc: errors ignored here */
- 		error = XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
- 		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
-@@ -584,7 +584,7 @@ xfs_syncd_stop(
- }
- 
- int
--xfs_finish_reclaim(
-+xfs_reclaim_inode(
- 	xfs_inode_t	*ip,
- 	int		locked,
- 	int		sync_mode)
-@@ -686,7 +686,7 @@ xfs_inode_clear_reclaim_tag(
- }
- 
- int
--xfs_finish_reclaim_all(
-+xfs_reclaim_inodes(
- 	xfs_mount_t	*mp,
- 	int		 noblock,
- 	int		mode)
-@@ -706,7 +706,7 @@ restart:
- 			}
- 		}
- 		XFS_MOUNT_IUNLOCK(mp);
--		if (xfs_finish_reclaim(ip, noblock, mode))
-+		if (xfs_reclaim_inode(ip, noblock, mode))
- 			delay(1);
- 		goto restart;
- 	}
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index fcaf004..5f6de1e 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -45,8 +45,8 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
- void xfs_flush_inode(struct xfs_inode *ip);
- void xfs_flush_device(struct xfs_inode *ip);
- 
--int xfs_finish_reclaim(struct xfs_inode *ip, int locked, int sync_mode);
--int xfs_finish_reclaim_all(struct xfs_mount *mp, int noblock, int mode);
-+int xfs_reclaim_inode(struct xfs_inode *ip, int locked, int sync_mode);
-+int xfs_reclaim_inodes(struct xfs_mount *mp, int noblock, int mode);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 8372b3d..25698ee 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1241,7 +1241,7 @@ xfs_unmountfs(
- 	 * need to force the log first.
- 	 */
- 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_ASYNC);
-+	xfs_reclaim_inodes(mp, 0, XFS_IFLUSH_ASYNC);
- 
- 	XFS_QM_DQPURGEALL(mp, XFS_QMOPT_QUOTALL | XFS_QMOPT_UMOUNTING);
- 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index e5393f3..860b6ab 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2801,7 +2801,7 @@ xfs_reclaim(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_iflock(ip);
- 		xfs_iflags_set(ip, XFS_IRECLAIMABLE);
--		return xfs_finish_reclaim(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
-+		return xfs_reclaim_inode(ip, 1, XFS_IFLUSH_DELWRI_ELSE_SYNC);
- 	} else {
- 		xfs_mount_t	*mp = ip->i_mount;
- 
--- 
-1.5.6
+Because this changes the interface to the traversal code, it makes
+sense to clean up the entire AIL subsystem interface while I am
+there. The overall goal here is to make the struct xfs_ail the sole
+structure used to access the AIL - for inserts, deletes, traversals,
+locking, etc so that we don't need to reference the xfs_mount just
+to get to the AIL.
+
+This also enables us to move the struct xfs_ail definition out of
+xfs_mount.h and reduce the visible scope of it to just the files
+that need to access members of the structure.
