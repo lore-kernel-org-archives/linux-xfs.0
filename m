@@ -1,107 +1,157 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 12 Sep 2008 21:18:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8D4I3Rf003737
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2008 21:18:03 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 06:46:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DDjjnF009930
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:45:45 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC5CA1067C84
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2008 21:19:33 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id abgK1TeBYTf9XYZD for <xfs@oss.sgi.com>; Fri, 12 Sep 2008 21:19:33 -0700 (PDT)
-Date: Sat, 13 Sep 2008 14:19:30 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB1521ADDF59
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:47:14 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id s3mHyoXZoYStV5Nb for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:47:14 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1KeVSx-0007Dn-Il
+	for xfs@oss.sgi.com; Sat, 13 Sep 2008 23:47:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Re-dirty pages on I/O error
-Message-ID: <20080913041930.GC5811@disturbed>
-References: <48C8D8CD.7050508@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48C8D8CD.7050508@sgi.com>
+Subject: [PATCH] XFS: remove i_gen from incore inode
+Date: Sat, 13 Sep 2008 23:47:11 +1000
+Message-Id: <1221313631-27727-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Sep 11, 2008 at 06:37:33PM +1000, Lachlan McIlroy wrote:
-> If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
-> we throw away the dirty page without converting the delayed allocation.  This
-> leaves delayed allocations that can never be removed and confuses code that
-> expects a flush of the file to clear them.  We need to re-dirty the page on
-> error so we can try again later or report that the flush failed.
->
-> --- a/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 16:32:11.000000000 +1000
-> +++ b/fs/xfs/linux-2.6/xfs_aops.c	2008-09-11 15:44:09.000000000 +1000
-> @@ -1147,16 +1147,6 @@ error:
-> 	if (iohead)
-> 		xfs_cancel_ioend(iohead);
->
-> -	/*
-> -	 * If it's delalloc and we have nowhere to put it,
-> -	 * throw it away, unless the lower layers told
-> -	 * us to try again.
-> -	 */
-> -	if (err != -EAGAIN) {
-> -		if (!unmapped)
-> -			block_invalidatepage(page, 0);
-> -		ClearPageUptodate(page);
-> -	}
-> 	return err;
-> }
+i_gen is incremented in directory operations when the
+directory is changed. It is never read or otherwise used
+so it should be removed to help reduce the size of the
+struct xfs_inode.
 
-So we keep dirty pages around that we can't write back?
-If we are in a low memory situation and the block device
-has gone bad, that will prevent memory reclaim from making
-progress.
+The patch also removes a duplicate logging of the directory
+inode core. We only need to do this once per transaction
+so kill the one associated with the i_gen increment.
 
-i.e. if we have a bad disk, a user can now take down the system
-by running it out of clean memory....
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_inode.h    |    1 -
+ fs/xfs/xfs_rename.c   |   12 ++----------
+ fs/xfs/xfs_vnodeops.c |   29 ++---------------------------
+ 3 files changed, 4 insertions(+), 38 deletions(-)
 
-The EAGAIN case is for when we can't get the locks we
-need during non-blocking writeback, which is a common case if
-there is concurrent writes to this inode....
-
-> @@ -1216,8 +1206,11 @@ xfs_vm_writepage(
-> 	 * then mark the page dirty again and leave the page
-> 	 * as is.
-> 	 */
-> -	if (current_test_flags(PF_FSTRANS) && need_trans)
-> -		goto out_fail;
-> +	if (current_test_flags(PF_FSTRANS) && need_trans) {
-> +		redirty_page_for_writepage(wbc, page);
-> +		unlock_page(page);
-> +		return -EAGAIN;
-> +	}
-
-Should not return an error here - the redirty_page_for_writepage()
-call effective says "can't do this right away, but no error
-needs to be reported because it can be written again later".
-Happens all the time with non-blocking writes.
-
-> @@ -1231,20 +1224,14 @@ xfs_vm_writepage(
-> 	 * to real space and flush out to disk.
-> 	 */
-> 	error = xfs_page_state_convert(inode, page, wbc, 1, unmapped);
-> -	if (error == -EAGAIN)
-> -		goto out_fail;
-> -	if (unlikely(error < 0))
-> -		goto out_unlock;
->
-> -	return 0;
-> +	if (error < 0) {
-> +		redirty_page_for_writepage(wbc, page);
-> +		unlock_page(page);
-> +		return error;
-> +	}
-
-That needs the EAGAIN exception - that's not an error.
-For EIO, though, we should really be invalidating the
-page like we currently do. However, it should be silent as
-per the current behaviour - a rate-limited log warning is
-really needed here...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 1420c49..9559e0b 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -230,7 +230,6 @@ typedef struct xfs_inode {
+ 	unsigned short		i_flags;	/* see defined flags below */
+ 	unsigned char		i_update_core;	/* timestamps/size is dirty */
+ 	unsigned char		i_update_size;	/* di_size field is dirty */
+-	unsigned int		i_gen;		/* generation count */
+ 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+ 
+ 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
+diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
+index d700dac..02f0e8f 100644
+--- a/fs/xfs/xfs_rename.c
++++ b/fs/xfs/xfs_rename.c
+@@ -367,19 +367,11 @@ xfs_rename(
+ 					&first_block, &free_list, spaceres);
+ 	if (error)
+ 		goto abort_return;
+-	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+-	/*
+-	 * Update the generation counts on all the directory inodes
+-	 * that we're modifying.
+-	 */
+-	src_dp->i_gen++;
++	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+-
+-	if (new_parent) {
+-		target_dp->i_gen++;
++	if (new_parent)
+ 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+-	}
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index aa238c8..bb8b560 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1625,8 +1625,6 @@ xfs_create(
+ 		xfs_trans_set_sync(tp);
+ 	}
+ 
+-	dp->i_gen++;
+-
+ 	/*
+ 	 * Attach the dquot(s) to the inodes and modify them incore.
+ 	 * These ids of the inode couldn't have changed since the new
+@@ -1985,13 +1983,6 @@ xfs_remove(
+ 	}
+ 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+-	/*
+-	 * Bump the in memory generation count on the parent
+-	 * directory so that other can know that it has changed.
+-	 */
+-	dp->i_gen++;
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+-
+ 	if (is_dir) {
+ 		/*
+ 		 * Drop the link from ip's "..".
+@@ -2009,8 +2000,8 @@ xfs_remove(
+ 	} else {
+ 		/*
+ 		 * When removing a non-directory we need to log the parent
+-		 * inode here for the i_gen update.  For a directory this is
+-		 * done implicitly by the xfs_droplink call for the ".." entry.
++		 * inode here.  For a directory this is done implicitly
++		 * by the xfs_droplink call for the ".." entry.
+ 		 */
+ 		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 	}
+@@ -2170,7 +2161,6 @@ xfs_link(
+ 	if (error)
+ 		goto abort_return;
+ 	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	tdp->i_gen++;
+ 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 
+ 	error = xfs_bumplink(tp, sip);
+@@ -2347,18 +2337,10 @@ xfs_mkdir(
+ 	}
+ 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+-	/*
+-	 * Bump the in memory version number of the parent directory
+-	 * so that other processes accessing it will recognize that
+-	 * the directory has changed.
+-	 */
+-	dp->i_gen++;
+-
+ 	error = xfs_dir_init(tp, cdp, dp);
+ 	if (error)
+ 		goto error2;
+ 
+-	cdp->i_gen = 1;
+ 	error = xfs_bumplink(tp, dp);
+ 	if (error)
+ 		goto error2;
+@@ -2645,13 +2627,6 @@ xfs_symlink(
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+ 	/*
+-	 * Bump the in memory version number of the parent directory
+-	 * so that other processes accessing it will recognize that
+-	 * the directory has changed.
+-	 */
+-	dp->i_gen++;
+-
+-	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * symlink transaction goes to disk before returning to
+ 	 * the user.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.5.6
