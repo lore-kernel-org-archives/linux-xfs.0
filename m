@@ -1,27 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:02:23 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:02:25 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DE2JlT015193
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:02:19 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DE2Krq015203
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:02:20 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92712126BF53
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:03:49 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id gGWfqm6BZyo6pTZE for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:03:49 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85BF5126BF56
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:03:50 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id a01tVI9g1jS4WXrZ for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:03:50 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeVj1-0007gA-Ah
+	id 1KeVj1-0007gI-Fc
 	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:03:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] XFS: Prepare for combining the XFS and Linux inodes.
-Date: Sun, 14 Sep 2008 00:03:44 +1000
-Message-Id: <1221314627-29065-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] XFS: Never call mark_inode_dirty_sync() directly
+Date: Sun, 14 Sep 2008 00:03:47 +1000
+Message-Id: <1221314627-29065-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1221314627-29065-1-git-send-email-david@fromorbit.com>
+References: <1221314627-29065-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-These three patches clean up code in preparation for combining
-the Linux and XFS inodes. Each patch stands alone, but I've sent
-them as a series becausee they have all been written to make it
-easier to transition the code to an embedded struct inode in the
-struct xfs_inode.
+Once the Linux inode and the XFS inode are combined, we cannot rely
+on just check if the linux inode exists as a method of determining
+if it is valid or not. Hence we should always call
+xfs_mark_inode_dirty_sync() instead as it does the correct checks to
+determine if the liinux inode is in a valid state or not.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c  |    2 +-
+ fs/xfs/linux-2.6/xfs_iops.c  |    2 +-
+ fs/xfs/linux-2.6/xfs_super.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index f42f80a..d932579 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -191,7 +191,7 @@ xfs_setfilesize(
+ 		ip->i_d.di_size = isize;
+ 		ip->i_update_core = 1;
+ 		ip->i_update_size = 1;
+-		mark_inode_dirty_sync(ioend->io_inode);
++		xfs_mark_inode_dirty_sync(ip);
+ 	}
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 095d271..3bfb3c0 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -128,7 +128,7 @@ xfs_ichgtime(
+ 	if (sync_it) {
+ 		SYNCHRONIZE();
+ 		ip->i_update_core = 1;
+-		mark_inode_dirty_sync(inode);
++		xfs_mark_inode_dirty_sync(ip);
+ 	}
+ }
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index c789950..8db6806 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -949,7 +949,7 @@ xfs_fs_write_inode(
+ 	 * it dirty again so we'll try again later.
+ 	 */
+ 	if (error)
+-		mark_inode_dirty_sync(inode);
++		xfs_mark_inode_dirty_sync(XFS_I(inode));
+ 
+ 	return -error;
+ }
+-- 
+1.5.6
