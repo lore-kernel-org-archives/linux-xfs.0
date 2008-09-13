@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:49 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEuXBs022230
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:34 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:56:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEuZ5U022246
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:56:35 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C31087A75CF
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:03 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id uk8fJflVQjG25hAA for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DC31126C1AD
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:05 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 7md9VGCoOAqH24X2 for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:58:05 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeWZS-0002O2-6a
+	id 1KeWZS-0002Nv-2Z
 	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:57:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/8] XFS: Given the log a pointer to the AIL
-Date: Sun, 14 Sep 2008 00:57:55 +1000
-Message-Id: <1221317877-8333-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/8] XFS: Allow 64 bit machines to avoid the AIL lock during flushes
+Date: Sun, 14 Sep 2008 00:57:53 +1000
+Message-Id: <1221317877-8333-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1221317877-8333-1-git-send-email-david@fromorbit.com>
 References: <1221317877-8333-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,176 +22,112 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-When we need to go from the log to the AIL, we have
-to go via the xfs_mount. Add a xfs_ail pointer to the log
-so we can go directly to the AIL associated with the log.
+When copying lsn's from the log item to the inode or dquot
+flush lsn, we currently grab the AIL lock. We do this because the
+LSN is a 64 bit quantity and it needs to be read atomically.
+The lock is used to guarantee atomicity for 32 bit platforms.
+
+Make the LSN copying a small function, and make the function
+used conditional on BITS_PER_LONG so that 64 bit machines don't
+need to take the AIL lock in these places.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_log.c         |    3 ++-
- fs/xfs/xfs_log_priv.h    |    1 +
- fs/xfs/xfs_log_recover.c |   42 +++++++++++++++++++++++-------------------
- 3 files changed, 26 insertions(+), 20 deletions(-)
+ fs/xfs/quota/xfs_dquot.c |    6 ++----
+ fs/xfs/xfs_inode.c       |   17 +++++++----------
+ fs/xfs/xfs_trans_priv.h  |   23 +++++++++++++++++++++++
+ 3 files changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index d3d7042..1fb22f8 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -544,6 +544,7 @@ xfs_log_mount(
- 		cmn_err(CE_WARN, "XFS: AIL initialisation failed: error %d", error);
- 		goto error;
- 	}
-+	mp->m_log->l_ailp = mp->m_ail;
+diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+index f2705f2..8e30a10 100644
+--- a/fs/xfs/quota/xfs_dquot.c
++++ b/fs/xfs/quota/xfs_dquot.c
+@@ -1274,10 +1274,8 @@ xfs_qm_dqflush(
+ 	dqp->dq_flags &= ~(XFS_DQ_DIRTY);
+ 	mp = dqp->q_mount;
+ 
+-	/* lsn is 64 bits */
+-	spin_lock(&mp->m_ail_lock);
+-	dqp->q_logitem.qli_flush_lsn = dqp->q_logitem.qli_item.li_lsn;
+-	spin_unlock(&mp->m_ail_lock);
++	xfs_trans_ail_copy_lsn(mp->m_ail, &dqp->q_logitem.qli_flush_lsn,
++					&dqp->q_logitem.qli_item.li_lsn);
  
  	/*
- 	 * skip log recovery on a norecovery mount.  pretend it all
-@@ -880,7 +881,7 @@ xfs_log_need_covered(xfs_mount_t *mp)
- 	spin_lock(&log->l_icloglock);
- 	if (((log->l_covered_state == XLOG_STATE_COVER_NEED) ||
- 		(log->l_covered_state == XLOG_STATE_COVER_NEED2))
--			&& !xfs_trans_ail_tail(mp->m_ail)
-+			&& !xfs_trans_ail_tail(log->l_ailp)
- 			&& xlog_iclogs_empty(log)) {
- 		if (log->l_covered_state == XLOG_STATE_COVER_NEED)
- 			log->l_covered_state = XLOG_STATE_COVER_DONE;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index c8a5b22..641c8f3 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -404,6 +404,7 @@ typedef struct xlog_in_core {
- typedef struct log {
- 	/* The following fields don't need locking */
- 	struct xfs_mount	*l_mp;	        /* mount point */
-+	struct xfs_ail		*l_ailp;	/* AIL log is working with */
- 	struct xfs_buf		*l_xbuf;        /* extra buffer for log
- 						 * wrapping */
- 	struct xfs_buftarg	*l_targ;        /* buftarg of log */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index a2d6d78..b9c1331 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -54,7 +54,7 @@ STATIC void	xlog_recover_insert_item_backq(xlog_recover_item_t **q,
- 					       xlog_recover_item_t *item);
- #if defined(DEBUG)
- STATIC void	xlog_recover_check_summary(xlog_t *);
--STATIC void	xlog_recover_check_ail(xfs_mount_t *, xfs_log_item_t *, 
-+STATIC void	xlog_recover_check_ail(struct xfs_ail *, xfs_log_item_t *,
- 					struct xfs_ail_cursor *);
- #else
- #define	xlog_recover_check_summary(log)
-@@ -2684,7 +2684,7 @@ xlog_recover_do_efi_trans(
- 	efip->efi_next_extent = efi_formatp->efi_nextents;
- 	efip->efi_flags |= XFS_EFI_COMMITTED;
- 
--	spin_lock(&mp->m_ail->xa_lock);
-+	spin_lock(&log->l_ailp->xa_lock);
- 	/*
- 	 * xfs_trans_update_ail() drops the AIL lock.
- 	 */
-@@ -2713,6 +2713,7 @@ xlog_recover_do_efd_trans(
- 	xfs_log_item_t		*lip;
- 	__uint64_t		efi_id;
- 	struct xfs_ail_cursor	cur;
-+	struct xfs_ail		*ailp;
- 
- 	if (pass == XLOG_RECOVER_PASS1) {
- 		return;
-@@ -2730,8 +2731,9 @@ xlog_recover_do_efd_trans(
- 	 * in the AIL.
- 	 */
- 	mp = log->l_mp;
--	spin_lock(&mp->m_ail->xa_lock);
--	lip = xfs_trans_ail_cursor_first(mp->m_ail, &cur, 0);
-+	ailp = log->l_ailp;
-+	spin_lock(&ailp->xa_lock);
-+	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- 	while (lip != NULL) {
- 		if (lip->li_type == XFS_LI_EFI) {
- 			efip = (xfs_efi_log_item_t *)lip;
-@@ -2742,14 +2744,14 @@ xlog_recover_do_efd_trans(
- 				 */
- 				xfs_trans_delete_ail(mp, lip);
- 				xfs_efi_item_free(efip);
--				spin_lock(&mp->m_ail->xa_lock);
-+				spin_lock(&ailp->xa_lock);
- 				break;
+ 	 * Attach an iodone routine so that we can remove this dquot from the
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 401b92c..448f507 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2213,9 +2213,9 @@ xfs_ifree_cluster(
+ 				iip = (xfs_inode_log_item_t *)lip;
+ 				ASSERT(iip->ili_logged == 1);
+ 				lip->li_cb = (void(*)(xfs_buf_t*,xfs_log_item_t*)) xfs_istale_done;
+-				spin_lock(&mp->m_ail_lock);
+-				iip->ili_flush_lsn = iip->ili_item.li_lsn;
+-				spin_unlock(&mp->m_ail_lock);
++				xfs_trans_ail_copy_lsn(mp->m_ail,
++							&iip->ili_flush_lsn,
++							&iip->ili_item.li_lsn);
+ 				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
+ 				pre_flushed++;
  			}
- 		}
--		lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
-+		lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 	}
--	xfs_trans_ail_cursor_done(mp->m_ail, &cur);
--	spin_unlock(&mp->m_ail->xa_lock);
-+	xfs_trans_ail_cursor_done(ailp, &cur);
-+	spin_unlock(&ailp->xa_lock);
- }
+@@ -2236,9 +2236,8 @@ xfs_ifree_cluster(
+ 			iip->ili_last_fields = iip->ili_format.ilf_fields;
+ 			iip->ili_format.ilf_fields = 0;
+ 			iip->ili_logged = 1;
+-			spin_lock(&mp->m_ail_lock);
+-			iip->ili_flush_lsn = iip->ili_item.li_lsn;
+-			spin_unlock(&mp->m_ail_lock);
++			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
++						&iip->ili_item.li_lsn);
  
- /*
-@@ -3039,13 +3041,13 @@ abort_error:
- #if defined(DEBUG)
- STATIC void
- xlog_recover_check_ail(
--	xfs_mount_t		*mp,
-+	struct xfs_ail		*ailp,
- 	xfs_log_item_t		*lip,
- 	struct xfs_ail_cursor	*cur)
- {
- 	do {
- 		ASSERT(lip->li_type != XFS_LI_EFI);
--		lip = xfs_trans_ail_cursor_next(mp->m_ail, cur);
-+		lip = xfs_trans_ail_cursor_next(ailp, cur);
- 	} while (lip != NULL);
- }
- #endif	/* DEBUG */
-@@ -3077,17 +3079,19 @@ xlog_recover_process_efis(
- 	xfs_mount_t		*mp;
- 	int			error = 0;
- 	struct xfs_ail_cursor	cur;
-+	struct xfs_ail		*ailp;
+ 			xfs_buf_attach_iodone(bp,
+ 				(void(*)(xfs_buf_t*,xfs_log_item_t*))
+@@ -3479,10 +3478,8 @@ xfs_iflush_int(
+ 		iip->ili_format.ilf_fields = 0;
+ 		iip->ili_logged = 1;
  
- 	mp = log->l_mp;
--	spin_lock(&mp->m_ail->xa_lock);
-+	ailp = log->l_ailp;
-+	spin_lock(&ailp->xa_lock);
+-		ASSERT(sizeof(xfs_lsn_t) == 8);	/* don't lock if it shrinks */
+-		spin_lock(&mp->m_ail_lock);
+-		iip->ili_flush_lsn = iip->ili_item.li_lsn;
+-		spin_unlock(&mp->m_ail_lock);
++		xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
++					&iip->ili_item.li_lsn);
  
--	lip = xfs_trans_ail_cursor_first(mp->m_ail, &cur, 0);
-+	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- 	while (lip != NULL) {
  		/*
- 		 * We're done when we see something other than an EFI.
- 		 */
- 		if (lip->li_type != XFS_LI_EFI) {
--			xlog_recover_check_ail(mp, lip, &cur);
-+			xlog_recover_check_ail(ailp, lip, &cur);
- 			break;
- 		}
+ 		 * Attach the function xfs_iflush_done to the inode's
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 8b84167..c6ea7fe 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -103,4 +103,27 @@ void	xfsaild_wakeup(struct xfs_ail *, xfs_lsn_t);
+ int	xfsaild_start(struct xfs_ail *);
+ void	xfsaild_stop(struct xfs_ail *);
  
-@@ -3096,20 +3100,20 @@ xlog_recover_process_efis(
- 		 */
- 		efip = (xfs_efi_log_item_t *)lip;
- 		if (efip->efi_flags & XFS_EFI_RECOVERED) {
--			lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
-+			lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 			continue;
- 		}
- 
--		spin_unlock(&mp->m_ail->xa_lock);
-+		spin_unlock(&ailp->xa_lock);
- 		error = xlog_recover_process_efi(mp, efip);
--		spin_lock(&mp->m_ail->xa_lock);
-+		spin_lock(&ailp->xa_lock);
- 		if (error)
- 			goto out;
--		lip = xfs_trans_ail_cursor_next(mp->m_ail, &cur);
-+		lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 	}
- out:
--	xfs_trans_ail_cursor_done(mp->m_ail, &cur);
--	spin_unlock(&mp->m_ail->xa_lock);
-+	xfs_trans_ail_cursor_done(ailp, &cur);
-+	spin_unlock(&ailp->xa_lock);
- 	return error;
- }
- 
++#if BITS_PER_LONG != 64
++static inline void
++xfs_trans_ail_copy_lsn(
++	struct xfs_ail	*ailp,
++	xfs_lsn_t	*dst,
++	xfs_lsn_t	*src)
++{
++	ASSERT(sizeof(xfs_lsn_t) == 8);	/* don't lock if it shrinks */
++	spin_lock(&ailp->xa_mount->m_ail_lock);
++	*dst = *src;
++	spin_unlock(&ailp->xa_mount->m_ail_lock);
++}
++#else
++static inline void
++xfs_trans_ail_copy_lsn(
++	struct xfs_ail	*ailp,
++	xfs_lsn_t	*dst,
++	xfs_lsn_t	*src)
++{
++	ASSERT(sizeof(xfs_lsn_t) == 8);
++	*dst = *src;
++}
++#endif
+ #endif	/* __XFS_TRANS_PRIV_H__ */
 -- 
 1.5.6
