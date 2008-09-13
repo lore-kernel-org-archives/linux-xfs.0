@@ -1,157 +1,218 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 06:46:16 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 06:52:44 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DDjjnF009930
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:45:45 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DDqZQe010524
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:52:35 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB1521ADDF59
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:47:14 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id s3mHyoXZoYStV5Nb for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:47:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C9A5D1ADDD49
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:54:04 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id rphxF6jnFGmzxxEn for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:54:04 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeVSx-0007Dn-Il
-	for xfs@oss.sgi.com; Sat, 13 Sep 2008 23:47:11 +1000
+	id 1KeVZZ-0007OC-1S
+	for xfs@oss.sgi.com; Sat, 13 Sep 2008 23:54:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] XFS: remove i_gen from incore inode
-Date: Sat, 13 Sep 2008 23:47:11 +1000
-Message-Id: <1221313631-27727-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] XFS: Remove xfs_iflush_all and clean up xfs_finish_reclaim_all() V3
+Date: Sat, 13 Sep 2008 23:53:57 +1000
+Message-Id: <1221314040-27990-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1221314040-27990-1-git-send-email-david@fromorbit.com>
+References: <1221314040-27990-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-i_gen is incremented in directory operations when the
-directory is changed. It is never read or otherwise used
-so it should be removed to help reduce the size of the
-struct xfs_inode.
+xfs_iflush_all() walks the m_inodes list to find inodes that
+need reclaiming. We already have such a list - the m_del_inodes
+list. Replace xfs_iflush_all() with a call to xfs_finish_reclaim_all()
+and clean up xfs_finish_reclaim_all() to handle the different flush
+modes now needed.
 
-The patch also removes a duplicate logging of the directory
-inode core. We only need to do this once per transaction
-so kill the one associated with the i_gen increment.
+Originally based on a patch from Christoph Hellwig.
+
+Version 3
+o rediff against new linux-2.6/xfs_sync.c code
+
+Version 2
+o revert xfs_syncsub() inode reclaim behaviour back to original
+  code
+o xfs_quiesce_fs() should use XFS_IFLUSH_DELWRI_ELSE_ASYNC, not
+  XFS_IFLUSH_ASYNC, to prevent change of behaviour.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_inode.h    |    1 -
- fs/xfs/xfs_rename.c   |   12 ++----------
- fs/xfs/xfs_vnodeops.c |   29 ++---------------------------
- 3 files changed, 4 insertions(+), 38 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |    2 +-
+ fs/xfs/xfs_inode.c          |   35 -----------------------------------
+ fs/xfs/xfs_inode.h          |    3 +--
+ fs/xfs/xfs_mount.c          |    2 +-
+ fs/xfs/xfs_vfsops.c         |    2 +-
+ fs/xfs/xfs_vnodeops.c       |   42 ++++++++++++++++++------------------------
+ 6 files changed, 22 insertions(+), 64 deletions(-)
 
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index a51534c..cd82ba5 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -504,7 +504,7 @@ xfs_syncsub(
+ 
+ 	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
+ 		if (flags & SYNC_BDFLUSH)
+-			xfs_finish_reclaim_all(mp, 1);
++			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 		else
+ 			error = xfs_sync_inodes(mp, flags, bypassed);
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 00e80df..98361bb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3459,41 +3459,6 @@ corrupt_out:
+ }
+ 
+ 
+-/*
+- * Flush all inactive inodes in mp.
+- */
+-void
+-xfs_iflush_all(
+-	xfs_mount_t	*mp)
+-{
+-	xfs_inode_t	*ip;
+-
+- again:
+-	XFS_MOUNT_ILOCK(mp);
+-	ip = mp->m_inodes;
+-	if (ip == NULL)
+-		goto out;
+-
+-	do {
+-		/* Make sure we skip markers inserted by sync */
+-		if (ip->i_mount == NULL) {
+-			ip = ip->i_mnext;
+-			continue;
+-		}
+-
+-		if (!VFS_I(ip)) {
+-			XFS_MOUNT_IUNLOCK(mp);
+-			xfs_finish_reclaim(ip, 0, XFS_IFLUSH_ASYNC);
+-			goto again;
+-		}
+-
+-		ASSERT(vn_count(VFS_I(ip)) == 0);
+-
+-		ip = ip->i_mnext;
+-	} while (ip != mp->m_inodes);
+- out:
+-	XFS_MOUNT_IUNLOCK(mp);
+-}
+ 
+ #ifdef XFS_ILOCK_TRACE
+ ktrace_t	*xfs_ilock_trace_buf;
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1420c49..9559e0b 100644
+index 9559e0b..ff68540 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -230,7 +230,6 @@ typedef struct xfs_inode {
- 	unsigned short		i_flags;	/* see defined flags below */
- 	unsigned char		i_update_core;	/* timestamps/size is dirty */
- 	unsigned char		i_update_size;	/* di_size field is dirty */
--	unsigned int		i_gen;		/* generation count */
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+@@ -484,7 +484,7 @@ uint		xfs_ilock_map_shared(xfs_inode_t *);
+ void		xfs_iunlock_map_shared(xfs_inode_t *, uint);
+ void		xfs_ireclaim(xfs_inode_t *);
+ int		xfs_finish_reclaim(xfs_inode_t *, int, int);
+-int		xfs_finish_reclaim_all(struct xfs_mount *, int);
++int		xfs_finish_reclaim_all(struct xfs_mount *, int, int);
  
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
-diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-index d700dac..02f0e8f 100644
---- a/fs/xfs/xfs_rename.c
-+++ b/fs/xfs/xfs_rename.c
-@@ -367,19 +367,11 @@ xfs_rename(
- 					&first_block, &free_list, spaceres);
- 	if (error)
- 		goto abort_return;
--	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ /*
+  * xfs_inode.c prototypes.
+@@ -522,7 +522,6 @@ void		xfs_ipin(xfs_inode_t *);
+ void		xfs_iunpin(xfs_inode_t *);
+ int		xfs_iextents_copy(xfs_inode_t *, xfs_bmbt_rec_t *, int);
+ int		xfs_iflush(xfs_inode_t *, uint);
+-void		xfs_iflush_all(struct xfs_mount *);
+ void		xfs_ichgtime(xfs_inode_t *, int);
+ xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index a4503f5..e222ab9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1241,7 +1241,7 @@ xfs_unmountfs(
+ 	 * need to force the log first.
+ 	 */
+ 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
+-	xfs_iflush_all(mp);
++	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_ASYNC);
  
--	/*
--	 * Update the generation counts on all the directory inodes
--	 * that we're modifying.
--	 */
--	src_dp->i_gen++;
-+	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
--
--	if (new_parent) {
--		target_dp->i_gen++;
-+	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
--	}
+ 	XFS_QM_DQPURGEALL(mp, XFS_QMOPT_QUOTALL | XFS_QMOPT_UMOUNTING);
  
- 	/*
- 	 * If this is a synchronous mount, make sure that the
+diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
+index 01e274b..0c5ee5e 100644
+--- a/fs/xfs/xfs_vfsops.c
++++ b/fs/xfs/xfs_vfsops.c
+@@ -66,7 +66,7 @@ xfs_quiesce_fs(
+ 	int			count = 0, pincount;
+ 
+ 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+-	xfs_finish_reclaim_all(mp, 0);
++	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 
+ 	/* This loop must run at least twice.
+ 	 * The first instance of the loop will flush
 diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index aa238c8..bb8b560 100644
+index bb8b560..6bce4ad 100644
 --- a/fs/xfs/xfs_vnodeops.c
 +++ b/fs/xfs/xfs_vnodeops.c
-@@ -1625,8 +1625,6 @@ xfs_create(
- 		xfs_trans_set_sync(tp);
- 	}
+@@ -2885,36 +2885,30 @@ xfs_finish_reclaim(
+ }
  
--	dp->i_gen++;
+ int
+-xfs_finish_reclaim_all(xfs_mount_t *mp, int noblock)
++xfs_finish_reclaim_all(
++	xfs_mount_t	*mp,
++	int		 noblock,
++	int		mode)
+ {
+-	int		purged;
+ 	xfs_inode_t	*ip, *n;
+-	int		done = 0;
+ 
+-	while (!done) {
+-		purged = 0;
+-		XFS_MOUNT_ILOCK(mp);
+-		list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
+-			if (noblock) {
+-				if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
+-					continue;
+-				if (xfs_ipincount(ip) ||
+-				    !xfs_iflock_nowait(ip)) {
+-					xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-					continue;
+-				}
++restart:
++	XFS_MOUNT_ILOCK(mp);
++	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
++		if (noblock) {
++			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
++				continue;
++			if (xfs_ipincount(ip) ||
++			    !xfs_iflock_nowait(ip)) {
++				xfs_iunlock(ip, XFS_ILOCK_EXCL);
++				continue;
+ 			}
+-			XFS_MOUNT_IUNLOCK(mp);
+-			if (xfs_finish_reclaim(ip, noblock,
+-					XFS_IFLUSH_DELWRI_ELSE_ASYNC))
+-				delay(1);
+-			purged = 1;
+-			break;
+ 		}
 -
- 	/*
- 	 * Attach the dquot(s) to the inodes and modify them incore.
- 	 * These ids of the inode couldn't have changed since the new
-@@ -1985,13 +1983,6 @@ xfs_remove(
+-		done = !purged;
++		XFS_MOUNT_IUNLOCK(mp);
++		if (xfs_finish_reclaim(ip, noblock, mode))
++			delay(1);
++		goto restart;
  	}
- 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
--	/*
--	 * Bump the in memory generation count on the parent
--	 * directory so that other can know that it has changed.
--	 */
--	dp->i_gen++;
--	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 -
- 	if (is_dir) {
- 		/*
- 		 * Drop the link from ip's "..".
-@@ -2009,8 +2000,8 @@ xfs_remove(
- 	} else {
- 		/*
- 		 * When removing a non-directory we need to log the parent
--		 * inode here for the i_gen update.  For a directory this is
--		 * done implicitly by the xfs_droplink call for the ".." entry.
-+		 * inode here.  For a directory this is done implicitly
-+		 * by the xfs_droplink call for the ".." entry.
- 		 */
- 		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 	}
-@@ -2170,7 +2161,6 @@ xfs_link(
- 	if (error)
- 		goto abort_return;
- 	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	tdp->i_gen++;
- 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
- 
- 	error = xfs_bumplink(tp, sip);
-@@ -2347,18 +2337,10 @@ xfs_mkdir(
- 	}
- 	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
--	/*
--	 * Bump the in memory version number of the parent directory
--	 * so that other processes accessing it will recognize that
--	 * the directory has changed.
--	 */
--	dp->i_gen++;
--
- 	error = xfs_dir_init(tp, cdp, dp);
- 	if (error)
- 		goto error2;
- 
--	cdp->i_gen = 1;
- 	error = xfs_bumplink(tp, dp);
- 	if (error)
- 		goto error2;
-@@ -2645,13 +2627,6 @@ xfs_symlink(
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	/*
--	 * Bump the in memory version number of the parent directory
--	 * so that other processes accessing it will recognize that
--	 * the directory has changed.
--	 */
--	dp->i_gen++;
--
--	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * symlink transaction goes to disk before returning to
- 	 * the user.
+ 	XFS_MOUNT_IUNLOCK(mp);
+ 	return 0;
+ }
 -- 
 1.5.6
