@@ -1,53 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 09:57:29 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DGvRgX004007
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:57:27 -0700
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25B95126C5F2
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:58:57 -0700 (PDT)
-Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by cuda.sgi.com with ESMTP id tO0ZkqDcT6f88RtE for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 09:58:57 -0700 (PDT)
-Date: Sat, 13 Sep 2008 12:58:56 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH 05/10] XFS: xfssyncd: don't call xfs_sync
-Message-ID: <20080913165856.GB17721@josefsipek.net>
-References: <1221314230-28618-1-git-send-email-david@fromorbit.com> <1221314230-28618-6-git-send-email-david@fromorbit.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 13:33:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DKX3RV021810
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:33:03 -0700
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 596301BD0EDE
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:34:33 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id lM1CkWKUy2d7WO3W for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:34:33 -0700 (PDT)
+Date: Sun, 14 Sep 2008 06:34:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/10] XFS: split out two helpers from xfs_syncsub
+Message-ID: <20080913203428.GJ5811@disturbed>
+References: <1221314230-28618-1-git-send-email-david@fromorbit.com> <1221314230-28618-2-git-send-email-david@fromorbit.com> <20080913165341.GA17721@josefsipek.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1221314230-28618-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <20080913165341.GA17721@josefsipek.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
 Cc: xfs@oss.sgi.com
 
-On Sat, Sep 13, 2008 at 11:57:05PM +1000, Dave Chinner wrote:
-...
-> @@ -533,8 +538,15 @@ xfs_sync_worker(
->  {
->  	int		error;
->  
-> -	if (!(mp->m_flags & XFS_MOUNT_RDONLY))
-> -		error = xfs_sync(mp, SYNC_FSDATA | SYNC_BDFLUSH | SYNC_ATTR);
-> +	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-> +		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-> +		xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-> +		/* dgc: errors ignored here */
+On Sat, Sep 13, 2008 at 12:53:41PM -0400, Josef 'Jeff' Sipek wrote:
+> On Sat, Sep 13, 2008 at 11:57:01PM +1000, Dave Chinner wrote:
+> ...
+> > diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+> > index 53d85ec..59da332 100644
+> > --- a/fs/xfs/linux-2.6/xfs_sync.c
+> > +++ b/fs/xfs/linux-2.6/xfs_sync.c
+> > @@ -315,6 +315,93 @@ xfs_sync_inodes(
+> >  	return XFS_ERROR(last_error);
+> >  }
+> >  
+> > +STATIC int
+> > +xfs_commit_dummy_trans(
+> > +	struct xfs_mount	*mp,
+> > +	uint			log_flags)
+> > +{
+> > +	struct xfs_inode	*ip = mp->m_rootip;
+> > +	struct xfs_trans	*tp;
+> > +	int			error;
+> > +
+> > +	/*
+> > +	 * Put a dummy transaction in the log to tell recovery
+> > +	 * that all others are OK.
+> > +	 */
+> > +	tp = xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+> > +	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+> > +	if (error) {
+> > +		xfs_trans_cancel(tp, 0);
+> > +		return error;
+> > +	}
+> > +
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +
+> > +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> > +	xfs_trans_ihold(tp, ip);
+> > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > +	/* XXX(hch): ignoring the error here.. */
+> 
+> Why? Was this supposed to be ignored in the final version of these patches?
 
-Again, why?
+The only possible error here is the result of a shutdown,
+at which point we really don't care if this transaction
+makes it to disk or not. There's nobody we can return the
+error to, anyway.
 
-> +		error = XFS_QM_DQSYNC(mp, SYNC_BDFLUSH);
-> +		error = xfs_sync_fsdata(mp, SYNC_BDFLUSH);
-> +		if (xfs_log_need_covered(mp))
-> +			error = xfs_commit_dummy_trans(mp, XFS_LOG_FORCE);
-> +	}
->  	mp->m_sync_seq++;
->  	wake_up(&mp->m_wait_single_sync_task);
->  }
+Cheers,
 
-Josef 'Jeff' Sipek.
-
+Dave.
 -- 
-I'm somewhere between geek and normal.
-		- Linus Torvalds
+Dave Chinner
+david@fromorbit.com
