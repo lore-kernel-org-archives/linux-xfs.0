@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:14:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEDZgt018093
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 07:14:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DEDZkE018071
 	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:13:35 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 527251ADE3DA
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1C8E126C074
 	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:15:05 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id ZAHMysObN8iqIsRt for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:15:05 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 1SDqAJKb3jfaZDdE for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 07:15:05 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeVts-0007yG-6f
+	id 1KeVts-0007yM-9o
 	for xfs@oss.sgi.com; Sun, 14 Sep 2008 00:15:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/6] XFS: mark inodes for reclaim via a tag in the inode radix tree
-Date: Sun, 14 Sep 2008 00:14:56 +1000
-Message-Id: <1221315300-30336-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/6] XFS: use the inode radix tree for reclaiming inodes
+Date: Sun, 14 Sep 2008 00:14:58 +1000
+Message-Id: <1221315300-30336-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1221315300-30336-1-git-send-email-david@fromorbit.com>
 References: <1221315300-30336-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,125 +22,122 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Prepare for removing the deleted inode list by marking inodes
-for reclaim in the inode radix trees so that we can use the
-radix trees to find reclaimable inodes.
+Use the reclaim tag to walk the radix tree and find
+the inodes under reclaim. This was the only user of the
+deleted inode list.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   41 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_sync.h |    4 ++++
- fs/xfs/xfs_ag.h             |    5 +++++
- fs/xfs/xfs_iget.c           |    3 +++
- fs/xfs/xfs_vnodeops.c       |    1 +
- 5 files changed, 54 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   81 +++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 71 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index e6363c0..b01748c 100644
+index 4fcb385..6e631f5 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -644,6 +644,47 @@ xfs_finish_reclaim(
- 	return 0;
+@@ -685,32 +685,93 @@ xfs_inode_clear_reclaim_tag(
+ 	xfs_put_perag(mp, pag);
  }
  
-+void
-+xfs_inode_set_reclaim_tag(
-+	xfs_inode_t	*ip)
-+{
-+	xfs_mount_t	*mp = ip->i_mount;
-+	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
+-int
+-xfs_reclaim_inodes(
 +
-+	read_lock(&pag->pag_ici_lock);
-+	spin_lock(&ip->i_flags_lock);
-+	radix_tree_tag_set(&pag->pag_ici_root,
-+			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
-+	spin_unlock(&ip->i_flags_lock);
-+	read_unlock(&pag->pag_ici_lock);
-+	xfs_put_perag(mp, pag);
-+}
-+
-+void
-+__xfs_inode_clear_reclaim_tag(
-+	xfs_mount_t	*mp,
-+	xfs_perag_t	*pag,
-+	xfs_inode_t	*ip)
-+{
-+	radix_tree_tag_clear(&pag->pag_ici_root,
-+			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
-+}
-+
-+void
-+xfs_inode_clear_reclaim_tag(
-+	xfs_inode_t	*ip)
-+{
-+	xfs_mount_t	*mp = ip->i_mount;
-+	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
-+
-+	read_lock(&pag->pag_ici_lock);
-+	spin_lock(&ip->i_flags_lock);
-+	__xfs_inode_clear_reclaim_tag(mp, pag, ip);
-+	spin_unlock(&ip->i_flags_lock);
-+	read_unlock(&pag->pag_ici_lock);
-+	xfs_put_perag(mp, pag);
-+}
-+
- int
- xfs_finish_reclaim_all(
++STATIC void
++xfs_reclaim_inodes_ag(
  	xfs_mount_t	*mp,
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 23117a1..fcaf004 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -48,4 +48,8 @@ void xfs_flush_device(struct xfs_inode *ip);
- int xfs_finish_reclaim(struct xfs_inode *ip, int locked, int sync_mode);
- int xfs_finish_reclaim_all(struct xfs_mount *mp, int noblock, int mode);
+-	int		 noblock,
++	int		ag,
++	int		noblock,
+ 	int		mode)
+ {
+-	xfs_inode_t	*ip, *n;
++	xfs_inode_t	*ip = NULL;
++	xfs_perag_t	*pag = &mp->m_perag[ag];
++	int		nr_found;
++	int		first_index;
++	int		skipped;
  
-+void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
-+void xfs_inode_clear_reclaim_tag(struct xfs_inode *ip);
-+void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
-+				struct xfs_inode *ip);
- #endif
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 61b292a..426e438 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -203,6 +203,11 @@ typedef struct xfs_perag
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- } xfs_perag_t;
- 
-+/*
-+ * tags for inode radix tree
-+ */
-+#define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
+ restart:
+-	XFS_MOUNT_ILOCK(mp);
+-	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
++	first_index = 0;
++	skipped = 0;
++	do {
++		/*
++		 * use a gang lookup to find the next inode in the tree
++		 * as the tree is sparse and a gang lookup walks to find
++		 * the number of objects requested.
++		 */
++		read_lock(&pag->pag_ici_lock);
++		nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
++					(void**)&ip, first_index, 1,
++					XFS_ICI_RECLAIM_TAG);
 +
- #define	XFS_AG_MAXLEVELS(mp)		((mp)->m_ag_maxlevels)
- #define	XFS_MIN_FREELIST_RAW(bl,cl,mp)	\
- 	(MIN(bl + 1, XFS_AG_MAXLEVELS(mp)) + MIN(cl + 1, XFS_AG_MAXLEVELS(mp)))
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 533a375..24a74d6 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -91,6 +91,9 @@ xfs_iget_cache_hit(
++		if (!nr_found) {
++			read_unlock(&pag->pag_ici_lock);
++			break;
++		}
++
++		/* update the index for the next lookup */
++		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++
++		ASSERT(xfs_iflags_test(ip, (XFS_IRECLAIMABLE|XFS_IRECLAIM)));
++
++		/* ignore if already under reclaim */
++		if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
++			read_unlock(&pag->pag_ici_lock);
++			continue;
++		}
++
+ 		if (noblock) {
+-			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
++			if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
++				read_unlock(&pag->pag_ici_lock);
+ 				continue;
++			}
+ 			if (xfs_ipincount(ip) ||
+ 			    !xfs_iflock_nowait(ip)) {
+ 				xfs_iunlock(ip, XFS_ILOCK_EXCL);
++				read_unlock(&pag->pag_ici_lock);
+ 				continue;
+ 			}
  		}
- 		xfs_iflags_set(ip, XFS_INEW);
- 		xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
+-		XFS_MOUNT_IUNLOCK(mp);
++		read_unlock(&pag->pag_ici_lock);
 +
-+		/* clear the radix tree reclaim flag as well. */
-+		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
- 		read_unlock(&pag->pag_ici_lock);
- 
- 		XFS_MOUNT_ILOCK(mp);
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 02ee432..e5393f3 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2812,6 +2812,7 @@ xfs_reclaim(
- 		spin_unlock(&ip->i_flags_lock);
- 		list_add_tail(&ip->i_reclaim, &mp->m_del_inodes);
- 		XFS_MOUNT_IUNLOCK(mp);
-+		xfs_inode_set_reclaim_tag(ip);
++		/*
++		 * hmmm - this is an inode already in reclaim. Do
++		 * we even bother catching it here?
++		 */
+ 		if (xfs_reclaim_inode(ip, noblock, mode))
+-			delay(1);
++			skipped++;
++	} while (nr_found);
++
++	if (skipped) {
++		delay(1);
+ 		goto restart;
  	}
+-	XFS_MOUNT_IUNLOCK(mp);
++	return;
++
++}
++
++int
++xfs_reclaim_inodes(
++	xfs_mount_t	*mp,
++	int		 noblock,
++	int		mode)
++{
++	int		i;
++
++	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++		if (!mp->m_perag[i].pag_ici_init)
++			continue;
++		xfs_reclaim_inodes_ag(mp, i, noblock, mode);
++	}
  	return 0;
  }
+ 
 -- 
 1.5.6
