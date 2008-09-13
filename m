@@ -1,41 +1,162 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 06:52:47 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DDqanP010527
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 06:52:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DDqaG2010541
 	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:52:36 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EDAD81ADDD49
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3274D106888E
 	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:54:06 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id HDiES7KzeAW0Aenx for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:54:06 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id zA5uQY3g7m97S3a0 for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 06:54:06 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KeVZY-0007O5-SZ
-	for xfs@oss.sgi.com; Sat, 13 Sep 2008 23:54:00 +1000
+	id 1KeVZZ-0007OL-6r
+	for xfs@oss.sgi.com; Sat, 13 Sep 2008 23:54:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] XFS: replace the mount inode list with radix tree traversals V4
-Date: Sat, 13 Sep 2008 23:53:54 +1000
-Message-Id: <1221314040-27990-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] XFS: remove the mount inode list
+Date: Sat, 13 Sep 2008 23:54:00 +1000
+Message-Id: <1221314040-27990-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1221314040-27990-1-git-send-email-david@fromorbit.com>
+References: <1221314040-27990-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-The list of all inodes on a mount is superfluous. We can traverse
-all inodes now by walking the per-AG inode radix trees without
-needing a separate list. This enables us to remove a bunch of
-complex list traversal code and remove another two pointers from
-the xfs_inode.
+Now we've removed all users of the mount inode list,
+we can kill it. This reduces the size of the xfs_inode
+by 2 pointers.
 
-Also, by replacing the sync traversal with an ascending inode
-number traversal, we will issue better inode I/O patterns for
-writeback triggered by xfssyncd or unmount.
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_iget.c  |   42 +-----------------------------------------
+ fs/xfs/xfs_inode.h |    8 --------
+ fs/xfs/xfs_mount.c |    5 -----
+ fs/xfs/xfs_mount.h |    1 -
+ 4 files changed, 1 insertions(+), 55 deletions(-)
 
-Before we make this change, move all the relevant sync code
-into it's own file in the linux-2.6/ directory. This aggregates
-VFS specific sync interfacing in the one file and will allow
-all the subsequent change history to be associated with this
-file so it is easy to find in future.
-
-Version 4:
-o revert xfs_syncsub -> xfs_sync change in xfs_quiesce_fs and
-  rediff patch series
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index e229e9e..60554ce 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -76,7 +76,6 @@ xfs_iget_core(
+ {
+ 	struct inode	*old_inode;
+ 	xfs_inode_t	*ip;
+-	xfs_inode_t	*iq;
+ 	int		error;
+ 	unsigned long	first_index, mask;
+ 	xfs_perag_t	*pag;
+@@ -267,24 +266,6 @@ finish_inode:
+ 
+ 	write_unlock(&pag->pag_ici_lock);
+ 	radix_tree_preload_end();
+-
+-	/*
+-	 * Link ip to its mount and thread it on the mount's inode list.
+-	 */
+-	XFS_MOUNT_ILOCK(mp);
+-	if ((iq = mp->m_inodes)) {
+-		ASSERT(iq->i_mprev->i_mnext == iq);
+-		ip->i_mprev = iq->i_mprev;
+-		iq->i_mprev->i_mnext = ip;
+-		iq->i_mprev = ip;
+-		ip->i_mnext = iq;
+-	} else {
+-		ip->i_mnext = ip;
+-		ip->i_mprev = ip;
+-	}
+-	mp->m_inodes = ip;
+-
+-	XFS_MOUNT_IUNLOCK(mp);
+ 	xfs_put_perag(mp, pag);
+ 
+  return_ip:
+@@ -505,36 +486,15 @@ xfs_iextract(
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_perag_t	*pag = xfs_get_perag(mp, ip->i_ino);
+-	xfs_inode_t	*iq;
+ 
+ 	write_lock(&pag->pag_ici_lock);
+ 	radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino));
+ 	write_unlock(&pag->pag_ici_lock);
+ 	xfs_put_perag(mp, pag);
+ 
+-	/*
+-	 * Remove from mount's inode list.
+-	 */
+-	XFS_MOUNT_ILOCK(mp);
+-	ASSERT((ip->i_mnext != NULL) && (ip->i_mprev != NULL));
+-	iq = ip->i_mnext;
+-	iq->i_mprev = ip->i_mprev;
+-	ip->i_mprev->i_mnext = iq;
+-
+-	/*
+-	 * Fix up the head pointer if it points to the inode being deleted.
+-	 */
+-	if (mp->m_inodes == ip) {
+-		if (ip == iq) {
+-			mp->m_inodes = NULL;
+-		} else {
+-			mp->m_inodes = iq;
+-		}
+-	}
+-
+ 	/* Deal with the deleted inodes list */
++	XFS_MOUNT_ILOCK(mp);
+ 	list_del_init(&ip->i_reclaim);
+-
+ 	mp->m_ireclaims++;
+ 	XFS_MOUNT_IUNLOCK(mp);
+ }
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index ff68540..7b50eb4 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -191,16 +191,8 @@ typedef struct xfs_icdinode {
+ 	__uint32_t	di_gen;		/* generation number */
+ } xfs_icdinode_t;
+ 
+-typedef struct {
+-	struct xfs_inode	*ip_mnext;	/* next inode in mount list */
+-	struct xfs_inode	*ip_mprev;	/* ptr to prev inode */
+-	struct xfs_mount	*ip_mount;	/* fs mount struct ptr */
+-} xfs_iptr_t;
+-
+ typedef struct xfs_inode {
+ 	/* Inode linking and identification information. */
+-	struct xfs_inode	*i_mnext;	/* next inode in mount list */
+-	struct xfs_inode	*i_mprev;	/* ptr to prev inode */
+ 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+ 	struct list_head	i_reclaim;	/* reclaim list */
+ 	struct inode		*i_vnode;	/* vnode backpointer */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index e222ab9..8372b3d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1285,11 +1285,6 @@ xfs_unmountfs(
+ 	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
+ 	xfs_log_unmount(mp);			/* Done! No more fs ops. */
+ 
+-	/*
+-	 * All inodes from this mount point should be freed.
+-	 */
+-	ASSERT(mp->m_inodes == NULL);
+-
+ 	if ((mp->m_flags & XFS_MOUNT_NOUUID) == 0)
+ 		uuid_table_remove(&mp->m_sb.sb_uuid);
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 16b5211..e9f2d1a 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -248,7 +248,6 @@ typedef struct xfs_mount {
+ 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+ 	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+ 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+-	struct xfs_inode	*m_inodes;	/* active inode list */
+ 	struct list_head	m_del_inodes;	/* inodes to reclaim */
+ 	mutex_t			m_ilock;	/* inode list mutex */
+ 	uint			m_ireclaims;	/* count of calls to reclaim*/
+-- 
+1.5.6
