@@ -1,49 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 13 Sep 2008 13:34:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8DKYKTW021995
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:34:21 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 12083126CDFC
-	for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:35:51 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 7B1M2PuGxlEmJu5u for <xfs@oss.sgi.com>; Sat, 13 Sep 2008 13:35:51 -0700 (PDT)
-Date: Sun, 14 Sep 2008 06:35:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/10] XFS: xfssyncd: don't call xfs_sync
-Message-ID: <20080913203549.GK5811@disturbed>
-References: <1221314230-28618-1-git-send-email-david@fromorbit.com> <1221314230-28618-6-git-send-email-david@fromorbit.com> <20080913165856.GB17721@josefsipek.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 14 Sep 2008 06:15:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8EDEntA001289
+	for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 06:14:51 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AF2D12967CA
+	for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 06:16:19 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id RJuU6GTLsUGcHsfx for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 06:16:19 -0700 (PDT)
+Date: Sun, 14 Sep 2008 09:16:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] XFS: remove i_gen from incore inode
+Message-ID: <20080914131617.GA14266@infradead.org>
+References: <1221313631-27727-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080913165856.GB17721@josefsipek.net>
+In-Reply-To: <1221313631-27727-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Sep 13, 2008 at 12:58:56PM -0400, Josef 'Jeff' Sipek wrote:
-> On Sat, Sep 13, 2008 at 11:57:05PM +1000, Dave Chinner wrote:
-> ...
-> > @@ -533,8 +538,15 @@ xfs_sync_worker(
-> >  {
-> >  	int		error;
-> >  
-> > -	if (!(mp->m_flags & XFS_MOUNT_RDONLY))
-> > -		error = xfs_sync(mp, SYNC_FSDATA | SYNC_BDFLUSH | SYNC_ATTR);
-> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-> > +		xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE);
-> > +		xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-> > +		/* dgc: errors ignored here */
+On Sat, Sep 13, 2008 at 11:47:11PM +1000, Dave Chinner wrote:
+> i_gen is incremented in directory operations when the
+> directory is changed. It is never read or otherwise used
+> so it should be removed to help reduce the size of the
+> struct xfs_inode.
 > 
-> Again, why?
+> The patch also removes a duplicate logging of the directory
+> inode core. We only need to do this once per transaction
+> so kill the one associated with the i_gen increment.
 
-Same again. No context for returning an error to someone useful,
-and will only fail in a shutdown situation.
+Still looks as good as when you posted it first month ago :)
 
-Cheers,
+And for reference here's the required fixup for xfsidbg:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-08-11 13:02:32.000000000 -0300
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-08-11 13:36:50.000000000 -0300
+@@ -3633,7 +3633,6 @@ xfs_prdinode_incore(xfs_icdinode_t *dip)
+ 		xfs_fmtformat((xfs_dinode_fmt_t)dip->di_aformat),
+ 		dip->di_dmevmask, dip->di_dmstate);
+ 	printflags(dip->di_flags, diflags, "flags");
+-	kdb_printf("gen 0x%x\n", dip->di_gen);
+ }
+ 
+ #ifdef XFS_RW_TRACE
+@@ -6385,11 +6384,8 @@ xfsidbg_xnode(xfs_inode_t *ip)
+ 	kdb_printf("\n");
+ 	kdb_printf("update_core %d update size %d\n",
+ 		(int)(ip->i_update_core), (int) ip->i_update_size);
+-	kdb_printf("gen 0x%x delayed blks %d",
+-		ip->i_gen,
+-		ip->i_delayed_blks);
+-	kdb_printf("size %lld\n",
+-		ip->i_size);
++	kdb_printf("delayed blks %d size %lld\n",
++		ip->i_delayed_blks, ip->i_size);
+ 
+ #ifdef	XFS_INODE_TRACE
+ 	qprintf(" trace 0x%p\n", ip->i_trace);
