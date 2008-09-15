@@ -1,206 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 14 Sep 2008 17:22:23 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8F0MJjM022177
-	for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:22:20 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B320126FDAC
-	for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:23:48 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id baZCRAr7JyQtAscl for <xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:23:48 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8F0NmIF011504
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 02:23:48 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8F0Nmhr011502
-	for xfs@oss.sgi.com; Mon, 15 Sep 2008 02:23:48 +0200
-Date: Mon, 15 Sep 2008 02:23:48 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: sanitize xlog_in_core_t definition
-Message-ID: <20080915002348.GA11469@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 14 Sep 2008 17:24:44 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8F0OdgV022560
+	for <linux-xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:24:40 -0700
+Received: from ogre.sisk.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7839C129C94F
+	for <linux-xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:26:09 -0700 (PDT)
+Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158]) by cuda.sgi.com with ESMTP id exq5ffdTEuum8N6t for <linux-xfs@oss.sgi.com>; Sun, 14 Sep 2008 17:26:09 -0700 (PDT)
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: XFS does not recognise mount options in 2.6.27-rc6
+Date: Mon, 15 Sep 2008 02:31:00 +0200
+References: <pan.2008.09.14.18.53.20@telenet.be>
+In-Reply-To: <pan.2008.09.14.18.53.20@telenet.be>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Message-Id: <200809150231.01220.rjw@sisk.pl>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Frederik Himpe <fhimpe@telenet.be>
+Cc: linux-kernel@vger.kernel.org, linux-xfs@oss.sgi.com
 
-Move all fields from xlog_iclog_fields_t into xlog_in_core_t instead of having
-them in a substructure and the using #defines to make it look like they were
-directly in xlog_in_core_t.  Also document that xlog_in_core_2_t is grossly
-misnamed, and make all references to it typesafe.
+On Sunday, 14 of September 2008, Frederik Himpe wrote:
+> In 2.6.27-rc6, XFS still does not recognise mount options like logbufs and 
+> others. Because of this, at boot time it fails to mount the partitions rw, 
+> making the system unusable.
 
+Was 2.6.26 OK?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6-xfs/fs/xfs/xfs_log.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-09-14 17:34:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-09-15 02:20:29.000000000 +0200
-@@ -1024,12 +1024,6 @@ xlog_iodone(xfs_buf_t *bp)
- 	ASSERT(XFS_BUF_FSPRIVATE2(bp, unsigned long) == (unsigned long) 2);
- 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
- 	aborted = 0;
--
--	/*
--	 * Some versions of cpp barf on the recursive definition of
--	 * ic_log -> hic_fields.ic_log and expand ic_log twice when
--	 * it is passed through two macros.  Workaround broken cpp.
--	 */
- 	l = iclog->ic_log;
- 
- 	/*
-@@ -1287,7 +1281,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
- 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
- 		iclog->ic_bp = bp;
--		iclog->hic_data = bp->b_addr;
-+		iclog->ic_data = bp->b_addr;
- #ifdef DEBUG
- 		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
- #endif
-@@ -1307,7 +1301,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		atomic_set(&iclog->ic_refcnt, 0);
- 		spin_lock_init(&iclog->ic_callback_lock);
- 		iclog->ic_callback_tail = &(iclog->ic_callback);
--		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
-+		iclog->ic_datap = (char *)iclog->ic_data + log->l_iclog_hsize;
- 
- 		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
- 		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
-@@ -3418,7 +3412,7 @@ xlog_verify_iclog(xlog_t	 *log,
- 	ptr = iclog->ic_datap;
- 	base_ptr = ptr;
- 	ophead = (xlog_op_header_t *)ptr;
--	xhdr = (xlog_in_core_2_t *)&iclog->ic_header;
-+	xhdr = iclog->ic_data;
- 	for (i = 0; i < len; i++) {
- 		ophead = (xlog_op_header_t *)ptr;
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_log_priv.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_priv.h	2008-09-14 17:34:36.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_priv.h	2008-09-15 02:20:30.000000000 +0200
-@@ -309,6 +309,16 @@ typedef struct xlog_rec_ext_header {
- } xlog_rec_ext_header_t;
- 
- #ifdef __KERNEL__
-+
-+/*
-+ * Quite misnamed, because this union lays out the actual on-disk log buffer.
-+ */
-+typedef union xlog_in_core2 {
-+	xlog_rec_header_t	hic_header;
-+	xlog_rec_ext_header_t	hic_xheader;
-+	char			hic_sector[XLOG_HEADER_SIZE];
-+} xlog_in_core_2_t;
-+
- /*
-  * - A log record header is 512 bytes.  There is plenty of room to grow the
-  *	xlog_rec_header_t into the reserved space.
-@@ -338,7 +348,7 @@ typedef struct xlog_rec_ext_header {
-  * We'll put all the read-only and l_icloglock fields in the first cacheline,
-  * and move everything else out to subsequent cachelines.
-  */
--typedef struct xlog_iclog_fields {
-+typedef struct xlog_in_core {
- 	sv_t			ic_force_wait;
- 	sv_t			ic_write_wait;
- 	struct xlog_in_core	*ic_next;
-@@ -361,41 +371,11 @@ typedef struct xlog_iclog_fields {
- 
- 	/* reference counts need their own cacheline */
- 	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
--} xlog_iclog_fields_t;
--
--typedef union xlog_in_core2 {
--	xlog_rec_header_t	hic_header;
--	xlog_rec_ext_header_t	hic_xheader;
--	char			hic_sector[XLOG_HEADER_SIZE];
--} xlog_in_core_2_t;
--
--typedef struct xlog_in_core {
--	xlog_iclog_fields_t	hic_fields;
--	xlog_in_core_2_t	*hic_data;
-+	xlog_in_core_2_t	*ic_data;
-+#define ic_header	ic_data->hic_header
- } xlog_in_core_t;
- 
- /*
-- * Defines to save our code from this glop.
-- */
--#define	ic_force_wait	hic_fields.ic_force_wait
--#define ic_write_wait	hic_fields.ic_write_wait
--#define	ic_next		hic_fields.ic_next
--#define	ic_prev		hic_fields.ic_prev
--#define	ic_bp		hic_fields.ic_bp
--#define	ic_log		hic_fields.ic_log
--#define	ic_callback	hic_fields.ic_callback
--#define	ic_callback_lock hic_fields.ic_callback_lock
--#define	ic_callback_tail hic_fields.ic_callback_tail
--#define	ic_trace	hic_fields.ic_trace
--#define	ic_size		hic_fields.ic_size
--#define	ic_offset	hic_fields.ic_offset
--#define	ic_refcnt	hic_fields.ic_refcnt
--#define	ic_bwritecnt	hic_fields.ic_bwritecnt
--#define	ic_state	hic_fields.ic_state
--#define ic_datap	hic_fields.ic_datap
--#define ic_header	hic_data->hic_header
--
--/*
-  * The reservation head lsn is not made up of a cycle number and block number.
-  * Instead, it uses a cycle number and byte number.  Logs don't expect to
-  * overflow 31 bits worth of byte offset, so using a byte number will mean
-Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-09-15 02:12:02.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-09-15 02:20:30.000000000 +0200
-@@ -3361,7 +3361,6 @@ xlog_pack_data(
- 	int			size = iclog->ic_offset + roundoff;
- 	__be32			cycle_lsn;
- 	xfs_caddr_t		dp;
--	xlog_in_core_2_t	*xhdr;
- 
- 	xlog_pack_data_checksum(log, iclog, size);
- 
-@@ -3376,7 +3375,8 @@ xlog_pack_data(
- 	}
- 
- 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		xhdr = (xlog_in_core_2_t *)&iclog->ic_header;
-+		xlog_in_core_2_t *xhdr = iclog->ic_data;
-+
- 		for ( ; i < BTOBB(size); i++) {
- 			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
- 			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-@@ -3434,7 +3434,6 @@ xlog_unpack_data(
- 	xlog_t			*log)
- {
- 	int			i, j, k;
--	xlog_in_core_2_t	*xhdr;
- 
- 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
- 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
-@@ -3443,7 +3442,7 @@ xlog_unpack_data(
- 	}
- 
- 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		xhdr = (xlog_in_core_2_t *)rhead;
-+		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
- 		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
- 			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
- 			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-09-15 02:12:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-09-15 02:20:30.000000000 +0200
-@@ -5725,7 +5725,7 @@ xfsidbg_xiclog(xlog_in_core_t *iclog)
- 	};
- 
- 	kdb_printf("xlog_in_core/header at 0x%p/0x%p\n",
--		iclog, iclog->hic_data);
-+		iclog, iclog->ic_data);
- 	kdb_printf("magicno: %x  cycle: %d  version: %d  lsn: 0x%Lx\n",
- 		be32_to_cpu(iclog->ic_header.h_magicno),
- 		be32_to_cpu(iclog->ic_header.h_cycle),
+Rafael
