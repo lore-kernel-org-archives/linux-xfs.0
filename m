@@ -1,52 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 21:07:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8G4703D030453
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:07:00 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 21:19:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8G4JeoQ031390
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:19:41 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A29A212755AA
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:08:31 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id jGeIPc3xgNdCjLGC for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:08:31 -0700 (PDT)
-Date: Tue, 16 Sep 2008 14:08:25 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B49CD44572F
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:21:11 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id Vgmvqs02D0LOW9QK for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:21:11 -0700 (PDT)
+Date: Tue, 16 Sep 2008 14:21:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Fix use-after-free with log and quotas
-Message-ID: <20080916040825.GO5811@disturbed>
-References: <48CA2B23.4020405@sgi.com> <20080913040219.GA5811@disturbed> <48CDCB04.1040402@sgi.com>
+Subject: Re: [PATCH 2/3] XFS: Make use of the init-once slab optimisation.
+Message-ID: <20080916042105.GP5811@disturbed>
+References: <1221314627-29065-1-git-send-email-david@fromorbit.com> <1221314627-29065-3-git-send-email-david@fromorbit.com> <20080915211117.GA29743@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48CDCB04.1040402@sgi.com>
+In-Reply-To: <20080915211117.GA29743@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 15, 2008 at 12:40:04PM +1000, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> On Fri, Sep 12, 2008 at 06:41:07PM +1000, Lachlan McIlroy wrote:
->>> Destroying the quota stuff on unmount can access the log - ie XFS_QM_DONE()
->>> ends up in xfs_dqunlock() which calls xfs_trans_unlocked_item() and then
->>> xfs_log_move_tail().  By this time the log has already been destroyed.
->>> Just move the cleanup of the quota code earlier in xfs_unmountfs() before
->>> the call to xfs_log_unmount().  Moving XFS_QM_DONE() up near
->>> XFS_QM_DQPURGEALL() seems like a good spot.
->>
->> FWIW, has this been actually seen in the real world?
-> Yes.  And easy to reproduce too.
+On Mon, Sep 15, 2008 at 05:11:17PM -0400, Christoph Hellwig wrote:
+> On Sun, Sep 14, 2008 at 12:03:46AM +1000, Dave Chinner wrote:
+> > To avoid having to initialise some fields of the XFS inode
+> > on every allocation, we can use the slab init-once feature
+> > to initialise them. All we have to guarantee is that when
+> > we free the inode, all it's entries are in the initial state.
+> > Add asserts where possible to ensure debug kernels check this
+> > initial state before freeing and after allocation.
+> 
+> This looks like it's already in:
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xaiki/xfs-linux-2.6-xfs-cvs/.git;a=commitdiff;h=12efb888674600ce73a64f8c6f4a20ea5e1ce4f1
 
-Care to provide details about the test case, then? I can't help if
-you keep me in the dark....
+<sigh>
 
->> torn down the AIL and there should be no log items in the system
->> that are in the AIL....
-> That should be the case but clearly not happening.  Pete is investigating
-> an issue right now where a dquot is not getting removed from the AIL when
-> it should.  Until we've got to the bottom of that problem I'd prefer to at
-> least avoid this use after free issue.
-
-No point in putting a bandaid in if you're already in the process of
-trying to find the real cause....
+Which means that some of the patches won't apply. SGI folks,
+can you please get the master tree updated so I can rediff all
+the patches and repost them again?
 
 Cheers,
 
