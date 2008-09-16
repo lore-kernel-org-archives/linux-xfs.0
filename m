@@ -1,32 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 14:15:34 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8FLFWYe000682
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 14:15:32 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B34A12A89B8
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 14:17:03 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 6jpf7QxKzgbVQoAa for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 14:17:03 -0700 (PDT)
-Date: Mon, 15 Sep 2008 17:17:03 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/6] XFS: kill deleted inodes list
-Message-ID: <20080915211703.GH29743@infradead.org>
-References: <1221315300-30336-1-git-send-email-david@fromorbit.com> <1221315300-30336-6-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1221315300-30336-6-git-send-email-david@fromorbit.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 18:07:58 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8G17twr016088
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 18:07:55 -0700
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 999911274EC9
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 18:09:27 -0700 (PDT)
+Received: from postoffice2.aconex.com (prod.aconex.com [203.89.192.138]) by cuda.sgi.com with ESMTP id BuWD1GUYewtIFHQA for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 18:09:27 -0700 (PDT)
+Subject: Re: Bug#499076: Physical walk no longer ignores all symlinks
+From: Nathan Scott <nscott@aconex.com>
+In-Reply-To: <1221526247.21658.21.camel@kulgan.wumi.org.au>
+References: <1221526247.21658.21.camel@kulgan.wumi.org.au>
+Content-Type: text/plain
+Date: Tue, 16 Sep 2008 11:07:31 +1000
+Message-Id: <1221527251.5138.15.camel@verge.scott.net.au>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: tes@sgi.com
 Cc: xfs@oss.sgi.com
 
-On Sun, Sep 14, 2008 at 12:14:59AM +1000, Dave Chinner wrote:
-> Now that the deleted inodes list is unused, kill it. This
-> also removes the i_reclaim list head from the xfs_inode, shrinking
-> it by two pointers.
+FYI... that last acl/attr attempt to address symlinks has
+broken things for some people it seems ... any thoughts on
+the options Kevin lists at the end?
 
-Looks good.
+thanks.
 
-Any reason this is split from the previous patch?
+On Tue, 2008-09-16 at 10:20 +0930, Kevin Shanahan wrote:
+> Package: acl
+> Version: 2.2.47-2
+> 
+> After upgrading a system from Etch to Lenny, we are having some problems
+> with our backup scripts which rely on getfacl/getfattr.
+> 
+> Previously we had been using "getfacl -RP ..." to recursively dump all
+> the ACLs in a number of directories which are also Samba shares. Because
+> we use the DFS features of Samba, we have numerous intentional
+> "dangling" symlinks in these directories. However, now this is causing
+> getfacl to exit with non-zero status and spew lots of unwanted output to
+> stderr.
+> 
+> A simple test case to reproduce the problem:
+> 
+>   #!/bin/sh
+>   ln -f -s no_such_file foo
+>   getfacl -RP . > dev/null
+>   echo $?
+> 
+> Output on Etch:
+>   0
+> 
+> Output on Lenny:
+>   getfacl: ./foo: No such file or directory
+>   1
+> 
+> I realise that upstream changed the behaviour at some point there, as
+> the manpage description of the -P option differs between Etch/Lenny.
+> However, we still need a way to ignore all symlinks - if the current
+> behaviour is be design (I don't understand why this would be desirable),
+> then can we have another option to completely ignore symlinks?
+> 
+> Thanks,
+> Kevin.
+> 
+> 
+> 
+> 
