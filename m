@@ -1,87 +1,52 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 21:04:05 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8G43qdD029917
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:03:52 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07BB512B0503
-	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:05:22 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id hi8lJKDe6dxAHYCL for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:05:22 -0700 (PDT)
-Date: Tue, 16 Sep 2008 14:01:25 +1000
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 15 Sep 2008 21:07:12 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8G4703D030453
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:07:00 -0700
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A29A212755AA
+	for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:08:31 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id jGeIPc3xgNdCjLGC for <xfs@oss.sgi.com>; Mon, 15 Sep 2008 21:08:31 -0700 (PDT)
+Date: Tue, 16 Sep 2008 14:08:25 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Re-dirty pages on I/O error
-Message-ID: <20080916040125.GN5811@disturbed>
-References: <48C8D8CD.7050508@sgi.com> <20080913041930.GC5811@disturbed> <48CDD4EE.8040105@sgi.com>
+Subject: Re: [PATCH] Fix use-after-free with log and quotas
+Message-ID: <20080916040825.GO5811@disturbed>
+References: <48CA2B23.4020405@sgi.com> <20080913040219.GA5811@disturbed> <48CDCB04.1040402@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48CDD4EE.8040105@sgi.com>
+In-Reply-To: <48CDCB04.1040402@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Sep 15, 2008 at 01:22:22PM +1000, Lachlan McIlroy wrote:
+On Mon, Sep 15, 2008 at 12:40:04PM +1000, Lachlan McIlroy wrote:
 > Dave Chinner wrote:
->> So we keep dirty pages around that we can't write back?
-> Yes.
->
->> If we are in a low memory situation and the block device
->> has gone bad, that will prevent memory reclaim from making
->> progress.
-> How do you differentiate "gone bad" from temporarily unavailable?
+>> On Fri, Sep 12, 2008 at 06:41:07PM +1000, Lachlan McIlroy wrote:
+>>> Destroying the quota stuff on unmount can access the log - ie XFS_QM_DONE()
+>>> ends up in xfs_dqunlock() which calls xfs_trans_unlocked_item() and then
+>>> xfs_log_move_tail().  By this time the log has already been destroyed.
+>>> Just move the cleanup of the quota code earlier in xfs_unmountfs() before
+>>> the call to xfs_log_unmount().  Moving XFS_QM_DONE() up near
+>>> XFS_QM_DQPURGEALL() seems like a good spot.
+>>
+>> FWIW, has this been actually seen in the real world?
+> Yes.  And easy to reproduce too.
 
-The only "temporary" error you can get in writeback is a path
-failure. IIRC, XVM will give an ENODEV on a path failure, but
-I don't think that dm-multipath does. Other than that, a write
-failure is unrecoverable. Any other error is permanent....
+Care to provide details about the test case, then? I can't help if
+you keep me in the dark....
 
->> i.e. if we have a bad disk, a user can now take down the system
->> by running it out of clean memory....
-> I'm sure there's many ways a malicious user could already do that.
+>> torn down the AIL and there should be no log items in the system
+>> that are in the AIL....
+> That should be the case but clearly not happening.  Pete is investigating
+> an issue right now where a dquot is not getting removed from the AIL when
+> it should.  Until we've got to the bottom of that problem I'd prefer to at
+> least avoid this use after free issue.
 
-That's no excuse for introducing a new way of taking down the
-system when a disk fails. Error handling in linux is bad enough
-without intentionally preventing the system from recovering from
-I/O errors...
-
-> Would you rather have data corruption?
-
-Data corruption as a result of an I/O error? What else can we
-be expected to do? Log the error and continue onwards....
-
-Face it - if the drive is dead then we can't write the data
-anywhere, so keeping it around and potentially killing the system
-completely makes even less sense.  At some point we *have to give
-up* on data we can't write back....
-
-> We've allowed the write() to succeed.  We've accepted the data.
-> We have an obligation to write it do disk.  Either we keep trying
-> in the face of errors or we take down the filesystem.
-
-It's write-behind buffering. We give best effort, not guaranteed
-writeback. If the system crashes, that data is lost. If we get an
-I/O error, that data is lost. If the application cares, it uses
-fsync and it gets the error and can handle it.
-
-.....
-
-> The EAGAIN case can be exceptioned.  The error we are getting here
-> is ENOSPC because xfs_trans_reserve() is failing. 
-
-<sigh>
-
-Please - put that detail in the patch description. I'm getting a
-little tired of having to draw out the reasons for your patches
-one little bit at a time.
-
-So: why is xfs_trans_reserve() failing? Aren't all the transactions
-in the writeback path marked as XFS_TRANS_RESERVE? That allows the
-transaction reserve to succeed when at ENOSPC by dipping into the
-reserved blocks. Did we run out of reserved blocks (i.e. the reserve
-pool is not big enough)? Or is there some other case that leads to
-ENOSPC in the writeback path that we've never considered before?
+No point in putting a bandaid in if you're already in the process of
+trying to find the real cause....
 
 Cheers,
 
