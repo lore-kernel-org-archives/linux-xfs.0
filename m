@@ -1,75 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 16 Sep 2008 17:58:42 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Sep 2008 11:32:10 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8H0wcEU022221
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2008 17:58:39 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8FA044AEF3
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2008 18:00:10 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id HhtFI3rRef8UmDTe for <xfs@oss.sgi.com>; Tue, 16 Sep 2008 18:00:10 -0700 (PDT)
-Date: Wed, 17 Sep 2008 10:59:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/6] always use struct xfs_btree_block instead of short
-	/ longform structures
-Message-ID: <20080917005955.GH5811@disturbed>
-References: <20080915004657.GF12213@lst.de> <20080916062616.GY5811@disturbed> <20080916173107.GB26187@lst.de>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8HIVwfG029350
+	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 11:32:00 -0700
+Received: from an-out-0708.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 50E0444F314
+	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 11:33:28 -0700 (PDT)
+Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.249]) by cuda.sgi.com with ESMTP id zgT6lKQnzBqqjtAw for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 11:33:28 -0700 (PDT)
+Received: by an-out-0708.google.com with SMTP id d30so348459and.75
+        for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 11:33:28 -0700 (PDT)
+Message-ID: <a4423d670809171133r39260814y211ba8104698d5f2@mail.gmail.com>
+Date: Wed, 17 Sep 2008 22:33:28 +0400
+From: "Alexander Beregalov" <a.beregalov@gmail.com>
+Subject: Re: 2.6.27-rc6: lockdep warning: iprune_mutex at shrink_icache_memory+0x38/0x1a8
+In-Reply-To: <a4423d670809160035s25fd5227j831492b3f43daa6a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20080916173107.GB26187@lst.de>
+References: <20080913233138.GA19576@orion> <20080916025204.GL5811@disturbed>
+	 <a4423d670809160035s25fd5227j831492b3f43daa6a@mail.gmail.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Alexander Beregalov <a.beregalov@gmail.com>, rjw@sisk.pl, linux-kernel@vger.kernel.org, kernel-testers@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 16, 2008 at 07:31:07PM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 16, 2008 at 04:26:16PM +1000, Dave Chinner wrote:
-> > On Mon, Sep 15, 2008 at 02:46:57AM +0200, Christoph Hellwig wrote:
-> > > Always use the generic xfs_btree_block type instead of the short / long
-> > > structures.  Add XFS_BTREE_SBLOCK_LEN / XFS_BTREE_LBLOCK_LEN defines for
-> > > the length of a short / long form block.  The rationale for this is that
-> > > we will grow more btree block header variants to support CRCs and other
-> > > RAS information, and always accessing them through the same datatype
-> > > with unions for the short / long form pointers makes implementing this
-> > > much easier.
-> > .......
-> > > @@ -382,16 +382,16 @@ xfs_alloc_fixup_trees(
-> > >  	}
-> > >  #ifdef DEBUG
-> > >  	{
-> > > -		xfs_alloc_block_t	*bnoblock;
-> > > -		xfs_alloc_block_t	*cntblock;
-> > > +		struct xfs_btree_block		*bnoblock;
-> > > +		struct xfs_btree_block		*cntblock;
-> > 
-> > Only need one tab there?
-> 
-> I think this was aligning to something, but I don't really care.
-> 
-> > > -			bnoblock = XFS_BUF_TO_ALLOC_BLOCK(bno_cur->bc_bufs[0]);
-> > > -			cntblock = XFS_BUF_TO_ALLOC_BLOCK(cnt_cur->bc_bufs[0]);
-> > >  			XFS_WANT_CORRUPTED_RETURN(
-> > > -				be16_to_cpu(bnoblock->bb_numrecs) ==
-> > > -				be16_to_cpu(cntblock->bb_numrecs));
-> > > +				bnoblock->bb_numrecs ==
-> > > +				cntblock->bb_numrecs);
-> > 
-> > The comparison could probably be made one line....
-> 
-> That would be far over 80 characters.
-
-I meant:
-			XFS_WANT_CORRUPTED_RETURN(
-				bnoblock->bb_numrecs == cntblock->bb_numrecs);
-
-Which doesn't go over 80 chars.
-
-Doesn't really matter, though.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+2008/9/16 Alexander Beregalov <a.beregalov@gmail.com>:
+> 2008/9/16 Dave Chinner <david@fromorbit.com>:
+>> On Sun, Sep 14, 2008 at 03:31:38AM +0400, Alexander Beregalov wrote:
+>>> Hi
+>>>
+>>> [ INFO: possible circular locking dependency detected ]
+>>> 2.6.27-rc6-00034-gd1c6d2e #3
+>>> -------------------------------------------------------
+>>> nfsd/1766 is trying to acquire lock:
+>>>  (iprune_mutex){--..}, at: [<c01743fb>] shrink_icache_memory+0x38/0x1a8
+>>>
+>>>  but task is already holding lock:
+>>>   (&(&ip->i_iolock)->mr_lock){----}, at: [<c021134f>]
+>>>   xfs_ilock+0xa2/0xd6
+>>>
+>>>
+>>> I read files through nfs and saw delay for few seconds.
+>>> System is x86_32, nfs, xfs.
+>>> The last working kernel is 2.6.27-rc5,
+>>> I do not know yet is it reproducible or not.
+>>
+>> <sigh>
+>>
+>> We need a FAQ for this one. It's a false positive.  Google for an
+>> explanation - I've explained it 4 or 5 times in the past year and
+>> asked that the lockdep folk invent a special annotation for the
+>> iprune_mutex (or memory reclaim) because of the way it can cause
+>> recursion into the filesystem and hence invert lock orders without
+>> causing deadlocks.....
+>
+> Hi Dave
+>
+> Yes, you already explained a similar message to me, but it was a bug,
+> not false positive.
+> http://lkml.org/lkml/2008/7/3/29
+> http://lkml.org/lkml/2008/7/3/315
+>
+> I will try to bisect.
+> It is not a OOM case.
+>
+I can not reproduce it.
