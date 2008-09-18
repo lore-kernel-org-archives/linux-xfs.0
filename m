@@ -1,725 +1,209 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Sep 2008 21:43:47 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I4hgro007598
-	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 21:43:43 -0700
-Message-ID: <48D1DCD5.7040502@thebarn.com>
-Date: Wed, 17 Sep 2008 23:45:09 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Sep 2008 22:27:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I5Rpcp010340
+	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:27:51 -0700
+Received: from rv-out-0708.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9AF3130495B
+	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:23 -0700 (PDT)
+Received: from rv-out-0708.google.com (rv-out-0708.google.com [209.85.198.244]) by cuda.sgi.com with ESMTP id rwvy6HQifiWar8y9 for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:23 -0700 (PDT)
+Received: by rv-out-0708.google.com with SMTP id f25so3408931rvb.32
+        for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:22 -0700 (PDT)
+Message-ID: <e03b90ae0809172229g64c4cb81lc4f2e039168a7d7@mail.gmail.com>
+Date: Wed, 17 Sep 2008 22:29:22 -0700
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: read only remount not so happy
+In-Reply-To: <20080916182927.GA13562@infradead.org>
 MIME-Version: 1.0
-Subject: Re: REVIEW: Fix for incore extent corruption.
-References: <48D19A83.4040608@thebarn.com> <48D1CD46.4010104@sgi.com>
-In-Reply-To: <48D1CD46.4010104@sgi.com>
 Content-Type: multipart/mixed;
- boundary="------------040806040806040709080001"
+	boundary="----=_Part_35496_3674225.1221715762115"
+References: <e03b90ae0809141904r47de6883k185174bb13df34b4@mail.gmail.com>
+	 <e03b90ae0809152103w5653bdbfrc1f060d9e41e7246@mail.gmail.com>
+	 <20080916055614.GX5811@disturbed>
+	 <20080916182927.GA13562@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------040806040806040709080001
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+------=_Part_35496_3674225.1221715762115
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Lachlan McIlroy wrote:
-> Russell Cattelan wrote:
->>
->> Reference:
->> http://oss.sgi.com/archives/xfs/2008-06/msg00209.html
->>
->>
->> It turns out that the code in question is still broken.
->>
->> xfs_iext_irec_compact_full will still corrupt the incore extent list 
->> if it does
->> the the partial copy of extents from one page to the next.
->> I haven't quit figured out where things get out of sync but somehow
->> if_real_bytes which tracks the total number of bytes available in
->> the extent buffers and if_bytes (which tracks the total bytes used
->> for extents.
->>
->> So at some point the inode thinks is has more extents than allocated 
->> pages allow.
->> So what happens is xfs_iext_idx_to_irec which uses idxp to pass IN the
->> absolute extent index is suppose to change  idxp on the way OUT and 
->> erp_idxp
->> to be a buffer index pair. What happens is that it doesn't find the 
->> extent so idxp
->> is left holding the same value as was passed in and erp_idx is 0.
->> This causes the extent code to then index way past the end of extent 
->> buffer 0
->> into garbage mem.
->>
->> with 4k ext buffers max extent count per buffer is 256.
->> example being:
->> IN:
->> idxp = 400
->> should become:
->> idexp = 144
->> erp_idxp = 1
->>
->> but we end up not finding the extent so
->> we have
->> idxp = 400
->> erp_idxp =0
->>
->> so we now index 6400 bytes into a 4k buffer.
->>
->> Which often times  is a pages of mostly 0 so we end up with access to 
->> block 0 errors.
->>
->> The more I looked at this code the more it didn't make sense to do 
->> partial moves.
->> Since the list of extent buffers is only scanned once vs restarting 
->> the list whenever a partial move is done,
->> it is very unlikely to actually free an extent buffer. (granted it's 
->> possible but unlikely)
->>
->> xfs_iext_irec_compact_pages does the same thing as 
->> xfs_iext_irec_compact_full except that doesn't handle partial moves.
->>
->> xfs_iext_irec_compact is written such that ratio of current extents 
->> has to be significantly smaller than the current allocated space
->> xfs_inode: 4513
->> nextents < ( nlists  * XFS_LINEAR_EXT) >> 3
->>
->> As it turns out 99% of the time it calls xfs_iext_irec_compact_pages
->> (which is why it has been so hard to track this bug down).
->>
->> If you change the 3 to a 1 so the code alway calls compact_full vs 
->> compact_pages the extent list will corrupt amost
->> immediately.
-> Awesome work Russell, we'll give it a go.
->
->>
->> Since the code is broken, almost never used, and provides only micro 
->> optimization of incore space I propose we just
->> remove it all together.
-> Are you sure the bug is in xfs_iext_irec_compact_full?
->
-> Is it possible that we are still indexing beyond the page when using
-> xfs_iext_irec_compact_pages but the pages just happen to be sequential
-> so the indexing gets the extent anyway?
-I added a bunch of printk to track this down,  the compact_pages path is hit
-a lot in fact as far as I can tell all running file systems that shrink 
-extents and don't crash :-)
+Logs attached in case they are of help.
 
-I should have done this originally my I'm including the modified 
-makeextents that
-I used to tickle this problem.
-It reserves a bunch of space to create a contiguous extents then in 
-unreserves space to
-poke a bunch of holes creating a big extent list, it then goes back and 
-writes the whole
-file hopefully collapsing extents as it goes.
+------=_Part_35496_3674225.1221715762115
+Content-Type: text/plain; name=logs.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fl8y0oe82
+Content-Disposition: attachment; filename=logs.txt
 
-i.e.
-makeextents -v -c 512 foo ; xfs_bmap -v foo
-should give you 1024 extents
-makeextents -v -f -c 512 foo ; xfs_bmap -v foo
-will do the same thing but fill in the file with writes.
-The number of resulting extents vary, but sometimes you
-end up with one extent. sometimes more.
+U2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEw
+Ljg0ODMxMV0gQXNzZXJ0aW9uIGZhaWxlZDogYXRvbWljX3JlYWQoJm1wLT5t
+X2FjdGl2ZV90cmFucykgPT0gMCwgZmlsZTogL2J1aWxkL2J1aWxkZC9saW51
+eC0yLjYuMjQvZnMveGZzL3hmc192ZnNvcHMuYywgbGluZTogNzA4ClNlcCAx
+NSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDg0
+NDFdIENQVSA2IApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5l
+bDogWzk2MDgzMTAuODQ4NDYzXSBNb2R1bGVzIGxpbmtlZCBpbjogeGZzIHBh
+cnBvcnRfcGMgbHAgcGFycG9ydCBsb29wIGlwdjYgaVRDT193ZHQgaWdiIGNv
+bnRhaW5lciBidXR0b24gaVRDT192ZW5kb3Jfc3VwcG9ydCBzaHBjaHAgcGNp
+X2hvdHBsdWcgZXZkZXYgcGNzcGtyIHBzbW91c2UgZXh0MyBqYmQgbWJjYWNo
+ZSBhdGFfZ2VuZXJpYyB1c2JoaWQgaGlkIHBhdGFfYWNwaSBzZyBzcl9tb2Qg
+Y2Ryb20gc2RfbW9kIGF0YV9waWl4IGZsb3BweSBlaGNpX2hjZCB1aGNpX2hj
+ZCBsaWJhdGEgdXNiY29yZSB0ZzMgYXJjbXNyIHNjc2lfbW9kIHJhaWQxMCBy
+YWlkNDU2IGFzeW5jX3hvciBhc3luY19tZW1jcHkgYXN5bmNfdHggeG9yIHJh
+aWQxIHJhaWQwIG11bHRpcGF0aCBsaW5lYXIgbWRfbW9kIHRoZXJtYWwgcHJv
+Y2Vzc29yIGZhbiBmdXNlClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUg
+a2VybmVsOiBbOTYwODMxMC44NDg3MDddIFBpZDogMTg2MDAsIGNvbW06IG1v
+dW50IE5vdCB0YWludGVkIDIuNi4yNC04LXNlcnZlciAjMQpTZXAgMTUgMDM6
+MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4NzM1XSBS
+SVA6IDAwMTA6W19lbmQrMTMwNDE1ODk4LzIxMjk1Nzk5MzZdICBbX2VuZCsx
+MzA0MTU4OTgvMjEyOTU3OTkzNl0gOnhmczphc3NmYWlsKzB4MWEvMHgyMApT
+ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
+ODQ4ODA2XSBSU1A6IDAwMTg6ZmZmZjgxMDEwMGMwZGMwOCAgRUZMQUdTOiAw
+MDAxMDI5NgpTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
+Wzk2MDgzMTAuODQ4ODMyXSBSQVg6IDAwMDAwMDAwMDAwMDAwOGQgUkJYOiBm
+ZmZmODEwODAzYmJjMDAwIFJDWDogMDAwMDAwMDAwMDAwMDAwMQpTZXAgMTUg
+MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4ODc1
+XSBSRFg6IGZmZmZmZmZmODA1ODVjNjggUlNJOiAwMDAwMDAwMDAwMDAwMDgy
+IFJESTogZmZmZmZmZmY4MDU4NWM2MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
+cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4OTE4XSBSQlA6IGZmZmY4MTAx
+MDExODEwMDAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogZmZmZjgxMDZl
+MmQ3YmExMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
+Wzk2MDgzMTAuODQ4OTYyXSBSMTA6IGZmZmY4MTAwMDEwNzFjNjAgUjExOiAw
+MDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjgxMDgwM2JiYzAwMApTZXAgMTUg
+MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MDA1
+XSBSMTM6IGZmZmY4MTAxMDBjMGRjNmMgUjE0OiBmZmZmODEwMmJiZjZiMDAw
+IFIxNTogMDAwMDAwMDAwMDAwMDAwOApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
+cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MDQ4XSBGUzogIDAwMDA3ZjI0
+YjYwNzQ2ZTAoMDAwMCkgR1M6ZmZmZjgxMDgxMDA2NmEwMCgwMDAwKSBrbmxH
+UzowMDAwMDAwMDAwMDAwMDAwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hp
+dmUga2VybmVsOiBbOTYwODMxMC44NDkwOTRdIENTOiAgMDAxMCBEUzogMDAw
+MCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwM2IKU2VwIDE1IDAzOjIz
+OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTEyMV0gQ1Iy
+OiAwMDAwN2ZkMTc1NmNjMDAwIENSMzogMDAwMDAwMDYyODE3OTAwMCBDUjQ6
+IDAwMDAwMDAwMDAwMDA2ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2
+ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTE2Nl0gRFIwOiAwMDAwMDAwMDAwMDAw
+MDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAw
+MDAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
+MzEwLjg0OTIxMF0gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAw
+MDBmZmZmMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKU2VwIDE1IDAzOjIz
+OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTI1NF0gUHJv
+Y2VzcyBtb3VudCAocGlkOiAxODYwMCwgdGhyZWFkaW5mbyBmZmZmODEwMTAw
+YzBjMDAwLCB0YXNrIGZmZmY4MTAxMDBmNzc3NDApClNlcCAxNSAwMzoyMzoy
+MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDkzMDFdIFN0YWNr
+OiAgZmZmZjgxMDEwMTE4MTAwMCBmZmZmZmZmZjg4MzYxODllIGZmZmY4MTA4
+MDNiYmMwMDAgZmZmZmZmZmY4ODM2MTk0MwpTZXAgMTUgMDM6MjM6MjAgbWFp
+bC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MzU4XSAgMDAwMDAwMDAw
+MDAwMDAwMCBmZmZmZmZmZjg4MzcxZTU2IDdmZmZmZmZmZmZmZmZmZmYgZmZm
+ZjgxMDdmZmM5ZjQwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtl
+cm5lbDogWzk2MDgzMTAuODQ5NDExXSAgMDAwMDAwMDBmZmZmZmZmMCAwMDAw
+MDAwMDAwMDAwMDAwIGZmZmY4MTAyYmJmNmIwMDAgZmZmZmZmZmY4MDJiMTQ0
+NQpTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
+MTAuODQ5NDQ3XSBDYWxsIFRyYWNlOgpTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
+cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5NDk4XSAgW19lbmQrMTMwMzQ1
+MDIyLzIxMjk1Nzk5MzZdIDp4ZnM6eGZzX2F0dHJfcXVpZXNjZSsweDRlLzB4
+NzAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
+MzEwLjg0OTUzOV0gIFtfZW5kKzEzMDM0NTE4Ny8yMTI5NTc5OTM2XSA6eGZz
+Onhmc19tbnR1cGRhdGUrMHg2My8weDkwClNlcCAxNSAwMzoyMzoyMCBtYWls
+LWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDk1NzldICBbX2VuZCsxMzA0
+MTIwMjIvMjEyOTU3OTkzNl0gOnhmczp4ZnNfZnNfcmVtb3VudCsweDU2LzB4
+OTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
+MzEwLjg0OTYxMl0gIFtkb19yZW1vdW50X3NiKzIxMy8zMzZdIGRvX3JlbW91
+bnRfc2IrMHhkNS8weDE1MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZl
+IGtlcm5lbDogWzk2MDgzMTAuODQ5NjQyXSAgW2RvX21vdW50KzExNDIvMjAx
+Nl0gZG9fbW91bnQrMHg0NzYvMHg3ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwt
+YXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTY3Ml0gIFtoYW5kbGVfbW1f
+ZmF1bHQrOTg3LzIwNDhdIGhhbmRsZV9tbV9mYXVsdCsweDNkYi8weDgwMApT
+ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
+ODQ5NzAzXSAgW2ZpbGVtYXBfZmF1bHQrMzkyLzkxMl0gZmlsZW1hcF9mYXVs
+dCsweDE4OC8weDM5MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtl
+cm5lbDogWzk2MDgzMTAuODQ5NzMzXSAgW19fdXBfcmVhZCszMy8xNzZdIF9f
+dXBfcmVhZCsweDIxLzB4YjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2
+ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTc2M10gIFtkb19wYWdlX2ZhdWx0KzQ2
+NC8yMTEyXSBkb19wYWdlX2ZhdWx0KzB4MWQwLzB4ODQwClNlcCAxNSAwMzoy
+MzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDk3OTJdICBb
+em9uZV9zdGF0aXN0aWNzKzEyNS8xMjhdIHpvbmVfc3RhdGlzdGljcysweDdk
+LzB4ODAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5
+NjA4MzEwLjg0OTgyN10gIFtfX2dldF9mcmVlX3BhZ2VzKzI3LzY0XSBfX2dl
+dF9mcmVlX3BhZ2VzKzB4MWIvMHg0MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
+cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5ODU3XSAgW3N5c19tb3VudCsx
+NTUvMjU2XSBzeXNfbW91bnQrMHg5Yi8weDEwMApTZXAgMTUgMDM6MjM6MjAg
+bWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5ODg3XSAgW3N5c3Rl
+bV9jYWxsKzEyNi8xMzFdIHN5c3RlbV9jYWxsKzB4N2UvMHg4MwpTZXAgMTUg
+MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5OTE2
+XSAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
+MzEwLjg0OTkzNl0gClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2Vy
+bmVsOiBbOTYwODMxMC44NDk5MzZdIENvZGU6IDBmIDBiIGViIGZlIDY2IDkw
+IDQxIDU1IDQxIDU0IDQ5IDg5IGY0IDU1IDg5IGZkIDQ4IGM3IGM3IGU4IApT
+ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
+ODUwMDk2XSAgUlNQIDxmZmZmODEwMTAwYzBkYzA4PgpTZXAgMTUgMDM6MjM6
+MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUwNDU3XSAtLS1b
+IGVuZCB0cmFjZSA3MDliNDJkY2ZkYjdkN2IyIF0tLS0KU2VwIDE1IDAzOjIz
+OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MDUyN10gV0FS
+TklORzogYXQgL2J1aWxkL2J1aWxkZC9saW51eC0yLjYuMjQva2VybmVsL2V4
+aXQuYzo5MTcgZG9fZXhpdCgpClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hp
+dmUga2VybmVsOiBbOTYwODMxMC44NTA2MTRdIFBpZDogMTg2MDAsIGNvbW06
+IG1vdW50IFRhaW50ZWQ6IEcgICAgICBEIDIuNi4yNC04LXNlcnZlciAjMQpT
+ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
+ODUwNjg2XSAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6
+IFs5NjA4MzEwLjg1MDY4N10gQ2FsbCBUcmFjZToKU2VwIDE1IDAzOjIzOjIw
+IG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MDgxNF0gIFtkb19l
+eGl0KzE5NjIvMjM2OF0gZG9fZXhpdCsweDdhYS8weDk0MApTZXAgMTUgMDM6
+MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUwODg1XSAg
+W3ZnYWNvbl9ibGFuays4MzIvMTU2OF0gdmdhY29uX2JsYW5rKzB4MzQwLzB4
+NjIwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYw
+ODMxMC44NTA5NTddICBbc2V0X3BhbGV0dGUrOS85Nl0gc2V0X3BhbGV0dGUr
+MHg5LzB4NjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6
+IFs5NjA4MzEwLjg1MTAyOV0gIFt2Z2Fjb25fc2V0X2N1cnNvcl9zaXplKzQ2
+LzI0MF0gdmdhY29uX3NldF9jdXJzb3Jfc2l6ZSsweDJlLzB4ZjAKU2VwIDE1
+IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTEw
+M10gIFtkaWUrODIvMTEyXSBkaWUrMHg1Mi8weDcwClNlcCAxNSAwMzoyMzoy
+MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NTExNzNdICBbZG9f
+aW52YWxpZF9vcCsxMzQvMTYwXSBkb19pbnZhbGlkX29wKzB4ODYvMHhhMApT
+ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
+ODUxMjUzXSAgW19lbmQrMTMwNDE1ODk4LzIxMjk1Nzk5MzZdIDp4ZnM6YXNz
+ZmFpbCsweDFhLzB4MjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBr
+ZXJuZWw6IFs5NjA4MzEwLjg1MTMyNl0gIFtwcmludGsrNzgvOTZdIHByaW50
+aysweDRlLzB4NjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJu
+ZWw6IFs5NjA4MzEwLjg1MTM5Nl0gIFtlcnJvcl9leGl0KzAvODFdIGVycm9y
+X2V4aXQrMHgwLzB4NTEKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBr
+ZXJuZWw6IFs5NjA4MzEwLjg1MTQ3OF0gIFtfZW5kKzEzMDQxNTg5OC8yMTI5
+NTc5OTM2XSA6eGZzOmFzc2ZhaWwrMHgxYS8weDIwClNlcCAxNSAwMzoyMzoy
+MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NTE1NTldICBbX2Vu
+ZCsxMzA0MTU4OTgvMjEyOTU3OTkzNl0gOnhmczphc3NmYWlsKzB4MWEvMHgy
+MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
+MTAuODUxNjQxXSAgW19lbmQrMTMwMzQ1MDIyLzIxMjk1Nzk5MzZdIDp4ZnM6
+eGZzX2F0dHJfcXVpZXNjZSsweDRlLzB4NzAKU2VwIDE1IDAzOjIzOjIwIG1h
+aWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTcyM10gIFtfZW5kKzEz
+MDM0NTE4Ny8yMTI5NTc5OTM2XSA6eGZzOnhmc19tbnR1cGRhdGUrMHg2My8w
+eDkwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYw
+ODMxMC44NTE4MDVdICBbX2VuZCsxMzA0MTIwMjIvMjEyOTU3OTkzNl0gOnhm
+czp4ZnNfZnNfcmVtb3VudCsweDU2LzB4OTAKU2VwIDE1IDAzOjIzOjIwIG1h
+aWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTg3OF0gIFtkb19yZW1v
+dW50X3NiKzIxMy8zMzZdIGRvX3JlbW91bnRfc2IrMHhkNS8weDE1MApTZXAg
+MTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUx
+OTQ5XSAgW2RvX21vdW50KzExNDIvMjAxNl0gZG9fbW91bnQrMHg0NzYvMHg3
+ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
+MzEwLjg1MjAyMF0gIFtoYW5kbGVfbW1fZmF1bHQrOTg3LzIwNDhdIGhhbmRs
+ZV9tbV9mYXVsdCsweDNkYi8weDgwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
+cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUyMDkyXSAgW2ZpbGVtYXBfZmF1
+bHQrMzkyLzkxMl0gZmlsZW1hcF9mYXVsdCsweDE4OC8weDM5MApTZXAgMTUg
+MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUyMTY0
+XSAgW19fdXBfcmVhZCszMy8xNzZdIF9fdXBfcmVhZCsweDIxLzB4YjAKU2Vw
+IDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1
+MjIzNF0gIFtkb19wYWdlX2ZhdWx0KzQ2NC8yMTEyXSBkb19wYWdlX2ZhdWx0
+KzB4MWQwLzB4ODQwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2Vy
+bmVsOiBbOTYwODMxMC44NTIzMDhdICBbem9uZV9zdGF0aXN0aWNzKzEyNS8x
+MjhdIHpvbmVfc3RhdGlzdGljcysweDdkLzB4ODAKU2VwIDE1IDAzOjIzOjIw
+IG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MjM4NF0gIFtfX2dl
+dF9mcmVlX3BhZ2VzKzI3LzY0XSBfX2dldF9mcmVlX3BhZ2VzKzB4MWIvMHg0
+MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
+MTAuODUyNDU1XSAgW3N5c19tb3VudCsxNTUvMjU2XSBzeXNfbW91bnQrMHg5
+Yi8weDEwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
+Wzk2MDgzMTAuODUyNTI1XSAgW3N5c3RlbV9jYWxsKzEyNi8xMzFdIHN5c3Rl
+bV9jYWxsKzB4N2UvMHg4Mwo=
 
-If you change the 3 to a 1 in the current code so compact_full is used 
-vs compact_pages
-and run the test it will hit some problem every time.
-xexlist in kdb will show the corruption in the incore list.
-
-This will run the code through all 3 formats so if you are lucky you end 
-up hitting all
-the cases indirect > 256, direct <= 256, and inline <= 2
-
-note:  xfs_iext_indirect_to_direct does call compact_full but in that 
-case we are already down
-to under 256 extents (at least we should be ) and at that point 
-compact_full will behave just like compact_pages.
-
-
->
->>
->> I'm also including an xfsidbg patch that for xexlist that prints out 
->> buffer offset and index.
->>
->> -Russell Cattelan
->>
->>
->
-
-
---------------040806040806040709080001
-Content-Type: text/plain;
- name="makeextents.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="makeextents.c"
-
-/*
- * Copyright (c) 2000-2004 Silicon Graphics, Inc.
- * All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
-/*
- * Write a bunch of holes to create a bunch of extents.
- */
- 
-
-#include "global.h"
-
-
-char *progname;
-__uint64_t num_holes = 1000;
-__uint64_t curr_holes;
-int verbose_opt = 0;
-char *filename;
-int status_num = 100;
-int wsync;
-int preserve;
-unsigned int blocksize;
-__uint64_t fileoffset;
-
-#define JUMP_SIZE (128 * 1024)
-#define NUMHOLES_TO_SIZE(i) (i * JUMP_SIZE)
-#define SIZE_TO_NUMHOLES(s) (s / JUMP_SIZE)
-
-void
-usage(void)
-{
-	fprintf(stderr, "%s [-b blocksize] [-n num-holes] [-s status-num]"
-			" [-o start-offset] [-vwp] file\n", progname);
-	exit(1);
-}
-
-
-static int
-offset_length(
-	__uint64_t	offset,
-	__uint64_t	length,
-	xfs_flock64_t	*segment)
-{
-
-	memset(segment, 0, sizeof(*segment));
-
-	segment->l_whence = SEEK_SET;
-	segment->l_start = offset;
-
-	if (segment->l_start < 0) {
-		printf(_("non-numeric offset argument -- %lld\n"), offset);
-		return 0;
-	}
-	segment->l_len = length;
-	if (segment->l_len < 0) {
-		printf(_("non-numeric length argument -- %lld\n"), length);
-		return 0;
-	}
-	return 1;
-}
-
-int
-main(int argc, char *argv[])
-{
-	int c;
-	int fd;
-	int oflags;
-	__uint64_t i;
-	__uint64_t offset;
-	int blocksize = 512;
-	int fill = 0;
-	unsigned char *buffer = NULL;
-	struct stat stat;
-	xfs_flock64_t segment;
-
-	progname = argv[0];
-
-	while ((c = getopt(argc, argv, "b:n:o:ps:vwf")) != -1) {
-		switch (c) {
-		case 'b':
-			blocksize = atoi(optarg);
-			break;
-		case 'n':
-			num_holes = atoll(optarg);
-			break;
-		case 'v':
-			verbose_opt = 1;
-			break;
-		case 'w':
-			wsync = 1;
-			break;
-		case 'p':
-			preserve = 1;
-			break;
-		case 's':
-			status_num = atoi(optarg);
-			break;
-		case 'o':
-			fileoffset = strtoull(optarg, NULL, 16);
-			break;
-		case 'f':
-			fill = 1;
-			break;
-		case '?':
-			usage();
-		}
-	}
-	if (optind == argc-1)
-		filename = argv[optind];
-	else
-		usage();
-
-	buffer = malloc(4096);
-	if (buffer == NULL) {
-	    fprintf(stderr, "%s: blocksize to big to allocate buffer\n", progname);
-	    return 1;
-	}
-
-        oflags = O_RDWR | O_CREAT;
-	oflags |=   (preserve ? 0 : O_TRUNC) |
-		    (wsync ? O_SYNC : 0);
-        
-	if ((fd = open(filename, oflags, 0666)) < 0) {
-		perror("open");
-		return 1;
-	}
-
-	if (fstat(fd, &stat) < 0) {
-		perror("stat");
-		return 1;
-	}
-	if (preserve) {
-		curr_holes = SIZE_TO_NUMHOLES(stat.st_size);
-		if (num_holes < curr_holes) {
-			/* we need to truncate back */
-			if (ftruncate(fd, NUMHOLES_TO_SIZE(num_holes)) < 0) {
-				perror("ftruncate");
-				return 1;
-			}
-			if (verbose_opt) {
-				printf("truncating back to %lld\n", NUMHOLES_TO_SIZE(num_holes));
-			}
-			return 0;
-		}
-	}
-	else {
-		curr_holes = 0;
-	}
-	if (curr_holes != 0 && verbose_opt) {
-		printf("creating %lld more holes\n", num_holes - curr_holes);
-	}
-		
-	printf("xfsctl alloc space\n");
-
-	offset_length(0, NUMHOLES_TO_SIZE(num_holes), &segment);
-
-	if (xfsctl(filename, fd,  XFS_IOC_RESVSP64, &segment) < 0) {
-		perror(" XFS_IOC_RESVSP64");
-		return 0;
-	}	
-
-#if 0
-	/* create holes by seeking and writing */
-	for (i = curr_holes; i < num_holes; i++) {
-
-		offset = NUMHOLES_TO_SIZE(i) + fileoffset;
-
-		if (lseek64(fd, offset, SEEK_SET) < 0) {
-			perror("lseek");
-			return 1;
-		}
-
-		if (write(fd, buffer, blocksize) < blocksize) {
-			perror("write");
-			return 1;
-		}
-
-		if (verbose_opt && ((i+1) % status_num == 0)) {
-			printf("seeked and wrote %lld times\n", i+1);
-		}
-	}
-#endif
-	offset = 0;
-	for (i = curr_holes; i < num_holes; i++) {
-
-		offset = NUMHOLES_TO_SIZE(i) + fileoffset;
-		//printf("unresvsp %lld\n", offset);
-		if (!offset_length(offset, JUMP_SIZE/2, &segment))
-			return 0;
-
-		if (xfsctl(filename, fd, XFS_IOC_UNRESVSP64, &segment) < 0) {
-			perror("XFS_IOC_UNRESVSP64");
-			return 0;
-		}
-	}
-
-	/* ok fill up file */
-
-	if (fill) {
-		int size = 4096;
-		offset  = 0;
-		memset(buffer,'B', size);
-		printf("filling in file num_holes %lld size %lld\n",num_holes, NUMHOLES_TO_SIZE(num_holes));
-		for (i = 0; i < NUMHOLES_TO_SIZE(num_holes) /  size ; i++) {
-			if (lseek64(fd, offset, SEEK_SET) < 0) {
-				perror("lseek");
-				return 1;
-			}
-			//printf("write @ %lld\n",offset);
-			if (write(fd, buffer,  size) <  size ) {
-				perror("write");
-				return 1;
-			}
-			offset += size;
-		}
-	}
-		
-		
-
-	close(fd);
-
-	return 0;
-}
-
---------------040806040806040709080001
-Content-Type: text/plain; x-mac-type="0"; x-mac-creator="0";
- name="xfs_extent_debug"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="xfs_extent_debug"
-
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2008-09-16 00:10:26.000000000 -0500
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2008-09-16 09:44:52.000000000 -0500
-@@ -489,6 +489,11 @@ xfs_zero_eof(
- 	start_zero_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)isize);
- 	end_zero_fsb = XFS_B_TO_FSBT(mp, offset - 1);
- 	ASSERT((xfs_sfiloff_t)last_fsb < (xfs_sfiloff_t)start_zero_fsb);
-+
-+	printk("%s: start_zero_fsb %lld end_zero_fsb %lld offset %lld isize %lld\n",
-+	       __FUNCTION__, start_zero_fsb, end_zero_fsb,
-+	       offset,isize);
-+
- 	if (last_fsb == end_zero_fsb) {
- 		/*
- 		 * The size was only incremented on its last block.
-@@ -503,6 +508,11 @@ xfs_zero_eof(
- 		zero_count_fsb = end_zero_fsb - start_zero_fsb + 1;
- 		error = xfs_bmapi(NULL, ip, start_zero_fsb, zero_count_fsb,
- 				  0, NULL, 0, &imap, &nimaps, NULL, NULL);
-+#warning printk added
-+		printk("%s: after bmapi start_zero_fsb %lld end_zero_fsb %lld offset %lld isize %lld\n",
-+		       __FUNCTION__, start_zero_fsb, end_zero_fsb,
-+		       offset,isize);
-+
- 		if (error) {
- 			ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
- 			return error;
-Index: linux-2.6-xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.c	2008-09-16 00:10:25.000000000 -0500
-+++ linux-2.6-xfs/fs/xfs/xfs_bmap.c	2008-09-16 09:44:52.000000000 -0500
-@@ -2216,7 +2216,8 @@ xfs_bmap_add_extent_hole_real(
- 					new->br_startblock,
- 					new->br_blockcount, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			//XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			printk("%s:%d i %d\n",__FUNCTION__,__LINE__,i);
- 			cur->bc_rec.b.br_state = new->br_state;
- 			if ((error = xfs_bmbt_insert(cur, &i)))
- 				goto done;
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-09-16 00:10:26.000000000 -0500
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-09-16 09:44:52.000000000 -0500
-@@ -4157,6 +4157,7 @@ xfs_iext_indirect_to_direct(
- 	ASSERT(nextents <= XFS_LINEAR_EXTS);
- 	size = nextents * sizeof(xfs_bmbt_rec_t);
- 
-+	printk("%s: if_bytes %d\n",__FUNCTION__,ifp->if_bytes);
- 	xfs_iext_irec_compact_full(ifp);
- 	ASSERT(ifp->if_real_bytes == XFS_IEXT_BUFSZ);
- 
-@@ -4165,6 +4166,7 @@ xfs_iext_indirect_to_direct(
- 	ifp->if_flags &= ~XFS_IFEXTIREC;
- 	ifp->if_u1.if_extents = ep;
- 	ifp->if_bytes = size;
-+	printk("%s: if_bytes %d\n",__FUNCTION__,ifp->if_bytes);
- 	if (nextents < XFS_LINEAR_EXTS) {
- 		xfs_iext_realloc_direct(ifp, size);
- 	}
-@@ -4439,6 +4441,32 @@ xfs_iext_irec_new(
- 	return (&erp[erp_idx]);
- }
- 
-+void
-+xfs_iext_print(
-+	xfs_ifork_t	*ifp)		/* inode fork pointer */
-+{
-+
-+	int		i;		/* loop counter */
-+	int		nlists;		/* number of irec's (ex lists) */
-+	xfs_ext_irec_t	*erp;		/* indirection array pointer */
-+	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-+
-+	printk("%s real_bytes %d\n",__FUNCTION__,ifp->if_real_bytes );
-+	erp = ifp->if_u1.if_ext_irec;
-+	for (i = 0; i < nlists - 1; i++) {
-+		printk("%s\ti %d "
-+		       "erp[i] 0x%p buf 0x%p off %d count %d "
-+		       "\n",
-+		       __FUNCTION__,
-+		       i,
-+		       &erp[i],
-+		       (&erp[i])->er_extbuf,
-+		       (&erp[i])->er_extoff,
-+		       (&erp[i])->er_extcount);
-+	}
-+}
-+
-+
- /*
-  * Remove a record from the indirection array.
-  */
-@@ -4459,9 +4487,26 @@ xfs_iext_irec_remove(
- 			-erp->er_extcount);
- 		kmem_free(erp->er_extbuf);
- 	}
-+//	printk("%s: if_real_bytes 0x%x\n",__FUNCTION__,ifp->if_real_bytes);
- 	/* Compact extent records */
- 	erp = ifp->if_u1.if_ext_irec;
- 	for (i = erp_idx; i < nlists - 1; i++) {
-+		printk("%s i %d "
-+		       "erp[i] 0x%p buf 0x%p off %d count %d "
-+		       "erp[i+1] 0x%p buf 0x%p off %d count %d "
-+		       "\n",
-+		       __FUNCTION__,
-+		       i,
-+		       &erp[i],
-+		       (&erp[i])->er_extbuf,
-+		       (&erp[i])->er_extoff,
-+		       (&erp[i])->er_extcount,
-+		       &erp[i+1],
-+		       (&erp[i+1])->er_extbuf,
-+		       (&erp[i+1])->er_extoff,
-+		       (&erp[i+1])->er_extcount
-+			);
-+
- 		memmove(&erp[i], &erp[i+1], sizeof(xfs_ext_irec_t));
- 	}
- 	/*
-@@ -4472,12 +4517,13 @@ xfs_iext_irec_remove(
- 	 * infinite loop.
- 	 */
- 	if (--nlists) {
--		xfs_iext_realloc_indirect(ifp,
--			nlists * sizeof(xfs_ext_irec_t));
-+		printk("%s: is this ok?\n",__FUNCTION__);
-+		xfs_iext_realloc_indirect(ifp, nlists * sizeof(xfs_ext_irec_t));
- 	} else {
- 		kmem_free(ifp->if_u1.if_ext_irec);
- 	}
- 	ifp->if_real_bytes = nlists * XFS_IEXT_BUFSZ;
-+	//printk("%s: if_real_bytes 0x%x\n",__FUNCTION__,ifp->if_real_bytes);
- }
- 
- /*
-@@ -4499,21 +4545,36 @@ xfs_iext_irec_compact(
- 	xfs_extnum_t	nextents;	/* number of extents in file */
- 	int		nlists;		/* number of irec's (ex lists) */
- 
-+	xfs_inode_t	*xip;
-+
- 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
- 	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
- 	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
- 
-+	xip = container_of(ifp, xfs_inode_t, i_df);
-+
-+	printk("%s: xip 0x%p nextents %d nlists %d ratko 3 %d ratio 1 %d\t",
-+	       __FUNCTION__, xip, nextents, nlists,
-+	       (nlists * XFS_LINEAR_EXTS) >> 3,
-+	       (nlists * XFS_LINEAR_EXTS) >> 1);
- 	if (nextents == 0) {
-+		printk("%s:%d destroy\n",__FUNCTION__,__LINE__);
- 		xfs_iext_destroy(ifp);
- 	} else if (nextents <= XFS_INLINE_EXTS) {
-+		printk("%s:%d indirect_to_direct 0\n",__FUNCTION__,__LINE__);
- 		xfs_iext_indirect_to_direct(ifp);
- 		xfs_iext_direct_to_inline(ifp, nextents);
- 	} else if (nextents <= XFS_LINEAR_EXTS) {
-+		printk("%s:%d indirect_to_direct 1\n",__FUNCTION__,__LINE__);
- 		xfs_iext_indirect_to_direct(ifp);
--	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 3) {
-+	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 1){
-+		printk("%s:%d compact_full\n",__FUNCTION__,__LINE__);
- 		xfs_iext_irec_compact_full(ifp);
- 	} else if (nextents < (nlists * XFS_LINEAR_EXTS) >> 1) {
-+		printk("%s:%d compact_pages\n",__FUNCTION__,__LINE__);
- 		xfs_iext_irec_compact_pages(ifp);
-+	} else {
-+		printk("\n");
- 	}
- }
- 
-@@ -4576,6 +4637,7 @@ xfs_iext_irec_compact_full(
- 	erp_next = erp + 1;
- 	ep_next = erp_next->er_extbuf;
- 
-+	printk("%s return 0x%p\n",__FUNCTION__,__builtin_return_address(0));
- 	while (erp_idx < nlists - 1) {
- 		/*
- 		 * Check how many extent records are available in this irec.
-@@ -4589,6 +4651,18 @@ xfs_iext_irec_compact_full(
- 			 * the previous page.
- 			 */
- 			ext_diff = MIN(ext_avail, erp_next->er_extcount);
-+			
-+			if (erp_next->er_extcount > ext_diff) {
-+				printk("partial moves is broken skip %d %d\n",
-+				       erp_next->er_extcount, ext_diff);
-+				erp_idx++;
-+				goto next;
-+			}
-+
-+			printk("%s: memcpy dst 0x%p src 0x%p size %d\n",__FUNCTION__,
-+			       ep,
-+			       ep_next,
-+			       ext_diff * sizeof(xfs_bmbt_rec_t));
- 			memcpy(ep, ep_next, ext_diff * sizeof(xfs_bmbt_rec_t));
- 			erp->er_extcount += ext_diff;
- 			erp_next->er_extcount -= ext_diff;
-@@ -4598,16 +4672,19 @@ xfs_iext_irec_compact_full(
- 			 * remove it.
- 			 */
- 			if (erp_next->er_extcount == 0) {
-+				printk("%s:%d extcount==0 \n",__FUNCTION__,__LINE__);
- 				/*
- 				 * Free page before removing extent record
- 				 * so er_extoffs don't get modified in
- 				 * xfs_iext_irec_remove.
- 				 */
-+				xfs_iext_print(ifp);
- 				kmem_free(erp_next->er_extbuf);
- 				erp_next->er_extbuf = NULL;
- 				xfs_iext_irec_remove(ifp, erp_idx + 1);
- 				erp = &ifp->if_u1.if_ext_irec[erp_idx];
- 				nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-+				xfs_iext_print(ifp);
- 
- 			/*
- 			 * If the next irec is not empty move up the content
-@@ -4615,17 +4692,29 @@ xfs_iext_irec_compact_full(
- 			 * the beggining of this one.
- 			 */
- 			} else {
-+				xfs_iext_print(ifp);
-+				printk("%s: memmove dst 0x%p src 0x%p size %d\n",__FUNCTION__,
-+				       erp_next->er_extbuf, &ep_next[ext_diff],
-+				       erp_next->er_extcount *
-+				       sizeof(xfs_bmbt_rec_t));
- 				memmove(erp_next->er_extbuf, &ep_next[ext_diff],
- 					erp_next->er_extcount *
- 					sizeof(xfs_bmbt_rec_t));
- 				ep_next = erp_next->er_extbuf;
-+				printk("%s: memset src 0x%p erp count %d size %d\n",__FUNCTION__,
-+				       &ep_next[erp_next->er_extcount],
-+				       erp_next->er_extcount,
-+				       (XFS_LINEAR_EXTS -
-+				        erp_next->er_extcount) *
-+					sizeof(xfs_bmbt_rec_t));
-+
- 				memset(&ep_next[erp_next->er_extcount], 0,
- 					(XFS_LINEAR_EXTS -
- 						erp_next->er_extcount) *
- 					sizeof(xfs_bmbt_rec_t));
-+				xfs_iext_print(ifp);
- 			}
- 		}
--
- 		if (erp->er_extcount == XFS_LINEAR_EXTS) {
- 			erp_idx++;
- 			if (erp_idx < nlists)
-@@ -4633,6 +4722,7 @@ xfs_iext_irec_compact_full(
- 			else
- 				break;
- 		}
-+	next:
- 		ep = &erp->er_extbuf[erp->er_extcount];
- 		erp_next = erp + 1;
- 		ep_next = erp_next->er_extbuf;
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-09-16 00:10:26.000000000 -0500
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-09-16 09:44:52.000000000 -0500
-@@ -2054,6 +2054,7 @@ kdbm_bp(int argc, const char **argv)
- static int
- kdbm_bpdelay(int argc, const char **argv)
- {
-+#if 0
- 	struct list_head	*xfs_buftarg_list = xfs_get_buftarg_list();
- 	struct list_head	*curr, *next;
- 	xfs_buftarg_t		*tp, *n;
-@@ -2091,6 +2092,7 @@ kdbm_bpdelay(int argc, const char **argv
- 			}
- 		}
- 	}
-+#endif
- 	return 0;
- }
- 
-@@ -3831,21 +3833,32 @@ xfs_rw_trace_entry(ktrace_entry_t *ktep)
- static void
- xfs_xexlist_fork(xfs_inode_t *ip, int whichfork)
- {
--	int nextents, i;
-+	int nextents, nlists, i;
- 	xfs_ifork_t *ifp;
- 	xfs_bmbt_irec_t irec;
-+	xfs_bmbt_rec_host_t *rec_h;
- 
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	if (ifp->if_flags & XFS_IFEXTENTS) {
- 		nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
--		kdb_printf("inode 0x%p %cf extents 0x%p nextents 0x%x\n",
-+		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-+		kdb_printf("inode 0x%p %cf extents 0x%p nextents %d nlists %d\n",
- 			ip, "da"[whichfork], xfs_iext_get_ext(ifp, 0),
--			nextents);
-+			   nextents,nlists);
- 		for (i = 0; i < nextents; i++) {
--			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, i), &irec);
-+			rec_h = xfs_iext_get_ext(ifp, i);
-+
-+			if (ifp->if_flags & XFS_IFEXTIREC) {
-+				xfs_ext_irec_t	*erp;		/* irec pointer */
-+				int		erp_idx = 0;	/* irec index */
-+				xfs_extnum_t	page_idx = i;	/* ext index in target list */
-+				erp = xfs_iext_idx_to_irec(ifp, &page_idx, &erp_idx, 0);
-+				kdb_printf("page_idx %d erp_idx %d\t",page_idx,erp_idx);
-+			}
-+			xfs_bmbt_get_all(rec_h, &irec);
- 			kdb_printf(
--		"%d: startoff %Ld startblock %s blockcount %Ld flag %d\n",
--			i, irec.br_startoff,
-+		"%d: addr 0x%p startoff %Ld startblock %s blockcount %Ld flag %d\n",
-+		        i, rec_h, irec.br_startoff,
- 			xfs_fmtfsblock(irec.br_startblock, ip->i_mount),
- 			irec.br_blockcount, irec.br_state);
- 		}
-
---------------040806040806040709080001--
+------=_Part_35496_3674225.1221715762115--
