@@ -1,209 +1,155 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Sep 2008 22:27:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I5Rpcp010340
-	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:27:51 -0700
-Received: from rv-out-0708.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9AF3130495B
-	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:23 -0700 (PDT)
-Received: from rv-out-0708.google.com (rv-out-0708.google.com [209.85.198.244]) by cuda.sgi.com with ESMTP id rwvy6HQifiWar8y9 for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:23 -0700 (PDT)
-Received: by rv-out-0708.google.com with SMTP id f25so3408931rvb.32
-        for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 22:29:22 -0700 (PDT)
-Message-ID: <e03b90ae0809172229g64c4cb81lc4f2e039168a7d7@mail.gmail.com>
-Date: Wed, 17 Sep 2008 22:29:22 -0700
-From: "Jeff Breidenbach" <jeff@jab.org>
-Subject: Re: read only remount not so happy
-In-Reply-To: <20080916182927.GA13562@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 17 Sep 2008 23:52:11 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I6q6GH014771
+	for <xfs@oss.sgi.com>; Wed, 17 Sep 2008 23:52:06 -0700
+Message-ID: <48D1FCEF.80903@sgi.com>
+Date: Thu, 18 Sep 2008 17:02:07 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_35496_3674225.1221715762115"
-References: <e03b90ae0809141904r47de6883k185174bb13df34b4@mail.gmail.com>
-	 <e03b90ae0809152103w5653bdbfrc1f060d9e41e7246@mail.gmail.com>
-	 <20080916055614.GX5811@disturbed>
-	 <20080916182927.GA13562@infradead.org>
+Subject: Re: REVIEW: Fix for incore extent corruption.
+References: <48D19A83.4040608@thebarn.com> <48D1CD46.4010104@sgi.com> <48D1DCD5.7040502@thebarn.com>
+In-Reply-To: <48D1DCD5.7040502@thebarn.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Russell Cattelan <cattelan@thebarn.com>
 Cc: xfs@oss.sgi.com
 
-------=_Part_35496_3674225.1221715762115
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Russell Cattelan wrote:
+> Lachlan McIlroy wrote:
+>> Russell Cattelan wrote:
+>>>
+>>> Reference:
+>>> http://oss.sgi.com/archives/xfs/2008-06/msg00209.html
+>>>
+>>>
+>>> It turns out that the code in question is still broken.
+>>>
+>>> xfs_iext_irec_compact_full will still corrupt the incore extent list 
+>>> if it does
+>>> the the partial copy of extents from one page to the next.
+>>> I haven't quit figured out where things get out of sync but somehow
+>>> if_real_bytes which tracks the total number of bytes available in
+>>> the extent buffers and if_bytes (which tracks the total bytes used
+>>> for extents.
+>>>
+>>> So at some point the inode thinks is has more extents than allocated 
+>>> pages allow.
+>>> So what happens is xfs_iext_idx_to_irec which uses idxp to pass IN the
+>>> absolute extent index is suppose to change  idxp on the way OUT and 
+>>> erp_idxp
+>>> to be a buffer index pair. What happens is that it doesn't find the 
+>>> extent so idxp
+>>> is left holding the same value as was passed in and erp_idx is 0.
+>>> This causes the extent code to then index way past the end of extent 
+>>> buffer 0
+>>> into garbage mem.
+>>>
+>>> with 4k ext buffers max extent count per buffer is 256.
+>>> example being:
+>>> IN:
+>>> idxp = 400
+>>> should become:
+>>> idexp = 144
+>>> erp_idxp = 1
+>>>
+>>> but we end up not finding the extent so
+>>> we have
+>>> idxp = 400
+>>> erp_idxp =0
+>>>
+>>> so we now index 6400 bytes into a 4k buffer.
+>>>
+>>> Which often times  is a pages of mostly 0 so we end up with access to 
+>>> block 0 errors.
+>>>
+>>> The more I looked at this code the more it didn't make sense to do 
+>>> partial moves.
+>>> Since the list of extent buffers is only scanned once vs restarting 
+>>> the list whenever a partial move is done,
+>>> it is very unlikely to actually free an extent buffer. (granted it's 
+>>> possible but unlikely)
+>>>
+>>> xfs_iext_irec_compact_pages does the same thing as 
+>>> xfs_iext_irec_compact_full except that doesn't handle partial moves.
+>>>
+>>> xfs_iext_irec_compact is written such that ratio of current extents 
+>>> has to be significantly smaller than the current allocated space
+>>> xfs_inode: 4513
+>>> nextents < ( nlists  * XFS_LINEAR_EXT) >> 3
+>>>
+>>> As it turns out 99% of the time it calls xfs_iext_irec_compact_pages
+>>> (which is why it has been so hard to track this bug down).
+>>>
+>>> If you change the 3 to a 1 so the code alway calls compact_full vs 
+>>> compact_pages the extent list will corrupt amost
+>>> immediately.
+>> Awesome work Russell, we'll give it a go.
+>>
+>>>
+>>> Since the code is broken, almost never used, and provides only micro 
+>>> optimization of incore space I propose we just
+>>> remove it all together.
+>> Are you sure the bug is in xfs_iext_irec_compact_full?
+>>
+>> Is it possible that we are still indexing beyond the page when using
+>> xfs_iext_irec_compact_pages but the pages just happen to be sequential
+>> so the indexing gets the extent anyway?
+> I added a bunch of printk to track this down,  the compact_pages path is 
+> hit
+> a lot in fact as far as I can tell all running file systems that shrink 
+> extents and don't crash :-)
+> 
+> I should have done this originally my I'm including the modified 
+> makeextents that
+> I used to tickle this problem.
+> It reserves a bunch of space to create a contiguous extents then in 
+> unreserves space to
+> poke a bunch of holes creating a big extent list, it then goes back and 
+> writes the whole
+> file hopefully collapsing extents as it goes.
+I've got one just like it!  I made the change (3 -> 1) and ran it
+and it asserted in xfs_bmap_add_extent_unwritten_real() with
+ASSERT(PREV.br_state == oldext) failing.
 
-Logs attached in case they are of help.
+I suspect the problem is that xfs_iext_irec_compact_full is not updating
+the er_extoff field and that's why lookups are not finding extents.
 
-------=_Part_35496_3674225.1221715762115
-Content-Type: text/plain; name=logs.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fl8y0oe82
-Content-Disposition: attachment; filename=logs.txt
-
-U2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEw
-Ljg0ODMxMV0gQXNzZXJ0aW9uIGZhaWxlZDogYXRvbWljX3JlYWQoJm1wLT5t
-X2FjdGl2ZV90cmFucykgPT0gMCwgZmlsZTogL2J1aWxkL2J1aWxkZC9saW51
-eC0yLjYuMjQvZnMveGZzL3hmc192ZnNvcHMuYywgbGluZTogNzA4ClNlcCAx
-NSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDg0
-NDFdIENQVSA2IApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5l
-bDogWzk2MDgzMTAuODQ4NDYzXSBNb2R1bGVzIGxpbmtlZCBpbjogeGZzIHBh
-cnBvcnRfcGMgbHAgcGFycG9ydCBsb29wIGlwdjYgaVRDT193ZHQgaWdiIGNv
-bnRhaW5lciBidXR0b24gaVRDT192ZW5kb3Jfc3VwcG9ydCBzaHBjaHAgcGNp
-X2hvdHBsdWcgZXZkZXYgcGNzcGtyIHBzbW91c2UgZXh0MyBqYmQgbWJjYWNo
-ZSBhdGFfZ2VuZXJpYyB1c2JoaWQgaGlkIHBhdGFfYWNwaSBzZyBzcl9tb2Qg
-Y2Ryb20gc2RfbW9kIGF0YV9waWl4IGZsb3BweSBlaGNpX2hjZCB1aGNpX2hj
-ZCBsaWJhdGEgdXNiY29yZSB0ZzMgYXJjbXNyIHNjc2lfbW9kIHJhaWQxMCBy
-YWlkNDU2IGFzeW5jX3hvciBhc3luY19tZW1jcHkgYXN5bmNfdHggeG9yIHJh
-aWQxIHJhaWQwIG11bHRpcGF0aCBsaW5lYXIgbWRfbW9kIHRoZXJtYWwgcHJv
-Y2Vzc29yIGZhbiBmdXNlClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUg
-a2VybmVsOiBbOTYwODMxMC44NDg3MDddIFBpZDogMTg2MDAsIGNvbW06IG1v
-dW50IE5vdCB0YWludGVkIDIuNi4yNC04LXNlcnZlciAjMQpTZXAgMTUgMDM6
-MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4NzM1XSBS
-SVA6IDAwMTA6W19lbmQrMTMwNDE1ODk4LzIxMjk1Nzk5MzZdICBbX2VuZCsx
-MzA0MTU4OTgvMjEyOTU3OTkzNl0gOnhmczphc3NmYWlsKzB4MWEvMHgyMApT
-ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
-ODQ4ODA2XSBSU1A6IDAwMTg6ZmZmZjgxMDEwMGMwZGMwOCAgRUZMQUdTOiAw
-MDAxMDI5NgpTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
-Wzk2MDgzMTAuODQ4ODMyXSBSQVg6IDAwMDAwMDAwMDAwMDAwOGQgUkJYOiBm
-ZmZmODEwODAzYmJjMDAwIFJDWDogMDAwMDAwMDAwMDAwMDAwMQpTZXAgMTUg
-MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4ODc1
-XSBSRFg6IGZmZmZmZmZmODA1ODVjNjggUlNJOiAwMDAwMDAwMDAwMDAwMDgy
-IFJESTogZmZmZmZmZmY4MDU4NWM2MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
-cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ4OTE4XSBSQlA6IGZmZmY4MTAx
-MDExODEwMDAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogZmZmZjgxMDZl
-MmQ3YmExMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
-Wzk2MDgzMTAuODQ4OTYyXSBSMTA6IGZmZmY4MTAwMDEwNzFjNjAgUjExOiAw
-MDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjgxMDgwM2JiYzAwMApTZXAgMTUg
-MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MDA1
-XSBSMTM6IGZmZmY4MTAxMDBjMGRjNmMgUjE0OiBmZmZmODEwMmJiZjZiMDAw
-IFIxNTogMDAwMDAwMDAwMDAwMDAwOApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
-cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MDQ4XSBGUzogIDAwMDA3ZjI0
-YjYwNzQ2ZTAoMDAwMCkgR1M6ZmZmZjgxMDgxMDA2NmEwMCgwMDAwKSBrbmxH
-UzowMDAwMDAwMDAwMDAwMDAwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hp
-dmUga2VybmVsOiBbOTYwODMxMC44NDkwOTRdIENTOiAgMDAxMCBEUzogMDAw
-MCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwM2IKU2VwIDE1IDAzOjIz
-OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTEyMV0gQ1Iy
-OiAwMDAwN2ZkMTc1NmNjMDAwIENSMzogMDAwMDAwMDYyODE3OTAwMCBDUjQ6
-IDAwMDAwMDAwMDAwMDA2ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2
-ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTE2Nl0gRFIwOiAwMDAwMDAwMDAwMDAw
-MDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAw
-MDAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
-MzEwLjg0OTIxMF0gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAw
-MDBmZmZmMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKU2VwIDE1IDAzOjIz
-OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTI1NF0gUHJv
-Y2VzcyBtb3VudCAocGlkOiAxODYwMCwgdGhyZWFkaW5mbyBmZmZmODEwMTAw
-YzBjMDAwLCB0YXNrIGZmZmY4MTAxMDBmNzc3NDApClNlcCAxNSAwMzoyMzoy
-MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDkzMDFdIFN0YWNr
-OiAgZmZmZjgxMDEwMTE4MTAwMCBmZmZmZmZmZjg4MzYxODllIGZmZmY4MTA4
-MDNiYmMwMDAgZmZmZmZmZmY4ODM2MTk0MwpTZXAgMTUgMDM6MjM6MjAgbWFp
-bC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5MzU4XSAgMDAwMDAwMDAw
-MDAwMDAwMCBmZmZmZmZmZjg4MzcxZTU2IDdmZmZmZmZmZmZmZmZmZmYgZmZm
-ZjgxMDdmZmM5ZjQwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtl
-cm5lbDogWzk2MDgzMTAuODQ5NDExXSAgMDAwMDAwMDBmZmZmZmZmMCAwMDAw
-MDAwMDAwMDAwMDAwIGZmZmY4MTAyYmJmNmIwMDAgZmZmZmZmZmY4MDJiMTQ0
-NQpTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
-MTAuODQ5NDQ3XSBDYWxsIFRyYWNlOgpTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
-cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5NDk4XSAgW19lbmQrMTMwMzQ1
-MDIyLzIxMjk1Nzk5MzZdIDp4ZnM6eGZzX2F0dHJfcXVpZXNjZSsweDRlLzB4
-NzAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
-MzEwLjg0OTUzOV0gIFtfZW5kKzEzMDM0NTE4Ny8yMTI5NTc5OTM2XSA6eGZz
-Onhmc19tbnR1cGRhdGUrMHg2My8weDkwClNlcCAxNSAwMzoyMzoyMCBtYWls
-LWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDk1NzldICBbX2VuZCsxMzA0
-MTIwMjIvMjEyOTU3OTkzNl0gOnhmczp4ZnNfZnNfcmVtb3VudCsweDU2LzB4
-OTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
-MzEwLjg0OTYxMl0gIFtkb19yZW1vdW50X3NiKzIxMy8zMzZdIGRvX3JlbW91
-bnRfc2IrMHhkNS8weDE1MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZl
-IGtlcm5lbDogWzk2MDgzMTAuODQ5NjQyXSAgW2RvX21vdW50KzExNDIvMjAx
-Nl0gZG9fbW91bnQrMHg0NzYvMHg3ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwt
-YXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTY3Ml0gIFtoYW5kbGVfbW1f
-ZmF1bHQrOTg3LzIwNDhdIGhhbmRsZV9tbV9mYXVsdCsweDNkYi8weDgwMApT
-ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
-ODQ5NzAzXSAgW2ZpbGVtYXBfZmF1bHQrMzkyLzkxMl0gZmlsZW1hcF9mYXVs
-dCsweDE4OC8weDM5MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtl
-cm5lbDogWzk2MDgzMTAuODQ5NzMzXSAgW19fdXBfcmVhZCszMy8xNzZdIF9f
-dXBfcmVhZCsweDIxLzB4YjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2
-ZSBrZXJuZWw6IFs5NjA4MzEwLjg0OTc2M10gIFtkb19wYWdlX2ZhdWx0KzQ2
-NC8yMTEyXSBkb19wYWdlX2ZhdWx0KzB4MWQwLzB4ODQwClNlcCAxNSAwMzoy
-MzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NDk3OTJdICBb
-em9uZV9zdGF0aXN0aWNzKzEyNS8xMjhdIHpvbmVfc3RhdGlzdGljcysweDdk
-LzB4ODAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5
-NjA4MzEwLjg0OTgyN10gIFtfX2dldF9mcmVlX3BhZ2VzKzI3LzY0XSBfX2dl
-dF9mcmVlX3BhZ2VzKzB4MWIvMHg0MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
-cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5ODU3XSAgW3N5c19tb3VudCsx
-NTUvMjU2XSBzeXNfbW91bnQrMHg5Yi8weDEwMApTZXAgMTUgMDM6MjM6MjAg
-bWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5ODg3XSAgW3N5c3Rl
-bV9jYWxsKzEyNi8xMzFdIHN5c3RlbV9jYWxsKzB4N2UvMHg4MwpTZXAgMTUg
-MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODQ5OTE2
-XSAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
-MzEwLjg0OTkzNl0gClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2Vy
-bmVsOiBbOTYwODMxMC44NDk5MzZdIENvZGU6IDBmIDBiIGViIGZlIDY2IDkw
-IDQxIDU1IDQxIDU0IDQ5IDg5IGY0IDU1IDg5IGZkIDQ4IGM3IGM3IGU4IApT
-ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
-ODUwMDk2XSAgUlNQIDxmZmZmODEwMTAwYzBkYzA4PgpTZXAgMTUgMDM6MjM6
-MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUwNDU3XSAtLS1b
-IGVuZCB0cmFjZSA3MDliNDJkY2ZkYjdkN2IyIF0tLS0KU2VwIDE1IDAzOjIz
-OjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MDUyN10gV0FS
-TklORzogYXQgL2J1aWxkL2J1aWxkZC9saW51eC0yLjYuMjQva2VybmVsL2V4
-aXQuYzo5MTcgZG9fZXhpdCgpClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hp
-dmUga2VybmVsOiBbOTYwODMxMC44NTA2MTRdIFBpZDogMTg2MDAsIGNvbW06
-IG1vdW50IFRhaW50ZWQ6IEcgICAgICBEIDIuNi4yNC04LXNlcnZlciAjMQpT
-ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
-ODUwNjg2XSAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6
-IFs5NjA4MzEwLjg1MDY4N10gQ2FsbCBUcmFjZToKU2VwIDE1IDAzOjIzOjIw
-IG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MDgxNF0gIFtkb19l
-eGl0KzE5NjIvMjM2OF0gZG9fZXhpdCsweDdhYS8weDk0MApTZXAgMTUgMDM6
-MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUwODg1XSAg
-W3ZnYWNvbl9ibGFuays4MzIvMTU2OF0gdmdhY29uX2JsYW5rKzB4MzQwLzB4
-NjIwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYw
-ODMxMC44NTA5NTddICBbc2V0X3BhbGV0dGUrOS85Nl0gc2V0X3BhbGV0dGUr
-MHg5LzB4NjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6
-IFs5NjA4MzEwLjg1MTAyOV0gIFt2Z2Fjb25fc2V0X2N1cnNvcl9zaXplKzQ2
-LzI0MF0gdmdhY29uX3NldF9jdXJzb3Jfc2l6ZSsweDJlLzB4ZjAKU2VwIDE1
-IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTEw
-M10gIFtkaWUrODIvMTEyXSBkaWUrMHg1Mi8weDcwClNlcCAxNSAwMzoyMzoy
-MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NTExNzNdICBbZG9f
-aW52YWxpZF9vcCsxMzQvMTYwXSBkb19pbnZhbGlkX29wKzB4ODYvMHhhMApT
-ZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAu
-ODUxMjUzXSAgW19lbmQrMTMwNDE1ODk4LzIxMjk1Nzk5MzZdIDp4ZnM6YXNz
-ZmFpbCsweDFhLzB4MjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBr
-ZXJuZWw6IFs5NjA4MzEwLjg1MTMyNl0gIFtwcmludGsrNzgvOTZdIHByaW50
-aysweDRlLzB4NjAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJu
-ZWw6IFs5NjA4MzEwLjg1MTM5Nl0gIFtlcnJvcl9leGl0KzAvODFdIGVycm9y
-X2V4aXQrMHgwLzB4NTEKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBr
-ZXJuZWw6IFs5NjA4MzEwLjg1MTQ3OF0gIFtfZW5kKzEzMDQxNTg5OC8yMTI5
-NTc5OTM2XSA6eGZzOmFzc2ZhaWwrMHgxYS8weDIwClNlcCAxNSAwMzoyMzoy
-MCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYwODMxMC44NTE1NTldICBbX2Vu
-ZCsxMzA0MTU4OTgvMjEyOTU3OTkzNl0gOnhmczphc3NmYWlsKzB4MWEvMHgy
-MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
-MTAuODUxNjQxXSAgW19lbmQrMTMwMzQ1MDIyLzIxMjk1Nzk5MzZdIDp4ZnM6
-eGZzX2F0dHJfcXVpZXNjZSsweDRlLzB4NzAKU2VwIDE1IDAzOjIzOjIwIG1h
-aWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTcyM10gIFtfZW5kKzEz
-MDM0NTE4Ny8yMTI5NTc5OTM2XSA6eGZzOnhmc19tbnR1cGRhdGUrMHg2My8w
-eDkwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2VybmVsOiBbOTYw
-ODMxMC44NTE4MDVdICBbX2VuZCsxMzA0MTIwMjIvMjEyOTU3OTkzNl0gOnhm
-czp4ZnNfZnNfcmVtb3VudCsweDU2LzB4OTAKU2VwIDE1IDAzOjIzOjIwIG1h
-aWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MTg3OF0gIFtkb19yZW1v
-dW50X3NiKzIxMy8zMzZdIGRvX3JlbW91bnRfc2IrMHhkNS8weDE1MApTZXAg
-MTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUx
-OTQ5XSAgW2RvX21vdW50KzExNDIvMjAxNl0gZG9fbW91bnQrMHg0NzYvMHg3
-ZTAKU2VwIDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4
-MzEwLjg1MjAyMF0gIFtoYW5kbGVfbW1fZmF1bHQrOTg3LzIwNDhdIGhhbmRs
-ZV9tbV9mYXVsdCsweDNkYi8weDgwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1h
-cmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUyMDkyXSAgW2ZpbGVtYXBfZmF1
-bHQrMzkyLzkxMl0gZmlsZW1hcF9mYXVsdCsweDE4OC8weDM5MApTZXAgMTUg
-MDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgzMTAuODUyMTY0
-XSAgW19fdXBfcmVhZCszMy8xNzZdIF9fdXBfcmVhZCsweDIxLzB4YjAKU2Vw
-IDE1IDAzOjIzOjIwIG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1
-MjIzNF0gIFtkb19wYWdlX2ZhdWx0KzQ2NC8yMTEyXSBkb19wYWdlX2ZhdWx0
-KzB4MWQwLzB4ODQwClNlcCAxNSAwMzoyMzoyMCBtYWlsLWFyY2hpdmUga2Vy
-bmVsOiBbOTYwODMxMC44NTIzMDhdICBbem9uZV9zdGF0aXN0aWNzKzEyNS8x
-MjhdIHpvbmVfc3RhdGlzdGljcysweDdkLzB4ODAKU2VwIDE1IDAzOjIzOjIw
-IG1haWwtYXJjaGl2ZSBrZXJuZWw6IFs5NjA4MzEwLjg1MjM4NF0gIFtfX2dl
-dF9mcmVlX3BhZ2VzKzI3LzY0XSBfX2dldF9mcmVlX3BhZ2VzKzB4MWIvMHg0
-MApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDogWzk2MDgz
-MTAuODUyNDU1XSAgW3N5c19tb3VudCsxNTUvMjU2XSBzeXNfbW91bnQrMHg5
-Yi8weDEwMApTZXAgMTUgMDM6MjM6MjAgbWFpbC1hcmNoaXZlIGtlcm5lbDog
-Wzk2MDgzMTAuODUyNTI1XSAgW3N5c3RlbV9jYWxsKzEyNi8xMzFdIHN5c3Rl
-bV9jYWxsKzB4N2UvMHg4Mwo=
-
-------=_Part_35496_3674225.1221715762115--
+> 
+> i.e.
+> makeextents -v -c 512 foo ; xfs_bmap -v foo
+> should give you 1024 extents
+> makeextents -v -f -c 512 foo ; xfs_bmap -v foo
+> will do the same thing but fill in the file with writes.
+> The number of resulting extents vary, but sometimes you
+> end up with one extent. sometimes more.
+> 
+> If you change the 3 to a 1 in the current code so compact_full is used 
+> vs compact_pages
+> and run the test it will hit some problem every time.
+> xexlist in kdb will show the corruption in the incore list.
+> 
+> This will run the code through all 3 formats so if you are lucky you end 
+> up hitting all
+> the cases indirect > 256, direct <= 256, and inline <= 2
+> 
+> note:  xfs_iext_indirect_to_direct does call compact_full but in that 
+> case we are already down
+> to under 256 extents (at least we should be ) and at that point 
+> compact_full will behave just like compact_pages.
+> 
+> 
+>>
+>>>
+>>> I'm also including an xfsidbg patch that for xexlist that prints out 
+>>> buffer offset and index.
+>>>
+>>> -Russell Cattelan
+>>>
+>>>
+>>
+> 
