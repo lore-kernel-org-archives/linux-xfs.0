@@ -1,39 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Sep 2008 00:35:02 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 18 Sep 2008 00:57:34 -0700 (PDT)
 Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I7Yu2Z024535
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2008 00:34:58 -0700
-Subject: TAKE 987086 - Fix use-after-free with log and quotas
-Message-Id: <20080918073621.39D9758C52AE@chook.melbourne.sgi.com>
-Date: Thu, 18 Sep 2008 17:36:21 +1000 (EST)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8I7vUE6025840
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2008 00:57:31 -0700
+Date: Thu, 18 Sep 2008 17:58:59 +1000
+Subject: [GIT PULL] XFS update for 2.6.27
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-Id: <20080918075859.BDE0D58C52AE@chook.melbourne.sgi.com>
 From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-Fix use-after-free with log and quotas
+The following changes since commit 45e9c0de2e86485f8b6633fd64ab19cfbff167f6:
+  Arjan van de Ven (1):
+        warn: Turn the netdev timeout WARN_ON() into a WARN()
 
-Destroying the quota stuff on unmount can access the log - ie XFS_QM_DONE()
-ends up in xfs_dqunlock() which calls xfs_trans_unlocked_item() and then
-xfs_log_move_tail().  By this time the log has already been destroyed.
-Just move the cleanup of the quota code earlier in xfs_unmountfs() before
-the call to xfs_log_unmount().  Moving XFS_QM_DONE() up near
-XFS_QM_DQPURGEALL() seems like a good spot. 
+are available in the git repository at:
 
-Date:  Thu Sep 18 17:35:23 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-tot
-Inspected by:  
-hch
-lachlan
-pleckie
-Author:  lachlan
+  git://oss.sgi.com:8090/xfs/linux-2.6 master
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Christoph Hellwig (1):
+      [XFS] Fix regression introduced by remount fixup
 
+David Chinner (2):
+      [XFS] Fix barrier status change detection.
+      [XFS] Prevent lockdep false positives when locking two inodes.
 
-Modid:  xfs-linux-melb:xfs-kern:32148a
-fs/xfs/xfs_mount.c - 1.446 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.446&r2=text&tr2=1.445&f=h
-	- Fix use-after-free with log and quotas
+Lachlan McIlroy (4):
+      [XFS] Move memory allocations for log tracing out of the critical path
+      [XFS] Prevent direct I/O from mapping extents beyond eof
+      [XFS] Fix use-after-free with buffers
+      [XFS] Don't do I/O beyond eof when unreserving space
+
+ fs/xfs/linux-2.6/xfs_aops.c  |    4 +++
+ fs/xfs/linux-2.6/xfs_super.c |   20 +++++++++++++
+ fs/xfs/xfs_buf_item.c        |   44 +++++++++++++----------------
+ fs/xfs/xfs_dfrag.c           |    9 +++++-
+ fs/xfs/xfs_log.c             |   62 +++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_log_priv.h        |    1 -
+ fs/xfs/xfs_vnodeops.c        |   26 +++++++++++++++++
+ 7 files changed, 119 insertions(+), 47 deletions(-)
