@@ -1,58 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Sep 2008 00:24:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 19 Sep 2008 02:13:59 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8J7OWdD003076
-	for <xfs@oss.sgi.com>; Fri, 19 Sep 2008 00:24:32 -0700
-Date: Fri, 19 Sep 2008 03:26:03 -0400
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8J9DtnG009107
+	for <xfs@oss.sgi.com>; Fri, 19 Sep 2008 02:13:57 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B450891DF7F
+	for <xfs@oss.sgi.com>; Fri, 19 Sep 2008 02:15:26 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id WvE1PMwCaPcX5MoH for <xfs@oss.sgi.com>; Fri, 19 Sep 2008 02:15:26 -0700 (PDT)
+Date: Fri, 19 Sep 2008 05:15:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Unlock inode before calling xfs_idestroy()
-Message-ID: <20080919072603.GA26903@infradead.org>
-References: <48D3193C.6060201@sgi.com>
+Subject: Re: [PATCH 1/8] XFS: Allocate the struct xfs_ail
+Message-ID: <20080919091526.GA11443@infradead.org>
+References: <1221317877-8333-1-git-send-email-david@fromorbit.com> <1221317877-8333-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48D3193C.6060201@sgi.com>
+In-Reply-To: <1221317877-8333-2-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Sep 19, 2008 at 01:15:08PM +1000, Lachlan McIlroy wrote:
-> Lock debugging reported the ilock was being destroyed
-> without being unlocked.
->
-> --- a/fs/xfs/xfs_iget.c	2008-09-19 13:03:57.000000000 +1000
-> +++ b/fs/xfs/xfs_iget.c	2008-09-19 13:12:38.000000000 +1000
-> @@ -214,6 +214,7 @@ finish_inode:
-> 		xfs_ilock(ip, lock_flags);
->
-> 	if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
-> +		xfs_iunlock(ip, lock_flags);
-> 		xfs_idestroy(ip);
-> 		xfs_put_perag(mp, pag);
-> 		return ENOENT;
-> @@ -224,6 +225,7 @@ finish_inode:
-> 	 * write spinlock.
-> 	 */
-> 	if (radix_tree_preload(GFP_KERNEL)) {
-> +		xfs_iunlock(ip, lock_flags);
-> 		xfs_idestroy(ip);
-> 		delay(1);
-> 		goto again;
+On Sun, Sep 14, 2008 at 12:57:50AM +1000, Dave Chinner wrote:
+> Rather than embedding the struct xfs_ail in the struct xfs_mount,
+> allocate it during AIL initialisation. Add a back pointer to
+> the struct xfs_ail so that we can pass around the xfs_ail
+> and still be able to access the xfs_mount if need be. This
+> is th first step involved in isolating the AIL implementation
+> from the surrounding filesystem code.
 
-Just move the xfs_ilock call after these two statements, there is no
-need to have it locked before inserting it into the radix tree.
-
-> @@ -239,6 +241,7 @@ finish_inode:
-> 		BUG_ON(error != -EEXIST);
-> 		write_unlock(&pag->pag_ici_lock);
-> 		radix_tree_preload_end();
-> +		xfs_iunlock(ip, lock_flags);
-> 		xfs_idestroy(ip);
-> 		XFS_STATS_INC(xs_ig_dup);
-> 		goto again;
-
-But here we still need the fix.  But as Tim mention we need to check
-for lock_flags != 0 first.  Long-term it might make sense to just make
-xfs_iunlock a no-op if lock_flags == 0, but let's do that separately.
+Makes sense.
