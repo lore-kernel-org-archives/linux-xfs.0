@@ -1,40 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 20 Sep 2008 00:00:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8K6xvif008821
-	for <xfs@oss.sgi.com>; Fri, 19 Sep 2008 23:59:57 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C29210715A1
-	for <xfs@oss.sgi.com>; Sat, 20 Sep 2008 00:01:29 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id nNy3fZoG01zfHZmq for <xfs@oss.sgi.com>; Sat, 20 Sep 2008 00:01:29 -0700 (PDT)
-Date: Sat, 20 Sep 2008 17:01:26 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Unlock inode before calling xfs_idestroy()
-Message-ID: <20080920070126.GQ5811@disturbed>
-References: <48D3193C.6060201@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Sep 2008 04:46:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8LBjV6S008873
+	for <xfs@oss.sgi.com>; Sun, 21 Sep 2008 04:45:32 -0700
+Date: Sun, 21 Sep 2008 13:46:52 +0200
+From: Sven Geggus <lists@fuchsschwanzdomain.de>
+Subject: Re: Ooops in Kernel 2.6.26.2
+Message-ID: <20080921114651.GA3998@diesel.geggus.net>
+References: <20080808180938.GA3760@diesel.geggus.net> <489FECCD.6050703@sgi.com> <489FF0EE.5040607@sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48D3193C.6060201@sgi.com>
+In-Reply-To: <489FF0EE.5040607@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Sep 19, 2008 at 01:15:08PM +1000, Lachlan McIlroy wrote:
-> Lock debugging reported the ilock was being destroyed
-> without being unlocked.
+Lachlan McIlroy schrieb am Montag, den 11. August um 09:57 Uhr:
 
-Is this going to go in before or after my changes to refactor
-this function? If it is before< can you please push it out to
-the master git tree ASAP (and all the other outstanding changes)
-so I can rediff all the outstanding patches I have before I
-send them again?
+> The ticket allocation code got reworked in 2.6.26 and we now free
+> tickets whereas before we used to cache them so the use-after-free
+> went undetected.
+> 
+> This patch should do the trick.
 
-Cheers,
+Just for your Info:
 
-Dave.
+The Problem was still persistent in Vanilla Kernel 2.6.26.5. So I
+applied your patch and everything is working fine now!
+
+Regards
+
+Sven
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Threading is a performance hack.
+(The Art of Unix Programming by Eric S. Raymond)
+
+/me is giggls@ircnet, http://sven.gegg.us/ on the Web
