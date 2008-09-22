@@ -1,31 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Sep 2008 21:03:30 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8M43Na6009279
-	for <xfs@oss.sgi.com>; Sun, 21 Sep 2008 21:03:23 -0700
-Subject: TAKE 987246 - xail idbg command doesn't increment count in each loop
-Message-Id: <20080922040456.1EA7C58C52AE@chook.melbourne.sgi.com>
-Date: Mon, 22 Sep 2008 14:04:56 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 21 Sep 2008 21:12:57 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8M4CrGr009983
+	for <xfs@oss.sgi.com>; Sun, 21 Sep 2008 21:12:53 -0700
+Message-ID: <48D71B9D.2040800@sgi.com>
+Date: Mon, 22 Sep 2008 14:14:21 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
+MIME-Version: 1.0
+Subject: Re: [PATCH] Remove xfs_iext_irec_compact_full()
+References: <48D7160B.8020108@sgi.com> <48D71701.6070900@sandeen.net>
+In-Reply-To: <48D71701.6070900@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
-
-xail idbg command doesn't increment count in each loop
-
-count is never incremented on each log item because it is unreachable code.
-
-Date:  Mon Sep 22 14:04:00 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-xfs
-Inspected by:  tes
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: lachlan@sgi.com, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
 
-Modid:  xfs-linux-melb:xfs-kern:32157a
-fs/xfs/xfsidbg.c - 1.365 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.365&r2=text&tr2=1.364&f=h
-	- xail idbg command doesn't increment count in each loop
+
+Eric Sandeen wrote:
+> Lachlan McIlroy wrote:
+>> Yet another bug was found in xfs_iext_irec_compact_full() and while the
+>> source of the bug was found it wasn't an easy task to track it down because
+>> the conditions are very difficult to reproduce.  Code that is difficult to
+>> reach is difficult to test and debug.
+> 
+> It might be nice to give credit to those who helped find it in the commit ;)
+
+yes, this is a very significant bug to find, thanks.
+
+I'm wondering whether it would be worth auditing or re-reviewing the entire
+incore-extents-optimization patchset (if that's possible against the current
+code base). Or should we just fix this and move on - let the testing 
+speak for
+itself? The hard to hit code paths are a worry IMO.
+
+Cheers
+-- Mark
