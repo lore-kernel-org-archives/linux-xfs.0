@@ -1,36 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Sep 2008 03:58:46 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8MAwgXI017178
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 03:58:44 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B6AFA1BD1850
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 04:00:16 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id FwGZ3HFYaHKGxR5C for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 04:00:16 -0700 (PDT)
-Date: Mon, 22 Sep 2008 06:59:56 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/10] VFS: Fix error handling of
-	write_super_lockfs/unlockfs
-Message-ID: <20080922105956.GA16069@infradead.org>
-References: <20080922195526t-sato@mail.jp.nec.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Sep 2008 04:04:55 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8MB4oFh017972
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 04:04:52 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C2AC46B082
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 04:06:24 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id rcBF5ZpItJQkb9qH for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 04:06:24 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8MB6NIF026026
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 13:06:23 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8MB6NxH026023
+	for xfs@oss.sgi.com; Mon, 22 Sep 2008 13:06:23 +0200
+Date: Mon, 22 Sep 2008 13:06:23 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 0/6] btree cleanups V2
+Message-ID: <20080922110623.GA26007@lst.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080922195526t-sato@mail.jp.nec.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Mon, Sep 22, 2008 at 07:55:26PM +0900, Takashi Sato wrote:
-> I've changed the type of write_super_lockfs and unlockfs from "void" to
-> "int" so that they can return an error. 
+Here's a set of a few small btree cleanup patches.  Most of them are in
+preparation of adding CRC support to the btree blocks.  All these
+require the generic btree patchset to be applied first.
 
-Returning an error from the freeze operation makes sense, but for the
-unfreeze I don't see the point.  You must however change all existing
-instances to actually return a value (even if it's always 0 for now)
-to avoid breaking git bisect.
+Compared to version 1 I've addressed Dave's review comments.  I decided to
+keep XFS_BMAP_BROOT_PTR_ADDR because it's used a few times and already in
+long enough lines that would start to get unreadable if we expanded it. I've
+also left the odd boolean arguments to the maxrecs functions as is for now,
+but I have some plans to tackle that from a higher level view later.
 
-If you touch all instances anyway, it would be nice to rename them
-to freeze / unfreze as the current names are more confusing.
+-- 
