@@ -1,558 +1,354 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 01:01:07 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N8135i030477
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:01:03 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 01:02:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N82SoV030798
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:02:29 -0700
 Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5A1F1282C36
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:02:34 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id UHUHZ4QRqBEriVPp for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:02:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4BF546FD16
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:04:01 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id YWBs7QnBLCjv80jv for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:04:01 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1Ki2qs-0008HH-3a
-	for xfs@oss.sgi.com; Tue, 23 Sep 2008 18:02:30 +1000
-Date: Tue, 23 Sep 2008 18:02:30 +1000
+	id 1Ki2sJ-0008Jx-9V
+	for xfs@oss.sgi.com; Tue, 23 Sep 2008 18:03:59 +1000
+Date: Tue, 23 Sep 2008 18:03:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC 1/3] Future Directions - Inode Subsystems
-Message-ID: <20080923080230.GB5448@disturbed>
+Subject: [RFC 2/3] Future Directions - Journalling
+Message-ID: <20080923080359.GC5448@disturbed>
 References: <20080923075910.GA5448@disturbed>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 In-Reply-To: <20080923075910.GA5448@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
+
 Future Directions for XFS
-
-Improving Inode Caching and Operation in XFS
---------------------------------------------
-
-$Id: future_directions-inodes.txt,v 1.1 2008/09/23 07:38:21 dave Exp dave $
-
-Thousand foot view:
-
-We want to drive inode lookup in a manner that is as parallel, scalable and low
-overhead as possible. This means efficient indexing, lowering memory
-consumption, simplifying the caching heirachy, removing duplication and
-reducing/removing lock traffic.
-
-In addition, we want to provide a good foundation for simplifying inode I/O,
-improving writeback clustering, preventing RMW of inode buffers under memory
-pressure, reducing creation and deletion overhead and removing writeback of
-unlogged changes completely.
-
-There are a variety of features in disconnected trees and patch sets that need
-to be combined to acheive this - the basic structure needed to implement this is
-already in mainline and that is the radix tree inode indexing.  Further
-improvements are going to be based around this structure and using it
-effectively to avoid needing other indexing mechanisms.
-
-High Level Tasks:
-
-(in no particular order - discussion is more coherent than this list)
-
-	- Combine XFS and Linux inode
-	- Introduce compressed cache
-	- lockless igrab()
-	- remove use of linux inode cache
-	- RCU locking on XFs inode cache radix trees
-	- background create of contiguous inode regions
-	- background unlink
-	- background inode chunk removal for noikeep
-	- removing unlogged changes to inodes
-	- removing inode buffers from create transaction (fast_icr)
-	- ascending offset order inode writeback
-	- clustering of inode writeback across multiple buffers
-	- moving inode I/O directly to page cache?
-	- rewrite sync code to be efficient and parallelisable
-	- allow pdflush to call filesystem specific sync methods
-	- avoiding writeback of unlinked inodes
-	- demand paging of large extent maps
-	- cross-inode data write clustering
-	- prevent buftarg address space cache pollution by read-only, used
-	  once inode cluster.
-	- allow inode allocation in single filesystem block units instead
-	  of chunks.
-	- killing bufferheads
-
-Discussion:
-
-Combining XFS and VFS inodes
-----------------------------
-
-If we combine the XFS and the Linux inode, we'll increase memory usage for
-cached inodes. However, combining them has some distinct advantages:
-
-	- one less memory allocation
-	- simpler reclaim code
-	- removal of a significant amount of duplicate information
-	- a single reference count for the entire inode data
-	- solves several issues with RCU locking on the cache and
-	  reclaim races
-
-Of course, the downside is the memory usage. We can avoid this problem by making
-use of the compressed inode cache - only the active inodes are held in a
-non-compressed form, hence most inodes will end up being cached in compressed
-form rather than in the XFS/linux inode form.  The compressed form can reduce
-the cached inode footprint to 200-300 bytes per inode instead of 1-1.1k that
-they currently take on a 64bit system. Hence by moving to a compressed cache we
-can greatly increase the number of inodes cached in a given amount of memory
-which more that offsets any comparitive increase we will see from inodes in
-reclaim. the compressed cache should really have a LRU and a shrinker as well
-so that memory pressure will slowly trim it as memory demands occur. [Note:
-this compressed cache is discussed further later on in the reclaim context.]
-
-It is worth noting that for embedded systems it may be worth while allowing
-the size of the caches to be fixed. Also, to prevent memory fragmentation
-problems,we could simply allocate that memory to the compressed cache slab.
-In effect, this would become a 'static slab' in that it has a bound maximum
-size and never frees and memory. When the cache is full, we reclaim an
-object out of it for reuse - this could be done by triggering the shrinker
-to reclaim from the LRU. This would prevent the compressed inode cache from
-consuming excessive amounts of memory in tightly constrained evironments.
-Such an extension to the slab caches does not look difficult to implement,
-and would allow such customisation with minimal deviation from mainline code.
-
-Also, it would be a nice-to-have to be able to make use of the 'init_once'
-slab cache optimisation that the linux inode uses for idempotent fields
-in the inode. This would reduce the allocation overhead of the combined
-inode because we wouldn't need to zero the whole structure and then
-re-initialise everything in it. We'd only need to initialise the changing
-structures in this case - it means a little more code but should use
-less CPU time for allocation (especially if the inodes are already hot
-in cache).
-
-Bypassing the Linux Inode Cache
--------------------------------
-
-With a larger number of cached inodes that the linux inode cache could possibly
-hold, it makes sense to completely remove the linux inode cache from the lookup
-path. That is, we do all our inode lookup based on the XFS cache, and if we find
-a compressed inode we uncompress it and turn it into a combined linux+XFS inode.
-If we also fast-path igrab() to avoid the inode_lock in the common case
-(refcount > 0) then we will substantially reduce the traffic on the inode_lock.
-
-If we have not hashed the inode in the linux inode cache, we now have to take
-care or tracking dirty inodes ourselves - unhashed inodes are not added to the
-superblock dirty inode list by __mark_inode_dirty().  However, we do get a
-callout (->dirty_inode) that allows us to do this ourselves. We can use this
-callout and a tag in the inode radix tree to track all dirty inodes, or even
-just use the superblock list ourselves. Either way, we now have a mechanism that
-allows us to track all dirty inodes our own way.
-
-Now that we can track dirty inodes ourselves, we can pretty much isolate
-writeback of both data and inodes from the generic pdflush code. If we add a
-hook high up in the pdflush path that simply passes us a writeback control
-structure with the current writeback guidelines, we can do writeback within
-those guidelines in the most optimal fashion for XFS.
-
-
-Avoiding the Generic pdflush Code
----------------------------------
-
-For pdflush driven writeback, we only want to write back data; all other inode
-writeback should be driven from the AIL (our time ordered dirty metadata list)
-or xfssyncd in a manner that is most optimal for XFS.
-
-Furthermore, if we implement our own pdflush method, we can parallelise it in
-several ways. We can ensure that each filesystem has it's own flush thread or
-thread pool, we can have a thread pool shared by all filesystems (like pdflush
-currently operates), we can have a flush thread per inode radix tree, and so
-one. The method of paralleisation is open for interpretation, but enabling
-multiple flush threads to operate on a single filesystem is one of the necessary
-requirements to avoid data writeback (and hence delayed allocation) being
-limited to the throughput of a single CPU per filesystem.
-
-As it is, once data writeback is separated from inode writeback, we could
-simply use pushing the AIL as a method of writing back metadata in the
-background. There is no good reason for writing the inode immediately after
-data if the inode is in the AIL - it will get written soon enough as the tail
-of the AIL gets moved along. If we log all inode changes, then we'll be
-unlikely to write the inode multiple times over it's dirty life-cycle as it
-will continue to be moved forward in the AIL each time it is logged...
-
-
-Improving Inode Writeback
 -------------------------
 
-To optimise inode writeback, we really need to reduce the impact of inode
-buffer read-modify-write cycles. XFS is capable of caching far more inodes in
-memory than it has buffer space available for, so RMW cycles during inode
-writeback under memory pressure are quite common. Firstly, we want to avoid
-blocking pdflush at all costs.  Secondly, we want to issue as much localised
-readahead as possible in ascending offset order to allow both elevator merging
-of readahead and as little seeking as possible. Finally, we want to issue all
-the write cycles as close together as possible to allow the same elevator and
-I/O optimisations to take place.
+Improving Metadata Performance By Reducing Journal Overhead
+-----------------------------------------------------------
 
-To do this, firstly we need the non-blocking inode flush semantics to issue
-readahead on buffers that are not up-to-daterather than reading them
-synchronously. Inode writeback already has the interface to handle inodes that
-weren't flushed - we return EAGAIN from xfs_iflush() and the higher inode
-writeback layers handle this appropriately. It would be easy to add another
-flag to pass down to the buffer layer to say 'issue but don't wait for any
-read'. If we use a radix tree traversal to issue readahead in such a manner,
-we'll get ascending offset readahead being issued.
+$Id: future_directions-journalling.txt,v 1.1 2008/09/23 07:38:44 dave Exp dave $
 
-One problem with this is that we can issue too much readahead and thrash the
-cache. A possible solution to this is to make the readahead a 'delayed read'
-and on I/o completion add it to a queue that holds a reference on the buffer.
-If a followup read occurs soon after, we remove it from the queue and drop that
-reference. This prevents the buffer from being reclaimed in betwen the
-readahead completing and the real read being issued. We should also issue this
-delayed read on buffers that are in the cache so that they don't get reclaimed
-to make room for the readahead.
+XFS currently uses asynchronous write-ahead logging to ensure that changes to
+the filesystem structure are preserved on crash.  It does this by logging
+detailed records ofteh changes being made to each object on disk during a
+transaction. Every byte that is modified needs to be recorded in the journal.
 
-To prevent buildup of delayed read buffers, we can periodically purge them -
-those that are older than a given age (say 5 seconds) can be removed from the
-list and their reference dropped. This will free the buffer and allow it's
-pages to be reclaimed.
+There are two issues with this approach. The first is that transactions can
+modify a *lot* of metadata  to complete a single operation. Worse is the fact
+that the average size of a transactions grows as structures get larger and
+deeper, so performance on larger, fuller filesystem drops off as log bandwidth
+is consumed by fewer, larger transactions.
 
-Once we have done the readahead pass, we can then do a modify and writeback
-pass over all the inodes, knowing that there will be no read cycles to delay
-this step. Once again, a radix tree traversal gives us ascending order
-writeback and hence the modified buffers we send to the device will be in
-optimal order for merging and minimal seek overhead.
+The second is that we re-log previous changes that are active in the journal
+if the object is modified again. hence if an object is modified repeatedly, the
+dirty parts of the object get rewritten over and over again. in the worst case,
+frequently logged buffers will be entirely dirty and so even if we only change
+a single byte in the buffer we'll log the entire buffer.
 
+An example of how needless this can be is the operation of a removing all the
+files in a directory result in the directory blocks being logged over and over
+again before finally being freed and made stale in the log. If we are freeing
+the entire contents of the directory, the only transactions we really need in
+the journal w.r.t to directory buffers is the 'remove, stale and free'
+transaction; all other changes are irrelevant because we don't care about
+changes to free space. Depending on the directory block size, we might log each
+directory buffer tens to hundreds of times before making it stale...
 
-Contiguous Inode Allocation
----------------------------
+Clearly we have two different axis to approach this problem along:
 
-To make optimal use of the radix tree cache and enable wide-scale clustering of
-inode writeback across multiple clusters, we really need to ensure that inode
-allocation occurs in large contiguous chunks on disk. Right now we only
-allocate chunks of 64 indoes at a time; ideally we want to allocate a stripe
-unit (or multiple of) full of inodes at a time. This would allow inode
-writeback clustering to do full stripe writes to the underlying RAID if there
-are dirty inodes spanning the entire stripe unit.
+	- reduce the amount we log in a given transaction
+	- reduce the number of times we re-log objects.
 
-The problem with doing this is that we don't want to introduce the latency of
-creating megabytes of inodes when only one is needed for the current operation.
-Hence we need to push the inode creation into a background thread and use that
-to create contiguous inode chunks asynchronously. This moves the actual on-disk
-allocation of inodes out of the normal create path; it should always be able to
-find a free inode without doing on disk allocation. This will simplify the
-create path by removing the allocate-on-disk-then-retry-the-create double
-transaction that currently occurs.
-
-As an aside, we could preallocate a small amount of inodes in each AG (10-20MB
-of inodes per AG?) without impacting mkfs time too greatly. This would allow
-the filesystem to be used immediately on the first mount without triggering
-lots of background allocation. This could alsobe done after the first mount
-occurs, but that could interfere with typical benchmarking situations. Another
-good reason for this preallocation is that it will help reduce xfs_repair
-runtime for most common filesystem usages.
-
-One of the issues that the background create will cause is a substantial amount
-of log traffic - every inode buffer initialised will be logged in whole. Hence
-if we create a megabyte of inodes, we'll be causing a megabyte of log traffic
-just for the inode buffers we've initialised.  This is relatively simple to fix
-- we don't log the buffer, we just log the fact that we need to initialise
-inodes in a given range.  In recovery, when we see this transaction, then we
-build the buffers, initialise them and write them out. Hence, we don't need to
-log the buffers used to initialise the inodes.
-
-Also, we can use the background allocations to keep track of recently allocated
-inode regions in the per-ag. Using that information to select the next inode to
-be used rather than requiring btree searches on every create will greatly reduce
-the CPU overhead of workloads that create lots of new inodes. It is not clear
-whether a single background thread will be able to allocate enough inodes
-to keep up with demand from the rest of the system - we may need multiple
-threads for large configurations.
+Both of these things give the same end result - we require less bandwidth to
+the journal to log changes that are happening in the filesystem. Let's start
+by looking at how to reduce re-logging of objects.
 
 
-Single Block Inode Allocation
+Asynchronous Transaction Aggregation
+------------------------------------
+
+The first observation that we need to make is that we are already doing
+asynchronous journalling for everything other than explicitly synchronous
+transactions. This means we are aggregating completed transactions in memory
+before writing them to disk. This reduces the number of disk I/Os needed to
+write the log, but it does nothing to help prevent relogging of items.
+
+The second observation is that we store asynchronous committed transactions
+in two forms while they are being written to disk:
+
+	- the physical form in the log buffer that will be written
+	- the logical form attached to the log buffer so that on I/O completion
+	  of the log buffer the items in the transaction can be unpinned and
+	  moved to or updated in the AIL for later writeback.
+
+The fact that we store the logical form of the transaction until after the
+log buffer is written to the journal is important - it means the transaction
+and all it's dirty items live longer than process that creates and commits
+the transaction. This allows us to redefine what 'transaction commit' actually
+means.
+
+A transaction commit currently takes the following steps:
+
+	- apply superblock and dquot changes to in-core structures
+	- build an vector array to all the dirty regions in all the items in
+	  the transaction.
+	- write the vector array into the log buffer (may trigger log I/O)
+	- release ununsed transaction reservations to in-core structures
+	- attach transaction to log buffer callbacks
+	- write a commit record into the log buffer for the transaction
+	- unlock all the items locked in the transaction
+	- release the log buffer (may trigger log I/O)
+	- if synchronous transaction, issue a synchronous log force to
+	  get the transaction on disk.
+
+Based on the observation that the transaction structure exists until it is
+freed during log buffer I/o completion, we really don't have to format the
+transaction into a log buffer during the transaction commit - we could
+simply queue it into a list for later processing. Synchronous
+transactions don't change this - they just queue the transaction then
+do a log force to cause the transaction queue to be flushed to disk.
+
+Now that we have an asynchronous transaction queue in logical format, we can
+take our time deciding when and how best to write it to disk. If we have
+the situation where we are relogging items, we will have a given item
+in multiple transactions. If we write out each transaction as an individual
+commit like we currently do, we'd then have the problem of future changes
+being written in the first transaction that we write. This will cause
+problems for recovery.
+
+Hence what we really want to do is aggregate all those transactions into a
+single large journal commit. This makes the journalling model more of a
+'checkpoint of changes' than a 'transactional change' model. By commiting
+a set of transactions rather than just a single transaction per commit
+record, we can avoid needed to commit items several times to the log
+if they are modified in multiple transactions. During recovery, we only
+recover the entire commit so we only need a single version of each item
+that encompasses all the changes in the commit period.
+
+As an aside, if we have large numbers of items per commit record now,
+it makes sense to start optimising the recovery read-ahead by sorting
+all the items in the commit record before issuing readahead on them.
+This will reduce the seeking the readahead triggers somewhat, so should
+lead to faster recovery times.
+
+The down sides to this approach are:
+
+	- holds items pinned in memory for longer, thereby increases
+	  the chances of triggering a log force to unpin them.
+	- partial log forces (i.e. those to a specific LSN) are no longer
+	  really possible as we do not have multiple independent queues
+	  (iclogbufs) holding the transactions.
+	- log forces become more expensive by having to drain the entire
+	  async transaction queue.
+	- synchronous transactions become more expensive by having to
+	  drain the entire async transaction queue.
+	- possible 'interesting' interactions with tail-pushing if we
+	  allow too many async transactions to be queued without flushing
+	  them.
+
+The main concern with this approach is ensuring that we don't adversely affect
+fsync() performance. For example, ext3 uses a checkpoint based journalling
+system that has a very long checkpoint period (5 seconds).  As a result, a
+synchronous operation such as an fsync() can be forced to flush up to 5 seconds
+worth of transactions to disk. In ordered mode, this also involves flushing
+data, so the fsync() latency can be measured in tens of seconds on a busy
+filesystem. This is known as the 'sync the world' problem, and currently XFS
+does not suffer from this at all. 
+
+[Data point: Recent testing of this phenomenon by Chris Mason showed XFS took
+less than one second to fsync a 4k write in the presence of a background
+streaming write; BTRFS took two seconds and ext3 took five seconds. ]
+
+To avoid this type of latency, we should not be allowing too many transactions
+to accumulate in the async transaction queue. If we look at optimising
+workloads such as sequential creates or deletes in a single directory then, in
+theory, accumulating just 10 async transactions into a single commit record
+should provide close to an order of magnitude reduction in bandwidth to the log
+under these workloads. We also reduce the number of log writes by aggregating
+like this and that will give us even larger gains by avoiding seeks to write
+log buffers out.
+
+Hence I don't think the async transaction queue needs to be all that deep
+to realise substantial gains, and hence the impact on synchronous transaction
+latency can be kept quite low as a result.
+
+
+Atomic Multi-Transaction Operations
+-----------------------------------
+
+A feature asynchronous transaction aggregation makes possible is atomic
+multi-transaction operations.  On the first transaction we hold the queue in
+memory, preventing it from being committed. We can then do further transactions
+that will end up in the same commit record, and on the final transaction we
+unlock the async transaction queue. This will allow all those transaction to be
+applied atomically. This is far simpler than any other method I've been looking
+at to do this.
+
+After a bit of reflection, I think this feature may be necessary for correct
+implementation of existing logging techniques. The way we currently implement
+rolling transactions (with permanent log reservations and rolling
+dup/commit/re-reserve sequences) would seem to require all the commits in a
+rolling transaction to be including in a single commit record.  If I understand
+history and the original design correctly, these rolling transactions were
+implemented so that large, complex transactions would not pin the tail of the
+log as they progressed.  IOWs, they implicitly use re-logging to keep the tail
+of the log moving forward as they progress and continue to modify items in the
+transaction.
+
+Given we are using asynchronous transaction aggregation as a method of reducing
+re-logging, it would make sense to prevent these sorts of transactions from
+pinning the tail of the log at all. Further, because we are effectively
+disturbing the concept of unique transactions, I don't think that allowing a
+rolling transaction to span aggregated commits is valid as we are going to be
+ignoring the transaction IDs that are used to identify individual transactions.
+
+Hence I think it is a good idea to simply replace rolling transactions with
+atomic multi-transaction operations. This may also allow us to split some of
+the large compound transactions into smaller, more self contained transactions.
+This would reduce reservation pressure on log space in the common case where
+all the corner cases in the transactions are not taken. In terms of
+implementation, I think we can initially augment the permanent transaction
+reservation/release interface to acheive this. With a working implementation,
+we can then look to changing to a more explicit interface and slowly work to
+remove the 'permanent log transaction' concept entirely. This shold simplify
+the log code somewhat....
+
+Note: This asynchronous transaction aggregation is originally based on a
+concept floated by Nathan Scott called 'Delayed Logging' after observing how
+ext3 implemented journalling.  This never passed more than a concept
+description phase....
+
+
+Operation Based Logging
+-----------------------
+
+The second approach to reducing log traffic is to change exactly what we
+log in the transactions. At the moment, what we log is the exact change to
+the item that is being made. For things like inodes and dquots, this isn't
+particularly expensive because it is already a very compact form. The issue
+comes with changes that are logged in buffers.
+
+The prime example of this is a btree modification that involves either removing
+or inserting a record into a buffer. The records are kept in compact form, so an
+insert or remove will also move other records around in the buffer. In the worst
+case, a single insert or remove of a 16 byte record can dirty an entire block
+(4k generally, but could be up to 64k). In this case, if we were to log the
+btree operation (e.g. insert {record, index}) rather than the resultant change
+on the buffer the overhead of a btree operation is fixed. Such logging also
+allows us to avoid needing to log the changes due to splits and merges - we just
+replay the operation and subsequent splits/merges get done as part of replay.
+
+The result of this is that complex transactions no longer need as much log space
+as all possible change they can cause - we only log the basic operations that
+are occurring and their result. Hence transaction end up being much smaller,
+vary less in size between empty and full filesystems, etc. An example set of
+operations describing all the changes made by an extent allocation on an inode
+would be:
+
+	- inode X intent to allocate extent {off, len}
+	- AGCNT btree update record in AG X {old rec} {new rec values}
+	- AGBNO btree delete record in AG X {block, len}
+	- inode X BMBT btree insert record {off, block, len}
+	- inode X delta
+
+This comes down to a relatively small, bound amount of space which is close the
+minimun and existing allocation transaction would consume.  However, with this
+method of logging the transaction size does not increase with the size of
+structures or the amount of updates necessary to complete the operations.
+
+A major difference to the existing transaction system is that re-logging
+of items doesn't fit very neatly with operation based logging. 
+
+There are three main disadvantages to this approach:
+
+	- recovery becomes more complex - it will need to change substantially
+	  to accomodate operation replay rather than just reading from disk
+	  and applying deltas.
+	- we have to create a whole new set of item types and add the necessary
+	  hooks into the code to log all the operations correctly.
+	- re-logging is probably not possible, and that introduces 
+	  differences to the way we'll need to track objects for flushing. It
+	  may, in fact, require transaction IDs in all objects to allow us
+	  to determine what the last transaction that modified the item
+	  on disk was during recovery.
+
+Changing the logging strategy as described is a much more fundamental change to
+XFS than asynchronous transaction aggregation. It will be difficult to change
+to such a model in an evolutionary manner; it is more of a 'flag day' style
+change where then entire functionality needs to be added in one hit. Given that
+we will also still have to support the old log format, it doesn't enable us to
+remove any code, either.
+
+Given that we are likely to see major benefits in the problem workloads as a
+result of asynchronous transaction aggregation, it may not be necessary to
+completely rework the transaction subsystem. Combining aggregation with an
+ongoing process of targeted reduction of transaction size will provide benefits
+out to at least the medium term. It is unclear whether this direction will be
+sufficient in the long run until we can measure the benefit that aggregation
+will provide.
+
+
+Reducing Transaction Overhead
 -----------------------------
 
-One of the big problems we have withe filesystems that are approaching
-full is that it canbe hard to find a large enough extent to hold 64 inodes.
-We've had ENOSPC errors on inode allocation reported on filesystems that
-are onl 85% full. This is a sign of free space fragementation, and it
-prevents inode allocation from succeeding. We could (and should) write
-a free space defragmenterr, but that does not solve the problem - it's
-reactive, not preventative.
+To switch tracks completely, I have not addressed general issues with overhead
+in the transaction subsystem itself. There are several points where the
+transaction subsystem will single thread because of filesystem scope locks and
+structures.  We have, for example, the log grant lock for protecting
+reservation and used log space, the AIL lock for tracking dirty metadata, the
+log state lock for state transition of log buffers and other associated
+structure modifications.
 
-The main problem we have is that XFS uses inode chunk size and alignment
-to optimise inode number to disk location conversion. That is, the conversion
-becomes a single set of shifts and masks instead of an AGI btree lookup.
-This optimisation substantially reduces the CPU and I/O overhead of
-inode lookups, but it does limit our flexibility. If we break the
-alignment restriction, every lookup has to go back to a btree search.
-Hence we really want to avoid breaking chunkk alignment and size
-rules.
+We have already started down the path of reducing contention in
+various paths. For example:
 
-An approach to avoiding violation of this rule is to be able to determine which
-index to look up when parsing the inode number. For example, we could use the
-high bit of the inode number to indicate that it is located in a non-aligned
-inode chunk and hence needs to be looked up in the btree. This would avoid
-the lookup penalty for correctly aligned inode chunks.
+	- changing iclog reference counts to atomics to avoid needing the log
+	  state lock on every transaction commit
+	- protecting iclog callback lists with a per-iclog lock instead of the log
+	  state lock
+	- removing the AIL lock from the transaction reserve path by isolating
+	  AIL tail pushing to a single thread instead of being done
+	  synchronously.
 
-If we then redefine the meaning of the contents of the AGI btree record for
-such inode chunks, we do not need a new index to keep these in. Effectively,
-we need to add a bitmask to the record to indicate which blocks inside
-the chunk can actually contain inodes. We still use aligned/sized records,
-but mask out the sections that we are not allowed to allocate inodes in.
-Effectively, this would allow sparse inode chunks. There may be limitations
-on the resolution of sparseness depending on inode size and block size,
-but for the common cases of 4k block size and 256 or 512 byte inodes I
-think we can run a fully sparse mapping for each inode chunk.
+Asynchronous transaction aggregation is likely to perturb the current known
+behaviour and bottlenecks as a result of moving all of the log interfacing out
+of the direct transaction commit path.  Similar to moving the AIL pushing into
+it's own thread, this will mean that there will typically only be a single
+thread formatting and writing to iclog buffers. This will remove much of the
+parallelism that puts excessive pressure on many of these locks.
 
-This would allow us to allocate inode extents of any alignment and size
-that fits *inside* the existing alignment/size limitations. That is,
-a single extent allocation could not span two btree records, but can
-lie anywhere inside a single record. It also means that we can do
-multiple extent allocations within one btree record to make optimal
-use of the fragmented free space.
+I am certain that asynchronous transaction aggregation will open up new areas
+of optimisation in the log formatting and dispatch code - it will probably
+enable us to remove a lot of the complexity because we will be able to directly
+control the parallelism in the formatting and dispatch of log buffers. This
+implies that we may not need to be limited to a fixed pool of fixed sized log
+buffers for writing transactions to disk.
 
-It should be noted that this will probably have impact on some of the
-inode cluster buffer mapping and clustering algorithms. It is not clear
-exactly what impact yet, but certainly write clustering will be affected.
-Fortunately we'll be able to detect the inodes that will have this problem
-by the high bit inthe inode number.
-
-Inode Unlink
-------------
-
-If we turn to look at unlink and reclaim interactions, there are a few
-optimisations that can be made.  Firstly, we don't need to do inode inactivation
-in reclaim threads - these transactions can easily be pushed to a background
-thread. This means that xfs_inactive would be little more than a vmtruncate()
-call and queuing to a workqueue. This will substantially speed up the processing
-of prune_icache() - we'll get inodes moved into reclaim much faster than we do
-right now.
-
-This will have a noticable effect, though. When inodes are unlinked the space
-consumed by those inodes may not be immediately freed - it will be returned as
-the inodes are processed through the reclaim threads. This means that userspace
-monitoring tools such as 'df' may not immediately reflect the result of a
-completed unlink operation. This will be a user visible change in behaviour,
-though in most cases should not affect anyone and for those that it does affect
-a 'sync' should be sufficient to wait for the space to be returned.
-
-Now that inodes to be unlinked are out of general circulation, we can make the
-unlinked path more complex. It is desirable to move the unlinked list from the
-inode buffer to the inode core, but that has locking implications for incore
-unlinked. Hence we really need background thread processing to enable this to
-work (i.e. being able to requeue inodes for later processing). To ensure that
-to overhead of this work is not a limiting factor, we will probably need
-multiple workqueue processing threads for this.
-
-Moving the logging to the inode core enables two things - it allows us to keep
-an in-memory copy of the unlinked list off the perag and that allows us to remove
-xfs_inotobp(). The in-memory unlinked list means we don't have to read and
-traverse the buffers every time we need to find the previous buffer to remove an
-inode from the list, but it does mean we have to take the inode lock. If the
-previous inode is locked, then we can't remove the inode from the unlinked list
-so we must requeue it for this to occur at a later time.
-
-Combined with the changes to inode create, we effectively will only use the
-inode buffer in the transaction subsystem for marking the region stale when
-freeing an inode chunk from disk (i.e. the default noikeep configuration). If
-we are using large inode allocation, we don't want to be freeing random inode
-chunks - this will just leave us with fragmented inode regions and undo all the
-good work that was done originally.
-
-To avoid this, we should not be freeing inode chunks as soon as they no longer
-have any empty inodes in them. We should periodically scan the AGI btree
-looking for contiguous chunks that have no inodes allocated in them, and then
-freeing the large contiguous regions we find in one go. It is likely this can
-be done in a single transaction; it's one extent to be freed, along with a
-contiguous set of records to be removed from the AGI btree so should not
-require logging much at all. Also, the background scanning could be triggered
-by a number of different events - low space in an AG, a large number of free
-inodes in an AG, etc - as it doesn't need to be done frequently. As a result
-of the lack of frequency that this needs to be done, it can probably be
-handled by a single thread or delayed workqueue.
-
-Further optimisations are possible here - if we rule that the AGI btree is the
-sole place that inodes are marked free or in-use (with the exception of
-unlinked inodes attached to the AGI lists), then we can avoid the need to
-write back unlinked inodes or read newly created inodes from disk.  This would
-require all inodes to effectively use a random generation number assigned at
-create time as we would not be reading it from disk - writing/reading the current
-generation number appears to be the only real reason for doing this I/O. This
-would require extra checks to determine if an inode is unlinked - we
-need to do an imap lookup rather than reading it and then checking it is
-valid if it is not already in memory. Avoiding the I/O, however, will greatly speed
-up create and remove workloads. Note: the impact of this on the bulkstat algorithm
-has not been determined yet.
-
-One of the issues we need to consider with this background inactivation is that
-we will be able to defer a large quantity of inactivation transactions so we are
-going to need to be careful about how much we allow to be queued. Simple queue
-depth throttling should be all that is needed to keep this under control.
+However, it is probably best to leave consideration of such optimisations until
+after the asynchronous transaction aggregation is implemented and we can
+directly observe the pain points that become apparent as a result of such a
+change.
 
 
-Reclaim Optimisations
----------------------
+Reducing Recovery Time
+----------------------
 
-Now that we have efficient unlink, we've got to handle the reclaim of all the
-inodes that are now dead or simply not referenced. For inodes that are dirty,
-we need to write them out to clean them. For inodes that are clean and not
-unlinked, we need to compress them down for more compact storage. This involves
-some CPU overhead, but it is worth noting that reclaiming of clean inodes
-typically only occurs when we are under memory pressure.
+With 2GB logs, recovery can take an awfully long time due to the need
+to read each object synchronously as we process the jounral. An obvious
+way to avoid this is to add another pass to the processing to do asynchronous
+readahead of all the objects in the log before doing the processing passes.
+This will populate the cache as quickly as possible and hide any read latency
+that could occur as we process commit records.
 
-By compressing the XFS inode in this case, we are effectively reducing the
-memory usage of the inode rather than freeing it directly. If we then get
-another operation on that inode (e.g. the working set is slightly larger than
-can be held in linux+XFS inode pairs, we avoid having to read the inode off
-disk again - it simply gets uncompressed out of the cache. In essence we use
-the compressed inode cache as an exclusive second level cache - it has higher
-density than the primary cache and higher load latency and CPU overhead,
-but it still avoids I/O in exactly the same manner as the primary cache.
+A logical extension to this is to sort the objects in ascending offset order
+before issuing I/O on them. That will further optimise the readahead I/O
+to reduce seeking and hence should speed up the read phase of recovery
+further.
 
-We cannot allow unrestricted build-up of reclaimable inodes - the memory they
-consume will be large, so we should be aiming to compress reclaimable inodes as
-soon as they are clean.  This will prevent buildup of memory consuming
-uncompressed inodes that are not likely to be referenced again immediately.
-
-This clean inode reclaimation process can be accelerated by triggering reclaim
-on inode I/O completion. If the inode is clean and reclaimable we should
-trigger immediate reclaim processing of that inode.  This will mean that
-reclaim of newly cleaned inodes will not get held up behind reclaim of dirty
-inodes.
-
-For inodes that are unlinked, we can simply free them in reclaim as theƦ
-are no longer in use. We don't want to poison the compressed cache with
-unlinked inodes, nor do we need to because we can allocate new inodes
-without incurring I/O.
-
-Still, we may end up with lots of inodes queued for reclaim. We may need
-to implement a throttle mechanism to slow down the rate at which inodes
-are queued for reclaimation in the situation where the reclaim process
-is not able to keep up. It should be noted that if we parallelise inode
-writeback we should also be able to parallelise inode reclaim via
-the same mechanism, so the need for throttling may relatively low
-if we can have multiple inodes under reclaim at once.
-
-It should be noted that complexity is exposed by interactions with concurrent
-lookups, especially if we move to RCU locking on the radix tree. Firstly, we
-need to be able to do an atomic swap of the compressed inode for the
-uncompressed inode in the radix tree (and vice versa), to be able to tell them
-apart (magic #), and to have atomic reference counts to ensure we can avoid use
-after free situations when lookups race with compression or freeing.
-
-Secondly, with the complex unlink/reclaim interactions we will need to be
-careful to detect inodes in the process of reclaim - the lookupp process
-will need to do different things depending on the state of reclaim. Indeed,
-we will need to be able to cancel reclaim of an unlinked inode if we try
-to allocate it before it has been fully unlinked or reclaimed. The same
-can be said for an inode in the process of being compressed - if we get
-a lookup during the compression process, we want to return the existing
-inode, not have to wait, re-allocate and uncompress it again. These
-are all solvable issues - they just add complexity.
-
-
-Accelerated Reclaim of buftarg Page Cache for Inodes
-----------------------------------------------------
-
-For single use inodes or even read-only inodes, we read them in, use then, then
-reclaim them. With the compressed cache, they'll get compressed and live a lot
-longer in memory. However, we also will have the inode cluster buffer pages
-sitting in memory for some length of time after the inode was read in. This can
-consume a large amount of memory that will never be used again, and does not
-get reclaimed until they are purged from the LRU by the VM.  It would be
-advantageous to accelerate the reclaim of these pages so that they do not build
-up unneccessarily.
-
-One method we could use for this would be to introduce our own page LRUs into
-the buftarg cache that we can reclaim from. This would allow us to sort pages
-according to their contents into different LRUs and periodically reclaim pages
-of specific types that were not referenced. This, however, would introduce a
-fair amount of complexity into the buffer cache that doesn't currently exist.
-Also, from a higher perspective, it makes the buffer cache a complex
-part-buffer cache, part VM frankenstein.
-
-A better method would appear to be to leverage the delayed read queue
-mechanism. This delayed read queue pins read buffers for a short period of
-time, and then if they have not been referenced they get torn down.  If, as
-part of this delayed read buffer teardown procedure we all free the backing
-pages completely, we acheive the exact same result as having our own LRUs to
-manage the page cache. This seems much simpler and a much more holistic
-approach to solving the problem than implementing page LRUs.
-
-As an aside, we already have the mechanism in place to vary buffer aging based
-on their type. The Irix buffer cache used this to great effect when under
-memory pressure and the XFS code that configured it still exists in the Linux
-code base. However, the Linux XFS buffer cache has never implemented any
-mechanism to allow this functionality to be exploited. A delayed buffer reclaim
-mechanism as described above could be greatly enhanced by making use of this
-code in XFS.
-
-
-Killing Bufferheads (a.k.a "Die, buggerheads, Die!")
-----------------------------------------------------
-
-[ This is not strictly about inode caching, but doesn't fit into
-  other areas of developement as closely as it does to inode caching
-  optimisations. ]
-
-XFS is extent based. The Linux page cache is block based. Hence for
-every cached page in memory, we have to attach a structure for mapping
-the blocks on that page back to to the on-disk location. In XFs, we also
-use this to hold state for delayed allocation and unwritten extent blocks
-so the generic code can do the right thing when necessary. We also
-use it to avoid extent lookups at various times within the XFS I/O
-path.
-
-However, this has a massive cost. While XFS might represent the
-disk mapping of a 1GB extent in 24 bytes of memory, the page cache
-requires 262,144 bufferheads (assuming 4k block size) to represent the
-same mapping. That's roughly 14MB of memory neededtoo represent that.
-
-Chris Mason wrote an extent map representation for page cache state
-and mappings for BTRFS; that code is mostly generic and could be
-adapted to XFS. This would allow us to hold all the page cache state
-in extent format and greatly reduce the memory overhead that it currently
-has. The tradeoff is increased CPU overhead due to tree lookups where
-structure lookups currently are used. Still, this has much lower
-overhead than xfs_bmapi() based lookups, so the penalty is going to
-be lower than if we did these lookups right now.
-
-If we make this change, we would then have three levels of extent
-caching:
-
-	- the BMBT buffers
-	- the XFS incore inode extent tree (iext*)
-	- the page cache extent map tree
-
-Effectively, the XFS incore inode extent tree becomes redundant - all
-the extent state it holds can be moved to the generic page cache tree
-and we can do all our incore operations there. Our logging of changes
-is based on the BMBT buffers, so getting rid of the iext layer would
-not impact the transaction subsystem at all.
-
-Such integration with the generic code will also allow development
-of generic writeback routines for delayed allocation, unwritten
-extents, etc that are not specific to a given filesystem.
-
-
-Demand Paging of Large Inode Extent Maps
-----------------------------------------
-
-Currently the inode extent map is pinned  in memory until the inode is
-reclaimed. Hence an inode with millions of extents will pin a large
-amount of memory and this can cause serious issues in low memory
-situations. Ideally we would like to be able to page the extent
-map in and out once they get to a certain size to avoid this
-problem. This feature requires more investigation before an overall
-approach can be detailed here.
-
-It should be noted that if we move to an extent-based page cache mapping
-tree, the associated extent state tree can be used to track sparse
-regions. That is, regions of the extent map that are not in memory
-can be easily represented and acceesses to an unread region can then
-be used to trigger demand loading.
-
-Food For Thought (Crazy Ideas)
-------------------------------
-
-If we are not using inode buffers for logging changes to inodes, we should
-consider whether we need them at all. What benefit do the buffers bring us when
-all we will use them for is read or write I/O?  Would it be better to go
-straight to the buftarg page cache and do page based I/O via submit_bio()?
+ToDo: Further investigation of recovery for future optimisation.
