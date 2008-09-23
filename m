@@ -1,354 +1,365 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 01:02:33 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N82SoV030798
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:02:29 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C4BF546FD16
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:04:01 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id YWBs7QnBLCjv80jv for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:04:01 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1Ki2sJ-0008Jx-9V
-	for xfs@oss.sgi.com; Tue, 23 Sep 2008 18:03:59 +1000
-Date: Tue, 23 Sep 2008 18:03:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC 2/3] Future Directions - Journalling
-Message-ID: <20080923080359.GC5448@disturbed>
-References: <20080923075910.GA5448@disturbed>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 01:03:25 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N83Lli030967
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:03:21 -0700
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id E41FC90893
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 01:04:51 -0700 (PDT)
+Message-ID: <48D89FC6.7010205@sgi.com>
+Date: Tue, 23 Sep 2008 17:50:30 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080923075910.GA5448@disturbed>
+Subject: Re: XFS internal error xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c
+References: <48D6A0AD.3040307@kevinjamieson.com>
+In-Reply-To: <48D6A0AD.3040307@kevinjamieson.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: kevin@kevinjamieson.com
+Cc: xfs@oss.sgi.com
 
 
-Future Directions for XFS
--------------------------
+Hi Kevin, sorry for the delay - yes AFAICT we have seen this before,
+see the discussion and patches in the xfs@oss archives at
+http://oss.sgi.com/archives/xfs/2008-03/msg00144.html
 
-Improving Metadata Performance By Reducing Journal Overhead
------------------------------------------------------------
+I think several patches have been committed to recent mainline kernels,
+but it looks like your testing on 2.6.26 indicates either it still isn't
+fixed, or you've hit a different problem, despite the similar stack
+traces. Tim might have additional info to add here ...
 
-$Id: future_directions-journalling.txt,v 1.1 2008/09/23 07:38:44 dave Exp dave $
+In any case, this has also been been reported in Novell bugzilla #243029
+against SLES10sp1. Since you're running sles10sp1, perhaps you could get
+in touch with Novell for support?
 
-XFS currently uses asynchronous write-ahead logging to ensure that changes to
-the filesystem structure are preserved on crash.  It does this by logging
-detailed records ofteh changes being made to each object on disk during a
-transaction. Every byte that is modified needs to be recorded in the journal.
-
-There are two issues with this approach. The first is that transactions can
-modify a *lot* of metadata  to complete a single operation. Worse is the fact
-that the average size of a transactions grows as structures get larger and
-deeper, so performance on larger, fuller filesystem drops off as log bandwidth
-is consumed by fewer, larger transactions.
-
-The second is that we re-log previous changes that are active in the journal
-if the object is modified again. hence if an object is modified repeatedly, the
-dirty parts of the object get rewritten over and over again. in the worst case,
-frequently logged buffers will be entirely dirty and so even if we only change
-a single byte in the buffer we'll log the entire buffer.
-
-An example of how needless this can be is the operation of a removing all the
-files in a directory result in the directory blocks being logged over and over
-again before finally being freed and made stale in the log. If we are freeing
-the entire contents of the directory, the only transactions we really need in
-the journal w.r.t to directory buffers is the 'remove, stale and free'
-transaction; all other changes are irrelevant because we don't care about
-changes to free space. Depending on the directory block size, we might log each
-directory buffer tens to hundreds of times before making it stale...
-
-Clearly we have two different axis to approach this problem along:
-
-	- reduce the amount we log in a given transaction
-	- reduce the number of times we re-log objects.
-
-Both of these things give the same end result - we require less bandwidth to
-the journal to log changes that are happening in the filesystem. Let's start
-by looking at how to reduce re-logging of objects.
+Thanks
+-- Mark
 
 
-Asynchronous Transaction Aggregation
-------------------------------------
+Kevin Jamieson wrote:
+> Hello,
+>
+> We have encountered the following error several times on some of our
+> customer systems running SLES 10 SP1 (kernel version 2.6.16.46-0.12):
+>
+> Sep 12 01:24:41 gn1 kernel: Filesystem "dm-0": XFS internal error
+> xfs_trans_cancel at line 1138 of file fs/xfs/xfs_trans.c.  Caller
+> 0xf9429f23
+> Sep 12 01:24:41 gn1 kernel:  [<f942277d>] xfs_trans_cancel+0x4d/0xd6 [xfs]
+> Sep 12 01:24:41 gn1 kernel:  [<f9429f23>] xfs_create+0x4f1/0x52a [xfs]
+> Sep 12 01:24:41 gn1 kernel:  [<f9429f23>] xfs_create+0x4f1/0x52a [xfs]
+> Sep 12 01:24:41 gn1 kernel:  [<f9433657>] xfs_vn_mknod+0x172/0x276 [xfs]
+> Sep 12 01:24:41 gn1 kernel:  [<c016c45b>] vfs_create+0xd1/0x138
+> Sep 12 01:24:41 gn1 kernel:  [<c016e862>] sys_mknodat+0xfa/0x164
+> Sep 12 01:24:41 gn1 kernel:  [<c016fc47>] do_ioctl+0x4f/0x5e
+> Sep 12 01:24:41 gn1 kernel:  [<c016fea2>] vfs_ioctl+0x24c/0x25e
+> Sep 12 01:24:41 gn1 kernel:  [<c016e8df>] sys_mknod+0x13/0x17
+> Sep 12 01:24:41 gn1 kernel:  [<c0103bdb>] sysenter_past_esp+0x54/0x79
+> Sep 12 01:24:41 gn1 kernel: xfs_force_shutdown(dm-0,0x8) called from
+> line 1139 of file fs/xfs/xfs_trans.c.  Return address = 0xf94359db
+> Sep 12 01:24:41 gn1 kernel: Filesystem "dm-0": Corruption of in-memory
+> data detected.  Shutting down filesystem: dm-0
+>
+>
+>  From a recent occurrence of this, I was able to obtain a copy of the
+> file system prior to it being restored from backup.
+>
+> The file system in question is relatively full -- 800GB with 25GB free
+> and 70M inodes used (the file system is used with a proprietary
+> DMAPI-based HSM application, so most of the file data is punched out).
+>
+> With the file system in this state, the forced shutdown error is
+> reproducible when attempting to create a file in a particular directory
+> -- an ENOSPC error is returned to userspace, and the file system shuts
+> down.
+>
+> The forced shutdown is also reproducible with this file system mounted
+> on a more recent kernel version -- here is a stack trace from the same
+> file system mounted on a 2.6.26 kernel built from oss.sgi.com cvs on Sep
+> 19 2008:
+>
+> Sep 21 06:35:41 gn1 kernel: Filesystem "loop0": XFS internal error
+> xfs_trans_cancel at line 1164 of file fs/xfs/xfs_trans.c.  Caller
+> 0xf93c8195
+> Sep 21 06:35:41 gn1 kernel:  [<f93c2fc0>] xfs_trans_cancel+0x4d/0xd3 [xfs]
+> Sep 21 06:35:41 gn1 kernel:  [<f93c8195>] xfs_create+0x49b/0x4db [xfs]
+> Sep 21 06:35:41 gn1 kernel:  [<f93c8195>] xfs_create+0x49b/0x4db [xfs]
+> Sep 21 06:35:41 gn1 kernel:  [<f93d166b>] xfs_vn_mknod+0x128/0x1e3 [xfs]
+> Sep 21 06:35:41 gn1 kernel:  [<c0170e9d>] vfs_create+0xb4/0x117
+> Sep 21 06:35:41 gn1 kernel:  [<c0172c46>] do_filp_open+0x1a0/0x671
+> Sep 21 06:35:41 gn1 kernel:  [<c01681da>] do_sys_open+0x40/0xb6
+> Sep 21 06:35:41 gn1 kernel:  [<c0168294>] sys_open+0x1e/0x23
+> Sep 21 06:35:41 gn1 kernel:  [<c0104791>] sysenter_past_esp+0x6a/0x99
+> Sep 21 06:35:41 gn1 kernel:  [<c02b0000>] unix_listen+0x8/0xc9
+> Sep 21 06:35:41 gn1 kernel:  =======================
+> Sep 21 06:35:41 gn1 kernel: xfs_force_shutdown(loop0,0x8) called from
+> line 1165 of file fs/xfs/xfs_trans.c.  Return address = 0xf93c2fd6
+> Sep 21 06:35:41 gn1 kernel: Filesystem "loop0": Corruption of in-memory
+> data detected.  Shutting down filesystem: loop0
+>
+>
+> Tracing through the XFS code, the ENOSPC error is returned here from
+> fs/xfs/xfs_da_btree.c:
+>
+> xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
+> {
+> ...
+>     if (got != count || mapp[0].br_startoff != bno ||
+>         ...
+>         return XFS_ERROR(ENOSPC);
+>     }
+> ...
+> }
+>
+> where got = 0 and count = 1 and xfs_da_grow_inode() is called from
+> xfs_create() -> xfs_dir_createname() -> xfs_dir2_node_addname() ->
+> xfs_da_split() -> xfs_da_root_split()
+>
+>
+> xfs_repair -n (the latest version of xfs_repair from cvs, as the SLES 10
+> SP1 version just runs out of memory) does not report any problems with
+> the file system, but after running xfs_repair (without -n) on the file
+> system, the error can no longer be triggered. Based on this, I suspect a
+> problem with the free space btrees, as I understand that xfs_repair
+> rebuilds them. I tried running xfs_check (latest cvs version also) as
+> well but it runs out of memory and dies.
+>
+> Are there any known issues in 2.6.16 that could lead to this sort of
+> problem? If there is any additional information that would be helpful in
+> tracking this down, please let me know. If needed, I can probably make a
+> xfs_metadump of the file system available to someone from SGI later this
+> week.
+>
+>
+> Some additional information that may be useful:
+>
+>
+> # xfs_info /fs
+> meta-data=/dev/loop0             isize=1024   agcount=32, agsize=6179712
+> blks
+>          =                       sectsz=512   attr=1
+> data     =                       bsize=4096   blocks=197750784, imaxpct=0
+>          =                       sunit=0      swidth=0 blks, unwritten=1
+> naming   =version 2              bsize=4096
+> log      =internal               bsize=4096   blocks=32768, version=1
+>          =                       sectsz=512   sunit=0 blks
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>
+>
+> # xfs_db -f -r -c 'sb 0' -c p /mnt/scratch3/xfs.fs
+> magicnum = 0x58465342
+> blocksize = 4096
+> dblocks = 197750784
+> rblocks = 0
+> rextents = 0
+> uuid = 18602b1d-e419-4f97-9bd7-37c4b64b884a
+> logstart = 134217732
+> rootino = 32
+> rbmino = 33
+> rsumino = 34
+> rextsize = 1
+> agblocks = 6179712
+> agcount = 32
+> rbmblocks = 0
+> logblocks = 32768
+> versionnum = 0x3094
+> sectsize = 512
+> inodesize = 1024
+> inopblock = 4
+> fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+> blocklog = 12
+> sectlog = 9
+> inodelog = 10
+> inopblog = 2
+> agblklog = 23
+> rextslog = 0
+> inprogress = 0
+> imax_pct = 0
+> icount = 72288384
+> ifree = 1131
+> fdblocks = 6101857
+> frextents = 0
+> uquotino = 0
+> gquotino = 0
+> qflags = 0
+> flags = 0
+> shared_vn = 0
+> inoalignmt = 2
+> unit = 0
+> width = 0
+> dirblklog = 0
+> logsectlog = 0
+> logsectsize = 0
+> logsunit = 0
+> features2 = 0
+>
+>
+> This is for the directory that triggers the problem:
+>
+> # xfs_db -f -r -c 'inode 304409506' -c p /mnt/scratch3/xfs.fs
+> core.magic = 0x494e
+> core.mode = 040700
+> core.version = 1
+> core.format = 2 (extents)
+> core.nlinkv1 = 2
+> core.uid = 60000
+> core.gid = 65534
+> core.flushiter = 0
+> core.atime.sec = Fri Sep 12 01:15:17 2008
+> core.atime.nsec = 169962854
+> core.mtime.sec = Fri Sep 12 01:24:41 2008
+> core.mtime.nsec = 058880718
+> core.ctime.sec = Fri Sep 12 01:24:41 2008
+> core.ctime.nsec = 058880718
+> core.size = 40960
+> core.nblocks = 12
+> core.extsize = 0
+> core.nextents = 12
+> core.naextents = 0
+> core.forkoff = 24
+> core.aformat = 1 (local)
+> core.dmevmask = 0
+> core.dmstate = 0
+> core.newrtbm = 0
+> core.prealloc = 0
+> core.realtime = 0
+> core.immutable = 0
+> core.append = 0
+> core.sync = 0
+> core.noatime = 0
+> core.nodump = 0
+> core.rtinherit = 0
+> core.projinherit = 0
+> core.nosymlinks = 0
+> core.extsz = 0
+> core.extszinherit = 0
+> core.nodefrag = 0
+> core.gen = 0
+> next_unlinked = null
+> u.bmx[0-11] = [startoff,startblock,blockcount,extentflag]
+> 0:[0,76102390,1,0] 1:[1,76102361,1,0] 2:[2,76102054,1,0]
+> 3:[3,76102053,1,0] 4:[4,76101744,1,0] 5:[5,76101743,1,0]
+> 6:[6,76101742,1,0] 7:[7,76101741,1,0] 8:[8,76101740,1,0]
+> 9:[9,76101707,1,0] 10:[8388608,76102391,1,0] 11:[16777216,76102719,1,0]
+> a.sfattr.hdr.totsize = 74
+> a.sfattr.hdr.count = 2
+> a.sfattr.list[0].namelen = 16
+> a.sfattr.list[0].valuelen = 8
+> a.sfattr.list[0].root = 1
+> a.sfattr.list[0].secure = 0
+> a.sfattr.list[0].name = "\004,\005XfY\016oapoBO\bR)"
+> a.sfattr.list[0].value = "\000\000\000\000\000\000\000\000"
+> a.sfattr.list[1].namelen = 16
+> a.sfattr.list[1].valuelen = 24
+> a.sfattr.list[1].root = 1
+> a.sfattr.list[1].secure = 0
+> a.sfattr.list[1].name = "\003>\016oMa7\034@#I8\004X\027G"
+> a.sfattr.list[1].value =
+> "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+>
+>
+>
+> # xfs_repair -f /mnt/scratch4/xfs.fs
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - agno = 6
+>         - agno = 7
+>         - agno = 8
+>         - agno = 9
+>         - agno = 10
+>         - agno = 11
+>         - agno = 12
+>         - agno = 13
+>         - agno = 14
+>         - agno = 15
+>         - agno = 16
+>         - agno = 17
+>         - agno = 18
+>         - agno = 19
+>         - agno = 20
+>         - agno = 21
+>         - agno = 22
+>         - agno = 23
+>         - agno = 24
+>         - agno = 25
+>         - agno = 26
+>         - agno = 27
+>         - agno = 28
+>         - agno = 29
+>         - agno = 30
+>         - agno = 31
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - agno = 6
+>         - agno = 7
+>         - agno = 8
+>         - agno = 9
+>         - agno = 10
+>         - agno = 11
+>         - agno = 12
+>         - agno = 13
+>         - agno = 14
+>         - agno = 15
+>         - agno = 16
+>         - agno = 17
+>         - agno = 18
+>         - agno = 19
+>         - agno = 20
+>         - agno = 21
+>         - agno = 22
+>         - agno = 23
+>         - agno = 24
+>         - agno = 25
+>         - agno = 26
+>         - agno = 27
+>         - agno = 28
+>         - agno = 29
+>         - agno = 30
+>         - agno = 31
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> done
+>
+>
+>
+> Thanks,
+> Kevin Jamieson
+>
+>
 
-The first observation that we need to make is that we are already doing
-asynchronous journalling for everything other than explicitly synchronous
-transactions. This means we are aggregating completed transactions in memory
-before writing them to disk. This reduces the number of disk I/Os needed to
-write the log, but it does nothing to help prevent relogging of items.
+-- 
 
-The second observation is that we store asynchronous committed transactions
-in two forms while they are being written to disk:
-
-	- the physical form in the log buffer that will be written
-	- the logical form attached to the log buffer so that on I/O completion
-	  of the log buffer the items in the transaction can be unpinned and
-	  moved to or updated in the AIL for later writeback.
-
-The fact that we store the logical form of the transaction until after the
-log buffer is written to the journal is important - it means the transaction
-and all it's dirty items live longer than process that creates and commits
-the transaction. This allows us to redefine what 'transaction commit' actually
-means.
-
-A transaction commit currently takes the following steps:
-
-	- apply superblock and dquot changes to in-core structures
-	- build an vector array to all the dirty regions in all the items in
-	  the transaction.
-	- write the vector array into the log buffer (may trigger log I/O)
-	- release ununsed transaction reservations to in-core structures
-	- attach transaction to log buffer callbacks
-	- write a commit record into the log buffer for the transaction
-	- unlock all the items locked in the transaction
-	- release the log buffer (may trigger log I/O)
-	- if synchronous transaction, issue a synchronous log force to
-	  get the transaction on disk.
-
-Based on the observation that the transaction structure exists until it is
-freed during log buffer I/o completion, we really don't have to format the
-transaction into a log buffer during the transaction commit - we could
-simply queue it into a list for later processing. Synchronous
-transactions don't change this - they just queue the transaction then
-do a log force to cause the transaction queue to be flushed to disk.
-
-Now that we have an asynchronous transaction queue in logical format, we can
-take our time deciding when and how best to write it to disk. If we have
-the situation where we are relogging items, we will have a given item
-in multiple transactions. If we write out each transaction as an individual
-commit like we currently do, we'd then have the problem of future changes
-being written in the first transaction that we write. This will cause
-problems for recovery.
-
-Hence what we really want to do is aggregate all those transactions into a
-single large journal commit. This makes the journalling model more of a
-'checkpoint of changes' than a 'transactional change' model. By commiting
-a set of transactions rather than just a single transaction per commit
-record, we can avoid needed to commit items several times to the log
-if they are modified in multiple transactions. During recovery, we only
-recover the entire commit so we only need a single version of each item
-that encompasses all the changes in the commit period.
-
-As an aside, if we have large numbers of items per commit record now,
-it makes sense to start optimising the recovery read-ahead by sorting
-all the items in the commit record before issuing readahead on them.
-This will reduce the seeking the readahead triggers somewhat, so should
-lead to faster recovery times.
-
-The down sides to this approach are:
-
-	- holds items pinned in memory for longer, thereby increases
-	  the chances of triggering a log force to unpin them.
-	- partial log forces (i.e. those to a specific LSN) are no longer
-	  really possible as we do not have multiple independent queues
-	  (iclogbufs) holding the transactions.
-	- log forces become more expensive by having to drain the entire
-	  async transaction queue.
-	- synchronous transactions become more expensive by having to
-	  drain the entire async transaction queue.
-	- possible 'interesting' interactions with tail-pushing if we
-	  allow too many async transactions to be queued without flushing
-	  them.
-
-The main concern with this approach is ensuring that we don't adversely affect
-fsync() performance. For example, ext3 uses a checkpoint based journalling
-system that has a very long checkpoint period (5 seconds).  As a result, a
-synchronous operation such as an fsync() can be forced to flush up to 5 seconds
-worth of transactions to disk. In ordered mode, this also involves flushing
-data, so the fsync() latency can be measured in tens of seconds on a busy
-filesystem. This is known as the 'sync the world' problem, and currently XFS
-does not suffer from this at all. 
-
-[Data point: Recent testing of this phenomenon by Chris Mason showed XFS took
-less than one second to fsync a 4k write in the presence of a background
-streaming write; BTRFS took two seconds and ext3 took five seconds. ]
-
-To avoid this type of latency, we should not be allowing too many transactions
-to accumulate in the async transaction queue. If we look at optimising
-workloads such as sequential creates or deletes in a single directory then, in
-theory, accumulating just 10 async transactions into a single commit record
-should provide close to an order of magnitude reduction in bandwidth to the log
-under these workloads. We also reduce the number of log writes by aggregating
-like this and that will give us even larger gains by avoiding seeks to write
-log buffers out.
-
-Hence I don't think the async transaction queue needs to be all that deep
-to realise substantial gains, and hence the impact on synchronous transaction
-latency can be kept quite low as a result.
-
-
-Atomic Multi-Transaction Operations
------------------------------------
-
-A feature asynchronous transaction aggregation makes possible is atomic
-multi-transaction operations.  On the first transaction we hold the queue in
-memory, preventing it from being committed. We can then do further transactions
-that will end up in the same commit record, and on the final transaction we
-unlock the async transaction queue. This will allow all those transaction to be
-applied atomically. This is far simpler than any other method I've been looking
-at to do this.
-
-After a bit of reflection, I think this feature may be necessary for correct
-implementation of existing logging techniques. The way we currently implement
-rolling transactions (with permanent log reservations and rolling
-dup/commit/re-reserve sequences) would seem to require all the commits in a
-rolling transaction to be including in a single commit record.  If I understand
-history and the original design correctly, these rolling transactions were
-implemented so that large, complex transactions would not pin the tail of the
-log as they progressed.  IOWs, they implicitly use re-logging to keep the tail
-of the log moving forward as they progress and continue to modify items in the
-transaction.
-
-Given we are using asynchronous transaction aggregation as a method of reducing
-re-logging, it would make sense to prevent these sorts of transactions from
-pinning the tail of the log at all. Further, because we are effectively
-disturbing the concept of unique transactions, I don't think that allowing a
-rolling transaction to span aggregated commits is valid as we are going to be
-ignoring the transaction IDs that are used to identify individual transactions.
-
-Hence I think it is a good idea to simply replace rolling transactions with
-atomic multi-transaction operations. This may also allow us to split some of
-the large compound transactions into smaller, more self contained transactions.
-This would reduce reservation pressure on log space in the common case where
-all the corner cases in the transactions are not taken. In terms of
-implementation, I think we can initially augment the permanent transaction
-reservation/release interface to acheive this. With a working implementation,
-we can then look to changing to a more explicit interface and slowly work to
-remove the 'permanent log transaction' concept entirely. This shold simplify
-the log code somewhat....
-
-Note: This asynchronous transaction aggregation is originally based on a
-concept floated by Nathan Scott called 'Delayed Logging' after observing how
-ext3 implemented journalling.  This never passed more than a concept
-description phase....
-
-
-Operation Based Logging
------------------------
-
-The second approach to reducing log traffic is to change exactly what we
-log in the transactions. At the moment, what we log is the exact change to
-the item that is being made. For things like inodes and dquots, this isn't
-particularly expensive because it is already a very compact form. The issue
-comes with changes that are logged in buffers.
-
-The prime example of this is a btree modification that involves either removing
-or inserting a record into a buffer. The records are kept in compact form, so an
-insert or remove will also move other records around in the buffer. In the worst
-case, a single insert or remove of a 16 byte record can dirty an entire block
-(4k generally, but could be up to 64k). In this case, if we were to log the
-btree operation (e.g. insert {record, index}) rather than the resultant change
-on the buffer the overhead of a btree operation is fixed. Such logging also
-allows us to avoid needing to log the changes due to splits and merges - we just
-replay the operation and subsequent splits/merges get done as part of replay.
-
-The result of this is that complex transactions no longer need as much log space
-as all possible change they can cause - we only log the basic operations that
-are occurring and their result. Hence transaction end up being much smaller,
-vary less in size between empty and full filesystems, etc. An example set of
-operations describing all the changes made by an extent allocation on an inode
-would be:
-
-	- inode X intent to allocate extent {off, len}
-	- AGCNT btree update record in AG X {old rec} {new rec values}
-	- AGBNO btree delete record in AG X {block, len}
-	- inode X BMBT btree insert record {off, block, len}
-	- inode X delta
-
-This comes down to a relatively small, bound amount of space which is close the
-minimun and existing allocation transaction would consume.  However, with this
-method of logging the transaction size does not increase with the size of
-structures or the amount of updates necessary to complete the operations.
-
-A major difference to the existing transaction system is that re-logging
-of items doesn't fit very neatly with operation based logging. 
-
-There are three main disadvantages to this approach:
-
-	- recovery becomes more complex - it will need to change substantially
-	  to accomodate operation replay rather than just reading from disk
-	  and applying deltas.
-	- we have to create a whole new set of item types and add the necessary
-	  hooks into the code to log all the operations correctly.
-	- re-logging is probably not possible, and that introduces 
-	  differences to the way we'll need to track objects for flushing. It
-	  may, in fact, require transaction IDs in all objects to allow us
-	  to determine what the last transaction that modified the item
-	  on disk was during recovery.
-
-Changing the logging strategy as described is a much more fundamental change to
-XFS than asynchronous transaction aggregation. It will be difficult to change
-to such a model in an evolutionary manner; it is more of a 'flag day' style
-change where then entire functionality needs to be added in one hit. Given that
-we will also still have to support the old log format, it doesn't enable us to
-remove any code, either.
-
-Given that we are likely to see major benefits in the problem workloads as a
-result of asynchronous transaction aggregation, it may not be necessary to
-completely rework the transaction subsystem. Combining aggregation with an
-ongoing process of targeted reduction of transaction size will provide benefits
-out to at least the medium term. It is unclear whether this direction will be
-sufficient in the long run until we can measure the benefit that aggregation
-will provide.
-
-
-Reducing Transaction Overhead
------------------------------
-
-To switch tracks completely, I have not addressed general issues with overhead
-in the transaction subsystem itself. There are several points where the
-transaction subsystem will single thread because of filesystem scope locks and
-structures.  We have, for example, the log grant lock for protecting
-reservation and used log space, the AIL lock for tracking dirty metadata, the
-log state lock for state transition of log buffers and other associated
-structure modifications.
-
-We have already started down the path of reducing contention in
-various paths. For example:
-
-	- changing iclog reference counts to atomics to avoid needing the log
-	  state lock on every transaction commit
-	- protecting iclog callback lists with a per-iclog lock instead of the log
-	  state lock
-	- removing the AIL lock from the transaction reserve path by isolating
-	  AIL tail pushing to a single thread instead of being done
-	  synchronously.
-
-Asynchronous transaction aggregation is likely to perturb the current known
-behaviour and bottlenecks as a result of moving all of the log interfacing out
-of the direct transaction commit path.  Similar to moving the AIL pushing into
-it's own thread, this will mean that there will typically only be a single
-thread formatting and writing to iclog buffers. This will remove much of the
-parallelism that puts excessive pressure on many of these locks.
-
-I am certain that asynchronous transaction aggregation will open up new areas
-of optimisation in the log formatting and dispatch code - it will probably
-enable us to remove a lot of the complexity because we will be able to directly
-control the parallelism in the formatting and dispatch of log buffers. This
-implies that we may not need to be limited to a fixed pool of fixed sized log
-buffers for writing transactions to disk.
-
-However, it is probably best to leave consideration of such optimisations until
-after the asynchronous transaction aggregation is implemented and we can
-directly observe the pain points that become apparent as a result of such a
-change.
-
-
-Reducing Recovery Time
-----------------------
-
-With 2GB logs, recovery can take an awfully long time due to the need
-to read each object synchronously as we process the jounral. An obvious
-way to avoid this is to add another pass to the processing to do asynchronous
-readahead of all the objects in the log before doing the processing passes.
-This will populate the cache as quickly as possible and hide any read latency
-that could occur as we process commit records.
-
-A logical extension to this is to sort the objects in ascending offset order
-before issuing I/O on them. That will further optimise the readahead I/O
-to reduce seeking and hence should speed up the read phase of recovery
-further.
-
-ToDo: Further investigation of recovery for future optimisation.
+  Mark Goodwin                                  markgw@sgi.com
+  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
+  SGI Australian Software Group           Cell: +61-4-18969583
+-------------------------------------------------------------
