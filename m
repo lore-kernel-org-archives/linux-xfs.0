@@ -1,42 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Sep 2008 21:54:55 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N4sqpT007441
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 21:54:53 -0700
-Message-ID: <48D87908.80408@sgi.com>
-Date: Tue, 23 Sep 2008 15:05:12 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 00:58:04 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N7vxZv029979
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 00:58:00 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B66C946FC80
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 00:59:29 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id slF8WwVx1jPDtHAk for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 00:59:29 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1Ki2ne-0008Ar-7R
+	for xfs@oss.sgi.com; Tue, 23 Sep 2008 17:59:10 +1000
+Date: Tue, 23 Sep 2008 17:59:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [RFC 0/3] Future Directions for XFS....
+Message-ID: <20080923075910.GA5448@disturbed>
 MIME-Version: 1.0
-Subject: [PATCH] Wait for all I/O on truncate to zero file size
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-It's possible to have outstanding xfs_ioend_t's queued when the file
-size is zero.  This can happen in the direct I/O path when a direct
-I/O write fails due to ENOSPC.  In this case the xfs_ioend_t will still
-be queued (ie xfs_end_io_direct() does not know that the I/O failed so
-can't force the xfs_ioend_t to be flushed synchronously).
+Folks,
 
-When we truncate a file on unlink we don't know to wait for these
-xfs_ioend_ts and we can have a use-after-free situation if the inode
-is reclaimed before the xfs_ioend_t is finally processed.
+I'm about to post a set of three documents that I was in the process
+of writing while working on contract for Agami Systems.  I have
+managed to get them extracted from the corpse of Agami so that the
+concepts and thoughts are not lost.
 
-As was suggested by Dave Chinner lets wait for all I/Os to complete
-when truncating the file size to zero.
+The documents encompass three different areas of interest - the
+inode subsystem, journalling and reliability - and try to encompass
+all the concepts and ideas that had either been used to solve
+problems or were considered the way forward to solve further issues
+that were being seen.
 
---- a/fs/xfs/xfs_inode.c	2008-09-23 14:18:27.000000000 +1000
-+++ b/fs/xfs/xfs_inode.c	2008-09-23 13:53:16.000000000 +1000
-@@ -1449,7 +1449,7 @@ xfs_itruncate_start(
- 	mp = ip->i_mount;
- 
- 	/* wait for the completion of any pending DIOs */
--	if (new_size < ip->i_size)
-+	if (new_size == 0 || new_size < ip->i_size)
- 		vn_iowait(ip);
- 
- 	/*
+I'm hoping that these documents will go a long way to defining the
+future direction and development plan for the XFS community.  At
+minimum I am hoping that these documents will foster an amount of
+discussion and provide tasks for anyone who wants to contribute to
+XFS.
+
+I intend to keep the documents up to date according to the
+discussion that occurs so that they can form reference documentation
+when it comes to implementing various features. Suggestions on the
+best place to host these documents are welcome....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
