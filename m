@@ -1,68 +1,132 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Sep 2008 16:40:11 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8MNdvVb009618
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 16:39:57 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FE7846E7AA
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 16:41:29 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id 3NXRPQ8dFEitl6Cu for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 16:41:29 -0700 (PDT)
-Date: Tue, 23 Sep 2008 09:41:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/10] xfs: Fix error handling in
-	write_super_lockfs/unlockfs
-Message-ID: <20080922234120.GV5811@disturbed>
-References: <20080922195637t-sato@mail.jp.nec.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 22 Sep 2008 20:04:27 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8N34PGN027252
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2008 20:04:25 -0700
+Message-ID: <48D85F24.9040305@sgi.com>
+Date: Tue, 23 Sep 2008 13:14:44 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080922195637t-sato@mail.jp.nec.com>
+Subject: [PATCH] Fix speculative allocation beyond eof
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Sep 22, 2008 at 07:56:37PM +0900, Takashi Sato wrote:
-> I've changed write_super_lockfs/unlockfs so that they always return
-> 0 (success) to keep a current behavior.
-> 
-> Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
-> Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
-> ---
->  xfs_super.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff -uprN -X linux-2.6.27-rc7-lockfs/Documentation/dontdiff linux-2.6.27-rc7-lockfs/fs/xfs/linux-2.6/xfs_super.c linux-
-> 2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c
-> --- linux-2.6.27-rc7-lockfs/fs/xfs/linux-2.6/xfs_super.c	2008-09-22 07:29:55.000000000 +0900
-> +++ linux-2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-09-22 10:13:39.000000000 +0900
-> @@ -1351,7 +1351,7 @@ xfs_fs_remount(
->   * need to take care of themetadata. Once that's done write a dummy
->   * record to dirty the log in case of a crash while frozen.
->   */
-> -STATIC void
-> +STATIC int
->  xfs_fs_lockfs(
->  	struct super_block	*sb)
->  {
-> @@ -1359,6 +1359,7 @@ xfs_fs_lockfs(
->  
->  	xfs_attr_quiesce(mp);
->  	xfs_fs_log_dummy(mp);
-> +	return 0;
->  }
+Speculative allocation beyond eof doesn't work properly.  It was broken some
+time ago after a code cleanup that moved what is now xfs_iomap_eof_align_last_fsb()
+and xfs_iomap_eof_want_preallocate() out of xfs_iomap_write_delay() into
+separate functions.  The code used to use the current file size in various checks
+but got changed to be max(file_size, i_new_size).  Since i_new_size is the result
+of 'offset + count' then in xfs_iomap_eof_want_preallocate() the check for
+'(offset + count) <= isize' will always be true.
 
-xfs_fs_log_dummy() currently is void because it had nowhere to
-return errors to. It silently throws away errors because of this.
-Hence the correct thing to do here is to fix xfs_fs_log_dummy()
-to return the errors it currently ignores. i.e. catch the errors
-from xfs_trans_reserve() and xfs_trans_commit() calls in
-xfs_fs_log_dummy().
+ie if 'offset + count' is > ip->i_size then isize will be i_new_size and equal to
+'offset + count'.
 
-Cheers,
+This change fixes all the places that used to use the current file size.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--- a/fs/xfs/xfs_iomap.c	2008-09-23 12:52:12.000000000 +1000
++++ b/fs/xfs/xfs_iomap.c	2008-09-23 12:51:29.000000000 +1000
+@@ -290,7 +290,6 @@ STATIC int
+ xfs_iomap_eof_align_last_fsb(
+ 	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
+-	xfs_fsize_t	isize,
+ 	xfs_extlen_t	extsize,
+ 	xfs_fileoff_t	*last_fsb)
+ {
+@@ -306,14 +305,14 @@ xfs_iomap_eof_align_last_fsb(
+ 	 * stripe width and we are allocating past the allocation eof.
+ 	 */
+ 	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
+-	        (isize >= XFS_FSB_TO_B(mp, mp->m_swidth)))
++	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
+ 		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
+ 	/*
+ 	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
+ 	 * if the file size is >= stripe unit size, and we are allocating past
+ 	 * the allocation eof.
+ 	 */
+-	else if (mp->m_dalign && (isize >= XFS_FSB_TO_B(mp, mp->m_dalign)))
++	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
+ 		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
+ 
+ 	/*
+@@ -403,7 +402,6 @@ xfs_iomap_write_direct(
+ 	xfs_filblks_t	count_fsb, resaligned;
+ 	xfs_fsblock_t	firstfsb;
+ 	xfs_extlen_t	extsz, temp;
+-	xfs_fsize_t	isize;
+ 	int		nimaps;
+ 	int		bmapi_flag;
+ 	int		quota_flag;
+@@ -426,15 +424,10 @@ xfs_iomap_write_direct(
+ 	rt = XFS_IS_REALTIME_INODE(ip);
+ 	extsz = xfs_get_extsz_hint(ip);
+ 
+-	isize = ip->i_size;
+-	if (ip->i_new_size > isize)
+-		isize = ip->i_new_size;
+-
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
+-	if ((offset + count) > isize) {
+-		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
+-							&last_fsb);
++	if ((offset + count) > ip->i_size) {
++		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
+ 		if (error)
+ 			goto error_out;
+ 	} else {
+@@ -559,7 +552,6 @@ STATIC int
+ xfs_iomap_eof_want_preallocate(
+ 	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
+-	xfs_fsize_t	isize,
+ 	xfs_off_t	offset,
+ 	size_t		count,
+ 	int		ioflag,
+@@ -573,7 +565,7 @@ xfs_iomap_eof_want_preallocate(
+ 	int		n, error, imaps;
+ 
+ 	*prealloc = 0;
+-	if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
++	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
+ 		return 0;
+ 
+ 	/*
+@@ -617,7 +609,6 @@ xfs_iomap_write_delay(
+ 	xfs_fileoff_t	ioalign;
+ 	xfs_fsblock_t	firstblock;
+ 	xfs_extlen_t	extsz;
+-	xfs_fsize_t	isize;
+ 	int		nimaps;
+ 	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
+ 	int		prealloc, fsynced = 0;
+@@ -637,11 +628,7 @@ xfs_iomap_write_delay(
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 
+ retry:
+-	isize = ip->i_size;
+-	if (ip->i_new_size > isize)
+-		isize = ip->i_new_size;
+-
+-	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
++	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
+ 				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
+ 	if (error)
+ 		return error;
+@@ -655,8 +642,7 @@ retry:
+ 	}
+ 
+ 	if (prealloc || extsz) {
+-		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
+-							&last_fsb);
++		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
+ 		if (error)
+ 			return error;
+ 	}
