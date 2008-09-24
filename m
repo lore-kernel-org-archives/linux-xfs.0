@@ -1,145 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 20:10:09 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O3A7J4031269
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:10:07 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 20:40:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O3dokX005488
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:39:51 -0700
 Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFE281327695
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:11:40 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id rIOG5OnIVJWNVPXD for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:11:40 -0700 (PDT)
-Date: Wed, 24 Sep 2008 13:11:38 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 649A84754EC
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:41:24 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id JPw9E2W2j9Vmp9re for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 20:41:24 -0700 (PDT)
+Date: Wed, 24 Sep 2008 13:41:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/8] XFS: Use a cursor for AIL traversal.
-Message-ID: <20080924031137.GF5448@disturbed>
-References: <1221317877-8333-1-git-send-email-david@fromorbit.com> <1221317877-8333-3-git-send-email-david@fromorbit.com> <20080919092444.GB11443@infradead.org>
+Subject: Re: [PATCH] XFS: Check for valid transaction headers in recovery
+Message-ID: <20080924034120.GG5448@disturbed>
+References: <1222218974-5161-1-git-send-email-david@fromorbit.com> <48D9AF0C.3050404@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20080919092444.GB11443@infradead.org>
+In-Reply-To: <48D9AF0C.3050404@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Fri, Sep 19, 2008 at 05:24:44AM -0400, Christoph Hellwig wrote:
-> On Sun, Sep 14, 2008 at 12:57:51AM +1000, Dave Chinner wrote:
-> > -	int			orig_gen = gen;
-> > -
-> >  	do {
-> >  		ASSERT(lip->li_type != XFS_LI_EFI);
-> > -		lip = xfs_trans_next_ail(mp, lip, &gen, NULL);
-> > -		/*
-> > -		 * The check will be bogus if we restart from the
-> > -		 * beginning of the AIL, so ASSERT that we don't.
-> > -		 * We never should since we're holding the AIL lock
-> > -		 * the entire time.
-> > -		 */
-> > -		ASSERT(gen == orig_gen);
-> > +		lip = xfs_trans_next_ail(mp, cur);
-> >  	} while (lip != NULL);
+On Tue, Sep 23, 2008 at 10:07:56PM -0500, Eric Sandeen wrote:
+> Dave Chinner wrote:
+> > When we are about to add a new item to a transaction in recovery,
+> > we need to check that it is valid first. Current we just assert
+> > that header magic number matches, but in production systems
+> > that is not done add a corrupted transaction to the list to be
+> > processed. This results in a kernel oops later when processing the
+> > corrupted transaction.
+> > 
+> > Instead, if we detect a corrupted transaction, abort recovery and
+> > leave the user to clean up the mess that has occurred.
+> > 
+> > Signed-off-by: Dave Chinner <david@fromorbit.com>
 > 
-> 	for (tmp = lip ; tmp = xfs_rans_next_ail(mp, tmp, &gen, NULL); tmp)
-> 		ASSERT(tmp->li_type != XFS_LI_EFI);
-> 
-> ?
+> Seems fine to me (I guess you tried the provided corrupt image?)
 
-Doesn't really matter. I'd prefer to avoid needing another temporary
-variable, so it can become:
+Yes, I tried to mount it.
 
-	for (; lip; lip = xfs_trans_next_ail(mp, cur))
-		ASSERT(lip->li_type != XFS_LI_EFI);
+> but the
+> commit message could be made a bit more ... English ;)
 
-And at that point, I can probably kill the debug wrapper function
-altogether. Hmmm - will the compiler optimise out the empty loop?
-(i.e. do i need #ifdef DEBUG around it?)
-
-> > +void
-> > +xfs_trans_ail_cursor_init(
-> 
-> A little comment describing the function would be nice.
-
-Sure.
-
-> > +	struct xfs_ail		*ailp,
-> > +	struct xfs_ail_cursor	*cur)
-> > +{
-> > +	cur->item = NULL;
-> > +	if (cur == &ailp->xa_cursors)
-> > +		return;
-> 
-> What is this check for?  It mans we'll do nothing if the cursor is the
-> one embedded into the ail.  But we should never do this anyway, should
-> we?
-
-It means that we don't link the embedded push cursor into the list.
-That is, initialisation of the push cursor simply clears the "next
-item".
-
-> > +/*
-> > + * Set the cursor to the next item, because when we look
-> > + * up the cursor the current item may have been freed.
-> > + */
-> > +STATIC void
-> > +xfs_trans_ail_cursor_set(
-> > +	struct xfs_ail		*ailp,
-> > +	struct xfs_ail_cursor	*cur,
-> > +	struct xfs_log_item	*lip)
-> > +{
-> > +	if (lip)
-> > +		cur->item = xfs_ail_next(ailp, lip);
-> > +}
-> 
-> Does it make sense to have the NULL check here and not in the caller?
-
-Doesn't really matter - this saves having to check in every place
-we call the function....
-
-> 
-> > +STATIC struct xfs_log_item *
-> > +xfs_trans_ail_cursor_next(
-> > +	struct xfs_ail		*ailp,
-> > +	struct xfs_ail_cursor	*cur)
-> > +{
-> > +	struct xfs_log_item	*lip = cur->item;
-> > +
-> > +	xfs_trans_ail_cursor_set(ailp, cur, lip);
-> > +	return lip;
-> > +}
-> 
-> I'd say kill this wrapper, it's only used once anyway.
-
-Ah - should be at least twice - I note that the push code uses
-the xfs_mount version rather than the xfs_ail version.
-
-Also, I realised that I forgot to add the traversal restart code
-into this function, so it's definitely necessary....
-
-> > +void
-> > +xfs_trans_ail_cursor_done(
-> > +	struct xfs_ail		*ailp,
-> > +	struct xfs_ail_cursor	*done)
-> 
-> A little comment describing it, please.
-
-Done.
-
-> > +	if (done == &ailp->xa_cursors)
-> > +		return;
-> > +	prev = &ailp->xa_cursors;
-> > +	for (cur = prev->next; cur; prev = cur, cur = prev->next) {
-> > +		if (cur == done) {
-> > +			prev->next = cur->next;
-> > +			break;
-> > +		}
-> > +	}
-> > +}
-> 
-> Add an assert somewhere that the cursor actually is on the list?
-
-Done.
-
-I'll repost the entire patch series with the fixes in a while
+Right. Updated patch (description) below ;)
 
 Cheers,
 
@@ -147,3 +51,38 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+XFS: Check for valid transaction headers in recovery
+
+When we are about to add a new item to a transaction in recovery, we
+need to check that it is valid first. Currently we just assert that
+header magic number matches, but in production systems that is not
+present and we add a corrupted transaction to the list to be
+processed. This results in a kernel oops later when processing the
+corrupted transaction.
+
+Instead, if we detect a corrupted transaction, abort recovery and
+leave the user to clean up the mess that has occurred.
+---
+ fs/xfs/xfs_log_recover.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 37c2bf9..1ccc80d 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1420,7 +1420,13 @@ xlog_recover_add_to_trans(
+ 		return 0;
+ 	item = trans->r_itemq;
+ 	if (item == NULL) {
+-		ASSERT(*(uint *)dp == XFS_TRANS_HEADER_MAGIC);
++		/* we need to catch log corruptions here */
++		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
++			xlog_warn("XFS: xlog_recover_add_to_trans: "
++				  "bad header magic number");
++			ASSERT(0);
++			return XFS_ERROR(EIO);
++		}
+ 		if (len == sizeof(xfs_trans_header_t))
+ 			xlog_recover_add_item(&trans->r_itemq);
+ 		memcpy(&trans->r_theader, dp, len); /* d, s, l */
