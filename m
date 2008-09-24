@@ -1,46 +1,107 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:39:55 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O7dq7P032598
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:39:52 -0700
-Subject: TAKE 985583 - refactor btree validation helpers
-Message-Id: <20080924074125.B894A58C52AE@chook.melbourne.sgi.com>
-Date: Wed, 24 Sep 2008 17:41:25 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:42:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O7fvqm000545
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:41:57 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44C03965369
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:43:31 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id ZkMIeKuQnlFcxTbN for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:43:31 -0700 (PDT)
+Date: Wed, 24 Sep 2008 17:43:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Use atomic_t and wait_event to track dquot pincount
+Message-ID: <20080924074317.GJ5448@disturbed>
+References: <48D9C1DD.6030607@sgi.com> <20080924060508.GH5448@disturbed> <48D9E3E2.3040504@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48D9E3E2.3040504@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Peter Leckie <pleckie@sgi.com>
+Cc: xfs@oss.sgi.com, xfs-dev@sgi.com
 
-refactor btree validation helpers
+On Wed, Sep 24, 2008 at 04:53:22PM +1000, Peter Leckie wrote:
+> Dave Chinner wrote:
+>> [ Pete, please wrap your text at 68-72 columns]
+>>   
+> Ok will do in future
+>> On Wed, Sep 24, 2008 at 02:28:13PM +1000, Peter Leckie wrote:
+>>   
+>>> The reason the lsn had changed was due to it not being initialized
+>>> by  the time a copy of the lsn was taken in xfs_qm_dqflush().
+>>> The lsn was then latter updated causing the test  in
+>>> xfs_qm_dqflush_done() to fail.
+>>>
+>>> Synchronizations between the 2 functions is done by the pincount
+>>> in  struct xfs_dquot_t  and xfs_qm_dqflush() calls
+>>> xfs_qm_dqunpin_wait() to wait for the pincount == 0. However after
+>>> been woken up it does not validate the pincount is actually 0,
+>>>     
+>>
+>> Sure - that's because we only ever send a wakeup when the pin count
+>> falls to zero. Because we have to be holding the dquot lock when we
+>> either pin a dquot or wait for it to be unpinned, the act of waiting
+>> for it to be unpinned with the dquot lock held guarantees that it
+>> is not pinned when we wake up.
+>>
+>> IOWs, the pin count cannot be incremented while we are waiting for
+>> it to be unpinned, and hence it must be zero when we are woken......
+>>
+>>   
+>>> allowing a false wake up by the scheduler to  cause
+>>> xfs_qm_dqflush() to prematurely start processing the dquot.
+>>>     
+>>
+>> .... which means I can't see how that would happen...
+>>
+>> What am I missing here?
+>>   
+> Yeah it's quite intriguing  isn't it, I added the pincount to the
+> dquot tracing code and sure enough it's 1 all the way through
+> xfs_qm_dqflush() I can tell you that none of the XFS code is
+> causing it to wake up.
 
-Move the various btree validation helpers around in xfs_btree.c so that
-they are close to each other and in common #ifdef DEBUG sections.
+Only the XFS code can cause it to be woken....
 
-Also add a new xfs_btree_check_ptr helper to check a btree ptr that
-can be either long or short form.
+> I was going to add some tracing code to
+> the scheduler to determine who is causing us to wake up however
+> I had other priorities to work on.
+>
+> Reading the code it appears things like a threads dying or a
+> system suspending can cause it.
 
-Split out from a bigger patch from Dave Chinner with various small
-changes applied by me.
+Wait queues are not affected by such events when they are
+configured to be uninterruptable. The sv_t:
 
+#define sv_wait(sv, pri, lock, s) \
+        _sv_wait(sv, lock, TASK_UNINTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Is as uninterruptible as it comes. Which means only an explicit
+wakeup will cause any waiters to wake up.
 
-Date:  Wed Sep 24 17:40:46 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-btree
-Inspected by:  
-dgc
-billodo
-lachlan
-Author:  lachlan
+> However none of these had
+> happened, after reading other examples in the Linux kernel
+> it appeared pretty standard to always re-evaluate the condition
+> after being woken so I suspect that Linux simply does not
+> guarantee that we will only be woken by the thread calling
+> wake_up on  us.
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+Not true - wake_up() will only wake tasks on the wait queue
+it was called for.
 
+> Any insight into this would be much appreciated as I'm also very curious
+> as to why this is happening.
 
-Modid:  xfs-linux-melb:xfs-kern:32183a
-fs/xfs/xfs_btree.c - 1.124 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.124&r2=text&tr2=1.123&f=h
-fs/xfs/xfs_btree.h - 1.75 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.75&r2=text&tr2=1.74&f=h
-	- refactor btree validation helpers
+Assert fail the machine when a dquot with a non-zero pincount is
+woken in xfs_qm_dqunpin_wait(). If the assert trips, then we need
+to work out how the pin count is getting elevated while we have
+a waiter....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
