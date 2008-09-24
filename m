@@ -1,133 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:14:03 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8DmiS005341
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:13:49 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F271813297CC
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:15:19 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id GF7pFRUGIsxgHcIY for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:15:19 -0700 (PDT)
-Subject: Re: [PATCH 4/10] xfs: Fix error handling inwrite_super_lockfs/unlockfs
-Message-Id: <20080924171439t-sato@mail.jp.nec.com>
-Mime-Version: 1.0
-From: Takashi Sato <t-sato@yk.jp.nec.com>
-Date: Wed, 24 Sep 2008 17:14:39 +0900
-Content-Type: text/plain; charset=us-ascii
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:14:09 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8DsSY005352
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:13:54 -0700
+Message-ID: <48D9F718.4010905@sgi.com>
+Date: Wed, 24 Sep 2008 18:15:20 +1000
+From: Peter Leckie <pleckie@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
+References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed>
+In-Reply-To: <20080924074604.GK5448@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-
-Hi,
+To: xfs@oss.sgi.com, xfs-dev@sgi.com
 
 Dave Chinner wrote:
->> diff -uprN -X linux-2.6.27-rc7-lockfs/Documentation/dontdiff linux-2.6.27-rc7-lockfs/fs/xfs/linux-2.6/xfs_super.c lin
-ux-
->> 2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c
->> --- linux-2.6.27-rc7-lockfs/fs/xfs/linux-2.6/xfs_super.c 2008-09-22 07:29:55.000000000 +0900
->> +++ linux-2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c 2008-09-22 10:13:39.000000000 +0900
->> @@ -1351,7 +1351,7 @@ xfs_fs_remount(
->>   * need to take care of themetadata. Once that's done write a dummy
->>   * record to dirty the log in case of a crash while frozen.
->>   */
->> -STATIC void
->> +STATIC int
->>  xfs_fs_lockfs(
->>  	struct super_block *sb)
->>  {
->> @@ -1359,6 +1359,7 @@ xfs_fs_lockfs(
->>  
->>  	xfs_attr_quiesce(mp);
->>  	xfs_fs_log_dummy(mp);
->> + 	return 0;
->>  }
-> 
-> xfs_fs_log_dummy() currently is void because it had nowhere to
-> return errors to. It silently throws away errors because of this.
-> Hence the correct thing to do here is to fix xfs_fs_log_dummy()
-> to return the errors it currently ignores. i.e. catch the errors
-> from xfs_trans_reserve() and xfs_trans_commit() calls in
-> xfs_fs_log_dummy().
+> No, it is not yet good. Pete cannot explain the underlying problem
+> and we need to understand if this is fixing the problem or just
+>
+>   
+No this patch does not change the timing so it does not happen, it fixes 
+a problem
+we don't properly understand. Using wait_event prevents the thread from 
+waking up
+unless the test condition is actually true. The the bug here is we are 
+being woken up
+with our test condition still being false.
 
-OK.
-I've fixed the patch for xfs as following.
-Could you review it?
-If it's OK, I will include it in new freeze patch-set.
+And this patch catches that case and hence fixes the problem the 
+question is
+why is this happening in the first place. And yes that is an unanswered 
+question.
 
-Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
-Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
----
-diff -uprN -X linux-2.6.27-rc7.org/Documentation/dontdiff linux-2.6.27-rc7-ext4_3/fs/xfs/linux-2.6/xfs_super.c linux-2.6
-.27-rc7-xfs_4/fs/xfs/linux-2.6/xfs_super.c
---- linux-2.6.27-rc7-ext4_3/fs/xfs/linux-2.6/xfs_super.c	2008-09-24 10:48:02.000000000 +0900
-+++ linux-2.6.27-rc7-xfs_4/fs/xfs/linux-2.6/xfs_super.c	2008-09-24 11:24:08.000000000 +0900
-@@ -1351,14 +1351,14 @@ xfs_fs_remount(
-  * need to take care of themetadata. Once that's done write a dummy
-  * record to dirty the log in case of a crash while frozen.
-  */
--STATIC void
-+STATIC int
- xfs_fs_lockfs(
- 	struct super_block	*sb)
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
- 	xfs_attr_quiesce(mp);
--	xfs_fs_log_dummy(mp);
-+	return -xfs_fs_log_dummy(mp);
- }
- 
- STATIC int
-diff -uprN -X linux-2.6.27-rc7.org/Documentation/dontdiff linux-2.6.27-rc7-ext4_3/fs/xfs/xfs_fsops.c linux-2.6.27-rc7-xf
-s_4/fs/xfs/xfs_fsops.c
---- linux-2.6.27-rc7-ext4_3/fs/xfs/xfs_fsops.c	2008-09-24 10:48:02.000000000 +0900
-+++ linux-2.6.27-rc7-xfs_4/fs/xfs/xfs_fsops.c	2008-09-24 11:47:08.000000000 +0900
-@@ -589,17 +589,19 @@ out:
- 	return 0;
- }
- 
--void
-+int
- xfs_fs_log_dummy(
- 	xfs_mount_t	*mp)
- {
- 	xfs_trans_t	*tp;
- 	xfs_inode_t	*ip;
-+	int		error;
- 
- 	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
--	if (xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0)) {
-+	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
-+	if (error) {
- 		xfs_trans_cancel(tp, 0);
--		return;
-+		return error;
- 	}
- 
- 	ip = mp->m_rootip;
-@@ -609,9 +611,10 @@ xfs_fs_log_dummy(
- 	xfs_trans_ihold(tp, ip);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	xfs_trans_set_sync(tp);
--	xfs_trans_commit(tp, 0);
-+	error = xfs_trans_commit(tp, 0);
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
- }
- 
- int
-diff -uprN -X linux-2.6.27-rc7.org/Documentation/dontdiff linux-2.6.27-rc7-ext4_3/fs/xfs/xfs_fsops.h linux-2.6.27-rc7-xf
-s_4/fs/xfs/xfs_fsops.h
---- linux-2.6.27-rc7-ext4_3/fs/xfs/xfs_fsops.h	2008-09-24 10:48:02.000000000 +0900
-+++ linux-2.6.27-rc7-xfs_4/fs/xfs/xfs_fsops.h	2008-09-24 11:36:29.000000000 +0900
-@@ -25,6 +25,6 @@ extern int xfs_fs_counts(xfs_mount_t *mp
- extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
- 				xfs_fsop_resblks_t *outval);
- extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
--extern void xfs_fs_log_dummy(xfs_mount_t *mp);
-+extern int xfs_fs_log_dummy(xfs_mount_t *mp);
- 
- #endif	/* __XFS_FSOPS_H__ */
+> Only the XFS code can cause it to be woken....
+Do you know this for sure?
+
+> Wait queues are not affected by such events when they are
+> configured to be uninterruptable. The sv_t:
+>
+> #define sv_wait(sv, pri, lock, s) \
+>         _sv_wait(sv, lock, TASK_UNINTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT)
+>
+> Is as uninterruptible as it comes. Which means only an explicit
+> wakeup will cause any waiters to wake up.
+>
+>   
+
+I added some tracing to sv_broadcast to trace anyone waking up the 
+thread however
+the only time it was called was from the unpinning code well after the 
+thread had already
+been woken up.
+
+> Assert fail the machine when a dquot with a non-zero pincount is
+> woken in xfs_qm_dqunpin_wait(). If the assert trips, then we need
+> to work out how the pin count is getting elevated while we have
+> a waiter....
+Done that, and it trips however it does not help us as there is no 
+insight into
+who woke us.
+
+
+XFS does have references to wake_up in other spots for example in 
+xfs_super.c and xfs_buf.c
+so I could add some tracing there, however the most ideal spot is in 
+__wake_up_common()
+so as soon as I have a chance I'll add some tracing there so we can work 
+out what's going on here.
+
+
+Either way this patch resolves this issue and is a nice code cleanup.
+
+Thanks,
+Pete
