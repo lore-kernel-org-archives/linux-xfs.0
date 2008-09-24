@@ -1,37 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:52:58 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O7quBr002405
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:52:56 -0700
-Message-ID: <48D9F44A.5010601@sgi.com>
-Date: Wed, 24 Sep 2008 18:03:22 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
-References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed>
-In-Reply-To: <20080924074604.GK5448@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:54:11 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O7s8qg002648
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:54:08 -0700
+Subject: TAKE 985583 - add get_maxrecs btree operation
+Message-Id: <20080924075541.5DF8258C52AE@chook.melbourne.sgi.com>
+Date: Wed, 24 Sep 2008 17:55:41 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Wed, Sep 24, 2008 at 05:42:38PM +1000, Lachlan McIlroy wrote:
->> Looks good Pete.
-> 
-> No, it is not yet good. Pete cannot explain the underlying problem
-> and we need to understand if this is fixing the problem or just
-> changing the timing so it doesn't show up....
-> 
+add get_maxrecs btree operation
 
-Pete clearly demonstrated to me that the sv_wait is being prematurely
-woken up when it should not be.  There may be an underlying problem or
-this could just be another peculiarity of the Linux kernel.  Either way
-Pete will continue to look into this and whatever the explanation turns
-out to be, we deperately need a way to prevent our customers from
-running into this deadlock.  Even if there is another problem lurking
-this code change is fine and if nothing else will serve as a performance
-improvement.
+Factor xfs_btree_maxrecs into a per-btree operation.
+
+The get_maxrecs method is based on a patch from Dave Chinner.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Wed Sep 24 17:54:59 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-btree
+Inspected by:  
+dgc
+billodo
+lachlan
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:32188a
+fs/xfs/xfs_ialloc_btree.c - 1.91 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.91&r2=text&tr2=1.90&f=h
+fs/xfs/xfs_bmap_btree.c - 1.180 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.180&r2=text&tr2=1.179&f=h
+fs/xfs/xfs_btree.c - 1.125 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.125&r2=text&tr2=1.124&f=h
+fs/xfs/xfs_btree.h - 1.78 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.78&r2=text&tr2=1.77&f=h
+fs/xfs/xfs_alloc_btree.c - 1.95 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.95&r2=text&tr2=1.94&f=h
+	- add get_maxrecs btree operation
