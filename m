@@ -1,195 +1,112 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 21:54:35 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O4sVQ1010519
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 21:54:32 -0700
-Message-ID: <48D9CA79.2090501@sgi.com>
-Date: Wed, 24 Sep 2008 15:04:57 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 23:05:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O63h1Z015792
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 23:03:43 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C2171475A49
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 23:05:16 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id v55ITIlKgSwON5BH for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 23:05:16 -0700 (PDT)
+Date: Wed, 24 Sep 2008 16:05:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Use atomic_t and wait_event to track dquot pincount
+Message-ID: <20080924060508.GH5448@disturbed>
+References: <48D9C1DD.6030607@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix speculative allocation beyond eof
-References: <48D85F24.9040305@sgi.com> <48D9AE73.4000703@sandeen.net>
-In-Reply-To: <48D9AE73.4000703@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48D9C1DD.6030607@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Peter Leckie <pleckie@sgi.com>
+Cc: xfs@oss.sgi.com, xfs-dev@sgi.com
 
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> Speculative allocation beyond eof doesn't work properly.  It was broken some
->> time ago after a code cleanup that moved what is now xfs_iomap_eof_align_last_fsb()
->> and xfs_iomap_eof_want_preallocate() out of xfs_iomap_write_delay() into
->> separate functions.  The code used to use the current file size in various checks
->> but got changed to be max(file_size, i_new_size).  Since i_new_size is the result
->> of 'offset + count' then in xfs_iomap_eof_want_preallocate() the check for
->> '(offset + count) <= isize' will always be true.
->>
->> ie if 'offset + count' is > ip->i_size then isize will be i_new_size and equal to
->> 'offset + count'.
->>
->> This change fixes all the places that used to use the current file size.
-> 
-> Lachlan, so what's the failure mode?  (is it that we simply don't do
-> that speculative preallocation anymore due to the problem?)
-Yes, we are not doing speculative allocation anymore.
+[ Pete, please wrap your text at 68-72 columns]
 
-Actually it's not that clear cut.  The 'offset + count' used in these functions
-is rounded up to a page boundary by the calling code so if the user is not page
-aligning their I/O then 'offset + count' will extend further into the file than
-what the user specified.  And i_new_size is the result of the actual user's
-'offset + count'.  The result is users who do not page align their I/O will get
-some speculative allocation but users who do page align their I/O (in order to
-get better performance) will be punished.
+On Wed, Sep 24, 2008 at 02:28:13PM +1000, Peter Leckie wrote:
+> The reason the lsn had changed was due to it not being initialized
+> by  the time a copy of the lsn was taken in xfs_qm_dqflush().
+> The lsn was then latter updated causing the test  in
+> xfs_qm_dqflush_done() to fail.
+>
+> Synchronizations between the 2 functions is done by the pincount
+> in  struct xfs_dquot_t  and xfs_qm_dqflush() calls
+> xfs_qm_dqunpin_wait() to wait for the pincount == 0. However after
+> been woken up it does not validate the pincount is actually 0,
 
-> 
->>From your description of the change above, it seems like you're talking
-> about:
-> 
-> dd9f438e32900d67def49fa1b8961b3e19b6fefc
-> 
-> [XFS] Implement the di_extsize allocator hint for non-realtime files as
-> well.  Also provides a mechanism for inheriting this property from the
-> parent directory for new files.
-> 
-> SGI-PV: 945264
-> SGI-Modid: xfs-linux-melb:xfs-kern:24367a
-> 
-> Signed-off-by: Nathan Scott <nathans@sgi.com>
-> 
-> but that isn't really a cleanup; and I don't think it changed the isize
-> behavior.
-That change did a lot of things.  I was referring the large chunks of code that
-were moved into new functions.
+Sure - that's because we only ever send a wakeup when the pin count
+falls to zero. Because we have to be holding the dquot lock when we
+either pin a dquot or wait for it to be unpinned, the act of waiting
+for it to be unpinned with the dquot lock held guarantees that it
+is not pinned when we wake up.
 
-Before the change we had this
--       if (!(ioflag & BMAPI_SYNC) && ((offset + count) > ip->i_d.di_size)) {
+IOWs, the pin count cannot be incremented while we are waiting for
+it to be unpinned, and hence it must be zero when we are woken......
 
-and after it is now
-+       if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
+> allowing a false wake up by the scheduler to  cause
+> xfs_qm_dqflush() to prematurely start processing the dquot.
 
-where isize is max(ip->i_d.di_size, io->io_new_size).  Note that the logic has
-been inverted but it's clear that we're using the wrong size.  That's where the
-choice to do speculative allocation got busted.  The code that does the stripe
-width/unit rounding has been broken much longer - in version 1.3 of xfs_iomap.c
-we changed XFS_SIZE(mp, io) to isize.  The code has morphed a lot since then but
-we kept the use of isize.
+.... which means I can't see how that would happen...
 
-> 
-> Was it possibly [XFS] Fix to prevent the notorious 'NULL files' problem
-> after a crash. that caused the regression?
-No, that just changes uses of the on-disk file size to be the in-memory file size.
+What am I missing here?
 
-> 
-> Thanks,
-> -Eric
-> 
->> --- a/fs/xfs/xfs_iomap.c	2008-09-23 12:52:12.000000000 +1000
->> +++ b/fs/xfs/xfs_iomap.c	2008-09-23 12:51:29.000000000 +1000
->> @@ -290,7 +290,6 @@ STATIC int
->>  xfs_iomap_eof_align_last_fsb(
->>  	xfs_mount_t	*mp,
->>  	xfs_inode_t	*ip,
->> -	xfs_fsize_t	isize,
->>  	xfs_extlen_t	extsize,
->>  	xfs_fileoff_t	*last_fsb)
->>  {
->> @@ -306,14 +305,14 @@ xfs_iomap_eof_align_last_fsb(
->>  	 * stripe width and we are allocating past the allocation eof.
->>  	 */
->>  	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
->> -	        (isize >= XFS_FSB_TO_B(mp, mp->m_swidth)))
->> +	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
->>  		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
->>  	/*
->>  	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
->>  	 * if the file size is >= stripe unit size, and we are allocating past
->>  	 * the allocation eof.
->>  	 */
->> -	else if (mp->m_dalign && (isize >= XFS_FSB_TO_B(mp, mp->m_dalign)))
->> +	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
->>  		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
->>  
->>  	/*
->> @@ -403,7 +402,6 @@ xfs_iomap_write_direct(
->>  	xfs_filblks_t	count_fsb, resaligned;
->>  	xfs_fsblock_t	firstfsb;
->>  	xfs_extlen_t	extsz, temp;
->> -	xfs_fsize_t	isize;
->>  	int		nimaps;
->>  	int		bmapi_flag;
->>  	int		quota_flag;
->> @@ -426,15 +424,10 @@ xfs_iomap_write_direct(
->>  	rt = XFS_IS_REALTIME_INODE(ip);
->>  	extsz = xfs_get_extsz_hint(ip);
->>  
->> -	isize = ip->i_size;
->> -	if (ip->i_new_size > isize)
->> -		isize = ip->i_new_size;
->> -
->>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->>  	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
->> -	if ((offset + count) > isize) {
->> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
->> -							&last_fsb);
->> +	if ((offset + count) > ip->i_size) {
->> +		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
->>  		if (error)
->>  			goto error_out;
->>  	} else {
->> @@ -559,7 +552,6 @@ STATIC int
->>  xfs_iomap_eof_want_preallocate(
->>  	xfs_mount_t	*mp,
->>  	xfs_inode_t	*ip,
->> -	xfs_fsize_t	isize,
->>  	xfs_off_t	offset,
->>  	size_t		count,
->>  	int		ioflag,
->> @@ -573,7 +565,7 @@ xfs_iomap_eof_want_preallocate(
->>  	int		n, error, imaps;
->>  
->>  	*prealloc = 0;
->> -	if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
->> +	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
->>  		return 0;
->>  
->>  	/*
->> @@ -617,7 +609,6 @@ xfs_iomap_write_delay(
->>  	xfs_fileoff_t	ioalign;
->>  	xfs_fsblock_t	firstblock;
->>  	xfs_extlen_t	extsz;
->> -	xfs_fsize_t	isize;
->>  	int		nimaps;
->>  	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
->>  	int		prealloc, fsynced = 0;
->> @@ -637,11 +628,7 @@ xfs_iomap_write_delay(
->>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->>  
->>  retry:
->> -	isize = ip->i_size;
->> -	if (ip->i_new_size > isize)
->> -		isize = ip->i_new_size;
->> -
->> -	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
->> +	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
->>  				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
->>  	if (error)
->>  		return error;
->> @@ -655,8 +642,7 @@ retry:
->>  	}
->>  
->>  	if (prealloc || extsz) {
->> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
->> -							&last_fsb);
->> +		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
->>  		if (error)
->>  			return error;
->>  	}
->>
->>
-> 
-> 
+> So this patch uses an atomic_t to track the pincount which allows
+> us to easily use the wait_event macro to wait, this will guarantee
+> that when we return from xfs_qm_dqunpin_wait() that the pincount
+> == 0.  We also remove the global  qi_pinlock from xfs_quotainfo
+> which may also reduce contention when pinning dquot's.
+
+I have an patch series that I've been running under test for the
+past two months that does exactly this - it's an optimisation,
+not a bug fix. I was actually planning on posting it this afternoon.
+
+As to the patch, your mailer has whitespace damaged it so you need
+to be fix that up.
+
+> Index: 2.6.x-xfs/fs/xfs/quota/xfs_dquot_item.c
+> ===================================================================
+> --- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot_item.c    2008-09-24  
+> 12:02:41.987960702 +1000
+> +++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot_item.c    2008-09-24  
+> 14:22:01.643627312 +1000
+> @@ -98,9 +98,7 @@ xfs_qm_dquot_logitem_pin(
+>
+>     dqp = logitem->qli_dquot;
+>     ASSERT(XFS_DQ_IS_LOCKED(dqp));
+> -    spin_lock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
+> -    dqp->q_pincount++;
+> -    spin_unlock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
+> +    atomic_inc(&dqp->q_pincount);
+> }
+
+The header comment on this function needs updating - it references
+the spinlock that just got removed. You can also do
+
+	xfs_dquot_t	*dqp = logitem->qli_dquot;
+
+> @@ -117,13 +115,9 @@ xfs_qm_dquot_logitem_unpin(
+>     xfs_dquot_t *dqp;
+>
+>     dqp = logitem->qli_dquot;
+> -    ASSERT(dqp->q_pincount > 0);
+> -    spin_lock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
+> -    dqp->q_pincount--;
+> -    if (dqp->q_pincount == 0) {
+> -        sv_broadcast(&dqp->q_pinwait);
+> -    }
+> -    spin_unlock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
+> +    ASSERT(atomic_read(&dqp->q_pincount) > 0);
+> +    if (atomic_dec_and_test(&dqp->q_pincount))
+> +        wake_up(&dqp->q_pinwait);
+> }
+
+The header comment for this function references functions that
+don't exist. Needs updating. same again about logitem->qli_dquot...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
