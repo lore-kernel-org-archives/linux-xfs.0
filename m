@@ -1,78 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:14:09 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:19:15 -0700 (PDT)
 Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8DsSY005352
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:13:54 -0700
-Message-ID: <48D9F718.4010905@sgi.com>
-Date: Wed, 24 Sep 2008 18:15:20 +1000
-From: Peter Leckie <pleckie@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
-References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed>
-In-Reply-To: <20080924074604.GK5448@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8JCi8006425
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:19:12 -0700
+Subject: TAKE 985583 - implement generic xfs_btree_updkey
+Message-Id: <20080924082042.8659858C52AE@chook.melbourne.sgi.com>
+Date: Wed, 24 Sep 2008 18:20:42 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> No, it is not yet good. Pete cannot explain the underlying problem
-> and we need to understand if this is fixing the problem or just
->
->   
-No this patch does not change the timing so it does not happen, it fixes 
-a problem
-we don't properly understand. Using wait_event prevents the thread from 
-waking up
-unless the test condition is actually true. The the bug here is we are 
-being woken up
-with our test condition still being false.
+implement generic xfs_btree_updkey
 
-And this patch catches that case and hence fixes the problem the 
-question is
-why is this happening in the first place. And yes that is an unanswered 
-question.
+From: Dave Chinner <dgc@sgi.com>
 
-> Only the XFS code can cause it to be woken....
-Do you know this for sure?
+Note that there are many > 80 char lines introduced due to the
+xfs_btree_key casts.  But the places where this happens is throw-away
+code once the whole btree code gets merged into a common implementation.
 
-> Wait queues are not affected by such events when they are
-> configured to be uninterruptable. The sv_t:
->
-> #define sv_wait(sv, pri, lock, s) \
->         _sv_wait(sv, lock, TASK_UNINTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT)
->
-> Is as uninterruptible as it comes. Which means only an explicit
-> wakeup will cause any waiters to wake up.
->
->   
-
-I added some tracing to sv_broadcast to trace anyone waking up the 
-thread however
-the only time it was called was from the unpinning code well after the 
-thread had already
-been woken up.
-
-> Assert fail the machine when a dquot with a non-zero pincount is
-> woken in xfs_qm_dqunpin_wait(). If the assert trips, then we need
-> to work out how the pin count is getting elevated while we have
-> a waiter....
-Done that, and it trips however it does not help us as there is no 
-insight into
-who woke us.
+The same is true for the temporary xfs_alloc_log_keys define to the new
+name.  All old users will be gone after a few patches.
 
 
-XFS does have references to wake_up in other spots for example in 
-xfs_super.c and xfs_buf.c
-so I could add some tracing there, however the most ideal spot is in 
-__wake_up_common()
-so as soon as I have a chance I'll add some tracing there so we can work 
-out what's going on here.
+[hch: split out from bigger patch and minor adaptions]
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Date:  Wed Sep 24 18:20:00 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-btree
+Inspected by:  
+dgc
+billodo
+lachlan
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Either way this patch resolves this issue and is a nice code cleanup.
-
-Thanks,
-Pete
+Modid:  xfs-linux-melb:xfs-kern:32193a
+fs/xfs/xfs_ialloc_btree.c - 1.96 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.96&r2=text&tr2=1.95&f=h
+fs/xfs/xfs_bmap_btree.c - 1.185 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.185&r2=text&tr2=1.184&f=h
+fs/xfs/xfs_btree.c - 1.130 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.130&r2=text&tr2=1.129&f=h
+fs/xfs/xfs_btree.h - 1.83 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.83&r2=text&tr2=1.82&f=h
+fs/xfs/xfs_alloc_btree.c - 1.100 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.100&r2=text&tr2=1.99&f=h
+	- implement generic xfs_btree_updkey
