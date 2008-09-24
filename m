@@ -1,53 +1,195 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 21:45:52 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 21:54:35 -0700 (PDT)
 Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O4joKM009696
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 21:45:50 -0700
-Message-ID: <48D9C653.1030908@sgi.com>
-Date: Wed, 24 Sep 2008 14:47:15 +1000
-From: Peter Leckie <pleckie@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O4sVQ1010519
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 21:54:32 -0700
+Message-ID: <48D9CA79.2090501@sgi.com>
+Date: Wed, 24 Sep 2008 15:04:57 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: [PATCH] don't use signed int to store xfs_dqid_t
+Subject: Re: [PATCH] Fix speculative allocation beyond eof
+References: <48D85F24.9040305@sgi.com> <48D9AE73.4000703@sandeen.net>
+In-Reply-To: <48D9AE73.4000703@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-When running xfsqa test 144 with quota's enabled it's possible to
-trip the following ASSERT(curid >= 0); from xfs_qm_init_dquot_blk().
-The reason this assert was tripped is the signed int currid was assigned
-an id from the unsigned xfs_dqid_t this works as long as the MSB in 
-xfs_dqid_t
-is not set. However if it is this translates to a negative number causing
-the assert to trip.
+Eric Sandeen wrote:
+> Lachlan McIlroy wrote:
+>> Speculative allocation beyond eof doesn't work properly.  It was broken some
+>> time ago after a code cleanup that moved what is now xfs_iomap_eof_align_last_fsb()
+>> and xfs_iomap_eof_want_preallocate() out of xfs_iomap_write_delay() into
+>> separate functions.  The code used to use the current file size in various checks
+>> but got changed to be max(file_size, i_new_size).  Since i_new_size is the result
+>> of 'offset + count' then in xfs_iomap_eof_want_preallocate() the check for
+>> '(offset + count) <= isize' will always be true.
+>>
+>> ie if 'offset + count' is > ip->i_size then isize will be i_new_size and equal to
+>> 'offset + count'.
+>>
+>> This change fixes all the places that used to use the current file size.
+> 
+> Lachlan, so what's the failure mode?  (is it that we simply don't do
+> that speculative preallocation anymore due to the problem?)
+Yes, we are not doing speculative allocation anymore.
 
-The fix for this is simply replacing the signed int with type xfs_dqid_t
-and since xfs_dqid_t is unsigned there is no point checking if it's negative
-so remove the assert.
+Actually it's not that clear cut.  The 'offset + count' used in these functions
+is rounded up to a page boundary by the calling code so if the user is not page
+aligning their I/O then 'offset + count' will extend further into the file than
+what the user specified.  And i_new_size is the result of the actual user's
+'offset + count'.  The result is users who do not page align their I/O will get
+some speculative allocation but users who do page align their I/O (in order to
+get better performance) will be punished.
 
+> 
+>>From your description of the change above, it seems like you're talking
+> about:
+> 
+> dd9f438e32900d67def49fa1b8961b3e19b6fefc
+> 
+> [XFS] Implement the di_extsize allocator hint for non-realtime files as
+> well.  Also provides a mechanism for inheriting this property from the
+> parent directory for new files.
+> 
+> SGI-PV: 945264
+> SGI-Modid: xfs-linux-melb:xfs-kern:24367a
+> 
+> Signed-off-by: Nathan Scott <nathans@sgi.com>
+> 
+> but that isn't really a cleanup; and I don't think it changed the isize
+> behavior.
+That change did a lot of things.  I was referring the large chunks of code that
+were moved into new functions.
 
-Index: 2.6.x-xfs/fs/xfs/quota/xfs_dquot.c
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot.c     2008-09-24 
-12:02:41.000000000 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot.c  2008-09-24 14:31:18.374406815 +1000
-@@ -370,7 +370,8 @@ xfs_qm_init_dquot_blk(
-        xfs_buf_t       *bp)
- {
-        xfs_dqblk_t     *d;
--       int             curid, i;
-+       xfs_dqid_t      curid;
-+       int              i;
+Before the change we had this
+-       if (!(ioflag & BMAPI_SYNC) && ((offset + count) > ip->i_d.di_size)) {
 
-        ASSERT(tp);
-        ASSERT(XFS_BUF_ISBUSY(bp));
-@@ -382,7 +383,6 @@ xfs_qm_init_dquot_blk(
-         * ID of the first dquot in the block - id's are zero based.
-         */
-        curid = id - (id % XFS_QM_DQPERBLK(mp));
--       ASSERT(curid >= 0);
-        memset(d, 0, BBTOB(XFS_QI_DQCHUNKLEN(mp)));
-        for (i = 0; i < XFS_QM_DQPERBLK(mp); i++, d++, curid++)
-                xfs_qm_dqinit_core(curid, type, d);
+and after it is now
++       if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
+
+where isize is max(ip->i_d.di_size, io->io_new_size).  Note that the logic has
+been inverted but it's clear that we're using the wrong size.  That's where the
+choice to do speculative allocation got busted.  The code that does the stripe
+width/unit rounding has been broken much longer - in version 1.3 of xfs_iomap.c
+we changed XFS_SIZE(mp, io) to isize.  The code has morphed a lot since then but
+we kept the use of isize.
+
+> 
+> Was it possibly [XFS] Fix to prevent the notorious 'NULL files' problem
+> after a crash. that caused the regression?
+No, that just changes uses of the on-disk file size to be the in-memory file size.
+
+> 
+> Thanks,
+> -Eric
+> 
+>> --- a/fs/xfs/xfs_iomap.c	2008-09-23 12:52:12.000000000 +1000
+>> +++ b/fs/xfs/xfs_iomap.c	2008-09-23 12:51:29.000000000 +1000
+>> @@ -290,7 +290,6 @@ STATIC int
+>>  xfs_iomap_eof_align_last_fsb(
+>>  	xfs_mount_t	*mp,
+>>  	xfs_inode_t	*ip,
+>> -	xfs_fsize_t	isize,
+>>  	xfs_extlen_t	extsize,
+>>  	xfs_fileoff_t	*last_fsb)
+>>  {
+>> @@ -306,14 +305,14 @@ xfs_iomap_eof_align_last_fsb(
+>>  	 * stripe width and we are allocating past the allocation eof.
+>>  	 */
+>>  	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
+>> -	        (isize >= XFS_FSB_TO_B(mp, mp->m_swidth)))
+>> +	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
+>>  		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
+>>  	/*
+>>  	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
+>>  	 * if the file size is >= stripe unit size, and we are allocating past
+>>  	 * the allocation eof.
+>>  	 */
+>> -	else if (mp->m_dalign && (isize >= XFS_FSB_TO_B(mp, mp->m_dalign)))
+>> +	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
+>>  		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
+>>  
+>>  	/*
+>> @@ -403,7 +402,6 @@ xfs_iomap_write_direct(
+>>  	xfs_filblks_t	count_fsb, resaligned;
+>>  	xfs_fsblock_t	firstfsb;
+>>  	xfs_extlen_t	extsz, temp;
+>> -	xfs_fsize_t	isize;
+>>  	int		nimaps;
+>>  	int		bmapi_flag;
+>>  	int		quota_flag;
+>> @@ -426,15 +424,10 @@ xfs_iomap_write_direct(
+>>  	rt = XFS_IS_REALTIME_INODE(ip);
+>>  	extsz = xfs_get_extsz_hint(ip);
+>>  
+>> -	isize = ip->i_size;
+>> -	if (ip->i_new_size > isize)
+>> -		isize = ip->i_new_size;
+>> -
+>>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>>  	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
+>> -	if ((offset + count) > isize) {
+>> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
+>> -							&last_fsb);
+>> +	if ((offset + count) > ip->i_size) {
+>> +		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
+>>  		if (error)
+>>  			goto error_out;
+>>  	} else {
+>> @@ -559,7 +552,6 @@ STATIC int
+>>  xfs_iomap_eof_want_preallocate(
+>>  	xfs_mount_t	*mp,
+>>  	xfs_inode_t	*ip,
+>> -	xfs_fsize_t	isize,
+>>  	xfs_off_t	offset,
+>>  	size_t		count,
+>>  	int		ioflag,
+>> @@ -573,7 +565,7 @@ xfs_iomap_eof_want_preallocate(
+>>  	int		n, error, imaps;
+>>  
+>>  	*prealloc = 0;
+>> -	if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
+>> +	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
+>>  		return 0;
+>>  
+>>  	/*
+>> @@ -617,7 +609,6 @@ xfs_iomap_write_delay(
+>>  	xfs_fileoff_t	ioalign;
+>>  	xfs_fsblock_t	firstblock;
+>>  	xfs_extlen_t	extsz;
+>> -	xfs_fsize_t	isize;
+>>  	int		nimaps;
+>>  	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
+>>  	int		prealloc, fsynced = 0;
+>> @@ -637,11 +628,7 @@ xfs_iomap_write_delay(
+>>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>>  
+>>  retry:
+>> -	isize = ip->i_size;
+>> -	if (ip->i_new_size > isize)
+>> -		isize = ip->i_new_size;
+>> -
+>> -	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
+>> +	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
+>>  				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
+>>  	if (error)
+>>  		return error;
+>> @@ -655,8 +642,7 @@ retry:
+>>  	}
+>>  
+>>  	if (prealloc || extsz) {
+>> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
+>> -							&last_fsb);
+>> +		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
+>>  		if (error)
+>>  			return error;
+>>  	}
+>>
+>>
+> 
+> 
