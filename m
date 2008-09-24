@@ -1,48 +1,65 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:44:29 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8iRdc009369
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:44:27 -0700
-Subject: TAKE 985583 - implement generic xfs_btree_split
-Message-Id: <20080924084600.2FE0F58C52AE@chook.melbourne.sgi.com>
-Date: Wed, 24 Sep 2008 18:46:00 +1000 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:45:04 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O8j083009443
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:45:01 -0700
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by relay2.corp.sgi.com (Postfix) with SMTP id 5679C3040B3
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:46:35 -0700 (PDT)
+Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id SAA02635 for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 18:46:33 +1000
+Date: Wed, 24 Sep 2008 18:47:35 +1000
+Subject: REVIEW: Don't reset dirty inode flag in xfs_repair
+From: "Barry Naujok" <bnaujok@sgi.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Message-ID: <op.uhy9dlyz3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-implement generic xfs_btree_split
+If an inode is dirtied due to some error in an inode, the very last
+check (nlink version) in process_dinode_int() in xfs_repair sets the
+dirty flag rather than just bumping it if it dirtied the inode.
 
-Make the btree split code generic.  Based on a patch from David Chinner
-with lots of changes to follow the original btree implementations more
-closely.  While this loses some of the generic helper routines for
-inserting/moving/removing records it also solves some of the one off
-bugs in the original code and makes it easier to verify.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Date:  Wed Sep 24 18:45:25 AEST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-btree
-Inspected by:  
-dgc
-billodo
-lachlan
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+So, if something earlier dirtied the inode without marking it bad
+(eg. resetting the inode's next unlinked field in the example that
+detected this issue), that dirty state will be lost if the nlink
+version checks out fine.
 
 
-Modid:  xfs-linux-melb:xfs-kern:32198a
-fs/xfs/xfs_ialloc_btree.c - 1.100 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.100&r2=text&tr2=1.99&f=h
-fs/xfs/xfs_bmap_btree.c - 1.189 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.189&r2=text&tr2=1.188&f=h
-fs/xfs/xfs_btree.c - 1.134 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.134&r2=text&tr2=1.133&f=h
-fs/xfs/xfs_btree.h - 1.87 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.87&r2=text&tr2=1.86&f=h
-fs/xfs/xfs_alloc_btree.c - 1.104 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.104&r2=text&tr2=1.103&f=h
-	- implement generic xfs_btree_split
+===========================================================================
+xfsprogs/db/check.c
+===========================================================================
+
+--- a/xfsprogs/db/check.c       2008-09-24 18:30:53.000000000 +1000
++++ b/xfsprogs/db/check.c       2008-09-24 18:04:48.215871460 +1000
+@@ -2689,6 +2689,12 @@ process_inode(
+                 }
+                 return;
+         }
++       if (be32_to_cpu(dip->di_next_unlinked) != NULLAGINO) {
++               if (!sflag || isfree || id->ilist || CHECK_BLIST(bno))
++                       dbprintf("bad next unlinked %#x for inode %lld\n",
++                               be32_to_cpu(dip->di_next_unlinked), ino);
++               error++;
++       }
+         /*
+          * di_mode is a 16-bit uint so no need to check the < 0 case
+          */
+
+===========================================================================
+xfsprogs/repair/dinode.c
+===========================================================================
+
+--- a/xfsprogs/repair/dinode.c  2008-09-24 18:30:53.000000000 +1000
++++ b/xfsprogs/repair/dinode.c  2008-09-24 18:29:19.477386207 +1000
+@@ -2694,7 +2694,7 @@ process_dinode_int(xfs_mount_t *mp,
+          * just leave nlinks alone.  even if it's set wrong,
+          * it'll be reset when read in.
+          */
+-       *dirty = process_check_inode_nlink_version(dinoc, lino);
++       *dirty += process_check_inode_nlink_version(dinoc, lino);
+
+         return retval;
