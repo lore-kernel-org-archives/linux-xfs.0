@@ -1,82 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 23:52:01 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O6puel019382
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 23:51:57 -0700
-Message-ID: <48D9E3E2.3040504@sgi.com>
-Date: Wed, 24 Sep 2008 16:53:22 +1000
-From: Peter Leckie <pleckie@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:01:49 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O71jD5022515
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:01:45 -0700
+Message-ID: <48D9E631.3080103@sgi.com>
+Date: Wed, 24 Sep 2008 17:03:13 +1000
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Use atomic_t and wait_event to track dquot pincount
-References: <48D9C1DD.6030607@sgi.com> <20080924060508.GH5448@disturbed>
-In-Reply-To: <20080924060508.GH5448@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: RFC: adding a crc field to xfs_buf_log_format_t
+References: <20080923172800.GA22047@infradead.org> <20080924010553.GC13705@disturbed>
+In-Reply-To: <20080924010553.GC13705@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
 Dave Chinner wrote:
-> [ Pete, please wrap your text at 68-72 columns]
->   
-Ok will do in future
-> On Wed, Sep 24, 2008 at 02:28:13PM +1000, Peter Leckie wrote:
->   
->> The reason the lsn had changed was due to it not being initialized
->> by  the time a copy of the lsn was taken in xfs_qm_dqflush().
->> The lsn was then latter updated causing the test  in
->> xfs_qm_dqflush_done() to fail.
->>
->> Synchronizations between the 2 functions is done by the pincount
->> in  struct xfs_dquot_t  and xfs_qm_dqflush() calls
->> xfs_qm_dqunpin_wait() to wait for the pincount == 0. However after
->> been woken up it does not validate the pincount is actually 0,
->>     
->
-> Sure - that's because we only ever send a wakeup when the pin count
-> falls to zero. Because we have to be holding the dquot lock when we
-> either pin a dquot or wait for it to be unpinned, the act of waiting
-> for it to be unpinned with the dquot lock held guarantees that it
-> is not pinned when we wake up.
->
-> IOWs, the pin count cannot be incremented while we are waiting for
-> it to be unpinned, and hence it must be zero when we are woken......
->
->   
->> allowing a false wake up by the scheduler to  cause
->> xfs_qm_dqflush() to prematurely start processing the dquot.
->>     
->
-> .... which means I can't see how that would happen...
->
-> What am I missing here?
->   
-Yeah it's quite intriguing  isn't it, I added the pincount to the
-dquot tracing code and sure enough it's 1 all the way through
-xfs_qm_dqflush() I can tell you that none of the XFS code is
-causing it to wake up. I was going to add some tracing code to
-the scheduler to determine who is causing us to wake up however
-I had other priorities to work on.
+> On Tue, Sep 23, 2008 at 01:28:00PM -0400, Christoph Hellwig wrote:
+>> With adding CRC to xfs metadata structures we face an interesting
+>> problem.  As we want all the CRCs logged we always have to log the CRC.
+> 
+> What version of the CRC are you wanting to log? The one that is
+> currently in the buffer (i.e. the one we last wrote to disk), or a
+> new CRC that covers the changes we just made to the buffer?
+> 
+> In the first case, I can't see how having that CRC in the
+> transaction helps in recovery at all. Algorithmically, if all
+> buffers have a crc32c in them, then the buffers should CRC to zero
+> when you include the CRC value in the calculation. Hence during log
+> recovery when we read a buffer in for the first time, we simply need
+> to check that the buffer CRC is zero. Hence we can verify that we've
+> read an uncorrupted buffer regardless of it's type or location of
+> the crc value in the buffer.
+> 
+> In the second case, that means every transaction commit has to
+> recalculate the CRC for every buffer modified to insert them into
+> the transaction. That means we need to peak into the buffer type
+> during transaction commit to determine where the CRC is and
+> extract that. There's a *lot* of CPU overhead there, especially
+> for heavily re-logged buffers, and once again I don't think it
+> buys us anything because we still need to verify the CRC is
+> correct before we write the buffer to disk at the end of log
+> replay...
+> 
+> I note that from your previous patch set you make these comments:
+> 
+>>> Note that we currently do not log the crc of the block, but
+>>> re-created it during log recovery.  With the pending patch to
+>>> also checksum the log this should be safe against filesystem
+>>> corruption but doesn't really follow the end to end argument.
+> 
+> The CRC is protecting what is on disk, not what is being changed in
+> memory. The model for protection is "write-IO to read-IO", not
+> "in-memory change to in-memory change".  That is, the CRC is not
+> protecting every single change that is made - it is simply there to
+> validate what is on disk is *what we wrote*, and with the current
+> re-logging model of the transaction subsystem that means each update
+> of the CRC is an "aggregate change" of the object.
+> 
+> Hence I think that CRC'd log transactions are more than sufficient
+> to protect against corruption of the delta changes that get applied
+> to CRC protected objects.....
+> 
+Thanks for the clarification.
+I haven't looked at the CRC of the transactions yet - need to find
+that patch.
+But it seems to make sense to just apply CRC's to metadata or log data
+that is going to disk and keep things simple - as we are targetting
+corruption of on-disk meta data by outside things.
 
-Reading the code it appears things like a threads dying or a
-system suspending can cause it. However none of these had
-happened, after reading other examples in the Linux kernel
-it appeared pretty standard to always re-evaluate the condition
-after being woken so I suspect that Linux simply does not
-guarantee that we will only be woken by the thread calling
-wake_up on  us.
-
-
-Any insight into this would be much appreciated as I'm also very curious
-as to why this is happening.
-> As to the patch, your mailer has whitespace damaged it so you need
-> to be fix that up.
->   
-
-Ahh yeah copy and past from a terminal, I'll  fix up the patch and
-re-send shortly,
-
-Thanks Dave.
-
-Pete
+--Tim
