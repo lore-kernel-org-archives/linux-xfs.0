@@ -1,79 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 07:04:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8OE4K8q023821
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 07:04:21 -0700
-Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 86EF8477660
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 07:05:54 -0700 (PDT)
-Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by cuda.sgi.com with ESMTP id rBZsYeBhJCMDL6Pj for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 07:05:54 -0700 (PDT)
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8OE5iPX032046
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 10:05:44 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8OE5Yws138202
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 10:05:34 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8OE5Vfv011834
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 10:05:33 -0400
-Subject: Re: [PATCH 7/10] jfs: Fix error handling in
-	write_super_lockfs/unlockfs
-From: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
-In-Reply-To: <20080922195742t-sato@mail.jp.nec.com>
-References: <20080922195742t-sato@mail.jp.nec.com>
-Content-Type: text/plain
-Date: Wed, 24 Sep 2008 09:05:29 -0500
-Message-Id: <1222265129.19388.12.camel@norville.austin.ibm.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 07:39:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8OEdl4D028876
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 07:39:48 -0700
+Date: Wed, 24 Sep 2008 10:41:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
+Message-ID: <20080924144121.GA349@infradead.org>
+References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080924074604.GK5448@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
 
-On Mon, 2008-09-22 at 19:57 +0900, Takashi Sato wrote:
-> I've changed write_super_lockfs/unlockfs so that they always return
-> 0 (success) to keep a current behavior.
+On Wed, Sep 24, 2008 at 05:46:04PM +1000, Dave Chinner wrote:
+> On Wed, Sep 24, 2008 at 05:42:38PM +1000, Lachlan McIlroy wrote:
+> > Looks good Pete.
+> 
+> No, it is not yet good. Pete cannot explain the underlying problem
+> and we need to understand if this is fixing the problem or just
+> changing the timing so it doesn't show up....
 
-Address Christoph's concerns, and you can add my ack.  The bits that
-change the return code need to be a single patch.
+The patch does not only cause timing but also makes sure
+xfs_qm_dqunpin_wait sleeps again when woken up but the condition it was
+waiting on is not met.  That's the reason why we have wait_event in
+Linux instead of the more traditional sv-style conditional variables.
 
-> Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
-> Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
-Acked-by: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
+Now the spurious wakeup from scheduler argument doesn't make any sense,
+so this spurious wakeup we're protecting from must come from XFS itself.
+The way this could happen is when a task trying to pin the dquot gets
+qi_pinlock before the one waiting for q_pincount to reach zero.
 
-
-> -static void jfs_write_super_lockfs(struct super_block *sb)
-> +static int jfs_write_super_lockfs(struct super_block *sb)
->  {
->  	struct jfs_sb_info *sbi = JFS_SBI(sb);
->  	struct jfs_log *log = sbi->log;
-> @@ -553,9 +553,10 @@ static void jfs_write_super_lockfs(struc
->  		lmLogShutdown(log);
->  		updateSuper(sb, FM_CLEAN);
->  	}
-> +	return 0;
-
-Alright.  Nothing should fail here, and if it does, we're screwed
-anyway.
-
-> -static void jfs_unlockfs(struct super_block *sb)
-> +static int jfs_unlockfs(struct super_block *sb)
->  {
->  	struct jfs_sb_info *sbi = JFS_SBI(sb);
->  	struct jfs_log *log = sbi->log;
-> @@ -568,6 +569,7 @@ static void jfs_unlockfs(struct super_bl
->  		else
->  			txResume(sb);
->  	}
-> +	return 0;
-
-jfs_unlockfs() could return non-zero in the case where lmLogInit()
-fails.  I'm not sure what good that does though.  There isn't much the
-caller can do when an unfreeze fails.
-
-Shaggy
--- 
-David Kleikamp
-IBM Linux Technology Center
+So the patch does looks good to me, but the current explanation needs
+some updating.
