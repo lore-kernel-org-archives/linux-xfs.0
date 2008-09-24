@@ -1,234 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 21:26:50 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O4Ql1P008364
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 21:26:47 -0700
-Message-ID: <48D9C1DD.6030607@sgi.com>
-Date: Wed, 24 Sep 2008 14:28:13 +1000
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 23 Sep 2008 21:45:52 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O4joKM009696
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2008 21:45:50 -0700
+Message-ID: <48D9C653.1030908@sgi.com>
+Date: Wed, 24 Sep 2008 14:47:15 +1000
 From: Peter Leckie <pleckie@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] Use atomic_t and wait_event to track dquot pincount
+Subject: [PATCH] don't use signed int to store xfs_dqid_t
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
 
-During a heavy workload with quota's enabled the system can stall with 
-every process
-requesting log space, however the log is full of dquots. The aild is 
-trying to push the tail
-of the log however every item in the log had previously been pushed by 
-the aild and was
-marked as clean so the aild aborts pushing the items in the log.
+When running xfsqa test 144 with quota's enabled it's possible to
+trip the following ASSERT(curid >= 0); from xfs_qm_init_dquot_blk().
+The reason this assert was tripped is the signed int currid was assigned
+an id from the unsigned xfs_dqid_t this works as long as the MSB in 
+xfs_dqid_t
+is not set. However if it is this translates to a negative number causing
+the assert to trip.
 
-The reason the log items are still in the log is because the iodone 
-routine xfs_qm_dqflush_done
-detected that the log sequence number(lsn) had changed and assumed the 
-log item had been re-dirtied
-so it should be left in the log.  However the log item had not been 
-re-dirtied so it was still marked as
-clean preventing it from being pushed again causing the log item to be 
-stuck in the log. After a while
-the log eventually filled with these dquot log items.
-
-The reason the lsn had changed was due to it not being initialized by 
-the time a copy of the lsn was taken
-in xfs_qm_dqflush().  The lsn was then latter updated causing the test 
-in xfs_qm_dqflush_done() to fail.
-
-Synchronizations between the 2 functions is done by the pincount in 
-struct xfs_dquot_t  and xfs_qm_dqflush()
-calls xfs_qm_dqunpin_wait() to wait for the pincount == 0. However after 
-been woken up it does not validate
-the pincount is actually 0, allowing a false wake up by the scheduler to 
-cause xfs_qm_dqflush() to prematurely
-start processing the dquot.
-
-So 
-this patch uses an atomic_t to track the pincount which allows us to easily
-use the wait_event macro to wait, this will guarantee 
-that when we return from
-xfs_qm_dqunpin_wait() that the pincount == 0.  We also remove the global 
-qi_pinlock
-from xfs_quotainfo which may also reduce contention when pinning dquot's.
+The fix for this is simply replacing the signed int with type xfs_dqid_t
+and since xfs_dqid_t is unsigned there is no point checking if it's negative
+so remove the assert.
 
 
-
-Index: 2.6.x-xfs/fs/xfs/quota/xfs_dquot_item.c
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot_item.c    2008-09-24 
-12:02:41.987960702 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot_item.c    2008-09-24 
-14:22:01.643627312 +1000
-@@ -98,9 +98,7 @@ xfs_qm_dquot_logitem_pin(
- 
-     dqp = logitem->qli_dquot;
-     ASSERT(XFS_DQ_IS_LOCKED(dqp));
--    spin_lock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
--    dqp->q_pincount++;
--    spin_unlock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
-+    atomic_inc(&dqp->q_pincount);
- }
- 
- /*
-@@ -117,13 +115,9 @@ xfs_qm_dquot_logitem_unpin(
-     xfs_dquot_t *dqp;
- 
-     dqp = logitem->qli_dquot;
--    ASSERT(dqp->q_pincount > 0);
--    spin_lock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
--    dqp->q_pincount--;
--    if (dqp->q_pincount == 0) {
--        sv_broadcast(&dqp->q_pinwait);
--    }
--    spin_unlock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
-+    ASSERT(atomic_read(&dqp->q_pincount) > 0);
-+    if (atomic_dec_and_test(&dqp->q_pincount))
-+        wake_up(&dqp->q_pinwait);
- }
- 
- /* ARGSUSED */
-@@ -193,21 +187,14 @@ xfs_qm_dqunpin_wait(
-     xfs_dquot_t    *dqp)
- {
-     ASSERT(XFS_DQ_IS_LOCKED(dqp));
--    if (dqp->q_pincount == 0) {
-+    if (atomic_read(&dqp->q_pincount) == 0)
-         return;
--    }
- 
-     /*
-      * Give the log a push so we don't wait here too long.
-      */
-     xfs_log_force(dqp->q_mount, (xfs_lsn_t)0, XFS_LOG_FORCE);
--    spin_lock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
--    if (dqp->q_pincount == 0) {
--        spin_unlock(&(XFS_DQ_TO_QINF(dqp)->qi_pinlock));
--        return;
--    }
--    sv_wait(&(dqp->q_pinwait), PINOD,
--        &(XFS_DQ_TO_QINF(dqp)->qi_pinlock), s);
-+    wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
- }
- 
- /*
-@@ -310,7 +297,7 @@ xfs_qm_dquot_logitem_trylock(
-     uint            retval;
- 
-     dqp = qip->qli_dquot;
--    if (dqp->q_pincount > 0)
-+    if (atomic_read(&dqp->q_pincount) > 0)
-         return (XFS_ITEM_PINNED);
- 
-     if (! xfs_qm_dqlock_nowait(dqp))
-Index: 2.6.x-xfs/fs/xfs/quota/xfs_dquot.h
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot.h    2008-09-24 
-12:02:41.991960179 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot.h    2008-09-24 14:20:28.979820915 
-+1000
-@@ -83,8 +83,8 @@ typedef struct xfs_dquot {
-     xfs_qcnt_t     q_res_rtbcount;/* total realtime blks used+reserved */
-     mutex_t         q_qlock;    /* quota lock */
-     struct completion q_flush;    /* flush completion queue */
--    uint         q_pincount;    /* pin count for this dquot */
--    sv_t         q_pinwait;    /* sync var for pinning */
-+    atomic_t          q_pincount;    /* dquot pin count */
-+    wait_queue_head_t q_pinwait;    /* dquot pinning wait queue */
- #ifdef XFS_DQUOT_TRACE
-     struct ktrace    *q_trace;    /* trace header structure */
- #endif
 Index: 2.6.x-xfs/fs/xfs/quota/xfs_dquot.c
 ===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot.c    2008-09-24 
-12:09:14.025200071 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot.c    2008-09-24 14:20:56.948140364 
-+1000
-@@ -101,7 +101,7 @@ xfs_qm_dqinit(
-     if (brandnewdquot) {
-         dqp->dq_flnext = dqp->dq_flprev = dqp;
-         mutex_init(&dqp->q_qlock);
--        sv_init(&dqp->q_pinwait, SV_DEFAULT, "pdq");
-+        init_waitqueue_head(&dqp->q_pinwait);
- 
-         /*
-          * Because we want to use a counting completion, complete
-@@ -131,7 +131,7 @@ xfs_qm_dqinit(
-          dqp->q_res_bcount = 0;
-          dqp->q_res_icount = 0;
-          dqp->q_res_rtbcount = 0;
--         dqp->q_pincount = 0;
-+         atomic_set(&dqp->q_pincount, 0);
-          dqp->q_hash = NULL;
-          ASSERT(dqp->dq_flnext == dqp->dq_flprev);
- 
-@@ -1490,7 +1490,7 @@ xfs_qm_dqpurge(
-                 "xfs_qm_dqpurge: dquot %p flush failed", dqp);
-         xfs_dqflock(dqp);
-     }
--    ASSERT(dqp->q_pincount == 0);
-+    ASSERT(atomic_read(&dqp->q_pincount) == 0);
-     ASSERT(XFS_FORCED_SHUTDOWN(mp) ||
-            !(dqp->q_logitem.qli_item.li_flags & XFS_LI_IN_AIL));
- 
-Index: 2.6.x-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/xfsidbg.c    2008-09-24 12:02:42.115943985 +1000
-+++ 2.6.x-xfs/fs/xfs/xfsidbg.c    2008-09-24 14:21:17.413447303 +1000
-@@ -6577,7 +6577,7 @@ xfsidbg_xqm_dquot(xfs_dquot_t *dqp)
-         (unsigned long long)dqp->q_res_rtbcount);
-     kdb_printf("qlock 0x%p  &q_flush 0x%p (%d) pincount 0x%x\n",
-         &dqp->q_qlock, &dqp->q_flush,
--        dqp->q_flush.done, dqp->q_pincount);
-+        dqp->q_flush.done, atomic_read(&dqp->q_pincount));
- #ifdef XFS_DQUOT_TRACE
-     qprintf("dqtrace 0x%p\n", dqp->q_trace);
- #endif
-@@ -6761,10 +6761,9 @@ xfsidbg_xqm_qinfo(xfs_mount_t *mp)
-         return;
-     }
- 
--    kdb_printf("uqip 0x%p, gqip 0x%p, &pinlock 0x%p &dqlist 0x%p\n",
-+    kdb_printf("uqip 0x%p, gqip 0x%p, &dqlist 0x%p\n",
-         mp->m_quotainfo->qi_uquotaip,
-         mp->m_quotainfo->qi_gquotaip,
--        &mp->m_quotainfo->qi_pinlock,
-         &mp->m_quotainfo->qi_dqlist);
- 
-     kdb_printf("btmlimit 0x%x, itmlimit 0x%x, RTbtmlim 0x%x\n",
-Index: 2.6.x-xfs/fs/xfs/quota/xfs_qm.h
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_qm.h    2008-09-24 
-12:02:41.999959135 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_qm.h    2008-09-24 14:00:36.168448681 +1000
-@@ -106,7 +106,6 @@ typedef struct xfs_qm {
- typedef struct xfs_quotainfo {
-     xfs_inode_t    *qi_uquotaip;     /* user quota inode */
-     xfs_inode_t    *qi_gquotaip;     /* group quota inode */
--    spinlock_t     qi_pinlock;     /* dquot pinning lock */
-     xfs_dqlist_t     qi_dqlist;     /* all dquots in filesys */
-     int         qi_dqreclaims;     /* a change here indicates
-                         a removal in the dqlist */
-Index: 2.6.x-xfs/fs/xfs/quota/xfs_qm.c
-===================================================================
---- 2.6.x-xfs.orig/fs/xfs/quota/xfs_qm.c    2008-09-24 
-12:02:42.000000000 +1000
-+++ 2.6.x-xfs/fs/xfs/quota/xfs_qm.c    2008-09-24 14:03:44.795703839 +1000
-@@ -1137,7 +1137,6 @@ xfs_qm_init_quotainfo(
-         return error;
-     }
- 
--    spin_lock_init(&qinf->qi_pinlock);
-     xfs_qm_list_init(&qinf->qi_dqlist, "mpdqlist", 0);
-     qinf->qi_dqreclaims = 0;
- 
-@@ -1234,7 +1233,6 @@ xfs_qm_destroy_quotainfo(
-      */
-     xfs_qm_rele_quotafs_ref(mp);
- 
--    spinlock_destroy(&qi->qi_pinlock);
-     xfs_qm_list_destroy(&qi->qi_dqlist);
- 
-     if (qi->qi_uquotaip) {
+--- 2.6.x-xfs.orig/fs/xfs/quota/xfs_dquot.c     2008-09-24 
+12:02:41.000000000 +1000
++++ 2.6.x-xfs/fs/xfs/quota/xfs_dquot.c  2008-09-24 14:31:18.374406815 +1000
+@@ -370,7 +370,8 @@ xfs_qm_init_dquot_blk(
+        xfs_buf_t       *bp)
+ {
+        xfs_dqblk_t     *d;
+-       int             curid, i;
++       xfs_dqid_t      curid;
++       int              i;
+
+        ASSERT(tp);
+        ASSERT(XFS_BUF_ISBUSY(bp));
+@@ -382,7 +383,6 @@ xfs_qm_init_dquot_blk(
+         * ID of the first dquot in the block - id's are zero based.
+         */
+        curid = id - (id % XFS_QM_DQPERBLK(mp));
+-       ASSERT(curid >= 0);
+        memset(d, 0, BBTOB(XFS_QI_DQCHUNKLEN(mp)));
+        for (i = 0; i < XFS_QM_DQPERBLK(mp); i++, d++, curid++)
+                xfs_qm_dqinit_core(curid, type, d);
