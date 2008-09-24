@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 00:56:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 01:01:42 -0700 (PDT)
 Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O7ut9Y003160
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 00:56:55 -0700
-Subject: TAKE 985583 - add helpers for addressing entities inside a btree block
-Message-Id: <20080924075828.0B52E58C52AE@chook.melbourne.sgi.com>
-Date: Wed, 24 Sep 2008 17:58:28 +1000 (EST)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8O81dcP003902
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 01:01:39 -0700
+Subject: TAKE 985583 - implement generic xfs_btree_increment
+Message-Id: <20080924080306.41F3358C52AE@chook.melbourne.sgi.com>
+Date: Wed, 24 Sep 2008 18:03:06 +1000 (EST)
 From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-add helpers for addressing entities inside a btree block
+implement generic xfs_btree_increment
 
-Add new helpers in xfs_btree.c to find the record, key and block pointer
-entries inside a btree block.  To implement this genericly the ->get_maxrecs
-methods and two new xfs_btree_ops entries for the key and record sizes are
-used.  Also add a big comment describing how the addressing inside a btree
-block works.
+From: Dave Chinner <dgc@sgi.com>
 
-Note that these helpers are unused until users are introduced in the next
-patches and this patch will thus cause some harmless compiler warnings.
+Because this is the first major generic btree routine this patch
+includes some infrastrucure, first a few routines to deal with
+a btree block that can be either in short or long form, second
+xfs_btree_read_buf_block, which is the new central routine to read
+a btree block given a cursor, and third the new xfs_btree_ptr_addr
+routine to calculate the address for a given btree pointer record.
 
+[hch: split out from bigger patch and minor adaptions]
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Date:  Wed Sep 24 17:57:38 AEST 2008
+Date:  Wed Sep 24 18:02:24 AEST 2008
 Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-btree
 Inspected by:  
 dgc
@@ -38,15 +39,29 @@ The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:32189a
-fs/xfs/xfs_ialloc_btree.c - 1.92 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.92&r2=text&tr2=1.91&f=h
-fs/xfs/xfs_bmap_btree.c - 1.181 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.181&r2=text&tr2=1.180&f=h
-fs/xfs/xfs_btree.c - 1.126 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.126&r2=text&tr2=1.125&f=h
-fs/xfs/xfs_btree.h - 1.79 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.79&r2=text&tr2=1.78&f=h
-fs/xfs/xfs_alloc_btree.c - 1.96 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.96&r2=text&tr2=1.95&f=h
-	- add helpers for addressing entities inside a btree block
+Modid:  xfs-linux-melb:xfs-kern:32190a
+fs/xfs/xfs_ialloc.c - 1.202 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc.c.diff?r1=text&tr1=1.202&r2=text&tr2=1.201&f=h
+fs/xfs/xfs_itable.c - 1.172 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_itable.c.diff?r1=text&tr1=1.172&r2=text&tr2=1.171&f=h
+fs/xfs/xfs_ialloc_btree.h - 1.35 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.h.diff?r1=text&tr1=1.35&r2=text&tr2=1.34&f=h
+fs/xfs/xfs_ialloc_btree.c - 1.93 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.93&r2=text&tr2=1.92&f=h
+fs/xfs/xfs_bmap_btree.h - 1.83 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.h.diff?r1=text&tr1=1.83&r2=text&tr2=1.82&f=h
+fs/xfs/xfs_bmap_btree.c - 1.182 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.182&r2=text&tr2=1.181&f=h
+fs/xfs/xfs_btree.c - 1.127 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.c.diff?r1=text&tr1=1.127&r2=text&tr2=1.126&f=h
+fs/xfs/xfs_btree.h - 1.80 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
+fs/xfs/xfs_alloc.c - 1.196 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc.c.diff?r1=text&tr1=1.196&r2=text&tr2=1.195&f=h
+fs/xfs/xfs_bmap.c - 1.403 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.403&r2=text&tr2=1.402&f=h
+fs/xfs/xfs_alloc_btree.h - 1.32 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.h.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
+fs/xfs/xfs_alloc_btree.c - 1.97 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.97&r2=text&tr2=1.96&f=h
+	- implement generic xfs_btree_increment
