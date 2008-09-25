@@ -1,438 +1,208 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 15:54:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 15:54:55 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8PMsk9v024215
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:54:46 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8PMsrsM024269
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:54:53 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81EDF105A359
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:56:20 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 52NZdz44Wko0XCU1 for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:56:20 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 187509836CB
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:56:27 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id V4Q77BzkzTm4SnHT for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 15:56:27 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8PMuJIF009855
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8PMuQIF009880
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:56:19 +0200
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:56:26 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8PMuIUP009853
-	for xfs@oss.sgi.com; Fri, 26 Sep 2008 00:56:18 +0200
-Date: Fri, 26 Sep 2008 00:56:18 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8PMuQSm009878
+	for xfs@oss.sgi.com; Fri, 26 Sep 2008 00:56:26 +0200
+Date: Fri, 26 Sep 2008 00:56:26 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/9] factor out xfs_read_agi helper
-Message-ID: <20080925225618.GB9822@lst.de>
+Subject: [PATCH 3/9] sanitize xlog_in_core_t definition
+Message-ID: <20080925225626.GD9822@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-xfs_read_agi
+Content-Disposition: inline; filename=xfs-kill-xlog_iclog_fields_t
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Add a helper to read the AGI header and perform basic verification.
-Based on hunks from a larger patch from Dave Chinner.
+Move all fields from xlog_iclog_fields_t into xlog_in_core_t instead of having
+them in a substructure and the using #defines to make it look like they were
+directly in xlog_in_core_t.  Also document that xlog_in_core_2_t is grossly
+misnamed, and make all references to it typesafe.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_ag.h
+Index: linux-2.6-xfs/fs/xfs/xfs_log.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ag.h	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ag.h	2008-07-23 19:47:29.000000000 +0200
-@@ -142,6 +142,9 @@ typedef struct xfs_agi {
- #define	XFS_AGI_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGI_DADDR(mp))
- #define	XFS_BUF_TO_AGI(bp)	((xfs_agi_t *)XFS_BUF_PTR(bp))
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-09-25 13:58:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-09-25 20:02:34.000000000 +0200
+@@ -1024,12 +1024,6 @@ xlog_iodone(xfs_buf_t *bp)
+ 	ASSERT(XFS_BUF_FSPRIVATE2(bp, unsigned long) == (unsigned long) 2);
+ 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+ 	aborted = 0;
+-
+-	/*
+-	 * Some versions of cpp barf on the recursive definition of
+-	 * ic_log -> hic_fields.ic_log and expand ic_log twice when
+-	 * it is passed through two macros.  Workaround broken cpp.
+-	 */
+ 	l = iclog->ic_log;
  
-+extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
-+				xfs_agnumber_t agno, struct xfs_buf **bpp);
+ 	/*
+@@ -1287,7 +1281,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
+ 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+ 		iclog->ic_bp = bp;
+-		iclog->hic_data = bp->b_addr;
++		iclog->ic_data = bp->b_addr;
+ #ifdef DEBUG
+ 		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
+ #endif
+@@ -1307,7 +1301,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		atomic_set(&iclog->ic_refcnt, 0);
+ 		spin_lock_init(&iclog->ic_callback_lock);
+ 		iclog->ic_callback_tail = &(iclog->ic_callback);
+-		iclog->ic_datap = (char *)iclog->hic_data + log->l_iclog_hsize;
++		iclog->ic_datap = (char *)iclog->ic_data + log->l_iclog_hsize;
+ 
+ 		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
+ 		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
+@@ -3418,7 +3412,7 @@ xlog_verify_iclog(xlog_t	 *log,
+ 	ptr = iclog->ic_datap;
+ 	base_ptr = ptr;
+ 	ophead = (xlog_op_header_t *)ptr;
+-	xhdr = (xlog_in_core_2_t *)&iclog->ic_header;
++	xhdr = iclog->ic_data;
+ 	for (i = 0; i < len; i++) {
+ 		ophead = (xlog_op_header_t *)ptr;
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_log_priv.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log_priv.h	2008-09-25 13:58:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log_priv.h	2008-09-25 20:02:35.000000000 +0200
+@@ -309,6 +309,16 @@ typedef struct xlog_rec_ext_header {
+ } xlog_rec_ext_header_t;
+ 
+ #ifdef __KERNEL__
++
++/*
++ * Quite misnamed, because this union lays out the actual on-disk log buffer.
++ */
++typedef union xlog_in_core2 {
++	xlog_rec_header_t	hic_header;
++	xlog_rec_ext_header_t	hic_xheader;
++	char			hic_sector[XLOG_HEADER_SIZE];
++} xlog_in_core_2_t;
 +
  /*
-  * The third a.g. block contains the a.g. freelist, an array
-  * of block pointers to blocks owned by the allocation btree code.
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-07-23 19:47:29.000000000 +0200
-@@ -1370,70 +1370,95 @@ xfs_ialloc_log_agi(
- 	xfs_trans_log_buf(tp, bp, first, last);
- }
- 
-+#ifdef DEBUG
-+STATIC void
-+xfs_check_agi_unlinked(
-+	struct xfs_agi		*agi)
-+{
-+	int			i;
-+
-+	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-+		ASSERT(agi->agi_unlinked[i]);
-+}
-+#else
-+#define xfs_check_agi_unlinked(agi)
-+#endif
-+
- /*
-  * Read in the allocation group header (inode allocation section)
+  * - A log record header is 512 bytes.  There is plenty of room to grow the
+  *	xlog_rec_header_t into the reserved space.
+@@ -338,7 +348,7 @@ typedef struct xlog_rec_ext_header {
+  * We'll put all the read-only and l_icloglock fields in the first cacheline,
+  * and move everything else out to subsequent cachelines.
   */
- int
--xfs_ialloc_read_agi(
--	xfs_mount_t	*mp,		/* file system mount structure */
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_agnumber_t	agno,		/* allocation group number */
--	xfs_buf_t	**bpp)		/* allocation group hdr buf */
-+xfs_read_agi(
-+	struct xfs_mount	*mp,	/* file system mount structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	struct xfs_buf		**bpp)	/* allocation group hdr buf */
- {
--	xfs_agi_t	*agi;		/* allocation group header */
--	int		agi_ok;		/* agi is consistent */
--	xfs_buf_t	*bp;		/* allocation group hdr buf */
--	xfs_perag_t	*pag;		/* per allocation group data */
--	int		error;
-+	struct xfs_agi		*agi;	/* allocation group header */
-+	int			agi_ok;	/* agi is consistent */
-+	int			error;
+-typedef struct xlog_iclog_fields {
++typedef struct xlog_in_core {
+ 	sv_t			ic_force_wait;
+ 	sv_t			ic_write_wait;
+ 	struct xlog_in_core	*ic_next;
+@@ -361,41 +371,11 @@ typedef struct xlog_iclog_fields {
  
- 	ASSERT(agno != NULLAGNUMBER);
--	error = xfs_trans_read_buf(
--			mp, tp, mp->m_ddev_targp,
-+
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+			XFS_FSS_TO_BB(mp, 1), 0, bpp);
- 	if (error)
- 		return error;
--	ASSERT(bp && !XFS_BUF_GETERROR(bp));
-+
-+	ASSERT(*bpp && !XFS_BUF_GETERROR(*bpp));
-+	agi = XFS_BUF_TO_AGI(*bpp);
- 
- 	/*
- 	 * Validate the magic number of the agi block.
- 	 */
--	agi = XFS_BUF_TO_AGI(bp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
-+	agi_ok = be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
-+		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
-+		be32_to_cpu(agi->agi_seqno) == agno;
- 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
- 			XFS_RANDOM_IALLOC_READ_AGI))) {
--		XFS_CORRUPTION_ERROR("xfs_ialloc_read_agi", XFS_ERRLEVEL_LOW,
-+		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
- 				     mp, agi);
--		xfs_trans_brelse(tp, bp);
-+		xfs_trans_brelse(tp, *bpp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
-+
-+	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGI, XFS_AGI_REF);
-+
-+	xfs_check_agi_unlinked(agi);
-+	return 0;
-+}
-+
-+int
-+xfs_ialloc_read_agi(
-+	struct xfs_mount	*mp,	/* file system mount structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	struct xfs_buf		**bpp)	/* allocation group hdr buf */
-+{
-+	struct xfs_agi		*agi;	/* allocation group header */
-+	struct xfs_perag	*pag;	/* per allocation group data */
-+	int			error;
-+
-+	error = xfs_read_agi(mp, tp, agno, bpp);
-+	if (error)
-+		return error;
-+
-+	agi = XFS_BUF_TO_AGI(*bpp);
- 	pag = &mp->m_perag[agno];
-+
- 	if (!pag->pagi_init) {
- 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
- 		pag->pagi_count = be32_to_cpu(agi->agi_count);
- 		pag->pagi_init = 1;
--	} else {
--		/*
--		 * It's possible for these to be out of sync if
--		 * we are in the middle of a forced shutdown.
--		 */
--		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
--			XFS_FORCED_SHUTDOWN(mp));
--	}
+ 	/* reference counts need their own cacheline */
+ 	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
+-} xlog_iclog_fields_t;
 -
--#ifdef DEBUG
--	{
--		int	i;
+-typedef union xlog_in_core2 {
+-	xlog_rec_header_t	hic_header;
+-	xlog_rec_ext_header_t	hic_xheader;
+-	char			hic_sector[XLOG_HEADER_SIZE];
+-} xlog_in_core_2_t;
 -
--		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
--			ASSERT(agi->agi_unlinked[i]);
- 	}
--#endif
+-typedef struct xlog_in_core {
+-	xlog_iclog_fields_t	hic_fields;
+-	xlog_in_core_2_t	*hic_data;
++	xlog_in_core_2_t	*ic_data;
++#define ic_header	ic_data->hic_header
+ } xlog_in_core_t;
  
--	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
--	*bpp = bp;
-+	/*
-+	 * It's possible for these to be out of sync if
-+	 * we are in the middle of a forced shutdown.
-+	 */
-+	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
-+		XFS_FORCED_SHUTDOWN(mp));
- 	return 0;
- }
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-07-23 19:45:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-07-23 19:47:29.000000000 +0200
-@@ -1776,13 +1776,10 @@ xfs_iunlink(
- 	xfs_dinode_t	*dip;
- 	xfs_buf_t	*agibp;
- 	xfs_buf_t	*ibp;
--	xfs_agnumber_t	agno;
--	xfs_daddr_t	agdaddr;
- 	xfs_agino_t	agino;
- 	short		bucket_index;
- 	int		offset;
- 	int		error;
--	int		agi_ok;
- 
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_mode != 0);
-@@ -1790,31 +1787,15 @@ xfs_iunlink(
- 
- 	mp = tp->t_mountp;
- 
--	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
--	agdaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
+ /*
+- * Defines to save our code from this glop.
+- */
+-#define	ic_force_wait	hic_fields.ic_force_wait
+-#define ic_write_wait	hic_fields.ic_write_wait
+-#define	ic_next		hic_fields.ic_next
+-#define	ic_prev		hic_fields.ic_prev
+-#define	ic_bp		hic_fields.ic_bp
+-#define	ic_log		hic_fields.ic_log
+-#define	ic_callback	hic_fields.ic_callback
+-#define	ic_callback_lock hic_fields.ic_callback_lock
+-#define	ic_callback_tail hic_fields.ic_callback_tail
+-#define	ic_trace	hic_fields.ic_trace
+-#define	ic_size		hic_fields.ic_size
+-#define	ic_offset	hic_fields.ic_offset
+-#define	ic_refcnt	hic_fields.ic_refcnt
+-#define	ic_bwritecnt	hic_fields.ic_bwritecnt
+-#define	ic_state	hic_fields.ic_state
+-#define ic_datap	hic_fields.ic_datap
+-#define ic_header	hic_data->hic_header
 -
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
- 	 */
--	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, agdaddr,
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, ip->i_ino), &agibp);
- 	if (error)
- 		return error;
--
--	/*
--	 * Validate the magic number of the agi block.
--	 */
- 	agi = XFS_BUF_TO_AGI(agibp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IUNLINK,
--			XFS_RANDOM_IUNLINK))) {
--		XFS_CORRUPTION_ERROR("xfs_iunlink", XFS_ERRLEVEL_LOW, mp, agi);
--		xfs_trans_brelse(tp, agibp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
-+
- 	/*
- 	 * Get the index into the agi hash table for the
- 	 * list this inode will go on.
-@@ -1874,7 +1855,6 @@ xfs_iunlink_remove(
- 	xfs_buf_t	*agibp;
- 	xfs_buf_t	*ibp;
- 	xfs_agnumber_t	agno;
--	xfs_daddr_t	agdaddr;
- 	xfs_agino_t	agino;
- 	xfs_agino_t	next_agino;
- 	xfs_buf_t	*last_ibp;
-@@ -1882,45 +1862,23 @@ xfs_iunlink_remove(
- 	short		bucket_index;
- 	int		offset, last_offset = 0;
- 	int		error;
--	int		agi_ok;
- 
--	/*
--	 * First pull the on-disk inode from the AGI unlinked list.
--	 */
- 	mp = tp->t_mountp;
--
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
--	agdaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
- 
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
- 	 */
--	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, agdaddr,
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_read_agi(mp, tp, agno, &agibp);
- 	if (error) {
- 		cmn_err(CE_WARN,
--			"xfs_iunlink_remove: xfs_trans_read_buf()  returned an error %d on %s.  Returning error.",
-+			"xfs_iunlink_remove: xfs_read_agi() returned an error %d on %s. Returning error.",
- 			error, mp->m_fsname);
- 		return error;
- 	}
--	/*
--	 * Validate the magic number of the agi block.
--	 */
- 	agi = XFS_BUF_TO_AGI(agibp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IUNLINK_REMOVE,
--			XFS_RANDOM_IUNLINK_REMOVE))) {
--		XFS_CORRUPTION_ERROR("xfs_iunlink_remove", XFS_ERRLEVEL_LOW,
--				     mp, agi);
--		xfs_trans_brelse(tp, agibp);
--		cmn_err(CE_WARN,
--			"xfs_iunlink_remove: XFS_TEST_ERROR()  returned an error on %s.  Returning EFSCORRUPTED.",
--			 mp->m_fsname);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
-+
- 	/*
- 	 * Get the index into the agi hash table for the
- 	 * list this inode will go on.
+-/*
+  * The reservation head lsn is not made up of a cycle number and block number.
+  * Instead, it uses a cycle number and byte number.  Logs don't expect to
+  * overflow 31 bits worth of byte offset, so using a byte number will mean
 Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-07-23 19:47:29.000000000 +0200
-@@ -3134,19 +3134,16 @@ xlog_recover_clear_agi_bucket(
- 	int		error;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-09-25 13:58:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-09-25 20:02:39.000000000 +0200
+@@ -3359,7 +3359,6 @@ xlog_pack_data(
+ 	int			size = iclog->ic_offset + roundoff;
+ 	__be32			cycle_lsn;
+ 	xfs_caddr_t		dp;
+-	xlog_in_core_2_t	*xhdr;
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_CLEAR_AGI_BUCKET);
--	error = xfs_trans_reserve(tp, 0, XFS_CLEAR_AGI_BUCKET_LOG_RES(mp), 0, 0, 0);
--	if (!error)
--		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
--				   XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_trans_reserve(tp, 0, XFS_CLEAR_AGI_BUCKET_LOG_RES(mp),
-+				  0, 0, 0);
- 	if (error)
- 		goto out_abort;
+ 	xlog_pack_data_checksum(log, iclog, size);
  
--	error = EINVAL;
--	agi = XFS_BUF_TO_AGI(agibp);
--	if (be32_to_cpu(agi->agi_magicnum) != XFS_AGI_MAGIC)
-+	error = xfs_read_agi(mp, tp, agno, &agibp);
-+	if (error)
- 		goto out_abort;
- 
-+	agi = XFS_BUF_TO_AGI(agibp);
- 	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
- 	offset = offsetof(xfs_agi_t, agi_unlinked) +
- 		 (sizeof(xfs_agino_t) * bucket);
-@@ -3207,16 +3204,21 @@ xlog_recover_process_iunlinks(
- 		/*
- 		 * Find the agi for this ag.
- 		 */
--		agibp = xfs_buf_read(mp->m_ddev_targp,
--				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--				XFS_FSS_TO_BB(mp, 1), 0);
--		if (XFS_BUF_ISERROR(agibp)) {
--			xfs_ioerror_alert("xlog_recover_process_iunlinks(#1)",
--				log->l_mp, agibp,
--				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)));
-+		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		if (error) {
-+			/*
-+			 * AGI is b0rked. Don't process it.
-+			 *
-+			 * We should probably mark the filesystem as corrupt
-+			 * after we've recovered all the ag's we can....
-+			 */
-+			xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_process_iunlinks(#1)"
-+					"agi read failed agno %d error %d",
-+					agno, error);
-+			continue;
- 		}
- 		agi = XFS_BUF_TO_AGI(agibp);
--		ASSERT(XFS_AGI_MAGIC == be32_to_cpu(agi->agi_magicnum));
- 
- 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
- 
-@@ -3295,22 +3297,18 @@ xlog_recover_process_iunlinks(
- 
- 				/*
- 				 * Reacquire the agibuffer and continue around
--				 * the loop.
-+				 * the loop. This should never fail as we know
-+				 * the buffer was good earlier on.
- 				 */
--				agibp = xfs_buf_read(mp->m_ddev_targp,
--						XFS_AG_DADDR(mp, agno,
--							XFS_AGI_DADDR(mp)),
--						XFS_FSS_TO_BB(mp, 1), 0);
--				if (XFS_BUF_ISERROR(agibp)) {
--					xfs_ioerror_alert(
--				"xlog_recover_process_iunlinks(#2)",
--						log->l_mp, agibp,
--						XFS_AG_DADDR(mp, agno,
--							XFS_AGI_DADDR(mp)));
-+				error = xfs_read_agi(mp, NULL, agno, &agibp);
-+				ASSERT(error == 0);
-+				if (error) {
-+					xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_process_iunlinks(#2)"
-+					"agi read failed agno %d error %d",
-+							agno, error);
- 				}
- 				agi = XFS_BUF_TO_AGI(agibp);
--				ASSERT(XFS_AGI_MAGIC == be32_to_cpu(
--					agi->agi_magicnum));
- 			}
- 		}
- 
-@@ -4004,7 +4002,6 @@ xlog_recover_check_summary(
- 	xfs_buf_t	*agfbp;
- 	xfs_buf_t	*agibp;
- 	xfs_daddr_t	agfdaddr;
--	xfs_daddr_t	agidaddr;
- 	xfs_buf_t	*sbbp;
- #ifdef XFS_LOUD_RECOVERY
- 	xfs_sb_t	*sbp;
-@@ -4013,6 +4010,7 @@ xlog_recover_check_summary(
- 	__uint64_t	freeblks;
- 	__uint64_t	itotal;
- 	__uint64_t	ifree;
-+	int		error;
- 
- 	mp = log->l_mp;
- 
-@@ -4036,21 +4034,19 @@ xlog_recover_check_summary(
- 			    be32_to_cpu(agfp->agf_flcount);
- 		xfs_buf_relse(agfbp);
- 
--		agidaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
--		agibp = xfs_buf_read(mp->m_ddev_targp, agidaddr,
--				XFS_FSS_TO_BB(mp, 1), 0);
--		if (XFS_BUF_ISERROR(agibp)) {
--			xfs_ioerror_alert("xlog_recover_check_summary(agi)",
--					  mp, agibp, agidaddr);
--		}
--		agip = XFS_BUF_TO_AGI(agibp);
--		ASSERT(XFS_AGI_MAGIC == be32_to_cpu(agip->agi_magicnum));
--		ASSERT(XFS_AGI_GOOD_VERSION(be32_to_cpu(agip->agi_versionnum)));
--		ASSERT(be32_to_cpu(agip->agi_seqno) == agno);
-+		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		if (error) {
-+			xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_check_summary(agi)"
-+					"agi read failed agno %d error %d",
-+							agno, error);
-+		} else {
-+			agip = XFS_BUF_TO_AGI(agibp);
- 
--		itotal += be32_to_cpu(agip->agi_count);
--		ifree += be32_to_cpu(agip->agi_freecount);
--		xfs_buf_relse(agibp);
-+			itotal += be32_to_cpu(agip->agi_count);
-+			ifree += be32_to_cpu(agip->agi_freecount);
-+			xfs_buf_relse(agibp);
-+		}
+@@ -3374,7 +3373,8 @@ xlog_pack_data(
  	}
  
- 	sbbp = xfs_getsb(mp, 0);
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+-		xhdr = (xlog_in_core_2_t *)&iclog->ic_header;
++		xlog_in_core_2_t *xhdr = iclog->ic_data;
++
+ 		for ( ; i < BTOBB(size); i++) {
+ 			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+ 			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+@@ -3432,7 +3432,6 @@ xlog_unpack_data(
+ 	xlog_t			*log)
+ {
+ 	int			i, j, k;
+-	xlog_in_core_2_t	*xhdr;
+ 
+ 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
+ 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
+@@ -3441,7 +3440,7 @@ xlog_unpack_data(
+ 	}
+ 
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+-		xhdr = (xlog_in_core_2_t *)rhead;
++		xlog_in_core_2_t *xhdr = (xlog_in_core_2_t *)rhead;
+ 		for ( ; i < BTOBB(be32_to_cpu(rhead->h_len)); i++) {
+ 			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+ 			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-09-25 13:58:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-09-25 20:02:39.000000000 +0200
+@@ -5763,7 +5763,7 @@ xfsidbg_xiclog(xlog_in_core_t *iclog)
+ 	};
+ 
+ 	kdb_printf("xlog_in_core/header at 0x%p/0x%p\n",
+-		iclog, iclog->hic_data);
++		iclog, iclog->ic_data);
+ 	kdb_printf("magicno: %x  cycle: %d  version: %d  lsn: 0x%Lx\n",
+ 		be32_to_cpu(iclog->ic_header.h_magicno),
+ 		be32_to_cpu(iclog->ic_header.h_cycle),
 
 -- 
