@@ -1,59 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 04:10:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8PBAo8a022882
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 04:10:50 -0700
-Received: from minas.ics.muni.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79D9948126A
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 04:12:22 -0700 (PDT)
-Received: from minas.ics.muni.cz (minas.ics.muni.cz [147.251.4.40]) by cuda.sgi.com with ESMTP id t8cIHACEZAELx8hQ for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 04:12:22 -0700 (PDT)
-Date: Thu, 25 Sep 2008 13:12:40 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Subject: Re: 2.6.27-rc7 no init found on the root partition?
-Message-ID: <20080925111239.GF31582@ics.muni.cz>
-References: <20080924192227.GC31582@ics.muni.cz> <20080924230326.GM5448@disturbed>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 06:47:10 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8PDl7OY005140
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 06:47:07 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C528C97DD19
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 06:48:42 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id eOuQq2dNfPKeE35b for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 06:48:42 -0700 (PDT)
+Message-ID: <48DB96B8.6050503@sandeen.net>
+Date: Thu, 25 Sep 2008 08:48:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20080924230326.GM5448@disturbed>
+Subject: Re: 2.6.27-rc7 no init found on the root partition?
+References: <20080924192227.GC31582@ics.muni.cz> <20080924230326.GM5448@disturbed> <20080925111239.GF31582@ics.muni.cz>
+In-Reply-To: <20080925111239.GF31582@ics.muni.cz>
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Sep 25, 2008 at 09:03:26AM +1000, Dave Chinner wrote:
-> On Wed, Sep 24, 2008 at 09:22:27PM +0200, Lukas Hejtmanek wrote:
-> > Hello,
-> > 
-> > I have a box that has XFS root partition, I have kernel 2.6.26.3 that boots
-> > pretty well on that box. Today, I've tried 2.6.27-rc7 (so that I can test
-> > NFSv4 over IPv6), but the kernel is unable to boot. It says that root
-> > partition is mounted, XFS file system but no init found.
+Lukas Hejtmanek wrote:
+
+> this is a grub record:
 > 
-> Can you paste the error messages or send pointers to screen shots of
-> the error?
+> title Linux 2.6.26.3
+> root (hd0,0)
+> kernel /boot/vmlinuz-2.6.26.3 root=/dev/sda1 ro console=tty0
+> 
+> title Linux 2.6.27-rc7
+> root (hd0,0)
+> kernel /boot/vmlinuz-2.6.27-rc7 root=/dev/sda1 ro 
 
-http://undomiel.ics.muni.cz/tmp/IMG_2962.JPG
+Is it possible that device ordering has changed?  what if you do:
 
-this one is if I pass init=/bin/bash
-http://undomiel.ics.muni.cz/tmp/IMG_2961.JPG
+> title Linux 2.6.27-rc7
+> root (hd0,0)
+> kernel /boot/vmlinuz-2.6.27-rc7 root=LABEL=$WHATEVER ro
 
-> If you go back to 2.6.26.3, does the kernel boot ok?
+and try mounting root by label? (or UUID ...)
 
-indeed.
-
-
-this is a grub record:
-
-title Linux 2.6.26.3
-root (hd0,0)
-kernel /boot/vmlinuz-2.6.26.3 root=/dev/sda1 ro console=tty0
-
-title Linux 2.6.27-rc7
-root (hd0,0)
-kernel /boot/vmlinuz-2.6.27-rc7 root=/dev/sda1 ro 
-
-
--- 
-Luká¹ Hejtmánek
+-Eric
