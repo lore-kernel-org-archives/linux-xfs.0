@@ -1,57 +1,85 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 18:06:46 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8P16hAl002586
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 18:06:44 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ADC761AEA475
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 18:08:17 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id 12pqJEYotT9rdDkv for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 18:08:17 -0700 (PDT)
-Date: Thu, 25 Sep 2008 11:08:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
-Message-ID: <20080925010815.GC27997@disturbed>
-References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed> <20080924144121.GA349@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 01:15:45 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8P8FABC010455
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 01:15:10 -0700
+Received: from nf-out-0910.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B37B21079064
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 01:16:44 -0700 (PDT)
+Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.188]) by cuda.sgi.com with ESMTP id 1kamaAF0xqViTjxB for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 01:16:44 -0700 (PDT)
+Received: by nf-out-0910.google.com with SMTP id h3so313537nfh.42
+        for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 01:16:43 -0700 (PDT)
+Message-ID: <48DB48E3.3020104@gmail.com>
+Date: Thu, 25 Sep 2008 11:16:35 +0300
+From: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080924144121.GA349@infradead.org>
+Subject: Re: Speed of rm compared to reiserfs (slow)
+References: <48D9FDA1.8050701@gmail.com> <20080925002724.GA27997@disturbed>
+In-Reply-To: <20080925002724.GA27997@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, Peter Leckie <pleckie@sgi.com>, xfs@oss.sgi.com, xfs-dev@sgi.com
+To: xfs@oss.sgi.com, david@fromorbit.com
 
-On Wed, Sep 24, 2008 at 10:41:21AM -0400, Christoph Hellwig wrote:
-> On Wed, Sep 24, 2008 at 05:46:04PM +1000, Dave Chinner wrote:
-> > On Wed, Sep 24, 2008 at 05:42:38PM +1000, Lachlan McIlroy wrote:
-> > > Looks good Pete.
-> > 
-> > No, it is not yet good. Pete cannot explain the underlying problem
-> > and we need to understand if this is fixing the problem or just
-> > changing the timing so it doesn't show up....
-> 
-> The patch does not only cause timing but also makes sure
-> xfs_qm_dqunpin_wait sleeps again when woken up but the condition it was
-> waiting on is not met.  That's the reason why we have wait_event in
-> Linux instead of the more traditional sv-style conditional variables.
-> 
-> Now the spurious wakeup from scheduler argument doesn't make any sense,
-> so this spurious wakeup we're protecting from must come from XFS itself.
-> The way this could happen is when a task trying to pin the dquot gets
-> qi_pinlock before the one waiting for q_pincount to reach zero.
+On 2008-09-25 03:27, Dave Chinner wrote:
+> On Wed, Sep 24, 2008 at 11:43:13AM +0300, Török Edwin wrote:
+>   
+>> Hi,
+>>
+>> I am happily using xfs for /var, /usr and /, and I am very pleased with
+>> the read speed.
+>> I've just recommended xfs to a friend, and he complained about the speed
+>> of rm.
+>>
+>> I did a test on my box, and indeed the speed of rm is order of magnitude
+>> slower compared to reiserfs.
+>> I already use lazy-count, and noatime/nodiratime. Write barriers are off
+>> because I run on raid10.
+>>
+>> Is there anything else I can tune to get faster rm speed?
+>>     
+>
+> mount -o logbsize=262144 <dev> <mtpt>
+>   
 
-Can't happen. To pin the dquot you have to hold the dquot lock. That
-dquot lock is held by the one waiting for the q_pincount to reach
-zero. i.e. pin and unpin_wait are mutually exclusive.
+I've added it to my mount options, also tried logbufs=8 (but that didn't
+make much difference).
 
-Also, qi_pinlock is a spinlock, so it should not be triggering
-any spurious scheduler events that wake up threads sleeping on some
-unrelated wait queue....
+>   
+>> # mount | grep var
+>> /dev/mapper/vg--all-lv--var on /var type xfs (rw,noatime,nodiratime)
+>>     
+>
+> BTW, noatime implies nodiratime - you don't ned to specify both.
+>
+>   
+>> tmpfs                 2.0G   12K  2.0G   1% /lib/init/rw
+>> udev                   10M  188K  9.9M   2% /dev
+>> tmpfs                 2.0G     0  2.0G   0% /dev/shm
+>> /dev/mapper/vg--all-lv--usr
+>>                       100G  5.3G   95G   6% /usr
+>> /dev/mapper/vg--all-lv--var
+>>                       1.3T  230G  1.1T  18% /var
+>>     
+>
+> At 1.1T, you probably want to use inode64 for /var. The different
+> allocation strategy of inode32 can be substantially slower than
+> inode64.
+>
+>   
 
-Cheers,
+Thanks for the suggestions, the time for rm has improved a bit, but is
+still slower than reiserfs:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+time rm -rf gcc
+
+real    1m18.818s
+user    0m0.156s
+sys     0m11.777s
+
+Is there anything else I can try to make it faster?
+
+Best regards,
+--Edwin
