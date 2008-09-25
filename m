@@ -1,65 +1,50 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 17:25:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8P0Pucm032028
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:25:56 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A0001AE94D1
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:27:29 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id ze1cU8ptdQKPsJEz for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:27:29 -0700 (PDT)
-Date: Thu, 25 Sep 2008 10:27:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Speed of rm compared to reiserfs (slow)
-Message-ID: <20080925002724.GA27997@disturbed>
-References: <48D9FDA1.8050701@gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 24 Sep 2008 17:37:51 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8P0bmg7000405
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:37:48 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7751447C354
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:39:22 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 79zLsRGiWJQmyhaH for <xfs@oss.sgi.com>; Wed, 24 Sep 2008 17:39:22 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
+	id 1Kiet8-000704-Ie
+	for xfs@oss.sgi.com; Thu, 25 Sep 2008 00:39:22 +0000
+Date: Wed, 24 Sep 2008 20:39:22 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC 3/3] Future Directions - Reliability
+Message-ID: <20080925003922.GA11841@infradead.org>
+References: <20080923075910.GA5448@disturbed> <20080923080504.GD5448@disturbed>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <48D9FDA1.8050701@gmail.com>
+In-Reply-To: <20080923080504.GD5448@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: =?iso-8859-1?B?VPZy9ms=?= Edwin <edwintorok@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Sep 24, 2008 at 11:43:13AM +0300, Török Edwin wrote:
-> Hi,
+On Tue, Sep 23, 2008 at 06:05:04PM +1000, Dave Chinner wrote:
+> Another failures that we often have reported is that XFS has 'hung' and
+> traige indicates that the filesystem appears to be waiting for a metadata
+> I/O completion to occur. We have seen in the past I/O errors not being
+> propagated from the lower layers back into the filesystem causing these
+> sort of problems. We have also seen cases where there have been silent
+> I/O errors and the first thing to go wrong is 'XFS has hung'.
 > 
-> I am happily using xfs for /var, /usr and /, and I am very pleased with
-> the read speed.
-> I've just recommended xfs to a friend, and he complained about the speed
-> of rm.
+> To catch situations like this, we need to track all I/O we have in flight and
+> have some method of timing them out.  That is, if we haven't completed the I/O
+> in N seconds, issue a warning and enter an exception handling process that
+> attempts to deal with the problem.
 > 
-> I did a test on my box, and indeed the speed of rm is order of magnitude
-> slower compared to reiserfs.
-> I already use lazy-count, and noatime/nodiratime. Write barriers are off
-> because I run on raid10.
-> 
-> Is there anything else I can tune to get faster rm speed?
+> My initial thoughts on this is that it could be implemented via the MRU cache
+> without much extra code being needed.  The complexity with this is that we
+> can't catch data read I/O because we use the generic I/O path for read. We do
+> our own data write and metadata read/write, so we can easily add hooks to track
+> all these types of I/O. Hence we will initially target just metadata I/O as
+> this would only need to hook into the xfs_buf I/O submission layer.
 
-mount -o logbsize=262144 <dev> <mtpt>
-
-> # mount | grep var
-> /dev/mapper/vg--all-lv--var on /var type xfs (rw,noatime,nodiratime)
-
-BTW, noatime implies nodiratime - you don't ned to specify both.
-
-> tmpfs                 2.0G   12K  2.0G   1% /lib/init/rw
-> udev                   10M  188K  9.9M   2% /dev
-> tmpfs                 2.0G     0  2.0G   0% /dev/shm
-> /dev/mapper/vg--all-lv--usr
->                       100G  5.3G   95G   6% /usr
-> /dev/mapper/vg--all-lv--var
->                       1.3T  230G  1.1T  18% /var
-
-At 1.1T, you probably want to use inode64 for /var. The different
-allocation strategy of inode32 can be substantially slower than
-inode64.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't think this is something we want to do in XFS itself, as this
+would fit much better in the bio layer (and propagation through the
+pagecache).  That way we have it in one places instead of growing this
+in various filesystems later on.
