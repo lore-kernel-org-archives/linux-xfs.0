@@ -1,69 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 03:56:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QAulKi021981
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 03:56:47 -0700
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0301F984422
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 03:58:22 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com with ESMTP id JCykCMn1LgK8zg2V for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 03:58:22 -0700 (PDT)
-Message-ID: <48DCC043.1020207@redhat.com>
-Date: Fri, 26 Sep 2008 06:58:11 -0400
-From: Ric Wheeler <rwheeler@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] Add timeout feature
-References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com> <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
-In-Reply-To: <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 04:09:17 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QB9Bfa024243
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 04:09:13 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48EF91AF6F8E
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 04:10:46 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id yJQfZzHP495MyWg4 for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 04:10:46 -0700 (PDT)
+Date: Fri, 26 Sep 2008 13:10:45 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 0/9] CRC support for superblock, ag headers, log and btree blocks
+Message-ID: <20080926111045.GA4411@lst.de>
+References: <20080925225613.GA9822@lst.de> <20080925235030.GE27997@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080925235030.GE27997@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Takashi Sato wrote:
-> Hi,
->
-> Ric Wheeler wrote:
->> Christoph Hellwig wrote:
->>> On Mon, Sep 08, 2008 at 08:53:37PM +0900, Takashi Sato wrote:
->>>
->>>> The timeout feature is added to "freeze ioctl" to solve a deadlock
->>>> when the freezer accesses a frozen filesystem. And new ioctl
->>>> to reset the timeout period is added to extend the timeout period.
->>>> For example, the freezer resets the timeout period to 10 seconds 
->>>> every 5
->>>> seconds.  In this approach, even if the freezer causes a deadlock by
->>>> accessing the frozen filesystem, it will be solved by the timeout
->>>> in 10 seconds and the freezer will be able to recognize that
->>>> at the next reset of timeout period.
->>>>
->>>
->>> And as with all previous posting I still fundamentally disagree about
->>> the need of this functionality.  We don't need a timeout for freezing.
->>
->> I agree with Christoph here, I think that the timeout is unneeded.
->
-> I think that your concern is that the freezer cannot recognize the 
-> occurrence
-> of a timeout and it continues the backup process and the backup data is
-> corrupted finally.
-> If the freezer can recognize it by the unfreeze ioctl's errono, will 
-> your concern
-> be solved?
-> If so, I will implement it.
->
-> Cheers, Takashi
->
-I think that is certainly part a big part of my concern.
+On Fri, Sep 26, 2008 at 09:50:30AM +1000, Dave Chinner wrote:
+> On Fri, Sep 26, 2008 at 12:56:13AM +0200, Christoph Hellwig wrote:
+> > Here's an updated crc series for various metadata structures.  We're still
+> > looking at the magic number in the log recovery case because getting down
+> > a buffer type for the other structures wasn't quite as easy as for the
+> > btree block.  I'll probably look into that again once we're done with all
+> > data structures.
+> 
+> FWIW, I note that you haven't done anything with the AGFL yet. I was
+> considering 2 different approaches. The first was to put the CRC for
+> the AGFL into the AGF so that the internals of the AGFL do not change.
+> However, that means we have interesting synchronisation problems
+> with the CRC, so I don't think that will fly.
+> 
+> The other option was to reduce the number of slots in the AGFL by
+> one and use the last slot to hold the CRC. I think that is OK to do;
+> the AGFL can change size with different secotr size support, so I
+> don't see this being a big problem. Nor do I think that we ever fill
+> the AGFL up to it's full 128 slots during any transaction, so
+> reducing the size by one should be safe.
 
-Also note that the timeout seems to be quite low relative to say the 
-standard timeout for a SCSI device (30 seconds worst case).
-
-In general, I am quite supportive of the patch series and think that 
-this is a great addition.
-
-Thanks!
-
-Ric
+Yes, my plan was to remove one slot, but use the first one for the crc.
+Last one might actually be smarter.
