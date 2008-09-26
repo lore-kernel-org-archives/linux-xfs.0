@@ -1,44 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 21:31:48 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q4VgeW009760
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 21:31:43 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D6BC1AF3086
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 21:33:13 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id 0Gcu5PieiLQ2KiEn for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 21:33:13 -0700 (PDT)
-Date: Fri, 26 Sep 2008 14:33:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Clean up dquot pincount code
-Message-ID: <20080926043309.GL27997@disturbed>
-References: <48DC6102.2040602@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48DC6102.2040602@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 21:40:59 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q4etoU011453
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 21:40:55 -0700
+Subject: TAKE 981668 - Wait for all I/O on truncate to zero file size
+Message-Id: <20080926044226.3D4DD58C52AE@chook.melbourne.sgi.com>
+Date: Fri, 26 Sep 2008 14:42:26 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Leckie <pleckie@sgi.com>
-Cc: xfs@oss.sgi.com, xfs-dev <xfs-dev@sgi.com>
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Fri, Sep 26, 2008 at 02:11:46PM +1000, Peter Leckie wrote:
-> This is a code cleanup and optimization that removes a per mount point
-> spinlock from the quota code and cleans up the code.
->
-> The patch changes the pincount from being an int protected by a spinlock
-> to an atomic_t allowing the pincount to be manipulated without holding
-> the spinlock.
->
-> This cleanup also protects against random wakup's of both the aild and
-> xfssyncd by reevaluating the pincount after been woken. Two latter patches
-> will address the Spurious wakeups.
+Wait for all I/O on truncate to zero file size
 
-Looks fine now.
+It's possible to have outstanding xfs_ioend_t's queued when the file
+size is zero.  This can happen in the direct I/O path when a direct
+I/O write fails due to ENOSPC.  In this case the xfs_ioend_t will still
+be queued (ie xfs_end_io_direct() does not know that the I/O failed so
+can't force the xfs_ioend_t to be flushed synchronously).
 
-Cheers,
+When we truncate a file on unlink we don't know to wait for these
+xfs_ioend_ts and we can have a use-after-free situation if the inode
+is reclaimed before the xfs_ioend_t is finally processed.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+As was suggested by Dave Chinner lets wait for all I/Os to complete
+when truncating the file size to zero.
+
+Date:  Fri Sep 26 14:41:42 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-tot
+Inspected by:  hch
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:32216a
+fs/xfs/xfs_inode.c - 1.524 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.524&r2=text&tr2=1.523&f=h
+	- Wait for all I/O on truncate to zero file size
