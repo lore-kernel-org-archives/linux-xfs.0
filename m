@@ -1,57 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 00:09:59 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q79u7k008749
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:09:56 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A21B81AF3AC5
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:11:30 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id pq7CpFule2x1M69G for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:11:30 -0700 (PDT)
-Date: Fri, 26 Sep 2008 17:11:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Clarification about NULLs in the file after a crash
-Message-ID: <20080926071128.GN27997@disturbed>
-References: <607544.16970.qm@web65603.mail.ac4.yahoo.com> <48DC770D.1000308@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 00:34:49 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q7Ydpm017290
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 00:34:40 -0700
+Message-ID: <48DC9306.104@sgi.com>
+Date: Fri, 26 Sep 2008 17:45:10 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48DC770D.1000308@sgi.com>
+Subject: Re: Running out of reserved data blocks
+References: <48DC73AB.4050309@sgi.com> <20080926070831.GM27997@disturbed>
+In-Reply-To: <20080926070831.GM27997@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: pvlogin@yahoo.com, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Sep 26, 2008 at 03:45:49PM +1000, Lachlan McIlroy wrote:
-> p v wrote:
->> Let's say that I did lseek/writev 10x - if I crash
->> after that according to the FAQ I can get NULLs in the file
->> - but - can I get it only at the end of the file or is it
->> possible to get NULLs in the middle as well? I could modify
->> my application to recover if it was only at the end
->> (ftruncate up to the last initialized data in the file) but
->> I cannot traverse the whole file and I don't want to
->> create checkpoints by doing fdatasync from time to time (at
->> that point I would consider to go up to the fixed version of
->> xfs).
-> Good question.  I think you could get gaps of NULLs in the start
-> or middle of the file if the VM flushed data from the middle or
-> end of the file first and then the inode was updated on disk.
-> Since data at the start of the file has not been written out
-> yet then no extents may have been allocated there yet either.
->
-> That's just a guess though - I don't know if it could actually
-> happen that way.
+Dave Chinner wrote:
+> On Fri, Sep 26, 2008 at 03:31:23PM +1000, Lachlan McIlroy wrote:
+>> A while back I posted a patch to re-dirty pages on I/O error to handle errors from
+>> xfs_trans_reserve() that was failing with ENOSPC when trying to convert delayed
+>> allocations.  I'm now seeing xfs_trans_reserve() fail when converting unwritten
+>> extents and in that case we silently ignore the error and leave the extent as
+>> unwritten which effectively causes data corruption.  I can also get failures when
+>> trying to unreserve disk space.
+> 
+> Is this problem being seen in the real world, or just in artificial
+> test workloads?
+Customer escalations.
 
-Yes, you can certainly still get NULLs in the middle of the file.
-It just depends on the timing and writeback patterns. if you are
-in low memory conditions, the VM will do random page writeback
-which means that there is no guarantee which page gets written
-first....
+> 
+> What the reserve pool is supposed to do is provide sufficient blocks
+> to allow dirty data to be flushed, xattrs to be added, etc in the
+> immediately period after the ENOSPC occurs so that none of the
+> existing operations we've committed to fail.  The reserve pool is
+> not meant to be an endless source of space that allows the system to
+> continue operating permanently at ENOSPC.
+I'm well aware of what the reserve pool is there for.
 
-Cheers,
+> 
+> If you start new operations like writing into unwritten extents once
+> you are already at ENOSPC, then you can consume the entire of the
+> reserve pool. There is nothing we can do to prevent that from
+> occurring, except by doing something like partially freezing the
+> filesystem (i.e. just the data write() level, not the transaction
+> level) until the ENOSPC condition goes away....
+Yes we could eat into the reserve pool with btree split/newroot
+allocations.  Same with delayed allocations.  That's yet another
+problem where we need to account for potential btree space before
+creating delayed allocations or unwritten extents.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+>> I've tried increasing the size of the reserved data blocks pool
+>> but that only delays the inevitable.  Increasing the size to 65536
+>> blocks seems to avoid failures but that's getting to be a lot of
+>> disk space.
+> 
+> You're worried about reserving 20c worth of disk space and 10s of
+> time to change the config vs hours of enginnering and test time
+> to come up with a different solution that may or may not be
+> as effective?
+65536 x 16KB blocks is 1GB of disk space - people will notice that go
+missing.
+
+> 
+> Reserving a bit of extra space is a cheap, cost effective solution
+> to the problem.
+We already plan to bump the pool size to help reduce the liklihood of
+this problem occuring but it's not a solution - it's a work around.
+It's only a matter of time before we hit this issue again.
+
+> 
+>> All of these ENOSPC errors should be transient and if we retried
+>> the operation - or waited for the reserved pool to refill - we
+>> could proceed with the transaction.  I was thinking about adding a
+>> retry loop in xfs_trans_reserve() so if XFS_TRANS_RESERVE is set
+>> and we fail to get space we just keep trying.
+> 
+> ENOSPC is not a transient condition unless you do something to
+> free up space. If the system is unattended, then ENOSPC can
+> persist for a long time. This is effectively silently livelocking
+> the system until the ENOSPC is cleared. That will have effect on
+> operations on other filesystems, too. e.g. pdflush gets stuck
+> in one of these loops...
+The loop would be just like the code that waits for logspace to
+become available (which we do right after allocating this space).
+But you're right that we may have permanently consumed all of the
+reserved space and then we cannot proceed - although I haven't
+actually seen that case in testing.
+
+> 
+> Either increase the size of the reserved pool so your reserve pool
+> doesn't empty, or identify and prevent what-ever I/O is depleting
+> the reserve pool at ENOSPC....
+The reserve pool is not depleting permanently - there are many threads
+each in a transaction and each has 4 blocks from the reserved pool.
+After the transaction completes the 4 blocks are returned to the pool.
+If another thread starts a transaction while the entire pool is tied
+up then that transaction will fail - if it comes back later it could
+work.
