@@ -1,58 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 22:47:26 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q5lOBT023807
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 22:47:24 -0700
-Message-ID: <48DC79E2.4040104@sgi.com>
-Date: Fri, 26 Sep 2008 15:57:54 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 22:51:10 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q5p7Sj024673
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 22:51:07 -0700
+Date: Fri, 26 Sep 2008 15:52:35 +1000
+Subject: [GIT PULL] XFS update for 2.6.27
 MIME-Version: 1.0
-Subject: Re: xfs mailing list posting help
-References: <126460.69037.qm@web65609.mail.ac4.yahoo.com> <48DC64FC.6010608@sgi.com> <48DC656B.2000202@sandeen.net>
-In-Reply-To: <48DC656B.2000202@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Message-Id: <20080926055235.9973458C52AE@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: pvlogin@yahoo.com, xfs-oss <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-Eric Sandeen wrote:
-> Lachlan McIlroy wrote:
->> Peter,
->>
->> How long ago did you post your message?
->> Maybe it fell on the floor somewhere along the way.  Try posting again.
->> Note that it can take a while before messages appear in the archives.
->>
->> Who is maintaining this list nowadays?
-> 
-> The usual cabal; Russell, Ralf, me sometimes.
-> 
-> There is the greylisting so that new email senders take a little while
-> (a retry) to get through ... it's a spam measure.
-Okay, thanks Eric.
+The following changes since commit 6ef190cc92e33565accff6a320f0e7d90480bfe7:
+  Roland Dreier (1):
+        IPoIB: Fix crash when path record fails after path flush
 
-> 
-> -Eric
-> 
->> Lachlan
->>
->> p v wrote:
->>> Hello,
->>>
->>> sorry to bother you but how do I post a question to the xfs mailing list? I've successfully subscribed and I am receiving messages but when I tried to send a message to xfs@oss.sgi.com I don't see it posted. If you can't help can you suggest an email of the maintainer of the list?
->>>
->>> thank you
->>>
->>> Peter Vajgel
->>>
->>>
->>>       
->>>
->>
-> 
-> 
-> 
+are available in the git repository at:
+
+  git://oss.sgi.com:8090/xfs/linux-2.6 master
+
+Lachlan McIlroy (2):
+      [XFS] Fix extent list corruption in xfs_iext_irec_compact_full().
+      [XFS] Remove xfs_iext_irec_compact_full()
+
+ fs/xfs/xfs_inode.c |   94 ++--------------------------------------------------
+ 1 files changed, 3 insertions(+), 91 deletions(-)
