@@ -1,58 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 05:34:02 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QCXtBi014220
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:33:56 -0700
-Received: from turing-police.cc.vt.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 481AF1AF7249
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:35:30 -0700 (PDT)
-Received: from turing-police.cc.vt.edu (turing-police.cc.vt.edu [128.173.14.107]) by cuda.sgi.com with ESMTP id wkXFAuXQHUyHSb9q for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:35:30 -0700 (PDT)
-Subject: Re: [PATCH 3/3] Add timeout feature
-In-Reply-To: Your message of "Fri, 26 Sep 2008 17:52:35 +0900."
-             <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
-From: Valdis.Kletnieks@vt.edu
-References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com>
-            <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1222432525_7097P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 07:28:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QESn2I032410
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:28:49 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B70729846F4
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:30:24 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id wVW9FtkrJEABrOBE for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:30:24 -0700 (PDT)
+Message-ID: <48DCF1FE.3080305@sandeen.net>
+Date: Fri, 26 Sep 2008 09:30:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: inode64 question
+References: <alpine.DEB.1.10.0809251943420.5846@p34.internal.lan> <20080926063050.GA20516@infradead.org>
+In-Reply-To: <20080926063050.GA20516@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Date: Fri, 26 Sep 2008 08:35:25 -0400
-Message-ID: <35472.1222432525@turing-police.cc.vt.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
 
---==_Exmh_1222432525_7097P
-Content-Type: text/plain; charset=us-ascii
+Christoph Hellwig wrote:
+> On Thu, Sep 25, 2008 at 07:44:33PM -0400, Justin Piszcz wrote:
+>> If I mount the fs with -o inode64, can I mount it again later say under  
+>> knoppix 32bit without any options, will the FS still mount?  The 64-bit  
+>> rescue cd/dvds--I have had problems with to say the least.
+> 
+> Not yet.  I'll hopefully get a patch for it into 2.6.28.
 
-On Fri, 26 Sep 2008 17:52:35 +0900, Takashi Sato said:
+Actually it *will* at least mount, won't it?  But that's dangerous.  I
+don't think xfs sets any kind of superblock flag saying "I contain
+inodes past 2^32, don't mount on 32-bit boxes" does it?
 
-(Sorry, am reading the threads out of temporal sequence....)
-
-> I think that your concern is that the freezer cannot recognize the occurrence
-> of a timeout and it continues the backup process and the backup data is
-> corrupted finally.
-> If the freezer can recognize it by the unfreeze ioctl's errono, will your concern
->  be solved?
-> If so, I will implement it.
-
-That would also address my concerns about merging patches 8 and 10 of the
-other patch series (because patch 10 wouldn't be needed then)...
-
-
---==_Exmh_1222432525_7097P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFI3NcNcC3lWbTT17ARAlfSAJ9koC6IkAWpTwgQQzzxs0CHDfWf6ACgzm8C
-gDUF+0x2+mjqNZBumGOhqOA=
-=x5uP
------END PGP SIGNATURE-----
-
---==_Exmh_1222432525_7097P--
+-Eric
