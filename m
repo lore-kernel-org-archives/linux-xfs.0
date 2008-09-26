@@ -1,38 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 04:30:28 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 05:34:02 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QBUCY7002122
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 04:30:14 -0700
-Date: Fri, 26 Sep 2008 07:31:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] Use atomic_t and wait_event to track dquot pincount
-Message-ID: <20080926113147.GD3287@infradead.org>
-References: <48D9C1DD.6030607@sgi.com> <48D9EB8F.1070104@sgi.com> <48D9EF6E.8010505@sgi.com> <20080924074604.GK5448@disturbed> <48D9F718.4010905@sgi.com> <20080925010318.GB27997@disturbed> <48DB4F3F.8040307@sgi.com> <20080926003401.GG27997@disturbed> <48DC3BBB.4080807@sgi.com> <48DC3D13.1010805@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48DC3D13.1010805@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QCXtBi014220
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:33:56 -0700
+Received: from turing-police.cc.vt.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 481AF1AF7249
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:35:30 -0700 (PDT)
+Received: from turing-police.cc.vt.edu (turing-police.cc.vt.edu [128.173.14.107]) by cuda.sgi.com with ESMTP id wkXFAuXQHUyHSb9q for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 05:35:30 -0700 (PDT)
+Subject: Re: [PATCH 3/3] Add timeout feature
+In-Reply-To: Your message of "Fri, 26 Sep 2008 17:52:35 +0900."
+             <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
+From: Valdis.Kletnieks@vt.edu
+References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com>
+            <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1222432525_7097P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
+Date: Fri, 26 Sep 2008 08:35:25 -0400
+Message-ID: <35472.1222432525@turing-police.cc.vt.edu>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Leckie <pleckie@sgi.com>
-Cc: xfs@oss.sgi.com, xfs-dev@sgi.com
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
 
-On Fri, Sep 26, 2008 at 11:38:27AM +1000, Peter Leckie wrote:
-> Lachlan McIlroy wrote:
->> The underlying problem has nothing to do with xfs_qm_dqflush() - the
->> spurious wakeups are caused by calls to wake_up_process() that  
->> arbitrarily
->> wake up a process that is in a state where it shouldn't be woken up.  If
->> we don't fix the spurious wakeups then we could easily re-introduce this
->> problem again.  If xfs_qm_dqflush() should be non-blocking then that's a
->> separate change and it sounds like a good change too.
-> Ok so what do we want to do. It almost sounds like there are 3 issues I  
-> need to solve,
-> first clean up the code, second make xfs_qm_dqflush() non blocking, and 3ed
-> fix up the spurious wakeups.
->
-> Should I propose 3 patches to fix each of these issues?
+--==_Exmh_1222432525_7097P
+Content-Type: text/plain; charset=us-ascii
 
-Well, your patch for 1 is in, Dave has one for 2, and I don't think
-three is an issue - at least for xfssyncd.
+On Fri, 26 Sep 2008 17:52:35 +0900, Takashi Sato said:
+
+(Sorry, am reading the threads out of temporal sequence....)
+
+> I think that your concern is that the freezer cannot recognize the occurrence
+> of a timeout and it continues the backup process and the backup data is
+> corrupted finally.
+> If the freezer can recognize it by the unfreeze ioctl's errono, will your concern
+>  be solved?
+> If so, I will implement it.
+
+That would also address my concerns about merging patches 8 and 10 of the
+other patch series (because patch 10 wouldn't be needed then)...
+
+
+--==_Exmh_1222432525_7097P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFI3NcNcC3lWbTT17ARAlfSAJ9koC6IkAWpTwgQQzzxs0CHDfWf6ACgzm8C
+gDUF+0x2+mjqNZBumGOhqOA=
+=x5uP
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1222432525_7097P--
