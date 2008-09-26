@@ -1,55 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 08:17:01 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 14:26:12 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QFGv8d007631
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:16:57 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E61EF1AFBCA9
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:18:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id bT4oF3COpMXAGoQG for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:18:32 -0700 (PDT)
-Message-ID: <48DCFD47.1020404@sandeen.net>
-Date: Fri, 26 Sep 2008 10:18:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs mailing list posting help
-References: <126460.69037.qm@web65609.mail.ac4.yahoo.com> <48DC64FC.6010608@sgi.com> <48DC656B.2000202@sandeen.net> <48DCFCE8.1010400@thebarn.com>
-In-Reply-To: <48DCFCE8.1010400@thebarn.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QLQ36u009319
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 14:26:04 -0700
+Received: from e36.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E43F11AFD5E6
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 14:27:37 -0700 (PDT)
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by cuda.sgi.com with ESMTP id xrZn6Ll7daO2peM0 for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 14:27:37 -0700 (PDT)
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m8QLRKsI013145
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 17:27:20 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id m8QLRJP0210108
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 15:27:19 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m8QLRIlN001730
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 15:27:18 -0600
+Subject: Re: [PATCH 0/10] freeze feature ver 1.13
+From: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
+In-Reply-To: <30536.1222426096@turing-police.cc.vt.edu>
+References: <20080926175652t-sato@mail.jp.nec.com>
+	 <30536.1222426096@turing-police.cc.vt.edu>
+Content-Type: text/plain
+Date: Fri, 26 Sep 2008 16:26:58 -0500
+Message-Id: <1222464418.27833.7.camel@norville.austin.ibm.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: lachlan@sgi.com, pvlogin@yahoo.com, xfs-oss <xfs@oss.sgi.com>
+To: Valdis.Kletnieks@vt.edu
+Cc: Takashi Sato <t-sato@yk.jp.nec.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Russell Cattelan wrote:
-> Eric Sandeen wrote:
->> Lachlan McIlroy wrote:
->>   
->>> Peter,
->>>
->>> How long ago did you post your message?
->>> Maybe it fell on the floor somewhere along the way.  Try posting again.
->>> Note that it can take a while before messages appear in the archives.
->>>
->>> Who is maintaining this list nowadays?
->>>     
->> The usual cabal; Russell, Ralf, me sometimes.
->>
->> There is the greylisting so that new email senders take a little while
->> (a retry) to get through ... it's a spam measure.
->>   
-> Actually that isn't the case anymore.
-> Everything is "pre-filtered" via a barracuda box so from oss's stand point
-> all mail is coming from one ip address which makes grey listing ineffective.
-> So there is no artificial delay anymore.
+On Fri, 2008-09-26 at 06:48 -0400, Valdis.Kletnieks@vt.edu wrote:
+> On Fri, 26 Sep 2008 17:56:52 +0900, Takashi Sato said:
 
-ah, ok, oops.  :)
-
+> Would it be a good idea to merge patch 10 into patch 8?   Otherwise, there's
+> two issues I can see:
 > 
-> Peter what email address did you send it from?
-> I didn't find anything in the logs from pvlogin.
+> 1) A mostly theoretical problem if a bisect lands exactly on patch 9 it can
+> hit the deadlock.
 
-an email did eventually show up from Peter.
+Really, there's no deadlock until someone uses the new function, so
+that's not really an issue, is it?  However, this patchset breaks
+bisection anyway.
 
--Eric
+A bisect anywhere between patch 1 and 7 will cause some number of
+filesystems to fail to compile.  Patches 1-7 either need to be combined
+into one, or patch 1 needs to add freeze_fs and unfreeze_fs while
+leaving write_super_lockfs and unlockfs, then a patch between 7 and 8
+could remove write_super_lockfs and unlockfs.
+
+> 2) The API at patch 8 and patch 10 differs, that's going to make testing through
+> a bisection of this patch series a pain.
+
+There's no need to test the new interface during a bisection.  Bisection
+is important in testing regressions, but not new function.
+-- 
+David Kleikamp
+IBM Linux Technology Center
