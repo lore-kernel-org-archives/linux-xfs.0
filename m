@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 22:51:10 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q5p7Sj024673
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 22:51:07 -0700
-Date: Fri, 26 Sep 2008 15:52:35 +1000
-Subject: [GIT PULL] XFS update for 2.6.27
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 25 Sep 2008 23:29:20 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q6TF3a031967
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 23:29:17 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE0B21AF3773
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 23:30:50 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id SP9yvqCDx1tlNwXH for <xfs@oss.sgi.com>; Thu, 25 Sep 2008 23:30:50 -0700 (PDT)
+Date: Fri, 26 Sep 2008 02:30:50 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: inode64 question
+Message-ID: <20080926063050.GA20516@infradead.org>
+References: <alpine.DEB.1.10.0809251943420.5846@p34.internal.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-Id: <20080926055235.9973458C52AE@chook.melbourne.sgi.com>
-From: lachlan@sgi.com (Lachlan McIlroy)
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0809251943420.5846@p34.internal.lan>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: xfs@oss.sgi.com
 
-The following changes since commit 6ef190cc92e33565accff6a320f0e7d90480bfe7:
-  Roland Dreier (1):
-        IPoIB: Fix crash when path record fails after path flush
+On Thu, Sep 25, 2008 at 07:44:33PM -0400, Justin Piszcz wrote:
+> If I mount the fs with -o inode64, can I mount it again later say under  
+> knoppix 32bit without any options, will the FS still mount?  The 64-bit  
+> rescue cd/dvds--I have had problems with to say the least.
 
-are available in the git repository at:
-
-  git://oss.sgi.com:8090/xfs/linux-2.6 master
-
-Lachlan McIlroy (2):
-      [XFS] Fix extent list corruption in xfs_iext_irec_compact_full().
-      [XFS] Remove xfs_iext_irec_compact_full()
-
- fs/xfs/xfs_inode.c |   94 ++--------------------------------------------------
- 1 files changed, 3 insertions(+), 91 deletions(-)
+Not yet.  I'll hopefully get a patch for it into 2.6.28.
