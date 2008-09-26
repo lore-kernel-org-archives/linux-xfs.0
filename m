@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 01:56:30 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 01:56:52 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q8uQ5m031160
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:56:26 -0700
-Received: from tyo202.gate.nec.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C26FF486CCA
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:58:00 -0700 (PDT)
-Received: from tyo202.gate.nec.co.jp (TYO202.gate.nec.co.jp [202.32.8.206]) by cuda.sgi.com with ESMTP id muOh6xtSrCPUWj6v for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:58:00 -0700 (PDT)
-Subject: [PATCH 3/10] ext4: Fix error handling in write_super_lockfs/unlockfs
-Message-Id: <20080926175746t-sato@mail.jp.nec.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8Q8ul3W031441
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:56:47 -0700
+Received: from tyo201.gate.nec.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78F99486D0C
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:58:21 -0700 (PDT)
+Received: from tyo201.gate.nec.co.jp (TYO201.gate.nec.co.jp [202.32.8.193]) by cuda.sgi.com with ESMTP id wiPAlrAlPRBTQSXf for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 01:58:21 -0700 (PDT)
+Subject: [PATCH 4/10] xfs: Fix error handling in write_super_lockfs/unlockfs
+Message-Id: <20080926175807t-sato@mail.jp.nec.com>
 Mime-Version: 1.0
 From: Takashi Sato <t-sato@yk.jp.nec.com>
-Date: Fri, 26 Sep 2008 17:57:46 +0900
+Date: Fri, 26 Sep 2008 17:58:06 +0900
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -23,124 +23,94 @@ Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Changed write_super_lockfs so that it returns an error in case of an failure.
 unlockfs always returns 0.
 
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 Signed-off-by: Takashi Sato <t-sato@yk.jp.nec.com>
 Signed-off-by: Masayuki Hamaguchi <m-hamaguchi@ys.jp.nec.com>
 ---
- super.c |   40 +++++++++++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 13 deletions(-)
+ linux-2.6/xfs_super.c |    8 ++++----
+ xfs_fsops.c           |   11 +++++++----
+ xfs_fsops.h           |    2 +-
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
-diff -uprN -X linux-2.6.27-rc7-lockfs-ext3/Documentation/dontdiff linux-2.6.27-rc7-lockfs-ext3/fs/ext4/super.c linux-2.6
-.27-rc7-lockfs-ext4/fs/ext4/super.c
---- linux-2.6.27-rc7-lockfs-ext3/fs/ext4/super.c	2008-09-26 11:44:53.000000000 +0900
-+++ linux-2.6.27-rc7-lockfs-ext4/fs/ext4/super.c	2008-09-26 16:55:57.000000000 +0900
-@@ -49,7 +49,7 @@ static int ext4_load_journal(struct supe
- 			     unsigned long journal_devnum);
- static int ext4_create_journal(struct super_block *, struct ext4_super_block *,
- 			       unsigned int);
--static void ext4_commit_super(struct super_block *sb,
-+static int ext4_commit_super(struct super_block *sb,
- 			      struct ext4_super_block *es, int sync);
- static void ext4_mark_recovery_complete(struct super_block *sb,
- 					struct ext4_super_block *es);
-@@ -60,9 +60,9 @@ static const char *ext4_decode_error(str
- 				     char nbuf[16]);
- static int ext4_remount(struct super_block *sb, int *flags, char *data);
- static int ext4_statfs(struct dentry *dentry, struct kstatfs *buf);
--static void ext4_unlockfs(struct super_block *sb);
-+static int ext4_unfreeze(struct super_block *sb);
- static void ext4_write_super(struct super_block *sb);
--static void ext4_write_super_lockfs(struct super_block *sb);
-+static int ext4_freeze(struct super_block *sb);
+diff -uprN -X linux-2.6.27-rc7-lockfs-ext4/Documentation/dontdiff linux-2.6.27-rc7-lockfs-ext4/fs/xfs/linux-2.6/xfs_supe
+r.c linux-2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c
+--- linux-2.6.27-rc7-lockfs-ext4/fs/xfs/linux-2.6/xfs_super.c	2008-09-22 07:29:55.000000000 +0900
++++ linux-2.6.27-rc7-lockfs-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-09-26 20:43:42.000000000 +0900
+@@ -1351,14 +1351,14 @@ xfs_fs_remount(
+  * need to take care of themetadata. Once that's done write a dummy
+  * record to dirty the log in case of a crash while frozen.
+  */
+-STATIC void
+-xfs_fs_lockfs(
++STATIC int
++xfs_fs_freeze(
+ 	struct super_block	*sb)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
  
+ 	xfs_attr_quiesce(mp);
+-	xfs_fs_log_dummy(mp);
++	return -xfs_fs_log_dummy(mp);
+ }
  
- ext4_fsblk_t ext4_block_bitmap(struct super_block *sb,
-@@ -875,8 +875,8 @@ static const struct super_operations ext
- 	.put_super	= ext4_put_super,
- 	.write_super	= ext4_write_super,
- 	.sync_fs	= ext4_sync_fs,
--	.write_super_lockfs = ext4_write_super_lockfs,
--	.unlockfs	= ext4_unlockfs,
-+	.freeze_fs	= ext4_freeze,
-+	.unfreeze_fs	= ext4_unfreeze,
- 	.statfs		= ext4_statfs,
- 	.remount_fs	= ext4_remount,
- 	.clear_inode	= ext4_clear_inode,
-@@ -2792,20 +2792,22 @@ static int ext4_create_journal(struct su
+ STATIC int
+@@ -1847,7 +1847,7 @@ static struct super_operations xfs_super
+ 	.put_super		= xfs_fs_put_super,
+ 	.write_super		= xfs_fs_write_super,
+ 	.sync_fs		= xfs_fs_sync_super,
+-	.write_super_lockfs	= xfs_fs_lockfs,
++	.freeze_fs		= xfs_fs_freeze,
+ 	.statfs			= xfs_fs_statfs,
+ 	.remount_fs		= xfs_fs_remount,
+ 	.show_options		= xfs_fs_show_options,
+diff -uprN -X linux-2.6.27-rc7-lockfs-ext4/Documentation/dontdiff linux-2.6.27-rc7-lockfs-ext4/fs/xfs/xfs_fsops.c linux-
+2.6.27-rc7-lockfs-xfs/fs/xfs/xfs_fsops.c
+--- linux-2.6.27-rc7-lockfs-ext4/fs/xfs/xfs_fsops.c	2008-09-22 07:29:55.000000000 +0900
++++ linux-2.6.27-rc7-lockfs-xfs/fs/xfs/xfs_fsops.c	2008-09-26 20:39:14.000000000 +0900
+@@ -589,17 +589,19 @@ out:
  	return 0;
  }
  
--static void ext4_commit_super(struct super_block *sb,
-+static int ext4_commit_super(struct super_block *sb,
- 			      struct ext4_super_block *es, int sync)
+-void
++int
+ xfs_fs_log_dummy(
+ 	xfs_mount_t	*mp)
  {
- 	struct buffer_head *sbh = EXT4_SB(sb)->s_sbh;
-+	int error = 0;
+ 	xfs_trans_t	*tp;
+ 	xfs_inode_t	*ip;
++	int		error;
  
- 	if (!sbh)
+ 	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1);
+-	if (xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0)) {
++	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
++	if (error) {
+ 		xfs_trans_cancel(tp, 0);
 -		return;
 +		return error;
- 	es->s_wtime = cpu_to_le32(get_seconds());
- 	ext4_free_blocks_count_set(es, ext4_count_free_blocks(sb));
- 	es->s_free_inodes_count = cpu_to_le32(ext4_count_free_inodes(sb));
- 	BUFFER_TRACE(sbh, "marking dirty");
- 	mark_buffer_dirty(sbh);
- 	if (sync)
--		sync_dirty_buffer(sbh);
-+		error = sync_dirty_buffer(sbh);
+ 	}
+ 
+ 	ip = mp->m_rootip;
+@@ -609,9 +611,10 @@ xfs_fs_log_dummy(
+ 	xfs_trans_ihold(tp, ip);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	xfs_trans_set_sync(tp);
+-	xfs_trans_commit(tp, 0);
++	error = xfs_trans_commit(tp, 0);
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +	return error;
  }
  
+ int
+diff -uprN -X linux-2.6.27-rc7-lockfs-ext4/Documentation/dontdiff linux-2.6.27-rc7-lockfs-ext4/fs/xfs/xfs_fsops.h linux-
+2.6.27-rc7-lockfs-xfs/fs/xfs/xfs_fsops.h
+--- linux-2.6.27-rc7-lockfs-ext4/fs/xfs/xfs_fsops.h	2008-09-22 07:29:55.000000000 +0900
++++ linux-2.6.27-rc7-lockfs-xfs/fs/xfs/xfs_fsops.h	2008-09-26 20:39:14.000000000 +0900
+@@ -25,6 +25,6 @@ extern int xfs_fs_counts(xfs_mount_t *mp
+ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
+-extern void xfs_fs_log_dummy(xfs_mount_t *mp);
++extern int xfs_fs_log_dummy(xfs_mount_t *mp);
  
-@@ -2919,28 +2921,39 @@ static int ext4_sync_fs(struct super_blo
-  * LVM calls this function before a (read-only) snapshot is created.  This
-  * gives us a chance to flush the journal completely and mark the fs clean.
-  */
--static void ext4_write_super_lockfs(struct super_block *sb)
-+static int ext4_freeze(struct super_block *sb)
- {
-+	int error = 0;
-+	journal_t *journal;
- 	sb->s_dirt = 0;
- 
- 	if (!(sb->s_flags & MS_RDONLY)) {
--		journal_t *journal = EXT4_SB(sb)->s_journal;
-+		journal = EXT4_SB(sb)->s_journal;
- 
- 		/* Now we set up the journal barrier. */
- 		jbd2_journal_lock_updates(journal);
--		jbd2_journal_flush(journal);
-+		error = jbd2_journal_flush(journal);
-+		if (error)
-+			goto out;
- 
- 		/* Journal blocked and flushed, clear needs_recovery flag. */
- 		EXT4_CLEAR_INCOMPAT_FEATURE(sb, EXT4_FEATURE_INCOMPAT_RECOVER);
--		ext4_commit_super(sb, EXT4_SB(sb)->s_es, 1);
-+		error = ext4_commit_super(sb, EXT4_SB(sb)->s_es, 1);
-+		if (error)
-+			goto out;
- 	}
-+	return 0;
-+
-+out:
-+	jbd2_journal_unlock_updates(journal);
-+	return error;
- }
- 
- /*
-  * Called by LVM after the snapshot is done.  We need to reset the RECOVER
-  * flag here, even though the filesystem is not technically dirty yet.
-  */
--static void ext4_unlockfs(struct super_block *sb)
-+static int ext4_unfreeze(struct super_block *sb)
- {
- 	if (!(sb->s_flags & MS_RDONLY)) {
- 		lock_super(sb);
-@@ -2950,6 +2963,7 @@ static void ext4_unlockfs(struct super_b
- 		unlock_super(sb);
- 		jbd2_journal_unlock_updates(EXT4_SB(sb)->s_journal);
- 	}
-+	return 0;
- }
- 
- static int ext4_remount(struct super_block *sb, int *flags, char *data)
+ #endif	/* __XFS_FSOPS_H__ */
