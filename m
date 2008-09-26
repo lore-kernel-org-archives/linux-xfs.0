@@ -1,37 +1,72 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 07:28:52 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QESn2I032410
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:28:49 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B70729846F4
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:30:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id wVW9FtkrJEABrOBE for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 07:30:24 -0700 (PDT)
-Message-ID: <48DCF1FE.3080305@sandeen.net>
-Date: Fri, 26 Sep 2008 09:30:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 26 Sep 2008 08:15:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8QFFNlN007318
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:15:24 -0700
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 781F11AFBC38
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:16:58 -0700 (PDT)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202]) by cuda.sgi.com with ESMTP id H6pxYV2ju2fnPNqx for <xfs@oss.sgi.com>; Fri, 26 Sep 2008 08:16:58 -0700 (PDT)
+Message-ID: <48DCFCE8.1010400@thebarn.com>
+Date: Fri, 26 Sep 2008 10:16:56 -0500
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
-Subject: Re: inode64 question
-References: <alpine.DEB.1.10.0809251943420.5846@p34.internal.lan> <20080926063050.GA20516@infradead.org>
-In-Reply-To: <20080926063050.GA20516@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: xfs mailing list posting help
+References: <126460.69037.qm@web65609.mail.ac4.yahoo.com> <48DC64FC.6010608@sgi.com> <48DC656B.2000202@sandeen.net>
+In-Reply-To: <48DC656B.2000202@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: lachlan@sgi.com, pvlogin@yahoo.com, xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Thu, Sep 25, 2008 at 07:44:33PM -0400, Justin Piszcz wrote:
->> If I mount the fs with -o inode64, can I mount it again later say under  
->> knoppix 32bit without any options, will the FS still mount?  The 64-bit  
->> rescue cd/dvds--I have had problems with to say the least.
-> 
-> Not yet.  I'll hopefully get a patch for it into 2.6.28.
+Eric Sandeen wrote:
+> Lachlan McIlroy wrote:
+>   
+>> Peter,
+>>
+>> How long ago did you post your message?
+>> Maybe it fell on the floor somewhere along the way.  Try posting again.
+>> Note that it can take a while before messages appear in the archives.
+>>
+>> Who is maintaining this list nowadays?
+>>     
+>
+> The usual cabal; Russell, Ralf, me sometimes.
+>
+> There is the greylisting so that new email senders take a little while
+> (a retry) to get through ... it's a spam measure.
+>   
+Actually that isn't the case anymore.
+Everything is "pre-filtered" via a barracuda box so from oss's stand point
+all mail is coming from one ip address which makes grey listing ineffective.
+So there is no artificial delay anymore.
 
-Actually it *will* at least mount, won't it?  But that's dangerous.  I
-don't think xfs sets any kind of superblock flag saying "I contain
-inodes past 2^32, don't mount on 32-bit boxes" does it?
 
--Eric
+Peter what email address did you send it from?
+I didn't find anything in the logs from pvlogin.
+
+> -Eric
+>
+>   
+>> Lachlan
+>>
+>> p v wrote:
+>>     
+>>> Hello,
+>>>
+>>> sorry to bother you but how do I post a question to the xfs mailing list? I've successfully subscribed and I am receiving messages but when I tried to send a message to xfs@oss.sgi.com I don't see it posted. If you can't help can you suggest an email of the maintainer of the list?
+>>>
+>>> thank you
+>>>
+>>> Peter Vajgel
+>>>
+>>>
+>>>       
+>>>
+>>>       
+>>     
+>
+>   
