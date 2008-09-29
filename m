@@ -1,207 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 01:30:15 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 01:30:50 -0700 (PDT)
 Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8T8UAAd022649
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 01:30:11 -0700
-Message-ID: <48E09494.6070709@sgi.com>
-Date: Mon, 29 Sep 2008 18:40:52 +1000
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8T8Ujd1022815
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 01:30:45 -0700
+Message-ID: <48E094BA.8060009@sgi.com>
+Date: Mon, 29 Sep 2008 18:41:30 +1000
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: Running out of reserved data blocks
-References: <48DC73AB.4050309@sgi.com> <20080926070831.GM27997@disturbed> <48DC9306.104@sgi.com> <20080926084814.GD13705@disturbed> <48E040FA.9090709@sgi.com> <20080929065152.GB16064@disturbed>
-In-Reply-To: <20080929065152.GB16064@disturbed>
+Subject: Re: compiler warning after applying btree patches
+References: <48E084D5.30205@sgi.com> <20080929073033.GA30795@infradead.org>
+In-Reply-To: <20080929073033.GA30795@infradead.org>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Dave Chinner wrote:
-> On Mon, Sep 29, 2008 at 12:44:10PM +1000, Lachlan McIlroy wrote:
->> Dave Chinner wrote:
->>> On Fri, Sep 26, 2008 at 05:45:10PM +1000, Lachlan McIlroy wrote:
->>>> Dave Chinner wrote:
->>>>> On Fri, Sep 26, 2008 at 03:31:23PM +1000, Lachlan McIlroy
->>>>> wrote:
->>>>>> A while back I posted a patch to re-dirty pages on I/O error
->>>>>> to handle errors from xfs_trans_reserve() that was failing
->>>>>> with ENOSPC when trying to convert delayed allocations.  I'm
->>>>>> now seeing xfs_trans_reserve() fail when converting unwritten
->>>>>> extents and in that case we silently ignore the error and
->>>>>> leave the extent as unwritten which effectively causes data
->>>>>> corruption.  I can also get failures when trying to unreserve
->>>>>> disk space.
->>>>> Is this problem being seen in the real world, or just in
->>>>> artificial test workloads?
->>>> Customer escalations.
->>> And the main cause is what? Direct I/O into unwritten extents?
->> The system is so busy that it's overwhelming the bandwidth of the
->> log and many threads have taken a slice of the reserved pool and
->> are waiting for log space. 
+Christoph Hellwig wrote:
+> On Mon, Sep 29, 2008 at 05:33:41PM +1000, Lachlan McIlroy wrote:
+>> Christoph,
+>>
+>> After applying the first round of btree patches we've now got this warning
+>> when building a non-debug xfs module.
+>>
+>>  CC      fs/xfs/xfs_btree.o
+>> fs/xfs/xfs_btree.c:191: warning: ?xfs_btree_check_ptr? defined but not used
+>>
+>> I took a quick look through your next round of btree patches but couldn't
+>> see a fix for it.  Did I miss something in the original patch set?  Is it
+>> fixed in a later patch?  If not here's a fix:
 > 
-> By that I assume you mean that there are lots of threads waiting
-> in xlog_state_get_iclog_space()?
-No, I think they were in xlog_grant_log_space().
+> No, it's not used for now.  For some reason I missed the warning.
+> 
+> The patch looks good, can you also put it into xfs-cmds so the two
+> copies stay in sync?
 
-> 
->> Extent conversions start failing and we invalidate the page but
->> fail to remove the delayed allocation.
-> 
-> IIUC, you are trying to say that delayed allocation is failing with
-> ENOSPC in xfs_iomap_write_allocate(), and everything goes downhill
-> from there?
-Yes.  Exactly.
-
-> 
-> Perhaps we shuld propagate the "BMAPI_TRYLOCK" flag into
-> xfs_iomap_write_allocate() and convert ENOSPC errors from
-> xfs_trans_reserve() into EAGAIN for non-blocking writeback. That
-> means any sort of synchronous write will propagate an error, but
-> async writeback (like pdflush) will simply treat the condition the
-> same as inode lock contention.
-That sounds like a small change on top of the patch I sent out
-earlier.  I'll add it in and re-post the patch.
-
-> 
-> Hence issuing something like a fsync() or sync(1) will cause ENOSPC 
-> errors to be triggered on delalloc in this situation, but async
-> writeback won't. In the case of a direct I/O read, it should get an
-> ENOSPC error reported back instead of.....
-> 
->> Then a direct I/O read
->> runs into a delayed allocation where it does not expect one and
->> hits a BUG_ON().
-> 
-> .... doing that.
-> 
->>>>> If you start new operations like writing into unwritten extents once
->>>>> you are already at ENOSPC, then you can consume the entire of the
->>>>> reserve pool. There is nothing we can do to prevent that from
->>>>> occurring, except by doing something like partially freezing the
->>>>> filesystem (i.e. just the data write() level, not the transaction
->>>>> level) until the ENOSPC condition goes away....
->>>> Yes we could eat into the reserve pool with btree split/newroot
->>>> allocations.  Same with delayed allocations. That's yet another
->>>> problem where we need to account for potential btree space before
->>>> creating delayed allocations or unwritten extents.
->>> It's the same problem - allocation can cause consumption of
->>> blocks in the BMBT tree. At ENOSPC, it's not the allocbt that
->>> is being split or consuming blocks...
->>>
->>> Metadata block allocation due to delayed data allocation is bound by
->>> memory size and dirty page limits - once we get to ENOSPC, there
->>> will be no more pages accepted for delayed allocation - the app will
->>> get an ENOSPC up front. The reserved pool needs to be larger enough
->>> to handle all the allocations that this dirty data can trigger.
->>> Easily solved by bumping the tunable for large mmory systems.
->> Yep, but how high do we bump it?
-> 
-> Not sure. It sounds like the problem is the number of transactions
-> that can be in flight at once, each taking their 4-8 blocks of
-> reservation out of the pool, and then blocking for some period of
-> time waiting for iclog space to be able to commit the transaction.
-> 
-> Given that the most I've previously seen is ~1500 transactions
-> blocked waiting for iclog space, I'd say that gives a rough
-> indication of how deep the reservation pool could be bumped to....
-Hmmm, okay.  1500 * 8 = 12,000 blocks.  Might as well round that up
-to 16K.  I'll post a patch to increase the default pool size.
-
-> 
->> I've run some pathological workloads
->> that can deplete a reserved pool of 16384 blocks.  While our customers
->> may never run this workload their systems are much bigger than what I
->> have at my disposal.  When the reserved pool depletes I would rather
->> have the system degrade performance than cause data corruption or panic.
-> 
-> Right, so would I. The problem is how to do it without introducing
-> excessive complexity.
-> 
->> In other words if we can find a solution to safely handle a depleted
->> reserved pool (even if it means taking a performance hit) rather than
->> hope it never happens I would like to hear about it.
-> 
-> I think what I mentioned above might prevent the common case of the
-> problem you are seeing. It doesn't fix the "depletion by a thousand
-> unwritten extent conversion" problem, but it should prevent the
-> silent trashing of delalloc data due to temporary reserve pool
-> depletion....
-> 
->>> FWIW, determining the number of blocks to reserve for delayed
->>> allocation during delayed allocation is not worth the complexity.
->>> You don't know how many extents the data will end up in, you don't
->>> know what order the pages might get written in so you could have
->>> worst case sparse page writeout before the holes are filled (i.e.
->>> have tree growth and then have it shrink), etc. Even reserving
->>> enough blocks for a full btree split per dirtied inode is not
->>> sufficient, as allocation may trigger multiple full tree splits.
->>> Basically the reservations will get so large that they will cause
->>> applications to get premature ENOSPC errors when the writes could
->>> have succeeded without problems.
->> I totally agree.  If only there was some way to know what was going
->> to happen to the btree during writeout we could account for the space.
->> We could disable delayed allocations when the filesystem is near ENOSPC
->> and do immediate allocations like in direct I/O.
-> 
-> Define "near ENOSPC" ;)
-I thought you might ask that.  I don't have an answer.
-
-> 
-> [ Well, I already have once. ;) The incore per-cpu superblock
-> counters fall back to updating the global superblock when the
-> filesystem approaches ENOSPC (per-cpu threshold, so scales with the
-> size of machine), but you'd effectively need to flush all the
-> delalloc data at this point as well if you were to switch of
-> delalloc.... ]
-> 
-> I guess just switching to sync writes when we near ENOSPC would
-> do what you are suggesting...
-Yeah that might work too since if the extent conversions fail we
-can return an error from the write().
-
-> 
->>> For the unwritten extent conversion case, though, we need to
->>> prevent new writes (after ENOSPC occurs) from draining the
->>> reserved pool. That means we either have to return an ENOSPC
->>> to the application, or we freeze the writes into preallocated
->>> space when we are at ENOSPC and the reserve pool is getting
->>> depleted. This needs to be done up-front, not in the I/O completion
->>> where it is too late to handle the fact that the reserve pool
->>> too depleted to do the conversion.....
->>>
->>> That seems simple enough to do without having to add any code
->>> to the back end I/O path or the transaction subsystem....
->> Sounds reasonable.  We could report ENOSPC for an extent conversion that
->> could work - ie if a split is not needed and users might get a little
->> confused with ENOSPC if they know they preallocated the space.  But it's
->> better than data corruption.
-> 
-> Certainly is ;)
-> 
->> What if we were to do the unwritten extent conversion up front?
-> 
-> Crash after conversion but before the data I/O is issued then
-> results in stale data exposure. Not a good failure mode.
-Didn't we have a plan to fix this for the delalloc extent conversion
-case?
-
-> 
->> Could
->> we delay the transaction commit until after the I/O or will that mean
->> holding an ilock across the I/O?
-> 
-> Right - that's not allowed. To do something like this, it would need
-> to be a two-phase transaction commit. That is, we do all the work
-> up front before the I/O, then commit that transaction as "pending".
-> Then on I/O completion we commit a subsequent "I/O done" transaction
-> that is paired with the coversion/allocation. Then in recovery, we
-> only do the conversion if we see the I/O done transaction as well.
-> 
-> Realistically, we should do this for all allocations to close the
-> allocate-crash-expose-stale-data hole that exists. The model for
-> this is the Extent Free Intent/Extent Free Done (EFI/EFD)
-> transaction pair and their linked log items used when freeing
-> extents.
-Sounds like a plan.  Would this be an easy change to make?
+Okay.  Thanks.
