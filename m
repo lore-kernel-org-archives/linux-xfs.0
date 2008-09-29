@@ -1,54 +1,147 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 07:43:59 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 08:11:12 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TEhu71026788
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:43:56 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DED3917DB8BF
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:45:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id dimWVUzL1XYa2g8g for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:45:32 -0700 (PDT)
-Message-ID: <48E0EA0B.7000701@sandeen.net>
-Date: Mon, 29 Sep 2008 09:45:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] Add timeout feature
-References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com> <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp> <20080929141326.GA31781@infradead.org> <48E0E7D4.1090409@sandeen.net> <20080929143749.GA13286@infradead.org>
-In-Reply-To: <20080929143749.GA13286@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TFB9E2028681
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:11:09 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 36AB31B4C69E
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:12:45 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 8xEOzJMxrvBRgQVx for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:12:45 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8TFCiIF014080
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 17:12:44 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8TFCiVx014078
+	for xfs@oss.sgi.com; Mon, 29 Sep 2008 17:12:44 +0200
+Date: Mon, 29 Sep 2008 17:12:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] wire up ->open for directories
+Message-ID: <20080929151244.GA12365@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Takashi Sato <t-sato@yk.jp.nec.com>, Ric Wheeler <rwheeler@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Mon, Sep 29, 2008 at 09:36:04AM -0500, Eric Sandeen wrote:
->> Christoph Hellwig wrote:
->>> On Fri, Sep 26, 2008 at 05:52:35PM +0900, Takashi Sato wrote:
->>>> I think that your concern is that the freezer cannot recognize the occurrence
->>>> of a timeout and it continues the backup process and the backup data is
->>>> corrupted finally.
->>> What timeout should happen?  the freeze ioctl must not return until the
->>> filesystem is a clean state and all writes are blocked.
->> The suggestion was that *UN*freeze would return ETIMEDOUT if the
->> filesystem had already unfrozen itself, I think.  That way you know that
->> the snapshot you just took is worthless, at least.
-> 
-> But why would the filesystem every unfreeze itself?  That defeats the
-> whole point of freezing it.
+Currently there's no ->open method set for directories on XFS.  That
+means we don't perform any check for opening too large directories
+without O_LARGEFILE, we don't check for shut down filesystems, and we
+don't actually do the readahead for the first block in the directory.
 
-I agree.  Was just trying to clarify the above point.
+Instead of just setting the directories open routine to xfs_file_open
+we merge the shutdown check directly into xfs_file_open and create
+a new xfs_dir_open that first calls xfs_file_open and then performs
+the readahead for block 0.
 
-But there have been what, 12 submissions now, with the unfreeze timeout
-in place so it's a persistent theme ;)
 
-Perhaps a demonstration of just how easy (or not easy) it is to deadlock
-a filesystem by freezing the root might be in order, at least.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-And even if it is relatively easy, I still maintain that it is the
-administrator's role to not inflict damage on the machine being
-administered.  There are a lot of potentially dangerous tools at root's
-disposal; why this particular one needs a nanny I'm still not quite sure.
-
--Eric
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:35:49.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:44:13.000000000 +0200
+@@ -38,6 +38,7 @@
+ #include "xfs_rw.h"
+ #include "xfs_ioctl32.h"
+ #include "xfs_vnodeops.h"
++#include "xfs_da_btree.h"
+ 
+ #include <linux/dcache.h>
+ #include <linux/smp_lock.h>
+@@ -172,11 +173,37 @@ xfs_file_splice_write_invis(
+ STATIC int
+ xfs_file_open(
+ 	struct inode	*inode,
+-	struct file	*filp)
++	struct file	*file)
+ {
+-	if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
++	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
+ 		return -EFBIG;
+-	return -xfs_open(XFS_I(inode));
++	if (XFS_FORCED_SHUTDOWN(XFS_M(inode->i_sb)))
++		return -EIO;
++	return 0;
++}
++
++STATIC int
++xfs_dir_open(
++	struct inode	*inode,
++	struct file	*file)
++{
++	struct xfs_inode *ip = XFS_I(inode);
++	int		mode;
++	int		error;
++
++	error = xfs_file_open(inode, file);
++	if (error)
++		return error;
++
++	/*
++	 * If there are any blocks, read-ahead block 0 as we're almost
++	 * certain to have the next operation be a read there.
++	 */
++	mode = xfs_ilock_map_shared(ip);
++	if (ip->i_d.di_nextents > 0)
++		xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
++	xfs_iunlock(ip, mode);
++	return 0;
+ }
+ 
+ STATIC int
+@@ -533,6 +560,7 @@ const struct file_operations xfs_invis_f
+ 
+ 
+ const struct file_operations xfs_dir_file_operations = {
++	.open		= xfs_dir_open,
+ 	.read		= generic_read_dir,
+ 	.readdir	= xfs_file_readdir,
+ 	.unlocked_ioctl	= xfs_file_ioctl,
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:49.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:59.000000000 +0200
+@@ -54,28 +54,6 @@
+ #include "xfs_vnodeops.h"
+ 
+ int
+-xfs_open(
+-	xfs_inode_t	*ip)
+-{
+-	int		mode;
+-
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+-		return XFS_ERROR(EIO);
+-
+-	/*
+-	 * If it's a directory with any blocks, read-ahead block 0
+-	 * as we're almost certain to have the next operation be a read there.
+-	 */
+-	if (S_ISDIR(ip->i_d.di_mode) && ip->i_d.di_nextents > 0) {
+-		mode = xfs_ilock_map_shared(ip);
+-		if (ip->i_d.di_nextents > 0)
+-			(void)xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
+-		xfs_iunlock(ip, mode);
+-	}
+-	return 0;
+-}
+-
+-int
+ xfs_setattr(
+ 	struct xfs_inode	*ip,
+ 	struct iattr		*iattr,
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:42.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:45.000000000 +0200
+@@ -14,7 +14,6 @@ struct xfs_inode;
+ struct xfs_iomap;
+ 
+ 
+-int xfs_open(struct xfs_inode *ip);
+ int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags,
+ 		struct cred *credp);
+ #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
