@@ -1,31 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 07:12:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TEC4J9022493
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:12:06 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B47949240C
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:13:40 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id PlOQ6lxdqAOYyAZ1 for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:13:40 -0700 (PDT)
-Date: Mon, 29 Sep 2008 10:13:26 -0400
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 07:21:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TELhjw024012
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 07:21:43 -0700
+Date: Mon, 29 Sep 2008 10:23:18 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] Add timeout feature
-Message-ID: <20080929141326.GA31781@infradead.org>
-References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com> <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
+Subject: Re: REVIEW: Don't reset dirty inode flag in xfs_repair
+Message-ID: <20080929142318.GA3709@infradead.org>
+References: <op.uhy9dlyz3jf8g2@pc-bnaujok.melbourne.sgi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp>
+In-Reply-To: <op.uhy9dlyz3jf8g2@pc-bnaujok.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Sep 26, 2008 at 05:52:35PM +0900, Takashi Sato wrote:
-> I think that your concern is that the freezer cannot recognize the occurrence
-> of a timeout and it continues the backup process and the backup data is
-> corrupted finally.
+On Wed, Sep 24, 2008 at 06:47:35PM +1000, Barry Naujok wrote:
+> If an inode is dirtied due to some error in an inode, the very last
+> check (nlink version) in process_dinode_int() in xfs_repair sets the
+> dirty flag rather than just bumping it if it dirtied the inode.
+>
+> So, if something earlier dirtied the inode without marking it bad
+> (eg. resetting the inode's next unlinked field in the example that
+> detected this issue), that dirty state will be lost if the nlink
+> version checks out fine.
 
-What timeout should happen?  the freeze ioctl must not return until the
-filesystem is a clean state and all writes are blocked.
+Looks good, but the diff you posted also includes a hunk in db/check.c
+that introduces another sanity check in process_inode() which seems
+unrelated.
