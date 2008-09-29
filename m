@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 08:11:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TFB9E2028681
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:11:09 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 14:36:56 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TLaqEp030787
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:36:53 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36AB31B4C69E
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:12:45 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id 8xEOzJMxrvBRgQVx for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 08:12:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 43DC3494ED1
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:38:28 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id QeavPHr3zBJcdPqp for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:38:28 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8TFCiIF014080
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8TLcRIF030186
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 17:12:44 +0200
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 23:38:27 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8TFCiVx014078
-	for xfs@oss.sgi.com; Mon, 29 Sep 2008 17:12:44 +0200
-Date: Mon, 29 Sep 2008 17:12:44 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8TLcR0U030184
+	for xfs@oss.sgi.com; Mon, 29 Sep 2008 23:38:27 +0200
+Date: Mon, 29 Sep 2008 23:38:27 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] wire up ->open for directories
-Message-ID: <20080929151244.GA12365@lst.de>
+Subject: [PATCH] reduce l_icloglock roundtrips
+Message-ID: <20080929213827.GA30126@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,122 +26,74 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Currently there's no ->open method set for directories on XFS.  That
-means we don't perform any check for opening too large directories
-without O_LARGEFILE, we don't check for shut down filesystems, and we
-don't actually do the readahead for the first block in the directory.
+All but one caller of xlog_state_want_sync drop and re-acquire
+l_icloglock around the call to it, just so that xlog_state_want_sync can
+acquire and drop it.
 
-Instead of just setting the directories open routine to xfs_file_open
-we merge the shutdown check directly into xfs_file_open and create
-a new xfs_dir_open that first calls xfs_file_open and then performs
-the readahead for block 0.
+Move all lock operation out of l_icloglock and assert that the lock is
+held when it is called.
+
+Note that it would make sense to extende this scheme to
+xlog_state_release_iclog, but the locking in there is more complicated
+and we'd like to keep the atomic_dec_and_lock optmization for those
+callers not having l_icloglock yet.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c
+Index: linux-2.6-xfs/fs/xfs/xfs_log.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:35:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:44:13.000000000 +0200
-@@ -38,6 +38,7 @@
- #include "xfs_rw.h"
- #include "xfs_ioctl32.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_da_btree.h"
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-09-29 10:54:19.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-09-29 10:58:23.000000000 +0200
+@@ -724,8 +724,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		spin_lock(&log->l_icloglock);
+ 		iclog = log->l_iclog;
+ 		atomic_inc(&iclog->ic_refcnt);
+-		spin_unlock(&log->l_icloglock);
+ 		xlog_state_want_sync(log, iclog);
++		spin_unlock(&log->l_icloglock);
+ 		error = xlog_state_release_iclog(log, iclog);
  
- #include <linux/dcache.h>
- #include <linux/smp_lock.h>
-@@ -172,11 +173,37 @@ xfs_file_splice_write_invis(
- STATIC int
- xfs_file_open(
- 	struct inode	*inode,
--	struct file	*filp)
-+	struct file	*file)
+ 		spin_lock(&log->l_icloglock);
+@@ -762,9 +762,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		spin_lock(&log->l_icloglock);
+ 		iclog = log->l_iclog;
+ 		atomic_inc(&iclog->ic_refcnt);
+-		spin_unlock(&log->l_icloglock);
+ 
+ 		xlog_state_want_sync(log, iclog);
++		spin_unlock(&log->l_icloglock);
+ 		error =  xlog_state_release_iclog(log, iclog);
+ 
+ 		spin_lock(&log->l_icloglock);
+@@ -1957,7 +1957,9 @@ xlog_write(xfs_mount_t *	mp,
+ 		if (iclog->ic_size - log_offset <= sizeof(xlog_op_header_t)) {
+ 		    xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+ 		    record_cnt = data_cnt = 0;
++		    spin_lock(&log->l_icloglock);
+ 		    xlog_state_want_sync(log, iclog);
++		    spin_unlock(&log->l_icloglock);
+ 		    if (commit_iclog) {
+ 			ASSERT(flags & XLOG_COMMIT_TRANS);
+ 			*commit_iclog = iclog;
+@@ -3166,7 +3168,7 @@ try_again:
+ STATIC void
+ xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
  {
--	if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
-+	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
- 		return -EFBIG;
--	return -xfs_open(XFS_I(inode));
-+	if (XFS_FORCED_SHUTDOWN(XFS_M(inode->i_sb)))
-+		return -EIO;
-+	return 0;
+-	spin_lock(&log->l_icloglock);
++	ASSERT(spin_is_locked(&log->l_icloglock));
+ 
+ 	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+ 		xlog_state_switch_iclogs(log, iclog, 0);
+@@ -3174,10 +3176,7 @@ xlog_state_want_sync(xlog_t *log, xlog_i
+ 		ASSERT(iclog->ic_state &
+ 			(XLOG_STATE_WANT_SYNC|XLOG_STATE_IOERROR));
+ 	}
+-
+-	spin_unlock(&log->l_icloglock);
+-}	/* xlog_state_want_sync */
+-
 +}
-+
-+STATIC int
-+xfs_dir_open(
-+	struct inode	*inode,
-+	struct file	*file)
-+{
-+	struct xfs_inode *ip = XFS_I(inode);
-+	int		mode;
-+	int		error;
-+
-+	error = xfs_file_open(inode, file);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If there are any blocks, read-ahead block 0 as we're almost
-+	 * certain to have the next operation be a read there.
-+	 */
-+	mode = xfs_ilock_map_shared(ip);
-+	if (ip->i_d.di_nextents > 0)
-+		xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
-+	xfs_iunlock(ip, mode);
-+	return 0;
- }
- 
- STATIC int
-@@ -533,6 +560,7 @@ const struct file_operations xfs_invis_f
  
  
- const struct file_operations xfs_dir_file_operations = {
-+	.open		= xfs_dir_open,
- 	.read		= generic_read_dir,
- 	.readdir	= xfs_file_readdir,
- 	.unlocked_ioctl	= xfs_file_ioctl,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:59.000000000 +0200
-@@ -54,28 +54,6 @@
- #include "xfs_vnodeops.h"
- 
- int
--xfs_open(
--	xfs_inode_t	*ip)
--{
--	int		mode;
--
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
--		return XFS_ERROR(EIO);
--
--	/*
--	 * If it's a directory with any blocks, read-ahead block 0
--	 * as we're almost certain to have the next operation be a read there.
--	 */
--	if (S_ISDIR(ip->i_d.di_mode) && ip->i_d.di_nextents > 0) {
--		mode = xfs_ilock_map_shared(ip);
--		if (ip->i_d.di_nextents > 0)
--			(void)xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
--		xfs_iunlock(ip, mode);
--	}
--	return 0;
--}
--
--int
- xfs_setattr(
- 	struct xfs_inode	*ip,
- 	struct iattr		*iattr,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:42.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:45.000000000 +0200
-@@ -14,7 +14,6 @@ struct xfs_inode;
- struct xfs_iomap;
- 
- 
--int xfs_open(struct xfs_inode *ip);
- int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags,
- 		struct cred *credp);
- #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+ /*****************************************************************************
