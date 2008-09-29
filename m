@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 14:51:54 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TLpoAr032173
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:51:50 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 14:52:01 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8TLps04032221
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:51:55 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2786A9B2630
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:53:26 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id SgR8ZRsfRIzopGKq for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:53:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A64D494D5F
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:53:30 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id ScFtZq204RPzo0Nd for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 14:53:30 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8TLrPIF030728
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m8TLrTIF030744
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 23:53:25 +0200
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 23:53:29 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8TLrPqv030726
-	for xfs@oss.sgi.com; Mon, 29 Sep 2008 23:53:25 +0200
-Date: Mon, 29 Sep 2008 23:53:25 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m8TLrT72030742
+	for xfs@oss.sgi.com; Mon, 29 Sep 2008 23:53:29 +0200
+Date: Mon, 29 Sep 2008 23:53:29 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] Remove restricted_chown parameter
-Message-ID: <20080929215325.GB30363@lst.de>
+Subject: [PATCH 3/3] use inode_change_ok for setattr permission checking
+Message-ID: <20080929215329.GC30363@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,134 +26,135 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-From: Tim Shimmin <tes@sgi.com>
+Instead of implementing our own checks use inode_change_ok to check for
+nessecary permission in setattr.  There is a slight change in behaviour
+as inode_change_ok doesn't allow i_mode updates to add the suid or sgid
+without superuser privilegues while the old XFS code just stripped away
+those bits from the file mode.
 
-On Linux all filesystems are supposed to be operating under
-Posix' restricted chown. Restricted chown means it restricts
-chown to the owner unless you have CAP_FOWNER.
 
-[hch: forward-ported to the current tree]
-
-Signed-off-by: Tim Shimmin <tes@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_globals.c	2008-09-29 18:26:31.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c	2008-09-29 18:27:29.000000000 +0200
-@@ -26,7 +26,6 @@
-  */
- xfs_param_t xfs_params = {
- 			  /*	MIN		DFLT		MAX	*/
--	.restrict_chown	= {	0,		1,		1	},
- 	.sgid_inherit	= {	0,		0,		1	},
- 	.symlink_mode	= {	0,		0,		1	},
- 	.panic_mask	= {	0,		0,		255	},
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2008-09-29 18:18:43.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2008-09-29 18:27:29.000000000 +0200
-@@ -112,7 +112,6 @@
- #define HAVE_DMAPI
- #endif
- 
--#define restricted_chown	xfs_params.restrict_chown.val
- #define irix_sgid_inherit	xfs_params.sgid_inherit.val
- #define irix_symlink_mode	xfs_params.symlink_mode.val
- #define xfs_panic_mask		xfs_params.panic_mask.val
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.c	2008-09-29 18:18:43.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c	2008-09-29 18:27:29.000000000 +0200
-@@ -56,17 +56,6 @@ xfs_stats_clear_proc_handler(
- 
- static ctl_table xfs_table[] = {
- 	{
--		.ctl_name	= XFS_RESTRICT_CHOWN,
--		.procname	= "restrict_chown",
--		.data		= &xfs_params.restrict_chown.val,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= &proc_dointvec_minmax,
--		.strategy	= &sysctl_intvec,
--		.extra1		= &xfs_params.restrict_chown.min,
--		.extra2		= &xfs_params.restrict_chown.max
--	},
--	{
- 		.ctl_name	= XFS_SGID_INHERIT,
- 		.procname	= "irix_sgid_inherit",
- 		.data		= &xfs_params.sgid_inherit.val,
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.h	2008-09-29 18:18:43.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h	2008-09-29 18:27:29.000000000 +0200
-@@ -31,7 +31,6 @@ typedef struct xfs_sysctl_val {
- } xfs_sysctl_val_t;
- 
- typedef struct xfs_param {
--	xfs_sysctl_val_t restrict_chown;/* Root/non-root can give away files.*/
- 	xfs_sysctl_val_t sgid_inherit;	/* Inherit S_ISGID if process' GID is
- 					 * not a member of parent dir GID. */
- 	xfs_sysctl_val_t symlink_mode;	/* Link creat mode affected by umask */
-@@ -68,7 +67,7 @@ typedef struct xfs_param {
- enum {
- 	/* XFS_REFCACHE_SIZE = 1 */
- 	/* XFS_REFCACHE_PURGE = 2 */
--	XFS_RESTRICT_CHOWN = 3,
-+	/* XFS_RESTRICT_CHOWN = 3 */
- 	XFS_SGID_INHERIT = 4,
- 	XFS_SYMLINK_MODE = 5,
- 	XFS_PANIC_MASK = 6,
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-09-29 18:24:44.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-09-29 18:27:29.000000000 +0200
-@@ -1106,10 +1106,6 @@ xfs_ioctl_setattr(
- 
- 	/*
- 	 * Change file ownership.  Must be the owner or privileged.
--	 * If the system was configured with the "restricted_chown"
--	 * option, the owner is not permitted to give away the file,
--	 * and can change the group id only to a group of which he
--	 * or she is a member.
- 	 */
- 	if (mask & FSX_PROJID) {
- 		/*
 Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-29 18:25:13.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-29 18:27:29.000000000 +0200
-@@ -210,10 +210,6 @@ xfs_setattr(
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-29 18:27:29.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-29 18:27:32.000000000 +0200
+@@ -70,7 +70,6 @@ xfs_setattr(
+ 	gid_t			gid=0, igid=0;
+ 	int			timeflags = 0;
+ 	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
+-	int			file_owner;
+ 	int			need_iolock = 1;
  
+ 	xfs_itrace_entry(ip);
+@@ -81,6 +80,10 @@ xfs_setattr(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return XFS_ERROR(EIO);
+ 
++	code = -inode_change_ok(inode, iattr);
++	if (code)
++		return code;
++
+ 	olddquot1 = olddquot2 = NULL;
+ 	udqp = gdqp = NULL;
+ 
+@@ -158,56 +161,6 @@ xfs_setattr(
+ 
+ 	xfs_ilock(ip, lock_flags);
+ 
+-	/* boolean: are we the file owner? */
+-	file_owner = (current_fsuid(credp) == ip->i_d.di_uid);
+-
+-	/*
+-	 * Change various properties of a file.
+-	 * Only the owner or users with CAP_FOWNER
+-	 * capability may do these things.
+-	 */
+-	if (mask & (ATTR_MODE|ATTR_UID|ATTR_GID)) {
+-		/*
+-		 * CAP_FOWNER overrides the following restrictions:
+-		 *
+-		 * The user ID of the calling process must be equal
+-		 * to the file owner ID, except in cases where the
+-		 * CAP_FSETID capability is applicable.
+-		 */
+-		if (!file_owner && !capable(CAP_FOWNER)) {
+-			code = XFS_ERROR(EPERM);
+-			goto error_return;
+-		}
+-
+-		/*
+-		 * CAP_FSETID overrides the following restrictions:
+-		 *
+-		 * The effective user ID of the calling process shall match
+-		 * the file owner when setting the set-user-ID and
+-		 * set-group-ID bits on that file.
+-		 *
+-		 * The effective group ID or one of the supplementary group
+-		 * IDs of the calling process shall match the group owner of
+-		 * the file when setting the set-group-ID bit on that file
+-		 */
+-		if (mask & ATTR_MODE) {
+-			mode_t m = 0;
+-
+-			if ((iattr->ia_mode & S_ISUID) && !file_owner)
+-				m |= S_ISUID;
+-			if ((iattr->ia_mode & S_ISGID) &&
+-			    !in_group_p((gid_t)ip->i_d.di_gid))
+-				m |= S_ISGID;
+-#if 0
+-			/* Linux allows this, Irix doesn't. */
+-			if ((iattr->ia_mode & S_ISVTX) && !S_ISDIR(ip->i_d.di_mode))
+-				m |= S_ISVTX;
+-#endif
+-			if (m && !capable(CAP_FSETID))
+-				iattr->ia_mode &= ~m;
+-		}
+-	}
+-
  	/*
  	 * Change file ownership.  Must be the owner or privileged.
--	 * If the system was configured with the "restricted_chown"
--	 * option, the owner is not permitted to give away the file,
--	 * and can change the group id only to a group of which he
--	 * or she is a member.
  	 */
- 	if (mask & (ATTR_UID|ATTR_GID)) {
+@@ -224,22 +177,6 @@ xfs_setattr(
+ 		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
+ 
  		/*
-@@ -237,9 +233,8 @@ xfs_setattr(
- 		 * shall be equal to either the group ID or one of the
- 		 * supplementary group IDs of the calling process.
+-		 * CAP_CHOWN overrides the following restrictions:
+-		 *
+-		 * If _POSIX_CHOWN_RESTRICTED is defined, this capability
+-		 * shall override the restriction that a process cannot
+-		 * change the user ID of a file it owns and the restriction
+-		 * that the group ID supplied to the chown() function
+-		 * shall be equal to either the group ID or one of the
+-		 * supplementary group IDs of the calling process.
+-		 */
+-		if ((iuid != uid ||
+-		     (igid != gid && !in_group_p((gid_t)gid))) &&
+-		    !capable(CAP_CHOWN)) {
+-			code = XFS_ERROR(EPERM);
+-			goto error_return;
+-		}
+-		/*
+ 		 * Do a quota reservation only if uid/gid is actually
+ 		 * going to change.
  		 */
--		if (restricted_chown &&
--		    (iuid != uid || (igid != gid &&
--				     !in_group_p((gid_t)gid))) &&
-+		if ((iuid != uid ||
-+		     (igid != gid && !in_group_p((gid_t)gid))) &&
- 		    !capable(CAP_CHOWN)) {
- 			code = XFS_ERROR(EPERM);
- 			goto error_return;
-@@ -433,10 +428,6 @@ xfs_setattr(
+@@ -284,19 +221,6 @@ xfs_setattr(
+ 	}
  
  	/*
- 	 * Change file ownership.  Must be the owner or privileged.
--	 * If the system was configured with the "restricted_chown"
--	 * option, the owner is not permitted to give away the file,
--	 * and can change the group id only to a group of which he
--	 * or she is a member.
- 	 */
- 	if (mask & (ATTR_UID|ATTR_GID)) {
- 		/*
+-	 * Change file access or modified times.
+-	 */
+-	if (mask & (ATTR_ATIME|ATTR_MTIME)) {
+-		if (!file_owner) {
+-			if ((mask & (ATTR_MTIME_SET|ATTR_ATIME_SET)) &&
+-			    !capable(CAP_FOWNER)) {
+-				code = XFS_ERROR(EPERM);
+-				goto error_return;
+-			}
+-		}
+-	}
+-
+-	/*
+ 	 * Now we can make the changes.  Before we join the inode
+ 	 * to the transaction, if ATTR_SIZE is set then take care of
+ 	 * the part of the truncation that must be done without the
