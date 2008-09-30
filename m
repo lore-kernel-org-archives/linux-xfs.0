@@ -1,30 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Sep 2008 01:10:55 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8U89ZB3024489
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 01:09:35 -0700
-Subject: TAKE 987634 - xfs_repair - repaired inode may be left dirty and not written
-Message-Id: <20080930081104.015C658C52B4@chook.melbourne.sgi.com>
-Date: Tue, 30 Sep 2008 18:11:03 +1000 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Sep 2008 02:32:14 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8U9W9tJ029769
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 02:32:11 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD9A2497432
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 02:33:44 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id pZBIkbjZ0kPcjS3G for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 02:33:44 -0700 (PDT)
+Date: Tue, 30 Sep 2008 11:33:43 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] Remove restricted_chown parameter
+Message-ID: <20080930093343.GA22444@lst.de>
+References: <20080929215325.GB30363@lst.de> <48E15869.6080506@sandeen.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48E15869.6080506@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Don't reset dirty flag during inode repair
+On Mon, Sep 29, 2008 at 05:36:25PM -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > From: Tim Shimmin <tes@sgi.com>
+> > 
+> > On Linux all filesystems are supposed to be operating under
+> > Posix' restricted chown. Restricted chown means it restricts
+> > chown to the owner unless you have CAP_FOWNER.
+> > 
+> > [hch: forward-ported to the current tree]
+> > 
+> > Signed-off-by: Tim Shimmin <tes@sgi.com>
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Looks fine to me, but you should also update
+> Documentation/filesystems/xfs.txt too, and remove the docs for the knob
+> (or maybe mark it obsolete, w/ the above explanation?)
 
-
-Date:  Tue Sep 30 18:10:17 AEST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  hch@lst.de
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:32230a
-xfsprogs/repair/dinode.c - 1.34 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/repair/dinode.c.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
-	- Don't reset dirty flag during inode repair
+Makes sense, I'll update it.
