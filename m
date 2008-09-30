@@ -1,75 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 19:21:21 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8U2LILN023679
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 19:21:18 -0700
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id BC80690907
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 19:22:54 -0700 (PDT)
-Received: from [134.14.55.216] (wererabbit.melbourne.sgi.com [134.14.55.216]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA28629 for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 12:22:53 +1000
-Message-ID: <48E18D78.5040808@sgi.com>
-Date: Tue, 30 Sep 2008 12:22:48 +1000
-From: Peter Leckie <pleckie@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 29 Sep 2008 20:25:01 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m8U3OvrP032326
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2008 20:24:57 -0700
+Message-ID: <48E19C59.7090303@sgi.com>
+Date: Tue, 30 Sep 2008 13:26:17 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
 MIME-Version: 1.0
-Subject: [PATCH] Clean up dquot pincount code.
-References: <20080930021756.44E4C58C52B4@chook.melbourne.sgi.com>
-In-Reply-To: <20080930021756.44E4C58C52B4@chook.melbourne.sgi.com>
+Subject: Re: [PATCH] Increase the default size of the reserved blocks pool
+References: <48E097B5.3010906@sgi.com>
+In-Reply-To: <48E097B5.3010906@sgi.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: lachlan@sgi.com
+Cc: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-Sorry people the take message got lost so I reposted it, however the 
-subject line was dropped.
 
-Pete
 
-Peter Leckie wrote:
-> mod xfs-linux-melb:xfs-kern:32215a TAKE message
-> ================================================
-> Subject: TAKE 986789 - 
->
-> Clean up dquot pincount code.
->
-> This is a code cleanup and optimization that removes a per mount point
-> spinlock from the quota code and cleans up the code.
->
-> The patch changes the pincount from being an int protected by a spinlock
-> to an atomic_t allowing the pincount to be manipulated without holding
-> the spinlock.
->
-> This cleanup also protects against random wakup's of both the aild and
-> xfssyncd by reevaluating the pincount after been woken. Two latter patches
-> will address the Spurious wakeups.
->
-> Signed-off-by: Peter Leckie <pleckie@sgi.com>
->
-> Date:  Fri Sep 26 14:42:30 AEST 2008
-> Workarea:  chook.melbourne.sgi.com:/build/pleckie/2.6.x-xfs
-> Inspected by:  
-> donaldd
-> lachlan
-> hch@lst.de
-> david@fromorbit.com
-> Author:  pleckie
->
-> The following file(s) were checked into:
->   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
->
->
-> Modid:  xfs-linux-melb:xfs-kern:32215a
-> fs/xfs/xfsidbg.c - 1.367 - changed
-> fs/xfs/quota/xfs_dquot_item.c - 1.24 - changed
-> fs/xfs/quota/xfs_dquot.h - 1.14 - changed
-> fs/xfs/quota/xfs_dquot.c - 1.39 - changed
-> fs/xfs/quota/xfs_qm.h - 1.21 - changed
-> fs/xfs/quota/xfs_qm.c - 1.75 - changed
-> 	- Clean up dquot pincount code.
->
->
->
->
->
->   
+Lachlan McIlroy wrote:
+> The current default size of the reserved blocks pool is easy to deplete
+> with certain workloads, in particular workloads that do lots of concurrent
+> delayed allocation extent conversions.  If enough transactions are running
+> in parallel and the entire pool is consumed then subsequent calls to
+> xfs_trans_reserve() will fail with ENOSPC.  Also add a rate limited
+> warning so we know if this starts happening again.
+> 
+
+Should we also change the semantics of the XFS_SET_RESBLKS ioctl
+so that the passed in value is the minimum required by the caller,
+i.e. silently succeed if the current value is more than that?
+
+Cheers
+-- Mark
