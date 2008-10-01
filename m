@@ -1,41 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 13:38:38 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m91KcYEI007460
-	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 13:38:35 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D569134E545
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 13:40:10 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id G3pYvTgjHpzbC9TN for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 13:40:10 -0700 (PDT)
-Date: Wed, 1 Oct 2008 22:40:09 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: XFS status update for September 2008
-Message-ID: <20081001204009.GA4259@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 14:00:03 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m91L00iI008806
+	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 14:00:00 -0700
+Received: from smtpout.eastlink.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 105C6130792D
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 14:01:37 -0700 (PDT)
+Received: from smtpout.eastlink.ca (smtpout.eastlink.ca [24.222.0.30]) by cuda.sgi.com with ESMTP id QxcghxPoAkLXznEX for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 14:01:37 -0700 (PDT)
+Received: from ip04.eastlink.ca ([24.222.39.52])
+ by mta02.eastlink.ca (Sun Java System Messaging Server 6.2-4.03 (built Sep 22
+ 2005)) with ESMTP id <0K8200ACIVQPAT31@mta02.eastlink.ca> for xfs@oss.sgi.com;
+ Wed, 01 Oct 2008 18:01:37 -0300 (ADT)
+Date: Wed, 01 Oct 2008 18:01:36 -0300
+From: Peter Cordes <peter@cordes.ca>
+Subject: Re: RAID5/6 writes
+In-reply-to: <20081001204450.GA25711@one.firstfloor.org>
+Message-id: <20081001210136.GM32037@cordes.ca>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Content-transfer-encoding: 7BIT
+Content-disposition: inline
+References: <20081001175237.GJ32037@cordes.ca>
+ <87k5csp0pe.fsf@basil.nowhere.org> <20081001201331.GL32037@cordes.ca>
+ <20081001204450.GA25711@one.firstfloor.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: xfs@oss.sgi.com
 
+On Wed, Oct 01, 2008 at 10:44:50PM +0200, Andi Kleen wrote:
+> The other problem I can think of is that determing if something is 
+> free data might need more read IO if the free extent tree is not completely
+> cached.
 
-With Linux 2.6.27 still not released but only making slow progress from
-2.6.27-rc5 to 2.6.27-rc8 XFS changes in mainline have been minimal in
-September with only about half a dozen bug fixes patches.
+ Yeah, I think I mentioned that in my original suggestion.  Unless
+there are repeated writes with the same hole, it's probably not worth
+it to read from disk to figure out if a sector is free.  XFS could just
+see what it could do with what it already has in memory.  This is just
+an optimization, so it doesn't have to succeed every time it's possible.
 
-In the meantime the generic btree patch set has been committed to the
-development tree, but not many other updates yet.  On the user space side
-xfsprogs 2.10.1 has been released on September 5th with a number of
-important bug fixes.  Following the release of xfsprogs 2.10.1 open season
-for development of the user space code has started.  The first full update
-of the shared kernel / user space code in libxfs since 2005 has been
-committed.  In addition to that the number of headers installed for the
-regular devel package has been reduced to the required minimum and support
-for checking the source code for endianess errors using sparse has been
-added.
+-- 
+#define X(x,y) x##y
+Peter Cordes ;  e-mail: X(peter@cor , des.ca)
 
-The patch sets to unify the XFS and Linux inode structures, and rewrite
-various bits of the sync code have seen various iterations on the XFS
-list, but haven't been committed yet.   A first set of patches implementing
-CRCs for various metadata structures has been posted to the list.
+"The gods confound the man who first found out how to distinguish the hours!
+ Confound him, too, who in this place set up a sundial, to cut and hack
+ my day so wretchedly into small pieces!" -- Plautus, 200 BC
