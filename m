@@ -1,138 +1,183 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 30 Sep 2008 23:58:21 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m916wIWY001906
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 23:58:18 -0700
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id 8D76390898
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2008 23:59:52 -0700 (PDT)
-Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com [134.14.55.58]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id QAA00080 for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 16:59:51 +1000
-Date: Wed, 01 Oct 2008 17:00:28 +1000
-Subject: [REVIEW] Fix two mkfs.xfs bugs
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-ID: <op.uib222cq3jf8g2@pc-bnaujok.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 06:33:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m91DWvPr006788
+	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 06:32:57 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3262F7A8BC2
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 06:34:33 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id A3ziJQHzekKYmHcZ for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 06:34:33 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m91DYVIF018768
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 15:34:31 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m91DYVVJ018766
+	for xfs@oss.sgi.com; Wed, 1 Oct 2008 15:34:31 +0200
+Date: Wed, 1 Oct 2008 15:34:31 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] Remove restricted_chown parameter
+Message-ID: <20081001133431.GA18672@lst.de>
+References: <20080929215325.GB30363@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20080929215325.GB30363@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-#1. -i maxpct option is not honoured (or ever used).
+On Mon, Sep 29, 2008 at 11:53:25PM +0200, Christoph Hellwig wrote:
+> From: Tim Shimmin <tes@sgi.com>
+> 
+> On Linux all filesystems are supposed to be operating under
+> Posix' restricted chown. Restricted chown means it restricts
+> chown to the owner unless you have CAP_FOWNER.
+> 
+> [hch: forward-ported to the current tree]
+> 
+> Signed-off-by: Tim Shimmin <tes@sgi.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+And here's a version that also updates Documentation/filesystems/xfs.txt
+about the sysctl removal.
 
 
-Index: xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c
 ===================================================================
---- xfs-cmds.orig/xfsprogs/mkfs/xfs_mkfs.c
-+++ xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-@@ -1808,6 +1808,9 @@ _("size %s specified for log subvolume i
-
-  	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-
-+	if (!imflag)
-+		imaxpct = calc_default_imaxpct(blocklog, dblocks);
-+
-  	if (!nodsflag) {
-  		if (dsunit) {
-  			if (xlv_dsunit && xlv_dsunit != dsunit) {
-@@ -2023,8 +2026,7 @@ an AG size that is one stripe unit small
-  		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
-  			dfile, isize, (long long)agcount, (long long)agsize,
-  			"", sectorsize, attrversion,
--			"", blocksize, (long long)dblocks,
--			       calc_default_imaxpct(blocklog, dblocks),
-+			"", blocksize, (long long)dblocks, imaxpct,
-  			"", dsunit, dswidth,
-  			dirversion, dirblocksize, nci,
-  			logfile, 1 << blocklog, (long long)logblocks,
-@@ -2061,7 +2063,7 @@ an AG size that is one stripe unit small
-  		(__uint8_t)(rtextents ?
-  			libxfs_highbit32((unsigned int)rtextents) : 0);
-  	sbp->sb_inprogress = 1;	/* mkfs is in progress */
--	sbp->sb_imax_pct = calc_default_imaxpct(blocklog, dblocks);
-+	sbp->sb_imax_pct = imaxpct;
-  	sbp->sb_icount = 0;
-  	sbp->sb_ifree = 0;
-  	sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
-
-
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_globals.c	2008-10-01 13:43:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c	2008-10-01 13:43:24.000000000 +0200
+@@ -26,7 +26,6 @@
+  */
+ xfs_param_t xfs_params = {
+ 			  /*	MIN		DFLT		MAX	*/
+-	.restrict_chown	= {	0,		1,		1	},
+ 	.sgid_inherit	= {	0,		0,		1	},
+ 	.symlink_mode	= {	0,		0,		1	},
+ 	.panic_mask	= {	0,		0,		255	},
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
 ===================================================================
-
-#2. If specifying a custom AG count (-d agcount) with stripe unit and
-     the calculated AG size from the AG count is not stripe unit aligned,
-     it refused to adjust the AG size and make the filesystem.
-
-     The final geometry check is also moved after the sunit adjustments
-     might have been made.
-
-
-Index: xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2008-10-01 13:39:44.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2008-10-01 13:43:24.000000000 +0200
+@@ -112,7 +112,6 @@
+ #define HAVE_DMAPI
+ #endif
+ 
+-#define restricted_chown	xfs_params.restrict_chown.val
+ #define irix_sgid_inherit	xfs_params.sgid_inherit.val
+ #define irix_symlink_mode	xfs_params.symlink_mode.val
+ #define xfs_panic_mask		xfs_params.panic_mask.val
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c
 ===================================================================
---- xfs-cmds.orig/xfsprogs/mkfs/xfs_mkfs.c
-+++ xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-@@ -1795,22 +1795,6 @@ _("size %s specified for log subvolume i
-  		calc_default_ag_geometry(blocklog, dblocks,
-  				xlv_dsunit | xlv_dswidth, &agsize, &agcount);
-
--	/*
--	 * If the last AG is too small, reduce the filesystem size
--	 * and drop the blocks.
--	 */
--	if ( dblocks % agsize != 0 &&
--	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
--		dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
--		agcount--;
--		ASSERT(agcount != 0);
--	}
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.c	2008-10-01 13:39:44.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.c	2008-10-01 13:43:24.000000000 +0200
+@@ -56,17 +56,6 @@ xfs_stats_clear_proc_handler(
+ 
+ static ctl_table xfs_table[] = {
+ 	{
+-		.ctl_name	= XFS_RESTRICT_CHOWN,
+-		.procname	= "restrict_chown",
+-		.data		= &xfs_params.restrict_chown.val,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler	= &proc_dointvec_minmax,
+-		.strategy	= &sysctl_intvec,
+-		.extra1		= &xfs_params.restrict_chown.min,
+-		.extra2		= &xfs_params.restrict_chown.max
+-	},
+-	{
+ 		.ctl_name	= XFS_SGID_INHERIT,
+ 		.procname	= "irix_sgid_inherit",
+ 		.data		= &xfs_params.sgid_inherit.val,
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sysctl.h	2008-10-01 13:39:44.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sysctl.h	2008-10-01 13:43:24.000000000 +0200
+@@ -31,7 +31,6 @@ typedef struct xfs_sysctl_val {
+ } xfs_sysctl_val_t;
+ 
+ typedef struct xfs_param {
+-	xfs_sysctl_val_t restrict_chown;/* Root/non-root can give away files.*/
+ 	xfs_sysctl_val_t sgid_inherit;	/* Inherit S_ISGID if process' GID is
+ 					 * not a member of parent dir GID. */
+ 	xfs_sysctl_val_t symlink_mode;	/* Link creat mode affected by umask */
+@@ -68,7 +67,7 @@ typedef struct xfs_param {
+ enum {
+ 	/* XFS_REFCACHE_SIZE = 1 */
+ 	/* XFS_REFCACHE_PURGE = 2 */
+-	XFS_RESTRICT_CHOWN = 3,
++	/* XFS_RESTRICT_CHOWN = 3 */
+ 	XFS_SGID_INHERIT = 4,
+ 	XFS_SYMLINK_MODE = 5,
+ 	XFS_PANIC_MASK = 6,
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-10-01 13:43:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-10-01 13:43:24.000000000 +0200
+@@ -1106,10 +1106,6 @@ xfs_ioctl_setattr(
+ 
+ 	/*
+ 	 * Change file ownership.  Must be the owner or privileged.
+-	 * If the system was configured with the "restricted_chown"
+-	 * option, the owner is not permitted to give away the file,
+-	 * and can change the group id only to a group of which he
+-	 * or she is a member.
+ 	 */
+ 	if (mask & FSX_PROJID) {
+ 		/*
+Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-10-01 13:43:24.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-10-01 13:44:10.000000000 +0200
+@@ -210,10 +210,6 @@ xfs_setattr(
+ 
+ 	/*
+ 	 * Change file ownership.  Must be the owner or privileged.
+-	 * If the system was configured with the "restricted_chown"
+-	 * option, the owner is not permitted to give away the file,
+-	 * and can change the group id only to a group of which he
+-	 * or she is a member.
+ 	 */
+ 	if (mask & (ATTR_UID|ATTR_GID)) {
+ 		/*
+@@ -237,9 +233,8 @@ xfs_setattr(
+ 		 * shall be equal to either the group ID or one of the
+ 		 * supplementary group IDs of the calling process.
+ 		 */
+-		if (restricted_chown &&
+-		    (iuid != uid || (igid != gid &&
+-				     !in_group_p((gid_t)gid))) &&
++		if ((iuid != uid ||
++		     (igid != gid && !in_group_p((gid_t)gid))) &&
+ 		    !capable(CAP_CHOWN)) {
+ 			code = XFS_ERROR(EPERM);
+ 			goto error_return;
+@@ -433,10 +428,6 @@ xfs_setattr(
+ 
+ 	/*
+ 	 * Change file ownership.  Must be the owner or privileged.
+-	 * If the system was configured with the "restricted_chown"
+-	 * option, the owner is not permitted to give away the file,
+-	 * and can change the group id only to a group of which he
+-	 * or she is a member.
+ 	 */
+ 	if (mask & (ATTR_UID|ATTR_GID)) {
+ 		/*
+Index: linux-2.6-xfs/Documentation/filesystems/xfs.txt
+===================================================================
+--- linux-2.6-xfs.orig/Documentation/filesystems/xfs.txt	2008-10-01 13:44:18.000000000 +0200
++++ linux-2.6-xfs/Documentation/filesystems/xfs.txt	2008-10-01 13:44:35.000000000 +0200
+@@ -229,10 +229,6 @@ The following sysctls are available for 
+ 	ISGID bit is cleared if the irix_sgid_inherit compatibility sysctl
+ 	is set.
+ 
+-  fs.xfs.restrict_chown		(Min: 0  Default: 1  Max: 1)
+-  	Controls whether unprivileged users can use chown to "give away"
+-	a file to another user.
 -
--	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
--
--	if (!imflag)
--		imaxpct = calc_default_imaxpct(blocklog, dblocks);
--
-  	if (!nodsflag) {
-  		if (dsunit) {
-  			if (xlv_dsunit && xlv_dsunit != dsunit) {
-@@ -1861,13 +1845,14 @@ _("size %s specified for log subvolume i
-  			 */
-  			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
-  				tmp_agsize = ((agsize) / dsunit) * dsunit;
-+
-  			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
--			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
--			    !daflag) {
-+			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog))) {
-  				agsize = tmp_agsize;
--				agcount = dblocks/agsize +
-+				if (!daflag)
-+					agcount = dblocks/agsize +
-  						(dblocks % agsize != 0);
--				if (dasize || daflag)
-+				if (dasize)
-  					fprintf(stderr,
-  				_("agsize rounded to %lld, swidth = %d\n"),
-  						(long long)agsize, dswidth);
-@@ -1932,6 +1917,23 @@ an AG size that is one stripe unit small
-  	}
-
-  	/*
-+	 * If the last AG is too small, reduce the filesystem size
-+	 * and drop the blocks.
-+	 */
-+	if ( dblocks % agsize != 0 &&
-+	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
-+		ASSERT(!daflag);
-+		dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
-+		agcount--;
-+		ASSERT(agcount != 0);
-+	}
-+
-+	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-+
-+	if (!imflag)
-+		imaxpct = calc_default_imaxpct(blocklog, dblocks);
-+
-+	/*
-  	 * check that log sunit is modulo fsblksize or default it to dsunit.
-  	 */
+   fs.xfs.inherit_sync		(Min: 0  Default: 1  Max: 1)
+ 	Setting this to "1" will cause the "sync" flag set
+ 	by the xfs_io(8) chattr command on a directory to be
