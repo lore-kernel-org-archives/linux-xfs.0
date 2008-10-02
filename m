@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 18:16:18 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m921GEJG029201
-	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 18:16:15 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 18:41:51 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m921fIh3030657
+	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 18:41:18 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 01799134FCE0
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 18:17:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 6XF5xfiEoPVtdQrI for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 18:17:51 -0700 (PDT)
-Message-ID: <48E4213E.9090508@sandeen.net>
-Date: Wed, 01 Oct 2008 20:17:50 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C9D744A2ED5
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 18:42:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 1LHU2xoXfCqX03Ir for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 18:42:55 -0700 (PDT)
+Message-ID: <48E4271D.1090203@sandeen.net>
+Date: Wed, 01 Oct 2008 20:42:53 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: XFS filesystem corruption on the arm(el) architecture
@@ -49,30 +49,27 @@ Dave Chinner wrote:
 >> Best regards,
 >> Tobias Frost
 >> http://blog.coldtobi.de
+>>
+>> PS: Thank you for your great work!
 
-You could try undoing this:
+Ok, actually: first - sorry for the scattershot replies.  I thought
+userspace was updated earlier, but:
 
-/* ARM old ABI has some weird alignment/padding */
-#if defined(__arm__) && !defined(__ARM_EABI__)
-#define __arch_pack __attribute__((packed))
-#else
-#define __arch_pack
-#endif
+xfsprogs-2.10.1 (5 September 2008)...
+	- Add packed on-disk shortform directory for ARM's old ABI, thanks to
+	  Eric Sandeen.
 
-and just define __arch_pack to nothing unconditionally, to see if that's
-what broke...
+and the original kernel change:
 
-Or if someone can provide an xfs.ko, or point "pahole" at it yourself,
-and see if xfs_dir2_sf_hdr, xfs_dir2_sf_entry, and xfs_dir2_sf look more
-like
+    [XFS] Pack some shortform dir2 structures for the ARM old ABI
+    architecture.
+...
+    Note that userspace needs a similar treatment, and any filesystems which
+    were running with the previous rogue "fix" will now see corruption
+...
 
-http://sandeen.net/xfs-diskformat/xfs-oldabi-arm-pahole-structs
-or
-http://sandeen.net/xfs-diskformat/xfs-oldabi-fixed-arm-pahole-structs
-
-?
-
-otherwise I will give this a whirl in the emulator again...
+So perhaps as a first easy test, can you please re-test with
+xfsprogs-2.10.1 or newer.
 
 Thanks,
 -Eric
