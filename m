@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 07:09:47 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m92E98Nx030168
-	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 07:09:09 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 07:27:17 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m92ERExX031466
+	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 07:27:14 -0700
 Received: from mail.gmx.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 4BC0C135CDB5
-	for <xfs@oss.sgi.com>; Thu,  2 Oct 2008 07:10:45 -0700 (PDT)
-Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com with SMTP id AQ2QhQSIdeD0xCmx for <xfs@oss.sgi.com>; Thu, 02 Oct 2008 07:10:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with SMTP id 3EFC24A5A1D
+	for <xfs@oss.sgi.com>; Thu,  2 Oct 2008 07:28:49 -0700 (PDT)
+Received: from mail.gmx.net (mail.gmx.net [213.165.64.20]) by cuda.sgi.com with SMTP id fPWn3qTvcgFSi8tb for <xfs@oss.sgi.com>; Thu, 02 Oct 2008 07:28:49 -0700 (PDT)
 From: "Tom" <T-o-m@gmx.net>
-Subject: Which XFS-options for best performance in my case?
-Date: Thu, 2 Oct 2008 17:10:33 +0300
-Message-ID: <001d01c92498$a4bd7b40$ee3871c0$@net>
+Subject: Re: Which XFS-options for best performance in my case?
+Date: Thu, 2 Oct 2008 17:28:38 +0300
+Message-ID: <002201c9249b$2addf590$8099e0b0$@net>
 MIME-Version: 1.0
 Content-Type: text/plain
 Content-Disposition: inline
@@ -19,6 +19,39 @@ Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+
+Hello again,
+
+ 
+
+I forgot one important piece of information:
+
+ 
+
+-          The fileserver is mainly serving quite huge files (images, mostly
+50MB-100MB of size).
+
+-          The fileserver serves only to the small amount of 3 clients,
+which read and write these files mostly sequentially (e.g. requesting 50 of
+those files located in a folder) to the server and mostly only one client at
+a time. 
+
+ 
+
+Thank you
+
+Tom
+
+ 
+
+ 
+
+From: Tom [mailto:T-o-m@gmx.net] 
+Sent: Donnerstag, 2. Oktober 2008 17:11
+To: 'xfs@oss.sgi.com'
+Subject: Which XFS-options for best performance in my case?
+
+ 
 
 Hello dear list members,
 
