@@ -1,53 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 13:45:04 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m92Kj1RE001235
-	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 13:45:01 -0700
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3454F1095CAE
-	for <xfs@oss.sgi.com>; Thu,  2 Oct 2008 13:46:38 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com with ESMTP id c67TBXZobMJc9MJy for <xfs@oss.sgi.com>; Thu, 02 Oct 2008 13:46:38 -0700 (PDT)
-Message-ID: <48E53314.5010609@sandeen.net>
-Date: Thu, 02 Oct 2008 15:46:12 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 16:50:43 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m92NoclP014729
+	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 16:50:39 -0700
+Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D44C71365A80
+	for <xfs@oss.sgi.com>; Thu,  2 Oct 2008 16:52:15 -0700 (PDT)
+Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id 08FJHoutG1kPiyZX for <xfs@oss.sgi.com>; Thu, 02 Oct 2008 16:52:15 -0700 (PDT)
+Date: Fri, 3 Oct 2008 09:52:11 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: XFS Regression Issue in kernel 2.6.26.3
+Message-ID: <20081002235211.GI30001@disturbed>
 References: <48E51BF5.3080100@g-b.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <48E51BF5.3080100@g-b.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: albert.graham@g-b.net
+To: Albert Graham <albert.graham@g-b.net>
 Cc: xfs@oss.sgi.com
 
-Albert Graham wrote:
+On Thu, Oct 02, 2008 at 08:07:33PM +0100, Albert Graham wrote:
 > Hi Guys,
-> 
-> I use Fedora 8 as my MythTV backend server which uses XFS, ISince upgrading from kernel-2.6.25 to kernel-2.6.26 I've 
-> been getting the following errors (see below).
-> 
-> This occurs on very light load (e.g. rsync from a remove server - via the internet), the only option is to reboot the 
-> server as the messages are constantly recursive once it starts.
-> 
-> Now, I know my kernel it tainted with the NVIDIA driver and this is not a problem with any previous kernel.
-> 
-> Please let me know if there is anything I can do to assist diagnosing this issue.
-> 
-> Albert.
-> 
-> 
->   =======================
+>
+> I use Fedora 8 as my MythTV backend server which uses XFS, ISince 
+> upgrading from kernel-2.6.25 to kernel-2.6.26 I've been getting the 
+> following errors (see below).
+
+The freespace btrees are getting out of sync for some reason.
+
+That is, when we go to allocate an extent, we have to update two
+free space btrees. This shutdown:
+
 > XFS internal error XFS_WANT_CORRUPTED_RETURN at line 280 of file fs/xfs/xfs_alloc.c.  Caller 0xf88e0018
-> Pid: 8025, comm: rsync Tainted: P          2.6.26.3-14.fc8PAE #1
->   [<f8900a41>] xfs_error_report+0x2c/0x2e [xfs]
->   [<f88de86c>] xfs_alloc_fixup_trees+0x264/0x273 [xfs]
->   [<f88e0018>] ? xfs_alloc_ag_vextent_near+0x6e4/0x82b [xfs]
 
-Do you know if the filesystem shows any corruption?
+Indicates the extent being allocated was not found in one of the
+two trees.
 
-Try xfs_repair -n to see; if it is, getting an xfs_metadump prior to
-repairing may help a post-mortem.
+This corruption could have happened a long time ago in the past, and
+it may simply be coincidental that you've tripped over this at
+roughly the same time you upgraded the kernel.
 
--Eric
+Can you run xfs_check on the filesystem to determine if a freespace
+tree is corrupted (post the output if it is), then run xfs_repair
+to rebuild them?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
