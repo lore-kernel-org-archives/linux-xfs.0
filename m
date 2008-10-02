@@ -1,75 +1,71 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 18:41:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m921fIh3030657
-	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 18:41:18 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9D744A2ED5
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2008 18:42:55 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 1LHU2xoXfCqX03Ir for <xfs@oss.sgi.com>; Wed, 01 Oct 2008 18:42:55 -0700 (PDT)
-Message-ID: <48E4271D.1090203@sandeen.net>
-Date: Wed, 01 Oct 2008 20:42:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS filesystem corruption on the arm(el) architecture
-References: <1222893502.5020.40.camel@moria> <20081002004556.GB30001@disturbed>
-In-Reply-To: <20081002004556.GB30001@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 01 Oct 2008 23:33:09 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m926X6qW020139
+	for <xfs@oss.sgi.com>; Wed, 1 Oct 2008 23:33:06 -0700
+Subject: TAKE 987785 - Consolidate btree block handling for xfs_db
+Message-Id: <20081002063436.22F7858C52B4@chook.melbourne.sgi.com>
+Date: Thu,  2 Oct 2008 16:34:36 +1000 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Tobias Frost <tobi@coldtobi.de>, linux-kernel@vger.kernel.org, debian-arm@lists.debian.org, xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> Adding xfs@oss.sgi.com to the cc list so all the XFS folk see this.
-> 
-> On Wed, Oct 01, 2008 at 10:38:22PM +0200, Tobias Frost wrote:
->> (Note: Please CC me, as I am NOT on the lkml!!)
->>
->> Some time ago, I discovered some problems with xfs. Unfortunatly, I had
->> no time diving into it. However, some weeks ago some other people
->> running debian on ARM machines confirmed the problem on their machines
->> starting at [1], so I think it is appropitate to at least report it.  
->> It has also been seen on 2.6.27-rc4  [2].
->>
->> summary: the xfs partition corrupts almost immediatly after creation. I
->> had the impression, that the first unlink (rm) causes the corruption,
->> but this might be just an impression.
->>
->> During the tests I made, I conserved a image of the corrupted filesystem
->> which I can make available on request (it's 26 Mbyte, gzipped).
->>
->> Please let me know how I can assist you in finding the problem. 
->>
->>
->> [1] http://lists.debian.org/debian-arm/2008/08/msg00155.html
->> [2] http://lists.debian.org/debian-arm/2008/08/msg00184.html
->>
->> Best regards,
->> Tobias Frost
->> http://blog.coldtobi.de
->>
->> PS: Thank you for your great work!
+Consolidate btree block handling for xfs_db
 
-Ok, actually: first - sorry for the scattershot replies.  I thought
-userspace was updated earlier, but:
+Currently xfs_db has five different implementations for poking at btree
+blocks, even duplicating code for btree blocks with entirely identical
+layout (bmapbta vs bmapbtd and bno vs cnt).  Merge all these into
+a single implementation that uses a table of btree characteristics keyed
+of their magic number.
+ 
+There's probably a way to further consolidate the magic arrays for the
+different types, but I don't quite understand xfs_db's table driven
+command parser for that.
+ 
+ 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-xfsprogs-2.10.1 (5 September 2008)...
-	- Add packed on-disk shortform directory for ARM's old ABI, thanks to
-	  Eric Sandeen.
 
-and the original kernel change:
+Date:  Thu Oct  2 16:33:59 AEST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  hch@lst.de
 
-    [XFS] Pack some shortform dir2 structures for the ARM old ABI
-    architecture.
-...
-    Note that userspace needs a similar treatment, and any filesystems which
-    were running with the previous rogue "fix" will now see corruption
-...
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
-So perhaps as a first easy test, can you please re-test with
-xfsprogs-2.10.1 or newer.
 
-Thanks,
--Eric
+Modid:  master-melb:xfs-cmds:32248a
+xfsprogs/db/btblock.h - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/btblock.h
+xfsprogs/db/btblock.c - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/btblock.c
+xfsprogs/db/field.c - 1.9 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/field.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
+xfsprogs/db/cntbt.c - 1.11 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/cntbt.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/db/cntbt.h - 1.8 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/cntbt.h.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+xfsprogs/db/bnobt.c - 1.11 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/bnobt.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/db/bnobt.h - 1.8 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/bnobt.h.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+xfsprogs/db/bmapbt.h - 1.8 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/bmapbt.h.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+xfsprogs/db/bmapbt.c - 1.11 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/bmapbt.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/db/inobt.c - 1.11 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/inobt.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/db/inobt.h - 1.8 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/inobt.h.diff?r1=text&tr1=1.8&r2=text&tr2=1.7&f=h
+xfsprogs/db/fprint.c - 1.12 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/fprint.c.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
+xfsprogs/db/type.c - 1.11 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/type.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
+xfsprogs/db/Makefile - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/Makefile.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+xfsprogs/db/check.c - 1.38 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/check.c.diff?r1=text&tr1=1.38&r2=text&tr2=1.37&f=h
+	- Consolidate btree block handling for xfs_db
