@@ -1,40 +1,45 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Oct 2008 02:53:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Oct 2008 08:03:13 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m939rrhg028053
-	for <xfs@oss.sgi.com>; Fri, 3 Oct 2008 02:53:53 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF3261370DB7
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 02:55:31 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id XFiWDyNTURoNTihg for <xfs@oss.sgi.com>; Fri, 03 Oct 2008 02:55:31 -0700 (PDT)
-Date: Fri, 3 Oct 2008 19:55:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: TAKE 957103 - Merge up to 2.6.27-rc8
-Message-ID: <20081003095527.GN30001@disturbed>
-References: <20081003031258.7886658C52B4@chook.melbourne.sgi.com> <20081003091001.GA11627@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081003091001.GA11627@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m93F3Apg024546
+	for <xfs@oss.sgi.com>; Fri, 3 Oct 2008 08:03:10 -0700
+Received: from smtp2-g19.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DCB813782DD
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 08:04:47 -0700 (PDT)
+Received: from smtp2-g19.free.fr (smtp2-g19.free.fr [212.27.42.28]) by cuda.sgi.com with ESMTP id SSgzIVx1bZR8xiAV for <xfs@oss.sgi.com>; Fri, 03 Oct 2008 08:04:47 -0700 (PDT)
+Received: from smtp2-g19.free.fr (localhost.localdomain [127.0.0.1])
+	by smtp2-g19.free.fr (Postfix) with ESMTP id E45A212B782
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 17:04:46 +0200 (CEST)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+	by smtp2-g19.free.fr (Postfix) with ESMTP id 972A912B75F
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 17:04:46 +0200 (CEST)
+Date: Fri, 3 Oct 2008 17:04:52 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: what is the FS size limit for xfs_repair ?
+Message-ID: <20081003170452.50a7ec78@harpe.intellique.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Oct 03, 2008 at 05:10:01AM -0400, Christoph Hellwig wrote:
-> So this patch now has made it out to the CVS on oss, but not the actual
-> update of the surrouding kernel tree.  Any chance to fix that before the
-> weekend so we'll actually have a tree the builds?
 
-I just noticed the master branch on the git tree on oss has been
-updated - it's got all the btree patches in it. It seems to build
-just fine - I haven't run it through xfsqa yet - still updating
-patches....
+After a system crash on a system with a 40TB XFS filesystem, xfs_repair
+(32 bits binary, with a 64 bits 2.6.24 kernel) refused to work ("cannot
+allocate block map, size xxx").
+The 64 bits xfs_repair did the trick fine. 
 
-Cheers,
+I tried to reproduce the problem today by corrupting a 22TB filesystem.
+However, 32 bits xfs_repair repaired the 22 TB FS just fine in the very
+same configuration (64 bits kernel, etc).
 
-Dave.
+I thought the limit would be at 16TB (32 bits limit for a filesystem)
+but obviously this isn't the case. Is the limitation higher (like 32
+TB) or is it a bug of etch 4.0r4 xfs_repair?
+
 -- 
-Dave Chinner
-david@fromorbit.com
+----------------------------------------
+Emmanuel Florac     |   Intellique
+----------------------------------------
