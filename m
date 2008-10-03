@@ -1,45 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Oct 2008 08:03:13 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m93F3Apg024546
-	for <xfs@oss.sgi.com>; Fri, 3 Oct 2008 08:03:10 -0700
-Received: from smtp2-g19.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DCB813782DD
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 08:04:47 -0700 (PDT)
-Received: from smtp2-g19.free.fr (smtp2-g19.free.fr [212.27.42.28]) by cuda.sgi.com with ESMTP id SSgzIVx1bZR8xiAV for <xfs@oss.sgi.com>; Fri, 03 Oct 2008 08:04:47 -0700 (PDT)
-Received: from smtp2-g19.free.fr (localhost.localdomain [127.0.0.1])
-	by smtp2-g19.free.fr (Postfix) with ESMTP id E45A212B782
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 17:04:46 +0200 (CEST)
-Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
-	by smtp2-g19.free.fr (Postfix) with ESMTP id 972A912B75F
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 17:04:46 +0200 (CEST)
-Date: Fri, 3 Oct 2008 17:04:52 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: what is the FS size limit for xfs_repair ?
-Message-ID: <20081003170452.50a7ec78@harpe.intellique.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Oct 2008 08:23:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m93FM58H030968
+	for <xfs@oss.sgi.com>; Fri, 3 Oct 2008 08:22:06 -0700
+Received: from ey-out-1920.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 216864ABC79
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2008 08:23:43 -0700 (PDT)
+Received: from ey-out-1920.google.com (ey-out-1920.google.com [74.125.78.150]) by cuda.sgi.com with ESMTP id HFHJoRQZ5AzuDxbs for <xfs@oss.sgi.com>; Fri, 03 Oct 2008 08:23:43 -0700 (PDT)
+Received: by ey-out-1920.google.com with SMTP id 21so501973eyc.32
+        for <xfs@oss.sgi.com>; Fri, 03 Oct 2008 08:23:42 -0700 (PDT)
+Message-ID: <25446eb90810030823g70506145o9aef9ed3832abfe@mail.gmail.com>
+Date: Fri, 3 Oct 2008 16:23:41 +0100
+From: "James Braid" <jamesb@loreland.org>
+Subject: Re: what is the FS size limit for xfs_repair ?
+In-Reply-To: <20081003170452.50a7ec78@harpe.intellique.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+References: <20081003170452.50a7ec78@harpe.intellique.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
+2008/10/3 Emmanuel Florac <eflorac@intellique.com>:
+> I thought the limit would be at 16TB (32 bits limit for a filesystem)
+> but obviously this isn't the case. Is the limitation higher (like 32
+> TB) or is it a bug of etch 4.0r4 xfs_repair?
 
-After a system crash on a system with a 40TB XFS filesystem, xfs_repair
-(32 bits binary, with a 64 bits 2.6.24 kernel) refused to work ("cannot
-allocate block map, size xxx").
-The 64 bits xfs_repair did the trick fine. 
+The limit is how much memory a 32-bit process can allocate - it's not
+a limit of xfs_repair itself.
 
-I tried to reproduce the problem today by corrupting a 22TB filesystem.
-However, 32 bits xfs_repair repaired the 22 TB FS just fine in the very
-same configuration (64 bits kernel, etc).
-
-I thought the limit would be at 16TB (32 bits limit for a filesystem)
-but obviously this isn't the case. Is the limitation higher (like 32
-TB) or is it a bug of etch 4.0r4 xfs_repair?
-
--- 
-----------------------------------------
-Emmanuel Florac     |   Intellique
-----------------------------------------
+xfs_repair uses different amounts of memory depending on the
+filesystem characteristics (number of inodes etc) - so a 32-bit
+xfs_repair might work fine on an empty filesystem but not on a
+filesystem with loads of files on it. e.g. we had a ~2TB filesystem
+with millions of inodes and 32-bit xfs_repair failed.
