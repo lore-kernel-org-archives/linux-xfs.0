@@ -1,55 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 16:50:43 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m92NoclP014729
-	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 16:50:39 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D44C71365A80
-	for <xfs@oss.sgi.com>; Thu,  2 Oct 2008 16:52:15 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id 08FJHoutG1kPiyZX for <xfs@oss.sgi.com>; Thu, 02 Oct 2008 16:52:15 -0700 (PDT)
-Date: Fri, 3 Oct 2008 09:52:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Regression Issue in kernel 2.6.26.3
-Message-ID: <20081002235211.GI30001@disturbed>
-References: <48E51BF5.3080100@g-b.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48E51BF5.3080100@g-b.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 02 Oct 2008 20:12:03 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m933BTXK023582
+	for <xfs@oss.sgi.com>; Thu, 2 Oct 2008 20:11:29 -0700
+Subject: TAKE 957103 - Merge up to 2.6.27-rc8
+Message-Id: <20081003031258.7886658C52B4@chook.melbourne.sgi.com>
+Date: Fri,  3 Oct 2008 13:12:58 +1000 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Albert Graham <albert.graham@g-b.net>
-Cc: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-On Thu, Oct 02, 2008 at 08:07:33PM +0100, Albert Graham wrote:
-> Hi Guys,
->
-> I use Fedora 8 as my MythTV backend server which uses XFS, ISince 
-> upgrading from kernel-2.6.25 to kernel-2.6.26 I've been getting the 
-> following errors (see below).
+Merge up to 2.6.27-rc8
 
-The freespace btrees are getting out of sync for some reason.
+Date:  Fri Oct  3 12:16:52 AEST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-fresh
+Inspected by:  lachlan
+Author:  lachlan
 
-That is, when we go to allocate an extent, we have to update two
-free space btrees. This shutdown:
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-> XFS internal error XFS_WANT_CORRUPTED_RETURN at line 280 of file fs/xfs/xfs_alloc.c.  Caller 0xf88e0018
 
-Indicates the extent being allocated was not found in one of the
-two trees.
-
-This corruption could have happened a long time ago in the past, and
-it may simply be coincidental that you've tripped over this at
-roughly the same time you upgraded the kernel.
-
-Can you run xfs_check on the filesystem to determine if a freespace
-tree is corrupted (post the output if it is), then run xfs_repair
-to rebuild them?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Modid:  xfs-linux-melb:xfs-kern:32254a
+fs/xfs/xfs_vnodeops.c - 1.775 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.775&r2=text&tr2=1.774&f=h
+fs/xfs/xfs_inode.c - 1.525 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.525&r2=text&tr2=1.524&f=h
+fs/xfs/linux-2.6/xfs_lrw.c - 1.283 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_lrw.c.diff?r1=text&tr1=1.283&r2=text&tr2=1.282&f=h
+fs/xfs/linux-2.6/xfs_ioctl.c - 1.172 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.172&r2=text&tr2=1.171&f=h
+fs/xfs/linux-2.6/xfs_linux.h - 1.171 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.171&r2=text&tr2=1.170&f=h
+fs/xfs/linux-2.6/xfs_super.c - 1.450 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.450&r2=text&tr2=1.449&f=h
+fs/xfs/linux-2.6/xfs_iops.c - 1.300 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.300&r2=text&tr2=1.299&f=h
+fs/xfs/linux-2.6/xfs_aops.c - 1.165 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.165&r2=text&tr2=1.164&f=h
+fs/xfs/linux-2.6/kmem.h - 1.48 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/kmem.h.diff?r1=text&tr1=1.48&r2=text&tr2=1.47&f=h
