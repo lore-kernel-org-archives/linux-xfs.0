@@ -1,38 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 03 Oct 2008 17:21:27 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m940LOTv015794
-	for <xfs@oss.sgi.com>; Fri, 3 Oct 2008 17:21:24 -0700
-Message-ID: <48E6B731.8020806@sgi.com>
-Date: Sat, 04 Oct 2008 10:22:09 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 04 Oct 2008 05:57:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m94CvbHN013722
+	for <xfs@oss.sgi.com>; Sat, 4 Oct 2008 05:57:38 -0700
+Received: from web65705.mail.ac4.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 53EF94B1A79
+	for <xfs@oss.sgi.com>; Sat,  4 Oct 2008 05:59:15 -0700 (PDT)
+Received: from web65705.mail.ac4.yahoo.com (web65705.mail.ac4.yahoo.com [76.13.9.97]) by cuda.sgi.com with SMTP id 3zlVevzvud5mXoaH for <xfs@oss.sgi.com>; Sat, 04 Oct 2008 05:59:15 -0700 (PDT)
+Date: Sat, 4 Oct 2008 05:59:14 -0700 (PDT)
+From: "Wilfredo Jr. Badoy" <wbadoy@yahoo.com>
+Reply-To: wbadoy@yahoo.com
+Subject: implementing trees
 MIME-Version: 1.0
-Subject: Re: what is the FS size limit for xfs_repair ?
-References: <20081003170452.50a7ec78@harpe.intellique.com>	<25446eb90810030823g70506145o9aef9ed3832abfe@mail.gmail.com> <20081003223920.107aeb43@galadriel.home>
-In-Reply-To: <20081003223920.107aeb43@galadriel.home>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Message-ID: <836721.79808.qm@web65705.mail.ac4.yahoo.com>
+Content-Type: text/plain
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: James Braid <jamesb@loreland.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+
+good day,
+
+=C2=A0i am wilfredo b. badoy jr., a graduate student of ateneo de davao, ph=
+ilippines.
+
+i am interested in implementing a B* structure, in replacement of the B+ st=
+ructure you implemented in XFS. i would like to try and compare the perform=
+ance of both implementations, and see if there is any difference in reads a=
+nd writes.
+
+i did tried to change the code four years ago. it crashed my pc. :-)
+
+i would like to ask for your help regarding this. if you can point to me wh=
+ich code to change, i would appreciate it very much.=20
+
+thank you and more power.
 
 
 
-Emmanuel Florac wrote:
-> Le Fri, 3 Oct 2008 16:23:41 +0100 vous écriviez:
-> 
->> The limit is how much memory a 32-bit process can allocate - it's not
->> a limit of xfs_repair itself.
-> 
-> OK, that makes sense. I'll keep my 64 bits xfs_repair at hand :)
-> 
 
-As a rule of thumb with a fairly recent xfs_repair, you need approx
-128MB RAM per TB filesystem size (but it also depends on number of
-inodes too).
 
-Cheers
--- Mark
+      Get your preferred Email name!
+Now you can @ymail.com and @rocketmail.com.=20
+http://mail.promotions.yahoo.com/newdomains/aa/
+
+[[HTML alternate version deleted]]
