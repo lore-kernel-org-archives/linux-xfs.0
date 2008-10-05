@@ -1,49 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 04 Oct 2008 05:57:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 05 Oct 2008 03:00:50 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m94CvbHN013722
-	for <xfs@oss.sgi.com>; Sat, 4 Oct 2008 05:57:38 -0700
-Received: from web65705.mail.ac4.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 53EF94B1A79
-	for <xfs@oss.sgi.com>; Sat,  4 Oct 2008 05:59:15 -0700 (PDT)
-Received: from web65705.mail.ac4.yahoo.com (web65705.mail.ac4.yahoo.com [76.13.9.97]) by cuda.sgi.com with SMTP id 3zlVevzvud5mXoaH for <xfs@oss.sgi.com>; Sat, 04 Oct 2008 05:59:15 -0700 (PDT)
-Date: Sat, 4 Oct 2008 05:59:14 -0700 (PDT)
-From: "Wilfredo Jr. Badoy" <wbadoy@yahoo.com>
-Reply-To: wbadoy@yahoo.com
-Subject: implementing trees
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m959xOV3023297
+	for <xfs@oss.sgi.com>; Sun, 5 Oct 2008 02:59:24 -0700
+Received: from UNKNOWN (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E80264B8183
+	for <xfs@oss.sgi.com>; Sun,  5 Oct 2008 03:00:47 -0700 (PDT)
+Received: from UNKNOWN (gprs189-60.eurotel.cz [160.218.189.60]) by cuda.sgi.com with ESMTP id EmPjQGmTBU2p8jyt for <xfs@oss.sgi.com>; Sun, 05 Oct 2008 03:00:47 -0700 (PDT)
+Date: Sun, 5 Oct 2008 12:00:38 +0200
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [PATCH 3/3] Add timeout feature
+Message-ID: <20081005100037.GB2351@ucw.cz>
+References: <20080908205337t-sato@mail.jp.nec.com> <20080908171119.GB22521@infradead.org> <48DBFD42.6030307@redhat.com> <D0B0D91F884647D6808626CDFF81E532@nsl.ad.nec.co.jp> <20080929141326.GA31781@infradead.org> <48E0E7D4.1090409@sandeen.net> <20080929143749.GA13286@infradead.org> <48E0EA0B.7000701@sandeen.net>
 MIME-Version: 1.0
-Message-ID: <836721.79808.qm@web65705.mail.ac4.yahoo.com>
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <48E0EA0B.7000701@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Takashi Sato <t-sato@yk.jp.nec.com>, Ric Wheeler <rwheeler@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Oleg Nesterov <oleg@tv-sign.ru>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, viro@ZenIV.linux.org.uk, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, axboe@kernel.dk, mtk.manpages@googlemail.com, linux-kernel@vger.kernel.org
 
-good day,
+On Mon 2008-09-29 09:45:31, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > On Mon, Sep 29, 2008 at 09:36:04AM -0500, Eric Sandeen wrote:
+> >> Christoph Hellwig wrote:
+> >>> On Fri, Sep 26, 2008 at 05:52:35PM +0900, Takashi Sato wrote:
+> >>>> I think that your concern is that the freezer cannot recognize the occurrence
+> >>>> of a timeout and it continues the backup process and the backup data is
+> >>>> corrupted finally.
+> >>> What timeout should happen?  the freeze ioctl must not return until the
+> >>> filesystem is a clean state and all writes are blocked.
+> >> The suggestion was that *UN*freeze would return ETIMEDOUT if the
+> >> filesystem had already unfrozen itself, I think.  That way you know that
+> >> the snapshot you just took is worthless, at least.
+> > 
+> > But why would the filesystem every unfreeze itself?  That defeats the
+> > whole point of freezing it.
+> 
+> I agree.  Was just trying to clarify the above point.
+> 
+> But there have been what, 12 submissions now, with the unfreeze timeout
+> in place so it's a persistent theme ;)
+> 
+> Perhaps a demonstration of just how easy (or not easy) it is to deadlock
+> a filesystem by freezing the root might be in order, at least.
+> 
+> And even if it is relatively easy, I still maintain that it is the
+> administrator's role to not inflict damage on the machine being
+> administered.  There are a lot of potentially dangerous tools at root's
+> disposal; why this particular one needs a nanny I'm still not quite sure.
 
-=C2=A0i am wilfredo b. badoy jr., a graduate student of ateneo de davao, ph=
-ilippines.
+Can you docuument what administrator must not do for freezing to be
+safe?
 
-i am interested in implementing a B* structure, in replacement of the B+ st=
-ructure you implemented in XFS. i would like to try and compare the perform=
-ance of both implementations, and see if there is any difference in reads a=
-nd writes.
+What if so much dirty data accumulates on frozen filesystem that
+there's not enough memory for the unfreeze tool?
 
-i did tried to change the code four years ago. it crashed my pc. :-)
-
-i would like to ask for your help regarding this. if you can point to me wh=
-ich code to change, i would appreciate it very much.=20
-
-thank you and more power.
-
-
-
-
-
-      Get your preferred Email name!
-Now you can @ymail.com and @rocketmail.com.=20
-http://mail.promotions.yahoo.com/newdomains/aa/
-
-[[HTML alternate version deleted]]
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
