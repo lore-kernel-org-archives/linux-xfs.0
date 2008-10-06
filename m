@@ -1,49 +1,67 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 06 Oct 2008 10:22:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m96HMNrS001766
-	for <xfs@oss.sgi.com>; Mon, 6 Oct 2008 10:22:23 -0700
-Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 278A4139EDF7
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2008 10:24:02 -0700 (PDT)
-Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com [208.42.117.202]) by cuda.sgi.com with ESMTP id wQDoRaJD387tY34D for <xfs@oss.sgi.com>; Mon, 06 Oct 2008 10:24:02 -0700 (PDT)
-Message-ID: <48EA49B1.2000500@thebarn.com>
-Date: Mon, 06 Oct 2008 12:24:01 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
-MIME-Version: 1.0
-Subject: Re: PARTIAL TAKE 987159 - Fix extent list corruption in xfs_iext_irec_compact_full().
-References: <20080923032821.A91D758C52AE@chook.melbourne.sgi.com> <48E8AB5A.7080301@sandeen.net> <48E8AC57.4050503@sandeen.net> <48E9631A.8050404@sgi.com>
-In-Reply-To: <48E9631A.8050404@sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 06 Oct 2008 11:14:57 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m96IEoXt005555
+	for <xfs@oss.sgi.com>; Mon, 6 Oct 2008 11:14:50 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B51234BDBA1
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2008 11:16:28 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id XdCCbASYKQdggy8D for <xfs@oss.sgi.com>; Mon, 06 Oct 2008 11:16:28 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m96IGQIF015469
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 6 Oct 2008 20:16:26 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m96IGQqN015467
+	for xfs@oss.sgi.com; Mon, 6 Oct 2008 20:16:26 +0200
+Date: Mon, 6 Oct 2008 20:16:26 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] remove exports of inline functions
+Message-ID: <20081006181626.GA15388@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: markgw@sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Mark Goodwin wrote:
->
->
-> Eric Sandeen wrote:
->> Eric Sandeen wrote:
->>> Lachlan McIlroy wrote:
->>
->>
->>>>     - Fix extent list corruption in xfs_iext_irec_compact_full().
->>> Are there plans to try to get this, and possibly the compact_full
->>> removal pushed into 2.6.27 still?  (and maybe even 2.6.26.x?)
->>>
->>> -Eric
->>>
->>>
->>
->> ugh already in, sorry.  ignore me!
->
-> yes, already in .27, but not yet .26 as far as I know.
->
-> Cheers
->
-BTW can we get xfsidbg fixed up so it compiles.
-Also it would be nice to add the extra debug patch into the extent list 
-print function.
+Recent gcc starts to complain about exports of functions marked static
+inline, so let's get rid of those.
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-07 01:08:33.000000000 +0000
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-07 01:09:58.000000000 +0000
+@@ -153,8 +153,6 @@
+ EXPORT_SYMBOL(kmem_zalloc);
+ EXPORT_SYMBOL(kmem_zone_alloc);
+ EXPORT_SYMBOL(kmem_zalloc_greedy);
+-EXPORT_SYMBOL(kmem_zone_free);
+-EXPORT_SYMBOL(kmem_zone_init);
+ EXPORT_SYMBOL(kmem_zone_zalloc);
+ EXPORT_SYMBOL(xfs_address_space_operations);
+ EXPORT_SYMBOL(xfs_dir_file_operations);
+@@ -217,8 +215,6 @@
+ EXPORT_SYMBOL(xfs_finish_reclaim_all);
+ EXPORT_SYMBOL(xfs_freesb);
+ EXPORT_SYMBOL(xfs_fs_cmn_err);
+-EXPORT_SYMBOL(xfs_highbit32);
+-EXPORT_SYMBOL(xfs_highbit64);
+ EXPORT_SYMBOL(xfs_idestroy);
+ EXPORT_SYMBOL(xfs_iextract);
+ EXPORT_SYMBOL(xfs_iext_add);
+@@ -227,10 +223,7 @@
+ EXPORT_SYMBOL(xfs_iext_idx_to_irec);
+ EXPORT_SYMBOL(xfs_iext_insert);
+ EXPORT_SYMBOL(xfs_iext_remove);
+-EXPORT_SYMBOL(xfs_iflock);
+-EXPORT_SYMBOL(xfs_iflock_nowait);
+ EXPORT_SYMBOL(xfs_iflush);
+-EXPORT_SYMBOL(xfs_ifunlock);
+ EXPORT_SYMBOL(xfs_iget);
+ EXPORT_SYMBOL(xfs_ilock);
+ EXPORT_SYMBOL(xfs_ilock_map_shared);
