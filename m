@@ -1,46 +1,32 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 05 Oct 2008 17:56:39 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m960uZqT001746
-	for <xfs@oss.sgi.com>; Sun, 5 Oct 2008 17:56:35 -0700
-Received: from cf--amer001e--3.americas.sgi.com (cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 432728F820C
-	for <xfs@oss.sgi.com>; Sun,  5 Oct 2008 17:58:12 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 05 Oct 2008 18:29:00 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m961SrEf004054
+	for <xfs@oss.sgi.com>; Sun, 5 Oct 2008 18:28:53 -0700
+Message-ID: <48E96C6B.7000009@sgi.com>
+Date: Mon, 06 Oct 2008 11:39:55 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: xfs_admin -U generate 
-Date: Sun, 5 Oct 2008 19:58:12 -0500
-Message-ID: <EE35CDB51A4F8F40820C05C4D2EAF2B5016AA2@cf--amer001e--3.americas.sgi.com>
-From: "Carolyn  Knox" <knox@sgi.com>
-Content-Type: text/plain
-Content-Disposition: inline
+Subject: Re: TAKE 957103 - Merge up to 2.6.27-rc8
+References: <20081003031258.7886658C52B4@chook.melbourne.sgi.com> <20081003091001.GA11627@infradead.org> <20081003195141.GA18988@infradead.org>
+In-Reply-To: <20081003195141.GA18988@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Carolyn  Knox <knox@sgi.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Hello,
+Christoph Hellwig wrote:
+> On Fri, Oct 03, 2008 at 05:10:01AM -0400, Christoph Hellwig wrote:
+>> So this patch now has made it out to the CVS on oss, but not the actual
+>> update of the surrouding kernel tree.  Any chance to fix that before the
+>> weekend so we'll actually have a tree the builds?
+> 
+> Ok, everything is fine now.  Looks like the ptools to cvs push being
+> fragile as usual..
 
- 
-
-Our group is looking into using `xfs_admin -U generate` command on a
-couple of SVM MultiMirror views (with xfs filesystem source) to be able
-to mount multiple views of the filesystem to more than one mount point
-at the same time (SLES 9 platform).
-
- 
-
-I'm wondering if there is a downside or known issues that I should be
-made aware of,  or if this is practice is frowned upon.
-
- 
-
-Thanks,
-
-Carrie
-
- 
-
-
-
-[[HTML alternate version deleted]]
+Both changes (ie fs/xfs and everything else) went in at the same time.
+Probably just ptools congestion.
