@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:40:11 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:40:16 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97LdwRl030986
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:39:58 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97LdvGm030973
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:39:57 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FFFB4B2ACF
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:41:37 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id KiysAhEFYVb2tzQA for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:41:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C5194B2ACD
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:41:36 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 6R3Ie7QJtLGvUHHe for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:41:36 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KnKJA-0001gH-SK
+	id 1KnKJA-0001gB-OF
 	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:41:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] XFS: Traverse inode trees when releasing dquots V3
-Date: Wed,  8 Oct 2008 08:41:31 +1100
-Message-Id: <1223415692-6354-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] XFS: Remove xfs_iflush_all and clean up xfs_finish_reclaim_all() V3
+Date: Wed,  8 Oct 2008 08:41:29 +1100
+Message-Id: <1223415692-6354-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1223415692-6354-1-git-send-email-david@fromorbit.com>
 References: <1223415692-6354-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,188 +22,197 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Make releasing all inode dquots traverse the per-ag
-inode radix trees rather than the mount inode list.
-This removes another user of the mount inode list.
+xfs_iflush_all() walks the m_inodes list to find inodes that
+need reclaiming. We already have such a list - the m_del_inodes
+list. Replace xfs_iflush_all() with a call to xfs_finish_reclaim_all()
+and clean up xfs_finish_reclaim_all() to handle the different flush
+modes now needed.
+
+Originally based on a patch from Christoph Hellwig.
 
 Version 3
-o fix comment relating to avoiding trying to release the
-  quota inodes and those in reclaim.
+o rediff against new linux-2.6/xfs_sync.c code
 
 Version 2
-o add comment explaining use of gang lookups for a single inode
-o use IRELE, not VN_RELE
-o move check for ag initialisation to caller.
+o revert xfs_syncsub() inode reclaim behaviour back to original
+  code
+o xfs_quiesce_fs() should use XFS_IFLUSH_DELWRI_ELSE_ASYNC, not
+  XFS_IFLUSH_ASYNC, to prevent change of behaviour.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/quota/xfs_qm_syscalls.c |  127 ++++++++++++++++++---------------------
- 1 files changed, 59 insertions(+), 68 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |    2 +-
+ fs/xfs/xfs_inode.c          |   35 -----------------------------------
+ fs/xfs/xfs_inode.h          |    3 +--
+ fs/xfs/xfs_mount.c          |    2 +-
+ fs/xfs/xfs_vfsops.c         |    2 +-
+ fs/xfs/xfs_vnodeops.c       |   42 ++++++++++++++++++------------------------
+ 6 files changed, 22 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 1a3b803..26152b9 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -1022,101 +1022,92 @@ xfs_qm_export_flags(
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index a51534c..cd82ba5 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -504,7 +504,7 @@ xfs_syncsub(
+ 
+ 	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
+ 		if (flags & SYNC_BDFLUSH)
+-			xfs_finish_reclaim_all(mp, 1);
++			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 		else
+ 			error = xfs_sync_inodes(mp, flags, bypassed);
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2b1294b..0c65ba2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3499,41 +3499,6 @@ corrupt_out:
+ }
  
  
- /*
-- * Go thru all the inodes in the file system, releasing their dquots.
-- * Note that the mount structure gets modified to indicate that quotas are off
-- * AFTER this, in the case of quotaoff. This also gets called from
-- * xfs_rootumount.
-+ * Release all the dquots on the inodes in an AG.
-  */
+-/*
+- * Flush all inactive inodes in mp.
+- */
 -void
--xfs_qm_dqrele_all_inodes(
--	struct xfs_mount *mp,
--	uint		 flags)
-+STATIC void
-+xfs_qm_dqrele_inodes_ag(
-+	xfs_mount_t	*mp,
-+	int		ag,
-+	uint		flags)
- {
--	xfs_inode_t	*ip, *topino;
--	uint		ireclaims;
--	struct inode	*vp;
--	boolean_t	vnode_refd;
-+	xfs_inode_t	*ip = NULL;
-+	struct inode	*vp = NULL;
-+	xfs_perag_t	*pag = &mp->m_perag[ag];
-+	int		first_index = 0;
-+	int		nr_found;
- 
--	ASSERT(mp->m_quotainfo);
+-xfs_iflush_all(
+-	xfs_mount_t	*mp)
+-{
+-	xfs_inode_t	*ip;
 -
+- again:
 -	XFS_MOUNT_ILOCK(mp);
--again:
 -	ip = mp->m_inodes;
--	if (ip == NULL) {
--		XFS_MOUNT_IUNLOCK(mp);
--		return;
--	}
- 	do {
--		/* Skip markers inserted by xfs_sync */
+-	if (ip == NULL)
+-		goto out;
+-
+-	do {
+-		/* Make sure we skip markers inserted by sync */
 -		if (ip->i_mount == NULL) {
 -			ip = ip->i_mnext;
 -			continue;
 -		}
--		/* Root inode, rbmip and rsumip have associated blocks */
--		if (ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
--			ASSERT(ip->i_udquot == NULL);
--			ASSERT(ip->i_gdquot == NULL);
--			ip = ip->i_mnext;
--			continue;
-+		boolean_t	vnode_refd = B_FALSE;
-+
-+		/*
-+		 * use a gang lookup to find the next inode in the tree
-+		 * as the tree is sparse and a gang lookup walks to find
-+		 * the number of objects requested.
-+		 */
-+		read_lock(&pag->pag_ici_lock);
-+		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
-+				(void**)&ip, first_index, 1);
-+
-+		if (!nr_found) {
-+			read_unlock(&pag->pag_ici_lock);
-+			break;
- 		}
-+
-+		/* update the index for the next lookup */
-+		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+
-+		/* skip quota inodes and those in reclaim */
- 		vp = VFS_I(ip);
--		if (!vp) {
-+		if (!vp || ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
- 			ASSERT(ip->i_udquot == NULL);
- 			ASSERT(ip->i_gdquot == NULL);
--			ip = ip->i_mnext;
-+			read_unlock(&pag->pag_ici_lock);
- 			continue;
- 		}
--		vnode_refd = B_FALSE;
- 		if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0) {
--			ireclaims = mp->m_ireclaims;
--			topino = mp->m_inodes;
- 			vp = vn_grab(vp);
-+			read_unlock(&pag->pag_ici_lock);
- 			if (!vp)
--				goto again;
 -
+-		if (!VFS_I(ip)) {
 -			XFS_MOUNT_IUNLOCK(mp);
--			/* XXX restart limit ? */
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
-+				continue;
- 			vnode_refd = B_TRUE;
-+			xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		} else {
--			ireclaims = mp->m_ireclaims;
--			topino = mp->m_inodes;
--			XFS_MOUNT_IUNLOCK(mp);
-+			read_unlock(&pag->pag_ici_lock);
- 		}
--
--		/*
--		 * We don't keep the mountlock across the dqrele() call,
--		 * since it can take a while..
--		 */
- 		if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
- 			xfs_qm_dqrele(ip->i_udquot);
- 			ip->i_udquot = NULL;
- 		}
--		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) && ip->i_gdquot) {
-+		if (flags & (XFS_PQUOTA_ACCT|XFS_GQUOTA_ACCT) &&
-+		    ip->i_gdquot) {
- 			xfs_qm_dqrele(ip->i_gdquot);
- 			ip->i_gdquot = NULL;
- 		}
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		/*
--		 * Wait until we've dropped the ilock and mountlock to
--		 * do the vn_rele. Or be condemned to an eternity in the
--		 * inactive code in hell.
--		 */
- 		if (vnode_refd)
- 			IRELE(ip);
--		XFS_MOUNT_ILOCK(mp);
--		/*
--		 * If an inode was inserted or removed, we gotta
--		 * start over again.
--		 */
--		if (topino != mp->m_inodes || mp->m_ireclaims != ireclaims) {
--			/* XXX use a sentinel */
+-			xfs_finish_reclaim(ip, 0, XFS_IFLUSH_ASYNC);
 -			goto again;
 -		}
+-
+-		ASSERT(vn_count(VFS_I(ip)) == 0);
+-
 -		ip = ip->i_mnext;
 -	} while (ip != mp->m_inodes);
-+	} while (nr_found);
-+}
- 
+- out:
 -	XFS_MOUNT_IUNLOCK(mp);
-+/*
-+ * Go thru all the inodes in the file system, releasing their dquots.
-+ * Note that the mount structure gets modified to indicate that quotas are off
-+ * AFTER this, in the case of quotaoff. This also gets called from
-+ * xfs_rootumount.
-+ */
-+void
-+xfs_qm_dqrele_all_inodes(
-+	struct xfs_mount *mp,
-+	uint		 flags)
-+{
-+	int		i;
-+
-+	ASSERT(mp->m_quotainfo);
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
-+		if (!mp->m_perag[i].pag_ici_init)
-+			continue;
-+		xfs_qm_dqrele_inodes_ag(mp, i, flags);
-+	}
+-}
+ 
+ #ifdef XFS_ILOCK_TRACE
+ ktrace_t	*xfs_ilock_trace_buf;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 5784f8e..9e8e81d 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -502,7 +502,7 @@ uint		xfs_ilock_map_shared(xfs_inode_t *);
+ void		xfs_iunlock_map_shared(xfs_inode_t *, uint);
+ void		xfs_ireclaim(xfs_inode_t *);
+ int		xfs_finish_reclaim(xfs_inode_t *, int, int);
+-int		xfs_finish_reclaim_all(struct xfs_mount *, int);
++int		xfs_finish_reclaim_all(struct xfs_mount *, int, int);
+ 
+ /*
+  * xfs_inode.c prototypes.
+@@ -529,7 +529,6 @@ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_ipin(xfs_inode_t *);
+ void		xfs_iunpin(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
+-void		xfs_iflush_all(struct xfs_mount *);
+ void		xfs_ichgtime(xfs_inode_t *, int);
+ xfs_fsize_t	xfs_file_last_byte(xfs_inode_t *);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 15f5dd2..5ec6032 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1241,7 +1241,7 @@ xfs_unmountfs(
+ 	 * need to force the log first.
+ 	 */
+ 	xfs_log_force(mp, (xfs_lsn_t)0, XFS_LOG_FORCE | XFS_LOG_SYNC);
+-	xfs_iflush_all(mp);
++	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_ASYNC);
+ 
+ 	XFS_QM_DQPURGEALL(mp, XFS_QMOPT_QUOTALL | XFS_QMOPT_UMOUNTING);
+ 
+diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
+index 01e274b..0c5ee5e 100644
+--- a/fs/xfs/xfs_vfsops.c
++++ b/fs/xfs/xfs_vfsops.c
+@@ -66,7 +66,7 @@ xfs_quiesce_fs(
+ 	int			count = 0, pincount;
+ 
+ 	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+-	xfs_finish_reclaim_all(mp, 0);
++	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+ 
+ 	/* This loop must run at least twice.
+ 	 * The first instance of the loop will flush
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 7a72b0a..8ab88ba 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2893,36 +2893,30 @@ xfs_finish_reclaim(
  }
  
- /*------------------------------------------------------------------------*/
+ int
+-xfs_finish_reclaim_all(xfs_mount_t *mp, int noblock)
++xfs_finish_reclaim_all(
++	xfs_mount_t	*mp,
++	int		 noblock,
++	int		mode)
+ {
+-	int		purged;
+ 	xfs_inode_t	*ip, *n;
+-	int		done = 0;
+ 
+-	while (!done) {
+-		purged = 0;
+-		XFS_MOUNT_ILOCK(mp);
+-		list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
+-			if (noblock) {
+-				if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
+-					continue;
+-				if (xfs_ipincount(ip) ||
+-				    !xfs_iflock_nowait(ip)) {
+-					xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-					continue;
+-				}
++restart:
++	XFS_MOUNT_ILOCK(mp);
++	list_for_each_entry_safe(ip, n, &mp->m_del_inodes, i_reclaim) {
++		if (noblock) {
++			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0)
++				continue;
++			if (xfs_ipincount(ip) ||
++			    !xfs_iflock_nowait(ip)) {
++				xfs_iunlock(ip, XFS_ILOCK_EXCL);
++				continue;
+ 			}
+-			XFS_MOUNT_IUNLOCK(mp);
+-			if (xfs_finish_reclaim(ip, noblock,
+-					XFS_IFLUSH_DELWRI_ELSE_ASYNC))
+-				delay(1);
+-			purged = 1;
+-			break;
+ 		}
+-
+-		done = !purged;
++		XFS_MOUNT_IUNLOCK(mp);
++		if (xfs_finish_reclaim(ip, noblock, mode))
++			delay(1);
++		goto restart;
+ 	}
+-
+ 	XFS_MOUNT_IUNLOCK(mp);
+ 	return 0;
+ }
 -- 
 1.5.6.5
