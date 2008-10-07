@@ -1,144 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 06 Oct 2008 21:49:43 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 00:16:03 -0700 (PDT)
 Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m974ncAB028244
-	for <xfs@oss.sgi.com>; Mon, 6 Oct 2008 21:49:39 -0700
-Message-ID: <48EAEADD.7030602@sgi.com>
-Date: Tue, 07 Oct 2008 15:51:41 +1100
-From: Donald Douwsma <donaldd@sgi.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m977G1ko006789
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 00:16:01 -0700
+Message-ID: <48EB1ABD.3020503@sgi.com>
+Date: Tue, 07 Oct 2008 18:15:57 +1000
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Subject: Re: [REVIEW] Fix two mkfs.xfs bugs
-References: <op.uib222cq3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.uib222cq3jf8g2@pc-bnaujok.melbourne.sgi.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH V2] Re-dirty pages on ENOSPC when converting delayed allocations
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>, xfs-dev <xfs-dev@sgi.com>
 
-Barry Naujok wrote:
-> #1. -i maxpct option is not honoured (or ever used).
+If we get an error in xfs_page_state_convert() - and it's not EAGAIN - then
+we throw away the dirty page without converting the delayed allocation.  This
+leaves delayed allocations that can never be removed and confuses code that
+expects a flush of the file to clear them.  We need to re-dirty the page on
+error so we can try again later or report that the flush failed.
 
-Looks good Barry.
+This change is needed to handle the condition where we are at ENOSPC and we
+exhaust the reserved block pool (because many transactions are executing
+concurrently) and calls to xfs_trans_reserve() start failing with ENOSPC
+errors.
 
-Don
+Version 2 wont return EAGAIN from xfs_vm_writepage() and also converts an
+ENOSPC error to an EAGAIN for asynchronous writeback to avoid setting an
+error in the inode mapping when we don't need to.
 
-> 
-> 
-> Index: xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-> ===================================================================
-> --- xfs-cmds.orig/xfsprogs/mkfs/xfs_mkfs.c
-> +++ xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-> @@ -1808,6 +1808,9 @@ _("size %s specified for log subvolume i
-> 
->      validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-> 
-> +    if (!imflag)
-> +        imaxpct = calc_default_imaxpct(blocklog, dblocks);
-> +
->      if (!nodsflag) {
->          if (dsunit) {
->              if (xlv_dsunit && xlv_dsunit != dsunit) {
-> @@ -2023,8 +2026,7 @@ an AG size that is one stripe unit small
->             "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
->              dfile, isize, (long long)agcount, (long long)agsize,
->              "", sectorsize, attrversion,
-> -            "", blocksize, (long long)dblocks,
-> -                   calc_default_imaxpct(blocklog, dblocks),
-> +            "", blocksize, (long long)dblocks, imaxpct,
->              "", dsunit, dswidth,
->              dirversion, dirblocksize, nci,
->              logfile, 1 << blocklog, (long long)logblocks,
-> @@ -2061,7 +2063,7 @@ an AG size that is one stripe unit small
->          (__uint8_t)(rtextents ?
->              libxfs_highbit32((unsigned int)rtextents) : 0);
->      sbp->sb_inprogress = 1;    /* mkfs is in progress */
-> -    sbp->sb_imax_pct = calc_default_imaxpct(blocklog, dblocks);
-> +    sbp->sb_imax_pct = imaxpct;
->      sbp->sb_icount = 0;
->      sbp->sb_ifree = 0;
->      sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
-> 
-> 
-> ===================================================================
-> 
-> #2. If specifying a custom AG count (-d agcount) with stripe unit and
->     the calculated AG size from the AG count is not stripe unit aligned,
->     it refused to adjust the AG size and make the filesystem.
-> 
->     The final geometry check is also moved after the sunit adjustments
->     might have been made.
-> 
-> 
-> Index: xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-> ===================================================================
-> --- xfs-cmds.orig/xfsprogs/mkfs/xfs_mkfs.c
-> +++ xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c
-> @@ -1795,22 +1795,6 @@ _("size %s specified for log subvolume i
->          calc_default_ag_geometry(blocklog, dblocks,
->                  xlv_dsunit | xlv_dswidth, &agsize, &agcount);
-> 
-> -    /*
-> -     * If the last AG is too small, reduce the filesystem size
-> -     * and drop the blocks.
-> -     */
-> -    if ( dblocks % agsize != 0 &&
-> -         (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
-> -        dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
-> -        agcount--;
-> -        ASSERT(agcount != 0);
-> -    }
-> -
-> -    validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-> -
-> -    if (!imflag)
-> -        imaxpct = calc_default_imaxpct(blocklog, dblocks);
-> -
->      if (!nodsflag) {
->          if (dsunit) {
->              if (xlv_dsunit && xlv_dsunit != dsunit) {
-> @@ -1861,13 +1845,14 @@ _("size %s specified for log subvolume i
->               */
->              if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
->                  tmp_agsize = ((agsize) / dsunit) * dsunit;
-> +
->              if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
-> -                (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog)) &&
-> -                !daflag) {
-> +                (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog))) {
->                  agsize = tmp_agsize;
-> -                agcount = dblocks/agsize +
-> +                if (!daflag)
-> +                    agcount = dblocks/agsize +
->                          (dblocks % agsize != 0);
-> -                if (dasize || daflag)
-> +                if (dasize)
->                      fprintf(stderr,
->                  _("agsize rounded to %lld, swidth = %d\n"),
->                          (long long)agsize, dswidth);
-> @@ -1932,6 +1917,23 @@ an AG size that is one stripe unit small
->      }
-> 
->      /*
-> +     * If the last AG is too small, reduce the filesystem size
-> +     * and drop the blocks.
-> +     */
-> +    if ( dblocks % agsize != 0 &&
-> +         (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
-> +        ASSERT(!daflag);
-> +        dblocks = (xfs_drfsbno_t)((agcount - 1) * agsize);
-> +        agcount--;
-> +        ASSERT(agcount != 0);
-> +    }
-> +
-> +    validate_ag_geometry(blocklog, dblocks, agsize, agcount);
-> +
-> +    if (!imflag)
-> +        imaxpct = calc_default_imaxpct(blocklog, dblocks);
-> +
-> +    /*
->       * check that log sunit is modulo fsblksize or default it to dsunit.
->       */
-> 
+--- a/fs/xfs/linux-2.6/xfs_aops.c	2008-10-07 17:02:04.000000000 +1000
++++ b/fs/xfs/linux-2.6/xfs_aops.c	2008-10-07 17:58:04.000000000 +1000
+@@ -1147,16 +1147,6 @@ error:
+ 	if (iohead)
+ 		xfs_cancel_ioend(iohead);
+ 
+-	/*
+-	 * If it's delalloc and we have nowhere to put it,
+-	 * throw it away, unless the lower layers told
+-	 * us to try again.
+-	 */
+-	if (err != -EAGAIN) {
+-		if (!unmapped)
+-			block_invalidatepage(page, 0);
+-		ClearPageUptodate(page);
+-	}
+ 	return err;
+ }
+ 
+@@ -1185,7 +1175,7 @@ xfs_vm_writepage(
+ 	struct page		*page,
+ 	struct writeback_control *wbc)
+ {
+-	int			error;
++	int			error = 0;
+ 	int			need_trans;
+ 	int			delalloc, unmapped, unwritten;
+ 	struct inode		*inode = page->mapping->host;
+@@ -1231,19 +1221,16 @@ xfs_vm_writepage(
+ 	 * to real space and flush out to disk.
+ 	 */
+ 	error = xfs_page_state_convert(inode, page, wbc, 1, unmapped);
+-	if (error == -EAGAIN)
+-		goto out_fail;
+ 	if (unlikely(error < 0))
+-		goto out_unlock;
++		goto out_fail;
+ 
+ 	return 0;
+ 
+ out_fail:
+ 	redirty_page_for_writepage(wbc, page);
+ 	unlock_page(page);
+-	return 0;
+-out_unlock:
+-	unlock_page(page);
++	if (error == -EAGAIN)
++		error = 0;
+ 	return error;
+ }
+ 
+--- a/fs/xfs/xfs_iomap.c	2008-10-07 17:02:04.000000000 +1000
++++ b/fs/xfs/xfs_iomap.c	2008-10-07 17:58:04.000000000 +1000
+@@ -269,6 +269,8 @@ xfs_iomap(
+ 
+ 		error = xfs_iomap_write_allocate(ip, offset, count,
+ 						 &imap, &nimaps);
++		if ((flags & BMAPI_TRYLOCK) && error == ENOSPC)
++			error = EAGAIN;
+ 		break;
+ 	}
+ 
