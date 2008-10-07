@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 16:48:05 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 16:56:49 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Nm2no024403
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 16:48:02 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97NukbS025124
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 16:56:47 -0700
 Received: from smtp.microsoft.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 605729FFD68
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 16:49:41 -0700 (PDT)
-Received: from smtp.microsoft.com (mail1.microsoft.com [131.107.115.212]) by cuda.sgi.com with ESMTP id GYsffqCzWdRB1DeP for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 16:49:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93050A0038B
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 16:58:26 -0700 (PDT)
+Received: from smtp.microsoft.com (smtp.microsoft.com [131.107.115.214]) by cuda.sgi.com with ESMTP id WtW3itOi7Tpr6Dab for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 16:58:26 -0700 (PDT)
 From: Allan Haywood <Allan.Haywood@microsoft.com>
-Date: Tue, 7 Oct 2008 16:49:40 -0700
+Date: Tue, 7 Oct 2008 16:58:24 -0700
 Subject: RE: xfs file system corruption
-Message-ID: <E8DED08235A93F4D8A2AB6CD0ABAB32A0A937FC922@NA-EXMSG-C121.redmond.corp.microsoft.com>
+Message-ID: <E8DED08235A93F4D8A2AB6CD0ABAB32A0A937FC938@NA-EXMSG-C121.redmond.corp.microsoft.com>
 References: <E8DED08235A93F4D8A2AB6CD0ABAB32A0A937FC8EC@NA-EXMSG-C121.redmond.corp.microsoft.com>
  <20081007233418.GB7342@disturbed>
-In-Reply-To: <20081007233418.GB7342@disturbed>
+ <E8DED08235A93F4D8A2AB6CD0ABAB32A0A937FC922@NA-EXMSG-C121.redmond.corp.microsoft.com>
+In-Reply-To: <E8DED08235A93F4D8A2AB6CD0ABAB32A0A937FC922@NA-EXMSG-C121.redmond.corp.microsoft.com>
 Content-Language: en-US
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
@@ -21,17 +22,8 @@ Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Allan Haywood <Allan.Haywood@microsoft.com>, Dave Chinner <david@fromorbit.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-
-
-
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com]
-Sent: Tuesday, October 07, 2008 4:34 PM
-To: Allan Haywood
-Cc: xfs@oss.sgi.com
-Subject: Re: xfs file system corruption
 
 [Allan, please wrap text at 72 lines. Thx]
 
@@ -104,6 +96,9 @@ once it is unfenced. i.e. step 3b = STONITH.
         writes (if I could get it to a point where modprobe -r xfs
         would work)? Although I am doubting that if there are pending
         writes that it would be easy to get xfs to unload.
+
+                Another possibility, is there a command that will tell xfs
+                To clear any pending writes?
 
 Cheers,
 
