@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 13:20:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97KKGJO018984
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 13:20:18 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 13:20:27 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97KKMrq019008
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 13:20:22 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0AAE4C5BF1
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 13:21:55 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id gyx5X1tp2Ua041xh for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 13:21:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DD3A13B2B64
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 13:21:59 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id UdxILoF2U4RV0Z24 for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 13:21:59 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m97KLrIF016709
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m97KLwIF016726
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 22:21:53 +0200
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 22:21:58 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m97KLr6D016707
-	for xfs@oss.sgi.com; Tue, 7 Oct 2008 22:21:53 +0200
-Date: Tue, 7 Oct 2008 22:21:53 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m97KLv4n016724
+	for xfs@oss.sgi.com; Tue, 7 Oct 2008 22:21:57 +0200
+Date: Tue, 7 Oct 2008 22:21:57 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] kill XFS_LITINO
-Message-ID: <20081007202153.GA16485@lst.de>
+Subject: [PATCH 2/3] kill xfs_ialloc_log_di
+Message-ID: <20081007202157.GB16485@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,146 +26,158 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-No point having a macro that just derefences a member of the struct
-pointer passed in.
+xfs_ialloc_log_di alwasy logs the full inode core + di_next_unlinked, so
+there's really no need for all the offset magic and we can just call
+xfs_trans_log_buf directly from it's only user.  Also add a comment
+describing what we should do here instead.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_attr_leaf.c
+Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_attr_leaf.c	2008-10-07 19:50:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_attr_leaf.c	2008-10-07 19:51:10.000000000 +0200
-@@ -106,7 +106,7 @@ xfs_attr_namesp_match(int arg_flags, int
- 
- 
- /*========================================================================
-- * External routines when attribute fork size < XFS_LITINO(mp).
-+ * External routines when attribute fork size < mp->m_litino.
-  *========================================================================*/
- 
- /*
-@@ -127,7 +127,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
- 	int dsize;	
- 	xfs_mount_t *mp = dp->i_mount;
- 
--	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
-+	offset = (mp->m_litino - bytes) >> 3; /* rounded down */
- 
- 	switch (dp->i_d.di_format) {
- 	case XFS_DINODE_FMT_DEV:
-@@ -184,7 +184,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t 
- 	minforkoff = roundup(minforkoff, 8) >> 3;
- 
- 	/* attr fork btree root can have at least this many key/ptr pairs */
--	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
-+	maxforkoff = mp->m_litino - XFS_BMDR_SPACE_CALC(MINABTPTRS);
- 	maxforkoff = maxforkoff >> 3;	/* rounded down */
- 
- 	if (offset >= minforkoff && offset < maxforkoff)
-Index: linux-2.6-xfs/fs/xfs/xfs_attr_leaf.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_attr_leaf.h	2008-10-07 19:50:45.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_attr_leaf.h	2008-10-07 19:51:10.000000000 +0200
-@@ -218,7 +218,7 @@ typedef struct xfs_attr_inactive_list {
-  *========================================================================*/
- 
- /*
-- * Internal routines when attribute fork size < XFS_LITINO(mp).
-+ * Internal routines when attribute fork size < mp->m_litino.
-  */
- void	xfs_attr_shortform_create(struct xfs_da_args *args);
- void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
-Index: linux-2.6-xfs/fs/xfs/xfs_dinode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_dinode.h	2008-10-07 19:50:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_dinode.h	2008-10-07 19:51:22.000000000 +0200
-@@ -76,10 +76,6 @@ typedef struct xfs_dinode_core {
- typedef struct xfs_dinode
- {
- 	xfs_dinode_core_t	di_core;
--	/*
--	 * In adding anything between the core and the union, be
--	 * sure to update the macros like XFS_LITINO below.
--	 */
- 	__be32			di_next_unlinked;/* agi unlinked list ptr */
- 	union {
- 		xfs_bmdr_block_t di_bmbt;	/* btree root block */
-@@ -160,10 +156,6 @@ typedef enum xfs_dinode_fmt
- #define	XFS_DINODE_MIN_SIZE	(1 << XFS_DINODE_MIN_LOG)
- #define	XFS_DINODE_MAX_SIZE	(1 << XFS_DINODE_MAX_LOG)
+--- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-10-07 19:50:47.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-10-07 19:57:41.000000000 +0200
+@@ -41,68 +41,6 @@
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
  
 -/*
-- * Inode size for given fs.
+- * Log specified fields for the inode given by bp and off.
 - */
--#define	XFS_LITINO(mp)	((mp)->m_litino)
- #define	XFS_BROOT_SIZE_ADJ	\
- 	(XFS_BTREE_LBLOCK_LEN - sizeof(xfs_bmdr_block_t))
+-STATIC void
+-xfs_ialloc_log_di(
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_buf_t	*bp,		/* inode buffer */
+-	int		off,		/* index of inode in buffer */
+-	int		fields)		/* bitmask of fields to log */
+-{
+-	int			first;		/* first byte number */
+-	int			ioffset;	/* off in bytes */
+-	int			last;		/* last byte number */
+-	xfs_mount_t		*mp;		/* mount point structure */
+-	static const short	offsets[] = {	/* field offsets */
+-						/* keep in sync with bits */
+-		offsetof(xfs_dinode_core_t, di_magic),
+-		offsetof(xfs_dinode_core_t, di_mode),
+-		offsetof(xfs_dinode_core_t, di_version),
+-		offsetof(xfs_dinode_core_t, di_format),
+-		offsetof(xfs_dinode_core_t, di_onlink),
+-		offsetof(xfs_dinode_core_t, di_uid),
+-		offsetof(xfs_dinode_core_t, di_gid),
+-		offsetof(xfs_dinode_core_t, di_nlink),
+-		offsetof(xfs_dinode_core_t, di_projid),
+-		offsetof(xfs_dinode_core_t, di_pad),
+-		offsetof(xfs_dinode_core_t, di_atime),
+-		offsetof(xfs_dinode_core_t, di_mtime),
+-		offsetof(xfs_dinode_core_t, di_ctime),
+-		offsetof(xfs_dinode_core_t, di_size),
+-		offsetof(xfs_dinode_core_t, di_nblocks),
+-		offsetof(xfs_dinode_core_t, di_extsize),
+-		offsetof(xfs_dinode_core_t, di_nextents),
+-		offsetof(xfs_dinode_core_t, di_anextents),
+-		offsetof(xfs_dinode_core_t, di_forkoff),
+-		offsetof(xfs_dinode_core_t, di_aformat),
+-		offsetof(xfs_dinode_core_t, di_dmevmask),
+-		offsetof(xfs_dinode_core_t, di_dmstate),
+-		offsetof(xfs_dinode_core_t, di_flags),
+-		offsetof(xfs_dinode_core_t, di_gen),
+-		offsetof(xfs_dinode_t, di_next_unlinked),
+-		offsetof(xfs_dinode_t, di_u),
+-		offsetof(xfs_dinode_t, di_a),
+-		sizeof(xfs_dinode_t)
+-	};
+-
+-
+-	ASSERT(offsetof(xfs_dinode_t, di_core) == 0);
+-	ASSERT((fields & (XFS_DI_U|XFS_DI_A)) == 0);
+-	mp = tp->t_mountp;
+-	/*
+-	 * Get the inode-relative first and last bytes for these fields
+-	 */
+-	xfs_btree_offsets(fields, offsets, XFS_DI_NUM_BITS, &first, &last);
+-	/*
+-	 * Convert to buffer offsets and log it.
+-	 */
+-	ioffset = off << mp->m_sb.sb_inodelog;
+-	first += ioffset;
+-	last += ioffset;
+-	xfs_trans_log_buf(tp, bp, first, last);
+-}
  
-@@ -176,10 +168,10 @@ typedef enum xfs_dinode_fmt
- #define XFS_DFORK_DSIZE(dip,mp) \
- 	(XFS_DFORK_Q(dip) ? \
- 		XFS_DFORK_BOFF(dip) : \
--		XFS_LITINO(mp))
-+		(mp)->m_litino)
- #define XFS_DFORK_ASIZE(dip,mp) \
- 	(XFS_DFORK_Q(dip) ? \
--		XFS_LITINO(mp) - XFS_DFORK_BOFF(dip) : \
-+		(mp)->m_litino - XFS_DFORK_BOFF(dip) : \
- 		0)
- #define XFS_DFORK_SIZE(dip,mp,w) \
- 	((w) == XFS_DATA_FORK ? \
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-10-07 19:50:45.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-10-07 19:51:10.000000000 +0200
-@@ -177,10 +177,10 @@ typedef struct xfs_icdinode {
- #define XFS_IFORK_DSIZE(ip) \
- 	(XFS_IFORK_Q(ip) ? \
- 		XFS_IFORK_BOFF(ip) : \
--		XFS_LITINO((ip)->i_mount))
-+		(ip)->i_mount->m_litino)
- #define XFS_IFORK_ASIZE(ip) \
- 	(XFS_IFORK_Q(ip) ? \
--		XFS_LITINO((ip)->i_mount) - XFS_IFORK_BOFF(ip) : \
-+		(ip)->i_mount->m_litino - XFS_IFORK_BOFF(ip) : \
- 		0)
- #define XFS_IFORK_SIZE(ip,w) \
- 	((w) == XFS_DATA_FORK ? \
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-10-07 19:50:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-10-07 19:51:10.000000000 +0200
-@@ -590,8 +590,8 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
- 	ASSERT(sbp->sb_inodesize >= 256 && sbp->sb_inodesize <= 2048);
- 	switch (sbp->sb_inodesize) {
- 	case 256:
--		mp->m_attroffset = XFS_LITINO(mp) -
--				   XFS_BMDR_SPACE_CALC(MINABTPTRS);
-+		mp->m_attroffset =
-+			mp->m_litino - XFS_BMDR_SPACE_CALC(MINABTPTRS);
- 		break;
- 	case 512:
- 	case 1024:
-@@ -601,7 +601,7 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb
- 	default:
- 		ASSERT(0);
+ /*
+  * Allocation group level functions.
+@@ -406,18 +344,25 @@ xfs_ialloc_ag_alloc(
+ 					 XFS_BUF_LOCK);
+ 		ASSERT(fbuf);
+ 		ASSERT(!XFS_BUF_GETERROR(fbuf));
++
+ 		/*
+-		 * Set initial values for the inodes in this buffer.
++		 * Initialize all inodes in this buffer and then log them.
++		 *
++		 * XXX: It would be much better if we had just one transaction to
++		 *      log a whole cluster of inodes instead of all the indivdual
++		 *      transactions causing a lot of log traffic.
+ 		 */
+ 		xfs_biozero(fbuf, 0, ninodes << args.mp->m_sb.sb_inodelog);
+ 		for (i = 0; i < ninodes; i++) {
++			int	ioffset = i << args.mp->m_sb.sb_inodelog;
++			uint	isize = sizeof(xfs_dinode_t) + sizeof(__be32);
++
+ 			free = XFS_MAKE_IPTR(args.mp, fbuf, i);
+ 			free->di_core.di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 			free->di_core.di_version = version;
+ 			free->di_core.di_gen = cpu_to_be32(gen);
+ 			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
+-			xfs_ialloc_log_di(tp, fbuf, i,
+-				XFS_DI_CORE_BITS | XFS_DI_NEXT_UNLINKED);
++			xfs_trans_log_buf(tp, fbuf, ioffset, ioffset + isize - 1);
+ 		}
+ 		xfs_trans_inode_alloc_buf(tp, fbuf);
  	}
--	ASSERT(mp->m_attroffset < XFS_LITINO(mp));
-+	ASSERT(mp->m_attroffset < mp->m_litino);
- 
- 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
- 	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+Index: linux-2.6-xfs/fs/xfs/xfs_dinode.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-10-07 19:50:45.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-10-07 19:51:10.000000000 +0200
-@@ -2406,7 +2406,7 @@ xfs_symlink(
- 	 * The symlink will fit into the inode data fork?
- 	 * There can't be any attributes so we get the whole variable part.
- 	 */
--	if (pathlen <= XFS_LITINO(mp))
-+	if (pathlen <= mp->m_litino)
- 		fs_blocks = 0;
- 	else
- 		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_dinode.h	2008-10-07 19:51:22.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_dinode.h	2008-10-07 19:56:16.000000000 +0200
+@@ -102,40 +102,6 @@ typedef struct xfs_dinode
+ #define	XFS_MAXLINK_1		65535U
+ 
+ /*
+- * Bit names for logging disk inodes only
+- */
+-#define	XFS_DI_MAGIC		0x0000001
+-#define	XFS_DI_MODE		0x0000002
+-#define	XFS_DI_VERSION		0x0000004
+-#define	XFS_DI_FORMAT		0x0000008
+-#define	XFS_DI_ONLINK		0x0000010
+-#define	XFS_DI_UID		0x0000020
+-#define	XFS_DI_GID		0x0000040
+-#define	XFS_DI_NLINK		0x0000080
+-#define	XFS_DI_PROJID		0x0000100
+-#define	XFS_DI_PAD		0x0000200
+-#define	XFS_DI_ATIME		0x0000400
+-#define	XFS_DI_MTIME		0x0000800
+-#define	XFS_DI_CTIME		0x0001000
+-#define	XFS_DI_SIZE		0x0002000
+-#define	XFS_DI_NBLOCKS		0x0004000
+-#define	XFS_DI_EXTSIZE		0x0008000
+-#define	XFS_DI_NEXTENTS		0x0010000
+-#define	XFS_DI_NAEXTENTS	0x0020000
+-#define	XFS_DI_FORKOFF		0x0040000
+-#define	XFS_DI_AFORMAT		0x0080000
+-#define	XFS_DI_DMEVMASK		0x0100000
+-#define	XFS_DI_DMSTATE		0x0200000
+-#define	XFS_DI_FLAGS		0x0400000
+-#define	XFS_DI_GEN		0x0800000
+-#define	XFS_DI_NEXT_UNLINKED	0x1000000
+-#define	XFS_DI_U		0x2000000
+-#define	XFS_DI_A		0x4000000
+-#define	XFS_DI_NUM_BITS		27
+-#define	XFS_DI_ALL_BITS		((1 << XFS_DI_NUM_BITS) - 1)
+-#define	XFS_DI_CORE_BITS	(XFS_DI_ALL_BITS & ~(XFS_DI_U|XFS_DI_A))
+-
+-/*
+  * Values for di_format
+  */
+ typedef enum xfs_dinode_fmt
