@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:42:35 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lg7HF032765
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:42:07 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:42:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lg8cF000334
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:42:09 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C0BE01B57AF6
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:43:45 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 7VUXk0sC4eounKfH for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:43:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AFC8E129BBAB
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:43:47 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id FekkspJbtTYDd4Av for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:43:47 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KnKLE-0001k8-92
-	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:43:40 +1100
+	id 1KnKLH-0001kN-5e
+	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:43:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/10] XFS: make SYNC_ATTR no longer use xfs_sync
-Date: Wed,  8 Oct 2008 08:43:35 +1100
-Message-Id: <1223415819-6599-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/10] XFS: Move remaining quiesce code.
+Date: Wed,  8 Oct 2008 08:43:39 +1100
+Message-Id: <1223415819-6599-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1223415819-6599-1-git-send-email-david@fromorbit.com>
 References: <1223415819-6599-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,109 +22,204 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Continue to de-multiplex xfs_sync be replacing all SYNC_ATTR
-callers with direct calls xfs_sync_inodes(). Add an assert
-into xfs_sync() to ensure we caught all the SYNC_ATTR callers.
+With all the other filesystem sync code it in xfs_sync.c
+including the data quiesce code, it makes sense to move
+the remaining quiesce code to the same place.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    3 ++-
- fs/xfs/linux-2.6/xfs_sync.c  |   23 +++++++++++------------
- fs/xfs/linux-2.6/xfs_sync.h  |    1 -
- fs/xfs/xfs_vfsops.c          |    2 +-
- 4 files changed, 14 insertions(+), 15 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |    6 ++--
+ fs/xfs/linux-2.6/xfs_sync.c  |   55 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_sync.h  |    1 +
+ fs/xfs/xfs_vfsops.c          |   55 ------------------------------------------
+ fs/xfs/xfs_vfsops.h          |    1 -
+ 5 files changed, 59 insertions(+), 59 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index ab09f6a..17958b7 100644
+index 9cd49dc..1f9c5a9 100644
 --- a/fs/xfs/linux-2.6/xfs_super.c
 +++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -998,7 +998,8 @@ xfs_fs_put_super(
- 	int			error;
+@@ -1212,7 +1212,7 @@ xfs_fs_remount(
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+ 		xfs_quiesce_data(mp);
+-		xfs_attr_quiesce(mp);
++		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+ 	}
  
- 	xfs_syncd_stop(mp);
--	xfs_sync(mp, SYNC_ATTR | SYNC_DELWRI);
-+	xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
-+	xfs_sync_inodes(mp, SYNC_ATTR|SYNC_DELWRI);
+@@ -1221,7 +1221,7 @@ xfs_fs_remount(
  
- #ifdef HAVE_DMAPI
- 	if (mp->m_flags & XFS_MOUNT_DMAPI) {
+ /*
+  * Second stage of a freeze. The data is already frozen so we only
+- * need to take care of themetadata. Once that's done write a dummy
++ * need to take care of the metadata. Once that's done write a dummy
+  * record to dirty the log in case of a crash while frozen.
+  */
+ STATIC void
+@@ -1230,7 +1230,7 @@ xfs_fs_lockfs(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+-	xfs_attr_quiesce(mp);
++	xfs_quiesce_attr(mp);
+ 	xfs_fs_log_dummy(mp);
+ }
+ 
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 3c31137..002ccb6 100644
+index ed24435..b2b7082 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -342,9 +342,8 @@ xfs_sync_fsdata(
-  *		       periodically.  We also push the inodes and
-  *		       superblock if we can lock them without sleeping
-  *			and they are not pinned.
-- *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
-- *		       set, then we really want to lock each inode and flush
-- *		       it.
-+ *      SYNC_ATTR    - We need to flush the inodes. Now handled by direct calls
-+ *		       to xfs_sync_inodes().
-  *      SYNC_WAIT    - All the flushes that take place in this call should
-  *		       be synchronous.
-  *      SYNC_DELWRI  - This tells us to push dirty pages associated with
-@@ -373,6 +372,8 @@ xfs_sync(
- 	int		last_error = 0;
- 	uint		log_flags = XFS_LOG_FORCE;
+@@ -357,6 +357,61 @@ xfs_quiesce_data(
+ 	return error;
+ }
  
-+	ASSERT(!(flags & SYNC_ATTR));
++STATIC void
++xfs_quiesce_fs(
++	struct xfs_mount	*mp)
++{
++	int	count = 0, pincount;
 +
- 	/*
- 	 * Get the Quota Manager to flush the dquots.
- 	 *
-@@ -403,20 +404,18 @@ xfs_sync(
- 
- 	xfs_log_force(mp, (xfs_lsn_t)0, log_flags);
- 
--	if (flags & (SYNC_ATTR|SYNC_DELWRI)) {
-+	if (flags & SYNC_DELWRI) {
- 		if (flags & SYNC_BDFLUSH)
- 			xfs_finish_reclaim_all(mp, 1, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
- 		else
- 			error = xfs_sync_inodes(mp, flags);
--	}
--
--	/*
--	 * Flushing out dirty data above probably generated more
--	 * log activity, so if this isn't vfs_sync() then flush
--	 * the log again.
--	 */
--	if (flags & SYNC_DELWRI)
-+		/*
-+		 * Flushing out dirty data above probably generated more
-+		 * log activity, so if this isn't vfs_sync() then flush
-+		 * the log again.
-+		 */
- 		xfs_log_force(mp, 0, log_flags);
-+	}
- 
- 	if (flags & SYNC_FSDATA) {
- 		error = xfs_sync_fsdata(mp, flags);
++	xfs_flush_buftarg(mp->m_ddev_targp, 0);
++	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
++
++	/*
++	 * This loop must run at least twice.  The first instance of the loop
++	 * will flush most meta data but that will generate more meta data
++	 * (typically directory updates).  Which then must be flushed and
++	 * logged before we can write the unmount record.
++	 */
++	do {
++		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
++		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
++		if (!pincount) {
++			delay(50);
++			count++;
++		}
++	} while (count < 2);
++}
++
++/*
++ * Second stage of a quiesce. The data is already synced, now we have to take
++ * care of the metadata. New transactions are already blocked, so we need to
++ * wait for any remaining transactions to drain out before proceding.
++ */
++void
++xfs_quiesce_attr(
++	struct xfs_mount	*mp)
++{
++	int	error = 0;
++
++	/* wait for all modifications to complete */
++	while (atomic_read(&mp->m_active_trans) > 0)
++		delay(100);
++
++	/* flush inodes and push all remaining buffers out to disk */
++	xfs_quiesce_fs(mp);
++
++	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
++
++	/* Push the superblock and write an unmount record */
++	error = xfs_log_sbcount(mp, 1);
++	if (error)
++		xfs_fs_cmn_err(CE_WARN, mp,
++				"xfs_attr_quiesce: failed to log sb changes. "
++				"Frozen image may not be consistent.");
++	xfs_log_unmount_write(mp);
++	xfs_unmountfs_writesb(mp);
++}
++
+ /*
+  * Enqueue a work item to be picked up by the vfs xfssyncd thread.
+  * Doing this has two advantages:
 diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 2954861..5316915 100644
+index 4591dc0..3b49aa3 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.h
 +++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -49,7 +49,6 @@ typedef struct bhv_vfs_sync_work {
-  * to disk (this is the main difference between a sync and a quiesce).
-  */
- #define SYNC_DATA_QUIESCE	(SYNC_DELWRI|SYNC_FSDATA|SYNC_WAIT|SYNC_IOWAIT)
--#define SYNC_INODE_QUIESCE	(SYNC_REMOUNT|SYNC_ATTR|SYNC_WAIT)
+@@ -40,6 +40,7 @@ int xfs_sync_inodes(struct xfs_mount *mp, int flags);
+ int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
  
- int xfs_syncd_init(struct xfs_mount *mp);
- void xfs_syncd_stop(struct xfs_mount *mp);
+ int xfs_quiesce_data(struct xfs_mount *mp);
++void xfs_quiesce_attr(struct xfs_mount *mp);
+ 
+ void xfs_flush_inode(struct xfs_inode *ip);
+ void xfs_flush_device(struct xfs_inode *ip);
 diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index d5396d6..c82b955 100644
+index b55a9bb..883dd0f 100644
 --- a/fs/xfs/xfs_vfsops.c
 +++ b/fs/xfs/xfs_vfsops.c
-@@ -76,7 +76,7 @@ xfs_quiesce_fs(
- 	 */
- 	do {
- 		xfs_log_force(mp, 0, XFS_LOG_FORCE|XFS_LOG_SYNC);
--		xfs_sync_inodes(mp, SYNC_INODE_QUIESCE);
-+		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
- 		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 		if (!pincount) {
- 			delay(50);
+@@ -59,61 +59,6 @@
+ #include "xfs_sync.h"
+ 
+ 
+-STATIC void
+-xfs_quiesce_fs(
+-	xfs_mount_t		*mp)
+-{
+-	int			count = 0, pincount;
+-
+-	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+-	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
+-
+-	/*
+-	 * This loop must run at least twice.  The first instance of the loop
+-	 * will flush most meta data but that will generate more meta data
+-	 * (typically directory updates).  Which then must be flushed and
+-	 * logged before we can write the unmount record.
+-	 */
+-	do {
+-		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
+-		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
+-		if (!pincount) {
+-			delay(50);
+-			count++;
+-		}
+-	} while (count < 2);
+-}
+-
+-/*
+- * Second stage of a quiesce. The data is already synced, now we have to take
+- * care of the metadata. New transactions are already blocked, so we need to
+- * wait for any remaining transactions to drain out before proceding.
+- */
+-void
+-xfs_attr_quiesce(
+-	xfs_mount_t	*mp)
+-{
+-	int	error = 0;
+-
+-	/* wait for all modifications to complete */
+-	while (atomic_read(&mp->m_active_trans) > 0)
+-		delay(100);
+-
+-	/* flush inodes and push all remaining buffers out to disk */
+-	xfs_quiesce_fs(mp);
+-
+-	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
+-
+-	/* Push the superblock and write an unmount record */
+-	error = xfs_log_sbcount(mp, 1);
+-	if (error)
+-		xfs_fs_cmn_err(CE_WARN, mp,
+-				"xfs_attr_quiesce: failed to log sb changes. "
+-				"Frozen image may not be consistent.");
+-	xfs_log_unmount_write(mp);
+-	xfs_unmountfs_writesb(mp);
+-}
+-
+ /*
+  * xfs_unmount_flush implements a set of flush operation on special
+  * inodes, which are needed as a separate set of operations so that
+diff --git a/fs/xfs/xfs_vfsops.h b/fs/xfs/xfs_vfsops.h
+index 6701d0e..6b8e0b5 100644
+--- a/fs/xfs/xfs_vfsops.h
++++ b/fs/xfs/xfs_vfsops.h
+@@ -10,6 +10,5 @@ struct xfs_mount_args;
+ 
+ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+ 		int lnnum);
+-void xfs_attr_quiesce(struct xfs_mount *mp);
+ 
+ #endif /* _XFS_VFSOPS_H */
 -- 
 1.5.6.5
