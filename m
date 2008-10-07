@@ -1,225 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:42:37 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lg8cF000334
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:42:09 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:50:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lodee003791
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:50:39 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFC8E129BBAB
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:43:47 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id FekkspJbtTYDd4Av for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:43:47 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1KnKLH-0001kN-5e
-	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:43:43 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B602C4C62D4
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:52:17 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id d5d4Yl4dfTKSSmtG for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:52:17 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/10] XFS: Move remaining quiesce code.
-Date: Wed,  8 Oct 2008 08:43:39 +1100
-Message-Id: <1223415819-6599-11-git-send-email-david@fromorbit.com>
-In-Reply-To: <1223415819-6599-1-git-send-email-david@fromorbit.com>
-References: <1223415819-6599-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/5] Combine the XFS and Linux inode structures V2
+Date: Wed,  8 Oct 2008 08:52:07 +1100
+Message-Id: <1223416332-7026-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
-With all the other filesystem sync code it in xfs_sync.c
-including the data quiesce code, it makes sense to move
-the remaining quiesce code to the same place.
+XFS currently has to deal with two separate inode lifecycles
+which makes for complexity in inode lookups and reclaim. We
+also have the problem of not always having a linux inode around
+when it might be useful to have it.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/linux-2.6/xfs_super.c |    6 ++--
- fs/xfs/linux-2.6/xfs_sync.c  |   55 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_sync.h  |    1 +
- fs/xfs/xfs_vfsops.c          |   55 ------------------------------------------
- fs/xfs/xfs_vfsops.h          |    1 -
- 5 files changed, 59 insertions(+), 59 deletions(-)
+To avoid these lifecycle problems, this series embedѕ the linux
+inode inside the struct xfs_inode and changes the way we reference
+the two inodes. We can no longer check for a null linux inode -
+instead we have to check to see if it is valid or not by checking
+either the linux inode or xfs inode state flags. While this means
+that inodes waiting for reclaim use more memory, this is not the
+common state for inodes and they will soon be completely freed so
+the additional memeory use in this state is only temporary.
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 9cd49dc..1f9c5a9 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1212,7 +1212,7 @@ xfs_fs_remount(
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
- 		xfs_quiesce_data(mp);
--		xfs_attr_quiesce(mp);
-+		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
- 
-@@ -1221,7 +1221,7 @@ xfs_fs_remount(
- 
- /*
-  * Second stage of a freeze. The data is already frozen so we only
-- * need to take care of themetadata. Once that's done write a dummy
-+ * need to take care of the metadata. Once that's done write a dummy
-  * record to dirty the log in case of a crash while frozen.
-  */
- STATIC void
-@@ -1230,7 +1230,7 @@ xfs_fs_lockfs(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
--	xfs_attr_quiesce(mp);
-+	xfs_quiesce_attr(mp);
- 	xfs_fs_log_dummy(mp);
- }
- 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index ed24435..b2b7082 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -357,6 +357,61 @@ xfs_quiesce_data(
- 	return error;
- }
- 
-+STATIC void
-+xfs_quiesce_fs(
-+	struct xfs_mount	*mp)
-+{
-+	int	count = 0, pincount;
-+
-+	xfs_flush_buftarg(mp->m_ddev_targp, 0);
-+	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
-+
-+	/*
-+	 * This loop must run at least twice.  The first instance of the loop
-+	 * will flush most meta data but that will generate more meta data
-+	 * (typically directory updates).  Which then must be flushed and
-+	 * logged before we can write the unmount record.
-+	 */
-+	do {
-+		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
-+		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-+		if (!pincount) {
-+			delay(50);
-+			count++;
-+		}
-+	} while (count < 2);
-+}
-+
-+/*
-+ * Second stage of a quiesce. The data is already synced, now we have to take
-+ * care of the metadata. New transactions are already blocked, so we need to
-+ * wait for any remaining transactions to drain out before proceding.
-+ */
-+void
-+xfs_quiesce_attr(
-+	struct xfs_mount	*mp)
-+{
-+	int	error = 0;
-+
-+	/* wait for all modifications to complete */
-+	while (atomic_read(&mp->m_active_trans) > 0)
-+		delay(100);
-+
-+	/* flush inodes and push all remaining buffers out to disk */
-+	xfs_quiesce_fs(mp);
-+
-+	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
-+
-+	/* Push the superblock and write an unmount record */
-+	error = xfs_log_sbcount(mp, 1);
-+	if (error)
-+		xfs_fs_cmn_err(CE_WARN, mp,
-+				"xfs_attr_quiesce: failed to log sb changes. "
-+				"Frozen image may not be consistent.");
-+	xfs_log_unmount_write(mp);
-+	xfs_unmountfs_writesb(mp);
-+}
-+
- /*
-  * Enqueue a work item to be picked up by the vfs xfssyncd thread.
-  * Doing this has two advantages:
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index 4591dc0..3b49aa3 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -40,6 +40,7 @@ int xfs_sync_inodes(struct xfs_mount *mp, int flags);
- int xfs_sync_fsdata(struct xfs_mount *mp, int flags);
- 
- int xfs_quiesce_data(struct xfs_mount *mp);
-+void xfs_quiesce_attr(struct xfs_mount *mp);
- 
- void xfs_flush_inode(struct xfs_inode *ip);
- void xfs_flush_device(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_vfsops.c b/fs/xfs/xfs_vfsops.c
-index b55a9bb..883dd0f 100644
---- a/fs/xfs/xfs_vfsops.c
-+++ b/fs/xfs/xfs_vfsops.c
-@@ -59,61 +59,6 @@
- #include "xfs_sync.h"
- 
- 
--STATIC void
--xfs_quiesce_fs(
--	xfs_mount_t		*mp)
--{
--	int			count = 0, pincount;
--
--	xfs_flush_buftarg(mp->m_ddev_targp, 0);
--	xfs_finish_reclaim_all(mp, 0, XFS_IFLUSH_DELWRI_ELSE_ASYNC);
--
--	/*
--	 * This loop must run at least twice.  The first instance of the loop
--	 * will flush most meta data but that will generate more meta data
--	 * (typically directory updates).  Which then must be flushed and
--	 * logged before we can write the unmount record.
--	 */
--	do {
--		xfs_sync_inodes(mp, SYNC_ATTR|SYNC_WAIT);
--		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
--		if (!pincount) {
--			delay(50);
--			count++;
--		}
--	} while (count < 2);
--}
--
--/*
-- * Second stage of a quiesce. The data is already synced, now we have to take
-- * care of the metadata. New transactions are already blocked, so we need to
-- * wait for any remaining transactions to drain out before proceding.
-- */
--void
--xfs_attr_quiesce(
--	xfs_mount_t	*mp)
--{
--	int	error = 0;
--
--	/* wait for all modifications to complete */
--	while (atomic_read(&mp->m_active_trans) > 0)
--		delay(100);
--
--	/* flush inodes and push all remaining buffers out to disk */
--	xfs_quiesce_fs(mp);
--
--	ASSERT_ALWAYS(atomic_read(&mp->m_active_trans) == 0);
--
--	/* Push the superblock and write an unmount record */
--	error = xfs_log_sbcount(mp, 1);
--	if (error)
--		xfs_fs_cmn_err(CE_WARN, mp,
--				"xfs_attr_quiesce: failed to log sb changes. "
--				"Frozen image may not be consistent.");
--	xfs_log_unmount_write(mp);
--	xfs_unmountfs_writesb(mp);
--}
--
- /*
-  * xfs_unmount_flush implements a set of flush operation on special
-  * inodes, which are needed as a separate set of operations so that
-diff --git a/fs/xfs/xfs_vfsops.h b/fs/xfs/xfs_vfsops.h
-index 6701d0e..6b8e0b5 100644
---- a/fs/xfs/xfs_vfsops.h
-+++ b/fs/xfs/xfs_vfsops.h
-@@ -10,6 +10,5 @@ struct xfs_mount_args;
- 
- void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- 		int lnnum);
--void xfs_attr_quiesce(struct xfs_mount *mp);
- 
- #endif /* _XFS_VFSOPS_H */
--- 
-1.5.6.5
+This combining of the inodes simplifies the inode and reclaim logic,
+making it possible to do reclaim via radix tree tags (an upcoming
+patch series) and to be able to use RCU locking on the radix trees.
+The fact that we don't have a simple mechanism to determine the
+reclaim state of the inode makes RCU locking very complex, and this
+complexity is removed by having a combined inode structure.
+
+This patch series also changes the way XFS caches inodes. It no
+longer uses the linux inode cache as the primary lookup cache -
+instead we rely solely on the XFS inode caches. This avoids the
+inode_lock in lookups that hit the cache - we should get much
+better parallelism out of inode lookup than we currently do now.
+
+In future, we should also be able to cull duplicate fields out of
+the xfs and linux inodes reducing the overall memory usage of
+the active inode cache. This provides scope for continuing to
+reduce the memory footprint of the XFS inode cache.
+
+Version 2:
+o clean up based on review comments
+o pull preparation patches into series now there's only two
+  uncommitted patches.
