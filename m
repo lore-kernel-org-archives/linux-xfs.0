@@ -1,68 +1,114 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:56:24 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:57:04 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97LuKNM007643
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:56:20 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lv0Cp007931
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:57:01 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F57B185E6CC
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:57:59 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id cHVW3H2VBOiBKgNp for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:57:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3553185EC5F
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:58:39 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id v5ylNIIep7pIN1vo for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:58:39 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KnKZ3-0002Cs-Om
-	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:57:57 +1100
+	id 1KnKZi-0002Ea-1K
+	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:58:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] XFS: don't block in xfs_qm_dqflush() during async writeback
-Date: Wed,  8 Oct 2008 08:57:57 +1100
-Message-Id: <1223416677-8458-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] XFS: Account for allocated blocks when expanding directories
+Date: Wed,  8 Oct 2008 08:58:37 +1100
+Message-Id: <1223416717-8566-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Normally dquots are written back via delayed write mechanisms.  They
-are flushed to their backing buffer by xfssyncd, which is then
-pushed out by either AIL or xfsbufd flushing. The flush from the
-xfssyncd is supposed to be non-blocking, but xfs_qm_dqflush() always
-waits for pinned duots, which means that it will block for the
-length of time it takes to do a synchronous log force. This causes
-unnecessary extra log I/O to be issued whenever we try to flush a
-busy dquot.
+When we create a directory, we reserve a number of blocks for
+the maximum possible expansion of of the directory due to
+various btree splits, freespace allocation, etc. Unfortunately,
+each allocation is not reflected in the total number of blocks
+still available to the transaction, so the maximal reservation
+is used over and over again.
 
-Avoid the log forces and blocking xfssyncd by making xfs_qm_dqflush()
-pay attention to what type of sync it is doing when it sees a pinned
-dquot and not waiting when doing non-blocking flushes.
+This leads to problems where an allocation group has only
+enough blocks for *some* of the allocations required for the
+directory modification. After the first N allocations, the
+remaining blocks in the allocation group drops below the total
+reservation, and subsequent allocations fail because the allocator
+will not allow the allocation to proceed if the AG does not have
+the enough blocks available for the entire allocation total.
+
+This results in an ENOSPC occurring after an allocation has
+already occurred. This results in aborting the directory
+operation (leaving the directory in an inconsistent state)
+and cancelling a dirty transaction, which results in a filesystem
+shutdown.
+
+Avoid the problem by reflecting the number of blocks allocated in
+any directory expansion in the total number of blocks available to
+the modification in progress. This prevents a directory modification
+from being aborted part way through with an ENOSPC.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/quota/xfs_dquot.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_da_btree.c |    5 +++++
+ fs/xfs/xfs_dir2.c     |    6 ++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index 5dca401..591ca66 100644
---- a/fs/xfs/quota/xfs_dquot.c
-+++ b/fs/xfs/quota/xfs_dquot.c
-@@ -1221,16 +1221,14 @@ xfs_qm_dqflush(
- 	xfs_dqtrace_entry(dqp, "DQFLUSH");
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 9e561a9..a11a839 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -1566,11 +1566,14 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
+ 	int nmap, error, w, count, c, got, i, mapi;
+ 	xfs_trans_t *tp;
+ 	xfs_mount_t *mp;
++	xfs_drfsbno_t	nblks;
  
+ 	dp = args->dp;
+ 	mp = dp->i_mount;
+ 	w = args->whichfork;
+ 	tp = args->trans;
++	nblks = dp->i_d.di_nblocks;
++
  	/*
--	 * If not dirty, nada.
-+	 * If not dirty, or it's pinned and we are not supposed to
-+	 * block, nada.
+ 	 * For new directories adjust the file offset and block count.
  	 */
--	if (!XFS_DQ_IS_DIRTY(dqp)) {
-+	if (!XFS_DQ_IS_DIRTY(dqp) ||
-+	    (!(flags & XFS_QMOPT_SYNC) && atomic_read(&dqp->q_pincount) > 0)) {
- 		xfs_dqfunlock(dqp);
--		return (0);
-+		return 0;
+@@ -1647,6 +1650,8 @@ xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno)
  	}
--
--	/*
--	 * Cant flush a pinned dquot. Wait for it.
--	 */
- 	xfs_qm_dqunpin_wait(dqp);
+ 	if (mapp != &map)
+ 		kmem_free(mapp);
++	/* account for newly allocated blocks in reserved blocks total */
++	args->total -= dp->i_d.di_nblocks - nblks;
+ 	*new_blkno = (xfs_dablk_t)bno;
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index 80e0dc5..1afb122 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -525,11 +525,13 @@ xfs_dir2_grow_inode(
+ 	xfs_mount_t	*mp;
+ 	int		nmap;		/* number of bmap entries */
+ 	xfs_trans_t	*tp;
++	xfs_drfsbno_t	nblks;
  
+ 	xfs_dir2_trace_args_s("grow_inode", args, space);
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
++	nblks = dp->i_d.di_nblocks;
  	/*
+ 	 * Set lowest possible block in the space requested.
+ 	 */
+@@ -622,7 +624,11 @@ xfs_dir2_grow_inode(
+ 	 */
+ 	if (mapp != &map)
+ 		kmem_free(mapp);
++
++	/* account for newly allocated blocks in reserved blocks total */
++	args->total -= dp->i_d.di_nblocks - nblks;
+ 	*dbp = xfs_dir2_da_to_db(mp, (xfs_dablk_t)bno);
++
+ 	/*
+ 	 * Update file's size if this is the data space and it grew.
+ 	 */
 -- 
 1.5.6.5
