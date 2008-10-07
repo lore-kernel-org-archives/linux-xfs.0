@@ -1,110 +1,58 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:53:24 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:55:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lr6oE005449
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:53:06 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97LtgXw007361
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:55:44 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7B2F4C6344
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:54:45 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id GRqAbabFPsAFAhmA for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:54:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E00A84C63AA
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:57:22 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id e3uXYTxS8wBMrHB2 for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:57:22 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KnKVt-00022o-LE
-	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:54:41 +1100
+	id 1KnKYS-0002BE-8i
+	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:57:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] XFS: Prevent looping in xfs_sync_inodes_ag
-Date: Wed,  8 Oct 2008 08:54:40 +1100
-Message-Id: <1223416480-7701-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1223416480-7701-1-git-send-email-david@fromorbit.com>
-References: <1223416480-7701-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] XFS: Check for valid transaction headers in recovery
+Date: Wed,  8 Oct 2008 08:57:20 +1100
+Message-Id: <1223416640-8357-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-If the last  block of the AG has inodes in it and the AG is an
-exactly power-of-2 size then the last inode in the AG points
-to the last block in the AG. If we try to find the next inode
-in the AG by adding one to the inode number, we increment the
-inode number past the size of the AG. The result is that the
-macro XFS_INO_TO_AGINO() will strip the AG portion of the inode
-number and return an inode number of zero.
+When we are about to add a new item to a transaction in recovery, we
+need to check that it is valid first. Currently we just assert that
+header magic number matches, but in production systems that is
+present and we add a corrupted transaction to the list to be
+processed. This results in a kernel oops later when processing the
+corrupted transaction.
 
-That is, instead of terminating the lookup loop because we hit the
-inode number went outside the valid range for the AG, the search
-index returns to zero and we start traversing the radix tree from
-the start again. This results in an endless loop in
-xfs_sync_inodes_ag().
-
-Fix it be detecting if the new search index decreases as a result of
-incrementing the current inode number. That indicate an overflow and
-hence that we have finished processing the AG so we can terminate
-the loop.
+Instead, if we detect a corrupted transaction, abort recovery and
+leave the user to clean up the mess that has occurred.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   26 ++++++++++++++++++++++----
- 1 files changed, 22 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_log_recover.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 22006b5..ee1648b 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -59,7 +59,7 @@ xfs_sync_inodes_ag(
- {
- 	xfs_perag_t	*pag = &mp->m_perag[ag];
- 	int		nr_found;
--	int		first_index = 0;
-+	uint32_t	first_index = 0;
- 	int		error = 0;
- 	int		last_error = 0;
- 	int		fflag = XFS_B_ASYNC;
-@@ -97,8 +97,17 @@ xfs_sync_inodes_ag(
- 			break;
- 		}
- 
--		/* update the index for the next lookup */
-+		/*
-+		 * Update the index for the next lookup. Catch overflows
-+		 * into the next AG range which can occur if we have inodes
-+		 * in the last block of the AG and we are currently
-+		 * pointing to the last inode.
-+		 */
- 		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
-+			read_unlock(&pag->pag_ici_lock);
-+			break;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0280a25..6d961fc 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1417,7 +1417,13 @@ xlog_recover_add_to_trans(
+ 		return 0;
+ 	item = trans->r_itemq;
+ 	if (item == NULL) {
+-		ASSERT(*(uint *)dp == XFS_TRANS_HEADER_MAGIC);
++		/* we need to catch log corruptions here */
++		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
++			xlog_warn("XFS: xlog_recover_add_to_trans: "
++				  "bad header magic number");
++			ASSERT(0);
++			return XFS_ERROR(EIO);
 +		}
- 
- 		/*
- 		 * skip inodes in reclaim. Let xfs_syncsub do that for
-@@ -702,7 +711,7 @@ xfs_reclaim_inodes_ag(
- 	xfs_inode_t	*ip = NULL;
- 	xfs_perag_t	*pag = &mp->m_perag[ag];
- 	int		nr_found;
--	int		first_index;
-+	uint32_t	first_index;
- 	int		skipped;
- 
- restart:
-@@ -724,8 +733,17 @@ restart:
- 			break;
- 		}
- 
--		/* update the index for the next lookup */
-+		/*
-+		 * Update the index for the next lookup. Catch overflows
-+		 * into the next AG range which can occur if we have inodes
-+		 * in the last block of the AG and we are currently
-+		 * pointing to the last inode.
-+		 */
- 		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
-+			read_unlock(&pag->pag_ici_lock);
-+			break;
-+		}
- 
- 		ASSERT(xfs_iflags_test(ip, (XFS_IRECLAIMABLE|XFS_IRECLAIM)));
- 
+ 		if (len == sizeof(xfs_trans_header_t))
+ 			xlog_recover_add_item(&trans->r_itemq);
+ 		memcpy(&trans->r_theader, dp, len); /* d, s, l */
 -- 
 1.5.6.5
