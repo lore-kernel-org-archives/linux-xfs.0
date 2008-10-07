@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:50:47 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:50:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Loc7e003780
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lobko003768
 	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:50:38 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 84A6C4C62D1
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:52:17 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id SBW5x4XIXdWYIejb for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:52:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 675644C62D1
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:52:16 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id pGJ1BI8o1sqWwGUX for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:52:16 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] XFS: factor xfs_iget_core() into hit and miss cases
-Date: Wed,  8 Oct 2008 08:52:08 +1100
-Message-Id: <1223416332-7026-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] Inode: Allow external initialisers
+Date: Wed,  8 Oct 2008 08:52:10 +1100
+Message-Id: <1223416332-7026-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1223416332-7026-1-git-send-email-david@fromorbit.com>
 References: <1223416332-7026-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -19,441 +19,202 @@ List-Id: xfs
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org
 
-There are really two cases in xfs_iget_core(). The first is the
-cache hit case, the second is the miss case. They share very little
-code, and hence can easily be factored out into separate functions.
-This makes the code much easier to understand and subsequently
-modify.
+To allow XFS to combine the XFS and linux inodes into a single
+structure, we need to drive inode lookup from the XFS inode cache,
+not the generic inode cache. This means that we need initialise a
+struct inode from a context outside alloc_inode() as it is no longer
+used by XFS.
+
+Factor and export the struct inode initialisation code from
+alloc_inode() to inode_init_always() as a counterpart to
+inode_init_once().  i.e. we have to call this init function for each
+inode instantiation (always), as opposed inode_init_once() which is
+only called on slab object instantiation (once).
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_iget.c |  348 +++++++++++++++++++++++++++++------------------------
- 1 files changed, 191 insertions(+), 157 deletions(-)
+ fs/inode.c         |  152 +++++++++++++++++++++++++++++-----------------------
+ include/linux/fs.h |    1 +
+ 2 files changed, 85 insertions(+), 68 deletions(-)
 
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 58865fe..b2539b1 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -40,161 +40,119 @@
- #include "xfs_utils.h"
- 
- /*
-- * Look up an inode by number in the given file system.
-- * The inode is looked up in the cache held in each AG.
-- * If the inode is found in the cache, attach it to the provided
-- * vnode.
-- *
-- * If it is not in core, read it in from the file system's device,
-- * add it to the cache and attach the provided vnode.
-- *
-- * The inode is locked according to the value of the lock_flags parameter.
-- * This flag parameter indicates how and if the inode's IO lock and inode lock
-- * should be taken.
-- *
-- * mp -- the mount point structure for the current file system.  It points
-- *       to the inode hash table.
-- * tp -- a pointer to the current transaction if there is one.  This is
-- *       simply passed through to the xfs_iread() call.
-- * ino -- the number of the inode desired.  This is the unique identifier
-- *        within the file system for the inode being requested.
-- * lock_flags -- flags indicating how to lock the inode.  See the comment
-- *		 for xfs_ilock() for a list of valid values.
-- * bno -- the block number starting the buffer containing the inode,
-- *	  if known (as by bulkstat), else 0.
-+ * Check the validity of the inode we just found it the cache
-  */
--STATIC int
--xfs_iget_core(
--	struct inode	*inode,
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_ino_t	ino,
--	uint		flags,
--	uint		lock_flags,
--	xfs_inode_t	**ipp,
--	xfs_daddr_t	bno)
-+static int
-+xfs_iget_cache_hit(
-+	struct inode		*inode,
-+	struct xfs_perag	*pag,
-+	struct xfs_inode	*ip,
-+	int			flags,
-+	int			lock_flags) __releases(pag->pag_ici_lock)
- {
--	struct inode	*old_inode;
--	xfs_inode_t	*ip;
--	int		error;
--	unsigned long	first_index, mask;
--	xfs_perag_t	*pag;
--	xfs_agino_t	agino;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct inode		*old_inode;
-+	int			error = 0;
- 
--	/* the radix tree exists only in inode capable AGs */
--	if (XFS_INO_TO_AGNO(mp, ino) >= mp->m_maxagi)
--		return EINVAL;
--
--	/* get the perag structure and ensure that it's inode capable */
--	pag = xfs_get_perag(mp, ino);
--	if (!pag->pagi_inodeok)
--		return EINVAL;
--	ASSERT(pag->pag_ici_init);
--	agino = XFS_INO_TO_AGINO(mp, ino);
--
--again:
--	read_lock(&pag->pag_ici_lock);
--	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-+	/*
-+	 * If INEW is set this inode is being set up
-+	 * Pause and try again.
-+	 */
-+	if (xfs_iflags_test(ip, XFS_INEW)) {
-+		error = EAGAIN;
-+		XFS_STATS_INC(xs_ig_frecycle);
-+		goto out_error;
-+	}
- 
--	if (ip != NULL) {
-+	old_inode = ip->i_vnode;
-+	if (old_inode == NULL) {
- 		/*
--		 * If INEW is set this inode is being set up
-+		 * If IRECLAIM is set this inode is
-+		 * on its way out of the system,
- 		 * we need to pause and try again.
- 		 */
--		if (xfs_iflags_test(ip, XFS_INEW)) {
--			read_unlock(&pag->pag_ici_lock);
--			delay(1);
-+		if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
-+			error = EAGAIN;
- 			XFS_STATS_INC(xs_ig_frecycle);
-+			goto out_error;
-+		}
-+		ASSERT(xfs_iflags_test(ip, XFS_IRECLAIMABLE));
- 
--			goto again;
-+		/*
-+		 * If lookup is racing with unlink, then we
-+		 * should return an error immediately so we
-+		 * don't remove it from the reclaim list and
-+		 * potentially leak the inode.
-+		 */
-+		if ((ip->i_d.di_mode == 0) &&
-+		    !(flags & XFS_IGET_CREATE)) {
-+			error = ENOENT;
-+			goto out_error;
- 		}
-+		xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
- 
--		old_inode = ip->i_vnode;
--		if (old_inode == NULL) {
--			/*
--			 * If IRECLAIM is set this inode is
--			 * on its way out of the system,
--			 * we need to pause and try again.
--			 */
--			if (xfs_iflags_test(ip, XFS_IRECLAIM)) {
--				read_unlock(&pag->pag_ici_lock);
--				delay(1);
--				XFS_STATS_INC(xs_ig_frecycle);
--
--				goto again;
--			}
--			ASSERT(xfs_iflags_test(ip, XFS_IRECLAIMABLE));
--
--			/*
--			 * If lookup is racing with unlink, then we
--			 * should return an error immediately so we
--			 * don't remove it from the reclaim list and
--			 * potentially leak the inode.
--			 */
--			if ((ip->i_d.di_mode == 0) &&
--			    !(flags & XFS_IGET_CREATE)) {
--				read_unlock(&pag->pag_ici_lock);
--				xfs_put_perag(mp, pag);
--				return ENOENT;
--			}
--
--			xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
--
--			XFS_STATS_INC(xs_ig_found);
--			xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
--			read_unlock(&pag->pag_ici_lock);
--
--			XFS_MOUNT_ILOCK(mp);
--			list_del_init(&ip->i_reclaim);
--			XFS_MOUNT_IUNLOCK(mp);
--
--			goto finish_inode;
--
--		} else if (inode != old_inode) {
--			/* The inode is being torn down, pause and
--			 * try again.
--			 */
--			if (old_inode->i_state & (I_FREEING | I_CLEAR)) {
--				read_unlock(&pag->pag_ici_lock);
--				delay(1);
--				XFS_STATS_INC(xs_ig_frecycle);
--
--				goto again;
--			}
-+		xfs_iflags_clear(ip, XFS_IRECLAIMABLE);
-+		read_unlock(&pag->pag_ici_lock);
-+
-+		XFS_MOUNT_ILOCK(mp);
-+		list_del_init(&ip->i_reclaim);
-+		XFS_MOUNT_IUNLOCK(mp);
-+
-+	} else if (inode != old_inode) {
-+		/* The inode is being torn down, pause and
-+		 * try again.
-+		 */
-+		if (old_inode->i_state & (I_FREEING | I_CLEAR)) {
-+			error = EAGAIN;
-+			XFS_STATS_INC(xs_ig_frecycle);
-+			goto out_error;
-+		}
- /* Chances are the other vnode (the one in the inode) is being torn
- * down right now, and we landed on top of it. Question is, what do
- * we do? Unhook the old inode and hook up the new one?
- */
--			cmn_err(CE_PANIC,
--		"xfs_iget_core: ambiguous vns: vp/0x%p, invp/0x%p",
--					old_inode, inode);
--		}
--
--		/*
--		 * Inode cache hit
--		 */
-+		cmn_err(CE_PANIC,
-+	"xfs_iget_core: ambiguous vns: vp/0x%p, invp/0x%p",
-+				old_inode, inode);
-+	} else {
- 		read_unlock(&pag->pag_ici_lock);
--		XFS_STATS_INC(xs_ig_found);
-+	}
- 
--finish_inode:
--		if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
--			xfs_put_perag(mp, pag);
--			return ENOENT;
--		}
-+	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
-+		error = ENOENT;
-+		goto out;
-+	}
- 
--		if (lock_flags != 0)
--			xfs_ilock(ip, lock_flags);
-+	if (lock_flags != 0)
-+		xfs_ilock(ip, lock_flags);
- 
--		xfs_iflags_clear(ip, XFS_ISTALE);
--		xfs_itrace_exit_tag(ip, "xfs_iget.found");
--		goto return_ip;
--	}
-+	xfs_iflags_clear(ip, XFS_ISTALE);
-+	xfs_itrace_exit_tag(ip, "xfs_iget.found");
-+	XFS_STATS_INC(xs_ig_found);
-+	return 0;
- 
--	/*
--	 * Inode cache miss
--	 */
-+out_error:
- 	read_unlock(&pag->pag_ici_lock);
--	XFS_STATS_INC(xs_ig_missed);
-+out:
-+	return error;
-+}
-+
-+
-+static int
-+xfs_iget_cache_miss(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag,
-+	xfs_trans_t		*tp,
-+	xfs_ino_t		ino,
-+	struct xfs_inode	**ipp,
-+	xfs_daddr_t		bno,
-+	int			flags,
-+	int			lock_flags) __releases(pag->pag_ici_lock)
-+{
-+	struct xfs_inode	*ip;
-+	int			error;
-+	unsigned long		first_index, mask;
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
- 
- 	/*
- 	 * Read the disk inode attributes into a new inode structure and get
-@@ -202,17 +160,14 @@ finish_inode:
- 	 */
- 	error = xfs_iread(mp, tp, ino, &ip, bno,
- 			  (flags & XFS_IGET_BULKSTAT) ? XFS_IMAP_BULKSTAT : 0);
--	if (error) {
--		xfs_put_perag(mp, pag);
-+	if (error)
- 		return error;
--	}
- 
- 	xfs_itrace_exit_tag(ip, "xfs_iget.alloc");
- 
- 	if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
--		xfs_idestroy(ip);
--		xfs_put_perag(mp, pag);
--		return ENOENT;
-+		error = ENOENT;
-+		goto out_destroy;
- 	}
- 
- 	/*
-@@ -220,9 +175,8 @@ finish_inode:
- 	 * write spinlock.
- 	 */
- 	if (radix_tree_preload(GFP_KERNEL)) {
--		xfs_idestroy(ip);
--		delay(1);
--		goto again;
-+		error = EAGAIN;
-+		goto out_destroy;
- 	}
- 
- 	if (lock_flags)
-@@ -231,32 +185,104 @@ finish_inode:
- 	mask = ~(((XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog)) - 1);
- 	first_index = agino & mask;
- 	write_lock(&pag->pag_ici_lock);
--	/*
--	 * insert the new inode
--	 */
-+
-+	/* insert the new inode */
- 	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
- 	if (unlikely(error)) {
--		BUG_ON(error != -EEXIST);
--		write_unlock(&pag->pag_ici_lock);
--		radix_tree_preload_end();
--		if (lock_flags)
--			xfs_iunlock(ip, lock_flags);
--		xfs_idestroy(ip);
-+		WARN_ON(error != -EEXIST);
- 		XFS_STATS_INC(xs_ig_dup);
--		goto again;
-+		error = EAGAIN;
-+		goto out_unlock;
- 	}
- 
--	/*
--	 * These values _must_ be set before releasing the radix tree lock!
--	 */
-+	/* These values _must_ be set before releasing the radix tree lock! */
- 	ip->i_udquot = ip->i_gdquot = NULL;
- 	xfs_iflags_set(ip, XFS_INEW);
- 
- 	write_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
-+	*ipp = ip;
-+	return 0;
-+
-+out_unlock:
-+	write_unlock(&pag->pag_ici_lock);
-+	radix_tree_preload_end();
-+out_destroy:
-+	xfs_idestroy(ip);
-+	return error;
-+}
-+
-+/*
-+ * Look up an inode by number in the given file system.
-+ * The inode is looked up in the cache held in each AG.
-+ * If the inode is found in the cache, attach it to the provided
-+ * vnode.
-+ *
-+ * If it is not in core, read it in from the file system's device,
-+ * add it to the cache and attach the provided vnode.
-+ *
-+ * The inode is locked according to the value of the lock_flags parameter.
-+ * This flag parameter indicates how and if the inode's IO lock and inode lock
-+ * should be taken.
-+ *
-+ * mp -- the mount point structure for the current file system.  It points
-+ *       to the inode hash table.
-+ * tp -- a pointer to the current transaction if there is one.  This is
-+ *       simply passed through to the xfs_iread() call.
-+ * ino -- the number of the inode desired.  This is the unique identifier
-+ *        within the file system for the inode being requested.
-+ * lock_flags -- flags indicating how to lock the inode.  See the comment
-+ *		 for xfs_ilock() for a list of valid values.
-+ * bno -- the block number starting the buffer containing the inode,
-+ *	  if known (as by bulkstat), else 0.
-+ */
-+STATIC int
-+xfs_iget_core(
-+	struct inode	*inode,
-+	xfs_mount_t	*mp,
-+	xfs_trans_t	*tp,
-+	xfs_ino_t	ino,
-+	uint		flags,
-+	uint		lock_flags,
-+	xfs_inode_t	**ipp,
-+	xfs_daddr_t	bno)
-+{
-+	xfs_inode_t	*ip;
-+	int		error;
-+	xfs_perag_t	*pag;
-+	xfs_agino_t	agino;
-+
-+	/* the radix tree exists only in inode capable AGs */
-+	if (XFS_INO_TO_AGNO(mp, ino) >= mp->m_maxagi)
-+		return EINVAL;
-+
-+	/* get the perag structure and ensure that it's inode capable */
-+	pag = xfs_get_perag(mp, ino);
-+	if (!pag->pagi_inodeok)
-+		return EINVAL;
-+	ASSERT(pag->pag_ici_init);
-+	agino = XFS_INO_TO_AGINO(mp, ino);
-+
-+again:
-+	error = 0;
-+	read_lock(&pag->pag_ici_lock);
-+	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-+
-+	if (ip) {
-+		error = xfs_iget_cache_hit(inode, pag, ip, flags, lock_flags);
-+		if (error)
-+			goto out_error_or_again;
-+	} else {
-+		read_unlock(&pag->pag_ici_lock);
-+		XFS_STATS_INC(xs_ig_missed);
-+
-+		error = xfs_iget_cache_miss(mp, pag, tp, ino, &ip, bno,
-+							flags, lock_flags);
-+		if (error)
-+			goto out_error_or_again;
-+	}
- 	xfs_put_perag(mp, pag);
- 
-- return_ip:
- 	ASSERT(ip->i_df.if_ext_max ==
- 	       XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t));
- 
-@@ -276,6 +302,14 @@ finish_inode:
- 	if (ip->i_d.di_mode != 0)
- 		xfs_setup_inode(ip);
- 	return 0;
-+
-+out_error_or_again:
-+	if (error == EAGAIN) {
-+		delay(1);
-+		goto again;
-+	}
-+	xfs_put_perag(mp, pag);
-+	return error;
+diff --git a/fs/inode.c b/fs/inode.c
+index 0487ddb..e7ee999 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -108,84 +108,100 @@ static void wake_up_inode(struct inode *inode)
+ 	wake_up_bit(&inode->i_state, __I_LOCK);
  }
  
+-static struct inode *alloc_inode(struct super_block *sb)
++/**
++ * inode_init_always - perform inode structure intialisation
++ * @sb		- superblock inode belongs to.
++ * @inode	- inode to initialise
++ *
++ * These are initializations that need to be done on every inode
++ * allocation as the fields are not initialised by slab allocation.
++ */
++struct inode *inode_init_always(struct super_block *sb, struct inode *inode)
+ {
+ 	static const struct address_space_operations empty_aops;
+ 	static struct inode_operations empty_iops;
+ 	static const struct file_operations empty_fops;
+-	struct inode *inode;
+-
+-	if (sb->s_op->alloc_inode)
+-		inode = sb->s_op->alloc_inode(sb);
+-	else
+-		inode = (struct inode *) kmem_cache_alloc(inode_cachep, GFP_KERNEL);
  
+-	if (inode) {
+-		struct address_space * const mapping = &inode->i_data;
+-
+-		inode->i_sb = sb;
+-		inode->i_blkbits = sb->s_blocksize_bits;
+-		inode->i_flags = 0;
+-		atomic_set(&inode->i_count, 1);
+-		inode->i_op = &empty_iops;
+-		inode->i_fop = &empty_fops;
+-		inode->i_nlink = 1;
+-		atomic_set(&inode->i_writecount, 0);
+-		inode->i_size = 0;
+-		inode->i_blocks = 0;
+-		inode->i_bytes = 0;
+-		inode->i_generation = 0;
++	struct address_space * const mapping = &inode->i_data;
++
++	inode->i_sb = sb;
++	inode->i_blkbits = sb->s_blocksize_bits;
++	inode->i_flags = 0;
++	atomic_set(&inode->i_count, 1);
++	inode->i_op = &empty_iops;
++	inode->i_fop = &empty_fops;
++	inode->i_nlink = 1;
++	atomic_set(&inode->i_writecount, 0);
++	inode->i_size = 0;
++	inode->i_blocks = 0;
++	inode->i_bytes = 0;
++	inode->i_generation = 0;
+ #ifdef CONFIG_QUOTA
+-		memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
++	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
+ #endif
+-		inode->i_pipe = NULL;
+-		inode->i_bdev = NULL;
+-		inode->i_cdev = NULL;
+-		inode->i_rdev = 0;
+-		inode->dirtied_when = 0;
+-		if (security_inode_alloc(inode)) {
+-			if (inode->i_sb->s_op->destroy_inode)
+-				inode->i_sb->s_op->destroy_inode(inode);
+-			else
+-				kmem_cache_free(inode_cachep, (inode));
+-			return NULL;
+-		}
++	inode->i_pipe = NULL;
++	inode->i_bdev = NULL;
++	inode->i_cdev = NULL;
++	inode->i_rdev = 0;
++	inode->dirtied_when = 0;
++	if (security_inode_alloc(inode)) {
++		if (inode->i_sb->s_op->destroy_inode)
++			inode->i_sb->s_op->destroy_inode(inode);
++		else
++			kmem_cache_free(inode_cachep, (inode));
++		return NULL;
++	}
+ 
+-		spin_lock_init(&inode->i_lock);
+-		lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
++	spin_lock_init(&inode->i_lock);
++	lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
+ 
+-		mutex_init(&inode->i_mutex);
+-		lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
++	mutex_init(&inode->i_mutex);
++	lockdep_set_class(&inode->i_mutex, &sb->s_type->i_mutex_key);
+ 
+-		init_rwsem(&inode->i_alloc_sem);
+-		lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
++	init_rwsem(&inode->i_alloc_sem);
++	lockdep_set_class(&inode->i_alloc_sem, &sb->s_type->i_alloc_sem_key);
+ 
+-		mapping->a_ops = &empty_aops;
+- 		mapping->host = inode;
+-		mapping->flags = 0;
+-		mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
+-		mapping->assoc_mapping = NULL;
+-		mapping->backing_dev_info = &default_backing_dev_info;
+-		mapping->writeback_index = 0;
++	mapping->a_ops = &empty_aops;
++	mapping->host = inode;
++	mapping->flags = 0;
++	mapping_set_gfp_mask(mapping, GFP_HIGHUSER_PAGECACHE);
++	mapping->assoc_mapping = NULL;
++	mapping->backing_dev_info = &default_backing_dev_info;
++	mapping->writeback_index = 0;
+ 
+-		/*
+-		 * If the block_device provides a backing_dev_info for client
+-		 * inodes then use that.  Otherwise the inode share the bdev's
+-		 * backing_dev_info.
+-		 */
+-		if (sb->s_bdev) {
+-			struct backing_dev_info *bdi;
++	/*
++	 * If the block_device provides a backing_dev_info for client
++	 * inodes then use that.  Otherwise the inode share the bdev's
++	 * backing_dev_info.
++	 */
++	if (sb->s_bdev) {
++		struct backing_dev_info *bdi;
+ 
+-			bdi = sb->s_bdev->bd_inode_backing_dev_info;
+-			if (!bdi)
+-				bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
+-			mapping->backing_dev_info = bdi;
+-		}
+-		inode->i_private = NULL;
+-		inode->i_mapping = mapping;
++		bdi = sb->s_bdev->bd_inode_backing_dev_info;
++		if (!bdi)
++			bdi = sb->s_bdev->bd_inode->i_mapping->backing_dev_info;
++		mapping->backing_dev_info = bdi;
+ 	}
++	inode->i_private = NULL;
++	inode->i_mapping = mapping;
++
+ 	return inode;
+ }
++EXPORT_SYMBOL(inode_init_always);
++
++static struct inode *alloc_inode(struct super_block *sb)
++{
++	struct inode *inode;
++
++	if (sb->s_op->alloc_inode)
++		inode = sb->s_op->alloc_inode(sb);
++	else
++		inode = kmem_cache_alloc(inode_cachep, GFP_KERNEL);
++
++	if (inode)
++		return inode_init_always(sb, inode);
++	return NULL;
++}
+ 
+ void destroy_inode(struct inode *inode) 
+ {
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 580b513..ce55983 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1811,6 +1811,7 @@ extern loff_t default_llseek(struct file *file, loff_t offset, int origin);
+ 
+ extern loff_t vfs_llseek(struct file *file, loff_t offset, int origin);
+ 
++extern struct inode * inode_init_always(struct super_block *, struct inode *);
+ extern void inode_init_once(struct inode *);
+ extern void iput(struct inode *);
+ extern struct inode * igrab(struct inode *);
 -- 
 1.5.6.5
