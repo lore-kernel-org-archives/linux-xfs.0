@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:42:28 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lg6uw032762
-	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:42:06 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 07 Oct 2008 14:42:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m97Lg8S7000319
+	for <xfs@oss.sgi.com>; Tue, 7 Oct 2008 14:42:08 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A88D129BB9F
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:43:45 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 4GM8iQsHEKHuUknx for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:43:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03E1B1B57AF6
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2008 14:43:47 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id nWxVKxnjgjIhFENp for <xfs@oss.sgi.com>; Tue, 07 Oct 2008 14:43:47 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1KnKLE-0001k2-5X
-	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:43:40 +1100
+	id 1KnKLG-0001kF-6W
+	for xfs@oss.sgi.com; Wed, 08 Oct 2008 08:43:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/10] XFS: kill xfs_syncsub
-Date: Wed,  8 Oct 2008 08:43:33 +1100
-Message-Id: <1223415819-6599-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/10] XFS: Kill SYNC_CLOSE
+Date: Wed,  8 Oct 2008 08:43:37 +1100
+Message-Id: <1223415819-6599-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1223415819-6599-1-git-send-email-david@fromorbit.com>
 References: <1223415819-6599-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,182 +22,124 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Now that the only caller is xfs_sync(), merge the two
-together as it makes no sense to keep them separate.
+SYNC_CLOSE is only ever used and checked in conjunction with
+SYNC_WAIT, and this only done in one spot. The only thing
+this does is make XFS_bflush() calls to the data buftargs.
+
+This will happen very shortly afterwards the xfs_sync() call
+anyway in the unmount path via the xfs_close_devices(), so this
+code is redundant and can be removed. That only user of SYNC_CLOSE
+is now gone, so kill the flag completely.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |  141 +++++++++++++++++++------------------------
- 1 files changed, 62 insertions(+), 79 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   10 ----------
+ fs/xfs/linux-2.6/xfs_sync.c  |   31 ++-----------------------------
+ fs/xfs/linux-2.6/xfs_sync.h  |    1 -
+ 3 files changed, 2 insertions(+), 40 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 7e9fb52..d4b7b21 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -48,79 +48,6 @@
- #include <linux/freezer.h>
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 4d9762c..9cd49dc 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1026,16 +1026,6 @@ xfs_fs_put_super(
+ 	error = xfs_unmount_flush(mp, 0);
+ 	WARN_ON(error);
  
- /*
-- * xfs_sync flushes any pending I/O to file system vfsp.
-- *
-- * This routine is called by vfs_sync() to make sure that things make it
-- * out to disk eventually, on sync() system calls to flush out everything,
-- * and when the file system is unmounted.  For the vfs_sync() case, all
-- * we really need to do is sync out the log to make all of our meta-data
-- * updates permanent (except for timestamps).  For calls from pflushd(),
-- * dirty pages are kept moving by calling pdflush() on the inodes
-- * containing them.  We also flush the inodes that we can lock without
-- * sleeping and the superblock if we can lock it without sleeping from
-- * vfs_sync() so that items at the tail of the log are always moving out.
-- *
-- * Flags:
-- *      SYNC_BDFLUSH - We're being called from vfs_sync() so we don't want
-- *		       to sleep if we can help it.  All we really need
-- *		       to do is ensure that the log is synced at least
-- *		       periodically.  We also push the inodes and
-- *		       superblock if we can lock them without sleeping
-- *			and they are not pinned.
-- *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
-- *		       set, then we really want to lock each inode and flush
-- *		       it.
-- *      SYNC_WAIT    - All the flushes that take place in this call should
-- *		       be synchronous.
-- *      SYNC_DELWRI  - This tells us to push dirty pages associated with
-- *		       inodes.  SYNC_WAIT and SYNC_BDFLUSH are used to
-- *		       determine if they should be flushed sync, async, or
-- *		       delwri.
-- *      SYNC_CLOSE   - This flag is passed when the system is being
-- *		       unmounted.  We should sync and invalidate everything.
-- *      SYNC_FSDATA  - This indicates that the caller would like to make
-- *		       sure the superblock is safe on disk.  We can ensure
-- *		       this by simply making sure the log gets flushed
-- *		       if SYNC_BDFLUSH is set, and by actually writing it
-- *		       out otherwise.
-- *	SYNC_IOWAIT  - The caller wants us to wait for all data I/O to complete
-- *		       before we return (including direct I/O). Forms the drain
-- *		       side of the write barrier needed to safely quiesce the
-- *		       filesystem.
-- *
-- */
--int
--xfs_sync(
--	xfs_mount_t	*mp,
--	int		flags)
--{
--	int		error;
--
 -	/*
--	 * Get the Quota Manager to flush the dquots.
--	 *
--	 * If XFS quota support is not enabled or this filesystem
--	 * instance does not use quotas XFS_QM_DQSYNC will always
--	 * return zero.
+-	 * If we're forcing a shutdown, typically because of a media error,
+-	 * we want to make sure we invalidate dirty pages that belong to
+-	 * referenced vnodes as well.
 -	 */
--	error = XFS_QM_DQSYNC(mp, flags);
--	if (error) {
--		/*
--		 * If we got an IO error, we will be shutting down.
--		 * So, there's nothing more for us to do here.
--		 */
--		ASSERT(error != EIO || XFS_FORCED_SHUTDOWN(mp));
--		if (XFS_FORCED_SHUTDOWN(mp))
--			return XFS_ERROR(error);
+-	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		error = xfs_sync(mp, SYNC_WAIT | SYNC_CLOSE);
+-		ASSERT(error != EFSCORRUPTED);
 -	}
 -
--	if (flags & SYNC_IOWAIT)
--		xfs_filestream_flush(mp);
+ 	if (mp->m_flags & XFS_MOUNT_DMAPI) {
+ 		XFS_SEND_UNMOUNT(mp, rip, DM_RIGHT_NULL, 0, 0,
+ 				unmount_event_flags);
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 838070c..91a54a7 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -70,7 +70,7 @@ xfs_sync_inodes_ag(
+ 	if (flags & SYNC_WAIT)
+ 		fflag = 0;		/* synchronous overrides all */
+ 
+-	if (flags & (SYNC_DELWRI | SYNC_CLOSE)) {
++	if (flags & SYNC_DELWRI) {
+ 		/*
+ 		 * We need the I/O lock if we're going to call any of
+ 		 * the flush/inval routines.
+@@ -117,7 +117,7 @@ xfs_sync_inodes_ag(
+ 		}
+ 
+ 		/* nothing to sync during shutdown */
+-		if (XFS_FORCED_SHUTDOWN(mp) && !(flags & SYNC_CLOSE)) {
++		if (XFS_FORCED_SHUTDOWN(mp)) {
+ 			read_unlock(&pag->pag_ici_lock);
+ 			return 0;
+ 		}
+@@ -152,20 +152,6 @@ xfs_sync_inodes_ag(
+ 		 * If we need to drop the lock, insert a marker if we
+ 		 * have not already done so.
+ 		 */
+-		if (flags & SYNC_CLOSE) {
+-			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-			if (XFS_FORCED_SHUTDOWN(mp))
+-				xfs_tosspages(ip, 0, -1, FI_REMAPF);
+-			else
+-				error = xfs_flushinval_pages(ip, 0, -1,
+-							FI_REMAPF);
+-			/* wait for I/O on freeze */
+-			if (flags & SYNC_IOWAIT)
+-				vn_iowait(ip);
 -
--	return xfs_syncsub(mp, flags);
--}
+-			xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		}
 -
--/*
-  * Sync all the inodes in the given AG according to the
-  * direction given by the flags.
-  */
-@@ -396,22 +323,78 @@ xfs_sync_fsdata(
+ 		if ((flags & SYNC_DELWRI) && VN_DIRTY(inode)) {
+ 			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 			error = xfs_flush_pages(ip, 0, -1, fflag, FI_NONE);
+@@ -390,8 +376,6 @@ xfs_quiesce_data(
+  *		       inodes.  SYNC_WAIT and SYNC_BDFLUSH are used to
+  *		       determine if they should be flushed sync, async, or
+  *		       delwri.
+- *      SYNC_CLOSE   - This flag is passed when the system is being
+- *		       unmounted.  We should sync and invalidate everything.
+  *      SYNC_FSDATA  - This indicates that the caller would like to make
+  *		       sure the superblock is safe on disk.  We can ensure
+  *		       this by simply making sure the log gets flushed
+@@ -472,17 +456,6 @@ xfs_sync(
+ 			return error;
+ 	}
+ 
+-	/*
+-	 * When shutting down, we need to insure that the AIL is pushed
+-	 * to disk or the filesystem can appear corrupt from the PROM.
+-	 */
+-	if ((flags & (SYNC_CLOSE|SYNC_WAIT)) == (SYNC_CLOSE|SYNC_WAIT)) {
+-		XFS_bflush(mp->m_ddev_targp);
+-		if (mp->m_rtdev_targp) {
+-			XFS_bflush(mp->m_rtdev_targp);
+-		}
+-	}
+-
+ 	return XFS_ERROR(last_error);
  }
  
- /*
-- * xfs sync routine for internal use
-+ * xfs_sync flushes any pending I/O to file system vfsp.
-  *
-- * This routine supports all of the flags defined for the generic vfs_sync
-- * interface as explained above under xfs_sync.
-+ * This routine is called by vfs_sync() to make sure that things make it
-+ * out to disk eventually, on sync() system calls to flush out everything,
-+ * and when the file system is unmounted.  For the vfs_sync() case, all
-+ * we really need to do is sync out the log to make all of our meta-data
-+ * updates permanent (except for timestamps).  For calls from pflushd(),
-+ * dirty pages are kept moving by calling pdflush() on the inodes
-+ * containing them.  We also flush the inodes that we can lock without
-+ * sleeping and the superblock if we can lock it without sleeping from
-+ * vfs_sync() so that items at the tail of the log are always moving out.
-+ *
-+ * Flags:
-+ *      SYNC_BDFLUSH - We're being called from vfs_sync() so we don't want
-+ *		       to sleep if we can help it.  All we really need
-+ *		       to do is ensure that the log is synced at least
-+ *		       periodically.  We also push the inodes and
-+ *		       superblock if we can lock them without sleeping
-+ *			and they are not pinned.
-+ *      SYNC_ATTR    - We need to flush the inodes.  If SYNC_BDFLUSH is not
-+ *		       set, then we really want to lock each inode and flush
-+ *		       it.
-+ *      SYNC_WAIT    - All the flushes that take place in this call should
-+ *		       be synchronous.
-+ *      SYNC_DELWRI  - This tells us to push dirty pages associated with
-+ *		       inodes.  SYNC_WAIT and SYNC_BDFLUSH are used to
-+ *		       determine if they should be flushed sync, async, or
-+ *		       delwri.
-+ *      SYNC_CLOSE   - This flag is passed when the system is being
-+ *		       unmounted.  We should sync and invalidate everything.
-+ *      SYNC_FSDATA  - This indicates that the caller would like to make
-+ *		       sure the superblock is safe on disk.  We can ensure
-+ *		       this by simply making sure the log gets flushed
-+ *		       if SYNC_BDFLUSH is set, and by actually writing it
-+ *		       out otherwise.
-+ *	SYNC_IOWAIT  - The caller wants us to wait for all data I/O to complete
-+ *		       before we return (including direct I/O). Forms the drain
-+ *		       side of the write barrier needed to safely quiesce the
-+ *		       filesystem.
-  *
-  */
--STATIC int
--xfs_syncsub(
-+int
-+xfs_sync(
- 	xfs_mount_t	*mp,
- 	int		flags)
- {
--	int		error = 0;
-+	int		error;
- 	int		last_error = 0;
- 	uint		log_flags = XFS_LOG_FORCE;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index fcd4040..2509db0 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -28,7 +28,6 @@ typedef struct bhv_vfs_sync_work {
+ } bhv_vfs_sync_work_t;
  
- 	/*
-+	 * Get the Quota Manager to flush the dquots.
-+	 *
-+	 * If XFS quota support is not enabled or this filesystem
-+	 * instance does not use quotas XFS_QM_DQSYNC will always
-+	 * return zero.
-+	 */
-+	error = XFS_QM_DQSYNC(mp, flags);
-+	if (error) {
-+		/*
-+		 * If we got an IO error, we will be shutting down.
-+		 * So, there's nothing more for us to do here.
-+		 */
-+		ASSERT(error != EIO || XFS_FORCED_SHUTDOWN(mp));
-+		if (XFS_FORCED_SHUTDOWN(mp))
-+			return XFS_ERROR(error);
-+	}
-+
-+	if (flags & SYNC_IOWAIT)
-+		xfs_filestream_flush(mp);
-+
-+	/*
- 	 * Sync out the log.  This ensures that the log is periodically
- 	 * flushed even if there is not enough activity to fill it up.
- 	 */
+ #define SYNC_ATTR		0x0001	/* sync attributes */
+-#define SYNC_CLOSE		0x0002	/* close file system down */
+ #define SYNC_DELWRI		0x0004	/* look at delayed writes */
+ #define SYNC_WAIT		0x0008	/* wait for i/o to complete */
+ #define SYNC_BDFLUSH		0x0010	/* BDFLUSH is calling -- don't block */
 -- 
 1.5.6.5
