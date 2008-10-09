@@ -1,96 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 07:22:36 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m99EMUVN021487
-	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 07:22:30 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2518E109DE3E
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2008 07:24:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id XOtlQHYBxIFj61Pz for <xfs@oss.sgi.com>; Thu, 09 Oct 2008 07:24:09 -0700 (PDT)
-Message-ID: <48EE1408.2040107@sandeen.net>
-Date: Thu, 09 Oct 2008 09:24:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 11:15:59 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m99IFuPE007627
+	for <linux-xfs@oss.sgi.com>; Thu, 9 Oct 2008 11:15:56 -0700
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 102E513D5C1A
+	for <linux-xfs@oss.sgi.com>; Thu,  9 Oct 2008 11:17:35 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by cuda.sgi.com with ESMTP id Z7iPe3TDfBCFmJkf for <linux-xfs@oss.sgi.com>; Thu, 09 Oct 2008 11:17:35 -0700 (PDT)
+Received: from shambhala.lichtvoll.local (DSL01.83.171.172.241.ip-pool.NEFkom.net [83.171.172.241])
+	by mail.lichtvoll.de (Postfix) with ESMTP id 2F0095AE1E
+	for <linux-xfs@oss.sgi.com>; Thu,  9 Oct 2008 20:17:34 +0200 (CEST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: [RFC, PATCH 0/7] XFS: dynamic busy extent tracking
+Date: Thu, 9 Oct 2008 20:17:32 +0200
+References: <1223417377-8679-1-git-send-email-david@fromorbit.com> (sfid-20081008_111209_917116_76A20764)
+In-Reply-To: <1223417377-8679-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] fix barrier fail detection
-References: <20081009130042.GA21071@lst.de>
-In-Reply-To: <20081009130042.GA21071@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200810092017.33042.Martin@lichtvoll.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, toei.rei@stargazer.at
+To: linux-xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Currently we disable barriers as soon as we get a buffer in xlog_iodone
-> that has the XBF_ORDERED flag cleared.  But this can be the case not only
-> for buffers where the barrier failed, but also the first buffer of a
-> split log write in case of a log wraparound.  Due to the disabled
-> barriers we can easily get directory corruption on unclean shutdowns.
-> So instead of using this check add a new buffer flag for failed barrier
-> writes.
-> 
-> This is a regression vs 2.6.26 caused by patch to use the right macro
-> to check for the ORDERED flag, as we previously got true returned for
-> every buffer.
-> 
-> Thanks to Toei Rei for reporting the bug.
 
-Fix looks good to me (I saw this failure too but at first attributed it
-to some hackery I was working on).
+Hi Dave,
 
-Think it can still make 2.6.27?
+Am Mittwoch 08 Oktober 2008 schrieb Dave Chinner:
+> The busy extent tracking in XFS is currently very static and has
+> some performance issues. We can only track 128 busy extents per AG,
+> and when we overflow this we fall back to synchronous transactions.
+> Also, every time we re-use a busy extent we cause a synchronous log
+> force, which stops all allocation and freeing in that AG while the
+> log force is in progress.
 
--Eric
+Could this accelerate
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2008-10-09 13:36:50.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c	2008-10-09 13:38:38.000000000 +0200
-> @@ -1007,6 +1007,7 @@ xfs_buf_iodone_work(
->  	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
->  		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
->  		bp->b_flags &= ~XBF_ORDERED;
-> +		bp->b_flags |= _XFS_BARRIER_FAILED;
->  		xfs_buf_iorequest(bp);
->  	} else if (bp->b_iodone)
->  		(*(bp->b_iodone))(bp);
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2008-10-09 13:36:50.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h	2008-10-09 13:38:15.000000000 +0200
-> @@ -85,6 +85,14 @@ typedef enum {
->  	 * modifications being lost.
->  	 */
->  	_XBF_PAGE_LOCKED = (1 << 22),
-> +
-> +	/*
-> +	 * If we try a barrier write, but it fails we have to communicate
-> +	 * this to the upper layers.  Unfortunately b_error gets overwritten
-> +	 * when the buffer is re-issued so we have to add another flag to
-> +	 * keep this information.
-> +	 */
-> +	_XFS_BARRIER_FAILED = (1 << 23),
->  } xfs_buf_flags_t;
->  
->  typedef enum {
-> Index: linux-2.6-xfs/fs/xfs/xfs_log.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-10-09 13:38:44.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-10-09 13:39:32.000000000 +0200
-> @@ -1037,7 +1037,8 @@ xlog_iodone(xfs_buf_t *bp)
->  	 * layer, it means the underlyin device no longer supports
->  	 * barrier I/O. Warn loudly and turn off barriers.
->  	 */
-> -	if ((l->l_mp->m_flags & XFS_MOUNT_BARRIER) && !XFS_BUF_ISORDERED(bp)) {
-> +	if (bp->b_flags & _XFS_BARRIER_FAILED) {
-> +		bp->b_flags &= ~_XFS_BARRIER_FAILED;
->  		l->l_mp->m_flags &= ~XFS_MOUNT_BARRIER;
->  		xfs_fs_cmn_err(CE_WARN, l->l_mp,
->  				"xlog_iodone: Barriers are no longer supported"
-> 
-> 
+tar -xf linux-2.6.26.tar.gz
+rm -r linux-2.6.26
+
+?
+
+A student in the Linux Performance Tuning course I hold this week compared 
+this with ext3, even with the improved mkfs.xfs options (but without 
+lazy-count=1, cause mkfs.xfs from Debian Etch is too old) and even with 
+noop as IO scheduler. AFAIR XFS took roughly 3-4 times as long as Ext3, I 
+did not note the exact numbers. This was with 2.6.25. I can repeat the 
+test locally with 2.6.26.5 if wanted.
+
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
