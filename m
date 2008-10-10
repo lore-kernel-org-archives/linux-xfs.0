@@ -1,38 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 17:14:48 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A0Edbt008546
-	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 17:14:40 -0700
-Message-ID: <48EEACD6.7070805@sgi.com>
-Date: Fri, 10 Oct 2008 11:16:06 +1000
-From: Peter Leckie <pleckie@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] XFS: don't block in xfs_qm_dqflush() during async writeback
-References: <1223416677-8458-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1223416677-8458-1-git-send-email-david@fromorbit.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 17:42:08 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A0g2FJ010308
+	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 17:42:03 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E7288129DE74
+	for <xfs@oss.sgi.com>; Thu,  9 Oct 2008 17:43:42 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id REfurvFMKP4wqQSC for <xfs@oss.sgi.com>; Thu, 09 Oct 2008 17:43:42 -0700 (PDT)
+Date: Fri, 10 Oct 2008 02:43:36 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] fix barrier fail detection
+Message-ID: <20081010004336.GA22273@lst.de>
+References: <20081009130042.GA21071@lst.de> <20081009223534.GJ9597@disturbed>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081009223534.GJ9597@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com, toei.rei@stargazer.at
 
-Dave Chinner wrote:
-> Normally dquots are written back via delayed write mechanisms.  They
-> are flushed to their backing buffer by xfssyncd, which is then
-> pushed out by either AIL or xfsbufd flushing. The flush from the
-> xfssyncd is supposed to be non-blocking, but xfs_qm_dqflush() always
-> waits for pinned duots, which means that it will block for the
-> length of time it takes to do a synchronous log force. This causes
-> unnecessary extra log I/O to be issued whenever we try to flush a
-> busy dquot.
->
-> Avoid the log forces and blocking xfssyncd by making xfs_qm_dqflush()
-> pay attention to what type of sync it is doing when it sees a pinned
-> dquot and not waiting when doing non-blocking flushes.
->   
-This patch looks good.
+On Fri, Oct 10, 2008 at 09:35:34AM +1100, Dave Chinner wrote:
+> Looks good. Should this be sent straight to Linus to get it into
+> .27? If you want to do that, you can add my SOB.
 
-Thanks,
-Pete
+I'll hope Lachlan or Tim as maintainers will pick up..
