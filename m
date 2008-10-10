@@ -1,40 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 21:25:57 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A4PtE0030261
-	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 21:25:55 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 64B65A32661
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2008 21:27:35 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id nBtXD44IhwJZe6Ic for <xfs@oss.sgi.com>; Thu, 09 Oct 2008 21:27:35 -0700 (PDT)
-Date: Fri, 10 Oct 2008 15:27:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fix barrier fail detection
-Message-ID: <20081010042732.GC8181@disturbed>
-References: <20081009130042.GA21071@lst.de> <48EEAC1A.2080309@sgi.com> <48EED73F.1010208@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48EED73F.1010208@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 21:47:35 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A4lXZ5031794
+	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 21:47:33 -0700
+Subject: PARTIAL TAKE 988146 - make xfsidbg independent of the main btree implementation.
+Message-Id: <20081010044912.2E3A61F08E6@chapter11.melbourne.sgi.com>
+Date: Fri, 10 Oct 2008 15:49:12 +1100 (EST)
+From: donaldd@sgi.com (Donald Douwsma)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com, toei.rei@stargazer.at
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Fri, Oct 10, 2008 at 03:17:03PM +1100, Timothy Shimmin wrote:
-> Timothy Shimmin wrote:
-.....
-> > Actually, probably need to update the comment for this one.
-.....
+make xfsidbg independent of the main btree implementation.
 
-> i.e. something like:
+Add a small btree framework inside xfsidbg which makes it independent
+of the main btree implementation and it's soon to be changing macros.
+This will also allow xfsidbg to easily select the right btree type
+depending on the magic number in the header.
 
-Looks fine to me.
 
-Cheers,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Date:  Fri Oct 10 15:47:30 EST 2008
+Workarea:  chapter11.melbourne.sgi.com:/scratch/donaldd/isms/2.6.x-xfs
+Inspected by:  hch
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:32289a
+fs/xfs/xfsidbg.c - 1.368 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfsidbg.c.diff?r1=text&tr1=1.368&r2=text&tr2=1.367&f=h
+	- make xfsidbg independent of the main btree implementation.
