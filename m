@@ -1,117 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 18:11:26 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A1BNUt012457
-	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 18:11:24 -0700
-Message-ID: <48EEAC1A.2080309@sgi.com>
-Date: Fri, 10 Oct 2008 12:12:58 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] fix barrier fail detection
-References: <20081009130042.GA21071@lst.de>
-In-Reply-To: <20081009130042.GA21071@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 20:48:15 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A3m74L026551
+	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 20:48:07 -0700
+Subject: TAKE 988139 - move sync code to its own file
+Message-Id: <20081010034939.A064858C52B5@chook.melbourne.sgi.com>
+Date: Fri, 10 Oct 2008 14:49:39 +1100 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, toei.rei@stargazer.at
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> Currently we disable barriers as soon as we get a buffer in xlog_iodone
-> that has the XBF_ORDERED flag cleared.  But this can be the case not only
-> for buffers where the barrier failed, but also the first buffer of a
-> split log write in case of a log wraparound.  Due to the disabled
-> barriers we can easily get directory corruption on unclean shutdowns.
-> So instead of using this check add a new buffer flag for failed barrier
-> writes.
-> 
-> This is a regression vs 2.6.26 caused by patch to use the right macro
-> to check for the ORDERED flag, as we previously got true returned for
-> every buffer.
-> 
-> Thanks to Toei Rei for reporting the bug.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2008-10-09 13:36:50.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c	2008-10-09 13:38:38.000000000 +0200
-> @@ -1007,6 +1007,7 @@ xfs_buf_iodone_work(
->  	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
->  		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
->  		bp->b_flags &= ~XBF_ORDERED;
-> +		bp->b_flags |= _XFS_BARRIER_FAILED;
->  		xfs_buf_iorequest(bp);
->  	} else if (bp->b_iodone)
->  		(*(bp->b_iodone))(bp);
+move sync code to its own file
 
-Actually, probably need to update the comment for this one.
+The sync code in XFS is spread around several files.
+While it used to make sense to have such a distribution,
+the code is about to be cleaned up and so centralising it
+in one spot as the first step makes sense.
 
-The existing comment being:
-> 	/*
-> 	 * We can get an EOPNOTSUPP to ordered writes.  Here we clear the
-> 	 * ordered flag and reissue them.  Because we can't tell the higher
-> 	 * layers directly that they should not issue ordered I/O anymore, they
-> 	 * need to check if the ordered flag was cleared during I/O completion.
-> 	 */
-> 	if ((bp->b_error == EOPNOTSUPP) &&
-> 	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
-> 		XB_TRACE(bp, "ordered_retry", bp->b_iodone);
-> 		bp->b_flags &= ~XBF_ORDERED;
-> 		bp->b_flags |= _XFS_BARRIER_FAILED;
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+Date:  Fri Oct 10 14:48:57 EST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-radix
+Inspected by:  hch
+Author:  lachlan
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2008-10-09 13:36:50.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h	2008-10-09 13:38:15.000000000 +0200
-> @@ -85,6 +85,14 @@ typedef enum {
->  	 * modifications being lost.
->  	 */
->  	_XBF_PAGE_LOCKED = (1 << 22),
-> +
-> +	/*
-> +	 * If we try a barrier write, but it fails we have to communicate
-> +	 * this to the upper layers.  Unfortunately b_error gets overwritten
-> +	 * when the buffer is re-issued so we have to add another flag to
-> +	 * keep this information.
-> +	 */
-> +	_XFS_BARRIER_FAILED = (1 << 23),
->  } xfs_buf_flags_t;
->  
->  typedef enum {
-
-
-> Index: linux-2.6-xfs/fs/xfs/xfs_log.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-10-09 13:38:44.000000000 +0200
-> +++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-10-09 13:39:32.000000000 +0200
-> @@ -1037,7 +1037,8 @@ xlog_iodone(xfs_buf_t *bp)
->  	 * layer, it means the underlyin device no longer supports
->  	 * barrier I/O. Warn loudly and turn off barriers.
->  	 */
-> -	if ((l->l_mp->m_flags & XFS_MOUNT_BARRIER) && !XFS_BUF_ISORDERED(bp)) {
-> +	if (bp->b_flags & _XFS_BARRIER_FAILED) {
-> +		bp->b_flags &= ~_XFS_BARRIER_FAILED;
->  		l->l_mp->m_flags &= ~XFS_MOUNT_BARRIER;
->  		xfs_fs_cmn_err(CE_WARN, l->l_mp,
->  				"xlog_iodone: Barriers are no longer supported"
-> 
-Okay, we probably should update this comment too.
-
-The existing comment being:
-> 	/*
-> 	 * If the ordered flag has been removed by a lower
-> 	 * layer, it means the underlyin device no longer supports
-> 	 * barrier I/O. Warn loudly and turn off barriers.
-> 	 */
-
-
-Might as well fix the existing typo "underlyin" in the comment as well :)
-
-Thanks,
---Tim
+Modid:  xfs-linux-melb:xfs-kern:32282a
+fs/xfs/linux-2.6/xfs_sync.h - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sync.h
+fs/xfs/linux-2.6/xfs_sync.c - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sync.c
+fs/xfs/Makefile - 1.66 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/Makefile.diff?r1=text&tr1=1.66&r2=text&tr2=1.65&f=h
+fs/xfs/xfs_vfsops.c - 1.575 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.575&r2=text&tr2=1.574&f=h
+fs/xfs/linux-2.6/xfs_super.c - 1.451 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.451&r2=text&tr2=1.450&f=h
+fs/xfs/xfs_vfsops.h - 1.12 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.h.diff?r1=text&tr1=1.12&r2=text&tr2=1.11&f=h
+	- move sync code to its own file
