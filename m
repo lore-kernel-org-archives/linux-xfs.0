@@ -1,44 +1,93 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 21:58:08 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 09 Oct 2008 22:01:49 -0700 (PDT)
 Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A4w5fN032757
-	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 21:58:06 -0700
-Subject: TAKE 988139 - Traverse inode trees when releasing dquots
-Message-Id: <20081010045944.8934D58C52B5@chook.melbourne.sgi.com>
-Date: Fri, 10 Oct 2008 15:59:44 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9A51kQo000706
+	for <xfs@oss.sgi.com>; Thu, 9 Oct 2008 22:01:47 -0700
+Subject: PARTIAL TAKE 988146 - Cleanup maxrecs calculation.
+Message-Id: <20081010050319.56FBB1F08E9@chapter11.melbourne.sgi.com>
+Date: Fri, 10 Oct 2008 16:03:19 +1100 (EST)
+From: donaldd@sgi.com (Donald Douwsma)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Traverse inode trees when releasing dquots
+Cleanup maxrecs calculation.
 
-Make releasing all inode dquots traverse the per-ag
-inode radix trees rather than the mount inode list.
-This removes another user of the mount inode list.
+Clean up the way the maximum and minimum records for the btree blocks are
+calculated.  For the alloc and inobt btrees all the values are pre-calculated
+in xfs_mount_common, and we switch the current loop around the ugly generic
+macros that use cpp token pasting to generate type names to two small helpers
+in normal C code.  For the bmbt and bmdr trees these helpers also exist,
+but can be called during runtime, too.  Here we also kill various macros
+dealing with them and inline the logic into the get_minrecs / get_maxrecs /
+get_dmaxrecs methods in xfs_bmap_btree.c.
 
-Version 3
-o fix comment relating to avoiding trying to release the
-  quota inodes and those in reclaim.
+Note that all these new helpers take an xfs_mount * argument which will
+be needed to determine the size of a btree block once we add support for
+extended btree blocks with CRCs and other RAS information.
 
-Version 2
-o add comment explaining use of gang lookups for a single inode
-o use IRELE, not VN_RELE
-o move check for ag initialisation to caller.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Date:  Fri Oct 10 15:59:17 EST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-radix
+
+Date:  Fri Oct 10 16:02:17 EST 2008
+Workarea:  chapter11.melbourne.sgi.com:/scratch/donaldd/isms/2.6.x-xfs
 Inspected by:  hch
-Author:  lachlan
 
 The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:32291a
-fs/xfs/quota/xfs_qm_syscalls.c - 1.47 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_syscalls.c.diff?r1=text&tr1=1.47&r2=text&tr2=1.46&f=h
-	- Traverse inode trees when releasing dquots
+Modid:  xfs-linux-melb:xfs-kern:32292a
+fs/xfs/xfs_ialloc_btree.h - 1.42 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.h.diff?r1=text&tr1=1.42&r2=text&tr2=1.41&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_ialloc_btree.c - 1.107 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_ialloc_btree.c.diff?r1=text&tr1=1.107&r2=text&tr2=1.106&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_log_recover.c - 1.348 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_log_recover.c.diff?r1=text&tr1=1.348&r2=text&tr2=1.347&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_bmap_btree.h - 1.92 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.h.diff?r1=text&tr1=1.92&r2=text&tr2=1.91&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_bmap_btree.c - 1.196 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap_btree.c.diff?r1=text&tr1=1.196&r2=text&tr2=1.195&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_mount.h - 1.278 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.278&r2=text&tr2=1.277&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_mount.c - 1.448 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.448&r2=text&tr2=1.447&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_btree.h - 1.98 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_btree.h.diff?r1=text&tr1=1.98&r2=text&tr2=1.97&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_inode.c - 1.527 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.527&r2=text&tr2=1.526&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_bmap.c - 1.412 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_bmap.c.diff?r1=text&tr1=1.412&r2=text&tr2=1.411&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_alloc_btree.h - 1.39 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.h.diff?r1=text&tr1=1.39&r2=text&tr2=1.38&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_alloc_btree.c - 1.111 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_alloc_btree.c.diff?r1=text&tr1=1.111&r2=text&tr2=1.110&f=h
+	- Cleanup maxrecs calculation.
+
+fs/xfs/xfs_dinode.h - 1.87 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dinode.h.diff?r1=text&tr1=1.87&r2=text&tr2=1.86&f=h
+	- Cleanup maxrecs calculation.
