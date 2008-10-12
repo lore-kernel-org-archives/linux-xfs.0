@@ -1,69 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 10 Oct 2008 21:31:15 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9B4VCm1029910
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2008 21:31:12 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6EF013EAB6B
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2008 21:32:53 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id iNoOF68Tp6OEBgxS for <xfs@oss.sgi.com>; Fri, 10 Oct 2008 21:32:53 -0700 (PDT)
-Message-ID: <48F02C74.8080902@sandeen.net>
-Date: Fri, 10 Oct 2008 23:32:52 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_db: don't put null inode
-References: <48F02BB0.2030107@sandeen.net>
-In-Reply-To: <48F02BB0.2030107@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 05:30:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9CCU394029070
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:30:03 -0700
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C70304E7321
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:31:37 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id B8FYSdvGb7ilH0Ci for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:31:37 -0700 (PDT)
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m9CCVaIF030408
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 14:31:36 +0200
+Received: (from hch@localhost)
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m9CCVag5030406
+	for xfs@oss.sgi.com; Sun, 12 Oct 2008 14:31:36 +0200
+Date: Sun, 12 Oct 2008 14:31:36 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] update xfsqa 189 to check for writeable fs after remount rw
+Message-ID: <20081012123136.GB30272@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: John Willis <John.Willis@Distant-earth.com>
+To: xfs@oss.sgi.com
 
-Ugh subject should be xfs_db of course :/
 
-Eric Sandeen wrote:
-> John Willis pointed this out:
-> 
-> $ sudo xfs_db -x /dev/evms/RAID5-SATA-1 
-> cache_node_purge: refcount was 1, not zero (node=0x80dd660)
-> xfs_db: cannot read root inode (22)
-> cache_node_purge: refcount was 1, not zero (node=0x80e0008)
-> xfs_db: cannot read realtime bitmap inode (22)
-> Segmentation fault
-> 
-> it dies when pthread code gets a null ptr, like this:
-> 
-> (gdb) bt
-> #0  0x0000003ef1c08309 in pthread_mutex_lock () from /lib64/libpthread.so.0
-> #1  0x000000000044f5af in cache_node_put (cache=0x25a2030, node=0x0) at cache.c:368
-> #2  0x000000000041ff7e in libxfs_mount (mp=0x0, sb=<value optimized out>, dev=<value optimized out>, logdev=<value optimized out>, 
->     rtdev=<value optimized out>, flags=1) at init.c:680
-> #3  0x0000000000416157 in init (argc=2, argv=0x7fffd9e19798) at init.c:125
-> #4  0x000000000041635a in main (argc=48, argv=0x7fffd9e19798) at init.c:153
-> (gdb) 
-> 
-> when reading the root inode fails, and we try to libxfs_iput it anyway.
-> 
-> The following seems to fix it ...
-> 
-> -Eric
-> 
-> Index: xfsprogs/libxfs/init.c
-> ===================================================================
-> --- xfsprogs.orig/libxfs/init.c
-> +++ xfsprogs/libxfs/init.c
-> @@ -677,7 +677,8 @@ libxfs_mount(
->  		ASSERT(mp->m_rootip != NULL);
->  	}
->  	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
-> -		libxfs_iput(mp->m_rootip, 0);
-> +		if (mp->m_rootip)
-> +			libxfs_iput(mp->m_rootip, 0);
->  		return NULL;
->  	}
->  
-> 
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs-cmds/xfstests/189
+===================================================================
+--- xfs-cmds.orig/xfstests/189	2008-08-15 06:11:24.000000000 -1000
++++ xfs-cmds/xfstests/189	2008-10-12 02:24:25.000000000 -1000
+@@ -90,6 +90,34 @@
+ }
+ 
+ #
++# make sure we really can write to a filesystem after remount,rw
++#
++_test_remount_write()
++{
++	echo
++	echo "try touching file after remount ro -> rw with options"
++	echo
++	_scratch_mount
++	[ $? -eq 0 ] || echo "mount (1) failed unexpectedly"
++
++	touch $SCRATCH_MNT/foobar
++	[ $? -eq 0 ] || echo "touch (1) failed unexpectedly"
++
++	umount $SCRATCH_MNT
++
++	_scratch_mount -o ro
++	[ $? -eq 0 ] || echo "mount (2) failed unexpectedly"
++
++	_mount -o remount,rw,filestreams $SCRATCH_MNT
++	[ $? -eq 0 ] || echo "remount failed unexpectedly"
++
++	touch $SCRATCH_MNT/foobar
++	[ $? -eq 0 ] || echo "touch (2) failed unexpectedly"
++
++	umount $SCRATCH_MNT
++}
++
++#
+ # barrier is the only option we can change besides ro<->rw which is partially
+ # handled by the VFS and tested elsewhere.  Make sure mount accepts going
+ # from barrier (which also is the default) to nobarrier and back.
+@@ -166,6 +194,7 @@
+ 
+ _add_scratch_fstab
+ _test_remount_rw
++_test_remount_write
+ 
+ echo
+ echo "add noikeep to fstab for scratch"
