@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 05:30:25 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 05:30:36 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9CCU394029070
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:30:03 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9CCTDAj028961
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:29:13 -0700
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C70304E7321
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:31:37 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id B8FYSdvGb7ilH0Ci for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:31:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3C594E731D
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:30:47 -0700 (PDT)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id NZBLB7C1zFszdphs for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 05:30:47 -0700 (PDT)
 Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m9CCVaIF030408
+	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m9CCUjIF030342
 	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 14:31:36 +0200
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 14:30:45 +0200
 Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m9CCVag5030406
-	for xfs@oss.sgi.com; Sun, 12 Oct 2008 14:31:36 +0200
-Date: Sun, 12 Oct 2008 14:31:36 +0200
+	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m9CCUioa030340
+	for xfs@oss.sgi.com; Sun, 12 Oct 2008 14:30:44 +0200
+Date: Sun, 12 Oct 2008 14:30:44 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] update xfsqa 189 to check for writeable fs after remount rw
-Message-ID: <20081012123136.GB30272@lst.de>
+Subject: [PATCH] fix remount rw with unrecognized options
+Message-ID: <20081012123044.GA30272@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -26,53 +26,29 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
+When we skip unrecognized options in xfs_fs_remount we should just break
+out of the switch and not return because otherwise we may skip clearing
+the xfs-internal read-only flag.  This will only show up on some
+operations like touch because most read-only checks are done by the VFS
+which things this filesystem is r/w.  Eventually we should replace the
+XFS read-only flag with a helper that always checks the VFS flag to make
+sure they can never get out of sync.
+
+Bug reported and fix verified by Marcel Beister on #xfs.
+
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs-cmds/xfstests/189
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- xfs-cmds.orig/xfstests/189	2008-08-15 06:11:24.000000000 -1000
-+++ xfs-cmds/xfstests/189	2008-10-12 02:24:25.000000000 -1000
-@@ -90,6 +90,34 @@
- }
- 
- #
-+# make sure we really can write to a filesystem after remount,rw
-+#
-+_test_remount_write()
-+{
-+	echo
-+	echo "try touching file after remount ro -> rw with options"
-+	echo
-+	_scratch_mount
-+	[ $? -eq 0 ] || echo "mount (1) failed unexpectedly"
-+
-+	touch $SCRATCH_MNT/foobar
-+	[ $? -eq 0 ] || echo "touch (1) failed unexpectedly"
-+
-+	umount $SCRATCH_MNT
-+
-+	_scratch_mount -o ro
-+	[ $? -eq 0 ] || echo "mount (2) failed unexpectedly"
-+
-+	_mount -o remount,rw,filestreams $SCRATCH_MNT
-+	[ $? -eq 0 ] || echo "remount failed unexpectedly"
-+
-+	touch $SCRATCH_MNT/foobar
-+	[ $? -eq 0 ] || echo "touch (2) failed unexpectedly"
-+
-+	umount $SCRATCH_MNT
-+}
-+
-+#
- # barrier is the only option we can change besides ro<->rw which is partially
- # handled by the VFS and tested elsewhere.  Make sure mount accepts going
- # from barrier (which also is the default) to nobarrier and back.
-@@ -166,6 +194,7 @@
- 
- _add_scratch_fstab
- _test_remount_rw
-+_test_remount_write
- 
- echo
- echo "add noikeep to fstab for scratch"
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-10-11 00:59:04.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-10-11 00:59:35.000000000 +0200
+@@ -1218,7 +1218,7 @@ xfs_fs_remount(
+ 	"XFS: mount option \"%s\" not supported for remount\n", p);
+ 			return -EINVAL;
+ #else
+-			return 0;
++			break;
+ #endif
+ 		}
+ 	}
