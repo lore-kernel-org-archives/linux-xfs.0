@@ -1,29 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 23:45:15 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9D6iq32002220
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 23:45:13 -0700
-Subject: TAKE 988140 - Remove exported symbol xfs_syncsub() since it no longer exists.
-Message-Id: <20081013064632.A172C58C38F4@chook.melbourne.sgi.com>
-Date: Mon, 13 Oct 2008 17:46:32 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Oct 2008 05:05:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9DC5bWg004590
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 05:05:38 -0700
+Received: from mailgw2a.lmco.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C1999A5C80F
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 05:07:13 -0700 (PDT)
+Received: from mailgw2a.lmco.com (mailgw2a.lmco.com [192.91.147.7]) by cuda.sgi.com with ESMTP id HrBfu0jbvMa4hVrS for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 05:07:13 -0700 (PDT)
+Date: Mon, 13 Oct 2008 08:06:53 -0400
+From: "Ngo, Andrew" <andrew.ngo@lmco.com>
+Subject: RE: Stale XFS mount for Kernel 2.6.25.14
+In-reply-to: <20081013035939.GB10716@disturbed>
+Message-id: <8604545CB7815D419F5FF108D3E434BA3BD628@emss04m05.us.lmco.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
+Content-transfer-encoding: 7BIT
+Content-class: urn:content-classes:message
+References: <8604545CB7815D419F5FF108D3E434BA3BD626@emss04m05.us.lmco.com> <20081013035939.GB10716@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, "Johnson, Je" <je.johnson@lmco.com>, "Ngo, Andrew" <andrew.ngo@lmco.com>
 
-Remove exported symbol xfs_syncsub() since it no longer exists.
+No.  There is no oops in the /var/log/messages when the mount command
+hangs.
 
-Date:  Mon Oct 13 17:45:58 EST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-sync
-Inspected by:  lachlan
-Author:  lachlan
+Andy Ngo 
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com] 
+Sent: Monday, October 13, 2008 12:00 AM
+To: Ngo, Andrew
+Cc: xfs@oss.sgi.com; Johnson, Je
+Subject: Re: Stale XFS mount for Kernel 2.6.25.14
 
+On Sun, Oct 12, 2008 at 10:10:54PM -0400, Ngo, Andrew wrote:
+> Hi,
+>  
+> This is my first attempt to report a stale mount problem.  If this is 
+> not the relevant mail list, please let me know.  I suspect that my 
+> problem is xfs related, thus I select this mailing list.
+>  
+> I have a system that recently upgraded it's kernel to 2.6.25.14.  The 
+> system's previous kernel was 2.6.18.-8.el5.  With the previous kernel,
 
-Modid:  xfs-linux-melb:xfs-kern:32313a
-fs/xfs/linux-2.6/xfs_ksyms.c - 1.91 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.91&r2=text&tr2=1.90&f=h
-	- Remove exported symbol xfs_syncsub() since it no longer exists.
+> I have no problem with executing the following commands when the 
+> system is in operation.  Note that the /mnt/mountpoint is mounted on a
+
+> XFS file system.
+>  
+> mount -o rw,remount /mnt/mountpoint
+> mount -o ro,remount /mnt/mountpoint
+>  
+> With kernel 2.6.25.14, however, the mount command may be hang when 
+> changing from rw to ro.  When this happen, system is very sluggish.
+
+That's because the remount,ro is actually flushing all the dirty data to
+disk in 2.6.25. There is also a check to catch when the remount,ro fails
+to clean everything that is dirty - that's probably what is triggering.
+Do you have an oops in the dmesg log when mount hangs?
+
+Cheers,
+
+Dave.
+--
+Dave Chinner
+david@fromorbit.com
