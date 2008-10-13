@@ -1,80 +1,54 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 15:31:23 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9CMVGVF026726
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 15:31:16 -0700
-Message-ID: <48F28911.606@sgi.com>
-Date: Mon, 13 Oct 2008 09:32:33 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_db: don't put null inode
-References: <48F02BB0.2030107@sandeen.net> <48F02C74.8080902@sandeen.net>
-In-Reply-To: <48F02C74.8080902@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 12 Oct 2008 19:40:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9D2eEeD013429
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 19:40:14 -0700
+Received: from mailgw3a.lmco.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E04CA58DDF
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 19:41:49 -0700 (PDT)
+Received: from mailgw3a.lmco.com (mailgw3a.lmco.com [192.35.35.7]) by cuda.sgi.com with ESMTP id 20e1m694HGXMJxR8 for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 19:41:49 -0700 (PDT)
+Received: from emss09g01.ems.lmco.com (relay6.ems.lmco.com [166.17.13.59])by mailgw3a.lmco.com  (LM-6) with ESMTP id m9D2B03K000655for <xfs@oss.sgi.com>; Sun, 12 Oct 2008 22:11:00 -0400 (EDT)
+Received: from CONVERSION2-DAEMON.lmco.com by lmco.com (PMDF V6.3-x14 #31428)
+ id <0K8N00A01NECCV@lmco.com> for xfs@oss.sgi.com; Sun, 12 Oct 2008 22:11:00 -0400 (EDT)
+Received: from EMSS04I00.us.lmco.com ([166.17.13.135]) by lmco.com (PMDF V6.3-x14 #31428)
+ with ESMTP id <0K8N002EMNE7NO@lmco.com> for xfs@oss.sgi.com; Sun, 12 Oct 2008 22:10:55 -0400 (EDT)
+Date: Sun, 12 Oct 2008 22:10:54 -0400
+From: "Ngo, Andrew" <andrew.ngo@lmco.com>
+Subject: Stale XFS mount for Kernel 2.6.25.14
+Message-id: <8604545CB7815D419F5FF108D3E434BA3BD626@emss04m05.us.lmco.com>
+MIME-version: 1.0
+Content-Type: text/plain
+Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>, John Willis <John.Willis@Distant-earth.com>
+To: xfs@oss.sgi.com
+Cc: "Johnson, Je" <je.johnson@lmco.com>, "Ngo, Andrew" <andrew.ngo@lmco.com>
 
-Thanks Eric (and John). Barry, can you please rv and pull this into libxfs
+Hi,  
+ 
+This is my first attempt to report a stale mount problem.  If this is
+not the relevant mail list, please let me know.  I suspect that my
+problem is xfs related, thus I select this mailing list.
+ 
+I have a system that recently upgraded it's kernel to 2.6.25.14.  The
+system's previous kernel was 2.6.18.-8.el5.  With the previous kernel, I
+have no problem with executing the following commands when the system is
+in operation.  Note that the /mnt/mountpoint is mounted on a XFS file
+system.
+ 
+mount -o rw,remount /mnt/mountpoint
+mount -o ro,remount /mnt/mountpoint
+ 
+With kernel 2.6.25.14, however, the mount command may be hang when
+changing from rw to ro.  When this happen, system is very sluggish.
+Even the "shutdown -r now" command is not taken.  The only way to get
+out of this hang is by manually pressing the power button
+ 
+Your sugguestion is greatly appreciated.
+ 
+Andy Ngo
 
-Cheers
 
-Eric Sandeen wrote:
-> Ugh subject should be xfs_db of course :/
-> 
-> Eric Sandeen wrote:
->> John Willis pointed this out:
->>
->> $ sudo xfs_db -x /dev/evms/RAID5-SATA-1 
->> cache_node_purge: refcount was 1, not zero (node=0x80dd660)
->> xfs_db: cannot read root inode (22)
->> cache_node_purge: refcount was 1, not zero (node=0x80e0008)
->> xfs_db: cannot read realtime bitmap inode (22)
->> Segmentation fault
->>
->> it dies when pthread code gets a null ptr, like this:
->>
->> (gdb) bt
->> #0  0x0000003ef1c08309 in pthread_mutex_lock () from /lib64/libpthread.so.0
->> #1  0x000000000044f5af in cache_node_put (cache=0x25a2030, node=0x0) at cache.c:368
->> #2  0x000000000041ff7e in libxfs_mount (mp=0x0, sb=<value optimized out>, dev=<value optimized out>, logdev=<value optimized out>, 
->>     rtdev=<value optimized out>, flags=1) at init.c:680
->> #3  0x0000000000416157 in init (argc=2, argv=0x7fffd9e19798) at init.c:125
->> #4  0x000000000041635a in main (argc=48, argv=0x7fffd9e19798) at init.c:153
->> (gdb) 
->>
->> when reading the root inode fails, and we try to libxfs_iput it anyway.
->>
->> The following seems to fix it ...
->>
->> -Eric
->>
->> Index: xfsprogs/libxfs/init.c
->> ===================================================================
->> --- xfsprogs.orig/libxfs/init.c
->> +++ xfsprogs/libxfs/init.c
->> @@ -677,7 +677,8 @@ libxfs_mount(
->>  		ASSERT(mp->m_rootip != NULL);
->>  	}
->>  	if ((flags & LIBXFS_MOUNT_ROOTINOS) && rtmount_inodes(mp)) {
->> -		libxfs_iput(mp->m_rootip, 0);
->> +		if (mp->m_rootip)
->> +			libxfs_iput(mp->m_rootip, 0);
->>  		return NULL;
->>  	}
->>  
->>
->>
-> 
-> 
-
--- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+[[HTML alternate version deleted]]
