@@ -1,55 +1,95 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Oct 2008 22:39:49 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9E5dkIe026473
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:39:46 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Oct 2008 22:52:53 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9E5qNxl026958
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:52:23 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C3D613F3253
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:41:26 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id Q5FpjwHF3NK82N1g for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:41:26 -0700 (PDT)
-Date: Tue, 14 Oct 2008 16:41:03 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 643D4130B7AF
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:54:05 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id vYydQak72pEBWfB3 for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:54:05 -0700 (PDT)
+Date: Tue, 14 Oct 2008 16:53:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: TAKE 988255 - fix instant oops with tracing enabled
-Message-ID: <20081014054103.GK10716@disturbed>
-References: <20081014011747.AC14E58FA1E9@chook.melbourne.sgi.com> <20081014020556.GH10716@disturbed> <48F42F12.1010409@sgi.com>
+Subject: Re: Stale XFS mount for Kernel 2.6.25.14
+Message-ID: <20081014055348.GL10716@disturbed>
+References: <8604545CB7815D419F5FF108D3E434BA3BD626@emss04m05.us.lmco.com> <20081013035939.GB10716@disturbed> <8604545CB7815D419F5FF108D3E434BA3BD628@emss04m05.us.lmco.com> <8604545CB7815D419F5FF108D3E434BA3BD62F@emss04m05.us.lmco.com> <20081014021534.GI10716@disturbed> <8604545CB7815D419F5FF108D3E434BA3BD631@emss04m05.us.lmco.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <48F42F12.1010409@sgi.com>
+In-Reply-To: <8604545CB7815D419F5FF108D3E434BA3BD631@emss04m05.us.lmco.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs@oss.sgi.com
+To: "Ngo, Andrew" <andrew.ngo@lmco.com>
+Cc: v9fs-developer@lists.sourceforge.net, xfs@oss.sgi.com, "Johnson, Je" <je.johnson@lmco.com>
 
-On Tue, Oct 14, 2008 at 03:33:06PM +1000, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> On Tue, Oct 14, 2008 at 12:17:47PM +1100, Lachlan McIlroy wrote:
->>> fix instant oops with tracing enabled
->>>
->>> We can only read inode->i_count if the inode is actually there and not
->>> a NULL pointer.  This was introduced in one of the recent sync patches.
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> BTW, this now means that other pending patches won't apply cleanly....
->>
->
-> Yeah this patch hunk didn't apply but was easy to hand merge.  It also
-> didn't compile because of a missing comma from the 4th last line.  Can
-> you please make sure each of your patch series compile on their own?
+On Mon, Oct 13, 2008 at 11:40:17PM -0400, Ngo, Andrew wrote:
+> What's the storage structure (DM, MD, iSCSI, etc)?
+> 
+> Output of 'xfs_info <mtpt>'?
+> 
+> [Andrew Ngo]xfs_info /mtpt
+> meta-data=/dev/sda3 isize=256 agcount=16 agsize=672219 blks
+>          =          sectsz=512 attr=0
+> data     =          bsize=4096 blocks=10755504, imaxpct=25
+>          =          sunit=0; swidth=0 blks, unwritten=1
+> naming   = version2 bsize=4096
+> log      = internal bsize=4096 blocks=525, version=1
+>                     sectsz=512  sunit=0 blocks
+> realtime = none     extsz=65536 blocks=0 rtextents=0
 
-I do make sure every patch compiles given the config options a
-mainline kernel allows. However, the CONFIG_XFS_TRACE option is not
-present in mainline-derived kernels so it's not obvious when
-problems occur inside code that isn't easily configurable on
-such a kernel....
+I think your cut-n-paste has dropped characters there - the log
+cannot be that small - it must be at least 10MB in size
+(2560 blocks, IIRC). Can you check this, please?
 
-As it is, I haven't done a CONFIG_XFS_TRACE build for several months
-because I've found that I haven't needed tracing to find problems
-esoteric problems. Using watchpoints, breakpoints and single
-stepping catches problems as they occur rather than needing tracing
-to try to work out what went wrong after a problem has occurred.
+> What are you really trying to acheive with the remount command?
+> 
+> [Andrew Ngo]This server hosts the patch directory for the developers.
+> When the developers are not patching software, the file system is ro.
+> When the developers needs to patch the software, the file system is
+> changed to rw.
+
+Ok. So when a software update needs to be done, the filesystem
+is made writable, correct? But once the update is done, it
+then gets made RO again? how much data gets written when an
+update is run?
+
+> Is the filesystem busy at the time the ro,remount is run?
+> (e.g. any large background writes occurring?)
+> 
+> [Andrew Ngo]Yes.  
+
+So you try to make a busy, dirty filesystem read only while an
+application is still writing to it?
+
+> Note that I make a script that performs the "mount -o rw,remount <mtpt>"
+> and "mount -o ro,remount <mnpt>".  When the system is not being used, I
+> can finish the loop of 100 mount operations; however, when the system is
+> being used, a couple of the above mount commands, even manually, will
+> cause the system to hang.
+> 
+> Does the problem go away if you do:
+> 
+> # xfs_freeze -f <mtpt>
+> # xfs_freeze -u <mtpt>
+> # mount -o ro,remount <mtpt>
+> 
+> [Andrew Ngo] When the mount command hangs, the above commands continue
+> the hang the system.
+
+I meant using that sequence of commands instead of just a single
+"mount -o ro,remount <mtpt>" to make the fs RO. They won't magically
+fix anything once something is broken.
+
+> Or does the first freeze command trigger the same problem?
+> [Andrew Ngo] Yes, the xfs_freeze -f command hang the system, just like
+> the stale mount command does.
+
+Is that before or after a remount has already hung?
+
+Next time you hang the system, please attach the output that
+appears in your syslog from:
+
+# echo t > /proc/sysrq-trigger
 
 Cheers,
 
