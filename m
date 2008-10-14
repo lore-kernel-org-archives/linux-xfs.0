@@ -1,41 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Oct 2008 21:49:01 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9E4mvTq025411
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 21:48:58 -0700
-Subject: TAKE 988141 - Never call mark_inode_dirty_sync() directly
-Message-Id: <20081014045038.4253258FA1E9@chook.melbourne.sgi.com>
-Date: Tue, 14 Oct 2008 15:50:38 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 13 Oct 2008 22:39:49 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9E5dkIe026473
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:39:46 -0700
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C3D613F3253
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:41:26 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id Q5FpjwHF3NK82N1g for <xfs@oss.sgi.com>; Mon, 13 Oct 2008 22:41:26 -0700 (PDT)
+Date: Tue, 14 Oct 2008 16:41:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: TAKE 988255 - fix instant oops with tracing enabled
+Message-ID: <20081014054103.GK10716@disturbed>
+References: <20081014011747.AC14E58FA1E9@chook.melbourne.sgi.com> <20081014020556.GH10716@disturbed> <48F42F12.1010409@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48F42F12.1010409@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Never call mark_inode_dirty_sync() directly
+On Tue, Oct 14, 2008 at 03:33:06PM +1000, Lachlan McIlroy wrote:
+> Dave Chinner wrote:
+>> On Tue, Oct 14, 2008 at 12:17:47PM +1100, Lachlan McIlroy wrote:
+>>> fix instant oops with tracing enabled
+>>>
+>>> We can only read inode->i_count if the inode is actually there and not
+>>> a NULL pointer.  This was introduced in one of the recent sync patches.
+>>>
+>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>
+>> BTW, this now means that other pending patches won't apply cleanly....
+>>
+>
+> Yeah this patch hunk didn't apply but was easy to hand merge.  It also
+> didn't compile because of a missing comma from the 4th last line.  Can
+> you please make sure each of your patch series compile on their own?
 
-Once the Linux inode and the XFS inode are combined, we cannot rely
-on just check if the linux inode exists as a method of determining
-if it is valid or not. Hence we should always call
-xfs_mark_inode_dirty_sync() instead as it does the correct checks to
-determine if the liinux inode is in a valid state or not.
+I do make sure every patch compiles given the config options a
+mainline kernel allows. However, the CONFIG_XFS_TRACE option is not
+present in mainline-derived kernels so it's not obvious when
+problems occur inside code that isn't easily configurable on
+such a kernel....
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+As it is, I haven't done a CONFIG_XFS_TRACE build for several months
+because I've found that I haven't needed tracing to find problems
+esoteric problems. Using watchpoints, breakpoints and single
+stepping catches problems as they occur rather than needing tracing
+to try to work out what went wrong after a problem has occurred.
 
-Date:  Tue Oct 14 15:50:14 EST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-inode
-Inspected by:  hch
-Author:  lachlan
+Cheers,
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:32318a
-fs/xfs/linux-2.6/xfs_super.c - 1.457 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.457&r2=text&tr2=1.456&f=h
-fs/xfs/linux-2.6/xfs_iops.c - 1.301 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.301&r2=text&tr2=1.300&f=h
-fs/xfs/linux-2.6/xfs_aops.c - 1.166 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_aops.c.diff?r1=text&tr1=1.166&r2=text&tr2=1.165&f=h
-	- Never call mark_inode_dirty_sync() directly
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
