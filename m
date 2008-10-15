@@ -1,61 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Oct 2008 18:39:24 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9F1dLKI002550
-	for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 18:39:21 -0700
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 173514FCBB0
-	for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 18:41:03 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id dJ9WASyw5D7jsnxR for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 18:41:03 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1KpvF8-0005Bv-QS
-	for xfs@oss.sgi.com; Wed, 15 Oct 2008 12:32:06 +1100
-Date: Wed, 15 Oct 2008 12:32:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Attribution of patches in the git tree...
-Message-ID: <20081015013206.GT10716@disturbed>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Oct 2008 18:46:43 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9F1kfgK003384
+	for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 18:46:41 -0700
+Subject: TAKE 988141 - Inode: Allow external initialisers
+Message-Id: <20081015014815.D53EF58FA1E9@chook.melbourne.sgi.com>
+Date: Wed, 15 Oct 2008 12:48:15 +1100 (EST)
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-Folks,
+Date:  Wed Oct 15 12:47:17 EST 2008
+Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-inode
+Inspected by:  hch
+Author:  lachlan
 
-Just noticed that all the btree factoring patches in the
-master tree are attributed to Christoph, even when his patch
-descriptions gave a different attribution for the source of the
-patch. e.g:
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-2.6.git;a=commit;h=ea8fb246ad5230263f13e45635fad80cc04e28a0
 
-> [XFS] implement generic xfs_btree_increment
->
-> From: Dave Chinner <dgc@sgi.com>
->
-> Because this is the first major generic btree routine this patch includes
-> some infrastrucure, first a few routines to deal with a btree block that
-> can be either in short or long form, second xfs_btree_read_buf_block,
-> which is the new central routine to read a btree block given a cursor, and
-> third the new xfs_btree_ptr_addr routine to calculate the address for a
-> given btree pointer record.
+Modid:  2.6.x-xfs-melb:linux:32321a
+fs/inode.c - 1.27 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.6-xfs/fs/inode.c.diff?r1=text&tr1=1.27&r2=text&tr2=1.26&f=h
+	- Inode: Allow external initialisers
+	  To allow XFS to combine the XFS and linux inodes into a single
+	  structure, we need to drive inode lookup from the XFS inode cache,
+	  not the generic inode cache. This means that we need initialise a
+	  struct inode from a context outside alloc_inode() as it is no longer
+	  used by XFS.
+	  Factor and export the struct inode initialisation code from
+	  alloc_inode() to inode_init_always() as a counterpart to
+	  inode_init_once().  i.e. we have to call this init function for each
+	  inode instantiation (always), as opposed inode_init_once() which is
+	  only called on slab object instantiation (once).
+	  Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-The description has a "From: blah" line indicates the author
-of the patch was not the person who sent the patch. i.e. the git
-"author" is incorrect, and the only way to find that out is by
-looking at the commit description.
-
-In future, can we please get the attribution for patches correct
-in the git tree so that things like pull requests and historical
-mining of the trees accurately reflect who the author of the patches
-really are?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+include/linux/fs.h - 1.40 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.6-xfs/include/linux/fs.h.diff?r1=text&tr1=1.40&r2=text&tr2=1.39&f=h
+	- Inode: Allow external initialisers
