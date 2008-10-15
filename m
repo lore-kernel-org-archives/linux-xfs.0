@@ -1,26 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Oct 2008 22:14:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 14 Oct 2008 22:15:08 -0700 (PDT)
 Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9F5E7hx003949
-	for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 22:14:08 -0700
-Subject: TAKE 988142 - kill deleted inodes list
-Message-Id: <20081015051547.CBDFC58FA1E9@chook.melbourne.sgi.com>
-Date: Wed, 15 Oct 2008 16:15:47 +1100 (EST)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9F5F6PZ004312
+	for <xfs@oss.sgi.com>; Tue, 14 Oct 2008 22:15:06 -0700
+Subject: TAKE 988142 - Prevent looping in xfs_sync_inodes_ag
+Message-Id: <20081015051646.CB89858FA1E9@chook.melbourne.sgi.com>
+Date: Wed, 15 Oct 2008 16:16:46 +1100 (EST)
 From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
 
-kill deleted inodes list
+Prevent looping in xfs_sync_inodes_ag
 
-Now that the deleted inodes list is unused, kill it. This
-also removes the i_reclaim list head from the xfs_inode, shrinking
-it by two pointers.
+If the last  block of the AG has inodes in it and the AG is an
+exactly power-of-2 size then the last inode in the AG points
+to the last block in the AG. If we try to find the next inode
+in the AG by adding one to the inode number, we increment the
+inode number past the size of the AG. The result is that the
+macro XFS_INO_TO_AGINO() will strip the AG portion of the inode
+number and return an inode number of zero.
+
+That is, instead of terminating the lookup loop because we hit the
+inode number went outside the valid range for the AG, the search
+index returns to zero and we start traversing the radix tree from
+the start again. This results in an endless loop in
+xfs_sync_inodes_ag().
+
+Fix it be detecting if the new search index decreases as a result of
+incrementing the current inode number. That indicate an overflow and
+hence that we have finished processing the AG so we can terminate
+the loop.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Date:  Wed Oct 15 16:15:14 EST 2008
+Date:  Wed Oct 15 16:16:29 EST 2008
 Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-reclaim
 Inspected by:  hch
 Author:  lachlan
@@ -29,21 +44,7 @@ The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
 
-Modid:  xfs-linux-melb:xfs-kern:32334a
-fs/xfs/xfs_vnodeops.c - 1.781 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.781&r2=text&tr2=1.780&f=h
-fs/xfs/xfs_iget.c - 1.252 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_iget.c.diff?r1=text&tr1=1.252&r2=text&tr2=1.251&f=h
-fs/xfs/xfs_mount.h - 1.281 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.281&r2=text&tr2=1.280&f=h
-fs/xfs/xfs_mount.c - 1.451 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.c.diff?r1=text&tr1=1.451&r2=text&tr2=1.450&f=h
-fs/xfs/xfs_inode.c - 1.531 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.c.diff?r1=text&tr1=1.531&r2=text&tr2=1.530&f=h
-fs/xfs/xfs_inode.h - 1.265 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_inode.h.diff?r1=text&tr1=1.265&r2=text&tr2=1.264&f=h
-fs/xfs/linux-2.6/xfs_super.c - 1.461 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.461&r2=text&tr2=1.460&f=h
-fs/xfs/linux-2.6/xfs_sync.c - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sync.c.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-	- kill deleted inodes list
+Modid:  xfs-linux-melb:xfs-kern:32335a
+fs/xfs/linux-2.6/xfs_sync.c - 1.23 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sync.c.diff?r1=text&tr1=1.23&r2=text&tr2=1.22&f=h
+	- Prevent looping in xfs_sync_inodes_ag
