@@ -1,265 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 15 Oct 2008 17:16:00 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 15 Oct 2008 17:17:26 -0700 (PDT)
 Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9G0FUHn009727
-	for <xfs@oss.sgi.com>; Wed, 15 Oct 2008 17:15:30 -0700
-Date: Thu, 16 Oct 2008 11:20:40 +1100
-Subject: Re: How can I recover data?
-From: "Barry Naujok" <bnaujok@sgi.com>
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9G0HNwi010041
+	for <xfs@oss.sgi.com>; Wed, 15 Oct 2008 17:17:23 -0700
+Message-ID: <48F68877.50507@sgi.com>
+Date: Thu, 16 Oct 2008 11:19:03 +1100
+From: Donald Douwsma <donaldd@sgi.com>
 MIME-Version: 1.0
-References: <19996090.post@talk.nabble.com>
+Subject: Re: [PATCH] remove exports of inline functions
+References: <20081006181626.GA15388@lst.de> <20081015104840.GA8853@lst.de>
+In-Reply-To: <20081015104840.GA8853@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Message-ID: <op.ui3ckqw83jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <19996090.post@talk.nabble.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: ibulescu <tibi_1980@yahoo.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, 16 Oct 2008 02:35:40 +1100, ibulescu <tibi_1980@yahoo.com> wrote:
+Christoph Hellwig wrote:
+> On Mon, Oct 06, 2008 at 08:16:26PM +0200, Christoph Hellwig wrote:
+>> Recent gcc starts to complain about exports of functions marked static
+>> inline, so let's get rid of those.
+> 
+> note that the complain is in the form of a kernel doesn't link, so any
+> chance we could get this patch in?
 
-> Hello,
-> how can I recover the data?
->
-> Here is my story:
->
-> I have openfiler installed with LVM and a single xfs partition over 7  
-> sata
-> hdd's. Yesterday I discovered that I can't write any files to the xfs
-> partition, even if there was 1,2Tb free space. I've googled alot and
-> modified the label of all partitions to GPT (that seemed to be the  
-> problem
-> with xfs, or so I've imagined and I've used parted - mklabel). After that
-> I've rebooted and all data was gone. The parted program changed the
-> partitions UUID's. I've manualy set original partitions UUID from lvm
-> backup's and restored the volume group. The partition from the volume  
-> group
-> was there but XFS can't mount the filesystem. After running xfs_repair  
-> this
-> is the result:
-> - all the data was contained in a single folder named "All" which was
-> deleted by the repair
+Yes, picking it up now.
 
-All was inode 186:
-
-> entry "All" in shortform directory 186 references free inode 136
-> junking entry "All" in directory inode 186
-
-which is now in lost+found:
-
-> disconnected dir inode 186, moving to lost+found
-
-So, you should find the contents of the All directory in
-/lost+found/186/
-
-
-> ----Begin copy----
-> bad magic number 0x0 on inode 183, resetting magic number
-> bad version number 0x0 on inode 183, resetting version number
-> bad magic number 0x0 on inode 184, resetting magic number
-> bad version number 0x0 on inode 184, resetting version number
-> bad magic number 0x0 on inode 185, resetting magic number
-> bad version number 0x0 on inode 185, resetting version number
-> imap claims in-use inode 186 is free, correcting imap
-> imap claims in-use inode 187 is free, correcting imap
-> imap claims in-use inode 188 is free, correcting imap
-> imap claims in-use inode 189 is free, correcting imap
-> imap claims in-use inode 190 is free, correcting imap
-> bad attribute leaf magic # 0 for dir ino 191
-> problem with attribute contents in inode 191
-> clearing inode 191 attributes
-> correcting nblocks for inode 191, was 1 - counted 0
-> imap claims in-use inode 191 is free, correcting imap
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - agno = 7
->         - agno = 8
->         - agno = 9
->         - agno = 10
->         - agno = 11
->         - agno = 12
->         - agno = 13
->         - agno = 14
->         - agno = 15
->         - agno = 16
->         - agno = 17
->         - agno = 18
->         - agno = 19
->         - agno = 20
->         - agno = 21
->         - agno = 22
->         - agno = 23
->         - agno = 24
->         - agno = 25
->         - agno = 26
->         - agno = 27
->         - agno = 28
->         - agno = 29
->         - agno = 30
->         - agno = 31
->         - agno = 32
->         - agno = 33
->         - agno = 34
->         - agno = 35
->         - agno = 36
->         - agno = 37
->         - agno = 38
->         - agno = 39
->         - agno = 40
->         - agno = 41
->         - agno = 42
->         - agno = 43
->         - agno = 44
->         - agno = 45
->         - agno = 46
->         - agno = 47
->         - agno = 48
->         - agno = 49
->         - agno = 50
->         - agno = 51
->         - agno = 52
->         - agno = 53
->         - agno = 54
->         - agno = 55
->         - agno = 56
->         - agno = 57
->         - agno = 58
->         - agno = 59
->         - agno = 60
->         - agno = 61
->         - agno = 62
->         - agno = 63
->         - agno = 64
->         - agno = 65
->         - agno = 66
->         - agno = 67
->         - agno = 68
->         - agno = 69
->         - agno = 70
->         - agno = 71
->         - agno = 72
->         - agno = 73
->         - agno = 74
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
-> root inode lost
->         - clear lost+found (if it exists) ...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
-> entry "All" in shortform directory 186 references free inode 136
-> junking entry "All" in directory inode 186
-> entry "All.info.xml" in shortform directory 186 references free inode 137
-> junking entry "All.info.xml" in directory inode 186
-> bad attribute format 1 in inode 191, resetting value
-> entry "rhi-rp11.iso" in shortform directory 191 references free inode 134
-> junking entry "rhi-rp11.iso" in directory inode 191
-> entry "rhi.nfo" in shortform directory 191 references free inode 135
-> junking entry "rhi.nfo" in directory inode 191
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - agno = 7
->         - agno = 8
->         - agno = 9
->         - agno = 10
->         - agno = 11
->         - agno = 12
->         - agno = 13
->         - agno = 14
->         - agno = 15
->         - agno = 16
->         - agno = 17
->         - agno = 18
->         - agno = 19
->         - agno = 20
->         - agno = 21
->         - agno = 22
->         - agno = 23
->         - agno = 24
->         - agno = 25
->         - agno = 26
->         - agno = 27
->         - agno = 28
->         - agno = 29
->         - agno = 30
->         - agno = 31
->         - agno = 32
->         - agno = 33
->         - agno = 34
->         - agno = 35
->         - agno = 36
->         - agno = 37
->         - agno = 38
->         - agno = 39
->         - agno = 40
->         - agno = 41
->         - agno = 42
->         - agno = 43
->         - agno = 44
->         - agno = 45
->         - agno = 46
->         - agno = 47
->         - agno = 48
->         - agno = 49
->         - agno = 50
->         - agno = 51
->         - agno = 52
->         - agno = 53
->         - agno = 54
->         - agno = 55
->         - agno = 56
->         - agno = 57
->         - agno = 58
->         - agno = 59
->         - agno = 60
->         - agno = 61
->         - agno = 62
->         - agno = 63
->         - agno = 64
->         - agno = 65
->         - agno = 66
->         - agno = 67
->         - agno = 68
->         - agno = 69
->         - agno = 70
->         - agno = 71
->         - agno = 72
->         - agno = 73
->         - agno = 74
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
-> reinitializing root directory
-> reinitializing realtime bitmap inode
-> reinitializing realtime summary inode
->         - resetting contents of realtime bitmap and summary inodes
->         - ensuring existence of lost+found directory
->         - traversing filesystem starting at / ...
->         - traversal finished ...
->         - traversing all unattached subtrees ...
->         - traversals finished ...
->         - moving disconnected inodes to lost+found ...
-> disconnected dir inode 186, moving to lost+found
-> disconnected inode 187, moving to lost+found
-> disconnected inode 188, moving to lost+found
-> disconnected inode 189, moving to lost+found
-> disconnected inode 190, moving to lost+found
-> disconnected dir inode 191, moving to lost+found
-> Phase 7 - verify and correct link counts...
-> resetting inode 128 nlinks from 2 to 3
-> resetting inode 186 nlinks from 3 to 2
-> Warning:  quota inodes were cleared.  Quotas disabled.
-> Note - stripe unit (0) and width (0) fields have been reset.
-> Please set with mount -o sunit=<value>,swidth=<value>
-> done
-> [root@nas01 /]#
-> ----End copy----
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>
+>> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
+>> ===================================================================
+>> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-07 01:08:33.000000000 +0000
+>> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-07 01:09:58.000000000 +0000
+>> @@ -153,8 +153,6 @@
+>>  EXPORT_SYMBOL(kmem_zalloc);
+>>  EXPORT_SYMBOL(kmem_zone_alloc);
+>>  EXPORT_SYMBOL(kmem_zalloc_greedy);
+>> -EXPORT_SYMBOL(kmem_zone_free);
+>> -EXPORT_SYMBOL(kmem_zone_init);
+>>  EXPORT_SYMBOL(kmem_zone_zalloc);
+>>  EXPORT_SYMBOL(xfs_address_space_operations);
+>>  EXPORT_SYMBOL(xfs_dir_file_operations);
+>> @@ -217,8 +215,6 @@
+>>  EXPORT_SYMBOL(xfs_finish_reclaim_all);
+>>  EXPORT_SYMBOL(xfs_freesb);
+>>  EXPORT_SYMBOL(xfs_fs_cmn_err);
+>> -EXPORT_SYMBOL(xfs_highbit32);
+>> -EXPORT_SYMBOL(xfs_highbit64);
+>>  EXPORT_SYMBOL(xfs_idestroy);
+>>  EXPORT_SYMBOL(xfs_iextract);
+>>  EXPORT_SYMBOL(xfs_iext_add);
+>> @@ -227,10 +223,7 @@
+>>  EXPORT_SYMBOL(xfs_iext_idx_to_irec);
+>>  EXPORT_SYMBOL(xfs_iext_insert);
+>>  EXPORT_SYMBOL(xfs_iext_remove);
+>> -EXPORT_SYMBOL(xfs_iflock);
+>> -EXPORT_SYMBOL(xfs_iflock_nowait);
+>>  EXPORT_SYMBOL(xfs_iflush);
+>> -EXPORT_SYMBOL(xfs_ifunlock);
+>>  EXPORT_SYMBOL(xfs_iget);
+>>  EXPORT_SYMBOL(xfs_ilock);
+>>  EXPORT_SYMBOL(xfs_ilock_map_shared);
+> ---end quoted text---
+> 
