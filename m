@@ -1,47 +1,28 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 17 Oct 2008 09:55:58 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9HGtunY008378
-	for <xfs@oss.sgi.com>; Fri, 17 Oct 2008 09:55:57 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 001B650D975
-	for <xfs@oss.sgi.com>; Fri, 17 Oct 2008 09:57:38 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id FzVd0m0eEqY8Fvr1 for <xfs@oss.sgi.com>; Fri, 17 Oct 2008 09:57:38 -0700 (PDT)
-Date: Fri, 17 Oct 2008 12:57:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: BUG: sleeping function called from invalid context at
-	kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
-Message-ID: <20081017165738.GA20818@infradead.org>
-References: <a4423d670810170543vd6b4c39p44bf125610d8540@mail.gmail.com> <20081017164116.GA17375@infradead.org> <a4423d670810170954h7ca130aaw8895380a4c6b125@mail.gmail.com>
-MIME-Version: 1.0
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 17 Oct 2008 10:08:25 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9HH8KHb009514
+	for <xfs@oss.sgi.com>; Fri, 17 Oct 2008 10:08:20 -0700
+Date: Fri, 17 Oct 2008 19:10:00 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: XFS_ERROR use - was Re: [PATCH] prevent NULL returns from d_obtain_alias
+Message-ID: <20081017171000.GC18582@lst.de>
+References: <20081015192839.GA867@lst.de> <E1KqWzC-00087u-TG@pomaz-ex.szeredi.hu> <20081016180947.GA26285@lst.de> <48F7D814.2080705@sgi.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a4423d670810170954h7ca130aaw8895380a4c6b125@mail.gmail.com>
+In-Reply-To: <48F7D814.2080705@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Timothy Shimmin <tes@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Oct 17, 2008 at 08:54:35PM +0400, Alexander Beregalov wrote:
-> Workload is not specific, many i/o commands trigger the message.
 > 
->  dmesg|grep comm:
-> [    4.419605] Pid: 1396, comm: mkdir Not tainted 2.6.27-next-20081017 #2
-> [    6.056443] Pid: 1782, comm: dhcpcd Not tainted 2.6.27-next-20081017 #2
-> [   17.899905] Pid: 1791, comm: dhcpcd-run-hook Not tainted
-> 2.6.27-next-20081017 #2
-> [ 3846.588549] Pid: 2005, comm: screen Not tainted 2.6.27-next-20081017 #2
-> [ 4416.242723] Pid: 2023, comm: git Not tainted 2.6.27-next-20081017 #2
-> [ 4430.618037] Pid: 2023, comm: git Not tainted 2.6.27-next-20081017 #2
-> [ 4431.641578] Pid: 2023, comm: git Not tainted 2.6.27-next-20081017 #2
-> [ 4432.944265] Pid: 2023, comm: git Not tainted 2.6.27-next-20081017 #2
-> [ 4590.330706] Pid: 2026, comm: git-merge Not tainted 2.6.27-next-20081017 #2
-> [14882.802479] Pid: 2058, comm: git-merge Not tainted 2.6.27-next-20081017 #2
-> [16955.026436] Pid: 2091, comm: git-merge Not tainted 2.6.27-next-20081017 #2
-> [18466.645935] Pid: 2119, comm: git-merge Not tainted 2.6.27-next-20081017 #2
-> [19165.813049] Pid: 2150, comm: git-merge Not tainted 2.6.27-next-20081017 #2
+> Fair enough.
+> But XFS_ERROR is used throughout the function.
 
-Very strange.  Can you retry with tomorrow Linux-next which should have
-a large XFS update?  If it still happens I'll investigate it in more
-detail.
+Can we leave it the simple way for now?  I have to revamp that whole
+function anyway as it's extremly buggy in many ways, especially when
+used to open directories (can lead to multiple dentries for a single
+directory - ouch) and then I'll kill the other uses.
