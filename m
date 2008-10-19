@@ -1,59 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 18 Oct 2008 22:11:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9J5BFAB028274
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2008 22:11:15 -0700
-Received: from sorrow.cyrius.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C6F33515701
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2008 22:12:58 -0700 (PDT)
-Received: from sorrow.cyrius.com (sorrow.cyrius.com [65.19.161.204]) by cuda.sgi.com with ESMTP id 4J8rvYGzQ45vjoB1 for <xfs@oss.sgi.com>; Sat, 18 Oct 2008 22:12:58 -0700 (PDT)
-Date: Sun, 19 Oct 2008 07:12:47 +0200
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: XFS filesystem corruption on the arm(el) architecture
-Message-ID: <20081019051247.GD9598@deprecation.cyrius.com>
-References: <1222893502.5020.40.camel@moria> <20081002004556.GB30001@disturbed> <48E4213E.9090508@sandeen.net> <20081016212500.GA27228@deprecation.cyrius.com> <48F7BC9F.4080909@sandeen.net> <20081017070109.GA30726@deprecation.cyrius.com> <48F89E0F.6030307@sandeen.net> <20081018085752.GS25834@deprecation.cyrius.com> <20081019014830.GI31761@disturbed>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 01:06:31 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9J85wtI014743
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 01:05:59 -0700
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9DC7AC6674
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 01:07:42 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id TavZmoKEfF6gzVPz for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 01:07:42 -0700 (PDT)
+Date: Sun, 19 Oct 2008 04:07:41 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: kernel 2.6.27.2 (32bit) filesystem is read-only
+In-Reply-To: <48FA8C3D.5090202@sandeen.net>
+Message-ID: <alpine.DEB.1.10.0810190407370.14982@p34.internal.lan>
+References: <alpine.DEB.1.10.0810181926380.20575@p34.internal.lan> <48FA8C3D.5090202@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081019014830.GI31761@disturbed>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Tobias Frost <tobi@coldtobi.de>, linux-kernel@vger.kernel.org, debian-arm@lists.debian.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-* Dave Chinner <david@fromorbit.com> [2008-10-19 12:48]:
-> That's the log replay indicating that there's a bad transaction
-> header in the log. Very strange - it shoul dbe a clean log. What
-> does xfs_logprint -t /dev/sda5 tell you about the transactions
-> in the log?
 
-mdebian:~# mkfs.xfs -f /dev/sda5
-meta-data=/dev/sda5              isize=256    agcount=4, agsize=94380
-blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=377519,
-imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks,
-lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-debian:~# mount -t xfs /dev/sda5 /mnt
-debian:~# cp /usr/bin/* /mnt/
-debian:~# umount /mnt
-debian:~# mount -t xfs /dev/sda5 /mnt
-mount: /dev/sda5: can't read superblock
-debian:~# xfs_logprint -t /dev/sda5
-xfs_logprint:
-    data device: 0x805
-    log device: 0x805 daddr: 1510112 length: 20480
 
-XFS: Log inconsistent (didn't find previous header)
-XFS: empty log check failed
-xfs_logprint: failed to find head and tail, error: 5
-debian:~#
+On Sat, 18 Oct 2008, Eric Sandeen wrote:
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+> Justin Piszcz wrote:
+>> all 2.6.26.x kernels work ok,
+>> make oldconfig on 2.6.27.2, filesystem mounted read-only at boot
+>> booted back to 2.6.26.x, back to normal
+>> barriers are on by default (single disk system)
+>>
+>>
+>
+> You'll need:
+>
+> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=review-2.6.27/xfs-fix-remount-rw-with-unrecognized-options.patch;h=4f93cbab85eb4c3b097065da3e13878d499b0d5a;hb=HEAD
+>
+> s/b in 2.6.27.3 (pity it took 3 -stable releases, though)
+>
+> -Eric
+>
+>
+
+Thanks Eric.
+
+Justin.
