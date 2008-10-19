@@ -1,59 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 04:17:45 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9JBHbCx029423
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 04:17:37 -0700
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DA1C51432190
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 04:19:19 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id P3Ri47mpXOkPKMCV for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 04:19:19 -0700 (PDT)
-Date: Sun, 19 Oct 2008 07:19:19 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: kernel 2.6.27.2 (32bit) filesystem is read-only
-In-Reply-To: <alpine.DEB.1.10.0810190407370.14982@p34.internal.lan>
-Message-ID: <alpine.DEB.1.10.0810190709580.26674@p34.internal.lan>
-References: <alpine.DEB.1.10.0810181926380.20575@p34.internal.lan> <48FA8C3D.5090202@sandeen.net> <alpine.DEB.1.10.0810190407370.14982@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 09:21:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9JGL2Oq029941
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:21:04 -0700
+Received: from xi.wantstofly.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C6D6AC759A
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:22:46 -0700 (PDT)
+Received: from xi.wantstofly.org (xi.wantstofly.org [83.160.184.112]) by cuda.sgi.com with ESMTP id 8I82uRa9ShPx5O2U for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:22:46 -0700 (PDT)
+Date: Sun, 19 Oct 2008 18:22:44 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: XFS filesystem corruption on the arm(el) architecture
+Message-ID: <20081019162244.GF4129@xi.wantstofly.org>
+References: <20081002004556.GB30001@disturbed> <48E4213E.9090508@sandeen.net> <20081016212500.GA27228@deprecation.cyrius.com> <48F7BC9F.4080909@sandeen.net> <20081017070109.GA30726@deprecation.cyrius.com> <48F89E0F.6030307@sandeen.net> <20081018085752.GS25834@deprecation.cyrius.com> <20081019014830.GI31761@disturbed> <48FAA445.9050800@sandeen.net> <20081019090702.GA1925@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081019090702.GA1925@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Martin Michlmayr <tbm@cyrius.com>, Tobias Frost <tobi@coldtobi.de>, linux-kernel@vger.kernel.org, debian-arm@lists.debian.org, xfs@oss.sgi.com, Hiroki KUMAGAI <hiroki.kumagai@toshiba.co.jp>
 
+On Sun, Oct 19, 2008 at 05:07:02AM -0400, Christoph Hellwig wrote:
 
+> > This is probably the vmap cache aliasing problem that we paid a bit of
+> > attention to a few months ago, no?
+> 
+> Shouldn't the cachepolicy switch take care of that?
 
-On Sun, 19 Oct 2008, Justin Piszcz wrote:
-
->
->
-> On Sat, 18 Oct 2008, Eric Sandeen wrote:
->
->> Justin Piszcz wrote:
->>> all 2.6.26.x kernels work ok,
->>> make oldconfig on 2.6.27.2, filesystem mounted read-only at boot
->>> booted back to 2.6.26.x, back to normal
->>> barriers are on by default (single disk system)
->>> 
->>> 
->> 
->> You'll need:
->> 
->> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=review-2.6.27/xfs-fix-remount-rw-with-unrecognized-options.patch;h=4f93cbab85eb4c3b097065da3e13878d499b0d5a;hb=HEAD
->> 
->> s/b in 2.6.27.3 (pity it took 3 -stable releases, though)
->> 
->> -Eric
->> 
->> 
->
-> Thanks Eric.
->
-> Justin.
->
-
-Confirmed working, but now it broke my UPS (nut doesn't start anymore) 
-(usb issues)
-
-$ uname -a
-Linux box 2.6.27.2 #2 SMP PREEMPT Sun Oct 19 06:58:32 EDT 2008 i686 GNU/Linux
+Setting cachepolicy=uncached should make aliasing issues disappear.
+If you're still seeing issues with cachepolicy=uncached, it's likely
+some other issue.
