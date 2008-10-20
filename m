@@ -1,34 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 09:21:09 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9JGL2Oq029941
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:21:04 -0700
-Received: from xi.wantstofly.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C6D6AC759A
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:22:46 -0700 (PDT)
-Received: from xi.wantstofly.org (xi.wantstofly.org [83.160.184.112]) by cuda.sgi.com with ESMTP id 8I82uRa9ShPx5O2U for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 09:22:46 -0700 (PDT)
-Date: Sun, 19 Oct 2008 18:22:44 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: XFS filesystem corruption on the arm(el) architecture
-Message-ID: <20081019162244.GF4129@xi.wantstofly.org>
-References: <20081002004556.GB30001@disturbed> <48E4213E.9090508@sandeen.net> <20081016212500.GA27228@deprecation.cyrius.com> <48F7BC9F.4080909@sandeen.net> <20081017070109.GA30726@deprecation.cyrius.com> <48F89E0F.6030307@sandeen.net> <20081018085752.GS25834@deprecation.cyrius.com> <20081019014830.GI31761@disturbed> <48FAA445.9050800@sandeen.net> <20081019090702.GA1925@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081019090702.GA1925@infradead.org>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 17:48:16 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9K0mBXP016396
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 17:48:11 -0700
+Message-ID: <48FBD5AB.6090306@sgi.com>
+Date: Mon, 20 Oct 2008 11:49:47 +1100
+From: Timothy Shimmin <tes@sgi.com>
+MIME-Version: 1.0
+Subject: Re: XFS_ERROR use - was Re: [PATCH] prevent NULL returns from d_obtain_alias
+References: <20081015192839.GA867@lst.de> <E1KqWzC-00087u-TG@pomaz-ex.szeredi.hu> <20081016180947.GA26285@lst.de> <48F7D814.2080705@sgi.com> <20081017171000.GC18582@lst.de>
+In-Reply-To: <20081017171000.GC18582@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Martin Michlmayr <tbm@cyrius.com>, Tobias Frost <tobi@coldtobi.de>, linux-kernel@vger.kernel.org, debian-arm@lists.debian.org, xfs@oss.sgi.com, Hiroki KUMAGAI <hiroki.kumagai@toshiba.co.jp>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Oct 19, 2008 at 05:07:02AM -0400, Christoph Hellwig wrote:
-
-> > This is probably the vmap cache aliasing problem that we paid a bit of
-> > attention to a few months ago, no?
+Christoph Hellwig wrote:
+>> Fair enough.
+>> But XFS_ERROR is used throughout the function.
 > 
-> Shouldn't the cachepolicy switch take care of that?
+> Can we leave it the simple way for now?  
 
-Setting cachepolicy=uncached should make aliasing issues disappear.
-If you're still seeing issues with cachepolicy=uncached, it's likely
-some other issue.
+Yep.
+
+> I have to revamp that whole
+> function anyway as it's extremly buggy in many ways, especially when
+> used to open directories (can lead to multiple dentries for a single
+> directory - ouch) and then I'll kill the other uses.
+
+Oh ok.
+
+In userspace,
+we use it for opening directories on xfsdump via jdm_open in order to
+do bulkstat driven dirent dumping.
+We also use it in xfsrestore - though I am not convinced we should -
+it was initially done for "performance" reasons apparently.
+
+--Tim
