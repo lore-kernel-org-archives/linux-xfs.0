@@ -1,54 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 15:39:25 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9KMdFd6013615
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:39:16 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5FE281311352
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:40:59 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 3yuJ7aIHh46bcAqB for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:40:59 -0700 (PDT)
-Date: Tue, 21 Oct 2008 09:35:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: BUG: sleeping function called from invalid context at
-	kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
-Message-ID: <20081020223549.GA21152@disturbed>
-References: <a4423d670810170543vd6b4c39p44bf125610d8540@mail.gmail.com> <20081017164116.GA17375@infradead.org> <a4423d670810170954h7ca130aaw8895380a4c6b125@mail.gmail.com> <20081017165738.GA20818@infradead.org> <a4423d670810171013g5bc19c1cm3f7d9c014ee70349@mail.gmail.com> <20081017203710.GA27187@infradead.org> <20081017135510.7127c4e7@infradead.org> <a4423d670810200758m3cea3841h40988afc8eaf81@mail.gmail.com> <20081020163327.GA15651@infradead.org> <a4423d670810201013w6448cb38w402771799cefb5f5@mail.gmail.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 16:14:27 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9KNEORh017510
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 16:14:25 -0700
+Message-ID: <48FD1132.6080503@sgi.com>
+Date: Tue, 21 Oct 2008 10:16:02 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a4423d670810201013w6448cb38w402771799cefb5f5@mail.gmail.com>
+Subject: Re: XFS_ERROR use - was Re: [PATCH] prevent NULL returns from	d_obtain_alias
+References: <20081015192839.GA867@lst.de> <E1KqWzC-00087u-TG@pomaz-ex.szeredi.hu> <20081016180947.GA26285@lst.de> <48F7D814.2080705@sgi.com> <20081017171000.GC18582@lst.de> <48FBD5AB.6090306@sgi.com> <20081020092346.GA14455@infradead.org>
+In-Reply-To: <20081020092346.GA14455@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Oct 20, 2008 at 09:13:05PM +0400, Alexander Beregalov wrote:
-> 2008/10/20 Christoph Hellwig <hch@infradead.org>:
-> > On Mon, Oct 20, 2008 at 06:58:09PM +0400, Alexander Beregalov wrote:
-> >> Hi Christoph
-> >>
-> >> I have the same result with next-1020 and today's xfs-2.6.git/master
-> >> (
-> >> commit bfd2bd10da76378dc4afd87d7d204a1d3d70b347
-> >> Author: David Chinner <david@fromorbit.com>
-> >> Date:   Fri Oct 17 15:36:23 2008 +1000
-> >>     Inode: Allow external list initialisation
-> >> )
-> Ha, that kernel (xfs/master) has made my system dead locked.
-> SysRQ-d:
-> Show all locks held in the system
-> 1 lock held by pdflush
-> (&type->s_umount_key#18{----}, at writeback_inodes
-> 1 lock held by login
-> (&(&ip->i_iolock)->mr_lock){----} at xfs_ilock
-> and so on ( many locks at xfs_ilock)
+Christoph Hellwig wrote:
+> On Mon, Oct 20, 2008 at 11:49:47AM +1100, Timothy Shimmin wrote:
+>>> I have to revamp that whole
+>>> function anyway as it's extremly buggy in many ways, especially when
+>>> used to open directories (can lead to multiple dentries for a single
+>>> directory - ouch) and then I'll kill the other uses.
+>> Oh ok.
+>>
+>> In userspace,
+>> we use it for opening directories on xfsdump via jdm_open in order to
+>> do bulkstat driven dirent dumping.
+>> We also use it in xfsrestore - though I am not convinced we should -
+>> it was initially done for "performance" reasons apparently.
+> 
+> I think the use of the API is fine, the problem is that the current
+> implemention is buggy.
+Yeah, I have no problem for xfsdump as it is driven by bulkstat
+but for xfsrestore it seems unnecessary.
+In fact, it can restore to other filesystems so it must only be using
+this in certain ways on restore.
+Having a look, yeah it is predicated by:
+  if ( tranp->t_dstdirisxfspr )
+and then just uses the fd for XFS_IOC_FSSETDM, XFS_IOC_FSSETXATTR
+for those xfs-specific things and in the same function it uses
+the path for non-xfs-specific: utime, chown, chmod
+So it seems unnecessary to me in restore.
 
-Curious. Can you post the full stack traces?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Tim
