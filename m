@@ -1,37 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 02:22:17 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9K9M3mr009189
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 02:22:05 -0700
-Date: Mon, 20 Oct 2008 05:23:46 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS_ERROR use - was Re: [PATCH] prevent NULL returns from
-	d_obtain_alias
-Message-ID: <20081020092346.GA14455@infradead.org>
-References: <20081015192839.GA867@lst.de> <E1KqWzC-00087u-TG@pomaz-ex.szeredi.hu> <20081016180947.GA26285@lst.de> <48F7D814.2080705@sgi.com> <20081017171000.GC18582@lst.de> <48FBD5AB.6090306@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 07:56:28 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9KEuO80016896
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 07:56:25 -0700
+Received: from yx-out-1718.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 095BB1441A6A
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 07:58:09 -0700 (PDT)
+Received: from yx-out-1718.google.com (yx-out-1718.google.com [74.125.44.155]) by cuda.sgi.com with ESMTP id lf6JoIjYnLMeVAj5 for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 07:58:09 -0700 (PDT)
+Received: by yx-out-1718.google.com with SMTP id 36so302416yxh.32
+        for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 07:58:09 -0700 (PDT)
+Message-ID: <a4423d670810200758m3cea3841h40988afc8eaf81@mail.gmail.com>
+Date: Mon, 20 Oct 2008 18:58:09 +0400
+From: "Alexander Beregalov" <a.beregalov@gmail.com>
+Subject: Re: BUG: sleeping function called from invalid context at kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
+In-Reply-To: <20081017135510.7127c4e7@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <48FBD5AB.6090306@sgi.com>
+References: <a4423d670810170543vd6b4c39p44bf125610d8540@mail.gmail.com>
+	 <20081017164116.GA17375@infradead.org>
+	 <a4423d670810170954h7ca130aaw8895380a4c6b125@mail.gmail.com>
+	 <20081017165738.GA20818@infradead.org>
+	 <a4423d670810171013g5bc19c1cm3f7d9c014ee70349@mail.gmail.com>
+	 <20081017203710.GA27187@infradead.org>
+	 <20081017135510.7127c4e7@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>, Miklos Szeredi <miklos@szeredi.hu>, xfs-oss <xfs@oss.sgi.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 20, 2008 at 11:49:47AM +1100, Timothy Shimmin wrote:
-> > I have to revamp that whole
-> > function anyway as it's extremly buggy in many ways, especially when
-> > used to open directories (can lead to multiple dentries for a single
-> > directory - ouch) and then I'll kill the other uses.
-> 
-> Oh ok.
-> 
-> In userspace,
-> we use it for opening directories on xfsdump via jdm_open in order to
-> do bulkstat driven dirent dumping.
-> We also use it in xfsrestore - though I am not convinced we should -
-> it was initially done for "performance" reasons apparently.
+2008/10/18 Arjan van de Ven <arjan@infradead.org>:
+> On Fri, 17 Oct 2008 16:37:10 -0400
+> Christoph Hellwig <hch@infradead.org> wrote:
+>
+>> I just ran the xfs testsuite over linux-next on qemu (i386), and I
+>> can't find anything at all.  Really strange.  Let's see if this still
+>> there with mondays linux-next, and if yes can you just try the xfs
+>> patch from the splitout linux-next patches and see if that alone
+>> causes it?
 
-I think the use of the API is fine, the problem is that the current
-implemention is buggy.
+Hi Christoph
+
+I have the same result with next-1020 and today's xfs-2.6.git/master
+(
+commit bfd2bd10da76378dc4afd87d7d204a1d3d70b347
+Author: David Chinner <david@fromorbit.com>
+Date:   Fri Oct 17 15:36:23 2008 +1000
+    Inode: Allow external list initialisation
+)
+
+Should I start bisecting?
+>>
+>> In fact that might be useful for todays linux-next, too.
+>> --
+>
+> also if you enable lockdep, it tracks where irq's got turned off (with
+> a stacktrace I think) so it would provide some good clues.
+
+Yes, lockdep was enabled, but there is no more information than I
+already posted.
