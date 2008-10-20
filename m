@@ -1,57 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 22:34:20 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 19 Oct 2008 23:03:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9K5YHsv014955
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 22:34:18 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9K63g7C017603
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 23:03:43 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C2B3551A04B
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 22:36:01 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id hFa4EJTZxtxROZPT for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 22:36:01 -0700 (PDT)
-Date: Mon, 20 Oct 2008 16:35:53 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B80151A028
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 23:05:25 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id 6jG4jP6iSBllrfl2 for <xfs@oss.sgi.com>; Sun, 19 Oct 2008 23:05:25 -0700 (PDT)
+Date: Mon, 20 Oct 2008 17:05:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: git tree updates....
-Message-ID: <20081020053553.GO31761@disturbed>
-References: <20081017054742.GH31761@disturbed> <48FBF841.1060603@sgi.com>
+Subject: Re: [PATCH] Re: another problem with latest code drops
+Message-ID: <20081020060522.GP31761@disturbed>
+References: <48F6FCB7.6050905@sgi.com> <20081016222904.GA31761@disturbed> <48F7E7BA.4070209@sgi.com> <20081017012141.GJ25906@disturbed> <20081017020434.GD31761@disturbed> <20081017020718.GE31761@disturbed> <48FBEED9.30609@sgi.com> <20081020031757.GM31761@disturbed> <48FC0B16.9090102@sgi.com> <20081020052929.GN31761@disturbed>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <48FBF841.1060603@sgi.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20081020052929.GN31761@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Oct 20, 2008 at 01:17:21PM +1000, Lachlan McIlroy wrote:
-> Dave Chinner wrote:
->> Lachlan,
->>
->> I just noticed you've been updating the git tree. You might want to
->> change the order that certain patches have been committed - the
->> changes to the fs/inode.c needed to be committed before the changes
->> to fs/xfs/xfs_inode.c that use them. They've been committed the
->> wrong way around and about 20 commits apart, so there's significant
->> region in the commit history where the kernel will fail to build.
->> Given the distance between the commits, there's a fair chance that
->> a git bisect could land in this range of compiliation failures.
->>
->> Any chance of redoing these commits before you push to Linus so
->> that they are ordered correctly in the git tree?
->
-> Yeah I'll try to get them back in the right order.  Our merge tools
-> conveniently missed anything outside fs/xfs so I didn't realise I had
-> missed them until after I merge all the XFS mods.  I just wanted to
-> get something out for linux-next and also since the cvs tree was busted.
+On Mon, Oct 20, 2008 at 04:29:29PM +1100, Dave Chinner wrote:
+> On Mon, Oct 20, 2008 at 02:37:42PM +1000, Lachlan McIlroy wrote:
+> > Dave Chinner wrote:
+> >> On Mon, Oct 20, 2008 at 12:37:13PM +1000, Lachlan McIlroy wrote:
+> >>> I also hit this panic where we have taken a reference on an inode
+> >>> that has I_CLEAR set.  I suspect we've made it into xfs_iget_cache_hit()
+> >>
+> >> I don't think there is an iput() in that path.  The only iput() call
+> >> should be the IRELE() I added to xfs_iget_cache_miss(). Can you make
+> >> sure the compiler is not inlining functions so we can pin-point
+> >> where the iput() call is coming from? (i.e. static > STATIC on the
+> >> hit/miss functions)
+> > Just disassembled xfs_iget() and xfs_iget_cache_miss() has been inlined
+> > and we're calling the IRELE() at the end of that function.
+> 
+> Ok, that makes more sense.
+> 
+> >>> and found an inode with XFS_IRECLAIMABLE set and since we don't call
+> >>> igrab() we don't do the I_CLEAR check.
+> >>
+> >> In that case, we call inode_init_always() instead which sets the
+> >> state to I_NEW and the reference count to 1. In the error case,
+> >> the inode will have already been freed and we make
+> > We don't set inode->i_state to i_NEW.  We're stuffing XFS_INEW into
+> > the XFS inode's i_flags field and not removing the I_CLEAR from the
+> > linux inode.  Note that inode_init_always() doesn't touch i_state.
+> 
+> Yeah, xfs_setup_inode() is what is doing:
+> 
+> 	inode->i_state = I_NEW|I_LOCK;
+> 
+> which happens after the cache miss has been processed.
+> 
+> Ok, so the initialisation code needs to clear іnode->i_state
+> during allocation so that iput() does not complain. The i_state
+> field is not accessed by anything until the inode is inserted
+> into the superblock lists, so it should be safe to zero it
+> in xfs_inode_alloc(). I missed that new_inode() returns an
+> inode with a zeroed i_state....
 
-Fair enough - I wasn't sure that you noticed it.
+On second thoughts, the inode has not been set up properly
+by this stage, so we can't really even expect to be able to
+call iput() on it. Hmmmm - maybe the only thing we can do
+here is call security_inode_free() before xfs_idestroy.
 
-> Out of curiosity Dave, why didn't you send those changes directly to
-> Linus?
-
-Because trying to co-ordinate an dependent updates in different
-trees is extremely painful. We'd have to delay the XFS update 
-till the inode patches were in mainline anyway, so it makes little
-sense to separate them....
+Christoph - any opinions on what the best thing to do is?
 
 Cheers,
 
