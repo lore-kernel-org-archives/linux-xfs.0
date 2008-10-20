@@ -1,182 +1,346 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 15:19:06 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 15:22:26 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9KMJ4N5010191
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:19:05 -0700
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 529A25216E8
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:20:48 -0700 (PDT)
-Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com with ESMTP id HEqzwjT2ZAw3XpVi for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:20:48 -0700 (PDT)
-Received: from verein.lst.de (localhost [127.0.0.1])
-	by verein.lst.de (8.12.3/8.12.3/Debian-7.1) with ESMTP id m9KMKiIF023715
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 00:20:44 +0200
-Received: (from hch@localhost)
-	by verein.lst.de (8.12.3/8.12.3/Debian-6.6) id m9KMKiAW023713
-	for xfs@oss.sgi.com; Tue, 21 Oct 2008 00:20:44 +0200
-Date: Tue, 21 Oct 2008 00:20:44 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] free inodes using destroy_inode
-Message-ID: <20081020222044.GC23662@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9KMMOUj011173
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:22:24 -0700
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BC081521737
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:24:08 -0700 (PDT)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com with ESMTP id AJN4ipIGmgqWgwCf for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 15:24:08 -0700 (PDT)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id m9KMO8x2005277
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 18:24:08 -0400
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m9KMO60d013795
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 18:24:07 -0400
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id m9KMO3fh004877
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 18:24:06 -0400
+Message-ID: <48FD0503.3090203@sandeen.net>
+Date: Mon, 20 Oct 2008 17:24:03 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH 1/2, RFC] convert xfs_getbmap to take formatter functions
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs mailing list <xfs@oss.sgi.com>
 
-To make sure we free the security data inodes need to be freed using
-the proper VFS helper (which we also need to export for this).  To make
-sure we don't corrupt the radix tree we need to add another special
-case to xfs_reclaim for inodes that haven't been fully initialized yet.
+Preliminary work to hook up fiemap, this allows us to pass in an
+arbitrary formatter to copy extent data back to userspace.
 
+The formatter takes info for 1 extent, a pointer to the user "thing*"
+and a pointer to a "filled" variable to indicate whether a userspace
+buffer did get filled in (for fiemap, hole "extents" are skipped).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I'm just using the getbmapx struct as a "common denominator" because
+as far as I can see, it holds all info that any formatters will care
+about.
 
-Index: xfs-2.6/fs/inode.c
+("*thing" because fiemap doesn't pass the user pointer around, but rather
+has a pointer to a fiemap info structure, and helpers associated with it)
+
+I'm still working on the fiemap hookup but wanted to put this out for comment.
+
+Thanks,
+-Eric
+
+ linux-2.6/xfs_ioctl.c |   39 ++++++++----------------
+ xfs_bmap.c            |   81 +++++++++++++++++++++++++++-----------------------
+ xfs_bmap.h            |   13 +++++---
+ xfs_fs.h              |   12 -------
+ 4 files changed, 67 insertions(+), 78 deletions(-)
+
+Index: linux-2.6.27.x86_64/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs-2.6.orig/fs/inode.c	2008-10-20 23:49:27.000000000 +0200
-+++ xfs-2.6/fs/inode.c	2008-10-20 23:54:08.000000000 +0200
-@@ -212,6 +212,7 @@ void destroy_inode(struct inode *inode) 
- 	else
- 		kmem_cache_free(inode_cachep, (inode));
- }
-+EXPORT_SYMBOL(destroy_inode);
- 
- 
- /*
-Index: xfs-2.6/fs/xfs/xfs_iget.c
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_iget.c	2008-10-20 23:49:27.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_iget.c	2008-10-20 23:54:08.000000000 +0200
-@@ -197,7 +197,7 @@ out_unlock:
- 	write_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
- out_destroy:
--	xfs_idestroy(ip);
-+	xfs_destroy_inode(ip);
- 	return error;
- }
- 
-Index: xfs-2.6/fs/xfs/xfs_inode.c
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_inode.c	2008-10-20 23:54:05.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_inode.c	2008-10-20 23:54:08.000000000 +0200
-@@ -872,10 +872,8 @@ xfs_iread(
- 	imap.im_blkno = bno;
- 	error = xfs_imap(mp, tp, ip->i_ino, &imap,
- 				XFS_IMAP_LOOKUP | imap_flags);
--	if (error) {
--		xfs_idestroy(ip);
--		return error;
--	}
-+	if (error)
-+ 		goto out_destroy_inode;
- 
- 	/*
- 	 * Fill in the fields in the inode that will be used to
-@@ -887,10 +885,8 @@ xfs_iread(
- 	ASSERT(bno == 0 || bno == imap.im_blkno);
- 
- 	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, imap_flags);
--	if (error) {
--		xfs_idestroy(ip);
--		return error;
--	}
-+	if (error)
-+ 		goto out_destroy_inode;
- 
- 	dip = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
- 
-@@ -899,8 +895,6 @@ xfs_iread(
- 	 * (nfs or dmi) has a stale handle.
- 	 */
- 	if (be16_to_cpu(dip->di_core.di_magic) != XFS_DINODE_MAGIC) {
--		xfs_idestroy(ip);
--		xfs_trans_brelse(tp, bp);
- #ifdef DEBUG
- 		xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
- 				"dip->di_core.di_magic (0x%x) != "
-@@ -908,7 +902,8 @@ xfs_iread(
- 				be16_to_cpu(dip->di_core.di_magic),
- 				XFS_DINODE_MAGIC);
- #endif /* DEBUG */
--		return XFS_ERROR(EINVAL);
-+		error = XFS_ERROR(EINVAL);
-+		goto out_brelse;
- 	}
- 
- 	/*
-@@ -922,14 +917,12 @@ xfs_iread(
- 		xfs_dinode_from_disk(&ip->i_d, &dip->di_core);
- 		error = xfs_iformat(ip, dip);
- 		if (error)  {
--			xfs_idestroy(ip);
--			xfs_trans_brelse(tp, bp);
- #ifdef DEBUG
- 			xfs_fs_cmn_err(CE_ALERT, mp, "xfs_iread: "
- 					"xfs_iformat() returned error %d",
- 					error);
- #endif /* DEBUG */
--			return error;
-+			goto out_brelse;
- 		}
- 	} else {
- 		ip->i_d.di_magic = be16_to_cpu(dip->di_core.di_magic);
-@@ -995,6 +988,12 @@ xfs_iread(
- 	xfs_trans_brelse(tp, bp);
- 	*ipp = ip;
- 	return 0;
-+
-+ out_brelse:
-+	xfs_trans_brelse(tp, bp);
-+ out_destroy_inode:
-+	xfs_destroy_inode(ip);
-+	return error;
+--- linux-2.6.27.x86_64.orig/fs/xfs/xfs_bmap.c
++++ linux-2.6.27.x86_64/fs/xfs/xfs_bmap.c
+@@ -5742,9 +5742,9 @@ error0:
+ STATIC int
+ xfs_getbmapx_fix_eof_hole(
+ 	xfs_inode_t		*ip,		/* xfs incore inode pointer */
+-	struct getbmap		*out,		/* output structure */
++	struct getbmapx		*out,		/* output structure */
+ 	int			prealloced,	/* this is a file with
+-						* preallocated data space */
++						 * preallocated data space */
+ 	__int64_t		end,		/* last block requested */
+ 	xfs_fsblock_t		startblock)
+ {
+@@ -5769,15 +5769,38 @@ xfs_getbmapx_fix_eof_hole(
+ 	return 1;
  }
  
- /*
-Index: xfs-2.6/fs/xfs/xfs_inode.h
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_inode.h	2008-10-20 23:54:05.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_inode.h	2008-10-20 23:54:08.000000000 +0200
-@@ -309,6 +309,12 @@ static inline struct inode *VFS_I(struct
- 	return &ip->i_vnode;
- }
- 
-+static inline void xfs_destroy_inode(struct xfs_inode *ip)
++int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled)
 +{
-+	make_bad_inode(VFS_I(ip));
-+	return destroy_inode(VFS_I(ip));
++	*filled = 0;
++	if (copy_to_user(*ap, bmv, sizeof(struct getbmapx)))
++		return XFS_ERROR(EFAULT);
++
++	*ap += sizeof(struct getbmapx);
++	*filled = 1;
++	return 0;
++}
++
++int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled)
++{
++	*filled = 0;
++	/* copy only getbmap portion (not getbmapx) */
++	if (copy_to_user(ap, bmv, sizeof(struct getbmap)))
++		return XFS_ERROR(EFAULT);
++
++	*ap += sizeof(struct getbmap);
++	*filled = 1;
++	return 0;
 +}
 +
  /*
-  * i_flags helper functions
+- * Fcntl interface to xfs_bmapi.
++ * ioctl interface to xfs_bmapi.
   */
-Index: xfs-2.6/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_vnodeops.c	2008-10-20 23:49:27.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_vnodeops.c	2008-10-20 23:55:31.000000000 +0200
-@@ -2798,13 +2798,19 @@ int
- xfs_reclaim(
- 	xfs_inode_t	*ip)
+ int						/* error code */
+ xfs_getbmap(
+ 	xfs_inode_t		*ip,
+-	struct getbmap		*bmv,		/* user bmap structure */
+-	void			__user *ap,	/* pointer to user's array */
+-	int			interface)	/* interface flags */
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg)		/* formatter arg (user ptr etc) */
  {
-+	struct inode	*inode = VFS_I(ip);
+ 	__int64_t		bmvend;		/* last block requested */
+ 	int			error;		/* return value */
+@@ -5790,19 +5813,20 @@ xfs_getbmap(
+ 	int			nexleft;	/* # of user extents left */
+ 	int			subnex;		/* # of bmapi's can do */
+ 	int			nmap;		/* number of map entries */
+-	struct getbmap		out;		/* output structure */
++	struct getbmapx		out;		/* output structure */
+ 	int			whichfork;	/* data or attr fork */
+ 	int			prealloced;	/* this is a file with
+ 						 * preallocated data space */
+ 	int			sh_unwritten;	/* true, if unwritten */
+ 						/* extents listed separately */
++	int			iflags;		/* interface flags */
+ 	int			bmapi_flags;	/* flags for xfs_bmapi */
+-	__int32_t		oflags;		/* getbmapx bmv_oflags field */
  
- 	xfs_itrace_entry(ip);
+ 	mp = ip->i_mount;
++	iflags = bmv->bmv_iflags;
  
--	ASSERT(!VN_MAPPED(VFS_I(ip)));
-+	ASSERT(!VN_MAPPED(inode));
+-	whichfork = interface & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
+-	sh_unwritten = (interface & BMV_IF_PREALLOC) != 0;
++	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
++	sh_unwritten = (iflags & BMV_IF_PREALLOC) != 0;
+ 
+ 	/*	If the BMV_IF_NO_DMAPI_READ interface bit specified, do not
+ 	 *	generate a DMAPI read event.  Otherwise, if the DM_EVENT_READ
+@@ -5817,7 +5841,7 @@ xfs_getbmap(
+ 	 *	could misinterpret holes in a DMAPI file as true holes,
+ 	 *	when in fact they may represent offline user data.
+ 	 */
+-	if ((interface & BMV_IF_NO_DMAPI_READ) == 0 &&
++	if ((iflags & BMV_IF_NO_DMAPI_READ) == 0 &&
+ 	    DM_EVENT_ENABLED(ip, DM_EVENT_READ) &&
+ 	    whichfork == XFS_DATA_FORK) {
+ 		error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip, 0, 0, 0, NULL);
+@@ -5924,52 +5948,35 @@ xfs_getbmap(
+ 		ASSERT(nmap <= subnex);
+ 
+ 		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+-			nexleft--;
+-			oflags = (map[i].br_state == XFS_EXT_UNWRITTEN) ?
++			out.bmv_oflags = (map[i].br_state == XFS_EXT_UNWRITTEN) ?
+ 					BMV_OF_PREALLOC : 0;
+ 			out.bmv_offset = XFS_FSB_TO_BB(mp, map[i].br_startoff);
+ 			out.bmv_length = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
++			out.bmv_unused1 = out.bmv_unused2 = 0;
+ 			ASSERT(map[i].br_startblock != DELAYSTARTBLOCK);
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
+ 				goto unlock_and_return;
+ 			} else {
++				int filled;	/* extents filled by formatter */
 +
-+	if (unlikely(inode->i_state & I_NEW)) {
-+		xfs_idestroy(ip);
-+		return 0;
-+	}
+ 				if (!xfs_getbmapx_fix_eof_hole(ip, &out,
+ 							prealloced, bmvend,
+ 							map[i].br_startblock)) {
+ 					goto unlock_and_return;
+ 				}
  
- 	/* bad inode, get out here ASAP */
--	if (VN_BAD(VFS_I(ip))) {
-+	if (unlikely(is_bad_inode(inode))) {
- 		xfs_ireclaim(ip);
- 		return 0;
- 	}
+-				/* return either getbmap/getbmapx structure. */
+-				if (interface & BMV_IF_EXTENDED) {
+-					struct	getbmapx	outx;
+-
+-					GETBMAP_CONVERT(out,outx);
+-					outx.bmv_oflags = oflags;
+-					outx.bmv_unused1 = outx.bmv_unused2 = 0;
+-					if (copy_to_user(ap, &outx,
+-							sizeof(outx))) {
+-						error = XFS_ERROR(EFAULT);
+-						goto unlock_and_return;
+-					}
+-				} else {
+-					if (copy_to_user(ap, &out,
+-							sizeof(out))) {
+-						error = XFS_ERROR(EFAULT);
+-						goto unlock_and_return;
+-					}
+-				}
++				/* format results into user's buffer & advance */
++				error = formatter(&arg, &out, &filled);
++				if (error)
++					goto unlock_and_return;
++				nexleft -= filled;
+ 				bmv->bmv_offset =
+ 					out.bmv_offset + out.bmv_length;
+ 				bmv->bmv_length = MAX((__int64_t)0,
+ 					(__int64_t)(bmvend - bmv->bmv_offset));
+ 				bmv->bmv_entries++;
+-				ap = (interface & BMV_IF_EXTENDED) ?
+-						(void __user *)
+-					((struct getbmapx __user *)ap + 1) :
+-						(void __user *)
+-					((struct getbmap __user *)ap + 1);
+ 			}
+ 		}
+ 	} while (nmap && nexleft && bmv->bmv_length);
+Index: linux-2.6.27.x86_64/fs/xfs/xfs_bmap.h
+===================================================================
+--- linux-2.6.27.x86_64.orig/fs/xfs/xfs_bmap.h
++++ linux-2.6.27.x86_64/fs/xfs/xfs_bmap.h
+@@ -343,15 +343,20 @@ xfs_bunmapi(
+ 						   extents */
+ 	int			*done);		/* set if not done yet */
+ 
++/* bmap to userspace formatters - copy to user & advance pointer */
++typedef int (*xfs_bmap_format_t)(void __user **, struct getbmapx *, int *filled);
++int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled);
++int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled);
++
+ /*
+- * Fcntl interface to xfs_bmapi.
++ * ioctl interface to xfs_bmapi.
+  */
+ int						/* error code */
+ xfs_getbmap(
+ 	xfs_inode_t		*ip,
+-	struct getbmap		*bmv,		/* user bmap structure */
+-	void			__user *ap,	/* pointer to user's array */
+-	int			iflags);	/* interface flags */
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg);		/* formatter arg (user ptr etc) */
+ 
+ /*
+  * Check if the endoff is outside the last extent. If so the caller will grow
+Index: linux-2.6.27.x86_64/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- linux-2.6.27.x86_64.orig/fs/xfs/linux-2.6/xfs_ioctl.c
++++ linux-2.6.27.x86_64/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -1262,25 +1262,26 @@ xfs_ioc_getbmap(
+ 	unsigned int		cmd,
+ 	void			__user *arg)
+ {
+-	struct getbmap		bm;
+-	int			iflags;
++	struct getbmapx		bmx;
+ 	int			error;
+ 
+-	if (copy_from_user(&bm, arg, sizeof(bm)))
++	if (copy_from_user(&bmx, arg, sizeof(struct getbmapx)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	if (bm.bmv_count < 2)
++	if (bmx.bmv_count < 2)
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
++	bmx.bmv_iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
+ 	if (ioflags & IO_INVIS)
+-		iflags |= BMV_IF_NO_DMAPI_READ;
++		bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+ 
+-	error = xfs_getbmap(ip, &bm, (struct getbmap __user *)arg+1, iflags);
++	error = xfs_getbmap(ip, &bmx, xfs_getbmap_format,
++			    (struct getbmap __user *)arg+1);
+ 	if (error)
+ 		return -error;
+ 
+-	if (copy_to_user(arg, &bm, sizeof(bm)))
++	/* copy back header - only size of getbmap */
++	if (copy_to_user(arg, &bmx, sizeof(struct getbmap)))
+ 		return -XFS_ERROR(EFAULT);
+ 	return 0;
+ }
+@@ -1291,8 +1292,6 @@ xfs_ioc_getbmapx(
+ 	void			__user *arg)
+ {
+ 	struct getbmapx		bmx;
+-	struct getbmap		bm;
+-	int			iflags;
+ 	int			error;
+ 
+ 	if (copy_from_user(&bmx, arg, sizeof(bmx)))
+@@ -1301,26 +1300,16 @@ xfs_ioc_getbmapx(
+ 	if (bmx.bmv_count < 2)
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	/*
+-	 * Map input getbmapx structure to a getbmap
+-	 * structure for xfs_getbmap.
+-	 */
+-	GETBMAP_CONVERT(bmx, bm);
+-
+-	iflags = bmx.bmv_iflags;
+-
+-	if (iflags & (~BMV_IF_VALID))
++	if (bmx.bmv_iflags & (~BMV_IF_VALID))
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	iflags |= BMV_IF_EXTENDED;
+-
+-	error = xfs_getbmap(ip, &bm, (struct getbmapx __user *)arg+1, iflags);
++	error = xfs_getbmap(ip, &bmx, xfs_getbmapx_format,
++			    (struct getbmapx __user *)arg+1);
+ 	if (error)
+ 		return -error;
+ 
+-	GETBMAP_CONVERT(bm, bmx);
+-
+-	if (copy_to_user(arg, &bmx, sizeof(bmx)))
++	/* copy back header */
++	if (copy_to_user(arg, &bmx, sizeof(struct getbmapx)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+ 	return 0;
+Index: linux-2.6.27.x86_64/fs/xfs/xfs_fs.h
+===================================================================
+--- linux-2.6.27.x86_64.orig/fs/xfs/xfs_fs.h
++++ linux-2.6.27.x86_64/fs/xfs/xfs_fs.h
+@@ -114,22 +114,10 @@ struct getbmapx {
+ #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
+ #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
+ #define BMV_IF_VALID	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC)
+-#ifdef __KERNEL__
+-#define BMV_IF_EXTENDED 0x40000000	/* getpmapx if set */
+-#endif
+ 
+ /*	bmv_oflags values - returned for for each non-header segment */
+ #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
+ 
+-/*	Convert getbmap <-> getbmapx - move fields from p1 to p2. */
+-#define GETBMAP_CONVERT(p1,p2) {	\
+-	p2.bmv_offset = p1.bmv_offset;	\
+-	p2.bmv_block = p1.bmv_block;	\
+-	p2.bmv_length = p1.bmv_length;	\
+-	p2.bmv_count = p1.bmv_count;	\
+-	p2.bmv_entries = p1.bmv_entries;  }
+-
+-
+ /*
+  * Structure for XFS_IOC_FSSETDM.
+  * For use by backup and restore programs to set the XFS on-disk inode
