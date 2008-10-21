@@ -1,59 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 23:19:22 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L6JJlw007336
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 23:19:19 -0700
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id EFA6C908A5
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 23:21:01 -0700 (PDT)
-Received: from boing.melbourne.sgi.com (boing.melbourne.sgi.com [134.14.55.141]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id RAA18225 for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 17:21:00 +1100
-Message-ID: <48FD74CC.907@sgi.com>
-Date: Tue, 21 Oct 2008 17:21:00 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: atime not written to disk
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 23:31:19 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L6VGbP008931
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 23:31:16 -0700
+Subject: TAKE 987246 - kill struct xfs_mount_args
+Message-Id: <20081021063256.BE0FA1EDD8C@chapter11.melbourne.sgi.com>
+Date: Tue, 21 Oct 2008 17:32:56 +1100 (EST)
+From: donaldd@sgi.com (Donald Douwsma)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Hi,
+No need to parse the mount option into a structure before applying it
+to struct xfs_mount.
 
-Before I investigate further ;-),
-it appears that in XFS (seen in recent xfs-dev tree and on older issp release
-on default mkfs/mount options),
-that the atime is not being written out to disk in xfs,
-at least, in the simple scenario below.
+The content of xfs_start_flags gets merged into xfs_parseargs.  Calls
+inbetween don't care and can use mount members instead of the args
+struct.
 
-emu:/home/tes # echo bill >/mnt/test/bill
-emu:/home/tes # ls -l /mnt/test/bill
--rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
-emu:/home/tes # ls -lu /mnt/test/bill
--rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
+This patch uncovered that the mount option for shared filesystems wasn't
+ever exposed on Linux.  The code to handle it is #if 0'ed in this patch
+pending a decision on this feature.  I'll send a writeup about it to
+the list soon.
 
-... wait a bit to change the atime...
 
-emu:/home/tes # cat /mnt/test/bill
-bill
-emu:/home/tes # ls -lu /mnt/test/bill
--rw-r--r-- 1 root root 5 2008-10-21 16:11 /mnt/test/bill
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-emu:/home/tes # cd /
-emu:/ # umount /mnt/test
-emu:/ # mount /mnt/test
-emu:/mnt/test # ls -lu /mnt/test/bill
--rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
 
-I believe that the atime is handled by the vfs and in xfs_iflush_int
-we sync up with the linux inode.
-Perhaps i_update_core needs to be set so that xfs_iflush_int
-will proceed and call xfs_synchronize_atime() and
-somehow that is not happening??
+Date:  Tue Oct 21 17:32:14 EST 2008
+Workarea:  chapter11.melbourne.sgi.com:/scratch/donaldd/isms/2.6.x-xfs
+Inspected by:  hch,david@fromorbit.com
 
-I haven't looked further yet, but I thought I'd ask on the list
-in case others, such as Christoph and Dave have thoughts on this.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
 
-Thanks,
-Tim.
+
+Modid:  xfs-linux-melb:xfs-kern:32371a
+fs/xfs/xfs_vfsops.c - 1.581 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vfsops.c.diff?r1=text&tr1=1.581&r2=text&tr2=1.580&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/xfs_clnt.h - 1.61 - deleted
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_clnt.h.diff?r1=text&tr1=1.61&r2=text&tr2=1.60&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/xfs_mount.h - 1.284 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_mount.h.diff?r1=text&tr1=1.284&r2=text&tr2=1.283&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/xfs_qmops.c - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_qmops.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/xfs_dmops.c - 1.14 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_dmops.c.diff?r1=text&tr1=1.14&r2=text&tr2=1.13&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/quota/xfs_qm_bhv.c - 1.30 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm_bhv.c.diff?r1=text&tr1=1.30&r2=text&tr2=1.29&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/quota/xfs_qm.c - 1.77 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/quota/xfs_qm.c.diff?r1=text&tr1=1.77&r2=text&tr2=1.76&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/linux-2.6/xfs_super.c - 1.464 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.464&r2=text&tr2=1.463&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/linux-2.6/xfs_ksyms.c - 1.95 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.95&r2=text&tr2=1.94&f=h
+	- kill struct xfs_mount_args 
+
+fs/xfs/dmapi/xfs_dm.c - 1.80 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
+	- kill struct xfs_mount_args 
