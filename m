@@ -1,31 +1,39 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 17:59:58 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L0xsD6002057
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 17:59:54 -0700
-Message-ID: <48FD37C5.9040309@sgi.com>
-Date: Tue, 21 Oct 2008 12:00:37 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 19:43:48 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L2hHAU012653
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 19:43:17 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DC411449A7A
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 19:45:01 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id tUFOUO5m3DEcl2Qk for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 19:45:01 -0700 (PDT)
+Date: Tue, 21 Oct 2008 13:44:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] stop using xfs_itobp in xfs_bulkstat
+Message-ID: <20081021024455.GB18495@disturbed>
+References: <20081020222036.GA23662@lst.de>
 MIME-Version: 1.0
-Subject: Re: git tree updates....
-References: <20081017054742.GH31761@disturbed> <20081020214310.GA26172@infradead.org>
-In-Reply-To: <20081020214310.GA26172@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081020222036.GA23662@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> While we at it, the b0rked m_vfsmount addition for DMAPI keeps on
-> leaking into the git tree for -next..
+On Tue, Oct 21, 2008 at 12:20:36AM +0200, Christoph Hellwig wrote:
+> xfs_bulkstat only wants the dinode, offset and buffer from a given
+> inode number.  Instead of using xfs_itobp on a fake inode that is much
+> easier done with xfs_inotobp, which just needs an imap_flag paramter to
+> pass down the XFS_IMAP_BULKSTAT flag.
 
-Thanks for pointing that out - that shouldn't have happened.  It wont
-be going to mainline.
+Nice - that removes the only external user of xfs_inode_alloc() very
+cleanly. Looks ok to me.
 
-The OSS xfs trees are in a bit of a mess and have been for a while.
-I've been wanting to clean them up but figured it would be easier to
-wait until we've moved over to git internally and then clone new trees.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
