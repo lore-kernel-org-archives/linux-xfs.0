@@ -1,101 +1,312 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 04:40:36 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 04:52:11 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9LBeVQD014882
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:40:32 -0700
-Received: from an-out-0708.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1523C1311C32
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:42:16 -0700 (PDT)
-Received: from an-out-0708.google.com (an-out-0708.google.com [209.85.132.243]) by cuda.sgi.com with ESMTP id qUF4xZqAbpvsFeoI for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:42:16 -0700 (PDT)
-Received: by an-out-0708.google.com with SMTP id d30so139333and.75
-        for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:42:16 -0700 (PDT)
-Message-ID: <a4423d670810210442y51b62fc2naf6cb649e6b26942@mail.gmail.com>
-Date: Tue, 21 Oct 2008 15:42:16 +0400
-From: "Alexander Beregalov" <a.beregalov@gmail.com>
-Subject: Re: BUG: sleeping function called from invalid context at kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
-In-Reply-To: <20081020223549.GA21152@disturbed>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9LBq991015766
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:52:09 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E5041311D00
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:53:53 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id BVYSEWhlD51TUian for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 04:53:53 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
+	id 1KsFo9-0001C0-BJ
+	for xfs@oss.sgi.com; Tue, 21 Oct 2008 11:53:53 +0000
+Date: Tue, 21 Oct 2008 07:53:53 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 5/3] cleanup xfs_imap useage
+Message-ID: <20081021115353.GA2881@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-References: <a4423d670810170543vd6b4c39p44bf125610d8540@mail.gmail.com>
-	 <a4423d670810170954h7ca130aaw8895380a4c6b125@mail.gmail.com>
-	 <20081017165738.GA20818@infradead.org>
-	 <a4423d670810171013g5bc19c1cm3f7d9c014ee70349@mail.gmail.com>
-	 <20081017203710.GA27187@infradead.org>
-	 <20081017135510.7127c4e7@infradead.org>
-	 <a4423d670810200758m3cea3841h40988afc8eaf81@mail.gmail.com>
-	 <20081020163327.GA15651@infradead.org>
-	 <a4423d670810201013w6448cb38w402771799cefb5f5@mail.gmail.com>
-	 <20081020223549.GA21152@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: lachlan@sgi.com, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-2008/10/21 Dave Chinner <david@fromorbit.com>:
-> On Mon, Oct 20, 2008 at 09:13:05PM +0400, Alexander Beregalov wrote:
->> 2008/10/20 Christoph Hellwig <hch@infradead.org>:
->> > On Mon, Oct 20, 2008 at 06:58:09PM +0400, Alexander Beregalov wrote:
->> >> Hi Christoph
->> >>
->> >> I have the same result with next-1020 and today's xfs-2.6.git/master
->> >> (
->> >> commit bfd2bd10da76378dc4afd87d7d204a1d3d70b347
->> >> Author: David Chinner <david@fromorbit.com>
->> >> Date:   Fri Oct 17 15:36:23 2008 +1000
->> >>     Inode: Allow external list initialisation
->> >> )
->> Ha, that kernel (xfs/master) has made my system dead locked.
->> SysRQ-d:
->> Show all locks held in the system
->> 1 lock held by pdflush
->> (&type->s_umount_key#18{----}, at writeback_inodes
->> 1 lock held by login
->> (&(&ip->i_iolock)->mr_lock){----} at xfs_ilock
->> and so on ( many locks at xfs_ilock)
->
-> Curious. Can you post the full stack traces?
-I can not reproduce it, yet.
+Embedd a struct xfs_imap into the xfs_inode as that's what we use
+xfs_imap and xfs_imap_to_bp on mostly.  Remove the two superflous
+members of struct xfs_imap so that the inode size stays the same.
 
-Bisected to:
-dd509097cb0b76d3836385f80d6b2d6fd3b97757 is first bad commit
-commit dd509097cb0b76d3836385f80d6b2d6fd3b97757
-Author: Lachlan McIlroy <lachlan@sgi.com>
-Date:   Mon Sep 29 14:56:40 2008 +1000
 
-    [XFS] Unlock inode before calling xfs_idestroy()
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-    Lock debugging reported the ilock was being destroyed without being
-    unlocked. We don't need to lock the inode until we are going to insert it
-    into the radix tree.
-
-    SGI-PV: 987246
-
-    SGI-Modid: xfs-linux-melb:xfs-kern:32159a
-
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
-    Signed-off-by: Christoph Hellwig <hch@infradead.org>
-
-:040000 040000 b56d4b74bf0cbdd66d0e61c537b4bb2f7461084f
-40773db6102a1e348a0a21b0e960cb33ffd0d419 M      fs
-
-git bisect start 'fs/xfs'
-git bisect bad bfd2bd10da76378dc4afd87d7d204a1d3d70b347 Inode: Allow
-external list initialisation
-git bisect good 3fa8749e584b55f1180411ab1b51117190bac1e5 Linux 2.6.27
-git bisect skip a55c8e45381bcc5588a544ba73580719887372eb
-git bisect skip 35afc673a41114eb650c6ae766010160dd982a7b
-git bisect skip 7a9ba9bb899933293604a2b3c5ca4f40ad5a92a8
-git bisect skip c02afc5fa7433fbbc0a045afbb472533de0758de
-git bisect skip c0f47794ba870f0cd1dbe5c8fdbf56b86f5f2afa
-git bisect skip 7197197719eb94b527c6a422bf3fb682cdf89954
-git bisect good e0fe783155e4f1c7106f3579c258b9f995330c19
-git bisect bad 2472c6b938d2b3cb1698abe39cc90a3c1d7625b9
-git bisect good 20c1bd2cc6d9311fb7d7d0eb91b46dc4a42b5d11
-git bisect good 8e47c0b2427f0ea35984f02648163cc7a35d3592
-git bisect good a1853934a9bef78aeb1aa7539c629cdb755edab2
-git bisect bad 05de34dbbe744a4d235279f1493a8f05b903a4bb
-git bisect bad c4fa37724d18a3444bb4b4f77c4580b9dd525ed9
-git bisect good 4b4577db477462ff6f41babcc3b3e7036a1ba27d
-git bisect bad dd509097cb0b76d3836385f80d6b2d6fd3b97757
+Index: xfs-2.6/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_inode.c	2008-10-21 11:50:56.000000000 +0200
++++ xfs-2.6/fs/xfs/xfs_inode.c	2008-10-21 11:58:37.000000000 +0200
+@@ -23,7 +23,6 @@
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_inum.h"
+-#include "xfs_imap.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+@@ -140,7 +139,7 @@ xfs_imap(
+ 	xfs_mount_t	*mp,
+ 	xfs_trans_t	*tp,
+ 	xfs_ino_t	ino,
+-	xfs_imap_t	*imap,
++	struct xfs_imap	*imap,
+ 	uint		flags)
+ {
+ 	xfs_fsblock_t	fsbno;
+@@ -156,8 +155,6 @@ xfs_imap(
+ 
+ 	imap->im_blkno = XFS_FSB_TO_DADDR(mp, fsbno);
+ 	imap->im_len = XFS_FSB_TO_BB(mp, len);
+-	imap->im_agblkno = XFS_FSB_TO_AGBNO(mp, fsbno);
+-	imap->im_ioffset = (ushort)off;
+ 	imap->im_boffset = (ushort)(off << mp->m_sb.sb_inodelog);
+ 
+ 	/*
+@@ -188,7 +185,7 @@ STATIC int
+ xfs_imap_to_bp(
+ 	xfs_mount_t	*mp,
+ 	xfs_trans_t	*tp,
+-	xfs_imap_t	*imap,
++	struct xfs_imap	*imap,
+ 	xfs_buf_t	**bpp,
+ 	uint		buf_flags,
+ 	uint		imap_flags)
+@@ -286,7 +283,7 @@ xfs_inotobp(
+ 	int		*offset,
+ 	uint		imap_flags)
+ {
+-	xfs_imap_t	imap;
++	struct xfs_imap	imap;
+ 	xfs_buf_t	*bp;
+ 	int		error;
+ 
+@@ -331,17 +328,12 @@ xfs_itobp(
+ 	xfs_buf_t	**bpp,
+ 	uint		buf_flags)
+ {
+-	xfs_imap_t	imap;
+ 	xfs_buf_t	*bp;
+ 	int		error;
+ 
+-	ASSERT(ip->i_blkno != 0);
++	ASSERT(ip->i_imap.im_blkno != 0);
+ 
+-	imap.im_blkno = ip->i_blkno;
+-	imap.im_len = ip->i_len;
+-	imap.im_boffset = ip->i_boffset;
+-
+-	error = xfs_imap_to_bp(mp, tp, &imap, &bp, buf_flags, 0);
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp, buf_flags, 0);
+ 	if (error)
+ 		return error;
+ 
+@@ -352,7 +344,7 @@ xfs_itobp(
+ 		return EAGAIN;
+ 	}
+ 
+-	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
++	*dipp = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 	*bpp = bp;
+ 	return 0;
+ }
+@@ -855,9 +847,7 @@ xfs_inode_alloc(
+ 	/* initialise the xfs inode */
+ 	ip->i_ino = ino;
+ 	ip->i_mount = mp;
+-	ip->i_blkno = 0;
+-	ip->i_len = 0;
+-	ip->i_boffset =0;
++	memset(&ip->i_imap, 0, sizeof(struct xfs_imap));
+ 	ip->i_afp = NULL;
+ 	memset(&ip->i_df, 0, sizeof(xfs_ifork_t));
+ 	ip->i_flags = 0;
+@@ -913,7 +903,6 @@ xfs_iread(
+ 	xfs_buf_t	*bp;
+ 	xfs_dinode_t	*dip;
+ 	xfs_inode_t	*ip;
+-	xfs_imap_t	imap;
+ 	int		error;
+ 
+ 	ip = xfs_inode_alloc(mp, ino);
+@@ -921,27 +910,23 @@ xfs_iread(
+ 		return ENOMEM;
+ 
+ 	/*
+-	 * Get pointer's to the on-disk inode and the buffer containing it.
++	 * Fill in the location information in the in-core inode.
+ 	 */
+-	imap.im_blkno = bno;
+-	error = xfs_imap(mp, tp, ip->i_ino, &imap, imap_flags);
++	ip->i_imap.im_blkno = bno;
++	error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, imap_flags);
+ 	if (error)
+ 		goto out_destroy_inode;
+ 
++	ASSERT(bno == 0 || bno == ip->i_imap.im_blkno);
++
+ 	/*
+-	 * Fill in the fields in the inode that will be used to
+-	 * map the inode to its buffer from now on.
++	 * Get pointers to the on-disk inode and the buffer containing it.
+ 	 */
+-	ip->i_blkno = imap.im_blkno;
+-	ip->i_len = imap.im_len;
+-	ip->i_boffset = imap.im_boffset;
+-	ASSERT(bno == 0 || bno == imap.im_blkno);
+-
+-	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, imap_flags);
++	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &bp,
++			       XFS_BUF_LOCK, imap_flags);
+ 	if (error)
+ 		goto out_destroy_inode;
+-
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
++	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 
+ 	/*
+ 	 * If we got something that isn't an inode it means someone
+@@ -1942,7 +1927,7 @@ xfs_iunlink(
+ 		ASSERT(be32_to_cpu(dip->di_next_unlinked) == NULLAGINO);
+ 		/* both on-disk, don't endian flip twice */
+ 		dip->di_next_unlinked = agi->agi_unlinked[bucket_index];
+-		offset = ip->i_boffset +
++		offset = ip->i_imap.im_boffset +
+ 			offsetof(xfs_dinode_t, di_next_unlinked);
+ 		xfs_trans_inode_buf(tp, ibp);
+ 		xfs_trans_log_buf(tp, ibp, offset,
+@@ -2054,7 +2039,7 @@ xfs_iunlink_remove(
+ 		ASSERT(next_agino != 0);
+ 		if (next_agino != NULLAGINO) {
+ 			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
+-			offset = ip->i_boffset +
++			offset = ip->i_imap.im_boffset +
+ 				offsetof(xfs_dinode_t, di_next_unlinked);
+ 			xfs_trans_inode_buf(tp, ibp);
+ 			xfs_trans_log_buf(tp, ibp, offset,
+@@ -2117,7 +2102,7 @@ xfs_iunlink_remove(
+ 		ASSERT(next_agino != agino);
+ 		if (next_agino != NULLAGINO) {
+ 			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
+-			offset = ip->i_boffset +
++			offset = ip->i_imap.im_boffset +
+ 				offsetof(xfs_dinode_t, di_next_unlinked);
+ 			xfs_trans_inode_buf(tp, ibp);
+ 			xfs_trans_log_buf(tp, ibp, offset,
+@@ -3296,7 +3281,7 @@ xfs_iflush_int(
+ 	}
+ 
+ 	/* set *dip = inode's place in the buffer */
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_boffset);
++	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 
+ 	/*
+ 	 * Clear i_update_core before copying out the data.
+Index: xfs-2.6/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_inode.h	2008-10-21 11:49:04.000000000 +0200
++++ xfs-2.6/fs/xfs/xfs_inode.h	2008-10-21 11:56:52.000000000 +0200
+@@ -84,6 +84,16 @@ typedef struct xfs_ifork {
+ } xfs_ifork_t;
+ 
+ /*
++ * Inode location information.  Stored in the inode and passed to
++ * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
++ */
++struct xfs_imap {
++	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
++	uint		im_len;		/* length in BBs of inode chunk */
++	ushort		im_boffset;	/* inode offset in block in bytes */
++};
++
++/*
+  * This is the xfs in-core inode structure.
+  * Most of the on-disk inode is embedded in the i_d field.
+  *
+@@ -239,9 +249,7 @@ typedef struct xfs_inode {
+ 
+ 	/* Inode location stuff */
+ 	xfs_ino_t		i_ino;		/* inode number (agno/agino)*/
+-	xfs_daddr_t		i_blkno;	/* blkno of inode buffer */
+-	ushort			i_len;		/* len of inode buffer */
+-	ushort			i_boffset;	/* off of inode in buffer */
++	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 
+ 	/* Extent information. */
+ 	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
+Index: xfs-2.6/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_inode_item.c	2008-10-21 11:49:01.000000000 +0200
++++ xfs-2.6/fs/xfs/xfs_inode_item.c	2008-10-21 11:52:20.000000000 +0200
+@@ -943,9 +943,9 @@ xfs_inode_item_init(
+ 
+ 	iip->ili_format.ilf_type = XFS_LI_INODE;
+ 	iip->ili_format.ilf_ino = ip->i_ino;
+-	iip->ili_format.ilf_blkno = ip->i_blkno;
+-	iip->ili_format.ilf_len = ip->i_len;
+-	iip->ili_format.ilf_boffset = ip->i_boffset;
++	iip->ili_format.ilf_blkno = ip->i_imap.im_blkno;
++	iip->ili_format.ilf_len = ip->i_imap.im_len;
++	iip->ili_format.ilf_boffset = ip->i_imap.im_boffset;
+ }
+ 
+ /*
+Index: xfs-2.6/fs/xfs/xfs_itable.c
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_itable.c	2008-10-21 11:49:00.000000000 +0200
++++ xfs-2.6/fs/xfs/xfs_itable.c	2008-10-21 11:52:20.000000000 +0200
+@@ -69,7 +69,7 @@ xfs_bulkstat_one_iget(
+ 	}
+ 
+ 	ASSERT(ip != NULL);
+-	ASSERT(ip->i_blkno != (xfs_daddr_t)0);
++	ASSERT(ip->i_imap.im_blkno != 0);
+ 
+ 	dic = &ip->i_d;
+ 
+Index: xfs-2.6/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_log_recover.c	2008-10-21 11:49:04.000000000 +0200
++++ xfs-2.6/fs/xfs/xfs_log_recover.c	2008-10-21 11:52:20.000000000 +0200
+@@ -36,7 +36,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+-#include "xfs_imap.h"
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_log_priv.h"
+Index: xfs-2.6/fs/xfs/xfs_imap.h
+===================================================================
+--- xfs-2.6.orig/fs/xfs/xfs_imap.h	2008-10-21 11:51:12.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,33 +0,0 @@
+-/*
+- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_IMAP_H__
+-#define	__XFS_IMAP_H__
+-
+-/*
+- * This is the structure passed to xfs_imap() to map
+- * an inode number to its on disk location.
+- */
+-typedef struct xfs_imap {
+-	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+-	uint		im_len;		/* length in BBs of inode chunk */
+-	xfs_agblock_t	im_agblkno;	/* logical block of inode chunk in ag */
+-	ushort		im_ioffset;	/* inode offset in block in "inodes" */
+-	ushort		im_boffset;	/* inode offset in block in bytes */
+-} xfs_imap_t;
+-
+-#endif	/* __XFS_IMAP_H__ */
