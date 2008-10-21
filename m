@@ -1,39 +1,66 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 23:35:27 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L6ZP8e010049
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 23:35:25 -0700
-Subject: TAKE 987246 - fix biosize option
-Message-Id: <20081021063706.434F21EDD8C@chapter11.melbourne.sgi.com>
-Date: Tue, 21 Oct 2008 17:37:06 +1100 (EST)
-From: donaldd@sgi.com (Donald Douwsma)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 20 Oct 2008 23:47:37 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L6lXxm011741
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2008 23:47:34 -0700
+Message-ID: <48FD7B69.3090600@wm.jp.nec.com>
+Date: Tue, 21 Oct 2008 15:49:13 +0900
+From: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+MIME-Version: 1.0
+Subject: Re: atime not written to disk
+References: <48FD74CC.907@sgi.com>
+In-Reply-To: <48FD74CC.907@sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Timothy Shimmin <tes@sgi.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-fix biosize option
+Hi,
 
-iosizelog shouldn't be the same as iosize but the logarithm of it.  Then
-again the current biosize option doesn't make much sense to me as it
-doesn't set the preferred I/O size as mentioned in the comment next to
-it but rather the allocation size and thus is identical to the allocsize
-option (except for the missing logarithm).  It's also not documented in
-Documentation/filesystems/xfs.txt or the mount manpage.
+Your problem seems the same as mine.
+http://oss.sgi.com/archives/xfs/2007-10/msg00168.html
 
+Utako.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-
-Date:  Tue Oct 21 17:36:43 EST 2008
-Workarea:  chapter11.melbourne.sgi.com:/scratch/donaldd/isms/2.6.x-xfs
-Inspected by:  hch,david@fromorbit.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:32373a
-fs/xfs/linux-2.6/xfs_super.c - 1.466 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_super.c.diff?r1=text&tr1=1.466&r2=text&tr2=1.465&f=h
-	- fix biosize option
+Timothy Shimmin wrote:
+> Hi,
+> 
+> Before I investigate further ;-),
+> it appears that in XFS (seen in recent xfs-dev tree and on older issp release
+> on default mkfs/mount options),
+> that the atime is not being written out to disk in xfs,
+> at least, in the simple scenario below.
+> 
+> emu:/home/tes # echo bill >/mnt/test/bill
+> emu:/home/tes # ls -l /mnt/test/bill
+> -rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
+> emu:/home/tes # ls -lu /mnt/test/bill
+> -rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
+> 
+> ... wait a bit to change the atime...
+> 
+> emu:/home/tes # cat /mnt/test/bill
+> bill
+> emu:/home/tes # ls -lu /mnt/test/bill
+> -rw-r--r-- 1 root root 5 2008-10-21 16:11 /mnt/test/bill
+> 
+> emu:/home/tes # cd /
+> emu:/ # umount /mnt/test
+> emu:/ # mount /mnt/test
+> emu:/mnt/test # ls -lu /mnt/test/bill
+> -rw-r--r-- 1 root root 5 2008-10-21 16:03 /mnt/test/bill
+> 
+> I believe that the atime is handled by the vfs and in xfs_iflush_int
+> we sync up with the linux inode.
+> Perhaps i_update_core needs to be set so that xfs_iflush_int
+> will proceed and call xfs_synchronize_atime() and
+> somehow that is not happening??
+> 
+> I haven't looked further yet, but I thought I'd ask on the list
+> in case others, such as Christoph and Dave have thoughts on this.
+> 
+> Thanks,
+> Tim.
