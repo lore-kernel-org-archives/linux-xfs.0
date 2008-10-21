@@ -1,59 +1,57 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 00:34:39 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L7YZw1023895
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 00:34:36 -0700
-Message-ID: <48FD8676.7000305@sgi.com>
-Date: Tue, 21 Oct 2008 18:36:22 +1100
-From: Donald Douwsma <donaldd@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 01:05:55 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L85qKQ026349
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:05:53 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 124DD52527A
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:07:37 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id lytwNVs4WGB1rGX7 for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:07:37 -0700 (PDT)
+Date: Tue, 21 Oct 2008 04:07:37 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2, RFC] convert xfs_getbmap to take formatter
+	functions
+Message-ID: <20081021080737.GA4193@infradead.org>
+References: <48FD0503.3090203@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] trivial xfs_remove comment fixup
-References: <20080807215849.GA11345@lst.de> <20081018123623.GB25304@lst.de>
-In-Reply-To: <20081018123623.GB25304@lst.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <48FD0503.3090203@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> Ping?  This is just a trivial comment fixup, shouldn't be that hard to
-> review..
-
-This is to cleanup the comments from the xfs_rmd -> xfs_remove merge.
-Ok then, its in.
-
+On Mon, Oct 20, 2008 at 05:24:03PM -0500, Eric Sandeen wrote:
+> Preliminary work to hook up fiemap, this allows us to pass in an
+> arbitrary formatter to copy extent data back to userspace.
 > 
-> On Thu, Aug 07, 2008 at 11:58:49PM +0200, Christoph Hellwig wrote:
->> The dp to ip comment should be for the unconditional xfs_droplink
->> call, and the "." link obviously only exists for directories,
->> so it should be in the is_dir conditional.
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-08-06 17:26:37.000000000 -0300
->> +++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-08-06 17:36:44.000000000 -0300
->> @@ -2014,7 +2014,7 @@ xfs_remove(
->>  			goto out_bmap_cancel;
->>  
->>  		/*
->> -		 * Drop the link from dp to ip.
->> +		 * Drop the "." link from ip to self.
->>  		 */
->>  		error = xfs_droplink(tp, ip);
->>  		if (error)
->> @@ -2029,7 +2029,7 @@ xfs_remove(
->>  	}
->>  
->>  	/*
->> -	 * Drop the "." link from ip to self.
->> +	 * Drop the link from dp to ip.
->>  	 */
->>  	error = xfs_droplink(tp, ip);
->>  	if (error)
-> ---end quoted text---
+> The formatter takes info for 1 extent, a pointer to the user "thing*"
+> and a pointer to a "filled" variable to indicate whether a userspace
+> buffer did get filled in (for fiemap, hole "extents" are skipped).
 > 
+> I'm just using the getbmapx struct as a "common denominator" because
+> as far as I can see, it holds all info that any formatters will care
+> about.
+> 
+> ("*thing" because fiemap doesn't pass the user pointer around, but rather
+> has a pointer to a fiemap info structure, and helpers associated with it)
+> 
+> I'm still working on the fiemap hookup but wanted to put this out for comment.
+
+This looks good to me.
+
+>  /*
+> - * Fcntl interface to xfs_bmapi.
+> + * ioctl interface to xfs_bmapi.
+>   */
+
+>  /*
+> - * Fcntl interface to xfs_bmapi.
+> + * ioctl interface to xfs_bmapi.
+>   */
+
+Well, it will be for fiemap, too.  And the comment doesn't make much
+sense either.  Either remove it completely or replace it by something
+that makes sense.
