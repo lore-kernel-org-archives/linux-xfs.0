@@ -1,169 +1,150 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 01:11:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 01:24:03 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L8Bj5w027095
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:11:47 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D7FB144B12B
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:13:30 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id Ms36oApfLzDRRoo2 for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:13:30 -0700 (PDT)
-Date: Tue, 21 Oct 2008 04:13:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] stop using xfs_itobp in xfs_bulkstat
-Message-ID: <20081021081329.GA23344@infradead.org>
-References: <20081020222036.GA23662@lst.de> <20081021024455.GB18495@disturbed>
-MIME-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9L8NwH6027939
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:23:59 -0700
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CC8A144AEBB
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:25:43 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com with ESMTP id OM2b5XFgRJY0qZ1f for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 01:25:43 -0700 (PDT)
+Received: from Relay1.suse.de (relay-ext.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 7ECC3429D3
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 10:31:48 +0200 (CEST)
+Date: Tue, 21 Oct 2008 10:25:42 +0200
+From: Nick Piggin <npiggin@suse.de>
+Subject: [patch 1/2] xfs: remove old vmap cache
+Message-ID: <20081021082542.GA6974@wotan.suse.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20081021024455.GB18495@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
-
-On Tue, Oct 21, 2008 at 01:44:55PM +1100, Dave Chinner wrote:
-> On Tue, Oct 21, 2008 at 12:20:36AM +0200, Christoph Hellwig wrote:
-> > xfs_bulkstat only wants the dinode, offset and buffer from a given
-> > inode number.  Instead of using xfs_itobp on a fake inode that is much
-> > easier done with xfs_inotobp, which just needs an imap_flag paramter to
-> > pass down the XFS_IMAP_BULKSTAT flag.
-> 
-> Nice - that removes the only external user of xfs_inode_alloc() very
-> cleanly. Looks ok to me.
-
-Which means we should mark it static now.  Updated patch below:
+To: xfs@oss.sgi.com
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+XFS's vmap batching simply defers a number (up to 64) of vunmaps, and keeps
+track of them in a list. To purge the batch, it just goes through the list and
+calls vunamp on each one. This is pretty poor: a global TLB flush is generally
+still performed on each vunmap, with the most expensive parts of the operation
+being the broadcast IPIs and locking involved in the SMP callouts, and the
+locking involved in the vmap management -- none of these are avoided by just
+batching up the calls. I'm actually surprised it ever made much difference.
+(Now that the lazy vmap allocator is upstream, this description is not quite
+right, but the vunmap batching still doesn't seem to do much)
 
-Index: xfs-2.6/fs/xfs/xfs_inode.c
+Rip all this logic out of XFS completely. I will improve vmap performance
+and scalability directly in subsequent patch.
+
+Signed-off-by: Nick Piggin <npiggin@suse.de>
+---
+
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_inode.c	2008-10-20 23:49:30.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_inode.c	2008-10-21 09:28:16.000000000 +0200
-@@ -222,25 +222,26 @@ xfs_imap_to_bp(
-  * Use xfs_imap() to determine the size and location of the
-  * buffer to read from disk.
-  */
--STATIC int
-+int
- xfs_inotobp(
- 	xfs_mount_t	*mp,
- 	xfs_trans_t	*tp,
- 	xfs_ino_t	ino,
- 	xfs_dinode_t	**dipp,
- 	xfs_buf_t	**bpp,
--	int		*offset)
-+	int		*offset,
-+	uint		imap_flags)
- {
- 	xfs_imap_t	imap;
- 	xfs_buf_t	*bp;
- 	int		error;
- 
- 	imap.im_blkno = 0;
--	error = xfs_imap(mp, tp, ino, &imap, XFS_IMAP_LOOKUP);
-+	error = xfs_imap(mp, tp, ino, &imap, imap_flags | XFS_IMAP_LOOKUP);
- 	if (error)
- 		return error;
- 
--	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, 0);
-+	error = xfs_imap_to_bp(mp, tp, &imap, &bp, XFS_BUF_LOCK, imap_flags);
- 	if (error)
- 		return error;
- 
-@@ -792,7 +793,7 @@ xfs_dic2xflags(
- /*
-  * Allocate and initialise an xfs_inode.
-  */
--struct xfs_inode *
-+STATIC struct xfs_inode *
- xfs_inode_alloc(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
-@@ -2046,7 +2047,7 @@ xfs_iunlink_remove(
- 			}
- 			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
- 			error = xfs_inotobp(mp, tp, next_ino, &last_dip,
--					    &last_ibp, &last_offset);
-+					    &last_ibp, &last_offset, 0);
- 			if (error) {
- 				cmn_err(CE_WARN,
- 			"xfs_iunlink_remove: xfs_inotobp()  returned an error %d on %s.  Returning error.",
-Index: xfs-2.6/fs/xfs/xfs_inode.h
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_inode.h	2008-10-20 23:49:30.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_inode.h	2008-10-21 09:28:03.000000000 +0200
-@@ -158,7 +158,7 @@ typedef struct xfs_icdinode {
- #define	XFS_IFEXTIREC	0x08	/* Indirection array of extent blocks */
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+@@ -166,75 +166,6 @@ test_page_region(
+ }
  
  /*
-- * Flags for xfs_itobp(), xfs_imap() and xfs_dilocate().
-+ * Flags for xfs_inotobp, xfs_itobp(), xfs_imap() and xfs_dilocate().
+- *	Mapping of multi-page buffers into contiguous virtual space
+- */
+-
+-typedef struct a_list {
+-	void		*vm_addr;
+-	struct a_list	*next;
+-} a_list_t;
+-
+-static a_list_t		*as_free_head;
+-static int		as_list_len;
+-static DEFINE_SPINLOCK(as_lock);
+-
+-/*
+- *	Try to batch vunmaps because they are costly.
+- */
+-STATIC void
+-free_address(
+-	void		*addr)
+-{
+-	a_list_t	*aentry;
+-
+-#ifdef CONFIG_XEN
+-	/*
+-	 * Xen needs to be able to make sure it can get an exclusive
+-	 * RO mapping of pages it wants to turn into a pagetable.  If
+-	 * a newly allocated page is also still being vmap()ed by xfs,
+-	 * it will cause pagetable construction to fail.  This is a
+-	 * quick workaround to always eagerly unmap pages so that Xen
+-	 * is happy.
+-	 */
+-	vunmap(addr);
+-	return;
+-#endif
+-
+-	aentry = kmalloc(sizeof(a_list_t), GFP_NOWAIT);
+-	if (likely(aentry)) {
+-		spin_lock(&as_lock);
+-		aentry->next = as_free_head;
+-		aentry->vm_addr = addr;
+-		as_free_head = aentry;
+-		as_list_len++;
+-		spin_unlock(&as_lock);
+-	} else {
+-		vunmap(addr);
+-	}
+-}
+-
+-STATIC void
+-purge_addresses(void)
+-{
+-	a_list_t	*aentry, *old;
+-
+-	if (as_free_head == NULL)
+-		return;
+-
+-	spin_lock(&as_lock);
+-	aentry = as_free_head;
+-	as_free_head = NULL;
+-	as_list_len = 0;
+-	spin_unlock(&as_lock);
+-
+-	while ((old = aentry) != NULL) {
+-		vunmap(aentry->vm_addr);
+-		aentry = aentry->next;
+-		kfree(old);
+-	}
+-}
+-
+-/*
+  *	Internal xfs_buf_t object manipulation
   */
- #define XFS_IMAP_LOOKUP		0x1
- #define XFS_IMAP_BULKSTAT	0x2
-@@ -514,7 +514,6 @@ int		xfs_itruncate_finish(struct xfs_tra
- 				     xfs_fsize_t, int, int);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
  
--struct xfs_inode * xfs_inode_alloc(struct xfs_mount *, xfs_ino_t);
- void		xfs_idestroy(xfs_inode_t *);
- void		xfs_iextract(xfs_inode_t *);
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
-@@ -531,6 +530,9 @@ void		xfs_mark_inode_dirty_sync(xfs_inod
+@@ -333,7 +264,7 @@ xfs_buf_free(
+ 		uint		i;
  
- #endif /* __KERNEL__ */
+ 		if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1))
+-			free_address(bp->b_addr - bp->b_offset);
++			vunmap(bp->b_addr - bp->b_offset);
  
-+int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
-+			    xfs_ino_t, struct xfs_dinode **,
-+			    struct xfs_buf **, int *, uint);
- int		xfs_itobp(struct xfs_mount *, struct xfs_trans *,
- 			  struct xfs_inode *, struct xfs_dinode **,
- 			  struct xfs_buf **, xfs_daddr_t, uint, uint);
-Index: xfs-2.6/fs/xfs/xfs_itable.c
-===================================================================
---- xfs-2.6.orig/fs/xfs/xfs_itable.c	2008-10-20 23:49:30.000000000 +0200
-+++ xfs-2.6/fs/xfs/xfs_itable.c	2008-10-20 23:49:34.000000000 +0200
-@@ -359,7 +359,6 @@ xfs_bulkstat(
- 	int			ubused;	/* bytes used by formatter */
- 	xfs_buf_t		*bp;	/* ptr to on-disk inode cluster buf */
- 	xfs_dinode_t		*dip;	/* ptr into bp for specific inode */
--	xfs_inode_t		*ip;	/* ptr to in-core inode struct */
+ 		for (i = 0; i < bp->b_page_count; i++) {
+ 			struct page	*page = bp->b_pages[i];
+@@ -455,8 +386,6 @@ _xfs_buf_map_pages(
+ 		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
+ 		bp->b_flags |= XBF_MAPPED;
+ 	} else if (flags & XBF_MAPPED) {
+-		if (as_list_len > 64)
+-			purge_addresses();
+ 		bp->b_addr = vmap(bp->b_pages, bp->b_page_count,
+ 					VM_MAP, PAGE_KERNEL);
+ 		if (unlikely(bp->b_addr == NULL))
+@@ -1732,8 +1661,6 @@ xfsbufd(
+ 			count++;
+ 		}
  
- 	/*
- 	 * Get the last inode value, see if there's nothing to do.
-@@ -585,6 +584,8 @@ xfs_bulkstat(
+-		if (as_list_len > 0)
+-			purge_addresses();
+ 		if (count)
+ 			blk_run_address_space(target->bt_mapping);
  
- 					if (flags & (BULKSTAT_FG_QUICK |
- 						     BULKSTAT_FG_INLINE)) {
-+						int offset;
-+
- 						ino = XFS_AGINO_TO_INO(mp, agno,
- 								       agino);
- 						bno = XFS_AGB_TO_DADDR(mp, agno,
-@@ -595,19 +596,13 @@ xfs_bulkstat(
- 						 */
- 						if (bp)
- 							xfs_buf_relse(bp);
--						ip = xfs_inode_alloc(mp, ino);
--						if (!ip) {
--							bp = NULL;
--							rval = ENOMEM;
--							break;
--						}
--						error = xfs_itobp(mp, NULL, ip,
--								&dip, &bp, bno,
--								XFS_IMAP_BULKSTAT,
--								XFS_BUF_LOCK);
-+
-+						error = xfs_inotobp(mp, NULL, ino, &dip,
-+								    &bp, &offset,
-+								    XFS_IMAP_BULKSTAT);
-+
- 						if (!error)
--							clustidx = ip->i_boffset / mp->m_sb.sb_inodesize;
--						xfs_idestroy(ip);
-+							clustidx = offset / mp->m_sb.sb_inodesize;
- 						if (XFS_TEST_ERROR(error != 0,
- 								   mp, XFS_ERRTAG_BULKSTAT_READ_CHUNK,
- 								   XFS_RANDOM_BULKSTAT_READ_CHUNK)) {
