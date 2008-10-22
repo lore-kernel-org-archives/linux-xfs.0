@@ -1,32 +1,64 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 02:28:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 03:10:05 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9M9SZO5019682
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 02:28:35 -0700
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E1481458BC3
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 02:30:20 -0700 (PDT)
-Received: from mx1.suse.de (mx1.suse.de [195.135.220.2]) by cuda.sgi.com with ESMTP id LHu7H4Blbqh0RThk for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 02:30:20 -0700 (PDT)
-Date: Wed, 22 Oct 2008 11:30:18 +0200
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [patch 2/2] xfs: use scalable vmap API
-Message-ID: <20081022093018.GD4359@wotan.suse.de>
-References: <20081021082542.GA6974@wotan.suse.de> <20081021082735.GB6974@wotan.suse.de> <20081021120932.GB13348@infradead.org>
-Mime-Version: 1.0
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9MAA1pu022318
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 03:10:02 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EBD714576CE
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 03:11:47 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 2JC0yQVaGxDFWMfA for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 03:11:47 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
+	id 1Ksags-0007Et-Ef
+	for xfs@oss.sgi.com; Wed, 22 Oct 2008 10:11:46 +0000
+Date: Wed, 22 Oct 2008 06:11:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Handle ENOMEM during log initialisation
+Message-ID: <20081022101146.GA11313@infradead.org>
+References: <20081022061002.GG18495@disturbed>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20081021120932.GB13348@infradead.org>
+In-Reply-To: <20081022061002.GG18495@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Oct 21, 2008 at 08:09:32AM -0400, Christoph Hellwig wrote:
-> On Tue, Oct 21, 2008 at 10:27:35AM +0200, Nick Piggin wrote:
-> > +		bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
-> > +					-1, PAGE_KERNEL);
+On Wed, Oct 22, 2008 at 05:10:02PM +1100, Dave Chinner wrote:
+> XFS: handle memory allocation failures during log initialisation
 > 
-> What does the -1 stand for?
+> When there is no memory left in the system, xfs_buf_get_noaddr()
+> can fail. If this happens at mount time during xlog_alloc_log()
+> we fail to catch the error and oops.
+> 
+> Catch the error from xfs_buf_get_noaddr(), and allow other memory
+> allocations to fail and catch those errors too. Report the error
+> to the console and fail the mount with ENOMEM.
+> 
+> Tested by manually injecting errors into xfs_buf_get_noaddr() and
+> xlog_alloc_log().
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/xfs_log.c |   38 ++++++++++++++++++++++++++++++++++++--
+>  1 files changed, 36 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 5184017..1dfa5fe 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
 
-Default node.
+> -	log = (xlog_t *)kmem_zalloc(sizeof(xlog_t), KM_SLEEP);
+> +	log = (xlog_t *)kmem_zalloc(sizeof(xlog_t), KM_MAYFAIL);
+
+You might want to remove the cast when you touch that line anyway.
+
+>  	for (i=0; i < log->l_iclog_bufs; i++) {
+>  		*iclogp = (xlog_in_core_t *)
+> -			  kmem_zalloc(sizeof(xlog_in_core_t), KM_SLEEP);
+> +			  kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
+
+Same here.
+
+
+Modulo those nitpicks this looks good.
