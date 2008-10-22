@@ -1,115 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 11:45:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 14:08:57 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9MIjFdO002822
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 11:45:17 -0700
-Received: from ninsei.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D03C810D04C6
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 11:46:58 -0700 (PDT)
-Received: from ninsei.hu (ninsei.hu [212.92.23.158]) by cuda.sgi.com with ESMTP id ZekjUvkL9CIqZs76 for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 11:46:58 -0700 (PDT)
-Received: from kyra (pb-d-128-141-48-108.cern.ch [128.141.48.108])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by chatsubo.ninsei.hu (Postfix) with ESMTP id A03B97833
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 20:46:53 +0200 (CEST)
-Date: Wed, 22 Oct 2008 20:36:36 +0200
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: [PATCH] xfs_repair: print superblock offsets and denial reasons
-Message-ID: <20081022183636.GE20550@kyra>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9ML8nUN020197
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 14:08:49 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 182331216714
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 14:10:32 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id QM45hcLP3HI8uC94 for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 14:10:32 -0700 (PDT)
+Date: Thu, 23 Oct 2008 08:10:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: BUG: sleeping function called from invalid context at
+	kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
+Message-ID: <20081022211028.GO18495@disturbed>
+References: <20081017203710.GA27187@infradead.org> <20081017135510.7127c4e7@infradead.org> <a4423d670810200758m3cea3841h40988afc8eaf81@mail.gmail.com> <20081020163327.GA15651@infradead.org> <a4423d670810201013w6448cb38w402771799cefb5f5@mail.gmail.com> <20081020223549.GA21152@disturbed> <a4423d670810210442y51b62fc2naf6cb649e6b26942@mail.gmail.com> <20081022075838.GK18495@disturbed> <20081022082550.GM18495@disturbed> <20081022101351.GB11313@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20081022101351.GB11313@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alexander Beregalov <a.beregalov@gmail.com>, lachlan@sgi.com, Arjan van de Ven <arjan@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Example output (without the scanning dots):
+On Wed, Oct 22, 2008 at 06:13:51AM -0400, Christoph Hellwig wrote:
+> On Wed, Oct 22, 2008 at 07:25:50PM +1100, Dave Chinner wrote:
+> > > Basically the above commit moved xfs_ilock() inside
+> > > radix_tree_preload()/radix_tree_preload_end(), which means we are
+> > > taking a rwsem() while we have an elevated preempt count. I'll
+> > > get a patch out to fix it.
+> 
+> This really needs a warning.  Then again I don't really understand this
+> as the point of radix_tree_preload was that we can do the actual
+> radix-tree under a lock, or not?
 
-Phase 1 - find and verify superblock.
-bad primary superblock - bad magic number !!!
+Right - the preload allows us to do GFP_KERNEL allocations for radix
+tree nodes and use a spinlock for inserts into the tree. We could
+drop the preload stuff if we initialised the radix tree to use
+GFP_ATOMIC allocations for radix tree nodes, but that is more likely
+to lead to insert failures under low memory conditions compared to
+the preload method.
 
-attempting to find secondary superblock...
-found candidate secondary superblock...
-offset: 62498275328
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 156246212608
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 249994149888
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 343742087168
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 437490024448
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 531237961728
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 624985899008
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 718733836288
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 812481773568
-reason: 16
-unable to verify superblock, continuing...
-found candidate secondary superblock...
-offset: 906229710848
-reason: 16
-unable to verify superblock, continuing...
-Sorry, could not find valid secondary superblock
-Exiting now.
+Cheers,
 
-Signed-off-by: KELEMEN Peter <Peter.Kelemen@cern.ch>
-
-Index: xfsprogs/repair/sb.c
-===================================================================
-RCS file: /cvs/xfs-cmds/xfsprogs/repair/sb.c,v
-retrieving revision 1.22
-diff -u -r1.22 sb.c
---- xfsprogs/repair/sb.c	8 Sep 2008 06:18:43 -0000	1.22
-+++ xfsprogs/repair/sb.c	22 Oct 2008 18:13:26 -0000
-@@ -96,6 +96,7 @@
- 	int		dirty;
- 	int		retval;
- 	int		bsize;
-+	int		reason;		/* why sb cannot be verified */
- 
- 	do_warn(_("\nattempting to find secondary superblock...\n"));
- 
-@@ -140,6 +141,7 @@
- 				continue;
- 
- 			do_warn(_("found candidate secondary superblock...\n"));
-+			do_warn("offset: %Lu\n", off);
- 
- 			/*
- 			 * found one.  now verify it by looking
-@@ -149,12 +151,13 @@
- 			rsb->sb_inprogress = 0;
- 			clear_sunit = 1;
- 
--			if (verify_set_primary_sb(rsb, 0, &dirty) == XR_OK)  {
-+			if ((reason = verify_set_primary_sb(rsb, 0, &dirty)) == XR_OK)  {
- 				do_warn(
- 			_("verified secondary superblock...\n"));
- 				done = 1;
- 				retval = 1;
- 			} else  {
-+				do_warn("reason: %d\n", reason);
- 				do_warn(
- 			_("unable to verify superblock, continuing...\n"));
- 			}
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
