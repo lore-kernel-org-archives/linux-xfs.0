@@ -1,32 +1,43 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 03:12:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 06:39:58 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9MAC6Dv022698
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 03:12:07 -0700
-Date: Wed, 22 Oct 2008 06:13:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: BUG: sleeping function called from invalid context at
-	kernel/rwsem.c:131 XFS? (was: Re: linux-next: Tree for October 17)
-Message-ID: <20081022101351.GB11313@infradead.org>
-References: <a4423d670810171013g5bc19c1cm3f7d9c014ee70349@mail.gmail.com> <20081017203710.GA27187@infradead.org> <20081017135510.7127c4e7@infradead.org> <a4423d670810200758m3cea3841h40988afc8eaf81@mail.gmail.com> <20081020163327.GA15651@infradead.org> <a4423d670810201013w6448cb38w402771799cefb5f5@mail.gmail.com> <20081020223549.GA21152@disturbed> <a4423d670810210442y51b62fc2naf6cb649e6b26942@mail.gmail.com> <20081022075838.GK18495@disturbed> <20081022082550.GM18495@disturbed>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9MDdoYt010032
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 06:39:50 -0700
+Received: from sargon.lncsa.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E03061B648F2
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 06:41:35 -0700 (PDT)
+Received: from sargon.lncsa.com (sargon.lncsa.com [212.99.8.251]) by cuda.sgi.com with ESMTP id 13mJrh1NZiIQ6Geq for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 06:41:35 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by sargon.lncsa.com (Postfix) with ESMTP id ED5283015C1C
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 15:41:33 +0200 (CEST)
+Received: from sargon.lncsa.com ([127.0.0.1])
+	by localhost (sargon.lncsa.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id rtuax116gtKb for <xfs@oss.sgi.com>;
+	Wed, 22 Oct 2008 15:41:33 +0200 (CEST)
+Received: from [192.168.0.31] (donald.lncsa.com [192.168.0.31])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by sargon.lncsa.com (Postfix) with ESMTP id 839EB3015C1A
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 15:41:33 +0200 (CEST)
+Message-ID: <48FF2D8D.8040305@lncsa.com>
+Date: Wed, 22 Oct 2008 15:41:33 +0200
+From: Laurent CARON <lcaron@lncsa.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081022082550.GM18495@disturbed>
+Subject: SPAM comming through xfs mailing list
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Alexander Beregalov <a.beregalov@gmail.com>, lachlan@sgi.com, Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, Oct 22, 2008 at 07:25:50PM +1100, Dave Chinner wrote:
-> > Basically the above commit moved xfs_ilock() inside
-> > radix_tree_preload()/radix_tree_preload_end(), which means we are
-> > taking a rwsem() while we have an elevated preempt count. I'll
-> > get a patch out to fix it.
+Hi,
 
-This really needs a warning.  Then again I don't really understand this
-as the point of radix_tree_preload was that we can do the actual
-radix-tree under a lock, or not?
+I'm receiving lots of spam through xfs mailing list.
 
-Anyway, the patch looks correct to me, including the slightly unrelated
-hunk to fix the missing unlock and preload leak.
+Is it possible to only accept messages from subscribers or at least not 
+broadcast messages from 'Mailer-Daemon' ?
+
+Thanks
+
+Laurent
