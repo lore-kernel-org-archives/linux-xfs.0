@@ -1,173 +1,132 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 22:47:34 -0700 (PDT)
-Received: from relay.sgi.com (relay2.corp.sgi.com [192.26.58.22])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9M5lUUl025618
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 22:47:30 -0700
-Message-ID: <48FEBEDA.2040209@sgi.com>
-Date: Wed, 22 Oct 2008 16:49:14 +1100
-From: Donald Douwsma <donaldd@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 21 Oct 2008 23:08:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9M68Nlm026820
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 23:08:24 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA22B10C5DA4
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 23:10:07 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id Ih4v2JjPh2qdlSYp for <xfs@oss.sgi.com>; Tue, 21 Oct 2008 23:10:07 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1KsWuw-0005MC-SK
+	for xfs@oss.sgi.com; Wed, 22 Oct 2008 17:10:02 +1100
+Date: Wed, 22 Oct 2008 17:10:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] Handle ENOMEM during log initialisation
+Message-ID: <20081022061002.GG18495@disturbed>
 MIME-Version: 1.0
-Subject: Re: [PATCH] use XFS_I and VFS_I in xfs_dm.c
-References: <20080822014205.GA10805@lst.de> <20080929092135.GA27608@lst.de>
-In-Reply-To: <20080929092135.GA27608@lst.de>
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> ping?
+XFS: handle memory allocation failures during log initialisation
 
-A similar patch has already been checked into the tree (which hopefully
-should be working again). I can apply the 3 remaining changes, just
-mentioning it here for transparency.
+When there is no memory left in the system, xfs_buf_get_noaddr()
+can fail. If this happens at mount time during xlog_alloc_log()
+we fail to catch the error and oops.
 
-> 
-> On Fri, Aug 22, 2008 at 03:42:05AM +0200, Christoph Hellwig wrote:
->> Convert xfs_dm.c to use the XFS_I and VFI_I helper, or in some cases
->> IHOLD/IRELE so that it still compiles with Dave's inode unification
->> patch.  It's only really required for the latter, but also a nice
->> cleanup without it, so it should probably go in before that patch
->> series.
->>
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
->> ===================================================================
->> --- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-08-19 22:42:31.000000000 -0300
->> +++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-08-19 22:45:17.000000000 -0300
->> @@ -140,7 +140,7 @@ xfs_dm_send_data_event(
->>  	int		flags,
->>  	int		*lock_flags)
->>  {
->> -	struct inode	*inode = ip->i_vnode;
->> +	struct inode	*inode = VFS_I(ip);
->>  	int		error;
->>  	uint16_t	dmstate;
->>  
+Catch the error from xfs_buf_get_noaddr(), and allow other memory
+allocations to fail and catch those errors too. Report the error
+to the console and fail the mount with ENOMEM.
 
-Already in
+Tested by manually injecting errors into xfs_buf_get_noaddr() and
+xlog_alloc_log().
 
->> @@ -468,7 +468,7 @@ xfs_dm_bulkall_iget_one(
->>  		return error;
->>  
->>  	xfs_ip_to_stat(mp, ino, ip, &xbuf->dx_statinfo);
->> -	dm_ip_to_handle(ip->i_vnode, &handle);
->> +	dm_ip_to_handle(VFS_I(ip), &handle);
->>  	xfs_dm_handle_to_xstat(xbuf, xstat_sz, &handle, sizeof(handle));
->>  
->>  	/* Drop ILOCK_SHARED for call to xfs_attr_get */
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_log.c |   38 ++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 36 insertions(+), 2 deletions(-)
 
-Already in
-
->> @@ -476,7 +476,7 @@ xfs_dm_bulkall_iget_one(
->>  
->>  	memset(&xbuf->dx_attrdata, 0, sizeof(dm_vardata_t));
->>  	error = xfs_attr_get(ip, attr_name, attr_buf, &value_len, ATTR_ROOT);
->> -	iput(ip->i_vnode);
->> +	IRELE(ip);
->>  
->>  	DM_EA_XLATE_ERR(error);
->>  	if (error && (error != ENOATTR)) {
-
-Fixed as
--	iput(ip->i_vnode);
-+	iput(VFS_I(ip));
-
-
->> @@ -726,7 +726,7 @@ xfs_dm_bulkattr_iget_one(
->>  		return error;
->>  
->>  	xfs_ip_to_stat(mp, ino, ip, sbuf);
->> -	dm_ip_to_handle(ip->i_vnode, &handle);
->> +	dm_ip_to_handle(VFS_I(ip), &handle);
->>  	xfs_dm_handle_to_stat(sbuf, stat_sz, &handle, sizeof(handle));
->>  
->>  	xfs_iput(ip, XFS_ILOCK_SHARED);
-
-Already in
-
->> @@ -907,7 +907,7 @@ xfs_dm_f_set_eventlist(
->>  	ip->i_d.di_dmevmask = (eventset & max_mask) | (ip->i_d.di_dmevmask & ~max_mask);
->>  
->>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->> -	igrab(ip->i_vnode);
->> +	IHOLD(ip);
->>  	xfs_trans_commit(tp, 0);
->>  
->>  	return(0);
-
-Fixed as
-+	igrab(VFS_I(ip))
-
->> @@ -2731,7 +2731,7 @@ xfs_dm_send_destroy_event(
->>  	dm_right_t	vp_right)	/* always DM_RIGHT_NULL */
->>  {
->>  	/* Returns positive errors to XFS */
->> -	return -dm_send_destroy_event(ip->i_vnode, vp_right);
->> +	return -dm_send_destroy_event(VFS_I(ip), vp_right);
->>  }
-
-Already in
-
->>  
->> @@ -2751,8 +2751,8 @@ xfs_dm_send_namesp_event(
->>  {
->>  	/* Returns positive errors to XFS */
->>  	return -dm_send_namesp_event(event, mp ? mp->m_super : NULL,
->> -				    ip1->i_vnode, vp1_right,
->> -				    ip2 ? ip2->i_vnode : NULL, vp2_right,
->> +				    VFS_I(ip1), vp1_right,
->> +				    ip2 ? VFS_I(ip2) : NULL, vp2_right,
->>  				    name1, name2,
->>  				    mode, retcode, flags);
->>  }
-
-Already in
-
->> @@ -2779,7 +2779,7 @@ xfs_dm_send_unmount_event(
->>  	int		retcode,	/* errno, if unmount failed */
->>  	int		flags)
->>  {
->> -	dm_send_unmount_event(mp->m_super, ip ? ip->i_vnode : NULL,
->> +	dm_send_unmount_event(mp->m_super, ip ? VFS_I(ip) : NULL,
->>  			      vfsp_right, mode, retcode, flags);
->>  }
->>  
-
-Already in
-
->> @@ -2822,9 +2822,8 @@ xfs_dm_fh_to_inode(
->>  
->>  	if (!dmfid->dm_fid_len) {
->>  		/* filesystem handle */
->> -		*inode = igrab(mp->m_rootip->i_vnode);
->> -		if (!*inode)
->> -			return -ENOENT;
->> +		IHOLD(mp->m_rootip);
->> +		*inode = VFS_I(mp->m_rootip);
->>  		return 0;
->>  	}
->>  
-
-Fixed As
-+		*inode = igrab(VFS_I(mp->m_rootip));
-
->> @@ -2849,7 +2848,7 @@ xfs_dm_fh_to_inode(
->>  		return -ENOENT;
->>  	}
->>  
->> -	*inode = ip->i_vnode;
->> +	*inode = VFS_I(ip);
->>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
->>  	return 0;
->>  }
-
-Already in
-
-> ---end quoted text---
-> 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 5184017..1dfa5fe 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -563,6 +563,11 @@ xfs_log_mount(
+ 	}
+ 
+ 	mp->m_log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
++	if (!mp->m_log) {
++		cmn_err(CE_WARN, "XFS: Log allocation failed: No memory!");
++		error = ENOMEM;
++		goto out;
++	}
+ 
+ 	/*
+ 	 * Initialize the AIL now we have a log.
+@@ -601,6 +606,7 @@ xfs_log_mount(
+ 	return 0;
+ error:
+ 	xfs_log_unmount_dealloc(mp);
++out:
+ 	return error;
+ }	/* xfs_log_mount */
+ 
+@@ -1217,7 +1223,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	int			i;
+ 	int			iclogsize;
+ 
+-	log = (xlog_t *)kmem_zalloc(sizeof(xlog_t), KM_SLEEP);
++	log = (xlog_t *)kmem_zalloc(sizeof(xlog_t), KM_MAYFAIL);
++	if (!log)
++		return NULL;
+ 
+ 	log->l_mp	   = mp;
+ 	log->l_targ	   = log_target;
+@@ -1249,6 +1257,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_get_iclog_buffer_size(mp, log);
+ 
+ 	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
++	if (!bp)
++		goto out_free_log;
+ 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+ 	XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
+ 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+@@ -1276,12 +1286,17 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	ASSERT(log->l_iclog_size >= 4096);
+ 	for (i=0; i < log->l_iclog_bufs; i++) {
+ 		*iclogp = (xlog_in_core_t *)
+-			  kmem_zalloc(sizeof(xlog_in_core_t), KM_SLEEP);
++			  kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
++		if (!*iclogp)
++			goto out_free_iclog;
++
+ 		iclog = *iclogp;
+ 		iclog->ic_prev = prev_iclog;
+ 		prev_iclog = iclog;
+ 
+ 		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
++		if (!bp)
++			goto out_free_iclog;
+ 		if (!XFS_BUF_CPSEMA(bp))
+ 			ASSERT(0);
+ 		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+@@ -1323,6 +1338,25 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	log->l_iclog->ic_prev = prev_iclog;	/* re-write 1st prev ptr */
+ 
+ 	return log;
++
++out_free_iclog:
++	for (iclog = log->l_iclog; iclog; iclog = prev_iclog) {
++		prev_iclog = iclog->ic_next;
++		if (iclog->ic_bp) {
++			sv_destroy(&iclog->ic_force_wait);
++			sv_destroy(&iclog->ic_write_wait);
++			xfs_buf_free(iclog->ic_bp);
++			xlog_trace_iclog_dealloc(iclog);
++		}
++		kmem_free(iclog);
++	}
++	spinlock_destroy(&log->l_icloglock);
++	spinlock_destroy(&log->l_grant_lock);
++	xlog_trace_loggrant_dealloc(log);
++	xfs_buf_free(log->l_xbuf);
++out_free_log:
++	kmem_free(log);
++	return NULL;
+ }	/* xlog_alloc_log */
+ 
+ 
