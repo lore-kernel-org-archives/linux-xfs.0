@@ -1,65 +1,119 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 20:58:01 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9N3vr1t030746
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 20:57:53 -0700
-Message-ID: <4900048B.3080706@sgi.com>
-Date: Thu, 23 Oct 2008 14:58:51 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 21:19:33 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9N4JN5c032511
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 21:19:23 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49BC510D4068
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 21:21:06 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id DWEjCeXdCa80ZBcZ for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 21:21:06 -0700 (PDT)
+Date: Thu, 23 Oct 2008 15:20:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH, RFC] Re: atime not written to disk
+Message-ID: <20081023042053.GY18495@disturbed>
+References: <48FD74CC.907@sgi.com> <48FD7B69.3090600@wm.jp.nec.com> <20081022081710.GL18495@disturbed> <ncctzb4nhss.fsf@itchy.melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] free partially initialized inodes using	destroy_inode
-References: <20081022163129.GC25556@infradead.org> <20081022213049.GS18495@disturbed>
-In-Reply-To: <20081022213049.GS18495@disturbed>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ncctzb4nhss.fsf@itchy.melbourne.sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: Utako Kusaka <u-kusaka@wm.jp.nec.com>, Timothy Shimmin <tes@sgi.com>, xfs <xfs@oss.sgi.com>
 
-Dave Chinner wrote:
-> On Wed, Oct 22, 2008 at 12:31:29PM -0400, Christoph Hellwig wrote:
->> To make sure we free the security data inodes need to be freed using
->> the proper VFS helper (which we also need to export for this). We mark
->> these inodes bad so we can skip the flush path for them.
+On Thu, Oct 23, 2008 at 01:53:23PM +1100, Niv Sardi wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> [...]
+> > As I mentioned on IRC, Tim, the following patch fixes the above test
+> > case. It will make XFS behave like other filesystems w.r.t. atime,
+> > instead of defaulting to relatime-like behaviour. This will have
+> > performance impact unless ppl now add the relatime mount option.
+>  ^^^^^^^^^^^^^^^^^^^
 > 
-> Looks good, except for one minor mistake in a comment:
-> 
->> Index: xfs-2.6/fs/xfs/xfs_inode.h
->> ===================================================================
->> --- xfs-2.6.orig/fs/xfs/xfs_inode.h	2008-10-22 17:57:30.000000000 +0200
->> +++ xfs-2.6/fs/xfs/xfs_inode.h	2008-10-22 18:00:15.000000000 +0200
->> @@ -310,6 +310,23 @@ static inline struct inode *VFS_I(struct
->>  }
->>  
->>  /*
->> + * Get rid of a partially initialized inode.
->> + *
->> + * We have to go through destroy_inode to make sure allocations
->> + * from init_inode_always like the security data are undone.
->> + *
->> + * We mark the inode dirty so that it takes the short cut in
->                         ^^^^^
-> 			"bad"
-> 
->> + * the reclaim path instead of going through the flush path
->> + * which doesn't make sense for an inode that has never seen the
->> + * light of day.
->> + */
->> +static inline void xfs_destroy_inode(struct xfs_inode *ip)
->> +{
->> +	make_bad_inode(VFS_I(ip));
->> +	return destroy_inode(VFS_I(ip));
->> +}
->> +
->> +/*
->>   * i_flags helper functions
->>   */
->>  static inline void
-> 
-> I don't think this needs another round of review just to fix the
-> comment, so it can probably go straight in if the committer can
-> touch up that comment.
+> I don't really like it, and don't think there is a real justification to
+> do it.
 
-Will do.  Thanks guys.
+You probably missed the context of that patch (which I mentioned on
+IRC to Tim).
+
+That was that it is part of a larger patch set that tracks dirty state
+in the XFS inode radix tree. In that case, the ->dirty_inode callout
+is used to set a tag in the per-ag inode radix tree. I want to
+do it this way so there is a single place that the dirty tag
+is set, whether it is due to an unlogged change (XFS or VFS) or
+a transaction commit....
+
+Also, if you read the referenced thread, Christoph made the comment
+that the VFS was not letting us know that the inode had been dirtied and
+that we really needed to know about that.  The patch I sent isn't
+intended to do this, not as a fix for atime updates...
+
+> Why not only do:
+>
+> From 96be907a11f2cad0d6c8696737bb144b1275ce5a Mon Sep 17 00:00:00 2001
+> From: Niv Sardi <xaiki@debian.org>
+> Date: Thu, 23 Oct 2008 13:41:09 +1100
+> Subject: [PATCH] Mark core as dirty when atime updated needed for XFS inode
+> 
+> Currently we're not writting atime updates back to disk on unmount
+> if it's the only change that happened. One solution would be to implement
+> ->dirty_inode() but that might be overkill and has a perf hit, instead
+> just tag as needed for update in reclaim()
+> 
+> Signed-off-by: Niv Sardi <xaiki@debian.org>
+> ---
+>  fs/xfs/xfs_vnodeops.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index e257f65..828d398 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -2840,6 +2840,7 @@ int
+>  xfs_reclaim(
+>  	xfs_inode_t	*ip)
+>  {
+> +	struct inode	*inode = VFS_I(ip);
+>  
+>  	xfs_itrace_entry(ip);
+>  
+> @@ -2856,10 +2857,13 @@ xfs_reclaim(
+>  	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+>  
+>  	/*
+> -	 * Make sure the atime in the XFS inode is correct before freeing the
+> -	 * Linux inode.
+> +	 * Mark dirty and update atime only if different from the linux inode one.
+>  	 */
+> -	xfs_synchronize_atime(ip);
+> +	if (! timespec_equal(&inode->i_atime,
+> +			     (struct timespec *) &ip->i_d.di_atime)) {
+> +		xfs_synchronize_atime(ip);
+> +		ip->i_update_core = 1;
+> +	}
+
+This doesn't avoid the performance problem - it simply shifts it to
+the reclaim code.  Think about it - you traverse a million inodes
+stat()ing them all (the nightly backup). Instead of having the now
+dirty inodes written back as you go along, you wait until memory
+reclaim turfs them out to mark them dirty and then write them back.
+This means memory reclaim goes *much slower* because reclaiming the
+memory now has to wait for I/O to complete.
+
+The speed of inode reclaim is already a problem when we only have
+clean inodes.  If we now have to write back all these inodes, we'll
+get at best a couple of thousand inodes cleaned a second (with
+current writeback algorithms) and it could be as little as 50
+inodes/s when software RAID5 on SATA disks is involved. That means
+reclaim will be very slow, as will unmount. This could make low
+memory situations effectively unrecoverable when the inode caches
+dominate memory usage (e.g. your build servers after the nightly
+backup has run).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
