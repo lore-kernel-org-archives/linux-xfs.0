@@ -1,37 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 22:37:39 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9N5bWFI005348
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 22:37:32 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 418C41464706
-	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 22:39:17 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id 1Q4BUxNLxiadZLe9 for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 22:39:17 -0700 (PDT)
-Date: Thu, 23 Oct 2008 16:39:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: crash with latest code drop.
-Message-ID: <20081023053912.GZ18495@disturbed>
-References: <48F54C20.8060704@sgi.com> <20081015011857.GS10716@disturbed> <20081015022948.GA20966@infradead.org> <20081015031645.GA25906@disturbed> <20081015032431.GA7426@infradead.org> <20081015035116.GB25906@disturbed> <48F584B8.8060907@sgi.com> <20081015061917.GC25906@disturbed> <20081022061905.GI18495@disturbed> <48FFFC5F.2030307@sgi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <48FFFC5F.2030307@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 22 Oct 2008 23:05:45 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9N65cxN007495
+	for <xfs@oss.sgi.com>; Wed, 22 Oct 2008 23:05:38 -0700
+Subject: TAKE 987246 - fs/xfs/linux-2.6/xfs_sync.c
+Message-Id: <20081023060716.5F5931EDDEF@chapter11.melbourne.sgi.com>
+Date: Thu, 23 Oct 2008 17:07:16 +1100 (EST)
+From: pleckie@sgi.com (Peter Leckie)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Peter Leckie <pleckie@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-On Thu, Oct 23, 2008 at 02:23:59PM +1000, Peter Leckie wrote:
-> Hey Dave I'll push it now, I assume it's ok to go in with out the check  
-> for a inode first
-> as the combine linux/XFS inode patch is in.
+avoid all reclaimable inodes in xfs_sync_inodes_ag
 
-Yes, it's safe to go in as it stands. Thanks.
+If we are syncing data in xfs_sync_inodes_ag(), the VFS
+inode must still be referencable as the dirty data state
+is carried on the VFS inode. hence if we can't get a
+reference via igrab(), the inode must be in reclaim which
+implies that it has no dirty data attached.
 
-Cheers,
+Leave such inodes to the reclaim code to flush the dirty
+inode state to disk and so avoid attempting to access the
+VFS inode when it may not exist in xfs_sync_inodes_ag().
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Version 4:
+o don't reference liinux inode untiil after igrab() succeeds
+
+Version 3:
+o converted unlock/rele to an xfs_iput() call.
+
+Version 2:
+o change igrab logic to be more linear
+o remove initial reclaimable inode check now that we are using
+  igrab() failure to find reclaimable inodes
+o assert that igrab failure occurs only on reclaimable inodes
+o clean up inode locking - only grab the iolock if we are doing
+  a SYNC_DELWRI call and we have a dirty inode.
+
+
+Date:  Thu Oct 23 17:06:31 EST 2008
+Workarea:  chapter11.melbourne.sgi.com:/scratch/pleckie/2.6.x-xfs
+Inspected by:  pleckie,david@fromorbit.com,hch@infradead.org
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+
+
+Modid:  xfs-linux-melb:xfs-kern:32391a
+fs/xfs/linux-2.6/xfs_sync.c - 1.24 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sync.c.diff?r1=text&tr1=1.24&r2=text&tr2=1.23&f=h
+	- avoid all reclaimable inodes in xfs_sync_inodes_ag
