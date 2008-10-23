@@ -1,47 +1,37 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 15:28:42 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9NMSQG7013386
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 15:28:26 -0700
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
-	by relay1.corp.sgi.com (Postfix) with SMTP id E73678F8115
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 15:30:09 -0700 (PDT)
-Received: from [134.15.251.4] (melb-sw-corp-251-4.corp.sgi.com [134.15.251.4]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id JAA15139 for <xfs@oss.sgi.com>; Fri, 24 Oct 2008 09:30:08 +1100
-Message-ID: <490108E6.7060502@sgi.com>
-Date: Fri, 24 Oct 2008 09:29:42 +1000
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 15:46:41 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9NMUa9H013781
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 15:30:38 -0700
+Date: Thu, 23 Oct 2008 18:32:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Fwd: [xfs-masters] [Bug 11813] New: xfs filesystem exported
+	via nfs don't work in 2.6.27.3]
+Message-ID: <20081023223221.GA32629@infradead.org>
+References: <4900F34C.2090205@sgi.com>
 MIME-Version: 1.0
-Subject: XFS performance tracking and regression monitoring
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4900F34C.2090205@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: Mark Goodwin <markgw@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>, francois.valenduc@tvcablenet.be
 
+On Fri, Oct 24, 2008 at 07:57:32AM +1000, Mark Goodwin wrote:
+> looks like we better do something urgently to fix this.
+> Any suggestions Christoph?
 
-We're about to deploy a system+jbod dedicated for performance
-regression tracking. The idea is to build the XFS dev branch
-nightly, run a bunch of self contained benchmarks, and generate
-a progressive daily report - date on the X-axis, with (perhaps)
-wallclock runtime on the y-axis.
+Francois Valenduc wrote on Bugzilla:
+> With kernel 2.6.27.3, it's impossible to use a xfs filesystem  exported via
+> NFS. I am using gentoo and I share a portage tree mounted on an xfs  
+> filesystem
+> via NFS. Each time packages are fetched, the emerge process is blocked. It
+> seems the problematic commit is the following:
+>
+> commit c068663ae65e507814545b59a8e2090f48a85613
 
-The aim is to track relative XFS performance on a daily basis
-for various workloads on identical h/w. If each workload runs for
-approx the same duration, the reports can all share the same
-generic y-axis. THe long term trend should have a positive
-gradient. Regressions can be date correlated with commits.
-
-Comments, benchmark suggestions? ANyone already running this?
-Know of a test harness and/or report generator? Or will we
-just roll our own - seems conceptually fairly simple.
-
-Thanks
-
--- 
-
-  Mark Goodwin                                  markgw@sgi.com
-  Engineering Manager for XFS and PCP    Phone: +61-3-99631937
-  SGI Australian Software Group           Cell: +61-4-18969583
--------------------------------------------------------------
+I can't reproduce this, and intuitively this doesn't make sense.
+The symptoms are the ones one would see due to the bug that is fixed by
+this commit.
