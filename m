@@ -1,143 +1,59 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 21:52:11 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9O4q42f007296
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 21:52:04 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D3E3538372
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 21:52:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id eUPYpkXHBKmxRPud for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 21:52:02 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id A6F44AC359B
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 23:01:11 -0500 (CDT)
-Message-ID: <49014887.6050309@sandeen.net>
-Date: Thu, 23 Oct 2008 23:01:11 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 22:24:40 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9O5OVU7008479
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 22:24:32 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A3CB1B16630
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 22:24:27 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id ZmZsmeaZwG3LhKLt for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 22:24:27 -0700 (PDT)
+Date: Fri, 24 Oct 2008 16:24:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock with latest xfs
+Message-ID: <20081024052418.GO25906@disturbed>
+References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH 3/2] delalloc support for xfs fiemap
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49013C47.4090601@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-Ok, got the kinks worked out of the delalloc portion of the
-fiemap hookup I think.
+On Fri, Oct 24, 2008 at 01:08:55PM +1000, Lachlan McIlroy wrote:
+> Christoph Hellwig wrote:
+>> On Thu, Oct 23, 2008 at 07:17:30PM +1000, Lachlan McIlroy wrote:
+>>> another problem with latest xfs
+>>
+>> Is this with the 2.6.27-based ptools/cvs tree or with the 2.6.28 based
+>> git tree?  It does looks more like a VM issue than a XFS issue to me.
+>>
+>
+> It's with the 2.6.27-rc8 based ptools tree.  Prior to checking
+> in these patches:
+>
+> Can't lock inodes in radix tree preload region
+> stop using xfs_itobp in xfs_bulkstat
+> free partially initialized inodes using destroy_inode
+>
+> I was able to stress a system for about 4 hours before it ran out
+> of memory.  Now I hit the deadlock within a few minutes.  I need
+> to roll back to find which patch changed the behaviour.
 
-This introduces a new input flag (BMV_IF_DELALLOC) and output
-flag (BMV_OF_DELALLOC) to request & show the delayed allocation
-segments.
+Does it go away when you add the "XFS: Fix race when looking up
+reclaimable inodes" I sent this morning?
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Also, is there a thread stuck in xfs_setfilesize() waiting on an
+ilock during I/O completion?
 
-Index: linux-2.6.27.x86_64/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6.27.x86_64.orig/fs/xfs/linux-2.6/xfs_iops.c
-+++ linux-2.6.27.x86_64/fs/xfs/linux-2.6/xfs_iops.c
-@@ -685,6 +685,10 @@ STATIC int xfs_fiemap_format(
- 
- 	if (bmv->bmv_oflags & BMV_OF_PREALLOC)
- 		fiemap_flags |= FIEMAP_EXTENT_UNWRITTEN;
-+	else if (bmv->bmv_oflags & BMV_OF_DELALLOC) {
-+		fiemap_flags |= FIEMAP_EXTENT_DELALLOC;
-+		physical = 0;   /* no block yet */
-+	}
- 	if (bmv->bmv_oflags & BMV_OF_LAST)
- 		fiemap_flags |= FIEMAP_EXTENT_LAST;
- 
-@@ -722,6 +726,8 @@ xfs_vn_fiemap(
- 	bm.bmv_iflags = BMV_IF_PREALLOC;
- 	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
- 		bm.bmv_iflags |= BMV_IF_ATTRFORK;
-+	if (!(fieinfo->fi_flags & FIEMAP_FLAG_SYNC))
-+		bm.bmv_iflags |= BMV_IF_DELALLOC;
- 
- 	error = xfs_getbmap(ip, &bm, xfs_fiemap_format, fieinfo);
- 	if (error)
-Index: linux-2.6.27.x86_64/fs/xfs/xfs_bmap.c
-===================================================================
---- linux-2.6.27.x86_64.orig/fs/xfs/xfs_bmap.c
-+++ linux-2.6.27.x86_64/fs/xfs/xfs_bmap.c
-@@ -5827,6 +5827,7 @@ xfs_getbmap(
- 						 * preallocated data space */
- 	int			sh_unwritten;	/* true, if unwritten */
- 						/* extents listed separately */
-+	int			sh_delalloc;	/* show delayed extents */
- 	int			iflags;		/* interface flags */
- 	int			bmapi_flags;	/* flags for xfs_bmapi */
- 
-@@ -5835,6 +5836,7 @@ xfs_getbmap(
- 
- 	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
- 	sh_unwritten = (iflags & BMV_IF_PREALLOC) != 0;
-+	sh_delalloc = (iflags & BMV_IF_DELALLOC) != 0;
- 
- 	/*	If the BMV_IF_NO_DMAPI_READ interface bit specified, do not
- 	 *	generate a DMAPI read event.  Otherwise, if the DM_EVENT_READ
-@@ -5905,7 +5907,7 @@ xfs_getbmap(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 
--	if (whichfork == XFS_DATA_FORK &&
-+	if (!sh_delalloc && (whichfork == XFS_DATA_FORK) &&
- 		(ip->i_delayed_blks || ip->i_size > ip->i_d.di_size)) {
- 		/* xfs_fsize_t last_byte = xfs_file_last_byte(ip); */
- 		error = xfs_flush_pages(ip, (xfs_off_t)0,
-@@ -5938,9 +5940,11 @@ xfs_getbmap(
- 
- 	bmv->bmv_entries = 0;
- 
--	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0) {
--		error = 0;
--		goto unlock_and_return;
-+	if ((XFS_IFORK_NEXTENTS(ip, whichfork) == 0)) {
-+		if (!sh_delalloc || whichfork == XFS_ATTR_FORK) {
-+			error = 0;
-+			goto unlock_and_return;
-+		}
- 	}
- 
- 	nexleft = nex;
-@@ -5956,12 +5960,16 @@ xfs_getbmap(
- 		ASSERT(nmap <= subnex);
- 
- 		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
--			out.bmv_oflags = (map[i].br_state == XFS_EXT_UNWRITTEN) ?
--					BMV_OF_PREALLOC : 0;
-+			out.bmv_oflags = 0;
-+			if (map[i].br_state == XFS_EXT_UNWRITTEN)
-+				out.bmv_oflags |= BMV_OF_PREALLOC;
-+			else if (map[i].br_startblock == DELAYSTARTBLOCK)
-+				out.bmv_oflags |= BMV_OF_DELALLOC;
- 			out.bmv_offset = XFS_FSB_TO_BB(mp, map[i].br_startoff);
- 			out.bmv_length = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
- 			out.bmv_unused1 = out.bmv_unused2 = 0;
--			ASSERT(map[i].br_startblock != DELAYSTARTBLOCK);
-+			ASSERT(sh_delalloc ||
-+			      (map[i].br_startblock != DELAYSTARTBLOCK));
-                         if (map[i].br_startblock == HOLESTARTBLOCK &&
- 			    whichfork == XFS_ATTR_FORK) {
- 				/* came to the end of attribute fork */
-Index: linux-2.6.27.x86_64/fs/xfs/xfs_fs.h
-===================================================================
---- linux-2.6.27.x86_64.orig/fs/xfs/xfs_fs.h
-+++ linux-2.6.27.x86_64/fs/xfs/xfs_fs.h
-@@ -113,10 +113,13 @@ struct getbmapx {
- #define BMV_IF_ATTRFORK		0x1	/* return attr fork rather than data */
- #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
- #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
--#define BMV_IF_VALID	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC)
-+#define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
-+#define BMV_IF_VALID	\
-+	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|BMV_IF_DELALLOC)
- 
- /*	bmv_oflags values - returned for for each non-header segment */
- #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define BMV_OF_DELALLOC		0x2	/* segment = delayed allocation */
- #define BMV_OF_LAST		0x4	/* segment is the last in the file */
- 
- /*
+i.e. did the log hang because I/O completion is stuck waiting on
+an ilock that is held by a thread waiting on I/O completion?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
