@@ -1,113 +1,93 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 23:08:21 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9O68BfJ011108
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 23:08:13 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81D19538780
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 23:08:10 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id G39SoEeukCGtC8Ly for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 23:08:10 -0700 (PDT)
-Date: Fri, 24 Oct 2008 17:08:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] Re: atime not written to disk
-Message-ID: <20081024060806.GJ18495@disturbed>
-References: <48FD74CC.907@sgi.com> <48FD7B69.3090600@wm.jp.nec.com> <20081022081710.GL18495@disturbed> <ncctzb4nhss.fsf@itchy.melbourne.sgi.com> <20081023042053.GY18495@disturbed> <nccmygumu2w.fsf@itchy.melbourne.sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 23 Oct 2008 23:12:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9O6CjO6011421
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2008 23:12:45 -0700
+Message-ID: <4901754D.9020109@sgi.com>
+Date: Fri, 24 Oct 2008 17:12:13 +1000
+From: Mark Goodwin <markgw@sgi.com>
+Reply-To: markgw@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <nccmygumu2w.fsf@itchy.melbourne.sgi.com>
+Subject: Re: XFS performance tracking and regression monitoring
+References: <490108E6.7060502@sgi.com> <20081024035411.GH18495@disturbed>
+In-Reply-To: <20081024035411.GH18495@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Niv Sardi <xaiki@sgi.com>
-Cc: Utako Kusaka <u-kusaka@wm.jp.nec.com>, Timothy Shimmin <tes@sgi.com>, xfs <xfs@oss.sgi.com>
+To: Mark Goodwin <markgw@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Oct 24, 2008 at 04:37:59PM +1100, Niv Sardi wrote:
-> Dave Chinner <david@fromorbit.com> writes:
+
+
+Dave Chinner wrote:
+> On Fri, Oct 24, 2008 at 09:29:42AM +1000, Mark Goodwin wrote:
+>> We're about to deploy a system+jbod dedicated for performance
+>> regression tracking. The idea is to build the XFS dev branch
+>> nightly, run a bunch of self contained benchmarks, and generate
+>> a progressive daily report - date on the X-axis, with (perhaps)
+>> wallclock runtime on the y-axis.
 > 
-> > On Thu, Oct 23, 2008 at 01:53:23PM +1100, Niv Sardi wrote:
-> >> Dave Chinner <david@fromorbit.com> writes:
-> >> [...]
-> >> > As I mentioned on IRC, Tim, the following patch fixes the above test
-> >> > case. It will make XFS behave like other filesystems w.r.t. atime,
-> >> > instead of defaulting to relatime-like behaviour. This will have
-> >> > performance impact unless ppl now add the relatime mount option.
-> >>  ^^^^^^^^^^^^^^^^^^^
-> >> 
-> >> I don't really like it, and don't think there is a real justification to
-> >> do it.
-> >
-> > You probably missed the context of that patch (which I mentioned on
-> > IRC to Tim).
+> wallclock runtime is not indicative of relative performance
+> for many benchmarks. e.g. dbench runs for a fixed time and
+> then gives a throughput number as it's output. It's the throughput
+> you want to compare.....
+
+either, or. Both are differential. I want to keep this really simple,
+just provide high level tracking on *when* a performance regression
+may have been introduced but only with broad indicators. I don't
+think anyone is regularly tracking this for XFS and we should be.
+
+>> The aim is to track relative XFS performance on a daily basis
+>> for various workloads on identical h/w. If each workload runs for
+>> approx the same duration, the reports can all share the same
+>> generic y-axis. THe long term trend should have a positive
+>> gradient.
 > 
-> Thank you for the refresh.
+> If you are measuring walltime, then you should see a negative
+> gradient as an indication of improvement....
+
+yes :)  what I ment, but was thinking "positively"
+
+>> Regressions can be date correlated with commits.
 > 
-> > That was that it is part of a larger patch set that tracks dirty state
-> > in the XFS inode radix tree. In that case, the ->dirty_inode callout
-> > is used to set a tag in the per-ag inode radix tree. I want to
-> > do it this way so there is a single place that the dirty tag
-> > is set, whether it is due to an unlogged change (XFS or VFS) or
-> > a transaction commit....
+> For the benchmarks to be useful as regression tests, then the
+> harness really needs to be profiling and gathering statistics at the
+> same time so that we might be able to determine what caused the
+> regression...
+
+I would regard that as follow-up once an issue has been identified.
+My proposal is too simple to be useful for diagnosis, but it should
+be enough to provide heads-up. That's the aim to start with. The same
+h/w can also be set up for more sophisticated measurements in the
+longer term.
+
+>> Comments, benchmark suggestions?
 > 
-> So, to refrase, you have a patchset, that will use that callback better,
-> and then we will not need the patch you actually sent ? why not wait for
-> that patchset, this is not exactly a critical bug…
-
-No, that patch is part of the patchset. In fact - it's the first
-patch in the patchset of 4 patches. The following patches are:
-
-xfs-iradix-set-dirty-tag
-xfs-iradix-use-dirty-tag-for-clustering
-xfs-iradix-use-dirty-tag-for-sync
-
-i.e. using the radix tree for finding sequential dirty inode
-clusters for writeback....
-
-It's not complete yet, because I'm trying to decide if it is better
-to avoid inode writeback from ->write_inode altogether and only do
-optimised ascending order inode writeback from from
-xfs_sync_inodes() and/or AIL tail pushing....
-
-> >> Why not only do:
-> […]
-> > This doesn't avoid the performance problem - it simply shifts it to
-> > the reclaim code.  Think about it - you traverse a million inodes
-> > stat()ing them all (the nightly backup). Instead of having the now
-> > dirty inodes written back as you go along, you wait until memory
-> > reclaim turfs them out to mark them dirty and then write them back.
-> > This means memory reclaim goes *much slower* because reclaiming the
-> > memory now has to wait for I/O to complete.
+> The usual set - bonnie++, postmark, ffsb, fio, sio, etc.
 > 
-> yep, I just read the code, do we have a way to know that we are
-> unmounting ? maybe the good way to do it is to only write atime on
-> unmount ? the call trace is:
+> Then some artificial tests that stress scalability like speed of
+> creating 1m small files with long names in a directory, the speed of
+> a cold cache read of the directory, the speed of a hot-cache read of
+> the directory, time to stat all the files (cold and hot cache),
+> time to remove all the files, etc. And then how well it scales
+> as you do this with more threads and directories in parallel...
 
-	if (!(sb->s_flags & MS_ACTIVE)) {
-		/* we are unmounting */
-	}
+yeah OK, bits and pieces of the the above, enough to provide broad
+heads-up.
 
-Even so, we don't want unmount to take hours - especially in the
-situation that unmounts that would trigger this problem often occur
-in planned maintenance windows that aren't hours long.....
+>> ANyone already running this?
+>> Know of a test harness and/or report generator?
+> 
+> Perhap you might want to look more closely at FFSB - it has a
+> fairly interesting automated test harness. e.g. it was used to
+> produce these:
+> 
+> http://btrfs.boxacle.net/
+> 
+> And you can probably set up custom workloads to cover all the things
+> that the standard benchmarks do.....
 
-> I'm concerned about the overhead, with your patch, that we'll be
-> writting things even if nothing has changed, not sure about how many
+I'll poke around on those pages for some ideas.
 
-We'll won't write an inode if it hasn't changed. The VFS calling
-mark_inode_dirty_sync() is not "nothing".
-
-> times ->dirty_inodes is called and such. I don't like the idea to slow
-> things down for everyone or force people to use realtime
-
-I didn't suggest we force ppl to use relatime - I suggested that we
-default to it behind the covers and then pay attention to all dirty
-events coming form the VFS. This should result in practically no
-increase in the number of atime-only inode writes....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks for the reply.
