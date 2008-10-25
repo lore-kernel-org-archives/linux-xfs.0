@@ -1,42 +1,49 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 13:27:27 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PKRKmt030762
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:20 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB3ED12A97C6
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:20 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id sJjoKxFTt42GXciE for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:20 -0700 (PDT)
-Message-ID: <49038127.8010608@sandeen.net>
-Date: Sat, 25 Oct 2008 15:27:19 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 13:27:51 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PKRicK030988
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:44 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 216C6147F6CD
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:44 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id eB0qpenFAPX2RGTo for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:27:44 -0700 (PDT)
+Date: Sat, 25 Oct 2008 16:27:43 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2 v2] convert xfs_getbmap to take formatter functions
+Message-ID: <20081025202743.GH28002@infradead.org>
+References: <49031E81.7040807@sandeen.net> <49032017.6070408@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] clean up printk formats with DMAPI_DEBUG
-References: <49031BB1.7080609@sandeen.net> <20081025202005.GC28002@infradead.org>
-In-Reply-To: <20081025202005.GC28002@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49032017.6070408@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Sat, Oct 25, 2008 at 08:14:25AM -0500, Eric Sandeen wrote:
->>  #ifdef CONFIG_DMAPI_DEBUG
->> -	printk("xfs_dm_round_hole: off %lu, len %ld, align %lu, "
->> -	       "filesize %llu, roff %ld, rlen %ld\n",
->> +	printk("xfs_dm_round_hole: off %lld, len %llu, align %llu, "
->> +	       "filesize %lld, roff %lld, rlen %llu\n",
->>  	       offset, length, align, filesize, *roff, *rlen);
-> 
-> We'd still need casts to (unsigned) long long because the 64 bit
-> types may be either variant on 64 bit platforms.
-> 
+> +int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled)
+> +{
+> +	*filled = 0;
+> +	if (copy_to_user(*ap, bmv, sizeof(struct getbmapx)))
+> +		return XFS_ERROR(EFAULT);
+> +
+> +	*ap += sizeof(struct getbmapx);
+> +	*filled = 1;
+> +	return 0;
+> +}
+> +
+> +int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled)
+> +{
+> +	*filled = 0;
+> +	/* copy only getbmap portion (not getbmapx) */
+> +	if (copy_to_user(*ap, bmv, sizeof(struct getbmap)))
+> +		return XFS_ERROR(EFAULT);
+> +
+> +	*ap += sizeof(struct getbmap);
+> +	*filled = 1;
+> +	return 0;
+> +}
 
-Ah crud you're right, I forgot that s64 was sometimes just a "long"
-
-Bah; is there no format that does this cleanly? :)
-
--Eric
+Probably makes sense to have these two helpers in xfs_ioctl.c, where
+they are used, similar to how fiemap is implemented.
