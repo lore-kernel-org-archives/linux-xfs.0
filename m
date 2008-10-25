@@ -1,76 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 06:07:33 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 06:14:37 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PD7RPb022076
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:07:27 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PDERh5022737
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:14:28 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8215812A7E6C
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:07:26 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id mQnrrXwMZtZZURGy for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:07:26 -0700 (PDT)
-Message-ID: <49031A0D.9040906@sandeen.net>
-Date: Sat, 25 Oct 2008 08:07:25 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E91912A7EAA
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:14:26 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id SknobNglz4EaEVxH for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:14:26 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 67289A9ABFF
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 08:14:26 -0500 (CDT)
+Message-ID: <49031BB1.7080609@sandeen.net>
+Date: Sat, 25 Oct 2008 08:14:25 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_db: out of memory (2.9.8)
-References: <alpine.DEB.1.10.0810250801360.5019@p34.internal.lan> <4903161D.9040204@sandeen.net> <alpine.DEB.1.10.0810250855430.5734@p34.internal.lan>
-In-Reply-To: <alpine.DEB.1.10.0810250855430.5734@p34.internal.lan>
+Subject: [PATCH] clean up printk formats with DMAPI_DEBUG
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Justin Piszcz wrote:
-> 
-> On Sat, 25 Oct 2008, Eric Sandeen wrote:
-> 
->> Justin Piszcz wrote:
->>> For the root partition I get "out of memory" when I try to check for
->>> fragmentation.
->>>
->>> # xfs_db -c frag -f /dev/md2
->>> xfs_db: out of memory
->> "-f" means "stored in a file"
->>
->>> # mount | grep "/dev/md2"
->>> /dev/md2 on / type xfs (rw,noatime)
->> It looks like you're cheating your way around:
->>
->> xfs_db: /dev/md2 contains a mounted filesystem
->>
->> fatal error -- couldn't initialize XFS library
->>
->> I'm not sure if that matters in this respect, though.
->>
->> You could use gdb to find out which allocation is failing.
->>
->>> # xfs_db -V
->>> xfs_db version 2.9.8
->>>
->>> Any idea?
->> Don't worry so much about that fragmentation stat? :)
->>
->> -Eric
->>
->>> Justin.
->>>
->>>
-> 
-> .. but it used to work :(
+Trivial cleanup of formats.
 
-if you can find out when it changed, maybe it can change back.
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> Loaded symbols for /lib/libgcc_s.so.1
-> Error while mapping shared library sections:
-> ease: No such file or directory.
-> (no debugging symbols found)
-
-... so the output isn't so useful here
-
-> mmap(NULL, 31221911552, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = -1 ENOMEM (Cannot allocate memory)
-
-32G...
-
--Eric
+Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+@@ -2334,8 +2334,8 @@ xfs_dm_round_hole(
+ 			return -EINVAL; /* requested length is too small */
+ 	}
+ #ifdef CONFIG_DMAPI_DEBUG
+-	printk("xfs_dm_round_hole: off %lu, len %ld, align %lu, "
+-	       "filesize %llu, roff %ld, rlen %ld\n",
++	printk("xfs_dm_round_hole: off %lld, len %llu, align %llu, "
++	       "filesize %lld, roff %lld, rlen %llu\n",
+ 	       offset, length, align, filesize, *roff, *rlen);
+ #endif
+ 	return 0; /* hole geometry successfully rounded */
+@@ -2467,7 +2467,7 @@ xfs_dm_punch_hole(
+ 	}
+ 
+ #ifdef CONFIG_DMAPI_DEBUG
+-	printk("xfs_dm_punch_hole: off %lu, len %ld, align %lu\n",
++	printk("xfs_dm_punch_hole: off %lld, len %llu, align %llu\n",
+ 		off, len, align);
+ #endif
+ 
