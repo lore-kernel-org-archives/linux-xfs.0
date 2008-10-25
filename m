@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 06:26:39 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 06:33:21 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PDQVaA023925
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:26:32 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PDXDrO024557
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:33:14 -0700
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EB9A12A82CB
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:26:30 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id VDK7tO71TpinaXMQ for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:26:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FE9E12A8503
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:33:12 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id sHPC5DjX1fVNrxHP for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 06:33:12 -0700 (PDT)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 4968EA9ABC8
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 08:26:30 -0500 (CDT)
-Message-ID: <49031E81.7040807@sandeen.net>
-Date: Sat, 25 Oct 2008 08:26:25 -0500
+	by sandeen.net (Postfix) with ESMTP id 52503A9ABD3
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 08:33:12 -0500 (CDT)
+Message-ID: <49032017.6070408@sandeen.net>
+Date: Sat, 25 Oct 2008 08:33:11 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/2 v2] hook xfs to fiemap ioctl
+Subject: [PATCH 1/2 v2] convert xfs_getbmap to take formatter functions
+References: <49031E81.7040807@sandeen.net>
+In-Reply-To: <49031E81.7040807@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -24,348 +26,311 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
 
-Update & resend, including some checkpatch fixes, a bugfix, and 
-incorporating some of Christoph's and Dave's comments.
+Preliminary work to hook up fiemap, this allows us to pass in an
+arbitrary formatter to copy extent data back to userspace.
 
-Also, here's a very hacky (don't laugh!) test app.  I'll clean it
-up at some point :)
+The formatter takes info for 1 extent, a pointer to the user "thing*"
+and a pointer to a "filled" variable to indicate whether a userspace
+buffer did get filled in (for fiemap, hole "extents" are skipped).
 
--Eric
+I'm just using the getbmapx struct as a "common denominator" because
+as far as I can see, it holds all info that any formatters will care
+about.
 
-------------
+("*thing" because fiemap doesn't pass the user pointer around, but rather
+has a pointer to a fiemap info structure, and helpers associated with it)
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/vfs.h>
-#include <ext2fs/ext2_types.h>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-/*************************************************/
-/* All this should come from fiemap.h eventually */
-struct fiemap_extent {
-        __u64 fe_logical;  /* logical offset in bytes for the start of
-                            * the extent from the beginning of the file */
-        __u64 fe_physical; /* physical offset in bytes for the start
-                            * of the extent from the beginning of the disk */
-        __u64 fe_length;   /* length in bytes for this extent */
-        __u64 fe_reserved64[2];
-        __u32 fe_flags;    /* FIEMAP_EXTENT_* flags for this extent */
-        __u32 fe_reserved[3];
-};
-
-struct fiemap {
-        __u64 fm_start;         /* logical offset (inclusive) at
-                                 * which to start mapping (in) */
-        __u64 fm_length;        /* logical length of mapping which
-                                 * userspace wants (in) */
-        __u32 fm_flags;         /* FIEMAP_FLAG_* flags for request (in/out) */
-        __u32 fm_mapped_extents;/* number of extents that were mapped (out) */
-        __u32 fm_extent_count;  /* size of fm_extents array (in) */
-        __u32 fm_reserved;
-        struct fiemap_extent fm_extents[0]; /* array of mapped extents (out) */
-};
-
-#define FIEMAP_MAX_OFFSET       (~0ULL)
-
-#define FIEMAP_FLAG_SYNC        0x00000001 /* sync file data before map */
-#define FIEMAP_FLAG_XATTR       0x00000002 /* map extended attribute tree */
-
-#define FIEMAP_FLAGS_COMPAT     (FIEMAP_FLAG_SYNC | FIEMAP_FLAG_XATTR)
-
-#define FIEMAP_EXTENT_LAST              0x00000001 /* Last extent in file. */
-#define FIEMAP_EXTENT_UNKNOWN           0x00000002 /* Data location unknown. */
-#define FIEMAP_EXTENT_DELALLOC          0x00000004 /* Location still pending.
-                                                    * Sets EXTENT_UNKNOWN. */
-#define FIEMAP_EXTENT_ENCODED           0x00000008 /* Data can not be read
-                                                    * while fs is unmounted */
-#define FIEMAP_EXTENT_DATA_ENCRYPTED    0x00000080 /* Data is encrypted by fs.
-                                                    * Sets EXTENT_NO_BYPASS. */
-#define FIEMAP_EXTENT_NOT_ALIGNED       0x00000100 /* Extent offsets may not be
-                                                    * block aligned. */
-#define FIEMAP_EXTENT_DATA_INLINE       0x00000200 /* Data mixed with metadata.
-                                                    * Sets EXTENT_NOT_ALIGNED.*/
-#define FIEMAP_EXTENT_DATA_TAIL         0x00000400 /* Multiple files in block.
-                                                    * Sets EXTENT_NOT_ALIGNED.*/
-#define FIEMAP_EXTENT_UNWRITTEN         0x00000800 /* Space allocated, but
-                                                    * no data (i.e. zero). */
-#define FIEMAP_EXTENT_MERGED            0x00001000 /* File does not natively
-                                                    * support extents. Result
-                                                    * merged for efficiency. */
-
-#define FIGETBSZ	_IO(0x00, 2)    /* get the block size used for bmap */
-#define FS_IOC_FIEMAP			_IOWR('f', 11, struct fiemap)
-// #define FS_IOC_FIECOUNT			_IOWR('f', 12, struct fiecount)
-
-/* End of what should be coming from fiemap.h */
-/**********************************************/
-
-
-void usage(void)
-{
-	printf("Usage: fiemap [-vrSCL] [-s start] [-l length] [-c buf count] [-m max] filename\n");
-	printf("  -v        : verbose mode\n");
-	printf("  -r        : raw output: print raw ioctl structure values\n");
-	printf("  -S        : set FIEMAP_FLAG_SYNC to sync before mapping\n");
-	printf("  -C        : set FIEMAP_FLAG_NUM_EXTENTS to only get extent count, not mapping\n");
-	printf("  -X        : set FIEMAP_FLAG_XATTR to report xattr mapping\n");
-	printf("  -s start  : start of mapping in bytes (default 0)\n");
-	printf("  -l length : length of mapping in bytes (default to end of file)\n");
-	printf("  -c count  : count of extents in ioctl input structure (default 32)\n");
-	printf("  -m max    : max nr of ioctls to call before exit (default 512)\n");
-	exit(EXIT_FAILURE);
-}
-
-#define EXABYTES(x)     ((long long)(x) << 60)
-#define PETABYTES(x)    ((long long)(x) << 50)
-#define TERABYTES(x)    ((long long)(x) << 40)
-#define GIGABYTES(x)    ((long long)(x) << 30)
-#define MEGABYTES(x)    ((long long)(x) << 20)
-#define KILOBYTES(x)    ((long long)(x) << 10)
-
-long long
-cvtnum(char *s)
-{
-	long long	i;
-	char		*sp;
-	int		c;
-
-	i = strtoll(s, &sp, 0);
-	if (i == 0 && sp == s)
-		return -1LL;
-	if (*sp == '\0')
-		return i;
-	if (sp[1] != '\0')
-		return -1LL;
-
-	c = tolower(*sp);
-	switch (c) {
-	case 'k':
-		return KILOBYTES(i);
-	case 'm':
-		return MEGABYTES(i);
-	case 'g':
-		return GIGABYTES(i);
-	case 't':
-		return TERABYTES(i);
-	case 'p':
-		return PETABYTES(i);
-	case 'e':
-		return  EXABYTES(i);
-	}
-
-	return -1LL;
-}
-
-void show_extents_table(struct fiemap *fiemap, int blocksize, int start_extent, int *is_last)
-{
-	unsigned int	i;
-
-	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-		__u64	logical = fiemap->fm_extents[i].fe_logical;
-		__u64	phys = fiemap->fm_extents[i].fe_physical;
-		__u64	length = fiemap->fm_extents[i].fe_length;
-		int	flags = fiemap->fm_extents[i].fe_flags;
-		__u64	last_logical = 0;
-
-		if (i) {
-			last_logical =
-				fiemap->fm_extents[i-1].fe_logical +
-				fiemap->fm_extents[i-1].fe_length - 1;
-		}
-
-		printf("ext: %3u logical: [%8llu..%8llu] phys: %8llu..%8llu flags: 0x%03X tot: %llu\n",
-			i + start_extent,
-			logical / blocksize,
-			(logical + length - 1) / blocksize,
-			phys / blocksize,
-			(phys + length - 1) / blocksize,
-			flags,
-			(length / blocksize));
-
-		if (fiemap->fm_extents[i].fe_flags & FIEMAP_EXTENT_LAST) {
-			*is_last = 1;
-			break; /* XXX should we?  or should look for exents filled in past last? */
-		}
-	}
-
-	if (fiemap->fm_mapped_extents < fiemap->fm_extent_count)
-		*is_last = 1;
-}
-
-void show_extents_raw(struct fiemap *fiemap, int start_extent, int *is_last)
-{
-	unsigned int	i;
-
-	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-		printf("Extent %3u: logical: %10lld physical: %10lld length: %10lld flags 0x%03X\n",
-			i + start_extent,
-			fiemap->fm_extents[i].fe_logical,
-			fiemap->fm_extents[i].fe_physical,
-			fiemap->fm_extents[i].fe_length,
-			fiemap->fm_extents[i].fe_flags);
-
-		if (fiemap->fm_extents[i].fe_flags & FIEMAP_EXTENT_LAST) {
-			*is_last = 1;
-			break;
-			/* XXX should we?  or should look for extents wrongly filled in past last? */
-		}
-	}
-
-	if (fiemap->fm_mapped_extents < fiemap->fm_extent_count)
-		*is_last = 1;
-}
-
-int main(int argc, char**argv)
-{
-	int	blocksize = 0;	/* filesystem blocksize */
-	uint	count = 32;	/* extent count */
-	int	fd;		/* file descriptor */
-	int	last = 0;	/* last extent found */
-	int	xattr = 0;	/* return xattr mapping */
-	int	maxioctls = 512; /* max ioctls to try */
-	int	opt;
-	int	rc;
-	int	raw = 0;	/* raw output format */
-	int	sync = 0;	/* sync file before mapping */
-	int	verbose = 0;	/* verbose output */
-	char	*fname;		/* filename to map */
-	char	*fiebuf;	/* fiemap buffer / ioctl argument */
-	__u64	lstart = 0;	/* logical input mapping start */
-	__u64	llength = ~0ULL;/* logical input mapping length */
-	uint	start_ext = 0;	/* starting extent nr. for this batch */
-	__u32	flags = 0;
-	struct fiemap *fiemap;
-
-
-	/* XXX er, can llength be ~0ULL if start > 0? */
-	while ((opt = getopt(argc, argv, "s:l:c:m:rSCLXv")) != -1) {
-		switch(opt) {
-		/* logical mapping offset */
-		case 's':
-			lstart = cvtnum(optarg);
-			break;
-		/* logical mapping length */
-		case 'l':
-			llength = cvtnum(optarg);
-			break;
-		/* count of extent buffers to send */
-		case 'c':
-			count = atoi(optarg);
-			break;
-		/* max nr. of ioctls to try (safety net) */
-		case 'm':
-			maxioctls = atoi(optarg);
-			break;
-		/* raw format output */
-		case 'r':
-			raw++;
-			break;
-		/* sync file before mapping */
-		case 'S':
-			sync++;
-			break;
-		/* return extents for xattrs */
-		case 'X':
-			xattr++;
-			break;
-		/* be verbose */
-		case 'v':
-			verbose++;
-			break;
-		default:
-			usage();
-		}
-	}
-
-	fname = argv[optind++];
-	if (!fname)
-		usage();
-
-	/* Set the flags for the header */
-	if (sync)
-		flags |= FIEMAP_FLAG_SYNC;
-	if (xattr)
-		flags |= FIEMAP_FLAG_XATTR;
-
-	/* The whole buffer, extent maps and all */
-	fiebuf = malloc(sizeof (struct fiemap) + (count * sizeof(struct fiemap_extent)));
-	if (!fiebuf) {
-		perror("Could not allocate fiemap buffers");
-		exit(1);
-	}
-
-	/* set up the header */
-	fiemap = (struct fiemap *)fiebuf;
-
-	fiemap->fm_start = lstart;
-	fiemap->fm_length = llength;
-	fiemap->fm_flags = flags;
-	fiemap->fm_extent_count = count;
-	fiemap->fm_mapped_extents = 0;	/* output only */
-
-	fd = open(fname, O_RDONLY);
-	if (fd < 0) {
-		perror("Can't open file");
-		exit(1);
-	}
-
-	if (ioctl(fd, FIGETBSZ, &blocksize) < 0) {
-		perror("Can't get block size");
-		close(fd);
-		return;
-	}
-
-	do {
-		if (verbose)
-			printf("Input:  start %llu length %llu flags 0x%X count %u\n",
-				fiemap->fm_start, fiemap->fm_length,
-				fiemap->fm_flags, fiemap->fm_extent_count);
-
-		rc = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-		if (rc < 0) {
-			perror("FIEMAP ioctl failed");
-			printf("flags 0x%x\n", fiemap->fm_flags);
-			close(fd);
-			exit(1);
-		}
-		if (verbose)
-			printf("Output: start %llu length %llu flags 0x%X count %u mapped %u\n",
-				fiemap->fm_start, fiemap->fm_length,
-				fiemap->fm_flags, fiemap->fm_extent_count,
-				fiemap->fm_mapped_extents);
-
-		if (raw)
-			show_extents_raw(fiemap, start_ext, &last);
-		else
-			show_extents_table(fiemap, blocksize, start_ext, &last);
-
-		if (!last) {
-			int last_map = fiemap->fm_mapped_extents - 1;
-			__u64 foo;	/* XXX Ummmm */
-
-			foo = fiemap->fm_extents[last_map].fe_logical +
-				fiemap->fm_extents[last_map].fe_length;
-			/* Set up the next call arguments */ /* move to top */
-			fiemap->fm_start = foo;
-			fiemap->fm_length = lstart + llength - foo;
-			fiemap->fm_extent_count = count;
-		}
-
-		/* keeps track of extent nrs. we've printed; rather, pass by value! */
-		start_ext += fiemap->fm_mapped_extents;
-
-		/* XXX need to stop if we've reached what we asked for */
-		maxioctls--;
-
-	} while (!last && maxioctls > 0);
-
-
-	close(fd);
-
-	return 0;
-}
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.c
++++ linux-2.6-xfs/fs/xfs/xfs_bmap.c
+@@ -5805,9 +5805,9 @@ error0:
+ STATIC int
+ xfs_getbmapx_fix_eof_hole(
+ 	xfs_inode_t		*ip,		/* xfs incore inode pointer */
+-	struct getbmap		*out,		/* output structure */
++	struct getbmapx		*out,		/* output structure */
+ 	int			prealloced,	/* this is a file with
+-						* preallocated data space */
++						 * preallocated data space */
+ 	__int64_t		end,		/* last block requested */
+ 	xfs_fsblock_t		startblock)
+ {
+@@ -5832,15 +5832,38 @@ xfs_getbmapx_fix_eof_hole(
+ 	return 1;
+ }
+ 
++int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled)
++{
++	*filled = 0;
++	if (copy_to_user(*ap, bmv, sizeof(struct getbmapx)))
++		return XFS_ERROR(EFAULT);
++
++	*ap += sizeof(struct getbmapx);
++	*filled = 1;
++	return 0;
++}
++
++int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled)
++{
++	*filled = 0;
++	/* copy only getbmap portion (not getbmapx) */
++	if (copy_to_user(*ap, bmv, sizeof(struct getbmap)))
++		return XFS_ERROR(EFAULT);
++
++	*ap += sizeof(struct getbmap);
++	*filled = 1;
++	return 0;
++}
++
+ /*
+- * Fcntl interface to xfs_bmapi.
++ * Get inode's extents as described in bmv, and format for output.
+  */
+ int						/* error code */
+ xfs_getbmap(
+ 	xfs_inode_t		*ip,
+-	struct getbmap		*bmv,		/* user bmap structure */
+-	void			__user *ap,	/* pointer to user's array */
+-	int			interface)	/* interface flags */
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg)		/* formatter arg */
+ {
+ 	__int64_t		bmvend;		/* last block requested */
+ 	int			error;		/* return value */
+@@ -5853,19 +5876,20 @@ xfs_getbmap(
+ 	int			nexleft;	/* # of user extents left */
+ 	int			subnex;		/* # of bmapi's can do */
+ 	int			nmap;		/* number of map entries */
+-	struct getbmap		out;		/* output structure */
++	struct getbmapx		out;		/* output structure */
+ 	int			whichfork;	/* data or attr fork */
+ 	int			prealloced;	/* this is a file with
+ 						 * preallocated data space */
+ 	int			sh_unwritten;	/* true, if unwritten */
+ 						/* extents listed separately */
++	int			iflags;		/* interface flags */
+ 	int			bmapi_flags;	/* flags for xfs_bmapi */
+-	__int32_t		oflags;		/* getbmapx bmv_oflags field */
+ 
+ 	mp = ip->i_mount;
++	iflags = bmv->bmv_iflags;
+ 
+-	whichfork = interface & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
+-	sh_unwritten = (interface & BMV_IF_PREALLOC) != 0;
++	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
++	sh_unwritten = (iflags & BMV_IF_PREALLOC) != 0;
+ 
+ 	/*	If the BMV_IF_NO_DMAPI_READ interface bit specified, do not
+ 	 *	generate a DMAPI read event.  Otherwise, if the DM_EVENT_READ
+@@ -5880,7 +5904,7 @@ xfs_getbmap(
+ 	 *	could misinterpret holes in a DMAPI file as true holes,
+ 	 *	when in fact they may represent offline user data.
+ 	 */
+-	if ((interface & BMV_IF_NO_DMAPI_READ) == 0 &&
++	if ((iflags & BMV_IF_NO_DMAPI_READ) == 0 &&
+ 	    DM_EVENT_ENABLED(ip, DM_EVENT_READ) &&
+ 	    whichfork == XFS_DATA_FORK) {
+ 		error = XFS_SEND_DATA(mp, DM_EVENT_READ, ip, 0, 0, 0, NULL);
+@@ -5987,52 +6011,35 @@ xfs_getbmap(
+ 		ASSERT(nmap <= subnex);
+ 
+ 		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+-			nexleft--;
+-			oflags = (map[i].br_state == XFS_EXT_UNWRITTEN) ?
++			out.bmv_oflags = (map[i].br_state == XFS_EXT_UNWRITTEN) ?
+ 					BMV_OF_PREALLOC : 0;
+ 			out.bmv_offset = XFS_FSB_TO_BB(mp, map[i].br_startoff);
+ 			out.bmv_length = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
++			out.bmv_unused1 = out.bmv_unused2 = 0;
+ 			ASSERT(map[i].br_startblock != DELAYSTARTBLOCK);
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
+ 				goto unlock_and_return;
+ 			} else {
++				int filled;	/* nr extents filled */
++
+ 				if (!xfs_getbmapx_fix_eof_hole(ip, &out,
+ 							prealloced, bmvend,
+ 							map[i].br_startblock)) {
+ 					goto unlock_and_return;
+ 				}
+ 
+-				/* return either getbmap/getbmapx structure. */
+-				if (interface & BMV_IF_EXTENDED) {
+-					struct	getbmapx	outx;
+-
+-					GETBMAP_CONVERT(out,outx);
+-					outx.bmv_oflags = oflags;
+-					outx.bmv_unused1 = outx.bmv_unused2 = 0;
+-					if (copy_to_user(ap, &outx,
+-							sizeof(outx))) {
+-						error = XFS_ERROR(EFAULT);
+-						goto unlock_and_return;
+-					}
+-				} else {
+-					if (copy_to_user(ap, &out,
+-							sizeof(out))) {
+-						error = XFS_ERROR(EFAULT);
+-						goto unlock_and_return;
+-					}
+-				}
++				/* format results & advance arg */
++				error = formatter(&arg, &out, &filled);
++				if (error)
++					goto unlock_and_return;
++				nexleft -= filled;
+ 				bmv->bmv_offset =
+ 					out.bmv_offset + out.bmv_length;
+ 				bmv->bmv_length = MAX((__int64_t)0,
+ 					(__int64_t)(bmvend - bmv->bmv_offset));
+ 				bmv->bmv_entries++;
+-				ap = (interface & BMV_IF_EXTENDED) ?
+-						(void __user *)
+-					((struct getbmapx __user *)ap + 1) :
+-						(void __user *)
+-					((struct getbmap __user *)ap + 1);
+ 			}
+ 		}
+ 	} while (nmap && nexleft && bmv->bmv_length);
+Index: linux-2.6-xfs/fs/xfs/xfs_bmap.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_bmap.h
++++ linux-2.6-xfs/fs/xfs/xfs_bmap.h
+@@ -356,15 +356,20 @@ xfs_bmap_finish(
+ 	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
+ 	int			*committed);	/* xact committed or not */
+ 
++/* bmap to userspace formatters - copy to user & advance pointer */
++typedef int (*xfs_bmap_format_t)(void __user **, struct getbmapx *, int *);
++int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled);
++int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled);
++
+ /*
+- * Fcntl interface to xfs_bmapi.
++ * Get inode's extents as described in bmv, and format for output.
+  */
+ int						/* error code */
+ xfs_getbmap(
+ 	xfs_inode_t		*ip,
+-	struct getbmap		*bmv,		/* user bmap structure */
+-	void			__user *ap,	/* pointer to user's array */
+-	int			iflags);	/* interface flags */
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg);		/* formatter arg */
+ 
+ /*
+  * Check if the endoff is outside the last extent. If so the caller will grow
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -1262,25 +1262,26 @@ xfs_ioc_getbmap(
+ 	unsigned int		cmd,
+ 	void			__user *arg)
+ {
+-	struct getbmap		bm;
+-	int			iflags;
++	struct getbmapx		bmx;
+ 	int			error;
+ 
+-	if (copy_from_user(&bm, arg, sizeof(bm)))
++	if (copy_from_user(&bmx, arg, sizeof(struct getbmapx)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+-	if (bm.bmv_count < 2)
++	if (bmx.bmv_count < 2)
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
++	bmx.bmv_iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
+ 	if (ioflags & IO_INVIS)
+-		iflags |= BMV_IF_NO_DMAPI_READ;
++		bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+ 
+-	error = xfs_getbmap(ip, &bm, (struct getbmap __user *)arg+1, iflags);
++	error = xfs_getbmap(ip, &bmx, xfs_getbmap_format,
++			    (struct getbmap __user *)arg+1);
+ 	if (error)
+ 		return -error;
+ 
+-	if (copy_to_user(arg, &bm, sizeof(bm)))
++	/* copy back header - only size of getbmap */
++	if (copy_to_user(arg, &bmx, sizeof(struct getbmap)))
+ 		return -XFS_ERROR(EFAULT);
+ 	return 0;
+ }
+@@ -1291,8 +1292,6 @@ xfs_ioc_getbmapx(
+ 	void			__user *arg)
+ {
+ 	struct getbmapx		bmx;
+-	struct getbmap		bm;
+-	int			iflags;
+ 	int			error;
+ 
+ 	if (copy_from_user(&bmx, arg, sizeof(bmx)))
+@@ -1301,26 +1300,16 @@ xfs_ioc_getbmapx(
+ 	if (bmx.bmv_count < 2)
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	/*
+-	 * Map input getbmapx structure to a getbmap
+-	 * structure for xfs_getbmap.
+-	 */
+-	GETBMAP_CONVERT(bmx, bm);
+-
+-	iflags = bmx.bmv_iflags;
+-
+-	if (iflags & (~BMV_IF_VALID))
++	if (bmx.bmv_iflags & (~BMV_IF_VALID))
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	iflags |= BMV_IF_EXTENDED;
+-
+-	error = xfs_getbmap(ip, &bm, (struct getbmapx __user *)arg+1, iflags);
++	error = xfs_getbmap(ip, &bmx, xfs_getbmapx_format,
++			    (struct getbmapx __user *)arg+1);
+ 	if (error)
+ 		return -error;
+ 
+-	GETBMAP_CONVERT(bm, bmx);
+-
+-	if (copy_to_user(arg, &bmx, sizeof(bmx)))
++	/* copy back header */
++	if (copy_to_user(arg, &bmx, sizeof(struct getbmapx)))
+ 		return -XFS_ERROR(EFAULT);
+ 
+ 	return 0;
+Index: linux-2.6-xfs/fs/xfs/xfs_fs.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_fs.h
++++ linux-2.6-xfs/fs/xfs/xfs_fs.h
+@@ -114,22 +114,10 @@ struct getbmapx {
+ #define BMV_IF_NO_DMAPI_READ	0x2	/* Do not generate DMAPI read event  */
+ #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
+ #define BMV_IF_VALID	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC)
+-#ifdef __KERNEL__
+-#define BMV_IF_EXTENDED 0x40000000	/* getpmapx if set */
+-#endif
+ 
+ /*	bmv_oflags values - returned for for each non-header segment */
+ #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
+ 
+-/*	Convert getbmap <-> getbmapx - move fields from p1 to p2. */
+-#define GETBMAP_CONVERT(p1,p2) {	\
+-	p2.bmv_offset = p1.bmv_offset;	\
+-	p2.bmv_block = p1.bmv_block;	\
+-	p2.bmv_length = p1.bmv_length;	\
+-	p2.bmv_count = p1.bmv_count;	\
+-	p2.bmv_entries = p1.bmv_entries;  }
+-
+-
+ /*
+  * Structure for XFS_IOC_FSSETDM.
+  * For use by backup and restore programs to set the XFS on-disk inode
