@@ -1,57 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 13:28:53 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 16:32:45 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PKSlkD031363
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:28:47 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4A85546B6C
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:28:47 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 0XPfjlr1iUyNnMrm for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:28:47 -0700 (PDT)
-Message-ID: <4903817E.5040006@sandeen.net>
-Date: Sat, 25 Oct 2008 15:28:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PNWa63016873
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 16:32:38 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F005B5471B3
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 16:32:35 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id UdEEI9wBCVEOOQ5Z for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 16:32:35 -0700 (PDT)
+Date: Sun, 26 Oct 2008 10:32:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: check for dmapi headers
+Message-ID: <20081025233231.GB11948@disturbed>
+References: <490362FB.5000300@sandeen.net> <20081025201840.GB28002@infradead.org> <49037F50.3010400@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2 v2] convert xfs_getbmap to take formatter functions
-References: <49031E81.7040807@sandeen.net> <49032017.6070408@sandeen.net> <20081025202743.GH28002@infradead.org>
-In-Reply-To: <20081025202743.GH28002@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49037F50.3010400@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
->> +int xfs_getbmapx_format(void __user **ap, struct getbmapx *bmv, int *filled)
->> +{
->> +	*filled = 0;
->> +	if (copy_to_user(*ap, bmv, sizeof(struct getbmapx)))
->> +		return XFS_ERROR(EFAULT);
->> +
->> +	*ap += sizeof(struct getbmapx);
->> +	*filled = 1;
->> +	return 0;
->> +}
->> +
->> +int xfs_getbmap_format(void __user **ap, struct getbmapx *bmv, int *filled)
->> +{
->> +	*filled = 0;
->> +	/* copy only getbmap portion (not getbmapx) */
->> +	if (copy_to_user(*ap, bmv, sizeof(struct getbmap)))
->> +		return XFS_ERROR(EFAULT);
->> +
->> +	*ap += sizeof(struct getbmap);
->> +	*filled = 1;
->> +	return 0;
->> +}
+On Sat, Oct 25, 2008 at 03:19:28PM -0500, Eric Sandeen wrote:
+> Christoph Hellwig wrote:
+> > On Sat, Oct 25, 2008 at 01:18:35PM -0500, Eric Sandeen wrote:
+> >> I'm no autoconf wizard, but I think this does the trick to allow
+> >> xfstests build to succeed when dmapi headers are missing, as
+> >> they probably will be for any distro that doesn't ship with
+> >> dmapi in the kernel, or dmapi userspace.
+> >>
+> >> AFAIK the dmapi-related tests all fail gracefully with "not run."
+> > 
+> > Looks sane to me, although the dmapi library can of course be shipped
+> > without kernel support - it's just rather useless that way :)
 > 
-> Probably makes sense to have these two helpers in xfs_ioctl.c, where
-> they are used, similar to how fiemap is implemented.
-> 
+> true, but very, very little motivation for that :)
 
-Ok, that makes sense.  Will change that & the other suggestions.
+$ dpkg -l libdm0\*
+Desired=Unknown/Install/Remove/Purge/Hold
+| Status=Not/Inst/Cfg-files/Unpacked/Failed-cfg/Half-inst/trig-aWait/Trig-pend
+|/ Err?=(none)/Hold/Reinst-required/X=both-problems (Status,Err: uppercase=bad)
+||/ Name               Version            Description
++++-==================-==================-====================================================
+ii  libdm0             2.2.8-1            Data Management API runtime environment
+ii  libdm0-dev         2.2.8-1            Data Management API static libraries and headers
+$
 
-(I did run sparse once, but made changes after that and forgot to re-run...)
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
