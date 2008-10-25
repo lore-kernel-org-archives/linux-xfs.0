@@ -1,40 +1,34 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 13:19:45 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sat, 25 Oct 2008 13:20:15 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PKJT63028994
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:19:29 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D64F147F662
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:19:29 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id dlx1DgTSXXpGhe4G for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:19:29 -0700 (PDT)
-Message-ID: <49037F50.3010400@sandeen.net>
-Date: Sat, 25 Oct 2008 15:19:28 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9PKK5h5029290
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:20:06 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B944147F671
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:20:05 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id ccLlKP6Ly44HsVCY for <xfs@oss.sgi.com>; Sat, 25 Oct 2008 13:20:05 -0700 (PDT)
+Date: Sat, 25 Oct 2008 16:20:05 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] clean up printk formats with DMAPI_DEBUG
+Message-ID: <20081025202005.GC28002@infradead.org>
+References: <49031BB1.7080609@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: check for dmapi headers
-References: <490362FB.5000300@sandeen.net> <20081025201840.GB28002@infradead.org>
-In-Reply-To: <20081025201840.GB28002@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49031BB1.7080609@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig wrote:
-> On Sat, Oct 25, 2008 at 01:18:35PM -0500, Eric Sandeen wrote:
->> I'm no autoconf wizard, but I think this does the trick to allow
->> xfstests build to succeed when dmapi headers are missing, as
->> they probably will be for any distro that doesn't ship with
->> dmapi in the kernel, or dmapi userspace.
->>
->> AFAIK the dmapi-related tests all fail gracefully with "not run."
-> 
-> Looks sane to me, although the dmapi library can of course be shipped
-> without kernel support - it's just rather useless that way :)
-> 
+On Sat, Oct 25, 2008 at 08:14:25AM -0500, Eric Sandeen wrote:
+>  #ifdef CONFIG_DMAPI_DEBUG
+> -	printk("xfs_dm_round_hole: off %lu, len %ld, align %lu, "
+> -	       "filesize %llu, roff %ld, rlen %ld\n",
+> +	printk("xfs_dm_round_hole: off %lld, len %llu, align %llu, "
+> +	       "filesize %lld, roff %lld, rlen %llu\n",
+>  	       offset, length, align, filesize, *roff, *rlen);
 
-true, but very, very little motivation for that :)
-
--Eric
+We'd still need casts to (unsigned) long long because the 64 bit
+types may be either variant on 64 bit platforms.
