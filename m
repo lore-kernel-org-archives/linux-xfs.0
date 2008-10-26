@@ -1,160 +1,208 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 13:36:36 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QKZBaW027406
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:11 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 13:35:57 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QKZJqc027504
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:20 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C0FB12ABC99
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:11 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id YIljs6m2jTJfqMar for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E1FDB1486761
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:19 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id n9rjwGNHHJkSSdgd for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:19 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuCKM-0002IR-Sb
-	for xfs@oss.sgi.com; Sun, 26 Oct 2008 20:35:10 +0000
-Date: Sun, 26 Oct 2008 16:35:10 -0400
+	id 1KuCKV-0002OX-CT
+	for xfs@oss.sgi.com; Sun, 26 Oct 2008 20:35:19 +0000
+Date: Sun, 26 Oct 2008 16:35:19 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] use inode_change_ok for setattr permission checking
-Message-ID: <20081026203510.GK4173@infradead.org>
+Subject: [PATCH 2/7] factor out xfs_read_agf helper
+Message-ID: <20081026203519.GN4173@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-setattr-use-inode_change_ok
+Content-Disposition: inline; filename=xfs-xfs_read_agf
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Instead of implementing our own checks use inode_change_ok to check for
-nessecary permission in setattr.  There is a slight change in behaviour
-as inode_change_ok doesn't allow i_mode updates to add the suid or sgid
-without superuser privilegues while the old XFS code just stripped away
-those bits from the file mode.
+Add a helper to read the AGF header and perform basic verification.
+Based on hunks from a larger patch from Dave Chinner.
 
-(First sent on Semptember 29th)
+(First sent on Juli 23rd)
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+Index: linux-2.6-xfs/fs/xfs/xfs_ag.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-10-03 22:16:03.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-10-03 22:16:32.000000000 +0200
-@@ -70,7 +70,6 @@ xfs_setattr(
- 	gid_t			gid=0, igid=0;
- 	int			timeflags = 0;
- 	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
--	int			file_owner;
- 	int			need_iolock = 1;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_ag.h	2008-10-01 13:46:50.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_ag.h	2008-10-01 13:48:23.000000000 +0200
+@@ -91,6 +91,8 @@ typedef struct xfs_agf {
+ #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
+ #define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)XFS_BUF_PTR(bp))
  
- 	xfs_itrace_entry(ip);
-@@ -81,6 +80,10 @@ xfs_setattr(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return XFS_ERROR(EIO);
++extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
++			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
  
-+	code = -inode_change_ok(inode, iattr);
-+	if (code)
-+		return code;
+ /*
+  * Size of the unlinked inode hash table in the agi.
+Index: linux-2.6-xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_alloc.c	2008-10-01 13:47:56.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_alloc.c	2008-10-01 13:49:12.000000000 +0200
+@@ -2233,44 +2233,41 @@ xfs_alloc_put_freelist(
+  * Read in the allocation group header (free/alloc section).
+  */
+ int					/* error */
+-xfs_alloc_read_agf(
+-	xfs_mount_t	*mp,		/* mount point structure */
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_agnumber_t	agno,		/* allocation group number */
+-	int		flags,		/* XFS_ALLOC_FLAG_... */
+-	xfs_buf_t	**bpp)		/* buffer for the ag freelist header */
++xfs_read_agf(
++	struct xfs_mount	*mp,	/* mount point structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	int			flags,	/* XFS_BUF_ */
++	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
+ {
+-	xfs_agf_t	*agf;		/* ag freelist header */
++	struct xfs_agf	*agf;		/* ag freelist header */
+ 	int		agf_ok;		/* set if agf is consistent */
+-	xfs_buf_t	*bp;		/* return value */
+-	xfs_perag_t	*pag;		/* per allocation group data */
+ 	int		error;
+ 
+ 	ASSERT(agno != NULLAGNUMBER);
+ 	error = xfs_trans_read_buf(
+ 			mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1),
+-			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0U,
+-			&bp);
++			XFS_FSS_TO_BB(mp, 1), flags, bpp);
+ 	if (error)
+ 		return error;
+-	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
+-	if (!bp) {
+-		*bpp = NULL;
++	if (!*bpp)
+ 		return 0;
+-	}
 +
- 	olddquot1 = olddquot2 = NULL;
- 	udqp = gdqp = NULL;
- 
-@@ -158,56 +161,6 @@ xfs_setattr(
- 
- 	xfs_ilock(ip, lock_flags);
- 
--	/* boolean: are we the file owner? */
--	file_owner = (current_fsuid() == ip->i_d.di_uid);
--
--	/*
--	 * Change various properties of a file.
--	 * Only the owner or users with CAP_FOWNER
--	 * capability may do these things.
--	 */
--	if (mask & (ATTR_MODE|ATTR_UID|ATTR_GID)) {
--		/*
--		 * CAP_FOWNER overrides the following restrictions:
--		 *
--		 * The user ID of the calling process must be equal
--		 * to the file owner ID, except in cases where the
--		 * CAP_FSETID capability is applicable.
--		 */
--		if (!file_owner && !capable(CAP_FOWNER)) {
--			code = XFS_ERROR(EPERM);
--			goto error_return;
--		}
--
--		/*
--		 * CAP_FSETID overrides the following restrictions:
--		 *
--		 * The effective user ID of the calling process shall match
--		 * the file owner when setting the set-user-ID and
--		 * set-group-ID bits on that file.
--		 *
--		 * The effective group ID or one of the supplementary group
--		 * IDs of the calling process shall match the group owner of
--		 * the file when setting the set-group-ID bit on that file
--		 */
--		if (mask & ATTR_MODE) {
--			mode_t m = 0;
--
--			if ((iattr->ia_mode & S_ISUID) && !file_owner)
--				m |= S_ISUID;
--			if ((iattr->ia_mode & S_ISGID) &&
--			    !in_group_p((gid_t)ip->i_d.di_gid))
--				m |= S_ISGID;
--#if 0
--			/* Linux allows this, Irix doesn't. */
--			if ((iattr->ia_mode & S_ISVTX) && !S_ISDIR(ip->i_d.di_mode))
--				m |= S_ISVTX;
--#endif
--			if (m && !capable(CAP_FSETID))
--				iattr->ia_mode &= ~m;
--		}
--	}
--
++	ASSERT(!XFS_BUF_GETERROR(*bpp));
++	agf = XFS_BUF_TO_AGF(*bpp);
++
  	/*
- 	 * Change file ownership.  Must be the owner or privileged.
+ 	 * Validate the magic number of the agf block.
  	 */
-@@ -224,22 +177,6 @@ xfs_setattr(
- 		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
- 
- 		/*
--		 * CAP_CHOWN overrides the following restrictions:
--		 *
--		 * If _POSIX_CHOWN_RESTRICTED is defined, this capability
--		 * shall override the restriction that a process cannot
--		 * change the user ID of a file it owns and the restriction
--		 * that the group ID supplied to the chown() function
--		 * shall be equal to either the group ID or one of the
--		 * supplementary group IDs of the calling process.
--		 */
--		if ((iuid != uid ||
--		     (igid != gid && !in_group_p((gid_t)gid))) &&
--		    !capable(CAP_CHOWN)) {
--			code = XFS_ERROR(EPERM);
--			goto error_return;
--		}
--		/*
- 		 * Do a quota reservation only if uid/gid is actually
- 		 * going to change.
- 		 */
-@@ -284,19 +221,6 @@ xfs_setattr(
+-	agf = XFS_BUF_TO_AGF(bp);
+ 	agf_ok =
+ 		be32_to_cpu(agf->agf_magicnum) == XFS_AGF_MAGIC &&
+ 		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+ 		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+ 		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+ 		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+-		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
++		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
++		be32_to_cpu(agf->agf_seqno) == agno;
+ 	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+ 		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
+ 						be32_to_cpu(agf->agf_length);
+@@ -2278,9 +2275,41 @@ xfs_alloc_read_agf(
+ 			XFS_RANDOM_ALLOC_READ_AGF))) {
+ 		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
+ 				     XFS_ERRLEVEL_LOW, mp, agf);
+-		xfs_trans_brelse(tp, bp);
++		xfs_trans_brelse(tp, *bpp);
+ 		return XFS_ERROR(EFSCORRUPTED);
  	}
++
++	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGF, XFS_AGF_REF);
++	return 0;
++}
++
++/*
++ * Read in the allocation group header (free/alloc section).
++ */
++int					/* error */
++xfs_alloc_read_agf(
++	struct xfs_mount	*mp,	/* mount point structure */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	xfs_agnumber_t		agno,	/* allocation group number */
++	int			flags,	/* XFS_ALLOC_FLAG_... */
++	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
++{
++	struct xfs_agf		*agf;		/* ag freelist header */
++	struct xfs_perag	*pag;		/* per allocation group data */
++	int			error;
++
++	ASSERT(agno != NULLAGNUMBER);
++
++	error = xfs_read_agf(mp, tp, agno,
++			(flags & XFS_ALLOC_FLAG_TRYLOCK) ? XFS_BUF_TRYLOCK : 0,
++			bpp);
++	if (error)
++		return error;
++	if (!*bpp)
++		return 0;
++	ASSERT(!XFS_BUF_GETERROR(*bpp));
++
++	agf = XFS_BUF_TO_AGF(*bpp);
+ 	pag = &mp->m_perag[agno];
+ 	if (!pag->pagf_init) {
+ 		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
+@@ -2308,8 +2337,6 @@ xfs_alloc_read_agf(
+ 		       be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]));
+ 	}
+ #endif
+-	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGF, XFS_AGF_REF);
+-	*bpp = bp;
+ 	return 0;
+ }
  
- 	/*
--	 * Change file access or modified times.
--	 */
--	if (mask & (ATTR_ATIME|ATTR_MTIME)) {
--		if (!file_owner) {
--			if ((mask & (ATTR_MTIME_SET|ATTR_ATIME_SET)) &&
--			    !capable(CAP_FOWNER)) {
--				code = XFS_ERROR(EPERM);
--				goto error_return;
--			}
--		}
--	}
+Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-10-01 13:46:50.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-10-01 13:48:23.000000000 +0200
+@@ -3998,7 +3998,6 @@ xlog_recover_check_summary(
+ 	xfs_agi_t	*agip;
+ 	xfs_buf_t	*agfbp;
+ 	xfs_buf_t	*agibp;
+-	xfs_daddr_t	agfdaddr;
+ 	xfs_buf_t	*sbbp;
+ #ifdef XFS_LOUD_RECOVERY
+ 	xfs_sb_t	*sbp;
+@@ -4015,21 +4014,18 @@ xlog_recover_check_summary(
+ 	itotal = 0LL;
+ 	ifree = 0LL;
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+-		agfdaddr = XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp));
+-		agfbp = xfs_buf_read(mp->m_ddev_targp, agfdaddr,
+-				XFS_FSS_TO_BB(mp, 1), 0);
+-		if (XFS_BUF_ISERROR(agfbp)) {
+-			xfs_ioerror_alert("xlog_recover_check_summary(agf)",
+-						mp, agfbp, agfdaddr);
++		error = xfs_read_agf(mp, NULL, agno, 0, &agfbp);
++		if (error) {
++			xfs_fs_cmn_err(CE_ALERT, mp,
++					"xlog_recover_check_summary(agf)"
++					"agf read failed agno %d error %d",
++							agno, error);
++		} else {
++			agfp = XFS_BUF_TO_AGF(agfbp);
++			freeblks += be32_to_cpu(agfp->agf_freeblks) +
++				    be32_to_cpu(agfp->agf_flcount);
++			xfs_buf_relse(agfbp);
+ 		}
+-		agfp = XFS_BUF_TO_AGF(agfbp);
+-		ASSERT(XFS_AGF_MAGIC == be32_to_cpu(agfp->agf_magicnum));
+-		ASSERT(XFS_AGF_GOOD_VERSION(be32_to_cpu(agfp->agf_versionnum)));
+-		ASSERT(be32_to_cpu(agfp->agf_seqno) == agno);
 -
--	/*
- 	 * Now we can make the changes.  Before we join the inode
- 	 * to the transaction, if ATTR_SIZE is set then take care of
- 	 * the part of the truncation that must be done without the
+-		freeblks += be32_to_cpu(agfp->agf_freeblks) +
+-			    be32_to_cpu(agfp->agf_flcount);
+-		xfs_buf_relse(agfbp);
+ 
+ 		error = xfs_read_agi(mp, NULL, agno, &agibp);
+ 		if (error) {
 
 -- 
