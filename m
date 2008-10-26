@@ -1,145 +1,99 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 14:48:14 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QLWDnO004274
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:32:13 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E085012AC15C
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:32:13 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id AzRRAf0bUQcGyl11 for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:32:13 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 1BDC3AC6275
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 16:32:13 -0500 (CDT)
-Message-ID: <4904E1DC.2050603@sandeen.net>
-Date: Sun, 26 Oct 2008 16:32:12 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 15:39:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QMdjX0013947
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 15:39:45 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 09C55549293
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 15:39:45 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id SzLGpvIKDdKzqGwe for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 15:39:45 -0700 (PDT)
+Date: Mon, 27 Oct 2008 09:39:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock with latest xfs
+Message-ID: <20081026223940.GN18495@disturbed>
+References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com>
 MIME-Version: 1.0
-Subject: PATCH 3/3 v3] hook up fiemap & associated formatter
-References: <4904E0DE.3040902@sandeen.net>
-In-Reply-To: <4904E0DE.3040902@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49013C47.4090601@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-Hook up the fiemap ioctl.
+On Fri, Oct 24, 2008 at 01:08:55PM +1000, Lachlan McIlroy wrote:
+> Christoph Hellwig wrote:
+>> On Thu, Oct 23, 2008 at 07:17:30PM +1000, Lachlan McIlroy wrote:
+>>> another problem with latest xfs
+>>
+>> Is this with the 2.6.27-based ptools/cvs tree or with the 2.6.28 based
+>> git tree?  It does looks more like a VM issue than a XFS issue to me.
+>>
+>
+> It's with the 2.6.27-rc8 based ptools tree.  Prior to checking
+> in these patches:
+>
+> Can't lock inodes in radix tree preload region
+> stop using xfs_itobp in xfs_bulkstat
+> free partially initialized inodes using destroy_inode
+>
+> I was able to stress a system for about 4 hours before it ran out
+> of memory.  Now I hit the deadlock within a few minutes.  I need
+> to roll back to find which patch changed the behaviour.
 
-This adds the fiemap inode_operation, which for us converts the 
-fiemap values & flags into a getbmapx structure which can be sent
-to xfs_getbmap.  The formatter then copies the bmv array back into
-the user's fiemap buffer via the fiemap helpers.
+Ok, I think I've found the regression - it's introduced by the AIL
+cursor modifications. The patch below has been running for 15
+minutes now on my UML box that would have hung in a couple of
+minutes otherwise.
 
-If we wanted to be more clever, we could also return mapping data
-for in-inode attributes, but I'm not terribly motivated to do that
-just yet.
+FYI, the way I found this was:
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+	- put a breakpoint on xfs_create() once the fs hung
+	- `touch /mnt/xfs2/fred` to trigger the break point.
+	- look at:
+		- mp->m_ail->xa_target
+		- mp->m_ail->xa_ail.next->li_lsn
+		- mp->m_log->l_tail_lsn
+	  which indicated the push target was way ahead the
+	  tail of the log, so AIL pushing was obviously not
+	  happening otherwise we'd be making progress.
+	- added breakpoint on xfsaild_push() and continued
+	- xfsaild_push() bp triggered, looked at *last_lsn
+	  and found it way behind the tail of the log (like
+	  3 cycle behind), which meant that would return
+	  NULL instead of the first object and AIL pushing
+	  would abort. Confirmed with single stepping.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+XFS: correctly select first log item to push
+
+Under heavy metadata load we are seeing log hangs. The
+AIL has items in it ready to be pushed, and they are within
+the push target window. However, we are not pushing them
+when the last pushed LSN is less than the LSN of the
+first log item on the AIL. This is a regression introduced
+by the AIL push cursor modifications.
 ---
+ fs/xfs/xfs_trans_ail.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-@@ -53,6 +53,7 @@
- #include <linux/namei.h>
- #include <linux/security.h>
- #include <linux/falloc.h>
-+#include <linux/fiemap.h>
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 67ee466..2d47f10 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -228,7 +228,7 @@ xfs_trans_ail_cursor_first(
  
- /*
-  * Bring the atime in the XFS inode uptodate.
-@@ -661,6 +662,82 @@ out_error:
- 	return error;
- }
- 
-+#define XFS_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
-+
-+STATIC int
-+xfs_fiemap_format(
-+	void			**arg,
-+	struct getbmapx		*bmv,
-+	int			*filled)
-+{
-+	int			error = 0;
-+	struct fiemap_extent_info *fieinfo = *arg;
-+	u32			fiemap_flags = 0;
-+	u64			logical, physical, length;
-+
-+	*filled = 0;
-+	/* Do nothing for a hole */
-+	if (bmv->bmv_block == -1LL)
-+		return 0;
-+
-+	logical = BBTOB(bmv->bmv_offset);
-+	physical = BBTOB(bmv->bmv_block);
-+	length = BBTOB(bmv->bmv_length);
-+
-+	if (bmv->bmv_oflags & BMV_OF_PREALLOC)
-+		fiemap_flags |= FIEMAP_EXTENT_UNWRITTEN;
-+	else if (bmv->bmv_oflags & BMV_OF_DELALLOC) {
-+		fiemap_flags |= FIEMAP_EXTENT_DELALLOC;
-+		physical = 0;   /* no block yet */
-+	}
-+	if (bmv->bmv_oflags & BMV_OF_LAST)
-+		fiemap_flags |= FIEMAP_EXTENT_LAST;
-+
-+	error = fiemap_fill_next_extent(fieinfo, logical, physical,
-+					length, fiemap_flags);
-+	if (error < 0)
-+		return -error;
-+	*filled = 1;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_vn_fiemap(
-+	struct inode		*inode,
-+	struct fiemap_extent_info *fieinfo,
-+	u64			start,
-+	u64			length)
-+{
-+	xfs_inode_t		*ip = XFS_I(inode);
-+	struct getbmapx		bm;
-+	int			error;
-+
-+	error = fiemap_check_flags(fieinfo, XFS_FIEMAP_FLAGS);
-+	if (error)
-+		return error;
-+
-+	/* Set up bmap header for xfs internal routine */
-+	bm.bmv_offset = BTOBB(start);
-+	/* Special case for whole file */
-+	if (length == FIEMAP_MAX_OFFSET)
-+		bm.bmv_length = -1LL;
-+	else
-+		bm.bmv_length = BTOBB(length);
-+	/* xfs_getbmap takes count as header + array */
-+	bm.bmv_count = fieinfo->fi_extents_max + 1;
-+	bm.bmv_iflags = BMV_IF_PREALLOC;
-+	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
-+		bm.bmv_iflags |= BMV_IF_ATTRFORK;
-+	if (!(fieinfo->fi_flags & FIEMAP_FLAG_SYNC))
-+		bm.bmv_iflags |= BMV_IF_DELALLOC;
-+
-+	error = xfs_getbmap(ip, &bm, xfs_fiemap_format, fieinfo);
-+	if (error)
-+		return -error;
-+
-+	return 0;
-+}
-+
- static const struct inode_operations xfs_inode_operations = {
- 	.permission		= xfs_vn_permission,
- 	.truncate		= xfs_vn_truncate,
-@@ -671,6 +748,7 @@ static const struct inode_operations xfs
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.fallocate		= xfs_vn_fallocate,
-+	.fiemap			= xfs_vn_fiemap,
- };
- 
- static const struct inode_operations xfs_dir_inode_operations = {
+ 	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
+ 		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
+-			break;
++			goto out;
+ 	}
+ 	lip = NULL;
+ out:
