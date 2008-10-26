@@ -1,436 +1,373 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 13:36:32 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 14:28:07 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QKZG7Q027471
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:16 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A010C12ABCA0
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:16 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id AQ486BIkscSh1LLi for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:16 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuCKR-0002MM-R7
-	for xfs@oss.sgi.com; Sun, 26 Oct 2008 20:35:15 +0000
-Date: Sun, 26 Oct 2008 16:35:15 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/7] factor out xfs_read_agi helper
-Message-ID: <20081026203515.GM4173@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QLS0ub003032
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:28:00 -0700
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B3A2612ABF32
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:27:59 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 9dbeGAW1Fgz8TWTV for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 14:27:59 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id BFCB0AC6275
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 16:27:58 -0500 (CDT)
+Message-ID: <4904E0DE.3040902@sandeen.net>
+Date: Sun, 26 Oct 2008 16:27:58 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-xfs_read_agi
+Subject: [PATCH 0/3 v3]  hook xfs to fiemap ioctl
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Add a helper to read the AGI header and perform basic verification.
-Based on hunks from a larger patch from Dave Chinner.
+v2: Update & resend, including some checkpatch fixes, a bugfix, and 
+incorporating some of Christoph's and Dave's comments.
 
-(First sent on Juli 23rd)
+v3: Address more review comments, and split into 3 patches this time.
+
+Also, here's a very hacky (don't laugh!) test app.  I'll clean it
+up at some point  :) 
+
+-Eric
+
+------------
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/vfs.h>
+#include <ext2fs/ext2_types.h>
+
+/*************************************************/
+/* All this should come from fiemap.h eventually */
+struct fiemap_extent {
+        __u64 fe_logical;  /* logical offset in bytes for the start of
+                            * the extent from the beginning of the file */
+        __u64 fe_physical; /* physical offset in bytes for the start
+                            * of the extent from the beginning of the disk */
+        __u64 fe_length;   /* length in bytes for this extent */
+        __u64 fe_reserved64[2];
+        __u32 fe_flags;    /* FIEMAP_EXTENT_* flags for this extent */
+        __u32 fe_reserved[3];
+};
+
+struct fiemap {
+        __u64 fm_start;         /* logical offset (inclusive) at
+                                 * which to start mapping (in) */
+        __u64 fm_length;        /* logical length of mapping which
+                                 * userspace wants (in) */
+        __u32 fm_flags;         /* FIEMAP_FLAG_* flags for request (in/out) */
+        __u32 fm_mapped_extents;/* number of extents that were mapped (out) */
+        __u32 fm_extent_count;  /* size of fm_extents array (in) */
+        __u32 fm_reserved;
+        struct fiemap_extent fm_extents[0]; /* array of mapped extents (out) */
+};
+
+#define FIEMAP_MAX_OFFSET       (~0ULL)
+
+#define FIEMAP_FLAG_SYNC        0x00000001 /* sync file data before map */
+#define FIEMAP_FLAG_XATTR       0x00000002 /* map extended attribute tree */
+
+#define FIEMAP_FLAGS_COMPAT     (FIEMAP_FLAG_SYNC | FIEMAP_FLAG_XATTR)
+
+#define FIEMAP_EXTENT_LAST              0x00000001 /* Last extent in file. */
+#define FIEMAP_EXTENT_UNKNOWN           0x00000002 /* Data location unknown. */
+#define FIEMAP_EXTENT_DELALLOC          0x00000004 /* Location still pending.
+                                                    * Sets EXTENT_UNKNOWN. */
+#define FIEMAP_EXTENT_ENCODED           0x00000008 /* Data can not be read
+                                                    * while fs is unmounted */
+#define FIEMAP_EXTENT_DATA_ENCRYPTED    0x00000080 /* Data is encrypted by fs.
+                                                    * Sets EXTENT_NO_BYPASS. */
+#define FIEMAP_EXTENT_NOT_ALIGNED       0x00000100 /* Extent offsets may not be
+                                                    * block aligned. */
+#define FIEMAP_EXTENT_DATA_INLINE       0x00000200 /* Data mixed with metadata.
+                                                    * Sets EXTENT_NOT_ALIGNED.*/
+#define FIEMAP_EXTENT_DATA_TAIL         0x00000400 /* Multiple files in block.
+                                                    * Sets EXTENT_NOT_ALIGNED.*/
+#define FIEMAP_EXTENT_UNWRITTEN         0x00000800 /* Space allocated, but
+                                                    * no data (i.e. zero). */
+#define FIEMAP_EXTENT_MERGED            0x00001000 /* File does not natively
+                                                    * support extents. Result
+                                                    * merged for efficiency. */
+
+#define FIGETBSZ	_IO(0x00, 2)    /* get the block size used for bmap */
+#define FS_IOC_FIEMAP			_IOWR('f', 11, struct fiemap)
+// #define FS_IOC_FIECOUNT			_IOWR('f', 12, struct fiecount)
+
+/* End of what should be coming from fiemap.h */
+/**********************************************/
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+void usage(void)
+{
+	printf("Usage: fiemap [-vrSCL] [-s start] [-l length] [-c buf count] [-m max] filename\n");
+	printf("  -v        : verbose mode\n");
+	printf("  -r        : raw output: print raw ioctl structure values\n");
+	printf("  -S        : set FIEMAP_FLAG_SYNC to sync before mapping\n");
+	printf("  -C        : set FIEMAP_FLAG_NUM_EXTENTS to only get extent count, not mapping\n");
+	printf("  -X        : set FIEMAP_FLAG_XATTR to report xattr mapping\n");
+	printf("  -s start  : start of mapping in bytes (default 0)\n");
+	printf("  -l length : length of mapping in bytes (default to end of file)\n");
+	printf("  -c count  : count of extents in ioctl input structure (default 32)\n");
+	printf("  -m max    : max nr of ioctls to call before exit (default 512)\n");
+	exit(EXIT_FAILURE);
+}
 
-Index: linux-2.6-xfs/fs/xfs/xfs_ag.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ag.h	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ag.h	2008-07-23 19:47:29.000000000 +0200
-@@ -142,6 +142,9 @@ typedef struct xfs_agi {
- #define	XFS_AGI_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGI_DADDR(mp))
- #define	XFS_BUF_TO_AGI(bp)	((xfs_agi_t *)XFS_BUF_PTR(bp))
- 
-+extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
-+				xfs_agnumber_t agno, struct xfs_buf **bpp);
-+
- /*
-  * The third a.g. block contains the a.g. freelist, an array
-  * of block pointers to blocks owned by the allocation btree code.
-Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-07-23 19:47:29.000000000 +0200
-@@ -1370,70 +1370,95 @@ xfs_ialloc_log_agi(
- 	xfs_trans_log_buf(tp, bp, first, last);
- }
- 
-+#ifdef DEBUG
-+STATIC void
-+xfs_check_agi_unlinked(
-+	struct xfs_agi		*agi)
-+{
-+	int			i;
-+
-+	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-+		ASSERT(agi->agi_unlinked[i]);
-+}
-+#else
-+#define xfs_check_agi_unlinked(agi)
-+#endif
-+
- /*
-  * Read in the allocation group header (inode allocation section)
-  */
- int
--xfs_ialloc_read_agi(
--	xfs_mount_t	*mp,		/* file system mount structure */
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_agnumber_t	agno,		/* allocation group number */
--	xfs_buf_t	**bpp)		/* allocation group hdr buf */
-+xfs_read_agi(
-+	struct xfs_mount	*mp,	/* file system mount structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	struct xfs_buf		**bpp)	/* allocation group hdr buf */
- {
--	xfs_agi_t	*agi;		/* allocation group header */
--	int		agi_ok;		/* agi is consistent */
--	xfs_buf_t	*bp;		/* allocation group hdr buf */
--	xfs_perag_t	*pag;		/* per allocation group data */
--	int		error;
-+	struct xfs_agi		*agi;	/* allocation group header */
-+	int			agi_ok;	/* agi is consistent */
-+	int			error;
- 
- 	ASSERT(agno != NULLAGNUMBER);
--	error = xfs_trans_read_buf(
--			mp, tp, mp->m_ddev_targp,
-+
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+			XFS_FSS_TO_BB(mp, 1), 0, bpp);
- 	if (error)
- 		return error;
--	ASSERT(bp && !XFS_BUF_GETERROR(bp));
-+
-+	ASSERT(*bpp && !XFS_BUF_GETERROR(*bpp));
-+	agi = XFS_BUF_TO_AGI(*bpp);
- 
- 	/*
- 	 * Validate the magic number of the agi block.
- 	 */
--	agi = XFS_BUF_TO_AGI(bp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
-+	agi_ok = be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
-+		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
-+		be32_to_cpu(agi->agi_seqno) == agno;
- 	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
- 			XFS_RANDOM_IALLOC_READ_AGI))) {
--		XFS_CORRUPTION_ERROR("xfs_ialloc_read_agi", XFS_ERRLEVEL_LOW,
-+		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
- 				     mp, agi);
--		xfs_trans_brelse(tp, bp);
-+		xfs_trans_brelse(tp, *bpp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
-+
-+	XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_AGI, XFS_AGI_REF);
-+
-+	xfs_check_agi_unlinked(agi);
-+	return 0;
-+}
-+
-+int
-+xfs_ialloc_read_agi(
-+	struct xfs_mount	*mp,	/* file system mount structure */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_agnumber_t		agno,	/* allocation group number */
-+	struct xfs_buf		**bpp)	/* allocation group hdr buf */
-+{
-+	struct xfs_agi		*agi;	/* allocation group header */
-+	struct xfs_perag	*pag;	/* per allocation group data */
-+	int			error;
-+
-+	error = xfs_read_agi(mp, tp, agno, bpp);
-+	if (error)
-+		return error;
-+
-+	agi = XFS_BUF_TO_AGI(*bpp);
- 	pag = &mp->m_perag[agno];
-+
- 	if (!pag->pagi_init) {
- 		pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
- 		pag->pagi_count = be32_to_cpu(agi->agi_count);
- 		pag->pagi_init = 1;
--	} else {
--		/*
--		 * It's possible for these to be out of sync if
--		 * we are in the middle of a forced shutdown.
--		 */
--		ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
--			XFS_FORCED_SHUTDOWN(mp));
--	}
--
--#ifdef DEBUG
--	{
--		int	i;
--
--		for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
--			ASSERT(agi->agi_unlinked[i]);
- 	}
--#endif
- 
--	XFS_BUF_SET_VTYPE_REF(bp, B_FS_AGI, XFS_AGI_REF);
--	*bpp = bp;
-+	/*
-+	 * It's possible for these to be out of sync if
-+	 * we are in the middle of a forced shutdown.
-+	 */
-+	ASSERT(pag->pagi_freecount == be32_to_cpu(agi->agi_freecount) ||
-+		XFS_FORCED_SHUTDOWN(mp));
- 	return 0;
- }
- 
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-07-23 19:45:01.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-07-23 19:47:29.000000000 +0200
-@@ -1776,13 +1776,10 @@ xfs_iunlink(
- 	xfs_dinode_t	*dip;
- 	xfs_buf_t	*agibp;
- 	xfs_buf_t	*ibp;
--	xfs_agnumber_t	agno;
--	xfs_daddr_t	agdaddr;
- 	xfs_agino_t	agino;
- 	short		bucket_index;
- 	int		offset;
- 	int		error;
--	int		agi_ok;
- 
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_mode != 0);
-@@ -1790,31 +1787,15 @@ xfs_iunlink(
- 
- 	mp = tp->t_mountp;
- 
--	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
--	agdaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
--
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
- 	 */
--	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, agdaddr,
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, ip->i_ino), &agibp);
- 	if (error)
- 		return error;
--
--	/*
--	 * Validate the magic number of the agi block.
--	 */
- 	agi = XFS_BUF_TO_AGI(agibp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IUNLINK,
--			XFS_RANDOM_IUNLINK))) {
--		XFS_CORRUPTION_ERROR("xfs_iunlink", XFS_ERRLEVEL_LOW, mp, agi);
--		xfs_trans_brelse(tp, agibp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
-+
- 	/*
- 	 * Get the index into the agi hash table for the
- 	 * list this inode will go on.
-@@ -1874,7 +1855,6 @@ xfs_iunlink_remove(
- 	xfs_buf_t	*agibp;
- 	xfs_buf_t	*ibp;
- 	xfs_agnumber_t	agno;
--	xfs_daddr_t	agdaddr;
- 	xfs_agino_t	agino;
- 	xfs_agino_t	next_agino;
- 	xfs_buf_t	*last_ibp;
-@@ -1882,45 +1862,23 @@ xfs_iunlink_remove(
- 	short		bucket_index;
- 	int		offset, last_offset = 0;
- 	int		error;
--	int		agi_ok;
- 
--	/*
--	 * First pull the on-disk inode from the AGI unlinked list.
--	 */
- 	mp = tp->t_mountp;
--
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
--	agdaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
- 
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
- 	 */
--	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, agdaddr,
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_read_agi(mp, tp, agno, &agibp);
- 	if (error) {
- 		cmn_err(CE_WARN,
--			"xfs_iunlink_remove: xfs_trans_read_buf()  returned an error %d on %s.  Returning error.",
-+			"xfs_iunlink_remove: xfs_read_agi() returned an error %d on %s. Returning error.",
- 			error, mp->m_fsname);
- 		return error;
- 	}
--	/*
--	 * Validate the magic number of the agi block.
--	 */
- 	agi = XFS_BUF_TO_AGI(agibp);
--	agi_ok =
--		be32_to_cpu(agi->agi_magicnum) == XFS_AGI_MAGIC &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IUNLINK_REMOVE,
--			XFS_RANDOM_IUNLINK_REMOVE))) {
--		XFS_CORRUPTION_ERROR("xfs_iunlink_remove", XFS_ERRLEVEL_LOW,
--				     mp, agi);
--		xfs_trans_brelse(tp, agibp);
--		cmn_err(CE_WARN,
--			"xfs_iunlink_remove: XFS_TEST_ERROR()  returned an error on %s.  Returning EFSCORRUPTED.",
--			 mp->m_fsname);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
-+
- 	/*
- 	 * Get the index into the agi hash table for the
- 	 * list this inode will go on.
-Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-07-23 18:06:20.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-07-23 19:47:29.000000000 +0200
-@@ -3134,19 +3134,16 @@ xlog_recover_clear_agi_bucket(
- 	int		error;
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_CLEAR_AGI_BUCKET);
--	error = xfs_trans_reserve(tp, 0, XFS_CLEAR_AGI_BUCKET_LOG_RES(mp), 0, 0, 0);
--	if (!error)
--		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
--				   XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
-+	error = xfs_trans_reserve(tp, 0, XFS_CLEAR_AGI_BUCKET_LOG_RES(mp),
-+				  0, 0, 0);
- 	if (error)
- 		goto out_abort;
- 
--	error = EINVAL;
--	agi = XFS_BUF_TO_AGI(agibp);
--	if (be32_to_cpu(agi->agi_magicnum) != XFS_AGI_MAGIC)
-+	error = xfs_read_agi(mp, tp, agno, &agibp);
-+	if (error)
- 		goto out_abort;
- 
-+	agi = XFS_BUF_TO_AGI(agibp);
- 	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
- 	offset = offsetof(xfs_agi_t, agi_unlinked) +
- 		 (sizeof(xfs_agino_t) * bucket);
-@@ -3207,16 +3204,21 @@ xlog_recover_process_iunlinks(
- 		/*
- 		 * Find the agi for this ag.
- 		 */
--		agibp = xfs_buf_read(mp->m_ddev_targp,
--				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--				XFS_FSS_TO_BB(mp, 1), 0);
--		if (XFS_BUF_ISERROR(agibp)) {
--			xfs_ioerror_alert("xlog_recover_process_iunlinks(#1)",
--				log->l_mp, agibp,
--				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)));
-+		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		if (error) {
-+			/*
-+			 * AGI is b0rked. Don't process it.
-+			 *
-+			 * We should probably mark the filesystem as corrupt
-+			 * after we've recovered all the ag's we can....
-+			 */
-+			xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_process_iunlinks(#1)"
-+					"agi read failed agno %d error %d",
-+					agno, error);
-+			continue;
- 		}
- 		agi = XFS_BUF_TO_AGI(agibp);
--		ASSERT(XFS_AGI_MAGIC == be32_to_cpu(agi->agi_magicnum));
- 
- 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
- 
-@@ -3295,22 +3297,18 @@ xlog_recover_process_iunlinks(
- 
- 				/*
- 				 * Reacquire the agibuffer and continue around
--				 * the loop.
-+				 * the loop. This should never fail as we know
-+				 * the buffer was good earlier on.
- 				 */
--				agibp = xfs_buf_read(mp->m_ddev_targp,
--						XFS_AG_DADDR(mp, agno,
--							XFS_AGI_DADDR(mp)),
--						XFS_FSS_TO_BB(mp, 1), 0);
--				if (XFS_BUF_ISERROR(agibp)) {
--					xfs_ioerror_alert(
--				"xlog_recover_process_iunlinks(#2)",
--						log->l_mp, agibp,
--						XFS_AG_DADDR(mp, agno,
--							XFS_AGI_DADDR(mp)));
-+				error = xfs_read_agi(mp, NULL, agno, &agibp);
-+				ASSERT(error == 0);
-+				if (error) {
-+					xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_process_iunlinks(#2)"
-+					"agi read failed agno %d error %d",
-+							agno, error);
- 				}
- 				agi = XFS_BUF_TO_AGI(agibp);
--				ASSERT(XFS_AGI_MAGIC == be32_to_cpu(
--					agi->agi_magicnum));
- 			}
- 		}
- 
-@@ -4004,7 +4002,6 @@ xlog_recover_check_summary(
- 	xfs_buf_t	*agfbp;
- 	xfs_buf_t	*agibp;
- 	xfs_daddr_t	agfdaddr;
--	xfs_daddr_t	agidaddr;
- 	xfs_buf_t	*sbbp;
- #ifdef XFS_LOUD_RECOVERY
- 	xfs_sb_t	*sbp;
-@@ -4013,6 +4010,7 @@ xlog_recover_check_summary(
- 	__uint64_t	freeblks;
- 	__uint64_t	itotal;
- 	__uint64_t	ifree;
-+	int		error;
- 
- 	mp = log->l_mp;
- 
-@@ -4036,21 +4034,19 @@ xlog_recover_check_summary(
- 			    be32_to_cpu(agfp->agf_flcount);
- 		xfs_buf_relse(agfbp);
- 
--		agidaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
--		agibp = xfs_buf_read(mp->m_ddev_targp, agidaddr,
--				XFS_FSS_TO_BB(mp, 1), 0);
--		if (XFS_BUF_ISERROR(agibp)) {
--			xfs_ioerror_alert("xlog_recover_check_summary(agi)",
--					  mp, agibp, agidaddr);
--		}
--		agip = XFS_BUF_TO_AGI(agibp);
--		ASSERT(XFS_AGI_MAGIC == be32_to_cpu(agip->agi_magicnum));
--		ASSERT(XFS_AGI_GOOD_VERSION(be32_to_cpu(agip->agi_versionnum)));
--		ASSERT(be32_to_cpu(agip->agi_seqno) == agno);
-+		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		if (error) {
-+			xfs_fs_cmn_err(CE_ALERT, mp,
-+					"xlog_recover_check_summary(agi)"
-+					"agi read failed agno %d error %d",
-+							agno, error);
-+		} else {
-+			agip = XFS_BUF_TO_AGI(agibp);
- 
--		itotal += be32_to_cpu(agip->agi_count);
--		ifree += be32_to_cpu(agip->agi_freecount);
--		xfs_buf_relse(agibp);
-+			itotal += be32_to_cpu(agip->agi_count);
-+			ifree += be32_to_cpu(agip->agi_freecount);
-+			xfs_buf_relse(agibp);
-+		}
- 	}
- 
- 	sbbp = xfs_getsb(mp, 0);
+#define EXABYTES(x)     ((long long)(x) << 60)
+#define PETABYTES(x)    ((long long)(x) << 50)
+#define TERABYTES(x)    ((long long)(x) << 40)
+#define GIGABYTES(x)    ((long long)(x) << 30)
+#define MEGABYTES(x)    ((long long)(x) << 20)
+#define KILOBYTES(x)    ((long long)(x) << 10)
 
--- 
+long long
+cvtnum(char *s)
+{
+	long long	i;
+	char		*sp;
+	int		c;
+
+	i = strtoll(s, &sp, 0);
+	if (i == 0 && sp == s)
+		return -1LL;
+	if (*sp == '\0')
+		return i;
+	if (sp[1] != '\0')
+		return -1LL;
+
+	c = tolower(*sp);
+	switch (c) {
+	case 'k':
+		return KILOBYTES(i);
+	case 'm':
+		return MEGABYTES(i);
+	case 'g':
+		return GIGABYTES(i);
+	case 't':
+		return TERABYTES(i);
+	case 'p':
+		return PETABYTES(i);
+	case 'e':
+		return  EXABYTES(i);
+	}
+
+	return -1LL;
+}
+
+void show_extents_table(struct fiemap *fiemap, int blocksize, int start_extent, int *is_last)
+{
+	unsigned int	i;
+
+	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+		__u64	logical = fiemap->fm_extents[i].fe_logical;
+		__u64	phys = fiemap->fm_extents[i].fe_physical;
+		__u64	length = fiemap->fm_extents[i].fe_length;
+		int	flags = fiemap->fm_extents[i].fe_flags;
+		__u64	last_logical = 0;
+
+		if (i) {
+			last_logical =
+				fiemap->fm_extents[i-1].fe_logical +
+				fiemap->fm_extents[i-1].fe_length - 1;
+		}
+
+		printf("ext: %3u logical: [%8llu..%8llu] phys: %8llu..%8llu flags: 0x%03X tot: %llu\n",
+			i + start_extent,
+			logical / blocksize,
+			(logical + length - 1) / blocksize,
+			phys / blocksize,
+			(phys + length - 1) / blocksize,
+			flags,
+			(length / blocksize));
+
+		if (fiemap->fm_extents[i].fe_flags & FIEMAP_EXTENT_LAST) {
+			*is_last = 1;
+			break; /* XXX should we?  or should look for exents filled in past last? */
+		}
+	}
+
+	if (fiemap->fm_mapped_extents < fiemap->fm_extent_count)
+		*is_last = 1;
+}
+
+void show_extents_raw(struct fiemap *fiemap, int start_extent, int *is_last)
+{
+	unsigned int	i;
+
+	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+		printf("Extent %3u: logical: %10lld physical: %10lld length: %10lld flags 0x%03X\n",
+			i + start_extent,
+			fiemap->fm_extents[i].fe_logical,
+			fiemap->fm_extents[i].fe_physical,
+			fiemap->fm_extents[i].fe_length,
+			fiemap->fm_extents[i].fe_flags);
+
+		if (fiemap->fm_extents[i].fe_flags & FIEMAP_EXTENT_LAST) {
+			*is_last = 1;
+			break;
+			/* XXX should we?  or should look for extents wrongly filled in past last? */
+		}
+	}
+
+	if (fiemap->fm_mapped_extents < fiemap->fm_extent_count)
+		*is_last = 1;
+}
+
+int main(int argc, char**argv)
+{
+	int	blocksize = 0;	/* filesystem blocksize */
+	uint	count = 32;	/* extent count */
+	int	fd;		/* file descriptor */
+	int	last = 0;	/* last extent found */
+	int	xattr = 0;	/* return xattr mapping */
+	int	maxioctls = 512; /* max ioctls to try */
+	int	opt;
+	int	rc;
+	int	raw = 0;	/* raw output format */
+	int	sync = 0;	/* sync file before mapping */
+	int	verbose = 0;	/* verbose output */
+	char	*fname;		/* filename to map */
+	char	*fiebuf;	/* fiemap buffer / ioctl argument */
+	__u64	lstart = 0;	/* logical input mapping start */
+	__u64	llength = ~0ULL;/* logical input mapping length */
+	uint	start_ext = 0;	/* starting extent nr. for this batch */
+	__u32	flags = 0;
+	struct fiemap *fiemap;
+
+
+	/* XXX er, can llength be ~0ULL if start > 0? */
+	while ((opt = getopt(argc, argv, "s:l:c:m:rSCLXv")) != -1) {
+		switch(opt) {
+		/* logical mapping offset */
+		case 's':
+			lstart = cvtnum(optarg);
+			break;
+		/* logical mapping length */
+		case 'l':
+			llength = cvtnum(optarg);
+			break;
+		/* count of extent buffers to send */
+		case 'c':
+			count = atoi(optarg);
+			break;
+		/* max nr. of ioctls to try (safety net) */
+		case 'm':
+			maxioctls = atoi(optarg);
+			break;
+		/* raw format output */
+		case 'r':
+			raw++;
+			break;
+		/* sync file before mapping */
+		case 'S':
+			sync++;
+			break;
+		/* return extents for xattrs */
+		case 'X':
+			xattr++;
+			break;
+		/* be verbose */
+		case 'v':
+			verbose++;
+			break;
+		default:
+			usage();
+		}
+	}
+
+	fname = argv[optind++];
+	if (!fname)
+		usage();
+
+	/* Set the flags for the header */
+	if (sync)
+		flags |= FIEMAP_FLAG_SYNC;
+	if (xattr)
+		flags |= FIEMAP_FLAG_XATTR;
+
+	/* The whole buffer, extent maps and all */
+	fiebuf = malloc(sizeof (struct fiemap) + (count * sizeof(struct fiemap_extent)));
+	if (!fiebuf) {
+		perror("Could not allocate fiemap buffers");
+		exit(1);
+	}
+
+	/* set up the header */
+	fiemap = (struct fiemap *)fiebuf;
+
+	fiemap->fm_start = lstart;
+	fiemap->fm_length = llength;
+	fiemap->fm_flags = flags;
+	fiemap->fm_extent_count = count;
+	fiemap->fm_mapped_extents = 0;	/* output only */
+
+	fd = open(fname, O_RDONLY);
+	if (fd < 0) {
+		perror("Can't open file");
+		exit(1);
+	}
+
+	if (ioctl(fd, FIGETBSZ, &blocksize) < 0) {
+		perror("Can't get block size");
+		close(fd);
+		return;
+	}
+
+	do {
+		if (verbose)
+			printf("Input:  start %llu length %llu flags 0x%X count %u\n",
+				fiemap->fm_start, fiemap->fm_length,
+				fiemap->fm_flags, fiemap->fm_extent_count);
+
+		rc = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+		if (rc < 0) {
+			perror("FIEMAP ioctl failed");
+			printf("flags 0x%x\n", fiemap->fm_flags);
+			close(fd);
+			exit(1);
+		}
+		if (verbose)
+			printf("Output: start %llu length %llu flags 0x%X count %u mapped %u\n",
+				fiemap->fm_start, fiemap->fm_length,
+				fiemap->fm_flags, fiemap->fm_extent_count,
+				fiemap->fm_mapped_extents);
+
+		if (raw)
+			show_extents_raw(fiemap, start_ext, &last);
+		else
+			show_extents_table(fiemap, blocksize, start_ext, &last);
+
+		if (!last) {
+			int last_map = fiemap->fm_mapped_extents - 1;
+			__u64 foo;	/* XXX Ummmm */
+
+			foo = fiemap->fm_extents[last_map].fe_logical +
+				fiemap->fm_extents[last_map].fe_length;
+			/* Set up the next call arguments */ /* move to top */
+			fiemap->fm_start = foo;
+			fiemap->fm_length = lstart + llength - foo;
+			fiemap->fm_extent_count = count;
+		}
+
+		/* keeps track of extent nrs. we've printed; rather, pass by value! */
+		start_ext += fiemap->fm_mapped_extents;
+
+		/* XXX need to stop if we've reached what we asked for */
+		maxioctls--;
+
+	} while (!last && maxioctls > 0);
+
+
+	close(fd);
+
+	return 0;
+}
