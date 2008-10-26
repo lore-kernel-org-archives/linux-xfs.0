@@ -1,225 +1,111 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 13:35:34 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QKZ5EJ027315
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:05 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 13:35:46 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9QKZ03w027267
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:00 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A892B546F36
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:05 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id h2dh9L4FPU4eNKtp for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9ED6E12ABC93
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:00 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 67eMhQ8Drt7uQ8iw for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 13:35:00 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuCKG-0002IE-RK
-	for xfs@oss.sgi.com; Sun, 26 Oct 2008 20:35:04 +0000
-Date: Sun, 26 Oct 2008 16:35:04 -0400
+	id 1KuCKB-0001tx-Uk
+	for xfs@oss.sgi.com; Sun, 26 Oct 2008 20:34:59 +0000
+Date: Sun, 26 Oct 2008 16:34:59 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] kill sys_cred
-Message-ID: <20081026203504.GI4173@infradead.org>
+Subject: [PATCH 3/3] remove xfs_vfsops.h
+Message-ID: <20081026203459.GG4173@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-kill-cred
+Content-Disposition: inline; filename="xfs-kill-xfs_vfsops.h"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-capable_cred has been unused for a while so we can kill it and sys_cred.
-That also means the cred argument to xfs_setattr and
-xfs_change_file_space can be removed now.
-
-(First sent on Semptember 29th)
+The only think left is xfs_do_force_shutdown which already has a defintion
+in xfs_mount.h, too.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-09-29 18:20:19.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-09-29 18:24:15.000000000 +0200
-@@ -2472,7 +2472,7 @@ xfs_dm_punch_hole(
- #endif
- 
- 	error = xfs_change_file_space(ip, XFS_IOC_UNRESVSP, &bf,
--				(xfs_off_t)off, sys_cred,
-+				(xfs_off_t)off,
- 				XFS_ATTR_DMI|XFS_ATTR_NOLOCK);
- 
- 	/*
-@@ -2730,7 +2730,7 @@ xfs_dm_set_fileattr(
- 		iattr.ia_size = stat.fa_size;
- 	}
- 
--	return -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_DMI, NULL);
-+	return -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_DMI);
- }
- 
- 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_cred.h
+--- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-10-15 18:21:53.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-10-15 18:22:07.000000000 -0400
+@@ -45,7 +45,6 @@
+ #include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_inode_item.h"
+-#include "xfs_vfsops.h"
+ #include "xfs_vnodeops.h"
+ #include <dmapi.h>
+ #include <dmapi_kern.h>
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_cred.h	2008-09-29 18:19:17.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_cred.h	2008-09-29 18:26:42.000000000 +0200
-@@ -27,12 +27,4 @@ typedef struct cred {
- 	/* EMPTY */
- } cred_t;
- 
--extern struct cred *sys_cred;
--
--/* this is a hack.. (assumes sys_cred is the only cred_t in the system) */
--static inline int capable_cred(cred_t *cr, int cid)
--{
--	return (cr == sys_cred) ? 1 : capable(cid);
--}
--
- #endif  /* __XFS_CRED_H__ */
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2008-09-29 18:24:32.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c	2008-09-29 18:24:44.000000000 +0200
-@@ -694,8 +694,7 @@ xfs_ioc_space(
- 	if (ioflags & IO_INVIS)
- 		attr_flags |= XFS_ATTR_DMI;
- 
--	error = xfs_change_file_space(ip, cmd, &bf, filp->f_pos,
--					      NULL, attr_flags);
-+	error = xfs_change_file_space(ip, cmd, &bf, filp->f_pos, attr_flags);
- 	return -error;
- }
- 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-09-29 18:20:30.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-09-29 18:24:28.000000000 +0200
-@@ -595,7 +595,7 @@ xfs_vn_setattr(
- 	struct dentry	*dentry,
- 	struct iattr	*iattr)
- {
--	return -xfs_setattr(XFS_I(dentry->d_inode), iattr, 0, NULL);
-+	return -xfs_setattr(XFS_I(dentry->d_inode), iattr, 0);
- }
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2008-10-15 18:21:53.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_export.c	2008-10-15 18:21:59.000000000 -0400
+@@ -29,7 +29,6 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_inode.h"
+-#include "xfs_vfsops.h"
  
  /*
-@@ -636,7 +636,7 @@ xfs_vn_fallocate(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 	error = xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
--				      0, NULL, XFS_ATTR_NOLOCK);
-+				      0, XFS_ATTR_NOLOCK);
- 	if (!error && !(mode & FALLOC_FL_KEEP_SIZE) &&
- 	    offset + len > i_size_read(inode))
- 		new_size = offset + len;
-@@ -647,7 +647,7 @@ xfs_vn_fallocate(
- 
- 		iattr.ia_valid = ATTR_SIZE;
- 		iattr.ia_size = new_size;
--		error = xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK, NULL);
-+		error = xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
- 	}
- 
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+  * Note that we only accept fileids which are long enough rather than allow
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-09-29 18:19:42.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-09-29 18:19:45.000000000 +0200
-@@ -172,7 +172,6 @@ EXPORT_SYMBOL(xfs_buf_offset);
- EXPORT_SYMBOL(xfs_buf_rele);
- EXPORT_SYMBOL(xfs_buf_readahead);
- EXPORT_SYMBOL(xfs_buf_unlock);
--EXPORT_SYMBOL(sys_cred);
- EXPORT_SYMBOL(uuid_create_nil);
- EXPORT_SYMBOL(uuid_equal);
- EXPORT_SYMBOL(uuid_getnodeuniq);
-Index: linux-2.6-xfs/fs/xfs/xfs_acl.c
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-15 18:21:53.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ksyms.c	2008-10-15 18:22:03.000000000 -0400
+@@ -64,7 +64,6 @@
+ #include "xfs_iomap.h"
+ #include "xfs_filestream.h"
+ #include "xfs_vnodeops.h"
+-#include "xfs_vfsops.h"
+ #include "support/ktrace.h"
+ 
+ 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_acl.c	2008-09-29 18:19:50.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_acl.c	2008-09-29 18:22:31.000000000 +0200
-@@ -759,7 +759,7 @@ xfs_acl_setmode(
- 	if (gap && nomask)
- 		iattr.ia_mode |= gap->ae_perm << 3;
- 
--	return xfs_setattr(XFS_I(vp), &iattr, 0, sys_cred);
-+	return xfs_setattr(XFS_I(vp), &iattr, 0);
- }
- 
- /*
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-10-15 18:21:53.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-10-15 18:22:01.000000000 -0400
+@@ -48,7 +48,6 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+ #include "xfs_vnodeops.h"
+-#include "xfs_vfsops.h"
+ #include "xfs_version.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_trans_priv.h"
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-29 18:20:55.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-29 18:25:13.000000000 +0200
-@@ -57,8 +57,7 @@ int
- xfs_setattr(
- 	struct xfs_inode	*ip,
- 	struct iattr		*iattr,
--	int			flags,
--	cred_t			*credp)
-+	int			flags)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
-@@ -3452,7 +3451,6 @@ xfs_change_file_space(
- 	int		cmd,
- 	xfs_flock64_t	*bf,
- 	xfs_off_t	offset,
--	cred_t		*credp,
- 	int		attr_flags)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
-@@ -3540,7 +3538,7 @@ xfs_change_file_space(
- 		iattr.ia_valid = ATTR_SIZE;
- 		iattr.ia_size = startoffset;
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.c	2008-10-15 18:21:53.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/xfs_vfsops.c	2008-10-15 18:22:05.000000000 -0400
+@@ -53,7 +53,6 @@
+ #include "xfs_filestream.h"
+ #include "xfs_fsops.h"
+ #include "xfs_vnodeops.h"
+-#include "xfs_vfsops.h"
+ #include "xfs_utils.h"
+ #include "xfs_sync.h"
  
--		error = xfs_setattr(ip, &iattr, attr_flags, credp);
-+		error = xfs_setattr(ip, &iattr, attr_flags);
- 
- 		if (error)
- 			return error;
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.h
+Index: linux-2.6-xfs/fs/xfs/xfs_vfsops.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.h	2008-09-29 18:21:40.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.h	2008-09-29 18:25:05.000000000 +0200
-@@ -14,8 +14,7 @@ struct xfs_inode;
- struct xfs_iomap;
- 
- 
--int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags,
--		struct cred *credp);
-+int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags);
- #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
- #define	XFS_ATTR_NONBLOCK	0x02	/* return EAGAIN if operation would block */
- #define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
-@@ -43,8 +42,7 @@ int xfs_inode_flush(struct xfs_inode *ip
- int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
- int xfs_reclaim(struct xfs_inode *ip);
- int xfs_change_file_space(struct xfs_inode *ip, int cmd,
--		xfs_flock64_t *bf, xfs_off_t offset,
--		struct cred *credp, int	attr_flags);
-+		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
- int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
- 		struct xfs_inode *src_ip, struct xfs_inode *target_dp,
- 		struct xfs_name *target_name, struct xfs_inode *target_ip);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_globals.c	2008-09-29 18:26:21.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.c	2008-09-29 18:26:31.000000000 +0200
-@@ -43,10 +43,3 @@ xfs_param_t xfs_params = {
- 	.inherit_nodfrg	= {	0,		1,		1	},
- 	.fstrm_timer	= {	1,		30*100,		3600*100},
- };
+--- linux-2.6-xfs.orig/fs/xfs/xfs_vfsops.h	2008-10-15 18:21:09.000000000 -0400
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,14 +0,0 @@
+-#ifndef _XFS_VFSOPS_H
+-#define _XFS_VFSOPS_H 1
 -
--/*
-- * Global system credential structure.
-- */
--static cred_t sys_cred_val;
--cred_t *sys_cred = &sys_cred_val;
+-struct cred;
+-struct xfs_fid;
+-struct inode;
+-struct kstatfs;
+-struct xfs_mount;
+-struct xfs_mount_args;
 -
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_globals.h	2008-09-29 18:26:33.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_globals.h	2008-09-29 18:26:35.000000000 +0200
-@@ -19,6 +19,5 @@
- #define __XFS_GLOBALS_H__
- 
- extern uint64_t	xfs_panic_mask;		/* set to cause more panics */
--extern struct cred *sys_cred;
- 
- #endif	/* __XFS_GLOBALS_H__ */
+-void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+-		int lnnum);
+-
+-#endif /* _XFS_VFSOPS_H */
 
 -- 
