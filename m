@@ -1,326 +1,149 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:49:06 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:49:08 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDmlFY027424
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:47 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDmqBj027460
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:53 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 203C754B902
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:46 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id dAd0vfr19oWcyOL9 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 31CCB54B908
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id hTJYiOQcgcBgh6B5 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:51 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSSc-0001gE-Br
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:48:46 +0000
-Date: Mon, 27 Oct 2008 09:48:46 -0400
+	id 1KuSSh-0001gR-I2
+	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:48:51 +0000
+Date: Mon, 27 Oct 2008 09:48:51 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/10] kill dead inode flags
-Message-ID: <20081027134846.GC6440@infradead.org>
+Subject: [PATCH 10/10] remove leftovers of shared read-only support
+Message-ID: <20081027134851.GE6440@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-kill-dead-inode-flags
+Content-Disposition: inline; filename=xfs-kill-m_mk_sharedro
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-There are a few inode flags around that aren't used anywhere, so remove
-them.  Also update xfsidbg to display all used inode flags correctly.
-
-(First sent on July 23nd)
+We never supported shared read-only filesystems, so remove the dead
+code left over from IRIX for it.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/dmapi/xfs_dm.c	2008-10-25 13:00:29.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/dmapi/xfs_dm.c	2008-10-25 13:15:42.000000000 +0200
-@@ -2494,7 +2494,6 @@ xfs_dm_punch_hole(
- 	/* Let threads in send_data_event know we punched the file. */
- 	ip->i_d.di_dmstate++;
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--	xfs_iflags_set(ip, XFS_IMODIFIED);
- 
- up_and_out:
- 	up_rw_sems(inode, DM_SEM_FLAG_WR);
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2008-10-25 13:00:29.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2008-10-25 13:15:42.000000000 +0200
-@@ -317,14 +317,9 @@ xfs_map_blocks(
- 	xfs_iomap_t		*mapp,
- 	int			flags)
- {
--	xfs_inode_t		*ip = XFS_I(inode);
--	int			error, nmaps = 1;
-+	int			nmaps = 1;
- 
--	error = xfs_iomap(ip, offset, count,
--				flags, mapp, &nmaps);
--	if (!error && (flags & (BMAPI_WRITE|BMAPI_ALLOCATE)))
--		xfs_iflags_set(ip, XFS_IMODIFIED);
--	return -error;
-+	return -xfs_iomap(XFS_I(inode), offset, count, flags, mapp, &nmaps);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-10-25 13:00:27.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-10-25 13:18:54.000000000 +0200
+@@ -1353,24 +1353,6 @@ xfs_log_sbcount(
+ 	return error;
  }
  
- STATIC_INLINE int
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2008-10-25 13:11:38.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c	2008-10-25 13:15:42.000000000 +0200
-@@ -434,11 +434,8 @@ xfs_file_ioctl(
- 	unsigned int	cmd,
- 	unsigned long	p)
- {
--	int		error;
- 	struct inode	*inode = filp->f_path.dentry->d_inode;
- 
--	error = xfs_ioctl(XFS_I(inode), filp, 0, cmd, (void __user *)p);
--	xfs_iflags_set(XFS_I(inode), XFS_IMODIFIED);
- 
- 	/* NOTE:  some of the ioctl's return positive #'s as a
- 	 *	  byte count indicating success, such as
-@@ -446,7 +443,7 @@ xfs_file_ioctl(
- 	 *	  like most other routines.  This means true
- 	 *	  errors need to be returned as a negative value.
- 	 */
--	return error;
-+	return xfs_ioctl(XFS_I(inode), filp, 0, cmd, (void __user *)p);
- }
- 
- STATIC long
-@@ -455,11 +452,8 @@ xfs_file_ioctl_invis(
- 	unsigned int	cmd,
- 	unsigned long	p)
- {
--	int		error;
- 	struct inode	*inode = filp->f_path.dentry->d_inode;
- 
--	error = xfs_ioctl(XFS_I(inode), filp, IO_INVIS, cmd, (void __user *)p);
--	xfs_iflags_set(XFS_I(inode), XFS_IMODIFIED);
- 
- 	/* NOTE:  some of the ioctl's return positive #'s as a
- 	 *	  byte count indicating success, such as
-@@ -467,7 +461,7 @@ xfs_file_ioctl_invis(
- 	 *	  like most other routines.  This means true
- 	 *	  errors need to be returned as a negative value.
- 	 */
--	return error;
-+	return xfs_ioctl(XFS_I(inode), filp, IO_INVIS, cmd, (void __user *)p);
- }
- 
- #ifdef HAVE_DMAPI
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2008-10-25 13:13:24.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_iops.c	2008-10-25 13:15:54.000000000 +0200
-@@ -158,8 +158,6 @@ xfs_init_security(
- 	}
- 
- 	error = xfs_attr_set(ip, name, value, length, ATTR_SECURE);
--	if (!error)
--		xfs_iflags_set(ip, XFS_IMODIFIED);
- 
- 	kfree(name);
- 	kfree(value);
-@@ -260,7 +258,6 @@ xfs_vn_mknod(
- 		error = _ACL_INHERIT(inode, mode, default_acl);
- 		if (unlikely(error))
- 			goto out_cleanup_inode;
--		xfs_iflags_set(ip, XFS_IMODIFIED);
- 		_ACL_FREE(default_acl);
- 	}
- 
-@@ -376,7 +373,6 @@ xfs_vn_link(
- 	if (unlikely(error))
- 		return -error;
- 
--	xfs_iflags_set(XFS_I(dir), XFS_IMODIFIED);
- 	atomic_inc(&inode->i_count);
- 	d_instantiate(dentry, inode);
- 	return 0;
-@@ -805,7 +801,6 @@ xfs_setup_inode(
- 	inode->i_ctime.tv_sec	= ip->i_d.di_ctime.t_sec;
- 	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
- 	xfs_diflags_to_iflags(inode, ip);
--	xfs_iflags_clear(ip, XFS_IMODIFIED);
- 
- 	switch (inode->i_mode & S_IFMT) {
- 	case S_IFREG:
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-10-25 13:00:29.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-10-25 13:15:42.000000000 +0200
-@@ -375,7 +375,6 @@ xfs_compat_ioctl(
- 	unsigned long	arg)
- {
- 	struct inode	*inode = file->f_path.dentry->d_inode;
--	int		error;
- 
- 	switch (cmd) {
- 	case XFS_IOC_DIOINFO:
-@@ -463,10 +462,7 @@ xfs_compat_ioctl(
- 		return -ENOIOCTLCMD;
- 	}
- 
--	error = xfs_ioctl(XFS_I(inode), file, mode, cmd, (void __user *)arg);
--	xfs_iflags_set(XFS_I(inode), XFS_IMODIFIED);
+-STATIC void
+-xfs_mark_shared_ro(
+-	xfs_mount_t	*mp,
+-	xfs_buf_t	*bp)
+-{
+-	xfs_dsb_t	*sb = XFS_BUF_TO_SBP(bp);
+-	__uint16_t	version;
 -
--	return error;
-+	return xfs_ioctl(XFS_I(inode), file, mode, cmd, (void __user *)arg);
- }
+-	if (!(sb->sb_flags & XFS_SBF_READONLY))
+-		sb->sb_flags |= XFS_SBF_READONLY;
+-
+-	version = be16_to_cpu(sb->sb_versionnum);
+-	if ((version & XFS_SB_VERSION_NUMBITS) != XFS_SB_VERSION_4 ||
+-	    !(version & XFS_SB_VERSION_SHAREDBIT))
+-		version |= XFS_SB_VERSION_SHAREDBIT;
+-	sb->sb_versionnum = cpu_to_be16(version);
+-}
+-
+ int
+ xfs_unmountfs_writesb(xfs_mount_t *mp)
+ {
+@@ -1386,12 +1368,6 @@ xfs_unmountfs_writesb(xfs_mount_t *mp)
  
- long
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:00:29.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:15:42.000000000 +0200
-@@ -1021,7 +1021,6 @@ xfs_fs_clear_inode(
- 	XFS_STATS_DEC(vn_active);
+ 		sbp = xfs_getsb(mp, 0);
  
- 	xfs_inactive(ip);
--	xfs_iflags_clear(ip, XFS_IMODIFIED);
- }
- 
- STATIC void
-Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2008-10-25 13:02:56.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2008-10-25 13:15:42.000000000 +0200
-@@ -275,7 +275,6 @@ again:
+-		/*
+-		 * mark shared-readonly if desired
+-		 */
+-		if (mp->m_mk_sharedro)
+-			xfs_mark_shared_ro(mp, sbp);
+-
+ 		XFS_BUF_UNDONE(sbp);
+ 		XFS_BUF_UNREAD(sbp);
+ 		XFS_BUF_UNDELAYWRITE(sbp);
+@@ -1403,8 +1379,6 @@ xfs_unmountfs_writesb(xfs_mount_t *mp)
+ 		if (error)
+ 			xfs_ioerror_alert("xfs_unmountfs_writesb",
+ 					  mp, sbp, XFS_BUF_ADDR(sbp));
+-		if (error && mp->m_mk_sharedro)
+-			xfs_fs_cmn_err(CE_ALERT, mp, "Superblock write error detected while unmounting.  Filesystem may not be marked shared readonly");
+ 		xfs_buf_relse(sbp);
  	}
- 	xfs_put_perag(mp, pag);
- 
--	xfs_iflags_set(ip, XFS_IMODIFIED);
- 	*ipp = ip;
- 
- 	ASSERT(ip->i_df.if_ext_max ==
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+ 	return error;
+Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-10-25 13:02:57.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-10-25 13:15:42.000000000 +0200
-@@ -403,17 +403,12 @@ static inline void xfs_ifunlock(xfs_inod
- /*
-  * In-core inode flags.
-  */
--#define XFS_IGRIO	0x0001  /* inode used for guaranteed rate i/o */
--#define XFS_IUIOSZ	0x0002  /* inode i/o sizes have been explicitly set */
--#define XFS_IQUIESCE    0x0004  /* we have started quiescing for this inode */
--#define XFS_IRECLAIM    0x0008  /* we have started reclaiming this inode    */
--#define XFS_ISTALE	0x0010	/* inode has been staled */
--#define XFS_IRECLAIMABLE 0x0020 /* inode can be reclaimed */
--#define XFS_INEW	0x0040
--#define XFS_IFILESTREAM	0x0080	/* inode is in a filestream directory */
--#define XFS_IMODIFIED	0x0100	/* XFS inode state possibly differs */
--				/* to the Linux inode state. */
--#define XFS_ITRUNCATED	0x0200	/* truncated down so flush-on-close */
-+#define XFS_IRECLAIM    0x0001  /* we have started reclaiming this inode    */
-+#define XFS_ISTALE	0x0002	/* inode has been staled */
-+#define XFS_IRECLAIMABLE 0x0004 /* inode can be reclaimed */
-+#define XFS_INEW	0x0008	/* inode has just been allocated */
-+#define XFS_IFILESTREAM	0x0010	/* inode is in a filestream directory */
-+#define XFS_ITRUNCATED	0x0020	/* truncated down so flush-on-close */
- 
- /*
-  * Flags for inode locking.
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-10-25 13:18:51.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-10-25 13:18:54.000000000 +0200
+@@ -302,7 +302,6 @@ typedef struct xfs_mount {
+ 	int			m_sinoalign;	/* stripe unit inode alignment */
+ 	int			m_attr_magicpct;/* 37% of the blocksize */
+ 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
+-	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
+ 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+ 	int			m_dirblksize;	/* directory block sz--bytes */
 Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-10-25 13:15:38.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-10-25 13:15:42.000000000 +0200
-@@ -157,7 +157,6 @@ static void	xfsidbg_xiclogall(xlog_in_co
- static void	xfsidbg_xiclogcb(xlog_in_core_t *);
- static void	xfsidbg_xinodes(xfs_mount_t *);
- static void	xfsidbg_delayed_blocks(xfs_mount_t *);
--static void	xfsidbg_xinodes_quiesce(xfs_mount_t *);
- static void	xfsidbg_xlog(xlog_t *);
- static void	xfsidbg_xlog_ritem(xlog_recover_item_t *);
- static void	xfsidbg_xlog_rtrans(xlog_recover_t *);
-@@ -1318,26 +1317,6 @@ static int	kdbm_xfs_delayed_blocks(
+--- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-10-25 13:18:51.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-10-25 13:18:54.000000000 +0200
+@@ -6523,8 +6523,7 @@ xfsidbg_xmount(xfs_mount_t *mp)
+ 	kdb_printf("dalign %d swidth %d sinoalign %d attr_magicpct %d dir_magicpct %d\n",
+ 		mp->m_dalign, mp->m_swidth, mp->m_sinoalign,
+ 		mp->m_attr_magicpct, mp->m_dir_magicpct);
+-	kdb_printf("mk_sharedro %d sectbb_log %d\n",
+-		mp->m_mk_sharedro, mp->m_sectbb_log);
++	kdb_printf("sectbb_log %d\n", mp->m_sectbb_log);
+ 	kdb_printf("dirblkfsbs %d\n", mp->m_dirblkfsbs);
+ 	kdb_printf("dirblksize %d dirdatablk 0x%Lx dirleafblk 0x%Lx dirfreeblk 0x%Lx\n",
+ 		mp->m_dirblksize,
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:20:10.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:20:16.000000000 +0200
+@@ -1384,35 +1384,6 @@ xfs_finish_flags(
+ 		return XFS_ERROR(EROFS);
+ 	}
+ 
+-#if 0 /* shared mounts were never supported on Linux */
+-	/*
+-	 * check for shared mount.
+-	 */
+-	if (ap->flags & XFSMNT_SHARED) {
+-		if (!xfs_sb_version_hasshared(&mp->m_sb))
+-			return XFS_ERROR(EINVAL);
+-
+-		/*
+-		 * For IRIX 6.5, shared mounts must have the shared
+-		 * version bit set, have the persistent readonly
+-		 * field set, must be version 0 and can only be mounted
+-		 * read-only.
+-		 */
+-		if (!ronly || !(mp->m_sb.sb_flags & XFS_SBF_READONLY) ||
+-		     (mp->m_sb.sb_shared_vn != 0))
+-			return XFS_ERROR(EINVAL);
+-
+-		mp->m_flags |= XFS_MOUNT_SHARED;
+-
+-		/*
+-		 * Shared XFS V0 can't deal with DMI.  Return EINVAL.
+-		 */
+-		if (mp->m_sb.sb_shared_vn == 0 &&
+-		    (mp->m_flags & XFS_MOUNT_DMAPI))
+-			return XFS_ERROR(EINVAL);
+-	}
+-#endif
+-
  	return 0;
  }
  
--
--static int	kdbm_xfs_xinodes_quiesce(
--	int	argc,
--	const char **argv)
--{
--	unsigned long addr;
--	int nextarg = 1;
--	long offset = 0;
--	int diag;
--
--	if (argc != 1)
--		return KDB_ARGCOUNT;
--	diag = kdbgetaddrarg(argc, argv, &nextarg, &addr, &offset, NULL);
--	if (diag)
--		return diag;
--
--	xfsidbg_xinodes_quiesce((xfs_mount_t *) addr);
--	return 0;
--}
--
- static int	kdbm_xfs_xlog(
- 	int	argc,
- 	const char **argv)
-@@ -2415,8 +2394,6 @@ static struct xif xfsidbg_funcs[] = {
- #endif
-   {  "xinodes",	kdbm_xfs_xinodes,	"<xfs_mount_t>",
- 				"Dump XFS inodes per mount"},
--  {  "xquiesce",kdbm_xfs_xinodes_quiesce, "<xfs_mount_t>",
--				"Dump non-quiesced XFS inodes per mount"},
- #ifdef XFS_LOG_TRACE
-   {  "xl_grtr",	kdbm_xfs_xlog_granttrace,	"<xlog_t>",
- 				"Dump XFS log grant trace" },
-@@ -5971,35 +5948,6 @@ xfsidbg_delayed_blocks(xfs_mount_t *mp)
- 	kdb_printf("delayed blocks total: %d in %d inodes\n", total, icount);
- }
- 
--static void
--xfsidbg_xinodes_quiesce(xfs_mount_t *mp)
--{
--	int		i;
--
--	kdb_printf("xfs_mount at 0x%p\n", mp);
--	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
--		xfs_perag_t	*pag = &mp->m_perag[i];
--		xfs_inode_t	*ip = NULL;
--		int		first_index = 0;
--		int		nr_found;
--
--		if (!pag->pag_ici_init)
--			continue;
--		do {
--			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
--						(void**)&ip, first_index, 1);
--			if (!nr_found)
--				break;
--			/* update the index for the next lookup */
--			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--			if (!(ip->i_flags & XFS_IQUIESCE)) {
--				kdb_printf("ip 0x%p not quiesced\n", ip);
--			}
--		} while (nr_found);
--	}
--	kdb_printf("\nEnd of Inodes\n");
--}
--
- static char *
- xfsidbg_get_cstate(int state)
- {
-@@ -6597,12 +6545,11 @@ static void
- xfsidbg_xnode(xfs_inode_t *ip)
- {
- 	static char *tab_flags[] = {
--		"grio",		/* XFS_IGRIO */
--		"uiosize",	/* XFS_IUIOSZ */
--		"quiesce",	/* XFS_IQUIESCE */
- 		"reclaim",	/* XFS_IRECLAIM */
- 		"stale",	/* XFS_ISTALE */
--		"modified",	/* XFS_IMODIFIED */
-+		"reclaimable",	/* XFS_IRECLAIMABLE */
-+		"new",		/* XFS_INEW */
-+		"filestream",	/* XFS_IFILESTREAM */
- 		"truncated",	/* XFS_ITRUNCATED */
- 		NULL
- 	};
 
 -- 
