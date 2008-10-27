@@ -1,59 +1,62 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 07:04:53 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 07:10:44 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDmn26027438
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:49 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 31C3054B906
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:48 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 101qtOsnc6bIwDzZ for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:48 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSSe-0001gK-L7
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:48:48 +0000
-Date: Mon, 27 Oct 2008 09:48:48 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/10] remove unused m_inode_quiesce member from struct
-	xfs_mount
-Message-ID: <20081027134848.GD6440@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDsfB3028560
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:54:42 -0700
+Received: from smtp.welcomes-you.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6544D54B98E
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:54:39 -0700 (PDT)
+Received: from smtp.welcomes-you.com (welcomes-you.com [85.214.50.128]) by cuda.sgi.com with ESMTP id d29g7XiyeVWTdtYA for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:54:39 -0700 (PDT)
+Message-ID: <4905C81B.50103@aei.mpg.de>
+Date: Mon, 27 Oct 2008 14:54:35 +0100
+From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-kill-m_inode_quiesce
+Subject: Re: Map a disk LBA to filename?
+References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com>
+In-Reply-To: <4905BC13.3030402@drutsystem.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Michal Soltys <nozo@drutsystem.com>
+Cc: xfs@oss.sgi.com
 
-(First sent on July 23rd)
+Hi Michal
 
+Michal Soltys wrote:
+> 
+> Wouldn't something like (under xfs_db) :
+> 
+> getblock -b #block -n
+> ncheck -i #inode
+> 
+> where required #inode is reported by getblock
+> 
+> do the thing ?
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Sounds nice, but my (ancient? 2.8.11) version of xfs_db does not know
+getblock (only blockget) since that also matches the command line and
+the usage looks about to be right, I'm currently trying that one, e.g.
 
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-10-22 09:33:02.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-10-22 09:43:34.000000000 +0200
-@@ -303,7 +303,6 @@ typedef struct xfs_mount {
- 	int			m_attr_magicpct;/* 37% of the blocksize */
- 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
- 	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
--	__uint8_t		m_inode_quiesce;/* call quiesce on new inodes. */
- 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
- 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
- 	int			m_dirblksize;	/* directory block sz--bytes */
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-10-22 09:40:15.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-10-22 09:43:08.000000000 +0200
-@@ -6523,8 +6523,8 @@ xfsidbg_xmount(xfs_mount_t *mp)
- 	kdb_printf("dalign %d swidth %d sinoalign %d attr_magicpct %d dir_magicpct %d\n",
- 		mp->m_dalign, mp->m_swidth, mp->m_sinoalign,
- 		mp->m_attr_magicpct, mp->m_dir_magicpct);
--	kdb_printf("mk_sharedro %d inode_quiesce %d sectbb_log %d\n",
--		mp->m_mk_sharedro, mp->m_inode_quiesce, mp->m_sectbb_log);
-+	kdb_printf("mk_sharedro %d sectbb_log %d\n",
-+		mp->m_mk_sharedro, mp->m_sectbb_log);
- 	kdb_printf("dirblkfsbs %d\n", mp->m_dirblkfsbs);
- 	kdb_printf("dirblksize %d dirdatablk 0x%Lx dirleafblk 0x%Lx dirfreeblk 0x%Lx\n",
- 		mp->m_dirblksize,
+smartctl reports a bad LBA at 36922326. fdisk tells me the partition
+starts at 31069773, hence the block under question is 5852553.
 
--- 
+xfs_info tells be a bsize of 4096 which I take as the block size, thus
+the xfs block to look at should be 731569, right?
+
+xfs_db> blockget -b 731569 -n
+setting block 0/731569 to free1
+setting block 0/731569 to free2
+xfs_db>
+
+hmm, no inode number. Does that mean this block is not used by any file
+currently - which might be perfectly fine since this partition is only
+31% full.
+
+Everything right so far?
+
+Cheers
+
+Carsten
