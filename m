@@ -1,66 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 21:52:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 22:30:30 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R4qWd1010776
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Oct 2008 21:52:32 -0700
-Received: from ciao.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7907954990C
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Oct 2008 19:22:13 -0700 (PDT)
-Received: from ciao.gmane.org (main.gmane.org [80.91.229.2]) by cuda.sgi.com with ESMTP id Zoj99NHwOiA5t1mO for <linux-xfs@oss.sgi.com>; Sun, 26 Oct 2008 19:22:13 -0700 (PDT)
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KuHkA-000827-U3
-	for linux-xfs@oss.sgi.com; Mon, 27 Oct 2008 02:22:11 +0000
-Received: from 75-134-105-39.dhcp.aldl.mi.charter.com ([75.134.105.39])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 02:22:10 +0000
-Received: from mlueck by 75-134-105-39.dhcp.aldl.mi.charter.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 02:22:10 +0000
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-Subject: Re: Bad day with xfsrestore, what went wrong?
-Date: Sun, 26 Oct 2008 22:22:03 -0400
-Message-ID: <ge38k5$qf$1@ger.gmane.org>
-References: <gde1k2$gkp$1@ger.gmane.org>
-Reply-To: mlueck@lueckdatasystems.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <gde1k2$gkp$1@ger.gmane.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R5UJ2A012875
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:30:20 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFFB5549E90
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:30:17 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id vv3QUgXV92TtD7IK for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:30:17 -0700 (PDT)
+Date: Mon, 27 Oct 2008 16:30:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock with latest xfs
+Message-ID: <20081027053004.GF11948@disturbed>
+References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com> <20081024052418.GO25906@disturbed> <20081024064804.GQ25906@disturbed> <20081026005351.GK18495@disturbed> <20081026025013.GL18495@disturbed> <49051C71.9040404@sgi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49051C71.9040404@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: linux-xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm@kvack.org
 
-No suggestions / possible answers anyone for my question...
+On Mon, Oct 27, 2008 at 12:42:09PM +1100, Lachlan McIlroy wrote:
+> Dave Chinner wrote:
+>> On Sun, Oct 26, 2008 at 11:53:51AM +1100, Dave Chinner wrote:
+>>> On Fri, Oct 24, 2008 at 05:48:04PM +1100, Dave Chinner wrote:
+>>>> OK, I just hung a single-threaded rm -rf after this completed:
+>>>>
+>>>> # fsstress -p 1024 -n 100 -d /mnt/xfs2/fsstress
+>>>>
+>>>> It has hung with this trace:
+....
+>> Got it now. I can reproduce this in a couple of minutes now that both
+>> the test fs and the fs hosting the UML fs images are using lazy-count=1
+>> (and the frequent 10s long host system freezes have gone away, too).
+>>
+>> Looks like *another* new memory allocation problem [1]:
+.....
+>> We've entered memory reclaim inside the xfsdatad while trying to do
+>> unwritten extent completion during I/O completion, and that memory
+>> reclaim is now blocked waiting for I/o completion that cannot make
+>> progress.
+>>
+>> Nasty.
+>>
+>> My initial though is to make _xfs_trans_alloc() able to take a KM_NOFS argument
+>> so we don't re-enter the FS here. If we get an ENOMEM in this case, we should
+>> then re-queue the I/O completion at the back of the workqueue and let other
+>> I/o completions progress before retrying this one. That way the I/O that
+>> is simply cleaning memory will make progress, hence allowing memory
+>> allocation to occur successfully when we retry this I/O completion...
+> It could work - unless it's a synchronous I/O in which case the I/O is not
+> complete until the extent conversion takes place.
 
-Michael Lueck wrote:
-> Greetings-
-> 
-> I hope this is the NNTP equiv of the email list found on this web page:
-> http://oss.sgi.com/projects/xfs/
-> 
-> I have been using XFS with Debian for a number of years with great 
-> success. Today, xfsrestore really threw me a curve ball. I am wondering 
-> what went wrong.
-> 
-> I had wanted to restore from an old backup some directories that I 
-> discovered I had need of. I used the following syntax to get the restore 
-> started:
-> 
-> xfsrestore -J -E -f /mnt/ext_backup/ldslnx01/20061220/data -s shares/data -i -v verbose /srv
-> 
-> I selected some directories to restore through the interactive 
-> interface, then allowed it to restore the specified files.
-> 
-> What it ended up doing, HOWEVER, was to restore every file present in 
-> that old backup that was no longer on disk!
-> 
-> Thus, what went wrong?
-> 
-> Thanks!
+Right. Pushing unwritten extent conversion onto a different
+workqueue is probably the only way to handle this easily.
+That's the same solution Irix has been using for a long time
+(the xfsc thread)....
 
+> Could we allocate the memory up front before the I/O is issued?
+
+Possibly, but that will create more memory pressure than
+allocation in I/O completion because now we could need to hold
+thousands of allocations across an I/O - think of the case where
+we are running low on memory and have a disk subsystem capable of
+a few hundred thousand I/Os per second. the allocation failing would
+prevent the I/os from being issued, and if this is buffered writes
+into unwritten extents we'd be preventing dirty pages from being
+cleaned....
+
+Cheers,
+
+Dave.
 -- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
+Dave Chinner
+david@fromorbit.com
