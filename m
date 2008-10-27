@@ -1,25 +1,42 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:03:18 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:03:46 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RD3AnQ017981
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:11 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E30E612AD8FF
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:09 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id v07Vw5xZmaFsbaR1 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:09 -0700 (PDT)
-Date: Mon, 27 Oct 2008 09:03:00 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] Add error handling of write_super_lockfs/unlockfs
-Message-ID: <20081027130259.GA1919@infradead.org>
-References: <20081027215832t-sato@mail.jp.nec.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RD3brL018147
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:37 -0700
+Received: from relay.ppgk.com.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E656612AD915
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:36 -0700 (PDT)
+Received: from relay.ppgk.com.pl (relay.ppgk.com.pl [80.53.243.36]) by cuda.sgi.com with ESMTP id VhqbNeF9T6eGPEAb for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:03:36 -0700 (PDT)
+Message-ID: <4905BC13.3030402@drutsystem.com>
+Date: Mon, 27 Oct 2008 14:03:15 +0100
+From: Michal Soltys <nozo@drutsystem.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081027215832t-sato@mail.jp.nec.com>
+Subject: Re: Map a disk LBA to filename?
+References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de>
+In-Reply-To: <4905B48A.8010108@aei.mpg.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+Cc: xfs@oss.sgi.com
 
-Looks good.
+Carsten Aulbert wrote:
+> 
+> Dave Chinner wrote:
+>> Use xfs_bmap to find the location on disk of the extents in each
+>> file. Recurse over the filesystem until you find the file that owns
+>> the block that went bad.
+> 
+> Sounds like a tedious but doable route to take.
+> 
+
+Wouldn't something like (under xfs_db) :
+
+getblock -b #block -n
+ncheck -i #inode
+
+where required #inode is reported by getblock
+
+do the thing ?
