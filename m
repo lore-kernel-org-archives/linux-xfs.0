@@ -1,147 +1,69 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:30:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:30:42 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDUE5R019745
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:15 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDUG9D019755
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:16 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24218549CC0
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:13 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id zLMeJpQlAYhDYkNI for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 31047549CC6
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:15 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id Q1d0KiFJcilMoyTR for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:30:15 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSAf-0007xq-9N
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:30:13 +0000
-Date: Mon, 27 Oct 2008 09:30:13 -0400
+	id 1KuSAh-0007y5-LB
+	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:30:15 +0000
+Date: Mon, 27 Oct 2008 09:30:15 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] wire up ->open for directories
-Message-ID: <20081027133013.GB30607@infradead.org>
+Subject: [PATCH 2/2] allow inode64 mount option on 32 bit systems
+Message-ID: <20081027133015.GC30607@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-wire-up-open
+Content-Disposition: inline; filename=xfs-allow-inode64-on-32bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-Currently there's no ->open method set for directories on XFS.  That
-means we don't perform any check for opening too large directories
-without O_LARGEFILE, we don't check for shut down filesystems, and we
-don't actually do the readahead for the first block in the directory.
+Now that we've stopped using the Linux inode cache when can trivally
+support the inode64 mount option on 32bit architectures.  As far as the
+kernel and most userspace is concerned this works perfectly, but
+applications still using really old stat and readdir interfaces will get
+an EOVERFLOW error when hitting an inode number not fitting into 32
+bits (that problem of course also exists when using these applications
+on a 64bit kernel).
 
-Instead of just setting the directories open routine to xfs_file_open
-we merge the shutdown check directly into xfs_file_open and create
-a new xfs_dir_open that first calls xfs_file_open and then performs
-the readahead for block 0.
+Note that because inode64 is simply a mount option we can currently
+mount a filesystem having > 32 bit inode numbers and cause a variety of
+problems, all this is solved but this patch which enables XFS_BIG_INUMS,
+even when inode64 is not used.
 
-(First sent on September 29th)
+(First sent on October 18th)
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c
+Index: xfs-2.6/fs/xfs/linux-2.6/xfs_linux.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:35:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_file.c	2008-09-09 17:44:13.000000000 +0200
-@@ -38,6 +38,7 @@
- #include "xfs_rw.h"
- #include "xfs_ioctl32.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_da_btree.h"
+--- xfs-2.6.orig/fs/xfs/linux-2.6/xfs_linux.h	2008-10-18 12:17:40.000000000 +0200
++++ xfs-2.6/fs/xfs/linux-2.6/xfs_linux.h	2008-10-18 12:19:30.000000000 +0200
+@@ -21,18 +21,12 @@
+ #include <linux/types.h>
  
- #include <linux/dcache.h>
- #include <linux/smp_lock.h>
-@@ -172,11 +173,37 @@ xfs_file_splice_write_invis(
- STATIC int
- xfs_file_open(
- 	struct inode	*inode,
--	struct file	*filp)
-+	struct file	*file)
- {
--	if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
-+	if (!(file->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
- 		return -EFBIG;
--	return -xfs_open(XFS_I(inode));
-+	if (XFS_FORCED_SHUTDOWN(XFS_M(inode->i_sb)))
-+		return -EIO;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_dir_open(
-+	struct inode	*inode,
-+	struct file	*file)
-+{
-+	struct xfs_inode *ip = XFS_I(inode);
-+	int		mode;
-+	int		error;
-+
-+	error = xfs_file_open(inode, file);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If there are any blocks, read-ahead block 0 as we're almost
-+	 * certain to have the next operation be a read there.
-+	 */
-+	mode = xfs_ilock_map_shared(ip);
-+	if (ip->i_d.di_nextents > 0)
-+		xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
-+	xfs_iunlock(ip, mode);
-+	return 0;
- }
- 
- STATIC int
-@@ -533,6 +560,7 @@ const struct file_operations xfs_invis_f
- 
- 
- const struct file_operations xfs_dir_file_operations = {
-+	.open		= xfs_dir_open,
- 	.read		= generic_read_dir,
- 	.readdir	= xfs_file_readdir,
- 	.unlocked_ioctl	= xfs_file_ioctl,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:49.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-09-09 17:35:59.000000000 +0200
-@@ -54,28 +54,6 @@
- #include "xfs_vnodeops.h"
- 
- int
--xfs_open(
--	xfs_inode_t	*ip)
--{
--	int		mode;
--
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
--		return XFS_ERROR(EIO);
--
--	/*
--	 * If it's a directory with any blocks, read-ahead block 0
--	 * as we're almost certain to have the next operation be a read there.
--	 */
--	if (S_ISDIR(ip->i_d.di_mode) && ip->i_d.di_nextents > 0) {
--		mode = xfs_ilock_map_shared(ip);
--		if (ip->i_d.di_nextents > 0)
--			(void)xfs_da_reada_buf(NULL, ip, 0, XFS_DATA_FORK);
--		xfs_iunlock(ip, mode);
--	}
--	return 0;
--}
--
--int
- xfs_setattr(
- 	struct xfs_inode	*ip,
- 	struct iattr		*iattr,
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:42.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.h	2008-09-09 17:35:45.000000000 +0200
-@@ -14,7 +14,6 @@ struct xfs_inode;
- struct xfs_iomap;
- 
- 
--int xfs_open(struct xfs_inode *ip);
- int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags,
- 		struct cred *credp);
- #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+ /*
+- * Some types are conditional depending on the target system.
+  * XFS_BIG_BLKNOS needs block layer disk addresses to be 64 bits.
+- * XFS_BIG_INUMS needs the VFS inode number to be 64 bits, as well
+- * as requiring XFS_BIG_BLKNOS to be set.
++ * XFS_BIG_INUMS requires XFS_BIG_BLKNOS to be set.
+  */
+ #if defined(CONFIG_LBD) || (BITS_PER_LONG == 64)
+ # define XFS_BIG_BLKNOS	1
+-# if BITS_PER_LONG == 64
+-#  define XFS_BIG_INUMS	1
+-# else
+-#  define XFS_BIG_INUMS	0
+-# endif
++# define XFS_BIG_INUMS	1
+ #else
+ # define XFS_BIG_BLKNOS	0
+ # define XFS_BIG_INUMS	0
 
 -- 
