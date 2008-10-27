@@ -1,83 +1,61 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 09:25:51 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RGPfCf015095
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:25:42 -0700
-Received: from drutsystem.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 057241488E06
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:25:40 -0700 (PDT)
-Received: from drutsystem.com (drutsystem.com [80.72.38.138]) by cuda.sgi.com with ESMTP id HlJpZwgxtDNnIYAe for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:25:40 -0700 (PDT)
-Message-ID: <4905E4B2.2010303@drutsystem.com>
-Date: Mon, 27 Oct 2008 16:56:34 +0100
-From: Michal Soltys <nozo@drutsystem.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 09:57:21 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RGvEZB016774
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:57:15 -0700
+Received: from rproxy.teamix.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A7C31AE2AFE
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:57:12 -0700 (PDT)
+Received: from rproxy.teamix.net (postman.teamix.net [194.150.191.120]) by cuda.sgi.com with ESMTP id n6mOazH144DechcV for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 09:57:12 -0700 (PDT)
+From: Martin Steigerwald <ms@teamix.de>
+Subject: Re: Is it possible the check an frozen XFS filesytem to avoid downtime
+Date: Mon, 27 Oct 2008 17:57:09 +0100
+References: <200807141542.51613.ms@teamix.de> <200807150944.13277.ms@teamix.de> <487CC1EB.6030100@sandeen.net>
+In-Reply-To: <487CC1EB.6030100@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Map a disk LBA to filename?
-References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com> <4905C81B.50103@aei.mpg.de>
-In-Reply-To: <4905C81B.50103@aei.mpg.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <200810271757.09915.ms@teamix.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
 
-Carsten Aulbert wrote:
-> Michal Soltys wrote:
->> 
->> Wouldn't something like (under xfs_db) :
->> 
->> getblock -b #block -n
->> ncheck -i #inode
->> 
->> where required #inode is reported by getblock
->> 
->> do the thing ?
->> 
-> 
-> Sounds nice, but my (ancient? 2.8.11) version of xfs_db does not know
-> getblock (only blockget) since that also matches the command line and
-> the usage looks about to be right, I'm currently trying that one, e.g.
-> 
+Am Dienstag, 15. Juli 2008 schrieb Eric Sandeen:
+> Martin Steigerwald wrote:
+> > Okay... we recommended the customer to do it the safe way unmounting the
+> > filesystem completely. He did and the filesystem appear to be intact
+> > *phew*. XFS appeared to detect the in memory corruption early enough.
+> >
+> > Its a bit strange however, cause we now know that the server sports ECC
+> > RAM. Well we will see what memtest86+ has to say about it.
+>
+> in-memory corruption could mean, but certainly does not absolutely mean,
+> problematic memory.  It could be, and usually is, a plain ol' bug (in
+> xfs or elsewhere).
 
-Sorry, I meant blockget.
+Ok, just as a follow up:
 
-> smartctl reports a bad LBA at 36922326. fdisk tells me the partition
-> starts at 31069773, hence the block under question is 5852553.
-> 
-> xfs_info tells be a bsize of 4096 which I take as the block size, thus
-> the xfs block to look at should be 731569, right?
-> 
-> xfs_db> blockget -b 731569 -n
-> setting block 0/731569 to free1
-> setting block 0/731569 to free2
-> xfs_db>
-> 
-> hmm, no inode number. Does that mean this block is not used by any file
-> currently - which might be perfectly fine since this partition is only
-> 31% full.
-> 
-> Everything right so far?
-> 
+Now we got similar XFS errors on the second backend server, this time on a 
+local hardware RAID1 while on the first backend server it was on logical 
+volumes on a soft RAID spread over two dislocated external hardware RAID 
+boxes.
 
-Yes, calculations look fine. I'm not sure what exactly is the difference 
-between free1 and free2 - someone more knowledgable would have to 
-comment (and overally comment about this method).
+So this appears to be an XFS bug to me. Maybe when running for long time it 
+corrupts its in-memory structures. Fortunately we did not see errors in 
+on-disk structures.
 
-In my case when I check block allocated by some file, I get results such as:
+A colleague did a kernel update on the inactive backend 1 server from 2.6.21 
+to 2.6.26 kernel from backports.org, tommorow backend 2 will follow. Let's 
+see whether that solves the issue.
 
-xfs_db> blockget -b 4584722 -n
-setting block 0/4584722 to data
-setting inode to 36231069 for block 0/4584722
-inode 36231069 block 4584722 at offset 810
-sb_fdblocks 1330583, aggregate AGF count 7983498
-xfs_db> ncheck -i 36231069
-    36231069 stuff/data/arst.dat
+Anyway it seems to be a hard to trigger bug and before bugging you with 
+something in kernel 2.6.21, we at least update to the latest backports.org 
+kernel.
 
-and further:
-
-xfs_db> inode 36231069
-xfs_db> bmap
-data offset 0 startblock 4583912 (0/4583912) count 832 flag 0
-
-Here the file lies in the first extent, taking 832*4096 blocks.
+-- 
+Martin Steigerwald - team(ix) GmbH - http://www.teamix.de
+gpg: 19E3 8D42 896F D004 08AC A0CA 1E10 C593 0399 AE90
