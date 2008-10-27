@@ -1,34 +1,63 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 10:15:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RHFNbS018277
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 10:15:23 -0700
-Message-ID: <4905F727.8030005@sandeen.net>
-Date: Mon, 27 Oct 2008 12:15:19 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 15:22:53 -0700 (PDT)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RMMISM012335
+	for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 15:22:18 -0700
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by netops-testserver-3.corp.sgi.com (Postfix) with ESMTP id B50D2908A8
+	for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 15:22:14 -0700 (PDT)
+Message-ID: <49063F75.7000604@sgi.com>
+Date: Mon, 27 Oct 2008 17:23:49 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Is it possible the check an frozen XFS filesytem to avoid downtime
-References: <200807141542.51613.ms@teamix.de> <200807150944.13277.ms@teamix.de> <487CC1EB.6030100@sandeen.net> <200810271757.09915.ms@teamix.de>
-In-Reply-To: <200810271757.09915.ms@teamix.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Bad day with xfsrestore, what went wrong?
+References: <gde1k2$gkp$1@ger.gmane.org> <ge38k5$qf$1@ger.gmane.org>
+In-Reply-To: <ge38k5$qf$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Martin Steigerwald <ms@teamix.de>
-Cc: Timothy Shimmin <tes@sgi.com>, xfs@oss.sgi.com
+To: mlueck@lueckdatasystems.com
+Cc: linux-xfs@oss.sgi.com
 
-Martin Steigerwald wrote:
-
-> A colleague did a kernel update on the inactive backend 1 server from 2.6.21 
-> to 2.6.26 kernel from backports.org, tommorow backend 2 will follow. Let's 
-> see whether that solves the issue.
+Michael Lueck wrote:
+> No suggestions / possible answers anyone for my question...
 > 
-> Anyway it seems to be a hard to trigger bug and before bugging you with 
-> something in kernel 2.6.21, we at least update to the latest backports.org 
-> kernel.
+> Michael Lueck wrote:
+>> Greetings-
+>>
+>> I hope this is the NNTP equiv of the email list found on this web page:
+>> http://oss.sgi.com/projects/xfs/
+>>
+>> I have been using XFS with Debian for a number of years with great 
+>> success. Today, xfsrestore really threw me a curve ball. I am 
+>> wondering what went wrong.
+>>
+>> I had wanted to restore from an old backup some directories that I 
+>> discovered I had need of. I used the following syntax to get the 
+>> restore started:
+>>
+>> xfsrestore -J -E -f /mnt/ext_backup/ldslnx01/20061220/data -s 
+>> shares/data -i -v verbose /srv
+>>
+>> I selected some directories to restore through the interactive 
+>> interface, then allowed it to restore the specified files.
+>>
+>> What it ended up doing, HOWEVER, was to restore every file present in 
+>> that old backup that was no longer on disk!
+>>
+>> Thus, what went wrong?
+>>
+>> Thanks!
+> 
 
-Honestly, I'd try a 2.6.27 kernel if you can, a few more problems were
-fixed there.
+Hi Michael,
 
--Eric
+I tried to reproduce this using the command line you supplied, but
+everything worked as expected for me. Perhaps try it without the -i
+(so that only subtrees given with -s are restored), just to rule out
+the possibility that you inadvertently added all files to the restore
+list.
+
+Bill
