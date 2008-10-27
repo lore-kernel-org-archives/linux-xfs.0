@@ -1,149 +1,156 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:49:08 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:57:26 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDmqBj027460
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:53 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDfNTI024588
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:41:24 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 31CCB54B908
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:51 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id hTJYiOQcgcBgh6B5 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:48:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A0EB54BB0D
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:41:23 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id aZ5Pr7OgC8LKn4Y0 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:41:23 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSSh-0001gR-I2
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:48:51 +0000
-Date: Mon, 27 Oct 2008 09:48:51 -0400
+	id 1KuSLS-0000ps-TU
+	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:41:22 +0000
+Date: Mon, 27 Oct 2008 09:41:22 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 10/10] remove leftovers of shared read-only support
-Message-ID: <20081027134851.GE6440@infradead.org>
+Subject: [PATCH 2/6] remove dead code for old inode item recovery
+Message-ID: <20081027134122.GC3183@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-kill-m_mk_sharedro
+Content-Disposition: inline; filename=xfs-remove-dead-log-recovery-code
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-We never supported shared read-only filesystems, so remove the dead
-code left over from IRIX for it.
+We have removed the support for old-style inode items a while ago and
+xlog_recover_do_inode_trans is now only called for XFS_LI_INODE items.
+That means we can remove the call to xfs_imap there and with it the
+XFS_IMAP_LOOKUP that is set by all other callers.  We can also mark
+xfs_imap static now.
+
+(First sent on October 21st)
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.c
+
+Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.c	2008-10-25 13:00:27.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.c	2008-10-25 13:18:54.000000000 +0200
-@@ -1353,24 +1353,6 @@ xfs_log_sbcount(
- 	return error;
- }
- 
--STATIC void
--xfs_mark_shared_ro(
--	xfs_mount_t	*mp,
--	xfs_buf_t	*bp)
--{
--	xfs_dsb_t	*sb = XFS_BUF_TO_SBP(bp);
--	__uint16_t	version;
--
--	if (!(sb->sb_flags & XFS_SBF_READONLY))
--		sb->sb_flags |= XFS_SBF_READONLY;
--
--	version = be16_to_cpu(sb->sb_versionnum);
--	if ((version & XFS_SB_VERSION_NUMBITS) != XFS_SB_VERSION_4 ||
--	    !(version & XFS_SB_VERSION_SHAREDBIT))
--		version |= XFS_SB_VERSION_SHAREDBIT;
--	sb->sb_versionnum = cpu_to_be16(version);
--}
--
- int
- xfs_unmountfs_writesb(xfs_mount_t *mp)
- {
-@@ -1386,12 +1368,6 @@ xfs_unmountfs_writesb(xfs_mount_t *mp)
- 
- 		sbp = xfs_getsb(mp, 0);
- 
--		/*
--		 * mark shared-readonly if desired
--		 */
--		if (mp->m_mk_sharedro)
--			xfs_mark_shared_ro(mp, sbp);
--
- 		XFS_BUF_UNDONE(sbp);
- 		XFS_BUF_UNREAD(sbp);
- 		XFS_BUF_UNDELAYWRITE(sbp);
-@@ -1403,8 +1379,6 @@ xfs_unmountfs_writesb(xfs_mount_t *mp)
- 		if (error)
- 			xfs_ioerror_alert("xfs_unmountfs_writesb",
- 					  mp, sbp, XFS_BUF_ADDR(sbp));
--		if (error && mp->m_mk_sharedro)
--			xfs_fs_cmn_err(CE_ALERT, mp, "Superblock write error detected while unmounting.  Filesystem may not be marked shared readonly");
- 		xfs_buf_relse(sbp);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-10-25 13:26:59.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-10-25 13:28:32.000000000 +0200
+@@ -2245,7 +2245,6 @@ xlog_recover_do_inode_trans(
+ 	xfs_inode_log_format_t	*in_f;
+ 	xfs_mount_t		*mp;
+ 	xfs_buf_t		*bp;
+-	xfs_imap_t		imap;
+ 	xfs_dinode_t		*dip;
+ 	xfs_ino_t		ino;
+ 	int			len;
+@@ -2273,48 +2272,29 @@ xlog_recover_do_inode_trans(
  	}
- 	return error;
-Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-10-25 13:18:51.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-10-25 13:18:54.000000000 +0200
-@@ -302,7 +302,6 @@ typedef struct xfs_mount {
- 	int			m_sinoalign;	/* stripe unit inode alignment */
- 	int			m_attr_magicpct;/* 37% of the blocksize */
- 	int			m_dir_magicpct;	/* 37% of the dir blocksize */
--	__uint8_t		m_mk_sharedro;	/* mark shared ro on unmount */
- 	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
- 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
- 	int			m_dirblksize;	/* directory block sz--bytes */
-Index: linux-2.6-xfs/fs/xfs/xfsidbg.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfsidbg.c	2008-10-25 13:18:51.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfsidbg.c	2008-10-25 13:18:54.000000000 +0200
-@@ -6523,8 +6523,7 @@ xfsidbg_xmount(xfs_mount_t *mp)
- 	kdb_printf("dalign %d swidth %d sinoalign %d attr_magicpct %d dir_magicpct %d\n",
- 		mp->m_dalign, mp->m_swidth, mp->m_sinoalign,
- 		mp->m_attr_magicpct, mp->m_dir_magicpct);
--	kdb_printf("mk_sharedro %d sectbb_log %d\n",
--		mp->m_mk_sharedro, mp->m_sectbb_log);
-+	kdb_printf("sectbb_log %d\n", mp->m_sectbb_log);
- 	kdb_printf("dirblkfsbs %d\n", mp->m_dirblkfsbs);
- 	kdb_printf("dirblksize %d dirdatablk 0x%Lx dirleafblk 0x%Lx dirfreeblk 0x%Lx\n",
- 		mp->m_dirblksize,
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:20:10.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-10-25 13:20:16.000000000 +0200
-@@ -1384,35 +1384,6 @@ xfs_finish_flags(
- 		return XFS_ERROR(EROFS);
- 	}
- 
--#if 0 /* shared mounts were never supported on Linux */
--	/*
--	 * check for shared mount.
--	 */
--	if (ap->flags & XFSMNT_SHARED) {
--		if (!xfs_sb_version_hasshared(&mp->m_sb))
--			return XFS_ERROR(EINVAL);
--
+ 	ino = in_f->ilf_ino;
+ 	mp = log->l_mp;
+-	if (ITEM_TYPE(item) == XFS_LI_INODE) {
+-		imap.im_blkno = (xfs_daddr_t)in_f->ilf_blkno;
+-		imap.im_len = in_f->ilf_len;
+-		imap.im_boffset = in_f->ilf_boffset;
+-	} else {
 -		/*
--		 * For IRIX 6.5, shared mounts must have the shared
--		 * version bit set, have the persistent readonly
--		 * field set, must be version 0 and can only be mounted
--		 * read-only.
+-		 * It's an old inode format record.  We don't know where
+-		 * its cluster is located on disk, and we can't allow
+-		 * xfs_imap() to figure it out because the inode btrees
+-		 * are not ready to be used.  Therefore do not pass the
+-		 * XFS_IMAP_LOOKUP flag to xfs_imap().  This will give
+-		 * us only the single block in which the inode lives
+-		 * rather than its cluster, so we must make sure to
+-		 * invalidate the buffer when we write it out below.
 -		 */
--		if (!ronly || !(mp->m_sb.sb_flags & XFS_SBF_READONLY) ||
--		     (mp->m_sb.sb_shared_vn != 0))
--			return XFS_ERROR(EINVAL);
--
--		mp->m_flags |= XFS_MOUNT_SHARED;
--
--		/*
--		 * Shared XFS V0 can't deal with DMI.  Return EINVAL.
--		 */
--		if (mp->m_sb.sb_shared_vn == 0 &&
--		    (mp->m_flags & XFS_MOUNT_DMAPI))
--			return XFS_ERROR(EINVAL);
+-		imap.im_blkno = 0;
+-		error = xfs_imap(log->l_mp, NULL, ino, &imap, 0);
+-		if (error)
+-			goto error;
 -	}
--#endif
--
- 	return 0;
- }
  
+ 	/*
+ 	 * Inode buffers can be freed, look out for it,
+ 	 * and do not replay the inode.
+ 	 */
+-	if (xlog_check_buffer_cancelled(log, imap.im_blkno, imap.im_len, 0)) {
++	if (xlog_check_buffer_cancelled(log, in_f->ilf_blkno,
++					in_f->ilf_len, 0)) {
+ 		error = 0;
+ 		goto error;
+ 	}
+ 
+-	bp = xfs_buf_read_flags(mp->m_ddev_targp, imap.im_blkno, imap.im_len,
+-								XFS_BUF_LOCK);
++	bp = xfs_buf_read_flags(mp->m_ddev_targp, in_f->ilf_blkno,
++				in_f->ilf_len, XFS_BUF_LOCK);
+ 	if (XFS_BUF_ISERROR(bp)) {
+ 		xfs_ioerror_alert("xlog_recover_do..(read#2)", mp,
+-				  bp, imap.im_blkno);
++				  bp, in_f->ilf_blkno);
+ 		error = XFS_BUF_GETERROR(bp);
+ 		xfs_buf_relse(bp);
+ 		goto error;
+ 	}
+ 	error = 0;
+ 	ASSERT(in_f->ilf_fields & XFS_ILOG_CORE);
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, imap.im_boffset);
++	dip = (xfs_dinode_t *)xfs_buf_offset(bp, in_f->ilf_boffset);
+ 
+ 	/*
+ 	 * Make sure the place we're flushing out to really looks
+Index: linux-2.6-xfs/fs/xfs/xfs_ialloc.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_ialloc.c	2008-10-25 13:24:43.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_ialloc.c	2008-10-25 13:28:32.000000000 +0200
+@@ -1262,8 +1262,7 @@ xfs_dilocate(
+ #endif /* DEBUG */
+ 		return XFS_ERROR(EINVAL);
+ 	}
+-	if ((mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) ||
+-	    !(flags & XFS_IMAP_LOOKUP)) {
++	if ((mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp))) {
+ 		offset = XFS_INO_TO_OFFSET(mp, ino);
+ 		ASSERT(offset < mp->m_sb.sb_inopblock);
+ 		*bno = XFS_AGB_TO_FSB(mp, agno, agbno);
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-10-25 13:26:51.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-10-25 13:28:32.000000000 +0200
+@@ -237,7 +237,7 @@ xfs_inotobp(
+ 	int		error;
+ 
+ 	imap.im_blkno = 0;
+-	error = xfs_imap(mp, tp, ino, &imap, imap_flags | XFS_IMAP_LOOKUP);
++	error = xfs_imap(mp, tp, ino, &imap, imap_flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -868,8 +868,7 @@ xfs_iread(
+ 	 * Get pointers to the on-disk inode and the buffer containing it.
+ 	 */
+ 	imap.im_blkno = bno;
+-	error = xfs_imap(mp, tp, ip->i_ino, &imap,
+-				XFS_IMAP_LOOKUP | imap_flags);
++	error = xfs_imap(mp, tp, ip->i_ino, &imap, imap_flags);
+ 	if (error)
+ 		goto out_destroy_inode;
+ 
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-10-25 13:26:51.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-10-25 13:28:32.000000000 +0200
+@@ -159,8 +159,7 @@ typedef struct xfs_icdinode {
+ /*
+  * Flags for xfs_inotobp, xfs_imap() and xfs_dilocate().
+  */
+-#define XFS_IMAP_LOOKUP		0x1
+-#define XFS_IMAP_BULKSTAT	0x2
++#define XFS_IMAP_BULKSTAT	0x1
+ 
+ /*
+  * Fork handling.
 
 -- 
