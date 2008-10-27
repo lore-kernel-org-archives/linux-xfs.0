@@ -1,64 +1,78 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 22:48:09 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R5m15x013551
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:48:02 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 04EB9549F27
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:48:00 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id Re280iNBytojrRPG for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 22:48:00 -0700 (PDT)
-Date: Mon, 27 Oct 2008 16:47:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: deadlock with latest xfs
-Message-ID: <20081027054757.GG11948@disturbed>
-References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com> <20081026223940.GN18495@disturbed> <490527E2.5000600@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 26 Oct 2008 23:31:59 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R6Vl1s015383
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2008 23:31:48 -0700
+Message-ID: <49055FDE.7040709@sgi.com>
+Date: Mon, 27 Oct 2008 17:29:50 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <490527E2.5000600@sgi.com>
+Subject: Re: deadlock with latest xfs
+References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com> <20081024052418.GO25906@disturbed> <20081024064804.GQ25906@disturbed> <20081026005351.GK18495@disturbed> <20081026025013.GL18495@disturbed> <49051C71.9040404@sgi.com> <20081027053004.GF11948@disturbed>
+In-Reply-To: <20081027053004.GF11948@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm@kvack.org
 
-On Mon, Oct 27, 2008 at 01:30:58PM +1100, Timothy Shimmin wrote:
-> Dave Chinner wrote:
-> > Ok, I think I've found the regression - it's introduced by the AIL
-> > cursor modifications. The patch below has been running for 15
-> > minutes now on my UML box that would have hung in a couple of
-> > minutes otherwise.
-.....
-> Yeah, the fix looks good. The previous code is pretty
-> obviously broken - a search which always returns NULL.
+Dave Chinner wrote:
+> On Mon, Oct 27, 2008 at 12:42:09PM +1100, Lachlan McIlroy wrote:
+>> Dave Chinner wrote:
+>>> On Sun, Oct 26, 2008 at 11:53:51AM +1100, Dave Chinner wrote:
+>>>> On Fri, Oct 24, 2008 at 05:48:04PM +1100, Dave Chinner wrote:
+>>>>> OK, I just hung a single-threaded rm -rf after this completed:
+>>>>>
+>>>>> # fsstress -p 1024 -n 100 -d /mnt/xfs2/fsstress
+>>>>>
+>>>>> It has hung with this trace:
+> ....
+>>> Got it now. I can reproduce this in a couple of minutes now that both
+>>> the test fs and the fs hosting the UML fs images are using lazy-count=1
+>>> (and the frequent 10s long host system freezes have gone away, too).
+>>>
+>>> Looks like *another* new memory allocation problem [1]:
+> .....
+>>> We've entered memory reclaim inside the xfsdatad while trying to do
+>>> unwritten extent completion during I/O completion, and that memory
+>>> reclaim is now blocked waiting for I/o completion that cannot make
+>>> progress.
+>>>
+>>> Nasty.
+>>>
+>>> My initial though is to make _xfs_trans_alloc() able to take a KM_NOFS argument
+>>> so we don't re-enter the FS here. If we get an ENOMEM in this case, we should
+>>> then re-queue the I/O completion at the back of the workqueue and let other
+>>> I/o completions progress before retrying this one. That way the I/O that
+>>> is simply cleaning memory will make progress, hence allowing memory
+>>> allocation to occur successfully when we retry this I/O completion...
+>> It could work - unless it's a synchronous I/O in which case the I/O is not
+>> complete until the extent conversion takes place.
 > 
-> Which begs the question on the best way of testing this ail code.
-> I dunno - it would be nice for independent testing of data structures
-> but perhaps that is too ambitious.
+> Right. Pushing unwritten extent conversion onto a different
+> workqueue is probably the only way to handle this easily.
+> That's the same solution Irix has been using for a long time
+> (the xfsc thread)....
+
+Would that be a workqueue specific to one filesystem?  Right now our
+workqueues are per-cpu so they can contain I/O completions for multiple
+filesystems.
+
 > 
-> OOC, so the call path for this code....
-> xfsaild -> xfsaild_push(ailp, &last_pushed_lsn)
->            -> lip = xfs_trans_ail_cursor_first(ailp, cur, *last_lsn)
-> Initially, last_lsn = 0 in xfsaild
-> but it will be updated via last_pushed_lsn.
+>> Could we allocate the memory up front before the I/O is issued?
+> 
+> Possibly, but that will create more memory pressure than
+> allocation in I/O completion because now we could need to hold
+> thousands of allocations across an I/O - think of the case where
+> we are running low on memory and have a disk subsystem capable of
+> a few hundred thousand I/Os per second. the allocation failing would
+> prevent the I/os from being issued, and if this is buffered writes
+> into unwritten extents we'd be preventing dirty pages from being
+> cleaned....
 
-Right.
-
-> So it looks like things will work initially when lsn==0, because
-> xfs_trans_ail_cursor_first special cases that and uses the min.
-> But as soon as the lsn is set to non-zero,
-> xfs_trans_ail_cursor_first will return NULL,
-> and xfsaild_push will return early.
-
-Right - that was the bug. With the fix we will only return NULL if
-we walk off the end of the AIL list before we get to the LSN being
-requested to start at. Otherwise we jump over the "lip = NULL" and
-start at the first log item with a LSN greater than or equal to the
-last_lsn....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The allocation has to be done sometime - if have a few hundred thousand
+I/Os per second then the queue of unwritten extent conversion requests
+is going to grow very quickly.  If a separate workqueue will fix this
+then that's a better solution anyway.
