@@ -1,63 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 15:22:53 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RMMISM012335
-	for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 15:22:18 -0700
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by netops-testserver-3.corp.sgi.com (Postfix) with ESMTP id B50D2908A8
-	for <linux-xfs@oss.sgi.com>; Mon, 27 Oct 2008 15:22:14 -0700 (PDT)
-Message-ID: <49063F75.7000604@sgi.com>
-Date: Mon, 27 Oct 2008 17:23:49 -0500
-From: Bill Kendall <wkendall@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 16:35:36 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RNZPts021386
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 16:35:26 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A69754F2D0
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 16:35:24 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id pJoSYVFWH2ln8OOf for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 16:35:24 -0700 (PDT)
+Date: Tue, 28 Oct 2008 10:35:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Map a disk LBA to filename?
+Message-ID: <20081027233516.GG4985@disturbed>
+References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com>
 MIME-Version: 1.0
-Subject: Re: Bad day with xfsrestore, what went wrong?
-References: <gde1k2$gkp$1@ger.gmane.org> <ge38k5$qf$1@ger.gmane.org>
-In-Reply-To: <ge38k5$qf$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4905BC13.3030402@drutsystem.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: mlueck@lueckdatasystems.com
-Cc: linux-xfs@oss.sgi.com
+To: Michal Soltys <nozo@drutsystem.com>
+Cc: Carsten Aulbert <carsten.aulbert@aei.mpg.de>, xfs@oss.sgi.com
 
-Michael Lueck wrote:
-> No suggestions / possible answers anyone for my question...
-> 
-> Michael Lueck wrote:
->> Greetings-
+On Mon, Oct 27, 2008 at 02:03:15PM +0100, Michal Soltys wrote:
+> Carsten Aulbert wrote:
 >>
->> I hope this is the NNTP equiv of the email list found on this web page:
->> http://oss.sgi.com/projects/xfs/
+>> Dave Chinner wrote:
+>>> Use xfs_bmap to find the location on disk of the extents in each
+>>> file. Recurse over the filesystem until you find the file that owns
+>>> the block that went bad.
 >>
->> I have been using XFS with Debian for a number of years with great 
->> success. Today, xfsrestore really threw me a curve ball. I am 
->> wondering what went wrong.
+>> Sounds like a tedious but doable route to take.
 >>
->> I had wanted to restore from an old backup some directories that I 
->> discovered I had need of. I used the following syntax to get the 
->> restore started:
->>
->> xfsrestore -J -E -f /mnt/ext_backup/ldslnx01/20061220/data -s 
->> shares/data -i -v verbose /srv
->>
->> I selected some directories to restore through the interactive 
->> interface, then allowed it to restore the specified files.
->>
->> What it ended up doing, HOWEVER, was to restore every file present in 
->> that old backup that was no longer on disk!
->>
->> Thus, what went wrong?
->>
->> Thanks!
-> 
+>
+> Wouldn't something like (under xfs_db) :
+>
+> getblock -b #block -n
+> ncheck -i #inode
+>
+> where required #inode is reported by getblock
+>
+> do the thing ?
 
-Hi Michael,
+Blockget - yes it will. It just does the traversal internally to
+build the mapping. With large filesystems xfs_db can run out of
+memory building the mapping, which is why I've used the
+explicit traverse+xfs_bmap method in the past....
 
-I tried to reproduce this using the command line you supplied, but
-everything worked as expected for me. Perhaps try it without the -i
-(so that only subtrees given with -s are restored), just to rule out
-the possibility that you inadvertently added all files to the restore
-list.
+Cheers,
 
-Bill
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
