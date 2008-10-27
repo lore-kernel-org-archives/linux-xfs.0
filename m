@@ -1,38 +1,33 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 00:40:24 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 00:46:09 -0700 (PDT)
 Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R7dkXH026547
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 00:39:46 -0700
-Subject: TAKE 987246 - correctly select first log item to push
-Message-Id: <20081027073935.916FB58AE1E5@chook.melbourne.sgi.com>
-Date: Mon, 27 Oct 2008 18:39:35 +1100 (EST)
-From: lachlan@sgi.com (Lachlan McIlroy)
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R7jupP026981
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 00:45:56 -0700
+Message-ID: <49057146.3000101@sgi.com>
+Date: Mon, 27 Oct 2008 18:44:06 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+Reply-To: lachlan@sgi.com
+MIME-Version: 1.0
+Subject: Re: linux-next: left over things in linux-next after 2.6.28-c1
+References: <20081026005009.50dbbb33.sfr@canb.auug.org.au> <20081026081717.GB20872@infradead.org> <20081026193421.f5f7d8f1.sfr@canb.auug.org.au> <20081026083939.GA19394@infradead.org>
+In-Reply-To: <20081026083939.GA19394@infradead.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: sgi.bugs.xfs@engr.sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com
 
-correctly select first log item to push
+Christoph Hellwig wrote:
+> On Sun, Oct 26, 2008 at 07:34:21PM +1100, Stephen Rothwell wrote:
+>> Presumably what was merged was slightly different (or the commits were
+>> split up differently).  This is the same problem I have with the kvm tree.
+> 
+> It should be the same, but the xfs trees have been a bit of a maze
+> recently, so it shouldn't be a surprise that your list got out of sync.
+> 
 
-Under heavy metadata load we are seeing log hangs. The
-AIL has items in it ready to be pushed, and they are within
-the push target window. However, we are not pushing them
-when the last pushed LSN is less than the LSN of the
-first log item on the AIL. This is a regression introduced
-by the AIL push cursor modifications.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-Date:  Mon Oct 27 18:39:08 EST 2008
-Workarea:  redback.melbourne.sgi.com:/home/lachlan/isms/2.6.x-xfs
-Inspected by:  tes
-Author:  lachlan
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:32409a
-fs/xfs/xfs_trans_ail.c - 1.93 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_trans_ail.c.diff?r1=text&tr1=1.93&r2=text&tr2=1.92&f=h
-	- correctly select first log item to push
+The XFS tree used for linux-next got a bit out of whack and I couldn't make
+sense of the mess so I've been using a different tree for the mainline pull
+requests.  We'll have this mess sorted out soon.
