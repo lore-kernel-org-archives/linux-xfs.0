@@ -1,77 +1,141 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:33:41 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:33:45 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDXWSL020673
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:33 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDXZXI020682
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:35 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7955A54BA7A
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:32 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id ZGyqXBDBwOiA4FFC for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5729354BA7A
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:34 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id maTdclG2973fBKH2 for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:33:34 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSDr-00086N-RF
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:33:31 +0000
-Date: Mon, 27 Oct 2008 09:33:31 -0400
+	id 1KuSDu-00086U-Hw
+	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:33:34 +0000
+Date: Mon, 27 Oct 2008 09:33:34 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] remove bhv_statvfs_t typedef
-Message-ID: <20081027133331.GB31125@infradead.org>
+Subject: [PATCH 2/3] remove xfs_vfs.h
+Message-ID: <20081027133334.GC31125@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-kill-bhv_statvfs_t
+Content-Disposition: inline; filename="xfs-kill-xfs_vfs.h"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
+The only thing left are the forced shutdown flags and freeze macros which
+fit into xfs_mount.h much better.
+
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-10-15 07:31:21.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-10-15 18:18:49.000000000 -0400
+@@ -36,7 +36,6 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_attr_sf.h"
+ #include "xfs_dir2_sf.h"
+-#include "xfs_vfs.h"
+ #include "xfs_vnode.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2008-10-15 07:46:49.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_linux.h	2008-10-15 18:18:49.000000000 -0400
+@@ -85,7 +85,6 @@
+ #include <asm/byteorder.h>
+ #include <asm/unaligned.h>
+ 
+-#include <xfs_vfs.h>
+ #include <xfs_cred.h>
+ #include <xfs_vnode.h>
+ #include <xfs_stats.h>
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vfs.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vfs.h	2008-10-16 00:18:08.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vfs.h	2008-10-16 00:18:49.000000000 +0200
-@@ -31,8 +31,6 @@ struct xfs_inode;
- struct xfs_mount;
- struct xfs_mount_args;
- 
--typedef struct kstatfs	bhv_statvfs_t;
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vfs.h	2008-10-15 18:18:49.000000000 -0400
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,44 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_VFS_H__
+-#define __XFS_VFS_H__
 -
- #define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
-Index: linux-2.6-xfs/fs/xfs/quota/xfs_qm_bhv.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/quota/xfs_qm_bhv.c	2008-10-16 00:18:08.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/quota/xfs_qm_bhv.c	2008-10-16 00:18:49.000000000 +0200
-@@ -50,7 +50,7 @@
- 
- STATIC void
- xfs_fill_statvfs_from_dquot(
--	bhv_statvfs_t		*statp,
-+	struct kstatfs		*statp,
- 	xfs_disk_dquot_t	*dp)
- {
- 	__uint64_t		limit;
-@@ -87,7 +87,7 @@ xfs_fill_statvfs_from_dquot(
- STATIC void
- xfs_qm_statvfs(
- 	xfs_inode_t		*ip,
--	bhv_statvfs_t		*statp)
-+	struct kstatfs		*statp)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_dquot_t		*dqp;
+-#include <linux/vfs.h>
+-#include "xfs_fs.h"
+-
+-struct inode;
+-
+-struct fid;
+-struct cred;
+-struct seq_file;
+-struct super_block;
+-struct xfs_inode;
+-struct xfs_mount;
+-struct xfs_mount_args;
+-
+-#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
+-#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+-#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+-#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+-#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
+-#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
+-
+-#define xfs_test_for_freeze(mp)		((mp)->m_super->s_frozen)
+-#define xfs_wait_for_freeze(mp,l)	vfs_check_frozen((mp)->m_super, (l))
+-
+-#endif	/* __XFS_VFS_H__ */
 Index: linux-2.6-xfs/fs/xfs/xfs_mount.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-10-16 00:18:08.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-10-22 09:29:09.000000000 +0200
-@@ -133,7 +133,7 @@ typedef struct xfs_dquot * (*xfs_dqvopch
- 			struct xfs_dquot **, struct xfs_dquot *);
- typedef int	(*xfs_dqvopchownresv_t)(struct xfs_trans *, struct xfs_inode *,
- 			struct xfs_dquot *, struct xfs_dquot *, uint);
--typedef void	(*xfs_dqstatvfs_t)(struct xfs_inode *, bhv_statvfs_t *);
-+typedef void	(*xfs_dqstatvfs_t)(struct xfs_inode *, struct kstatfs *);
- typedef int	(*xfs_dqsync_t)(struct xfs_mount *, int flags);
- typedef int	(*xfs_quotactl_t)(struct xfs_mount *, int, int, xfs_caddr_t);
+--- linux-2.6-xfs.orig/fs/xfs/xfs_mount.h	2008-10-15 18:18:49.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/xfs_mount.h	2008-10-15 18:18:49.000000000 -0400
+@@ -435,6 +435,16 @@ void xfs_do_force_shutdown(struct xfs_mo
+ #define xfs_force_shutdown(m,f)	\
+ 	xfs_do_force_shutdown(m, f, __FILE__, __LINE__)
+ 
++#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
++#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
++#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
++#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
++#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
++#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
++
++#define xfs_test_for_freeze(mp)		((mp)->m_super->s_frozen)
++#define xfs_wait_for_freeze(mp,l)	vfs_check_frozen((mp)->m_super, (l))
++
+ /*
+  * Flags for xfs_mountfs
+  */
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-10-15 07:31:17.000000000 -0400
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-10-15 18:19:30.000000000 -0400
+@@ -18,7 +18,10 @@
+ #ifndef __XFS_VNODE_H__
+ #define __XFS_VNODE_H__
+ 
++#include "xfs_fs.h"
++
+ struct file;
++struct xfs_inode;
+ struct xfs_iomap;
+ struct attrlist_cursor_kern;
  
 
 -- 
