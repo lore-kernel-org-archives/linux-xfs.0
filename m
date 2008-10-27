@@ -1,99 +1,75 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:47:30 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDlH7u026136
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:17 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 06:47:36 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9RDlJdd026147
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:19 -0700
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9DE51488026
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:16 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id uo2c71pxUm5GC0ig for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1372354B8D5
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:18 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id VNOQ6WJgzMrKIysy for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 06:47:18 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KuSRA-0001Yf-GK
-	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:47:16 +0000
-Date: Mon, 27 Oct 2008 09:47:16 -0400
+	id 1KuSRC-0001c9-HM
+	for xfs@oss.sgi.com; Mon, 27 Oct 2008 13:47:18 +0000
+Date: Mon, 27 Oct 2008 09:47:18 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 04/10] reduce l_icloglock roundtrips
-Message-ID: <20081027134716.GE5730@infradead.org>
+Subject: [PATCH 05/10] remove dead code from sv_t implementation
+Message-ID: <20081027134718.GF5730@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline; filename=xfs-reduce-log-lock-roundtrips
+Content-Disposition: inline; filename=xfs-simplify-sv
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-All but one caller of xlog_state_want_sync drop and re-acquire
-l_icloglock around the call to it, just so that xlog_state_want_sync can
-acquire and drop it.
-
-Move all lock operation out of l_icloglock and assert that the lock is
-held when it is called.
-
-Note that it would make sense to extende this scheme to
-xlog_state_release_iclog, but the locking in there is more complicated
-and we'd like to keep the atomic_dec_and_lock optmization for those
-callers not having l_icloglock yet.
-
-(First sent on Semptember 29th)
-
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_log.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/sv.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_log.c	2008-09-29 10:54:19.000000000 +0200
-+++ linux-2.6-xfs/fs/xfs/xfs_log.c	2008-09-29 10:58:23.000000000 +0200
-@@ -724,8 +724,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 		spin_lock(&log->l_icloglock);
- 		iclog = log->l_iclog;
- 		atomic_inc(&iclog->ic_refcnt);
--		spin_unlock(&log->l_icloglock);
- 		xlog_state_want_sync(log, iclog);
-+		spin_unlock(&log->l_icloglock);
- 		error = xlog_state_release_iclog(log, iclog);
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/sv.h	2008-09-29 10:45:36.000000000 +0200
++++ linux-2.6-xfs/fs/xfs/linux-2.6/sv.h	2008-09-29 10:49:16.000000000 +0200
+@@ -32,23 +32,15 @@ typedef struct sv_s {
+ 	wait_queue_head_t waiters;
+ } sv_t;
  
- 		spin_lock(&log->l_icloglock);
-@@ -762,9 +762,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 		spin_lock(&log->l_icloglock);
- 		iclog = log->l_iclog;
- 		atomic_inc(&iclog->ic_refcnt);
--		spin_unlock(&log->l_icloglock);
- 
- 		xlog_state_want_sync(log, iclog);
-+		spin_unlock(&log->l_icloglock);
- 		error =  xlog_state_release_iclog(log, iclog);
- 
- 		spin_lock(&log->l_icloglock);
-@@ -1957,7 +1957,9 @@ xlog_write(xfs_mount_t *	mp,
- 		if (iclog->ic_size - log_offset <= sizeof(xlog_op_header_t)) {
- 		    xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
- 		    record_cnt = data_cnt = 0;
-+		    spin_lock(&log->l_icloglock);
- 		    xlog_state_want_sync(log, iclog);
-+		    spin_unlock(&log->l_icloglock);
- 		    if (commit_iclog) {
- 			ASSERT(flags & XLOG_COMMIT_TRANS);
- 			*commit_iclog = iclog;
-@@ -3166,7 +3168,7 @@ try_again:
- STATIC void
- xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
+-#define SV_FIFO		0x0		/* sv_t is FIFO type */
+-#define SV_LIFO		0x2		/* sv_t is LIFO type */
+-#define SV_PRIO		0x4		/* sv_t is PRIO type */
+-#define SV_KEYED	0x6		/* sv_t is KEYED type */
+-#define SV_DEFAULT      SV_FIFO
+-
+-
+-static inline void _sv_wait(sv_t *sv, spinlock_t *lock, int state,
+-			     unsigned long timeout)
++static inline void _sv_wait(sv_t *sv, spinlock_t *lock)
  {
--	spin_lock(&log->l_icloglock);
-+	ASSERT(spin_is_locked(&log->l_icloglock));
+ 	DECLARE_WAITQUEUE(wait, current);
  
- 	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
- 		xlog_state_switch_iclogs(log, iclog, 0);
-@@ -3174,10 +3176,7 @@ xlog_state_want_sync(xlog_t *log, xlog_i
- 		ASSERT(iclog->ic_state &
- 			(XLOG_STATE_WANT_SYNC|XLOG_STATE_IOERROR));
- 	}
--
--	spin_unlock(&log->l_icloglock);
--}	/* xlog_state_want_sync */
--
-+}
+ 	add_wait_queue_exclusive(&sv->waiters, &wait);
+-	__set_current_state(state);
++	__set_current_state(TASK_UNINTERRUPTIBLE);
+ 	spin_unlock(lock);
  
+-	schedule_timeout(timeout);
++	schedule();
  
- /*****************************************************************************
+ 	remove_wait_queue(&sv->waiters, &wait);
+ }
+@@ -58,13 +50,7 @@ static inline void _sv_wait(sv_t *sv, sp
+ #define sv_destroy(sv) \
+ 	/*NOTHING*/
+ #define sv_wait(sv, pri, lock, s) \
+-	_sv_wait(sv, lock, TASK_UNINTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT)
+-#define sv_wait_sig(sv, pri, lock, s)   \
+-	_sv_wait(sv, lock, TASK_INTERRUPTIBLE, MAX_SCHEDULE_TIMEOUT)
+-#define sv_timedwait(sv, pri, lock, s, svf, ts, rts) \
+-	_sv_wait(sv, lock, TASK_UNINTERRUPTIBLE, timespec_to_jiffies(ts))
+-#define sv_timedwait_sig(sv, pri, lock, s, svf, ts, rts) \
+-	_sv_wait(sv, lock, TASK_INTERRUPTIBLE, timespec_to_jiffies(ts))
++	_sv_wait(sv, lock)
+ #define sv_signal(sv) \
+ 	wake_up(&(sv)->waiters)
+ #define sv_broadcast(sv) \
 
 -- 
