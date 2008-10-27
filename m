@@ -1,121 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 00:33:13 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 00:35:32 -0700 (PDT)
 Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R7X3Jd025882
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 00:33:03 -0700
-Message-ID: <49056E40.5040906@sgi.com>
-Date: Mon, 27 Oct 2008 18:31:12 +1100
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9R7ZTRn026186
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 00:35:30 -0700
+Message-ID: <49056ED7.7030303@sgi.com>
+Date: Mon, 27 Oct 2008 18:33:43 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 Reply-To: lachlan@sgi.com
 MIME-Version: 1.0
 Subject: Re: deadlock with latest xfs
-References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com> <20081024052418.GO25906@disturbed> <20081024064804.GQ25906@disturbed> <20081026005351.GK18495@disturbed> <20081026025013.GL18495@disturbed> <49051C71.9040404@sgi.com> <20081027053004.GF11948@disturbed> <49055FDE.7040709@sgi.com> <20081027065455.GB4985@disturbed>
-In-Reply-To: <20081027065455.GB4985@disturbed>
+References: <4900412A.2050802@sgi.com> <20081023205727.GA28490@infradead.org> <49013C47.4090601@sgi.com> <20081026223940.GN18495@disturbed>
+In-Reply-To: <20081026223940.GN18495@disturbed>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm@kvack.org
+To: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
 Dave Chinner wrote:
-> On Mon, Oct 27, 2008 at 05:29:50PM +1100, Lachlan McIlroy wrote:
->> Dave Chinner wrote:
->>> On Mon, Oct 27, 2008 at 12:42:09PM +1100, Lachlan McIlroy wrote:
->>>> Dave Chinner wrote:
->>>>> On Sun, Oct 26, 2008 at 11:53:51AM +1100, Dave Chinner wrote:
->>>>>> On Fri, Oct 24, 2008 at 05:48:04PM +1100, Dave Chinner wrote:
->>>>>>> OK, I just hung a single-threaded rm -rf after this completed:
->>>>>>>
->>>>>>> # fsstress -p 1024 -n 100 -d /mnt/xfs2/fsstress
->>>>>>>
->>>>>>> It has hung with this trace:
->>> ....
->>>>> Got it now. I can reproduce this in a couple of minutes now that both
->>>>> the test fs and the fs hosting the UML fs images are using lazy-count=1
->>>>> (and the frequent 10s long host system freezes have gone away, too).
->>>>>
->>>>> Looks like *another* new memory allocation problem [1]:
->>> .....
->>>>> We've entered memory reclaim inside the xfsdatad while trying to do
->>>>> unwritten extent completion during I/O completion, and that memory
->>>>> reclaim is now blocked waiting for I/o completion that cannot make
->>>>> progress.
->>>>>
->>>>> Nasty.
->>>>>
->>>>> My initial though is to make _xfs_trans_alloc() able to take a KM_NOFS argument
->>>>> so we don't re-enter the FS here. If we get an ENOMEM in this case, we should
->>>>> then re-queue the I/O completion at the back of the workqueue and let other
->>>>> I/o completions progress before retrying this one. That way the I/O that
->>>>> is simply cleaning memory will make progress, hence allowing memory
->>>>> allocation to occur successfully when we retry this I/O completion...
->>>> It could work - unless it's a synchronous I/O in which case the I/O is not
->>>> complete until the extent conversion takes place.
->>> Right. Pushing unwritten extent conversion onto a different
->>> workqueue is probably the only way to handle this easily.
->>> That's the same solution Irix has been using for a long time
->>> (the xfsc thread)....
->> Would that be a workqueue specific to one filesystem?  Right now our
->> workqueues are per-cpu so they can contain I/O completions for multiple
->> filesystems.
+> On Fri, Oct 24, 2008 at 01:08:55PM +1000, Lachlan McIlroy wrote:
+>> Christoph Hellwig wrote:
+>>> On Thu, Oct 23, 2008 at 07:17:30PM +1000, Lachlan McIlroy wrote:
+>>>> another problem with latest xfs
+>>> Is this with the 2.6.27-based ptools/cvs tree or with the 2.6.28 based
+>>> git tree?  It does looks more like a VM issue than a XFS issue to me.
+>>>
+>> It's with the 2.6.27-rc8 based ptools tree.  Prior to checking
+>> in these patches:
+>>
+>> Can't lock inodes in radix tree preload region
+>> stop using xfs_itobp in xfs_bulkstat
+>> free partially initialized inodes using destroy_inode
+>>
+>> I was able to stress a system for about 4 hours before it ran out
+>> of memory.  Now I hit the deadlock within a few minutes.  I need
+>> to roll back to find which patch changed the behaviour.
 > 
-> I've simply implemented another per-cpu workqueue set.
-> 
->>>> Could we allocate the memory up front before the I/O is issued?
->>> Possibly, but that will create more memory pressure than
->>> allocation in I/O completion because now we could need to hold
->>> thousands of allocations across an I/O - think of the case where
->>> we are running low on memory and have a disk subsystem capable of
->>> a few hundred thousand I/Os per second. the allocation failing would
->>> prevent the I/os from being issued, and if this is buffered writes
->>> into unwritten extents we'd be preventing dirty pages from being
->>> cleaned....
->> The allocation has to be done sometime - if have a few hundred thousand
->> I/Os per second then the queue of unwritten extent conversion requests
->> is going to grow very quickly.
-> 
-> Sure, but the difference is that in a workqueue we are doing:
-> 
-> 	alloc
-> 	free
-> 	alloc
-> 	free
-> 	.....
-> 	alloc
-> 	free
-> 
-> So the instantaneous memory usage is bound by the number of
-> workqueue threads doing conversions. The "pre-allocate" case is:
-> 
-> 	alloc
-> 	alloc
-> 	alloc
-> 	alloc
-> 	......
-> 	<io completes>
-> 	free
-> 	.....
-> 	<io_completes>
-> 	free
-> 	.....
-> 
-> so the allocation is bound by the number of parallel I/Os we have
-> not completed. Given that the transaction structure is *800* bytes,
-> they will consume memory very quickly if pre-allocated before the
-> I/O is dispatched.
-Ah, yes of course I see your point.  It would only really work for
-synchronous I/O.
-
-Even with the current code we could have queues that grow very large
-because buffered writes to unwritten extents don't wait for the
-conversion.  So even for the small amount of memory we allocate for
-each queue entry we still could consume a lot in total.
+> Ok, I think I've found the regression - it's introduced by the AIL
+> cursor modifications. The patch below has been running for 15
+> minutes now on my UML box that would have hung in a couple of
+> minutes otherwise.
+Yep, looks good here too.  My test system has been up at least an hour
+and still chugging.
 
 > 
->> If a separate workqueue will fix this
->> then that's a better solution anyway.
+> FYI, the way I found this was:
 > 
-> I think so. The patch I have been testing is below.
-
-Thanks, I'll add it to the list.
+> 	- put a breakpoint on xfs_create() once the fs hung
+> 	- `touch /mnt/xfs2/fred` to trigger the break point.
+> 	- look at:
+> 		- mp->m_ail->xa_target
+> 		- mp->m_ail->xa_ail.next->li_lsn
+> 		- mp->m_log->l_tail_lsn
+> 	  which indicated the push target was way ahead the
+> 	  tail of the log, so AIL pushing was obviously not
+> 	  happening otherwise we'd be making progress.
+> 	- added breakpoint on xfsaild_push() and continued
+> 	- xfsaild_push() bp triggered, looked at *last_lsn
+> 	  and found it way behind the tail of the log (like
+> 	  3 cycle behind), which meant that would return
+> 	  NULL instead of the first object and AIL pushing
+> 	  would abort. Confirmed with single stepping.
+> 
+> Cheers,
+> 
+> Dave.
