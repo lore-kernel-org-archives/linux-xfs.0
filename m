@@ -1,41 +1,68 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:16:29 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6GJ6n021671
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:19 -0700
-Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2538810EE6B4
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:13 -0700 (PDT)
-Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id p5rwG4nU0SFRKb3w for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:13 -0700 (PDT)
-Date: Mon, 27 Oct 2008 23:15:33 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 2/3] Implement generic freeze feature
-Message-Id: <20081027231533.96c42a78.akpm@linux-foundation.org>
-In-Reply-To: <20081027215855t-sato@mail.jp.nec.com>
-References: <20081027215855t-sato@mail.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:25:41 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6PYCw022718
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:34 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 042021B662BB
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:32 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id zZhwob5SsTBHzWlx for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:32 -0700 (PDT)
+Date: Tue, 28 Oct 2008 17:25:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock with latest xfs
+Message-ID: <20081028062524.GQ4985@disturbed>
+References: <4900412A.2050802@sgi.com> <20081026005351.GK18495@disturbed> <20081026025013.GL18495@disturbed> <200810281702.17135.nickpiggin@yahoo.com.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <200810281702.17135.nickpiggin@yahoo.com.au>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Takashi Sato <t-sato@yk.jp.nec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm@kvack.org
 
-On Mon, 27 Oct 2008 21:58:54 +0900 Takashi Sato <t-sato@yk.jp.nec.com> wrote:
+On Tue, Oct 28, 2008 at 05:02:16PM +1100, Nick Piggin wrote:
+> On Sunday 26 October 2008 13:50, Dave Chinner wrote:
+> 
+> > [1] I don't see how any of the XFS changes we made make this easier to hit.
+> > What I suspect is a VM regression w.r.t. memory reclaim because this is
+> > the second problem since 2.6.26 that appears to be a result of memory
+> > allocation failures in places that we've never, ever seen failures before.
+> >
+> > The other new failure is this one:
+> >
+> > http://bugzilla.kernel.org/show_bug.cgi?id=11805
+> >
+> > which is an alloc_pages(GFP_KERNEL) failure....
+> >
+> > mm-folk - care to weight in?
+> 
+> order-0 alloc page GFP_KERNEL can fail sometimes. If it is called
+> from reclaim or PF_MEMALLOC thread; if it is OOM-killed; fault
+> injection.
+> 
+> This is even the case for __GFP_NOFAIL allocations (which basically
+> are buggy anyway).
+> 
+> Not sure why it might have started happening, but I didn't see
+> exactly which alloc_pages you are talking about? If it is via slab,
+> then maybe some parameters have changed (eg. in SLUB) which is
+> using higher order allocations.
 
-> -void thaw_bdev(struct block_device *bdev, struct super_block *sb)
-> +int thaw_bdev(struct block_device *bdev, struct super_block *sb)
->  {
-> +	int error = 0;
-> +
-> +	mutex_lock(&bdev->bd_fsfreeze_mutex);
-> +	if (!bdev->bd_fsfreeze_count) {
-> +		mutex_unlock(&bdev->bd_fsfreeze_mutex);
-> +		return -EINVAL;
+In fs/xfs/linux-2.6/xfs_buf.c::xfs_buf_get_noaddr(). It's doing a
+single page allocation at a time.
 
-This would be a programming error, yes?
+It may be that this failure is caused by an increase base memory
+consumption of the kernel as this failure was reported in an lguest
+and reproduced with a simple 'modprobe xfs ; mount /dev/xxx
+/mnt/xfs' command. Maybe the lguest had very little memory available
+to begin with and trying to allocate 2MB of pages for 8x256k log
+buffers may have been too much for it...
 
-If so, a WARN_ON is more appropriate than a silent runtime error.
+Cheers,
 
-> +	}
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
