@@ -1,51 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:56:40 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Oct 2008 00:11:58 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6uXMw025133
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:56:34 -0700
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 06E145506FF
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:56:32 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id G0Gq3oDWxa06dCet for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:56:32 -0700 (PDT)
-Date: Tue, 28 Oct 2008 17:56:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/7] kill xfs_dinode_core_t
-Message-ID: <20081028065629.GT4985@disturbed>
-References: <20081027133912.GF1109@infradead.org>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S7BoPd028379
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 00:11:51 -0700
+Received: from smtp.welcomes-you.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4B0C54ED93
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 00:11:49 -0700 (PDT)
+Received: from smtp.welcomes-you.com (welcomes-you.com [85.214.50.128]) by cuda.sgi.com with ESMTP id RkruxnDihSeXMJAg for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 00:11:49 -0700 (PDT)
+Message-ID: <4906BB32.8080403@aei.mpg.de>
+Date: Tue, 28 Oct 2008 08:11:46 +0100
+From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081027133912.GF1109@infradead.org>
+Subject: Re: Map a disk LBA to filename?
+References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com> <20081027233516.GG4985@disturbed>
+In-Reply-To: <20081027233516.GG4985@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Michal Soltys <nozo@drutsystem.com>, david@fromorbit.com, xfs@oss.sgi.com
 
-On Mon, Oct 27, 2008 at 09:39:12AM -0400, Christoph Hellwig wrote:
-> Now that we have a separate xfs_icdinode_t for the in-core inode which
-> gets logged there is no need anymore for the xfs_dinode vs xfs_dinode_core
-> split - the fact that part of the structure gets logged through the inode
-> log item and a small part not can better be described in a comment.
-> 
-> All sizeof operations on the dinode_core either really wanted the
-> icdinode and are switched to that one, or had already added the size
-> of the agi unlinked list pointer.  Later both will be replaced with
-> helpers once we get the larger CRC-enabled dinode.
-> 
-> Removing the data and attribute fork unions also has the advantage that
-> xfs_dinode.h doesn't need to pull in every header under the sun.
-> 
-> While we're at it also add some more comments describing the dinode
-> structure.
-> 
-> (First sent on October 7th)
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi Dave et al
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+Dave Chinner wrote:
 
--- 
-Dave Chinner
-david@fromorbit.com
+> Blockget - yes it will. It just does the traversal internally to
+> build the mapping. With large filesystems xfs_db can run out of
+> memory building the mapping, which is why I've used the
+> explicit traverse+xfs_bmap method in the past....
+
+How expensive is this operation (rule of thumb)? We will mostly use this
+on compute nodes where the partition is 500-750 GB large and the node
+has 8 GB of memory. For the simple test where I apparently hit thin air
+I have not seen anything bad in terms of memory consumption.
+
+Cheers
+
+Carsten
