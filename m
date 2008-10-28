@@ -1,92 +1,38 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Oct 2008 02:52:48 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Oct 2008 04:13:23 -0700 (PDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S9qSQe012105
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 02:52:28 -0700
-Received: from relay.ppgk.com.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FD05550EE6
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 02:52:27 -0700 (PDT)
-Received: from relay.ppgk.com.pl (relay.ppgk.com.pl [80.53.243.36]) by cuda.sgi.com with ESMTP id KKvKYQyeYzCTxheY for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 02:52:27 -0700 (PDT)
-Message-ID: <4906E0BE.8050903@drutsystem.com>
-Date: Tue, 28 Oct 2008 10:51:58 +0100
-From: Michal Soltys <nozo@drutsystem.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9SBCVYb014371
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 04:12:33 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 30FCB551346
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 03:53:22 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id mn63TtvwBUT1w9G8 for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 03:53:22 -0700 (PDT)
+Date: Tue, 28 Oct 2008 06:53:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/2] Urgent queue
+Message-ID: <20081028105321.GA30522@infradead.org>
+References: <20081027133010.GA30607@infradead.org> <20081028064150.GS4985@disturbed> <4906EB5B.2020004@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Map a disk LBA to filename?
-References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com> <20081027233516.GG4985@disturbed> <4906BB32.8080403@aei.mpg.de> <20081028072105.GW4985@disturbed> <4906C164.6090704@aei.mpg.de> <4906D80F.9050500@aei.mpg.de>
-In-Reply-To: <4906D80F.9050500@aei.mpg.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4906EB5B.2020004@sgi.com>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+To: Mark Goodwin <markgw@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Carsten Aulbert wrote:
-> 
-> Carsten Aulbert wrote:
-> 
->> Any idea where my logical error is?
->>
-> 
-> Related, more logical errors on my side probably:
-> 
-> Can someone give me a hint what I'm doing wrong here?
-> 
-> xfs_bmap -l  /local/boinc/time_stats_log
-> /local/boinc/time_stats_log:
->         0: [0..127]: 280..407 128 blocks
->         1: [128..159]: 728..759 32 blocks
->         2: [160..167]: 1016..1023 8 blocks
->         3: [168..183]: 54120..54135 16 blocks
->         4: [184..207]: 656..679 24 blocks
->         5: [208..215]: 3451664..3451671 8 blocks
->         6: [216..255]: 3451624..3451663 40 blocks
->         7: [256..287]: 3451672..3451703 32 blocks
-> 
->>From that I assume that this file lives in several block strips, when I
-> subsequently try to get this back via xfs_db I fail miserably:
-> 
-> xfs_db -i /dev/sda6
-> xfs_db> blockget -b 660 -n
-> setting block 0/660 to data
-> setting inode to 2787 for block 0/660
-> inode 2787 block 660 at offset 346
-> xfs_db> ncheck -i 2787
->        2787 CT_oneyear_01/S_noise_wu_84/Fstats_105.25_Snoise__WU84_84_out
-> xfs_db> quit
-> 
-> Is it possible that blocks != bsized_blocks?
-> 
-> Sorry for these questions, but I'm quite lost and I have not been able
-> to find the answer in the man pages.
-> 
+On Tue, Oct 28, 2008 at 09:37:15PM +1100, Mark Goodwin wrote:
+> individually (by series) or only after all 30? Bisectability is important,
+> as Christoph alluded to in another thread. Is the intention to try and take
+> this lot for 28-rc3? I think Lachlan is now very close to a pull req for
+> .28, depending on his testing for the memleak and deadlock fixes - time
+> is now getting pretty short :)
 
-660 is interpreted (by blockget) using filesystem's block size - so it'd
-correspond to 5280 in 512 byte units. That file isn't that long.
+Even urgent isn't urgent enough for the first 2.6.28 series, please get
+that one out ASAP, I don't want to miss it.  The two patches from the
+urgent queue are something I would consider for a second .28 pull,
+everything else is .29 material.
 
-Another example:
-
-10:37 > ls -al /music/The\ Flashbulb\ -\ 11\ -\ Remember\ Tomorrow.flac
-
--rw-r--r-- 1 admin users 21921889 2008-09-08 09:07 /music/The Flashbulb
-- 11 - Remember Tomorrow.flac
-
-xfs_bmap -l /music/The\ Flashbulb\ -\ 11\ -\ Remember\ Tomorrow.flac
-
-/music/The Flashbulb - 11 - Remember Tomorrow.flac:
-         0: [0..35039]: 12140432..12175471 35040 blocks
-         1: [35040..42823]: 12200864..12208647 7784 blocks
-
-Let's check file's sector 36000 - from the perspective of filesystem -
-sector 12200864+(36000-35040) = 12201824. Using 4096 block size -
-1525228. Now let's check using xfs_db:
-
-10:38 > xfs_db -r /dev/mapper/vg1-music
-xfs_db> blockget -b 1525228 -n
-setting block 0/1525228 to data
-setting inode to 126 for block 0/1525228
-inode 126 block 1525228 at offset 4500
-sb_fdblocks 1330583, aggregate AGF count 2661166
-xfs_db> ncheck -i 126
-         126 The Flashbulb - 11 - Remember Tomorrow.flac
+But it would be highly useful if we could open up a .29 staging tree that
+can be QAed and included in linux-next ASAP..
