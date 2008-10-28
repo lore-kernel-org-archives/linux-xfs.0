@@ -1,57 +1,41 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:09:19 -0700 (PDT)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S69D35020990
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:09:13 -0700
-Subject: TAKE 988919 - remove restricted chown parameter from xfs linux
-Message-Id: <20081028055052.3CCD058AE1E9@chook.melbourne.sgi.com>
-Date: Tue, 28 Oct 2008 16:50:52 +1100 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:16:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6GJ6n021671
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:19 -0700
+Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2538810EE6B4
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:13 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org [140.211.169.13]) by cuda.sgi.com with ESMTP id p5rwG4nU0SFRKb3w for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:16:13 -0700 (PDT)
+Date: Mon, 27 Oct 2008 23:15:33 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/3] Implement generic freeze feature
+Message-Id: <20081027231533.96c42a78.akpm@linux-foundation.org>
+In-Reply-To: <20081027215855t-sato@mail.jp.nec.com>
+References: <20081027215855t-sato@mail.jp.nec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Takashi Sato <t-sato@yk.jp.nec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "viro@ZenIV.linux.org.uk" <viro@ZenIV.linux.org.uk>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "mtk.manpages@googlemail.com" <mtk.manpages@googlemail.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-remove restricted chown parameter from xfs linux
+On Mon, 27 Oct 2008 21:58:54 +0900 Takashi Sato <t-sato@yk.jp.nec.com> wrote:
 
-On Linux all filesystems are supposed to be operating under
-Posix' restricted chown. Restricted chown means it restricts
-chown to the owner unless you have CAP_FOWNER.
+> -void thaw_bdev(struct block_device *bdev, struct super_block *sb)
+> +int thaw_bdev(struct block_device *bdev, struct super_block *sb)
+>  {
+> +	int error = 0;
+> +
+> +	mutex_lock(&bdev->bd_fsfreeze_mutex);
+> +	if (!bdev->bd_fsfreeze_count) {
+> +		mutex_unlock(&bdev->bd_fsfreeze_mutex);
+> +		return -EINVAL;
 
-NOTE: that 2 files outside of fs/xfs have been modified too
-for this change.
+This would be a programming error, yes?
 
-Signed-off-by: Tim Shimmin <tes@sgi.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+If so, a WARN_ON is more appropriate than a silent runtime error.
 
-Date:  Tue Oct 28 16:49:18 EST 2008
-Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
-Inspected by:  hch@lst.de,david@fromorbit.com
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
-
-
-Modid:  xfs-linux-melb:xfs-kern:32413a
-fs/xfs/xfs_vnodeops.c - 1.784 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.784&r2=text&tr2=1.783&f=h
-fs/xfs/linux-2.6/xfs_ioctl.c - 1.175 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.175&r2=text&tr2=1.174&f=h
-fs/xfs/linux-2.6/xfs_globals.c - 1.76 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_globals.c.diff?r1=text&tr1=1.76&r2=text&tr2=1.75&f=h
-fs/xfs/linux-2.6/xfs_linux.h - 1.172 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_linux.h.diff?r1=text&tr1=1.172&r2=text&tr2=1.171&f=h
-fs/xfs/linux-2.6/xfs_sysctl.c - 1.47 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.c.diff?r1=text&tr1=1.47&r2=text&tr2=1.46&f=h
-fs/xfs/linux-2.6/xfs_sysctl.h - 1.32 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_sysctl.h.diff?r1=text&tr1=1.32&r2=text&tr2=1.31&f=h
-	- remove restricted chown parameter from xfs linux
-
-
-Modid:  2.6.x-xfs-melb:linux:32413b
-Documentation/filesystems/xfs.txt - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.6-xfs/Documentation/filesystems/xfs.txt.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-kernel/sysctl_check.c - 1.5 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/linux-2.6-xfs/kernel/sysctl_check.c.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
-	- remove restricted chown parameter from xfs linux
+> +	}
