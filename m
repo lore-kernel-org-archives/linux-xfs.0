@@ -1,52 +1,103 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 21:47:55 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S4lbt2013997
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 21:47:37 -0700
-Subject: TAKE 988918 - kill sys_cred
-Message-Id: <20081028044723.DF87058AE1E9@chook.melbourne.sgi.com>
-Date: Tue, 28 Oct 2008 15:47:23 +1100 (EST)
-From: tes@sgi.com (Tim Shimmin)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 22:09:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S592Yx015854
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 22:09:02 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B177C10EE4A9
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 22:09:00 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id Sgz4eysTs8GfOO1b for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 22:09:00 -0700 (PDT)
+Date: Tue, 28 Oct 2008 16:08:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/7] factor out xfs_read_agi helper
+Message-ID: <20081028050852.GA17077@disturbed>
+References: <20081027133901.GB1109@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081027133901.GB1109@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-kill sys_cred
+On Mon, Oct 27, 2008 at 09:39:01AM -0400, Christoph Hellwig wrote:
+> Add a helper to read the AGI header and perform basic verification.
+> Based on hunks from a larger patch from Dave Chinner.
+> 
+> (First sent on Juli 23rd)
 
-capable_cred has been unused for a while so we can kill it and sys_cred.
-That also means the cred argument to xfs_setattr and
-xfs_change_file_space can be removed now.
+Couple of small things.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+> @@ -1882,45 +1862,23 @@ xfs_iunlink_remove(
+>  	short		bucket_index;
+>  	int		offset, last_offset = 0;
+>  	int		error;
+> -	int		agi_ok;
+>  
+> -	/*
+> -	 * First pull the on-disk inode from the AGI unlinked list.
+> -	 */
+>  	mp = tp->t_mountp;
+> -
+>  	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> -	agdaddr = XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp));
+>  
+>  	/*
+>  	 * Get the agi buffer first.  It ensures lock ordering
+>  	 * on the list.
+>  	 */
+> -	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, agdaddr,
+> -				   XFS_FSS_TO_BB(mp, 1), 0, &agibp);
+> +	error = xfs_read_agi(mp, tp, agno, &agibp);
+>  	if (error) {
+>  		cmn_err(CE_WARN,
+> -			"xfs_iunlink_remove: xfs_trans_read_buf()  returned an error %d on %s.  Returning error.",
+> +			"xfs_iunlink_remove: xfs_read_agi() returned an error %d on %s. Returning error.",
+>  			error, mp->m_fsname);
+>  		return error;
+>  	}
 
-Date:  Tue Oct 28 15:45:57 EST 2008
-Workarea:  chook.melbourne.sgi.com:/build/tes/2.6.x-xfs-quilt
-Inspected by:  hch@lst.de,david@fromorbit.com
+Do we need this warning here? xfs_read_agi() will have already
+issued an error, right? Also, xfs_fs_cmn_err() is probably better
+to use here rather than manually encoding the fsname into the error
+message....
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/linux/2.6.x-xfs-melb
+> @@ -3295,22 +3297,18 @@ xlog_recover_process_iunlinks(
+>  
+>  				/*
+>  				 * Reacquire the agibuffer and continue around
+> -				 * the loop.
+> +				 * the loop. This should never fail as we know
+> +				 * the buffer was good earlier on.
+>  				 */
+> -				agibp = xfs_buf_read(mp->m_ddev_targp,
+> -						XFS_AG_DADDR(mp, agno,
+> -							XFS_AGI_DADDR(mp)),
+> -						XFS_FSS_TO_BB(mp, 1), 0);
+> -				if (XFS_BUF_ISERROR(agibp)) {
+> -					xfs_ioerror_alert(
+> -				"xlog_recover_process_iunlinks(#2)",
+> -						log->l_mp, agibp,
+> -						XFS_AG_DADDR(mp, agno,
+> -							XFS_AGI_DADDR(mp)));
+> +				error = xfs_read_agi(mp, NULL, agno, &agibp);
+> +				ASSERT(error == 0);
+> +				if (error) {
+> +					xfs_fs_cmn_err(CE_ALERT, mp,
+> +					"xlog_recover_process_iunlinks(#2)"
+> +					"agi read failed agno %d error %d",
+> +							agno, error);
 
-Modid:  xfs-linux-melb:xfs-kern:32412a
-fs/xfs/xfs_vnodeops.c - 1.783 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.c.diff?r1=text&tr1=1.783&r2=text&tr2=1.782&f=h
-fs/xfs/xfs_acl.c - 1.80 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_acl.c.diff?r1=text&tr1=1.80&r2=text&tr2=1.79&f=h
-fs/xfs/linux-2.6/xfs_ioctl.c - 1.174 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ioctl.c.diff?r1=text&tr1=1.174&r2=text&tr2=1.173&f=h
-fs/xfs/linux-2.6/xfs_globals.h - 1.21 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_globals.h.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
-fs/xfs/linux-2.6/xfs_globals.c - 1.75 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_globals.c.diff?r1=text&tr1=1.75&r2=text&tr2=1.74&f=h
-fs/xfs/linux-2.6/xfs_cred.h - 1.26 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_cred.h.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
-fs/xfs/linux-2.6/xfs_iops.c - 1.303 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_iops.c.diff?r1=text&tr1=1.303&r2=text&tr2=1.302&f=h
-fs/xfs/linux-2.6/xfs_ksyms.c - 1.96 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/linux-2.6/xfs_ksyms.c.diff?r1=text&tr1=1.96&r2=text&tr2=1.95&f=h
-fs/xfs/dmapi/xfs_dm.c - 1.81 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/dmapi/xfs_dm.c.diff?r1=text&tr1=1.81&r2=text&tr2=1.80&f=h
-fs/xfs/xfs_vnodeops.h - 1.20 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-linux/xfs_vnodeops.h.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
-	- kill sys_cred
+Move the assert into the if (error) branch after the message is
+logged so that it is clear the reason for the assert failure.
+
+Otherwise seems fine.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
