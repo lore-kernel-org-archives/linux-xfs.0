@@ -1,68 +1,40 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:25:41 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6PYCw022718
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:34 -0700
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 27 Oct 2008 23:40:54 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9S6eldi023804
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:40:48 -0700
 Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 042021B662BB
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:32 -0700 (PDT)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id zZhwob5SsTBHzWlx for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:25:32 -0700 (PDT)
-Date: Tue, 28 Oct 2008 17:25:24 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D564EAF0D1A
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:40:47 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id CXNltfaqoI2WGOcF for <xfs@oss.sgi.com>; Mon, 27 Oct 2008 23:40:47 -0700 (PDT)
+Date: Tue, 28 Oct 2008 17:40:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: deadlock with latest xfs
-Message-ID: <20081028062524.GQ4985@disturbed>
-References: <4900412A.2050802@sgi.com> <20081026005351.GK18495@disturbed> <20081026025013.GL18495@disturbed> <200810281702.17135.nickpiggin@yahoo.com.au>
+Subject: Re: [PATCH 4/7] kill xfs_ialloc_log_di
+Message-ID: <20081028064041.GR4985@disturbed>
+References: <20081027133909.GE1109@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <200810281702.17135.nickpiggin@yahoo.com.au>
+In-Reply-To: <20081027133909.GE1109@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: Lachlan McIlroy <lachlan@sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>, linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Oct 28, 2008 at 05:02:16PM +1100, Nick Piggin wrote:
-> On Sunday 26 October 2008 13:50, Dave Chinner wrote:
+On Mon, Oct 27, 2008 at 09:39:09AM -0400, Christoph Hellwig wrote:
+> xfs_ialloc_log_di is only used to log the full inode core + di_next_unlinked.
+> That means all the offset magic is not nessecary and we can simply use
+> xfs_trans_log_buf directly.  Also add a comment describing what we should do
+> here instead.
 > 
-> > [1] I don't see how any of the XFS changes we made make this easier to hit.
-> > What I suspect is a VM regression w.r.t. memory reclaim because this is
-> > the second problem since 2.6.26 that appears to be a result of memory
-> > allocation failures in places that we've never, ever seen failures before.
-> >
-> > The other new failure is this one:
-> >
-> > http://bugzilla.kernel.org/show_bug.cgi?id=11805
-> >
-> > which is an alloc_pages(GFP_KERNEL) failure....
-> >
-> > mm-folk - care to weight in?
+> (First sent on October 7th)
 > 
-> order-0 alloc page GFP_KERNEL can fail sometimes. If it is called
-> from reclaim or PF_MEMALLOC thread; if it is OOM-killed; fault
-> injection.
 > 
-> This is even the case for __GFP_NOFAIL allocations (which basically
-> are buggy anyway).
-> 
-> Not sure why it might have started happening, but I didn't see
-> exactly which alloc_pages you are talking about? If it is via slab,
-> then maybe some parameters have changed (eg. in SLUB) which is
-> using higher order allocations.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-In fs/xfs/linux-2.6/xfs_buf.c::xfs_buf_get_noaddr(). It's doing a
-single page allocation at a time.
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-It may be that this failure is caused by an increase base memory
-consumption of the kernel as this failure was reported in an lguest
-and reproduced with a simple 'modprobe xfs ; mount /dev/xxx
-/mnt/xfs' command. Maybe the lguest had very little memory available
-to begin with and trying to allocate 2MB of pages for 8x256k log
-buffers may have been too much for it...
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
