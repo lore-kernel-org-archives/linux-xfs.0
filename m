@@ -1,63 +1,83 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Oct 2008 18:18:55 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9T1IfYN020501
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 18:18:41 -0700
-Message-ID: <4907B9E4.8090609@sgi.com>
-Date: Wed, 29 Oct 2008 12:18:28 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 28 Oct 2008 20:17:09 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9T3GrNe026407
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 20:16:53 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 22DD98A1C0F
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 20:16:49 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id PRAvFZChMCT5AmoI for <xfs@oss.sgi.com>; Tue, 28 Oct 2008 20:16:49 -0700 (PDT)
+Date: Wed, 29 Oct 2008 14:16:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 0/9] writeback data integrity and other fixes (take 3)
+Message-ID: <20081029031645.GE4985@disturbed>
+References: <20081028144715.683011000@suse.de> <20081028153953.GB3082@wotan.suse.de> <20081028222746.GB4985@disturbed> <20081029001653.GF15599@wotan.suse.de>
 MIME-Version: 1.0
-Subject: Re: oss.sgi.com and mailman, looking for volunteers.
-References: <490720DD.2050502@thebarn.com> <20081028215031.GY4985@disturbed> <20081028223053.GA458@infradead.org> <4907B631.1090205@xfs.org>
-In-Reply-To: <4907B631.1090205@xfs.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081029001653.GF15599@wotan.suse.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Nick Piggin <npiggin@suse.de>
+Cc: akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 
-
-
-Russell Cattelan wrote:
-> Christoph Hellwig wrote:
->> On Wed, Oct 29, 2008 at 08:50:31AM +1100, Dave Chinner wrote:
->>  
->>> What is the point? Let's just move the list to vger.kernel.org and
->>> we can forget about all these problems....
->>>     
->>
->> Yeah.  ecartis is just part of the problem.  barracuda is another at
->> least as big problem, and I guess there are many other hiding.
->>
->>   
-> ya it has dropped 39 messages this month
-> oss[5:59pm]#formail -x Subject: -s < xfs.2008-10 |wc -l
-> 741
-> oss[5:59pm]#formail -x Subject: -s < xfs-procmail-2008_10  | wc -l
-> 780
+On Wed, Oct 29, 2008 at 01:16:53AM +0100, Nick Piggin wrote:
+> On Wed, Oct 29, 2008 at 09:27:46AM +1100, Dave Chinner wrote:
+> > On Tue, Oct 28, 2008 at 04:39:53PM +0100, Nick Piggin wrote:
+> > Yes - that's coming from end_buffer_async_write() when an error is
+> > reported in bio completion. This does:
+> > 
+> >  465                 set_bit(AS_EIO, &page->mapping->flags);
+> >  466                 set_buffer_write_io_error(bh);
+> >  467                 clear_buffer_uptodate(bh);
+> >  468                 SetPageError(page);
+> > 
+> > Hmmmm - do_fsync() calls filemap_fdatawait() which ends up in
+> > wait_on_page_writeback_range() which is appears to be checking the
+> > mapping flags for errors. I wonder why that error is not being
+> > propagated then? AFAICT both XFS and the fsync code are doing the
+> > right thing but somewhere the error has gone missing...
 > 
+> This one-liner has it reporting EIO errors like a champion. I
+> don't know if you'll actually need to put this into the
+> linux API layer or not, but anyway the root cause of the problem
+> AFAIKS is this.
+> --
 > 
-> I think using mailman will clear up the dropped mail problems.
-> 
-> What other issues do you think is there?
+> XFS: fix fsync errors not being propogated back to userspace.
+> ---
+> Index: linux-2.6/fs/xfs/xfs_vnodeops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_vnodeops.c
+> +++ linux-2.6/fs/xfs/xfs_vnodeops.c
+> @@ -715,7 +715,7 @@ xfs_fsync(
+>  	/* capture size updates in I/O completion before writing the inode. */
+>  	error = filemap_fdatawait(VFS_I(ip)->i_mapping);
+>  	if (error)
+> -		return XFS_ERROR(error);
+> +		return XFS_ERROR(-error);
 
-I will reply later today on this
+<groan>
 
-> 
-> The barracuda problem is outside of oss and affects all mail from 1st.de 
-> to sgi.
+Yeah, that'd do it. Good catch. I can't believe I recently fixed a
+bug that touched these lines of code without noticing the inversion.
+Sometimes I wonder if we should just conver the entire of XFS to
+return negative errors - mistakes in handling negative error numbers
+in the core XFS code happen all the time.
 
-all mail to any list @sgi.com goes thru the internal barracuda spam filter.
+FWIW, the core issue here is that we've got to do the
+filemap_fdatawait() call in the ->fsync method because ->fsync
+gets called before we've waited for the data I/O to complete.
+XFS updates inode state on I/O completion, so we *must* wait
+for data I/O to complete before logging the inode changes. I
+think btrfs has the same problem....
 
-> 
-> Did you ever find out why barracuda thinks your ip has  a "poor" rating?
-> 
+Thanks again, Nick.
 
-Christoph's IP has now been whitelisted (or should have been by now).
-I have no insight as to which other IP addresses have a poor rating,
-there may be others (that are not spammers).
+Cheers,
 
--- Mark
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
