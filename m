@@ -1,65 +1,70 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 07:57:45 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9TEvUIU021605
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 07:57:31 -0700
-Received: from rgminet13.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D03014A8B54
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 07:57:30 -0700 (PDT)
-Received: from rgminet13.oracle.com (rcsinet13.oracle.com [148.87.113.125]) by cuda.sgi.com with ESMTP id iYH9YmmR6YjgKUTv for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 07:57:30 -0700 (PDT)
-Subject: Re: [patch 0/9] writeback data integrity and other fixes (take 3)
-From: Chris Mason <chris.mason@oracle.com>
-In-Reply-To: <490865E3.8070102@gmail.com>
-References: <20081028144715.683011000@suse.de>
-	 <20081028153953.GB3082@wotan.suse.de> <20081028222746.GB4985@disturbed>
-	 <20081029001653.GF15599@wotan.suse.de> <20081029031645.GE4985@disturbed>
-	 <20081029091203.GA32545@infradead.org>
-	 <20081029092143.GA5953@wotan.suse.de>
-	 <20081029094417.GA21824@infradead.org>
-	 <20081029103029.GC5953@wotan.suse.de> <20081029122234.GE846@shareable.org>
-	 <490865E3.8070102@gmail.com>
-Content-Type: text/plain
-Date: Wed, 29 Oct 2008 10:56:36 -0400
-Message-Id: <1225292196.6448.263.camel@think.oraclecorp.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 09:02:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9TG21tf030247
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 09:02:02 -0700
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CE9A559841
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 09:02:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com with ESMTP id MjRXL2xsD4RlIepX for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 09:02:01 -0700 (PDT)
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m9TG20re021512
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 12:02:00 -0400
+Received: from pobox.stuttgart.redhat.com (pobox.stuttgart.redhat.com [172.16.2.10])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m9TG1wi9013780
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 12:01:59 -0400
+Received: from dhcp-lab-218.englab.brq.redhat.com (dhcp-lab-225.englab.brq.redhat.com [10.34.33.225])
+	by pobox.stuttgart.redhat.com (8.13.1/8.13.1) with ESMTP id m9TG1wQq005984
+	for <linux-xfs@oss.sgi.com>; Wed, 29 Oct 2008 12:01:58 -0400
+Message-ID: <490888F6.8000101@redhat.com>
+Date: Wed, 29 Oct 2008 17:01:58 +0100
+From: Zdenek Prikryl <zprikryl@redhat.com>
+MIME-Version: 1.0
+Subject: getfattr and -d options
+Content-Type: multipart/mixed;
+ boundary="------------030807070105090905020207"
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Jamie Lokier <jamie@shareable.org>, Nick Piggin <npiggin@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
-On Wed, 2008-10-29 at 09:32 -0400, Ric Wheeler wrote:
-> Jamie Lokier wrote:
+This is a multi-part message in MIME format.
+--------------030807070105090905020207
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-> >> Is there anything that particularly makes it a file operation
-> >> as opposed to an inode operation?
-> >>     
-> >
-> > In principle, is fsync() required to flush all dirty data written
-> > through any file descriptor ever, or just dirty data written through
-> > the file descriptor used for fsync()?
-> >
-> > -- Jamie
-> > --
-> >   
-> http://www.opengroup.org/onlinepubs/009695399/functions/fsync.html
-> 
-> Is a pointer to what seems to be the official posix spec for this - it 
-> is definitely per file descriptor, not per file system, etc...
-> 
+Hello,
+in getfattr's man page there is "-d Dump the values of all extended attributes
+associated with path-name". If you use SELinux, files have this extended attribute:
 
-Maybe I'm reading Jamie's question wrong, but I think he's saying:
+security.selinux="...".
 
-/* open exactly the same file twice */
-fd = open("file");
-fd2 = open("file");
+-d option works in such way that it only prints extended attributes, which names
+begin with "user." So, in this case, selinux attribute isn't printed. I'm
+sending simple patch, which corrects this.
 
-write(fd, "stuff")
-write(fd2, "more stuff")
-fsync(fd);
+Best regards.
 
-Does the fsync promise "more stuff" will be on disk?  I think the answer
-should be yes.
+-- 
+Zdenek Prikryl <zprikryl@redhat.com>
 
--chris
+
+--------------030807070105090905020207
+Content-Type: text/plain;
+ name="attr-2.4.43-dump.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="attr-2.4.43-dump.patch"
+
+ZGlmZiAtdXAgYXR0ci0yLjQuNDMvZ2V0ZmF0dHIvZ2V0ZmF0dHIuYy5kdW1w
+IGF0dHItMi40LjQzL2dldGZhdHRyL2dldGZhdHRyLmMKLS0tIGF0dHItMi40
+LjQzL2dldGZhdHRyL2dldGZhdHRyLmMuZHVtcAkyMDA4LTEwLTI5IDE2OjU1
+OjQzLjAwMDAwMDAwMCArMDEwMAorKysgYXR0ci0yLjQuNDMvZ2V0ZmF0dHIv
+Z2V0ZmF0dHIuYwkyMDA4LTEwLTI5IDE2OjU1OjQ1LjAwMDAwMDAwMCArMDEw
+MApAQCAtNDA4LDYgKzQwOCw3IEBAIGludCBtYWluKGludCBhcmdjLCBjaGFy
+ICphcmd2W10pCiAKIAkJCWNhc2UgJ2QnOiAvKiBkdW1wIGF0dHJpYnV0ZSB2
+YWx1ZXMgKi8KIAkJCQlvcHRfZHVtcCA9IDE7CisJCQkJb3B0X25hbWVfcGF0
+dGVybiA9ICIiOwogCQkJCWJyZWFrOwogCiAJCQljYXNlICdlJzogIC8qIGVu
+Y29kaW5nICovCg==
+
+--------------030807070105090905020207--
