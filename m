@@ -1,58 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 14:44:12 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9TLhxWK025440
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:43:59 -0700
-Received: from ipmail04.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AD394B0ACB7
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:43:58 -0700 (PDT)
-Received: from ipmail04.adl2.internode.on.net (ipmail04.adl2.internode.on.net [203.16.214.57]) by cuda.sgi.com with ESMTP id bR9FNZ8TAA55BLnz for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:43:58 -0700 (PDT)
-Date: Thu, 30 Oct 2008 08:43:47 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 14:45:17 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9TLj5Qx025806
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:45:05 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C04E55B796
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:45:05 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id Ws7yB6UdabWHCZpN for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 14:45:05 -0700 (PDT)
+Date: Wed, 29 Oct 2008 17:45:03 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [patch 0/9] writeback data integrity and other fixes (take 3)
-Message-ID: <20081029214347.GI17077@disturbed>
-References: <20081028144715.683011000@suse.de> <20081028153953.GB3082@wotan.suse.de> <20081028222746.GB4985@disturbed> <20081029001653.GF15599@wotan.suse.de> <20081029031645.GE4985@disturbed> <20081029091203.GA32545@infradead.org> <20081029092143.GA5953@wotan.suse.de> <20081029094417.GA21824@infradead.org> <20081029103029.GC5953@wotan.suse.de> <20081029122234.GE846@shareable.org>
+Message-ID: <20081029214503.GA8895@infradead.org>
+References: <20081028144715.683011000@suse.de> <20081028153953.GB3082@wotan.suse.de> <20081028222746.GB4985@disturbed> <20081029001653.GF15599@wotan.suse.de> <20081029031645.GE4985@disturbed> <20081029032601.GF4985@disturbed> <20081029091326.GB32545@infradead.org> <20081029214202.GH17077@disturbed>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20081029122234.GE846@shareable.org>
+In-Reply-To: <20081029214202.GH17077@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Jamie Lokier <jamie@shareable.org>
-Cc: Nick Piggin <npiggin@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>, Nick Piggin <npiggin@suse.de>, akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 
-On Wed, Oct 29, 2008 at 12:22:35PM +0000, Jamie Lokier wrote:
-> Nick Piggin wrote:
-> > On Wed, Oct 29, 2008 at 05:44:17AM -0400, Christoph Hellwig wrote:
-> > > On Wed, Oct 29, 2008 at 10:21:43AM +0100, Nick Piggin wrote:
-> > > > Please do.
-> > > 
-> > > Well, there's one stumling block I haven't made progress on yet:
-> > > 
-> > > I've changed the prototype of ->fsync to lose the dentry as we should
-> > > always have a valid file struct.  Except that nfsd doesn't on
-> > > directories.  So I either need to fake up a file there, or bail out
-> > > and add a ->dir_sync export operation that needs just a dentry.
-> > 
-> > OK. I don't know much about hthat code, but I would think nfsd
-> > should look as close to the syscall layer as possible. I guess
-> > there must be something prohibitive (some protocol semantics?).
-> > 
-> > Is there anything that particularly makes it a file operation
-> > as opposed to an inode operation?
-> 
-> In principle, is fsync() required to flush all dirty data written
-> through any file descriptor ever, or just dirty data written through
-> the file descriptor used for fsync()?
+On Thu, Oct 30, 2008 at 08:42:02AM +1100, Dave Chinner wrote:
+> I'll do that as a separate patch - it's not really part of a "fix
+> error value inversion" bug fix....
 
-fsync() is required to flush the data that is dirty at the time of the
-call, as well as any associated metadata needed to reference that data. It
-doesn't matter who wrote the data in the first place....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Well it is kindof.  Because we'd call Linux library functions directly
+from the method we skip to places that need sign conversion and could
+possibly go wrong.  But if you want a separate patch that's fine with
+me too.
