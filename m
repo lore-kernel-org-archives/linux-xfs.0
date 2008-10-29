@@ -1,76 +1,345 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 01:42:01 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9T8fl9s025857
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:41:47 -0700
-Received: from truetug.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C26F14A6E43
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:41:44 -0700 (PDT)
-Received: from truetug.info (truetug.info [82.146.61.203]) by cuda.sgi.com with ESMTP id szjwPSyTUGSmjuCy for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:41:44 -0700 (PDT)
-Date: Wed, 29 Oct 2008 11:41:43 +0300 (MSK)
-From: Mail Delivery Subsystem <MAILER-DAEMON@truetug.info>
-Message-Id: <200810290841.m9T5YGXN058420@truetug.info>
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 01:51:52 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9T8pZkF026487
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:51:37 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F38C955748B
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:51:34 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id WI8Rci1DraXnTrAF for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 01:51:34 -0700 (PDT)
+Date: Wed, 29 Oct 2008 19:51:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 0/9] writeback data integrity and other fixes (take 3)
+Message-ID: <20081029085129.GJ4985@disturbed>
+References: <20081028144715.683011000@suse.de> <20081028153953.GB3082@wotan.suse.de> <20081028222746.GB4985@disturbed>
 MIME-Version: 1.0
-Content-Type: multipart/report; report-type=delivery-status;
-	boundary="m9T5YGXN058420.1225269703/truetug.info"
-Subject: ***** SUSPECTED SPAM *****  Returned mail: see transcript for details
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081028222746.GB4985@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@suse.de>, akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 
-This is a MIME-encapsulated message
+On Wed, Oct 29, 2008 at 09:27:46AM +1100, Dave Chinner wrote:
+> On Tue, Oct 28, 2008 at 04:39:53PM +0100, Nick Piggin wrote:
+> > On Wed, Oct 29, 2008 at 01:47:15AM +1100, npiggin@suse.de wrote:
+> > I think I also saw a slab bug when running dbench with fault injection on.
+> > Running latest Linus kernel.
+.....
+> > xfs_force_shutdown(ram0,0x2) called from line 1056 of file /home/npiggin/usr/src
+> > /linux-2.6/fs/xfs/xfs_log.c.  Return address = 0x000000006011370d
+> > Filesystem "ram0": Log I/O Error Detected.  Shutting down filesystem: ram0
+> > Please umount the filesystem, and rectify the problem(s)
+> > xfs_force_shutdown(ram0,0x2) called from line 818 of file /home/npiggin/usr/src/
+> > linux-2.6/fs/xfs/xfs_log.c.  Return address = 0x0000000060114e7d
+> > slab error in verify_redzone_free(): cache `xfs_log_ticket': double free detecte
+> > d
+....
+> Now that is interesting.
+> 
+> We've got a rolling transaction in progress, and the commit of the
+> first part of the transaction has got the I/O error.  That frees the
+> transaction structure used during that commit, as well as the
+> ticket.
+> 
+> However, before we committed the initial transaction, we duplicated
+> the transaction structure to allow the transaction to continue to
+> track all the dirty objects in the first commit. That included
+> duplicating the pointer to the ticket.
+> 
+> Then the EIO is returned to mkdir code with the duplicated
+> transaction, which is then cancelled, and that frees the transaction
+> and the ticket it holds. However, we'd already freed the ticket.
+> 
+> Ok, we're only seeing this problem now because I recently modified
+> the ticket allocation to use a slab instead of a roll-your-own free
+> list structure that wouldn't have been poisoned. Nice to know that
+> this change did more than just remove code. ;)
+> 
+> This might take a little while to fix - a lot of code needs
+> auditing - but thanks for reporting the problem.
 
---m9T5YGXN058420.1225269703/truetug.info
+The patch below should fix this problem. It's about 10% of the way
+through XFSQA, which means there's nothing obviously bad about it,
+but it will need many more eyes on it before we decide if this is
+the best way to fix the problem....
 
-The original message was received at Fri, 24 Oct 2008 12:40:48 +0300 (MSK)
-from 89-139-72-155.bb.netvision.net.il [89.139.72.155]
+Cheers,
 
-   ----- The following addresses had permanent fatal errors -----
-\virtuser_1024
-    (reason: 450 4.2.0 /var/mail/virtuser_1024: Disc quota exceeded)
-    (expanded from: <mail@grafimex.ru>)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-   ----- Transcript of session follows -----
-... while talking to local:
->>> DATA
-<<< 450 4.2.0 /var/mail/virtuser_1024: Disc quota exceeded
-\virtuser_1024... Deferred: 450 4.2.0 /var/mail/virtuser_1024: Disc quota exceeded
-Message could not be delivered for 5 days
-Message will be deleted from queue
+XFS: Fix double free of log tickets
 
---m9T5YGXN058420.1225269703/truetug.info
-Content-Type: message/delivery-status
+When an I/O error occurs during an intermediate commit on a rolling
+transaction, xfs_trans_commit() will free the transaction structure
+and the related ticket. However, the duplicate transaction that
+gets used as the transaction continues still contains a pointer
+to the ticket. Hence when the duplicate transaction is cancelled
+and freed, we free the ticket a second time.
 
-Reporting-MTA: dns; truetug.info
-Arrival-Date: Fri, 24 Oct 2008 12:40:48 +0300 (MSK)
+Add reference counting to the ticket so that we hold an extra
+reference to the ticket over the transaction commit. We drop the
+extra reference once we have checked that the transaction commit
+did not return an error, thus avoiding a double free on commit
+error.
 
-Final-Recipient: RFC822; mail@grafimex.ru
-X-Actual-Recipient: RFC822; virtuser_1024@truetug.info
-Action: failed
-Status: 4.4.7
-Diagnostic-Code: SMTP; 450 4.2.0 /var/mail/virtuser_1024: Disc quota exceeded
-Last-Attempt-Date: Wed, 29 Oct 2008 11:41:43 +0300 (MSK)
+Credit to Nick Piggin for tripping over the problem.
 
---m9T5YGXN058420.1225269703/truetug.info
-Content-Type: text/rfc822-headers
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_bmap.c     |   10 ++++++++--
+ fs/xfs/xfs_inode.c    |   10 ++++++++--
+ fs/xfs/xfs_log.c      |   39 +++++++++++++++++++++++++--------------
+ fs/xfs/xfs_log.h      |    4 ++++
+ fs/xfs/xfs_log_priv.h |    1 +
+ fs/xfs/xfs_trans.c    |    9 ++++++++-
+ fs/xfs/xfs_utils.c    |    6 ++++++
+ fs/xfs/xfs_vnodeops.c |    6 ++++++
+ 8 files changed, 66 insertions(+), 19 deletions(-)
 
-Return-Path: <xfs@oss.sgi.com>
-Received: from 89-139-72-155.bb.netvision.net.il (89-139-72-155.bb.netvision.net.il [89.139.72.155])
-	by truetug.info (8.14.3/8.14.2) with ESMTP id m9O8ecOj066996
-	for <mail@grafimex.ru>; Fri, 24 Oct 2008 12:40:48 +0400 (MSD)
-	(envelope-from xfs@oss.sgi.com)
-Message-ID: <000a01c935b4$0419a775$71530ba4@iuqwygul>
-From: =?koi8-r?B?4cbJ28Eg7c/Ty9fZ?= <xfs@oss.sgi.com>
-To: <mail@grafimex.ru>
-Subject: =?koi8-r?B?987JzcHOycUhIPTJ1MHOycsh?=
-Date: Fri, 24 Oct 2008 06:52:53 +0000
-MIME-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_000_0007_01C935B4.0416C9D8"
-X-Priority: 3
-X-MSMail-Priority: Normal
-X-Mailer: Microsoft Outlook Express 6.00.2720.3000
-X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2727.1300
-
---m9T5YGXN058420.1225269703/truetug.info--
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index db28905..c391221 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4292,9 +4292,15 @@ xfs_bmap_finish(
+ 	 * We have a new transaction, so we should return committed=1,
+ 	 * even though we're returning an error.
+ 	 */
+-	if (error) {
++	if (error)
+ 		return error;
+-	}
++
++	/*
++	 * transaction commit worked ok so we can drop the extra ticket
++	 * reference that we gained in xfs_trans_dup()
++	 */
++	xfs_log_ticket_put(ntp->t_ticket);
++
+ 	if ((error = xfs_trans_reserve(ntp, 0, logres, 0, XFS_TRANS_PERM_LOG_RES,
+ 			logcount)))
+ 		return error;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index cd52282..b977100 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1782,8 +1782,14 @@ xfs_itruncate_finish(
+ 		xfs_trans_ijoin(ntp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+ 		xfs_trans_ihold(ntp, ip);
+ 
+-		if (!error)
+-			error = xfs_trans_reserve(ntp, 0,
++		if (error)
++			return error;
++		/*
++		 * transaction commit worked ok so we can drop the extra ticket
++		 * reference that we gained in xfs_trans_dup()
++		 */
++		xfs_log_ticket_put(ntp->t_ticket);
++		error = xfs_trans_reserve(ntp, 0,
+ 					XFS_ITRUNCATE_LOG_RES(mp), 0,
+ 					XFS_TRANS_PERM_LOG_RES,
+ 					XFS_ITRUNCATE_LOG_COUNT);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index cc1e789..9aecefd 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -100,12 +100,11 @@ STATIC void xlog_ungrant_log_space(xlog_t	 *log,
+ 
+ 
+ /* local ticket functions */
+-STATIC xlog_ticket_t	*xlog_ticket_get(xlog_t *log,
++STATIC xlog_ticket_t	*xlog_ticket_alloc(xlog_t *log,
+ 					 int	unit_bytes,
+ 					 int	count,
+ 					 char	clientid,
+ 					 uint	flags);
+-STATIC void		xlog_ticket_put(xlog_t *log, xlog_ticket_t *ticket);
+ 
+ #if defined(DEBUG)
+ STATIC void	xlog_verify_dest_ptr(xlog_t *log, __psint_t ptr);
+@@ -360,7 +359,7 @@ xfs_log_done(xfs_mount_t	*mp,
+ 		 */
+ 		xlog_trace_loggrant(log, ticket, "xfs_log_done: (non-permanent)");
+ 		xlog_ungrant_log_space(log, ticket);
+-		xlog_ticket_put(log, ticket);
++		xfs_log_ticket_put(ticket);
+ 	} else {
+ 		xlog_trace_loggrant(log, ticket, "xfs_log_done: (permanent)");
+ 		xlog_regrant_reserve_log_space(log, ticket);
+@@ -514,7 +513,7 @@ xfs_log_reserve(xfs_mount_t	 *mp,
+ 		retval = xlog_regrant_write_log_space(log, internal_ticket);
+ 	} else {
+ 		/* may sleep if need to allocate more tickets */
+-		internal_ticket = xlog_ticket_get(log, unit_bytes, cnt,
++		internal_ticket = xlog_ticket_alloc(log, unit_bytes, cnt,
+ 						  client, flags);
+ 		if (!internal_ticket)
+ 			return XFS_ERROR(ENOMEM);
+@@ -749,7 +748,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		if (tic) {
+ 			xlog_trace_loggrant(log, tic, "unmount rec");
+ 			xlog_ungrant_log_space(log, tic);
+-			xlog_ticket_put(log, tic);
++			xfs_log_ticket_put(tic);
+ 		}
+ 	} else {
+ 		/*
+@@ -3223,22 +3222,33 @@ xlog_state_want_sync(xlog_t *log, xlog_in_core_t *iclog)
+  */
+ 
+ /*
+- * Free a used ticket.
++ * Free a used ticket when it's refcount falls to zero.
+  */
+-STATIC void
+-xlog_ticket_put(xlog_t		*log,
+-		xlog_ticket_t	*ticket)
++void
++xfs_log_ticket_put(
++	xlog_ticket_t	*ticket)
+ {
+-	sv_destroy(&ticket->t_wait);
+-	kmem_zone_free(xfs_log_ticket_zone, ticket);
+-}	/* xlog_ticket_put */
++	ASSERT(atomic_read(&ticket->t_ref) > 0);
++	if (atomic_dec_and_test(&ticket->t_ref)) {
++		sv_destroy(&ticket->t_wait);
++		kmem_zone_free(xfs_log_ticket_zone, ticket);
++	}
++}
+ 
++xlog_ticket_t *
++xfs_log_ticket_get(
++	xlog_ticket_t	*ticket)
++{
++	ASSERT(atomic_read(&ticket->t_ref) > 0);
++	atomic_inc(&ticket->t_ref);
++	return ticket;
++}
+ 
+ /*
+  * Allocate and initialise a new log ticket.
+  */
+ STATIC xlog_ticket_t *
+-xlog_ticket_get(xlog_t		*log,
++xlog_ticket_alloc(xlog_t		*log,
+ 		int		unit_bytes,
+ 		int		cnt,
+ 		char		client,
+@@ -3309,6 +3319,7 @@ xlog_ticket_get(xlog_t		*log,
+ 		unit_bytes += 2*BBSIZE;
+         }
+ 
++	atomic_set(&tic->t_ref, 1);
+ 	tic->t_unit_res		= unit_bytes;
+ 	tic->t_curr_res		= unit_bytes;
+ 	tic->t_cnt		= cnt;
+@@ -3324,7 +3335,7 @@ xlog_ticket_get(xlog_t		*log,
+ 	xlog_tic_reset_res(tic);
+ 
+ 	return tic;
+-}	/* xlog_ticket_get */
++}
+ 
+ 
+ /******************************************************************************
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index d47b91f..8a3e84e 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -134,6 +134,7 @@ typedef struct xfs_log_callback {
+ #ifdef __KERNEL__
+ /* Log manager interfaces */
+ struct xfs_mount;
++struct xlog_ticket;
+ xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
+ 		       xfs_log_ticket_t ticket,
+ 		       void		**iclog,
+@@ -177,6 +178,9 @@ int	  xfs_log_need_covered(struct xfs_mount *mp);
+ 
+ void	  xlog_iodone(struct xfs_buf *);
+ 
++struct xlog_ticket * xfs_log_ticket_get(struct xlog_ticket *ticket);
++void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
++
+ #endif
+ 
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index de7ef6c..b39a198 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -245,6 +245,7 @@ typedef struct xlog_ticket {
+ 	struct xlog_ticket *t_next;	 /*			         :4|8 */
+ 	struct xlog_ticket *t_prev;	 /*				 :4|8 */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
++	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
+ 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index ad137ef..8570b82 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -290,7 +290,7 @@ xfs_trans_dup(
+ 	ASSERT(tp->t_ticket != NULL);
+ 
+ 	ntp->t_flags = XFS_TRANS_PERM_LOG_RES | (tp->t_flags & XFS_TRANS_RESERVE);
+-	ntp->t_ticket = tp->t_ticket;
++	ntp->t_ticket = xfs_log_ticket_get(tp->t_ticket);
+ 	ntp->t_blk_res = tp->t_blk_res - tp->t_blk_res_used;
+ 	tp->t_blk_res = tp->t_blk_res_used;
+ 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
+@@ -1260,6 +1260,13 @@ xfs_trans_roll(
+ 	trans = *tpp;
+ 
+ 	/*
++	 * transaction commit worked ok so we can drop the extra ticket
++	 * reference that we gained in xfs_trans_dup()
++	 */
++	xfs_log_ticket_put(trans->t_ticket);
++
++
++	/*
+ 	 * Reserve space in the log for th next transaction.
+ 	 * This also pushes items in the "AIL", the list of logged items,
+ 	 * out to disk if they are taking up space at the tail of the log
+diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
+index 35d4d41..7711449 100644
+--- a/fs/xfs/xfs_utils.c
++++ b/fs/xfs/xfs_utils.c
+@@ -172,6 +172,12 @@ xfs_dir_ialloc(
+ 			*ipp = NULL;
+ 			return code;
+ 		}
++
++		/*
++		 * transaction commit worked ok so we can drop the extra ticket
++		 * reference that we gained in xfs_trans_dup()
++		 */
++		xfs_log_ticket_put(tp->t_ticket);
+ 		code = xfs_trans_reserve(tp, 0, log_res, 0,
+ 					 XFS_TRANS_PERM_LOG_RES, log_count);
+ 		/*
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 5809c42..f7eea70 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1029,6 +1029,12 @@ xfs_inactive_symlink_rmt(
+ 		goto error0;
+ 	}
+ 	/*
++	 * transaction commit worked ok so we can drop the extra ticket
++	 * reference that we gained in xfs_trans_dup()
++	 */
++	xfs_log_ticket_put(tp->t_ticket);
++
++	/*
+ 	 * Remove the memory for extent descriptions (just bookkeeping).
+ 	 */
+ 	if (ip->i_df.if_bytes)
