@@ -1,34 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 06:41:57 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 15:46:42 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9UDfgdw007818
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 06:41:44 -0700
-Received: from hackers.mr.itd.umich.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EA091B6C89B
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 06:41:42 -0700 (PDT)
-Received: from hackers.mr.itd.umich.edu (smtp.mail.umich.edu [141.211.14.81]) by cuda.sgi.com with ESMTP id 7vOZtDhcTmwNsbb6 for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 06:41:42 -0700 (PDT)
-Date: Thu, 30 Oct 2008 09:41:18 -0400
-From: Jim Rees <rees@umich.edu>
-Subject: Re: [patch 0/9] writeback data integrity and other fixes (take 3)
-Message-ID: <20081030134118.GA31598@citi.umich.edu>
-References: <20081029031645.GE4985@disturbed> <20081029091203.GA32545@infradead.org> <20081029092143.GA5953@wotan.suse.de> <20081029094417.GA21824@infradead.org> <20081029103029.GC5953@wotan.suse.de> <20081029122234.GE846@shareable.org> <490865E3.8070102@gmail.com> <1225292196.6448.263.camel@think.oraclecorp.com> <20081030021601.GF18041@wotan.suse.de> <4909ADE0.1060205@hp.com>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9UMkOBn017217
+	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 15:46:26 -0700
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EB401B6EDE6
+	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 15:46:25 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id QpD8vI1AmvXjP9xg for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 15:46:25 -0700 (PDT)
+Date: Thu, 30 Oct 2008 18:46:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: do_sync() and XFSQA test 182 failures....
+Message-ID: <20081030224625.GA18690@infradead.org>
+References: <20081030085020.GP17077@disturbed>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4909ADE0.1060205@hp.com>
+In-Reply-To: <20081030085020.GP17077@disturbed>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: jim owens <jowens@hp.com>
-Cc: Nick Piggin <npiggin@suse.de>, Chris Mason <chris.mason@oracle.com>, Ric Wheeler <ricwheeler@gmail.com>, Jamie Lokier <jamie@shareable.org>, Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-jim owens wrote:
+On Thu, Oct 30, 2008 at 07:50:20PM +1100, Dave Chinner wrote:
+> [*] Starting pdflush to sync data in the background when we are
+>     about to start flushing ourselves is self-defeating. instead of
+>     having a single thread doing optimal writeout patterns, we now
+>     have two threads trying to sync the same filesystems and
+>     competing with each other to write out dirty inodes.  This
+>     actually causes bugs in sync because pdflush is doing async
+>     flushes. Hence if pdflush races and wins during the sync flush
+>     part of the sync process, sync_inodes(1) will return before all
+>     the data/metadata is on disk because it can't be found to be
+>     waited on.
 
-  AFAIK the fsync semantic comes from the days of dinosaurs,
-  mainframes, and minicomputers... when a lot of operating
-  systems had user-space libraries that buffered the I/O.
-  On fsync(fd), the "fd2" data would still be in user-space.
+Note that this is an XFS special.  Every other filesystem (at least the
+major ones) rely on the VFS to write out data.
 
-User space buffering happens in stdio, which is above the system call
-level.  It's been that way since fsync() was first introduced, and is still
-that way today.
+> Now the sync is _supposedly_ complete. But we still have a dirty
+> log and superblock thanks to delayed allocation that may have
+> occurred after the sync_supers() call. Hence we can immediately
+> see that we cannot *ever* do a proper sync of an XFS filesystem
+> in Linux without modifying do_sync() to do more callouts.
+>
+> Worse, XFS can also still have *dirty inodes* because sync_inodes(1)
+> will remove inodes from the dirty list in the async pass, but they
+> can get dirtied a short time later (if they had dirty data) when the
+> data I/O completes. Hence if the second sync pass completes before
+> the inode is dirtied again we'll miss flushing it. This will mean we
+> don't write inode size updates during sync. This is the same race
+> that pdflush running in the background can trigger.
+
+This is a common problem that would hit any filesystem trying to have
+some sort of ordered data or journaled data mode.
+
+> However, I have a problem - I'm an expert in XFS, not the other tens
+> of Linux filesystems so I can't begin to guess what the impact of
+> changing do_sync() would be on those many filesystems. How many
+> filesystems would such a change break? Indeed - how many are broken
+> right now by having dirty inodes and superblocks slip through
+> sync(1)?
+
+I would guess more are broken now then a change in order would break.
+Then again purely a change in order would still leave this code
+fragile as hell.
+
+> What are the alternatives? do_sync() operates above any particular
+> filesystem, so it's hard to provide a filesystem specific ->do_sync
+> method to avoid changing sync order for all filesystems. Do we
+> change do_sync() to completely sync a superblock at a time instead
+> of doing each operation across all superblocks before moving onto
+> the next operation? Is there any particular reason (e.g. performance, locking) for the current
+> method that would prevent changing to completely-sync-a-superblock
+> iteration algorithm so we can provide a custom ->do_sync method?
+
+Locking can't be the reason as we should never hold locks while
+returning from one of the VFS operations.  I think it's performance
+or rather alledged performance as I think it doesn't really matter.
+If it matters however there is an easy method to make it perform just
+as well with a proper callout - just spawn a thread for every filesystem
+to perform it in parallel.
+
+> Are there any other ways that we can get a custom ->do_sync
+> method for XFS? I'd prefer a custom method so we don't have to
+> revalidate every linux filesystem, especially as XFS already has
+> everything it needs to provide it's own sync method (used for
+> freezing) and a test suite to validate it is working correctly.....
+
+I think having a method for this would be useful.  And given that
+a proper sync should be exactly the same as a filesysytem freeze
+we should maybe use one method for both of those and use the chance
+to give filesystem better control over the freeze process?
