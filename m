@@ -1,44 +1,55 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 21:07:00 -0700 (PDT)
-Received: from relay.sgi.com (relay1.corp.sgi.com [192.26.58.214])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9U46XT6028034
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 21:06:33 -0700
-Message-ID: <490932BB.9020804@sgi.com>
-Date: Thu, 30 Oct 2008 15:06:19 +1100
-From: Mark Goodwin <markgw@sgi.com>
-Reply-To: markgw@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 29 Oct 2008 22:23:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9U5NE7v032565
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 22:23:14 -0700
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC42855D02F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 22:23:13 -0700 (PDT)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id kW2nncB77k2sXchM for <xfs@oss.sgi.com>; Wed, 29 Oct 2008 22:23:13 -0700 (PDT)
+Received: from dave by disturbed with local (Exim 4.69)
+	(envelope-from <david@fromorbit.com>)
+	id 1KvPzx-00038l-UQ
+	for xfs@oss.sgi.com; Thu, 30 Oct 2008 16:23:09 +1100
+Date: Thu, 30 Oct 2008 16:23:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Map a disk LBA to filename?
+Message-ID: <20081030052309.GM17077@disturbed>
+References: <4905A3FB.6080709@aei.mpg.de> <20081027114945.GE4985@disturbed> <4905B48A.8010108@aei.mpg.de> <4905BC13.3030402@drutsystem.com> <20081027233516.GG4985@disturbed> <4906BB32.8080403@aei.mpg.de> <20081028072105.GW4985@disturbed> <4906C164.6090704@aei.mpg.de> <4906D80F.9050500@aei.mpg.de> <20081028093827.GA12133@kyra>
 MIME-Version: 1.0
-Subject: Re: oss.sgi.com and mailman, looking for volunteers.
-References: <490720DD.2050502@thebarn.com>
-In-Reply-To: <490720DD.2050502@thebarn.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081028093827.GA12133@kyra>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Russell Cattelan <cattelan@thebarn.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
+On Tue, Oct 28, 2008 at 10:38:27AM +0100, KELEMEN Peter wrote:
+> * Carsten Aulbert (carsten.aulbert@aei.mpg.de) [20081028 10:14]:
+> 
+> > Is it possible that blocks != bsized_blocks?
+> 
+> xfs_bmap(8) talks in basic blocks (512 bytes).
+> 660 div 8 = 82, so try:
+> 
+> 	blockget -b 82 -n
 
+I think all of you need to know about the "convert" command ;)
 
-Russell Cattelan wrote:
-> If everything works out then I will move the entire list over to using
-> mailman.
+e.g. to do the above conversion correctly:
 
-Or over to vger, as we've been discussing. I'd like to delay any
-significant change until (a) after we have git'ified our patch flow
-and tree management processes (shortly after the .28 pull req goes out),
-and (b) the new oss.sgi.com has been set up and all content rsync'd
-across. This machine exists but Trev is currently occupied on other
-tasks.
+xfs_db> convert daddr 660 fsb
+0x52 (82)
 
-We're going to want more than just a new mailing list or handler.
-We also need a wiki for docs (news, arch, blogs, training, papers,
-etc), something like patchwork for tracking submissions, and more, etc.
-It doesn't make much sense to start setting this up on the current oss
-and then do it all again on the new oss.
+The xfs_db man page tells you all the different formats that can
+be converted between. The convert command automatically takes into
+account the geometry of the filesystem where appropriate (e.g.
+filesystem block size).
 
-So can we please hobble along for another week or two?
+Cheers,
 
-Thanks
--- Mark
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
