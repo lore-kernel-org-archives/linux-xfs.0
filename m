@@ -1,47 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 22:53:38 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 00:58:26 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V5rIgi024250
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 22:53:18 -0700
-Received: from nf-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 33C5DB1E3C5
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 22:53:17 -0700 (PDT)
-Received: from nf-out-0910.google.com (nf-out-0910.google.com [64.233.182.191]) by cuda.sgi.com with ESMTP id DzxMfmKmOlcyK357 for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 22:53:17 -0700 (PDT)
-Received: by nf-out-0910.google.com with SMTP id h3so579607nfh.42
-        for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 22:53:16 -0700 (PDT)
-Message-ID: <f488382f0810302253l6e8b2705u29582f348256a91a@mail.gmail.com>
-Date: Thu, 30 Oct 2008 22:53:16 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-Subject: Re: [GIT PULL] XFS update for 2.6.28
-In-Reply-To: <alpine.DEB.1.10.0810302201030.3116@asgard.lang.hm>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V7wCdV008124
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:13 -0700
+Received: from main.carme.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E73B10F5961
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:12 -0700 (PDT)
+Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by cuda.sgi.com with ESMTP id pK89p60Fq2izsVgP for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:12 -0700 (PDT)
+Received: from [83.238.65.58] (port=2870 helo=maven.pl ident=matrix157)
+	by main.carme.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <arekm@maven.pl>)
+	id 1KvotW-00141R-97
+	for xfs@oss.sgi.com; Fri, 31 Oct 2008 08:58:10 +0100
+Received: from arekm by maven.pl with local (Exim 4.69)
+	(envelope-from <arekm@maven.pl>)
+	id 1KvotT-0000BG-Mf
+	for xfs@oss.sgi.com; Fri, 31 Oct 2008 08:58:08 +0100
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: 2.6.25.18 in memory corruption?
+Date: Fri, 31 Oct 2008 08:58:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Disposition: inline
-References: <20081031045737.ECE0E58AE1E9@chook.melbourne.sgi.com>
-	 <alpine.DEB.1.10.0810302201030.3116@asgard.lang.hm>
+Message-Id: <200810310858.07632.arekm@maven.pl>
+Content-Transfer-Encoding: 8bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: david@lang.hm
-Cc: Lachlan McIlroy <lachlan@sgi.com>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: xfs@oss.sgi.com
 
-On Thu, Oct 30, 2008 at 10:02 PM,  <david@lang.hm> wrote:
-> On Fri, 31 Oct 2008, Lachlan McIlroy wrote:
->
->> The following changes since commit
->> 721d5dfe7e516954c501d5e9d0dfab379cf4241a:
->>  Linus Torvalds (1):
->>       Merge branch 'for-linus' of git://neil.brown.name/md
->
-> I am a fairly heavy user of XFS and am as eager as anyone to see cleanups
-> and improvements, but 102 commits to go into -rc3????
->
-> David Lang
->
 
-I'm pretty sure these won't be accepted until 2.6.29's merge window
-opens. The merge window for 2.6.28 has closed, and due to the sheer
-number of commits, at least -one- is bound to cause a regression.
+Hi,
 
-- Steven
+I'm trying to find out  a reason (and a solution) for in memory corruption with xfs involved.
+
+Sometimes files are corrupted in such way as pasted below. This is in memory
+corruption since the file is correct after reboot. File size is unchanged as original,
+mtime not modified (compared to what I have in backup) according to ls -l.
+
+There is no oops, just contents of some files (it happens like 1 file per week, well I notice
+one file per week) are partially trashed.
+
+This is 230GB partition on lvm2, mounted with rw,nosuid,nodev,noatime,nodiratime,usrquota,grpquota
+options. Hardware is intel rack server (don't remember which one exactly) 1U with 2 x quad xeon,
+adaptec 3405, 4 SAS disks in raid5.
+
+Any ideas what that could be?
+
+/**
+* A class for reading Microsoft Excel Spreadsheets.
+*
+* Originally d4040\134040\134040\134040//"#,##0.00",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x5\134040=>\134040"%1.0f",\134040\134040\134040\134040\134040/*"$#,##0;
+($#,##0)",*/^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x6\134040=>\134040'$%1.0f',\134040\134040\134040\134040/*"$#,##0;
+($#,##0)",*/^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x7\134040=>\134040'$%1.2f',\134040\134040\134040\134040//"$#,##0.00;
+($#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x8\134040=>\134040'$%1.2f',\134040\134040\134040\134040//"$#,##0.00;
+($#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x9\134040=>\134040'%1.0f%%',
+\134040\134040\134040//\134040"0%"^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400xa\134040=>\134040'%1.2f%%',
+\134040\134040\134040//\134040"0.00%"^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400xb\134040=>\134040'%1.2f',\134040\134040\134040\134040\134040//\1340400.00E00",
+^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x25\134040=>\134040'%1.0f',\134040\134040\134040\134040//\134040"#,##0;
+(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x26\134040=>\134040'%1.0f',\134040\134040\134040\134040//"#,##0;
+(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x27\134040=>\134040'%1.2f',\134040\134040\134040\134040//"#,##0.00;
+(#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x28\134040=>\134040'%1.2f',\134040\134040\134040\134040//"#,##0.00;
+(#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x29\134040=>\134040'%1.0f',\134040\134040\134040\134040//"#,##0;
+(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x2a\134040=>\134040'$%1.0f',\134040\134040\134040//"$#,##0;
+($#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x2b\134040=>\134040'%1.2f',\134040\134040\134040\040\040\040//"#,##0.00;
+(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x2c\040=>\040'$%1.2f',\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x30\040=>\040'%1.0f');
+\040\040\040\040array^M\012\040\040\040\040\040*\040@access\040public^M\012\040\040\040\040\040*/^M\012\040\040\040\040var\040$numberFormats\040=\040array(^M\012\040\040\040\040\040\040\040\0400x1\040=>\040"%1.0f",
+\040\040\040\040\040//\040"0"^M\012\040\040\040\040\040\040\040\0400x2\040=>\040"%1.2f",\040\040\040\040\040//\040"0.00",^M\012\040\040\040\040\040\040\040\0400x3\040=>\040"%1.0f",
+\040\040\040\040\040//"#,##0",^M\012\040\040\040\040\040\040\040\0400x4\040=>\040"%1.2f",\040\040\040\040\040//"#,##0.00",^M\012\040\040\040\040\040\040\040\0400x5\040=>\040"%1.0f",
+\040\040\040\040\040/*"$#,##0;($#,##0)",*/^M\012\040\040\040\040\040\040\040\0400x6\040=>\040'$%1.0f',\040\040\040\040/*"$#,##0;($#,##0)",*/^M\012\040\040\040\040\040\040\040\0400x7\040=>\040'$%1.2f',
+\040\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x8\040=>\040'$%1.2f',\040\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x9\040=>\040'%1.0f%%',
+\040\040\040//\040"0%"^M\012\040\040\040\040\040\040\040\0400xa\040=>\040'%1.2f%%',\040\040\040//\040"0.00%"^M\012\040\040\040\040\040\040\040\0400xb\040=>\040'%1.2f',
+\040\040\040\040\040//\0400.00E00",^M\012\040\040\040\040\040\040\040\0400x25\040=>\040'%1.0f',\040\040\040\040//\040"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x26\040=>\040'%1.0f',
+\040\040\040\040//"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x27\040=>\040'%1.2f',\040\040\040\040//"#,##0.00;(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x28\040=>\040'%1.2f',
+\040\040\040\040//"#,##0.00;(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x29\040=>\040'%1.0f',\040\040\040\040//"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x2a\040=>\040'$%1.0f',
+\040\040\040//"$#,##0;($#,##0)",^M\012\040\040\040\040\040\040\040\0400x2b\040=>\040'%1.2f',\040\040\040   //"#,##0.00;(#,##0.00)",
+        0x2c => '$%1.2f',   //"$#,##0.00;($#,##0.00)",
+        0x30 => '%1.0f');   //"##0.0E0";
+
+    // }}}
+    // {{{ Spreadsheet_Excel_Reader()
+
+    /**
+     * Constructor
+
+
+-- 
+Arkadiusz Miśkiewicz        PLD/Linux Team
+arekm / maven.pl            http://ftp.pld-linux.org/
