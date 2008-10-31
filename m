@@ -1,58 +1,48 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 08:01:10 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 08:38:13 -0700 (PDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9VF0v2D010093
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:00:57 -0700
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D62DDB24FFD
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:00:58 -0700 (PDT)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com with ESMTP id GFFECrI4uABkPF2c for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:00:58 -0700 (PDT)
-Message-ID: <490B1DA1.4030107@sandeen.net>
-Date: Fri, 31 Oct 2008 10:00:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9VFbx5u017570
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:38:00 -0700
+Received: from spike.porcupine.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DD3AB2575C
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:38:00 -0700 (PDT)
+Received: from spike.porcupine.org (spike.porcupine.org [168.100.189.2]) by cuda.sgi.com with ESMTP id zUFGfBVMjtEc6jyq for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 08:38:00 -0700 (PDT)
+Subject: Re: Which FileSystem do you use on your postfix server?
+In-Reply-To: <490B1C8B.7010607@sandeen.net> "from Eric Sandeen at Oct 31, 2008
+ 09:56:11 am"
+Date: Fri, 31 Oct 2008 11:37:58 -0400 (EDT)
 MIME-Version: 1.0
-Subject: Re: 2.6.25.18 in memory corruption?
-References: <200810310858.07632.arekm@maven.pl>
-In-Reply-To: <200810310858.07632.arekm@maven.pl>
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <20081031153758.EF0521F3E9E@spike.porcupine.org>
+From: wietse@porcupine.org (Wietse Venema)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Postfix users <postfix-users@postfix.org>, xfs@oss.sgi.com, wietse@porcupine.org
 
-Arkadiusz Miskiewicz wrote:
-> Hi,
+Eric Sandeen:
+> > This
+> > would violate a basic requirement of Postfix (don't lose data after
+> > fsync).  Postfix updates existing files all the time: it updates
+> > queue files as it marks recipients as done, and it updates mailbox
+> > files as it appends mail.
 > 
-> I'm trying to find out  a reason (and a solution) for in memory corruption with xfs involved.
-> 
-> Sometimes files are corrupted in such way as pasted below. This is in memory
-> corruption since the file is correct after reboot. File size is unchanged as original,
-> mtime not modified (compared to what I have in backup) according to ls -l.
-> 
-> There is no oops, just contents of some files (it happens like 1 file per week, well I notice
-> one file per week) are partially trashed.
-> 
-> This is 230GB partition on lvm2, mounted with rw,nosuid,nodev,noatime,nodiratime,usrquota,grpquota
-> options. Hardware is intel rack server (don't remember which one exactly) 1U with 2 x quad xeon,
-> adaptec 3405, 4 SAS disks in raid5.
-> 
-> Any ideas what that could be?
-> 
-> /**
-> * A class for reading Microsoft Excel Spreadsheets.
-> *
-> * Originally d4040\134040\134040\134040//"#,##0.00",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x5\134040=>\134040"%1.0f",\134040\134040\134040\134040\134040/*"$#,##0;
+> As long as postfix is looking after data properly with fsyncs etc, xfs
+> should be perfectly safe w.r.t. data integrity on a crash.  If you see
+> any other behavior, it's a *bug* which should be reported, and I'm sure
+> it would be fixed.  As far as I know, though, there is no issue here.
 
-Ow, my eyes ;)
+The specific question is, will unclean shutdown cause loss of data
+that was already fsynced, when the file was updated after the fsync.
+For example, if the on-disk file metadata is updated after the file
+data is appended, then there is no need to have a zero-fill problem
+after crash during append.
 
-try:
+What if the crash happens after Postfix requests a 1-byte write in
+the middle of a file, i.e. without changing the size? A reasonable
+implementation would not corrupt the file, but would either update
+the file data or not change it. I can deal with that.
 
-# hexdump -C $FILENAME
-
-to see if it's obvious where the corruption boundaries are, or any
-patterns that might be more readable than
-"\134012\134040\134040\134040\134040\"  :)
-
--Eric
+	Wietse
