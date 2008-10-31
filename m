@@ -1,55 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 15:22:48 -0700 (PDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9VMMWCk026792
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:22:32 -0700
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D0B7F14C408D
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:22:33 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id F5aqCPX4bOv43i5X for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:22:33 -0700 (PDT)
-Date: Fri, 31 Oct 2008 18:22:32 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: do_sync() and XFSQA test 182 failures....
-Message-ID: <20081031222232.GB29761@infradead.org>
-References: <20081030085020.GP17077@disturbed> <20081030224625.GA18690@infradead.org> <20081031001249.GM4985@disturbed> <20081031203123.GA11514@infradead.org> <20081031215430.GB19509@disturbed>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 15:56:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9VMuFJP028508
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:56:16 -0700
+Received: from spike.porcupine.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AC9FB2D812
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:56:16 -0700 (PDT)
+Received: from spike.porcupine.org (spike.porcupine.org [168.100.189.2]) by cuda.sgi.com with ESMTP id pG6MWAgT135Tv8Kv for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 15:56:16 -0700 (PDT)
+Subject: Re: Which FileSystem do you use on your postfix server?
+In-Reply-To: <20081031221817.GD19509@disturbed> "from Dave Chinner at Nov 1,
+ 2008 09:18:17 am"
+Date: Fri, 31 Oct 2008 18:56:15 -0400 (EDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20081031215430.GB19509@disturbed>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <20081031225615.5E66B1F3EA0@spike.porcupine.org>
+From: wietse@porcupine.org (Wietse Venema)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Wietse Venema <wietse@porcupine.org>, Eric Sandeen <sandeen@sandeen.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, Postfix users <postfix-users@postfix.org>, xfs@oss.sgi.com
 
-On Sat, Nov 01, 2008 at 08:54:30AM +1100, Dave Chinner wrote:
-> Effectively, yes. 
+Dave Chinner:
+> On Fri, Oct 31, 2008 at 11:37:58AM -0400, Wietse Venema wrote:
+> > Eric Sandeen:
+> > > > This
+> > > > would violate a basic requirement of Postfix (don't lose data after
+> > > > fsync).  Postfix updates existing files all the time: it updates
+> > > > queue files as it marks recipients as done, and it updates mailbox
+> > > > files as it appends mail.
+> > > 
+> > > As long as postfix is looking after data properly with fsyncs etc, xfs
+> > > should be perfectly safe w.r.t. data integrity on a crash.  If you see
+> > > any other behavior, it's a *bug* which should be reported, and I'm sure
+> > > it would be fixed.  As far as I know, though, there is no issue here.
+> > 
+> > The specific question is, will unclean shutdown cause loss of data
+> > that was already fsynced,
 > 
-> Currently we iterate inodes for data and "metadata" sync, and the
-> only other concept is writing superblocks. I think most filesystems
-> have more types of metadata than this, so it makes sense for sync to
-> work on abstracts sync as data and metadata rather than data, inodes
-> and superblocks...
-
-Yes, absolutely.  And for those that have inodes as primary / only
-metadata besides superblock we can still provide a generic_sync_inodes
-helper that just takes a callback to apply to every inode.  Which we
-probably want anyway as XFS is the only intree-filesystem that currently
-has a more efficient way to iterate inodes.
-
-> > And as we found out it's not just sync that gets it wrong, it's also
-> > fsync (which isn't part of the above picture as it's per-inode) that
-> > gets this utterly wrong, as well as all kinds of syncs, not just the
-> > unmount one.
+> No.
 > 
-> Async writeback (write_inode()) has the same problem as fsync -
-> writing the inode before waiting for data I/O to complete - which
-> means we've got to jump through hoops in the filesystem to avoid
-> blocking on inodes that can't be immediately flushed, and often we
-> end up writing the inode multiple times and having to issue log
-> forces whenw e shouldn't need to. Effectively we have to tell the
-> VFS to "try again later" the entire time data is being flushed
-> before we can write the inode and it's exceedingly inefficient.....
+> > when the file was updated after the fsync.
+> 
+> and no.
+> 
+> XFS guarantees that you won't lose anything you fsync()d. You might
+> lose what you wrote after the fsync()), though, because you haven't
+> fsync()d it. Obvious, yes?
 
-Yes, that was the couple of sync functions I meant above as the whole
-inode writeback path is extremly convoluted - mostly due to the dirty
-data vs metadata mixup mess.
+This is how I hoped any reasonable implementation would work. The
+stories about null files made me wonder if there was something
+unusual about XFS that I should be aware of.
+
+> > For example, if the on-disk file metadata is updated after the file
+> > data is appended, then there is no need to have a zero-fill problem
+> > after crash during append.
+> 
+> In case you didn't read Eric's response - that's exactly how we
+> fixed XFS to prevent this problem. And please stop propagating
+> this erroneous "zero-fill" meme - Eric addressed how wrong that
+> FUD is as well.
+
+Just confirming a specific case that I care about.
+
+Here's something I would like to know regarding the order of
+directory updates:
+
+- Does fsync(file) guarantee the file's directory entry is safe?
+Some file systems complete directory updates before the open/link/rename
+system call returns, so fsync() doesn't have to worry about it.
+
+- Does rename() guarantee that at least one directory entry will
+exist even when the system crashes in the middle of the operation?
+
+Postfix assumes both answers are "yes"; old ext2fs violated both
+assumptions.
+
+> > What if the crash happens after Postfix requests a 1-byte write in
+> > the middle of a file, i.e. without changing the size?  A
+> > reasonable implementation would not corrupt the file, but would
+> > either update the file data or not change it. I can deal with
+> > that.
+> 
+> That is exactly how XFS has always behaved for non-extending data
+> overwrite. i.e. Exactly the same pretty much every filesystem that
+> has ever existed.
+
+Good. Thanks for confirming that XFS is not unusual.
+
+	Wietse
