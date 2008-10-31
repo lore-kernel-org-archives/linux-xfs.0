@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 18:16:04 -0700 (PDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V1FXUh001239
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 18:16:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V1FX48001241
 	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:15:33 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2515B562F64
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 505C11B6F451
 	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:15:33 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id BzGzBfMUTljfdsNB for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:15:33 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id ojrTMztz3KKg7L3S for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:15:33 -0700 (PDT)
 Received: from dave by disturbed with local (Exim 4.69)
 	(envelope-from <david@fromorbit.com>)
-	id 1Kvibp-0007qF-5x
+	id 1Kvibp-0007qP-AM
 	for xfs@oss.sgi.com; Fri, 31 Oct 2008 12:15:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] XFS: fix error inversion problems with data flushing
-Date: Fri, 31 Oct 2008 12:15:25 +1100
-Message-Id: <1225415729-26514-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] XFS: fix uninitialised variable bug in dquot release.
+Date: Fri, 31 Oct 2008 12:15:27 +1100
+Message-Id: <1225415729-26514-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1225415729-26514-1-git-send-email-david@fromorbit.com>
 References: <1225415729-26514-1-git-send-email-david@fromorbit.com>
 Sender: xfs-bounce@oss.sgi.com
@@ -22,147 +22,93 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
-XFS gets the sign of the error wrong in several places when
-gathering the error from generic linux functions. These functions
-return negative error values, while the core XFS code returns
-positive error values. Hence when XFS inverts the error to be
-returned to the VFS, it can incorrectly invert a negative
-error and this error will be ignored by the syscall return.
+gcc on ARM warns about an using an uninitialised variable
+in xfs_qm_dqrele_all_inodes(). This is a real bug, but gcc
+on x86_64 is not reporting this warning so it went unnoticed.
 
-Fix all the problems related to calling filemap_* functions.
-
-Problem initially identified by Nick Piggin in xfs_fsync().
+Fix the bug by bring the inode radix tree walk code up to
+date with xfs_sync_inodes_ag().
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/linux-2.6/xfs_fs_subr.c |   23 ++++++++++++++++++++---
- fs/xfs/linux-2.6/xfs_lrw.c     |    2 +-
- fs/xfs/linux-2.6/xfs_super.c   |   13 +++++++++----
- fs/xfs/xfs_vnodeops.c          |    2 +-
- fs/xfs/xfs_vnodeops.h          |    1 +
- 5 files changed, 32 insertions(+), 9 deletions(-)
+ fs/xfs/quota/xfs_qm_syscalls.c |   42 ++++++++++++++++++++++-----------------
+ 1 files changed, 24 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-index 36caa6d..5aeb777 100644
---- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-+++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-@@ -24,6 +24,10 @@ int  fs_noerr(void) { return 0; }
- int  fs_nosys(void) { return ENOSYS; }
- void fs_noval(void) { return; }
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index 9ff28e6..2c57a6e 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -1036,9 +1036,6 @@ xfs_qm_dqrele_inodes_ag(
+ 	int		nr_found;
  
-+/*
-+ * note: all filemap functions return negative error codes. These
-+ * need to be inverted before returning to the xfs core functions.
-+ */
- void
- xfs_tosspages(
- 	xfs_inode_t	*ip,
-@@ -53,7 +57,7 @@ xfs_flushinval_pages(
- 		if (!ret)
- 			truncate_inode_pages(mapping, first);
- 	}
--	return ret;
-+	return -ret;
+ 	do {
+-		boolean_t	inode_refed;
+-		struct inode	*inode;
+-
+ 		/*
+ 		 * use a gang lookup to find the next inode in the tree
+ 		 * as the tree is sparse and a gang lookup walks to find
+@@ -1053,27 +1050,37 @@ xfs_qm_dqrele_inodes_ag(
+ 			break;
+ 		}
+ 
+-		/* update the index for the next lookup */
++		/*
++		 * Update the index for the next lookup. Catch overflows
++		 * into the next AG range which can occur if we have inodes
++		 * in the last block of the AG and we are currently
++		 * pointing to the last inode.
++		 */
+ 		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino)) {
++			read_unlock(&pag->pag_ici_lock);
++			break;
++		}
+ 
+-		/* skip quota inodes and those in reclaim */
+-		inode = VFS_I(ip);
+-		if (!inode || ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
++		/* skip quota inodes */
++		if (ip == XFS_QI_UQIP(mp) || ip == XFS_QI_GQIP(mp)) {
+ 			ASSERT(ip->i_udquot == NULL);
+ 			ASSERT(ip->i_gdquot == NULL);
+ 			read_unlock(&pag->pag_ici_lock);
+ 			continue;
+ 		}
+-		if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL) == 0) {
+-			inode = igrab(inode);
+-			read_unlock(&pag->pag_ici_lock);
+-			if (!inode)
+-				continue;
+-			inode_refed = B_TRUE;
+-			xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		} else {
++
++		/*
++		 * If we can't get a reference on the inode, it must be
++		 * in reclaim. Leave it for the reclaim code to flush.
++		 */
++		if (!igrab(VFS_I(ip))) {
+ 			read_unlock(&pag->pag_ici_lock);
++			continue;
+ 		}
++		read_unlock(&pag->pag_ici_lock);
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
+ 			xfs_qm_dqrele(ip->i_udquot);
+ 			ip->i_udquot = NULL;
+@@ -1083,9 +1090,8 @@ xfs_qm_dqrele_inodes_ag(
+ 			xfs_qm_dqrele(ip->i_gdquot);
+ 			ip->i_gdquot = NULL;
+ 		}
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		if (inode_refed)
+-			IRELE(ip);
++		xfs_iput(ip, XFS_ILOCK_EXCL);
++
+ 	} while (nr_found);
  }
  
- int
-@@ -72,10 +76,23 @@ xfs_flush_pages(
- 		xfs_iflags_clear(ip, XFS_ITRUNCATED);
- 		ret = filemap_fdatawrite(mapping);
- 		if (flags & XFS_B_ASYNC)
--			return ret;
-+			return -ret;
- 		ret2 = filemap_fdatawait(mapping);
- 		if (!ret)
- 			ret = ret2;
- 	}
--	return ret;
-+	return -ret;
-+}
-+
-+int
-+xfs_wait_on_pages(
-+	xfs_inode_t	*ip,
-+	xfs_off_t	first,
-+	xfs_off_t	last)
-+{
-+	struct address_space *mapping = VFS_I(ip)->i_mapping;
-+
-+	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK))
-+		return -filemap_fdatawait(mapping);
-+	return 0;
- }
-diff --git a/fs/xfs/linux-2.6/xfs_lrw.c b/fs/xfs/linux-2.6/xfs_lrw.c
-index 1957e53..4959c87 100644
---- a/fs/xfs/linux-2.6/xfs_lrw.c
-+++ b/fs/xfs/linux-2.6/xfs_lrw.c
-@@ -243,7 +243,7 @@ xfs_read(
- 
- 	if (unlikely(ioflags & IO_ISDIRECT)) {
- 		if (inode->i_mapping->nrpages)
--			ret = xfs_flushinval_pages(ip, (*offset & PAGE_CACHE_MASK),
-+			ret = -xfs_flushinval_pages(ip, (*offset & PAGE_CACHE_MASK),
- 						    -1, FI_REMAPF_LOCKED);
- 		mutex_unlock(&inode->i_mutex);
- 		if (ret) {
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 9dc977d..c5cfc1e 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1012,21 +1012,26 @@ xfs_fs_write_inode(
- 	struct inode		*inode,
- 	int			sync)
- {
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	int			error = 0;
- 	int			flags = 0;
- 
--	xfs_itrace_entry(XFS_I(inode));
-+	xfs_itrace_entry(ip);
- 	if (sync) {
--		filemap_fdatawait(inode->i_mapping);
-+		error = xfs_wait_on_pages(ip, 0, -1);
-+		if (error)
-+			goto out_error;
- 		flags |= FLUSH_SYNC;
- 	}
--	error = xfs_inode_flush(XFS_I(inode), flags);
-+	error = xfs_inode_flush(ip, flags);
-+
-+out_error:
- 	/*
- 	 * if we failed to write out the inode then mark
- 	 * it dirty again so we'll try again later.
- 	 */
- 	if (error)
--		xfs_mark_inode_dirty_sync(XFS_I(inode));
-+		xfs_mark_inode_dirty_sync(ip);
- 
- 	return -error;
- }
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 2e2fbd9..5809c42 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -713,7 +713,7 @@ xfs_fsync(
- 		return XFS_ERROR(EIO);
- 
- 	/* capture size updates in I/O completion before writing the inode. */
--	error = filemap_fdatawait(VFS_I(ip)->i_mapping);
-+	error = xfs_wait_on_pages(ip, 0, -1);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index e932a96..f9cd376 100644
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -78,5 +78,6 @@ int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
- 		xfs_off_t last, int fiopt);
- int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
- 		xfs_off_t last, uint64_t flags, int fiopt);
-+int xfs_wait_on_pages(struct xfs_inode *ip, xfs_off_t first, xfs_off_t last);
- 
- #endif /* _XFS_VNODEOPS_H */
 -- 
 1.5.6.5
