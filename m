@@ -1,182 +1,92 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 18:28:24 -0700 (PDT)
+Received: with ECARTIS (v1.0.0; list xfs); Thu, 30 Oct 2008 21:02:45 -0700 (PDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V1SBR4003428
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:28:11 -0700
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V42Krn017285
+	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 21:02:21 -0700
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B4161B6D453
-	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:28:10 -0700 (PDT)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id AlxH2pBz2FFAUmlh for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 18:28:10 -0700 (PDT)
-Received: from dave by disturbed with local (Exim 4.69)
-	(envelope-from <david@fromorbit.com>)
-	id 1Kvinu-0000r6-Th
-	for xfs@oss.sgi.com; Fri, 31 Oct 2008 12:27:58 +1100
-Date: Fri, 31 Oct 2008 12:27:58 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D4A9D14B55B9
+	for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 21:02:19 -0700 (PDT)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net [203.16.214.145]) by cuda.sgi.com with ESMTP id CuABVhTTky9NkCPK for <xfs@oss.sgi.com>; Thu, 30 Oct 2008 21:02:19 -0700 (PDT)
+Date: Fri, 31 Oct 2008 15:02:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: remove i_gen from incore inode
-Message-ID: <20081031012758.GT17077@disturbed>
-References: <1223417549-9920-1-git-send-email-david@fromorbit.com> <20081022062044.GJ18495@disturbed>
+Subject: Re: [PATCH 5/7] kill xfs_dinode_core_t
+Message-ID: <20081031040205.GV17077@disturbed>
+References: <20081027133912.GF1109@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20081022062044.GJ18495@disturbed>
+In-Reply-To: <20081027133912.GF1109@infradead.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Ping?
+On Mon, Oct 27, 2008 at 09:39:12AM -0400, Christoph Hellwig wrote:
+> Now that we have a separate xfs_icdinode_t for the in-core inode which
+> gets logged there is no need anymore for the xfs_dinode vs xfs_dinode_core
+> split - the fact that part of the structure gets logged through the inode
+> log item and a small part not can better be described in a comment.
+> 
+> All sizeof operations on the dinode_core either really wanted the
+> icdinode and are switched to that one, or had already added the size
+> of the agi unlinked list pointer.  Later both will be replaced with
+> helpers once we get the larger CRC-enabled dinode.
+> 
+> Removing the data and attribute fork unions also has the advantage that
+> xfs_dinode.h doesn't need to pull in every header under the sun.
+> 
+> While we're at it also add some more comments describing the dinode
+> structure.
+> 
+> (First sent on October 7th)
 
-On Wed, Oct 22, 2008 at 05:20:44PM +1100, Dave Chinner wrote:
-> Ping?
-> 
-> On Wed, Oct 08, 2008 at 09:12:29AM +1100, Dave Chinner wrote:
-> > i_gen is incremented in directory operations when the
-> > directory is changed. It is never read or otherwise used
-> > so it should be removed to help reduce the size of the
-> > struct xfs_inode.
-> > 
-> > The patch also removes a duplicate logging of the directory
-> > inode core. We only need to do this once per transaction
-> > so kill the one associated with the i_gen increment.
-> > 
-> > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> > ---
-> >  fs/xfs/xfs_inode.h    |    1 -
-> >  fs/xfs/xfs_rename.c   |   12 ++----------
-> >  fs/xfs/xfs_vnodeops.c |   29 ++---------------------------
-> >  3 files changed, 4 insertions(+), 38 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > index a8f1e68..5784f8e 100644
-> > --- a/fs/xfs/xfs_inode.h
-> > +++ b/fs/xfs/xfs_inode.h
-> > @@ -272,7 +272,6 @@ typedef struct xfs_inode {
-> >  	unsigned short		i_flags;	/* see defined flags below */
-> >  	unsigned char		i_update_core;	/* timestamps/size is dirty */
-> >  	unsigned char		i_update_size;	/* di_size field is dirty */
-> > -	unsigned int		i_gen;		/* generation count */
-> >  	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
-> >  
-> >  	xfs_icdinode_t		i_d;		/* most of ondisk inode */
-> > diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-> > index d700dac..02f0e8f 100644
-> > --- a/fs/xfs/xfs_rename.c
-> > +++ b/fs/xfs/xfs_rename.c
-> > @@ -367,19 +367,11 @@ xfs_rename(
-> >  					&first_block, &free_list, spaceres);
-> >  	if (error)
-> >  		goto abort_return;
-> > -	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> >  
-> > -	/*
-> > -	 * Update the generation counts on all the directory inodes
-> > -	 * that we're modifying.
-> > -	 */
-> > -	src_dp->i_gen++;
-> > +	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> >  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
-> > -
-> > -	if (new_parent) {
-> > -		target_dp->i_gen++;
-> > +	if (new_parent)
-> >  		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
-> > -	}
-> >  
-> >  	/*
-> >  	 * If this is a synchronous mount, make sure that the
-> > diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-> > index 8b6812f..7a72b0a 100644
-> > --- a/fs/xfs/xfs_vnodeops.c
-> > +++ b/fs/xfs/xfs_vnodeops.c
-> > @@ -1625,8 +1625,6 @@ xfs_create(
-> >  		xfs_trans_set_sync(tp);
-> >  	}
-> >  
-> > -	dp->i_gen++;
-> > -
-> >  	/*
-> >  	 * Attach the dquot(s) to the inodes and modify them incore.
-> >  	 * These ids of the inode couldn't have changed since the new
-> > @@ -1993,13 +1991,6 @@ xfs_remove(
-> >  	}
-> >  	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> >  
-> > -	/*
-> > -	 * Bump the in memory generation count on the parent
-> > -	 * directory so that other can know that it has changed.
-> > -	 */
-> > -	dp->i_gen++;
-> > -	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
-> > -
-> >  	if (is_dir) {
-> >  		/*
-> >  		 * Drop the link from ip's "..".
-> > @@ -2017,8 +2008,8 @@ xfs_remove(
-> >  	} else {
-> >  		/*
-> >  		 * When removing a non-directory we need to log the parent
-> > -		 * inode here for the i_gen update.  For a directory this is
-> > -		 * done implicitly by the xfs_droplink call for the ".." entry.
-> > +		 * inode here.  For a directory this is done implicitly
-> > +		 * by the xfs_droplink call for the ".." entry.
-> >  		 */
-> >  		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
-> >  	}
-> > @@ -2178,7 +2169,6 @@ xfs_link(
-> >  	if (error)
-> >  		goto abort_return;
-> >  	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> > -	tdp->i_gen++;
-> >  	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
-> >  
-> >  	error = xfs_bumplink(tp, sip);
-> > @@ -2355,18 +2345,10 @@ xfs_mkdir(
-> >  	}
-> >  	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> >  
-> > -	/*
-> > -	 * Bump the in memory version number of the parent directory
-> > -	 * so that other processes accessing it will recognize that
-> > -	 * the directory has changed.
-> > -	 */
-> > -	dp->i_gen++;
-> > -
-> >  	error = xfs_dir_init(tp, cdp, dp);
-> >  	if (error)
-> >  		goto error2;
-> >  
-> > -	cdp->i_gen = 1;
-> >  	error = xfs_bumplink(tp, dp);
-> >  	if (error)
-> >  		goto error2;
-> > @@ -2653,13 +2635,6 @@ xfs_symlink(
-> >  	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
-> >  
-> >  	/*
-> > -	 * Bump the in memory version number of the parent directory
-> > -	 * so that other processes accessing it will recognize that
-> > -	 * the directory has changed.
-> > -	 */
-> > -	dp->i_gen++;
-> > -
-> > -	/*
-> >  	 * If this is a synchronous mount, make sure that the
-> >  	 * symlink transaction goes to disk before returning to
-> >  	 * the user.
-> > -- 
-> > 1.5.6.5
-> > 
-> > 
-> > 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> 
-> 
+There's a problem with this patch somewhere. I haven't had it in my
+test stack for the last couple of days, and when I re-added it
+a couple of hours back after updating the base kernel and master
+branch I'm now getting shortform directory corruption from 
+xfsqa test 001. Platform is x86_64 UML:
 
+[42949510.230000] Assertion failed: i8count == sfp->hdr.i8count, file: fs/xfs/xfs_dir2_sf.c, line: 634
+
+Program received signal SIGILL, Illegal instruction.
+assfail (expr=<value optimized out>, file=<value optimized out>, line=<value optimized out>) at fs/xfs/support/debug.c:81
+81              BUG();
+(gdb) bt
+#0  assfail (expr=<value optimized out>, file=<value optimized out>, line=<value optimized out>)
+    at fs/xfs/support/debug.c:81
+#1  0x0000000060139956 in xfs_dir2_sf_check (args=<value optimized out>) at fs/xfs/xfs_dir2_sf.c:634
+#2  0x000000006013acb5 in xfs_dir2_sf_lookup (args=0x80913620) at fs/xfs/xfs_dir2_sf.c:822
+#3  0x00000000601317f1 in xfs_dir_lookup (tp=0x0, dp=0x80da5958, name=0x80913b40, inum=0x80913b00, ci_name=0x0)
+    at fs/xfs/xfs_dir2.c:303
+#4  0x000000006015efeb in xfs_lookup (dp=0x80da5958, name=0x80913b40, ipp=0x80913b58, ci_name=0x0)
+    at fs/xfs/xfs_vnodeops.c:1361
+#5  0x0000000060168b25 in xfs_vn_lookup (dir=<value optimized out>, dentry=0x80dac550, nd=<value optimized out>)
+    at fs/xfs/xfs_inode.h:301
+#6  0x000000006007a451 in __lookup_hash (name=0x80913c10, base=0x80dac740, nd=0x80913c00) at fs/namei.c:1200
+#7  0x000000006007a4aa in lookup_hash (nd=0x80913c00) at fs/namei.c:1222
+#8  0x000000006007a4fe in lookup_create (nd=0x80913c00, is_dir=1) at fs/namei.c:1902
+#9  0x000000006007c721 in sys_mkdirat (dfd=<value optimized out>, pathname=<value optimized out>, mode=493)
+    at fs/namei.c:2061
+#10 0x000000006007c7fb in sys_mkdir (pathname=<value optimized out>, mode=<value optimized out>) at fs/namei.c:2085
+#11 0x000000006001515d in handle_syscall (r=0x7fb0b500) at arch/um/kernel/skas/syscall.c:35
+#12 0x0000000060024303 in userspace (regs=0x7fb0b500) at arch/um/os-Linux/skas/process.c:201
+#13 0x00000000600127cd in fork_handler () at arch/um/kernel/process.c:179
+#14 0x0000000000000000 in ?? ()
+
+(gdb) p i8count
+$6 = 1
+(gdb) p /x sfp->hdr.i8count
+$7 = 0x80
+
+I *didn't* see this problem a few days ago, so updating the tree has
+brought in something that this patch doesn't like. I don't have time
+to track this down now, so I'll leave it to you for the moment,
+Christoph.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
