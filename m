@@ -1,92 +1,36 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 00:58:26 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9V7wCdV008124
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:13 -0700
-Received: from main.carme.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E73B10F5961
-	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:12 -0700 (PDT)
-Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by cuda.sgi.com with ESMTP id pK89p60Fq2izsVgP for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 00:58:12 -0700 (PDT)
-Received: from [83.238.65.58] (port=2870 helo=maven.pl ident=matrix157)
-	by main.carme.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <arekm@maven.pl>)
-	id 1KvotW-00141R-97
-	for xfs@oss.sgi.com; Fri, 31 Oct 2008 08:58:10 +0100
-Received: from arekm by maven.pl with local (Exim 4.69)
-	(envelope-from <arekm@maven.pl>)
-	id 1KvotT-0000BG-Mf
-	for xfs@oss.sgi.com; Fri, 31 Oct 2008 08:58:08 +0100
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: 2.6.25.18 in memory corruption?
-Date: Fri, 31 Oct 2008 08:58:07 +0100
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 31 Oct 2008 05:13:21 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m9VCD8Kk030697
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 05:13:08 -0700
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC3421B6FB4A
+	for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 05:13:09 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by cuda.sgi.com with ESMTP id SGQ5e0XFX8k6RE2V for <xfs@oss.sgi.com>; Fri, 31 Oct 2008 05:13:09 -0700 (PDT)
+Date: Fri, 31 Oct 2008 08:13:09 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Which FileSystem do you use on your postfix server?
+In-Reply-To: <20081031121002.D94A11F3E98@spike.porcupine.org>
+Message-ID: <alpine.DEB.1.10.0810310810520.468@p34.internal.lan>
+References: <20081031121002.D94A11F3E98@spike.porcupine.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Disposition: inline
-Message-Id: <200810310858.07632.arekm@maven.pl>
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: Postfix users <postfix-users@postfix.org>
+Cc: xfs@oss.sgi.com
 
 
-Hi,
 
-I'm trying to find out  a reason (and a solution) for in memory corruption with xfs involved.
+On Fri, 31 Oct 2008, Wietse Venema wrote:
 
-Sometimes files are corrupted in such way as pasted below. This is in memory
-corruption since the file is correct after reboot. File size is unchanged as original,
-mtime not modified (compared to what I have in backup) according to ls -l.
+> Does XFS still overwrite existing files with zeros, when those
+> files were open for write at the time of unclean shutdown? This
+I believe this was fixed in an early 2.6.2x release, cc'ing xfs mailing 
+list to confirm.
 
-There is no oops, just contents of some files (it happens like 1 file per week, well I notice
-one file per week) are partially trashed.
-
-This is 230GB partition on lvm2, mounted with rw,nosuid,nodev,noatime,nodiratime,usrquota,grpquota
-options. Hardware is intel rack server (don't remember which one exactly) 1U with 2 x quad xeon,
-adaptec 3405, 4 SAS disks in raid5.
-
-Any ideas what that could be?
-
-/**
-* A class for reading Microsoft Excel Spreadsheets.
-*
-* Originally d4040\134040\134040\134040//"#,##0.00",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x5\134040=>\134040"%1.0f",\134040\134040\134040\134040\134040/*"$#,##0;
-($#,##0)",*/^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x6\134040=>\134040'$%1.0f',\134040\134040\134040\134040/*"$#,##0;
-($#,##0)",*/^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x7\134040=>\134040'$%1.2f',\134040\134040\134040\134040//"$#,##0.00;
-($#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x8\134040=>\134040'$%1.2f',\134040\134040\134040\134040//"$#,##0.00;
-($#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x9\134040=>\134040'%1.0f%%',
-\134040\134040\134040//\134040"0%"^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400xa\134040=>\134040'%1.2f%%',
-\134040\134040\134040//\134040"0.00%"^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400xb\134040=>\134040'%1.2f',\134040\134040\134040\134040\134040//\1340400.00E00",
-^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x25\134040=>\134040'%1.0f',\134040\134040\134040\134040//\134040"#,##0;
-(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x26\134040=>\134040'%1.0f',\134040\134040\134040\134040//"#,##0;
-(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x27\134040=>\134040'%1.2f',\134040\134040\134040\134040//"#,##0.00;
-(#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x28\134040=>\134040'%1.2f',\134040\134040\134040\134040//"#,##0.00;
-(#,##0.00)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x29\134040=>\134040'%1.0f',\134040\134040\134040\134040//"#,##0;
-(#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x2a\134040=>\134040'$%1.0f',\134040\134040\134040//"$#,##0;
-($#,##0)",^M\134012\134040\134040\134040\134040\134040\134040\134040\1340400x2b\134040=>\134040'%1.2f',\134040\134040\134040\040\040\040//"#,##0.00;
-(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x2c\040=>\040'$%1.2f',\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x30\040=>\040'%1.0f');
-\040\040\040\040array^M\012\040\040\040\040\040*\040@access\040public^M\012\040\040\040\040\040*/^M\012\040\040\040\040var\040$numberFormats\040=\040array(^M\012\040\040\040\040\040\040\040\0400x1\040=>\040"%1.0f",
-\040\040\040\040\040//\040"0"^M\012\040\040\040\040\040\040\040\0400x2\040=>\040"%1.2f",\040\040\040\040\040//\040"0.00",^M\012\040\040\040\040\040\040\040\0400x3\040=>\040"%1.0f",
-\040\040\040\040\040//"#,##0",^M\012\040\040\040\040\040\040\040\0400x4\040=>\040"%1.2f",\040\040\040\040\040//"#,##0.00",^M\012\040\040\040\040\040\040\040\0400x5\040=>\040"%1.0f",
-\040\040\040\040\040/*"$#,##0;($#,##0)",*/^M\012\040\040\040\040\040\040\040\0400x6\040=>\040'$%1.0f',\040\040\040\040/*"$#,##0;($#,##0)",*/^M\012\040\040\040\040\040\040\040\0400x7\040=>\040'$%1.2f',
-\040\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x8\040=>\040'$%1.2f',\040\040\040\040//"$#,##0.00;($#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x9\040=>\040'%1.0f%%',
-\040\040\040//\040"0%"^M\012\040\040\040\040\040\040\040\0400xa\040=>\040'%1.2f%%',\040\040\040//\040"0.00%"^M\012\040\040\040\040\040\040\040\0400xb\040=>\040'%1.2f',
-\040\040\040\040\040//\0400.00E00",^M\012\040\040\040\040\040\040\040\0400x25\040=>\040'%1.0f',\040\040\040\040//\040"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x26\040=>\040'%1.0f',
-\040\040\040\040//"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x27\040=>\040'%1.2f',\040\040\040\040//"#,##0.00;(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x28\040=>\040'%1.2f',
-\040\040\040\040//"#,##0.00;(#,##0.00)",^M\012\040\040\040\040\040\040\040\0400x29\040=>\040'%1.0f',\040\040\040\040//"#,##0;(#,##0)",^M\012\040\040\040\040\040\040\040\0400x2a\040=>\040'$%1.0f',
-\040\040\040//"$#,##0;($#,##0)",^M\012\040\040\040\040\040\040\040\0400x2b\040=>\040'%1.2f',\040\040\040   //"#,##0.00;(#,##0.00)",
-        0x2c => '$%1.2f',   //"$#,##0.00;($#,##0.00)",
-        0x30 => '%1.0f');   //"##0.0E0";
-
-    // }}}
-    // {{{ Spreadsheet_Excel_Reader()
-
-    /**
-     * Constructor
-
-
--- 
-Arkadiusz Miśkiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
+> would violate a basic requirement of Postfix (don't lose data after
+> fsync).  Postfix updates existing files all the time: it updates
+> queue files as it marks recipients as done, and it updates mailbox
+> files as it appends mail.
