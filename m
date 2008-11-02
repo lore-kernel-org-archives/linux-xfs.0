@@ -1,172 +1,115 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Nov 2008 15:10:47 -0800 (PST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA2NAXDk031039
-	for <xfs@oss.sgi.com>; Sun, 2 Nov 2008 15:10:34 -0800
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 320EB1BDB3E3
-	for <xfs@oss.sgi.com>; Sun,  2 Nov 2008 15:10:33 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id QkfEtPpprC9now4g for <xfs@oss.sgi.com>; Sun, 02 Nov 2008 15:10:33 -0800 (PST)
-Date: Mon, 3 Nov 2008 10:10:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] XFS: handle memory allocation failures during log
-	initialisation
-Message-ID: <20081102231023.GJ19509@disturbed>
-References: <1225416366-3116-1-git-send-email-david@fromorbit.com> <490A8AAD.50207@sgi.com>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Nov 2008 15:12:30 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA2NCHM3031313
+	for <xfs@oss.sgi.com>; Sun, 2 Nov 2008 15:12:18 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E586E7B0667
+	for <xfs@oss.sgi.com>; Sun,  2 Nov 2008 15:12:19 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id i4EsuehxOpHu5pY5 for <xfs@oss.sgi.com>; Sun, 02 Nov 2008 15:12:19 -0800 (PST)
+Message-ID: <490E33D1.8030306@sandeen.net>
+Date: Sun, 02 Nov 2008 17:12:17 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <490A8AAD.50207@sgi.com>
+Subject: Re: [PATCH] xfstests: create tape group
+References: <490C7CAC.2070902@sandeen.net> <20081102220551.GG19509@disturbed>
+In-Reply-To: <20081102220551.GG19509@disturbed>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Oct 31, 2008 at 03:33:49PM +1100, Timothy Shimmin wrote:
-> Hi Dave,
-> 
-> Dave Chinner wrote:
-> > When there is no memory left in the system, xfs_buf_get_noaddr()
-> > can fail. If this happens at mount time during xlog_alloc_log()
-> > we fail to catch the error and oops.
-> > 
-> > Catch the error from xfs_buf_get_noaddr(), and allow other memory
-> > allocations to fail and catch those errors too. Report the error
-> > to the console and fail the mount with ENOMEM.
-> > 
-> > Tested by manually injecting errors into xfs_buf_get_noaddr() and
-> > xlog_alloc_log().
-> > 
-> > Version 2:
-> > o remove unnecessary casts of the returned pointer from kmem_zalloc()
-> > 
-> > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> > ---
-> >  fs/xfs/xfs_log.c |   39 ++++++++++++++++++++++++++++++++++++---
-> >  1 files changed, 36 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index 5184017..92c20a8 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -563,6 +563,11 @@ xfs_log_mount(
-> >  	}
-> >  
-> >  	mp->m_log = xlog_alloc_log(mp, log_target, blk_offset, num_bblks);
-> > +	if (!mp->m_log) {
-> > +		cmn_err(CE_WARN, "XFS: Log allocation failed: No memory!");
-> > +		error = ENOMEM;
-> > +		goto out;
-> > +	}
-> >  
-> >  	/*
-> >  	 * Initialize the AIL now we have a log.
-> > @@ -601,6 +606,7 @@ xfs_log_mount(
-> >  	return 0;
-> >  error:
-> >  	xfs_log_unmount_dealloc(mp);
-> > +out:
-> >  	return error;
-> >  }	/* xfs_log_mount */
-> >  
-> > @@ -1217,7 +1223,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
-> >  	int			i;
-> >  	int			iclogsize;
-> >  
-> > -	log = (xlog_t *)kmem_zalloc(sizeof(xlog_t), KM_SLEEP);
-> > +	log = kmem_zalloc(sizeof(xlog_t), KM_MAYFAIL);
-> > +	if (!log)
-> > +		return NULL;
-> >  
-> >  	log->l_mp	   = mp;
-> >  	log->l_targ	   = log_target;
-> > @@ -1249,6 +1257,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
-> >  	xlog_get_iclog_buffer_size(mp, log);
-> >  
-> >  	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
-> > +	if (!bp)
-> > +		goto out_free_log;
-> >  	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-> >  	XFS_BUF_SET_BDSTRAT_FUNC(bp, xlog_bdstrat_cb);
-> >  	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
-> > @@ -1275,13 +1285,17 @@ xlog_alloc_log(xfs_mount_t	*mp,
-> >  	iclogsize = log->l_iclog_size;
-> >  	ASSERT(log->l_iclog_size >= 4096);
-> >  	for (i=0; i < log->l_iclog_bufs; i++) {
-> > -		*iclogp = (xlog_in_core_t *)
-> > -			  kmem_zalloc(sizeof(xlog_in_core_t), KM_SLEEP);
-> > +		*iclogp = kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
-> > +		if (!*iclogp)
-> > +			goto out_free_iclog;
-> > +
-> >  		iclog = *iclogp;
-> >  		iclog->ic_prev = prev_iclog;
-> >  		prev_iclog = iclog;
-> >  
-> >  		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
-> > +		if (!bp)
-> > +			goto out_free_iclog;
-> >  		if (!XFS_BUF_CPSEMA(bp))
-> >  			ASSERT(0);
-> >  		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-> > @@ -1323,6 +1337,25 @@ xlog_alloc_log(xfs_mount_t	*mp,
-> >  	log->l_iclog->ic_prev = prev_iclog;	/* re-write 1st prev ptr */
-> >  
-> >  	return log;
-> > +
-> > +out_free_iclog:
-> > +	for (iclog = log->l_iclog; iclog; iclog = prev_iclog) {
-> > +		prev_iclog = iclog->ic_next;
-> > +		if (iclog->ic_bp) {
-> > +			sv_destroy(&iclog->ic_force_wait);
-> > +			sv_destroy(&iclog->ic_write_wait);
-> > +			xfs_buf_free(iclog->ic_bp);
-> > +			xlog_trace_iclog_dealloc(iclog);
-> > +		}
-> > +		kmem_free(iclog);
-> > +	}
-> > +	spinlock_destroy(&log->l_icloglock);
-> > +	spinlock_destroy(&log->l_grant_lock);
-> > +	xlog_trace_loggrant_dealloc(log);
-> > +	xfs_buf_free(log->l_xbuf);
-> > +out_free_log:
-> > +	kmem_free(log);
-> > +	return NULL;
-> >  }	/* xlog_alloc_log */
-> >  
-> >  
-> 
-> I would have done s/prev_iclog/next_iclog/
-> as I'm not sure why you look at it as previous.
+Dave Chinner wrote:
 
-Already had a local variable of the right type - not much
-point in declaring a new variable to use as a list iterator
-when you've already got a variable that is used as a list
-iterator in another, non-overlapping part of the code ;)
+> On Sat, Nov 01, 2008 at 10:58:36AM -0500, Eric Sandeen wrote:
+>   
+>> Create a tape group for anything which expects
+>> to dump to tape (I guess this is a superset
+>> of "remote" and a few others).
+>>     
+>
+> Given that most ppl don't have tape drives, should these be left in
+> the auto group now that they can easily be run by 'check -g tape'? I
+> know I've never had a config to run them the *entire* time I've 
+> personally run XFSQA...
+>
+> Cheers,
+>
+> Dave.
+>   
+Sounds like a plan.  We probably don't even know (?) if they run
+well enough to be in the auto group?  Revised patch below:
 
-> However, I think it would be nicer to modify xlog_dealloc_log()
-> to handle less than l_iclog_bufs.
-> i.e put the code you have here into xlog_dealloc_log()
-> and do the deallocation in one place.
+-----------------
 
-The current trend is to unwind complex initialisation errors at
-the place they occur, even if there is a destructor function for
-a completely intialised object/subsystem. I just followed that
-construct. And to be truly complete, it should also handle
-trace buffer initialisation failure, which would make the
-unwinding even more complex than it is above.
+Create a tape group for anything which expects
+to dump to tape (I guess this is a superset
+of "remote" and a few others).  Also, remove
+this from the auto group; most people won't have tapes
+and -g tape is easy enough (per dchinner's suggestion).
 
-Given that this is a regression fix I didn't want to perturb the
-log destructor code by making it have to handle partially set up
-lists and objects....
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-If you still want me to push this into xlog_dealloc_log() I will,
-just let me know.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfs-cmds/xfstests/group
+===================================================================
+--- xfs-cmds.orig/xfstests/group
++++ xfs-cmds/xfstests/group
+@@ -35,6 +35,9 @@ v2log		tes@sgi.com
+ # xfsdump, xfsrestore, xfsinvutil
+ dump		tes@sgi.com ivanr@sgi.com
+ 
++# xfsdump, xfsrestore to tapes
++tape		tes@sgi.com ivanr@sgi.com
++
+ # xfsdump, xfsrestore to remote tapes
+ remote		tes@sgi.com ivanr@sgi.com
+ 
+@@ -118,10 +121,10 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
+ 019 mkfs auto
+ 020 metadata attr udf auto
+ 021 db attr auto
+-022 dump ioctl auto
+-023 dump ioctl auto
+-024 dump ioctl auto
+-025 dump ioctl auto
++022 dump ioctl tape
++023 dump ioctl tape
++024 dump ioctl tape
++025 dump ioctl tape
+ 026 dump ioctl auto
+ 027 dump ioctl auto
+ 028 dump ioctl auto
+@@ -131,15 +134,15 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
+ 032 mkfs auto
+ 033 repair auto
+ 034 other auto
+-035 dump ioctl auto
+-036 dump ioctl remote auto
+-037 dump ioctl remote auto
+-038 dump ioctl remote auto
+-039 dump ioctl remote auto
++035 dump ioctl tape auto
++036 dump ioctl remote tape
++037 dump ioctl remote tape
++038 dump ioctl remote tape
++039 dump ioctl remote tape
+ 040 other auto
+ 041 growfs ioctl auto
+ 042 fsr ioctl auto
+-043 dump ioctl auto
++043 dump ioctl tape
+ 044 other auto
+ 045 other auto
+ 046 dump ioctl auto
+@@ -151,7 +154,7 @@ nfs4acl		tes@sgi.com donaldd@sgi.com
+ 052 quota db auto
+ 053 acl repair auto
+ 054 quota auto
+-055 dump ioctl remote auto
++055 dump ioctl remote tape
+ 056 dump ioctl auto
+ 057 acl auto
+ 058 acl auto
