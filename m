@@ -1,49 +1,53 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sat, 01 Nov 2008 12:19:22 -0700 (PDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA1JJAva011746
-	for <xfs@oss.sgi.com>; Sat, 1 Nov 2008 12:19:10 -0700
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0464B13158F8
-	for <xfs@oss.sgi.com>; Sat,  1 Nov 2008 12:19:11 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id pRg2CWj1VJYHnWej for <xfs@oss.sgi.com>; Sat, 01 Nov 2008 12:19:11 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 3F466AC3590
-	for <xfs@oss.sgi.com>; Sat,  1 Nov 2008 14:19:11 -0500 (CDT)
-Message-ID: <490CABAE.2070402@sandeen.net>
-Date: Sat, 01 Nov 2008 14:19:10 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: with ECARTIS (v1.0.0; list xfs); Sun, 02 Nov 2008 13:45:01 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.168.29])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA2LilE2025511
+	for <xfs@oss.sgi.com>; Sun, 2 Nov 2008 13:44:47 -0800
+Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60EF37B058A
+	for <xfs@oss.sgi.com>; Sun,  2 Nov 2008 13:44:48 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id DzyFSLOQAONSVGL5 for <xfs@oss.sgi.com>; Sun, 02 Nov 2008 13:44:48 -0800 (PST)
+Date: Mon, 3 Nov 2008 08:44:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Which FileSystem do you use on your postfix server?
+Message-ID: <20081102214444.GE19509@disturbed>
+References: <20081031221817.GD19509@disturbed> <20081031225615.5E66B1F3EA0@spike.porcupine.org>
 MIME-Version: 1.0
-Subject: [PATCH v2] xfstest: confirm mkfs.gfs[2] in test 032
-References: <490C801E.9070405@sandeen.net>
-In-Reply-To: <490C801E.9070405@sandeen.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20081031225615.5E66B1F3EA0@spike.porcupine.org>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>
+To: Wietse Venema <wietse@porcupine.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, Postfix users <postfix-users@postfix.org>, xfs@oss.sgi.com
 
-mkfs.gfs[2] asks for confirmation before mkfs'ing; without
-this test 032 hangs when mkfs.gfs2 is present.
+On Fri, Oct 31, 2008 at 06:56:15PM -0400, Wietse Venema wrote:
+> Dave Chinner:
+> Here's something I would like to know regarding the order of
+> directory updates:
+> 
+> - Does fsync(file) guarantee the file's directory entry is safe?
 
-Also, mkfs.gfs needs a few more args to make it go.
+No.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+> Some file systems complete directory updates before the open/link/rename
+> system call returns, so fsync() doesn't have to worry about it.
 
-Index: xfs-cmds/xfstests/032
-===================================================================
---- xfs-cmds.orig/xfstests/032
-+++ xfs-cmds/xfstests/032
-@@ -43,6 +43,8 @@ do
- 	[ $fs = vfat ] && postargs=2000
- 	# these folks prompt before writing
- 	[ $fs = jfs ] && preop="echo Y |"
-+	[ $fs = gfs ] && preop="echo y |" && preargs="-p lock_nolock -j 1"
-+	[ $fs = gfs2 ] && preop="echo y |"
- 	[ $fs = reiserfs ] && preop="echo y |" && preargs="-f"
- 	# cramfs mkfs requires a directory argument
- 	[ $fs = cramfs ] && preargs=/proc/fs/xfs
+If you run with '-o dirsync', all directory transactions are guaranteed
+to be in the log on disk by the time the syscall returns. Note that
+this means you do at least one log write per create/link/rename/unlink
+syscall, which has performance impact....
+
+> - Does rename() guarantee that at least one directory entry will
+> exist even when the system crashes in the middle of the operation?
+
+Yes - either it will complete atomically or no change will occur at
+all.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
