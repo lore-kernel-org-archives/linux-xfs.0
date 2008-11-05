@@ -1,51 +1,44 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Nov 2008 17:56:39 -0800 (PST)
-Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA51uQbh026788
-	for <xfs@oss.sgi.com>; Tue, 4 Nov 2008 17:56:26 -0800
-Message-ID: <4910FCF8.5080802@sgi.com>
-Date: Wed, 05 Nov 2008 12:55:04 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
+Received: with ECARTIS (v1.0.0; list xfs); Tue, 04 Nov 2008 20:32:57 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA54WeDx005682
+	for <xfs@oss.sgi.com>; Tue, 4 Nov 2008 20:32:40 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60081111C062
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2008 20:32:42 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id QWFsq8PDeH5ccvsK for <xfs@oss.sgi.com>; Tue, 04 Nov 2008 20:32:42 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id B48F9A81F0B
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2008 22:32:41 -0600 (CST)
+Message-ID: <491121E9.5000608@sandeen.net>
+Date: Tue, 04 Nov 2008 22:32:41 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [GIT PULL] XFS update for 2.6.28
-References: <20081031045737.ECE0E58AE1E9@chook.melbourne.sgi.com>	 <alpine.DEB.1.10.0810302201030.3116@asgard.lang.hm> <f488382f0810302253l6e8b2705u29582f348256a91a@mail.gmail.com>
-In-Reply-To: <f488382f0810302253l6e8b2705u29582f348256a91a@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [PATCH] xfstests: mount with security context if SELinux is enabled
+References: <49107592.3030800@sandeen.net>
+In-Reply-To: <49107592.3030800@sandeen.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Steven Noonan <steven@uplinklabs.net>
-Cc: david@lang.hm, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
+To: xfs mailing list <xfs@oss.sgi.com>
 
-Steven Noonan wrote:
-> On Thu, Oct 30, 2008 at 10:02 PM,  <david@lang.hm> wrote:
->> On Fri, 31 Oct 2008, Lachlan McIlroy wrote:
->>
->>> The following changes since commit
->>> 721d5dfe7e516954c501d5e9d0dfab379cf4241a:
->>>  Linus Torvalds (1):
->>>       Merge branch 'for-linus' of git://neil.brown.name/md
->> I am a fairly heavy user of XFS and am as eager as anyone to see cleanups
->> and improvements, but 102 commits to go into -rc3????
->>
->> David Lang
->>
+Eric Sandeen wrote:
+> When SELinux is enabled, it adds extra xattrs for security
+> attributes which can change the output of various tests, causing
+> them to fail.
 > 
-> I'm pretty sure these won't be accepted until 2.6.29's merge window
-> opens. The merge window for 2.6.28 has closed, and due to the sheer
-> number of commits, at least -one- is bound to cause a regression.
+> If SELinux is enabled, mount with a liberal/permissive context
+> for the entire filesystem, so that SELinux xattrs don't get
+> created.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
 
-Okay, that's fine.  The tree was too unstable to request a pull any earlier
-and we're still chasing some issues.  We should be well and truly ready for
-2.6.29.
+hold off on this one, I've needed to make a few more changes.
 
-> 
-> - Steven
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Thanks,
+-Eric
