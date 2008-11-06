@@ -1,67 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Nov 2008 21:38:39 -0800 (PST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA65cOGF011842
-	for <xfs@oss.sgi.com>; Wed, 5 Nov 2008 21:38:26 -0800
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B41D1502666
-	for <xfs@oss.sgi.com>; Wed,  5 Nov 2008 21:38:26 -0800 (PST)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by cuda.sgi.com with ESMTP id Fqs5EeBslJXsBtsN for <xfs@oss.sgi.com>; Wed, 05 Nov 2008 21:38:26 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1KxxZZ-0007Si-GX
-	for xfs@oss.sgi.com; Wed, 05 Nov 2008 21:38:25 -0800
-Message-ID: <20355466.post@talk.nabble.com>
-Date: Wed, 5 Nov 2008 21:38:25 -0800 (PST)
-From: cyjoyp <cyjoyp@gmail.com>
-Subject: Inode Core, di_format = 3 , with sb_inodesize=1024
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 05 Nov 2008 21:54:00 -0800 (PST)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA65rjxs012583
+	for <xfs@oss.sgi.com>; Wed, 5 Nov 2008 21:53:47 -0800
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com [134.14.52.130])
+	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id 80F2E9088A
+	for <xfs@oss.sgi.com>; Wed,  5 Nov 2008 21:53:45 -0800 (PST)
+Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com [134.14.54.237]) by larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id QAA03020 for <xfs@oss.sgi.com>; Thu, 6 Nov 2008 16:53:42 +1100
+Subject: TAKE 052 - keep Eric happy :-)
+Message-Id: <20081106055342.4C19958AE1F3@chook.melbourne.sgi.com>
+Date: Thu,  6 Nov 2008 16:53:42 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs@oss.sgi.com
 
+Long devicenames cause this quota output to split onto 2 lines:
 
-Hello folks,
-    Referring to the document "XFS File System Structure" by Silicon
-Graphics ,page number 34 ....
-    "* On disk, the B+tree node starts with the xfs_bmbr_block_t header
-followed by an array of 
-        xfs_bmbt_key_t  values and then an array of xfs_bmbt_ptr_t
-values.The size of 
-        both arrays is specified by the header's bb_numrecs value ."
-   "* The root node in the inode can only contain up to 19 key/pointer pairs
-for a standard 256 byte inode 
-       before a new level of nodes is added between the root and the
-leaves."
+# xfs_quota -c "quota -gpu -birnN 99" /mnt/scratch
+/dev/mapper/testvol-test2
+                           880       1004       1004   00 [--------]           1         10         10   00 [--------]           0          0          0   00 [--------] /mnt/scratch
 
-My query is,
-      
-       I do not see the header  xfs_bmbr_block_t anywhere else in the
-documentation.Is it a 
-       spelling a mistake? As far as I understand, bb_numrecs represents the
-number of pointers present in 
-       the Inode core and not the size of the key/pointer arrays.This
-pointer value helps us reach the 
-       block of extents having the signature BMAP. Please correct me if I am
-wrong.
+but if we make that "\n" go away, the test still passes.
 
-       If there are up to 19 key/pointer pairs for a standard 256 byte
-Inode, do any one know how 
-       may key/pointer pair does a Inode core of size 512 and 1024 will
-have????
-       Is there any way to calculate the offset of the pointer ??
-
-  Pleas help me
-       
-
-      
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
 
+Date:  Thu Nov  6 16:52:39 EST 2008
+Workarea:  chook.melbourne.sgi.com:/build/tes/xfs-cmds
+Inspected by:  sandeen@sandeen.net
 
--- 
-View this message in context: http://www.nabble.com/Inode-Core%2C-di_format-%3D-3-%2C-with-sb_inodesize%3D1024-tp20355466p20355466.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:32444a
+xfstests/052 - 1.17 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/052.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
+	- Long devicenames cause this quota output to split onto 2 lines:
+	  # xfs_quota -c "quota -gpu -birnN 99" /mnt/scratch
+	  /dev/mapper/testvol-test2
+	  880       1004       1004   00 [--------]           1         10         10   00 [--------]           0          0          0   00 [--------] /mnt/scratch
+	  but if we make that "\n" go away, the test still passes.
+	  Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
