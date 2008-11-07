@@ -1,255 +1,188 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Thu, 06 Nov 2008 08:25:24 -0800 (PST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.168.28])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA6GPADX026496
-	for <xfs@oss.sgi.com>; Thu, 6 Nov 2008 08:25:10 -0800
-Received: from funky.thebarn.com (slurp.thebarn.com [208.42.117.201])
-	(authenticated bits=0)
-	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id mA6GOgXJ055013;
-	Thu, 6 Nov 2008 10:24:43 -0600 (CST)
-	(envelope-from cattelan@xfs.org)
-Message-ID: <49131A4A.4050208@xfs.org>
-Date: Thu, 06 Nov 2008 10:24:42 -0600
-From: Russell Cattelan <cattelan@thebarn.com>
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Nov 2008 11:00:09 -0800 (PST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA7IwctK000836
+	for <xfs@oss.sgi.com>; Fri, 7 Nov 2008 10:58:38 -0800
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4909F1514187
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 10:58:37 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 5UTWWZ4xz6QTpVkp for <xfs@oss.sgi.com>; Fri, 07 Nov 2008 10:58:37 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id A3A2BA81F08
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 12:58:35 -0600 (CST)
+Message-ID: <49148FDB.30407@sandeen.net>
+Date: Fri, 07 Nov 2008 12:58:35 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [xfs] [GIT PULL] XFS update for 2.6.28
-References: <20081031045737.ECE0E58AE1E9@chook.melbourne.sgi.com>
-In-Reply-To: <20081031045737.ECE0E58AE1E9@chook.melbourne.sgi.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [PATCH] xfsprogs parallel build
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Lachlan McIlroy wrote:
-> The following changes since commit 721d5dfe7e516954c501d5e9d0dfab379cf4241a:
->   Linus Torvalds (1):
->         Merge branch 'for-linus' of git://neil.brown.name/md
->
-> are available in the git repository at:
->
->   git://oss.sgi.com:8090/xfs/linux-2.6 master
->
->   
-Please don't publish the 8090 port for git at oss anymore.
-The firewall has been set up to allow for standard git traffic so no 
-port number is needed.
+I got tired of waiting for xfsprogs to build
+serially...
 
-The git daemon on port 8090 will probably cease once the oss upgrade is 
-complete.
+On a 16p altix, make -j16 (excluding the configure
+phase) went from 2m16s to 33s.
 
+I tossed this into an rpm and did a fedora scratch
+build on all arches, they all passed - some of them,
+at least, should have been doing parallel builds too.
 
-> Barry Naujok (4):
->       [XFS] Remove final remnants of dirv1 macros and other stuff
->       [XFS] Sync up kernel and user-space headers
->       [XFS] Check agf_btreeblks is valid when reading in the AGF
->       [XFS] Show buffer address with debug hexdump on corruption
->
-> Christoph Hellwig (42):
->       [XFS] kill struct xfs_btree_hdr
->       [XFS] split up xfs_btree_init_cursor
->       [XFS] add generic btree types
->       [XFS] make btree root in inode support generic
->       [XFS] add a long pointers flag to xfs_btree_cur
->       [XFS] refactor xfs_btree_readahead
->       [XFS] refactor btree validation helpers
->       [XFS] make btree tracing generic
->       [XFS] add get_maxrecs btree operation
->       [XFS] add helpers for addressing entities inside a btree block
->       [XFS] implement generic xfs_btree_increment
->       [XFS] implement generic xfs_btree_decrement
->       [XFS] implement generic xfs_btree_lookup
->       [XFS] implement generic xfs_btree_updkey
->       [XFS] implement generic xfs_btree_update
->       [XFS] implement generic xfs_btree_rshift
->       [XFS] implement generic xfs_btree_lshift
->       [XFS] implement generic xfs_btree_split
->       [XFS] implement semi-generic xfs_btree_new_root
->       [XFS] move xfs_bmbt_newroot to common code
->       [XFS] implement generic xfs_btree_insert/insrec
->       [XFS] move xfs_bmbt_killroot to common code
->       [XFS] implement generic xfs_btree_delete/delrec
->       [XFS] implement generic xfs_btree_get_rec
->       [XFS] kill xfs_bmbt_log_block and xfs_bmbt_log_recs
->       [XFS] add keys_inorder and recs_inorder btree methods
->       [XFS] mark various functions in xfs_btree.c static
->       [XFS] make btree tracing generic
->       [XFS] Cleanup maxrecs calculation.
->       [XFS] cleanup btree record / key / ptr addressing macros.
->       [XFS] Always use struct xfs_btree_block instead of short / longform
->       [XFS] Move XFS_BMAP_SANITY_CHECK out of line.
->       [XFS] split out two helpers from xfs_syncsub
->       [XFS] fix instant oops with tracing enabled
->       [XFS] kill struct xfs_mount_args
->       [XFS] fix the noquota mount option
->       [XFS] fix biosize option
->       [XFS] Trivial xfs_remove comment fixup
->       [XFS] stop using xfs_itobp in xfs_bulkstat
->       Inode: export symbol destroy_inode
->       [XFS] free partially initialized inodes using destroy_inode
->       [XFS] kill sys_cred
->
-> David Chinner (44):
->       [XFS] Make use of the init-once slab optimisation.
->       [XFS] add new btree statistics
->       [XFS] move sync code to its own file
->       [XFS] move xfssyncd code to xfs_sync.c
->       [XFS] Remove xfs_iflush_all and clean up xfs_finish_reclaim_all()
->       [XFS] don't block in xfs_qm_dqflush() during async writeback.
->       [XFS] Use the inode tree for finding dirty inodes
->       [XFS] Traverse inode trees when releasing dquots
->       [XFS] remove the mount inode list
->       [XFS] Use struct inodes instead of vnodes to kill vn_grab
->       [XFS] use xfs_sync_inodes rather than xfs_syncsub
->       [XFS] kill xfs_syncsub
->       [XFS] xfssyncd: don't call xfs_sync
->       [XFS] make SYNC_ATTR no longer use xfs_sync
->       [XFS] make SYNC_DELWRI no longer use xfs_sync
->       [XFS] Kill SYNC_CLOSE
->       [XFS] Kill xfs_sync()
->       [XFS] Move remaining quiesce code.
->       [XFS] factor xfs_iget_core() into hit and miss cases
->       [XFS] Never call mark_inode_dirty_sync() directly
->       Inode: Allow external initialisers
->       Inode: Allow external list initialisation
->       [XFS] Combine the XFS and Linux inodes
->       [XFS] Prevent use-after-free caused by synchronous inode reclaim
->       [XFS] move inode reclaim functions to xfs_sync.c
->       [XFS] rename inode reclaim functions
->       [XFS] mark inodes for reclaim via a tag in the inode radix tree
->       [XFS] use the inode radix tree for reclaiming inodes
->       [XFS] kill deleted inodes list
->       [XFS] Prevent looping in xfs_sync_inodes_ag
->       [XFS] Account for allocated blocks when expanding directories
->       [XFS] Allocate the struct xfs_ail
->       [XFS] Use a cursor for AIL traversal.
->       [XFS] move the AIl traversal over to a consistent interface
->       [XFS] Allow 64 bit machines to avoid the AIL lock during flushes
->       [XFS] Move the AIL lock into the struct xfs_ail
->       [XFS] Given the log a pointer to the AIL
->       [XFS] Add ail pointer into log items
->       [XFS] Finish removing the mount pointer from the AIL API
->       [XFS] XFS: Check for valid transaction headers in recovery
->       [XFS] Can't lock inodes in radix tree preload region
->       [XFS] avoid all reclaimable inodes in xfs_sync_inodes_ag
->       [XFS] correctly select first log item to push
->       [XFS] Fix race when looking up reclaimable inodes
->
-> David Howells (1):
->       CRED: Wrap task credential accesses in the XFS filesystem
->
-> Lachlan McIlroy (7):
->       [XFS] Remove kmem_zone_t argument from xfs_inode_init_once()
->       [XFS] Use xfs_idestroy() to cleanup an inode.
->       [XFS] Fix use-after-free with log and quotas
->       [XFS] Unlock inode before calling xfs_idestroy()
->       [XFS] Wait for all I/O on truncate to zero file size
->       [XFS] Make xfs_btree_check_ptr() debug-only code.
->       [XFS] Fix build warning - xfs_fs_alloc_inode() needs a return statement
->
-> Peter Leckie (2):
->       [XFS] Clean up dquot pincount code.
->       [XFS] Fix build brakage from patch "Clean up dquot pincount code"
->
-> Tim Shimmin (2):
->       [XFS] remove restricted chown parameter from xfs linux
->       [XFS] remove restricted chown parameter from xfs linux
->
->  Documentation/filesystems/xfs.txt |    4 -
->  fs/inode.c                        |  208 ++-
->  fs/xfs/Makefile                   |    4 +-
->  fs/xfs/linux-2.6/xfs_aops.c       |    2 +-
->  fs/xfs/linux-2.6/xfs_cred.h       |   10 +-
->  fs/xfs/linux-2.6/xfs_globals.c    |    8 -
->  fs/xfs/linux-2.6/xfs_globals.h    |    1 -
->  fs/xfs/linux-2.6/xfs_ioctl.c      |    9 +-
->  fs/xfs/linux-2.6/xfs_iops.c       |   25 +-
->  fs/xfs/linux-2.6/xfs_linux.h      |    2 +-
->  fs/xfs/linux-2.6/xfs_stats.c      |    4 +
->  fs/xfs/linux-2.6/xfs_stats.h      |   65 +
->  fs/xfs/linux-2.6/xfs_super.c      |  840 +++------
->  fs/xfs/linux-2.6/xfs_super.h      |    3 -
->  fs/xfs/linux-2.6/xfs_sync.c       |  763 ++++++++
->  fs/xfs/linux-2.6/xfs_sync.h       |   55 +
->  fs/xfs/linux-2.6/xfs_sysctl.c     |   11 -
->  fs/xfs/linux-2.6/xfs_sysctl.h     |    3 +-
->  fs/xfs/linux-2.6/xfs_vfs.h        |   31 -
->  fs/xfs/linux-2.6/xfs_vnode.c      |   15 +-
->  fs/xfs/linux-2.6/xfs_vnode.h      |    5 -
->  fs/xfs/quota/xfs_dquot.c          |   39 +-
->  fs/xfs/quota/xfs_dquot.h          |    4 +-
->  fs/xfs/quota/xfs_dquot_item.c     |   45 +-
->  fs/xfs/quota/xfs_qm.c             |   13 +-
->  fs/xfs/quota/xfs_qm.h             |    1 -
->  fs/xfs/quota/xfs_qm_bhv.c         |    1 -
->  fs/xfs/quota/xfs_qm_syscalls.c    |  137 +-
->  fs/xfs/support/debug.c            |    2 +-
->  fs/xfs/xfs.h                      |    2 +-
->  fs/xfs/xfs_acl.c                  |    8 +-
->  fs/xfs/xfs_ag.h                   |   10 +-
->  fs/xfs/xfs_alloc.c                |  195 ++-
->  fs/xfs/xfs_alloc.h                |   27 +-
->  fs/xfs/xfs_alloc_btree.c          | 2387 ++++---------------------
->  fs/xfs/xfs_alloc_btree.h          |  107 +-
->  fs/xfs/xfs_arch.h                 |   39 +-
->  fs/xfs/xfs_bit.h                  |    3 +-
->  fs/xfs/xfs_bmap.c                 |  296 ++--
->  fs/xfs/xfs_bmap.h                 |   61 +-
->  fs/xfs/xfs_bmap_btree.c           | 2614 +++++----------------------
->  fs/xfs/xfs_bmap_btree.h           |  171 +--
->  fs/xfs/xfs_btree.c                | 3596 ++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_btree.h                |  392 +++--
->  fs/xfs/xfs_btree_trace.c          |  249 +++
->  fs/xfs/xfs_btree_trace.h          |  116 ++
->  fs/xfs/xfs_buf_item.c             |   25 +-
->  fs/xfs/xfs_clnt.h                 |  105 --
->  fs/xfs/xfs_da_btree.c             |    5 +
->  fs/xfs/xfs_da_btree.h             |   24 +-
->  fs/xfs/xfs_dinode.h               |    5 +-
->  fs/xfs/xfs_dir2.c                 |    6 +
->  fs/xfs/xfs_dmops.c                |    5 +-
->  fs/xfs/xfs_extfree_item.c         |   45 +-
->  fs/xfs/xfs_fsops.c                |   24 +-
->  fs/xfs/xfs_ialloc.c               |  132 ++-
->  fs/xfs/xfs_ialloc.h               |   21 +-
->  fs/xfs/xfs_ialloc_btree.c         | 2193 +++--------------------
->  fs/xfs/xfs_ialloc_btree.h         |  111 +-
->  fs/xfs/xfs_iget.c                 |  501 ++----
->  fs/xfs/xfs_imap.h                 |    2 -
->  fs/xfs/xfs_inode.c                |  292 ++--
->  fs/xfs/xfs_inode.h                |  288 ++--
->  fs/xfs/xfs_inode_item.c           |   30 +-
->  fs/xfs/xfs_inode_item.h           |   41 +-
->  fs/xfs/xfs_itable.c               |   33 +-
->  fs/xfs/xfs_log.c                  |   10 +-
->  fs/xfs/xfs_log_priv.h             |    1 +
->  fs/xfs/xfs_log_recover.c          |  105 +-
->  fs/xfs/xfs_mount.c                |   47 +-
->  fs/xfs/xfs_mount.h                |   54 +-
->  fs/xfs/xfs_qmops.c                |    5 +-
->  fs/xfs/xfs_trans.c                |   13 +-
->  fs/xfs/xfs_trans.h                |  322 ++--
->  fs/xfs/xfs_trans_ail.c            |  362 +++--
->  fs/xfs/xfs_trans_buf.c            |    7 +-
->  fs/xfs/xfs_trans_item.c           |   10 +
->  fs/xfs/xfs_trans_priv.h           |   98 +-
->  fs/xfs/xfs_vfsops.c               |  617 +-------
->  fs/xfs/xfs_vfsops.h               |    2 -
->  fs/xfs/xfs_vnodeops.c             |  141 +--
->  fs/xfs/xfs_vnodeops.h             |    6 +-
->  include/linux/fs.h                |    2 +
->  kernel/sysctl_check.c             |    1 -
->  84 files changed, 8096 insertions(+), 10178 deletions(-)
->  create mode 100644 fs/xfs/linux-2.6/xfs_sync.c
->  create mode 100644 fs/xfs/linux-2.6/xfs_sync.h
->  create mode 100644 fs/xfs/xfs_btree_trace.c
->  create mode 100644 fs/xfs/xfs_btree_trace.h
->  delete mode 100644 fs/xfs/xfs_clnt.h
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->   
+So this has had reasonable testing.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+Index: xfsprogs-2.10.1/Makefile
+===================================================================
+--- xfsprogs-2.10.1.orig/Makefile
++++ xfsprogs-2.10.1/Makefile
+@@ -15,23 +15,28 @@ LSRCFILES = configure configure.in Makep
+ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+ 	Logs/* built .census install.* install-dev.* *.gz
+ 
+-SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
+-	copy db fsck growfs io logprint mkfs quota mdrestore repair rtcp \
++LIB_SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk
++TOOL_SUBDIRS = copy db fsck growfs io logprint mkfs quota mdrestore repair rtcp \
+ 	m4 man doc po debian build
+ 
++SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
++
+ default: $(CONFIGURE)
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(MAKE) -C . $@
+ else
+-	$(SUBDIRS_MAKERULE)
++	$(MAKE) $(SUBDIRS)
+ endif
+ 
++$(TOOL_SUBDIRS) : $(LIB_SUBDIRS)
++
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+ else
+ clean:	# if configure hasn't run, nothing to clean
+ endif
+ 
++.NOTPARALLEL: $(CONFIGURE)
+ $(CONFIGURE):
+ 	autoconf
+ 	./configure \
+@@ -51,13 +56,17 @@ $(CONFIGURE):
+ aclocal.m4::
+ 	aclocal --acdir=`pwd`/m4 --output=$@
+ 
+-install: default
+-	$(SUBDIRS_MAKERULE)
++install: default $(addsuffix -install,$(SUBDIRS))
+ 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+ 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
+ 
+-install-dev: default
+-	$(SUBDIRS_MAKERULE)
++%-install:
++	$(MAKE) -C $* install
++
++install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
++
++%-install-dev:
++	$(MAKE) -C $* install-dev
+ 
+ realclean distclean: clean
+ 	rm -f $(LDIRT) $(CONFIGURE)
+Index: xfsprogs-2.10.1/include/buildrules
+===================================================================
+--- xfsprogs-2.10.1.orig/include/buildrules
++++ xfsprogs-2.10.1/include/buildrules
+@@ -6,18 +6,22 @@ _BUILDRULES_INCLUDED_ = 1
+ 
+ include $(TOPDIR)/include/builddefs
+ 
+-clean clobber : $(SUBDIRS)
++clean clobber: $(addsuffix -clean,$(SUBDIRS))
+ 	rm -f $(DIRT)
+ 	@rm -fr .libs
+-	$(SUBDIRS_MAKERULE)
++%-clean::
++	$(MAKE) -C $* clean
+ 
+ # Never blow away subdirs
+ ifdef SUBDIRS
+ .PRECIOUS: $(SUBDIRS)
+-$(SUBDIRS):
+-	$(SUBDIRS_MAKERULE)
+ endif
+ 
++.PHONY: $(SUBDIRS)
++
++$(SUBDIRS):
++	$(MAKE) -C $@
++
+ #
+ # Standard targets
+ #
+@@ -69,11 +73,13 @@ ifdef LTLIBRARY
+ DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
+ endif
+ 
+-depend : $(CFILES) $(HFILES)
+-	$(SUBDIRS_MAKERULE)
++depend : $(CFILES) $(HFILES) $(addsuffix -depend,$(SUBDIRS))
+ 	$(DEPENDSCRIPT) > .dep
+ 	test -s .dep || rm -f .dep
+ 
++%-depend:
++	$(MAKE) -C $* depend
++
+ # Include dep, but only if it exists
+ ifeq ($(shell test -f .dep && echo .dep), .dep)
+ include .dep
+Index: xfsprogs-2.10.1/include/buildmacros
+===================================================================
+--- xfsprogs-2.10.1.orig/include/buildmacros
++++ xfsprogs-2.10.1/include/buildmacros
+@@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
+ 	done
+ endif
+ 
+-SUBDIRS_MAKERULE = \
+-	@for d in $(SUBDIRS) ""; do \
+-		if test -d "$$d" -a ! -z "$$d"; then \
+-			$(ECHO) === $$d ===; \
+-			$(MAKEF) -C $$d $@ || exit $$?; \
+-		fi; \
+-	done
+-
+ MAN_MAKERULE = \
+ 	@for f in *.[12345678] ""; do \
+ 		if test ! -z "$$f"; then \
+Index: xfsprogs-2.10.1/man/Makefile
+===================================================================
+--- xfsprogs-2.10.1.orig/man/Makefile
++++ xfsprogs-2.10.1/man/Makefile
+@@ -7,7 +7,16 @@ include $(TOPDIR)/include/builddefs
+ 
+ SUBDIRS = man3 man5 man8
+ 
+-default install install-dev : $(SUBDIRS)
+-	$(SUBDIRS_MAKERULE)
++default : $(SUBDIRS)
++
++install : $(addsuffix -install,$(SUBDIRS))
++
++install-dev : $(addsuffix -install-dev,$(SUBDIRS))
++
++%-install:
++	$(MAKE) -C $* install
++
++%-install-dev:
++	$(MAKE) -C $* install-dev
+ 
+ include $(BUILDRULES)
