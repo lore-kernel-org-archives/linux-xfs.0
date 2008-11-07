@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Nov 2008 11:02:50 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Nov 2008 11:28:26 -0800 (PST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA7J2g2D001278
-	for <xfs@oss.sgi.com>; Fri, 7 Nov 2008 11:02:43 -0800
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA7JSJWA002913
+	for <xfs@oss.sgi.com>; Fri, 7 Nov 2008 11:28:19 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 64A50151420F
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 11:02:43 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id kG39EdKFY3HuwYfL for <xfs@oss.sgi.com>; Fri, 07 Nov 2008 11:02:43 -0800 (PST)
-Message-ID: <491490D2.70804@sandeen.net>
-Date: Fri, 07 Nov 2008 13:02:42 -0600
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B96D0151490E
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 11:28:18 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id trbhGX62nCBP3lpW for <xfs@oss.sgi.com>; Fri, 07 Nov 2008 11:28:18 -0800 (PST)
+Message-ID: <491496D2.70906@sandeen.net>
+Date: Fri, 07 Nov 2008 13:28:18 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsdump parallel build
+Subject: [PATCH V2] xfsdump parallel build
+References: <491490D2.70804@sandeen.net>
+In-Reply-To: <491490D2.70804@sandeen.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
@@ -19,6 +21,8 @@ Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
 Cc: Bill Kendall <wkendall@sgi.com>
+
+(oops, cvs version)
 
 I got tired of waiting for xfsdump to build
 serially...
@@ -29,18 +33,18 @@ phase) went from 55s to 12s.
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-Index: xfsdump-2.2.48/Makefile
+Index: xfs-cmds/xfsdump/Makefile
 ===================================================================
---- xfsdump-2.2.48.orig/Makefile
-+++ xfsdump-2.2.48/Makefile
+--- xfs-cmds.orig/xfsdump/Makefile
++++ xfs-cmds/xfsdump/Makefile
 @@ -15,23 +15,28 @@ LSRCFILES = configure configure.in acloc
  LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
  	Logs/* built .census install.* install-dev.* *.gz
  
 -SUBDIRS = include librmt \
--	common estimate fsr inventory invutil dump restore \
+-	common fsr inventory invutil dump restore \
 +LIB_SUBDIRS = include librmt
-+TOOL_SUBDIRS =	common estimate fsr inventory invutil dump restore \
++TOOL_SUBDIRS = common fsr inventory invutil dump restore \
  	m4 man doc po debian build
  
 +SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
@@ -87,10 +91,10 @@ Index: xfsdump-2.2.48/Makefile
  
  realclean distclean: clean
  	rm -f $(LDIRT) $(CONFIGURE)
-Index: xfsdump-2.2.48/include/buildmacros
+Index: xfs-cmds/xfsdump/include/buildmacros
 ===================================================================
---- xfsdump-2.2.48.orig/include/buildmacros
-+++ xfsdump-2.2.48/include/buildmacros
+--- xfs-cmds.orig/xfsdump/include/buildmacros
++++ xfs-cmds/xfsdump/include/buildmacros
 @@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
  	done
  endif
@@ -106,10 +110,10 @@ Index: xfsdump-2.2.48/include/buildmacros
  MAN_MAKERULE = \
  	@for f in *.[12345678] ""; do \
  		if test ! -z "$$f"; then \
-Index: xfsdump-2.2.48/include/buildrules
+Index: xfs-cmds/xfsdump/include/buildrules
 ===================================================================
---- xfsdump-2.2.48.orig/include/buildrules
-+++ xfsdump-2.2.48/include/buildrules
+--- xfs-cmds.orig/xfsdump/include/buildrules
++++ xfs-cmds/xfsdump/include/buildrules
 @@ -6,18 +6,23 @@ _BUILDRULES_INCLUDED_ = 1
  
  include $(TOPDIR)/include/builddefs
@@ -154,10 +158,10 @@ Index: xfsdump-2.2.48/include/buildrules
  # Include dep, but only if it exists
  ifeq ($(shell test -f .dep && echo .dep), .dep)
  include .dep
-Index: xfsdump-2.2.48/man/Makefile
+Index: xfs-cmds/xfsdump/man/Makefile
 ===================================================================
---- xfsdump-2.2.48.orig/man/Makefile
-+++ xfsdump-2.2.48/man/Makefile
+--- xfs-cmds.orig/xfsdump/man/Makefile
++++ xfs-cmds/xfsdump/man/Makefile
 @@ -7,7 +7,16 @@ include $(TOPDIR)/include/builddefs
  
  SUBDIRS = man8
