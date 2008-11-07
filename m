@@ -1,56 +1,46 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Nov 2008 11:00:09 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Fri, 07 Nov 2008 11:02:50 -0800 (PST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA7IwctK000836
-	for <xfs@oss.sgi.com>; Fri, 7 Nov 2008 10:58:38 -0800
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA7J2g2D001278
+	for <xfs@oss.sgi.com>; Fri, 7 Nov 2008 11:02:43 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4909F1514187
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 10:58:37 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id 5UTWWZ4xz6QTpVkp for <xfs@oss.sgi.com>; Fri, 07 Nov 2008 10:58:37 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id A3A2BA81F08
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 12:58:35 -0600 (CST)
-Message-ID: <49148FDB.30407@sandeen.net>
-Date: Fri, 07 Nov 2008 12:58:35 -0600
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64A50151420F
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2008 11:02:43 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com with ESMTP id kG39EdKFY3HuwYfL for <xfs@oss.sgi.com>; Fri, 07 Nov 2008 11:02:43 -0800 (PST)
+Message-ID: <491490D2.70804@sandeen.net>
+Date: Fri, 07 Nov 2008 13:02:42 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs parallel build
+Subject: [PATCH] xfsdump parallel build
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
 To: xfs-oss <xfs@oss.sgi.com>
+Cc: Bill Kendall <wkendall@sgi.com>
 
-I got tired of waiting for xfsprogs to build
+I got tired of waiting for xfsdump to build
 serially...
 
 On a 16p altix, make -j16 (excluding the configure
-phase) went from 2m16s to 33s.
-
-I tossed this into an rpm and did a fedora scratch
-build on all arches, they all passed - some of them,
-at least, should have been doing parallel builds too.
-
-So this has had reasonable testing.
+phase) went from 55s to 12s.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-Index: xfsprogs-2.10.1/Makefile
+Index: xfsdump-2.2.48/Makefile
 ===================================================================
---- xfsprogs-2.10.1.orig/Makefile
-+++ xfsprogs-2.10.1/Makefile
-@@ -15,23 +15,28 @@ LSRCFILES = configure configure.in Makep
+--- xfsdump-2.2.48.orig/Makefile
++++ xfsdump-2.2.48/Makefile
+@@ -15,23 +15,28 @@ LSRCFILES = configure configure.in acloc
  LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
  	Logs/* built .census install.* install-dev.* *.gz
  
--SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk \
--	copy db fsck growfs io logprint mkfs quota mdrestore repair rtcp \
-+LIB_SUBDIRS = include libxfs libxlog libxcmd libhandle libdisk
-+TOOL_SUBDIRS = copy db fsck growfs io logprint mkfs quota mdrestore repair rtcp \
+-SUBDIRS = include librmt \
+-	common estimate fsr inventory invutil dump restore \
++LIB_SUBDIRS = include librmt
++TOOL_SUBDIRS =	common estimate fsr inventory invutil dump restore \
  	m4 man doc po debian build
  
 +SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
@@ -97,11 +87,30 @@ Index: xfsprogs-2.10.1/Makefile
  
  realclean distclean: clean
  	rm -f $(LDIRT) $(CONFIGURE)
-Index: xfsprogs-2.10.1/include/buildrules
+Index: xfsdump-2.2.48/include/buildmacros
 ===================================================================
---- xfsprogs-2.10.1.orig/include/buildrules
-+++ xfsprogs-2.10.1/include/buildrules
-@@ -6,18 +6,22 @@ _BUILDRULES_INCLUDED_ = 1
+--- xfsdump-2.2.48.orig/include/buildmacros
++++ xfsdump-2.2.48/include/buildmacros
+@@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
+ 	done
+ endif
+ 
+-SUBDIRS_MAKERULE = \
+-	@for d in $(SUBDIRS) ""; do \
+-		if test -d "$$d" -a ! -z "$$d"; then \
+-			$(ECHO) === $$d ===; \
+-			$(MAKEF) -C $$d $@ || exit $$?; \
+-		fi; \
+-	done
+-
+ MAN_MAKERULE = \
+ 	@for f in *.[12345678] ""; do \
+ 		if test ! -z "$$f"; then \
+Index: xfsdump-2.2.48/include/buildrules
+===================================================================
+--- xfsdump-2.2.48.orig/include/buildrules
++++ xfsdump-2.2.48/include/buildrules
+@@ -6,18 +6,23 @@ _BUILDRULES_INCLUDED_ = 1
  
  include $(TOPDIR)/include/builddefs
  
@@ -110,6 +119,7 @@ Index: xfsprogs-2.10.1/include/buildrules
  	rm -f $(DIRT)
  	@rm -fr .libs
 -	$(SUBDIRS_MAKERULE)
++
 +%-clean::
 +	$(MAKE) -C $* clean
  
@@ -128,7 +138,7 @@ Index: xfsprogs-2.10.1/include/buildrules
  #
  # Standard targets
  #
-@@ -69,11 +73,13 @@ ifdef LTLIBRARY
+@@ -68,11 +73,13 @@ ifdef LTLIBRARY
  DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
  endif
  
@@ -144,32 +154,13 @@ Index: xfsprogs-2.10.1/include/buildrules
  # Include dep, but only if it exists
  ifeq ($(shell test -f .dep && echo .dep), .dep)
  include .dep
-Index: xfsprogs-2.10.1/include/buildmacros
+Index: xfsdump-2.2.48/man/Makefile
 ===================================================================
---- xfsprogs-2.10.1.orig/include/buildmacros
-+++ xfsprogs-2.10.1/include/buildmacros
-@@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
- 	done
- endif
- 
--SUBDIRS_MAKERULE = \
--	@for d in $(SUBDIRS) ""; do \
--		if test -d "$$d" -a ! -z "$$d"; then \
--			$(ECHO) === $$d ===; \
--			$(MAKEF) -C $$d $@ || exit $$?; \
--		fi; \
--	done
--
- MAN_MAKERULE = \
- 	@for f in *.[12345678] ""; do \
- 		if test ! -z "$$f"; then \
-Index: xfsprogs-2.10.1/man/Makefile
-===================================================================
---- xfsprogs-2.10.1.orig/man/Makefile
-+++ xfsprogs-2.10.1/man/Makefile
+--- xfsdump-2.2.48.orig/man/Makefile
++++ xfsdump-2.2.48/man/Makefile
 @@ -7,7 +7,16 @@ include $(TOPDIR)/include/builddefs
  
- SUBDIRS = man3 man5 man8
+ SUBDIRS = man8
  
 -default install install-dev : $(SUBDIRS)
 -	$(SUBDIRS_MAKERULE)
