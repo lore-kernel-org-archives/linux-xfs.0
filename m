@@ -1,46 +1,73 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Sun, 09 Nov 2008 14:42:08 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Nov 2008 05:32:05 -0800 (PST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mA9MfwaF032528
-	for <xfs@oss.sgi.com>; Sun, 9 Nov 2008 14:41:59 -0800
-Received: from ipmail01.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 384DB1B7CB50
-	for <xfs@oss.sgi.com>; Sun,  9 Nov 2008 14:41:57 -0800 (PST)
-Received: from ipmail01.adl6.internode.on.net (ipmail01.adl6.internode.on.net [203.16.214.146]) by cuda.sgi.com with ESMTP id ZJRpP0IZxbkx0sDI for <xfs@oss.sgi.com>; Sun, 09 Nov 2008 14:41:57 -0800 (PST)
-Date: Mon, 10 Nov 2008 09:41:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair hanging
-Message-ID: <20081109224151.GR4985@disturbed>
-References: <alpine.DEB.1.10.0811091026030.6319@p34.internal.lan>
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mAADVpQl005571
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:55 -0800
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D6C7B152C88B
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:50 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id tsCcfynUQ0djdXp5 for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:50 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
+	id 1KzWru-0008Pv-8p
+	for xfs@oss.sgi.com; Mon, 10 Nov 2008 13:31:50 +0000
+Date: Mon, 10 Nov 2008 08:31:50 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH][mainline-only] remove useless mnt_want_write call in
+	xfs_write
+Message-ID: <20081110133150.GA27234@infradead.org>
+References: <20080814212551.GA20980@lst.de> <20080929074450.GB23785@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0811091026030.6319@p34.internal.lan>
+In-Reply-To: <20080929074450.GB23785@lst.de>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Nov 09, 2008 at 10:28:21AM -0500, Justin Piszcz wrote:
-> p34:~# xfs_repair -V
-> xfs_repair version 2.9.8
->
-> Hangs with xfs_repair as shown below or with -L option.
-....
-> pread(4, "Driver\n------\n\nInformations about"..., 4096, 10944512) = 4096
-> write(2, "bad magic # 0x44726976 in btbno b"..., 45bad magic # 0x44726976 in btbno block 0/2672
-> ) = 45
-> pread(4, "00-INDEX\n\t- this file (info on so"..., 4096, 188416) = 4096
-> write(2, "bad magic # 0x30302d49 in btbno b"..., 43bad magic # 0x30302d49 in btbno block 0/46
-> ) = 43
-> futex(0x185d098, FUTEX_WAIT_PRIVATE, 2, NULL
+ping?
 
-Try disabling prefetch mode (-P)?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Mon, Sep 29, 2008 at 09:44:50AM +0200, Christoph Hellwig wrote:
+> Any chance to get this into the git tree for the first 2.6.28 pull?
+> 
+> On Thu, Aug 14, 2008 at 11:25:51PM +0200, Christoph Hellwig wrote:
+> > When mnt_want_write was introduced a call to it was added around
+> > xfs_ichgtime, but there is no need for this because a file can't be open
+> > read/write on a r/o mount, and a mount can't degrade r/o while we still
+> > have files open for writing.  As the mnt_want_write changes were never
+> > merged into the CVS tree this patch is for mainline only.
+> > 
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > --- linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c	2008-08-14 14:52:15.000000000 -0300
+> > +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2008-08-14 14:54:53.000000000 -0300
+> > @@ -51,7 +51,6 @@
+> >  #include "xfs_vnodeops.h"
+> >  
+> >  #include <linux/capability.h>
+> > -#include <linux/mount.h>
+> >  #include <linux/writeback.h>
+> >  
+> >  
+> > @@ -668,15 +667,8 @@ start:
+> >  	if (new_size > xip->i_size)
+> >  		xip->i_new_size = new_size;
+> >  
+> > -	/*
+> > -	 * We're not supposed to change timestamps in readonly-mounted
+> > -	 * filesystems.  Throw it away if anyone asks us.
+> > -	 */
+> > -	if (likely(!(ioflags & IO_INVIS) &&
+> > -		   !mnt_want_write(file->f_path.mnt))) {
+> > +	if (likely(!(ioflags & IO_INVIS)))
+> >  		xfs_ichgtime(xip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+> > -		mnt_drop_write(file->f_path.mnt);
+> > -	}
+> >  
+> >  	/*
+> >  	 * If the offset is beyond the size of the file, we have a couple
+> ---end quoted text---
+> 
+> 
+---end quoted text---
