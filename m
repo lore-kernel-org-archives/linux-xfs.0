@@ -1,73 +1,47 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Nov 2008 05:32:05 -0800 (PST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mAADVpQl005571
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:55 -0800
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6C7B152C88B
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:50 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id tsCcfynUQ0djdXp5 for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 05:31:50 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat Linux))
-	id 1KzWru-0008Pv-8p
-	for xfs@oss.sgi.com; Mon, 10 Nov 2008 13:31:50 +0000
-Date: Mon, 10 Nov 2008 08:31:50 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH][mainline-only] remove useless mnt_want_write call in
-	xfs_write
-Message-ID: <20081110133150.GA27234@infradead.org>
-References: <20080814212551.GA20980@lst.de> <20080929074450.GB23785@lst.de>
+Received: with ECARTIS (v1.0.0; list xfs); Mon, 10 Nov 2008 19:58:24 -0800 (PST)
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mAB3wCJR012054
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2008 19:58:14 -0800
+Date: Tue, 11 Nov 2008 14:58:05 +1100
+Subject: [GIT PULL] XFS update for 2.6.28
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20080929074450.GB23785@lst.de>
+Content-Transfer-Encoding: 7bit
+Message-Id: <20081111035805.EEC4B58FA24A@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, akpm@linux-foundation.org
 
-ping?
+This pull request is a little more conservative than the last one!  Just
+critical bug fixes this time.
 
-On Mon, Sep 29, 2008 at 09:44:50AM +0200, Christoph Hellwig wrote:
-> Any chance to get this into the git tree for the first 2.6.28 pull?
-> 
-> On Thu, Aug 14, 2008 at 11:25:51PM +0200, Christoph Hellwig wrote:
-> > When mnt_want_write was introduced a call to it was added around
-> > xfs_ichgtime, but there is no need for this because a file can't be open
-> > read/write on a r/o mount, and a mount can't degrade r/o while we still
-> > have files open for writing.  As the mnt_want_write changes were never
-> > merged into the CVS tree this patch is for mainline only.
-> > 
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > --- linux-2.6/fs/xfs/linux-2.6/xfs_lrw.c	2008-08-14 14:52:15.000000000 -0300
-> > +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2008-08-14 14:54:53.000000000 -0300
-> > @@ -51,7 +51,6 @@
-> >  #include "xfs_vnodeops.h"
-> >  
-> >  #include <linux/capability.h>
-> > -#include <linux/mount.h>
-> >  #include <linux/writeback.h>
-> >  
-> >  
-> > @@ -668,15 +667,8 @@ start:
-> >  	if (new_size > xip->i_size)
-> >  		xip->i_new_size = new_size;
-> >  
-> > -	/*
-> > -	 * We're not supposed to change timestamps in readonly-mounted
-> > -	 * filesystems.  Throw it away if anyone asks us.
-> > -	 */
-> > -	if (likely(!(ioflags & IO_INVIS) &&
-> > -		   !mnt_want_write(file->f_path.mnt))) {
-> > +	if (likely(!(ioflags & IO_INVIS)))
-> >  		xfs_ichgtime(xip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> > -		mnt_drop_write(file->f_path.mnt);
-> > -	}
-> >  
-> >  	/*
-> >  	 * If the offset is beyond the size of the file, we have a couple
-> ---end quoted text---
-> 
-> 
----end quoted text---
+The following changes since commit 3ad4f597058301c97f362e500a32f63f5c950a45:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.org/.../tiwai/sound-2.6
+
+are available in the git repository at:
+
+  git://oss.sgi.com:8090/xfs/xfs for-linus
+
+Dave Chinner (1):
+      [XFS] handle memory allocation failures during log initialisation
+
+David Chinner (2):
+      [XFS] Account for allocated blocks when expanding directories
+      [XFS] XFS: Check for valid transaction headers in recovery
+
+Lachlan McIlroy (2):
+      [XFS] Fix use-after-free with log and quotas
+      [XFS] Wait for all I/O on truncate to zero file size
+
+ fs/xfs/xfs_da_btree.c    |    5 +++++
+ fs/xfs/xfs_dir2.c        |    6 ++++++
+ fs/xfs/xfs_inode.c       |    2 +-
+ fs/xfs/xfs_log.c         |   39 ++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_log_recover.c |    8 +++++++-
+ fs/xfs/xfs_mount.c       |    5 +++--
+ 6 files changed, 58 insertions(+), 7 deletions(-)
