@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounce@oss.sgi.com>
-Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Nov 2008 01:37:42 -0800 (PST)
+Received: with ECARTIS (v1.0.0; list xfs); Wed, 12 Nov 2008 01:42:18 -0800 (PST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mAC9bZul031593
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:37:36 -0800
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id mAC9gBdM032037
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:42:11 -0800
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25DAC154A7B7
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:37:35 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 6XOU2aPSSFwbh96D for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:37:35 -0800 (PST)
-Date: Wed, 12 Nov 2008 04:37:34 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EC8A154ABAD
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:42:11 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34]) by cuda.sgi.com with ESMTP id 4u06k4A97v7XwS6m for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 01:42:11 -0800 (PST)
+Date: Wed, 12 Nov 2008 04:42:11 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] kill xfs_dinode_core_t
-Message-ID: <20081112093734.GG8896@infradead.org>
-References: <20081027133912.GF1109@infradead.org> <20081031040205.GV17077@disturbed>
+Subject: Re: [PATCH v2] xfstest: confirm mkfs.gfs[2] in test 032
+Message-ID: <20081112094211.GA9944@infradead.org>
+References: <490C801E.9070405@sandeen.net> <490CABAE.2070402@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20081031040205.GV17077@disturbed>
+In-Reply-To: <490CABAE.2070402@sandeen.net>
 Sender: xfs-bounce@oss.sgi.com
 Errors-to: xfs-bounce@oss.sgi.com
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Oct 31, 2008 at 03:02:05PM +1100, Dave Chinner wrote:
-> There's a problem with this patch somewhere. I haven't had it in my
-> test stack for the last couple of days, and when I re-added it
-> a couple of hours back after updating the base kernel and master
-> branch I'm now getting shortform directory corruption from 
-> xfsqa test 001. Platform is x86_64 UML:
+On Sat, Nov 01, 2008 at 02:19:10PM -0500, Eric Sandeen wrote:
+> mkfs.gfs[2] asks for confirmation before mkfs'ing; without
+> this test 032 hangs when mkfs.gfs2 is present.
+> 
+> Also, mkfs.gfs needs a few more args to make it go.
 
-Still can't reproduce it on either x86 or ppc64.  I'll give x86_64 a go
-in the next days.
+Looks good.
