@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAD5rHOY012230 for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 21:53:18 -0800
+	mAD5rIN6012239 for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 21:53:18 -0800
 Received: from slurp.thebarn.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF72D155509B
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 54A8115550A0
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 21:53:17 -0800 (PST)
 Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
 	[208.42.117.202]) by cuda.sgi.com with ESMTP id
-	rXTQe0f4Fpo9RHd9 for <xfs@oss.sgi.com>;
+	5vKzuzgepQ44N6UY for <xfs@oss.sgi.com>;
 	Wed, 12 Nov 2008 21:53:17 -0800 (PST)
 Received: from funky.thebarn.com (slurp.thebarn.com [208.42.117.201])
 	(authenticated bits=0)
-	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id mAD4nslw087639
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 22:49:55 -0600 (CST)
+	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id mAD4e0uH087546
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 22:40:01 -0600 (CST)
 	(envelope-from cattelan@xfs.org)
-Message-ID: <491BB1F2.5090902@xfs.org>
-Date: Wed, 12 Nov 2008 22:49:54 -0600
+Message-ID: <491BAF9F.70901@xfs.org>
+Date: Wed, 12 Nov 2008 22:39:59 -0600
 From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
 Subject: [xfs] xfs list converted to mailman
@@ -31,7 +31,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
 Test email to verify thing are working correctly.
 
@@ -49,7 +49,6 @@ to the list config that might be useful.
 Thanks for everyones patience.
 
 -Russell Cattelan
-
 
 _______________________________________________
 xfs mailing list
