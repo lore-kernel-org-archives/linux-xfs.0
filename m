@@ -1,46 +1,57 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
+	mAD5rHOY012230 for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 21:53:18 -0800
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AF72D155509B
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 21:53:17 -0800 (PST)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
+	[208.42.117.202]) by cuda.sgi.com with ESMTP id
+	rXTQe0f4Fpo9RHd9 for <xfs@oss.sgi.com>;
+	Wed, 12 Nov 2008 21:53:17 -0800 (PST)
+Received: from funky.thebarn.com (slurp.thebarn.com [208.42.117.201])
+	(authenticated bits=0)
+	by slurp.thebarn.com (8.14.0/8.13.8) with ESMTP id mAD4nslw087639
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2008 22:49:55 -0600 (CST)
+	(envelope-from cattelan@xfs.org)
+Message-ID: <491BB1F2.5090902@xfs.org>
+Date: Wed, 12 Nov 2008 22:49:54 -0600
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
+Subject: [xfs] xfs list converted to mailman
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Subject: Welcome to the "xfs" mailing list
-From: xfs-request@oss.sgi.com
-Message-ID: <mailman.400.1226550683.613.xfs@oss.sgi.com>
-Date: Wed, 12 Nov 2008 20:31:23 -0800
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sandeen@sandeen.net
+To: xfs@oss.sgi.com
 
-Welcome to the xfs@oss.sgi.com mailing list!
+Test email to verify thing are working correctly.
 
-To post to this list, send your email to:
+User management at:
+http://oss.sgi.com/mailman/listinfo
 
-  xfs@oss.sgi.com
+Hopefully this marks an end to the string of issues
+that has surrounded ecartis.
 
-General information about the mailing list is at:
+But of course now we have a new set of mailman issues :-)
 
-  http://oss.sgi.com/mailman/listinfo/xfs
+Please let me know of any issues that arise or any adjustments
+to the list config that might be useful.
 
-If you ever want to unsubscribe or change your options (eg, switch to
-or from digest mode, change your password, etc.), visit your
-subscription page at:
+Thanks for everyones patience.
 
-  http://oss.sgi.com/mailman/options/xfs/sandeen%40sandeen.net
+-Russell Cattelan
 
-You can also make such adjustments via email by sending a message to:
 
-  xfs-request@oss.sgi.com
-
-with the word `help' in the subject or body (don't include the
-quotes), and you will get back a message with instructions.
-
-You must know your password to change your options (including changing
-the password, itself) or to unsubscribe.  It is:
-
-  cQrPpMr/
-
-Normally, Mailman will remind you of your oss.sgi.com mailing list
-passwords once every month, although you can disable this if you
-prefer.  This reminder will also include instructions on how to
-unsubscribe or change your account options.  There is also a button on
-your options page that will email your current password to you.
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
