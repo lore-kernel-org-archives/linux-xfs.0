@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAI43La5017354 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:03:21 -0800
+	mAI4XgDm024551 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:33:42 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AA16D15925BE
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:03:12 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 793EB1592792
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:33:39 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id zVOi2SFwKpzchDwd for <xfs@oss.sgi.com>;
-	Mon, 17 Nov 2008 20:03:12 -0800 (PST)
+	with ESMTP id rXERc3yC9VFF1fW0 for <xfs@oss.sgi.com>;
+	Mon, 17 Nov 2008 20:33:39 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 4318AA8408B
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 22:03:12 -0600 (CST)
-Message-ID: <49223E80.5080504@sandeen.net>
-Date: Mon, 17 Nov 2008 22:03:12 -0600
+	by sandeen.net (Postfix) with ESMTP id 6E458A9C501
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 22:00:11 -0600 (CST)
+Message-ID: <49223DCB.3090505@sandeen.net>
+Date: Mon, 17 Nov 2008 22:00:11 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 7/7] xfstests parallel build
+Subject: [PATCH 5/7] xfsdump parallel build
 References: <49223C13.2080507@sandeen.net>
 In-Reply-To: <49223C13.2080507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,54 +34,59 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Allow parallel builds of the xfstests package
+Allow parallel builds of the xfsdump package
+
+I got tired of waiting for xfsdump to build
+serially...
+
+On a 16p altix, make -j16 (excluding the configure
+phase) went from 55s to 8s.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-Index: xfs-cmds/xfstests/Makefile
+Index: xfs-cmds/xfsdump/Makefile
 ===================================================================
---- xfs-cmds.orig/xfstests/Makefile
-+++ xfs-cmds/xfstests/Makefile
-@@ -16,31 +16,44 @@ LSRCFILES = configure configure.in acloc
+--- xfs-cmds.orig/xfsdump/Makefile
++++ xfs-cmds/xfsdump/Makefile
+@@ -15,24 +15,29 @@ LSRCFILES = configure configure.in acloc
  LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
- 	check.log check.time
+ 	Logs/* built .census install.* install-dev.* *.gz
  
--SUBDIRS = include lib ltp src m4
-+LIB_SUBDIRS = include lib
-+TOOL_SUBDIRS = ltp src m4
+-SUBDIRS = include librmt \
+-	common fsr inventory invutil dump restore \
++LIB_SUBDIRS = include librmt
++TOOL_SUBDIRS = common fsr inventory invutil dump restore \
+ 	m4 man doc po debian build
  
--default: $(CONFIGURE) $(DMAPI_MAKEFILE) new remake check $(TESTS)
+-default: $(CONFIGURE)
 +SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
 +
-+default: include/builddefs include/config.h $(DMAPI_MAKEFILE) new remake check $(TESTS)
++default: include/builddefs include/config.h
  ifeq ($(HAVE_BUILDDEFS), no)
- 	$(MAKE) $@
+ 	$(MAKE) -C . $@
  else
 -	$(SUBDIRS_MAKERULE)
 +	$(MAKE) $(SUBDIRS)
- 	# automake doesn't always support "default" target 
- 	# so do dmapi make explicitly with "all"
--	cd $(TOPDIR)/dmapi; make all
-+	$(MAKE) -C $(TOPDIR)/dmapi all
  endif
  
 +# tool/lib dependencies
-+src ltp: lib
++fsr invutil dump restore: librmt
 +
  ifeq ($(HAVE_BUILDDEFS), yes)
  include $(BUILDRULES)
  else
- clean:  # if configure hasn't run, nothing to clean
+ clean:	# if configure hasn't run, nothing to clean
  endif
  
 -$(CONFIGURE):
-+include/builddefs.h:
- 	autoheader
++include/builddefs:
  	autoconf
  	./configure \
-                 --libexecdir=/usr/lib \
-                 --enable-lib64=yes
+ 		--prefix=/ \
+@@ -48,16 +53,27 @@ $(CONFIGURE):
+ 		$$LOCAL_CONFIGURE_OPTIONS
+ 	touch .census
  
 +include/config.h: include/builddefs
 +## Recover from the removal of $@
@@ -90,14 +95,32 @@ Index: xfs-cmds/xfstests/Makefile
 +		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
 +	fi
 +
- $(DMAPI_MAKEFILE):
- 	cd $(TOPDIR)/dmapi/ ; ./configure
+ aclocal.m4::
+ 	aclocal --acdir=`pwd`/m4 --output=$@
  
-Index: xfs-cmds/xfstests/include/buildmacros
+-install: default
+-	$(SUBDIRS_MAKERULE)
++install: default $(addsuffix -install,$(SUBDIRS))
+ 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
+ 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
+ 
+-install-dev: default
+-	$(SUBDIRS_MAKERULE)
++install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
++
++%-install:
++	$(MAKE) -C $* install
++
++%-install-dev:
++	$(MAKE) -C $* install-dev
+ 
+ realclean distclean: clean
+ 	rm -f $(LDIRT) $(CONFIGURE)
+Index: xfs-cmds/xfsdump/include/buildmacros
 ===================================================================
---- xfs-cmds.orig/xfstests/include/buildmacros
-+++ xfs-cmds/xfstests/include/buildmacros
-@@ -122,14 +122,6 @@ INSTALL_LINGUAS = \
+--- xfs-cmds.orig/xfsdump/include/buildmacros
++++ xfs-cmds/xfsdump/include/buildmacros
+@@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
  	done
  endif
  
@@ -112,10 +135,10 @@ Index: xfs-cmds/xfstests/include/buildmacros
  MAN_MAKERULE = \
  	@for f in *.[12345678] ""; do \
  		if test ! -z "$$f"; then \
-Index: xfs-cmds/xfstests/include/buildrules
+Index: xfs-cmds/xfsdump/include/buildrules
 ===================================================================
---- xfs-cmds.orig/xfstests/include/buildrules
-+++ xfs-cmds/xfstests/include/buildrules
+--- xfs-cmds.orig/xfsdump/include/buildrules
++++ xfs-cmds/xfsdump/include/buildrules
 @@ -6,16 +6,20 @@ _BUILDRULES_INCLUDED_ = 1
  
  include $(TOPDIR)/include/builddefs
@@ -156,6 +179,29 @@ Index: xfs-cmds/xfstests/include/buildrules
  # Include dep, but only if it exists
  ifeq ($(shell test -f .dep && echo .dep), .dep)
  include .dep
+Index: xfs-cmds/xfsdump/man/Makefile
+===================================================================
+--- xfs-cmds.orig/xfsdump/man/Makefile
++++ xfs-cmds/xfsdump/man/Makefile
+@@ -7,7 +7,16 @@ include $(TOPDIR)/include/builddefs
+ 
+ SUBDIRS = man8
+ 
+-default install install-dev : $(SUBDIRS)
+-	$(SUBDIRS_MAKERULE)
++default : $(SUBDIRS)
++
++install : $(addsuffix -install,$(SUBDIRS))
++
++install-dev : $(addsuffix -install-dev,$(SUBDIRS))
++
++%-install:
++	$(MAKE) -C $* install
++
++%-install-dev:
++	$(MAKE) -C $* install-dev
+ 
+ include $(BUILDRULES)
 
 _______________________________________________
 xfs mailing list
