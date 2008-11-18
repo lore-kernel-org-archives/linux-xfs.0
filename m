@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAI41KNg017168 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:01:21 -0800
+	mAI43La5017354 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:03:21 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 43F5715925AB
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:01:13 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA16D15925BE
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 20:03:12 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id HKw2sVqymz0fSBHi for <xfs@oss.sgi.com>;
-	Mon, 17 Nov 2008 20:01:13 -0800 (PST)
+	with ESMTP id zVOi2SFwKpzchDwd for <xfs@oss.sgi.com>;
+	Mon, 17 Nov 2008 20:03:12 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id A605FA8408B
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 22:01:13 -0600 (CST)
-Message-ID: <49223E09.3090506@sandeen.net>
-Date: Mon, 17 Nov 2008 22:01:13 -0600
+	by sandeen.net (Postfix) with ESMTP id 4318AA8408B
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 22:03:12 -0600 (CST)
+Message-ID: <49223E80.5080504@sandeen.net>
+Date: Mon, 17 Nov 2008 22:03:12 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 6/7] nfs4acl parallel build
+Subject: [PATCH 7/7] xfstests parallel build
 References: <49223C13.2080507@sandeen.net>
 In-Reply-To: <49223C13.2080507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,16 +34,70 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Allow parallel builds of the nfs4acl package
+Allow parallel builds of the xfstests package
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-Index: xfs-cmds/nfs4acl/include/buildmacros
+Index: xfs-cmds/xfstests/Makefile
 ===================================================================
---- xfs-cmds.orig/nfs4acl/include/buildmacros
-+++ xfs-cmds/nfs4acl/include/buildmacros
-@@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
+--- xfs-cmds.orig/xfstests/Makefile
++++ xfs-cmds/xfstests/Makefile
+@@ -16,31 +16,44 @@ LSRCFILES = configure configure.in acloc
+ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+ 	check.log check.time
+ 
+-SUBDIRS = include lib ltp src m4
++LIB_SUBDIRS = include lib
++TOOL_SUBDIRS = ltp src m4
+ 
+-default: $(CONFIGURE) $(DMAPI_MAKEFILE) new remake check $(TESTS)
++SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
++
++default: include/builddefs include/config.h $(DMAPI_MAKEFILE) new remake check $(TESTS)
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(MAKE) $@
+ else
+-	$(SUBDIRS_MAKERULE)
++	$(MAKE) $(SUBDIRS)
+ 	# automake doesn't always support "default" target 
+ 	# so do dmapi make explicitly with "all"
+-	cd $(TOPDIR)/dmapi; make all
++	$(MAKE) -C $(TOPDIR)/dmapi all
+ endif
+ 
++# tool/lib dependencies
++src ltp: lib
++
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+ else
+ clean:  # if configure hasn't run, nothing to clean
+ endif
+ 
+-$(CONFIGURE):
++include/builddefs.h:
+ 	autoheader
+ 	autoconf
+ 	./configure \
+                 --libexecdir=/usr/lib \
+                 --enable-lib64=yes
+ 
++include/config.h: include/builddefs
++## Recover from the removal of $@
++	@if test -f $@; then :; else \
++		rm -f include/builddefs; \
++		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
++	fi
++
+ $(DMAPI_MAKEFILE):
+ 	cd $(TOPDIR)/dmapi/ ; ./configure
+ 
+Index: xfs-cmds/xfstests/include/buildmacros
+===================================================================
+--- xfs-cmds.orig/xfstests/include/buildmacros
++++ xfs-cmds/xfstests/include/buildmacros
+@@ -122,14 +122,6 @@ INSTALL_LINGUAS = \
  	done
  endif
  
@@ -58,10 +112,10 @@ Index: xfs-cmds/nfs4acl/include/buildmacros
  MAN_MAKERULE = \
  	@for f in *.[12345678] ""; do \
  		if test ! -z "$$f"; then \
-Index: xfs-cmds/nfs4acl/include/buildrules
+Index: xfs-cmds/xfstests/include/buildrules
 ===================================================================
---- xfs-cmds.orig/nfs4acl/include/buildrules
-+++ xfs-cmds/nfs4acl/include/buildrules
+--- xfs-cmds.orig/xfstests/include/buildrules
++++ xfs-cmds/xfstests/include/buildrules
 @@ -6,16 +6,20 @@ _BUILDRULES_INCLUDED_ = 1
  
  include $(TOPDIR)/include/builddefs
@@ -102,84 +156,6 @@ Index: xfs-cmds/nfs4acl/include/buildrules
  # Include dep, but only if it exists
  ifeq ($(shell test -f .dep && echo .dep), .dep)
  include .dep
-Index: xfs-cmds/nfs4acl/Makefile
-===================================================================
---- xfs-cmds.orig/nfs4acl/Makefile
-+++ xfs-cmds/nfs4acl/Makefile
-@@ -18,23 +18,28 @@ LDIRT = config.log .dep config.status co
- 
- #SUBDIRS = include libnfs4acl nfs4acl m4 man doc po \
- #	  test examples build debian
--SUBDIRS = include libnfs4acl nfs4acl m4 doc \
--	  test build
-+LIB_SUBDIRS = include libnfs4acl
-+TOOL_SUBDIRS = nfs4acl m4 doc test build
- 
--default: $(CONFIGURE)
-+SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
-+
-+default: include/builddefs include/config.h
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(MAKE) -C . $@
- else
--	$(SUBDIRS_MAKERULE)
-+	$(MAKE) $(SUBDIRS)
- endif
- 
-+# tool/lib dependencies
-+nfs4acl: libnfs4acl
-+
- ifeq ($(HAVE_BUILDDEFS), yes)
- include $(BUILDRULES)
- else
- clean:	# if configure hasn't run, nothing to clean
- endif
- 
--$(CONFIGURE):
-+include/builddefs:
- 	autoconf
- 	./configure \
- 		--prefix=/ \
-@@ -49,20 +54,33 @@ $(CONFIGURE):
- 		--datadir=/usr/share \
- 		$$LOCAL_CONFIGURE_OPTIONS
- 	touch .census
-+ 
-+include/config.h: include/builddefs
-+## Recover from the removal of $@
-+	@if test -f $@; then :; else \
-+		rm -f include/builddefs; \
-+		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
-+	fi
- 
- aclocal.m4::
- 	aclocal --acdir=`pwd`/m4 --output=$@
- 
--install: default
--	$(SUBDIRS_MAKERULE)
-+install: default $(addsuffix -install,$(SUBDIRS))
- 	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
- 	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
- 
--install-dev: default
--	$(SUBDIRS_MAKERULE)
-+install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
-+
-+install-lib: default $(addsuffix -install-lib,$(SUBDIRS))
-+
-+%-install:
-+	$(MAKE) -C $* install
-+
-+%-install-dev:
-+	$(MAKE) -C $* install-dev
- 
--install-lib: default
--	$(SUBDIRS_MAKERULE)
-+%-install-lib:
-+	$(MAKE) -C $* install-lib
- 
- realclean distclean: clean
- 	rm -f $(LDIRT) $(CONFIGURE)
 
 _______________________________________________
 xfs mailing list
