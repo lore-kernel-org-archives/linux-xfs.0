@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAI3to5D016702 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 19:55:50 -0800
+	mAI3utm8016787 for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 19:56:56 -0800
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB022159255B
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 19:55:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A6E4159256E
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 19:56:45 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id HCwagFNjU1iqRLWR for <xfs@oss.sgi.com>;
-	Mon, 17 Nov 2008 19:55:39 -0800 (PST)
+	with ESMTP id 3fhFEl7NVKbiIY0J for <xfs@oss.sgi.com>;
+	Mon, 17 Nov 2008 19:56:45 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 1695DAC3591
-	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 21:55:39 -0600 (CST)
-Message-ID: <49223CBA.2080507@sandeen.net>
-Date: Mon, 17 Nov 2008 21:55:38 -0600
+	by sandeen.net (Postfix) with ESMTP id 78DF6AC3591
+	for <xfs@oss.sgi.com>; Mon, 17 Nov 2008 21:56:14 -0600 (CST)
+Message-ID: <49223CDE.20803@sandeen.net>
+Date: Mon, 17 Nov 2008 21:56:14 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/7] attr parallel build
+Subject: [PATCH 2/7] acl parallel build
 References: <49223C13.2080507@sandeen.net>
 In-Reply-To: <49223C13.2080507@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,23 +34,23 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Allow parallel builds of the attr package
+Allow parallel builds of the acl package
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
 
-Index: xfs-cmds/attr/Makefile
+Index: xfs-cmds/acl/Makefile
 ===================================================================
---- xfs-cmds.orig/attr/Makefile
-+++ xfs-cmds/attr/Makefile
-@@ -16,23 +16,30 @@ LSRCFILES = configure configure.in acloc
+--- xfs-cmds.orig/acl/Makefile
++++ xfs-cmds/acl/Makefile
+@@ -16,23 +16,29 @@ LSRCFILES = configure configure.in acloc
  LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
  	Logs/* built .census install.* install-dev.* install-lib.* *.gz
  
--SUBDIRS = include libmisc libattr attr getfattr setfattr \
--	  examples test m4 man doc po debian build
-+LIB_SUBDIRS = include libmisc libattr
-+TOOL_SUBDIRS = attr getfattr setfattr examples test m4 man doc po debian build
+-SUBDIRS = include libmisc libacl getfacl setfacl chacl m4 man doc po \
+-	  test examples build debian
++LIB_SUBDIRS = include libmisc libacl
++TOOL_SUBDIRS = getfacl setfacl chacl m4 man doc po test examples build debian
  
 -default: $(CONFIGURE)
 +SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
@@ -64,9 +64,8 @@ Index: xfs-cmds/attr/Makefile
  endif
  
 +# tool/lib dependencies
-+libattr: include
-+getfattr setfattr: libmisc libattr
-+attr: libattr
++libacl: libmisc
++getfacl setfacl chacl: libacl
 +
  ifeq ($(HAVE_BUILDDEFS), yes)
  include $(BUILDRULES)
@@ -79,7 +78,7 @@ Index: xfs-cmds/attr/Makefile
  	autoconf
  	./configure \
  		--prefix=/ \
-@@ -48,16 +55,32 @@ $(CONFIGURE):
+@@ -48,19 +54,32 @@ $(CONFIGURE):
  		$$LOCAL_CONFIGURE_OPTIONS
  	touch .census
  
@@ -99,27 +98,29 @@ Index: xfs-cmds/attr/Makefile
  	$(INSTALL) -m 755 -d $(PKG_DOC_DIR)
  	$(INSTALL) -m 644 README $(PKG_DOC_DIR)
  
--install-dev install-lib: default
+-install-dev: default
 -	$(SUBDIRS_MAKERULE)
 +install-dev: default $(addsuffix -install-dev,$(SUBDIRS))
 +
-+install-lib: install $(addsuffix -install-lib,$(SUBDIRS))
++install-lib: default $(addsuffix -install-lib,$(SUBDIRS))
 +
 +%-install:
 +	$(MAKE) -C $* install
 +
-+%-install-dev:
-+	$(MAKE) -C $* install-dev
-+
 +%-install-lib:
 +	$(MAKE) -C $* install-lib
  
+-install-lib: default
+-	$(SUBDIRS_MAKERULE)
++%-install-dev:
++	$(MAKE) -C $* install-dev
+ 
  realclean distclean: clean
  	rm -f $(LDIRT) $(CONFIGURE)
-Index: xfs-cmds/attr/include/buildrules
+Index: xfs-cmds/acl/include/buildrules
 ===================================================================
---- xfs-cmds.orig/attr/include/buildrules
-+++ xfs-cmds/attr/include/buildrules
+--- xfs-cmds.orig/acl/include/buildrules
++++ xfs-cmds/acl/include/buildrules
 @@ -6,16 +6,20 @@ _BUILDRULES_INCLUDED_ = 1
  
  include $(TOPDIR)/include/builddefs
@@ -160,13 +161,13 @@ Index: xfs-cmds/attr/include/buildrules
  # Include dep, but only if it exists
  ifeq ($(shell test -f .dep && echo .dep), .dep)
  include .dep
-Index: xfs-cmds/attr/man/Makefile
+Index: xfs-cmds/acl/man/Makefile
 ===================================================================
---- xfs-cmds.orig/attr/man/Makefile
-+++ xfs-cmds/attr/man/Makefile
-@@ -7,7 +7,21 @@ include $(TOPDIR)/include/builddefs
+--- xfs-cmds.orig/acl/man/Makefile
++++ xfs-cmds/acl/man/Makefile
+@@ -7,7 +7,16 @@ include $(TOPDIR)/include/builddefs
  
- SUBDIRS = man1 man2 man3 man5
+ SUBDIRS = man1 man3 man5
  
 -default install install-dev install-lib: $(SUBDIRS)
 -	$(SUBDIRS_MAKERULE)
@@ -176,22 +177,17 @@ Index: xfs-cmds/attr/man/Makefile
 +
 +install-dev : $(addsuffix -install-dev,$(SUBDIRS))
 +
-+install-lib : $(addsuffix -install-lib,$(SUBDIRS))
-+
 +%-install:
 +	$(MAKE) -C $* install
 +
 +%-install-dev:
 +	$(MAKE) -C $* install-dev
-+
-+%-install-lib:
-+	$(MAKE) -C $* install-lib
  
  include $(BUILDRULES)
-Index: xfs-cmds/attr/include/buildmacros
+Index: xfs-cmds/acl/include/buildmacros
 ===================================================================
---- xfs-cmds.orig/attr/include/buildmacros
-+++ xfs-cmds/attr/include/buildmacros
+--- xfs-cmds.orig/acl/include/buildmacros
++++ xfs-cmds/acl/include/buildmacros
 @@ -123,14 +123,6 @@ INSTALL_LINGUAS = \
  	done
  endif
