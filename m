@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAJ4nsRH029981 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 22:49:54 -0600
+	mAJ4nsfn029974 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 22:49:54 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0510C159E769
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 20:49:23 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 63601159E75F
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 20:49:27 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id 0cOjmCEnYReX6Dvm for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2008 20:49:23 -0800 (PST)
-Message-Id: <20081119044909.789177139@sandeen.net>
+	with ESMTP id QlPMsPiLsDAnkIJF for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2008 20:49:27 -0800 (PST)
+Message-Id: <20081119044910.489906118@sandeen.net>
 References: <20081119044401.573365619@sandeen.net>
-Date: Tue, 18 Nov 2008 22:44:08 -0600
+Date: Tue, 18 Nov 2008 22:44:12 -0600
 From: sandeen@sandeen.net
-Subject: [patch 07/11] Fix compat XFS_IOC_FSBULKSTAT_SINGLE ioctl
-Content-Disposition: inline; filename=compat_ioctl_bulkstat_single_fix
+Subject: [patch 11/11] Reorder xfs_ioctl32.c for some tidiness
+Content-Disposition: inline; filename=compat_ioctl_tidy
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +30,8 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org
 
-The XFS_IOC_FSBULKSTAT_SINGLE ioctl passes in the
-desired inode number, while XFS_IOC_FSBULKSTAT passes
-in the previous/last-stat'd inode number.  The
-compat handler wasn't differentiating these, so
-when a XFS_IOC_FSBULKSTAT_SINGLE request for inode
-128 was sent in, stat information for 131 was sent out.
+Put things in IMHO a more readable order, now
+that it's all done; add some comments.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 --
@@ -44,42 +40,100 @@ Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
 ===================================================================
 --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c
 +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -279,7 +279,7 @@ xfs_ioc_bulkstat_compat(
- 	int			count;	/* # of records returned */
- 	xfs_ino_t		inlast;	/* last inode number */
- 	int			done;
--	int			error;
-+	int			error = EINVAL;
+@@ -634,6 +634,7 @@ xfs_compat_ioctl(
+ 	int		error;
  
- 	/* done = 1 if there are more stats to get and if bulkstat */
- 	/* should be called again (unused here, but used in dmapi) */
-@@ -310,17 +310,23 @@ xfs_ioc_bulkstat_compat(
- 	if (bulkreq.ubuffer == NULL)
- 		return -XFS_ERROR(EINVAL);
- 
--	if (cmd == XFS_IOC_FSINUMBERS_32)
-+	if (cmd == XFS_IOC_FSINUMBERS_32) {
- 		error = xfs_inumbers(mp, &inlast, &count,
- 				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
--	else {
-+	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
-+		int res;
-+
-+		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
-+				sizeof(compat_xfs_bstat_t),
-+				NULL, 0, NULL, NULL, &res);
-+	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
- 		error = xfs_bulkstat(mp, &inlast, &count,
- 			xfs_bulkstat_one_compat, NULL,
- 			sizeof(compat_xfs_bstat_t), bulkreq.ubuffer,
- 			BULKSTAT_FG_QUICK, &done);
- 	}
- 	if (error)
--		return -error;
-+		return -XFS_ERROR(error);
- 
- 	if (bulkreq.ocount != NULL) {
- 		if (copy_to_user(bulkreq.lastip, &inlast, sizeof(xfs_ino_t)) ||
+ 	switch (cmd) {
++	/* No size or alignment issues with any of these on any arch */
+ 	case XFS_IOC_DIOINFO:
+ 	case XFS_IOC_FSGEOMETRY:
+ 	case XFS_IOC_FSGETXATTR:
+@@ -655,14 +656,18 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
+ 		break;
+-
+-	case XFS_IOC_GETXFLAGS_32:
+-	case XFS_IOC_SETXFLAGS_32:
+-	case XFS_IOC_GETVERSION_32:
+-		cmd = _NATIVE_IOC(cmd, long);
++#ifndef BROKEN_X86_ALIGNMENT /* handled fine if no alignment issues */
++	case XFS_IOC_ALLOCSP:
++	case XFS_IOC_FREESP:
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_ALLOCSP64:
++	case XFS_IOC_FREESP64:
++	case XFS_IOC_RESVSP64:
++	case XFS_IOC_UNRESVSP64:
++	case XFS_IOC_FSGEOMETRY_V1:
+ 		break;
+-#ifdef BROKEN_X86_ALIGNMENT
+-	/* xfs_flock_t has wrong u32 vs u64 alignment */
++#else	/* BROKEN_X86_ALIGNMENT */
+ 	case XFS_IOC_ALLOCSP_32:
+ 	case XFS_IOC_FREESP_32:
+ 	case XFS_IOC_ALLOCSP64_32:
+@@ -674,9 +679,6 @@ xfs_compat_ioctl(
+ 		arg = xfs_ioctl32_flock_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_flock64);
+ 		break;
+-	case XFS_IOC_FSGEOMETRY_V1_32:
+-		return xfs_ioc_fsgeometry_v1_compat(XFS_I(inode)->i_mount,
+-						    (void __user*)arg);
+ 	case XFS_IOC_FSGROWFSDATA_32:
+ 		arg = xfs_ioctl32_growfs_data_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_growfs_data);
+@@ -684,28 +686,21 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_FSGROWFSRT_32:
+ 		arg = xfs_ioctl32_growfs_rt_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_growfs_rt);
++	case XFS_IOC_FSGEOMETRY_V1_32:
++		return xfs_ioc_fsgeometry_v1_compat(XFS_I(inode)->i_mount,
++						    (void __user*)arg);
+ 	break;
+-#else /* These are handled fine if no alignment issues */
+-	case XFS_IOC_ALLOCSP:
+-	case XFS_IOC_FREESP:
+-	case XFS_IOC_RESVSP:
+-	case XFS_IOC_UNRESVSP:
+-	case XFS_IOC_ALLOCSP64:
+-	case XFS_IOC_FREESP64:
+-	case XFS_IOC_RESVSP64:
+-	case XFS_IOC_UNRESVSP64:
+-	case XFS_IOC_FSGEOMETRY_V1:
+-		break;
+ #endif
++	/* long varies in size, but xfs only ever copies out 32 bits */
++	case XFS_IOC_GETXFLAGS_32:
++	case XFS_IOC_SETXFLAGS_32:
++	case XFS_IOC_GETVERSION_32:
++		cmd = _NATIVE_IOC(cmd, long);
++		break;
+ 	case XFS_IOC_SWAPEXT_32:
+ 		arg = xfs_ioctl32_swapext_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_swapext);
+ 		break;
+-	case XFS_IOC_FSBULKSTAT_32:
+-	case XFS_IOC_FSBULKSTAT_SINGLE_32:
+-	case XFS_IOC_FSINUMBERS_32:
+-		return xfs_ioc_bulkstat_compat(XFS_I(inode)->i_mount,
+-				cmd, (void __user*)arg);
+ 	case XFS_IOC_FD_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_FSHANDLE_32:
+@@ -714,6 +709,11 @@ xfs_compat_ioctl(
+ 		arg = xfs_ioctl32_fshandle_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_fsop_handlereq);
+ 		break;
++	case XFS_IOC_FSBULKSTAT_32:
++	case XFS_IOC_FSBULKSTAT_SINGLE_32:
++	case XFS_IOC_FSINUMBERS_32:
++		return xfs_ioc_bulkstat_compat(XFS_I(inode)->i_mount,
++				cmd, (void __user*)arg);
+ 	case XFS_IOC_ATTRLIST_BY_HANDLE_32:
+ 		return xfs_attrlist_by_handle_compat((void __user*)arg, inode);
+ 	case XFS_IOC_ATTRMULTI_BY_HANDLE_32:
 
 -- 
 
