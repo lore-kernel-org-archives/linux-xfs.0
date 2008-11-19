@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAJFV7ER020756 for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 09:31:07 -0600
+	mAJG1BW6022560 for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 10:01:12 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5FA8815A1430
-	for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 07:31:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 50E1615A19F1
+	for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 07:50:18 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id Qvc5FD2mf7flIDyy for <xfs@oss.sgi.com>;
-	Wed, 19 Nov 2008 07:31:05 -0800 (PST)
-Message-ID: <49243119.2000905@sandeen.net>
-Date: Wed, 19 Nov 2008 09:30:33 -0600
+	with ESMTP id UB4z5qHFkga80wci for <xfs@oss.sgi.com>;
+	Wed, 19 Nov 2008 07:50:18 -0800 (PST)
+Message-ID: <49242FAC.2060208@sandeen.net>
+Date: Wed, 19 Nov 2008 09:24:28 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [patch 09/11] Hook up compat XFS_IOC_ATTRMULTI_BY_HANDLE ioctl
-	handler
+Subject: Re: [patch 01/11] Move compat ioctl structs & numbers
+	into	xfs_ioctl32.h
 References: <20081119044401.573365619@sandeen.net>
-	<20081119044910.147769242@sandeen.net>
-	<20081119151628.GI13050@infradead.org>
-In-Reply-To: <20081119151628.GI13050@infradead.org>
+	<20081119044907.776640320@sandeen.net>
+	<20081119145941.GA13050@infradead.org>
+In-Reply-To: <20081119145941.GA13050@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,32 +34,46 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Tue, Nov 18, 2008 at 10:44:10PM -0600, sandeen@sandeen.net wrote:
->> +extern int
->> +xfs_attrmulti_attr_get(struct inode *, char *, char __user *,
->> +		       __uint32_t *, __uint32_t);
->> +extern int
->> +xfs_attrmulti_attr_set(struct inode *, char *, const char __user *,
->> +		      __uint32_t, __uint32_t);
->> +extern int
->> +xfs_attrmulti_attr_remove(struct inode *, char *, __uint32_t);
+> On Tue, Nov 18, 2008 at 10:44:02PM -0600, sandeen@sandeen.net wrote:
+>> +#ifdef BROKEN_X86_ALIGNMENT
+>>  STATIC unsigned long
+>> -xfs_ioctl32_flock(
+>> -	unsigned long		arg)
+>> +xfs_ioctl32_flock_copyin(unsigned long arg)
 > 
-> These should be in a header.
+> Any reason this deflect from the standard xfs formatting?
 
-ah good point.
+eh, not really.  I can change it back.
 
->> +	if (copy_from_user(&am_hreq, arg, sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
->> +		return -XFS_ERROR(EFAULT);
->> +
->> +	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &am_hreq.hreq, &inode);
+> Also when you touch these helpers it would be a lot nice to already
+> pass a void __user * pointer to them with just a single case in the main
+> handler ala
 > 
-> Far too long lines, please break them up after 80 chars.
+> 	void__user *	argp = (void __user *)arg;
 > 
-> Looks good even if the duplication is rather sad..
+> And then use that directly in the places where it works, e.g.
+> copy_{from,to,in}_user.
+
+ok, sounds good.
+
+> I must also say that I don't really like these _copying helpers at all,
+> just adding an explicit call to the underlying ioctl from them seems
+> much clener than dispatching control back to the main routine with a
+> changed argument and ioc number.
+
+Ok, either way is fine by me, was just following what was there already.
+
+>> -#define XFS_IOC32_GETXFLAGS	FS_IOC32_GETFLAGS
+>> -#define XFS_IOC32_SETXFLAGS	FS_IOC32_SETFLAGS
+>> -#define XFS_IOC32_GETVERSION	FS_IOC32_GETVERSION
+>> +#define XFS_IOC_GETXFLAGS_32	FS_IOC32_GETFLAGS
+>> +#define XFS_IOC_SETXFLAGS_32	FS_IOC32_SETFLAGS
+>> +#define XFS_IOC_GETVERSION_32	FS_IOC32_GETVERSION
+> 
+> I think these should go into xfs_ioctl32.h, too.
 > 
 
-yeah, I don't like it.  We could refactor stuff, but I'm also just
-trying to get to something that works right now... :)
+ah, good point.
 
 -Eric
 
