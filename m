@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAJ4nsa7029984 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 22:49:54 -0600
+	mAJ4nvcL029997 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 22:49:58 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 36027159E75F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 20:49:49 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EDFD3159E767
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 20:49:23 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id DZVay3YMQAAkYDw2 for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2008 20:49:49 -0800 (PST)
-Message-Id: <20081119044909.622123679@sandeen.net>
+	with ESMTP id 0P8uPXQSGkV3WAUo for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2008 20:49:23 -0800 (PST)
+Message-Id: <20081119044909.981142660@sandeen.net>
 References: <20081119044401.573365619@sandeen.net>
-Date: Tue, 18 Nov 2008 22:44:07 -0600
+Date: Tue, 18 Nov 2008 22:44:09 -0600
 From: sandeen@sandeen.net
-Subject: [patch 06/11] Fix xfs_bulkstat_one size checks & error handling
-Content-Disposition: inline; filename=bulkstat_one_size_and_error_fixes
+Subject: [patch 08/11] Hook up compat XFS_IOC_ATTRLIST_BY_HANDLE ioctl handler
+Content-Disposition: inline; filename=compat_ioctl_attrlist
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,127 +30,202 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org
 
-The 32-bit xfs_blkstat_one handler was failing because
-a size check checked whether the remaining (32-bit)
-user buffer was less than the (64-bit) bulkstat buffer,
-and failed with ENOMEM if so.  Move this check
-into the respective handlers so that they check the
-correct sizes.
-
-Also, the formatters were returning negative errors
-or positive bytes copied; this was odd in the positive
-error value world of xfs, and handled wrong by at least
-some of the callers, which treated the bytes returned
-as an error value.  Move the bytes-used assignment
-into the formatters.
+Add a compat handler for XFS_IOC_ATTRLIST_BY_HANDLE
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 --
 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.h
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
+@@ -119,6 +119,18 @@ typedef struct compat_xfs_swapext
+ 
+ #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
+ 
++typedef struct compat_xfs_fsop_attrlist_handlereq {
++	struct compat_xfs_fsop_handlereq hreq; /* handle interface structure */
++	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
++	__u32				flags;	/* which namespace to use */
++	__u32				buflen;	/* length of buffer supplied */
++	compat_uptr_t			buffer;	/* returned names */
++} _PACKED compat_xfs_fsop_attrlist_handlereq_t;
++
++/* Note: actually this is read/write */
++#define XFS_IOC_ATTRLIST_BY_HANDLE_32 \
++	_IOW ('X', 122, struct compat_xfs_fsop_attrlist_handlereq)
++
+ #ifdef BROKEN_X86_ALIGNMENT
+ /* on ia32 l_start is on a 32-bit boundary */
+ typedef struct compat_xfs_flock64 {
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
 ===================================================================
 --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c
 +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -211,13 +211,18 @@ xfs_bstime_store_compat(
- 	return 0;
+@@ -45,6 +45,7 @@
+ #include "xfs_dfrag.h"
+ #include "xfs_vnodeops.h"
+ #include "xfs_fsops.h"
++#include "xfs_attr.h"
+ #include "xfs_ioctl32.h"
+ 
+ #define  _NATIVE_IOC(cmd, type) \
+@@ -360,6 +361,138 @@ xfs_ioctl32_fshandle_copyin(unsigned lon
+ 	return (unsigned long)p;
  }
  
-+/* Return 0 on success or positive error (to xfs_bulkstat()) */
- STATIC int
- xfs_bulkstat_one_fmt_compat(
- 	void			__user *ubuffer,
-+	int			ubsize,
-+	int			*ubused,
- 	const xfs_bstat_t	*buffer)
- {
- 	compat_xfs_bstat_t __user *p32 = ubuffer;
- 
-+	if (ubsize < sizeof(*p32))
-+		return XFS_ERROR(ENOMEM);
- 	if (put_user(buffer->bs_ino, &p32->bs_ino) ||
- 	    put_user(buffer->bs_mode, &p32->bs_mode) ||
- 	    put_user(buffer->bs_nlink, &p32->bs_nlink) ||
-@@ -238,8 +243,10 @@ xfs_bulkstat_one_fmt_compat(
- 	    put_user(buffer->bs_dmevmask, &p32->bs_dmevmask) ||
- 	    put_user(buffer->bs_dmstate, &p32->bs_dmstate) ||
- 	    put_user(buffer->bs_aextents, &p32->bs_aextents))
--		return -XFS_ERROR(EFAULT);
--	return sizeof(*p32);
++/*
++ * Convert userspace handle data into inode.
++ *
++ * We use the fact that all the fsop_handlereq ioctl calls have a data
++ * structure argument whose first component is always a xfs_fsop_handlereq_t,
++ * so we can pass that sub structure into this handy, shared routine.
++ *
++ * If no error, caller must always iput the returned inode.
++ */
++STATIC int
++xfs_vget_fsop_handlereq_compat(
++	xfs_mount_t		*mp,
++	struct inode		*parinode,	/* parent inode pointer    */
++	compat_xfs_fsop_handlereq_t	*hreq,
++	struct inode		**inode)
++{
++	void			__user *hanp;
++	size_t			hlen;
++	xfs_fid_t		*xfid;
++	xfs_handle_t		*handlep;
++	xfs_handle_t		handle;
++	xfs_inode_t		*ip;
++	xfs_ino_t		ino;
++	__u32			igen;
++	int			error;
++
++	/*
++	 * Only allow handle opens under a directory.
++	 */
++	if (!S_ISDIR(parinode->i_mode))
++		return XFS_ERROR(ENOTDIR);
++
++	hanp = compat_ptr(hreq->ihandle);
++	hlen = hreq->ihandlen;
++	handlep = &handle;
++
++	if (hlen < sizeof(handlep->ha_fsid) || hlen > sizeof(*handlep))
++		return XFS_ERROR(EINVAL);
++	if (copy_from_user(handlep, hanp, hlen))
 +		return XFS_ERROR(EFAULT);
-+	if (ubused)
-+		*ubused = sizeof(*p32);
-+	return 0;
- }
- 
- STATIC int
-Index: linux-2.6-xfs/fs/xfs/xfs_itable.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_itable.c
-+++ linux-2.6-xfs/fs/xfs/xfs_itable.c
-@@ -192,14 +192,21 @@ xfs_bulkstat_one_dinode(
- 	}
- }
- 
-+/* Return 0 on success or positive error */
- STATIC int
- xfs_bulkstat_one_fmt(
- 	void			__user *ubuffer,
-+	int			ubsize,
-+	int			*ubused,
- 	const xfs_bstat_t	*buffer)
- {
-+	if (ubsize < sizeof(*buffer))
-+		return XFS_ERROR(ENOMEM);
- 	if (copy_to_user(ubuffer, buffer, sizeof(*buffer)))
--		return -EFAULT;
--	return sizeof(*buffer);
-+		return XFS_ERROR(EFAULT);
-+	if (ubused)
-+		*ubused = sizeof(*buffer);
-+	return 0;
- }
- 
- /*
-@@ -227,8 +234,6 @@ xfs_bulkstat_one_int(
- 
- 	if (!buffer || xfs_internal_inum(mp, ino))
- 		return XFS_ERROR(EINVAL);
--	if (ubsize < sizeof(*buf))
--		return XFS_ERROR(ENOMEM);
- 
- 	buf = kmem_alloc(sizeof(*buf), KM_SLEEP);
- 
-@@ -243,15 +248,11 @@ xfs_bulkstat_one_int(
- 		xfs_bulkstat_one_dinode(mp, ino, dip, buf);
- 	}
- 
--	error = formatter(buffer, buf);
--	if (error < 0)  {
--		error = EFAULT;
-+	error = formatter(buffer, ubsize, ubused, buf);
++	if (hlen < sizeof(*handlep))
++		memset(((char *)handlep) + hlen, 0, sizeof(*handlep) - hlen);
++	if (hlen > sizeof(handlep->ha_fsid)) {
++		if (handlep->ha_fid.fid_len !=
++		    (hlen - sizeof(handlep->ha_fsid) -
++		            sizeof(handlep->ha_fid.fid_len)) ||
++		    handlep->ha_fid.fid_pad)
++			return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * Crack the handle, obtain the inode # & generation #
++	 */
++	xfid = (struct xfs_fid *)&handlep->ha_fid;
++	if (xfid->fid_len == sizeof(*xfid) - sizeof(xfid->fid_len)) {
++		ino  = xfid->fid_ino;
++		igen = xfid->fid_gen;
++	} else {
++		return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * Get the XFS inode, building a Linux inode to go with it.
++	 */
++	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
 +	if (error)
- 		goto out_free;
--	}
- 
- 	*stat = BULKSTAT_RV_DIDONE;
--	if (ubused)
--		*ubused = error;
- 
-  out_free:
- 	kmem_free(buf);
-Index: linux-2.6-xfs/fs/xfs/xfs_itable.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_itable.h
-+++ linux-2.6-xfs/fs/xfs/xfs_itable.h
-@@ -71,6 +71,8 @@ xfs_bulkstat_single(
- 
- typedef int (*bulkstat_one_fmt_pf)(  /* used size in bytes or negative error */
- 	void			__user *ubuffer, /* buffer to write to */
-+	int			ubsize,		 /* remaining user buffer sz */
-+	int			*ubused,	 /* bytes used by formatter */
- 	const xfs_bstat_t	*buffer);        /* buffer to read from */
- 
- int
++		return error;
++	if (ip == NULL)
++		return XFS_ERROR(EIO);
++	if (ip->i_d.di_gen != igen) {
++		xfs_iput_new(ip, XFS_ILOCK_SHARED);
++		return XFS_ERROR(ENOENT);
++	}
++
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	*inode = VFS_I(ip);
++	return 0;
++}
++
++STATIC int
++xfs_attrlist_by_handle_compat(
++	void			__user *arg,
++	struct inode		*parinode)
++{
++	int			error;
++	attrlist_cursor_kern_t	*cursor;
++	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
++	struct inode		*inode;
++	char			*kbuf;
++	xfs_mount_t		*mp = XFS_I(parinode)->i_mount;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -XFS_ERROR(EPERM);
++	if (copy_from_user(&al_hreq, arg,
++			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
++		return -XFS_ERROR(EFAULT);
++	if (al_hreq.buflen > XATTR_LIST_MAX)
++		return -XFS_ERROR(EINVAL);
++
++	/*
++	 * Reject flags, only allow namespaces.
++	 */
++	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
++		return -XFS_ERROR(EINVAL);
++
++	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &al_hreq.hreq,
++					       &inode);
++	if (error)
++		goto out;
++
++	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
++	if (!kbuf)
++		goto out_vn_rele;
++
++	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
++	error = xfs_attr_list(XFS_I(inode), kbuf, al_hreq.buflen,
++					al_hreq.flags, cursor);
++	if (error)
++		goto out_kfree;
++
++	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
++		error = -EFAULT;
++
++ out_kfree:
++	kfree(kbuf);
++ out_vn_rele:
++	iput(inode);
++ out:
++	return -error;
++}
++
+ STATIC long
+ xfs_compat_ioctl(
+ 	int		mode,
+@@ -382,7 +515,6 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_GETBMAPX:
+ /* not handled
+ 	case XFS_IOC_FSSETDM_BY_HANDLE:
+-	case XFS_IOC_ATTRLIST_BY_HANDLE:
+ 	case XFS_IOC_ATTRMULTI_BY_HANDLE:
+ */
+ 	case XFS_IOC_FSCOUNTS:
+@@ -456,6 +588,8 @@ xfs_compat_ioctl(
+ 		arg = xfs_ioctl32_fshandle_copyin(arg);
+ 		cmd = _NATIVE_IOC(cmd, struct xfs_fsop_handlereq);
+ 		break;
++	case XFS_IOC_ATTRLIST_BY_HANDLE_32:
++		return xfs_attrlist_by_handle_compat((void __user*)arg, inode);
+ 	default:
+ 		return -XFS_ERROR(ENOIOCTLCMD);
+ 	}
 
 -- 
 
