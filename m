@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAJ5GcRC031826 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 23:16:38 -0600
+	mAJ5H6wA031881 for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 23:17:06 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 95F30159F526
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 21:16:28 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 832EE159F534
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2008 21:16:59 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id dOClb94oS8FKJaT7 for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2008 21:16:28 -0800 (PST)
-Message-Id: <20081119044910.147769242@sandeen.net>
+	with ESMTP id Pn4t75Ss78cOpVJO for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2008 21:16:59 -0800 (PST)
+Message-Id: <20081119044908.948703484@sandeen.net>
 References: <20081119044401.573365619@sandeen.net>
-Date: Tue, 18 Nov 2008 22:44:10 -0600
+Date: Tue, 18 Nov 2008 22:44:05 -0600
 From: sandeen@sandeen.net
-Subject: [patch 09/11] Hook up compat XFS_IOC_ATTRMULTI_BY_HANDLE ioctl handler
-Content-Disposition: inline; filename=compat_ioctl_attrmulti
+Subject: [patch 04/11] Add compat handlers for swapext ioctl
+Content-Disposition: inline; filename=compat_ioctl_swapext
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,7 +30,10 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org
 
-Add a compat handler for XFS_IOC_ATTRMULTI_BY_HANDLE
+The big hitter here was the bstat field, which contains
+different sized time_t on 32 vs. 64 bit.  Add a copyin
+function to translate the 32-bit arg to 64-bit, and
+call the native ioctl.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 --
@@ -39,188 +42,113 @@ Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
 ===================================================================
 --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c
 +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -493,6 +493,98 @@ xfs_attrlist_by_handle_compat(
- 	return -error;
- }
+@@ -136,6 +136,65 @@ xfs_inumbers_fmt_compat(
  
-+extern int
-+xfs_attrmulti_attr_get(struct inode *, char *, char __user *,
-+		       __uint32_t *, __uint32_t);
-+extern int
-+xfs_attrmulti_attr_set(struct inode *, char *, const char __user *,
-+		      __uint32_t, __uint32_t);
-+extern int
-+xfs_attrmulti_attr_remove(struct inode *, char *, __uint32_t);
-+
+ #endif
+ 
++/* tv_sec differs on 64 vs. 32 */
 +STATIC int
-+xfs_attrmulti_by_handle_compat(
-+	void					__user *arg,
-+	struct inode				*parinode)
++xfs_ioctl32_bstime_copyin(
++	xfs_bstime_t		__user *p,
++	compat_xfs_bstime_t	__user *p32)
 +{
-+	int					error;
-+	compat_xfs_attr_multiop_t		*ops;
-+	compat_xfs_fsop_attrmulti_handlereq_t	am_hreq;
-+	struct inode				*inode;
-+	unsigned int				i, size;
-+	char					*attr_name;
-+	xfs_mount_t				*mp = XFS_I(parinode)->i_mount;
++	compat_time_t	sec32;
++	s32		nsec;
 +
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -XFS_ERROR(EPERM);
-+	if (copy_from_user(&am_hreq, arg, sizeof(compat_xfs_fsop_attrmulti_handlereq_t)))
++	if (get_user(sec32,	&p32->tv_sec) ||
++	    put_user(sec32,	&p->tv_sec)   ||
++	    get_user(nsec,	&p32->tv_nsec)||
++	    put_user(nsec,	&p->tv_nsec))
 +		return -XFS_ERROR(EFAULT);
-+
-+	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &am_hreq.hreq, &inode);
-+	if (error)
-+		goto out;
-+
-+	error = E2BIG;
-+	size = am_hreq.opcount * sizeof(compat_xfs_attr_multiop_t);
-+	if (!size || size > 16 * PAGE_SIZE)
-+		goto out_vn_rele;
-+
-+	error = ENOMEM;
-+	ops = kmalloc(size, GFP_KERNEL);
-+	if (!ops)
-+		goto out_vn_rele;
-+
-+	error = EFAULT;
-+	if (copy_from_user(ops, compat_ptr(am_hreq.ops), size))
-+		goto out_kfree_ops;
-+
-+	attr_name = kmalloc(MAXNAMELEN, GFP_KERNEL);
-+	if (!attr_name)
-+		goto out_kfree_ops;
-+
-+
-+	error = 0;
-+	for (i = 0; i < am_hreq.opcount; i++) {
-+		ops[i].am_error = strncpy_from_user(attr_name,
-+				compat_ptr(ops[i].am_attrname),
-+				MAXNAMELEN);
-+		if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)
-+			error = -ERANGE;
-+		if (ops[i].am_error < 0)
-+			break;
-+
-+		switch (ops[i].am_opcode) {
-+		case ATTR_OP_GET:
-+			ops[i].am_error = xfs_attrmulti_attr_get(inode,
-+					attr_name, compat_ptr(ops[i].am_attrvalue),
-+					&ops[i].am_length, ops[i].am_flags);
-+			break;
-+		case ATTR_OP_SET:
-+			ops[i].am_error = xfs_attrmulti_attr_set(inode,
-+					attr_name, compat_ptr(ops[i].am_attrvalue),
-+					ops[i].am_length, ops[i].am_flags);
-+			break;
-+		case ATTR_OP_REMOVE:
-+			ops[i].am_error = xfs_attrmulti_attr_remove(inode,
-+					attr_name, ops[i].am_flags);
-+			break;
-+		default:
-+			ops[i].am_error = EINVAL;
-+		}
-+	}
-+
-+	if (copy_to_user(compat_ptr(am_hreq.ops), ops, size))
-+		error = XFS_ERROR(EFAULT);
-+
-+	kfree(attr_name);
-+ out_kfree_ops:
-+	kfree(ops);
-+ out_vn_rele:
-+	iput(inode);
-+ out:
-+	return -error;
++	return 0;
 +}
 +
- STATIC long
- xfs_compat_ioctl(
- 	int		mode,
-@@ -513,10 +605,7 @@ xfs_compat_ioctl(
- 	case XFS_IOC_GETBMAP:
- 	case XFS_IOC_GETBMAPA:
- 	case XFS_IOC_GETBMAPX:
--/* not handled
--	case XFS_IOC_FSSETDM_BY_HANDLE:
--	case XFS_IOC_ATTRMULTI_BY_HANDLE:
--*/
-+/*	case XFS_IOC_FSSETDM_BY_HANDLE: not handled */
- 	case XFS_IOC_FSCOUNTS:
- 	case XFS_IOC_SET_RESBLKS:
- 	case XFS_IOC_GET_RESBLKS:
-@@ -590,6 +679,8 @@ xfs_compat_ioctl(
++/* xfs_bstat_t has differing alignment on intel, & bstime_t sizes everywhere */
++STATIC int
++xfs_ioctl32_bstat_copyin(
++	xfs_bstat_t		__user *p,
++	compat_xfs_bstat_t	__user *p32)
++{
++	if (copy_in_user(&p->bs_ino,	&p32->bs_ino,	sizeof(u64)) ||
++	    copy_in_user(&p->bs_mode,	&p32->bs_mode,	sizeof(u16)) ||
++	    copy_in_user(&p->bs_nlink,	&p32->bs_nlink,	sizeof(u16)) ||
++	    copy_in_user(&p->bs_uid,	&p32->bs_uid,	sizeof(u32)) ||
++	    copy_in_user(&p->bs_gid,	&p32->bs_gid,	sizeof(u32)) ||
++	    copy_in_user(&p->bs_rdev,	&p32->bs_rdev,	sizeof(u32)) ||
++	    copy_in_user(&p->bs_blksize, &p32->bs_blksize, sizeof(s32)) ||
++	    copy_in_user(&p->bs_size,	&p32->bs_size,	sizeof(s64)) ||
++	    xfs_ioctl32_bstime_copyin(&p->bs_atime, &p32->bs_atime) ||
++	    xfs_ioctl32_bstime_copyin(&p->bs_mtime, &p32->bs_mtime) ||
++	    xfs_ioctl32_bstime_copyin(&p->bs_ctime, &p32->bs_ctime) ||
++	    copy_in_user(&p->bs_blocks,	&p32->bs_size,	sizeof(s64)) ||
++	    copy_in_user(&p->bs_xflags,	&p32->bs_size,	sizeof(u32)) ||
++	    copy_in_user(&p->bs_extsize, &p32->bs_extsize, sizeof(s32)) ||
++	    copy_in_user(&p->bs_extents, &p32->bs_extents, sizeof(s32)) ||
++	    copy_in_user(&p->bs_gen,	&p32->bs_gen,	sizeof(u32)) ||
++	    copy_in_user(&p->bs_projid,	&p32->bs_projid, sizeof(u16)) ||
++	    copy_in_user(&p->bs_dmevmask, &p32->bs_dmevmask, sizeof(u32)) ||
++	    copy_in_user(&p->bs_dmstate, &p32->bs_dmstate, sizeof(u16)) ||
++	    copy_in_user(&p->bs_aextents, &p32->bs_aextents, sizeof(u16)))
++		return -XFS_ERROR(EFAULT);
++	return 0;
++}
++
++STATIC unsigned long
++xfs_ioctl32_swapext_copyin(unsigned long arg)
++{
++	compat_xfs_swapext_t	__user *p32 = (void __user *)arg;
++        xfs_swapext_t		__user *p = compat_alloc_user_space(sizeof(*p));
++
++	if (copy_in_user(p, p32, offsetof(xfs_swapext_t, sx_stat)) ||
++	    xfs_ioctl32_bstat_copyin(&p->sx_stat, &p32->sx_stat))
++		return -XFS_ERROR(EFAULT);
++	return (unsigned long)p;
++}
++
+ /* XFS_IOC_FSBULKSTAT and friends */
+ 
+ STATIC int
+@@ -351,11 +410,11 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_UNRESVSP64:
+ 	case XFS_IOC_FSGEOMETRY_V1:
  		break;
- 	case XFS_IOC_ATTRLIST_BY_HANDLE_32:
- 		return xfs_attrlist_by_handle_compat((void __user*)arg, inode);
-+	case XFS_IOC_ATTRMULTI_BY_HANDLE_32:
-+		return xfs_attrmulti_by_handle_compat((void __user*)arg, inode);
- 	default:
- 		return -XFS_ERROR(ENOIOCTLCMD);
- 	}
+-	/* xfs_bstat_t still has wrong u32 vs u64 alignment */
+-	case XFS_IOC_SWAPEXT:
+-		break;
+-
+ #endif
++	case XFS_IOC_SWAPEXT_32:
++		arg = xfs_ioctl32_swapext_copyin(arg);
++		cmd = _NATIVE_IOC(cmd, struct xfs_swapext);
++		break;
+ 	case XFS_IOC_FSBULKSTAT_32:
+ 	case XFS_IOC_FSBULKSTAT_SINGLE_32:
+ 	case XFS_IOC_FSINUMBERS_32:
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
 ===================================================================
 --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.h
 +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
-@@ -131,6 +131,26 @@ typedef struct compat_xfs_fsop_attrlist_
- #define XFS_IOC_ATTRLIST_BY_HANDLE_32 \
- 	_IOW ('X', 122, struct compat_xfs_fsop_attrlist_handlereq)
+@@ -105,6 +105,20 @@ typedef struct compat_xfs_fsop_handlereq
+ #define XFS_IOC_READLINK_BY_HANDLE_32 \
+ 	_IOWR('X', 108, struct compat_xfs_fsop_handlereq)
  
-+/* am_opcodes defined in xfs_fs.h */
-+typedef struct compat_xfs_attr_multiop {
-+	__u32		am_opcode;
-+	__s32		am_error;
-+	compat_uptr_t	am_attrname;
-+	compat_uptr_t	am_attrvalue;
-+	__u32		am_length;
-+	__u32		am_flags;
-+} compat_xfs_attr_multiop_t;
++/* The bstat field in the swapext struct needs translation */
++typedef struct compat_xfs_swapext
++{
++	__int64_t		sx_version;	/* version */
++	__int64_t		sx_fdtarget;	/* fd of target file */
++	__int64_t		sx_fdtmp;	/* fd of tmp file */
++	xfs_off_t		sx_offset;	/* offset into file */
++	xfs_off_t		sx_length;	/* leng from offset */
++	char			sx_pad[16];	/* pad space, unused */
++	compat_xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
++} _PACKED compat_xfs_swapext_t;
 +
-+typedef struct compat_xfs_fsop_attrmulti_handlereq {
-+	struct compat_xfs_fsop_handlereq hreq; /* handle interface structure */
-+	__u32				opcount;/* count of following multiop */
-+	/* ptr to compat_xfs_attr_multiop */
-+	compat_uptr_t			ops; /* attr_multi data */
-+} compat_xfs_fsop_attrmulti_handlereq_t;
-+
-+#define XFS_IOC_ATTRMULTI_BY_HANDLE_32 \
-+	_IOW ('X', 123, struct compat_xfs_fsop_attrmulti_handlereq)
++#define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
 +
  #ifdef BROKEN_X86_ALIGNMENT
  /* on ia32 l_start is on a 32-bit boundary */
  typedef struct compat_xfs_flock64 {
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -501,7 +501,7 @@ xfs_attrlist_by_handle(
- 	return -error;
- }
- 
--STATIC int
-+int
- xfs_attrmulti_attr_get(
- 	struct inode		*inode,
- 	char			*name,
-@@ -530,7 +530,7 @@ xfs_attrmulti_attr_get(
- 	return error;
- }
- 
--STATIC int
-+int
- xfs_attrmulti_attr_set(
- 	struct inode		*inode,
- 	char			*name,
-@@ -560,7 +560,7 @@ xfs_attrmulti_attr_set(
- 	return error;
- }
- 
--STATIC int
-+int
- xfs_attrmulti_attr_remove(
- 	struct inode		*inode,
- 	char			*name,
 
 -- 
 
