@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAK1t01m030052 for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 19:55:00 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9BB51B29646
-	for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 17:54:53 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id AAz6BDc1LuOUTHdE for <xfs@oss.sgi.com>;
-	Wed, 19 Nov 2008 17:54:53 -0800 (PST)
-Message-ID: <4924C36B.6090700@sandeen.net>
-Date: Wed, 19 Nov 2008 19:54:51 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [patch 01/11] Move compat ioctl structs &
-	numbers	into	xfs_ioctl32.h
-References: <20081119044401.573365619@sandeen.net>	<20081119044907.776640320@sandeen.net>	<20081119145941.GA13050@infradead.org>
-	<49242FAC.2060208@sandeen.net>
-In-Reply-To: <49242FAC.2060208@sandeen.net>
+	mAK43USt010955 for <xfs@oss.sgi.com>; Wed, 19 Nov 2008 22:03:30 -0600
+Subject: TAKE 989944 - mkfs.xfs ignores -i maxpct option
+Message-Id: <20081120040321.E731658AE1E9@chook.melbourne.sgi.com>
+Date: Thu, 20 Nov 2008 15:03:21 +1100 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +14,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: sgi.bugs.xfs@engr.sgi.com
 Cc: xfs@oss.sgi.com
 
-Eric Sandeen wrote:
+Make sure mkfs.xfs doesn't ignore -i maxpct option
 
->> I must also say that I don't really like these _copying helpers at all,
->> just adding an explicit call to the underlying ioctl from them seems
->> much clener than dispatching control back to the main routine with a
->> changed argument and ioc number.
-> 
-> Ok, either way is fine by me, was just following what was there already.
 
-So I went off to do it this way, and while I certainly can, (I'm almost
-done rewriting it this way) after a bit more thought I really don't see
-much wrong with just translating in the 32-bit args for any ioctl which
-is _IOW only... it doesn't seem that bad... any particular reason you're
-against it?
+Date:  Thu Nov 20 15:02:45 EST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
+Inspected by:  peter@cordes.ca
 
--Eric
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:32500a
+xfsprogs/mkfs/xfs_mkfs.c - 1.94 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/mkfs/xfs_mkfs.c.diff?r1=text&tr1=1.94&r2=text&tr2=1.93&f=h
+	- Fix mkfs.xfs so it doesn't ignore the -i maxpct option
+
 
 _______________________________________________
 xfs mailing list
