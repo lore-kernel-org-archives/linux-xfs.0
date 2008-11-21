@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mALN85ml021548 for <xfs@oss.sgi.com>; Fri, 21 Nov 2008 17:08:06 -0600
-Message-ID: <49273F36.7040302@sgi.com>
-Date: Sat, 22 Nov 2008 10:07:34 +1100
-From: Mark Goodwin <markgw@sgi.com>
+	mALNDFOP021823 for <xfs@oss.sgi.com>; Fri, 21 Nov 2008 17:13:16 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8426A15C296B
+	for <xfs@oss.sgi.com>; Fri, 21 Nov 2008 15:13:15 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id IHE9X9NKWyRBW6Zl for
+	<xfs@oss.sgi.com>; Fri, 21 Nov 2008 15:13:15 -0800 (PST)
+Date: Fri, 21 Nov 2008 18:12:14 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fix spurious gcc warnings
+Message-ID: <20081121231214.GA25602@infradead.org>
+References: <20081112114738.GC15216@infradead.org>
+	<20081121230948.GZ4144@josefsipek.net>
 MIME-Version: 1.0
-Subject: Re: Announce: XFS staging tree
-References: <20081121212030.GA17816@infradead.org>
-In-Reply-To: <20081121212030.GA17816@infradead.org>
-Reply-To: markgw@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20081121230948.GZ4144@josefsipek.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,31 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, xfs@oss.sgi.com
+To: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Fri, Nov 21, 2008 at 06:09:48PM -0500, Josef 'Jeff' Sipek wrote:
+> >  	for (i=j=len = 0; i < ARRAY_SIZE(xstats); i++) {
+> > -		len += sprintf(buffer + len, xstats[i].desc);
+> > +		len += sprintf(buffer + len, "%s", xstats[i].desc);
+> 
+> Why not use strcpy here?
 
-
-Christoph Hellwig wrote:
-> I've created a new tree of all patches that have been reviewed, and
-> properly QAed but haven't been merged into the SGI tree for reasons
-> unknown to us patch submitters.
-
-Lachlan has about 30 patches almost ready to push back out (mostly yours
-Christoph). Sorry for the delays and the frustration this is causing. Just
-waiting for some back-end constipation with ptools to resolve, which will
-happen early next week.
-
-> I'll add all patches that have gotten review on linux-xfs to it after
-> they pass xfsqa for me.   Patches will be dropped as soon as they get
-> into the xfs git tree.
-
-On-going, this might be a better way to manage the patch queue, at least
-possibly better in terms of front-line QA. Maybe an almost-open-access
-git repository for incomming patches could work too. What do others think?
-
-Cheers
--- Mark
+I applies the principle of minimal change.  strcpy would work, too and
+be a tidbit more efficient.
 
 _______________________________________________
 xfs mailing list
