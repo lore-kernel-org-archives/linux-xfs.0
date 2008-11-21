@@ -1,11 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAL0Uvgq009000 for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 18:30:58 -0600
-Subject: PARTIAL TAKE 990014 - xfs-cmds: Add parallel build support
-Message-Id: <20081121003048.12CC159391F4@chook.melbourne.sgi.com>
-Date: Fri, 21 Nov 2008 11:30:48 +1100 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	mAL0s0Fi010466 for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 18:54:00 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A12D15B8D3E
+	for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 16:53:59 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id WJYheefRf1bNNv7q for <xfs@oss.sgi.com>;
+	Thu, 20 Nov 2008 16:53:59 -0800 (PST)
+Message-ID: <49260557.9010507@sandeen.net>
+Date: Thu, 20 Nov 2008 18:48:23 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH 7/7] xfstests parallel build
+References: <49223C13.2080507@sandeen.net> <49223E80.5080504@sandeen.net>
+	<op.ukx09mh13jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <op.ukx09mh13jf8g2@pc-bnaujok.melbourne.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,73 +24,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sgi.bugs.xfs@engr.sgi.com
-Cc: xfs@oss.sgi.com
+To: Barry Naujok <bnaujok@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Allow parallel builds of xfs-cmds.
+Barry Naujok wrote:
+
+> On Tue, 18 Nov 2008 15:03:12 +1100, Eric Sandeen <sandeen@sandeen.net>  
+> wrote:
+>
+>   
+>> Allow parallel builds of the xfstests package
+>>     
+>
+> Eric, this patch doesn't apply anymore with the DMAPI patch you posted  
+> earlier.
+>
+>   
+Try this on for size (quick merge, not tested...)
 
 
-Date:  Fri Nov 21 11:29:51 EST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  "Eric Sandeen" <sandeen@sandeen.net>
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:32514a
-acl/Makefile - 1.20 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/Makefile.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
-acl/man/Makefile - 1.11 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/man/Makefile.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
-acl/include/buildrules - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/include/buildrules.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-attr/Makefile - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/Makefile.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-attr/man/Makefile - 1.10 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/man/Makefile.diff?r1=text&tr1=1.10&r2=text&tr2=1.9&f=h
-attr/include/buildrules - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/include/buildrules.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-xfsprogs/Makefile - 1.30 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/Makefile.diff?r1=text&tr1=1.30&r2=text&tr2=1.29&f=h
-xfsprogs/man/Makefile - 1.7 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/man/Makefile.diff?r1=text&tr1=1.7&r2=text&tr2=1.6&f=h
-xfsprogs/include/buildrules - 1.22 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/buildrules.diff?r1=text&tr1=1.22&r2=text&tr2=1.21&f=h
-xfsdump/Makefile - 1.21 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/Makefile.diff?r1=text&tr1=1.21&r2=text&tr2=1.20&f=h
-xfsdump/man/Makefile - 1.6 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/man/Makefile.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-xfsdump/include/buildrules - 1.16 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/include/buildrules.diff?r1=text&tr1=1.16&r2=text&tr2=1.15&f=h
-dmapi/Makefile - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/Makefile.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-dmapi/man/Makefile - 1.6 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/man/Makefile.diff?r1=text&tr1=1.6&r2=text&tr2=1.5&f=h
-dmapi/include/buildrules - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/include/buildrules.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-dmapi/include/buildmacros - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/dmapi/include/buildmacros.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-xfsprogs/include/buildmacros - 1.20 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/include/buildmacros.diff?r1=text&tr1=1.20&r2=text&tr2=1.19&f=h
-acl/include/buildmacros - 1.19 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/acl/include/buildmacros.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-attr/include/buildmacros - 1.17 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/attr/include/buildmacros.diff?r1=text&tr1=1.17&r2=text&tr2=1.16&f=h
-xfsdump/include/buildmacros - 1.18 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/include/buildmacros.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
-nfs4acl/Makefile - 1.5 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/nfs4acl/Makefile.diff?r1=text&tr1=1.5&r2=text&tr2=1.4&f=h
-nfs4acl/include/buildmacros - 1.2 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/nfs4acl/include/buildmacros.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
-nfs4acl/include/buildrules - 1.2 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/nfs4acl/include/buildrules.diff?r1=text&tr1=1.2&r2=text&tr2=1.1&f=h
-	- Allow parallel builds of xfs-cmds
+Index: xfs-cmds/xfstests/Makefile
+===================================================================
+--- xfs-cmds.orig/xfstests/Makefile
++++ xfs-cmds/xfstests/Makefile
+@@ -16,33 +16,46 @@ LSRCFILES = configure configure.in acloc
+ LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
+ 	check.log check.time
+ 
+-SUBDIRS = include lib ltp src m4
++LIB_SUBDIRS = include lib
++TOOL_SUBDIRS = ltp src m4
+ 
+-default: $(CONFIGURE) $(DMAPI_MAKEFILE) new remake check $(TESTS)
++SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
++
++default: include/builddefs include/config.h $(DMAPI_MAKEFILE) new remake check $(TESTS)
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(MAKE) $@
+ else
+-	$(SUBDIRS_MAKERULE)
++	$(MAKE) $(SUBDIRS)
+ 	# automake doesn't always support "default" target 
+ 	# so do dmapi make explicitly with "all"
+ ifeq ($(HAVE_DMAPI), true)
+-	cd $(TOPDIR)/dmapi; make all
++	$(MAKE) -C $(TOPDIR)/dmapi all
+ endif
+ endif
+ 
++# tool/lib dependencies
++src ltp: lib
++
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+ else
+ clean:  # if configure hasn't run, nothing to clean
+ endif
+ 
+-$(CONFIGURE):
++include/builddefs.h:
+ 	autoheader
+ 	autoconf
+ 	./configure \
+                 --libexecdir=/usr/lib \
+                 --enable-lib64=yes
+ 
++include/config.h: include/builddefs
++## Recover from the removal of $@
++	@if test -f $@; then :; else \
++	rm -f include/builddefs; \
++		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
++	fi
++
+ $(DMAPI_MAKEFILE):
+ 	cd $(TOPDIR)/dmapi/ ; ./configure
+ 
+Index: xfs-cmds/xfstests/include/buildmacros
+===================================================================
+--- xfs-cmds.orig/xfstests/include/buildmacros
++++ xfs-cmds/xfstests/include/buildmacros
+@@ -122,14 +122,6 @@ INSTALL_LINGUAS = \
+ 	done
+ endif
+ 
+-SUBDIRS_MAKERULE = \
+-	@for d in $(SUBDIRS) ""; do \
+-		if test -d "$$d" -a ! -z "$$d"; then \
+-			$(ECHO) === $$d ===; \
+-			$(MAKEF) -C $$d $@ || exit $$?; \
+-		fi; \
+-	done
+-
+ MAN_MAKERULE = \
+ 	@for f in *.[12345678] ""; do \
+ 		if test ! -z "$$f"; then \
+Index: xfs-cmds/xfstests/include/buildrules
+===================================================================
+--- xfs-cmds.orig/xfstests/include/buildrules
++++ xfs-cmds/xfstests/include/buildrules
+@@ -6,16 +6,20 @@ _BUILDRULES_INCLUDED_ = 1
+ 
+ include $(TOPDIR)/include/builddefs
+ 
+-clean clobber : $(SUBDIRS)
++clean clobber : $(addsuffix -clean,$(SUBDIRS))
+ 	rm -f $(DIRT)
+ 	@rm -fr .libs
+-	$(SUBDIRS_MAKERULE)
++
++%-clean:
++	$(MAKE) -C $* clean
+ 
+ # Never blow away subdirs
+ ifdef SUBDIRS
+ .PRECIOUS: $(SUBDIRS)
++.PHONY: $(SUBDIRS)
++
+ $(SUBDIRS):
+-	$(SUBDIRS_MAKERULE)
++	$(MAKE) -C $@
+ endif
+ 
+ #
+@@ -68,11 +72,13 @@ ifdef LTLIBRARY
+ DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
+ endif
+ 
+-depend : $(CFILES) $(HFILES)
+-	$(SUBDIRS_MAKERULE)
++depend : $(CFILES) $(HFILES) $(addsuffix -depend,$(SUBDIRS))
+ 	$(DEPENDSCRIPT) > .dep
+ 	test -s .dep || rm -f .dep
+ 
++%-depend:
++	$(MAKE) -C $* depend
++
+ # Include dep, but only if it exists
+ ifeq ($(shell test -f .dep && echo .dep), .dep)
+ include .dep
 
 
 _______________________________________________
