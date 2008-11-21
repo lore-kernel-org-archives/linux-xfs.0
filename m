@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAL0s0Fi010466 for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 18:54:00 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A12D15B8D3E
-	for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 16:53:59 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id WJYheefRf1bNNv7q for <xfs@oss.sgi.com>;
-	Thu, 20 Nov 2008 16:53:59 -0800 (PST)
-Message-ID: <49260557.9010507@sandeen.net>
-Date: Thu, 20 Nov 2008 18:48:23 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (netops-testserver-3.corp.sgi.com [192.26.57.72])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP
+	id mAL0xVCn010736
+	for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 18:59:32 -0600
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
+	[134.14.52.130])
+	by netops-testserver-3.corp.sgi.com (Postfix) with SMTP id 5B34090898
+	for <xfs@oss.sgi.com>; Thu, 20 Nov 2008 16:59:27 -0800 (PST)
+Received: from pc-bnaujok.melbourne.sgi.com (pc-bnaujok.melbourne.sgi.com
+	[134.14.55.58]) by larry.melbourne.sgi.com
+	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA28532 for
+	<xfs@oss.sgi.com>; Fri, 21 Nov 2008 11:59:25 +1100
+Date: Fri, 21 Nov 2008 12:03:36 +1100
+Subject: Re: [PATCH V2] xfs_repair: print superblock offsets and why they
+	can't	be verified
+From: "Barry Naujok" <bnaujok@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 7/7] xfstests parallel build
-References: <49223C13.2080507@sandeen.net> <49223E80.5080504@sandeen.net>
-	<op.ukx09mh13jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <op.ukx09mh13jf8g2@pc-bnaujok.melbourne.sgi.com>
+References: <20081022183636.GE20550@kyra> <20081022234128.GC4395@kyra>
+	<490081C6.1030301@sandeen.net>
+Message-ID: <op.ukx2ka0p3jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <490081C6.1030301@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,146 +32,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Barry Naujok <bnaujok@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Barry Naujok wrote:
+On Fri, 24 Oct 2008 00:53:10 +1100, Eric Sandeen <sandeen@sandeen.net>  
+wrote:
 
-> On Tue, 18 Nov 2008 15:03:12 +1100, Eric Sandeen <sandeen@sandeen.net>  
-> wrote:
+> KELEMEN Peter wrote:
+>> Eric has pointed out that verify_set_primary_sb() will either
+>> return 1 or XR_INSUFF_SEC_SB.  Move the check lower into
+>> verify_set_primary_sb() by checking the return value of
+>> verify_sb().  Example output:
+>>
+>> found candidate secondary superblock...
+>> verifying sb at 31249334272: bad magic number (1)
+>> verifying sb at 62498668544: bad magic number (1)
+>> verifying sb at 93748002816: bad magic number (1)
+>> verifying sb at 124997337088: bad magic number (1)
+>> unable to verify superblock, continuing...
+>>
 >
->   
->> Allow parallel builds of the xfstests package
->>     
+> This looks better :)  You may want to add even more info...
 >
-> Eric, this patch doesn't apply anymore with the DMAPI patch you posted  
-> earlier.
+> while it's just searching block by block, if it finds a candidate, I'd
+> print the sector offset for that candidate (your first output line).
 >
->   
-Try this on for size (quick merge, not tested...)
+> And rather than "verifying sb at..." you might do something like
+> "comparing to sb N at offset X":
+>
+> +	} else {
+> +		do_warn("comparing with sb %d at sector %Lu failed: %s (%d)\n",
+> +			agno, off, err_string(reason), reason);
+>
+> because at this point it's using the geometry of the candidate sb to see
+> if it can be used to find enough other valid sb's....
 
+Do I check in the patch as is or will there be an update?
 
-
-Index: xfs-cmds/xfstests/Makefile
-===================================================================
---- xfs-cmds.orig/xfstests/Makefile
-+++ xfs-cmds/xfstests/Makefile
-@@ -16,33 +16,46 @@ LSRCFILES = configure configure.in acloc
- LDIRT = config.log .dep config.status config.cache confdefs.h conftest* \
- 	check.log check.time
- 
--SUBDIRS = include lib ltp src m4
-+LIB_SUBDIRS = include lib
-+TOOL_SUBDIRS = ltp src m4
- 
--default: $(CONFIGURE) $(DMAPI_MAKEFILE) new remake check $(TESTS)
-+SUBDIRS = $(LIB_SUBDIRS) $(TOOL_SUBDIRS)
-+
-+default: include/builddefs include/config.h $(DMAPI_MAKEFILE) new remake check $(TESTS)
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(MAKE) $@
- else
--	$(SUBDIRS_MAKERULE)
-+	$(MAKE) $(SUBDIRS)
- 	# automake doesn't always support "default" target 
- 	# so do dmapi make explicitly with "all"
- ifeq ($(HAVE_DMAPI), true)
--	cd $(TOPDIR)/dmapi; make all
-+	$(MAKE) -C $(TOPDIR)/dmapi all
- endif
- endif
- 
-+# tool/lib dependencies
-+src ltp: lib
-+
- ifeq ($(HAVE_BUILDDEFS), yes)
- include $(BUILDRULES)
- else
- clean:  # if configure hasn't run, nothing to clean
- endif
- 
--$(CONFIGURE):
-+include/builddefs.h:
- 	autoheader
- 	autoconf
- 	./configure \
-                 --libexecdir=/usr/lib \
-                 --enable-lib64=yes
- 
-+include/config.h: include/builddefs
-+## Recover from the removal of $@
-+	@if test -f $@; then :; else \
-+	rm -f include/builddefs; \
-+		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
-+	fi
-+
- $(DMAPI_MAKEFILE):
- 	cd $(TOPDIR)/dmapi/ ; ./configure
- 
-Index: xfs-cmds/xfstests/include/buildmacros
-===================================================================
---- xfs-cmds.orig/xfstests/include/buildmacros
-+++ xfs-cmds/xfstests/include/buildmacros
-@@ -122,14 +122,6 @@ INSTALL_LINGUAS = \
- 	done
- endif
- 
--SUBDIRS_MAKERULE = \
--	@for d in $(SUBDIRS) ""; do \
--		if test -d "$$d" -a ! -z "$$d"; then \
--			$(ECHO) === $$d ===; \
--			$(MAKEF) -C $$d $@ || exit $$?; \
--		fi; \
--	done
--
- MAN_MAKERULE = \
- 	@for f in *.[12345678] ""; do \
- 		if test ! -z "$$f"; then \
-Index: xfs-cmds/xfstests/include/buildrules
-===================================================================
---- xfs-cmds.orig/xfstests/include/buildrules
-+++ xfs-cmds/xfstests/include/buildrules
-@@ -6,16 +6,20 @@ _BUILDRULES_INCLUDED_ = 1
- 
- include $(TOPDIR)/include/builddefs
- 
--clean clobber : $(SUBDIRS)
-+clean clobber : $(addsuffix -clean,$(SUBDIRS))
- 	rm -f $(DIRT)
- 	@rm -fr .libs
--	$(SUBDIRS_MAKERULE)
-+
-+%-clean:
-+	$(MAKE) -C $* clean
- 
- # Never blow away subdirs
- ifdef SUBDIRS
- .PRECIOUS: $(SUBDIRS)
-+.PHONY: $(SUBDIRS)
-+
- $(SUBDIRS):
--	$(SUBDIRS_MAKERULE)
-+	$(MAKE) -C $@
- endif
- 
- #
-@@ -68,11 +72,13 @@ ifdef LTLIBRARY
- DEPENDSCRIPT := $(DEPENDSCRIPT) | $(SED) -e 's,^\([^:]*\)\.o,\1.lo,'
- endif
- 
--depend : $(CFILES) $(HFILES)
--	$(SUBDIRS_MAKERULE)
-+depend : $(CFILES) $(HFILES) $(addsuffix -depend,$(SUBDIRS))
- 	$(DEPENDSCRIPT) > .dep
- 	test -s .dep || rm -f .dep
- 
-+%-depend:
-+	$(MAKE) -C $* depend
-+
- # Include dep, but only if it exists
- ifeq ($(shell test -f .dep && echo .dep), .dep)
- include .dep
-
+Regards,
+Barry.
 
 _______________________________________________
 xfs mailing list
