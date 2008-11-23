@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mALNIx2c022135 for <xfs@oss.sgi.com>; Fri, 21 Nov 2008 17:18:59 -0600
-Received: from josefsipek.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA90D15C3ADB
-	for <xfs@oss.sgi.com>; Fri, 21 Nov 2008 15:18:58 -0800 (PST)
-Received: from josefsipek.net (josefsipek.net [141.211.133.196]) by
-	cuda.sgi.com with ESMTP id tHkKh7KX999ZE8Jx for
-	<xfs@oss.sgi.com>; Fri, 21 Nov 2008 15:18:58 -0800 (PST)
-Date: Fri, 21 Nov 2008 18:09:48 -0500
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] fix spurious gcc warnings
-Message-ID: <20081121230948.GZ4144@josefsipek.net>
-References: <20081112114738.GC15216@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20081112114738.GC15216@infradead.org>
+	mANLnbC2023393 for <xfs@oss.sgi.com>; Sun, 23 Nov 2008 15:49:37 -0600
+Received: from buick.jordet.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4DA515CECBF
+	for <xfs@oss.sgi.com>; Sun, 23 Nov 2008 13:49:35 -0800 (PST)
+Received: from buick.jordet.net (buick.jordet.net [193.91.240.190]) by
+	cuda.sgi.com with ESMTP id 1ABmIJit4JvBneGP for
+	<xfs@oss.sgi.com>; Sun, 23 Nov 2008 13:49:35 -0800 (PST)
+Subject: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
+From: Stian Jordet <liste@jordet.net>
+In-Reply-To: <430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>
+References: <1226760254.5089.11.camel@chevrolet>
+	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>
+Date: Sun, 23 Nov 2008 22:48:28 +0100
+Message-Id: <1227476908.32357.5.camel@chevrolet>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +28,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: linux-kernel@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 12, 2008 at 06:47:38AM -0500, Christoph Hellwig wrote:
-> Some recent gcc warnings don't like passing string variables to
-> printf-like functions without using at least a "%s" format string.
-> Chaneg the two occurances of that in xfs to please gcc.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> fs/xfs/linux-2.6/xfs_stats.c: In function "xfs_read_xfssta":
-> fs/xfs/linux-2.6/xfs_stats.c:64: warning: format not a string literal and no format arguments
-> fs/xfs/linux-2.6/xfs_super.c: In function "init_xfs_fs":
-> fs/xfs/linux-2.6/xfs_super.c:1833: warning: format not a string literal and no format arguments
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_stats.c	2008-11-12 11:12:49.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_stats.c	2008-11-12 11:13:05.000000000 +0100
-> @@ -61,7 +61,7 @@ xfs_read_xfsstats(
->  
->  	/* Loop over all stats groups */
->  	for (i=j=len = 0; i < ARRAY_SIZE(xstats); i++) {
-> -		len += sprintf(buffer + len, xstats[i].desc);
-> +		len += sprintf(buffer + len, "%s", xstats[i].desc);
+ti., 18.11.2008 kl. 11.51 -0200, skrev Sergio Luis: 
+> please post your config and dmesg output. It might help people try to
+> identify something wrong.
 
-Why not use strcpy here?
+(see http://marc.info/?l=linux-kernel&m=122676220019858&w=2 for the
+start of this thread)
 
-Josef 'Jeff' Sipek.
+Hmm. I have now converted my root and /home filesystems to ext3, and
+that actually fixed it (!). I have no idea why xfs is performing so
+extremely poorly on this machine, i'm running xfs on every filesystem on
+eight other computers (one heavy loaded server, as well).
 
---
-Real Programmers consider "what you see is what you get" to be just as bad a
-concept in Text Editors as it is in women. No, the Real Programmer wants a
-"you asked for it, you got it" text editor -- complicated, cryptic,
-powerful, unforgiving, dangerous.
+Anyway, I'm now unpacking the 2.6.27.6 kernel in 15 seconds, with xfs on
+the same array it used between five and six minutes.
+
+I still have a xfs array, and when I copy files to or from that array,
+the gnome session practically freezes, and the load average easily goes
+beyond 10.
+
+How should I debug this? I'm not very eager about reformatting my 1,5TB
+xfs array... Besides, xfs have never let me down earlier.
+
+Thanks.
+
+Please cc me on any replies.
+
+Regards,
+Stian
 
 _______________________________________________
 xfs mailing list
