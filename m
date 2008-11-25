@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPLnsRm009246
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 15:49:54 -0600
+	mAPM30hQ010939
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:03:00 -0600
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CF0E515F611D
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 13:49:52 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B342215F6482
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:02:57 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id BnT5e4nrHDVqVAIA for
-	<linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 13:49:52 -0800 (PST)
+	cuda.sgi.com with ESMTP id 8gECg9FtkSGqV9Hm for
+	<linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:02:57 -0800 (PST)
 Received: from shambhala.lichtvoll.local
 	(DSL01.83.171.175.140.ip-pool.NEFkom.net [83.171.175.140])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id E3B165ADD6
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 22:44:15 +0100 (CET)
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id 198F65ADD6
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 23:02:57 +0100 (CET)
 From: Martin Steigerwald <Martin@Lichtvoll.de>
-Subject: truncated files
-Date: Tue, 25 Nov 2008 22:44:14 +0100
+Subject: Badness in key lookup (length)
+Date: Tue, 25 Nov 2008 23:02:55 +0100
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200811252244.14718.Martin@Lichtvoll.de>
+Message-Id: <200811252302.55944.Martin@Lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,112 +36,212 @@ To: linux-xfs@oss.sgi.com
 
 Hi!
 
-Today on one try to hibernate via tuxonice it machine appeared dead. I am 
-not completely sure if it was. But I was in a hurry and had no time to 
-try to ping or SSH it from a different machine and thus I just switched 
-it off hard.
+I also checked my / XFS filesystem after that failed attempt to hibernate 
+via TuxOnIce (see my mail "truncated files"). Well BTW this happened on a 
+ThinkPad T42.
 
-After booting again which worked fine, parts of my KDE configuration 
-appeared broken. Color scheme and window position was lost. And KMail did 
-not know how to sent out a mail anymore, all transports were missing.
+While /home was fine, / had some rather minor - it seems - issues. Whether 
+they have been from today or from whenever - I do not know.
 
-Thus I checked my /home filesystem on /dev/sda5 this evening. It appeared 
-absolutely fine with xfs_check and xfs_repair -n from xfsprogs 2.9.8 
-(grml 2008.11rc).
+xfs_check had stuff like
 
-But comparing some of the config files of KDE with the versions in my 
-backup showed truncated files:
+agi unlinked bucket 0 is 8620800 in ag 0 (inode=8620800)
+agi unlinked bucket 1 is 1181377 in ag 0 (inode=1181377)
+agi unlinked bucket 2 is 8628866 in ag 0 (inode=8628866)
+agi unlinked bucket 3 is 8620611 in ag 0 (inode=8620611)
+agi unlinked bucket 4 is 1181380 in ag 0 (inode=1181380)
+agi unlinked bucket 5 is 7711173 in ag 0 (inode=7711173)
+agi unlinked bucket 6 is 7711174 in ag 0 (inode=7711174)
+[...]
+allocated inode 207025 has 0 link count
+allocated inode 207029 has 0 link count
+allocated inode 207118 has 0 link count
+allocated inode 7711173 has 0 link count
+allocated inode 7711174 has 0 link count
+allocated inode 7711197 has 0 link count
 
-martin@shambhala:~> ls -l .kde-backup-2008-11-22/share/config/kmailrc
--rw------- 1 martin martin 247680 22. Nov 
-18:29 .kde-backup-2008-11-22/share/config/kmailrc
+Which are due to references to deleted files AFAIK.
 
-martin@shambhala:~> ls -l .kde-broken-2008-11-25/share/config/kmailrc
--rw------- 1 martin martin 116902 25. Nov 
-21:16 .kde-broken-2008-11-25/share/config/kmailrc
+But there also was:
 
-But no hole in it:
-
-martin@shambhala:~> 
-su -c "xfs_bmap -v .kde-broken-2008-11-25/share/config/kmailrc"
-Passwort:
-.kde-broken-2008-11-25/share/config/kmailrc:
- EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET            TOTAL
-   0: [0..231]:        22444768..22444999  0 (22444768..22444999)   232
-
-
-Similar stuff happened on the encfs encrypted KDE user that I use for 
-professional stuff - encfs is layered on top of XFS via FUSE:
-
-shambhala:~ms> ls -l .kde-broken-2008-11-25/share/config/kdeglobals
--rw------- 1 ms teamix 4772 25. Nov 
-20:35 .kde-broken-2008-11-25/share/config/kdeglobals
-shambhala:~ms> ls -l .kde-backup-2008-11-22/share/config/kdeglobals
--rw------- 1 ms teamix 6621 18. Nov 
-16:13 .kde-backup-2008-11-22/share/config/kdeglobals
-
-Unfortunately I cannot check this one for holes directly as its on encfs:
-
-shambhala:~ms> xfs_bmap -v .kde-broken-2008-11-25/share/config/kdeglobals
-xfs_bmap: specified file 
-[".kde-broken-2008-11-25/share/config/kdeglobals"] is not on an XFS 
-filesystem
-
-(Since encfs encrypted pathes as well and the file length may differ a 
-bit, the encrypted file could be difficult to find... well maybe by 
-date.)
-
-And well my basket index was lost (http://basket.kde.org is a note taking 
-application):
-
-shambhala:~ms> 
-ls -l .kde-backup-2008-11-22/share/apps/basket/baskets/baskets.xml
--rw-r--r-- 1 ms teamix 10271 18. Nov 
-15:03 .kde-backup-2008-11-22/share/apps/basket/baskets/baskets.xml
-shambhala:~ms> 
-ls -l .kde-broken-2008-11-25/share/apps/basket/baskets/baskets.xml
--rw-r--r-- 1 ms teamix 1905 25. Nov 
-13:24 .kde-broken-2008-11-25/share/apps/basket/baskets/baskets.xml
+allocated inode 17686884 has 0 link count
+link count mismatch for inode 23955806 (name ?), nlink 28, counted 29
+allocated inode 23971992 has 0 link count
+[...]
+allocated inode 36427654 has 0 link count
+link count mismatch for inode 35553563 (name ?), nlink 0, counted 1
+allocated inode 34329742 has 0 link count
 
 
 
-But since I found no holes in the other file and AFAIK the truncated file 
-problem has long been solved - anyone has a idea, how this could have 
-happened?
+And xfs_repair -n showed:
 
-I fixed it by copying ~/.kde/share/config for my private user, and 
-complete ~/.kde for my company user from the backup last weekend. In 
-~/.kde/share/apps for the private too much has changed since the backup, 
-thus for the moment I left it. I do not miss anything in there right now, 
-but feel a tad bit uncomfortable that files might be truncated in there 
-also and I might only find out later when I already worked with them for 
-some time.
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+error following ag 0 unlinked list
+error following ag 2 unlinked list
+error following ag 3 unlinked list
+        - process known inodes and perform inode discovery...
+        - agno = 0
+b796fb90: Badness in key lookup (length)
+bp=(bno 21440, len 16384 bytes) key=(bno 21440, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 29872, len 16384 bytes) key=(bno 29872, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 84512, len 16384 bytes) key=(bno 84512, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 91728, len 16384 bytes) key=(bno 91728, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 97728, len 16384 bytes) key=(bno 97728, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 100208, len 16384 bytes) key=(bno 100208, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 100256, len 16384 bytes) key=(bno 100256, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+[...]
+        - agno = 1
+b47ffb90: Badness in key lookup (length)
+bp=(bno 15007344, len 16384 bytes) key=(bno 15007344, len 8192 bytes)
+b47ffb90: Badness in key lookup (length)
+bp=(bno 15009728, len 16384 bytes) key=(bno 15009728, len 8192 bytes)
+b47ffb90: Badness in key lookup (length)
+bp=(bno 15020000, len 16384 bytes) key=(bno 15020000, len 8192 bytes)
+b47ffb90: Badness in key lookup (length)
+bp=(bno 15044480, len 16384 bytes) key=(bno 15044480, len 8192 bytes)
+b47ffb90: Badness in key lookup (length)
+[...]
+        - agno = 2
+b796fb90: Badness in key lookup (length)
+bp=(bno 21986088, len 16384 bytes) key=(bno 21986088, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 22240200, len 16384 bytes) key=(bno 22240200, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 22374744, len 16384 bytes) key=(bno 22374744, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 23118072, len 16384 bytes) key=(bno 23118072, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 23133528, len 16384 bytes) key=(bno 23133528, len 8192 bytes)
+b796fb90: Badness in key lookup (length)
+bp=(bno 26478456, len 16384 bytes) key=(bno 26478456, len 8192 bytes)
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected inode 29078, moving to lost+found
+disconnected inode 42896, moving to lost+found
+disconnected inode 42930, moving to lost+found
+disconnected inode 53518, moving to lost+found
+[...]
+disconnected inode 35447288, moving to lost+found
+disconnected inode 35447289, moving to lost+found
+disconnected dir inode 35553563, moving to lost+found
+disconnected inode 35756686, moving to lost+found
+disconnected inode 36427654, moving to lost+found
+[...]
+Phase 7 - verify and correct link counts...
+resetting inode 35553563 nlinks from 0 to 2
+done
 
-I thought that KDE maybe was writing those files at the moment. But its a 
-bit wide-spread for that. And it must have happened that it wrote to 
-config / app files on two user accounts. Might be the explaination, but I 
-am not completely convinced.
 
-I did not have seen a thing like this since at least a year I think.
+Running xfs_repair -n after that yielded yet another issue - although 
+everything should be fixed:
+
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify link counts...
+would have reset inode 94530 nlinks from 2 to 3
+No modify flag set, skipping filesystem flush and exiting.
+
+Another xfs_repair fixed this one for good.
 
 
-This is with:
+Lost+found is impressive -  but my bet is that its all those previously 
+deleted files that xfs_repair "fixed" - disk usage appears to be where I 
+expect it to be and I do not "miss" anything yet:
 
-martin@shambhala:~> cat /proc/version
+shambhala:~> du -sch /lost+found
+151M    /lost+found
+151M    insgesamt
+
+
+My questions:
+
+1) Whats those Badness in key lookup messages? Anything to worry about?
+
+2) Why did xfs_repair -n after I ran xfs_repair yield yet another 
+error "would have reset inode 94530 nlinks from 2 to 3"? Why didn't it 
+appear in the first pass?
+
+martin@shambhala:~/Zeit/xfs-probleme-2008-11-25> grep 94530 
+xfsrepair-sda1-repair.txt
+martin@shambhala:~/Zeit/xfs-probleme-2008-11-25#1>
+
+3) Any idea how these problems occured in the first time? 
+
+
+Well I did not grab a metadump as I was just concerned to get anything up 
+and running ASAP. So if you can't say much, thats fair enough. I have 
+complete outputs of xfs_check and the different xfs_repair runs at hand 
+tough and could upload them to my webserver somewhere.
+
+
+
+
+shambhala:~> xfs_info /dev/sda1
+meta-data=/dev/disk/by-uuid/7fcd9766-bf1a-426a-8a07-2c3e0c510898 isize=256    
+agcount=4, agsize=915703 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3662812, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+shambhala:~#1> cat /proc/version
 Linux version 2.6.27.7-tp42-toi-3.0-rc7a (martin@shambhala) (gcc version 
 4.3.2 (Debian 4.3.2-1) ) #1 PREEMPT Mon Nov 24 11:30:39 CET 2008
 
-I did not find anything cumbersone in /var/log/syslog... no XFS crash or 
-something like this.
-
-
-If no one has any idea I take this as really bad luck. Might really be 
-that I turned off the machine while quite some KDE files were being 
-written out. I know that some KDE applications make backups prior to 
-overwriting. Maybe something could be improved in KDE applications. If 
-so, I would be interested to hear and I would file bug reports with KDE.
-
-Well actually thats my bet already. XFS appears to be fine.
+xfsprogs 2.9.8-1 (debian package)
 
 Ciao,
 -- 
