@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPM30hQ010939
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:03:00 -0600
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B342215F6482
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:02:57 -0800 (PST)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 8gECg9FtkSGqV9Hm for
-	<linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:02:57 -0800 (PST)
-Received: from shambhala.lichtvoll.local
-	(DSL01.83.171.175.140.ip-pool.NEFkom.net [83.171.175.140])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 198F65ADD6
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 23:02:57 +0100 (CET)
-From: Martin Steigerwald <Martin@Lichtvoll.de>
-Subject: Badness in key lookup (length)
-Date: Tue, 25 Nov 2008 23:02:55 +0100
+	mAPM7kA4011692 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:07:46 -0600
+Received: from pmx2.sophos.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0E9415F5795
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:07:45 -0800 (PST)
+Received: from pmx2.sophos.com (pmx2.sophos.com [213.31.172.17]) by
+	cuda.sgi.com with ESMTP id bThXQbtic0Mctguc for
+	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:07:45 -0800 (PST)
+Message-ID: <492C75E2.1080701@ca.sophos.com>
+Date: Tue, 25 Nov 2008 14:02:10 -0800
+From: David Sparks <dave@ca.sophos.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200811252302.55944.Martin@Lichtvoll.de>
+Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
+References: <1226760254.5089.11.camel@chevrolet>	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>	<1227476908.32357.5.camel@chevrolet>	<alpine.DEB.1.10.0811231721350.22594@p34.internal.lan>	<1227485956.5145.10.camel@chevrolet>	<alpine.DEB.1.10.0811240448570.25866@p34.internal.lan>	<1227569808.5039.6.camel@chevrolet>	<alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>	<1227645887.7992.10.camel@chevrolet>
+	<492C6C9B.3060000@sandeen.net>
+	<1227649893.6557.10.camel@oldsmobile>
+In-Reply-To: <1227649893.6557.10.camel@oldsmobile>
+Reply-To: David Sparks <dave@ca.sophos.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,222 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Stian Jordet <liste@jordet.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+> With no barriers, it's 22s faster than my workstation. That can't be the
+> way it's supposed to be?
 
-Hi!
+What IO elevator are you using?  Did you try the 'noop' or 'deadline' schedulers?
 
-I also checked my / XFS filesystem after that failed attempt to hibernate 
-via TuxOnIce (see my mail "truncated files"). Well BTW this happened on a 
-ThinkPad T42.
+cat /sys/block/sda/queue/scheduler
+echo noop > /sys/block/sda/queue/scheduler
 
-While /home was fine, / had some rather minor - it seems - issues. Whether 
-they have been from today or from whenever - I do not know.
-
-xfs_check had stuff like
-
-agi unlinked bucket 0 is 8620800 in ag 0 (inode=8620800)
-agi unlinked bucket 1 is 1181377 in ag 0 (inode=1181377)
-agi unlinked bucket 2 is 8628866 in ag 0 (inode=8628866)
-agi unlinked bucket 3 is 8620611 in ag 0 (inode=8620611)
-agi unlinked bucket 4 is 1181380 in ag 0 (inode=1181380)
-agi unlinked bucket 5 is 7711173 in ag 0 (inode=7711173)
-agi unlinked bucket 6 is 7711174 in ag 0 (inode=7711174)
-[...]
-allocated inode 207025 has 0 link count
-allocated inode 207029 has 0 link count
-allocated inode 207118 has 0 link count
-allocated inode 7711173 has 0 link count
-allocated inode 7711174 has 0 link count
-allocated inode 7711197 has 0 link count
-
-Which are due to references to deleted files AFAIK.
-
-But there also was:
-
-allocated inode 17686884 has 0 link count
-link count mismatch for inode 23955806 (name ?), nlink 28, counted 29
-allocated inode 23971992 has 0 link count
-[...]
-allocated inode 36427654 has 0 link count
-link count mismatch for inode 35553563 (name ?), nlink 0, counted 1
-allocated inode 34329742 has 0 link count
-
-
-
-And xfs_repair -n showed:
-
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-error following ag 0 unlinked list
-error following ag 2 unlinked list
-error following ag 3 unlinked list
-        - process known inodes and perform inode discovery...
-        - agno = 0
-b796fb90: Badness in key lookup (length)
-bp=(bno 21440, len 16384 bytes) key=(bno 21440, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 29872, len 16384 bytes) key=(bno 29872, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 84512, len 16384 bytes) key=(bno 84512, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 91728, len 16384 bytes) key=(bno 91728, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 97728, len 16384 bytes) key=(bno 97728, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 100208, len 16384 bytes) key=(bno 100208, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 100256, len 16384 bytes) key=(bno 100256, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-[...]
-        - agno = 1
-b47ffb90: Badness in key lookup (length)
-bp=(bno 15007344, len 16384 bytes) key=(bno 15007344, len 8192 bytes)
-b47ffb90: Badness in key lookup (length)
-bp=(bno 15009728, len 16384 bytes) key=(bno 15009728, len 8192 bytes)
-b47ffb90: Badness in key lookup (length)
-bp=(bno 15020000, len 16384 bytes) key=(bno 15020000, len 8192 bytes)
-b47ffb90: Badness in key lookup (length)
-bp=(bno 15044480, len 16384 bytes) key=(bno 15044480, len 8192 bytes)
-b47ffb90: Badness in key lookup (length)
-[...]
-        - agno = 2
-b796fb90: Badness in key lookup (length)
-bp=(bno 21986088, len 16384 bytes) key=(bno 21986088, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 22240200, len 16384 bytes) key=(bno 22240200, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 22374744, len 16384 bytes) key=(bno 22374744, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 23118072, len 16384 bytes) key=(bno 23118072, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 23133528, len 16384 bytes) key=(bno 23133528, len 8192 bytes)
-b796fb90: Badness in key lookup (length)
-bp=(bno 26478456, len 16384 bytes) key=(bno 26478456, len 8192 bytes)
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-disconnected inode 29078, moving to lost+found
-disconnected inode 42896, moving to lost+found
-disconnected inode 42930, moving to lost+found
-disconnected inode 53518, moving to lost+found
-[...]
-disconnected inode 35447288, moving to lost+found
-disconnected inode 35447289, moving to lost+found
-disconnected dir inode 35553563, moving to lost+found
-disconnected inode 35756686, moving to lost+found
-disconnected inode 36427654, moving to lost+found
-[...]
-Phase 7 - verify and correct link counts...
-resetting inode 35553563 nlinks from 0 to 2
-done
-
-
-Running xfs_repair -n after that yielded yet another issue - although 
-everything should be fixed:
-
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-would have reset inode 94530 nlinks from 2 to 3
-No modify flag set, skipping filesystem flush and exiting.
-
-Another xfs_repair fixed this one for good.
-
-
-Lost+found is impressive -  but my bet is that its all those previously 
-deleted files that xfs_repair "fixed" - disk usage appears to be where I 
-expect it to be and I do not "miss" anything yet:
-
-shambhala:~> du -sch /lost+found
-151M    /lost+found
-151M    insgesamt
-
-
-My questions:
-
-1) Whats those Badness in key lookup messages? Anything to worry about?
-
-2) Why did xfs_repair -n after I ran xfs_repair yield yet another 
-error "would have reset inode 94530 nlinks from 2 to 3"? Why didn't it 
-appear in the first pass?
-
-martin@shambhala:~/Zeit/xfs-probleme-2008-11-25> grep 94530 
-xfsrepair-sda1-repair.txt
-martin@shambhala:~/Zeit/xfs-probleme-2008-11-25#1>
-
-3) Any idea how these problems occured in the first time? 
-
-
-Well I did not grab a metadump as I was just concerned to get anything up 
-and running ASAP. So if you can't say much, thats fair enough. I have 
-complete outputs of xfs_check and the different xfs_repair runs at hand 
-tough and could upload them to my webserver somewhere.
-
-
-
-
-shambhala:~> xfs_info /dev/sda1
-meta-data=/dev/disk/by-uuid/7fcd9766-bf1a-426a-8a07-2c3e0c510898 isize=256    
-agcount=4, agsize=915703 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=3662812, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-shambhala:~#1> cat /proc/version
-Linux version 2.6.27.7-tp42-toi-3.0-rc7a (martin@shambhala) (gcc version 
-4.3.2 (Debian 4.3.2-1) ) #1 PREEMPT Mon Nov 24 11:30:39 CET 2008
-
-xfsprogs 2.9.8-1 (debian package)
-
-Ciao,
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+ds
 
 _______________________________________________
 xfs mailing list
