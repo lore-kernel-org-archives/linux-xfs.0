@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPM3V7b011040 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:03:31 -0600
+	mAPLnsRm009246
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 15:49:54 -0600
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A789815F64A4
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:03:30 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CF0E515F611D
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 13:49:52 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id qgkcMiQsTTCV5kxm for
-	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:03:30 -0800 (PST)
+	cuda.sgi.com with ESMTP id BnT5e4nrHDVqVAIA for
+	<linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 13:49:52 -0800 (PST)
 Received: from shambhala.lichtvoll.local
 	(DSL01.83.171.175.140.ip-pool.NEFkom.net [83.171.175.140])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 7D9FF5ADD6
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 23:03:29 +0100 (CET)
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id E3B165ADD6
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 22:44:15 +0100 (CET)
+From: Martin Steigerwald <Martin@Lichtvoll.de>
 Subject: truncated files
-Content-Disposition: inline
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Date: Tue, 25 Nov 2008 23:03:28 +0100
+Date: Tue, 25 Nov 2008 22:44:14 +0100
 MIME-Version: 1.0
-Message-Id: <200811252303.28690.Martin@lichtvoll.de>
+Content-Disposition: inline
+Message-Id: <200811252244.14718.Martin@Lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,7 +31,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
 
 Hi!
