@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPAtoRU000684 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 04:55:50 -0600
+	mAPBLxvq002346 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 05:21:59 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7EF8815ECCB1
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 02:55:50 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45F0C15ECD3C
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 03:02:09 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id iFQmU9ZvGLzGuILG for
-	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 02:55:50 -0800 (PST)
+	by cuda.sgi.com with ESMTP id 8RvOA7YeTWalBAnw for
+	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 03:02:09 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L4vZf-0005wV-Ob
-	for xfs@oss.sgi.com; Tue, 25 Nov 2008 10:55:19 +0000
-Date: Tue, 25 Nov 2008 05:55:19 -0500
+	Linux)) id 1L4vaw-0005yG-Br
+	for xfs@oss.sgi.com; Tue, 25 Nov 2008 10:56:38 +0000
+Date: Tue, 25 Nov 2008 05:56:38 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsdump: don't redeclare offsetoff
-Message-ID: <20081125105519.GA21288@infradead.org>
+Subject: [PATCH] xfsdump: make help printing a little smarter
+Message-ID: <20081125105638.GB21288@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,25 +31,66 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Don't redeclare offsetof, we already include <stddef.h> to get it and
-modern gcc will complain about the redeclaration.
+fprintf returns the number of characters printed, we can use this
+for the offsetted lines.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs-cmds/xfsdump/common/getdents.c
+Index: xfs-cmds/xfsdump/common/main.c
 ===================================================================
---- xfs-cmds.orig/xfsdump/common/getdents.c	2008-11-13 18:45:11.000000000 +0100
-+++ xfs-cmds/xfsdump/common/getdents.c	2008-11-13 18:45:18.000000000 +0100
-@@ -72,8 +72,6 @@ extern int __have_no_getdents64;
- # endif
- #endif
+--- xfs-cmds.orig/xfsdump/common/main.c	2008-11-13 18:39:06.000000000 +0100
++++ xfs-cmds/xfsdump/common/main.c	2008-11-13 18:40:43.000000000 +0100
+@@ -960,20 +960,12 @@ main( int argc, char *argv[] )
+ void
+ usage( void )
+ {
+-	char linebuf[ 200 ];
+ 	int pfxsz;
+-	int ps;
++	int ps = 0;
+ 	char *ns = "";
  
--#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+-	sprintf( linebuf,
+-		 _("%s: usage: %s "),
+-		 progname,
+-		 basename( progname ));
+-	pfxsz = strlen( linebuf );
+-	ASSERT( pfxsz < sizeof( linebuf ));
+-	ps = 0;
 -
+-	fprintf( stderr, linebuf );
++	pfxsz = fprintf(stderr, _("%s: usage: %s "),
++				progname, basename(progname));
  
- /* For Linux we need a special version of this file since the
-    definition of `struct dirent' is not the same for the kernel and
+ #ifdef DUMP
+ 	ULO(_("(dump DMF dualstate files as offline)"),	GETOPT_DUMPASOFFLINE );
+Index: xfs-cmds/xfsdump/invutil/invutil.c
+===================================================================
+--- xfs-cmds.orig/xfsdump/invutil/invutil.c	2008-11-13 18:34:44.000000000 +0100
++++ xfs-cmds/xfsdump/invutil/invutil.c	2008-11-13 18:40:59.000000000 +0100
+@@ -1082,18 +1082,12 @@ mmap_n_bytes(int fd, size_t count, bool_
+ void
+ usage (void)
+ {
+-    char linebuf[ 200 ];
+     int pfxsz;
+-    int ps;
++    int ps = 0;
+     char *ns = "";
+ 
+-    fprintf( stderr, "%s: %s\n", g_programName, g_programVersion );
+-    snprintf( linebuf, sizeof(linebuf), "Usage: %s ", g_programName );
+-    pfxsz = strlen( linebuf );
+-    assert( pfxsz < sizeof( linebuf ));
+-    ps = 0;
+-
+-    fprintf( stderr, linebuf );
++    fprintf(stderr, "%s: %s\n", g_programName, g_programVersion);
++    pfxsz = fprintf(stderr, "Usage: %s ", g_programName);
+ 
+ #ifdef REVEAL
+     ULO( "(output debug information)", GETOPT_DEBUG );
 
 _______________________________________________
 xfs mailing list
