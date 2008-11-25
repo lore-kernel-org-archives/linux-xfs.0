@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPG2GGT020206 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 10:02:16 -0600
-Received: from mx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 129481B8A075
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 08:02:15 -0800 (PST)
-Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
-	with ESMTP id cdgkFjOhKN6X32wC for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2008 08:02:15 -0800 (PST)
-Message-ID: <492C213D.6090401@sandeen.net>
-Date: Tue, 25 Nov 2008 10:01:01 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: don't redeclare offsetoff
-References: <20081125105519.GA21288@infradead.org>
-In-Reply-To: <20081125105519.GA21288@infradead.org>
+	mAPKitCO005119 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:44:56 -0600
+Received: from buick.jordet.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 72EB715F5367
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 12:44:55 -0800 (PST)
+Received: from buick.jordet.net (buick.jordet.net [193.91.240.190]) by
+	cuda.sgi.com with ESMTP id 7o2FRZob4oPKV0jw for
+	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 12:44:55 -0800 (PST)
+Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
+From: Stian Jordet <liste@jordet.net>
+In-Reply-To: <alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>
+References: <1226760254.5089.11.camel@chevrolet>
+	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>
+	<1227476908.32357.5.camel@chevrolet>
+	<alpine.DEB.1.10.0811231721350.22594@p34.internal.lan>
+	<1227485956.5145.10.camel@chevrolet>
+	<alpine.DEB.1.10.0811240448570.25866@p34.internal.lan>
+	<1227569808.5039.6.camel@chevrolet>
+	<alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>
+Date: Tue, 25 Nov 2008 21:44:47 +0100
+Message-Id: <1227645887.7992.10.camel@chevrolet>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +34,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Sven-Haegar Koch <haegar@sdinet.de>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Christoph Hellwig wrote:
-> Don't redeclare offsetof, we already include <stddef.h> to get it and
-> modern gcc will complain about the redeclaration.
+ti., 25.11.2008 kl. 01.09 +0100, skrev Sven-Haegar Koch:
+> I had the same problem when I tried it on my laptop (T60) - using it on 
+> the unencrypted root filesystem (with /usr/src) took ages, using it on 
+> the LUKS encrypted /home was blasing fast - on the same disk.
 > 
+> This test was some time ago with something like 2.6.20 or 2.6.24 - I 
+> gave up and reformatted / with ext3 as I needed the machine.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I think barriers were the problem, they seem to cost performance like 
+> hell, especially for operations with many small files. My laptop used 
+> barriers for xfs on the direct partition, but not on crypto drivermapper 
+> mounts.
 > 
-> Index: xfs-cmds/xfsdump/common/getdents.c
-> ===================================================================
-> --- xfs-cmds.orig/xfsdump/common/getdents.c	2008-11-13 18:45:11.000000000 +0100
-> +++ xfs-cmds/xfsdump/common/getdents.c	2008-11-13 18:45:18.000000000 +0100
-> @@ -72,8 +72,6 @@ extern int __have_no_getdents64;
->  # endif
->  #endif
->  
-> -#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-> -
+> So perhaps try mounting with nobarrier and see if the speed problem goes 
+> away - but know that you sacrifice some crash-resilience when doing so.
 
-ACK.  I'd noticed this too, thanks.
+Barriers were the problem indeed. My old system had no problems with
+barriers, but here it did an incredible difference.
 
--Eric
+Thanks!
+-Stian
 
 _______________________________________________
 xfs mailing list
