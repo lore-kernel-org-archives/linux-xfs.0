@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAP0rXXK026667 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 18:53:34 -0600
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
-	[134.14.52.130])
-	by relay1.corp.sgi.com (Postfix) with SMTP id 351898F809D
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 16:53:29 -0800 (PST)
-Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com
-	[134.14.54.237]) by larry.melbourne.sgi.com
-	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA27681 for
-	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 11:53:28 +1100
-Subject: TAKE - xfstests: add mode to open call in devzero.c,
-	which may have O_CREAT set.
-Message-Id: <20081125005328.0D85858C8A4D@chook.melbourne.sgi.com>
-Date: Tue, 25 Nov 2008 11:53:27 +1100 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	mAP1adg3029276 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 19:36:39 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C346A15E3A66
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 17:36:38 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id XzuAm0KSXGZEdXYt for <xfs@oss.sgi.com>;
+	Mon, 24 Nov 2008 17:36:38 -0800 (PST)
+Message-ID: <492B5684.2080107@sandeen.net>
+Date: Mon, 24 Nov 2008 19:36:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
+References: <1226760254.5089.11.camel@chevrolet>	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>	<1227476908.32357.5.camel@chevrolet>	<alpine.DEB.1.10.0811231721350.22594@p34.internal.lan>	<1227485956.5145.10.camel@chevrolet>	<alpine.DEB.1.10.0811240448570.25866@p34.internal.lan>
+	<1227569808.5039.6.camel@chevrolet>
+In-Reply-To: <1227569808.5039.6.camel@chevrolet>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,29 +24,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stian Jordet <liste@jordet.net>
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Fedora is catching calls to open which have O_CREAT set w/o a mode.
+Stian Jordet wrote:
+> ma., 24.11.2008 kl. 04.50 -0500, skrev Justin Piszcz:
+>> While there still may be something else wrong, the first problem I see is 
+>> your sunit and swidth are set to 0.
+>>
+>> Please read, a good article on what they are and how to set them:
+>> http://www.socalsysadmin.com/
+> 
+> Oh, this was new to me. But the setting didn't change anything. I can
+> copy one large file between the xfs and ext3 disk (both ways), and I get
+> speeds between 160 and 200 MB/s. But unpacking the kernel source takes
+> between 5 and 10 minutes on the xfs disk, and a mere 15 seconds on the
+> ext3... (and it also used to take between 5 and 10 minutes when I had
+> xfs on the raid0, so it doesn't seem to be hardware related...)
+> 
+> If anyone has anything more I can try before I do the lengthy process of
+> backup 1TB, reformat and restore...
 
+I don't know if the storage you're on passes barriers or not, but xfs
+has barriers on by default, while ext3 does not.  ext3 will still likely
+win the "untar a kernel" race, but for a fairer test, make the barrier
+settings consistent between the two.
 
-Date:  Tue Nov 25 11:53:02 EST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  "Eric Sandeen" <sandeen@sandeen.net>
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:32535a
-xfstests/src/devzero.c - 1.9 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/src/devzero.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
-	- Fedora is catching calls to open which have O_CREAT set w/o a mode.
-
+-Eric
 
 _______________________________________________
 xfs mailing list
