@@ -1,27 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAPKitCO005119 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 14:44:56 -0600
-Received: from buick.jordet.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72EB715F5367
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 12:44:55 -0800 (PST)
-Received: from buick.jordet.net (buick.jordet.net [193.91.240.190]) by
-	cuda.sgi.com with ESMTP id 7o2FRZob4oPKV0jw for
-	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 12:44:55 -0800 (PST)
-Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
-From: Stian Jordet <liste@jordet.net>
-In-Reply-To: <alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>
-References: <1226760254.5089.11.camel@chevrolet>
-	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>
-	<1227476908.32357.5.camel@chevrolet>
-	<alpine.DEB.1.10.0811231721350.22594@p34.internal.lan>
-	<1227485956.5145.10.camel@chevrolet>
-	<alpine.DEB.1.10.0811240448570.25866@p34.internal.lan>
-	<1227569808.5039.6.camel@chevrolet>
-	<alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>
-Date: Tue, 25 Nov 2008 21:44:47 +0100
-Message-Id: <1227645887.7992.10.camel@chevrolet>
-Mime-Version: 1.0
+	mAPLh69K008811 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 15:43:06 -0600
+Message-ID: <492C7160.80208@sgi.com>
+Date: Wed, 26 Nov 2008 08:42:56 +1100
+From: Mark Goodwin <markgw@sgi.com>
+MIME-Version: 1.0
+Subject: Re: New XFS git tree on oss.sgi.com
+References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
+	<492C0B3D.3040002@thebarn.com>
+In-Reply-To: <492C0B3D.3040002@thebarn.com>
+Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,30 +23,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sven-Haegar Koch <haegar@sdinet.de>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Russell Cattelan <cattelan@thebarn.com>
+Cc: xfs@oss.sgi.com
 
-ti., 25.11.2008 kl. 01.09 +0100, skrev Sven-Haegar Koch:
-> I had the same problem when I tried it on my laptop (T60) - using it on 
-> the unencrypted root filesystem (with /usr/src) took ages, using it on 
-> the LUKS encrypted /home was blasing fast - on the same disk.
-> 
-> This test was some time ago with something like 2.6.20 or 2.6.24 - I 
-> gave up and reformatted / with ext3 as I needed the machine.
-> 
-> I think barriers were the problem, they seem to cost performance like 
-> hell, especially for operations with many small files. My laptop used 
-> barriers for xfs on the direct partition, but not on crypto drivermapper 
-> mounts.
-> 
-> So perhaps try mounting with nobarrier and see if the speed problem goes 
-> away - but know that you sacrifice some crash-resilience when doing so.
 
-Barriers were the problem indeed. My old system had no problems with
-barriers, but here it did an incredible difference.
 
-Thanks!
--Stian
+Russell Cattelan wrote:
+> Christoph Hellwig wrote:
+>> On Tue, Nov 25, 2008 at 06:22:21PM +1100, Lachlan McIlroy wrote:
+>>
+>>> There's a few branches there already:
+>>>
+>>> 'master'      This will contain all the latest xfs changes not yet pushed
+>>>                to mainline.
+>>> 'mainline'    This is vanilla mainline and will updated regularly.
+>>> 'for-linus'   Our staging branch for pull requests
+>>> 'xfs-dev'     This branch will contain KDB and other supporting code for
+>>>                development and should be identical to the old CVS tree.
+>>>
+>>> Feel free to start using it and let us know if you have any issues.
+>>>
+>> Any chance to have these as separate git trees instead of branches?
+
+Why? Is it just a bandwidth issue with the initial clone, or some
+other reason?
+
+>> In either case, do you expect patches against the xfs-dev or the master
+>> tree?
+
+I'll let Lachlan reply to that, but normally master I think. One thing that
+is important is that any commit against the xfs-dev tree should split out
+kdb and dmapi changes into separate commits from changes to fs/xfs.
+
+>  It would also be useful if the trees and which one to be used
+>> could be documented on oss.sgi.com/projects/xfs or xfs.org.
+
+yes certainly.
+
+> Specifically this page please.
+> http://xfs.org/index.php/Getting_the_latest_source_code
+
+Been waiting for the WIKI on oss to be set up - these two sites
+can simply mirror each other I guess for some or all documentation.
+
+> Maybe add a quick tutorial on git branches and how to create tracking
+> branches for this tree.
+
+Yes that's a good idea: git remote add ....
+
+> Also can we have something other than "unnamed repository" in the
+> description file?
+
+Yep. Niv, can you fix that up please.
+
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+Russell, would it be possible somehow for this footer to include the URL
+of the archive reference for the message containing it?
+
+Cheers
+-- Mark
 
 _______________________________________________
 xfs mailing list
