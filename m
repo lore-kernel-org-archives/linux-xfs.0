@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAONqoht022860 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 17:52:50 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA8AB15E0B14
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 15:52:49 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id cIS59KWqDJA5JECA for
-	<xfs@oss.sgi.com>; Mon, 24 Nov 2008 15:52:49 -0800 (PST)
-Date: Mon, 24 Nov 2008 18:52:48 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+	mAP06D70024124 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 18:06:13 -0600
+Received: from mail.sdinet.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BBD915E280C
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 16:06:11 -0800 (PST)
+Received: from mail.sdinet.de (mail.sdinet.de [78.47.32.153]) by cuda.sgi.com
+	with ESMTP id l9pKs1PF9WlHwSuu for <xfs@oss.sgi.com>;
+	Mon, 24 Nov 2008 16:06:11 -0800 (PST)
+Date: Tue, 25 Nov 2008 01:09:02 +0100 (CET)
+From: Sven-Haegar Koch <haegar@sdinet.de>
 Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
 In-Reply-To: <1227569808.5039.6.camel@chevrolet>
-Message-ID: <alpine.DEB.1.10.0811241851160.11882@p34.internal.lan>
+Message-ID: <alpine.DEB.2.00.0811250057510.27010@aurora.sdinet.de>
 References: <1226760254.5089.11.camel@chevrolet>
 	<430c4fa50811180551r67d5d680tf1ffa493604ac4ea@mail.gmail.com>
 	<1227476908.32357.5.camel@chevrolet>
@@ -34,54 +34,46 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Stian Jordet <liste@jordet.net>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
-
-
+Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
 On Tue, 25 Nov 2008, Stian Jordet wrote:
 
 > ma., 24.11.2008 kl. 04.50 -0500, skrev Justin Piszcz:
->> While there still may be something else wrong, the first problem I see is
->> your sunit and swidth are set to 0.
->>
->> Please read, a good article on what they are and how to set them:
->> http://www.socalsysadmin.com/
->
+> > While there still may be something else wrong, the first problem I see is 
+> > your sunit and swidth are set to 0.
+> > 
+> > Please read, a good article on what they are and how to set them:
+> > http://www.socalsysadmin.com/
+> 
 > Oh, this was new to me. But the setting didn't change anything. I can
 > copy one large file between the xfs and ext3 disk (both ways), and I get
 > speeds between 160 and 200 MB/s. But unpacking the kernel source takes
 > between 5 and 10 minutes on the xfs disk, and a mere 15 seconds on the
 > ext3... (and it also used to take between 5 and 10 minutes when I had
 > xfs on the raid0, so it doesn't seem to be hardware related...)
->
-> If anyone has anything more I can try before I do the lengthy process of
-> backup 1TB, reformat and restore...
->
-> Thanks :)
->
-> Regards,
-> Stian
->
 
-When you 'unpack the kernel source' ext3 will cache it etc, best way to 
-test:
+I had the same problem when I tried it on my laptop (T60) - using it on 
+the unencrypted root filesystem (with /usr/src) took ages, using it on 
+the LUKS encrypted /home was blasing fast - on the same disk.
 
-/usr/bin/time cmd
-or
-time cmd
+This test was some time ago with something like 2.6.20 or 2.6.24 - I 
+gave up and reformatted / with ext3 as I needed the machine.
 
-where cmd is: bash -c 'tar xvf file.tar; sync'
+I think barriers were the problem, they seem to cost performance like 
+hell, especially for operations with many small files. My laptop used 
+barriers for xfs on the direct partition, but not on crypto drivermapper 
+mounts.
 
-Make sure its a tar and not gzip/bzip2 (limited by CPU/etc)
+So perhaps try mounting with nobarrier and see if the speed problem goes 
+away - but know that you sacrifice some crash-resilience when doing so.
 
-The other option is the relatime you stated, use this instead:
+c'ya
+sven
 
-defaults,noatime,logbufs=8,logbsize=262144
+-- 
 
-then tell me what you get
-(instead of relatime)
-
-Justin.
+The Internet treats censorship as a routing problem, and routes around
+it. (John Gilmore on http://www.cygnus.com/~gnu/)
 
 _______________________________________________
 xfs mailing list
