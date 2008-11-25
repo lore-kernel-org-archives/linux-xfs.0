@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAP0klF4026360 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 18:46:47 -0600
+	mAP0rXXK026667 for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 18:53:34 -0600
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
 	[134.14.52.130])
-	by relay3.corp.sgi.com (Postfix) with SMTP id 6D057AC018
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 16:46:43 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with SMTP id 351898F809D
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2008 16:53:29 -0800 (PST)
 Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com
 	[134.14.54.237]) by larry.melbourne.sgi.com
-	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA27553 for
-	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 11:46:42 +1100
-Subject: TAKE - xfstests: fix buffer overflow in lstat64.c
-Message-Id: <20081125004642.0054358C8A4D@chook.melbourne.sgi.com>
-Date: Tue, 25 Nov 2008 11:46:41 +1100 (EST)
+	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA27681 for
+	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 11:53:28 +1100
+Subject: TAKE - xfstests: add mode to open call in devzero.c,
+	which may have O_CREAT set.
+Message-Id: <20081125005328.0D85858C8A4D@chook.melbourne.sgi.com>
+Date: Tue, 25 Nov 2008 11:53:27 +1100 (EST)
 From: bnaujok@sgi.com (Barry Naujok)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -29,21 +30,21 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Change mode string variable declaration
+Fedora is catching calls to open which have O_CREAT set w/o a mode.
 
 
-Date:  Tue Nov 25 11:45:58 EST 2008
+Date:  Tue Nov 25 11:53:02 EST 2008
 Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xfs-cmds
-Inspected by:  Christoph Hellwig <hch@lst.de>
+Inspected by:  "Eric Sandeen" <sandeen@sandeen.net>
 
 The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  master-melb:xfs-cmds:32533a
-xfstests/src/lstat64.c - 1.13 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/src/lstat64.c.diff?r1=text&tr1=1.13&r2=text&tr2=1.12&f=h
-	- Change mode string variable declaration
+Modid:  master-melb:xfs-cmds:32535a
+xfstests/src/devzero.c - 1.9 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/src/devzero.c.diff?r1=text&tr1=1.9&r2=text&tr2=1.8&f=h
+	- Fedora is catching calls to open which have O_CREAT set w/o a mode.
 
 
 _______________________________________________
