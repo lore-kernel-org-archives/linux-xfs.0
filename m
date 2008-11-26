@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ14D94023990 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:04:13 -0600
-Message-ID: <492CA07F.1030803@sgi.com>
-Date: Wed, 26 Nov 2008 12:03:59 +1100
+	mAQ1BggJ024482 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:11:42 -0600
+Message-ID: <492CA245.3000709@sgi.com>
+Date: Wed, 26 Nov 2008 12:11:33 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
 Subject: Re: New XFS git tree on oss.sgi.com
-References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
-	<492C0B3D.3040002@thebarn.com>
-In-Reply-To: <492C0B3D.3040002@thebarn.com>
+References: <492BA7AD.5080007@sgi.com> <20081125140553.GA16553@infradead.org>
+In-Reply-To: <20081125140553.GA16553@infradead.org>
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -23,56 +22,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Russell Cattelan <cattelan@thebarn.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Russell Cattelan wrote:
-> Christoph Hellwig wrote:
->> On Tue, Nov 25, 2008 at 06:22:21PM +1100, Lachlan McIlroy wrote:
->>  
->>> There's a few branches there already:
->>>
->>> 'master'      This will contain all the latest xfs changes not yet 
->>> pushed
->>>                to mainline.
->>> 'mainline'    This is vanilla mainline and will updated regularly.
->>> 'for-linus'   Our staging branch for pull requests
->>> 'xfs-dev'     This branch will contain KDB and other supporting code for
->>>                development and should be identical to the old CVS tree.
->>>
->>> Feel free to start using it and let us know if you have any issues.
->>>     
->>
->> Any chance to have these as separate git trees instead of branches?
->>
->> In either case, do you expect patches against the xfs-dev or the master
->> tree?  It would also be useful if the trees and which one to be used
->> could be documented on oss.sgi.com/projects/xfs or xfs.org.
->>
->>   
-> Specifically this page please.
-> http://xfs.org/index.php/Getting_the_latest_source_code
-Sure.  I didn't even know that page existed.
+Christoph Hellwig wrote:
+> Looking over the -dev tree, can you please revert
+> 
+> 	http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=c79ae33eebac1c15aa435fb77362fdc5eff2be4d
+> 
+> All this wasn't needed in the old ptrace tree either, no need to carry it forward.
 
-> 
-> Maybe add a quick tutorial on git branches and how to create tracking 
-> branches for this tree.
-Can we just point people at an existing git tutorial?  Or are you wanting
-something specific to our processes?
+Is this code needed for the BSD port?
 
-> 
-> Also can we have something other than "unnamed repository" in the 
-> description file?
-Okay, how do we change that?
-
-> 
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>   
-> 
-> 
+There may be other code that can be removed too.  We moved a lot of the code
+that existed only in ptools into the xfs-dev branch so that branch and ptools
+are in sync.  This allows us to automatically merge changes back to the old
+ptools tree (yes it still lives).  Any merge failures will now be handled
+between git branches and not between different scms.
 
 _______________________________________________
 xfs mailing list
