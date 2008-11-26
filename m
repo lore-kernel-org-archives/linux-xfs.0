@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQCV2Kp013388 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 06:31:02 -0600
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3E5B1BE296A
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 04:31:01 -0800 (PST)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id gCcHCtfVM6O94AGo for
-	<xfs@oss.sgi.com>; Wed, 26 Nov 2008 04:31:01 -0800 (PST)
-Received: from shambala.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 1C0475ADF2
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 13:30:28 +0100 (CET)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
-Date: Wed, 26 Nov 2008 13:30:26 +0100
-References: <1226760254.5089.11.camel@chevrolet> <492B5684.2080107@sandeen.net>
-	<1227647010.7992.34.camel@chevrolet>
-	(sfid-20081125_220944_366364_C8DFDCD4)
-In-Reply-To: <1227647010.7992.34.camel@chevrolet>
+	mAQEk2Nk022897 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 08:46:02 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B1FD1BE49C3
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 06:46:00 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id nghFNOkCUcETexZW for <xfs@oss.sgi.com>;
+	Wed, 26 Nov 2008 06:46:00 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 86EDDAC6272
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 08:40:27 -0600 (CST)
+Message-ID: <492D5FDB.3000208@sandeen.net>
+Date: Wed, 26 Nov 2008 08:40:27 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <200811261330.27328.Martin@lichtvoll.de>
+Subject: Re: [patch 00/12] [PATCH V2]: compat ioctl fixes/cleanups/additions
+References: <20081126032005.639750968@sandeen.net>
+In-Reply-To: <20081126032005.639750968@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,48 +34,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Am Dienstag 25 November 2008 schrieb Stian Jordet:
-> ma., 24.11.2008 kl. 19.36 -0600, skrev Eric Sandeen:
-> > I don't know if the storage you're on passes barriers or not, but xfs
-> > has barriers on by default, while ext3 does not.  ext3 will still
-> > likely
-> > win the "untar a kernel" race, but for a fairer test, make the
-> > barrier settings consistent between the two.
->
-> As I wrote earlier, the point wasn't to find the fastest fs. That's not
-> what I'm looking for. I just want xfs to perform at least as good on my
-> new workstation as it did on my six years old other workstation.
->
-> Which disabling barriers helped (notice the rm -rf with barriers...
-> nobarrier is almost 200 times faster, 10 times faster on the
-> unpacking):
+sandeen@sandeen.net wrote:
+> Latest installation, incorporating hch's comments.
+> 
+> Which is to say, a lot changed.  :)
+> 
+> -Eric
 
-[...]
+Just a note, Christoph reviewed & acked all these after I posted them.
 
-> ### Ext3
->
-> time bash -c 'tar xjf linux-2.6.27.7.tar.bz2 ; sync'
->
-> real 0m18.663s
-> user 0m14.693s
-> sys 0m2.828s
->
->
-> time bash -c 'rm -r linux-2.6.27.7 ; sync'
-> real 0m0.635s
-> user 0m0.028s
-> sys 0m0.564s
+The list ate the replies, it seems, so it'd be hard for anyone to know.
+ At best they are delayed by 4 hours.
 
-It would be interesting to know the value on Ext3 with barriers.
+I checked the archives at
+http://oss.sgi.com/archives/xfs/2008-11/index.html but even my original
+thread is missing there (no email past Nov 24).
 
-I wonder whether XFS performance with barriers enabled can be improved? 
-And whether XFS with disabled write cache (via hdparm) but without 
-barriers might even be *faster* than XFS with barriers... One thing to 
-test eventually.
+Same for here, http://oss.sgi.com/pipermail/xfs/2008-November/ ends on
+Nov 12.  So it's hard to know if it made it anywhere.
 
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Is the best practice now to cc: LKML or linux-fsdevel so that email is
+more certain to be delivered to some endpoint?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
