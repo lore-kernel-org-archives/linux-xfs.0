@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ8sstM029202 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 02:54:55 -0600
+	mAQ8v0at029406 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 02:57:00 -0600
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 645BF1603D90
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 00:54:52 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B3CD160345A
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 00:56:59 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id CXxAgae3zjLgrBXl for
-	<xfs@oss.sgi.com>; Wed, 26 Nov 2008 00:54:52 -0800 (PST)
+	cuda.sgi.com with ESMTP id mQfUeC2KyptTIjED for
+	<xfs@oss.sgi.com>; Wed, 26 Nov 2008 00:56:59 -0800 (PST)
 Received: from shambala.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 838555ADF2
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 09:49:20 +0100 (CET)
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id 0E23B5AE36
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 09:51:59 +0100 (CET)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: truncated files
-Date: Wed, 26 Nov 2008 09:49:18 +0100
-References: <200811252244.14718.Martin@Lichtvoll.de>
-	<20081125222703.GE6291@disturbed>
-	(sfid-20081126_093721_225409_0DE433F6)
-In-Reply-To: <20081125222703.GE6291@disturbed>
+Subject: Re: Badness in key lookup (length)
+Date: Wed, 26 Nov 2008 09:51:58 +0100
+References: <200811252302.55944.Martin@Lichtvoll.de> <492C9D65.2080302@sgi.com>
+	(sfid-20081126_093700_023988_A1E7DD35)
+In-Reply-To: <492C9D65.2080302@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200811260949.19642.Martin@lichtvoll.de>
+Message-Id: <200811260951.58472.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,41 +34,59 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Am Dienstag 25 November 2008 schrieb Dave Chinner:
-> On Tue, Nov 25, 2008 at 10:44:14PM +0100, Martin Steigerwald wrote:
+Am Mittwoch 26 November 2008 schrieb Timothy Shimmin:
+> Martin Steigerwald wrote:
 > > Hi!
 > >
-> > Today on one try to hibernate via tuxonice it machine appeared dead.
-> > I am
+> > I also checked my / XFS filesystem after that failed attempt to
+> > hibernate via TuxOnIce (see my mail "truncated files"). Well BTW this
+> > happened on a ThinkPad T42.
+> >
+> > While /home was fine, / had some rather minor - it seems - issues.
+> > Whether they have been from today or from whenever - I do not know.
+> >
+> > xfs_check had stuff like
+> >
+> > agi unlinked bucket 0 is 8620800 in ag 0 (inode=8620800)
+> > agi unlinked bucket 1 is 1181377 in ag 0 (inode=1181377)
+> > agi unlinked bucket 2 is 8628866 in ag 0 (inode=8628866)
+> > agi unlinked bucket 3 is 8620611 in ag 0 (inode=8620611)
+> > agi unlinked bucket 4 is 1181380 in ag 0 (inode=1181380)
+> > agi unlinked bucket 5 is 7711173 in ag 0 (inode=7711173)
+> > agi unlinked bucket 6 is 7711174 in ag 0 (inode=7711174)
+> > [...]
+> > allocated inode 207025 has 0 link count
+> > allocated inode 207029 has 0 link count
+> > allocated inode 207118 has 0 link count
+> > allocated inode 7711173 has 0 link count
+> > allocated inode 7711174 has 0 link count
+> > allocated inode 7711197 has 0 link count
+> >
+> > Which are due to references to deleted files AFAIK.
 >
->                       ^^^^^^^^^
-> When (not if) suspend to disk/resume fails, you get to keep all the
-> broken pieces of your filesystem. It works most of the time, but it has
-> some fundamentally broken corner cases that you probably just
-> hit....
+> Yep, inodes which were unlinked but still had references to them
+> when the filesystem was taken down without cleanly unmounting.
+> There is a hash table of buckets which point to linked lists of
+> unlinked inodes. These are then supposed to be cleaned up during the
+> log-replay stage on mount.
+> I presume (sorry for asking but just checking :-) that you mounted the
+> filesystem first - you would have gotten an error message if there was
+> a dirty log anyway. And if you didn't mount first, did you get the
+> error message? Just curious.
 
-Well I use TuxOnIce for a reason! I had uptimes of up to 70 days with it 
-already. And they are usually only interrupted by kernel updates or 
-manual shutdowns. I was never convinced by in-kernel solutions for 
-hibernate.
+I did mount first ;-). I know its better to avoid xfs_repair -L ;-)
 
-> > Similar stuff happened on the encfs encrypted KDE user that I use for
-> > professional stuff - encfs is layered on top of XFS via FUSE:
->
-> IIRC, FUSE cannot be suspended safely at all, so expect corruption
-> of FUSE filesystems on a failed suspend.
+Indeed it was not unmounted cleanly:
 
-Ok, fair enough. My private data isn't on encfs tough.
+Nov 25 13:16:39 shambhala kernel: XFS mounting filesystem sda5
+Nov 25 13:16:39 shambhala kernel: Starting XFS recovery on filesystem: 
+sda5 (logdev: internal)
+Nov 25 13:16:39 shambhala kernel: Ending XFS recovery on filesystem: sda5 
+(logdev: internal)
 
-> I've never had a system that suspends reliably (let alone resumes
-> from the suspend) so it's no real surprise that I don't trust
-> suspend to disk....
+I wonder about those "Badness in key lookup (length)" messages of 
+xfs_repair 2.9.8 touch.
 
-Well I take it as bad luck then, especially since there are no hints that 
-XFS had a problem. I am not sure whether the machine really was dead, but 
-I can't reproduce what exactly happened. So thats it.
-
-Ciao,
 -- 
 Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
 GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
