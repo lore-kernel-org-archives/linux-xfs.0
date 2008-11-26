@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ3KUEE000814 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:20:30 -0600
+	mAQ3KThX000813 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:20:30 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4478F15FCD90
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:20:29 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ADEA415FCD6A
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:20:28 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id 4PbPP4pkFNm072wF for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2008 19:20:29 -0800 (PST)
-Message-Id: <20081126032028.382309095@sandeen.net>
+	with ESMTP id S3PFNJh4Rlkmgwrk for <xfs@oss.sgi.com>;
+	Tue, 25 Nov 2008 19:20:28 -0800 (PST)
+Message-Id: <20081126032027.741040886@sandeen.net>
 References: <20081126032005.639750968@sandeen.net>
-Date: Tue, 25 Nov 2008 21:20:11 -0600
+Date: Tue, 25 Nov 2008 21:20:09 -0600
 From: sandeen@sandeen.net
-Subject: [patch 06/12] Make the bulkstat_one compat ioctl handling more sane
-Content-Disposition: inline; filename=compat_ioctl_bulkstat_sanity
+Subject: [patch 04/12] Add compat handlers for swapext ioctl
+Content-Disposition: inline; filename=compat_swapext_v2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,165 +29,124 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently the compat formatter was handled by passing
-in "private_data" for the xfs_bulkstat_one formatter,
-which was really just another formatter... IMHO this
-got confusing.
-
-Instead, just make a new xfs_bulkstat_one_compat
-formatter for xfs_bulkstat, and call it via a wrapper.
-
-Also, don't translate the ioctl nrs into their native
-counterparts, that just clouds the issue; we're in a
-compat handler anyway, just switch on the 32-bit cmds.
+The big hitter here was the bstat field, which contains
+different sized time_t on 32 vs. 64 bit.  Add a copyin
+function to translate the 32-bit arg to 64-bit, and
+call the swapext ioctl helper.
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 --
 
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:00:29.615001209 -0600
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:09:27.779001802 -0600
-@@ -224,14 +224,30 @@ xfs_bulkstat_one_fmt_compat(
- 	return sizeof(*p32);
- }
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:00:13.028001846 -0600
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:09:28.789064125 -0600
+@@ -109,6 +109,50 @@ xfs_inumbers_fmt_compat(
+ #define xfs_inumbers_fmt_compat xfs_inumbers_fmt
+ #endif
  
 +STATIC int
-+xfs_bulkstat_one_compat(
-+	xfs_mount_t	*mp,		/* mount point for filesystem */
-+	xfs_ino_t	ino,		/* inode number to get data for */
-+	void		__user *buffer,	/* buffer to place output in */
-+	int		ubsize,		/* size of buffer */
-+	void		*private_data,	/* my private data */
-+	xfs_daddr_t	bno,		/* starting bno of inode cluster */
-+	int		*ubused,	/* bytes used by me */
-+	void		*dibuff,	/* on-disk inode buffer */
-+	int		*stat)		/* BULKSTAT_RV_... */
++xfs_ioctl32_bstime_copyin(
++	xfs_bstime_t		*bstime,
++	compat_xfs_bstime_t	__user *bstime32)
 +{
-+	return xfs_bulkstat_one_int(mp, ino, buffer, ubsize,
-+				    xfs_bulkstat_one_fmt_compat, bno,
-+				    ubused, dibuff, stat);
++	compat_time_t		sec32;	/* tv_sec differs on 64 vs. 32 */
++
++	if (get_user(sec32,		&bstime32->tv_sec)	||
++	    get_user(bstime->tv_nsec,	&bstime32->tv_nsec))
++		return -XFS_ERROR(EFAULT);
++	bstime->tv_sec = sec32;
++	return 0;
 +}
 +
- /* copied from xfs_ioctl.c */
- STATIC int
--xfs_ioc_bulkstat_compat(
--	xfs_mount_t		*mp,
--	unsigned int		cmd,
--	void			__user *arg)
-+xfs_compat_ioc_bulkstat(
-+	xfs_mount_t		  *mp,
-+	unsigned int		  cmd,
-+	compat_xfs_fsop_bulkreq_t __user *p32)
- {
--	compat_xfs_fsop_bulkreq_t __user *p32 = (void __user *)arg;
- 	u32			addr;
- 	xfs_fsop_bulkreq_t	bulkreq;
- 	int			count;	/* # of records returned */
-@@ -268,14 +284,12 @@ xfs_ioc_bulkstat_compat(
- 	if (bulkreq.ubuffer == NULL)
- 		return -XFS_ERROR(EINVAL);
++/* xfs_bstat_t has differing alignment on intel, & bstime_t sizes everywhere */
++STATIC int
++xfs_ioctl32_bstat_copyin(
++	xfs_bstat_t		*bstat,
++	compat_xfs_bstat_t	__user *bstat32)
++{
++	if (get_user(bstat->bs_ino,	&bstat32->bs_ino)	||
++	    get_user(bstat->bs_mode,	&bstat32->bs_mode)	||
++	    get_user(bstat->bs_nlink,	&bstat32->bs_nlink)	||
++	    get_user(bstat->bs_uid,	&bstat32->bs_uid)	||
++	    get_user(bstat->bs_gid,	&bstat32->bs_gid)	||
++	    get_user(bstat->bs_rdev,	&bstat32->bs_rdev)	||
++	    get_user(bstat->bs_blksize,	&bstat32->bs_blksize)	||
++	    get_user(bstat->bs_size,	&bstat32->bs_size)	||
++	    xfs_ioctl32_bstime_copyin(&bstat->bs_atime, &bstat32->bs_atime) ||
++	    xfs_ioctl32_bstime_copyin(&bstat->bs_mtime, &bstat32->bs_mtime) ||
++	    xfs_ioctl32_bstime_copyin(&bstat->bs_ctime, &bstat32->bs_ctime) ||
++	    get_user(bstat->bs_blocks,	&bstat32->bs_size)	||
++	    get_user(bstat->bs_xflags,	&bstat32->bs_size)	||
++	    get_user(bstat->bs_extsize,	&bstat32->bs_extsize)	||
++	    get_user(bstat->bs_extents,	&bstat32->bs_extents)	||
++	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
++	    get_user(bstat->bs_projid,	&bstat32->bs_projid)	||
++	    get_user(bstat->bs_dmevmask, &bstat32->bs_dmevmask)	||
++	    get_user(bstat->bs_dmstate,	&bstat32->bs_dmstate)	||
++	    get_user(bstat->bs_aextents, &bstat32->bs_aextents))
++		return -XFS_ERROR(EFAULT);
++	return 0;
++}
++
+ /* XFS_IOC_FSBULKSTAT and friends */
  
--	if (cmd == XFS_IOC_FSINUMBERS)
-+	if (cmd == XFS_IOC_FSINUMBERS_32)
- 		error = xfs_inumbers(mp, &inlast, &count,
- 				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
- 	else {
--		/* declare a var to get a warning in case the type changes */
--		bulkstat_one_fmt_pf formatter = xfs_bulkstat_one_fmt_compat;
- 		error = xfs_bulkstat(mp, &inlast, &count,
--			xfs_bulkstat_one, formatter,
-+			xfs_bulkstat_one_compat, NULL,
- 			sizeof(compat_xfs_bstat_t), bulkreq.ubuffer,
- 			BULKSTAT_FG_QUICK, &done);
- 	}
-@@ -423,9 +437,7 @@ xfs_compat_ioctl(
+ STATIC int
+@@ -293,6 +337,18 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_GETVERSION_32:
+ 		cmd = _NATIVE_IOC(cmd, long);
+ 		break;
++	case XFS_IOC_SWAPEXT: {
++		struct xfs_swapext	  sxp;
++		struct compat_xfs_swapext __user *sxu = arg;
++
++		/* Bulk copy in up to the sx_stat field, then grab bstat */
++		if (copy_from_user(&sxp, sxu,
++				   offsetof(xfs_swapext_t, sx_stat)) ||
++		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
++			return -XFS_ERROR(EFAULT);
++		error = xfs_swapext(&sxp);
++		return -error;
++	}
+ #ifdef BROKEN_X86_ALIGNMENT
+ 	/* xfs_flock_t has wrong u32 vs u64 alignment */
+ 	case XFS_IOC_ALLOCSP_32:
+@@ -323,11 +379,6 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_UNRESVSP64:
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 		break;
+-
+-	/* xfs_bstat_t still has wrong u32 vs u64 alignment */
+-	case XFS_IOC_SWAPEXT:
+-		break;
+-
+ #endif
  	case XFS_IOC_FSBULKSTAT_32:
  	case XFS_IOC_FSBULKSTAT_SINGLE_32:
- 	case XFS_IOC_FSINUMBERS_32:
--		cmd = _NATIVE_IOC(cmd, struct xfs_fsop_bulkreq);
--		return xfs_ioc_bulkstat_compat(XFS_I(inode)->i_mount,
--				cmd, (void __user*)arg);
-+		return xfs_compat_ioc_bulkstat(mp, cmd, arg);
- 	case XFS_IOC_FD_TO_HANDLE_32:
- 	case XFS_IOC_PATH_TO_HANDLE_32:
- 	case XFS_IOC_PATH_TO_FSHANDLE_32: {
-Index: linux-2.6-xfs/fs/xfs/xfs_itable.c
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_itable.c	2008-11-24 16:59:25.772001741 -0600
-+++ linux-2.6-xfs/fs/xfs/xfs_itable.c	2008-11-24 17:09:27.779001802 -0600
-@@ -206,13 +206,13 @@ xfs_bulkstat_one_fmt(
-  * Return stat information for one inode.
-  * Return 0 if ok, else errno.
-  */
--int		       		/* error status */
--xfs_bulkstat_one(
-+int		   	    		/* error status */
-+xfs_bulkstat_one_int(
- 	xfs_mount_t	*mp,		/* mount point for filesystem */
- 	xfs_ino_t	ino,		/* inode number to get data for */
- 	void		__user *buffer,	/* buffer to place output in */
- 	int		ubsize,		/* size of buffer */
--	void		*private_data,	/* my private data */
-+	bulkstat_one_fmt_pf formatter,	/* formatter, copy to user */
- 	xfs_daddr_t	bno,		/* starting bno of inode cluster */
- 	int		*ubused,	/* bytes used by me */
- 	void		*dibuff,	/* on-disk inode buffer */
-@@ -221,7 +221,6 @@ xfs_bulkstat_one(
- 	xfs_bstat_t	*buf;		/* return buffer */
- 	int		error = 0;	/* error value */
- 	xfs_dinode_t	*dip;		/* dinode inode pointer */
--	bulkstat_one_fmt_pf formatter = private_data ? : xfs_bulkstat_one_fmt;
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-11-24 16:59:35.191002158 -0600
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-11-24 17:09:28.789064125 -0600
+@@ -110,6 +110,19 @@ typedef struct compat_xfs_fsop_handlereq
+ #define XFS_IOC_READLINK_BY_HANDLE_32 \
+ 	_IOWR('X', 108, struct compat_xfs_fsop_handlereq)
  
- 	dip = (xfs_dinode_t *)dibuff;
- 	*stat = BULKSTAT_RV_NOTHING;
-@@ -259,6 +258,23 @@ xfs_bulkstat_one(
- 	return error;
- }
- 
-+int
-+xfs_bulkstat_one(
-+	xfs_mount_t	*mp,		/* mount point for filesystem */
-+	xfs_ino_t	ino,		/* inode number to get data for */
-+	void		__user *buffer,	/* buffer to place output in */
-+	int		ubsize,		/* size of buffer */
-+	void		*private_data,	/* my private data */
-+	xfs_daddr_t	bno,		/* starting bno of inode cluster */
-+	int		*ubused,	/* bytes used by me */
-+	void		*dibuff,	/* on-disk inode buffer */
-+	int		*stat)		/* BULKSTAT_RV_... */
-+{
-+	return xfs_bulkstat_one_int(mp, ino, buffer, ubsize,
-+				    xfs_bulkstat_one_fmt, bno,
-+				    ubused, dibuff, stat);
-+}
++/* The bstat field in the swapext struct needs translation */
++typedef struct compat_xfs_swapext {
++	__int64_t		sx_version;	/* version */
++	__int64_t		sx_fdtarget;	/* fd of target file */
++	__int64_t		sx_fdtmp;	/* fd of tmp file */
++	xfs_off_t		sx_offset;	/* offset into file */
++	xfs_off_t		sx_length;	/* leng from offset */
++	char			sx_pad[16];	/* pad space, unused */
++	compat_xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
++} __compat_packed compat_xfs_swapext_t;
 +
- /*
-  * Test to see whether we can use the ondisk inode directly, based
-  * on the given bulkstat flags, filling in dipp accordingly.
-Index: linux-2.6-xfs/fs/xfs/xfs_itable.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_itable.h	2008-11-24 16:59:25.773001344 -0600
-+++ linux-2.6-xfs/fs/xfs/xfs_itable.h	2008-11-24 17:09:27.780001260 -0600
-@@ -74,6 +74,18 @@ typedef int (*bulkstat_one_fmt_pf)(  /* 
- 	const xfs_bstat_t	*buffer);        /* buffer to read from */
- 
- int
-+xfs_bulkstat_one_int(
-+	xfs_mount_t		*mp,
-+	xfs_ino_t		ino,
-+	void			__user *buffer,
-+	int			ubsize,
-+	bulkstat_one_fmt_pf	formatter,
-+	xfs_daddr_t		bno,
-+	int			*ubused,
-+	void			*dibuff,
-+	int			*stat);
++#define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
 +
-+int
- xfs_bulkstat_one(
- 	xfs_mount_t		*mp,
- 	xfs_ino_t		ino,
+ #ifdef BROKEN_X86_ALIGNMENT
+ /* on ia32 l_start is on a 32-bit boundary */
+ typedef struct compat_xfs_flock64 {
 
 -- 
 
