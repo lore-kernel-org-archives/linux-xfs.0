@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ1HRwt024902 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:17:27 -0600
-Message-ID: <492CA3A4.6040203@sgi.com>
-Date: Wed, 26 Nov 2008 12:17:24 +1100
-From: Timothy Shimmin <tes@sgi.com>
+	mAQ1XlZE026308
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:33:48 -0600
+Received: from slurp.thebarn.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 52F5115F8D49
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 17:33:44 -0800 (PST)
+Received: from slurp.thebarn.com (cattelan-host202.dsl.visi.com
+	[208.42.117.202]) by cuda.sgi.com with ESMTP id
+	lGCupzVQXJ5dvB8Y for <linux-xfs@oss.sgi.com>;
+	Tue, 25 Nov 2008 17:33:44 -0800 (PST)
+Received: from Russell-Cattelans-MacBook.local (slurp.thebarn.com
+	[208.42.117.201]) (authenticated bits=0)
+	by slurp.thebarn.com (8.14.0/8.14.0) with ESMTP id mAQ0Ms5a001979
+	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 18:22:55 -0600 (CST)
+	(envelope-from cattelan@thebarn.com)
+Message-ID: <492C96DE.9080102@thebarn.com>
+Date: Tue, 25 Nov 2008 18:22:54 -0600
+From: Russell Cattelan <cattelan@thebarn.com>
 MIME-Version: 1.0
-Subject: Re: New XFS git tree on oss.sgi.com
-References: <492BA7AD.5080007@sgi.com>
-	<20081125081644.GA20644@infradead.org>	<492C0B3D.3040002@thebarn.com>
-	<492CA07F.1030803@sgi.com>
-In-Reply-To: <492CA07F.1030803@sgi.com>
+Subject: Testing old list alias of linux-xfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +32,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lachlan@sgi.com
-Cc: Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
-> 
->> Also can we have something other than "unnamed repository" in the 
->> description file?
-> Okay, how do we change that?
-I've changed it.
-description file at top of bare repository used by gitweb.
+Lets see if mailman now handles email to the very OLD list address:
+linux-xfs@oss.sgi.com.
 
---Tim
+-Russell
+
 
 _______________________________________________
 xfs mailing list
