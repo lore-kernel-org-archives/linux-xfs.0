@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ3KVfl000849 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:20:31 -0600
+	mAQ3KUs9000828 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:20:31 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7B0C15FCD9E
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:20:30 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BDEB15FCD94
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:20:29 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id R2wOCVL0s6MVHgJP for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2008 19:20:30 -0800 (PST)
-Message-Id: <20081126032029.414794702@sandeen.net>
+	with ESMTP id 59Dc1A02LApBrTJq for <xfs@oss.sgi.com>;
+	Tue, 25 Nov 2008 19:20:29 -0800 (PST)
+Message-Id: <20081126032028.923383101@sandeen.net>
 References: <20081126032005.639750968@sandeen.net>
-Date: Tue, 25 Nov 2008 21:20:17 -0600
+Date: Tue, 25 Nov 2008 21:20:14 -0600
 From: sandeen@sandeen.net
-Subject: [patch 12/12] Reorder xfs_ioctl32.c for some tidiness
-Content-Disposition: inline; filename=compat_ioctl_tidy2
+Subject: [patch 09/12] Hook up compat XFS_IOC_ATTRLIST_BY_HANDLE ioctl handler
+Content-Disposition: inline; filename=compat_ioctl_attrlist
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,144 +29,202 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Put things in IMHO a more readable order, now
-that it's all done; add some comments.
+Add a compat handler for XFS_IOC_ATTRLIST_BY_HANDLE
 
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 --
 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-11-24 17:00:29.616000880 -0600
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-11-24 17:09:26.128001872 -0600
+@@ -123,6 +123,18 @@ typedef struct compat_xfs_swapext {
+ 
+ #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
+ 
++typedef struct compat_xfs_fsop_attrlist_handlereq {
++	struct compat_xfs_fsop_handlereq hreq; /* handle interface structure */
++	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
++	__u32				flags;	/* which namespace to use */
++	__u32				buflen;	/* length of buffer supplied */
++	compat_uptr_t			buffer;	/* returned names */
++} __compat_packed compat_xfs_fsop_attrlist_handlereq_t;
++
++/* Note: actually this is read/write */
++#define XFS_IOC_ATTRLIST_BY_HANDLE_32 \
++	_IOW('X', 122, struct compat_xfs_fsop_attrlist_handlereq)
++
+ #ifdef BROKEN_X86_ALIGNMENT
+ /* on ia32 l_start is on a 32-bit boundary */
+ typedef struct compat_xfs_flock64 {
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:00:32.471064582 -0600
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:00:33.095064454 -0600
-@@ -16,11 +16,7 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- #include <linux/compat.h>
--#include <linux/init.h>
- #include <linux/ioctl.h>
--#include <linux/syscalls.h>
--#include <linux/types.h>
--#include <linux/fs.h>
- #include <asm/uaccess.h>
- #include "xfs.h"
- #include "xfs_fs.h"
-@@ -132,7 +128,7 @@ xfs_inumbers_fmt_compat(
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:00:30.969063389 -0600
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_ioctl32.c	2008-11-24 17:09:26.127001434 -0600
+@@ -47,6 +47,7 @@
+ #include "xfs_fsops.h"
+ #include "xfs_alloc.h"
+ #include "xfs_rtalloc.h"
++#include "xfs_attr.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_ioctl32.h"
  
- #else
- #define xfs_inumbers_fmt_compat xfs_inumbers_fmt
--#endif
-+#endif	/* BROKEN_X86_ALIGNMENT */
+@@ -344,6 +345,138 @@ xfs_compat_handlereq_copyin(
+ 	return 0;
+ }
  
- STATIC int
- xfs_ioctl32_bstime_copyin(
-@@ -618,6 +614,7 @@ xfs_compat_ioctl(
- 
- 	xfs_itrace_entry(XFS_I(inode));
- 	switch (cmd) {
-+	/* No size or alignment issues on any arch */
- 	case XFS_IOC_DIOINFO:
- 	case XFS_IOC_FSGEOMETRY:
- 	case XFS_IOC_FSGETXATTR:
-@@ -630,35 +627,28 @@ xfs_compat_ioctl(
- 	case XFS_IOC_FSCOUNTS:
- 	case XFS_IOC_SET_RESBLKS:
- 	case XFS_IOC_GET_RESBLKS:
--	case XFS_IOC_FSGROWFSDATA:
- 	case XFS_IOC_FSGROWFSLOG:
--	case XFS_IOC_FSGROWFSRT:
- 	case XFS_IOC_FREEZE:
- 	case XFS_IOC_THAW:
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
--		break;
--
--	case XFS_IOC_GETXFLAGS_32:
--	case XFS_IOC_SETXFLAGS_32:
--	case XFS_IOC_GETVERSION_32:
--		cmd = _NATIVE_IOC(cmd, long);
--		break;
--	case XFS_IOC_SWAPEXT: {
--		struct xfs_swapext	  sxp;
--		struct compat_xfs_swapext __user *sxu = arg;
--
--		/* Bulk copy in up to the sx_stat field, then grab bstat */
--		if (copy_from_user(&sxp, sxu,
--				   offsetof(xfs_swapext_t, sx_stat)) ||
--		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
--			return -XFS_ERROR(EFAULT);
--		error = xfs_swapext(&sxp);
--		return -error;
--	}
--#ifdef BROKEN_X86_ALIGNMENT
--	/* xfs_flock_t has wrong u32 vs u64 alignment */
-+		return xfs_ioctl(ip, filp, ioflags, cmd, arg);
-+#ifndef BROKEN_X86_ALIGNMENT
-+	/* These are handled fine if no alignment issues */
-+	case XFS_IOC_ALLOCSP:
-+	case XFS_IOC_FREESP:
-+	case XFS_IOC_RESVSP:
-+	case XFS_IOC_UNRESVSP:
-+	case XFS_IOC_ALLOCSP64:
-+	case XFS_IOC_FREESP64:
-+	case XFS_IOC_RESVSP64:
-+	case XFS_IOC_UNRESVSP64:
-+	case XFS_IOC_FSGEOMETRY_V1:
-+	case XFS_IOC_FSGROWFSDATA:
-+	case XFS_IOC_FSGROWFSRT:
-+		return xfs_ioctl(ip, filp, ioflags, cmd, arg);
-+#else
- 	case XFS_IOC_ALLOCSP_32:
- 	case XFS_IOC_FREESP_32:
- 	case XFS_IOC_ALLOCSP64_32:
-@@ -692,18 +682,25 @@ xfs_compat_ioctl(
- 		error = xfs_growfs_rt(mp, &in);
- 		return -error;
- 	}
--#else /* These are handled fine if no alignment issues */
--	case XFS_IOC_ALLOCSP:
--	case XFS_IOC_FREESP:
--	case XFS_IOC_RESVSP:
--	case XFS_IOC_UNRESVSP:
--	case XFS_IOC_ALLOCSP64:
--	case XFS_IOC_FREESP64:
--	case XFS_IOC_RESVSP64:
--	case XFS_IOC_UNRESVSP64:
--	case XFS_IOC_FSGEOMETRY_V1:
--		break;
- #endif
-+	/* long changes size, but xfs only copiese out 32 bits */
-+	case XFS_IOC_GETXFLAGS_32:
-+	case XFS_IOC_SETXFLAGS_32:
-+	case XFS_IOC_GETVERSION_32:
-+		cmd = _NATIVE_IOC(cmd, long);
-+		return xfs_ioctl(ip, filp, ioflags, cmd, arg);
-+	case XFS_IOC_SWAPEXT: {
-+		struct xfs_swapext	  sxp;
-+		struct compat_xfs_swapext __user *sxu = arg;
++/*
++ * Convert userspace handle data into inode.
++ *
++ * We use the fact that all the fsop_handlereq ioctl calls have a data
++ * structure argument whose first component is always a xfs_fsop_handlereq_t,
++ * so we can pass that sub structure into this handy, shared routine.
++ *
++ * If no error, caller must always iput the returned inode.
++ */
++STATIC int
++xfs_vget_fsop_handlereq_compat(
++	xfs_mount_t		*mp,
++	struct inode		*parinode,	/* parent inode pointer    */
++	compat_xfs_fsop_handlereq_t	*hreq,
++	struct inode		**inode)
++{
++	void			__user *hanp;
++	size_t			hlen;
++	xfs_fid_t		*xfid;
++	xfs_handle_t		*handlep;
++	xfs_handle_t		handle;
++	xfs_inode_t		*ip;
++	xfs_ino_t		ino;
++	__u32			igen;
++	int			error;
 +
-+		/* Bulk copy in up to the sx_stat field, then copy bstat */
-+		if (copy_from_user(&sxp, sxu,
-+				   offsetof(struct xfs_swapext, sx_stat)) ||
-+		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
-+			return -XFS_ERROR(EFAULT);
-+		error = xfs_swapext(&sxp);
-+		return -error;
++	/*
++	 * Only allow handle opens under a directory.
++	 */
++	if (!S_ISDIR(parinode->i_mode))
++		return XFS_ERROR(ENOTDIR);
++
++	hanp = compat_ptr(hreq->ihandle);
++	hlen = hreq->ihandlen;
++	handlep = &handle;
++
++	if (hlen < sizeof(handlep->ha_fsid) || hlen > sizeof(*handlep))
++		return XFS_ERROR(EINVAL);
++	if (copy_from_user(handlep, hanp, hlen))
++		return XFS_ERROR(EFAULT);
++	if (hlen < sizeof(*handlep))
++		memset(((char *)handlep) + hlen, 0, sizeof(*handlep) - hlen);
++	if (hlen > sizeof(handlep->ha_fsid)) {
++		if (handlep->ha_fid.fid_len !=
++		    (hlen - sizeof(handlep->ha_fsid) -
++			    sizeof(handlep->ha_fid.fid_len)) ||
++		    handlep->ha_fid.fid_pad)
++			return XFS_ERROR(EINVAL);
 +	}
- 	case XFS_IOC_FSBULKSTAT_32:
- 	case XFS_IOC_FSBULKSTAT_SINGLE_32:
- 	case XFS_IOC_FSINUMBERS_32:
-@@ -741,9 +738,6 @@ xfs_compat_ioctl(
++
++	/*
++	 * Crack the handle, obtain the inode # & generation #
++	 */
++	xfid = (struct xfs_fid *)&handlep->ha_fid;
++	if (xfid->fid_len == sizeof(*xfid) - sizeof(xfid->fid_len)) {
++		ino  = xfid->fid_ino;
++		igen = xfid->fid_gen;
++	} else {
++		return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * Get the XFS inode, building a Linux inode to go with it.
++	 */
++	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_SHARED, &ip, 0);
++	if (error)
++		return error;
++	if (ip == NULL)
++		return XFS_ERROR(EIO);
++	if (ip->i_d.di_gen != igen) {
++		xfs_iput_new(ip, XFS_ILOCK_SHARED);
++		return XFS_ERROR(ENOENT);
++	}
++
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	*inode = VFS_I(ip);
++	return 0;
++}
++
++STATIC int
++xfs_compat_attrlist_by_handle(
++	xfs_mount_t		*mp,
++	void			__user *arg,
++	struct inode		*parinode)
++{
++	int			error;
++	attrlist_cursor_kern_t	*cursor;
++	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
++	struct inode		*inode;
++	char			*kbuf;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -XFS_ERROR(EPERM);
++	if (copy_from_user(&al_hreq, arg,
++			   sizeof(compat_xfs_fsop_attrlist_handlereq_t)))
++		return -XFS_ERROR(EFAULT);
++	if (al_hreq.buflen > XATTR_LIST_MAX)
++		return -XFS_ERROR(EINVAL);
++
++	/*
++	 * Reject flags, only allow namespaces.
++	 */
++	if (al_hreq.flags & ~(ATTR_ROOT | ATTR_SECURE))
++		return -XFS_ERROR(EINVAL);
++
++	error = xfs_vget_fsop_handlereq_compat(mp, parinode, &al_hreq.hreq,
++					       &inode);
++	if (error)
++		goto out;
++
++	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
++	if (!kbuf)
++		goto out_vn_rele;
++
++	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
++	error = xfs_attr_list(XFS_I(inode), kbuf, al_hreq.buflen,
++					al_hreq.flags, cursor);
++	if (error)
++		goto out_kfree;
++
++	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
++		error = -EFAULT;
++
++ out_kfree:
++	kfree(kbuf);
++ out_vn_rele:
++	iput(inode);
++ out:
++	return -error;
++}
++
+ STATIC long
+ xfs_compat_ioctl(
+ 	xfs_inode_t	*ip,
+@@ -369,7 +502,6 @@ xfs_compat_ioctl(
+ 	case XFS_IOC_GETBMAPX:
+ /* not handled
+ 	case XFS_IOC_FSSETDM_BY_HANDLE:
+-	case XFS_IOC_ATTRLIST_BY_HANDLE:
+ 	case XFS_IOC_ATTRMULTI_BY_HANDLE:
+ */
+ 	case XFS_IOC_FSCOUNTS:
+@@ -477,6 +609,8 @@ xfs_compat_ioctl(
+ 			return -XFS_ERROR(EFAULT);
+ 		return xfs_readlink_by_handle(mp, &hreq, inode);
+ 	}
++	case XFS_IOC_ATTRLIST_BY_HANDLE_32:
++		return xfs_compat_attrlist_by_handle(mp, arg, inode);
  	default:
  		return -XFS_ERROR(ENOIOCTLCMD);
  	}
--
--	error = xfs_ioctl(ip, filp, ioflags, cmd, arg);
--	return error;
- }
- 
- long
 
 -- 
 
