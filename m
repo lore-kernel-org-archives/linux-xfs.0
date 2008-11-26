@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ0ophp022766
-	for <linux-xfs@oss.sgi.com>; Tue, 25 Nov 2008 18:50:51 -0600
-Message-ID: <492C9D65.2080302@sgi.com>
-Date: Wed, 26 Nov 2008 11:50:45 +1100
-From: Timothy Shimmin <tes@sgi.com>
+	mAQ10m5a023348 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:00:49 -0600
+Message-ID: <492C9FB9.3090204@sgi.com>
+Date: Wed, 26 Nov 2008 12:00:41 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Badness in key lookup (length)
-References: <200811252302.55944.Martin@Lichtvoll.de>
-In-Reply-To: <200811252302.55944.Martin@Lichtvoll.de>
+Subject: Re: New XFS git tree on oss.sgi.com
+References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
+In-Reply-To: <20081125081644.GA20644@infradead.org>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,48 +22,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@Lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Martin Steigerwald wrote:
-> Hi!
+Christoph Hellwig wrote:
+> On Tue, Nov 25, 2008 at 06:22:21PM +1100, Lachlan McIlroy wrote:
+>> There's a few branches there already:
+>>
+>> 'master'      This will contain all the latest xfs changes not yet pushed
+>>                to mainline.
+>> 'mainline'    This is vanilla mainline and will updated regularly.
+>> 'for-linus'   Our staging branch for pull requests
+>> 'xfs-dev'     This branch will contain KDB and other supporting code for
+>>                development and should be identical to the old CVS tree.
+>>
+>> Feel free to start using it and let us know if you have any issues.
 > 
-> I also checked my / XFS filesystem after that failed attempt to hibernate 
-> via TuxOnIce (see my mail "truncated files"). Well BTW this happened on a 
-> ThinkPad T42.
-> 
-> While /home was fine, / had some rather minor - it seems - issues. Whether 
-> they have been from today or from whenever - I do not know.
-> 
-> xfs_check had stuff like
-> 
-> agi unlinked bucket 0 is 8620800 in ag 0 (inode=8620800)
-> agi unlinked bucket 1 is 1181377 in ag 0 (inode=1181377)
-> agi unlinked bucket 2 is 8628866 in ag 0 (inode=8628866)
-> agi unlinked bucket 3 is 8620611 in ag 0 (inode=8620611)
-> agi unlinked bucket 4 is 1181380 in ag 0 (inode=1181380)
-> agi unlinked bucket 5 is 7711173 in ag 0 (inode=7711173)
-> agi unlinked bucket 6 is 7711174 in ag 0 (inode=7711174)
-> [...]
-> allocated inode 207025 has 0 link count
-> allocated inode 207029 has 0 link count
-> allocated inode 207118 has 0 link count
-> allocated inode 7711173 has 0 link count
-> allocated inode 7711174 has 0 link count
-> allocated inode 7711197 has 0 link count
-> 
-> Which are due to references to deleted files AFAIK.
-> 
-Yep, inodes which were unlinked but still had references to them
-when the filesystem was taken down without cleanly unmounting.
-There is a hash table of buckets which point to linked lists of unlinked inodes.
-These are then supposed to be cleaned up during the log-replay stage
-on mount.
-I presume (sorry for asking but just checking :-) that you mounted the filesystem
-first - you would have gotten an error message if there was a dirty log anyway.
-And if you didn't mount first, did you get the error message? Just curious.
+> Any chance to have these as separate git trees instead of branches?
+That was the original plan.  Not sure why that got changed.  If there is
+good reason for it we can change it.
 
---Tim
+> 
+> In either case, do you expect patches against the xfs-dev or the master
+> tree?  It would also be useful if the trees and which one to be used
+> could be documented on oss.sgi.com/projects/xfs or xfs.org.
+We would prefer patches based on the master branch but patches can be
+against the mainline, master or xfs-dev branches.  If a patch against
+mainline or xfs-dev doesn't apply cleanly to the master branch we may
+ask the author to rebase that patch against the master branch.  If a
+patch to the master branch needs auxillary changes to files that only
+exist in the xfs-dev branch (ie xfsidbg stuff) we may ask for an
+additional patch from the author.
+
+We'll update the docs, thanks for that.
 
 _______________________________________________
 xfs mailing list
