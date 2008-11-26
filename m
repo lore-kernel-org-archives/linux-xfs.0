@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ0ajRB021867 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 18:36:45 -0600
+	mAQ0ccZK022022 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 18:38:39 -0600
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
 	[134.14.52.130])
-	by relay2.corp.sgi.com (Postfix) with SMTP id 448D130405F
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:36:41 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with SMTP id 1BB6D30405F
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 16:38:37 -0800 (PST)
 Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com
 	[134.14.54.237]) by larry.melbourne.sgi.com
-	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA07044 for
-	<xfs@oss.sgi.com>; Wed, 26 Nov 2008 11:36:39 +1100
-Subject: TAKE - xfsdump: don't redeclare offsetoff
-Message-Id: <20081126003639.9C3B959391F9@chook.melbourne.sgi.com>
-Date: Wed, 26 Nov 2008 11:36:39 +1100 (EST)
+	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id LAA07085 for
+	<xfs@oss.sgi.com>; Wed, 26 Nov 2008 11:38:36 +1100
+Subject: TAKE - xfsdump: make help printing a little smarter
+Message-Id: <20081126003836.7A87759391F9@chook.melbourne.sgi.com>
+Date: Wed, 26 Nov 2008 11:38:36 +1100 (EST)
 From: bnaujok@sgi.com (Barry Naujok)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -29,14 +29,14 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Don't redeclare offsetof, we already include <stddef.h> to get it and
-modern gcc will complain about the redeclaration.
+fprintf returns the number of characters printed, we can use this
+for the offsetted lines.
  
  
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 
-Date:  Wed Nov 26 11:35:28 EST 2008
+Date:  Wed Nov 26 11:38:05 EST 2008
 Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xcmds-clean
 Inspected by:  Christoph Hellwig <hch@lst.de>
 
@@ -44,10 +44,12 @@ The following file(s) were checked into:
   longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-Modid:  master-melb:xfs-cmds:32547a
-xfsdump/common/getdents.c - 1.11 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/common/getdents.c.diff?r1=text&tr1=1.11&r2=text&tr2=1.10&f=h
-	- don't redeclare offsetoff
+Modid:  master-melb:xfs-cmds:32548a
+xfsdump/invutil/invutil.c - 1.19 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/invutil/invutil.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
+xfsdump/common/main.c - 1.34 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsdump/common/main.c.diff?r1=text&tr1=1.34&r2=text&tr2=1.33&f=h
+	- make help printing a little smarter
 
 
 _______________________________________________
