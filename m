@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ3RBmb002345 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:27:11 -0600
-Date: Tue, 25 Nov 2008 22:27:10 -0500
+	mAQ3TGX2002670 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 21:29:16 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E50915FEF12
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:29:16 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id UoXTxQHbEk7ZakR3 for
+	<xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:29:16 -0800 (PST)
+Date: Tue, 25 Nov 2008 22:28:44 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: New XFS git tree on oss.sgi.com
-Message-ID: <20081126032710.GA19523@infradead.org>
-References: <492BA7AD.5080007@sgi.com> <20081125140553.GA16553@infradead.org>
-	<492CA245.3000709@sgi.com>
+Message-ID: <20081126032844.GB19523@infradead.org>
+References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
+	<492C9FB9.3090204@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <492CA245.3000709@sgi.com>
+In-Reply-To: <492C9FB9.3090204@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,35 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Lachlan McIlroy <lachlan@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Nov 26, 2008 at 12:11:33PM +1100, Lachlan McIlroy wrote:
-> Christoph Hellwig wrote:
-> > Looking over the -dev tree, can you please revert
-> > 
-> > 	http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=c79ae33eebac1c15aa435fb77362fdc5eff2be4d
-> > 
-> > All this wasn't needed in the old ptrace tree either, no need to carry it forward.
-> 
-> Is this code needed for the BSD port?
+On Wed, Nov 26, 2008 at 12:00:41PM +1100, Lachlan McIlroy wrote:
+> We would prefer patches based on the master branch but patches can be
+> against the mainline, master or xfs-dev branches.  If a patch against
+> mainline or xfs-dev doesn't apply cleanly to the master branch we may
+> ask the author to rebase that patch against the master branch.  If a
+> patch to the master branch needs auxillary changes to files that only
+> exist in the xfs-dev branch (ie xfsidbg stuff) we may ask for an
+> additional patch from the author.
 
-According to Russell it may be need, but he'll probably need a newer
-version than the one check-ed in once he resyncs.  And he'll have his
-own support dir with the rest of the BSD code.
-
-> There may be other code that can be removed too.  We moved a lot of the code
-> that existed only in ptools into the xfs-dev branch so that branch and ptools
-> are in sync.  This allows us to automatically merge changes back to the old
-> ptools tree (yes it still lives).  Any merge failures will now be handled
-> between git branches and not between different scms.
-
-The xfs-dev also fortunately doesn't have the modular quota code.  So
-for both these I'd suggest removing them from the ptools tree, too.
-
-
-Also
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=ca830fdf6231d0683f4ea4e9223e234c3a509063
-doesn't seem to be needed.  None of those symbols seems to be used by
-either dmapi or xfsidbg, the only two modules using xfs symbols in the
-tree.
+Seems like a complicated setup, and not very friendly to patch
+submitters.  Why acn't we just submit all patches against the -dev
+branch?  Especially for dmapi-related patches everything else will
+be a real pain.
 
 _______________________________________________
 xfs mailing list
