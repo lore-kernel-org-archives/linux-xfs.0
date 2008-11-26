@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQMnrQB017274 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 16:49:53 -0600
+	mAQN5ARs018939 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 17:05:11 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A4CA160748C
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 14:49:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A13A61609241
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 15:05:08 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	mAIArUAoW5ooU9lH for <xfs@oss.sgi.com>;
-	Wed, 26 Nov 2008 14:49:51 -0800 (PST)
-Date: Thu, 27 Nov 2008 08:43:08 +1100
+	8LPFSV41dEPUcwBE for <xfs@oss.sgi.com>;
+	Wed, 26 Nov 2008 15:05:08 -0800 (PST)
+Date: Thu, 27 Nov 2008 09:59:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Extreme slowness with xfs [WAS: Re: Slowness with new pc]
-Message-ID: <20081126214308.GJ6291@disturbed>
-References: <1226760254.5089.11.camel@chevrolet> <492B5684.2080107@sandeen.net>
-	<1227647010.7992.34.camel@chevrolet>
-	<200811261330.27328.Martin@lichtvoll.de>
+Subject: Re: truncated files
+Message-ID: <20081126225931.GK6291@disturbed>
+References: <200811252244.14718.Martin@Lichtvoll.de>
+	<20081125222703.GE6291@disturbed>
+	<200811260949.19642.Martin@lichtvoll.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200811261330.27328.Martin@lichtvoll.de>
+In-Reply-To: <200811260949.19642.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,21 +34,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Martin Steigerwald <Martin@lichtvoll.de>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 26, 2008 at 01:30:26PM +0100, Martin Steigerwald wrote:
-> I wonder whether XFS performance with barriers enabled can be improved? 
+On Wed, Nov 26, 2008 at 09:49:18AM +0100, Martin Steigerwald wrote:
+> Am Dienstag 25 November 2008 schrieb Dave Chinner:
+> > On Tue, Nov 25, 2008 at 10:44:14PM +0100, Martin Steigerwald wrote:
+> > > Hi!
+> > >
+> > > Today on one try to hibernate via tuxonice it machine appeared dead.
+> > > I am
+> >
+> >                       ^^^^^^^^^
+> > When (not if) suspend to disk/resume fails, you get to keep all the
+> > broken pieces of your filesystem. It works most of the time, but it has
+> > some fundamentally broken corner cases that you probably just
+> > hit....
+> 
+> Well I use TuxOnIce for a reason! I had uptimes of up to 70 days with it 
+> already. And they are usually only interrupted by kernel updates or 
+> manual shutdowns. I was never convinced by in-kernel solutions for 
+> hibernate.
 
-Not really. It requires fundamentally altering the way the
-transaction system works, and that's no easy task. I have a few
-things that I'm looking at, but nothing that would be considered
-short-term....
+Sure, though I'm not convinced that TuxOnIce is any better because
+it still uses the same fundamental design as the in-kernel ones.
 
-> And whether XFS with disabled write cache (via hdparm) but without 
-> barriers might even be *faster* than XFS with barriers... One thing to 
-> test eventually.
+> > I've never had a system that suspends reliably (let alone resumes
+> > from the suspend) so it's no real surprise that I don't trust
+> > suspend to disk....
+> 
+> Well I take it as bad luck then, especially since there are no hints that 
+> XFS had a problem. I am not sure whether the machine really was dead, but 
+> I can't reproduce what exactly happened. So thats it.
 
-Yes, it often is with SATA drives - it depends on the quality of
-the NCQ implementation in the drive. For SCSI drives, no write
-cache or barriers is almost always faster than using WC+barriers.
+And therein lies the problem. I can't get suspend/resume to work
+reliably on anything I own, so I can't do anything about problems
+reported as a result of suspend/resume. Hell, I even considered
+running linux on my new laptop inside a virtual machine on windows
+just so I could have functioning suspend/resume....
 
 Cheers,
 
