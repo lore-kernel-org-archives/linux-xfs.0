@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQ10m5a023348 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:00:49 -0600
-Message-ID: <492C9FB9.3090204@sgi.com>
-Date: Wed, 26 Nov 2008 12:00:41 +1100
+	mAQ14D94023990 for <xfs@oss.sgi.com>; Tue, 25 Nov 2008 19:04:13 -0600
+Message-ID: <492CA07F.1030803@sgi.com>
+Date: Wed, 26 Nov 2008 12:03:59 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
 Subject: Re: New XFS git tree on oss.sgi.com
 References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
-In-Reply-To: <20081125081644.GA20644@infradead.org>
+	<492C0B3D.3040002@thebarn.com>
+In-Reply-To: <492C0B3D.3040002@thebarn.com>
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -22,39 +23,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Russell Cattelan <cattelan@thebarn.com>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Tue, Nov 25, 2008 at 06:22:21PM +1100, Lachlan McIlroy wrote:
->> There's a few branches there already:
+Russell Cattelan wrote:
+> Christoph Hellwig wrote:
+>> On Tue, Nov 25, 2008 at 06:22:21PM +1100, Lachlan McIlroy wrote:
+>>  
+>>> There's a few branches there already:
+>>>
+>>> 'master'      This will contain all the latest xfs changes not yet 
+>>> pushed
+>>>                to mainline.
+>>> 'mainline'    This is vanilla mainline and will updated regularly.
+>>> 'for-linus'   Our staging branch for pull requests
+>>> 'xfs-dev'     This branch will contain KDB and other supporting code for
+>>>                development and should be identical to the old CVS tree.
+>>>
+>>> Feel free to start using it and let us know if you have any issues.
+>>>     
 >>
->> 'master'      This will contain all the latest xfs changes not yet pushed
->>                to mainline.
->> 'mainline'    This is vanilla mainline and will updated regularly.
->> 'for-linus'   Our staging branch for pull requests
->> 'xfs-dev'     This branch will contain KDB and other supporting code for
->>                development and should be identical to the old CVS tree.
+>> Any chance to have these as separate git trees instead of branches?
 >>
->> Feel free to start using it and let us know if you have any issues.
-> 
-> Any chance to have these as separate git trees instead of branches?
-That was the original plan.  Not sure why that got changed.  If there is
-good reason for it we can change it.
+>> In either case, do you expect patches against the xfs-dev or the master
+>> tree?  It would also be useful if the trees and which one to be used
+>> could be documented on oss.sgi.com/projects/xfs or xfs.org.
+>>
+>>   
+> Specifically this page please.
+> http://xfs.org/index.php/Getting_the_latest_source_code
+Sure.  I didn't even know that page existed.
 
 > 
-> In either case, do you expect patches against the xfs-dev or the master
-> tree?  It would also be useful if the trees and which one to be used
-> could be documented on oss.sgi.com/projects/xfs or xfs.org.
-We would prefer patches based on the master branch but patches can be
-against the mainline, master or xfs-dev branches.  If a patch against
-mainline or xfs-dev doesn't apply cleanly to the master branch we may
-ask the author to rebase that patch against the master branch.  If a
-patch to the master branch needs auxillary changes to files that only
-exist in the xfs-dev branch (ie xfsidbg stuff) we may ask for an
-additional patch from the author.
+> Maybe add a quick tutorial on git branches and how to create tracking 
+> branches for this tree.
+Can we just point people at an existing git tutorial?  Or are you wanting
+something specific to our processes?
 
-We'll update the docs, thanks for that.
+> 
+> Also can we have something other than "unnamed repository" in the 
+> description file?
+Okay, how do we change that?
+
+> 
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>   
+> 
+> 
 
 _______________________________________________
 xfs mailing list
