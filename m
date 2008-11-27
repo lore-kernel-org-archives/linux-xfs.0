@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mARJvdn7028601 for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:57:45 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F002C16131F0
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:38 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id a0zZmUIqXRpNUWTl for
-	<xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:38 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L5mz5-0007pQ-Sx
-	for xfs@oss.sgi.com; Thu, 27 Nov 2008 19:57:07 +0000
-Date: Thu, 27 Nov 2008 14:57:07 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] move inode tracing out of xfs_vnode.[ch]
-Message-ID: <20081127195707.GC15027@infradead.org>
+	mARLt4UY003395 for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 15:55:11 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1192C16178BD
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:55:02 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id qXL5X00zUfsRbtxi for
+	<xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:55:02 -0800 (PST)
+Date: Thu, 27 Nov 2008 16:54:30 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Intel X25-E running Linux using XFS
+Message-ID: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,289 +25,321 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com
+Cc: Alan Piszcz <ap@solarrain.com>
 
-Move the inode tracing into xfs_iget.c / xfs_inode.h and kill xfs_vnode.c
-now that it's empty.
+Ordered the SSD from newegg.
+http://www.newegg.com/Product/Product.aspx?Item=N82E16820167013
 
+It comes in a small box with the SSD and a single page about how to 
+install the SSD.  Attached it to a 2.5-3.5" converter so it would fit in a 
+standard case.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+====
 
-Index: linux-2.6-xfs/fs/xfs/Makefile
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/Makefile	2008-11-16 21:16:20.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/Makefile	2008-11-16 21:18:05.000000000 +0100
-@@ -97,7 +97,6 @@ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
- 				   xfs_lrw.o \
- 				   xfs_super.o \
- 				   xfs_sync.o \
--				   xfs_vnode.o \
- 				   xfs_xattr.o \
- 				   xfs_ksyms.o) 
- 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 21:16:23.000000000 +0100
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,82 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include "xfs.h"
--#include "xfs_vnodeops.h"
--#include "xfs_bmap_btree.h"
--#include "xfs_inode.h"
--
--/*
-- * And this gunk is needed for xfs_mount.h"
-- */
--#include "xfs_log.h"
--#include "xfs_trans.h"
--#include "xfs_sb.h"
--#include "xfs_dmapi.h"
--#include "xfs_inum.h"
--#include "xfs_ag.h"
--#include "xfs_mount.h"
--
--
--#ifdef	XFS_INODE_TRACE
--
--#define KTRACE_ENTER(ip, vk, s, line, ra)			\
--	ktrace_enter(	(ip)->i_trace,				\
--/*  0 */		(void *)(__psint_t)(vk),		\
--/*  1 */		(void *)(s),				\
--/*  2 */		(void *)(__psint_t) line,		\
--/*  3 */		(void *)(__psint_t)atomic_read(&VFS_I(ip)->i_count), \
--/*  4 */		(void *)(ra),				\
--/*  5 */		NULL,					\
--/*  6 */		(void *)(__psint_t)current_cpu(),	\
--/*  7 */		(void *)(__psint_t)current_pid(),	\
--/*  8 */		(void *)__return_address,		\
--/*  9 */		NULL, NULL, NULL, NULL, NULL, NULL, NULL)
--
--/*
-- * Vnode tracing code.
-- */
--void
--_xfs_itrace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
--{
--	KTRACE_ENTER(ip, INODE_KTRACE_ENTRY, func, 0, ra);
--}
--
--void
--_xfs_itrace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
--{
--	KTRACE_ENTER(ip, INODE_KTRACE_EXIT, func, 0, ra);
--}
--
--void
--xfs_itrace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
--{
--	KTRACE_ENTER(ip, INODE_KTRACE_HOLD, file, line, ra);
--}
--
--void
--_xfs_itrace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
--{
--	KTRACE_ENTER(ip, INODE_KTRACE_REF, file, line, ra);
--}
--
--void
--xfs_itrace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
--{
--	KTRACE_ENTER(ip, INODE_KTRACE_RELE, file, line, ra);
--}
--#endif	/* XFS_INODE_TRACE */
-Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2008-11-16 21:18:05.000000000 +0100
-@@ -793,3 +793,51 @@ xfs_isilocked(
- }
- #endif
- 
-+#ifdef	XFS_INODE_TRACE
-+
-+#define KTRACE_ENTER(ip, vk, s, line, ra)			\
-+	ktrace_enter(	(ip)->i_trace,				\
-+/*  0 */		(void *)(__psint_t)(vk),		\
-+/*  1 */		(void *)(s),				\
-+/*  2 */		(void *)(__psint_t) line,		\
-+/*  3 */		(void *)(__psint_t)atomic_read(&VFS_I(ip)->i_count), \
-+/*  4 */		(void *)(ra),				\
-+/*  5 */		NULL,					\
-+/*  6 */		(void *)(__psint_t)current_cpu(),	\
-+/*  7 */		(void *)(__psint_t)current_pid(),	\
-+/*  8 */		(void *)__return_address,		\
-+/*  9 */		NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-+
-+/*
-+ * Vnode tracing code.
-+ */
-+void
-+_xfs_itrace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
-+{
-+	KTRACE_ENTER(ip, INODE_KTRACE_ENTRY, func, 0, ra);
-+}
-+
-+void
-+_xfs_itrace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
-+{
-+	KTRACE_ENTER(ip, INODE_KTRACE_EXIT, func, 0, ra);
-+}
-+
-+void
-+xfs_itrace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+{
-+	KTRACE_ENTER(ip, INODE_KTRACE_HOLD, file, line, ra);
-+}
-+
-+void
-+_xfs_itrace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+{
-+	KTRACE_ENTER(ip, INODE_KTRACE_REF, file, line, ra);
-+}
-+
-+void
-+xfs_itrace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
-+{
-+	KTRACE_ENTER(ip, INODE_KTRACE_RELE, file, line, ra);
-+}
-+#endif	/* XFS_INODE_TRACE */
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:16:46.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:18:05.000000000 +0100
-@@ -54,19 +54,6 @@ struct attrlist_cursor_kern;
- 					   Prevent VM access to the pages until
- 					   the operation completes. */
- 
--#define IHOLD(ip) \
--do { \
--	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
--	atomic_inc(&(VFS_I(ip)->i_count)); \
--	xfs_itrace_hold((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
--} while (0)
--
--#define IRELE(ip) \
--do { \
--	xfs_itrace_rele((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
--	iput(VFS_I(ip)); \
--} while (0)
--
- /*
-  * Dealing with bad inodes
-  */
-@@ -103,39 +90,4 @@ static inline void vn_atime_to_time_t(st
- 					PAGECACHE_TAG_DIRTY)
- 
- 
--/*
-- * Tracking vnode activity.
-- */
--#if defined(XFS_INODE_TRACE)
--
--#define	INODE_TRACE_SIZE	16		/* number of trace entries */
--#define	INODE_KTRACE_ENTRY	1
--#define	INODE_KTRACE_EXIT	2
--#define	INODE_KTRACE_HOLD	3
--#define	INODE_KTRACE_REF	4
--#define	INODE_KTRACE_RELE	5
--
--extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
--extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
--extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
--extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
--extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
--#define xfs_itrace_entry(ip)	\
--	_xfs_itrace_entry(ip, __func__, (inst_t *)__return_address)
--#define xfs_itrace_exit(ip)	\
--	_xfs_itrace_exit(ip, __func__, (inst_t *)__return_address)
--#define xfs_itrace_exit_tag(ip, tag)	\
--	_xfs_itrace_exit(ip, tag, (inst_t *)__return_address)
--#define xfs_itrace_ref(ip)	\
--	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
--
--#else
--#define	xfs_itrace_entry(a)
--#define	xfs_itrace_exit(a)
--#define	xfs_itrace_exit_tag(a, b)
--#define	xfs_itrace_hold(a, b, c, d)
--#define	xfs_itrace_ref(a)
--#define	xfs_itrace_rele(a, b, c, d)
--#endif
--
- #endif	/* __XFS_VNODE_H__ */
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-11-16 21:18:05.000000000 +0100
-@@ -540,6 +540,51 @@ void		xfs_lock_two_inodes(xfs_inode_t *,
- void		xfs_synchronize_atime(xfs_inode_t *);
- void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
- 
-+#if defined(XFS_INODE_TRACE)
-+
-+#define	INODE_TRACE_SIZE	16		/* number of trace entries */
-+#define	INODE_KTRACE_ENTRY	1
-+#define	INODE_KTRACE_EXIT	2
-+#define	INODE_KTRACE_HOLD	3
-+#define	INODE_KTRACE_REF	4
-+#define	INODE_KTRACE_RELE	5
-+
-+extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
-+extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
-+extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
-+extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
-+extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
-+#define xfs_itrace_entry(ip)	\
-+	_xfs_itrace_entry(ip, __func__, (inst_t *)__return_address)
-+#define xfs_itrace_exit(ip)	\
-+	_xfs_itrace_exit(ip, __func__, (inst_t *)__return_address)
-+#define xfs_itrace_exit_tag(ip, tag)	\
-+	_xfs_itrace_exit(ip, tag, (inst_t *)__return_address)
-+#define xfs_itrace_ref(ip)	\
-+	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
-+
-+#else
-+#define	xfs_itrace_entry(a)
-+#define	xfs_itrace_exit(a)
-+#define	xfs_itrace_exit_tag(a, b)
-+#define	xfs_itrace_hold(a, b, c, d)
-+#define	xfs_itrace_ref(a)
-+#define	xfs_itrace_rele(a, b, c, d)
-+#endif
-+
-+#define IHOLD(ip) \
-+do { \
-+	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
-+	atomic_inc(&(VFS_I(ip)->i_count)); \
-+	xfs_itrace_hold((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
-+} while (0)
-+
-+#define IRELE(ip) \
-+do { \
-+	xfs_itrace_rele((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
-+	iput(VFS_I(ip)); \
-+} while (0)
-+
- #endif /* __KERNEL__ */
- 
- int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+When I got the SSD, it showed 54 hours of usage and 66 power cycles, I 
+assume this is testing at the factory, in any case, this is what the smart 
+stats look like and some basic dd speed tests, as shown in the techreport 
+review, write speed is quite fast, 227MiB/s.
+
+The machine used to take about 60-70 seconds to boot, it now takes about 
+5-6 seconds.
+
+When opening browsers etc, I no longer hear my (previously) 750 gig disk 
+grinding away loading all the libraries, everything is instantaneous.
+
+====
+
+Btw, no temp sensor.
+
+# hddtemp /dev/sda
+WARNING: Drive /dev/sda doesn't seem to have a temperature sensor.
+WARNING: This doesn't mean it hasn't got one.
+WARNING: If you are sure it has one, please contact me (hddtemp@guzu.net).
+WARNING: See --help, --debug and --drivebase options.
+/dev/sda: SSDSA2SH032G1GN INTEL:  no sensor
+
+====
+
+# fdisk -l
+
+Disk /dev/sda: 32.0 GB, 32000000000 bytes
+255 heads, 63 sectors/track, 3890 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sda doesn't contain a valid partition table
+
+========================================================
+
+# smartctl -a /dev/sda
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Device Model:     SSDSA2SH032G1GN INTEL
+Serial Number:    [snip]
+Firmware Version: 045C8621
+User Capacity:    32,000,000,000 bytes
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   7
+ATA Standard is:  ATA/ATAPI-7 T13 1532D revision 1
+Local Time is:    Thu Nov 27 16:32:46 2008 EST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+See vendor-specific Attribute list for marginal Attributes.
+
+General SMART Values:
+Offline data collection status:  (0x00) Offline data collection activity
+                                         was never started.
+                                         Auto Offline Data Collection: Disabled.
+Self-test execution status:      (   0) The previous self-test routine completed
+                                         without error or no self-test has ever
+                                         been run.
+Total time to complete Offline 
+data collection:                 (   1) seconds.
+Offline data collection
+capabilities:                    (0x75) SMART execute Offline immediate.
+                                         No Auto Offline data collection support.
+                                         Abort Offline collection upon new
+                                         command.
+                                         No Offline surface scan supported.
+                                         Self-test supported.
+                                         Conveyance Self-test supported.
+                                         Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                         power-saving mode.
+                                         Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                         General Purpose Logging supported.
+Short self-test routine 
+recommended polling time:        (   2) minutes.
+Extended self-test routine
+recommended polling time:        (   5) minutes.
+Conveyance self-test routine
+recommended polling time:        (   1) minutes.
+
+SMART Attributes Data Structure revision number: 5
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
+FAILED RAW_VALUE
+   3 Spin_Up_Time            0x0000   100   000   000    Old_age   Offline  In_th
+e_past 0
+   4 Start_Stop_Count        0x0000   100   000   000    Old_age   Offline  In_th
+e_past 0
+   5 Reallocated_Sector_Ct   0x0002   100   100   000    Old_age   Always       -
+        0
+   9 Power_On_Hours          0x0002   100   100   000    Old_age   Always       -
+        58
+  12 Power_Cycle_Count       0x0002   100   100   000    Old_age   Always       -
+        66
+192 Power-Off_Retract_Count 0x0002   100   100   000    Old_age   Always       -
+        58
+232 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -
+        0
+233 Unknown_Attribute       0x0002   099   099   000    Old_age   Always       -
+        0
+225 Load_Cycle_Count        0x0000   200   200   000    Old_age   Offline      -
+        116201
+
+SMART Error Log Version: 1
+No Errors Logged
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA
+_of_first_error
+# 1  Short offline       Completed without error       00%        58         -
+
+SMART Selective Self-Test Log Data Structure Revision Number (0) should be 1
+SMART Selective self-test log data structure revision number 0
+Warning: ATA Specification requires selective self-test log data structure revis
+ion number = 1
+  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+     1        0        0  Not_testing
+     2        0        0  Not_testing
+     3        0        0  Not_testing
+     4        0        0  Not_testing
+     5        0        0  Not_testing
+Selective self-test flags (0x0):
+   After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+========================================================
+
+# hdparm -i /dev/sda
+
+/dev/sda:
+
+  Model=SSDSA2SH032G1GN INTEL                   , FwRev=045C8621, SerialNo=[snip]
+  Config={ Fixed }
+  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=0
+  BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
+  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=62500000
+  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+  PIO modes:  pio0 pio3 pio4
+  DMA modes:  mdma0 mdma1 mdma2
+  UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+  AdvancedPM=no WriteCache=enabled
+  Drive conforms to: ATA/ATAPI-7 T13 1532D revision 1:  ATA/ATAPI-2,3,4,5,6,7
+
+  * signifies the current active mode
+
+========================================================
+
+# hdparm -vI /dev/sda
+
+/dev/sda:
+  IO_support    =  0 (default)
+  readonly      =  0 (off)
+  readahead     = 256 (on)
+  geometry      = 3890/255/63, sectors = 62500000, start = 0
+
+ATA device, with non-removable media
+         Model Number:       SSDSA2SH032G1GN INTEL
+         Serial Number:      [snip]
+         Firmware Revision:  045C8621
+         Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II Extensions, SATA Rev 2.5
+Standards:
+         Used: ATA/ATAPI-7 T13 1532D revision 1
+         Supported: 7 6 5 4 
+Configuration:
+         Logical         max     current
+         cylinders       16383   16383
+         heads           16      16
+         sectors/track   63      63
+         --
+         CHS current addressable sectors:   16514064
+         LBA    user addressable sectors:   62500000
+         LBA48  user addressable sectors:   62500000
+         device size with M = 1024*1024:       30517 MBytes
+         device size with M = 1000*1000:       32000 MBytes (32 GB)
+Capabilities:
+         LBA, IORDY(can be disabled)
+         Queue depth: 31
+         Standby timer values: spec'd by Standard, no device specific minimum
+         R/W multiple sector transfer: Max = 16  Current = 16
+         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+              Cycle time: min=120ns recommended=120ns
+         PIO: pio0 pio1 pio2 pio3 pio4
+              Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+         Enabled Supported:
+            *    SMART feature set
+                 Security Mode feature set
+            *    Power Management feature set
+            *    Write cache
+            *    Look-ahead
+            *    Host Protected Area feature set
+            *    WRITE_BUFFER command
+            *    READ_BUFFER command
+            *    NOP cmd
+            *    DOWNLOAD_MICROCODE
+            *    48-bit Address feature set
+            *    Device Configuration Overlay feature set
+            *    Mandatory FLUSH_CACHE
+            *    FLUSH_CACHE_EXT
+            *    SMART error logging
+            *    SMART self-test
+            *    General Purpose Logging feature set
+            *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+            *    64-bit World wide name
+            *    IDLE_IMMEDIATE with UNLOAD
+            *    WRITE_UNCORRECTABLE_EXT command
+            *    {READ,WRITE}_DMA_EXT_GPL commands
+            *    Segmented DOWNLOAD_MICROCODE
+            *    SATA-I signaling speed (1.5Gb/s)
+            *    SATA-II signaling speed (3.0Gb/s)
+            *    Native Command Queueing (NCQ)
+                 Device-initiated interface power management
+            *    Software settings preservation
+Security:
+         Master password revision code = 65534
+                 supported
+         not     enabled
+         not     locked
+         not     frozen
+         not     expired: security count
+                 supported: enhanced erase
+         2min for SECURITY ERASE UNIT. 2min for ENHANCED SECURITY ERASE UNIT.
+Logical Unit WWN Device Identifier: 500151795870198c
+         NAA             : 5
+         IEEE OUI        : 1517
+         Unique ID       : 95870198c
+Checksum: correct
+
+========================================================
+
+# mkfs.xfs /dev/sda
+meta-data=/dev/sda               isize=256    agcount=4, agsize=1953125 blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=7812500, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal log           bsize=4096   blocks=3814, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# mkdir /disk
+# mount /dev/sda /disk
+
+========================================================
+
+Incase you are wondering, both disks are using no barriers.
+
+time to decompress kernel tree (linux, xfs):
+
+$ /usr/bin/time tar xf linux-2.6.27.7.tar 
+Total bytes read: 293857280 (281MiB, 75MiB/s)
+0.15user 1.12system 0:03.74elapsed 34%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+645minor)pagefaults 0swaps
+
+The same thing on a 750 gigabyte hdd:
+
+$ /usr/bin/time tar xf linux-2.6.27.7.tar 
+Total bytes read: 293857280 (281MiB, 6.5MiB/s)
+0.15user 1.22system 0:43.29elapsed 3%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+643minor)pagefaults 0swaps
+
+========================================================
+
+# dd if=/dev/zero of=1gigabyte bs=1M count=1024
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 4.71984 s, 227 MB/s
+
+(yeah probably should of run echo 1 > to drop_caches here) but never the 
+less its fast
+
+# dd if=1gigabyte of=/dev/null bs=1M count=1024
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 0.302331 s, 3.6 GB/s
+
+(bunzip2'd the kernel and:)
+$ /usr/bin/time dd if=linux-2.6.27.7.tar of=/dev/null bs=1M
+280+1 records in
+280+1 records out
+293857280 bytes (294 MB) copied, 0.0760212 s, 3.9 GB/s
+0.00user 0.06system 0:00.07elapsed 90%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+485minor)pagefaults 0swaps
+
+========================================================
+
+Due to the 100k write cycle lifetime, I will not be performing any 
+more benchmarks on the SSD itself, such benchmarks are available on 
+techreport.com but just wanted to send out the smart data for the 
+smartmontools list and point out it is working with linux+ich7+xfs.
+
+Overall, whenever I do anything now its just like the entire machine is
+sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
+
+The techreport benchmarks are here:
+http://techreport.com/articles.x/15931
+
+Justin.
 
 _______________________________________________
 xfs mailing list
