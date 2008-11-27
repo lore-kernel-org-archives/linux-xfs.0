@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mARJv5lO028567 for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:57:05 -0600
+	mARJvdn7028601 for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:57:45 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0380216131E9
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:04 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F002C16131F0
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:38 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id hHZHrDlOneXVCc1v for
-	<xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:04 -0800 (PST)
+	by cuda.sgi.com with ESMTP id a0zZmUIqXRpNUWTl for
+	<xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:38 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L5mz2-0007cg-Lu
-	for xfs@oss.sgi.com; Thu, 27 Nov 2008 19:57:04 +0000
-Date: Thu, 27 Nov 2008 14:57:04 -0500
+	Linux)) id 1L5mz5-0007pQ-Sx
+	for xfs@oss.sgi.com; Thu, 27 Nov 2008 19:57:07 +0000
+Date: Thu, 27 Nov 2008 14:57:07 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/3] move vn_iowait / vn_iowake into xfs_aops.c
-Message-ID: <20081127195704.GB15027@infradead.org>
+Subject: [PATCH 3/3] move inode tracing out of xfs_vnode.[ch]
+Message-ID: <20081127195707.GC15027@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,236 +31,287 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The whole machinery to wait on I/O completion is related to the I/O path
-and should be there instead of in xfs_vnode.c.  Also give the functions
-more descriptive names.
+Move the inode tracing into xfs_iget.c / xfs_inode.h and kill xfs_vnode.c
+now that it's empty.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+Index: linux-2.6-xfs/fs/xfs/Makefile
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2008-11-16 21:16:21.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2008-11-16 21:16:23.000000000 +0100
-@@ -42,6 +42,40 @@
- #include <linux/pagevec.h>
- #include <linux/writeback.h>
- 
-+
-+/*
-+ * Prime number of hash buckets since address is used as the key.
-+ */
-+#define NVSYNC		37
-+#define to_ioend_wq(v)	(&xfs_ioend_wq[((unsigned long)v) % NVSYNC])
-+static wait_queue_head_t xfs_ioend_wq[NVSYNC];
-+
-+void __init
-+xfs_ioend_init(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < NVSYNC; i++)
-+		init_waitqueue_head(&xfs_ioend_wq[i]);
-+}
-+
-+void
-+xfs_ioend_wait(
-+	xfs_inode_t	*ip)
-+{
-+	wait_queue_head_t *wq = to_ioend_wq(ip);
-+
-+	wait_event(*wq, (atomic_read(&ip->i_iocount) == 0));
-+}
-+
-+STATIC void
-+xfs_ioend_wake(
-+	xfs_inode_t	*ip)
-+{
-+	if (atomic_dec_and_test(&ip->i_iocount))
-+		wake_up(to_ioend_wq(ip));
-+}
-+
- STATIC void
- xfs_count_page_state(
- 	struct page		*page,
-@@ -164,7 +198,7 @@ xfs_destroy_ioend(
- 				      __FILE__, __LINE__);
- 	}
- 
--	vn_iowake(ip);
-+	xfs_ioend_wake(ip);
- 	mempool_free(ioend, xfs_ioend_pool);
- }
- 
-@@ -516,7 +550,7 @@ xfs_cancel_ioend(
- 			unlock_buffer(bh);
- 		} while ((bh = next_bh) != NULL);
- 
--		vn_iowake(XFS_I(ioend->io_inode));
-+		xfs_ioend_wake(XFS_I(ioend->io_inode));
- 		mempool_free(ioend, xfs_ioend_pool);
- 	} while ((ioend = next) != NULL);
- }
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.h
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.h	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.h	2008-11-16 21:16:23.000000000 +0100
-@@ -43,4 +43,7 @@ typedef struct xfs_ioend {
- extern const struct address_space_operations xfs_address_space_operations;
- extern int xfs_get_blocks(struct inode *, sector_t, struct buffer_head *, int);
- 
-+extern void xfs_ioend_init(void);
-+extern void xfs_ioend_wait(struct xfs_inode *);
-+
- #endif /* __XFS_AOPS_H__ */
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2008-11-16 21:16:20.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_super.c	2008-11-16 21:16:23.000000000 +0100
-@@ -1827,7 +1827,7 @@ init_xfs_fs(void)
- 			 XFS_BUILD_OPTIONS " enabled\n");
- 
- 	ktrace_init(64);
--	vn_init();
-+	xfs_ioend_init();
- 	xfs_dir_startup();
- 
- 	error = xfs_init_zones();
-Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sync.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_sync.c	2008-11-16 21:16:23.000000000 +0100
-@@ -132,7 +132,7 @@ xfs_sync_inodes_ag(
- 			lock_flags |= XFS_IOLOCK_SHARED;
- 			error = xfs_flush_pages(ip, 0, -1, fflag, FI_NONE);
- 			if (flags & SYNC_IOWAIT)
--				vn_iowait(ip);
-+				xfs_ioend_wait(ip);
- 		}
- 		xfs_ilock(ip, XFS_ILOCK_SHARED);
+--- linux-2.6-xfs.orig/fs/xfs/Makefile	2008-11-16 21:16:20.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/Makefile	2008-11-16 21:18:05.000000000 +0100
+@@ -97,7 +97,6 @@ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
+ 				   xfs_lrw.o \
+ 				   xfs_super.o \
+ 				   xfs_sync.o \
+-				   xfs_vnode.o \
+ 				   xfs_xattr.o \
+ 				   xfs_ksyms.o) 
  
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 21:16:21.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 21:16:23.000000000 +0100
-@@ -32,40 +32,6 @@
- #include "xfs_mount.h"
- 
- 
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 21:16:23.000000000 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,82 +0,0 @@
 -/*
-- * Dedicated vnode inactive/reclaim sync wait queues.
-- * Prime number of hash buckets since address is used as the key.
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#define NVSYNC                  37
--#define vptosync(v)             (&vsync[((unsigned long)v) % NVSYNC])
--static wait_queue_head_t vsync[NVSYNC];
+-#include "xfs.h"
+-#include "xfs_vnodeops.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_inode.h"
 -
--void __init
--vn_init(void)
+-/*
+- * And this gunk is needed for xfs_mount.h"
+- */
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_dmapi.h"
+-#include "xfs_inum.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-
+-
+-#ifdef	XFS_INODE_TRACE
+-
+-#define KTRACE_ENTER(ip, vk, s, line, ra)			\
+-	ktrace_enter(	(ip)->i_trace,				\
+-/*  0 */		(void *)(__psint_t)(vk),		\
+-/*  1 */		(void *)(s),				\
+-/*  2 */		(void *)(__psint_t) line,		\
+-/*  3 */		(void *)(__psint_t)atomic_read(&VFS_I(ip)->i_count), \
+-/*  4 */		(void *)(ra),				\
+-/*  5 */		NULL,					\
+-/*  6 */		(void *)(__psint_t)current_cpu(),	\
+-/*  7 */		(void *)(__psint_t)current_pid(),	\
+-/*  8 */		(void *)__return_address,		\
+-/*  9 */		NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+-
+-/*
+- * Vnode tracing code.
+- */
+-void
+-_xfs_itrace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
 -{
--	int i;
--
--	for (i = 0; i < NVSYNC; i++)
--		init_waitqueue_head(&vsync[i]);
+-	KTRACE_ENTER(ip, INODE_KTRACE_ENTRY, func, 0, ra);
 -}
 -
 -void
--vn_iowait(
--	xfs_inode_t	*ip)
+-_xfs_itrace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
 -{
--	wait_queue_head_t *wq = vptosync(ip);
--
--	wait_event(*wq, (atomic_read(&ip->i_iocount) == 0));
+-	KTRACE_ENTER(ip, INODE_KTRACE_EXIT, func, 0, ra);
 -}
 -
 -void
--vn_iowake(
--	xfs_inode_t	*ip)
+-xfs_itrace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
 -{
--	if (atomic_dec_and_test(&ip->i_iocount))
--		wake_up(vptosync(ip));
+-	KTRACE_ENTER(ip, INODE_KTRACE_HOLD, file, line, ra);
 -}
 -
- #ifdef	XFS_INODE_TRACE
+-void
+-_xfs_itrace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
+-{
+-	KTRACE_ENTER(ip, INODE_KTRACE_REF, file, line, ra);
+-}
+-
+-void
+-xfs_itrace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
+-{
+-	KTRACE_ENTER(ip, INODE_KTRACE_RELE, file, line, ra);
+-}
+-#endif	/* XFS_INODE_TRACE */
+Index: linux-2.6-xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/xfs_iget.c	2008-11-16 21:15:39.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_iget.c	2008-11-16 21:18:05.000000000 +0100
+@@ -793,3 +793,51 @@ xfs_isilocked(
+ }
+ #endif
  
- #define KTRACE_ENTER(ip, vk, s, line, ra)			\
++#ifdef	XFS_INODE_TRACE
++
++#define KTRACE_ENTER(ip, vk, s, line, ra)			\
++	ktrace_enter(	(ip)->i_trace,				\
++/*  0 */		(void *)(__psint_t)(vk),		\
++/*  1 */		(void *)(s),				\
++/*  2 */		(void *)(__psint_t) line,		\
++/*  3 */		(void *)(__psint_t)atomic_read(&VFS_I(ip)->i_count), \
++/*  4 */		(void *)(ra),				\
++/*  5 */		NULL,					\
++/*  6 */		(void *)(__psint_t)current_cpu(),	\
++/*  7 */		(void *)(__psint_t)current_pid(),	\
++/*  8 */		(void *)__return_address,		\
++/*  9 */		NULL, NULL, NULL, NULL, NULL, NULL, NULL)
++
++/*
++ * Vnode tracing code.
++ */
++void
++_xfs_itrace_entry(xfs_inode_t *ip, const char *func, inst_t *ra)
++{
++	KTRACE_ENTER(ip, INODE_KTRACE_ENTRY, func, 0, ra);
++}
++
++void
++_xfs_itrace_exit(xfs_inode_t *ip, const char *func, inst_t *ra)
++{
++	KTRACE_ENTER(ip, INODE_KTRACE_EXIT, func, 0, ra);
++}
++
++void
++xfs_itrace_hold(xfs_inode_t *ip, char *file, int line, inst_t *ra)
++{
++	KTRACE_ENTER(ip, INODE_KTRACE_HOLD, file, line, ra);
++}
++
++void
++_xfs_itrace_ref(xfs_inode_t *ip, char *file, int line, inst_t *ra)
++{
++	KTRACE_ENTER(ip, INODE_KTRACE_REF, file, line, ra);
++}
++
++void
++xfs_itrace_rele(xfs_inode_t *ip, char *file, int line, inst_t *ra)
++{
++	KTRACE_ENTER(ip, INODE_KTRACE_RELE, file, line, ra);
++}
++#endif	/* XFS_INODE_TRACE */
 Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:16:21.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:16:46.000000000 +0100
-@@ -54,16 +54,6 @@ struct attrlist_cursor_kern;
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:16:46.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 21:18:05.000000000 +0100
+@@ -54,19 +54,6 @@ struct attrlist_cursor_kern;
  					   Prevent VM access to the pages until
  					   the operation completes. */
  
+-#define IHOLD(ip) \
+-do { \
+-	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
+-	atomic_inc(&(VFS_I(ip)->i_count)); \
+-	xfs_itrace_hold((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
+-} while (0)
 -
--extern void	vn_init(void);
+-#define IRELE(ip) \
+-do { \
+-	xfs_itrace_rele((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
+-	iput(VFS_I(ip)); \
+-} while (0)
 -
+ /*
+  * Dealing with bad inodes
+  */
+@@ -103,39 +90,4 @@ static inline void vn_atime_to_time_t(st
+ 					PAGECACHE_TAG_DIRTY)
+ 
+ 
 -/*
-- * Yeah, these don't take vnode anymore at all, all this should be
-- * cleaned up at some point.
+- * Tracking vnode activity.
 - */
--extern void	vn_iowait(struct xfs_inode *ip);
--extern void	vn_iowake(struct xfs_inode *ip);
+-#if defined(XFS_INODE_TRACE)
 -
- #define IHOLD(ip) \
- do { \
- 	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.c
+-#define	INODE_TRACE_SIZE	16		/* number of trace entries */
+-#define	INODE_KTRACE_ENTRY	1
+-#define	INODE_KTRACE_EXIT	2
+-#define	INODE_KTRACE_HOLD	3
+-#define	INODE_KTRACE_REF	4
+-#define	INODE_KTRACE_RELE	5
+-
+-extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
+-extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
+-extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
+-extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
+-extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
+-#define xfs_itrace_entry(ip)	\
+-	_xfs_itrace_entry(ip, __func__, (inst_t *)__return_address)
+-#define xfs_itrace_exit(ip)	\
+-	_xfs_itrace_exit(ip, __func__, (inst_t *)__return_address)
+-#define xfs_itrace_exit_tag(ip, tag)	\
+-	_xfs_itrace_exit(ip, tag, (inst_t *)__return_address)
+-#define xfs_itrace_ref(ip)	\
+-	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
+-
+-#else
+-#define	xfs_itrace_entry(a)
+-#define	xfs_itrace_exit(a)
+-#define	xfs_itrace_exit_tag(a, b)
+-#define	xfs_itrace_hold(a, b, c, d)
+-#define	xfs_itrace_ref(a)
+-#define	xfs_itrace_rele(a, b, c, d)
+-#endif
+-
+ #endif	/* __XFS_VNODE_H__ */
+Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.c	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.c	2008-11-16 21:16:23.000000000 +0100
-@@ -1322,8 +1322,8 @@ xfs_itrunc_trace(
-  * direct I/O with the truncate operation.  Also, because we hold
-  * the IOLOCK in exclusive mode, we prevent new direct I/Os from being
-  * started until the truncate completes and drops the lock. Essentially,
-- * the vn_iowait() call forms an I/O barrier that provides strict ordering
-- * between direct I/Os and the truncate operation.
-+ * the xfs_ioend_wait() call forms an I/O barrier that provides strict
-+ * ordering between direct I/Os and the truncate operation.
-  *
-  * The flags parameter can have either the value XFS_ITRUNC_DEFINITE
-  * or XFS_ITRUNC_MAYBE.  The XFS_ITRUNC_MAYBE value should be used
-@@ -1354,7 +1354,7 @@ xfs_itruncate_start(
+--- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-11-16 21:15:39.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-11-16 21:18:05.000000000 +0100
+@@ -540,6 +540,51 @@ void		xfs_lock_two_inodes(xfs_inode_t *,
+ void		xfs_synchronize_atime(xfs_inode_t *);
+ void		xfs_mark_inode_dirty_sync(xfs_inode_t *);
  
- 	/* wait for the completion of any pending DIOs */
- 	if (new_size == 0 || new_size < ip->i_size)
--		vn_iowait(ip);
-+		xfs_ioend_wait(ip);
++#if defined(XFS_INODE_TRACE)
++
++#define	INODE_TRACE_SIZE	16		/* number of trace entries */
++#define	INODE_KTRACE_ENTRY	1
++#define	INODE_KTRACE_EXIT	2
++#define	INODE_KTRACE_HOLD	3
++#define	INODE_KTRACE_REF	4
++#define	INODE_KTRACE_RELE	5
++
++extern void _xfs_itrace_entry(struct xfs_inode *, const char *, inst_t *);
++extern void _xfs_itrace_exit(struct xfs_inode *, const char *, inst_t *);
++extern void xfs_itrace_hold(struct xfs_inode *, char *, int, inst_t *);
++extern void _xfs_itrace_ref(struct xfs_inode *, char *, int, inst_t *);
++extern void xfs_itrace_rele(struct xfs_inode *, char *, int, inst_t *);
++#define xfs_itrace_entry(ip)	\
++	_xfs_itrace_entry(ip, __func__, (inst_t *)__return_address)
++#define xfs_itrace_exit(ip)	\
++	_xfs_itrace_exit(ip, __func__, (inst_t *)__return_address)
++#define xfs_itrace_exit_tag(ip, tag)	\
++	_xfs_itrace_exit(ip, tag, (inst_t *)__return_address)
++#define xfs_itrace_ref(ip)	\
++	_xfs_itrace_ref(ip, __FILE__, __LINE__, (inst_t *)__return_address)
++
++#else
++#define	xfs_itrace_entry(a)
++#define	xfs_itrace_exit(a)
++#define	xfs_itrace_exit_tag(a, b)
++#define	xfs_itrace_hold(a, b, c, d)
++#define	xfs_itrace_ref(a)
++#define	xfs_itrace_rele(a, b, c, d)
++#endif
++
++#define IHOLD(ip) \
++do { \
++	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
++	atomic_inc(&(VFS_I(ip)->i_count)); \
++	xfs_itrace_hold((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
++} while (0)
++
++#define IRELE(ip) \
++do { \
++	xfs_itrace_rele((ip), __FILE__, __LINE__, (inst_t *)__return_address); \
++	iput(VFS_I(ip)); \
++} while (0)
++
+ #endif /* __KERNEL__ */
  
- 	/*
- 	 * Call toss_pages or flushinval_pages to get rid of pages
-Index: linux-2.6-xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_vnodeops.c	2008-11-16 21:15:39.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_vnodeops.c	2008-11-16 21:16:23.000000000 +0100
-@@ -262,7 +262,7 @@ xfs_setattr(
- 		}
- 
- 		/* wait for all I/O to complete */
--		vn_iowait(ip);
-+		xfs_ioend_wait(ip);
- 
- 		if (!code)
- 			code = xfs_itruncate_data(ip, iattr->ia_size);
-@@ -2705,7 +2705,7 @@ xfs_reclaim(
- 		return 0;
- 	}
- 
--	vn_iowait(ip);
-+	xfs_ioend_wait(ip);
- 
- 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
- 
-@@ -3096,7 +3096,8 @@ xfs_free_file_space(
- 		need_iolock = 0;
- 	if (need_iolock) {
- 		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--		vn_iowait(ip);	/* wait for the completion of any pending DIOs */
-+		/* wait for the completion of any pending DIOs */
-+		xfs_ioend_wait(ip);
- 	}
- 
- 	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+ int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
 
 _______________________________________________
 xfs mailing list
