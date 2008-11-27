@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAQN5ARs018939 for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 17:05:11 -0600
-Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A13A61609241
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2008 15:05:08 -0800 (PST)
-Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
-	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	8LPFSV41dEPUcwBE for <xfs@oss.sgi.com>;
-	Wed, 26 Nov 2008 15:05:08 -0800 (PST)
-Date: Thu, 27 Nov 2008 09:59:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: truncated files
-Message-ID: <20081126225931.GK6291@disturbed>
-References: <200811252244.14718.Martin@Lichtvoll.de>
-	<20081125222703.GE6291@disturbed>
-	<200811260949.19642.Martin@lichtvoll.de>
+	mARJv1Xd028557 for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 13:57:02 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E4CE16131E3
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:00 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id sOKwqF91yFILVkW9 for
+	<xfs@oss.sgi.com>; Thu, 27 Nov 2008 11:57:00 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
+	Linux)) id 1L5myy-0007Z7-Bc
+	for xfs@oss.sgi.com; Thu, 27 Nov 2008 19:57:00 +0000
+Date: Thu, 27 Nov 2008 14:57:00 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/3] kill vn_ioerror
+Message-ID: <20081127195700.GA15027@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200811260949.19642.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Nov 26, 2008 at 09:49:18AM +0100, Martin Steigerwald wrote:
-> Am Dienstag 25 November 2008 schrieb Dave Chinner:
-> > On Tue, Nov 25, 2008 at 10:44:14PM +0100, Martin Steigerwald wrote:
-> > > Hi!
-> > >
-> > > Today on one try to hibernate via tuxonice it machine appeared dead.
-> > > I am
-> >
-> >                       ^^^^^^^^^
-> > When (not if) suspend to disk/resume fails, you get to keep all the
-> > broken pieces of your filesystem. It works most of the time, but it has
-> > some fundamentally broken corner cases that you probably just
-> > hit....
-> 
-> Well I use TuxOnIce for a reason! I had uptimes of up to 70 days with it 
-> already. And they are usually only interrupted by kernel updates or 
-> manual shutdowns. I was never convinced by in-kernel solutions for 
-> hibernate.
+There's just one caller of this helper, and it's much cleaner to just merge
+the xfs_do_force_shutdown call into it.
 
-Sure, though I'm not convinced that TuxOnIce is any better because
-it still uses the same fundamental design as the in-kernel ones.
 
-> > I've never had a system that suspends reliably (let alone resumes
-> > from the suspend) so it's no real surprise that I don't trust
-> > suspend to disk....
-> 
-> Well I take it as bad luck then, especially since there are no hints that 
-> XFS had a problem. I am not sure whether the machine really was dead, but 
-> I can't reproduce what exactly happened. So thats it.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-And therein lies the problem. I can't get suspend/resume to work
-reliably on anything I own, so I can't do anything about problems
-reported as a result of suspend/resume. Hell, I even considered
-running linux on my new laptop inside a virtual machine on windows
-just so I could have functioning suspend/resume....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2008-11-16 20:51:30.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_aops.c	2008-11-16 20:54:00.000000000 +0100
+@@ -146,16 +146,25 @@ xfs_destroy_ioend(
+ 	xfs_ioend_t		*ioend)
+ {
+ 	struct buffer_head	*bh, *next;
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 
+ 	for (bh = ioend->io_buffer_head; bh; bh = next) {
+ 		next = bh->b_private;
+ 		bh->b_end_io(bh, !ioend->io_error);
+ 	}
+-	if (unlikely(ioend->io_error)) {
+-		vn_ioerror(XFS_I(ioend->io_inode), ioend->io_error,
+-				__FILE__,__LINE__);
++
++	/*
++	 * Volume managers supporting multiple paths can send back ENODEV
++	 * when the final path disappears.  In this case continuing to fill
++	 * the page cache with dirty data which cannot be written out is
++	 * evil, so prevent that.
++	 */
++	if (unlikely(ioend->io_error == -ENODEV)) {
++		xfs_do_force_shutdown(ip->i_mount, SHUTDOWN_DEVICE_REQ,
++				      __FILE__, __LINE__);
+ 	}
+-	vn_iowake(XFS_I(ioend->io_inode));
++
++	vn_iowake(ip);
+ 	mempool_free(ioend, xfs_ioend_pool);
+ }
+ 
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 20:51:30.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.c	2008-11-16 20:54:29.000000000 +0100
+@@ -66,22 +66,6 @@ vn_iowake(
+ 		wake_up(vptosync(ip));
+ }
+ 
+-/*
+- * Volume managers supporting multiple paths can send back ENODEV when the
+- * final path disappears.  In this case continuing to fill the page cache
+- * with dirty data which cannot be written out is evil, so prevent that.
+- */
+-void
+-vn_ioerror(
+-	xfs_inode_t	*ip,
+-	int		error,
+-	char		*f,
+-	int		l)
+-{
+-	if (unlikely(error == -ENODEV))
+-		xfs_do_force_shutdown(ip->i_mount, SHUTDOWN_DEVICE_REQ, f, l);
+-}
+-
+ #ifdef	XFS_INODE_TRACE
+ 
+ #define KTRACE_ENTER(ip, vk, s, line, ra)			\
+Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h
+===================================================================
+--- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 20:54:09.000000000 +0100
++++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_vnode.h	2008-11-16 20:54:21.000000000 +0100
+@@ -63,7 +63,6 @@ extern void	vn_init(void);
+  */
+ extern void	vn_iowait(struct xfs_inode *ip);
+ extern void	vn_iowake(struct xfs_inode *ip);
+-extern void	vn_ioerror(struct xfs_inode *ip, int error, char *f, int l);
+ 
+ static inline int vn_count(struct inode *vp)
+ {
 
 _______________________________________________
 xfs mailing list
