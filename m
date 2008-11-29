@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mAT7Oi7S020130 for <xfs@oss.sgi.com>; Sat, 29 Nov 2008 01:24:44 -0600
+	mATN3PGN030222 for <xfs@oss.sgi.com>; Sat, 29 Nov 2008 17:03:26 -0600
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 788DF1ABC7E1
-	for <xfs@oss.sgi.com>; Fri, 28 Nov 2008 23:24:40 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A100616241F5
+	for <xfs@oss.sgi.com>; Sat, 29 Nov 2008 15:03:24 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id w3CTDzu1NoVOxxiG for
-	<xfs@oss.sgi.com>; Fri, 28 Nov 2008 23:24:40 -0800 (PST)
+	cuda.sgi.com with ESMTP id 9w3Ey3A53Gtbd2tU for
+	<xfs@oss.sgi.com>; Sat, 29 Nov 2008 15:03:24 -0800 (PST)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: hangs with MTRR_SANITIZER? (was: Re: truncated files)
-Date: Sat, 29 Nov 2008 08:24:37 +0100
+Subject: Re: hangs with MTRR_SANITIZER? - no, something else
+Date: Sun, 30 Nov 2008 00:02:45 +0100
 References: <200811252244.14718.Martin@Lichtvoll.de>
-	<200811282302.42809.Martin@lichtvoll.de>
 	<200811282339.24197.Martin@lichtvoll.de>
-	(sfid-20081129_074736_759214_8BA75EA5)
-In-Reply-To: <200811282339.24197.Martin@lichtvoll.de>
+	<200811290824.38750.Martin@lichtvoll.de>
+	(sfid-20081129_083903_406893_57EEF7DC)
+In-Reply-To: <200811290824.38750.Martin@lichtvoll.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200811290824.38750.Martin@lichtvoll.de>
+Message-Id: <200811300002.45669.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,130 +27,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: tuxonice-devel@lists.tuxonice.net, linux-kernel@vger.kernel.org
 
-CkhpIQoKQ0MnZCB0byBsaW51eC1rZXJuZWwgbWFpbGluZ2xpc3QsIGFzIHRoYXQgbWlnaHQgYmUg
-c29tZXRoaW5nIHRoYXQgZ29lcyAKYmV5b25kIGFueSBwb3NzaWJsZSBUdXhPbkljZSBvciBYRlMg
-aXNzdWVzLiBJIGtub3cgSSBhbSB1c2luZyBUdXhPbkljZSAKd2hpY2ggaXMgbm90IHBhcnQgb2Yg
-dGhlIG1haW5saW5lIGtlcm5lbC4gQW5kIEkgYW0gZXZlbiB1c2luZyBhbiAKaW5vZmZpY2lhbCBw
-YXRjaCAtIHdoaWNoIEkgd2lsbCB1c2UgYWdhaW4gdW5jaGFuZ2VkIGZvciB0aGUgbm9uIApNVFJS
-X1NBTklUSVpFUiBrZXJuZWwsIGluIG9yZGVyIHRvIGtub3cgd2hldGhlciBpdHMgdGhlIE1UUlJf
-U0FOSVRJWkVSIAp0aGluZy4gQW5kIGFueXdheSBiZWZvcmUga25vd2luZyB3aGV0aGVyIGl0IG1p
-Z2h0IGJlIE1UUlJfU0FOSVRJWkVSIApyZWxhdGVkIEkgbmVlZCB0byBydW4gdGhlIG5vbiBNVFJS
-X1NBTklUSVpFUiBrZXJuZWwgZm9yIGF0IGxlYXN0IGEgd2VlayAKYW5kIGhhdmUgcXVpdGUgc29t
-ZSBoaWJlcm5hdGUgY3ljbGVzLiBJZiBzb21lb25lIGVsc2UgaGFkIGlzc3VlcyB3aXRoIApNVFJS
-X1NBTklUSVpFUiBJIHdvdWxkIGxpa2UgdG8gaGVhciBhYm91dCBpdC4gQWxzbyBpZiBzb21lb25l
-IHRoaW5rcyBJIGFtIApjb21wbGV0ZWx5IG9mZiB0cmFjayBvbiB0cnlpbmcgdG8gdHJhY2sgdGhp
-cyBkb3duIEkgYXBwcmVjaWF0ZSBhIGhpbnQuCgoKTGlua3MgdG8gbXkgcG9zdHMgb24geGZzIGFu
-ZCB0dXhvbmljZS1kZXZlbCBtYWlsaW5nIGxpc3RzOgoKaHR0cDovL29zcy5zZ2kuY29tL3BpcGVy
-bWFpbC94ZnMvMjAwOC1Ob3ZlbWJlci8wMzczOTkuaHRtbAoKaHR0cDovL2xpc3RzLnR1eG9uaWNl
-Lm5ldC9waXBlcm1haWwvdHV4b25pY2UtZGV2ZWwvMjAwOC1Ob3ZlbWJlci8wMDA0MjEuaHRtbAoK
-CkFtIEZyZWl0YWcgMjggTm92ZW1iZXIgMjAwOCBzY2hyaWViIE1hcnRpbiBTdGVpZ2Vyd2FsZDoK
-PiBBbSBGcmVpdGFnIDI4IE5vdmVtYmVyIDIwMDggc2NocmllYiBNYXJ0aW4gU3RlaWdlcndhbGQ6
-Cj4gPiBBbSBNaXR0d29jaCAyNiBOb3ZlbWJlciAyMDA4IHNjaHJpZWIgRGF2ZSBDaGlubmVyOgo+
-ID4gPiBPbiBXZWQsIE5vdiAyNiwgMjAwOCBhdCAwOTo0OToxOEFNICswMTAwLCBNYXJ0aW4gU3Rl
-aWdlcndhbGQgd3JvdGU6Cj4gPiA+ID4gQW0gRGllbnN0YWcgMjUgTm92ZW1iZXIgMjAwOCBzY2hy
-aWViIERhdmUgQ2hpbm5lcjoKPiA+ID4gPiA+IE9uIFR1ZSwgTm92IDI1LCAyMDA4IGF0IDEwOjQ0
-OjE0UE0gKzAxMDAsIE1hcnRpbiBTdGVpZ2Vyd2FsZAo+Cj4gd3JvdGU6Cj4gPiA+ID4gPiA+IEhp
-IQo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiBUb2RheSBvbiBvbmUgdHJ5IHRvIGhpYmVybmF0ZSB2
-aWEgdHV4b25pY2UgaXQgbWFjaGluZQo+ID4gPiA+ID4gPiBhcHBlYXJlZCBkZWFkLiBJIGFtCj4g
-PiA+ID4gPgo+ID4gPiA+ID4gICAgICAgICAgICAgICAgICAgICAgIF5eXl5eXl5eXgo+ID4gPiA+
-ID4gV2hlbiAobm90IGlmKSBzdXNwZW5kIHRvIGRpc2svcmVzdW1lIGZhaWxzLCB5b3UgZ2V0IHRv
-IGtlZXAgYWxsCj4gPiA+ID4gPiB0aGUgYnJva2VuIHBpZWNlcyBvZiB5b3VyIGZpbGVzeXN0ZW0u
-IEl0IHdvcmtzIG1vc3Qgb2YgdGhlCj4gPiA+ID4gPiB0aW1lLCBidXQgaXQgaGFzIHNvbWUgZnVu
-ZGFtZW50YWxseSBicm9rZW4gY29ybmVyIGNhc2VzIHRoYXQKPiA+ID4gPiA+IHlvdSBwcm9iYWJs
-eSBqdXN0IGhpdC4uLi4KPiA+ID4gPgo+ID4gPiA+IFdlbGwgSSB1c2UgVHV4T25JY2UgZm9yIGEg
-cmVhc29uISBJIGhhZCB1cHRpbWVzIG9mIHVwIHRvIDcwIGRheXMKPiA+ID4gPiB3aXRoIGl0IGFs
-cmVhZHkuIEFuZCB0aGV5IGFyZSB1c3VhbGx5IG9ubHkgaW50ZXJydXB0ZWQgYnkga2VybmVsCj4g
-PiA+ID4gdXBkYXRlcyBvciBtYW51YWwgc2h1dGRvd25zLiBJIHdhcyBuZXZlciBjb252aW5jZWQg
-YnkgaW4ta2VybmVsCj4gPiA+ID4gc29sdXRpb25zIGZvciBoaWJlcm5hdGUuCj4gPiA+Cj4gPiA+
-IFN1cmUsIHRob3VnaCBJJ20gbm90IGNvbnZpbmNlZCB0aGF0IFR1eE9uSWNlIGlzIGFueSBiZXR0
-ZXIgYmVjYXVzZQo+ID4gPiBpdCBzdGlsbCB1c2VzIHRoZSBzYW1lIGZ1bmRhbWVudGFsIGRlc2ln
-biBhcyB0aGUgaW4ta2VybmVsIG9uZXMuCj4gPgo+ID4gTWlnaHQgYmUuCj4gPgo+ID4gQnV0IHNv
-bWV0aGluZyBpcyBmaXNoeSBoZXJlLiBJIGhhZCBpdCBhIHNlY29uZCB0aW1lIHRvZGF5LiBUaGlz
-IHRpbWUKPiA+IEkga25vdyBmb3Igc3VyZSB0aGF0IHRoZSBtYWNoaW5lIGZyZWV6ZWQgaGFyZC4g
-TW91c2UgcG9pbnRlciBmcm96ZQo+ID4gYW5kIHRoZSBtYWNoaW5lIGRpZG4ndCBldmVuIHJlc3Bv
-bmQgdG8gYSBwaW5nIGFueW1vcmUuIE5vdGhpbmcgaW4KPiA+IGxvZ3MgLSBkb2Vzbid0IHN1cnBy
-aXNlIG1lLgo+ID4KPiA+IEkgZGlkbid0IGhhdmUgdGhpcyBpc3N1ZSB3aXRoIDIuNi4yNiwgYW5k
-IEkgYWxzbyBkb24ndCB0aGluayBJIGhhZCBpdAo+ID4gd2l0aCAyLjYuMjcuNS4gSSB3aWxsIGRv
-d25ncmFkZSB0byAyLjYuMjcuNSBub3cuCj4KPiBJIHdvbmRlciBhYm91dCB0aG9zZSB0cnVuY2F0
-ZWQgZmlsZXMgbm9uZXRoZWxlc3MuIEFzIEkgZG9uJ3QgdGhpbmsgdGhhdAo+IEtERSBpcyB3cml0
-aW5nIGNvbmZpZyBmaWxlcyBhbGwgdGhlIHRpbWUuIFdlbGwgSSBtaWdodCBiZSB3cm9uZywgYnV0
-IEkKPiBkaWRuJ3QgZXZlbiBjaGFuZ2UgS0RFIGNvbmZpZ3VyYXRpb24gZHVyaW5nIHRpbWUgb2Yg
-dGhlIGNyYXNoLi4uIE9UT0gKPiBYRlMgdXNlcyBhIGluIG1lbW9yeSBpbm9kZSBzaXplIGFuZCBz
-aG91bGQgYmUgc2FmZSB3aXRoIHRoZSBwb2ludCBpbgo+IHRpbWUgd2hlbiBpdCB3cml0ZXMgdGhl
-IHNpemUgdG8gZGlzayBhcyBmYXIgYXMgSSByZWFkIGhlcmUuIFdlbGwgdGhpcwo+IHRpbWUgYXQg
-bGVhc3QgYWdhaW4gdGhlIGZpbGUgImtkZWdsb2JhbHMiIHdhcyBhZmZlY3RlZCBhbmQgdGhpcyBm
-aWxlCj4gbWlnaHQgYmUgd3JpdHRlbiByYXRoZXIgb2Z0ZW4uCgpPa2F5LCBJIHRob3VnaHQgYWJv
-dXQgdGhpcyBhIGJpdCBtb3JlIGluIG15IGRyZWFtcyB0aGlzIG5pZ2h0IGl0IHNlZW1zLiBJIAp0
-aGluayBpdCBldmVuIGhhbmdzIGJlZm9yZSBzdGFydGluZyBtdWNoIG9mIGhpYmVybmF0ZS4KCkkg
-aGFkIHRoaXMgcHJlLWhpYmVybmF0ZSBzY3JpcHQ6CgpzaGFtYmhhbGE6L2V0Yy9hY3BpPiBienIg
-Y2F0IC1yMzA0IGhpYmVybmF0ZS10dXhvbmljZS5zaAojIS9iaW4vc2gKCiMgw4RuZGVydW5nIGRl
-ciBOZXR6d2Vya3VtZ2VidW5nIGVya2VubmVuIHVuZCBaZWl0c2VydmVyIGhhbmRlbG4KL2V0Yy9p
-bml0LmQvaWZwbHVnZCBzdG9wCmlmZG93biBldGgwCi9ldGMvaW5pdC5kL2Nocm9ueSBzdG9wCgoj
-IEd1dG5hY2h0CmhpYmVybmF0ZQoKIyDDhG5kZXJ1bmcgZGVyIE5ldHp3ZXJrdW1nZWJ1bmcgZXJr
-ZW5uZW4gdW5kIFplaXRzZXJ2ZXIgaGFuZGVsbgovZXRjL2luaXQuZC9jaHJvbnkgc3RhcnQKL2V0
-Yy9pbml0LmQvaWZwbHVnZCBzdGFydAoKClRodXMgaXRzIGxvZ2ljYWwgdGhhdCBwaW5naW5nIHRo
-ZSBtYWNoaW5lIGRpZCBub3Qgd29yayBhbnltb3JlLCBzaW5jZSBpdHMgCmZpcnN0IHRoaW5nIGl0
-IGRvZXMgaXMgdG8gZGlzYWJsZSB0aGUgbmV0d29yayBpbiBvcmRlciB0byBkZXRlY3QgY2hhbmdl
-cyAKaW4gbmV0d29yayBlbnZpcm9ubWVudCBiZXR3ZWVuIHNuYXBzaG90IGN5Y2xlcyByZWxpYWJs
-eS4gCgpUaGVuIGl0IGZyb3plIGhhcmQgZXZlbiBiZWZvcmUgdGhlIGRlc2t0b3Agd2FzIGxvY2tl
-ZC4gQUZBSVIgbm90IGV2ZW4gdGhlIApoaWJlcm5hdGVyIC8gc3VzcGVuZCBMRUQgb2YgbXkgVGhp
-bmtQYWQgVDQyIHN0YXJ0ZWQgdG8gYmxpbmsuIFRodXMgSSAKZ3Vlc3MgaXQgZnJvemUgd2F5IGJl
-Zm9yZSBhbnkgc2VyaW91cyBoaWJlcm5hdGlvbiB3b3JrIHN0YXJ0ZWQuIEl0IGFsc28gCmRpZG4n
-dCB5ZXQgc3dpdGNoIHRvIGNvbnNvbGUuIEFuZCBhY3R1YWxseSBzb21ld2hlcmUgYWxvbmcgdGhl
-IGxpbmUgb2YgCnRoaXMgaXQgbWlnaHQgZmFpbC4KCkkgYXQgbGVhc3QgaGF2ZSB0aGUgaWRlYSB0
-aGF0IGl0IGNvdWxkIGhhdmUgdG8gZG8gd2l0aDoKCiAg4pSCIENPTkZJR19NVFJSX1NBTklUSVpF
-UjoKICDilIIgCiAg4pSCIENvbnZlcnQgTVRSUiBsYXlvdXQgZnJvbSBjb250aW51b3VzIHRvIGRp
-c2NyZXRlLCBzbyBYIGRyaXZlcnMgY2FuCiAg4pSCIGFkZCB3cml0ZWJhY2sgZW50cmllcy4KICDi
-lIIKICDilIIgQ2FuIGJlIGRpc2FibGVkIHdpdGggZGlzYWJsZV9tdHJyX2NsZWFudXAgb24gdGhl
-IGtlcm5lbCBjb21tYW5kIGxpbmUuCiAg4pSCIFRoZSBsYXJnZXN0IG10cnIgZW50cnkgc2l6ZSBm
-b3IgYSBjb250aW5vdXMgYmxvY2sgY2FuIGJlIHNldCB3aXRoCiAg4pSCIG10cnJfY2h1bmtfc2l6
-ZS4KICDilIIKICDilIIgSWYgdW5zdXJlLCBzYXkgTi4KCkVzcGVjaWFsbHkgYXMgc29tZSBlYXJs
-aWVyIGRlc2NyaXB0aW9uIG9mIHRoaXMgY29uZmlnIG9wdGlvbiBhZGRzIGFuIAppbXBvcnRhbnQg
-ZGV0YWlsOgoKPiAgPiArY29uZmlnIE1UUlJfU0FOSVRJWkVSCj4gID4gKyAgICAgZGVmX2Jvb2wg
-eQo+ICA+ICsgICAgIHByb21wdCAiTVRSUiBjbGVhbnVwIHN1cHBvcnQiCj4gID4gKyAgICAgZGVw
-ZW5kcyBvbiBNVFJSCj4gID4gKyAgICAgaGVscAo+ICA+ICsgICAgICAgQ29udmVydCBNVFJSIGxh
-eW91dCBmcm9tIGNvbnRpbnVvdXMgdG8gZGlzY3JldGUsIHNvIHNvbWUgWCAKZHJpdmVyCj4gID4g
-KyAgICAgICBjb3VsZCBhZGQgV0IgZW50cmllcy4KPiAgPiArCj4gID4gKyAgICAgICBTYXkgTiBo
-ZXJlIGlmIHlvdSBzZWUgYm9vdHVwIHByb2JsZW1zIChib290IGNyYXNoLCBib290IGhhbmcsCj4g
-ID4gKyAgICAgICBzcG9udGFuZW91cyByZWJvb3RzKS4KClRoaXMgb25lIGF0IGxlYXN0IHNvdW5k
-cyBpbnRlcmVzdGluZy4gRXNwZWNpYWxseSBpbiBjb21iaW50aW9uIHdpdGggdGhlIApzZW50ZW5j
-ZSBhYm91dCBYIGRyaXZlcnMuIEJ1dCB0aGVuIGl0IG9ubHkgc3BlYWtzIGFib3V0IGJvb3QgcmVs
-YXRlZCAKaXNzdWVzLiBBbmQgaGVyZSBpdCBoYW5nZWQgc2hvcnRseSBhZnRlciBJIHByZXNzZWQg
-Rm4tRjEyIHRvIHN0YXJ0IGEgCnNuYXBzaG90IGN5Y2xlLgoKCnNoYW1iaGFsYTovZXRjL2FjcGk+
-IGxzcGNpIC1ubiB8IGdyZXAgLWkgdmdhCjAxOjAwLjAgVkdBIGNvbXBhdGlibGUgY29udHJvbGxl
-ciBbMDMwMF06IEFUSSBUZWNobm9sb2dpZXMgSW5jIFJWMzUwIApbTW9iaWxpdHkgUmFkZW9uIDk2
-MDAgTTEwXSBbMTAwMjo0ZTUwXQoKSXQgZGlkbid0IHlldCBoYW5nIHdpdGggbXkgSUJNIFRoaW5r
-UGFkIFQyMyAoU3VwZXJTYXZhZ2UpIGFuZCBteSAKd29ya3N0YXRpb24gYXQgd29yayAobmV3ZXIg
-QVRJIFJhZGVvbikuIFNvIHRoYXQgbWlnaHQgYmUgYW5vdGhlciBoaW50LgoKT24gdGhlIGZpcnN0
-IG9jY3VyZW5jZSB0aGUgbWFjaGluZSBkaWQgbm90IHJlc3BvbmQgdG8gdXNlciBpbnB1dCB2ZXJ5
-IAplYXJseSwgZXZlbiBiZWZvcmUgc2VyaW91cyBoaWJlcm5hdGluZyB3b3JrIHN0YXJ0ZWQsIHRv
-by4KCj4gID4gKwo+ICA+ICsgICAgICAgY291bGQgYmUgZGlzYWJsZWQgd2l0aCBkaXNhYmxlX210
-cnJfY2xlYW51cC4gYWxzbyAKbXRycl9jaHVua19zaXplCgpodHRwOi8vbGttbC5vcmcvbGttbC8y
-MDA4LzQvMjgvNjg1CgpUaHVzIEkgYW0gY29tcGlsaW5nIDIuNi4yNy43IHdpdGhvdXQgTVRSUl9T
-QU5JVElaRVIgc3VwcG9ydCwgYnV0IGVsc2V3aXNlIAp1bmNoYW5nZWQuIEFuZCB3aWxsIHRlc3Qg
-d2hldGhlciB0aG9zZSBoYW5ncyB3aWxsIGJlIGdvbmUuIEl0IGRpZG4ndCAKaGFwcGVuIHdpdGgg
-Mi42LjI3LjUgdG91Z2guIFRoYXQgbWlnaHQganVzdCBiZSBjb25jdXJyZW5jZSBvciBpdCBtaWdo
-dCAKaGludCBhdCB0aG9zZSBCSU9TIGNvcnJ1cHRpb24gcHJldmVudGlvbiBwYXRjaCB0aGF0IGNh
-bWUgaW4gYmV0d2VlbiAKMi42LjI3LjUgYW5kIDIuNi4yNy43LiBCdXQgYWN0dWFsbHkgSSBkb3Vi
-dCB0aGF0IHRoZSBCSU9TIGNvcnJ1cHRpb24gCnByZXZlbnRpb24gcGF0Y2ggaXMgYXQgcGxheSBo
-ZXJlLgoKClRvIGF2b2lkIHRoZSB0cnVuY2F0ZWQgZmlsZXMgcHJvYmxlbXMsIEkgd2lsbCB0cnkg
-dGhpczoKCnNoYW1iaGFsYTovZXRjL2FjcGk+IGNhdCBoaWJlcm5hdGUtdHV4b25pY2Uuc2gKIyEv
-YmluL3NoCgojIFp1ciBTaWNoZXJoZWl0IGdsZWljaCBhbSBBbmZhbmcgYWxsZSBhdXNzdGVoZW5k
-ZW4gw4RuZGVydW5nZW4gc2NocmVpYmVuCnN5bmMKCiMgw4RuZGVydW5nIGRlciBOZXR6d2Vya3Vt
-Z2VidW5nIGVya2VubmVuIHVuZCBaZWl0c2VydmVyIGhhbmRlbG4KL2V0Yy9pbml0LmQvaWZwbHVn
-ZCBzdG9wCmlmZG93biBldGgwCi9ldGMvaW5pdC5kL2Nocm9ueSBzdG9wCgojIFp1ciBTaWNoZXJo
-ZWl0IGhpZXIgbm9jaG1hbCBhbGxlIGF1c3N0ZWhlbmRlbiDDhG5kZXJ1bmdlbiBzY2hyZWliZW4K
-c3luYwoKIyBHdXRuYWNodApoaWJlcm5hdGUKCiMgw4RuZGVydW5nIGRlciBOZXR6d2Vya3VtZ2Vi
-dW5nIGVya2VubmVuIHVuZCBaZWl0c2VydmVyIGhhbmRlbG4KL2V0Yy9pbml0LmQvY2hyb255IHN0
-YXJ0Ci9ldGMvaW5pdC5kL2lmcGx1Z2Qgc3RhcnQKCkNpYW8sCi0tIApNYXJ0aW4gJ0hlbGlvcycg
-U3RlaWdlcndhbGQgLSBodHRwOi8vd3d3LkxpY2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQw
-IDA3MTAgNEFGQSAgQjgyRiA5OTFCIEVBQUMgQTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Am Samstag 29 November 2008 schrieb Martin Steigerwald:
+> Hi!
+>
+> CC'd to linux-kernel mailinglist, as that might be something that goes
+> beyond any possible TuxOnIce or XFS issues. I know I am using TuxOnIce
+> which is not part of the mainline kernel. And I am even using an
+> inofficial patch - which I will use again unchanged for the non
+> MTRR_SANITIZER kernel, in order to know whether its the MTRR_SANITIZER
+> thing. And anyway before knowing whether it might be MTRR_SANITIZER
+> related I need to run the non MTRR_SANITIZER kernel for at least a week
+> and have quite some hibernate cycles. If someone else had issues with
+> MTRR_SANITIZER I would like to hear about it. Also if someone thinks I
+> am completely off track on trying to track this down I appreciate a
+> hint.
+
+Ok, its not MTRR_SANITIZER. It hung again on hibernate, again before any 
+serious hibernating work has started. I will add debug output to my 
+pre-hibernate script as it might hang already in there, maybe while 
+disabling the network. I want to know whether it hangs before calling the 
+hibernate script or after it. I think I will go for the latest official 
+hibernate patch instead of using the inofficial one, although I am not 
+convinced that it makes much of a difference. Lets see.
+
+The syncs I added to my pre-hibernate seemed to help. KDE configuration is 
+intact. As a safeguard I rsync ~/.kde to a backup directory before 
+hibernating anyway.
+
+Lets see what ideas I have to continue that Sherlock Holmes game ;)
+
+I am puzzled that it only happens on my ThinkPad T42, not on the T23 and 
+neither on the Dell workstation - till now.
+
+Goodnight ;-),
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
