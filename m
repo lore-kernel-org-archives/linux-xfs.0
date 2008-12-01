@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB1N4dIv027538 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 17:04:40 -0600
+	mB1NHP8B028489 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 17:17:25 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 99A8C3041D8
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2008 15:04:36 -0800 (PST)
-Date: Mon, 1 Dec 2008 17:10:05 -0600
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 390283041D9
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2008 15:17:25 -0800 (PST)
+Date: Mon, 1 Dec 2008 17:22:54 -0600
 From: "Bill O'Donnell" <billodo@sgi.com>
 Subject: Re: [PATCH 0/9] CRC support for superblock, ag headers, log and
 	btree blocks
-Message-ID: <20081201231005.GA17631@sgi.com>
+Message-ID: <20081201232254.GA25288@sgi.com>
 References: <20080925225613.GA9822@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -36,11 +36,11 @@ On Fri, Sep 26, 2008 at 12:56:13AM +0200, Christoph Hellwig wrote:
 | btree block.  I'll probably look into that again once we're done with all
 | data structures.
 
-Just to be clear, crc only applies to the metadata structures listed in the
-subject line, correct?  It wasn't clear to me where you were with the "other
-structures".  Maybe it would be more clear if you could provide a simple
-table listing the structures and whether or not crc applies (yet).
+IIUC, this is the latest crc series, right?  
+(I had once thought, perhaps mistakenly, that there would be a refreshed patchset 
+subsequent to this one).
 
+Thanks,
 Bill
 
 _______________________________________________
