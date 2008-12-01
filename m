@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB1NVB7Q029149 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 17:31:11 -0600
-Date: Tue, 02 Dec 2008 10:31:16 +1100
-Subject: Re: [REVIEW] Fix unaligned accesses in IA64 in xfsprogs
-From: "Barry Naujok" <bnaujok@sgi.com>
+	mB1NYIKf029479 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 17:34:20 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 867298F81A5
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2008 15:34:15 -0800 (PST)
+Date: Mon, 1 Dec 2008 17:39:44 -0600
+From: "Bill O'Donnell" <billodo@sgi.com>
+Subject: Re: [PATCH 0/9] CRC support for superblock, ag headers, log and
+	btree blocks
+Message-ID: <20081201233944.GA32605@sgi.com>
+References: <20080925225613.GA9822@lst.de>
 MIME-Version: 1.0
-References: <op.ulg0j1bf3jf8g2@pc-bnaujok.melbourne.sgi.com>
-	<20081201134205.GA7528@infradead.org>
-Message-ID: <op.ulibmezc3jf8g2@pc-bnaujok.melbourne.sgi.com>
-In-Reply-To: <20081201134205.GA7528@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20080925225613.GA9822@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,49 +26,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@sgi.com
 
-On Tue, 02 Dec 2008 00:42:05 +1100, Christoph Hellwig <hch@infradead.org>  
-wrote:
+On Fri, Sep 26, 2008 at 12:56:13AM +0200, Christoph Hellwig wrote:
+| Here's an updated crc series for various metadata structures.  We're still
+| looking at the magic number in the log recovery case because getting down
+| a buffer type for the other structures wasn't quite as easy as for the
+| btree block.  I'll probably look into that again once we're done with all
+| data structures.
 
-> On Mon, Dec 01, 2008 at 05:34:39PM +1100, Barry Naujok wrote:
->> xfs_repair is the main culprit when getting disk extents which aren't
->> properly aligned in memory. This patch does not call
->> xfs_bmbt_disk_get_all directly anymore but does an unaligned get on
->> the disk extent record and calls xfs_bmbt_get_all which is host-based
->> like the rest of the kernel routines do.
->
-> What about just doin the get_unaligned in xfs_bmbt_disk_get_all?  That
-> way we could just use it everywhere.  The only users that don't need
-> the get_unaligned are in the tracing code, and I don't think we should
-> be worried about that little bit of overhead.
->
->> @@ -277,21 +277,17 @@ convert_extent(
->>   	xfs_dfilblks_t		*cp,
->>   	int			*fp)
->>   {
->
-> And then we could replace this helper with a direct call to
-> xfs_bmbt_disk_get_all as the caller would be much cleaner with a
-> xfs_bmbt_irec_t on the stack anyway..
+Christoph-
+Yet another question as I revisit this ;)  ... 
+What is to be done with the other tarball on your site ( xfs-cmds-crcs.tgz )?
+Is there a separate posting on this list that I may have missed earlier?
 
-It's a libxfs/kernel function, so ideally, it should be also ported
-into the kernel space and possible kernel cleanups along with it.
+Bill
 
->> --- a/xfsprogs/repair/dino_chunks.c	2008-12-01 17:10:37.000000000 +1100
->> +++ b/xfsprogs/repair/dino_chunks.c	2008-12-01 16:11:11.549834281 +1100
->> @@ -609,7 +609,8 @@ process_inode_chunk(
->>   	if (blks_per_cluster == 0)
->>   		blks_per_cluster = 1;
->>   	cluster_count = XFS_INODES_PER_CHUNK / inodes_per_cluster;
->> -	ASSERT(cluster_count > 0);
->> +	if (cluster_count == 0)
->> +		cluster_count = 1;
->
-> I can't see how this is related.
 
-Another IA64 fix.
 
 
 _______________________________________________
