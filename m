@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB1NlnqW030400 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 17:47:49 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA9778F8047
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2008 15:47:48 -0800 (PST)
-Date: Mon, 1 Dec 2008 17:53:18 -0600
-From: "Bill O'Donnell" <billodo@sgi.com>
-Subject: Re: [PATCH 0/9] CRC support for superblock, ag headers, log and
-	btree blocks
-Message-ID: <20081201235318.GC5094@sgi.com>
-References: <20080925225613.GA9822@lst.de>
+	mB20bKYf000715 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 18:37:20 -0600
+Date: Tue, 02 Dec 2008 11:37:31 +1100
+Subject: Re: [REVIEW] Fix unaligned accesses in IA64 in xfsprogs
+From: "Barry Naujok" <bnaujok@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20080925225613.GA9822@lst.de>
+References: <op.ulg0j1bf3jf8g2@pc-bnaujok.melbourne.sgi.com>
+	<20081201134205.GA7528@infradead.org>
+Message-ID: <op.ulieotl73jf8g2@pc-bnaujok.melbourne.sgi.com>
+In-Reply-To: <20081201134205.GA7528@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +22,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Sep 26, 2008 at 12:56:13AM +0200, Christoph Hellwig wrote:
-| Here's an updated crc series for various metadata structures.  We're still
-| looking at the magic number in the log recovery case because getting down
-| a buffer type for the other structures wasn't quite as easy as for the
-| btree block.  I'll probably look into that again once we're done with all
-| data structures.
+On Tue, 02 Dec 2008 00:42:05 +1100, Christoph Hellwig <hch@infradead.org>  
+wrote:
 
-I've carried out cursory build and test of this series.  I'm concerned that
-my testing (and anyone else's testing) has not addressed performance hits 
-being introduced with crc on metadata.  What level of testing have you done,
-and can you recommend some testing that goes beyond the QA suite that we
-have in place.  I did run the btree test harness on that earlier series, but it
-appeared to me that that was a go/no-go test and unless I'm missing something,
-I've not seen tests that might help quantify performance hits.
+> On Mon, Dec 01, 2008 at 05:34:39PM +1100, Barry Naujok wrote:
+>> xfs_repair is the main culprit when getting disk extents which aren't
+>> properly aligned in memory. This patch does not call
+>> xfs_bmbt_disk_get_all directly anymore but does an unaligned get on
+>> the disk extent record and calls xfs_bmbt_get_all which is host-based
+>> like the rest of the kernel routines do.
+>
+> What about just doin the get_unaligned in xfs_bmbt_disk_get_all?  That
+> way we could just use it everywhere.  The only users that don't need
+> the get_unaligned are in the tracing code, and I don't think we should
+> be worried about that little bit of overhead.
+>
+>> @@ -277,21 +277,17 @@ convert_extent(
+>>   	xfs_dfilblks_t		*cp,
+>>   	int			*fp)
+>>   {
+>
+> And then we could replace this helper with a direct call to
+> xfs_bmbt_disk_get_all as the caller would be much cleaner with a
+> xfs_bmbt_irec_t on the stack anyway..
 
+Obviously modifying xfs_bmbt_disk_get_all yields a much smaller patch:
 
+===========================================================================
+xfsprogs/db/bmap.c
+===========================================================================
 
-Thanks,
-Bill
+--- a/xfsprogs/db/bmap.c	2008-12-02 11:21:00.000000000 +1100
++++ b/xfsprogs/db/bmap.c	2008-12-02 11:20:41.324928232 +1100
+@@ -277,21 +277,14 @@ convert_extent(
+  	xfs_dfilblks_t		*cp,
+  	int			*fp)
+  {
+-	xfs_bmbt_irec_t irec, *s = &irec;
+-	xfs_bmbt_rec_t rpcopy, *p = &rpcopy;
++	xfs_bmbt_irec_t		irec;
+
+-	memmove(&rpcopy, rp, sizeof(rpcopy));
+-	libxfs_bmbt_disk_get_all(p, s);
++	libxfs_bmbt_disk_get_all(rp, &irec);
+
+-	if (s->br_state == XFS_EXT_UNWRITTEN) {
+-		*fp = 1;
+-	} else {
+-		*fp = 0;
+-	}
+-
+-	*op = s->br_startoff;
+-	*sp = s->br_startblock;
+-	*cp = s->br_blockcount;
++	*fp = irec.br_state == XFS_EXT_UNWRITTEN;
++	*op = irec.br_startoff;
++	*sp = irec.br_startblock;
++	*cp = irec.br_blockcount;
+  }
+
+  void
+
+===========================================================================
+xfsprogs/libxfs/xfs_bmap_btree.c
+===========================================================================
+
+--- a/xfsprogs/libxfs/xfs_bmap_btree.c	2008-12-02 11:21:00.000000000 +1100
++++ b/xfsprogs/libxfs/xfs_bmap_btree.c	2008-12-02 11:20:09.553355392 +1100
+@@ -181,7 +181,8 @@ xfs_bmbt_disk_get_all(
+  	xfs_bmbt_rec_t	*r,
+  	xfs_bmbt_irec_t *s)
+  {
+-	__xfs_bmbt_get_all(be64_to_cpu(r->l0), be64_to_cpu(r->l1), s);
++	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
++				get_unaligned_be64(&r->l1), s);
+  }
+
+  /*
 
 _______________________________________________
 xfs mailing list
