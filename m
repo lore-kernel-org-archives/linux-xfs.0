@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB2G7Lox031738 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 10:07:21 -0600
+	mB2G7pUP031826 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 10:07:51 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F10A3164F1E0
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 08:07:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 00D8C164F1EF
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 08:07:50 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id MgcLIBZ1B2LVMaLy for
-	<xfs@oss.sgi.com>; Tue, 02 Dec 2008 08:07:20 -0800 (PST)
+	by cuda.sgi.com with ESMTP id qXvYRtMlLi4hFPHw for
+	<xfs@oss.sgi.com>; Tue, 02 Dec 2008 08:07:50 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L7Xly-0007Jd-4q
-	for xfs@oss.sgi.com; Tue, 02 Dec 2008 16:06:50 +0000
-Message-Id: <20081202160650.066779000@bombadil.infradead.org>
+	Linux)) id 1L7Xlz-0007Qj-24
+	for xfs@oss.sgi.com; Tue, 02 Dec 2008 16:06:51 +0000
+Message-Id: <20081202160650.974883000@bombadil.infradead.org>
 References: <20081202160430.775774000@bombadil.infradead.org>
-Date: Tue, 02 Dec 2008 11:04:34 -0500
+Date: Tue, 02 Dec 2008 11:04:40 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 04/22] remove unused prototypes for xfs_ihash_init /
-	xfs_ihash_free
-Content-Disposition: inline; filename=xfs-kill-xfs_ihash_init-exit
+Subject: [patch 10/22] kill dead quota flags
+Content-Disposition: inline; filename=xfs-kill-dead-quota-flags
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,19 +35,25 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6-xfs/fs/xfs/xfs_inode.h
+Index: xfs-master/fs/xfs/xfs_quota.h
 ===================================================================
---- linux-2.6-xfs.orig/fs/xfs/xfs_inode.h	2008-11-19 20:07:01.000000000 +0100
-+++ linux-2.6-xfs/fs/xfs/xfs_inode.h	2008-11-19 20:07:05.000000000 +0100
-@@ -493,8 +493,6 @@ static inline void xfs_ifunlock(xfs_inod
- /*
-  * xfs_iget.c prototypes.
-  */
--void		xfs_ihash_init(struct xfs_mount *);
--void		xfs_ihash_free(struct xfs_mount *);
- xfs_inode_t	*xfs_inode_incore(struct xfs_mount *, xfs_ino_t,
- 				  struct xfs_trans *);
- int		xfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+--- xfs-master.orig/fs/xfs/xfs_quota.h	2008-12-01 19:26:03.000000000 +0100
++++ xfs-master/fs/xfs/xfs_quota.h	2008-12-01 19:27:41.000000000 +0100
+@@ -84,11 +84,9 @@ typedef struct xfs_dqblk {
+ #define XFS_DQ_USER		0x0001		/* a user quota */
+ #define XFS_DQ_PROJ		0x0002		/* project quota */
+ #define XFS_DQ_GROUP		0x0004		/* a group quota */
+-#define XFS_DQ_FLOCKED		0x0008		/* flush lock taken */
+-#define XFS_DQ_DIRTY		0x0010		/* dquot is dirty */
+-#define XFS_DQ_WANT		0x0020		/* for lookup/reclaim race */
+-#define XFS_DQ_INACTIVE		0x0040		/* dq off mplist & hashlist */
+-#define XFS_DQ_MARKER		0x0080		/* sentinel */
++#define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
++#define XFS_DQ_WANT		0x0010		/* for lookup/reclaim race */
++#define XFS_DQ_INACTIVE		0x0020		/* dq off mplist & hashlist */
+ 
+ #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+ 
 
 -- 
 
