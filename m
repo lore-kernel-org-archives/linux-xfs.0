@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB21KFGM003055 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 19:20:16 -0600
-Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
-	[134.14.52.130])
-	by relay3.corp.sgi.com (Postfix) with SMTP id A8552AC09B
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2008 17:20:11 -0800 (PST)
-Received: from chook.melbourne.sgi.com (chook.melbourne.sgi.com
-	[134.14.54.237]) by larry.melbourne.sgi.com
-	(950413.SGI.8.6.12/950213.SGI.AUTOCF) via ESMTP id MAA23639 for
-	<xfs@oss.sgi.com>; Tue, 2 Dec 2008 12:20:10 +1100
-Subject: TAKE - xfsprogs: pad ustat struct for mount check to avoid corruption
-Message-Id: <20081202012010.217DA58ADBF6@chook.melbourne.sgi.com>
-Date: Tue,  2 Dec 2008 12:20:09 +1100 (EST)
-From: bnaujok@sgi.com (Barry Naujok)
+	mB23PJJm010216 for <xfs@oss.sgi.com>; Mon, 1 Dec 2008 21:25:19 -0600
+Message-ID: <4934AAA9.5090405@sgi.com>
+Date: Tue, 02 Dec 2008 14:25:29 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Assertion failed: atomic_read(&mp->m_active_trans)
+References: <492BB095.1000104@sgi.com>
+In-Reply-To: <492BB095.1000104@sgi.com>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +18,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Linux kernels (at least up until 2.6.27) are lacking compat sys_ustat
-handlers on some platforms (notably PPC) so that if called from 32 bits
-on a 64-bit kernel, the kernel will copy out too much (32 bytes onto a
-20-byte structure):
- 
-[root@xero xfstests]# xfs_logprint /dev/loop0
-xfs_logprint:
-*** stack smashing detected ***: xfs_logprint terminated
-Aborted
- 
-This will be fixed upstream, but for the benefit of older kernels we
-may want to guard against this by padding the structure we pass into
-the syscall.   We don't care about the values anyway, just the return
-value.
- 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+That looks fine to me.  Just make sure the PV doesn't get closed when
+you check in the changes since the real problem is still unresolved.
 
-
-Date:  Tue Dec  2 12:17:58 EST 2008
-Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xcmds-clean
-Inspected by:  Eric Sandeen <sandeen@sandeen.net>
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:32618a
-xfsprogs/libxfs/linux.c - 1.19 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/linux.c.diff?r1=text&tr1=1.19&r2=text&tr2=1.18&f=h
-	- Pad ustat struct to avoid stack corruption
-
+Donald Douwsma wrote:
+> We still occasionally see transactions in flight after remounting
+> read-only. This has come up a few times in the past, but we never
+> seem to have gotten to the bottom of it.
+> 
+> http://www.gossamer-threads.com/lists/linux/kernel/868139
+> 
+> Most recently we've seen this on 2.6.27, when unmounting the root
+> filesystem during shutdown/reboot.
+> 
+> Stack traceback for pid 13170
+> 0xffff81024dcd9080    13170    12901  1    1   R  0xffff81024dcd93c0 *mount
+> rsp                rip                Function (args)
+> 0xffff8101fb977d18 0xffffffff803b8acd assfail+0x1a (invalid, invalid, invalid)
+> 0xffff8101fb977d50 0xffffffff803a57e4 xfs_attr_quiesce+0x4a (0xffff8102211e4b20)
+> 0xffff8101fb977d70 0xffffffff803a589b xfs_mntupdate+0x7c (0xffff8102211e4b20, invalid, invalid)
+> 0xffff8101fb977d90 0xffffffff803b7cf6 xfs_fs_remount+0x49 (invalid, 0xffff8101fb977dd4, invalid)
+> 0xffff8101fb977dc0 0xffffffff802830fe do_remount_sb+0xe9 (0xffff81025c804670, invalid, 0xffff8101ee490000, invalid)
+> 0xffff8101fb977e00 0xffffffff8029698d do_remount+0x7d (0xffff8101fb977e58, invalid, invalid, 0xffff8101ee490000)
+> 0xffff8101fb977e40 0xffffffff802974fd do_mount+0x13b (0xffff8102079c2000, 0xffff8102004ea000, 0xffff810219cb0000, invalid, 0xffff8101ee490000)
+> 0xffff8101fb977f20 0xffffffff8029761a sys_mount+0x89 (0x523d90, invalid, invalid, 0xffffffffc0ed0021, 0x523e30)
+> 0xffff8101fb977f80 0xffffffff8020b18b system_call_after_swapgs+0x7b (invalid, invalid, invalid, invalid, invalid, invalid)
+> 
+> Previously we've discussed changing the ASSERT_ALWAYS to a normal
+> ASSERT to lessen the impact for users. Any objections to doing this
+> until we fix the underlying problem?
+> 
+> Don
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
