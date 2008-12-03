@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB33n82S013254 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 21:49:10 -0600
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: New XFS git tree on oss.sgi.com
-References: <492BA7AD.5080007@sgi.com> <20081125140553.GA16553@infradead.org>
-	<492CA245.3000709@sgi.com> <20081126032710.GA19523@infradead.org>
-Date: Wed, 03 Dec 2008 14:48:57 +1100
-In-Reply-To: <20081126032710.GA19523@infradead.org> (Christoph Hellwig's
-	message of "Tue, 25 Nov 2008 22:27:10 -0500")
-Message-ID: <ncctz9llxzq.fsf@itchy.melbourne.sgi.com>
+	mB33rkoL013524 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 21:53:46 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2785D166E543
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 19:53:42 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	j4Dd5KoRBsVfFnsY for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2008 19:53:42 -0800 (PST)
+Date: Wed, 3 Dec 2008 14:20:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.27.7 vanilla, project quota enabled and process stuck in D
+	state (repeatable every time)
+Message-ID: <20081203032013.GS18236@disturbed>
+References: <200812021949.55463.arekm@maven.pl>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <200812021949.55463.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,44 +30,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig <hch@infradead.org> writes:
+On Tue, Dec 02, 2008 at 07:49:55PM +0100, Arkadiusz Miskiewicz wrote:
+> 
+> Hello,
+> 
+> I'm trying to use xfs project quota on kernel 2.6.27.7 (vanilla, no additional 
+> patches), x86_64 UP machine (SMP kernel). 
+> 
+> Now some processes that are using /home/users/arekm/rpm are hanging in D-state 
+> like:
+> 
+> SysRq : Show Blocked State
+>   task                        PC stack   pid father
+> patch         D ffff88003a7dd080     0  3971   3965
+>  ffff880034453cd8 0000000000000086 0000000000000000 ffff8800344770d0
+>  ffff880034453cd8 ffff8800354d2440 ffffffff805d0340 ffff8800354d27b8
+>  00000000000041ed 00000000fffc7a61 ffff8800354d27b8 0000000000000250
+> Call Trace:
+>  [<ffffffffa00af4c4>] ? kmem_zone_alloc+0x94/0xe0 [xfs]
+>  [<ffffffff804a51cd>] __down_write_nested+0x8d/0xd0
+>  [<ffffffff804a521b>] __down_write+0xb/0x10
+>  [<ffffffff804a4229>] down_write+0x9/0x10
+>  [<ffffffffa008deb6>] xfs_ilock+0x76/0x90 [xfs]
+>  [<ffffffffa00aa7d0>] xfs_lock_two_inodes+0x70/0x120 [xfs]
+>  [<ffffffffa00ac651>] xfs_remove+0x141/0x3a0 [xfs]
+>  [<ffffffff804a54c9>] ? _spin_lock+0x9/0x10
+>  [<ffffffffa00b7c13>] xfs_setup_inode+0x673/0xa00 [xfs]
+>  [<ffffffff802d0849>] vfs_unlink+0xf9/0x140
+>  [<ffffffff802d3313>] do_unlinkat+0x1a3/0x1c0
+>  [<ffffffff80287ce0>] ? audit_syscall_entry+0x150/0x180
+>  [<ffffffff802d3341>] sys_unlink+0x11/0x20
+>  [<ffffffff8020c5aa>] system_call_fastpath+0x16/0x1b
 
-> On Wed, Nov 26, 2008 at 12:11:33PM +1100, Lachlan McIlroy wrote:
->
->> Christoph Hellwig wrote:
->> > Looking over the -dev tree, can you please revert
->> > 
->> > 	http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=c79ae33eebac1c15aa435fb77362fdc5eff2be4d> > 
->> > All this wasn't needed in the old ptrace tree either, no need to carry it forward.
->> 
->> Is this code needed for the BSD port?
->
-> According to Russell it may be need, but he'll probably need a newer
-> version than the one check-ed in once he resyncs.  And he'll have his
-> own support dir with the rest of the BSD code.
->
->> There may be other code that can be removed too.  We moved a lot of the code
->> that existed only in ptools into the xfs-dev branch so that branch and ptools
->> are in sync.  This allows us to automatically merge changes back to the old
->> ptools tree (yes it still lives).  Any merge failures will now be handled
->> between git branches and not between different scms.
->
-> The xfs-dev also fortunately doesn't have the modular quota code.  So
-> for both these I'd suggest removing them from the ptools tree, too.
->
->
-> Also
-> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=ca830fdf6231d0683f4ea4e9223e234c3a509063doesn't seem to be needed.  None of those symbols seems to be used by
-> either dmapi or xfsidbg, the only two modules using xfs symbols in the
-> tree.
+Can you enable lockdep in your kernel and retest? That will give
+use much more information about the locks that are causing problems
+here....
 
-That's exactly why it's there, the revertion is actually moving from
-what was in ptools to something sane.
+Cheers,
+
+Dave.
 -- 
-Niv Sardi
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
