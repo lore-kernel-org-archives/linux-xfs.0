@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB3Lm4xE021694 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 15:48:04 -0600
-Received: from main.carme.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61A5A16879EA
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 13:48:02 -0800 (PST)
-Received: from main.carme.maven.pl (main.carme.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id 68343KExoGsKaFpH for
-	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 13:48:02 -0800 (PST)
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: 2.6.27.7 vanilla,
-	project quota enabled and process stuck in D state (repeatable every
-	time)
-Date: Wed, 3 Dec 2008 22:42:29 +0100
-References: <200812021949.55463.arekm@maven.pl>
-	<200812031406.41882.arekm@maven.pl>
-	<20081203213028.GW18236@disturbed>
-In-Reply-To: <20081203213028.GW18236@disturbed>
+	mB3LrF62021964 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 15:53:15 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 15AE81686C0F
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 13:53:13 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	7wABagGIrkJ51Abv for <xfs@oss.sgi.com>;
+	Wed, 03 Dec 2008 13:53:13 -0800 (PST)
+Date: Thu, 4 Dec 2008 08:48:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 20/22] move vn_iowait / vn_iowake into xfs_aops.c
+Message-ID: <20081203214809.GY18236@disturbed>
+References: <20081202160430.775774000@bombadil.infradead.org>
+	<20081202160652.542003000@bombadil.infradead.org>
+	<20081203031719.GQ18236@disturbed>
+	<20081203105831.GB19287@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200812032242.29326.arekm@maven.pl>
+In-Reply-To: <20081203105831.GB19287@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +28,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkbmVzZGF5IDAzIG9mIERlY2VtYmVyIDIwMDgsIERhdmUgQ2hpbm5lciB3cm90ZToKCj4g
-PiBELXN0YXRlIGxvY2sgaXMgYWxzbyBoYXBwZW5pbmcgaWYgSSBkcm9wIHVzcnF1b3RhLHByanF1
-b3RhLCByZWJvb3QgYW5kCj4gPiByZXRyeSB0aGUgdGVzdC4gSSBhc3N1bWUgc29tZXRoaW5nIHdh
-cyB3cml0dGVuIG9uIGRpc2sgdGhhdCB0cmlnZ2VycyB0aGUKPiA+IHByb2JsZW0uCj4KPiBVbmxp
-a2VseSAtIGxvY2tpbmcgZG9lc24ndCBnZW5lcmFsbHkgZ2V0IHN0dWNrIGR1ZSB0byBvbiBkaXNr
-Cj4gY29ycnVwdGlvbi4gQXJlIHRoZXJlIGFueSBvdGhlciBibG9ja2VkIHByb2Nlc3NlcyBpbiB0
-aGUgbWFjaGluZT8KPiBpLmUuIHdoYXQgaXMgdGhlIGVudGlyZSBvdXRwdXQgb2YgJ2VjaG8gdyA+
-IC9wcm9jL3N5c3JxLXRyaWdnZXInPwoKT25seSB0aGlzIG9uZSBwcm9ncmFtIHRyYWNlIHZpc2li
-bGUgaW4gc3lzcnEtdyBvdXRwdXQuIE5vIG90aGVyIHRyYWNlcyAtIHNvIG5vIApvdGhlciBibG9j
-a2VkIHByb2dyYW1zLgoKPiBBcmUgdGhlcmUgYW55IG90aGVyIHNpZ25zIG9mIGdlbmVyYWwgdW53
-ZWxsbmVzcyAoZS5nLiBhIENQVSBydW5uaW5nCj4gYXQgMTAwJSB3aGVuIGl0IHNob3VsZG4ndCBi
-ZSk/CgpOb3RoaW5nIHdyb25nLgoKPiBGV0lXLCBpZiB5b3UgYXJlIHNlZWluZyB0aGlzIG9uIHR3
-byBob3N0cywgY2FuIHlvdSB0cnkgdG8gYnVpbGQKPiBhIHJlcHJvZHVjYWJsZSB0ZXN0IGNhc2Ug
-dXNpbmcgYSBtaW5pbWFsIGRhdGEgc2V0IGFuZCBhIHNpbXBsZQo+IHNldCBvZiBjb21tYW5kcz8g
-SWYgeW91IGNhbiBkbyB0aGlzIGFuZCBzdXBwbHkgdXMgd2l0aCBhCj4geGZzX21ldGFkdW1wIGlt
-YWdlIG9mIHRoZSBmaWxlc3lzdGVtIHBsdXMgdGhlIGNvbW1hbmRzIHRvIHJlcHJvZHVjZQo+IHRo
-ZSBwcm9ibGVtIHdlJ2xsIGJlIGFibGUgdG8gZmluZCB0aGUgcHJvYmxlbSBwcmV0dHkgcXVpY2ts
-eS4uLi4KCkkgd2FzIGFibGUgdG8gcmVwcm9kdWNlIGl0IHdpdGg6CgotIG1vdW50IGZzIHdpdGgg
-dXNycXVvdGEscHJqcXVvdGEKLSBzZXR1cCAvaG9tZS91c2Vycy9hcmVrbS9ycG0gYXMgcHJvamVj
-dCBxdW90YSBpZCA9IDEwCi0gcnVuIHByb2dyYW0gYmVsb3cgdHdpY2UKClthcmVrbUBmYXJtIHJw
-bV0kIG1vcmUgYS5jCiNpbmNsdWRlIDxzdGRpby5oPgogCmludCBtYWluKCkgewogICAgICAgIGlu
-dCBpOwogCiAgICAgICAgaSA9IApyZW5hbWUoIi9ob21lL3VzZXJzL2FyZWttL3RtcC9hYSIsICIv
-aG9tZS91c2Vycy9hcmVrbS9ycG0vdGVzdGluZyIpOwogICAgICAgIHByaW50ZigicmV0PSVkICVt
-XG4iLCBpKTsKICAgICAgICByZXR1cm4gMDsKfQpbYXJla21AZmFybSBycG1dJCB0b3VjaCAvaG9t
-ZS91c2Vycy9hcmVrbS90bXAvYWEKW2FyZWttQGZhcm0gcnBtXSQgLi9hLm91dApyZXQ9LTEgSW52
-YWxpZCBjcm9zcy1kZXZpY2UgbGluawpbYXJla21AZmFybSBycG1dJCAuL2Eub3V0CgpzZWNvbmQg
-cnVuIGhhbmdzIHdpdGggRC1zdGF0ZS4gCgpGb3IgY2xhcmlmaWNhdGlvbiwgcnBtIGFuZCB0bXAg
-ZGlyZWN0b3JpZXMgYXJlIG9uIHRoZSBzYW1lIApmaWxlc3lzdGVtL3BhcnRpdGlvbiAoaGRhMiks
-IHJwbS8gZGlyIGJlbG9uZ3MgdG8gcHJvamVjdCBxdW90YSBpZD0xMCwgdG1wIApkb2Vzbid0IGJl
-bG9uZyB0byBhbnkgcHJvamVjdCBxdW90YS4KCkZvciB0aGUgcmVzdCBvZiB5b3VyIHF1ZXN0aW9u
-cyAtICBDaHJpc3RvcGggcHJvbWlzZWQgdG8gbG9vayBhdCB0aGUgaXNzdWUgCnRvZGF5LCBzbyBJ
-J2xsIHdhaXQgdW50aWwgdG9tb3Jyb3cgYW5kIGlmIHRoZSBpc3N1ZSB3aWxsIHN0aWxsIGJlIGEg
-bXlzdGVyeSAKdGhlbiBJJ2xsIGRpZyBvdXQgYWxsIGRhdGEgeW91IGFza2VkIGZvci4KCj4gQ2hl
-ZXJzLAo+Cj4gRGF2ZS4KCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51
-eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5v
-cmcvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+On Wed, Dec 03, 2008 at 05:58:31AM -0500, Christoph Hellwig wrote:
+> On Wed, Dec 03, 2008 at 02:17:19PM +1100, Dave Chinner wrote:
+> > On Tue, Dec 02, 2008 at 11:04:50AM -0500, Christoph Hellwig wrote:
+> > > The whole machinery to wait on I/O completion is related to the I/O path
+> > > and should be there instead of in xfs_vnode.c.  Also give the functions
+> > > more descriptive names.
+> > 
+> > I'm not sure that "xfs_ioend_..." is the best name - it looks
+> > slightly weird in some of the callers' contexts. Just dropping the
+> > "end" out of the names makes the code read much better (i.e.
+> > xfs_io_wait() and xfs_io_wake()). Not particularly important,
+> > though, and everything else looks good.
+> 
+> xfs_ioend_* wasn't my first choice either.  I first did
+> xfs_iowait/xfs_iowake, but that clashes with the buffercache.
+
+Ah, so it does. but:
+
+#define xfs_iowait(bp)  xfs_buf_iowait(bp)
+
+Perhaps we should kill that define and just use xfs_buf_iowait(bp)
+because it documents that we really are waiting on a specific
+object....
+
+Then maybe we can use xfs_data_iowake/xfs_data_iowait for the data
+I/O on an inode to complete. That way it's obvious from the code
+exactly what we are waiting on, too (which might make some of the
+comments redundant).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
