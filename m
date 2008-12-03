@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB31ataF002988 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 19:36:55 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF6E98F8064
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 17:36:54 -0800 (PST)
-Date: Tue, 2 Dec 2008 19:42:25 -0600
-From: "Bill O'Donnell" <billodo@sgi.com>
-Subject: Re: [PATCH 9/9] Replace log checksumming code with CRCs.
-Message-ID: <20081203014225.GE16811@sgi.com>
-References: <20080925225650.GJ9822@lst.de>
+	mB32D0W6005255 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:13:00 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99233166646B
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:12:58 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	7XzGMkrd6Eoh1h1S for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2008 18:12:58 -0800 (PST)
+Date: Wed, 3 Dec 2008 13:12:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 03/22] remove unused behvavior cruft in xfs_super.h
+Message-ID: <20081203021222.GB18236@disturbed>
+References: <20081202160430.775774000@bombadil.infradead.org>
+	<20081202160649.932903000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20080925225650.GJ9822@lst.de>
+In-Reply-To: <20081202160649.932903000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Sep 26, 2008 at 12:56:50AM +0200, Christoph Hellwig wrote:
-| From: Dave Chinner <dgc@sgi.com>
-| 
-| The log has debug only checksum validation; replace this with
-| stronger CRCs and always use it.
-| 
-| So far we only checksum the payload in every log buffer.  For the final
-| version this needs to be extended to include the headers, too.
-| 
-| 
-| [hch: minor adaptions]
+On Tue, Dec 02, 2008 at 11:04:33AM -0500, Christoph Hellwig wrote:
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-looks good.
+Reviewed-by: Dave Chinner <david@fromorbit.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
