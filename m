@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB3E3WIW022687 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 08:03:35 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CA981673D5C
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 06:03:31 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id XsMuoR3OH11jYTuG for
-	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 06:03:31 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L7sKB-0001ud-4B
-	for xfs@oss.sgi.com; Wed, 03 Dec 2008 14:03:31 +0000
-Date: Wed, 3 Dec 2008 09:03:31 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 15/22] replace b_fspriv with b_mount
-Message-ID: <20081203140331.GA28361@infradead.org>
-References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160651.749289000@bombadil.infradead.org>
+	mB3EIa03023829 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 08:18:37 -0600
+Received: from e23smtp06.au.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49C3C167401F
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 06:18:33 -0800 (PST)
+Received: from e23smtp06.au.ibm.com (E23SMTP06.au.ibm.com [202.81.18.175]) by
+	cuda.sgi.com with ESMTP id qMAmVydXNIAK6rFN for
+	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 06:18:33 -0800 (PST)
+Received: from sd0109e.au.ibm.com (d23rh905.au.ibm.com [202.81.18.225])
+	by e23smtp06.au.ibm.com (8.13.1/8.13.1) with ESMTP id mB3EHQmb001592
+	for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:17:26 +1100
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by sd0109e.au.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
+	mB3EG2AM056866 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:16:02 +1100
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id
+	mB3EG18k014959 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:16:01 +1100
+Date: Wed, 3 Dec 2008 19:45:55 +0530
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: next-20081203 build failure, when building xfs_file.o
+Message-ID: <20081203141555.GB5400@linux.vnet.ibm.com>
+References: <20081203183602.c06f8c39.sfr@canb.auug.org.au>
+	<20081203124104.GA5400@linux.vnet.ibm.com>
+	<20081203125534.GA8007@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081202160651.749289000@bombadil.infradead.org>
+In-Reply-To: <20081203125534.GA8007@infradead.org>
+Reply-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,192 +40,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Any chance to get this one reviewed?
+* Christoph Hellwig <hch@infradead.org> [2008-12-03 07:55:34]:
 
-On Tue, Dec 02, 2008 at 11:04:45AM -0500, Christoph Hellwig wrote:
-> Replace the b_fspriv pointer and it's ugly accessors with a properly types
-> xfs_mount pointer.  Also switch log reocvery over to it instead of using
-> b_fspriv for the mount pointer.
+> On Wed, Dec 03, 2008 at 06:11:04PM +0530, Kamalesh Babulal wrote:
+> > Hi Stephen,
+> > 
+> > 	next-20081203 kernel build fails on x86 with build failure
+> > 
+> > In file included from fs/xfs/linux-2.6/xfs_file.c:39:
 > 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2008-11-15 15:27:32.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.c	2008-11-15 15:28:01.000000000 +0100
-> @@ -1085,7 +1085,7 @@ xfs_bawrite(
->  	bp->b_flags &= ~(XBF_READ | XBF_DELWRI | XBF_READ_AHEAD);
->  	bp->b_flags |= (XBF_WRITE | XBF_ASYNC | _XBF_RUN_QUEUES);
->  
-> -	bp->b_fspriv3 = mp;
-> +	bp->b_mount = mp;
->  	bp->b_strat = xfs_bdstrat_cb;
->  	return xfs_bdstrat_cb(bp);
->  }
-> @@ -1098,7 +1098,7 @@ xfs_bdwrite(
->  	XB_TRACE(bp, "bdwrite", 0);
->  
->  	bp->b_strat = xfs_bdstrat_cb;
-> -	bp->b_fspriv3 = mp;
-> +	bp->b_mount = mp;
->  
->  	bp->b_flags &= ~XBF_READ;
->  	bp->b_flags |= (XBF_DELWRI | XBF_ASYNC);
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2008-11-15 15:28:08.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_buf.h	2008-11-15 15:29:12.000000000 +0100
-> @@ -168,7 +168,7 @@ typedef struct xfs_buf {
->  	struct completion	b_iowait;	/* queue for I/O waiters */
->  	void			*b_fspriv;
->  	void			*b_fspriv2;
-> -	void			*b_fspriv3;
-> +	struct xfs_mount	*b_mount;
->  	unsigned short		b_error;	/* error code on I/O */
->  	unsigned int		b_page_count;	/* size of page array */
->  	unsigned int		b_offset;	/* page offset in first page */
-> @@ -335,8 +335,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
->  #define XFS_BUF_SET_FSPRIVATE(bp, val)		((bp)->b_fspriv = (void*)(val))
->  #define XFS_BUF_FSPRIVATE2(bp, type)		((type)(bp)->b_fspriv2)
->  #define XFS_BUF_SET_FSPRIVATE2(bp, val)		((bp)->b_fspriv2 = (void*)(val))
-> -#define XFS_BUF_FSPRIVATE3(bp, type)		((type)(bp)->b_fspriv3)
-> -#define XFS_BUF_SET_FSPRIVATE3(bp, val)		((bp)->b_fspriv3 = (void*)(val))
->  #define XFS_BUF_SET_START(bp)			do { } while (0)
->  #define XFS_BUF_SET_BRELSE_FUNC(bp, func)	((bp)->b_relse = (func))
->  
-> Index: linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/linux-2.6/xfs_lrw.c	2008-11-15 15:25:29.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/linux-2.6/xfs_lrw.c	2008-11-15 15:26:27.000000000 +0100
-> @@ -847,13 +847,7 @@ retry:
->  int
->  xfs_bdstrat_cb(struct xfs_buf *bp)
->  {
-> -	xfs_mount_t	*mp;
-> -
-> -	mp = XFS_BUF_FSPRIVATE3(bp, xfs_mount_t *);
-> -	if (!XFS_FORCED_SHUTDOWN(mp)) {
-> -		xfs_buf_iorequest(bp);
-> -		return 0;
-> -	} else {
-> +	if (XFS_FORCED_SHUTDOWN(bp->b_mount)) {
->  		xfs_buftrace("XFS__BDSTRAT IOERROR", bp);
->  		/*
->  		 * Metadata write that didn't get logged but
-> @@ -866,6 +860,9 @@ xfs_bdstrat_cb(struct xfs_buf *bp)
->  		else
->  			return (xfs_bioerror(bp));
->  	}
-> +
-> +	xfs_buf_iorequest(bp);
-> +	return 0;
->  }
->  
->  /*
-> Index: linux-2.6-xfs/fs/xfs/xfs_buf_item.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_buf_item.c	2008-11-15 15:24:38.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/xfs_buf_item.c	2008-11-15 15:25:05.000000000 +0100
-> @@ -707,8 +707,8 @@ xfs_buf_item_init(
->  	 * the first.  If we do already have one, there is
->  	 * nothing to do here so return.
->  	 */
-> -	if (XFS_BUF_FSPRIVATE3(bp, xfs_mount_t *) != mp)
-> -		XFS_BUF_SET_FSPRIVATE3(bp, mp);
-> +	if (bp->b_mount != mp)
-> +		bp->b_mount = mp;
->  	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
->  	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
->  		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-> Index: linux-2.6-xfs/fs/xfs/xfs_rw.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_rw.c	2008-11-15 15:26:37.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/xfs_rw.c	2008-11-15 15:27:17.000000000 +0100
-> @@ -406,7 +406,7 @@ xfs_bwrite(
->  	 * XXXsup how does this work for quotas.
->  	 */
->  	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
-> -	XFS_BUF_SET_FSPRIVATE3(bp, mp);
-> +	bp->b_mount = mp;
->  	XFS_BUF_WRITE(bp);
->  
->  	if ((error = XFS_bwrite(bp))) {
-> Index: linux-2.6-xfs/fs/xfs/xfs_log_recover.c
-> ===================================================================
-> --- linux-2.6-xfs.orig/fs/xfs/xfs_log_recover.c	2008-11-15 15:31:41.000000000 +0100
-> +++ linux-2.6-xfs/fs/xfs/xfs_log_recover.c	2008-11-15 15:35:12.000000000 +0100
-> @@ -267,21 +267,16 @@ STATIC void
->  xlog_recover_iodone(
->  	struct xfs_buf	*bp)
->  {
-> -	xfs_mount_t	*mp;
-> -
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *));
-> -
->  	if (XFS_BUF_GETERROR(bp)) {
->  		/*
->  		 * We're not going to bother about retrying
->  		 * this during recovery. One strike!
->  		 */
-> -		mp = XFS_BUF_FSPRIVATE(bp, xfs_mount_t *);
->  		xfs_ioerror_alert("xlog_recover_iodone",
-> -				  mp, bp, XFS_BUF_ADDR(bp));
-> -		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-> +				  bp->b_mount, bp, XFS_BUF_ADDR(bp));
-> +		xfs_force_shutdown(bp->b_mount, SHUTDOWN_META_IO_ERROR);
->  	}
-> -	XFS_BUF_SET_FSPRIVATE(bp, NULL);
-> +	bp->b_mount = NULL;
->  	XFS_BUF_CLR_IODONE_FUNC(bp);
->  	xfs_biodone(bp);
->  }
-> @@ -2225,9 +2220,8 @@ xlog_recover_do_buffer_trans(
->  		XFS_BUF_STALE(bp);
->  		error = xfs_bwrite(mp, bp);
->  	} else {
-> -		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) == NULL ||
-> -		       XFS_BUF_FSPRIVATE(bp, xfs_mount_t *) == mp);
-> -		XFS_BUF_SET_FSPRIVATE(bp, mp);
-> +		ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
-> +		bp->b_mount = mp;
->  		XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
->  		xfs_bdwrite(mp, bp);
->  	}
-> @@ -2490,9 +2484,8 @@ xlog_recover_do_inode_trans(
->  
->  write_inode_buffer:
->  	if (ITEM_TYPE(item) == XFS_LI_INODE) {
-> -		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) == NULL ||
-> -		       XFS_BUF_FSPRIVATE(bp, xfs_mount_t *) == mp);
-> -		XFS_BUF_SET_FSPRIVATE(bp, mp);
-> +		ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
-> +		bp->b_mount = mp;
->  		XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
->  		xfs_bdwrite(mp, bp);
->  	} else {
-> @@ -2623,9 +2616,8 @@ xlog_recover_do_dquot_trans(
->  	memcpy(ddq, recddq, item->ri_buf[1].i_len);
->  
->  	ASSERT(dq_f->qlf_size == 2);
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) == NULL ||
-> -	       XFS_BUF_FSPRIVATE(bp, xfs_mount_t *) == mp);
-> -	XFS_BUF_SET_FSPRIVATE(bp, mp);
-> +	ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
-> +	bp->b_mount = mp;
->  	XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
->  	xfs_bdwrite(mp, bp);
->  
+> This is the fix I submitted for it yesterday:
 > 
 > -- 
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+> fix compile on 32 bit systems
+> 
+> The recent compat patches make xfs_file.c include xfs_ioctl32.h unconditional,
+> which breaks the build on 32 bit systems which don't have the various compat
+> defintions.
+> 
+> Remove the include and move the defintion of xfs_file_compat_ioctl to
+> xfs_ioctl.h so that we can avoid including all the compat defintions in
+> xfs_file.c
+> 
+
+
+Hi Chirstoph,
+
+	Thanks, the patch fixes the build failure.
+
+  Tested-by: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs-master/fs/xfs/linux-2.6/xfs_file.c
+> ===================================================================
+> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_file.c	2008-12-02 11:43:38.000000000 +0100
+> +++ xfs-master/fs/xfs/linux-2.6/xfs_file.c	2008-12-02 11:44:06.000000000 +0100
+> @@ -36,9 +36,9 @@
+>  #include "xfs_inode.h"
+>  #include "xfs_error.h"
+>  #include "xfs_rw.h"
+> -#include "xfs_ioctl32.h"
+>  #include "xfs_vnodeops.h"
+>  #include "xfs_da_btree.h"
+> +#include "xfs_ioctl.h"
+> 
+>  #include <linux/dcache.h>
+>  #include <linux/smp_lock.h>
+> Index: xfs-master/fs/xfs/linux-2.6/xfs_ioctl.h
+> ===================================================================
+> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-02 11:44:10.000000000 +0100
+> +++ xfs-master/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-02 11:44:52.000000000 +0100
+> @@ -67,4 +67,16 @@ xfs_attrmulti_attr_remove(
+>  	char			*name,
+>  	__uint32_t		flags);
+> 
+> +extern long
+> +xfs_file_compat_ioctl(
+> +	struct file		*file,
+> +	unsigned int		cmd,
+> +	unsigned long		arg);
+> +
+> +extern long
+> +xfs_file_compat_ioctl_invis(
+> +	struct file		*file,
+> +	unsigned int		cmd,
+> +	unsigned long		arg);
+> +
+>  #endif
+> Index: xfs-master/fs/xfs/linux-2.6/xfs_ioctl32.h
+> ===================================================================
+> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-12-02 11:44:10.000000000 +0100
+> +++ xfs-master/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-12-02 11:44:18.000000000 +0100
+> @@ -20,9 +20,6 @@
+> 
+>  #include <linux/compat.h>
+> 
+> -extern long xfs_file_compat_ioctl(struct file *, unsigned, unsigned long);
+> -extern long xfs_file_compat_invis_ioctl(struct file *, unsigned, unsigned long);
+> -
+>  /*
+>   * on 32-bit arches, ioctl argument structures may have different sizes
+>   * and/or alignment.  We define compat structures which match the
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-next" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
 
 _______________________________________________
 xfs mailing list
