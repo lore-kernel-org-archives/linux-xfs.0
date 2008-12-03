@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB32bwj9007258 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:37:58 -0600
+	mB32dqZ2007461 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:39:52 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C7CB21664C10
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:37:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0A0D1664C33
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:39:50 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	tjyAnG15L7krGIDY for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2008 18:37:56 -0800 (PST)
-Date: Wed, 3 Dec 2008 13:37:54 +1100
+	rGlVj07GeOuWf3mA for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2008 18:39:50 -0800 (PST)
+Date: Wed, 3 Dec 2008 13:39:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 06/22] kill xfs_buf_iostart
-Message-ID: <20081203023754.GE18236@disturbed>
+Subject: Re: [patch 07/22] stop using igrab in xfs_vn_link
+Message-ID: <20081203023948.GF18236@disturbed>
 References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160650.360918000@bombadil.infradead.org>
+	<20081202160650.515494000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081202160650.360918000@bombadil.infradead.org>
+In-Reply-To: <20081202160650.515494000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +33,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2008 at 11:04:36AM -0500, Christoph Hellwig wrote:
-> xfs_buf_iostart is a "shared" helper for xfs_buf_read_flags,
-> xfs_bawrite, and xfs_bdwrite - except that there isn't much shared
-> code but rather special cases for each caller.
+On Tue, Dec 02, 2008 at 11:04:37AM -0500, Christoph Hellwig wrote:
+> ->link is guranteed to get an already reference inode passed so we
+> can do a simple increment of i_count instead of using igrab and thus
+> avoid banging on the global inode_lock.  This is what most filesystems
+> already do.
 > 
-> So remove this function and move the functionality to the caller.
-> xfs_bawrite and xfs_bdwrite are now big enough to be moved out of
-> line and the xfs_buf_read_flags is moved into a new helper called
-> _xfs_buf_read.
+> Also move the increment after the call to xfs_link to simplify error
+> handling.
 > 
-> (First sent on August 2nd)
+> (First sent on July 26th)
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
