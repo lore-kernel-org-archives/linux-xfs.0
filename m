@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB32D0W6005255 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:13:00 -0600
+	mB32GjCJ005795 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:16:45 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99233166646B
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:12:58 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 249D41665633
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:16:44 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	7XzGMkrd6Eoh1h1S for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2008 18:12:58 -0800 (PST)
-Date: Wed, 3 Dec 2008 13:12:22 +1100
+	MnMvtseSVj5iZGxz for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2008 18:16:44 -0800 (PST)
+Date: Wed, 3 Dec 2008 13:11:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 03/22] remove unused behvavior cruft in xfs_super.h
-Message-ID: <20081203021222.GB18236@disturbed>
+Subject: Re: [patch 02/22] remove useless mnt_want_write call in xfs_write
+Message-ID: <20081203021102.GA18236@disturbed>
 References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160649.932903000@bombadil.infradead.org>
+	<20081202160649.790190000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081202160649.932903000@bombadil.infradead.org>
+In-Reply-To: <20081202160649.790190000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,7 +33,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2008 at 11:04:33AM -0500, Christoph Hellwig wrote:
+On Tue, Dec 02, 2008 at 11:04:32AM -0500, Christoph Hellwig wrote:
+> 
+> When mnt_want_write was introduced a call to it was added around
+> xfs_ichgtime, but there is no need for this because a file can't be open
+> read/write on a r/o mount, and a mount can't degrade r/o while we still
+> have files open for writing.  As the mnt_want_write changes were never
+> merged into the CVS tree this patch is for mainline only.
+> 
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
