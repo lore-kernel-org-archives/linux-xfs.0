@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB32xR45008920 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 20:59:28 -0600
+	mB332xo7009261 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 21:02:59 -0600
 Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 137D216436F6
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 18:59:19 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A0AE166D82F
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 19:02:57 -0800 (PST)
 Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
 	[203.16.214.145]) by cuda.sgi.com with ESMTP id
-	cqDl0Lq0a300GvG1 for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2008 18:59:19 -0800 (PST)
-Date: Wed, 3 Dec 2008 13:59:14 +1100
+	x0NpyK2cKhAwsvLg for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2008 19:02:57 -0800 (PST)
+Date: Wed, 3 Dec 2008 13:56:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 12/22] kill dead inode flags
-Message-ID: <20081203025914.GJ18236@disturbed>
+Subject: Re: [patch 09/22] remove dead code from sv_t implementation
+Message-ID: <20081203025644.GH18236@disturbed>
 References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160651.264876000@bombadil.infradead.org>
+	<20081202160650.829703000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081202160651.264876000@bombadil.infradead.org>
+In-Reply-To: <20081202160650.829703000@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,11 +33,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2008 at 11:04:42AM -0500, Christoph Hellwig wrote:
-> There are a few inode flags around that aren't used anywhere, so remove
-> them.  Also update xfsidbg to display all used inode flags correctly.
-> 
-> (First sent on July 23nd)
+On Tue, Dec 02, 2008 at 11:04:39AM -0500, Christoph Hellwig wrote:
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
