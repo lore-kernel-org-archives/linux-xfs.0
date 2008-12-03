@@ -1,33 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB3EIa03023829 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 08:18:37 -0600
-Received: from e23smtp06.au.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 49C3C167401F
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 06:18:33 -0800 (PST)
-Received: from e23smtp06.au.ibm.com (E23SMTP06.au.ibm.com [202.81.18.175]) by
-	cuda.sgi.com with ESMTP id qMAmVydXNIAK6rFN for
-	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 06:18:33 -0800 (PST)
-Received: from sd0109e.au.ibm.com (d23rh905.au.ibm.com [202.81.18.225])
-	by e23smtp06.au.ibm.com (8.13.1/8.13.1) with ESMTP id mB3EHQmb001592
-	for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:17:26 +1100
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by sd0109e.au.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
-	mB3EG2AM056866 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:16:02 +1100
-Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
-	by d23av04.au.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id
-	mB3EG18k014959 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:16:01 +1100
-Date: Wed, 3 Dec 2008 19:45:55 +0530
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: Re: next-20081203 build failure, when building xfs_file.o
-Message-ID: <20081203141555.GB5400@linux.vnet.ibm.com>
-References: <20081203183602.c06f8c39.sfr@canb.auug.org.au>
-	<20081203124104.GA5400@linux.vnet.ibm.com>
-	<20081203125534.GA8007@infradead.org>
+	mB3Ed6Mg024868 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 08:39:06 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B03611677989
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 06:39:05 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id VOG3XDNfGTw86XhW for
+	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 06:39:05 -0800 (PST)
+Date: Wed, 3 Dec 2008 09:34:04 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 3ware 9650SE-16ML w/XFS & RAID6: first impressions
+Message-ID: <alpine.DEB.1.10.0812030930450.22299@p34.internal.lan>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20081203125534.GA8007@infradead.org>
-Reply-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,101 +25,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-* Christoph Hellwig <hch@infradead.org> [2008-12-03 07:55:34]:
+For read speed, it appears that there is some overhead (2x). With software 
+raid6 I used to get 1.0Gbyte/sec read speed, or at least 800MiB/s across the 
+entire array, now I only get 538MiB/s across the entire array. However, 
+write speed is improved. Before it was in the mid 400s for RAID6 and peaking at
+502MiB/s at the outer edge of the drives. For the write speed now, its around 
+620-640MiB/s at the end of the array and 580-620MiB/s going in further and 
+502MiB/s across the entire array. I always heard all of the horror stories with 3ware cards, it turns out they're not so bad after all.
 
-> On Wed, Dec 03, 2008 at 06:11:04PM +0530, Kamalesh Babulal wrote:
-> > Hi Stephen,
-> > 
-> > 	next-20081203 kernel build fails on x86 with build failure
-> > 
-> > In file included from fs/xfs/linux-2.6/xfs_file.c:39:
-> 
-> This is the fix I submitted for it yesterday:
-> 
-> -- 
-> 
-> fix compile on 32 bit systems
-> 
-> The recent compat patches make xfs_file.c include xfs_ioctl32.h unconditional,
-> which breaks the build on 32 bit systems which don't have the various compat
-> defintions.
-> 
-> Remove the include and move the defintion of xfs_file_compat_ioctl to
-> xfs_ioctl.h so that we can avoid including all the compat defintions in
-> xfs_file.c
-> 
+Here is the STR across a RAID6 array of 10 velociraptors configured as RAID6 with storsave=perform and blockdev --setra 65536 and using the XFS filesystem.
 
+p34:/t# /usr/bin/time dd if=/dev/zero of=really_big_file bs=1M
+dd: writing `really_big_file': No space left on device
+2288604+0 records in
+2288603+0 records out
+2399774998528 bytes (2.4 TB) copied, 4777.22 s, 502 MB/s
+Command exited with non-zero status 1
+1.47user 3322.83system 1:19:37elapsed 69%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (1major+506minor)pagefaults 0swaps
 
-Hi Chirstoph,
+p34:/t# /usr/bin/time dd if=really_big_file of=/dev/null bs=1M
+2288603+1 records in
+2288603+1 records out
+2399774998528 bytes (2.4 TB) copied, 4457.55 s, 538 MB/s
+1.66user 1538.87system 1:14:17elapsed 34%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (4major+498minor)pagefaults 0swaps
+p34:/t#
 
-	Thanks, the patch fixes the build failure.
+So what is the difference between protect, balance and perform?
 
-  Tested-by: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs-master/fs/xfs/linux-2.6/xfs_file.c
-> ===================================================================
-> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_file.c	2008-12-02 11:43:38.000000000 +0100
-> +++ xfs-master/fs/xfs/linux-2.6/xfs_file.c	2008-12-02 11:44:06.000000000 +0100
-> @@ -36,9 +36,9 @@
->  #include "xfs_inode.h"
->  #include "xfs_error.h"
->  #include "xfs_rw.h"
-> -#include "xfs_ioctl32.h"
->  #include "xfs_vnodeops.h"
->  #include "xfs_da_btree.h"
-> +#include "xfs_ioctl.h"
-> 
->  #include <linux/dcache.h>
->  #include <linux/smp_lock.h>
-> Index: xfs-master/fs/xfs/linux-2.6/xfs_ioctl.h
-> ===================================================================
-> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-02 11:44:10.000000000 +0100
-> +++ xfs-master/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-02 11:44:52.000000000 +0100
-> @@ -67,4 +67,16 @@ xfs_attrmulti_attr_remove(
->  	char			*name,
->  	__uint32_t		flags);
-> 
-> +extern long
-> +xfs_file_compat_ioctl(
-> +	struct file		*file,
-> +	unsigned int		cmd,
-> +	unsigned long		arg);
-> +
-> +extern long
-> +xfs_file_compat_ioctl_invis(
-> +	struct file		*file,
-> +	unsigned int		cmd,
-> +	unsigned long		arg);
-> +
->  #endif
-> Index: xfs-master/fs/xfs/linux-2.6/xfs_ioctl32.h
-> ===================================================================
-> --- xfs-master.orig/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-12-02 11:44:10.000000000 +0100
-> +++ xfs-master/fs/xfs/linux-2.6/xfs_ioctl32.h	2008-12-02 11:44:18.000000000 +0100
-> @@ -20,9 +20,6 @@
-> 
->  #include <linux/compat.h>
-> 
-> -extern long xfs_file_compat_ioctl(struct file *, unsigned, unsigned long);
-> -extern long xfs_file_compat_invis_ioctl(struct file *, unsigned, unsigned long);
-> -
->  /*
->   * on 32-bit arches, ioctl argument structures may have different sizes
->   * and/or alignment.  We define compat structures which match the
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-next" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Protect
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=protect
+Setting Command Storsave Policy for unit /c0/u1 to [protect] ... Done.
 
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+p34:/t# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 60.6041 s, 354 MB/s
+
+Balance:
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=balance
+Setting Command Storsave Policy for unit /c0/u1 to [balance] ... Done.
+
+# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 60.4287 s, 355 MB/s
+
+Perform
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=perform
+Warning: Unit /c0/u1 storsave policy is set to Performance which may cause data loss in the event of power failure.
+Do you want to continue ? Y|N [N]: Y
+Setting Command Storsave Policy for unit /c0/u1 to [perform] ... Done.
+
+p34:/t# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 34.4955 s, 623 MB/s
+
+--
+
+And yes, I have a BBU attached to this card and everything is on a UPS.
+Something I do not like though is 3ware states "TwinStor" "TwinStor" etc
+etc if you read a file it will read from both drives, maybe it does this but
+I have the I/O results to prove it-- it never breaks the barrier of a 
+single drive's STR. Whereas with SW RAID, you can read 2 or more files
+concurrently and you will get the bandwidth of both drives. I have a lot
+more testing to do, RAID0, RAID5, RAID6, RAID10, not sure when I will get
+to it but just thought I'd post this to show that 3ware cards aren't as
+slow as everyone says, at least not when attached to Velociraptors, a BBU
+and XFS as the filesystem.
+
+Justin.
 
 _______________________________________________
 xfs mailing list
