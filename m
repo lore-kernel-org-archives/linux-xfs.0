@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB2K2SYo015280 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 14:02:29 -0600
-Received: from sovereign.computergmbh.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 831F91658AC1
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 12:02:26 -0800 (PST)
-Received: from sovereign.computergmbh.de (sovereign.computergmbh.de
-	[85.214.69.204]) by cuda.sgi.com with ESMTP id wmowfBLIrHDVcXty
-	for <xfs@oss.sgi.com>; Tue, 02 Dec 2008 12:02:26 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by sovereign.computergmbh.de (Postfix) with ESMTP id E4F051C00EF63
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 21:02:25 +0100 (CET)
-Date: Tue, 2 Dec 2008 21:02:25 +0100 (CET)
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: Disk full during delayed allocation
-Message-ID: <alpine.LNX.1.10.0812022055550.14216@fbirervta.pbzchgretzou.qr>
+	mB31NWIO001916 for <xfs@oss.sgi.com>; Tue, 2 Dec 2008 19:23:33 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D035CAC002
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2008 17:23:28 -0800 (PST)
+Date: Tue, 2 Dec 2008 19:28:59 -0600
+From: "Bill O'Donnell" <billodo@sgi.com>
+Subject: Re: [PATCH 5/9] add support for large btree blocks with CRCs and
+	additional RAS information
+Message-ID: <20081203012859.GA16811@sgi.com>
+References: <20080925225633.GF9822@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20080925225633.GF9822@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,27 +26,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@sgi.com
 
-Hi,
+On Fri, Sep 26, 2008 at 12:56:33AM +0200, Christoph Hellwig wrote:
+| Add support for larger btree blocks that contains a CRC32C checksum, a
+| filesystem uuid and block number for detecting filesystem consistency
+| and out of place writes.  The use of these blocks is triggered by the
+| crc superblock patches just added.
+| 
+| Note that we currently do not log the crc of the block, but re-created
+| it during log recovery.  With the pending patch to also checksum the log
+| this should be safe against filesystem corruption but doesn't really
+| follow the end to end argument.  Also poking into the buffer to find
+| out whether this is a btree buffer during log recovery is not a very
+| clean way to implement this.  I'll look into how well adding crcs
+| to the buffer log items for every btree is going to work and hope
+| I can switch to that variant for the next version.
+
+looks good... will need to put this through the QA wringer.
 
 
-on space-constrained filesystems, I noticed that extracting lots of 
-files [about 10k] bumps the Used count up quickly leading to a disk full 
-unless the extraction process (rpm here) is halted, synced, and then 
-continued. I believe this is fully within XFS's standard behavior, but I 
-would like to learn more how exactly this can happen. My guess is that 
-this is due to the "dynamic journal/log" size XFS employs - on a 
-filesystem just mkfs'ed, about 4256KB (for a volume of 128MB) are used, 
-compared to e.g. reiser3 where the full 32MB for the journal are used 
-(according to df) right from the start.
-Is this so?
-
-# df; killall -CONT rpm; sleep 1; killall -STOP rpm; df; sync; df;
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/lo/src.fs               93504     29396     64108  32% /usr/src
-/lo/src.fs               93504     49072     44432  53% /usr/src
-/lo/src.fs               93504     35632     57872  39% /usr/src
+-- 
+Bill O'Donnell
+SGI
+billodo@sgi.com
 
 _______________________________________________
 xfs mailing list
