@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB3Aq7NO010880 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 04:52:07 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCC221A73A09
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 02:52:06 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id YraYFyBlVtMYEw8W for
-	<xfs@oss.sgi.com>; Wed, 03 Dec 2008 02:52:06 -0800 (PST)
-Date: Wed, 3 Dec 2008 05:51:36 -0500
+	mB3AqjFc010927 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 04:52:45 -0600
+Date: Wed, 3 Dec 2008 05:52:44 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 08/22] reduce l_icloglock roundtrips
-Message-ID: <20081203105136.GH15485@infradead.org>
+Subject: Re: [patch 11/22] cleanup xfs_sb.h feature flag helpers
+Message-ID: <20081203105244.GI15485@infradead.org>
 References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160650.663976000@bombadil.infradead.org>
-	<20081203025614.GG18236@disturbed>
+	<20081202160651.115809000@bombadil.infradead.org>
+	<49362688.4030200@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081203025614.GG18236@disturbed>
+In-Reply-To: <49362688.4030200@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,23 +24,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Donald Douwsma <donaldd@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 03, 2008 at 01:56:14PM +1100, Dave Chinner wrote:
-> On Tue, Dec 02, 2008 at 11:04:38AM -0500, Christoph Hellwig wrote:
-> > All but one caller of xlog_state_want_sync drop and re-acquire
-> > l_icloglock around the call to it, just so that xlog_state_want_sync can
-> > acquire and drop it.
+On Wed, Dec 03, 2008 at 05:26:16PM +1100, Donald Douwsma wrote:
+> Christoph Hellwig wrote:
 > 
-> Not really a performance problem, though, because the one caller
-> that doesn't already hold the lock is the common path (i.e.
-> xlog_write()); the others are in the  unmount path, so lock traffic
-> is not there is not performance critical....
-> 
-> Hence I'm not sure this is really necessary.
+> Looks ok, I think all these used to be macros, but when they got cleaned up
+> a lot of grogens were left in place. I wish we could get all this kind of thing
+> cleaned up right first time...
 
-I don't think it's absolutely nessecary, but it's a lot cleaner this
-way..
+I think this was Nathan's big sweap to kill xfs_macros.[ch] for the ugly
+marcros turning into macros calling functions calling the original macro
+crap.  He did this in some sort of scripted way and a lot of things like
+this were left in place.
 
 _______________________________________________
 xfs mailing list
