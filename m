@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB47IF1h000961 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:18:16 -0600
+	mB47Quti001600 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 01:26:56 -0600
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
 	[134.14.52.130])
-	by relay2.corp.sgi.com (Postfix) with SMTP id EC518304081
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 23:18:12 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with SMTP id 6A93D304081
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 23:26:54 -0800 (PST)
 Received: from [134.14.55.78] (redback.melbourne.sgi.com [134.14.55.78]) by
 	larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF)
-	via ESMTP id SAA21577 for <xfs@oss.sgi.com>;
-	Thu, 4 Dec 2008 18:18:05 +1100
-Message-ID: <49378444.9040108@sgi.com>
-Date: Thu, 04 Dec 2008 18:18:28 +1100
+	via ESMTP id SAA21605 for <xfs@oss.sgi.com>;
+	Thu, 4 Dec 2008 18:26:52 +1100
+Message-ID: <49378654.2050707@sgi.com>
+Date: Thu, 04 Dec 2008 18:27:16 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: [Fwd: [PATCH] Fix speculative allocation beyond eof]
+Subject: [PATCH] Remove XFS_BUF_SHUT() and friends
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -30,131 +30,56 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-ping.
+Code does nothing so remove it.
 
-Anyone have any objections to this?
+--- a/fs/xfs/linux-2.6/xfs_buf.h	2008-12-04 14:24:12.000000000 +1100
++++ b/fs/xfs/linux-2.6/xfs_buf.h	2008-12-04 14:24:22.000000000 +1100
+@@ -311,10 +311,6 @@ extern void xfs_buf_trace(xfs_buf_t *, c
+  #define XFS_BUF_UNORDERED(bp)	((bp)->b_flags &= ~XBF_ORDERED)
+  #define XFS_BUF_ISORDERED(bp)	((bp)->b_flags & XBF_ORDERED)
 
--------- Original Message --------
-Subject: [PATCH] Fix speculative allocation beyond eof
-Date: Tue, 23 Sep 2008 13:14:44 +1000
-From: Lachlan McIlroy <lachlan@sgi.com>
-Reply-To: lachlan@sgi.com
-To: xfs-dev <xfs-dev@sgi.com>, xfs-oss <xfs@oss.sgi.com>
-
-Speculative allocation beyond eof doesn't work properly.  It was broken some
-time ago after a code cleanup that moved what is now xfs_iomap_eof_align_last_fsb()
-and xfs_iomap_eof_want_preallocate() out of xfs_iomap_write_delay() into
-separate functions.  The code used to use the current file size in various checks
-but got changed to be max(file_size, i_new_size).  Since i_new_size is the result
-of 'offset + count' then in xfs_iomap_eof_want_preallocate() the check for
-'(offset + count) <= isize' will always be true.
-
-ie if 'offset + count' is > ip->i_size then isize will be i_new_size and equal to
-'offset + count'.
-
-This change fixes all the places that used to use the current file size.
-
---- a/fs/xfs/xfs_iomap.c	2008-09-23 12:52:12.000000000 +1000
-+++ b/fs/xfs/xfs_iomap.c	2008-09-23 12:51:29.000000000 +1000
-@@ -290,7 +290,6 @@ STATIC int
-xfs_iomap_eof_align_last_fsb(
-	xfs_mount_t	*mp,
-	xfs_inode_t	*ip,
--	xfs_fsize_t	isize,
-	xfs_extlen_t	extsize,
-	xfs_fileoff_t	*last_fsb)
-{
-@@ -306,14 +305,14 @@ xfs_iomap_eof_align_last_fsb(
-	 * stripe width and we are allocating past the allocation eof.
-	 */
-	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
--	        (isize >= XFS_FSB_TO_B(mp, mp->m_swidth)))
-+	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
-		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
-	/*
-	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
-	 * if the file size is >= stripe unit size, and we are allocating past
-	 * the allocation eof.
-	 */
--	else if (mp->m_dalign && (isize >= XFS_FSB_TO_B(mp, mp->m_dalign)))
-+	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
-		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
-
-	/*
-@@ -403,7 +402,6 @@ xfs_iomap_write_direct(
-	xfs_filblks_t	count_fsb, resaligned;
-	xfs_fsblock_t	firstfsb;
-	xfs_extlen_t	extsz, temp;
--	xfs_fsize_t	isize;
-	int		nimaps;
-	int		bmapi_flag;
-	int		quota_flag;
-@@ -426,15 +424,10 @@ xfs_iomap_write_direct(
-	rt = XFS_IS_REALTIME_INODE(ip);
-	extsz = xfs_get_extsz_hint(ip);
-
--	isize = ip->i_size;
--	if (ip->i_new_size > isize)
--		isize = ip->i_new_size;
+-#define XFS_BUF_SHUT(bp)	do { } while (0)
+-#define XFS_BUF_UNSHUT(bp)	do { } while (0)
+-#define XFS_BUF_ISSHUT(bp)	(0)
 -
-	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
--	if ((offset + count) > isize) {
--		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
--							&last_fsb);
-+	if ((offset + count) > ip->i_size) {
-+		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-		if (error)
-			goto error_out;
-	} else {
-@@ -559,7 +552,6 @@ STATIC int
-xfs_iomap_eof_want_preallocate(
-	xfs_mount_t	*mp,
-	xfs_inode_t	*ip,
--	xfs_fsize_t	isize,
-	xfs_off_t	offset,
-	size_t		count,
-	int		ioflag,
-@@ -573,7 +565,7 @@ xfs_iomap_eof_want_preallocate(
-	int		n, error, imaps;
-
-	*prealloc = 0;
--	if ((ioflag & BMAPI_SYNC) || (offset + count) <= isize)
-+	if ((ioflag & BMAPI_SYNC) || (offset + count) <= ip->i_size)
-		return 0;
-
-	/*
-@@ -617,7 +609,6 @@ xfs_iomap_write_delay(
-	xfs_fileoff_t	ioalign;
-	xfs_fsblock_t	firstblock;
-	xfs_extlen_t	extsz;
--	xfs_fsize_t	isize;
-	int		nimaps;
-	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
-	int		prealloc, fsynced = 0;
-@@ -637,11 +628,7 @@ xfs_iomap_write_delay(
-	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-
-retry:
--	isize = ip->i_size;
--	if (ip->i_new_size > isize)
--		isize = ip->i_new_size;
+  #define XFS_BUF_HOLD(bp)	xfs_buf_hold(bp)
+  #define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
+  #define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
+--- a/fs/xfs/xfs_buf_item.c	2008-12-04 14:24:12.000000000 +1100
++++ b/fs/xfs/xfs_buf_item.c	2008-12-04 14:13:32.000000000 +1100
+@@ -998,21 +1000,7 @@ xfs_buf_iodone_callbacks(
+  			xfs_buf_do_callbacks(bp, lip);
+  			XFS_BUF_SET_FSPRIVATE(bp, NULL);
+  			XFS_BUF_CLR_IODONE_FUNC(bp);
 -
--	error = xfs_iomap_eof_want_preallocate(mp, ip, isize, offset, count,
-+	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
-				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
-	if (error)
-		return error;
-@@ -655,8 +642,7 @@ retry:
-	}
+-			/*
+-			 * XFS_SHUT flag gets set when we go thru the
+-			 * entire buffer cache and deliberately start
+-			 * throwing away delayed write buffers.
+-			 * Since there's no biowait done on those,
+-			 * we should just brelse them.
+-			 */
+-			if (XFS_BUF_ISSHUT(bp)) {
+-			    XFS_BUF_UNSHUT(bp);
+-				xfs_buf_relse(bp);
+-			} else {
+-				xfs_biodone(bp);
+-			}
+-
++			xfs_biodone(bp);
+  			return;
+  		}
 
-	if (prealloc || extsz) {
--		error = xfs_iomap_eof_align_last_fsb(mp, ip, isize, extsz,
--							&last_fsb);
-+		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-		if (error)
-			return error;
-	}
+--- a/fs/xfs/xfs_inode.c	2008-12-04 14:24:12.000000000 +1100
++++ b/fs/xfs/xfs_inode.c	2008-12-04 14:21:54.000000000 +1100
+@@ -3089,7 +3089,6 @@ cluster_corrupt_out:
+  			XFS_BUF_CLR_BDSTRAT_FUNC(bp);
+  			XFS_BUF_UNDONE(bp);
+  			XFS_BUF_STALE(bp);
+-			XFS_BUF_SHUT(bp);
+  			XFS_BUF_ERROR(bp,EIO);
+  			xfs_biodone(bp);
+  		} else {
 
 _______________________________________________
 xfs mailing list
