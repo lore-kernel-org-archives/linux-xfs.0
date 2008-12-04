@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4DQk70032418 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 07:26:46 -0600
-Date: Thu, 4 Dec 2008 08:26:45 -0500
+	mB4DSITt032548 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 07:28:19 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1B8B1BEECF9
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 05:28:17 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id kmTEF7vc0QjEW9f4 for
+	<xfs@oss.sgi.com>; Thu, 04 Dec 2008 05:28:17 -0800 (PST)
+Date: Thu, 4 Dec 2008 08:27:46 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: New XFS git tree on oss.sgi.com
-Message-ID: <20081204132645.GA32664@infradead.org>
-References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
-	<492C9FB9.3090204@sgi.com> <20081126020009.GF6291@disturbed>
-	<492CC287.3070709@sgi.com> <20081126040840.GG6291@disturbed>
-	<492CE189.2000304@sgi.com>
+Subject: Re: [PATCH] Remove XFS_BUF_SHUT() and friends
+Message-ID: <20081204132746.GA27400@infradead.org>
+References: <49378654.2050707@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <492CE189.2000304@sgi.com>
+In-Reply-To: <49378654.2050707@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,20 +28,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Nov 26, 2008 at 04:41:29PM +1100, Timothy Shimmin wrote:
-> I was just thinking that if an external developer is working on a clone of
-> say the master branch and they have a fix, that they might post a patch
-> and say where sgi can pull from (the developer's tree) to receive the patch(es)
-> as an easier way to bring stuff in.
+On Thu, Dec 04, 2008 at 06:27:16PM +1100, Lachlan McIlroy wrote:
+> Code does nothing so remove it.
 
-So do you want git trees or not now?  I spent quite some time to set up
-a tree for my last set of patches, but what got in was slightly
-different, so when I pulles I got a merge and duplicates in my tree and
-had to git-reset to a point before my patches.  If you do apply from
-the list anyway I can avoid that overhead.
+Looks good to me.  Does anyone remember why this flag was set on IRIX?
 
 _______________________________________________
 xfs mailing list
