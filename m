@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB45dC44023047 for <xfs@oss.sgi.com>; Wed, 3 Dec 2008 23:39:12 -0600
+	mB46IrnU028554 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 00:18:53 -0600
 Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
 	[134.14.52.130])
-	by relay2.corp.sgi.com (Postfix) with SMTP id 0A5A530408C
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 21:39:07 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with SMTP id DD5BC30408D
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2008 22:18:48 -0800 (PST)
 Received: from [134.14.55.78] (redback.melbourne.sgi.com [134.14.55.78]) by
 	larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF)
-	via ESMTP id QAA19948 for <xfs@oss.sgi.com>;
-	Thu, 4 Dec 2008 16:39:06 +1100
-Message-ID: <49376D11.4010507@sgi.com>
-Date: Thu, 04 Dec 2008 16:39:29 +1100
+	via ESMTP id RAA20606 for <xfs@oss.sgi.com>;
+	Thu, 4 Dec 2008 17:18:46 +1100
+Message-ID: <4937765D.2030601@sgi.com>
+Date: Thu, 04 Dec 2008 17:19:09 +1100
 From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] Check return value of xfs_buf_get_noaddr()
+Subject: [PATCH] Remove unused variable in ktrace_free()
 Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -30,20 +30,35 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-We check the return value of all other calls to xfs_buf_get_noaddr().
-Make sense to do it here too.
+entries_size is probably left over from when we used to pass the
+size to kmem_free().
 
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -3034,6 +3034,8 @@ xfs_zero_remaining_bytes(
-  	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
-  				XFS_IS_REALTIME_INODE(ip) ?
-  				mp->m_rtdev_targp : mp->m_ddev_targp);
-+	if (!bp)
-+		return ENOMEM;
+--- xfs-fix.orig/fs/xfs/support/ktrace.c
++++ xfs-fix/fs/xfs/support/ktrace.c
+@@ -113,21 +113,16 @@ ktrace_alloc(int nentries, unsigned int
+  void
+  ktrace_free(ktrace_t *ktp)
+  {
+-	int     entries_size;
+-
+  	if (ktp == (ktrace_t *)NULL)
+  		return;
 
-  	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
-  		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+  	/*
+  	 * Special treatment for the Vnode trace buffer.
+  	 */
+-	if (ktp->kt_nentries == ktrace_zentries) {
++	if (ktp->kt_nentries == ktrace_zentries)
+  		kmem_zone_free(ktrace_ent_zone, ktp->kt_entries);
+-	} else {
+-		entries_size = (int)(ktp->kt_nentries * sizeof(ktrace_entry_t));
+-
++	else
+  		kmem_free(ktp->kt_entries);
+-	}
+
+  	kmem_zone_free(ktrace_hdr_zone, ktp);
+  }
 
 _______________________________________________
 xfs mailing list
