@@ -1,26 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4El8LQ009563 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 08:47:09 -0600
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 680D716958E3
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 06:47:05 -0800 (PST)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id aA5drg6wBmeZvBAu for
-	<xfs@oss.sgi.com>; Thu, 04 Dec 2008 06:47:05 -0800 (PST)
-Date: Thu, 4 Dec 2008 15:58:10 +0100
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Device loses barrier support (was: Fixed patch for simple
-	barriers.)
-Message-ID: <20081204145810.GR6703@one.firstfloor.org>
-References: <Pine.LNX.4.64.0812040009340.15169@hs20-bc2-1.build.redhat.com>
-	<20081204100050.GN6703@one.firstfloor.org>
-	<Pine.LNX.4.64.0812040836480.6118@hs20-bc2-1.build.redhat.com>
-	<20081204142015.GQ6703@one.firstfloor.org>
-	<Pine.LNX.4.64.0812040913510.6118@hs20-bc2-1.build.redhat.com>
-Mime-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0812040913510.6118@hs20-bc2-1.build.redhat.com>
+	mB4FTc4I012076 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 09:29:39 -0600
+Message-ID: <4937F75F.8070302@sandeen.net>
+Date: Thu, 04 Dec 2008 09:29:35 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] Remove unused variable in ktrace_free()
+References: <4937765D.2030601@sgi.com>
+In-Reply-To: <4937765D.2030601@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,56 +21,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
+To: lachlan@sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-> You start pvmove. The filesystem doesn't know about pvmove.
+Lachlan McIlroy wrote:
+> entries_size is probably left over from when we used to pass the
+> size to kmem_free().
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+> --- xfs-fix.orig/fs/xfs/support/ktrace.c
+> +++ xfs-fix/fs/xfs/support/ktrace.c
+> @@ -113,21 +113,16 @@ ktrace_alloc(int nentries, unsigned int
+>   void
+>   ktrace_free(ktrace_t *ktp)
+>   {
+> -	int     entries_size;
+> -
+>   	if (ktp == (ktrace_t *)NULL)
+>   		return;
 > 
-> The next time filesystem does somethig, it submits these 3 requests and 
-> the 2nd fill unexpectedly fail.
-
-Again the file systems handle failing barriers and they expect it.
-
+>   	/*
+>   	 * Special treatment for the Vnode trace buffer.
+>   	 */
+> -	if (ktp->kt_nentries == ktrace_zentries) {
+> +	if (ktp->kt_nentries == ktrace_zentries)
+>   		kmem_zone_free(ktrace_ent_zone, ktp->kt_entries);
+> -	} else {
+> -		entries_size = (int)(ktp->kt_nentries * sizeof(ktrace_entry_t));
+> -
+> +	else
+>   		kmem_free(ktp->kt_entries);
+> -	}
 > 
-> So the fact that pvmove drains the request queue won't help you.
-
-Help you against what? 
-
+>   	kmem_zone_free(ktrace_hdr_zone, ktp);
+>   }
 > 
-> > > finished after the 2nd write) and you are in an interrupt context, where 
-> > > you can't reissue -EOPNOTSUPP request. So what do you want to do?
-> > 
-> > The barrier aware file systems I know of just resubmit synchronously when 
-> > a barrier fails.
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
-> ... and produce structure corruption for certain period in time, because 
-> the writes meant to be ordered are submitted unordered.
-
-No there is nothing unordered. The file system path typically looks like
-
-commit of a transaction
-	if (i have never seen a barrier failing) 
-		write block with barrier
-		if (EOPNOTSUPP) {
-			record failure
-			submit synchronously
-		}
-	} else
-		submit synchronously
-
-
-So if a pvmove barrier fails it will just submit synchronously.
-
-The write block with barrier bit varies, jbd/gfs2 do it synchronously
-too and xfs does it asynchronously (with io done callbacks), but
-in both cases they handle an EOPNOTSUPP comming out in the final
-io done.
-
-When the pvmove migrates from no barrier support to barrier support
-there won't be any barrier on the file system for the time of the
-current mount, but that's also fine.
-
--Andi
 
 _______________________________________________
 xfs mailing list
