@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4DlOrD002492 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 07:47:26 -0600
-Received: from rv-out-0708.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D886D167DA45
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 05:47:23 -0800 (PST)
-Received: from rv-out-0708.google.com (rv-out-0708.google.com
-	[209.85.198.245]) by cuda.sgi.com with ESMTP id
-	Yt1gYUjVGnvHvpzJ for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 05:47:23 -0800 (PST)
-Received: by rv-out-0708.google.com with SMTP id f25so3791578rvb.32
-	for <xfs@oss.sgi.com>; Thu, 04 Dec 2008 05:47:22 -0800 (PST)
-Message-ID: <416c461f0812040540q569321f6scf5f4716b6abcaee@mail.gmail.com>
-Date: Fri, 5 Dec 2008 00:40:28 +1100
-From: "Niv Sardi" <xaiki@cxhome.ath.cx>
-Subject: Re: [patch 01/22] fix compile on 32 bit systems
-In-Reply-To: <20081204131124.GA7276@infradead.org>
-MIME-Version: 1.0
+	mB4DmKZt002598 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 07:48:20 -0600
+Received: from verein.lst.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A83271BEF4BA
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 05:48:18 -0800 (PST)
+Received: from verein.lst.de (verein.lst.de [213.95.11.210]) by cuda.sgi.com
+	with ESMTP id KZGayJeTZVdOP8Y0 for <xfs@oss.sgi.com>;
+	Thu, 04 Dec 2008 05:48:18 -0800 (PST)
+Date: Thu, 4 Dec 2008 14:23:27 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: XFS breakage on m68k (was: Re: linux-next: Tree for December 3)
+Message-ID: <20081204132327.GA12971@lst.de>
+References: <20081203183602.c06f8c39.sfr@canb.auug.org.au>
+	<Pine.LNX.4.64.0812040956370.10635@anakin>
+	<20081204121330.GA18815@infradead.org>
+	<20081204234603.b5a28cd6.sfr@canb.auug.org.au>
+	<20081204125006.GA13411@infradead.org>
+Mime-Version: 1.0
 Content-Disposition: inline
-References: <20081202160430.775774000@bombadil.infradead.org>
-	<20081202160649.658660000@bombadil.infradead.org>
-	<87vdu07nvp.fsf@cxhome.ath.cx> <20081204123432.GC7085@infradead.org>
-	<416c461f0812040503g13083bdbl7a9b716f17d2adc0@mail.gmail.com>
-	<20081204131124.GA7276@infradead.org>
+In-Reply-To: <20081204125006.GA13411@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,26 +33,36 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-next@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@lst.de>
 
-Bissectable commits my dear christoph, bissectable commits =)
-Mark told me I should make you happy and put lots of patches of yours
-in if you put them in nice git trees for us =) just send to list.
+On Thu, Dec 04, 2008 at 07:50:06AM -0500, Christoph Hellwig wrote:
+> Yeah, but Niv fixed it up and the correct version is not in the xfs git
+> tree.
 
-On Fri, Dec 5, 2008 at 12:11 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Dec 05, 2008 at 12:03:15AM +1100, Niv Sardi wrote:
->> Oh well, lachland allready checked it in like that...
->
-> Just put in my add FMODE_NOCMTIME patch in, it removes all that invis
-> file operations crap :)  Seriously, it's already been reviewed on
-> -fsdevel anyway.
->
->
+Hah, he noticed the bug but the wrong version got checked in anyway.
 
-
+Here's the fix (for todays xfs tree):
 
 -- 
-Niv Sardi
+
+[XFS] Fix compile with CONFIG_COMPAT enabled
+
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/linux-2.6/xfs_ioctl.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-04 14:19:32.000000000 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_ioctl.h	2008-12-04 14:19:38.000000000 +0100
+@@ -74,7 +74,7 @@ xfs_file_compat_ioctl(
+ 	unsigned long		arg);
+ 
+ extern long
+-xfs_file_compat_ioctl_invis(
++xfs_file_compat_invis_ioctl(
+ 	struct file		*file,
+ 	unsigned int		cmd,
+ 	unsigned long		arg);
 
 _______________________________________________
 xfs mailing list
