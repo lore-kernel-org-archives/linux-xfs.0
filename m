@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4FinZY012792 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 09:44:49 -0600
-Message-ID: <4937FAED.7060503@sandeen.net>
-Date: Thu, 04 Dec 2008 09:44:45 -0600
+	mB4GQpEc016009 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 10:26:52 -0600
+Message-ID: <4937F70E.4060600@sandeen.net>
+Date: Thu, 04 Dec 2008 09:28:14 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix off by one error in page_region_mask()
-References: <49378B60.1060603@sgi.com>
-In-Reply-To: <49378B60.1060603@sgi.com>
+Subject: Re: [PATCH] Check return value of xfs_buf_get_noaddr()
+References: <49376D11.4010507@sgi.com>
+In-Reply-To: <49376D11.4010507@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +25,26 @@ To: lachlan@sgi.com
 Cc: xfs-oss <xfs@oss.sgi.com>
 
 Lachlan McIlroy wrote:
-> final is calculated to be the last bit to set (ie inclusive) but when we
-> do the mask shifting final really needs to be first bit not to set.
+> We check the return value of all other calls to xfs_buf_get_noaddr().
+> Make sense to do it here too.
 > 
-> For example if first and final are both bit 0 (ie only first bit to be set)
-> then mask is completely shifted and becomes all zeroes.
-> 
-> Or if first is 0 and final is 63 then the mask is shifted one bit when it
-> shouldn't be shifted at all.
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -3034,6 +3034,8 @@ xfs_zero_remaining_bytes(
+>   	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
+>   				XFS_IS_REALTIME_INODE(ip) ?
+>   				mp->m_rtdev_targp : mp->m_ddev_targp);
+> +	if (!bp)
+> +		return ENOMEM;
 
-Lachlan, what's the end result of this bug?  What's the broken behavior?
+Maybe
 
-Thanks,
++		return XFS_ERROR(ENOMEM);
+
 -Eric
 
-> --- xfs-fix.orig/fs/xfs/linux-2.6/xfs_buf.c
-> +++ xfs-fix/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -129,15 +129,17 @@ page_region_mask(
->   	int		first, final;
-> 
->   	first = BTOPR(offset);
-> -	final = BTOPRT(offset + length - 1);
-> -	first = min(first, final);
-> +	final = BTOPRT(offset + length);
-> +
-> +	if (first >= final)
-> +		return 0UL;
-> 
->   	mask = ~0UL;
->   	mask <<= BITS_PER_LONG - (final - first);
->   	mask >>= BITS_PER_LONG - (final);
-> 
->   	ASSERT(offset + length <= PAGE_CACHE_SIZE);
-> -	ASSERT((final - first) < BITS_PER_LONG && (final - first) >= 0);
-> +	ASSERT((final - first) <= BITS_PER_LONG && (final - first) > 0);
-> 
->   	return mask;
->   }
+>   	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
+>   		offset_fsb = XFS_B_TO_FSBT(mp, offset);
 > 
 > _______________________________________________
 > xfs mailing list
