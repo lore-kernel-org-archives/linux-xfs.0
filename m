@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4CW7Rl026865 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 06:32:08 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F5651695450
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 04:32:07 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id f7vk1HhxuK0Y8aNb for
-	<xfs@oss.sgi.com>; Thu, 04 Dec 2008 04:32:07 -0800 (PST)
-Date: Thu, 4 Dec 2008 07:32:06 -0500
+	mB4CYAjl027100 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 06:34:11 -0600
+Date: Thu, 4 Dec 2008 07:34:08 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.27.7 vanilla, project quota enabled and process stuck in D
-	state (repeatable every time)
-Message-ID: <20081204123206.GA6935@infradead.org>
-References: <200812021949.55463.arekm@maven.pl>
-	<200812031406.41882.arekm@maven.pl>
-	<20081203213028.GW18236@disturbed>
-	<200812032242.29326.arekm@maven.pl>
-	<20081203220934.GA32301@disturbed>
+Subject: Re: New XFS git tree on oss.sgi.com
+Message-ID: <20081204123408.GB7085@infradead.org>
+References: <492BA7AD.5080007@sgi.com> <20081125140553.GA16553@infradead.org>
+	<492CA245.3000709@sgi.com> <20081126032710.GA19523@infradead.org>
+	<ncctz9llxzq.fsf@itchy.melbourne.sgi.com>
+	<20081203130414.GB9681@infradead.org>
+	<871vwo95fr.fsf@cxhome.ath.cx>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20081203220934.GA32301@disturbed>
+In-Reply-To: <871vwo95fr.fsf@cxhome.ath.cx>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,20 +26,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>, xfs@oss.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Dec 04, 2008 at 09:09:34AM +1100, Dave Chinner wrote:
-> Is that the unlock of the inodes is using the incorrect lock
-> type for the unlock, (inodes lock XFS_ILOCK_EXCL, unlocked XFS_ILOCK_SHARED)
-> which means they don't get unlocked and the next attempt to do anything
-> with those inodes will hang.
+On Thu, Dec 04, 2008 at 10:58:48AM +1100, Niv Sardi wrote:
+> Christoph Hellwig <hch@infradead.org> writes:
 > 
-> Compile-tested-only patch below that should fix the problem.
+> > On Wed, Dec 03, 2008 at 02:48:57PM +1100, Niv Sardi wrote:
+> >
+> >> > Also
+> >> > http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=ca830fdf6231d0683f4ea4e9223e234c3a509063doesn't seem to be needed.  None of those symbols seems to be used by
+> >> > either dmapi or xfsidbg, the only two modules using xfs symbols in the
+> >> > tree.
+> >> 
+> >> That's exactly why it's there, the revertion is actually moving from
+> >> what was in ptools to something sane.
+> >
+> > ??  The commit above adds tons of unused exports.  But hey, I'll just
+> > submit a patch to sort it out when I get some time..
+> 
+> Yes, I already did that ???that's the previous commit??? but Lachland wanted
+> the tree not too move too much at first.
+> The patch you want is the exact revert of the commit you pointed out,
+> it'll be checked in soon.
 
-Yeah, that also explains why my patch fixes it :)  I'd say let's put
-yours into 2.6.28 and -stable, and I'll rediff mine ontop for the 2.6.29
-queue.  I'll also write a testcase for xfsqa based on Arkadiusz's
-report.
+Ah, makes sense.  Thanks for the clarification.
 
 _______________________________________________
 xfs mailing list
