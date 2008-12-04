@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB4CYAjl027100 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 06:34:11 -0600
-Date: Thu, 4 Dec 2008 07:34:08 -0500
+	mB4CYHMq027118 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 06:34:18 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 23B4A169546F
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 04:34:17 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ouSAvoll9MdKz0jB for
+	<xfs@oss.sgi.com>; Thu, 04 Dec 2008 04:34:17 -0800 (PST)
+Date: Thu, 4 Dec 2008 07:33:46 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: New XFS git tree on oss.sgi.com
-Message-ID: <20081204123408.GB7085@infradead.org>
-References: <492BA7AD.5080007@sgi.com> <20081125140553.GA16553@infradead.org>
-	<492CA245.3000709@sgi.com> <20081126032710.GA19523@infradead.org>
-	<ncctz9llxzq.fsf@itchy.melbourne.sgi.com>
-	<20081203130414.GB9681@infradead.org>
-	<871vwo95fr.fsf@cxhome.ath.cx>
+Subject: Re: Assertion failed: atomic_read(&mp->m_active_trans)
+Message-ID: <20081204123346.GA7085@infradead.org>
+References: <492BB095.1000104@sgi.com> <4934AAA9.5090405@sgi.com>
+	<20081203104849.GF15485@infradead.org>
+	<20081203213950.GX18236@disturbed>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <871vwo95fr.fsf@cxhome.ath.cx>
+In-Reply-To: <20081203213950.GX18236@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Niv Sardi <xaiki@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, Lachlan McIlroy <lachlan@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Dec 04, 2008 at 10:58:48AM +1100, Niv Sardi wrote:
-> Christoph Hellwig <hch@infradead.org> writes:
+On Thu, Dec 04, 2008 at 08:39:50AM +1100, Dave Chinner wrote:
+> On Wed, Dec 03, 2008 at 05:48:49AM -0500, Christoph Hellwig wrote:
+> > I'd rather fix it properly.
 > 
-> > On Wed, Dec 03, 2008 at 02:48:57PM +1100, Niv Sardi wrote:
-> >
-> >> > Also
-> >> > http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=ca830fdf6231d0683f4ea4e9223e234c3a509063doesn't seem to be needed.  None of those symbols seems to be used by
-> >> > either dmapi or xfsidbg, the only two modules using xfs symbols in the
-> >> > tree.
-> >> 
-> >> That's exactly why it's there, the revertion is actually moving from
-> >> what was in ptools to something sane.
-> >
-> > ??  The commit above adds tons of unused exports.  But hey, I'll just
-> > submit a patch to sort it out when I get some time..
-> 
-> Yes, I already did that ???that's the previous commit??? but Lachland wanted
-> the tree not too move too much at first.
-> The patch you want is the exact revert of the commit you pointed out,
-> it'll be checked in soon.
+> Sure, but in the mean time, I'd suggest changing it to a WARN_ON()
+> rather than an ASSERT(). That way we'll continue to have ppl bug us
+> about it until the VFS can support read-only remounts without racing
+> correctly.
 
-Ah, makes sense.  Thanks for the clarification.
+Makes sense.
+
+> Has that work been dropped on the floor, Christoph? We've
+> been holding off removing this ASSERT or adding the hack
+> I did to work around the common case of the assert triggering
+> based on the fact that the problem in the VFS would be fixed
+> in the next release. That was the case each release since
+> 2.6.25 and there doesn't seem to be much progress...
+
+Yeah, once we got the r/o bind mounts which introduces the
+infrastructure to deal with people dropped that ball and we never fixed
+it.  But I just heard from Al that he's looking into some major surgery
+for the remount path, which should include this in the second or third
+batch.
 
 _______________________________________________
 xfs mailing list
