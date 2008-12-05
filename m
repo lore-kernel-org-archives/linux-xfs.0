@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB53Mapc029093 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:22:36 -0600
-Message-ID: <49389E8F.5000301@sgi.com>
-Date: Fri, 05 Dec 2008 14:22:55 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	mB53ToOe029815 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:29:50 -0600
+From: Niv Sardi <xaiki@sgi.com>
+Subject: Re: New XFS git tree on oss.sgi.com
+References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
+	<492C9FB9.3090204@sgi.com> <20081126020009.GF6291@disturbed>
+	<492CC287.3070709@sgi.com> <20081126040840.GG6291@disturbed>
+	<492CE189.2000304@sgi.com> <20081204132645.GA32664@infradead.org>
+Date: Fri, 05 Dec 2008 14:29:38 +1100
+In-Reply-To: <20081204132645.GA32664@infradead.org> (Christoph Hellwig's
+	message of "Thu, 4 Dec 2008 08:26:45 -0500")
+Message-ID: <ncc4p1jfgf1.fsf@itchy.melbourne.sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Use the incore inode size in xfs_file_readdir()
-References: <49377FBC.5020501@sgi.com> <20081204070827.GB29531@infradead.org>
-In-Reply-To: <20081204070827.GB29531@infradead.org>
-Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,23 +26,32 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Thu, Dec 04, 2008 at 05:59:08PM +1100, Lachlan McIlroy wrote:
->> We should be using the incore inode size here not the linux inode
->> size.  The incore inode size is always up to date for directories
->> whereas the linux inode size is not updated for directories.
->>
->> We've hit assertions in xfs_bmap() and traced it back to the linux
->> inode size being zero here but the incore size being correct.
-> 
-> Heh. Looks good, but you can still call ->readdir with a 0 inode size,
-> so you might want to check for that (actualyl I think other pathes
-> are goign to take care of it, but..)
+Christoph Hellwig <hch@infradead.org> writes:
 
-What if we remove bufsize and pass PAGE_SIZE into xfs_readdir()?
-No need to worry about a 0 inode size.
+> On Wed, Nov 26, 2008 at 04:41:29PM +1100, Timothy Shimmin wrote:
+>
+>> I was just thinking that if an external developer is working on a clone of
+>> say the master branch and they have a fix, that they might post a patch
+>> and say where sgi can pull from (the developer's tree) to receive the patch(es)
+>> as an easier way to bring stuff in.
+>
+> So do you want git trees or not now?  I spent quite some time to set up
+> a tree for my last set of patches, but what got in was slightly
+> different, so when I pulles I got a merge and duplicates in my tree and
+> had to git-reset to a point before my patches.  If you do apply from
+> the list anyway I can avoid that overhead.
+
+I believe that if you don't work in git, and prefer to send patches (as
+long as git-am likes them) it's not harder for us to merge things (We
+can't pull because we want to add a signed-off-by anyway). If you do use
+git, publishing your tree makes it a bit easier to track your work, and
+our delta. but that is in no way mandatory.
+
+Cheers,
+-- 
+Niv Sardi
 
 _______________________________________________
 xfs mailing list
