@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB54wfG0012791 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 22:58:42 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0016F16B1FC2
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 20:58:40 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id 1bt7E7ZItFcBDqKW for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 20:58:40 -0800 (PST)
-Message-ID: <4938B3B4.6080505@sandeen.net>
-Date: Thu, 04 Dec 2008 22:53:08 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mB555w5h013188 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 23:05:58 -0600
+Message-ID: <4938B6CA.80205@sgi.com>
+Date: Fri, 05 Dec 2008 16:06:18 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] Fix off by one error in page_region_mask()
 References: <49378B60.1060603@sgi.com> <4937FAED.7060503@sandeen.net>
-	<49387CDE.2030904@sgi.com>
-In-Reply-To: <49387CDE.2030904@sgi.com>
+	<49387CDE.2030904@sgi.com> <4938B3B4.6080505@sandeen.net>
+In-Reply-To: <4938B3B4.6080505@sandeen.net>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +23,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lachlan@sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Lachlan McIlroy wrote:
-> Eric Sandeen wrote:
->> Lachlan McIlroy wrote:
->>> final is calculated to be the last bit to set (ie inclusive) but when we
->>> do the mask shifting final really needs to be first bit not to set.
->>>
->>> For example if first and final are both bit 0 (ie only first bit to be set)
->>> then mask is completely shifted and becomes all zeroes.
->>>
->>> Or if first is 0 and final is 63 then the mask is shifted one bit when it
->>> shouldn't be shifted at all.
->> Lachlan, what's the end result of this bug?  What's the broken behavior?
+Eric Sandeen wrote:
+> Lachlan McIlroy wrote:
+>> Eric Sandeen wrote:
+>>> Lachlan McIlroy wrote:
+>>>> final is calculated to be the last bit to set (ie inclusive) but when we
+>>>> do the mask shifting final really needs to be first bit not to set.
+>>>>
+>>>> For example if first and final are both bit 0 (ie only first bit to be set)
+>>>> then mask is completely shifted and becomes all zeroes.
+>>>>
+>>>> Or if first is 0 and final is 63 then the mask is shifted one bit when it
+>>>> shouldn't be shifted at all.
+>>> Lachlan, what's the end result of this bug?  What's the broken behavior?
+>> There was no observed bug - well nothing I can tie directly to this code.
+>> I found this by inspection while investigating the page bitmap stuff.
+>> We have a problem with ia64 going to 64K page size with filesystems that
+>> use a filesystem sector size of 512 bytes - we don't have the granularity
+>> we need in the bitmap.
+>>
+>> I suppose it is possible this bug could indicate a page region is not up
+>> to date when it actually is and we might re-read something from disk and
+>> overwrite the more up to date in-memory version.
 > 
-> There was no observed bug - well nothing I can tie directly to this code.
-> I found this by inspection while investigating the page bitmap stuff.
-> We have a problem with ia64 going to 64K page size with filesystems that
-> use a filesystem sector size of 512 bytes - we don't have the granularity
-> we need in the bitmap.
-> 
-> I suppose it is possible this bug could indicate a page region is not up
-> to date when it actually is and we might re-read something from disk and
-> overwrite the more up to date in-memory version.
+> ah, ok.  So I've seen this corruption on 64k pages too, on ppc... but I
+> take it this patch doesn't fix it...
 
-ah, ok.  So I've seen this corruption on 64k pages too, on ppc... but I
-take it this patch doesn't fix it...
-
-Thanks,
--Eric
+I don't know - it might help.  But there's still an issue beyond this patch
+that needs fixing.
 
 _______________________________________________
 xfs mailing list
