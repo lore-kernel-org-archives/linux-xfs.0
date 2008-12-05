@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB5E0Rha019904 for <xfs@oss.sgi.com>; Fri, 5 Dec 2008 08:00:29 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B23B16B6477
-	for <xfs@oss.sgi.com>; Fri,  5 Dec 2008 06:00:25 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id sHPjhFqyOGjIXVfj for
-	<xfs@oss.sgi.com>; Fri, 05 Dec 2008 06:00:25 -0800 (PST)
-Date: Fri, 5 Dec 2008 08:59:54 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Velociraptor drive related to the use of NCQ.
-In-Reply-To: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
-Message-ID: <alpine.DEB.1.10.0812050855140.4713@p34.internal.lan>
-References: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
-MIME-Version: 1.0
+	mB5GZs3U029389 for <xfs@oss.sgi.com>; Fri, 5 Dec 2008 10:35:55 -0600
+Received: from lxorguk.ukuu.org.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE23816BDBC2
+	for <xfs@oss.sgi.com>; Fri,  5 Dec 2008 08:35:51 -0800 (PST)
+Received: from lxorguk.ukuu.org.uk (earthlight.etchedpixels.co.uk
+	[81.2.110.250]) by cuda.sgi.com with ESMTP id KcYFdvsCXhbykIXQ
+	for <xfs@oss.sgi.com>; Fri, 05 Dec 2008 08:35:51 -0800 (PST)
+Date: Fri, 5 Dec 2008 11:52:25 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Device loses barrier support (was: Fixed patch for simple
+	barriers.)
+Message-ID: <20081205115225.13c277ee@lxorguk.ukuu.org.uk>
+In-Reply-To: <20081205013739.GZ6703@one.firstfloor.org>
+References: <20081204142015.GQ6703@one.firstfloor.org>
+	<Pine.LNX.4.64.0812040913510.6118@hs20-bc2-1.build.redhat.com>
+	<20081204145810.GR6703@one.firstfloor.org>
+	<Pine.LNX.4.64.0812041139200.2434@hs20-bc2-1.build.redhat.com>
+	<20081204174838.GS6703@one.firstfloor.org>
+	<Pine.LNX.4.64.0812041401210.23079@hs20-bc2-1.build.redhat.com>
+	<20081204221551.GV6703@one.firstfloor.org>
+	<Pine.LNX.4.64.0812041756550.29638@hs20-bc2-1.build.redhat.com>
+	<20081205004849.GX6703@one.firstfloor.org>
+	<Pine.LNX.4.64.0812041948400.14114@hs20-bc2-1.build.redhat.com>
+	<20081205013739.GZ6703@one.firstfloor.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +38,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
-Cc: Alan Piszcz <ap@solarrain.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Mikulas Patocka <mpatocka@redhat.com>, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
 
+On Fri, 5 Dec 2008 02:37:39 +0100
+Andi Kleen <andi@firstfloor.org> wrote:
 
+> > * barrier support in md-raid1 deviates from the specification at 
+> > Documentation/block/barrier.txt. The specification says that requests 
+> > submitted after the barrier request hit the media after the barrier 
+> > request hits the media. The reality is that the barrier request can be 
+> > randomly aborted and the requests submitted after it hit the media before 
+> > the barrier request.
+> 
+> Yes the spec should be probably updated.
+> 
+> But also see Linus' rant from yesterday about code vs documentation.
+> When in doubt the code wins.
 
-On Fri, 5 Dec 2008, Justin Piszcz wrote:
+Not when the fundamental design of the code is broken and trashes
+performance. The documented behaviour is strongly desirable.
 
-> I swapped out my power supply, changed ALL cables and bought a $1000 raid
-> controller with BBU, the drives are still having problems, when writing to
-> them in a RAID10 configuration, it locks up the card:
->
-> SMART shows the same thing on many of the disks in the RAID10:
->
-> Error 1 occurred at disk power-on lifetime: 3708 hours (154 days + 12 hours)
->  When the command that caused the error occurred, the device was active or 
-> idle.
-
-I spoke to soon, turning off NCQ helped dramatically, it worked three times!
-
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 3914.51 s, 383 MB/s
-Fri Dec  5 06:00:25 EST 2008
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 4063.25 s, 369 MB/s
-Fri Dec  5 07:08:11 EST 2008
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 3926.71 s, 382 MB/s
-Fri Dec  5 08:13:41 EST 2008
-
-Then it crashed again, with NCQ enabled, it would not even complete one test,
-So basically a new system, new PSU, new cables, its on a new APC UPS and the 
-problem persists even when all disks are on a RAID card, SW raid, it does not 
-matter, Velociraptors have problems, I think its time for me to get regular
-1TiB disks and be done with it.
-
-Justin.
+Alan
 
 _______________________________________________
 xfs mailing list
