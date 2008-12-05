@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB53Rcko029414 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:27:39 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32CA61665BEE
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 19:27:37 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id ZiZoO8D8UvK28pvR for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 19:27:37 -0800 (PST)
-Message-ID: <49389F81.1090306@sandeen.net>
-Date: Thu, 04 Dec 2008 21:26:57 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mB53Mapc029093 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:22:36 -0600
+Message-ID: <49389E8F.5000301@sgi.com>
+Date: Fri, 05 Dec 2008 14:22:55 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Device loses barrier support
-References: <Pine.LNX.4.64.0812040009340.15169@hs20-bc2-1.build.redhat.com>	<20081204100050.GN6703@one.firstfloor.org>	<Pine.LNX.4.64.0812040836480.6118@hs20-bc2-1.build.redhat.com>	<20081204142015.GQ6703@one.firstfloor.org>	<Pine.LNX.4.64.0812040913510.6118@hs20-bc2-1.build.redhat.com>	<20081204145810.GR6703@one.firstfloor.org>	<Pine.LNX.4.64.0812041139200.2434@hs20-bc2-1.build.redhat.com>	<20081204174838.GS6703@one.firstfloor.org>
-	<Pine.LNX.4.64.0812041401210.23079@hs20-bc2-1.build.redhat.com>
-In-Reply-To: <Pine.LNX.4.64.0812041401210.23079@hs20-bc2-1.build.redhat.com>
+Subject: Re: [PATCH] Use the incore inode size in xfs_file_readdir()
+References: <49377FBC.5020501@sgi.com> <20081204070827.GB29531@infradead.org>
+In-Reply-To: <20081204070827.GB29531@infradead.org>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,22 +22,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Mikulas Patocka wrote:
-
-> Another thing:
+Christoph Hellwig wrote:
+> On Thu, Dec 04, 2008 at 05:59:08PM +1100, Lachlan McIlroy wrote:
+>> We should be using the incore inode size here not the linux inode
+>> size.  The incore inode size is always up to date for directories
+>> whereas the linux inode size is not updated for directories.
+>>
+>> We've hit assertions in xfs_bmap() and traced it back to the linux
+>> inode size being zero here but the incore size being correct.
 > 
-> I'm wondering, where in fsync() does Linux wait for hardware disk cache to 
-> be flushed? Isn't there a bug that fsync() will return before the cache is 
-> flushed? I couldn't really find it. The last thing do_fsync calls is 
-> filemap_fdatawait and it doesn't do cache flush (blkdev_issue_flush).
+> Heh. Looks good, but you can still call ->readdir with a 0 inode size,
+> so you might want to check for that (actualyl I think other pathes
+> are goign to take care of it, but..)
 
-ext4, reiserfs, and xfs all call blkdev_issue_flush() in their ->fsync
-file operations (or down that path).
-
--Eric
+What if we remove bufsize and pass PAGE_SIZE into xfs_readdir()?
+No need to worry about a 0 inode size.
 
 _______________________________________________
 xfs mailing list
