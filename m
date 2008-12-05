@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB51LBDD020663 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 19:21:12 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F129D16AF26B
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 17:21:10 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [66.187.233.31]) by cuda.sgi.com
-	with ESMTP id BMoHB2dhbbHJd8ev for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 17:21:10 -0800 (PST)
-Date: Thu, 4 Dec 2008 20:16:23 -0500 (EST)
-From: Mikulas Patocka <mpatocka@redhat.com>
+	mB51VWts021275 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 19:31:32 -0600
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6905B16AEEA5
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 17:31:30 -0800 (PST)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id hBJwDSgRygFB8DY7 for
+	<xfs@oss.sgi.com>; Thu, 04 Dec 2008 17:31:30 -0800 (PST)
+Date: Fri, 5 Dec 2008 02:37:39 +0100
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: Device loses barrier support (was: Fixed patch for simple
 	barriers.)
-In-Reply-To: <20081205004849.GX6703@one.firstfloor.org>
-Message-ID: <Pine.LNX.4.64.0812041948400.14114@hs20-bc2-1.build.redhat.com>
-References: <20081204100050.GN6703@one.firstfloor.org>
-	<Pine.LNX.4.64.0812040836480.6118@hs20-bc2-1.build.redhat.com>
-	<20081204142015.GQ6703@one.firstfloor.org>
+Message-ID: <20081205013739.GZ6703@one.firstfloor.org>
+References: <20081204142015.GQ6703@one.firstfloor.org>
 	<Pine.LNX.4.64.0812040913510.6118@hs20-bc2-1.build.redhat.com>
 	<20081204145810.GR6703@one.firstfloor.org>
 	<Pine.LNX.4.64.0812041139200.2434@hs20-bc2-1.build.redhat.com>
@@ -25,7 +22,10 @@ References: <20081204100050.GN6703@one.firstfloor.org>
 	<20081204221551.GV6703@one.firstfloor.org>
 	<Pine.LNX.4.64.0812041756550.29638@hs20-bc2-1.build.redhat.com>
 	<20081205004849.GX6703@one.firstfloor.org>
-MIME-Version: 1.0
+	<Pine.LNX.4.64.0812041948400.14114@hs20-bc2-1.build.redhat.com>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0812041948400.14114@hs20-bc2-1.build.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,45 +38,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Milan Broz <mbroz@redhat.com>, Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, Alasdair G Kergon <agk@redhat.com>, xfs@oss.sgi.com
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
 
-On Fri, 5 Dec 2008, Andi Kleen wrote:
+> * barrier support in md-raid1 deviates from the specification at 
+> Documentation/block/barrier.txt. The specification says that requests 
+> submitted after the barrier request hit the media after the barrier 
+> request hits the media. The reality is that the barrier request can be 
+> randomly aborted and the requests submitted after it hit the media before 
+> the barrier request.
 
-> > And if barriers fail at random points, the user can't turn on disk cache 
-> > anyway (he would get data corruption if barrier write failed and hardware 
+Yes the spec should be probably updated.
+
+But also see Linus' rant from yesterday about code vs documentation.
+When in doubt the code wins.
 > 
-> I think we already established earlier in the thread that there is no disk
-> corruption
+> * the filesystems developed hacks to work around this issue, the hacks 
+> involve not submitting more requests after the barrier request, 
 
-So, the facts are:
+I suspect the reason the file systems did it this way is that
+it was a much simpler change than to rewrite the transaction
+manager for this.
 
-* barrier support in md-raid1 deviates from the specification at 
-Documentation/block/barrier.txt. The specification says that requests 
-submitted after the barrier request hit the media after the barrier 
-request hits the media. The reality is that the barrier request can be 
-randomly aborted and the requests submitted after it hit the media before 
-the barrier request.
+> synchronously waiting for the barrier request and eventually retrying it. 
+> These hacks suppress any performance advantage barriers could bring.
+> 
+> * you submit a patch that makes barriers even more often deviate from the 
+> specification and you argue that the patch is correct because filesystems 
+> handle this deviation.
 
-* the filesystems developed hacks to work around this issue, the hacks 
-involve not submitting more requests after the barrier request, 
-synchronously waiting for the barrier request and eventually retrying it. 
-These hacks suppress any performance advantage barriers could bring.
+Sorry what counts is the code behaviour, not the specification.
 
-* you submit a patch that makes barriers even more often deviate from the 
-specification and you argue that the patch is correct because filesystems 
-handle this deviation.
+-Andi
 
-This is runaway logic that will eventually turn Linux into unmaintainable 
-mess. What do you think we'll be doing when we'll be implementing barriers 
-into other dm targets? Do you really think it'll be fun to write code to 
-double-submit all metadata writes just because you and some person at 
-md-raid1 provided an unreliable interface?
-
-I am again repeating: either make barriers consistent with the 
-specification, or remove them at all.
-
-Mikulas
+-- 
+ak@linux.intel.com
 
 _______________________________________________
 xfs mailing list
