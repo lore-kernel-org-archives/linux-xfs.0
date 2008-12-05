@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB53ToOe029815 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:29:50 -0600
-From: Niv Sardi <xaiki@sgi.com>
-Subject: Re: New XFS git tree on oss.sgi.com
-References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
-	<492C9FB9.3090204@sgi.com> <20081126020009.GF6291@disturbed>
-	<492CC287.3070709@sgi.com> <20081126040840.GG6291@disturbed>
-	<492CE189.2000304@sgi.com> <20081204132645.GA32664@infradead.org>
-Date: Fri, 05 Dec 2008 14:29:38 +1100
-In-Reply-To: <20081204132645.GA32664@infradead.org> (Christoph Hellwig's
-	message of "Thu, 4 Dec 2008 08:26:45 -0500")
-Message-ID: <ncc4p1jfgf1.fsf@itchy.melbourne.sgi.com>
+	mB53nfuw031259 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:49:42 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 323C316B0AC3
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 19:49:21 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id 7FL2CXlo6HIx08Q6 for <xfs@oss.sgi.com>;
+	Thu, 04 Dec 2008 19:49:21 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTP id 61A70AC6272
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 21:49:21 -0600 (CST)
+Message-ID: <4938A4C1.9010401@sandeen.net>
+Date: Thu, 04 Dec 2008 21:49:21 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: [PATCH, RFC] - set b_error from bio error in xfs_buf_bio_end_io
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Christoph Hellwig <hch@infradead.org> writes:
+Tim mentioned something about the code in xfs_buf_iodone_work()
+which detects barrier failures post-mount, as added in commit
+0bfefc46dc028df60120acdb92062169c9328769,
+[XFS] Barriers need to be dynamically checked and switched off
 
-> On Wed, Nov 26, 2008 at 04:41:29PM +1100, Timothy Shimmin wrote:
->
->> I was just thinking that if an external developer is working on a clone of
->> say the master branch and they have a fix, that they might post a patch
->> and say where sgi can pull from (the developer's tree) to receive the patch(es)
->> as an easier way to bring stuff in.
->
-> So do you want git trees or not now?  I spent quite some time to set up
-> a tree for my last set of patches, but what got in was slightly
-> different, so when I pulles I got a merge and duplicates in my tree and
-> had to git-reset to a point before my patches.  If you do apply from
-> the list anyway I can avoid that overhead.
+        if ((bp->b_error == EOPNOTSUPP) &&
+            (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
+                XB_TRACE(bp, "ordered_retry", bp->b_iodone);
+                bp->b_flags &= ~XBF_ORDERED;
+                bp->b_flags |= _XFS_BARRIER_FAILED;
+...
 
-I believe that if you don't work in git, and prefer to send patches (as
-long as git-am likes them) it's not harder for us to merge things (We
-can't pull because we want to add a signed-off-by anyway). If you do use
-git, publishing your tree makes it a bit easier to track your work, and
-our delta. but that is in no way mandatory.
+but it seems that nothing ever sets EOPNOTSUPP on b_error, so
+this path would never be hit.
 
-Cheers,
--- 
-Niv Sardi
+I think that we need to do something like below, totally untested,
+to ensure that bio errors get set on b_error, if we're looking
+for them by name, no?
+
+(I'm not sure if we still need the BIO_UPTODATE test, or if
+we can just look at the error we're given and be done?)
+
+Does this seem about right?
+
+Thanks,
+-Eric
+
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
++++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1114,8 +1114,10 @@ xfs_buf_bio_end_io(
+ 	unsigned int		blocksize = bp->b_target->bt_bsize;
+ 	struct bio_vec		*bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+ 
+-	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+-		bp->b_error = EIO;
++	if (error)
++		bp->b_error = XFS_ERROR(-error);
++	else if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
++		bp->b_error = XFS_ERROR(EIO);
+ 
+ 	do {
+ 		struct page	*page = bvec->bv_page;
+
 
 _______________________________________________
 xfs mailing list
