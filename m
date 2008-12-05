@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB53xAxd031855 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 21:59:10 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2849B16B0F0F
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 19:59:09 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id hm7MI54X8BItTJHS for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 19:59:09 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id 73F6DAC6272
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 21:59:09 -0600 (CST)
-Message-ID: <4938A70D.8090502@sandeen.net>
-Date: Thu, 04 Dec 2008 21:59:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mB5465L0032217 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 22:06:05 -0600
+Message-ID: <4938A8C1.7030103@sgi.com>
+Date: Fri, 05 Dec 2008 15:06:25 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH, RFC] - set b_error from bio error in xfs_buf_bio_end_io
 References: <4938A4C1.9010401@sandeen.net>
 In-Reply-To: <4938A4C1.9010401@sandeen.net>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,7 +22,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
 Eric Sandeen wrote:
 > Tim mentioned something about the code in xfs_buf_iodone_work()
@@ -53,12 +44,57 @@ Eric Sandeen wrote:
 > I think that we need to do something like below, totally untested,
 > to ensure that bio errors get set on b_error, if we're looking
 > for them by name, no?
+> 
+> (I'm not sure if we still need the BIO_UPTODATE test, or if
+> we can just look at the error we're given and be done?)
+> 
+> Does this seem about right?
+> 
+> Thanks,
+> -Eric
+> 
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+> @@ -1114,8 +1114,10 @@ xfs_buf_bio_end_io(
+>  	unsigned int		blocksize = bp->b_target->bt_bsize;
+>  	struct bio_vec		*bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+>  
+> -	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+> -		bp->b_error = EIO;
+> +	if (error)
+> +		bp->b_error = XFS_ERROR(-error);
+> +	else if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+> +		bp->b_error = XFS_ERROR(EIO);
 
-oh, heh, Tim had mentioned that Lachlan suggested this same thing on irc
-yesterday, but somehow I had forgotten or totally missed that... didn't
-mean to usurp Lachlan :)
 
--Eric
+I would suggest this:
+
+@@ -1114,8 +1140,7 @@ xfs_buf_bio_end_io(
+  	unsigned int		blocksize = bp->b_target->bt_bsize;
+  	struct bio_vec		*bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+
+-	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+-		bp->b_error = EIO;
++	xfs_buf_ioerror(bp, -error);
+
+  	do {
+  		struct page	*page = bvec->bv_page;
+
+The BIO_UPTODATE checks have already been done before calling this function
+and error has been set appropriately so we can just use it.
+
+>  
+>  	do {
+>  		struct page	*page = bvec->bv_page;
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
