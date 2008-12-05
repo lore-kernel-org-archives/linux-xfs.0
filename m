@@ -1,20 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB54F0R3000351 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 22:15:00 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4491616B160B
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2008 20:14:58 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id ORBSDPQeoyqWSEor for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2008 20:14:58 -0800 (PST)
-Message-ID: <4938A995.6040609@sandeen.net>
-Date: Thu, 04 Dec 2008 22:09:57 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mB54hnW1011558 for <xfs@oss.sgi.com>; Thu, 4 Dec 2008 22:43:49 -0600
+Date: Fri, 05 Dec 2008 15:43:39 +1100
+Subject: [GIT PULL] XFS update for 2.6.28
 MIME-Version: 1.0
-Subject: Re: [PATCH, RFC] - set b_error from bio error in xfs_buf_bio_end_io
-References: <4938A4C1.9010401@sandeen.net> <4938A8C1.7030103@sgi.com>
-In-Reply-To: <4938A8C1.7030103@sgi.com>
+Message-Id: <20081205044339.65ECC58ADC07@chook.melbourne.sgi.com>
+From: lachlan@sgi.com (Lachlan McIlroy)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +19,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lachlan@sgi.com
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Lachlan McIlroy wrote:
+The following changes since commit feaf3848a813a106f163013af6fcf6c4bfec92d9:
+  Linus Torvalds (1):
+        Merge branch 'for-linus' of git://git.kernel.dk/linux-2.6-block
 
-> I would suggest this:
-> 
-> @@ -1114,8 +1140,7 @@ xfs_buf_bio_end_io(
->   	unsigned int		blocksize = bp->b_target->bt_bsize;
->   	struct bio_vec		*bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
-> 
-> -	if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
-> -		bp->b_error = EIO;
-> +	xfs_buf_ioerror(bp, -error);
+are available in the git repository at:
 
-oh, sure.  I forgot we had the wrapper to set the error ... :)
+  git://oss.sgi.com/xfs/xfs for-linus
 
-> The BIO_UPTODATE checks have already been done before calling this function
-> and error has been set appropriately so we can just use it.
+Dave Chinner (1):
+      [XFS] Fix hang after disallowed rename across directory quota domains
 
-ah so it is.   yeah, makes perfect sense.
-
--Eric
+ fs/xfs/xfs_rename.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 _______________________________________________
 xfs mailing list
