@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB5IZBfB005182 for <xfs@oss.sgi.com>; Fri, 5 Dec 2008 12:35:12 -0600
-Received: from one.firstfloor.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11B6816A2B9B
-	for <xfs@oss.sgi.com>; Fri,  5 Dec 2008 10:35:10 -0800 (PST)
-Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
-	cuda.sgi.com with ESMTP id BIH41JYuudEISH03 for
-	<xfs@oss.sgi.com>; Fri, 05 Dec 2008 10:35:10 -0800 (PST)
-Date: Fri, 5 Dec 2008 19:41:14 +0100
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Device loses barrier support (was: Fixed patch for simple
-	barriers.)
-Message-ID: <20081205184114.GE6703@one.firstfloor.org>
-References: <bFquY-2x2-5@gated-at.bofh.it> <bFsnc-51o-37@gated-at.bofh.it>
-	<bFuyC-7Zt-11@gated-at.bofh.it> <bFvuI-L8-29@gated-at.bofh.it>
-	<bFwTJ-2oc-13@gated-at.bofh.it> <bFxwq-3g7-1@gated-at.bofh.it>
-	<bFxGa-3pz-1@gated-at.bofh.it> <bFHvW-7up-5@gated-at.bofh.it>
-	<bFHPd-84I-13@gated-at.bofh.it>
-	<E1L8fIY-0001ui-DV@be1.7eggert.dyndns.org>
-Mime-Version: 1.0
+	mB62aCRB002567 for <xfs@oss.sgi.com>; Fri, 5 Dec 2008 20:36:13 -0600
+Received: from bob.dscon.sk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1786E16C792C
+	for <xfs@oss.sgi.com>; Fri,  5 Dec 2008 18:36:11 -0800 (PST)
+Received: from bob.dscon.sk (bob.dscon.sk [88.86.113.10]) by cuda.sgi.com with
+	ESMTP id 2rIAEUWyhdIiJDWX for <xfs@oss.sgi.com>;
+	Fri, 05 Dec 2008 18:36:11 -0800 (PST)
+Date: Sat, 6 Dec 2008 03:36:09 +0100
+Subject: kernel 2.6.27.7 problem
+Message-ID: <20081206023608.GA22135@bob.dscon.sk>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <E1L8fIY-0001ui-DV@be1.7eggert.dyndns.org>
+From: xfs@bob.dscon.sk (DS)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,36 +26,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bodo Eggert <7eggert@gmx.de>
-Cc: Andi Kleen <andi-suse@firstfloor.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Mikulas Patocka <mpatocka@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
+To: xfs@oss.sgi.com
 
-On Fri, Dec 05, 2008 at 07:21:06PM +0100, Bodo Eggert wrote:
-> Andi Kleen <andi@firstfloor.org> wrote:
-> 
-> >> Not when the fundamental design of the code is broken and trashes
-> >> performance.
-> > 
-> > Sorry but that's just not correct. There's nothing in late failing
-> > barriers that "trashes performance". The file system writers have 
-> > to be careful to handle it, but at least the current ones all do.
-> 
-> So let's keep requiring the "trashes performance" hacks, because they're
+Hi,
 
-Again there's nothing about the code that handles this that 
-"trashes performance". 
+I have trouble with xfs after upgrade kernel 2.6.24.3 -> 2.6.27.7.
 
-Mickulas was just ranting that the current file systems don't use
-barriers in the way he thinks they ought to be used, but that
-is completely orthogonal to the problem if barriers may fail
-late or not.
+Message on console:
+ end_request: I/O error, dev sde, sector 351572544
+ I/O error in filesystem ("sde1") meta-data dev sde1 block 0x14f49201
+ ("xlog_iodone") error 5 buf count 9728
+ xfs_force_shutdown(sde1,0x2) called from line 1056 of file
+ fs/xfs/xfs_log.c.  Return address = 0xffffffff80373233
+ Filesystem "sde1": Log I/O Error Detected.  Shutting down filesystem:
+ sde1
+ Please umount the filesystem, and rectify the problem(s)
 
-In Mickulas imaginary barrier world it would be slightly more 
-complicated to handle it, but far from impossible. And again
-if there it wouldn't affect performance. In the real world
-Linux barrier world handling late failing barriers in the fs
-is also very easy currently.
 
--Andi
+Remount is possible, but filesystem hangs up again.
+After xfs_repair too.
+It looks OK now after rebooting to old kernel.
+
+On other similar system (same  disk array, other vol) I use 2.6.27.6 kernel  without problems.
+
+
+System:
+AMD x64, debian stable (etch)
+filesytem is on iSCSI  storage
+
+mount options:
+rw,noatime,nodiratime,logbsize=256k,logbufs=8,quota
+
+xfs_info:
+meta-data=/dev/sde1              isize=256    agcount=16, agsize=5493104
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=87889584,
+imaxpct=25
+         =                       sunit=16     swidth=112 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+
+Any ideas.
+Thanx
+
+Dusan
 
 _______________________________________________
 xfs mailing list
