@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB6ARASF005105 for <xfs@oss.sgi.com>; Sat, 6 Dec 2008 04:27:11 -0600
+	mB6AUo6E005474 for <xfs@oss.sgi.com>; Sat, 6 Dec 2008 04:30:50 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61A06CE1793
-	for <xfs@oss.sgi.com>; Sat,  6 Dec 2008 02:27:10 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B59CE16C8F2D
+	for <xfs@oss.sgi.com>; Sat,  6 Dec 2008 02:30:49 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nQdiJyWNOddYAmf1 for
-	<xfs@oss.sgi.com>; Sat, 06 Dec 2008 02:27:10 -0800 (PST)
+	by cuda.sgi.com with ESMTP id ETiOB4dbumfp5Ke0 for
+	<xfs@oss.sgi.com>; Sat, 06 Dec 2008 02:30:49 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.68 #1 (Red Hat
-	Linux)) id 1L8uNR-0007v8-U3
-	for xfs@oss.sgi.com; Sat, 06 Dec 2008 10:27:09 +0000
-Date: Sat, 6 Dec 2008 05:27:09 -0500
+	Linux)) id 1L8uM9-0007uW-An
+	for xfs@oss.sgi.com; Sat, 06 Dec 2008 10:25:49 +0000
+Date: Sat, 6 Dec 2008 05:25:49 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfsdump: cleanup _rmt_dev
-Message-ID: <20081206102709.GB30364@infradead.org>
+Subject: [PATCH] xfsdump: add support for building with sparse
+Message-ID: <20081206102549.GA30364@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,41 +31,26 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Rewrite _rmt_dev to be proper ANSI C and readable.
-
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs-cmds/xfsdump/librmt/rmtdev.c
+Index: xfs-cmds/xfsdump/include/buildmacros
 ===================================================================
---- xfs-cmds.orig/xfsdump/librmt/rmtdev.c	2008-11-25 16:39:45.000000000 +0530
-+++ xfs-cmds/xfsdump/librmt/rmtdev.c	2008-11-25 16:41:06.000000000 +0530
-@@ -28,18 +28,12 @@
-  *	is any string that contains ":/dev/".  Returns 1 if remote,
-  *	0 otherwise.
-  */
--
--int _rmt_dev (path)
--register char *path;
-+int _rmt_dev(char *path)
- {
--	if ((path = strchr (path, ':')) != (char *)0)
--	{
--		if (strncmp (path + 1, "/dev/", 5) == 0)
--		{
--			return (1);
--		}
--	}
--	return (0);
--}
--
-+	char *c;
+--- xfs-cmds.orig/xfsdump/include/buildmacros	2008-11-13 18:31:57.000000000 +0100
++++ xfs-cmds/xfsdump/include/buildmacros	2008-11-13 18:58:13.000000000 +0100
+@@ -42,10 +42,10 @@ LIBNAME = $(basename $(LTLIBRARY))
+ LTOBJECTS = $(OBJECTS:.o=.lo)
+ LTVERSION = $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
  
-+	c = strchr(path, ':');
-+	if (c && strncmp(c + 1, "/dev/", 5) == 0)
-+		return 1;
-+	return 0;
-+}
+-LTLINK = $(LIBTOOL) --mode=link $(CC)
++LTLINK = $(LIBTOOL) --tag=CC --mode=link $(CC)
+ LTEXEC = $(LIBTOOL) --mode=execute
+ LTINSTALL = $(LIBTOOL) --mode=install $(INSTALL)
+-LTCOMPILE = $(LIBTOOL) --mode=compile $(CCF)
++LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CCF)
+ 
+ ifeq ($(ENABLE_SHARED),yes)
+ LTLDFLAGS += -rpath $(PKG_LIB_DIR)
 
 _______________________________________________
 xfs mailing list
