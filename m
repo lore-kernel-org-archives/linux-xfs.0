@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB7CwG1p006856 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 06:58:16 -0600
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7857A1AAB804
-	for <xfs@oss.sgi.com>; Sun,  7 Dec 2008 04:58:13 -0800 (PST)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.177]) by cuda.sgi.com with ESMTP id
-	zB6Bay6WMq9tT0ne for <xfs@oss.sgi.com>;
-	Sun, 07 Dec 2008 04:58:13 -0800 (PST)
-From: "Hans-Peter Jansen" <hpj@urpla.net>
-Subject: Re: 3ware 9650SE-16ML w/XFS & RAID6: first impressions
-Date: Sun, 7 Dec 2008 13:55:48 +0100
-References: <alpine.DEB.1.10.0812030930450.22299@p34.internal.lan>
-In-Reply-To: <alpine.DEB.1.10.0812030930450.22299@p34.internal.lan>
+	mB7DW2Z8009085 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 07:32:02 -0600
+Received: from mga14.intel.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2849D16D621A
+	for <xfs@oss.sgi.com>; Sun,  7 Dec 2008 05:32:00 -0800 (PST)
+Received: from mga14.intel.com (mga14.intel.com [143.182.124.37]) by
+	cuda.sgi.com with ESMTP id SkD17YpPUgQFqF7k for
+	<xfs@oss.sgi.com>; Sun, 07 Dec 2008 05:32:00 -0800 (PST)
+Date: Sat, 6 Dec 2008 21:20:24 +0800
+From: Wu Fengguang <fengguang.wu@intel.com>
+Subject: xfs: possible circular locking dependency detected
+Message-ID: <20081206132023.GA21235@localhost>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200812071355.49427.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +26,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: David Chinner <dgc@sgi.com>
+Cc: Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Am Mittwoch, 3. Dezember 2008 schrieb Justin Piszcz:
-> For read speed, it appears that there is some overhead (2x). With
-> software raid6 I used to get 1.0Gbyte/sec read speed, or at least
-> 800MiB/s across the entire array, now I only get 538MiB/s across the
-> entire array. However, write speed is improved. Before it was in the mid
-> 400s for RAID6 and peaking at 502MiB/s at the outer edge of the drives.
-> For the write speed now, its around 620-640MiB/s at the end of the array
-> and 580-620MiB/s going in further and 502MiB/s across the entire array. I
-> always heard all of the horror stories with 3ware cards, it turns out
-> they're not so bad after all.
+Hi Dave,
 
-Hustin, if you're after speed, AND sane support, you may consider trying 
-Areca products. I'm biased, since 3ware fed me up completely, when it came 
-to a single drive failure in a RAID 5 setup: the support only provides an 
-ugly web interface: when posting my problem, they replied with:
+I got this warning while accessing xfs on usb storage.
+Is this a real problem?
 
->>>
-Thank you for contacting 3ware Technical Support.
-Your submission has been received and assigned case id # xxxxxxxxxxxxxx. You 
-will receive a response within one business day.
+Thanks,
+Fengguang
 
-Note:
-Do not reply to this email ( websupport@webrt.amcc.com ). Emails sent to 
-websupport@webrt.amcc.com will not receive a response.
-To check the status of your case, go to https://www.3ware.com and login.
+ =======================================================
+ [ INFO: possible circular locking dependency detected ]
+ 2.6.28-rc7 #85
+ -------------------------------------------------------
+ rsync/20106 is trying to acquire lock:
+  (iprune_mutex){--..}, at: [<ffffffff811070a4>] shrink_icache_memory+0x84/0x290
 
-Thank you indeed!
-<<<
+ but task is already holding lock:
+  (&(&ip->i_iolock)->mr_lock){----}, at: [<ffffffffa030fcc5>] xfs_ilock+0x75/0xb0 [xfs]
 
-Well, they responded within 23-26 hours on average, only to request 
-information, that was given in the very first post! In the end (a week 
-later) they concluded: the problem cannot be solved without replacing the  
-firmware and reinstalling the array! The array couldn't be restored from 
-degraded mode - they blamed the samsung drives for it. 
+ which lock already depends on the new lock.
 
-Since then I replaced all my 3ware controllers with Areca controllers and 
-haven't regretted it, but I haven't done any serious measurement (I mostly 
-care for reliability, btw) but they where noticably faster.
 
-Cheers,
-Pete
+ the existing dependency chain (in reverse order) is:
+
+ -> #1 (&(&ip->i_iolock)->mr_lock){----}:
+        [<ffffffff810799b2>] __lock_acquire+0x12e2/0x18c0
+        [<ffffffff8107a029>] lock_acquire+0x99/0xd0
+        [<ffffffff8106a937>] down_write_nested+0x57/0x90
+        [<ffffffffa030fcf5>] xfs_ilock+0xa5/0xb0 [xfs]
+        [<ffffffffa030fea6>] xfs_ireclaim+0x46/0x90 [xfs]
+        [<ffffffffa032d8de>] xfs_finish_reclaim+0x5e/0x1a0 [xfs]
+        [<ffffffffa032dc3b>] xfs_reclaim+0x11b/0x120 [xfs]
+        [<ffffffffa033cd4e>] xfs_fs_clear_inode+0xee/0x120 [xfs]
+        [<ffffffff81106e50>] clear_inode+0x90/0x140
+        [<ffffffff81106f38>] dispose_list+0x38/0x120
+        [<ffffffff81107263>] shrink_icache_memory+0x243/0x290
+        [<ffffffff810c3ae5>] shrink_slab+0x125/0x180
+        [<ffffffff810c4362>] kswapd+0x542/0x6a0
+        [<ffffffff8106610e>] kthread+0x4e/0x90
+        [<ffffffff8100dc99>] child_rip+0xa/0x11
+        [<ffffffffffffffff>] 0xffffffffffffffff
+
+ -> #0 (iprune_mutex){--..}:
+        [<ffffffff81079aff>] __lock_acquire+0x142f/0x18c0
+        [<ffffffff8107a029>] lock_acquire+0x99/0xd0
+        [<ffffffff8148220e>] mutex_lock_nested+0xce/0x320
+        [<ffffffff811070a4>] shrink_icache_memory+0x84/0x290
+        [<ffffffff810c3ae5>] shrink_slab+0x125/0x180
+        [<ffffffff810c4b46>] try_to_free_pages+0x286/0x3f0
+        [<ffffffff810bcba5>] __alloc_pages_internal+0x255/0x5b0
+        [<ffffffff810e275b>] alloc_pages_current+0x7b/0x100
+        [<ffffffff810b5340>] __page_cache_alloc+0x10/0x20
+        [<ffffffff810bf0e8>] __do_page_cache_readahead+0x138/0x250
+        [<ffffffff810bf2df>] ondemand_readahead+0xdf/0x3c0
+        [<ffffffff810bf669>] page_cache_async_readahead+0xa9/0xc0
+        [<ffffffff810b5e39>] do_generic_file_read+0x259/0x4d0
+        [<ffffffff810b6ff0>] generic_file_aio_read+0xd0/0x1c0
+        [<ffffffffa033c5ea>] xfs_read+0x12a/0x280 [xfs]
+        [<ffffffffa0337c46>] xfs_file_aio_read+0x56/0x60 [xfs]
+        [<ffffffff810f1459>] do_sync_read+0xf9/0x140
+        [<ffffffff810f20c8>] vfs_read+0xc8/0x180
+        [<ffffffff810f2285>] sys_read+0x55/0x90
+        [<ffffffff8100c62a>] system_call_fastpath+0x16/0x1b
+        [<ffffffffffffffff>] 0xffffffffffffffff
+
+ other info that might help us debug this:
+
+ 2 locks held by rsync/20106:
+  #0:  (&(&ip->i_iolock)->mr_lock){----}, at: [<ffffffffa030fcc5>] xfs_ilock+0x75/0xb0 [xfs]
+  #1:  (shrinker_rwsem){----}, at: [<ffffffff810c39f7>] shrink_slab+0x37/0x180
+
+ stack backtrace:
+ Pid: 20106, comm: rsync Not tainted 2.6.28-rc7 #85
+ Call Trace:
+  [<ffffffff81078298>] print_circular_bug_tail+0xd8/0xe0
+  [<ffffffff81079aff>] __lock_acquire+0x142f/0x18c0
+  [<ffffffff810c0576>] ? __pagevec_release+0x26/0x40
+  [<ffffffff8107a029>] lock_acquire+0x99/0xd0
+  [<ffffffff811070a4>] ? shrink_icache_memory+0x84/0x290
+  [<ffffffff8148220e>] mutex_lock_nested+0xce/0x320
+  [<ffffffff811070a4>] ? shrink_icache_memory+0x84/0x290
+  [<ffffffff811070a4>] ? shrink_icache_memory+0x84/0x290
+  [<ffffffff811070a4>] shrink_icache_memory+0x84/0x290
+  [<ffffffff810c3ae5>] shrink_slab+0x125/0x180
+  [<ffffffff810c4b46>] try_to_free_pages+0x286/0x3f0
+  [<ffffffff810c1640>] ? isolate_pages_global+0x0/0x260
+  [<ffffffff810bcba5>] __alloc_pages_internal+0x255/0x5b0
+  [<ffffffff810e275b>] alloc_pages_current+0x7b/0x100
+  [<ffffffff810b5340>] __page_cache_alloc+0x10/0x20
+  [<ffffffff810bf0e8>] __do_page_cache_readahead+0x138/0x250
+  [<ffffffff810bf07a>] ? __do_page_cache_readahead+0xca/0x250
+  [<ffffffff810bf2df>] ondemand_readahead+0xdf/0x3c0
+  [<ffffffff81013e49>] ? sched_clock+0x9/0x10
+  [<ffffffff810bf669>] page_cache_async_readahead+0xa9/0xc0
+  [<ffffffff810b5e39>] do_generic_file_read+0x259/0x4d0
+  [<ffffffff810b47a0>] ? file_read_actor+0x0/0x190
+  [<ffffffff810b6ff0>] generic_file_aio_read+0xd0/0x1c0
+  [<ffffffffa030fcc5>] ? xfs_ilock+0x75/0xb0 [xfs]
+  [<ffffffffa033c5ea>] xfs_read+0x12a/0x280 [xfs]
+  [<ffffffffa0337c46>] xfs_file_aio_read+0x56/0x60 [xfs]
+  [<ffffffff810f1459>] do_sync_read+0xf9/0x140
+  [<ffffffff81066560>] ? autoremove_wake_function+0x0/0x40
+  [<ffffffff811ecdaf>] ? _raw_spin_unlock+0x7f/0xb0
+  [<ffffffff81483f9d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+  [<ffffffff810f20c8>] vfs_read+0xc8/0x180
+  [<ffffffff810f2285>] sys_read+0x55/0x90
+  [<ffffffff8100c62a>] system_call_fastpath+0x16/0x1b
 
 _______________________________________________
 xfs mailing list
