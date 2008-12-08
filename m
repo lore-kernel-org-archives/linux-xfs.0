@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB84qF3b032677 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 22:52:15 -0600
-Message-ID: <493CA7F8.9070305@sgi.com>
-Date: Mon, 08 Dec 2008 15:52:08 +1100
-From: Timothy Shimmin <tes@sgi.com>
+	mB85Fijl001626 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 23:15:44 -0600
+Message-ID: <493CAD9E.4000304@sgi.com>
+Date: Mon, 08 Dec 2008 16:16:14 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: review: xfstests/192 atime test
-References: <49192204.3040300@sgi.com> <20081111223810.GK2373@disturbed>
-	<491A13CA.6010404@sgi.com> <491A1709.9020705@sgi.com>
-In-Reply-To: <491A1709.9020705@sgi.com>
+Subject: Re: [PATCH] Fix off by one error in page_region_mask()
+References: <49378B60.1060603@sgi.com> <493CA59C.302@sgi.com>
+In-Reply-To: <493CA59C.302@sgi.com>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,49 +22,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Timothy Shimmin <tes@sgi.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
 Timothy Shimmin wrote:
-> Timothy Shimmin wrote:
->> Dave Chinner wrote:
->>> On Tue, Nov 11, 2008 at 05:11:16PM +1100, Timothy Shimmin wrote:
->>>> Attached simple atime test.
->>>> 192.out and group file would be added appropriately.
->>>> Thanks.
->>>> --Tim
->>>> _supported_fs xfs udf nfs
->>>> _supported_os Linux
->>>> delay=150
->>> 150s sleep? It only needs a few seconds for this test.
->>>
->> Not for me. Passed every time at a few secs,
->> that is why I tried longer as was originally reported.
+> Lachlan McIlroy wrote:
+>> final is calculated to be the last bit to set (ie inclusive) but when we
+>> do the mask shifting final really needs to be first bit not to set.
 >>
->>>> time3=`_access_time $testfile | tee -a $seq.full`
->>>>
->>>> delta1=`expr $time2 - $time1`
->>>> delta2=`expr $time3 - $time1`
->>>>
->>>> echo "delta1 - access time after sleep in-core: $delta1"
->>>> echo "delta2 - access time after sleep on-disk: $delta2"
->>> Why bother with deltas? if the numbers are the same, just output
->>> "same", if they are different, output "different"....
->>>
->> Fine, will do.
+>> For example if first and final are both bit 0 (ie only first bit to be set)
+>> then mask is completely shifted and becomes all zeroes.
 >>
-> The only other thing is that I am not just testing the bug
-> as it stands - i.e. if the atime is being lost on-disk.
-> I want to test that the atime is updated appropriately.
+>> Or if first is 0 and final is 63 then the mask is shifted one bit when it
+>> shouldn't be shifted at all.
+>>
+>> --- xfs-fix.orig/fs/xfs/linux-2.6/xfs_buf.c
+>> +++ xfs-fix/fs/xfs/linux-2.6/xfs_buf.c
+>> @@ -129,15 +129,17 @@ page_region_mask(
+>>   	int		first, final;
+>>
+>>   	first = BTOPR(offset);
+>> -	final = BTOPRT(offset + length - 1);
+>> -	first = min(first, final);
+>> +	final = BTOPRT(offset + length);
+>> +
+>> +	if (first >= final)
+>> +		return 0UL;
+>>
+>>   	mask = ~0UL;
+>>   	mask <<= BITS_PER_LONG - (final - first);
+>>   	mask >>= BITS_PER_LONG - (final);
+>>
+>>   	ASSERT(offset + length <= PAGE_CACHE_SIZE);
+>> -	ASSERT((final - first) < BITS_PER_LONG && (final - first) >= 0);
+>> +	ASSERT((final - first) <= BITS_PER_LONG && (final - first) > 0);
+>>
+>>   	return mask;
+>>   }
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> Gee, I always find these tricky to get right.
+> I tend to like a userspace version and input various ranges,
+> such as extremes like you did, and verify it is working.
+> 
+> I kind of like first and final to be inclusive of the range to be set
+> (not so keen on making final to be first bit not to set -
+> name doesn't seem so good then).
+Using an inclusive final means we have to add 1 every time we use it - which
+we could forget to do and maybe that was how this bug got introduced.
+
+I would prefer a starting bit and a bit count but I was trying to limit
+changes to a minimum.
+
+We can change the name of final if you like.
+
+> And if one needs to know the size of the range to use (final - first + 1)
+> and for 0..final => size = final-0+1 = final+1.
+> 
+> And the thing about min(first, final) and (first >= final),
+> is interesting - I would have thought final would be expected to be >=
+> to the first ??
+It wasn't the case with the old scheme.
+
+If we have a 64KB page size then each bit is 1024 bytes and if we read the
+second sector of a page:
+
+first = BTOPR(512) = (512+1023)/1024 = 1
+final = BTOPRT(512 + 512 - 1) = (1023/1024) = 0
+
+So the off by one error creates a special case that we need to handle.
+This shouldn't happen (first > final) if we remove the magic subtract 1
+business:
+
+final = BTOPRT(512 + 512) = (1024/1024) = 1
+
+But should anyone pass in bad values that are not sector aligned this
+assumption wont hold so be defensive and leave the > check in.  If we
+know that the resultant mask should be all zeroes then bail early and
+don't stuff around bit shifting a mask for nothing.
+
+> 
+> Okay, the other thing that interests me is the use of both BTOPR and BTOPRT
+> for given offsets.
+> BTOPR is the typical howmany() implementation, where if you go over
+> a multiple-boundaries worth then you need another multiple.
+> I would expect it to have values starting from 1.
+> So I was thinking typically of BTOPR for sizes and BTOPRT for 0-based offsets.
+> e.g. given multiple, 512
+> BTOPR  1..512 => 1, 513..1024 => 2
+> BTOPRT 0..511 => 0, 512..1023 => 1
+These macros are used to round the boundaries inwards.  BTOPR rounds
+up and BTOPRT rounds down.  We cannot flag partial regions as up to
+date because we could expose bad data.  Actually if we have to round
+then we've got a problem because if we have regions that are active
+but not marked up to date we risk re-reading them and overwriting
+in-memory changes.
+
+> 
+> So I find the code a bit hard to follow then.
 > 
 > --Tim
 > 
-
-Ping?
-Not fussed?
-
-Thanks,
---Tim
 
 _______________________________________________
 xfs mailing list
