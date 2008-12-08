@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB8CoM3N031222
-	for <linux-xfs@oss.sgi.com>; Mon, 8 Dec 2008 06:50:23 -0600
-Received: from yw-out-1718.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EE2616D60F6
-	for <linux-xfs@oss.sgi.com>; Mon,  8 Dec 2008 04:50:21 -0800 (PST)
-Received: from yw-out-1718.google.com (yw-out-1718.google.com [74.125.46.152])
-	by cuda.sgi.com with ESMTP id aIJuHtIq4LQUFHz4 for
-	<linux-xfs@oss.sgi.com>; Mon, 08 Dec 2008 04:50:21 -0800 (PST)
-Received: by yw-out-1718.google.com with SMTP id 5so405987ywm.32
-	for <linux-xfs@oss.sgi.com>; Mon, 08 Dec 2008 04:50:20 -0800 (PST)
-Message-ID: <5d96567b0812080442r131d9fc8t4019c99ffbffa290@mail.gmail.com>
-Date: Mon, 8 Dec 2008 14:42:34 +0200
-From: Raz <raziebe@gmail.com>
-Subject: XFS over SSD
+	mB8DVk2J001001
+	for <linux-xfs@oss.sgi.com>; Mon, 8 Dec 2008 07:31:48 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8705E16DBD5D
+	for <linux-xfs@oss.sgi.com>; Mon,  8 Dec 2008 05:31:45 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id eSqWb3ew4CasKLFL for
+	<linux-xfs@oss.sgi.com>; Mon, 08 Dec 2008 05:31:45 -0800 (PST)
+Date: Mon, 8 Dec 2008 08:31:13 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: XFS over SSD
+In-Reply-To: <5d96567b0812080442r131d9fc8t4019c99ffbffa290@mail.gmail.com>
+Message-ID: <alpine.DEB.1.10.0812080829370.24867@p34.internal.lan>
+References: <5d96567b0812080442r131d9fc8t4019c99ffbffa290@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +28,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Raz <raziebe@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-I am thinking of using XFS over a SSD disk.
-1. Can I separate xfs meta data ( not just the logging) from the SSD ?
-can I put the meta on a different disk ?
-2. When does a file's meta ( its block maps ) is being flushed to disk
-? can I control it ?
 
-thank you
-raz
+
+On Mon, 8 Dec 2008, Raz wrote:
+
+> I am thinking of using XFS over a SSD disk.
+I am currently using XFS on an Intel X25-E with the logdev internal, using 
+the defaults.
+I see the point for putting the journal elsewhere; however, that may 
+defeat the purpose of an SSD, if its latency is 0.01 or 0.001 and the HDD 
+is 8-14ms, then it may defeat the purpose for writes or fast access 
+anyhow?
+
+> 1. Can I separate xfs meta data ( not just the logging) from 
+the SSD ? > can I put the meta on a different disk ?
+Yes, see the logdev option on the mkfs.xfs manpage.
+
+> 2. When does a file's meta ( its block maps ) is being flushed to disk
+> ? can I control it ?
+I am not sure you can control this, will let the XFS devs/others take on 
+this question.
 
 _______________________________________________
 xfs mailing list
