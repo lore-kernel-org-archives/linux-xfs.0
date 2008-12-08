@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB7JQDac030395 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 13:26:14 -0600
-Received: from mail.harddata.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CF5AEFE068
-	for <xfs@oss.sgi.com>; Sun,  7 Dec 2008 11:26:04 -0800 (PST)
-Received: from mail.harddata.com ([207.148.148.78]) by cuda.sgi.com with ESMTP
-	id beHIAOzq3yVHlrTM for <xfs@oss.sgi.com>;
-	Sun, 07 Dec 2008 11:26:04 -0800 (PST)
-Message-ID: <493C1765.7070901@harddata.com>
-Date: Sun, 07 Dec 2008 11:35:17 -0700
-From: Maurice Hilarius <maurice@harddata.com>
-MIME-Version: 1.0
-Subject: Re: 3ware 9650SE-16ML w/XFS & RAID6: first impressions
-References: <alpine.DEB.1.10.0812030930450.22299@p34.internal.lan>
-	<200812071355.49427.hpj@urpla.net>
-In-Reply-To: <200812071355.49427.hpj@urpla.net>
-Content-Disposition: inline
+	mB80AAGb014748 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 18:10:11 -0600
+Subject: TAKE 989644 - unaligned references in latest xfs_repair on ia64
+Message-Id: <20081208001004.2400D58ADC07@chook.melbourne.sgi.com>
+Date: Mon,  8 Dec 2008 11:10:04 +1100 (EST)
+From: bnaujok@sgi.com (Barry Naujok)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,53 +14,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: sgi.bugs.xfs@engr.sgi.com
+Cc: xfs@oss.sgi.com
 
-Hans-Peter Jansen wrote:
-> Am Mittwoch, 3. Dezember 2008 schrieb Justin Piszcz:
->   
->> For read speed, it appears that there is some overhead (2x). With
->> software raid6 I used to get 1.0Gbyte/sec read speed, or at least
->> 800MiB/s across the entire array, now I only get 538MiB/s across the
->> entire array. However, write speed is improved. Before it was in the mid
->> 400s for RAID6 and peaking at 502MiB/s at the outer edge of the drives.
->> For the write speed now, its around 620-640MiB/s at the end of the array
->> and 580-620MiB/s going in further and 502MiB/s across the entire array. I
->> always heard all of the horror stories with 3ware cards, it turns out
->> they're not so bad after all.
->>     
->
-> Hustin, if you're after speed, AND sane support, you may consider trying 
-> Areca products. I'm biased, since 3ware fed me up completely, when it came 
-> to a single drive failure in a RAID 5 setup: the support only provides an 
-> ugly web interface: when posting my problem, they replied with:
->
->   
-Nice Areca advertisement.
-
-Of course you can demonstrate how their tech support responded, to a
-similar DISK failure, with a better suggestion, and more promptly?
-
-Buried for biased and irrelevant.
+Fix unaligned accesses in IA64 when getting disk extents
 
 
--- 
-With our best regards,
+Date:  Mon Dec  8 11:08:22 EST 2008
+Workarea:  chook.melbourne.sgi.com:/home/bnaujok/isms/xcmds-clean
+Inspected by:  hch@lst.de
 
-//Maurice W. Hilarius         Telephone: 01-780-456-9771/
-/Hard Data Ltd.                FAX:          01-780-456-9772/
-/11060 - 166 Avenue         email:maurice@harddata.com/
-/Edmonton, AB, Canada         http://www.harddata.com//
-/     T5X 1Y3/
-/
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
 
 
-[[HTML alternate version deleted]]
+Modid:  master-melb:xfs-cmds:32642a
+xfsprogs/db/bmap.c - 1.18 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/db/bmap.c.diff?r1=text&tr1=1.18&r2=text&tr2=1.17&f=h
+xfsprogs/libxfs/xfs_bmap_btree.c - 1.26 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfsprogs/libxfs/xfs_bmap_btree.c.diff?r1=text&tr1=1.26&r2=text&tr2=1.25&f=h
+	- Fix unaligned accesses when getting disk extents on IA64
+
 
 _______________________________________________
 xfs mailing list
