@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB85Fijl001626 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 23:15:44 -0600
-Message-ID: <493CAD9E.4000304@sgi.com>
-Date: Mon, 08 Dec 2008 16:16:14 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	mB85mCwa003769 for <xfs@oss.sgi.com>; Sun, 7 Dec 2008 23:48:12 -0600
+Message-ID: <493CB518.7000001@sgi.com>
+Date: Mon, 08 Dec 2008 16:48:08 +1100
+From: Timothy Shimmin <tes@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix off by one error in page_region_mask()
-References: <49378B60.1060603@sgi.com> <493CA59C.302@sgi.com>
-In-Reply-To: <493CA59C.302@sgi.com>
-Reply-To: lachlan@sgi.com
+Subject: Re: [PATCH] xfsqa: add testcase for ->setattr permission checking
+References: <20081202142039.GA25155@infradead.org>
+In-Reply-To: <20081202142039.GA25155@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,111 +21,144 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Timothy Shimmin <tes@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Timothy Shimmin wrote:
-> Lachlan McIlroy wrote:
->> final is calculated to be the last bit to set (ie inclusive) but when we
->> do the mask shifting final really needs to be first bit not to set.
->>
->> For example if first and final are both bit 0 (ie only first bit to be set)
->> then mask is completely shifted and becomes all zeroes.
->>
->> Or if first is 0 and final is 63 then the mask is shifted one bit when it
->> shouldn't be shifted at all.
->>
->> --- xfs-fix.orig/fs/xfs/linux-2.6/xfs_buf.c
->> +++ xfs-fix/fs/xfs/linux-2.6/xfs_buf.c
->> @@ -129,15 +129,17 @@ page_region_mask(
->>   	int		first, final;
->>
->>   	first = BTOPR(offset);
->> -	final = BTOPRT(offset + length - 1);
->> -	first = min(first, final);
->> +	final = BTOPRT(offset + length);
->> +
->> +	if (first >= final)
->> +		return 0UL;
->>
->>   	mask = ~0UL;
->>   	mask <<= BITS_PER_LONG - (final - first);
->>   	mask >>= BITS_PER_LONG - (final);
->>
->>   	ASSERT(offset + length <= PAGE_CACHE_SIZE);
->> -	ASSERT((final - first) < BITS_PER_LONG && (final - first) >= 0);
->> +	ASSERT((final - first) <= BITS_PER_LONG && (final - first) > 0);
->>
->>   	return mask;
->>   }
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> Gee, I always find these tricky to get right.
-> I tend to like a userspace version and input various ranges,
-> such as extremes like you did, and verify it is working.
-> 
-> I kind of like first and final to be inclusive of the range to be set
-> (not so keen on making final to be first bit not to set -
-> name doesn't seem so good then).
-Using an inclusive final means we have to add 1 every time we use it - which
-we could forget to do and maybe that was how this bug got introduced.
+I'd like to check this in.
+I can do the uid/gid test allocation later.
 
-I would prefer a starting bit and a bit count but I was trying to limit
-changes to a minimum.
+There are a few things below that
+I want to check with you...
 
-We can change the name of final if you like.
+Christoph Hellwig wrote:
+> Index: xfs-cmds-git/xfstests/192
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfs-cmds-git/xfstests/192	2008-12-02 14:16:12.000000000 +0000
+> @@ -0,0 +1,177 @@
+> +#! /bin/sh
+> +# FS QA Test No. 192
+> +#
+> +# Test permission checks in ->setattr
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2008 Christoph Hellwig.
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=hch@lst.de
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup_files; exit \$status" 0 1 2 3 15
+> +tag="added by qa $seq"
+> +
+> +#
+> +# For some tests we need a secondary group for the qa_user.  Currently
+> +# that's not available in the framework, so the tests using it are
+> +# commented out.
+> +#
+> +#group2=foo
+> +
+> +#
+> +# Create two files, one owned by root, one by the qa_user
+> +#
+> +_create_files()
+> +{
+> +	touch test.root
+> +	touch test.${qa_user}
+> +	chown ${qa_user}:${qa_user} test.${qa_user}
+> +}
+> +
+> +#
+> +# Remove our files again
+> +#
+> +_cleanup_files()
+> +{
+> +	rm -f test.${qa_user}
+> +	rm -f test.root
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs nfs udf
+> +_supported_os Linux
+> +
+> +_require_user
+> +_need_to_be_root
+> +
+> +
+> +#
+> +# make sure we have a normal umask set
+> +#
+> +umask 022
+> +
+> +
+> +#
+> +# Test the ATTR_UID case
+> +#
+> +echo
+> +echo "testing ATTR_UID"
+> +echo
+> +
+> +_create_files
+> +
 
-> And if one needs to know the size of the range to use (final - first + 1)
-> and for 0..final => size = final-0+1 = final+1.
-> 
-> And the thing about min(first, final) and (first >= final),
-> is interesting - I would have thought final would be expected to be >=
-> to the first ??
-It wasn't the case with the old scheme.
+1.
+> +echo "user: chown root owned file to qa_user (should fail)"
+> +su ${qa_user} -c "chown root test.${qa_user}"
+> +
+I think the description and command above don't match.
+I think we have a swap with subtest 4 below.
+Need to either swap descriptions or commands.
 
-If we have a 64KB page size then each bit is 1024 bytes and if we read the
-second sector of a page:
+2.
+> +echo "user: chown root owned file to root (should fail)"
+> +su ${qa_user} -c "chown root test.root"
+> +
 
-first = BTOPR(512) = (512+1023)/1024 = 1
-final = BTOPRT(512 + 512 - 1) = (1023/1024) = 0
+3.
+> +echo "user: chown qa_user owned file to qa_user (should succeed)"
+> +su ${qa_user} -c "chown ${qa_user} test.${qa_user}"
+> +
 
-So the off by one error creates a special case that we need to handle.
-This shouldn't happen (first > final) if we remove the magic subtract 1
-business:
+4.
+> +# this would work without _POSIX_CHOWN_RESTRICTED
+> +echo "user: chown qa_user owned file to root (should fail)"
+> +su ${qa_user} -c "chown ${qa_user} test.root"
+> +
 
-final = BTOPRT(512 + 512) = (1024/1024) = 1
 
-But should anyone pass in bad values that are not sector aligned this
-assumption wont hold so be defensive and leave the > check in.  If we
-know that the resultant mask should be all zeroes then bail early and
-don't stuff around bit shifting a mask for nothing.
 
-> 
-> Okay, the other thing that interests me is the use of both BTOPR and BTOPRT
-> for given offsets.
-> BTOPR is the typical howmany() implementation, where if you go over
-> a multiple-boundaries worth then you need another multiple.
-> I would expect it to have values starting from 1.
-> So I was thinking typically of BTOPR for sizes and BTOPRT for 0-based offsets.
-> e.g. given multiple, 512
-> BTOPR  1..512 => 1, 513..1024 => 2
-> BTOPRT 0..511 => 0, 512..1023 => 1
-These macros are used to round the boundaries inwards.  BTOPR rounds
-up and BTOPRT rounds down.  We cannot flag partial regions as up to
-date because we could expose bad data.  Actually if we have to round
-then we've got a problem because if we have regions that are active
-but not marked up to date we risk re-reading them and overwriting
-in-memory changes.
+> +#
+> +# Setup a file owned by the qa_user and with the suid bit set.
+> +# A chown by root should not clean the suid bit.
+> +#
 
-> 
-> So I find the code a bit hard to follow then.
-> 
-> --Tim
-> 
+Typos:
+s/clean/clear/
+
+s/suceed/succeed/ in a couple of places.
+
+* It looks like you test the clearing of suid/sgid bits
+for setting the mode permission bits and not
+for setting ownership as the description suggests;
+i.e. you test with chmod instead of chown for clearing of suid/sgid bits
+
+
+Ideally in the future it would be good to test a few other things too:
+* CAP_FOWNER
+* CAP_FSETID
+* CAP_CHOWN
+
+--Tim
 
 _______________________________________________
 xfs mailing list
