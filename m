@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB99vQtM013774
-	for <linux-xfs@oss.sgi.com>; Tue, 9 Dec 2008 03:57:26 -0600
+	mB99wMQb013895
+	for <linux-xfs@oss.sgi.com>; Tue, 9 Dec 2008 03:58:23 -0600
 Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C1E016F3664
-	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 01:57:24 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2271816F366A
+	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 01:58:21 -0800 (PST)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 1nKDw2KbXFGMAtB3 for
-	<linux-xfs@oss.sgi.com>; Tue, 09 Dec 2008 01:57:24 -0800 (PST)
+	cuda.sgi.com with ESMTP id k9zjoqW7AvjEtrTH for
+	<linux-xfs@oss.sgi.com>; Tue, 09 Dec 2008 01:58:21 -0800 (PST)
 Received: from shambala.of.teamix.net (blackhole.teamix.net [194.150.191.251])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 4EBB35ADF2
-	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 10:56:52 +0100 (CET)
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id 1F3B55ADF2
+	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 10:57:50 +0100 (CET)
 From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: [patch 1/5] replace b_fspriv with b_mount
-Date: Tue, 9 Dec 2008 10:56:47 +0100
+Subject: Re: [patch 0/5] Patch queue for 2.6.29
+Date: Tue, 9 Dec 2008 10:57:48 +0100
 References: <20081209094729.939583000@bombadil.infradead.org>
-	<20081209094801.116064000@bombadil.infradead.org>
-	(sfid-20081209_105430_370632_621C9505)
-In-Reply-To: <20081209094801.116064000@bombadil.infradead.org>
+	(sfid-20081209_105430_313295_CF3FFFDA)
+In-Reply-To: <20081209094729.939583000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-Message-Id: <200812091056.48281.Martin@lichtvoll.de>
+Message-Id: <200812091057.49292.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,13 +36,10 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-xfs@oss.sgi.com
 
 Am Dienstag 09 Dezember 2008 schrieb Christoph Hellwig:
-> Replace the b_fspriv pointer and it's ugly accessors with a properly
-> types xfs_mount pointer.  Also switch log reocvery over to it instead
-> of using b_fspriv for the mount pointer.
+> These are my outstanding patches for 2.6.29.  The first two have
+> already been rewied by Dave, the others still need review.
 
-s/reocvery/recovery
-
-Can't comment on code ;)
+Patch 4/5 appears to be missing.
 
 -- 
 Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
