@@ -1,11 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB95PFuo028603 for <xfs@oss.sgi.com>; Mon, 8 Dec 2008 23:25:16 -0600
-Subject: PARITAL TAKE 988581 - atime testing xfstests/192
-Message-Id: <20081209052505.9FC4C1C033D@chapter11.melbourne.sgi.com>
-Date: Tue,  9 Dec 2008 16:25:05 +1100 (EST)
-From: tes@sgi.com (Timothy Shimmin)
+	mB97rnOq006242
+	for <linux-xfs@oss.sgi.com>; Tue, 9 Dec 2008 01:53:49 -0600
+Received: from smtp5-g19.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7085024CE
+	for <linux-xfs@oss.sgi.com>; Mon,  8 Dec 2008 23:53:47 -0800 (PST)
+Received: from smtp5-g19.free.fr (smtp5-g19.free.fr [212.27.42.35]) by
+	cuda.sgi.com with ESMTP id IvVHahTvCg3pkMJs for
+	<linux-xfs@oss.sgi.com>; Mon, 08 Dec 2008 23:53:47 -0800 (PST)
+Date: Tue, 9 Dec 2008 08:53:28 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: XFS over SSD
+Message-ID: <20081209085328.001d483d@galadriel.home>
+In-Reply-To: <5d96567b0812080442r131d9fc8t4019c99ffbffa290@mail.gmail.com>
+References: <5d96567b0812080442r131d9fc8t4019c99ffbffa290@mail.gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,36 +24,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Raz <raziebe@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-Test out that access time is updated correctly in memory and on disk.
+Le Mon, 8 Dec 2008 14:42:34 +0200 vous =E9criviez:
 
-Date:  Tue Dec  9 16:12:48 EST 2008
-Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  Dave Chinner (with unused recommendations:)
-Author:  tes@sgi.com
+> I am thinking of using XFS over a SSD disk.
+> 1. Can I separate xfs meta data ( not just the logging) from the SSD ?
+> can I put the meta on a different disk ?
+> 2. When does a file's meta ( its block maps ) is being flushed to disk
+> ? can I control it ?
 
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+I've made some testing on a bunch of MTRON SSDs. Actually, the best bet
+is to use one SSD to store the XFS log for an array of SATA or SAS
+drives, that's the highest performance gain ; it offers tremendous IO
+performance.
 
 
-Modid:  master-melb:xfs-cmds:32647a
-xfstests/192 - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/192
-	- Test out that access time is updated correctly in memory and on disk.
+-- =
 
-xfstests/192.out - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/192.out
-	- atime output for 192
+--------------------------------------------------
+Emmanuel Florac               www.intellique.com   =
 
-xfstests/group - 1.129 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.129&r2=text&tr2=1.128&f=h
-	- add 192 and atime group
+--------------------------------------------------
 
 _______________________________________________
 xfs mailing list
