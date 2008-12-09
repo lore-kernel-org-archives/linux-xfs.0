@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB8MsRGe004748 for <xfs@oss.sgi.com>; Mon, 8 Dec 2008 16:54:27 -0600
-Date: Mon, 8 Dec 2008 17:54:26 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC, PATCH] XFS_TRANS_DEBUG fixes
-Message-ID: <20081208225426.GA22003@infradead.org>
-References: <4938D3E0.5050501@sgi.com>
+	mB934P1o019990 for <xfs@oss.sgi.com>; Mon, 8 Dec 2008 21:04:25 -0600
+Received: from larry.melbourne.sgi.com (larry.melbourne.sgi.com
+	[134.14.52.130])
+	by relay1.corp.sgi.com (Postfix) with SMTP id 335DA8F8081
+	for <xfs@oss.sgi.com>; Mon,  8 Dec 2008 19:04:18 -0800 (PST)
+Received: from [134.14.55.22] (dhcp22.melbourne.sgi.com [134.14.55.22]) by
+	larry.melbourne.sgi.com (950413.SGI.8.6.12/950213.SGI.AUTOCF)
+	via ESMTP id OAA29389 for <xfs@oss.sgi.com>;
+	Tue, 9 Dec 2008 14:04:17 +1100
+Message-ID: <493DE01B.6050303@sgi.com>
+Date: Tue, 09 Dec 2008 14:03:55 +1100
+From: Mark Goodwin <markgw@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4938D3E0.5050501@sgi.com>
+Subject: What's left for 2.6.29?
+Reply-To: markgw@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,27 +28,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lachlan@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Dec 05, 2008 at 06:10:24PM +1100, Lachlan McIlroy wrote:
-> Some of the things I had to do to get it to work (and could be done some other
-> way) are:
-> - all buffers that are logged need to be mapped into kernel space so the
->    debugging code can make a copy of the buffer data and compare it later.
->    The easiest way to do that is to make all buffers mapped in xfs_bug_get_flags()
->    when XFS_TRANS_DEBUG is set.
 
-Need a comment similar to this next to the place that sets the flag.
+I think we need to freeze and start testing, i.e. git-cherry from
+the master branch over to for-linus and start some soak, stress
+amd regression testing. What's still left? Outstanding reviews?
+Dave, ...?
 
-> - Some bit setting functions (btst()/bset()/bfset()) appear to be missing so
->    I've coded up some trivial versions.  There maybe some linux kernel functions
->    that do the same thing.
-
-Just use the Linu set_bit / clear_bit / test_bit / test_and_set_bit /
-test_and_clear_bit helpers, or the __ prefixed versions if you don't
-need atomicy.  Note that they want to have pointers to unsigned long
-passed.
+Cheers
 
 _______________________________________________
 xfs mailing list
