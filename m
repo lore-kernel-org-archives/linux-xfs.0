@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mB99uI3E013637 for <xfs@oss.sgi.com>; Tue, 9 Dec 2008 03:56:18 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78D4516109AD
-	for <xfs@oss.sgi.com>; Tue,  9 Dec 2008 01:56:17 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id i6B9e5FlqAJ2VhyU for
-	<xfs@oss.sgi.com>; Tue, 09 Dec 2008 01:56:17 -0800 (PST)
-Date: Tue, 9 Dec 2008 04:55:46 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsqa: add testcase for ->setattr permission checking
-Message-ID: <20081209095546.GB8599@infradead.org>
-References: <20081202142039.GA25155@infradead.org> <493CB518.7000001@sgi.com>
+	mB99vQtM013774
+	for <linux-xfs@oss.sgi.com>; Tue, 9 Dec 2008 03:57:26 -0600
+Received: from mail.lichtvoll.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C1E016F3664
+	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 01:57:24 -0800 (PST)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id 1nKDw2KbXFGMAtB3 for
+	<linux-xfs@oss.sgi.com>; Tue, 09 Dec 2008 01:57:24 -0800 (PST)
+Received: from shambala.of.teamix.net (blackhole.teamix.net [194.150.191.251])
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id 4EBB35ADF2
+	for <linux-xfs@oss.sgi.com>; Tue,  9 Dec 2008 10:56:52 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: [patch 1/5] replace b_fspriv with b_mount
+Date: Tue, 9 Dec 2008 10:56:47 +0100
+References: <20081209094729.939583000@bombadil.infradead.org>
+	<20081209094801.116064000@bombadil.infradead.org>
+	(sfid-20081209_105430_370632_621C9505)
+In-Reply-To: <20081209094801.116064000@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <493CB518.7000001@sgi.com>
+Message-Id: <200812091056.48281.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +34,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Timothy Shimmin <tes@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, Dec 08, 2008 at 04:48:08PM +1100, Timothy Shimmin wrote:
-> 1.
-> > +echo "user: chown root owned file to qa_user (should fail)"
-> > +su ${qa_user} -c "chown root test.${qa_user}"
-> > +
-> I think the description and command above don't match.
-> I think we have a swap with subtest 4 below.
-> Need to either swap descriptions or commands.
+Am Dienstag 09 Dezember 2008 schrieb Christoph Hellwig:
+> Replace the b_fspriv pointer and it's ugly accessors with a properly
+> types xfs_mount pointer.  Also switch log reocvery over to it instead
+> of using b_fspriv for the mount pointer.
 
-Yes, I swapped the descriptions.
+s/reocvery/recovery
 
-> > +#
-> > +# Setup a file owned by the qa_user and with the suid bit set.
-> > +# A chown by root should not clean the suid bit.
-> > +#
-> 
-> Typos:
-> s/clean/clear/
-> 
-> s/suceed/succeed/ in a couple of places.
+Can't comment on code ;)
 
-Yeah.
-
-> * It looks like you test the clearing of suid/sgid bits
-> for setting the mode permission bits and not
-> for setting ownership as the description suggests;
-> i.e. you test with chmod instead of chown for clearing of suid/sgid bits
-
-Yes, that's also what I intended too, as XFS had some code to clear
-the suid bits for changing permissions, but those shouldn't happen
-for the restricted_chown case (and don't even happen in the XFS code,
-it's just not obvious when reading the old setattr implementation).
-While for sgid we want to clear it on mode changes if the gid
-is not in the group list.  So what needs fixing here is once again
-the comment.
-
-Btw, I just noticed you checked in another testcase as 192.  Do you want
-a respin or do you want to fix it up yourself?
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
 _______________________________________________
 xfs mailing list
