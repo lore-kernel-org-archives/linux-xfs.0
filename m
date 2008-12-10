@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBA59DeA013435 for <xfs@oss.sgi.com>; Tue, 9 Dec 2008 23:09:13 -0600
-Message-ID: <493F4EF2.1020300@sgi.com>
-Date: Wed, 10 Dec 2008 16:09:06 +1100
-From: Timothy Shimmin <tes@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [patch 5/5] use inode_change_ok for setattr permission checking
-References: <20081209094729.939583000@bombadil.infradead.org>
-	<20081209094801.643772000@bombadil.infradead.org>
-In-Reply-To: <20081209094801.643772000@bombadil.infradead.org>
+	mBA5Gxsc014051 for <xfs@oss.sgi.com>; Tue, 9 Dec 2008 23:16:59 -0600
+Subject: PARTIAL TAKE 990768 - setattr perm check test - 193
+Message-Id: <20081210051652.CB97F58AE1F6@chook.melbourne.sgi.com>
+Date: Wed, 10 Dec 2008 16:16:52 +1100 (EST)
+From: tes@sgi.com (Tim Shimmin)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,27 +14,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
 
-Christoph Hellwig wrote:
-> Instead of implementing our own checks use inode_change_ok to check for
-> necessary permission in setattr.  There is a slight change in behaviour
-> as inode_change_ok doesn't allow i_mode updates to add the suid or sgid
-> without superuser privilegues while the old XFS code just stripped away
-> those bits from the file mode.
-> 
-> (First sent on Semptember 29th)
-(No reply from Question on Nov 12th:)
+Test out the perm checks in xfs_setattr - chmod, chown, etc..
 
-I just wanted to run this thru an amended xfstests/193 first.
-
-Thanks,
 --Tim
+
+Date:  Wed Dec 10 16:12:22 EST 2008
+Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
+Inspected by:  hch@lst.de (authored by)
+
+The following file(s) were checked into:
+  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
+
+
+Modid:  master-melb:xfs-cmds:32713a
+xfstests/193 - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/193
+xfstests/193.out - 1.1 - new
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/193.out
+	- Test out the perm checks in xfs_setattr - chmod, chown, etc..
+
+xfstests/group - 1.130 - changed
+http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.130&r2=text&tr2=1.129&f=h
+	- Add 193 for setattr permission testing.
+
 
 _______________________________________________
 xfs mailing list
