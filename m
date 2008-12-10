@@ -1,11 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBA5Gxsc014051 for <xfs@oss.sgi.com>; Tue, 9 Dec 2008 23:16:59 -0600
-Subject: PARTIAL TAKE 990768 - setattr perm check test - 193
-Message-Id: <20081210051652.CB97F58AE1F6@chook.melbourne.sgi.com>
-Date: Wed, 10 Dec 2008 16:16:52 +1100 (EST)
-From: tes@sgi.com (Tim Shimmin)
+	mBA6pj6k021611 for <xfs@oss.sgi.com>; Wed, 10 Dec 2008 00:51:49 -0600
+Date: Wed, 10 Dec 2008 01:51:44 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: New XFS git tree on oss.sgi.com
+Message-ID: <20081210065143.GA5834@infradead.org>
+References: <492BA7AD.5080007@sgi.com> <20081125081644.GA20644@infradead.org>
+	<492C0B3D.3040002@thebarn.com> <492CA07F.1030803@sgi.com>
+	<492CC201.3080304@xfs.org>
+	<ncc3ah6lyiw.fsf@itchy.melbourne.sgi.com>
+	<20081209091725.GA26180@infradead.org> <493E9AB4.1050505@xfs.org>
+	<nccvdtthtyi.fsf@itchy.melbourne.sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <nccvdtthtyi.fsf@itchy.melbourne.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,36 +23,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, sgi.bugs.xfs@engr.sgi.com
+To: Niv Sardi <xaiki@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Russell Cattelan <cattelan@thebarn.com>, xfs@oss.sgi.com
 
-Test out the perm checks in xfs_setattr - chmod, chown, etc..
+On Wed, Dec 10, 2008 at 09:20:05AM +1100, Niv Sardi wrote:
+> Please read git documentation.
+>    
+> You don't want to be pulling xfs-dev into a xfs/master tree, you should
+> setup a remote properly and have local branch tracking them.
 
---Tim
-
-Date:  Wed Dec 10 16:12:22 EST 2008
-Workarea:  emu.melbourne.sgi.com:/home/tes/isms/xfs-cmds
-Inspected by:  hch@lst.de (authored by)
-
-The following file(s) were checked into:
-  longdrop.melbourne.sgi.com:/isms/xfs-cmds/master-melb
-
-
-Modid:  master-melb:xfs-cmds:32713a
-xfstests/193 - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/193
-xfstests/193.out - 1.1 - new
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/193.out
-	- Test out the perm checks in xfs_setattr - chmod, chown, etc..
-
-xfstests/group - 1.130 - changed
-http://oss.sgi.com/cgi-bin/cvsweb.cgi/xfs-cmds/xfstests/group.diff?r1=text&tr1=1.130&r2=text&tr2=1.129&f=h
-	- Add 193 for setattr permission testing.
-
+Sorry, I'm not gona waste my time on this shit.  It works just fine with
+a separate git repository that has zero downsides.
 
 _______________________________________________
 xfs mailing list
