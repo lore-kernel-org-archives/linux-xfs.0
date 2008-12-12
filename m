@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBBIU0Pa000309 for <xfs@oss.sgi.com>; Thu, 11 Dec 2008 12:30:01 -0600
-Date: Thu, 11 Dec 2008 19:29:55 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [xfs-masters] next-20081210: BUG: sleeping function called from
-	invalid context at mm/slub.c:1619 (XFS)
-Message-ID: <20081211182955.GB27952@lst.de>
-References: <a4423d670812110210g50d66304pb0a7d96b3dde00c7@mail.gmail.com>
-Mime-Version: 1.0
+	mBCIuxX6010384 for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 12:57:00 -0600
+Received: from atrey.karlin.mff.cuni.cz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A2AE15F69
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 10:56:55 -0800 (PST)
+Received: from atrey.karlin.mff.cuni.cz (atrey.karlin.mff.cuni.cz
+	[195.113.26.193]) by cuda.sgi.com with ESMTP id
+	svMD94rEFocIzOuM for <xfs@oss.sgi.com>;
+	Fri, 12 Dec 2008 10:56:55 -0800 (PST)
+Date: Fri, 12 Dec 2008 19:58:03 +0100
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Intel X25-E running Linux using XFS
+Message-ID: <20081212185803.GE11974@elf.ucw.cz>
+References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a4423d670812110210g50d66304pb0a7d96b3dde00c7@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,31 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alexander Beregalov <a.beregalov@gmail.com>
-Cc: xfs-masters@oss.sgi.com, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 
-On Thu, Dec 11, 2008 at 01:10:23PM +0300, Alexander Beregalov wrote:
-> BUG: sleeping function called from invalid context at mm/slub.c:1619
-> in_atomic(): 1, irqs_disabled(): 0, pid: 8096, name: sh
-> INFO: lockdep is turned off.
-> Pid: 8096, comm: sh Tainted: G        W  2.6.28-rc7-next-20081210 #2
-> Call Trace:
->  [<ffffffff80256e5a>] ? __debug_show_held_locks+0x1b/0x24
->  [<ffffffff8022fb55>] __might_sleep+0x120/0x122
->  [<ffffffff8029c526>] __kmalloc+0x70/0xfc
->  [<ffffffff803534d2>] kmem_alloc+0x75/0xd7
->  [<ffffffff803350ba>] xfs_fs_vcmn_err+0x46/0x94
->  [<ffffffff80335297>] xfs_fs_cmn_err+0x59/0x5e
 
-xfs_fs_vcmn_err does a sleeping memory allocation under a spinlock,
-nasty.  I have an idea that will get rid of the memory allocation
-completely, I'll come back to you once I have hacked something up.
+Hi!
 
-> Filesystem "sda2": xlog_space_left: head behind tail
->   tail_cycle = 1802201963, tail_bytes = -690563584
->   GH   cycle = 3078, GH   bytes = 69183384
+> Due to the 100k write cycle lifetime, I will not be performing any more 
+> benchmarks on the SSD itself, such benchmarks are available on  
+> techreport.com but just wanted to send out the smart data for the  
+> smartmontools list and point out it is working with linux+ich7+xfs.
+>
+> Overall, whenever I do anything now its just like the entire machine is
+> sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
+>
+> The techreport benchmarks are here:
+> http://techreport.com/articles.x/15931
 
-This btw is a bug, too..
+Actually I'd like to know... how does it behave during powerfails
+while it is being written to?
+
+Flashes I seen (USB / SD) developed bad sectors in that case, and
+ext2/ext3 can't handle that. (And I don't think xfs can handle that
+either).
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
 
 _______________________________________________
 xfs mailing list
