@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBCKO60l014239 for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 14:24:07 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0EBC9165E3
-	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 12:23:51 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id mdwOy1JV07vs1Spn for
-	<xfs@oss.sgi.com>; Fri, 12 Dec 2008 12:23:51 -0800 (PST)
-Date: Fri, 12 Dec 2008 15:23:19 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Intel X25-E running Linux using XFS
-In-Reply-To: <20081212185803.GE11974@elf.ucw.cz>
-Message-ID: <alpine.DEB.1.10.0812121516190.17857@p34.internal.lan>
-References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
-	<20081212185803.GE11974@elf.ucw.cz>
+	mBCKahUW014736 for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 14:36:43 -0600
+Received: from mx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD4EE16C8739
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 12:36:41 -0800 (PST)
+Received: from mx2.redhat.com (mx2.redhat.com [66.187.237.31]) by cuda.sgi.com
+	with ESMTP id AMOZYsaNCYDcRFqy for <xfs@oss.sgi.com>;
+	Fri, 12 Dec 2008 12:36:41 -0800 (PST)
+Received: from int-mx2.corp.redhat.com (int-mx2.corp.redhat.com [172.16.27.26])
+	by mx2.redhat.com (8.13.8/8.13.8) with ESMTP id mBCKHiQq026469
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 15:17:44 -0500
+Received: from ns3.rdu.redhat.com (ns3.rdu.redhat.com [10.11.255.199])
+	by int-mx2.corp.redhat.com (8.13.1/8.13.1) with ESMTP id mBCKHeoV010159
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 15:17:43 -0500
+Received: from neon.msp.redhat.com (neon.msp.redhat.com [10.15.80.10])
+	by ns3.rdu.redhat.com (8.13.8/8.13.8) with ESMTP id mBCKHcFX028624
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 15:17:39 -0500
+Message-ID: <4942C6E2.4040506@sandeen.net>
+Date: Fri, 12 Dec 2008 14:17:38 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: [PATCH] xfstests: test 194, test tricky mapping/conversion around
+	holes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +35,293 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Pavel Machek <pavel@suse.cz>
-Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: xfs mailing list <xfs@oss.sgi.com>
+
+Related to 
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
+
+Latest patch posted on that bug makes this testcase pass...
+
+(are we at 194 now?)
+
+first 2 tests are simple buffred writ tests making sure stale
+data isn't exposed, and hole-blocks aren't mapped.
+
+2nd 2 tests are more related to the above bug, tricky testcase
+uncovered by fsx on ppc64 which actually re-maps a block
+which should be a hole, bringing stale data back into existence.
+
+-Eric
+
+--- /dev/null	2008-12-01 16:01:41.522110504 -0600
++++ xfs-cmds/xfstests/194	2008-12-12 13:57:13.000000000 -0600
+@@ -0,0 +1,200 @@
++#! /bin/sh
++# FS QA Test No. 194
++#
++# Test mapping around/over holes for sub-page blocks
++# http://oss.sgi.com/bugzilla/show_bug.cgi?id=801
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2008 Eric Sandeen.  All Rights Reserved.
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# only xfs supported due to use of xfs_bmap
++_supported_fs xfs
++_supported_os IRIX Linux
++
++# real QA test starts here
++rm -f $seq.full
++
++# For this test we use block size = 1/8 page size
++pgsize=`$here/src/feature -s`
++blksize=`expr $pgsize / 8`
++
++#  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
++#  0: [0..63]:         160..223          0 (160..223)          64
++#  1: [64..127]:       hole                                    64
++
++# Filter out file mountpoint and physical location info
++_filter_bmap()
++{
++    tee -a $seq.full | \
++    sed "s#$SCRATCH_MNT#SCRATCH_MNT#g" | \
++    awk --assign blksize=$blksize \
++        '$3 ~ /hole/   { print $1 "\t" $3 "\t" ($4 * 512) / blksize; next }
++         $1 ~ /^[0-9]/ { print $1 "\tblocks\t" ($6 * 512) / blksize; next }
++         	       { print $1 "\tTYPE\t" $6 }' 
++}
++
++# Filter out offsets, which vary by blocksize
++_filter_od()
++{
++    tee -a $seq.full | \
++    sed -e "s/^[0-9A-Fa-f ]\{7,8\}//"
++}
++
++_require_scratch
++unset MKFS_OPTIONS
++unset XFS_MKFS_OPTIONS
++_scratch_mkfs_xfs -b size=$blksize >/dev/null 2>&1
++_scratch_mount
++
++# 512b block / 4k page example:
++#
++#1) Write 1k of data (buffered):
++#
++# |1111|1111|
++#
++# 2) ftruncate back to 256 bytes:
++#
++# |1100|
++#
++# 3) ftruncate out to 4k: ("H" means hole (expected))
++#
++# |1100|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|HHHH|
++#
++# So we should have 1 block of data/0, 7 blocks of holes.
++#
++# 4) check what's there with a direct IO read
++#
++# In fact what I get is 1 block of data/0, 1 block of 0's, and 7 blocks of
++# garbage:
++#
++# |1100|0000|GGGG|GGGG|GGGG|GGGG|GGGG|GGGG|
++#
++# The garbage is in fact stale data from the disk. 
++#
++# Check that we don't get stale data and that the hole is a hole:
++
++echo "== Test 1 =="
++# Write, truncate in, truncate out
++xfs_io \
++-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
++-c "truncate `expr $blksize / 2`" \
++-c "truncate $pgsize" \
++-t -f $SCRATCH_MNT/testfile1 >> $seq.full
++
++# directio read of entire file
++xfs_io \
++-c "pread 0 $pgsize" \
++-d $SCRATCH_MNT/testfile1 >> $seq.full
++
++xfs_bmap -v $SCRATCH_MNT/testfile1 | _filter_bmap
++od -x $SCRATCH_MNT/testfile1 | _filter_od
++
++# Similar but write another block to create block/hole/block/hole
++
++echo "== Test 2 =="
++# Write, truncate in, truncate out, write to middle
++xfs_io \
++-c "pwrite -S 0x11 -b `expr $pgsize / 2`  0 `expr $pgsize / 2`" \
++-c "truncate `expr $blksize / 2`" \
++-c "truncate $pgsize" \
++-c "pwrite -S 0x22 -b $blksize `expr $blksize \* 4` $blksize" \
++-t -f $SCRATCH_MNT/testfile2 >> $seq.full
++
++# directio read of entire file
++xfs_io \
++-c "pread 0 $pgsize" \
++-d $SCRATCH_MNT/testfile2 >> $seq.full
++
++xfs_bmap -v $SCRATCH_MNT/testfile2 | _filter_bmap
++od -x $SCRATCH_MNT/testfile2 | _filter_od
++
++# 512 byte block / 4k page example:
++
++# direct write 1 page (8 blocks) of "0x11" to 0x1000
++# map read 1 block, 512 (0x200) at 0
++# truncate to half a block, 256 (0x100)
++# truncate to block+1, 513 (0x201)
++# direct write "0x22" for 1 block at offset 2048 (0x800)
++
++# |1111|1111|1111|1111|1111|1111|1111|1111|     Write 1's
++# |MRMR|1111|1111|1111|1111|1111|1111|1111|     mapread
++# |11--|                                        truncate down
++# |1100|0---|                                   truncate up, block+1
++# |    |    |HHHH|HHHH|2222|                    Write 2's (extending)
++
++#           |uptodate?|
++# |1100|0000|1111|1111|2222|----|----|----| 	<- potential badness
++
++# We're looking for this badness due to mapping over a hole:
++# Exposes stale data from 0x400 (1024) through 0x800 (2048)
++
++# 00000000  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................|
++# *
++# 00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
++# *
++# 00000400  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................| <- BAD
++# *
++# 00000800  22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22  |""""""""""""""""|
++# *
++# 00000a00
++
++# We *should* get:
++# |1100|HHHH|HHHH|HHHH|2222|----|----|----|
++
++echo "== Test 3 =="
++xfs_io \
++-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
++-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
++-c "truncate `expr $blksize / 2`" \
++-c "truncate `expr $blksize + 1`" \
++-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
++-t -d -f $SCRATCH_MNT/testfile3 >> $seq.full
++
++xfs_bmap -v $SCRATCH_MNT/testfile3 | _filter_bmap
++od -x $SCRATCH_MNT/testfile3 | _filter_od
++
++# Now try the same thing but write a sector in the middle of that hole
++# If things go badly stale data will be exposed either side.
++# This is most interesting for block size > 512 (page size > 4096)
++
++# We *should* get:
++# |1100|HHHH|33HH|HHHH|2222|----|----|----|
++
++echo "== Test 4 =="
++xfs_io \
++-c "pwrite -S 0x11 -b $pgsize 0 $pgsize" \
++-c "mmap -r 0 $blksize" -c "mread 0 $blksize" -c "munmap" \
++-c "truncate `expr $blksize / 2`" \
++-c "truncate `expr $blksize + 1`" \
++-c "pwrite -S 0x22 -b $blksize `expr $pgsize / 2` $blksize" \
++-c "pwrite -S 0x33 -b 512 `expr $blksize \* 2` 512" \
++-t -d -f $SCRATCH_MNT/testfile4 >> $seq.full
++
++xfs_bmap -v $SCRATCH_MNT/testfile4 | _filter_bmap
++od -x $SCRATCH_MNT/testfile4 | _filter_od
++
++# success, all done
++status=0
++exit
 
 
+--- /dev/null	2008-12-01 16:01:41.522110504 -0600
++++ xfs-cmds/xfstests/194.out	2008-12-12 13:57:14.000000000 -0600
+@@ -0,0 +1,59 @@
++QA output created by 194
++== Test 1 ==
++SCRATCH_MNT/testfile1:	TYPE	
++EXT:	TYPE	TOTAL
++0:	blocks	1
++1:	hole	7
++1111 1111 1111 1111 1111 1111 1111 1111
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++
++== Test 2 ==
++SCRATCH_MNT/testfile2:	TYPE	
++EXT:	TYPE	TOTAL
++0:	blocks	1
++1:	hole	3
++2:	blocks	1
++3:	hole	3
++1111 1111 1111 1111 1111 1111 1111 1111
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++2222 2222 2222 2222 2222 2222 2222 2222
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++
++== Test 3 ==
++SCRATCH_MNT/testfile3:	TYPE	
++EXT:	TYPE	TOTAL
++0:	blocks	1
++1:	hole	3
++2:	blocks	1
++1111 1111 1111 1111 1111 1111 1111 1111
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++2222 2222 2222 2222 2222 2222 2222 2222
++*
++
++== Test 4 ==
++SCRATCH_MNT/testfile4:	TYPE	
++EXT:	TYPE	TOTAL
++0:	blocks	1
++1:	hole	1
++2:	blocks	1
++3:	hole	1
++4:	blocks	1
++1111 1111 1111 1111 1111 1111 1111 1111
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++3333 3333 3333 3333 3333 3333 3333 3333
++*
++0000 0000 0000 0000 0000 0000 0000 0000
++*
++2222 2222 2222 2222 2222 2222 2222 2222
++*
++
 
-On Fri, 12 Dec 2008, Pavel Machek wrote:
 
->
-> Hi!
->
->> Due to the 100k write cycle lifetime, I will not be performing any more
->> benchmarks on the SSD itself, such benchmarks are available on
->> techreport.com but just wanted to send out the smart data for the
->> smartmontools list and point out it is working with linux+ich7+xfs.
->>
->> Overall, whenever I do anything now its just like the entire machine is
->> sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
->>
->> The techreport benchmarks are here:
->> http://techreport.com/articles.x/15931
->
-> Actually I'd like to know... how does it behave during powerfails
-> while it is being written to?
->
-> Flashes I seen (USB / SD) developed bad sectors in that case, and
-> ext2/ext3 can't handle that. (And I don't think xfs can handle that
-> either).
-
-I have a UPS for all of my machines, so that will not be a problem in my 
-case.  I do not wish to trash a $720 SSD or my current install, if someone 
-else wants to try feel free though :)
-
-With barriers, presumably it would be safe-- but as always, a UPS/and 
-barriers and/or RAID, there is no excuse not to have regular backups 
-incase of a failure at any time..
-
-I do recall however one instance where there was an apt-get dist-upgrade 
-going and the power was cut to a machine on purpose (before/not 
-using barriers) and suffice to say-- it got mucked/suffered many corruptions
-all over the place.
-
-Justin.
 
 _______________________________________________
 xfs mailing list
