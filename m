@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBD77aij013696 for <xfs@oss.sgi.com>; Sat, 13 Dec 2008 01:07:36 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F2190172A608
-	for <xfs@oss.sgi.com>; Fri, 12 Dec 2008 23:07:34 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id JfeAi3WDGyejC6pB for <xfs@oss.sgi.com>;
-	Fri, 12 Dec 2008 23:07:34 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id A11A0A883C2
-	for <xfs@oss.sgi.com>; Sat, 13 Dec 2008 01:07:32 -0600 (CST)
-Message-ID: <49435F35.40109@sandeen.net>
-Date: Sat, 13 Dec 2008 01:07:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mBDBiEUo026076 for <xfs@oss.sgi.com>; Sat, 13 Dec 2008 05:44:14 -0600
+Received: from einhorn.in-berlin.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 536621AB82
+	for <xfs@oss.sgi.com>; Sat, 13 Dec 2008 03:44:11 -0800 (PST)
+Received: from einhorn.in-berlin.de (einhorn.in-berlin.de [192.109.42.8]) by
+	cuda.sgi.com with ESMTP id BauBR6dq9ws9OSDp for
+	<xfs@oss.sgi.com>; Sat, 13 Dec 2008 03:44:11 -0800 (PST)
+Message-ID: <49439FF9.50202@s5r6.in-berlin.de>
+Date: Sat, 13 Dec 2008 12:43:53 +0100
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Subject: [PATCH] fix corruption case for block size < page size
+Subject: Re: Intel X25-E running Linux using XFS
+References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+	<20081212185803.GE11974@elf.ucw.cz>
+	<alpine.DEB.1.10.0812121516190.17857@p34.internal.lan>
+In-Reply-To: <alpine.DEB.1.10.0812121516190.17857@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,76 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Pavel Machek <pavel@suse.cz>, Alan Piszcz <ap@solarrain.com>
 
-On a 4k page system and 512-byte blocksize, this:
+Justin Piszcz wrote:
+> On Fri, 12 Dec 2008, Pavel Machek wrote:
+>> Actually I'd like to know... how does it behave during powerfails
+>> while it is being written to?
+>>
+>> Flashes I seen (USB / SD) developed bad sectors in that case, and
+>> ext2/ext3 can't handle that. (And I don't think xfs can handle that
+>> either).
+> 
+> I have a UPS for all of my machines, so that will not be a problem in my
+> case.
 
-xfs_io \
--c "pwrite -S 0x11 -b 4096 0 4096" \
--c "mmap -r 0 512" -c "mread 0 512" -c "munmap" \
--c "truncate 256" \
--c "truncate 513" \
--c "pwrite -S 0x22 -b 512 2048 512" \
--t -d -f testfile
+UPSs fail too.
 
-leads to this in the resulting file:
+...
+> With barriers, presumably it would be safe
 
-# 00000000  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................|
-# *
-# 00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-# *
-# 00000400  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  |................| <- BAD
-# *
-# 00000800  22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22  |""""""""""""""""|
-# *
-# 00000a00
-
-laid out like this:
-
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-   0: [0..4]:          63..67            0 (63..67)             5
-
-which is wrong.  :)  The 2nd series of 1's should be a hole;
-it is stale data left over from the original write which gets re-
-mapped in xfs_page_state convert; this is largely because on
-the previous truncate down, discard_buffer() leaves the discarded
-bh uptodate - due to page vs. bh uptodate rules, I think.
-
-This all got turned up by xfsqa 091 on ppc with 64k pages & 4k blocks;
-see also http://oss.sgi.com/bugzilla/show_bug.cgi?id=801.
-This would hit 64k page ia64 as well.
-
-This could probably use a bit more investigation; why for example
-is the mmap read needed above; but the below fixes the problem for
-me, by recognizing an uptodate but not dirty or mapped buffer at
-this stage as a hole.  At any rate it certainly doesn't need to
-be written (not dirty)...
-
-I previously submitted an xfsqa testcase for this too.
-
-I've run it through qa but more soak time would probably be good.
-
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1042,6 +1042,13 @@ xfs_page_state_convert(
- 			continue;
- 		}
- 
-+		/* This means its a hole (discard_buffer leaves uptodate set) */
-+		if (!buffer_dirty(bh) && !buffer_mapped(bh) &&
-+		    buffer_uptodate(bh)) {
-+			iomap_valid = 0;
-+			continue;
-+		}
-+
- 		if (iomap_valid)
- 			iomap_valid = xfs_iomap_valid(&iomap, offset);
- 
+There are other opinions:  http://lwn.net/Articles/309576/
+(Magnetic disks are discussed there.)
+-- 
+Stefan Richter
+-=====-==--- ==-- -==-=
+http://arcgraph.de/sr/
 
 _______________________________________________
 xfs mailing list
