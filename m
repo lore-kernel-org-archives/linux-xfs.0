@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBFJTuVi032159
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 13:29:56 -0600
+	mBFJUKE7032253
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 13:30:20 -0600
 Received: from carme.pld-linux.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 41E66218A7
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:29:47 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A948218BE
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:30:19 -0800 (PST)
 Received: from carme.pld-linux.org (carme.pld-linux.org [193.239.45.140]) by
-	cuda.sgi.com with ESMTP id DfwCErQrTIA8oJXo for
-	<linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:29:47 -0800 (PST)
+	cuda.sgi.com with ESMTP id 5qQD11WNDmapID7a for
+	<linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:30:19 -0800 (PST)
 From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: [PATCH 6/6] xfs_quota: Fix range for -U.
-Date: Mon, 15 Dec 2008 20:29:46 +0100
-Message-Id: <1229369386-66312-6-git-send-email-arekm@maven.pl>
-In-Reply-To: <1229369386-66312-5-git-send-email-arekm@maven.pl>
+Subject: [PATCH 2/6] Fix build when gettext is enabled.
+Date: Mon, 15 Dec 2008 20:29:42 +0100
+Message-Id: <1229369386-66312-2-git-send-email-arekm@maven.pl>
+In-Reply-To: <1229369386-66312-1-git-send-email-arekm@maven.pl>
 References: <1229369386-66312-1-git-send-email-arekm@maven.pl>
-	<1229369386-66312-2-git-send-email-arekm@maven.pl>
-	<1229369386-66312-3-git-send-email-arekm@maven.pl>
-	<1229369386-66312-4-git-send-email-arekm@maven.pl>
-	<1229369386-66312-5-git-send-email-arekm@maven.pl>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +24,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-xfs@oss.sgi.com
 
-xfs_quota report "-L" option specifies lower range of requested IDs.
-"-U" specifies upper range but "-L" is closed range while "-U" is open
-range.
-
-Make "-U" closed range, too which is something more expected.
----
- xfsprogs/quota/report.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/xfsprogs/quota/report.c b/xfsprogs/quota/report.c
-index 21b4edb..2184158 100644
---- a/xfsprogs/quota/report.c
-+++ b/xfsprogs/quota/report.c
-@@ -124,7 +124,7 @@ dump_limits_any_type(
- 	}
- 
- 	if (upper) {
--		for (id = lower; id < upper; id++)
-+		for (id = lower; id <= upper; id++)
- 			dump_file(fp, id, type, mount->fs_name);
- 		return;
- 	}
-@@ -398,7 +398,7 @@ report_user_mount(
- 	uint		id;
- 
- 	if (upper) {	/* identifier range specified */
--		for (id = lower; id < upper; id++) {
-+		for (id = lower; id <= upper; id++) {
- 			snprintf(n, sizeof(n)-1, "#%u", id);
- 			if (report_mount(fp, id, n,
- 					form, XFS_USER_QUOTA, mount, flags))
-@@ -436,7 +436,7 @@ report_group_mount(
- 	uint		id;
- 
- 	if (upper) {	/* identifier range specified */
--		for (id = lower; id < upper; id++) {
-+		for (id = lower; id <= upper; id++) {
- 			snprintf(n, sizeof(n)-1, "#%u", id);
- 			if (report_mount(fp, id, n,
- 					form, XFS_GROUP_QUOTA, mount, flags))
-@@ -473,7 +473,7 @@ report_project_mount(
- 	uint		id;
- 
- 	if (upper) {	/* identifier range specified */
--		for (id = lower; id < upper; id++) {
-+		for (id = lower; id <= upper; id++) {
- 			snprintf(n, sizeof(n)-1, "#%u", id);
- 			if (report_mount(fp, id, n,
- 					form, XFS_PROJ_QUOTA, mount, flags))
--- 
-1.6.0.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QnVpbGQgZmFpbHMgd2hlbiBnZXR0ZXh0IGlzIGVuYWJsZWQ6Cgpwcm9ncmVzcy5jOjE2OiBlcnJv
+cjogaW5pdGlhbGl6ZXIgZWxlbWVudCBpcyBub3QgY29uc3RhbnQKcHJvZ3Jlc3MuYzoxNjogZXJy
+b3I6IChuZWFyIGluaXRpYWxpemF0aW9uIGZvciDigJhycHRfdHlwZXNbMF3igJkpCnByb2dyZXNz
+LmM6MTg6IGVycm9yOiBpbml0aWFsaXplciBlbGVtZW50IGlzIG5vdCBjb25zdGFudApwcm9ncmVz
+cy5jOjE4OiBlcnJvcjogKG5lYXIgaW5pdGlhbGl6YXRpb24gZm9yIOKAmHJwdF90eXBlc1sxXeKA
+mSkKWy4uLl0KCkZpeCB0aGF0IHVzaW5nIGNvbW1vbmx5IHN0YW5kYXJkIE5fKCkgbWFjcm8uCgpQ
+YXRjaCBieSBKYWt1YiBCb2d1c3ogPHFib29zaEBwbGQtbGludXgub3JnPi4KSW1wcm92ZW1lbnRz
+IGJ5IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+LgotLS0KIHhmc3Byb2dz
+L2luY2x1ZGUvYnVpbGRydWxlcyAgICAgICAgIHwgICAgMiArLQogeGZzcHJvZ3MvaW5jbHVkZS9w
+bGF0Zm9ybV9kZWZzLmguaW4gfCAgICAyICsKIHhmc3Byb2dzL3JlcGFpci9wcm9ncmVzcy5jICAg
+ICAgICAgIHwgICA1MCArKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tCiAzIGZpbGVz
+IGNoYW5nZWQsIDI4IGluc2VydGlvbnMoKyksIDI2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
+L3hmc3Byb2dzL2luY2x1ZGUvYnVpbGRydWxlcyBiL3hmc3Byb2dzL2luY2x1ZGUvYnVpbGRydWxl
+cwppbmRleCA3MTU1YjIxLi4xMDQ3ZWMzIDEwMDY0NAotLS0gYS94ZnNwcm9ncy9pbmNsdWRlL2J1
+aWxkcnVsZXMKKysrIGIveGZzcHJvZ3MvaW5jbHVkZS9idWlsZHJ1bGVzCkBAIC00MCw3ICs0MCw3
+IEBAIGVuZGlmCiAKIGlmZGVmIFBPVEhFQUQKICQoUE9USEVBRCk6ICQoWEdFVFRFWFRGSUxFUykK
+LQkkKFhHRVRURVhUKSAtLWxhbmd1YWdlPUMgLS1rZXl3b3JkPV8gLW8gJEAgJChYR0VUVEVYVEZJ
+TEVTKQorCSQoWEdFVFRFWFQpIC0tbGFuZ3VhZ2U9QyAtLWtleXdvcmQ9XyAtLWtleXdvcmQ9Tl8g
+LW8gJEAgJChYR0VUVEVYVEZJTEVTKQogCiAjIEdlbmVyYXRlIHRlbXAgLnBvIGZpbGVzLCB0byBj
+aGVjayB3aGV0aGVyIHRyYW5zbGF0aW9ucyBuZWVkIHVwZGF0aW5nLgogIyBOb3QgYnkgZGVmYXVs
+dCwgZHVlIHRvIGdldHRleHQgb3V0cHV0IGRpZmZlcmVuY2VzIGJldHdlZW4gdmVyc2lvbnMuCmRp
+ZmYgLS1naXQgYS94ZnNwcm9ncy9pbmNsdWRlL3BsYXRmb3JtX2RlZnMuaC5pbiBiL3hmc3Byb2dz
+L2luY2x1ZGUvcGxhdGZvcm1fZGVmcy5oLmluCmluZGV4IDY2ODJlZjYuLjRmOGViZTUgMTAwNjQ0
+Ci0tLSBhL3hmc3Byb2dzL2luY2x1ZGUvcGxhdGZvcm1fZGVmcy5oLmluCisrKyBiL3hmc3Byb2dz
+L2luY2x1ZGUvcGxhdGZvcm1fZGVmcy5oLmluCkBAIC0xMjksOCArMTI5LDEwIEBAIHR5cGVkZWYg
+dW5zaWduZWQgbG9uZyBsb25nIF9fcHN1bnNpZ25lZF90OwogI2lmZGVmIEVOQUJMRV9HRVRURVhU
+CiAjIGluY2x1ZGUgPGxpYmludGwuaD4KICMgZGVmaW5lIF8oeCkgICAgICAgICAgICAgICAgICAg
+Z2V0dGV4dCh4KQorIyBkZWZpbmUgTl8oeCkJCQkgeAogI2Vsc2UKICMgZGVmaW5lIF8oeCkgICAg
+ICAgICAgICAgICAgICAgKHgpCisjIGRlZmluZSBOXyh4KQkJCSB4CiAjIGRlZmluZSB0ZXh0ZG9t
+YWluKGQpICAgICAgICAgIGRvIHsgfSB3aGlsZSAoMCkKICMgZGVmaW5lIGJpbmR0ZXh0ZG9tYWlu
+KGQsZGlyKSAgZG8geyB9IHdoaWxlICgwKQogI2VuZGlmCmRpZmYgLS1naXQgYS94ZnNwcm9ncy9y
+ZXBhaXIvcHJvZ3Jlc3MuYyBiL3hmc3Byb2dzL3JlcGFpci9wcm9ncmVzcy5jCmluZGV4IDBjYTlh
+OGEuLmZmNDJmODIgMTAwNjQ0Ci0tLSBhL3hmc3Byb2dzL3JlcGFpci9wcm9ncmVzcy5jCisrKyBi
+L3hmc3Byb2dzL3JlcGFpci9wcm9ncmVzcy5jCkBAIC0xMywzMCArMTMsMzAgQEAKIHN0YXRpYwog
+Y2hhciAqcnB0X3R5cGVzW10gPSB7CiAjZGVmaW5lIFRZUEVfSU5PREUgCTAKLQlfKCJpbm9kZXMi
+KSwKKwlOXygiaW5vZGVzIiksCiAjZGVmaW5lIFRZUEVfQkxPQ0sgCTEKLQlfKCJibG9ja3MiKSwK
+KwlOXygiYmxvY2tzIiksCiAjZGVmaW5lIFRZUEVfRElSICAgCTIKLQlfKCJkaXJlY3RvcmllcyIp
+LAorCU5fKCJkaXJlY3RvcmllcyIpLAogI2RlZmluZSBUWVBFX0FHCQkzCi0JXygiYWxsb2NhdGlv
+biBncm91cHMiKSwKKwlOXygiYWxsb2NhdGlvbiBncm91cHMiKSwKICNkZWZpbmUgVFlQRV9BR0lf
+QlVDS0VUCTQKLQlfKCJBR0kgdW5saW5rZWQgYnVja2V0cyIpLAorCU5fKCJBR0kgdW5saW5rZWQg
+YnVja2V0cyIpLAogI2RlZmluZSBUWVBFX0VYVEVOVFMJNQotCV8oImV4dGVudHMiKSwKKwlOXygi
+ZXh0ZW50cyIpLAogI2RlZmluZSBUWVBFX1JURVhURU5UUwk2Ci0JXygicmVhbHRpbWUgZXh0ZW50
+cyIpLAorCU5fKCJyZWFsdGltZSBleHRlbnRzIiksCiAjZGVmaW5lIFRZUEVfVU5MSU5LRURfTElT
+VCA3Ci0JXygidW5saW5rZWQgbGlzdHMiKQorCU5fKCJ1bmxpbmtlZCBsaXN0cyIpCiB9OwogCiAK
+IHN0YXRpYwogY2hhciAqcnB0X2ZtdHNbXSA9IHsKICNkZWZpbmUgRk1UMSAwCi1fKCIgICAgICAg
+IC0gJTAyZDolMDJkOiUwMmQ6ICVzIC0gJWxsdSBvZiAlbGx1ICVzIGRvbmVcbiIpLAorTl8oIiAg
+ICAgICAgLSAlMDJkOiUwMmQ6JTAyZDogJXMgLSAlbGx1IG9mICVsbHUgJXMgZG9uZVxuIiksCiAj
+ZGVmaW5lIEZNVDIgMQotXygiICAgICAgICAtICUwMmQ6JTAyZDolMDJkOiAlcyAtICVsbHUgJXMg
+ZG9uZVxuIiksCitOXygiICAgICAgICAtICUwMmQ6JTAyZDolMDJkOiAlcyAtICVsbHUgJXMgZG9u
+ZVxuIiksCiB9OwogCiB0eXBlZGVmIHN0cnVjdCBwcm9ncmVzc19ycHRfcyB7CkBAIC00OCwzNSAr
+NDgsMzUgQEAgdHlwZWRlZiBzdHJ1Y3QgcHJvZ3Jlc3NfcnB0X3MgewogCiBzdGF0aWMKIHByb2dy
+ZXNzX3JwdF90IHByb2dyZXNzX3JwdF9yZXBvcnRzW10gPSB7Ci17Rk1UMSwgXygic2Nhbm5pbmcg
+ZmlsZXN5c3RlbSBmcmVlc3BhY2UiKSwJCQkvKiAgMCAqLwore0ZNVDEsIE5fKCJzY2FubmluZyBm
+aWxlc3lzdGVtIGZyZWVzcGFjZSIpLAkJCS8qICAwICovCiAJJnJwdF9mbXRzW0ZNVDFdLCAmcnB0
+X3R5cGVzW1RZUEVfQUddfSwKLXtGTVQxLCBfKCJzY2FubmluZyBhZ2kgdW5saW5rZWQgbGlzdHMi
+KSwJCQkvKiAgMSAqLwore0ZNVDEsIE5fKCJzY2FubmluZyBhZ2kgdW5saW5rZWQgbGlzdHMiKSwJ
+CQkvKiAgMSAqLwogCSZycHRfZm10c1tGTVQxXSwgJnJwdF90eXBlc1tUWVBFX0FHXX0sCi17Rk1U
+MiwgXygiY2hlY2sgdW5jZXJ0YWluIEFHIGlub2RlcyIpLAkJCQkvKiAgMiAqLwore0ZNVDIsIE5f
+KCJjaGVjayB1bmNlcnRhaW4gQUcgaW5vZGVzIiksCQkJCS8qICAyICovCiAJJnJwdF9mbXRzW0ZN
+VDJdLCAmcnB0X3R5cGVzW1RZUEVfQUdJX0JVQ0tFVF19LAote0ZNVDEsIF8oInByb2Nlc3Mga25v
+d24gaW5vZGVzIGFuZCBpbm9kZSBkaXNjb3ZlcnkiKSwJCS8qICAzICovCit7Rk1UMSwgTl8oInBy
+b2Nlc3Mga25vd24gaW5vZGVzIGFuZCBpbm9kZSBkaXNjb3ZlcnkiKSwJCS8qICAzICovCiAJJnJw
+dF9mbXRzW0ZNVDFdLCAmcnB0X3R5cGVzW1RZUEVfSU5PREVdfSwKLXtGTVQxLCBfKCJwcm9jZXNz
+IG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzIiksCQkJLyogIDQgKi8KK3tGTVQxLCBOXygicHJvY2Vz
+cyBuZXdseSBkaXNjb3ZlcmVkIGlub2RlcyIpLAkJCS8qICA0ICovCiAJJnJwdF9mbXRzW0ZNVDFd
+LCAmcnB0X3R5cGVzW1RZUEVfQUddfSwKLXtGTVQxLCBfKCJzZXR0aW5nIHVwIGR1cGxpY2F0ZSBl
+eHRlbnQgbGlzdCIpLAkJCS8qICA1ICovCit7Rk1UMSwgTl8oInNldHRpbmcgdXAgZHVwbGljYXRl
+IGV4dGVudCBsaXN0IiksCQkJLyogIDUgKi8KIAkmcnB0X2ZtdHNbRk1UMV0sICZycHRfdHlwZXNb
+VFlQRV9BR119LAote0ZNVDEsIF8oImluaXRpYWxpemUgcmVhbHRpbWUgYml0bWFwIiksCQkJCS8q
+ICA2ICovCit7Rk1UMSwgTl8oImluaXRpYWxpemUgcmVhbHRpbWUgYml0bWFwIiksCQkJLyogIDYg
+Ki8KIAkmcnB0X2ZtdHNbRk1UMV0sICZycHRfdHlwZXNbVFlQRV9CTE9DS119LAote0ZNVDEsIF8o
+InJlc2V0IHJlYWx0aW1lIGJpdG1hcHMiKSwJCQkJLyogIDcgKi8KK3tGTVQxLCBOXygicmVzZXQg
+cmVhbHRpbWUgYml0bWFwcyIpLAkJCQkvKiAgNyAqLwogCSZycHRfZm10c1tGTVQxXSwgJnJwdF90
+eXBlc1tUWVBFX0FHXX0sCi17Rk1UMSwgXygiY2hlY2sgZm9yIGlub2RlcyBjbGFpbWluZyBkdXBs
+aWNhdGUgYmxvY2tzIiksCQkvKiAgOCAqLwore0ZNVDEsIE5fKCJjaGVjayBmb3IgaW5vZGVzIGNs
+YWltaW5nIGR1cGxpY2F0ZSBibG9ja3MiKSwJLyogIDggKi8KIAkmcnB0X2ZtdHNbRk1UMV0sICZy
+cHRfdHlwZXNbVFlQRV9JTk9ERV19LAote0ZNVDEsIF8oInJlYnVpbGQgQUcgaGVhZGVycyBhbmQg
+dHJlZXMiKSwJIAkJLyogIDkgKi8KK3tGTVQxLCBOXygicmVidWlsZCBBRyBoZWFkZXJzIGFuZCB0
+cmVlcyIpLAkgCQkvKiAgOSAqLwogCSZycHRfZm10c1tGTVQxXSwgJnJwdF90eXBlc1tUWVBFX0FH
+XX0sCi17Rk1UMSwgXygidHJhdmVyc2luZyBmaWxlc3lzdGVtIiksCQkJCS8qIDEwICovCit7Rk1U
+MSwgTl8oInRyYXZlcnNpbmcgZmlsZXN5c3RlbSIpLAkJCQkvKiAxMCAqLwogCSZycHRfZm10c1tG
+TVQxXSwgJnJwdF90eXBlc1tUWVBFX0FHXX0sCi17Rk1UMiwgXygidHJhdmVyc2luZyBhbGwgdW5h
+dHRhY2hlZCBzdWJ0cmVlcyIpLAkJCS8qIDExICovCit7Rk1UMiwgTl8oInRyYXZlcnNpbmcgYWxs
+IHVuYXR0YWNoZWQgc3VidHJlZXMiKSwJCS8qIDExICovCiAJJnJwdF9mbXRzW0ZNVDJdLCAmcnB0
+X3R5cGVzW1RZUEVfRElSXX0sCi17Rk1UMiwgXygibW92aW5nIGRpc2Nvbm5lY3RlZCBpbm9kZXMg
+dG8gbG9zdCtmb3VuZCIpLAkJLyogMTIgKi8KK3tGTVQyLCBOXygibW92aW5nIGRpc2Nvbm5lY3Rl
+ZCBpbm9kZXMgdG8gbG9zdCtmb3VuZCIpLAkJLyogMTIgKi8KIAkmcnB0X2ZtdHNbRk1UMl0sICZy
+cHRfdHlwZXNbVFlQRV9JTk9ERV19LAote0ZNVDEsIF8oInZlcmlmeSBhbmQgY29ycmVjdCBsaW5r
+IGNvdW50cyIpLAkJCS8qIDEzICovCit7Rk1UMSwgTl8oInZlcmlmeSBhbmQgY29ycmVjdCBsaW5r
+IGNvdW50cyIpLAkJCS8qIDEzICovCiAJJnJwdF9mbXRzW0ZNVDFdLCAmcnB0X3R5cGVzW1RZUEVf
+SU5PREVdfSwKLXtGTVQxLCBfKCJ2ZXJpZnkgbGluayBjb3VudHMiKSwJCQkJCS8qIDE0ICovCit7
+Rk1UMSwgTl8oInZlcmlmeSBsaW5rIGNvdW50cyIpLAkJCQkvKiAxNCAqLwogCSZycHRfZm10c1tG
+TVQxXSwgJnJwdF90eXBlc1tUWVBFX0lOT0RFXX0KIH07CiAKLS0gCjEuNi4wLjUKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
