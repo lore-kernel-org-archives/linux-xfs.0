@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBFJxXMK001948
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 13:59:33 -0600
-Received: from carme.pld-linux.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D31EE1733AD0
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:59:32 -0800 (PST)
-Received: from carme.pld-linux.org (carme.pld-linux.org [193.239.45.140]) by
-	cuda.sgi.com with ESMTP id Ag3B2P4ZmD4rUriF for
-	<linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 11:59:32 -0800 (PST)
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: [PATCH 1/1] Include ctype.h for tolower(3).
-Date: Mon, 15 Dec 2008 20:59:00 +0100
-Message-Id: <1229371140-105409-1-git-send-email-arekm@maven.pl>
+	mBFLieno009454
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 15:44:41 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B6B622A95
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 13:44:39 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id FlQ74EzPCYwID2lD for
+	<linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 13:44:39 -0800 (PST)
+Date: Mon, 15 Dec 2008 16:44:38 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Include ctype.h for tolower(3).
+Message-ID: <20081215214438.GA5392@infradead.org>
+References: <1229371140-105409-1-git-send-email-arekm@maven.pl>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1229371140-105409-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,31 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-xfs@oss.sgi.com
 
----
- xfsprogs/libxfs/xfs_dir2.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Mon, Dec 15, 2008 at 08:59:00PM +0100, Arkadiusz Miskiewicz wrote:
+> ---
+>  xfsprogs/libxfs/xfs_dir2.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/xfsprogs/libxfs/xfs_dir2.c b/xfsprogs/libxfs/xfs_dir2.c
+> index 71134f8..eab4718 100644
+> --- a/xfsprogs/libxfs/xfs_dir2.c
+> +++ b/xfsprogs/libxfs/xfs_dir2.c
+> @@ -17,6 +17,7 @@
+>   */
+>  
+>  #include <xfs.h>
+> +#include <ctype.h>
 
-diff --git a/xfsprogs/libxfs/xfs_dir2.c b/xfsprogs/libxfs/xfs_dir2.c
-index 71134f8..eab4718 100644
---- a/xfsprogs/libxfs/xfs_dir2.c
-+++ b/xfsprogs/libxfs/xfs_dir2.c
-@@ -17,6 +17,7 @@
-  */
- 
- #include <xfs.h>
-+#include <ctype.h>
- 
- struct xfs_name xfs_name_dotdot = {"..", 2};
- 
--- 
-1.6.0.5
+This file is shared with the kernel, so adding the include here is not
+a good idea.  Can you resubmit it with the include added in
+include/platform_defs.h.in?
 
 _______________________________________________
 xfs mailing list
