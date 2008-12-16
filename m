@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBG6pIJb016812 for <xfs@oss.sgi.com>; Tue, 16 Dec 2008 00:51:19 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3D5D173A30D
-	for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 22:51:17 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id Q75xOdg57WzKWM7D for <xfs@oss.sgi.com>;
-	Mon, 15 Dec 2008 22:51:17 -0800 (PST)
-Message-ID: <49474FE4.2030500@sandeen.net>
-Date: Tue, 16 Dec 2008 00:51:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] fix corruption case for block size < page size
-References: <49435F35.40109@sandeen.net>	<4943FCD7.2010509@sandeen.net>	<494735D9.8020809@sgi.com>	<49473F5C.3070308@sandeen.net>	<49474530.2080809@sgi.com>	<4947466D.7000705@sandeen.net>
-	<494748FA.20404@sandeen.net>
-In-Reply-To: <494748FA.20404@sandeen.net>
+	mBG7rC6Q022690
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Dec 2008 01:53:12 -0600
+Received: from carme.pld-linux.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26EE9173A68C
+	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 23:53:09 -0800 (PST)
+Received: from carme.pld-linux.org (carme.pld-linux.org [193.239.45.140]) by
+	cuda.sgi.com with ESMTP id 6ESXeKPFPzRFE0gn for
+	<linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 23:53:09 -0800 (PST)
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: [PATCH] xfs_quota: Don't ignore every error when asking for quota.
+Date: Tue, 16 Dec 2008 08:53:08 +0100
+Message-Id: <1229413988-212167-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +21,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lachlan@sgi.com
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-Eric Sandeen wrote:
+Errors from quotactl() were silently ignored like:
 
-> Gah; or not.  what is going on here...  Doing just steps 1, 2, 3, 4
-> (ending on the extending truncate):
-> 
-> # xfs_io -c "pwrite -S 0x11 -b 4096 0 4096" -c "mmap -r 0 512" -c "mread
-> 0 512" -c "munmap" -c "truncate 256" -c "truncate 514" -t -d -f
-> /mnt/scratch/testfile
-> 
-> # xfs_bmap -v /mnt/scratch/testfile
-> /mnt/scratch/testfile:
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->    0: [0..0]:          63..63            0 (63..63)             1
->    1: [1..1]:          hole                                     1
-> 
-> It looks like what I expect, at this point.  But then:
-> 
-> # sync
-> # xfs_bmap -v /mnt/scratch/testfile
-> /mnt/scratch/testfile:
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
->    0: [0..1]:          63..64            0 (63..64)             2
-> 
-> Um, why'd that last block get mapped in?  mmap vs. direct IO I'm
-> guessing... w/o the mmap read this does not happen.
+$ xfs_quota -x -c "report -u -L 12000 -U 12001"
+$
 
-Replying to myself twice?  I really need to go to bed.
+Print error messages for conditions other than ENOENT and ENOSYS
+(these two aren't actually errors for the way quotactl is used).
 
-So this all does seem to come back to page_state_convert.
+We now get:
 
-Both the extending write in the original case and the sync above find
-their way there; but esp. in the sync test above, why do we have *any*
-work to do?
+$ ./xfs_quota -x -c "report -u -L 12000 -U 12001"  /home
+XFS_GETQUOTA: Operation not permitted
+XFS_GETQUOTA: Operation not permitted
+$
 
-With a little instrumentation I see that for the truncate out; sync test
-above we get to xfs_vm_writepage() for a page which is *not* dirty, and
-yet we call page_state_convert on it and map in that 2nd block... Is
-that right!?  I guess it is; ->write_cache_pages() clears dirty before
-calling writepage.  Still why would this page be found dirty on this
-path.  Bah.  Bedtime.
+which is consistent with error reporting in rest of quotactl using code.
+---
+ xfsprogs/quota/report.c |   28 ++++++++++++++++++++--------
+ 1 files changed, 20 insertions(+), 8 deletions(-)
 
--Eric
+diff --git a/xfsprogs/quota/report.c b/xfsprogs/quota/report.c
+index 2184158..73248d0 100644
+--- a/xfsprogs/quota/report.c
++++ b/xfsprogs/quota/report.c
+@@ -81,8 +81,11 @@ dump_file(
+ {
+ 	fs_disk_quota_t	d;
+ 
+-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
++	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
++		if (errno != ENOENT && errno != ENOSYS)
++			perror("XFS_GETQUOTA");
+ 		return;
++	}
+ 	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+ 	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+ 	    !d.d_rtb_softlimit && !d.d_rtb_hardlimit)
+@@ -298,8 +301,11 @@ report_mount(
+ 	uint		qflags;
+ 	int		count;
+ 
+-	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
++	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
++		if (errno != ENOENT && errno != ENOSYS)
++			perror("XFS_GETQUOTA");
+ 		return 0;
++	}
+ 
+ 	if (flags & TERSE_FLAG) {
+ 		count = 0;
+@@ -514,8 +520,10 @@ report_any_type(
+ 	if (type & XFS_USER_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_USER_QUOTA, 0, NULL);
++			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
++						XFS_USER_QUOTA, 0, NULL) < 0
++					&& errno != ENOENT && errno != ENOSYS)
++				perror("XFS_QSYNC user quota");
+ 			report_user_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
+@@ -523,8 +531,10 @@ report_any_type(
+ 	if (type & XFS_GROUP_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_GROUP_QUOTA, 0, NULL);
++			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
++						XFS_GROUP_QUOTA, 0, NULL) < 0
++					&& errno != ENOENT && errno != ENOSYS)
++				perror("XFS_QSYNC group quota");
+ 			report_group_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
+@@ -532,8 +542,10 @@ report_any_type(
+ 	if (type & XFS_PROJ_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_PROJ_QUOTA, 0, NULL);
++			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
++						XFS_PROJ_QUOTA, 0, NULL) < 0
++					&& errno != ENOENT && errno != ENOSYS)
++				perror("XFS_QSYNC proj quota");
+ 			report_project_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
+-- 
+1.6.0.5
 
 _______________________________________________
 xfs mailing list
