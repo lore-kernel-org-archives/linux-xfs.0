@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBG51Crm006207 for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 23:01:12 -0600
+	mBG5elP9008712 for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 23:40:48 -0600
 Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7BD951739AF4
-	for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 21:01:11 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DDFF1739D88
+	for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 21:40:45 -0800 (PST)
 Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id xuOHbYTbw3WASDhU for <xfs@oss.sgi.com>;
-	Mon, 15 Dec 2008 21:01:11 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTP id BFC08AAC743
-	for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 23:01:10 -0600 (CST)
-Message-ID: <49473616.1020307@sandeen.net>
-Date: Mon, 15 Dec 2008 23:01:10 -0600
+	with ESMTP id hF8NEHhdFTTeO0AH for <xfs@oss.sgi.com>;
+	Mon, 15 Dec 2008 21:40:45 -0800 (PST)
+Message-ID: <49473F5C.3070308@sandeen.net>
+Date: Mon, 15 Dec 2008 23:40:44 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: xfstests tests not in the auto group; do we know why?
+Subject: Re: [PATCH] fix corruption case for block size < page size
+References: <49435F35.40109@sandeen.net> <4943FCD7.2010509@sandeen.net>
+	<494735D9.8020809@sgi.com>
+In-Reply-To: <494735D9.8020809@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +28,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: lachlan@sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Of the tests that are not in the auto group, do we know why they are not?
+Lachlan McIlroy wrote:
+> I'm still working through this Eric so I don't fully understand what's 
+> going on.
+> 
+> It looks to me like the region was never zeroed at all.  In
+> xfs_zero_last_block() we only zero up to the end of the last block
+> (hence the name) but if the last page extends beyond that last
+> block we wont zero that extra space in the page.  If that remaining
+> space in the page sits over a hole then xfs_zero_eof() wont zero it
+> either.
 
-022: # Test out a level 0 dump/restore to a tape of a subdir
-023: # To test xfsdump/restore to tape using a directory with
-024: # Test out incremental dumps
-025: # Test dump/restore using -m option (min strategy)
-036: # Test xfsdump/restore minrmt to a remote IRIX tape
-037: # Test xfsdump/restore minrmt to a remote linux tape
-038: # Test xfsdump/restore to a remote linux tape
-039: # Test xfsdump/restore to a remote IRIX tape
-043: # Test out xfsdump/restore but rmv inventory prior to restore.
-055: # Test xfsdump/restore to a remote IRIX tape using RMT user
-059: # place holder for IRIX 059 test for xfsdump/xfsrestore multi streams
-060: # place holder for IRIX 060 test for xfsdump/xfsrestore multi streams
-064: # test multilevel dump and restores with hardlinks
-071: # Exercise IO at large file offsets.
-080: # rwtest (iogen|doio)
-085: # To test log replay by shutdown of file system
-086: # To test log replay with version 2 logs
-087: # like 086 but want to create more/different kinds of metadata
-098: # simple attr tests for EAs:
-101: # This tests mkfs_udf with -s [SIZE] option.
-102: # This tests mkfs_udf/mkudffs and the device detection code
-104: # XFS online growfs-while-allocating tests (data subvol variant)
-106: # Exercise basic xfs_quota functionality (user/group/project quota)
-107: # Project quota.
-108: # Simple quota accounting test for direct/buffered/mmap IO.
-109: # ENOSPC deadlock case from Asano Masahiro.
-110: # Incorrect dir2 freetab warning case from Masanori Tsuda.
-111: # Infinite xfs_bulkstat bad-inode loop case from Roger Willcocks.
-113: # aio-stress
-114: # Test some parent ptr stuff
-115: # Test out xfs_repair_ipaths
-116: # Test out resetting of sb_qflags when mounting with no quotas
-after having mounted with quotas.
-118: # To test out pv#940675 crash in xfs_trans_brelse + quotas
-119: # Leaking reservation space in the GRH
-133: # Concurrent I/O to same file to ensure no deadlocks
-136: # Test the attr2 code
+So the testcase steps are (8 blocks per page here).
 
+1: |1111|1111|1111|1111|1111|1111|1111|1111|     write 1's
 
-udf tests are probably not auto out of principle? :)
-071 fails/hangs on some platforms IIRC
-104 hangs ...
-"parent" requires code not committed(?)
-"tape" group requires... tape so not auto?
+2: |RRRR|1111|1111|1111|1111|1111|1111|1111|     mapread first block
 
-# auto - tests to be run as part of nightly qa
+     |<--------trunc-----------------------
+3: |1100|                                        trunc down to 1/2 block
 
-I'm not sure what that means; is this group always supposed to pass?  If
-so there are filestreams tests that don't, for example.  Maybe "tests
-that don't hang?"
+ trunc-->|
+4: |1100|                                        trunc up to block+1byte
 
-I wonder if it'd be worth documenting this a bit, and have a group which
-should always run & pass on the core architectures.  (and for those that
-don't pass, do a bit of documentation on why they don't?)
+5: |    |    |    |    |2222|                    write 2's (extending)
+
+And we get:
+
+# |1100|0000|1111|1111|2222|----|----|----|
+
+But we should get:
+
+# |1100|HHHH|HHHH|HHHH|2222|----|----|----|
+
+(where "H" means hole)
+
+So no, the data for blocks 1,2,3 is never zeroed, nor should it be, I
+think - we never partially write those blocks.  And the stale 1's coming
+through in blocks 2 & 3 are not the result of non-zero buffer heads
+getting written to disk in the last stage; they are simply stale disk
+blocks from the first step mapped back into the file.  (They were
+originally written as 1's in the first step.)
+
+> In your example above the last write extends the file size from 513
+> bytes to 2048 bytes.  In xfs_zero_last_block() we'll only zero from
+> 513 up to 1024 bytes (ie up to the end of the last block) but leave
+> the rest of the page untouched.  
+
+Actually; after the truncate down step (3) we should have:
+
+     |<--------trunc-----------------------
+3: |11??|                                       trunc down to 1/2 block
+     ^
+     |
+    EOF
+
+Hm, but does the end of this block get zeroed now or only when we
+subsequently extend the size?  The latter I think...?
+
+So I think in the next step:
+
+ trunc-->|
+4: |1100|                                        trunc up to block+1byte
+      ^^
+  now || this part of the block gets zeroed, right, by xfs_zero_eof?
+
+> Because of the truncate to 256 bytes
+> only the first block is allocated and everything beyond 512 bytes is
+> a hole.  
+
+Yep, up until the last write anyway.
+
+> More specifically there is a hole under the remainder of the
+> page so xfs_zero_eof() will skip that region and not zero anything.
+
+Well, the last write (step 5) is still completely within the page...
+
+Right, that's what it *should* be doing; but in page_state_convert (and
+I'll admit to not having this 100% nailed down) we write block 1 and map
+blocks 2 & 3 back into the file, and get:
+
+# |1100|0000|1111|1111|2222|----|----|----|
+             ^^^^ ^^^^
+where these  |||| |||| blocks are stale data, and block 1 is written
+(but at least zeroed).  How block 1 got zeroed I guess I'm not quite
+certain yet.  But it does not appear that blocks 2 and 3 get *written*
+any time other than step 1; blktrace seems to confirm this.  block 1
+does get written, and 0s are written.  (But I don't think this block
+ever should get written either; EOF landed there but only via truncate,
+not a write).
+
+Crap, now you've got me slightly confused again, and I'll need to look a
+bit more to be sure I'm 100% clear on what's getting zeroed and when vs.
+what's getting mapped and why.  :)
 
 -Eric
+
 
 _______________________________________________
 xfs mailing list
