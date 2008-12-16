@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBG4krJ9004895
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 22:46:53 -0600
-Received: from sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90AB31739ABF
-	for <linux-xfs@oss.sgi.com>; Mon, 15 Dec 2008 20:46:51 -0800 (PST)
-Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
-	with ESMTP id QqH9Cfvnf60dpeQb for <linux-xfs@oss.sgi.com>;
-	Mon, 15 Dec 2008 20:46:51 -0800 (PST)
-Message-ID: <494732BB.1070905@sandeen.net>
-Date: Mon, 15 Dec 2008 22:46:51 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	mBG4xFsG005960 for <xfs@oss.sgi.com>; Mon, 15 Dec 2008 22:59:15 -0600
+Message-ID: <494735D9.8020809@sgi.com>
+Date: Tue, 16 Dec 2008 16:00:09 +1100
+From: Lachlan McIlroy <lachlan@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/6] xfs_quota: Return non zero exit status in
-	error	conditions.
-References: <1229369386-66312-1-git-send-email-arekm@maven.pl>	<1229369386-66312-2-git-send-email-arekm@maven.pl>	<1229369386-66312-3-git-send-email-arekm@maven.pl>
-	<1229369386-66312-4-git-send-email-arekm@maven.pl>
-In-Reply-To: <1229369386-66312-4-git-send-email-arekm@maven.pl>
+Subject: Re: [PATCH] fix corruption case for block size < page size
+References: <49435F35.40109@sandeen.net> <4943FCD7.2010509@sandeen.net>
+In-Reply-To: <4943FCD7.2010509@sandeen.net>
+Reply-To: lachlan@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +18,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-QXJrYWRpdXN6IE1pc2tpZXdpY3ogd3JvdGU6Cj4gUGF0Y2ggYnkgQXJrYWRpdXN6IE1pxZtraWV3
-aWN6IDxhcmVrbUBtYXZlbi5wbD4uCj4gLS0tCj4gIHhmc3Byb2dzL3F1b3RhL2VkaXQuYyAgICB8
-ICAgNDUgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tCj4gIHhm
-c3Byb2dzL3F1b3RhL2ZyZWUuYyAgICB8ICAgIDUgKysrKysKPiAgeGZzcHJvZ3MvcXVvdGEvcHJv
-amVjdC5jIHwgICAyOSArKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLQo+ICB4ZnNwcm9ncy9x
-dW90YS9xdW90YS5jICAgfCAgICA0ICsrKysKPiAgeGZzcHJvZ3MvcXVvdGEvcmVwb3J0LmMgIHwg
-ICAgMSArCj4gIHhmc3Byb2dzL3F1b3RhL3N0YXRlLmMgICB8ICAgIDQgKysrKwo+ICB4ZnNwcm9n
-cy9xdW90YS91dGlsLmMgICAgfCAgICAyICsrCj4gIDcgZmlsZXMgY2hhbmdlZCwgNjggaW5zZXJ0
-aW9ucygrKSwgMjIgZGVsZXRpb25zKC0pCj4gCgpTZWVtcyBnb29kOyBJIHNob3VsZCBwcm9iYWJs
-eSBleWViYWxsIGluIHh4ZGlmZiB3aGVuIEkgZ2V0IHRvIG15IGJpZ2dlcgpzY3JlZW4gOikgIFRo
-ZSB4ZnN0ZXN0cyAicXVvdGEiIGdyb3VwIHBhc3NlcyBmaW5lIGZvciBtZSB3aXRoIHRoaXMgYW5k
-CnRoZSBvdGhlcnMgaW4gcGxhY2UuICBJIGFsc28gdGVzdC1idWlsdCB0aGlzICYgdGhlIG90aGVy
-IHBhdGNoZXMgb24gYWxsCmNvcmUgZmVkb3JhIHBsYXRmb3JtcyAoeDg2LCB4ODZfNjQsIHBwYywg
-cHBjNjQpIHdpdGggbm8gcHJvYmxlbXMuCgotRXJpYwoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Eric Sandeen wrote:
+> Eric Sandeen wrote:
+>> On a 4k page system and 512-byte blocksize, this:
+>>
+>> xfs_io \
+>> -c "pwrite -S 0x11 -b 4096 0 4096" \
+>> -c "mmap -r 0 512" -c "mread 0 512" -c "munmap" \
+>> -c "truncate 256" \
+>> -c "truncate 513" \
+>> -c "pwrite -S 0x22 -b 512 2048 512" \
+>> -t -d -f testfile
+> 
+> Not to keep belaboring the point, but if anyone reviews this here's a
+> bit more info.
+> 
+> If I blktrace the testcase it looks like this:
+> 
+> 8,16  0   1   0.000000000  4222  C   W 166979666 + 8 [0] 4k wr
+> 8,16  0   2   0.000367043  4222  C   R 166979666 + 8 [0] 4k map rd
+> 8,16  0   3   0.002923548  4222  C   N (35 00 ..) [0]
+> 8,16  0   4   0.003108924  4222  C   W 200708307 + 9 [0] Log?(trunc)
+> 8,16  0   5   0.020357902  4222  C   N (35 00 ..) [0]
+> 8,16  0   6   0.020361434  4222  C   W 200708307 + 9 [0] Log?(trunc)
+> 8,16  0   7   0.020745509  4222  C   W 166979666 + 1 [0] 512 wr @0
+> 8,16  0   8   0.020940005  4222  C   W 166979667 + 1 [0] 512 wr @1
+> 8,16  0   9   0.021172749  4222  C   W 166979670 + 1 [0] 512 wr @4
+> 
+> and a detailed look at the data on disk is this:
+> 
+> 00000000  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  Block 0(OK)
+> *
+> 00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  Block 0...
+> *
+> 00000200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  Block 1(OK)
+> *
+> 00000400  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  Block 2(BAD)
+> *
+> 00000600  11 11 11 11 11 11 11 11  11 11 11 11 11 11 11 11  Block 3(BAD)
+> *
+> 00000800  22 22 22 22 22 22 22 22  22 22 22 22 22 22 22 22  Block 4(OK)
+> *
+> 00000a00
+> 
+> And the bmap information is this:
+> 
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+>    0: [0..4]:          56..60            0 (56..60)             5
+> 
+> So the bad data in blocks 2 and 3 were never rewritten; the buffer heads
+> probably were fine (containing 0's, but I should check) and we simply
+> re-mapped blocks 2 and 3 back into existence, along with their stale
+> data, it seems.
+> 
+> So I think this was just a bad mapping decision, and not a buffer head
+> state/zeroing problem...?
+I'm still working through this Eric so I don't fully understand what's 
+going on.
+
+It looks to me like the region was never zeroed at all.  In
+xfs_zero_last_block() we only zero up to the end of the last block
+(hence the name) but if the last page extends beyond that last
+block we wont zero that extra space in the page.  If that remaining
+space in the page sits over a hole then xfs_zero_eof() wont zero it
+either.
+
+In your example above the last write extends the file size from 513
+bytes to 2048 bytes.  In xfs_zero_last_block() we'll only zero from
+513 up to 1024 bytes (ie up to the end of the last block) but leave
+the rest of the page untouched.  Because of the truncate to 256 bytes
+only the first block is allocated and everything beyond 512 bytes is
+a hole.  More specifically there is a hole under the remainder of the
+page so xfs_zero_eof() will skip that region and not zero anything.
+
+> 
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
