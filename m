@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBGNEg2o023124 for <xfs@oss.sgi.com>; Tue, 16 Dec 2008 17:14:42 -0600
-Date: Wed, 17 Dec 2008 10:14:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Message-ID: <20081216231411.GG32301@disturbed>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
-	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-	<20081215223857.GF32301@disturbed>
-	<200812161039.07700.Martin@lichtvoll.de>
+	mBHEKUCP023871 for <xfs@oss.sgi.com>; Wed, 17 Dec 2008 08:20:32 -0600
+Date: Wed, 17 Dec 2008 09:20:28 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Use the incore inode size in xfs_file_readdir()
+Message-ID: <20081217142028.GA22023@infradead.org>
+References: <49377FBC.5020501@sgi.com> <20081204070827.GB29531@infradead.org>
+	<49389E8F.5000301@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <200812161039.07700.Martin@lichtvoll.de>
+In-Reply-To: <49389E8F.5000301@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,61 +19,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com, Linux RAID <linux-raid@vger.kernel.org>Linux XFS <xfs@oss.sgi.com>
+To: Lachlan McIlroy <lachlan@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-T24gVHVlLCBEZWMgMTYsIDIwMDggYXQgMTA6Mzk6MDdBTSArMDEwMCwgTWFydGluIFN0ZWlnZXJ3
-YWxkIHdyb3RlOgo+IEFtIE1vbnRhZyAxNSBEZXplbWJlciAyMDA4IHNjaHJpZWIgRGF2ZSBDaGlu
-bmVyOgo+ID4gT24gU3VuLCBEZWMgMTQsIDIwMDggYXQgMTA6MDI6MDVQTSArMDAwMCwgUGV0ZXIg
-R3JhbmRpIHdyb3RlOgo+ID4gPiBUaGUgcHVycG9zZSBvZiBiYXJyaWVycyBpcyB0byBndWFyYW50
-ZWUgdGhhdCByZWxldmFudCBkYXRhIGlzCj4gPiA+IGtub3duIHRvIGJlIG9uIHBlcnNpc3RlbnQg
-c3RvcmFnZSAoa2luZCBvZiBoYXJkd2FyZSAnZnN5bmMnKS4KPiA+ID4KPiA+ID4gSW4gZWZmZWN0
-IHdyaXRlIGJhcnJpZXIgbWVhbnMgInRlbGwgbWUgd2hlbiByZWxldmFudCBkYXRhIGlzIG9uCj4g
-PiA+IHBlcnNpc3RlbnQgc3RvcmFnZSIsIG9yIGxlc3MgcHJlY2lzZWx5ICJmbHVzaC9zeW5jIHdy
-aXRlcyBub3cKPiA+ID4gYW5kIHRlbGwgbWUgd2hlbiBpdCBpcyBkb25lIi4gUHJvcGVydGllcyBh
-cyB0byBvcmRlcmluZyBhcmUganVzdAo+ID4gPiBhIHNpZGUgZWZmZWN0Lgo+ID4KPiA+IE5vLCB0
-aGF0IGlzIGluY29ycmVjdC4KPiA+Cj4gPiBCYXJyaWVycyBwcm92aWRlIHN0cm9uZyBvcmRlcmlu
-ZyBzZW1hbnRpY3MuICBJL09zIGlzc3VlZCBiZWZvcmUgdGhlCj4gPiBiYXJyaWVyIG11c3QgYmUg
-Y29tcGxldGVkIGJlZm9yZSB0aGUgYmFycmllciBJL08sIGFuZCBJL09zIGlzc3VlZAo+ID4gYWZ0
-ZXIgdGhlIGJhcnJpZXIgd3JpdGUgbXVzdCBub3QgYmUgc3RhcnRlZCBiZWZvcmUgdGhlIGJhcnJp
-ZXIgd3JpdGUKPiA+IGNvbXBsZXRlcy4gVGhlIGVsZXZhdG9ycyBhcmUgbm90IGFsbG93ZWQgdG8g
-cmUt0L5yZGVyIEkvT3MgYXJvdW5kCj4gPiBiYXJyaWVycy4KPiA+Cj4gPiBUaGlzIGlzIGFsbCBk
-b2N1bWVudGVkIGluIERvY3VtZW50YXRpb24vYmxvY2svYmFycmllci50eHQuIFBsZWFzZQo+ID4g
-cmVhZCBpdCBiZWNhdXNlIG1vc3Qgb2Ygd2hhdCB5b3UgYXJlIHNheWluZyBhcHBlYXJzIHRvIGJl
-IGJhc2VkIG9uCj4gPiBpbmNvcnJlY3QgYXNzdW1wdGlvbnMgYWJvdXQgd2hhdCBiYXJyaWVycyBk
-by4KPiAKPiBIbW1tLCBzbyBJIGFtIG5vdCBjb21wbGV0ZWx5IG9mZiB0cmFjayBpdCBzZWVtcyA7
-LSkuCj4gCj4gV2hhdCBJIHN0aWxsIGRvIG5vdCB1bmRlcnN0YW5kIHRoZW4gaXM6IEhvdyBjYW4g
-d3JpdGUgYmFycmllcnMgKyB3cml0ZSAKPiBjYWNoZSBiZSBzbG93ZXIgdGhhbiBubyB3cml0ZSBi
-YXJyaWVycyArIG5vIGNhY2hlPwoKQmVjYXVzZSBmcmVxdWVudCB3cml0ZSBiYXJyaWVycyBjYXVz
-ZSBvcmRlcmluZyBjb25zdHJhaW50cyBvbiBJL08uCkZvciBleGFtcGxlLCBpbiBYRlMgbG9nIEkv
-T3MgYXJlIHNlcXVlbnRpYWwuIFdpdGggYmFycmllcnMgZW5hYmxlZAp0aGV5IGNhbm5vdCBiZSBt
-ZXJnZWQgYnkgdGhlIGVsZXZhdG9yLCB3aGVyZWFzIHdpdGhvdXQgYmFycmllcnMKdGhleSBjYW4g
-YmUgbWVyZ2VkIGFuZCBpc3N1ZWQgYXMgYSBzaW5nbGUgSS9PLgoKRnVydGhlciwgaWYgeW91IGhh
-dmUgbm8gYmFycmllciBJL29zIHF1ZXVlZCBpbiB0aGUgZWxldmF0b3IsIHNvcnRpbmcKYW5kIG1l
-cmdpbmcgb2NjdXJzIGFjcm9zcyB0aGUgZW50aXJlIHF1ZXVlIG9mIEkvT3MsIG5vdCBqdXN0IHRo
-ZQpJL09zIHRoYXQgaGF2ZSBiZWVuIGlzc3VlZCBhZnRlciB0aGUgbGFzdCBiYXJyaWVyIEkvTy4K
-CkVmZmVjdGl2ZWx5IHRoZSBvcmRlcmluZyBjb25zdHJhaW50cyBvZiBiYXJyaWVycyBpbnRyb2R1
-Y2UgbW9yZQpzZWVrcyBieSByZWR1Y2luZyB0aGUgZWZmaWNpZW5jeSBvZiB0aGUgZWxldmF0b3Ig
-ZHVlIHRvIGNvbnN0cmFpbmluZwpzb3J0aW5nIGFuZCBtZXJnaW5nIHJhbmdlcy4KCkluIG1hbnkg
-Y2FzZXMsIHRoZSBvcmRlcmluZyBjb25zdHJhaW50cyBpbXBvc2UgYSBoaWdoZXIgc2VlayBwZW5h
-bHR5CnRoYW4gdGhlIHdyaXRlIGNhY2hlIGNhbiBtaXRpZ2F0ZSAtIHRoZSB3aG9sZSBwdXJwb3Nl
-IG9mIHRoZSBiYXJyaWVyCklPcyBpcyB0byBmb3JjZSB0aGUgY2FjaGUgdG8gYmUgZmx1c2hlZCAt
-IHNvIHdyaXRlIGNhY2hpbmcgZG9lcyBub3QKaW1wcm92ZSBwZXJmb3JtYW5jZSB3aGVuIGZyZXF1
-ZW50IGJhcnJpZXJzIGFyZSBpc3N1ZWQuIEluIHRoaXMgY2FzZSwKYmFycmllcnMgYXJlIHRoZSBw
-cm9ibGVtIGFuZCBoZW5jZSB0dXJuaW5nIG9mIHRoZSBjYWNoZSBhbmQgYmFycmllcnMKd2lsbCBy
-ZXN1bHQgaW4gaGlnaGVyIHBlcmZvcm1hbmNlLgoKCgo+IEkgc3RpbGwgd291bGQgZXhwZWN0IAo+
-IHdyaXRlIGJhcnJpZXJzICsgd3JpdGUgY2FjaGUgYmUgaW4gYmV0d2VlbiBubyBiYXJyaWVycyAr
-IHdyaXRlIGNhY2hlIGFuZCAKPiBubyBiYXJyaWVycyArIG5vIGNhY2hlIHBlcmZvcm1hbmNlIHdp
-c2UuCgpEZXBlbmRzIGVudGlyZWx5IG9uIHRoZSBkaXNrIGFuZCB0aGUgd29ya2xvYWQuIFNvbWUg
-ZGlza3MgYXJlIGZhc3Rlcgp3aXRoIHdjYWNoZSBhbmQgYmFycmllcnMgKGUuZy4gbGFwdG9wIGRy
-aXZlcyksIHNvbWUgYXJlIGZhc3RlciB3aXRoCm5vIHdjYWNoZSBhbmQgbm8gYmFycmllcnMgKGUu
-Zy4gc2VydmVyIGRyaXZlcykuLi4uCgo+IEFuZCB3b3VsZCBzZWUgYW55dGhpbmcgZWxzZSBhcyBh
-IAo+IHJlZ3Jlc3Npb24gYmFzaWNhbGx5LgoKTm8sIGp1c3QgeW91ciB1c3VhbCAicGljayB0aGUg
-cmlnaHQgaGFyZHdhcmUiIHByb2JsZW0uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVy
-CmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Fri, Dec 05, 2008 at 02:22:55PM +1100, Lachlan McIlroy wrote:
+> Christoph Hellwig wrote:
+> > On Thu, Dec 04, 2008 at 05:59:08PM +1100, Lachlan McIlroy wrote:
+> >> We should be using the incore inode size here not the linux inode
+> >> size.  The incore inode size is always up to date for directories
+> >> whereas the linux inode size is not updated for directories.
+> >>
+> >> We've hit assertions in xfs_bmap() and traced it back to the linux
+> >> inode size being zero here but the incore size being correct.
+> > 
+> > Heh. Looks good, but you can still call ->readdir with a 0 inode size,
+> > so you might want to check for that (actualyl I think other pathes
+> > are goign to take care of it, but..)
+> 
+> What if we remove bufsize and pass PAGE_SIZE into xfs_readdir()?
+> No need to worry about a 0 inode size.
+
+It is used for sizing a memory allocation in xfs_dir2_leaf_getdents, and
+avoiding over-allocations for small directories seems like a good idea.
+
+So please go ahead with your original patch.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
