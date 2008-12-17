@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBHLe8P6015230 for <xfs@OSS.SGI.com>; Wed, 17 Dec 2008 15:40:09 -0600
-Received: from partygirl.tmr.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57E142DDE1
-	for <xfs@OSS.SGI.com>; Wed, 17 Dec 2008 13:40:06 -0800 (PST)
-Received: from partygirl.tmr.com (mail.tmr.com [64.65.253.246]) by
-	cuda.sgi.com with ESMTP id pWH1rADYM7J1JIZo for
-	<xfs@OSS.SGI.com>; Wed, 17 Dec 2008 13:40:06 -0800 (PST)
-Message-ID: <494971B2.1000103@tmr.com>
-Date: Wed, 17 Dec 2008 16:40:02 -0500
-From: Bill Davidsen <davidsen@tmr.com>
+	mBHNLOQ7019756 for <xfs@oss.sgi.com>; Wed, 17 Dec 2008 17:21:25 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BED7D2DEC8
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2008 15:21:23 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id Wj5GFcHo5tVdWqUA for
+	<xfs@oss.sgi.com>; Wed, 17 Dec 2008 15:21:23 -0800 (PST)
+Date: Wed, 17 Dec 2008 18:21:22 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Have the velociraptors in a test system now, checkout the errors.
+In-Reply-To: <4949645F.4030407@tmr.com>
+Message-ID: <alpine.DEB.1.10.0812171820200.26527@p34.internal.lan>
+References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan>
+	<49405A94.8080601@tmr.com> <1229225303.16555.149.camel@localhost>
+	<4949645F.4030407@tmr.com>
 MIME-Version: 1.0
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>	<1229225480.16555.152.camel@localhost>	<18757.4606.966139.10342@tree.ty.sabi.co.uk>	<200812141912.59649.Martin@lichtvoll.de>
-	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-In-Reply-To: <18757.33373.744917.457587@tree.ty.sabi.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +29,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux XFS <xfs@oss.sgi.com>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org, smartmontools-support@lists.sourceforge.net, Redeeman <redeeman@metanurb.dk>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Peter Grandi wrote:
-> Unfortunately that seems the case.
+
+
+On Wed, 17 Dec 2008, Bill Davidsen wrote:
+
+> Redeeman wrote:
+>> On Wed, 2008-12-10 at 19:11 -0500, Bill Davidsen wrote:
+>> 
+>>> Justin Piszcz wrote:
+>>> 
 >
-> The purpose of barriers is to guarantee that relevant data is
-> known to be on persistent storage (kind of hardware 'fsync').
+> Calls itself "WDC WD10EACS-00D" in /sys if that helps. I could dig out the 
+> packing slip if it matters. Runs nicely so far, and if the SMART temperature 
+> probe is correct, very cool:
 >
-> In effect write barrier means "tell me when relevant data is on
-> persistent storage", or less precisely "flush/sync writes now
-> and tell me when it is done". Properties as to ordering are just
-> a side effect.
->   
+> /dev/sda: ST3750640AS: 43 C
+> /dev/sdb: WDC WD10EACS-00D6B1: 31 C
+> /dev/sdc: ST3750640AS: 44 C
+> /dev/sdd: ST3750640AS: 46 C
+>
+> I don't totally trust the temps, there is a LOT of 18C air going into that 
+> box, because it has a lot coming out the back and side.
 
-I don't get that sense from the barriers stuff in Documentation, in fact 
-I think it's essentially a pure ordering thing, I don't even see that it 
-has an effect of forcing the data to be written to the device, other 
-than by preventing other writes until the drive writes everything. So we 
-read the intended use differently.
+Hmm do you have a picture of those seagates? Seems like a lack of airflow there
+or do they just run really hot?  Also, how many head unload/loads has the
+1.0TB GP drive performed, that was one of my concerns when I was looking at
+disks.
 
-What really bothers me is that there's no obvious need for barriers at 
-the device level if the file system is just a bit smarter and does it's 
-own async io (like aio_*), because you can track writes outstanding on a 
-per-fd basis, so instead of stopping the flow of data to the drive, you 
-can just block a file descriptor and wait for the count of outstanding 
-i/o to drop to zero. That provides the order semantics of barriers as 
-far as I can see, having tirelessly thought about it for ten minutes or 
-so. Oh, and did something very similar decades ago in a long-gone 
-mainframe OS.
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+Justin.
 
 _______________________________________________
 xfs mailing list
