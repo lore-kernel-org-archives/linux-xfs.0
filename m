@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBI9tIOM012569 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 03:55:19 -0600
-Received: from qb-out-1314.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCC8B2F0CA
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 01:55:17 -0800 (PST)
-Received: from qb-out-1314.google.com (qb-out-1314.google.com [72.14.204.168])
-	by cuda.sgi.com with ESMTP id S1fMMNPUBQBOTdJT for
-	<xfs@oss.sgi.com>; Thu, 18 Dec 2008 01:55:17 -0800 (PST)
-Received: by qb-out-1314.google.com with SMTP id e19so187810qba.8
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 01:55:17 -0800 (PST)
-Message-ID: <494A1DE3.5090203@ankitjain.org>
-Date: Thu, 18 Dec 2008 15:24:43 +0530
-From: Ankit Jain <me@ankitjain.org>
+	mBIFum6c030005 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 09:56:48 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 75A9B8F80AF
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 07:56:44 -0800 (PST)
+Received: from lnx-billodo.americas.sgi.com (lnx-billodo.americas.sgi.com
+	[128.162.232.245])
+	by estes.americas.sgi.com (Postfix) with ESMTP id D8A4870001C8
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 09:56:43 -0600 (CST)
+Date: Thu, 18 Dec 2008 10:02:24 -0600
+From: "Bill O'Donnell" <billodo@sgi.com>
+Subject: testing
+Message-ID: <20081218160224.GD18110@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH][RFC] fs: Add new pre-allocation ioctls to vfs for
-	compatibility with legacy xfs ioctls
-References: <49460F88.2080408@ankitjain.org>
-	<9D2593C9-08EB-486C-AAF5-E83A1EAEE9B9@sgi.com>
-In-Reply-To: <9D2593C9-08EB-486C-AAF5-E83A1EAEE9B9@sgi.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,24 +27,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Felix Blyakher <felixb@sgi.com>
-Cc: mfasheh@suse.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: xfs@sgi.com
 
-Felix Blyakher wrote:
-> 
->> This patch adds ioctls to vfs for compatibility with legacy XFS
->> pre-allocation ioctls (XFS_IOC_*RESVP*). The implementation
->> effectively invokes sys_fallocate for the new ioctls.
-> 
-> I don't think we can use sys_fallocate for XFS_IOC_UNRESVSP*
-> commands, which suppose to release currently allocated file
-> blocks.
-> See more comments below.
+sfsf
 
-My bad :( I'll drop the *UNRESV* completely from the new ioctl and
-post an updated patch.
-
--Ankit
+-- 
+Bill O'Donnell
+SGI
+billodo@sgi.com
 
 _______________________________________________
 xfs mailing list
