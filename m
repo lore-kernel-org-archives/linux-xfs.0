@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBI8KCKJ008697 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 02:20:12 -0600
-Received: from out1.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44084300E7
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 00:20:10 -0800 (PST)
-Received: from out1.smtp.messagingengine.com (out1.smtp.messagingengine.com
-	[66.111.4.25]) by cuda.sgi.com with ESMTP id 34bVnAwV0jT37wPv
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 00:20:10 -0800 (PST)
-Message-ID: <494A07BA.1080008@mailcan.com>
-Date: Thu, 18 Dec 2008 09:20:10 +0100
-From: Leon Woestenberg <leonw@mailcan.com>
+	mBIDgKfw022174 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 07:42:21 -0600
+Received: from qb-out-1314.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9F531BF564F
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 05:42:18 -0800 (PST)
+Received: from qb-out-1314.google.com (qb-out-1314.google.com [72.14.204.170])
+	by cuda.sgi.com with ESMTP id 7398FjWerUJdQZaz for
+	<xfs@oss.sgi.com>; Thu, 18 Dec 2008 05:42:18 -0800 (PST)
+Received: by qb-out-1314.google.com with SMTP id e19so232823qba.8
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 05:42:18 -0800 (PST)
+Message-ID: <494A1B69.70300@ankitjain.org>
+Date: Thu, 18 Dec 2008 15:14:09 +0530
+From: Ankit Jain <me@ankitjain.org>
 MIME-Version: 1.0
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>	<1229225480.16555.152.camel@localhost>	<18757.4606.966139.10342@tree.ty.sabi.co.uk>	<200812141912.59649.Martin@lichtvoll.de>	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-	<494971B2.1000103@tmr.com>
-In-Reply-To: <494971B2.1000103@tmr.com>
-Content-Disposition: inline
+Subject: Re: [PATCH][RFC] fs: Add new pre-allocation ioctls to vfs for
+	compatibility with legacy xfs ioctls
+References: <49460F88.2080408@ankitjain.org>
+	<20081217202815.GE8791@wotan.suse.de>
+In-Reply-To: <20081217202815.GE8791@wotan.suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +31,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
+To: Mark Fasheh <mfasheh@suse.com>
+Cc: linux-kernel@vger.kernel.org, joel.becker@oracle.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-Hello all,
+Mark Fasheh wrote:
+>> 2. Should the corresponding ioctls be removed from ocfs2?
+> 
+> Well, a small amount of the code in fs/ocfs2/ioctl.c can certainly go away.
+> Shouldn't we be talking about doing the same for xfs too?
 
-Bill Davidsen wrote:
-> Peter Grandi wrote:
->   
->> Unfortunately that seems the case.
+Yep. I'll cook up cleanup patches for these two and post them.
+
+-Ankit
+
+> 
+> 
+>> Signed-off-by: Ankit Jain <me@ankitjain.org>
+>> ---
+>>  fs/ioctl.c             |   37 +++++++++++++++++++++++++++
+>>  fs/open.c              |   51 ++++++++++++++++++-------------------
+>>  include/linux/falloc.h |   19 ++++++++++++++
+>>  include/linux/fs.h     |    2 +
+>>  4 files changed, 83 insertions(+), 26 deletions(-)
 >>
->> The purpose of barriers is to guarantee that relevant data is
->> known to be on persistent storage (kind of hardware 'fsync').
->>
->> In effect write barrier means "tell me when relevant data is on
->> persistent storage", or less precisely "flush/sync writes now
->> and tell me when it is done". Properties as to ordering are just
->> a side effect.
->>   
->>     
->
-> I don't get that sense from the barriers stuff in Documentation, in fact 
-> I think it's essentially a pure ordering thing, I don't even see that it 
-> has an effect of forcing the data to be written to the device, other 
-> than by preventing other writes until the drive writes everything. So we 
-> read the intended use differently.
->
-> What really bothers me is that there's no obvious need for barriers at 
-> the device level if the file system is just a bit smarter and does it's 
-> own async io (like aio_*), because you can track writes outstanding on a 
-> per-fd basis, so instead of stopping the flow of data to the drive, you 
-> can just block a file descriptor and wait for the count of outstanding 
-> i/o to drop to zero. That provides the order semantics of barriers as 
-> far as I can see, having tirelessly thought about it for ten minutes or 
-> so. Oh, and did something very similar decades ago in a long-gone 
-> mainframe OS.
->   
-Did that mainframe OS have re-ordering devices? If it did, you'ld still 
-need barriers all the way down:
-
-The drive itself may still re-order writes, thus can cause corruption if 
-halfway the power goes down.
- From my understanding, disabling write-caches simply forces the drive 
-to operate in-order.
-
-Barriers need to travel all the way down to the point where-after 
-everything remains in-order.
-Devices with write-cache enabled will still re-order, but not across 
-barriers (which are implemented as
-either a single cache flush with forced unit access, or a double cache 
-flush around the barrier write).
-
-Whether the data has made it to the drive platters is not really 
-important from a barrier point of view, however,
-iff part of the data made it to the platters, then we want to be sure it 
-was in-order.
-
-Because only in this way can we ensure that the data that is on the 
-platters is consistent.
-
-Regards,
-
-Leon.
-
-
-
-[[HTML alternate version deleted]]
+>> diff --git a/fs/ioctl.c b/fs/ioctl.c
+>> index 43e8b2c..5e565c8 100644
+>> --- a/fs/ioctl.c
+>> +++ b/fs/ioctl.c
+>> @@ -15,6 +15,7 @@
+>>  #include <linux/uaccess.h>
+>>  #include <linux/writeback.h>
+>>  #include <linux/buffer_head.h>
+>> +#include <linux/falloc.h>
+>>  
+>>  #include <asm/ioctls.h>
+>>  
+>> @@ -346,6 +347,37 @@ EXPORT_SYMBOL(generic_block_fiemap);
+>>  
+>>  #endif  /*  CONFIG_BLOCK  */
+>>  
+>> +/*
+>> + * This provides compatibility with legacy XFS pre-allocation ioctls
+>> + * which predate the fallocate syscall.
+>> + *
+>> + * Only the l_start, l_len and l_whence fields of the 'struct space_resv'
+>> + * are used here, rest are ignored.
+>> + */
+>> +static int ioctl_preallocate(struct file *filp, unsigned long arg)
+>> +{
+>> +	struct inode *inode = filp->f_path.dentry->d_inode;
+>> +	struct space_resv sr;
+>> +
+>> +	if (copy_from_user(&sr, (struct space_resv __user *) arg, sizeof(sr)))
+>> +		return -EFAULT;
+>> +
+>> +	switch (sr.l_whence) {
+>> +	case SEEK_SET:
+>> +		break;
+>> +	case SEEK_CUR:
+>> +		sr.l_start += filp->f_pos;
+>> +		break;
+>> +	case SEEK_END:
+>> +		sr.l_start += i_size_read(inode);
+>> +		break;
+>> +	default:
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	return do_fallocate(filp, FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
+>> +}
+>> +
+>>  static int file_ioctl(struct file *filp, unsigned int cmd,
+>>  		unsigned long arg)
+>>  {
+>> @@ -361,6 +393,11 @@ static int file_ioctl(struct file *filp, unsigned int cmd,
+>>  		return put_user(inode->i_sb->s_blocksize, p);
+>>  	case FIONREAD:
+>>  		return put_user(i_size_read(inode) - filp->f_pos, p);
+>> +	case F_IOC_RESVSP:
+>> +	case F_IOC_RESVSP64:
+>> +	case F_IOC_UNRESVSP:
+>> +	case F_IOC_UNRESVSP64:
+>> +		return ioctl_preallocate(filp, arg);
+> 
+> This patch is not implementing proper support for F_IOC_UNRESVSP and
+> F_IOC_UNRESVSP64, so why are you catching those here? To be more clear,
+> those are used for freeing space in a file ("puching holes"), which
+> fallocate is not set up to do right now.
+> 	--Mark
+> 
+> --
+> Mark Fasheh
 
 _______________________________________________
 xfs mailing list
