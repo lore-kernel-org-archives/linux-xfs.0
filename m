@@ -1,13 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBILLfux020599 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 15:21:42 -0600
-Message-ID: <494ABEBC.8060101@ankitjain.org>
-Date: Fri, 19 Dec 2008 02:51:00 +0530
-From: Ankit Jain <me@ankitjain.org>
+	mBINA0WH029563 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 17:10:00 -0600
+Received: from ipmail05.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1270717644AF
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 15:09:57 -0800 (PST)
+Received: from ipmail05.adl2.internode.on.net (ipmail05.adl2.internode.on.net
+	[203.16.214.145]) by cuda.sgi.com with ESMTP id
+	eCwRVSVHbVqSBqzJ for <xfs@oss.sgi.com>;
+	Thu, 18 Dec 2008 15:09:57 -0800 (PST)
+Date: Fri, 19 Dec 2008 09:26:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Message-ID: <20081218222621.GA17177@disturbed>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	<1229225480.16555.152.camel@localhost>
+	<18757.4606.966139.10342@tree.ty.sabi.co.uk>
+	<200812141912.59649.Martin@lichtvoll.de>
+	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
+	<494971B2.1000103@tmr.com>
 MIME-Version: 1.0
-Subject: [PATCH v2] fs: Add new pre-allocation ioctls to vfs for compatibility
-	with legacy xfs ioctls
+Content-Disposition: inline
+In-Reply-To: <494971B2.1000103@tmr.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,221 +34,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: mfasheh@suse.com, linux-kernel@vger.kernel.org, joel.becker@oracle.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
 
-This patch adds ioctls to vfs for compatibility with legacy XFS
-pre-allocation ioctls (XFS_IOC_*RESVP*). The implementation
-effectively invokes sys_fallocate for the new ioctls.
-Note: These legacy ioctls are also implemented by OCFS2.
+On Wed, Dec 17, 2008 at 04:40:02PM -0500, Bill Davidsen wrote:
+> What really bothers me is that there's no obvious need for
+> barriers at the device level if the file system is just a bit
+> smarter and does it's own async io (like aio_*), because you can
+> track writes outstanding on a per-fd basis, so instead of stopping
+> the flow of data to the drive, you can just block a file
+> descriptor and wait for the count of outstanding i/o to drop to
+> zero. That provides the order semantics of barriers as far as I
+> can see, having tirelessly thought about it for ten minutes or so.
 
-Changes in v2:
-- Dropped the incorrect handling of *UNRESVSP* ioctl.
-- Made the ioctl and argument structure kernel only (__KERNEL__)
+Well, you've pretty much described the algorithm XFS uses in it's
+transaction system - it's entirely asynchronous - and it's been
+clear for many, many years that this model is broken when you have
+devices with volatile write caches and internal re-ordering.  I/O
+completion on such devices does not guarantee data is safe on stable
+storage.
 
-Signed-off-by: Ankit Jain <me@ankitjain.org>
----
- fs/ioctl.c             |   35 ++++++++++++++++++++++++++
- fs/open.c              |   51 ++++++++++++++++++-------------------
- include/linux/falloc.h |   21 +++++++++++++++
- include/linux/fs.h     |    2 +
- 4 files changed, 83 insertions(+), 26 deletions(-)
+If the device does not commit writes to stable storage in the same
+order they are signalled as complete (i.e. internal device
+re-ordering occurred after completion), then the device violates
+fundamental assumptions about I/O completion that the above model
+relies on.
 
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index 43e8b2c..2b3fae7 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -15,6 +15,7 @@
- #include <linux/uaccess.h>
- #include <linux/writeback.h>
- #include <linux/buffer_head.h>
-+#include <linux/falloc.h>
- 
- #include <asm/ioctls.h>
- 
-@@ -346,6 +347,37 @@ EXPORT_SYMBOL(generic_block_fiemap);
- 
- #endif  /*  CONFIG_BLOCK  */
- 
-+/*
-+ * This provides compatibility with legacy XFS pre-allocation ioctls
-+ * which predate the fallocate syscall.
-+ *
-+ * Only the l_start, l_len and l_whence fields of the 'struct space_resv'
-+ * are used here, rest are ignored.
-+ */
-+static int ioctl_preallocate(struct file *filp, unsigned long arg)
-+{
-+	struct inode *inode = filp->f_path.dentry->d_inode;
-+	struct space_resv sr;
-+
-+	if (copy_from_user(&sr, (struct space_resv __user *) arg, sizeof(sr)))
-+		return -EFAULT;
-+
-+	switch (sr.l_whence) {
-+	case SEEK_SET:
-+		break;
-+	case SEEK_CUR:
-+		sr.l_start += filp->f_pos;
-+		break;
-+	case SEEK_END:
-+		sr.l_start += i_size_read(inode);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	return do_fallocate(filp, FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
-+}
-+
- static int file_ioctl(struct file *filp, unsigned int cmd,
- 		unsigned long arg)
- {
-@@ -361,6 +393,9 @@ static int file_ioctl(struct file *filp, unsigned int cmd,
- 		return put_user(inode->i_sb->s_blocksize, p);
- 	case FIONREAD:
- 		return put_user(i_size_read(inode) - filp->f_pos, p);
-+	case F_IOC_RESVSP:
-+	case F_IOC_RESVSP64:
-+		return ioctl_preallocate(filp, arg);
- 	}
- 
- 	return vfs_ioctl(filp, cmd, arg);
-diff --git a/fs/open.c b/fs/open.c
-index 83cdb9d..0703bcb 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -360,62 +360,61 @@ asmlinkage long sys_ftruncate64(unsigned int fd, loff_t length)
- }
- #endif
- 
--asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
-+long do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- {
--	struct file *file;
- 	struct inode *inode;
--	long ret = -EINVAL;
-+	long ret;
- 
- 	if (offset < 0 || len <= 0)
--		goto out;
-+		return -EINVAL;
- 
- 	/* Return error if mode is not supported */
--	ret = -EOPNOTSUPP;
- 	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
--		goto out;
-+		return -EOPNOTSUPP;
- 
--	ret = -EBADF;
--	file = fget(fd);
--	if (!file)
--		goto out;
--	if (!(file->f_mode & FMODE_WRITE))
--		goto out_fput;
-+	if (!file || !(file->f_mode & FMODE_WRITE))
-+		return -EBADF;
- 	/*
- 	 * Revalidate the write permissions, in case security policy has
- 	 * changed since the files were opened.
- 	 */
- 	ret = security_file_permission(file, MAY_WRITE);
- 	if (ret)
--		goto out_fput;
-+		return ret;
- 
- 	inode = file->f_path.dentry->d_inode;
--
--	ret = -ESPIPE;
- 	if (S_ISFIFO(inode->i_mode))
--		goto out_fput;
-+		return -ESPIPE;
- 
--	ret = -ENODEV;
- 	/*
- 	 * Let individual file system decide if it supports preallocation
- 	 * for directories or not.
- 	 */
- 	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
--		goto out_fput;
-+		return -ENODEV;
- 
--	ret = -EFBIG;
- 	/* Check for wrap through zero too */
- 	if (((offset + len) > inode->i_sb->s_maxbytes) || ((offset + len) < 0))
--		goto out_fput;
-+		return -EFBIG;
- 
- 	if (inode->i_op && inode->i_op->fallocate)
--		ret = inode->i_op->fallocate(inode, mode, offset, len);
-+		return inode->i_op->fallocate(inode, mode, offset, len);
- 	else
--		ret = -EOPNOTSUPP;
-+		return -EOPNOTSUPP;
-+}
- 
--out_fput:
--	fput(file);
--out:
--	return ret;
-+asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len)
-+{
-+	struct file *file;
-+	int error = -EBADF;
-+
-+	file = fget(fd);
-+	if (file) {
-+		error = do_fallocate(file, mode, offset, len);
-+		fput(file);
-+	}
-+
-+	return error;
- }
- 
- /*
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 8e912ab..c4bf904 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -3,4 +3,25 @@
- 
- #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
- 
-+#ifdef __KERNEL__
-+
-+/*
-+ * Space reservation ioctls and argument structure
-+ * are designed to be compatible with the legacy XFS ioctls.
-+ */
-+struct space_resv {
-+	__s16		l_type;
-+	__s16		l_whence;
-+	__s64		l_start;
-+	__s64		l_len;		/* len == 0 means until end of file */
-+	__s32		l_sysid;
-+	__u32		l_pid;
-+	__s32		l_pad[4];	/* reserve area			    */
-+};
-+
-+#define F_IOC_RESVSP		_IOW('X', 40, struct space_resv)
-+#define F_IOC_RESVSP64		_IOW('X', 42, struct space_resv)
-+
-+#endif
-+
- #endif /* _FALLOC_H_ */
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 4a853ef..b1d8f12 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1671,6 +1671,8 @@ static inline int break_lease(struct inode *inode, unsigned int mode)
- 
- extern int do_truncate(struct dentry *, loff_t start, unsigned int time_attrs,
- 		       struct file *filp);
-+extern long do_fallocate(struct file *file, int mode, loff_t offset,
-+			loff_t len);
- extern long do_sys_open(int dfd, const char __user *filename, int flags,
- 			int mode);
- extern struct file *filp_open(const char *, int, int);
+XFS uses barriers to guarantee that the devices don't lie about the
+completion order of critical I/O, not that the I/Os are on stable
+storage. The fact that this causes cache flushes to stable storage
+is result of the implementation of that guarantee of ordering. I'm
+sure the linux barrier implementation could be smarter and faster
+(for some hardware), but for an operation that is used to guarantee
+integrity I'll take conservative and safe over smart and fast any
+day of the week....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
