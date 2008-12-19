@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBJ4bqJ1015423 for <xfs@oss.sgi.com>; Thu, 18 Dec 2008 22:37:53 -0600
-Date: Fri, 19 Dec 2008 15:37:44 +1100
-From: Dave Chinner <david@fromorbit.com>
+	mBJ8xIdq002409 for <xfs@oss.sgi.com>; Fri, 19 Dec 2008 02:59:20 -0600
+Date: Fri, 19 Dec 2008 03:59:12 -0500
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v2] fs: Add new pre-allocation ioctls to vfs for
 	compatibility with legacy xfs ioctls
-Message-ID: <20081219043744.GC17177@disturbed>
-References: <494ABEBC.8060101@ankitjain.org>
+Message-ID: <20081219085912.GA30293@infradead.org>
+References: <494ABEBC.8060101@ankitjain.org> <20081219043744.GC17177@disturbed>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <494ABEBC.8060101@ankitjain.org>
+In-Reply-To: <20081219043744.GC17177@disturbed>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,51 +19,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ankit Jain <me@ankitjain.org>
-Cc: mfasheh@suse.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Ankit Jain <me@ankitjain.org>, Al Viro <viro@zeniv.linux.org.uk>, mfasheh@suse.com, linux-kernel@vger.kernel.org, joel.becker@oracle.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-T24gRnJpLCBEZWMgMTksIDIwMDggYXQgMDI6NTE6MDBBTSArMDUzMCwgQW5raXQgSmFpbiB3cm90
-ZToKPiBUaGlzIHBhdGNoIGFkZHMgaW9jdGxzIHRvIHZmcyBmb3IgY29tcGF0aWJpbGl0eSB3aXRo
-IGxlZ2FjeSBYRlMKPiBwcmUtYWxsb2NhdGlvbiBpb2N0bHMgKFhGU19JT0NfKlJFU1ZQKikuIFRo
-ZSBpbXBsZW1lbnRhdGlvbgo+IGVmZmVjdGl2ZWx5IGludm9rZXMgc3lzX2ZhbGxvY2F0ZSBmb3Ig
-dGhlIG5ldyBpb2N0bHMuCj4gTm90ZTogVGhlc2UgbGVnYWN5IGlvY3RscyBhcmUgYWxzbyBpbXBs
-ZW1lbnRlZCBieSBPQ0ZTMi4KPiAKPiBDaGFuZ2VzIGluIHYyOgo+IC0gRHJvcHBlZCB0aGUgaW5j
-b3JyZWN0IGhhbmRsaW5nIG9mICpVTlJFU1ZTUCogaW9jdGwuCj4gLSBNYWRlIHRoZSBpb2N0bCBh
-bmQgYXJndW1lbnQgc3RydWN0dXJlIGtlcm5lbCBvbmx5IChfX0tFUk5FTF9fKQo+IAo+IFNpZ25l
-ZC1vZmYtYnk6IEFua2l0IEphaW4gPG1lQGFua2l0amFpbi5vcmc+Ci4uLi4uCj4gQEAgLTM2MSw2
-ICszOTMsOSBAQCBzdGF0aWMgaW50IGZpbGVfaW9jdGwoc3RydWN0IGZpbGUgKmZpbHAsIHVuc2ln
-bmVkIGludCBjbWQsCj4gIAkJcmV0dXJuIHB1dF91c2VyKGlub2RlLT5pX3NiLT5zX2Jsb2Nrc2l6
-ZSwgcCk7Cj4gIAljYXNlIEZJT05SRUFEOgo+ICAJCXJldHVybiBwdXRfdXNlcihpX3NpemVfcmVh
-ZChpbm9kZSkgLSBmaWxwLT5mX3BvcywgcCk7Cj4gKwljYXNlIEZfSU9DX1JFU1ZTUDoKPiArCWNh
-c2UgRl9JT0NfUkVTVlNQNjQ6Cj4gKwkJcmV0dXJuIGlvY3RsX3ByZWFsbG9jYXRlKGZpbHAsIGFy
-Zyk7Cj4gIAl9Cj4gIAo+ICAJcmV0dXJuIHZmc19pb2N0bChmaWxwLCBjbWQsIGFyZyk7CgpBZGRp
-bmcgdGhpcyBoZXJlIGJyZWFrcyBYRlNfSU9DX1JFU1ZTUCBpbiBzdWJ0bGUgYW5kIGludGVyZXN0
-aW5nCndheXMuCgpYRlNfSU9DX1JFU1ZTUCBzdXBwb3J0cyBpbnZpc2libGUgSS9PLCBhbmQgdGhh
-dCBtZWFucwpYRlNfSU9DX1JFU1ZTUCBuZWVkcyB0byBiZSBwYXNzZWQgdGhyb3VnaCB0byB2ZnNf
-aW9jdGwoKQp0byB2ZWN0b3IgdG8gWEZTIHRvIGhhbmRsZS4KClRoaXMgaGFwcGVu0ZUgYmVjYXVz
-ZToKCj4gK3N0cnVjdCBzcGFjZV9yZXN2IHsKPiArCV9fczE2CQlsX3R5cGU7Cj4gKwlfX3MxNgkJ
-bF93aGVuY2U7Cj4gKwlfX3M2NAkJbF9zdGFydDsKPiArCV9fczY0CQlsX2xlbjsJCS8qIGxlbiA9
-PSAwIG1lYW5zIHVudGlsIGVuZCBvZiBmaWxlICovCj4gKwlfX3MzMgkJbF9zeXNpZDsKPiArCV9f
-dTMyCQlsX3BpZDsKPiArCV9fczMyCQlsX3BhZFs0XTsJLyogcmVzZXJ2ZSBhcmVhCQkJICAgICov
-Cj4gK307Cj4gKwo+ICsjZGVmaW5lIEZfSU9DX1JFU1ZTUAkJX0lPVygnWCcsIDQwLCBzdHJ1Y3Qg
-c3BhY2VfcmVzdikKPiArI2RlZmluZSBGX0lPQ19SRVNWU1A2NAkJX0lPVygnWCcsIDQyLCBzdHJ1
-Y3Qgc3BhY2VfcmVzdikKCklzIHRoZSBzYW1lIGFzOgoKI2RlZmluZSBYRlNfSU9DX1JFU1ZTUCAg
-ICAgICAgICBfSU9XICgnWCcsIDQwLCBzdHJ1Y3QgeGZzX2Zsb2NrNjQpCiNkZWZpbmUgWEZTX0lP
-Q19SRVNWU1A2NCAgICAgICAgX0lPVyAoJ1gnLCA0Miwgc3RydWN0IHhmc19mbG9jazY0KQoKYmVj
-YXVzZToKCnR5cGVkZWYgc3RydWN0IHhmc19mbG9jazY0IHsKICAgICAgICBfX3MxNiAgICAgICAg
-ICAgbF90eXBlOwogICAgICAgIF9fczE2ICAgICAgICAgICBsX3doZW5jZTsKICAgICAgICBfX3M2
-NCAgICAgICAgICAgbF9zdGFydDsKICAgICAgICBfX3M2NCAgICAgICAgICAgbF9sZW47ICAgICAg
-ICAgIC8qIGxlbiA9PSAwIG1lYW5zIHVudGlsIGVuZCBvZiBmaWxlICovCiAgICAgICAgX19zMzIg
-ICAgICAgICAgIGxfc3lzaWQ7CiAgICAgICAgX191MzIgICAgICAgICAgIGxfcGlkOwogICAgICAg
-IF9fczMyICAgICAgICAgICBsX3BhZFs0XTsgICAgICAgLyogcmVzZXJ2ZSBhcmVhICAgICAgICAg
-ICAgICAgICAgICAgKi8KfSB4ZnNfZmxvY2s2NF90OwoKCmlzIHRoZSBzYW1lIHNpemUgYXMgc3Ry
-dWN0IHNwYWNlX3Jlc3YuIEhlbmNlIGV4aXN0aW5nIGNhbGxzIHRvClhGU19JT0NfUkVTVlNQIHdp
-bGwgbm93IHZlY3RvciBpbmNvcnJlY3RseSBkb3duIHRoZSBmYWxsb2NhdGUgcGF0aApyZXN1bHRp
-bmcgaW4gaW52aXNpYmxlIG9wZXJhdGlvbnMgd2lsbCBub3cgYmUgdmlzaWJsZS4uLi4KCkNoZWVy
-cywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
-ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Dec 19, 2008 at 03:37:44PM +1100, Dave Chinner wrote:
+> XFS_IOC_RESVSP supports invisible I/O, and that means
+> XFS_IOC_RESVSP needs to be passed through to vfs_ioctl()
+> to vector to XFS to handle.
+
+When the current XFS git tree gets merged to mainline before this
+patch.  invisible I/O handling is now FMODE_NOCMTIME in file->f_flags
+which this patch will pass through to the filesystem.  We just need
+to chage xfs_vn_fallocate ot honour it.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
