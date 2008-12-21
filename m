@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBLGbeUL023605 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 10:37:41 -0600
-Date: Sun, 21 Dec 2008 17:36:33 +0100 (CET)
+	mBLGcXBI023718 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 10:38:34 -0600
+Date: Sun, 21 Dec 2008 17:38:29 +0100 (CET)
 From: Julia Lawall <julia@diku.dk>
 Subject: Re: [PATCH 9/13] fs/xfs: Remove redundant test
 In-Reply-To: <494E6846.8070800@sandeen.net>
-Message-ID: <Pine.LNX.4.64.0812211736150.9555@pc-004.diku.dk>
+Message-ID: <Pine.LNX.4.64.0812211737180.9555@pc-004.diku.dk>
 References: <Pine.LNX.4.64.0812211640360.9555@pc-004.diku.dk>
 	<494E6846.8070800@sandeen.net>
 MIME-Version: 1.0
@@ -25,44 +25,87 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-masters@oss.sgi.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-> Looks fine to me, though a similar test under the #ifdef DEBUG can
-> probably also be removed.
+From: Julia Lawall <julia@diku.dk>
 
-Indeed.  I will send an updated patch.
+In fs/xfs/xfs_trans_buf.c, bp is tested for being NULL just a few lines
+above.
 
-julia
+A simplified version of the semantic patch that makes this change is as
+follows: (http://www.emn.fr/x-info/coccinelle/)
 
-> -Eric
-> 
-> > ---
-> >  fs/xfs/xfs_trans_buf.c              |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> > index 8ee2f8c..22afe29 100644
-> > --- a/fs/xfs/xfs_trans_buf.c
-> > +++ b/fs/xfs/xfs_trans_buf.c
-> > @@ -307,7 +307,7 @@ xfs_trans_read_buf(
-> >  			return (flags & XFS_BUF_TRYLOCK) ?
-> >  					EAGAIN : XFS_ERROR(ENOMEM);
-> >  
-> > -		if ((bp != NULL) && (XFS_BUF_GETERROR(bp) != 0)) {
-> > +		if (XFS_BUF_GETERROR(bp) != 0) {
-> >  			xfs_ioerror_alert("xfs_trans_read_buf", mp,
-> >  					  bp, blkno);
-> >  			error = XFS_BUF_GETERROR(bp);
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+// <smpl>
+@r exists@
+local idexpression x;
+expression E;
+position p1,p2;
+@@
+
+if (x@p1 == NULL || ...) { ... when forall
+   return ...; }
+... when != \(x=E\|x--\|x++\|--x\|++x\|x-=E\|x+=E\|x|=E\|x&=E\|&x\)
+(
+x@p2 == NULL
+|
+x@p2 != NULL
+)
+
+// another path to the test that is not through p1?
+@s exists@
+local idexpression r.x;
+position r.p1,r.p2;
+@@
+
+... when != x@p1
+(
+x@p2 == NULL
+|
+x@p2 != NULL
+)
+
+@fix depends on !s@
+position r.p1,r.p2;
+expression x,E;
+statement S1,S2;
+@@
+
+(
+- if ((x@p2 != NULL) || ...)
+  S1
+|
+- if ((x@p2 == NULL) && ...) S1
+|
+- BUG_ON(x@p2 == NULL);
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/var/linuxes/linux-next/fs/xfs/xfs_trans_buf.c b/var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c
+index 8ee2f8c..218829e 100644
+--- a/var/linuxes/linux-next/fs/xfs/xfs_trans_buf.c
++++ b/var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c
+@@ -307,7 +307,7 @@ xfs_trans_read_buf(
+ 			return (flags & XFS_BUF_TRYLOCK) ?
+ 					EAGAIN : XFS_ERROR(ENOMEM);
+ 
+-		if ((bp != NULL) && (XFS_BUF_GETERROR(bp) != 0)) {
++		if (XFS_BUF_GETERROR(bp) != 0) {
+ 			xfs_ioerror_alert("xfs_trans_read_buf", mp,
+ 					  bp, blkno);
+ 			error = XFS_BUF_GETERROR(bp);
+@@ -315,7 +315,7 @@ xfs_trans_read_buf(
+ 			return error;
+ 		}
+ #ifdef DEBUG
+-		if (xfs_do_error && (bp != NULL)) {
++		if (xfs_do_error) {
+ 			if (xfs_error_target == target) {
+ 				if (((xfs_req_num++) % xfs_error_mod) == 0) {
+ 					xfs_buf_relse(bp);
 
 _______________________________________________
 xfs mailing list
