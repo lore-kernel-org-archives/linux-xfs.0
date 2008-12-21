@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBLGcXBI023718 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 10:38:34 -0600
-Date: Sun, 21 Dec 2008 17:38:29 +0100 (CET)
+	mBLGjnZM024357 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 10:45:49 -0600
+Date: Sun, 21 Dec 2008 17:45:44 +0100 (CET)
 From: Julia Lawall <julia@diku.dk>
 Subject: Re: [PATCH 9/13] fs/xfs: Remove redundant test
-In-Reply-To: <494E6846.8070800@sandeen.net>
-Message-ID: <Pine.LNX.4.64.0812211737180.9555@pc-004.diku.dk>
+In-Reply-To: <Pine.LNX.4.64.0812211737180.9555@pc-004.diku.dk>
+Message-ID: <Pine.LNX.4.64.0812211745210.9555@pc-004.diku.dk>
 References: <Pine.LNX.4.64.0812211640360.9555@pc-004.diku.dk>
 	<494E6846.8070800@sandeen.net>
+	<Pine.LNX.4.64.0812211737180.9555@pc-004.diku.dk>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
@@ -81,13 +82,13 @@ statement S1,S2;
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c |    4 ++--
+ fs/xfs/xfs_trans_buf.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/var/linuxes/linux-next/fs/xfs/xfs_trans_buf.c b/var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
 index 8ee2f8c..218829e 100644
---- a/var/linuxes/linux-next/fs/xfs/xfs_trans_buf.c
-+++ b/var/julia/linuxcopy/fs/xfs/xfs_trans_buf.c
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
 @@ -307,7 +307,7 @@ xfs_trans_read_buf(
  			return (flags & XFS_BUF_TRYLOCK) ?
  					EAGAIN : XFS_ERROR(ENOMEM);
