@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBKMpseQ018587 for <xfs@oss.sgi.com>; Sat, 20 Dec 2008 16:51:56 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC7381769FD4
-	for <xfs@oss.sgi.com>; Sat, 20 Dec 2008 14:51:53 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id zpaq8wksAWXXqQz4 for
-	<xfs@oss.sgi.com>; Sat, 20 Dec 2008 14:51:53 -0800 (PST)
-Date: Sat, 20 Dec 2008 17:51:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Debian userspace updates
-Message-ID: <20081220225152.GA16671@infradead.org>
-References: <1229732749.4496.28.camel@verge.scott.net.au>
+	mBLF9uJ6013823 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 09:09:56 -0600
+Received: from mail-bw0-f10.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 788F51769536
+	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 07:09:52 -0800 (PST)
+Received: from mail-bw0-f10.google.com (mail-bw0-f10.google.com
+	[209.85.218.10]) by cuda.sgi.com with ESMTP id kR5WMy6Z6gi1OtUr
+	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 07:09:52 -0800 (PST)
+Received: by bwz3 with SMTP id 3so3497731bwz.20
+	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 07:09:51 -0800 (PST)
+Message-ID: <7bcfcfff0812210703r4bd889cave8e2d60c56587e3e@mail.gmail.com>
+Date: Sun, 21 Dec 2008 10:03:19 -0500
+From: "David Bernick" <dbernick@gmail.com>
+Subject: xfs_repair problem.
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1229732749.4496.28.camel@verge.scott.net.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +28,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nscott@aconex.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Dec 20, 2008 at 11:25:49AM +1100, Nathan Scott wrote:
-> Hi,
-> 
-> Here's a couple of trivial patches from updating the Debian
-> userspace packages.  Please merge - thanks!
+I have a filesystem where an xfs_growfs went bad. We were adding
+storage to a pre-existing infrastructure and when growing, we received
+an error. SInce then, we've been unable to mount.
 
-2.10.2 is purely a tarball release,
+It's a large filesystem (see below) and the addition of the extra data
+has made it larger. We tried an xfs_repair but it died, as the machine
+only has 4GB RAM. We're going to put 32 GB in RAM and see if that
+helps. The original FS size is about 13T and the addition brought it
+to 29T.
+Since we've been unable to write or mount, we've "backed off" the
+addition and are left with our original, which we'd like to mount.
 
-> Index: xfsprogs-2.10.2/debian/changelog
-> ===================================================================
-> --- xfsprogs-2.10.2.orig/debian/changelog	2008-12-20 11:18:09.875260474 +1100
-> +++ xfsprogs-2.10.2/debian/changelog	2008-12-20 11:18:13.473172568 +1100
-> @@ -1,3 +1,13 @@
-> +xfsprogs (2.10.2-1) unstable; urgency=low
-> +
-> +  * New upstream release
-> +  * No longer ignore -i maxpct option in mkfs.xfs (closes: #500593)
-> +  * Correct features2 superblock field handling (closes: #473135)
-> +  * 32 bit emulation on 64 bit kernels works (closes: #485020)
-> +  * Fix up large sector handling in mkfs (closes: #489421)
-> +
-> + -- Nathan Scott <nathans@debian.org>  Sat, 20 Dec 2008 10:14:27 +1100
+We try to mount and get an error about the root inode not being
+readable. Makes sense as the root inode is null (according to xfs_db).
 
-But we should probably throw this into the git tree so it's in there
-once 3.0 is released.
+So before we run another big xfs_repair:
 
-> Index: xfsprogs-2.10.2/libxfs/xfs_dir2.c
-> ===================================================================
-> --- xfsprogs-2.10.2.orig/libxfs/xfs_dir2.c	2008-12-20 11:21:21.985184849 +1100
-> +++ xfsprogs-2.10.2/libxfs/xfs_dir2.c	2008-12-20 11:21:33.795013403 +1100
-> @@ -21,6 +21,7 @@
->   * Top-level and utility routines.
->   */
->  
-> +#include <ctype.h>
->  #include <xfs.h>
->  
->  extern const struct xfs_nameops xfs_default_nameops;
+1. What is the math of filesystems size, number of files and how much
+RAM is needed for such a task? Is 32 GB enough for 1/2 Billion files
+and 13 TB?
 
-While this one has been fixed in the meantime by including ctype.h in
-platform_defs.h
+2. Any way I can just find my rootino,rbmino,rsumino and put them in the DB?
+
+Any other advice?
+
+/proc/partitions:
+ 253     0 13084291072 dm-0
+
+--- Logical volume ---
+LV Name                /dev/docs/v5Docs
+VG Name                docs
+LV UUID                G85Zi9-s63C-yWrU-yyf0-STP6-YOhJ-6Ne3pS
+LV Write Access        read/write
+LV Status              available
+# open                 1
+LV Size                12.19 TB
+Current LE             3194407
+Segments               2
+Allocation             inherit
+Read ahead sectors     0
+Block device           253:0
+
+DB:
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 3064987648
+rblocks = 0
+rextents = 0
+uuid = f086bb71-d67b-4cc1-b622-1f10349e6a49
+logstart = 1073741828
+rootino = null
+rbmino = null
+rsumino = null
+rextsize = 1
+agblocks = 67108864
+agcount = 46
+rbmblocks = 0
+logblocks = 32768
+versionnum = 0x3084
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 26
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 0
+ifree = 0
+fdblocks = 0
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 0
+features2 = 0
+
+
+[[HTML alternate version deleted]]
 
 _______________________________________________
 xfs mailing list
