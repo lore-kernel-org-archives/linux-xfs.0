@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBLH7V9n026781 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 11:07:32 -0600
-Received: from fk-out-0910.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E7B43B44A
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 09:07:29 -0800 (PST)
-Received: from fk-out-0910.google.com (fk-out-0910.google.com
-	[209.85.128.191]) by cuda.sgi.com with ESMTP id
-	1Vo7PqG3Zqy21zZm for <xfs@oss.sgi.com>;
-	Sun, 21 Dec 2008 09:07:29 -0800 (PST)
-Received: by fk-out-0910.google.com with SMTP id 26so1163516fkx.4
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 09:07:29 -0800 (PST)
-Message-ID: <7bcfcfff0812210907t6515b070ie553556d451c308@mail.gmail.com>
-Date: Sun, 21 Dec 2008 12:07:28 -0500
-From: "David Bernick" <dbernick@gmail.com>
-Subject: Re: xfs_repair problem.
-In-Reply-To: <494E766B.5080102@sandeen.net>
+	mBLHC53l027429 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 11:12:05 -0600
+Received: from sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 65F123B45F
+	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 09:12:03 -0800 (PST)
+Received: from sandeen.net (sandeen.net [209.173.210.139]) by cuda.sgi.com
+	with ESMTP id u6aHVvGerDnPP0cm for <xfs@oss.sgi.com>;
+	Sun, 21 Dec 2008 09:12:03 -0800 (PST)
+Message-ID: <494E78E3.7080003@sandeen.net>
+Date: Sun, 21 Dec 2008 11:12:03 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-References: <7bcfcfff0812210703r4bd889cave8e2d60c56587e3e@mail.gmail.com>
-	<494E66D9.5030704@sandeen.net>
+Subject: Re: xfs_repair problem.
+References: <7bcfcfff0812210703r4bd889cave8e2d60c56587e3e@mail.gmail.com>	<494E66D9.5030704@sandeen.net>
 	<7bcfcfff0812210852v6c1cd522i334de914e1e9a112@mail.gmail.com>
-	<494E766B.5080102@sandeen.net>
-Content-Disposition: inline
+In-Reply-To: <7bcfcfff0812210852v6c1cd522i334de914e1e9a112@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,36 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: David Bernick <dbernick@gmail.com>
 Cc: xfs@oss.sgi.com
 
-The xfs_repair is running. seems to have stabilized at about 91% RAM usage.
-It's at a part where its "clearing inode number in entry at offset...", so
-hopefully its just progressing.
+David Bernick wrote:
 
-I'll grab the newest version of xfs_repair and try that if this all fails.
-WHere can I grab the latest?
+> How do you go about writing to these inodes with these values:
+> rootino = 128
+> rbmino = 129
+> rsumino = 130
+> without affecting the data?
 
->
-> > Kernel is - 2.6.18-92.1.1.el5
->
-> heh; RHEL5 does not support xfs ;)
->
-shhh. i know that :)
+forgot this answer...
 
-"well, you don't want to take out part of the device if the fs thinks it
-owns it now, but from the db output I think you still have the smaller
-size."
+start xfs_db with -x, then:
 
-That's what I thought from looking at everything, too.
+xfs_db> sb 0
+xfs_db> write rsumino 130
+rsumino = 130
 
-"I'd read through:
+etc
 
-http://oss.sgi.com/archives/xfs/2008-01/msg00085.html"
-I've been pouring through that thread since 3am EST :)
-
-
-[[HTML alternate version deleted]]
+-Eric
 
 _______________________________________________
 xfs mailing list
