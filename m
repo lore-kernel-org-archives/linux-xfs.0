@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id
-	mBM3BNhl016346 for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 21:11:23 -0600
-Received: from [134.14.55.78] (redback.melbourne.sgi.com [134.14.55.78])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 29133304059
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2008 19:11:17 -0800 (PST)
-Message-ID: <494F05A6.6010800@sgi.com>
-Date: Mon, 22 Dec 2008 14:12:38 +1100
-From: Lachlan McIlroy <lachlan@sgi.com>
+	mBM8orFT024828 for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 02:50:58 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 95CBF3DD4A
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2008 00:50:52 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 9wQHcZthnuQjlH2R for
+	<xfs@oss.sgi.com>; Mon, 22 Dec 2008 00:50:52 -0800 (PST)
+Date: Mon, 22 Dec 2008 03:50:47 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Intel X25-E running Linux using XFS
+Message-ID: <20081222085047.GA24795@infradead.org>
+References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+	<20081212185803.GE11974@elf.ucw.cz>
 MIME-Version: 1.0
-Subject: [PATCH] Update MAINTAINERS file
-Reply-To: lachlan@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20081212185803.GE11974@elf.ucw.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,29 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Pavel Machek <pavel@suse.cz>
+Cc: Alan Piszcz <ap@solarrain.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Tim has left the company and the tree address has
-changed so update accordingly.
+On Fri, Dec 12, 2008 at 07:58:03PM +0100, Pavel Machek wrote:
+> Actually I'd like to know... how does it behave during powerfails
+> while it is being written to?
 
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 09ed704..fa7b4df 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4767,11 +4767,10 @@ S:	Supported
-
-  XFS FILESYSTEM
-  P:	Silicon Graphics Inc
--P:	Tim Shimmin
-  M:	xfs-masters@oss.sgi.com
-  L:	xfs@oss.sgi.com
-  W:	http://oss.sgi.com/projects/xfs
--T:	git git://oss.sgi.com:8090/xfs/xfs-2.6.git
-+T:	git://oss.sgi.com/xfs/xfs.git
-  S:	Supported
-
-  XILINX SYSTEMACE DRIVER
+I've done various powerfail tests with and X25-M and as expect it
+behaves perfectly fine as long as you either disable the write cache
+or use barriers.  The default ext3 setup without barriers corrupts
+the filesystem left, right and center, but that's the same as other
+recent disk drives with large caches.
 
 _______________________________________________
 xfs mailing list
